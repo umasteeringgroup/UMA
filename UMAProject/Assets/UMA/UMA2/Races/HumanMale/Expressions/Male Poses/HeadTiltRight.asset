@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: HeadTiltRight
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: Head
+    hash: 130111906
+    position: {x: -0.000000007450581, y: -1.15463195e-14, z: 0.000000011175871}
+    rotation: {x: 0.0000000037777212, y: -0.0000000062864842, z: -0.25320908, w: 0.96741164}
+    scale: {x: 1.0000001, y: 1, z: 1.0000002}
+  - bone: Mandible
+    hash: 1574626840
+    position: {x: 0.0000005476177, y: 0.000000043139153, z: 0.000000018626451}
+    rotation: {x: 0.00000007570766, y: 0.02101053, z: -0.000000041529017, w: 0.9997753}
+    scale: {x: 0.9999999, y: 1.0000001, z: 1}
+  - bone: Neck
+    hash: -2145158803
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.000000044122913, y: -0.0000000042677195, z: -0.16200662, w: 0.9868077}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []

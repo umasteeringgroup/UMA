@@ -39,73 +39,6 @@ MonoBehaviour:
           name: 
           Value: 0
         p10:
-          stringRepresentation: Color;#000000FF;_Base_Color
-          name: _Base_Color
-          Value: {r: 0, g: 0, b: 0, a: 1}
-        p9:
-          stringRepresentation: 
-          name: 
-          Value: {x: 0, y: 0, z: 0, w: 0}
-        p8:
-          stringRepresentation: 
-          name: 
-          Value: []
-        p7:
-          stringRepresentation: 
-          name: 
-          Value: {fileID: 0}
-        p6:
-          stringRepresentation: 
-          name: 
-          Value: []
-        p5:
-          stringRepresentation: 
-          name: 
-          Value: 0
-        p4:
-          stringRepresentation: 
-          name: 
-          Value:
-            e00: 0
-            e01: 0
-            e02: 0
-            e03: 0
-            e10: 0
-            e11: 0
-            e12: 0
-            e13: 0
-            e20: 0
-            e21: 0
-            e22: 0
-            e23: 0
-            e30: 0
-            e31: 0
-            e32: 0
-            e33: 0
-        p3:
-          stringRepresentation: 
-          name: 
-          Value: []
-        p2:
-          stringRepresentation: 
-          name: 
-        p1:
-          stringRepresentation: 
-          name: 
-          offset: 0
-          size: 0
-        propertType: UMAColorProperty
-      - p12:
-          stringRepresentation: 
-          name: 
-          Translate: {x: 0, y: 0}
-          Rotate: 0
-          Scale: {x: 1, y: 1}
-        p11:
-          stringRepresentation: 
-          name: 
-          Value: 0
-        p10:
           stringRepresentation: Color;#38110D00;_SubsurfaceColor
           name: _SubsurfaceColor
           Value: {r: 0.22012573, g: 0.067586094, b: 0.050531976, a: 0}
@@ -296,14 +229,81 @@ MonoBehaviour:
           offset: 0
           size: 0
         propertType: UMAFloatProperty
+      - p12:
+          stringRepresentation: 
+          name: 
+          Translate: {x: 0, y: 0}
+          Rotate: 0
+          Scale: {x: 1, y: 1}
+        p11:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p10:
+          stringRepresentation: Color;#0D0D0DFF;_BaseColor
+          name: _BaseColor
+          Value: {r: 0.050314426, g: 0.050314426, b: 0.050314426, a: 1}
+        p9:
+          stringRepresentation: 
+          name: 
+          Value: {x: 0, y: 0, z: 0, w: 0}
+        p8:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p7:
+          stringRepresentation: 
+          name: 
+          Value: {fileID: 0}
+        p6:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p5:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p4:
+          stringRepresentation: 
+          name: 
+          Value:
+            e00: 0
+            e01: 0
+            e02: 0
+            e03: 0
+            e10: 0
+            e11: 0
+            e12: 0
+            e13: 0
+            e20: 0
+            e21: 0
+            e22: 0
+            e23: 0
+            e30: 0
+            e31: 0
+            e32: 0
+            e33: 0
+        p3:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p2:
+          stringRepresentation: 
+          name: 
+        p1:
+          stringRepresentation: 
+          name: 
+          offset: 0
+          size: 0
+        propertType: UMAColorProperty
     foldout: 0
     showAdvanced: 0
     isBaseColor: 0
     deleteThis: 0
     moveUpThis: 0
     moveDownThis: 0
-    colorsExpanded: 1
-    propertiesExpanded: 1
+    colorsExpanded: 0
+    propertiesExpanded: 0
     showSelected: 1
     isSelected: 1
     showDisplayColor: 1
@@ -596,7 +596,7 @@ MonoBehaviour:
     moveUpThis: 0
     moveDownThis: 0
     colorsExpanded: 0
-    propertiesExpanded: 1
+    propertiesExpanded: 0
     showSelected: 1
     isSelected: 0
     showDisplayColor: 1
@@ -889,7 +889,7 @@ MonoBehaviour:
     moveUpThis: 0
     moveDownThis: 0
     colorsExpanded: 1
-    propertiesExpanded: 1
+    propertiesExpanded: 0
     showSelected: 1
     isSelected: 0
     showDisplayColor: 1

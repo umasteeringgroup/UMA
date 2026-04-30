@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: EyeSquint_L
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftCheek
+    hash: 1397141478
+    position: {x: -.0069186762, y: 2.95657665e-05, z: -8.87736678e-05}
+    rotation: {x: 3.27155249e-07, y: 4.03444211e-08, z: -3.82832184e-08, w: 1.00000024}
+    scale: {x: .999999881, y: .999999762, z: .999999881}
+  - bone: LeftEye
+    hash: 27653119
+    position: {x: -1.1920929e-07, y: 0, z: 0}
+    rotation: {x: -4.64884558e-08, y: 8.42912442e-08, z: -3.46359378e-12, w: 1}
+    scale: {x: .999999523, y: .999999642, z: .907871902}
+  - bone: LeftLowerLid
+    hash: 484878204
+    position: {x: -4.59822758e-09, y: 3.7252974e-09, z: 1.22391697e-07}
+    rotation: {x: 3.78561937e-09, y: .055975955, z: -1.9949789e-10, w: .998432219}
+    scale: {x: .999999881, y: .999999881, z: .99999994}
+  - bone: LeftUpperLid
+    hash: -209628701
+    position: {x: -4.59822758e-09, y: 3.7252974e-09, z: 1.22391697e-07}
+    rotation: {x: -4.99944131e-09, y: -.0652709752, z: 7.99943011e-12, w: .997867644}
+    scale: {x: 1, y: 1, z: 1.00000024}
+  - bone: LeftEyebrowLow
+    hash: 2129323926
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -3.26453247e-08, y: -.0165455565, z: -7.00216274e-10, w: .999863148}
+    scale: {x: 1.00000012, y: .999999762, z: 1}
+  - bone: LeftEyebrowMiddle
+    hash: -356417641
+    position: {x: -1.1920929e-07, y: 0, z: 0}
+    rotation: {x: -1.06783582e-09, y: -.0267909802, z: -7.74011411e-10, w: .999641061}
+    scale: {x: 1, y: 1, z: 1.00000024}
+  - bone: LeftEyebrowUp
+    hash: 1123680177
+    position: {x: .00114617497, y: -1.35600567e-06, z: 4.19914722e-05}
+    rotation: {x: -9.99538585e-09, y: -.0361384265, z: 2.95535957e-10, w: .999346852}
+    scale: {x: .999999762, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []

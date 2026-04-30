@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f0188188c253e0c4bb9b46e19fa7312e, type: 3}
+  m_Name: WolfTattooU3Recipe
+  m_EditorClassIdentifier: 
+  label: 
+  resourcesOnly: 0
+  recipeType: Wardrobe
+  DisplayValue: 
+  compatibleRaces:
+  - Human Male 3.0
+  wardrobeRecipeThumbs:
+  - race: Human Male 3.0
+    filename: Assets/UMA/UMA3/Wearables/Icons/Tattoo/Human Male 3.0/1_WolfTattooU3Recipe.png
+    thumb: {fileID: 21300000, guid: 3404c6e948b0b2140bed04a6dba90038, type: 3}
+  wardrobeSlot: Tattoo
+  Appended: 1
+  Hides: []
+  HideTags: []
+  suppressWardrobeSlots: []
+  activeWardrobeSet: []
+  MeshHideAssets: []
+  MeshHideAssetCollections: []
+  MeshModifiers: []
+  OverrideDNA:
+    PreloadValues: []
+  disabled: 0
+  recipeString: '{"version":3,"packedSlotDataList":[],"slotsV2":[],"slotsV3":[{"id":"","scale":1,"copyIdx":-1,"overlays":[],"Tags":[],"Races":[],"blendShapeTarget":"","overSmoosh":0.0,"smooshDistance":0.0,"smooshInvertX":false,"smooshInvertY":false,"smooshInvertZ":false,"smooshInvertDist":false,"smooshTargetTag":"","smooshableTag":"","isSwapSlot":false,"swapTag":"","uvOverride":0,"isDisabled":false,"expandAlongNormal":0,"isPlaceholderSlot":false},{"id":"","scale":1,"copyIdx":-1,"overlays":[],"Tags":[],"Races":[],"blendShapeTarget":"","overSmoosh":0.0,"smooshDistance":0.0,"smooshInvertX":false,"smooshInvertY":false,"smooshInvertZ":false,"smooshInvertDist":false,"smooshTargetTag":"","smooshableTag":"","isSwapSlot":false,"swapTag":"","uvOverride":0,"isDisabled":false,"expandAlongNormal":0,"isPlaceholderSlot":false},{"id":"","scale":1,"copyIdx":-1,"overlays":[],"Tags":[],"Races":[],"blendShapeTarget":"","overSmoosh":0.0,"smooshDistance":0.0,"smooshInvertX":false,"smooshInvertY":false,"smooshInvertZ":false,"smooshInvertDist":false,"smooshTargetTag":"","smooshableTag":"","isSwapSlot":false,"swapTag":"","uvOverride":0,"isDisabled":false,"expandAlongNormal":0,"isPlaceholderSlot":false},{"id":"","scale":1,"copyIdx":-1,"overlays":[],"Tags":[],"Races":[],"blendShapeTarget":"","overSmoosh":0.0,"smooshDistance":0.0,"smooshInvertX":false,"smooshInvertY":false,"smooshInvertZ":false,"smooshInvertDist":false,"smooshTargetTag":"","smooshableTag":"","isSwapSlot":false,"swapTag":"","uvOverride":0,"isDisabled":false,"expandAlongNormal":0,"isPlaceholderSlot":false},{"id":"","scale":1,"copyIdx":-1,"overlays":[],"Tags":[],"Races":[],"blendShapeTarget":"","overSmoosh":0.0,"smooshDistance":0.0,"smooshInvertX":false,"smooshInvertY":false,"smooshInvertZ":false,"smooshInvertDist":false,"smooshTargetTag":"","smooshableTag":"","isSwapSlot":false,"swapTag":"","uvOverride":0,"isDisabled":false,"expandAlongNormal":0,"isPlaceholderSlot":false},{"id":"Torso","scale":100,"copyIdx":-1,"overlays":[{"id":"WolfTattoo","colorIdx":0,"rect":[0.3717254400253296,0.5388748049736023,0.24605602025985719,0.23727434873580934],"isTransformed":false,"scale":{"x":1.0,"y":1.0,"z":0.0},"rotation":0.0,"blendModes":[0,0,0,0,0,0],"Tags":[],"tiling":[false,false,false,false,false,false],"uvOverride":0,"translate":{"x":0.0,"y":0.0}}],"Tags":["Torso"],"Races":[],"blendShapeTarget":"","overSmoosh":0.009999999776482582,"smooshDistance":0.0010000000474974514,"smooshInvertX":false,"smooshInvertY":true,"smooshInvertZ":false,"smooshInvertDist":true,"smooshTargetTag":"","smooshableTag":"","isSwapSlot":false,"swapTag":"","uvOverride":0,"isDisabled":false,"expandAlongNormal":0,"isPlaceholderSlot":true},{"id":"","scale":1,"copyIdx":-1,"overlays":[],"Tags":[],"Races":[],"blendShapeTarget":"","overSmoosh":0.0,"smooshDistance":0.0,"smooshInvertX":false,"smooshInvertY":false,"smooshInvertZ":false,"smooshInvertDist":false,"smooshTargetTag":"","smooshableTag":"","isSwapSlot":false,"swapTag":"","uvOverride":0,"isDisabled":false,"expandAlongNormal":0,"isPlaceholderSlot":false}],"colors":[],"fColors":[{"name":"","colors":[255,255,255,255,0,0,0,0],"ShaderParms":[],"alwaysUpdate":false,"alwaysUpdateParms":false,"isBaseColor":false,"displayColor":-1}],"sharedColorCount":0,"race":"","packedDna":[],"uvOverride":0,"isWardrobe":false}'
+  forceKeep: 0
+  labelLocalFiles: 0
+  noAutoAdd: 0
+  IncompatibleRecipes: []
+  UserField: 
+  replaces: Nothing

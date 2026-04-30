@@ -1,0 +1,86 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: EyesSquint
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftCheek
+    hash: 1397141478
+    position: {x: -.00625739247, y: 2.07126141e-05, z: -6.93127513e-05}
+    rotation: {x: 9.32580022e-08, y: -4.88279781e-08, z: 1.93006535e-08, w: 1}
+    scale: {x: 1.00000012, y: 1.00000024, z: 1}
+  - bone: LeftEye
+    hash: 27653119
+    position: {x: -1.49011612e-08, y: -3.7252903e-09, z: -7.4505806e-09}
+    rotation: {x: 4.19011528e-08, y: 1.68582559e-07, z: -4.06100934e-12, w: 1}
+    scale: {x: 1.00000012, y: 1.00000012, z: .920211911}
+  - bone: LeftLowerLid
+    hash: 484878204
+    position: {x: 9.18412724e-09, y: -3.72352815e-09, z: 1.59360553e-07}
+    rotation: {x: 2.32094299e-09, y: .0324006043, z: 2.58888137e-11, w: .999483764}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftUpperLid
+    hash: -209628701
+    position: {x: 9.18412724e-09, y: -3.72352815e-09, z: 1.59360553e-07}
+    rotation: {x: -4.21802726e-09, y: -.0558835305, z: 1.07395507e-11, w: .998437405}
+    scale: {x: .999999702, y: .999999821, z: .999999821}
+  - bone: LeftEyebrowLow
+    hash: 2129323926
+    position: {x: .00129451603, y: -1.86264515e-09, z: .000274889171}
+    rotation: {x: 4.12730365e-08, y: -1.2101431e-14, z: -3.03514538e-14, w: 1}
+    scale: {x: 1, y: 1.00000012, z: 1.00000012}
+  - bone: LeftEyebrowMiddle
+    hash: -356417641
+    position: {x: .00150755048, y: -3.7252903e-09, z: .000320188701}
+    rotation: {x: 2.94577642e-08, y: -6.19742693e-08, z: -.00409329683, w: 1.00006413}
+    scale: {x: 1.00000012, y: 1.00000012, z: 1}
+  - bone: LeftEyebrowUp
+    hash: 1123680177
+    position: {x: .00182516873, y: -4.84287739e-08, z: .000349551439}
+    rotation: {x: 5.58060869e-08, y: -6.29246655e-11, z: 8.56302529e-11, w: 1.00000012}
+    scale: {x: 1.00000012, y: 1.00000012, z: 1}
+  - bone: RightCheek
+    hash: 827866759
+    position: {x: -.00625739247, y: -2.07126141e-05, z: -6.93127513e-05}
+    rotation: {x: -7.6531137e-10, y: 4.68534829e-08, z: -3.7339916e-08, w: 1}
+    scale: {x: 1.00000024, y: 1.00000012, z: .999999881}
+  - bone: RightEye
+    hash: -2120937982
+    position: {x: -1.49011612e-08, y: 3.7252903e-09, z: -7.4505806e-09}
+    rotation: {x: 5.19158867e-08, y: -8.42912939e-08, z: -6.16598873e-12, w: 1}
+    scale: {x: 1, y: 1.00000012, z: .920211852}
+  - bone: RightLowerLid
+    hash: -945389519
+    position: {x: -7.14408088e-09, y: -1.83320026e-12, z: 2.86821091e-07}
+    rotation: {x: 2.50386734e-09, y: .0324006043, z: -6.17763913e-12, w: .999483824}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightUpperLid
+    hash: 683767470
+    position: {x: -7.14408088e-09, y: -1.83320026e-12, z: 2.86821262e-07}
+    rotation: {x: -4.30210179e-09, y: -.0558835082, z: -2.2568219e-12, w: .998437345}
+    scale: {x: .999999881, y: 1, z: 1}
+  - bone: RightEyebrowLow
+    hash: -1640515339
+    position: {x: .00129451603, y: 1.86264515e-09, z: .000274881721}
+    rotation: {x: -5.76580348e-08, y: 2.60902411e-15, z: -3.62674097e-14, w: 1}
+    scale: {x: 1, y: 1.00000012, z: 1.00000012}
+  - bone: RightEyebrowMiddle
+    hash: 1695671804
+    position: {x: .00150755048, y: 3.7252903e-09, z: .000320188701}
+    rotation: {x: -4.68728416e-08, y: -5.37335865e-08, z: .00409329263, w: 1.0000639}
+    scale: {x: 1, y: 1.00000012, z: 1.00000012}
+  - bone: RightEyebrowUp
+    hash: 1246724795
+    position: {x: .00182517618, y: 4.84287739e-08, z: .000349543989}
+    rotation: {x: -3.31344872e-08, y: -4.59768827e-08, z: -8.84044921e-11, w: 1.00000012}
+    scale: {x: 1.00000036, y: 1.00000024, z: 1.00000036}
+  tweenPoses: []
+  tweenWeights: []

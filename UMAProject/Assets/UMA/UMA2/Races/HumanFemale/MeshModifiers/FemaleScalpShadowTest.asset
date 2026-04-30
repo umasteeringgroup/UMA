@@ -1,0 +1,332 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3022e3cc0dfedfb46969c949a86882f3, type: 3}
+  m_Name: FemaleScalpShadowTest
+  m_EditorClassIdentifier: UMA_Core::UMA.MeshModifier
+  splitDiagnostics: 
+  runtimeModifiers:
+  - ModifierName: Set Color (1)
+    isTemporary: 0
+    manuallyModified: 0
+    keepAsIs: 0
+    SlotName: UMA_Human_Female_Head_Mid_Slot
+    DNAName: 
+    Scale: 1
+    adjustments:
+      rid: 7442056106083091055
+  editorModifiers:
+  - ModifierName: Set Color (1)
+    isTemporary: 0
+    manuallyModified: 0
+    keepAsIs: 0
+    SlotName: 
+    DNAName: 
+    Scale: 1
+    adjustments:
+      rid: 7442056106083091056
+  references:
+    version: 2
+    RefIds:
+    - rid: 7442056106083091055
+      type: {class: VertexColorAdjustmentCollection, ns: UMA, asm: UMA_Core}
+      data:
+        vertexAdjustments:
+        - rid: 7442056106083091057
+        - rid: 7442056106083091058
+        - rid: 7442056106083091059
+        - rid: 7442056106083091060
+        - rid: 7442056106083091061
+        - rid: 7442056106083091062
+        - rid: 7442056106083091063
+        - rid: 7442056106083091064
+        - rid: 7442056106083091065
+        - rid: 7442056106083091066
+        - rid: 7442056106083091067
+        - rid: 7442056106083091068
+        - rid: 7442056106083091069
+        - rid: 7442056106083091070
+        - rid: 7442056106083091071
+        - rid: 7442056106083091072
+        - rid: 7442056106083091073
+        - rid: 7442056106083091074
+        - rid: 7442056106083091075
+        - rid: 7442056106083091076
+        - rid: 7442056106083091077
+        - rid: 7442056106083091078
+    - rid: 7442056106083091056
+      type: {class: VertexColorAdjustmentCollection, ns: UMA, asm: UMA_Core}
+      data:
+        vertexAdjustments:
+        - rid: 7442056106083091057
+        - rid: 7442056106083091058
+        - rid: 7442056106083091059
+        - rid: 7442056106083091060
+        - rid: 7442056106083091061
+        - rid: 7442056106083091062
+        - rid: 7442056106083091063
+        - rid: 7442056106083091064
+        - rid: 7442056106083091065
+        - rid: 7442056106083091066
+        - rid: 7442056106083091067
+        - rid: 7442056106083091068
+        - rid: 7442056106083091069
+        - rid: 7442056106083091070
+        - rid: 7442056106083091071
+        - rid: 7442056106083091072
+        - rid: 7442056106083091073
+        - rid: 7442056106083091074
+        - rid: 7442056106083091075
+        - rid: 7442056106083091076
+        - rid: 7442056106083091077
+        - rid: 7442056106083091078
+    - rid: 7442056106083091057
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 359
+        weight: 0.54
+        _name: Set Color
+        active: 1
+        slotName: UMA_Human_Female_Head_Mid_Slot
+        color:
+          serializedVersion: 2
+          rgba: 0
+    - rid: 7442056106083091058
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 361
+        weight: 0.54
+        _name: Set Color
+        active: 1
+        slotName: UMA_Human_Female_Head_Mid_Slot
+        color:
+          serializedVersion: 2
+          rgba: 0
+    - rid: 7442056106083091059
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 367
+        weight: 0.54
+        _name: Set Color
+        active: 1
+        slotName: UMA_Human_Female_Head_Mid_Slot
+        color:
+          serializedVersion: 2
+          rgba: 0
+    - rid: 7442056106083091060
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 369
+        weight: 0.54
+        _name: Set Color
+        active: 1
+        slotName: UMA_Human_Female_Head_Mid_Slot
+        color:
+          serializedVersion: 2
+          rgba: 0
+    - rid: 7442056106083091061
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 370
+        weight: 0.54
+        _name: Set Color
+        active: 1
+        slotName: UMA_Human_Female_Head_Mid_Slot
+        color:
+          serializedVersion: 2
+          rgba: 0
+    - rid: 7442056106083091062
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 371
+        weight: 0.54
+        _name: Set Color
+        active: 1
+        slotName: UMA_Human_Female_Head_Mid_Slot
+        color:
+          serializedVersion: 2
+          rgba: 0
+    - rid: 7442056106083091063
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 372
+        weight: 0.54
+        _name: Set Color
+        active: 1
+        slotName: UMA_Human_Female_Head_Mid_Slot
+        color:
+          serializedVersion: 2
+          rgba: 0
+    - rid: 7442056106083091064
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 373
+        weight: 0.54
+        _name: Set Color
+        active: 1
+        slotName: UMA_Human_Female_Head_Mid_Slot
+        color:
+          serializedVersion: 2
+          rgba: 0
+    - rid: 7442056106083091065
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 374
+        weight: 0.54
+        _name: Set Color
+        active: 1
+        slotName: UMA_Human_Female_Head_Mid_Slot
+        color:
+          serializedVersion: 2
+          rgba: 0
+    - rid: 7442056106083091066
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 375
+        weight: 0.54
+        _name: Set Color
+        active: 1
+        slotName: UMA_Human_Female_Head_Mid_Slot
+        color:
+          serializedVersion: 2
+          rgba: 0
+    - rid: 7442056106083091067
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 376
+        weight: 0.54
+        _name: Set Color
+        active: 1
+        slotName: UMA_Human_Female_Head_Mid_Slot
+        color:
+          serializedVersion: 2
+          rgba: 0
+    - rid: 7442056106083091068
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 377
+        weight: 0.54
+        _name: Set Color
+        active: 1
+        slotName: UMA_Human_Female_Head_Mid_Slot
+        color:
+          serializedVersion: 2
+          rgba: 0
+    - rid: 7442056106083091069
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 378
+        weight: 0.54
+        _name: Set Color
+        active: 1
+        slotName: UMA_Human_Female_Head_Mid_Slot
+        color:
+          serializedVersion: 2
+          rgba: 0
+    - rid: 7442056106083091070
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 379
+        weight: 0.54
+        _name: Set Color
+        active: 1
+        slotName: UMA_Human_Female_Head_Mid_Slot
+        color:
+          serializedVersion: 2
+          rgba: 0
+    - rid: 7442056106083091071
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 380
+        weight: 0.54
+        _name: Set Color
+        active: 1
+        slotName: UMA_Human_Female_Head_Mid_Slot
+        color:
+          serializedVersion: 2
+          rgba: 0
+    - rid: 7442056106083091072
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 384
+        weight: 0.54
+        _name: Set Color
+        active: 1
+        slotName: UMA_Human_Female_Head_Mid_Slot
+        color:
+          serializedVersion: 2
+          rgba: 0
+    - rid: 7442056106083091073
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2984
+        weight: 0.54
+        _name: Set Color
+        active: 1
+        slotName: UMA_Human_Female_Head_Mid_Slot
+        color:
+          serializedVersion: 2
+          rgba: 0
+    - rid: 7442056106083091074
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2987
+        weight: 0.54
+        _name: Set Color
+        active: 1
+        slotName: UMA_Human_Female_Head_Mid_Slot
+        color:
+          serializedVersion: 2
+          rgba: 0
+    - rid: 7442056106083091075
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2990
+        weight: 0.54
+        _name: Set Color
+        active: 1
+        slotName: UMA_Human_Female_Head_Mid_Slot
+        color:
+          serializedVersion: 2
+          rgba: 0
+    - rid: 7442056106083091076
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 3011
+        weight: 0.54
+        _name: Set Color
+        active: 1
+        slotName: UMA_Human_Female_Head_Mid_Slot
+        color:
+          serializedVersion: 2
+          rgba: 0
+    - rid: 7442056106083091077
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 3025
+        weight: 0.54
+        _name: Set Color
+        active: 1
+        slotName: UMA_Human_Female_Head_Mid_Slot
+        color:
+          serializedVersion: 2
+          rgba: 0
+    - rid: 7442056106083091078
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 3009
+        weight: 0.54
+        _name: Set Color
+        active: 1
+        slotName: UMA_Human_Female_Head_Mid_Slot
+        color:
+          serializedVersion: 2
+          rgba: 0

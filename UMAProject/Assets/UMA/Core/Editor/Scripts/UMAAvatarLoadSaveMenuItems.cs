@@ -898,6 +898,25 @@ namespace UMA.Editors
 			return Selection.objects != null && Selection.objects.Length > 0;
 		}
 
+		[MenuItem("Assets/UMA/Open in Texture Utilities", false, 2003)]
+		private static void OpenSelectedTexturesInTextureUtilitiesMenu()
+		{
+			var textures = GetSelectedTextures();
+			if (textures.Count == 0)
+			{
+				EditorUtility.DisplayDialog("Texture Utilities", "Select one or more Texture2D assets in the Project window.", "OK");
+				return;
+			}
+
+			UMATextureUtilitiesWindow.Open(textures);
+		}
+
+		[MenuItem("Assets/UMA/Open in Texture Utilities", true)]
+		private static bool OpenSelectedTexturesInTextureUtilitiesMenu_Validate()
+		{
+			return GetSelectedTextures().Count > 0;
+		}
+
 		[MenuItem("Assets/UMA/Convert selected textures to PNG", false, 2004)]
 		private static void ConvertSelectedTexturesToPngMenu()
 		{

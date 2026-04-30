@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: TongueRight
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: Tongue01
+    hash: 1278850178
+    position: {x: 2.64495611e-07, y: -2.81288521e-08, z: 7.18981028e-07}
+    rotation: {x: -1.54789994e-08, y: -2.67524891e-09, z: .086547032, w: .996287346}
+    scale: {x: .999999225, y: 1.00000036, z: .999999881}
+  - bone: Tongue02
+    hash: -718215880
+    position: {x: 0, y: -1.61757185e-09, z: -1.00730034e-07}
+    rotation: {x: 3.69631188e-08, y: -5.79656634e-09, z: -.17353867, w: .985271156}
+    scale: {x: 1.00000012, y: .999999464, z: 1.00000012}
+  tweenPoses: []
+  tweenWeights: []

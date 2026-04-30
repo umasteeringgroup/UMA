@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac718b8ce852d1445b8fbe5c323134ac, type: 3}
   m_Name: UMAMaterial_UMA_URP_HAIR
   m_EditorClassIdentifier: UMA_Core::UMA.UMAMaterial
-  _material: {fileID: 2100000, guid: 9872487463550f944853b0a1c92124ca, type: 2}
-  _secondPass: {fileID: 2100000, guid: 3e16755bdf3e18a42a5ef35a772363b3, type: 2}
-  materialType: 1
+  _material: {fileID: 2100000, guid: 39055ade9321e8c40b31784cc9332f4e, type: 2}
+  _secondPass: {fileID: 2100000, guid: 6eebbc33ce23fd343a1c99344fe0f8ba, type: 2}
+  materialType: 8
   channels:
-  - channelType: 0
+  - channelType: 3
     textureFormat: 0
     materialPropertyName: _BaseMap
     sourceTextureName: 
@@ -30,6 +30,12 @@ MonoBehaviour:
   MatFilterMode: 2
   Compression: 0
   shaderParms: []
+  shaderKeywords:
+  - _RootColor
+  - _BaseColor
+  - _Tip_Color
+  - _SpecularTint
+  - _AlphaClip
   MaskWithCurrentColor: 1
   maskMultiplier: {r: 1, g: 1, b: 1, a: 1}
   MaterialName: UMA_URP_HAIR_Pass1

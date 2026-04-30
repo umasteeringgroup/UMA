@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c86f7fb3ea5bac04a857e5f4a0b30077, type: 3}
+  m_Name: SweatPantAnklesMeshHideAsset
+  m_EditorClassIdentifier: 
+  _asset: {fileID: 0}
+  _assetSlotName: MaleLegs
+  _serializedFlags:
+  - flags: ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f8fffffffff3f00a90100208601feb97ff8ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff9ff7ffffffffffffffff0f080000000000fcf1fffdffffffff0f00
+    Count: 884

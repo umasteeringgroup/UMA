@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: EyesUp
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftEyeGlobe
+    hash: -326698209
+    position: {x: -8.72937278e-10, y: 7.10542736e-15, z: 1.21183291e-07}
+    rotation: {x: 1.94716065e-08, y: .257909417, z: -2.8369788e-14, w: .966736853}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftLowerLid
+    hash: 484878204
+    position: {x: -8.72937278e-10, y: 7.10542736e-15, z: 1.21183291e-07}
+    rotation: {x: 7.39828909e-09, y: .100526728, z: -2.65241717e-11, w: .995685399}
+    scale: {x: .999999881, y: 1, z: .99999994}
+  - bone: LeftUpperLid
+    hash: -209628701
+    position: {x: -8.72937278e-10, y: 7.10542736e-15, z: 1.21183291e-07}
+    rotation: {x: 3.8479202e-09, y: .0523359366, z: 8.90612562e-13, w: .99862951}
+    scale: {x: 1, y: 1, z: 1.00000012}
+  - bone: RightEyeGlobe
+    hash: 935779410
+    position: {x: -2.18839169e-09, y: 3.90798505e-14, z: 1.13751781e-07}
+    rotation: {x: 1.94715497e-08, y: .257908702, z: 2.15517945e-14, w: .966737032}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightLowerLid
+    hash: -945389519
+    position: {x: -2.18839169e-09, y: 3.90798505e-14, z: 1.13751781e-07}
+    rotation: {x: 8.01181699e-09, y: .100526787, z: 7.44481976e-11, w: .995685458}
+    scale: {x: .999999881, y: .999999821, z: .999999642}
+  - bone: RightUpperLid
+    hash: 683767470
+    position: {x: -2.18839169e-09, y: 3.90798505e-14, z: 1.13751781e-07}
+    rotation: {x: 3.8817789e-09, y: .0523359478, z: 2.07401023e-12, w: .99862951}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []

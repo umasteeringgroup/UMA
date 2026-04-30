@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: UpperLipUp
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftLipsSuperiorMiddle
+    hash: -1900485368
+    position: {x: -.00689985231, y: -.000668389723, z: .00253091753}
+    rotation: {x: 2.59224407e-07, y: -.00124192052, z: -3.39539554e-07, w: 1.00000072}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LipsSuperior
+    hash: -1089081410
+    position: {x: -.00644716434, y: 6.4028427e-10, z: .000139728189}
+    rotation: {x: 6.79502676e-08, y: -.00294829416, z: 5.14514376e-10, w: 1.00000381}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: LeftLips
+    hash: 1620479899
+    position: {x: .00166476518, y: 0, z: .00274513848}
+    rotation: {x: 1.09331522e-08, y: 9.5971231e-10, z: -4.65035743e-09, w: 1}
+    scale: {x: .999999762, y: 1, z: .999999881}
+  - bone: RightLips
+    hash: -1558564409
+    position: {x: .00166475773, y: 0, z: .00274514221}
+    rotation: {x: -1.78700468e-08, y: 1.56863433e-09, z: -4.99532238e-09, w: 1}
+    scale: {x: 1, y: 1, z: .999999881}
+  - bone: NoseBase
+    hash: -1184023893
+    position: {x: -.000299178064, y: 3.63797881e-11, z: -4.57465649e-06}
+    rotation: {x: 4.88684293e-08, y: -1.88737914e-15, z: -1.4668594e-13, w: 1}
+    scale: {x: 1, y: 1, z: 1.00000012}
+  - bone: RightLipsSuperiorMiddle
+    hash: -2093673696
+    position: {x: -.00689985044, y: .000668391585, z: .00253091753}
+    rotation: {x: -6.40451731e-07, y: -.00124169828, z: 1.16924775e-06, w: 1.00000072}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: UpperLips
+    hash: 891826736
+    position: {x: -.0035607703, y: 3.56521923e-10, z: -5.96046448e-08}
+    rotation: {x: .00138799811, y: 4.8426682e-05, z: 6.83981298e-08, w: 1.00000155}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []

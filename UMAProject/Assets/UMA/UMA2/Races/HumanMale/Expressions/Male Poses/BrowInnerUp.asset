@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: BrowInnerUp
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: LeftEyebrowLow
+    hash: 2129323926
+    position: {x: -2.52947211e-05, y: -1.86264515e-09, z: .00357813388}
+    rotation: {x: 1.35723852e-07, y: .086297214, z: -1.4659044e-09, w: .996424675}
+    scale: {x: 1, y: 1.00000012, z: 1.00000012}
+  - bone: LeftEyebrowMiddle
+    hash: -356417641
+    position: {x: -.00508581102, y: -3.7252903e-09, z: -.00108019263}
+    rotation: {x: -2.12838799e-07, y: -3.29038023e-08, z: -.0010475259, w: 1.00000083}
+    scale: {x: 1.00000012, y: 1.00000012, z: 1}
+  - bone: NoseTop
+    hash: 463827395
+    position: {x: -.00689659268, y: -.000108134969, z: -.000805921853}
+    rotation: {x: 4.20391152e-05, y: .053768944, z: 2.26334191e-06, w: .998781145}
+    scale: {x: 1, y: 1.00000012, z: 1}
+  - bone: RightEyebrowLow
+    hash: -1640515339
+    position: {x: -2.52872705e-05, y: 1.86264515e-09, z: .00357813388}
+    rotation: {x: -1.01871045e-07, y: .086297214, z: 4.61897542e-09, w: .996424675}
+    scale: {x: 1, y: 1.00000012, z: 1.00000012}
+  - bone: RightEyebrowMiddle
+    hash: 1695671804
+    position: {x: -.00508581102, y: 3.7252903e-09, z: -.00108019263}
+    rotation: {x: -1.77379221e-07, y: -3.30466676e-08, z: .00104752579, w: 1.00000072}
+    scale: {x: 1, y: 1.00000012, z: 1.00000012}
+  tweenPoses: []
+  tweenWeights: []

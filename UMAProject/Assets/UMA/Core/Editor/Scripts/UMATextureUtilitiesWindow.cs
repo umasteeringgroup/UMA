@@ -9,6 +9,79 @@ namespace UMA.Editors
 {
     public class UMATextureUtilitiesWindow : EditorWindow
     {
+        private class PresetNamePromptWindow : EditorWindow
+        {
+            private string presetName;
+            private Action<string> onSave;
+            private bool focused;
+
+            public static void Open(string initialName, Action<string> onSave)
+            {
+                PresetNamePromptWindow window = CreateInstance<PresetNamePromptWindow>();
+                window.titleContent = new GUIContent("Save Preset");
+                window.presetName = initialName ?? string.Empty;
+                window.onSave = onSave;
+                window.minSize = new Vector2(320f, 92f);
+                window.maxSize = new Vector2(320f, 92f);
+                window.ShowUtility();
+            }
+
+            private void OnGUI()
+            {
+                EditorGUILayout.LabelField("Preset Name");
+                GUI.SetNextControlName("PresetName");
+                presetName = EditorGUILayout.TextField(presetName);
+
+                if (!focused)
+                {
+                    focused = true;
+                    EditorGUI.FocusTextInControl("PresetName");
+                }
+
+                Event currentEvent = Event.current;
+                if (currentEvent.type == EventType.KeyDown)
+                {
+                    if (currentEvent.keyCode == KeyCode.Return || currentEvent.keyCode == KeyCode.KeypadEnter)
+                    {
+                        SaveAndClose();
+                        currentEvent.Use();
+                    }
+                    else if (currentEvent.keyCode == KeyCode.Escape)
+                    {
+                        Close();
+                        currentEvent.Use();
+                    }
+                }
+
+                EditorGUILayout.BeginHorizontal();
+                GUILayout.FlexibleSpace();
+                using (new EditorGUI.DisabledScope(string.IsNullOrWhiteSpace(presetName)))
+                {
+                    if (GUILayout.Button("Save", GUILayout.Width(80f)))
+                    {
+                        SaveAndClose();
+                    }
+                }
+                if (GUILayout.Button("Cancel", GUILayout.Width(80f)))
+                {
+                    Close();
+                }
+                EditorGUILayout.EndHorizontal();
+            }
+
+            private void SaveAndClose()
+            {
+                string trimmedName = presetName.Trim();
+                if (string.IsNullOrEmpty(trimmedName))
+                {
+                    return;
+                }
+
+                onSave?.Invoke(trimmedName);
+                Close();
+            }
+        }
+
         [Serializable]
         private class TextureParameterPreset
         {
@@ -17,6 +90,8 @@ namespace UMA.Editors
             public float contrast;
             public float saturation;
             public float hueDegrees;
+            public int alphaFillRadiusPixels;
+            public float alphaFillAlphaThreshold;
             public GradientMode gradientMode;
             public GradientFrom gradientFrom;
             public float solidPercent;
@@ -35,10 +110,32 @@ namespace UMA.Editors
             public List<TextureParameterPreset> presets = new List<TextureParameterPreset>();
         }
 
+        private class QueuedTextureState
+        {
+            public Texture2D workingTexture;
+            public bool dirty;
+        }
+
+        private class ColorDistributionStats
+        {
+            public readonly int[] luminanceHistogram = new int[256];
+            public int pixelCount;
+            public float luminanceSum;
+            public float saturationSum;
+            public float hueVectorX;
+            public float hueVectorY;
+            public float hueWeight;
+
+            public float MeanLuminance => pixelCount > 0 ? luminanceSum / pixelCount : 0f;
+            public float MeanSaturation => pixelCount > 0 ? saturationSum / pixelCount : 0f;
+        }
+
         private enum Tool
         {
             Split,
+            AdjustColors,
             AlphaGradient,
+            AlphaFill,
         }
 
         private enum SplitDirection
@@ -68,11 +165,28 @@ namespace UMA.Editors
             MatchHeight,
         }
 
+        private enum PreviewDisplayMode
+        {
+            Fit,
+            Actual,
+        }
+
         private const float ToolPanelWidth = 190f;
         private const float DroppedTextureListWidth = 220f;
+        private const float PreviewActualMinZoom = 0.25f;
+        private const float PreviewActualMaxZoom = 8f;
         private const int CheckerTile = 16;
         private const int BcsParallelPixelThreshold = 65536;
         private const int BcsParallelMinPixelsPerWorker = 16384;
+        private const int AutoMatchAlphaThreshold = 8;
+        private const float AutoMatchMinLuminanceSpread = 0.05f;
+        private const float AutoMatchMaxBrightness = 0.25f;
+        private const float AutoMatchBrightnessInfluence = 0.65f;
+        private const float AutoMatchContrastInfluence = 0.35f;
+        private const float AutoMatchMinContrast = -0.18f;
+        private const float AutoMatchMaxContrast = 0.22f;
+        private const float AutoMatchMaxSaturation = 0.9f;
+        private const float AutoMatchMaxHueDegrees = 90f;
         private const string PresetPrefsKey = "UMA.TextureUtilities.ParameterPresets";
         private static readonly Color CheckerLight = new Color(1f, 1f, 1f, 1f);
         private static readonly Color CheckerDark = new Color(0.75f, 0.75f, 0.75f, 1f);
@@ -85,11 +199,16 @@ namespace UMA.Editors
         private Texture2D currentTexture;     // editable RGBA32 working copy (the "current texture")
         private Texture2D previewTexture;     // displayed texture: currentTexture or BCS-adjusted copy
         private readonly List<Texture2D> droppedTextureAssets = new List<Texture2D>();
+        private readonly Dictionary<Texture2D, QueuedTextureState> queuedTextureStates = new Dictionary<Texture2D, QueuedTextureState>();
         private int selectedDroppedTextureIndex = -1;
         private bool dirty;                   // currentTexture has unsaved baked changes
         private bool showBackgroundTexture;
         private bool combineBackgroundOnSave;
         private BackgroundScaleMode backgroundScaleMode = BackgroundScaleMode.MatchWidth;
+        private PreviewDisplayMode previewDisplayMode = PreviewDisplayMode.Fit;
+        private Vector2 previewScroll;
+        private bool previewMousePanning;
+        private float previewActualZoom = 1f;
 
         // Cached pixel buffers used by live preview and destructive edits.
         private Color32[] cachedCurrentPixels;
@@ -135,9 +254,19 @@ namespace UMA.Editors
         private float lastRadialCenterOffsetHorizontalPercent = float.NaN;
         private float lastRadialCenterOffsetVerticalPercent = float.NaN;
 
+        // Alpha fill tool state
+        private int alphaFillRadiusPixels = 8;
+        private float alphaFillAlphaThreshold = 0.01f;
+
+        // Display-only quadrant visibility for the Adjust Colors tool.
+        private bool visibleAreaTopLeft = true;
+        private bool visibleAreaTopRight = true;
+        private bool visibleAreaBottomLeft = true;
+        private bool visibleAreaBottomRight = true;
+
         // Saved parameter presets
         private List<TextureParameterPreset> parameterPresets = new List<TextureParameterPreset>();
-        private string[] parameterPresetOptions = new[] { "(Current Settings)" };
+        private string[] parameterPresetOptions = new[] { "(No Presets)" };
         private int selectedParameterPresetIndex;
         private string presetName = string.Empty;
 
@@ -151,10 +280,22 @@ namespace UMA.Editors
         [MenuItem("UMA/Texture Utilities", priority = 25)]
         public static void ShowWindow()
         {
+            Open();
+        }
+
+        public static UMATextureUtilitiesWindow Open()
+        {
             var window = GetWindow<UMATextureUtilitiesWindow>();
             window.titleContent = new GUIContent("UMA Texture Utilities");
             window.minSize = new Vector2(720f, 480f);
             window.Show();
+            return window;
+        }
+
+        public static void Open(IList<Texture2D> textures)
+        {
+            UMATextureUtilitiesWindow window = Open();
+            window.AddDroppedTexturesAndLoadFirst(textures, "loading selected textures");
         }
 
         private void OnDisable()
@@ -162,6 +303,7 @@ namespace UMA.Editors
             InvalidateCachedPixels();
             DestroyTexture(ref currentTexture);
             DestroyTexture(ref previewTexture);
+            DestroyQueuedTextureStates();
         }
 
         private void OnEnable()
@@ -186,7 +328,9 @@ namespace UMA.Editors
             EditorGUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.Width(ToolPanelWidth), GUILayout.ExpandHeight(true));
             EditorGUILayout.LabelField("Tools", EditorStyles.boldLabel);
             DrawToolToggle(Tool.Split, "Split Texture");
+            DrawToolToggle(Tool.AdjustColors, "Adjust Colors");
             DrawToolToggle(Tool.AlphaGradient, "Alpha Gradient");
+            DrawToolToggle(Tool.AlphaFill, "Alpha Fill");
             GUILayout.FlexibleSpace();
             EditorGUILayout.LabelField("(More tools may be added here.)", EditorStyles.miniLabel);
             EditorGUILayout.EndVertical();
@@ -217,18 +361,17 @@ namespace UMA.Editors
             DrawBackgroundSection();
             EditorGUILayout.Space();
 
-            DrawParameterPresetSection();
-            EditorGUILayout.Space();
-
             DrawAdjustmentsSection();
             EditorGUILayout.Space();
 
-            EditorGUILayout.LabelField(currentTool == Tool.Split ? "Split Texture" : "Alpha Gradient", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField(GetToolLabel(currentTool), EditorStyles.boldLabel);
             GUIHelper.BeginVerticalPadded(8, new Color(0.85f, 0.92f, 1f), EditorStyles.helpBox);
             switch (currentTool)
             {
                 case Tool.Split: DrawSplitTool(); break;
+                case Tool.AdjustColors: DrawAdjustColorsTool(); break;
                 case Tool.AlphaGradient: DrawAlphaGradientTool(); break;
+                case Tool.AlphaFill: DrawAlphaFillTool(); break;
             }
             GUIHelper.EndVerticalPadded();
 
@@ -237,52 +380,32 @@ namespace UMA.Editors
             EditorGUILayout.EndVertical();
         }
 
-        private void DrawParameterPresetSection()
+        private static string GetToolLabel(Tool tool)
         {
-            EditorGUILayout.LabelField("Parameter Presets", EditorStyles.boldLabel);
-            GUIHelper.BeginVerticalPadded(8, new Color(0.9f, 0.96f, 0.9f), EditorStyles.helpBox);
-
-            EditorGUILayout.BeginHorizontal();
-            presetName = EditorGUILayout.TextField("Preset Name", presetName);
-            using (new EditorGUI.DisabledScope(string.IsNullOrWhiteSpace(presetName)))
+            switch (tool)
             {
-                if (GUILayout.Button("Save Current", GUILayout.Width(110f)))
-                {
-                    SaveCurrentPreset();
-                }
+                case Tool.Split: return "Split Texture";
+                case Tool.AdjustColors: return "Adjust Colors";
+                case Tool.AlphaGradient: return "Alpha Gradient";
+                case Tool.AlphaFill: return "Alpha Fill";
+                default: return tool.ToString();
             }
-            EditorGUILayout.EndHorizontal();
-
-            EditorGUI.BeginChangeCheck();
-            int newIndex = EditorGUILayout.Popup("Load Preset", selectedParameterPresetIndex, parameterPresetOptions);
-            if (EditorGUI.EndChangeCheck())
-            {
-                selectedParameterPresetIndex = newIndex;
-                if (selectedParameterPresetIndex > 0)
-                {
-                    ApplyPreset(parameterPresets[selectedParameterPresetIndex - 1]);
-                }
-            }
-
-            GUIHelper.EndVerticalPadded();
         }
 
         private void DrawHeaderBar()
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 
+            EditorGUI.BeginChangeCheck();
             Texture2D newAsset = (Texture2D)EditorGUILayout.ObjectField(sourceAsset, typeof(Texture2D), false, GUILayout.Width(220));
-            if (newAsset != sourceAsset)
+            if (EditorGUI.EndChangeCheck())
             {
                 TryLoadTextureAsset(newAsset, FindDroppedTextureIndex(newAsset), "loading a new texture");
             }
 
             if (GUILayout.Button("Load From Disk...", EditorStyles.toolbarButton, GUILayout.Width(120)))
             {
-                if (PromptSaveIfDirty("loading a new texture"))
-                {
-                    LoadFromDisk();
-                }
+                LoadFromDisk();
             }
 
             using (new EditorGUI.DisabledScope(currentTexture == null))
@@ -348,6 +471,7 @@ namespace UMA.Editors
             // Reserve a square-ish area sized to remaining space.
             float minHeight = 200f;
             float desired = Mathf.Max(minHeight, position.height * 0.5f);
+            DrawPreviewControls();
             EditorGUILayout.BeginHorizontal();
             if (droppedTextureAssets.Count > 0)
             {
@@ -369,31 +493,181 @@ namespace UMA.Editors
             Texture2D toShow = previewTexture != null ? previewTexture : currentTexture;
             if (toShow != null)
             {
-                Rect fit = FitRect(rect, toShow.width, toShow.height);
-                if (showBackgroundTexture && backgroundAsset != null)
+                if (previewDisplayMode == PreviewDisplayMode.Actual)
                 {
-                    Rect backgroundRect = FitBackgroundRect(fit, backgroundAsset.width, backgroundAsset.height, backgroundScaleMode);
-                    GUI.DrawTexture(backgroundRect, backgroundAsset, ScaleMode.StretchToFill, true);
+                    DrawActualPreview(rect, toShow);
                 }
-                GUI.DrawTexture(fit, toShow, ScaleMode.StretchToFill, true);
-            }
-            else if (showBackgroundTexture && backgroundAsset != null)
-            {
-                Rect fit = FitRect(rect, backgroundAsset.width, backgroundAsset.height);
-                GUI.DrawTexture(fit, backgroundAsset, ScaleMode.StretchToFill, true);
+                else
+                {
+                    DrawFitPreview(rect, toShow);
+                }
             }
             else
             {
+                if (showBackgroundTexture && backgroundAsset != null)
+                {
+                    Rect fit = FitRect(rect, backgroundAsset.width, backgroundAsset.height);
+                    GUI.DrawTexture(fit, backgroundAsset, ScaleMode.StretchToFill, true);
+                }
+
                 GUI.Label(rect, "No texture loaded.\nUse the Object field, Load From Disk, or drag a project texture here.", CenteredStyle());
             }
 
             HandlePreviewDragAndDrop(rect);
         }
 
+        private void DrawPreviewControls()
+        {
+            EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+            EditorGUILayout.LabelField("Display", GUILayout.Width(48f));
+            EditorGUI.BeginChangeCheck();
+            previewDisplayMode = (PreviewDisplayMode)GUILayout.Toolbar((int)previewDisplayMode, new[] { "Fit", "Actual" }, EditorStyles.toolbarButton, GUILayout.Width(130f));
+            if (EditorGUI.EndChangeCheck())
+            {
+                previewScroll = Vector2.zero;
+                previewMousePanning = false;
+            }
+
+            using (new EditorGUI.DisabledScope(previewDisplayMode != PreviewDisplayMode.Actual))
+            {
+                GUILayout.Space(8f);
+                EditorGUILayout.LabelField("Zoom", GUILayout.Width(36f));
+                EditorGUI.BeginChangeCheck();
+                previewActualZoom = EditorGUILayout.Slider(previewActualZoom, PreviewActualMinZoom, PreviewActualMaxZoom, GUILayout.Width(180f));
+                if (GUILayout.Button("1:1", EditorStyles.toolbarButton, GUILayout.Width(38f)))
+                {
+                    previewActualZoom = 1f;
+                }
+                if (EditorGUI.EndChangeCheck())
+                {
+                    previewActualZoom = Mathf.Clamp(previewActualZoom, PreviewActualMinZoom, PreviewActualMaxZoom);
+                }
+            }
+
+            GUILayout.FlexibleSpace();
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private void DrawFitPreview(Rect rect, Texture2D toShow)
+        {
+            Rect fit = FitRect(rect, toShow.width, toShow.height);
+            if (showBackgroundTexture && backgroundAsset != null)
+            {
+                Rect backgroundRect = FitBackgroundRect(fit, backgroundAsset.width, backgroundAsset.height, backgroundScaleMode);
+                GUI.DrawTexture(backgroundRect, backgroundAsset, ScaleMode.StretchToFill, true);
+            }
+
+            DrawPreviewTextureWithVisibleAreas(fit, toShow);
+        }
+
+        private void DrawActualPreview(Rect rect, Texture2D toShow)
+        {
+            float zoom = Mathf.Clamp(previewActualZoom, PreviewActualMinZoom, PreviewActualMaxZoom);
+            float contentWidth = Mathf.Max(1f, toShow.width * zoom);
+            float contentHeight = Mathf.Max(1f, toShow.height * zoom);
+            Rect viewRect = new Rect(0f, 0f, Mathf.Max(contentWidth, rect.width - 16f), Mathf.Max(contentHeight, rect.height - 16f));
+
+            HandleActualPreviewMousePan(rect, viewRect);
+
+            previewScroll = GUI.BeginScrollView(rect, previewScroll, viewRect, true, true);
+            Rect textureRect = new Rect(0f, 0f, contentWidth, contentHeight);
+            if (showBackgroundTexture && backgroundAsset != null)
+            {
+                Rect backgroundRect = FitBackgroundRect(textureRect, backgroundAsset.width, backgroundAsset.height, backgroundScaleMode);
+                GUI.DrawTexture(backgroundRect, backgroundAsset, ScaleMode.StretchToFill, true);
+            }
+
+            DrawPreviewTextureWithVisibleAreas(textureRect, toShow);
+            GUI.EndScrollView();
+        }
+
+        private void DrawPreviewTextureWithVisibleAreas(Rect textureRect, Texture2D texture)
+        {
+            if (!UseVisibleAreaMask())
+            {
+                GUI.DrawTexture(textureRect, texture, ScaleMode.StretchToFill, true);
+                return;
+            }
+
+            float halfWidth = textureRect.width * 0.5f;
+            float halfHeight = textureRect.height * 0.5f;
+            if (visibleAreaTopLeft)
+            {
+                GUI.DrawTextureWithTexCoords(new Rect(textureRect.x, textureRect.y, halfWidth, halfHeight), texture, new Rect(0f, 0.5f, 0.5f, 0.5f), true);
+            }
+            if (visibleAreaTopRight)
+            {
+                GUI.DrawTextureWithTexCoords(new Rect(textureRect.x + halfWidth, textureRect.y, halfWidth, halfHeight), texture, new Rect(0.5f, 0.5f, 0.5f, 0.5f), true);
+            }
+            if (visibleAreaBottomLeft)
+            {
+                GUI.DrawTextureWithTexCoords(new Rect(textureRect.x, textureRect.y + halfHeight, halfWidth, halfHeight), texture, new Rect(0f, 0f, 0.5f, 0.5f), true);
+            }
+            if (visibleAreaBottomRight)
+            {
+                GUI.DrawTextureWithTexCoords(new Rect(textureRect.x + halfWidth, textureRect.y + halfHeight, halfWidth, halfHeight), texture, new Rect(0.5f, 0f, 0.5f, 0.5f), true);
+            }
+        }
+
+        private bool UseVisibleAreaMask()
+        {
+            return currentTool == Tool.AdjustColors
+                && (!visibleAreaTopLeft || !visibleAreaTopRight || !visibleAreaBottomLeft || !visibleAreaBottomRight);
+        }
+
+        private void HandleActualPreviewMousePan(Rect rect, Rect viewRect)
+        {
+            int controlId = GUIUtility.GetControlID(FocusType.Passive);
+            Event evt = Event.current;
+            bool canPan = viewRect.width > rect.width || viewRect.height > rect.height;
+
+            if (canPan)
+            {
+                EditorGUIUtility.AddCursorRect(rect, MouseCursor.MoveArrow, controlId);
+            }
+
+            switch (evt.GetTypeForControl(controlId))
+            {
+                case EventType.MouseDown:
+                    if (canPan && rect.Contains(evt.mousePosition) && evt.button == 0)
+                    {
+                        previewMousePanning = true;
+                        GUIUtility.hotControl = controlId;
+                        evt.Use();
+                    }
+                    break;
+                case EventType.MouseDrag:
+                    if (previewMousePanning && GUIUtility.hotControl == controlId)
+                    {
+                        previewScroll = ClampPreviewScroll(previewScroll - evt.delta, rect, viewRect);
+                        evt.Use();
+                        Repaint();
+                    }
+                    break;
+                case EventType.MouseUp:
+                    if (previewMousePanning && GUIUtility.hotControl == controlId && evt.button == 0)
+                    {
+                        previewMousePanning = false;
+                        GUIUtility.hotControl = 0;
+                        evt.Use();
+                    }
+                    break;
+            }
+        }
+
+        private static Vector2 ClampPreviewScroll(Vector2 scroll, Rect rect, Rect viewRect)
+        {
+            float maxX = Mathf.Max(0f, viewRect.width - rect.width);
+            float maxY = Mathf.Max(0f, viewRect.height - rect.height);
+            scroll.x = Mathf.Clamp(scroll.x, 0f, maxX);
+            scroll.y = Mathf.Clamp(scroll.y, 0f, maxY);
+            return scroll;
+        }
+
         private void DrawDroppedTextureList(float height)
         {
             EditorGUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.Width(DroppedTextureListWidth), GUILayout.Height(height));
-            EditorGUILayout.LabelField("Dropped Textures", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Queue", EditorStyles.boldLabel);
             droppedTextureListScroll = EditorGUILayout.BeginScrollView(droppedTextureListScroll, GUILayout.ExpandHeight(true));
 
             for (int i = 0; i < droppedTextureAssets.Count; i++)
@@ -416,23 +690,30 @@ namespace UMA.Editors
             }
 
             Rect rowRect = EditorGUILayout.GetControlRect(false, EditorGUIUtility.singleLineHeight);
-            Rect fieldRect = new Rect(rowRect.x, rowRect.y, rowRect.width - 24f, rowRect.height);
+            Rect markerRect = new Rect(rowRect.x, rowRect.y, 24f, rowRect.height);
+            Rect fieldRect = new Rect(rowRect.x + 26f, rowRect.y, rowRect.width - 50f, rowRect.height);
             Rect removeRect = new Rect(rowRect.xMax - 20f, rowRect.y, 20f, rowRect.height);
-            bool isSelected = index == selectedDroppedTextureIndex && sourceAsset == texture;
-            if (Event.current.type == EventType.Repaint && isSelected)
+            bool isCurrent = index == selectedDroppedTextureIndex && sourceAsset == texture;
+            bool isDirty = IsQueuedTextureDirty(texture, index);
+            if (Event.current.type == EventType.Repaint && isCurrent)
             {
-                EditorGUI.DrawRect(rowRect, new Color(0.72f, 0.84f, 1f, 0.35f));
+                EditorGUI.DrawRect(rowRect, new Color(0.5f, 0.72f, 1f, 0.45f));
             }
+
+            Event currentEvent = Event.current;
+            if (currentEvent.type == EventType.MouseDown && currentEvent.button == 0 && rowRect.Contains(currentEvent.mousePosition) && !removeRect.Contains(currentEvent.mousePosition))
+            {
+                TryLoadTextureAsset(texture, index, "selecting a queued texture");
+                GUI.FocusControl(null);
+                currentEvent.Use();
+                GUIUtility.ExitGUI();
+            }
+
+            EditorGUI.LabelField(markerRect, (isCurrent ? ">" : " ") + (isDirty ? "*" : string.Empty), EditorStyles.boldLabel);
 
             EditorGUI.BeginDisabledGroup(true);
             EditorGUI.ObjectField(fieldRect, GUIContent.none, texture, typeof(Texture2D), false);
             EditorGUI.EndDisabledGroup();
-
-            if (GUI.Button(fieldRect, GUIContent.none, GUIStyle.none))
-            {
-                TryLoadTextureAsset(texture, index, "selecting a dropped texture");
-                GUI.FocusControl(null);
-            }
 
             if (GUI.Button(removeRect, "X"))
             {
@@ -466,10 +747,39 @@ namespace UMA.Editors
                     hueDegrees = 0f;
                     InvalidatePreview();
                 }
+                using (new EditorGUI.DisabledScope(backgroundAsset == null))
+                {
+                    if (GUILayout.Button("Auto-match", GUILayout.Width(95f)))
+                    {
+                        AutoMatchAdjustmentsToBackground();
+                    }
+                }
                 EditorGUILayout.EndHorizontal();
             }
 
+            EditorGUILayout.Space(4f);
+            DrawAdjustmentPresetControls();
+
             GUIHelper.EndVerticalPadded();
+        }
+
+        private void DrawAdjustmentPresetControls()
+        {
+            EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button("Save Preset", GUILayout.Width(100f)))
+            {
+                PromptAndSaveCurrentPreset();
+            }
+
+            using (new EditorGUI.DisabledScope(parameterPresets.Count == 0))
+            {
+                selectedParameterPresetIndex = EditorGUILayout.Popup(selectedParameterPresetIndex, parameterPresetOptions, GUILayout.MinWidth(120f));
+                if (GUILayout.Button("Apply", GUILayout.Width(70f)))
+                {
+                    ApplySelectedPreset();
+                }
+            }
+            EditorGUILayout.EndHorizontal();
         }
 
         private static void DrawHueStrip(float currentHueDegrees)
@@ -523,6 +833,25 @@ namespace UMA.Editors
             }
         }
 
+        private void DrawAdjustColorsTool()
+        {
+            EditorGUILayout.HelpBox("Adjust RGB preview controls without applying an alpha gradient. Visible Area only changes the preview display.", MessageType.Info);
+            EditorGUILayout.LabelField("Visible Area", EditorStyles.boldLabel);
+            EditorGUI.BeginChangeCheck();
+            EditorGUILayout.BeginHorizontal();
+            visibleAreaTopLeft = EditorGUILayout.ToggleLeft("Top Left", visibleAreaTopLeft, GUILayout.Width(90f));
+            visibleAreaTopRight = EditorGUILayout.ToggleLeft("Top Right", visibleAreaTopRight, GUILayout.Width(90f));
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.BeginHorizontal();
+            visibleAreaBottomLeft = EditorGUILayout.ToggleLeft("Bottom Left", visibleAreaBottomLeft, GUILayout.Width(90f));
+            visibleAreaBottomRight = EditorGUILayout.ToggleLeft("Bottom Right", visibleAreaBottomRight, GUILayout.Width(90f));
+            EditorGUILayout.EndHorizontal();
+            if (EditorGUI.EndChangeCheck())
+            {
+                Repaint();
+            }
+        }
+
         private void DrawAlphaGradientTool()
         {
             EditorGUILayout.HelpBox("Replaces the alpha channel of the current texture with a gradient mask. RGB is preserved. Linear mode uses 'Coming From' as the fully-opaque edge. Changes apply live as you adjust the values.", MessageType.Info);
@@ -563,6 +892,22 @@ namespace UMA.Editors
             }
         }
 
+        private void DrawAlphaFillTool()
+        {
+            EditorGUILayout.HelpBox("Fills RGB color into transparent padding from nearby opaque pixels while preserving the original alpha channel. Use it to reduce edge fringes and mip seam artifacts.", MessageType.Info);
+
+            alphaFillRadiusPixels = EditorGUILayout.IntSlider(new GUIContent("Radius (px)", "Maximum number of pixels to expand nearby RGB into transparent padding."), alphaFillRadiusPixels, 1, 256);
+            alphaFillAlphaThreshold = EditorGUILayout.Slider(new GUIContent("Alpha Threshold", "Pixels at or below this alpha receive nearby RGB; pixels above it are treated as color sources."), alphaFillAlphaThreshold, 0f, 1f);
+
+            using (new EditorGUI.DisabledScope(currentTexture == null))
+            {
+                if (GUILayout.Button("Apply Alpha Fill"))
+                {
+                    ApplyAlphaFill();
+                }
+            }
+        }
+
         private bool AreGradientSettingsChanged()
         {
             return !gradientApplied
@@ -578,14 +923,20 @@ namespace UMA.Editors
                 || !Mathf.Approximately(radialCenterOffsetVerticalPercent, lastRadialCenterOffsetVerticalPercent);
         }
 
-        private void SaveCurrentPreset()
+        private void PromptAndSaveCurrentPreset()
         {
-            string trimmedName = presetName.Trim();
-            if (string.IsNullOrEmpty(trimmedName))
+            string initialName = presetName;
+            if (selectedParameterPresetIndex >= 0 && selectedParameterPresetIndex < parameterPresets.Count)
             {
-                return;
+                initialName = parameterPresets[selectedParameterPresetIndex].name;
             }
 
+            PresetNamePromptWindow.Open(initialName, SaveCurrentPreset);
+        }
+
+        private void SaveCurrentPreset(string presetNameToSave)
+        {
+            string trimmedName = presetNameToSave.Trim();
             TextureParameterPreset preset = CreateCurrentPreset(trimmedName);
             int existingIndex = parameterPresets.FindIndex(p => string.Equals(p.name, trimmedName, StringComparison.OrdinalIgnoreCase));
             if (existingIndex >= 0)
@@ -600,6 +951,8 @@ namespace UMA.Editors
             parameterPresets.Sort((left, right) => string.Compare(left.name, right.name, StringComparison.OrdinalIgnoreCase));
             SaveParameterPresets();
             selectedParameterPresetIndex = GetPresetPopupIndex(trimmedName);
+            presetName = trimmedName;
+            Repaint();
         }
 
         private TextureParameterPreset CreateCurrentPreset(string name)
@@ -611,6 +964,8 @@ namespace UMA.Editors
                 contrast = contrast,
                 saturation = saturation,
                 hueDegrees = hueDegrees,
+                alphaFillRadiusPixels = alphaFillRadiusPixels,
+                alphaFillAlphaThreshold = alphaFillAlphaThreshold,
                 gradientMode = gradientMode,
                 gradientFrom = gradientFrom,
                 solidPercent = solidPercent,
@@ -636,17 +991,17 @@ namespace UMA.Editors
             contrast = preset.contrast;
             saturation = preset.saturation;
             hueDegrees = preset.hueDegrees;
-            gradientMode = preset.gradientMode;
-            gradientFrom = preset.gradientFrom;
-            solidPercent = preset.solidPercent;
-            gradientPercent = preset.gradientPercent;
-            radialSolidHorizontalPercent = preset.radialSolidHorizontalPercent;
-            radialSolidVerticalPercent = preset.radialSolidVerticalPercent;
-            radialGradientHorizontalPercent = preset.radialGradientHorizontalPercent;
-            radialGradientVerticalPercent = preset.radialGradientVerticalPercent;
-            radialCenterOffsetHorizontalPercent = preset.radialCenterOffsetHorizontalPercent;
-            radialCenterOffsetVerticalPercent = preset.radialCenterOffsetVerticalPercent;
             InvalidatePreview();
+        }
+
+        private void ApplySelectedPreset()
+        {
+            if (selectedParameterPresetIndex < 0 || selectedParameterPresetIndex >= parameterPresets.Count)
+            {
+                return;
+            }
+
+            ApplyPreset(parameterPresets[selectedParameterPresetIndex]);
         }
 
         private void LoadParameterPresets()
@@ -684,11 +1039,17 @@ namespace UMA.Editors
 
         private void RefreshParameterPresetOptions()
         {
-            parameterPresetOptions = new string[parameterPresets.Count + 1];
-            parameterPresetOptions[0] = "(Current Settings)";
+            if (parameterPresets.Count == 0)
+            {
+                parameterPresetOptions = new[] { "(No Presets)" };
+                selectedParameterPresetIndex = 0;
+                return;
+            }
+
+            parameterPresetOptions = new string[parameterPresets.Count];
             for (int i = 0; i < parameterPresets.Count; i++)
             {
-                parameterPresetOptions[i + 1] = parameterPresets[i].name;
+                parameterPresetOptions[i] = parameterPresets[i].name;
             }
 
             selectedParameterPresetIndex = Mathf.Clamp(selectedParameterPresetIndex, 0, parameterPresetOptions.Length - 1);
@@ -700,7 +1061,7 @@ namespace UMA.Editors
             {
                 if (string.Equals(parameterPresets[i].name, name, StringComparison.OrdinalIgnoreCase))
                 {
-                    return i + 1;
+                    return i;
                 }
             }
 
@@ -709,24 +1070,53 @@ namespace UMA.Editors
 
         // ---------- Loading / Saving ----------
 
-        private void LoadFromAsset(Texture2D asset)
+        private bool LoadFromAsset(Texture2D asset)
         {
+            Texture2D loadedTexture = null;
+            QueuedTextureState loadedState = null;
+            if (asset != null)
+            {
+                loadedState = GetQueuedTextureState(asset, false);
+                if (loadedState != null && loadedState.workingTexture != null)
+                {
+                    loadedTexture = loadedState.workingTexture;
+                }
+                else
+                {
+                    try
+                    {
+                        loadedTexture = MakeReadableCopy(asset);
+                    }
+                    catch (Exception ex)
+                    {
+                        EditorUtility.DisplayDialog("Load Texture", "Error: " + ex.Message, "OK");
+                        return false;
+                    }
+                }
+            }
+
             InvalidateCachedPixels();
             DestroyTexture(ref currentTexture);
             DestroyTexture(ref previewTexture);
-            dirty = false;
+            dirty = loadedState != null && loadedState.dirty;
             ResetAdjustments();
-            if (asset == null)
-            {
-                return;
-            }
-            currentTexture = MakeReadableCopy(asset);
+            previewScroll = Vector2.zero;
+            currentTexture = loadedTexture;
+            return true;
         }
 
         private void LoadFromDisk()
         {
             string path = EditorUtility.OpenFilePanel("Load Texture", Application.dataPath, "png,jpg,jpeg,tga,bmp");
             if (string.IsNullOrEmpty(path))
+            {
+                return;
+            }
+
+            Texture2D previousSourceAsset = sourceAsset;
+            int previousDroppedTextureIndex = selectedDroppedTextureIndex;
+            bool preservedCurrentQueuedTexture = PreserveCurrentQueuedTextureState();
+            if (!preservedCurrentQueuedTexture && !PromptSaveIfDirty("loading a new texture"))
             {
                 return;
             }
@@ -738,6 +1128,11 @@ namespace UMA.Editors
                 if (!ImageConversion.LoadImage(tex, bytes, false))
                 {
                     UnityEngine.Object.DestroyImmediate(tex);
+                    if (preservedCurrentQueuedTexture)
+                    {
+                        RestoreQueuedTextureState(previousSourceAsset, previousDroppedTextureIndex);
+                    }
+
                     EditorUtility.DisplayDialog("Load Texture", "Failed to load image at: " + path, "OK");
                     return;
                 }
@@ -749,11 +1144,17 @@ namespace UMA.Editors
                 selectedDroppedTextureIndex = -1;
                 currentTexture = tex;
                 currentTexture.name = Path.GetFileNameWithoutExtension(path);
-                dirty = false;
+                SetCurrentDirty(false);
                 ResetAdjustments();
+                previewScroll = Vector2.zero;
             }
             catch (Exception ex)
             {
+                if (preservedCurrentQueuedTexture)
+                {
+                    RestoreQueuedTextureState(previousSourceAsset, previousDroppedTextureIndex);
+                }
+
                 EditorUtility.DisplayDialog("Load Texture", "Error: " + ex.Message, "OK");
             }
         }
@@ -794,7 +1195,7 @@ namespace UMA.Editors
 
                 File.WriteAllBytes(path, png);
                 ImportIfInProject(path);
-                dirty = false;
+                SetCurrentDirty(false);
                 DestroyTexture(ref outputTexture);
                 EditorUtility.DisplayDialog("Save Texture", "Saved: " + path, "OK");
                 return true;
@@ -851,7 +1252,7 @@ namespace UMA.Editors
                 File.WriteAllBytes(absolutePath, png);
                 ImportIfInProject(absolutePath);
                 AssetDatabase.Refresh();
-                dirty = false;
+                SetCurrentDirty(false);
                 return true;
             }
             catch (Exception ex)
@@ -1070,7 +1471,7 @@ namespace UMA.Editors
 
             currentTexture.SetPixels32(pixels);
             currentTexture.Apply(false, false);
-            dirty = true;
+            SetCurrentDirty(true);
             gradientApplied = true;
             lastGradientMode = gradientMode;
             lastGradientFrom = gradientFrom;
@@ -1270,6 +1671,153 @@ namespace UMA.Editors
             return denominator <= epsilon ? 0f : 1f / denominator;
         }
 
+        // ---------- Alpha fill ----------
+
+        private void ApplyAlphaFill()
+        {
+            if (currentTexture == null)
+            {
+                return;
+            }
+
+            if (HasPendingAdjustments())
+            {
+                BakeAdjustmentsToCurrent();
+            }
+
+            EnsureCachedPixels();
+            int radiusPixels = Mathf.Clamp(alphaFillRadiusPixels, 1, 256);
+            bool changed = FillTransparentRgbFromNearestOpaque(
+                cachedCurrentPixels,
+                currentTexture.width,
+                currentTexture.height,
+                radiusPixels,
+                alphaFillAlphaThreshold);
+
+            if (!changed)
+            {
+                EditorUtility.DisplayDialog("Alpha Fill", "No pixels were filled. Try a larger radius or a lower alpha threshold.", "OK");
+                return;
+            }
+
+            currentTexture.SetPixels32(cachedCurrentPixels);
+            currentTexture.Apply(false, false);
+            SetCurrentDirty(true);
+            InvalidatePreview();
+        }
+
+        private static bool FillTransparentRgbFromNearestOpaque(Color32[] pixels, int width, int height, int radiusPixels, float alphaThreshold)
+        {
+            if (pixels == null || pixels.Length == 0 || width <= 0 || height <= 0 || radiusPixels <= 0)
+            {
+                return false;
+            }
+
+            int pixelCount = pixels.Length;
+            int threshold = Mathf.Clamp(Mathf.RoundToInt(Mathf.Clamp01(alphaThreshold) * 255f), 0, 254);
+            byte thresholdByte = (byte)threshold;
+            int[] distances = new int[pixelCount];
+            int[] queue = new int[pixelCount];
+            int head = 0;
+            int tail = 0;
+
+            for (int index = 0; index < pixelCount; index++)
+            {
+                if (pixels[index].a > thresholdByte)
+                {
+                    distances[index] = 0;
+                    queue[tail++] = index;
+                }
+                else
+                {
+                    distances[index] = -1;
+                }
+            }
+
+            if (tail == 0 || tail == pixelCount)
+            {
+                return false;
+            }
+
+            bool changed = false;
+            while (head < tail)
+            {
+                int sourceIndex = queue[head++];
+                int nextDistance = distances[sourceIndex] + 1;
+                if (nextDistance > radiusPixels)
+                {
+                    continue;
+                }
+
+                int x = sourceIndex % width;
+                int y = sourceIndex / width;
+                bool hasLeft = x > 0;
+                bool hasRight = x < width - 1;
+                bool hasDown = y > 0;
+                bool hasUp = y < height - 1;
+
+                if (hasLeft)
+                {
+                    changed |= TryQueueAlphaFillPixel(pixels, distances, queue, ref tail, sourceIndex, sourceIndex - 1, nextDistance);
+                }
+                if (hasRight)
+                {
+                    changed |= TryQueueAlphaFillPixel(pixels, distances, queue, ref tail, sourceIndex, sourceIndex + 1, nextDistance);
+                }
+                if (hasDown)
+                {
+                    changed |= TryQueueAlphaFillPixel(pixels, distances, queue, ref tail, sourceIndex, sourceIndex - width, nextDistance);
+                }
+                if (hasUp)
+                {
+                    changed |= TryQueueAlphaFillPixel(pixels, distances, queue, ref tail, sourceIndex, sourceIndex + width, nextDistance);
+                }
+                if (hasLeft && hasDown)
+                {
+                    changed |= TryQueueAlphaFillPixel(pixels, distances, queue, ref tail, sourceIndex, sourceIndex - width - 1, nextDistance);
+                }
+                if (hasRight && hasDown)
+                {
+                    changed |= TryQueueAlphaFillPixel(pixels, distances, queue, ref tail, sourceIndex, sourceIndex - width + 1, nextDistance);
+                }
+                if (hasLeft && hasUp)
+                {
+                    changed |= TryQueueAlphaFillPixel(pixels, distances, queue, ref tail, sourceIndex, sourceIndex + width - 1, nextDistance);
+                }
+                if (hasRight && hasUp)
+                {
+                    changed |= TryQueueAlphaFillPixel(pixels, distances, queue, ref tail, sourceIndex, sourceIndex + width + 1, nextDistance);
+                }
+            }
+
+            return changed;
+        }
+
+        private static bool TryQueueAlphaFillPixel(
+            Color32[] pixels,
+            int[] distances,
+            int[] queue,
+            ref int tail,
+            int sourceIndex,
+            int targetIndex,
+            int distance)
+        {
+            if (distances[targetIndex] >= 0)
+            {
+                return false;
+            }
+
+            Color32 source = pixels[sourceIndex];
+            Color32 target = pixels[targetIndex];
+            target.r = source.r;
+            target.g = source.g;
+            target.b = source.b;
+            pixels[targetIndex] = target;
+            distances[targetIndex] = distance;
+            queue[tail++] = targetIndex;
+            return true;
+        }
+
         // ---------- Adjustments (BCS) ----------
 
         private bool HasPendingAdjustments()
@@ -1341,9 +1889,140 @@ namespace UMA.Editors
             ApplyBcs32(cachedCurrentPixels, brightness, contrast, saturation, hueDegrees);
             currentTexture.SetPixels32(cachedCurrentPixels);
             currentTexture.Apply(false, false);
-            dirty = true;
+            SetCurrentDirty(true);
             ResetAdjustments();
             InvalidatePreview();
+        }
+
+        private void AutoMatchAdjustmentsToBackground()
+        {
+            if (currentTexture == null || backgroundAsset == null)
+            {
+                return;
+            }
+
+            Texture2D backgroundCopy = null;
+            try
+            {
+                EnsureCachedPixels();
+                ColorDistributionStats sourceStats = AnalyzeColorDistribution(cachedCurrentPixels);
+                backgroundCopy = MakeReadableCopy(backgroundAsset);
+                ColorDistributionStats targetStats = AnalyzeColorDistribution(backgroundCopy.GetPixels32());
+                if (sourceStats.pixelCount == 0 || targetStats.pixelCount == 0)
+                {
+                    EditorUtility.DisplayDialog("Auto-match", "Unable to analyze enough opaque pixels in the source or background texture.", "OK");
+                    return;
+                }
+
+                ApplyAutoMatchSettings(sourceStats, targetStats);
+            }
+            catch (Exception ex)
+            {
+                EditorUtility.DisplayDialog("Auto-match", "Error: " + ex.Message, "OK");
+            }
+            finally
+            {
+                DestroyTexture(ref backgroundCopy);
+            }
+        }
+
+        private void ApplyAutoMatchSettings(ColorDistributionStats sourceStats, ColorDistributionStats targetStats)
+        {
+            float sourceLow = GetHistogramPercentile(sourceStats.luminanceHistogram, sourceStats.pixelCount, 0.1f);
+            float sourceMid = GetHistogramPercentile(sourceStats.luminanceHistogram, sourceStats.pixelCount, 0.5f);
+            float sourceHigh = GetHistogramPercentile(sourceStats.luminanceHistogram, sourceStats.pixelCount, 0.9f);
+            float targetLow = GetHistogramPercentile(targetStats.luminanceHistogram, targetStats.pixelCount, 0.1f);
+            float targetMid = GetHistogramPercentile(targetStats.luminanceHistogram, targetStats.pixelCount, 0.5f);
+            float targetHigh = GetHistogramPercentile(targetStats.luminanceHistogram, targetStats.pixelCount, 0.9f);
+
+            float sourceSpread = Mathf.Max(AutoMatchMinLuminanceSpread, sourceHigh - sourceLow);
+            float targetSpread = Mathf.Max(AutoMatchMinLuminanceSpread, targetHigh - targetLow);
+            float rawContrastMultiplier = Mathf.Clamp(targetSpread / sourceSpread, 1f + AutoMatchMinContrast, 1f + AutoMatchMaxContrast);
+            float contrastMultiplier = Mathf.Lerp(1f, rawContrastMultiplier, AutoMatchContrastInfluence);
+
+            contrast = contrastMultiplier - 1f;
+            float brightnessOffset = ((targetMid - 0.5f) / contrastMultiplier) + 0.5f - sourceMid;
+            brightness = Mathf.Clamp(brightnessOffset * AutoMatchBrightnessInfluence, -AutoMatchMaxBrightness, AutoMatchMaxBrightness);
+            saturation = Mathf.Clamp((targetStats.MeanSaturation / Mathf.Max(0.05f, sourceStats.MeanSaturation)) - 1f, -AutoMatchMaxSaturation, AutoMatchMaxSaturation);
+
+            float sourceHue = GetCircularHueDegrees(sourceStats);
+            float targetHue = GetCircularHueDegrees(targetStats);
+            hueDegrees = Mathf.Clamp(Mathf.DeltaAngle(sourceHue, targetHue), -AutoMatchMaxHueDegrees, AutoMatchMaxHueDegrees);
+
+            InvalidatePreview();
+        }
+
+        private static ColorDistributionStats AnalyzeColorDistribution(Color32[] pixels)
+        {
+            ColorDistributionStats stats = new ColorDistributionStats();
+            if (pixels == null)
+            {
+                return stats;
+            }
+
+            const float inv255 = 1f / 255f;
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                Color32 pixel = pixels[i];
+                if (pixel.a <= AutoMatchAlphaThreshold)
+                {
+                    continue;
+                }
+
+                float r = pixel.r * inv255;
+                float g = pixel.g * inv255;
+                float b = pixel.b * inv255;
+                float luminance = Mathf.Clamp01((0.2126f * r) + (0.7152f * g) + (0.0722f * b));
+                int luminanceBin = Mathf.Clamp(Mathf.RoundToInt(luminance * 255f), 0, 255);
+                stats.luminanceHistogram[luminanceBin]++;
+                stats.luminanceSum += luminance;
+
+                Color.RGBToHSV(new Color(r, g, b, 1f), out float hue, out float saturationValue, out _);
+                stats.saturationSum += saturationValue;
+                if (saturationValue > 0.05f)
+                {
+                    float hueRadians = hue * Mathf.PI * 2f;
+                    stats.hueVectorX += Mathf.Cos(hueRadians) * saturationValue;
+                    stats.hueVectorY += Mathf.Sin(hueRadians) * saturationValue;
+                    stats.hueWeight += saturationValue;
+                }
+
+                stats.pixelCount++;
+            }
+
+            return stats;
+        }
+
+        private static float GetHistogramPercentile(int[] histogram, int pixelCount, float percentile)
+        {
+            if (histogram == null || histogram.Length == 0 || pixelCount <= 0)
+            {
+                return 0f;
+            }
+
+            int target = Mathf.Clamp(Mathf.RoundToInt((pixelCount - 1) * Mathf.Clamp01(percentile)), 0, pixelCount - 1);
+            int cumulative = 0;
+            for (int i = 0; i < histogram.Length; i++)
+            {
+                cumulative += histogram[i];
+                if (cumulative > target)
+                {
+                    return i / 255f;
+                }
+            }
+
+            return 1f;
+        }
+
+        private static float GetCircularHueDegrees(ColorDistributionStats stats)
+        {
+            if (stats == null || stats.hueWeight <= 1e-5f)
+            {
+                return 0f;
+            }
+
+            float degrees = Mathf.Atan2(stats.hueVectorY, stats.hueVectorX) * Mathf.Rad2Deg;
+            return degrees < 0f ? degrees + 360f : degrees;
         }
 
         private static void ApplyBcs32(Color32[] pixels, float b, float c, float s, float hueDeg)
@@ -1565,7 +2244,121 @@ namespace UMA.Editors
             return SaveCurrentAsPng();
         }
 
+        private QueuedTextureState GetQueuedTextureState(Texture2D texture, bool create)
+        {
+            if (texture == null)
+            {
+                return null;
+            }
+
+            if (!queuedTextureStates.TryGetValue(texture, out QueuedTextureState state) && create)
+            {
+                state = new QueuedTextureState();
+                queuedTextureStates.Add(texture, state);
+            }
+
+            return state;
+        }
+
+        private bool IsQueuedTextureDirty(Texture2D texture, int index)
+        {
+            if (texture == null)
+            {
+                return false;
+            }
+
+            if (index == selectedDroppedTextureIndex && texture == sourceAsset)
+            {
+                return dirty;
+            }
+
+            QueuedTextureState state = GetQueuedTextureState(texture, false);
+            return state != null && state.dirty;
+        }
+
+        private void SetCurrentDirty(bool isDirty)
+        {
+            dirty = isDirty;
+            if (sourceAsset == null || FindDroppedTextureIndex(sourceAsset) < 0)
+            {
+                return;
+            }
+
+            QueuedTextureState state = GetQueuedTextureState(sourceAsset, true);
+            state.dirty = isDirty;
+            if (currentTexture != null)
+            {
+                state.workingTexture = currentTexture;
+            }
+        }
+
+        private bool PreserveCurrentQueuedTextureState()
+        {
+            if (sourceAsset == null || currentTexture == null || FindDroppedTextureIndex(sourceAsset) < 0)
+            {
+                return false;
+            }
+
+            QueuedTextureState state = GetQueuedTextureState(sourceAsset, true);
+            if (state.workingTexture != currentTexture)
+            {
+                DestroyTexture(ref state.workingTexture);
+                state.workingTexture = currentTexture;
+            }
+
+            state.dirty = dirty;
+            currentTexture = null;
+            return true;
+        }
+
+        private bool RestoreQueuedTextureState(Texture2D asset, int droppedTextureIndex)
+        {
+            QueuedTextureState state = GetQueuedTextureState(asset, false);
+            if (state == null || state.workingTexture == null)
+            {
+                return false;
+            }
+
+            InvalidateCachedPixels();
+            DestroyTexture(ref previewTexture);
+            sourceAsset = asset;
+            selectedDroppedTextureIndex = droppedTextureIndex;
+            currentTexture = state.workingTexture;
+            dirty = state.dirty;
+            ResetAdjustments();
+            previewScroll = Vector2.zero;
+            return true;
+        }
+
+        private void DestroyQueuedTextureState(Texture2D texture, QueuedTextureState state)
+        {
+            if (texture != null)
+            {
+                queuedTextureStates.Remove(texture);
+            }
+
+            if (state != null)
+            {
+                DestroyTexture(ref state.workingTexture);
+            }
+        }
+
+        private void DestroyQueuedTextureStates()
+        {
+            foreach (QueuedTextureState state in queuedTextureStates.Values)
+            {
+                DestroyTexture(ref state.workingTexture);
+            }
+
+            queuedTextureStates.Clear();
+        }
+
         private bool TryLoadTextureAsset(Texture2D asset, int droppedTextureIndex, string action)
+        {
+            return TryLoadTextureAsset(asset, droppedTextureIndex, action, true);
+        }
+
+        private bool TryLoadTextureAsset(Texture2D asset, int droppedTextureIndex, string action, bool promptIfDirty)
         {
             if (asset == sourceAsset)
             {
@@ -1573,14 +2366,26 @@ namespace UMA.Editors
                 return true;
             }
 
-            if (!PromptSaveIfDirty(action))
+            Texture2D previousSourceAsset = sourceAsset;
+            int previousDroppedTextureIndex = selectedDroppedTextureIndex;
+            bool preservedCurrentQueuedTexture = PreserveCurrentQueuedTextureState();
+            if (!preservedCurrentQueuedTexture && promptIfDirty && !PromptSaveIfDirty(action))
             {
+                return false;
+            }
+
+            if (!LoadFromAsset(asset))
+            {
+                if (preservedCurrentQueuedTexture)
+                {
+                    RestoreQueuedTextureState(previousSourceAsset, previousDroppedTextureIndex);
+                }
+
                 return false;
             }
 
             sourceAsset = asset;
             selectedDroppedTextureIndex = droppedTextureIndex;
-            LoadFromAsset(sourceAsset);
             return true;
         }
 
@@ -1621,22 +2426,48 @@ namespace UMA.Editors
             return firstTextureIndex;
         }
 
-        private void RemoveDroppedTextureAt(int index)
+        private bool RemoveDroppedTextureAt(int index)
         {
             if (index < 0 || index >= droppedTextureAssets.Count)
             {
-                return;
+                return false;
             }
 
-            droppedTextureAssets.RemoveAt(index);
-            if (selectedDroppedTextureIndex == index)
+            Texture2D removedTexture = droppedTextureAssets[index];
+            bool removingCurrent = index == selectedDroppedTextureIndex || removedTexture == sourceAsset;
+            if (removingCurrent && !PromptSaveIfDirty("removing the current texture"))
             {
-                selectedDroppedTextureIndex = -1;
+                return false;
             }
-            else if (selectedDroppedTextureIndex > index)
+
+            QueuedTextureState removedState = GetQueuedTextureState(removedTexture, false);
+
+            droppedTextureAssets.RemoveAt(index);
+            if (removingCurrent)
+            {
+                if (droppedTextureAssets.Count == 0)
+                {
+                    TryLoadTextureAsset(null, -1, "clearing the current texture", false);
+                }
+                else
+                {
+                    int nextIndex = index < droppedTextureAssets.Count ? index : 0;
+                    TryLoadTextureAsset(droppedTextureAssets[nextIndex], nextIndex, "loading the next queued texture", false);
+                }
+
+                DestroyQueuedTextureState(removedTexture, removedState);
+                Repaint();
+                return true;
+            }
+
+            DestroyQueuedTextureState(removedTexture, removedState);
+            if (selectedDroppedTextureIndex > index)
             {
                 selectedDroppedTextureIndex--;
             }
+
+            Repaint();
+            return true;
         }
 
         private void HandlePreviewDragAndDrop(Rect dropArea)
@@ -1662,14 +2493,25 @@ namespace UMA.Editors
             if (currentEvent.type == EventType.DragPerform)
             {
                 DragAndDrop.AcceptDrag();
-                int firstTextureIndex = AddDroppedTextures(droppedTextures);
-                if (firstTextureIndex >= 0)
-                {
-                    TryLoadTextureAsset(droppedTextureAssets[firstTextureIndex], firstTextureIndex, "loading a new texture");
-                }
+                AddDroppedTexturesAndLoadFirst(droppedTextures, "loading a new texture");
             }
 
             currentEvent.Use();
+        }
+
+        private void AddDroppedTexturesAndLoadFirst(IList<Texture2D> textures, string action)
+        {
+            if (textures == null || textures.Count == 0)
+            {
+                return;
+            }
+
+            int firstTextureIndex = AddDroppedTextures(textures);
+            if (firstTextureIndex >= 0)
+            {
+                TryLoadTextureAsset(droppedTextureAssets[firstTextureIndex], firstTextureIndex, action);
+                Repaint();
+            }
         }
 
         private static List<Texture2D> GetDroppedProjectTextures()
@@ -1778,6 +2620,10 @@ namespace UMA.Editors
                     alignment = TextAnchor.MiddleCenter,
                     wordWrap = true,
                 };
+                s_centered.normal.textColor = Color.black;
+                s_centered.hover.textColor = Color.black;
+                s_centered.active.textColor = Color.black;
+                s_centered.focused.textColor = Color.black;
             }
             return s_centered;
         }

@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: TongueUp
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: Tongue02
+    hash: -718215880
+    position: {x: -3.7252903e-09, y: -4.66959804e-13, z: 1.164153e-09}
+    rotation: {x: -7.93651864e-08, y: -.250361145, z: -8.76619666e-09, w: .968301833}
+    scale: {x: 1, y: 1.00000048, z: 1}
+  tweenPoses: []
+  tweenWeights: []

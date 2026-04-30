@@ -2,7 +2,7 @@
     "slotName": "UMA30_Body",
     "RootBone": "Global",
     "createOverlay": false,
-    "createRecipe": false,
+    "createRecipe": true,
     "isBaseRaceRecipe": false,
     "addToGlobalLibrary": false,
     "binarySerialization": true,
@@ -29,7 +29,7 @@
     "alwaysRecreateSlots": true,
     "Tags": [],
     "slotMaterialPath": "Assets/UMA/Core/ShaderPackages/UMAMaterial_UMA_URP_HAIR.asset",
-    "slotFolderPath": "",
+    "slotFolderPath": "Assets/Temp",
     "generateSlotLods": true,
     "useUnityLodGenerator": true,
     "slotLodMaxLevels": 8,
@@ -45,7 +45,7 @@
     "filterIgnoreMeshesContaining": "",
     "filterOnlyIncludeMeshesEnabled": false,
     "filterOnlyIncludeMeshesContaining": "robe",
-    "lastDroppedFbxPath": "Assets/Temp/UMA_3_all.fbx",
-    "pendingSmrsCompactView": false,
+    "lastDroppedFbxPath": "Assets/Temp/UMA_3_Clothing_Hair_all.fbx",
+    "pendingSmrsCompactView": true,
     "pendingSmrsFilterEnabled": false
 }

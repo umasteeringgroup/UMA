@@ -150,7 +150,20 @@ namespace UMA.Editors
                                 {
                                     continue;
                                 }
-                                if (mat.name.StartsWith(source.material.name) && mat.shader == source.material.shader)
+                                string sourceMatName = source.material.name;
+                                // If the source material has a second pass, we will ignore _Pass1 and _Pass2 suffixes when matching to the materials on the renderer, to allow for two pass shader setups.
+                                if (source.secondPass != null)
+                                {
+                                    if (source.material.name.ToLowerInvariant().EndsWith("_pass1"))
+                                    {
+                                        sourceMatName = source.material.name.Substring(0, source.material.name.Length - "_Pass1".Length);
+                                    }
+                                    else if (source.material.name.ToLowerInvariant().EndsWith("_pass2"))
+                                    {
+                                        sourceMatName = source.material.name.Substring(0, source.material.name.Length - "_Pass2".Length);
+                                    }
+                                }
+                                if (mat.name.StartsWith(sourceMatName) && mat.shader == source.material.shader)
                                 {
                                     List<KeyValuePair<string,Texture>> savedTextures = new List<KeyValuePair<string,Texture>>();
                                     foreach (var chan in source.channels)

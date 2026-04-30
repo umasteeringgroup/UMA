@@ -26,10 +26,19 @@ namespace UnityEditor.ShaderGraph.Samples
             return 48;
         }
 
+        private static bool IsPerRendererData(MaterialProperty prop)
+        {
+#if UNITY_6000_1_OR_NEWER
+            return (prop.propertyFlags & UnityEngine.Rendering.ShaderPropertyFlags.PerRendererData) != 0;
+#else
+            return (prop.flags & MaterialProperty.PropFlags.PerRendererData) != 0;
+#endif
+        }
+
         public override void OnGUI(Rect position, MaterialProperty prop, String label, MaterialEditor editor)
         {
             editor.BeginAnimatedCheck(position, prop);
-            using (new EditorGUI.DisabledScope((prop.propertyFlags & UnityEngine.Rendering.ShaderPropertyFlags.PerRendererData) != 0))
+            using (new EditorGUI.DisabledScope(IsPerRendererData(prop)))
             {
                 MaterialEditor.BeginProperty(position, prop);
                 float labelWidth = EditorGUIUtility.labelWidth;
