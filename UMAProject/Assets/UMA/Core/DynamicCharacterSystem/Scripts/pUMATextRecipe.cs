@@ -3,7 +3,6 @@ using System;
 using System.Reflection;
 using System.Collections.Generic;
 using UMA.CharacterSystem;
-using System.Linq.Expressions;
 
 namespace UMA
 {

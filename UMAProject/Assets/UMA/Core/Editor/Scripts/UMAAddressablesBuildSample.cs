@@ -5,7 +5,6 @@ using UMA;
 using System;
 using UnityEditor.Build.Reporting;
 using UnityEditor;
-using System.Linq;
 using System.IO;
 
 namespace UMA
@@ -60,9 +59,15 @@ public class UMAAddressablesBuildSample
         {
             Directory.CreateDirectory(path);
         }
+        EditorBuildSettingsScene[] editorScenes = EditorBuildSettings.scenes;
+        string[] scenePaths = new string[editorScenes.Length];
+        for (int sceneIndex = 0; sceneIndex < editorScenes.Length; sceneIndex++)
+        {
+            scenePaths[sceneIndex] = editorScenes[sceneIndex].path;
+        }
         var buildPlayerOptions = new BuildPlayerOptions()
         {
-            scenes = EditorBuildSettings.scenes.Select(scene => scene.path.ToString()).ToArray(),
+            scenes = scenePaths,
             locationPathName = pathName,
             target = EditorUserBuildSettings.activeBuildTarget,
             options = buildOptions

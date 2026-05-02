@@ -1,4 +1,4 @@
-﻿#define UMA_COMPRESS_HIDDENVERTEXESBYUV
+#define UMA_COMPRESS_HIDDENVERTEXESBYUV
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
@@ -47,7 +47,7 @@ namespace UMA
         public bool NeedsRebuildFromUV()
         {
             var sda = asset;
-            if (sda == null || sda.meshData == null)
+            if (sda == null || UMAMeshData.IsNullOrEmptyMeshData(sda.meshData))
             {
                 return false;
             }
@@ -63,7 +63,7 @@ namespace UMA
         public void UpdateEditorHashAndUVMaskFromFlags()
         {
             var sda = asset;
-            if (sda == null || sda.meshData == null)
+            if (sda == null || UMAMeshData.IsNullOrEmptyMeshData(sda.meshData))
             {
                 return;
             }
@@ -151,7 +151,7 @@ namespace UMA
         public void RebuildFlagsFromEditorUVMask()
         {
             var sda = asset;
-            if (sda == null || sda.meshData == null)
+            if (sda == null || UMAMeshData.IsNullOrEmptyMeshData(sda.meshData))
             {
                 return;
             }
@@ -627,7 +627,7 @@ namespace UMA
                 return;
             }
 
-            if (slot.meshData == null)
+            if (UMAMeshData.IsNullOrEmptyMeshData(slot.meshData))
             {
                 return;
             }
@@ -713,7 +713,7 @@ namespace UMA
         // LOD helpers
         public int GetLODCount()
         {
-            if (asset == null || asset.meshData == null || asset.subMeshIndex < 0 || asset.subMeshIndex >= asset.meshData.subMeshCount)
+            if (asset == null || UMAMeshData.IsNullOrEmptyMeshData(asset.meshData) || asset.subMeshIndex < 0 || asset.subMeshIndex >= asset.meshData.subMeshCount)
             {
                 return 1;
             }
@@ -744,7 +744,7 @@ namespace UMA
 
         private void EnsureLODAllocated(int lod)
         {
-            if (asset == null || asset.meshData == null) return;
+            if (asset == null || UMAMeshData.IsNullOrEmptyMeshData(asset.meshData)) return;
             if (_triangleFlagsPerLOD.ContainsKey(lod)) return;
 
             var perSubmesh = new BitArray[asset.meshData.subMeshCount];
@@ -759,7 +759,7 @@ namespace UMA
         private static HashSet<int> BuildHiddenVertexSet(BitArray[] mask, UMAMeshData meshData, int submesh, int lod)
         {
             var set = new HashSet<int>();
-            if (mask == null || meshData == null) return set;
+            if (mask == null || UMAMeshData.IsNullOrEmptyMeshData(meshData)) return set;
 #if UNITY_6000_2_OR_NEWER
             var tris = meshData.submeshes[submesh].GetTriangles(lod);
 #else
@@ -788,7 +788,7 @@ namespace UMA
                 return _triangleFlags;
             }
 
-            if (asset == null || asset.meshData == null)
+            if (asset == null || UMAMeshData.IsNullOrEmptyMeshData(asset.meshData))
             {
                 return _triangleFlags;
             }
@@ -823,7 +823,7 @@ namespace UMA
 
         public void SaveSelectionForLOD(BitArray selection, int lod)
         {
-            if (asset == null || asset.meshData == null) return;
+            if (asset == null || UMAMeshData.IsNullOrEmptyMeshData(asset.meshData)) return;
 
             if (lod <= 0)
             {
@@ -853,7 +853,7 @@ namespace UMA
 
         public void CopyLODMask(int fromLOD, int toLOD, bool replaceDestination, TriangleHideStrategy mode)
         {
-            if (asset == null || asset.meshData == null) return;
+            if (asset == null || UMAMeshData.IsNullOrEmptyMeshData(asset.meshData)) return;
             if (fromLOD == toLOD) return;
 
             EnsureLODAllocated(toLOD);

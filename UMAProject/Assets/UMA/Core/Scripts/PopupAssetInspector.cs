@@ -1,7 +1,6 @@
 #if UNITY_EDITOR
 using UnityEngine;
 using UnityEditor;
-using System.Linq;
 
 namespace UMA
 {
@@ -17,7 +16,16 @@ namespace UMA
         public static PopUpAssetInspector Create(Object asset)
         {
             EditorWindow[] windows = Resources.FindObjectsOfTypeAll<EditorWindow>();
-            var gameWindow = windows.FirstOrDefault(e => e.titleContent.text.Contains("Inspector"));
+            EditorWindow gameWindow = null;
+            for (int windowIndex = 0; windowIndex < windows.Length; windowIndex++)
+            {
+                EditorWindow candidateWindow = windows[windowIndex];
+                if (candidateWindow != null && candidateWindow.titleContent.text.Contains("Inspector"))
+                {
+                    gameWindow = candidateWindow;
+                    break;
+                }
+            }
             PopUpAssetInspector window = null;
             if (gameWindow != null)
             {

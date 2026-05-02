@@ -18,7 +18,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UMA.PoseTools;//so we can set the expression set based on the race
 using UnityEngine.SceneManagement;
-using Codice.Client.Common.GameUI;
 
 #if UMA_ADDRESSABLES
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -166,6 +165,9 @@ namespace UMA.CharacterSystem
         //This will generate itself from a list available Races and set itself to the current value of activeRace.name
         [Tooltip("Selects the race to used. When initialized, the Avatar will use the base recipe from the RaceData selected.")]
         public RaceSetter activeRace = new RaceSetter();
+
+        [NonSerialized]
+        private UMAFbxRouteRuntime fbxRouteRuntime;
 
         //To determine what recipes from a previous race can be applied to a the new race (on race change) sometimes we need to know what the previous race was
         //for example when a wardrobe collection is applied to a race, when the race changes we need to know if a given current slot was set because the wardrobe collection was compatible with the previous race.
@@ -772,12 +774,46 @@ namespace UMA.CharacterSystem
             for(int i=0;i<transformcount;i++)
             {
                 Transform t = parent.transform.GetChild(i);
-                if (t.GetComponent<SkinnedMeshRenderer>() != null)
+                if (t.GetComponent<SkinnedMeshRenderer>() != null && !IsFbxRouteRendererObject(t.gameObject))
                 {
                     objs.Add(t.gameObject);
                 }
             }
             return objs;
+        }
+
+        public bool IsFbxRouteRendererObject(GameObject rendererObject)
+        {
+            UMAFbxRouteRuntime routeRuntime = fbxRouteRuntime != null ? fbxRouteRuntime : GetComponent<UMAFbxRouteRuntime>();
+            if (routeRuntime != null && routeRuntime.OwnsRendererGameObject(rendererObject))
+            {
+                return true;
+            }
+
+            RaceData raceData = activeRace != null ? activeRace.racedata : null;
+            if (raceData == null || !raceData.UsesFbxRoute || raceData.baseFbxRenderer == null)
+            {
+                return false;
+            }
+
+            string expectedName = raceData.baseFbxRenderer.transform.root.gameObject.name + " (FBX Route)";
+            Transform current = rendererObject != null ? rendererObject.transform : null;
+            while (current != null && current != transform)
+            {
+                if (IsFbxRouteInstanceName(current.gameObject.name, expectedName))
+                {
+                    return true;
+                }
+
+                current = current.parent;
+            }
+
+            return false;
+        }
+
+        private static bool IsFbxRouteInstanceName(string objectName, string expectedName)
+        {
+            return objectName == expectedName || (!string.IsNullOrEmpty(objectName) && objectName.StartsWith(expectedName + " (", StringComparison.Ordinal));
         }
 
         public void InitializeFromPreset(UMAPreset preset)
@@ -972,6 +1008,7 @@ namespace UMA.CharacterSystem
 
         public void SetRenderers(bool val)
         {
+            SetFbxRouteRendererVisible(!hide);
             if (RendererCount > 0)
             {
                 SkinnedMeshRenderer frenderer = GetRenderer(0);
@@ -1028,8 +1065,9 @@ namespace UMA.CharacterSystem
         private void UnhideRenderers(UMAData data)
         {
             umaData.OnCharacterUpdated -= UnhideRenderers;
+            SetFbxRouteRendererVisible(true);
             SkinnedMeshRenderer frenderer = umaData.GetRenderer(0);
-            if (!frenderer.enabled && hide == false)
+            if (frenderer != null && !frenderer.enabled && hide == false)
             {
                 SkinnedMeshRenderer[] array = umaData.GetRenderers();
                 for (int i = 0; i < array.Length; i++)
@@ -1621,7 +1659,7 @@ namespace UMA.CharacterSystem
             if (activeRace.data != null && activeRace.name == activeRace.racedata.raceName)
             {
                 activeRace.name = activeRace.racedata.raceName;
-                serializedRecipe = activeRace.racedata.baseRaceRecipe;
+                serializedRecipe = GetBuildBaseRecipe(activeRace.racedata);
             }
             //otherwise...
             else if (activeRace.name != "")
@@ -1629,12 +1667,26 @@ namespace UMA.CharacterSystem
                 activeRace.data = UMAAssetIndexer.Instance.GetRace(activeRace.name);
                 if (activeRace.racedata != null)
                 {
-                    serializedRecipe = activeRace.racedata.baseRaceRecipe;
+                    serializedRecipe = GetBuildBaseRecipe(activeRace.racedata);
                 }
             }
             //if we are loading an old UMARecipe from the recipe field and the old race is not in resources the race will be null but the recipe wont be 
             if (serializedRecipe == null)
             {
+                if (activeRace.racedata != null && activeRace.racedata.UsesFbxRoute)
+                {
+                    if (activeRace.racedata.HasValidFbxRoute)
+                    {
+                        return true;
+                    }
+#if UNITY_EDITOR
+                    if (Debug.isDebugBuild)
+                    {
+                        Debug.LogWarning("[SetActiveRace] Race " + activeRace.name + " is using the FBX route, but no base FBX SkinnedMeshRenderer is assigned.");
+                    }
+#endif
+                    return false;
+                }
 #if UNITY_EDITOR
                 if (Debug.isDebugBuild)
                 {
@@ -1644,6 +1696,74 @@ namespace UMA.CharacterSystem
                 return false;
             }
             return true;
+        }
+
+        private static UMARecipeBase GetBuildBaseRecipe(RaceData raceData)
+        {
+            if (raceData == null || raceData.UsesFbxRoute)
+            {
+                return null;
+            }
+
+            return raceData.baseRaceRecipe;
+        }
+
+        private UMAFbxRouteRuntime GetOrCreateFbxRouteRuntime()
+        {
+            if (fbxRouteRuntime == null)
+            {
+                fbxRouteRuntime = GetComponent<UMAFbxRouteRuntime>();
+            }
+            if (fbxRouteRuntime == null)
+            {
+                fbxRouteRuntime = gameObject.AddComponent<UMAFbxRouteRuntime>();
+            }
+            return fbxRouteRuntime;
+        }
+
+        private bool PrepareFbxRouteRuntime(RaceData raceData)
+        {
+            UMAFbxRouteRuntime routeRuntime = GetOrCreateFbxRouteRuntime();
+            if (!routeRuntime.Prepare(raceData, umaData))
+            {
+#if UNITY_EDITOR
+                Debug.LogWarning("[DynamicCharacterAvatar] Unable to prepare FBX route for race " + (raceData != null ? raceData.raceName : "<null>") + ".");
+#endif
+                return false;
+            }
+
+            routeRuntime.SetBaseRendererVisible(!hide);
+            return true;
+        }
+
+        private void ClearFbxRouteRuntime()
+        {
+            if (fbxRouteRuntime == null)
+            {
+                fbxRouteRuntime = GetComponent<UMAFbxRouteRuntime>();
+            }
+
+            if (fbxRouteRuntime != null)
+            {
+                fbxRouteRuntime.Teardown(umaData);
+            }
+            else if (umaData != null)
+            {
+                umaData.ClearExternalSkeletonRoot();
+            }
+        }
+
+        private void SetFbxRouteRendererVisible(bool visible)
+        {
+            if (fbxRouteRuntime == null)
+            {
+                fbxRouteRuntime = GetComponent<UMAFbxRouteRuntime>();
+            }
+
+            if (fbxRouteRuntime != null)
+            {
+                fbxRouteRuntime.SetBaseRendererVisible(visible);
+            }
         }
 
         public void ChangeRace(string racename, bool force)
@@ -1804,6 +1924,11 @@ namespace UMA.CharacterSystem
                     thisLoadFlags &= ~LoadOptions.loadWardrobeColors;
                     RestoreCachedWardrobeColors(false, true);
                     _wardrobeRecipes.Clear();
+                }
+                if (race.UsesFbxRoute)
+                {
+                    BuildCharacter(false, !BundleCheck);
+                    return;
                 }
                 //by setting 'ForceDCSLoad' to true the loaded race will always be loaded like a new uma rather than the old uma way
                 OldImportSettings(UMATextRecipe.PackedLoadDCS((race.baseRaceRecipe as UMATextRecipe).recipeString), thisLoadFlags, true);
@@ -3149,12 +3274,17 @@ namespace UMA.CharacterSystem
                 Debug.Log("No raceData found for " + activeRace.name);
                 return bodyColorNames;
             }
-            if (activeRace.data.baseRaceRecipe == null)
+            if (activeRace.data.UsesFbxRoute)
+            {
+                return bodyColorNames;
+            }
+            UMATextRecipe textRecipe = activeRace.data.baseRaceRecipe as UMATextRecipe;
+            if (textRecipe == null)
             {
                 Debug.Log("No baseRaceRecipe found for " + activeRace.name);
                 return bodyColorNames;
             }
-            var baseRaceRecipeTemp = UMATextRecipe.PackedLoadDCS((activeRace.data.baseRaceRecipe as UMATextRecipe).recipeString);
+            var baseRaceRecipeTemp = UMATextRecipe.PackedLoadDCS(textRecipe.recipeString);
             for (int i = 0; i < baseRaceRecipeTemp.sharedColors.Length; i++)
             {
                 OverlayColorData col = baseRaceRecipeTemp.sharedColors[i];
@@ -3886,10 +4016,6 @@ namespace UMA.CharacterSystem
 
         public bool DoSave(bool saveAsAsset = false, string filePath = "")
         {
-            if (saveAsAsset)
-            {
-                Debug.LogWarning("Saving as asset is not currently supported for DynamicCharacterAvatar recipes."); 
-            }
             return DoSave(filePath);
         }
 
@@ -4646,7 +4772,7 @@ namespace UMA.CharacterSystem
             }
             if (activeRace.racedata != null)
             {
-                serializedRecipe = activeRace.racedata.baseRaceRecipe;
+                serializedRecipe = GetBuildBaseRecipe(activeRace.racedata);
             }
             tm.Stop();
             Ticks_InitializeBuild += tm.ElapsedTicks;
@@ -5275,15 +5401,32 @@ namespace UMA.CharacterSystem
                 animator = this.gameObject.GetComponent<Animator>();
             }
 
-            serializedRecipe = baseRaceRecipe; 
+            RaceData currentRaceData = this.activeRace.racedata;
+            bool usingFbxRoute = currentRaceData != null && currentRaceData.UsesFbxRoute;
 
             tm.Restart();
-            baseRaceRecipe.Load(umaRecipe,activeRace.data);
+            if (usingFbxRoute)
+            {
+                if (!PrepareFbxRouteRuntime(currentRaceData))
+                {
+                    return;
+                }
+
+                serializedRecipe = null;
+                umaRecipe.SetRace(currentRaceData);
+                umaRecipe.SetSlots(Array.Empty<SlotData>());
+            }
+            else
+            {
+                ClearFbxRouteRuntime();
+                serializedRecipe = baseRaceRecipe;
+                baseRaceRecipe.Load(umaRecipe, activeRace.data);
+            }
 
             tm.Stop();
             Ticks_LoadPhase1 += tm.ElapsedTicks;
             tm.Restart();
-            umaRecipe.SetRace(this.activeRace.racedata); // JRRM Test
+            umaRecipe.SetRace(currentRaceData); // JRRM Test
             tm.Stop();
             Ticks_LoadPhase2 += tm.ElapsedTicks;
             tm.Restart();
@@ -5332,6 +5475,10 @@ namespace UMA.CharacterSystem
                 ProcessMeshHides(MeshHideDictionary, wardrobeRecipes);
             }
             umaRecipe.UpdateMeshHideMasks();
+            if (usingFbxRoute && fbxRouteRuntime != null)
+            {
+                fbxRouteRuntime.ApplyBaseMeshHides(currentRaceData, MeshHideDictionary, currentLODLevel);
+            }
 
             List<SlotData> smooshSlots = new List<SlotData>();
             List<SlotData> clippingPlanes = new List<SlotData>();
@@ -5520,7 +5667,7 @@ namespace UMA.CharacterSystem
 
             foreach (var slot in umaRecipe.slotDataList)
             {
-                if (slot.asset != null && slot.asset.meshData != null && modifiers.ContainsKey(slot.slotName))
+                if (slot.asset != null && !UMAMeshData.IsNullOrEmptyMeshData(slot.asset.meshData) && modifiers.ContainsKey(slot.slotName))
                 {
                     var slotModifiers = modifiers[slot.slotName];
 
@@ -6479,7 +6626,7 @@ namespace UMA.CharacterSystem
                     {
 						// Only stick an overlay on it if it has tags and a mesh
 						SlotData sd = NewSlots[i1];
-						if(sd.tags != null && sd.tags.Length > 0 && sd.asset.meshData != null && sd.asset.meshData.subMeshCount > 0)
+						if(sd.tags != null && sd.tags.Length > 0 && !UMAMeshData.IsNullOrEmptyMeshData(sd.asset.meshData) && sd.asset.meshData.subMeshCount > 0)
                         {
                             if (sd.HasTag(wc.tags))
                             {
@@ -6704,6 +6851,7 @@ namespace UMA.CharacterSystem
             if (umaData != null)
             {
                 Hide();
+                ClearFbxRouteRuntime();
                 if (UMAAssetIndexer.bareInstance != null)
                 {
                     var generator = UMAAssetIndexer.bareInstance.generator;

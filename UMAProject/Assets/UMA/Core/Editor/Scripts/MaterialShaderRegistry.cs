@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace UMA
@@ -161,7 +160,16 @@ namespace UMA
                 return true;
 
             // Attempt to resolve from the entry (handles lost references)
-            var e = _entries.FirstOrDefault(x => ReferenceEquals(x.material, material));
+            Entry e = null;
+            for (int entryIndex = 0; entryIndex < _entries.Count; entryIndex++)
+            {
+                Entry candidateEntry = _entries[entryIndex];
+                if (ReferenceEquals(candidateEntry.material, material))
+                {
+                    e = candidateEntry;
+                    break;
+                }
+            }
             if (e != null)
             {
                 shader = ResolveShaderForEntry(e, cache: true);
@@ -209,7 +217,25 @@ namespace UMA
         public bool Contains(Material material)
         {
             EnsureBuilt();
-            return material != null && (_map.ContainsKey(material) || _entries.Any(e => ReferenceEquals(e.material, material)));
+            if (material == null)
+            {
+                return false;
+            }
+
+            if (_map.ContainsKey(material))
+            {
+                return true;
+            }
+
+            for (int entryIndex = 0; entryIndex < _entries.Count; entryIndex++)
+            {
+                if (ReferenceEquals(_entries[entryIndex].material, material))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public void AddOrUpdate(Material material, Shader shader = null)

@@ -1,7 +1,6 @@
 #define UMA_COMBINER_TIMINGS
 using UnityEngine;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine.Rendering;
 using UMA.Dynamics;
 
@@ -119,6 +118,7 @@ namespace UMA
                         if (oldRenderers != null && oldRenderers.Length > i)
                         {
                             renderers[i] = oldRenderers[i];
+                            renderers[i].rootBone = globalTransform;
                             if (umaData.generatedMaterials.rendererAssets[i] != null)
                             {
                                 umaData.generatedMaterials.rendererAssets[i].ApplySettingsToRenderer(renderers[i]);
@@ -473,7 +473,7 @@ namespace UMA
 
 				for(int materialDefinitionIndex = 0; materialDefinitionIndex < generatedMaterial.materialFragments.Count; materialDefinitionIndex++) {
 					var fragment = generatedMaterial.materialFragments[materialDefinitionIndex];
-					if(fragment?.slotData == null || fragment.slotData.asset?.meshData == null)
+					if(fragment?.slotData == null || UMAMeshData.IsNullOrEmptyMeshData(fragment.slotData.asset?.meshData))
 						continue;
 
 					var sdTemp = fragment.slotData;
@@ -661,7 +661,7 @@ private static Dictionary<string, float> BuildBakedBlendshapeDict(BlendShapeSett
                 {
                     var fragment = frags[fragIdx];
                     var slotData = fragment.slotData;
-                    if (slotData == null || slotData.asset == null || slotData.asset.meshData == null) continue;
+                    if (slotData == null || slotData.asset == null || UMAMeshData.IsNullOrEmptyMeshData(slotData.asset.meshData)) continue;
 
                     combineInstance = new SkinnedMeshCombiner.CombineInstance
                     {

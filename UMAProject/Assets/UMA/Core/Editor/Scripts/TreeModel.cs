@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 
 namespace UMA.Controls
@@ -33,7 +32,16 @@ namespace UMA.Controls
 
 		public T Find (int id)
 		{
-			return m_Data.FirstOrDefault (element => element.id == id);
+			for (int dataIndex = 0; dataIndex < m_Data.Count; dataIndex++)
+			{
+				T element = m_Data[dataIndex];
+				if (element.id == id)
+				{
+					return element;
+				}
+			}
+
+			return null;
 		}
 	
 		public void SetData (IList<T> data)
@@ -54,7 +62,14 @@ namespace UMA.Controls
                 m_Root = TreeElementUtility.ListToTree(data);
             }
 
-            m_MaxID = m_Data.Max(e => e.id);
+			m_MaxID = 0;
+			for (int dataIndex = 0; dataIndex < m_Data.Count; dataIndex++)
+			{
+				if (m_Data[dataIndex].id > m_MaxID)
+				{
+					m_MaxID = m_Data[dataIndex].id;
+				}
+			}
 		}
 
 		public int GenerateUniqueID ()
@@ -111,7 +126,15 @@ namespace UMA.Controls
 
 		public void RemoveElements (IList<int> elementIDs)
 		{
-			IList<T> elements = m_Data.Where (element => elementIDs.Contains (element.id)).ToArray ();
+			List<T> elements = new List<T>();
+			for (int dataIndex = 0; dataIndex < m_Data.Count; dataIndex++)
+			{
+				T element = m_Data[dataIndex];
+				if (elementIDs.Contains(element.id))
+				{
+					elements.Add(element);
+				}
+			}
 			RemoveElements (elements);
 		}
 
@@ -160,7 +183,12 @@ namespace UMA.Controls
                 parent.children = new List<TreeElement>();
             }
 
-            parent.children.InsertRange(insertPosition, elements.Cast<TreeElement> ());
+			List<TreeElement> treeElements = new List<TreeElement>(elements.Count);
+			for (int elementIndex = 0; elementIndex < elements.Count; elementIndex++)
+			{
+				treeElements.Add(elements[elementIndex]);
+			}
+			parent.children.InsertRange(insertPosition, treeElements);
 			foreach (var element in elements)
 			{
 				element.parent = parent;
@@ -237,7 +265,15 @@ namespace UMA.Controls
             // We are moving items so we adjust the insertion index to accomodate that any items above the insertion index is removed before inserting
             if (insertionIndex > 0)
             {
-                insertionIndex -= parentElement.children.GetRange(0, insertionIndex).Count(elements.Contains);
+				int movedChildrenBeforeInsert = 0;
+				for (int childIndex = 0; childIndex < insertionIndex; childIndex++)
+				{
+					if (elements.Contains(parentElement.children[childIndex] as T))
+					{
+						movedChildrenBeforeInsert++;
+					}
+				}
+				insertionIndex -= movedChildrenBeforeInsert;
             }
 
             // Remove draggedItems from their parents

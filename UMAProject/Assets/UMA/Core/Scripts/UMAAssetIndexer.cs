@@ -15,7 +15,6 @@ using UnityEngine.ResourceManagement.ResourceLocations;
 using PackSlot = UMA.UMAPackedRecipeBase.PackedSlotDataV3;
 using SlotRecipes = System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<UMA.UMATextRecipe>>;
 using RaceRecipes = System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<UMA.UMATextRecipe>>>;
-using System.Linq;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -70,6 +69,253 @@ namespace UMA
             }
         }
 
+        private static bool ContainsString(string[] source, string value)
+        {
+            if (source == null)
+            {
+                return false;
+            }
+
+            for (int sourceIndex = 0; sourceIndex < source.Length; sourceIndex++)
+            {
+                if (source[sourceIndex] == value)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static string[] AppendString(string[] source, string value)
+        {
+            if (source == null || source.Length == 0)
+            {
+                return new[] { value };
+            }
+
+            string[] result = new string[source.Length + 1];
+            Array.Copy(source, result, source.Length);
+            result[source.Length] = value;
+            return result;
+        }
+
+        private static string[] RemoveString(string[] source, string value)
+        {
+            if (source == null || source.Length == 0)
+            {
+                return Array.Empty<string>();
+            }
+
+            int keptCount = 0;
+            for (int sourceIndex = 0; sourceIndex < source.Length; sourceIndex++)
+            {
+                if (source[sourceIndex] != value)
+                {
+                    keptCount++;
+                }
+            }
+
+            if (keptCount == source.Length)
+            {
+                return source;
+            }
+
+            string[] result = new string[keptCount];
+            int resultIndex = 0;
+            for (int sourceIndex = 0; sourceIndex < source.Length; sourceIndex++)
+            {
+                if (source[sourceIndex] != value)
+                {
+                    result[resultIndex++] = source[sourceIndex];
+                }
+            }
+
+            return result;
+        }
+
+        private static string GetAssetTypeName(AssetItem item)
+        {
+            return item != null && item._Type != null ? item._Type.Name : "Unknown";
+        }
+
+        private static int CompareAssetItemNames(AssetItem left, AssetItem right)
+        {
+            string leftName = left != null ? left._Name ?? string.Empty : string.Empty;
+            string rightName = right != null ? right._Name ?? string.Empty : string.Empty;
+            return StringComparer.Ordinal.Compare(leftName, rightName);
+        }
+
+        private static List<KeyValuePair<string, List<AssetItem>>> GroupAssetItemsByType(List<AssetItem> items)
+        {
+            Dictionary<string, List<AssetItem>> groupedItems = new Dictionary<string, List<AssetItem>>(StringComparer.Ordinal);
+            for (int itemIndex = 0; itemIndex < items.Count; itemIndex++)
+            {
+                AssetItem item = items[itemIndex];
+                string typeName = GetAssetTypeName(item);
+                if (!groupedItems.TryGetValue(typeName, out List<AssetItem> typeItems))
+                {
+                    typeItems = new List<AssetItem>();
+                    groupedItems[typeName] = typeItems;
+                }
+
+                typeItems.Add(item);
+            }
+
+            List<KeyValuePair<string, List<AssetItem>>> result = new List<KeyValuePair<string, List<AssetItem>>>(groupedItems);
+            result.Sort((left, right) => StringComparer.Ordinal.Compare(left.Key, right.Key));
+
+            for (int groupIndex = 0; groupIndex < result.Count; groupIndex++)
+            {
+                result[groupIndex].Value.Sort(CompareAssetItemNames);
+            }
+
+            return result;
+        }
+
+        private static void WriteGroupedAssetItemsReport(StringBuilder report, List<AssetItem> items)
+        {
+            List<KeyValuePair<string, List<AssetItem>>> groupedItems = GroupAssetItemsByType(items);
+            for (int groupIndex = 0; groupIndex < groupedItems.Count; groupIndex++)
+            {
+                KeyValuePair<string, List<AssetItem>> typeGroup = groupedItems[groupIndex];
+                report.AppendLine($"  {typeGroup.Key} ({typeGroup.Value.Count} items):");
+                for (int itemIndex = 0; itemIndex < typeGroup.Value.Count; itemIndex++)
+                {
+                    AssetItem item = typeGroup.Value[itemIndex];
+                    report.AppendLine($"    • {item._Name}");
+                    if (!string.IsNullOrEmpty(item._Path))
+                    {
+                        report.AppendLine($"      Path: {item._Path}");
+                    }
+                    if (!string.IsNullOrEmpty(item._Guid))
+                    {
+                        report.AppendLine($"      GUID: {item._Guid}");
+                    }
+                }
+                report.AppendLine();
+            }
+        }
+
+        private static List<string> GetSortedAssetTypeNames(Dictionary<string, AssetItem> firstItems, Dictionary<string, AssetItem> secondItems)
+        {
+            HashSet<string> allTypes = new HashSet<string>(StringComparer.Ordinal);
+            foreach (AssetItem item in firstItems.Values)
+            {
+                allTypes.Add(GetAssetTypeName(item));
+            }
+
+            foreach (AssetItem item in secondItems.Values)
+            {
+                allTypes.Add(GetAssetTypeName(item));
+            }
+
+            List<string> result = new List<string>(allTypes);
+            result.Sort(StringComparer.Ordinal);
+            return result;
+        }
+
+        private static int CountAssetItemsByType(Dictionary<string, AssetItem> items, string typeName)
+        {
+            int count = 0;
+            foreach (AssetItem item in items.Values)
+            {
+                if (GetAssetTypeName(item) == typeName)
+                {
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
+        private static string ExtractMissingAssetTypeName(string assetDescription)
+        {
+            int typeStart = assetDescription.LastIndexOf("Type: ", StringComparison.Ordinal);
+            if (typeStart < 0)
+            {
+                return "Unknown";
+            }
+
+            typeStart += 6;
+            int typeEnd = assetDescription.LastIndexOf(")", StringComparison.Ordinal);
+            return typeEnd > typeStart ? assetDescription.Substring(typeStart, typeEnd - typeStart) : "Unknown";
+        }
+
+        private static List<KeyValuePair<string, List<string>>> GroupMissingAssetsByType(List<string> missingAssets)
+        {
+            Dictionary<string, List<string>> groupedAssets = new Dictionary<string, List<string>>(StringComparer.Ordinal);
+            for (int assetIndex = 0; assetIndex < missingAssets.Count; assetIndex++)
+            {
+                string assetDescription = missingAssets[assetIndex];
+                string typeName = ExtractMissingAssetTypeName(assetDescription);
+                if (!groupedAssets.TryGetValue(typeName, out List<string> typeAssets))
+                {
+                    typeAssets = new List<string>();
+                    groupedAssets[typeName] = typeAssets;
+                }
+
+                typeAssets.Add(assetDescription);
+            }
+
+            List<KeyValuePair<string, List<string>>> result = new List<KeyValuePair<string, List<string>>>(groupedAssets);
+            result.Sort((left, right) => StringComparer.Ordinal.Compare(left.Key, right.Key));
+            return result;
+        }
+
+        private static int CompareTypesByName(Type left, Type right)
+        {
+            string leftName = left != null ? left.Name : string.Empty;
+            string rightName = right != null ? right.Name : string.Empty;
+            return StringComparer.Ordinal.Compare(leftName, rightName);
+        }
+
+        private static bool ContainsType(Type[] source, Type value)
+        {
+            if (source == null)
+            {
+                return false;
+            }
+
+            for (int sourceIndex = 0; sourceIndex < source.Length; sourceIndex++)
+            {
+                if (source[sourceIndex] == value)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static List<Type> GetSortedCommonTypes(HashSet<Type> firstTypes, HashSet<Type> secondTypes)
+        {
+            List<Type> commonTypes = new List<Type>();
+            foreach (Type type in firstTypes)
+            {
+                if (secondTypes.Contains(type))
+                {
+                    commonTypes.Add(type);
+                }
+            }
+
+            commonTypes.Sort(CompareTypesByName);
+            return commonTypes;
+        }
+
+        private static List<Type> GetSortedUnionTypes(HashSet<Type> firstTypes, HashSet<Type> secondTypes)
+        {
+            HashSet<Type> allTypes = new HashSet<Type>(firstTypes);
+            foreach (Type type in secondTypes)
+            {
+                allTypes.Add(type);
+            }
+
+            List<Type> result = new List<Type>(allTypes);
+            result.Sort(CompareTypesByName);
+            return result;
+        }
+
         // TODO: change to scriptable object and load in Initialize
         public UMAGenerator generator;
 
@@ -115,6 +361,23 @@ namespace UMA
 			private static long _events;
 			private static string _logPath;
 
+            private static List<KeyValuePair<string, int>> GetTopCounts(Dictionary<string, int> source, int maxEntries)
+            {
+                List<KeyValuePair<string, int>> orderedCounts = new List<KeyValuePair<string, int>>(source);
+                orderedCounts.Sort((left, right) =>
+                {
+                    int countCompare = right.Value.CompareTo(left.Value);
+                    return countCompare != 0 ? countCompare : StringComparer.Ordinal.Compare(left.Key, right.Key);
+                });
+
+                if (orderedCounts.Count > maxEntries)
+                {
+                    orderedCounts.RemoveRange(maxEntries, orderedCounts.Count - maxEntries);
+                }
+
+                return orderedCounts;
+            }
+
 			public static bool Enabled => EditorPrefs.GetBool(PrefEnabled, false);
 			public static int MaxStacks => Mathf.Clamp(EditorPrefs.GetInt(PrefMaxStacks, 8), 1, 64);
 			public static int LogEvery => Mathf.Clamp(EditorPrefs.GetInt(PrefLogEvery, 2500), 1, 1000000);
@@ -139,13 +402,13 @@ namespace UMA
 				WriteShort($"[UMAAssetIndexer][Trace] End session {_sessionId}: {reason}. Events={_events}, UniqueKeys={CountsByKey.Count}");
 
 				// Print the most duplicated keys + their top stacks
-				foreach (var kvp in CountsByKey.OrderByDescending(k => k.Value).Take(25))
+                foreach (var kvp in GetTopCounts(CountsByKey, 25))
 				{
 					if (kvp.Value <= 1) break;
 					WriteDuplicate($"[UMAAssetIndexer][Trace] DuplicateKey '{kvp.Key}' count={kvp.Value}");
 					if (StacksByKey.TryGetValue(kvp.Key, out var stacks) && stacks != null)
 					{
-						foreach (var s in stacks.OrderByDescending(x => x.Value).Take(MaxStacks))
+                        foreach (var s in GetTopCounts(stacks, MaxStacks))
 						{
 							WriteDuplicate($"[UMAAssetIndexer][Trace]   stackHits={s.Value} stack='{s.Key}'");
 						}
@@ -604,7 +867,7 @@ namespace UMA
 				}
 
 				// Ensure `Types` contains it
-				if (!Types.Contains(t))
+                if (!ContainsType(Types, t))
 				{
 					var newTypes = new List<System.Type>(Types.Length + 1);
 					newTypes.AddRange(Types);
@@ -1016,11 +1279,11 @@ namespace UMA
             var tf = typeFolders.Find(x => x.typeName == type);
             if (tf != null)
             {
-                if (tf.Folders.Contains(FolderName))
+                if (ContainsString(tf.Folders, FolderName))
                 {
                     return;
                 }
-                tf.Folders = tf.Folders.Concat(new string[] { FolderName }).ToArray();
+                tf.Folders = AppendString(tf.Folders, FolderName);
             }
             else
             {
@@ -1039,7 +1302,7 @@ namespace UMA
             var tf = typeFolders.Find(x => x.typeName == type);
             if (tf != null)
             {
-                tf.Folders = tf.Folders.Where(x => x != FolderName).ToArray();
+                tf.Folders = RemoveString(tf.Folders, FolderName);
                 CreateTypeFolderMapping();
                 ForceSave();
             }
@@ -1265,28 +1528,7 @@ namespace UMA
                     report.AppendLine($"ITEMS MISSING IN AFTER INDEXER ({missingInOther.Count}):");
                     report.AppendLine("-".PadRight(50, '-'));
 
-                    // Group by type for better readability
-                    var groupedMissingInOther = missingInOther
-                        .GroupBy(item => item._Type?.Name ?? "Unknown")
-                        .OrderBy(g => g.Key);
-
-                    foreach (var typeGroup in groupedMissingInOther)
-                    {
-                        report.AppendLine($"  {typeGroup.Key} ({typeGroup.Count()} items):");
-                        foreach (var item in typeGroup.OrderBy(i => i._Name))
-                        {
-                            report.AppendLine($"    • {item._Name}");
-                            if (!string.IsNullOrEmpty(item._Path))
-                            {
-                                report.AppendLine($"      Path: {item._Path}");
-                            }
-                            if (!string.IsNullOrEmpty(item._Guid))
-                            {
-                                report.AppendLine($"      GUID: {item._Guid}");
-                            }
-                        }
-                        report.AppendLine();
-                    }
+                    WriteGroupedAssetItemsReport(report, missingInOther);
                 }
 
                 // Items missing in this indexer
@@ -1295,28 +1537,7 @@ namespace UMA
                     report.AppendLine($"ITEMS MISSING IN BEFORE INDEXER ({missingInThis.Count}):");
                     report.AppendLine("-".PadRight(50, '-'));
 
-                    // Group by type for better readability
-                    var groupedMissingInThis = missingInThis
-                        .GroupBy(item => item._Type?.Name ?? "Unknown")
-                        .OrderBy(g => g.Key);
-
-                    foreach (var typeGroup in groupedMissingInThis)
-                    {
-                        report.AppendLine($"  {typeGroup.Key} ({typeGroup.Count()} items):");
-                        foreach (var item in typeGroup.OrderBy(i => i._Name))
-                        {
-                            report.AppendLine($"    • {item._Name}");
-                            if (!string.IsNullOrEmpty(item._Path))
-                            {
-                                report.AppendLine($"      Path: {item._Path}");
-                            }
-                            if (!string.IsNullOrEmpty(item._Guid))
-                            {
-                                report.AppendLine($"      GUID: {item._Guid}");
-                            }
-                        }
-                        report.AppendLine();
-                    }
+                    WriteGroupedAssetItemsReport(report, missingInThis);
                 }
 
                 // Type breakdown comparison
@@ -1490,23 +1711,7 @@ namespace UMA
 					report.AppendLine("-".PadRight(50, '-'));
 
 					// Group by type for better readability
-					var groupedMissingInOther = missingInOther
-						.GroupBy(item => item._Type?.Name ?? "Unknown")
-						.OrderBy(g => g.Key);
-
-					foreach(var typeGroup in groupedMissingInOther) {
-						report.AppendLine($"  {typeGroup.Key} ({typeGroup.Count()} items):");
-						foreach(var item in typeGroup.OrderBy(i => i._Name)) {
-							report.AppendLine($"    • {item._Name}");
-							if(!string.IsNullOrEmpty(item._Path)) {
-								report.AppendLine($"      Path: {item._Path}");
-							}
-							if(!string.IsNullOrEmpty(item._Guid)) {
-								report.AppendLine($"      GUID: {item._Guid}");
-							}
-						}
-						report.AppendLine();
-					}
+                    WriteGroupedAssetItemsReport(report, missingInOther);
 				}
 
 				// Items missing in this indexer
@@ -1515,37 +1720,18 @@ namespace UMA
 					report.AppendLine("-".PadRight(50, '-'));
 
 					// Group by type for better readability
-					var groupedMissingInThis = missingInThis
-						.GroupBy(item => item._Type?.Name ?? "Unknown")
-						.OrderBy(g => g.Key);
-
-					foreach(var typeGroup in groupedMissingInThis) {
-						report.AppendLine($"  {typeGroup.Key} ({typeGroup.Count()} items):");
-						foreach(var item in typeGroup.OrderBy(i => i._Name)) {
-							report.AppendLine($"    • {item._Name}");
-							if(!string.IsNullOrEmpty(item._Path)) {
-								report.AppendLine($"      Path: {item._Path}");
-							}
-							if(!string.IsNullOrEmpty(item._Guid)) {
-								report.AppendLine($"      GUID: {item._Guid}");
-							}
-						}
-						report.AppendLine();
-					}
+                    WriteGroupedAssetItemsReport(report, missingInThis);
 				}
 
 				// Type breakdown comparison
 				report.AppendLine("TYPE BREAKDOWN COMPARISON:");
 				report.AppendLine("-".PadRight(50, '-'));
 
-				var allTypes = thisItems.Values.Select(i => i._Type?.Name ?? "Unknown")
-					.Union(otherItems.Values.Select(i => i._Type?.Name ?? "Unknown"))
-					.Distinct()
-					.OrderBy(t => t);
+                List<string> allTypes = GetSortedAssetTypeNames(thisItems, otherItems);
 
-				foreach(var typeName in allTypes) {
-					var thisCount = thisItems.Values.Count(i => (i._Type?.Name ?? "Unknown") == typeName);
-					var otherCount = otherItems.Values.Count(i => (i._Type?.Name ?? "Unknown") == typeName);
+                foreach(var typeName in allTypes) {
+                    int thisCount = CountAssetItemsByType(thisItems, typeName);
+                    int otherCount = CountAssetItemsByType(otherItems, typeName);
 					var status = thisCount == otherCount ? "✓" : "⚠";
 
 					report.AppendLine($"  {status} {typeName}: Before={thisCount}, After={otherCount}");
@@ -1626,8 +1812,8 @@ namespace UMA
 				}
 
 				// Compare assets within common types
-				var commonTypes = thisTypes.Intersect(otherTypes);
-				foreach(var type in commonTypes) {
+                List<Type> commonTypes = GetSortedCommonTypes(thisTypes, otherTypes);
+                foreach(var type in commonTypes) {
 					var thisAssets = GetAssetDictionary(type);
 					var otherAssets = After.GetAssetDictionary(type);
 
@@ -1693,17 +1879,11 @@ namespace UMA
 					report.AppendLine("-".PadRight(40, '-'));
 
 					// Group missing assets by type for better readability
-					var assetsByType = missingAssets
-						.GroupBy(asset => {
-							var typeStart = asset.LastIndexOf("Type: ") + 6;
-							var typeEnd = asset.LastIndexOf(")");
-							return typeEnd > typeStart ? asset.Substring(typeStart, typeEnd - typeStart) : "Unknown";
-						})
-						.OrderBy(g => g.Key);
+                    List<KeyValuePair<string, List<string>>> assetsByType = GroupMissingAssetsByType(missingAssets);
 
-					foreach(var typeGroup in assetsByType) {
-						report.AppendLine($"  {typeGroup.Key}:");
-						foreach(var asset in typeGroup) {
+                    foreach(var typeGroup in assetsByType) {
+                        report.AppendLine($"  {typeGroup.Key}:");
+                        foreach(var asset in typeGroup.Value) {
 							report.AppendLine($"    • {asset}");
 						}
 						report.AppendLine();
@@ -1713,8 +1893,8 @@ namespace UMA
 				// Type details comparison
 				report.AppendLine("TYPE DETAILS COMPARISON:");
 				report.AppendLine("-".PadRight(40, '-'));
-				var allTypes = thisTypes.Union(otherTypes).OrderBy(t => t.Name);
-				foreach(var type in allTypes) {
+                List<Type> allTypes = GetSortedUnionTypes(thisTypes, otherTypes);
+                foreach(var type in allTypes) {
 					var thisCount = thisTypes.Contains(type) ? GetAssetDictionary(type).Count : 0;
 					var otherCount = otherTypes.Contains(type) ? After.GetAssetDictionary(type).Count : 0;
 					var status = thisCount == otherCount ? "✓" : "⚠";
@@ -1869,7 +2049,7 @@ namespace UMA
         {
             string QualifiedName = sType.AssemblyQualifiedName;
 
-            if (!Types.Contains(sType))
+            if (!ContainsType(Types, sType))
             {
                 List<System.Type> newTypes = new List<System.Type>();
                 newTypes.AddRange(Types);
@@ -2700,7 +2880,12 @@ namespace UMA
             SlotRecipes results = new SlotRecipes();
             foreach (KeyValuePair<string, HashSet<UMATextRecipe>> kp in aggregate)
             {
-                results.Add(kp.Key, kp.Value.ToList());
+                List<UMATextRecipe> listForKey = new List<UMATextRecipe>(kp.Value.Count);
+                foreach (UMATextRecipe recipe in kp.Value)
+                {
+                    listForKey.Add(recipe);
+                }
+                results.Add(kp.Key, listForKey);
             }
 
             return results;
@@ -2726,7 +2911,6 @@ namespace UMA
             SlotRecipes results = new SlotRecipes();
             foreach (KeyValuePair<string, HashSet<UMATextRecipe>> kp in aggregate)
             {
-                // Replace LINQ ToList() with manual copy
                 List<UMATextRecipe> listForKey = new List<UMATextRecipe>(kp.Value.Count);
                 foreach (UMATextRecipe recipe in kp.Value)
                 {
@@ -2952,6 +3136,10 @@ namespace UMA
 
 		public AsyncOperationHandle<IList<UnityEngine.Object>> Preload(RaceData theRace, bool keepLoaded = false)
 		{
+            if (theRace == null || theRace.baseRaceRecipe == null)
+            {
+                return LoadLabelList(new List<string>(), keepLoaded);
+            }
 			return LoadLabel(GetLabel(theRace.baseRaceRecipe), keepLoaded);
 		}
 
@@ -2960,6 +3148,10 @@ namespace UMA
 			List<string> keys = new List<string>();
 			foreach(RaceData rc in theRaces)
 			{
+                if (rc == null || rc.baseRaceRecipe == null)
+                {
+                    continue;
+                }
 				string key = GetLabel(rc.baseRaceRecipe);
 
 				if (keys.Contains(key))
@@ -3017,11 +3209,21 @@ namespace UMA
 
         public AsyncOperationHandle<IList<UnityEngine.Object>> LoadLabelList(List<string> Keys, bool keepLoaded)
         {
+            if (Keys == null)
+            {
+                Keys = new List<string>();
+            }
 #if UMA_VES
             Keys.RemoveAll(label => VesUmaLabelMaker.DO_NOT_INCLUDE_LABELS.Contains(label)); //VES added
 #endif
 
             BeforeProcessingLabels.Invoke(Keys);
+
+            if (Keys.Count == 0)
+            {
+                IList<UnityEngine.Object> emptyResult = new List<UnityEngine.Object>();
+                return Addressables.ResourceManager.CreateCompletedOperation(emptyResult, null);
+            }
 
             foreach (string label in Keys)
             {
@@ -4528,7 +4730,25 @@ namespace UMA
 #if UMA_VES
 					var labels = AssetDatabase.GetLabels(o); 
 					if(labels != null) {
-						if (VesUmaLabelMaker.DO_NOT_INCLUDE_LABELS.Intersect(labels).Any()) {
+                        bool hasExcludedLabel = false;
+                        foreach (string excludedLabel in VesUmaLabelMaker.DO_NOT_INCLUDE_LABELS)
+                        {
+                            for (int labelIndex = 0; labelIndex < labels.Length; labelIndex++)
+                            {
+                                if (labels[labelIndex] == excludedLabel)
+                                {
+                                    hasExcludedLabel = true;
+                                    break;
+                                }
+                            }
+
+                            if (hasExcludedLabel)
+                            {
+                                break;
+                            }
+                        }
+
+                        if (hasExcludedLabel) {
 							// Do not add this item during a library rebuild!
 							continue;
 						}

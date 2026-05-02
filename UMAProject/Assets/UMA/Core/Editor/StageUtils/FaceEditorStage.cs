@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UMA.CharacterSystem;
 using UMA.Editors;
 using UnityEditor;
@@ -799,7 +798,7 @@ namespace UMA
                 if (slot.Suppressed) continue;
 
                 var asset = slot.asset;
-                if (asset == null || asset.meshData == null) continue;
+                if (asset == null || UMAMeshData.IsNullOrEmptyMeshData(asset.meshData)) continue;
 
                 int slotSubmeshCount = Mathf.Max(1, asset.meshData.subMeshCount);
 
@@ -1033,7 +1032,7 @@ namespace UMA
             for (int i = 0; i < slots.Length; i++)
             {
                 var slot = slots[i];
-                if (slot == null || slot.asset == null || slot.asset.meshData == null)
+                if (slot == null || slot.asset == null || UMAMeshData.IsNullOrEmptyMeshData(slot.asset.meshData))
                 {
                     continue;
                 }
@@ -1313,7 +1312,7 @@ namespace UMA
 
             // Target slot must have valid mesh data to contribute submeshes
             var asset = slot.asset;
-            if (asset == null || asset.meshData == null)
+            if (asset == null || UMAMeshData.IsNullOrEmptyMeshData(asset.meshData))
             {
                 return false;
             }
@@ -1332,7 +1331,7 @@ namespace UMA
 
                 // 2. Slots without valid mesh data (including utility slots)
                 var sAsset = s.asset;
-                if (sAsset == null || sAsset.meshData == null) continue;
+                if (sAsset == null || UMAMeshData.IsNullOrEmptyMeshData(sAsset.meshData)) continue;
 
                 int sCount = Mathf.Max(1, sAsset.meshData.subMeshCount);
 
@@ -1820,7 +1819,7 @@ namespace UMA
                     }
 
                     SlotData slot = thisDCA.umaData.umaRecipe.GetSlot(slotName);
-                    if (slot == null || slot.asset == null || slot.asset.meshData == null)
+                    if (slot == null || slot.asset == null || UMAMeshData.IsNullOrEmptyMeshData(slot.asset.meshData))
                     {
                         skippedMissingMesh++;
                         continue;
@@ -1989,7 +1988,7 @@ namespace UMA
             }
 
             SlotData sourceSlot = thisDCA.umaData.umaRecipe.GetSlot(raycastTestSourceSlot);
-            if (sourceSlot == null || sourceSlot.asset == null || sourceSlot.asset.meshData == null)
+            if (sourceSlot == null || sourceSlot.asset == null || UMAMeshData.IsNullOrEmptyMeshData(sourceSlot.asset.meshData))
             {
                 raycastTestStatusType = MessageType.Warning;
                 raycastTestStatus = "Source slot not found or missing mesh data.";
@@ -2164,7 +2163,7 @@ namespace UMA
             ref int totalVerticesTested,
             ref int totalVertexHits)
         {
-            if (sourceSlot == null || sourceSlot.asset == null || sourceSlot.asset.meshData == null)
+            if (sourceSlot == null || sourceSlot.asset == null || UMAMeshData.IsNullOrEmptyMeshData(sourceSlot.asset.meshData))
             {
                 return null;
             }
@@ -2273,7 +2272,7 @@ namespace UMA
 
         private int GetBakedVertexIndexForSlotVertex(SlotData slot, int slotVertexIndex)
         {
-            if (slot == null || slot.asset == null || slot.asset.meshData == null)
+            if (slot == null || slot.asset == null || UMAMeshData.IsNullOrEmptyMeshData(slot.asset.meshData))
             {
                 return -1;
             }
@@ -2392,7 +2391,7 @@ namespace UMA
 
         private int GetLocalTriangleCountForSlotSubmesh(SlotData slot, int localSubmesh)
         {
-            if (slot == null || slot.asset == null || slot.asset.meshData == null)
+            if (slot == null || slot.asset == null || UMAMeshData.IsNullOrEmptyMeshData(slot.asset.meshData))
             {
                 return 0;
             }
@@ -2411,7 +2410,7 @@ namespace UMA
 
         private int ApplyTriangleOcclusionFromVertexOcclusion(SlotData slot, int localSubmesh, bool[] occludedVerts, BitArray flags, MeshHideAsset.TriangleHideStrategy strategy)
         {
-            if (slot == null || slot.asset == null || slot.asset.meshData == null)
+            if (slot == null || slot.asset == null || UMAMeshData.IsNullOrEmptyMeshData(slot.asset.meshData))
             {
                 return 0;
             }
@@ -3208,7 +3207,7 @@ namespace UMA
             for (int i = 0; i < slots.Length; i++)
             {
                 var s = slots[i];
-                if (s == null || s.Suppressed || s.asset == null || s.asset.meshData == null)
+                if (s == null || s.Suppressed || s.asset == null || UMAMeshData.IsNullOrEmptyMeshData(s.asset.meshData))
                 {
                     continue;
                 }
@@ -3291,7 +3290,7 @@ namespace UMA
                 try
                 {
                     var meshData = slot.asset != null ? slot.asset.meshData : null;
-                    if (meshData != null && slotSubmeshIndex >= 0 && slotSubmeshIndex < meshData.subMeshCount)
+                    if (!UMAMeshData.IsNullOrEmptyMeshData(meshData) && slotSubmeshIndex >= 0 && slotSubmeshIndex < meshData.subMeshCount)
                     {
                         slotBaseTriangles = meshData.submeshes[slotSubmeshIndex].GetBaseTriangles();
                     }
@@ -3607,7 +3606,7 @@ namespace UMA
             }
 
             SlotData sourceSlot = thisDCA != null && thisDCA.umaData != null && thisDCA.umaData.umaRecipe != null ? thisDCA.umaData.umaRecipe.GetSlot(raycastTestSourceSlot) : null;
-            if (sourceSlot == null || sourceSlot.asset == null || sourceSlot.asset.meshData == null)
+            if (sourceSlot == null || sourceSlot.asset == null || UMAMeshData.IsNullOrEmptyMeshData(sourceSlot.asset.meshData))
             {
                 return;
             }
@@ -4237,7 +4236,7 @@ namespace UMA
                 mha.asset = slot.asset;
 
                 int submeshCount = 1;
-                if (slot.asset != null && slot.asset.meshData != null)
+                if (slot.asset != null && !UMAMeshData.IsNullOrEmptyMeshData(slot.asset.meshData))
                 {
                     submeshCount = Mathf.Max(1, slot.asset.meshData.subMeshCount);
                 }
@@ -4315,7 +4314,7 @@ namespace UMA
 
             int[] triCounts = new int[submeshCount];
             var asset = slot != null ? slot.asset : null;
-            if (asset != null && asset.meshData != null)
+            if (asset != null && !UMAMeshData.IsNullOrEmptyMeshData(asset.meshData))
             {
                 for (int sm = 0; sm < submeshCount; sm++)
                 {

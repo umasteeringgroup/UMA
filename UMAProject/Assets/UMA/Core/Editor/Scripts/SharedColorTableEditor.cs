@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -19,6 +18,34 @@ namespace UMA.Editors
         private Material donorMaterial;
         private SkinnedMeshRenderer donorRenderer;
         private int donorRendererMaterialIndex;
+            private static OverlayColorData[] RemoveColorAt(OverlayColorData[] colors, int indexToRemove)
+            {
+                OverlayColorData[] result = new OverlayColorData[colors.Length - 1];
+                int resultIndex = 0;
+                for (int colorIndex = 0; colorIndex < colors.Length; colorIndex++)
+                {
+                    if (colorIndex == indexToRemove)
+                    {
+                        continue;
+                    }
+
+                    result[resultIndex++] = colors[colorIndex];
+                }
+
+                return result;
+            }
+
+            private static OverlayColorData[] AppendColor(OverlayColorData[] colors, OverlayColorData color)
+            {
+                OverlayColorData[] result = new OverlayColorData[colors.Length + 1];
+                for (int colorIndex = 0; colorIndex < colors.Length; colorIndex++)
+                {
+                    result[colorIndex] = colors[colorIndex];
+                }
+
+                result[colors.Length] = color;
+                return result;
+            }
         private bool donorPropertiesFoldout;
         private bool applyMaterialsFoldout;
         private bool mainDonorFoldout;
@@ -173,7 +200,7 @@ namespace UMA.Editors
                     var deleteThis = c.FindPropertyRelative("deleteThis");
                     if (deleteThis.boolValue == true)
                     {
-                        sct.colors = sct.colors.Where((source, index) => index != i).ToArray();
+                        sct.colors = RemoveColorAt(sct.colors, i);
                         colorsProperty.DeleteArrayElementAtIndex(i);
                         i--;
                     }
@@ -220,7 +247,7 @@ namespace UMA.Editors
 
             OverlayColorData newColor = new OverlayColorData(sharedColorTable.channelCount);
             newColor.name = "New Color";
-            sharedColorTable.colors = sharedColorTable.colors.Concat(new[] { newColor }).ToArray();
+                sharedColorTable.colors = AppendColor(sharedColorTable.colors, newColor);
 
             serializedObject.Update();
             CollapseColorsExcept(serializedObject.FindProperty("colors"), -1);
@@ -242,7 +269,7 @@ namespace UMA.Editors
             duplicatedColor.showSelected = true;
             duplicatedColor.deleteThis = false;
 #endif
-            sharedColorTable.colors = sharedColorTable.colors.Concat(new[] { duplicatedColor }).ToArray();
+            sharedColorTable.colors = AppendColor(sharedColorTable.colors, duplicatedColor);
 
             serializedObject.Update();
             SerializedProperty colorsProperty = serializedObject.FindProperty("colors");

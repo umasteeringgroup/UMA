@@ -245,6 +245,41 @@ namespace UMA
         public bool Validate()
 		{
 			bool valid = true;
+			if (UsesFbxRoute)
+			{
+				if (baseFbxRenderer == null)
+				{
+					if (Debug.isDebugBuild)
+					{
+						Debug.LogError("FBX route missing required Base FBX Renderer!");
+					}
+
+					valid = false;
+				}
+				else
+				{
+					if (baseFbxRenderer.sharedMesh == null)
+					{
+						if (Debug.isDebugBuild)
+						{
+							Debug.LogError("FBX route Base FBX Renderer has no shared mesh!");
+						}
+
+						valid = false;
+					}
+
+					SkinnedMeshRenderer[] rootRenderers = baseFbxRenderer.transform.root.GetComponentsInChildren<SkinnedMeshRenderer>(true);
+					if (rootRenderers.Length != 1 || rootRenderers[0] != baseFbxRenderer)
+					{
+						if (Debug.isDebugBuild)
+						{
+							Debug.LogError("FBX route Base FBX Renderer must be the only SkinnedMeshRenderer under its prefab root!");
+						}
+
+						valid = false;
+					}
+				}
+			}
 			if ((umaTarget == UMATarget.Humanoid) && (TPose == null))
 			{
 				if (Debug.isDebugBuild)

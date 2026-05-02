@@ -2204,6 +2204,10 @@ namespace UMA.CharacterSystem.Editors
             for (int i =0; i < renderers.Length; i++)
             {
                 Renderer renderer = renderers[i];
+                if (thisDCA != null && thisDCA.IsFbxRouteRendererObject(renderer.gameObject))
+                {
+                    continue;
+                }
                 objs.Add(renderer.gameObject);
             }
             return objs;

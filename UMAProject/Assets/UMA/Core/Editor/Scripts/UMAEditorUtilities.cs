@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using System;
@@ -382,7 +382,7 @@ namespace UMA
         }
 
         /// <summary>
-        /// Converts a UMAMeshData from Blender Z‑up to Unity Y‑up space (same logic as ConvertSkinnedMesh but in-place on UMAMeshData).
+        /// Converts a UMAMeshData from Blender Z-up to Unity Y-up space (same logic as ConvertSkinnedMesh but in-place on UMAMeshData).
         /// Geometry (vertices, normals, tangents), bindposes, and optionally bone/local transforms are rotated.
         /// </summary>
         /// <param name="meshData">Source UMA mesh data.</param>
@@ -403,7 +403,7 @@ namespace UMA
             bool rotateRootBoneOnly = true,
             bool mirrorHandednessAdjust = true)
         {
-            if (meshData == null)
+            if (UMAMeshData.IsNullOrEmptyMeshData(meshData))
             {
                 Debug.LogWarning("ConvertMeshData: meshData is null.");
                 return;
@@ -414,7 +414,7 @@ namespace UMA
                 return;
             }
 
-            // Use same rotation as geometry conversion (-90° about X).
+            // Use same rotation as geometry conversion (-90� about X).
             Quaternion rot = BlenderToUnityRot;
             Matrix4x4 rotM = Matrix4x4.Rotate(rot);
             Matrix4x4 invRotM = rotM.inverse;

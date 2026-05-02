@@ -412,7 +412,7 @@ namespace UMA.Examples
             for (int i = 0; i < slots.Length; i++)
             {
                 var sd = slots[i];
-                if (sd == null || sd.asset == null || sd.asset.meshData == null) continue;
+                if (sd == null || sd.asset == null || UMAMeshData.IsNullOrEmptyMeshData(sd.asset.meshData)) continue;
                 int sm = sd.asset.subMeshIndex;
                 if (sd.asset.meshData.submeshes == null || sm < 0 || sm >= sd.asset.meshData.subMeshCount) continue;
                 var smt = sd.asset.meshData.submeshes[sm];
@@ -467,7 +467,7 @@ namespace UMA.Examples
                 for (int i = 0; i < slots.Length; i++)
                 {
                     var sd = slots[i];
-                    if (sd == null || sd.asset == null || sd.asset.meshData == null) continue;
+                    if (sd == null || sd.asset == null || UMAMeshData.IsNullOrEmptyMeshData(sd.asset.meshData)) continue;
                     if (sd.skinnedMeshRenderer != r) continue; // only this renderer
                     if (sd.Suppressed) continue; // dropped by LOD rules
 

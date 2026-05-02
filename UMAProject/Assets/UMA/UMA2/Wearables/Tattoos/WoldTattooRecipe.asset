@@ -29,11 +29,12 @@ MonoBehaviour:
   suppressWardrobeSlots: []
   activeWardrobeSet: []
   MeshHideAssets: []
+  MeshHideAssetCollections: []
   MeshModifiers: []
   OverrideDNA:
     PreloadValues: []
   disabled: 0
-  recipeString: '{"version":3,"packedSlotDataList":[],"slotsV2":[],"slotsV3":[{"id":"MaleTorso","scale":100,"copyIdx":-1,"overlays":[{"id":"WolfTattoo","colorIdx":0,"rect":[0.2150000035762787,0.7400000095367432,0.23899999260902406,0.1629999876022339],"isTransformed":true,"scale":{"x":0.20000000298023225,"y":0.2199999988079071,"z":0.0},"rotation":-0.25999999046325686,"blendModes":[0,0,0,0,0],"Tags":[],"tiling":[false,false,false,false,false],"uvOverride":0,"translate":{"x":0.023000000044703485,"y":0.0010000000474974514}}],"Tags":["Torso"],"Races":[],"blendShapeTarget":"","overSmoosh":0.009999999776482582,"smooshDistance":0.0010000000474974514,"smooshInvertX":false,"smooshInvertY":true,"smooshInvertZ":false,"smooshInvertDist":true,"smooshTargetTag":"","smooshableTag":"","isSwapSlot":false,"swapTag":"LongHair","uvOverride":0,"isDisabled":false,"expandAlongNormal":0}],"colors":[],"fColors":[{"name":"-","colors":[173,15,15,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0],"ShaderParms":[],"alwaysUpdate":false,"alwaysUpdateParms":false,"isBaseColor":false,"displayColor":-15790163}],"sharedColorCount":0,"race":"","packedDna":[],"uvOverride":0,"isWardrobe":false}'
+  recipeString: '{"version":3,"packedSlotDataList":[],"slotsV2":[],"slotsV3":[{"id":"MaleTorso","scale":100,"copyIdx":-1,"overlays":[{"id":"WolfTattoo","colorIdx":0,"rect":[0.2150000035762787,0.7400000095367432,0.23899999260902406,0.1629999876022339],"isTransformed":true,"scale":{"x":0.20000000298023225,"y":0.2199999988079071,"z":0.0},"rotation":-0.25999999046325686,"blendModes":[0,0,0],"Tags":[],"tiling":[false,false,false],"uvOverride":0,"translate":{"x":0.023000000044703485,"y":0.0010000000474974514}}],"Tags":["Torso"],"Races":[],"blendShapeTarget":"","overSmoosh":0.009999999776482582,"smooshDistance":0.0010000000474974514,"smooshInvertX":false,"smooshInvertY":true,"smooshInvertZ":false,"smooshInvertDist":true,"smooshTargetTag":"","smooshableTag":"","isSwapSlot":false,"swapTag":"LongHair","uvOverride":0,"isDisabled":false,"expandAlongNormal":0,"isPlaceholderSlot":false}],"colors":[],"fColors":[{"name":"Tattoo","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0],"ShaderParms":[],"alwaysUpdate":false,"alwaysUpdateParms":false,"isBaseColor":false,"displayColor":-1}],"sharedColorCount":1,"race":"","packedDna":[],"uvOverride":0,"isWardrobe":false}'
   forceKeep: 0
   labelLocalFiles: 0
   noAutoAdd: 0

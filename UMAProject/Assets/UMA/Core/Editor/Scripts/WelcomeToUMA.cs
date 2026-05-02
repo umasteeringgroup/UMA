@@ -1220,7 +1220,7 @@ namespace UMA
                             }
                         }
 
-                     if (sd.meshData != null && sd.meshData.vertices != null && sd.meshData.vertexCount > 0)
+                     if (!UMAMeshData.IsNullOrEmptyMeshData(sd.meshData) && sd.meshData.vertices != null && sd.meshData.vertexCount > 0)
                         {
                             // SlotDataAsset materials are now derived from overlays at the SlotData level.
                         }
@@ -1248,7 +1248,7 @@ namespace UMA
                                     l.ReviewItem = AI;
                                 }
                             }
-                            if (sd.isClippingPlane && (sd.meshData == null || sd.meshData.vertexCount < 4))
+                            if (sd.isClippingPlane && (UMAMeshData.IsNullOrEmptyMeshData(sd.meshData) || sd.meshData.vertexCount < 4))
                             {
                                 AddText($"Warning: SlotDataAsset {AI._Name} is marked as a clipping plane, but has no geometry!", LogType.Warning);
                                 AddText("This slot will never clip anything!");

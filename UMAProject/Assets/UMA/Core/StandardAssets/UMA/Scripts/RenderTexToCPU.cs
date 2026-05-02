@@ -6,7 +6,6 @@ using UMA;
 using static UMA.UMAData;
 using UnityEngine.Rendering;
 using System.Collections.Concurrent;
-using System.Linq;
 using UnityEngine.Experimental.Rendering;
 
 namespace UMA

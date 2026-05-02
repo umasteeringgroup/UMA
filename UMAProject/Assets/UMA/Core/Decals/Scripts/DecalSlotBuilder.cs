@@ -1,10 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Unity.Collections;
 using UnityEngine;
 using UMA.CharacterSystem;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.IO.Compression;
 using System.Runtime.CompilerServices;
@@ -78,7 +77,7 @@ namespace UMA
         /// </summary>
         public static bool RemoveTrianglesFromLastDecal(HashSet<int> ordinalsToRemove)
         {
-            if (LastCreatedDecalSlot == null || LastCreatedDecalSlot.meshData == null) return false;
+            if (LastCreatedDecalSlot == null || UMAMeshData.IsNullOrEmptyMeshData(LastCreatedDecalSlot.meshData)) return false;
             if (_lastOutputTriangles == null || _lastOutputTriOrdinals == null || _lastOutputTriOrdinals.Length * 3 != _lastOutputTriangles.Length) return false;
             if (ordinalsToRemove == null || ordinalsToRemove.Count == 0) return false;
 
@@ -135,14 +134,73 @@ namespace UMA
                 {
                     slot.tags = new[] { "Decal", overlayTag };
                 }
-                else if (!slot.tags.Contains(overlayTag))
+                else if (!HasTag(slot.tags, overlayTag))
                 {
-                    var list = slot.tags.ToList();
-                    if (!list.Contains("Decal")) list.Add("Decal");
-                    list.Add(overlayTag);
-                    slot.tags = list.ToArray();
+                    slot.tags = EnsureTagPresent(slot.tags, "Decal");
+                    slot.tags = EnsureTagPresent(slot.tags, overlayTag);
                 }
             }
+        }
+
+        private static bool HasTag(string[] tags, string tag)
+        {
+            if (tags == null)
+            {
+                return false;
+            }
+
+            for (int tagIndex = 0; tagIndex < tags.Length; tagIndex++)
+            {
+                if (tags[tagIndex] == tag)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static string[] EnsureTagPresent(string[] tags, string tag)
+        {
+            if (string.IsNullOrEmpty(tag))
+            {
+                return tags;
+            }
+
+            if (tags == null)
+            {
+                return new[] { tag };
+            }
+
+            if (HasTag(tags, tag))
+            {
+                return tags;
+            }
+
+            string[] updatedTags = new string[tags.Length + 1];
+            Array.Copy(tags, updatedTags, tags.Length);
+            updatedTags[tags.Length] = tag;
+            return updatedTags;
+        }
+
+        private static UMAMaterial FindMaterialByName(string materialName)
+        {
+            if (string.IsNullOrEmpty(materialName))
+            {
+                return null;
+            }
+
+            UMAMaterial[] materials = Resources.FindObjectsOfTypeAll<UMAMaterial>();
+            for (int materialIndex = 0; materialIndex < materials.Length; materialIndex++)
+            {
+                UMAMaterial material = materials[materialIndex];
+                if (material != null && string.Equals(material.name, materialName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return material;
+                }
+            }
+
+            return null;
         }
 
         public class DecalBuildOptions
@@ -263,7 +321,7 @@ namespace UMA
                 for (int si = 0; si < recipe.slotDataList.Length; si++)
                 {
                     var slot = recipe.slotDataList[si];
-                    if (slot?.asset?.meshData == null) continue;
+                    if (UMAMeshData.IsNullOrEmptyMeshData(slot?.asset?.meshData)) continue;
                     int start = slot.vertexOffset;
                     int count = slot.asset.meshData.vertexCount;
                     int end = start + count;
@@ -366,7 +424,7 @@ namespace UMA
                     Color32 restColor;
                     Vector2 uv2 = Vector2.zero, uv3 = Vector2.zero, uv4 = Vector2.zero;
 
-                    if (slot?.asset?.meshData != null && localIdx >= 0 && localIdx < slot.asset.meshData.vertexCount)
+                    if (!UMAMeshData.IsNullOrEmptyMeshData(slot?.asset?.meshData) && localIdx >= 0 && localIdx < slot.asset.meshData.vertexCount)
                     {
                         var mdSrc = slot.asset.meshData;
                         restPos = SafeGet(mdSrc.vertices, localIdx, Vector3.zero);
@@ -414,7 +472,7 @@ namespace UMA
                     outTriangles[i] = remap[includedTriangles[i]];
 
                 // Track output triangle ordinals aligned to outTriangles
-                _lastOutputTriangles = outTriangles.ToArray();
+                _lastOutputTriangles = outTriangles;
                 _lastOutputTriOrdinals = selectedTriIds.ToArray();
 
                 ApplyBindposeCorrection(shared, smr, vertexSlot, vertexLocalIndex,
@@ -561,7 +619,7 @@ namespace UMA
 
             // Prepare access to previous decal mapping and UVs
             var prevMap = GetVertexMap(LastCreatedDecalSlot)?.TheirToOur;
-            var prevUV = LastCreatedDecalSlot.meshData != null ? LastCreatedDecalSlot.meshData.uv : null;
+            var prevUV = !UMAMeshData.IsNullOrEmptyMeshData(LastCreatedDecalSlot.meshData) ? LastCreatedDecalSlot.meshData.uv : null;
 
             // Bake and reconstruct using cached axes
             Mesh baked = new Mesh();
@@ -598,7 +656,7 @@ namespace UMA
                     for (int si = 0; si < recipe.slotDataList.Length; si++)
                     {
                         var slot = recipe.slotDataList[si];
-                        if (slot?.asset?.meshData == null) continue;
+                        if (UMAMeshData.IsNullOrEmptyMeshData(slot?.asset?.meshData)) continue;
                         int start = slot.vertexOffset;
                         int count = slot.asset.meshData.vertexCount;
                         int end = start + count;
@@ -680,7 +738,7 @@ namespace UMA
                     int combTri = newSelectedTriIds[ord];
                     if (!_dbgTriToOrdinal.ContainsKey(combTri)) _dbgTriToOrdinal.Add(combTri, ord);
                 }
-                _lastOutputTriangles = outTriangles.ToArray();
+                _lastOutputTriangles = outTriangles;
                 _lastOutputTriOrdinals = newSelectedTriIds.ToArray();
                 _dbgSequence++;
 
@@ -746,7 +804,7 @@ namespace UMA
 
         public static SlotDataAsset SaveDecalSlotAsset(SlotDataAsset slot, string folderPath, string baseName)
         {
-            if (slot == null || slot.meshData == null || string.IsNullOrEmpty(baseName)) return slot;
+            if (slot == null || UMAMeshData.IsNullOrEmptyMeshData(slot.meshData) || string.IsNullOrEmpty(baseName)) return slot;
             if (string.IsNullOrEmpty(folderPath)) folderPath = "Assets";
 
 #if UNITY_EDITOR
@@ -795,7 +853,7 @@ namespace UMA
             }
 
             // Update slot & mesh names
-            if (slot.meshData != null) slot.meshData.SlotName = finalName;
+            if (!UMAMeshData.IsNullOrEmptyMeshData(slot.meshData)) slot.meshData.SlotName = finalName;
             slot.name = finalName;
 
             // Ensure Decal tag present
@@ -803,11 +861,9 @@ namespace UMA
             {
                 slot.tags = new[] { "Decal" };
             }
-            else if (!slot.tags.Contains("Decal"))
+            else if (!HasTag(slot.tags, "Decal"))
             {
-                var list = slot.tags.ToList();
-                list.Add("Decal");
-                slot.tags = list.ToArray();
+                slot.tags = EnsureTagPresent(slot.tags, "Decal");
             }
 
             EnsureOverlayTag(slot); // add overlay tag if needed
@@ -847,8 +903,8 @@ namespace UMA
                     finalName = baseName + "_" + suffix++;
                 }
 
-                slot.slotName = finalName;
-                if (slot.meshData != null) slot.meshData.SlotName = finalName;
+                slot.name = finalName;
+                if (!UMAMeshData.IsNullOrEmptyMeshData(slot.meshData)) slot.meshData.SlotName = finalName;
 
                 var json = SerializeDecalSlotToJson(slot, false);
                 File.WriteAllText(Path.Combine(root, finalName + ".json"), json);
@@ -864,7 +920,7 @@ namespace UMA
         // Public helper for runtime JSON save with optional compression.
         public static bool SaveRuntimeJson(SlotDataAsset slot, string folderPath, string baseName, bool compress)
         {
-            if (slot == null || slot.meshData == null) return false;
+            if (slot == null || UMAMeshData.IsNullOrEmptyMeshData(slot.meshData)) return false;
             try
             {
                 string root = folderPath;
@@ -895,7 +951,7 @@ namespace UMA
 
         private static string SerializeDecalSlotToJson(SlotDataAsset slot, bool compress)
         {
-            if (slot == null || slot.meshData == null) return "{}";
+            if (slot == null || UMAMeshData.IsNullOrEmptyMeshData(slot.meshData)) return "{}";
             string overlayName = null;
             if (slot == LastCreatedDecalSlot)
             {
@@ -981,7 +1037,7 @@ namespace UMA
                         umaMaterial = indexer.GetAsset<UMAMaterial>(dto.material);
                         if (umaMaterial == null)
                         {
-                            umaMaterial = Resources.FindObjectsOfTypeAll<UMAMaterial>().FirstOrDefault(m => string.Equals(m.name, dto.material, StringComparison.OrdinalIgnoreCase));
+                            umaMaterial = FindMaterialByName(dto.material);
                         }
                     }
                 }
@@ -992,6 +1048,20 @@ namespace UMA
                 if (umaMaterial == null && !silent)
                 {
                     Debug.LogWarning("DecalSlotBuilder: Could not resolve UMAMaterial '" + dto.material + "'. Decal slot will be created without material.");
+                }
+            }
+            BoneWeight1[] managedBoneWeights = null;
+            if (dto.boneWeights != null)
+            {
+                managedBoneWeights = new BoneWeight1[dto.boneWeights.Length];
+                for (int boneWeightIndex = 0; boneWeightIndex < dto.boneWeights.Length; boneWeightIndex++)
+                {
+                    var boneWeight = dto.boneWeights[boneWeightIndex];
+                    managedBoneWeights[boneWeightIndex] = new BoneWeight1
+                    {
+                        boneIndex = boneWeight.boneIndex,
+                        weight = boneWeight.weight
+                    };
                 }
             }
 
@@ -1009,7 +1079,7 @@ namespace UMA
                 vertexCount = dto.vertexCount,
                 boneNameHashes = dto.boneNameHashes,
                 ManagedBonesPerVertex = dto.bonesPerVertex,
-                ManagedBoneWeights = dto.boneWeights != null ? dto.boneWeights.Select(b => new BoneWeight1 { boneIndex = b.boneIndex, weight = b.weight }).ToArray() : null,
+                ManagedBoneWeights = managedBoneWeights,
                 clothSkinningSerialized = dto.clothCoeffs
             };
 
@@ -1089,9 +1159,7 @@ namespace UMA
             if (!string.IsNullOrEmpty(dto.overlayAssetName))
             {
                 string overlayTag = "DecalOverlay:" + dto.overlayAssetName;
-                var list = slotAsset.tags.ToList();
-                if (!list.Contains(overlayTag)) list.Add(overlayTag);
-                slotAsset.tags = list.ToArray();
+                slotAsset.tags = EnsureTagPresent(slotAsset.tags, overlayTag);
                 try
                 {
                     var indexer = UMAAssetIndexer.Instance;
@@ -1146,7 +1214,7 @@ namespace UMA
         /// </summary>
         public static bool SaveRuntimeBinaryGZip(SlotDataAsset slot, string folderPath, string baseName)
         {
-            if (slot == null || slot.meshData == null) return false;
+            if (slot == null || UMAMeshData.IsNullOrEmptyMeshData(slot.meshData)) return false;
             try
             {
                 string root = folderPath;
@@ -1819,7 +1887,7 @@ namespace UMA
             bool anyCloth = false; Vector2 defaultCoeff = new Vector2(float.MaxValue, 0f); var dest = new Vector2[newVertexCount]; for (int i = 0; i < newVertexCount; i++) dest[i] = defaultCoeff;
             foreach (var kv in perSlot)
             {
-                var slot = kv.Key; var md = slot?.asset?.meshData; if (md == null) continue; Vector2[] srcSerialized = md.clothSkinningSerialized; ClothSkinningCoefficient[] srcCloth = md.clothSkinning;
+                var slot = kv.Key; var md = slot?.asset?.meshData; if (UMAMeshData.IsNullOrEmptyMeshData(md)) continue; Vector2[] srcSerialized = md.clothSkinningSerialized; ClothSkinningCoefficient[] srcCloth = md.clothSkinning;
                 if ((srcSerialized == null || srcSerialized.Length == 0) && (srcCloth == null || srcCloth.Length == 0)) continue; anyCloth = true; var mapping = kv.Value;
                 for (int i = 0; i < mapping.Count; i++)
                 {
@@ -1874,7 +1942,7 @@ namespace UMA
                 if (nv < 0) continue;
 
                 var slot = vertexSlot[ov];
-                if (slot?.asset?.meshData == null) continue;
+                if (UMAMeshData.IsNullOrEmptyMeshData(slot?.asset?.meshData)) continue;
 
                 if (!slotBindPoseCache.TryGetValue(slot, out var perSlot))
                 {

@@ -3,7 +3,6 @@ using UnityEngine;
 using UMA;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine.SceneManagement;
 using UMA.CharacterSystem;
 using UMA.Editors;
@@ -414,7 +413,7 @@ public class DNAGroupEditor : Editor
             }
         }
         // Sort by name for a stable menu
-        list = list.OrderBy(t => t.Name).ToList();
+        list.Sort((left, right) => StringComparer.Ordinal.Compare(left.Name, right.Name));
         _cachedEffectTypes = list;
         return _cachedEffectTypes;
     }

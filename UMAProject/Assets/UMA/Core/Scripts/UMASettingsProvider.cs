@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using UnityEngine.UIElements;
-using System.Linq;
 using UMA;
 using UnityEditor.Build;
 using System;
@@ -53,6 +52,24 @@ namespace UMA
             // return the path relative to the Assets folder
             string folder = basePath.Replace(Application.dataPath, "Assets");
             return folder;
+        }
+
+        protected internal static bool ContainsPropertyName(string[] propertyNames, string propertyName)
+        {
+            if (propertyNames == null)
+            {
+                return false;
+            }
+
+            for (int propertyIndex = 0; propertyIndex < propertyNames.Length; propertyIndex++)
+            {
+                if (propertyNames[propertyIndex] == propertyName)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public static string FindUMAFullPath()
@@ -167,7 +184,7 @@ namespace UMA
             while (iterator.NextVisible(enterChildren))
             {
                 enterChildren = false;
-                if (!propertyToExclude.Contains(iterator.name))
+                if (!ContainsPropertyName(propertyToExclude, iterator.name))
                 {
                     //Debug.Log("Drawing property " + iterator.name);
                     EditorGUILayout.PropertyField(iterator, true);
@@ -182,7 +199,7 @@ namespace UMA
             while (iterator.NextVisible(enterChildren))
             {
                 enterChildren = false;
-                if (propertyToInclude.Contains(iterator.name))
+                if (ContainsPropertyName(propertyToInclude, iterator.name))
                 {
                     EditorGUILayout.PropertyField(iterator, true);
                 }

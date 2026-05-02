@@ -1080,7 +1080,7 @@ namespace UMA
 				var s = slots[si];
 				if (s == null || s.asset == null) continue;
 				var md = s.asset.meshData;
-				if (md == null) continue;
+				if (IsNullOrEmptyMeshData(md)) continue;
 
 				// Capture first encountered bones/root info if present
 				if (firstBones == null && md.bones != null && md.bones.Length > 0)
@@ -2368,47 +2368,10 @@ namespace UMA
 			}
 		}
 
-		#region operator ==, != and similar HACKS, seriously.....
-		public static implicit operator bool(UMAMeshData obj)
+		public static bool IsNullOrEmptyMeshData(UMAMeshData meshData)
 		{
-			return ((System.Object)obj) != null && obj.vertexCount != 0;
+			return System.Object.ReferenceEquals(meshData, null) || meshData.vertexCount <= 0;
 		}
-
-		public bool Equals(UMAMeshData other)
-		{
-			return (this == other);
-		}
-		public override bool Equals(object other)
-		{
-			return Equals(other as UMAMeshData);
-		}
-
-		public static bool operator ==(UMAMeshData overlay, UMAMeshData obj)
-		{
-			if (overlay)
-			{
-				if (obj)
-				{
-					return System.Object.ReferenceEquals(overlay, obj);
-				}
-				return false;
-			}
-			return !((bool)obj);
-		}
-
-		public static bool operator !=(UMAMeshData overlay, UMAMeshData obj)
-		{
-			if (overlay)
-			{
-				if (obj)
-				{
-					return !System.Object.ReferenceEquals(overlay, obj);
-				}
-				return true;
-			}
-			return ((bool)obj);
-		}
-		#endregion
 
 		internal void ReSortUMABones()
 		{
@@ -3018,7 +2981,7 @@ namespace UMA
             if (postRotate && preRotation != Matrix4x4.identity)
             {
                 var baked = ApplyBonePoseWithRoot(bonePose, Matrix4x4.identity, false, rootBoneName);
-                if (baked == null || baked.vertices == null || baked.vertexCount == 0)
+				if (IsNullOrEmptyMeshData(baked) || baked.vertices == null)
                     return baked;
 
                 int vCount = baked.vertexCount;
@@ -3161,7 +3124,7 @@ namespace UMA
                 }
             }
 
-            // Forced root (by name) — stop hierarchy traversal when reaching this hash
+            // Forced root (by name) ï¿½ stop hierarchy traversal when reaching this hash
             int forcedRootHash = 0;
             if (!string.IsNullOrEmpty(rootBoneName))
             {
@@ -3382,7 +3345,7 @@ namespace UMA
             {
                 // Bake pose without pre-rotation
                 var baked = ApplyBonePose(bonePose, Matrix4x4.identity, false);
-                if (baked == null) return null;
+				if (IsNullOrEmptyMeshData(baked)) return null;
 
                 // Nothing to rotate?
                 if (baked.vertices == null || baked.vertexCount == 0)
@@ -3717,7 +3680,7 @@ namespace UMA
 //- Left the existing pre-rotation path untouched for backward compatibility.
 
 //Why this fixes twisting:
-//- With both a pose and a global 180° Z correction, pre-rotating raw vertices and then skinning effectively double-transform bones versus geometry. Post-rotating applies the global correction in the same space as the baked (skinned) geometry, avoiding compounded rotation artifacts (e.g., twisted shoes).
+//- With both a pose and a global 180ï¿½ Z correction, pre-rotating raw vertices and then skinning effectively double-transform bones versus geometry. Post-rotating applies the global correction in the same space as the baked (skinned) geometry, avoiding compounded rotation artifacts (e.g., twisted shoes).
 
         // Convenience overload: apply pre-rotation and race replacements in one call
         public UMAMeshData ApplyBonePose(UMABonePose bonePose, Matrix4x4 preRotation, RaceData raceData, bool postRotate)

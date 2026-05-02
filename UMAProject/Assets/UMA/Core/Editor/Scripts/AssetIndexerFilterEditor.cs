@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using UMA;
 using UnityEditor;
 using UnityEngine;
-using System.Linq;
 using UMA.Editors;
 
 namespace UMA
@@ -32,7 +31,15 @@ namespace UMA
         {
             var keys = UMAAssetIndexer.TypeFromString.Keys;
 
-            List<string> typekeys = new List<string>(keys.Distinct());
+            List<string> typekeys = new List<string>();
+            HashSet<string> seenKeys = new HashSet<string>();
+            foreach (string key in keys)
+            {
+                if (seenKeys.Add(key))
+                {
+                    typekeys.Add(key);
+                }
+            }
 
             typekeys.Remove("AnimatorController");
             typekeys.Remove("AnimatorOverrideController");

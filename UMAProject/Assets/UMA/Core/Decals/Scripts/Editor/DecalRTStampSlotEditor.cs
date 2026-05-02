@@ -1,7 +1,6 @@
 ﻿#if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UMA;
 using UMA.CharacterSystem;
 using UnityEditor;
@@ -31,6 +30,58 @@ namespace UMA.EditorTools
 
         private GUIContent upArrow = new GUIContent("▲", "Move Up");
         private GUIContent downArrow = new GUIContent("▼", "Move Down");
+
+        private static void SortPairedLists<TAsset>(List<TAsset> assets, List<string> names)
+        {
+            if (assets == null || names == null)
+            {
+                return;
+            }
+
+            int pairCount = Mathf.Min(assets.Count, names.Count);
+            for (int sortedIndex = 0; sortedIndex < pairCount - 1; sortedIndex++)
+            {
+                int bestIndex = sortedIndex;
+                for (int candidateIndex = sortedIndex + 1; candidateIndex < pairCount; candidateIndex++)
+                {
+                    string bestName = names[bestIndex] ?? string.Empty;
+                    string candidateName = names[candidateIndex] ?? string.Empty;
+                    if (StringComparer.Ordinal.Compare(candidateName, bestName) < 0)
+                    {
+                        bestIndex = candidateIndex;
+                    }
+                }
+
+                if (bestIndex != sortedIndex)
+                {
+                    TAsset asset = assets[sortedIndex];
+                    assets[sortedIndex] = assets[bestIndex];
+                    assets[bestIndex] = asset;
+
+                    string name = names[sortedIndex];
+                    names[sortedIndex] = names[bestIndex];
+                    names[bestIndex] = name;
+                }
+            }
+        }
+
+        private static string GetOverlaySetPreview(List<string> names)
+        {
+            if (names == null || names.Count == 0)
+            {
+                return string.Empty;
+            }
+
+            int previewCount = Mathf.Min(names.Count, 3);
+            string[] previewNames = new string[previewCount];
+            for (int previewIndex = 0; previewIndex < previewCount; previewIndex++)
+            {
+                previewNames[previewIndex] = names[previewIndex];
+            }
+
+            string preview = string.Join(", ", previewNames);
+            return names.Count > previewCount ? preview + "…" : preview;
+        }
 
         public override void OnInspectorGUI()
         {
@@ -398,9 +449,7 @@ namespace UMA.EditorTools
 #endif
 
             // Sort by name
-            var zipped = _overlayAssets.Zip(_overlayNames, (a, n) => new { a, n }).OrderBy(z => z.n, StringComparer.Ordinal).ToList();
-            _overlayAssets = zipped.Select(z => z.a).ToList();
-            _overlayNames = zipped.Select(z => z.n).ToList();
+            SortPairedLists(_overlayAssets, _overlayNames);
         }
 
         private void RefreshRaceCatalog()
@@ -442,9 +491,7 @@ namespace UMA.EditorTools
             }
 #endif
             // Sort by raceName (or name fallback)
-            var zipped = _raceAssets.Zip(_raceNames, (r, n) => new { r, n }).OrderBy(z => z.n, StringComparer.Ordinal).ToList();
-            _raceAssets = zipped.Select(z => z.r).ToList();
-            _raceNames = zipped.Select(z => z.n).ToList();
+            SortPairedLists(_raceAssets, _raceNames);
 
             // keep selection valid
             if (_selectedRaceIndex >= _raceAssets.Count) _selectedRaceIndex = -1;
@@ -564,9 +611,7 @@ namespace UMA.EditorTools
             if (names.Count == 0)
                 return $"Overlay Set {index + 1}";
 
-            return names.Count > 3
-                ? string.Join(", ", names.Take(3)) + "…"
-                : string.Join(", ", names);
+            return GetOverlaySetPreview(names);
         }
     }
 }

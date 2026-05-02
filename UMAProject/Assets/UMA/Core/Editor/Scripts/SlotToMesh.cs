@@ -163,7 +163,7 @@ namespace UMA
         {
             Mesh mesh = new Mesh() { indexFormat = IndexFormat.UInt32 };
 
-            if (meshData == null)
+            if (UMAMeshData.IsNullOrEmptyMeshData(meshData))
             {
                 return mesh;
             }
@@ -230,7 +230,7 @@ namespace UMA
 
         private static void CopyBlendShapes(Mesh mesh, UMAMeshData meshData, Matrix4x4 deltaTransform, Matrix4x4 deltaNormalTransform)
         {
-            if (mesh == null || meshData == null || meshData.blendShapes == null || meshData.blendShapes.Length == 0)
+            if (mesh == null || UMAMeshData.IsNullOrEmptyMeshData(meshData) || meshData.blendShapes == null || meshData.blendShapes.Length == 0)
             {
                 return;
             }
@@ -324,7 +324,7 @@ namespace UMA
         private static bool TryGetCanonicalMeshFromRootMatrix(SlotDataAsset slot, out Matrix4x4 meshFromRoot)
         {
             meshFromRoot = Matrix4x4.identity;
-            if (slot == null || slot.meshData == null)
+            if (slot == null || UMAMeshData.IsNullOrEmptyMeshData(slot.meshData))
             {
                 return false;
             }
@@ -422,7 +422,7 @@ namespace UMA
         private static float[] BuildBoneWeightSums(UMAMeshData meshData, int boneCount)
         {
             float[] sums = new float[boneCount];
-            if (meshData == null || boneCount <= 0)
+            if (UMAMeshData.IsNullOrEmptyMeshData(meshData) || boneCount <= 0)
             {
                 return sums;
             }
@@ -567,7 +567,7 @@ namespace UMA
 
         public static Mesh ConvertSlotToMesh(SlotDataAsset slot, bool preciseCharacterSpace)
         {
-            if (slot == null || slot.meshData == null)
+            if (slot == null || UMAMeshData.IsNullOrEmptyMeshData(slot.meshData))
             {
                 return null;
             }
@@ -584,7 +584,7 @@ namespace UMA
 
         public static Mesh ConvertSlotToMeshLTOW(SlotDataAsset slot, Quaternion Rotation, int VertexHighlight, Transform modelRoot = null)
         {
-            if (slot == null || slot.meshData == null)
+            if (slot == null || UMAMeshData.IsNullOrEmptyMeshData(slot.meshData))
             {
                 return null;
             }
@@ -618,7 +618,7 @@ namespace UMA
 
         public static Mesh ConvertSlotToMesh(SlotDataAsset slot, Quaternion Rotation, int VertexHighlight)
         {
-            if (slot == null || slot.meshData == null)
+            if (slot == null || UMAMeshData.IsNullOrEmptyMeshData(slot.meshData))
             {
                 return null;
             }

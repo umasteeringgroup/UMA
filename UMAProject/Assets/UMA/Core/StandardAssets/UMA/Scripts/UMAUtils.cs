@@ -7,7 +7,6 @@ using UnityEngine.Events;
 #if UNITY_EDITOR
 using UnityEditor.Events;
 #endif
-using System.Linq;
 using System.Buffers;
 
 #if UNITY_EDITOR
@@ -413,8 +412,14 @@ namespace UMA
 				}
 				catch
 				{
-					foreach (MethodInfo info in target.GetType().GetMethods(allBindings).Where(x => x.Name == methodName))
+					MethodInfo[] methods = target.GetType().GetMethods(allBindings);
+					for (int methodIndex = 0; methodIndex < methods.Length; methodIndex++)
 					{
+						MethodInfo info = methods[methodIndex];
+						if (info.Name != methodName)
+						{
+							continue;
+						}
 						ParameterInfo[] _params = info.GetParameters();
 						if (_params.Length < 2)
 						{

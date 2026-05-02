@@ -1188,11 +1188,11 @@ namespace UMA.Editors
                         slotLodPreserveBoundaryEdges = EditorGUILayout.Toggle(new GUIContent("Preserve Boundary Edges", "Attempt to preserve open edges to reduce seams when combined with other slots."), slotLodPreserveBoundaryEdges);
                         slotLodBoundaryWeight = EditorGUILayout.FloatField(new GUIContent(
                             "Boundary Weight",
-                            "•\tDefault / good starting point: 10\n" +
-                            "•\tIf you see borders \u201Cchewing in\u201D or seams drifting: 20\u201350\n" +
-                            "•\tIf you see it refusing to reduce enough or leaving too much geometry near borders: 5\u201310\n" +
-                            "•\tFor slots where border alignment is critical (hands, sleeves, boots, neck, waist): 25\u201375\n" +
-                            "•\tFor mostly-closed pieces (props, buttons, inner mouth) where border preservation is less important: 0\u201310"),
+                            "ï¿½\tDefault / good starting point: 10\n" +
+                            "ï¿½\tIf you see borders \u201Cchewing in\u201D or seams drifting: 20\u201350\n" +
+                            "ï¿½\tIf you see it refusing to reduce enough or leaving too much geometry near borders: 5\u201310\n" +
+                            "ï¿½\tFor slots where border alignment is critical (hands, sleeves, boots, neck, waist): 25\u201375\n" +
+                            "ï¿½\tFor mostly-closed pieces (props, buttons, inner mouth) where border preservation is less important: 0\u201310"),
                             Mathf.Max(0f, slotLodBoundaryWeight));
                     }
                 }
@@ -1878,8 +1878,8 @@ namespace UMA.Editors
                         var s = result.Slots[si];
                         if (s == null) continue;
                         var md = s.meshData;
-                        int lodCount = (md != null && md.submeshes != null && md.submeshes.Length > 0 && md.submeshes[0] != null) ? md.submeshes[0].LODCount() : -1;
-                        int triLen = (md != null && md.submeshes != null && md.submeshes.Length > 0 && md.submeshes[0] != null && md.submeshes[0].getManagedTriangles(0) != null)
+                        int lodCount = (!UMAMeshData.IsNullOrEmptyMeshData(md) && md.submeshes != null && md.submeshes.Length > 0 && md.submeshes[0] != null) ? md.submeshes[0].LODCount() : -1;
+                        int triLen = (!UMAMeshData.IsNullOrEmptyMeshData(md) && md.submeshes != null && md.submeshes.Length > 0 && md.submeshes[0] != null && md.submeshes[0].getManagedTriangles(0) != null)
                             ? md.submeshes[0].getManagedTriangles(0).Length
                             : -1;
                         Debug.Log($"[SlotBuilder][SlotLOD] Slot[{si}] '{s.slotName}' (new slots use submesh0) lodCount={lodCount} triLen={triLen}");

@@ -287,7 +287,7 @@ namespace UMA.Editors
                     }
                 }
             }
-            using (new EditorGUI.DisabledScope((target as SlotDataAsset) == null || (target as SlotDataAsset).meshData == null))
+            using (new EditorGUI.DisabledScope((target as SlotDataAsset) == null || UMAMeshData.IsNullOrEmptyMeshData((target as SlotDataAsset).meshData)))
             {
                 if (GUILayout.Button("View MeshData"))
                 {
@@ -438,7 +438,7 @@ namespace UMA.Editors
             {
                 GUILayout.Space(10);
                 GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
-                if (slot.meshData == null || slot.meshData.submeshes == null || slot.meshData.subMeshCount <= 0)
+                if (UMAMeshData.IsNullOrEmptyMeshData(slot.meshData) || slot.meshData.submeshes == null || slot.meshData.subMeshCount <= 0)
                 {
                     EditorGUILayout.HelpBox("MeshData is missing.", MessageType.Info);
                 }
@@ -601,7 +601,7 @@ namespace UMA.Editors
                 if (GUILayout.Button("Mirror U"))
                 {
                     var slotDataAsset = target as SlotDataAsset;
-                    if (slotDataAsset?.meshData == null)
+                    if (UMAMeshData.IsNullOrEmptyMeshData(slotDataAsset?.meshData))
                     {
                         EditorUtility.DisplayDialog("Error", "MeshData missing.", "OK");
                     }
@@ -623,7 +623,7 @@ namespace UMA.Editors
                 if (GUILayout.Button("Mirror V"))
                 {
                     var slotDataAsset = target as SlotDataAsset;
-                    if (slotDataAsset?.meshData == null)
+                    if (UMAMeshData.IsNullOrEmptyMeshData(slotDataAsset?.meshData))
                     {
                         EditorUtility.DisplayDialog("Error", "MeshData missing.", "OK");
                     }
@@ -652,7 +652,7 @@ namespace UMA.Editors
                 EditorGUILayout.HelpBox("Conform this slot's bindposes and vertex positions to those in the source slot. Vertices are adjusted using the dominant bone so skin output stays consistent. Bones not present in the source keep their original bindpose.", MessageType.Info);
                 bindposeSourceSlot = EditorGUILayout.ObjectField("Source Slot", bindposeSourceSlot, typeof(SlotDataAsset), false) as SlotDataAsset;
 
-                bool canConform = bindposeSourceSlot != null && bindposeSourceSlot.meshData != null && slot.meshData != null;
+                bool canConform = bindposeSourceSlot != null && !UMAMeshData.IsNullOrEmptyMeshData(bindposeSourceSlot.meshData) && !UMAMeshData.IsNullOrEmptyMeshData(slot.meshData);
                 EditorGUI.BeginDisabledGroup(!canConform);
                 if (GUILayout.Button("Conform Bindposes && Vertices"))
                 {
@@ -666,38 +666,6 @@ namespace UMA.Editors
                 if (!string.IsNullOrEmpty(lastBindposeInfo))
                 {
                     EditorGUILayout.HelpBox(lastBindposeInfo, MessageType.None);
-                }
-                GUIHelper.EndVerticalPadded(10);
-                #endregion
-
-                #region UMA3 Conversion
-                GUIHelper.BeginVerticalPadded(10, new Color(1f, 0.92f, 0.8f));
-                GUILayout.Label("Convert To UMA3", EditorStyles.boldLabel);
-                EditorGUILayout.HelpBox("Convert this slot into a donor slot's UMA3 bindpose space and donor bone ordering. The current slot is modified in place; the donor slot supplies the final bindposes and bone index layout.", MessageType.Info);
-                uma3DonorSlot = EditorGUILayout.ObjectField("Donor Slot", uma3DonorSlot, typeof(SlotDataAsset), false) as SlotDataAsset;
-                overrideUma3AxisConversion = EditorGUILayout.Toggle("Override axis conversion", overrideUma3AxisConversion);
-
-                EditorGUI.BeginDisabledGroup(!overrideUma3AxisConversion);
-                uma3AxisConversion = EditorGUILayout.Vector3Field("Axis Rotation", uma3AxisConversion);
-                EditorGUI.EndDisabledGroup();
-
-                bool canConvertUma3 = uma3DonorSlot != null && uma3DonorSlot.meshData != null && slot.meshData != null;
-                EditorGUI.BeginDisabledGroup(!canConvertUma3);
-                if (GUILayout.Button("Convert Slot To UMA3"))
-                {
-                    lastUma3ConversionInfo = overrideUma3AxisConversion
-                        ? slot.ConvertSlotDataToUMA3(uma3DonorSlot, true, uma3AxisConversion.x, uma3AxisConversion.y, uma3AxisConversion.z)
-                        : slot.ConvertSlotDataToUMA3(uma3DonorSlot);
-                    EditorUtility.SetDirty(slot);
-                    AssetDatabase.SaveAssetIfDirty(slot);
-                    UMAUpdateProcessor.UpdateSlot(slot, false);
-                    reConfigurePreview = true;
-                }
-                EditorGUI.EndDisabledGroup();
-
-                if (!string.IsNullOrEmpty(lastUma3ConversionInfo))
-                {
-                    EditorGUILayout.HelpBox(lastUma3ConversionInfo, MessageType.None);
                 }
                 GUIHelper.EndVerticalPadded(10);
                 #endregion
@@ -739,7 +707,7 @@ namespace UMA.Editors
 
                 weldDistance = EditorGUILayout.FloatField("Max Vertex Distance", weldDistance);
 
-                bool haveWeldSource = WeldToSlot != null && WeldToSlot.meshData != null && slot.meshData != null;
+                bool haveWeldSource = WeldToSlot != null && !UMAMeshData.IsNullOrEmptyMeshData(WeldToSlot.meshData) && !UMAMeshData.IsNullOrEmptyMeshData(slot.meshData);
 
                 if (!haveWeldSource) { EditorGUI.BeginDisabledGroup(true); }
                 GUILayout.Box("Warning! averaging normals will update both slots!", GUILayout.ExpandWidth(true));
@@ -781,7 +749,7 @@ namespace UMA.Editors
                 GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
                 GUILayout.Label("This mesh");
 
-                if (slot.meshData != null)
+                if (!UMAMeshData.IsNullOrEmptyMeshData(slot.meshData))
                 {
                     GUILayout.BeginHorizontal();
                     GUILayout.Label("  Vertices: ", GUILayout.Width(160));
@@ -800,7 +768,7 @@ namespace UMA.Editors
                     EditorGUILayout.HelpBox("MeshData is missing.", MessageType.Info);
                 }
 
-                if (WeldToSlot != null && WeldToSlot.meshData != null)
+                if (WeldToSlot != null && !UMAMeshData.IsNullOrEmptyMeshData(WeldToSlot.meshData))
                 {
                     GUILayout.Space(10);
                     GUILayout.Label("Source Mesh");
@@ -1098,7 +1066,7 @@ namespace UMA.Editors
             GUIHelper.BeginVerticalPadded(10, new Color(0.92f, 0.95f, 1f));
             GUILayout.Label("Transform Rotation / Bindpose", EditorStyles.boldLabel);
 
-            if (slot == null || slot.meshData == null)
+            if (slot == null || UMAMeshData.IsNullOrEmptyMeshData(slot.meshData))
             {
                 EditorGUILayout.HelpBox("MeshData is missing.", MessageType.Info);
                 GUIHelper.EndVerticalPadded(10);
@@ -1139,7 +1107,7 @@ namespace UMA.Editors
             meshTransform = null;
             bindPose = null;
 
-            if (slot == null || slot.meshData == null || slot.meshData.umaBones == null || string.IsNullOrEmpty(transformName))
+            if (slot == null || UMAMeshData.IsNullOrEmptyMeshData(slot.meshData) || slot.meshData.umaBones == null || string.IsNullOrEmpty(transformName))
             {
                 return false;
             }
@@ -1190,7 +1158,7 @@ namespace UMA.Editors
 
         private void ShowDebugVertInfo(SlotDataAsset current, int previewVertex)
         {
-            if (current == null || WeldToSlot == null || current.meshData == null || WeldToSlot.meshData == null)
+            if (current == null || WeldToSlot == null || UMAMeshData.IsNullOrEmptyMeshData(current.meshData) || UMAMeshData.IsNullOrEmptyMeshData(WeldToSlot.meshData))
             {
                 Debug.Log("Missing mesh data for debug info.");
                 return;
@@ -1530,7 +1498,7 @@ namespace UMA.Editors
                 return;
             }
 
-            string existingRootBone = s.meshData != null ? s.meshData.RootBoneName : string.Empty;
+            string existingRootBone = !UMAMeshData.IsNullOrEmptyMeshData(s.meshData) ? s.meshData.RootBoneName : string.Empty;
 
             UMASlotProcessingUtil.UpdateSlotData(s, skinnedMesh, null, seamsMesh, existingRootBone, true, clearNormals, clearTangents);
             string path = AssetDatabase.GetAssetPath(target.GetInstanceID());
@@ -1545,7 +1513,7 @@ namespace UMA.Editors
         /// </summary>
         public static string ConformBindposesAndVertices(SlotDataAsset targetSlot, SlotDataAsset sourceSlot)
         {
-            if (targetSlot == null || sourceSlot == null || targetSlot.meshData == null || sourceSlot.meshData == null)
+            if (targetSlot == null || sourceSlot == null || UMAMeshData.IsNullOrEmptyMeshData(targetSlot.meshData) || UMAMeshData.IsNullOrEmptyMeshData(sourceSlot.meshData))
                 return "Missing mesh data.";
 
             var tMesh = targetSlot.meshData;
@@ -1732,7 +1700,7 @@ namespace UMA.Editors
 
         internal static void Open(SlotDataAsset slot)
         {
-            if (slot == null || slot.meshData == null)
+            if (slot == null || UMAMeshData.IsNullOrEmptyMeshData(slot.meshData))
             {
                 EditorUtility.DisplayDialog("View MeshData", "This SlotDataAsset has no MeshData.", "OK");
                 return;
@@ -1749,7 +1717,7 @@ namespace UMA.Editors
 
         private void OnGUI()
         {
-            if (slotDataAsset == null || meshData == null)
+            if (slotDataAsset == null || UMAMeshData.IsNullOrEmptyMeshData(meshData))
             {
                 EditorGUILayout.HelpBox("MeshData is not available.", MessageType.Info);
                 DrawCloseButton();

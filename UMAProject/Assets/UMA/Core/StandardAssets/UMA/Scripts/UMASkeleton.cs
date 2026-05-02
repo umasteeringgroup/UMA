@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 //using System.Diagnostics;
 using UnityEngine;
 
@@ -267,6 +266,7 @@ namespace UMA
 		public virtual void AddBone(UMATransform transform)
 		{
 			var go = new GameObject(transform.name);
+			go.AddComponent<UMAGeneratedBone>();
 			BoneData newBone = new BoneData()
 			{
 				accessedFrame = -1,
@@ -918,7 +918,14 @@ private void ValidateHierarchy(Transform root, string ignoreTag)
 
     Collect(root);
 
-    var dups = byName.Where(kvp => kvp.Value.Count > 1).ToList();
+	var dups = new List<KeyValuePair<string, List<Transform>>>();
+	foreach (var kvp in byName)
+	{
+		if (kvp.Value.Count > 1)
+		{
+			dups.Add(kvp);
+		}
+	}
     if (dups.Count > 0)
     {
         var msg = new System.Text.StringBuilder();
@@ -949,7 +956,14 @@ private void ValidateBoneDictionary(Transform root)
     var dictCount = boneHashData.Count;
 
     // Spot-check for null transforms in dictionary
-    var nullEntries = boneHashData.Where(kvp => kvp.Value == null || kvp.Value.boneTransform == null).ToList();
+	var nullEntries = new List<KeyValuePair<int, BoneData>>();
+	foreach (var kvp in boneHashData)
+	{
+		if (kvp.Value == null || kvp.Value.boneTransform == null)
+		{
+			nullEntries.Add(kvp);
+		}
+	}
     if (nullEntries.Count > 0 && Debug.isDebugBuild)
     {
         var msg = new System.Text.StringBuilder();

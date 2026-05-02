@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using UMA;
 using UMA.Editors;
 using UnityEditor;
@@ -26,6 +25,85 @@ namespace UMA.Editors
 
         private static readonly Color COLOR_EDGE_SHARED_TO_OVERLAY = new Color(0.25f, 0.5f, 0.9f);
         private static readonly Color COLOR_EDGE_OVERLAY_TO_SLOT = new Color(0.3f, 0.7f, 0.3f);
+
+        private static void SortNodesByYMin(List<Node> nodes)
+        {
+            nodes.Sort((left, right) => left.Rect.yMin.CompareTo(right.Rect.yMin));
+        }
+
+        private List<Node> GetSortedNodesByType(NodeType nodeType)
+        {
+            List<Node> nodes = new List<Node>();
+            for (int nodeIndex = 0; nodeIndex < _nodes.Count; nodeIndex++)
+            {
+                Node node = _nodes[nodeIndex];
+                if (node.Type == nodeType)
+                {
+                    nodes.Add(node);
+                }
+            }
+
+            SortNodesByYMin(nodes);
+            return nodes;
+        }
+
+        private Node GetFirstNodeByType(NodeType nodeType)
+        {
+            for (int nodeIndex = 0; nodeIndex < _nodes.Count; nodeIndex++)
+            {
+                Node node = _nodes[nodeIndex];
+                if (node.Type == nodeType)
+                {
+                    return node;
+                }
+            }
+
+            return null;
+        }
+
+        private List<SlotData> GetNonNullRecipeSlots()
+        {
+            List<SlotData> slots = new List<SlotData>();
+            SlotData[] recipeSlots = _recipe.GetAllSlots();
+            for (int slotIndex = 0; slotIndex < recipeSlots.Length; slotIndex++)
+            {
+                SlotData slot = recipeSlots[slotIndex];
+                if (slot != null)
+                {
+                    slots.Add(slot);
+                }
+            }
+
+            return slots;
+        }
+
+        private SlotData GetFirstNonNullRecipeSlot()
+        {
+            SlotData[] recipeSlots = _recipe.GetAllSlots();
+            for (int slotIndex = 0; slotIndex < recipeSlots.Length; slotIndex++)
+            {
+                if (recipeSlots[slotIndex] != null)
+                {
+                    return recipeSlots[slotIndex];
+                }
+            }
+
+            return null;
+        }
+
+        private static UMATextRecipe GetFirstDroppedRecipe(UnityEngine.Object[] draggedObjects)
+        {
+            for (int objectIndex = 0; objectIndex < draggedObjects.Length; objectIndex++)
+            {
+                UMATextRecipe recipe = draggedObjects[objectIndex] as UMATextRecipe;
+                if (recipe != null)
+                {
+                    return recipe;
+                }
+            }
+
+            return null;
+        }
 
         private static readonly Color COLOR_PORT_FILL = new Color(0.18f, 0.18f, 0.18f);
         private static readonly Color COLOR_PORT_OUTLINE = Color.black;
@@ -827,7 +905,7 @@ namespace UMA.Editors
 
         private void ComputeSlotInsertPreview(float mouseYGraph, Node draggingSlotNode)
         {
-            var slots = _nodes.Where(n => n.Type == NodeType.Slot).OrderBy(n => n.Rect.yMin).ToList();
+            var slots = GetSortedNodesByType(NodeType.Slot);
             if (slots.Count == 0)
             {
                 _slotInsertPreviewIndex = 0;
@@ -882,7 +960,7 @@ namespace UMA.Editors
                 }
             }
 
-            overlayNodes = overlayNodes.OrderBy(n => n.Rect.yMin).ToList();
+            SortNodesByYMin(overlayNodes);
             if (overlayNodes.Count == 0) { insertIndex = 0; guideY = GetOverlayColumnYStartGraphForSlot(slot); return; }
 
             int idx = 0;
@@ -931,13 +1009,13 @@ namespace UMA.Editors
 
         private float GetSlotColumnXScreen()
         {
-            var n = _nodes.FirstOrDefault(nd => nd.Type == NodeType.Slot);
+            var n = GetFirstNodeByType(NodeType.Slot);
             return n != null ? GraphToScreenRect(n.Rect).xMin : 0f;
         }
 
         private float GetOverlayColumnXScreenForSlot(Node slotNode)
         {
-            var overlay = _nodes.FirstOrDefault(n => n.Type == NodeType.Overlay);
+            var overlay = GetFirstNodeByType(NodeType.Overlay);
             if (overlay != null) return GraphToScreenRect(overlay.Rect).xMin;
             return GraphToScreenRect(slotNode.Rect).xMin - ColumnSpacing * _zoom;
         }
@@ -1365,7 +1443,7 @@ namespace UMA.Editors
         private void MoveSlotToIndex(SlotData slot, int newIndex)
         {
             if (slot == null) return;
-            var currentSlots = new List<SlotData>(_recipe.GetAllSlots().Where(s => s != null));
+            var currentSlots = GetNonNullRecipeSlots();
             int oldIndex = currentSlots.FindIndex(s => ReferenceEquals(s, slot));
             if (oldIndex < 0) return;
 
@@ -1444,7 +1522,7 @@ namespace UMA.Editors
                 case NodeType.Overlay:
                     {
                         var ov = _selectedNode.Overlay;
-                        var slot = FindSlotForOverlay(ov) ?? _recipe.GetAllSlots().FirstOrDefault();
+                        var slot = FindSlotForOverlay(ov) ?? GetFirstNonNullRecipeSlot();
                         var overlayEditor = new OverlayEditor(_recipe, slot, ov, null, _asset);
                         var changed = overlayEditor.OnGUI();
                         if (changed) _needsSave = true;
@@ -1495,7 +1573,7 @@ namespace UMA.Editors
 
                     if (_recipe == null)
                     {
-                        var droppedRecipe = DragAndDrop.objectReferences.OfType<UMATextRecipe>().FirstOrDefault();
+                        var droppedRecipe = GetFirstDroppedRecipe(DragAndDrop.objectReferences);
                         if (droppedRecipe != null)
                         {
                             LoadRecipe(droppedRecipe);
@@ -1559,7 +1637,7 @@ namespace UMA.Editors
                             {
                                 if (firstSlot == null)
                                 {
-                                    firstSlot = _recipe.GetAllSlots().FirstOrDefault(s => s != null);
+                                    firstSlot = GetFirstNonNullRecipeSlot();
                                 }
                                 if (firstSlot != null)
                                 {

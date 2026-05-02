@@ -1,10 +1,35 @@
 using UnityEngine;
 using UnityEditor;
 using UnityEngine.Experimental.Rendering;
-using System.Linq;
 
 public class TextureArrayCreator
 {
+    private static Texture2D[] GetSelectedTextures()
+    {
+        Object[] selectedObjects = Selection.objects;
+        int textureCount = 0;
+        for (int objectIndex = 0; objectIndex < selectedObjects.Length; objectIndex++)
+        {
+            if (selectedObjects[objectIndex] is Texture2D)
+            {
+                textureCount++;
+            }
+        }
+
+        Texture2D[] textures = new Texture2D[textureCount];
+        int textureIndex = 0;
+        for (int objectIndex = 0; objectIndex < selectedObjects.Length; objectIndex++)
+        {
+            Texture2D texture = selectedObjects[objectIndex] as Texture2D;
+            if (texture != null)
+            {
+                textures[textureIndex++] = texture;
+            }
+        }
+
+        return textures;
+    }
+
     [MenuItem("Assets/Create/Texture2DArray From Selection")]
     static void CreateTextureArray()
     {
@@ -81,7 +106,7 @@ public class TextureArrayCreator
     [MenuItem("Assets/Create/Build Normal Texture2DArray From Selection")]
     public static void BuildFromSelection()
     {
-        var textures = Selection.objects.OfType<Texture2D>().ToArray();
+        var textures = GetSelectedTextures();
         if (textures.Length == 0) { Debug.LogError("Select one or more Texture2D normal maps."); return; }
 
         System.Array.Sort(textures, (a, b) => GetUDIMNumber(a.name).CompareTo(GetUDIMNumber(b.name)));
@@ -152,7 +177,7 @@ public class TextureArrayCreator
 
     public static void OldBuildFromSelection()
     {
-        var textures = Selection.objects.OfType<Texture2D>().ToArray();
+        var textures = GetSelectedTextures();
         if (textures.Length == 0) { Debug.LogError("Select one or more Texture2D normal maps."); return; }
 
         // Sort by UDIM number to ensure correct array slice order

@@ -716,6 +716,7 @@ namespace UMA.Editors
 		private bool SelectingSlot;
 		private string slotFilter = "";
 		private bool ShowHidetags;
+		private bool ShowHideBaseSlots;
 		private bool ShowSuppressSlots;
 		private bool ShowOverrideDNA;
 		private ReorderableList hideTagsList = null;
@@ -1026,62 +1027,88 @@ namespace UMA.Editors
 
 			#region Hides UI
 			//Hides UI
-			EditorGUILayout.BeginHorizontal();
 			GenerateBaseSlotsEnum(compatibleRaces, false, hides);
-			int hiddenBaseFlags = 0;
-			List<string> newHides = new List<string>();
-			for (int i = 0; i < generatedBaseSlotOptions.Count; i++)
-			{
-				if (hides.Contains(generatedBaseSlotOptions[i]))
-				{
-					hiddenBaseFlags |= 0x1 << i;
-				}
-			}
+			List<string> newHides = hides != null ? new List<string>(hides) : new List<string>();
+			bool hideBaseSlotsChanged = false;
 
-			if (generatedBaseSlotOptionsLabels.Count > 0)
-			{
-				int newHiddenBaseFlags = 0;
-
-				newHiddenBaseFlags = EditorGUILayout.MaskField("Hides Base Slot(s)", hiddenBaseFlags, generatedBaseSlotOptionsLabels.ToArray());
-				for (int i = 0; i < generatedBaseSlotOptionsLabels.Count; i++)
-				{
-					if ((newHiddenBaseFlags & (1 << i)) == (1 << i))
-					{
-						newHides.Add(generatedBaseSlotOptions[i]);
-					}
-				}
-			}
-			else
-			{
-				EditorGUI.BeginDisabledGroup(true);
-				EditorGUILayout.Popup("Hides Base Slot(s)", 0, new string[1] { "Nothing" });
-				
-			}
-
-			GUILayout.Space(8);
-			if (GUILayout.Button("Select", GUILayout.MaxWidth(64), GUILayout.MaxHeight(16)))
-			{
-				slotHidePickerID = EditorGUIUtility.GetControlID(FocusType.Passive) + 101;
-				EditorGUIUtility.ShowObjectPicker<SlotDataAsset>(null, false, "", slotHidePickerID);
-			}
 			if (Event.current.commandName == "ObjectSelectorUpdated" && EditorGUIUtility.GetObjectPickerControlID() == slotHidePickerID)
 			{
 				SlotDataAsset sda = EditorGUIUtility.GetObjectPickerObject() as SlotDataAsset;
-				if (sda != null)
+				if (sda != null && !string.IsNullOrEmpty(sda.slotName))
 				{
-					newHides.Add(sda.slotName);
+					if (!newHides.Contains(sda.slotName))
+					{
+						newHides.Add(sda.slotName);
+						hideBaseSlotsChanged = true;
+					}
+					GenerateBaseSlotsEnum(compatibleRaces, true, newHides);
 					Event.current.Use();
-					GenerateBaseSlotsEnum(compatibleRaces, true, hides);
 				}
 			}
 
-			EditorGUILayout.EndHorizontal();
-			if (newHides.Count > 1)
+			GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
+			GUILayout.Space(10);
+			ShowHideBaseSlots = EditorGUILayout.Foldout(ShowHideBaseSlots, "Hide Base Slots");
+			GUILayout.EndHorizontal();
+
+			if (ShowHideBaseSlots)
 			{
-				GUI.enabled = false;
-				string newHidesResult = String.Join(", ", newHides.ToArray());
-				EditorGUILayout.TextField(newHidesResult);
-				GUI.enabled = true;
+				GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
+
+				if (generatedBaseSlotOptions.Count > 0)
+				{
+					for (int i = 0; i < generatedBaseSlotOptions.Count; i++)
+					{
+						string slotName = generatedBaseSlotOptions[i];
+						string slotLabel = i < generatedBaseSlotOptionsLabels.Count ? generatedBaseSlotOptionsLabels[i] : slotName;
+						bool wasHidden = newHides.Contains(slotName);
+						bool shouldHide = EditorGUILayout.ToggleLeft(slotLabel, wasHidden);
+						if (shouldHide != wasHidden)
+						{
+							if (shouldHide)
+							{
+								newHides.Add(slotName);
+							}
+							else
+							{
+								newHides.RemoveAll(x => string.Equals(x, slotName, StringComparison.Ordinal));
+							}
+							hideBaseSlotsChanged = true;
+						}
+					}
+				}
+				else
+				{
+					using (new EditorGUI.DisabledScope(true))
+					{
+						EditorGUILayout.ToggleLeft("No base slots available", false);
+					}
+				}
+
+				GUILayout.BeginHorizontal();
+				GUILayout.Label("Add Base Slot Asset");
+				if (GUILayout.Button("Select", EditorStyles.miniButton, GUILayout.Width(64)))
+				{
+					slotHidePickerID = EditorGUIUtility.GetControlID(FocusType.Passive) + 101;
+					EditorGUIUtility.ShowObjectPicker<SlotDataAsset>(null, false, "", slotHidePickerID);
+				}
+				GUILayout.EndHorizontal();
+
+				if (newHides.Count > 0)
+				{
+					using (new EditorGUI.DisabledScope(true))
+					{
+						string newHidesResult = String.Join(", ", newHides.ToArray());
+						EditorGUILayout.TextField("Selected", newHidesResult);
+					}
+				}
+
+				GUIHelper.EndVerticalPadded(10);
+			}
+
+			if (hideBaseSlotsChanged)
+			{
+				GenerateBaseSlotsEnum(compatibleRaces, true, newHides);
 			}
 
 			if (ShowHelp)

@@ -4,7 +4,6 @@ using UnityEditor;
 #endif
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine.Serialization;
 
 namespace UMA
@@ -16,6 +15,43 @@ namespace UMA
 
 		[Tooltip("UMA Text recipe that holds the slots and overlays that are the default set up for this race.")]
 		public UMARecipeBase baseRaceRecipe;
+
+		[Tooltip("Use a referenced FBX/prefab SkinnedMeshRenderer as the preserved base race body instead of loading a base race recipe.")]
+		public bool useFbxRoute;
+
+		[Tooltip("The source FBX/prefab SkinnedMeshRenderer used as the preserved base race body when the FBX route is enabled.")]
+		public SkinnedMeshRenderer baseFbxRenderer;
+
+		[Serializable]
+		public class FbxBaseMeshHideBinding
+		{
+			[Tooltip("MeshHideAsset slot name to apply to the preserved FBX base mesh.")]
+			public string slotName;
+
+			[Tooltip("Submesh on the MeshHideAsset mask to read.")]
+			public int maskSubMeshIndex;
+
+			[Tooltip("Submesh on the preserved FBX base mesh to hide.")]
+			public int fbxSubMeshIndex;
+		}
+
+		[Tooltip("Optional bindings that allow existing MeshHideAssets to hide submeshes on the preserved FBX base mesh.")]
+		public List<FbxBaseMeshHideBinding> fbxBaseMeshHideBindings = new List<FbxBaseMeshHideBinding>();
+
+		public bool UsesFbxRoute
+		{
+			get { return useFbxRoute; }
+		}
+
+		public bool HasValidFbxRoute
+		{
+			get { return useFbxRoute && baseFbxRenderer != null; }
+		}
+
+		public bool HasBaseDefinition
+		{
+			get { return HasValidFbxRoute || baseRaceRecipe != null; }
+		}
 		
 		public List<string> wardrobeSlots 
 		{
@@ -92,12 +128,23 @@ namespace UMA
 
 		public UMAPackedRecipeBase.UMAPackRecipe GetPackedRecipe()
         {
+			if (UsesFbxRoute)
+			{
+				return null;
+			}
+
 			if (packedRecipe != null)
             {
                 return packedRecipe;
             }
 
-            packedRecipe = (baseRaceRecipe as UMATextRecipe).PackedLoad();
+			UMATextRecipe textRecipe = baseRaceRecipe as UMATextRecipe;
+			if (textRecipe == null)
+			{
+				return null;
+			}
+
+			packedRecipe = textRecipe.PackedLoad();
 
 			return packedRecipe;
 		}
@@ -598,6 +645,8 @@ namespace UMA
 
 #if UNITY_EDITOR
         [SerializeField, HideInInspector] private UMARecipeBase _lastBaseRecipeRef;
+	[SerializeField, HideInInspector] private bool _lastUseFbxRoute;
+	[SerializeField, HideInInspector] private SkinnedMeshRenderer _lastBaseFbxRendererRef;
         [SerializeField, HideInInspector] private int _lastConvertersVersion;
 #endif
 
@@ -636,6 +685,16 @@ namespace UMA
                 _lastBaseRecipeRef = baseRaceRecipe;
                 changed = true;
             }
+			if (_lastUseFbxRoute != useFbxRoute)
+			{
+				_lastUseFbxRoute = useFbxRoute;
+				changed = true;
+			}
+			if (_lastBaseFbxRendererRef != baseFbxRenderer)
+			{
+				_lastBaseFbxRendererRef = baseFbxRenderer;
+				changed = true;
+			}
             // Detect converter list change
             int currentVer = ComputeConvertersVersion();
             if (_lastConvertersVersion != currentVer)

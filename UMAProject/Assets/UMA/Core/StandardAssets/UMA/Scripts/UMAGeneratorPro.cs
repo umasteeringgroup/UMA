@@ -2,7 +2,6 @@ using UnityEngine;
 using System.Collections.Generic;
 using System;
 using static UMA.UMAData;
-using System.Linq;
 
 namespace UMA
 {
@@ -251,7 +250,7 @@ namespace UMA
 #endif
                 // Let's only add the default overlay if the slot has meshData and NO overlays
                 // This should be able to be removed if default overlay/textures are ever added to uma materials...
-                if ((slot.asset.meshData != null) && (slot.OverlayCount == 0))
+                if ((!UMAMeshData.IsNullOrEmptyMeshData(slot.asset.meshData)) && (slot.OverlayCount == 0))
 				{
                     if (umaGenerator.defaultOverlaydata != null)
                     {

@@ -1068,7 +1068,7 @@ namespace UMA
                 for (int f = 0; f < fragments.Count; f++)
                 {
                     var fragment = fragments[f]; var slot = fragment.slotData;
-                    if (slot?.asset?.meshData == null) continue;
+                    if (UMAMeshData.IsNullOrEmptyMeshData(slot?.asset?.meshData)) continue;
                     if (_uvProcessedSlots.Contains(slot)) continue;
                     int vertexCount = slot.asset.meshData.vertexCount;
                     int start = slot.vertexOffset;

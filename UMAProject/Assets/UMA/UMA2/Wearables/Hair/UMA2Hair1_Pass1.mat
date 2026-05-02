@@ -129,11 +129,11 @@ Material:
     - _Root_Shift: 1
     - _Root_Tip_Intensity: 0
     - _ShadowClip: 0.5
-    - _Smoothness: 0.315
+    - _Smoothness: 0.25
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SpecularMix: 0.752
-    - _SpecularMultiplier: 0.366
+    - _SpecularMultiplier: 0.3
     - _SpecularPowerScale: 41.2
     - _SpecularShiftMax: 0
     - _SpecularShiftMin: -0.233

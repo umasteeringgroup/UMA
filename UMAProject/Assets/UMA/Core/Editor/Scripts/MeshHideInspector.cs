@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEditor;
 using UnityEngine.SceneManagement;
 using UnityEditor.SceneManagement;
@@ -243,7 +243,7 @@ namespace UMA.Editors
 				return;
 			}
 
-			if (_meshData == null)
+			if (UMAMeshData.IsNullOrEmptyMeshData(_meshData))
 			{
 				_meshData = new UMAMeshData();
 			}

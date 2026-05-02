@@ -1,5 +1,4 @@
 ﻿using System.Reflection;
-using System.Linq;
 using UnityEngine;
 using UnityEditor;
 using UnityEditorInternal;
@@ -40,6 +39,26 @@ namespace UMA.Editors
 
 		private bool initialized = false;
 
+		private static DNAEvaluator.ConfigAttribute GetConfigAttribute(FieldInfo fieldInfo)
+		{
+			if (fieldInfo == null)
+			{
+				return null;
+			}
+
+			object[] attributes = fieldInfo.GetCustomAttributes(typeof(DNAEvaluator.ConfigAttribute), true);
+			for (int attributeIndex = 0; attributeIndex < attributes.Length; attributeIndex++)
+			{
+				DNAEvaluator.ConfigAttribute attribute = attributes[attributeIndex] as DNAEvaluator.ConfigAttribute;
+				if (attribute != null)
+				{
+					return attribute;
+				}
+			}
+
+			return null;
+		}
+
 		public bool DrawLabels
 		{
 			set
@@ -78,7 +97,7 @@ namespace UMA.Editors
 			{
 				if (this.fieldInfo != null)
 				{
-					var attrib = this.fieldInfo.GetCustomAttributes(typeof(DNAEvaluator.ConfigAttribute), true).FirstOrDefault() as DNAEvaluator.ConfigAttribute;
+					var attrib = GetConfigAttribute(this.fieldInfo);
 					if (attrib != null)
 					{
 						_drawLabels = attrib.drawLabels;
@@ -284,7 +303,7 @@ namespace UMA.Editors
 			{
 				if (this.fieldInfo != null)
 				{
-					var attrib = this.fieldInfo.GetCustomAttributes(typeof(DNAEvaluator.ConfigAttribute), true).FirstOrDefault() as DNAEvaluator.ConfigAttribute;
+					var attrib = GetConfigAttribute(this.fieldInfo);
 					if (attrib != null)
 					{
 						_drawLabels = attrib.drawLabels;

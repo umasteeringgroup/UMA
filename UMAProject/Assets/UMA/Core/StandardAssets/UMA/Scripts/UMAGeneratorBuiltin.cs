@@ -673,7 +673,7 @@ namespace UMA
                 {
                     SlotData slot = slotList[i];
 
-                    if (slot != null && slot.asset.meshData != null)
+                    if (slot != null && !UMAMeshData.IsNullOrEmptyMeshData(slot.asset.meshData))
                     {
 						string key = "slot:"+slot.asset.slotName;
                      var slotMaterial = slot.material;
@@ -763,6 +763,7 @@ namespace UMA
 				{
 					if (Debug.isDebugBuild)
 					{
+                        Debug.LogError($"Exception while generating UMA {umaData.name}: {ex.Message}", umaData.gameObject);
 						Debug.LogException(ex);
 					}
 				}

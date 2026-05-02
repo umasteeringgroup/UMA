@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using UMA.CharacterSystem;
 using UMA.Editors;
 using UMA.PoseTools;
@@ -548,10 +547,38 @@ namespace UMA.Controls
                 }
             }
 
-            return theTypes;
-            /*			return AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes())
-                             .Where(x => typeof(IUMAAddressablePlugin).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract)
-                             .Select(x => x).ToList();*/
+			return theTypes;
+        }
+
+        private static List<AssetItem> FilterAssetItemsByType(List<AssetItem> sourceItems, Type assetType)
+        {
+            List<AssetItem> filteredItems = new List<AssetItem>();
+            if (sourceItems == null)
+            {
+                return filteredItems;
+            }
+
+            for (int itemIndex = 0; itemIndex < sourceItems.Count; itemIndex++)
+            {
+                AssetItem item = sourceItems[itemIndex];
+                if (item != null && item._Type == assetType)
+                {
+                    filteredItems.Add(item);
+                }
+            }
+
+            return filteredItems;
+        }
+
+        private AssetItem GetFirstSelectedAsset(Type assetType)
+        {
+            List<AssetItem> selectedAssets = GetSelectedAssets(assetType);
+            if (selectedAssets == null || selectedAssets.Count == 0)
+            {
+                return null;
+            }
+
+            return selectedAssets[0];
         }
 
         [MenuItem("UMA/Global Library", priority = 99)]
@@ -1274,30 +1301,6 @@ namespace UMA.Controls
                         dest.fColors = sourceColors;
                         continue;
                     }
-
-                    /*
-					Dictionary<string, UMAPackedRecipeBase.PackedOverlayColorDataV3> NewColors = new Dictionary<string, UMAPackedRecipeBase.PackedOverlayColorDataV3>();
-
-					foreach(var ocd in dest.fColors)
-                    {
-						if (!string.IsNullOrEmpty(ocd.name))
-						{
-							NewColors.Add(ocd.name, ocd);
-						}
-                    }
-
-					foreach(var color in col)
-                    {
-						if (NewColors.ContainsKey(color.name))
-                        {
-							NewColors[color.name] = color;
-                        }
-						else
-                        {
-							NewColors.Add(color.name, color);
-                        }
-                    }
-					dest.fColors = NewColors.Values.ToArray();*/
 
                     List<UMAPackedRecipeBase.PackedOverlayColorDataV3> currentColors = new List<UMAPackedRecipeBase.PackedOverlayColorDataV3>();
                     currentColors.AddRange(dest.fColors);
@@ -2191,7 +2194,7 @@ namespace UMA.Controls
             RaceData rc = Race as RaceData;
             List<AssetItem> recipeItems = UAI.GetAssetItems(rc.baseRaceRecipe as UMAPackedRecipeBase);
 
-            recipeItems = recipeItems.Where(x => x._Type == typeof(SlotDataAsset)).ToList();
+            recipeItems = FilterAssetItemsByType(recipeItems, typeof(SlotDataAsset));
             SelectByAssetItems(recipeItems);
         }
 
@@ -2200,7 +2203,7 @@ namespace UMA.Controls
             if (UAI == null) return;
             RaceData rc = Race as RaceData;
             List<AssetItem> recipeItems = UAI.GetAssetItems(rc.baseRaceRecipe as UMAPackedRecipeBase);
-            recipeItems = recipeItems.Where(x => x._Type == typeof(OverlayDataAsset)).ToList();
+            recipeItems = FilterAssetItemsByType(recipeItems, typeof(OverlayDataAsset));
             SelectByAssetItems(recipeItems);
         }
 
@@ -2966,7 +2969,7 @@ namespace UMA.Controls
                 AddedMHA = EditorGUILayout.ObjectField("", AddedMHA, typeof(MeshHideAsset), false, GUILayout.Width(175)) as MeshHideAsset;
                 if (GUILayout.Button("Selected", GUILayout.Width(75)))
                 {
-                    var o = GetSelectedAssets(typeof(MeshHideAsset)).FirstOrDefault();
+                    var o = GetFirstSelectedAsset(typeof(MeshHideAsset));
                     if (o != null)
                     {
                         AddedMHA = o.Item as MeshHideAsset;
@@ -3038,7 +3041,7 @@ namespace UMA.Controls
                 umaMaterial = EditorGUILayout.ObjectField("", umaMaterial, typeof(UMAMaterial), false, GUILayout.Width(175)) as UMAMaterial;
                 if (GUILayout.Button("Selected",GUILayout.Width(75)))
                 {
-                    var o = GetSelectedAssets(typeof(UMAMaterial)).FirstOrDefault();
+                    var o = GetFirstSelectedAsset(typeof(UMAMaterial));
                     if (o != null)
                     {
                         umaMaterial = o.Item as UMAMaterial;
@@ -3094,7 +3097,7 @@ namespace UMA.Controls
                 umaRaceData = EditorGUILayout.ObjectField("", umaRaceData, typeof(RaceData), false, GUILayout.Width(175)) as RaceData;
                 if (GUILayout.Button("Selected", GUILayout.Width(75)))
                 {
-                    var o = GetSelectedAssets(typeof(RaceData)).FirstOrDefault();
+                    var o = GetFirstSelectedAsset(typeof(RaceData));
                     if (o != null)
                     {
                         umaRaceData = o.Item as RaceData;
@@ -3206,7 +3209,7 @@ namespace UMA.Controls
                 umaOverlay = EditorGUILayout.ObjectField("", umaOverlay, typeof(OverlayDataAsset), false, GUILayout.Width(175)) as OverlayDataAsset;
                 if (GUILayout.Button("Selected", GUILayout.Width(75)))
                 {
-                    var o = GetSelectedAssets(typeof(OverlayDataAsset)).FirstOrDefault();
+                    var o = GetFirstSelectedAsset(typeof(OverlayDataAsset));
                     if (o != null)
                     {
                         umaOverlay = o.Item as OverlayDataAsset;
@@ -3247,7 +3250,7 @@ namespace UMA.Controls
                 umaSlot = EditorGUILayout.ObjectField("", umaSlot, typeof(SlotDataAsset), false, GUILayout.Width(175)) as SlotDataAsset;
                 if (GUILayout.Button("Selected", GUILayout.Width(75)))
                 {
-                    var o = GetSelectedAssets(typeof(SlotDataAsset)).FirstOrDefault();
+                    var o = GetFirstSelectedAsset(typeof(SlotDataAsset));
                     if (o != null)
                     {
                         umaSlot = o.Item as SlotDataAsset;
@@ -3528,7 +3531,7 @@ namespace UMA.Controls
                 for (int i = 0; i < slots.Count; i++)
                 {
                     var slot = slots[i];
-                    if (slot == null || slot.meshData == null)
+                    if (slot == null || UMAMeshData.IsNullOrEmptyMeshData(slot.meshData))
                     {
                         skipped++;
                         continue;
@@ -3611,7 +3614,7 @@ namespace UMA.Controls
                 }
 
                 SlotDataAsset slot = mha.asset;
-                if (slot == null || slot.meshData == null)
+                if (slot == null || UMAMeshData.IsNullOrEmptyMeshData(slot.meshData))
                 {
                     continue;
                 }
@@ -4453,7 +4456,7 @@ namespace UMA.Controls
                 if (slots[i] != null)
                 {
                     var s = slots[i].Item as SlotDataAsset;
-                    if (s.meshData != null)
+                    if (!UMAMeshData.IsNullOrEmptyMeshData(s.meshData))
                     {
                         s.ValidateMeshData();
                         if (!string.IsNullOrEmpty(s.Errors))

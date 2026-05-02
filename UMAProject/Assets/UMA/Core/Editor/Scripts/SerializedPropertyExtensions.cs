@@ -8,7 +8,6 @@
 // </author>
 
 using System.Collections;
-using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using UnityEditor;
@@ -17,6 +16,21 @@ namespace UMA
 {
     public static class SerializedPropertyExtensions
     {
+
+        private static string ExtractDigits(string value)
+        {
+            System.Text.StringBuilder digits = new System.Text.StringBuilder();
+            for (int characterIndex = 0; characterIndex < value.Length; characterIndex++)
+            {
+                char character = value[characterIndex];
+                if (char.IsDigit(character))
+                {
+                    digits.Append(character);
+                }
+            }
+
+            return digits.ToString();
+        }
 
         public static T GetValue<T>(this SerializedProperty property) where T : class
         {
@@ -28,7 +42,7 @@ namespace UMA
             {
                 if (fieldStructure[i].Contains("["))
                 {
-                    int index = System.Convert.ToInt32(new string(fieldStructure[i].Where(c => char.IsDigit(c)).ToArray()));
+                    int index = System.Convert.ToInt32(ExtractDigits(fieldStructure[i]));
                     obj = GetFieldValueWithIndex(rgx.Replace(fieldStructure[i], ""), obj, index);
                 }
                 else
@@ -55,7 +69,7 @@ namespace UMA
             {
                 if (fieldStructure[i].Contains("["))
                 {
-                    int index = System.Convert.ToInt32(new string(fieldStructure[i].Where(c => char.IsDigit(c)).ToArray()));
+                    int index = System.Convert.ToInt32(ExtractDigits(fieldStructure[i]));
                     obj = GetFieldValueWithIndex(rgx.Replace(fieldStructure[i], ""), obj, index);
                 }
                 else
@@ -64,10 +78,10 @@ namespace UMA
                 }
             }
 
-            string fieldName = fieldStructure.Last();
+            string fieldName = fieldStructure[fieldStructure.Length - 1];
             if (fieldName.Contains("["))
             {
-                int index = System.Convert.ToInt32(new string(fieldName.Where(c => char.IsDigit(c)).ToArray()));
+                int index = System.Convert.ToInt32(ExtractDigits(fieldName));
                 return SetFieldValueWithIndex(rgx.Replace(fieldName, ""), obj, index, value);
             }
             else

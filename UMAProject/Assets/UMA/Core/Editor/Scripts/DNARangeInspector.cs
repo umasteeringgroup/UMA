@@ -35,7 +35,7 @@ namespace UMA.Editors
 				}
 				else
 				{
-					dnaSource = dnaRange.dnaConverter.DNAType.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase;
+					dnaSource = UMADnaBase.CreateInstance(dnaRange.dnaConverter);
 					if (dnaSource != null)
 					{
 
@@ -68,7 +68,7 @@ namespace UMA.Editors
 			}
 			else
 			{
-				originalDNA = originalConverter.DNAType.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase;
+				originalDNA = UMADnaBase.CreateInstance(originalConverter);
 				if (originalDNA != null)
 				{
 					originalNames.AddRange(originalDNA.Names);
@@ -81,7 +81,7 @@ namespace UMA.Editors
 			}
 			else
 			{
-				replacingDNA = replacingConverter.DNAType.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase;
+				replacingDNA = UMADnaBase.CreateInstance(replacingConverter);
 				if (replacingDNA != null)
 				{
 					replacingNames.AddRange(replacingDNA.Names);

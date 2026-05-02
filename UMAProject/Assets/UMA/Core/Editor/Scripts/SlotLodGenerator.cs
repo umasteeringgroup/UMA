@@ -1,4 +1,4 @@
-﻿#if UNITY_EDITOR
+#if UNITY_EDITOR
 
 using System;
 using System.Collections.Generic;
@@ -30,7 +30,7 @@ namespace UMA.Editors
                 Debug.LogError("Slot is null.");
                 return false;
             }
-            if (slot.meshData == null || slot.meshData.submeshes == null || slot.meshData.submeshes.Length == 0)
+            if (UMAMeshData.IsNullOrEmptyMeshData(slot.meshData) || slot.meshData.submeshes == null || slot.meshData.submeshes.Length == 0)
             {
                 Debug.LogError("Slot mesh data is missing or has no submeshes.");
                 return false;
@@ -166,7 +166,7 @@ namespace UMA.Editors
                 }
                  try
                     {
-                        int verify = (slot.meshData != null && slot.meshData.submeshes != null && slot.meshData.submeshes.Length > sub && slot.meshData.submeshes[sub] != null)
+                        int verify = (!UMAMeshData.IsNullOrEmptyMeshData(slot.meshData) && slot.meshData.submeshes != null && slot.meshData.submeshes.Length > sub && slot.meshData.submeshes[sub] != null)
                             ? slot.meshData.submeshes[sub].LODCount()
                             : -1;
                         Debug.Log($"[SlotLOD][Unity] VERIFY slot='{slot.slotName}' lodCount={verify}");
@@ -198,7 +198,7 @@ namespace UMA.Editors
             {
                 return false;
             }
-            if (slot.meshData == null || slot.meshData.submeshes == null || slot.meshData.submeshes.Length == 0)
+            if (UMAMeshData.IsNullOrEmptyMeshData(slot.meshData) || slot.meshData.submeshes == null || slot.meshData.submeshes.Length == 0)
             {
                 return false;
             }
@@ -405,7 +405,7 @@ namespace UMA.Editors
             for (int i = 0; i < vCount; i++)
             {
                 Vector3 p = positions[i];
-                // Skip vertices on the center line (X ≈ 0)
+                // Skip vertices on the center line (X � 0)
                 if (Mathf.Abs(p.x) < symmetryTolerance)
                 {
                     continue;
@@ -1026,7 +1026,7 @@ namespace UMA.Editors
 
         public static bool ValidateInternalLods(SlotDataAsset slot)
         {
-            if (slot == null || slot.meshData == null || slot.meshData.submeshes == null || slot.meshData.submeshes.Length == 0)
+            if (slot == null || UMAMeshData.IsNullOrEmptyMeshData(slot.meshData) || slot.meshData.submeshes == null || slot.meshData.submeshes.Length == 0)
             {
                 return false;
             }

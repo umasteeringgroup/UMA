@@ -571,7 +571,9 @@ namespace UMA.Editors
             private float _dragStartRotation;
             private Vector2 _dragStartScale;
             private Vector2 _dragPivot;
+            private readonly HashSet<string> _baseTextureLookupLogMessages = new HashSet<string>();
             private static readonly Color PreviewClear = new Color(0f, 0f, 0f, 0f);
+            private const int SlotDiagnosticLimit = 24;
 
             private enum BaseOverlaySource
             {
@@ -633,6 +635,7 @@ namespace UMA.Editors
                 _useUvRect = LooksLikeUvRect(_workingRect);
                 _pickedBaseOverlayAsset = preferredBaseOverlay;
                 BuildBaseChoices(preferredBaseOverlay);
+                LogBaseTextureLookup("Opened overlay positioner lookup diagnostics for " + GetOverlayLookupContext() + ".");
             }
 
             private void BuildBaseChoices(OverlayDataAsset preferredBaseOverlay)
@@ -1176,7 +1179,7 @@ namespace UMA.Editors
                     _rectChanged = false;
                 }
 
-                Texture baseTexture = GetPreviewTexture(SelectedBaseOverlay);
+                Texture baseTexture = GetEffectiveBasePreviewTexture();
                 Texture overlayTexture = GetPreviewTexture(_overlayData);
                 Rect previewArea = GUILayoutUtility.GetRect(10f, 10000f, 320f, 520f, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
                 Rect previewRect = GetPreviewRect(previewArea, baseTexture, overlayTexture);
@@ -1808,11 +1811,7 @@ namespace UMA.Editors
 
             private Vector2 GetReferenceSize()
             {
-                Texture referenceTexture = GetRuntimeBaseTexture();
-                if (referenceTexture == null)
-                {
-                    referenceTexture = GetPreviewTexture(SelectedBaseOverlay);
-                }
+                Texture referenceTexture = GetEffectiveBasePreviewTexture();
                 if (referenceTexture == null)
                 {
                     referenceTexture = GetPreviewTexture(_overlayData);
@@ -1826,20 +1825,318 @@ namespace UMA.Editors
                 return new Vector2(Mathf.Max(1f, referenceTexture.width), Mathf.Max(1f, referenceTexture.height));
             }
 
+            private Texture GetEffectiveBasePreviewTexture()
+            {
+                Texture explicitBaseTexture = GetPreviewTexture(SelectedBaseOverlay);
+                if (explicitBaseTexture != null)
+                {
+                    return explicitBaseTexture;
+                }
+
+                return GetRuntimeBaseTexture();
+            }
+
             private Texture GetRuntimeBaseTexture()
             {
+                Texture selectedAvatarTexture = GetSelectedAvatarBaseTexture();
+                if (selectedAvatarTexture != null)
+                {
+                    return selectedAvatarTexture;
+                }
+
+                LogBaseTextureLookup("Selected-avatar base texture lookup did not resolve a texture for " + GetOverlayLookupContext() + ". Falling back to the current slot overlay.");
+
                 if (_slotData == null)
                 {
+                    LogBaseTextureLookup("Current slot data is null while resolving runtime base texture for " + GetOverlayLookupContext() + ".");
                     return null;
                 }
 
                 OverlayData runtimeBaseOverlay = _slotData.GetOverlay(0);
                 if (runtimeBaseOverlay == null)
                 {
+                    LogBaseTextureLookup("Current slot '" + GetCurrentSlotNameKey() + "' has no overlay at index 0 while resolving runtime base texture.");
                     return null;
                 }
 
-                return runtimeBaseOverlay.GetTexture(0);
+                Texture runtimeBaseTexture = runtimeBaseOverlay.GetTexture(0);
+                if (runtimeBaseTexture == null)
+                {
+                    LogBaseTextureLookup("Current slot fallback overlay '" + runtimeBaseOverlay.overlayName + "' has no texture at index 0.");
+                }
+
+                return runtimeBaseTexture;
+            }
+
+            private Texture GetSelectedAvatarBaseTexture()
+            {
+                DynamicCharacterAvatar selectedAvatar = GetSelectedSceneAvatar();
+                Texture selectedAvatarTexture = GetAvatarBaseTexture(selectedAvatar);
+                if (selectedAvatarTexture != null)
+                {
+                    return selectedAvatarTexture;
+                }
+
+                if (selectedAvatar != null)
+                {
+                    LogBaseTextureLookup("Selected avatar '" + selectedAvatar.name + "' did not provide a usable base texture for " + GetOverlayLookupContext() + ".");
+                }
+
+                DynamicCharacterAvatar[] avatars = UnityEngine.Object.FindObjectsByType<DynamicCharacterAvatar>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+                if (avatars == null || avatars.Length == 0)
+                {
+                    LogBaseTextureLookup("No scene DynamicCharacterAvatar instances were found while resolving a base texture for " + GetOverlayLookupContext() + ".");
+                    return null;
+                }
+
+                for (int avatarIndex = 0; avatarIndex < avatars.Length; avatarIndex++)
+                {
+                    DynamicCharacterAvatar avatar = avatars[avatarIndex];
+                    if (avatar == null || ReferenceEquals(avatar, selectedAvatar) || EditorUtility.IsPersistent(avatar) || avatar.gameObject == null || !avatar.gameObject.scene.IsValid())
+                    {
+                        continue;
+                    }
+
+                    Texture avatarTexture = GetAvatarBaseTexture(avatar);
+                    if (avatarTexture != null)
+                    {
+                        return avatarTexture;
+                    }
+                }
+
+                LogBaseTextureLookup("Scene avatar scan did not find any matching base texture for " + GetOverlayLookupContext() + ". Evaluated " + avatars.Length + " avatar(s).");
+
+                return null;
+            }
+
+            private Texture GetAvatarBaseTexture(DynamicCharacterAvatar avatar)
+            {
+                if (avatar == null)
+                {
+                    LogBaseTextureLookup("Cannot resolve base texture because the avatar reference is null for " + GetOverlayLookupContext() + ".");
+                    return null;
+                }
+
+                if (avatar.umaRecipe == null)
+                {
+                    LogBaseTextureLookup("Avatar '" + avatar.name + "' has a null umaRecipe while resolving a base texture for " + GetOverlayLookupContext() + ".");
+                    return null;
+                }
+
+                SlotData matchedSlot = FindAvatarSlotForCurrentOverlay(avatar);
+                if (matchedSlot == null)
+                {
+                    LogBaseTextureLookup("Avatar '" + avatar.name + "' did not contain a matching slot for " + GetOverlayLookupContext() + ".");
+                    return null;
+                }
+
+                OverlayData baseOverlay = matchedSlot.GetOverlay(0);
+                if (baseOverlay == null)
+                {
+                    LogBaseTextureLookup("Avatar '" + avatar.name + "' matched slot '" + matchedSlot.slotName + "' but that slot has no overlay at index 0.");
+                    return null;
+                }
+
+                Texture baseTexture = baseOverlay.GetTexture(0);
+                if (baseTexture == null)
+                {
+                    LogBaseTextureLookup("Avatar '" + avatar.name + "' matched slot '" + matchedSlot.slotName + "' and overlay '" + baseOverlay.overlayName + "', but texture index 0 is null.");
+                }
+
+                return baseTexture;
+            }
+
+            private SlotData FindAvatarSlotForCurrentOverlay(DynamicCharacterAvatar avatar)
+            {
+                if (avatar == null)
+                {
+                    LogBaseTextureLookup("FindAvatarSlotForCurrentOverlay was called with a null avatar for " + GetOverlayLookupContext() + ".");
+                    return null;
+                }
+
+                if (avatar.umaRecipe == null)
+                {
+                    LogBaseTextureLookup("Avatar '" + avatar.name + "' has a null umaRecipe while attempting slot lookup for " + GetOverlayLookupContext() + ".");
+                    return null;
+                }
+
+                if (_slotData == null)
+                {
+                    LogBaseTextureLookup("Current overlay editor slot data is null while attempting avatar slot lookup for avatar '" + avatar.name + "'.");
+                    return null;
+                }
+
+                string sourceSlotKey = GetCurrentSourceSlotKey();
+                string slotNameKey = GetCurrentSlotNameKey();
+                if (string.IsNullOrWhiteSpace(sourceSlotKey) && string.IsNullOrWhiteSpace(slotNameKey))
+                {
+                    LogBaseTextureLookup("No source-slot or slot-name key could be derived from the current overlay editor slot while matching avatar '" + avatar.name + "'.");
+                    return null;
+                }
+
+                SlotData[] slots = avatar.umaRecipe.GetAllSlots();
+                if (slots == null || slots.Length == 0)
+                {
+                    LogBaseTextureLookup("Avatar '" + avatar.name + "' has no slots in umaRecipe while matching " + GetOverlayLookupContext() + ".");
+                    return null;
+                }
+
+                SlotData legacyMatch = null;
+
+                for (int slotIndex = 0; slotIndex < slots.Length; slotIndex++)
+                {
+                    SlotData slot = slots[slotIndex];
+                    if (slot == null)
+                    {
+                        continue;
+                    }
+
+                    if (SlotMatchesSourceSlot(slot, sourceSlotKey) || SlotMatchesSourceSlot(slot, slotNameKey))
+                    {
+                        return slot;
+                    }
+
+                    if (legacyMatch == null && (SlotMatchesSlotName(slot, sourceSlotKey) || SlotMatchesSlotName(slot, slotNameKey)))
+                    {
+                        legacyMatch = slot;
+                    }
+                }
+
+                if (legacyMatch == null)
+                {
+                    LogBaseTextureLookup(
+                        "Avatar '" + avatar.name + "' had no slot matching sourceSlot='" + sourceSlotKey + "' or slotName='" + slotNameKey + "'. Available slots: "
+                        + DescribeAvatarSlots(slots));
+                }
+
+                return legacyMatch;
+            }
+
+            private string GetCurrentSourceSlotKey()
+            {
+                if (_slotData == null)
+                {
+                    return null;
+                }
+
+                if (_slotData.asset != null && !string.IsNullOrWhiteSpace(_slotData.asset.sourceSlot))
+                {
+                    return _slotData.asset.sourceSlot;
+                }
+
+                return GetCurrentSlotNameKey();
+            }
+
+            private string GetCurrentSlotNameKey()
+            {
+                if (_slotData == null)
+                {
+                    return null;
+                }
+
+                if (_slotData.isPlaceholderSlot && !string.IsNullOrWhiteSpace(_slotData.placeholderSlotName))
+                {
+                    return _slotData.placeholderSlotName;
+                }
+
+                return _slotData.slotName;
+            }
+
+            private static bool SlotMatchesSourceSlot(SlotData slot, string slotKey)
+            {
+                return slot != null
+                    && slot.asset != null
+                    && !string.IsNullOrWhiteSpace(slotKey)
+                    && string.Equals(slot.asset.sourceSlot, slotKey, StringComparison.OrdinalIgnoreCase);
+            }
+
+            private static bool SlotMatchesSlotName(SlotData slot, string slotKey)
+            {
+                return slot != null
+                    && !string.IsNullOrWhiteSpace(slotKey)
+                    && string.Equals(slot.slotName, slotKey, StringComparison.OrdinalIgnoreCase);
+            }
+
+            private DynamicCharacterAvatar GetSelectedSceneAvatar()
+            {
+                GameObject selectedGameObject = Selection.activeGameObject;
+                if (selectedGameObject == null)
+                {
+                    LogBaseTextureLookup("Selection.activeGameObject is null while resolving the selected scene avatar for " + GetOverlayLookupContext() + ". Active object is " + DescribeUnityObject(Selection.activeObject) + ".");
+                    return null;
+                }
+
+                DynamicCharacterAvatar avatar = selectedGameObject.GetComponentInParent<DynamicCharacterAvatar>();
+                if (avatar == null || avatar.gameObject == null)
+                {
+                    LogBaseTextureLookup("Selection.activeGameObject '" + selectedGameObject.name + "' does not resolve to a DynamicCharacterAvatar while looking up a base texture for " + GetOverlayLookupContext() + ".");
+                    return null;
+                }
+
+                if (EditorUtility.IsPersistent(avatar) || !avatar.gameObject.scene.IsValid())
+                {
+                    LogBaseTextureLookup("Selected avatar '" + avatar.name + "' is persistent or not in a valid scene while resolving a base texture for " + GetOverlayLookupContext() + ".");
+                    return null;
+                }
+
+                return avatar;
+            }
+
+            private void LogBaseTextureLookup(string message)
+            {
+                if (string.IsNullOrWhiteSpace(message) || !_baseTextureLookupLogMessages.Add(message))
+                {
+                    return;
+                }
+
+                Debug.Log("[Overlay Positioner] " + message);
+            }
+
+            private string GetOverlayLookupContext()
+            {
+                string overlayName = _overlayData != null ? _overlayData.overlayName : "<null overlay>";
+                string slotName = GetCurrentSlotNameKey();
+                string sourceSlot = GetCurrentSourceSlotKey();
+                return "overlay='" + overlayName + "', slotName='" + (string.IsNullOrWhiteSpace(slotName) ? "<null>" : slotName) + "', sourceSlot='" + (string.IsNullOrWhiteSpace(sourceSlot) ? "<null>" : sourceSlot) + "'";
+            }
+
+            private static string DescribeUnityObject(UnityEngine.Object obj)
+            {
+                if (obj == null)
+                {
+                    return "<null>";
+                }
+
+                return "'" + obj.name + "' (" + obj.GetType().Name + ")";
+            }
+
+            private static string DescribeAvatarSlots(SlotData[] slots)
+            {
+                if (slots == null || slots.Length == 0)
+                {
+                    return "<none>";
+                }
+
+                List<string> descriptions = new List<string>();
+                for (int i = 0; i < slots.Length; i++)
+                {
+                    SlotData slot = slots[i];
+                    if (slot == null)
+                    {
+                        continue;
+                    }
+
+                    string slotName = string.IsNullOrWhiteSpace(slot.slotName) ? "<null>" : slot.slotName;
+                    string sourceSlot = slot.asset != null && !string.IsNullOrWhiteSpace(slot.asset.sourceSlot) ? slot.asset.sourceSlot : "<null>";
+                    descriptions.Add("'" + slotName + "' [sourceSlot='" + sourceSlot + "']");
+                    if (descriptions.Count >= SlotDiagnosticLimit)
+                    {
+                        descriptions.Add("...");
+                        break;
+                    }
+                }
+
+                return descriptions.Count == 0 ? "<none>" : string.Join(", ", descriptions);
             }
 
             private static Rect GetUvRectForOverlay(OverlayData overlayData)

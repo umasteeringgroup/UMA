@@ -2,7 +2,6 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System;
-using System.Linq;
 
 namespace UMA
 {
@@ -711,7 +710,7 @@ namespace UMA
                 return true;
             }
 
-            if (asset.meshData != null)
+            if (!UMAMeshData.IsNullOrEmptyMeshData(asset.meshData))
             {
                 if (material == null)
                 {

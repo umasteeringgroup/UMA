@@ -36,18 +36,7 @@ namespace UMA
 			{
 				if (_dnaConverter.Value != null)
 				{
-					if (dnaConverter.DNAType == typeof(DynamicUMADna))
-					{
-						return ((IDynamicDNAConverter)dnaConverter).dnaAsset.Names.Length;
-					}
-					else
-					{
-						var legacyDNA = dnaConverter.DNAType.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase;
-						if (legacyDNA != null)
-						{
-							return legacyDNA.Names.Length;
-						}
-					}
+					return UMADnaBase.GetNames(dnaConverter).Length;
 				}
 				return 0;
 			}
@@ -73,7 +62,7 @@ namespace UMA
 			}
 			else
 			{
-				originalDNA = originalConverter.DNAType.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase;
+				originalDNA = UMADnaBase.CreateInstance(originalConverter);
 				if (originalDNA != null)
 				{
 					originalNames.AddRange(originalDNA.Names);
@@ -86,7 +75,7 @@ namespace UMA
 			}
 			else
 			{
-				replacingDNA = replacingConverter.DNAType.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase;
+				replacingDNA = UMADnaBase.CreateInstance(replacingConverter);
 				if (replacingDNA != null)
 				{
 					replacingNames.AddRange(replacingDNA.Names);
@@ -146,7 +135,7 @@ namespace UMA
 			}
 			else
 			{
-				names = (dnaConverter.DNAType.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase).Names;
+				names = UMADnaBase.GetNames(dnaConverter);
 			}
 			//CharacterSystem.DNAEditor.Initialize calls this- who knew?
 			if (index < names.Length && names[index] == name)
@@ -178,7 +167,7 @@ namespace UMA
 			}
 			else
 			{
-				names = (dnaConverter.DNAType.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase).Names;
+				names = UMADnaBase.GetNames(dnaConverter);
 			}
 
 			for(int i = 0; i < names.Length; i++)
@@ -213,7 +202,7 @@ namespace UMA
 			}
 			else
 			{
-				names = (dnaConverter.DNAType.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase).Names;
+				names = UMADnaBase.GetNames(dnaConverter);
 			}
 
 			for (int i = 0; i < names.Length; i++)

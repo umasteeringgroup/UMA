@@ -5,7 +5,6 @@
 //////////////////////////////////////////////////////
 
 using System;
-using System.Linq;
 using System.Reflection;
 using System.Collections.Generic;
 using UnityEditor;
@@ -41,12 +40,19 @@ namespace UMA.ShaderPackager
 
       public static bool DoesTypeExist(string className)
             {
-         var foundType = (from assembly in AppDomain.CurrentDomain.GetAssemblies()
-                          from type in GetTypesSafe(assembly)
-                          where type.Name == className
-                          select type).FirstOrDefault();
+         System.Reflection.Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+         for (int assemblyIndex = 0; assemblyIndex < assemblies.Length; assemblyIndex++)
+         {
+            foreach (Type type in GetTypesSafe(assemblies[assemblyIndex]))
+            {
+               if (type.Name == className)
+               {
+                  return true;
+               }
+            }
+         }
 
-         return foundType != null;
+         return false;
          }
 
       public static IEnumerable<Type> GetTypesSafe(System.Reflection.Assembly assembly)
@@ -62,7 +68,17 @@ namespace UMA.ShaderPackager
             types = e.Types;
          }
 
-         return types.Where(x => x != null);
+         List<Type> validTypes = new List<Type>();
+         for (int typeIndex = 0; typeIndex < types.Length; typeIndex++)
+         {
+            Type type = types[typeIndex];
+            if (type != null)
+            {
+               validTypes.Add(type);
+            }
+         }
+
+         return validTypes;
       }
 
 

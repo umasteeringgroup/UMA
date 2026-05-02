@@ -227,10 +227,12 @@ namespace UMA.Dynamics
 				_playerRigidbody = gameObject.GetComponent<Rigidbody> ();
 				if (_playerCollider == null || _playerRigidbody == null)
 				{
+#if UNITY_EDITOR					
 					if (Debug.isDebugBuild)
                     {
                         Debug.LogWarning("PlayerCollider or PlayerRigidBody is null, try putting the collider recipe before the PhysicsRecipe, or turn off SimplePlayerCollider.");
                     }
+#endif
                 }
 			}
 

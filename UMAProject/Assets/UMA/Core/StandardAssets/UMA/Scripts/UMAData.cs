@@ -3,7 +3,6 @@ using UnityEngine;
 using System;
 using System.Collections.Generic;
 using static UMA.DNAInstanceCollection;
-using System.Linq;
 using UMA.CharacterSystem;
 
 namespace UMA
@@ -62,10 +61,15 @@ namespace UMA
 		[SerializeField]
 		private SkinnedMeshRenderer[] renderers;
 		private UMARendererAsset[] rendererAssets = new UMARendererAsset[0];
+		[NonSerialized]
+		private Transform externalSkeletonRoot;
+		[NonSerialized]
+		private SkinnedMeshRenderer externalBaseRenderer;
 
 		[Tooltip("The default renderer asset to use for this avatar. This lets you set parameters for the generated SkinnedMeshRenderer")]
 		public UMARendererAsset defaultRendererAsset;
 		public int RendererCount { get { return renderers == null ? 0 : renderers.Length; } }
+		public bool HasExternalSkeletonRoot { get { return externalSkeletonRoot != null; } }
 
 		//public List<SlotTracker> slotTrackers = new();
 		private readonly List<UMASavedItem> savedItems = new();
@@ -463,6 +467,24 @@ namespace UMA
 
 			UMARendererAsset.ResetRenderer(renderers[idx]);
 		}
+
+		public void SetExternalSkeletonRoot(Transform root, SkinnedMeshRenderer baseRenderer)
+		{
+			externalSkeletonRoot = root;
+			externalBaseRenderer = baseRenderer;
+		}
+
+		public void ClearExternalSkeletonRoot(SkinnedMeshRenderer owner = null)
+		{
+			if (owner != null && externalBaseRenderer != null && owner != externalBaseRenderer)
+			{
+				return;
+			}
+
+			externalSkeletonRoot = null;
+			externalBaseRenderer = null;
+			skeleton = null;
+		}
         #endregion
 
         [NonSerialized]
@@ -702,6 +724,13 @@ namespace UMA
 
 		public void CheckSkeletonSetup()
 		{
+			if (externalSkeletonRoot != null)
+			{
+				EnsureUmaRootAndGlobal();
+				skeleton = new UMASkeleton(externalSkeletonRoot);
+				return;
+			}
+
 			if (skeleton != null)
 			{
 				if (skeleton.isValid())
@@ -710,22 +739,7 @@ namespace UMA
                 }
             }
 
-			Transform globalTransform = umaRoot.transform.Find("Global");
-			if (!globalTransform)
-			{
-				GameObject newGlobal = new GameObject("Global");
-				newGlobal.transform.parent = umaRoot.transform;
-				newGlobal.transform.localPosition = Vector3.zero;
-				if (umaRecipe.raceData.FixupRotations)
-				{
-					newGlobal.transform.localRotation = Quaternion.Euler(90f, 90f, 0f);
-				}
-				else
-				{
-					newGlobal.transform.localRotation = Quaternion.Euler(0f, 0f, 0f);
-				}
-				globalTransform = newGlobal.transform;
-			}
+			Transform globalTransform = EnsureUmaRootAndGlobal();
 			skeleton = new UMASkeleton(globalTransform);
 		}
 
@@ -800,7 +814,7 @@ namespace UMA
             return updateFlags;
         }
 
-        public void SetupSkeleton()
+		private Transform EnsureUmaRootAndGlobal()
 		{
 			Transform rootTransform = gameObject.transform.Find("Root");
 			if (rootTransform)
@@ -842,7 +856,15 @@ namespace UMA
 				}
 				globalTransform = newGlobal.transform;
 			}
-			skeleton = new UMASkeleton(globalTransform);
+
+			return globalTransform;
+		}
+
+        public void SetupSkeleton()
+		{
+			Transform globalTransform = EnsureUmaRootAndGlobal();
+			Transform skeletonRoot = externalSkeletonRoot != null ? externalSkeletonRoot : globalTransform;
+			skeleton = new UMASkeleton(skeletonRoot);
 		}
 
 		public void ResetAnimatedBones()
@@ -867,6 +889,11 @@ namespace UMA
 
 		public Transform GetGlobalTransform()
 		{
+			if (externalSkeletonRoot != null)
+			{
+				return externalSkeletonRoot;
+			}
+
 			return (renderers != null && renderers.Length > 0) ? renderers[0].rootBone : umaRoot.transform.Find("Global");
 		}
 
@@ -1279,6 +1306,10 @@ namespace UMA
 			}
 			else
 			{
+				if (externalBaseRenderer != null)
+				{
+					externalBaseRenderer.enabled = true;
+				}
 				for (int i = 0; i < RendererCount; i++)
                 {
                     GetRenderer(i).enabled = true;
@@ -1288,6 +1319,10 @@ namespace UMA
 
 		public void Hide()
 		{
+			if (externalBaseRenderer != null)
+			{
+				externalBaseRenderer.enabled = false;
+			}
 			for (int i = 0; i < RendererCount; i++)
             {
 				var renderer = GetRenderer(i);
@@ -1437,14 +1472,20 @@ namespace UMA
 					valid = valid && raceData.Validate();
 				}
 
+				bool allowEmptySlots = raceData != null && raceData.HasValidFbxRoute;
 				if (slotDataList == null || slotDataList.Length == 0)
 				{
-					if (Debug.isDebugBuild)
+					if (!allowEmptySlots)
                     {
-                        Debug.LogError("UMA recipe slot list is empty!");
-                    }
+						if (Debug.isDebugBuild)
+                        {
+                            Debug.LogError("UMA recipe slot list is empty!");
+                        }
 
-                    valid = false;
+						valid = false;
+					}
+
+					return valid;
 				}
 				int slotDataCount = 0;
 				for (int i = 0; i < slotDataList.Length; i++)
@@ -1456,7 +1497,7 @@ namespace UMA
 						valid = valid && slotData.Validate();
 					}
 				}
-				if (slotDataCount < 1)
+				if (slotDataCount < 1 && !allowEmptySlots)
 				{
 					if (Debug.isDebugBuild)
                     {
@@ -1667,7 +1708,6 @@ namespace UMA
 			{
 				if (umaDna.ContainsKey(dna.DNATypeHash))
 				{
-					Debug.LogWarning("UMARecipe: DNA of type " + dna.GetType().Name + " already exists. Use RemoveDna before adding new DNA of the same type.");
 					return;
                 }
                 umaDna.Add(dna.DNATypeHash, dna);
@@ -1684,7 +1724,6 @@ namespace UMA
 			{
                 if (raceData != null && raceData.useNewDNA)
                 {
-                    Debug.LogError($"Attempting GetDna<T> Type = {typeof(T).Name} to get UMADnaBase when useNewDNA is true!");
                     return null;
                 }
 				UMADnaBase dna;
@@ -1762,7 +1801,11 @@ namespace UMA
 				T res = GetDna<T>();
 				if (res == null)
 				{
-					res = typeof(T).GetConstructor(System.Type.EmptyTypes).Invoke(null) as T;
+					res = UMADnaBase.CreateInstance<T>();
+					if (res == null)
+					{
+						return null;
+					}
 					umaDna.Add(res.DNATypeHash, res);
 					dnaValues.Add(res);
 				}
@@ -1783,7 +1826,11 @@ namespace UMA
 					return dna;
 				}
 
-				dna = type.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase;
+				dna = UMADnaBase.CreateInstance(type);
+				if (dna == null)
+				{
+					return null;
+				}
 				umaDna.Add(typeNameHash, dna);
 				dnaValues.Add(dna);
 				return dna;
@@ -1802,7 +1849,11 @@ namespace UMA
 					return dna;
 				}
 
-				dna = type.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase;
+				dna = UMADnaBase.CreateInstance(type);
+				if (dna == null)
+				{
+					return null;
+				}
 				dna.DNATypeHash = dnaTypeHash;
 				umaDna.Add(dnaTypeHash, dna);
 				dnaValues.Add(dna);
@@ -2408,15 +2459,14 @@ namespace UMA
                             requiredDnas.Add(dnaTypeHash);
                         }
 
-                        if (!umaDna.ContainsKey(dnaTypeHash))
+						if (!umaDna.ContainsKey(dnaTypeHash))
 						{
-							var dna = converter.DNAType.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase;
-							dna.DNATypeHash = dnaTypeHash;
-							//DynamicUMADna:: needs the DNAasset from the converter - moved because this might change
-							if (converter is IDynamicDNAConverter)
+							var dna = UMADnaBase.CreateInstance(converter);
+							if (dna == null)
 							{
-								((DynamicUMADnaBase)dna).dnaAsset = ((IDynamicDNAConverter)converter).dnaAsset;
+								continue;
 							}
+							dna.DNATypeHash = dnaTypeHash;
 							umaDna.Add(dnaTypeHash, dna);
 							dnaValues.Add(dna);
 						}
@@ -2453,15 +2503,14 @@ namespace UMA
                             requiredDnas.Add(dnaTypeHash);
                         }
 
-                        if (!umaDna.ContainsKey(dnaTypeHash))
+						if (!umaDna.ContainsKey(dnaTypeHash))
 						{
-							var dna = slotData.asset.slotDNA.DNAType.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase;
-							dna.DNATypeHash = dnaTypeHash;
-							//DynamicUMADna:: needs the DNAasset from the converter TODO are there other places where I heed to sort out this slotDNA?
-							if (slotData.asset.slotDNA is IDynamicDNAConverter)
+							var dna = UMADnaBase.CreateInstance(slotData.asset.slotDNA);
+							if (dna == null)
 							{
-								((DynamicUMADnaBase)dna).dnaAsset = ((IDynamicDNAConverter)slotData.asset.slotDNA).dnaAsset;
+								continue;
 							}
+							dna.DNATypeHash = dnaTypeHash;
 							umaDna.Add(dnaTypeHash, dna);
 							dnaValues.Add(dna);
 						}

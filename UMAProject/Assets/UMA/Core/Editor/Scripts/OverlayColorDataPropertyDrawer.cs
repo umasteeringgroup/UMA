@@ -7,6 +7,7 @@ namespace UMA.Editors
     [CustomPropertyDrawer(typeof(OverlayColorData),true)]
 	public class OverlayColorDataPropertyDrawer : PropertyDrawer
 	{
+		public static bool displayColorFoldout = false;
 		GUIContent Modulate = new GUIContent("Multiplier");
 		GUIContent Additive = new GUIContent("Additive");
 		GUIContent Channels = new GUIContent("Channel Count");
@@ -148,8 +149,12 @@ namespace UMA.Editors
                 EditorGUILayout.PropertyField(property.FindPropertyRelative("name"));
 				EditorGUILayout.PropertyField(property.FindPropertyRelative("isBaseColor"));
 				EditorGUILayout.PropertyField(property.FindPropertyRelative("showDisplayColor"));
-                EditorGUILayout.PropertyField(displayColor);
-
+				displayColorFoldout = EditorGUILayout.Foldout(displayColorFoldout, "Display Color");
+				if (displayColorFoldout)	
+				{
+					EditorGUILayout.HelpBox("This color is used for display purposes in user editors and does not affect the actual colors used in the character. It can be useful to set this to the approximate color that will be shown after combining onto the layers.", MessageType.Info);
+                	EditorGUILayout.PropertyField(displayColor);
+				}
 				if (ocd != null)
 				{
 					int ChannelCount = EditorGUILayout.IntSlider(Channels, ocd.channelCount, 0, 16);

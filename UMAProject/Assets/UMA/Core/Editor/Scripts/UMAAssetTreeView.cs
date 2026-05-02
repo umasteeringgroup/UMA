@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
@@ -142,6 +141,36 @@ namespace UMA.Controls
 			Repaint();
 		}
 
+		private int CompareItemsBySortedColumns(TreeViewItem<AssetTreeElement> left, TreeViewItem<AssetTreeElement> right, int[] sortedColumns)
+		{
+			for (int sortIndex = 0; sortIndex < sortedColumns.Length; sortIndex++)
+			{
+				SortOption sortOption = m_SortOptions[sortedColumns[sortIndex]];
+				bool ascending = multiColumnHeader.IsSortedAscending(sortedColumns[sortIndex]);
+				int comparison = CompareItemsForSortOption(left, right, sortOption);
+				if (comparison != 0)
+				{
+					return ascending ? comparison : -comparison;
+				}
+			}
+
+			return 0;
+		}
+
+		private static int CompareItemsForSortOption(TreeViewItem<AssetTreeElement> left, TreeViewItem<AssetTreeElement> right, SortOption sortOption)
+		{
+			switch (sortOption)
+			{
+				case SortOption.Name:
+					return StringComparer.Ordinal.Compare(left.data.name ?? string.Empty, right.data.name ?? string.Empty);
+				case SortOption.Group:
+					return StringComparer.Ordinal.Compare(left.data.ai.AddressableGroup ?? string.Empty, right.data.ai.AddressableGroup ?? string.Empty);
+				default:
+					Assert.IsTrue(false, "Unhandled enum");
+					return 0;
+			}
+		}
+
 		void SortByMultipleColumns()
 		{
 			var sortedColumns = multiColumnHeader.state.sortedColumns;
@@ -151,43 +180,21 @@ namespace UMA.Controls
                 return;
             }
 
-            var myTypes = rootItem.children.Cast<TreeViewItem<AssetTreeElement>>();
-			var orderedQuery = InitialOrder(myTypes, sortedColumns);
-			for (int i = 1; i < sortedColumns.Length; i++)
+			List<TreeViewItem<AssetTreeElement>> sortedChildren = new List<TreeViewItem<AssetTreeElement>>(rootItem.children.Count);
+			for (int childIndex = 0; childIndex < rootItem.children.Count; childIndex++)
 			{
-				SortOption sortOption = m_SortOptions[sortedColumns[i]];
-				bool ascending = multiColumnHeader.IsSortedAscending(sortedColumns[i]);
-
-				switch (sortOption)
-				{
-					case SortOption.Name:
-						orderedQuery = orderedQuery.ThenBy(l => l.data.ai.EvilName, ascending);
-						break;
-					case SortOption.Group:
-						orderedQuery = orderedQuery.ThenBy(l => l.data.ai.AddressableGroup, ascending);
-						break;
-				}
-			}
-			rootItem.children = orderedQuery.Cast<TreeViewItem>().ToList();
-		}
-
-		IOrderedEnumerable<TreeViewItem<AssetTreeElement>> InitialOrder(IEnumerable<TreeViewItem<AssetTreeElement>> myTypes, int[] history)
-		{
-			SortOption sortOption = m_SortOptions[history[0]];
-			bool ascending = multiColumnHeader.IsSortedAscending(history[0]);
-			switch (sortOption)
-			{
-				case SortOption.Name:
-					return myTypes.Order(l => l.data.name, ascending);
-				case SortOption.Group:
-					return myTypes.Order(l => l.data.ai.AddressableGroup, ascending);
-				default:
-					Assert.IsTrue(false, "Unhandled enum");
-					break;
+				sortedChildren.Add(rootItem.children[childIndex] as TreeViewItem<AssetTreeElement>);
 			}
 
-			// default
-			return myTypes.Order(l => l.data.name, ascending);
+			sortedChildren.Sort((left, right) => CompareItemsBySortedColumns(left, right, sortedColumns));
+
+			List<TreeViewItem> newChildren = new List<TreeViewItem>(sortedChildren.Count);
+			for (int childIndex = 0; childIndex < sortedChildren.Count; childIndex++)
+			{
+				newChildren.Add(sortedChildren[childIndex]);
+			}
+
+			rootItem.children = newChildren;
 		}
 		#endregion
 		public UMAAssetTreeView(AssetIndexerWindow owner, TreeViewState state, MultiColumnHeader multiColumnHeader, TreeModel<AssetTreeElement> model) : base(state, multiColumnHeader, model)
@@ -832,32 +839,6 @@ namespace UMA.Controls
 
 			var state = new MultiColumnHeaderState(columns);
 			return state;
-		}
-	}
-	static class UMATreeExtensionMethods
-	{
-		public static IOrderedEnumerable<T> Order<T, TKey>(this IEnumerable<T> source, System.Func<T, TKey> selector, bool ascending)
-		{
-			if (ascending)
-			{
-				return source.OrderBy(selector);
-			}
-			else
-			{
-				return source.OrderByDescending(selector);
-			}
-		}
-
-		public static IOrderedEnumerable<T> ThenBy<T, TKey>(this IOrderedEnumerable<T> source, System.Func<T, TKey> selector, bool ascending)
-		{
-			if (ascending)
-			{
-				return source.ThenBy(selector);
-			}
-			else
-			{
-				return source.ThenByDescending(selector);
-			}
 		}
 	}
 }

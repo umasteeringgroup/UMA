@@ -186,7 +186,7 @@ namespace UMA.Editors
         private static void CopyLodRangesFromSourceMesh(SlotDataAsset sda, int targetSubmeshIndex, Mesh sourceMesh, int sourceSubmeshIndex)
         {
 #if UNITY_6000_2_OR_NEWER
-            if (sda == null || sda.meshData == null || sda.meshData.submeshes == null) return;
+            if (sda == null || UMAMeshData.IsNullOrEmptyMeshData(sda.meshData) || sda.meshData.submeshes == null) return;
             if (targetSubmeshIndex < 0 || targetSubmeshIndex >= sda.meshData.submeshes.Length) return;
             if (sourceMesh == null) return;
             int lodCount = sourceMesh.lodCount;
@@ -206,7 +206,7 @@ namespace UMA.Editors
         private static void ClearInternalLods(SlotDataAsset slot, int targetSubmeshIndex)
         {
 #if UNITY_6000_2_OR_NEWER
-            if (slot == null || slot.meshData == null || slot.meshData.submeshes == null)
+            if (slot == null || UMAMeshData.IsNullOrEmptyMeshData(slot.meshData) || slot.meshData.submeshes == null)
             {
                 return;
             }
@@ -241,7 +241,7 @@ namespace UMA.Editors
             try
             {
                 var md = slot.meshData;
-                int lodsBefore = (md != null && md.submeshes != null && md.submeshes.Length > 0 && md.submeshes[0] != null) ? md.submeshes[0].LODCount() : -1;
+                int lodsBefore = (!UMAMeshData.IsNullOrEmptyMeshData(md) && md.submeshes != null && md.submeshes.Length > 0 && md.submeshes[0] != null) ? md.submeshes[0].LODCount() : -1;
                 Debug.Log($"[SlotLOD] BEFORE slot='{slot.slotName}' (new slots use submesh0) useUnity={sbp.useUnityLodGenerator} lodCount={lodsBefore}");
             }
             catch { }
@@ -291,7 +291,7 @@ namespace UMA.Editors
             try
             {
                 var md = slot.meshData;
-                int lodsAfter = (md != null && md.submeshes != null && md.submeshes.Length > 0 && md.submeshes[0] != null) ? md.submeshes[0].LODCount() : -1;
+                int lodsAfter = (!UMAMeshData.IsNullOrEmptyMeshData(md) && md.submeshes != null && md.submeshes.Length > 0 && md.submeshes[0] != null) ? md.submeshes[0].LODCount() : -1;
                 Debug.Log($"[SlotLOD] AFTER slot='{slot.slotName}' (new slots use submesh0) useUnity={sbp.useUnityLodGenerator} lodCount={lodsAfter}");
             }
             catch { }
@@ -1803,7 +1803,7 @@ namespace UMA.Editors
                                 ranges.Add(new UMA.UMALodRange(offset, cnt));
                                 offset += cnt;
                             }
-                            if (sda.meshData != null && sda.meshData.submeshes != null && sda.meshData.submeshes.Length > 0)
+                            if (!UMAMeshData.IsNullOrEmptyMeshData(sda.meshData) && sda.meshData.submeshes != null && sda.meshData.submeshes.Length > 0)
                             {
                                 sda.meshData.submeshes[0].SetLodRanges(ranges);
                             }
@@ -1855,7 +1855,7 @@ namespace UMA.Editors
             var map = new Dictionary<int, List<(SlotDataAsset s, int idx)>>();
             foreach (var s in slots)
             {
-                if (s == null || s.meshData == null) continue;
+                if (s == null || UMAMeshData.IsNullOrEmptyMeshData(s.meshData)) continue;
                 var m = s.UdimSharedVertexMap;
                 if (m == null || m.originalIndices == null || m.localIndices == null) continue;
                 int count = Math.Min(m.originalIndices.Length, m.localIndices.Length);

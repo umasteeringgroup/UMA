@@ -45,9 +45,6 @@ namespace UMA.Editors
 			}
 
 			return theTypes;
-			/*			return AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes())
-							 .Where(x => typeof(IUMAAddressablePlugin).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract)
-							 .Select(x => x).ToList();*/
 		}
 
 		public virtual void OnSceneDrag(SceneView view, int index)

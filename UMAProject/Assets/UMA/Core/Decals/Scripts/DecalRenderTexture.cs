@@ -475,7 +475,7 @@ namespace UMA {
 					// This is used for editor visualization/editing only.
 					try
 					{
-						if (slot.vertexOffset >= 0 && slot.asset != null && slot.asset.meshData != null)
+						if (slot.vertexOffset >= 0 && slot.asset != null && !UMAMeshData.IsNullOrEmptyMeshData(slot.asset.meshData))
 						{
 							var rel = new int[tris.Count];
 							for (int ti = 0; ti < tris.Count; ti++)

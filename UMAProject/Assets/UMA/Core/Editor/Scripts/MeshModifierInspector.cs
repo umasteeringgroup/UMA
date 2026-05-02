@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UMA;
 using UnityEditor;
 using UnityEngine;
@@ -16,6 +15,51 @@ namespace UMA
         private GUIStyle _headerStyle;
         private GUIStyle _foldoutStyle;
         private GUIStyle _boxedStyle;
+
+        private static void DrawVertexAdjustmentsBySlot(List<VertexAdjustment> vertices, string fallbackSlotName = null)
+        {
+            Dictionary<string, List<VertexAdjustment>> groupedBySlot = new Dictionary<string, List<VertexAdjustment>>();
+            List<string> orderedSlotNames = new List<string>();
+
+            for (int vertexIndex = 0; vertexIndex < vertices.Count; vertexIndex++)
+            {
+                VertexAdjustment adjustment = vertices[vertexIndex];
+                string slotName = string.Empty;
+                if (adjustment != null)
+                {
+                    slotName = !string.IsNullOrEmpty(adjustment.slotName) ? adjustment.slotName : fallbackSlotName ?? string.Empty;
+                }
+
+                if (!groupedBySlot.TryGetValue(slotName, out List<VertexAdjustment> slotAdjustments))
+                {
+                    slotAdjustments = new List<VertexAdjustment>();
+                    groupedBySlot.Add(slotName, slotAdjustments);
+                    orderedSlotNames.Add(slotName);
+                }
+
+                slotAdjustments.Add(adjustment);
+            }
+
+            for (int slotIndex = 0; slotIndex < orderedSlotNames.Count; slotIndex++)
+            {
+                string slotName = orderedSlotNames[slotIndex];
+                List<VertexAdjustment> slotAdjustments = groupedBySlot[slotName];
+                string label = string.IsNullOrEmpty(slotName) ? "(No Slot)" : slotName;
+                EditorGUILayout.LabelField($"Slot: {label} ({slotAdjustments.Count})", EditorStyles.miniBoldLabel);
+
+                for (int adjustmentIndex = 0; adjustmentIndex < slotAdjustments.Count; adjustmentIndex++)
+                {
+                    VertexAdjustment adjustment = slotAdjustments[adjustmentIndex];
+                    if (adjustment == null)
+                    {
+                        EditorGUILayout.LabelField("- <null>");
+                        continue;
+                    }
+
+                    EditorGUILayout.LabelField($"- v:{adjustment.vertexIndex} [{adjustment.GetType().Name}]");
+                }
+            }
+        }
 
         private bool _showRuntimeModifiers = true;
         private bool _showEditorModifiers = false;
@@ -418,23 +462,7 @@ namespace UMA
             }
 
             var vertices = modifier.adjustments.vertexAdjustments;
-            var groupedBySlot = vertices.GroupBy(x => x != null ? x.slotName : string.Empty);
-            foreach (var group in groupedBySlot)
-            {
-                string slotName = string.IsNullOrEmpty(group.Key) ? "(No Slot)" : group.Key;
-                EditorGUILayout.LabelField($"Slot: {slotName} ({group.Count()})", EditorStyles.miniBoldLabel);
-
-                foreach (var adjustment in group)
-                {
-                    if (adjustment == null)
-                    {
-                        EditorGUILayout.LabelField("- <null>");
-                        continue;
-                    }
-
-                    EditorGUILayout.LabelField($"- v:{adjustment.vertexIndex} [{adjustment.GetType().Name}]");
-                }
-            }
+            DrawVertexAdjustmentsBySlot(vertices);
         }
 
         private void DrawEditorModifierDetails(MeshModifier meshModifier, int index)
@@ -490,28 +518,7 @@ namespace UMA
             // For editor modifiers, group by slotName stored on each adjustment (legacy path)
             // or use the modifier's SlotName if adjustments don't have individual slot names
             string modifierSlotName = modifier.SlotName;
-            var groupedBySlot = vertices.GroupBy(x => {
-                if (x == null) return string.Empty;
-                // Use adjustment's slotName if available, otherwise fall back to modifier's SlotName
-                return !string.IsNullOrEmpty(x.slotName) ? x.slotName : modifierSlotName;
-            });
-
-            foreach (var group in groupedBySlot)
-            {
-                string slotName = string.IsNullOrEmpty(group.Key) ? "(No Slot)" : group.Key;
-                EditorGUILayout.LabelField($"Slot: {slotName} ({group.Count()})", EditorStyles.miniBoldLabel);
-
-                foreach (var adjustment in group)
-                {
-                    if (adjustment == null)
-                    {
-                        EditorGUILayout.LabelField("- <null>");
-                        continue;
-                    }
-
-                    EditorGUILayout.LabelField($"- v:{adjustment.vertexIndex} [{adjustment.GetType().Name}]");
-                }
-            }
+            DrawVertexAdjustmentsBySlot(vertices, modifierSlotName);
         }
     }
 }

@@ -1,6 +1,5 @@
 using UnityEngine;
 using System;
-using System.Linq;
 using System.Text;
 using System.IO;
 using System.IO.Compression;
@@ -32,6 +31,172 @@ namespace UMA
         public Vector2[] clothCoeffs;
         public string overlayAssetName;
         public string[] tags;
+
+        private static SubmeshDTO[] CreateSubmeshDtos(SubMeshTriangles[] submeshes)
+        {
+            if (submeshes == null)
+            {
+                return null;
+            }
+
+            SubmeshDTO[] result = new SubmeshDTO[submeshes.Length];
+            for (int submeshIndex = 0; submeshIndex < submeshes.Length; submeshIndex++)
+            {
+                result[submeshIndex] = new SubmeshDTO
+                {
+                    triangles = submeshes[submeshIndex].getManagedTriangles(0)
+                };
+            }
+
+            return result;
+        }
+
+        private static BoneWeightDTO[] CreateBoneWeightDtos(BoneWeight1[] source)
+        {
+            if (source == null)
+            {
+                return null;
+            }
+
+            BoneWeightDTO[] result = new BoneWeightDTO[source.Length];
+            for (int boneWeightIndex = 0; boneWeightIndex < source.Length; boneWeightIndex++)
+            {
+                BoneWeight1 boneWeight = source[boneWeightIndex];
+                result[boneWeightIndex] = new BoneWeightDTO
+                {
+                    boneIndex = boneWeight.boneIndex,
+                    weight = boneWeight.weight
+                };
+            }
+
+            return result;
+        }
+
+        private static BoneDTO[] CreateBoneDtos(UMATransform[] source)
+        {
+            if (source == null)
+            {
+                return null;
+            }
+
+            BoneDTO[] result = new BoneDTO[source.Length];
+            for (int boneIndex = 0; boneIndex < source.Length; boneIndex++)
+            {
+                UMATransform bone = source[boneIndex];
+                result[boneIndex] = new BoneDTO
+                {
+                    hash = bone.hash,
+                    name = bone.name,
+                    parent = bone.parent,
+                    position = bone.position,
+                    rotation = bone.rotation,
+                    scale = bone.scale
+                };
+            }
+
+            return result;
+        }
+
+        private static BlendShapeFrameDTO[] CreateBlendShapeFrameDtos(UMABlendFrame[] source)
+        {
+            BlendShapeFrameDTO[] result = new BlendShapeFrameDTO[source.Length];
+            for (int frameIndex = 0; frameIndex < source.Length; frameIndex++)
+            {
+                UMABlendFrame frame = source[frameIndex];
+                result[frameIndex] = new BlendShapeFrameDTO
+                {
+                    frameWeight = frame.frameWeight,
+                    deltaVertices = frame.deltaVertices,
+                    deltaNormals = frame.HasNormals() ? frame.deltaNormals : null,
+                    deltaTangents = frame.HasTangents() ? frame.deltaTangents : null
+                };
+            }
+
+            return result;
+        }
+
+        private static BlendShapeDTO[] CreateBlendShapeDtos(UMABlendShape[] source)
+        {
+            if (source == null)
+            {
+                return null;
+            }
+
+            BlendShapeDTO[] result = new BlendShapeDTO[source.Length];
+            for (int blendShapeIndex = 0; blendShapeIndex < source.Length; blendShapeIndex++)
+            {
+                UMABlendShape blendShape = source[blendShapeIndex];
+                result[blendShapeIndex] = new BlendShapeDTO
+                {
+                    name = blendShape.shapeName,
+                    frames = CreateBlendShapeFrameDtos(blendShape.frames)
+                };
+            }
+
+            return result;
+        }
+
+        private static BoneWeight1[] CreateManagedBoneWeights(BoneWeightDTO[] source)
+        {
+            if (source == null)
+            {
+                return null;
+            }
+
+            BoneWeight1[] result = new BoneWeight1[source.Length];
+            for (int boneWeightIndex = 0; boneWeightIndex < source.Length; boneWeightIndex++)
+            {
+                BoneWeightDTO boneWeight = source[boneWeightIndex];
+                result[boneWeightIndex] = new BoneWeight1
+                {
+                    boneIndex = boneWeight.boneIndex,
+                    weight = boneWeight.weight
+                };
+            }
+
+            return result;
+        }
+
+        private static bool HasTag(string[] source, string tag)
+        {
+            if (source == null)
+            {
+                return false;
+            }
+
+            for (int tagIndex = 0; tagIndex < source.Length; tagIndex++)
+            {
+                if (source[tagIndex] == tag)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static string[] EnsureTagPresent(string[] source, string tag)
+        {
+            if (string.IsNullOrEmpty(tag))
+            {
+                return source;
+            }
+
+            if (source == null)
+            {
+                return new[] { tag };
+            }
+
+            if (HasTag(source, tag))
+            {
+                return source;
+            }
+
+            string[] result = new string[source.Length + 1];
+            Array.Copy(source, result, source.Length);
+            result[source.Length] = tag;
+            return result;
+        }
 
         // Backward-compatible convenience overload (no UDIM or clearing)
         public static RuntimeSlotData FromSkinnedMesh(SkinnedMeshRenderer smr, int SubMesh)
@@ -94,40 +259,18 @@ namespace UMA
                 uv2 = md.uv2,
                 uv3 = md.uv3,
                 uv4 = md.uv4,
-                submeshes = md.submeshes != null ? md.submeshes.Select(sm => new SubmeshDTO { triangles = sm.getManagedTriangles(0) }).ToArray() : null,
+                submeshes = CreateSubmeshDtos(md.submeshes),
                 vertexCount = md.vertexCount,
                 bindPoses = md.bindPoses,
 
                 // Skinning
                 boneNameHashes = md.boneNameHashes,
                 bonesPerVertex = md.ManagedBonesPerVertex,
-                boneWeights = (md.ManagedBoneWeights != null)
-                    ? md.ManagedBoneWeights.Select(bw => new BoneWeightDTO { boneIndex = bw.boneIndex, weight = bw.weight }).ToArray()
-                    : Array.Empty<BoneWeightDTO>(),
-                bones = (md.umaBones != null)
-                    ? md.umaBones.Select(b => new BoneDTO
-                    {
-                        hash = b.hash,
-                        name = b.name,
-                        parent = b.parent,
-                        position = b.position,
-                        rotation = b.rotation,
-                        scale = b.scale
-                    }).ToArray()
-                    : Array.Empty<BoneDTO>(),
+                boneWeights = md.ManagedBoneWeights != null ? CreateBoneWeightDtos(md.ManagedBoneWeights) : Array.Empty<BoneWeightDTO>(),
+                bones = md.umaBones != null ? CreateBoneDtos(md.umaBones) : Array.Empty<BoneDTO>(),
 
                 // Blendshapes
-                blendShapes = (md.blendShapes != null) ? md.blendShapes.Select(bs => new BlendShapeDTO
-                {
-                    name = bs.shapeName,
-                    frames = bs.frames.Select(fr => new BlendShapeFrameDTO
-                    {
-                        frameWeight = fr.frameWeight,
-                        deltaVertices = fr.deltaVertices,
-                        deltaNormals = fr.HasNormals() ? fr.deltaNormals : null,
-                        deltaTangents = fr.HasTangents() ? fr.deltaTangents : null
-                    }).ToArray()
-                }).ToArray() : null,
+                blendShapes = CreateBlendShapeDtos(md.blendShapes),
 
                 // Cloth (serialized two-float coefficients)
                 clothCoeffs = md.clothSkinningSerialized
@@ -165,24 +308,14 @@ namespace UMA
                 uv2 = md.uv2,
                 uv3 = md.uv3,
                 uv4 = md.uv4,
-                submeshes = md.submeshes != null ? md.submeshes.Select(sm => new SubmeshDTO { triangles = sm.getManagedTriangles(0) }).ToArray() : null,
+                submeshes = CreateSubmeshDtos(md.submeshes),
                 vertexCount = md.vertexCount,
                 boneNameHashes = md.boneNameHashes,
                 bonesPerVertex = md.ManagedBonesPerVertex,
-                boneWeights = md.ManagedBoneWeights != null ? md.ManagedBoneWeights.Select(bw => new BoneWeightDTO { boneIndex = bw.boneIndex, weight = bw.weight }).ToArray() : null,
-                bones = md.umaBones != null ? md.umaBones.Select(b => new BoneDTO { hash = b.hash, name = b.name, parent = b.parent, position = b.position, rotation = b.rotation, scale = b.scale }).ToArray() : null,
+                boneWeights = CreateBoneWeightDtos(md.ManagedBoneWeights),
+                bones = CreateBoneDtos(md.umaBones),
                 bindPoses = md.bindPoses,
-                blendShapes = md.blendShapes != null ? md.blendShapes.Select(bs => new BlendShapeDTO
-                {
-                    name = bs.shapeName,
-                    frames = bs.frames.Select(fr => new BlendShapeFrameDTO
-                    {
-                        frameWeight = fr.frameWeight,
-                        deltaVertices = fr.deltaVertices,
-                        deltaNormals = fr.HasNormals() ? fr.deltaNormals : null,
-                        deltaTangents = fr.HasTangents() ? fr.deltaTangents : null
-                    }).ToArray()
-                }).ToArray() : null,
+                blendShapes = CreateBlendShapeDtos(md.blendShapes),
                 clothCoeffs = md.clothSkinningSerialized,
                 overlayAssetName = overlayName
             };
@@ -192,7 +325,7 @@ namespace UMA
         // Build a RuntimeSlotData from an existing UMAMeshData (used by DecalSlotBuilder)
         public static RuntimeSlotData FromMeshData(UMAMeshData md, string slotName, UMAMaterial material, string overlayName = null, string[] tags = null)
         {
-            if (md == null) return null;
+            if (UMAMeshData.IsNullOrEmptyMeshData(md)) return null;
             var dto = new RuntimeSlotData
             {
                 slotName = string.IsNullOrEmpty(slotName) ? (md.SlotName ?? "RuntimeSlot") : slotName,
@@ -206,24 +339,14 @@ namespace UMA
                 uv2 = md.uv2,
                 uv3 = md.uv3,
                 uv4 = md.uv4,
-                submeshes = md.submeshes != null ? md.submeshes.Select(sm => new SubmeshDTO { triangles = sm.getManagedTriangles(0) }).ToArray() : null,
+                submeshes = CreateSubmeshDtos(md.submeshes),
                 vertexCount = md.vertexCount,
                 boneNameHashes = md.boneNameHashes,
                 bonesPerVertex = md.ManagedBonesPerVertex,
-                boneWeights = md.ManagedBoneWeights != null ? md.ManagedBoneWeights.Select(bw => new BoneWeightDTO { boneIndex = bw.boneIndex, weight = bw.weight }).ToArray() : null,
-                bones = md.umaBones != null ? md.umaBones.Select(b => new BoneDTO { hash = b.hash, name = b.name, parent = b.parent, position = b.position, rotation = b.rotation, scale = b.scale }).ToArray() : null,
+                boneWeights = CreateBoneWeightDtos(md.ManagedBoneWeights),
+                bones = CreateBoneDtos(md.umaBones),
                 bindPoses = md.bindPoses,
-                blendShapes = md.blendShapes != null ? md.blendShapes.Select(bs => new BlendShapeDTO
-                {
-                    name = bs.shapeName,
-                    frames = bs.frames.Select(fr => new BlendShapeFrameDTO
-                    {
-                        frameWeight = fr.frameWeight,
-                        deltaVertices = fr.deltaVertices,
-                        deltaNormals = fr.HasNormals() ? fr.deltaNormals : null,
-                        deltaTangents = fr.HasTangents() ? fr.deltaTangents : null
-                    }).ToArray()
-                }).ToArray() : null,
+                blendShapes = CreateBlendShapeDtos(md.blendShapes),
                 clothCoeffs = md.clothSkinningSerialized,
                 overlayAssetName = overlayName
             };
@@ -249,7 +372,7 @@ namespace UMA
                 vertexCount = dto.vertexCount,
                 boneNameHashes = dto.boneNameHashes,
                 ManagedBonesPerVertex = dto.bonesPerVertex,
-                ManagedBoneWeights = dto.boneWeights != null ? dto.boneWeights.Select(b => new BoneWeight1 { boneIndex = b.boneIndex, weight = b.weight }).ToArray() : null,
+                ManagedBoneWeights = CreateManagedBoneWeights(dto.boneWeights),
                 clothSkinningSerialized = dto.clothCoeffs
             };
 
@@ -331,9 +454,7 @@ namespace UMA
             if (!string.IsNullOrEmpty(dto.overlayAssetName))
             {
                 string overlayTag = "DecalOverlay:" + dto.overlayAssetName;
-                var list = slotAsset.tags.ToList();
-                if (!list.Contains(overlayTag)) list.Add(overlayTag);
-                slotAsset.tags = list.ToArray();
+                slotAsset.tags = EnsureTagPresent(slotAsset.tags, overlayTag);
                 try
                 {
                     var indexer = UMAAssetIndexer.Instance;

@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor.SceneManagement;
 #endif
@@ -182,7 +182,7 @@ namespace UMA
 
                         public void InitializeFromMeshData(UMAMeshData meshData)
                         {
-                            if (meshData == null)
+                            if (UMAMeshData.IsNullOrEmptyMeshData(meshData))
                             {
                                 if (Debug.isDebugBuild)
                                 {
@@ -386,7 +386,7 @@ namespace UMA
 
         public void CreateOcclusionMesh(UMAMeshData meshData)
         {
-            if (meshData == null)
+            if (UMAMeshData.IsNullOrEmptyMeshData(meshData))
             {
                 return;
             };

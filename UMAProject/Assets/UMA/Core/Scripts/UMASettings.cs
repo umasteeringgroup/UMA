@@ -87,6 +87,12 @@ namespace UMA
         public Texture2D Overlays;
         public Texture2D Slots;
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        public static void InitializeOnLoad()
+        {
+            instance = GetSettings();
+        }
+
 
         [MenuItem("Assets/Create/UMA/Core/UMASettings")]
         public static void CreateUMASettingsMenuItem()

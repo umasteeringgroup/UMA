@@ -1,4 +1,4 @@
-﻿#pragma warning disable 0472 // disable warnings about result of comparison being unused (because of if/else usage)
+#pragma warning disable 0472 // disable warnings about result of comparison being unused (because of if/else usage)
 #if UNITY_EDITOR
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -81,6 +81,15 @@ namespace UMA.Editors
 
 		private void EnsureBlendshapeCache()
 		{
+			if (race != null && race.UsesFbxRoute)
+			{
+				_bsSlotNames = Array.Empty<string>();
+				_bsBySlot.Clear();
+				_bsCacheValid = true;
+				_lastBaseRecipeId = 0;
+				return;
+			}
+
 			// Pull the baseRaceRecipe reference
 			var baseRecipeProp = serializedObject.FindProperty("baseRaceRecipe");
 			var baseRecipe = baseRecipeProp != null ? baseRecipeProp.objectReferenceValue as UMARecipeBase : null;
@@ -113,7 +122,7 @@ namespace UMA.Editors
 			for (int i = 0; i < slots.Length; i++)
 			{
 				var sd = slots[i];
-				if (sd == null || sd.asset == null || sd.asset.meshData == null) continue;
+				if (sd == null || sd.asset == null || UMAMeshData.IsNullOrEmptyMeshData(sd.asset.meshData)) continue;
 				var md = sd.asset.meshData;
 				var shapes = md.blendShapes;
 				if (shapes == null || shapes.Length == 0) continue;
@@ -281,7 +290,26 @@ namespace UMA.Editors
 					ValidationMessages.Add("Error: RaceData is null. How is this even possible???");
 					return;
 				}
-				if (race.baseRaceRecipe == null)
+				if (race.UsesFbxRoute)
+				{
+					if (race.baseFbxRenderer == null)
+					{
+						ValidationMessages.Add("Error: FBX route is enabled but Base FBX Renderer is not set");
+					}
+					else if (race.baseFbxRenderer.sharedMesh == null)
+					{
+						ValidationMessages.Add("Error: FBX route Base FBX Renderer has no shared mesh");
+					}
+					else
+					{
+						SkinnedMeshRenderer[] rootRenderers = race.baseFbxRenderer.transform.root.GetComponentsInChildren<SkinnedMeshRenderer>(true);
+						if (rootRenderers.Length != 1 || rootRenderers[0] != race.baseFbxRenderer)
+						{
+							ValidationMessages.Add("Error: FBX route Base FBX Renderer must be the only SkinnedMeshRenderer under its prefab root");
+						}
+					}
+				}
+				else if (race.baseRaceRecipe == null)
 				{
 					ValidationMessages.Add("Error: baseRaceRecipe is null");
 				}
@@ -878,8 +906,24 @@ namespace UMA.Editors
 		public bool AddExtraStuff()
 		{
 			SerializedProperty baseRaceRecipe = serializedObject.FindProperty("baseRaceRecipe");
+			SerializedProperty useFbxRoute = serializedObject.FindProperty("useFbxRoute");
+			SerializedProperty baseFbxRenderer = serializedObject.FindProperty("baseFbxRenderer");
+			SerializedProperty fbxBaseMeshHideBindings = serializedObject.FindProperty("fbxBaseMeshHideBindings");
 			EditorGUI.BeginChangeCheck();
-			EditorGUILayout.PropertyField(baseRaceRecipe, true);
+			EditorGUILayout.PropertyField(useFbxRoute, new GUIContent("Use FBX Route"));
+			if (useFbxRoute.boolValue)
+			{
+				baseFbxRenderer.objectReferenceValue = EditorGUILayout.ObjectField(new GUIContent("Base FBX Renderer", "The source FBX/prefab SkinnedMeshRenderer used as the preserved base body."), baseFbxRenderer.objectReferenceValue, typeof(SkinnedMeshRenderer), false);
+				EditorGUILayout.PropertyField(fbxBaseMeshHideBindings, true);
+				using (new EditorGUI.DisabledScope(true))
+				{
+					EditorGUILayout.PropertyField(baseRaceRecipe, true);
+				}
+			}
+			else
+			{
+				EditorGUILayout.PropertyField(baseRaceRecipe, true);
+			}
 			if (EditorGUI.EndChangeCheck())
 			{
 				serializedObject.ApplyModifiedProperties();
@@ -933,7 +977,7 @@ namespace UMA.Editors
 					EditorGUILayout.HelpBox(helpText, MessageType.Info);
 				}
 				EditorGUI.indentLevel--;
-				if (baseRaceRecipe.objectReferenceValue != null)
+				if (!useFbxRoute.boolValue && baseRaceRecipe.objectReferenceValue != null)
 				{
 					Rect dropArea = new Rect();
 					dropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
@@ -993,6 +1037,10 @@ namespace UMA.Editors
 						}
 
 					}
+				}
+				else if (useFbxRoute.boolValue)
+				{
+					EditorGUILayout.HelpBox("Cross compatibility slot mapping uses the base race recipe and is disabled while the FBX route is active.", MessageType.Info);
 				}
 				else
 				{

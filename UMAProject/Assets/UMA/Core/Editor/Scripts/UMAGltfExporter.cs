@@ -122,7 +122,7 @@ namespace UMA.Editors
             for (int i = 0; i < slotDataList.Length; i++)
             {
                 SlotData slot = slotDataList[i];
-                if (slot == null || slot.asset == null || slot.asset.meshData == null)
+                if (slot == null || slot.asset == null || UMAMeshData.IsNullOrEmptyMeshData(slot.asset.meshData))
                 {
                     continue;
                 }
@@ -282,7 +282,7 @@ namespace UMA.Editors
             {
                 throw new ArgumentNullException(nameof(slotName));
             }
-            if (slot.meshData == null)
+            if (UMAMeshData.IsNullOrEmptyMeshData(slot.meshData))
             {
                 throw new InvalidOperationException("SlotDataAsset has no meshData.");
             }
@@ -317,7 +317,7 @@ namespace UMA.Editors
             Material material = new Material(Shader.Find("Standard"));
             material.name = mesh.name + "_Mat";
 
-            if (includeRig && slot.meshData != null && slot.meshData.bindPoses != null && slot.meshData.bindPoses.Length > 0)
+            if (includeRig && !UMAMeshData.IsNullOrEmptyMeshData(slot.meshData) && slot.meshData.bindPoses != null && slot.meshData.bindPoses.Length > 0)
             {
                 BuildSkinnedSlotRenderer(root, slot, mesh, material);
             }
@@ -335,7 +335,7 @@ namespace UMA.Editors
 
         private static Mesh CreateExportMeshFromSlot(SlotDataAsset slot, int requestedSubmesh)
         {
-            if (slot == null || slot.meshData == null || slot.meshData.vertices == null || slot.meshData.vertices.Length == 0)
+            if (slot == null || UMAMeshData.IsNullOrEmptyMeshData(slot.meshData) || slot.meshData.vertices == null || slot.meshData.vertices.Length == 0)
             {
                 return null;
             }

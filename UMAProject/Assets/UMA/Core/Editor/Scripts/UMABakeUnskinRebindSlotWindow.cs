@@ -565,7 +565,7 @@ namespace UMA.Editors
                 slot.sourceSubmeshIndex = submeshIndex;
                 slot.UpdateMeshData(reboundRenderer, sourceData.RootBoneName, false, submeshIndex, false, false);
 
-                if (slot.meshData != null)
+                if (!UMAMeshData.IsNullOrEmptyMeshData(slot.meshData))
                 {
                     slot.meshData.RootBoneName = sourceData.RootBoneName;
                     slot.meshData.rootBoneHash = sourceData.RootBoneHash;

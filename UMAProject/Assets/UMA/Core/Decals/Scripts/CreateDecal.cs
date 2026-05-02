@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using UMA;
 using UMA.CharacterSystem;
 #if UNITY_EDITOR
@@ -247,6 +246,46 @@ namespace UMA.Decals
                 _lineMat.SetFloat("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
             }
         }
+
+		private static bool HasAnyOverlayStamps(DecalRTStampSlot stampField)
+		{
+			if (stampField == null || stampField.overlayStamps == null)
+			{
+				return false;
+			}
+
+			for (int stampSetIndex = 0; stampSetIndex < stampField.overlayStamps.Count; stampSetIndex++)
+			{
+				var stampSet = stampField.overlayStamps[stampSetIndex];
+				if (stampSet != null && stampSet.stamps != null && stampSet.stamps.Length > 0)
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+#if UNITY_EDITOR
+		private static bool HasEditorTag(string tagName)
+		{
+			string[] tags = UnityEditorInternal.InternalEditorUtility.tags;
+			if (tags == null)
+			{
+				return false;
+			}
+
+			for (int tagIndex = 0; tagIndex < tags.Length; tagIndex++)
+			{
+				if (tags[tagIndex] == tagName)
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+#endif
 
         void InitializeOrbit()
         {
@@ -1439,7 +1478,7 @@ namespace UMA.Decals
 						bool hadAnyStampsBefore = false;
 						try
 						{
-							hadAnyStampsBefore = StampField.overlayStamps != null && StampField.overlayStamps.Any(s => s != null && s.stamps != null && s.stamps.Length > 0);
+							hadAnyStampsBefore = HasAnyOverlayStamps(StampField);
 						}
 						catch { }
 
@@ -1593,7 +1632,7 @@ namespace UMA.Decals
 		}
 #if UNITY_EDITOR
         public void EnsureTag(string tagName) {
-			if(!UnityEditorInternal.InternalEditorUtility.tags.Contains(tagName)) {
+			if(!HasEditorTag(tagName)) {
 				var tagManager = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/TagManager.asset")[0]);
 				var tagsProp = tagManager.FindProperty("tags");
 				bool found = false;

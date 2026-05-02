@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEditor;
 using UnityEditorInternal;
 
@@ -35,6 +34,26 @@ namespace UMA.Editors
 		ReorderableList.Defaults ROLDefaults;
 
 		bool initialized = false;
+
+		private static DNAEvaluatorList.ConfigAttribute GetConfigAttribute(System.Reflection.FieldInfo fieldInfo)
+		{
+			if (fieldInfo == null)
+			{
+				return null;
+			}
+
+			object[] attributes = fieldInfo.GetCustomAttributes(typeof(DNAEvaluatorList.ConfigAttribute), true);
+			for (int attributeIndex = 0; attributeIndex < attributes.Length; attributeIndex++)
+			{
+				DNAEvaluatorList.ConfigAttribute attribute = attributes[attributeIndex] as DNAEvaluatorList.ConfigAttribute;
+				if (attribute != null)
+				{
+					return attribute;
+				}
+			}
+
+			return null;
+		}
 
 		//If the list aggregationMode is 'Cumulative' draw the calc options
 		private bool drawCalcOption = false;
@@ -74,7 +93,7 @@ namespace UMA.Editors
 			{
 				if (this.fieldInfo != null)
 				{
-					var attrib = this.fieldInfo.GetCustomAttributes(typeof(DNAEvaluatorList.ConfigAttribute), true).FirstOrDefault() as DNAEvaluatorList.ConfigAttribute;
+					var attrib = GetConfigAttribute(this.fieldInfo);
 					if (attrib != null)
 					{
 						_labelOption = attrib.labelOption;

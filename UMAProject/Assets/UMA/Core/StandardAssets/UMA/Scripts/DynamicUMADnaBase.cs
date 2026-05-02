@@ -41,6 +41,16 @@ namespace UMA
 			get;
 		}
 
+		public override void Initialize(IDNAConverter converter)
+		{
+			base.Initialize(converter);
+			IDynamicDNAConverter dynamicConverter = converter as IDynamicDNAConverter;
+			if (dynamicConverter != null)
+			{
+				dnaAsset = dynamicConverter.dnaAsset;
+			}
+		}
+
 		#endregion
 
 		#region Static

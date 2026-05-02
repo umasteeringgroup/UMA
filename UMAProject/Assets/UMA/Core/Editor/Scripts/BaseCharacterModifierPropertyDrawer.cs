@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEditor;
 
 namespace UMA
@@ -13,6 +12,26 @@ namespace UMA
 		private bool _manuallyConfigured = false;
 
 		bool initialized = false;
+
+		private static BaseCharacterModifier.ConfigAttribute GetConfigAttribute(System.Reflection.FieldInfo fieldInfo)
+		{
+			if (fieldInfo == null)
+			{
+				return null;
+			}
+
+			object[] attributes = fieldInfo.GetCustomAttributes(typeof(BaseCharacterModifier.ConfigAttribute), true);
+			for (int attributeIndex = 0; attributeIndex < attributes.Length; attributeIndex++)
+			{
+				BaseCharacterModifier.ConfigAttribute attribute = attributes[attributeIndex] as BaseCharacterModifier.ConfigAttribute;
+				if (attribute != null)
+				{
+					return attribute;
+				}
+			}
+
+			return null;
+		}
 
 		public bool AlwaysExpanded
 		{
@@ -31,7 +50,7 @@ namespace UMA
 			{
 				if (this.fieldInfo != null)
 				{
-					var attrib = this.fieldInfo.GetCustomAttributes(typeof(BaseCharacterModifier.ConfigAttribute), true).FirstOrDefault() as BaseCharacterModifier.ConfigAttribute;
+					var attrib = GetConfigAttribute(this.fieldInfo);
 					if (attrib != null) { _alwaysExpanded = attrib.alwaysExpanded; }
 				}
 			}
@@ -66,7 +85,7 @@ namespace UMA
 			{
 				if (this.fieldInfo != null)
 				{
-					var attrib = this.fieldInfo.GetCustomAttributes(typeof(BaseCharacterModifier.ConfigAttribute), true).FirstOrDefault() as BaseCharacterModifier.ConfigAttribute;
+					var attrib = GetConfigAttribute(this.fieldInfo);
 					if (attrib != null)
 					{
 						_alwaysExpanded = attrib.alwaysExpanded;

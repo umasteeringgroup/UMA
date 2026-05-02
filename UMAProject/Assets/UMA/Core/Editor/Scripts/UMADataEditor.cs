@@ -802,7 +802,7 @@ namespace UMA.Editors
 
         private void DrawBlendShapeNames(string label, UMAMeshData meshData, string path)
         {
-            if (meshData == null || meshData.blendShapes == null)
+            if (UMAMeshData.IsNullOrEmptyMeshData(meshData) || meshData.blendShapes == null)
             {
                 EditorGUILayout.LabelField(label, "null");
                 return;

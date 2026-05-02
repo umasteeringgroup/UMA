@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UMA.CharacterSystem;
-using System.Linq;
 
 namespace UMA
 {
@@ -232,7 +231,7 @@ namespace UMA
 				{
 					if (cvt is DnaConverterBehaviour)
 					{
-						var legacyDNA = (cvt as DnaConverterBehaviour).DNAType.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase;
+						var legacyDNA = UMADnaBase.CreateInstance(cvt);
 						if (legacyDNA != null)
 						{
 							DNAList.AddRange(legacyDNA.Names);
@@ -283,7 +282,17 @@ namespace UMA
 		{
 			foreach (T srcItem in src)
 			{
-				T destItem = dest.SingleOrDefault(x => selector(srcItem) == selector(x));
+				T destItem = default;
+				string sourceKey = selector(srcItem);
+				for (int destIndex = 0; destIndex < dest.Count; destIndex++)
+				{
+					T candidate = dest[destIndex];
+					if (sourceKey == selector(candidate))
+					{
+						destItem = candidate;
+						break;
+					}
+				}
 				if (destItem != null)
 					setter(destItem, srcItem);
 				else

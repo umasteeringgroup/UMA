@@ -65,7 +65,6 @@ namespace UMA
         /// </summary>
         public void Set(float val)
         {
-            Debug.Log($"Setting DNA {Name} to {val}");
             Value = val; 
             if (dnaInstance != null)
             {

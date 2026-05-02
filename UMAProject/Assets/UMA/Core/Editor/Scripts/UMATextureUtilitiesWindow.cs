@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
@@ -90,6 +91,8 @@ namespace UMA.Editors
             public float contrast;
             public float saturation;
             public float hueDegrees;
+            public bool hasAlphaFromLuminanceCutoff;
+            public float alphaFromLuminanceCutoff;
             public int alphaFillRadiusPixels;
             public float alphaFillAlphaThreshold;
             public GradientMode gradientMode;
@@ -130,12 +133,109 @@ namespace UMA.Editors
             public float MeanSaturation => pixelCount > 0 ? saturationSum / pixelCount : 0f;
         }
 
+        private class DetailCurvePoint
+        {
+            public Vector2 position;
+            public Vector2 inHandle;
+            public Vector2 outHandle;
+
+            public DetailCurvePoint(Vector2 position, Vector2 inHandle, Vector2 outHandle)
+            {
+                this.position = position;
+                this.inHandle = inHandle;
+                this.outHandle = outHandle;
+            }
+        }
+
+        private class DetailAreaMask
+        {
+            public int minX;
+            public int maxX;
+            public int minY;
+            public int maxY;
+            public int boxWidth;
+            public int boxHeight;
+            public int insidePixelCount;
+            public byte[] strengths;
+
+            public float GetStrength(int x, int y)
+            {
+                if (strengths == null || x < minX || x > maxX || y < minY || y > maxY)
+                {
+                    return 0f;
+                }
+
+                int index = ((y - minY) * boxWidth) + (x - minX);
+                return strengths[index] * (1f / 255f);
+            }
+        }
+
+        private struct DetailSpot
+        {
+            public Vector2 center;
+            public float radius;
+            public Color color;
+
+            public DetailSpot(Vector2 center, float radius, Color color)
+            {
+                this.center = center;
+                this.radius = radius;
+                this.color = color;
+            }
+        }
+
+        private struct DetailSpotApplication
+        {
+            public DetailSpot spot;
+            public float radius;
+            public float radiusSquared;
+            public int minX;
+            public int maxX;
+            public int minY;
+            public int maxY;
+        }
+
+        private struct MagnifiedPreviewLayout
+        {
+            public Rect viewportRect;
+            public Rect textureRect;
+            public Vector2 contentSize;
+        }
+
         private enum Tool
         {
             Split,
             AdjustColors,
             AlphaGradient,
             AlphaFill,
+            Touchup,
+            AddDetails,
+        }
+
+        private enum TouchupMode
+        {
+            Erase,
+        }
+
+        private enum TouchupBrushShape
+        {
+            Round,
+            Square,
+            Bitmap,
+        }
+
+        private enum DetailEffectMode
+        {
+            Spots,
+            Blush,
+        }
+
+        private enum DetailCurveDragTarget
+        {
+            None,
+            Anchor,
+            InHandle,
+            OutHandle,
         }
 
         private enum SplitDirection
@@ -168,13 +268,30 @@ namespace UMA.Editors
         private enum PreviewDisplayMode
         {
             Fit,
-            Actual,
+            Magnify,
         }
 
         private const float ToolPanelWidth = 190f;
         private const float DroppedTextureListWidth = 220f;
-        private const float PreviewActualMinZoom = 0.25f;
-        private const float PreviewActualMaxZoom = 8f;
+        private const float PreviewImageDefaultHeight = 512f;
+        private const float PreviewImageMinHeight = 120f;
+        private const float PreviewToolsScrollMinHeight = 600f;
+        private const float PreviewResizeHandleHeight = 7f;
+        private const float PreviewLayoutFixedHeight = 96f;
+        private const float PreviewMagnifyMinZoom = 0.25f;
+        private const float PreviewMagnifyMaxZoom = 8f;
+        private const float DetailCircleKappa = 0.55228475f;
+        private const float DetailDefaultCircleRadiusScale = 0.22f;
+        private const float DetailMirrorCenterX = 0.5f;
+        private const float DetailMirrorCenterEpsilon = 0.0005f;
+        private const float DetailMirrorSimplifyEpsilon = 0.003f;
+        private const float DetailAnchorHitRadius = 8f;
+        private const float DetailHandleHitRadius = 6f;
+        private const float DetailCurveHitRadius = 9f;
+        private const int DetailMinCurvePoints = 3;
+        private const int DetailCurveSamplesPerSegment = 18;
+        private const int DetailMirrorSamplesPerSegment = 32;
+        private const int DetailMirrorMaxPoints = 80;
         private const int CheckerTile = 16;
         private const int BcsParallelPixelThreshold = 65536;
         private const int BcsParallelMinPixelsPerWorker = 16384;
@@ -188,6 +305,9 @@ namespace UMA.Editors
         private const float AutoMatchMaxSaturation = 0.9f;
         private const float AutoMatchMaxHueDegrees = 90f;
         private const string PresetPrefsKey = "UMA.TextureUtilities.ParameterPresets";
+        private const string BackgroundSectionExpandedPrefsKey = "UMA.TextureUtilities.BackgroundSectionExpanded";
+        private const string AdjustmentsSectionExpandedPrefsKey = "UMA.TextureUtilities.AdjustmentsSectionExpanded";
+        private const string ToolSectionExpandedPrefsKey = "UMA.TextureUtilities.ToolSectionExpanded";
         private static readonly Color CheckerLight = new Color(1f, 1f, 1f, 1f);
         private static readonly Color CheckerDark = new Color(0.75f, 0.75f, 0.75f, 1f);
 
@@ -197,6 +317,8 @@ namespace UMA.Editors
         private Texture2D sourceAsset;
         private Texture2D backgroundAsset;
         private Texture2D currentTexture;     // editable RGBA32 working copy (the "current texture")
+        private Texture2D diskOriginalTexture;
+        private string diskOriginalTextureDirectory;
         private Texture2D previewTexture;     // displayed texture: currentTexture or BCS-adjusted copy
         private readonly List<Texture2D> droppedTextureAssets = new List<Texture2D>();
         private readonly Dictionary<Texture2D, QueuedTextureState> queuedTextureStates = new Dictionary<Texture2D, QueuedTextureState>();
@@ -206,9 +328,15 @@ namespace UMA.Editors
         private bool combineBackgroundOnSave;
         private BackgroundScaleMode backgroundScaleMode = BackgroundScaleMode.MatchWidth;
         private PreviewDisplayMode previewDisplayMode = PreviewDisplayMode.Fit;
-        private Vector2 previewScroll;
+        private Vector2 previewCenterNormalized = new Vector2(0.5f, 0.5f);
         private bool previewMousePanning;
-        private float previewActualZoom = 1f;
+        private int previewMousePanButton = -1;
+        private float previewMagnifyZoom = 1f;
+        private float previewImageHeight = PreviewImageDefaultHeight;
+        private bool previewResizeDragging;
+        private bool backgroundSectionExpanded = true;
+        private bool adjustmentsSectionExpanded = true;
+        private bool toolSectionExpanded = true;
 
         // Cached pixel buffers used by live preview and destructive edits.
         private Color32[] cachedCurrentPixels;
@@ -221,6 +349,7 @@ namespace UMA.Editors
         private float contrast = 0f;
         private float saturation = 0f;
         private float hueDegrees = 0f;
+        private float alphaFromLuminanceCutoff = 0.5f;
         private float lastBrightness = 0f;
         private float lastContrast = 0f;
         private float lastSaturation = 0f;
@@ -257,6 +386,39 @@ namespace UMA.Editors
         // Alpha fill tool state
         private int alphaFillRadiusPixels = 8;
         private float alphaFillAlphaThreshold = 0.01f;
+
+        // Touchup tool state
+        private TouchupMode touchupMode = TouchupMode.Erase;
+        private TouchupBrushShape touchupBrushShape = TouchupBrushShape.Round;
+        private int touchupBrushSizePixels = 32;
+        private Texture2D touchupBrushBitmap;
+        private Texture2D cachedTouchupBrushBitmap;
+        private Color32[] cachedTouchupBrushPixels;
+        private int cachedTouchupBrushWidth;
+        private int cachedTouchupBrushHeight;
+        private bool touchupPainting;
+
+        // Add Details tool state
+        private DetailEffectMode detailEffectMode = DetailEffectMode.Spots;
+        private readonly List<DetailCurvePoint> detailPoints = new List<DetailCurvePoint>();
+        private int detailAreaTextureWidth;
+        private int detailAreaTextureHeight;
+        private DetailCurveDragTarget detailDragTarget = DetailCurveDragTarget.None;
+        private int detailDragPointIndex = -1;
+        private int detailSelectedPointIndex = -1;
+        private bool detailCurveDragging;
+        private int detailSeed = 12345;
+        private float detailStrength = 0.65f;
+        private bool detailUseEdgeFalloff = true;
+        private float detailFalloffDistancePixels = 48f;
+        private Color detailSpotColor = new Color(0.38f, 0.16f, 0.10f, 1f);
+        private float detailSpotColorVariation = 0.25f;
+        private float detailSpotDensityPer10kPixels = 18f;
+        private float detailSpotDensityVariation = 0.35f;
+        private float detailSpotSizePixels = 3.5f;
+        private float detailSpotSizeVariation = 0.45f;
+        private Color detailBlushColor = new Color(1f, 0.32f, 0.28f, 1f);
+        private float detailBlushOpacity = 0.25f;
 
         // Display-only quadrant visibility for the Adjust Colors tool.
         private bool visibleAreaTopLeft = true;
@@ -300,14 +462,21 @@ namespace UMA.Editors
 
         private void OnDisable()
         {
+            touchupPainting = false;
+            detailCurveDragging = false;
+            previewResizeDragging = false;
             InvalidateCachedPixels();
             DestroyTexture(ref currentTexture);
+            DestroyTexture(ref diskOriginalTexture);
+            diskOriginalTextureDirectory = null;
             DestroyTexture(ref previewTexture);
             DestroyQueuedTextureStates();
         }
 
         private void OnEnable()
         {
+            wantsMouseMove = true;
+            LoadToolAreaFoldoutState();
             LoadParameterPresets();
         }
 
@@ -315,7 +484,7 @@ namespace UMA.Editors
         {
             EnsureChecker();
 
-            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.BeginHorizontal(GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
             DrawToolPanel();
             DrawRightPane();
             EditorGUILayout.EndHorizontal();
@@ -331,6 +500,8 @@ namespace UMA.Editors
             DrawToolToggle(Tool.AdjustColors, "Adjust Colors");
             DrawToolToggle(Tool.AlphaGradient, "Alpha Gradient");
             DrawToolToggle(Tool.AlphaFill, "Alpha Fill");
+            DrawToolToggle(Tool.Touchup, "Touchup");
+            DrawToolToggle(Tool.AddDetails, "Add Details");
             GUILayout.FlexibleSpace();
             EditorGUILayout.LabelField("(More tools may be added here.)", EditorStyles.miniLabel);
             EditorGUILayout.EndVertical();
@@ -348,15 +519,16 @@ namespace UMA.Editors
 
         private void DrawRightPane()
         {
-            EditorGUILayout.BeginVertical();
+            EditorGUILayout.BeginVertical(GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
 
             DrawHeaderBar();
             EditorGUILayout.Space();
 
-            scrollRight = EditorGUILayout.BeginScrollView(scrollRight);
-
-            DrawPreviewArea();
+            DrawPreviewArea(GetClampedPreviewImageHeight());
+            DrawPreviewResizeHandle();
             EditorGUILayout.Space();
+
+            scrollRight = EditorGUILayout.BeginScrollView(scrollRight, GUILayout.ExpandHeight(true));
 
             DrawBackgroundSection();
             EditorGUILayout.Space();
@@ -364,20 +536,109 @@ namespace UMA.Editors
             DrawAdjustmentsSection();
             EditorGUILayout.Space();
 
-            EditorGUILayout.LabelField(GetToolLabel(currentTool), EditorStyles.boldLabel);
-            GUIHelper.BeginVerticalPadded(8, new Color(0.85f, 0.92f, 1f), EditorStyles.helpBox);
-            switch (currentTool)
+            if (DrawCollapsibleSectionHeader(GetToolLabel(currentTool), ref toolSectionExpanded, ToolSectionExpandedPrefsKey))
             {
-                case Tool.Split: DrawSplitTool(); break;
-                case Tool.AdjustColors: DrawAdjustColorsTool(); break;
-                case Tool.AlphaGradient: DrawAlphaGradientTool(); break;
-                case Tool.AlphaFill: DrawAlphaFillTool(); break;
+                GUIHelper.BeginVerticalPadded(8, new Color(0.85f, 0.92f, 1f), EditorStyles.helpBox);
+                switch (currentTool)
+                {
+                    case Tool.Split: DrawSplitTool(); break;
+                    case Tool.AdjustColors: DrawAdjustColorsTool(); break;
+                    case Tool.AlphaGradient: DrawAlphaGradientTool(); break;
+                    case Tool.AlphaFill: DrawAlphaFillTool(); break;
+                    case Tool.Touchup: DrawTouchupTool(); break;
+                    case Tool.AddDetails: DrawAddDetailsTool(); break;
+                }
+                GUIHelper.EndVerticalPadded();
             }
-            GUIHelper.EndVerticalPadded();
 
             EditorGUILayout.EndScrollView();
 
             EditorGUILayout.EndVertical();
+        }
+
+        private bool DrawCollapsibleSectionHeader(string label, ref bool expanded, string prefsKey)
+        {
+            EditorGUI.BeginChangeCheck();
+            expanded = EditorGUILayout.Foldout(expanded, label, true);
+            if (EditorGUI.EndChangeCheck())
+            {
+                if (!string.IsNullOrEmpty(prefsKey))
+                {
+                    EditorPrefs.SetBool(prefsKey, expanded);
+                }
+
+                Repaint();
+            }
+
+            return expanded;
+        }
+
+        private void LoadToolAreaFoldoutState()
+        {
+            backgroundSectionExpanded = EditorPrefs.GetBool(BackgroundSectionExpandedPrefsKey, backgroundSectionExpanded);
+            adjustmentsSectionExpanded = EditorPrefs.GetBool(AdjustmentsSectionExpandedPrefsKey, adjustmentsSectionExpanded);
+            toolSectionExpanded = EditorPrefs.GetBool(ToolSectionExpandedPrefsKey, toolSectionExpanded);
+        }
+
+        private float GetClampedPreviewImageHeight()
+        {
+            return Mathf.Clamp(previewImageHeight, PreviewImageMinHeight, GetMaxPreviewImageHeight());
+        }
+
+        private float GetMaxPreviewImageHeight()
+        {
+            return position.height;
+//            return Mathf.Max(PreviewImageMinHeight, position.height - PreviewToolsScrollMinHeight - PreviewLayoutFixedHeight);
+        }
+
+        private void DrawPreviewResizeHandle()
+        {
+            Rect rect = GUILayoutUtility.GetRect(GUIContent.none, GUIStyle.none, GUILayout.Height(PreviewResizeHandleHeight), GUILayout.ExpandWidth(true));
+            int controlId = GUIUtility.GetControlID(FocusType.Passive, rect);
+            Event currentEvent = Event.current;
+            EditorGUIUtility.AddCursorRect(rect, MouseCursor.ResizeVertical, controlId);
+
+            if (currentEvent.type == EventType.Repaint)
+            {
+                EditorGUI.DrawRect(rect, new Color(0.32f, 0.32f, 0.32f, 0.35f));
+                float y = rect.y + Mathf.Floor(rect.height * 0.5f);
+                EditorGUI.DrawRect(new Rect(rect.x + 16f, y, Mathf.Max(0f, rect.width - 32f), 1f), new Color(1f, 1f, 1f, 0.35f));
+            }
+
+            switch (currentEvent.GetTypeForControl(controlId))
+            {
+                case EventType.MouseDown:
+                    if (rect.Contains(currentEvent.mousePosition) && currentEvent.button == 0)
+                    {
+                        previewResizeDragging = true;
+                        GUIUtility.hotControl = controlId;
+                        currentEvent.Use();
+                    }
+                    break;
+                case EventType.MouseDrag:
+                    if (previewResizeDragging && GUIUtility.hotControl == controlId)
+                    {
+                        previewImageHeight = Mathf.Clamp(GetClampedPreviewImageHeight() + currentEvent.delta.y, PreviewImageMinHeight, GetMaxPreviewImageHeight());
+                        currentEvent.Use();
+                        Repaint();
+                    }
+                    break;
+                case EventType.MouseUp:
+                    if (previewResizeDragging && GUIUtility.hotControl == controlId && currentEvent.button == 0)
+                    {
+                        previewResizeDragging = false;
+                        GUIUtility.hotControl = 0;
+                        currentEvent.Use();
+                    }
+                    break;
+                case EventType.MouseLeaveWindow:
+                    if (previewResizeDragging && GUIUtility.hotControl == controlId)
+                    {
+                        previewResizeDragging = false;
+                        GUIUtility.hotControl = 0;
+                    }
+                    break;
+            }
         }
 
         private static string GetToolLabel(Tool tool)
@@ -388,6 +649,8 @@ namespace UMA.Editors
                 case Tool.AdjustColors: return "Adjust Colors";
                 case Tool.AlphaGradient: return "Alpha Gradient";
                 case Tool.AlphaFill: return "Alpha Fill";
+                case Tool.Touchup: return "Touchup";
+                case Tool.AddDetails: return "Add Details";
                 default: return tool.ToString();
             }
         }
@@ -436,7 +699,11 @@ namespace UMA.Editors
 
         private void DrawBackgroundSection()
         {
-            EditorGUILayout.LabelField("Background", EditorStyles.boldLabel);
+            if (!DrawCollapsibleSectionHeader("Background", ref backgroundSectionExpanded, BackgroundSectionExpandedPrefsKey))
+            {
+                return;
+            }
+
             GUIHelper.BeginVerticalPadded(8, new Color(0.95f, 0.92f, 0.88f), EditorStyles.helpBox);
 
             Texture2D newBackground = (Texture2D)EditorGUILayout.ObjectField("Background Texture", backgroundAsset, typeof(Texture2D), false);
@@ -466,20 +733,18 @@ namespace UMA.Editors
             GUIHelper.EndVerticalPadded();
         }
 
-        private void DrawPreviewArea()
+        private void DrawPreviewArea(float imageHeight)
         {
-            // Reserve a square-ish area sized to remaining space.
-            float minHeight = 200f;
-            float desired = Mathf.Max(minHeight, position.height * 0.5f);
             DrawPreviewControls();
+
             EditorGUILayout.BeginHorizontal();
             if (droppedTextureAssets.Count > 0)
             {
-                DrawDroppedTextureList(desired);
+                DrawDroppedTextureList(imageHeight);
                 EditorGUILayout.Space(6f, false);
             }
 
-            Rect rect = GUILayoutUtility.GetRect(GUIContent.none, GUIStyle.none, GUILayout.ExpandWidth(true), GUILayout.Height(desired));
+            Rect rect = GUILayoutUtility.GetRect(GUIContent.none, GUIStyle.none, GUILayout.ExpandWidth(true), GUILayout.Height(imageHeight));
             EditorGUILayout.EndHorizontal();
 
             // Draw checkerboard background tiled.
@@ -493,9 +758,9 @@ namespace UMA.Editors
             Texture2D toShow = previewTexture != null ? previewTexture : currentTexture;
             if (toShow != null)
             {
-                if (previewDisplayMode == PreviewDisplayMode.Actual)
+                if (previewDisplayMode == PreviewDisplayMode.Magnify)
                 {
-                    DrawActualPreview(rect, toShow);
+                    DrawMagnifiedPreview(rect, toShow);
                 }
                 else
                 {
@@ -521,31 +786,54 @@ namespace UMA.Editors
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
             EditorGUILayout.LabelField("Display", GUILayout.Width(48f));
             EditorGUI.BeginChangeCheck();
-            previewDisplayMode = (PreviewDisplayMode)GUILayout.Toolbar((int)previewDisplayMode, new[] { "Fit", "Actual" }, EditorStyles.toolbarButton, GUILayout.Width(130f));
+            previewDisplayMode = (PreviewDisplayMode)GUILayout.Toolbar((int)previewDisplayMode, new[] { "Fit", "Magnify" }, EditorStyles.toolbarButton, GUILayout.Width(150f));
             if (EditorGUI.EndChangeCheck())
             {
-                previewScroll = Vector2.zero;
+                ResetMagnifiedPreviewCenter();
                 previewMousePanning = false;
+                previewMousePanButton = -1;
             }
 
-            using (new EditorGUI.DisabledScope(previewDisplayMode != PreviewDisplayMode.Actual))
+            using (new EditorGUI.DisabledScope(previewDisplayMode != PreviewDisplayMode.Magnify))
             {
                 GUILayout.Space(8f);
                 EditorGUILayout.LabelField("Zoom", GUILayout.Width(36f));
                 EditorGUI.BeginChangeCheck();
-                previewActualZoom = EditorGUILayout.Slider(previewActualZoom, PreviewActualMinZoom, PreviewActualMaxZoom, GUILayout.Width(180f));
-                if (GUILayout.Button("1:1", EditorStyles.toolbarButton, GUILayout.Width(38f)))
+                previewMagnifyZoom = EditorGUILayout.Slider(previewMagnifyZoom, PreviewMagnifyMinZoom, PreviewMagnifyMaxZoom, GUILayout.Width(180f));
+                EditorGUILayout.LabelField($"{previewMagnifyZoom * 100f:0}%", GUILayout.Width(44f));
+                bool resetZoom = GUILayout.Button("100%", EditorStyles.toolbarButton, GUILayout.Width(48f));
+                if (resetZoom)
                 {
-                    previewActualZoom = 1f;
+                    previewMagnifyZoom = 1f;
                 }
-                if (EditorGUI.EndChangeCheck())
+
+                if (previewDisplayMode == PreviewDisplayMode.Magnify)
                 {
-                    previewActualZoom = Mathf.Clamp(previewActualZoom, PreviewActualMinZoom, PreviewActualMaxZoom);
+                    bool centerPreview = GUILayout.Button("Center", EditorStyles.toolbarButton, GUILayout.Width(58f));
+                    if (centerPreview)
+                    {
+                        ResetMagnifiedPreviewCenter();
+                        Repaint();
+                    }
+
+                    GUILayout.Space(8f);
+                    EditorGUILayout.LabelField("Pan with middle mouse button", EditorStyles.miniLabel, GUILayout.Width(170f));
+                }
+
+                bool zoomControlChanged = EditorGUI.EndChangeCheck() || resetZoom;
+                if (zoomControlChanged)
+                {
+                    previewMagnifyZoom = Mathf.Clamp(previewMagnifyZoom, PreviewMagnifyMinZoom, PreviewMagnifyMaxZoom);
                 }
             }
 
             GUILayout.FlexibleSpace();
             EditorGUILayout.EndHorizontal();
+        }
+
+        private void ResetMagnifiedPreviewCenter()
+        {
+            previewCenterNormalized = new Vector2(0.5f, 0.5f);
         }
 
         private void DrawFitPreview(Rect rect, Texture2D toShow)
@@ -558,27 +846,83 @@ namespace UMA.Editors
             }
 
             DrawPreviewTextureWithVisibleAreas(fit, toShow);
+            HandleTouchupPreview(fit, toShow.width, toShow.height);
+            HandleAddDetailsPreview(fit, toShow.width, toShow.height);
         }
 
-        private void DrawActualPreview(Rect rect, Texture2D toShow)
+        private void DrawMagnifiedPreview(Rect rect, Texture2D toShow)
         {
-            float zoom = Mathf.Clamp(previewActualZoom, PreviewActualMinZoom, PreviewActualMaxZoom);
-            float contentWidth = Mathf.Max(1f, toShow.width * zoom);
-            float contentHeight = Mathf.Max(1f, toShow.height * zoom);
-            Rect viewRect = new Rect(0f, 0f, Mathf.Max(contentWidth, rect.width - 16f), Mathf.Max(contentHeight, rect.height - 16f));
+            float zoom = Mathf.Clamp(previewMagnifyZoom, PreviewMagnifyMinZoom, PreviewMagnifyMaxZoom);
+            MagnifiedPreviewLayout layout = GetMagnifiedPreviewLayout(rect, toShow, zoom, previewCenterNormalized);
+            previewCenterNormalized = GetMagnifiedPreviewCenterNormalized(layout.textureRect, layout.viewportRect.size);
 
-            HandleActualPreviewMousePan(rect, viewRect);
-
-            previewScroll = GUI.BeginScrollView(rect, previewScroll, viewRect, true, true);
-            Rect textureRect = new Rect(0f, 0f, contentWidth, contentHeight);
+            GUI.BeginGroup(layout.viewportRect);
+            Rect localViewportRect = new Rect(0f, 0f, layout.viewportRect.width, layout.viewportRect.height);
             if (showBackgroundTexture && backgroundAsset != null)
             {
-                Rect backgroundRect = FitBackgroundRect(textureRect, backgroundAsset.width, backgroundAsset.height, backgroundScaleMode);
+                Rect backgroundRect = FitBackgroundRect(layout.textureRect, backgroundAsset.width, backgroundAsset.height, backgroundScaleMode);
                 GUI.DrawTexture(backgroundRect, backgroundAsset, ScaleMode.StretchToFill, true);
             }
 
-            DrawPreviewTextureWithVisibleAreas(textureRect, toShow);
-            GUI.EndScrollView();
+            DrawPreviewTextureWithVisibleAreas(layout.textureRect, toShow);
+            HandleTouchupPreview(layout.textureRect, toShow.width, toShow.height);
+            HandleAddDetailsPreview(layout.textureRect, toShow.width, toShow.height);
+            HandleMagnifiedPreviewMousePan(localViewportRect, layout);
+            GUI.EndGroup();
+        }
+
+        private static MagnifiedPreviewLayout GetMagnifiedPreviewLayout(Rect rect, Texture2D texture, float zoom, Vector2 centerNormalized)
+        {
+            Rect fit = FitRect(new Rect(0f, 0f, rect.width, rect.height), texture.width, texture.height);
+            float clampedZoom = Mathf.Clamp(zoom, PreviewMagnifyMinZoom, PreviewMagnifyMaxZoom);
+            float contentWidth = Mathf.Max(1f, fit.width * clampedZoom);
+            float contentHeight = Mathf.Max(1f, fit.height * clampedZoom);
+            Rect viewportRect = new Rect(rect.x, rect.y, Mathf.Max(1f, rect.width), Mathf.Max(1f, rect.height));
+            Vector2 contentSize = new Vector2(contentWidth, contentHeight);
+
+            Rect textureRect = new Rect(
+                (viewportRect.width * 0.5f) - (Mathf.Clamp01(centerNormalized.x) * contentWidth),
+                (viewportRect.height * 0.5f) - (Mathf.Clamp01(centerNormalized.y) * contentHeight),
+                contentWidth,
+                contentHeight);
+            textureRect = ClampMagnifiedTextureRect(textureRect, viewportRect.size);
+
+            return new MagnifiedPreviewLayout
+            {
+                viewportRect = viewportRect,
+                textureRect = textureRect,
+                contentSize = contentSize,
+            };
+        }
+
+        private static Rect ClampMagnifiedTextureRect(Rect textureRect, Vector2 viewportSize)
+        {
+            if (textureRect.width <= viewportSize.x)
+            {
+                textureRect.x = (viewportSize.x - textureRect.width) * 0.5f;
+            }
+            else
+            {
+                textureRect.x = Mathf.Clamp(textureRect.x, viewportSize.x - textureRect.width, 0f);
+            }
+
+            if (textureRect.height <= viewportSize.y)
+            {
+                textureRect.y = (viewportSize.y - textureRect.height) * 0.5f;
+            }
+            else
+            {
+                textureRect.y = Mathf.Clamp(textureRect.y, viewportSize.y - textureRect.height, 0f);
+            }
+
+            return textureRect;
+        }
+
+        private static Vector2 GetMagnifiedPreviewCenterNormalized(Rect textureRect, Vector2 viewportSize)
+        {
+            return new Vector2(
+                textureRect.width <= viewportSize.x ? 0.5f : Mathf.Clamp01(((viewportSize.x * 0.5f) - textureRect.xMin) / textureRect.width),
+                textureRect.height <= viewportSize.y ? 0.5f : Mathf.Clamp01(((viewportSize.y * 0.5f) - textureRect.yMin) / textureRect.height));
         }
 
         private void DrawPreviewTextureWithVisibleAreas(Rect textureRect, Texture2D texture)
@@ -615,23 +959,25 @@ namespace UMA.Editors
                 && (!visibleAreaTopLeft || !visibleAreaTopRight || !visibleAreaBottomLeft || !visibleAreaBottomRight);
         }
 
-        private void HandleActualPreviewMousePan(Rect rect, Rect viewRect)
+        private void HandleMagnifiedPreviewMousePan(Rect localViewportRect, MagnifiedPreviewLayout layout)
         {
             int controlId = GUIUtility.GetControlID(FocusType.Passive);
             Event evt = Event.current;
-            bool canPan = viewRect.width > rect.width || viewRect.height > rect.height;
+            bool canPan = layout.contentSize.x > localViewportRect.width || layout.contentSize.y > localViewportRect.height;
+            bool mouseInViewport = localViewportRect.Contains(evt.mousePosition);
 
             if (canPan)
             {
-                EditorGUIUtility.AddCursorRect(rect, MouseCursor.MoveArrow, controlId);
+                EditorGUIUtility.AddCursorRect(localViewportRect, MouseCursor.MoveArrow, controlId);
             }
 
             switch (evt.GetTypeForControl(controlId))
             {
                 case EventType.MouseDown:
-                    if (canPan && rect.Contains(evt.mousePosition) && evt.button == 0)
+                    if (canPan && evt.button == 2 && mouseInViewport)
                     {
                         previewMousePanning = true;
+                        previewMousePanButton = evt.button;
                         GUIUtility.hotControl = controlId;
                         evt.Use();
                     }
@@ -639,29 +985,1155 @@ namespace UMA.Editors
                 case EventType.MouseDrag:
                     if (previewMousePanning && GUIUtility.hotControl == controlId)
                     {
-                        previewScroll = ClampPreviewScroll(previewScroll - evt.delta, rect, viewRect);
+                        Rect movedTextureRect = layout.textureRect;
+                        movedTextureRect.position += evt.delta;
+                        movedTextureRect = ClampMagnifiedTextureRect(movedTextureRect, localViewportRect.size);
+                        previewCenterNormalized = GetMagnifiedPreviewCenterNormalized(movedTextureRect, localViewportRect.size);
                         evt.Use();
                         Repaint();
                     }
                     break;
                 case EventType.MouseUp:
-                    if (previewMousePanning && GUIUtility.hotControl == controlId && evt.button == 0)
+                    if (previewMousePanning && GUIUtility.hotControl == controlId && evt.button == previewMousePanButton)
                     {
                         previewMousePanning = false;
+                        previewMousePanButton = -1;
                         GUIUtility.hotControl = 0;
                         evt.Use();
+                    }
+                    break;
+                case EventType.MouseLeaveWindow:
+                    if (previewMousePanning && GUIUtility.hotControl == controlId)
+                    {
+                        previewMousePanning = false;
+                        previewMousePanButton = -1;
+                        GUIUtility.hotControl = 0;
                     }
                     break;
             }
         }
 
-        private static Vector2 ClampPreviewScroll(Vector2 scroll, Rect rect, Rect viewRect)
+        private void HandleTouchupPreview(Rect textureRect, int textureWidth, int textureHeight)
         {
-            float maxX = Mathf.Max(0f, viewRect.width - rect.width);
-            float maxY = Mathf.Max(0f, viewRect.height - rect.height);
-            scroll.x = Mathf.Clamp(scroll.x, 0f, maxX);
-            scroll.y = Mathf.Clamp(scroll.y, 0f, maxY);
-            return scroll;
+            if (currentTool != Tool.Touchup || currentTexture == null || textureWidth <= 0 || textureHeight <= 0)
+            {
+                return;
+            }
+
+            int controlId = GUIUtility.GetControlID(FocusType.Passive);
+            Event currentEvent = Event.current;
+            bool mouseInTexture = textureRect.Contains(currentEvent.mousePosition);
+            bool ownsControl = touchupPainting && GUIUtility.hotControl == controlId;
+
+            if (mouseInTexture || ownsControl)
+            {
+                EditorGUIUtility.AddCursorRect(textureRect, MouseCursor.Arrow, controlId);
+            }
+
+            switch (currentEvent.GetTypeForControl(controlId))
+            {
+                case EventType.MouseDown:
+                    if (mouseInTexture && currentEvent.button == 0)
+                    {
+                        touchupPainting = true;
+                        GUIUtility.hotControl = controlId;
+                        GUI.FocusControl(null);
+                        PaintTouchupAtPreviewPosition(currentEvent.mousePosition, textureRect);
+                        currentEvent.Use();
+                    }
+                    break;
+                case EventType.MouseDrag:
+                    if (ownsControl)
+                    {
+                        PaintTouchupAtPreviewPosition(currentEvent.mousePosition, textureRect);
+                        currentEvent.Use();
+                    }
+                    break;
+                case EventType.MouseUp:
+                    if (ownsControl && currentEvent.button == 0)
+                    {
+                        touchupPainting = false;
+                        GUIUtility.hotControl = 0;
+                        currentEvent.Use();
+                    }
+                    break;
+                case EventType.MouseMove:
+                    if (mouseInTexture)
+                    {
+                        Repaint();
+                    }
+                    break;
+                case EventType.MouseLeaveWindow:
+                    if (ownsControl)
+                    {
+                        touchupPainting = false;
+                        GUIUtility.hotControl = 0;
+                    }
+                    break;
+            }
+
+            if (currentEvent.type == EventType.Repaint && (mouseInTexture || ownsControl))
+            {
+                DrawTouchupBrushOutline(currentEvent.mousePosition, textureRect, textureWidth, textureHeight);
+            }
+        }
+
+        private void PaintTouchupAtPreviewPosition(Vector2 previewPosition, Rect textureRect)
+        {
+            if (currentTexture == null || touchupMode != TouchupMode.Erase)
+            {
+                return;
+            }
+
+            if (HasPendingAdjustments())
+            {
+                BakeAdjustmentsToCurrent();
+            }
+
+            EnsureCachedPixels();
+            bool changed = EraseAlphaWithBrush(cachedCurrentPixels, currentTexture.width, currentTexture.height, previewPosition, textureRect);
+            if (!changed)
+            {
+                return;
+            }
+
+            currentTexture.SetPixels32(cachedCurrentPixels);
+            currentTexture.Apply(false, false);
+            SetCurrentDirty(true);
+            InvalidatePreview();
+        }
+
+        private bool EraseAlphaWithBrush(Color32[] pixels, int width, int height, Vector2 previewPosition, Rect textureRect)
+        {
+            if (pixels == null || pixels.Length == 0 || width <= 0 || height <= 0 || textureRect.width <= 0f || textureRect.height <= 0f)
+            {
+                return false;
+            }
+
+            if (touchupBrushShape == TouchupBrushShape.Bitmap && !EnsureTouchupBrushPixels())
+            {
+                return false;
+            }
+
+            float brushSize = Mathf.Max(1f, touchupBrushSizePixels);
+            float halfBrushSize = brushSize * 0.5f;
+            float normalizedX = (previewPosition.x - textureRect.xMin) / textureRect.width;
+            float normalizedYFromTop = (previewPosition.y - textureRect.yMin) / textureRect.height;
+            float centerX = normalizedX * width;
+            float centerY = (1f - normalizedYFromTop) * height;
+
+            int minX = Mathf.Max(0, Mathf.FloorToInt(centerX - halfBrushSize));
+            int maxX = Mathf.Min(width, Mathf.CeilToInt(centerX + halfBrushSize));
+            int minY = Mathf.Max(0, Mathf.FloorToInt(centerY - halfBrushSize));
+            int maxY = Mathf.Min(height, Mathf.CeilToInt(centerY + halfBrushSize));
+            if (minX >= maxX || minY >= maxY)
+            {
+                return false;
+            }
+
+            bool changed = false;
+            float radiusSquared = halfBrushSize * halfBrushSize;
+            float left = centerX - halfBrushSize;
+            float bottom = centerY - halfBrushSize;
+            for (int y = minY; y < maxY; y++)
+            {
+                float pixelCenterY = y + 0.5f;
+                for (int x = minX; x < maxX; x++)
+                {
+                    float pixelCenterX = x + 0.5f;
+                    float mask = GetTouchupBrushMask(pixelCenterX, pixelCenterY, centerX, centerY, left, bottom, brushSize, radiusSquared);
+                    if (mask <= 0f)
+                    {
+                        continue;
+                    }
+
+                    int pixelIndex = (y * width) + x;
+                    Color32 pixel = pixels[pixelIndex];
+                    byte alpha = (byte)Mathf.RoundToInt(pixel.a * (1f - Mathf.Clamp01(mask)));
+                    if (alpha >= pixel.a)
+                    {
+                        continue;
+                    }
+
+                    pixel.a = alpha;
+                    pixels[pixelIndex] = pixel;
+                    changed = true;
+                }
+            }
+
+            return changed;
+        }
+
+        private float GetTouchupBrushMask(
+            float pixelCenterX,
+            float pixelCenterY,
+            float centerX,
+            float centerY,
+            float left,
+            float bottom,
+            float brushSize,
+            float radiusSquared)
+        {
+            switch (touchupBrushShape)
+            {
+                case TouchupBrushShape.Round:
+                    float deltaX = pixelCenterX - centerX;
+                    float deltaY = pixelCenterY - centerY;
+                    return (deltaX * deltaX) + (deltaY * deltaY) <= radiusSquared ? 1f : 0f;
+                case TouchupBrushShape.Bitmap:
+                    return GetTouchupBitmapBrushMask((pixelCenterX - left) / brushSize, (pixelCenterY - bottom) / brushSize);
+                case TouchupBrushShape.Square:
+                default:
+                    return 1f;
+            }
+        }
+
+        private float GetTouchupBitmapBrushMask(float u, float v)
+        {
+            if (cachedTouchupBrushPixels == null || cachedTouchupBrushWidth <= 0 || cachedTouchupBrushHeight <= 0 || u < 0f || u > 1f || v < 0f || v > 1f)
+            {
+                return 0f;
+            }
+
+            int x = Mathf.Clamp(Mathf.FloorToInt(u * cachedTouchupBrushWidth), 0, cachedTouchupBrushWidth - 1);
+            int y = Mathf.Clamp(Mathf.FloorToInt(v * cachedTouchupBrushHeight), 0, cachedTouchupBrushHeight - 1);
+            Color32 brushPixel = cachedTouchupBrushPixels[(y * cachedTouchupBrushWidth) + x];
+            const float inv255 = 1f / 255f;
+            float alpha = brushPixel.a * inv255;
+            float luminance = ((0.2126f * brushPixel.r) + (0.7152f * brushPixel.g) + (0.0722f * brushPixel.b)) * inv255;
+            return Mathf.Clamp01(luminance * alpha);
+        }
+
+        private bool EnsureTouchupBrushPixels()
+        {
+            if (touchupBrushBitmap == null)
+            {
+                InvalidateTouchupBrushCache();
+                return false;
+            }
+
+            if (cachedTouchupBrushBitmap == touchupBrushBitmap && cachedTouchupBrushPixels != null)
+            {
+                return true;
+            }
+
+            InvalidateTouchupBrushCache();
+            Texture2D readableCopy = null;
+            try
+            {
+                readableCopy = MakeReadableCopy(touchupBrushBitmap);
+                cachedTouchupBrushBitmap = touchupBrushBitmap;
+                cachedTouchupBrushPixels = readableCopy.GetPixels32();
+                cachedTouchupBrushWidth = readableCopy.width;
+                cachedTouchupBrushHeight = readableCopy.height;
+                return cachedTouchupBrushPixels.Length > 0;
+            }
+            catch
+            {
+                InvalidateTouchupBrushCache();
+                return false;
+            }
+            finally
+            {
+                DestroyTexture(ref readableCopy);
+            }
+        }
+
+        private void InvalidateTouchupBrushCache()
+        {
+            cachedTouchupBrushBitmap = null;
+            cachedTouchupBrushPixels = null;
+            cachedTouchupBrushWidth = 0;
+            cachedTouchupBrushHeight = 0;
+        }
+
+        private void DrawTouchupBrushOutline(Vector2 center, Rect textureRect, int textureWidth, int textureHeight)
+        {
+            float widthScale = textureRect.width / textureWidth;
+            float heightScale = textureRect.height / textureHeight;
+            float brushWidth = Mathf.Max(1f, touchupBrushSizePixels * widthScale);
+            float brushHeight = Mathf.Max(1f, touchupBrushSizePixels * heightScale);
+
+            if (touchupBrushShape == TouchupBrushShape.Round)
+            {
+                DrawTouchupRoundOutline(center, (brushWidth + brushHeight) * 0.25f);
+            }
+            else
+            {
+                DrawTouchupSquareOutline(new Rect(center.x - (brushWidth * 0.5f), center.y - (brushHeight * 0.5f), brushWidth, brushHeight));
+            }
+        }
+
+        private static void DrawTouchupRoundOutline(Vector2 center, float radius)
+        {
+            Handles.BeginGUI();
+            Color oldColor = Handles.color;
+            Vector3 center3 = new Vector3(center.x, center.y, 0f);
+            Handles.color = new Color(0f, 0f, 0f, 0.85f);
+            Handles.DrawWireDisc(center3, Vector3.forward, radius + 1f);
+            Handles.color = new Color(1f, 1f, 1f, 0.95f);
+            Handles.DrawWireDisc(center3, Vector3.forward, radius);
+            Handles.color = oldColor;
+            Handles.EndGUI();
+        }
+
+        private static void DrawTouchupSquareOutline(Rect rect)
+        {
+            DrawRectOutline(new Rect(rect.x - 1f, rect.y - 1f, rect.width + 2f, rect.height + 2f), new Color(0f, 0f, 0f, 0.85f));
+            DrawRectOutline(rect, new Color(1f, 1f, 1f, 0.95f));
+        }
+
+        private static void DrawRectOutline(Rect rect, Color color)
+        {
+            EditorGUI.DrawRect(new Rect(rect.xMin, rect.yMin, rect.width, 1f), color);
+            EditorGUI.DrawRect(new Rect(rect.xMin, rect.yMax - 1f, rect.width, 1f), color);
+            EditorGUI.DrawRect(new Rect(rect.xMin, rect.yMin, 1f, rect.height), color);
+            EditorGUI.DrawRect(new Rect(rect.xMax - 1f, rect.yMin, 1f, rect.height), color);
+        }
+
+        private void HandleAddDetailsPreview(Rect textureRect, int textureWidth, int textureHeight)
+        {
+            if (currentTool != Tool.AddDetails || currentTexture == null || textureWidth <= 0 || textureHeight <= 0)
+            {
+                return;
+            }
+
+            EnsureDetailAreaInitialized(textureWidth, textureHeight);
+
+            int controlId = GUIUtility.GetControlID(FocusType.Passive);
+            Event currentEvent = Event.current;
+            bool mouseInTexture = textureRect.Contains(currentEvent.mousePosition);
+            bool ownsControl = detailCurveDragging && GUIUtility.hotControl == controlId;
+
+            if (mouseInTexture || ownsControl)
+            {
+                EditorGUIUtility.AddCursorRect(textureRect, MouseCursor.Arrow, controlId);
+            }
+
+            switch (currentEvent.GetTypeForControl(controlId))
+            {
+                case EventType.MouseDown:
+                    if (mouseInTexture && currentEvent.button == 0)
+                    {
+                        if (currentEvent.control || currentEvent.command)
+                        {
+                            if (TryDeleteDetailPointAtPreviewPosition(currentEvent.mousePosition, textureRect))
+                            {
+                                currentEvent.Use();
+                                Repaint();
+                            }
+                        }
+                        else if (currentEvent.shift)
+                        {
+                            if (TryInsertDetailPointAtPreviewPosition(currentEvent.mousePosition, textureRect))
+                            {
+                                currentEvent.Use();
+                                Repaint();
+                            }
+                        }
+                        else if (TryBeginDetailCurveDrag(currentEvent.mousePosition, textureRect))
+                        {
+                            GUIUtility.hotControl = controlId;
+                            GUI.FocusControl(null);
+                            currentEvent.Use();
+                            Repaint();
+                        }
+                    }
+                    break;
+                case EventType.MouseDrag:
+                    if (ownsControl)
+                    {
+                        MoveDetailDragToPreviewPosition(currentEvent.mousePosition, textureRect);
+                        currentEvent.Use();
+                        Repaint();
+                    }
+                    break;
+                case EventType.MouseUp:
+                    if (ownsControl && currentEvent.button == 0)
+                    {
+                        detailCurveDragging = false;
+                        detailDragTarget = DetailCurveDragTarget.None;
+                        detailDragPointIndex = -1;
+                        GUIUtility.hotControl = 0;
+                        currentEvent.Use();
+                    }
+                    break;
+                case EventType.MouseMove:
+                    if (mouseInTexture)
+                    {
+                        Repaint();
+                    }
+                    break;
+                case EventType.MouseLeaveWindow:
+                    if (ownsControl)
+                    {
+                        detailCurveDragging = false;
+                        detailDragTarget = DetailCurveDragTarget.None;
+                        detailDragPointIndex = -1;
+                        GUIUtility.hotControl = 0;
+                    }
+                    break;
+            }
+
+            if (currentEvent.type == EventType.Repaint)
+            {
+                DrawAddDetailsCurveOverlay(textureRect);
+            }
+        }
+
+        private bool CanApplyAddDetails()
+        {
+            return currentTexture != null && detailPoints.Count >= DetailMinCurvePoints;
+        }
+
+        private void EnsureDetailAreaInitialized(int textureWidth, int textureHeight)
+        {
+            if (detailPoints.Count >= DetailMinCurvePoints
+                && detailAreaTextureWidth == textureWidth
+                && detailAreaTextureHeight == textureHeight)
+            {
+                return;
+            }
+
+            ResetDetailAreaToDefaultCircle(textureWidth, textureHeight);
+        }
+
+        private void ResetDetailAreaToDefaultCircle(int textureWidth, int textureHeight)
+        {
+            detailPoints.Clear();
+            detailAreaTextureWidth = textureWidth;
+            detailAreaTextureHeight = textureHeight;
+            detailSelectedPointIndex = -1;
+
+            if (textureWidth <= 0 || textureHeight <= 0)
+            {
+                return;
+            }
+
+            float radiusPixels = Mathf.Max(8f, Mathf.Min(textureWidth, textureHeight) * DetailDefaultCircleRadiusScale);
+            float radiusX = radiusPixels / Mathf.Max(1f, textureWidth);
+            float radiusY = radiusPixels / Mathf.Max(1f, textureHeight);
+            float handleX = radiusX * DetailCircleKappa;
+            float handleY = radiusY * DetailCircleKappa;
+            Vector2 center = new Vector2(0.5f, 0.5f);
+
+            Vector2 right = ClampNormalizedPoint(new Vector2(center.x + radiusX, center.y));
+            Vector2 top = ClampNormalizedPoint(new Vector2(center.x, center.y + radiusY));
+            Vector2 left = ClampNormalizedPoint(new Vector2(center.x - radiusX, center.y));
+            Vector2 bottom = ClampNormalizedPoint(new Vector2(center.x, center.y - radiusY));
+
+            detailPoints.Add(new DetailCurvePoint(
+                right,
+                ClampNormalizedPoint(new Vector2(right.x, right.y - handleY)),
+                ClampNormalizedPoint(new Vector2(right.x, right.y + handleY))));
+            detailPoints.Add(new DetailCurvePoint(
+                top,
+                ClampNormalizedPoint(new Vector2(top.x + handleX, top.y)),
+                ClampNormalizedPoint(new Vector2(top.x - handleX, top.y))));
+            detailPoints.Add(new DetailCurvePoint(
+                left,
+                ClampNormalizedPoint(new Vector2(left.x, left.y + handleY)),
+                ClampNormalizedPoint(new Vector2(left.x, left.y - handleY))));
+            detailPoints.Add(new DetailCurvePoint(
+                bottom,
+                ClampNormalizedPoint(new Vector2(bottom.x - handleX, bottom.y)),
+                ClampNormalizedPoint(new Vector2(bottom.x + handleX, bottom.y))));
+        }
+
+        private void DrawAddDetailsCurveOverlay(Rect textureRect)
+        {
+            if (detailPoints.Count < DetailMinCurvePoints)
+            {
+                return;
+            }
+
+            Handles.BeginGUI();
+            Color oldColor = Handles.color;
+
+            for (int i = 0; i < detailPoints.Count; i++)
+            {
+                DetailCurvePoint point = detailPoints[i];
+                DetailCurvePoint nextPoint = detailPoints[GetNextDetailPointIndex(i)];
+                Vector2 p0 = NormalizedTextureToPreviewPoint(point.position, textureRect);
+                Vector2 p1 = NormalizedTextureToPreviewPoint(point.outHandle, textureRect);
+                Vector2 p2 = NormalizedTextureToPreviewPoint(nextPoint.inHandle, textureRect);
+                Vector2 p3 = NormalizedTextureToPreviewPoint(nextPoint.position, textureRect);
+                Handles.DrawBezier(p0, p3, p1, p2, new Color(0f, 0f, 0f, 0.8f), null, 4f);
+                Handles.DrawBezier(p0, p3, p1, p2, new Color(0.1f, 0.65f, 1f, 0.95f), null, 2f);
+            }
+
+            for (int i = 0; i < detailPoints.Count; i++)
+            {
+                DetailCurvePoint point = detailPoints[i];
+                Vector2 anchor = NormalizedTextureToPreviewPoint(point.position, textureRect);
+                Vector2 inHandle = NormalizedTextureToPreviewPoint(point.inHandle, textureRect);
+                Vector2 outHandle = NormalizedTextureToPreviewPoint(point.outHandle, textureRect);
+
+                Handles.color = new Color(1f, 1f, 1f, 0.32f);
+                Handles.DrawLine(anchor, inHandle);
+                Handles.DrawLine(anchor, outHandle);
+
+                bool selected = i == detailSelectedPointIndex || (detailCurveDragging && i == detailDragPointIndex);
+                DrawDetailDisc(inHandle, DetailHandleHitRadius - 1f, new Color(0f, 0f, 0f, 0.85f), new Color(1f, 0.95f, 0.35f, 0.95f));
+                DrawDetailDisc(outHandle, DetailHandleHitRadius - 1f, new Color(0f, 0f, 0f, 0.85f), new Color(1f, 0.95f, 0.35f, 0.95f));
+                DrawDetailDisc(anchor, DetailAnchorHitRadius - 1f, new Color(0f, 0f, 0f, 0.9f), selected ? new Color(1f, 0.58f, 0.2f, 1f) : new Color(0.1f, 0.65f, 1f, 1f));
+            }
+
+            Handles.color = oldColor;
+            Handles.EndGUI();
+        }
+
+        private static void DrawDetailDisc(Vector2 center, float radius, Color borderColor, Color fillColor)
+        {
+            Vector3 center3 = new Vector3(center.x, center.y, 0f);
+            Handles.color = borderColor;
+            Handles.DrawSolidDisc(center3, Vector3.forward, radius + 1f);
+            Handles.color = fillColor;
+            Handles.DrawSolidDisc(center3, Vector3.forward, radius);
+        }
+
+        private bool TryBeginDetailCurveDrag(Vector2 previewPosition, Rect textureRect)
+        {
+            if (!FindDetailHitTarget(previewPosition, textureRect, out DetailCurveDragTarget hitTarget, out int pointIndex))
+            {
+                return false;
+            }
+
+            detailCurveDragging = true;
+            detailDragTarget = hitTarget;
+            detailDragPointIndex = pointIndex;
+            detailSelectedPointIndex = pointIndex;
+            return true;
+        }
+
+        private bool FindDetailHitTarget(Vector2 previewPosition, Rect textureRect, out DetailCurveDragTarget hitTarget, out int pointIndex)
+        {
+            hitTarget = DetailCurveDragTarget.None;
+            pointIndex = -1;
+            float anchorHitRadiusSquared = DetailAnchorHitRadius * DetailAnchorHitRadius;
+            float handleHitRadiusSquared = DetailHandleHitRadius * DetailHandleHitRadius;
+
+            for (int i = 0; i < detailPoints.Count; i++)
+            {
+                Vector2 anchor = NormalizedTextureToPreviewPoint(detailPoints[i].position, textureRect);
+                if ((anchor - previewPosition).sqrMagnitude <= anchorHitRadiusSquared)
+                {
+                    hitTarget = DetailCurveDragTarget.Anchor;
+                    pointIndex = i;
+                    return true;
+                }
+            }
+
+            for (int i = 0; i < detailPoints.Count; i++)
+            {
+                Vector2 inHandle = NormalizedTextureToPreviewPoint(detailPoints[i].inHandle, textureRect);
+                if ((inHandle - previewPosition).sqrMagnitude <= handleHitRadiusSquared)
+                {
+                    hitTarget = DetailCurveDragTarget.InHandle;
+                    pointIndex = i;
+                    return true;
+                }
+
+                Vector2 outHandle = NormalizedTextureToPreviewPoint(detailPoints[i].outHandle, textureRect);
+                if ((outHandle - previewPosition).sqrMagnitude <= handleHitRadiusSquared)
+                {
+                    hitTarget = DetailCurveDragTarget.OutHandle;
+                    pointIndex = i;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void MoveDetailDragToPreviewPosition(Vector2 previewPosition, Rect textureRect)
+        {
+            if (detailDragPointIndex < 0 || detailDragPointIndex >= detailPoints.Count)
+            {
+                return;
+            }
+
+            DetailCurvePoint point = detailPoints[detailDragPointIndex];
+            Vector2 normalizedPosition = ClampNormalizedPoint(PreviewToNormalizedTexturePoint(previewPosition, textureRect));
+            switch (detailDragTarget)
+            {
+                case DetailCurveDragTarget.Anchor:
+                    Vector2 oldPosition = point.position;
+                    Vector2 delta = normalizedPosition - oldPosition;
+                    point.position = normalizedPosition;
+                    point.inHandle = ClampNormalizedPoint(point.inHandle + delta);
+                    point.outHandle = ClampNormalizedPoint(point.outHandle + delta);
+                    break;
+                case DetailCurveDragTarget.InHandle:
+                    point.inHandle = normalizedPosition;
+                    break;
+                case DetailCurveDragTarget.OutHandle:
+                    point.outHandle = normalizedPosition;
+                    break;
+            }
+        }
+
+        private bool TryDeleteDetailPointAtPreviewPosition(Vector2 previewPosition, Rect textureRect)
+        {
+            if (detailPoints.Count <= DetailMinCurvePoints)
+            {
+                return false;
+            }
+
+            int pointIndex = FindDetailAnchorAtPreviewPosition(previewPosition, textureRect);
+            if (pointIndex < 0)
+            {
+                return false;
+            }
+
+            detailPoints.RemoveAt(pointIndex);
+            detailSelectedPointIndex = Mathf.Clamp(pointIndex, 0, detailPoints.Count - 1);
+            NormalizeDetailHandlesAroundIndex(detailSelectedPointIndex);
+            NormalizeDetailHandlesAroundIndex(GetPreviousDetailPointIndex(detailSelectedPointIndex));
+            return true;
+        }
+
+        private int FindDetailAnchorAtPreviewPosition(Vector2 previewPosition, Rect textureRect)
+        {
+            float anchorHitRadiusSquared = DetailAnchorHitRadius * DetailAnchorHitRadius;
+            for (int i = 0; i < detailPoints.Count; i++)
+            {
+                Vector2 anchor = NormalizedTextureToPreviewPoint(detailPoints[i].position, textureRect);
+                if ((anchor - previewPosition).sqrMagnitude <= anchorHitRadiusSquared)
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        private bool TryInsertDetailPointAtPreviewPosition(Vector2 previewPosition, Rect textureRect)
+        {
+            if (!FindNearestDetailCurveSegment(previewPosition, textureRect, out int segmentIndex, out float segmentT))
+            {
+                return false;
+            }
+
+            SplitDetailCurveSegment(segmentIndex, segmentT);
+            detailSelectedPointIndex = segmentIndex + 1;
+            return true;
+        }
+
+        private bool FindNearestDetailCurveSegment(Vector2 previewPosition, Rect textureRect, out int segmentIndex, out float segmentT)
+        {
+            segmentIndex = -1;
+            segmentT = 0f;
+            if (detailPoints.Count < DetailMinCurvePoints)
+            {
+                return false;
+            }
+
+            float bestDistanceSquared = DetailCurveHitRadius * DetailCurveHitRadius;
+            const int HitTestSamples = 28;
+            for (int i = 0; i < detailPoints.Count; i++)
+            {
+                DetailCurvePoint point = detailPoints[i];
+                DetailCurvePoint nextPoint = detailPoints[GetNextDetailPointIndex(i)];
+                Vector2 previous = NormalizedTextureToPreviewPoint(point.position, textureRect);
+                for (int sample = 1; sample <= HitTestSamples; sample++)
+                {
+                    float t = (float)sample / HitTestSamples;
+                    Vector2 current = NormalizedTextureToPreviewPoint(EvaluateCubic(point.position, point.outHandle, nextPoint.inHandle, nextPoint.position, t), textureRect);
+                    float distanceSquared = DistancePointToSegmentSquared(previewPosition, previous, current, out float segmentLocalT);
+                    if (distanceSquared < bestDistanceSquared)
+                    {
+                        bestDistanceSquared = distanceSquared;
+                        segmentIndex = i;
+                        segmentT = Mathf.Lerp((float)(sample - 1) / HitTestSamples, t, segmentLocalT);
+                    }
+                    previous = current;
+                }
+            }
+
+            return segmentIndex >= 0;
+        }
+
+        private void SplitDetailCurveSegment(int segmentIndex, float t)
+        {
+            if (segmentIndex < 0 || segmentIndex >= detailPoints.Count)
+            {
+                return;
+            }
+
+            int nextIndex = GetNextDetailPointIndex(segmentIndex);
+            DetailCurvePoint point = detailPoints[segmentIndex];
+            DetailCurvePoint nextPoint = detailPoints[nextIndex];
+            Vector2 p0 = point.position;
+            Vector2 p1 = point.outHandle;
+            Vector2 p2 = nextPoint.inHandle;
+            Vector2 p3 = nextPoint.position;
+            float clampedT = Mathf.Clamp01(t);
+
+            Vector2 p01 = Vector2.Lerp(p0, p1, clampedT);
+            Vector2 p12 = Vector2.Lerp(p1, p2, clampedT);
+            Vector2 p23 = Vector2.Lerp(p2, p3, clampedT);
+            Vector2 p012 = Vector2.Lerp(p01, p12, clampedT);
+            Vector2 p123 = Vector2.Lerp(p12, p23, clampedT);
+            Vector2 p0123 = Vector2.Lerp(p012, p123, clampedT);
+
+            point.outHandle = ClampNormalizedPoint(p01);
+            nextPoint.inHandle = ClampNormalizedPoint(p23);
+            DetailCurvePoint insertedPoint = new DetailCurvePoint(
+                ClampNormalizedPoint(p0123),
+                ClampNormalizedPoint(p012),
+                ClampNormalizedPoint(p123));
+            detailPoints.Insert(segmentIndex + 1, insertedPoint);
+        }
+
+        private void MirrorDetailAreaRight()
+        {
+            if (currentTexture == null)
+            {
+                return;
+            }
+
+            EnsureDetailAreaInitialized(currentTexture.width, currentTexture.height);
+            List<Vector2> sampledBoundary = SampleDetailBoundaryNormalized(DetailMirrorSamplesPerSegment);
+            List<Vector2> clippedLeftBoundary = ClipDetailPolygonToLeftHalf(sampledBoundary);
+            List<Vector2> leftBoundary = ExtractDetailMirrorLeftBoundary(clippedLeftBoundary);
+            if (leftBoundary.Count < 2)
+            {
+                EditorUtility.DisplayDialog("Add Details", "The current detail area does not have enough left-side boundary to mirror.", "OK");
+                return;
+            }
+
+            List<Vector2> mirroredBoundary = BuildDetailMirroredRightBoundary(leftBoundary);
+            SimplifyDetailMirrorBoundary(mirroredBoundary);
+            if (mirroredBoundary.Count < DetailMinCurvePoints)
+            {
+                EditorUtility.DisplayDialog("Add Details", "The mirrored detail area is too small to build a valid curve.", "OK");
+                return;
+            }
+
+            RebuildDetailAreaFromBoundary(mirroredBoundary);
+            Repaint();
+        }
+
+        private List<Vector2> SampleDetailBoundaryNormalized(int samplesPerSegment)
+        {
+            List<Vector2> points = new List<Vector2>();
+            if (detailPoints.Count < DetailMinCurvePoints)
+            {
+                return points;
+            }
+
+            int clampedSamplesPerSegment = Mathf.Max(2, samplesPerSegment);
+            for (int pointIndex = 0; pointIndex < detailPoints.Count; pointIndex++)
+            {
+                DetailCurvePoint point = detailPoints[pointIndex];
+                DetailCurvePoint nextPoint = detailPoints[GetNextDetailPointIndex(pointIndex)];
+                if (pointIndex == 0)
+                {
+                    AddDetailPointIfDistinct(points, point.position);
+                }
+
+                for (int sampleIndex = 1; sampleIndex <= clampedSamplesPerSegment; sampleIndex++)
+                {
+                    float sampleT = (float)sampleIndex / clampedSamplesPerSegment;
+                    AddDetailPointIfDistinct(points, EvaluateCubic(point.position, point.outHandle, nextPoint.inHandle, nextPoint.position, sampleT));
+                }
+            }
+
+            RemoveDuplicateDetailClosingPoint(points);
+            return points;
+        }
+
+        private static List<Vector2> ClipDetailPolygonToLeftHalf(List<Vector2> polygon)
+        {
+            List<Vector2> clipped = new List<Vector2>();
+            int count = polygon == null ? 0 : polygon.Count;
+            if (count < DetailMinCurvePoints)
+            {
+                return clipped;
+            }
+
+            Vector2 previousPoint = polygon[count - 1];
+            bool previousInside = IsDetailPointOnMirrorLeft(previousPoint);
+            for (int pointIndex = 0; pointIndex < count; pointIndex++)
+            {
+                Vector2 currentPoint = polygon[pointIndex];
+                bool currentInside = IsDetailPointOnMirrorLeft(currentPoint);
+                if (currentInside)
+                {
+                    if (!previousInside)
+                    {
+                        AddDetailPointIfDistinct(clipped, GetDetailMirrorCenterIntersection(previousPoint, currentPoint));
+                    }
+
+                    AddDetailPointIfDistinct(clipped, currentPoint);
+                }
+                else if (previousInside)
+                {
+                    AddDetailPointIfDistinct(clipped, GetDetailMirrorCenterIntersection(previousPoint, currentPoint));
+                }
+
+                previousPoint = currentPoint;
+                previousInside = currentInside;
+            }
+
+            RemoveDuplicateDetailClosingPoint(clipped);
+            return clipped;
+        }
+
+        private static List<Vector2> ExtractDetailMirrorLeftBoundary(List<Vector2> clippedPolygon)
+        {
+            List<Vector2> boundary = new List<Vector2>();
+            int count = clippedPolygon == null ? 0 : clippedPolygon.Count;
+            if (count < 2)
+            {
+                return boundary;
+            }
+
+            int firstCenterIndex = -1;
+            int secondCenterIndex = -1;
+            float widestCenterSpan = -1f;
+            for (int leftIndex = 0; leftIndex < count; leftIndex++)
+            {
+                if (!IsDetailPointOnMirrorCenter(clippedPolygon[leftIndex]))
+                {
+                    continue;
+                }
+
+                for (int rightIndex = leftIndex + 1; rightIndex < count; rightIndex++)
+                {
+                    if (!IsDetailPointOnMirrorCenter(clippedPolygon[rightIndex]))
+                    {
+                        continue;
+                    }
+
+                    float centerSpan = Mathf.Abs(clippedPolygon[leftIndex].y - clippedPolygon[rightIndex].y);
+                    if (centerSpan > widestCenterSpan)
+                    {
+                        widestCenterSpan = centerSpan;
+                        firstCenterIndex = leftIndex;
+                        secondCenterIndex = rightIndex;
+                    }
+                }
+            }
+
+            if (firstCenterIndex < 0 || secondCenterIndex < 0)
+            {
+                boundary.AddRange(clippedPolygon);
+                return boundary;
+            }
+
+            List<Vector2> forwardPath = GetDetailPolygonPath(clippedPolygon, firstCenterIndex, secondCenterIndex, true);
+            List<Vector2> backwardPath = GetDetailPolygonPath(clippedPolygon, firstCenterIndex, secondCenterIndex, false);
+            float forwardLeftness = GetDetailMirrorPathLeftness(forwardPath);
+            float backwardLeftness = GetDetailMirrorPathLeftness(backwardPath);
+            if (backwardLeftness > forwardLeftness)
+            {
+                return backwardPath;
+            }
+
+            if (Mathf.Approximately(backwardLeftness, forwardLeftness) && GetDetailPathLength(backwardPath) > GetDetailPathLength(forwardPath))
+            {
+                return backwardPath;
+            }
+
+            return forwardPath;
+        }
+
+        private static List<Vector2> GetDetailPolygonPath(List<Vector2> polygon, int startIndex, int endIndex, bool forward)
+        {
+            List<Vector2> path = new List<Vector2>();
+            int count = polygon.Count;
+            int pointIndex = startIndex;
+            int guard = 0;
+            while (guard <= count)
+            {
+                AddDetailPointIfDistinct(path, polygon[pointIndex]);
+                if (pointIndex == endIndex)
+                {
+                    break;
+                }
+
+                pointIndex = forward ? (pointIndex + 1) % count : (pointIndex + count - 1) % count;
+                guard++;
+            }
+
+            return path;
+        }
+
+        private static List<Vector2> BuildDetailMirroredRightBoundary(List<Vector2> leftBoundary)
+        {
+            List<Vector2> mirroredBoundary = new List<Vector2>();
+            if (leftBoundary == null || leftBoundary.Count == 0)
+            {
+                return mirroredBoundary;
+            }
+
+            for (int pointIndex = 0; pointIndex < leftBoundary.Count; pointIndex++)
+            {
+                AddDetailPointIfDistinct(mirroredBoundary, ClampNormalizedPoint(leftBoundary[pointIndex]));
+            }
+
+            bool lastPointOnCenter = IsDetailPointOnMirrorCenter(leftBoundary[leftBoundary.Count - 1]);
+            bool firstPointOnCenter = IsDetailPointOnMirrorCenter(leftBoundary[0]);
+            int mirrorStartIndex = lastPointOnCenter ? leftBoundary.Count - 2 : leftBoundary.Count - 1;
+            int mirrorEndIndex = firstPointOnCenter ? 1 : 0;
+            for (int pointIndex = mirrorStartIndex; pointIndex >= mirrorEndIndex; pointIndex--)
+            {
+                AddDetailPointIfDistinct(mirroredBoundary, MirrorDetailPointRight(leftBoundary[pointIndex]));
+            }
+
+            RemoveDuplicateDetailClosingPoint(mirroredBoundary);
+            return mirroredBoundary;
+        }
+
+        private static void SimplifyDetailMirrorBoundary(List<Vector2> boundary)
+        {
+            if (boundary == null)
+            {
+                return;
+            }
+
+            RemoveDuplicateDetailClosingPoint(boundary);
+            float simplifyDistanceSquared = DetailMirrorSimplifyEpsilon * DetailMirrorSimplifyEpsilon;
+            bool removedPoint;
+            do
+            {
+                removedPoint = false;
+                int removeIndex = FindDetailMirrorSimplifyIndex(boundary, simplifyDistanceSquared, boundary.Count > DetailMirrorMaxPoints);
+                if (removeIndex >= 0)
+                {
+                    boundary.RemoveAt(removeIndex);
+                    removedPoint = true;
+                }
+            }
+            while (removedPoint && boundary.Count > DetailMinCurvePoints);
+        }
+
+        private static int FindDetailMirrorSimplifyIndex(List<Vector2> boundary, float simplifyDistanceSquared, bool forceRemove)
+        {
+            if (boundary.Count <= DetailMinCurvePoints)
+            {
+                return -1;
+            }
+
+            int bestIndex = -1;
+            float bestDistanceSquared = float.MaxValue;
+            for (int pointIndex = 0; pointIndex < boundary.Count; pointIndex++)
+            {
+                if (IsDetailPointOnMirrorCenter(boundary[pointIndex]))
+                {
+                    continue;
+                }
+
+                Vector2 previousPoint = boundary[(pointIndex + boundary.Count - 1) % boundary.Count];
+                Vector2 nextPoint = boundary[(pointIndex + 1) % boundary.Count];
+                float distanceSquared = DistancePointToSegmentSquared(boundary[pointIndex], previousPoint, nextPoint);
+                if (distanceSquared < bestDistanceSquared)
+                {
+                    bestDistanceSquared = distanceSquared;
+                    bestIndex = pointIndex;
+                }
+            }
+
+            if (bestIndex < 0)
+            {
+                return -1;
+            }
+
+            return forceRemove || bestDistanceSquared <= simplifyDistanceSquared ? bestIndex : -1;
+        }
+
+        private void RebuildDetailAreaFromBoundary(List<Vector2> boundary)
+        {
+            detailPoints.Clear();
+            if (currentTexture != null)
+            {
+                detailAreaTextureWidth = currentTexture.width;
+                detailAreaTextureHeight = currentTexture.height;
+            }
+
+            int count = boundary.Count;
+            for (int pointIndex = 0; pointIndex < count; pointIndex++)
+            {
+                Vector2 previousPoint = ClampNormalizedPoint(boundary[(pointIndex + count - 1) % count]);
+                Vector2 point = ClampNormalizedPoint(boundary[pointIndex]);
+                Vector2 nextPoint = ClampNormalizedPoint(boundary[(pointIndex + 1) % count]);
+                Vector2 tangent = nextPoint - previousPoint;
+                detailPoints.Add(new DetailCurvePoint(
+                    point,
+                    ClampNormalizedPoint(point - (tangent * (1f / 6f))),
+                    ClampNormalizedPoint(point + (tangent * (1f / 6f)))));
+            }
+
+            detailSelectedPointIndex = detailPoints.Count > 0 ? 0 : -1;
+        }
+
+        private static float GetDetailMirrorPathLeftness(List<Vector2> path)
+        {
+            if (path == null || path.Count == 0)
+            {
+                return 0f;
+            }
+
+            float leftness = 0f;
+            for (int pointIndex = 0; pointIndex < path.Count; pointIndex++)
+            {
+                leftness += Mathf.Max(0f, DetailMirrorCenterX - path[pointIndex].x);
+            }
+
+            return leftness / path.Count;
+        }
+
+        private static float GetDetailPathLength(List<Vector2> path)
+        {
+            if (path == null || path.Count < 2)
+            {
+                return 0f;
+            }
+
+            float length = 0f;
+            for (int pointIndex = 1; pointIndex < path.Count; pointIndex++)
+            {
+                length += Vector2.Distance(path[pointIndex - 1], path[pointIndex]);
+            }
+
+            return length;
+        }
+
+        private static bool IsDetailPointOnMirrorLeft(Vector2 point)
+        {
+            return point.x <= DetailMirrorCenterX + DetailMirrorCenterEpsilon;
+        }
+
+        private static bool IsDetailPointOnMirrorCenter(Vector2 point)
+        {
+            return Mathf.Abs(point.x - DetailMirrorCenterX) <= DetailMirrorCenterEpsilon;
+        }
+
+        private static Vector2 MirrorDetailPointRight(Vector2 point)
+        {
+            return ClampNormalizedPoint(new Vector2(1f - point.x, point.y));
+        }
+
+        private static Vector2 GetDetailMirrorCenterIntersection(Vector2 startPoint, Vector2 endPoint)
+        {
+            float deltaX = endPoint.x - startPoint.x;
+            if (Mathf.Abs(deltaX) <= 1e-6f)
+            {
+                return ClampNormalizedPoint(new Vector2(DetailMirrorCenterX, Mathf.Lerp(startPoint.y, endPoint.y, 0.5f)));
+            }
+
+            float intersectionT = Mathf.Clamp01((DetailMirrorCenterX - startPoint.x) / deltaX);
+            Vector2 intersection = Vector2.Lerp(startPoint, endPoint, intersectionT);
+            intersection.x = DetailMirrorCenterX;
+            return ClampNormalizedPoint(intersection);
+        }
+
+        private static void AddDetailPointIfDistinct(List<Vector2> points, Vector2 point)
+        {
+            Vector2 clampedPoint = ClampNormalizedPoint(point);
+            if (points.Count == 0 || (points[points.Count - 1] - clampedPoint).sqrMagnitude > 1e-8f)
+            {
+                points.Add(clampedPoint);
+            }
+        }
+
+        private static void RemoveDuplicateDetailClosingPoint(List<Vector2> points)
+        {
+            if (points == null || points.Count < 2)
+            {
+                return;
+            }
+
+            if ((points[0] - points[points.Count - 1]).sqrMagnitude <= 1e-8f)
+            {
+                points.RemoveAt(points.Count - 1);
+            }
+        }
+
+        private void NormalizeDetailHandlesAroundIndex(int pointIndex)
+        {
+            if (pointIndex < 0 || pointIndex >= detailPoints.Count || detailPoints.Count < DetailMinCurvePoints)
+            {
+                return;
+            }
+
+            DetailCurvePoint point = detailPoints[pointIndex];
+            Vector2 previous = detailPoints[GetPreviousDetailPointIndex(pointIndex)].position;
+            Vector2 next = detailPoints[GetNextDetailPointIndex(pointIndex)].position;
+            point.inHandle = ClampNormalizedPoint(point.position + ((previous - point.position) * 0.33f));
+            point.outHandle = ClampNormalizedPoint(point.position + ((next - point.position) * 0.33f));
+        }
+
+        private int GetNextDetailPointIndex(int pointIndex)
+        {
+            return detailPoints.Count == 0 ? 0 : (pointIndex + 1) % detailPoints.Count;
+        }
+
+        private int GetPreviousDetailPointIndex(int pointIndex)
+        {
+            if (detailPoints.Count == 0)
+            {
+                return 0;
+            }
+
+            return (pointIndex + detailPoints.Count - 1) % detailPoints.Count;
+        }
+
+        private static Vector2 PreviewToNormalizedTexturePoint(Vector2 previewPosition, Rect textureRect)
+        {
+            float x = textureRect.width <= 0f ? 0f : (previewPosition.x - textureRect.xMin) / textureRect.width;
+            float yFromTop = textureRect.height <= 0f ? 0f : (previewPosition.y - textureRect.yMin) / textureRect.height;
+            return new Vector2(x, 1f - yFromTop);
+        }
+
+        private static Vector2 NormalizedTextureToPreviewPoint(Vector2 normalizedPoint, Rect textureRect)
+        {
+            return new Vector2(
+                textureRect.xMin + (normalizedPoint.x * textureRect.width),
+                textureRect.yMax - (normalizedPoint.y * textureRect.height));
+        }
+
+        private static Vector2 NormalizedTextureToPixelPoint(Vector2 normalizedPoint, int textureWidth, int textureHeight)
+        {
+            return new Vector2(normalizedPoint.x * textureWidth, normalizedPoint.y * textureHeight);
+        }
+
+        private static Vector2 ClampNormalizedPoint(Vector2 point)
+        {
+            point.x = Mathf.Clamp01(point.x);
+            point.y = Mathf.Clamp01(point.y);
+            return point;
+        }
+
+        private static Vector2 EvaluateCubic(Vector2 p0, Vector2 p1, Vector2 p2, Vector2 p3, float t)
+        {
+            float oneMinusT = 1f - t;
+            return (oneMinusT * oneMinusT * oneMinusT * p0)
+                + (3f * oneMinusT * oneMinusT * t * p1)
+                + (3f * oneMinusT * t * t * p2)
+                + (t * t * t * p3);
+        }
+
+        private static float DistancePointToSegmentSquared(Vector2 point, Vector2 segmentStart, Vector2 segmentEnd)
+        {
+            return DistancePointToSegmentSquared(point, segmentStart, segmentEnd, out _);
+        }
+
+        private static float DistancePointToSegmentSquared(Vector2 point, Vector2 segmentStart, Vector2 segmentEnd, out float segmentT)
+        {
+            Vector2 segment = segmentEnd - segmentStart;
+            float lengthSquared = segment.sqrMagnitude;
+            if (lengthSquared <= 1e-6f)
+            {
+                segmentT = 0f;
+                return (point - segmentStart).sqrMagnitude;
+            }
+
+            segmentT = Mathf.Clamp01(Vector2.Dot(point - segmentStart, segment) / lengthSquared);
+            Vector2 closest = segmentStart + (segment * segmentT);
+            return (point - closest).sqrMagnitude;
         }
 
         private void DrawDroppedTextureList(float height)
@@ -724,7 +2196,11 @@ namespace UMA.Editors
 
         private void DrawAdjustmentsSection()
         {
-            EditorGUILayout.LabelField("Adjustments (live preview)", EditorStyles.boldLabel);
+            if (!DrawCollapsibleSectionHeader("Adjustments (live preview)", ref adjustmentsSectionExpanded, AdjustmentsSectionExpandedPrefsKey))
+            {
+                return;
+            }
+
             GUIHelper.BeginVerticalPadded(8, new Color(0.92f, 0.92f, 0.92f), EditorStyles.helpBox);
 
             using (new EditorGUI.DisabledScope(currentTexture == null))
@@ -743,9 +2219,7 @@ namespace UMA.Editors
                 }
                 if (GUILayout.Button("Reset"))
                 {
-                    brightness = contrast = saturation = 0f;
-                    hueDegrees = 0f;
-                    InvalidatePreview();
+                    RestoreCurrentTextureToUnmodified();
                 }
                 using (new EditorGUI.DisabledScope(backgroundAsset == null))
                 {
@@ -753,6 +2227,32 @@ namespace UMA.Editors
                     {
                         AutoMatchAdjustmentsToBackground();
                     }
+                }
+                EditorGUILayout.EndHorizontal();
+
+                EditorGUILayout.Space(4f);
+                alphaFromLuminanceCutoff = EditorGUILayout.Slider(
+                    new GUIContent("Alpha Luminance Cutoff", "Only pixels with luminance at or below this value can lower the existing alpha."),
+                    alphaFromLuminanceCutoff,
+                    0f,
+                    1f);
+
+                EditorGUILayout.BeginHorizontal();
+                if (GUILayout.Button(new GUIContent("Invert Colors", "Invert RGB values while preserving the alpha channel.")))
+                {
+                    InvertCurrentColors();
+                }
+                if (GUILayout.Button(new GUIContent("Alpha From Luminance", "Lower alpha from RGB luminance when luminance is at or below the cutoff.")))
+                {
+                    ApplyAlphaFromLuminance();
+                }
+                if (GUILayout.Button(new GUIContent("Fill with White", "Set RGB to white while preserving the alpha channel.")))
+                {
+                    FillCurrentColors(255);
+                }
+                if (GUILayout.Button(new GUIContent("Fill with Black", "Set RGB to black while preserving the alpha channel.")))
+                {
+                    FillCurrentColors(0);
                 }
                 EditorGUILayout.EndHorizontal();
             }
@@ -908,6 +2408,107 @@ namespace UMA.Editors
             }
         }
 
+        private void DrawTouchupTool()
+        {
+            EditorGUILayout.HelpBox("Paint alpha-only touchups directly on the preview. Erase lowers alpha using the selected brush.", MessageType.Info);
+
+            touchupMode = (TouchupMode)GUILayout.Toolbar((int)touchupMode, new[] { "Erase" });
+            touchupBrushShape = (TouchupBrushShape)EditorGUILayout.EnumPopup("Brush", touchupBrushShape);
+            touchupBrushSizePixels = EditorGUILayout.IntSlider(new GUIContent("Size (px)", "Brush diameter or square side length in texture pixels."), touchupBrushSizePixels, 1, 512);
+
+            if (touchupBrushShape == TouchupBrushShape.Bitmap)
+            {
+                EditorGUI.BeginChangeCheck();
+                Texture2D newBrush = (Texture2D)EditorGUILayout.ObjectField(new GUIContent("Bitmap Brush", "Grayscale mask: black is invisible, white is visible."), touchupBrushBitmap, typeof(Texture2D), false);
+                if (EditorGUI.EndChangeCheck())
+                {
+                    touchupBrushBitmap = newBrush;
+                    InvalidateTouchupBrushCache();
+                }
+
+                if (touchupBrushBitmap == null)
+                {
+                    EditorGUILayout.HelpBox("Assign a bitmap brush to paint with the Bitmap brush type.", MessageType.Info);
+                }
+            }
+
+            using (new EditorGUI.DisabledScope(currentTexture == null))
+            {
+                EditorGUILayout.LabelField("Drag on the preview to erase alpha.", EditorStyles.miniLabel);
+            }
+        }
+
+        private void DrawAddDetailsTool()
+        {
+            EditorGUILayout.HelpBox("Define a closed Bezier area on the preview, then apply spots or blush to RGB while preserving alpha.", MessageType.Info);
+
+            using (new EditorGUI.DisabledScope(currentTexture == null))
+            {
+                if (currentTexture != null)
+                {
+                    EnsureDetailAreaInitialized(currentTexture.width, currentTexture.height);
+                }
+
+                detailEffectMode = (DetailEffectMode)GUILayout.Toolbar((int)detailEffectMode, new[] { "Spots", "Blush" });
+                detailSeed = EditorGUILayout.IntField(new GUIContent("Seed", "The same seed and settings generate the same details."), detailSeed);
+                detailStrength = EditorGUILayout.Slider("Strength", detailStrength, 0f, 1f);
+                detailUseEdgeFalloff = EditorGUILayout.Toggle("Edge Falloff", detailUseEdgeFalloff);
+                using (new EditorGUI.DisabledScope(!detailUseEdgeFalloff))
+                {
+                    detailFalloffDistancePixels = EditorGUILayout.Slider(new GUIContent("Falloff Distance (px)", "Distance inward from the Bezier boundary before full strength is reached."), detailFalloffDistancePixels, 0f, 512f);
+                }
+
+                EditorGUILayout.Space(4f);
+                if (detailEffectMode == DetailEffectMode.Spots)
+                {
+                    detailSpotColor = EditorGUILayout.ColorField("Spot Color", detailSpotColor);
+                    detailSpotColorVariation = EditorGUILayout.Slider("Color Variation", detailSpotColorVariation, 0f, 1f);
+                    detailSpotDensityPer10kPixels = EditorGUILayout.Slider(new GUIContent("Density", "Approximate spots per 10,000 affected pixels."), detailSpotDensityPer10kPixels, 0f, 120f);
+                    detailSpotDensityVariation = EditorGUILayout.Slider("Density Variation", detailSpotDensityVariation, 0f, 1f);
+                    detailSpotSizePixels = EditorGUILayout.Slider(new GUIContent("Size (px)", "Average spot radius in texture pixels."), detailSpotSizePixels, 0.5f, 64f);
+                    detailSpotSizeVariation = EditorGUILayout.Slider("Size Variation", detailSpotSizeVariation, 0f, 1f);
+                }
+                else
+                {
+                    detailBlushColor = EditorGUILayout.ColorField("Blush Color", detailBlushColor);
+                    detailBlushOpacity = EditorGUILayout.Slider("Opacity", detailBlushOpacity, 0f, 1f);
+                }
+
+                EditorGUILayout.Space(4f);
+                EditorGUILayout.BeginHorizontal();
+                if (GUILayout.Button("Reset Area"))
+                {
+                    ResetDetailAreaToDefaultCircle(currentTexture.width, currentTexture.height);
+                    Repaint();
+                }
+
+                using (new EditorGUI.DisabledScope(!CanApplyAddDetails()))
+                {
+                    if (GUILayout.Button("Mirror Area Right"))
+                    {
+                        MirrorDetailAreaRight();
+                    }
+                }
+                EditorGUILayout.EndHorizontal();
+
+                string applyLabel = detailEffectMode == DetailEffectMode.Spots ? "Apply Spots" : "Apply Blush";
+                EditorGUILayout.BeginHorizontal();
+                using (new EditorGUI.DisabledScope(!CanApplyAddDetails()))
+                {
+                    if (GUILayout.Button(applyLabel))
+                    {
+                        ApplyAddDetails(false);
+                    }
+
+                    if (GUILayout.Button("Mirror Effect Right"))
+                    {
+                        ApplyAddDetails(true);
+                    }
+                }
+                EditorGUILayout.EndHorizontal();
+            }
+        }
+
         private bool AreGradientSettingsChanged()
         {
             return !gradientApplied
@@ -964,6 +2565,8 @@ namespace UMA.Editors
                 contrast = contrast,
                 saturation = saturation,
                 hueDegrees = hueDegrees,
+                hasAlphaFromLuminanceCutoff = true,
+                alphaFromLuminanceCutoff = alphaFromLuminanceCutoff,
                 alphaFillRadiusPixels = alphaFillRadiusPixels,
                 alphaFillAlphaThreshold = alphaFillAlphaThreshold,
                 gradientMode = gradientMode,
@@ -991,6 +2594,10 @@ namespace UMA.Editors
             contrast = preset.contrast;
             saturation = preset.saturation;
             hueDegrees = preset.hueDegrees;
+            if (preset.hasAlphaFromLuminanceCutoff)
+            {
+                alphaFromLuminanceCutoff = Mathf.Clamp01(preset.alphaFromLuminanceCutoff);
+            }
             InvalidatePreview();
         }
 
@@ -1097,10 +2704,12 @@ namespace UMA.Editors
 
             InvalidateCachedPixels();
             DestroyTexture(ref currentTexture);
+            DestroyTexture(ref diskOriginalTexture);
+            diskOriginalTextureDirectory = null;
             DestroyTexture(ref previewTexture);
             dirty = loadedState != null && loadedState.dirty;
             ResetAdjustments();
-            previewScroll = Vector2.zero;
+            ResetMagnifiedPreviewCenter();
             currentTexture = loadedTexture;
             return true;
         }
@@ -1121,13 +2730,15 @@ namespace UMA.Editors
                 return;
             }
 
+            Texture2D tex = null;
+            Texture2D originalTexture = null;
             try
             {
                 byte[] bytes = File.ReadAllBytes(path);
-                Texture2D tex = new Texture2D(2, 2, TextureFormat.RGBA32, false, false);
+                tex = new Texture2D(2, 2, TextureFormat.RGBA32, false, false);
                 if (!ImageConversion.LoadImage(tex, bytes, false))
                 {
-                    UnityEngine.Object.DestroyImmediate(tex);
+                    DestroyTexture(ref tex);
                     if (preservedCurrentQueuedTexture)
                     {
                         RestoreQueuedTextureState(previousSourceAsset, previousDroppedTextureIndex);
@@ -1137,19 +2748,29 @@ namespace UMA.Editors
                     return;
                 }
 
+                tex.name = Path.GetFileNameWithoutExtension(path);
+                originalTexture = DuplicateReadableTexture(tex);
+                originalTexture.hideFlags = HideFlags.HideAndDontSave;
+
                 InvalidateCachedPixels();
                 DestroyTexture(ref currentTexture);
+                DestroyTexture(ref diskOriginalTexture);
                 DestroyTexture(ref previewTexture);
                 sourceAsset = null;
                 selectedDroppedTextureIndex = -1;
                 currentTexture = tex;
-                currentTexture.name = Path.GetFileNameWithoutExtension(path);
+                tex = null;
+                diskOriginalTexture = originalTexture;
+                originalTexture = null;
+                diskOriginalTextureDirectory = Path.GetDirectoryName(path);
                 SetCurrentDirty(false);
                 ResetAdjustments();
-                previewScroll = Vector2.zero;
+                ResetMagnifiedPreviewCenter();
             }
             catch (Exception ex)
             {
+                DestroyTexture(ref tex);
+                DestroyTexture(ref originalTexture);
                 if (preservedCurrentQueuedTexture)
                 {
                     RestoreQueuedTextureState(previousSourceAsset, previousDroppedTextureIndex);
@@ -1173,7 +2794,7 @@ namespace UMA.Editors
             }
 
             string defaultName = string.IsNullOrEmpty(currentTexture.name) ? "Texture" : currentTexture.name;
-            string path = EditorUtility.SaveFilePanel("Save Texture As PNG", Application.dataPath, defaultName + ".png", "png");
+            string path = EditorUtility.SaveFilePanel("Save Texture As PNG", GetSaveAsInitialDirectory(), defaultName + ".png", "png");
             if (string.IsNullOrEmpty(path))
             {
                 return false;
@@ -1205,6 +2826,29 @@ namespace UMA.Editors
                 EditorUtility.DisplayDialog("Save Texture", "Error: " + ex.Message, "OK");
                 return false;
             }
+        }
+
+        private string GetSaveAsInitialDirectory()
+        {
+            if (sourceAsset != null)
+            {
+                string assetPath = AssetDatabase.GetAssetPath(sourceAsset);
+                if (!string.IsNullOrEmpty(assetPath))
+                {
+                    string sourceDirectory = Path.GetDirectoryName(GetAbsoluteProjectPath(assetPath));
+                    if (!string.IsNullOrEmpty(sourceDirectory) && Directory.Exists(sourceDirectory))
+                    {
+                        return sourceDirectory;
+                    }
+                }
+            }
+
+            if (!string.IsNullOrEmpty(diskOriginalTextureDirectory) && Directory.Exists(diskOriginalTextureDirectory))
+            {
+                return diskOriginalTextureDirectory;
+            }
+
+            return Application.dataPath;
         }
 
         private bool CanQuickSaveOverwrite()
@@ -1818,6 +3462,718 @@ namespace UMA.Editors
             return true;
         }
 
+        // ---------- Add Details ----------
+
+        private void ApplyAddDetails(bool mirrorEffectRight)
+        {
+            if (currentTexture == null)
+            {
+                return;
+            }
+
+            EnsureDetailAreaInitialized(currentTexture.width, currentTexture.height);
+            if (detailPoints.Count < DetailMinCurvePoints)
+            {
+                EditorUtility.DisplayDialog("Add Details", "The detail area needs at least three points.", "OK");
+                return;
+            }
+
+            if (HasPendingAdjustments())
+            {
+                BakeAdjustmentsToCurrent();
+            }
+
+            EnsureCachedPixels();
+            DetailAreaMask mask = BuildDetailAreaMask(currentTexture.width, currentTexture.height);
+            if (mask == null || mask.insidePixelCount <= 0)
+            {
+                EditorUtility.DisplayDialog("Add Details", "The selected area is too small to affect any pixels.", "OK");
+                return;
+            }
+
+            bool changed;
+            try
+            {
+                changed = detailEffectMode == DetailEffectMode.Spots
+                    ? ApplySpotDetails(cachedCurrentPixels, currentTexture.width, currentTexture.height, mask, mirrorEffectRight)
+                    : ApplyBlushDetails(cachedCurrentPixels, currentTexture.width, currentTexture.height, mask, mirrorEffectRight);
+            }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
+            }
+
+            if (!changed)
+            {
+                EditorUtility.DisplayDialog("Add Details", "No pixels were changed. Try stronger settings or a larger area.", "OK");
+                return;
+            }
+
+            currentTexture.SetPixels32(cachedCurrentPixels);
+            currentTexture.Apply(false, false);
+            SetCurrentDirty(true);
+            InvalidatePreview();
+        }
+
+        private DetailAreaMask BuildDetailAreaMask(int textureWidth, int textureHeight)
+        {
+            List<Vector2> boundaryPixels = SampleDetailBoundaryPixels(textureWidth, textureHeight);
+            if (boundaryPixels.Count < DetailMinCurvePoints)
+            {
+                return null;
+            }
+
+            float minXFloat = textureWidth;
+            float maxXFloat = 0f;
+            float minYFloat = textureHeight;
+            float maxYFloat = 0f;
+            for (int i = 0; i < boundaryPixels.Count; i++)
+            {
+                Vector2 point = boundaryPixels[i];
+                minXFloat = Mathf.Min(minXFloat, point.x);
+                maxXFloat = Mathf.Max(maxXFloat, point.x);
+                minYFloat = Mathf.Min(minYFloat, point.y);
+                maxYFloat = Mathf.Max(maxYFloat, point.y);
+            }
+
+            int minX = Mathf.Clamp(Mathf.FloorToInt(minXFloat) - 1, 0, textureWidth - 1);
+            int maxX = Mathf.Clamp(Mathf.CeilToInt(maxXFloat) + 1, 0, textureWidth - 1);
+            int minY = Mathf.Clamp(Mathf.FloorToInt(minYFloat) - 1, 0, textureHeight - 1);
+            int maxY = Mathf.Clamp(Mathf.CeilToInt(maxYFloat) + 1, 0, textureHeight - 1);
+            if (minX > maxX || minY > maxY)
+            {
+                return null;
+            }
+
+            DetailAreaMask mask = new DetailAreaMask
+            {
+                minX = minX,
+                maxX = maxX,
+                minY = minY,
+                maxY = maxY,
+                boxWidth = (maxX - minX) + 1,
+                boxHeight = (maxY - minY) + 1,
+            };
+            mask.strengths = new byte[mask.boxWidth * mask.boxHeight];
+
+            float falloffDistance = detailUseEdgeFalloff ? Mathf.Max(0.001f, detailFalloffDistancePixels) : 0f;
+            for (int y = minY; y <= maxY; y++)
+            {
+                float pixelCenterY = y + 0.5f;
+                for (int x = minX; x <= maxX; x++)
+                {
+                    Vector2 pixelCenter = new Vector2(x + 0.5f, pixelCenterY);
+                    if (!IsPointInsidePolygon(pixelCenter, boundaryPixels))
+                    {
+                        continue;
+                    }
+
+                    float strength = falloffDistance > 0f ? GetBoundaryFalloffStrength(pixelCenter, boundaryPixels, falloffDistance) : 1f;
+                    byte strengthByte = (byte)Mathf.RoundToInt(Mathf.Clamp01(strength) * 255f);
+                    if (strengthByte == 0)
+                    {
+                        continue;
+                    }
+
+                    int maskIndex = ((y - minY) * mask.boxWidth) + (x - minX);
+                    mask.strengths[maskIndex] = strengthByte;
+                    mask.insidePixelCount++;
+                }
+            }
+
+            return mask;
+        }
+
+        private List<Vector2> SampleDetailBoundaryPixels(int textureWidth, int textureHeight)
+        {
+            List<Vector2> points = new List<Vector2>();
+            if (detailPoints.Count < DetailMinCurvePoints)
+            {
+                return points;
+            }
+
+            for (int i = 0; i < detailPoints.Count; i++)
+            {
+                DetailCurvePoint point = detailPoints[i];
+                DetailCurvePoint nextPoint = detailPoints[GetNextDetailPointIndex(i)];
+                if (i == 0)
+                {
+                    points.Add(NormalizedTextureToPixelPoint(point.position, textureWidth, textureHeight));
+                }
+
+                for (int sample = 1; sample <= DetailCurveSamplesPerSegment; sample++)
+                {
+                    float t = (float)sample / DetailCurveSamplesPerSegment;
+                    Vector2 sampled = EvaluateCubic(point.position, point.outHandle, nextPoint.inHandle, nextPoint.position, t);
+                    points.Add(NormalizedTextureToPixelPoint(sampled, textureWidth, textureHeight));
+                }
+            }
+
+            return points;
+        }
+
+        private static bool IsPointInsidePolygon(Vector2 point, List<Vector2> polygon)
+        {
+            bool inside = false;
+            int count = polygon == null ? 0 : polygon.Count;
+            if (count < DetailMinCurvePoints)
+            {
+                return false;
+            }
+
+            int previousIndex = count - 1;
+            for (int i = 0; i < count; i++)
+            {
+                Vector2 current = polygon[i];
+                Vector2 previous = polygon[previousIndex];
+                bool crosses = (current.y > point.y) != (previous.y > point.y);
+                if (crosses)
+                {
+                    float intersectionX = ((previous.x - current.x) * (point.y - current.y) / (previous.y - current.y)) + current.x;
+                    if (point.x < intersectionX)
+                    {
+                        inside = !inside;
+                    }
+                }
+
+                previousIndex = i;
+            }
+
+            return inside;
+        }
+
+        private static float GetBoundaryFalloffStrength(Vector2 point, List<Vector2> boundaryPixels, float falloffDistance)
+        {
+            float maxDistanceSquared = falloffDistance * falloffDistance;
+            float minDistanceSquared = maxDistanceSquared;
+            int count = boundaryPixels.Count;
+            for (int i = 0; i < count; i++)
+            {
+                Vector2 start = boundaryPixels[i];
+                Vector2 end = boundaryPixels[(i + 1) % count];
+                float distanceSquared = DistancePointToSegmentSquared(point, start, end);
+                if (distanceSquared < minDistanceSquared)
+                {
+                    minDistanceSquared = distanceSquared;
+                }
+            }
+
+            return Mathf.Clamp01(Mathf.Sqrt(minDistanceSquared) / falloffDistance);
+        }
+
+        private bool ApplyBlushDetails(Color32[] pixels, int textureWidth, int textureHeight, DetailAreaMask mask, bool mirrorEffectRight)
+        {
+            if (pixels == null || mask == null)
+            {
+                return false;
+            }
+
+            float baseAmount = Mathf.Clamp01(detailStrength) * Mathf.Clamp01(detailBlushOpacity);
+            if (baseAmount <= 0f)
+            {
+                return false;
+            }
+
+            int maxSourceX = mirrorEffectRight ? Mathf.Min(mask.maxX, GetDetailMirrorSourceMaxX(textureWidth)) : mask.maxX;
+            if (mask.minX > maxSourceX)
+            {
+                return false;
+            }
+
+            Color blushColor = detailBlushColor;
+            return ApplyDetailRowsWithProgress(
+                "Apply Blush",
+                "Applying blush details",
+                mask.minY,
+                mask.maxY,
+                0f,
+                1f,
+                pixelY => ApplyBlushDetailsRow(pixels, textureWidth, mask, maxSourceX, mirrorEffectRight, baseAmount, blushColor, pixelY));
+        }
+
+        private bool ApplySpotDetails(Color32[] pixels, int textureWidth, int textureHeight, DetailAreaMask mask, bool mirrorEffectRight)
+        {
+            if (pixels == null || mask == null)
+            {
+                return false;
+            }
+
+            float density = Mathf.Max(0f, detailSpotDensityPer10kPixels);
+            float strength = Mathf.Clamp01(detailStrength);
+            if (density <= 0f || strength <= 0f)
+            {
+                return false;
+            }
+
+            System.Random random = new System.Random(detailSeed);
+            int sourcePixelCount = mirrorEffectRight ? GetDetailMirrorSourcePixelCount(mask, textureWidth) : mask.insidePixelCount;
+            if (sourcePixelCount <= 0)
+            {
+                return false;
+            }
+
+            float densityVariation = Mathf.Clamp01(detailSpotDensityVariation);
+            float densityScale = 1f + (GetRandomRange(random, -0.5f, 0.5f) * densityVariation);
+            int targetSpotCount = Mathf.RoundToInt(sourcePixelCount * density * densityScale / 10000f);
+            targetSpotCount = Mathf.Clamp(targetSpotCount, 0, 100000);
+            if (targetSpotCount <= 0)
+            {
+                return false;
+            }
+
+            List<DetailSpot> spots = GenerateDetailSpots(mask, targetSpotCount, random, mirrorEffectRight, textureWidth);
+            if (spots.Count == 0)
+            {
+                return false;
+            }
+
+            int maxSourceX = mirrorEffectRight ? Mathf.Min(mask.maxX, GetDetailMirrorSourceMaxX(textureWidth)) : mask.maxX;
+            EditorUtility.DisplayProgressBar("Apply Spots", "Preparing spots", 0.16f);
+            DetailSpotApplication[] spotApplications = BuildDetailSpotApplications(spots, mask, maxSourceX);
+            if (spotApplications.Length == 0)
+            {
+                return false;
+            }
+
+            EditorUtility.DisplayProgressBar("Apply Spots", "Preparing spot rows", 0.18f);
+            List<int>[] spotRows = BuildDetailSpotRows(spotApplications, mask);
+
+            return ApplyDetailRowsWithProgress(
+                "Apply Spots",
+                "Applying spots",
+                mask.minY,
+                mask.maxY,
+                0.2f,
+                1f,
+                pixelY => ApplySpotDetailsRow(pixels, textureWidth, mask, spotApplications, spotRows, maxSourceX, mirrorEffectRight, strength, pixelY));
+        }
+
+        private List<DetailSpot> GenerateDetailSpots(DetailAreaMask mask, int targetSpotCount, System.Random random, bool mirrorEffectRight, int textureWidth)
+        {
+            List<DetailSpot> spots = new List<DetailSpot>(targetSpotCount);
+            int maxAttempts = Mathf.Max(1000, targetSpotCount * 80);
+            float sizeVariation = Mathf.Clamp01(detailSpotSizeVariation);
+            int maxSourceX = mirrorEffectRight ? Mathf.Min(mask.maxX, GetDetailMirrorSourceMaxX(textureWidth)) : mask.maxX;
+            if (mask.minX > maxSourceX)
+            {
+                return spots;
+            }
+
+            int progressInterval = Mathf.Max(256, maxAttempts / 100);
+            for (int attempt = 0; attempt < maxAttempts && spots.Count < targetSpotCount; attempt++)
+            {
+                if (attempt % progressInterval == 0)
+                {
+                    float progress = Mathf.Lerp(0.02f, 0.16f, (float)attempt / maxAttempts);
+                    EditorUtility.DisplayProgressBar("Apply Spots", $"Generating spots ({spots.Count}/{targetSpotCount})", progress);
+                }
+
+                int pixelX = random.Next(mask.minX, maxSourceX + 1);
+                int pixelY = random.Next(mask.minY, mask.maxY + 1);
+                if (mask.GetStrength(pixelX, pixelY) <= 0f)
+                {
+                    continue;
+                }
+
+                float densityAcceptance = GetDetailDensityAcceptance(pixelX, pixelY);
+                if (GetRandomFloat(random) > densityAcceptance)
+                {
+                    continue;
+                }
+
+                float radius = Mathf.Max(0.35f, detailSpotSizePixels * (1f + GetRandomRange(random, -sizeVariation, sizeVariation)));
+                Vector2 center = new Vector2(pixelX + GetRandomFloat(random), pixelY + GetRandomFloat(random));
+                Color color = GetVariedDetailSpotColor(random);
+                spots.Add(new DetailSpot(center, radius, color));
+            }
+
+            return spots;
+        }
+
+        private static bool ApplyBlushDetailsRow(
+            Color32[] pixels,
+            int textureWidth,
+            DetailAreaMask mask,
+            int maxSourceX,
+            bool mirrorEffectRight,
+            float baseAmount,
+            Color blushColor,
+            int pixelY)
+        {
+            bool changed = false;
+            for (int pixelX = mask.minX; pixelX <= maxSourceX; pixelX++)
+            {
+                float amount = baseAmount * mask.GetStrength(pixelX, pixelY);
+                if (amount <= 0f)
+                {
+                    continue;
+                }
+
+                int pixelIndex = (pixelY * textureWidth) + pixelX;
+                if (BlendDetailRgbPixel(pixels, pixelIndex, blushColor, amount))
+                {
+                    changed = true;
+                }
+
+                if (mirrorEffectRight)
+                {
+                    int mirroredX = GetDetailMirrorTargetX(pixelX, textureWidth);
+                    if (mirroredX != pixelX && BlendDetailRgbPixel(pixels, (pixelY * textureWidth) + mirroredX, blushColor, amount))
+                    {
+                        changed = true;
+                    }
+                }
+            }
+
+            return changed;
+        }
+
+        private static DetailSpotApplication[] BuildDetailSpotApplications(List<DetailSpot> spots, DetailAreaMask mask, int maxSourceX)
+        {
+            List<DetailSpotApplication> applications = new List<DetailSpotApplication>(spots.Count);
+            for (int i = 0; i < spots.Count; i++)
+            {
+                DetailSpot spot = spots[i];
+                float radius = Mathf.Max(0.35f, spot.radius);
+                int minX = Mathf.Clamp(Mathf.FloorToInt(spot.center.x - radius), mask.minX, mask.maxX);
+                int maxX = Mathf.Clamp(Mathf.CeilToInt(spot.center.x + radius), mask.minX, maxSourceX);
+                int minY = Mathf.Clamp(Mathf.FloorToInt(spot.center.y - radius), mask.minY, mask.maxY);
+                int maxY = Mathf.Clamp(Mathf.CeilToInt(spot.center.y + radius), mask.minY, mask.maxY);
+                if (minX > maxX || minY > maxY)
+                {
+                    continue;
+                }
+
+                applications.Add(new DetailSpotApplication
+                {
+                    spot = spot,
+                    radius = radius,
+                    radiusSquared = radius * radius,
+                    minX = minX,
+                    maxX = maxX,
+                    minY = minY,
+                    maxY = maxY,
+                });
+            }
+
+            return applications.ToArray();
+        }
+
+        private static List<int>[] BuildDetailSpotRows(DetailSpotApplication[] spotApplications, DetailAreaMask mask)
+        {
+            int rowCount = (mask.maxY - mask.minY) + 1;
+            List<int>[] spotRows = new List<int>[rowCount];
+            for (int spotIndex = 0; spotIndex < spotApplications.Length; spotIndex++)
+            {
+                if ((spotIndex & 255) == 0)
+                {
+                    float progress = Mathf.Lerp(0.18f, 0.2f, (float)spotIndex / spotApplications.Length);
+                    EditorUtility.DisplayProgressBar("Apply Spots", $"Preparing spot rows ({spotIndex}/{spotApplications.Length})", progress);
+                }
+
+                DetailSpotApplication application = spotApplications[spotIndex];
+                for (int pixelY = application.minY; pixelY <= application.maxY; pixelY++)
+                {
+                    int rowIndex = pixelY - mask.minY;
+                    List<int> row = spotRows[rowIndex];
+                    if (row == null)
+                    {
+                        row = new List<int>();
+                        spotRows[rowIndex] = row;
+                    }
+
+                    row.Add(spotIndex);
+                }
+            }
+
+            return spotRows;
+        }
+
+        private static bool ApplySpotDetailsRow(
+            Color32[] pixels,
+            int textureWidth,
+            DetailAreaMask mask,
+            DetailSpotApplication[] spotApplications,
+            List<int>[] spotRows,
+            int maxSourceX,
+            bool mirrorEffectRight,
+            float strength,
+            int pixelY)
+        {
+            int rowIndex = pixelY - mask.minY;
+            List<int> rowSpots = rowIndex >= 0 && rowIndex < spotRows.Length ? spotRows[rowIndex] : null;
+            if (rowSpots == null || rowSpots.Count == 0)
+            {
+                return false;
+            }
+
+            bool changed = false;
+            float pixelCenterY = pixelY + 0.5f;
+            for (int pixelX = mask.minX; pixelX <= maxSourceX; pixelX++)
+            {
+                float areaStrength = mask.GetStrength(pixelX, pixelY);
+                if (areaStrength <= 0f)
+                {
+                    continue;
+                }
+
+                float pixelCenterX = pixelX + 0.5f;
+                for (int i = 0; i < rowSpots.Count; i++)
+                {
+                    DetailSpotApplication application = spotApplications[rowSpots[i]];
+                    if (pixelX < application.minX || pixelX > application.maxX)
+                    {
+                        continue;
+                    }
+
+                    float deltaX = pixelCenterX - application.spot.center.x;
+                    float deltaY = pixelCenterY - application.spot.center.y;
+                    float distanceSquared = (deltaX * deltaX) + (deltaY * deltaY);
+                    if (distanceSquared > application.radiusSquared)
+                    {
+                        continue;
+                    }
+
+                    float radial = 1f - (Mathf.Sqrt(distanceSquared) / application.radius);
+                    radial = radial * radial * (3f - (2f * radial));
+                    float amount = Mathf.Clamp01(strength * areaStrength * radial);
+                    if (amount <= 0f)
+                    {
+                        continue;
+                    }
+
+                    int pixelIndex = (pixelY * textureWidth) + pixelX;
+                    if (BlendDetailRgbPixel(pixels, pixelIndex, application.spot.color, amount))
+                    {
+                        changed = true;
+                    }
+
+                    if (mirrorEffectRight)
+                    {
+                        int mirroredX = GetDetailMirrorTargetX(pixelX, textureWidth);
+                        if (mirroredX != pixelX && BlendDetailRgbPixel(pixels, (pixelY * textureWidth) + mirroredX, application.spot.color, amount))
+                        {
+                            changed = true;
+                        }
+                    }
+                }
+            }
+
+            return changed;
+        }
+
+        private static bool ApplyDetailRowsWithProgress(
+            string title,
+            string message,
+            int minY,
+            int maxY,
+            float progressStart,
+            float progressEnd,
+            Func<int, bool> applyRow)
+        {
+            if (applyRow == null || minY > maxY)
+            {
+                return false;
+            }
+
+            int rowCount = (maxY - minY) + 1;
+            int workerCount = GetDetailWorkerCount(rowCount);
+            bool[] workerChanged = new bool[workerCount];
+            int completedRows = 0;
+            EditorUtility.DisplayProgressBar(title, message, Mathf.Clamp01(progressStart));
+
+            try
+            {
+                if (workerCount <= 1)
+                {
+                    bool singleThreadChanged = false;
+                    for (int pixelY = minY; pixelY <= maxY; pixelY++)
+                    {
+                        singleThreadChanged |= applyRow(pixelY);
+                        completedRows++;
+                        if ((completedRows & 7) == 0 || completedRows == rowCount)
+                        {
+                            DisplayDetailProgress(title, message, completedRows, rowCount, progressStart, progressEnd);
+                        }
+                    }
+
+                    return singleThreadChanged;
+                }
+
+                int rowsPerWorker = (rowCount + workerCount - 1) / workerCount;
+                Task[] tasks = new Task[workerCount];
+                for (int workerIndex = 0; workerIndex < workerCount; workerIndex++)
+                {
+                    int capturedWorkerIndex = workerIndex;
+                    int startY = minY + (workerIndex * rowsPerWorker);
+                    int endYExclusive = Math.Min(startY + rowsPerWorker, maxY + 1);
+                    tasks[workerIndex] = Task.Run(() =>
+                    {
+                        bool localChanged = false;
+                        int pendingRows = 0;
+                        for (int pixelY = startY; pixelY < endYExclusive; pixelY++)
+                        {
+                            localChanged |= applyRow(pixelY);
+                            pendingRows++;
+                            if (pendingRows >= 4)
+                            {
+                                Interlocked.Add(ref completedRows, pendingRows);
+                                pendingRows = 0;
+                            }
+                        }
+
+                        if (pendingRows > 0)
+                        {
+                            Interlocked.Add(ref completedRows, pendingRows);
+                        }
+
+                        workerChanged[capturedWorkerIndex] = localChanged;
+                    });
+                }
+
+                while (!Task.WaitAll(tasks, 50))
+                {
+                    int done = Math.Min(rowCount, Interlocked.CompareExchange(ref completedRows, 0, 0));
+                    DisplayDetailProgress(title, message, done, rowCount, progressStart, progressEnd);
+                }
+
+                Task.WaitAll(tasks);
+                DisplayDetailProgress(title, message, rowCount, rowCount, progressStart, progressEnd);
+
+                bool threadedChanged = false;
+                for (int i = 0; i < workerChanged.Length; i++)
+                {
+                    threadedChanged |= workerChanged[i];
+                }
+
+                return threadedChanged;
+            }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
+            }
+        }
+
+        private static int GetDetailWorkerCount(int rowCount)
+        {
+            int processorCount = Math.Max(1, Environment.ProcessorCount);
+            return Math.Max(1, Math.Min(processorCount, Math.Max(1, rowCount)));
+        }
+
+        private static void DisplayDetailProgress(string title, string message, int completedRows, int rowCount, float progressStart, float progressEnd)
+        {
+            float rowProgress = rowCount <= 0 ? 1f : Mathf.Clamp01((float)completedRows / rowCount);
+            float progress = Mathf.Lerp(Mathf.Clamp01(progressStart), Mathf.Clamp01(progressEnd), rowProgress);
+            EditorUtility.DisplayProgressBar(title, $"{message} ({completedRows}/{rowCount} rows)", progress);
+        }
+
+        private static int GetDetailMirrorSourcePixelCount(DetailAreaMask mask, int textureWidth)
+        {
+            if (mask == null)
+            {
+                return 0;
+            }
+
+            int count = 0;
+            int maxSourceX = Mathf.Min(mask.maxX, GetDetailMirrorSourceMaxX(textureWidth));
+            if (mask.minX > maxSourceX)
+            {
+                return 0;
+            }
+
+            for (int pixelY = mask.minY; pixelY <= mask.maxY; pixelY++)
+            {
+                for (int pixelX = mask.minX; pixelX <= maxSourceX; pixelX++)
+                {
+                    if (mask.GetStrength(pixelX, pixelY) > 0f)
+                    {
+                        count++;
+                    }
+                }
+            }
+
+            return count;
+        }
+
+        private static int GetDetailMirrorSourceMaxX(int textureWidth)
+        {
+            return Mathf.Max(0, (textureWidth - 1) / 2);
+        }
+
+        private static int GetDetailMirrorTargetX(int sourceX, int textureWidth)
+        {
+            return Mathf.Clamp((textureWidth - 1) - sourceX, 0, textureWidth - 1);
+        }
+
+        private static bool BlendDetailRgbPixel(Color32[] pixels, int pixelIndex, Color targetColor, float amount)
+        {
+            Color32 original = pixels[pixelIndex];
+            Color32 blended = BlendRgb(original, targetColor, amount);
+            if (!HasDifferentRgb(original, blended))
+            {
+                return false;
+            }
+
+            pixels[pixelIndex] = blended;
+            return true;
+        }
+
+        private float GetDetailDensityAcceptance(int x, int y)
+        {
+            float variation = Mathf.Clamp01(detailSpotDensityVariation);
+            if (variation <= 0f)
+            {
+                return 1f;
+            }
+
+            float seedX = (detailSeed & 1023) * 0.037f;
+            float seedY = ((detailSeed >> 8) & 1023) * 0.041f;
+            float noise = Mathf.PerlinNoise((x * 0.0125f) + seedX, (y * 0.0125f) + seedY);
+            float clustered = Mathf.Clamp01(noise * 1.45f);
+            return Mathf.Lerp(1f, clustered, variation);
+        }
+
+        private Color GetVariedDetailSpotColor(System.Random random)
+        {
+            float variation = Mathf.Clamp01(detailSpotColorVariation);
+            if (variation <= 0f)
+            {
+                return detailSpotColor;
+            }
+
+            Color.RGBToHSV(detailSpotColor, out float hue, out float saturationValue, out float value);
+            hue = Mathf.Repeat(hue + GetRandomRange(random, -0.08f * variation, 0.08f * variation), 1f);
+            saturationValue = Mathf.Clamp01(saturationValue * (1f + GetRandomRange(random, -0.5f * variation, 0.5f * variation)));
+            value = Mathf.Clamp01(value * (1f + GetRandomRange(random, -0.45f * variation, 0.45f * variation)));
+            Color varied = Color.HSVToRGB(hue, saturationValue, value);
+            varied.a = detailSpotColor.a;
+            return varied;
+        }
+
+        private static float GetRandomFloat(System.Random random)
+        {
+            return (float)random.NextDouble();
+        }
+
+        private static float GetRandomRange(System.Random random, float min, float max)
+        {
+            return Mathf.Lerp(min, max, GetRandomFloat(random));
+        }
+
+        private static Color32 BlendRgb(Color32 original, Color targetColor, float amount)
+        {
+            float clampedAmount = Mathf.Clamp01(amount);
+            byte red = (byte)Mathf.RoundToInt(Mathf.Lerp(original.r, Mathf.Clamp01(targetColor.r) * 255f, clampedAmount));
+            byte green = (byte)Mathf.RoundToInt(Mathf.Lerp(original.g, Mathf.Clamp01(targetColor.g) * 255f, clampedAmount));
+            byte blue = (byte)Mathf.RoundToInt(Mathf.Lerp(original.b, Mathf.Clamp01(targetColor.b) * 255f, clampedAmount));
+            return new Color32(red, green, blue, original.a);
+        }
+
+        private static bool HasDifferentRgb(Color32 left, Color32 right)
+        {
+            return left.r != right.r || left.g != right.g || left.b != right.b;
+        }
+
         // ---------- Adjustments (BCS) ----------
 
         private bool HasPendingAdjustments()
@@ -1892,6 +4248,204 @@ namespace UMA.Editors
             SetCurrentDirty(true);
             ResetAdjustments();
             InvalidatePreview();
+        }
+
+        private void RestoreCurrentTextureToUnmodified()
+        {
+            if (currentTexture == null)
+            {
+                return;
+            }
+
+            Texture2D restoredTexture = null;
+            try
+            {
+                restoredTexture = CreateUnmodifiedTextureCopy();
+            }
+            catch (Exception ex)
+            {
+                EditorUtility.DisplayDialog("Reset Texture", "Error: " + ex.Message, "OK");
+                return;
+            }
+
+            ResetAdjustments();
+            if (restoredTexture == null)
+            {
+                InvalidatePreview();
+                return;
+            }
+
+            InvalidateCachedPixels();
+            DestroyTexture(ref currentTexture);
+            DestroyTexture(ref previewTexture);
+            currentTexture = restoredTexture;
+            SetCurrentDirty(false);
+            ResetMagnifiedPreviewCenter();
+            Repaint();
+        }
+
+        private Texture2D CreateUnmodifiedTextureCopy()
+        {
+            if (sourceAsset != null)
+            {
+                return MakeReadableCopy(sourceAsset);
+            }
+
+            if (diskOriginalTexture != null)
+            {
+                return DuplicateReadableTexture(diskOriginalTexture);
+            }
+
+            return null;
+        }
+
+        private static Texture2D DuplicateReadableTexture(Texture2D source)
+        {
+            if (source == null)
+            {
+                return null;
+            }
+
+            Texture2D copy = new Texture2D(source.width, source.height, TextureFormat.RGBA32, false, false)
+            {
+                name = source.name,
+            };
+            copy.SetPixels32(source.GetPixels32());
+            copy.Apply(false, false);
+            return copy;
+        }
+
+        private void InvertCurrentColors()
+        {
+            if (currentTexture == null)
+            {
+                return;
+            }
+
+            if (HasPendingAdjustments())
+            {
+                BakeAdjustmentsToCurrent();
+            }
+
+            EnsureCachedPixels();
+            InvertColors32(cachedCurrentPixels);
+            currentTexture.SetPixels32(cachedCurrentPixels);
+            currentTexture.Apply(false, false);
+            SetCurrentDirty(true);
+            InvalidatePreview();
+        }
+
+        private void FillCurrentColors(byte colorValue)
+        {
+            if (currentTexture == null)
+            {
+                return;
+            }
+
+            if (HasPendingAdjustments())
+            {
+                BakeAdjustmentsToCurrent();
+            }
+
+            EnsureCachedPixels();
+            FillColors32(cachedCurrentPixels, colorValue);
+            currentTexture.SetPixels32(cachedCurrentPixels);
+            currentTexture.Apply(false, false);
+            SetCurrentDirty(true);
+            InvalidatePreview();
+        }
+
+        private void ApplyAlphaFromLuminance()
+        {
+            if (currentTexture == null)
+            {
+                return;
+            }
+
+            if (HasPendingAdjustments())
+            {
+                BakeAdjustmentsToCurrent();
+            }
+
+            EnsureCachedPixels();
+            bool changed = ApplyAlphaFromLuminance(cachedCurrentPixels, alphaFromLuminanceCutoff);
+            if (!changed)
+            {
+                EditorUtility.DisplayDialog("Alpha From Luminance", "No alpha values were lowered. Try a higher cutoff or a darker texture area.", "OK");
+                return;
+            }
+
+            currentTexture.SetPixels32(cachedCurrentPixels);
+            currentTexture.Apply(false, false);
+            SetCurrentDirty(true);
+            InvalidatePreview();
+        }
+
+        private static void InvertColors32(Color32[] pixels)
+        {
+            if (pixels == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                Color32 pixel = pixels[i];
+                pixel.r = (byte)(255 - pixel.r);
+                pixel.g = (byte)(255 - pixel.g);
+                pixel.b = (byte)(255 - pixel.b);
+                pixels[i] = pixel;
+            }
+        }
+
+        private static void FillColors32(Color32[] pixels, byte colorValue)
+        {
+            if (pixels == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                Color32 pixel = pixels[i];
+                pixel.r = colorValue;
+                pixel.g = colorValue;
+                pixel.b = colorValue;
+                pixels[i] = pixel;
+            }
+        }
+
+        private static bool ApplyAlphaFromLuminance(Color32[] pixels, float cutoff)
+        {
+            if (pixels == null || pixels.Length == 0)
+            {
+                return false;
+            }
+
+            bool changed = false;
+            float clampedCutoff = Mathf.Clamp01(cutoff);
+            const float inv255 = 1f / 255f;
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                Color32 pixel = pixels[i];
+                float luminance = Mathf.Clamp01(((0.2126f * pixel.r) + (0.7152f * pixel.g) + (0.0722f * pixel.b)) * inv255);
+                if (luminance > clampedCutoff)
+                {
+                    continue;
+                }
+
+                byte luminanceAlpha = (byte)Mathf.RoundToInt(luminance * 255f);
+                if (luminanceAlpha >= pixel.a)
+                {
+                    continue;
+                }
+
+                pixel.a = luminanceAlpha;
+                pixels[i] = pixel;
+                changed = true;
+            }
+
+            return changed;
         }
 
         private void AutoMatchAdjustmentsToBackground()
@@ -2326,7 +4880,7 @@ namespace UMA.Editors
             currentTexture = state.workingTexture;
             dirty = state.dirty;
             ResetAdjustments();
-            previewScroll = Vector2.zero;
+            ResetMagnifiedPreviewCenter();
             return true;
         }
 

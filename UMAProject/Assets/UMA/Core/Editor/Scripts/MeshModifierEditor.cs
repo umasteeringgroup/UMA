@@ -2307,7 +2307,7 @@ namespace UMA
 
                 foreach (var slot in owner.thisDCA.umaData.umaRecipe.slotDataList)
                 {
-                    if (slot != null && slot.asset != null && slot.asset.meshData != null)
+                    if (slot != null && slot.asset != null && !UMAMeshData.IsNullOrEmptyMeshData(slot.asset.meshData))
                     {
                         string slotKey = owner.GetModifierSlotKey(slot);
                         bool exists = false;
@@ -2354,7 +2354,7 @@ namespace UMA
 
             private bool TryAddVertex(MeshModifier.Modifier modifier, SlotData slot, int vertexIndex)
             {
-                if (modifier == null || modifier.adjustments == null || slot == null || slot.asset == null || slot.asset.meshData == null)
+                if (modifier == null || modifier.adjustments == null || slot == null || slot.asset == null || UMAMeshData.IsNullOrEmptyMeshData(slot.asset.meshData))
                 {
                     return false;
                 }

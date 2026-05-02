@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using System.Globalization;
 
@@ -826,22 +825,16 @@ namespace UMA
         {
             CheckInitialize();
         }
-
-
-        // Returns a list of types to load 
-        /*     public static List<Type> GetPropertyTypes()
-             {
-                 return AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes())
-                      .Where(x => typeof(UMAProperty).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract)
-                      .Select(x => x).ToList();
-             }*/
         public static List<Type> GetPropertyTypes()
         {
             List<Type> theTypes = new List<Type>();
 
 
 #if UNITY_EDITOR && UNITY_2019_2_OR_NEWER
-            theTypes = TypeCache.GetTypesDerivedFrom<UMAProperty>().ToList();
+            foreach (Type propertyType in TypeCache.GetTypesDerivedFrom<UMAProperty>())
+            {
+                theTypes.Add(propertyType);
+            }
 #else
 
             var Assemblies = AppDomain.CurrentDomain.GetAssemblies();

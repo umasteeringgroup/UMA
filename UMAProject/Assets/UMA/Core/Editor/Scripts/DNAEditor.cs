@@ -4,7 +4,6 @@ using UMA;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Linq;
 using UMA.Editors;
 using UnityEngine.SceneManagement;
 using UMA.CharacterSystem;
@@ -32,6 +31,27 @@ public class DNAEditor : Editor
 
     // Static, editor-only context bridge (weak reference to avoid leaks)
     private static WeakReference<DynamicCharacterAvatarEditor> _lastDcaCtx;
+
+    private static DNAEffect CreateEffect(Type effectType, bool logFailure = true)
+    {
+        if (effectType == null || !typeof(DNAEffect).IsAssignableFrom(effectType) || effectType.IsAbstract || effectType.IsGenericType)
+        {
+            return null;
+        }
+
+        try
+        {
+            return Activator.CreateInstance(effectType) as DNAEffect;
+        }
+        catch (Exception e)
+        {
+            if (logFailure)
+            {
+                Debug.LogError($"Unable to create DNA effect type '{effectType.FullName}': {e.Message}");
+            }
+            return null;
+        }
+    }
 
     public static void SetDcaContext(DynamicCharacterAvatarEditor editor)
     {
@@ -76,7 +96,7 @@ public class DNAEditor : Editor
             foreach (var t in types)
             {
                 if (t == null) continue;
-                if (baseType.IsAssignableFrom(t) && !t.IsAbstract && !t.IsGenericType && t.GetConstructor(Type.EmptyTypes) != null)
+                if (baseType.IsAssignableFrom(t) && CreateEffect(t, false) != null)
                 {
                     typesList.Add(t);
                     namesList.Add(t.Name);
@@ -300,7 +320,7 @@ public class DNAEditor : Editor
             Type selectedType = effectTypes[selectedEffectTypeIndex];
             if (newEffectInstance == null || newEffectInstance.GetType() != selectedType)
             {
-                newEffectInstance = (DNAEffect)Activator.CreateInstance(selectedType);
+                newEffectInstance = CreateEffect(selectedType);
             }
 
             // Draw fields for the new effect instance
@@ -322,11 +342,14 @@ public class DNAEditor : Editor
                 {
                     // Deep clone to avoid sharing the temp instance
                     var clone = CloneDNAEffect(newEffectInstance);
-                    (target as DNA).effects.Add(clone);
-                    newEffectInstance = (DNAEffect)Activator.CreateInstance(selectedType); // reset for next add
-                    EditorUtility.SetDirty(target);
-                    AssetDatabase.SaveAssetIfDirty(target);
-                    BuildCharacterIfPossible();
+                    if (clone != null)
+                    {
+                        (target as DNA).effects.Add(clone);
+                        newEffectInstance = CreateEffect(selectedType); // reset for next add
+                        EditorUtility.SetDirty(target);
+                        AssetDatabase.SaveAssetIfDirty(target);
+                        BuildCharacterIfPossible();
+                    }
                 }
             }
         }
@@ -341,7 +364,11 @@ public class DNAEditor : Editor
     private DNAEffect CloneDNAEffect(DNAEffect effect)
     {
         var type = effect.GetType();
-        var clone = (DNAEffect)Activator.CreateInstance(type);
+        var clone = CreateEffect(type);
+        if (clone == null)
+        {
+            return null;
+        }
         foreach (var field in type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
         {
             if (field.IsNotSerialized) continue;
@@ -720,7 +747,11 @@ public class DNAEditor : Editor
                 if (!string.IsNullOrEmpty(n)) set.Add(n);
             }
         }
-        var list = set.ToList();
+        var list = new List<string>(set.Count);
+        foreach (string entry in set)
+        {
+            list.Add(entry);
+        }
         list.Sort(StringComparer.OrdinalIgnoreCase);
         return list;
     }
@@ -755,7 +786,12 @@ public class DNAEditor : Editor
         first = parts[0];
         if (parts.Count > 1)
         {
-            rest = string.Concat(parts.Skip(1));
+            var restBuilder = new StringBuilder();
+            for (int partIndex = 1; partIndex < parts.Count; partIndex++)
+            {
+                restBuilder.Append(parts[partIndex]);
+            }
+            rest = restBuilder.ToString();
         }
         else
         {

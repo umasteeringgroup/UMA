@@ -27,6 +27,7 @@ namespace UMA.Editors
         private OverlayDataAsset _sourceOverlay;
         private bool _copyOverlayMaterial = true;
         private bool _copyOverlayTextureChannels = true;
+        private static GUIContent _editTextureButtonContent;
 
         private static bool IsEditorBusy => EditorApplication.isCompiling || EditorApplication.isUpdating;
 
@@ -314,6 +315,15 @@ namespace UMA.Editors
                                 EditorGUILayout.PropertyField(blendElement, GUIContent.none, GUILayout.Width(110));
                             }
 
+                            Texture2D editableTexture = textureElement != null ? textureElement.objectReferenceValue as Texture2D : null;
+                            using (new EditorGUI.DisabledScope(editableTexture == null))
+                            {
+                                if (GUILayout.Button(GetEditTextureButtonContent(), GUILayout.Width(22), GUILayout.Height(EditorGUIUtility.singleLineHeight)))
+                                {
+                                    UMATextureUtilitiesWindow.Open(new[] { editableTexture });
+                                }
+                            }
+
                             if (GUILayout.Button("x", GUILayout.Width(22)))
                             {
                                 RemoveTextureChannelAt(i);
@@ -495,6 +505,31 @@ namespace UMA.Editors
                 od.lastActionTime = Time.realtimeSinceStartup;
                 od.doSave = true;
             }
+        }
+
+        private static GUIContent CreateEditTextureButtonContent()
+        {
+            GUIContent content = EditorGUIUtility.IconContent("d_editicon.sml");
+            if (content == null || content.image == null)
+            {
+                content = EditorGUIUtility.IconContent("editicon.sml");
+            }
+            if (content == null || content.image == null)
+            {
+                content = new GUIContent("E");
+            }
+            content.tooltip = "Open texture in UMA Texture Utilities";
+            return content;
+        }
+
+        private static GUIContent GetEditTextureButtonContent()
+        {
+            if (_editTextureButtonContent == null)
+            {
+                _editTextureButtonContent = CreateEditTextureButtonContent();
+            }
+
+            return _editTextureButtonContent;
         }
 
         private void DrawOverlayValueCopyUI(OverlayDataAsset targetOverlay)

@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using UMA;
 using UMA.CharacterSystem;
 using UMA.Editors;
@@ -522,7 +521,7 @@ namespace UMA
                 return;
             }
 
-            int sourceVertexCount = sourceSlot.asset != null && sourceSlot.asset.meshData != null
+            int sourceVertexCount = sourceSlot.asset != null && !UMAMeshData.IsNullOrEmptyMeshData(sourceSlot.asset.meshData)
                 ? sourceSlot.asset.meshData.vertexCount
                 : 0;
 
@@ -886,7 +885,7 @@ namespace UMA
         {
             return slot != null &&
                    slot.asset != null &&
-                   slot.asset.meshData != null &&
+                   !UMAMeshData.IsNullOrEmptyMeshData(slot.asset.meshData) &&
                    !slot.Suppressed &&
                    !slot.asset.isUtilitySlot;
         }
@@ -1177,10 +1176,15 @@ namespace UMA
         private List<Type> LoadTypes(Type baseType)
         {
             List<Type> theTypes = new List<Type>();
-            var Assemblies = AppDomain.CurrentDomain.GetAssemblies().Where(p => !p.IsDynamic);
+            System.Reflection.Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
 
-            foreach (var asm in Assemblies)
+            foreach (var asm in assemblies)
             {
+                if (asm.IsDynamic)
+                {
+                    continue;
+                }
+
                 var Types = asm.GetExportedTypes();
                 foreach (var t in Types)
                 {
@@ -1884,7 +1888,7 @@ namespace UMA
             if (thisDCA != null && thisDCA.umaData != null && thisDCA.umaData.umaRecipe != null)
             {
                 var wearables = thisDCA.GetVisibleWearables();
-                wearableCount = wearables != null ? wearables.Count() : 0;
+                wearableCount = wearables != null ? wearables.Length : 0;
                 var slots = thisDCA.umaData.umaRecipe.slotDataList;
                 slotCount = slots != null ? slots.Length : 0;
             }

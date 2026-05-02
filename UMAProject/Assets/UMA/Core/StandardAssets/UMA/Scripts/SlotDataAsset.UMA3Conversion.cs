@@ -23,129 +23,6 @@ namespace UMA
             public int fallbackVertices;
         }
 
-        /// <summary>
-        /// Converts this slot's mesh data into the donor slot's UMA3 bindpose space and donor bone ordering.
-        /// The resulting slot keeps its own geometry, but is rebound to donor-authoritative bindposes and weight indices.
-        /// </summary>
-        public string ConvertSlotDataToUMA3(SlotDataAsset donorSlot)
-        {
-            return ConvertSlotDataToUMA3(donorSlot, false, 0f, 0f, 90f);
-        }
-
-        public string ConvertSlotDataToUMA3(SlotDataAsset donorSlot, bool overrideAxisConversion, float axisX, float axisY, float axisZ)
-        {
-            if (donorSlot == null)
-            {
-                return "Donor slot is null.";
-            }
-
-            if (meshData == null)
-            {
-                return $"Slot '{slotName}' has no meshData.";
-            }
-
-            if (donorSlot.meshData == null)
-            {
-                return $"Donor slot '{donorSlot.slotName}' has no meshData.";
-            }
-
-            if (!EnsureManagedWeightsForUma3(meshData, slotName, out string sourceWeightMessage))
-            {
-                return sourceWeightMessage;
-            }
-
-            if (!EnsureManagedWeightsForUma3(donorSlot.meshData, donorSlot.slotName, out string donorWeightMessage))
-            {
-                return donorWeightMessage;
-            }
-
-            if (!TryGetCanonicalMeshFromRootMatrix(meshData, slotName, out Matrix4x4 sourceMeshFromRoot))
-            {
-                return $"Could not reconstruct source mesh transform for slot '{slotName}'.";
-            }
-
-            if (!TryGetCanonicalMeshFromRootMatrix(donorSlot.meshData, donorSlot.slotName, out Matrix4x4 donorMeshFromRoot))
-            {
-                return $"Could not reconstruct donor mesh transform for slot '{donorSlot.slotName}'.";
-            }
-
-            int donorBoneCount = Mathf.Min(donorSlot.meshData.bindPoses != null ? donorSlot.meshData.bindPoses.Length : 0,
-                                           donorSlot.meshData.boneNameHashes != null ? donorSlot.meshData.boneNameHashes.Length : 0);
-            if (donorBoneCount <= 0)
-            {
-                return $"Donor slot '{donorSlot.slotName}' is missing donor-authoritative bindposes or bone hashes.";
-            }
-
-            UMAMeshData converted = meshData.DeepCopy();
-            converted.SlotName = slotName;
-
-            Quaternion legacyRotation = Quaternion.identity;
-            if (isLegacySlot)
-            {
-                legacyRotation = overrideAxisConversion
-                    ? Quaternion.Euler(axisX, axisY, axisZ)
-                    : Quaternion.Euler(0f, 0f, 90f);
-            }
-
-            Matrix4x4 legacyVertexRotation = Matrix4x4.TRS(Vector3.zero, legacyRotation, Vector3.one);
-
-            Matrix4x4 sourceToDonor = donorMeshFromRoot.inverse * sourceMeshFromRoot;
-            Matrix4x4 vertexTransform = sourceToDonor * legacyVertexRotation;
-            Matrix4x4 normalTransform = sourceToDonor.inverse.transpose;
-
-            TransformMeshIntoDonorSpace(converted, vertexTransform, normalTransform, sourceToDonor);
-
-            Uma3WeightRemapStats remapStats = RemapManagedWeightsToDonor(converted, donorSlot.meshData);
-            ApplyDonorBindingMetadata(converted, donorSlot.meshData);
-            converted.boneWeights = null;
-
-            converted.vertexCount = converted.vertices != null ? converted.vertices.Length : 0;
-            converted.verticesModified = converted.vertices != null && converted.vertices.Length > 0;
-            converted.normalsModified = converted.normals != null && converted.normals.Length > 0;
-            converted.tangentsModified = converted.tangents != null && converted.tangents.Length > 0;
-            converted.SlotName = slotName;
-
-            meshData = converted;
-            isLegacySlot = false;
-            ValidateMeshData();
-#if UNITY_EDITOR
-            UnityEditor.EditorUtility.SetDirty(this);
-#endif
-
-            return $"Converted '{slotName}' to donor '{donorSlot.slotName}'. Mapped weights: {remapStats.mappedWeights}, unmapped weights: {remapStats.unmappedWeights}, fallback vertices: {remapStats.fallbackVertices}.";
-        }
-
-        private static bool EnsureManagedWeightsForUma3(UMAMeshData data, string debugName, out string message)
-        {
-            message = null;
-            if (data == null)
-            {
-                message = $"Slot '{debugName}' has no meshData.";
-                return false;
-            }
-
-            bool haveManaged = data.ManagedBoneWeights != null && data.ManagedBoneWeights.Length > 0 &&
-                               data.ManagedBonesPerVertex != null && data.ManagedBonesPerVertex.Length == data.vertexCount;
-            if (haveManaged)
-            {
-                return true;
-            }
-
-            if (data.boneWeights != null && data.boneWeights.Length > 0)
-            {
-                data.LoadBoneWeights();
-                haveManaged = data.ManagedBoneWeights != null && data.ManagedBoneWeights.Length > 0 &&
-                              data.ManagedBonesPerVertex != null && data.ManagedBonesPerVertex.Length == data.vertexCount;
-                if (haveManaged)
-                {
-                    return true;
-                }
-            }
-
-            message = $"Slot '{debugName}' does not have usable ManagedBoneWeights/ManagedBonesPerVertex for UMA3 conversion.";
-            return false;
-        }
-
         private static void TransformMeshIntoDonorSpace(UMAMeshData data, Matrix4x4 vertexTransform, Matrix4x4 normalTransform, Matrix4x4 tangentTransform)
         {
             if (data.vertices != null && data.vertices.Length > 0)
@@ -285,7 +162,7 @@ namespace UMA
 
         private static int GetFallbackDonorBoneIndex(UMAMeshData donor, Dictionary<int, int> donorHashToIndex)
         {
-            if (donor == null)
+            if (UMAMeshData.IsNullOrEmptyMeshData(donor))
             {
                 return -1;
             }
@@ -440,7 +317,7 @@ namespace UMA
         private static bool TryGetCanonicalMeshFromRootMatrix(UMAMeshData meshData, string debugName, out Matrix4x4 meshFromRoot)
         {
             meshFromRoot = Matrix4x4.identity;
-            if (meshData == null || meshData.bindPoses == null || meshData.bindPoses.Length == 0 ||
+            if (UMAMeshData.IsNullOrEmptyMeshData(meshData) || meshData.bindPoses == null || meshData.bindPoses.Length == 0 ||
                 meshData.boneNameHashes == null || meshData.boneNameHashes.Length == 0)
             {
                 return false;
@@ -533,7 +410,7 @@ namespace UMA
         private static float[] BuildBoneWeightSums(UMAMeshData meshData, int boneCount)
         {
             float[] sums = new float[boneCount];
-            if (meshData == null || boneCount <= 0)
+            if (UMAMeshData.IsNullOrEmptyMeshData(meshData) || boneCount <= 0)
             {
                 return sums;
             }

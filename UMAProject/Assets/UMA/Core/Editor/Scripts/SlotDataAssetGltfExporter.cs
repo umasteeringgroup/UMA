@@ -45,7 +45,7 @@ namespace UMA.Editors
             }
 
             var meshData = slot.meshData;
-            if (meshData == null)
+            if (UMAMeshData.IsNullOrEmptyMeshData(meshData))
             {
                 EditorUtility.DisplayDialog("Export glTF", "SlotDataAsset has no meshData.", "OK");
                 return;

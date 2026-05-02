@@ -1,4 +1,4 @@
-﻿//#define DEBUG_BAKING
+//#define DEBUG_BAKING
 using System.Collections.Generic;
 #if UNITY_EDITOR
 using System.Text;
@@ -12,7 +12,6 @@ using System;
 using UnityEngine.Serialization;
 using System.Text.RegularExpressions;
 using UnityEditor;
-using System.Linq;
 
 namespace UMA
 {
@@ -576,7 +575,7 @@ namespace UMA
             Errors = "";
             errorBuilder.Clear();
 
-            if (meshData == null)
+            if (UMAMeshData.IsNullOrEmptyMeshData(meshData))
             {
                 return isUtilitySlot;
             }
@@ -608,7 +607,7 @@ namespace UMA
 			}
 
 			// If meshData is missing, treat as valid only if this looks like a deliberate utility slot.
-			if (meshData == null)
+			if (UMAMeshData.IsNullOrEmptyMeshData(meshData))
 			{
 				reasons.Add("meshData is null.");
 				return reasons.Count == 0;
@@ -756,7 +755,7 @@ namespace UMA
                     return true;
                 }
 
-                if (meshData != null && meshData.vertexCount > 0)
+                if (!UMAMeshData.IsNullOrEmptyMeshData(meshData) && meshData.vertexCount > 0)
                 {
                     return false;
                 }
@@ -781,7 +780,7 @@ namespace UMA
                     return true;
                 }
 
-                return meshData == null || meshData.vertexCount <= 0;
+                return UMAMeshData.IsNullOrEmptyMeshData(meshData) || meshData.vertexCount <= 0;
             }
         }
 
@@ -922,7 +921,7 @@ namespace UMA
 
         public void OnDestroy()
         {
-            if (meshData != null)
+            if (!UMAMeshData.IsNullOrEmptyMeshData(meshData))
             {
                 meshData.FreeBoneWeights();
             }
@@ -930,7 +929,7 @@ namespace UMA
 
         public void OnDisable()
         {
-            //if (meshData != null)
+            //if (!UMAMeshData.IsNullOrEmptyMeshData(meshData))
             //{
             //    meshData.FreeBoneWeights();
             //}
@@ -985,7 +984,7 @@ namespace UMA
 #if UNITY_EDITOR
             try
             {
-                int before = (meshData != null && meshData.submeshes != null && meshData.submeshes.Length > 0 && meshData.submeshes[0] != null)
+                int before = (!UMAMeshData.IsNullOrEmptyMeshData(meshData) && meshData.submeshes != null && meshData.submeshes.Length > 0 && meshData.submeshes[0] != null)
                     ? meshData.submeshes[0].LODCount()
                     : -1;
                 Debug.Log($"[SlotLOD][UpdateMeshData] slot='{slotName}' BEFORE meshDataRebuild lodCount={before} submeshIndexArg={submeshIndex} udim={udimAdjustment}");
@@ -999,7 +998,7 @@ namespace UMA
 #if UNITY_EDITOR
             try
             {
-                int after = (meshData != null && meshData.submeshes != null && meshData.submeshes.Length > 0 && meshData.submeshes[0] != null)
+                int after = (!UMAMeshData.IsNullOrEmptyMeshData(meshData) && meshData.submeshes != null && meshData.submeshes.Length > 0 && meshData.submeshes[0] != null)
                     ? meshData.submeshes[0].LODCount()
                     : -1;
                 Debug.Log($"[SlotLOD][UpdateMeshData] slot='{slotName}' AFTER meshDataRebuild lodCount={after} submeshIndexArg={submeshIndex} udim={udimAdjustment}");
@@ -1022,7 +1021,7 @@ namespace UMA
 
         public void OnEnable()
         {
-            if (meshData == null)
+            if (UMAMeshData.IsNullOrEmptyMeshData(meshData))
             {
                 return;
             }
@@ -1114,7 +1113,7 @@ namespace UMA
             if (p.burnOptions != null && p.burnOptions.Count >0)
             {
                 bool hasAny = false;
-                if (meshData != null && meshData.blendShapes != null && meshData.blendShapes.Length >0)
+                if (!UMAMeshData.IsNullOrEmptyMeshData(meshData) && meshData.blendShapes != null && meshData.blendShapes.Length >0)
                 {
                     // Build a small set of requested shape names
                     // Avoid LINQ to reduce allocs
@@ -1139,7 +1138,16 @@ namespace UMA
                 {
 #if DEBUG_BAKING
                     Debug.LogWarning("BakeNewSlotData called with no bake targets found on slot: " + slotName);
-                    Debug.LogWarning("Requested blendshapes: " + string.Join(", ", p.burnOptions.Where(o => o != null).Select(o => o.BlendShape)));
+                    List<string> requestedBlendShapes = new List<string>();
+                    for (int optionIndex = 0; optionIndex < p.burnOptions.Length; optionIndex++)
+                    {
+                        var option = p.burnOptions[optionIndex];
+                        if (option != null)
+                        {
+                            requestedBlendShapes.Add(option.BlendShape);
+                        }
+                    }
+                    Debug.LogWarning("Requested blendshapes: " + string.Join(", ", requestedBlendShapes.ToArray()));
 #endif
                     return this;
                 }
@@ -1160,7 +1168,7 @@ namespace UMA
             var newSlotData = ScriptableObject.CreateInstance<SlotDataAsset>();
             newSlotData.Assign(this);
 
-            if (meshData == null)
+            if (UMAMeshData.IsNullOrEmptyMeshData(meshData))
             {
                 newSlotData.meshData = null;
 #if DEBUG_BAKING
@@ -1171,7 +1179,7 @@ namespace UMA
 
             // Deep copy the mesh so we don't mutate the source asset
             var md = meshData.DeepCopy();
-            if (md == null)
+            if (UMAMeshData.IsNullOrEmptyMeshData(md))
             {
 #if DEBUG_BAKING
                 Debug.LogWarning("BakeNewSlotData called but DeepCopy returned null mesh data on slot: " + slotName);
@@ -1364,7 +1372,7 @@ namespace UMA
                 //Debug.Log("Renaming slot to " + p.newSlotName);
                 newSlotData.name = p.newSlotName;
                 newSlotData._oldSlotName = "";
-                if (newSlotData.meshData != null)
+                if (!UMAMeshData.IsNullOrEmptyMeshData(newSlotData.meshData))
                 {
                     newSlotData.meshData.SlotName = newSlotData.slotName;
                 }
@@ -1427,7 +1435,7 @@ namespace UMA
             clone.slotDNA = slotDNA;
             clone._sourceSlotName = (string)_sourceSlotName.Clone(); 
 
-            if (meshData != null)
+            if (!UMAMeshData.IsNullOrEmptyMeshData(meshData))
             {
                 try
                 {
