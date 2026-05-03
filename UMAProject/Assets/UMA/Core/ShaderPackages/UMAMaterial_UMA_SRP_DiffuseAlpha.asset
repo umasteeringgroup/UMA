@@ -25,11 +25,12 @@ MonoBehaviour:
     ConvertRenderTexture: 0
     NonShaderTexture: 0
   generateMipMaps: 1
-  MipMapBias: -1
-  AnisoLevel: 1
+  MipMapBias: 0
+  AnisoLevel: 8
   MatFilterMode: 1
   Compression: 0
   shaderParms: []
+  shaderKeywords: []
   MaskWithCurrentColor: 0
   maskMultiplier: {r: 1, g: 1, b: 1, a: 1}
   MaterialName: UMA_SRP_DiffuseAlpha
