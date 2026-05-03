@@ -104,7 +104,7 @@ Material:
     - _ClearCoatSmoothness: 0
     - _ColorBlendModulation: 1
     - _ColorModulation: 1
-    - _Cull: 0
+    - _Cull: 2
     - _CullMode: 2
     - _Cutoff: 0.5
     - _DetailAlbedoMapScale: 1
@@ -153,8 +153,9 @@ Material:
     - _BaseColor: {r: 0.9308176, g: 0.4567666, b: 0.06146893, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+    - _Normal: {r: 0, g: 0, b: 0, a: 0}
     - _RimLightColor: {r: 1, g: 1, b: 1, a: 1}
-    - _RootColor: {r: 0.38679248, g: 0.25750712, b: 0.16516039, a: 1}
+    - _RootColor: {r: 0.7987421, g: 0.33776662, b: 0.002511599, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
     - _SpecularTint: {r: 1, g: 1, b: 1, a: 0}
     - _Tip_Color: {r: 1, g: 0.87058824, b: 0, a: 0.8627451}

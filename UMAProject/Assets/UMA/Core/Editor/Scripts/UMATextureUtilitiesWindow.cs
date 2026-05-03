@@ -205,7 +205,7 @@ namespace UMA.Editors
         private enum Tool
         {
             Split,
-            AdjustColors,
+            AdjustTexture,
             AlphaGradient,
             AlphaFill,
             Touchup,
@@ -304,6 +304,7 @@ namespace UMA.Editors
         private const float AutoMatchMaxContrast = 0.22f;
         private const float AutoMatchMaxSaturation = 0.9f;
         private const float AutoMatchMaxHueDegrees = 90f;
+        private const float ResizeDetailPreserveAmount = 0.55f;
         private const string PresetPrefsKey = "UMA.TextureUtilities.ParameterPresets";
         private const string BackgroundSectionExpandedPrefsKey = "UMA.TextureUtilities.BackgroundSectionExpanded";
         private const string AdjustmentsSectionExpandedPrefsKey = "UMA.TextureUtilities.AdjustmentsSectionExpanded";
@@ -354,6 +355,17 @@ namespace UMA.Editors
         private float lastContrast = 0f;
         private float lastSaturation = 0f;
         private float lastHueDegrees = 0f;
+
+        // Adjust Texture tool state
+        private int resizeWidth;
+        private int resizeHeight;
+        private int resizeSourceWidth;
+        private int resizeSourceHeight;
+        private bool resizePreserveDetails = true;
+        private bool resizeSmoother = true;
+        private float sharpenPower = 1f;
+        private float blurPower = 1f;
+        private float normalMapStrength = 4f;
 
         // Split tool state
         private SplitDirection splitDirection = SplitDirection.Vertical;
@@ -420,7 +432,7 @@ namespace UMA.Editors
         private Color detailBlushColor = new Color(1f, 0.32f, 0.28f, 1f);
         private float detailBlushOpacity = 0.25f;
 
-        // Display-only quadrant visibility for the Adjust Colors tool.
+        // Display-only quadrant visibility for the Adjust Texture tool.
         private bool visibleAreaTopLeft = true;
         private bool visibleAreaTopRight = true;
         private bool visibleAreaBottomLeft = true;
@@ -497,7 +509,7 @@ namespace UMA.Editors
             EditorGUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.Width(ToolPanelWidth), GUILayout.ExpandHeight(true));
             EditorGUILayout.LabelField("Tools", EditorStyles.boldLabel);
             DrawToolToggle(Tool.Split, "Split Texture");
-            DrawToolToggle(Tool.AdjustColors, "Adjust Colors");
+            DrawToolToggle(Tool.AdjustTexture, "Adjust Texture");
             DrawToolToggle(Tool.AlphaGradient, "Alpha Gradient");
             DrawToolToggle(Tool.AlphaFill, "Alpha Fill");
             DrawToolToggle(Tool.Touchup, "Touchup");
@@ -542,7 +554,7 @@ namespace UMA.Editors
                 switch (currentTool)
                 {
                     case Tool.Split: DrawSplitTool(); break;
-                    case Tool.AdjustColors: DrawAdjustColorsTool(); break;
+                    case Tool.AdjustTexture: DrawAdjustTextureTool(); break;
                     case Tool.AlphaGradient: DrawAlphaGradientTool(); break;
                     case Tool.AlphaFill: DrawAlphaFillTool(); break;
                     case Tool.Touchup: DrawTouchupTool(); break;
@@ -646,7 +658,7 @@ namespace UMA.Editors
             switch (tool)
             {
                 case Tool.Split: return "Split Texture";
-                case Tool.AdjustColors: return "Adjust Colors";
+                case Tool.AdjustTexture: return "Adjust Texture";
                 case Tool.AlphaGradient: return "Alpha Gradient";
                 case Tool.AlphaFill: return "Alpha Fill";
                 case Tool.Touchup: return "Touchup";
@@ -955,7 +967,7 @@ namespace UMA.Editors
 
         private bool UseVisibleAreaMask()
         {
-            return currentTool == Tool.AdjustColors
+            return currentTool == Tool.AdjustTexture
                 && (!visibleAreaTopLeft || !visibleAreaTopRight || !visibleAreaBottomLeft || !visibleAreaBottomRight);
         }
 
@@ -2333,9 +2345,9 @@ namespace UMA.Editors
             }
         }
 
-        private void DrawAdjustColorsTool()
+        private void DrawAdjustTextureTool()
         {
-            EditorGUILayout.HelpBox("Adjust RGB preview controls without applying an alpha gradient. Visible Area only changes the preview display.", MessageType.Info);
+            EditorGUILayout.HelpBox("Adjust RGB preview controls, resize the working texture, or generate a Unity normal map from luminance. Visible Area only changes the preview display.", MessageType.Info);
             EditorGUILayout.LabelField("Visible Area", EditorStyles.boldLabel);
             EditorGUI.BeginChangeCheck();
             EditorGUILayout.BeginHorizontal();
@@ -2349,6 +2361,70 @@ namespace UMA.Editors
             if (EditorGUI.EndChangeCheck())
             {
                 Repaint();
+            }
+
+            EditorGUILayout.Space(8f);
+            EditorGUILayout.LabelField("Resize", EditorStyles.boldLabel);
+            using (new EditorGUI.DisabledScope(currentTexture == null))
+            {
+                EnsureResizeFieldsInitialized();
+
+                EditorGUILayout.BeginHorizontal();
+                if (GUILayout.Button("X 2", GUILayout.Width(60f)))
+                {
+                    resizeWidth *= 2;
+                    resizeHeight *= 2;
+                }
+                if (GUILayout.Button("/ 2", GUILayout.Width(60f)))
+                {
+                    resizeWidth = Mathf.Max(1, resizeWidth / 2);
+                    resizeHeight = Mathf.Max(1, resizeHeight / 2);
+                }
+                resizeWidth = Mathf.Max(1, EditorGUILayout.DelayedIntField("Width", resizeWidth));
+                resizeHeight = Mathf.Max(1, EditorGUILayout.DelayedIntField("Height", resizeHeight));
+                EditorGUILayout.EndHorizontal();
+
+                resizePreserveDetails = EditorGUILayout.Toggle("Preserve Details", resizePreserveDetails);
+                resizeSmoother = EditorGUILayout.Toggle("Smoother", resizeSmoother);
+
+                using (new EditorGUI.DisabledScope(currentTexture == null || resizeWidth <= 0 || resizeHeight <= 0))
+                {
+                    if (GUILayout.Button("Resize Texture"))
+                    {
+                        ResizeCurrentTexture();
+                    }
+                }
+
+                EditorGUILayout.Space(8f);
+                EditorGUILayout.LabelField("Sharpen", EditorStyles.boldLabel);
+                sharpenPower = EditorGUILayout.Slider("Power", sharpenPower, 0.1f, 5f);
+                if (GUILayout.Button("Sharpen Texture"))
+                {
+                    SharpenCurrentTexture();
+                }
+
+                EditorGUILayout.Space(8f);
+                EditorGUILayout.LabelField("Blur", EditorStyles.boldLabel);
+                blurPower = EditorGUILayout.Slider("Power", blurPower, 0.1f, 12f);
+                if (GUILayout.Button("Blur Texture"))
+                {
+                    BlurCurrentTexture();
+                }
+
+                EditorGUILayout.Space(8f);
+                EditorGUILayout.LabelField("Hairify", EditorStyles.boldLabel);
+                if (GUILayout.Button("Hairify (experimental)"))
+                {
+                    HairifyCurrentTexture();
+                }
+
+                EditorGUILayout.Space(8f);
+                EditorGUILayout.LabelField("Normal Map", EditorStyles.boldLabel);
+                normalMapStrength = EditorGUILayout.Slider("Strength", normalMapStrength, 0.1f, 16f);
+                if (GUILayout.Button("Generate Normal Map from Texture"))
+                {
+                    GenerateNormalMapFromTexture();
+                }
             }
         }
 
@@ -4067,6 +4143,127 @@ namespace UMA.Editors
             EditorUtility.DisplayProgressBar(title, $"{message} ({completedRows}/{rowCount} rows)", progress);
         }
 
+        private static bool RunHairifyRowsWithProgress(
+            string title,
+            string message,
+            int minY,
+            int maxY,
+            float progressStart,
+            float progressEnd,
+            Func<int, bool> applyRow,
+            ref bool cancelRequested)
+        {
+            if (applyRow == null || minY > maxY)
+            {
+                return false;
+            }
+
+            int rowCount = (maxY - minY) + 1;
+            int workerCount = GetDetailWorkerCount(rowCount);
+            bool[] workerChanged = new bool[workerCount];
+            int completedRows = 0;
+            int cancelFlag = cancelRequested ? 1 : 0;
+
+            if (DisplayHairifyProgress(title, message, completedRows, rowCount, progressStart, progressEnd, cancelFlag != 0))
+            {
+                Volatile.Write(ref cancelFlag, 1);
+            }
+
+            if (workerCount <= 1)
+            {
+                bool singleThreadChanged = false;
+                for (int pixelY = minY; pixelY <= maxY; pixelY++)
+                {
+                    if (Volatile.Read(ref cancelFlag) != 0)
+                    {
+                        break;
+                    }
+
+                    singleThreadChanged |= applyRow(pixelY);
+                    completedRows++;
+                    if ((completedRows & 7) == 0 || completedRows == rowCount)
+                    {
+                        if (DisplayHairifyProgress(title, message, completedRows, rowCount, progressStart, progressEnd, false))
+                        {
+                            Volatile.Write(ref cancelFlag, 1);
+                        }
+                    }
+                }
+
+                cancelRequested = Volatile.Read(ref cancelFlag) != 0;
+                return singleThreadChanged;
+            }
+
+            int rowsPerWorker = (rowCount + workerCount - 1) / workerCount;
+            Task[] tasks = new Task[workerCount];
+            for (int workerIndex = 0; workerIndex < workerCount; workerIndex++)
+            {
+                int capturedWorkerIndex = workerIndex;
+                int startY = minY + (workerIndex * rowsPerWorker);
+                int endYExclusive = Math.Min(startY + rowsPerWorker, maxY + 1);
+                tasks[workerIndex] = Task.Run(() =>
+                {
+                    bool localChanged = false;
+                    int pendingRows = 0;
+                    for (int pixelY = startY; pixelY < endYExclusive; pixelY++)
+                    {
+                        if (Volatile.Read(ref cancelFlag) != 0)
+                        {
+                            break;
+                        }
+
+                        localChanged |= applyRow(pixelY);
+                        pendingRows++;
+                        if (pendingRows >= 4)
+                        {
+                            Interlocked.Add(ref completedRows, pendingRows);
+                            pendingRows = 0;
+                        }
+                    }
+
+                    if (pendingRows > 0)
+                    {
+                        Interlocked.Add(ref completedRows, pendingRows);
+                    }
+
+                    workerChanged[capturedWorkerIndex] = localChanged;
+                });
+            }
+
+            while (!Task.WaitAll(tasks, 50))
+            {
+                int done = Math.Min(rowCount, Interlocked.CompareExchange(ref completedRows, 0, 0));
+                bool canceling = Volatile.Read(ref cancelFlag) != 0;
+                if (DisplayHairifyProgress(title, message, done, rowCount, progressStart, progressEnd, canceling))
+                {
+                    Volatile.Write(ref cancelFlag, 1);
+                }
+            }
+
+            Task.WaitAll(tasks);
+            cancelRequested = Volatile.Read(ref cancelFlag) != 0;
+            if (!cancelRequested)
+            {
+                DisplayHairifyProgress(title, message, rowCount, rowCount, progressStart, progressEnd, false);
+            }
+
+            bool threadedChanged = false;
+            for (int i = 0; i < workerChanged.Length; i++)
+            {
+                threadedChanged |= workerChanged[i];
+            }
+
+            return threadedChanged;
+        }
+
+        private static bool DisplayHairifyProgress(string title, string message, int completedRows, int rowCount, float progressStart, float progressEnd, bool canceling)
+        {
+            float rowProgress = rowCount <= 0 ? 1f : Mathf.Clamp01((float)completedRows / rowCount);
+            float progress = Mathf.Lerp(Mathf.Clamp01(progressStart), Mathf.Clamp01(progressEnd), rowProgress);
+            string displayMessage = canceling ? "Canceling..." : $"{message} ({completedRows}/{rowCount} rows)";
+            return EditorUtility.DisplayCancelableProgressBar(title, displayMessage, progress);
+        }
+
         private static int GetDetailMirrorSourcePixelCount(DetailAreaMask mask, int textureWidth)
         {
             if (mask == null)
@@ -4284,6 +4481,227 @@ namespace UMA.Editors
             Repaint();
         }
 
+        private void EnsureResizeFieldsInitialized()
+        {
+            if (currentTexture == null)
+            {
+                return;
+            }
+
+            if (resizeWidth <= 0
+                || resizeHeight <= 0
+                || resizeSourceWidth != currentTexture.width
+                || resizeSourceHeight != currentTexture.height)
+            {
+                resizeWidth = currentTexture.width;
+                resizeHeight = currentTexture.height;
+                resizeSourceWidth = currentTexture.width;
+                resizeSourceHeight = currentTexture.height;
+            }
+        }
+
+        private void ResizeCurrentTexture()
+        {
+            if (currentTexture == null)
+            {
+                return;
+            }
+
+            int targetWidth = Mathf.Max(1, resizeWidth);
+            int targetHeight = Mathf.Max(1, resizeHeight);
+            if (targetWidth == currentTexture.width && targetHeight == currentTexture.height)
+            {
+                EditorUtility.DisplayDialog("Resize Texture", "The target size matches the current texture size.", "OK");
+                return;
+            }
+
+            if (HasPendingAdjustments())
+            {
+                BakeAdjustmentsToCurrent();
+            }
+
+            Texture2D resizedTexture = null;
+            try
+            {
+                resizedTexture = ResizeTexture(currentTexture, targetWidth, targetHeight, resizePreserveDetails, resizeSmoother);
+            }
+            catch (Exception ex)
+            {
+                DestroyTexture(ref resizedTexture);
+                EditorUtility.DisplayDialog("Resize Texture", "Error: " + ex.Message, "OK");
+                return;
+            }
+
+            InvalidateCachedPixels();
+            DestroyTexture(ref currentTexture);
+            DestroyTexture(ref previewTexture);
+            currentTexture = resizedTexture;
+            resizeSourceWidth = currentTexture.width;
+            resizeSourceHeight = currentTexture.height;
+            resizeWidth = currentTexture.width;
+            resizeHeight = currentTexture.height;
+            SetCurrentDirty(true);
+            ResetMagnifiedPreviewCenter();
+            InvalidatePreview();
+            Repaint();
+        }
+
+        private void SharpenCurrentTexture()
+        {
+            if (currentTexture == null)
+            {
+                return;
+            }
+
+            if (HasPendingAdjustments())
+            {
+                BakeAdjustmentsToCurrent();
+            }
+
+            Texture2D sharpenedTexture = null;
+            try
+            {
+                sharpenedTexture = SharpenTexture(currentTexture, sharpenPower);
+            }
+            catch (Exception ex)
+            {
+                DestroyTexture(ref sharpenedTexture);
+                EditorUtility.DisplayDialog("Sharpen Texture", "Error: " + ex.Message, "OK");
+                return;
+            }
+
+            InvalidateCachedPixels();
+            DestroyTexture(ref currentTexture);
+            DestroyTexture(ref previewTexture);
+            currentTexture = sharpenedTexture;
+            SetCurrentDirty(true);
+            ResetMagnifiedPreviewCenter();
+            InvalidatePreview();
+            Repaint();
+        }
+
+        private void BlurCurrentTexture()
+        {
+            if (currentTexture == null)
+            {
+                return;
+            }
+
+            if (HasPendingAdjustments())
+            {
+                BakeAdjustmentsToCurrent();
+            }
+
+            Texture2D blurredTexture = null;
+            try
+            {
+                blurredTexture = BlurTexture(currentTexture, blurPower);
+            }
+            catch (Exception ex)
+            {
+                DestroyTexture(ref blurredTexture);
+                EditorUtility.DisplayDialog("Blur Texture", "Error: " + ex.Message, "OK");
+                return;
+            }
+
+            InvalidateCachedPixels();
+            DestroyTexture(ref currentTexture);
+            DestroyTexture(ref previewTexture);
+            currentTexture = blurredTexture;
+            SetCurrentDirty(true);
+            ResetMagnifiedPreviewCenter();
+            InvalidatePreview();
+            Repaint();
+        }
+
+        private void HairifyCurrentTexture()
+        {
+            if (currentTexture == null)
+            {
+                return;
+            }
+
+            Texture2D hairifiedTexture = null;
+            bool canceled = false;
+            try
+            {
+                try
+                {
+                    if (HasPendingAdjustments())
+                    {
+                        EditorUtility.DisplayProgressBar("Hairify (experimental)", "Baking pending adjustments", 0f);
+                        BakeAdjustmentsToCurrent();
+                    }
+
+                    hairifiedTexture = HairifyTexture(currentTexture, out canceled);
+                }
+                finally
+                {
+                    EditorUtility.ClearProgressBar();
+                }
+            }
+            catch (Exception ex)
+            {
+                DestroyTexture(ref hairifiedTexture);
+                EditorUtility.DisplayDialog("Hairify (experimental)", "Error: " + ex.Message, "OK");
+                return;
+            }
+
+            if (canceled)
+            {
+                DestroyTexture(ref hairifiedTexture);
+                return;
+            }
+
+            if (hairifiedTexture == null)
+            {
+                return;
+            }
+
+            InvalidateCachedPixels();
+            DestroyTexture(ref currentTexture);
+            DestroyTexture(ref previewTexture);
+            currentTexture = hairifiedTexture;
+            SetCurrentDirty(true);
+            ResetMagnifiedPreviewCenter();
+            InvalidatePreview();
+            Repaint();
+        }
+
+        private void GenerateNormalMapFromTexture()
+        {
+            if (currentTexture == null)
+            {
+                return;
+            }
+
+            if (HasPendingAdjustments())
+            {
+                BakeAdjustmentsToCurrent();
+            }
+
+            Texture2D normalTexture = null;
+            try
+            {
+                normalTexture = GenerateNormalMapTexture(currentTexture, normalMapStrength);
+            }
+            catch (Exception ex)
+            {
+                DestroyTexture(ref normalTexture);
+                EditorUtility.DisplayDialog("Generate Normal Map", "Error: " + ex.Message, "OK");
+                return;
+            }
+
+            InvalidateCachedPixels();
+            DestroyTexture(ref currentTexture);
+            DestroyTexture(ref previewTexture);
+            currentTexture = normalTexture;
+            SetCurrentDirty(true);
+            ResetMagnifiedPreviewCenter();
+            InvalidatePreview();
+            Repaint();
+        }
+
         private Texture2D CreateUnmodifiedTextureCopy()
         {
             if (sourceAsset != null)
@@ -4313,6 +4731,815 @@ namespace UMA.Editors
             copy.SetPixels32(source.GetPixels32());
             copy.Apply(false, false);
             return copy;
+        }
+
+        private static Texture2D ResizeTexture(Texture2D source, int targetWidth, int targetHeight, bool preserveDetails, bool smoother)
+        {
+            if (source == null)
+            {
+                return null;
+            }
+
+            int sourceWidth = Mathf.Max(1, source.width);
+            int sourceHeight = Mathf.Max(1, source.height);
+            int width = Mathf.Max(1, targetWidth);
+            int height = Mathf.Max(1, targetHeight);
+            Color32[] sourcePixels = source.GetPixels32();
+            Color32[] resizedPixels = new Color32[width * height];
+            bool useAreaSampling = smoother && (width < sourceWidth || height < sourceHeight);
+
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    resizedPixels[(y * width) + x] = useAreaSampling
+                        ? SampleArea(sourcePixels, sourceWidth, sourceHeight, x, y, width, height)
+                        : SampleBilinear(sourcePixels, sourceWidth, sourceHeight, x, y, width, height, smoother);
+                }
+            }
+
+            if (preserveDetails && width > 2 && height > 2)
+            {
+                ApplySharpen(resizedPixels, width, height, ResizeDetailPreserveAmount);
+            }
+
+            Texture2D resizedTexture = new Texture2D(width, height, TextureFormat.RGBA32, false, false)
+            {
+                name = source.name,
+                hideFlags = HideFlags.HideAndDontSave,
+            };
+            resizedTexture.SetPixels32(resizedPixels);
+            resizedTexture.Apply(false, false);
+            return resizedTexture;
+        }
+
+        private static Texture2D SharpenTexture(Texture2D source, float power)
+        {
+            if (source == null)
+            {
+                return null;
+            }
+
+            int width = Mathf.Max(1, source.width);
+            int height = Mathf.Max(1, source.height);
+            Color32[] pixels = source.GetPixels32();
+            if (width > 2 && height > 2)
+            {
+                ApplySharpen(pixels, width, height, Mathf.Max(0f, power));
+            }
+
+            Texture2D sharpenedTexture = new Texture2D(width, height, TextureFormat.RGBA32, false, false)
+            {
+                name = source.name,
+                hideFlags = HideFlags.HideAndDontSave,
+            };
+            sharpenedTexture.SetPixels32(pixels);
+            sharpenedTexture.Apply(false, false);
+            return sharpenedTexture;
+        }
+
+        private static Texture2D BlurTexture(Texture2D source, float power)
+        {
+            if (source == null)
+            {
+                return null;
+            }
+
+            int width = Mathf.Max(1, source.width);
+            int height = Mathf.Max(1, source.height);
+            Color32[] pixels = source.GetPixels32();
+            ApplyBlur(pixels, width, height, Mathf.Max(0f, power));
+
+            Texture2D blurredTexture = new Texture2D(width, height, TextureFormat.RGBA32, false, false)
+            {
+                name = source.name,
+                hideFlags = HideFlags.HideAndDontSave,
+            };
+            blurredTexture.SetPixels32(pixels);
+            blurredTexture.Apply(false, false);
+            return blurredTexture;
+        }
+
+        private static Texture2D HairifyTexture(Texture2D source, out bool canceled)
+        {
+            canceled = false;
+            if (source == null)
+            {
+                return null;
+            }
+
+            const string title = "Hairify (experimental)";
+            int width = Mathf.Max(1, source.width);
+            int height = Mathf.Max(1, source.height);
+            Color32[] sourcePixels = source.GetPixels32();
+            int pixelCount = sourcePixels.Length;
+            if (pixelCount == 0)
+            {
+                return null;
+            }
+
+            if (EditorUtility.DisplayCancelableProgressBar(title, "Preparing source pixels", 0.01f))
+            {
+                canceled = true;
+                return null;
+            }
+
+            int guideRadius = GetHairifyGuideRadius(width, height);
+            Color32[] horizontalGuidePixels = new Color32[pixelCount];
+            Color32[] guidePixels = new Color32[pixelCount];
+            RunHairifyRowsWithProgress(
+                title,
+                "Softening color guide",
+                0,
+                height - 1,
+                0.02f,
+                0.16f,
+                pixelY =>
+                {
+                    BuildHairifyHorizontalGuideRow(sourcePixels, horizontalGuidePixels, width, pixelY, guideRadius);
+                    return true;
+                },
+                ref canceled);
+            if (canceled)
+            {
+                return null;
+            }
+
+            RunHairifyRowsWithProgress(
+                title,
+                "Blending color guide",
+                0,
+                height - 1,
+                0.16f,
+                0.30f,
+                pixelY =>
+                {
+                    BuildHairifyVerticalGuideRow(horizontalGuidePixels, guidePixels, width, height, pixelY, guideRadius);
+                    return true;
+                },
+                ref canceled);
+            if (canceled)
+            {
+                return null;
+            }
+
+            float[] guideLuminance = new float[pixelCount];
+            RunHairifyRowsWithProgress(
+                title,
+                "Reading luminance guide",
+                0,
+                height - 1,
+                0.30f,
+                0.38f,
+                pixelY =>
+                {
+                    BuildHairifyLuminanceRow(guidePixels, guideLuminance, width, pixelY);
+                    return true;
+                },
+                ref canceled);
+            if (canceled)
+            {
+                return null;
+            }
+
+            float[] directionX = new float[pixelCount];
+            float[] directionY = new float[pixelCount];
+            float[] confidence = new float[pixelCount];
+            RunHairifyRowsWithProgress(
+                title,
+                "Finding strand direction",
+                0,
+                height - 1,
+                0.38f,
+                0.50f,
+                pixelY =>
+                {
+                    BuildHairifyDirectionRow(guideLuminance, directionX, directionY, confidence, width, height, pixelY);
+                    return true;
+                },
+                ref canceled);
+            if (canceled)
+            {
+                return null;
+            }
+
+            Color32[] strandPixels = new Color32[pixelCount];
+            RunHairifyRowsWithProgress(
+                title,
+                "Drawing hair strands",
+                0,
+                height - 1,
+                0.50f,
+                0.86f,
+                pixelY =>
+                {
+                    BuildHairifyStrandRow(sourcePixels, guidePixels, directionX, directionY, confidence, strandPixels, width, pixelY);
+                    return true;
+                },
+                ref canceled);
+            if (canceled)
+            {
+                return null;
+            }
+
+            Color32[] smoothedPixels = new Color32[pixelCount];
+            RunHairifyRowsWithProgress(
+                title,
+                "Connecting strand flow",
+                0,
+                height - 1,
+                0.86f,
+                0.98f,
+                pixelY =>
+                {
+                    BuildHairifyDirectionalSmoothRow(strandPixels, smoothedPixels, directionX, directionY, width, height, pixelY);
+                    return true;
+                },
+                ref canceled);
+            if (canceled)
+            {
+                return null;
+            }
+
+            if (EditorUtility.DisplayCancelableProgressBar(title, "Creating hairified texture", 0.99f))
+            {
+                canceled = true;
+                return null;
+            }
+
+            Texture2D hairifiedTexture = new Texture2D(width, height, TextureFormat.RGBA32, false, false)
+            {
+                name = string.IsNullOrEmpty(source.name) ? "Hairified" : source.name + "_Hairified",
+                hideFlags = HideFlags.HideAndDontSave,
+            };
+            hairifiedTexture.SetPixels32(smoothedPixels);
+            hairifiedTexture.Apply(false, false);
+            return hairifiedTexture;
+        }
+
+        private static Texture2D GenerateNormalMapTexture(Texture2D source, float strength)
+        {
+            if (source == null)
+            {
+                return null;
+            }
+
+            int width = Mathf.Max(1, source.width);
+            int height = Mathf.Max(1, source.height);
+            Color32[] sourcePixels = source.GetPixels32();
+            float[] luminance = new float[sourcePixels.Length];
+            for (int i = 0; i < sourcePixels.Length; i++)
+            {
+                luminance[i] = GetLuminance01(sourcePixels[i]);
+            }
+
+            float normalStrength = Mathf.Max(0.001f, strength);
+            Color32[] normalPixels = new Color32[sourcePixels.Length];
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    float left = GetLuminanceClamped(luminance, width, height, x - 1, y);
+                    float right = GetLuminanceClamped(luminance, width, height, x + 1, y);
+                    float down = GetLuminanceClamped(luminance, width, height, x, y - 1);
+                    float up = GetLuminanceClamped(luminance, width, height, x, y + 1);
+                    float deltaX = (right - left) * normalStrength;
+                    float deltaY = (up - down) * normalStrength;
+                    Vector3 normal = new Vector3(-deltaX, -deltaY, 1f).normalized;
+                    normalPixels[(y * width) + x] = new Color32(
+                        FloatToByte((normal.x * 0.5f) + 0.5f),
+                        FloatToByte((normal.y * 0.5f) + 0.5f),
+                        FloatToByte((normal.z * 0.5f) + 0.5f),
+                        255);
+                }
+            }
+
+            Texture2D normalTexture = new Texture2D(width, height, TextureFormat.RGBA32, false, false)
+            {
+                name = string.IsNullOrEmpty(source.name) ? "NormalMap" : source.name + "_Normal",
+                hideFlags = HideFlags.HideAndDontSave,
+            };
+            normalTexture.SetPixels32(normalPixels);
+            normalTexture.Apply(false, false);
+            return normalTexture;
+        }
+
+        private static Color32 SampleBilinear(Color32[] pixels, int sourceWidth, int sourceHeight, int targetX, int targetY, int targetWidth, int targetHeight, bool smoother)
+        {
+            float sourceX = ((targetX + 0.5f) * sourceWidth / targetWidth) - 0.5f;
+            float sourceY = ((targetY + 0.5f) * sourceHeight / targetHeight) - 0.5f;
+            int x0 = Mathf.Clamp(Mathf.FloorToInt(sourceX), 0, sourceWidth - 1);
+            int y0 = Mathf.Clamp(Mathf.FloorToInt(sourceY), 0, sourceHeight - 1);
+            int x1 = Mathf.Min(x0 + 1, sourceWidth - 1);
+            int y1 = Mathf.Min(y0 + 1, sourceHeight - 1);
+            float tx = Mathf.Clamp01(sourceX - x0);
+            float ty = Mathf.Clamp01(sourceY - y0);
+            if (smoother)
+            {
+                tx = SmoothStep01(tx);
+                ty = SmoothStep01(ty);
+            }
+
+            Color32 bottomLeft = pixels[(y0 * sourceWidth) + x0];
+            Color32 bottomRight = pixels[(y0 * sourceWidth) + x1];
+            Color32 topLeft = pixels[(y1 * sourceWidth) + x0];
+            Color32 topRight = pixels[(y1 * sourceWidth) + x1];
+            return LerpColor32(LerpColor32(bottomLeft, bottomRight, tx), LerpColor32(topLeft, topRight, tx), ty);
+        }
+
+        private static Color32 SampleArea(Color32[] pixels, int sourceWidth, int sourceHeight, int targetX, int targetY, int targetWidth, int targetHeight)
+        {
+            float scaleX = (float)sourceWidth / targetWidth;
+            float scaleY = (float)sourceHeight / targetHeight;
+            float minX = targetX * scaleX;
+            float maxX = (targetX + 1) * scaleX;
+            float minY = targetY * scaleY;
+            float maxY = (targetY + 1) * scaleY;
+            int startX = Mathf.Clamp(Mathf.FloorToInt(minX), 0, sourceWidth - 1);
+            int endX = Mathf.Clamp(Mathf.CeilToInt(maxX) - 1, 0, sourceWidth - 1);
+            int startY = Mathf.Clamp(Mathf.FloorToInt(minY), 0, sourceHeight - 1);
+            int endY = Mathf.Clamp(Mathf.CeilToInt(maxY) - 1, 0, sourceHeight - 1);
+
+            float r = 0f;
+            float g = 0f;
+            float b = 0f;
+            float a = 0f;
+            float weightSum = 0f;
+            for (int y = startY; y <= endY; y++)
+            {
+                float weightY = Mathf.Max(0f, Mathf.Min(maxY, y + 1f) - Mathf.Max(minY, y));
+                if (weightY <= 0f)
+                {
+                    continue;
+                }
+
+                for (int x = startX; x <= endX; x++)
+                {
+                    float weightX = Mathf.Max(0f, Mathf.Min(maxX, x + 1f) - Mathf.Max(minX, x));
+                    float weight = weightX * weightY;
+                    if (weight <= 0f)
+                    {
+                        continue;
+                    }
+
+                    Color32 pixel = pixels[(y * sourceWidth) + x];
+                    r += pixel.r * weight;
+                    g += pixel.g * weight;
+                    b += pixel.b * weight;
+                    a += pixel.a * weight;
+                    weightSum += weight;
+                }
+            }
+
+            if (weightSum <= 0f)
+            {
+                return SampleBilinear(pixels, sourceWidth, sourceHeight, targetX, targetY, targetWidth, targetHeight, true);
+            }
+
+            float invWeight = 1f / weightSum;
+            return new Color32(
+                ByteFromChannel(r * invWeight),
+                ByteFromChannel(g * invWeight),
+                ByteFromChannel(b * invWeight),
+                ByteFromChannel(a * invWeight));
+        }
+
+        private static void ApplySharpen(Color32[] pixels, int width, int height, float amount)
+        {
+            Color32[] original = new Color32[pixels.Length];
+            Array.Copy(pixels, original, pixels.Length);
+            float detailAmount = Mathf.Max(0f, amount);
+
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    int count = 0;
+                    float blurR = 0f;
+                    float blurG = 0f;
+                    float blurB = 0f;
+                    float blurA = 0f;
+                    for (int offsetY = -1; offsetY <= 1; offsetY++)
+                    {
+                        int sampleY = Mathf.Clamp(y + offsetY, 0, height - 1);
+                        for (int offsetX = -1; offsetX <= 1; offsetX++)
+                        {
+                            int sampleX = Mathf.Clamp(x + offsetX, 0, width - 1);
+                            Color32 sample = original[(sampleY * width) + sampleX];
+                            blurR += sample.r;
+                            blurG += sample.g;
+                            blurB += sample.b;
+                            blurA += sample.a;
+                            count++;
+                        }
+                    }
+
+                    float invCount = 1f / count;
+                    int index = (y * width) + x;
+                    Color32 center = original[index];
+                    pixels[index] = new Color32(
+                        ByteFromChannel(center.r + ((center.r - (blurR * invCount)) * detailAmount)),
+                        ByteFromChannel(center.g + ((center.g - (blurG * invCount)) * detailAmount)),
+                        ByteFromChannel(center.b + ((center.b - (blurB * invCount)) * detailAmount)),
+                        ByteFromChannel(center.a + ((center.a - (blurA * invCount)) * detailAmount)));
+                }
+            }
+        }
+
+        private static void ApplyBlur(Color32[] pixels, int width, int height, float amount)
+        {
+            if (pixels == null || pixels.Length == 0 || width <= 0 || height <= 0)
+            {
+                return;
+            }
+
+            float blurAmount = Mathf.Max(0f, amount);
+            if (blurAmount <= 0f)
+            {
+                return;
+            }
+
+            int radius = Mathf.Clamp(Mathf.CeilToInt(blurAmount), 1, 32);
+            float blend = Mathf.Clamp01(blurAmount);
+            Color32[] original = new Color32[pixels.Length];
+            Color32[] horizontal = new Color32[pixels.Length];
+            Array.Copy(pixels, original, pixels.Length);
+
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    int count = 0;
+                    float r = 0f;
+                    float g = 0f;
+                    float b = 0f;
+                    float a = 0f;
+                    for (int offsetX = -radius; offsetX <= radius; offsetX++)
+                    {
+                        int sampleX = Mathf.Clamp(x + offsetX, 0, width - 1);
+                        Color32 sample = original[(y * width) + sampleX];
+                        r += sample.r;
+                        g += sample.g;
+                        b += sample.b;
+                        a += sample.a;
+                        count++;
+                    }
+
+                    float invCount = 1f / count;
+                    horizontal[(y * width) + x] = new Color32(
+                        ByteFromChannel(r * invCount),
+                        ByteFromChannel(g * invCount),
+                        ByteFromChannel(b * invCount),
+                        ByteFromChannel(a * invCount));
+                }
+            }
+
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    int count = 0;
+                    float r = 0f;
+                    float g = 0f;
+                    float b = 0f;
+                    float a = 0f;
+                    for (int offsetY = -radius; offsetY <= radius; offsetY++)
+                    {
+                        int sampleY = Mathf.Clamp(y + offsetY, 0, height - 1);
+                        Color32 sample = horizontal[(sampleY * width) + x];
+                        r += sample.r;
+                        g += sample.g;
+                        b += sample.b;
+                        a += sample.a;
+                        count++;
+                    }
+
+                    float invCount = 1f / count;
+                    int index = (y * width) + x;
+                    Color32 sourcePixel = original[index];
+                    Color32 blurPixel = new Color32(
+                        ByteFromChannel(r * invCount),
+                        ByteFromChannel(g * invCount),
+                        ByteFromChannel(b * invCount),
+                        ByteFromChannel(a * invCount));
+                    pixels[index] = LerpColor32(sourcePixel, blurPixel, blend);
+                }
+            }
+        }
+
+        private static int GetHairifyGuideRadius(int width, int height)
+        {
+            int shortSide = Math.Min(Mathf.Max(1, width), Mathf.Max(1, height));
+            return Mathf.Clamp(Mathf.RoundToInt(shortSide / 160f), 1, 8);
+        }
+
+        private static void BuildHairifyHorizontalGuideRow(Color32[] sourcePixels, Color32[] targetPixels, int width, int pixelY, int radius)
+        {
+            int rowStart = pixelY * width;
+            for (int pixelX = 0; pixelX < width; pixelX++)
+            {
+                int sampleCount = 0;
+                float red = 0f;
+                float green = 0f;
+                float blue = 0f;
+                float alpha = 0f;
+                for (int offsetX = -radius; offsetX <= radius; offsetX++)
+                {
+                    int sampleX = Mathf.Clamp(pixelX + offsetX, 0, width - 1);
+                    Color32 samplePixel = sourcePixels[rowStart + sampleX];
+                    red += samplePixel.r;
+                    green += samplePixel.g;
+                    blue += samplePixel.b;
+                    alpha += samplePixel.a;
+                    sampleCount++;
+                }
+
+                float invSampleCount = 1f / sampleCount;
+                targetPixels[rowStart + pixelX] = new Color32(
+                    ByteFromChannel(red * invSampleCount),
+                    ByteFromChannel(green * invSampleCount),
+                    ByteFromChannel(blue * invSampleCount),
+                    ByteFromChannel(alpha * invSampleCount));
+            }
+        }
+
+        private static void BuildHairifyVerticalGuideRow(Color32[] sourcePixels, Color32[] targetPixels, int width, int height, int pixelY, int radius)
+        {
+            int rowStart = pixelY * width;
+            for (int pixelX = 0; pixelX < width; pixelX++)
+            {
+                int sampleCount = 0;
+                float red = 0f;
+                float green = 0f;
+                float blue = 0f;
+                float alpha = 0f;
+                for (int offsetY = -radius; offsetY <= radius; offsetY++)
+                {
+                    int sampleY = Mathf.Clamp(pixelY + offsetY, 0, height - 1);
+                    Color32 samplePixel = sourcePixels[(sampleY * width) + pixelX];
+                    red += samplePixel.r;
+                    green += samplePixel.g;
+                    blue += samplePixel.b;
+                    alpha += samplePixel.a;
+                    sampleCount++;
+                }
+
+                float invSampleCount = 1f / sampleCount;
+                targetPixels[rowStart + pixelX] = new Color32(
+                    ByteFromChannel(red * invSampleCount),
+                    ByteFromChannel(green * invSampleCount),
+                    ByteFromChannel(blue * invSampleCount),
+                    ByteFromChannel(alpha * invSampleCount));
+            }
+        }
+
+        private static void BuildHairifyLuminanceRow(Color32[] guidePixels, float[] luminance, int width, int pixelY)
+        {
+            int rowStart = pixelY * width;
+            for (int pixelX = 0; pixelX < width; pixelX++)
+            {
+                int index = rowStart + pixelX;
+                luminance[index] = GetLuminance01(guidePixels[index]);
+            }
+        }
+
+        private static void BuildHairifyDirectionRow(float[] luminance, float[] directionX, float[] directionY, float[] confidence, int width, int height, int pixelY)
+        {
+            int rowStart = pixelY * width;
+            for (int pixelX = 0; pixelX < width; pixelX++)
+            {
+                float topLeft = GetLuminanceClamped(luminance, width, height, pixelX - 1, pixelY + 1);
+                float top = GetLuminanceClamped(luminance, width, height, pixelX, pixelY + 1);
+                float topRight = GetLuminanceClamped(luminance, width, height, pixelX + 1, pixelY + 1);
+                float left = GetLuminanceClamped(luminance, width, height, pixelX - 1, pixelY);
+                float right = GetLuminanceClamped(luminance, width, height, pixelX + 1, pixelY);
+                float bottomLeft = GetLuminanceClamped(luminance, width, height, pixelX - 1, pixelY - 1);
+                float bottom = GetLuminanceClamped(luminance, width, height, pixelX, pixelY - 1);
+                float bottomRight = GetLuminanceClamped(luminance, width, height, pixelX + 1, pixelY - 1);
+
+                float gradientX = (topRight + (2f * right) + bottomRight) - (topLeft + (2f * left) + bottomLeft);
+                float gradientY = (topLeft + (2f * top) + topRight) - (bottomLeft + (2f * bottom) + bottomRight);
+                float gradientMagnitude = (float)Math.Sqrt((gradientX * gradientX) + (gradientY * gradientY));
+                float confidenceValue = Mathf.Clamp01(gradientMagnitude * 3.5f);
+
+                float fallbackX = (HairifyHash01(pixelX / 16, pixelY / 16, 17) - 0.5f) * 0.35f;
+                float fallbackY = 1f;
+                NormalizeHairifyDirection(ref fallbackX, ref fallbackY);
+
+                float strandX = fallbackX;
+                float strandY = fallbackY;
+                if (gradientMagnitude > 0.00001f)
+                {
+                    strandX = -gradientY / gradientMagnitude;
+                    strandY = gradientX / gradientMagnitude;
+                    if (strandY < 0f)
+                    {
+                        strandX = -strandX;
+                        strandY = -strandY;
+                    }
+                }
+
+                float blendedX = Mathf.Lerp(fallbackX, strandX, confidenceValue);
+                float blendedY = Mathf.Lerp(fallbackY, strandY, confidenceValue);
+                NormalizeHairifyDirection(ref blendedX, ref blendedY);
+
+                int index = rowStart + pixelX;
+                directionX[index] = blendedX;
+                directionY[index] = blendedY;
+                confidence[index] = confidenceValue;
+            }
+        }
+
+        private static void BuildHairifyStrandRow(Color32[] sourcePixels, Color32[] guidePixels, float[] directionX, float[] directionY, float[] confidence, Color32[] targetPixels, int width, int pixelY)
+        {
+            const float inv255 = 1f / 255f;
+            int rowStart = pixelY * width;
+            for (int pixelX = 0; pixelX < width; pixelX++)
+            {
+                int index = rowStart + pixelX;
+                Color32 sourcePixel = sourcePixels[index];
+                if (sourcePixel.a <= 2)
+                {
+                    targetPixels[index] = sourcePixel;
+                    continue;
+                }
+
+                Color32 guidePixel = guidePixels[index];
+                float alphaMask = sourcePixel.a * inv255;
+                float confidenceValue = confidence[index];
+                float strandDirectionX = directionX[index];
+                float strandDirectionY = directionY[index];
+                float perpendicularX = -strandDirectionY;
+                float perpendicularY = strandDirectionX;
+                float crossPosition = (pixelX * perpendicularX) + (pixelY * perpendicularY);
+                float alongPosition = (pixelX * strandDirectionX) + (pixelY * strandDirectionY);
+
+                float localSpacingNoise = HairifyHash01(HairifyFloorToInt(pixelX / 17f), HairifyFloorToInt(pixelY / 17f), 41);
+                float strandSpacing = Mathf.Lerp(2.2f, 5.2f, localSpacingNoise);
+                int strandCell = HairifyFloorToInt(crossPosition / strandSpacing);
+                int alongCell = HairifyFloorToInt(alongPosition / 18f);
+                float strandOffset = (HairifyHash01(strandCell, alongCell, 73) - 0.5f) * 0.6f;
+                float strandPhase = HairifyRepeat01((crossPosition / strandSpacing) + strandOffset);
+                float distanceFromStrandCenter = Mathf.Abs(strandPhase - 0.5f) * 2f;
+                float strandLine = 1f - HairifySmoothRange(0.08f, 0.82f, distanceFromStrandCenter);
+                float phaseOffset = HairifyHash01(strandCell, alongCell, 91) * 6.2831853f;
+                float alongWave = (float)Math.Sin((alongPosition * 0.18f) + phaseOffset);
+                float fineNoise = HairifyHash01(pixelX, pixelY, 123) - 0.5f;
+                float hairAmount = alphaMask * (0.55f + (confidenceValue * 0.45f));
+                float guideBlend = 0.58f + (confidenceValue * 0.18f);
+                float red = Mathf.Lerp(sourcePixel.r, guidePixel.r, guideBlend);
+                float green = Mathf.Lerp(sourcePixel.g, guidePixel.g, guideBlend);
+                float blue = Mathf.Lerp(sourcePixel.b, guidePixel.b, guideBlend);
+                float highlight = ((strandLine - 0.32f) * 34f) + (alongWave * 9f) + (fineNoise * 8f);
+                float troughDarkening = (1f - strandLine) * (0.35f + confidenceValue) * -9f;
+                float brightness = (highlight + troughDarkening) * hairAmount;
+                float colorShift = (HairifyHash01(strandCell, alongCell, 157) - 0.5f) * 10f * hairAmount;
+
+                targetPixels[index] = new Color32(
+                    ByteFromChannel(red + brightness + colorShift),
+                    ByteFromChannel(green + (brightness * 0.95f) + (colorShift * 0.25f)),
+                    ByteFromChannel(blue + (brightness * 0.9f) - (colorShift * 0.65f)),
+                    sourcePixel.a);
+            }
+        }
+
+        private static void BuildHairifyDirectionalSmoothRow(Color32[] sourcePixels, Color32[] targetPixels, float[] directionX, float[] directionY, int width, int height, int pixelY)
+        {
+            int rowStart = pixelY * width;
+            for (int pixelX = 0; pixelX < width; pixelX++)
+            {
+                int index = rowStart + pixelX;
+                Color32 centerPixel = sourcePixels[index];
+                if (centerPixel.a <= 2)
+                {
+                    targetPixels[index] = centerPixel;
+                    continue;
+                }
+
+                int offsetX = HairifyDirectionToOffset(directionX[index]);
+                int offsetY = HairifyDirectionToOffset(directionY[index]);
+                if (offsetX == 0 && offsetY == 0)
+                {
+                    offsetY = 1;
+                }
+
+                Color32 previousPixel = GetColorClamped(sourcePixels, width, height, pixelX - offsetX, pixelY - offsetY);
+                Color32 nextPixel = GetColorClamped(sourcePixels, width, height, pixelX + offsetX, pixelY + offsetY);
+                Color32 averagePixel = new Color32(
+                    ByteFromChannel((previousPixel.r + (2f * centerPixel.r) + nextPixel.r) * 0.25f),
+                    ByteFromChannel((previousPixel.g + (2f * centerPixel.g) + nextPixel.g) * 0.25f),
+                    ByteFromChannel((previousPixel.b + (2f * centerPixel.b) + nextPixel.b) * 0.25f),
+                    centerPixel.a);
+                Color32 smoothedPixel = LerpColor32(centerPixel, averagePixel, 0.3f);
+                smoothedPixel.a = centerPixel.a;
+                targetPixels[index] = smoothedPixel;
+            }
+        }
+
+        private static Color32 GetColorClamped(Color32[] pixels, int width, int height, int pixelX, int pixelY)
+        {
+            int clampedX = Mathf.Clamp(pixelX, 0, width - 1);
+            int clampedY = Mathf.Clamp(pixelY, 0, height - 1);
+            return pixels[(clampedY * width) + clampedX];
+        }
+
+        private static int HairifyDirectionToOffset(float direction)
+        {
+            if (direction > 0.33f)
+            {
+                return 1;
+            }
+
+            return direction < -0.33f ? -1 : 0;
+        }
+
+        private static void NormalizeHairifyDirection(ref float directionX, ref float directionY)
+        {
+            float length = (float)Math.Sqrt((directionX * directionX) + (directionY * directionY));
+            if (length <= 0.00001f)
+            {
+                directionX = 0f;
+                directionY = 1f;
+                return;
+            }
+
+            float invLength = 1f / length;
+            directionX *= invLength;
+            directionY *= invLength;
+        }
+
+        private static int HairifyFloorToInt(float value)
+        {
+            return (int)Math.Floor(value);
+        }
+
+        private static float HairifyRepeat01(float value)
+        {
+            return value - (float)Math.Floor(value);
+        }
+
+        private static float HairifySmoothRange(float edge0, float edge1, float value)
+        {
+            if (edge1 <= edge0)
+            {
+                return value >= edge1 ? 1f : 0f;
+            }
+
+            return SmoothStep01((value - edge0) / (edge1 - edge0));
+        }
+
+        private static float HairifyHash01(int first, int second, int salt)
+        {
+            unchecked
+            {
+                uint hash = 2166136261u;
+                hash = (hash ^ (uint)first) * 16777619u;
+                hash = (hash ^ (uint)second) * 16777619u;
+                hash = (hash ^ (uint)salt) * 16777619u;
+                hash ^= hash >> 13;
+                hash *= 1274126177u;
+                hash ^= hash >> 16;
+                return (hash & 0x00FFFFFFu) * (1f / 16777215f);
+            }
+        }
+
+        private static Color32 LerpColor32(Color32 left, Color32 right, float t)
+        {
+            float clampedT = Mathf.Clamp01(t);
+            return new Color32(
+                ByteFromChannel(Mathf.Lerp(left.r, right.r, clampedT)),
+                ByteFromChannel(Mathf.Lerp(left.g, right.g, clampedT)),
+                ByteFromChannel(Mathf.Lerp(left.b, right.b, clampedT)),
+                ByteFromChannel(Mathf.Lerp(left.a, right.a, clampedT)));
+        }
+
+        private static float SmoothStep01(float value)
+        {
+            float t = Mathf.Clamp01(value);
+            return t * t * (3f - (2f * t));
+        }
+
+        private static float GetLuminance01(Color32 pixel)
+        {
+            const float inv255 = 1f / 255f;
+            return ((0.2126f * pixel.r) + (0.7152f * pixel.g) + (0.0722f * pixel.b)) * inv255;
+        }
+
+        private static float GetLuminanceClamped(float[] luminance, int width, int height, int x, int y)
+        {
+            int clampedX = Mathf.Clamp(x, 0, width - 1);
+            int clampedY = Mathf.Clamp(y, 0, height - 1);
+            return luminance[(clampedY * width) + clampedX];
+        }
+
+        private static byte FloatToByte(float value)
+        {
+            return ByteFromChannel(Mathf.Clamp01(value) * 255f);
+        }
+
+        private static byte ByteFromChannel(float value)
+        {
+            return (byte)Mathf.Clamp(Mathf.RoundToInt(value), 0, 255);
         }
 
         private void InvertCurrentColors()

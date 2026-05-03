@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ad6e21078dbc88344b21463ab3922a67, type: 3}
   m_Name: UMASettings
   m_EditorClassIdentifier: 
-  useMeshAPICombiner: 1
+  useMeshAPICombiner: 0
   DebugMemoryUsage: 0
   DisableDecalCallbacks: 0
   WarningMessage: "Warning: Please do not modify these\n settings using the inspector.\n
@@ -60,6 +60,7 @@ MonoBehaviour:
   enableGLTFExport: 0
   alwaysGetAddressables: 1
   ignoreBackupFolders: 0
+  addDNAOnRaceChange: 1
   addrUseSharedGroup: 1
   addrSharedGroupName: UMAShared
   addrDefaultLabel: UMA_Default

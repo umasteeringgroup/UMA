@@ -294,6 +294,18 @@ namespace UMA.Editors
                 UMAMaterial.MaterialType NewMatType = (UMAMaterial.MaterialType)materialTypeProperty.intValue;
                 if (MatType != NewMatType)
                 {
+                    if (MatType == UMAMaterial.MaterialType.UseExistingTextures)
+                    {
+                        // When changing from UseExistingTexture, all channels are forced to Texture type and the second pass is cleared since they aren't used in that mode.
+                        var list = serializedObject.FindProperty("channels");
+                        for (int i = 0; i < list.arraySize; i++)
+                        {
+                            SerializedProperty channel = list.GetArrayElementAtIndex(i);
+                            var channelProperty = channel.FindPropertyRelative("channelType");
+                            channelProperty.intValue = (int)UMAMaterial.ChannelType.Texture;
+                        }
+                        serializedObject.ApplyModifiedProperties();
+                    }
                     if (NewMatType != UMAMaterial.MaterialType.UseExistingTextures)
                     {
                         // second Pass only used for UseExistingTextures

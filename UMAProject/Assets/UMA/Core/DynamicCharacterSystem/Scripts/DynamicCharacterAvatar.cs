@@ -6557,7 +6557,7 @@ namespace UMA.CharacterSystem
                             {
                                 if (WildCards == null) WildCards = new List<SlotData>();
                                 WildCards.Add(sd);
-                                Debug.Log("[DynamicCharacterAvatar:PostProcessSlots] Placeholder slot '" + sd.slotName + "' queued for wildcard processing. Tags=[" + GetDebugList(sd.tags) + "], Races=[" + GetDebugList(sd.Races) + "], Overlays=[" + GetOverlayDebugList(sd) + "]");
+                               // Debug.Log("[DynamicCharacterAvatar:PostProcessSlots] Placeholder slot '" + sd.slotName + "' queued for wildcard processing. Tags=[" + GetDebugList(sd.tags) + "], Races=[" + GetDebugList(sd.Races) + "], Overlays=[" + GetOverlayDebugList(sd) + "]");
                                 break;
                             }
                         }
@@ -6566,7 +6566,7 @@ namespace UMA.CharacterSystem
                     {
                         if (WildCards == null) WildCards = new List<SlotData>();
                         WildCards.Add(sd);
-                        Debug.Log("[DynamicCharacterAvatar:PostProcessSlots] Placeholder slot '" + sd.slotName + "' queued for wildcard processing. Tags=[" + GetDebugList(sd.tags) + "], Races=[" + GetDebugList(sd.Races) + "], Overlays=[" + GetOverlayDebugList(sd) + "]");
+                        // Debug.Log("[DynamicCharacterAvatar:PostProcessSlots] Placeholder slot '" + sd.slotName + "' queued for wildcard processing. Tags=[" + GetDebugList(sd.tags) + "], Races=[" + GetDebugList(sd.Races) + "], Overlays=[" + GetOverlayDebugList(sd) + "]");
                     }
                     continue;
                 }
@@ -6634,7 +6634,7 @@ namespace UMA.CharacterSystem
                                 if (wc.isPlaceholderSlot)
                                 {
                                     placeholderMatched = true;
-                                    Debug.Log("[DynamicCharacterAvatar:PostProcessSlots] Placeholder slot '" + wc.slotName + "' added overlays [" + GetOverlayDebugList(wc) + "] to slot '" + sd.slotName + "'. Placeholder Tags=[" + GetDebugList(wc.tags) + "], Target Tags=[" + GetDebugList(sd.tags) + "]");
+                                    //Debug.Log("[DynamicCharacterAvatar:PostProcessSlots] Placeholder slot '" + wc.slotName + "' added overlays [" + GetOverlayDebugList(wc) + "] to slot '" + sd.slotName + "'. Placeholder Tags=[" + GetDebugList(wc.tags) + "], Target Tags=[" + GetDebugList(sd.tags) + "]");
                                 }
                                 continue;
                             }
@@ -6643,7 +6643,7 @@ namespace UMA.CharacterSystem
 
                     if (wc.isPlaceholderSlot && !placeholderMatched)
                     {
-                        Debug.LogWarning("[DynamicCharacterAvatar:PostProcessSlots] Placeholder slot '" + wc.slotName + "' was not applied because no matching slot was found. Tags=[" + GetDebugList(wc.tags) + "], Races=[" + GetDebugList(wc.Races) + "], Overlays=[" + GetOverlayDebugList(wc) + "]");
+                       // Debug.LogWarning("[DynamicCharacterAvatar:PostProcessSlots] Placeholder slot '" + wc.slotName + "' was not applied because no matching slot was found. Tags=[" + GetDebugList(wc.tags) + "], Races=[" + GetDebugList(wc.Races) + "], Overlays=[" + GetOverlayDebugList(wc) + "]");
                     }
                 }
             }

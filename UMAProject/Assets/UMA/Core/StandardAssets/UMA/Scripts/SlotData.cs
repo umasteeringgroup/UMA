@@ -712,45 +712,48 @@ namespace UMA
 
             if (!UMAMeshData.IsNullOrEmptyMeshData(asset.meshData))
             {
-                if (material == null)
+                if (!asset.isClippingPlane)
                 {
-                    if (Debug.isDebugBuild)
-                    {
-                        Debug.LogError(string.Format("Slot '{0}' has a mesh but no material.", asset.slotName), asset);
-                    }
-
-                    valid = false;
-                }
-                else
-                {
-                    if (material.material == null)
+                    if (material == null)
                     {
                         if (Debug.isDebugBuild)
                         {
-                            Debug.LogError(string.Format("Slot '{0}' has an umaMaterial without a material assigned.", asset.slotName), asset);
-                            Debug.Log("UMAMaterial: " + material.name, material);
+                            Debug.LogError(string.Format("Slot '{0}' has a mesh but no material.", asset.slotName), asset);
                         }
 
                         valid = false;
                     }
-#if UNITY_EDITOR
                     else
                     {
-                        for (int i = 0; i < material.channels.Length; i++)
+                        if (material.material == null)
                         {
-                            var channel = material.channels[i];
-                            if (!channel.NonShaderTexture && !material.material.HasProperty(channel.materialPropertyName))
+                            if (Debug.isDebugBuild)
                             {
-                                if (Debug.isDebugBuild)
+                                Debug.LogError(string.Format("Slot '{0}' has an umaMaterial without a material assigned.", asset.slotName), asset);
+                                Debug.Log("UMAMaterial: " + material.name, material);
+                            }
+
+                            valid = false;
+                        }
+    #if UNITY_EDITOR
+                        else
+                        {
+                            for (int i = 0; i < material.channels.Length; i++)
+                            {
+                                var channel = material.channels[i];
+                                if (!channel.NonShaderTexture && !material.material.HasProperty(channel.materialPropertyName))
                                 {
-                                    Debug.LogWarning(string.Format("Slot '{0}' Material Channel {1} on UMAMaterial {3} refers to material property '{2}' but no such property exists.", asset.slotName, i, channel.materialPropertyName, material.name), asset);
-                                    Debug.Log("UMAMaterial: " + material.name, material);
+                                    if (Debug.isDebugBuild)
+                                    {
+                                        Debug.LogWarning(string.Format("Slot '{0}' Material Channel {1} on UMAMaterial {3} refers to material property '{2}' but no such property exists.", asset.slotName, i, channel.materialPropertyName, material.name), asset);
+                                        Debug.Log("UMAMaterial: " + material.name, material);
+                                    }
+                                    //valid = false;
                                 }
-                                //valid = false;
                             }
                         }
+    #endif
                     }
-#endif
                 }
                 for (int i = 0; i < overlayList.Count; i++)
                 {
