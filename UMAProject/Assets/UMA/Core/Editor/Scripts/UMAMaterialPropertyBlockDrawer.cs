@@ -208,6 +208,8 @@ namespace UMA
                 {
                     int removeMaterialIndex = -1;
 
+                    DrawTemplateMaterialSelectionButtons(entry);
+
                     EditorGUILayout.BeginHorizontal();
                     entry.expanded = EditorGUILayout.Foldout(entry.expanded, entry.materialName, true);
                     if (GUILayout.Button("X", GUILayout.Width(24)))
@@ -404,6 +406,61 @@ namespace UMA
                     {
                         propertyEntry.selected = selected;
                     }
+                }
+            }
+        }
+
+        private static void DrawTemplateMaterialSelectionButtons(TemplateMaterialEntry materialEntry)
+        {
+            using (new EditorGUI.DisabledScope(materialEntry == null || materialEntry.properties.Count == 0))
+            {
+                EditorGUILayout.BeginHorizontal();
+                if (GUILayout.Button("Clear Selection"))
+                {
+                    SetTemplateMaterialPropertySelections(materialEntry, false);
+                }
+                if (GUILayout.Button("Select All"))
+                {
+                    SetTemplateMaterialPropertySelections(materialEntry, true);
+                }
+                if (GUILayout.Button("Invert Selection"))
+                {
+                    InvertTemplateMaterialPropertySelections(materialEntry);
+                }
+                EditorGUILayout.EndHorizontal();
+            }
+        }
+
+        private static void SetTemplateMaterialPropertySelections(TemplateMaterialEntry materialEntry, bool selected)
+        {
+            if (materialEntry == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < materialEntry.properties.Count; i++)
+            {
+                TemplatePropertyEntry propertyEntry = materialEntry.properties[i];
+                if (propertyEntry != null)
+                {
+                    propertyEntry.selected = selected;
+                }
+            }
+        }
+
+        private static void InvertTemplateMaterialPropertySelections(TemplateMaterialEntry materialEntry)
+        {
+            if (materialEntry == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < materialEntry.properties.Count; i++)
+            {
+                TemplatePropertyEntry propertyEntry = materialEntry.properties[i];
+                if (propertyEntry != null)
+                {
+                    propertyEntry.selected = !propertyEntry.selected;
                 }
             }
         }

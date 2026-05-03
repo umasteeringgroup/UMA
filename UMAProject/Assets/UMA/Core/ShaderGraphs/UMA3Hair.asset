@@ -37,9 +37,7 @@ MonoBehaviour:
   AnisoLevel: 8
   MatFilterMode: 2
   Compression: 0
-  shaderParms:
-  - ParameterName: _BaseColor
-    ColorName: Hair
+  shaderParms: []
   shaderKeywords: []
   MaskWithCurrentColor: 0
   maskMultiplier: {r: 1, g: 1, b: 1, a: 1}
