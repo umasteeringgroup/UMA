@@ -1,0 +1,35 @@
+{
+    "version": 1,
+    "name": "UMAActions",
+    "maps": [
+        {
+            "name": "PlayerMap",
+            "id": "6d407e5d-5892-45e6-a381-4c641f56b7a0",
+            "actions": [
+                {
+                    "name": "New action",
+                    "type": "Button",
+                    "id": "de6887a4-39bb-4776-8535-e9fef7841ab8",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "010ff2ac-6d12-492e-b3c5-eaffff127244",
+                    "path": "",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "New action",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}

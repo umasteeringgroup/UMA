@@ -141,7 +141,9 @@ namespace UMA
         #region EventHandlers
         public void SetColor(string ColorName, OverlayColorData color)
         {
-            avatar.SetRawColor(ColorName, color, true);
+            // We need to clone the color so changing the name or display color doesn't change the actual color in the SharedColorTable
+            OverlayColorData newColor = color.Clone();
+            avatar.SetRawColor(ColorName, newColor, true);
         }
 
         public void SetDNA(string DNAName, float value)

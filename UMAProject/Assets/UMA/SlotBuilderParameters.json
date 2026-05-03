@@ -29,7 +29,7 @@
     "alwaysRecreateSlots": true,
     "Tags": [],
     "slotMaterialPath": "Assets/UMA/Core/ShaderPackages/UMAMaterial_UMA_URP_HAIR.asset",
-    "slotFolderPath": "Assets/Temp",
+    "slotFolderPath": "Assets/temp",
     "generateSlotLods": true,
     "useUnityLodGenerator": true,
     "slotLodMaxLevels": 8,

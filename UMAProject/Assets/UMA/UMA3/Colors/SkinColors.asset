@@ -308,7 +308,7 @@ MonoBehaviour:
     isSelected: 1
     showDisplayColor: 1
     displayColor: {r: 0, g: 0, b: 0, a: 1}
-  - name: Coffee
+  - name: Dark Brown
     channelMask:
     - {r: 1, g: 1, b: 1, a: 1}
     - {r: 1, g: 1, b: 1, a: 1}
@@ -894,7 +894,7 @@ MonoBehaviour:
     isSelected: 0
     showDisplayColor: 1
     displayColor: {r: 0.2509804, g: 0.15294118, b: 0.13725491, a: 1}
-  - name: Chestnut
+  - name: Medium Brown
     channelMask:
     - {r: 1, g: 1, b: 1, a: 1}
     - {r: 1, g: 1, b: 1, a: 1}
@@ -1773,7 +1773,7 @@ MonoBehaviour:
     isSelected: 0
     showDisplayColor: 0
     displayColor: {r: 0.68235296, g: 0.48627454, b: 0.41960788, a: 1}
-  - name: Fair
+  - name: Light
     channelMask:
     - {r: 1, g: 1, b: 1, a: 1}
     - {r: 1, g: 1, b: 1, a: 1}
@@ -2066,7 +2066,7 @@ MonoBehaviour:
     isSelected: 0
     showDisplayColor: 0
     displayColor: {r: 0.68235296, g: 0.454902, b: 0.40000004, a: 1}
-  - name: Ivory
+  - name: Fair
     channelMask:
     - {r: 1, g: 1, b: 1, a: 1}
     - {r: 1, g: 1, b: 1, a: 1}

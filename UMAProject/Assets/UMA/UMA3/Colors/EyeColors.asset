@@ -15,7 +15,7 @@ MonoBehaviour:
   channelCount: 2
   sharedColorName: Eyes
   colors:
-  - name: Eyes
+  - name: Gray
     channelMask:
     - {r: 0.35220122, g: 0.35220122, b: 0.35220122, a: 1}
     - {r: 1, g: 1, b: 1, a: 0}
@@ -38,7 +38,7 @@ MonoBehaviour:
     isSelected: 0
     showDisplayColor: 0
     displayColor: {r: 0, g: 0, b: 0, a: 1}
-  - name: Eyes
+  - name: Brown
     channelMask:
     - {r: 0.4716981, g: 0.15413252, b: 0.06971635, a: 1}
     - {r: 0, g: 0, b: 0, a: 0}
@@ -61,7 +61,7 @@ MonoBehaviour:
     isSelected: 0
     showDisplayColor: 0
     displayColor: {r: 0.2830189, g: 0.11982255, b: 0.0026699454, a: 1}
-  - name: Eyes
+  - name: Hazelish
     channelMask:
     - {r: 0.67295593, g: 0.41380107, b: 0.25182936, a: 1}
     - {r: 0, g: 0, b: 0, a: 0}
@@ -84,7 +84,7 @@ MonoBehaviour:
     isSelected: 1
     showDisplayColor: 0
     displayColor: {r: 0.61960787, g: 0.34901962, b: 0, a: 1}
-  - name: Eyes
+  - name: Gold
     channelMask:
     - {r: 0.8050314, g: 0.56732607, b: 0.3721371, a: 1}
     - {r: 0, g: 0, b: 0, a: 0}
@@ -107,7 +107,7 @@ MonoBehaviour:
     isSelected: 0
     showDisplayColor: 1
     displayColor: {r: 0.7176471, g: 0.627451, b: 0.42352945, a: 1}
-  - name: Eyes
+  - name: Green
     channelMask:
     - {r: 0, g: 1, b: 0.07926488, a: 1}
     - {r: 0, g: 0, b: 0, a: 0}
@@ -130,7 +130,7 @@ MonoBehaviour:
     isSelected: 0
     showDisplayColor: 0
     displayColor: {r: 0.12449611, g: 0.7372549, b: 0.086274505, a: 1}
-  - name: Eyes
+  - name: Blue
     channelMask:
     - {r: 0.22352941, g: 0.6, b: 1, a: 1}
     - {r: 0, g: 0, b: 0, a: 0}
@@ -153,7 +153,7 @@ MonoBehaviour:
     isSelected: 0
     showDisplayColor: 0
     displayColor: {r: 1, g: 1, b: 1, a: 1}
-  - name: Eyes
+  - name: Silver
     channelMask:
     - {r: 0.764151, g: 0.764151, b: 0.764151, a: 1}
     - {r: 0.06289297, g: 0.06289297, b: 0.06289297, a: 0}

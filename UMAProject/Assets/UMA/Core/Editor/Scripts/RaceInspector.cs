@@ -147,6 +147,9 @@ namespace UMA.Editors
 			_unbakedAddShapeIndex = 0;
 		}
 
+		public static Vector3 StaticBounds= new Vector3(0.75f, 1f, 0.5f);
+		public static Vector3 StaticBoundsCenter = new Vector3(0, 1f, 0);
+
 		public override void OnInspectorGUI()
 		{
 			if (lastActionTime == 0)
@@ -178,6 +181,18 @@ namespace UMA.Editors
 			{
 				EditorGUILayout.PropertyField(manualBoundsProp, new GUIContent("Manual Bounds (Extents)", "Extents in local space before scaling by the 'Position' bone."));
 				EditorGUILayout.PropertyField(manualBoundsCenterProp, new GUIContent("Manual Bounds Center", "Center offset in local space before scaling by the 'Position' bone."));
+				GUILayout.BeginHorizontal();
+				if (GUILayout.Button("Copy Bounds"))
+				{
+					StaticBounds = manualBoundsProp.vector3Value;
+					StaticBoundsCenter = manualBoundsCenterProp.vector3Value;
+				}
+				if (GUILayout.Button("Paste Bounds"))
+				{
+					manualBoundsProp.vector3Value = StaticBounds;
+					manualBoundsCenterProp.vector3Value = StaticBoundsCenter;
+				}
+				GUILayout.EndHorizontal();				
 			}
 			EditorGUILayout.Space();
 			SerializedProperty useNewDNA = serializedObject.FindProperty("useNewDNA");

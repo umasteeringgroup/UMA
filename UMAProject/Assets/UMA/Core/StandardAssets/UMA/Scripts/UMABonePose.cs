@@ -128,7 +128,7 @@ namespace UMA.PoseTools
 #if UNITY_EDITOR
 				if (Debug.isDebugBuild)
 				{
-					Debug.LogWarning($"[UMABonePose] Removed missing tween references in '{name}'.");
+					//Debug.LogWarning($"[UMABonePose] Removed missing tween references in '{name}'.");
 				}
 				EditorUtility.SetDirty(this);
 #endif
