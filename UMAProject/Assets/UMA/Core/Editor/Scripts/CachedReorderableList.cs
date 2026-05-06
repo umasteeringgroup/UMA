@@ -104,7 +104,7 @@ namespace UMA.Editors
 
             var spath = property.propertyPath;
 
-			int num = property.serializedObject.targetObject.GetInstanceID() ^ spath.GetHashCode();
+			int num = (int)property.serializedObject.targetObject.GetEntityId() ^ spath.GetHashCode();
 			if (property.propertyType == SerializedPropertyType.ObjectReference)
             {
                 num ^= property.objectReferenceInstanceIDValue;

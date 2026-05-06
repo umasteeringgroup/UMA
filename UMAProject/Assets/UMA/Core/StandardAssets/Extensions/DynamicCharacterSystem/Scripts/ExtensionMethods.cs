@@ -79,9 +79,9 @@ namespace UMA.CharacterSystem
             {
                 var bp = plugins[p] as BonePoseDNAConverterPlugin;
                 if (bp == null || bp.poseDNAConverters == null) continue;
-
+#if UNITY_EDITOR
                 bool anyRemovedFromThis = false;
-
+#endif
                 // Remove matching converters (iterate backwards)
                 for (int i = bp.poseDNAConverters.Count - 1; i >= 0; i--)
                 {
@@ -91,7 +91,7 @@ namespace UMA.CharacterSystem
                     var target = conv.poseToApply;
                     bool match =
                         target == pose ||
-                        (target != null && pose != null && target.GetInstanceID() == pose.GetInstanceID());
+                        (target != null && pose != null && target.GetEntityId() == pose.GetEntityId());
 
                     if (match)
                     {
@@ -100,7 +100,9 @@ namespace UMA.CharacterSystem
 #endif
                         bp.poseDNAConverters.RemoveAt(i);
                         removed++;
+#if UNITY_EDITOR                        
                         anyRemovedFromThis = true;
+#endif                        
                     }
                 }
 

@@ -46,7 +46,7 @@ namespace UMA.Editors
                 if (time != lastTime)
                 {
                     lastTime = time;
-                    //Debug.Log($"Sampling clip '{clip.name}' at time {time} seconds. GameObject {gameObject.GetInstanceID()} name {gameObject.name}");
+                    //Debug.Log($"Sampling clip '{clip.name}' at time {time} seconds. GameObject {gameObject.GetEntityId()} name {gameObject.name}");
                     // Sample the clip at the chosen time
                     clip.SampleAnimation(gameObject, time);
 
@@ -62,7 +62,7 @@ namespace UMA.Editors
         {
             if (clip != null && gameObject != null)
             {
-                //Debug.Log($"[AnimationFramePreview] Going to time: {time} GameObject {gameObject.GetInstanceID()} name {gameObject.name}");
+                //Debug.Log($"[AnimationFramePreview] Going to time: {time} GameObject {gameObject.GetEntityId()} name {gameObject.name}");
                 clip.SampleAnimation(gameObject, time);
 #if UNITY_EDITOR
                 UnityEditor.EditorUtility.SetDirty(gameObject);

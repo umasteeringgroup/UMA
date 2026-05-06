@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UMA.CharacterSystem;
@@ -65,6 +66,33 @@ namespace UMA
             }
             return updateFlags;
         }
+
+        public DNABuildType ApplyBaseBonePoseEffects(UMAData avatar, float value)
+        {
+            return ApplyFilteredEffects(avatar, value, effect => effect is DNAEffect_BonePose bonePose && bonePose.isBasePose);
+        }
+
+        public DNABuildType ApplyNonBaseEffects(UMAData avatar, float value)
+        {
+            return ApplyFilteredEffects(avatar, value, effect => !(effect is DNAEffect_BonePose bonePose) || !bonePose.isBasePose);
+        }
+
+        private DNABuildType ApplyFilteredEffects(UMAData avatar, float value, Func<DNAEffect, bool> predicate)
+        {
+            DNABuildType updateFlags = DNABuildType.None;
+            foreach (var effect in effects)
+            {
+                if (effect == null || !predicate(effect))
+                {
+                    continue;
+                }
+
+                updateFlags |= effect.AreaEffect;
+                effect.Apply(avatar, this, value);
+            }
+            return updateFlags;
+        }
+
         public DNABuildType PostApply(UMAData avatar, float value)
         {
             DNABuildType updateFlags = DNABuildType.None;

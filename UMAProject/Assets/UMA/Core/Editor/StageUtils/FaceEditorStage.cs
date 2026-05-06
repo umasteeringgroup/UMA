@@ -54,6 +54,17 @@ namespace UMA
             public int v1Slot;
             public int v2Slot;
         }
+
+        private struct PaintScreenTriangle
+        {
+            public SlotTriangleKey slotKey;
+            public Vector2 screen0;
+            public Vector2 screen1;
+            public Vector2 screen2;
+            public Vector2 screenCenter;
+            public Rect screenBounds;
+        }
+
         public GUIContent titleContent;
         public SceneView openedSceneView;
         public GameObject selectedObject;
@@ -77,6 +88,8 @@ namespace UMA
 
         private void RefreshBakedMeshCaches()
         {
+            InvalidatePaintScreenTriangleCache();
+
             if (BakedMesh == null)
             {
                 bakedVertices = null;
@@ -98,6 +111,7 @@ namespace UMA
         }
 
         private enum selectMode { Add, Remove, InvertSelection, HideFaces, UnhideFaces, ToggleHide };
+        private enum PaintBrushMode { Point, Circle, Square, Loadable };
 
         [Serializable]
         private struct SerializedSlotTriangleKey
@@ -201,16 +215,25 @@ namespace UMA
 
         [SerializeField]
         private List<SlotSelectionEntry> slotSelectionEntries = new List<SlotSelectionEntry>();
-
-        private selectMode currentMode = selectMode.HideFaces;
         private bool paintMode;
         private bool paintAddMode = true;
+        private PaintBrushMode paintBrushMode = PaintBrushMode.Point;
+        private int paintBrushRadiusPixels = 24;
+        private Texture2D paintBrushTexture;
+        private Texture2D cachedPaintBrushTexture;
+        private Color32[] cachedPaintBrushPixels;
+        private int cachedPaintBrushWidth;
+        private int cachedPaintBrushHeight;
         private bool isPointerDown;
         private bool isPaintDragging;
         private Vector2 dragStartMousePos;
         private Rect currentDragRect;
         private bool rubberBandCullBackfaces = true;
         private const float ClickDragThreshold = 6f;
+        private const int MinPaintBrushRadiusPixels = 1;
+        private const int MaxPaintBrushRadiusPixels = 256;
+        private const float PaintBrushMaskThreshold = 0.01f;
+        private const int ParallelBrushSelectionThreshold = 8192;
 
         private GUIStyle centeredLabel;
         private readonly Color rubberBandColor = new Color(0.8f, 0.8f, 0.95f, 0.15f);
@@ -285,6 +308,25 @@ namespace UMA
 
         private bool slotTriangleCacheBuilt;
         private readonly List<CachedSlotTriangle> slotTriangleCache = new List<CachedSlotTriangle>(4096);
+        private readonly HashSet<string> selectedSlotNames = new HashSet<string>(StringComparer.Ordinal);
+        private int slotSelectionVersion;
+        private readonly List<PaintScreenTriangle> paintScreenTriangleCache = new List<PaintScreenTriangle>(4096);
+        private readonly List<SlotTriangleKey> paintBrushSelectionBuffer = new List<SlotTriangleKey>(256);
+        private bool paintScreenTriangleCacheValid;
+        private Mesh paintScreenTriangleCacheMesh;
+        private int paintScreenTriangleCacheSlotSelectionVersion = -1;
+        private int paintScreenTriangleCacheTriangleCount = -1;
+        private bool paintScreenTriangleCacheCullBackfaces;
+        private Vector3 paintScreenTriangleCacheCameraPosition;
+        private Quaternion paintScreenTriangleCacheCameraRotation;
+        private bool paintScreenTriangleCacheCameraOrthographic;
+        private float paintScreenTriangleCacheCameraSize;
+        private float paintScreenTriangleCacheCameraFieldOfView;
+        private Rect paintScreenTriangleCacheCameraPixelRect;
+        private Vector2 paintScreenTriangleCacheSceneSize;
+        private Vector3 paintScreenTriangleCacheFacePosition;
+        private Quaternion paintScreenTriangleCacheFaceRotation;
+        private Vector3 paintScreenTriangleCacheFaceScale;
         private readonly HashSet<SlotTriangleKey> selectedSlotTriangles = new HashSet<SlotTriangleKey>();
         private int selectionVersion;
 
@@ -457,10 +499,15 @@ namespace UMA
         {
             return new GUIContent("Face Editor");
         }
+        private GUIStyle _toolbarButtonStyle;
 
         protected override bool OnOpenStage()
         {
             base.OnOpenStage();
+
+            _toolbarButtonStyle = new GUIStyle(EditorStyles.toolbarButton);
+            _toolbarButtonStyle.fixedWidth = 52;   // ← make them thinner
+            _toolbarButtonStyle.alignment = TextAnchor.MiddleCenter;
 
             EnsureEditorEvents();
 
@@ -906,6 +953,7 @@ namespace UMA
             DrawRaycastDebugRaysHandles(sceneView);
 
             DrawMeshHideOverlay(sceneView);
+            DrawPaintBrush(sceneView, Event.current, leftPanelRect.Contains(Event.current.mousePosition));
             HandleFacePick(Event.current, sceneView);
         }
 
@@ -925,6 +973,187 @@ namespace UMA
                 var r = raycastDebugRays[i];
                 Handles.color = r.color;
                 Handles.DrawLine(r.origin, r.origin + (r.direction * r.distance));
+            }
+        }
+
+        private void DrawPaintBrush(SceneView sceneView, Event currentEvent, bool mouseOverAnyWindow)
+        {
+            if (currentEvent == null || mouseOverAnyWindow || !paintMode || paintBrushMode == PaintBrushMode.Point)
+            {
+                return;
+            }
+
+            if (currentEvent.type == EventType.MouseMove || currentEvent.type == EventType.MouseDrag)
+            {
+                sceneView.Repaint();
+                return;
+            }
+
+            if (currentEvent.type != EventType.Repaint)
+            {
+                return;
+            }
+
+            Vector2 mousePosition = currentEvent.mousePosition;
+            if (mousePosition.x < 0f || mousePosition.y < 0f || mousePosition.x > sceneView.position.width || mousePosition.y > sceneView.position.height)
+            {
+                return;
+            }
+
+            float brushRadius = Mathf.Clamp(paintBrushRadiusPixels, MinPaintBrushRadiusPixels, MaxPaintBrushRadiusPixels);
+            Color brushColor = paintAddMode ? new Color(0.25f, 0.75f, 1f, 0.9f) : new Color(1f, 0.35f, 0.25f, 0.9f);
+
+            Handles.BeginGUI();
+            try
+            {
+                if (paintBrushMode == PaintBrushMode.Circle)
+                {
+                    DrawPaintBrushCircle(mousePosition, brushRadius, brushColor);
+                    return;
+                }
+
+                Rect brushRect = new Rect(mousePosition.x - brushRadius, mousePosition.y - brushRadius, brushRadius * 2f, brushRadius * 2f);
+                if (paintBrushMode == PaintBrushMode.Loadable && paintBrushTexture != null)
+                {
+                    Color previousGuiColor = GUI.color;
+                    GUI.color = new Color(1f, 1f, 1f, 0.18f);
+                    GUI.DrawTexture(brushRect, paintBrushTexture, ScaleMode.StretchToFill, true);
+                    GUI.color = previousGuiColor;
+                }
+
+                DrawPaintBrushSquare(brushRect, brushColor);
+            }
+            finally
+            {
+                Handles.EndGUI();
+            }
+        }
+
+        private static void DrawPaintBrushCircle(Vector2 mousePosition, float brushRadius, Color brushColor)
+        {
+            const int segments = 64;
+            Vector3[] points = new Vector3[segments + 1];
+            for (int segmentIndex = 0; segmentIndex <= segments; segmentIndex++)
+            {
+                float angle = (segmentIndex / (float)segments) * Mathf.PI * 2f;
+                points[segmentIndex] = new Vector3(mousePosition.x + Mathf.Cos(angle) * brushRadius, mousePosition.y + Mathf.Sin(angle) * brushRadius, 0f);
+            }
+
+            Color previousColor = Handles.color;
+            Handles.color = new Color(0f, 0f, 0f, 0.7f);
+            Handles.DrawAAPolyLine(3f, points);
+            Handles.color = brushColor;
+            Handles.DrawAAPolyLine(1.5f, points);
+            Handles.color = previousColor;
+        }
+
+        private static void DrawPaintBrushSquare(Rect brushRect, Color brushColor)
+        {
+            Vector3[] points = new Vector3[]
+            {
+                new Vector3(brushRect.xMin, brushRect.yMin, 0f),
+                new Vector3(brushRect.xMax, brushRect.yMin, 0f),
+                new Vector3(brushRect.xMax, brushRect.yMax, 0f),
+                new Vector3(brushRect.xMin, brushRect.yMax, 0f),
+                new Vector3(brushRect.xMin, brushRect.yMin, 0f)
+            };
+
+            Color previousColor = Handles.color;
+            Handles.color = new Color(0f, 0f, 0f, 0.7f);
+            Handles.DrawAAPolyLine(3f, points);
+            Handles.color = brushColor;
+            Handles.DrawAAPolyLine(1.5f, points);
+            Handles.color = previousColor;
+        }
+
+        private bool EnsurePaintBrushPixels()
+        {
+            if (paintBrushTexture == null)
+            {
+                InvalidatePaintBrushCache();
+                return false;
+            }
+
+            if (cachedPaintBrushTexture == paintBrushTexture && cachedPaintBrushPixels != null)
+            {
+                return true;
+            }
+
+            InvalidatePaintBrushCache();
+            Texture2D readableCopy = null;
+            try
+            {
+                readableCopy = MakeReadableCopy(paintBrushTexture);
+                cachedPaintBrushTexture = paintBrushTexture;
+                cachedPaintBrushPixels = readableCopy.GetPixels32();
+                cachedPaintBrushWidth = readableCopy.width;
+                cachedPaintBrushHeight = readableCopy.height;
+                return cachedPaintBrushPixels.Length > 0;
+            }
+            catch
+            {
+                InvalidatePaintBrushCache();
+                return false;
+            }
+            finally
+            {
+                DestroyTexture(ref readableCopy);
+            }
+        }
+
+        private static float GetPaintBrushTextureMask(float normalizedX, float normalizedY, Color32[] brushPixels, int brushWidth, int brushHeight)
+        {
+            if (brushPixels == null || brushWidth <= 0 || brushHeight <= 0 || normalizedX < 0f || normalizedX > 1f || normalizedY < 0f || normalizedY > 1f)
+            {
+                return 0f;
+            }
+
+            int textureX = Mathf.Clamp(Mathf.FloorToInt(normalizedX * brushWidth), 0, brushWidth - 1);
+            int textureY = Mathf.Clamp(Mathf.FloorToInt((1f - normalizedY) * brushHeight), 0, brushHeight - 1);
+            Color32 brushPixel = brushPixels[(textureY * brushWidth) + textureX];
+            const float inv255 = 1f / 255f;
+            float alpha = brushPixel.a * inv255;
+            float luminance = ((0.2126f * brushPixel.r) + (0.7152f * brushPixel.g) + (0.0722f * brushPixel.b)) * inv255;
+            return Mathf.Clamp01(luminance * alpha);
+        }
+
+        private void InvalidatePaintBrushCache()
+        {
+            cachedPaintBrushTexture = null;
+            cachedPaintBrushPixels = null;
+            cachedPaintBrushWidth = 0;
+            cachedPaintBrushHeight = 0;
+        }
+
+        private static Texture2D MakeReadableCopy(Texture2D source)
+        {
+            int width = source.width;
+            int height = source.height;
+            RenderTexture renderTexture = RenderTexture.GetTemporary(width, height, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default);
+            RenderTexture previousActive = RenderTexture.active;
+            try
+            {
+                Graphics.Blit(source, renderTexture);
+                RenderTexture.active = renderTexture;
+                Texture2D copy = new Texture2D(width, height, TextureFormat.RGBA32, false, false);
+                copy.name = source.name;
+                copy.ReadPixels(new Rect(0, 0, width, height), 0, 0, false);
+                copy.Apply(false, false);
+                return copy;
+            }
+            finally
+            {
+                RenderTexture.active = previousActive;
+                RenderTexture.ReleaseTemporary(renderTexture);
+            }
+        }
+
+        private static void DestroyTexture(ref Texture2D texture)
+        {
+            if (texture != null)
+            {
+                UnityEngine.Object.DestroyImmediate(texture);
+                texture = null;
             }
         }
 
@@ -1637,6 +1866,7 @@ namespace UMA
                 if (newSelected != e.isSelected)
                 {
                     e.isSelected = newSelected;
+                    RebuildSelectedSlotNameCache();
                     MarkOverlayMeshDirty();
                 }
             }
@@ -2002,6 +2232,8 @@ namespace UMA
                 raycastTestStatus = $"Invalid baked vertex index for slot vertex {raycastTestSlotVertexIndex}.";
                 return;
             }
+
+            InvalidatePaintBrushCache();
 
             RefreshBakedMeshCaches();
             if (bakedVertices == null || bakedNormals == null)
@@ -2607,6 +2839,7 @@ namespace UMA
                 slotSelectionEntries[i].isSelected = selected;
             }
 
+            RebuildSelectedSlotNameCache();
             MarkOverlayMeshDirty();
         }
 
@@ -2635,6 +2868,7 @@ namespace UMA
                 }
             }
 
+            RebuildSelectedSlotNameCache();
             MarkOverlayMeshDirty();
         }
 
@@ -2685,6 +2919,8 @@ namespace UMA
                     }
                 }
 
+                DrawPaintBrushOptions();
+
                 rubberBandCullBackfaces = EditorGUILayout.ToggleLeft("Rubber Band Cull Backfaces", rubberBandCullBackfaces);
 
                 if (GUILayout.Button("Reset Camera"))
@@ -2720,6 +2956,45 @@ namespace UMA
                 if (GUILayout.Button("Create MeshHideAssets (Split by Slot)"))
                 {
                     SaveSelections();
+                }
+            }
+        }
+
+        private void DrawPaintBrushOptions()
+        {
+            if (!paintMode)
+            {
+                return;
+            }
+
+            using (new GUILayout.HorizontalScope())
+            {
+                GUILayout.Label("Brush", GUILayout.Width(70f));
+                paintBrushMode = (PaintBrushMode)GUILayout.Toolbar((int)paintBrushMode, new string[] { "Point", "Circle", "Square", "Load" }, _toolbarButtonStyle);
+            }
+
+            if (paintBrushMode != PaintBrushMode.Point)
+            {
+                using (new GUILayout.HorizontalScope())
+                {
+                    GUILayout.Label("Radius", GUILayout.Width(70f));
+                    paintBrushRadiusPixels = EditorGUILayout.IntSlider(paintBrushRadiusPixels, MinPaintBrushRadiusPixels, MaxPaintBrushRadiusPixels);
+                }
+            }
+
+            if (paintBrushMode == PaintBrushMode.Loadable)
+            {
+                EditorGUI.BeginChangeCheck();
+                Texture2D newBrushTexture = (Texture2D)EditorGUILayout.ObjectField(new GUIContent("Brush Texture", "Grayscale/alpha mask used by the loadable brush."), paintBrushTexture, typeof(Texture2D), false);
+                if (EditorGUI.EndChangeCheck())
+                {
+                    paintBrushTexture = newBrushTexture;
+                    InvalidatePaintBrushCache();
+                }
+
+                if (paintBrushTexture == null)
+                {
+                    EditorGUILayout.HelpBox("Assign a brush texture to use the loadable brush.", MessageType.Info);
                 }
             }
         }
@@ -3119,6 +3394,7 @@ namespace UMA
             if (thisDCA == null || thisDCA.umaData == null || thisDCA.umaData.umaRecipe == null || thisDCA.umaData.umaRecipe.slotDataList == null)
             {
                 slotSelectionEntries.Clear();
+                RebuildSelectedSlotNameCache();
                 return;
             }
 
@@ -3163,34 +3439,52 @@ namespace UMA
             }
 
             slotSelectionEntries = rebuilt;
+            RebuildSelectedSlotNameCache();
         }
 
         private bool IsSlotSelected(string slotName)
         {
-            if (string.IsNullOrEmpty(slotName) || slotSelectionEntries == null)
+            return !string.IsNullOrEmpty(slotName) && selectedSlotNames.Contains(slotName);
+        }
+
+        private void RebuildSelectedSlotNameCache()
+        {
+            HashSet<string> rebuilt = new HashSet<string>(StringComparer.Ordinal);
+            if (slotSelectionEntries != null)
             {
-                return false;
+                for (int i = 0; i < slotSelectionEntries.Count; i++)
+                {
+                    var entry = slotSelectionEntries[i];
+                    if (entry == null || string.IsNullOrEmpty(entry.slotName) || !entry.isSelected)
+                    {
+                        continue;
+                    }
+
+                    rebuilt.Add(entry.slotName);
+                }
             }
 
-            for (int i = 0; i < slotSelectionEntries.Count; i++)
+            if (selectedSlotNames.SetEquals(rebuilt))
             {
-                var e = slotSelectionEntries[i];
-                if (e == null || string.IsNullOrEmpty(e.slotName))
-                {
-                    continue;
-                }
-
-                if (string.Equals(e.slotName, slotName, StringComparison.Ordinal))
-                {
-                    return e.isSelected;
-                }
+                return;
             }
 
-            return false;
+            selectedSlotNames.Clear();
+            foreach (string slotName in rebuilt)
+            {
+                selectedSlotNames.Add(slotName);
+            }
+
+            slotSelectionVersion++;
+            InvalidatePaintScreenTriangleCache();
         }
 
         private void RebuildTriangleSlotOwnership()
         {
+            slotTriangleCacheBuilt = false;
+            slotTriangleCache.Clear();
+            InvalidatePaintScreenTriangleCache();
+
             triangleSlotOwnership.Clear();
             slotLocalToBaked.Clear();
             bakedVertexSlotRanges.Clear();
@@ -3536,7 +3830,7 @@ namespace UMA
                 {
                     bool add = paintMode ? paintAddMode : evt.shift;
                     RecordSelectionUndo(add ? "Paint Add Faces" : "Paint Remove Faces");
-                    ApplySelectionAtMouse(evt.mousePosition, add);
+                    ApplyPaintSelectionAtMouse(evt.mousePosition, add, paintMode, view);
                     evt.Use();
                 }
 
@@ -3553,7 +3847,7 @@ namespace UMA
                 if (isPaintDragging)
                 {
                     bool add = paintMode ? paintAddMode : evt.shift;
-                    ApplySelectionAtMouse(evt.mousePosition, add);
+                    ApplyPaintSelectionAtMouse(evt.mousePosition, add, paintMode, view);
                 }
                 else
                 {
@@ -3690,6 +3984,427 @@ namespace UMA
             }
 
             currentDragRect = new Rect(correctedPos, size);
+        }
+
+        private void ApplyPaintSelectionAtMouse(Vector2 mousePosition, bool add, bool useBrush, SceneView view)
+        {
+            if (!useBrush || paintBrushMode == PaintBrushMode.Point)
+            {
+                ApplySelectionAtMouse(mousePosition, add);
+                return;
+            }
+
+            ApplyBrushSelection(mousePosition, add, view);
+        }
+
+        private void ApplyBrushSelection(Vector2 mousePosition, bool add, SceneView view)
+        {
+            if (FaceObject == null || BakedMesh == null)
+            {
+                return;
+            }
+
+            if (paintBrushMode == PaintBrushMode.Loadable && !EnsurePaintBrushPixels())
+            {
+                return;
+            }
+
+            if (!EnsurePaintScreenTriangleCache(view))
+            {
+                return;
+            }
+
+            float brushRadius = Mathf.Clamp(paintBrushRadiusPixels, MinPaintBrushRadiusPixels, MaxPaintBrushRadiusPixels);
+            Rect brushBounds = new Rect(mousePosition.x - brushRadius, mousePosition.y - brushRadius, brushRadius * 2f, brushRadius * 2f);
+            List<SlotTriangleKey> matchingTriangles = GetBrushSelectionMatches(mousePosition, brushRadius, brushBounds);
+            bool changed = false;
+
+            for (int i = 0; i < matchingTriangles.Count; i++)
+            {
+                SlotTriangleKey slotKey = matchingTriangles[i];
+                changed |= add ? AddSelectedSlotTriangle(slotKey) : RemoveSelectedSlotTriangle(slotKey);
+            }
+
+            if (changed)
+            {
+                selectionVersion++;
+                MarkOverlayMeshDirty();
+                SceneView.RepaintAll();
+            }
+        }
+
+        private List<SlotTriangleKey> GetBrushSelectionMatches(Vector2 mousePosition, float brushRadius, Rect brushBounds)
+        {
+            paintBrushSelectionBuffer.Clear();
+
+            PaintBrushMode brushMode = paintBrushMode;
+            Color32[] brushPixels = cachedPaintBrushPixels;
+            int brushWidth = cachedPaintBrushWidth;
+            int brushHeight = cachedPaintBrushHeight;
+            int triangleCount = paintScreenTriangleCache.Count;
+
+            if (triangleCount >= ParallelBrushSelectionThreshold)
+            {
+                object sync = new object();
+                System.Threading.Tasks.Parallel.For(
+                    0,
+                    triangleCount,
+                    () => new List<SlotTriangleKey>(),
+                    (triangleIndex, loopState, localMatches) =>
+                    {
+                        PaintScreenTriangle screenTriangle = paintScreenTriangleCache[triangleIndex];
+                        if (screenTriangle.screenBounds.Overlaps(brushBounds) &&
+                            BrushContainsTriangle(brushMode, mousePosition, brushRadius, brushBounds, screenTriangle, brushPixels, brushWidth, brushHeight))
+                        {
+                            localMatches.Add(screenTriangle.slotKey);
+                        }
+
+                        return localMatches;
+                    },
+                    localMatches =>
+                    {
+                        if (localMatches.Count == 0)
+                        {
+                            return;
+                        }
+
+                        lock (sync)
+                        {
+                            paintBrushSelectionBuffer.AddRange(localMatches);
+                        }
+                    });
+
+                return paintBrushSelectionBuffer;
+            }
+
+            for (int i = 0; i < triangleCount; i++)
+            {
+                PaintScreenTriangle screenTriangle = paintScreenTriangleCache[i];
+                if (!screenTriangle.screenBounds.Overlaps(brushBounds))
+                {
+                    continue;
+                }
+
+                if (BrushContainsTriangle(brushMode, mousePosition, brushRadius, brushBounds, screenTriangle, brushPixels, brushWidth, brushHeight))
+                {
+                    paintBrushSelectionBuffer.Add(screenTriangle.slotKey);
+                }
+            }
+
+            return paintBrushSelectionBuffer;
+        }
+
+        private bool EnsurePaintScreenTriangleCache(SceneView sceneView)
+        {
+            Camera camera = sceneView != null ? sceneView.camera : (openedSceneView != null ? openedSceneView.camera : (SceneView.lastActiveSceneView != null ? SceneView.lastActiveSceneView.camera : null));
+            if (IsPaintScreenTriangleCacheValid(sceneView, camera))
+            {
+                return paintScreenTriangleCache.Count > 0;
+            }
+
+            InvalidatePaintScreenTriangleCache();
+            if (FaceObject == null || BakedMesh == null || camera == null)
+            {
+                return false;
+            }
+
+            EnsureSlotTriangleCacheBuilt();
+            RefreshBakedMeshCaches();
+            Vector3[] vertices = bakedVertices;
+            if (vertices == null || vertices.Length == 0)
+            {
+                return false;
+            }
+
+            Transform faceTransform = FaceObject.transform;
+            Transform cameraTransform = camera.transform;
+            Matrix4x4 localToWorld = faceTransform.localToWorldMatrix;
+            Vector3 cameraForward = cameraTransform.forward;
+
+            for (int cacheIndex = 0; cacheIndex < slotTriangleCache.Count; cacheIndex++)
+            {
+                CachedSlotTriangle cachedTriangle = slotTriangleCache[cacheIndex];
+                if (!IsSelectableCachedTriangle(cachedTriangle, out SlotData slot))
+                {
+                    continue;
+                }
+
+                int bakedIndex0 = slot.vertexOffset + cachedTriangle.v0Slot;
+                int bakedIndex1 = slot.vertexOffset + cachedTriangle.v1Slot;
+                int bakedIndex2 = slot.vertexOffset + cachedTriangle.v2Slot;
+                if (bakedIndex0 < 0 || bakedIndex1 < 0 || bakedIndex2 < 0 || bakedIndex0 >= vertices.Length || bakedIndex1 >= vertices.Length || bakedIndex2 >= vertices.Length)
+                {
+                    continue;
+                }
+
+                Vector3 world0 = localToWorld.MultiplyPoint3x4(vertices[bakedIndex0]);
+                Vector3 world1 = localToWorld.MultiplyPoint3x4(vertices[bakedIndex1]);
+                Vector3 world2 = localToWorld.MultiplyPoint3x4(vertices[bakedIndex2]);
+
+                if (rubberBandCullBackfaces)
+                {
+                    Vector3 normal = Vector3.Cross(world1 - world0, world2 - world0);
+                    if (Vector3.Dot(normal, cameraForward) >= 0f)
+                    {
+                        continue;
+                    }
+                }
+
+                Vector2 screen0 = HandleUtility.WorldToGUIPoint(world0);
+                Vector2 screen1 = HandleUtility.WorldToGUIPoint(world1);
+                Vector2 screen2 = HandleUtility.WorldToGUIPoint(world2);
+
+                paintScreenTriangleCache.Add(new PaintScreenTriangle
+                {
+                    slotKey = new SlotTriangleKey(cachedTriangle.slotName, cachedTriangle.slotSubmeshIndex, cachedTriangle.slotTriangleIndex),
+                    screen0 = screen0,
+                    screen1 = screen1,
+                    screen2 = screen2,
+                    screenCenter = (screen0 + screen1 + screen2) / 3f,
+                    screenBounds = GetTriangleScreenBounds(screen0, screen1, screen2)
+                });
+            }
+
+            paintScreenTriangleCacheValid = true;
+            paintScreenTriangleCacheMesh = BakedMesh;
+            paintScreenTriangleCacheSlotSelectionVersion = slotSelectionVersion;
+            paintScreenTriangleCacheTriangleCount = slotTriangleCache.Count;
+            paintScreenTriangleCacheCullBackfaces = rubberBandCullBackfaces;
+            paintScreenTriangleCacheCameraPosition = cameraTransform.position;
+            paintScreenTriangleCacheCameraRotation = cameraTransform.rotation;
+            paintScreenTriangleCacheCameraOrthographic = camera.orthographic;
+            paintScreenTriangleCacheCameraSize = camera.orthographicSize;
+            paintScreenTriangleCacheCameraFieldOfView = camera.fieldOfView;
+            paintScreenTriangleCacheCameraPixelRect = camera.pixelRect;
+            paintScreenTriangleCacheSceneSize = sceneView != null ? new Vector2(sceneView.position.width, sceneView.position.height) : Vector2.zero;
+            paintScreenTriangleCacheFacePosition = faceTransform.position;
+            paintScreenTriangleCacheFaceRotation = faceTransform.rotation;
+            paintScreenTriangleCacheFaceScale = faceTransform.lossyScale;
+            return paintScreenTriangleCache.Count > 0;
+        }
+
+        private bool IsPaintScreenTriangleCacheValid(SceneView sceneView, Camera camera)
+        {
+            if (!paintScreenTriangleCacheValid || camera == null || FaceObject == null)
+            {
+                return false;
+            }
+
+            Transform faceTransform = FaceObject.transform;
+            Transform cameraTransform = camera.transform;
+            Vector2 sceneSize = sceneView != null ? new Vector2(sceneView.position.width, sceneView.position.height) : Vector2.zero;
+
+            return paintScreenTriangleCacheMesh == BakedMesh &&
+                   paintScreenTriangleCacheSlotSelectionVersion == slotSelectionVersion &&
+                   paintScreenTriangleCacheTriangleCount == slotTriangleCache.Count &&
+                   paintScreenTriangleCacheCullBackfaces == rubberBandCullBackfaces &&
+                   paintScreenTriangleCacheCameraPosition == cameraTransform.position &&
+                   paintScreenTriangleCacheCameraRotation == cameraTransform.rotation &&
+                   paintScreenTriangleCacheCameraOrthographic == camera.orthographic &&
+                   Mathf.Approximately(paintScreenTriangleCacheCameraSize, camera.orthographicSize) &&
+                   Mathf.Approximately(paintScreenTriangleCacheCameraFieldOfView, camera.fieldOfView) &&
+                   SameRect(paintScreenTriangleCacheCameraPixelRect, camera.pixelRect) &&
+                   paintScreenTriangleCacheSceneSize == sceneSize &&
+                   paintScreenTriangleCacheFacePosition == faceTransform.position &&
+                   paintScreenTriangleCacheFaceRotation == faceTransform.rotation &&
+                   paintScreenTriangleCacheFaceScale == faceTransform.lossyScale;
+        }
+
+        private void InvalidatePaintScreenTriangleCache()
+        {
+            paintScreenTriangleCacheValid = false;
+            paintScreenTriangleCacheMesh = null;
+            paintScreenTriangleCacheSlotSelectionVersion = -1;
+            paintScreenTriangleCacheTriangleCount = -1;
+            paintScreenTriangleCache.Clear();
+        }
+
+        private static Rect GetTriangleScreenBounds(Vector2 screen0, Vector2 screen1, Vector2 screen2)
+        {
+            float minX = Mathf.Min(screen0.x, Mathf.Min(screen1.x, screen2.x));
+            float minY = Mathf.Min(screen0.y, Mathf.Min(screen1.y, screen2.y));
+            float maxX = Mathf.Max(screen0.x, Mathf.Max(screen1.x, screen2.x));
+            float maxY = Mathf.Max(screen0.y, Mathf.Max(screen1.y, screen2.y));
+            return Rect.MinMaxRect(minX, minY, maxX, maxY);
+        }
+
+        private static bool SameRect(Rect left, Rect right)
+        {
+            return Mathf.Approximately(left.x, right.x) &&
+                   Mathf.Approximately(left.y, right.y) &&
+                   Mathf.Approximately(left.width, right.width) &&
+                   Mathf.Approximately(left.height, right.height);
+        }
+
+        private bool IsSelectableCachedTriangle(CachedSlotTriangle cachedTriangle, out SlotData slot)
+        {
+            slot = null;
+            if (string.IsNullOrEmpty(cachedTriangle.slotName))
+            {
+                return false;
+            }
+
+            if (!IsSlotSelected(cachedTriangle.slotName))
+            {
+                return false;
+            }
+
+            if (!slotLookupByName.TryGetValue(cachedTriangle.slotName, out slot) || slot == null || slot.Suppressed)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private static bool BrushContainsTriangle(PaintBrushMode brushMode, Vector2 brushCenter, float brushRadius, Rect brushBounds, PaintScreenTriangle screenTriangle, Color32[] brushPixels, int brushWidth, int brushHeight)
+        {
+            Vector2 screen0 = screenTriangle.screen0;
+            Vector2 screen1 = screenTriangle.screen1;
+            Vector2 screen2 = screenTriangle.screen2;
+
+            if (BrushContainsPoint(brushMode, screen0, brushCenter, brushRadius, brushBounds, brushPixels, brushWidth, brushHeight) ||
+                BrushContainsPoint(brushMode, screen1, brushCenter, brushRadius, brushBounds, brushPixels, brushWidth, brushHeight) ||
+                BrushContainsPoint(brushMode, screen2, brushCenter, brushRadius, brushBounds, brushPixels, brushWidth, brushHeight) ||
+                BrushContainsPoint(brushMode, screenTriangle.screenCenter, brushCenter, brushRadius, brushBounds, brushPixels, brushWidth, brushHeight))
+            {
+                return true;
+            }
+
+            if (PointInScreenTriangle(brushCenter, screen0, screen1, screen2) && BrushContainsPoint(brushMode, brushCenter, brushCenter, brushRadius, brushBounds, brushPixels, brushWidth, brushHeight))
+            {
+                return true;
+            }
+
+            if (brushMode == PaintBrushMode.Circle)
+            {
+                float radiusSquared = brushRadius * brushRadius;
+                return DistancePointToSegmentSquared(brushCenter, screen0, screen1) <= radiusSquared ||
+                       DistancePointToSegmentSquared(brushCenter, screen1, screen2) <= radiusSquared ||
+                       DistancePointToSegmentSquared(brushCenter, screen2, screen0) <= radiusSquared;
+            }
+
+            if (brushMode == PaintBrushMode.Square)
+            {
+                return TriangleIntersectsRect(brushBounds, screen0, screen1, screen2);
+            }
+
+            return false;
+        }
+
+        private static bool BrushContainsPoint(PaintBrushMode brushMode, Vector2 screenPoint, Vector2 brushCenter, float brushRadius, Rect brushBounds, Color32[] brushPixels, int brushWidth, int brushHeight)
+        {
+            switch (brushMode)
+            {
+                case PaintBrushMode.Circle:
+                    return (screenPoint - brushCenter).sqrMagnitude <= brushRadius * brushRadius;
+                case PaintBrushMode.Square:
+                    return brushBounds.Contains(screenPoint);
+                case PaintBrushMode.Loadable:
+                    if (!brushBounds.Contains(screenPoint))
+                    {
+                        return false;
+                    }
+
+                    float normalizedX = (screenPoint.x - brushBounds.xMin) / Mathf.Max(1f, brushBounds.width);
+                    float normalizedY = (screenPoint.y - brushBounds.yMin) / Mathf.Max(1f, brushBounds.height);
+                    return GetPaintBrushTextureMask(normalizedX, normalizedY, brushPixels, brushWidth, brushHeight) > PaintBrushMaskThreshold;
+                default:
+                    return false;
+            }
+        }
+
+        private static bool PointInScreenTriangle(Vector2 point, Vector2 triangle0, Vector2 triangle1, Vector2 triangle2)
+        {
+            float denominator = ((triangle1.y - triangle2.y) * (triangle0.x - triangle2.x)) + ((triangle2.x - triangle1.x) * (triangle0.y - triangle2.y));
+            if (Mathf.Abs(denominator) < 1e-5f)
+            {
+                return false;
+            }
+
+            float alpha = (((triangle1.y - triangle2.y) * (point.x - triangle2.x)) + ((triangle2.x - triangle1.x) * (point.y - triangle2.y))) / denominator;
+            float beta = (((triangle2.y - triangle0.y) * (point.x - triangle2.x)) + ((triangle0.x - triangle2.x) * (point.y - triangle2.y))) / denominator;
+            float gamma = 1f - alpha - beta;
+            return alpha >= 0f && beta >= 0f && gamma >= 0f;
+        }
+
+        private static float DistancePointToSegmentSquared(Vector2 point, Vector2 segmentStart, Vector2 segmentEnd)
+        {
+            Vector2 segment = segmentEnd - segmentStart;
+            float segmentLengthSquared = segment.sqrMagnitude;
+            if (segmentLengthSquared <= Mathf.Epsilon)
+            {
+                return (point - segmentStart).sqrMagnitude;
+            }
+
+            float position = Mathf.Clamp01(Vector2.Dot(point - segmentStart, segment) / segmentLengthSquared);
+            Vector2 closest = segmentStart + (segment * position);
+            return (point - closest).sqrMagnitude;
+        }
+
+        private static bool TriangleIntersectsRect(Rect rect, Vector2 triangle0, Vector2 triangle1, Vector2 triangle2)
+        {
+            if (rect.Contains(triangle0) || rect.Contains(triangle1) || rect.Contains(triangle2))
+            {
+                return true;
+            }
+
+            Vector2 rectTopLeft = new Vector2(rect.xMin, rect.yMin);
+            Vector2 rectTopRight = new Vector2(rect.xMax, rect.yMin);
+            Vector2 rectBottomRight = new Vector2(rect.xMax, rect.yMax);
+            Vector2 rectBottomLeft = new Vector2(rect.xMin, rect.yMax);
+            if (PointInScreenTriangle(rectTopLeft, triangle0, triangle1, triangle2) ||
+                PointInScreenTriangle(rectTopRight, triangle0, triangle1, triangle2) ||
+                PointInScreenTriangle(rectBottomRight, triangle0, triangle1, triangle2) ||
+                PointInScreenTriangle(rectBottomLeft, triangle0, triangle1, triangle2))
+            {
+                return true;
+            }
+
+            return SegmentsIntersect(triangle0, triangle1, rectTopLeft, rectTopRight) ||
+                   SegmentsIntersect(triangle0, triangle1, rectTopRight, rectBottomRight) ||
+                   SegmentsIntersect(triangle0, triangle1, rectBottomRight, rectBottomLeft) ||
+                   SegmentsIntersect(triangle0, triangle1, rectBottomLeft, rectTopLeft) ||
+                   SegmentsIntersect(triangle1, triangle2, rectTopLeft, rectTopRight) ||
+                   SegmentsIntersect(triangle1, triangle2, rectTopRight, rectBottomRight) ||
+                   SegmentsIntersect(triangle1, triangle2, rectBottomRight, rectBottomLeft) ||
+                   SegmentsIntersect(triangle1, triangle2, rectBottomLeft, rectTopLeft) ||
+                   SegmentsIntersect(triangle2, triangle0, rectTopLeft, rectTopRight) ||
+                   SegmentsIntersect(triangle2, triangle0, rectTopRight, rectBottomRight) ||
+                   SegmentsIntersect(triangle2, triangle0, rectBottomRight, rectBottomLeft) ||
+                   SegmentsIntersect(triangle2, triangle0, rectBottomLeft, rectTopLeft);
+        }
+
+        private static bool SegmentsIntersect(Vector2 line0Start, Vector2 line0End, Vector2 line1Start, Vector2 line1End)
+        {
+            float direction0 = Cross(line0End - line0Start, line1Start - line0Start);
+            float direction1 = Cross(line0End - line0Start, line1End - line0Start);
+            float direction2 = Cross(line1End - line1Start, line0Start - line1Start);
+            float direction3 = Cross(line1End - line1Start, line0End - line1Start);
+
+            if (((direction0 > 0f && direction1 < 0f) || (direction0 < 0f && direction1 > 0f)) &&
+                ((direction2 > 0f && direction3 < 0f) || (direction2 < 0f && direction3 > 0f)))
+            {
+                return true;
+            }
+
+            return Mathf.Approximately(direction0, 0f) && PointOnSegment(line1Start, line0Start, line0End) ||
+                   Mathf.Approximately(direction1, 0f) && PointOnSegment(line1End, line0Start, line0End) ||
+                   Mathf.Approximately(direction2, 0f) && PointOnSegment(line0Start, line1Start, line1End) ||
+                   Mathf.Approximately(direction3, 0f) && PointOnSegment(line0End, line1Start, line1End);
+        }
+
+        private static float Cross(Vector2 left, Vector2 right)
+        {
+            return (left.x * right.y) - (left.y * right.x);
+        }
+
+        private static bool PointOnSegment(Vector2 point, Vector2 segmentStart, Vector2 segmentEnd)
+        {
+            return point.x >= Mathf.Min(segmentStart.x, segmentEnd.x) - 1e-5f &&
+                   point.x <= Mathf.Max(segmentStart.x, segmentEnd.x) + 1e-5f &&
+                   point.y >= Mathf.Min(segmentStart.y, segmentEnd.y) - 1e-5f &&
+                   point.y <= Mathf.Max(segmentStart.y, segmentEnd.y) + 1e-5f;
         }
 
         private void ApplySelectionAtMouse(Vector2 mousePosition, bool add)

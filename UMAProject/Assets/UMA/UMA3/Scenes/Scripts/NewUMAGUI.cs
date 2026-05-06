@@ -43,6 +43,7 @@ namespace UMA
         public float FaceBoneOffset = 0.0f;
         public float LegsBoneOffset = 0.0f;
 
+
         public float lerpSpeed = 1.0f;
         public AnimationCurve lerpCurve;
 
@@ -88,6 +89,11 @@ namespace UMA
         public GameObject BodyButton;
         public GameObject HairButton;
         public GameObject BackButton;
+        public Sprite clearImage;
+        public Sprite PoseImage;
+
+        [Header("Misc")]
+        public List<RuntimeAnimatorController> Animators = new List<RuntimeAnimatorController>();
 
         private List<string> ConsoleLog = new List<string>();
         private List<string> PendingLog = new List<string>();
@@ -101,7 +107,7 @@ namespace UMA
             ShowInfo();
         }
 
-        private void OnDestroy()
+        private void OnDisable()
         {
             Application.logMessageReceived -= HandleLog;
         }
@@ -150,13 +156,21 @@ namespace UMA
         {
             if (!constructing)
             {
-                avatar.SetDNA(DNAName, value, true);
+                avatar.SetDNA(DNAName, value, false);
+                //avatar.BuildCharacter(false);
+                avatar.ForceUpdate(true,true,true);
             }
         }
 
         public void SetItem(UMAWardrobeRecipe item)
         {
             avatar.SetSlot(item);
+            avatar.BuildCharacter(true);
+        }
+
+        public void ClearItem(string category)
+        {
+            avatar.ClearSlot(category);
             avatar.BuildCharacter(true);
         }
 
@@ -284,8 +298,25 @@ namespace UMA
             }
         }
 
+        public bool isCompatible(UMAWardrobeRecipe item, List<string> compatibleRaces)
+        {
+            foreach (string race in compatibleRaces)
+            {
+                if (item.compatibleRaces.Contains(race))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+
         private void AddWardrobeItems(GameObject container, List<UMAWardrobeRecipe> items)
         {
+            RaceData race = avatar.activeRace.data;
+            List<string> races = race.GetCrossCompatibleRaces();
+            races.Add(race.raceName);
+
             if (container != null)
             {
                 foreach (Transform child in container.transform)
@@ -298,7 +329,7 @@ namespace UMA
 
                 foreach (UMAWardrobeRecipe item in items)
                 {
-                    if (item.compatibleRaces.Contains(avatar.activeRace.name))
+                    if (isCompatible(item, races))
                     {
                         string category = item.wardrobeSlot;
                         if (SortedItems.ContainsKey(category))
@@ -339,12 +370,19 @@ namespace UMA
             {
                 GameObject gridContainer = Instantiate(ItemContainer, container.transform);
 
+                // add the clear button for the category
+                GameObject clearObj = Instantiate(Item, gridContainer.transform);
+                ItemEffector clearEffector = clearObj.GetComponent<ItemEffector>();
+                clearEffector.clearImage = clearImage;
+                clearEffector.Setup(this, null, category );
+
+
                 foreach (UMAWardrobeRecipe item in items)
                 {
                     GameObject itemObj = Instantiate(Item, gridContainer.transform);
 
                     ItemEffector effector = itemObj.GetComponent<ItemEffector>();
-                    effector.Setup(this, item);
+                    effector.Setup(this, item, category );
                 }
             }
         }
@@ -557,6 +595,25 @@ namespace UMA
             ActivateButton(HairButton);
             SetupCategory(DNAContainer, HairColors, HairDNA, HairItems);
         }
+
+        public int currentAnimator;
+        public void OnPoseClick()
+        {
+            if (Animators.Count > 0)
+            {
+                currentAnimator++;
+                if (currentAnimator >= Animators.Count)
+                {
+                    currentAnimator = 0;
+                }
+                RuntimeAnimatorController controller = Animators[currentAnimator];
+                avatar.animator.runtimeAnimatorController = controller;
+                // also set the default animator on the DynamicCharacterAvatar so that it will be used when copying rebuilding or changing race
+                avatar.animationController= controller;
+                avatar.raceAnimationControllers.defaultAnimationController = controller;
+            }
+        }
+
 
         public void OnRaceClick(string raceName)
         {

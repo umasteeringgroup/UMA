@@ -107,7 +107,7 @@ namespace UMA.Editors
 			{
 				if (GUIHelper.BeginCollapsableGroup(ref ShowOverrides, "Override Info"))
                 {
-					EditorGUILayout.LabelField("Object ID", _umaData.GetInstanceID().ToString());
+                    EditorGUILayout.LabelField("Object ID", _umaData.GetEntityId().ToString());
 					EditorGUILayout.LabelField("TPose Override", (_umaData.OverrideTpose != null).ToString());
 					EditorGUILayout.LabelField("Texture Override", (_umaData.TextureOverrides.Count != 0).ToString());
 
@@ -185,7 +185,7 @@ namespace UMA.Editors
         {
             GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f, 1f));
             EditorGUILayout.LabelField("Edit Time Info", EditorStyles.boldLabel);
-            EditorGUILayout.IntField("Instance ID", _umaData.GetInstanceID());
+            EditorGUILayout.LabelField("Entity ID", _umaData.GetEntityId().ToString());
             EditorGUILayout.Toggle("Using 32 bit", _umaData.force32bit);
             if (_umaData.umaRecipe != null)
             {

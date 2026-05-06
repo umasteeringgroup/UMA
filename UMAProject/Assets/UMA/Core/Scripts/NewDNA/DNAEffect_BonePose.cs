@@ -16,6 +16,8 @@ namespace UMA
         /// The bone pose asset to apply to the skeleton.
         /// </summary>
         public UMABonePose bonePose;
+        public bool isBasePose;
+
         public override string Description => "Applies a bone pose to the character's skeleton. This is done before any single bone DNA is applied.";
 
         public override DNAInstanceCollection.DNABuildType AreaEffect => DNAInstanceCollection.DNABuildType.Rig;
@@ -29,6 +31,8 @@ namespace UMA
             {
                 UnityEditor.EditorGUILayout.HelpBox("Bone Pose is required.", UnityEditor.MessageType.Error);
             }
+            UnityEditor.EditorGUILayout.HelpBox("Base Pose: If enabled, this pose will be applied first within the rig Apply phase, after the skeleton reset and before non-base rig effects. If disabled, the pose will be applied during the normal Apply phase, allowing it to layer on top of the current rig state.", UnityEditor.MessageType.Info);
+            isBasePose = UnityEditor.EditorGUILayout.Toggle("Is Base Pose", isBasePose);
         }
 #endif
         /// <inheritdoc />

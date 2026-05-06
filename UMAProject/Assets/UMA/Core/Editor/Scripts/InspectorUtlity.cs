@@ -38,7 +38,7 @@ namespace UMA
 #if UNITY_6000_3_OR_NEWER
             Selection.entityIds = new EntityId[] { target.GetEntityId() };
 #else
-            Selection.instanceIDs = new int[] { target.GetInstanceID() };
+			Selection.instanceIDs = new int[] { (int)target.GetEntityId() };
 #endif
 
 			// Invoke `isLocked` setter method passing 'true' to lock the inspector

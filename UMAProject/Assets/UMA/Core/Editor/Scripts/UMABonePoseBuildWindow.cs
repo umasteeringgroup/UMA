@@ -165,7 +165,14 @@ namespace UMA.PoseTools
 			}
 
 			// Single pose from skeleton
-			if (skelOpen = EditorGUILayout.Foldout(skelOpen, "Pose Source"))
+			bool nextSkelOpen = EditorGUILayout.Foldout(skelOpen, "Pose Source");
+			if (nextSkelOpen != skelOpen)
+			{
+				skelOpen = nextSkelOpen;
+				stateChanged = true;
+			}
+
+			if (skelOpen)
 			{
 				EditorGUI.indentLevel++;
 				EditorGUI.BeginChangeCheck();
@@ -238,7 +245,14 @@ namespace UMA.PoseTools
 			EditorGUILayout.Space();
 
 			// Multiple poses from animation frames
-			if (animOpen = EditorGUILayout.Foldout(animOpen, "Animation Source"))
+			bool nextAnimOpen = EditorGUILayout.Foldout(animOpen, "Animation Source");
+			if (nextAnimOpen != animOpen)
+			{
+				animOpen = nextAnimOpen;
+				stateChanged = true;
+			}
+
+			if (animOpen)
 			{
 				EditorGUI.indentLevel++;
 				EditorGUI.BeginChangeCheck();
@@ -253,6 +267,7 @@ namespace UMA.PoseTools
 
 				bool validPose = false;
 				AnimationPose deletedPose = null;
+				Vector2 previousScrollPosition = scrollPosition;
 				scrollPosition = GUILayout.BeginScrollView(scrollPosition);
 				for (int i = 0; i < poses.Count; i++)
 				{
@@ -283,6 +298,10 @@ namespace UMA.PoseTools
 					stateChanged = true;
 				}
 				GUILayout.EndScrollView();
+				if (scrollPosition != previousScrollPosition)
+				{
+					stateChanged = true;
+				}
 
 				GUILayout.BeginHorizontal();
 				GUILayout.FlexibleSpace();
@@ -555,9 +574,10 @@ namespace UMA.PoseTools
 				EditorGUI.indentLevel--;
 			}
 
-			// Persist lightweight UI state frequently
-			if (Event.current.type == EventType.Repaint)
+			if (stateChanged)
+			{
 				SaveState();
+			}
 		}
 
 		private void CollectCurvesAtTime(AnimationClip clip, EditorCurveBinding[] bindings, float time,

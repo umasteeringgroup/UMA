@@ -797,7 +797,6 @@ namespace UMA.Editors
 				return;
 			}
 
-			string defaultFolder = "Assets";
 			string pickedFolder = EditorUtility.OpenFolderPanel("Select destination folder", Application.dataPath, string.Empty);
 			if (string.IsNullOrEmpty(pickedFolder))
 			{
@@ -1469,7 +1468,7 @@ namespace UMA.Editors
 								Texture texture = m.GetTexture(propertyName);
 								if (texture is Texture2D || texture is RenderTexture)
 								{
-									string path = AssetDatabase.GetAssetPath(texture.GetInstanceID());
+									string path = AssetDatabase.GetAssetPath(texture.GetEntityId());
 									if (string.IsNullOrEmpty(path))
 									{
 										bool isNormal = (propertyName.ToLower().Contains("bumpmap") || propertyName.ToLower().Contains("normal"));
@@ -1600,7 +1599,7 @@ namespace UMA.Editors
 			originalBonesArrays.Add(origBones);
 			originalMeshes.Add(origMesh);
 
-			Dictionary<int, int> instanceIdToNewIndex = new Dictionary<int, int>();
+			Dictionary<EntityId, int> instanceIdToNewIndex = new Dictionary<EntityId, int>();
 			Dictionary<int, int> indexRemap = new Dictionary<int, int>();
 			List<Transform> uniqueBones = new List<Transform>();
 			List<Matrix4x4> uniqueBindPoses = new List<Matrix4x4>();
@@ -1609,7 +1608,7 @@ namespace UMA.Editors
 			for (int b = 0; b < origBones.Length; b++)
 			{
 				Transform bone = origBones[b];
-				int key = bone != null ? bone.GetInstanceID() : ~b;
+				EntityId key = bone != null ? bone.GetEntityId() : ~b;
 
 				int existingNewIndex;
 				if (instanceIdToNewIndex.TryGetValue(key, out existingNewIndex))
@@ -1902,7 +1901,7 @@ namespace UMA.Editors
 							Texture texture = m.GetTexture(propertyName);
 							if (texture is Texture2D || texture is RenderTexture)
 							{
-								string path = AssetDatabase.GetAssetPath(texture.GetInstanceID());
+								string path = AssetDatabase.GetAssetPath(texture.GetEntityId());
 								if (string.IsNullOrEmpty(path))
 								{
 									bool isNormal = (propertyName.ToLower().Contains("bumpmap") || propertyName.ToLower().Contains("normal"));

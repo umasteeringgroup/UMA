@@ -1444,7 +1444,6 @@ namespace UMA {
 			}
 		}
 
-        int sequence = 0;
 		// Save RT as PNG next to the stamp asset (Editor); fallback to persistentDataPath at runtime
       public static void SaveRenderTexturePNG(RenderTexture rt, DecalRTStampAsset stamp, String overlayLabel, int frame, String suffix) {
 

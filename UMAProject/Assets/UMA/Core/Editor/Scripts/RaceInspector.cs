@@ -47,7 +47,7 @@ namespace UMA.Editors
 		// Cached blendshape lookup for baseRaceRecipe slots
 		private string[] _bsSlotNames = Array.Empty<string>();
 		private Dictionary<string, string[]> _bsBySlot = new Dictionary<string, string[]>();
-		private int _lastBaseRecipeId = 0;
+		private EntityId _lastBaseRecipeId = 0;
 		private bool _bsCacheValid = false;
 		// UI selections for add-from-slot
 		private int _prebakeAddSlotIndex = 0;
@@ -73,7 +73,7 @@ namespace UMA.Editors
 				doSave = false;
 				lastActionTime = Time.realtimeSinceStartup;
 				EditorUtility.SetDirty(race);
-				string path = AssetDatabase.GetAssetPath(race.GetInstanceID());
+				string path = AssetDatabase.GetAssetPath(race.GetEntityId());
 				AssetDatabase.ImportAsset(path);
 				UMAUpdateProcessor.UpdateRace(race);
 			}
@@ -93,7 +93,7 @@ namespace UMA.Editors
 			// Pull the baseRaceRecipe reference
 			var baseRecipeProp = serializedObject.FindProperty("baseRaceRecipe");
 			var baseRecipe = baseRecipeProp != null ? baseRecipeProp.objectReferenceValue as UMARecipeBase : null;
-			int recipeId = baseRecipe != null ? baseRecipe.GetInstanceID() : 0;
+			EntityId recipeId = baseRecipe != null ? baseRecipe.GetEntityId() : 0;
 			if (_bsCacheValid && recipeId == _lastBaseRecipeId)
 			{
 				return;

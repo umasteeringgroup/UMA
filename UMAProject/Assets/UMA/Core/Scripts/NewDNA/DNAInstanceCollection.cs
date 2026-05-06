@@ -380,6 +380,7 @@ namespace UMA
             }
 
             var dict = _DNACollection.dnaDictionary;
+
             for (int i = 0; i < dnaInstances.Count; i++)
             {
                 var inst = dnaInstances[i];
@@ -464,7 +465,26 @@ namespace UMA
 
                 if (ValueDiffers(inst.Value, dna.defaultValue))
                 {
-                    flags |= dna.Apply(umaData, inst.Value);
+                    flags |= dna.ApplyBaseBonePoseEffects(umaData, inst.Value);
+                }
+            }
+
+            for (int i = 0; i < dnaInstances.Count; i++)
+            {
+                var inst = dnaInstances[i];
+                if (inst == null || string.IsNullOrEmpty(inst.Name) || inst.enabled == false) continue;
+
+                if (!dict.TryGetValue(inst.Name, out var dna) || dna == null)
+                {
+#if UNITY_EDITOR
+                    Debug.LogWarning($"DNA '{inst.Name}' not found in collection during Apply.");
+#endif
+                    continue;
+                }
+
+                if (ValueDiffers(inst.Value, dna.defaultValue))
+                {
+                    flags |= dna.ApplyNonBaseEffects(umaData, inst.Value);
                 }
             }
             return flags;

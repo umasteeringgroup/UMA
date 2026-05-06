@@ -600,7 +600,7 @@ namespace UMA
 				return;
 			}
 
-			string assetPath = AssetDatabase.GetAssetPath(sd.GetInstanceID());
+			string assetPath = AssetDatabase.GetAssetPath(sd.GetEntityId());
 			string path = Path.GetDirectoryName(assetPath);
 			string AssetName = Path.GetFileNameWithoutExtension(assetPath);
 			if (AssetName.ToLower().Contains("_slot"))

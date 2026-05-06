@@ -1109,7 +1109,7 @@ namespace UMA.Editors
                     if (sd != null)
                     {
                         Debug.Log("Success.");
-                        string AssetPath = AssetDatabase.GetAssetPath(sd.GetInstanceID());
+                        string AssetPath = AssetDatabase.GetAssetPath(sd.GetEntityId());
                         if (addToGlobalLibrary)
                         {
                             UMAAssetIndexer.Instance.EvilAddAsset(typeof(SlotDataAsset), sd);

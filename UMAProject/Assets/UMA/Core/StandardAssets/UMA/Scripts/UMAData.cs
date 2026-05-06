@@ -360,7 +360,7 @@ namespace UMA
 				if (usi.replaceExisting)
 				{
 					var newBone = skeleton.GetBoneTransform(usi.Object.name);
-					if (newBone.gameObject.GetInstanceID() != usi.Object.gameObject.GetInstanceID())
+					if (newBone.gameObject.GetEntityId() != usi.Object.gameObject.GetEntityId())
 					{
                         skeleton.ReplaceBone(usi);
 						DestroyImmediate(newBone.gameObject);
@@ -777,6 +777,7 @@ namespace UMA
 
             DNABuildType updateFlags = DNABuildType.None;
 
+            // Base bone poses must run after ResetAll but before the rest of the rig effects.
             foreach (var dnainstance in dnaInstanceCollection.dnaInstances)
             {
 				if (dnainstance != null && dnainstance.enabled)
@@ -784,7 +785,19 @@ namespace UMA
 					var dna = dnaInstanceCollection.GetDNA(dnainstance.Name);
 					if (dna != null)
 					{
-						updateFlags |= dna.Apply(this, dnainstance.Value);
+						updateFlags |= dna.ApplyBaseBonePoseEffects(this, dnainstance.Value);
+					}
+				}
+            }
+
+            foreach (var dnainstance in dnaInstanceCollection.dnaInstances)
+            {
+				if (dnainstance != null && dnainstance.enabled)
+				{
+					var dna = dnaInstanceCollection.GetDNA(dnainstance.Name);
+					if (dna != null)
+					{
+						updateFlags |= dna.ApplyNonBaseEffects(this, dnainstance.Value);
 					}
 				}
             }
@@ -1529,7 +1542,7 @@ namespace UMA
 
             public void InitializeDNA()
             {
-                if (raceData == null || !raceData.useNewDNA)
+				if (raceData == null || !raceData.useNewDNA)
 				{
 					return;
 				}
@@ -1546,27 +1559,29 @@ namespace UMA
 				if (dnaInstanceCollection == null)
 				{
 					dnaInstanceCollection = new DNAInstanceCollection();
-                }
-                dnaInstanceCollection.Initialize(collection);
+				}
+				dnaInstanceCollection.Initialize(collection);
 
+				if (dnaInstanceCollection.dnaInstances == null)
+				{
+					dnaInstanceCollection.dnaInstances = new List<DNAInstance>();
+				}
 
+				PruneDNAInstancesForRace(collection);
 
-                if (dnaInstanceCollection.dnaInstances == null)
-                {
-                    dnaInstanceCollection.dnaInstances = new List<DNAInstance>();
-                }
-
-                var groups = collection.DNAGroups;
+				var groups = collection.DNAGroups;
 				if (groups == null || groups.Count == 0)
 				{
 					dnaInstanceCollection.ClearAll();
 					return;
 				}
 
-                var dict = collection.dnaDictionary;
+				var dict = collection.dnaDictionary;
+				Dictionary<string, float> overrides = null;
+				try { overrides = raceData.GetDefaultDNA(); } catch { overrides = null; }
 				var assignedDNA = dnaInstanceCollection.ToDictionary();
 
-                foreach (var group in groups)
+				foreach (var group in groups)
 				{
 					if (group != null && group.dnaList != null)
 					{
@@ -1574,25 +1589,29 @@ namespace UMA
 						{
 							if (d != null)
 							{
-                                float defaultValue = 0.5f;
-                                if (dict != null && dict.TryGetValue(d.name, out var dnaAsset) && dnaAsset != null)
-                                {
-                                    defaultValue = Mathf.Clamp01(dnaAsset.defaultValue);
-                                }
+								float defaultValue = 0.5f;
+								if (overrides != null && overrides.TryGetValue(d.name, out var overrideValue))
+								{
+									defaultValue = Mathf.Clamp01(overrideValue);
+								}
+								else if (dict != null && dict.TryGetValue(d.name, out var dnaAsset) && dnaAsset != null)
+								{
+									defaultValue = Mathf.Clamp01(dnaAsset.defaultValue);
+								}
 								if (assignedDNA.ContainsKey(d.name))
 								{
 									assignedDNA[d.name].Value = defaultValue;
+									assignedDNA[d.name].parentGroup = group;
 									continue;
-                                }
-                                // Set parentGroup for each instance
+								}
+
 								var inst = new DNAInstance(d.name, defaultValue, group);
-                                dnaInstanceCollection.dnaInstances.Add(inst);
+								dnaInstanceCollection.dnaInstances.Add(inst);
 								assignedDNA.Add(d.name, inst);
-                            }
+							}
 						}
 					}
-                }
-				//Debug.Log($"Initialized DNA for recipe {recipeName} with {dnaInstanceCollection.dnaInstances.Count} instances.");
+				}
             }
 
             // AddMissingDNAForRace: ensure all DNA from Race DNACollection exists, using overrides where provided
@@ -1616,6 +1635,13 @@ namespace UMA
                     dnaInstanceCollection = new DNAInstanceCollection();
                 }
                 dnaInstanceCollection.Initialize(collection);
+
+				if (dnaInstanceCollection.dnaInstances == null)
+				{
+					dnaInstanceCollection.dnaInstances = new List<DNAInstance>();
+				}
+
+				PruneDNAInstancesForRace(collection);
 
                 var assigned = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                 if (dnaInstanceCollection.dnaInstances != null)
@@ -1665,6 +1691,33 @@ namespace UMA
                     }
                 }
             }
+
+			private void PruneDNAInstancesForRace(DNACollection collection)
+			{
+				if (dnaInstanceCollection == null || dnaInstanceCollection.dnaInstances == null || collection == null)
+				{
+					return;
+				}
+
+				var dict = collection.dnaDictionary;
+				bool removedAny = false;
+
+				for (int i = dnaInstanceCollection.dnaInstances.Count - 1; i >= 0; i--)
+				{
+					var inst = dnaInstanceCollection.dnaInstances[i];
+					if (inst == null || string.IsNullOrEmpty(inst.Name) || dict == null || !dict.ContainsKey(inst.Name))
+					{
+						dnaInstanceCollection.dnaInstances.RemoveAt(i);
+						removedAny = true;
+					}
+				}
+
+				if (removedAny)
+				{
+					dnaInstanceCollection.dnaGroupInstances?.Clear();
+					dnaInstanceCollection.dnaInstanceDictionary = null;
+				}
+			}
 
 #pragma warning disable 618
             /// <summary>
@@ -2987,8 +3040,8 @@ namespace UMA
                             if (tempTexture is RenderTexture)
 							{
 								RenderTexture tempRenderTexture = tempTexture as RenderTexture;
-								int InstanceID = tempRenderTexture.GetInstanceID();
-								if (!RenderTexToCPU.renderTexturesToCPU.ContainsKey(InstanceID))
+								var entityId = tempRenderTexture.GetEntityId();
+								if (!RenderTexToCPU.renderTexturesToCPU.ContainsKey(entityId))
 								{
                                     // this will be cleared up when the async call is completed.
                                     tempTexture = null;

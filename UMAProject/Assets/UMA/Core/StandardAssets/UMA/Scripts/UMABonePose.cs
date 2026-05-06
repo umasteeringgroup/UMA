@@ -240,7 +240,7 @@ namespace UMA.PoseTools
 #if UNITY_EDITOR
 				if (Debug.isDebugBuild)
 				{
-					Debug.LogError($"[UMABonePose] Missing skeleton or pose data on '{name}'.");
+					/*Debug.LogError($"[UMABonePose] Missing skeleton or pose data on '{name}'."); */
 				}
 #endif
 				return;

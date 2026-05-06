@@ -133,14 +133,14 @@ namespace UMA
                             // search for the asset in the recipe path, including children.
                             // if it exists, then add the label to the asset.
 
-                            string path = AssetDatabase.GetAssetPath(ai.Item.GetInstanceID());
+                            string path = AssetDatabase.GetAssetPath(ai.Item.GetEntityId());
                             string filename = System.IO.Path.GetFileName(path);
                             string basePath = System.IO.Path.GetDirectoryName(path);
 
                             Debug.Log("Looking for asset: " + filename + " in path: " + basePath);
                             AssetItem ai2 = GetLocalAssetItemIfExist(basePath, filename, ai._Type.Name, ai);
 
-                            if (ai._SerializedItem.GetInstanceID() != ai2._SerializedItem.GetInstanceID())
+                            if (ai._SerializedItem.GetEntityId() != ai2._SerializedItem.GetEntityId())
                             {
                                 AddressableItems[ai].Add(uwr.AssignedLabel);
                             }
@@ -230,7 +230,7 @@ namespace UMA
                     }
                     ai.AddressableLabels = sb.ToString();
 
-                    bool found = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(ai.Item.GetInstanceID(), out string itemGUID, out long localID);
+                    bool found = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(ai.Item.GetEntityId(), out string itemGUID, out long localID);
 
                     UMAAddressablesSupport.Instance.AddItemToSharedGroup(itemGUID, ai.AddressableAddress, AddressableItems[ai], sharedGroup);
 
@@ -317,9 +317,9 @@ namespace UMA
                                     var texAI = Index.GetAssetItemForObject(tex);
 
                                     // 2) Create or move the texture entry to the shared group with the same labels
-                                    string texPath = AssetDatabase.GetAssetPath(tex.GetInstanceID());
+                                    string texPath = AssetDatabase.GetAssetPath(tex.GetEntityId());
                                     string address = AssetItem.AddressableFolder + "Texture2D-" + tex.name + "-" + texPath.GetHashCode();
-                                    bool texFound = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(tex.GetInstanceID(), out string texGUID, out long texLocalId);
+                                    bool texFound = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(tex.GetEntityId(), out string texGUID, out long texLocalId);
                                     if (texFound)
                                     {
                                         UMAAddressablesSupport.Instance.AddItemToSharedGroup(texGUID, address, overlayLabels, sharedGroup);
@@ -358,9 +358,9 @@ namespace UMA
                                 var tex = od.alphaMask;
                                 Index.AddIfIndexed(tex);
                                 var texAI = Index.GetAssetItemForObject(tex);
-                                string texPath = AssetDatabase.GetAssetPath(tex.GetInstanceID());
+                                string texPath = AssetDatabase.GetAssetPath(tex.GetEntityId());
                                 string address = AssetItem.AddressableFolder + "Texture2D-" + tex.name + "-" + texPath.GetHashCode();
-                                bool texFound = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(tex.GetInstanceID(), out string texGUID, out long texLocalId);
+                                bool texFound = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(tex.GetEntityId(), out string texGUID, out long texLocalId);
                                 if (texFound)
                                 {
                                     UMAAddressablesSupport.Instance.AddItemToSharedGroup(texGUID, address, AddressableItems[ai], sharedGroup);
@@ -418,10 +418,10 @@ namespace UMA
                                 Debug.Log("Texture is not Texture2D!!! " + tex.name);
                                 continue;
                             }
-                            string path = AssetDatabase.GetAssetPath(tex.GetInstanceID());
+                            string path = AssetDatabase.GetAssetPath(tex.GetEntityId());
                             string Address = "Texture2D-" + tex.name + "-" + path.GetHashCode();
 
-                            found = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(tex.GetInstanceID(), out string texGUID, out long texlocalID);
+                            found = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(tex.GetEntityId(), out string texGUID, out long texlocalID);
                             if (found)
                             {
                                 UMAAddressablesSupport.Instance.AddItemToSharedGroup(texGUID, AssetItem.AddressableFolder + Address, AddressableItems[ai], sharedGroup);

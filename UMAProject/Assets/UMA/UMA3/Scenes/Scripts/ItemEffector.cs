@@ -9,15 +9,46 @@ namespace UMA
     {
         public IItemSelector itemSelector;
         public UMAWardrobeRecipe recipe;
+        public string category;
+        public Sprite clearImage;
 
-        public void Setup(IItemSelector itemSelector, UMAWardrobeRecipe recipe)
+
+        public void SetupClearbutton()
         {
+            Image[] img = GetComponentsInChildren<Image>();
+            if (recipe == null)
+            {
+                foreach (Image i in img)
+                {
+                    if (i.name == "ItemImage")
+                    {
+                        i.sprite = clearImage;
+                    }
+                }
+            }
+            Text text = GetComponentInChildren<Text>();
+            if (text != null)
+            {
+                    text.text = "Clear";
+            }            
+        }
+
+        public void Setup(IItemSelector itemSelector, UMAWardrobeRecipe recipe, string category)
+        {
+            bool imageSet = false;
+  
             this.itemSelector = itemSelector;
             this.recipe = recipe;
+            this.category = category;
+
+            if (recipe == null)
+            {
+                SetupClearbutton();
+                return;
+            }
 
             Image[] img = GetComponentsInChildren<Image>();
-
-            bool imageSet = false;
+            
             if (recipe.wardrobeRecipeThumbs.Count > 0)
             {
                 for (int i = 0; i < img.Length; i++)
@@ -52,7 +83,14 @@ namespace UMA
 
         public void ImageClicked()
         {
-            itemSelector.SetItem(recipe);
+            if (recipe != null)
+            {
+                itemSelector.SetItem(recipe);
+            }
+            else
+            {
+                itemSelector.ClearItem(category);
+            }
         }
     }
 }

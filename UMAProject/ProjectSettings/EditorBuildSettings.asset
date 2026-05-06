@@ -5,11 +5,11 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
+  - enabled: 0
     path: Assets/UMA/Examples/DynamicCharacterSystem Examples/UMA DCS Demo - Random
       Characters.unity
     guid: 23bb4999598a61e4989ccef2415039cf
-  - enabled: 1
+  - enabled: 0
     path: Assets/UMA/Examples/Physics Examples/RagdollExample.unity
     guid: 5cc55c23c33870e49a6f3c5aa01a6ab0
   m_configObjects:

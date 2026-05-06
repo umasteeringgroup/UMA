@@ -86,6 +86,7 @@ namespace UMA
 
         // Edit Options
         float HandlesSize = 0.003f;
+        float weightSmoothAmount = 0.5f;
         public Color ActiveColor = new Color32(0, 210, 0, 255);
         public Color InactiveColor = new Color32(235, 0, 0, 255);
         bool selectObscured = false;
@@ -796,8 +797,6 @@ namespace UMA
 
         int currentNewVertexState = 1;
 
-        private vertexState currentState;
-
 
         GUIStyle HelpBoxStyle;
         [Serializable]
@@ -984,6 +983,1364 @@ namespace UMA
                 return SelectedVertexes[currentSelected];
             }
             return null;
+        }
+
+        private const float BoneWeightMismatchTolerance = 0.0001f;
+
+        private class VertexWeightEntry
+        {
+            public int boneIndex;
+            public int boneHash;
+            public string boneName;
+            public float weight;
+
+            public VertexWeightEntry Clone()
+            {
+                return new VertexWeightEntry()
+                {
+                    boneIndex = boneIndex,
+                    boneHash = boneHash,
+                    boneName = boneName,
+                    weight = weight
+                };
+            }
+        }
+
+        private class BoneOption
+        {
+            public int boneIndex;
+            public int boneHash;
+            public string boneName;
+            public string displayName;
+        }
+
+        private class VertexWeightComparison
+        {
+            public int boneHash;
+            public string boneName;
+            public float slotWeight;
+            public float skinnedWeight;
+            public bool mismatch;
+        }
+
+        private VertexSelection GetVertexForWeightPopup()
+        {
+            VertexSelection selectedVertex = GetSelectedVertex();
+            if (selectedVertex != null)
+            {
+                return selectedVertex;
+            }
+
+            if (SelectedVertexes != null && SelectedVertexes.Count > 0)
+            {
+                return SelectedVertexes[0];
+            }
+
+            return null;
+        }
+
+        private void ShowCurrentVertexWeightsPopup()
+        {
+            VertexSelection selectedVertex = GetVertexForWeightPopup();
+            if (selectedVertex == null)
+            {
+                EditorUtility.DisplayDialog("Vertex Weights", "No current or selected vertex is available.", "OK");
+                return;
+            }
+
+            VertexWeightEditorWindow.Open(this, selectedVertex);
+        }
+
+        private List<VertexWeightEntry> GetSlotAssetVertexWeights(VertexSelection selectedVertex, out string statusMessage)
+        {
+            List<VertexWeightEntry> weights = new List<VertexWeightEntry>();
+            statusMessage = string.Empty;
+
+            if (!TryGetSelectionMeshData(selectedVertex, out UMAMeshData meshData, out statusMessage))
+            {
+                return weights;
+            }
+
+            int vertexIndex = selectedVertex.vertexIndexOnSlot;
+            if (TryGetManagedWeightsForVertex(meshData, vertexIndex, out List<BoneWeight1> managedWeights))
+            {
+                for (int i = 0; i < managedWeights.Count; i++)
+                {
+                    BoneWeight1 weight = managedWeights[i];
+                    weights.Add(CreateSlotWeightEntry(meshData, weight.boneIndex, weight.weight));
+                }
+                statusMessage = weights.Count == 0 ? "SlotDataAsset has no weights for this vertex." : string.Empty;
+                return weights;
+            }
+
+            if (TryGetLegacyWeightsForVertex(meshData, vertexIndex, out List<BoneWeight1> legacyWeights))
+            {
+                for (int i = 0; i < legacyWeights.Count; i++)
+                {
+                    BoneWeight1 weight = legacyWeights[i];
+                    weights.Add(CreateSlotWeightEntry(meshData, weight.boneIndex, weight.weight));
+                }
+                statusMessage = weights.Count == 0 ? "SlotDataAsset has no legacy weights for this vertex." : "Using legacy SlotDataAsset weights.";
+                return weights;
+            }
+
+            statusMessage = "SlotDataAsset has no usable weight data for this vertex.";
+            return weights;
+        }
+
+        private List<VertexWeightEntry> GetSkinnedMeshVertexWeights(VertexSelection selectedVertex, out string statusMessage)
+        {
+            List<VertexWeightEntry> weights = new List<VertexWeightEntry>();
+            statusMessage = string.Empty;
+
+            if (selectedVertex == null || selectedVertex.slot == null)
+            {
+                statusMessage = "No vertex is selected.";
+                return weights;
+            }
+
+            if (!TryGetVisibleBakedVertexIndex(selectedVertex.slot, selectedVertex.vertexIndexOnSlot, out int skinnedVertexIndex))
+            {
+                statusMessage = "The selected vertex is not visible in the current generated mesh.";
+                return weights;
+            }
+
+            SkinnedMeshRenderer renderer = GetCurrentSkinnedMeshRenderer();
+            if (renderer == null || renderer.sharedMesh == null)
+            {
+                statusMessage = "No generated SkinnedMeshRenderer mesh is available.";
+                return weights;
+            }
+
+            Mesh skinnedMesh = renderer.sharedMesh;
+            var bonesPerVertex = skinnedMesh.GetBonesPerVertex();
+            var allWeights = skinnedMesh.GetAllBoneWeights();
+            try
+            {
+                if (bonesPerVertex.Length <= skinnedVertexIndex)
+                {
+                    statusMessage = "The generated SkinnedMesh vertex index is outside the bone weight data.";
+                    return weights;
+                }
+
+                int weightOffset = 0;
+                for (int i = 0; i < skinnedVertexIndex; i++)
+                {
+                    weightOffset += bonesPerVertex[i];
+                }
+
+                int weightCount = bonesPerVertex[skinnedVertexIndex];
+                if (weightOffset + weightCount > allWeights.Length)
+                {
+                    statusMessage = "Generated SkinnedMesh bone weight data is not valid for this vertex.";
+                    return weights;
+                }
+
+                for (int i = 0; i < weightCount; i++)
+                {
+                    BoneWeight1 boneWeight = allWeights[weightOffset + i];
+                    weights.Add(CreateSkinnedWeightEntry(renderer, boneWeight.boneIndex, boneWeight.weight));
+                }
+            }
+            finally
+            {
+                if (bonesPerVertex.IsCreated)
+                {
+                    bonesPerVertex.Dispose();
+                }
+                if (allWeights.IsCreated)
+                {
+                    allWeights.Dispose();
+                }
+            }
+
+            statusMessage = weights.Count == 0 ? "Generated SkinnedMesh has no weights for this vertex." : string.Empty;
+            return weights;
+        }
+
+        private bool TryApplySlotAssetVertexWeights(VertexSelection selectedVertex, List<VertexWeightEntry> editedWeights, out string statusMessage)
+        {
+            statusMessage = string.Empty;
+            if (!TryGetSelectionMeshData(selectedVertex, out UMAMeshData meshData, out statusMessage))
+            {
+                return false;
+            }
+
+            List<BoneWeight1> targetWeights = BuildTargetBoneWeights(meshData, editedWeights, out statusMessage);
+            if (targetWeights == null)
+            {
+                return false;
+            }
+
+            bool hasManagedWeights = HasValidManagedBoneWeights(meshData);
+            bool hasLegacyWeights = HasValidLegacyBoneWeights(meshData);
+            if (!hasManagedWeights && !hasLegacyWeights)
+            {
+                statusMessage = "Cannot rewrite the SlotDataAsset because the existing mesh data has no valid managed or legacy weights to preserve for the other vertices.";
+                return false;
+            }
+
+            Undo.RecordObject(selectedVertex.slot.asset, "Edit Vertex Weights");
+
+            byte[] newBonesPerVertex = new byte[meshData.vertexCount];
+            List<BoneWeight1> newBoneWeights = new List<BoneWeight1>(meshData.ManagedBoneWeights != null ? meshData.ManagedBoneWeights.Length : meshData.vertexCount * 4);
+            int managedOffset = 0;
+            for (int vertexIndex = 0; vertexIndex < meshData.vertexCount; vertexIndex++)
+            {
+                List<BoneWeight1> vertexWeights;
+                if (vertexIndex == selectedVertex.vertexIndexOnSlot)
+                {
+                    vertexWeights = targetWeights;
+                }
+                else if (hasManagedWeights)
+                {
+                    int count = meshData.ManagedBonesPerVertex[vertexIndex];
+                    vertexWeights = new List<BoneWeight1>(count);
+                    for (int weightIndex = 0; weightIndex < count; weightIndex++)
+                    {
+                        vertexWeights.Add(meshData.ManagedBoneWeights[managedOffset + weightIndex]);
+                    }
+                }
+                else
+                {
+                    TryGetLegacyWeightsForVertex(meshData, vertexIndex, out vertexWeights);
+                }
+
+                if (hasManagedWeights)
+                {
+                    managedOffset += meshData.ManagedBonesPerVertex[vertexIndex];
+                }
+
+                if (vertexWeights.Count > byte.MaxValue)
+                {
+                    statusMessage = "A vertex cannot store more than 255 bone weights.";
+                    return false;
+                }
+
+                newBonesPerVertex[vertexIndex] = (byte)vertexWeights.Count;
+                newBoneWeights.AddRange(vertexWeights);
+            }
+
+            meshData.ManagedBonesPerVertex = newBonesPerVertex;
+            meshData.ManagedBoneWeights = newBoneWeights.ToArray();
+            UpdateLegacyVertexWeights(meshData, selectedVertex.vertexIndexOnSlot, targetWeights);
+            meshData.LoadedBoneweights = false;
+
+            EditorUtility.SetDirty(selectedVertex.slot.asset);
+            AssetDatabase.SaveAssets();
+            statusMessage = "SlotDataAsset weights updated.";
+            return true;
+        }
+
+        private void SmoothSelectedVertexWeights(float smoothAmount)
+        {
+            if (TrySmoothSelectedVertexWeights(smoothAmount, out string statusMessage))
+            {
+                RebuildMesh(true);
+            }
+
+            EditorUtility.DisplayDialog("Smooth Vertex Weights", statusMessage, "OK");
+        }
+
+        private bool TrySmoothSelectedVertexWeights(float smoothAmount, out string statusMessage)
+        {
+            statusMessage = string.Empty;
+            smoothAmount = Mathf.Clamp01(smoothAmount);
+            if (smoothAmount <= 0f)
+            {
+                statusMessage = "Smooth amount is 0. No weights were changed.";
+                return false;
+            }
+
+            if (SelectedVertexes == null || SelectedVertexes.Count == 0)
+            {
+                statusMessage = "No selected vertices are available to smooth.";
+                return false;
+            }
+
+            Dictionary<SlotData, HashSet<int>> selectedVertexIndicesBySlot = GetSelectedVertexIndicesBySlot(out int skippedSelections);
+            if (selectedVertexIndicesBySlot.Count == 0)
+            {
+                statusMessage = "No valid selected vertices are available to smooth.";
+                return false;
+            }
+
+            int updatedSlotCount = 0;
+            int updatedVertexCount = 0;
+            int skippedVertexCount = skippedSelections;
+            List<string> errors = new List<string>();
+
+            foreach (KeyValuePair<SlotData, HashSet<int>> slotSelection in selectedVertexIndicesBySlot)
+            {
+                SlotData slot = slotSelection.Key;
+                if (!TryGetSlotMeshData(slot, out UMAMeshData meshData, out string meshStatusMessage))
+                {
+                    errors.Add(slot != null ? slot.slotName + ": " + meshStatusMessage : meshStatusMessage);
+                    skippedVertexCount += slotSelection.Value.Count;
+                    continue;
+                }
+
+                Dictionary<int, HashSet<int>> connectedVerticesBySelection = BuildConnectedVertexLookup(meshData, slotSelection.Value);
+                Dictionary<int, List<BoneWeight1>> smoothedWeightsByVertex = new Dictionary<int, List<BoneWeight1>>();
+                foreach (int vertexIndex in slotSelection.Value)
+                {
+                    if (!connectedVerticesBySelection.TryGetValue(vertexIndex, out HashSet<int> connectedVertices) || connectedVertices.Count == 0)
+                    {
+                        skippedVertexCount++;
+                        continue;
+                    }
+
+                    if (!TryGetVertexBoneWeights(meshData, vertexIndex, out List<BoneWeight1> currentWeights))
+                    {
+                        skippedVertexCount++;
+                        continue;
+                    }
+
+                    Dictionary<int, float> connectedWeightTotals = new Dictionary<int, float>();
+                    int connectedWeightVertexCount = 0;
+                    foreach (int connectedVertexIndex in connectedVertices)
+                    {
+                        if (connectedVertexIndex < 0 || connectedVertexIndex >= meshData.vertexCount)
+                        {
+                            continue;
+                        }
+
+                        if (!TryGetVertexBoneWeights(meshData, connectedVertexIndex, out List<BoneWeight1> connectedWeights))
+                        {
+                            continue;
+                        }
+
+                        AddWeightsToWeightMap(connectedWeightTotals, connectedWeights, 1f);
+                        connectedWeightVertexCount++;
+                    }
+
+                    if (connectedWeightVertexCount == 0)
+                    {
+                        skippedVertexCount++;
+                        continue;
+                    }
+
+                    Dictionary<int, float> currentWeightMap = BuildWeightMap(currentWeights);
+                    Dictionary<int, float> connectedAverageWeightMap = DivideWeightMap(connectedWeightTotals, connectedWeightVertexCount);
+                    List<BoneWeight1> smoothedWeights = BuildSmoothedBoneWeights(meshData, currentWeightMap, connectedAverageWeightMap, smoothAmount, out string smoothStatusMessage);
+                    if (smoothedWeights == null)
+                    {
+                        errors.Add(slot.slotName + " vertex " + vertexIndex + ": " + smoothStatusMessage);
+                        skippedVertexCount++;
+                        continue;
+                    }
+
+                    smoothedWeightsByVertex.Add(vertexIndex, smoothedWeights);
+                }
+
+                if (smoothedWeightsByVertex.Count == 0)
+                {
+                    continue;
+                }
+
+                if (!TryRewriteSlotAssetVertexWeights(slot, smoothedWeightsByVertex, "Smooth Vertex Weights", out string rewriteStatusMessage))
+                {
+                    errors.Add(slot.slotName + ": " + rewriteStatusMessage);
+                    skippedVertexCount += smoothedWeightsByVertex.Count;
+                    continue;
+                }
+
+                updatedSlotCount++;
+                updatedVertexCount += smoothedWeightsByVertex.Count;
+            }
+
+            if (updatedVertexCount > 0)
+            {
+                AssetDatabase.SaveAssets();
+                statusMessage = "Smoothed weights for " + updatedVertexCount + " selected vertex(es) across " + updatedSlotCount + " slot(s).";
+                if (skippedVertexCount > 0)
+                {
+                    statusMessage += "\nSkipped " + skippedVertexCount + " selected vertex(es) with no usable connected weights.";
+                }
+                if (errors.Count > 0)
+                {
+                    statusMessage += "\n" + string.Join("\n", errors);
+                }
+                return true;
+            }
+
+            statusMessage = "No selected vertex weights were smoothed.";
+            if (skippedVertexCount > 0)
+            {
+                statusMessage += "\nSkipped " + skippedVertexCount + " selected vertex(es) with no usable connected weights.";
+            }
+            if (errors.Count > 0)
+            {
+                statusMessage += "\n" + string.Join("\n", errors);
+            }
+            return false;
+        }
+
+        private Dictionary<SlotData, HashSet<int>> GetSelectedVertexIndicesBySlot(out int skippedSelections)
+        {
+            skippedSelections = 0;
+            Dictionary<SlotData, HashSet<int>> selectedVertexIndicesBySlot = new Dictionary<SlotData, HashSet<int>>();
+            for (int i = 0; i < SelectedVertexes.Count; i++)
+            {
+                VertexSelection selectedVertex = SelectedVertexes[i];
+                if (selectedVertex == null || selectedVertex.slot == null || selectedVertex.suppressed)
+                {
+                    skippedSelections++;
+                    continue;
+                }
+
+                if (!TryGetSlotMeshData(selectedVertex.slot, out UMAMeshData meshData, out _)
+                    || selectedVertex.vertexIndexOnSlot < 0
+                    || selectedVertex.vertexIndexOnSlot >= meshData.vertexCount)
+                {
+                    skippedSelections++;
+                    continue;
+                }
+
+                if (!selectedVertexIndicesBySlot.TryGetValue(selectedVertex.slot, out HashSet<int> vertexIndices))
+                {
+                    vertexIndices = new HashSet<int>();
+                    selectedVertexIndicesBySlot.Add(selectedVertex.slot, vertexIndices);
+                }
+                vertexIndices.Add(selectedVertex.vertexIndexOnSlot);
+            }
+            return selectedVertexIndicesBySlot;
+        }
+
+        private Dictionary<int, HashSet<int>> BuildConnectedVertexLookup(UMAMeshData meshData, HashSet<int> selectedVertexIndices)
+        {
+            Dictionary<int, HashSet<int>> connectedVerticesBySelection = new Dictionary<int, HashSet<int>>();
+            foreach (int vertexIndex in selectedVertexIndices)
+            {
+                connectedVerticesBySelection.Add(vertexIndex, new HashSet<int>());
+            }
+
+            if (meshData == null || meshData.submeshes == null)
+            {
+                return connectedVerticesBySelection;
+            }
+
+            for (int submeshIndex = 0; submeshIndex < meshData.submeshes.Length; submeshIndex++)
+            {
+                SubMeshTriangles submesh = meshData.submeshes[submeshIndex];
+                if (submesh == null)
+                {
+                    continue;
+                }
+
+                int[] triangles = submesh.getManagedTriangles(0);
+                if (triangles == null)
+                {
+                    continue;
+                }
+
+                for (int triangleIndex = 0; triangleIndex + 2 < triangles.Length; triangleIndex += 3)
+                {
+                    int vertex0 = triangles[triangleIndex];
+                    int vertex1 = triangles[triangleIndex + 1];
+                    int vertex2 = triangles[triangleIndex + 2];
+                    AddConnectedTriangleVertices(connectedVerticesBySelection, selectedVertexIndices, vertex0, vertex1, vertex2, meshData.vertexCount);
+                }
+            }
+
+            return connectedVerticesBySelection;
+        }
+
+        private void AddConnectedTriangleVertices(Dictionary<int, HashSet<int>> connectedVerticesBySelection, HashSet<int> selectedVertexIndices, int vertex0, int vertex1, int vertex2, int vertexCount)
+        {
+            AddConnectedVertices(connectedVerticesBySelection, selectedVertexIndices, vertex0, vertex1, vertex2, vertexCount);
+            AddConnectedVertices(connectedVerticesBySelection, selectedVertexIndices, vertex1, vertex0, vertex2, vertexCount);
+            AddConnectedVertices(connectedVerticesBySelection, selectedVertexIndices, vertex2, vertex0, vertex1, vertexCount);
+        }
+
+        private void AddConnectedVertices(Dictionary<int, HashSet<int>> connectedVerticesBySelection, HashSet<int> selectedVertexIndices, int selectedCandidate, int connectedVertex0, int connectedVertex1, int vertexCount)
+        {
+            if (!selectedVertexIndices.Contains(selectedCandidate) || !connectedVerticesBySelection.TryGetValue(selectedCandidate, out HashSet<int> connectedVertices))
+            {
+                return;
+            }
+
+            if (connectedVertex0 >= 0 && connectedVertex0 < vertexCount && connectedVertex0 != selectedCandidate)
+            {
+                connectedVertices.Add(connectedVertex0);
+            }
+            if (connectedVertex1 >= 0 && connectedVertex1 < vertexCount && connectedVertex1 != selectedCandidate)
+            {
+                connectedVertices.Add(connectedVertex1);
+            }
+        }
+
+        private Dictionary<int, float> BuildWeightMap(List<BoneWeight1> weights)
+        {
+            Dictionary<int, float> weightMap = new Dictionary<int, float>();
+            AddWeightsToWeightMap(weightMap, weights, 1f);
+            return weightMap;
+        }
+
+        private void AddWeightsToWeightMap(Dictionary<int, float> weightMap, List<BoneWeight1> weights, float multiplier)
+        {
+            for (int i = 0; i < weights.Count; i++)
+            {
+                BoneWeight1 weight = weights[i];
+                float weightedValue = weight.weight * multiplier;
+                if (weightMap.ContainsKey(weight.boneIndex))
+                {
+                    weightMap[weight.boneIndex] += weightedValue;
+                }
+                else
+                {
+                    weightMap.Add(weight.boneIndex, weightedValue);
+                }
+            }
+        }
+
+        private Dictionary<int, float> DivideWeightMap(Dictionary<int, float> weightMap, int divisor)
+        {
+            Dictionary<int, float> dividedWeightMap = new Dictionary<int, float>();
+            if (divisor <= 0)
+            {
+                return dividedWeightMap;
+            }
+
+            foreach (KeyValuePair<int, float> weight in weightMap)
+            {
+                dividedWeightMap.Add(weight.Key, weight.Value / divisor);
+            }
+            return dividedWeightMap;
+        }
+
+        private List<BoneWeight1> BuildSmoothedBoneWeights(UMAMeshData meshData, Dictionary<int, float> currentWeightMap, Dictionary<int, float> connectedAverageWeightMap, float smoothAmount, out string statusMessage)
+        {
+            statusMessage = string.Empty;
+            Dictionary<int, float> smoothedWeightMap = new Dictionary<int, float>();
+            foreach (KeyValuePair<int, float> currentWeight in currentWeightMap)
+            {
+                connectedAverageWeightMap.TryGetValue(currentWeight.Key, out float connectedAverageWeight);
+                smoothedWeightMap.Add(currentWeight.Key, Mathf.Lerp(currentWeight.Value, connectedAverageWeight, smoothAmount));
+            }
+
+            foreach (KeyValuePair<int, float> connectedAverageWeight in connectedAverageWeightMap)
+            {
+                if (smoothedWeightMap.ContainsKey(connectedAverageWeight.Key))
+                {
+                    continue;
+                }
+                smoothedWeightMap.Add(connectedAverageWeight.Key, Mathf.Lerp(0f, connectedAverageWeight.Value, smoothAmount));
+            }
+
+            List<BoneWeight1> smoothedWeights = new List<BoneWeight1>(smoothedWeightMap.Count);
+            foreach (KeyValuePair<int, float> smoothedWeight in smoothedWeightMap)
+            {
+                smoothedWeights.Add(new BoneWeight1()
+                {
+                    boneIndex = smoothedWeight.Key,
+                    weight = smoothedWeight.Value
+                });
+            }
+            return BuildTargetBoneWeightsFromBoneWeights(meshData, smoothedWeights, out statusMessage);
+        }
+
+        private bool TryRewriteSlotAssetVertexWeights(SlotData slot, Dictionary<int, List<BoneWeight1>> targetWeightsByVertexIndex, string undoName, out string statusMessage)
+        {
+            statusMessage = string.Empty;
+            if (!TryGetSlotMeshData(slot, out UMAMeshData meshData, out statusMessage))
+            {
+                return false;
+            }
+
+            if (targetWeightsByVertexIndex == null || targetWeightsByVertexIndex.Count == 0)
+            {
+                statusMessage = "No target vertex weights were supplied.";
+                return false;
+            }
+
+            bool hasManagedWeights = HasValidManagedBoneWeights(meshData);
+            bool hasLegacyWeights = HasValidLegacyBoneWeights(meshData);
+            if (!hasManagedWeights && !hasLegacyWeights)
+            {
+                statusMessage = "Cannot rewrite the SlotDataAsset because the existing mesh data has no valid managed or legacy weights to preserve for the other vertices.";
+                return false;
+            }
+
+            Dictionary<int, List<BoneWeight1>> validatedTargetWeights = new Dictionary<int, List<BoneWeight1>>();
+            foreach (KeyValuePair<int, List<BoneWeight1>> targetWeights in targetWeightsByVertexIndex)
+            {
+                if (targetWeights.Key < 0 || targetWeights.Key >= meshData.vertexCount)
+                {
+                    statusMessage = "Target vertex index is outside the slot mesh data.";
+                    return false;
+                }
+
+                List<BoneWeight1> validatedWeights = BuildTargetBoneWeightsFromBoneWeights(meshData, targetWeights.Value, out statusMessage);
+                if (validatedWeights == null)
+                {
+                    return false;
+                }
+                if (validatedWeights.Count > byte.MaxValue)
+                {
+                    statusMessage = "A vertex cannot store more than 255 bone weights.";
+                    return false;
+                }
+                validatedTargetWeights.Add(targetWeights.Key, validatedWeights);
+            }
+
+            byte[] newBonesPerVertex = new byte[meshData.vertexCount];
+            List<BoneWeight1> newBoneWeights = new List<BoneWeight1>(meshData.ManagedBoneWeights != null ? meshData.ManagedBoneWeights.Length : meshData.vertexCount * 4);
+            int managedOffset = 0;
+            for (int vertexIndex = 0; vertexIndex < meshData.vertexCount; vertexIndex++)
+            {
+                List<BoneWeight1> vertexWeights;
+                if (validatedTargetWeights.TryGetValue(vertexIndex, out List<BoneWeight1> targetWeights))
+                {
+                    vertexWeights = targetWeights;
+                }
+                else if (hasManagedWeights)
+                {
+                    int count = meshData.ManagedBonesPerVertex[vertexIndex];
+                    vertexWeights = new List<BoneWeight1>(count);
+                    for (int weightIndex = 0; weightIndex < count; weightIndex++)
+                    {
+                        vertexWeights.Add(meshData.ManagedBoneWeights[managedOffset + weightIndex]);
+                    }
+                }
+                else
+                {
+                    TryGetLegacyWeightsForVertex(meshData, vertexIndex, out vertexWeights);
+                }
+
+                if (hasManagedWeights)
+                {
+                    managedOffset += meshData.ManagedBonesPerVertex[vertexIndex];
+                }
+
+                if (vertexWeights.Count > byte.MaxValue)
+                {
+                    statusMessage = "A vertex cannot store more than 255 bone weights.";
+                    return false;
+                }
+
+                newBonesPerVertex[vertexIndex] = (byte)vertexWeights.Count;
+                newBoneWeights.AddRange(vertexWeights);
+            }
+
+            Undo.RecordObject(slot.asset, undoName);
+            meshData.ManagedBonesPerVertex = newBonesPerVertex;
+            meshData.ManagedBoneWeights = newBoneWeights.ToArray();
+            foreach (KeyValuePair<int, List<BoneWeight1>> targetWeights in validatedTargetWeights)
+            {
+                UpdateLegacyVertexWeights(meshData, targetWeights.Key, targetWeights.Value);
+            }
+            meshData.LoadedBoneweights = false;
+
+            EditorUtility.SetDirty(slot.asset);
+            return true;
+        }
+
+        private bool TryGetSlotMeshData(SlotData slot, out UMAMeshData meshData, out string statusMessage)
+        {
+            meshData = null;
+            statusMessage = string.Empty;
+            if (slot == null)
+            {
+                statusMessage = "No slot is available.";
+                return false;
+            }
+
+            if (slot.asset == null || UMAMeshData.IsNullOrEmptyMeshData(slot.asset.meshData))
+            {
+                statusMessage = "The selected slot has no mesh data.";
+                return false;
+            }
+
+            meshData = slot.asset.meshData;
+            return true;
+        }
+
+        private bool TryGetVertexBoneWeights(UMAMeshData meshData, int vertexIndex, out List<BoneWeight1> weights)
+        {
+            if (TryGetManagedWeightsForVertex(meshData, vertexIndex, out weights))
+            {
+                return true;
+            }
+
+            if (TryGetLegacyWeightsForVertex(meshData, vertexIndex, out weights))
+            {
+                return true;
+            }
+
+            weights = new List<BoneWeight1>();
+            return false;
+        }
+
+        private List<BoneWeight1> BuildTargetBoneWeightsFromBoneWeights(UMAMeshData meshData, List<BoneWeight1> editedWeights, out string statusMessage)
+        {
+            statusMessage = string.Empty;
+            if (editedWeights == null || editedWeights.Count == 0)
+            {
+                statusMessage = "Add at least one weight before applying.";
+                return null;
+            }
+
+            Dictionary<int, float> weightsByBoneIndex = new Dictionary<int, float>();
+            for (int i = 0; i < editedWeights.Count; i++)
+            {
+                BoneWeight1 editedWeight = editedWeights[i];
+                if (editedWeight.boneIndex < 0 || meshData.boneNameHashes == null || editedWeight.boneIndex >= meshData.boneNameHashes.Length)
+                {
+                    statusMessage = "Weight references an invalid SlotDataAsset bone index.";
+                    return null;
+                }
+
+                float weight = Mathf.Clamp01(editedWeight.weight);
+                if (weight <= 0f)
+                {
+                    continue;
+                }
+
+                if (weightsByBoneIndex.ContainsKey(editedWeight.boneIndex))
+                {
+                    weightsByBoneIndex[editedWeight.boneIndex] += weight;
+                }
+                else
+                {
+                    weightsByBoneIndex.Add(editedWeight.boneIndex, weight);
+                }
+            }
+
+            if (weightsByBoneIndex.Count == 0)
+            {
+                statusMessage = "At least one weight must be greater than zero.";
+                return null;
+            }
+
+            List<BoneWeight1> targetWeights = new List<BoneWeight1>(weightsByBoneIndex.Count);
+            foreach (KeyValuePair<int, float> pair in weightsByBoneIndex)
+            {
+                targetWeights.Add(new BoneWeight1()
+                {
+                    boneIndex = pair.Key,
+                    weight = pair.Value
+                });
+            }
+            targetWeights.Sort((left, right) => right.weight.CompareTo(left.weight));
+            return targetWeights;
+        }
+
+        private bool TryGetSelectionMeshData(VertexSelection selectedVertex, out UMAMeshData meshData, out string statusMessage)
+        {
+            meshData = null;
+            statusMessage = string.Empty;
+
+            if (selectedVertex == null || selectedVertex.slot == null)
+            {
+                statusMessage = "No vertex is selected.";
+                return false;
+            }
+
+            if (selectedVertex.slot.asset == null || UMAMeshData.IsNullOrEmptyMeshData(selectedVertex.slot.asset.meshData))
+            {
+                statusMessage = "The selected slot has no mesh data.";
+                return false;
+            }
+
+            meshData = selectedVertex.slot.asset.meshData;
+            if (selectedVertex.vertexIndexOnSlot < 0 || selectedVertex.vertexIndexOnSlot >= meshData.vertexCount)
+            {
+                statusMessage = "The selected vertex index is outside the slot mesh data.";
+                return false;
+            }
+
+            return true;
+        }
+
+        private bool TryGetManagedWeightsForVertex(UMAMeshData meshData, int vertexIndex, out List<BoneWeight1> weights)
+        {
+            weights = new List<BoneWeight1>();
+            if (!HasValidManagedBoneWeights(meshData))
+            {
+                return false;
+            }
+
+            int weightOffset = 0;
+            for (int i = 0; i < vertexIndex; i++)
+            {
+                weightOffset += meshData.ManagedBonesPerVertex[i];
+            }
+
+            int weightCount = meshData.ManagedBonesPerVertex[vertexIndex];
+            for (int i = 0; i < weightCount; i++)
+            {
+                weights.Add(meshData.ManagedBoneWeights[weightOffset + i]);
+            }
+            return true;
+        }
+
+        private bool TryGetLegacyWeightsForVertex(UMAMeshData meshData, int vertexIndex, out List<BoneWeight1> weights)
+        {
+            weights = new List<BoneWeight1>();
+            if (!HasValidLegacyBoneWeights(meshData) || vertexIndex < 0 || vertexIndex >= meshData.boneWeights.Length)
+            {
+                return false;
+            }
+
+            UMABoneWeight legacyWeight = meshData.boneWeights[vertexIndex];
+            AddLegacyWeight(weights, legacyWeight.boneIndex0, legacyWeight.weight0);
+            AddLegacyWeight(weights, legacyWeight.boneIndex1, legacyWeight.weight1);
+            AddLegacyWeight(weights, legacyWeight.boneIndex2, legacyWeight.weight2);
+            AddLegacyWeight(weights, legacyWeight.boneIndex3, legacyWeight.weight3);
+            return true;
+        }
+
+        private void AddLegacyWeight(List<BoneWeight1> weights, int boneIndex, float weight)
+        {
+            if (weight <= 0f)
+            {
+                return;
+            }
+
+            weights.Add(new BoneWeight1()
+            {
+                boneIndex = boneIndex,
+                weight = weight
+            });
+        }
+
+        private bool HasValidManagedBoneWeights(UMAMeshData meshData)
+        {
+            if (meshData == null || meshData.ManagedBonesPerVertex == null || meshData.ManagedBonesPerVertex.Length != meshData.vertexCount || meshData.ManagedBoneWeights == null)
+            {
+                return false;
+            }
+
+            int weightCount = 0;
+            for (int i = 0; i < meshData.ManagedBonesPerVertex.Length; i++)
+            {
+                weightCount += meshData.ManagedBonesPerVertex[i];
+                if (weightCount > meshData.ManagedBoneWeights.Length)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        private bool HasValidLegacyBoneWeights(UMAMeshData meshData)
+        {
+            return meshData != null && meshData.boneWeights != null && meshData.boneWeights.Length == meshData.vertexCount;
+        }
+
+        private VertexWeightEntry CreateSlotWeightEntry(UMAMeshData meshData, int boneIndex, float weight)
+        {
+            int boneHash = GetSlotBoneHash(meshData, boneIndex);
+            return new VertexWeightEntry()
+            {
+                boneIndex = boneIndex,
+                boneHash = boneHash,
+                boneName = GetBoneDisplayName(boneHash, boneIndex),
+                weight = weight
+            };
+        }
+
+        private VertexWeightEntry CreateSkinnedWeightEntry(SkinnedMeshRenderer renderer, int boneIndex, float weight)
+        {
+            string boneName = "Renderer Bone Index " + boneIndex;
+            int boneHash = 0;
+            if (renderer != null && renderer.bones != null && boneIndex >= 0 && boneIndex < renderer.bones.Length && renderer.bones[boneIndex] != null)
+            {
+                boneName = renderer.bones[boneIndex].name;
+                boneHash = UMAUtils.StringToHash(boneName);
+            }
+
+            return new VertexWeightEntry()
+            {
+                boneIndex = boneIndex,
+                boneHash = boneHash,
+                boneName = boneName,
+                weight = weight
+            };
+        }
+
+        private int GetSlotBoneHash(UMAMeshData meshData, int boneIndex)
+        {
+            if (meshData == null || meshData.boneNameHashes == null || boneIndex < 0 || boneIndex >= meshData.boneNameHashes.Length)
+            {
+                return 0;
+            }
+            return meshData.boneNameHashes[boneIndex];
+        }
+
+        private string GetBoneDisplayName(int boneHash, int boneIndex)
+        {
+            Transform boneTransform = thisDCA != null && thisDCA.umaData != null && thisDCA.umaData.skeleton != null
+                ? thisDCA.umaData.skeleton.GetBoneTransform(boneHash)
+                : null;
+            if (boneTransform != null)
+            {
+                return boneTransform.name;
+            }
+
+            return boneHash != 0 ? "Hash " + boneHash : "Bone Index " + boneIndex;
+        }
+
+        private SkinnedMeshRenderer GetCurrentSkinnedMeshRenderer()
+        {
+            if (thisDCA != null && thisDCA.umaData != null)
+            {
+                SkinnedMeshRenderer renderer = thisDCA.umaData.GetRenderer(0);
+                if (renderer != null)
+                {
+                    return renderer;
+                }
+            }
+
+            return thisDCA != null ? thisDCA.GetComponentInChildren<SkinnedMeshRenderer>(true) : null;
+        }
+
+        private List<BoneOption> GetSlotBoneOptions(VertexSelection selectedVertex)
+        {
+            List<BoneOption> options = new List<BoneOption>();
+            if (!TryGetSelectionMeshData(selectedVertex, out UMAMeshData meshData, out _))
+            {
+                return options;
+            }
+
+            if (meshData.boneNameHashes == null)
+            {
+                return options;
+            }
+
+            for (int i = 0; i < meshData.boneNameHashes.Length; i++)
+            {
+                int boneHash = meshData.boneNameHashes[i];
+                string boneName = GetBoneDisplayName(boneHash, i);
+                options.Add(new BoneOption()
+                {
+                    boneIndex = i,
+                    boneHash = boneHash,
+                    boneName = boneName,
+                    displayName = boneName + " (index " + i + ", hash " + boneHash + ")"
+                });
+            }
+
+            return options;
+        }
+
+        private List<VertexWeightComparison> BuildWeightComparisons(List<VertexWeightEntry> slotWeights, List<VertexWeightEntry> skinnedWeights)
+        {
+            Dictionary<int, VertexWeightComparison> comparisonsByHash = new Dictionary<int, VertexWeightComparison>();
+            AddWeightsToComparisons(comparisonsByHash, slotWeights, true);
+            AddWeightsToComparisons(comparisonsByHash, skinnedWeights, false);
+
+            List<VertexWeightComparison> comparisons = new List<VertexWeightComparison>(comparisonsByHash.Values);
+            comparisons.Sort((left, right) => string.Compare(left.boneName, right.boneName, StringComparison.OrdinalIgnoreCase));
+            for (int i = 0; i < comparisons.Count; i++)
+            {
+                comparisons[i].mismatch = Mathf.Abs(comparisons[i].slotWeight - comparisons[i].skinnedWeight) > BoneWeightMismatchTolerance;
+            }
+            return comparisons;
+        }
+
+        private void AddWeightsToComparisons(Dictionary<int, VertexWeightComparison> comparisonsByHash, List<VertexWeightEntry> weights, bool isSlotWeight)
+        {
+            for (int i = 0; i < weights.Count; i++)
+            {
+                VertexWeightEntry weight = weights[i];
+                int key = weight.boneHash != 0 ? weight.boneHash : int.MinValue + weight.boneIndex;
+                if (!comparisonsByHash.TryGetValue(key, out VertexWeightComparison comparison))
+                {
+                    comparison = new VertexWeightComparison()
+                    {
+                        boneHash = weight.boneHash,
+                        boneName = weight.boneName
+                    };
+                    comparisonsByHash.Add(key, comparison);
+                }
+
+                if (isSlotWeight)
+                {
+                    comparison.slotWeight += weight.weight;
+                }
+                else
+                {
+                    comparison.skinnedWeight += weight.weight;
+                    if (string.IsNullOrEmpty(comparison.boneName) || comparison.boneName.StartsWith("Hash ", StringComparison.Ordinal))
+                    {
+                        comparison.boneName = weight.boneName;
+                    }
+                }
+            }
+        }
+
+        private List<BoneWeight1> BuildTargetBoneWeights(UMAMeshData meshData, List<VertexWeightEntry> editedWeights, out string statusMessage)
+        {
+            statusMessage = string.Empty;
+            if (editedWeights == null || editedWeights.Count == 0)
+            {
+                statusMessage = "Add at least one weight before applying.";
+                return null;
+            }
+
+            Dictionary<int, float> weightsByBoneIndex = new Dictionary<int, float>();
+            for (int i = 0; i < editedWeights.Count; i++)
+            {
+                VertexWeightEntry editedWeight = editedWeights[i];
+                if (editedWeight.boneIndex < 0 || meshData.boneNameHashes == null || editedWeight.boneIndex >= meshData.boneNameHashes.Length)
+                {
+                    statusMessage = "Weight references an invalid SlotDataAsset bone index.";
+                    return null;
+                }
+
+                float weight = Mathf.Clamp01(editedWeight.weight);
+                if (weight <= 0f)
+                {
+                    continue;
+                }
+
+                if (weightsByBoneIndex.ContainsKey(editedWeight.boneIndex))
+                {
+                    weightsByBoneIndex[editedWeight.boneIndex] += weight;
+                }
+                else
+                {
+                    weightsByBoneIndex.Add(editedWeight.boneIndex, weight);
+                }
+            }
+
+            if (weightsByBoneIndex.Count == 0)
+            {
+                statusMessage = "At least one weight must be greater than zero.";
+                return null;
+            }
+
+            List<BoneWeight1> targetWeights = new List<BoneWeight1>(weightsByBoneIndex.Count);
+            foreach (KeyValuePair<int, float> pair in weightsByBoneIndex)
+            {
+                targetWeights.Add(new BoneWeight1()
+                {
+                    boneIndex = pair.Key,
+                    weight = pair.Value
+                });
+            }
+            targetWeights.Sort((left, right) => right.weight.CompareTo(left.weight));
+            return targetWeights;
+        }
+
+        private void UpdateLegacyVertexWeights(UMAMeshData meshData, int vertexIndex, List<BoneWeight1> targetWeights)
+        {
+            if (!HasValidLegacyBoneWeights(meshData) || vertexIndex < 0 || vertexIndex >= meshData.boneWeights.Length)
+            {
+                return;
+            }
+
+            UMABoneWeight legacyWeight = new UMABoneWeight();
+            if (targetWeights.Count > 0)
+            {
+                legacyWeight.boneIndex0 = targetWeights[0].boneIndex;
+                legacyWeight.weight0 = targetWeights[0].weight;
+            }
+            if (targetWeights.Count > 1)
+            {
+                legacyWeight.boneIndex1 = targetWeights[1].boneIndex;
+                legacyWeight.weight1 = targetWeights[1].weight;
+            }
+            if (targetWeights.Count > 2)
+            {
+                legacyWeight.boneIndex2 = targetWeights[2].boneIndex;
+                legacyWeight.weight2 = targetWeights[2].weight;
+            }
+            if (targetWeights.Count > 3)
+            {
+                legacyWeight.boneIndex3 = targetWeights[3].boneIndex;
+                legacyWeight.weight3 = targetWeights[3].weight;
+            }
+
+            meshData.boneWeights[vertexIndex] = legacyWeight;
+        }
+
+        private class VertexWeightEditorWindow : EditorWindow
+        {
+            private VertexEditorStage stage;
+            private VertexSelection selectedVertex;
+            private List<VertexWeightEntry> editableSlotWeights = new List<VertexWeightEntry>();
+            private List<VertexWeightEntry> skinnedWeights = new List<VertexWeightEntry>();
+            private List<BoneOption> boneOptions = new List<BoneOption>();
+            private Vector2 scrollPosition;
+            private string slotStatusMessage;
+            private string skinnedStatusMessage;
+            private string actionStatusMessage;
+            private string boneFilter = string.Empty;
+            private int filteredBoneIndex;
+            private float newBoneWeight = 0f;
+
+            public static void Open(VertexEditorStage stage, VertexSelection selectedVertex)
+            {
+                VertexWeightEditorWindow window = CreateInstance<VertexWeightEditorWindow>();
+                window.titleContent = new GUIContent("Vertex Weights");
+                window.minSize = new Vector2(560f, 480f);
+                window.Initialize(stage, selectedVertex);
+                window.ShowUtility();
+                window.Focus();
+            }
+
+            private void Initialize(VertexEditorStage stage, VertexSelection selectedVertex)
+            {
+                this.stage = stage;
+                this.selectedVertex = selectedVertex;
+                RefreshData();
+            }
+
+            private void RefreshData()
+            {
+                if (stage == null || selectedVertex == null)
+                {
+                    return;
+                }
+
+                List<VertexWeightEntry> slotWeights = stage.GetSlotAssetVertexWeights(selectedVertex, out slotStatusMessage);
+                editableSlotWeights = new List<VertexWeightEntry>(slotWeights.Count);
+                for (int i = 0; i < slotWeights.Count; i++)
+                {
+                    editableSlotWeights.Add(slotWeights[i].Clone());
+                }
+
+                skinnedWeights = stage.GetSkinnedMeshVertexWeights(selectedVertex, out skinnedStatusMessage);
+                boneOptions = stage.GetSlotBoneOptions(selectedVertex);
+                actionStatusMessage = string.Empty;
+            }
+
+            private void OnGUI()
+            {
+                if (stage == null || selectedVertex == null || selectedVertex.slot == null)
+                {
+                    EditorGUILayout.HelpBox("The selected vertex is no longer available.", MessageType.Warning);
+                    if (GUILayout.Button("Close"))
+                    {
+                        Close();
+                    }
+                    return;
+                }
+
+                EditorGUILayout.LabelField("Slot", selectedVertex.slot.slotName);
+                EditorGUILayout.LabelField("Vertex", selectedVertex.vertexIndexOnSlot.ToString());
+
+                List<VertexWeightComparison> comparisons = stage.BuildWeightComparisons(editableSlotWeights, skinnedWeights);
+                bool hasMismatch = HasMismatch(comparisons);
+                EditorGUILayout.HelpBox(hasMismatch ? "Mismatch: SlotDataAsset weights do not match the current SkinnedMesh weights." : "OK: SlotDataAsset weights match the current SkinnedMesh weights.", hasMismatch ? MessageType.Warning : MessageType.Info);
+
+                if (!string.IsNullOrEmpty(slotStatusMessage))
+                {
+                    EditorGUILayout.HelpBox(slotStatusMessage, MessageType.Info);
+                }
+                if (!string.IsNullOrEmpty(skinnedStatusMessage))
+                {
+                    EditorGUILayout.HelpBox(skinnedStatusMessage, MessageType.Info);
+                }
+                if (!string.IsNullOrEmpty(actionStatusMessage))
+                {
+                    EditorGUILayout.HelpBox(actionStatusMessage, MessageType.Info);
+                }
+
+                scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
+                DrawComparison(comparisons);
+                EditorGUILayout.Space();
+                DrawEditableWeights();
+                EditorGUILayout.Space();
+                DrawAddWeight();
+                EditorGUILayout.EndScrollView();
+
+                DrawFooterButtons();
+            }
+
+            private bool HasMismatch(List<VertexWeightComparison> comparisons)
+            {
+                for (int i = 0; i < comparisons.Count; i++)
+                {
+                    if (comparisons[i].mismatch)
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            private void DrawComparison(List<VertexWeightComparison> comparisons)
+            {
+                EditorGUILayout.LabelField("SlotDataAsset vs SkinnedMesh", EditorStyles.boldLabel);
+                if (comparisons.Count == 0)
+                {
+                    EditorGUILayout.HelpBox("No weights are available to compare.", MessageType.Info);
+                    return;
+                }
+
+                for (int i = 0; i < comparisons.Count; i++)
+                {
+                    VertexWeightComparison comparison = comparisons[i];
+                    string message = (comparison.mismatch ? "Mismatch" : "OK") + " - " + comparison.boneName + " | SlotDataAsset: " + FormatWeight(comparison.slotWeight) + " | SkinnedMesh: " + FormatWeight(comparison.skinnedWeight);
+                    EditorGUILayout.HelpBox(message, comparison.mismatch ? MessageType.Warning : MessageType.None);
+                }
+            }
+
+            private void DrawEditableWeights()
+            {
+                EditorGUILayout.LabelField("Edit SlotDataAsset Weights", EditorStyles.boldLabel);
+                if (editableSlotWeights.Count == 0)
+                {
+                    EditorGUILayout.HelpBox("No SlotDataAsset weights are currently assigned to this vertex.", MessageType.Info);
+                }
+
+                for (int i = 0; i < editableSlotWeights.Count; i++)
+                {
+                    VertexWeightEntry weight = editableSlotWeights[i];
+                    EditorGUILayout.BeginHorizontal();
+                    EditorGUILayout.LabelField(weight.boneName + " (index " + weight.boneIndex + ")", GUILayout.MinWidth(220f));
+                    weight.weight = Mathf.Clamp01(EditorGUILayout.FloatField(weight.weight, GUILayout.Width(72f)));
+                    bool removeWeight = false;
+                    if (GUILayout.Button("Remove", GUILayout.Width(70f)))
+                    {
+                        removeWeight = true;
+                    }
+                    EditorGUILayout.EndHorizontal();
+
+                    if (removeWeight)
+                    {
+                        editableSlotWeights.RemoveAt(i);
+                        GUIUtility.ExitGUI();
+                    }
+                }
+
+                float total = GetEditableWeightTotal();
+                EditorGUILayout.LabelField("Total", FormatWeight(total));
+                EditorGUI.BeginDisabledGroup(total <= 0f);
+                if (GUILayout.Button("Normalize"))
+                {
+                    NormalizeEditableWeights(total);
+                }
+                EditorGUI.EndDisabledGroup();
+            }
+
+            private void DrawAddWeight()
+            {
+                EditorGUILayout.LabelField("Add Bone Weight", EditorStyles.boldLabel);
+                boneFilter = EditorGUILayout.TextField("Bone Filter", boneFilter);
+                List<BoneOption> filteredOptions = GetFilteredBoneOptions();
+                if (filteredOptions.Count == 0)
+                {
+                    EditorGUILayout.HelpBox("No matching bones are available to add.", MessageType.Info);
+                    return;
+                }
+
+                if (filteredBoneIndex >= filteredOptions.Count)
+                {
+                    filteredBoneIndex = 0;
+                }
+
+                string[] optionNames = new string[filteredOptions.Count];
+                for (int i = 0; i < filteredOptions.Count; i++)
+                {
+                    optionNames[i] = filteredOptions[i].displayName;
+                }
+
+                filteredBoneIndex = EditorGUILayout.Popup("Bone", filteredBoneIndex, optionNames);
+                newBoneWeight = Mathf.Clamp01(EditorGUILayout.FloatField("Weight", newBoneWeight));
+                if (GUILayout.Button("Add"))
+                {
+                    BoneOption option = filteredOptions[filteredBoneIndex];
+                    editableSlotWeights.Add(new VertexWeightEntry()
+                    {
+                        boneIndex = option.boneIndex,
+                        boneHash = option.boneHash,
+                        boneName = option.boneName,
+                        weight = newBoneWeight
+                    });
+                    newBoneWeight = 0f;
+                }
+            }
+
+            private void DrawFooterButtons()
+            {
+                EditorGUILayout.BeginHorizontal();
+                if (GUILayout.Button("Refresh"))
+                {
+                    RefreshData();
+                }
+                if (GUILayout.Button("Apply to SlotDataAsset"))
+                {
+                    if (stage.TryApplySlotAssetVertexWeights(selectedVertex, editableSlotWeights, out actionStatusMessage))
+                    {
+                        string applyStatusMessage = actionStatusMessage;
+                        stage.RebuildMesh(true);
+                        RefreshData();
+                        actionStatusMessage = applyStatusMessage;
+                    }
+                }
+                if (GUILayout.Button("Close"))
+                {
+                    Close();
+                }
+                EditorGUILayout.EndHorizontal();
+            }
+
+            private List<BoneOption> GetFilteredBoneOptions()
+            {
+                List<BoneOption> filteredOptions = new List<BoneOption>();
+                string normalizedFilter = string.IsNullOrWhiteSpace(boneFilter) ? string.Empty : boneFilter.Trim();
+                for (int i = 0; i < boneOptions.Count; i++)
+                {
+                    BoneOption option = boneOptions[i];
+                    if (HasEditableBone(option.boneIndex))
+                    {
+                        continue;
+                    }
+
+                    if (!string.IsNullOrEmpty(normalizedFilter) && option.displayName.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) < 0)
+                    {
+                        continue;
+                    }
+
+                    filteredOptions.Add(option);
+                }
+                return filteredOptions;
+            }
+
+            private bool HasEditableBone(int boneIndex)
+            {
+                for (int i = 0; i < editableSlotWeights.Count; i++)
+                {
+                    if (editableSlotWeights[i].boneIndex == boneIndex)
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            private float GetEditableWeightTotal()
+            {
+                float total = 0f;
+                for (int i = 0; i < editableSlotWeights.Count; i++)
+                {
+                    total += editableSlotWeights[i].weight;
+                }
+                return total;
+            }
+
+            private void NormalizeEditableWeights(float total)
+            {
+                if (total <= 0f)
+                {
+                    return;
+                }
+
+                for (int i = 0; i < editableSlotWeights.Count; i++)
+                {
+                    editableSlotWeights[i].weight /= total;
+                }
+            }
+
+            private string FormatWeight(float weight)
+            {
+                return weight.ToString("0.######");
+            }
         }
 
         public VertexSelection GetInternalSelection(VertexAdjustment va)
@@ -1388,8 +2745,6 @@ namespace UMA
 
                if (currentEvent.type == EventType.MouseDown && !mouseOverAnyWindow)
                 {
-                    currentState = vertexState.unKnown;
-
                     flippedVertexes.Clear();
                     paintedVerticesThisStroke.Clear();
                     //Debug.Log("Currentevent.button = "+ currentEvent.button);
@@ -2094,6 +3449,20 @@ namespace UMA
             GUILayout.Label("Inactive", GUILayout.Width(82));
             InactiveColor = EditorGUILayout.ColorField(InactiveColor, GUILayout.Width(90));
             GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Smooth Amount", GUILayout.Width(82));
+            weightSmoothAmount = EditorGUILayout.Slider(weightSmoothAmount, 0.0f, 1.0f);
+            GUILayout.EndHorizontal();
+            EditorGUI.BeginDisabledGroup(SelectedVertexes == null || SelectedVertexes.Count == 0);
+            if (GUILayout.Button("Smooth Selected Weights"))
+            {
+                SmoothSelectedVertexWeights(weightSmoothAmount);
+            }
+            EditorGUI.EndDisabledGroup();
+            if (GUILayout.Button("View/Edit Vertex Weights"))
+            {
+                ShowCurrentVertexWeightsPopup();
+            }
             GUIHelper.EndVerticalPadded(5);
             #endregion
             #region Selection Options
@@ -2207,7 +3576,7 @@ namespace UMA
                     {
                        GUILayout.Label("Result (copy/paste):", EditorStyles.miniBoldLabel);
                         float line = EditorGUIUtility.singleLineHeight;
-                        raycastStatusMessage = EditorGUILayout.TextArea(raycastStatusMessage, GUILayout.MinHeight(line * 4f));
+                        EditorGUILayout.HelpBox(raycastStatusMessage, raycastStatusType, true);
                     }
 
                     GUIHelper.EndVerticalPadded(5);

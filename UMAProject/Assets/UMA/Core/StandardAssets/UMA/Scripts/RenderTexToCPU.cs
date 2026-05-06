@@ -13,9 +13,9 @@ namespace UMA
     public class RenderTexToCPU
     {
         public static bool ApplyInline;
-        public static Dictionary<int, RenderTexToCPU> renderTexturesToCPU = new Dictionary<int, RenderTexToCPU>();
+        public static Dictionary<EntityId, RenderTexToCPU> renderTexturesToCPU = new Dictionary<EntityId, RenderTexToCPU>();
         public static Queue<RenderTexToCPU> QueuedCopies = new Queue<RenderTexToCPU>();
-        public static Dictionary<int, RenderTexture> renderTexturesToFree = new Dictionary<int, RenderTexture>();
+        public static Dictionary<EntityId, RenderTexture> renderTexturesToFree = new Dictionary<EntityId, RenderTexture>();
 
         public RenderTexture texture;
         public GeneratedMaterial generatedMaterial;
@@ -36,8 +36,8 @@ namespace UMA
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         public static void StaticInitializeOnLoad()
         {
-            renderTexturesToCPU = new Dictionary<int, RenderTexToCPU>();
-            renderTexturesToFree = new Dictionary<int, RenderTexture>();
+            renderTexturesToCPU = new Dictionary<EntityId, RenderTexToCPU>();
+            renderTexturesToFree = new Dictionary<EntityId, RenderTexture>();
             QueuedCopies = new Queue<RenderTexToCPU>();
             ApplyInline = false;
             copiesEnqueued = 0;
@@ -58,7 +58,7 @@ namespace UMA
             this.textureName = textureName;
             this.textureIndex = textureIndex;
             this.recreateMips = basegen.convertMipMaps;
-            renderTexturesToCPU.Add(texture.GetInstanceID(), this);
+            renderTexturesToCPU.Add(texture.GetEntityId(), this);
         }
 
         public void DoAsyncCopy()
@@ -72,10 +72,10 @@ namespace UMA
 
         private void QueueCopy(AsyncGPUReadbackRequest asyncAction)
         {
-            int instanceID = texture.GetInstanceID();
-            if (renderTexturesToCPU.ContainsKey(instanceID))
+            var entityId = texture.GetEntityId();
+            if (renderTexturesToCPU.ContainsKey(entityId))
             {
-                renderTexturesToCPU.Remove(instanceID);
+                renderTexturesToCPU.Remove(entityId);
             }
 
             // if it's still valid, then create the texture and enqueue the apply method
@@ -121,7 +121,7 @@ namespace UMA
                 else
                 {
                     copiesEnqueued++;
-                    renderTexturesToFree.Add(instanceID, texture);
+                    renderTexturesToFree.Add(entityId, texture);
                     QueuedCopies.Enqueue(this);
                 }
             }
@@ -138,12 +138,12 @@ namespace UMA
 
         public static bool SafeToFree(RenderTexture tex)
         {
-            int instanceID = tex.GetInstanceID();
-            if (renderTexturesToCPU.ContainsKey(instanceID))
+            var entityId = tex.GetEntityId();
+            if (renderTexturesToCPU.ContainsKey(entityId))
             {
                 return false;
             }
-            if (renderTexturesToFree.ContainsKey(instanceID))
+            if (renderTexturesToFree.ContainsKey(entityId))
             {
                 return false;
             }
@@ -159,7 +159,7 @@ namespace UMA
             {
                 copiesDequeued++;
                 RenderTexToCPU copy = QueuedCopies.Dequeue();
-                renderTexturesToFree.Remove(copy.texture.GetInstanceID());
+                renderTexturesToFree.Remove(copy.texture.GetEntityId());
                 copy.ApplyTexture();
                 number--;
                 if (number <= 0)

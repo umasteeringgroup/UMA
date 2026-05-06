@@ -664,7 +664,7 @@ namespace UMA
                     var c = list[i];
                     if (c != null)
                     {
-                        ver = ver * 31 + c.GetInstanceID();
+						ver = ver * 31 + (int)c.GetEntityId();
                         ver = ver * 31 + (c.name != null ? c.name.GetHashCode() : 0);
                     }
                     else

@@ -39,9 +39,9 @@ MonoBehaviour:
           name: 
           Value: 0
         p10:
-          stringRepresentation: Color;#FFF8E3FF;_BaseColor
+          stringRepresentation: Color;#FDE6A2FF;_BaseColor
           name: _BaseColor
-          Value: {r: 1, g: 0.9742406, b: 0.88993704, a: 1}
+          Value: {r: 0.99371064, g: 0.90387046, b: 0.6343498, a: 1}
         p9:
           stringRepresentation: 
           name: 
@@ -169,7 +169,7 @@ MonoBehaviour:
     moveUpThis: 0
     moveDownThis: 0
     colorsExpanded: 0
-    propertiesExpanded: 0
+    propertiesExpanded: 1
     showSelected: 1
     isSelected: 1
     showDisplayColor: 1

@@ -254,7 +254,7 @@ namespace UMA
 				return;
 			}
 
-			int DestroyInstance = obj.GetInstanceID();
+			var DestroyInstance = obj.GetEntityId();
 			if (obj is Avatar && !UMAGeneratorBase.CreatedAvatars.Contains(DestroyInstance))
 			{
 				return;
@@ -284,7 +284,7 @@ namespace UMA
 				return;
 			}
 
-			int DestroyInstance = obj.GetInstanceID();
+			EntityId DestroyInstance = obj.GetEntityId();
 			if (obj is Avatar && !UMAGeneratorBase.CreatedAvatars.Contains(DestroyInstance))
 			{
 				return;

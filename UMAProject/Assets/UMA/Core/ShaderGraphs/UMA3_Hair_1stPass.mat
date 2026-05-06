@@ -111,9 +111,9 @@ Material:
     - _Root_Shift: 2.27
     - _Root_Tip_Intensity: 0
     - _ShadowClip: 0.3
-    - _Smoothness: 0.4
+    - _Smoothness: 0.25
     - _SpecularMix: 0.5
-    - _SpecularMultiplier: 0.4
+    - _SpecularMultiplier: 0.3
     - _SpecularPowerScale: 30
     - _SpecularShiftMax: 0
     - _SpecularShiftMin: 0
@@ -133,8 +133,9 @@ Material:
     m_Colors:
     - _BaseColor: {r: 0.8196079, g: 0.8196079, b: 0.8196079, a: 1}
     - _EmissiveColor: {r: 0, g: 0, b: 0, a: 0}
+    - _Normal: {r: 0, g: 0, b: 0, a: 0}
     - _RootColor: {r: 0.8196079, g: 0.8196079, b: 0.8196079, a: 1}
-    - _SpecularTint: {r: 0.6886792, g: 0.55549127, b: 0.55549127, a: 1}
+    - _SpecularTint: {r: 0.8616352, g: 0.26562414, b: 0, a: 1}
     - _Tip_Color: {r: 0.8196079, g: 0.8196079, b: 0.8196079, a: 1}
     - _VertexBaseColor: {r: 0, g: 0, b: 0, a: 0}
   m_BuildTextureStacks: []

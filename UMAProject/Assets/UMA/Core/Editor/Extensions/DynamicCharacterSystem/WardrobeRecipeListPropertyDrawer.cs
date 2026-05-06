@@ -800,7 +800,6 @@ namespace UMA.CharacterSystem.Editors
                         catch { }
                     }
 
-                    bool canToggleForce = false;
                     bool forceLoad = false;
                     try
                     {
@@ -808,7 +807,6 @@ namespace UMA.CharacterSystem.Editors
                             i >= 0 && i < thisDCA.preloadWardrobeRecipes.recipes.Count &&
                             thisDCA.preloadWardrobeRecipes.recipes[i] != null)
                         {
-                            canToggleForce = true;
                             forceLoad = thisDCA.preloadWardrobeRecipes.recipes[i].ForceLoad;
                             if (forceLoad) prequel += "F";
                         }

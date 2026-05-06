@@ -1639,7 +1639,7 @@ namespace UMA.Controls
 #else
                     AssetDatabase.SaveAssets();
 #endif
-                    string path = AssetDatabase.GetAssetPath(uwr.GetInstanceID());
+                    string path = AssetDatabase.GetAssetPath(uwr.GetEntityId());
                     AssetDatabase.ImportAsset(path);
                     return true;
                 }
@@ -1659,7 +1659,7 @@ namespace UMA.Controls
                 bool found = false;
                 foreach (MeshHideAsset theAsset in uwr.MeshHideAssets)
                 {
-                    if (theAsset.GetInstanceID() == AddedMHA.GetInstanceID())
+                    if (theAsset.GetEntityId() == AddedMHA.GetEntityId())
                     {
                         found = true;
                         break;
@@ -1676,7 +1676,7 @@ namespace UMA.Controls
                     AssetDatabase.SaveAssets();
 #endif
 
-                    string path = AssetDatabase.GetAssetPath(uwr.GetInstanceID());
+                    string path = AssetDatabase.GetAssetPath(uwr.GetEntityId());
                     AssetDatabase.ImportAsset(path);
                     return true;
                 }
@@ -1838,7 +1838,7 @@ namespace UMA.Controls
                     AssetDatabase.SaveAssets();
 #endif
 
-                    string path = AssetDatabase.GetAssetPath(uwr.GetInstanceID());
+                    string path = AssetDatabase.GetAssetPath(uwr.GetEntityId());
                     AssetDatabase.ImportAsset(path);
                 }
             }
@@ -1860,7 +1860,7 @@ namespace UMA.Controls
                     AssetDatabase.SaveAssets();
 #endif
 
-                    string path = AssetDatabase.GetAssetPath(uwr.GetInstanceID());
+                    string path = AssetDatabase.GetAssetPath(uwr.GetEntityId());
                     AssetDatabase.ImportAsset(path);
                 }
             }
@@ -1883,7 +1883,7 @@ namespace UMA.Controls
                     AssetDatabase.SaveAssets();
 #endif
 
-                    string path = AssetDatabase.GetAssetPath(uwr.GetInstanceID());
+                    string path = AssetDatabase.GetAssetPath(uwr.GetEntityId());
                     AssetDatabase.ImportAsset(path);
                 }
             }
@@ -1905,7 +1905,7 @@ namespace UMA.Controls
                     AssetDatabase.SaveAssets();
 #endif
 
-                    string path = AssetDatabase.GetAssetPath(uwr.GetInstanceID());
+                    string path = AssetDatabase.GetAssetPath(uwr.GetEntityId());
                     AssetDatabase.ImportAsset(path);
                 }
             }
@@ -2876,7 +2876,7 @@ namespace UMA.Controls
         private RaceData toRace;
         private SlotDataAsset donorSlot;
         float rotX, rotY, rotZ;
-        private bool postRotate = false;
+
 
 
         void ShowSidebar()
@@ -3673,7 +3673,7 @@ namespace UMA.Controls
 
         private DynamicCharacterAvatar _fromCharacter;
         private DynamicCharacterAvatar _toCharacter;
-        private bool alignBindPoses = false;
+
 
         class SaveBonePoseInfo
         {
@@ -4517,7 +4517,7 @@ namespace UMA.Controls
                             {
                                 continue;
                             }
-                            if (tex != null && o.textureList[j].GetInstanceID() == tex.GetInstanceID())
+                            if (tex != null && o.textureList[j].GetEntityId() == tex.GetEntityId())
                             {
                                 badItems.Add(ovls[i]);
                             }

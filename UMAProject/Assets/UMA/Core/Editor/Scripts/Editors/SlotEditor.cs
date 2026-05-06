@@ -104,7 +104,7 @@ namespace UMA.Editors
 
             if (select && !_slotData.isPlaceholderSlot)
             {
-                EditorGUIUtility.PingObject(_slotData.asset.GetInstanceID());
+                EditorGUIUtility.PingObject(_slotData.asset.GetEntityId());
                 InspectorUtlity.InspectTarget(_slotData.asset);
             }
 
@@ -170,89 +170,101 @@ namespace UMA.Editors
                     if (_utilitiesFoldout[_slotData.slotName])
                     {
                         GUIHelper.BeginVerticalPadded(10, new Color(0.9f, 0.9f, 0.9f));
-
-                        // View copied data (moved here)
-                        _slotData.slotAssetFoldout = EditorGUILayout.Foldout(_slotData.slotAssetFoldout, "View copied data", true);
-                        if (_slotData.slotAssetFoldout)
+                        try
                         {
-                            GUIHelper.BeginVerticalPadded(10, new Color(0.65f, 0.675f, 1f));
-                            EditorGUILayout.LabelField("Overlay Scale", _slotData.overlayScale.ToString("F4"));
-                            EditorGUILayout.LabelField("Matching Tags");
-                            if (_slotData.tags != null && _slotData.tags.Length > 0)
+                            // View copied data (moved here)
+                            _slotData.slotAssetFoldout = EditorGUILayout.Foldout(_slotData.slotAssetFoldout, "View copied data", true);
+                            if (_slotData.slotAssetFoldout)
                             {
-                                foreach (var tag in _slotData.tags)
+                                GUIHelper.BeginVerticalPadded(10, new Color(0.65f, 0.675f, 1f));
+                                try
                                 {
-                                    EditorGUILayout.LabelField(" - " + tag);
-                                }
-                            }
-                            else
-                            {
-                                EditorGUILayout.LabelField(" - None");
-                            }
-                            EditorGUILayout.LabelField("Matching Races");
-                            if (_slotData.Races != null && _slotData.Races.Length > 0)
-                            {
-                                foreach (var race in _slotData.Races)
-                                {
-                                    EditorGUILayout.LabelField(" - " + race);
-                                }
-                            }
-                            else
-                            {
-                                EditorGUILayout.LabelField(" - None");
-                            }
-                            if (GUILayout.Button("Refresh slot from Asset"))
-                            {
-                                _slotData.asset = AssetDatabase.LoadAssetAtPath<SlotDataAsset>(AssetDatabase.GetAssetPath(_slotData.asset));
-                                _slotData.UpdateFromAsset(_slotData.asset);
-                                changed = true;
-                            }
-                            GUIHelper.EndVerticalPadded(10);
-                        }
-
-                        GUILayout.Space(4);
-                        EditorGUILayout.LabelField("Update Overlay UMA Material", EditorStyles.boldLabel);
-                        Rect matDrop = GUILayoutUtility.GetRect(0.0f, 40.0f, GUILayout.ExpandWidth(true));
-                        GUI.Box(matDrop, "Drag UMA Material here to update this slot's overlays");
-                        Event evt = Event.current;
-                        if ((evt.type == EventType.DragUpdated || evt.type == EventType.DragPerform) && matDrop.Contains(evt.mousePosition))
-                        {
-                            bool hasUmaMaterial = false;
-                            foreach (var obj in DragAndDrop.objectReferences)
-                            {
-                                if (obj is UMAMaterial)
-                                {
-                                    hasUmaMaterial = true;
-                                    break;
-                                }
-                            }
-                            if (hasUmaMaterial)
-                            {
-                                DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
-                                if (evt.type == EventType.DragPerform)
-                                {
-                                    DragAndDrop.AcceptDrag();
-                                    foreach (var obj in DragAndDrop.objectReferences)
+                                    EditorGUILayout.LabelField("Overlay Scale", _slotData.overlayScale.ToString("F4"));
+                                    EditorGUILayout.LabelField("Matching Tags");
+                                    if (_slotData.tags != null && _slotData.tags.Length > 0)
                                     {
-                                        if (obj is UMAMaterial umaMat)
+                                        foreach (var tag in _slotData.tags)
                                         {
-                                            if (ApplyUMAMaterialToSlotAndOverlays(umaMat))
-                                            {
-                                                changed = true;
-                                                _textureDirty = true;
-                                                _meshDirty = true;
-                                            }
+                                            EditorGUILayout.LabelField(" - " + tag);
                                         }
                                     }
-                                    evt.Use();
+                                    else
+                                    {
+                                        EditorGUILayout.LabelField(" - None");
+                                    }
+                                    EditorGUILayout.LabelField("Matching Races");
+                                    if (_slotData.Races != null && _slotData.Races.Length > 0)
+                                    {
+                                        foreach (var race in _slotData.Races)
+                                        {
+                                            EditorGUILayout.LabelField(" - " + race);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        EditorGUILayout.LabelField(" - None");
+                                    }
+                                    if (GUILayout.Button("Refresh slot from Asset"))
+                                    {
+                                        _slotData.asset = AssetDatabase.LoadAssetAtPath<SlotDataAsset>(AssetDatabase.GetAssetPath(_slotData.asset));
+                                        _slotData.UpdateFromAsset(_slotData.asset);
+                                        changed = true;
+                                        GUIUtility.ExitGUI();
+                                    }
                                 }
-                                else
+                                finally
                                 {
-                                    evt.Use();
+                                    GUIHelper.EndVerticalPadded(10);
+                                }
+                            }
+
+                            GUILayout.Space(4);
+                            EditorGUILayout.LabelField("Update Overlay UMA Material", EditorStyles.boldLabel);
+                            Rect matDrop = GUILayoutUtility.GetRect(0.0f, 40.0f, GUILayout.ExpandWidth(true));
+                            GUI.Box(matDrop, "Drag UMA Material here to update this slot's overlays");
+                            Event evt = Event.current;
+                            if ((evt.type == EventType.DragUpdated || evt.type == EventType.DragPerform) && matDrop.Contains(evt.mousePosition))
+                            {
+                                bool hasUmaMaterial = false;
+                                foreach (var obj in DragAndDrop.objectReferences)
+                                {
+                                    if (obj is UMAMaterial)
+                                    {
+                                        hasUmaMaterial = true;
+                                        break;
+                                    }
+                                }
+                                if (hasUmaMaterial)
+                                {
+                                    DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
+                                    if (evt.type == EventType.DragPerform)
+                                    {
+                                        DragAndDrop.AcceptDrag();
+                                        foreach (var obj in DragAndDrop.objectReferences)
+                                        {
+                                            if (obj is UMAMaterial umaMat)
+                                            {
+                                                if (ApplyUMAMaterialToSlotAndOverlays(umaMat))
+                                                {
+                                                    changed = true;
+                                                    _textureDirty = true;
+                                                    _meshDirty = true;
+                                                }
+                                            }
+                                        }
+                                        evt.Use();
+                                    }
+                                    else
+                                    {
+                                        evt.Use();
+                                    }
                                 }
                             }
                         }
-                        GUIHelper.EndVerticalPadded(10);
+                        finally
+                        {
+                            GUIHelper.EndVerticalPadded(10);
+                        }
                     }
                 }
 
@@ -309,7 +321,6 @@ namespace UMA.Editors
                     GUIHelper.BeginVerticalPadded(10, new Color(0.65f, 0.675f, 1f));
                     try
                     {
-                        bool wasDeleted = false;
                         foreach (SlotData sda in BlendShapeSlots)
                         {
                             GUILayout.BeginHorizontal();
@@ -317,15 +328,12 @@ namespace UMA.Editors
                             if (GUILayout.Button("X", GUILayout.Width(22)))
                             {
                                 _recipe.RemoveSlot(sda);
-                                wasDeleted = true;
+                                _dnaDirty = true;
+                                _meshDirty = true;
+                                changed = true;
+                                GUIUtility.ExitGUI();
                             }
                             GUILayout.EndHorizontal();
-                        }
-                        if (wasDeleted)
-                        {
-                            _dnaDirty = true;
-                            _meshDirty = true;
-                            changed = true;
                         }
                         var addedSlot = (SlotDataAsset)EditorGUILayout.ObjectField("Add Slot", null, typeof(SlotDataAsset), false);
 
@@ -365,6 +373,7 @@ namespace UMA.Editors
                                 _textureDirty = true;
                                 _meshDirty = true;
                                 changed = true;
+                                GUIUtility.ExitGUI();
                             }
                         }
                     }
@@ -392,27 +401,33 @@ namespace UMA.Editors
                 if (_foldout[_slotData.slotName])
                 {
                     GUIHelper.BeginVerticalPadded(10, new Color(0.65f, 0.675f, 1f));
-                    if (_slotData.isPlaceholderSlot || (_slotData.asset != null && _slotData.asset.isWildCardSlot))
+                    try
                     {
-                        GUILayout.Label("Match Tags:");
+                        if (_slotData.isPlaceholderSlot || (_slotData.asset != null && _slotData.asset.isWildCardSlot))
+                        {
+                            GUILayout.Label("Match Tags:");
+                        }
+                        else
+                        {
+                            GUILayout.Label("Edit tags for this slot:");
+                        }
+                        if (SlotTagsList == null)
+                        {
+                            backingTags = new List<string>(_slotData.tags);
+                            SlotTagsList = GUIHelper.InitGenericTagsList(backingTags);
+                        }
+                        SlotTagsList.DoLayoutList();
+                        if (GUI.changed)
+                        {
+                            _slotData.tags = backingTags.ToArray();
+                            changed = true;
+                        }
+                        TagsEditor.DoRaceGUI(ref changed, _slotData);
                     }
-                    else
+                    finally
                     {
-                        GUILayout.Label("Edit tags for this slot:");
+                        GUIHelper.EndVerticalPadded(10);
                     }
-                    if (SlotTagsList == null)
-                    {
-                        backingTags = new List<string>(_slotData.tags);
-                        SlotTagsList = GUIHelper.InitGenericTagsList(backingTags);
-                    }
-                    SlotTagsList.DoLayoutList();
-                    if (GUI.changed)
-                    {
-                        _slotData.tags = backingTags.ToArray();
-                        changed = true;
-                    }
-                    TagsEditor.DoRaceGUI(ref changed, _slotData);
-                    GUIHelper.EndVerticalPadded(10);
                 }
 
                 if (!_slotData.isPlaceholderSlot)
@@ -431,11 +446,17 @@ namespace UMA.Editors
 
                     EditorGUILayout.LabelField("Shared Overlays:");
                     GUIHelper.BeginVerticalPadded(10, new Color(0.85f, 0.85f, 0.85f));
-                    foreach (OverlayData ov in ovr)
+                    try
                     {
-                        EditorGUILayout.LabelField(ov.asset.overlayName);
+                        foreach (OverlayData ov in ovr)
+                        {
+                            EditorGUILayout.LabelField(ov.asset.overlayName);
+                        }
                     }
-                    GUIHelper.EndVerticalPadded(10);
+                    finally
+                    {
+                        GUIHelper.EndVerticalPadded(10);
+                    }
                 }
                 else
                 {
@@ -450,6 +471,7 @@ namespace UMA.Editors
                         _textureDirty = true;
                         _meshDirty = true;
                         changed = true;
+                        GUIUtility.ExitGUI();
                     }
 
                     if (!_slotData.isPlaceholderSlot)
@@ -465,6 +487,7 @@ namespace UMA.Editors
                             _textureDirty = true;
                             _meshDirty = true;
                             changed = true;
+                            GUIUtility.ExitGUI();
                         }
 
                         int remapUV = EditorGUILayout.Popup("Remap UV to Main", _slotData.UVSet, new string[] { "None", "UV Set 2", "UV Set 3", "UV Set 4" });
@@ -492,7 +515,7 @@ namespace UMA.Editors
                             _overlayData.RemoveAt(i);
                             _textureDirty = true;
                             changed = true;
-                            i--;
+                            GUIUtility.ExitGUI();
                         }
                     }
 
@@ -540,6 +563,7 @@ namespace UMA.Editors
                             _textureDirty = true;
                             _meshDirty = true;
                             changed = true;
+                            GUIUtility.ExitGUI();
                         }
                     }
                 }

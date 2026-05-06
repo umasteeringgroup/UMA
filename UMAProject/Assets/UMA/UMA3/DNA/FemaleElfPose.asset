@@ -16,4 +16,4 @@ MonoBehaviour:
   dnaList:
   - {fileID: 11400000, guid: 3b1aaa90f8f394c488ff96fa3768f7f9, type: 2}
   MaxTotalValue: 0
-  editorFoldout: 0
+  editorFoldout: 1

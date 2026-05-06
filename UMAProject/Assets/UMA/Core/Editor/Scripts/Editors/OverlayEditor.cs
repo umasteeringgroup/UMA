@@ -18,7 +18,7 @@ namespace UMA.Editors
         private readonly TextureEditor[] _textures;
         private ColorEditor[] _colors;
         private bool isUV = false;
-        private bool _rectChanged = false;
+
         private bool _popupRectChanged;
 
 
@@ -33,7 +33,7 @@ namespace UMA.Editors
 
         public int move;
         private static OverlayData showExtendedRangeForOverlay;
-        private static readonly HashSet<int> PopupChangedOverlayAssetIds = new HashSet<int>();
+        private static readonly HashSet<EntityId> PopupChangedOverlayAssetIds = new HashSet<EntityId>();
 
         public void EnsureEntry(string overlayName)
         {
@@ -129,7 +129,7 @@ namespace UMA.Editors
             _popupRectChanged = true;
             if (_overlayData.asset != null)
             {
-                PopupChangedOverlayAssetIds.Add(_overlayData.asset.GetInstanceID());
+                PopupChangedOverlayAssetIds.Add(_overlayData.asset.GetEntityId());
             }
 
             if (updateAsset && _overlayData.asset != null)
@@ -162,7 +162,7 @@ namespace UMA.Editors
 
             if (_overlayData.asset != null)
             {
-                PopupChangedOverlayAssetIds.Add(_overlayData.asset.GetInstanceID());
+                PopupChangedOverlayAssetIds.Add(_overlayData.asset.GetEntityId());
             }
 
             RepaintEditorViews();
@@ -178,7 +178,7 @@ namespace UMA.Editors
 
             if (_overlayData.asset != null)
             {
-                PopupChangedOverlayAssetIds.Add(_overlayData.asset.GetInstanceID());
+                PopupChangedOverlayAssetIds.Add(_overlayData.asset.GetEntityId());
             }
 
             if (_recipeContext != null)
@@ -299,7 +299,7 @@ namespace UMA.Editors
 
             if (_overlayData.asset != null)
             {
-                PopupChangedOverlayAssetIds.Add(_overlayData.asset.GetInstanceID());
+                PopupChangedOverlayAssetIds.Add(_overlayData.asset.GetEntityId());
             }
 
             RepaintEditorViews();
@@ -311,7 +311,7 @@ namespace UMA.Editors
 
             if (_overlayData != null && _overlayData.asset != null)
             {
-                int assetId = _overlayData.asset.GetInstanceID();
+                EntityId assetId = _overlayData.asset.GetEntityId();
                 if (PopupChangedOverlayAssetIds.Contains(assetId))
                 {
                     popupChanged = true;
@@ -366,19 +366,19 @@ namespace UMA.Editors
 
             if (pressed[0])
             {
-                EditorGUIUtility.PingObject(_overlayData.asset.GetInstanceID());
+                EditorGUIUtility.PingObject(_overlayData.asset.GetEntityId());
                 InspectorUtlity.InspectTarget(_overlayData.asset);
             }
 
             if (pressed[1])
             {
-                EditorGUIUtility.PingObject(_overlayData.asset.material.material.GetInstanceID());
+                EditorGUIUtility.PingObject(_overlayData.asset.material.material.GetEntityId());
                 InspectorUtlity.InspectTarget(_overlayData.asset.material.material);
             }
 
             if (pressed[2])
             {
-                EditorGUIUtility.PingObject(_overlayData.asset.material.GetInstanceID());
+                EditorGUIUtility.PingObject(_overlayData.asset.material.GetEntityId());
                 InspectorUtlity.InspectTarget(_overlayData.asset.material);
             }
 
@@ -450,7 +450,7 @@ namespace UMA.Editors
                         {
                             _overlayData.asset.material = _slotData.material;
                             EditorUtility.SetDirty(_overlayData.asset);
-                            string path = AssetDatabase.GetAssetPath(_overlayData.asset.GetInstanceID());
+                            string path = AssetDatabase.GetAssetPath(_overlayData.asset.GetEntityId());
                             AssetDatabase.ImportAsset(path);
                         }
                     }

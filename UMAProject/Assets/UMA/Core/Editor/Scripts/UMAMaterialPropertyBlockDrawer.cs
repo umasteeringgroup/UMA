@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEditor;
 using UMA.Editors;
 
@@ -19,7 +19,7 @@ namespace UMA
 
         private class TemplateMaterialEntry
         {
-            public int materialInstanceID;
+            public EntityId materialInstanceID;
             public string materialName;
             public bool expanded = true;
             public readonly System.Collections.Generic.List<TemplatePropertyEntry> properties = new System.Collections.Generic.List<TemplatePropertyEntry>();
@@ -249,7 +249,8 @@ namespace UMA
                 }
             }
 
-            using (new EditorGUI.DisabledScope(templateMaterials.Count == 0))
+            int selectedPropertyCount = GetSelectedTemplateMaterialPropertyCount();
+            using (new EditorGUI.DisabledScope(selectedPropertyCount == 0))
             {
                 if (GUILayout.Button("Copy selected material properties"))
                 {
@@ -269,7 +270,7 @@ namespace UMA
                 return;
             }
 
-            var addedMaterials = new System.Collections.Generic.HashSet<int>();
+            var addedMaterials = new System.Collections.Generic.HashSet<EntityId>();
             for (int i = 0; i < materials.Length; i++)
             {
                 Material material = materials[i];
@@ -278,7 +279,7 @@ namespace UMA
                     continue;
                 }
 
-                int materialInstanceID = material.GetInstanceID();
+                EntityId materialInstanceID = material.GetEntityId();
                 if (!addedMaterials.Add(materialInstanceID))
                 {
                     continue;
@@ -368,25 +369,54 @@ namespace UMA
 
         private static void CopySelectedTemplateMaterialProperties(UMAMaterialPropertyBlock umpb)
         {
-            for (int i = 0; i < templateMaterials.Count; i++)
+            TemplateMaterialEntry materialEntry = GetSelectedTemplateMaterialEntry();
+            if (materialEntry == null)
             {
-                TemplateMaterialEntry materialEntry = templateMaterials[i];
-                if (materialEntry == null)
+                return;
+            }
+
+            for (int j = 0; j < materialEntry.properties.Count; j++)
+            {
+                TemplatePropertyEntry propertyEntry = materialEntry.properties[j];
+                if (propertyEntry == null || !propertyEntry.selected || propertyEntry.property == null)
                 {
                     continue;
                 }
 
-                for (int j = 0; j < materialEntry.properties.Count; j++)
-                {
-                    TemplatePropertyEntry propertyEntry = materialEntry.properties[j];
-                    if (propertyEntry == null || !propertyEntry.selected || propertyEntry.property == null)
-                    {
-                        continue;
-                    }
+                umpb.SetProperty(propertyEntry.property.Clone());
+            }
+        }
 
-                    umpb.SetProperty(propertyEntry.property.Clone());
+        private static TemplateMaterialEntry GetSelectedTemplateMaterialEntry()
+        {
+            if (templateMaterials.Count == 0)
+            {
+                return null;
+            }
+
+            selectedTemplateMaterialIndex = Mathf.Clamp(selectedTemplateMaterialIndex, 0, templateMaterials.Count - 1);
+            return templateMaterials[selectedTemplateMaterialIndex];
+        }
+
+        private static int GetSelectedTemplateMaterialPropertyCount()
+        {
+            TemplateMaterialEntry materialEntry = GetSelectedTemplateMaterialEntry();
+            if (materialEntry == null)
+            {
+                return 0;
+            }
+
+            int count = 0;
+            for (int i = 0; i < materialEntry.properties.Count; i++)
+            {
+                TemplatePropertyEntry propertyEntry = materialEntry.properties[i];
+                if (propertyEntry != null && propertyEntry.selected && propertyEntry.property != null)
+                {
+                    count++;
                 }
             }
+
+            return count;
         }
 
         private static void SetAllTemplatePropertySelections(bool selected)

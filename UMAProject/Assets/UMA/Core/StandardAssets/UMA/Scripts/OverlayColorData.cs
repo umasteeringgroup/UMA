@@ -492,6 +492,10 @@ namespace UMA
         {
             if (src == null) return;
 
+            bool preservePropertyUpdateFlags = CopyParmsOnly && PropertyBlock != null;
+            bool previousAlwaysUpdate = preservePropertyUpdateFlags && PropertyBlock.alwaysUpdate;
+            bool previousAlwaysUpdateParms = preservePropertyUpdateFlags && PropertyBlock.alwaysUpdateParms;
+
             // If CopyParmsOnly is false, then we need to copy the colors and the property block.
             // If it is true, then we are copying the property block only.
             if (!CopyParmsOnly)
@@ -516,8 +520,8 @@ namespace UMA
             PropertyBlock = new UMAMaterialPropertyBlock();
             if (src.PropertyBlock != null)
             {
-                PropertyBlock.alwaysUpdate = src.PropertyBlock.alwaysUpdate;
-                PropertyBlock.alwaysUpdateParms = src.PropertyBlock.alwaysUpdateParms;
+                PropertyBlock.alwaysUpdate = preservePropertyUpdateFlags ? previousAlwaysUpdate : src.PropertyBlock.alwaysUpdate;
+                PropertyBlock.alwaysUpdateParms = preservePropertyUpdateFlags ? previousAlwaysUpdateParms : src.PropertyBlock.alwaysUpdateParms;
                 PropertyBlock.shaderProperties = new List<UMAProperty>(src.PropertyBlock.shaderProperties?.Count ?? 0);
                 if (src.PropertyBlock.shaderProperties != null)
                 {
@@ -527,6 +531,11 @@ namespace UMA
                         if (up != null) PropertyBlock.shaderProperties.Add(up.Clone());
                     }
                 }
+            }
+            else if (preservePropertyUpdateFlags)
+            {
+                PropertyBlock.alwaysUpdate = previousAlwaysUpdate;
+                PropertyBlock.alwaysUpdateParms = previousAlwaysUpdateParms;
             }
         }
 

@@ -57,7 +57,6 @@ namespace UMA.Editors
         SlotDataAsset uma3DonorSlot = null;
         bool overrideUma3AxisConversion;
         Vector3 uma3AxisConversion = new Vector3(0f, 0f, 90f);
-        string lastUma3ConversionInfo = "";
 
         bool CopyNormals;
         bool CopyBoneWeights;
@@ -106,7 +105,7 @@ namespace UMA.Editors
             wildcard.isWildCardSlot = true;
             wildcard.name = "WildCard";
             EditorUtility.SetDirty(wildcard);
-            string path = AssetDatabase.GetAssetPath(wildcard.GetInstanceID());
+            string path = AssetDatabase.GetAssetPath(wildcard.GetEntityId());
             AssetDatabase.ImportAsset(path);
             EditorUtility.DisplayDialog("UMA", "Wildcard slot created. You should first change the SlotName in the inspector, and then add it to the global library or to a scene library", "OK");
         }
@@ -507,7 +506,7 @@ namespace UMA.Editors
                     UMAUpdateProcessor.UpdateSlot(target as SlotDataAsset, false);
                     EditorUtility.SetDirty(target);
                     AssetDatabase.SaveAssetIfDirty(target);
-                    string path = AssetDatabase.GetAssetPath(target.GetInstanceID());
+                    string path = AssetDatabase.GetAssetPath(target.GetEntityId());
                     AssetDatabase.ImportAsset(path);
                     forceUpdate = true;
                 }
@@ -895,7 +894,7 @@ namespace UMA.Editors
             {
                 EditorUtility.SetDirty(target);
                 AssetDatabase.SaveAssetIfDirty(target);
-                string path = AssetDatabase.GetAssetPath(target.GetInstanceID());
+                string path = AssetDatabase.GetAssetPath(target.GetEntityId());
                 AssetDatabase.ImportAsset(path);
                 UMAUpdateProcessor.UpdateSlot(target as SlotDataAsset, false);
             }
@@ -1501,7 +1500,7 @@ namespace UMA.Editors
             string existingRootBone = !UMAMeshData.IsNullOrEmptyMeshData(s.meshData) ? s.meshData.RootBoneName : string.Empty;
 
             UMASlotProcessingUtil.UpdateSlotData(s, skinnedMesh, null, seamsMesh, existingRootBone, true, clearNormals, clearTangents);
-            string path = AssetDatabase.GetAssetPath(target.GetInstanceID());
+            string path = AssetDatabase.GetAssetPath(target.GetEntityId());
             AssetDatabase.ImportAsset(path);
             UMAUpdateProcessor.UpdateSlot(s);
         }

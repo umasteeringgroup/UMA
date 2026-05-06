@@ -467,7 +467,7 @@ namespace UMA
 #if UNITY_6000_3_OR_NEWER
             _Path = AssetDatabase.GetAssetPath(Item.GetEntityId());
 #else
-            _Path = AssetDatabase.GetAssetPath(Item.GetInstanceID());
+            _Path = AssetDatabase.GetAssetPath(Item.GetEntityId());
 #endif
             _Guid = AssetDatabase.AssetPathToGUID(_Path);
 #endif

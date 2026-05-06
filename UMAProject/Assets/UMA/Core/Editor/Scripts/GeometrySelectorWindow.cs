@@ -42,7 +42,6 @@ namespace UMA.Editors
         private bool showCopyLOD;
 
 #if UNITY_6000_2_OR_NEWER
-        private int _selectedLOD = 0;
         private int _copyFromLod = 0;
         private int _copyToLod = 0;
         private bool _copyReplaceDest = true;

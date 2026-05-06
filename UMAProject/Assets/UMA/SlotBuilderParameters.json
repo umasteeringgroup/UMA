@@ -45,7 +45,7 @@
     "filterIgnoreMeshesContaining": "",
     "filterOnlyIncludeMeshesEnabled": false,
     "filterOnlyIncludeMeshesContaining": "robe",
-    "lastDroppedFbxPath": "Assets/Temp/UMA_3_Clothing_Hair_all.fbx",
+    "lastDroppedFbxPath": "Assets/temp/UMA_3_Clothing_Hair_selected.fbx",
     "pendingSmrsCompactView": true,
     "pendingSmrsFilterEnabled": false
 }

@@ -136,9 +136,8 @@ namespace UMA.Decals
         private static Material _lineMat;
 
         // UI state for improved interface
-        private Vector2 _scrollPosition;
+        private Vector2 _scrollPosition; 
 		private Vector2 _stampsScrollPosition;
-        private bool _showDebugSettings = false;
 		public bool debugShowSpheres = false;
 		public float DecalScale = 1.0f;
 

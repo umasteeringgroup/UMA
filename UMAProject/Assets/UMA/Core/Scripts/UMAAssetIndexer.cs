@@ -1063,7 +1063,6 @@ namespace UMA
             {
                 return;
             }
-            Debug.Log("Rebuilding UMAs in scene " + scene.name);
             GameObject[] sceneObjs = scene.GetRootGameObjects();
             for (int i = 0; i < sceneObjs.Length; i++)
             {
@@ -1081,7 +1080,6 @@ namespace UMA
                     }
                 }
             }
-            Debug.Log("Finished Rebuilding UMAs in scene " + scene.name);
         }
 
         public static void CleanupUMAS(Scene scene)
@@ -4122,7 +4120,7 @@ namespace UMA
 #if UNITY_6000_3_OR_NEWER
             ai._Path = AssetDatabase.GetAssetPath(o.GetEntityId());
 #else
-            ai._Path = AssetDatabase.GetAssetPath(o.GetInstanceID());
+            ai._Path = AssetDatabase.GetAssetPath(o.GetEntityId());
 #endif
             return AddAssetItem(ai);
         }
@@ -4660,7 +4658,6 @@ namespace UMA
         private void AddType(string s, Type CurrentType, List<string> FolderFilter)
         {
             bool ignoreBackups = UMASettings.IgnoreBackupFolders;
-            bool logAdds = false;
 
             string qualifiedName = CurrentType.AssemblyQualifiedName;
             bool removeUnlabeled = isRemoveUnlabelledType(qualifiedName);
@@ -4951,7 +4948,7 @@ namespace UMA
 #if UNITY_6000_3_OR_NEWER
                         ai._Path = AssetDatabase.GetAssetPath(obj.GetEntityId());
 #else
-                        ai._Path = AssetDatabase.GetAssetPath(obj.GetInstanceID());
+                        ai._Path = AssetDatabase.GetAssetPath(obj.GetEntityId());
 #endif
                         ai._Guid = AssetDatabase.AssetPathToGUID(ai._Path);
                     }

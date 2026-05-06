@@ -774,8 +774,9 @@ namespace UMA
 		{
 			var res = new Transform[boneNameHashes.Length];
 			Transform fallback = GetGlobalTransform() ?? GetRootTransform();
+#if UNITY_EDITOR || DEVELOPMENT_BUILD			
 			bool reported = false;
-
+#endif
 			for (int i = 0; i < boneNameHashes.Length; i++)
 			{
 				BoneData bd;
@@ -804,8 +805,9 @@ namespace UMA
 		{
 			var res = new Transform[boneNameHashes.Count];
 			Transform fallback = GetGlobalTransform() ?? GetRootTransform();
+#if UNITY_EDITOR || DEVELOPMENT_BUILD			
 			bool reported = false;
-
+#endif
 			for (int i = 0; i < boneNameHashes.Count; i++)
 			{
 				BoneData bd;

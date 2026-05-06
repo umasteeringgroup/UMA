@@ -27,6 +27,8 @@ namespace UMA
         private DNACurve _TemplateCurve = null;
         public bool expanded;
         public bool selected;
+
+
         public string title
         {
             get
