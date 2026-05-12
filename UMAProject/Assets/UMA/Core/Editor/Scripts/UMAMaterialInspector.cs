@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 using Unity.Collections.LowLevel.Unsafe;
@@ -102,6 +102,7 @@ namespace UMA.Editors
 
             GUILayout.BeginHorizontal();
             EditorGUILayout.PropertyField(serializedObject.FindProperty("_material"), new GUIContent( "Default Material", "The Unity Material to link to."),GUILayout.ExpandWidth(true));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("_HDRPMaterial"), new GUIContent("HDRP Material", "The Unity Material for HDRP."), GUILayout.ExpandWidth(true));
 
 
 
@@ -215,6 +216,7 @@ namespace UMA.Editors
             if (MatType == UMAMaterial.MaterialType.UseExistingTextures)
             {
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("_secondPass"), new GUIContent("Second Pass", "The Unity Material for a second pass. Usually NULL."));
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("_HDRPSecondPass"), new GUIContent("HDRP Second Pass", "The Unity Material for a second pass in HDRP. Usually NULL."));
             }
 
             GUILayout.Space(20);
@@ -821,6 +823,467 @@ namespace UMA.Editors
             {
                 EditorUtility.DisplayDialog("None found", "No matching OverlayDataAssets were found.", "OK");
             }
+        }
+    }
+
+    internal class UMAMaterialOverlayUsageWindow : EditorWindow
+    {
+        private class MaterialUsageRow
+        {
+            public UMAMaterial Material;
+            public readonly List<OverlayDataAsset> Overlays = new List<OverlayDataAsset>();
+
+            public int UseCount => Overlays.Count;
+            public string Name => Material != null ? Material.name : string.Empty;
+        }
+
+        private readonly List<MaterialUsageRow> _materials = new List<MaterialUsageRow>();
+        private readonly List<UMAMaterial> _materialFilter = new List<UMAMaterial>();
+        private DefaultAsset _overlayFolderAsset;
+        private string _overlayFolderPath = string.Empty;
+        private Vector2 _materialScroll;
+        private Vector2 _overlayScroll;
+        private int _selectedMaterialIndex = -1;
+        private int _scannedOverlayCount;
+        private int _unassignedOverlayCount;
+
+        [MenuItem("UMA/Find UMAMaterial in Overlays", priority = 26)]
+        public static void Open()
+        {
+            Open(null);
+        }
+
+        [MenuItem("Assets/UMA/Find Selected UMAMaterials in Overlays", false, 2008)]
+        private static void OpenForSelectedMaterials()
+        {
+            Open(GetSelectedMaterialsFromSelection());
+        }
+
+        [MenuItem("Assets/UMA/Find Selected UMAMaterials in Overlays", true)]
+        private static bool ValidateOpenForSelectedMaterials()
+        {
+            return GetSelectedMaterialsFromSelection().Count > 0;
+        }
+
+        private static void Open(IList<UMAMaterial> materialFilter)
+        {
+            UMAMaterialOverlayUsageWindow window = GetWindow<UMAMaterialOverlayUsageWindow>(true, "Find UMAMaterial in Overlays", true);
+            window.minSize = new Vector2(860f, 420f);
+            window.SetMaterialFilter(materialFilter);
+            window.RefreshUsage();
+            window.ShowUtility();
+            window.Focus();
+        }
+
+        private void OnEnable()
+        {
+            if (_materials.Count == 0)
+            {
+                RefreshUsage();
+            }
+        }
+
+        private void OnGUI()
+        {
+            DrawToolbar();
+            DrawFolderFilterBar();
+            EditorGUILayout.Space(4f);
+            EditorGUILayout.BeginHorizontal();
+            DrawMaterialColumn();
+            DrawOverlayColumn();
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private void DrawToolbar()
+        {
+            EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+            GUILayout.Label("Overlay UMAMaterial Usage", EditorStyles.boldLabel);
+            GUILayout.FlexibleSpace();
+            if (_materialFilter.Count > 0)
+            {
+                GUILayout.Label("Filtered to " + _materialFilter.Count + " selected material(s)", EditorStyles.miniLabel);
+            }
+            GUILayout.Label(_materials.Count + " material(s), " + _scannedOverlayCount + " overlay(s)", EditorStyles.miniLabel);
+            if (_unassignedOverlayCount > 0)
+            {
+                GUILayout.Label(_unassignedOverlayCount + " unassigned", EditorStyles.miniLabel);
+            }
+            if (GUILayout.Button("Refresh", EditorStyles.toolbarButton, GUILayout.Width(70f)))
+            {
+                RefreshUsage();
+            }
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private void DrawFolderFilterBar()
+        {
+            EditorGUILayout.BeginHorizontal(EditorStyles.helpBox);
+            EditorGUI.BeginChangeCheck();
+            DefaultAsset newFolderAsset = EditorGUILayout.ObjectField(
+                new GUIContent("Overlay Folder", "Only OverlayDataAssets in this folder and its subfolders are included."),
+                _overlayFolderAsset,
+                typeof(DefaultAsset),
+                false,
+                GUILayout.MinWidth(240f)) as DefaultAsset;
+            if (EditorGUI.EndChangeCheck())
+            {
+                SetOverlayFolderFilter(newFolderAsset);
+            }
+
+            using (new EditorGUI.DisabledScope(_overlayFolderAsset == null))
+            {
+                if (GUILayout.Button("Clear", GUILayout.Width(60f)))
+                {
+                    SetOverlayFolderFilter(null);
+                }
+            }
+
+            GUILayout.FlexibleSpace();
+            GUILayout.Label(string.IsNullOrEmpty(_overlayFolderPath) ? "All overlay folders" : _overlayFolderPath, EditorStyles.miniLabel);
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private void DrawMaterialColumn()
+        {
+            EditorGUILayout.BeginVertical(GUILayout.Width(430f));
+            EditorGUILayout.LabelField("UMAMaterials", EditorStyles.boldLabel);
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Label("", GUILayout.Width(22f));
+            GUILayout.Label("Material", EditorStyles.miniBoldLabel, GUILayout.Width(220f));
+            GUILayout.Label("", GUILayout.Width(50f));
+            GUILayout.Label("Status", EditorStyles.miniBoldLabel, GUILayout.Width(90f));
+            EditorGUILayout.EndHorizontal();
+
+            _materialScroll = EditorGUILayout.BeginScrollView(_materialScroll, EditorStyles.helpBox);
+            for (int i = 0; i < _materials.Count; i++)
+            {
+                DrawMaterialRow(i);
+            }
+            EditorGUILayout.EndScrollView();
+            EditorGUILayout.EndVertical();
+        }
+
+        private void DrawMaterialRow(int index)
+        {
+            MaterialUsageRow usage = _materials[index];
+            bool selected = index == _selectedMaterialIndex;
+            EditorGUILayout.BeginHorizontal(selected ? EditorStyles.helpBox : GUIStyle.none);
+            if (GUILayout.Button(selected ? ">" : string.Empty, EditorStyles.miniButton, GUILayout.Width(22f)))
+            {
+                _selectedMaterialIndex = index;
+                GUI.FocusControl(null);
+            }
+
+            using (new EditorGUI.DisabledScope(true))
+            {
+                EditorGUILayout.ObjectField(usage.Material, typeof(UMAMaterial), false, GUILayout.Width(220f));
+            }
+
+            using (new EditorGUI.DisabledScope(usage.Material == null))
+            {
+                if (GUILayout.Button("Ping", GUILayout.Width(50f)))
+                {
+                    Selection.activeObject = usage.Material;
+                    EditorGUIUtility.PingObject(usage.Material);
+                }
+            }
+
+            GUILayout.Label(GetUseStatus(usage), GUILayout.Width(90f));
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private void DrawOverlayColumn()
+        {
+            EditorGUILayout.BeginVertical(GUILayout.ExpandWidth(true));
+            MaterialUsageRow selectedUsage = GetSelectedUsage();
+            string header = selectedUsage != null && selectedUsage.Material != null ? selectedUsage.Material.name : "Overlays";
+            EditorGUILayout.LabelField(header, EditorStyles.boldLabel);
+
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Label("OverlayDataAsset", EditorStyles.miniBoldLabel);
+            GUILayout.Label("", GUILayout.Width(70f));
+            EditorGUILayout.EndHorizontal();
+
+            _overlayScroll = EditorGUILayout.BeginScrollView(_overlayScroll, EditorStyles.helpBox);
+            if (selectedUsage == null)
+            {
+                EditorGUILayout.HelpBox("Select a UMAMaterial to see matching OverlayDataAssets.", MessageType.Info);
+            }
+            else if (selectedUsage.Overlays.Count == 0)
+            {
+                EditorGUILayout.HelpBox("No OverlayDataAssets use this UMAMaterial.", MessageType.Info);
+            }
+            else
+            {
+                for (int i = 0; i < selectedUsage.Overlays.Count; i++)
+                {
+                    DrawOverlayRow(selectedUsage.Overlays[i]);
+                }
+            }
+            EditorGUILayout.EndScrollView();
+            EditorGUILayout.EndVertical();
+        }
+
+        private void DrawOverlayRow(OverlayDataAsset overlay)
+        {
+            EditorGUILayout.BeginHorizontal();
+            using (new EditorGUI.DisabledScope(true))
+            {
+                EditorGUILayout.ObjectField(overlay, typeof(OverlayDataAsset), false, GUILayout.ExpandWidth(true));
+            }
+
+            using (new EditorGUI.DisabledScope(overlay == null))
+            {
+                if (GUILayout.Button("Inspect", GUILayout.Width(70f)))
+                {
+                    OverlayDataAsset overlayToInspect = overlay;
+                    EditorApplication.delayCall += () =>
+                    {
+                        if (overlayToInspect != null)
+                        {
+                            UMA.InspectorUtlity.InspectTarget(overlayToInspect);
+                        }
+                    };
+                }
+            }
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private void RefreshUsage()
+        {
+            UMAMaterial previouslySelected = GetSelectedUsage()?.Material;
+            _materials.Clear();
+            _scannedOverlayCount = 0;
+            _unassignedOverlayCount = 0;
+
+            Dictionary<UMAMaterial, MaterialUsageRow> usageByMaterial = new Dictionary<UMAMaterial, MaterialUsageRow>();
+            Dictionary<string, UMAMaterial> materialByName = new Dictionary<string, UMAMaterial>();
+
+            List<UMAMaterial> materials = _materialFilter.Count > 0 ? new List<UMAMaterial>(_materialFilter) : LoadAssets<UMAMaterial>();
+            materials.Sort(CompareAssetsByName);
+            for (int i = 0; i < materials.Count; i++)
+            {
+                UMAMaterial material = materials[i];
+                if (material == null)
+                {
+                    continue;
+                }
+
+                GetOrCreateUsage(material, usageByMaterial);
+                if (!string.IsNullOrEmpty(material.name) && !materialByName.ContainsKey(material.name))
+                {
+                    materialByName.Add(material.name, material);
+                }
+            }
+
+            List<OverlayDataAsset> overlays = LoadAssets<OverlayDataAsset>(_overlayFolderPath);
+            _scannedOverlayCount = overlays.Count;
+            for (int i = 0; i < overlays.Count; i++)
+            {
+                OverlayDataAsset overlay = overlays[i];
+                if (overlay == null)
+                {
+                    continue;
+                }
+
+                UMAMaterial material = ResolveOverlayMaterial(overlay, materialByName);
+                if (material == null)
+                {
+                    _unassignedOverlayCount++;
+                    continue;
+                }
+
+                MaterialUsageRow usage = GetOrCreateUsage(material, usageByMaterial);
+                usage.Overlays.Add(overlay);
+            }
+
+            for (int i = 0; i < _materials.Count; i++)
+            {
+                _materials[i].Overlays.Sort(CompareAssetsByName);
+            }
+            _materials.Sort(CompareMaterialRowsByName);
+
+            _selectedMaterialIndex = FindMaterialIndex(previouslySelected);
+            if (_selectedMaterialIndex < 0 && _materials.Count > 0)
+            {
+                _selectedMaterialIndex = 0;
+            }
+            _materialScroll = Vector2.zero;
+            _overlayScroll = Vector2.zero;
+            Repaint();
+        }
+
+        private void SetOverlayFolderFilter(DefaultAsset folderAsset)
+        {
+            if (folderAsset == null)
+            {
+                if (_overlayFolderAsset == null && string.IsNullOrEmpty(_overlayFolderPath))
+                {
+                    return;
+                }
+
+                _overlayFolderAsset = null;
+                _overlayFolderPath = string.Empty;
+                RefreshUsage();
+                return;
+            }
+
+            string assetPath = AssetDatabase.GetAssetPath(folderAsset);
+            if (string.IsNullOrEmpty(assetPath) || !AssetDatabase.IsValidFolder(assetPath))
+            {
+                EditorUtility.DisplayDialog("Overlay Folder Filter", "Please select a folder inside the project.", "OK");
+                return;
+            }
+
+            if (_overlayFolderAsset == folderAsset && string.Equals(_overlayFolderPath, assetPath, System.StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            _overlayFolderAsset = folderAsset;
+            _overlayFolderPath = assetPath;
+            RefreshUsage();
+        }
+
+        private void SetMaterialFilter(IList<UMAMaterial> materialFilter)
+        {
+            _materialFilter.Clear();
+            if (materialFilter == null || materialFilter.Count == 0)
+            {
+                return;
+            }
+
+            HashSet<UMAMaterial> seen = new HashSet<UMAMaterial>();
+            for (int i = 0; i < materialFilter.Count; i++)
+            {
+                UMAMaterial material = materialFilter[i];
+                if (material == null || !seen.Add(material))
+                {
+                    continue;
+                }
+
+                _materialFilter.Add(material);
+            }
+        }
+
+        private MaterialUsageRow GetOrCreateUsage(UMAMaterial material, Dictionary<UMAMaterial, MaterialUsageRow> usageByMaterial)
+        {
+            if (usageByMaterial.TryGetValue(material, out MaterialUsageRow usage))
+            {
+                return usage;
+            }
+
+            usage = new MaterialUsageRow { Material = material };
+            usageByMaterial.Add(material, usage);
+            _materials.Add(usage);
+            return usage;
+        }
+
+        private static UMAMaterial ResolveOverlayMaterial(OverlayDataAsset overlay, Dictionary<string, UMAMaterial> materialByName)
+        {
+            if (overlay.material != null)
+            {
+                return overlay.material;
+            }
+
+            if (!string.IsNullOrEmpty(overlay.materialName) && materialByName.TryGetValue(overlay.materialName, out UMAMaterial material))
+            {
+                return material;
+            }
+
+            return null;
+        }
+
+        private static List<T> LoadAssets<T>(string rootFolder = null) where T : UnityEngine.Object
+        {
+            List<T> assets = new List<T>();
+            string[] guids = string.IsNullOrEmpty(rootFolder)
+                ? AssetDatabase.FindAssets("t:" + typeof(T).Name)
+                : AssetDatabase.FindAssets("t:" + typeof(T).Name, new[] { rootFolder });
+            for (int i = 0; i < guids.Length; i++)
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guids[i]);
+                T asset = AssetDatabase.LoadAssetAtPath<T>(path);
+                if (asset != null)
+                {
+                    assets.Add(asset);
+                }
+            }
+
+            assets.Sort(CompareAssetsByName);
+            return assets;
+        }
+
+        private static List<UMAMaterial> GetSelectedMaterialsFromSelection()
+        {
+            UnityEngine.Object[] selectedObjects = Selection.GetFiltered(typeof(UMAMaterial), SelectionMode.Assets);
+            List<UMAMaterial> materials = new List<UMAMaterial>(selectedObjects.Length);
+            HashSet<UMAMaterial> seen = new HashSet<UMAMaterial>();
+            for (int i = 0; i < selectedObjects.Length; i++)
+            {
+                UMAMaterial material = selectedObjects[i] as UMAMaterial;
+                if (material == null || !seen.Add(material))
+                {
+                    continue;
+                }
+
+                materials.Add(material);
+            }
+
+            materials.Sort(CompareAssetsByName);
+            return materials;
+        }
+
+        private MaterialUsageRow GetSelectedUsage()
+        {
+            if (_selectedMaterialIndex < 0 || _selectedMaterialIndex >= _materials.Count)
+            {
+                return null;
+            }
+
+            return _materials[_selectedMaterialIndex];
+        }
+
+        private int FindMaterialIndex(UMAMaterial material)
+        {
+            if (material == null)
+            {
+                return -1;
+            }
+
+            for (int i = 0; i < _materials.Count; i++)
+            {
+                if (_materials[i].Material == material)
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        private static string GetUseStatus(MaterialUsageRow usage)
+        {
+            if (usage.UseCount == 0)
+            {
+                return "Unused";
+            }
+
+            return usage.UseCount + (usage.UseCount == 1 ? " use" : " uses");
+        }
+
+        private static int CompareMaterialRowsByName(MaterialUsageRow left, MaterialUsageRow right)
+        {
+            string leftName = left != null ? left.Name : string.Empty;
+            string rightName = right != null ? right.Name : string.Empty;
+            return string.Compare(leftName, rightName, true);
+        }
+
+        private static int CompareAssetsByName(UnityEngine.Object left, UnityEngine.Object right)
+        {
+            string leftName = left != null ? left.name : string.Empty;
+            string rightName = right != null ? right.name : string.Empty;
+            return string.Compare(leftName, rightName, true);
         }
     }
 }

@@ -1697,11 +1697,14 @@ namespace UMA.Editors
             {
                 foreach (MeshHideAsset theAsset in recipe.MeshHideAssets)
                 {
-                    if (theAsset.GetEntityId() == mha.GetEntityId())
-                    {
-                        found = true;
-                        break;
-                    }
+					if (theAsset!=null)
+					{
+						if (theAsset.GetEntityId() == mha.GetEntityId())
+						{
+							found = true;
+							break;
+						}
+					}
                 }
             }
             if (!found)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using UMA.Editors.TextureUtilities;
 using UnityEditor;
 using UnityEngine;
 
@@ -210,6 +211,7 @@ namespace UMA.Editors
             AlphaFill,
             Touchup,
             AddDetails,
+            NormalIndent,
         }
 
         private enum TouchupMode
@@ -228,6 +230,12 @@ namespace UMA.Editors
         {
             Spots,
             Blush,
+        }
+
+        private enum NormalIndentMode
+        {
+            PathIndent,
+            FilledNoise,
         }
 
         private enum DetailCurveDragTarget
@@ -288,8 +296,17 @@ namespace UMA.Editors
         private const float DetailAnchorHitRadius = 8f;
         private const float DetailHandleHitRadius = 6f;
         private const float DetailCurveHitRadius = 9f;
+        private const float NormalIndentDefaultShapeRadiusScale = 0.24f;
+        private const float NormalIndentLightHandleSize = 86f;
+        private const float NormalIndentLightHandlePadding = 12f;
+        private const float NormalIndentLightHandleMinSize = 56f;
+        private const float NormalIndentLightHandleKnobRadius = 6f;
+        private const float NormalIndentLightMaxPlanarMagnitude = 0.98f;
         private const int DetailMinCurvePoints = 3;
         private const int DetailCurveSamplesPerSegment = 18;
+        private const int NormalIndentPathMinPoints = 2;
+        private const int NormalIndentShapeMinPoints = 3;
+        private const int NormalIndentCurveSamplesPerSegment = 24;
         private const int DetailMirrorSamplesPerSegment = 32;
         private const int DetailMirrorMaxPoints = 80;
         private const int CheckerTile = 16;
@@ -366,6 +383,8 @@ namespace UMA.Editors
         private float sharpenPower = 1f;
         private float blurPower = 1f;
         private float normalMapStrength = 4f;
+        private bool alphaFromGrayscaleDefringe;
+        private Color alphaFromGrayscaleDefringeColor = Color.white;
 
         // Split tool state
         private SplitDirection splitDirection = SplitDirection.Vertical;
@@ -432,6 +451,45 @@ namespace UMA.Editors
         private Color detailBlushColor = new Color(1f, 0.32f, 0.28f, 1f);
         private float detailBlushOpacity = 0.25f;
 
+        // Normal Indent tool state
+        private NormalIndentMode normalIndentMode = NormalIndentMode.PathIndent;
+        private NormalMapDecodeMode normalIndentDecodeMode = NormalMapDecodeMode.Auto;
+        private Texture2D normalIndentNormalAsset;
+        private Texture2D normalIndentWorkingNormal;
+        private Material normalIndentPreviewMaterial;
+        private Color32[] normalIndentPixels;
+        private Color32[] normalIndentOriginalPixels;
+        private Color32[] normalIndentUndoPixels;
+        private readonly List<Bezier2DPoint> normalIndentPathPoints = new List<Bezier2DPoint>();
+        private readonly List<Bezier2DPoint> normalIndentShapePoints = new List<Bezier2DPoint>();
+        private int normalIndentCurveTextureWidth;
+        private int normalIndentCurveTextureHeight;
+        private DetailCurveDragTarget normalIndentDragTarget = DetailCurveDragTarget.None;
+        private int normalIndentDragPointIndex = -1;
+        private int normalIndentSelectedPointIndex = -1;
+        private bool normalIndentCurveDragging;
+        private bool normalIndentDirty;
+        private bool normalIndentUndoDirty;
+        private bool normalIndentShowCurves = true;
+        private bool normalIndentShowLightHandle = true;
+        private bool normalIndentLightDragging;
+        private string normalIndentDiskPath;
+        private string normalIndentDiskDirectory;
+        private string normalIndentSourceName;
+        private Vector3 normalIndentPreviewLightDirection = new Vector3(0.35f, 0.45f, 0.82f).normalized;
+        private float normalIndentPreviewLightContrast = 1.25f;
+        private float normalIndentPathPressure = 0.7f;
+        private float normalIndentPathWidthPixels = 42f;
+        private float normalIndentPathEndFadePixels = 32f;
+        private float normalIndentPathEndTaperPixels = 48f;
+        private float normalIndentPathLeftSoftness = 0.25f;
+        private float normalIndentPathRightSoftness = 0.25f;
+        private float normalIndentNoisePressure = 0.55f;
+        private float normalIndentNoiseBoundaryFalloffPixels = 48f;
+        private float normalIndentNoiseScalePixels = 28f;
+        private int normalIndentNoiseOctaves = 3;
+        private int normalIndentNoiseSeed = 12345;
+
         // Display-only quadrant visibility for the Adjust Texture tool.
         private bool visibleAreaTopLeft = true;
         private bool visibleAreaTopRight = true;
@@ -451,7 +509,7 @@ namespace UMA.Editors
         private Vector2 droppedTextureListScroll;
         private Vector2 scrollRight;
 
-        [MenuItem("UMA/Texture Utilities", priority = 25)]
+        [MenuItem("UMA/Textures/Texture Utilities", priority = 27)]
         public static void ShowWindow()
         {
             Open();
@@ -476,12 +534,27 @@ namespace UMA.Editors
         {
             touchupPainting = false;
             detailCurveDragging = false;
+            normalIndentLightDragging = false;
             previewResizeDragging = false;
             InvalidateCachedPixels();
             DestroyTexture(ref currentTexture);
             DestroyTexture(ref diskOriginalTexture);
             diskOriginalTextureDirectory = null;
             DestroyTexture(ref previewTexture);
+            DestroyTexture(ref normalIndentWorkingNormal);
+            normalIndentPixels = null;
+            normalIndentOriginalPixels = null;
+            normalIndentUndoPixels = null;
+            normalIndentNormalAsset = null;
+            normalIndentDiskPath = null;
+            normalIndentDiskDirectory = null;
+            normalIndentSourceName = null;
+            normalIndentUndoDirty = false;
+            if (normalIndentPreviewMaterial != null)
+            {
+                UnityEngine.Object.DestroyImmediate(normalIndentPreviewMaterial);
+                normalIndentPreviewMaterial = null;
+            }
             DestroyQueuedTextureStates();
         }
 
@@ -514,6 +587,7 @@ namespace UMA.Editors
             DrawToolToggle(Tool.AlphaFill, "Alpha Fill");
             DrawToolToggle(Tool.Touchup, "Touchup");
             DrawToolToggle(Tool.AddDetails, "Add Details");
+            DrawToolToggle(Tool.NormalIndent, "Normal Indent");
             GUILayout.FlexibleSpace();
             EditorGUILayout.LabelField("(More tools may be added here.)", EditorStyles.miniLabel);
             EditorGUILayout.EndVertical();
@@ -559,6 +633,7 @@ namespace UMA.Editors
                     case Tool.AlphaFill: DrawAlphaFillTool(); break;
                     case Tool.Touchup: DrawTouchupTool(); break;
                     case Tool.AddDetails: DrawAddDetailsTool(); break;
+                    case Tool.NormalIndent: DrawNormalIndentTool(); break;
                 }
                 GUIHelper.EndVerticalPadded();
             }
@@ -663,6 +738,7 @@ namespace UMA.Editors
                 case Tool.AlphaFill: return "Alpha Fill";
                 case Tool.Touchup: return "Touchup";
                 case Tool.AddDetails: return "Add Details";
+                case Tool.NormalIndent: return "Normal Indent";
                 default: return tool.ToString();
             }
         }
@@ -767,7 +843,7 @@ namespace UMA.Editors
             }
 
             EnsurePreviewTexture();
-            Texture2D toShow = previewTexture != null ? previewTexture : currentTexture;
+            Texture2D toShow = GetPreviewTextureToShow();
             if (toShow != null)
             {
                 if (previewDisplayMode == PreviewDisplayMode.Magnify)
@@ -857,9 +933,10 @@ namespace UMA.Editors
                 GUI.DrawTexture(backgroundRect, backgroundAsset, ScaleMode.StretchToFill, true);
             }
 
-            DrawPreviewTextureWithVisibleAreas(fit, toShow);
+            DrawPreviewTextureWithVisibleAreas(fit, toShow, fit);
             HandleTouchupPreview(fit, toShow.width, toShow.height);
             HandleAddDetailsPreview(fit, toShow.width, toShow.height);
+            HandleNormalIndentPreview(fit, fit, toShow.width, toShow.height);
         }
 
         private void DrawMagnifiedPreview(Rect rect, Texture2D toShow)
@@ -876,9 +953,10 @@ namespace UMA.Editors
                 GUI.DrawTexture(backgroundRect, backgroundAsset, ScaleMode.StretchToFill, true);
             }
 
-            DrawPreviewTextureWithVisibleAreas(layout.textureRect, toShow);
+            DrawPreviewTextureWithVisibleAreas(layout.textureRect, toShow, localViewportRect);
             HandleTouchupPreview(layout.textureRect, toShow.width, toShow.height);
             HandleAddDetailsPreview(layout.textureRect, toShow.width, toShow.height);
+            HandleNormalIndentPreview(layout.textureRect, localViewportRect, toShow.width, toShow.height);
             HandleMagnifiedPreviewMousePan(localViewportRect, layout);
             GUI.EndGroup();
         }
@@ -937,8 +1015,14 @@ namespace UMA.Editors
                 textureRect.height <= viewportSize.y ? 0.5f : Mathf.Clamp01(((viewportSize.y * 0.5f) - textureRect.yMin) / textureRect.height));
         }
 
-        private void DrawPreviewTextureWithVisibleAreas(Rect textureRect, Texture2D texture)
+        private void DrawPreviewTextureWithVisibleAreas(Rect textureRect, Texture2D texture, Rect visibleRect)
         {
+            if (currentTool == Tool.NormalIndent && normalIndentWorkingNormal != null)
+            {
+                DrawNormalIndentPreviewTexture(textureRect, visibleRect);
+                return;
+            }
+
             if (!UseVisibleAreaMask())
             {
                 GUI.DrawTexture(textureRect, texture, ScaleMode.StretchToFill, true);
@@ -963,6 +1047,105 @@ namespace UMA.Editors
             {
                 GUI.DrawTextureWithTexCoords(new Rect(textureRect.x + halfWidth, textureRect.y + halfHeight, halfWidth, halfHeight), texture, new Rect(0.5f, 0f, 0.5f, 0.5f), true);
             }
+        }
+
+        private Texture2D GetPreviewTextureToShow()
+        {
+            if (currentTool == Tool.NormalIndent && normalIndentWorkingNormal != null)
+            {
+                return normalIndentWorkingNormal;
+            }
+
+            return previewTexture != null ? previewTexture : currentTexture;
+        }
+
+        private void DrawNormalIndentPreviewTexture(Rect textureRect, Rect visibleRect)
+        {
+            if (normalIndentWorkingNormal == null)
+            {
+                return;
+            }
+
+            Rect drawRect = IntersectRects(textureRect, visibleRect);
+            if (drawRect.width <= 0f || drawRect.height <= 0f)
+            {
+                return;
+            }
+
+            Rect uvRect = GetTextureUvRect(textureRect, drawRect);
+
+            Texture2D albedoTexture = previewTexture != null ? previewTexture : currentTexture;
+            if (albedoTexture == null)
+            {
+                GUI.DrawTextureWithTexCoords(drawRect, normalIndentWorkingNormal, uvRect, true);
+                return;
+            }
+
+            Material previewMaterial = EnsureNormalIndentPreviewMaterial();
+            if (previewMaterial == null)
+            {
+                GUI.DrawTextureWithTexCoords(drawRect, albedoTexture, uvRect, true);
+                return;
+            }
+
+            previewMaterial.SetTexture("_BaseMap", albedoTexture);
+            previewMaterial.SetTexture("_MainTex", albedoTexture);
+            previewMaterial.SetTexture("_BumpMap", normalIndentWorkingNormal);
+            previewMaterial.SetVector("_LightDir", GetNormalIndentPreviewLightDirection());
+            previewMaterial.SetFloat("_LightContrast", Mathf.Max(0f, normalIndentPreviewLightContrast));
+            previewMaterial.SetTextureScale("_BaseMap", uvRect.size);
+            previewMaterial.SetTextureOffset("_BaseMap", uvRect.position);
+            previewMaterial.SetTextureScale("_BumpMap", uvRect.size);
+            previewMaterial.SetTextureOffset("_BumpMap", uvRect.position);
+            EditorGUI.DrawPreviewTexture(drawRect, normalIndentWorkingNormal, previewMaterial, ScaleMode.StretchToFill);
+        }
+
+        private static Rect IntersectRects(Rect first, Rect second)
+        {
+            float xMin = Mathf.Max(first.xMin, second.xMin);
+            float yMin = Mathf.Max(first.yMin, second.yMin);
+            float xMax = Mathf.Min(first.xMax, second.xMax);
+            float yMax = Mathf.Min(first.yMax, second.yMax);
+            if (xMax <= xMin || yMax <= yMin)
+            {
+                return new Rect(xMin, yMin, 0f, 0f);
+            }
+
+            return Rect.MinMaxRect(xMin, yMin, xMax, yMax);
+        }
+
+        private static Rect GetTextureUvRect(Rect textureRect, Rect drawRect)
+        {
+            if (textureRect.width <= 0f || textureRect.height <= 0f)
+            {
+                return new Rect(0f, 0f, 1f, 1f);
+            }
+
+            float uMin = Mathf.Clamp01((drawRect.xMin - textureRect.xMin) / textureRect.width);
+            float uMax = Mathf.Clamp01((drawRect.xMax - textureRect.xMin) / textureRect.width);
+            float vMin = Mathf.Clamp01(1f - ((drawRect.yMax - textureRect.yMin) / textureRect.height));
+            float vMax = Mathf.Clamp01(1f - ((drawRect.yMin - textureRect.yMin) / textureRect.height));
+            return Rect.MinMaxRect(uMin, vMin, uMax, vMax);
+        }
+
+        private Material EnsureNormalIndentPreviewMaterial()
+        {
+            if (normalIndentPreviewMaterial != null)
+            {
+                return normalIndentPreviewMaterial;
+            }
+
+            Shader shader = Shader.Find("Hidden/UMA/TextureUtilitiesRawNormalPreview");
+            if (shader == null)
+            {
+                return null;
+            }
+
+            normalIndentPreviewMaterial = new Material(shader)
+            {
+                hideFlags = HideFlags.HideAndDontSave,
+            };
+            return normalIndentPreviewMaterial;
         }
 
         private bool UseVisibleAreaMask()
@@ -1391,6 +1574,580 @@ namespace UMA.Editors
             {
                 DrawAddDetailsCurveOverlay(textureRect);
             }
+        }
+
+        private void HandleNormalIndentPreview(Rect textureRect, Rect visibleRect, int textureWidth, int textureHeight)
+        {
+            if (currentTool != Tool.NormalIndent || normalIndentWorkingNormal == null || textureWidth <= 0 || textureHeight <= 0)
+            {
+                return;
+            }
+
+            EnsureNormalIndentCurvesInitialized(textureWidth, textureHeight);
+            HandleNormalIndentLightInput(visibleRect);
+
+            int controlId = GUIUtility.GetControlID(FocusType.Passive);
+            Event currentEvent = Event.current;
+            bool mouseInTexture = textureRect.Contains(currentEvent.mousePosition);
+            bool ownsControl = normalIndentCurveDragging && GUIUtility.hotControl == controlId;
+
+            if (!normalIndentShowCurves)
+            {
+                if (ownsControl)
+                {
+                    normalIndentCurveDragging = false;
+                    normalIndentDragTarget = DetailCurveDragTarget.None;
+                    normalIndentDragPointIndex = -1;
+                    GUIUtility.hotControl = 0;
+                }
+
+                if (currentEvent.type == EventType.Repaint)
+                {
+                    DrawNormalIndentLightHandle(visibleRect);
+                }
+
+                return;
+            }
+
+            if (mouseInTexture || ownsControl)
+            {
+                EditorGUIUtility.AddCursorRect(textureRect, MouseCursor.Arrow, controlId);
+            }
+
+            switch (currentEvent.GetTypeForControl(controlId))
+            {
+                case EventType.MouseDown:
+                    if (mouseInTexture && currentEvent.button == 0)
+                    {
+                        if (currentEvent.control || currentEvent.command)
+                        {
+                            if (TryDeleteNormalIndentPointAtPreviewPosition(currentEvent.mousePosition, textureRect))
+                            {
+                                currentEvent.Use();
+                                Repaint();
+                            }
+                        }
+                        else if (currentEvent.shift)
+                        {
+                            if (TryInsertNormalIndentPointAtPreviewPosition(currentEvent.mousePosition, textureRect))
+                            {
+                                currentEvent.Use();
+                                Repaint();
+                            }
+                        }
+                        else if (TryBeginNormalIndentCurveDrag(currentEvent.mousePosition, textureRect))
+                        {
+                            GUIUtility.hotControl = controlId;
+                            GUI.FocusControl(null);
+                            currentEvent.Use();
+                            Repaint();
+                        }
+                    }
+                    break;
+                case EventType.MouseDrag:
+                    if (ownsControl)
+                    {
+                        MoveNormalIndentDragToPreviewPosition(currentEvent.mousePosition, textureRect);
+                        currentEvent.Use();
+                        Repaint();
+                    }
+                    break;
+                case EventType.MouseUp:
+                    if (ownsControl && currentEvent.button == 0)
+                    {
+                        normalIndentCurveDragging = false;
+                        normalIndentDragTarget = DetailCurveDragTarget.None;
+                        normalIndentDragPointIndex = -1;
+                        GUIUtility.hotControl = 0;
+                        currentEvent.Use();
+                    }
+                    break;
+                case EventType.MouseMove:
+                    if (mouseInTexture)
+                    {
+                        Repaint();
+                    }
+                    break;
+                case EventType.MouseLeaveWindow:
+                    if (ownsControl)
+                    {
+                        normalIndentCurveDragging = false;
+                        normalIndentDragTarget = DetailCurveDragTarget.None;
+                        normalIndentDragPointIndex = -1;
+                        GUIUtility.hotControl = 0;
+                    }
+                    break;
+            }
+
+            if (currentEvent.type == EventType.Repaint)
+            {
+                DrawNormalIndentCurveOverlay(textureRect);
+                DrawNormalIndentLightHandle(visibleRect);
+            }
+        }
+
+        private void HandleNormalIndentLightInput(Rect visibleRect)
+        {
+            if (!normalIndentShowLightHandle || visibleRect.width <= 0f || visibleRect.height <= 0f)
+            {
+                return;
+            }
+
+            Rect handleRect = GetNormalIndentLightHandleRect(visibleRect);
+            if (handleRect.width <= 0f || handleRect.height <= 0f)
+            {
+                return;
+            }
+
+            int controlId = GUIUtility.GetControlID(FocusType.Passive);
+            Event currentEvent = Event.current;
+            bool mouseInHandle = handleRect.Contains(currentEvent.mousePosition);
+            bool ownsControl = normalIndentLightDragging && GUIUtility.hotControl == controlId;
+
+            if (mouseInHandle || ownsControl)
+            {
+                EditorGUIUtility.AddCursorRect(handleRect, MouseCursor.MoveArrow, controlId);
+            }
+
+            switch (currentEvent.GetTypeForControl(controlId))
+            {
+                case EventType.MouseDown:
+                    if (mouseInHandle && currentEvent.button == 0)
+                    {
+                        normalIndentLightDragging = true;
+                        GUIUtility.hotControl = controlId;
+                        GUI.FocusControl(null);
+                        SetNormalIndentPreviewLightFromHandle(currentEvent.mousePosition, handleRect);
+                        currentEvent.Use();
+                        Repaint();
+                    }
+                    break;
+                case EventType.MouseDrag:
+                    if (ownsControl)
+                    {
+                        SetNormalIndentPreviewLightFromHandle(currentEvent.mousePosition, handleRect);
+                        currentEvent.Use();
+                        Repaint();
+                    }
+                    break;
+                case EventType.MouseUp:
+                    if (ownsControl && currentEvent.button == 0)
+                    {
+                        normalIndentLightDragging = false;
+                        GUIUtility.hotControl = 0;
+                        currentEvent.Use();
+                    }
+                    break;
+                case EventType.MouseMove:
+                    if (mouseInHandle)
+                    {
+                        Repaint();
+                    }
+                    break;
+                case EventType.MouseLeaveWindow:
+                    if (ownsControl)
+                    {
+                        normalIndentLightDragging = false;
+                        GUIUtility.hotControl = 0;
+                    }
+                    break;
+            }
+        }
+
+        private void DrawNormalIndentLightHandle(Rect visibleRect)
+        {
+            if (!normalIndentShowLightHandle || Event.current.type != EventType.Repaint)
+            {
+                return;
+            }
+
+            Rect handleRect = GetNormalIndentLightHandleRect(visibleRect);
+            if (handleRect.width <= 0f || handleRect.height <= 0f)
+            {
+                return;
+            }
+
+            Vector2 center = handleRect.center;
+            float radius = GetNormalIndentLightHandleRadius(handleRect);
+            Vector3 lightDirection = GetNormalIndentPreviewLightDirection();
+            Vector2 knob = center + new Vector2(lightDirection.x, -lightDirection.y) * radius;
+
+            Handles.BeginGUI();
+            Color oldColor = Handles.color;
+            Handles.color = new Color(0f, 0f, 0f, 0.42f);
+            Handles.DrawSolidDisc(center, Vector3.forward, radius + 8f);
+            Handles.color = new Color(1f, 1f, 1f, 0.16f);
+            Handles.DrawSolidDisc(center, Vector3.forward, radius + 7f);
+            Handles.color = new Color(0f, 0f, 0f, 0.8f);
+            Handles.DrawWireDisc(center, Vector3.forward, radius + 1f);
+            Handles.color = new Color(1f, 1f, 1f, 0.88f);
+            Handles.DrawWireDisc(center, Vector3.forward, radius);
+            Handles.DrawLine(center, knob);
+            Handles.color = new Color(0f, 0f, 0f, 0.88f);
+            Handles.DrawSolidDisc(knob, Vector3.forward, NormalIndentLightHandleKnobRadius + 2f);
+            Handles.color = new Color(1f, 0.92f, 0.28f, 1f);
+            Handles.DrawSolidDisc(knob, Vector3.forward, NormalIndentLightHandleKnobRadius);
+            Handles.color = oldColor;
+            Handles.EndGUI();
+        }
+
+        private static Rect GetNormalIndentLightHandleRect(Rect visibleRect)
+        {
+            float availableSize = Mathf.Min(visibleRect.width, visibleRect.height) - (NormalIndentLightHandlePadding * 2f);
+            float size = Mathf.Min(NormalIndentLightHandleSize, availableSize);
+            if (size < NormalIndentLightHandleMinSize)
+            {
+                return new Rect(0f, 0f, 0f, 0f);
+            }
+
+            return new Rect(
+                visibleRect.xMax - size - NormalIndentLightHandlePadding,
+                visibleRect.yMin + NormalIndentLightHandlePadding,
+                size,
+                size);
+        }
+
+        private static float GetNormalIndentLightHandleRadius(Rect handleRect)
+        {
+            return Mathf.Max(1f, (Mathf.Min(handleRect.width, handleRect.height) * 0.5f) - 12f);
+        }
+
+        private void SetNormalIndentPreviewLightFromHandle(Vector2 mousePosition, Rect handleRect)
+        {
+            Vector2 offset = mousePosition - handleRect.center;
+            float radius = GetNormalIndentLightHandleRadius(handleRect);
+            Vector2 planar = radius <= 0.001f ? Vector2.zero : new Vector2(offset.x / radius, -offset.y / radius);
+            planar = Vector2.ClampMagnitude(planar, NormalIndentLightMaxPlanarMagnitude);
+            float z = Mathf.Sqrt(Mathf.Max(0.001f, 1f - planar.sqrMagnitude));
+            normalIndentPreviewLightDirection = new Vector3(planar.x, planar.y, z).normalized;
+        }
+
+        private Vector3 GetNormalIndentPreviewLightDirection()
+        {
+            if (normalIndentPreviewLightDirection.sqrMagnitude <= 0.0001f)
+            {
+                normalIndentPreviewLightDirection = new Vector3(0.35f, 0.45f, 0.82f).normalized;
+            }
+
+            return normalIndentPreviewLightDirection.normalized;
+        }
+
+        private void DrawNormalIndentCurveOverlay(Rect textureRect)
+        {
+            List<Bezier2DPoint> points = GetActiveNormalIndentPoints();
+            bool closed = IsNormalIndentCurveClosed();
+            int minPoints = closed ? NormalIndentShapeMinPoints : NormalIndentPathMinPoints;
+            if (points.Count < minPoints)
+            {
+                return;
+            }
+
+            Handles.BeginGUI();
+            Color oldColor = Handles.color;
+            Color curveColor = closed ? new Color(0.2f, 0.85f, 0.56f, 0.95f) : new Color(1f, 0.58f, 0.2f, 0.95f);
+            int segmentCount = closed ? points.Count : points.Count - 1;
+
+            for (int pointIndex = 0; pointIndex < segmentCount; pointIndex++)
+            {
+                Bezier2DPoint point = points[pointIndex];
+                Bezier2DPoint nextPoint = points[(pointIndex + 1) % points.Count];
+                Vector2 p0 = NormalizedTextureToPreviewPoint(point.position, textureRect);
+                Vector2 p1 = NormalizedTextureToPreviewPoint(point.outHandle, textureRect);
+                Vector2 p2 = NormalizedTextureToPreviewPoint(nextPoint.inHandle, textureRect);
+                Vector2 p3 = NormalizedTextureToPreviewPoint(nextPoint.position, textureRect);
+                Handles.DrawBezier(p0, p3, p1, p2, new Color(0f, 0f, 0f, 0.8f), null, 4f);
+                Handles.DrawBezier(p0, p3, p1, p2, curveColor, null, 2f);
+            }
+
+            for (int pointIndex = 0; pointIndex < points.Count; pointIndex++)
+            {
+                Bezier2DPoint point = points[pointIndex];
+                Vector2 anchor = NormalizedTextureToPreviewPoint(point.position, textureRect);
+                Vector2 inHandle = NormalizedTextureToPreviewPoint(point.inHandle, textureRect);
+                Vector2 outHandle = NormalizedTextureToPreviewPoint(point.outHandle, textureRect);
+
+                Handles.color = new Color(1f, 1f, 1f, 0.32f);
+                Handles.DrawLine(anchor, inHandle);
+                Handles.DrawLine(anchor, outHandle);
+
+                bool selected = pointIndex == normalIndentSelectedPointIndex || (normalIndentCurveDragging && pointIndex == normalIndentDragPointIndex);
+                DrawDetailDisc(inHandle, DetailHandleHitRadius - 1f, new Color(0f, 0f, 0f, 0.85f), new Color(0.95f, 0.95f, 0.25f, 0.95f));
+                DrawDetailDisc(outHandle, DetailHandleHitRadius - 1f, new Color(0f, 0f, 0f, 0.85f), new Color(0.95f, 0.95f, 0.25f, 0.95f));
+                DrawDetailDisc(anchor, DetailAnchorHitRadius - 1f, new Color(0f, 0f, 0f, 0.9f), selected ? Color.white : curveColor);
+            }
+
+            Handles.color = oldColor;
+            Handles.EndGUI();
+        }
+
+        private bool TryBeginNormalIndentCurveDrag(Vector2 previewPosition, Rect textureRect)
+        {
+            if (!FindNormalIndentHitTarget(previewPosition, textureRect, out DetailCurveDragTarget hitTarget, out int pointIndex))
+            {
+                return false;
+            }
+
+            normalIndentCurveDragging = true;
+            normalIndentDragTarget = hitTarget;
+            normalIndentDragPointIndex = pointIndex;
+            normalIndentSelectedPointIndex = pointIndex;
+            return true;
+        }
+
+        private bool FindNormalIndentHitTarget(Vector2 previewPosition, Rect textureRect, out DetailCurveDragTarget hitTarget, out int pointIndex)
+        {
+            List<Bezier2DPoint> points = GetActiveNormalIndentPoints();
+            hitTarget = DetailCurveDragTarget.None;
+            pointIndex = -1;
+            float anchorHitRadiusSquared = DetailAnchorHitRadius * DetailAnchorHitRadius;
+            float handleHitRadiusSquared = DetailHandleHitRadius * DetailHandleHitRadius;
+
+            for (int i = 0; i < points.Count; i++)
+            {
+                Vector2 anchor = NormalizedTextureToPreviewPoint(points[i].position, textureRect);
+                if ((anchor - previewPosition).sqrMagnitude <= anchorHitRadiusSquared)
+                {
+                    hitTarget = DetailCurveDragTarget.Anchor;
+                    pointIndex = i;
+                    return true;
+                }
+            }
+
+            for (int i = 0; i < points.Count; i++)
+            {
+                Vector2 inHandle = NormalizedTextureToPreviewPoint(points[i].inHandle, textureRect);
+                if ((inHandle - previewPosition).sqrMagnitude <= handleHitRadiusSquared)
+                {
+                    hitTarget = DetailCurveDragTarget.InHandle;
+                    pointIndex = i;
+                    return true;
+                }
+
+                Vector2 outHandle = NormalizedTextureToPreviewPoint(points[i].outHandle, textureRect);
+                if ((outHandle - previewPosition).sqrMagnitude <= handleHitRadiusSquared)
+                {
+                    hitTarget = DetailCurveDragTarget.OutHandle;
+                    pointIndex = i;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void MoveNormalIndentDragToPreviewPosition(Vector2 previewPosition, Rect textureRect)
+        {
+            List<Bezier2DPoint> points = GetActiveNormalIndentPoints();
+            if (normalIndentDragPointIndex < 0 || normalIndentDragPointIndex >= points.Count)
+            {
+                return;
+            }
+
+            Bezier2DPoint point = points[normalIndentDragPointIndex];
+            Vector2 normalizedPosition = ClampNormalizedPoint(PreviewToNormalizedTexturePoint(previewPosition, textureRect));
+            switch (normalIndentDragTarget)
+            {
+                case DetailCurveDragTarget.Anchor:
+                    Vector2 oldPosition = point.position;
+                    Vector2 delta = normalizedPosition - oldPosition;
+                    point.position = normalizedPosition;
+                    point.inHandle = ClampNormalizedPoint(point.inHandle + delta);
+                    point.outHandle = ClampNormalizedPoint(point.outHandle + delta);
+                    break;
+                case DetailCurveDragTarget.InHandle:
+                    point.inHandle = normalizedPosition;
+                    break;
+                case DetailCurveDragTarget.OutHandle:
+                    point.outHandle = normalizedPosition;
+                    break;
+            }
+        }
+
+        private bool TryDeleteNormalIndentPointAtPreviewPosition(Vector2 previewPosition, Rect textureRect)
+        {
+            List<Bezier2DPoint> points = GetActiveNormalIndentPoints();
+            int minPoints = IsNormalIndentCurveClosed() ? NormalIndentShapeMinPoints : NormalIndentPathMinPoints;
+            if (points.Count <= minPoints)
+            {
+                return false;
+            }
+
+            int pointIndex = FindNormalIndentAnchorAtPreviewPosition(previewPosition, textureRect);
+            if (pointIndex < 0)
+            {
+                return false;
+            }
+
+            points.RemoveAt(pointIndex);
+            normalIndentSelectedPointIndex = Mathf.Clamp(pointIndex, 0, points.Count - 1);
+            NormalizeNormalIndentHandlesAroundIndex(normalIndentSelectedPointIndex);
+            NormalizeNormalIndentHandlesAroundIndex(GetPreviousNormalIndentPointIndex(normalIndentSelectedPointIndex));
+            return true;
+        }
+
+        private int FindNormalIndentAnchorAtPreviewPosition(Vector2 previewPosition, Rect textureRect)
+        {
+            List<Bezier2DPoint> points = GetActiveNormalIndentPoints();
+            float anchorHitRadiusSquared = DetailAnchorHitRadius * DetailAnchorHitRadius;
+            for (int pointIndex = 0; pointIndex < points.Count; pointIndex++)
+            {
+                Vector2 anchor = NormalizedTextureToPreviewPoint(points[pointIndex].position, textureRect);
+                if ((anchor - previewPosition).sqrMagnitude <= anchorHitRadiusSquared)
+                {
+                    return pointIndex;
+                }
+            }
+
+            return -1;
+        }
+
+        private bool TryInsertNormalIndentPointAtPreviewPosition(Vector2 previewPosition, Rect textureRect)
+        {
+            if (!FindNearestNormalIndentCurveSegment(previewPosition, textureRect, out int segmentIndex, out float segmentT))
+            {
+                return false;
+            }
+
+            SplitNormalIndentCurveSegment(segmentIndex, segmentT);
+            normalIndentSelectedPointIndex = segmentIndex + 1;
+            return true;
+        }
+
+        private bool FindNearestNormalIndentCurveSegment(Vector2 previewPosition, Rect textureRect, out int segmentIndex, out float segmentT)
+        {
+            List<Bezier2DPoint> points = GetActiveNormalIndentPoints();
+            bool closed = IsNormalIndentCurveClosed();
+            int minPoints = closed ? NormalIndentShapeMinPoints : NormalIndentPathMinPoints;
+            segmentIndex = -1;
+            segmentT = 0f;
+            if (points.Count < minPoints)
+            {
+                return false;
+            }
+
+            float bestDistanceSquared = DetailCurveHitRadius * DetailCurveHitRadius;
+            const int HitTestSamples = 28;
+            int segmentCount = closed ? points.Count : points.Count - 1;
+            for (int i = 0; i < segmentCount; i++)
+            {
+                Bezier2DPoint point = points[i];
+                Bezier2DPoint nextPoint = points[(i + 1) % points.Count];
+                Vector2 previous = NormalizedTextureToPreviewPoint(point.position, textureRect);
+                for (int sample = 1; sample <= HitTestSamples; sample++)
+                {
+                    float t = (float)sample / HitTestSamples;
+                    Vector2 current = NormalizedTextureToPreviewPoint(Bezier2DPath.EvaluateCubic(point.position, point.outHandle, nextPoint.inHandle, nextPoint.position, t), textureRect);
+                    float distanceSquared = DistancePointToSegmentSquared(previewPosition, previous, current, out float segmentLocalT);
+                    if (distanceSquared < bestDistanceSquared)
+                    {
+                        bestDistanceSquared = distanceSquared;
+                        segmentIndex = i;
+                        segmentT = Mathf.Lerp((float)(sample - 1) / HitTestSamples, t, segmentLocalT);
+                    }
+                    previous = current;
+                }
+            }
+
+            return segmentIndex >= 0;
+        }
+
+        private void SplitNormalIndentCurveSegment(int segmentIndex, float t)
+        {
+            List<Bezier2DPoint> points = GetActiveNormalIndentPoints();
+            if (segmentIndex < 0 || segmentIndex >= points.Count)
+            {
+                return;
+            }
+
+            int nextIndex = (segmentIndex + 1) % points.Count;
+            Bezier2DPoint point = points[segmentIndex];
+            Bezier2DPoint nextPoint = points[nextIndex];
+            Vector2 p0 = point.position;
+            Vector2 p1 = point.outHandle;
+            Vector2 p2 = nextPoint.inHandle;
+            Vector2 p3 = nextPoint.position;
+            float clampedT = Mathf.Clamp01(t);
+
+            Vector2 p01 = Vector2.Lerp(p0, p1, clampedT);
+            Vector2 p12 = Vector2.Lerp(p1, p2, clampedT);
+            Vector2 p23 = Vector2.Lerp(p2, p3, clampedT);
+            Vector2 p012 = Vector2.Lerp(p01, p12, clampedT);
+            Vector2 p123 = Vector2.Lerp(p12, p23, clampedT);
+            Vector2 p0123 = Vector2.Lerp(p012, p123, clampedT);
+
+            point.outHandle = ClampNormalizedPoint(p01);
+            nextPoint.inHandle = ClampNormalizedPoint(p23);
+            Bezier2DPoint insertedPoint = new Bezier2DPoint(
+                ClampNormalizedPoint(p0123),
+                ClampNormalizedPoint(p012),
+                ClampNormalizedPoint(p123));
+            points.Insert(segmentIndex + 1, insertedPoint);
+        }
+
+        private void NormalizeNormalIndentHandlesAroundIndex(int pointIndex)
+        {
+            List<Bezier2DPoint> points = GetActiveNormalIndentPoints();
+            if (pointIndex < 0 || pointIndex >= points.Count || points.Count < NormalIndentPathMinPoints)
+            {
+                return;
+            }
+
+            bool closed = IsNormalIndentCurveClosed();
+            Bezier2DPoint point = points[pointIndex];
+            Vector2 previous = GetNormalIndentNeighborPosition(points, pointIndex, -1, closed);
+            Vector2 next = GetNormalIndentNeighborPosition(points, pointIndex, 1, closed);
+            point.inHandle = ClampNormalizedPoint(point.position + ((previous - point.position) * 0.33f));
+            point.outHandle = ClampNormalizedPoint(point.position + ((next - point.position) * 0.33f));
+        }
+
+        private static Vector2 GetNormalIndentNeighborPosition(List<Bezier2DPoint> points, int pointIndex, int direction, bool closed)
+        {
+            int count = points.Count;
+            int neighborIndex = pointIndex + direction;
+            if (closed)
+            {
+                return points[(neighborIndex + count) % count].position;
+            }
+
+            if (neighborIndex >= 0 && neighborIndex < count)
+            {
+                return points[neighborIndex].position;
+            }
+
+            if (count < 2)
+            {
+                return points[pointIndex].position;
+            }
+
+            Vector2 point = points[pointIndex].position;
+            Vector2 inward = direction < 0 ? points[Mathf.Min(pointIndex + 1, count - 1)].position : points[Mathf.Max(pointIndex - 1, 0)].position;
+            return point + (point - inward);
+        }
+
+        private int GetPreviousNormalIndentPointIndex(int pointIndex)
+        {
+            List<Bezier2DPoint> points = GetActiveNormalIndentPoints();
+            if (points.Count == 0)
+            {
+                return 0;
+            }
+
+            if (IsNormalIndentCurveClosed())
+            {
+                return (pointIndex + points.Count - 1) % points.Count;
+            }
+
+            return Mathf.Max(0, pointIndex - 1);
+        }
+
+        private List<Bezier2DPoint> GetActiveNormalIndentPoints()
+        {
+            return normalIndentMode == NormalIndentMode.FilledNoise ? normalIndentShapePoints : normalIndentPathPoints;
+        }
+
+        private bool IsNormalIndentCurveClosed()
+        {
+            return normalIndentMode == NormalIndentMode.FilledNoise;
         }
 
         private bool CanApplyAddDetails()
@@ -2347,7 +3104,7 @@ namespace UMA.Editors
 
         private void DrawAdjustTextureTool()
         {
-            EditorGUILayout.HelpBox("Adjust RGB preview controls, resize the working texture, or generate a Unity normal map from luminance. Visible Area only changes the preview display.", MessageType.Info);
+            EditorGUILayout.HelpBox("Adjust RGB preview controls, resize the working texture, generate alpha from grayscale, or generate a Unity normal map from luminance. Visible Area only changes the preview display.", MessageType.Info);
             EditorGUILayout.LabelField("Visible Area", EditorStyles.boldLabel);
             EditorGUI.BeginChangeCheck();
             EditorGUILayout.BeginHorizontal();
@@ -2416,6 +3173,19 @@ namespace UMA.Editors
                 if (GUILayout.Button("Hairify (experimental)"))
                 {
                     HairifyCurrentTexture();
+                }
+
+                EditorGUILayout.Space(8f);
+                EditorGUILayout.LabelField("Alpha from Grayscale", EditorStyles.boldLabel);
+                alphaFromGrayscaleDefringe = EditorGUILayout.Toggle(new GUIContent("Defringe", "Replace RGB with a solid color after alpha is generated to avoid colored fringes around transparent pixels."), alphaFromGrayscaleDefringe);
+                using (new EditorGUI.DisabledScope(!alphaFromGrayscaleDefringe))
+                {
+                    alphaFromGrayscaleDefringeColor = EditorGUILayout.ColorField(new GUIContent("Defringe Color", "RGB color written into every pixel when Defringe is enabled."), alphaFromGrayscaleDefringeColor);
+                }
+
+                if (GUILayout.Button(new GUIContent("Generate Alpha from Grayscale", "Set each pixel alpha from its RGB luma value. Black becomes transparent and white becomes opaque.")))
+                {
+                    GenerateAlphaFromGrayscale();
                 }
 
                 EditorGUILayout.Space(8f);
@@ -2585,6 +3355,425 @@ namespace UMA.Editors
             }
         }
 
+        private void DrawNormalIndentTool()
+        {
+            EditorGUILayout.HelpBox("Load an albedo and normal map, edit a raw duplicate of the normal, then save the edited normal as a new PNG.", MessageType.Info);
+
+            EditorGUI.BeginChangeCheck();
+            Texture2D newAlbedo = (Texture2D)EditorGUILayout.ObjectField("Albedo", sourceAsset, typeof(Texture2D), false);
+            if (EditorGUI.EndChangeCheck())
+            {
+                TryLoadTextureAsset(newAlbedo, FindDroppedTextureIndex(newAlbedo), "loading a normal-indent albedo");
+            }
+
+            EditorGUI.BeginChangeCheck();
+            Texture2D newNormal = (Texture2D)EditorGUILayout.ObjectField("Normal Map", normalIndentNormalAsset, typeof(Texture2D), false);
+            if (EditorGUI.EndChangeCheck())
+            {
+                TryLoadNormalIndentNormalAsset(newNormal, true);
+            }
+
+            EditorGUI.BeginChangeCheck();
+            normalIndentDecodeMode = (NormalMapDecodeMode)EditorGUILayout.EnumPopup(new GUIContent("Decode", "Auto usually keeps raw RGB normals as-is and detects DXT5nm-style alpha/green maps."), normalIndentDecodeMode);
+            if (EditorGUI.EndChangeCheck())
+            {
+                ReloadNormalIndentSource(true);
+            }
+
+            EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button("Load Normal From Disk..."))
+            {
+                LoadNormalIndentNormalFromDisk();
+            }
+
+            using (new EditorGUI.DisabledScope(normalIndentNormalAsset == null && string.IsNullOrEmpty(normalIndentDiskPath)))
+            {
+                if (GUILayout.Button("Reload Normal"))
+                {
+                    ReloadNormalIndentSource(true);
+                }
+            }
+
+            using (new EditorGUI.DisabledScope(normalIndentWorkingNormal == null))
+            {
+                if (GUILayout.Button("Save Edited Normal As PNG..."))
+                {
+                    SaveNormalIndentAsPng();
+                }
+            }
+            EditorGUILayout.EndHorizontal();
+
+            if (normalIndentWorkingNormal != null)
+            {
+                string sourceLabel = string.IsNullOrEmpty(normalIndentSourceName) ? normalIndentWorkingNormal.name : normalIndentSourceName;
+                EditorGUILayout.LabelField($"Normal: {sourceLabel} ({normalIndentWorkingNormal.width} x {normalIndentWorkingNormal.height}{(normalIndentDirty ? " *" : string.Empty)})", EditorStyles.miniLabel);
+            }
+
+            EditorGUILayout.BeginHorizontal();
+            using (new EditorGUI.DisabledScope(!CanUndoNormalIndent()))
+            {
+                if (GUILayout.Button("Undo Last Apply"))
+                {
+                    UndoNormalIndentApply();
+                }
+            }
+
+            using (new EditorGUI.DisabledScope(!CanResetNormalIndent()))
+            {
+                if (GUILayout.Button("Reset Normal"))
+                {
+                    ResetNormalIndentToOriginal();
+                }
+            }
+            EditorGUILayout.EndHorizontal();
+
+            if (currentTexture != null && normalIndentWorkingNormal != null
+                && (currentTexture.width != normalIndentWorkingNormal.width || currentTexture.height != normalIndentWorkingNormal.height))
+            {
+                EditorGUILayout.HelpBox("Albedo and normal dimensions differ. Preview UVs still match, but curve coordinates follow the normal map size.", MessageType.Warning);
+            }
+
+            using (new EditorGUI.DisabledScope(!CanUseNormalIndent()))
+            {
+                if (normalIndentWorkingNormal != null)
+                {
+                    EnsureNormalIndentCurvesInitialized(normalIndentWorkingNormal.width, normalIndentWorkingNormal.height);
+                }
+
+                normalIndentMode = (NormalIndentMode)GUILayout.Toolbar((int)normalIndentMode, new[] { "Path Indent", "Filled Noise" });
+                EditorGUI.BeginChangeCheck();
+                normalIndentShowCurves = EditorGUILayout.ToggleLeft(new GUIContent("Show Curves/Handles", "Hide the editable curve overlay so the texture preview is unobstructed."), normalIndentShowCurves);
+                normalIndentShowLightHandle = EditorGUILayout.ToggleLeft(new GUIContent("Show Light Handle", "Show a draggable preview light control over the texture."), normalIndentShowLightHandle);
+                normalIndentPreviewLightContrast = EditorGUILayout.Slider(new GUIContent("Light Contrast", "Preview-only lighting contrast for making normal detail easier to inspect."), normalIndentPreviewLightContrast, 0f, 3f);
+                if (EditorGUI.EndChangeCheck())
+                {
+                    if (!normalIndentShowCurves)
+                    {
+                        normalIndentCurveDragging = false;
+                        normalIndentDragTarget = DetailCurveDragTarget.None;
+                        normalIndentDragPointIndex = -1;
+                    }
+
+                    if (!normalIndentShowLightHandle)
+                    {
+                        normalIndentLightDragging = false;
+                    }
+
+                    Repaint();
+                }
+
+                if (GUILayout.Button("Reset Preview Light"))
+                {
+                    normalIndentPreviewLightDirection = new Vector3(0.35f, 0.45f, 0.82f).normalized;
+                    normalIndentPreviewLightContrast = 1.25f;
+                    Repaint();
+                }
+                EditorGUILayout.Space(4f);
+
+                if (normalIndentMode == NormalIndentMode.PathIndent)
+                {
+                    normalIndentPathPressure = EditorGUILayout.Slider(new GUIContent("Pressure", "Per-operation indentation pressure."), normalIndentPathPressure, 0f, 2f);
+                    normalIndentPathWidthPixels = EditorGUILayout.Slider("Width (px)", normalIndentPathWidthPixels, 1f, 256f);
+                    normalIndentPathEndFadePixels = EditorGUILayout.Slider("End Fade (px)", normalIndentPathEndFadePixels, 0f, 256f);
+                    normalIndentPathEndTaperPixels = EditorGUILayout.Slider("End Taper (px)", normalIndentPathEndTaperPixels, 0f, 256f);
+                    normalIndentPathLeftSoftness = EditorGUILayout.Slider(new GUIContent("Left Softness", "Relative to the direction of the path. 0 is a hard side, 1 fades that side until it is nearly invisible."), normalIndentPathLeftSoftness, 0f, 1f);
+                    normalIndentPathRightSoftness = EditorGUILayout.Slider(new GUIContent("Right Softness", "Relative to the direction of the path. 0 is a hard side, 1 fades that side until it is nearly invisible."), normalIndentPathRightSoftness, 0f, 1f);
+
+                    EditorGUILayout.BeginHorizontal();
+                    if (GUILayout.Button("Reset Path"))
+                    {
+                        ResetNormalIndentPath();
+                        Repaint();
+                    }
+
+                    using (new EditorGUI.DisabledScope(!CanApplyNormalIndentPath()))
+                    {
+                        if (GUILayout.Button("Apply Path Indent"))
+                        {
+                            ApplyNormalIndentPath(false);
+                        }
+
+                        if (GUILayout.Button("Apply Mirrored Path"))
+                        {
+                            ApplyNormalIndentPath(true);
+                        }
+                    }
+                    EditorGUILayout.EndHorizontal();
+                }
+                else
+                {
+                    normalIndentNoisePressure = EditorGUILayout.Slider(new GUIContent("Pressure", "Per-operation noise normal pressure."), normalIndentNoisePressure, 0f, 2f);
+                    normalIndentNoiseBoundaryFalloffPixels = EditorGUILayout.Slider("Boundary Falloff (px)", normalIndentNoiseBoundaryFalloffPixels, 0f, 256f);
+                    normalIndentNoiseScalePixels = EditorGUILayout.Slider("Noise Scale (px)", normalIndentNoiseScalePixels, 2f, 256f);
+                    normalIndentNoiseOctaves = EditorGUILayout.IntSlider("Noise Octaves", normalIndentNoiseOctaves, 1, 6);
+                    normalIndentNoiseSeed = EditorGUILayout.IntField("Seed", normalIndentNoiseSeed);
+
+                    EditorGUILayout.BeginHorizontal();
+                    if (GUILayout.Button("Reset Shape"))
+                    {
+                        ResetNormalIndentShape();
+                        Repaint();
+                    }
+
+                    using (new EditorGUI.DisabledScope(!CanApplyNormalIndentNoise()))
+                    {
+                        if (GUILayout.Button("Apply Filled Noise"))
+                        {
+                            ApplyNormalIndentNoise(false);
+                        }
+
+                        if (GUILayout.Button("Apply Mirrored Noise"))
+                        {
+                            ApplyNormalIndentNoise(true);
+                        }
+                    }
+                    EditorGUILayout.EndHorizontal();
+                }
+            }
+        }
+
+        private void EnsureNormalIndentCurvesInitialized(int textureWidth, int textureHeight)
+        {
+            if (textureWidth <= 0 || textureHeight <= 0)
+            {
+                return;
+            }
+
+            if (normalIndentCurveTextureWidth == textureWidth
+                && normalIndentCurveTextureHeight == textureHeight
+                && normalIndentPathPoints.Count >= NormalIndentPathMinPoints
+                && normalIndentShapePoints.Count >= NormalIndentShapeMinPoints)
+            {
+                return;
+            }
+
+            normalIndentCurveTextureWidth = textureWidth;
+            normalIndentCurveTextureHeight = textureHeight;
+            ResetNormalIndentPath();
+            ResetNormalIndentShape();
+        }
+
+        private void ResetNormalIndentPath()
+        {
+            Bezier2DPath.ResetToDefaultPath(normalIndentPathPoints);
+            normalIndentSelectedPointIndex = normalIndentPathPoints.Count > 0 ? 0 : -1;
+            normalIndentDragPointIndex = -1;
+            normalIndentDragTarget = DetailCurveDragTarget.None;
+        }
+
+        private void ResetNormalIndentShape()
+        {
+            Bezier2DPath.ResetToDefaultCircle(normalIndentShapePoints, normalIndentCurveTextureWidth, normalIndentCurveTextureHeight, NormalIndentDefaultShapeRadiusScale);
+            normalIndentSelectedPointIndex = normalIndentShapePoints.Count > 0 ? 0 : -1;
+            normalIndentDragPointIndex = -1;
+            normalIndentDragTarget = DetailCurveDragTarget.None;
+        }
+
+        private void ApplyNormalIndentPath(bool mirrorAcrossX)
+        {
+            if (!CanApplyNormalIndentPath())
+            {
+                return;
+            }
+
+            Color32[] pixels = GetNormalIndentWorkingPixels();
+            Color32[] undoPixels = CloneColor32Array(pixels);
+            bool undoDirty = normalIndentDirty;
+            NormalIndentPathSettings settings = CreateNormalIndentPathSettings(normalIndentPathPoints, false);
+            bool changed = NormalIndentProcessor.ApplyPathIndent(pixels, normalIndentWorkingNormal.width, normalIndentWorkingNormal.height, settings);
+
+            if (mirrorAcrossX)
+            {
+                List<Bezier2DPoint> mirroredPoints = CreateMirroredNormalIndentPoints(normalIndentPathPoints);
+                NormalIndentPathSettings mirroredSettings = CreateNormalIndentPathSettings(mirroredPoints, true);
+                changed = NormalIndentProcessor.ApplyPathIndent(pixels, normalIndentWorkingNormal.width, normalIndentWorkingNormal.height, mirroredSettings) || changed;
+            }
+
+            CommitNormalIndentPixels(pixels, changed, mirrorAcrossX ? "Mirrored Path Indent" : "Path Indent", undoPixels, undoDirty);
+        }
+
+        private void ApplyNormalIndentNoise(bool mirrorAcrossX)
+        {
+            if (!CanApplyNormalIndentNoise())
+            {
+                return;
+            }
+
+            Color32[] pixels = GetNormalIndentWorkingPixels();
+            Color32[] undoPixels = CloneColor32Array(pixels);
+            bool undoDirty = normalIndentDirty;
+            NormalIndentNoiseSettings settings = CreateNormalIndentNoiseSettings(normalIndentShapePoints, false);
+            bool changed = NormalIndentProcessor.ApplyFilledNoise(pixels, normalIndentWorkingNormal.width, normalIndentWorkingNormal.height, settings);
+
+            if (mirrorAcrossX)
+            {
+                List<Bezier2DPoint> mirroredPoints = CreateMirroredNormalIndentPoints(normalIndentShapePoints);
+                NormalIndentNoiseSettings mirroredSettings = CreateNormalIndentNoiseSettings(mirroredPoints, true);
+                changed = NormalIndentProcessor.ApplyFilledNoise(pixels, normalIndentWorkingNormal.width, normalIndentWorkingNormal.height, mirroredSettings) || changed;
+            }
+
+            CommitNormalIndentPixels(pixels, changed, mirrorAcrossX ? "Mirrored Filled Noise" : "Filled Noise", undoPixels, undoDirty);
+        }
+
+        private NormalIndentPathSettings CreateNormalIndentPathSettings(IList<Bezier2DPoint> points, bool mirroredAcrossX)
+        {
+            return new NormalIndentPathSettings
+            {
+                points = points,
+                pressure = normalIndentPathPressure,
+                widthPixels = normalIndentPathWidthPixels,
+                endFadePixels = normalIndentPathEndFadePixels,
+                endTaperPixels = normalIndentPathEndTaperPixels,
+                leftProfileSoftness = mirroredAcrossX ? normalIndentPathRightSoftness : normalIndentPathLeftSoftness,
+                rightProfileSoftness = mirroredAcrossX ? normalIndentPathLeftSoftness : normalIndentPathRightSoftness,
+                samplesPerSegment = NormalIndentCurveSamplesPerSegment,
+            };
+        }
+
+        private NormalIndentNoiseSettings CreateNormalIndentNoiseSettings(IList<Bezier2DPoint> points, bool mirroredAcrossX)
+        {
+            return new NormalIndentNoiseSettings
+            {
+                shapePoints = points,
+                pressure = normalIndentNoisePressure,
+                boundaryFalloffPixels = normalIndentNoiseBoundaryFalloffPixels,
+                noiseScalePixels = normalIndentNoiseScalePixels,
+                noiseOctaves = normalIndentNoiseOctaves,
+                seed = normalIndentNoiseSeed,
+                samplesPerSegment = NormalIndentCurveSamplesPerSegment,
+                mirrorNoiseAcrossX = mirroredAcrossX,
+            };
+        }
+
+        private static List<Bezier2DPoint> CreateMirroredNormalIndentPoints(IList<Bezier2DPoint> points)
+        {
+            List<Bezier2DPoint> mirroredPoints = new List<Bezier2DPoint>();
+            if (points == null)
+            {
+                return mirroredPoints;
+            }
+
+            for (int pointIndex = 0; pointIndex < points.Count; pointIndex++)
+            {
+                Bezier2DPoint point = points[pointIndex];
+                mirroredPoints.Add(new Bezier2DPoint(
+                    MirrorNormalIndentPointAcrossX(point.position),
+                    MirrorNormalIndentPointAcrossX(point.inHandle),
+                    MirrorNormalIndentPointAcrossX(point.outHandle)));
+            }
+
+            return mirroredPoints;
+        }
+
+        private static Vector2 MirrorNormalIndentPointAcrossX(Vector2 point)
+        {
+            return ClampNormalizedPoint(new Vector2(1f - point.x, point.y));
+        }
+
+        private Color32[] GetNormalIndentWorkingPixels()
+        {
+            if (normalIndentWorkingNormal == null)
+            {
+                return null;
+            }
+
+            if (normalIndentPixels == null || normalIndentPixels.Length != normalIndentWorkingNormal.width * normalIndentWorkingNormal.height)
+            {
+                normalIndentPixels = normalIndentWorkingNormal.GetPixels32();
+            }
+
+            return normalIndentPixels;
+        }
+
+        private void CommitNormalIndentPixels(Color32[] pixels, bool changed, string operationName, Color32[] undoPixels, bool undoDirty)
+        {
+            if (!changed || pixels == null || normalIndentWorkingNormal == null)
+            {
+                EditorUtility.DisplayDialog(operationName, "No normal pixels were changed. Try increasing pressure, width, or the affected area.", "OK");
+                return;
+            }
+
+            normalIndentUndoPixels = undoPixels;
+            normalIndentUndoDirty = undoDirty;
+            normalIndentPixels = pixels;
+            normalIndentWorkingNormal.SetPixels32(normalIndentPixels);
+            normalIndentWorkingNormal.Apply(false, false);
+            normalIndentDirty = true;
+            Repaint();
+        }
+
+        private bool CanUndoNormalIndent()
+        {
+            return normalIndentWorkingNormal != null
+                && normalIndentUndoPixels != null
+                && normalIndentUndoPixels.Length == normalIndentWorkingNormal.width * normalIndentWorkingNormal.height;
+        }
+
+        private bool CanResetNormalIndent()
+        {
+            return normalIndentWorkingNormal != null
+                && normalIndentOriginalPixels != null
+                && normalIndentOriginalPixels.Length == normalIndentWorkingNormal.width * normalIndentWorkingNormal.height;
+        }
+
+        private void UndoNormalIndentApply()
+        {
+            if (!CanUndoNormalIndent())
+            {
+                return;
+            }
+
+            Color32[] undoPixels = normalIndentUndoPixels;
+            bool undoDirty = normalIndentUndoDirty;
+            RestoreNormalIndentPixels(undoPixels, undoDirty);
+            normalIndentUndoPixels = null;
+            normalIndentUndoDirty = false;
+        }
+
+        private void ResetNormalIndentToOriginal()
+        {
+            if (!CanResetNormalIndent())
+            {
+                return;
+            }
+
+            if (normalIndentDirty
+                && !EditorUtility.DisplayDialog("Reset Normal", "Restore the normal map to the originally loaded pixels?", "Reset", "Cancel"))
+            {
+                return;
+            }
+
+            RestoreNormalIndentPixels(normalIndentOriginalPixels, false);
+            normalIndentUndoPixels = null;
+            normalIndentUndoDirty = false;
+        }
+
+        private void RestoreNormalIndentPixels(Color32[] pixels, bool dirty)
+        {
+            if (pixels == null || normalIndentWorkingNormal == null || pixels.Length != normalIndentWorkingNormal.width * normalIndentWorkingNormal.height)
+            {
+                return;
+            }
+
+            normalIndentPixels = CloneColor32Array(pixels);
+            normalIndentWorkingNormal.SetPixels32(normalIndentPixels);
+            normalIndentWorkingNormal.Apply(false, false);
+            normalIndentDirty = dirty;
+            Repaint();
+        }
+
+        private static Color32[] CloneColor32Array(Color32[] pixels)
+        {
+            if (pixels == null)
+            {
+                return null;
+            }
+
+            Color32[] clone = new Color32[pixels.Length];
+            Array.Copy(pixels, clone, pixels.Length);
+            return clone;
+        }
+
         private bool AreGradientSettingsChanged()
         {
             return !gradientApplied
@@ -2752,6 +3941,295 @@ namespace UMA.Editors
         }
 
         // ---------- Loading / Saving ----------
+
+        private bool CanUseNormalIndent()
+        {
+            return currentTexture != null && normalIndentWorkingNormal != null;
+        }
+
+        private bool CanApplyNormalIndentPath()
+        {
+            return CanUseNormalIndent() && normalIndentPathPoints.Count >= NormalIndentPathMinPoints;
+        }
+
+        private bool CanApplyNormalIndentNoise()
+        {
+            return CanUseNormalIndent() && normalIndentShapePoints.Count >= NormalIndentShapeMinPoints;
+        }
+
+        private void LoadNormalIndentNormalFromDisk()
+        {
+            if (!PromptSaveNormalIndentIfDirty("loading a new normal map"))
+            {
+                return;
+            }
+
+            string path = EditorUtility.OpenFilePanel("Load Normal Map", GetNormalIndentSaveInitialDirectory(), "png,jpg,jpeg,tga,bmp");
+            if (string.IsNullOrEmpty(path))
+            {
+                return;
+            }
+
+            Texture2D texture = null;
+            try
+            {
+                byte[] bytes = File.ReadAllBytes(path);
+                texture = new Texture2D(2, 2, TextureFormat.RGBA32, false, false);
+                if (!ImageConversion.LoadImage(texture, bytes, false))
+                {
+                    EditorUtility.DisplayDialog("Load Normal Map", "Failed to load image at: " + path, "OK");
+                    return;
+                }
+
+                Color32[] decodedPixels = NormalIndentProcessor.DecodeToRawNormals(texture.GetPixels32(), normalIndentDecodeMode);
+                SetNormalIndentWorkingNormal(decodedPixels, texture.width, texture.height, Path.GetFileNameWithoutExtension(path), null, path);
+            }
+            catch (Exception ex)
+            {
+                EditorUtility.DisplayDialog("Load Normal Map", "Error: " + ex.Message, "OK");
+            }
+            finally
+            {
+                DestroyTexture(ref texture);
+            }
+        }
+
+        private bool TryLoadNormalIndentNormalAsset(Texture2D asset, bool promptIfDirty)
+        {
+            if (promptIfDirty && !PromptSaveNormalIndentIfDirty("loading a new normal map"))
+            {
+                return false;
+            }
+
+            if (asset == null)
+            {
+                ClearNormalIndentWorkingNormal();
+                Repaint();
+                return true;
+            }
+
+            Texture2D readable = null;
+            try
+            {
+                readable = MakeReadableCopy(asset);
+                Color32[] decodedPixels = NormalIndentProcessor.DecodeToRawNormals(readable.GetPixels32(), normalIndentDecodeMode);
+                SetNormalIndentWorkingNormal(decodedPixels, readable.width, readable.height, asset.name, asset, null);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                EditorUtility.DisplayDialog("Load Normal Map", "Error: " + ex.Message, "OK");
+                return false;
+            }
+            finally
+            {
+                DestroyTexture(ref readable);
+            }
+        }
+
+        private bool ReloadNormalIndentSource(bool promptIfDirty)
+        {
+            if (normalIndentNormalAsset != null)
+            {
+                return TryLoadNormalIndentNormalAsset(normalIndentNormalAsset, promptIfDirty);
+            }
+
+            if (string.IsNullOrEmpty(normalIndentDiskPath))
+            {
+                return false;
+            }
+
+            if (promptIfDirty && !PromptSaveNormalIndentIfDirty("reloading the normal map"))
+            {
+                return false;
+            }
+
+            Texture2D texture = null;
+            try
+            {
+                byte[] bytes = File.ReadAllBytes(normalIndentDiskPath);
+                texture = new Texture2D(2, 2, TextureFormat.RGBA32, false, false);
+                if (!ImageConversion.LoadImage(texture, bytes, false))
+                {
+                    EditorUtility.DisplayDialog("Reload Normal Map", "Failed to load image at: " + normalIndentDiskPath, "OK");
+                    return false;
+                }
+
+                Color32[] decodedPixels = NormalIndentProcessor.DecodeToRawNormals(texture.GetPixels32(), normalIndentDecodeMode);
+                SetNormalIndentWorkingNormal(decodedPixels, texture.width, texture.height, Path.GetFileNameWithoutExtension(normalIndentDiskPath), null, normalIndentDiskPath);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                EditorUtility.DisplayDialog("Reload Normal Map", "Error: " + ex.Message, "OK");
+                return false;
+            }
+            finally
+            {
+                DestroyTexture(ref texture);
+            }
+        }
+
+        private void SetNormalIndentWorkingNormal(Color32[] rawNormalPixels, int width, int height, string sourceName, Texture2D sourceNormalAsset, string diskPath)
+        {
+            ClearNormalIndentWorkingNormal();
+            if (rawNormalPixels == null || rawNormalPixels.Length != width * height || width <= 0 || height <= 0)
+            {
+                return;
+            }
+
+            normalIndentWorkingNormal = new Texture2D(width, height, TextureFormat.RGBA32, false, true)
+            {
+                name = string.IsNullOrEmpty(sourceName) ? "NormalIndent" : sourceName + "_RawNormalWorking",
+                hideFlags = HideFlags.HideAndDontSave,
+                filterMode = FilterMode.Bilinear,
+                wrapMode = TextureWrapMode.Clamp,
+            };
+            normalIndentPixels = CloneColor32Array(rawNormalPixels);
+            normalIndentOriginalPixels = CloneColor32Array(rawNormalPixels);
+            normalIndentWorkingNormal.SetPixels32(normalIndentPixels);
+            normalIndentWorkingNormal.Apply(false, false);
+            normalIndentUndoPixels = null;
+            normalIndentNormalAsset = sourceNormalAsset;
+            normalIndentDiskPath = diskPath;
+            normalIndentDiskDirectory = string.IsNullOrEmpty(diskPath) ? null : Path.GetDirectoryName(diskPath);
+            normalIndentSourceName = sourceName;
+            normalIndentDirty = false;
+            normalIndentUndoDirty = false;
+            normalIndentCurveTextureWidth = 0;
+            normalIndentCurveTextureHeight = 0;
+            EnsureNormalIndentCurvesInitialized(width, height);
+            ResetMagnifiedPreviewCenter();
+            Repaint();
+        }
+
+        private void ClearNormalIndentWorkingNormal()
+        {
+            DestroyTexture(ref normalIndentWorkingNormal);
+            normalIndentPixels = null;
+            normalIndentOriginalPixels = null;
+            normalIndentUndoPixels = null;
+            normalIndentNormalAsset = null;
+            normalIndentDiskPath = null;
+            normalIndentDiskDirectory = null;
+            normalIndentSourceName = null;
+            normalIndentDirty = false;
+            normalIndentUndoDirty = false;
+            normalIndentCurveTextureWidth = 0;
+            normalIndentCurveTextureHeight = 0;
+            normalIndentCurveDragging = false;
+            normalIndentDragPointIndex = -1;
+            normalIndentSelectedPointIndex = -1;
+        }
+
+        private bool PromptSaveNormalIndentIfDirty(string action)
+        {
+            if (!normalIndentDirty || normalIndentWorkingNormal == null)
+            {
+                return true;
+            }
+
+            int choice = EditorUtility.DisplayDialogComplex(
+                "Save Edited Normal?",
+                "The edited normal map has unsaved changes. Do you want to save before " + action + "?",
+                "Save",
+                "Discard",
+                "Cancel");
+
+            switch (choice)
+            {
+                case 0:
+                    return SaveNormalIndentAsPng();
+                case 1:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        private bool SaveNormalIndentAsPng()
+        {
+            if (normalIndentWorkingNormal == null)
+            {
+                return false;
+            }
+
+            string baseName = string.IsNullOrEmpty(normalIndentSourceName) ? normalIndentWorkingNormal.name : normalIndentSourceName;
+            string path = EditorUtility.SaveFilePanel("Save Edited Normal As PNG", GetNormalIndentSaveInitialDirectory(), baseName + "_IndentedNormal.png", "png");
+            if (string.IsNullOrEmpty(path))
+            {
+                return false;
+            }
+
+            try
+            {
+                byte[] png = normalIndentWorkingNormal.EncodeToPNG();
+                File.WriteAllBytes(path, png);
+                ImportNormalIfInProject(path);
+                normalIndentDirty = false;
+                EditorUtility.DisplayDialog("Save Normal Map", "Saved: " + path, "OK");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                EditorUtility.DisplayDialog("Save Normal Map", "Error: " + ex.Message, "OK");
+                return false;
+            }
+        }
+
+        private string GetNormalIndentSaveInitialDirectory()
+        {
+            if (normalIndentNormalAsset != null)
+            {
+                string assetPath = AssetDatabase.GetAssetPath(normalIndentNormalAsset);
+                if (!string.IsNullOrEmpty(assetPath))
+                {
+                    string sourceDirectory = Path.GetDirectoryName(GetAbsoluteProjectPath(assetPath));
+                    if (!string.IsNullOrEmpty(sourceDirectory) && Directory.Exists(sourceDirectory))
+                    {
+                        return sourceDirectory;
+                    }
+                }
+            }
+
+            if (!string.IsNullOrEmpty(normalIndentDiskDirectory) && Directory.Exists(normalIndentDiskDirectory))
+            {
+                return normalIndentDiskDirectory;
+            }
+
+            return Application.dataPath;
+        }
+
+        private static void ImportNormalIfInProject(string absolutePath)
+        {
+            string assetPath = AbsolutePathToProjectAssetPath(absolutePath);
+            if (string.IsNullOrEmpty(assetPath))
+            {
+                return;
+            }
+
+            AssetDatabase.ImportAsset(assetPath, ImportAssetOptions.ForceUpdate);
+            TextureImporter importer = AssetImporter.GetAtPath(assetPath) as TextureImporter;
+            if (importer != null)
+            {
+                importer.textureType = TextureImporterType.NormalMap;
+                importer.sRGBTexture = false;
+                importer.mipmapEnabled = true;
+                importer.SaveAndReimport();
+            }
+        }
+
+        private static string AbsolutePathToProjectAssetPath(string absolutePath)
+        {
+            string dataPath = Application.dataPath.Replace('\\', '/');
+            string normalized = absolutePath.Replace('\\', '/');
+            if (!normalized.StartsWith(dataPath, StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+
+            return "Assets" + normalized.Substring(dataPath.Length);
+        }
 
         private bool LoadFromAsset(Texture2D asset)
         {
@@ -5608,6 +7086,32 @@ namespace UMA.Editors
             InvalidatePreview();
         }
 
+        private void GenerateAlphaFromGrayscale()
+        {
+            if (currentTexture == null)
+            {
+                return;
+            }
+
+            if (HasPendingAdjustments())
+            {
+                BakeAdjustmentsToCurrent();
+            }
+
+            EnsureCachedPixels();
+            bool changed = ApplyAlphaFromGrayscale(cachedCurrentPixels, alphaFromGrayscaleDefringe, alphaFromGrayscaleDefringeColor);
+            if (!changed)
+            {
+                EditorUtility.DisplayDialog("Alpha from Grayscale", "No pixels changed. The texture already matches the requested alpha and defringe settings.", "OK");
+                return;
+            }
+
+            currentTexture.SetPixels32(cachedCurrentPixels);
+            currentTexture.Apply(false, false);
+            SetCurrentDirty(true);
+            InvalidatePreview();
+        }
+
         private static void InvertColors32(Color32[] pixels)
         {
             if (pixels == null)
@@ -5670,6 +7174,46 @@ namespace UMA.Editors
                 pixel.a = luminanceAlpha;
                 pixels[i] = pixel;
                 changed = true;
+            }
+
+            return changed;
+        }
+
+        private static bool ApplyAlphaFromGrayscale(Color32[] pixels, bool defringe, Color defringeColor)
+        {
+            if (pixels == null || pixels.Length == 0)
+            {
+                return false;
+            }
+
+            bool changed = false;
+            Color32 defringePixel = new Color32(
+                FloatToByte(defringeColor.r),
+                FloatToByte(defringeColor.g),
+                FloatToByte(defringeColor.b),
+                255);
+
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                Color32 pixel = pixels[i];
+                byte luminanceAlpha = FloatToByte(GetLuminance01(pixel));
+                Color32 updatedPixel = pixel;
+                updatedPixel.a = luminanceAlpha;
+                if (defringe)
+                {
+                    updatedPixel.r = defringePixel.r;
+                    updatedPixel.g = defringePixel.g;
+                    updatedPixel.b = defringePixel.b;
+                }
+
+                if (updatedPixel.r != pixel.r
+                    || updatedPixel.g != pixel.g
+                    || updatedPixel.b != pixel.b
+                    || updatedPixel.a != pixel.a)
+                {
+                    pixels[i] = updatedPixel;
+                    changed = true;
+                }
             }
 
             return changed;

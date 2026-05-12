@@ -1324,7 +1324,10 @@ namespace UMA.PoseTools
                 }
                 EditorGUI.EndDisabledGroup();
                 EditorGUILayout.EndHorizontal();
+                EditorGUILayout.HelpBox("A Mixer Pose is used to mix a new pose in the Race Wizard's Pose Creator. It is not required for editing or generating poses in this editor, and does not affect runtime behavior.", MessageType.Info);
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("mixerPose"), new GUIContent("Mixer Pose"));
                 autoUpdatePreview = EditorGUILayout.Toggle("Auto-Update Preview", autoUpdatePreview );
+                EditorGUILayout.HelpBox("When enabled, the preview target (below) will update in real-time as you edit the pose. Disable to improve performance when editing complex poses or when using a large source UMA.", MessageType.Info);
                 targetSMR = EditorGUILayout.ObjectField("Target SkinnedMeshRenderer", targetSMR, typeof(SkinnedMeshRenderer), true) as SkinnedMeshRenderer;
 
                 bool sourceChanged = (sourceUMA == null && saveUMAData != null)
@@ -1595,6 +1598,7 @@ namespace UMA.PoseTools
                             toRemove.Add(i);
                         }
                     }
+
                     // Remove from the end to avoid index shifting
                     toRemove.Sort();
                     toRemove.Reverse();
@@ -1607,6 +1611,20 @@ namespace UMA.PoseTools
                         _poseEdited = true;
                     }
                 }
+                if (GUILayout.Button("Reset All")) 
+                {
+                    for (int i =0; i < poses.arraySize; i++)
+                    {
+                        SerializedProperty pose = poses.GetArrayElementAtIndex(i);
+                        SerializedProperty position = pose.FindPropertyRelative("position");
+                        SerializedProperty rotation = pose.FindPropertyRelative("rotation");
+                        SerializedProperty scale = pose.FindPropertyRelative("scale");
+                        position.vector3Value = Vector3.zero;
+                        rotation.quaternionValue = Quaternion.identity;
+                        scale.vector3Value = Vector3.one;
+                    }
+                    _poseEdited = true;
+                }        
                 EditorGUI.EndDisabledGroup();
                 GUILayout.EndHorizontal();
                 for (int i =0; i < poses.arraySize; i++)

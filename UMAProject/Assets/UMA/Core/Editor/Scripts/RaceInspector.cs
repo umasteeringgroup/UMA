@@ -207,6 +207,8 @@ namespace UMA.Editors
 				EditorGUILayout.PropertyField(serializedObject.FindProperty("disableDNAConverters"));
 				SerializedProperty dnaConverterListprop = serializedObject.FindProperty("_dnaConverterList");
 				EditorGUILayout.PropertyField(dnaConverterListprop, true);
+				SerializedProperty dnaRanges = serializedObject.FindProperty("dnaRanges");
+				EditorGUILayout.PropertyField(dnaRanges, true);
 			}
 
 			showRaceGeneration = EditorGUILayout.Foldout(showRaceGeneration, "Race Generation");
@@ -222,8 +224,7 @@ namespace UMA.Editors
 				DrawUnbakedShapesToIncludeList();
 			}
 
-			SerializedProperty dnaRanges = serializedObject.FindProperty("dnaRanges");
-			EditorGUILayout.PropertyField(dnaRanges, true);
+
 			/* tags GUI */
 			SerializedProperty tags = serializedObject.FindProperty("tags");
 			EditorGUILayout.PropertyField(tags, true);
@@ -299,125 +300,7 @@ namespace UMA.Editors
 
 			void DoValidate()
 			{
-				RaceData race = target as RaceData;
-				if (race == null)
-				{
-					ValidationMessages.Add("Error: RaceData is null. How is this even possible???");
-					return;
-				}
-				if (race.UsesFbxRoute)
-				{
-					if (race.baseFbxRenderer == null)
-					{
-						ValidationMessages.Add("Error: FBX route is enabled but Base FBX Renderer is not set");
-					}
-					else if (race.baseFbxRenderer.sharedMesh == null)
-					{
-						ValidationMessages.Add("Error: FBX route Base FBX Renderer has no shared mesh");
-					}
-					else
-					{
-						SkinnedMeshRenderer[] rootRenderers = race.baseFbxRenderer.transform.root.GetComponentsInChildren<SkinnedMeshRenderer>(true);
-						if (rootRenderers.Length != 1 || rootRenderers[0] != race.baseFbxRenderer)
-						{
-							ValidationMessages.Add("Error: FBX route Base FBX Renderer must be the only SkinnedMeshRenderer under its prefab root");
-						}
-					}
-				}
-				else if (race.baseRaceRecipe == null)
-				{
-					ValidationMessages.Add("Error: baseRaceRecipe is null");
-				}
-				if (race.TPose == null)
-				{
-					ValidationMessages.Add("Error: TPose is not set! This is required to build an avatar and store the base bone positions");
-				}
-				// validate all wardrobe slots are not null or empty
-				if (race.wardrobeSlots == null)
-				{
-					ValidationMessages.Add("Error: wardrobeSlots is null");
-				}
-				else
-				{
-					for (int i = 0; i < race.wardrobeSlots.Count; i++)
-					{
-						if (String.IsNullOrWhiteSpace(race.wardrobeSlots[i]))
-						{
-							ValidationMessages.Add("Error: wardrobeSlots[" + i + "] is null or empty. This could cause a problem with recipes loading.");
-						}
-					}
-				}
-				if (race.umaTarget == RaceData.UMATarget.Generic && String.IsNullOrWhiteSpace(race.genericRootMotionTransformName))
-				{
-					ValidationMessages.Add("Error: genericRootMotionTransformName is null or empty. This is required for Generic UMA Targets.");
-				}
-
-				if (race.useNewDNA)
-				{
-					if (race.DNACollection == null)
-					{
-						ValidationMessages.Add("Error: DNACollection is null");
-					}
-					else
-					{
-						if (race.DNACollection.DNAGroups == null || race.DNACollection.DNAGroups.Count == 0)
-						{
-							ValidationMessages.Add("Error: DNACollection has no DNAGroups");
-                        }
-					}
-                }
-				else 
-				{
-					if (race.dnaConverterList == null)
-					{
-						ValidationMessages.Add("Error: dnaConverterList is null");
-					}
-					else
-					{
-						for (int i = 0; i < race.dnaConverterList.Length; i++)
-						{
-							var cvt = race.dnaConverterList[i];
-							if (cvt == null)
-							{
-								ValidationMessages.Add("Error: dnaConverterList[" + i + "] is null");
-							}
-							else
-							{
-								if (cvt.dnaAsset == null)
-								{
-									ValidationMessages.Add("Error: dnaConverterList[" + i + "] has a null dnaAsset");
-								}
-								else
-								{
-									if (cvt.dnaAsset.Names == null || cvt.dnaAsset.Names.Length == 0)
-									{
-										ValidationMessages.Add("Error: dnaConverterList[" + i + "] has a dnaAsset with no DNA names");
-									}
-									if (cvt.dnaAsset.dnaTypeHash == 0)
-									{
-										ValidationMessages.Add("Error: dnaConverterList[" + i + "] has a dnaAsset with a0 dnaType Hash");
-									}
-									if (cvt.PluginCount == 0)
-									{
-										ValidationMessages.Add("Warning: dnaConverterList[" + i + "] has no DNA Converter Plugins. Is that intentional?");
-									}
-									for (int j = 0; j < cvt.PluginCount; j++)
-									{
-										var plugin = cvt.GetPlugin(j);
-										if (plugin == null)
-										{
-											ValidationMessages.Add("Error: dnaConverterList[" + i + "] has a null plugin at index " + j);
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-				if (ValidationMessages.Count == 0)
-				{
-					ValidationMessages.Add("Info: No problems found. This RaceData looks good!");
-				}
+				ValidationMessages.AddRange(UMARaceValidation.GetInspectorMessages(target as RaceData));
 			}
 
 			#endregion

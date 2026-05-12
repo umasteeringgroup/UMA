@@ -1,0 +1,151 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: Thin
+  m_EditorClassIdentifier: UMA_Core::UMA.PoseTools.UMABonePose
+  poses:
+  - bone: LeftFoot
+    hash: 1486391408
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.05, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: LeftGluteus
+    hash: 2044062440
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.71488315, y: 0.52024275, z: 1}
+    category: 
+    enabled: 1
+  - bone: LeftLeg
+    hash: 101577729
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.1392562, y: 0.99999577, z: 0.9999981}
+    category: 
+    enabled: 1
+  - bone: LeftUpLeg
+    hash: 392266736
+    position: {x: 0, y: -0.000000052154064, z: -0.000000044936314}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.8407041, y: 0.99999595, z: 1.0001054}
+    category: 
+    enabled: 1
+  - bone: LowerBackAdjust
+    hash: -1471957022
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: LowerBackBelly
+    hash: -1421416706
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: Neck
+    hash: -2145158803
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.9, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightFoot
+    hash: -1693174228
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.05, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightGluteus
+    hash: -2110033470
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.71488315, y: 0.52024275, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightLeg
+    hash: -2042820100
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.1392562, y: 0.99999577, z: 0.9999981}
+    category: 
+    enabled: 1
+  - bone: RightUpLeg
+    hash: 1971262097
+    position: {x: 0, y: -0.000000052154064, z: -0.000000044936314}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.8407041, y: 0.99999595, z: 1.0001054}
+    category: 
+    enabled: 1
+  - bone: Spine
+    hash: 1393476043
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: Spine1
+    hash: -1892025778
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightShoulder
+    hash: -167360539
+    position: {x: -0.009528503, y: 0.0030551404, z: 0.0002584085}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.9999993, y: 0.98836446, z: 1}
+    category: 
+    enabled: 1
+  - bone: LeftShoulder
+    hash: 759586984
+    position: {x: 0.009528503, y: 0.0030551404, z: 0.0002584085}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.9999993, y: 0.98836446, z: 1}
+    category: 
+    enabled: 1
+  - bone: Head
+    hash: 130111906
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.1706328, y: 0.99999607, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightOuterBreast
+    hash: -1043063424
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.8856111, y: 0.6863351, z: 0.99999905}
+    category: 
+    enabled: 1
+  - bone: LeftOuterBreast
+    hash: 361754685
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.8856111, y: 0.6863351, z: 0.99999905}
+    category: 
+    enabled: 1
+  - bone: Hips
+    hash: -556726767
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.9444738, y: 0.9999976, z: 1}
+    category: 
+    enabled: 1
+  tweenPoses: []
+  tweenWeights: []
+  mixerPose: 1

@@ -8,7 +8,9 @@
         "Unity.Addressables",
         "Addressable_Editor",
         "Unity.Mathematics",
-        "Unity.Burst"
+        "Unity.Burst",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
     ],
     "includePlatforms": [
         "Editor"

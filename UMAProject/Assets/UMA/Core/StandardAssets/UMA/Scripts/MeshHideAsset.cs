@@ -537,22 +537,38 @@ namespace UMA
             }
         }
 
+        public void OnEnable()
+        {
+            if (_asset == null && string.IsNullOrEmpty(_assetSlotName))
+            {
+                return;
+            }
+
+            
+            if (_asset != null && string.IsNullOrEmpty(_assetSlotName))
+            {                
+                _assetSlotName = _asset.slotName;
+            }
+        }
+
         /// <summary>
         /// Custom deserialization to write the boolean array to the BitArray.
         /// </summary>
         public void OnAfterDeserialize()
         {
+            /*  Moved these to OnEnable because we need to access the asset name and you cant during deserialization.  
             //We're not logging an error here because we'll get spammed by it for empty/not-set assets.
             if (_asset == null && string.IsNullOrEmpty(_assetSlotName))
             {
                 return;
             }
 
-            if (_asset != null)
-            {
+            
+            if (_asset != null && string.IsNullOrEmpty(_assetSlotName))
+            {                
                 _assetSlotName = _asset.slotName;
             }
-
+            */
             if (_serializedFlags != null && _serializedFlags.Length > 0)
             {
                 _triangleFlags = new BitArray[_serializedFlags.Length];

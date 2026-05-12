@@ -4,6 +4,7 @@ using UnityEngine.Serialization;
 using System.Collections.Generic;
 using System.IO.Pipes;
 using System.Runtime.InteropServices;
+using UnityEngine.Rendering;
 
 namespace UMA
 {
@@ -25,8 +26,13 @@ namespace UMA
         [FormerlySerializedAs("material")]
         private Material _material;
         [SerializeField]
+        private Material _HDRPMaterial;
+
+        [SerializeField]
         [FormerlySerializedAs("secondPass")]
         private Material _secondPass;
+        [SerializeField]
+        private Material _HDRPSecondPass;
 
         public void Awake()
         {
@@ -35,6 +41,22 @@ namespace UMA
         private void OnValidate()
         {
             EnsureSupportedChannelTextureFormats(channels);
+        }
+
+        private bool hdrpchecked = false;
+        private bool checkedHDRPResult = false;
+
+        private bool isHDRP
+        {
+            get
+            {
+                //if (!hdrpchecked)
+                //{
+                    checkedHDRPResult = GraphicsSettings.currentRenderPipeline != null && GraphicsSettings.currentRenderPipeline.GetType().ToString().Contains("HDRenderPipelineAsset");
+                  //  hdrpchecked = true;
+                //}
+                return checkedHDRPResult;
+            }
         }
 
         private string _thisName;
@@ -58,6 +80,10 @@ namespace UMA
         {
             get 
             {
+                if (isHDRP && _HDRPMaterial != null)
+                {
+                    return _HDRPMaterial;
+                }
                 return _material;
             }
             set { _material = value; }
@@ -68,6 +94,10 @@ namespace UMA
 
             get
             {
+                if (isHDRP && _HDRPSecondPass != null)
+                {
+                    return _HDRPSecondPass;
+                }
                 return _secondPass;
             }
         }

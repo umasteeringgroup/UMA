@@ -13,7 +13,7 @@ namespace UMA
         public static int kernel = 0;
 
 
-        [MenuItem("UMA/Texture Channel Combiner...")]
+        [MenuItem("UMA/Textures/Texture Channel Combiner...", priority = 26)]
         static void Open()
         {
             // Get the compute shader

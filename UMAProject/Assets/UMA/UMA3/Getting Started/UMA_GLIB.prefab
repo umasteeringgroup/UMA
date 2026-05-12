@@ -56,10 +56,10 @@ MonoBehaviour:
   AtlasOverflowFitMethod: 1
   FitPercentageDecrease: 0.5
   SharperFitTextures: 1
-  defaultOverlayAsset: {fileID: 0}
+  defaultOverlayAsset: {fileID: 11400000, guid: 3229b50ab18d98647981be0f3ce77903, type: 2}
   ignoreTag: UMAIgnore
   keepTag: UMAKeepChain
-  defaultRendererAsset: {fileID: 0}
+  defaultRendererAsset: {fileID: 11400000, guid: 2ffdda70ea6184d4eab8ca0976e7f37c, type: 2}
   MultiThreadTextureConversion: 1
   MaxQueuedConversionsPerFrame: 8
   Use32BitBuffers: 0

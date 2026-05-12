@@ -32,6 +32,9 @@ namespace UMA.PoseTools
 		public UMABonePose[] tweenPoses = null;
 		public float[] tweenWeights = null;
 
+		// If true, this pose is intended for use as a mixer pose, and will be available for selection in the race wizard's wizard pose creator. This is just a hint and does not affect runtime behavior.
+		public bool mixerPose = false;
+
 		void Reset()
 		{
 			poses = new PoseBone[0];

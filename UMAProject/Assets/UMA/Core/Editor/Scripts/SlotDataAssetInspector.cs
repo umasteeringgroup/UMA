@@ -27,12 +27,16 @@ namespace UMA.Editors
             public string selectedRaceName;
             public int uvChannel;
             public int uvChannelToMirror;
+            public int triplanarUvChannel = 1;
+            public float triplanarTileU = 1f;
+            public float triplanarTileV = 1f;
             public int normalCopyMode;
             public int blendshapeCopyMode;
         }
 
         static string[] RegularSlotFields = new string[] { "slotName", "CharacterBegun", "SlotAtlassed", "SlotProcessed", "SlotBeginProcessing", "DNAApplied", "CharacterCompleted", "_slotDNALegacy", "tags", "isWildCardSlot", "Races", "smooshOffset", "smooshExpand", "Welds" };
         static string[] WildcardSlotFields = new string[] { "slotName", "CharacterBegun", "SlotAtlassed", "SlotProcessed", "SlotBeginProcessing", "DNAApplied", "CharacterCompleted", "_slotDNALegacy", "tags", "isWildCardSlot", "Races", "_rendererAsset", "maxLOD", "useAtlasOverlay", "overlayScale", "_slotDNA", "meshData", "subMeshIndex", "Welds" };
+        private static readonly string[] TriplanarUvChannelLabels = new string[] { "0 (uv)", "1 (uv2)", "2 (uv3)", "3 (uv4)" };
         SerializedProperty slotName;
         SerializedProperty CharacterBegun;
         SerializedProperty SlotAtlassed;
@@ -73,6 +77,9 @@ namespace UMA.Editors
         private List<string> foundRaceNames = new List<string>();
         private int uvChannel;
         private int uvChannelToMirror;
+        private int triplanarUvChannel = 1;
+        private float triplanarTileU = 1f;
+        private float triplanarTileV = 1f;
         private bool exportIncludeRig = true;
         private string persistedSectionStateKey;
         private string persistedSectionStateCache;
@@ -593,6 +600,26 @@ namespace UMA.Editors
                 }
                 GUILayout.EndHorizontal();
 
+                GUILayout.Space(6);
+                GUILayout.Label("Tri-Planar Detail UVs", EditorStyles.boldLabel);
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Target UV Channel", GUILayout.Width(150));
+                triplanarUvChannel = EditorGUILayout.Popup(Mathf.Clamp(triplanarUvChannel, 0, 3), TriplanarUvChannelLabels, GUILayout.Width(90));
+                GUILayout.Label("Tile U", GUILayout.Width(45));
+                triplanarTileU = EditorGUILayout.FloatField(triplanarTileU, GUILayout.Width(70));
+                GUILayout.Label("Tile V", GUILayout.Width(45));
+                triplanarTileV = EditorGUILayout.FloatField(triplanarTileV, GUILayout.Width(70));
+                if (GUILayout.Button("Generate"))
+                {
+                    GenerateTriplanarDetailUvsForSelection();
+                }
+                GUILayout.EndHorizontal();
+
+                if (triplanarUvChannel == 0)
+                {
+                    EditorGUILayout.HelpBox("Generating into channel 0 overwrites the slot's primary overlay/atlas UVs.", MessageType.Warning);
+                }
+
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Mirror UV Channel ", GUILayout.Width(150));
                 uvChannelToMirror = EditorGUILayout.Popup(uvChannelToMirror, new string[] { "1", "2", "3", "4" }, GUILayout.Width(50));
@@ -945,6 +972,10 @@ namespace UMA.Editors
             selectedRaceIndex = FindRaceIndex(state.selectedRaceName);
             uvChannel = Mathf.Clamp(state.uvChannel, 0, 2);
             uvChannelToMirror = Mathf.Clamp(state.uvChannelToMirror, 0, 3);
+            bool hasTriplanarUvState = json.Contains("\"triplanarUvChannel\"");
+            triplanarUvChannel = hasTriplanarUvState ? Mathf.Clamp(state.triplanarUvChannel, 0, 3) : 1;
+            triplanarTileU = hasTriplanarUvState ? state.triplanarTileU : 1f;
+            triplanarTileV = hasTriplanarUvState ? state.triplanarTileV : 1f;
             normalCopyMode = Enum.IsDefined(typeof(UMA.SlotDataAsset.NormalCopyMode), state.normalCopyMode)
                 ? (UMA.SlotDataAsset.NormalCopyMode)state.normalCopyMode
                 : default;
@@ -987,6 +1018,9 @@ namespace UMA.Editors
                 selectedRaceName = GetSelectedRaceName(),
                 uvChannel = uvChannel,
                 uvChannelToMirror = uvChannelToMirror,
+                triplanarUvChannel = triplanarUvChannel,
+                triplanarTileU = triplanarTileU,
+                triplanarTileV = triplanarTileV,
                 normalCopyMode = (int)normalCopyMode,
                 blendshapeCopyMode = (int)blendshapeCopyMode
             };
@@ -1057,6 +1091,213 @@ namespace UMA.Editors
 
             string assetPath = AssetDatabase.GUIDToAssetPath(guid);
             return string.IsNullOrEmpty(assetPath) ? null : AssetDatabase.LoadAssetAtPath<T>(assetPath);
+        }
+
+        private void GenerateTriplanarDetailUvsForSelection()
+        {
+            int channel = Mathf.Clamp(triplanarUvChannel, 0, 3);
+            if (channel == 0 && !EditorUtility.DisplayDialog(
+                "Overwrite UV Channel 0?",
+                "This will replace the slot's primary UV channel. Channel 0 is usually used for overlay and atlas mapping.",
+                "Overwrite UV0",
+                "Cancel"))
+            {
+                return;
+            }
+
+            int updatedCount = 0;
+            StringBuilder skipped = new StringBuilder();
+            foreach (UnityEngine.Object selectedTarget in targets)
+            {
+                SlotDataAsset slotDataAsset = selectedTarget as SlotDataAsset;
+                if (slotDataAsset == null)
+                {
+                    continue;
+                }
+
+                if (UMAMeshData.IsNullOrEmptyMeshData(slotDataAsset.meshData) || slotDataAsset.meshData.vertices == null || slotDataAsset.meshData.vertices.Length == 0)
+                {
+                    skipped.AppendLine(slotDataAsset.name + ": meshData or vertices missing.");
+                    continue;
+                }
+
+                Undo.RecordObject(slotDataAsset, "Generate Tri-Planar Detail UVs");
+                Vector2[] generatedUvs = GenerateTriplanarDetailUvs(slotDataAsset.meshData, triplanarTileU, triplanarTileV);
+                SetMeshDataUvChannel(slotDataAsset.meshData, channel, generatedUvs);
+                slotDataAsset.ValidateMeshData();
+                EditorUtility.SetDirty(slotDataAsset);
+                AssetDatabase.SaveAssetIfDirty(slotDataAsset);
+                UMAUpdateProcessor.UpdateSlot(slotDataAsset, false);
+                updatedCount++;
+            }
+
+            if (updatedCount > 0)
+            {
+                GUI.changed = true;
+                Repaint();
+            }
+
+            if (skipped.Length > 0)
+            {
+                EditorUtility.DisplayDialog(
+                    "Tri-Planar Detail UVs",
+                    "Generated UVs for " + updatedCount + " slot(s).\n\nSkipped:\n" + skipped,
+                    "OK");
+            }
+            else
+            {
+                EditorUtility.DisplayDialog(
+                    "Tri-Planar Detail UVs",
+                    "Generated UVs for " + updatedCount + " slot(s) into channel " + channel + ".",
+                    "OK");
+            }
+        }
+
+        private static Vector2[] GenerateTriplanarDetailUvs(UMAMeshData meshData, float tileU, float tileV)
+        {
+            Vector3[] vertices = meshData.vertices;
+            Vector3[] projectionNormals = GetTriplanarProjectionNormals(meshData);
+            Vector2[] generatedUvs = new Vector2[vertices.Length];
+
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                Vector3 normal = i < projectionNormals.Length ? projectionNormals[i] : Vector3.up;
+                generatedUvs[i] = ProjectTriplanarUv(vertices[i], normal, tileU, tileV);
+            }
+
+            return generatedUvs;
+        }
+
+        private static Vector3[] GetTriplanarProjectionNormals(UMAMeshData meshData)
+        {
+            int vertexCount = meshData.vertices != null ? meshData.vertices.Length : 0;
+            Vector3[] projectionNormals = new Vector3[vertexCount];
+            bool haveNormals = meshData.normals != null && meshData.normals.Length == vertexCount;
+
+            if (haveNormals)
+            {
+                for (int i = 0; i < vertexCount; i++)
+                {
+                    projectionNormals[i] = SafeProjectionNormal(meshData.normals[i], meshData.vertices[i]);
+                }
+                return projectionNormals;
+            }
+
+            AccumulateTriangleNormals(meshData, projectionNormals);
+            for (int i = 0; i < vertexCount; i++)
+            {
+                projectionNormals[i] = SafeProjectionNormal(projectionNormals[i], meshData.vertices[i]);
+            }
+
+            return projectionNormals;
+        }
+
+        private static void AccumulateTriangleNormals(UMAMeshData meshData, Vector3[] projectionNormals)
+        {
+            if (meshData.submeshes == null || projectionNormals == null || projectionNormals.Length == 0)
+            {
+                return;
+            }
+
+            for (int submeshIndex = 0; submeshIndex < meshData.submeshes.Length; submeshIndex++)
+            {
+                SubMeshTriangles submesh = meshData.submeshes[submeshIndex];
+                if (submesh == null)
+                {
+                    continue;
+                }
+
+                int[] triangles = submesh.GetBaseTriangles();
+                if (triangles == null || triangles.Length < 3)
+                {
+                    triangles = submesh.getManagedTriangles(0);
+                }
+
+                if (triangles == null)
+                {
+                    continue;
+                }
+
+                for (int triangleIndex = 0; triangleIndex + 2 < triangles.Length; triangleIndex += 3)
+                {
+                    int a = triangles[triangleIndex];
+                    int b = triangles[triangleIndex + 1];
+                    int c = triangles[triangleIndex + 2];
+                    if (!IsValidVertexIndex(a, projectionNormals.Length) || !IsValidVertexIndex(b, projectionNormals.Length) || !IsValidVertexIndex(c, projectionNormals.Length))
+                    {
+                        continue;
+                    }
+
+                    Vector3 normal = Vector3.Cross(meshData.vertices[b] - meshData.vertices[a], meshData.vertices[c] - meshData.vertices[a]);
+                    if (normal.sqrMagnitude <= 0.0000001f)
+                    {
+                        continue;
+                    }
+
+                    projectionNormals[a] += normal;
+                    projectionNormals[b] += normal;
+                    projectionNormals[c] += normal;
+                }
+            }
+        }
+
+        private static bool IsValidVertexIndex(int index, int vertexCount)
+        {
+            return index >= 0 && index < vertexCount;
+        }
+
+        private static Vector3 SafeProjectionNormal(Vector3 normal, Vector3 vertex)
+        {
+            if (normal.sqrMagnitude > 0.0000001f)
+            {
+                return normal.normalized;
+            }
+
+            if (vertex.sqrMagnitude > 0.0000001f)
+            {
+                return vertex.normalized;
+            }
+
+            return Vector3.up;
+        }
+
+        private static Vector2 ProjectTriplanarUv(Vector3 vertex, Vector3 normal, float tileU, float tileV)
+        {
+            Vector3 axisWeights = new Vector3(Mathf.Abs(normal.x), Mathf.Abs(normal.y), Mathf.Abs(normal.z));
+            if (axisWeights.x >= axisWeights.y && axisWeights.x >= axisWeights.z)
+            {
+                return new Vector2(vertex.z * tileU, vertex.y * tileV);
+            }
+
+            if (axisWeights.y >= axisWeights.z)
+            {
+                return new Vector2(vertex.x * tileU, vertex.z * tileV);
+            }
+
+            return new Vector2(vertex.x * tileU, vertex.y * tileV);
+        }
+
+        private static void SetMeshDataUvChannel(UMAMeshData meshData, int channel, Vector2[] uvs)
+        {
+            switch (channel)
+            {
+                case 0:
+                    meshData.uv = uvs;
+                    meshData.uvModified = true;
+                    break;
+                case 1:
+                    meshData.uv2 = uvs;
+                    meshData.uv2Modified = true;
+                    break;
+                case 2:
+                    meshData.uv3 = uvs;
+                    meshData.uv3Modified = true;
+                    break;
+                case 3:
+                    meshData.uv4 = uvs;
+                    meshData.uv4Modified = true;
+                    break;
+            }
         }
 
         private void DrawTransformDebugInfo()

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Text;
 using UMA;
 using UMA.CharacterSystem;
@@ -9,7 +10,6 @@ using UnityEngine.UI;
 
 namespace UMA
 {
-
     public class NewUMAGUI : MonoBehaviour, IDNASelector, IColorSelector, IItemSelector
     {
         private bool lerping;
@@ -33,7 +33,6 @@ namespace UMA
         public GameObject InfoText;
         public GameObject LogLabel;
 
-
         [Header("Camera Animation")]
         public Transform FacePos;
         public Transform LegsPos;
@@ -43,10 +42,8 @@ namespace UMA
         public float FaceBoneOffset = 0.0f;
         public float LegsBoneOffset = 0.0f;
 
-
         public float lerpSpeed = 1.0f;
         public AnimationCurve lerpCurve;
-
 
         [Header("Test")]
         public List<string> Labels = new List<string>();
@@ -69,19 +66,10 @@ namespace UMA
         public List<UMAWardrobeRecipe> LegsItems = new List<UMAWardrobeRecipe>();
         public List<UMAWardrobeRecipe> BodyItems = new List<UMAWardrobeRecipe>();
 
-        /* [Header("Panels")]
-         public GameObject FacePanel;
-         public GameObject LegsPanel;
-         public GameObject BodyPanel;
-         public GameObject HairPanel;
-         public GameObject MainPanel; */
-
         [Header("Containers")]
         public GameObject DNAContainer;
         public GameObject ItemsContainer;
         public GameObject LogDetailContainer;
-
-
 
         [Header("Buttons")]
         public GameObject FaceButton;
@@ -100,10 +88,21 @@ namespace UMA
         private GameObject currentButton;
         private string currentInfoText;
 
+        // Resume guard
+        private bool resumedRecently = false;
+        private float resumeBlockTime = 1.0f; // seconds to wait after resume
+
         private void Start()
         {
-            mainCameraTransform = Camera.main.transform;
+            mainCameraTransform = Camera.main != null ? Camera.main.transform : null;
             Application.logMessageReceived += HandleLog;
+            // Defer initial ShowInfo slightly to avoid race on resume/start
+            StartCoroutine(InitialShowInfo());
+        }
+
+        private IEnumerator InitialShowInfo()
+        {
+            yield return null;
             ShowInfo();
         }
 
@@ -112,8 +111,6 @@ namespace UMA
             Application.logMessageReceived -= HandleLog;
         }
 
-
-        // Update is called once per frame
         void Update()
         {
             if (lerping)
@@ -124,7 +121,8 @@ namespace UMA
                     lerpPos = 1.0f;
                     lerping = false;
                 }
-                mainCameraTransform.position = Vector3.Lerp(LerpStart, lerpTo, lerpCurve.Evaluate(lerpPos));
+                if (mainCameraTransform != null)
+                    mainCameraTransform.position = Vector3.Lerp(LerpStart, lerpTo, lerpCurve.Evaluate(lerpPos));
             }
             if (PendingLog.Count > 0)
             {
@@ -147,52 +145,57 @@ namespace UMA
         #region EventHandlers
         public void SetColor(string ColorName, OverlayColorData color)
         {
-            // We need to clone the color so changing the name or display color doesn't change the actual color in the SharedColorTable
             OverlayColorData newColor = color.Clone();
-            avatar.SetRawColor(ColorName, newColor, true);
+            if (avatar != null)
+                avatar.SetRawColor(ColorName, newColor, true);
         }
 
         public void SetDNA(string DNAName, float value)
         {
-            if (!constructing)
+            if (!constructing && avatar != null)
             {
                 avatar.SetDNA(DNAName, value, false);
-                //avatar.BuildCharacter(false);
-                avatar.ForceUpdate(true,true,true);
+                avatar.ForceUpdate(true, true, true);
             }
         }
 
         public void SetItem(UMAWardrobeRecipe item)
         {
-            avatar.SetSlot(item);
-            avatar.BuildCharacter(true);
+            if (avatar != null)
+            {
+                avatar.SetSlot(item);
+                avatar.BuildCharacter(true);
+            }
         }
 
         public void ClearItem(string category)
         {
-            avatar.ClearSlot(category);
-            avatar.BuildCharacter(true);
+            if (avatar != null)
+            {
+                avatar.ClearSlot(category);
+                avatar.BuildCharacter(true);
+            }
         }
-
         #endregion
 
         public void CopyToClipboard()
         {
-            //string recipeString = avatar.GetAvatarDefinitionString(true,true);
-            AvatarDefinition def = avatar.GetAvatarDefinition(true,true);
+            if (avatar == null) return;
+            AvatarDefinition def = avatar.GetAvatarDefinition(true, true);
             string recipeString = def.ToCompressedString();
-
             GUIUtility.systemCopyBuffer = recipeString;
         }
-
 
         private Vector3 GetLerpPosition(Transform pos, string bone, float offset)
         {
             float boneY = pos.position.y;
-            Transform boneXform = avatar.umaData.skeleton.GetBoneTransform(bone);
-            if (boneXform != null)
+            if (avatar != null && avatar.umaData != null && avatar.umaData.skeleton != null)
             {
-                boneY = boneXform.position.y;
+                Transform boneXform = avatar.umaData.skeleton.GetBoneTransform(bone);
+                if (boneXform != null)
+                {
+                    boneY = boneXform.position.y;
+                }
             }
             Vector3 newPos = new Vector3(pos.position.x, boneY + offset, pos.position.z);
             return newPos;
@@ -200,6 +203,7 @@ namespace UMA
 
         private void StartLerp(Transform pos, string bone, float offset)
         {
+            if (mainCameraTransform == null) return;
             LerpStart = mainCameraTransform.position;
             lerpTo = GetLerpPosition(pos, bone, offset);
             lerping = true;
@@ -208,44 +212,38 @@ namespace UMA
 
         #region Panel Setup
 
-
         private void AddColors(GameObject layoutParent, SharedColorTable colorTable)
         {
             if (layoutParent != null && colorTable != null)
             {
-                // Create the color name label.
-                // get the name from the color table
-
-                GameObject label = Instantiate(ColorLabel, layoutParent.transform);
-                Text labelText = label.GetComponent<Text>();
-                labelText.text = colorTable.sharedColorName;
-
-                // get the prefab for the horizontal layout group
-                // instantiate it and add it to the layout parent
-                // add the color selectors to the layout group
-                GameObject colorContainer = Instantiate(GridContainer, layoutParent.transform);
-
-                foreach (OverlayColorData color in colorTable.colors)
+                GameObject label = SafeInstantiatePrefab(ColorLabel, layoutParent.transform);
+                if (label != null)
                 {
-                    GameObject colorSelector = Instantiate(ColorSelector, colorContainer.transform);
-                    ColorEffector effector = colorSelector.GetComponent<ColorEffector>();
-                    effector.Setup(this, colorTable.sharedColorName, color);
-                    //ColorSelector selector = colorSelector.GetComponent<ColorSelector>();
-                    //selector.color = color.color;
-                    //selector.colorName = color.name;
-                    //selector.colorTable = colorTable;
+                    Text labelText = label.GetComponent<Text>();
+                    if (labelText != null) labelText.text = colorTable.sharedColorName;
+                }
+
+                GameObject colorContainer = SafeInstantiatePrefab(GridContainer, layoutParent.transform);
+
+                if (colorContainer != null)
+                {
+                    foreach (OverlayColorData color in colorTable.colors)
+                    {
+                        GameObject colorSelector = SafeInstantiatePrefab(ColorSelector, colorContainer.transform);
+                        if (colorSelector == null) continue;
+                        ColorEffector effector = colorSelector.GetComponent<ColorEffector>();
+                        if (effector != null)
+                            effector.Setup(this, colorTable.sharedColorName, color);
+                    }
                 }
             }
         }
-
 
         public string[] BreakCamelCase(string str)
         {
             if (string.IsNullOrEmpty(str))
                 return new string[1] { str };
 
-            // We want to build string in a loop. 
-            // StringBuilder has been specially desinged for this
             StringBuilder sb = new StringBuilder();
 
             bool nextUpper = true;
@@ -260,7 +258,6 @@ namespace UMA
                     sb.Append(c);
                 nextUpper = false;
             }
-
 
             string result = sb.ToString();
             return result.Split(' ');
@@ -277,23 +274,18 @@ namespace UMA
             }
         }
 
-
         private void SetupCategory(GameObject container, List<SharedColorTable> colorTables, List<string> DNA, List<UMAWardrobeRecipe> items)
         {
             CleanContainer(container);
             if (container != null)
             {
-                // add the color selectors
                 foreach (SharedColorTable colorTable in colorTables)
                 {
                     AddColors(container, colorTable);
                 }
 
                 AddWardrobeItems(ItemsContainer, items);
-
-                // add the DNA selectors
                 AddDNA(container, DNA);
-                // force the layout to update
                 LayoutRebuilder.ForceRebuildLayoutImmediate(container.GetComponent<RectTransform>());
             }
         }
@@ -310,9 +302,14 @@ namespace UMA
             return false;
         }
 
-
         private void AddWardrobeItems(GameObject container, List<UMAWardrobeRecipe> items)
         {
+            if (avatar == null || avatar.activeRace == null)
+            {
+                Debug.LogWarning("AddWardrobeItems aborted: avatar or activeRace null");
+                return;
+            }
+
             RaceData race = avatar.activeRace.data;
             List<string> races = race.GetCrossCompatibleRaces();
             races.Add(race.raceName);
@@ -323,7 +320,6 @@ namespace UMA
                 {
                     Destroy(child.gameObject);
                 }
-
 
                 Dictionary<string, List<UMAWardrobeRecipe>> SortedItems = new Dictionary<string, List<UMAWardrobeRecipe>>();
 
@@ -352,9 +348,12 @@ namespace UMA
                     List<UMAWardrobeRecipe> categoryItems = SortedItems[key];
                     if (categoryItems.Count > 0)
                     {
-                        GameObject header = Instantiate(ColorLabel, container.transform);
-                        Text headerText = header.GetComponent<Text>();
-                        headerText.text = key;
+                        GameObject header = SafeInstantiatePrefab(ColorLabel, container.transform);
+                        if (header != null)
+                        {
+                            Text headerText = header.GetComponent<Text>();
+                            if (headerText != null) headerText.text = key;
+                        }
 
                         AddWardrobeItemsForCategory(container, categoryItems, key);
                     }
@@ -368,21 +367,27 @@ namespace UMA
         {
             if (container != null)
             {
-                GameObject gridContainer = Instantiate(ItemContainer, container.transform);
+                GameObject gridContainer = SafeInstantiatePrefab(ItemContainer, container.transform);
+                if (gridContainer == null) return;
 
-                // add the clear button for the category
-                GameObject clearObj = Instantiate(Item, gridContainer.transform);
-                ItemEffector clearEffector = clearObj.GetComponent<ItemEffector>();
-                clearEffector.clearImage = clearImage;
-                clearEffector.Setup(this, null, category );
-
+                GameObject clearObj = SafeInstantiatePrefab(Item, gridContainer.transform);
+                if (clearObj != null)
+                {
+                    ItemEffector clearEffector = clearObj.GetComponent<ItemEffector>();
+                    if (clearEffector != null)
+                    {
+                        clearEffector.clearImage = clearImage;
+                        clearEffector.Setup(this, null, category);
+                    }
+                }
 
                 foreach (UMAWardrobeRecipe item in items)
                 {
-                    GameObject itemObj = Instantiate(Item, gridContainer.transform);
-
+                    GameObject itemObj = SafeInstantiatePrefab(Item, gridContainer.transform);
+                    if (itemObj == null) continue;
                     ItemEffector effector = itemObj.GetComponent<ItemEffector>();
-                    effector.Setup(this, item, category );
+                    if (effector != null)
+                        effector.Setup(this, item, category);
                 }
             }
         }
@@ -428,11 +433,12 @@ namespace UMA
 
         private void AddEffector(GameObject parent, string dna, string label)
         {
-            GameObject dnaAdjuster = Instantiate(DNAAdjuster, parent.transform);
+            GameObject dnaAdjuster = SafeInstantiatePrefab(DNAAdjuster, parent.transform);
+            if (dnaAdjuster == null) return;
             DNAEffector effector = dnaAdjuster.GetComponent<DNAEffector>();
 
             float value = 0.5f;
-            var allDNA = avatar.GetDNA();
+            var allDNA = avatar != null ? avatar.GetDNA() : null;
             if (allDNA != null)
             {
                 if (allDNA.ContainsKey(dna))
@@ -440,14 +446,18 @@ namespace UMA
                     value = allDNA[dna].Value;
                 }
             }
-            effector.Setup(this, dna, label, value);
+            if (effector != null)
+                effector.Setup(this, dna, label, value);
         }
 
         private void AddHeader(GameObject container, string currentHeader)
         {
-            GameObject header = Instantiate(ColorLabel, container.transform);
-            Text headerText = header.GetComponent<Text>();
-            headerText.text = currentHeader;
+            GameObject header = SafeInstantiatePrefab(ColorLabel, container.transform);
+            if (header != null)
+            {
+                Text headerText = header.GetComponent<Text>();
+                if (headerText != null) headerText.text = currentHeader;
+            }
         }
 
         #endregion
@@ -467,7 +477,7 @@ namespace UMA
             if (button != null)
             {
                 Image image = button.GetComponent<Image>();
-                image.color = new Color(0f, 0.003f, 0.25f, 1f);
+                if (image != null) image.color = new Color(0f, 0.003f, 0.25f, 1f);
             }
         }
 
@@ -476,18 +486,41 @@ namespace UMA
             if (button != null)
             {
                 Image image = button.GetComponent<Image>();
-                image.color = new Color(0f, 0f, 0f, 0.35f);
+                if (image != null) image.color = new Color(0f, 0f, 0f, 0.35f);
             }
         }
 
+        // Public ShowInfo entry point with resume guard
         public void ShowInfo()
+        {
+            if (resumedRecently)
+            {
+                StartCoroutine(DeferredShowInfo());
+                return;
+            }
+            ShowInfoImmediate();
+        }
+
+        // The actual ShowInfo logic factored out for safe reuse
+        private void ShowInfoImmediate()
         {
             DeactivateButtons();
             CleanContainer(DNAContainer);
-            if (InfoText != null)
+
+            if (avatar == null)
+            {
+                Debug.LogError("NewUMAGUI.ShowInfoImmediate: avatar is null, aborting.");
+                return;
+            }
+            if (avatar.activeRace == null)
+            {
+                Debug.LogError("NewUMAGUI.ShowInfoImmediate: avatar.activeRace is null, aborting.");
+                return;
+            }
+
+            if (InfoText != null && DNAContainer != null)
             {
                 Text t = InfoText.GetComponent<Text>();
-
                 if (t != null)
                 {
                     if (string.IsNullOrEmpty(currentInfoText))
@@ -496,27 +529,47 @@ namespace UMA
                     }
                     t.text = TranslateMacros(currentInfoText);
                 }
-                Instantiate(InfoText, DNAContainer.transform);
+                // Use safe instantiate helper
+                SafeInstantiatePrefab(InfoText, DNAContainer.transform);
             }
             ShowLog();
             ActivateButton(BackButton);
         }
 
+        private IEnumerator DeferredShowInfo()
+        {
+            // Wait a short time to allow native subsystems to stabilize after resume
+            yield return new WaitForSeconds(0.5f);
+            resumedRecently = false;
+            // Double-check state
+            if (avatar == null || avatar.activeRace == null || DNAContainer == null)
+            {
+                Debug.LogWarning("DeferredShowInfo aborted due to null state");
+                yield break;
+            }
+            ShowInfoImmediate();
+        }
+
         private string TranslateMacros(string text)
         {
-            string result = text.Replace("{racename}", avatar.activeRace.name);
+            string result = text;
+            if (avatar != null && avatar.activeRace != null)
+                result = text.Replace("{racename}", avatar.activeRace.name);
             return result;
         }
 
         private void ShowLogItem(string logtext)
         {
-            if (!showConsole)
+            if (!showConsole) return;
+            if (ItemsContainer == null)
             {
+                Debug.LogWarning("ShowLogItem aborted: ItemsContainer null");
                 return;
             }
-            GameObject log = Instantiate(LogLabel, ItemsContainer.transform);
+            GameObject log = SafeInstantiatePrefab(LogLabel, ItemsContainer.transform);
+            if (log == null) return;
             Text logText = log.GetComponent<Text>();
-            logText.text = logtext;
+            if (logText != null) logText.text = logtext;
 
             Button button = log.GetComponentInChildren<Button>();
             if (button != null)
@@ -527,6 +580,7 @@ namespace UMA
 
         private void ShowLogDetail(string log)
         {
+            if (LogDetailContainer == null) return;
             Text text = LogDetailContainer.GetComponentInChildren<Text>();
             if (text != null)
             {
@@ -607,18 +661,23 @@ namespace UMA
                     currentAnimator = 0;
                 }
                 RuntimeAnimatorController controller = Animators[currentAnimator];
-                avatar.animator.runtimeAnimatorController = controller;
-                // also set the default animator on the DynamicCharacterAvatar so that it will be used when copying rebuilding or changing race
-                avatar.animationController= controller;
-                avatar.raceAnimationControllers.defaultAnimationController = controller;
+                if (avatar != null)
+                {
+                    avatar.animator.runtimeAnimatorController = controller;
+                    avatar.animationController = controller;
+                    if (avatar.raceAnimationControllers != null)
+                        avatar.raceAnimationControllers.defaultAnimationController = controller;
+                }
             }
         }
 
-
         public void OnRaceClick(string raceName)
         {
-            avatar.ChangeRace(raceName);
-            ShowInfo(); // clears the UI of the other races items.
+            if (avatar != null)
+            {
+                avatar.ChangeRace(raceName);
+                ShowInfo();
+            }
         }
 
         public void OnBackClick()
@@ -630,17 +689,88 @@ namespace UMA
         #region Scrolling
         public void DoDrag(BaseEventData eventData)
         {
-            GameObject parent = avatar.transform.parent.gameObject;
+            if (avatar == null || avatar.transform == null) return;
+            GameObject parent = avatar.transform.parent != null ? avatar.transform.parent.gameObject : null;
+            if (parent == null) return;
 
-            // rotate the parent object base on mouse input
             PointerEventData pointerData = eventData as PointerEventData;
             if (pointerData != null)
             {
                 parent.transform.Rotate(Vector3.up, -pointerData.delta.x);
             }
-
-
         }
+        #endregion
+
+        #region Safe Instantiate Helpers
+
+        // Instantiate without using the parent overload and set parent afterwards.
+        private GameObject SafeInstantiatePrefab(GameObject prefab, Transform parent)
+        {
+            if (prefab == null)
+            {
+                Debug.LogWarning("SafeInstantiatePrefab: prefab is null");
+                return null;
+            }
+            if (parent == null)
+            {
+                Debug.LogWarning($"SafeInstantiatePrefab: parent is null for prefab {prefab.name}");
+                return null;
+            }
+
+            GameObject instance = null;
+            try
+            {
+                instance = Instantiate(prefab);
+                if (instance == null)
+                {
+                    Debug.LogError($"SafeInstantiatePrefab: Instantiate returned null for {prefab.name}");
+                    return null;
+                }
+                instance.transform.SetParent(parent, false);
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"SafeInstantiatePrefab failed for {prefab.name}: {ex}");
+                if (instance != null) Destroy(instance);
+                instance = null;
+            }
+            return instance;
+        }
+
+        private IEnumerator SafeInstantiateNextFrame(GameObject prefab, Transform parent)
+        {
+            yield return null;
+            SafeInstantiatePrefab(prefab, parent);
+        }
+
+        #endregion
+
+        #region Resume Handlers
+
+        private void OnApplicationFocus(bool hasFocus)
+        {
+            if (hasFocus)
+            {
+                resumedRecently = true;
+                StartCoroutine(ClearResumeFlagAfterDelay());
+            }
+        }
+
+        private void OnApplicationPause(bool paused)
+        {
+            if (!paused)
+            {
+                resumedRecently = true;
+                StartCoroutine(ClearResumeFlagAfterDelay());
+            }
+        }
+
+        private IEnumerator ClearResumeFlagAfterDelay()
+        {
+            yield return new WaitForSeconds(resumeBlockTime);
+            resumedRecently = false;
+        }
+
         #endregion
     }
 }

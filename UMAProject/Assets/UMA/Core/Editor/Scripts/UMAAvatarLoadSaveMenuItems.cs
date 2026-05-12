@@ -503,6 +503,446 @@ namespace UMA.Editors
 			}
 		}
 
+     private class CreateUMAMaterialFromMaterialWindow : EditorWindow
+		{
+			private class TextureSelection
+			{
+				public string PropertyName;
+				public Texture Texture;
+				public bool Selected;
+			}
+
+			private const int MaterialTypePage = 0;
+			private const int GeneratedTextureSettingsPage = 1;
+			private const int TextureOverridePage = 2;
+			private const float IntroColumnWidth = 260f;
+			private const float WizardHorizontalPadding = 8f;
+			private const float WizardColumnSpacing = 8f;
+
+			private Material sourceMaterial;
+			private string umaMaterialName;
+			private UMAMaterial.MaterialType materialType = UMAMaterial.MaterialType.Atlas;
+			private bool generateMipMaps = true;
+			private float mipMapBias = 0f;
+			private int anisoLevel = 1;
+			private FilterMode textureFilterMode = FilterMode.Bilinear;
+			private bool maskWithCurrentColor;
+			private Color maskMultiplier = Color.white;
+			private int pageIndex;
+			private Vector2 scrollPosition;
+			private List<TextureSelection> textureSelections = new List<TextureSelection>();
+
+			public static void Open(Material material)
+			{
+				if (material == null)
+				{
+					EditorUtility.DisplayDialog("Create UMAMaterial", "Select a Material asset in the Project window.", "OK");
+					return;
+				}
+
+				CreateUMAMaterialFromMaterialWindow window = CreateInstance<CreateUMAMaterialFromMaterialWindow>();
+				window.titleContent = new GUIContent("Create UMAMaterial");
+				window.sourceMaterial = material;
+				window.umaMaterialName = "UMAMaterial_" + material.name;
+				window.minSize = new Vector2(800f, 300f);
+				window.RefreshTextureSelections();
+				window.ShowUtility();
+			}
+
+			private void OnGUI()
+			{
+				GUILayout.Space(WizardHorizontalPadding);
+				DrawWizardPage();
+				GUILayout.Space(6f);
+				DrawNavigationButtons();
+				GUILayout.Space(WizardHorizontalPadding);
+			}
+
+			private void DrawWizardPage()
+			{
+				EditorGUILayout.BeginHorizontal(GUILayout.ExpandHeight(true));
+				GUILayout.Space(WizardHorizontalPadding);
+				DrawWizardIntroColumn();
+				GUILayout.Space(WizardColumnSpacing);
+				DrawWizardSettingsColumn();
+				GUILayout.Space(WizardHorizontalPadding);
+				EditorGUILayout.EndHorizontal();
+			}
+
+			private void DrawWizardIntroColumn()
+			{
+				EditorGUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.Width(IntroColumnWidth), GUILayout.ExpandHeight(true));
+				EditorGUILayout.LabelField("Step " + (pageIndex + 1) + " of 3", EditorStyles.miniLabel);
+				EditorGUILayout.LabelField(GetPageTitle(), EditorStyles.boldLabel);
+				GUILayout.Space(6f);
+				GUILayout.Label(GetPageIntroText(), EditorStyles.wordWrappedLabel);
+				GUILayout.FlexibleSpace();
+				EditorGUILayout.EndVertical();
+			}
+
+			private void DrawWizardSettingsColumn()
+			{
+				EditorGUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+				DrawMaterialSummary();
+				GUILayout.Space(6f);
+
+				scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition, false, false);
+				if (pageIndex == MaterialTypePage)
+				{
+					DrawMaterialTypePage();
+				}
+				else if (pageIndex == GeneratedTextureSettingsPage)
+				{
+					DrawGeneratedTextureSettingsPage();
+				}
+				else
+				{
+					DrawTextureOverridePage();
+				}
+				EditorGUILayout.EndScrollView();
+				EditorGUILayout.EndVertical();
+			}
+
+			private void DrawMaterialSummary()
+			{
+				using (new EditorGUI.DisabledScope(true))
+				{
+					EditorGUILayout.ObjectField("Material", sourceMaterial, typeof(Material), false);
+				}
+
+				string shaderName = sourceMaterial != null && sourceMaterial.shader != null ? sourceMaterial.shader.name : "(None)";
+				EditorGUILayout.LabelField("Shader", shaderName);
+			}
+
+			private string GetPageTitle()
+			{
+				if (pageIndex == MaterialTypePage)
+				{
+					return "Choose Material Type";
+				}
+
+				if (pageIndex == GeneratedTextureSettingsPage)
+				{
+					return "Generated Textures";
+				}
+
+				return "Texture Overrides";
+			}
+
+			private string GetPageIntroText()
+			{
+				if (pageIndex == MaterialTypePage)
+				{
+					return "Name the UMAMaterial and choose how UMA should use the selected Unity Material at runtime. The material type controls whether UMA builds atlases, composites textures without an atlas, or keeps existing material or texture assignments.";
+				}
+
+				if (pageIndex == GeneratedTextureSettingsPage)
+				{
+					return "Set the texture output options UMA should apply when it generates textures for this UMAMaterial. These values control mipmaps, filtering, anisotropic sampling, and optional color masking during compositing.";
+				}
+
+				return "Choose which shader texture properties UMA should override. Selected properties become UMAMaterial channels; unselected textures remain on the Unity Material as-is. Keep the base color texture first for overlay compatibility.";
+			}
+
+			private void DrawMaterialTypePage()
+			{
+				EditorGUILayout.LabelField("Material", EditorStyles.boldLabel);
+				umaMaterialName = EditorGUILayout.TextField("UMAMaterial Name", umaMaterialName);
+
+				if (!IsValidAssetName(umaMaterialName))
+				{
+					EditorGUILayout.HelpBox("Enter a valid asset name. Avoid empty names and path separator characters.", MessageType.Warning);
+				}
+
+				GUILayout.Space(8f);
+				EditorGUILayout.LabelField("Material Type", EditorStyles.boldLabel);
+				DrawMaterialTypeRadio(UMAMaterial.MaterialType.Atlas, "Atlas");
+				DrawMaterialTypeRadio(UMAMaterial.MaterialType.NoAtlas, "No Atlas");
+				DrawMaterialTypeRadio(UMAMaterial.MaterialType.UseExistingMaterial, "Use Existing Material");
+				DrawMaterialTypeRadio(UMAMaterial.MaterialType.UseExistingTextures, "Use Existing Textures");
+
+				EditorGUILayout.HelpBox(GetMaterialTypeHelp(materialType), MessageType.Info);
+			}
+
+			private void DrawMaterialTypeRadio(UMAMaterial.MaterialType type, string label)
+			{
+				bool selected = materialType == type;
+				bool newSelected = GUILayout.Toggle(selected, label, EditorStyles.radioButton);
+				if (newSelected && !selected)
+				{
+					materialType = type;
+				}
+			}
+
+			private void DrawGeneratedTextureSettingsPage()
+			{
+				EditorGUILayout.LabelField("Generated Texture Settings", EditorStyles.boldLabel);
+				generateMipMaps = EditorGUILayout.Toggle("Generate Mip Maps", generateMipMaps);
+				mipMapBias = EditorGUILayout.Slider("Mip Map Bias", mipMapBias, -2f, 2f);
+				anisoLevel = EditorGUILayout.IntSlider("Aniso Level", anisoLevel, 1, 16);
+				textureFilterMode = (FilterMode)EditorGUILayout.EnumPopup("Texture Filter Mode", textureFilterMode);
+				maskWithCurrentColor = EditorGUILayout.Toggle("Mask with Current Color", maskWithCurrentColor);
+				using (new EditorGUI.DisabledScope(!maskWithCurrentColor))
+				{
+					maskMultiplier = EditorGUILayout.ColorField("Mask Multiplier", maskMultiplier);
+				}
+			}
+
+			private void DrawTextureOverridePage()
+			{
+				EditorGUILayout.LabelField("Texture Overrides", EditorStyles.boldLabel);
+				EditorGUILayout.HelpBox("Select the material texture properties UMA should override. Unselected textures will remain on the Unity Material as-is. The first selected texture should be the base color.", MessageType.Info);
+
+				if (textureSelections.Count == 0)
+				{
+					EditorGUILayout.HelpBox("No texture properties were found on the selected material shader. The UMAMaterial will be created without texture channels.", MessageType.Warning);
+					return;
+				}
+
+				EditorGUILayout.BeginHorizontal();
+				if (GUILayout.Button("Select All", GUILayout.Width(90f)))
+				{
+					SetAllTextureSelections(true);
+				}
+				if (GUILayout.Button("Select None", GUILayout.Width(90f)))
+				{
+					SetAllTextureSelections(false);
+				}
+				GUILayout.FlexibleSpace();
+				EditorGUILayout.EndHorizontal();
+
+				GUILayout.Space(4f);
+				DrawTextureSelectionHeader();
+				int firstSelectedIndex = GetFirstSelectedTextureIndex();
+				for (int i = 0; i < textureSelections.Count; i++)
+				{
+					DrawTextureSelectionRow(i, firstSelectedIndex);
+				}
+
+				if (firstSelectedIndex >= 0 && IsNormalMapTexture(sourceMaterial, textureSelections[firstSelectedIndex].PropertyName))
+				{
+					EditorGUILayout.HelpBox("The first selected texture looks like a normal map. UMA overlays usually expect the first texture channel to be the base color.", MessageType.Warning);
+				}
+			}
+
+			private void DrawTextureSelectionHeader()
+			{
+				Rect rowRect = EditorGUILayout.GetControlRect(false, EditorGUIUtility.singleLineHeight);
+				EditorGUI.LabelField(new Rect(rowRect.x + 24f, rowRect.y, rowRect.width * 0.38f, rowRect.height), "Property", EditorStyles.miniBoldLabel);
+				EditorGUI.LabelField(new Rect(rowRect.x + rowRect.width * 0.42f, rowRect.y, rowRect.width * 0.38f, rowRect.height), "Texture", EditorStyles.miniBoldLabel);
+				EditorGUI.LabelField(new Rect(rowRect.x + rowRect.width - 88f, rowRect.y, 88f, rowRect.height), "Channel", EditorStyles.miniBoldLabel);
+			}
+
+			private void DrawTextureSelectionRow(int index, int firstSelectedIndex)
+			{
+				TextureSelection selection = textureSelections[index];
+				EditorGUILayout.BeginHorizontal();
+				selection.Selected = EditorGUILayout.Toggle(selection.Selected, GUILayout.Width(18f));
+				string propertyLabel = selection.PropertyName;
+				if (index == firstSelectedIndex)
+				{
+					propertyLabel += " (first)";
+				}
+				EditorGUILayout.LabelField(propertyLabel, GUILayout.MinWidth(150f));
+				using (new EditorGUI.DisabledScope(true))
+				{
+					EditorGUILayout.ObjectField(selection.Texture, typeof(Texture), false, GUILayout.MinWidth(160f));
+				}
+				EditorGUILayout.LabelField(IsNormalMapTexture(sourceMaterial, selection.PropertyName) ? "NormalMap" : "Texture", GUILayout.Width(88f));
+				EditorGUILayout.EndHorizontal();
+			}
+
+			private void DrawNavigationButtons()
+			{
+				EditorGUILayout.BeginHorizontal();
+				GUILayout.Space(WizardHorizontalPadding);
+				using (new EditorGUI.DisabledScope(pageIndex == MaterialTypePage))
+				{
+					if (GUILayout.Button("Previous", GUILayout.Width(90f)))
+					{
+						SetPage(Mathf.Max(MaterialTypePage, pageIndex - 1));
+						GUI.FocusControl(null);
+					}
+				}
+
+				GUILayout.FlexibleSpace();
+				if (GUILayout.Button("Cancel", GUILayout.Width(90f)))
+				{
+					Close();
+				}
+
+				using (new EditorGUI.DisabledScope(!CanContinue()))
+				{
+					if (pageIndex == TextureOverridePage)
+					{
+						if (GUILayout.Button("Create", GUILayout.Width(90f)))
+						{
+							CreateUMAMaterial();
+						}
+					}
+					else if (GUILayout.Button("Next", GUILayout.Width(90f)))
+					{
+						SetPage(Mathf.Min(TextureOverridePage, pageIndex + 1));
+						GUI.FocusControl(null);
+					}
+				}
+				GUILayout.Space(WizardHorizontalPadding);
+				EditorGUILayout.EndHorizontal();
+			}
+
+			private void SetPage(int newPageIndex)
+			{
+				if (pageIndex == newPageIndex)
+				{
+					return;
+				}
+
+				pageIndex = newPageIndex;
+				scrollPosition = Vector2.zero;
+			}
+
+			private void RefreshTextureSelections()
+			{
+				textureSelections.Clear();
+				List<string> propertyNames = GetMaterialTexturePropertyNames(sourceMaterial);
+				for (int i = 0; i < propertyNames.Count; i++)
+				{
+					string propertyName = propertyNames[i];
+					Texture texture = sourceMaterial != null && sourceMaterial.HasProperty(propertyName) ? sourceMaterial.GetTexture(propertyName) : null;
+					textureSelections.Add(new TextureSelection
+					{
+						PropertyName = propertyName,
+						Texture = texture,
+						Selected = texture != null
+					});
+				}
+			}
+
+			private void SetAllTextureSelections(bool selected)
+			{
+				for (int i = 0; i < textureSelections.Count; i++)
+				{
+					textureSelections[i].Selected = selected;
+				}
+			}
+
+			private int GetFirstSelectedTextureIndex()
+			{
+				for (int i = 0; i < textureSelections.Count; i++)
+				{
+					if (textureSelections[i].Selected)
+					{
+						return i;
+					}
+				}
+				return -1;
+			}
+
+			private List<string> GetSelectedTexturePropertyNames()
+			{
+				List<string> selectedProperties = new List<string>();
+				for (int i = 0; i < textureSelections.Count; i++)
+				{
+					if (textureSelections[i].Selected)
+					{
+						selectedProperties.Add(textureSelections[i].PropertyName);
+					}
+				}
+				return selectedProperties;
+			}
+
+			private bool CanContinue()
+			{
+				return sourceMaterial != null && IsValidAssetName(umaMaterialName);
+			}
+
+			private void CreateUMAMaterial()
+			{
+				if (!CanContinue())
+				{
+					return;
+				}
+
+				string materialPath = AssetDatabase.GetAssetPath(sourceMaterial);
+				if (string.IsNullOrEmpty(materialPath))
+				{
+					EditorUtility.DisplayDialog("Create UMAMaterial", "The selected Material is not an asset in the Project window.", "OK");
+					return;
+				}
+
+				string folder = Path.GetDirectoryName(materialPath);
+				if (string.IsNullOrEmpty(folder))
+				{
+					folder = "Assets";
+				}
+
+				string baseName = umaMaterialName.Trim();
+				string assetPath = Path.Combine(folder, baseName + ".asset").Replace('\\', '/');
+				UMAMaterial umaMaterial = CustomAssetUtility.CreateAsset<UMAMaterial>(assetPath, false, baseName, false);
+				if (umaMaterial == null)
+				{
+					EditorUtility.DisplayDialog("Create UMAMaterial", "Failed to create the UMAMaterial asset.", "OK");
+					return;
+				}
+
+				umaMaterial.name = baseName;
+				umaMaterial.material = sourceMaterial;
+				umaMaterial.materialType = materialType;
+				umaMaterial.generateMipMaps = generateMipMaps;
+				umaMaterial.MipMapBias = mipMapBias;
+				umaMaterial.AnisoLevel = anisoLevel;
+				umaMaterial.MatFilterMode = textureFilterMode;
+				umaMaterial.MaskWithCurrentColor = maskWithCurrentColor;
+				umaMaterial.maskMultiplier = maskMultiplier;
+				umaMaterial.MaterialName = sourceMaterial.name;
+				umaMaterial.ShaderName = sourceMaterial.shader != null ? sourceMaterial.shader.name : string.Empty;
+				umaMaterial.channels = BuildChannelsForMaterial(sourceMaterial, GetSelectedTexturePropertyNames());
+				UMAMaterial.EnsureSupportedChannelTextureFormats(umaMaterial.channels);
+
+				EditorUtility.SetDirty(umaMaterial);
+				AssetDatabase.SaveAssets();
+				AssetDatabase.Refresh();
+				Close();
+				InspectorUtlity.InspectTarget(umaMaterial);
+			}
+
+			private static bool IsValidAssetName(string assetName)
+			{
+				if (string.IsNullOrWhiteSpace(assetName))
+				{
+					return false;
+				}
+
+				char[] invalidChars = Path.GetInvalidFileNameChars();
+				for (int i = 0; i < invalidChars.Length; i++)
+				{
+					if (assetName.IndexOf(invalidChars[i]) >= 0)
+					{
+						return false;
+					}
+				}
+
+				return assetName.IndexOf('/') < 0 && assetName.IndexOf('\\') < 0;
+			}
+
+			private static string GetMaterialTypeHelp(UMAMaterial.MaterialType type)
+			{
+				switch (type)
+				{
+					case UMAMaterial.MaterialType.Atlas:
+						return "Atlas combines textures using this UMAMaterial into atlases. Each selected texture property becomes its own UMA channel.";
+					case UMAMaterial.MaterialType.NoAtlas:
+						return "No Atlas composites texture layers per channel without packing the result into a shared atlas.";
+					case UMAMaterial.MaterialType.UseExistingMaterial:
+						return "Use Existing Material keeps the selected Unity Material as the final material. UMA will not generate atlased texture output for it.";
+					case UMAMaterial.MaterialType.UseExistingTextures:
+						return "Use Existing Textures creates a material instance and assigns selected overlay textures to the matching shader texture properties without layer compositing.";
+					default:
+						return string.Empty;
+				}
+			}
+		}
+
      private class UpdatePhysicsElementsWindow : EditorWindow
 		{
 			private enum AxisSource
@@ -966,6 +1406,44 @@ namespace UMA.Editors
 			UmaAddRacesToRecipesWindow.Open(selectedRecipes);
 		}
 
+		[MenuItem("Assets/UMA/Duplicate Race", false, 2005)]
+		private static void DuplicateSelectedRaceMenu()
+		{
+			var selectedRaces = GetSelectedRaces();
+			if (selectedRaces.Count == 0)
+			{
+				EditorUtility.DisplayDialog("Duplicate Race", "Select one or more RaceData assets in the Project window.", "OK");
+				return;
+			}
+
+			DuplicateRaceWizardWindow.Open(selectedRaces[0]);
+		}
+
+		[MenuItem("Assets/UMA/Duplicate Race", true)]
+		private static bool DuplicateSelectedRaceMenu_Validate()
+		{
+			return GetSelectedRaces().Count > 0;
+		}
+
+		[MenuItem("Assets/UMA/Create UMAMaterial from Material", false, 2006)]
+		private static void CreateUmaMaterialFromSelectedMaterialMenu()
+		{
+			var materials = GetSelectedMaterials();
+			if (materials.Count != 1)
+			{
+				EditorUtility.DisplayDialog("Create UMAMaterial", "Select a single Material asset in the Project window.", "OK");
+				return;
+			}
+
+			CreateUMAMaterialFromMaterialWindow.Open(materials[0]);
+		}
+
+		[MenuItem("Assets/UMA/Create UMAMaterial from Material", true)]
+		private static bool CreateUmaMaterialFromSelectedMaterialMenu_Validate()
+		{
+			return GetSelectedMaterials().Count == 1;
+		}
+
 		[MenuItem("Assets/UMA/Create UMAMaterials for selected materials", false, 2006)]
 		private static void CreateUmaMaterialsForSelectedMaterialsMenu()
 		{
@@ -1086,6 +1564,21 @@ namespace UMA.Editors
 				}
 			}
 			return recipes;
+		}
+
+		private static List<RaceData> GetSelectedRaces()
+		{
+			var selected = Selection.GetFiltered(typeof(RaceData), SelectionMode.Assets);
+			var races = new List<RaceData>(selected.Length);
+			for (int i = 0; i < selected.Length; i++)
+			{
+				var race = selected[i] as RaceData;
+				if (race != null)
+				{
+					races.Add(race);
+				}
+			}
+			return races;
 		}
 
 		private static string GetAssetFolderPathFromAbsolutePath(string absoluteFolderPath)
@@ -1316,47 +1809,21 @@ namespace UMA.Editors
 
 		private static UMAMaterial.MaterialChannel[] BuildChannelsForMaterial(Material material)
 		{
+			return BuildChannelsForMaterial(material, GetMaterialTexturePropertyNames(material));
+		}
+
+		private static UMAMaterial.MaterialChannel[] BuildChannelsForMaterial(Material material, List<string> propertyNames)
+		{
 			if (material == null)
 			{
 				return new UMAMaterial.MaterialChannel[0];
 			}
-			var shader = material.shader;
-			if (shader == null)
+			if (propertyNames == null || propertyNames.Count == 0)
 			{
 				return new UMAMaterial.MaterialChannel[0];
 			}
 
 			var channels = new List<UMAMaterial.MaterialChannel>();
-          var propertyNames = new List<string>();
-			var textureProperties = material.GetTexturePropertyNames();
-			if (textureProperties != null && textureProperties.Length > 0)
-			{
-				for (int i = 0; i < textureProperties.Length; i++)
-				{
-					if (!string.IsNullOrEmpty(textureProperties[i]))
-					{
-						propertyNames.Add(textureProperties[i]);
-					}
-				}
-			}
-			else
-			{
-				int count = shader.GetPropertyCount();
-				for (int i = 0; i < count; i++)
-				{
-					if (shader.GetPropertyType(i) != ShaderPropertyType.Texture)
-					{
-						continue;
-					}
-					string propName = shader.GetPropertyName(i);
-					if (!string.IsNullOrEmpty(propName))
-					{
-						propertyNames.Add(propName);
-					}
-				}
-			}
-
-			var seen = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
 			for (int i = 0; i < propertyNames.Count; i++)
 			{
 				string propName = propertyNames[i];
@@ -1368,22 +1835,14 @@ namespace UMA.Editors
 				{
 					continue;
 				}
-				if (seen.Contains(propName))
-				{
-					continue;
-				}
-				seen.Add(propName);
 				if (!material.HasProperty(propName))
 				{
 					continue;
 				}
 
-				UMAMaterial.ChannelType channelType = UMAMaterial.ChannelType.Texture;
-				if (propName.IndexOf("normal", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
-					propName.IndexOf("bump", System.StringComparison.OrdinalIgnoreCase) >= 0)
-				{
-					channelType = UMAMaterial.ChannelType.NormalMap;
-				}
+				UMAMaterial.ChannelType channelType = IsNormalMapTexture(material, propName)
+					? UMAMaterial.ChannelType.NormalMap
+					: UMAMaterial.ChannelType.Texture;
 
 				var channel = new UMAMaterial.MaterialChannel();
 				channel.channelType = channelType;
@@ -1399,6 +1858,148 @@ namespace UMA.Editors
 			}
 
 			return channels.ToArray();
+		}
+
+		private static List<string> GetMaterialTexturePropertyNames(Material material)
+		{
+			var propertyNames = new List<string>();
+			if (material == null)
+			{
+				return propertyNames;
+			}
+			var shader = material.shader;
+			if (shader == null)
+			{
+				return propertyNames;
+			}
+
+			var rawPropertyNames = new List<string>();
+			var textureProperties = material.GetTexturePropertyNames();
+			if (textureProperties != null && textureProperties.Length > 0)
+			{
+				for (int i = 0; i < textureProperties.Length; i++)
+				{
+					if (!string.IsNullOrEmpty(textureProperties[i]))
+					{
+						rawPropertyNames.Add(textureProperties[i]);
+					}
+				}
+			}
+			else
+			{
+				int count = shader.GetPropertyCount();
+				for (int i = 0; i < count; i++)
+				{
+					if (shader.GetPropertyType(i) != ShaderPropertyType.Texture)
+					{
+						continue;
+					}
+					string propName = shader.GetPropertyName(i);
+					if (!string.IsNullOrEmpty(propName))
+					{
+						rawPropertyNames.Add(propName);
+					}
+				}
+			}
+
+			var seen = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
+			for (int i = 0; i < rawPropertyNames.Count; i++)
+			{
+				string propName = rawPropertyNames[i];
+				if (string.IsNullOrEmpty(propName))
+				{
+					continue;
+				}
+				if (propName.StartsWith("unity", System.StringComparison.OrdinalIgnoreCase))
+				{
+					continue;
+				}
+				if (seen.Contains(propName))
+				{
+					continue;
+				}
+				if (!material.HasProperty(propName))
+				{
+					continue;
+				}
+				seen.Add(propName);
+				propertyNames.Add(propName);
+			}
+
+			MoveBaseColorTexturePropertyFirst(material, propertyNames);
+			return propertyNames;
+		}
+
+		private static void MoveBaseColorTexturePropertyFirst(Material material, List<string> propertyNames)
+		{
+			if (propertyNames == null || propertyNames.Count < 2)
+			{
+				return;
+			}
+
+			int baseColorIndex = -1;
+			for (int i = 0; i < propertyNames.Count; i++)
+			{
+				if (IsBaseColorTexture(material, propertyNames[i]))
+				{
+					baseColorIndex = i;
+					break;
+				}
+			}
+
+			if (baseColorIndex <= 0)
+			{
+				return;
+			}
+
+			string baseColorProperty = propertyNames[baseColorIndex];
+			propertyNames.RemoveAt(baseColorIndex);
+			propertyNames.Insert(0, baseColorProperty);
+		}
+
+		private static bool IsBaseColorTexture(Material material, string propertyName)
+		{
+			if (string.Equals(propertyName, "_MainTex", System.StringComparison.OrdinalIgnoreCase) ||
+				string.Equals(propertyName, "_BaseMap", System.StringComparison.OrdinalIgnoreCase) ||
+				string.Equals(propertyName, "_BaseColorMap", System.StringComparison.OrdinalIgnoreCase))
+			{
+				return true;
+			}
+
+			if (ContainsTextureNamePart(propertyName, "albedo") ||
+				ContainsTextureNamePart(propertyName, "diffuse") ||
+				ContainsTextureNamePart(propertyName, "base") ||
+				ContainsTextureNamePart(propertyName, "color"))
+			{
+				return !IsNormalMapTexture(material, propertyName);
+			}
+
+			Texture texture = material != null && material.HasProperty(propertyName) ? material.GetTexture(propertyName) : null;
+			if (texture == null)
+			{
+				return false;
+			}
+
+			return (ContainsTextureNamePart(texture.name, "albedo") ||
+				ContainsTextureNamePart(texture.name, "diffuse") ||
+				ContainsTextureNamePart(texture.name, "base") ||
+				ContainsTextureNamePart(texture.name, "color")) && !IsNormalMapTexture(material, propertyName);
+		}
+
+		private static bool IsNormalMapTexture(Material material, string propertyName)
+		{
+			if (ContainsTextureNamePart(propertyName, "norm") || ContainsTextureNamePart(propertyName, "bump"))
+			{
+				return true;
+			}
+
+			Texture texture = material != null && material.HasProperty(propertyName) ? material.GetTexture(propertyName) : null;
+			return texture != null && (ContainsTextureNamePart(texture.name, "norm") || ContainsTextureNamePart(texture.name, "bump"));
+		}
+
+		private static bool ContainsTextureNamePart(string value, string part)
+		{
+			return !string.IsNullOrEmpty(value) && value.IndexOf(part, System.StringComparison.OrdinalIgnoreCase) >= 0;
 		}
 
 				

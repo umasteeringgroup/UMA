@@ -1,0 +1,214 @@
+BEGIN_OPTIONS
+   ShaderName "UMA/Diffuse_Normal_Thickness_Occlusion_Gloss_UDIM"
+   Stackable "False"
+   Workflow "Metallic"
+END_OPTIONS
+
+BEGIN_PROPERTIES
+
+    [BetterHeader(Material Specific)]
+	_Color ("Main Color", Color) = (1, 1, 1, 1)
+	_ColorModulation ("Color Modulation", Range(0,2)) = 1
+	_Metallic ("Metallic", Range(0,2)) = 1
+	_SmoothnessModulation ("Smoothness Level", Range(0,2)) = 1
+    _SmoothnessAdd ("Smoothness Add", Range(0, 1)) = 0
+    _MinSmooth ("Min Smoothness", Range(0, 1)) = 0.1
+    _MaxSmooth ("Max Smoothness", Range(0, 1)) = 1
+	[BetterHeader(Lighting Adjustment)]
+        [Toggle]_UseHalfLambert ("Use Half Lambert (!HDRP)", Float) = 0
+    _HalfLambertStrength ("Lambert(0), HalfLambert(1)", Range(0,8)) = 1
+    _RimLightingModulation ("Rim Lighting Level", Float) = 0
+	_RimLightColor("Rim Light Color", Color) = (1,1,1,1)
+	_RimLightPower("Rim Light Power", Range(0.5, 12)) = 4
+    _SSSColor("SSS Color", Color) = (1,0.4,0.4,1)
+    _SSSLevel("SSS Level", Range(0,1)) = 0.3
+    _SSSGlow("SSS Glow", Range(0,1)) = 0.3 
+    _FuzzAmount("Fuzz Amount",Range(0,1)) = 0.35
+    _Occlusion ("Occlusion Level", Range(0, 2)) = 1
+    _OcclusionAdd ("Occlusion Add", Range(-1, 1)) = 0
+    _EmissiveModulation ("Emissive Modulation", Range(0, 2)) = 1
+    _EmissiveAdd ("Emissive Add", Color) = (0,0,0,0)
+    _Contrast ("Contrast", Range(0, 2)) = 1
+    _Saturation ("Saturation", Range(0, 6)) = 1
+    [Enum(Normal, 0, Inverted, 1)]_InvertThickness("Invert Thickness", Float) = 0
+    [Enum(Off,0,Front,1,Back,2)]_CullMode("Culling Mode", Float) = 2
+    [Enum(Flip, 0, Mirror, 1, None, 2)] _DoubleSidedNormalMode("Double sided normal mode", Float) = 1
+
+    [GroupRollout(Textures)]
+    [MainTexture]
+    [Group(Textures)][NoScaleOffset]_BaseMapArray("BaseMap Array", 2DArray) = "" {}
+    [Group(Textures)][NoScaleOffset]_BumpMapArray("_BumpMap Array", 2DArray) = "" {}
+    [Group(Textures)]_NormalStrength ("Normal Strength", Range(0,2)) = 1
+    [Group(Textures)][Enum(RG_BC5,0,AG_DXT5nm,1,Auto,2)] _NormalArrayEncoding("Normal Array Encoding", Float) = 2
+    // New: UDIM columns (default 10)
+    [Group(Textures)] _UDIMCols("UDIM Columns", Float) = 10
+
+    [Group(Textures)][NoScaleOffset]_ThicknessMapArray("_ThicknessMap Array", 2DArray) = "" {}
+    [Group(Textures)][NoScaleOffset]_OcclusionMapArray("OcclusionMap Array", 2DArray) = "" {}
+    [Group(Textures)][NoScaleOffset]_GlossMapArray("GlossMap Array", 2DArray) = "" {}
+END_PROPERTIES
+
+BEGIN_PASS("All")
+   Cull [_CullMode]
+END_PASS
+
+BEGIN_CBUFFER
+    half4 _Color;
+	half  _ColorModulation;
+	half  _SmoothnessModulation;
+    half _SmoothnessAdd;
+	half  _Metallic;
+    half _HalfLambertStrength;
+    float _DoubleSidedNormalMode;
+    half3 _RimLightColor;
+	half  _RimLightPower;
+    float _RimLightingModulation;
+    float _NormalStrength;
+    half _NormalArrayEncoding;
+    half4 _SSSColor;
+    float _InvertThickness;
+    float _SSSLevel;
+    float _SSSGlow;
+    float _Occlusion;
+    float _OcclusionAdd;
+    half4 _EmissiveAdd;
+    float _EmissiveModulation;
+    float _MinSmooth;
+    float _MaxSmooth;
+    half _Contrast;
+    half _Saturation;
+    half _UseHalfLambert;
+    // New: UDIM columns
+    float _UDIMCols;
+END_CBUFFER
+
+BEGIN_CODE
+
+//#define _SIMPLELIT 1
+
+   TEXTURE2D_ARRAY(_BaseMapArray);
+   SAMPLER(sampler_BaseMap);
+   TEXTURE2D_ARRAY(_BumpMapArray);
+   SAMPLER(sampler_BumpMap);
+   TEXTURE2D_ARRAY(_ThicknessMapArray);
+   SAMPLER(sampler_ThicknessMap);
+   TEXTURE2D_ARRAY(_OcclusionMapArray);
+   SAMPLER(sampler_OcclusionMap);
+   TEXTURE2D_ARRAY(_GlossMapArray);
+   SAMPLER(sampler_GlossMap);
+
+    half3 AdjustContrast(half3 color, half contrast) {
+        color = saturate(lerp(half3(0.5, 0.5, 0.5), color, contrast));
+        return color;
+    }
+
+    inline half UMADotClamped (half3 a, half3 b) { return max(0.0h, dot(a, b)); }
+
+    inline half Luminance(half3 color) { return dot(color, half3(0.299, 0.587, 0.114)); }
+
+    inline half3 SaturateColors(half3 color, half saturation) {
+        half gray = 0.214041f;
+        half luminance = Luminance(color);
+        color = (color - luminance) * saturation + luminance;
+        return (color - gray) * _Contrast + gray; 
+    }
+
+// Explicit normal unpack for Texture2DArray slices (encoding selectable)
+half3 UnpackArrayNormal(half4 packed, half scale)
+{
+    half2 xy;
+    if (_NormalArrayEncoding < 0.5h)
+    {
+        xy = packed.rg * 2.0h - 1.0h;            // RG/BC5
+    }
+    else if (_NormalArrayEncoding < 1.5h)
+    {
+        xy = half2(packed.a, packed.g) * 2.0h - 1.0h; // AG/DXT5nm
+    }
+    else
+    {
+        bool aIsOne = (packed.a > 0.99h);
+        xy = aIsOne ? (packed.rg * 2.0h - 1.0h) : (half2(packed.a, packed.g) * 2.0h - 1.0h);
+    }
+
+    xy *= scale;
+    half z = sqrt(saturate(1.0h - dot(xy, xy)));
+    return normalize(half3(xy, z));
+}
+
+	void SurfaceFunction(inout Surface o, ShaderData d)
+	{
+      // Original UVs (continuous)
+      float2 uv = d.texcoord0.xy;
+
+      // UDIM tile (0..1) and index (account for rows)
+      float2 udimUV = frac(uv);
+      int udimU = (int)floor(uv.x);
+      int udimV = (int)floor(uv.y);
+      int udimIndex = udimU + udimV * (int)_UDIMCols;
+
+      // Use explicit gradients from original (non-frac) UVs to stabilize LOD across seams
+      float2 duvdx = ddx(uv);
+      float2 duvdy = ddy(uv);
+
+	  half4 mask = SAMPLE_TEXTURE2D_ARRAY_GRAD(_ThicknessMapArray, sampler_ThicknessMap, udimUV, udimIndex, duvdx, duvdy);
+	  float4 base_c = SAMPLE_TEXTURE2D_ARRAY_GRAD(_BaseMapArray, sampler_BaseMap, udimUV, udimIndex, duvdx, duvdy);
+	  half4 basepackednormal = SAMPLE_TEXTURE2D_ARRAY_GRAD(_BumpMapArray, sampler_BumpMap, udimUV, udimIndex, duvdx, duvdy);
+      half4 base_occlusion = SAMPLE_TEXTURE2D_ARRAY_GRAD(_OcclusionMapArray, sampler_OcclusionMap, udimUV, udimIndex, duvdx, duvdy);
+      half4 base_Gloss = SAMPLE_TEXTURE2D_ARRAY_GRAD(_GlossMapArray, sampler_GlossMap, udimUV, udimIndex, duvdx, duvdy);
+
+      half3 base_n = UnpackArrayNormal(basepackednormal, _NormalStrength);
+
+	  half base_smooth = mask.a;
+	  half base_thick = mask.r;
+      
+      o.Alpha = base_c.a * _Color.a;
+      o.Albedo = SaturateColors(base_c.rgb * _ColorModulation * _Color.rgb, _Saturation);
+	  o.Normal = base_n;
+	  o.Metallic = _Metallic;
+	  o.Smoothness = (base_Gloss * _SmoothnessModulation) + _SmoothnessAdd;
+
+      o.Smoothness = lerp(_MinSmooth, _MaxSmooth, o.Smoothness);
+      o.Occlusion = (base_occlusion + _OcclusionAdd) * _Occlusion;
+
+      if (_DoubleSidedNormalMode == 0)
+      {
+         o.Normal *= d.isFrontFace ? 1 : -1;
+      }
+      else if (_DoubleSidedNormalMode == 1)
+      {
+		 o.Normal.z *= d.isFrontFace ? 1 : -1;
+      }
+
+        float3 lightDir = float3(0, 0, -1);
+        float3 lightColor = float3(0.8, 0.8, 0.8);
+#if  _HDRP
+	 GetSun(lightDir, lightColor);
+#endif
+     if (_UseHalfLambert) 
+     { 
+	    float3 normalDirection = TangentToWorldSpace(d, o.Normal);
+	    float atten = 1.0;
+	    float lambert = dot(normalDirection, lightDir);
+        lambert = lerp(lambert, lambert * 0.5 + 0.5, _HalfLambertStrength);
+        o.Albedo *= atten * lightColor * lambert;
+     }
+     if (_InvertThickness) 
+     { 
+         base_thick = 1.0 - base_thick;
+     }
+     float fakeLum = dot(o.Albedo, float3(0.299, 0.587, 0.114));
+     o.Albedo += (base_thick * _SSSColor.rgb * _SSSLevel * fakeLum);
+
+     float3 wsN = TangentToWorldSpace(d, o.Normal);
+     o.Emission = _EmissiveAdd + ((max(0.0h, dot(lightDir, wsN)) * _SSSColor.rgb * base_thick * _SSSGlow) * _EmissiveModulation);
+
+     if (_RimLightingModulation>0) 
+     { 
+	    float rim = 1.0 - saturate(dot(d.tangentSpaceViewDir, o.Normal)); 
+        float3 rimcol =(pow(rim, _RimLightPower) * _RimLightColor) * _RimLightingModulation; 
+        o.Emission += rimcol;
+      }
+	}
+
+END_CODE

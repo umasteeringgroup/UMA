@@ -1597,6 +1597,11 @@ namespace UMA.CharacterSystem.Editors
                 FaceEditorStage.ShowStage(thisDCA, (MeshHideAsset)null);
             }
 
+            if (GUILayout.Button("Create Slot From Scene Mesh"))
+            {
+                SceneMeshSlotBuilderWindow.ShowWindow(thisDCA);
+            }
+
             // Drag & Drop Area
             Rect dropRect = GUILayoutUtility.GetRect(0,40, GUILayout.ExpandWidth(true));
             GUIContent dropLabel;
