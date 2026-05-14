@@ -1091,7 +1091,7 @@ namespace UMA.CharacterSystem.Editors
                         bool newEnabled = EditorGUILayout.ToggleLeft(inst.Name, inst.enabled, GUILayout.Width(140));
                         float oldValue = inst.Value;
                         inst.Value = EditorGUILayout.Slider(inst.Value, 0f, 1f);
-                        if (GUILayout.Button("Def", GUILayout.Width(40)))
+                        if (GUILayout.Button("Reset", GUILayout.Width(50)))
                         {
                             if (_nameToDnaCache.TryGetValue(inst.Name, out var dnaAsset) && dnaAsset != null)
                             {
@@ -1116,7 +1116,7 @@ namespace UMA.CharacterSystem.Editors
                                 EditorUtility.DisplayDialog("DNA Not Found", $"DNA asset '{inst.Name}' not found in collection.", "OK");
                             }
                         }
-                        if (GUILayout.Button("Edit", GUILayout.Width(40)))
+                        if (GUILayout.Button("Inspect", GUILayout.Width(50)))
                         {
                             if (_nameToDnaCache.TryGetValue(inst.Name, out var dnaAsset) && dnaAsset != null)
                             {

@@ -114,7 +114,7 @@ public class DNAGroupEditor : Editor
                 DNA dnaObj = dnaProp.objectReferenceValue as DNA;
 
                 string header = dnaObj != null ? dnaObj.name : $"DNA {i}";
-                GUIHelper.FoldoutBarButton(ref _foldoutStates[i], header, "ping", out bool pressed, out bool delete);
+                GUIHelper.FoldoutBarButton(ref _foldoutStates[i], header, "Inspect", out bool pressed, out bool delete);
                 if (delete)
                 {
                     Undo.RecordObject(target, "Remove DNA from Group");

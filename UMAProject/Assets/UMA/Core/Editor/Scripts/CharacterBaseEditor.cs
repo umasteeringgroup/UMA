@@ -194,6 +194,7 @@ namespace UMA.Editors
                 }
             }
 
+#if false
             GUILayout.Space(4);
             if (GUILayout.Button("Open in Node Recipe Editor (Do not use!)"))
             {
@@ -209,6 +210,7 @@ namespace UMA.Editors
                 win.Show();
                 win.Focus();
             }
+#endif
 
             if (target as UMATextRecipe != null)
             {

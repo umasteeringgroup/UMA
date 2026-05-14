@@ -83,7 +83,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Skinmask:
-        m_Texture: {fileID: 2800000, guid: ce84ac6354b628f4389fb7327538e10b, type: 3}
+        m_Texture: {fileID: 2800000, guid: b85053ec451e36842b87945477bfbc9c, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _SubsurfaceBlurMap:
@@ -161,7 +161,7 @@ Material:
     - _Occlusion_Strength: 1
     - _QueueControl: 0
     - _QueueOffset: 0
-    - _SSSBlend: 0.5
+    - _SSSBlend: 0.652
     - _SSSDistortion: 0
     - _SSSTransmission: 0
     - _Saturation: 1
@@ -178,7 +178,7 @@ Material:
     - _EmissiveColor: {r: 0, g: 0, b: 0, a: 0}
     - _Gloss_Remap: {r: 0, g: 0, b: 0, a: 0}
     - _SSS_BlurColor: {r: 1, g: 1, b: 1, a: 1}
-    - _Smoothness_Remap: {r: 0, g: 0.55, b: 0, a: 0}
+    - _Smoothness_Remap: {r: 0, g: 0.38, b: 0, a: 0}
     - _SubsurfaceColor: {r: 1, g: 0.36862746, b: 0.29803923, a: 0}
     - _SubsurfaceFalloff: {r: 0.8509804, g: 0.1822153, b: 0.10196077, a: 0}
     - _WrinkleValueSet12CL: {r: 0, g: 0, b: 0, a: 0}

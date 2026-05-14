@@ -16,7 +16,18 @@ namespace UMA.Editors
 		[MenuItem("Assets/Create/UMA/Core/RaceData")]
 		public static void CreateRaceMenuItem()
 		{
-			CustomAssetUtility.CreateAsset<RaceData>();
+			var rc = CustomAssetUtility.CreateAsset<RaceData>();
+			if (rc != null)
+			{
+				Selection.activeObject = rc;
+				rc.useNewDNA = true;
+				EditorUtility.SetDirty(rc);
+				AssetDatabase.SaveAssetIfDirty(rc);
+			}
+			else
+			{
+				Debug.LogError("Failed to create RaceData asset.");
+			}
 		}
 		public static bool showRaceGeneration = false;
 		protected RaceData race;

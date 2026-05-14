@@ -372,7 +372,20 @@ public class DNAEditor : Editor
         foreach (var field in type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
         {
             if (field.IsNotSerialized) continue;
-            field.SetValue(clone, field.GetValue(effect));
+            if (field.Name.ToLower() == "curve") 
+            {
+                var originalCurve = field.GetValue(effect) as AnimationCurve;
+                if (originalCurve != null)
+                {
+                    var curveCopy = new AnimationCurve(originalCurve.keys);
+                    field.SetValue(clone, curveCopy);
+                }
+            }
+            else
+            {
+                field.SetValue(clone, field.GetValue(effect));
+            }
+            //field.SetValue(clone, field.GetValue(effect));
         }
         return clone;
     }
