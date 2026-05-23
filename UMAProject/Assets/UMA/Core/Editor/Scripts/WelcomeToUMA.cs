@@ -9,6 +9,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEditor.TerrainTools;
 using UnityEngine;
+using UnityEngine.AI;
 
 namespace UMA
 {
@@ -157,6 +158,7 @@ namespace UMA
 
         public int currentButton;
         private Vector2 scrollPosition;
+        private bool projectScanHasRun;
         public bool processing = false;
         public bool initialized = false;
 
@@ -305,10 +307,10 @@ namespace UMA
                 AddText("The library data can be in Resources and/or in Addressable Bundles");
                 AddSeperator();
                 AddText("UMA uses a generator to create characters. This is a scriptable object.");
-                AddText("This prefab needs to be in a scene for UMA to work.");
+                AddText("This prefab will be added as needed to a scene for UMA to work.");
                 AddText("The generator has settings for texture merging, mesh combining, and more.");
                 AddText("To get started, use the 'Add an UMA to the current scene' button");
-                AddText("This will add an editable UMA and generator, if needed");
+                AddText("This will add an editable UMA character to the scene");
                 AddSeperator();
                 AddText("UMA uses recipes to define meshes, textures, and other data");
                 AddText("   There are two types of recipes - basic <b>Text Recipes</b> and <b>Wardrobe Recipes.");
@@ -792,6 +794,10 @@ namespace UMA
             }
             if (showLog)
             {
+                if (currentButton == 4 && projectScanHasRun)
+                {
+                    DrawProjectScanControls();
+                }
                 scrollPosition = GUILayout.BeginScrollView(scrollPosition);
                 ShowLogItems();
                 GUILayout.EndScrollView();
@@ -799,10 +805,61 @@ namespace UMA
             GUIHelper.EndInsetArea();
         }
 
+        private void DrawProjectScanControls()
+        {
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Filter to errors only", GUILayout.Width(180)))
+            {
+                FilterLogToErrorsOnly();
+            }
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+        }
+
+        private void FilterLogToErrorsOnly()
+        {
+            if (LoggedItems == null) return;
+
+            List<LogLine> filteredItems = new List<LogLine>();
+            bool keepActionsForError = false;
+            foreach (var line in LoggedItems)
+            {
+                if (line == null)
+                {
+                    continue;
+                }
+
+                if (line.logType == LogType.Error)
+                {
+                    filteredItems.Add(line);
+                    keepActionsForError = true;
+                    continue;
+                }
+
+                if (line.ButtonAction != null && keepActionsForError)
+                {
+                    filteredItems.Add(line);
+                    continue;
+                }
+
+                keepActionsForError = false;
+            }
+
+            LoggedItems.Clear();
+            LoggedItems.AddRange(filteredItems);
+            for (int i = 0; i < LoggedItems.Count; i++)
+            {
+                LoggedItems[i].index = i;
+            }
+            scrollPosition = Vector2.zero;
+            Repaint();
+        }
+
         private void ShowLogItems()
         {
             LogLineAction ButtonAction = null;
             LogLine ButtonActionLine = null;
+            LogLine PingLine = null;
 
             if (LoggedItems == null) return;
 
@@ -832,10 +889,27 @@ namespace UMA
                 }
                 if (item.ButtonAction != null)
                 {
-                    if (GUILayout.Button(item.Message ?? string.Empty))
+                    if (item.ReviewItem != null)
                     {
-                        ButtonAction = item.ButtonAction;
-                        ButtonActionLine = item;
+                        GUILayout.BeginHorizontal();
+                        if (GUILayout.Button(item.Message ?? string.Empty))
+                        {
+                            ButtonAction = item.ButtonAction;
+                            ButtonActionLine = item;
+                        }
+                        if (GUILayout.Button("Ping", GUILayout.Width(96)))
+                        {
+                            PingLine = item;
+                        }
+                        GUILayout.EndHorizontal();
+                    }
+                    else
+                    {
+                        if (GUILayout.Button(item.Message ?? string.Empty))
+                        {
+                            ButtonAction = item.ButtonAction;
+                            ButtonActionLine = item;
+                        }
                     }
                 }
                 else
@@ -843,6 +917,10 @@ namespace UMA
                     GUILayout.Label(item.Message ?? string.Empty, item.Style ?? InfoStyle);
                 }
                 GUILayout.EndHorizontal();
+            }
+            if (PingLine != null)
+            {
+                PingReviewItem(PingLine);
             }
             if (ButtonAction != null && ButtonActionLine != null)
             {
@@ -857,10 +935,23 @@ namespace UMA
             }
         }
 
+        private void PingReviewItem(LogLine line)
+        {
+            UnityEngine.Object reviewObject = line?.ReviewItem?.Item;
+            if (reviewObject == null)
+            {
+                AddText("Nothing selected to ping.", LogType.Warning);
+                return;
+            }
+
+            EditorGUIUtility.PingObject(reviewObject);
+        }
+
         private void ClearLog()
         {
             if (LoggedItems == null) LoggedItems = new List<LogLine>();
             LoggedItems.Clear();
+            projectScanHasRun = false;
             Repaint();
         }
 
@@ -1053,6 +1144,7 @@ namespace UMA
 
         private void ScanProject()
         {
+            projectScanHasRun = true;
             AddText("Checking library");
             UMAAssetIndexer indexer = null;
             try { indexer = UMAAssetIndexer.Instance; } catch { /* ignore */ }
@@ -1064,7 +1156,8 @@ namespace UMA
                 AddText(" Assets/UMA/InternalDataSore/InGame/Resources/AssetIndexer.asset");
                 return;
             }
-
+            CheckQualitySettings();
+            AddSeperator();
             CheckLibrary();
             AddSeperator();
             CheckMaterials();
@@ -1083,6 +1176,97 @@ namespace UMA
             AddSeperator();
             AddText("Project check completed. Please review any items that were flagged");
         }
+
+        public static List<string> ValidateSkinWeights()
+        {
+            List<string> invalidLevels = new List<string>();
+            int original = QualitySettings.GetQualityLevel();
+            string[] names = QualitySettings.names;
+
+            for (int i = 0; i < names.Length; i++)
+            {
+                QualitySettings.SetQualityLevel(i, applyExpensiveChanges: false);
+
+                SkinWeights sw = QualitySettings.skinWeights;
+
+                bool ok =
+                    sw == SkinWeights.FourBones ||
+                    sw == SkinWeights.Unlimited;
+
+                Debug.Log($"{names[i]}: SkinWeights = {sw}  => {(ok ? "OK" : "INVALID")}");
+
+                if (!ok)
+                {
+                    string msg = $"Quality level '{names[i]}' uses {sw} skinWeights, expected FourBones or Unlimited.";
+                    Debug.LogWarning(msg);
+                    invalidLevels.Add(msg);
+                }
+            }
+
+            // Restore original quality level
+            QualitySettings.SetQualityLevel(original, false);
+
+            return invalidLevels;
+        }
+ 
+
+        private void CheckQualitySettings()
+        {
+            AddText("Checking Quality Settings");
+            List<string> invalidLevels = ValidateSkinWeights();
+            if (invalidLevels.Count == 0)
+            {
+                AddText("All quality levels are using valid skin weights settings.");
+            }
+            else
+            {
+                AddText("The following quality levels have invalid skin weights settings:", LogType.Error);
+                foreach (var msg in invalidLevels)
+                {
+                    AddText($" - {msg}", LogType.Error);
+                }
+                AddText("Please update the skin weights settings for these quality levels to FourBones or Unlimited.", LogType.Error);
+                LogLine l = AddText(text: "Open Quality Settings", LogType.Error);
+                LogLine l2 = AddText(text: "Fix them all automatically", LogType.Warning);
+                l.ButtonAction = (line) => DoOpenQualitySettings(line);
+                l2.ButtonAction = (line) => DoFixAllAutomatically(line);
+            }
+        }
+
+        private void DoFixAllAutomatically(LogLine line)
+        {
+            int original = QualitySettings.GetQualityLevel();
+            string[] names = QualitySettings.names;
+
+            for (int i = 0; i < names.Length; i++)
+            {
+                QualitySettings.SetQualityLevel(i, applyExpensiveChanges: false);
+
+                SkinWeights sw = QualitySettings.skinWeights;
+
+                if (sw != SkinWeights.FourBones && sw != SkinWeights.Unlimited)
+                {
+                    QualitySettings.skinWeights = SkinWeights.Unlimited;
+                    Debug.Log($"Fixed quality level '{names[i]}' skin weights from {sw} to Unlimited.");
+                }
+            }
+
+            // Restore original quality level
+            QualitySettings.SetQualityLevel(original, false);
+            AddText("All quality levels have been updated to use Unlimited skin weights.", LogType.Warning);
+        }
+
+
+        private void DoOpenQualitySettings(LogLine line)
+        {
+#if UNITY_2023_1_OR_NEWER
+            SettingsService.OpenProjectSettings("Project/Quality");
+#else
+            EditorApplication.ExecuteMenuItem("Edit/Project Settings/Quality");
+#endif
+        }
+
+
 
         private void CheckLibrary()
         {
@@ -1353,9 +1537,14 @@ namespace UMA
 
                     if (od.textureCount > 0)
                     {
-                        if (od.material != null && od.textureCount != od.material.channels.Length)
+                        if (od.material != null && od.textureCount > od.material.channels.Length)
                         {
                             AddText($"Texture Count on overlay {AI._Name} does not match material channel count ({od.textureCount} vs {od.material.channels.Length})!", LogType.Error);
+                            ReviewAssetItem(AI);
+                        }
+                        if (od.material != null && od.textureCount < od.material.channels.Length)
+                        {
+                            AddText($"Texture Count on overlay {AI._Name}  is less than material channel count ({od.textureCount} vs {od.material.channels.Length}). This will only work as an additional overlay on a stack", LogType.Info);
                             ReviewAssetItem(AI);
                         }
                         bool texturesOK = true;
@@ -1578,37 +1767,40 @@ namespace UMA
                     {
                         continue;
                     }
-                    if (!lib.HasAsset<SlotDataAsset>(s.id))
+                    if (s.isPlaceholderSlot == false)
                     {
-                        AddText($"Wardrobe Recipe {uwr.name} has a slot '{s.id}' that does not exist in the library!", LogType.Error);
-                        AddText("To fix this, restore the missing slot, add it to the library, and then validate the slot", LogType.Error);
-                    }
-                    else
-                    {
-                        SlotDataAsset sd = null;
-                        try { sd = lib.GetAsset<SlotDataAsset>(s.id); } catch { /* ignore */ }
-
-                        if (sd != null && !(sd.isUtilitySlot || sd.isClippingPlane || sd.isWildCardSlot))
+                        if (!lib.HasAsset<SlotDataAsset>(s.id))
                         {
-                            if (s.overlays == null || s.overlays.Length == 0)
+                            AddText($"Wardrobe Recipe {uwr.name} has a slot '{s.id}' that does not exist in the library!", LogType.Error);
+                            AddText("To fix this, restore the missing slot, add it to the library, and then validate the slot", LogType.Error);
+                        }
+                        else
+                        {
+                            SlotDataAsset sd = null;
+                            try { sd = lib.GetAsset<SlotDataAsset>(s.id); } catch { /* ignore */ }
+
+                            if (sd != null && !(sd.isUtilitySlot || sd.isClippingPlane || sd.isWildCardSlot))
                             {
-                                AddText($"Wardrobe Recipe {uwr.name} has a slot '{s.id}' does not have any overlays assigned!", LogType.Warning);
-                                ReviewAssetItem(r);
-                            }
-                            else
-                            {
-                                // Validate overlay references exist in the library
-                                for (int oi = 0; oi < s.overlays.Length; oi++)
+                                if (s.overlays == null || s.overlays.Length == 0)
                                 {
-                                    var ov = s.overlays[oi];
-                                    if (ov == null || string.IsNullOrEmpty(ov.id)) continue;
-                                    if (!lib.HasAsset<OverlayDataAsset>(ov.id))
+                                    AddText($"Wardrobe Recipe {uwr.name} has a slot '{s.id}' does not have any overlays assigned!", LogType.Warning);
+                                    ReviewAssetItem(r);
+                                }
+                                else
+                                {
+                                    // Validate overlay references exist in the library
+                                    for (int oi = 0; oi < s.overlays.Length; oi++)
                                     {
-                                        AddText($"Wardrobe Recipe {uwr.name} slot '{s.id}' references missing Overlay '{ov.id}'!", LogType.Error);
+                                        var ov = s.overlays[oi];
+                                        if (ov == null || string.IsNullOrEmpty(ov.id)) continue;
+                                        if (!lib.HasAsset<OverlayDataAsset>(ov.id))
+                                        {
+                                            AddText($"Wardrobe Recipe {uwr.name} slot '{s.id}' references missing Overlay '{ov.id}'!", LogType.Error);
+                                        }
                                     }
                                 }
                             }
-                        }
+                        } 
                     }
                 }
             }
@@ -1697,33 +1889,36 @@ namespace UMA
                             {
                                 continue;
                             }
-                            if (!lib.HasAsset<SlotDataAsset>(s.id))
-                            {
-                                AddText($"Text Recipe {utr.name} has a slot '{s.id}' that does not exist in the library!", LogType.Error);
-                                AddText("To fix this, restore the missing slot, add it to the library, and then validate the slot", LogType.Error);
-                            }
-                            else
-                            {
-                                SlotDataAsset sd = null;
-                                try { sd = lib.GetAsset<SlotDataAsset>(s.id); } catch { /* ignore */ }
-
-                                if (sd != null && !(sd.isUtilitySlot || sd.isClippingPlane || sd.isWildCardSlot))
+                            if (s.isPlaceholderSlot == false)
+                            {   
+                                if (!lib.HasAsset<SlotDataAsset>(s.id))
                                 {
-                                    if (s.overlays == null || s.overlays.Length == 0)
+                                    AddText($"Text Recipe {utr.name} has a slot '{s.id}' that does not exist in the library!", LogType.Error);
+                                    AddText("To fix this, restore the missing slot, add it to the library, and then validate the slot", LogType.Error);
+                                }
+                                else
+                                {
+                                    SlotDataAsset sd = null;
+                                    try { sd = lib.GetAsset<SlotDataAsset>(s.id); } catch { /* ignore */ }
+
+                                    if (sd != null && !(sd.isUtilitySlot || sd.isClippingPlane || sd.isWildCardSlot))
                                     {
-                                        AddText($"Text Recipe {utr.name} has a slot '{s.id}' does not have any overlays assigned!", LogType.Warning);
-                                        ReviewAssetItem(r);
-                                    }
-                                    else
-                                    {
-                                        // Validate overlay references exist in the library
-                                        for (int oi = 0; oi < s.overlays.Length; oi++)
+                                        if (s.overlays == null || s.overlays.Length == 0)
                                         {
-                                            var ov = s.overlays[oi];
-                                            if (ov == null || string.IsNullOrEmpty(ov.id)) continue;
-                                            if (!lib.HasAsset<OverlayDataAsset>(ov.id))
+                                            AddText($"Text Recipe {utr.name} has a slot '{s.id}' does not have any overlays assigned!", LogType.Warning);
+                                            ReviewAssetItem(r);
+                                        }
+                                        else
+                                        {
+                                            // Validate overlay references exist in the library
+                                            for (int oi = 0; oi < s.overlays.Length; oi++)
                                             {
-                                                AddText($"Text Recipe {utr.name} slot '{s.id}' references missing Overlay '{ov.id}'!", LogType.Error);
+                                                var ov = s.overlays[oi];
+                                                if (ov == null || string.IsNullOrEmpty(ov.id)) continue;
+                                                if (!lib.HasAsset<OverlayDataAsset>(ov.id))
+                                                {
+                                                    AddText($"Text Recipe {utr.name} slot '{s.id}' references missing Overlay '{ov.id}'!", LogType.Error);
+                                                }
                                             }
                                         }
                                     }
@@ -1767,34 +1962,51 @@ namespace UMA
                 {
                     AddText($"Race {race.name} is using the legacy 'raceName'", LogType.Warning);
                 }
-                if (race.dnaConverterList == null || race.dnaConverterList.Length == 0)
+                if (race.forceRebuildRaceSlots)
                 {
-                    AddText($"Race {race.name} has no DNA Converters assigned!", LogType.Error);
-                    ReviewAssetItem(r);
+                    AddText($"Race {race.name} is set to force rebuild race slots. This can cause performance issues if enabled in production. Please disable this setting after making any necessary slot changes.", LogType.Warning);
                 }
-                else
+
+                if (race.useNewDNA)
                 {
-                    for (int i = 0; i < race.dnaConverterList.Length; i++)
+                    if (race.DNACollection.DNAGroups.Count == 0)
                     {
-                        if (race.dnaConverterList[i] == null)
+                        AddText($"Race {race.name} is using new DNA system but has no DNAGroups defined!", LogType.Error);
+                        ReviewAssetItem(r);
+                    }
+                }
+                else 
+                {
+                    if (race.dnaConverterList == null || race.dnaConverterList.Length == 0)
+                    {
+                        AddText($"Race {race.name} uses old DNA and has no DNA Converters assigned!", LogType.Error);
+                        ReviewAssetItem(r);
+                    }                                   
+                    else
+                    {
+                        for (int i = 0; i < race.dnaConverterList.Length; i++)
                         {
-                            AddText($"DynamicDNAConvertController {i} on Race {race.name} is invalid");
-                            invalid = true;
-                        }
-                        else
-                        {
-                            var cvt = race.dnaConverterList[i];
-                            var dnaasset = cvt.dnaAsset;
-                            if (dnaasset != null && !UMAAssetIndexer.Instance.HasAsset<DynamicUMADnaAsset>(dnaasset.name))
+                            if (race.dnaConverterList[i] == null)
                             {
-                                AddText($"DynamicDNAConvertController {i} on Race {dnaasset.name} is not indexed! Adding...", LogType.Warning);
-                                var ai = new AssetItem(typeof(DynamicUMADna), dnaasset);
-                                UMAAssetIndexer.Instance.AddAssetItem(ai);
-                                UMAAssetIndexer.Instance.ForceSave();
+                                AddText($"DynamicDNAConvertController {i} on Race {race.name} is invalid");
+                                invalid = true;
+                            }
+                            else
+                            {
+                                var cvt = race.dnaConverterList[i];
+                                var dnaasset = cvt.dnaAsset;
+                                if (dnaasset != null && !UMAAssetIndexer.Instance.HasAsset<DynamicUMADnaAsset>(dnaasset.name))
+                                {
+                                    AddText($"DynamicDNAConvertController {i} on Race {dnaasset.name} is not indexed! Adding...", LogType.Warning);
+                                    var ai = new AssetItem(typeof(DynamicUMADna), dnaasset);
+                                    UMAAssetIndexer.Instance.AddAssetItem(ai);
+                                    UMAAssetIndexer.Instance.ForceSave();
+                                }
                             }
                         }
                     }
                 }
+
                 // Validate base race recipe alignment with race name
                 if (race.baseRaceRecipe != null)
                 {
@@ -1936,6 +2148,7 @@ namespace UMA
                 AddText("Nothing selected to inspect.", LogType.Warning);
                 return;
             }
+            line.ButtonAction = null;
             StartCoroutine(InspectObject(line.ReviewItem));
             Repaint();
         }

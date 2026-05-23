@@ -119,7 +119,6 @@ namespace UMA.CharacterSystem.Editors
                 }
 			}
 
-			EditorGUILayout.LabelField("Inspector Tools", EditorStyles.boldLabel);
 			EditorGUILayout.BeginHorizontal();
 
 			if (GUILayout.Button("Race"))

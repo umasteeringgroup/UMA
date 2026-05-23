@@ -13,7 +13,9 @@ MonoBehaviour:
   m_Name: UMA2Hair_UET
   m_EditorClassIdentifier: UMA_Core::UMA.UMAMaterial
   _material: {fileID: 2100000, guid: 2cc77075c9a1ab14c8d4293ee5f79145, type: 2}
+  _HDRPMaterial: {fileID: 0}
   _secondPass: {fileID: 2100000, guid: ab951148c99f3d445ae54acd7263af41, type: 2}
+  _HDRPSecondPass: {fileID: 0}
   materialType: 8
   channels:
   - channelType: 0

@@ -19,6 +19,9 @@ namespace UMA
         private NormalsDrawData _vertexNormals = new NormalsDrawData(new Color32(200, 0, 0, 240), false);
 
         public DynamicCharacterAvatar avatar;
+        private UMAData _umaData;
+    private bool _meshBakeValid;
+    private SkinnedMeshRenderer _bakedSkinnedMesh;
 
         [System.Serializable]
         private class NormalsDrawData
@@ -64,22 +67,111 @@ namespace UMA
 
         private void Start()
         {
-            avatar = gameObject.GetComponentInChildren<DynamicCharacterAvatar>();
-            avatar.OnCharacterUpdated += Avatar_OnCharacterUpdated;
+            SubscribeToAvatar();
+        }
+
+        private void OnEnable()
+        {
+            SubscribeToAvatar();
+        }
+
+        private void OnDisable()
+        {
+            UnsubscribeFromAvatar();
+        }
+
+        private void OnDestroy()
+        {
+            DestroyBakedMesh();
+        }
+
+        private void SubscribeToAvatar()
+        {
+            UnsubscribeFromAvatar();
+
+            _umaData = FindUMAData();
+            if (_umaData != null)
+            {
+                _umaData.OnCharacterUpdated += Avatar_OnCharacterUpdated;
+            }
+        }
+
+        private void UnsubscribeFromAvatar()
+        {
+            if (_umaData != null)
+            {
+                _umaData.OnCharacterUpdated -= Avatar_OnCharacterUpdated;
+                _umaData = null;
+            }
+        }
+
+        private UMAData FindUMAData()
+        {
+            if (avatar != null)
+            {
+                return avatar.umaData;
+            }
+
+            avatar = GetComponent<DynamicCharacterAvatar>();
+            if (avatar == null)
+            {
+                avatar = GetComponentInParent<DynamicCharacterAvatar>();
+            }
+
+            if (avatar == null)
+            {
+                avatar = GetComponentInChildren<DynamicCharacterAvatar>(true);
+            }
+
+            if (avatar != null)
+            {
+                return avatar.umaData;
+            }
+
+            UMAData umaData = GetComponent<UMAData>();
+            if (umaData == null)
+            {
+                umaData = GetComponentInParent<UMAData>();
+            }
+
+            if (umaData == null)
+            {
+                umaData = GetComponentInChildren<UMAData>(true);
+            }
+
+            return umaData;
         }
 
         private void Avatar_OnCharacterUpdated(UMAData obj)
+        {
+            InvalidateBakedMesh();
+        }
+
+        private void InvalidateBakedMesh()
+        {
+            _meshBakeValid = false;
+            _bakedSkinnedMesh = null;
+            _skinnedMesh = null;
+        }
+
+        private void DestroyBakedMesh()
         {
             if (mesh != null)
             {
                 DestroyImmediate(mesh);
                 mesh = null;
-                _skinnedMesh = GetComponentInChildren<SkinnedMeshRenderer>();
             }
+
+            InvalidateBakedMesh();
         }
 
         void OnDrawGizmosSelected()
         {
+            if (!isActiveAndEnabled)
+            {
+                return;
+            }
+
 #pragma warning disable CS0618 // Type or member is obsolete
             EditorUtility.SetSelectedWireframeHidden(GetComponent<Renderer>(), !_displayWireframe);
 #pragma warning restore CS0618 // Type or member is obsolete
@@ -88,6 +180,11 @@ namespace UMA
 
         void OnDrawGizmos()
         {
+            if (!isActiveAndEnabled)
+            {
+                return;
+            }
+
             if (!Selection.Contains(this))
             {
                 OnDrawNormals(false);
@@ -98,20 +195,24 @@ namespace UMA
         public Mesh mesh;
         private void OnDrawNormals(bool isSelected)
         {
-
-            if (_skinnedMesh == null)
+            if (!isActiveAndEnabled)
             {
-                _skinnedMesh = GetComponentInChildren<SkinnedMeshRenderer>();
-                if (_skinnedMesh == null)
-                {
-                    return;
-                }
+                return;
             }
 
-            if (mesh == null && _skinnedMesh != null)
+            if (Application.isPlaying && !EditorApplication.isPaused)
             {
-                mesh = new Mesh();
-                _skinnedMesh.BakeMesh(mesh, true);
+                return;
+            }
+
+            if (!EnsureSkinnedMesh())
+            {
+                return;
+            }
+
+            if (ShouldBakeMesh())
+            {
+                BakeMesh();
             }
 
             if (mesh == null)
@@ -122,11 +223,124 @@ namespace UMA
             {
                 Vector3[] vertices = mesh.vertices;
                 Vector3[] normals = mesh.normals;
-                for (int i = 0; i < vertices.Length; i++)
+                Transform rendererTransform = _bakedSkinnedMesh != null ? _bakedSkinnedMesh.transform : _skinnedMesh.transform;
+                int normalCount = Mathf.Min(vertices.Length, normals.Length);
+                for (int i = 0; i < normalCount; i++)
                 {
-                    _vertexNormals.Draw(transform.TransformPoint(vertices[i]), transform.TransformVector(normals[i]));
+                    Vector3 normal = rendererTransform.TransformDirection(normals[i]).normalized;
+                    if (normal.sqrMagnitude > 0f)
+                    {
+                        _vertexNormals.Draw(rendererTransform.TransformPoint(vertices[i]), normal);
+                    }
                 }
             }
+        }
+
+        private bool EnsureSkinnedMesh()
+        {
+            SkinnedMeshRenderer currentRenderer = FindSkinnedMeshRenderer();
+            if (currentRenderer == null)
+            {
+                return false;
+            }
+
+            if (_skinnedMesh != currentRenderer)
+            {
+                _skinnedMesh = currentRenderer;
+                _meshBakeValid = false;
+                _bakedSkinnedMesh = null;
+            }
+
+            return true;
+        }
+
+        private SkinnedMeshRenderer FindSkinnedMeshRenderer()
+        {
+            if (_umaData == null)
+            {
+                _umaData = FindUMAData();
+            }
+
+            SkinnedMeshRenderer umaRenderer = GetFirstUMARenderer(true);
+            if (umaRenderer != null)
+            {
+                return umaRenderer;
+            }
+
+            umaRenderer = GetFirstUMARenderer(false);
+            if (umaRenderer != null)
+            {
+                return umaRenderer;
+            }
+
+            if (_skinnedMesh != null && _skinnedMesh.sharedMesh != null)
+            {
+                return _skinnedMesh;
+            }
+
+            return GetComponentInChildren<SkinnedMeshRenderer>(true);
+        }
+
+        private SkinnedMeshRenderer GetFirstUMARenderer(bool requireEnabled)
+        {
+            if (_umaData == null)
+            {
+                return null;
+            }
+
+            SkinnedMeshRenderer[] renderers = _umaData.GetRenderers();
+            if (renderers == null)
+            {
+                return null;
+            }
+
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                SkinnedMeshRenderer renderer = renderers[i];
+                if (renderer == null || renderer.sharedMesh == null)
+                {
+                    continue;
+                }
+
+                if (requireEnabled && !renderer.enabled)
+                {
+                    continue;
+                }
+
+                return renderer;
+            }
+
+            return null;
+        }
+
+        private bool ShouldBakeMesh()
+        {
+            if (!_meshBakeValid || mesh == null || _bakedSkinnedMesh != _skinnedMesh)
+            {
+                return true;
+            }
+
+            return !Application.isPlaying || EditorApplication.isPaused;
+        }
+
+        private void BakeMesh()
+        {
+            if (mesh == null)
+            {
+                mesh = new Mesh
+                {
+                    name = "UMANormalViewer Baked Mesh",
+                    hideFlags = HideFlags.HideAndDontSave
+                };
+            }
+            else
+            {
+                mesh.Clear();
+            }
+
+            _skinnedMesh.BakeMesh(mesh, false);
+            _bakedSkinnedMesh = _skinnedMesh;
+            _meshBakeValid = true;
         }
 #endif
     }

@@ -12,8 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac718b8ce852d1445b8fbe5c323134ac, type: 3}
   m_Name: UMAMaterial_UMA_SRP_DiffuseNormalSpecular
   m_EditorClassIdentifier: UMA_Core::UMA.UMAMaterial
-  _material: {fileID: 2100000, guid: af19252e3ceaa2e4797ada3a9fdb3fec, type: 2}
+  _material: {fileID: 2100000, guid: 157a073a02ea18542956a088584644e0, type: 2}
+  _HDRPMaterial: {fileID: 0}
   _secondPass: {fileID: 0}
+  _HDRPSecondPass: {fileID: 0}
   materialType: 1
   channels:
   - channelType: 0
@@ -40,11 +42,13 @@ MonoBehaviour:
     DownSample: 1
     ConvertRenderTexture: 0
     NonShaderTexture: 0
+  generateMipMaps: 1
   MipMapBias: 0
   AnisoLevel: 1
   MatFilterMode: 1
   Compression: 0
   shaderParms: []
+  shaderKeywords: []
   MaskWithCurrentColor: 0
   maskMultiplier: {r: 1, g: 1, b: 1, a: 1}
   MaterialName: UMA_SRP_DiffuseNormalSpecular

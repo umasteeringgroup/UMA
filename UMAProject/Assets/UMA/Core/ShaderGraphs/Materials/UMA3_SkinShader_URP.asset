@@ -13,7 +13,9 @@ MonoBehaviour:
   m_Name: UMA3_SkinShader_URP
   m_EditorClassIdentifier: UMA_Core::UMA.UMAMaterial
   _material: {fileID: 2100000, guid: af9ee587fa376fc4ca268bbfccac9e82, type: 2}
+  _HDRPMaterial: {fileID: 2100000, guid: 96c2261d5021a32458020318a72e7ee7, type: 2}
   _secondPass: {fileID: 0}
+  _HDRPSecondPass: {fileID: 0}
   materialType: 2
   channels:
   - channelType: 0
@@ -54,6 +56,7 @@ MonoBehaviour:
   MatFilterMode: 1
   Compression: 0
   shaderParms: []
+  shaderKeywords: []
   MaskWithCurrentColor: 0
   maskMultiplier: {r: 1, g: 1, b: 1, a: 1}
   MaterialName: UMA3_SkinShader_URP

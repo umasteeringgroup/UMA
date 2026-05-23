@@ -64,7 +64,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _ID_Map:
-        m_Texture: {fileID: 2800000, guid: b2bd8af9250e2f749a1c93dd37eb0543, type: 3}
+        m_Texture: {fileID: 2800000, guid: ce7333787ae7c804085f021d89588716, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
@@ -93,6 +93,7 @@ Material:
     - _AOOccludeAll: 1
     - _AlphaClip: 0
     - _AlphaClip2: 0.5
+    - _AlphaModulation: 2
     - _AlphaToMask: 0
     - _Blend: 0
     - _BlendModePreserveSpecular: 0
@@ -110,20 +111,21 @@ Material:
     - _QueueOffset: 0
     - _ReceiveShadows: 1
     - _Root_Power: 1
-    - _Root_Shift: 2.27
-    - _Root_Tip_Intensity: 0
+    - _Root_Shift: 0.2
+    - _Root_Tip_Intensity: 0.4
     - _ShadowClip: 0.5
     - _Smoothness: 0.25
     - _SpecularMix: 0.5
-    - _SpecularMultiplier: 0.3
+    - _SpecularMultiplier: 0.25
     - _SpecularPowerScale: 30
+    - _SpecularShift: 0
     - _SpecularShiftMax: 0
     - _SpecularShiftMin: 0
     - _SrcBlend: 5
     - _SrcBlendAlpha: 1
     - _Surface: 1
     - _Tip_Power: 1
-    - _Tip_Shift: 5.96
+    - _Tip_Shift: 0.8
     - _UseAnisotropic: 1
     - _UseDisplacement: 1
     - _VertexColorStrength: 0.5
@@ -137,7 +139,7 @@ Material:
     - _EmissiveColor: {r: 0, g: 0, b: 0, a: 0}
     - _Normal: {r: 0, g: 0, b: 0, a: 0}
     - _RootColor: {r: 0.8196079, g: 0.8196079, b: 0.8196079, a: 1}
-    - _SpecularTint: {r: 0.8050314, g: 0.24259727, b: 0.00759451, a: 1}
+    - _SpecularTint: {r: 0.654902, g: 0.24259722, b: 0.00759451, a: 1}
     - _Tip_Color: {r: 0.8196079, g: 0.8196079, b: 0.8196079, a: 1}
     - _VertexBaseColor: {r: 0, g: 0, b: 0, a: 0}
   m_BuildTextureStacks: []

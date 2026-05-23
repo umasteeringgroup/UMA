@@ -202,6 +202,9 @@ namespace UMA.Editors
 				{
 					manualBoundsProp.vector3Value = StaticBounds;
 					manualBoundsCenterProp.vector3Value = StaticBoundsCenter;
+					serializedObject.ApplyModifiedProperties();
+					EditorUtility.SetDirty(race);
+					_needsUpdate = true;
 				}
 				GUILayout.EndHorizontal();				
 			}
@@ -342,7 +345,14 @@ namespace UMA.Editors
 		/// </summary>
 		protected virtual void DoUpdate()
 		{
-
+			serializedObject.ApplyModifiedProperties();
+			EditorUtility.SetDirty(race);
+			AssetDatabase.SaveAssetIfDirty(race);
+			RaceData ra = UMAAssetIndexer.Instance.GetAsset<RaceData>(race.raceName);
+			if (ra != null)
+			{
+				UMAUpdateProcessor.UpdateRace(ra);
+			}
 		}
 
 		#region DCS functions

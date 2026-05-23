@@ -17,12 +17,13 @@ MonoBehaviour:
   - {fileID: 114673142985711662}
   _overallModifiers:
     _adjustScale: 0
-    _adjustHeight: 1
-    _adjustRadius: 1
-    _adjustMass: 1
-    _updateBounds: 1
-    _tightenBounds: 1
+    _adjustHeight: 0
+    _adjustRadius: 0
+    _adjustMass: 0
+    _updateBounds: 0
+    _tightenBounds: 0
     _adjustBounds: 0
+    _manuallySetBounds: 0
     _scale: 1
     _bone: Position
     _scaleBoneHash: -1084586333
@@ -31,6 +32,7 @@ MonoBehaviour:
     _radiusAdjust: {x: 0.23, y: 0}
     _massAdjust: {x: 46, y: 26, z: 26}
     _boundsAdjust: {x: 0, y: 0, z: 0}
+    _manualSetBounds: {x: 0, y: 0, z: 0}
   _displayValue: 
 --- !u!114 &114673142985711662
 MonoBehaviour:
@@ -160,8 +162,6 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: -1
       _max: 1
-    _umaDNA:
-      dnaTypeHash: 0
   - _hashName: RearRight
     _hash: -89877225
     _property: 2
@@ -312,8 +312,6 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.5
       _max: 2
-    _umaDNA:
-      dnaTypeHash: 0
   - _hashName: FrontRight
     _hash: 1604555703
     _property: 2
@@ -464,8 +462,6 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.5
       _max: 2
-    _umaDNA:
-      dnaTypeHash: 0
   - _hashName: RearLeft
     _hash: 268742794
     _property: 2
@@ -616,8 +612,6 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.5
       _max: 2
-    _umaDNA:
-      dnaTypeHash: 0
   - _hashName: FrontLeft
     _hash: 498564013
     _property: 2
@@ -768,5 +762,3 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.5
       _max: 2
-    _umaDNA:
-      dnaTypeHash: 0

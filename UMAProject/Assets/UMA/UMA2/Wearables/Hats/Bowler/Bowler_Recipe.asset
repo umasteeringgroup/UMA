@@ -20,7 +20,6 @@ MonoBehaviour:
   - HumanMale
   - HumanMaleHighPoly
   - HumanFemale
-  - Human Male 3.0
   wardrobeRecipeThumbs:
   - race: HumanMale
     filename: 
@@ -29,9 +28,6 @@ MonoBehaviour:
     filename: 
     thumb: {fileID: 0}
   - race: HumanFemale
-    filename: 
-    thumb: {fileID: 0}
-  - race: Human Male 3.0
     filename: 
     thumb: {fileID: 0}
   wardrobeSlot: Helmet

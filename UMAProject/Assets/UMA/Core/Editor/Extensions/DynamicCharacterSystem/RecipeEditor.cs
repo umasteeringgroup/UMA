@@ -20,11 +20,14 @@ namespace UMA.Editors
 
 		EditorWindow inspectorWindow;
 		public bool Initialized = false;
+		private bool baseEditorEnabled;
+		private bool pluginsInitialized;
+		private bool isDisposed;
 
 		//for showing a warning if any of the compatible races are missing or not assigned to bundles or the index
 		protected Texture warningIcon;
 		protected GUIStyle warningStyle;
-		private static List<IUMARecipePlugin> plugins;
+		private List<IUMARecipePlugin> plugins;
 		public static List<Type> GetRecipeEditorPlugins() {
 			List<Type> theTypes = new List<Type>();
 
@@ -105,20 +108,69 @@ namespace UMA.Editors
 			}
 		}
 
+		private void QueueInitializeEditor()
+		{
+			EditorApplication.delayCall -= InitializeEditor;
+			EditorApplication.delayCall += InitializeEditor;
+		}
+
+		private void UnqueueInitializeEditor()
+		{
+			EditorApplication.delayCall -= InitializeEditor;
+		}
+
+		private void DestroyPlugins()
+		{
+			if (!pluginsInitialized || plugins == null)
+			{
+				plugins = null;
+				pluginsInitialized = false;
+				return;
+			}
+
+			foreach (IUMARecipePlugin plugin in plugins)
+			{
+				if (plugin == null) continue;
+				plugin.OnDestroy();
+			}
+
+			plugins = null;
+			pluginsInitialized = false;
+		}
+
         public override void OnEnable()
         {
-            EditorApplication.delayCall += InitializeEditor;
+			isDisposed = false;
+			Initialized = false;
+			QueueInitializeEditor();
         }
+
+		public override void OnDisable()
+		{
+			isDisposed = true;
+			UnqueueInitializeEditor();
+			DestroyPlugins();
+			baseEditorEnabled = false;
+			Initialized = false;
+			base.OnDisable();
+		}
 
         private void InitializeEditor()
         {
+			UnqueueInitializeEditor();
+
+			if (isDisposed || target == null)
+			{
+				return;
+			}
+
 			if (Initialized)
             {
                 return;
             }
 			if (EditorApplication.isCompiling || EditorApplication.isUpdating)
 			{
-                EditorApplication.delayCall += InitializeEditor;
+				QueueInitializeEditor();
                 return;
             }
             if (plugins == null)
@@ -126,15 +178,26 @@ namespace UMA.Editors
                 AddPlugins();
             }
 
-            base.OnEnable();
+			if (!baseEditorEnabled)
+			{
+				base.OnEnable();
+				baseEditorEnabled = true;
+			}
 
-            foreach (IUMARecipePlugin plugin in plugins)
-            {
-                plugin.OnEnable();
-            }
+			if (!pluginsInitialized)
+			{
+				foreach (IUMARecipePlugin plugin in plugins)
+				{
+					plugin.OnEnable();
+				}
+				pluginsInitialized = true;
+			}
 
             if (!NeedsReenable())
+			{
+				Initialized = true;
                 return;
+			}
 
             _errorMessage = null;
             _recipe = new UMAData.UMARecipe();
@@ -145,7 +208,6 @@ namespace UMA.Editors
                 var umaRecipeBase = target as UMARecipeBase;
                 if (umaRecipeBase != null)
                 {
-
                     umaRecipeBase.Load(_recipe);
                     _description = umaRecipeBase.GetInfo();
                 }
@@ -167,12 +229,13 @@ namespace UMA.Editors
 
         public void OnDestroy()
 		{
-			if (plugins == null) return;
-            foreach (IUMARecipePlugin plugin in plugins) 
+			isDisposed = true;
+			UnqueueInitializeEditor();
+			if (warningStyle != null)
 			{
-				if (plugin == null) continue;
-                plugin.OnDestroy();
+				warningStyle = null;
 			}
+			DestroyPlugins();
 
 		}
 

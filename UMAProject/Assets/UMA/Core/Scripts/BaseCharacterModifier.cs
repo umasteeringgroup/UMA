@@ -319,6 +319,7 @@ namespace UMA
 						adjustedBounds = Vector3.Scale(adjustedBounds, posBone.localScale);
 					}
 				}
+				Debug.Log($"Manually setting bounds to: {adjustedBounds} FixupRotations: {fixupRotations}	ManualSetBounds: {_manualSetBounds} AdjustScale: {_adjustScale} LiveScale: {_liveScale} Scale: {_scale}");
                 if (fixupRotations)
 				{
 					newBounds.extents = new Vector3(-adjustedBounds.y, adjustedBounds.x, adjustedBounds.z);
@@ -342,6 +343,7 @@ namespace UMA
             // --- Added _updateBounds scaling logic ---
             if (_updateBounds)
             {
+				Debug.Log("Updating bounds for race: " + umaData.umaRecipe.raceData.raceName + " with adjustScale: " + _adjustScale + " and liveScale: " + _liveScale);
                 // Use the mesh's intrinsic bounds as a stable baseline to avoid cumulative growth
                 Bounds baseBounds = targetRenderer.sharedMesh != null ? targetRenderer.sharedMesh.bounds : targetRenderer.localBounds;
 

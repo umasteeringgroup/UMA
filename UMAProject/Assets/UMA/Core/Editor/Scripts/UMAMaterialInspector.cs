@@ -102,16 +102,22 @@ namespace UMA.Editors
 
             GUILayout.BeginHorizontal();
             EditorGUILayout.PropertyField(serializedObject.FindProperty("_material"), new GUIContent( "Default Material", "The Unity Material to link to."),GUILayout.ExpandWidth(true));
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("_HDRPMaterial"), new GUIContent("HDRP Material", "The Unity Material for HDRP."), GUILayout.ExpandWidth(true));
-
-
-
             if (GUILayout.Button("Inspect", GUILayout.Width(60)))
             {
                 _inspectedObjects.Add(serializedObject.FindProperty("_material").objectReferenceValue);
-                // InspectorUtlity.InspectTarget(serializedObject.FindProperty("_material").objectReferenceValue);
             }
             GUILayout.EndHorizontal();
+            if (GUILayout.Button("Inspect", GUILayout.Width(60)))
+            {
+                _inspectedObjects.Add(serializedObject.FindProperty("_HDRPMaterial").objectReferenceValue);
+            }
+            GUILayout.BeginHorizontal();
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("_HDRPMaterial"), new GUIContent("HDRP Material", "The Unity Material for HDRP."), GUILayout.ExpandWidth(true));
+
+
+            GUILayout.EndHorizontal();
+
+
 
             if (showHelp)
             {

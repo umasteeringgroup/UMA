@@ -16,13 +16,14 @@ namespace UMA.CharacterSystem.Editors
         public static bool showHelp = false;
         public static bool showWardrobe = false;
         public static bool showUtils = true; // JRRM set false before release
-        public static bool showEditorCustomization = false; // set true before release
+        public static bool showEditorCustomization = true; // set true before release
         public static bool showPrefinedDNA = false;
         public static bool showAnimatorGUI = false;
         public static bool showBlendshapes = false;
         public static bool showUMAFramework = false;
         public static bool showUMAData = false;
         public static bool showAdvanced = false;
+        public static bool showCurrentRendererBounds = false;
 
         public static int currentcolorfilter =0;
         public string[] colorfilters = { "Base", "All", "Hide ColorDNA" };
@@ -565,7 +566,7 @@ namespace UMA.CharacterSystem.Editors
                 }
             }
             EditorGUILayout.EndHorizontal();
-            if (GUILayout.Button("Regen"))
+            if (GUILayout.Button("Regenerate Avatar"))
             {
                 UpdateCharacter();
             }
@@ -1554,6 +1555,11 @@ namespace UMA.CharacterSystem.Editors
             {
                 return;
             }
+            if (thisDCA.visualizeRendererBounds)
+            {
+                DrawRendererBounds();
+            }
+
             // Leaving this function here so I can later add some tools to the scene view to find/rebuild/modify UMAs
             // TODO: include all that in a project setting
             Event currentEvent = Event.current;
@@ -1569,6 +1575,35 @@ namespace UMA.CharacterSystem.Editors
             {
                 //SceneView.RepaintAll();
             }
+        }
+
+        private void DrawRendererBounds()
+        {
+            Renderer[] renderers = thisDCA.GetComponentsInChildren<Renderer>(true);
+            if (renderers == null || renderers.Length == 0)
+            {
+                return;
+            }
+
+            Color previousColor = Handles.color;
+            Handles.color = new Color(0.15f, 0.85f, 1f, 1f);
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                Renderer renderer = renderers[i];
+                if (renderer == null || thisDCA.IsFbxRouteRendererObject(renderer.gameObject))
+                {
+                    continue;
+                }
+
+                Bounds rendererBounds = renderer.bounds;
+                if (rendererBounds.size == Vector3.zero)
+                {
+                    continue;
+                }
+
+                Handles.DrawWireCube(rendererBounds.center, rendererBounds.size);
+            }
+            Handles.color = previousColor;
         }
 
         
@@ -2109,6 +2144,18 @@ namespace UMA.CharacterSystem.Editors
             }
             EditorGUILayout.PropertyField(serializedObject.FindProperty("BoundsOffset"));
 
+            // Visualize Renderer Bounds
+            if (showHelp)
+            {
+                EditorGUILayout.HelpBox("Visualize Renderer Bounds: Draws the current renderer bounds in the Scene view for debugging culling and bounds issues.", MessageType.Info);
+            }
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("visualizeRendererBounds"));
+            showCurrentRendererBounds = EditorGUILayout.Foldout(showCurrentRendererBounds, "Current Renderer Bounds");
+            if (showCurrentRendererBounds)
+            {
+                DrawCurrentRendererBounds();
+            }
+
             // Mark Not Readable
             if (showHelp)
             {
@@ -2160,6 +2207,67 @@ namespace UMA.CharacterSystem.Editors
             {
                 serializedObject.ApplyModifiedProperties();
             }
+        }
+
+        private void DrawCurrentRendererBounds()
+        {
+            if (TryGetCurrentRendererBounds(out Bounds currentBounds, out int rendererCount))
+            {
+                using (new EditorGUI.DisabledScope(true))
+                {
+                    EditorGUILayout.IntField("Renderers", rendererCount);
+                    EditorGUILayout.Vector3Field("Center", currentBounds.center);
+                    EditorGUILayout.Vector3Field("Extents", currentBounds.extents);
+                }
+            }
+            else
+            {
+                EditorGUILayout.HelpBox("No current renderer bounds were found.", MessageType.Info);
+            }
+        }
+
+        private bool TryGetCurrentRendererBounds(out Bounds currentBounds, out int rendererCount)
+        {
+            currentBounds = default;
+            rendererCount = 0;
+
+            if (thisDCA == null)
+            {
+                return false;
+            }
+
+            Renderer[] renderers = thisDCA.GetComponentsInChildren<Renderer>(true);
+            if (renderers == null || renderers.Length == 0)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                Renderer renderer = renderers[i];
+                if (renderer == null || thisDCA.IsFbxRouteRendererObject(renderer.gameObject))
+                {
+                    continue;
+                }
+
+                Bounds rendererBounds = renderer.bounds;
+                if (rendererBounds.size == Vector3.zero)
+                {
+                    continue;
+                }
+
+                if (rendererCount == 0)
+                {
+                    currentBounds = rendererBounds;
+                }
+                else
+                {
+                    currentBounds.Encapsulate(rendererBounds);
+                }
+                rendererCount++;
+            }
+
+            return rendererCount > 0;
         }
 
         private void DoGizmosUI(SerializedProperty enableGizmo, SerializedProperty previewModel, SerializedProperty customModel, SerializedProperty customRotation, SerializedProperty previewColor)

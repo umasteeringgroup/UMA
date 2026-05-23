@@ -64,7 +64,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _ID_Map:
-        m_Texture: {fileID: 2800000, guid: b2bd8af9250e2f749a1c93dd37eb0543, type: 3}
+        m_Texture: {fileID: 2800000, guid: ce7333787ae7c804085f021d89588716, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
@@ -93,6 +93,7 @@ Material:
     - _AOOccludeAll: 1
     - _AlphaClip: 0
     - _AlphaClip2: 0.5
+    - _AlphaModulation: 2
     - _AlphaToMask: 0
     - _Blend: 0
     - _BlendModePreserveSpecular: 0
@@ -117,6 +118,7 @@ Material:
     - _SpecularMix: 0.5
     - _SpecularMultiplier: 0.25
     - _SpecularPowerScale: 30
+    - _SpecularShift: 0
     - _SpecularShiftMax: 0
     - _SpecularShiftMin: 0
     - _SrcBlend: 5

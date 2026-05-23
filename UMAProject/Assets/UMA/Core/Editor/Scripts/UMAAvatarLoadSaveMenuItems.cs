@@ -1322,6 +1322,31 @@ namespace UMA.Editors
 			return GetSelectedSlots().Count > 0;
 		}
 
+		[MenuItem("Assets/UMA/View and Edit weights", false, 2006)]
+		private static void ViewAndEditSlotWeightsMenu()
+		{
+			var slots = GetSelectedSlots();
+			if (slots.Count == 0)
+			{
+				EditorUtility.DisplayDialog("View and Edit weights", "Select a SlotDataAsset asset in the Project window.", "OK");
+				return;
+			}
+
+			if (slots.Count > 1)
+			{
+				EditorUtility.DisplayDialog("View and Edit weights", "Open one SlotDataAsset at a time for weight editing.", "OK");
+				return;
+			}
+
+			VertexEditorStage.OpenSlotWeightEditor(slots[0]);
+		}
+
+		[MenuItem("Assets/UMA/View and Edit weights", true)]
+		private static bool ViewAndEditSlotWeightsMenu_Validate()
+		{
+			return GetSelectedSlots().Count > 0;
+		}
+
 		[MenuItem("Assets/UMA/Extract T-Pose", false, 1999)]
 		private static void ExtractTPoseMenu()
 		{
@@ -1392,6 +1417,106 @@ namespace UMA.Editors
 		private static bool CreateOverlaysForSelectedItemsMenu_Validate()
 		{
 			return GetSelectedTextures().Count > 0;
+		}
+
+		[MenuItem("UMA/Textures/Repair Overlays with too many textures", priority = 29)]
+		private static void RepairOverlaysWithTooManyTexturesMenu()
+		{
+			UMAAssetIndexer indexer = UMAAssetIndexer.Instance;
+			if (indexer == null)
+			{
+				EditorUtility.DisplayDialog("Repair Overlays", "UMA Asset Indexer is not available.", "OK");
+				return;
+			}
+
+			var overlays = indexer.GetAllAssets<OverlayDataAsset>();
+			if (overlays == null || overlays.Count == 0)
+			{
+				EditorUtility.DisplayDialog("Repair Overlays", "No OverlayDataAsset assets were found in the UMA Asset Indexer.", "OK");
+				return;
+			}
+
+			int checkedCount = 0;
+			int repairedCount = 0;
+			int skippedNoMaterial = 0;
+			List<string> repairedNames = new List<string>();
+
+			try
+			{
+				for (int i = 0; i < overlays.Count; i++)
+				{
+					OverlayDataAsset overlay = overlays[i];
+					if (overlay == null)
+					{
+						continue;
+					}
+
+					checkedCount++;
+					EditorUtility.DisplayProgressBar("Repair Overlays", "Checking " + overlay.name, Mathf.Clamp01((float)i / Mathf.Max(1, overlays.Count)));
+					overlay.EnsureMaterial();
+					UMAMaterial material = overlay.material;
+					if (material == null)
+					{
+						skippedNoMaterial++;
+						continue;
+					}
+
+					int materialChannelCount = material.channels != null ? material.channels.Length : 0;
+					int overlayTextureCount = overlay.textureCount;
+					if (overlayTextureCount <= materialChannelCount)
+					{
+						continue;
+					}
+
+					ResizeOverlayChannelData(overlay, materialChannelCount);
+					EditorUtility.SetDirty(overlay);
+					AssetDatabase.SaveAssetIfDirty(overlay);
+					repairedCount++;
+					repairedNames.Add(overlay.name + " (" + overlayTextureCount + " -> " + materialChannelCount + ")");
+				}
+			}
+			finally
+			{
+				EditorUtility.ClearProgressBar();
+			}
+
+			string message = "Checked overlays: " + checkedCount
+				+ "\nRepaired overlays: " + repairedCount
+				+ "\nSkipped without material: " + skippedNoMaterial;
+
+			if (repairedNames.Count > 0)
+			{
+				message += "\n\nRepaired:";
+				for (int i = 0; i < repairedNames.Count; i++)
+				{
+					message += "\n- " + repairedNames[i];
+				}
+			}
+
+			EditorUtility.DisplayDialog("Repair Overlays", message, "OK");
+		}
+
+		private static void ResizeOverlayChannelData(OverlayDataAsset overlay, int channelCount)
+		{
+			overlay.textureList = ResizeArrayPreservingPrefix(overlay.textureList, channelCount);
+			overlay.textureNames = ResizeArrayPreservingPrefix(overlay.textureNames, channelCount);
+			overlay.overlayBlend = ResizeArrayPreservingPrefix(overlay.overlayBlend, channelCount);
+		}
+
+		private static T[] ResizeArrayPreservingPrefix<T>(T[] source, int length)
+		{
+			if (length < 0)
+			{
+				length = 0;
+			}
+
+			T[] result = new T[length];
+			if (source != null)
+			{
+				Array.Copy(source, result, Math.Min(source.Length, length));
+			}
+
+			return result;
 		}
 
 		[MenuItem("Assets/UMA/Add Race(s) to Selected Recipes", false, 2000)]
@@ -2418,15 +2543,22 @@ namespace UMA.Editors
 
 						if (AddStandaloneDNA)
 						{
-							UMAData uda = newAvatar.GetComponent<UMAData>();
-							StandAloneDNA sda = newAvatar.AddComponent<UMA.StandAloneDNA>();
-							sda.PackedDNA = UMAPackedRecipeBase.GetPackedDNA(uda._umaRecipe);
 							if (avatar is DynamicCharacterAvatar)
 							{
 								DynamicCharacterAvatar avt = avatar as DynamicCharacterAvatar;
+								StandAloneDNA sda = newAvatar.AddComponent<UMA.StandAloneDNA>();
+								sda.PackedDNA = UMAPackedRecipeBase.GetPackedDNA(avt.umaData._umaRecipe);
 								sda.avatarDefinition = avt.GetAvatarDefinition(true);
+								sda.umaData = avt.umaData;
 							}
-							sda.umaData = uda;
+							else
+							{
+								UMAData uda = newAvatar.GetComponent<UMAData>();
+								StandAloneDNA sda = newAvatar.AddComponent<UMA.StandAloneDNA>();
+								sda.PackedDNA = UMAPackedRecipeBase.GetPackedDNA(uda._umaRecipe);
+								Debug.LogWarning("Avatar is not a DynamicCharacterAvatar. AvatarDefinition will not be set on StandAloneDNA.");
+								sda.umaData = uda;
+							}
 						}
 						else
 						{

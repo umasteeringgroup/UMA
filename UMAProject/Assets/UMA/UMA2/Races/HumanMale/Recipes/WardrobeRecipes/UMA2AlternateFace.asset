@@ -22,7 +22,7 @@ MonoBehaviour:
   - race: HumanMale
     filename: 
     thumb: {fileID: 0}
-  wardrobeSlot: None
+  wardrobeSlot: Face
   Appended: 0
   Hides: []
   HideTags: []
@@ -40,4 +40,4 @@ MonoBehaviour:
   noAutoAdd: 0
   IncompatibleRecipes: []
   UserField: 
-  replaces: 
+  replaces: Nothing

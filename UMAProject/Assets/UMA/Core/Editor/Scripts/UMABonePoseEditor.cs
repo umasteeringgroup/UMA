@@ -616,7 +616,7 @@ namespace UMA.PoseTools
                 return;
             }
 
-            Debug.Log("Applying T-Pose preview mode to source UMA: " + sourceUMA.name);
+            //Debug.Log("Applying T-Pose preview mode to source UMA: " + sourceUMA.name);
             SetBonePoseMasterWeight(sourceUMA,1.0f);
             BuildSourceAvatarIfAvailable(sourceUMA);
 

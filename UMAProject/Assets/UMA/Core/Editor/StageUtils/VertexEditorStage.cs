@@ -103,10 +103,22 @@ namespace UMA
                 {
                     currentSelected = value;
                     VertexSelection vs = GetSelectedVertex();
-                    modifierEditor.Repaint();
+                    RepaintLinkedEditors();
                 }
             }
        }
+
+        private void RepaintLinkedEditors()
+        {
+            if (modifierEditor != null)
+            {
+                modifierEditor.Repaint();
+            }
+            if (slotWeightEditorWindow != null)
+            {
+                slotWeightEditorWindow.Repaint();
+            }
+        }
 
         private void RefreshVisibleSlotListsIfNeeded()
         {
@@ -205,6 +217,14 @@ namespace UMA
         private float cachedVisibilityHeight = -1f;
 
         private MeshModifierEditor modifierEditor;
+        private UmaSlotWeightEditorWindow slotWeightEditorWindow;
+        private bool slotWeightEditorMode;
+        private bool slotWeightEditorReadOnly;
+        private bool ownsSlotWeightPreviewAvatar;
+        private SlotDataAsset slotWeightEditorSlotAsset;
+        private RaceData slotWeightEditorRace;
+        private SkinnedMeshRenderer stageSkinnedMeshRenderer;
+        private bool stageSkinnedMeshRendererWasEnabled;
         public bool rectSelect = false;
         public bool painting = false;
         private bool pendingStateClickAction = false;
@@ -882,11 +902,17 @@ namespace UMA
 
         private bool IsSelectableSlot(SlotData slot)
         {
-            return slot != null &&
-                   slot.asset != null &&
-                   !UMAMeshData.IsNullOrEmptyMeshData(slot.asset.meshData) &&
-                   !slot.Suppressed &&
-                   !slot.asset.isUtilitySlot;
+            if (slot == null || slot.asset == null || UMAMeshData.IsNullOrEmptyMeshData(slot.asset.meshData) || slot.Suppressed || slot.asset.isUtilitySlot)
+            {
+                return false;
+            }
+
+            if (slotWeightEditorMode && slotWeightEditorSlotAsset != null)
+            {
+                return ReferenceEquals(slot.asset, slotWeightEditorSlotAsset) || SlotMatchesAssetSource(slot, slotWeightEditorSlotAsset);
+            }
+
+            return true;
         }
 
         private bool TryGetSlotForBakedVertex(int bakedVertexIndex, out SlotData foundSlot, out int slotVertexIndex)
@@ -976,6 +1002,387 @@ namespace UMA
             return stage;
         }
 
+        public static void OpenSlotWeightEditor(SlotDataAsset slotAsset)
+        {
+            if (slotAsset == null)
+            {
+                EditorUtility.DisplayDialog("View and Edit weights", "Select a SlotDataAsset asset in the Project window.", "OK");
+                return;
+            }
+
+            if (slotAsset.isUtilitySlot || UMAMeshData.IsNullOrEmptyMeshData(slotAsset.meshData))
+            {
+                EditorUtility.DisplayDialog("View and Edit weights", "The selected slot does not have editable mesh data.", "OK");
+                return;
+            }
+
+            List<RaceData> races = GetCompatibleRacesForSlotWeightEditor(slotAsset);
+            if (races.Count == 0)
+            {
+                EditorUtility.DisplayDialog("View and Edit weights", "No compatible race with a matching base slot was found for this slot.", "OK");
+                return;
+            }
+
+            if (races.Count == 1)
+            {
+                ShowSlotWeightEditorStage(slotAsset, races[0]);
+                return;
+            }
+
+            UmaSlotWeightEditorRacePickerWindow.Open(slotAsset, races);
+        }
+
+        internal static void ShowSlotWeightEditorStage(SlotDataAsset slotAsset, RaceData race)
+        {
+            if (slotAsset == null || race == null)
+            {
+                EditorUtility.DisplayDialog("View and Edit weights", "Select a slot and race before opening the weight editor.", "OK");
+                return;
+            }
+
+            string errorMessage;
+            DynamicCharacterAvatar previewAvatar;
+            if (!TryCreateSlotWeightPreviewAvatar(slotAsset, race, out previewAvatar, out errorMessage))
+            {
+                EditorUtility.DisplayDialog("View and Edit weights", errorMessage, "OK");
+                return;
+            }
+
+            VertexEditorStage stage = ScriptableObject.CreateInstance<VertexEditorStage>();
+            stage.titleContent = new GUIContent();
+            stage.titleContent.text = "Slot Weight Editor";
+            stage.titleContent.image = EditorGUIUtility.IconContent("SkinnedMeshRenderer Icon").image;
+            stage.thisDCA = previewAvatar;
+            stage.Currentmodifier = null;
+            stage.slotWeightEditorMode = true;
+            stage.slotWeightEditorReadOnly = false;
+            stage.ownsSlotWeightPreviewAvatar = true;
+            stage.slotWeightEditorSlotAsset = slotAsset;
+            stage.slotWeightEditorRace = race;
+            StageUtility.GoToStage(stage, true);
+        }
+
+        public static void OpenCurrentCharacterWeightViewer(DynamicCharacterAvatar avatar)
+        {
+            if (!TryValidateCurrentCharacterWeightAvatar(avatar, out string errorMessage))
+            {
+                EditorUtility.DisplayDialog("View Current Character Weights", errorMessage, "OK");
+                return;
+            }
+
+            VertexEditorStage stage = ScriptableObject.CreateInstance<VertexEditorStage>();
+            stage.titleContent = new GUIContent();
+            stage.titleContent.text = "Current Character Weights";
+            stage.titleContent.image = EditorGUIUtility.IconContent("SkinnedMeshRenderer Icon").image;
+            stage.thisDCA = avatar;
+            stage.Currentmodifier = null;
+            stage.slotWeightEditorMode = true;
+            stage.slotWeightEditorReadOnly = true;
+            stage.ownsSlotWeightPreviewAvatar = false;
+            stage.slotWeightEditorSlotAsset = null;
+            stage.slotWeightEditorRace = GetAvatarRaceData(avatar);
+            StageUtility.GoToStage(stage, true);
+        }
+
+        private static bool TryValidateCurrentCharacterWeightAvatar(DynamicCharacterAvatar avatar, out string errorMessage)
+        {
+            errorMessage = string.Empty;
+            if (avatar == null)
+            {
+                errorMessage = "Select a DynamicCharacterAvatar, or one of its children, in the Hierarchy.";
+                return false;
+            }
+
+            if (avatar.umaData == null || avatar.umaData.umaRecipe == null || avatar.umaData.umaRecipe.slotDataList == null)
+            {
+                errorMessage = "The selected DynamicCharacterAvatar has not built a usable UMA recipe yet.";
+                return false;
+            }
+
+            SkinnedMeshRenderer renderer = GetSkinnedMeshRenderer(avatar);
+            if (renderer == null || renderer.sharedMesh == null)
+            {
+                errorMessage = "The selected DynamicCharacterAvatar does not have a generated SkinnedMeshRenderer mesh.";
+                return false;
+            }
+
+            SlotData[] slots = avatar.umaData.umaRecipe.slotDataList;
+            for (int i = 0; i < slots.Length; i++)
+            {
+                SlotData slot = slots[i];
+                if (slot != null && slot.asset != null && !slot.Suppressed && !slot.asset.isUtilitySlot && !UMAMeshData.IsNullOrEmptyMeshData(slot.asset.meshData))
+                {
+                    return true;
+                }
+            }
+
+            errorMessage = "The selected DynamicCharacterAvatar does not have any visible weighted slots to inspect.";
+            return false;
+        }
+
+        private static RaceData GetAvatarRaceData(DynamicCharacterAvatar avatar)
+        {
+            if (avatar == null || avatar.activeRace == null)
+            {
+                return null;
+            }
+
+            return avatar.activeRace.racedata != null ? avatar.activeRace.racedata : avatar.activeRace.data;
+        }
+
+        internal SlotDataAsset SlotWeightEditorSlotAsset
+        {
+            get { return slotWeightEditorSlotAsset; }
+        }
+
+        internal RaceData SlotWeightEditorRace
+        {
+            get { return slotWeightEditorRace; }
+        }
+
+        internal bool IsSlotWeightEditorMode
+        {
+            get { return slotWeightEditorMode; }
+        }
+
+        internal bool IsSlotWeightEditorReadOnly
+        {
+            get { return slotWeightEditorReadOnly; }
+        }
+
+        private static List<RaceData> GetCompatibleRacesForSlotWeightEditor(SlotDataAsset slotAsset)
+        {
+            List<RaceData> races = new List<RaceData>();
+            UMAAssetIndexer indexer = UMAAssetIndexer.Instance;
+            if (indexer == null || slotAsset == null)
+            {
+                return races;
+            }
+
+            if (slotAsset.Races != null && slotAsset.Races.Length > 0)
+            {
+                for (int i = 0; i < slotAsset.Races.Length; i++)
+                {
+                    if (string.IsNullOrEmpty(slotAsset.Races[i]))
+                    {
+                        continue;
+                    }
+                    RaceData race = indexer.GetRace(slotAsset.Races[i]);
+                    if (race != null && RaceBaseRecipeContainsSlot(race, slotAsset))
+                    {
+                        AddUniqueRace(races, race);
+                    }
+                }
+
+                if (races.Count > 0)
+                {
+                    return races;
+                }
+            }
+
+            RaceData[] allRaces = indexer.GetAllRaces();
+            if (allRaces == null)
+            {
+                return races;
+            }
+
+            for (int i = 0; i < allRaces.Length; i++)
+            {
+                RaceData race = allRaces[i];
+                if (race == null || string.Equals(race.raceName, "RaceDataPlaceholder", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                if (RaceBaseRecipeContainsSlot(race, slotAsset))
+                {
+                    AddUniqueRace(races, race);
+                }
+            }
+
+            return races;
+        }
+
+        private static void AddUniqueRace(List<RaceData> races, RaceData race)
+        {
+            if (race == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < races.Count; i++)
+            {
+                if (races[i] == race || string.Equals(races[i].raceName, race.raceName, StringComparison.Ordinal))
+                {
+                    return;
+                }
+            }
+
+            races.Add(race);
+        }
+
+        private static bool RaceBaseRecipeContainsSlot(RaceData race, SlotDataAsset slotAsset)
+        {
+            if (race == null || race.baseRaceRecipe == null || slotAsset == null)
+            {
+                return false;
+            }
+
+            try
+            {
+                UMAData.UMARecipe recipe = new UMAData.UMARecipe();
+                race.baseRaceRecipe.Load(recipe);
+                if (recipe.slotDataList == null)
+                {
+                    return false;
+                }
+
+                for (int i = 0; i < recipe.slotDataList.Length; i++)
+                {
+                    if (SlotMatchesAssetSource(recipe.slotDataList[i], slotAsset))
+                    {
+                        return true;
+                    }
+                }
+            }
+            catch
+            {
+            }
+
+            return false;
+        }
+
+        private static bool TryCreateSlotWeightPreviewAvatar(SlotDataAsset slotAsset, RaceData race, out DynamicCharacterAvatar previewAvatar, out string errorMessage)
+        {
+            previewAvatar = null;
+            errorMessage = string.Empty;
+
+            GameObject previewObject = new GameObject("UMA Slot Weight Preview - " + slotAsset.name);
+            previewObject.hideFlags = HideFlags.HideAndDontSave;
+            try
+            {
+                previewAvatar = previewObject.AddComponent<DynamicCharacterAvatar>();
+                previewAvatar.editorTimeGeneration = true;
+                previewAvatar.ignoreMeshHideAssets = true;
+                previewAvatar.activeRace.name = race.raceName;
+                previewAvatar.activeRace.data = race;
+                previewAvatar.GenerateNow();
+
+                if (!InstallSlotWeightEditorSlot(previewAvatar, slotAsset, out errorMessage))
+                {
+                    DestroyImmediate(previewObject);
+                    previewAvatar = null;
+                    return false;
+                }
+
+                RegeneratePreviewAvatar(previewAvatar);
+                SkinnedMeshRenderer renderer = previewAvatar.gameObject.GetComponentInChildren<SkinnedMeshRenderer>(true);
+                if (renderer == null || renderer.sharedMesh == null)
+                {
+                    DestroyImmediate(previewObject);
+                    previewAvatar = null;
+                    errorMessage = "The preview avatar did not generate a SkinnedMeshRenderer for the selected slot.";
+                    return false;
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                DestroyImmediate(previewObject);
+                previewAvatar = null;
+                errorMessage = "Unable to create the temporary slot weight preview avatar.\n" + ex.Message;
+                return false;
+            }
+        }
+
+        private static bool InstallSlotWeightEditorSlot(DynamicCharacterAvatar previewAvatar, SlotDataAsset slotAsset, out string errorMessage)
+        {
+            errorMessage = string.Empty;
+            if (previewAvatar == null || previewAvatar.umaData == null || previewAvatar.umaData.umaRecipe == null || previewAvatar.umaData.umaRecipe.slotDataList == null)
+            {
+                errorMessage = "The preview avatar did not build a usable UMA recipe.";
+                return false;
+            }
+
+            SlotData targetSlot = null;
+            SlotData[] slots = previewAvatar.umaData.umaRecipe.slotDataList;
+            for (int i = 0; i < slots.Length; i++)
+            {
+                if (SlotMatchesAssetSource(slots[i], slotAsset))
+                {
+                    targetSlot = slots[i];
+                    break;
+                }
+            }
+
+            if (targetSlot == null)
+            {
+                errorMessage = "The selected race does not contain a base slot matching '" + GetSlotSourceKey(slotAsset) + "'.";
+                return false;
+            }
+
+            for (int i = 0; i < slots.Length; i++)
+            {
+                if (slots[i] != null)
+                {
+                    slots[i].Suppressed = !ReferenceEquals(slots[i], targetSlot);
+                }
+            }
+
+            targetSlot.asset = slotAsset;
+            targetSlot.UpdateFromAsset(slotAsset);
+            targetSlot.Suppressed = false;
+            return true;
+        }
+
+        private static void RegeneratePreviewAvatar(DynamicCharacterAvatar previewAvatar)
+        {
+            if (previewAvatar == null || previewAvatar.umaData == null || previewAvatar.umaData.umaGenerator == null)
+            {
+                return;
+            }
+
+            previewAvatar.umaData.Dirty(true, true, true);
+            previewAvatar.umaData.umaGenerator.GenerateSingleUMA(previewAvatar.umaData, true);
+            previewAvatar.umaData.umaGenerator.Clear();
+        }
+
+        private static bool SlotMatchesAssetSource(SlotData recipeSlot, SlotDataAsset slotAsset)
+        {
+            if (recipeSlot == null || slotAsset == null)
+            {
+                return false;
+            }
+
+            string targetSource = GetSlotSourceKey(slotAsset);
+            if (recipeSlot.asset != null)
+            {
+                string recipeSource = GetSlotSourceKey(recipeSlot.asset);
+                if (StringEqualsSlotKey(recipeSource, targetSource) || StringEqualsSlotKey(recipeSlot.asset.slotName, targetSource) || StringEqualsSlotKey(recipeSource, slotAsset.slotName))
+                {
+                    return true;
+                }
+            }
+
+            return StringEqualsSlotKey(recipeSlot.slotName, targetSource) || StringEqualsSlotKey(recipeSlot.slotName, slotAsset.slotName);
+        }
+
+        private static string GetSlotSourceKey(SlotDataAsset slotAsset)
+        {
+            if (slotAsset == null)
+            {
+                return string.Empty;
+            }
+
+            return string.IsNullOrEmpty(slotAsset.sourceSlot) ? slotAsset.slotName : slotAsset.sourceSlot;
+        }
+
+        private static bool StringEqualsSlotKey(string left, string right)
+        {
+            return !string.IsNullOrEmpty(left) && !string.IsNullOrEmpty(right) && string.Equals(left, right, StringComparison.OrdinalIgnoreCase);
+        }
+
         public VertexSelection GetSelectedVertex()
         {
             if (currentSelected >= 0 && currentSelected < SelectedVertexes.Count)
@@ -987,7 +1394,7 @@ namespace UMA
 
         private const float BoneWeightMismatchTolerance = 0.0001f;
 
-        private class VertexWeightEntry
+        internal class VertexWeightEntry
         {
             public int boneIndex;
             public int boneHash;
@@ -1006,15 +1413,16 @@ namespace UMA
             }
         }
 
-        private class BoneOption
+        internal class BoneOption
         {
             public int boneIndex;
             public int boneHash;
             public string boneName;
             public string displayName;
+            public bool isBound;
         }
 
-        private class VertexWeightComparison
+        internal class VertexWeightComparison
         {
             public int boneHash;
             public string boneName;
@@ -1023,7 +1431,7 @@ namespace UMA
             public bool mismatch;
         }
 
-        private VertexSelection GetVertexForWeightPopup()
+        internal VertexSelection GetVertexForWeightPopup()
         {
             VertexSelection selectedVertex = GetSelectedVertex();
             if (selectedVertex != null)
@@ -1051,7 +1459,7 @@ namespace UMA
             VertexWeightEditorWindow.Open(this, selectedVertex);
         }
 
-        private List<VertexWeightEntry> GetSlotAssetVertexWeights(VertexSelection selectedVertex, out string statusMessage)
+        internal List<VertexWeightEntry> GetSlotAssetVertexWeights(VertexSelection selectedVertex, out string statusMessage)
         {
             List<VertexWeightEntry> weights = new List<VertexWeightEntry>();
             statusMessage = string.Empty;
@@ -1088,7 +1496,7 @@ namespace UMA
             return weights;
         }
 
-        private List<VertexWeightEntry> GetSkinnedMeshVertexWeights(VertexSelection selectedVertex, out string statusMessage)
+        internal List<VertexWeightEntry> GetSkinnedMeshVertexWeights(VertexSelection selectedVertex, out string statusMessage)
         {
             List<VertexWeightEntry> weights = new List<VertexWeightEntry>();
             statusMessage = string.Empty;
@@ -1158,10 +1566,17 @@ namespace UMA
             return weights;
         }
 
-        private bool TryApplySlotAssetVertexWeights(VertexSelection selectedVertex, List<VertexWeightEntry> editedWeights, out string statusMessage)
+        internal bool TryApplySlotAssetVertexWeights(VertexSelection selectedVertex, List<VertexWeightEntry> editedWeights, out string statusMessage)
         {
             statusMessage = string.Empty;
             if (!TryGetSelectionMeshData(selectedVertex, out UMAMeshData meshData, out statusMessage))
+            {
+                return false;
+            }
+
+            Undo.RecordObject(selectedVertex.slot.asset, "Edit Vertex Weights");
+
+            if (!EnsureEditedWeightBonesAreBound(meshData, editedWeights, out statusMessage))
             {
                 return false;
             }
@@ -1179,8 +1594,6 @@ namespace UMA
                 statusMessage = "Cannot rewrite the SlotDataAsset because the existing mesh data has no valid managed or legacy weights to preserve for the other vertices.";
                 return false;
             }
-
-            Undo.RecordObject(selectedVertex.slot.asset, "Edit Vertex Weights");
 
             byte[] newBonesPerVertex = new byte[meshData.vertexCount];
             List<BoneWeight1> newBoneWeights = new List<BoneWeight1>(meshData.ManagedBoneWeights != null ? meshData.ManagedBoneWeights.Length : meshData.vertexCount * 4);
@@ -1230,6 +1643,148 @@ namespace UMA
             AssetDatabase.SaveAssets();
             statusMessage = "SlotDataAsset weights updated.";
             return true;
+        }
+
+        private bool EnsureEditedWeightBonesAreBound(UMAMeshData meshData, List<VertexWeightEntry> editedWeights, out string statusMessage)
+        {
+            statusMessage = string.Empty;
+            if (meshData == null || editedWeights == null)
+            {
+                statusMessage = "No editable bone weights are available.";
+                return false;
+            }
+
+            for (int i = 0; i < editedWeights.Count; i++)
+            {
+                VertexWeightEntry weight = editedWeights[i];
+                if (weight == null)
+                {
+                    continue;
+                }
+                if (Mathf.Clamp01(weight.weight) <= 0f)
+                {
+                    continue;
+                }
+
+                int existingIndex = GetBoundBoneIndex(meshData, weight.boneHash);
+                if (existingIndex >= 0)
+                {
+                    weight.boneIndex = existingIndex;
+                    continue;
+                }
+
+                if (weight.boneHash == 0)
+                {
+                    statusMessage = "Weight references a bone without a usable UMA hash.";
+                    return false;
+                }
+
+                if (!AppendSlotBoneBinding(meshData, weight.boneHash, out int newBoneIndex, out statusMessage))
+                {
+                    return false;
+                }
+
+                weight.boneIndex = newBoneIndex;
+            }
+
+            return true;
+        }
+
+        private int GetBoundBoneIndex(UMAMeshData meshData, int boneHash)
+        {
+            if (meshData == null || meshData.boneNameHashes == null || boneHash == 0)
+            {
+                return -1;
+            }
+
+            for (int i = 0; i < meshData.boneNameHashes.Length; i++)
+            {
+                if (meshData.boneNameHashes[i] == boneHash)
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        private bool AppendSlotBoneBinding(UMAMeshData meshData, int boneHash, out int boneIndex, out string statusMessage)
+        {
+            boneIndex = -1;
+            statusMessage = string.Empty;
+            if (thisDCA == null || thisDCA.umaData == null || thisDCA.umaData.skeleton == null)
+            {
+                statusMessage = "No preview skeleton is available for the new bone binding.";
+                return false;
+            }
+
+            Transform boneTransform = thisDCA.umaData.skeleton.GetBoneTransform(boneHash);
+            if (boneTransform == null)
+            {
+                statusMessage = "The selected bone is not present in the preview skeleton.";
+                return false;
+            }
+
+            int oldCount = meshData.boneNameHashes != null ? meshData.boneNameHashes.Length : 0;
+            boneIndex = oldCount;
+
+            int[] newHashes = new int[oldCount + 1];
+            if (meshData.boneNameHashes != null)
+            {
+                Array.Copy(meshData.boneNameHashes, newHashes, meshData.boneNameHashes.Length);
+            }
+            newHashes[oldCount] = boneHash;
+            meshData.boneNameHashes = newHashes;
+
+            Matrix4x4[] newBindPoses = new Matrix4x4[oldCount + 1];
+            if (meshData.bindPoses != null)
+            {
+                Array.Copy(meshData.bindPoses, newBindPoses, Mathf.Min(meshData.bindPoses.Length, oldCount));
+            }
+            newBindPoses[oldCount] = ResolveBindPoseForBone(boneHash, boneTransform);
+            meshData.bindPoses = newBindPoses;
+
+            UMATransform[] newUmaBones = new UMATransform[oldCount + 1];
+            if (meshData.umaBones != null)
+            {
+                Array.Copy(meshData.umaBones, newUmaBones, Mathf.Min(meshData.umaBones.Length, oldCount));
+            }
+
+            int parentHash = boneTransform.parent != null ? UMAUtils.StringToHash(boneTransform.parent.name) : 0;
+            newUmaBones[oldCount] = new UMATransform(boneTransform, boneHash, parentHash);
+            meshData.umaBones = newUmaBones;
+            meshData.umaBoneCount = newUmaBones.Length;
+            return true;
+        }
+
+        private Matrix4x4 ResolveBindPoseForBone(int boneHash, Transform boneTransform)
+        {
+            SkinnedMeshRenderer renderer = GetCurrentSkinnedMeshRenderer();
+            if (renderer != null && renderer.bones != null && renderer.sharedMesh != null && renderer.sharedMesh.bindposes != null)
+            {
+                Matrix4x4[] bindPoses = renderer.sharedMesh.bindposes;
+                for (int i = 0; i < renderer.bones.Length && i < bindPoses.Length; i++)
+                {
+                    Transform rendererBone = renderer.bones[i];
+                    if (rendererBone != null && UMAUtils.StringToHash(rendererBone.name) == boneHash)
+                    {
+                        return bindPoses[i];
+                    }
+                }
+            }
+
+            Transform rootTransform = renderer != null && renderer.rootBone != null ? renderer.rootBone : null;
+            if (rootTransform == null && thisDCA != null && thisDCA.umaData != null)
+            {
+                rootTransform = thisDCA.umaData.GetGlobalTransform();
+            }
+
+            if (boneTransform != null && rootTransform != null)
+            {
+                return boneTransform.worldToLocalMatrix * rootTransform.localToWorldMatrix;
+            }
+
+            return Matrix4x4.identity;
         }
 
         private void SmoothSelectedVertexWeights(float smoothAmount)
@@ -1869,7 +2424,7 @@ namespace UMA
             return meshData.boneNameHashes[boneIndex];
         }
 
-        private string GetBoneDisplayName(int boneHash, int boneIndex)
+        internal string GetBoneDisplayName(int boneHash, int boneIndex)
         {
             Transform boneTransform = thisDCA != null && thisDCA.umaData != null && thisDCA.umaData.skeleton != null
                 ? thisDCA.umaData.skeleton.GetBoneTransform(boneHash)
@@ -1882,21 +2437,26 @@ namespace UMA
             return boneHash != 0 ? "Hash " + boneHash : "Bone Index " + boneIndex;
         }
 
-        private SkinnedMeshRenderer GetCurrentSkinnedMeshRenderer()
+        private static SkinnedMeshRenderer GetSkinnedMeshRenderer(DynamicCharacterAvatar avatar)
         {
-            if (thisDCA != null && thisDCA.umaData != null)
+            if (avatar != null && avatar.umaData != null)
             {
-                SkinnedMeshRenderer renderer = thisDCA.umaData.GetRenderer(0);
+                SkinnedMeshRenderer renderer = avatar.umaData.GetRenderer(0);
                 if (renderer != null)
                 {
                     return renderer;
                 }
             }
 
-            return thisDCA != null ? thisDCA.GetComponentInChildren<SkinnedMeshRenderer>(true) : null;
+            return avatar != null ? avatar.GetComponentInChildren<SkinnedMeshRenderer>(true) : null;
         }
 
-        private List<BoneOption> GetSlotBoneOptions(VertexSelection selectedVertex)
+        private SkinnedMeshRenderer GetCurrentSkinnedMeshRenderer()
+        {
+            return GetSkinnedMeshRenderer(thisDCA);
+        }
+
+        internal List<BoneOption> GetSlotBoneOptions(VertexSelection selectedVertex)
         {
             List<BoneOption> options = new List<BoneOption>();
             if (!TryGetSelectionMeshData(selectedVertex, out UMAMeshData meshData, out _))
@@ -1918,14 +2478,58 @@ namespace UMA
                     boneIndex = i,
                     boneHash = boneHash,
                     boneName = boneName,
-                    displayName = boneName + " (index " + i + ", hash " + boneHash + ")"
+                    displayName = boneName + " (index " + i + ", hash " + boneHash + ")",
+                    isBound = true
                 });
             }
 
             return options;
         }
 
-        private List<VertexWeightComparison> BuildWeightComparisons(List<VertexWeightEntry> slotWeights, List<VertexWeightEntry> skinnedWeights)
+        internal List<BoneOption> GetEditableBoneOptions(VertexSelection selectedVertex)
+        {
+            List<BoneOption> options = GetSlotBoneOptions(selectedVertex);
+            HashSet<int> seenHashes = new HashSet<int>();
+            for (int i = 0; i < options.Count; i++)
+            {
+                if (options[i].boneHash != 0)
+                {
+                    seenHashes.Add(options[i].boneHash);
+                }
+            }
+
+            if (thisDCA == null || thisDCA.umaData == null || thisDCA.umaData.skeleton == null)
+            {
+                return options;
+            }
+
+            List<int> skeletonHashes = new List<int>(thisDCA.umaData.skeleton.boneHashData.Keys);
+            skeletonHashes.Sort();
+            for (int i = 0; i < skeletonHashes.Count; i++)
+            {
+                int boneHash = skeletonHashes[i];
+                if (seenHashes.Contains(boneHash))
+                {
+                    continue;
+                }
+
+                Transform boneTransform = thisDCA.umaData.skeleton.GetBoneTransform(boneHash);
+                string boneName = boneTransform != null ? boneTransform.name : "Hash " + boneHash;
+                options.Add(new BoneOption()
+                {
+                    boneIndex = -1,
+                    boneHash = boneHash,
+                    boneName = boneName,
+                    displayName = boneName + " (new binding, hash " + boneHash + ")",
+                    isBound = false
+                });
+                seenHashes.Add(boneHash);
+            }
+
+            return options;
+        }
+
+        internal List<VertexWeightComparison> BuildWeightComparisons(List<VertexWeightEntry> slotWeights, List<VertexWeightEntry> skinnedWeights)
         {
             Dictionary<int, VertexWeightComparison> comparisonsByHash = new Dictionary<int, VertexWeightComparison>();
             AddWeightsToComparisons(comparisonsByHash, slotWeights, true);
@@ -2438,54 +3042,65 @@ namespace UMA
             EnsureEditorEvents();
             //scene = EditorSceneManager.NewPreviewScene();
 
-            centeredLabel = new GUIStyle(GUI.skin.label);
-            centeredLabel.fontStyle = FontStyle.Bold;
-            centeredLabel.alignment = TextAnchor.MiddleCenter;
-
-            modifierEditor = MeshModifierEditor.GetOrCreateWindowFromModifier(Currentmodifier, thisDCA, this);
-            if (Currentmodifier != null)
+            if (slotWeightEditorMode)
             {
-                // Note: Setup() in MeshModifierEditor already creates a safe copy of EditorModifiers.
-                // Do NOT reassign modifierEditor.Modifiers here as it would replace the copy with a direct reference.
-                foreach (var newMod in modifierEditor.Modifiers)
-                {
-                    // get the type of the VertexAdjustment for this collection
-                    // no-op: adjustments are persisted directly via SerializeReference
-                    /*
-                    Type adjType = Type.GetType(newMod.AdjustmentType);
-                    Type colType = Type.GetType(newMod.CollectionType);
-                    newMod.adjustments = (VertexAdjustmentCollection)Activator.CreateInstance(colType);
-                    newMod.TemplateAdjustment = (VertexAdjustment)Activator.CreateInstance(adjType);
-                    foreach(string json in newMod.JsonAdjustments)
-                    {
-                        VertexAdjustment va = VertexAdjustment.FromJSON(json);
-                        if (va != null)
-                        {
-                            newMod.adjustments.Add(va);
-                        }
-                    } */
-                }
-
-                // Debug: Check adjustments count after foreach loop
-                int totalAfterLoop = 0;
-                foreach (var mod in modifierEditor.Modifiers)
-                {
-                    if (mod != null && mod.adjustments != null && mod.adjustments.vertexAdjustments != null)
-                    {
-                        totalAfterLoop += mod.adjustments.vertexAdjustments.Count;
-                    }
-                }
-                Debug.Log($"[OnOpenStage] After foreach loop: Modifiers.Count={modifierEditor.Modifiers.Count}, TotalAdjustments={totalAfterLoop}");
+                slotWeightEditorWindow = UmaSlotWeightEditorWindow.Open(this, slotWeightEditorSlotAsset);
             }
             else
             {
-                modifierEditor.Modifiers = new List<MeshModifier.Modifier>();
+                modifierEditor = MeshModifierEditor.GetOrCreateWindowFromModifier(Currentmodifier, thisDCA, this);
+                if (Currentmodifier != null)
+                {
+                    // Note: Setup() in MeshModifierEditor already creates a safe copy of EditorModifiers.
+                    // Do NOT reassign modifierEditor.Modifiers here as it would replace the copy with a direct reference.
+                    foreach (var newMod in modifierEditor.Modifiers)
+                    {
+                        // get the type of the VertexAdjustment for this collection
+                        // no-op: adjustments are persisted directly via SerializeReference
+                        /*
+                        Type adjType = Type.GetType(newMod.AdjustmentType);
+                        Type colType = Type.GetType(newMod.CollectionType);
+                        newMod.adjustments = (VertexAdjustmentCollection)Activator.CreateInstance(colType);
+                        newMod.TemplateAdjustment = (VertexAdjustment)Activator.CreateInstance(adjType);
+                        foreach(string json in newMod.JsonAdjustments)
+                        {
+                            VertexAdjustment va = VertexAdjustment.FromJSON(json);
+                            if (va != null)
+                            {
+                                newMod.adjustments.Add(va);
+                            }
+                        } */
+                    }
+
+                    // Debug: Check adjustments count after foreach loop
+                    int totalAfterLoop = 0;
+                    foreach (var mod in modifierEditor.Modifiers)
+                    {
+                        if (mod != null && mod.adjustments != null && mod.adjustments.vertexAdjustments != null)
+                        {
+                            totalAfterLoop += mod.adjustments.vertexAdjustments.Count;
+                        }
+                    }
+                    Debug.Log($"[OnOpenStage] After foreach loop: Modifiers.Count={modifierEditor.Modifiers.Count}, TotalAdjustments={totalAfterLoop}");
+                }
+                else
+                {
+                    modifierEditor.Modifiers = new List<MeshModifier.Modifier>();
+                }
             }
-            GameObject lightingObject = new GameObject("Directional Light");
+            lightingObject = new GameObject("Directional Light");
             lightingObject.transform.rotation = Quaternion.Euler(50, 330, 0);
             lightingObject.AddComponent<Light>().type = LightType.Directional;
 
-            SkinnedMeshRenderer smr = thisDCA.gameObject.GetComponentInChildren<SkinnedMeshRenderer>();
+            SkinnedMeshRenderer smr = GetCurrentSkinnedMeshRenderer();
+            if (smr == null)
+            {
+                EditorUtility.DisplayDialog("UMA Vertex Editing", "No SkinnedMeshRenderer was available for the vertex editor stage.", "OK");
+                return false;
+            }
+
+            stageSkinnedMeshRenderer = smr;
+            stageSkinnedMeshRendererWasEnabled = smr.enabled;
 
             BakedMesh = new Mesh();
             BakedMesh.name = "BakedMesh";
@@ -2521,10 +3136,11 @@ namespace UMA
             Tools.hidden = true;
             SceneView.duringSceneGui += OnSceneGUI;
             NeedsCameraSetup = true;
-            HelpBoxStyle = new GUIStyle(EditorStyles.miniLabel);
-            HelpBoxStyle.wordWrap = true;
             //AssetDatabase.StartAssetEditing();
-            thisDCA.GenerateSingleUMA();
+            if (!slotWeightEditorMode)
+            {
+                thisDCA.GenerateSingleUMA();
+            }
             cachedVisibilityHeight = -1f;
 
             return true;
@@ -2560,25 +3176,46 @@ namespace UMA
         {
             closing = true;
             Tools.hidden = false;
-            DestroyImmediate(VertexObject);
-            DestroyImmediate(lightingObject);
-            DestroyImmediate(cameraAnchor);
+            if (VertexObject != null)
+            {
+                DestroyImmediate(VertexObject);
+            }
+            if (lightingObject != null)
+            {
+                DestroyImmediate(lightingObject);
+            }
+            if (cameraAnchor != null)
+            {
+                DestroyImmediate(cameraAnchor);
+            }
             RefreshBakedMeshCaches();
             SceneView.duringSceneGui -= OnSceneGUI;
-            var wearables = thisDCA.GetVisibleWearables();
-            foreach (var wearable in wearables)
+            if (!ownsSlotWeightPreviewAvatar && stageSkinnedMeshRenderer != null)
             {
-                wearable.disabled = false;
+                stageSkinnedMeshRenderer.enabled = stageSkinnedMeshRendererWasEnabled;
             }
-            thisDCA.umaData.ManualMeshModifiers = new List<MeshModifier.Modifier>();
-            if (thisDCA.editorTimeGeneration)
+            if (thisDCA != null && !slotWeightEditorReadOnly)
             {
-                thisDCA.ignoreMeshHideAssets = false;
-                thisDCA.GenerateSingleUMA();
+                var wearables = thisDCA.GetVisibleWearables();
+                foreach (var wearable in wearables)
+                {
+                    wearable.disabled = false;
+                }
+                thisDCA.umaData.ManualMeshModifiers = new List<MeshModifier.Modifier>();
+                if (!ownsSlotWeightPreviewAvatar && thisDCA.editorTimeGeneration)
+                {
+                    thisDCA.ignoreMeshHideAssets = false;
+                    thisDCA.GenerateSingleUMA();
+                }
             }
             if (modifierEditor != null)
             {
                 modifierEditor.Close();
+            }
+            if (slotWeightEditorWindow != null)
+            {
+                slotWeightEditorWindow.Close();
+                slotWeightEditorWindow = null;
             }
             if (vertexMaterial != null)
             {
@@ -2587,6 +3224,10 @@ namespace UMA
             if (vertexMesh != null)
             {
                 DestroyImmediate(vertexMesh);
+            }
+            if (ownsSlotWeightPreviewAvatar && thisDCA != null && thisDCA.gameObject != null)
+            {
+                DestroyImmediate(thisDCA.gameObject);
             }
             base.OnCloseStage();
         }
@@ -2710,9 +3351,9 @@ namespace UMA
                 bool changed = DoGizmoInput();
                 if (changed)
                 {
-                    modifierEditor.Repaint();
+                    RepaintLinkedEditors();
 
-                    if (modifierEditor.RebuildOnChanges)
+                    if (modifierEditor != null && modifierEditor.RebuildOnChanges)
                     {
                         modifierEditor.DoCharacterRebuild();
                     }
@@ -2720,6 +3361,7 @@ namespace UMA
             }
 
             Handles.BeginGUI();
+            EnsureGUIStyles();
 
             if (isEditing == false)
             {
@@ -3198,8 +3840,19 @@ namespace UMA
         private void DrawGUIWindows(SceneView sceneView)
         {
             Handles.BeginGUI();
+            EnsureGUIStyles();
             GUILayout.BeginArea(leftPanelRect, EditorStyles.helpBox);
             {
+                if (slotWeightEditorMode)
+                {
+                    VertexEditorScrollLocation = GUILayout.BeginScrollView(VertexEditorScrollLocation);
+                    DoToolsPanel();
+                    GUILayout.EndScrollView();
+                    GUILayout.EndArea();
+                    Handles.EndGUI();
+                    return;
+                }
+
                 float availableHeight = leftPanelRect.height - (LeftPanelPadding * 2f);
                 float maxVisibilityHeight = Mathf.Max(50f, availableHeight * 0.5f);
                if (cachedVisibilityHeight < 0f)
@@ -3401,12 +4054,12 @@ namespace UMA
             if (wasChanged)
             {
                 RebuildMesh(false);
-                modifierEditor.Repaint();
+                RepaintLinkedEditors();
             }
             if (wasRecipeChanged)
             {
                 RebuildMesh(true);
-                modifierEditor.Repaint();
+                RepaintLinkedEditors();
             }
         }
 
@@ -3416,6 +4069,21 @@ namespace UMA
         bool doneButton = false;
         public float ToolWindowAreaHeight = 0.0f;
         public MeshModifierEditor.EditorMode editorMode = MeshModifierEditor.EditorMode.VertexAdjustments;
+
+        private void EnsureGUIStyles()
+        {
+            if (centeredLabel == null)
+            {
+                centeredLabel = new GUIStyle(EditorStyles.boldLabel);
+                centeredLabel.alignment = TextAnchor.MiddleCenter;
+            }
+
+            if (HelpBoxStyle == null)
+            {
+                HelpBoxStyle = new GUIStyle(EditorStyles.miniLabel);
+                HelpBoxStyle.wordWrap = true;
+            }
+        }
 
         public void DoToolsWindow(int ID)
         {
@@ -3449,19 +4117,26 @@ namespace UMA
             GUILayout.Label("Inactive", GUILayout.Width(82));
             InactiveColor = EditorGUILayout.ColorField(InactiveColor, GUILayout.Width(90));
             GUILayout.EndHorizontal();
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Smooth Amount", GUILayout.Width(82));
-            weightSmoothAmount = EditorGUILayout.Slider(weightSmoothAmount, 0.0f, 1.0f);
-            GUILayout.EndHorizontal();
-            EditorGUI.BeginDisabledGroup(SelectedVertexes == null || SelectedVertexes.Count == 0);
-            if (GUILayout.Button("Smooth Selected Weights"))
+            if (slotWeightEditorReadOnly)
             {
-                SmoothSelectedVertexWeights(weightSmoothAmount);
+                EditorGUILayout.HelpBox("Current character mode is read-only. Select vertices to inspect generated weights.", MessageType.Info);
             }
-            EditorGUI.EndDisabledGroup();
-            if (GUILayout.Button("View/Edit Vertex Weights"))
+            else
             {
-                ShowCurrentVertexWeightsPopup();
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Smooth Amount", GUILayout.Width(82));
+                weightSmoothAmount = EditorGUILayout.Slider(weightSmoothAmount, 0.0f, 1.0f);
+                GUILayout.EndHorizontal();
+                EditorGUI.BeginDisabledGroup(SelectedVertexes == null || SelectedVertexes.Count == 0);
+                if (GUILayout.Button("Smooth Selected Weights"))
+                {
+                    SmoothSelectedVertexWeights(weightSmoothAmount);
+                }
+                EditorGUI.EndDisabledGroup();
+                if (GUILayout.Button("View/Edit Vertex Weights"))
+                {
+                    ShowCurrentVertexWeightsPopup();
+                }
             }
             GUIHelper.EndVerticalPadded(5);
             #endregion
@@ -3567,7 +4242,7 @@ namespace UMA
                     {
                         Undo.RegisterCompleteObjectUndo(this, "Select Vertexes By Raycast");
                         SelectByRaycast();
-                        modifierEditor.Repaint();
+                        RepaintLinkedEditors();
                         SceneView.RepaintAll();
                     }
                     EditorGUI.EndDisabledGroup();
@@ -3609,14 +4284,14 @@ namespace UMA
                 Undo.RegisterCompleteObjectUndo(this, "Load Vertex Selection");
                 SelectedVertexes.Clear();
                 LoadSelections();
-                modifierEditor.Repaint();
+                RepaintLinkedEditors();
             }
             if (GUILayout.Button("Append", threeButtonStyle))
             {
                 // Append the vertex selections
                 Undo.RegisterCompleteObjectUndo(this, "Append Vertex Selection");
                 LoadSelections();
-                modifierEditor.Repaint();
+                RepaintLinkedEditors();
             }
             GUILayout.EndHorizontal();
 
@@ -3627,13 +4302,13 @@ namespace UMA
                 {
                     Undo.RegisterCompleteObjectUndo(this, "Invert Vertex Selection");
                     InvertSelection();
-                    modifierEditor.Repaint();
+                    RepaintLinkedEditors();
                 }
                 if (GUILayout.Button("Select All", smallButtonStyle))
                 {
                     Undo.RegisterCompleteObjectUndo(this, "Select All Vertexes");
                     SelectAll();
-                    modifierEditor.Repaint();
+                    RepaintLinkedEditors();
                 }
                 GUILayout.EndHorizontal();
                 GUILayout.BeginHorizontal();
@@ -3641,7 +4316,7 @@ namespace UMA
                 {
                     Undo.RegisterCompleteObjectUndo(this, "Clear Vertex Selection");
                     SelectedVertexes.Clear();
-                    modifierEditor.Repaint();
+                    RepaintLinkedEditors();
                 }
                 GUILayout.EndHorizontal();
             }
@@ -3655,7 +4330,7 @@ namespace UMA
                     {
                         SelectedVertexes[i].isActive = !SelectedVertexes[i].isActive;
                     }
-                    modifierEditor.Repaint();
+                    RepaintLinkedEditors();
                 }
                 if (GUILayout.Button("Activate all", smallButtonStyle))
                 {
@@ -3664,7 +4339,7 @@ namespace UMA
                     {
                         SelectedVertexes[i].isActive = true;
                     }
-                    modifierEditor.Repaint();
+                    RepaintLinkedEditors();
                 }
                 GUILayout.EndHorizontal();
                 GUILayout.BeginHorizontal();
@@ -3675,18 +4350,16 @@ namespace UMA
                     {
                         SelectedVertexes[i].isActive = false;
                     }
-                    modifierEditor.Repaint();
+                        RepaintLinkedEditors();
                 }
                 GUILayout.EndHorizontal();
             }
             GUIHelper.EndVerticalPadded(5);
             #endregion
 
-
             //GUILayout.Label("camera: " + sceneView.camera.transform.position.ToString());
             if (GUILayout.Button("Reset Camera"))
             {
-                SceneView.lastActiveSceneView.pivot = new Vector3(0, 1, 2.5f);
                 Selection.activeObject = VertexObject;
                 sceneView.AlignViewToObject(cameraAnchor.transform);
                 sceneView.FrameSelected(true);
@@ -3701,7 +4374,7 @@ namespace UMA
                 }
                 else
                 {
-                    GUILayout.TextArea("Define Vertex Set mode\nLeft-click applies Set Action to a vertex\nLeft-drag box applies Set Action to multiple vertices\nSet Action is selected from Add / Remove / Invert\n\nHold Alt and use mouse buttons/wheel to navigate.", HelpBoxStyle);
+                    GUILayout.TextArea("Define Vertex Set mode\nClick a vertex, or click-drag a rectangle, to change the selection\nSet Action is selected from Add / Remove / Invert\n\nHold Alt and use mouse buttons/wheel to navigate.", HelpBoxStyle);
                 }
             }
             else
@@ -3712,13 +4385,13 @@ namespace UMA
                 }
                 else
                 {
-                    GUILayout.TextArea("Define Vertex State mode\nOnly affects already selected vertices\nLeft-click applies State Action\nState Action is selected from Toggle / Activate / Deactivate\n\nHold Alt and use mouse buttons/wheel to navigate.", HelpBoxStyle);
+                    GUILayout.TextArea("Define Vertex State mode\nOnly affects already selected vertices\nClick a selected vertex, or click-drag a rectangle, to apply State Action\nState Action is selected from Toggle / Activate / Deactivate\n\nHold Alt and use mouse buttons/wheel to navigate.", HelpBoxStyle);
                 }
             }
             if (Event.current.type == EventType.Repaint)
             {
-                float height = GUILayoutUtility.GetLastRect().yMax;
-                ToolWindowAreaHeight = height;
+                Rect lastRect = GUILayoutUtility.GetLastRect();
+                ToolWindowAreaHeight = Mathf.Max(50f, lastRect.yMax + 10f);
             }
             GUIHelper.EndVerticalPadded(5);
             GUILayout.EndArea();
@@ -3764,7 +4437,7 @@ namespace UMA
             {
                 if (currentEvent.control)
                 {
-                    return selectMode.InvertSelection;
+                    return selectMode.Remove;
                 }
 
                 if (currentEvent.shift)
@@ -3992,7 +4665,7 @@ namespace UMA
                 }
             }
             EditorUtility.ClearProgressBar();
-            modifierEditor.Repaint();
+            RepaintLinkedEditors();
         }
 
         private bool PaintSelect(Event currentEvent)
@@ -4065,7 +4738,7 @@ namespace UMA
 
             if (changed)
             {
-                modifierEditor.Repaint();
+                RepaintLinkedEditors();
                 SceneView.RepaintAll();
             }
 
@@ -4426,7 +5099,7 @@ namespace UMA
                     }
                 }
             }
-            modifierEditor.Repaint();
+            RepaintLinkedEditors();
             return found;
         }
 
@@ -4489,6 +5162,15 @@ namespace UMA
             if (gb != null)
             {
                 gb.Clear();
+                if (slotWeightEditorMode && slotWeightEditorSlotAsset != null)
+                {
+                    InstallSlotWeightEditorSlot(thisDCA, slotWeightEditorSlotAsset, out _);
+                    thisDCA.umaData.Dirty(true, true, true);
+                    gb.GenerateSingleUMA(thisDCA.umaData, true);
+                    gb.Clear();
+                    return;
+                }
+
                 if (RecipeChanged)
                 {
                     var suppressed = SaveSuppressedSlots();

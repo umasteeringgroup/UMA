@@ -28,7 +28,7 @@
     "invertZ": false,
     "alwaysRecreateSlots": true,
     "Tags": [],
-    "slotMaterialPath": "Assets/UMA/Core/ShaderPackages/UMAMaterial_UMA_URP_HAIR.asset",
+    "slotMaterialPath": "Assets/UMA/Core/ShaderGraphs/UMAMaterial/UMAMaterial_UMA_URP_HAIR.asset",
     "slotFolderPath": "Assets/temp",
     "generateSlotLods": true,
     "useUnityLodGenerator": true,

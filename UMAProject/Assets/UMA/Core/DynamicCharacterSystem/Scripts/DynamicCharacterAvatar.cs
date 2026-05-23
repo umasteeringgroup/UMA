@@ -246,6 +246,8 @@ namespace UMA.CharacterSystem
         public SaveOptions defaultSaveOptions = SaveOptions.saveDNA | SaveOptions.saveWardrobe | SaveOptions.saveColors | SaveOptions.saveAnimator;
         //
         public Vector3 BoundsOffset;
+        [Tooltip("Draw this avatar's renderer bounds in the Scene view.")]
+        public bool visualizeRendererBounds = false;
 
         private List<UMATextRecipe> SuppressedRecipes = new List<UMATextRecipe>();
         private List<SlotData> HiddenSlots = new List<SlotData>();
@@ -6641,6 +6643,7 @@ namespace UMA.CharacterSystem
 
         public void ApplyBounds()
         {
+            Debug.Log("Applying Bounds Offset: " + BoundsOffset);
             SkinnedMeshRenderer smr = this.gameObject.GetComponentInChildren<SkinnedMeshRenderer>();
             smr.localBounds = new Bounds(smr.localBounds.center + BoundsOffset, smr.localBounds.size);
         }
