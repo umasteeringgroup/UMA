@@ -20,8 +20,8 @@ MonoBehaviour:
   - Human Male 3.0
   wardrobeRecipeThumbs:
   - race: Human Male 3.0
-    filename: Assets/UMA/UMA3/Wearables/Icons/Beard/Human Male 3.0/17_Beard_SoulPatch_Bushy.png
-    thumb: {fileID: 21300000, guid: 9ec2325d200f48f4da98cf15703990f1, type: 3}
+    filename: Assets/UMA/UMA3/Wearables/Icons/Beard/Human Male 3.0/18_Beard_SoulPatch_Bushy.png
+    thumb: {fileID: 21300000, guid: 781a9e0a97a31ae45bf679c1aa0220be, type: 3}
   wardrobeSlot: Beard
   Appended: 0
   Hides: []

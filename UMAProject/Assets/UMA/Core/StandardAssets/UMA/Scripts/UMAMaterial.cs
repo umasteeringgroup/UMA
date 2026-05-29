@@ -43,18 +43,13 @@ namespace UMA
             EnsureSupportedChannelTextureFormats(channels);
         }
 
-        private bool hdrpchecked = false;
         private bool checkedHDRPResult = false;
 
         private bool isHDRP
         {
             get
             {
-                //if (!hdrpchecked)
-                //{
-                    checkedHDRPResult = GraphicsSettings.currentRenderPipeline != null && GraphicsSettings.currentRenderPipeline.GetType().ToString().Contains("HDRenderPipelineAsset");
-                  //  hdrpchecked = true;
-                //}
+                checkedHDRPResult = GraphicsSettings.currentRenderPipeline != null && GraphicsSettings.currentRenderPipeline.GetType().ToString().Contains("HDRenderPipelineAsset");
                 return checkedHDRPResult;
             }
         }

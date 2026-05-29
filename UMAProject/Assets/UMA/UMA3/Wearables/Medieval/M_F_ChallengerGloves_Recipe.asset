@@ -21,8 +21,8 @@ MonoBehaviour:
   - Human Female 3.0
   wardrobeRecipeThumbs:
   - race: Human Male 3.0
-    filename: 
-    thumb: {fileID: 0}
+    filename: Assets/UMA/UMA3/Wearables/Icons/Hands/Human Male 3.0/1_M_F_ChallengerGloves_Recipe.png
+    thumb: {fileID: 21300000, guid: c430a658061159d47944e26711106b02, type: 3}
   - race: Human Female 3.0
     filename: 
     thumb: {fileID: 0}

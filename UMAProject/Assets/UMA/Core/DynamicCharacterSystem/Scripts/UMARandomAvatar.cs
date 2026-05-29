@@ -168,7 +168,7 @@ namespace UMA
                     if (rc.ColorTable != null)
 					{
 						OverlayColorData ocd = GetRandomColor(rc);
-						Avatar.SetColor(rc.ColorName, ocd, false);
+						Avatar.SetRawColor(rc.ColorName, ocd, false);
 					}
 				}
 			}
@@ -223,7 +223,7 @@ namespace UMA
                         RandomColors rc = ra.SharedColors[i];
                         if (rc.ColorTable != null)
 						{
-							Avatar.SetColor(rc.ColorName, GetRandomColor(rc), false);
+							Avatar.SetRawColor(rc.ColorName, GetRandomColor(rc), false);
 						}
 					}
 				}

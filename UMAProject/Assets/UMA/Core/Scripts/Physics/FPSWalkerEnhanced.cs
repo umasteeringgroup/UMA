@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.InputSystem;
 using System;
 
 namespace UMA.Dynamics.Examples
@@ -7,66 +8,55 @@ namespace UMA.Dynamics.Examples
     [RequireComponent(typeof(CharacterController))]
     public class FPSWalkerEnhanced : MonoBehaviour
     {
+        private UMAPlayerActions controls;
+
+        private bool runPressed;
+        private bool crouchPressed;
+
         [Header("Speeds")]
         public float walkSpeed = 6.0f;
         public float runSpeed = 11.0f;
         public float crouchSpeedMultiplier = 0.5f;
 
         [Header("Movement")]
-        // If true, diagonal speed (when strafing + moving forward or back) can't exceed normal move speed
         public bool limitDiagonalSpeed = true;
-        [Tooltip("Time to accelerate to target horizontal speed (seconds)")]
-        [Min(0f)] public float accelTime = 0.08f;
-        [Tooltip("Time to decelerate to stop (seconds)")]
-        [Min(0f)] public float decelTime = 0.12f;
-        [Tooltip("How much control in air (0 = none, 1 = full)")]
-        [Range(0f, 1f)] public float airControl = 0.2f;
+        public float accelTime = 0.08f;
+        public float decelTime = 0.12f;
+        public float airControl = 0.2f;
 
         [Header("Run & Jump")]
-        // If checked, the run key toggles between running and walking. Otherwise player runs if the key is held down and walks otherwise
-        // There must be a button set up in the Input Manager called "Run"
         public bool toggleRun = false;
         public float jumpSpeed = 8.0f;
         public float gravity = 20.0f;
         public float terminalVelocity = 55.0f;
-        
-        [Tooltip("Coyote time: allowed jump time after leaving ground (seconds)")]
-        [Min(0f)] public float coyoteTime = 0.1f;
-        [Tooltip("Jump buffer: remember jump press this long before landing (seconds)")]
-        [Min(0f)] public float jumpBufferTime = 0.1f;
-        
-        // Units that player can fall before a falling damage function is run. To disable, type "infinity" in the inspector
+        public float coyoteTime = 0.1f;
+        public float jumpBufferTime = 0.1f;
         public float fallingDamageThreshold = 10.0f;
 
         [Header("Slopes & Sliding")]
-        // If the player ends up on a slope which is at least the Slope Limit as set on the character controller, then he will slide down
         public bool slideWhenOverSlopeLimit = false;
-        // If checked and the player is on an object tagged "Slide", he will slide down it regardless of the slope limit
         public bool slideOnTaggedObjects = false;
         public float slideSpeed = 12.0f;
-        // Small amounts of this results in bumping when walking down slopes, but large amounts results in falling too fast
         public float antiBumpFactor = .75f;
 
         [Header("Anti-bhop (legacy)")]
-        // Player must be grounded for at least this many physics frames before being able to jump again; set to 0 to allow bunny hopping
         public int antiBunnyHopFactor = 1;
 
         [Header("Crouch")]
         public bool enableCrouch = true;
         public bool toggleCrouch = false;
-        public KeyCode crouchKey = KeyCode.LeftControl;
-        [Min(0.5f)] public float crouchHeight = 1.0f;
-        [Min(0f)] public float crouchTransitionTime = 0.1f;
+        public float crouchHeight = 1.0f;
+        public float crouchTransitionTime = 0.1f;
 
         [Header("Camera FX (optional)")]
         public Camera playerCamera;
-        [Tooltip("Extra FOV added while sprinting")] public float sprintFOVKick = 6f;
-        [Min(0f)] public float fovLerpTime = 0.2f;
-        [Tooltip("Head bob amplitude in units")] public float headBobAmplitude = 0.02f;
-        [Tooltip("Head bob frequency at full speed")] public float headBobFrequency = 10f;
-        [Tooltip("Distance between footsteps to trigger footstep event")] public float stepInterval = 2.2f;
+        public float sprintFOVKick = 6f;
+        public float fovLerpTime = 0.2f;
+        public float headBobAmplitude = 0.02f;
+        public float headBobFrequency = 10f;
+        public float stepInterval = 2.2f;
 
-        [Header("Events")] 
+        [Header("Events")]
         public UnityEvent OnJump;
         public UnityEvent OnLanded;
         [Serializable] public class FloatEvent : UnityEvent<float> { }
@@ -76,12 +66,12 @@ namespace UMA.Dynamics.Examples
         public UnityEvent OnCrouchEnd;
 
         // Private state
-        private Vector3 moveVelocity; // horizontal velocity (world)
+        private Vector3 moveVelocity;
         private float verticalVelocity;
         private bool grounded = false;
         private CharacterController controller;
         private Transform myTransform;
-        private float speed; // current target speed (walk/run)
+        private float speed;
         private RaycastHit hit;
         private float fallStartLevel;
         private bool falling;
@@ -94,11 +84,32 @@ namespace UMA.Dynamics.Examples
         private bool isCrouching;
         private float standingHeight;
         private Vector3 standingCenter;
-        private float crouchVelocity; // for smooth damp of height
         private float baseFOV;
         private Vector3 camLocalBase;
         private float headBobTimer;
         private float stepCycle;
+
+        // -------------------------
+        // NEW INPUT SYSTEM SETUP
+        // -------------------------
+        void Awake()
+        {
+            controls = new UMAPlayerActions();
+
+            controls.Player.Run.performed += ctx => runPressed = true;
+            controls.Player.Crouch.performed += ctx => crouchPressed = true;
+
+            //controls.Player.Shoot.performed += ctx => Debug.Log("Shoot action performed!");
+
+
+            controls.Player.Jump.performed += ctx =>
+            {
+                lastJumpPressedTime = Time.time;
+            };
+        }
+
+        void OnEnable() => controls.Enable();
+        void OnDisable() => controls.Disable();
 
         void Start()
         {
@@ -107,13 +118,13 @@ namespace UMA.Dynamics.Examples
             speed = walkSpeed;
             rayDistance = controller.height * .5f + controller.radius;
             slideLimit = controller.slopeLimit - .1f;
-            jumpTimer = antiBunnyHopFactor;
+            jumpTimer = antiBunnyHopFactor; 
             standingHeight = controller.height;
             standingCenter = controller.center;
+
             if (playerCamera == null)
-            {
                 playerCamera = GetComponentInChildren<Camera>();
-            }
+
             if (playerCamera != null)
             {
                 baseFOV = playerCamera.fieldOfView;
@@ -121,14 +132,20 @@ namespace UMA.Dynamics.Examples
             }
         }
 
+        // -------------------------------------------------------
+        // FULL NEW-INPUT-SYSTEM FIXEDUPDATE
+        // -------------------------------------------------------
         void FixedUpdate()
         {
-            float inputX = Input.GetAxisRaw("Horizontal");
-            float inputY = Input.GetAxisRaw("Vertical");
-            float inputModifyFactor = (inputX != 0.0f && inputY != 0.0f && limitDiagonalSpeed) ? 0.7071f : 1.0f;
+            Vector2 currentMoveInput = controls.Player.Move.ReadValue<Vector2>();
+            bool runHeld = controls.Player.Run.ReadValue<float>() > 0.5f;
+            float inputX = currentMoveInput.x;
+            float inputY = currentMoveInput.y;
+            float inputModifyFactor =
+                (inputX != 0 && inputY != 0 && limitDiagonalSpeed) ? 0.7071f : 1f;
 
-            // Ground check via controller flags (Move result) from previous frame is used; we also raycast to detect sliding
             bool sliding = false;
+
             if (grounded)
             {
                 if (Physics.Raycast(myTransform.position, Vector3.down, out hit, rayDistance))
@@ -146,32 +163,33 @@ namespace UMA.Dynamics.Examples
                     falling = false;
                     float fallDistance = fallStartLevel - myTransform.position.y;
                     if (fallDistance > fallingDamageThreshold)
-                    {
                         FallingDamageAlert(fallDistance);
-                    }
+
                     OnLanded?.Invoke();
                 }
 
-                // Run speed selection (supports toggle)
                 if (!toggleRun)
-                {
-                    speed = Input.GetKey(KeyCode.LeftShift) ? runSpeed : walkSpeed;
-                }
+                    speed = runHeld ? runSpeed : walkSpeed;
 
-                // Determine target horizontal velocity
                 Vector3 inputDirLocal = new Vector3(inputX * inputModifyFactor, 0f, inputY * inputModifyFactor);
-                Vector3 inputDirWorld = myTransform.TransformDirection(inputDirLocal).normalized;
+                Vector3 inputDirWorld = playerCamera != null
+                    ? (playerCamera.transform.right * inputX) + (playerCamera.transform.forward * inputY)
+                    : myTransform.TransformDirection(inputDirLocal);
+
+                inputDirWorld.y = 0f;
+                inputDirWorld.Normalize();
+
+
                 float targetSpeed = speed * (isCrouching ? crouchSpeedMultiplier : 1f);
 
                 Vector3 targetVel = inputDirWorld * (inputDirLocal.sqrMagnitude > 0f ? targetSpeed : 0f);
 
-                // Accel/Decel smoothing for horizontal movement
                 float t = (targetVel.sqrMagnitude > 0.001f) ? accelTime : decelTime;
                 float accel = (t <= 0.0001f) ? float.PositiveInfinity : (1f / t);
                 moveVelocity = Vector3.MoveTowards(moveVelocity, targetVel, accel * Time.fixedDeltaTime * targetSpeed);
 
-                // Sliding overrides horizontal control
-                if ((sliding && slideWhenOverSlopeLimit) || (slideOnTaggedObjects && hit.collider != null && hit.collider.CompareTag("Slide")))
+                if ((sliding && slideWhenOverSlopeLimit) ||
+                    (slideOnTaggedObjects && hit.collider != null && hit.collider.CompareTag("Slide")))
                 {
                     Vector3 hitNormal = hit.normal;
                     Vector3 slideDir = new Vector3(hitNormal.x, -hitNormal.y, hitNormal.z);
@@ -179,12 +197,15 @@ namespace UMA.Dynamics.Examples
                     moveVelocity = slideDir * slideSpeed;
                 }
 
-                // Jump buffer + coyote time + anti-bhop frames
-                if (!Input.GetButton("Jump"))
-                {
+                bool jumpHeld = controls.Player.Jump.ReadValue<float>() > 0.5f;
+                if (!jumpHeld)
                     jumpTimer++;
-                }
-                bool canJump = (Time.time - lastGroundedTime) <= coyoteTime && (Time.time - lastJumpPressedTime) <= jumpBufferTime && jumpTimer >= antiBunnyHopFactor;
+
+                bool canJump =
+                    (Time.time - lastGroundedTime) <= coyoteTime &&
+                    (Time.time - lastJumpPressedTime) <= jumpBufferTime &&
+                    jumpTimer >= antiBunnyHopFactor;
+
                 if (canJump)
                 {
                     verticalVelocity = jumpSpeed;
@@ -194,11 +215,10 @@ namespace UMA.Dynamics.Examples
                 }
                 else if (verticalVelocity < 0f)
                 {
-                    // Small downward force to keep grounded gently
                     verticalVelocity = -antiBumpFactor;
                 }
             }
-            else // in air
+            else
             {
                 if (!falling)
                 {
@@ -206,7 +226,6 @@ namespace UMA.Dynamics.Examples
                     fallStartLevel = myTransform.position.y;
                 }
 
-                // Air control
                 if (airControl > 0f)
                 {
                     Vector3 inputDirLocal = new Vector3(inputX * inputModifyFactor, 0f, inputY * inputModifyFactor);
@@ -216,73 +235,76 @@ namespace UMA.Dynamics.Examples
                 }
             }
 
-            // Gravity
             verticalVelocity -= gravity * Time.fixedDeltaTime;
-            if (verticalVelocity < -terminalVelocity) verticalVelocity = -terminalVelocity;
+            if (verticalVelocity < -terminalVelocity)
+                verticalVelocity = -terminalVelocity;
 
-            // Move
             Vector3 motion = new Vector3(moveVelocity.x, verticalVelocity, moveVelocity.z) * Time.fixedDeltaTime;
             CollisionFlags flags = controller.Move(motion);
+
             bool wasGrounded = grounded;
             grounded = (flags & CollisionFlags.Below) != 0 || controller.isGrounded;
+
             if (grounded)
             {
                 lastGroundedTime = Time.time;
                 if (!wasGrounded && verticalVelocity < 0f)
-                {
-                    verticalVelocity = -antiBumpFactor; // reset on land
-                }
+                    verticalVelocity = -antiBumpFactor;
             }
         }
 
+        // -------------------------------------------------------
+        // UPDATE (new input system)
+        // -------------------------------------------------------
         void Update()
         {
-            // Run toggle handled here for responsiveness
-            if (toggleRun && grounded && Input.GetButtonDown("Run"))
+            bool crouchHeld = controls.Player.Crouch.ReadValue<float>() > 0.5f;
+
+            if (toggleRun && grounded && runPressed)
             {
-                speed = (Mathf.Approximately(speed, walkSpeed) ? runSpeed : walkSpeed);
+                speed = Mathf.Approximately(speed, walkSpeed) ? runSpeed : walkSpeed;
+                runPressed = false;
             }
 
-            // Jump buffer input capture
-            if (Input.GetButtonDown("Jump"))
-            {
-                lastJumpPressedTime = Time.time;
-            }
-
-            // Crouch handling
             if (enableCrouch)
             {
-                bool crouchPressed = toggleCrouch ? Input.GetKeyDown(crouchKey) : Input.GetKey(crouchKey);
                 if (toggleCrouch)
                 {
                     if (crouchPressed)
                     {
                         SetCrouch(!isCrouching);
+                        crouchPressed = false;
                     }
                 }
                 else
                 {
-                    SetCrouch(crouchPressed);
+                    SetCrouch(crouchHeld);
                 }
             }
 
-            // Camera effects (FOV kick & head bob)
             if (playerCamera != null)
             {
-                float targetFOV = baseFOV + ((Mathf.Approximately(speed, runSpeed) && !isCrouching) ? sprintFOVKick : 0f);
-                playerCamera.fieldOfView = Mathf.Lerp(playerCamera.fieldOfView, targetFOV, Time.deltaTime / Mathf.Max(0.0001f, fovLerpTime));
+                float targetFOV = baseFOV +
+                    ((Mathf.Approximately(speed, runSpeed) && !isCrouching) ? sprintFOVKick : 0f);
 
-                // Head bob only when moving and grounded
+                playerCamera.fieldOfView =
+                    Mathf.Lerp(playerCamera.fieldOfView, targetFOV,
+                    Time.deltaTime / Mathf.Max(0.0001f, fovLerpTime));
+
                 Vector3 camLocal = camLocalBase;
                 Vector2 horizVel = new Vector2(moveVelocity.x, moveVelocity.z);
                 float moveAmount = Mathf.Clamp01(horizVel.magnitude / Mathf.Max(0.01f, runSpeed));
+
                 if (grounded && moveAmount > 0.01f)
                 {
-                    headBobTimer += Time.deltaTime * Mathf.Lerp(headBobFrequency * 0.6f, headBobFrequency, moveAmount);
-                    float bob = Mathf.Sin(headBobTimer * Mathf.PI * 2f) * headBobAmplitude * moveAmount * (isCrouching ? 0.5f : 1f);
+                    headBobTimer += Time.deltaTime *
+                        Mathf.Lerp(headBobFrequency * 0.6f, headBobFrequency, moveAmount);
+
+                    float bob = Mathf.Sin(headBobTimer * Mathf.PI * 2f) *
+                        headBobAmplitude * moveAmount * (isCrouching ? 0.5f : 1f);
+
                     camLocal.y += bob;
 
-                    // Footstep event on down crossing
                     if (OnFootstep != null)
                     {
                         stepCycle += horizVel.magnitude * Time.deltaTime;
@@ -298,7 +320,9 @@ namespace UMA.Dynamics.Examples
                     headBobTimer = 0f;
                     stepCycle = 0f;
                 }
-                playerCamera.transform.localPosition = Vector3.Lerp(playerCamera.transform.localPosition, camLocal, 0.25f);
+
+                playerCamera.transform.localPosition =
+                    Vector3.Lerp(playerCamera.transform.localPosition, camLocal, 0.25f);
             }
         }
 
@@ -310,13 +334,15 @@ namespace UMA.Dynamics.Examples
             isCrouching = crouch;
 
             float targetHeight = isCrouching ? crouchHeight : standingHeight;
-            Vector3 targetCenter = isCrouching ? new Vector3(standingCenter.x, crouchHeight * 0.5f, standingCenter.z) : standingCenter;
+            Vector3 targetCenter = isCrouching
+                ? new Vector3(standingCenter.x, crouchHeight * 0.5f, standingCenter.z)
+                : standingCenter;
 
-            // Smoothly change collider height/center over time
             StopAllCoroutines();
             StartCoroutine(CrouchRoutine(targetHeight, targetCenter));
 
-            if (isCrouching) OnCrouchStart?.Invoke(); else OnCrouchEnd?.Invoke();
+            if (isCrouching) OnCrouchStart?.Invoke();
+            else OnCrouchEnd?.Invoke();
         }
 
         System.Collections.IEnumerator CrouchRoutine(float targetHeight, Vector3 targetCenter)
@@ -325,6 +351,7 @@ namespace UMA.Dynamics.Examples
             Vector3 startCenter = controller.center;
             float t = 0f;
             float duration = Mathf.Max(0.0001f, crouchTransitionTime);
+
             while (t < 1f)
             {
                 t += Time.deltaTime / duration;
@@ -332,25 +359,21 @@ namespace UMA.Dynamics.Examples
                 controller.center = Vector3.Lerp(startCenter, targetCenter, t);
                 yield return null;
             }
+
             controller.height = targetHeight;
             controller.center = targetCenter;
         }
 
-        // Store point that we're in contact with for use in FixedUpdate if needed
         void OnControllerColliderHit(ControllerColliderHit hit)
         {
             contactPoint = hit.point;
         }
 
-        // If falling damage occurred, do something about it.
         void FallingDamageAlert(float fallDistance)
         {
             OnFallDamage?.Invoke(fallDistance);
-            // Fallback log for projects not wiring the event
             if (OnFallDamage == null)
-            {
                 Debug.Log("Ouch! Fell " + fallDistance + " units!");
-            }
         }
     }
 }

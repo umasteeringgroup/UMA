@@ -1440,8 +1440,11 @@ namespace UMA.CharacterSystem
                     var v = GetDNA();
                     for (int i = 0; i < adf.Dna.Length; i++)
                     {
-                        DnaDef d = adf.Dna[i];
-                        v[d.Name].Set(d.Value);
+                        if (v.ContainsKey(adf.Dna[i].Name))
+                        {
+                            DnaDef d = adf.Dna[i];
+                            v[d.Name].Set(d.Value);
+                        }
                     }
                 }
                 else
@@ -3034,7 +3037,11 @@ namespace UMA.CharacterSystem
         //NOTE needs to be public for the editor
         public void UpdateColors(bool triggerDirty = false)
         {
-            if (umaData.umaRecipe.sharedColors == null)
+            if (umaRecipe == null)
+            {
+                return;
+            }
+            if (umaRecipe.sharedColors == null)
             {
                 return;
             }

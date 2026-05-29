@@ -21,11 +21,11 @@ MonoBehaviour:
   - Human Female 3.0
   wardrobeRecipeThumbs:
   - race: Human Male 3.0
-    filename: Assets/UMA/UMA3/Wearables/Icons/Hair/Human Male 3.0/14_bb_Male_Military_Hair_Recipe.png
-    thumb: {fileID: 21300000, guid: 23fc5d586529e37489cec006220eadbc, type: 3}
+    filename: Assets/UMA/UMA3/Wearables/Icons/Hair/Human Male 3.0/12_bb_Male_Military_Hair_Recipe.png
+    thumb: {fileID: 21300000, guid: 48af2e76d09f6ca43abe1f88da4bedc3, type: 3}
   - race: Human Female 3.0
-    filename: Assets/UMA/UMA3/Wearables/Icons/Hair/Human Female 3.0/14_bb_Male_Military_Hair_Recipe.png
-    thumb: {fileID: 21300000, guid: 44d99ee6bff6e904a9c7352b87756175, type: 3}
+    filename: Assets/UMA/UMA3/Wearables/Icons/Hair/Human Female 3.0/12_bb_Male_Military_Hair_Recipe.png
+    thumb: {fileID: 21300000, guid: 3cca7ffd1f9b8c7468688b8882a113a6, type: 3}
   wardrobeSlot: Hair
   Appended: 0
   Hides: []

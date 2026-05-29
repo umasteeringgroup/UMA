@@ -164,14 +164,14 @@ MonoBehaviour:
         propertType: UMAColorProperty
     foldout: 0
     showAdvanced: 0
-    isBaseColor: 0
+    isBaseColor: 1
     deleteThis: 0
     moveUpThis: 0
     moveDownThis: 0
     colorsExpanded: 0
     propertiesExpanded: 1
     showSelected: 1
-    isSelected: 1
+    isSelected: 0
     showDisplayColor: 1
     displayColor: {r: 1, g: 0.8411773, b: 0.51257855, a: 1}
   - name: Red
@@ -323,7 +323,7 @@ MonoBehaviour:
         propertType: UMAColorProperty
     foldout: 0
     showAdvanced: 0
-    isBaseColor: 0
+    isBaseColor: 1
     deleteThis: 0
     moveUpThis: 0
     moveDownThis: 0
@@ -482,7 +482,7 @@ MonoBehaviour:
         propertType: UMAColorProperty
     foldout: 0
     showAdvanced: 0
-    isBaseColor: 0
+    isBaseColor: 1
     deleteThis: 0
     moveUpThis: 0
     moveDownThis: 0
@@ -641,7 +641,7 @@ MonoBehaviour:
         propertType: UMAColorProperty
     foldout: 0
     showAdvanced: 0
-    isBaseColor: 0
+    isBaseColor: 1
     deleteThis: 0
     moveUpThis: 0
     moveDownThis: 0
@@ -800,7 +800,7 @@ MonoBehaviour:
         propertType: UMAColorProperty
     foldout: 0
     showAdvanced: 0
-    isBaseColor: 0
+    isBaseColor: 1
     deleteThis: 0
     moveUpThis: 0
     moveDownThis: 0
@@ -959,7 +959,7 @@ MonoBehaviour:
         propertType: UMAColorProperty
     foldout: 0
     showAdvanced: 0
-    isBaseColor: 0
+    isBaseColor: 1
     deleteThis: 0
     moveUpThis: 0
     moveDownThis: 0
@@ -1118,7 +1118,7 @@ MonoBehaviour:
         propertType: UMAColorProperty
     foldout: 0
     showAdvanced: 0
-    isBaseColor: 0
+    isBaseColor: 1
     deleteThis: 0
     moveUpThis: 0
     moveDownThis: 0
@@ -1277,7 +1277,7 @@ MonoBehaviour:
         propertType: UMAColorProperty
     foldout: 0
     showAdvanced: 0
-    isBaseColor: 0
+    isBaseColor: 1
     deleteThis: 0
     moveUpThis: 0
     moveDownThis: 0
@@ -1436,7 +1436,7 @@ MonoBehaviour:
         propertType: UMAColorProperty
     foldout: 0
     showAdvanced: 0
-    isBaseColor: 0
+    isBaseColor: 1
     deleteThis: 0
     moveUpThis: 0
     moveDownThis: 0
@@ -1595,7 +1595,7 @@ MonoBehaviour:
         propertType: UMAColorProperty
     foldout: 0
     showAdvanced: 0
-    isBaseColor: 0
+    isBaseColor: 1
     deleteThis: 0
     moveUpThis: 0
     moveDownThis: 0
@@ -1754,7 +1754,7 @@ MonoBehaviour:
         propertType: UMAColorProperty
     foldout: 0
     showAdvanced: 0
-    isBaseColor: 0
+    isBaseColor: 1
     deleteThis: 0
     moveUpThis: 0
     moveDownThis: 0

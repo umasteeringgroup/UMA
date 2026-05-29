@@ -24,8 +24,8 @@ MonoBehaviour:
     filename: 
     thumb: {fileID: 21300000, guid: 011fcbcb1bb123647b1068ea622e1ddc, type: 3}
   - race: Human Male 3.0
-    filename: 
-    thumb: {fileID: 0}
+    filename: Assets/UMA/UMA3/Wearables/Icons/Feet/Human Male 3.0/1_MaleRobe Shoes.png
+    thumb: {fileID: 21300000, guid: 782dcc94792dddc4a90a561e0b675435, type: 3}
   wardrobeSlot: Feet
   Appended: 0
   Hides:
@@ -34,6 +34,7 @@ MonoBehaviour:
   suppressWardrobeSlots: []
   activeWardrobeSet: []
   MeshHideAssets: []
+  MeshHideAssetCollections: []
   MeshModifiers: []
   OverrideDNA:
     PreloadValues: []

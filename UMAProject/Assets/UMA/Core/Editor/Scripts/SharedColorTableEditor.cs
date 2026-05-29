@@ -116,6 +116,16 @@ namespace UMA.Editors
                 }
             }
             EditorGUILayout.EndHorizontal();
+            EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button("Set all as base color"))
+            {
+                SetAllBaseColorFlags(sct, true);
+            }
+            if (GUILayout.Button("Clear base color flags"))
+            {
+                SetAllBaseColorFlags(sct, false);
+            }
+            EditorGUILayout.EndHorizontal();
 
             SerializedProperty colorsProperty = serializedObject.FindProperty("colors");
             bool hasDeletes = false;
@@ -239,6 +249,28 @@ namespace UMA.Editors
 #endif
 
             EditorUtility.SetDirty(sharedColorTable);
+        }
+
+        private void SetAllBaseColorFlags(SharedColorTable sharedColorTable, bool isBaseColor)
+        {
+            if (sharedColorTable == null || sharedColorTable.colors == null)
+            {
+                return;
+            }
+
+            Undo.RecordObject(sharedColorTable, isBaseColor ? "Set Shared Colors As Base Color" : "Clear Shared Color Base Flags");
+
+            for (int colorIndex = 0; colorIndex < sharedColorTable.colors.Length; colorIndex++)
+            {
+                OverlayColorData color = sharedColorTable.colors[colorIndex];
+                if (color != null)
+                {
+                    color.isBaseColor = isBaseColor;
+                }
+            }
+
+            EditorUtility.SetDirty(sharedColorTable);
+            serializedObject.Update();
         }
 
         private void AddNewColor(SharedColorTable sharedColorTable)

@@ -488,7 +488,7 @@ namespace UMA
 #endif
         }
 
-        public void AssignFrom(OverlayColorData src, bool CopyParmsOnly = false)
+        public void AssignFrom(OverlayColorData src, bool CopyParmsOnly = false, bool copyName = true)
         {
             if (src == null) return;
 
@@ -503,7 +503,10 @@ namespace UMA
 #if UNITY_EDITOR
                 isBaseColor = src.isBaseColor;
 #endif
-                name = src.name; // strings are immutable
+                if (copyName)
+                {
+                    name = src.name; // strings are immutable
+                }
                 EnsureChannels(src.channelMask?.Length ?? 0);
                 for (int i = 0; i < src.channelMask.Length; i++)
                 {

@@ -21,6 +21,11 @@ namespace UMA.Editors
         private List<string> backingTags = new List<string>();
         private static Dictionary<string, bool> _foldout = new Dictionary<string, bool>();
         private static Dictionary<string, bool> _utilitiesFoldout = new Dictionary<string, bool>();
+        private const string RecentOverlayEditorPrefsKeyPrefix = "UMA.SlotEditor.RecentOverlayName";
+        private const int MaxRecentOverlays = 2;
+        private static readonly List<OverlayDataAsset> _recentOverlayAssets = new List<OverlayDataAsset>(MaxRecentOverlays);
+        private static readonly List<string> _recentOverlayNames = new List<string>(MaxRecentOverlays);
+        private static bool _recentOverlaysLoaded;
 
         public SlotData Slot { get { return _slotData; } }
 
@@ -71,6 +76,143 @@ namespace UMA.Editors
         public List<OverlayData> GetOverlays()
         {
             return _overlayData;
+        }
+
+        private static string GetOverlayDisplayName(OverlayDataAsset overlay)
+        {
+            if (overlay == null)
+            {
+                return string.Empty;
+            }
+
+            return string.IsNullOrEmpty(overlay.overlayName) ? overlay.name : overlay.overlayName;
+        }
+
+        private static string GetRecentOverlayPrefsKey(int index)
+        {
+            return RecentOverlayEditorPrefsKeyPrefix + index;
+        }
+
+        private static void SaveRecentOverlays()
+        {
+            for (int i = 0; i < MaxRecentOverlays; i++)
+            {
+                string prefKey = GetRecentOverlayPrefsKey(i);
+                if (i < _recentOverlayNames.Count && !string.IsNullOrEmpty(_recentOverlayNames[i]))
+                {
+                    EditorPrefs.SetString(prefKey, _recentOverlayNames[i]);
+                }
+                else
+                {
+                    EditorPrefs.DeleteKey(prefKey);
+                }
+            }
+        }
+
+        private static void RememberRecentOverlay(OverlayDataAsset overlay)
+        {
+            if (overlay == null)
+            {
+                return;
+            }
+
+            string overlayName = GetOverlayDisplayName(overlay);
+            if (string.IsNullOrEmpty(overlayName))
+            {
+                return;
+            }
+
+            _recentOverlaysLoaded = true;
+
+            for (int i = _recentOverlayNames.Count - 1; i >= 0; i--)
+            {
+                if (_recentOverlayNames[i] == overlayName)
+                {
+                    _recentOverlayNames.RemoveAt(i);
+                    _recentOverlayAssets.RemoveAt(i);
+                }
+            }
+
+            _recentOverlayNames.Insert(0, overlayName);
+            _recentOverlayAssets.Insert(0, overlay);
+
+            while (_recentOverlayNames.Count > MaxRecentOverlays)
+            {
+                _recentOverlayNames.RemoveAt(_recentOverlayNames.Count - 1);
+                _recentOverlayAssets.RemoveAt(_recentOverlayAssets.Count - 1);
+            }
+
+            SaveRecentOverlays();
+        }
+
+        private static List<OverlayDataAsset> GetRecentOverlays()
+        {
+            if (!_recentOverlaysLoaded)
+            {
+                _recentOverlayNames.Clear();
+                _recentOverlayAssets.Clear();
+
+                for (int i = 0; i < MaxRecentOverlays; i++)
+                {
+                    string overlayName = EditorPrefs.GetString(GetRecentOverlayPrefsKey(i), string.Empty);
+                    if (string.IsNullOrEmpty(overlayName))
+                    {
+                        continue;
+                    }
+
+                    OverlayDataAsset overlay = UMAAssetIndexer.Instance.GetAsset<OverlayDataAsset>(overlayName);
+                    if (overlay == null)
+                    {
+                        continue;
+                    }
+
+                    _recentOverlayNames.Add(overlayName);
+                    _recentOverlayAssets.Add(overlay);
+                }
+
+                _recentOverlaysLoaded = true;
+            }
+
+            return _recentOverlayAssets;
+        }
+
+        private void AddOverlayToSlot(OverlayDataAsset overlay)
+        {
+            var newOverlay = new OverlayData(overlay);
+            _overlayEditors.Add(new OverlayEditor(_recipe, _slotData, newOverlay, null, _recipeContext));
+            _overlayData.Add(newOverlay);
+            RememberRecentOverlay(overlay);
+            SaveRecipeContext();
+        }
+
+        private void SaveRecipeContext()
+        {
+            if (_recipeContext == null)
+            {
+                return;
+            }
+
+            if (_recipeContext is UMARecipeBase recipeBase)
+            {
+                recipeBase.Save(_recipe);
+                EditorUtility.SetDirty(recipeBase);
+                if (EditorUtility.IsPersistent(recipeBase))
+                {
+                    AssetDatabase.SaveAssetIfDirty(recipeBase);
+                }
+
+                if (recipeBase is UMATextRecipe textRecipe)
+                {
+                    UMAUpdateProcessor.UpdateRecipe(textRecipe);
+                }
+                return;
+            }
+
+            EditorUtility.SetDirty(_recipeContext);
+            if (EditorUtility.IsPersistent(_recipeContext))
+            {
+                AssetDatabase.SaveAssetIfDirty(_recipeContext);
+            }
         }
 
         private bool InIndex(SlotData _slotData)
@@ -323,9 +465,16 @@ namespace UMA.Editors
                     {
                         foreach (SlotData sda in BlendShapeSlots)
                         {
+                            bool removeBlendshapeSlot = false;
                             GUILayout.BeginHorizontal();
                             GUILayout.Label(sda.slotName, EditorStyles.textField, GUILayout.ExpandWidth(true));
                             if (GUILayout.Button("X", GUILayout.Width(22)))
+                            {
+                                removeBlendshapeSlot = true;
+                            }
+                            GUILayout.EndHorizontal();
+
+                            if (removeBlendshapeSlot)
                             {
                                 _recipe.RemoveSlot(sda);
                                 _dnaDirty = true;
@@ -333,7 +482,6 @@ namespace UMA.Editors
                                 changed = true;
                                 GUIUtility.ExitGUI();
                             }
-                            GUILayout.EndHorizontal();
                         }
                         var addedSlot = (SlotDataAsset)EditorGUILayout.ObjectField("Add Slot", null, typeof(SlotDataAsset), false);
 
@@ -464,14 +612,42 @@ namespace UMA.Editors
 
                     if (added != null)
                     {
-                        var newOverlay = new OverlayData(added);
-                        _overlayEditors.Add(new OverlayEditor(_recipe, _slotData, newOverlay, null, _recipeContext));
-                        _overlayData.Add(newOverlay);
+                        AddOverlayToSlot(added);
                         _dnaDirty = true;
                         _textureDirty = true;
                         _meshDirty = true;
                         changed = true;
                         GUIUtility.ExitGUI();
+                    }
+
+                    List<OverlayDataAsset> recentOverlays = GetRecentOverlays();
+                    for (int overlayIndex = 0; overlayIndex < MaxRecentOverlays; overlayIndex++)
+                    {
+                        OverlayDataAsset recentOverlay = overlayIndex < recentOverlays.Count ? recentOverlays[overlayIndex] : null;
+                        string overlayLabel = recentOverlay != null ? GetOverlayDisplayName(recentOverlay) : "None";
+                        string rowLabel = overlayIndex == 0 ? "Last Overlay: " : "Previous Overlay: ";
+                        bool addRecentOverlay = false;
+
+                        EditorGUILayout.BeginHorizontal();
+                        EditorGUILayout.LabelField(rowLabel + overlayLabel);
+                        using (new EditorGUI.DisabledScope(recentOverlay == null))
+                        {
+                            if (GUILayout.Button("Add", GUILayout.Width(80)))
+                            {
+                                addRecentOverlay = true;
+                            }
+                        }
+                        EditorGUILayout.EndHorizontal();
+
+                        if (addRecentOverlay)
+                        {
+                            AddOverlayToSlot(recentOverlay);
+                            _dnaDirty = true;
+                            _textureDirty = true;
+                            _meshDirty = true;
+                            changed = true;
+                            GUIUtility.ExitGUI();
+                        }
                     }
 
                     if (!_slotData.isPlaceholderSlot)

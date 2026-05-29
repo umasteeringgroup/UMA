@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f0188188c253e0c4bb9b46e19fa7312e, type: 3}
+  m_Name: HairMessyUp_Recipe
+  m_EditorClassIdentifier: UMA_Core::UMA.CharacterSystem.UMAWardrobeRecipe
+  label: 
+  resourcesOnly: 0
+  recipeType: Wardrobe
+  DisplayValue: 
+  compatibleRaces:
+  - Human Female 3.0
+  - Human Male 3.0
+  wardrobeRecipeThumbs:
+  - race: Human Female 3.0
+    filename: Assets/UMA/UMA3/Wearables/Icons/Hair/Human Female 3.0/14_HairMessyUp_Recipe.png
+    thumb: {fileID: 21300000, guid: 38839222045de9740aab0c20ca9caa57, type: 3}
+  - race: Human Male 3.0
+    filename: Assets/UMA/UMA3/Wearables/Icons/Hair/Human Male 3.0/14_HairMessyUp_Recipe.png
+    thumb: {fileID: 21300000, guid: a4c9d40368ce6ef489fcde1a9ee211e8, type: 3}
+  wardrobeSlot: Hair
+  Appended: 0
+  Hides: []
+  HideTags: []
+  suppressWardrobeSlots: []
+  activeWardrobeSet: []
+  MeshHideAssets: []
+  MeshHideAssetCollections: []
+  MeshModifiers:
+  - {fileID: 11400000, guid: 386e0c1d555a6d74b833641fcbc98d8a, type: 2}
+  OverrideDNA:
+    PreloadValues: []
+  disabled: 0
+  recipeString: '{"version":3,"packedSlotDataList":[],"slotsV2":[],"slotsV3":[{"id":"HairMessyUp_slot","scale":100,"copyIdx":-1,"overlays":[{"id":"CardHairMultiPass","colorIdx":0,"rect":[0.0,0.0,0.0,0.0],"isTransformed":false,"scale":{"x":1.0,"y":1.0,"z":0.0},"rotation":0.0,"blendModes":[0,0],"Tags":[],"tiling":[false,false],"uvOverride":0,"translate":{"x":0.0,"y":0.0}}],"Tags":[],"Races":[],"blendShapeTarget":"","overSmoosh":0.009999999776482582,"smooshDistance":0.0010000000474974514,"smooshInvertX":false,"smooshInvertY":true,"smooshInvertZ":false,"smooshInvertDist":true,"smooshTargetTag":"","smooshableTag":"","isSwapSlot":false,"swapTag":"LongHair","uvOverride":0,"isDisabled":false,"expandAlongNormal":0,"isPlaceholderSlot":false}],"colors":[],"fColors":[{"name":"Hair","colors":[255,255,255,255,0,0,0,0],"ShaderParms":[],"alwaysUpdate":false,"alwaysUpdateParms":false,"isBaseColor":false,"displayColor":-1}],"sharedColorCount":1,"race":"","packedDna":[],"uvOverride":0,"isWardrobe":false}'
+  forceKeep: 0
+  labelLocalFiles: 0
+  noAutoAdd: 0
+  IncompatibleRecipes: []
+  UserField: 
+  replaces: Nothing

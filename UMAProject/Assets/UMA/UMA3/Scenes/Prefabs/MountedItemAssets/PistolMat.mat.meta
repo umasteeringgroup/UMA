@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 99943ef5d340eaa4a9a5de5c73d5a917
+timeCreated: 1534567134
+licenseType: Store
+NativeFormatImporter:
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 2
+  packageVersion: 2.14f6
+  assetPath: Assets/UMA/Examples/MountingObjects Example/Assets/PistolMat.mat
+  uploadId: 771830

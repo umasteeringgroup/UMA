@@ -825,12 +825,12 @@ MonoBehaviour:
     Chance: 39
     SharedColors:
     - ColorName: Skin
-      ColorTable: {fileID: 11400000, guid: 293a9ab09ce104c24a17ac539784a376, type: 2}
+      ColorTable: {fileID: 11400000, guid: 1142620b746698b42a5bb3392ee7c732, type: 2}
       GuiFoldout: 1
       Delete: 0
       CurrentColor: 0
     - ColorName: Hair
-      ColorTable: {fileID: 11400000, guid: e7303e8210acb45ef8d3f465731d2e94, type: 2}
+      ColorTable: {fileID: 11400000, guid: b3b6cfa4c2da1004cb1e49feb8144d30, type: 2}
       GuiFoldout: 1
       Delete: 0
       CurrentColor: 0
@@ -1786,7 +1786,7 @@ MonoBehaviour:
       MinValue: 0.25
       MaxValue: 0.75
     raceData: {fileID: 11400000, guid: df173d6a708cd49499632fea0b0056d5, type: 2}
-    GuiFoldout: 0
+    GuiFoldout: 1
     ColorsFoldout: 1
     WardrobeFoldout: 1
     DnaFoldout: 1

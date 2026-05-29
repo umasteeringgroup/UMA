@@ -32,6 +32,7 @@ namespace UMA.Editors
             public float triplanarTileV = 1f;
             public int normalCopyMode;
             public int blendshapeCopyMode;
+            public int previewLodLevel;
         }
 
         static string[] RegularSlotFields = new string[] { "slotName", "CharacterBegun", "SlotAtlassed", "SlotProcessed", "SlotBeginProcessing", "DNAApplied", "CharacterCompleted", "_slotDNALegacy", "tags", "isWildCardSlot", "Races", "smooshOffset", "smooshExpand", "Welds" };
@@ -89,8 +90,10 @@ namespace UMA.Editors
         Mesh meshToPreview;
         // Make rotation per-inspector (not static) so multi-inspector drags don't conflict
         Vector3 previewRotation = Vector3.zero;
+        int previewLodLevel;
         // Track last built rotation to know when to rebuild
         Vector3 lastBuiltRotation = new Vector3(9999, 9999, 9999);
+        int lastBuiltLodLevel = -1;
         SlotPreviewMode previewMode = SlotPreviewMode.ThisSlot;
         int previewVertex = -1;
 
@@ -194,6 +197,7 @@ namespace UMA.Editors
                 MeshPreview = null;
             }
             previewForTarget = null;
+            lastBuiltLodLevel = -1;
         }
 
         private void OnDisable()
@@ -817,6 +821,15 @@ namespace UMA.Editors
                 GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
 
                 SlotPreviewMode newPreviewMode = (SlotPreviewMode)EditorGUILayout.EnumPopup("Preview Mode", previewMode);
+                if (newPreviewMode != previewMode)
+                {
+                    reConfigurePreview = true;
+                    previewMode = newPreviewMode;
+                    ClampPreviewLodLevel(target as SlotDataAsset);
+                }
+
+                DrawPreviewLodSelector(target as SlotDataAsset, false);
+
                 if (meshToPreview != null)
                 {
                     EditorGUILayout.BeginHorizontal();
@@ -839,40 +852,9 @@ namespace UMA.Editors
                 {
                     reConfigurePreview = true;
                 }
-                if (newPreviewMode != previewMode)
-                {
-                    reConfigurePreview = true;
-                    previewMode = newPreviewMode;
-                }
                 if (reConfigurePreview)
                 {
-                    reConfigurePreview = false;
-                    if (MeshPreview != null)
-                    {
-                        MeshPreview.Dispose();
-                        MeshPreview = null;
-                    }
-                    if (meshToPreview != null)
-                    {
-                        DestroyImmediate(meshToPreview);
-                        meshToPreview = null;
-                    }
-                    meshToPreview = GetPreviewMeshFor(target as SlotDataAsset);
-                    previewForTarget = target as SlotDataAsset;
-                    lastBuiltRotation = previewRotation;
-                    if (meshToPreview != null)
-                    {
-                        MeshPreview = new MeshPreview(meshToPreview);
-                    }
-                    else
-                    {
-                        if (MeshPreview != null)
-                        {
-                            MeshPreview.Dispose();
-                            MeshPreview = null;
-                        }
-                    }
-
+                    RebuildPreviewMesh(target as SlotDataAsset);
                 }
                 GUIHelper.EndVerticalPadded(10);
                 #endregion
@@ -982,6 +964,7 @@ namespace UMA.Editors
             blendshapeCopyMode = Enum.IsDefined(typeof(UMA.SlotDataAsset.BlendshapeCopyMode), state.blendshapeCopyMode)
                 ? (UMA.SlotDataAsset.BlendshapeCopyMode)state.blendshapeCopyMode
                 : default;
+            previewLodLevel = Mathf.Max(0, state.previewLodLevel);
 
             persistedSectionStateCache = json;
         }
@@ -1022,7 +1005,8 @@ namespace UMA.Editors
                 triplanarTileU = triplanarTileU,
                 triplanarTileV = triplanarTileV,
                 normalCopyMode = (int)normalCopyMode,
-                blendshapeCopyMode = (int)blendshapeCopyMode
+                blendshapeCopyMode = (int)blendshapeCopyMode,
+                previewLodLevel = previewLodLevel
             };
         }
 
@@ -1437,6 +1421,8 @@ namespace UMA.Editors
 
         public override void OnPreviewSettings()
         {
+            DrawPreviewLodSelector(target as SlotDataAsset, true);
+
             if (MeshPreview == null)
                 return;
             try
@@ -1448,30 +1434,157 @@ namespace UMA.Editors
             }
         }
 
+        private void RebuildPreviewMesh(SlotDataAsset currentTarget)
+        {
+            if (MeshPreview != null)
+            {
+                MeshPreview.Dispose();
+                MeshPreview = null;
+            }
+            if (meshToPreview != null)
+            {
+                DestroyImmediate(meshToPreview);
+                meshToPreview = null;
+            }
+
+            ClampPreviewLodLevel(currentTarget);
+            meshToPreview = GetPreviewMeshFor(currentTarget);
+            previewForTarget = currentTarget;
+            lastBuiltRotation = previewRotation;
+            lastBuiltLodLevel = previewLodLevel;
+            reConfigurePreview = false;
+
+            if (meshToPreview != null)
+            {
+                MeshPreview = new MeshPreview(meshToPreview);
+            }
+        }
+
+        private void DrawPreviewLodSelector(SlotDataAsset currentTarget, bool compact)
+        {
+            int lodCount = Mathf.Max(1, GetPreviewLodCount(currentTarget));
+            int clampedLodLevel = Mathf.Clamp(previewLodLevel, 0, lodCount - 1);
+            if (clampedLodLevel != previewLodLevel)
+            {
+                previewLodLevel = clampedLodLevel;
+                reConfigurePreview = true;
+            }
+
+            string[] lodOptions = BuildPreviewLodOptions(lodCount);
+            EditorGUI.BeginChangeCheck();
+            int selectedLodLevel;
+            if (compact)
+            {
+                GUILayout.Label("LOD", EditorStyles.miniLabel, GUILayout.Width(28f));
+                selectedLodLevel = EditorGUILayout.Popup(previewLodLevel, lodOptions, EditorStyles.toolbarPopup, GUILayout.Width(72f));
+            }
+            else
+            {
+                selectedLodLevel = EditorGUILayout.Popup("Preview LOD", previewLodLevel, lodOptions);
+            }
+
+            if (EditorGUI.EndChangeCheck())
+            {
+                previewLodLevel = selectedLodLevel;
+                reConfigurePreview = true;
+                Repaint();
+            }
+        }
+
+        private bool ClampPreviewLodLevel(SlotDataAsset currentTarget)
+        {
+            int lodCount = Mathf.Max(1, GetPreviewLodCount(currentTarget));
+            int clampedLodLevel = Mathf.Clamp(previewLodLevel, 0, lodCount - 1);
+            if (clampedLodLevel == previewLodLevel)
+            {
+                return false;
+            }
+
+            previewLodLevel = clampedLodLevel;
+            return true;
+        }
+
+        private int GetPreviewLodCount(SlotDataAsset currentTarget)
+        {
+            switch (previewMode)
+            {
+                case SlotPreviewMode.WeldSlot:
+                    return GetSlotPreviewLodCount(WeldToSlot);
+                case SlotPreviewMode.BothSlots:
+                    return Mathf.Max(GetSlotPreviewLodCount(currentTarget), GetSlotPreviewLodCount(WeldToSlot));
+                default:
+                    return GetSlotPreviewLodCount(currentTarget);
+            }
+        }
+
+        private static int GetSlotPreviewLodCount(SlotDataAsset previewSlot)
+        {
+            if (previewSlot == null || UMAMeshData.IsNullOrEmptyMeshData(previewSlot.meshData) || previewSlot.meshData.submeshes == null)
+            {
+                return 0;
+            }
+
+            int maxLodCount = 0;
+            for (int submeshIndex = 0; submeshIndex < previewSlot.meshData.submeshes.Length; submeshIndex++)
+            {
+                SubMeshTriangles submesh = previewSlot.meshData.submeshes[submeshIndex];
+                if (submesh == null)
+                {
+                    continue;
+                }
+
+                int lodCount = submesh.LODCount();
+                if (lodCount <= 0 && submesh.GetTriangleCount(0) > 0)
+                {
+                    lodCount = 1;
+                }
+
+                if (lodCount > maxLodCount)
+                {
+                    maxLodCount = lodCount;
+                }
+            }
+
+            return maxLodCount;
+        }
+
+        private static string[] BuildPreviewLodOptions(int lodCount)
+        {
+            string[] lodOptions = new string[lodCount];
+            for (int lodIndex = 0; lodIndex < lodOptions.Length; lodIndex++)
+            {
+                lodOptions[lodIndex] = "LOD " + lodIndex;
+            }
+
+            return lodOptions;
+        }
+
         private Mesh GetPreviewMeshFor(SlotDataAsset which)
         {
             try
             {
+                ClampPreviewLodLevel(which);
+                int lodLevel = previewLodLevel;
                 Quaternion pRot = Quaternion.Euler(previewRotation);
                 if (previewMode == SlotPreviewMode.ThisSlot)
                 {
                     if (which == null) return null;
-                    return SlotToMesh.ConvertSlotToMesh(which, pRot, previewVertex);
+                    return SlotToMesh.ConvertSlotToMesh(which, pRot, previewVertex, lodLevel);
                 }
                 if (previewMode == SlotPreviewMode.WeldSlot)
                 {
                     if (WeldToSlot != null)
                     {
-                        return SlotToMesh.ConvertSlotToMesh(WeldToSlot, pRot, previewVertex);
+                        return SlotToMesh.ConvertSlotToMesh(WeldToSlot, pRot, previewVertex, lodLevel);
                     }
                 }
                 if (previewMode == SlotPreviewMode.BothSlots)
                 {
                     if (which == null) return null;
-                    Mesh mesh = SlotToMesh.ConvertSlotToMeshLTOW(which, pRot, previewVertex);
+                    Mesh mesh = SlotToMesh.ConvertSlotToMeshLTOW(which, pRot, previewVertex, lodLevel);
                     if (WeldToSlot != null)
                     {
-                        Mesh weldMesh = SlotToMesh.ConvertSlotToMeshLTOW(WeldToSlot, pRot, previewVertex);
+                        Mesh weldMesh = SlotToMesh.ConvertSlotToMeshLTOW(WeldToSlot, pRot, previewVertex, lodLevel);
                         if (weldMesh != null)
                         {
                             CombineInstance[] combine = new CombineInstance[2];
@@ -1509,35 +1622,29 @@ namespace UMA.Editors
         public override void OnInteractivePreviewGUI(Rect r, GUIStyle background)
         {
             var currentTarget = target as SlotDataAsset;
+            if (currentTarget == null)
+            {
+                EditorGUI.LabelField(r, "Slot is not available.");
+                return;
+            }
+
             if (currentTarget.isUtilitySlot)
             {
                 EditorGUI.LabelField(r, "Utility slots cannot be previewed.");
                 return;
             }
 
+            if (ClampPreviewLodLevel(currentTarget))
+            {
+                reConfigurePreview = true;
+            }
+
             const float controlYOffset = 32f;
             const float controlButtonHeight = 30f;
 
-            // Rebuild preview if first time, settings changed, or the target changed
-            if (meshToPreview == null || previewForTarget != currentTarget)
+            if (meshToPreview == null || previewForTarget != currentTarget || reConfigurePreview)
             {
-                if (MeshPreview != null)
-                {
-                    MeshPreview.Dispose();
-                    MeshPreview = null;
-                }
-                if (meshToPreview != null)
-                {
-                    DestroyImmediate(meshToPreview);
-                    meshToPreview = null;
-                }
-                meshToPreview = GetPreviewMeshFor(currentTarget);
-                previewForTarget = currentTarget;
-                lastBuiltRotation = previewRotation;
-                if (meshToPreview != null)
-                {
-                    MeshPreview = new MeshPreview(meshToPreview);
-                }
+                RebuildPreviewMesh(currentTarget);
             }
 
             Rect controlArea = new Rect(r.x, r.y + controlYOffset, r.width, r.height - controlYOffset);
@@ -1551,21 +1658,9 @@ namespace UMA.Editors
             // Exclude the button strip so button clicks are not consumed by the drag handler.
             HandlePreviewDrag(dragArea);
 
-            // If rotation changed since last mesh build, rebuild the mesh for this target
-            if (meshToPreview != null && (lastBuiltRotation != previewRotation))
+            if (meshToPreview != null && (lastBuiltRotation != previewRotation || lastBuiltLodLevel != previewLodLevel || reConfigurePreview))
             {
-                if (MeshPreview != null)
-                {
-                    MeshPreview.Dispose();
-                    MeshPreview = null;
-                }
-                DestroyImmediate(meshToPreview);
-                meshToPreview = GetPreviewMeshFor(currentTarget);
-                lastBuiltRotation = previewRotation;
-                if (meshToPreview != null)
-                {
-                    MeshPreview = new MeshPreview(meshToPreview);
-                }
+                RebuildPreviewMesh(currentTarget);
             }
 
             if (meshToPreview != null && MeshPreview != null)
@@ -1917,6 +2012,7 @@ namespace UMA.Editors
         private bool blendShapesFoldout;
         private bool clothFoldout;
         private bool stateFoldout;
+        private bool lodTotalsFoldout;
 
         private bool verticesFoldout;
         private bool normalsFoldout;
@@ -1980,6 +2076,7 @@ namespace UMA.Editors
             DrawBlendShapesSection();
             DrawClothSection();
             DrawStateSection();
+            DrawLodTotalsSection();
 
             EditorGUILayout.EndScrollView();
 
@@ -2360,6 +2457,34 @@ namespace UMA.Editors
             }
         }
 
+        private void DrawLodTotalsSection()
+        {
+            lodTotalsFoldout = EditorGUILayout.Foldout(lodTotalsFoldout, "LOD Totals", true);
+            if (!lodTotalsFoldout)
+            {
+                return;
+            }
+
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                int lodCount = GetEffectiveLodCount();
+                EditorGUILayout.LabelField("LOD Levels", lodCount.ToString());
+
+                if (lodCount == 0)
+                {
+                    EditorGUILayout.LabelField("No triangle data.");
+                    return;
+                }
+
+                for (int lodIndex = 0; lodIndex < lodCount; lodIndex++)
+                {
+                    int indexCount = GetTotalTriangleIndicesForLod(lodIndex);
+                    int triangleCount = indexCount / 3;
+                    EditorGUILayout.LabelField("LOD " + lodIndex, "Triangles=" + triangleCount + ", Indices=" + indexCount);
+                }
+            }
+        }
+
         private void DrawCloseButton()
         {
             EditorGUILayout.Space(8f);
@@ -2480,6 +2605,82 @@ namespace UMA.Editors
         private int GetTotalLod0Triangles()
         {
             return GetTotalLod0TriangleIndices() / 3;
+        }
+
+        private int GetEffectiveLodCount()
+        {
+            SubMeshTriangles[] submeshes = meshData.submeshes;
+            if (submeshes == null)
+            {
+                return 0;
+            }
+
+            int max = 0;
+            for (int i = 0; i < submeshes.Length; i++)
+            {
+                int lodCount = GetDisplayedLodCount(submeshes[i]);
+                if (lodCount > max)
+                {
+                    max = lodCount;
+                }
+            }
+
+            return max;
+        }
+
+        private int GetTotalTriangleIndicesForLod(int lodIndex)
+        {
+            SubMeshTriangles[] submeshes = meshData.submeshes;
+            if (submeshes == null || lodIndex < 0)
+            {
+                return 0;
+            }
+
+            int total = 0;
+            for (int i = 0; i < submeshes.Length; i++)
+            {
+                SubMeshTriangles submesh = submeshes[i];
+                if (!HasDisplayedLodLevel(submesh, lodIndex))
+                {
+                    continue;
+                }
+
+                total += submesh.GetTriangleCount(lodIndex);
+            }
+
+            return total;
+        }
+
+        private static int GetDisplayedLodCount(SubMeshTriangles submesh)
+        {
+            if (submesh == null)
+            {
+                return 0;
+            }
+
+            int lodCount = submesh.LODCount();
+            if (lodCount > 0)
+            {
+                return lodCount;
+            }
+
+            return submesh.GetTriangleCount(0) > 0 ? 1 : 0;
+        }
+
+        private static bool HasDisplayedLodLevel(SubMeshTriangles submesh, int lodIndex)
+        {
+            if (submesh == null || lodIndex < 0)
+            {
+                return false;
+            }
+
+            int lodCount = submesh.LODCount();
+            if (lodCount > 0)
+            {
+                return lodIndex < lodCount;
+            }
+
+            return lodIndex == 0 && submesh.GetTriangleCount(0) > 0;
         }
 
         private int GetSubmeshesWithLodsCount()

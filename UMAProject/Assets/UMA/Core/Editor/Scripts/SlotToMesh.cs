@@ -161,6 +161,11 @@ namespace UMA
 
         private static Mesh BuildStaticMesh(UMAMeshData meshData, Matrix4x4 meshFromRoot, bool includeBlendShapes)
         {
+            return BuildStaticMesh(meshData, meshFromRoot, includeBlendShapes, 0);
+        }
+
+        private static Mesh BuildStaticMesh(UMAMeshData meshData, Matrix4x4 meshFromRoot, bool includeBlendShapes, int lodLevel)
+        {
             Mesh mesh = new Mesh() { indexFormat = IndexFormat.UInt32 };
 
             if (UMAMeshData.IsNullOrEmptyMeshData(meshData))
@@ -213,9 +218,10 @@ namespace UMA
             }
 
             mesh.subMeshCount = meshData.subMeshCount;
+            int selectedLodLevel = Mathf.Max(0, lodLevel);
             for (int i = 0; i < meshData.subMeshCount; i++)
             {
-                var tris = GetTriangles(meshData, i);
+                var tris = GetTriangles(meshData, i, selectedLodLevel);
                 mesh.SetIndices(tris, MeshTopology.Triangles, i);
             }
 
@@ -567,6 +573,11 @@ namespace UMA
 
         public static Mesh ConvertSlotToMesh(SlotDataAsset slot, bool preciseCharacterSpace)
         {
+            return ConvertSlotToMesh(slot, preciseCharacterSpace, 0);
+        }
+
+        public static Mesh ConvertSlotToMesh(SlotDataAsset slot, bool preciseCharacterSpace, int lodLevel)
+        {
             if (slot == null || UMAMeshData.IsNullOrEmptyMeshData(slot.meshData))
             {
                 return null;
@@ -579,10 +590,15 @@ namespace UMA
                 Debug.LogWarning($"[SlotToMesh] Could not reconstruct canonical character-space transform for slot '{slot.slotName}'. Falling back to raw slot mesh data.", slot);
             }
 
-            return BuildStaticMesh(slot.meshData, meshFromRoot, true);
+            return BuildStaticMesh(slot.meshData, meshFromRoot, true, lodLevel);
         }
 
         public static Mesh ConvertSlotToMeshLTOW(SlotDataAsset slot, Quaternion Rotation, int VertexHighlight, Transform modelRoot = null)
+        {
+            return ConvertSlotToMeshLTOW(slot, Rotation, VertexHighlight, 0, modelRoot);
+        }
+
+        public static Mesh ConvertSlotToMeshLTOW(SlotDataAsset slot, Quaternion Rotation, int VertexHighlight, int lodLevel, Transform modelRoot = null)
         {
             if (slot == null || UMAMeshData.IsNullOrEmptyMeshData(slot.meshData))
             {
@@ -611,12 +627,17 @@ namespace UMA
 
             Matrix4x4 rotMat = Matrix4x4.TRS(Vector3.zero, Rotation, Vector3.one);
             Matrix4x4 total = rotMat * rootLocalToTarget * meshFromRoot;
-            Mesh mesh = BuildStaticMesh(src, total, true);
+            Mesh mesh = BuildStaticMesh(src, total, true, lodLevel);
             return AddVertexHighlight(mesh, VertexHighlight);
         }
 
 
         public static Mesh ConvertSlotToMesh(SlotDataAsset slot, Quaternion Rotation, int VertexHighlight)
+        {
+            return ConvertSlotToMesh(slot, Rotation, VertexHighlight, 0);
+        }
+
+        public static Mesh ConvertSlotToMesh(SlotDataAsset slot, Quaternion Rotation, int VertexHighlight, int lodLevel)
         {
             if (slot == null || UMAMeshData.IsNullOrEmptyMeshData(slot.meshData))
             {
@@ -631,7 +652,7 @@ namespace UMA
             }
 
             Matrix4x4 rot = Matrix4x4.TRS(Vector3.zero, Rotation, Vector3.one);
-            Mesh mesh = BuildStaticMesh(slot.meshData, rot * meshFromRoot, true);
+            Mesh mesh = BuildStaticMesh(slot.meshData, rot * meshFromRoot, true, lodLevel);
             return AddVertexHighlight(mesh, VertexHighlight);
         }
 
@@ -677,7 +698,18 @@ namespace UMA
 
         public static int[] GetTriangles(UMAMeshData meshData, int subMesh)
         {
-            return meshData.submeshes[subMesh].getManagedTriangles(0);
+            return GetTriangles(meshData, subMesh, 0);
+        }
+
+        public static int[] GetTriangles(UMAMeshData meshData, int subMesh, int lodLevel)
+        {
+            if (meshData == null || meshData.submeshes == null || subMesh < 0 || subMesh >= meshData.submeshes.Length || meshData.submeshes[subMesh] == null)
+            {
+                return new int[0];
+            }
+
+            int[] triangles = meshData.submeshes[subMesh].getManagedTriangles(Mathf.Max(0, lodLevel));
+            return triangles ?? new int[0];
         }
     }
 }

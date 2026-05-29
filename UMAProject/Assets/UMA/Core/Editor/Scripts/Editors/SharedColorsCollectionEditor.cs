@@ -9,8 +9,19 @@ namespace UMA.Editors
     {
         static bool _foldout = true;
         static int selectedChannelCount = 3;// default 3
+        static readonly string[] quickPickNames = new string[3] { "Hair", "Skin", "Eyes" };
         string[] names = new string[16] { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16" };
         int[] channels = new int[16] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 };
+        int selectedQuickPickIndex = 0;
+
+        private static void AddSharedColor(UMAData.UMARecipe recipe, int channelCount, string colorName)
+        {
+            List<OverlayColorData> sharedColors = new List<OverlayColorData>();
+            sharedColors.AddRange(recipe.sharedColors);
+            sharedColors.Add(new OverlayColorData(channelCount));
+            sharedColors[sharedColors.Count - 1].name = colorName;
+            recipe.sharedColors = sharedColors.ToArray();
+        }
 
         public bool OnGUI(UMAData.UMARecipe _recipe)
         {
@@ -43,11 +54,7 @@ namespace UMA.Editors
 
                 if (GUILayout.Button("Add Shared Color"))
                 {
-                    List<OverlayColorData> sharedColors = new List<OverlayColorData>();
-                    sharedColors.AddRange(_recipe.sharedColors);
-                    sharedColors.Add(new OverlayColorData(selectedChannelCount));
-                    sharedColors[sharedColors.Count - 1].name = "Shared Color " + sharedColors.Count;
-                    _recipe.sharedColors = sharedColors.ToArray();
+                    AddSharedColor(_recipe, selectedChannelCount, "Shared Color " + (_recipe.sharedColors.Length + 1));
                     changed = true;
                 }
 
@@ -58,6 +65,15 @@ namespace UMA.Editors
                     sharedColors.Add(new OverlayColorData(0));
                     sharedColors[sharedColors.Count - 1].name = "Shared Color " + sharedColors.Count;
                     _recipe.sharedColors = sharedColors.ToArray();
+                    changed = true;
+                }
+                EditorGUILayout.EndHorizontal();
+
+                EditorGUILayout.BeginHorizontal();
+                selectedQuickPickIndex = EditorGUILayout.Popup("Quick pick", selectedQuickPickIndex, quickPickNames);
+                if (GUILayout.Button("Add", GUILayout.Width(80f)))
+                {
+                    AddSharedColor(_recipe, selectedChannelCount, quickPickNames[selectedQuickPickIndex]);
                     changed = true;
                 }
                 EditorGUILayout.EndHorizontal();

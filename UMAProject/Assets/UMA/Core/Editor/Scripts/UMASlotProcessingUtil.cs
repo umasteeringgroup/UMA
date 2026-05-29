@@ -98,9 +98,40 @@ namespace UMA.Editors
         {
             public List<SlotDataAsset> Slots = new List<SlotDataAsset>();
             public Dictionary<SlotDataAsset, OverlayDataAsset> SlotToOverlay = new Dictionary<SlotDataAsset, OverlayDataAsset>();
+            public Dictionary<SlotDataAsset, string> SlotToSourceMesh = new Dictionary<SlotDataAsset, string>();
+            public Dictionary<SlotDataAsset, List<UnityEngine.Object>> SlotToRecipes = new Dictionary<SlotDataAsset, List<UnityEngine.Object>>();
             public bool IsUDIM;
             // New: paths to temporary assets to delete later (when in batch mode)
             public List<string> TempAssetsToDelete = new List<string>();
+
+            public void AddSourceMesh(SlotDataAsset slot, string sourceMeshName)
+            {
+                if (slot == null || string.IsNullOrEmpty(sourceMeshName))
+                {
+                    return;
+                }
+
+                SlotToSourceMesh[slot] = sourceMeshName;
+            }
+
+            public void AddRecipe(SlotDataAsset slot, UnityEngine.Object recipe)
+            {
+                if (slot == null || recipe == null)
+                {
+                    return;
+                }
+
+                if (!SlotToRecipes.TryGetValue(slot, out var recipes))
+                {
+                    recipes = new List<UnityEngine.Object>();
+                    SlotToRecipes.Add(slot, recipes);
+                }
+
+                if (!recipes.Contains(recipe))
+                {
+                    recipes.Add(recipe);
+                }
+            }
         }
 
         private class SlotPreserveData
@@ -225,6 +256,31 @@ namespace UMA.Editors
                 EditorUtility.SetDirty(slot);
             }
 #endif
+        }
+
+        private static List<int> GetNonEmptySubmeshIndices(Mesh mesh)
+        {
+            var nonEmptySubmeshIndices = new List<int>();
+            if (mesh == null)
+            {
+                return nonEmptySubmeshIndices;
+            }
+
+            for (int sub = 0; sub < mesh.subMeshCount; sub++)
+            {
+                int[] triangles = mesh.GetTriangles(sub);
+                if (triangles != null && triangles.Length > 0)
+                {
+                    nonEmptySubmeshIndices.Add(sub);
+                }
+            }
+
+            if (nonEmptySubmeshIndices.Count == 0 && mesh.subMeshCount > 0)
+            {
+                nonEmptySubmeshIndices.Add(0);
+            }
+
+            return nonEmptySubmeshIndices;
         }
 
         private static void GenerateSlotLodsIfEnabled(SlotBuilderParameters sbp, SlotDataAsset slot)
@@ -780,15 +836,18 @@ namespace UMA.Editors
             var slotToOverlay = new Dictionary<SlotDataAsset, OverlayDataAsset>();
             var materialToOverlay = new Dictionary<Material, OverlayDataAsset>();
             string assetDir = sbp.useRootFolder ? sbp.slotFolder : (sbp.slotFolder + '/' + sbp.assetName);
+            List<int> nonEmptySubmeshIndices = GetNonEmptySubmeshIndices(finalMeshRenderer.sharedMesh);
+            int baseSubmeshIndex = nonEmptySubmeshIndices.Count > 0 ? nonEmptySubmeshIndices[0] : 0;
 
             // Base slot
             var slot = ScriptableObject.CreateInstance<SlotDataAsset>();
+            slot.isLegacySlot = false;
             slot.name = sbp.slotName;
-            slot.sourceSubmeshIndex = 0;
+            slot.sourceSubmeshIndex = baseSubmeshIndex;
             try
             {
                 // Non-UDIM path: ensure udimAdjustment=false in UpdateMeshData
-                slot.UpdateMeshData(finalMeshRenderer, sbp.rootBone, false, 0, sbp.clearNormals, sbp.clearTangents);
+                slot.UpdateMeshData(finalMeshRenderer, sbp.rootBone, false, baseSubmeshIndex, sbp.clearNormals, sbp.clearTangents);
             }
             catch (Exception ex)
             {
@@ -831,6 +890,7 @@ namespace UMA.Editors
             {
                 // Overwrite existing slot in place
                 string existingRootBone = slot.meshData.RootBoneName;
+                OldAsset.sourceSubmeshIndex = baseSubmeshIndex;
                 UpdateSlotData(OldAsset, finalMeshRenderer, sbp.material, OldAsset.normalReferenceMesh, existingRootBone, true, sbp.clearNormals, sbp.clearTangents);
                 EditorUtility.SetDirty(OldAsset);
 #if UNITY_6000_2_OR_NEWER
@@ -843,7 +903,7 @@ namespace UMA.Editors
 #if UNITY_6000_2_OR_NEWER
                 if (sbp.generateSlotLods)
                 {
-                    CopyLodRangesFromSourceMesh(OldAsset, 0, sbp.slotMesh.sharedMesh, 0);
+                    CopyLodRangesFromSourceMesh(OldAsset, 0, sbp.slotMesh.sharedMesh, baseSubmeshIndex);
                 }
 #endif
                 GenerateSlotLodsIfEnabled(sbp, OldAsset);
@@ -859,7 +919,7 @@ namespace UMA.Editors
                 // Carry LOD ranges from the source mesh
                 if (sbp.generateSlotLods)
                 {
-                    CopyLodRangesFromSourceMesh(slot, 0, sbp.slotMesh.sharedMesh, 0);
+                    CopyLodRangesFromSourceMesh(slot, 0, sbp.slotMesh.sharedMesh, baseSubmeshIndex);
                 }
                 else
                 {
@@ -877,7 +937,7 @@ namespace UMA.Editors
             // Create/overwrite overlay for submesh0 if requested (non-UDIM reuse rule applies)
             if (sbp.createOverlays)
             {
-                var srcMat0 = (sbp.slotMesh.sharedMaterials != null && sbp.slotMesh.sharedMaterials.Length > 0) ? sbp.slotMesh.sharedMaterials[0] : null;
+                var srcMat0 = (sbp.slotMesh.sharedMaterials != null && baseSubmeshIndex < sbp.slotMesh.sharedMaterials.Length) ? sbp.slotMesh.sharedMaterials[baseSubmeshIndex] : null;
                 if (srcMat0 != null)
                 {
                     var oda = CreateOverlayFromMaterial(sbp, slot, srcMat0, null, assetDir);
@@ -891,20 +951,17 @@ namespace UMA.Editors
                 }
             }
 
-            var frenderer = finalMeshRenderer;
-            var shmesh = finalMeshRenderer.sharedMesh;
-            int meshCount = finalMeshRenderer.sharedMesh.subMeshCount;
-
             // Additional submeshes
-            for (int i = 1; i < meshCount; i++)
+            for (int additionalIndex = 1; additionalIndex < nonEmptySubmeshIndices.Count; additionalIndex++)
             {
-                string theSlotName = string.Format("{0}_{1}", sbp.slotName, i);
+                int sourceSubmeshIndex = nonEmptySubmeshIndices[additionalIndex];
+                string theSlotName = string.Format("{0}_{1}", sbp.slotName, additionalIndex);
 
-                if (i < sbp.slotMesh.sharedMaterials.Length && sbp.nameByMaterial)
+                if (sourceSubmeshIndex < sbp.slotMesh.sharedMaterials.Length && sbp.nameByMaterial)
                 {
-                    if (!string.IsNullOrEmpty(sbp.slotMesh.sharedMaterials[i].name))
+                    if (!string.IsNullOrEmpty(sbp.slotMesh.sharedMaterials[sourceSubmeshIndex].name))
                     {
-                        string titlecase = sbp.slotMesh.sharedMaterials[i].name.ToTitleCase();
+                        string titlecase = sbp.slotMesh.sharedMaterials[sourceSubmeshIndex].name.ToTitleCase();
                         if (!string.IsNullOrWhiteSpace(titlecase))
                         {
                             theSlotName = titlecase;
@@ -931,8 +988,8 @@ namespace UMA.Editors
                 {
                     // Update existing submesh slot
                     string existingRootBone = slot.meshData.RootBoneName;
+                    existingAdditional.sourceSubmeshIndex = sourceSubmeshIndex;
                     UpdateSlotData(existingAdditional, finalMeshRenderer, sbp.material, existingAdditional.normalReferenceMesh, existingRootBone, true, sbp.clearNormals, sbp.clearTangents);
-                    existingAdditional.sourceSubmeshIndex = i;
 #if UNITY_6000_2_OR_NEWER
                     if (!sbp.generateSlotLods)
                     {
@@ -940,7 +997,7 @@ namespace UMA.Editors
                     }
                     if (sbp.generateSlotLods)
                     {
-                        CopyLodRangesFromSourceMesh(existingAdditional, 0, sbp.slotMesh.sharedMesh, i);
+                        CopyLodRangesFromSourceMesh(existingAdditional, 0, sbp.slotMesh.sharedMesh, sourceSubmeshIndex);
                     }
 #endif
                     GenerateSlotLodsIfEnabled(sbp, existingAdditional);
@@ -950,7 +1007,7 @@ namespace UMA.Editors
                     // Overlay for this submesh
                     if (sbp.createOverlays)
                     {
-                        Material srcMat = (sbp.slotMesh.sharedMaterials != null && i < sbp.slotMesh.sharedMaterials.Length) ? sbp.slotMesh.sharedMaterials[i] : null;
+                        Material srcMat = (sbp.slotMesh.sharedMaterials != null && sourceSubmeshIndex < sbp.slotMesh.sharedMaterials.Length) ? sbp.slotMesh.sharedMaterials[sourceSubmeshIndex] : null;
                         var oda = CreateOverlayFromMaterial(sbp, existingAdditional, srcMat, null, assetDir);
                         slotToOverlay[existingAdditional] = oda;
                     }
@@ -959,18 +1016,19 @@ namespace UMA.Editors
 
                 // Create new additional slot
                 var additionalSlot = ScriptableObject.CreateInstance<SlotDataAsset>();
+                additionalSlot.isLegacySlot = false;
                 additionalSlot.name = theSlotName;
                 // Non-UDIM path: ensure udimAdjustment=false
-                additionalSlot.UpdateMeshData(finalMeshRenderer, sbp.rootBone, false, i, sbp.clearNormals, sbp.clearTangents);
+                additionalSlot.UpdateMeshData(finalMeshRenderer, sbp.rootBone, false, sourceSubmeshIndex, sbp.clearNormals, sbp.clearTangents);
                 TransformMeshData(additionalSlot, sbp);
 
-                additionalSlot.sourceSubmeshIndex = i;
+                additionalSlot.sourceSubmeshIndex = sourceSubmeshIndex;
 
                 AssetDatabase.CreateAsset(additionalSlot, theSlotPath);
 #if UNITY_6000_2_OR_NEWER
                 if (sbp.generateSlotLods)
                 {
-                    CopyLodRangesFromSourceMesh(additionalSlot, 0, sbp.slotMesh.sharedMesh, i);
+                    CopyLodRangesFromSourceMesh(additionalSlot, 0, sbp.slotMesh.sharedMesh, sourceSubmeshIndex);
                 }
                 else
                 {
@@ -987,7 +1045,7 @@ namespace UMA.Editors
                 // Overlay creation for additional submeshes (non-UDIM reuse rule)
                 if (sbp.createOverlays)
                 {
-                    Material srcMat = (sbp.slotMesh.sharedMaterials != null && i < sbp.slotMesh.sharedMaterials.Length) ? sbp.slotMesh.sharedMaterials[i] : null;
+                    Material srcMat = (sbp.slotMesh.sharedMaterials != null && sourceSubmeshIndex < sbp.slotMesh.sharedMaterials.Length) ? sbp.slotMesh.sharedMaterials[sourceSubmeshIndex] : null;
                     var oda = CreateOverlayFromMaterial(sbp, additionalSlot, srcMat, null, assetDir);
                     slotToOverlay[additionalSlot] = oda;
                 }
@@ -1003,6 +1061,10 @@ namespace UMA.Editors
                 resultBatch.Slots = createdSlots;
                 resultBatch.SlotToOverlay = slotToOverlay;
                 resultBatch.IsUDIM = false;
+                for (int i = 0; i < createdSlots.Count; i++)
+                {
+                    resultBatch.AddSourceMesh(createdSlots[i], sbp.slotMesh != null ? sbp.slotMesh.name : string.Empty);
+                }
                 resultBatch.TempAssetsToDelete.Add(SkinnedName);
                 resultBatch.TempAssetsToDelete.Add(theMesh);
                 return resultBatch;
@@ -1016,6 +1078,10 @@ namespace UMA.Editors
             resultNonUdim.Slots = createdSlots;
             resultNonUdim.SlotToOverlay = slotToOverlay;
             resultNonUdim.IsUDIM = false;
+            for (int i = 0; i < createdSlots.Count; i++)
+            {
+                resultNonUdim.AddSourceMesh(createdSlots[i], sbp.slotMesh != null ? sbp.slotMesh.name : string.Empty);
+            }
             return resultNonUdim;
         }
 
@@ -1590,6 +1656,16 @@ namespace UMA.Editors
                     sharedOldIndices.Add(kv.Key);
             }
 
+            var nonEmptyUdimSubmeshOrdinals = new Dictionary<int, int>();
+            int nonEmptyUdimSubmeshCount = 0;
+            for (int sub = 0; sub < mesh.subMeshCount; sub++)
+            {
+                if (perSubTileToTris.TryGetValue(sub, out var tileToTrisForSubmesh) && tileToTrisForSubmesh != null && tileToTrisForSubmesh.Count > 0)
+                {
+                    nonEmptyUdimSubmeshOrdinals[sub] = nonEmptyUdimSubmeshCount++;
+                }
+            }
+
             for (int sub = 0; sub < mesh.subMeshCount; sub++)
             {
                 if (!perSubTileToTris.TryGetValue(sub, out var tileToTris) || tileToTris.Count == 0)
@@ -1598,6 +1674,7 @@ namespace UMA.Editors
                 }
 
                 int i = 0;
+                bool hasMultipleTilesForSubmesh = tileToTris.Count > 1;
                 // Create a slot per used tile
                 foreach (var kvp in tileToTris)
                 {
@@ -1607,7 +1684,8 @@ namespace UMA.Editors
                     int udimNumber = 1001 + tu + (tv * 10);
 
                     // Base name logic like existing code
-                    string baseName = (sub == 0) ? sbp.slotName : string.Format("{0}_{1}", sbp.slotName, sub);
+                    int createdSubmeshOrdinal = nonEmptyUdimSubmeshOrdinals.TryGetValue(sub, out var ordinal) ? ordinal : sub;
+                    string baseName = (createdSubmeshOrdinal == 0) ? sbp.slotName : string.Format("{0}_{1}", sbp.slotName, createdSubmeshOrdinal);
                     if (sub < sbp.slotMesh.sharedMaterials.Length && sbp.nameByMaterial)
                     {
                         var mat = sbp.slotMesh.sharedMaterials[sub];
@@ -1626,9 +1704,8 @@ namespace UMA.Editors
                     {    
                         theSlotName = string.Format("{0}_UDIM{1}", baseName, udimNumber);
                     }
-                    else
+                    else if (hasMultipleTilesForSubmesh)
                     {
-                        // get the last 3 digits 
                         theSlotName = string.Format("{0}_{1}", baseName, i);
                     }
 
@@ -1728,6 +1805,7 @@ namespace UMA.Editors
                         {
                             // Create a new slot asset
                             sda = ScriptableObject.CreateInstance<SlotDataAsset>();
+                            sda.isLegacySlot = false;
                             sda.name = theSlotName;
                             sda.sourceSubmeshIndex = sub;
 
@@ -1826,7 +1904,12 @@ namespace UMA.Editors
                         UnityEngine.Object.DestroyImmediate(go);
                         UnityEngine.Object.DestroyImmediate(cmr.Mesh);
                         UnityEngine.Object.DestroyImmediate(tileMeshSrc);
-                        return new SlotBuildResult { Slots = createdSlots, SlotToOverlay = slotToOverlay, IsUDIM = true };
+                        var partialResult = new SlotBuildResult { Slots = createdSlots, SlotToOverlay = slotToOverlay, IsUDIM = true };
+                        for (int si = 0; si < createdSlots.Count; si++)
+                        {
+                            partialResult.AddSourceMesh(createdSlots[si], sourceRenderer != null ? sourceRenderer.name : string.Empty);
+                        }
+                        return partialResult;
                     }
                     finally
                     {
@@ -1845,7 +1928,12 @@ namespace UMA.Editors
             }
 
             // Build result for UDIM; recipe creation happens in caller
-            return new SlotBuildResult { Slots = createdSlots, SlotToOverlay = slotToOverlay, IsUDIM = true };
+            var udimResult = new SlotBuildResult { Slots = createdSlots, SlotToOverlay = slotToOverlay, IsUDIM = true };
+            for (int i = 0; i < createdSlots.Count; i++)
+            {
+                udimResult.AddSourceMesh(createdSlots[i], sourceRenderer != null ? sourceRenderer.name : string.Empty);
+            }
+            return udimResult;
         }
 
         private static void WeldUdimSeamNormalsAverage(List<SlotDataAsset> slots)

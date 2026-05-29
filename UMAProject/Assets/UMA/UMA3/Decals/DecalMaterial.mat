@@ -21,7 +21,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: DecalMaterial
-  m_Shader: {fileID: -6465566751694194690, guid: de90b6ff34ca64449b132b66875423ed, type: 3}
+  m_Shader: {fileID: -6465566751694194690, guid: 54edaf39267490441b52006754bf7a49, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -98,14 +98,14 @@ Material:
     m_Floats:
     - _AddPrecomputedVelocity: 0
     - _AlphaClip: 0.059
-    - _AlphaModulation: 1
+    - _AlphaModulation: 1.715
     - _AlphaToMask: 0
     - _Blend: 0
     - _BlendModePreserveSpecular: 1
     - _BumpScale: 1
     - _ClearCoatMask: 0
     - _ClearCoatSmoothness: 0
-    - _ColorModulation: 1.9
+    - _ColorModulation: 1.528
     - _Cull: 2
     - _CullMode: 2
     - _Cutoff: 0.5
@@ -121,7 +121,7 @@ Material:
     - _HalfLambertStrength: 1.49
     - _Metallic: 0
     - _MetallicModulation: 0
-    - _NormalStrength: 1
+    - _NormalStrength: 1.297
     - _OcclusionStrength: 1
     - _Parallax: 0.005
     - _QueueControl: -1
@@ -129,7 +129,7 @@ Material:
     - _ReceiveShadows: 1
     - _RimLightPower: 5.16
     - _RimLightingModulation: 0
-    - _Smoothness: 0.5
+    - _Smoothness: 0.734
     - _SmoothnessModulation: 0
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
@@ -142,6 +142,7 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
+    - _AltColor: {r: 1, g: 1, b: 1, a: 1}
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 0.8}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}

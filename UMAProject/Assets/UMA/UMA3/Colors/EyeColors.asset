@@ -28,7 +28,7 @@ MonoBehaviour:
       serializedProperties: []
     foldout: 0
     showAdvanced: 0
-    isBaseColor: 0
+    isBaseColor: 1
     deleteThis: 0
     moveUpThis: 0
     moveDownThis: 0
@@ -51,7 +51,7 @@ MonoBehaviour:
       serializedProperties: []
     foldout: 0
     showAdvanced: 0
-    isBaseColor: 0
+    isBaseColor: 1
     deleteThis: 0
     moveUpThis: 0
     moveDownThis: 0
@@ -74,7 +74,7 @@ MonoBehaviour:
       serializedProperties: []
     foldout: 0
     showAdvanced: 0
-    isBaseColor: 0
+    isBaseColor: 1
     deleteThis: 0
     moveUpThis: 0
     moveDownThis: 0
@@ -97,7 +97,7 @@ MonoBehaviour:
       serializedProperties: []
     foldout: 0
     showAdvanced: 0
-    isBaseColor: 0
+    isBaseColor: 1
     deleteThis: 0
     moveUpThis: 0
     moveDownThis: 0
@@ -120,7 +120,7 @@ MonoBehaviour:
       serializedProperties: []
     foldout: 0
     showAdvanced: 0
-    isBaseColor: 0
+    isBaseColor: 1
     deleteThis: 0
     moveUpThis: 0
     moveDownThis: 0
@@ -143,7 +143,7 @@ MonoBehaviour:
       serializedProperties: []
     foldout: 0
     showAdvanced: 0
-    isBaseColor: 0
+    isBaseColor: 1
     deleteThis: 0
     moveUpThis: 0
     moveDownThis: 0
@@ -166,7 +166,7 @@ MonoBehaviour:
       serializedProperties: []
     foldout: 0
     showAdvanced: 0
-    isBaseColor: 0
+    isBaseColor: 1
     deleteThis: 0
     moveUpThis: 0
     moveDownThis: 0

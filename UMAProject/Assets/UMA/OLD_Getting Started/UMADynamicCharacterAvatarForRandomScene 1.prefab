@@ -883,7 +883,7 @@ MonoBehaviour:
       deleteThis: 0
       moveUpThis: 0
       moveDownThis: 0
-      colorsExpanded: 0
+      colorsExpanded: 1
       propertiesExpanded: 0
       showSelected: 0
       isSelected: 0
@@ -1027,6 +1027,7 @@ MonoBehaviour:
   ensureSharedColors: 0
   defaultSaveOptions: 15
   BoundsOffset: {x: 0, y: 0, z: 0}
+  visualizeRendererBounds: 0
   editorTimeGeneration: 1
   showPlaceholder: 0
   previewModel: 0

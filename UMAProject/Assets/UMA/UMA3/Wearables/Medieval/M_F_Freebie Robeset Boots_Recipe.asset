@@ -21,11 +21,13 @@ MonoBehaviour:
   - Human Female 3.0
   wardrobeRecipeThumbs:
   - race: Human Male 3.0
-    filename: 
-    thumb: {fileID: 0}
+    filename: Assets/UMA/UMA3/Wearables/Icons/Feet/Human Male 3.0/4_M_F_Freebie Robeset
+      Boots_Recipe.png
+    thumb: {fileID: 21300000, guid: be055e7065ae9d44a979c701bf8d0bec, type: 3}
   - race: Human Female 3.0
-    filename: 
-    thumb: {fileID: 0}
+    filename: Assets/UMA/UMA3/Wearables/Icons/Feet/Human Female 3.0/2_M_F_Freebie
+      Robeset Boots_Recipe.png
+    thumb: {fileID: 21300000, guid: f4bd32114281cc44aba9b090a37db6fe, type: 3}
   wardrobeSlot: Feet
   Appended: 0
   Hides: []

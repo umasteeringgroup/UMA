@@ -14,6 +14,7 @@ namespace UMA.CharacterSystem.Editors
         public List<string> recipeSlots = new List<string>();
         public List<bool> recipeMenuIsAddAll = new List<bool>();
         public string LastRace = "";
+        private string lastDropdownSignature = string.Empty;
         public static int lastAdded = -1;
         public static int selectedSlotIndex = 0;
 
@@ -60,62 +61,138 @@ namespace UMA.CharacterSystem.Editors
             }
         }
 
+        private Dictionary<string, List<UMATextRecipe>> GetAvailableRecipesForCurrentRace()
+        {
+            if (thisDCA == null)
+            {
+                return null;
+            }
+
+            try
+            {
+                thisDCA.preloadWardrobeRecipes?.GetRecipesForRace(thisDCA.activeRace.name, thisDCA.activeRace.data);
+            }
+            catch { }
+
+            Dictionary<string, List<UMATextRecipe>> availableRecipes = null;
+            try
+            {
+                availableRecipes = thisDCA.AvailableRecipes;
+            }
+            catch { }
+
+            if ((availableRecipes == null || availableRecipes.Count == 0) && thisDCA.activeRace != null && thisDCA.activeRace.data != null)
+            {
+                var idx = TryGetIndexer();
+                if (idx != null)
+                {
+                    try { idx.RebuildRaceRecipes(); } catch { }
+                }
+
+                try
+                {
+                    availableRecipes = thisDCA.AvailableRecipes;
+                }
+                catch { }
+            }
+
+            return availableRecipes;
+        }
+
+        private string BuildDropdownSignature(string race, Dictionary<string, List<UMATextRecipe>> availableRecipes)
+        {
+            List<string> orderedSlots = new List<string>();
+            HashSet<string> seenSlots = new HashSet<string>();
+
+            IList<string> raceSlots = thisDCA?.activeRace?.data != null ? thisDCA.activeRace.data.wardrobeSlots : null;
+            if (raceSlots != null)
+            {
+                for (int i = 0; i < raceSlots.Count; i++)
+                {
+                    string slot = raceSlots[i] ?? string.Empty;
+                    if (seenSlots.Add(slot))
+                    {
+                        orderedSlots.Add(slot);
+                    }
+                }
+            }
+
+            if (availableRecipes != null)
+            {
+                List<string> extraSlots = new List<string>();
+                foreach (var kvp in availableRecipes)
+                {
+                    string slot = kvp.Key ?? string.Empty;
+                    if (seenSlots.Add(slot))
+                    {
+                        extraSlots.Add(slot);
+                    }
+                }
+                extraSlots.Sort(StringComparer.Ordinal);
+                orderedSlots.AddRange(extraSlots);
+            }
+
+            List<string> slotEntries = new List<string>(orderedSlots.Count);
+            for (int i = 0; i < orderedSlots.Count; i++)
+            {
+                string slot = orderedSlots[i];
+                List<string> recipeNames = new List<string>();
+                if (availableRecipes != null && availableRecipes.TryGetValue(slot, out var slotRecipes) && slotRecipes != null)
+                {
+                    for (int recipeIndex = 0; recipeIndex < slotRecipes.Count; recipeIndex++)
+                    {
+                        var recipe = slotRecipes[recipeIndex];
+                        if (recipe != null)
+                        {
+                            recipeNames.Add(recipe.name);
+                        }
+                    }
+                }
+                recipeNames.Sort(StringComparer.Ordinal);
+                slotEntries.Add(slot + ":" + string.Join(",", recipeNames));
+            }
+
+            return (race ?? string.Empty) + "|" + string.Join(";", slotEntries);
+        }
+
         public void SetupDropdown(string race)
         {
-			// Rebuild when race changes OR when the menu is empty (domain reload / index refresh)
-			if (LastRace != race || recipeMenu.Count == 0 || recipes.Count == 0)
+            var availableRecipes = GetAvailableRecipesForCurrentRace();
+            string currentSignature = BuildDropdownSignature(race, availableRecipes);
+
+			// Rebuild when race changes, when the live recipe set changes, or when the menu is empty.
+			if (LastRace != race || lastDropdownSignature != currentSignature || recipeMenu.Count == 0 || recipes.Count == 0)
             {
                 LastRace = race;
+                lastDropdownSignature = currentSignature;
                 recipes.Clear();
                 recipeMenu.Clear();
                 recipeSlots.Clear();
                 recipeMenuIsAddAll.Clear();
-				if (thisDCA != null)
+				if (availableRecipes != null && availableRecipes.Count > 0)
                 {
                     try
                     {
-						// Ensure the DCA has an up-to-date AvailableRecipes mapping for the currently selected race
-						try
-						{
-							thisDCA.preloadWardrobeRecipes?.GetRecipesForRace(thisDCA.activeRace.name, thisDCA.activeRace.data);
-						}
-						catch { }
-
-						var availableRecipes = thisDCA.AvailableRecipes;
-						if ((availableRecipes == null || availableRecipes.Count == 0) && thisDCA.activeRace != null && thisDCA.activeRace.data != null)
-						{
-							// Fallback: force a rebuild of race recipes in the indexer and try again
-							var idx = TryGetIndexer();
-							if (idx != null)
-							{
-								try { idx.RebuildRaceRecipes(); } catch { }
-							}
-							availableRecipes = thisDCA.AvailableRecipes;
-						}
-
-						if (availableRecipes != null && availableRecipes.Count > 0)
-						{
-							// Present as a submenu for each wardrobe slot on the current race
-							var raceData = thisDCA.activeRace != null ? thisDCA.activeRace.data : null;
-							IList<string> slots = raceData != null ? raceData.wardrobeSlots : null;
-							if (slots != null && slots.Count > 0)
-							{
-								for (int si = 0; si < slots.Count; si++)
-								{
-									string slot = slots[si];
-									if (string.IsNullOrEmpty(slot)) continue;
-									if (!availableRecipes.TryGetValue(slot, out var list) || list == null) continue;
+                        var raceData = thisDCA.activeRace != null ? thisDCA.activeRace.data : null;
+                        IList<string> slots = raceData != null ? raceData.wardrobeSlots : null;
+                        if (slots != null && slots.Count > 0)
+                        {
+                            for (int si = 0; si < slots.Count; si++)
+                            {
+                                string slot = slots[si];
+                                if (string.IsNullOrEmpty(slot)) continue;
+                                if (!availableRecipes.TryGetValue(slot, out var list) || list == null) continue;
                                  int addedForSlot = 0;
-									for (int ri = 0; ri < list.Count; ri++)
-									{
-										var recipe = list[ri];
-										if (recipe == null) continue;
-										recipes.Add(recipe.name);
-										recipeMenu.Add(slot + "/" + recipe.name);
+                                for (int ri = 0; ri < list.Count; ri++)
+                                {
+                                    var recipe = list[ri];
+                                    if (recipe == null) continue;
+                                    recipes.Add(recipe.name);
+                                    recipeMenu.Add(slot + "/" + recipe.name);
                                        recipeSlots.Add(slot);
                                         recipeMenuIsAddAll.Add(false);
                                         addedForSlot++;
-									}
+                                }
                                    if (addedForSlot > 0)
                                     {
                                         recipes.Add(string.Empty);
@@ -123,25 +200,25 @@ namespace UMA.CharacterSystem.Editors
                                         recipeSlots.Add(slot);
                                         recipeMenuIsAddAll.Add(true);
                                     }
-								}
-							}
-							else
-							{
-								foreach (var kvp in availableRecipes)
-								{
-									var list = kvp.Value;
-									if (list == null) continue;
+                            }
+                        }
+                        else
+                        {
+                            foreach (var kvp in availableRecipes)
+                            {
+                                var list = kvp.Value;
+                                if (list == null) continue;
                                  int addedForSlot = 0;
-									for (int ri = 0; ri < list.Count; ri++)
-									{
-										var recipe = list[ri];
-										if (recipe == null) continue;
-										recipes.Add(recipe.name);
-										recipeMenu.Add(kvp.Key + "/" + recipe.name);
+                                for (int ri = 0; ri < list.Count; ri++)
+                                {
+                                    var recipe = list[ri];
+                                    if (recipe == null) continue;
+                                    recipes.Add(recipe.name);
+                                    recipeMenu.Add(kvp.Key + "/" + recipe.name);
                                        recipeSlots.Add(kvp.Key);
                                         recipeMenuIsAddAll.Add(false);
                                         addedForSlot++;
-									}
+                                }
                                    if (addedForSlot > 0)
                                     {
                                         recipes.Add(string.Empty);
@@ -149,9 +226,8 @@ namespace UMA.CharacterSystem.Editors
                                         recipeSlots.Add(kvp.Key);
                                         recipeMenuIsAddAll.Add(true);
                                     }
-								}
-							}
-                           }
+                            }
+                        }
                     }
                     catch { /* ignore during reload */ }
                 }
@@ -420,10 +496,33 @@ namespace UMA.CharacterSystem.Editors
         private void InvalidateDropdownCache()
         {
             LastRace = string.Empty;
+            lastDropdownSignature = string.Empty;
             recipes.Clear();
             recipeMenu.Clear();
             recipeSlots.Clear();
             recipeMenuIsAddAll.Clear();
+        }
+
+        private void RefreshRecipeAvailability(UMATextRecipe recipeAsset)
+        {
+            try
+            {
+                UMAUpdateProcessor.UpdateRecipe(recipeAsset);
+            }
+            catch
+            {
+                var idx = TryGetIndexer();
+                if (idx != null)
+                {
+                    try { idx.RebuildRaceRecipes(); } catch { ScheduleRebuildRaceRecipes(); }
+                }
+                else
+                {
+                    ScheduleRebuildRaceRecipes();
+                }
+            }
+
+            InvalidateDropdownCache();
         }
 
         private bool TryGetCurrentRaceName(out string raceName)
@@ -514,7 +613,7 @@ namespace UMA.CharacterSystem.Editors
                     {
                         recipeElement.serializedObject.ApplyModifiedProperties();
                     }
-                    InvalidateDropdownCache();
+                    RefreshRecipeAvailability(recipeAsset);
                     changed = true;
                 }
             });
@@ -542,7 +641,7 @@ namespace UMA.CharacterSystem.Editors
                     {
                         recipeElement.serializedObject.ApplyModifiedProperties();
                     }
-                    InvalidateDropdownCache();
+                    RefreshRecipeAvailability(recipeAsset);
                     changed = true;
                 }
             });

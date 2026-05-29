@@ -117,6 +117,31 @@ namespace UMA
                 return false;
             }
         }
+        
+        public bool isBaked
+        {
+            get
+            {
+                if (asset == null)
+                {
+                    return false;
+                }
+
+                return !string.IsNullOrEmpty(asset.sourceSlot);
+            }
+        }
+
+        public string baseSlotName
+        {    
+            get
+            {
+                if (asset != null && !string.IsNullOrEmpty(asset.sourceSlot))
+                {
+                    return asset.sourceSlot;
+                }
+                return slotName;
+            } 
+        }
 
         public Vector2 ConvertToAtlasUV(Vector2 uvIn)
         {

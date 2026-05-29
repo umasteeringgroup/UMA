@@ -37,6 +37,7 @@ public class IconCreator : MonoBehaviour
     public Vector2 IconDimensions = new Vector2(128, 128);
 
     public float PreviewSize = 128.0f;
+    public float scrollAreaHeight = 90.0f;
     public int currentCameraIndex = 0;
     private Vector2 previewScrollPosition = Vector2.zero;
     private int selectedRegionIndex = 0;
@@ -64,7 +65,6 @@ public class IconCreator : MonoBehaviour
     {
         if (skin == null)
         {
-            Debug.Log("Creating custom GUI skin for Icon Creator.");
             skin = ScriptableObject.Instantiate(GUI.skin);
 
             flatNormal = MakeTex(new Color(0.25f, 0.25f, 0.25f)); // normal
@@ -126,7 +126,7 @@ public class IconCreator : MonoBehaviour
     {
         float previewWidth = Mathf.Max(64f, PreviewSize); ;
         float previewHeight = Mathf.Max(64f, PreviewSize);
-        float scrollHeight = previewHeight + 150f;
+        float scrollHeight = previewHeight + scrollAreaHeight;
 
         previewScrollPosition = GUILayout.BeginScrollView(previewScrollPosition, GUILayout.Height(scrollHeight));
         GUILayout.BeginHorizontal();
@@ -207,6 +207,12 @@ public class IconCreator : MonoBehaviour
         List<string> raceRegions = GetRaceRegionsFromAvatarRaceData();
         SyncSelectedRegion(raceRegions);
 
+        GUILayout.Label("Icon Creation", GUI.skin.box);
+        GUILayout.Label("Select the region to render, and click 'Render Now' to generate icons for the current wearable items in that region");
+        GUILayout.Label("Click 'Generate All Icons' to render icons for all wearable items across all regions.");
+        GUILayout.Label("Icons will be saved to: " + GetOutputBaseFolder());
+        GUILayout.Label("(This can be changed by modifying the root folder field on the Icon Creator component)", GUILayout.ExpandWidth(false));
+        
         GUILayout.BeginHorizontal();
         GUILayout.Label("Region to Render", GUILayout.Width(110f));
 

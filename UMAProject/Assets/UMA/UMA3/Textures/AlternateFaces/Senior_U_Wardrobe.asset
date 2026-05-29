@@ -19,7 +19,13 @@ MonoBehaviour:
   compatibleRaces:
   - Human Female 3.0
   - Human Male 3.0
-  wardrobeRecipeThumbs: []
+  wardrobeRecipeThumbs:
+  - race: Human Female 3.0
+    filename: Assets/UMA/UMA3/Wearables/Icons/Face/Human Female 3.0/11_Senior_U_Wardrobe.png
+    thumb: {fileID: 21300000, guid: 5d6da07c439f09d449c7b0cf6a6b5e55, type: 3}
+  - race: Human Male 3.0
+    filename: Assets/UMA/UMA3/Wearables/Icons/Face/Human Male 3.0/9_Senior_U_Wardrobe.png
+    thumb: {fileID: 21300000, guid: 57f836fd5a962a643b440302a188526f, type: 3}
   wardrobeSlot: Face
   Appended: 0
   Hides: []

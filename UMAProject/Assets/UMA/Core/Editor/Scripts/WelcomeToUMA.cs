@@ -727,8 +727,8 @@ namespace UMA
         private void DoDocumentation()
         {
             ClearLog();
-            AddText("Opening UMA Documentation.PDF");
-
+            UMAMarkdownViewer.ViewDocumentation();
+            /*
             string basePath = null;
             try
             {
@@ -773,7 +773,7 @@ namespace UMA
             catch (Exception ex)
             {
                 AddText($"Error opening documentation: {ex.Message}", LogType.Error);
-            }
+            } */
         }
 
         private void DrawContent(int currentButton)

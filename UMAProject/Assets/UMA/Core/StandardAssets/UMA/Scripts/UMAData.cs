@@ -1414,6 +1414,7 @@ namespace UMA
                     }
 
                     sd.meshHideMask = null;
+					
 					//Add MeshHideAsset here
                     if (MeshHideDictionary.ContainsKey(sd.slotName))
                     {   //If this slotDataAsset is found in the MeshHideDictionary then we need to supply the SlotData with the bitArray.

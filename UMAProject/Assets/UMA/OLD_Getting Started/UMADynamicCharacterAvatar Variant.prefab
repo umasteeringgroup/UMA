@@ -65,6 +65,18 @@ PrefabInstance:
       value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
+      propertyPath: characterColors._colors.Array.data[0].isBaseColor
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
+      propertyPath: characterColors._colors.Array.data[1].isBaseColor
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
+      propertyPath: characterColors._colors.Array.data[2].isBaseColor
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
       propertyPath: preloadWardrobeRecipes.recipes.Array.data[0]._recipeName
       value: colors_top_Recipe
       objectReference: {fileID: 0}
@@ -120,7 +132,8 @@ PrefabInstance:
       propertyPath: 'preloadWardrobeRecipes.recipes.Array.data[3]._compatibleRaces.Array.data[1]'
       value: Human Male 3.0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 7177144072677387642, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []

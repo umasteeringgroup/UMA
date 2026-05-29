@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 487678}
   - component: {fileID: 11453600}
   - component: {fileID: 114399585086637844}
-  - component: {fileID: 7177144072677387642}
   m_Layer: 0
   m_Name: UMADynamicCharacterAvatar
   m_TagString: Untagged
@@ -47,13 +46,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   renderers: []
+  defaultRendererAsset: {fileID: 0}
   userInformation: 
-  dnaInstanceCollection:
-    dnaInstances: []
-  useNewDNA: 0
+  alwaysAdjustBounds: 0
   rawAvatar: 0
+  disableAnimation: 0
   raceChanged: 0
   hideRenderers: 0
+  currentLODLevel: 0
   OverrideTpose: {fileID: 0}
   atlasResolutionScale: 1
   ForceRebindAnimator: 0
@@ -61,6 +61,7 @@ MonoBehaviour:
   isShapeDirty: 0
   isTextureDirty: 0
   isAtlasDirty: 0
+  needsMaterialClear: 0
   markNotReadable: 1
   markDynamic: 0
   force32bit: 0
@@ -107,10 +108,15 @@ MonoBehaviour:
   PreUpdateUMABody:
     m_PersistentCalls:
       m_Calls: []
+  AtlasUpdated:
+    m_PersistentCalls:
+      m_Calls: []
   umaRoot: {fileID: 0}
   _umaRecipe:
     raceData: {fileID: 0}
-    dnaValues: []
+    recipeName: 
+    dnaInstanceCollection:
+      dnaInstances: []
     slotDataList: []
     sharedColors: []
   animator: {fileID: 0}
@@ -123,6 +129,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 1f292487d7383514f97c491cadfb0442, type: 2}
   DelayUnload: 2
   BundleCheck: 1
+  StartGuard: 0
+  UnpackPrefabOnBuild: 1
   KeepAnimatorController: 0
   RecreateAnimatorOnRaceChange: 1
   RecipeUpdated:
@@ -216,8 +224,13 @@ MonoBehaviour:
       showAdvanced: 0
       isBaseColor: 0
       deleteThis: 0
+      moveUpThis: 0
+      moveDownThis: 0
       colorsExpanded: 0
       propertiesExpanded: 0
+      showSelected: 0
+      isSelected: 0
+      showDisplayColor: 0
       displayColor: {r: 1, g: 1, b: 1, a: 1}
       _name: 
       _color: {r: 0.3529412, g: 0.21568629, b: 0.14117648, a: 1}
@@ -241,8 +254,13 @@ MonoBehaviour:
       showAdvanced: 0
       isBaseColor: 0
       deleteThis: 0
+      moveUpThis: 0
+      moveDownThis: 0
       colorsExpanded: 0
       propertiesExpanded: 0
+      showSelected: 0
+      isSelected: 0
+      showDisplayColor: 0
       displayColor: {r: 1, g: 1, b: 1, a: 1}
       _name: 
       _color: {r: 0.28627452, g: 0.40784317, b: 1, a: 1}
@@ -266,8 +284,13 @@ MonoBehaviour:
       showAdvanced: 0
       isBaseColor: 0
       deleteThis: 0
+      moveUpThis: 0
+      moveDownThis: 0
       colorsExpanded: 0
       propertiesExpanded: 0
+      showSelected: 0
+      isSelected: 0
+      showDisplayColor: 0
       displayColor: {r: 1, g: 1, b: 1, a: 1}
       _name: 
       _color: {r: 0.9632353, g: 0.82158303, b: 0.82158303, a: 1}
@@ -291,8 +314,13 @@ MonoBehaviour:
       showAdvanced: 0
       isBaseColor: 0
       deleteThis: 0
+      moveUpThis: 0
+      moveDownThis: 0
       colorsExpanded: 0
       propertiesExpanded: 0
+      showSelected: 0
+      isSelected: 0
+      showDisplayColor: 0
       displayColor: {r: 1, g: 1, b: 1, a: 1}
       _name: 
       _color: {r: 0.3529412, g: 0.4156863, b: 0.6392157, a: 1}
@@ -316,6 +344,7 @@ MonoBehaviour:
   ensureSharedColors: 0
   defaultSaveOptions: 15
   BoundsOffset: {x: 0, y: 0, z: 0}
+  visualizeRendererBounds: 0
   editorTimeGeneration: 1
   showPlaceholder: 0
   previewModel: 0
@@ -325,6 +354,9 @@ MonoBehaviour:
   _buildCharacterEnabled: 1
   nextBuildSlotsOnly: 0
   debugVertexes: 1
+  references:
+    version: 2
+    RefIds: []
 --- !u!114 &114399585086637844
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -402,90 +434,3 @@ MonoBehaviour:
             m_StringArgument: 
             m_BoolArgument: 1
           m_CallState: 2
---- !u!114 &7177144072677387642
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 153068}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 05c88fba981e04b49b91569af1c372a6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  enableBlinking: 0
-  blinkDuration: 0.15
-  minBlinkDelay: 3
-  maxBlinkDelay: 15
-  enableSaccades: 0
-  gazeTarget: {x: 0, y: 0, z: 0}
-  gazeWeight: 0
-  gazeMode: 0
-  overrideMecanimEyes: 1
-  overrideMecanimJaw: 1
-  overrideMecanimNeck: 0
-  overrideMecanimHead: 0
-  overrideMecanimHands: 0
-  Expressions: []
-  neckUp_Down: 0
-  neckLeft_Right: 0
-  neckTiltLeft_Right: 0
-  headUp_Down: 0
-  headLeft_Right: 0
-  headTiltLeft_Right: 0
-  jawOpen_Close: 0
-  jawForward_Back: 0
-  jawLeft_Right: 0
-  mouthLeft_Right: 0
-  mouthUp_Down: 0
-  mouthNarrow_Pucker: 0
-  tongueOut: 0
-  tongueCurl: 0
-  tongueUp_Down: 0
-  tongueLeft_Right: 0
-  tongueWide_Narrow: 0
-  leftMouthSmile_Frown: 0
-  rightMouthSmile_Frown: 0
-  leftLowerLipUp_Down: 0
-  rightLowerLipUp_Down: 0
-  leftUpperLipUp_Down: 0
-  rightUpperLipUp_Down: 0
-  leftCheekPuff_Squint: 0
-  rightCheekPuff_Squint: 0
-  noseSneer: 0
-  leftEyeOpen_Close: 0
-  rightEyeOpen_Close: 0
-  leftEyeUp_Down: 0
-  rightEyeUp_Down: 0
-  leftEyeIn_Out: 0
-  rightEyeIn_Out: 0
-  browsIn: 0
-  leftBrowUp_Down: 0
-  rightBrowUp_Down: 0
-  midBrowUp_Down: 0
-  leftGrasp: 0
-  rightGrasp: 0
-  leftPeace: 0
-  rightPeace: 0
-  leftRude: 0
-  rightRude: 0
-  leftPoint: 0
-  rightPoint: 0
-  expressionSet: {fileID: 0}
-  minWeight: 0
-  logResetErrors: 0
-  useDisableDistance: 0
-  processing: 0
-  disableDistance: 10
-  eyeMovementRange: 30
-  mutualGazeRange: 0.1
-  MinSaccadeDelay: 0.25
-  MaxSaccadeMagnitude: 15
-  minSaccade: -0.6
-  maxSaccade: 0.6
-  allowUpDownSaccades: 0
-  animator: {fileID: 0}
-  ExpressionChanged:
-    m_PersistentCalls:
-      m_Calls: []

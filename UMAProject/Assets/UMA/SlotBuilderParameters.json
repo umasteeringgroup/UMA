@@ -9,7 +9,7 @@
     "calcTangents": false,
     "clearNormals": false,
     "clearTangents": false,
-    "udimAdjustment": true,
+    "udimAdjustment": false,
     "udimTilesU": 10,
     "udimTilesV": 10,
     "nameAfterMaterial": false,
@@ -41,11 +41,11 @@
         "x": 0.0,
         "y": 0.0
     },
-    "filterIgnoreMeshesEnabled": false,
-    "filterIgnoreMeshesContaining": "",
+    "filterIgnoreMeshesEnabled": true,
+    "filterIgnoreMeshesContaining": "UMA30",
     "filterOnlyIncludeMeshesEnabled": false,
     "filterOnlyIncludeMeshesContaining": "robe",
-    "lastDroppedFbxPath": "Assets/temp/UMA_3_Clothing_Hair_selected.fbx",
-    "pendingSmrsCompactView": true,
+    "lastDroppedFbxPath": "Assets/temp/UMA_3_scrunchies.fbx",
+    "pendingSmrsCompactView": false,
     "pendingSmrsFilterEnabled": false
 }

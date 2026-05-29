@@ -599,7 +599,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   renderers: []
-  defaultRendererAsset: {fileID: 0}
+  defaultRendererAsset: {fileID: 11400000, guid: 2ffdda70ea6184d4eab8ca0976e7f37c, type: 2}
   userInformation: 
   alwaysAdjustBounds: 0
   rawAvatar: 0
@@ -719,10 +719,6 @@ MonoBehaviour:
         enabled: 1
         parentGroup: {fileID: 11400000, guid: 03b087bf030777547a3270b711355867, type: 2}
       - Name: earsYaw
-        Value: 0.5
-        enabled: 1
-        parentGroup: {fileID: 11400000, guid: 03b087bf030777547a3270b711355867, type: 2}
-      - Name: EyePosition
         Value: 0.5
         enabled: 1
         parentGroup: {fileID: 11400000, guid: 03b087bf030777547a3270b711355867, type: 2}
@@ -906,20 +902,16 @@ MonoBehaviour:
         Value: 0.5
         enabled: 1
         parentGroup: {fileID: 11400000, guid: f37fdc4aa818b914f9b89d0385c8bcf9, type: 2}
-      - Name: chestSize
-        Value: 0.5
-        enabled: 1
-        parentGroup: {fileID: 11400000, guid: 15c4688efc612034ca4bef53794fabdc, type: 2}
-      - Name: shoulderWidth
-        Value: 0.751
-        enabled: 1
-        parentGroup: {fileID: 11400000, guid: 15c4688efc612034ca4bef53794fabdc, type: 2}
       - Name: feetHighHeels
         Value: 0.5
         enabled: 1
         parentGroup: {fileID: 11400000, guid: bd79fbf28341021419ec55437e4ac01d, type: 2}
+      - Name: eyePosition
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 03b087bf030777547a3270b711355867, type: 2}
     slotDataList:
-    - asset: {fileID: 11400000, guid: b73118a9e04bc0744ba856fcf1a2c46b, type: 2}
+    - asset: {fileID: 11400000, guid: c7aa9036cfe42254195d9dfa232d33f2, type: 2}
       isPlaceholderSlot: 0
       placeholderSlotName: 
       overlayScale: 1
@@ -962,7 +954,7 @@ MonoBehaviour:
       Suppressed: 0
       dontSerialize: 0
       rendererAsset: {fileID: 0}
-    - asset: {fileID: 11400000, guid: 6ae1b08dc3cc9a749b9d73edb0b0372d, type: 2}
+    - asset: {fileID: 11400000, guid: 4582d4dad782b1b46acd129f239007c7, type: 2}
       isPlaceholderSlot: 0
       placeholderSlotName: 
       overlayScale: 1
@@ -977,7 +969,7 @@ MonoBehaviour:
         DNAName: 
         Scale: 1
         adjustments:
-          rid: 7442055854780580639
+          rid: 7551229840371220496
       blendShapeTargetSlot: 
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
@@ -1012,7 +1004,7 @@ MonoBehaviour:
       Suppressed: 0
       dontSerialize: 0
       rendererAsset: {fileID: 0}
-    - asset: {fileID: 11400000, guid: 8353b4a99926fd7419859646df784aa0, type: 2}
+    - asset: {fileID: 11400000, guid: 3da325823ac614f40bc1ecfa57ff2264, type: 2}
       isPlaceholderSlot: 0
       placeholderSlotName: 
       overlayScale: 1
@@ -1053,7 +1045,7 @@ MonoBehaviour:
       Suppressed: 0
       dontSerialize: 0
       rendererAsset: {fileID: 0}
-    - asset: {fileID: 11400000, guid: 096b1cc2585e4d241bd4039aeef93f66, type: 2}
+    - asset: {fileID: 11400000, guid: 556cfd1c30b5fd745ad0ea14c32630ab, type: 2}
       isPlaceholderSlot: 0
       placeholderSlotName: 
       overlayScale: 1
@@ -1094,7 +1086,7 @@ MonoBehaviour:
       Suppressed: 0
       dontSerialize: 0
       rendererAsset: {fileID: 0}
-    - asset: {fileID: 11400000, guid: 2a13747dc4eeab541aa8bd60047a587d, type: 2}
+    - asset: {fileID: 11400000, guid: ae8d052b217aade4facd6057c66fc6ad, type: 2}
       isPlaceholderSlot: 0
       placeholderSlotName: 
       overlayScale: 1
@@ -1202,13 +1194,13 @@ MonoBehaviour:
       skinnedMeshRenderer: 0
       submeshIndex: 6
       vertexOffset: 14449
-      uvAreaUpdateFrame: 0
+      uvAreaUpdateFrame: 1
       UVArea:
         serializedVersion: 2
-        x: NaN
-        y: NaN
-        width: NaN
-        height: NaN
+        x: 0
+        y: 0
+        width: 0.25
+        height: 0.25
       tempHidden: 0
       isDisabled: 0
       UVSet: 0
@@ -1243,7 +1235,7 @@ MonoBehaviour:
       skinnedMeshRenderer: 0
       submeshIndex: 7
       vertexOffset: 15863
-      uvAreaUpdateFrame: 1
+      uvAreaUpdateFrame: 0
       UVArea:
         serializedVersion: 2
         x: 0
@@ -1257,6 +1249,47 @@ MonoBehaviour:
       BlendshapeSlotNames: []
       Suppressed: 0
       dontSerialize: 0
+      rendererAsset: {fileID: 0}
+    - asset: {fileID: 11400000, guid: 90fdc283478c6544583ff1f461a6d26c, type: 2}
+      isPlaceholderSlot: 0
+      placeholderSlotName: 
+      overlayScale: 1
+      tags: []
+      Races: []
+      meshModifiers: []
+      blendShapeTargetSlot: 
+      BlendshapeFoldout: 0
+      ClipPlaneFoldout: 0
+      isDeleted: 0
+      slotAssetFoldout: 0
+      expandAlongNormal: 0
+      overSmoosh: 0.01
+      smooshDistance: 0.001
+      smooshInvertX: 0
+      smooshInvertY: 1
+      smooshInvertZ: 0
+      smooshInvertDist: 1
+      smooshTargetTag: 
+      smooshableTag: 
+      isSwapSlot: 0
+      swapTag: LongHair
+      skinnedMeshRenderer: 0
+      submeshIndex: 0
+      vertexOffset: 0
+      uvAreaUpdateFrame: 0
+      UVArea:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 0
+        height: 0
+      tempHidden: 0
+      isDisabled: 0
+      UVSet: 0
+      altMaterial: {fileID: 0}
+      BlendshapeSlotNames: []
+      Suppressed: 0
+      dontSerialize: 1
       rendererAsset: {fileID: 0}
     - asset: {fileID: 11400000, guid: cfd3d4f915399244888eb689bc89be8e, type: 2}
       isPlaceholderSlot: 0
@@ -1283,14 +1316,14 @@ MonoBehaviour:
       swapTag: LongHair
       skinnedMeshRenderer: 0
       submeshIndex: 8
-      vertexOffset: 17537
+      vertexOffset: 16023
       uvAreaUpdateFrame: 0
       UVArea:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 0.25
-        height: 0.25
+        width: 0.5
+        height: 0.5
       tempHidden: 0
       isDisabled: 0
       UVSet: 0
@@ -1299,48 +1332,7 @@ MonoBehaviour:
       Suppressed: 0
       dontSerialize: 0
       rendererAsset: {fileID: 0}
-    - asset: {fileID: 11400000, guid: 74b6271bc7e516546956bbb653dc74f1, type: 2}
-      isPlaceholderSlot: 0
-      placeholderSlotName: 
-      overlayScale: 1
-      tags: []
-      Races: []
-      meshModifiers: []
-      blendShapeTargetSlot: 
-      BlendshapeFoldout: 0
-      ClipPlaneFoldout: 0
-      isDeleted: 0
-      slotAssetFoldout: 0
-      expandAlongNormal: 0
-      overSmoosh: 0.01
-      smooshDistance: 0.001
-      smooshInvertX: 0
-      smooshInvertY: 1
-      smooshInvertZ: 0
-      smooshInvertDist: 1
-      smooshTargetTag: 
-      smooshableTag: 
-      isSwapSlot: 0
-      swapTag: LongHair
-      skinnedMeshRenderer: 0
-      submeshIndex: 7
-      vertexOffset: 16023
-      uvAreaUpdateFrame: 1
-      UVArea:
-        serializedVersion: 2
-        x: 0
-        y: 0.5
-        width: 0.125
-        height: 0.125
-      tempHidden: 0
-      isDisabled: 0
-      UVSet: 0
-      altMaterial: {fileID: 0}
-      BlendshapeSlotNames: []
-      Suppressed: 0
-      dontSerialize: 0
-      rendererAsset: {fileID: 0}
-    - asset: {fileID: 11400000, guid: 9309942767b10874b90f1ccfb3f17103, type: 2}
+    - asset: {fileID: 11400000, guid: 5825e0da17b206845bc4d3fcc2a5e44c, type: 2}
       isPlaceholderSlot: 0
       placeholderSlotName: 
       overlayScale: 1
@@ -1365,14 +1357,55 @@ MonoBehaviour:
       swapTag: LongHair
       skinnedMeshRenderer: 0
       submeshIndex: 9
-      vertexOffset: 36648
+      vertexOffset: 35134
+      uvAreaUpdateFrame: 0
+      UVArea:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 0.125
+        height: 0.125
+      tempHidden: 0
+      isDisabled: 0
+      UVSet: 0
+      altMaterial: {fileID: 0}
+      BlendshapeSlotNames: []
+      Suppressed: 0
+      dontSerialize: 0
+      rendererAsset: {fileID: 0}
+    - asset: {fileID: 11400000, guid: 9309942767b10874b90f1ccfb3f17103, type: 2}
+      isPlaceholderSlot: 0
+      placeholderSlotName: 
+      overlayScale: 1
+      tags: []
+      Races: []
+      meshModifiers: []
+      blendShapeTargetSlot: 
+      BlendshapeFoldout: 0
+      ClipPlaneFoldout: 0
+      isDeleted: 0
+      slotAssetFoldout: 0
+      expandAlongNormal: 2000
+      overSmoosh: 0.01
+      smooshDistance: 0.001
+      smooshInvertX: 0
+      smooshInvertY: 1
+      smooshInvertZ: 0
+      smooshInvertDist: 1
+      smooshTargetTag: 
+      smooshableTag: 
+      isSwapSlot: 0
+      swapTag: LongHair
+      skinnedMeshRenderer: 0
+      submeshIndex: 10
+      vertexOffset: 36500
       uvAreaUpdateFrame: 1
       UVArea:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 0.25
-        height: 0.25
+        width: 1
+        height: 0.5
       tempHidden: 0
       isDisabled: 0
       UVSet: 0
@@ -1405,15 +1438,15 @@ MonoBehaviour:
       isSwapSlot: 0
       swapTag: LongHair
       skinnedMeshRenderer: 0
-      submeshIndex: 9
-      vertexOffset: 37385
+      submeshIndex: 10
+      vertexOffset: 37237
       uvAreaUpdateFrame: 1
       UVArea:
         serializedVersion: 2
         x: 0
-        y: 0.25
-        width: 0.25
-        height: 0.25
+        y: 0.5
+        width: 1
+        height: 0.5
       tempHidden: 0
       isDisabled: 0
       UVSet: 0
@@ -1435,7 +1468,342 @@ MonoBehaviour:
       PropertyBlock:
         alwaysUpdate: 0
         alwaysUpdateParms: 0
-        serializedProperties: []
+        serializedProperties:
+        - p12:
+            stringRepresentation: 
+            name: 
+            Translate: {x: 0, y: 0}
+            Rotate: 0
+            Scale: {x: 1, y: 1}
+          p11:
+            stringRepresentation: 
+            name: 
+            Value: 0
+          p10:
+            stringRepresentation: Color;#AC4E00FF;_BaseColor
+            name: _BaseColor
+            Value: {r: 0.67295593, g: 0.30450496, b: 0, a: 1}
+          p9:
+            stringRepresentation: 
+            name: 
+            Value: {x: 0, y: 0, z: 0, w: 0}
+          p8:
+            stringRepresentation: 
+            name: 
+            Value: []
+          p7:
+            stringRepresentation: 
+            name: 
+            Value: {fileID: 0}
+          p6:
+            stringRepresentation: 
+            name: 
+            Value: []
+          p5:
+            stringRepresentation: 
+            name: 
+            Value: 0
+          p4:
+            stringRepresentation: 
+            name: 
+            Value:
+              e00: 0
+              e01: 0
+              e02: 0
+              e03: 0
+              e10: 0
+              e11: 0
+              e12: 0
+              e13: 0
+              e20: 0
+              e21: 0
+              e22: 0
+              e23: 0
+              e30: 0
+              e31: 0
+              e32: 0
+              e33: 0
+          p3:
+            stringRepresentation: 
+            name: 
+            Value: []
+          p2:
+            stringRepresentation: 
+            name: 
+          p1:
+            stringRepresentation: 
+            name: 
+            offset: 0
+            size: 0
+          propertType: UMAColorProperty
+        - p12:
+            stringRepresentation: 
+            name: 
+            Translate: {x: 0, y: 0}
+            Rotate: 0
+            Scale: {x: 1, y: 1}
+          p11:
+            stringRepresentation: 
+            name: 
+            Value: 0
+          p10:
+            stringRepresentation: Color;#F97346FF;_TipColor
+            name: _TipColor
+            Value: {r: 0.9748427, g: 0.45095512, b: 0.2728333, a: 1}
+          p9:
+            stringRepresentation: 
+            name: 
+            Value: {x: 0, y: 0, z: 0, w: 0}
+          p8:
+            stringRepresentation: 
+            name: 
+            Value: []
+          p7:
+            stringRepresentation: 
+            name: 
+            Value: {fileID: 0}
+          p6:
+            stringRepresentation: 
+            name: 
+            Value: []
+          p5:
+            stringRepresentation: 
+            name: 
+            Value: 0
+          p4:
+            stringRepresentation: 
+            name: 
+            Value:
+              e00: 0
+              e01: 0
+              e02: 0
+              e03: 0
+              e10: 0
+              e11: 0
+              e12: 0
+              e13: 0
+              e20: 0
+              e21: 0
+              e22: 0
+              e23: 0
+              e30: 0
+              e31: 0
+              e32: 0
+              e33: 0
+          p3:
+            stringRepresentation: 
+            name: 
+            Value: []
+          p2:
+            stringRepresentation: 
+            name: 
+          p1:
+            stringRepresentation: 
+            name: 
+            offset: 0
+            size: 0
+          propertType: UMAColorProperty
+        - p12:
+            stringRepresentation: 
+            name: 
+            Translate: {x: 0, y: 0}
+            Rotate: 0
+            Scale: {x: 1, y: 1}
+          p11:
+            stringRepresentation: 
+            name: 
+            Value: 0
+          p10:
+            stringRepresentation: Color;#00000000;_RootColor
+            name: _RootColor
+            Value: {r: 0, g: 0, b: 0, a: 0}
+          p9:
+            stringRepresentation: 
+            name: 
+            Value: {x: 0, y: 0, z: 0, w: 0}
+          p8:
+            stringRepresentation: 
+            name: 
+            Value: []
+          p7:
+            stringRepresentation: 
+            name: 
+            Value: {fileID: 0}
+          p6:
+            stringRepresentation: 
+            name: 
+            Value: []
+          p5:
+            stringRepresentation: 
+            name: 
+            Value: 0
+          p4:
+            stringRepresentation: 
+            name: 
+            Value:
+              e00: 0
+              e01: 0
+              e02: 0
+              e03: 0
+              e10: 0
+              e11: 0
+              e12: 0
+              e13: 0
+              e20: 0
+              e21: 0
+              e22: 0
+              e23: 0
+              e30: 0
+              e31: 0
+              e32: 0
+              e33: 0
+          p3:
+            stringRepresentation: 
+            name: 
+            Value: []
+          p2:
+            stringRepresentation: 
+            name: 
+          p1:
+            stringRepresentation: 
+            name: 
+            offset: 0
+            size: 0
+          propertType: UMAColorProperty
+        - p12:
+            stringRepresentation: 
+            name: 
+            Translate: {x: 0, y: 0}
+            Rotate: 0
+            Scale: {x: 1, y: 1}
+          p11:
+            stringRepresentation: Float;0.0000;_SpecularMultiplier
+            name: _SpecularMultiplier
+            Value: 0
+          p10:
+            stringRepresentation: 
+            name: 
+            Value: {r: 0, g: 0, b: 0, a: 0}
+          p9:
+            stringRepresentation: 
+            name: 
+            Value: {x: 0, y: 0, z: 0, w: 0}
+          p8:
+            stringRepresentation: 
+            name: 
+            Value: []
+          p7:
+            stringRepresentation: 
+            name: 
+            Value: {fileID: 0}
+          p6:
+            stringRepresentation: 
+            name: 
+            Value: []
+          p5:
+            stringRepresentation: 
+            name: 
+            Value: 0
+          p4:
+            stringRepresentation: 
+            name: 
+            Value:
+              e00: 0
+              e01: 0
+              e02: 0
+              e03: 0
+              e10: 0
+              e11: 0
+              e12: 0
+              e13: 0
+              e20: 0
+              e21: 0
+              e22: 0
+              e23: 0
+              e30: 0
+              e31: 0
+              e32: 0
+              e33: 0
+          p3:
+            stringRepresentation: 
+            name: 
+            Value: []
+          p2:
+            stringRepresentation: 
+            name: 
+          p1:
+            stringRepresentation: 
+            name: 
+            offset: 0
+            size: 0
+          propertType: UMAFloatProperty
+        - p12:
+            stringRepresentation: 
+            name: 
+            Translate: {x: 0, y: 0}
+            Rotate: 0
+            Scale: {x: 1, y: 1}
+          p11:
+            stringRepresentation: Float;0.0000;_Smoothness
+            name: _Smoothness
+            Value: 0
+          p10:
+            stringRepresentation: 
+            name: 
+            Value: {r: 0, g: 0, b: 0, a: 0}
+          p9:
+            stringRepresentation: 
+            name: 
+            Value: {x: 0, y: 0, z: 0, w: 0}
+          p8:
+            stringRepresentation: 
+            name: 
+            Value: []
+          p7:
+            stringRepresentation: 
+            name: 
+            Value: {fileID: 0}
+          p6:
+            stringRepresentation: 
+            name: 
+            Value: []
+          p5:
+            stringRepresentation: 
+            name: 
+            Value: 0
+          p4:
+            stringRepresentation: 
+            name: 
+            Value:
+              e00: 0
+              e01: 0
+              e02: 0
+              e03: 0
+              e10: 0
+              e11: 0
+              e12: 0
+              e13: 0
+              e20: 0
+              e21: 0
+              e22: 0
+              e23: 0
+              e30: 0
+              e31: 0
+              e32: 0
+              e33: 0
+          p3:
+            stringRepresentation: 
+            name: 
+            Value: []
+          p2:
+            stringRepresentation: 
+            name: 
+          p1:
+            stringRepresentation: 
+            name: 
+            offset: 0
+            size: 0
+          propertType: UMAFloatProperty
       foldout: 0
       showAdvanced: 0
       isBaseColor: 1
@@ -1724,6 +2092,29 @@ MonoBehaviour:
       isSelected: 0
       showDisplayColor: 0
       displayColor: {r: 0.6784314, g: 0.6784314, b: 0.6784314, a: 1}
+    - name: Brows
+      channelMask:
+      - {r: 1, g: 1, b: 1, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      channelAdditiveMask:
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      PropertyBlock:
+        alwaysUpdate: 0
+        alwaysUpdateParms: 0
+        serializedProperties: []
+      foldout: 0
+      showAdvanced: 0
+      isBaseColor: 0
+      deleteThis: 0
+      moveUpThis: 0
+      moveDownThis: 0
+      colorsExpanded: 0
+      propertiesExpanded: 0
+      showSelected: 0
+      isSelected: 0
+      showDisplayColor: 0
+      displayColor: {r: 1, g: 1, b: 1, a: 1}
   animator: {fileID: 0}
   KeepAvatar: 0
   characterHeight: 2
@@ -1816,6 +2207,12 @@ MonoBehaviour:
       - Human Female 3.0
       - Human Male 3.0
       ForceLoad: 0
+    - _recipeName: Eyebrows_Thin_Average
+      _enabledInDefaultWardrobe: 1
+      _compatibleRaces:
+      - Human Female 3.0
+      - Human Male 3.0
+      ForceLoad: 0
   raceAnimationControllers:
     defaultAnimationController: {fileID: 9100000, guid: a11a9f35ac7dac74c9c6f12df8600aa0, type: 2}
     animators:
@@ -1844,7 +2241,342 @@ MonoBehaviour:
       PropertyBlock:
         alwaysUpdate: 0
         alwaysUpdateParms: 0
-        serializedProperties: []
+        serializedProperties:
+        - p12:
+            stringRepresentation: 
+            name: 
+            Translate: {x: 0, y: 0}
+            Rotate: 0
+            Scale: {x: 1, y: 1}
+          p11:
+            stringRepresentation: 
+            name: 
+            Value: 0
+          p10:
+            stringRepresentation: Color;#AC4E00FF;_BaseColor
+            name: _BaseColor
+            Value: {r: 0.67295593, g: 0.30450496, b: 0, a: 1}
+          p9:
+            stringRepresentation: 
+            name: 
+            Value: {x: 0, y: 0, z: 0, w: 0}
+          p8:
+            stringRepresentation: 
+            name: 
+            Value: []
+          p7:
+            stringRepresentation: 
+            name: 
+            Value: {fileID: 0}
+          p6:
+            stringRepresentation: 
+            name: 
+            Value: []
+          p5:
+            stringRepresentation: 
+            name: 
+            Value: 0
+          p4:
+            stringRepresentation: 
+            name: 
+            Value:
+              e00: 0
+              e01: 0
+              e02: 0
+              e03: 0
+              e10: 0
+              e11: 0
+              e12: 0
+              e13: 0
+              e20: 0
+              e21: 0
+              e22: 0
+              e23: 0
+              e30: 0
+              e31: 0
+              e32: 0
+              e33: 0
+          p3:
+            stringRepresentation: 
+            name: 
+            Value: []
+          p2:
+            stringRepresentation: 
+            name: 
+          p1:
+            stringRepresentation: 
+            name: 
+            offset: 0
+            size: 0
+          propertType: UMAColorProperty
+        - p12:
+            stringRepresentation: 
+            name: 
+            Translate: {x: 0, y: 0}
+            Rotate: 0
+            Scale: {x: 1, y: 1}
+          p11:
+            stringRepresentation: 
+            name: 
+            Value: 0
+          p10:
+            stringRepresentation: Color;#F97346FF;_TipColor
+            name: _TipColor
+            Value: {r: 0.9748427, g: 0.45095512, b: 0.2728333, a: 1}
+          p9:
+            stringRepresentation: 
+            name: 
+            Value: {x: 0, y: 0, z: 0, w: 0}
+          p8:
+            stringRepresentation: 
+            name: 
+            Value: []
+          p7:
+            stringRepresentation: 
+            name: 
+            Value: {fileID: 0}
+          p6:
+            stringRepresentation: 
+            name: 
+            Value: []
+          p5:
+            stringRepresentation: 
+            name: 
+            Value: 0
+          p4:
+            stringRepresentation: 
+            name: 
+            Value:
+              e00: 0
+              e01: 0
+              e02: 0
+              e03: 0
+              e10: 0
+              e11: 0
+              e12: 0
+              e13: 0
+              e20: 0
+              e21: 0
+              e22: 0
+              e23: 0
+              e30: 0
+              e31: 0
+              e32: 0
+              e33: 0
+          p3:
+            stringRepresentation: 
+            name: 
+            Value: []
+          p2:
+            stringRepresentation: 
+            name: 
+          p1:
+            stringRepresentation: 
+            name: 
+            offset: 0
+            size: 0
+          propertType: UMAColorProperty
+        - p12:
+            stringRepresentation: 
+            name: 
+            Translate: {x: 0, y: 0}
+            Rotate: 0
+            Scale: {x: 1, y: 1}
+          p11:
+            stringRepresentation: 
+            name: 
+            Value: 0
+          p10:
+            stringRepresentation: Color;#00000000;_RootColor
+            name: _RootColor
+            Value: {r: 0, g: 0, b: 0, a: 0}
+          p9:
+            stringRepresentation: 
+            name: 
+            Value: {x: 0, y: 0, z: 0, w: 0}
+          p8:
+            stringRepresentation: 
+            name: 
+            Value: []
+          p7:
+            stringRepresentation: 
+            name: 
+            Value: {fileID: 0}
+          p6:
+            stringRepresentation: 
+            name: 
+            Value: []
+          p5:
+            stringRepresentation: 
+            name: 
+            Value: 0
+          p4:
+            stringRepresentation: 
+            name: 
+            Value:
+              e00: 0
+              e01: 0
+              e02: 0
+              e03: 0
+              e10: 0
+              e11: 0
+              e12: 0
+              e13: 0
+              e20: 0
+              e21: 0
+              e22: 0
+              e23: 0
+              e30: 0
+              e31: 0
+              e32: 0
+              e33: 0
+          p3:
+            stringRepresentation: 
+            name: 
+            Value: []
+          p2:
+            stringRepresentation: 
+            name: 
+          p1:
+            stringRepresentation: 
+            name: 
+            offset: 0
+            size: 0
+          propertType: UMAColorProperty
+        - p12:
+            stringRepresentation: 
+            name: 
+            Translate: {x: 0, y: 0}
+            Rotate: 0
+            Scale: {x: 1, y: 1}
+          p11:
+            stringRepresentation: Float;0.0000;_SpecularMultiplier
+            name: _SpecularMultiplier
+            Value: 0
+          p10:
+            stringRepresentation: 
+            name: 
+            Value: {r: 0, g: 0, b: 0, a: 0}
+          p9:
+            stringRepresentation: 
+            name: 
+            Value: {x: 0, y: 0, z: 0, w: 0}
+          p8:
+            stringRepresentation: 
+            name: 
+            Value: []
+          p7:
+            stringRepresentation: 
+            name: 
+            Value: {fileID: 0}
+          p6:
+            stringRepresentation: 
+            name: 
+            Value: []
+          p5:
+            stringRepresentation: 
+            name: 
+            Value: 0
+          p4:
+            stringRepresentation: 
+            name: 
+            Value:
+              e00: 0
+              e01: 0
+              e02: 0
+              e03: 0
+              e10: 0
+              e11: 0
+              e12: 0
+              e13: 0
+              e20: 0
+              e21: 0
+              e22: 0
+              e23: 0
+              e30: 0
+              e31: 0
+              e32: 0
+              e33: 0
+          p3:
+            stringRepresentation: 
+            name: 
+            Value: []
+          p2:
+            stringRepresentation: 
+            name: 
+          p1:
+            stringRepresentation: 
+            name: 
+            offset: 0
+            size: 0
+          propertType: UMAFloatProperty
+        - p12:
+            stringRepresentation: 
+            name: 
+            Translate: {x: 0, y: 0}
+            Rotate: 0
+            Scale: {x: 1, y: 1}
+          p11:
+            stringRepresentation: Float;0.0000;_Smoothness
+            name: _Smoothness
+            Value: 0
+          p10:
+            stringRepresentation: 
+            name: 
+            Value: {r: 0, g: 0, b: 0, a: 0}
+          p9:
+            stringRepresentation: 
+            name: 
+            Value: {x: 0, y: 0, z: 0, w: 0}
+          p8:
+            stringRepresentation: 
+            name: 
+            Value: []
+          p7:
+            stringRepresentation: 
+            name: 
+            Value: {fileID: 0}
+          p6:
+            stringRepresentation: 
+            name: 
+            Value: []
+          p5:
+            stringRepresentation: 
+            name: 
+            Value: 0
+          p4:
+            stringRepresentation: 
+            name: 
+            Value:
+              e00: 0
+              e01: 0
+              e02: 0
+              e03: 0
+              e10: 0
+              e11: 0
+              e12: 0
+              e13: 0
+              e20: 0
+              e21: 0
+              e22: 0
+              e23: 0
+              e30: 0
+              e31: 0
+              e32: 0
+              e33: 0
+          p3:
+            stringRepresentation: 
+            name: 
+            Value: []
+          p2:
+            stringRepresentation: 
+            name: 
+          p1:
+            stringRepresentation: 
+            name: 
+            offset: 0
+            size: 0
+          propertType: UMAFloatProperty
       foldout: 0
       showAdvanced: 0
       isBaseColor: 1
@@ -1852,7 +2584,7 @@ MonoBehaviour:
       moveUpThis: 0
       moveDownThis: 0
       colorsExpanded: 0
-      propertiesExpanded: 0
+      propertiesExpanded: 1
       showSelected: 0
       isSelected: 0
       showDisplayColor: 0
@@ -2457,6 +3189,34 @@ MonoBehaviour:
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
       Raw: 0
       valuesConverted: 0
+    - name: Brows
+      channelMask:
+      - {r: 1, g: 1, b: 1, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      channelAdditiveMask:
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      PropertyBlock:
+        alwaysUpdate: 0
+        alwaysUpdateParms: 0
+        serializedProperties: []
+      foldout: 0
+      showAdvanced: 0
+      isBaseColor: 0
+      deleteThis: 0
+      moveUpThis: 0
+      moveDownThis: 0
+      colorsExpanded: 0
+      propertiesExpanded: 0
+      showSelected: 0
+      isSelected: 0
+      showDisplayColor: 0
+      displayColor: {r: 1, g: 1, b: 1, a: 1}
+      _name: 
+      _color: {r: 1, g: 1, b: 1, a: 1}
+      _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      Raw: 0
+      valuesConverted: 0
   predefinedDNA:
     PreloadValues: []
   loadPathType: 2
@@ -2474,6 +3234,7 @@ MonoBehaviour:
   ensureSharedColors: 0
   defaultSaveOptions: 15
   BoundsOffset: {x: 0, y: 0, z: 0}
+  visualizeRendererBounds: 0
   editorTimeGeneration: 1
   showPlaceholder: 1
   previewModel: 0
@@ -2486,399 +3247,399 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 7442055854780580639
+    - rid: 7551229840371220496
       type: {class: VertexColorAdjustmentCollection, ns: UMA, asm: UMA_Core}
       data:
         vertexAdjustments:
-        - rid: 7442055854780580640
-        - rid: 7442055854780580641
-        - rid: 7442055854780580642
-        - rid: 7442055854780580643
-        - rid: 7442055854780580644
-        - rid: 7442055854780580645
-        - rid: 7442055854780580646
-        - rid: 7442055854780580647
-        - rid: 7442055854780580648
-        - rid: 7442055854780580649
-        - rid: 7442055854780580650
-        - rid: 7442055854780580651
-        - rid: 7442055854780580652
-        - rid: 7442055854780580653
-        - rid: 7442055854780580654
-        - rid: 7442055854780580655
-        - rid: 7442055854780580656
-        - rid: 7442055854780580657
-        - rid: 7442055854780580658
-        - rid: 7442055854780580659
-        - rid: 7442055854780580660
-        - rid: 7442055854780580661
-        - rid: 7442055854780580662
-        - rid: 7442055854780580663
-        - rid: 7442055854780580664
-        - rid: 7442055854780580665
-        - rid: 7442055854780580666
-        - rid: 7442055854780580667
-        - rid: 7442055854780580668
-        - rid: 7442055854780580669
-        - rid: 7442055854780580670
-        - rid: 7442055854780580671
-        - rid: 7442055854780580672
-        - rid: 7442055854780580673
-        - rid: 7442055854780580674
-        - rid: 7442055854780580675
-        - rid: 7442055854780580676
-        - rid: 7442055854780580677
-        - rid: 7442055854780580678
-        - rid: 7442055854780580679
-        - rid: 7442055854780580680
-        - rid: 7442055854780580681
-        - rid: 7442055854780580682
-        - rid: 7442055854780580683
-        - rid: 7442055854780580684
-        - rid: 7442055854780580685
-        - rid: 7442055854780580686
-        - rid: 7442055854780580687
-        - rid: 7442055854780580688
-        - rid: 7442055854780580689
-        - rid: 7442055854780580690
-        - rid: 7442055854780580691
-        - rid: 7442055854780580692
-        - rid: 7442055854780580693
-        - rid: 7442055854780580694
-        - rid: 7442055854780580695
-        - rid: 7442055854780580696
-        - rid: 7442055854780580697
-        - rid: 7442055854780580698
-        - rid: 7442055854780580699
-        - rid: 7442055854780580700
-        - rid: 7442055854780580701
-        - rid: 7442055854780580702
-        - rid: 7442055854780580703
-        - rid: 7442055854780580704
-        - rid: 7442055854780580705
-        - rid: 7442055854780580706
-        - rid: 7442055854780580707
-        - rid: 7442055854780580708
-        - rid: 7442055854780580709
-        - rid: 7442055854780580710
-        - rid: 7442055854780580711
-        - rid: 7442055854780580712
-        - rid: 7442055854780580713
-        - rid: 7442055854780580714
-        - rid: 7442055854780580715
-        - rid: 7442055854780580716
-        - rid: 7442055854780580717
-        - rid: 7442055854780580718
-        - rid: 7442055854780580719
-        - rid: 7442055854780580720
-        - rid: 7442055854780580721
-        - rid: 7442055854780580722
-        - rid: 7442055854780580723
-        - rid: 7442055854780580724
-        - rid: 7442055854780580725
-        - rid: 7442055854780580726
-        - rid: 7442055854780580727
-        - rid: 7442055854780580728
-        - rid: 7442055854780580729
-        - rid: 7442055854780580730
-        - rid: 7442055854780580731
-        - rid: 7442055854780580732
-        - rid: 7442055854780580733
-        - rid: 7442055854780580734
-        - rid: 7442055854780580735
-        - rid: 7442055854780580736
-        - rid: 7442055854780580737
-        - rid: 7442055854780580738
-        - rid: 7442055854780580739
-        - rid: 7442055854780580740
-        - rid: 7442055854780580741
-        - rid: 7442055854780580742
-        - rid: 7442055854780580743
-        - rid: 7442055854780580744
-        - rid: 7442055854780580745
-        - rid: 7442055854780580746
-        - rid: 7442055854780580747
-        - rid: 7442055854780580748
-        - rid: 7442055854780580749
-        - rid: 7442055854780580750
-        - rid: 7442055854780580751
-        - rid: 7442055854780580752
-        - rid: 7442055854780580753
-        - rid: 7442055854780580754
-        - rid: 7442055854780580755
-        - rid: 7442055854780580756
-        - rid: 7442055854780580757
-        - rid: 7442055854780580758
-        - rid: 7442055854780580759
-        - rid: 7442055854780580760
-        - rid: 7442055854780580761
-        - rid: 7442055854780580762
-        - rid: 7442055854780580763
-        - rid: 7442055854780580764
-        - rid: 7442055854780580765
-        - rid: 7442055854780580766
-        - rid: 7442055854780580767
-        - rid: 7442055854780580768
-        - rid: 7442055854780580769
-        - rid: 7442055854780580770
-        - rid: 7442055854780580771
-        - rid: 7442055854780580772
-        - rid: 7442055854780580773
-        - rid: 7442055854780580774
-        - rid: 7442055854780580775
-        - rid: 7442055854780580776
-        - rid: 7442055854780580777
-        - rid: 7442055854780580778
-        - rid: 7442055854780580779
-        - rid: 7442055854780580780
-        - rid: 7442055854780580781
-        - rid: 7442055854780580782
-        - rid: 7442055854780580783
-        - rid: 7442055854780580784
-        - rid: 7442055854780580785
-        - rid: 7442055854780580786
-        - rid: 7442055854780580787
-        - rid: 7442055854780580788
-        - rid: 7442055854780580789
-        - rid: 7442055854780580790
-        - rid: 7442055854780580791
-        - rid: 7442055854780580792
-        - rid: 7442055854780580793
-        - rid: 7442055854780580794
-        - rid: 7442055854780580795
-        - rid: 7442055854780580796
-        - rid: 7442055854780580797
-        - rid: 7442055854780580798
-        - rid: 7442055854780580799
-        - rid: 7442055854780580800
-        - rid: 7442055854780580801
-        - rid: 7442055854780580802
-        - rid: 7442055854780580803
-        - rid: 7442055854780580804
-        - rid: 7442055854780580805
-        - rid: 7442055854780580806
-        - rid: 7442055854780580807
-        - rid: 7442055854780580808
-        - rid: 7442055854780580809
-        - rid: 7442055854780580810
-        - rid: 7442055854780580811
-        - rid: 7442055854780580812
-        - rid: 7442055854780580813
-        - rid: 7442055854780580814
-        - rid: 7442055854780580815
-        - rid: 7442055854780580816
-        - rid: 7442055854780580817
-        - rid: 7442055854780580818
-        - rid: 7442055854780580819
-        - rid: 7442055854780580820
-        - rid: 7442055854780580821
-        - rid: 7442055854780580822
-        - rid: 7442055854780580823
-        - rid: 7442055854780580824
-        - rid: 7442055854780580825
-        - rid: 7442055854780580826
-        - rid: 7442055854780580827
-        - rid: 7442055854780580828
-        - rid: 7442055854780580829
-        - rid: 7442055854780580830
-        - rid: 7442055854780580831
-        - rid: 7442055854780580832
-        - rid: 7442055854780580833
-        - rid: 7442055854780580834
-        - rid: 7442055854780580835
-        - rid: 7442055854780580836
-        - rid: 7442055854780580837
-        - rid: 7442055854780580838
-        - rid: 7442055854780580839
-        - rid: 7442055854780580840
-        - rid: 7442055854780580841
-        - rid: 7442055854780580842
-        - rid: 7442055854780580843
-        - rid: 7442055854780580844
-        - rid: 7442055854780580845
-        - rid: 7442055854780580846
-        - rid: 7442055854780580847
-        - rid: 7442055854780580848
-        - rid: 7442055854780580849
-        - rid: 7442055854780580850
-        - rid: 7442055854780580851
-        - rid: 7442055854780580852
-        - rid: 7442055854780580853
-        - rid: 7442055854780580854
-        - rid: 7442055854780580855
-        - rid: 7442055854780580856
-        - rid: 7442055854780580857
-        - rid: 7442055854780580858
-        - rid: 7442055854780580859
-        - rid: 7442055854780580860
-        - rid: 7442055854780580861
-        - rid: 7442055854780580862
-        - rid: 7442055854780580863
-        - rid: 7442055854868135936
-        - rid: 7442055854868135937
-        - rid: 7442055854868135938
-        - rid: 7442055854868135939
-        - rid: 7442055854868135940
-        - rid: 7442055854868135941
-        - rid: 7442055854868135942
-        - rid: 7442055854868135943
-        - rid: 7442055854868135944
-        - rid: 7442055854868135945
-        - rid: 7442055854868135946
-        - rid: 7442055854868135947
-        - rid: 7442055854868135948
-        - rid: 7442055854868135949
-        - rid: 7442055854868135950
-        - rid: 7442055854868135951
-        - rid: 7442055854868135952
-        - rid: 7442055854868135953
-        - rid: 7442055854868135954
-        - rid: 7442055854868135955
-        - rid: 7442055854868135956
-        - rid: 7442055854868135957
-        - rid: 7442055854868135958
-        - rid: 7442055854868135959
-        - rid: 7442055854868135960
-        - rid: 7442055854868135961
-        - rid: 7442055854868135962
-        - rid: 7442055854868135963
-        - rid: 7442055854868135964
-        - rid: 7442055854868135965
-        - rid: 7442055854868135966
-        - rid: 7442055854868135967
-        - rid: 7442055854868135968
-        - rid: 7442055854868135969
-        - rid: 7442055854868135970
-        - rid: 7442055854868135971
-        - rid: 7442055854868135972
-        - rid: 7442055854868135973
-        - rid: 7442055854868135974
-        - rid: 7442055854868135975
-        - rid: 7442055854868135976
-        - rid: 7442055854868135977
-        - rid: 7442055854868135978
-        - rid: 7442055854868135979
-        - rid: 7442055854868135980
-        - rid: 7442055854868135981
-        - rid: 7442055854868135982
-        - rid: 7442055854868135983
-        - rid: 7442055854868135984
-        - rid: 7442055854868135985
-        - rid: 7442055854868135986
-        - rid: 7442055854868135987
-        - rid: 7442055854868135988
-        - rid: 7442055854868135989
-        - rid: 7442055854868135990
-        - rid: 7442055854868135991
-        - rid: 7442055854868135992
-        - rid: 7442055854868135993
-        - rid: 7442055854868135994
-        - rid: 7442055854868135995
-        - rid: 7442055854868135996
-        - rid: 7442055854868135997
-        - rid: 7442055854868135998
-        - rid: 7442055854868135999
-        - rid: 7442055854868136000
-        - rid: 7442055854868136001
-        - rid: 7442055854868136002
-        - rid: 7442055854868136003
-        - rid: 7442055854868136004
-        - rid: 7442055854868136005
-        - rid: 7442055854868136006
-        - rid: 7442055854868136007
-        - rid: 7442055854868136008
-        - rid: 7442055854868136009
-        - rid: 7442055854868136010
-        - rid: 7442055854868136011
-        - rid: 7442055854868136012
-        - rid: 7442055854868136013
-        - rid: 7442055854868136014
-        - rid: 7442055854868136015
-        - rid: 7442055854868136016
-        - rid: 7442055854868136017
-        - rid: 7442055854868136018
-        - rid: 7442055854868136019
-        - rid: 7442055854868136020
-        - rid: 7442055854868136021
-        - rid: 7442055854868136022
-        - rid: 7442055854868136023
-        - rid: 7442055854868136024
-        - rid: 7442055854868136025
-        - rid: 7442055854868136026
-        - rid: 7442055854868136027
-        - rid: 7442055854868136028
-        - rid: 7442055854868136029
-        - rid: 7442055854868136030
-        - rid: 7442055854868136031
-        - rid: 7442055854868136032
-        - rid: 7442055854868136033
-        - rid: 7442055854868136034
-        - rid: 7442055854868136035
-        - rid: 7442055854868136036
-        - rid: 7442055854868136037
-        - rid: 7442055854868136038
-        - rid: 7442055854868136039
-        - rid: 7442055854868136040
-        - rid: 7442055854868136041
-        - rid: 7442055854868136042
-        - rid: 7442055854868136043
-        - rid: 7442055854868136044
-        - rid: 7442055854868136045
-        - rid: 7442055854868136046
-        - rid: 7442055854868136047
-        - rid: 7442055854868136048
-        - rid: 7442055854868136049
-        - rid: 7442055854868136050
-        - rid: 7442055854868136051
-        - rid: 7442055854868136052
-        - rid: 7442055854868136053
-        - rid: 7442055854868136054
-        - rid: 7442055854868136055
-        - rid: 7442055854868136056
-        - rid: 7442055854868136057
-        - rid: 7442055854868136058
-        - rid: 7442055854868136059
-        - rid: 7442055854868136060
-        - rid: 7442055854868136061
-        - rid: 7442055854868136062
-        - rid: 7442055854868136063
-        - rid: 7442055854868136064
-        - rid: 7442055854868136065
-        - rid: 7442055854868136066
-        - rid: 7442055854868136067
-        - rid: 7442055854868136068
-        - rid: 7442055854868136069
-        - rid: 7442055854868136070
-        - rid: 7442055854868136071
-        - rid: 7442055854868136072
-        - rid: 7442055854868136073
-        - rid: 7442055854868136074
-        - rid: 7442055854868136075
-        - rid: 7442055854868136076
-        - rid: 7442055854868136077
-        - rid: 7442055854868136078
-        - rid: 7442055854868136079
-        - rid: 7442055854868136080
-        - rid: 7442055854868136081
-        - rid: 7442055854868136082
-        - rid: 7442055854868136083
-        - rid: 7442055854868136084
-        - rid: 7442055854868136085
-        - rid: 7442055854868136086
-        - rid: 7442055854868136087
-        - rid: 7442055854868136088
-        - rid: 7442055854868136089
-        - rid: 7442055854868136090
-        - rid: 7442055854868136091
-        - rid: 7442055854868136092
-        - rid: 7442055854868136093
-        - rid: 7442055854868136094
-        - rid: 7442055854868136095
-        - rid: 7442055854868136096
-        - rid: 7442055854868136097
-        - rid: 7442055854868136098
-        - rid: 7442055854868136099
-    - rid: 7442055854780580640
+        - rid: 7551229840371220497
+        - rid: 7551229840371220498
+        - rid: 7551229840371220499
+        - rid: 7551229840371220500
+        - rid: 7551229840371220501
+        - rid: 7551229840371220502
+        - rid: 7551229840371220503
+        - rid: 7551229840371220504
+        - rid: 7551229840371220505
+        - rid: 7551229840371220506
+        - rid: 7551229840371220507
+        - rid: 7551229840371220508
+        - rid: 7551229840371220509
+        - rid: 7551229840371220510
+        - rid: 7551229840371220511
+        - rid: 7551229840371220512
+        - rid: 7551229840371220513
+        - rid: 7551229840371220514
+        - rid: 7551229840371220515
+        - rid: 7551229840371220516
+        - rid: 7551229840371220517
+        - rid: 7551229840371220518
+        - rid: 7551229840371220519
+        - rid: 7551229840371220520
+        - rid: 7551229840371220521
+        - rid: 7551229840371220522
+        - rid: 7551229840371220523
+        - rid: 7551229840371220524
+        - rid: 7551229840371220525
+        - rid: 7551229840371220526
+        - rid: 7551229840371220527
+        - rid: 7551229840371220528
+        - rid: 7551229840371220529
+        - rid: 7551229840371220530
+        - rid: 7551229840371220531
+        - rid: 7551229840371220532
+        - rid: 7551229840371220533
+        - rid: 7551229840371220534
+        - rid: 7551229840371220535
+        - rid: 7551229840371220536
+        - rid: 7551229840371220537
+        - rid: 7551229840371220538
+        - rid: 7551229840371220539
+        - rid: 7551229840371220540
+        - rid: 7551229840371220541
+        - rid: 7551229840371220542
+        - rid: 7551229840371220543
+        - rid: 7551229840371220544
+        - rid: 7551229840371220545
+        - rid: 7551229840371220546
+        - rid: 7551229840371220547
+        - rid: 7551229840371220548
+        - rid: 7551229840371220549
+        - rid: 7551229840371220550
+        - rid: 7551229840371220551
+        - rid: 7551229840371220552
+        - rid: 7551229840371220553
+        - rid: 7551229840371220554
+        - rid: 7551229840371220555
+        - rid: 7551229840371220556
+        - rid: 7551229840371220557
+        - rid: 7551229840371220558
+        - rid: 7551229840371220559
+        - rid: 7551229840371220560
+        - rid: 7551229840371220561
+        - rid: 7551229840371220562
+        - rid: 7551229840371220563
+        - rid: 7551229840371220564
+        - rid: 7551229840371220565
+        - rid: 7551229840371220566
+        - rid: 7551229840371220567
+        - rid: 7551229840371220568
+        - rid: 7551229840371220569
+        - rid: 7551229840371220570
+        - rid: 7551229840371220571
+        - rid: 7551229840371220572
+        - rid: 7551229840371220573
+        - rid: 7551229840371220574
+        - rid: 7551229840371220575
+        - rid: 7551229840371220576
+        - rid: 7551229840371220577
+        - rid: 7551229840371220578
+        - rid: 7551229840371220579
+        - rid: 7551229840371220580
+        - rid: 7551229840371220581
+        - rid: 7551229840371220582
+        - rid: 7551229840371220583
+        - rid: 7551229840371220584
+        - rid: 7551229840371220585
+        - rid: 7551229840371220586
+        - rid: 7551229840371220587
+        - rid: 7551229840371220588
+        - rid: 7551229840371220589
+        - rid: 7551229840371220590
+        - rid: 7551229840371220591
+        - rid: 7551229840371220592
+        - rid: 7551229840371220593
+        - rid: 7551229840371220594
+        - rid: 7551229840371220595
+        - rid: 7551229840371220596
+        - rid: 7551229840371220597
+        - rid: 7551229840371220598
+        - rid: 7551229840371220599
+        - rid: 7551229840371220600
+        - rid: 7551229840371220601
+        - rid: 7551229840371220602
+        - rid: 7551229840371220603
+        - rid: 7551229840371220604
+        - rid: 7551229840371220605
+        - rid: 7551229840371220606
+        - rid: 7551229840371220607
+        - rid: 7551229840371220608
+        - rid: 7551229840371220609
+        - rid: 7551229840371220610
+        - rid: 7551229840371220611
+        - rid: 7551229840371220612
+        - rid: 7551229840371220613
+        - rid: 7551229840371220614
+        - rid: 7551229840371220615
+        - rid: 7551229840371220616
+        - rid: 7551229840371220617
+        - rid: 7551229840371220618
+        - rid: 7551229840371220619
+        - rid: 7551229840371220620
+        - rid: 7551229840371220621
+        - rid: 7551229840371220622
+        - rid: 7551229840371220623
+        - rid: 7551229840371220624
+        - rid: 7551229840371220625
+        - rid: 7551229840371220626
+        - rid: 7551229840371220627
+        - rid: 7551229840371220628
+        - rid: 7551229840371220629
+        - rid: 7551229840371220630
+        - rid: 7551229840371220631
+        - rid: 7551229840371220632
+        - rid: 7551229840371220633
+        - rid: 7551229840371220634
+        - rid: 7551229840371220635
+        - rid: 7551229840371220636
+        - rid: 7551229840371220637
+        - rid: 7551229840371220638
+        - rid: 7551229840371220639
+        - rid: 7551229840371220640
+        - rid: 7551229840371220641
+        - rid: 7551229840371220642
+        - rid: 7551229840371220643
+        - rid: 7551229840371220644
+        - rid: 7551229840371220645
+        - rid: 7551229840371220646
+        - rid: 7551229840371220647
+        - rid: 7551229840371220648
+        - rid: 7551229840371220649
+        - rid: 7551229840371220650
+        - rid: 7551229840371220651
+        - rid: 7551229840371220652
+        - rid: 7551229840371220653
+        - rid: 7551229840371220654
+        - rid: 7551229840371220655
+        - rid: 7551229840371220656
+        - rid: 7551229840371220657
+        - rid: 7551229840371220658
+        - rid: 7551229840371220659
+        - rid: 7551229840371220660
+        - rid: 7551229840371220661
+        - rid: 7551229840371220662
+        - rid: 7551229840371220663
+        - rid: 7551229840371220664
+        - rid: 7551229840371220665
+        - rid: 7551229840371220666
+        - rid: 7551229840371220667
+        - rid: 7551229840371220668
+        - rid: 7551229840371220669
+        - rid: 7551229840371220670
+        - rid: 7551229840371220671
+        - rid: 7551229840371220672
+        - rid: 7551229840371220673
+        - rid: 7551229840371220674
+        - rid: 7551229840371220675
+        - rid: 7551229840371220676
+        - rid: 7551229840371220677
+        - rid: 7551229840371220678
+        - rid: 7551229840371220679
+        - rid: 7551229840371220680
+        - rid: 7551229840371220681
+        - rid: 7551229840371220682
+        - rid: 7551229840371220683
+        - rid: 7551229840371220684
+        - rid: 7551229840371220685
+        - rid: 7551229840371220686
+        - rid: 7551229840371220687
+        - rid: 7551229840371220688
+        - rid: 7551229840371220689
+        - rid: 7551229840371220690
+        - rid: 7551229840371220691
+        - rid: 7551229840371220692
+        - rid: 7551229840371220693
+        - rid: 7551229840371220694
+        - rid: 7551229840371220695
+        - rid: 7551229840371220696
+        - rid: 7551229840371220697
+        - rid: 7551229840371220698
+        - rid: 7551229840371220699
+        - rid: 7551229840371220700
+        - rid: 7551229840371220701
+        - rid: 7551229840371220702
+        - rid: 7551229840371220703
+        - rid: 7551229840371220704
+        - rid: 7551229840371220705
+        - rid: 7551229840371220706
+        - rid: 7551229840371220707
+        - rid: 7551229840371220708
+        - rid: 7551229840371220709
+        - rid: 7551229840371220710
+        - rid: 7551229840371220711
+        - rid: 7551229840371220712
+        - rid: 7551229840371220713
+        - rid: 7551229840371220714
+        - rid: 7551229840371220715
+        - rid: 7551229840371220716
+        - rid: 7551229840371220717
+        - rid: 7551229840371220718
+        - rid: 7551229840371220719
+        - rid: 7551229840371220720
+        - rid: 7551229840371220721
+        - rid: 7551229840371220722
+        - rid: 7551229840371220723
+        - rid: 7551229840371220724
+        - rid: 7551229840371220725
+        - rid: 7551229840371220726
+        - rid: 7551229840371220727
+        - rid: 7551229840371220728
+        - rid: 7551229840371220729
+        - rid: 7551229840371220730
+        - rid: 7551229840371220731
+        - rid: 7551229840371220732
+        - rid: 7551229840371220733
+        - rid: 7551229840371220734
+        - rid: 7551229840371220735
+        - rid: 7551229840371220736
+        - rid: 7551229840371220737
+        - rid: 7551229840371220738
+        - rid: 7551229840371220739
+        - rid: 7551229840371220740
+        - rid: 7551229840371220741
+        - rid: 7551229840371220742
+        - rid: 7551229840371220743
+        - rid: 7551229840371220744
+        - rid: 7551229840371220745
+        - rid: 7551229840371220746
+        - rid: 7551229840371220747
+        - rid: 7551229840371220748
+        - rid: 7551229840371220749
+        - rid: 7551229840371220750
+        - rid: 7551229840371220751
+        - rid: 7551229840371220752
+        - rid: 7551229840371220753
+        - rid: 7551229840371220754
+        - rid: 7551229840371220755
+        - rid: 7551229840371220756
+        - rid: 7551229840371220757
+        - rid: 7551229840371220758
+        - rid: 7551229840371220759
+        - rid: 7551229840371220760
+        - rid: 7551229840371220761
+        - rid: 7551229840371220762
+        - rid: 7551229840371220763
+        - rid: 7551229840371220764
+        - rid: 7551229840371220765
+        - rid: 7551229840371220766
+        - rid: 7551229840371220767
+        - rid: 7551229840371220768
+        - rid: 7551229840371220769
+        - rid: 7551229840371220770
+        - rid: 7551229840371220771
+        - rid: 7551229840371220772
+        - rid: 7551229840371220773
+        - rid: 7551229840371220774
+        - rid: 7551229840371220775
+        - rid: 7551229840371220776
+        - rid: 7551229840371220777
+        - rid: 7551229840371220778
+        - rid: 7551229840371220779
+        - rid: 7551229840371220780
+        - rid: 7551229840371220781
+        - rid: 7551229840371220782
+        - rid: 7551229840371220783
+        - rid: 7551229840371220784
+        - rid: 7551229840371220785
+        - rid: 7551229840371220786
+        - rid: 7551229840371220787
+        - rid: 7551229840371220788
+        - rid: 7551229840371220789
+        - rid: 7551229840371220790
+        - rid: 7551229840371220791
+        - rid: 7551229840371220792
+        - rid: 7551229840371220793
+        - rid: 7551229840371220794
+        - rid: 7551229840371220795
+        - rid: 7551229840371220796
+        - rid: 7551229840371220797
+        - rid: 7551229840371220798
+        - rid: 7551229840371220799
+        - rid: 7551229840371220800
+        - rid: 7551229840371220801
+        - rid: 7551229840371220802
+        - rid: 7551229840371220803
+        - rid: 7551229840371220804
+        - rid: 7551229840371220805
+        - rid: 7551229840371220806
+        - rid: 7551229840371220807
+        - rid: 7551229840371220808
+        - rid: 7551229840371220809
+        - rid: 7551229840371220810
+        - rid: 7551229840371220811
+        - rid: 7551229840371220812
+        - rid: 7551229840371220813
+        - rid: 7551229840371220814
+        - rid: 7551229840371220815
+        - rid: 7551229840371220816
+        - rid: 7551229840371220817
+        - rid: 7551229840371220818
+        - rid: 7551229840371220819
+        - rid: 7551229840371220820
+        - rid: 7551229840371220821
+        - rid: 7551229840371220822
+        - rid: 7551229840371220823
+        - rid: 7551229840371220824
+        - rid: 7551229840371220825
+        - rid: 7551229840371220826
+        - rid: 7551229840371220827
+        - rid: 7551229840371220828
+        - rid: 7551229840371220829
+        - rid: 7551229840371220830
+        - rid: 7551229840371220831
+        - rid: 7551229840371220832
+        - rid: 7551229840371220833
+        - rid: 7551229840371220834
+        - rid: 7551229840371220835
+        - rid: 7551229840371220836
+        - rid: 7551229840371220837
+        - rid: 7551229840371220838
+        - rid: 7551229840371220839
+        - rid: 7551229840371220840
+        - rid: 7551229840371220841
+        - rid: 7551229840371220842
+        - rid: 7551229840371220843
+        - rid: 7551229840371220844
+        - rid: 7551229840371220845
+        - rid: 7551229840371220846
+        - rid: 7551229840371220847
+        - rid: 7551229840371220848
+        - rid: 7551229840371220849
+        - rid: 7551229840371220850
+        - rid: 7551229840371220851
+        - rid: 7551229840371220852
+        - rid: 7551229840371220853
+        - rid: 7551229840371220854
+        - rid: 7551229840371220855
+        - rid: 7551229840371220856
+        - rid: 7551229840371220857
+        - rid: 7551229840371220858
+        - rid: 7551229840371220859
+        - rid: 7551229840371220860
+        - rid: 7551229840371220861
+        - rid: 7551229840371220862
+        - rid: 7551229840371220863
+        - rid: 7551229840371220864
+        - rid: 7551229840371220865
+        - rid: 7551229840371220866
+        - rid: 7551229840371220867
+        - rid: 7551229840371220868
+        - rid: 7551229840371220869
+        - rid: 7551229840371220870
+        - rid: 7551229840371220871
+        - rid: 7551229840371220872
+        - rid: 7551229840371220873
+        - rid: 7551229840371220874
+        - rid: 7551229840371220875
+        - rid: 7551229840371220876
+        - rid: 7551229840371220877
+        - rid: 7551229840371220878
+        - rid: 7551229840371220879
+        - rid: 7551229840371220880
+        - rid: 7551229840371220881
+        - rid: 7551229840371220882
+        - rid: 7551229840371220883
+        - rid: 7551229840371220884
+    - rid: 7551229840371220497
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 3
@@ -2889,7 +3650,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580641
+    - rid: 7551229840371220498
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 6
@@ -2900,7 +3661,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580642
+    - rid: 7551229840371220499
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 8
@@ -2911,7 +3672,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580643
+    - rid: 7551229840371220500
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 9
@@ -2922,7 +3683,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580644
+    - rid: 7551229840371220501
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 10
@@ -2933,7 +3694,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580645
+    - rid: 7551229840371220502
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 12
@@ -2944,7 +3705,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580646
+    - rid: 7551229840371220503
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 13
@@ -2955,7 +3716,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580647
+    - rid: 7551229840371220504
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 14
@@ -2966,7 +3727,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580648
+    - rid: 7551229840371220505
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 15
@@ -2977,7 +3738,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580649
+    - rid: 7551229840371220506
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 17
@@ -2988,7 +3749,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580650
+    - rid: 7551229840371220507
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 18
@@ -2999,7 +3760,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580651
+    - rid: 7551229840371220508
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 19
@@ -3010,7 +3771,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580652
+    - rid: 7551229840371220509
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 20
@@ -3021,7 +3782,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580653
+    - rid: 7551229840371220510
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 21
@@ -3032,7 +3793,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580654
+    - rid: 7551229840371220511
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 22
@@ -3043,7 +3804,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580655
+    - rid: 7551229840371220512
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 23
@@ -3054,7 +3815,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580656
+    - rid: 7551229840371220513
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 24
@@ -3065,7 +3826,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580657
+    - rid: 7551229840371220514
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 25
@@ -3076,7 +3837,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580658
+    - rid: 7551229840371220515
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 26
@@ -3087,7 +3848,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580659
+    - rid: 7551229840371220516
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 27
@@ -3098,7 +3859,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580660
+    - rid: 7551229840371220517
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 30
@@ -3109,7 +3870,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580661
+    - rid: 7551229840371220518
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 31
@@ -3120,7 +3881,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580662
+    - rid: 7551229840371220519
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 32
@@ -3131,7 +3892,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580663
+    - rid: 7551229840371220520
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 33
@@ -3142,7 +3903,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580664
+    - rid: 7551229840371220521
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 34
@@ -3153,7 +3914,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580665
+    - rid: 7551229840371220522
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 35
@@ -3164,7 +3925,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580666
+    - rid: 7551229840371220523
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 36
@@ -3175,7 +3936,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580667
+    - rid: 7551229840371220524
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 37
@@ -3186,7 +3947,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580668
+    - rid: 7551229840371220525
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 38
@@ -3197,7 +3958,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580669
+    - rid: 7551229840371220526
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 40
@@ -3208,7 +3969,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580670
+    - rid: 7551229840371220527
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 42
@@ -3219,7 +3980,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580671
+    - rid: 7551229840371220528
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 43
@@ -3230,7 +3991,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580672
+    - rid: 7551229840371220529
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 44
@@ -3241,7 +4002,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580673
+    - rid: 7551229840371220530
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 45
@@ -3252,7 +4013,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580674
+    - rid: 7551229840371220531
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 46
@@ -3263,7 +4024,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580675
+    - rid: 7551229840371220532
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 48
@@ -3274,7 +4035,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580676
+    - rid: 7551229840371220533
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 49
@@ -3285,7 +4046,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580677
+    - rid: 7551229840371220534
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 51
@@ -3296,7 +4057,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580678
+    - rid: 7551229840371220535
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 52
@@ -3307,7 +4068,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580679
+    - rid: 7551229840371220536
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 53
@@ -3318,7 +4079,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580680
+    - rid: 7551229840371220537
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 54
@@ -3329,7 +4090,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580681
+    - rid: 7551229840371220538
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 55
@@ -3340,7 +4101,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580682
+    - rid: 7551229840371220539
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 56
@@ -3351,7 +4112,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580683
+    - rid: 7551229840371220540
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 57
@@ -3362,7 +4123,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580684
+    - rid: 7551229840371220541
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 58
@@ -3373,7 +4134,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580685
+    - rid: 7551229840371220542
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 59
@@ -3384,7 +4145,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580686
+    - rid: 7551229840371220543
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 60
@@ -3395,7 +4156,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580687
+    - rid: 7551229840371220544
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 61
@@ -3406,7 +4167,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580688
+    - rid: 7551229840371220545
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 62
@@ -3417,7 +4178,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580689
+    - rid: 7551229840371220546
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 63
@@ -3428,7 +4189,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580690
+    - rid: 7551229840371220547
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 64
@@ -3439,7 +4200,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580691
+    - rid: 7551229840371220548
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 65
@@ -3450,7 +4211,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580692
+    - rid: 7551229840371220549
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 66
@@ -3461,7 +4222,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580693
+    - rid: 7551229840371220550
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 67
@@ -3472,7 +4233,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580694
+    - rid: 7551229840371220551
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 68
@@ -3483,7 +4244,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580695
+    - rid: 7551229840371220552
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 69
@@ -3494,7 +4255,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580696
+    - rid: 7551229840371220553
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 70
@@ -3505,7 +4266,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580697
+    - rid: 7551229840371220554
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 71
@@ -3516,7 +4277,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580698
+    - rid: 7551229840371220555
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 72
@@ -3527,7 +4288,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580699
+    - rid: 7551229840371220556
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 73
@@ -3538,7 +4299,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580700
+    - rid: 7551229840371220557
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 74
@@ -3549,7 +4310,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580701
+    - rid: 7551229840371220558
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 75
@@ -3560,7 +4321,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580702
+    - rid: 7551229840371220559
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 76
@@ -3571,7 +4332,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580703
+    - rid: 7551229840371220560
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 77
@@ -3582,7 +4343,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580704
+    - rid: 7551229840371220561
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 78
@@ -3593,7 +4354,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580705
+    - rid: 7551229840371220562
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 79
@@ -3604,7 +4365,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580706
+    - rid: 7551229840371220563
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 80
@@ -3615,7 +4376,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580707
+    - rid: 7551229840371220564
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 81
@@ -3626,7 +4387,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580708
+    - rid: 7551229840371220565
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 82
@@ -3637,7 +4398,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580709
+    - rid: 7551229840371220566
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 83
@@ -3648,7 +4409,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580710
+    - rid: 7551229840371220567
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 84
@@ -3659,7 +4420,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580711
+    - rid: 7551229840371220568
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 85
@@ -3670,7 +4431,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580712
+    - rid: 7551229840371220569
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 86
@@ -3681,7 +4442,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580713
+    - rid: 7551229840371220570
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 87
@@ -3692,7 +4453,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580714
+    - rid: 7551229840371220571
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 88
@@ -3703,7 +4464,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580715
+    - rid: 7551229840371220572
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 89
@@ -3714,7 +4475,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580716
+    - rid: 7551229840371220573
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 90
@@ -3725,7 +4486,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580717
+    - rid: 7551229840371220574
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 91
@@ -3736,7 +4497,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580718
+    - rid: 7551229840371220575
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 92
@@ -3747,7 +4508,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580719
+    - rid: 7551229840371220576
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 93
@@ -3758,7 +4519,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580720
+    - rid: 7551229840371220577
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 94
@@ -3769,7 +4530,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580721
+    - rid: 7551229840371220578
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 95
@@ -3780,7 +4541,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580722
+    - rid: 7551229840371220579
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 96
@@ -3791,7 +4552,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580723
+    - rid: 7551229840371220580
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 97
@@ -3802,7 +4563,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580724
+    - rid: 7551229840371220581
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 98
@@ -3813,7 +4574,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580725
+    - rid: 7551229840371220582
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 99
@@ -3824,7 +4585,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580726
+    - rid: 7551229840371220583
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 100
@@ -3835,7 +4596,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580727
+    - rid: 7551229840371220584
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 101
@@ -3846,7 +4607,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580728
+    - rid: 7551229840371220585
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 102
@@ -3857,7 +4618,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580729
+    - rid: 7551229840371220586
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 103
@@ -3868,7 +4629,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580730
+    - rid: 7551229840371220587
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 104
@@ -3879,7 +4640,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580731
+    - rid: 7551229840371220588
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 105
@@ -3890,7 +4651,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580732
+    - rid: 7551229840371220589
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 106
@@ -3901,7 +4662,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580733
+    - rid: 7551229840371220590
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 107
@@ -3912,7 +4673,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580734
+    - rid: 7551229840371220591
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 108
@@ -3923,7 +4684,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580735
+    - rid: 7551229840371220592
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 109
@@ -3934,7 +4695,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580736
+    - rid: 7551229840371220593
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 110
@@ -3945,7 +4706,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580737
+    - rid: 7551229840371220594
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 111
@@ -3956,7 +4717,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580738
+    - rid: 7551229840371220595
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 112
@@ -3967,7 +4728,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580739
+    - rid: 7551229840371220596
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 114
@@ -3978,7 +4739,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580740
+    - rid: 7551229840371220597
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 116
@@ -3989,7 +4750,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580741
+    - rid: 7551229840371220598
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 117
@@ -4000,7 +4761,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580742
+    - rid: 7551229840371220599
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 121
@@ -4011,7 +4772,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580743
+    - rid: 7551229840371220600
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 122
@@ -4022,7 +4783,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580744
+    - rid: 7551229840371220601
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 123
@@ -4033,7 +4794,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580745
+    - rid: 7551229840371220602
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 124
@@ -4044,7 +4805,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580746
+    - rid: 7551229840371220603
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 131
@@ -4055,7 +4816,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580747
+    - rid: 7551229840371220604
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 132
@@ -4066,7 +4827,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580748
+    - rid: 7551229840371220605
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 137
@@ -4077,7 +4838,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580749
+    - rid: 7551229840371220606
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 138
@@ -4088,7 +4849,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580750
+    - rid: 7551229840371220607
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 139
@@ -4099,7 +4860,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580751
+    - rid: 7551229840371220608
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 142
@@ -4110,7 +4871,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580752
+    - rid: 7551229840371220609
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 143
@@ -4121,7 +4882,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580753
+    - rid: 7551229840371220610
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 146
@@ -4132,7 +4893,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580754
+    - rid: 7551229840371220611
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 147
@@ -4143,7 +4904,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580755
+    - rid: 7551229840371220612
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 148
@@ -4154,7 +4915,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580756
+    - rid: 7551229840371220613
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 149
@@ -4165,7 +4926,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580757
+    - rid: 7551229840371220614
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 150
@@ -4176,7 +4937,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580758
+    - rid: 7551229840371220615
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 151
@@ -4187,7 +4948,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580759
+    - rid: 7551229840371220616
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 152
@@ -4198,7 +4959,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580760
+    - rid: 7551229840371220617
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 153
@@ -4209,7 +4970,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580761
+    - rid: 7551229840371220618
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 154
@@ -4220,7 +4981,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580762
+    - rid: 7551229840371220619
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 155
@@ -4231,7 +4992,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580763
+    - rid: 7551229840371220620
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 156
@@ -4242,7 +5003,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580764
+    - rid: 7551229840371220621
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 157
@@ -4253,7 +5014,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580765
+    - rid: 7551229840371220622
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 158
@@ -4264,7 +5025,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580766
+    - rid: 7551229840371220623
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 159
@@ -4275,7 +5036,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580767
+    - rid: 7551229840371220624
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 160
@@ -4286,7 +5047,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580768
+    - rid: 7551229840371220625
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 161
@@ -4297,7 +5058,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580769
+    - rid: 7551229840371220626
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 162
@@ -4308,7 +5069,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580770
+    - rid: 7551229840371220627
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 163
@@ -4319,7 +5080,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580771
+    - rid: 7551229840371220628
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 164
@@ -4330,7 +5091,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580772
+    - rid: 7551229840371220629
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 165
@@ -4341,7 +5102,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580773
+    - rid: 7551229840371220630
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 166
@@ -4352,7 +5113,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580774
+    - rid: 7551229840371220631
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 167
@@ -4363,7 +5124,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580775
+    - rid: 7551229840371220632
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 168
@@ -4374,7 +5135,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580776
+    - rid: 7551229840371220633
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 169
@@ -4385,7 +5146,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580777
+    - rid: 7551229840371220634
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 170
@@ -4396,7 +5157,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580778
+    - rid: 7551229840371220635
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 171
@@ -4407,7 +5168,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580779
+    - rid: 7551229840371220636
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 172
@@ -4418,7 +5179,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580780
+    - rid: 7551229840371220637
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 173
@@ -4429,7 +5190,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580781
+    - rid: 7551229840371220638
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 174
@@ -4440,7 +5201,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580782
+    - rid: 7551229840371220639
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 175
@@ -4451,7 +5212,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580783
+    - rid: 7551229840371220640
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 176
@@ -4462,7 +5223,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580784
+    - rid: 7551229840371220641
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 177
@@ -4473,7 +5234,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580785
+    - rid: 7551229840371220642
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 178
@@ -4484,7 +5245,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580786
+    - rid: 7551229840371220643
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 179
@@ -4495,7 +5256,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580787
+    - rid: 7551229840371220644
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 180
@@ -4506,7 +5267,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580788
+    - rid: 7551229840371220645
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 181
@@ -4517,7 +5278,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580789
+    - rid: 7551229840371220646
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 182
@@ -4528,7 +5289,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580790
+    - rid: 7551229840371220647
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 183
@@ -4539,7 +5300,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580791
+    - rid: 7551229840371220648
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 184
@@ -4550,7 +5311,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580792
+    - rid: 7551229840371220649
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 185
@@ -4561,7 +5322,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580793
+    - rid: 7551229840371220650
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 186
@@ -4572,7 +5333,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580794
+    - rid: 7551229840371220651
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 187
@@ -4583,7 +5344,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580795
+    - rid: 7551229840371220652
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 188
@@ -4594,7 +5355,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580796
+    - rid: 7551229840371220653
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 189
@@ -4605,7 +5366,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580797
+    - rid: 7551229840371220654
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 190
@@ -4616,7 +5377,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580798
+    - rid: 7551229840371220655
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 191
@@ -4627,7 +5388,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580799
+    - rid: 7551229840371220656
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 192
@@ -4638,7 +5399,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580800
+    - rid: 7551229840371220657
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 193
@@ -4649,7 +5410,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580801
+    - rid: 7551229840371220658
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 194
@@ -4660,7 +5421,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580802
+    - rid: 7551229840371220659
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 195
@@ -4671,7 +5432,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580803
+    - rid: 7551229840371220660
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 196
@@ -4682,7 +5443,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580804
+    - rid: 7551229840371220661
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 197
@@ -4693,7 +5454,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580805
+    - rid: 7551229840371220662
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 198
@@ -4704,7 +5465,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580806
+    - rid: 7551229840371220663
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 199
@@ -4715,7 +5476,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580807
+    - rid: 7551229840371220664
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 200
@@ -4726,7 +5487,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580808
+    - rid: 7551229840371220665
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 201
@@ -4737,7 +5498,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580809
+    - rid: 7551229840371220666
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 202
@@ -4748,7 +5509,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580810
+    - rid: 7551229840371220667
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 203
@@ -4759,7 +5520,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580811
+    - rid: 7551229840371220668
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 204
@@ -4770,7 +5531,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580812
+    - rid: 7551229840371220669
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 205
@@ -4781,7 +5542,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580813
+    - rid: 7551229840371220670
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 206
@@ -4792,7 +5553,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580814
+    - rid: 7551229840371220671
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 207
@@ -4803,7 +5564,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580815
+    - rid: 7551229840371220672
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 209
@@ -4814,7 +5575,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580816
+    - rid: 7551229840371220673
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 210
@@ -4825,7 +5586,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580817
+    - rid: 7551229840371220674
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 211
@@ -4836,7 +5597,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580818
+    - rid: 7551229840371220675
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 212
@@ -4847,7 +5608,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580819
+    - rid: 7551229840371220676
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 261
@@ -4858,7 +5619,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580820
+    - rid: 7551229840371220677
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 263
@@ -4869,7 +5630,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580821
+    - rid: 7551229840371220678
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 264
@@ -4880,7 +5641,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580822
+    - rid: 7551229840371220679
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 265
@@ -4891,7 +5652,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580823
+    - rid: 7551229840371220680
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 266
@@ -4902,7 +5663,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580824
+    - rid: 7551229840371220681
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 270
@@ -4913,7 +5674,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580825
+    - rid: 7551229840371220682
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 273
@@ -4924,7 +5685,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580826
+    - rid: 7551229840371220683
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 274
@@ -4935,7 +5696,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580827
+    - rid: 7551229840371220684
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 275
@@ -4946,7 +5707,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580828
+    - rid: 7551229840371220685
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 276
@@ -4957,7 +5718,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580829
+    - rid: 7551229840371220686
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 278
@@ -4968,7 +5729,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580830
+    - rid: 7551229840371220687
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 279
@@ -4979,7 +5740,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580831
+    - rid: 7551229840371220688
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 280
@@ -4990,7 +5751,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580832
+    - rid: 7551229840371220689
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 281
@@ -5001,7 +5762,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580833
+    - rid: 7551229840371220690
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 282
@@ -5012,7 +5773,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580834
+    - rid: 7551229840371220691
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 432
@@ -5023,7 +5784,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580835
+    - rid: 7551229840371220692
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 433
@@ -5034,7 +5795,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580836
+    - rid: 7551229840371220693
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 434
@@ -5045,7 +5806,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580837
+    - rid: 7551229840371220694
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 435
@@ -5056,7 +5817,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580838
+    - rid: 7551229840371220695
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 436
@@ -5067,7 +5828,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580839
+    - rid: 7551229840371220696
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 437
@@ -5078,7 +5839,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580840
+    - rid: 7551229840371220697
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 442
@@ -5089,7 +5850,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580841
+    - rid: 7551229840371220698
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 487
@@ -5100,7 +5861,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580842
+    - rid: 7551229840371220699
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 492
@@ -5111,7 +5872,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580843
+    - rid: 7551229840371220700
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 493
@@ -5122,7 +5883,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580844
+    - rid: 7551229840371220701
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 494
@@ -5133,7 +5894,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580845
+    - rid: 7551229840371220702
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 495
@@ -5144,7 +5905,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580846
+    - rid: 7551229840371220703
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 496
@@ -5155,7 +5916,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580847
+    - rid: 7551229840371220704
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 497
@@ -5166,7 +5927,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580848
+    - rid: 7551229840371220705
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 498
@@ -5177,7 +5938,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580849
+    - rid: 7551229840371220706
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 499
@@ -5188,7 +5949,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580850
+    - rid: 7551229840371220707
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 500
@@ -5199,7 +5960,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580851
+    - rid: 7551229840371220708
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 501
@@ -5210,7 +5971,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580852
+    - rid: 7551229840371220709
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 502
@@ -5221,7 +5982,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580853
+    - rid: 7551229840371220710
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 503
@@ -5232,7 +5993,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580854
+    - rid: 7551229840371220711
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 504
@@ -5243,7 +6004,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580855
+    - rid: 7551229840371220712
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 506
@@ -5254,7 +6015,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580856
+    - rid: 7551229840371220713
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 507
@@ -5265,7 +6026,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580857
+    - rid: 7551229840371220714
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 508
@@ -5276,7 +6037,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580858
+    - rid: 7551229840371220715
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 509
@@ -5287,7 +6048,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580859
+    - rid: 7551229840371220716
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 510
@@ -5298,7 +6059,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580860
+    - rid: 7551229840371220717
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 511
@@ -5309,7 +6070,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580861
+    - rid: 7551229840371220718
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 512
@@ -5320,7 +6081,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580862
+    - rid: 7551229840371220719
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 513
@@ -5331,7 +6092,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854780580863
+    - rid: 7551229840371220720
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 514
@@ -5342,7 +6103,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135936
+    - rid: 7551229840371220721
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 515
@@ -5353,7 +6114,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135937
+    - rid: 7551229840371220722
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 516
@@ -5364,7 +6125,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135938
+    - rid: 7551229840371220723
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 517
@@ -5375,7 +6136,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135939
+    - rid: 7551229840371220724
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 518
@@ -5386,7 +6147,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135940
+    - rid: 7551229840371220725
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 519
@@ -5397,7 +6158,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135941
+    - rid: 7551229840371220726
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 520
@@ -5408,7 +6169,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135942
+    - rid: 7551229840371220727
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 521
@@ -5419,7 +6180,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135943
+    - rid: 7551229840371220728
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 522
@@ -5430,7 +6191,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135944
+    - rid: 7551229840371220729
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 523
@@ -5441,7 +6202,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135945
+    - rid: 7551229840371220730
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 524
@@ -5452,7 +6213,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135946
+    - rid: 7551229840371220731
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 525
@@ -5463,7 +6224,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135947
+    - rid: 7551229840371220732
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 526
@@ -5474,7 +6235,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135948
+    - rid: 7551229840371220733
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 527
@@ -5485,7 +6246,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135949
+    - rid: 7551229840371220734
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 528
@@ -5496,7 +6257,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135950
+    - rid: 7551229840371220735
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 529
@@ -5507,7 +6268,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135951
+    - rid: 7551229840371220736
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 530
@@ -5518,7 +6279,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135952
+    - rid: 7551229840371220737
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 531
@@ -5529,7 +6290,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135953
+    - rid: 7551229840371220738
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 532
@@ -5540,7 +6301,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135954
+    - rid: 7551229840371220739
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 533
@@ -5551,7 +6312,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135955
+    - rid: 7551229840371220740
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 534
@@ -5562,7 +6323,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135956
+    - rid: 7551229840371220741
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 535
@@ -5573,7 +6334,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135957
+    - rid: 7551229840371220742
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 536
@@ -5584,7 +6345,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135958
+    - rid: 7551229840371220743
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 537
@@ -5595,7 +6356,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135959
+    - rid: 7551229840371220744
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 538
@@ -5606,7 +6367,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135960
+    - rid: 7551229840371220745
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 539
@@ -5617,7 +6378,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135961
+    - rid: 7551229840371220746
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 540
@@ -5628,7 +6389,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135962
+    - rid: 7551229840371220747
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 541
@@ -5639,7 +6400,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135963
+    - rid: 7551229840371220748
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 542
@@ -5650,7 +6411,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135964
+    - rid: 7551229840371220749
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 543
@@ -5661,7 +6422,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135965
+    - rid: 7551229840371220750
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 544
@@ -5672,7 +6433,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135966
+    - rid: 7551229840371220751
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 545
@@ -5683,7 +6444,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135967
+    - rid: 7551229840371220752
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 546
@@ -5694,7 +6455,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135968
+    - rid: 7551229840371220753
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 547
@@ -5705,7 +6466,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135969
+    - rid: 7551229840371220754
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 548
@@ -5716,7 +6477,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135970
+    - rid: 7551229840371220755
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 549
@@ -5727,7 +6488,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135971
+    - rid: 7551229840371220756
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 550
@@ -5738,7 +6499,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135972
+    - rid: 7551229840371220757
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 551
@@ -5749,7 +6510,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135973
+    - rid: 7551229840371220758
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 552
@@ -5760,7 +6521,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135974
+    - rid: 7551229840371220759
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 553
@@ -5771,7 +6532,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135975
+    - rid: 7551229840371220760
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 554
@@ -5782,7 +6543,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135976
+    - rid: 7551229840371220761
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 555
@@ -5793,7 +6554,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135977
+    - rid: 7551229840371220762
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 556
@@ -5804,7 +6565,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135978
+    - rid: 7551229840371220763
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 557
@@ -5815,7 +6576,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135979
+    - rid: 7551229840371220764
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 558
@@ -5826,7 +6587,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135980
+    - rid: 7551229840371220765
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 559
@@ -5837,7 +6598,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135981
+    - rid: 7551229840371220766
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 560
@@ -5848,7 +6609,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135982
+    - rid: 7551229840371220767
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 561
@@ -5859,7 +6620,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135983
+    - rid: 7551229840371220768
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 562
@@ -5870,7 +6631,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135984
+    - rid: 7551229840371220769
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 563
@@ -5881,7 +6642,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135985
+    - rid: 7551229840371220770
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 564
@@ -5892,7 +6653,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135986
+    - rid: 7551229840371220771
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 565
@@ -5903,7 +6664,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135987
+    - rid: 7551229840371220772
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 566
@@ -5914,7 +6675,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135988
+    - rid: 7551229840371220773
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 567
@@ -5925,7 +6686,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135989
+    - rid: 7551229840371220774
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 568
@@ -5936,7 +6697,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135990
+    - rid: 7551229840371220775
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 569
@@ -5947,7 +6708,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135991
+    - rid: 7551229840371220776
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 570
@@ -5958,7 +6719,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135992
+    - rid: 7551229840371220777
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 571
@@ -5969,7 +6730,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135993
+    - rid: 7551229840371220778
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 572
@@ -5980,7 +6741,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135994
+    - rid: 7551229840371220779
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 573
@@ -5991,7 +6752,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135995
+    - rid: 7551229840371220780
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 574
@@ -6002,7 +6763,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135996
+    - rid: 7551229840371220781
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 575
@@ -6013,7 +6774,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135997
+    - rid: 7551229840371220782
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 576
@@ -6024,7 +6785,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135998
+    - rid: 7551229840371220783
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 580
@@ -6035,7 +6796,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868135999
+    - rid: 7551229840371220784
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 581
@@ -6046,7 +6807,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136000
+    - rid: 7551229840371220785
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 582
@@ -6057,7 +6818,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136001
+    - rid: 7551229840371220786
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 583
@@ -6068,7 +6829,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136002
+    - rid: 7551229840371220787
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 585
@@ -6079,7 +6840,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136003
+    - rid: 7551229840371220788
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 587
@@ -6090,7 +6851,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136004
+    - rid: 7551229840371220789
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 588
@@ -6101,7 +6862,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136005
+    - rid: 7551229840371220790
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 589
@@ -6112,7 +6873,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136006
+    - rid: 7551229840371220791
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 590
@@ -6123,7 +6884,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136007
+    - rid: 7551229840371220792
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 593
@@ -6134,7 +6895,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136008
+    - rid: 7551229840371220793
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 594
@@ -6145,7 +6906,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136009
+    - rid: 7551229840371220794
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 595
@@ -6156,7 +6917,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136010
+    - rid: 7551229840371220795
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 598
@@ -6167,7 +6928,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136011
+    - rid: 7551229840371220796
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 599
@@ -6178,7 +6939,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136012
+    - rid: 7551229840371220797
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 600
@@ -6189,7 +6950,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136013
+    - rid: 7551229840371220798
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 601
@@ -6200,7 +6961,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136014
+    - rid: 7551229840371220799
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 602
@@ -6211,7 +6972,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136015
+    - rid: 7551229840371220800
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 603
@@ -6222,7 +6983,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136016
+    - rid: 7551229840371220801
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 604
@@ -6233,7 +6994,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136017
+    - rid: 7551229840371220802
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 605
@@ -6244,7 +7005,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136018
+    - rid: 7551229840371220803
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 606
@@ -6255,7 +7016,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136019
+    - rid: 7551229840371220804
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 607
@@ -6266,7 +7027,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136020
+    - rid: 7551229840371220805
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 608
@@ -6277,7 +7038,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136021
+    - rid: 7551229840371220806
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 609
@@ -6288,7 +7049,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136022
+    - rid: 7551229840371220807
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 610
@@ -6299,7 +7060,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136023
+    - rid: 7551229840371220808
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 611
@@ -6310,7 +7071,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136024
+    - rid: 7551229840371220809
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 612
@@ -6321,7 +7082,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136025
+    - rid: 7551229840371220810
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 613
@@ -6332,7 +7093,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136026
+    - rid: 7551229840371220811
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 614
@@ -6343,7 +7104,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136027
+    - rid: 7551229840371220812
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 615
@@ -6354,7 +7115,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136028
+    - rid: 7551229840371220813
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 616
@@ -6365,7 +7126,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136029
+    - rid: 7551229840371220814
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 617
@@ -6376,7 +7137,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136030
+    - rid: 7551229840371220815
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 618
@@ -6387,7 +7148,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136031
+    - rid: 7551229840371220816
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 619
@@ -6398,7 +7159,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136032
+    - rid: 7551229840371220817
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 620
@@ -6409,7 +7170,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136033
+    - rid: 7551229840371220818
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 621
@@ -6420,7 +7181,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136034
+    - rid: 7551229840371220819
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 622
@@ -6431,7 +7192,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136035
+    - rid: 7551229840371220820
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 623
@@ -6442,7 +7203,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136036
+    - rid: 7551229840371220821
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 624
@@ -6453,7 +7214,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136037
+    - rid: 7551229840371220822
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 625
@@ -6464,7 +7225,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136038
+    - rid: 7551229840371220823
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 626
@@ -6475,7 +7236,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136039
+    - rid: 7551229840371220824
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 627
@@ -6486,7 +7247,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136040
+    - rid: 7551229840371220825
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 628
@@ -6497,7 +7258,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136041
+    - rid: 7551229840371220826
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 629
@@ -6508,7 +7269,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136042
+    - rid: 7551229840371220827
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 630
@@ -6519,7 +7280,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136043
+    - rid: 7551229840371220828
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 631
@@ -6530,7 +7291,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136044
+    - rid: 7551229840371220829
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 632
@@ -6541,7 +7302,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136045
+    - rid: 7551229840371220830
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 633
@@ -6552,7 +7313,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136046
+    - rid: 7551229840371220831
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 634
@@ -6563,7 +7324,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136047
+    - rid: 7551229840371220832
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 635
@@ -6574,7 +7335,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136048
+    - rid: 7551229840371220833
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 636
@@ -6585,7 +7346,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136049
+    - rid: 7551229840371220834
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 637
@@ -6596,7 +7357,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136050
+    - rid: 7551229840371220835
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 638
@@ -6607,7 +7368,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136051
+    - rid: 7551229840371220836
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 639
@@ -6618,7 +7379,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136052
+    - rid: 7551229840371220837
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 640
@@ -6629,7 +7390,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136053
+    - rid: 7551229840371220838
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 641
@@ -6640,7 +7401,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136054
+    - rid: 7551229840371220839
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 642
@@ -6651,7 +7412,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136055
+    - rid: 7551229840371220840
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 643
@@ -6662,7 +7423,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136056
+    - rid: 7551229840371220841
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 644
@@ -6673,7 +7434,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136057
+    - rid: 7551229840371220842
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 645
@@ -6684,7 +7445,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136058
+    - rid: 7551229840371220843
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 646
@@ -6695,7 +7456,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136059
+    - rid: 7551229840371220844
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 647
@@ -6706,7 +7467,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136060
+    - rid: 7551229840371220845
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 648
@@ -6717,7 +7478,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136061
+    - rid: 7551229840371220846
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 649
@@ -6728,7 +7489,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136062
+    - rid: 7551229840371220847
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 650
@@ -6739,7 +7500,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136063
+    - rid: 7551229840371220848
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 651
@@ -6750,7 +7511,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136064
+    - rid: 7551229840371220849
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 652
@@ -6761,7 +7522,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136065
+    - rid: 7551229840371220850
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 653
@@ -6772,7 +7533,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136066
+    - rid: 7551229840371220851
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 654
@@ -6783,7 +7544,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136067
+    - rid: 7551229840371220852
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 655
@@ -6794,7 +7555,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136068
+    - rid: 7551229840371220853
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 656
@@ -6805,7 +7566,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136069
+    - rid: 7551229840371220854
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 657
@@ -6816,7 +7577,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136070
+    - rid: 7551229840371220855
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 658
@@ -6827,7 +7588,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136071
+    - rid: 7551229840371220856
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 659
@@ -6838,7 +7599,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136072
+    - rid: 7551229840371220857
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 665
@@ -6849,7 +7610,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136073
+    - rid: 7551229840371220858
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 666
@@ -6860,7 +7621,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136074
+    - rid: 7551229840371220859
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 667
@@ -6871,7 +7632,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136075
+    - rid: 7551229840371220860
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 669
@@ -6882,7 +7643,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136076
+    - rid: 7551229840371220861
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 671
@@ -6893,7 +7654,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136077
+    - rid: 7551229840371220862
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 680
@@ -6904,7 +7665,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136078
+    - rid: 7551229840371220863
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 685
@@ -6915,7 +7676,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136079
+    - rid: 7551229840371220864
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 690
@@ -6926,7 +7687,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136080
+    - rid: 7551229840371220865
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 692
@@ -6937,7 +7698,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136081
+    - rid: 7551229840371220866
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 693
@@ -6948,7 +7709,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136082
+    - rid: 7551229840371220867
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 695
@@ -6959,7 +7720,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136083
+    - rid: 7551229840371220868
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 696
@@ -6970,7 +7731,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136084
+    - rid: 7551229840371220869
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 697
@@ -6981,7 +7742,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136085
+    - rid: 7551229840371220870
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 698
@@ -6992,7 +7753,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136086
+    - rid: 7551229840371220871
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 699
@@ -7003,7 +7764,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136087
+    - rid: 7551229840371220872
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 701
@@ -7014,7 +7775,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136088
+    - rid: 7551229840371220873
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 702
@@ -7025,7 +7786,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136089
+    - rid: 7551229840371220874
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 703
@@ -7036,7 +7797,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136090
+    - rid: 7551229840371220875
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 704
@@ -7047,7 +7808,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136091
+    - rid: 7551229840371220876
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 705
@@ -7058,7 +7819,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136092
+    - rid: 7551229840371220877
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 706
@@ -7069,7 +7830,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136093
+    - rid: 7551229840371220878
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 707
@@ -7080,7 +7841,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136094
+    - rid: 7551229840371220879
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 708
@@ -7091,7 +7852,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136095
+    - rid: 7551229840371220880
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 709
@@ -7102,7 +7863,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136096
+    - rid: 7551229840371220881
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 710
@@ -7113,7 +7874,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136097
+    - rid: 7551229840371220882
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 711
@@ -7124,7 +7885,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136098
+    - rid: 7551229840371220883
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 712
@@ -7135,7 +7896,7 @@ MonoBehaviour:
         color:
           serializedVersion: 2
           rgba: 0
-    - rid: 7442055854868136099
+    - rid: 7551229840371220884
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
         vertexIndex: 713
@@ -7724,7 +8485,7 @@ Transform:
   m_GameObject: {fileID: 163984182}
   serializedVersion: 2
   m_LocalRotation: {x: 0.0007693477, y: 0.7362954, z: 0.6766593, w: 0.00083714613}
-  m_LocalPosition: {x: -0.0143991895, y: 0.0922147, z: 0.08036259}
+  m_LocalPosition: {x: -0.01440333, y: 0.09040027, z: 0.08051604}
   m_LocalScale: {x: 1, y: 0.9999997, z: 0.9999999}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -8334,7 +9095,7 @@ Transform:
   m_GameObject: {fileID: 339826592}
   serializedVersion: 2
   m_LocalRotation: {x: -0.00000027713267, y: 0.697902, z: 0.7161933, w: 0.00000037547036}
-  m_LocalPosition: {x: 0.035081808, y: 0.08138917, z: 0.11382261}
+  m_LocalPosition: {x: 0.03508181, y: 0.07645972, z: 0.110938326}
   m_LocalScale: {x: 1, y: 1.0000004, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -8496,7 +9257,7 @@ Transform:
   m_GameObject: {fileID: 376023757}
   serializedVersion: 2
   m_LocalRotation: {x: 0.0000003847218, y: 0.6979021, z: 0.71619326, w: -0.00000026948067}
-  m_LocalPosition: {x: -0.03508177, y: 0.08138917, z: 0.113822624}
+  m_LocalPosition: {x: -0.035081774, y: 0.07645972, z: 0.11093834}
   m_LocalScale: {x: 1, y: 0.9999994, z: 0.9999999}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -9473,7 +10234,7 @@ GameObject:
   m_Component:
   - component: {fileID: 695950894}
   - component: {fileID: 695950893}
-  - component: {fileID: 695950892}
+  - component: {fileID: 695950895}
   m_Layer: 0
   m_Name: EventSystem
   m_TagString: Untagged
@@ -9481,26 +10242,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &695950892
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 695950891}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f231c4fb786f3946a6b90b886c48677, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_SendPointerHoverToParent: 1
-  m_HorizontalAxis: Horizontal
-  m_VerticalAxis: Vertical
-  m_SubmitButton: Submit
-  m_CancelButton: Cancel
-  m_InputActionsPerSecond: 10
-  m_RepeatDelay: 0.5
-  m_ForceModuleActive: 0
 --- !u!114 &695950893
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9531,6 +10272,37 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &695950895
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 695950891}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01614664b831546d2ae94a42149d80ac, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.UI.InputSystemUIInputModule
+  m_SendPointerHoverToParent: 1
+  m_MoveRepeatDelay: 0.5
+  m_MoveRepeatRate: 0.1
+  m_XRTrackingOrigin: {fileID: 0}
+  m_ActionsAsset: {fileID: -944628639613478452, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_PointAction: {fileID: -1654692200621890270, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_MoveAction: {fileID: -8784545083839296357, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_SubmitAction: {fileID: 392368643174621059, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_CancelAction: {fileID: 7727032971491509709, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_LeftClickAction: {fileID: 3001919216989983466, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_MiddleClickAction: {fileID: -2185481485913320682, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_RightClickAction: {fileID: -4090225696740746782, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_ScrollWheelAction: {fileID: 6240969308177333660, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_TrackedDevicePositionAction: {fileID: 6564999863303420839, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_TrackedDeviceOrientationAction: {fileID: 7970375526676320489, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_DeselectOnBackgroundClick: 1
+  m_PointerBehavior: 0
+  m_CursorLockBehavior: 0
+  m_ScrollDeltaPerTick: 6
 --- !u!1 &699622033
 GameObject:
   m_ObjectHideFlags: 0
@@ -9877,7 +10649,7 @@ Transform:
   m_GameObject: {fileID: 767658695}
   serializedVersion: 2
   m_LocalRotation: {x: 0.0018799359, y: 0.72324556, z: 0.6905856, w: 0.001968873}
-  m_LocalPosition: {x: -0.028593317, y: 0.09468054, z: 0.078375235}
+  m_LocalPosition: {x: -0.028605727, y: 0.09240353, z: 0.07848057}
   m_LocalScale: {x: 0.99999994, y: 1.0000002, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -9909,7 +10681,7 @@ Transform:
   m_GameObject: {fileID: 785167529}
   serializedVersion: 2
   m_LocalRotation: {x: -0.0018797974, y: 0.72324556, z: 0.6905856, w: -0.0019689058}
-  m_LocalPosition: {x: 0.028593328, y: 0.09468053, z: 0.078375176}
+  m_LocalPosition: {x: 0.028605739, y: 0.09240352, z: 0.07848051}
   m_LocalScale: {x: 0.99999994, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -10085,7 +10857,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 854209518}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.17737584, y: 0.00036783214, z: -0.00002634864, w: 0.98414314}
+  m_LocalRotation: {x: 0.18999922, y: 0.00036746354, z: -0.00003107006, w: 0.9817842}
   m_LocalPosition: {x: 0.000000022011523, y: 0.00000007023567, z: -0.00000011658681}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -11524,7 +12296,7 @@ Transform:
   m_GameObject: {fileID: 1222367054}
   serializedVersion: 2
   m_LocalRotation: {x: -0.00040413655, y: 0.733416, z: 0.6797798, w: -0.0004361242}
-  m_LocalPosition: {x: 0.04648722, y: 0.09679888, z: 0.068257965}
+  m_LocalPosition: {x: 0.04649306, y: 0.09190415, z: 0.068630055}
   m_LocalScale: {x: 1, y: 0.99999976, z: 0.9999999}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -12356,7 +13128,7 @@ Transform:
   m_GameObject: {fileID: 1439854387}
   serializedVersion: 2
   m_LocalRotation: {x: 0.00040417764, y: 0.73341614, z: 0.6797797, w: 0.00043616214}
-  m_LocalPosition: {x: -0.046487194, y: 0.09679889, z: 0.06825799}
+  m_LocalPosition: {x: -0.04649303, y: 0.09190415, z: 0.06863008}
   m_LocalScale: {x: 1, y: 0.99999994, z: 0.99999994}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -12866,7 +13638,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1550356967}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.17737548, y: -0.00036772122, z: 0.000026483167, w: 0.9841432}
+  m_LocalRotation: {x: 0.18999888, y: -0.0003673509, z: 0.00003120315, w: 0.9817843}
   m_LocalPosition: {x: -0.000000011967888, y: 0.00000003992608, z: -0.00000014667451}
   m_LocalScale: {x: 1, y: 0.99999994, z: 0.9999999}
   m_ConstrainProportionsScale: 0
@@ -13341,7 +14113,7 @@ Transform:
   m_GameObject: {fileID: 1691780651}
   serializedVersion: 2
   m_LocalRotation: {x: -0.0007693356, y: 0.7362954, z: 0.6766593, w: -0.0008372969}
-  m_LocalPosition: {x: 0.014399216, y: 0.0922147, z: 0.08036266}
+  m_LocalPosition: {x: 0.014403358, y: 0.09040027, z: 0.080516115}
   m_LocalScale: {x: 1, y: 0.9999997, z: 0.99999994}
   m_ConstrainProportionsScale: 0
   m_Children:

@@ -40,12 +40,21 @@ namespace UMA
                 return;
             }
 
-            UMAAssetIndexer.Instance.ReleaseReference(recipe);
+            var indexer = UMAAssetIndexer.Instance;
+            if (indexer != null)
+            {
+                indexer.ReleaseReference(recipe);
+            }
 
             List<DynamicCharacterAvatar> Avatars = GetSceneEditTimeAvatars();
 
             if (recipe is UMAWardrobeRecipe)
             {
+                if (indexer != null)
+                {
+                    indexer.RebuildRaceRecipes();
+                }
+
                 foreach (DynamicCharacterAvatar dca in Avatars)
                 {
                     var items = dca.preloadWardrobeRecipes.recipes;
@@ -69,7 +78,10 @@ namespace UMA
                         }
                     }
                 }
-                UMAAssetIndexer.Instance.ReleaseReference(recipe);
+                if (indexer != null)
+                {
+                    indexer.ReleaseReference(recipe);
+                }
                 return;
             }
 

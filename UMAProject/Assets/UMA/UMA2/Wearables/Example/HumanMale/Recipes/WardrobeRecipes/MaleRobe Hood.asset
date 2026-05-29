@@ -24,8 +24,8 @@ MonoBehaviour:
     filename: 
     thumb: {fileID: 21300000, guid: 9f540207166d6874f9e8b31f2aa88076, type: 3}
   - race: Human Male 3.0
-    filename: 
-    thumb: {fileID: 0}
+    filename: Assets/UMA/UMA3/Wearables/Icons/Helmet/Human Male 3.0/1_MaleRobe Hood.png
+    thumb: {fileID: 21300000, guid: 3c724e350bc24dc40978991ccddcc915, type: 3}
   wardrobeSlot: Helmet
   Appended: 0
   Hides: []
@@ -34,6 +34,7 @@ MonoBehaviour:
   - Hair
   activeWardrobeSet: []
   MeshHideAssets: []
+  MeshHideAssetCollections: []
   MeshModifiers: []
   OverrideDNA:
     PreloadValues: []

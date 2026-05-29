@@ -18,7 +18,10 @@ MonoBehaviour:
   DisplayValue: MoreMakeup_F
   compatibleRaces:
   - Human Female 3.0
-  wardrobeRecipeThumbs: []
+  wardrobeRecipeThumbs:
+  - race: Human Female 3.0
+    filename: Assets/UMA/UMA3/Wearables/Icons/Face/Human Female 3.0/8_MoreMakeup_F_Wardrobe.png
+    thumb: {fileID: 21300000, guid: 300a8a9b36d4a264193cd5f565938f20, type: 3}
   wardrobeSlot: Face
   Appended: 0
   Hides: []

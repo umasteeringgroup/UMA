@@ -11,11 +11,14 @@ namespace UMA.Editors
 		UMARandomizer currentTarget = null;               // Randomizer Inspector target
 		private List<RandomColors> colorsToDelete = default;    // SharedColorTables temp var
 		private SerializedProperty definitionProperty = default;// Randomizer Definition is drawn using a custom Property drawer
+		private EditorApplication.CallbackFunction delayedEnableHandler = default;   // Defer init until editor/domain reload settles
 
 		private bool displayHelp = false;                   // Not used ATM
 		private int copyFromRace = 0, copyToRace = 0;       // For Randomizer Copy From / To Race Utility
 		private bool autoSave = false;                      // Does Randomizer requires saving ?
 		private double autoSavePeriod = 3f, nextSave = 0f;  // Handle SaveAssets Delay
+
+		private static bool IsEditorBusy => EditorApplication.isCompiling || EditorApplication.isUpdating;
 
 		/// <summary>
 		/// Adds Context Menu to turn off Character Definition and Global Colors
@@ -105,20 +108,10 @@ namespace UMA.Editors
 
 		protected void OnEnable()
 		{
-			// -- Inspector Vars --
-			currentTarget = target as UMARandomizer;
-			definitionProperty = serializedObject.FindProperty("definition");
-
-			// -- Basic Vars Init --
-			autoSave = false;
-			colorsToDelete = new List<RandomColors>();
-
-			InitRaces(currentTarget);
-
-			ContextMenu.UseDefinition = currentTarget.useDefinition;
-			ContextMenu.UseGlobalColors = currentTarget.useGlobalColors;
-			ContextMenu.OnUseDefinitionChange += OnUseDefinitionChange;
-			ContextMenu.OnUseGlobalColorsChange += OnUseGlobalColorsChange;
+			if (!TryInitializeEditor())
+			{
+				ScheduleDelayedEnable();
+			}
 		}
 
 
@@ -127,15 +120,31 @@ namespace UMA.Editors
 		/// </summary>
 		protected void OnDisable()
 		{
-			if (autoSave)
+			AssemblyReloadEvents.beforeAssemblyReload -= HandleBeforeAssemblyReload;
+
+			if (delayedEnableHandler != null)
+			{
+				EditorApplication.delayCall -= delayedEnableHandler;
+				delayedEnableHandler = null;
+			}
+
+			if (autoSave && currentTarget != null)
 				SaveObject();
 
 			ContextMenu.OnUseDefinitionChange -= OnUseDefinitionChange;
 			ContextMenu.OnUseGlobalColorsChange -= OnUseGlobalColorsChange;
+			currentTarget = null;
+			definitionProperty = null;
 		}
 
 		public override void OnInspectorGUI()
 		{
+			if (!EnsureEditorInitialized())
+			{
+				EditorGUILayout.HelpBox("UMARandomizer is waiting for the editor domain and UMA Asset Indexer to finish loading.", MessageType.Info);
+				return;
+			}
+
 			if (currentTarget == null)
 			{
 				EditorGUILayout.HelpBox("UMARandomizer target is missing.", MessageType.Error);
@@ -145,7 +154,12 @@ namespace UMA.Editors
 			// Ensure editor-only, non-serialized fields are initialized.
 			if (currentTarget.raceDatas == null || currentTarget.races == null)
 			{
-				InitRaces(currentTarget);
+				if (!TryInitRaces(currentTarget))
+				{
+					ScheduleDelayedEnable();
+					EditorGUILayout.HelpBox("UMA races are still loading after the domain reload. Please wait a moment.", MessageType.Info);
+					return;
+				}
 			}
 			if (currentTarget.droppedItems == null)
 			{
@@ -664,8 +678,113 @@ namespace UMA.Editors
 
 		#region ------ Processing Methods -----
 
+		private void ScheduleDelayedEnable()
+		{
+			if (delayedEnableHandler == null)
+			{
+				delayedEnableHandler = () =>
+				{
+					EditorApplication.delayCall -= delayedEnableHandler;
+					delayedEnableHandler = null;
+
+					if (this == null)
+					{
+						return;
+					}
+
+					if (!TryInitializeEditor())
+					{
+						ScheduleDelayedEnable();
+						return;
+					}
+
+					Repaint();
+				};
+			}
+
+			EditorApplication.delayCall -= delayedEnableHandler;
+			EditorApplication.delayCall += delayedEnableHandler;
+		}
+
+		private bool EnsureEditorInitialized()
+		{
+			if (currentTarget != null && definitionProperty != null && currentTarget.raceDatas != null && currentTarget.races != null)
+			{
+				return true;
+			}
+
+			if (TryInitializeEditor())
+			{
+				return true;
+			}
+
+			ScheduleDelayedEnable();
+			return false;
+		}
+
+		private bool TryInitializeEditor()
+		{
+			if (IsEditorBusy || target == null || serializedObject == null || serializedObject.targetObject == null)
+			{
+				return false;
+			}
+
+			currentTarget = target as UMARandomizer;
+			if (currentTarget == null)
+			{
+				return false;
+			}
+
+			definitionProperty = serializedObject.FindProperty("definition");
+			if (definitionProperty == null)
+			{
+				return false;
+			}
+
+			autoSave = false;
+			if (colorsToDelete == null)
+			{
+				colorsToDelete = new List<RandomColors>();
+			}
+
+			if (!TryInitRaces(currentTarget))
+			{
+				return false;
+			}
+
+			AssemblyReloadEvents.beforeAssemblyReload -= HandleBeforeAssemblyReload;
+			AssemblyReloadEvents.beforeAssemblyReload += HandleBeforeAssemblyReload;
+
+			ContextMenu.OnUseDefinitionChange -= OnUseDefinitionChange;
+			ContextMenu.OnUseGlobalColorsChange -= OnUseGlobalColorsChange;
+			ContextMenu.UseDefinition = currentTarget.useDefinition;
+			ContextMenu.UseGlobalColors = currentTarget.useGlobalColors;
+			ContextMenu.OnUseDefinitionChange += OnUseDefinitionChange;
+			ContextMenu.OnUseGlobalColorsChange += OnUseGlobalColorsChange;
+			return true;
+		}
+
+		private void HandleBeforeAssemblyReload()
+		{
+			if (delayedEnableHandler != null)
+			{
+				EditorApplication.delayCall -= delayedEnableHandler;
+				delayedEnableHandler = null;
+			}
+
+			ContextMenu.OnUseDefinitionChange -= OnUseDefinitionChange;
+			ContextMenu.OnUseGlobalColorsChange -= OnUseGlobalColorsChange;
+			currentTarget = null;
+			definitionProperty = null;
+		}
+
 		private void SaveObject()
 		{
+			if (currentTarget == null)
+			{
+				return;
+			}
+
 			currentTarget.useDefinition = ContextMenu.UseDefinition;
 			currentTarget.useGlobalColors = ContextMenu.UseGlobalColors;
 			EditorUtility.SetDirty(currentTarget);
@@ -677,9 +796,29 @@ namespace UMA.Editors
 		/// Fill in Races Drop-Down List with existing UMA Races
 		/// </summary>
 		/// <param name="randomizer"> Randomizer to initialize </param>
-		private void InitRaces(UMARandomizer randomizer)
+		private bool TryInitRaces(UMARandomizer randomizer)
 		{
-			randomizer.raceDatas = UMAAssetIndexer.Instance.GetAllAssets<RaceData>();
+			if (randomizer == null)
+			{
+				return false;
+			}
+
+			UMAAssetIndexer assetIndexer;
+			try
+			{
+				assetIndexer = UMAAssetIndexer.Instance;
+			}
+			catch
+			{
+				return false;
+			}
+
+			if (assetIndexer == null)
+			{
+				return false;
+			}
+
+			randomizer.raceDatas = assetIndexer.GetAllAssets<RaceData>() ?? new List<RaceData>();
 
 			List<string> tmpRaces = new List<string>();
 
@@ -689,6 +828,7 @@ namespace UMA.Editors
 					tmpRaces.Add(race.name);
 			}
 			randomizer.races = tmpRaces.ToArray();
+			return true;
 		}
 
 		protected void RecursiveScanFoldersForAssets(string path)

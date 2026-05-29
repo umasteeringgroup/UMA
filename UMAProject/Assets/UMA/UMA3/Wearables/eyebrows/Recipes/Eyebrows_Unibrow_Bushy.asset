@@ -21,11 +21,11 @@ MonoBehaviour:
   - Human Male 3.0
   wardrobeRecipeThumbs:
   - race: Human Female 3.0
-    filename: Assets/UMA/UMA3/Wearables/Icons/Eyebrows/Human Female 3.0/12_Eyebrows_Unibrow_Bushy.png
-    thumb: {fileID: 21300000, guid: 06d0f0798a315a147802771111990ade, type: 3}
+    filename: Assets/UMA/UMA3/Wearables/Icons/Eyebrows/Human Female 3.0/15_Eyebrows_Unibrow_Bushy.png
+    thumb: {fileID: 21300000, guid: 6b39623a7cbc23c43b718b97065e3b38, type: 3}
   - race: Human Male 3.0
-    filename: Assets/UMA/UMA3/Wearables/Icons/Eyebrows/Human Male 3.0/12_Eyebrows_Unibrow_Bushy.png
-    thumb: {fileID: 21300000, guid: 238df6556ebd8e347aebd581d938746b, type: 3}
+    filename: Assets/UMA/UMA3/Wearables/Icons/Eyebrows/Human Male 3.0/15_Eyebrows_Unibrow_Bushy.png
+    thumb: {fileID: 21300000, guid: 913d759f721c9474e8120522af3d0f46, type: 3}
   wardrobeSlot: Eyebrows
   Appended: 0
   Hides: []

@@ -20,8 +20,9 @@ MonoBehaviour:
   - Human Male 3.0
   wardrobeRecipeThumbs:
   - race: Human Male 3.0
-    filename: 
-    thumb: {fileID: 0}
+    filename: Assets/UMA/UMA3/Wearables/Icons/Chest/Human Male 3.0/2_M_Freebie Robeset
+      Robe_Recipe.png
+    thumb: {fileID: 21300000, guid: db5b1c04faea5ff4ab32e55c07c0b7a7, type: 3}
   wardrobeSlot: Chest
   Appended: 0
   Hides: []

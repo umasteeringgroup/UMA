@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac718b8ce852d1445b8fbe5c323134ac, type: 3}
   m_Name: UMAMaterial_UMA_SRP_DiffuseNormalMetallicOcclusion
   m_EditorClassIdentifier: UMA_Core::UMA.UMAMaterial
-  _material: {fileID: 2100000, guid: 98eaa731da458714e87b34a1413828df, type: 2}
+  _material: {fileID: 2100000, guid: 3407489f7e2856e439008dddcfcd2654, type: 2}
   _HDRPMaterial: {fileID: 0}
   _secondPass: {fileID: 0}
   _HDRPSecondPass: {fileID: 0}

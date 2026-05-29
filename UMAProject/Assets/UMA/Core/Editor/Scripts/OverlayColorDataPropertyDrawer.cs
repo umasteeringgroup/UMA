@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using UMA.CharacterSystem;
@@ -8,6 +10,14 @@ namespace UMA.Editors
 	public class OverlayColorDataPropertyDrawer : PropertyDrawer
 	{
 		public static bool displayColorFoldout = false;
+		private const string SharedColorTableFoldoutLabel = "select from Shared Color Table";
+		private const double SharedColorTableCacheSeconds = 2.0;
+		private static bool sharedColorTableFoldout = false;
+		private static bool sharedColorTableCacheInitialized = false;
+		private static double nextSharedColorTableRefreshTime = 0.0;
+		private static SharedColorTable[] cachedSharedColorTables = new SharedColorTable[0];
+		private static GUIContent[] cachedSharedColorTableOptions = new GUIContent[0];
+		private static readonly Dictionary<string, SharedColorTable> selectedSharedColorTablesByProperty = new Dictionary<string, SharedColorTable>();
 		GUIContent Modulate = new GUIContent("Multiplier");
 		GUIContent Additive = new GUIContent("Additive");
 		GUIContent Channels = new GUIContent("Channel Count");
@@ -145,6 +155,17 @@ namespace UMA.Editors
 			if (name.isExpanded)
 			{
 				EditorGUILayout.BeginVertical(GUI.skin.box);
+				bool appliedSharedColor = DrawSharedColorTableSelector(property, ocd, dca);
+				if (appliedSharedColor)
+				{
+					ocd = property.GetValue<OverlayColorData>();
+					name = property.FindPropertyRelative("name");
+					mask = property.FindPropertyRelative("channelMask");
+					additive = property.FindPropertyRelative("channelAdditiveMask");
+					displayColor = property.FindPropertyRelative("displayColor");
+					colorFoldout = property.FindPropertyRelative("colorsExpanded");
+					propertiesFoldout = property.FindPropertyRelative("propertiesExpanded");
+				}
                 EditorGUILayout.LabelField("Overlay Color Data", EditorStyles.boldLabel);
                 EditorGUILayout.PropertyField(property.FindPropertyRelative("name"));
 				EditorGUILayout.PropertyField(property.FindPropertyRelative("isBaseColor"));
@@ -281,6 +302,218 @@ namespace UMA.Editors
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
 		{
 			return -2f;
+		}
+
+		private bool DrawSharedColorTableSelector(SerializedProperty property, OverlayColorData currentOverlayColorData, DynamicCharacterAvatar dca)
+		{
+			sharedColorTableFoldout = EditorGUILayout.Foldout(sharedColorTableFoldout, SharedColorTableFoldoutLabel, true);
+			if (!sharedColorTableFoldout)
+			{
+				return false;
+			}
+
+			EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+			RefreshSharedColorTableCacheIfNeeded(false);
+
+			if (cachedSharedColorTables.Length == 0)
+			{
+				EditorGUILayout.HelpBox("No SharedColorTable assets were found in the project.", MessageType.Info);
+				EditorGUILayout.EndVertical();
+				return false;
+			}
+
+			string propertyKey = GetPropertyStateKey(property);
+			selectedSharedColorTablesByProperty.TryGetValue(propertyKey, out SharedColorTable selectedTable);
+			int selectedTableIndex = GetSharedColorTableIndex(selectedTable);
+			if (selectedTableIndex < 0)
+			{
+				selectedTableIndex = 0;
+				selectedSharedColorTablesByProperty[propertyKey] = cachedSharedColorTables[selectedTableIndex];
+			}
+
+			EditorGUI.BeginChangeCheck();
+			int newSelectedTableIndex = EditorGUILayout.Popup(new GUIContent("Shared Color Table"), selectedTableIndex, cachedSharedColorTableOptions);
+			if (EditorGUI.EndChangeCheck())
+			{
+				selectedTableIndex = newSelectedTableIndex;
+				selectedSharedColorTablesByProperty[propertyKey] = cachedSharedColorTables[selectedTableIndex];
+			}
+
+			selectedTable = cachedSharedColorTables[selectedTableIndex];
+			if (selectedTable == null || selectedTable.colors == null || selectedTable.colors.Length == 0)
+			{
+				EditorGUILayout.HelpBox("The selected SharedColorTable has no shared colors.", MessageType.Info);
+				EditorGUILayout.EndVertical();
+				return false;
+			}
+
+			bool appliedSharedColor = false;
+			for (int colorIndex = 0; colorIndex < selectedTable.colors.Length; colorIndex++)
+			{
+				OverlayColorData sharedColor = selectedTable.colors[colorIndex];
+				if (sharedColor == null)
+				{
+					continue;
+				}
+
+				EditorGUILayout.BeginHorizontal();
+				using (new EditorGUI.DisabledScope(true))
+				{
+					EditorGUILayout.ColorField(GUIContent.none, sharedColor.displayColor, false, true, false, GUILayout.Width(72));
+				}
+				EditorGUILayout.LabelField(GetSharedColorName(sharedColor, colorIndex), GUILayout.MinWidth(120));
+
+				using (new EditorGUI.DisabledScope(ReferenceEquals(currentOverlayColorData, sharedColor)))
+				{
+					if (GUILayout.Button("Select", EditorStyles.miniButton, GUILayout.Width(56)))
+					{
+						appliedSharedColor = ApplySharedColor(property, currentOverlayColorData, sharedColor, dca);
+						currentOverlayColorData = property.GetValue<OverlayColorData>();
+					}
+				}
+
+				EditorGUILayout.EndHorizontal();
+			}
+
+			EditorGUILayout.EndVertical();
+			return appliedSharedColor;
+		}
+
+		private bool ApplySharedColor(SerializedProperty property, OverlayColorData currentOverlayColorData, OverlayColorData sharedColor, DynamicCharacterAvatar dca)
+		{
+			if (sharedColor == null)
+			{
+				return false;
+			}
+
+			OverlayColorData targetOverlayColorData = currentOverlayColorData ?? property.GetValue<OverlayColorData>();
+			if (ReferenceEquals(targetOverlayColorData, sharedColor))
+			{
+				return false;
+			}
+
+			UnityEngine.Object targetObject = property.serializedObject.targetObject;
+			if (targetObject != null)
+			{
+				Undo.RecordObject(targetObject, "Select Shared Color");
+			}
+
+			if (targetOverlayColorData != null)
+			{
+				targetOverlayColorData.AssignFrom(sharedColor,false, false);
+				targetOverlayColorData.showDisplayColor = sharedColor.showDisplayColor;
+			}
+			else if (!property.SetValue(sharedColor.Clone()))
+			{
+				return false;
+			}
+
+			if (targetObject != null)
+			{
+				EditorUtility.SetDirty(targetObject);
+			}
+
+			if (dca != null && dca != targetObject)
+			{
+				EditorUtility.SetDirty(dca);
+			}
+
+			property.serializedObject.Update();
+			return true;
+		}
+
+		private static void RefreshSharedColorTableCacheIfNeeded(bool force)
+		{
+			if (!force && sharedColorTableCacheInitialized && EditorApplication.timeSinceStartup < nextSharedColorTableRefreshTime)
+			{
+				return;
+			}
+
+			string[] sharedColorTableGuids = AssetDatabase.FindAssets("t:SharedColorTable");
+			List<SharedColorTable> sharedColorTables = new List<SharedColorTable>(sharedColorTableGuids.Length);
+			for (int guidIndex = 0; guidIndex < sharedColorTableGuids.Length; guidIndex++)
+			{
+				string sharedColorTablePath = AssetDatabase.GUIDToAssetPath(sharedColorTableGuids[guidIndex]);
+				SharedColorTable sharedColorTable = AssetDatabase.LoadAssetAtPath<SharedColorTable>(sharedColorTablePath);
+				if (sharedColorTable != null)
+				{
+					sharedColorTables.Add(sharedColorTable);
+				}
+			}
+
+			sharedColorTables.Sort(CompareSharedColorTables);
+			cachedSharedColorTables = sharedColorTables.ToArray();
+			cachedSharedColorTableOptions = new GUIContent[cachedSharedColorTables.Length];
+			for (int tableIndex = 0; tableIndex < cachedSharedColorTables.Length; tableIndex++)
+			{
+				SharedColorTable sharedColorTable = cachedSharedColorTables[tableIndex];
+				cachedSharedColorTableOptions[tableIndex] = new GUIContent(GetSharedColorTableMenuName(sharedColorTable), AssetDatabase.GetAssetPath(sharedColorTable));
+			}
+
+			sharedColorTableCacheInitialized = true;
+			nextSharedColorTableRefreshTime = EditorApplication.timeSinceStartup + SharedColorTableCacheSeconds;
+		}
+
+		private static int CompareSharedColorTables(SharedColorTable leftTable, SharedColorTable rightTable)
+		{
+			int nameComparison = string.Compare(GetSharedColorTableMenuName(leftTable), GetSharedColorTableMenuName(rightTable), StringComparison.OrdinalIgnoreCase);
+			if (nameComparison != 0)
+			{
+				return nameComparison;
+			}
+
+			return string.Compare(AssetDatabase.GetAssetPath(leftTable), AssetDatabase.GetAssetPath(rightTable), StringComparison.OrdinalIgnoreCase);
+		}
+
+		private static int GetSharedColorTableIndex(SharedColorTable sharedColorTable)
+		{
+			for (int tableIndex = 0; tableIndex < cachedSharedColorTables.Length; tableIndex++)
+			{
+				if (cachedSharedColorTables[tableIndex] == sharedColorTable)
+				{
+					return tableIndex;
+				}
+			}
+
+			return -1;
+		}
+
+		private static string GetSharedColorTableMenuName(SharedColorTable sharedColorTable)
+		{
+			if (sharedColorTable == null)
+			{
+				return "Missing Shared Color Table";
+			}
+
+			string sharedColorName = !string.IsNullOrEmpty(sharedColorTable.sharedColorName) ? sharedColorTable.sharedColorName : sharedColorTable.name;
+			if (string.IsNullOrEmpty(sharedColorName))
+			{
+				sharedColorName = "Unnamed Shared Color Table";
+			}
+
+			if (!string.IsNullOrEmpty(sharedColorTable.name) && !string.Equals(sharedColorName, sharedColorTable.name, StringComparison.Ordinal))
+			{
+				return sharedColorName + " (" + sharedColorTable.name + ")";
+			}
+
+			return sharedColorName;
+		}
+
+		private static string GetSharedColorName(OverlayColorData sharedColor, int colorIndex)
+		{
+			if (sharedColor == null || string.IsNullOrEmpty(sharedColor.name))
+			{
+				return "Color " + colorIndex;
+			}
+
+			return sharedColor.name;
+		}
+
+		private static string GetPropertyStateKey(SerializedProperty property)
+		{
+			UnityEngine.Object targetObject = property.serializedObject.targetObject;
+			int targetId = targetObject != null ? targetObject.GetInstanceID() : 0;
+			return targetId.ToString() + ":" + property.propertyPath;
 		}
 
 

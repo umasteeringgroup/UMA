@@ -20,8 +20,8 @@ MonoBehaviour:
   - Human Male 3.0
   wardrobeRecipeThumbs:
   - race: Human Male 3.0
-    filename: 
-    thumb: {fileID: 0}
+    filename: Assets/UMA/UMA3/Wearables/Icons/Shoulders/Human Male 3.0/2_M_ChallengerShouderPads_Recipe.png
+    thumb: {fileID: 21300000, guid: 55b47ee4f1ca17743a21054c6736a23e, type: 3}
   wardrobeSlot: Shoulders
   Appended: 0
   Hides: []

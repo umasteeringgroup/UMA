@@ -43,33 +43,102 @@ namespace UMA.Editors
             }
         }
 
-        private string EnsureWardrobeFolder()
+        [System.Serializable]
+        private class SlotBuildSummaryRow
         {
-            if (slotFolder == null)
+            public SlotDataAsset slotAsset;
+            public string slotName;
+            public string sourceMeshName;
+            public string overlayName;
+            public string recipeNames;
+            public int lodLevelCount;
+        }
+
+        private class SlotBuilderResultsWindow : EditorWindow
+        {
+            private const float SlotWidth = 220f;
+            private const float SourceMeshWidth = 200f;
+            private const float OverlayWidth = 220f;
+            private const float RecipeWidth = 320f;
+            private const float LodWidth = 90f;
+            private const float ActionWidth = 60f;
+
+            [SerializeField]
+            private List<SlotBuildSummaryRow> _rows = new List<SlotBuildSummaryRow>();
+
+            private Vector2 _scrollPos;
+
+            public static void ShowResults(List<SlotBuildSummaryRow> rows)
             {
-                return null;
+                if (rows == null || rows.Count == 0)
+                {
+                    return;
+                }
+
+                var window = CreateInstance<SlotBuilderResultsWindow>();
+                window.titleContent = new GUIContent("Slot Builder Results");
+                window.minSize = new Vector2(1220f, 260f);
+                window._rows = rows;
+                window.ShowUtility();
             }
 
-            string basePath = AssetDatabase.GetAssetPath(slotFolder);
-            if (string.IsNullOrEmpty(basePath))
+            private void OnGUI()
             {
-                return null;
-            }
+                EditorGUILayout.LabelField("Created " + _rows.Count + " slot(s).", EditorStyles.boldLabel);
+                EditorGUILayout.Space(4f);
 
-            string wardrobePath = basePath.TrimEnd('/') + "/Wardrobe";
-            if (AssetDatabase.IsValidFolder(wardrobePath))
-            {
-                return wardrobePath;
-            }
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    GUILayout.Label("Slot Name", EditorStyles.miniBoldLabel, GUILayout.Width(SlotWidth));
+                    GUILayout.Label("Source Mesh", EditorStyles.miniBoldLabel, GUILayout.Width(SourceMeshWidth));
+                    GUILayout.Label("Overlay", EditorStyles.miniBoldLabel, GUILayout.Width(OverlayWidth));
+                    GUILayout.Label("Recipe", EditorStyles.miniBoldLabel, GUILayout.Width(RecipeWidth));
+                    GUILayout.Label("LOD Levels", EditorStyles.miniBoldLabel, GUILayout.Width(LodWidth));
+                    GUILayout.Label("Inspect", EditorStyles.miniBoldLabel, GUILayout.Width(ActionWidth));
+                    GUILayout.Label("Ping", EditorStyles.miniBoldLabel, GUILayout.Width(ActionWidth));
+                }
 
-            string guid = AssetDatabase.CreateFolder(basePath, "Wardrobe");
-            if (string.IsNullOrEmpty(guid))
-            {
-                Debug.LogWarning("[SlotBuilder] Could not create Wardrobe folder under: " + basePath);
-                return basePath;
-            }
+                EditorGUILayout.Space(2f);
 
-            return wardrobePath;
+                using (var scrollScope = new EditorGUILayout.ScrollViewScope(_scrollPos))
+                {
+                    _scrollPos = scrollScope.scrollPosition;
+
+                    for (int i = 0; i < _rows.Count; i++)
+                    {
+                        var row = _rows[i];
+                        using (new EditorGUILayout.HorizontalScope(EditorStyles.helpBox))
+                        {
+                            GUILayout.Label(new GUIContent(row.slotName, row.slotName), GUILayout.Width(SlotWidth));
+                            GUILayout.Label(new GUIContent(row.sourceMeshName, row.sourceMeshName), GUILayout.Width(SourceMeshWidth));
+                            GUILayout.Label(new GUIContent(row.overlayName, row.overlayName), GUILayout.Width(OverlayWidth));
+                            GUILayout.Label(new GUIContent(row.recipeNames, row.recipeNames), GUILayout.Width(RecipeWidth));
+                            GUILayout.Label(row.lodLevelCount.ToString(), GUILayout.Width(LodWidth));
+
+                            using (new EditorGUI.DisabledScope(row.slotAsset == null))
+                            {
+                                if (GUILayout.Button("Inspect", GUILayout.Width(ActionWidth)))
+                                {
+                                    var slotAsset = row.slotAsset;
+                                    EditorApplication.delayCall += () => InspectorUtlity.InspectTarget(slotAsset);
+                                }
+
+                                if (GUILayout.Button("Ping", GUILayout.Width(ActionWidth)))
+                                {
+                                    EditorUtility.FocusProjectWindow();
+                                    EditorGUIUtility.PingObject(row.slotAsset);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                EditorGUILayout.Space(6f);
+                if (GUILayout.Button("Close", GUILayout.Width(100f)))
+                {
+                    Close();
+                }
+            }
         }
 
         private string EnsureWearablesFolder()
@@ -85,35 +154,31 @@ namespace UMA.Editors
                 return null;
             }
 
-            string parentPath = slotPath;
+            string basePath = slotPath;
             if (AssetDatabase.IsValidFolder(slotPath))
             {
-                int slash = slotPath.LastIndexOf('/');
-                if (slash > 0)
-                {
-                    parentPath = slotPath.Substring(0, slash);
-                }
+                basePath = slotPath;
             }
             else
             {
-                parentPath = Path.GetDirectoryName(slotPath)?.Replace('\\', '/');
+                basePath = Path.GetDirectoryName(slotPath)?.Replace('\\', '/');
             }
 
-            if (string.IsNullOrEmpty(parentPath))
+            if (string.IsNullOrEmpty(basePath))
             {
                 return null;
             }
 
-            string wearablesPath = parentPath.TrimEnd('/') + "/Wearables";
+            string wearablesPath = basePath.TrimEnd('/') + "/Wearables";
             if (AssetDatabase.IsValidFolder(wearablesPath))
             {
                 return wearablesPath;
             }
 
-            string guid = AssetDatabase.CreateFolder(parentPath, "Wearables");
+            string guid = AssetDatabase.CreateFolder(basePath, "Wearables");
             if (string.IsNullOrEmpty(guid))
             {
-                Debug.LogWarning("[SlotBuilder] Could not create Wearables folder under: " + parentPath);
+                Debug.LogWarning("[SlotBuilder] Could not create Wearables folder under: " + basePath);
                 return null;
             }
 
@@ -281,6 +346,7 @@ namespace UMA.Editors
                     ApplyAdditionalRacesToRecipe(uwr);
                     AssetDatabase.CreateAsset(uwr, recipePath);
                     EditorUtility.SetDirty(uwr);
+                    result.AddRecipe(sda, uwr);
 
                     if (addToGlobalLibrary)
                     {
@@ -294,14 +360,14 @@ namespace UMA.Editors
         }
 
 
-        private void CreateWardrobeRecipesForSlots(UMASlotProcessingUtil.SlotBuildResult result, string wardrobeFolderPath)
+        private void CreateWardrobeRecipesForSlots(UMASlotProcessingUtil.SlotBuildResult result)
         {
             if (result == null || result.Slots == null || result.Slots.Count == 0)
             {
                 return;
             }
 
-            // Always use Wearables as the root, ignore incoming wardrobeFolderPath
+            // Always use Wearables as the root for generated wearable recipes.
             string wearablesFolder = EnsureWearablesFolder();
             if (string.IsNullOrEmpty(wearablesFolder))
             {
@@ -319,6 +385,28 @@ namespace UMA.Editors
 
             // Use wearablesFolder for output
 
+            string recipeBaseName = GetSlotName(slotMesh);
+            if (string.IsNullOrEmpty(recipeBaseName))
+            {
+                var firstSlot = result.Slots[0];
+                if (firstSlot == null)
+                {
+                    return;
+                }
+
+                    
+                recipeBaseName = string.IsNullOrEmpty(firstSlot.slotName) ? firstSlot.name : firstSlot.slotName;
+            }
+
+            recipeBaseName = NormalizeAdditionalRecipeBaseName(recipeBaseName) + "_Recipe";
+
+            EditorUtility.DisplayProgressBar("Creating Wardrobe Recipes", "Recipe for: " + recipeBaseName, 1f);
+            Thread.Sleep(0);
+
+            var recipe = new UMA.UMAData.UMARecipe();
+            recipe.ClearDna();
+
+            int recipeIndex = 0;
             for (int i = 0; i < result.Slots.Count; i++)
             {
                 var sda = result.Slots[i];
@@ -327,42 +415,33 @@ namespace UMA.Editors
                     continue;
                 }
 
-                string slotAssetName = sda.slotName;
-                if (string.IsNullOrEmpty(slotAssetName))
-                {
-                    slotAssetName = sda.name;
-                }
-                slotAssetName = NormalizeAdditionalRecipeBaseName(slotAssetName);
-
-                EditorUtility.DisplayProgressBar("Creating Wardrobe Recipes", "Recipe for: " + slotAssetName, 1f);
-                Thread.Sleep(0);
-
-                var recipe = new UMA.UMAData.UMARecipe();
-                recipe.ClearDna();
-
                 var sd = new SlotData(sda);
                 if (result.SlotToOverlay != null && result.SlotToOverlay.TryGetValue(sda, out var oda) && oda != null)
                 {
                     var od = new OverlayData(oda);
                     sd.AddOverlay(od);
                 }
-                recipe.SetSlot(0, sd);
+                recipe.SetSlot(recipeIndex++, sd);
+            }
 
-                string recipeBaseName = slotAssetName + "_Recipe";
-                string recipePath = Path.Combine(wearablesFolder, recipeBaseName + ".asset").Replace('\\', '/');
-                recipePath = AssetDatabase.GenerateUniqueAssetPath(recipePath);
+            string recipePath = Path.Combine(wearablesFolder, recipeBaseName + ".asset").Replace('\\', '/');
+            recipePath = AssetDatabase.GenerateUniqueAssetPath(recipePath);
 
-                var uwr = ScriptableObject.CreateInstance<UMAWardrobeRecipe>();
-                uwr.name = recipeBaseName;
-                uwr.Save(recipe);
-                ApplyAdditionalRacesToRecipe(uwr);
-                AssetDatabase.CreateAsset(uwr, recipePath);
-                EditorUtility.SetDirty(uwr);
+            var uwr = ScriptableObject.CreateInstance<UMAWardrobeRecipe>();
+            uwr.name = recipeBaseName;
+            uwr.Save(recipe);
+            ApplyAdditionalRacesToRecipe(uwr);
+            AssetDatabase.CreateAsset(uwr, recipePath);
+            EditorUtility.SetDirty(uwr);
 
-                if (addToGlobalLibrary)
-                {
-                    UMAAssetIndexer.Instance.EvilAddAsset(typeof(UMAWardrobeRecipe), uwr);
-                }
+            for (int i = 0; i < result.Slots.Count; i++)
+            {
+                result.AddRecipe(result.Slots[i], uwr);
+            }
+
+            if (addToGlobalLibrary)
+            {
+                UMAAssetIndexer.Instance.EvilAddAsset(typeof(UMAWardrobeRecipe), uwr);
             }
 
             AssetDatabase.SaveAssets();
@@ -1320,28 +1399,28 @@ namespace UMA.Editors
             {
                 return;
             }
+            _pendingSmrsFilterEnabled = EditorGUILayout.Toggle(new GUIContent("Filter list", "Filter the pending list using 'Only include meshes containing' text."), _pendingSmrsFilterEnabled);
 
             EditorGUILayout.Space(5);
             EditorGUILayout.LabelField("Pending SkinnedMeshRenderers", EditorStyles.boldLabel);
 
             EditorGUILayout.BeginHorizontal();
-            _pendingSmrsFilterEnabled = EditorGUILayout.Toggle(new GUIContent("Filter list", "Filter the pending list using 'Only include meshes containing' text."), _pendingSmrsFilterEnabled);
             GUILayout.FlexibleSpace();
             if (_pendingSmrsCompactView)
             {
-                if (GUILayout.Button("Expanded View", GUILayout.Width(120)))
+                if (GUILayout.Button("Expanded View", GUILayout.Width(110)))
                 {
                     _pendingSmrsCompactView = false;
                 }
             }
             else
             {
-                if (GUILayout.Button("Compact View", GUILayout.Width(120)))
+                if (GUILayout.Button("Compact View", GUILayout.Width(110)))
                 {
                     _pendingSmrsCompactView = true;
                 }
             }
-            if (GUILayout.Button("Select All", GUILayout.Width(90)))
+            if (GUILayout.Button("Select All", GUILayout.Width(80)))
             {
                 for (int i = 0; i < _pendingSmrs.Count; i++)
                 {
@@ -1355,7 +1434,7 @@ namespace UMA.Editors
                     }
                 }
             }
-            if (GUILayout.Button("Select None", GUILayout.Width(90)))
+            if (GUILayout.Button("Select None", GUILayout.Width(80)))
             {
                 for (int i = 0; i < _pendingSmrs.Count; i++)
                 {
@@ -1369,11 +1448,11 @@ namespace UMA.Editors
                     }
                 }
             }
-            if (GUILayout.Button("Clear List", GUILayout.Width(90)))
+            if (GUILayout.Button("Clear", GUILayout.Width(55)))
             {
                 _pendingSmrs.Clear();
             }
-            if (GUILayout.Button("Remove Selected", GUILayout.Width(130)))
+            if (GUILayout.Button("Remove Selected", GUILayout.Width(120)))
             {
                 for (int i = _pendingSmrs.Count - 1; i >= 0; i--)
                 {
@@ -1500,6 +1579,7 @@ namespace UMA.Editors
 
             float current = 1f;
             float total = (float)selectedCount;
+            bool showResults = false;
 
             try
             {
@@ -1508,13 +1588,8 @@ namespace UMA.Editors
                 Thread.Sleep(0);
 
                 // Batch mode behavior:
-                // - If isBaseRaceRecipe == false: create a Wardrobe subfolder and create one wardrobe recipe per processed slot.
+                // - If isBaseRaceRecipe == false: create one wearable recipe per processed slot.
                 // - If isBaseRaceRecipe == true: defer to existing behavior (single base recipe can be created later if createRecipe enabled).
-                string wardrobeFolderPath = null;
-                if (!isBaseRaceRecipe && createRecipe)
-                {
-                    wardrobeFolderPath = EnsureWardrobeFolder();
-                }
 
                 for (int i = 0; i < _pendingSmrs.Count; i++)
                 {
@@ -1541,19 +1616,6 @@ namespace UMA.Editors
                     var result = CreateSlot_Internal_WithResult(true);
                     if (result != null && result.Slots != null && result.Slots.Count > 0)
                     {
-                        aggregate.Slots.AddRange(result.Slots);
-                        if (result.SlotToOverlay != null)
-                        {
-                            foreach (var kv in result.SlotToOverlay)
-                            {
-                                if (!aggregate.SlotToOverlay.ContainsKey(kv.Key))
-                                {
-                                    aggregate.SlotToOverlay.Add(kv.Key, kv.Value);
-                                }
-                            }
-                        }
-                        aggregate.IsUDIM = aggregate.IsUDIM || result.IsUDIM;
-
                         if (result.TempAssetsToDelete != null)
                         {
                             for (int ti = 0; ti < result.TempAssetsToDelete.Count; ti++)
@@ -1563,16 +1625,18 @@ namespace UMA.Editors
                             }
                         }
 
-                        // Per-slot wardrobe recipe creation in batch mode
+                        // Per-slot wearable recipe creation in batch mode
                         if (!isBaseRaceRecipe && createRecipe)
                         {
-                            CreateWardrobeRecipesForSlots(result, wardrobeFolderPath);
+                            CreateWardrobeRecipesForSlots(result);
                         }
 
                         if (!isBaseRaceRecipe)
                         {
                             CreateAdditionalWearableRecipesForSlots(result);
                         }
+
+                        MergeSlotBuildResult(aggregate, result);
                     }
 
                     processedEntries.Add(e);
@@ -1616,12 +1680,18 @@ namespace UMA.Editors
 
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
+                showResults = aggregate.Slots.Count > 0;
             }
 
             finally
             {
                 EditorUtility.ClearProgressBar();
                 Thread.Sleep(0);
+
+                if (showResults)
+                {
+                    ShowSlotBuildResults(aggregate);
+                }
 
                 slotName = originalSlotName;
                 slotMesh = originalSlotMesh;
@@ -1750,6 +1820,8 @@ namespace UMA.Editors
             {
                 CreateAdditionalWearableRecipesForSlots(result);
             }
+
+            ShowSlotBuildResults(result);
 
             // Return first created slot for backward compatibility
             var first = result.Slots[0];
@@ -1960,6 +2032,10 @@ namespace UMA.Editors
                 utr.name = recipeBaseName;
                 utr.Save(recipe);
                 AssetDatabase.CreateAsset(utr, recipePath);
+                for (int i = 0; i < result.Slots.Count; i++)
+                {
+                    result.AddRecipe(result.Slots[i], utr);
+                }
                 if (addToGlobalLibrary)
                 {
                     UMAAssetIndexer.Instance.EvilAddAsset(typeof(UMATextRecipe), utr);
@@ -1971,12 +2047,170 @@ namespace UMA.Editors
                 uwr.name = recipeBaseName;
                 uwr.Save(recipe);
                 AssetDatabase.CreateAsset(uwr, recipePath);
+                for (int i = 0; i < result.Slots.Count; i++)
+                {
+                    result.AddRecipe(result.Slots[i], uwr);
+                }
                 if (addToGlobalLibrary)
                 {
                     UMAAssetIndexer.Instance.EvilAddAsset(typeof(UMAWardrobeRecipe), uwr);
                 }
             }
             AssetDatabase.SaveAssets();
+        }
+
+        private static int GetCreatedLodLevelCount(SlotDataAsset slot)
+        {
+            if (slot == null || UMAMeshData.IsNullOrEmptyMeshData(slot.meshData) || slot.meshData.submeshes == null || slot.meshData.submeshes.Length == 0 || slot.meshData.submeshes[0] == null)
+            {
+                return 0;
+            }
+
+            return slot.meshData.submeshes[0].LODCount();
+        }
+
+        private static string GetAssetDisplayName(UnityEngine.Object asset)
+        {
+            if (asset == null)
+            {
+                return "-";
+            }
+
+            string assetPath = AssetDatabase.GetAssetPath(asset);
+            if (!string.IsNullOrEmpty(assetPath))
+            {
+                return Path.GetFileNameWithoutExtension(assetPath);
+            }
+
+            return string.IsNullOrEmpty(asset.name) ? "-" : asset.name;
+        }
+
+        private static string GetCreatedOverlayName(UMASlotProcessingUtil.SlotBuildResult result, SlotDataAsset slot)
+        {
+            if (result == null || slot == null || result.SlotToOverlay == null || !result.SlotToOverlay.TryGetValue(slot, out var overlay) || overlay == null)
+            {
+                return "-";
+            }
+
+            return GetAssetDisplayName(overlay);
+        }
+
+        private static string GetCreatedRecipeNames(UMASlotProcessingUtil.SlotBuildResult result, SlotDataAsset slot)
+        {
+            if (result == null || slot == null || result.SlotToRecipes == null || !result.SlotToRecipes.TryGetValue(slot, out var recipes) || recipes == null || recipes.Count == 0)
+            {
+                return "-";
+            }
+
+            var uniqueNames = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
+            var recipeNames = new List<string>();
+            for (int i = 0; i < recipes.Count; i++)
+            {
+                string displayName = GetAssetDisplayName(recipes[i]);
+                if (!string.IsNullOrEmpty(displayName) && uniqueNames.Add(displayName))
+                {
+                    recipeNames.Add(displayName);
+                }
+            }
+
+            return recipeNames.Count > 0 ? string.Join(", ", recipeNames.ToArray()) : "-";
+        }
+
+        private static string GetSourceMeshName(UMASlotProcessingUtil.SlotBuildResult result, SlotDataAsset slot)
+        {
+            if (result == null || slot == null || result.SlotToSourceMesh == null || !result.SlotToSourceMesh.TryGetValue(slot, out var sourceMeshName) || string.IsNullOrEmpty(sourceMeshName))
+            {
+                return "-";
+            }
+
+            return sourceMeshName;
+        }
+
+        private void MergeSlotBuildResult(UMASlotProcessingUtil.SlotBuildResult aggregate, UMASlotProcessingUtil.SlotBuildResult result)
+        {
+            if (aggregate == null || result == null)
+            {
+                return;
+            }
+
+            if (result.Slots != null)
+            {
+                for (int i = 0; i < result.Slots.Count; i++)
+                {
+                    var slot = result.Slots[i];
+                    if (slot != null && !aggregate.Slots.Contains(slot))
+                    {
+                        aggregate.Slots.Add(slot);
+                    }
+                }
+            }
+
+            if (result.SlotToOverlay != null)
+            {
+                foreach (var kv in result.SlotToOverlay)
+                {
+                    aggregate.SlotToOverlay[kv.Key] = kv.Value;
+                }
+            }
+
+            if (result.SlotToSourceMesh != null)
+            {
+                foreach (var kv in result.SlotToSourceMesh)
+                {
+                    if (kv.Key != null)
+                    {
+                        aggregate.SlotToSourceMesh[kv.Key] = kv.Value;
+                    }
+                }
+            }
+
+            if (result.SlotToRecipes != null)
+            {
+                foreach (var kv in result.SlotToRecipes)
+                {
+                    if (kv.Value == null)
+                    {
+                        continue;
+                    }
+
+                    for (int i = 0; i < kv.Value.Count; i++)
+                    {
+                        aggregate.AddRecipe(kv.Key, kv.Value[i]);
+                    }
+                }
+            }
+
+            aggregate.IsUDIM |= result.IsUDIM;
+        }
+
+        private void ShowSlotBuildResults(UMASlotProcessingUtil.SlotBuildResult result)
+        {
+            if (result == null || result.Slots == null || result.Slots.Count == 0)
+            {
+                return;
+            }
+
+            var rows = new List<SlotBuildSummaryRow>(result.Slots.Count);
+            for (int i = 0; i < result.Slots.Count; i++)
+            {
+                var slot = result.Slots[i];
+                if (slot == null)
+                {
+                    continue;
+                }
+
+                rows.Add(new SlotBuildSummaryRow
+                {
+                    slotAsset = slot,
+                    slotName = string.IsNullOrEmpty(slot.slotName) ? slot.name : slot.slotName,
+                    sourceMeshName = GetSourceMeshName(result, slot),
+                    overlayName = GetCreatedOverlayName(result, slot),
+                    recipeNames = GetCreatedRecipeNames(result, slot),
+                    lodLevelCount = GetCreatedLodLevelCount(slot)
+                });
+            }
+
+            SlotBuilderResultsWindow.ShowResults(rows);
         }
 
         // Restored helpers for drag & drop batch processing

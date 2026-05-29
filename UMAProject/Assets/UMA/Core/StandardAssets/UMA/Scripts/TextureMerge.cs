@@ -486,10 +486,10 @@ namespace UMA
 
         /// <summary>
         /// SetupSlotAndOverlayStack sets up the texture merge for a specific material fragment (slot + overlay stack) in an atlas.
-		/// •	A MaterialFragment represents one slot’s contribution to a single atlas/material. It holds:
-		/// •	Where to draw in the final atlas: atlasRegion(target rect in the combined texture).
-		/// •	What to draw: baseOverlay(the first overlay) and overlays[] (additional overlays).
-		/// •	How to draw: per-overlay rects[], color multipliers/additives, and supporting data(slotData, overlayData[], masks).
+		/// ï¿½	A MaterialFragment represents one slotï¿½s contribution to a single atlas/material. It holds:
+		/// ï¿½	Where to draw in the final atlas: atlasRegion(target rect in the combined texture).
+		/// ï¿½	What to draw: baseOverlay(the first overlay) and overlays[] (additional overlays).
+		/// ï¿½	How to draw: per-overlay rects[], color multipliers/additives, and supporting data(slotData, overlayData[], masks).
 		/// 
 		/// So basically, for a single slot, this sets up the base overlay, then sets up each additional overlay in turn, so they can all be drawn in the correct order.
 		/// This happens later, in DrawAllRects.
@@ -515,7 +515,7 @@ namespace UMA
 
 			if (atlasElement.AdditionalOverlays == null)
             {
-				Debug.LogWarning($"SetupSlotAndOverlayStack: No overlays in atlasElement for slot {atlasElement.slotData.slotName}");
+				//Debug.LogWarning($"SetupSlotAndOverlayStack: No overlays in atlasElement for slot {atlasElement.slotData.slotName}");
                 return;
             }
 
