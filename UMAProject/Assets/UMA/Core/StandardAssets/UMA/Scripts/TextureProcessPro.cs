@@ -96,6 +96,99 @@ namespace UMA
             }
         }
 
+        private static bool IsExistingTextureChannelType(UMAMaterial.ChannelType channelType)
+        {
+            switch (channelType)
+            {
+                case UMAMaterial.ChannelType.Texture:
+                case UMAMaterial.ChannelType.DiffuseTexture:
+                case UMAMaterial.ChannelType.NormalMap:
+                case UMAMaterial.ChannelType.DetailNormalMap:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        private static bool ShouldUseExistingTextureForChannel(UMAMaterial umaMaterial, UMAMaterial.MaterialChannel channel)
+        {
+            if (umaMaterial == null)
+            {
+                return false;
+            }
+
+            return umaMaterial.IsGeneratedTextures &&
+                   channel.UseExistingTextureForChannel &&
+                   !channel.NonShaderTexture &&
+                   IsExistingTextureChannelType(channel.channelType);
+        }
+
+        private static void SetExistingTexturesForChannel(UMAData umaData, UMAData.GeneratedMaterial generatedMaterial, UMAMaterial umaMaterial, int textureChannelNumber)
+        {
+            if (generatedMaterial == null || generatedMaterial.material == null || generatedMaterial.materialFragments == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < generatedMaterial.materialFragments.Count; i++)
+            {
+                UMAData.MaterialFragment fragment = generatedMaterial.materialFragments[i];
+                if (fragment == null || fragment.isNoTextures)
+                {
+                    continue;
+                }
+
+                if (fragment.overlayData != null && fragment.overlayData.Length > 0)
+                {
+                    for (int overlayNumber = 0; overlayNumber < fragment.overlayData.Length; overlayNumber++)
+                    {
+                        SetChannelTexture(umaData, textureChannelNumber, overlayNumber, generatedMaterial.material, fragment.overlayData[overlayNumber], umaMaterial, false, true);
+                    }
+                }
+                else if (fragment.slotData != null)
+                {
+                    for (int overlayNumber = 0; overlayNumber < fragment.slotData.OverlayCount; overlayNumber++)
+                    {
+                        SetChannelTexture(umaData, textureChannelNumber, overlayNumber, generatedMaterial.material, fragment.slotData.GetOverlay(overlayNumber), umaMaterial, false, true);
+                    }
+                }
+            }
+        }
+
+        private static void ReleasePreviousGeneratedTexture(Texture[] previousResults, int textureChannelNumber)
+        {
+            if (previousResults == null || textureChannelNumber < 0 || textureChannelNumber >= previousResults.Length)
+            {
+                return;
+            }
+
+            Texture tempTexture = previousResults[textureChannelNumber];
+            previousResults[textureChannelNumber] = null;
+
+            if (tempTexture == null)
+            {
+                return;
+            }
+
+            RenderTexture tempRenderTexture = tempTexture as RenderTexture;
+            if (tempRenderTexture != null)
+            {
+                var entityId = tempRenderTexture.GetEntityId();
+                if (!RenderTexToCPU.renderTexturesToCPU.ContainsKey(entityId) && RenderTexToCPU.SafeToFree(tempRenderTexture))
+                {
+                    if (tempRenderTexture.IsCreated())
+                    {
+                        tempRenderTexture.Release();
+                    }
+                    RenderTexToCPU.renderTexturesCleanedUMAData++;
+                    UMAUtils.DestroySceneObject(tempRenderTexture);
+                }
+                return;
+            }
+
+            UMAUtils.DestroySceneObject(tempTexture);
+        }
+
         public static RenderTexture ResizeRenderTexture(RenderTexture source, int newWidth, int newHeight, FilterMode filter)
         {
             source.filterMode = filter;
@@ -188,6 +281,14 @@ namespace UMA
                             case UMAMaterial.ChannelType.NormalMap:
                             case UMAMaterial.ChannelType.DetailNormalMap:
                                 {
+                                    UMAMaterial umaMaterial = generatedMaterial.umaMaterial != null ? generatedMaterial.umaMaterial : slotData.material;
+                                    if (ShouldUseExistingTextureForChannel(umaMaterial, channels[textureChannelNumber]))
+                                    {
+                                        SetExistingTexturesForChannel(umaData, generatedMaterial, umaMaterial, textureChannelNumber);
+                                        ReleasePreviousGeneratedTexture(previousResults, textureChannelNumber);
+                                        break;
+                                    }
+
                                     RenderTextureFormat channelTextureFormat = UMAMaterial.GetCompatibleChannelTextureFormat(channels[textureChannelNumber].textureFormat);
                                     bool CopyRTtoTex = SupportsRTToTexture2D && (umaGenerator.convertRenderTexture || channels[textureChannelNumber].ConvertRenderTexture);
                                     if (CopyRTtoTex)
@@ -521,12 +622,32 @@ namespace UMA
 
         private static void SetChannelTexture(UMAData umaData, int textureChannelNumber, int overlayNumber, Material mat, OverlayData overlay0)
         {
+            UMAMaterial umaMaterial = null;
+            if (overlay0 != null && overlay0.asset != null)
+            {
+                umaMaterial = overlay0.asset.material;
+            }
+
+            SetChannelTexture(umaData, textureChannelNumber, overlayNumber, mat, overlay0, umaMaterial, true, false);
+        }
+
+        private static void SetChannelTexture(UMAData umaData, int textureChannelNumber, int overlayNumber, Material mat, OverlayData overlay0, UMAMaterial umaMaterial, bool appendOverlayNumber, bool skipNullTexture)
+        {
 #if DEBUG
             Debug.Log("Setting channel texture" + textureChannelNumber + " overlay " + overlayNumber + " on " + mat.name);
 #endif
+            if (overlay0 == null || mat == null)
+            {
+                return;
+            }
+
             var theTex = overlay0.GetTexture(textureChannelNumber);
-            var overlayOverrides = (umaData.GetTextureOverrides(overlay0.overlayName));
-            var umaMaterial = overlay0.asset.material;
+            var overlayOverrides = umaData != null ? umaData.GetTextureOverrides(overlay0.overlayName) : null;
+
+            if (umaMaterial == null)
+            {
+                return;
+            }
 
             if (overlayOverrides != null)
             {
@@ -534,6 +655,11 @@ namespace UMA
                 {
                     theTex = overlayOverrides[textureChannelNumber];
                 }
+            }
+
+            if (skipNullTexture && theTex == null)
+            {
+                return;
             }
 
             string materialPropertyName = "";
@@ -578,7 +704,7 @@ namespace UMA
             }
 #endif
 
-            if (overlayNumber > 0)
+            if (appendOverlayNumber && overlayNumber > 0)
             {
                 materialPropertyName += overlayNumber.ToString();
             }

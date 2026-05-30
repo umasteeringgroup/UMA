@@ -217,7 +217,7 @@ namespace UMA.Editors
             EditorGUILayout.PropertyField(materialTypeProperty, new GUIContent( "Material Type", "To atlas or not to atlas- that is the question."));
             if (showHelp)
             {
-                EditorGUILayout.HelpBox("Atlas: Combine all textures using this material into a single atlas. Each channel will be a separate atlas - ie, normal maps will not be combine with albedo\nNo Atlas: Create a single texture for each channel, compositing all layers and colorizing as needed.\nUseExistingMaterial: use the material assigned directly. No channels, layering or colorizing will be done. This type has no texture channels.\nUseExistingTextures: Generates a new material, assigns the textures from the overlay to the appropriate channel. No layering can be done, but you can colorize the texture using Color 0 on the overlay. This will set all channels to type TintedTexture.", MessageType.Info);
+                EditorGUILayout.HelpBox("Atlas: Combine all textures using this material into a single atlas. Each channel will be a separate atlas - ie, normal maps will not be combine with albedo\nNo Atlas: Create a single texture for each channel, compositing all layers and colorizing as needed.\nAtlas and No Atlas channels can optionally use the existing overlay texture directly for a channel, skipping compositing, post-processing, compression, and render texture creation for that channel.\nUseExistingMaterial: use the material assigned directly. No channels, layering or colorizing will be done. This type has no texture channels.\nUseExistingTextures: Generates a new material, assigns the textures from the overlay to the appropriate channel. No layering can be done, but you can colorize the texture using Color 0 on the overlay. This will set all channels to type TintedTexture.", MessageType.Info);
             }
             if (MatType == UMAMaterial.MaterialType.UseExistingTextures)
             {
@@ -372,6 +372,25 @@ namespace UMA.Editors
             }
             return true;
         }
+
+        private static bool IsGeneratedTextureMaterialType(UMAMaterial.MaterialType materialType)
+        {
+            return materialType == UMAMaterial.MaterialType.Atlas || materialType == UMAMaterial.MaterialType.NoAtlas;
+        }
+
+        private static bool IsExistingTextureChannelType(UMAMaterial.ChannelType channelType)
+        {
+            switch (channelType)
+            {
+                case UMAMaterial.ChannelType.Texture:
+                case UMAMaterial.ChannelType.DiffuseTexture:
+                case UMAMaterial.ChannelType.NormalMap:
+                case UMAMaterial.ChannelType.DetailNormalMap:
+                    return true;
+                default:
+                    return false;
+            }
+        }
         
  
         //Maybe eventually we can use the new IMGUI classes once older unity version are no longer supported.
@@ -440,14 +459,43 @@ namespace UMA.Editors
                         {
                             EditorGUILayout.LabelField("Materials of type 'UseExistingTextures' use TintedTexture type");
                         }
+                        SerializedProperty NonShaderProperty = channel.FindPropertyRelative("NonShaderTexture");
+                        SerializedProperty useExistingTextureProperty = channel.FindPropertyRelative("UseExistingTextureForChannel");
+                        UMAMaterial.ChannelType selectedChannelType = (UMAMaterial.ChannelType)channelProperty.intValue;
+                        bool isGeneratedTextureMaterial = IsGeneratedTextureMaterialType(materialType);
+                        bool canUseExistingTextureForChannel = isGeneratedTextureMaterial && IsExistingTextureChannelType(selectedChannelType);
+                        bool useExistingTextureForChannel = useExistingTextureProperty.boolValue && canUseExistingTextureForChannel && !NonShaderProperty.boolValue;
+
+                        if (isGeneratedTextureMaterial)
+                        {
+                            EditorGUI.BeginDisabledGroup(!canUseExistingTextureForChannel || NonShaderProperty.boolValue);
+                            EditorGUILayout.PropertyField(useExistingTextureProperty, new GUIContent("Use Existing Texture For Channel", "Use the overlay texture directly for this channel instead of creating a generated render texture. Stacked overlays are assigned in order, so later overlay textures overwrite earlier ones on the material property."));
+                            EditorGUI.EndDisabledGroup();
+
+                            if (useExistingTextureProperty.boolValue && !canUseExistingTextureForChannel)
+                            {
+                                EditorGUILayout.HelpBox("Use Existing Texture For Channel only applies to Texture, DiffuseTexture, NormalMap, and DetailNormalMap channels on Atlas or No Atlas materials.", MessageType.Warning);
+                            }
+                            if (useExistingTextureProperty.boolValue && NonShaderProperty.boolValue)
+                            {
+                                EditorGUILayout.HelpBox("Use Existing Texture For Channel is ignored for NonShader Texture channels because there is no shader property to assign.", MessageType.Warning);
+                            }
+                            if (useExistingTextureForChannel && showHelp)
+                            {
+                                EditorGUILayout.HelpBox("This channel will use overlay textures directly. UMA will skip compositing, post-processing, downsample, compression, and render texture allocation for this channel.", MessageType.Info);
+                            }
+                        }
+
                         SerializedProperty textureFormatProperty = channel.FindPropertyRelative("textureFormat");
+                        EditorGUI.BeginDisabledGroup(useExistingTextureForChannel);
                         DrawTextureFormatPopup(textureFormatProperty);
 
                         RenderTextureFormat selectedFormat = (RenderTextureFormat)textureFormatProperty.intValue;
-                        if (!SystemInfo.SupportsRenderTextureFormat(selectedFormat))
+                        if (!useExistingTextureForChannel && !SystemInfo.SupportsRenderTextureFormat(selectedFormat))
                         {
                             EditorGUILayout.HelpBox("This Texture Format is not supported on this system. UMA will fall back to ARGB32 at runtime.", MessageType.Warning);
                         }
+                        EditorGUI.EndDisabledGroup();
 
                         EditorGUILayout.BeginHorizontal();
 
@@ -463,7 +511,6 @@ namespace UMA.Editors
                         }
                         EditorGUILayout.EndHorizontal();
 
-                        SerializedProperty NonShaderProperty = channel.FindPropertyRelative("NonShaderTexture");
                         UMAMaterial source = target as UMAMaterial;
                         if( source.material != null )
                         {
@@ -473,6 +520,7 @@ namespace UMA.Editors
                             }
                         }
 
+                        EditorGUI.BeginDisabledGroup(useExistingTextureForChannel);
                         EditorGUILayout.PropertyField(channel.FindPropertyRelative("ConvertRenderTexture"), new GUIContent("Convert RenderTexture", "Convert the Render Texture to a Texture2D (so it can be compressed)"));
                         SerializedProperty ConvertRenderTextureProperty = channel.FindPropertyRelative("ConvertRenderTexture");
                         if (ConvertRenderTextureProperty.boolValue == true)
@@ -481,6 +529,7 @@ namespace UMA.Editors
                         }
                         
                         EditorGUILayout.PropertyField(channel.FindPropertyRelative("DownSample"), new GUIContent("Down Sample", "Decrease size to save texture memory"));
+                        EditorGUI.EndDisabledGroup();
                         EditorGUILayout.PropertyField(channel.FindPropertyRelative("sourceTextureName"), new GUIContent("Source Texture Name", "For use with procedural materials, leave empty otherwise."));
 
                         EditorGUILayout.PropertyField(NonShaderProperty, new GUIContent("NonShader Texture", "For having a texture get merged by the UMA texture merging process but not used in a shader. E.G. Pixel/UV based ID lookup. The Material Property Name should be empty when this is true."));

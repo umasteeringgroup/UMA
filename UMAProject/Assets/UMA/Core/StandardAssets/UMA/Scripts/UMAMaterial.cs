@@ -258,6 +258,7 @@ namespace UMA
             [Range(1,128)]
             public int DownSample;
             public bool ConvertRenderTexture;
+              public bool UseExistingTextureForChannel;
             public bool NonShaderTexture;
        }
 
