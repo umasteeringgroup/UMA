@@ -500,23 +500,13 @@ namespace UMA.Editors
 				{
 					var shapeName = shapes[_prebakeAddShapeIndex];
 					var listProp = serializedObject.FindProperty("PrebakedBlendshapes");
-					// prevent duplicates
+					// prevent duplicates in the prebaked list
 					bool exists = false;
 					for (int i =0; i < listProp.arraySize; i++)
 					{
 						var el = listProp.GetArrayElementAtIndex(i);
 						var n = el.FindPropertyRelative("BlendShape");
 						if (n != null && n.stringValue == shapeName) { exists = true; break; }
-					}
-					// also prevent if the shape exists in UnbakedShapesToInclude
-					if (!exists)
-					{
-						var otherList = serializedObject.FindProperty("UnbakedShapesToInclude");
-						for (int i =0; i < otherList.arraySize; i++)
-						{
-							var el = otherList.GetArrayElementAtIndex(i);
-							if (el != null && el.stringValue == shapeName) { exists = true; break; }
-						}
 					}
 					if (!exists)
 					{
@@ -525,6 +515,10 @@ namespace UMA.Editors
 						var el = listProp.GetArrayElementAtIndex(idx);
 						el.FindPropertyRelative("BlendShape").stringValue = shapeName;
 						el.FindPropertyRelative("value").floatValue =0f;
+					}
+					bool removedFromUnbaked = RemoveExactUnbakedShapeToInclude(shapeName) > 0;
+					if (!exists || removedFromUnbaked)
+					{
 						serializedObject.ApplyModifiedProperties();
 						_needsUpdate = true;
 					}
@@ -533,7 +527,7 @@ namespace UMA.Editors
 				if (GUILayout.Button("Add all from slot", GUILayout.Width(150)))
 				{
 					var listProp = serializedObject.FindProperty("PrebakedBlendshapes");
-					// Build set of existing names
+					// Build set of existing prebaked names
 					var existing = new HashSet<string>(StringComparer.Ordinal);
 					for (int i =0; i < listProp.arraySize; i++)
 					{
@@ -541,27 +535,25 @@ namespace UMA.Editors
 						var n = el.FindPropertyRelative("BlendShape");
 						if (n != null && !string.IsNullOrEmpty(n.stringValue)) existing.Add(n.stringValue);
 					}
-					// include names from UnbakedShapesToInclude to avoid cross-adding
-					var otherList = serializedObject.FindProperty("UnbakedShapesToInclude");
-					for (int i =0; i < otherList.arraySize; i++)
-					{
-						var el = otherList.GetArrayElementAtIndex(i);
-						if (el != null && !string.IsNullOrEmpty(el.stringValue)) existing.Add(el.stringValue);
-					}
 					int added =0;
+					int removed =0;
 					for (int s =0; s < shapes.Length; s++)
 					{
 						var shapeName = shapes[s];
-						if (string.IsNullOrEmpty(shapeName) || existing.Contains(shapeName)) continue;
-						int idx = listProp.arraySize;
-						listProp.InsertArrayElementAtIndex(idx);
-						var el = listProp.GetArrayElementAtIndex(idx);
-						el.FindPropertyRelative("BlendShape").stringValue = shapeName;
-						el.FindPropertyRelative("value").floatValue =0f;
-						existing.Add(shapeName);
-						added++;
+						if (string.IsNullOrEmpty(shapeName)) continue;
+						if (!existing.Contains(shapeName))
+						{
+							int idx = listProp.arraySize;
+							listProp.InsertArrayElementAtIndex(idx);
+							var el = listProp.GetArrayElementAtIndex(idx);
+							el.FindPropertyRelative("BlendShape").stringValue = shapeName;
+							el.FindPropertyRelative("value").floatValue =0f;
+							existing.Add(shapeName);
+							added++;
+						}
+						removed += RemoveExactUnbakedShapeToInclude(shapeName);
 					}
-					if (added >0)
+					if (added >0 || removed >0)
 					{
 						serializedObject.ApplyModifiedProperties();
 						_needsUpdate = true;
@@ -573,6 +565,33 @@ namespace UMA.Editors
 			GUI.enabled = true;
 			GUIHelper.EndVerticalPadded(5.0f);
         }
+
+		private int RemoveExactUnbakedShapeToInclude(string shapeName)
+		{
+			if (string.IsNullOrEmpty(shapeName))
+			{
+				return 0;
+			}
+
+			var unbakedList = serializedObject.FindProperty("UnbakedShapesToInclude");
+			if (unbakedList == null)
+			{
+				return 0;
+			}
+
+			int removed = 0;
+			for (int i = unbakedList.arraySize - 1; i >= 0; i--)
+			{
+				var element = unbakedList.GetArrayElementAtIndex(i);
+				if (element != null && element.stringValue == shapeName)
+				{
+					unbakedList.DeleteArrayElementAtIndex(i);
+					removed++;
+				}
+			}
+
+			return removed;
+		}
 
 		private void InitUnbakedShapesToIncludeList()
 		{

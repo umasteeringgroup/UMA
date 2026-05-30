@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
+using UMA.PoseTools;
 
 namespace UMA
 {
@@ -14,6 +16,9 @@ namespace UMA
         List<bool> foldouts = new List<bool>();
 
         UmaTPose source;
+        UMABonePose bonePoseSource;
+        string bonePoseCopyMessage;
+        MessageType bonePoseCopyMessageType = MessageType.Info;
 
         void OnEnable()
         {
@@ -49,6 +54,8 @@ namespace UMA
                 source.Serialize();
                 EditorUtility.SetDirty(source);
             }
+
+            DrawBonePoseCopyControls();
 
             humanPoseFoldout = EditorGUILayout.Foldout(humanPoseFoldout, "Human Pose");
             if (humanPoseFoldout)
@@ -164,6 +171,162 @@ namespace UMA
             }
 
 
+        }
+
+        private void DrawBonePoseCopyControls()
+        {
+            EditorGUILayout.Space(4);
+            EditorGUILayout.LabelField("Apply Bone Pose To TPose", EditorStyles.boldLabel);
+            bonePoseSource = EditorGUILayout.ObjectField("Bone Pose", bonePoseSource, typeof(UMABonePose), false) as UMABonePose;
+
+            bool canCopy = source != null && source.boneInfo != null && source.boneInfo.Length > 0 && bonePoseSource != null && bonePoseSource.poses != null && bonePoseSource.poses.Length > 0;
+            using (new EditorGUI.DisabledScope(!canCopy))
+            {
+                if (GUILayout.Button("Apply Matching Bone Pose Transforms"))
+                {
+                    int replaced = ApplyBonePoseTransformsToTPose(bonePoseSource, out List<string> ignoredBones, out List<string> disabledBones);
+                    if (replaced > 0)
+                    {
+                        bonePoseCopyMessage = $"Applied {replaced} matching bone pose transform{(replaced == 1 ? string.Empty : "s")}.";
+                        if (ignoredBones.Count > 0)
+                        {
+                            bonePoseCopyMessage += "\nBones not found in TPose:\n" + string.Join("\n", ignoredBones);
+                        }
+                        if (disabledBones.Count > 0)
+                        {
+                            bonePoseCopyMessage += "\nDisabled pose bones skipped:\n" + string.Join("\n", disabledBones);
+                        }
+                        bonePoseCopyMessageType = MessageType.Info;
+                    }
+                    else
+                    {
+                        bonePoseCopyMessage = "No matching enabled TPose bones found.";
+                        if (ignoredBones.Count > 0)
+                        {
+                            bonePoseCopyMessage += "\nBones not found in TPose:\n" + string.Join("\n", ignoredBones);
+                        }
+                        if (disabledBones.Count > 0)
+                        {
+                            bonePoseCopyMessage += "\nDisabled pose bones skipped:\n" + string.Join("\n", disabledBones);
+                        }
+                        bonePoseCopyMessageType = MessageType.Warning;
+                    }
+                }
+            }
+
+            if (!string.IsNullOrEmpty(bonePoseCopyMessage))
+            {
+                EditorGUILayout.HelpBox(bonePoseCopyMessage, bonePoseCopyMessageType);
+            }
+        }
+
+        private int ApplyBonePoseTransformsToTPose(UMABonePose bonePose, out List<string> ignoredBoneNames, out List<string> disabledBoneNames)
+        {
+            ignoredBoneNames = new List<string>();
+            disabledBoneNames = new List<string>();
+            if (source == null || bonePose == null || bonePose.poses == null)
+            {
+                return 0;
+            }
+
+            source.DeSerialize();
+            if (source.boneInfo == null || source.boneInfo.Length == 0)
+            {
+                return 0;
+            }
+
+            Dictionary<string, UMABonePose.PoseBone> poseByName = new Dictionary<string, UMABonePose.PoseBone>(StringComparer.Ordinal);
+            HashSet<string> disabledNames = new HashSet<string>(StringComparer.Ordinal);
+            for (int poseIndex = 0; poseIndex < bonePose.poses.Length; poseIndex++)
+            {
+                UMABonePose.PoseBone poseBone = bonePose.poses[poseIndex];
+                if (poseBone == null || string.IsNullOrEmpty(poseBone.bone))
+                {
+                    continue;
+                }
+
+                if (!poseBone.enabled)
+                {
+                    disabledNames.Add(poseBone.bone);
+                    continue;
+                }
+
+                poseByName[poseBone.bone] = poseBone;
+            }
+
+            foreach (string copiedBoneName in poseByName.Keys)
+            {
+                disabledNames.Remove(copiedBoneName);
+            }
+            disabledBoneNames.AddRange(disabledNames);
+            disabledBoneNames.Sort(StringComparer.Ordinal);
+
+            if (poseByName.Count == 0)
+            {
+                return 0;
+            }
+
+            bool hasMatch = false;
+            for (int boneIndex = 0; boneIndex < source.boneInfo.Length; boneIndex++)
+            {
+                string boneName = source.boneInfo[boneIndex].name;
+                if (!string.IsNullOrEmpty(boneName) && poseByName.ContainsKey(boneName))
+                {
+                    hasMatch = true;
+                    break;
+                }
+            }
+
+            if (!hasMatch)
+            {
+                ignoredBoneNames.AddRange(poseByName.Keys);
+                ignoredBoneNames.Sort(StringComparer.Ordinal);
+                return 0;
+            }
+
+            Undo.RecordObject(source, "Copy Bone Pose Transforms To TPose");
+
+            int replaced = 0;
+            HashSet<string> matchedNames = new HashSet<string>(StringComparer.Ordinal);
+            for (int boneIndex = 0; boneIndex < source.boneInfo.Length; boneIndex++)
+            {
+                SkeletonBone skeletonBone = source.boneInfo[boneIndex];
+                if (string.IsNullOrEmpty(skeletonBone.name) || !poseByName.TryGetValue(skeletonBone.name, out UMABonePose.PoseBone poseBone))
+                {
+                    continue;
+                }
+
+                skeletonBone.position += poseBone.position;
+                skeletonBone.rotation = NormalizeSafe(skeletonBone.rotation * poseBone.rotation);
+                skeletonBone.scale = Vector3.Scale(skeletonBone.scale, poseBone.scale);
+                source.boneInfo[boneIndex] = skeletonBone;
+                matchedNames.Add(skeletonBone.name);
+                replaced++;
+            }
+
+            foreach (string poseBoneName in poseByName.Keys)
+            {
+                if (!matchedNames.Contains(poseBoneName))
+                {
+                    ignoredBoneNames.Add(poseBoneName);
+                }
+            }
+            ignoredBoneNames.Sort(StringComparer.Ordinal);
+            source.Serialize();
+            EditorUtility.SetDirty(source);
+            serializedObject.Update();
+            return replaced;
+        }
+
+        private static Quaternion NormalizeSafe(Quaternion rotation)
+        {
+            float magnitude = Mathf.Sqrt(rotation.x * rotation.x + rotation.y * rotation.y + rotation.z * rotation.z + rotation.w * rotation.w);
+            if (magnitude <= Mathf.Epsilon)
+            {
+                return Quaternion.identity;
+            }
+
+            return new Quaternion(rotation.x / magnitude, rotation.y / magnitude, rotation.z / magnitude, rotation.w / magnitude);
         }
     }
 }

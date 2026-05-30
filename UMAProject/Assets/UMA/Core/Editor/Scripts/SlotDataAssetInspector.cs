@@ -33,6 +33,7 @@ namespace UMA.Editors
             public int normalCopyMode;
             public int blendshapeCopyMode;
             public int previewLodLevel;
+            public bool weightRecalculatedNormalsByTriangleSize;
         }
 
         static string[] RegularSlotFields = new string[] { "slotName", "CharacterBegun", "SlotAtlassed", "SlotProcessed", "SlotBeginProcessing", "DNAApplied", "CharacterCompleted", "_slotDNALegacy", "tags", "isWildCardSlot", "Races", "smooshOffset", "smooshExpand", "Welds" };
@@ -81,6 +82,8 @@ namespace UMA.Editors
         private int triplanarUvChannel = 1;
         private float triplanarTileU = 1f;
         private float triplanarTileV = 1f;
+        private bool weightRecalculatedNormalsByTriangleSize;
+        private string recalculateNormalsInfo = string.Empty;
         private bool exportIncludeRig = true;
         private string persistedSectionStateKey;
         private string persistedSectionStateCache;
@@ -676,6 +679,44 @@ namespace UMA.Editors
                 GUIHelper.EndVerticalPadded(10);
                 #endregion
 
+                #region Recalculate Normals
+                GUIHelper.BeginVerticalPadded(10, new Color(0.90f, 0.92f, 1f));
+                GUILayout.Label("Recalculate Normals", EditorStyles.boldLabel);
+                weightRecalculatedNormalsByTriangleSize = EditorGUILayout.ToggleLeft("Weight normals by triangle size", weightRecalculatedNormalsByTriangleSize);
+                using (new EditorGUI.DisabledScope(UMAMeshData.IsNullOrEmptyMeshData(slot?.meshData)))
+                {
+                    if (GUILayout.Button("Recalculate Normals and Tangents"))
+                    {
+                        SlotDataAsset slotDataAsset = target as SlotDataAsset;
+                        if (slotDataAsset == null || UMAMeshData.IsNullOrEmptyMeshData(slotDataAsset.meshData))
+                        {
+                            recalculateNormalsInfo = "MeshData missing.";
+                        }
+                        else
+                        {
+                            Undo.RecordObject(slotDataAsset, "Recalculate Slot Normals");
+                            recalculateNormalsInfo = RecalculateSlotNormalsAndTangents(slotDataAsset, weightRecalculatedNormalsByTriangleSize);
+                            slotDataAsset.ValidateMeshData();
+                            EditorUtility.SetDirty(slotDataAsset);
+                            AssetDatabase.SaveAssetIfDirty(slotDataAsset);
+                            string path = AssetDatabase.GetAssetPath(slotDataAsset.GetEntityId());
+                            if (!string.IsNullOrEmpty(path))
+                            {
+                                AssetDatabase.ImportAsset(path);
+                            }
+                            UMAUpdateProcessor.UpdateSlot(slotDataAsset, false);
+                            RebuildPreviewMesh(slotDataAsset);
+                            Repaint();
+                        }
+                    }
+                }
+                if (!string.IsNullOrEmpty(recalculateNormalsInfo))
+                {
+                    EditorGUILayout.HelpBox(recalculateNormalsInfo, MessageType.Info);
+                }
+                GUIHelper.EndVerticalPadded(10);
+                #endregion
+
                 #region Bindpose Conform
                 GUIHelper.BeginVerticalPadded(10, new Color(0.80f, 0.95f, 0.80f));
                 GUILayout.Label("Bindpose Conform", EditorStyles.boldLabel);
@@ -958,6 +999,7 @@ namespace UMA.Editors
             triplanarUvChannel = hasTriplanarUvState ? Mathf.Clamp(state.triplanarUvChannel, 0, 3) : 1;
             triplanarTileU = hasTriplanarUvState ? state.triplanarTileU : 1f;
             triplanarTileV = hasTriplanarUvState ? state.triplanarTileV : 1f;
+            weightRecalculatedNormalsByTriangleSize = json.Contains("\"weightRecalculatedNormalsByTriangleSize\"") && state.weightRecalculatedNormalsByTriangleSize;
             normalCopyMode = Enum.IsDefined(typeof(UMA.SlotDataAsset.NormalCopyMode), state.normalCopyMode)
                 ? (UMA.SlotDataAsset.NormalCopyMode)state.normalCopyMode
                 : default;
@@ -1004,6 +1046,7 @@ namespace UMA.Editors
                 triplanarUvChannel = triplanarUvChannel,
                 triplanarTileU = triplanarTileU,
                 triplanarTileV = triplanarTileV,
+                weightRecalculatedNormalsByTriangleSize = weightRecalculatedNormalsByTriangleSize,
                 normalCopyMode = (int)normalCopyMode,
                 blendshapeCopyMode = (int)blendshapeCopyMode,
                 previewLodLevel = previewLodLevel
@@ -1282,6 +1325,218 @@ namespace UMA.Editors
                     meshData.uv4Modified = true;
                     break;
             }
+        }
+
+        private static string RecalculateSlotNormalsAndTangents(SlotDataAsset slotDataAsset, bool weightNormalsByTriangleSize)
+        {
+            if (slotDataAsset == null || UMAMeshData.IsNullOrEmptyMeshData(slotDataAsset.meshData))
+            {
+                return "MeshData missing.";
+            }
+
+            UMAMeshData meshData = slotDataAsset.meshData;
+            Vector3[] vertices = meshData.vertices;
+            if (vertices == null || vertices.Length == 0)
+            {
+                return "MeshData has no vertices.";
+            }
+
+            int vertexCount = vertices.Length;
+            Vector3[] normalSums = new Vector3[vertexCount];
+            int processedTriangleCount = AccumulateSlotTriangleNormals(meshData, normalSums, weightNormalsByTriangleSize);
+            if (processedTriangleCount == 0)
+            {
+                return "No valid triangles found.";
+            }
+
+            Vector3[] previousNormals = meshData.normals;
+            Vector3[] recalculatedNormals = new Vector3[vertexCount];
+            int fallbackNormalCount = 0;
+            for (int vertexIndex = 0; vertexIndex < vertexCount; vertexIndex++)
+            {
+                Vector3 normal = normalSums[vertexIndex];
+                if (normal.sqrMagnitude > 0.0000001f)
+                {
+                    recalculatedNormals[vertexIndex] = normal.normalized;
+                    continue;
+                }
+
+                fallbackNormalCount++;
+                if (previousNormals != null && vertexIndex < previousNormals.Length && previousNormals[vertexIndex].sqrMagnitude > 0.0000001f)
+                {
+                    recalculatedNormals[vertexIndex] = previousNormals[vertexIndex].normalized;
+                }
+                else
+                {
+                    recalculatedNormals[vertexIndex] = Vector3.up;
+                }
+            }
+
+            meshData.normals = recalculatedNormals;
+            meshData.tangents = RecalculateSlotTangents(meshData, recalculatedNormals);
+            meshData.normalsModified = true;
+            meshData.tangentsModified = true;
+
+            return "Recalculated normals and tangents from " + processedTriangleCount + " triangle(s)." +
+                (fallbackNormalCount > 0 ? " " + fallbackNormalCount + " vertex normal(s) had no triangle contribution and used fallback normals." : string.Empty);
+        }
+
+        private static int AccumulateSlotTriangleNormals(UMAMeshData meshData, Vector3[] normalSums, bool weightNormalsByTriangleSize)
+        {
+            if (meshData == null || meshData.submeshes == null || normalSums == null || normalSums.Length == 0)
+            {
+                return 0;
+            }
+
+            int processedTriangleCount = 0;
+            Vector3[] vertices = meshData.vertices;
+            for (int submeshIndex = 0; submeshIndex < meshData.submeshes.Length; submeshIndex++)
+            {
+                SubMeshTriangles submesh = meshData.submeshes[submeshIndex];
+                int[] triangles = GetBaseManagedTriangles(submesh);
+                if (triangles == null || triangles.Length < 3)
+                {
+                    continue;
+                }
+
+                for (int triangleIndex = 0; triangleIndex + 2 < triangles.Length; triangleIndex += 3)
+                {
+                    int vertexIndex0 = triangles[triangleIndex];
+                    int vertexIndex1 = triangles[triangleIndex + 1];
+                    int vertexIndex2 = triangles[triangleIndex + 2];
+                    if (!IsValidVertexIndex(vertexIndex0, normalSums.Length) || !IsValidVertexIndex(vertexIndex1, normalSums.Length) || !IsValidVertexIndex(vertexIndex2, normalSums.Length))
+                    {
+                        continue;
+                    }
+
+                    Vector3 edge0 = vertices[vertexIndex1] - vertices[vertexIndex0];
+                    Vector3 edge1 = vertices[vertexIndex2] - vertices[vertexIndex0];
+                    Vector3 faceNormal = Vector3.Cross(edge0, edge1);
+                    if (faceNormal.sqrMagnitude <= 0.0000001f)
+                    {
+                        continue;
+                    }
+
+                    Vector3 contribution = weightNormalsByTriangleSize ? faceNormal : faceNormal.normalized;
+                    normalSums[vertexIndex0] += contribution;
+                    normalSums[vertexIndex1] += contribution;
+                    normalSums[vertexIndex2] += contribution;
+                    processedTriangleCount++;
+                }
+            }
+
+            return processedTriangleCount;
+        }
+
+        private static Vector4[] RecalculateSlotTangents(UMAMeshData meshData, Vector3[] normals)
+        {
+            Vector3[] vertices = meshData.vertices;
+            Vector2[] uv = meshData.uv;
+            int vertexCount = vertices.Length;
+            Vector3[] tangentSums = new Vector3[vertexCount];
+            Vector3[] bitangentSums = new Vector3[vertexCount];
+            bool haveUsableUvs = uv != null && uv.Length == vertexCount;
+
+            if (haveUsableUvs && meshData.submeshes != null)
+            {
+                for (int submeshIndex = 0; submeshIndex < meshData.submeshes.Length; submeshIndex++)
+                {
+                    SubMeshTriangles submesh = meshData.submeshes[submeshIndex];
+                    int[] triangles = GetBaseManagedTriangles(submesh);
+                    if (triangles == null || triangles.Length < 3)
+                    {
+                        continue;
+                    }
+
+                    for (int triangleIndex = 0; triangleIndex + 2 < triangles.Length; triangleIndex += 3)
+                    {
+                        int vertexIndex0 = triangles[triangleIndex];
+                        int vertexIndex1 = triangles[triangleIndex + 1];
+                        int vertexIndex2 = triangles[triangleIndex + 2];
+                        if (!IsValidVertexIndex(vertexIndex0, vertexCount) || !IsValidVertexIndex(vertexIndex1, vertexCount) || !IsValidVertexIndex(vertexIndex2, vertexCount))
+                        {
+                            continue;
+                        }
+
+                        Vector3 edge0 = vertices[vertexIndex1] - vertices[vertexIndex0];
+                        Vector3 edge1 = vertices[vertexIndex2] - vertices[vertexIndex0];
+                        Vector2 uvDelta0 = uv[vertexIndex1] - uv[vertexIndex0];
+                        Vector2 uvDelta1 = uv[vertexIndex2] - uv[vertexIndex0];
+                        float determinant = uvDelta0.x * uvDelta1.y - uvDelta1.x * uvDelta0.y;
+                        if (Mathf.Abs(determinant) <= 0.0000001f)
+                        {
+                            continue;
+                        }
+
+                        float reciprocal = 1f / determinant;
+                        Vector3 tangent = (edge0 * uvDelta1.y - edge1 * uvDelta0.y) * reciprocal;
+                        Vector3 bitangent = (edge1 * uvDelta0.x - edge0 * uvDelta1.x) * reciprocal;
+                        tangentSums[vertexIndex0] += tangent;
+                        tangentSums[vertexIndex1] += tangent;
+                        tangentSums[vertexIndex2] += tangent;
+                        bitangentSums[vertexIndex0] += bitangent;
+                        bitangentSums[vertexIndex1] += bitangent;
+                        bitangentSums[vertexIndex2] += bitangent;
+                    }
+                }
+            }
+
+            Vector4[] tangents = new Vector4[vertexCount];
+            Vector4[] previousTangents = meshData.tangents;
+            for (int vertexIndex = 0; vertexIndex < vertexCount; vertexIndex++)
+            {
+                Vector3 normal = normals[vertexIndex].sqrMagnitude > 0.0000001f ? normals[vertexIndex].normalized : Vector3.up;
+                Vector3 tangent = tangentSums[vertexIndex];
+                if (tangent.sqrMagnitude <= 0.0000001f && previousTangents != null && vertexIndex < previousTangents.Length)
+                {
+                    tangent = new Vector3(previousTangents[vertexIndex].x, previousTangents[vertexIndex].y, previousTangents[vertexIndex].z);
+                }
+                tangent = tangent - normal * Vector3.Dot(normal, tangent);
+                if (tangent.sqrMagnitude <= 0.0000001f)
+                {
+                    tangent = BuildFallbackTangent(normal);
+                }
+                else
+                {
+                    tangent.Normalize();
+                }
+
+                Vector3 bitangent = bitangentSums[vertexIndex];
+                float handedness = bitangent.sqrMagnitude > 0.0000001f && Vector3.Dot(Vector3.Cross(normal, tangent), bitangent) < 0f ? -1f : 1f;
+                tangents[vertexIndex] = new Vector4(tangent.x, tangent.y, tangent.z, handedness);
+            }
+
+            return tangents;
+        }
+
+        private static Vector3 BuildFallbackTangent(Vector3 normal)
+        {
+            Vector3 reference = Mathf.Abs(normal.y) < 0.9f ? Vector3.up : Vector3.right;
+            Vector3 tangent = Vector3.Cross(reference, normal);
+            if (tangent.sqrMagnitude <= 0.0000001f)
+            {
+                tangent = Vector3.right;
+            }
+            else
+            {
+                tangent.Normalize();
+            }
+            return tangent;
+        }
+
+        private static int[] GetBaseManagedTriangles(SubMeshTriangles submesh)
+        {
+            if (submesh == null)
+            {
+                return null;
+            }
+
+            int[] triangles = submesh.GetBaseTriangles();
+            if (triangles == null || triangles.Length < 3)
+            {
+                triangles = submesh.getManagedTriangles(0);
+            }
+            return triangles;
         }
 
         private void DrawTransformDebugInfo()
