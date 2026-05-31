@@ -74,7 +74,7 @@ namespace UMA.PoseTools
                     mirroredBones.Add(mirroredBone);
                 }
             }
-            selectedBones.AddRange(mirroredBones);  
+            selectedBones.AddRange(mirroredBones);
             return selectedBones;
         }
 
@@ -193,11 +193,16 @@ namespace UMA.PoseTools
     public class UMABonePoseEditor : Editor
     {
         private static UMABonePoseEditor _livePopupEditor = null;
+        private static UMABonePose _protectedBonePoseSelection = null;
+        private static bool _selectionProtectionRegistered = false;
+        private static bool _restoringProtectedBonePoseSelection = false;
         public static int MirrorAxis =0;
         public static string[] MirrorAxises = { "X Axis", "Y Axis (Legacy UMA)", "Z Axis" };
         public static int displayMode =0;
         public static string[] strings = { "Pose Bones", "Filtered", "All", "None" };
         public enum DisplayMode { PoseBones, Filtered, All, None };
+        private enum IKMovementPlane { Free, XZ, YZ, XY }
+        private enum IKMovementPlaneSpace { Global, Local }
         // Global mirroring disable switch for UI/scene edits
         public static bool disableMirroring = false;
         public static bool useTPosePreview = true;
@@ -239,6 +244,65 @@ namespace UMA.PoseTools
         private int activeBoneIndex = BAD_INDEX;
         private int mirrorBoneIndex = BAD_INDEX;
         private bool mirrorActive = true;
+        private bool useIKEditor = false;
+        private bool protectBonePoseSceneSelection = true;
+        private float ikHandleBaseSize =0.2f;
+        private bool ikUseBoundaryBone = false;
+        private int ikBoundaryBoneIndex = BAD_INDEX;
+        private string ikBoundaryBoneName = "Position";
+        private string ikBoundaryBoneFilter = "";
+        private Transform ikActiveJoint = null;
+        private string ikStatusMessage = "";
+        private IKMovementPlane ikMovementPlane = IKMovementPlane.Free;
+        private IKMovementPlaneSpace ikMovementPlaneSpace = IKMovementPlaneSpace.Global;
+        private GUIStyle ikPlaneLabelStyle;
+
+        const int ikMaxIterations =12;
+        const float ikSolveTolerance =0.001f;
+        const float ikHandleMinViewScale =0.025f;
+        const float ikHandleMaxViewScale =0.18f;
+        private static readonly GUIContent[] ikMovementPlaneOptions =
+        {
+            new GUIContent("Free"),
+            new GUIContent("X/Z"),
+            new GUIContent("Y/Z"),
+            new GUIContent("X/Y")
+        };
+        private static readonly GUIContent[] ikMovementPlaneSpaceOptions =
+        {
+            new GUIContent("Global"),
+            new GUIContent("Local")
+        };
+        private static readonly string[] ikCommonBoundaryBoneNames =
+        {
+            "Position",
+            "Global",
+            "Hips",
+            "Pelvis",
+            "Spine",
+            "Spine1",
+            "Spine2",
+            "Chest",
+            "UpperChest",
+            "Neck",
+            "Head",
+            "LeftShoulder",
+            "RightShoulder",
+            "LeftUpperArm",
+            "RightUpperArm",
+            "LeftForeArm",
+            "RightForeArm",
+            "LeftHand",
+            "RightHand",
+            "LeftUpLeg",
+            "RightUpLeg",
+            "LeftLeg",
+            "RightLeg",
+            "LeftFoot",
+            "RightFoot",
+            "LeftToeBase",
+            "RightToeBase"
+        };
 
         private bool doBoneAdd = false;
         private bool doBoneRemove = false;
@@ -281,6 +345,36 @@ namespace UMA.PoseTools
         private static GUIContent generatePoseGUIContent = new GUIContent(
             "Generate Pose from Target SMR",
             "Generate bone pose by comparing the source UMA skeleton with the target SkinnedMeshRenderer bones. This creates pose data to transform the source UMA rig to match the target rig for clothing remapping.");
+        private static GUIContent useIKEditorGUIContent = new GUIContent(
+            "Use IK Editor",
+            "Draw all scene joints with round handles and drag non-adjust joints with IK.");
+        private static GUIContent ikHandleBaseSizeGUIContent = new GUIContent(
+            "IK Handle Base Size",
+            "Multiplier applied to the nearest joint distance when sizing IK joint handles.");
+        private static GUIContent ikUseBoundaryGUIContent = new GUIContent(
+            "Affect down to:",
+            "When enabled, IK affects ancestors down from the selected boundary bone. Otherwise IK stops at the nearest natural branch/root.");
+        private static GUIContent ikBoundaryBoneGUIContent = new GUIContent(
+            "IK Boundary Bone",
+            "Optional ancestor bone used as the root of the IK chain.");
+        private static GUIContent ikBoundaryQuickPickGUIContent = new GUIContent(
+            "Boundary Quick Pick",
+            "Quickly choose a common IK boundary bone when it exists in the current skeleton.");
+        private static GUIContent ikBoundaryFilterGUIContent = new GUIContent(
+            "Boundary Filter",
+            "Filter the full IK boundary bone list before choosing from it.");
+        private static GUIContent ikMovementPlaneGUIContent = new GUIContent(
+            "Movement Plane",
+            "Constrain IK joint movement to a two-axis plane.");
+        private static GUIContent ikMovementPlaneSpaceGUIContent = new GUIContent(
+            "Plane Space",
+            "Use world axes or the dragged joint's local axes for the movement plane.");
+        private static GUIContent savePoseAnimationGUIContent = new GUIContent(
+            "Save as animation",
+            "Save the current visible pose to a one-frame Unity animation clip.");
+        private static GUIContent resetSkeletonGUIContent = new GUIContent(
+            "Reset Skeleton",
+            "Reset all pose bone transforms to identity and restore the source skeleton to the base pose.");
 
         // Track whether any edits were made so we can restore & rebuild on exit
         private bool _poseEdited = false;
@@ -296,6 +390,57 @@ namespace UMA.PoseTools
             if (Application.isPlaying)
             {
                 _livePopupEditor = liveUBPEditor;
+            }
+        }
+
+        private static void EnsureSelectionProtectionRegistered()
+        {
+            if (_selectionProtectionRegistered)
+            {
+                return;
+            }
+
+            Selection.selectionChanged += RestoreProtectedBonePoseSelection;
+            _selectionProtectionRegistered = true;
+        }
+
+        private static void RestoreProtectedBonePoseSelection()
+        {
+            if (_restoringProtectedBonePoseSelection || _protectedBonePoseSelection == null || Selection.activeObject == _protectedBonePoseSelection)
+            {
+                return;
+            }
+
+            UMABonePose poseToRestore = _protectedBonePoseSelection;
+            _restoringProtectedBonePoseSelection = true;
+            EditorApplication.delayCall += () =>
+            {
+                try
+                {
+                    if (poseToRestore != null && _protectedBonePoseSelection == poseToRestore && Selection.activeObject != poseToRestore)
+                    {
+                        Selection.activeObject = poseToRestore;
+                    }
+                }
+                finally
+                {
+                    _restoringProtectedBonePoseSelection = false;
+                }
+            };
+        }
+
+        private void SetBonePoseSelectionProtection(bool enabled)
+        {
+            EnsureSelectionProtectionRegistered();
+            if (enabled && targetPose != null)
+            {
+                _protectedBonePoseSelection = targetPose;
+                return;
+            }
+
+            if (_protectedBonePoseSelection == targetPose)
+            {
+                _protectedBonePoseSelection = null;
             }
         }
 
@@ -346,6 +491,8 @@ namespace UMA.PoseTools
             {
                 warningIcon = EditorGUIUtility.FindTexture("console.warnicon.sml");
             }
+
+            SetBonePoseSelectionProtection(ShouldProtectBonePoseSceneSelection());
         }
 
         private void HandleBeforeAssemblyReload()
@@ -361,6 +508,10 @@ namespace UMA.PoseTools
 
         public void OnDisable()
         {
+            if (!ShouldProtectBonePoseSceneSelection())
+            {
+                SetBonePoseSelectionProtection(false);
+            }
             TryRestoreAndRebuildOnExit();
             try { EditorApplication.update -= this.OnUpdate; } catch { }
 #if UNITY_2019_1_OR_NEWER
@@ -379,6 +530,7 @@ namespace UMA.PoseTools
             editBoneIndex = BAD_INDEX;
             activeBoneIndex = BAD_INDEX;
             mirrorBoneIndex = BAD_INDEX;
+            ikActiveJoint = null;
             if (context != null)
             {
                 context.activeTransform = null;
@@ -437,7 +589,7 @@ namespace UMA.PoseTools
                     BonePoseDNAConverterPlugin bonePosePlugin = boneplug as BonePoseDNAConverterPlugin;
                     if (bonePosePlugin != null)
                     {
-                        Debug.Log($"Setting master weight {masterWeight} on BonePoseDNAConverter Plugin: {bonePosePlugin.name} on race {race.name}");   
+                        Debug.Log($"Setting master weight {masterWeight} on BonePoseDNAConverter Plugin: {bonePosePlugin.name} on race {race.name}");
                         bonePosePlugin.masterWeight.globalWeight = masterWeight;
                     }
                 }
@@ -612,9 +764,14 @@ namespace UMA.PoseTools
 
             if (sourceUMA == null)
             {
+                protectBonePoseSceneSelection = false;
+                SetBonePoseSelectionProtection(false);
                 ClearActiveEditState();
                 return;
             }
+
+            protectBonePoseSceneSelection = true;
+            SetBonePoseSelectionProtection(true);
 
             //Debug.Log("Applying T-Pose preview mode to source UMA: " + sourceUMA.name);
             SetBonePoseMasterWeight(sourceUMA,1.0f);
@@ -895,9 +1052,1214 @@ namespace UMA.PoseTools
             }
         }
 
+        private struct IKTransformState
+        {
+            public Vector3 localPosition;
+            public Quaternion localRotation;
+            public Vector3 localScale;
+
+            public IKTransformState(Transform transform)
+            {
+                localPosition = transform.localPosition;
+                localRotation = transform.localRotation;
+                localScale = transform.localScale;
+            }
+        }
+
+        private static bool IsAdjustBone(string boneName)
+        {
+            return !string.IsNullOrEmpty(boneName) && boneName.IndexOf("adjust", System.StringComparison.OrdinalIgnoreCase) >=0;
+        }
+
+        private Transform GetIKRootTransform()
+        {
+            UMAData umaData = context != null ? context.activeUMA : null;
+            if (umaData == null)
+            {
+                return null;
+            }
+
+            if (umaData.skeleton != null)
+            {
+                Transform root = umaData.skeleton.GetRootTransform();
+                if (root != null)
+                {
+                    return root;
+                }
+
+                Transform global = umaData.skeleton.GetGlobalTransform();
+                if (global != null)
+                {
+                    return global;
+                }
+            }
+
+            if (umaData.umaRoot != null)
+            {
+                Transform global = umaData.umaRoot.transform.Find("Global");
+                return global != null ? global : umaData.umaRoot.transform;
+            }
+
+            return null;
+        }
+
+        private List<Transform> CollectIKTransforms()
+        {
+            List<Transform> transforms = new List<Transform>();
+            Transform root = GetIKRootTransform();
+            CollectIKTransformsRecursive(root, transforms);
+            return transforms;
+        }
+
+        private void CollectIKTransformsRecursive(Transform transform, List<Transform> transforms)
+        {
+            if (transform == null || transforms == null)
+            {
+                return;
+            }
+
+            transforms.Add(transform);
+            for (int i =0; i < transform.childCount; i++)
+            {
+                CollectIKTransformsRecursive(transform.GetChild(i), transforms);
+            }
+        }
+
+        private void DrawIKSkeleton(List<Transform> transforms)
+        {
+            if (transforms == null || transforms.Count ==0)
+            {
+                return;
+            }
+
+            HashSet<Transform> transformSet = new HashSet<Transform>(transforms);
+            Color previousColor = Handles.color;
+            for (int i =0; i < transforms.Count; i++)
+            {
+                Transform joint = transforms[i];
+                if (joint == null || joint.parent == null || !transformSet.Contains(joint.parent))
+                {
+                    continue;
+                }
+
+                Handles.color = IsAdjustBone(joint.name) ? new Color(0.55f,0.65f,0.75f,0.65f) : new Color(0.9f,0.9f,0.9f,0.9f);
+                Handles.DrawLine(joint.parent.position, joint.position);
+            }
+            Handles.color = previousColor;
+        }
+
+        private float GetIKHandleSize(Transform joint, HashSet<Transform> transformSet)
+        {
+            if (joint == null)
+            {
+                return 0.01f;
+            }
+
+            float nearestDistance = float.MaxValue;
+            if (joint.parent != null && transformSet != null && transformSet.Contains(joint.parent))
+            {
+                nearestDistance = Mathf.Min(nearestDistance, Vector3.Distance(joint.position, joint.parent.position));
+            }
+
+            for (int i =0; i < joint.childCount; i++)
+            {
+                Transform child = joint.GetChild(i);
+                if (child != null && (transformSet == null || transformSet.Contains(child)))
+                {
+                    nearestDistance = Mathf.Min(nearestDistance, Vector3.Distance(joint.position, child.position));
+                }
+            }
+
+            float viewSize = HandleUtility.GetHandleSize(joint.position);
+            if (nearestDistance == float.MaxValue || nearestDistance <= Mathf.Epsilon)
+            {
+                nearestDistance = viewSize *0.25f;
+            }
+
+            float size = nearestDistance * Mathf.Max(0.01f, ikHandleBaseSize);
+            return Mathf.Clamp(size, viewSize * ikHandleMinViewScale, viewSize * ikHandleMaxViewScale);
+        }
+
+        private int CountNonAdjustChildren(Transform transform)
+        {
+            if (transform == null)
+            {
+                return 0;
+            }
+
+            int count =0;
+            for (int i =0; i < transform.childCount; i++)
+            {
+                Transform child = transform.GetChild(i);
+                if (child != null && !IsAdjustBone(child.name))
+                {
+                    count++;
+                }
+            }
+            return count;
+        }
+
+        private static bool IsAncestorOrSelf(Transform ancestor, Transform transform)
+        {
+            Transform current = transform;
+            while (current != null)
+            {
+                if (current == ancestor)
+                {
+                    return true;
+                }
+                current = current.parent;
+            }
+            return false;
+        }
+
+        private bool IsLogicalIKBoundary(Transform transform, Transform skeletonRoot)
+        {
+            return transform != null && (transform == skeletonRoot || CountNonAdjustChildren(transform) >1);
+        }
+
+        private Transform FindNaturalIKRoot(Transform effector)
+        {
+            if (effector == null)
+            {
+                return null;
+            }
+
+            Transform skeletonRoot = GetIKRootTransform();
+            Transform current = effector;
+            while (current.parent != null)
+            {
+                Transform parent = current.parent;
+                if (IsLogicalIKBoundary(parent, skeletonRoot))
+                {
+                    if (!ikUseBoundaryBone && current == effector)
+                    {
+                        current = parent;
+                        continue;
+                    }
+
+                    return current;
+                }
+                current = parent;
+            }
+            return current;
+        }
+
+        private Transform FindIKBoundaryTransform()
+        {
+            if (string.IsNullOrEmpty(ikBoundaryBoneName) || context == null || context.activeUMA == null || context.activeUMA.skeleton == null)
+            {
+                return null;
+            }
+            return context.activeUMA.skeleton.GetBoneTransform(ikBoundaryBoneName);
+        }
+
+        private Transform ResolveIKChainRoot(Transform effector)
+        {
+            Transform naturalRoot = FindNaturalIKRoot(effector);
+            if (!ikUseBoundaryBone)
+            {
+                ikStatusMessage = "";
+                return naturalRoot;
+            }
+
+            Transform boundary = FindIKBoundaryTransform();
+            if (boundary != null && !IsAdjustBone(boundary.name) && IsAncestorOrSelf(boundary, effector))
+            {
+                ikStatusMessage = "";
+                return boundary;
+            }
+
+            ikStatusMessage = "IK boundary is not a valid ancestor of the dragged joint; using the natural branch/root.";
+            return naturalRoot;
+        }
+
+        private List<Transform> BuildIKChain(Transform effector)
+        {
+            List<Transform> reversedChain = new List<Transform>();
+            if (effector == null)
+            {
+                return reversedChain;
+            }
+
+            Transform root = ResolveIKChainRoot(effector);
+            Transform current = effector;
+            while (current != null)
+            {
+                if (!IsAdjustBone(current.name))
+                {
+                    reversedChain.Add(current);
+                }
+
+                if (current == root)
+                {
+                    break;
+                }
+
+                current = current.parent;
+            }
+
+            reversedChain.Reverse();
+            return reversedChain;
+        }
+
+        private Dictionary<Transform, IKTransformState> CaptureTransformStates(List<Transform> transforms)
+        {
+            Dictionary<Transform, IKTransformState> states = new Dictionary<Transform, IKTransformState>();
+            if (transforms == null)
+            {
+                return states;
+            }
+
+            for (int i =0; i < transforms.Count; i++)
+            {
+                Transform transform = transforms[i];
+                if (transform != null && !states.ContainsKey(transform))
+                {
+                    states.Add(transform, new IKTransformState(transform));
+                }
+            }
+            return states;
+        }
+
+        private void MoveIKJointToWorldPosition(Transform joint, Vector3 worldPosition)
+        {
+            if (joint == null)
+            {
+                return;
+            }
+
+            if (joint.parent != null)
+            {
+                joint.localPosition = joint.parent.InverseTransformPoint(worldPosition);
+            }
+            else
+            {
+                joint.position = worldPosition;
+            }
+        }
+
+        private void SolveIKChainCCD(List<Transform> chain, Vector3 targetPosition)
+        {
+            if (chain == null || chain.Count ==0)
+            {
+                return;
+            }
+
+            Transform effector = chain[chain.Count -1];
+            if (effector == null)
+            {
+                return;
+            }
+
+            if (chain.Count <2)
+            {
+                MoveIKJointToWorldPosition(effector, targetPosition);
+                return;
+            }
+
+            float toleranceSqr = ikSolveTolerance * ikSolveTolerance;
+            for (int iteration =0; iteration < ikMaxIterations; iteration++)
+            {
+                if ((effector.position - targetPosition).sqrMagnitude <= toleranceSqr)
+                {
+                    break;
+                }
+
+                for (int i = chain.Count -2; i >=0; i--)
+                {
+                    Transform joint = chain[i];
+                    if (joint == null || IsAdjustBone(joint.name))
+                    {
+                        continue;
+                    }
+
+                    Vector3 toEffector = effector.position - joint.position;
+                    Vector3 toTarget = targetPosition - joint.position;
+                    if (toEffector.sqrMagnitude <= 0.0000001f || toTarget.sqrMagnitude <= 0.0000001f)
+                    {
+                        continue;
+                    }
+
+                    Quaternion swing = Quaternion.FromToRotation(toEffector, toTarget);
+                    joint.rotation = NormalizeSafe(swing * joint.rotation);
+                }
+            }
+        }
+
+        private SerializedProperty FindPoseByBoneName(SerializedProperty poses, string boneName)
+        {
+            if (poses == null || string.IsNullOrEmpty(boneName))
+            {
+                return null;
+            }
+
+            for (int i =0; i < poses.arraySize; i++)
+            {
+                SerializedProperty pose = poses.GetArrayElementAtIndex(i);
+                SerializedProperty bone = pose.FindPropertyRelative("bone");
+                if (bone != null && bone.stringValue == boneName)
+                {
+                    return pose;
+                }
+            }
+            return null;
+        }
+
+        private SerializedProperty FindOrCreatePoseByBoneName(SerializedProperty poses, string boneName)
+        {
+            SerializedProperty pose = FindPoseByBoneName(poses, boneName);
+            if (pose != null)
+            {
+                return pose;
+            }
+
+            AddABone(poses, boneName);
+            return FindPoseByBoneName(poses, boneName);
+        }
+
+        private bool CommitIKChainToPose(SerializedProperty poses, Dictionary<Transform, IKTransformState> previousStates)
+        {
+            if (poses == null || previousStates == null || previousStates.Count ==0)
+            {
+                return false;
+            }
+
+            bool changed = false;
+            foreach (var kvp in previousStates)
+            {
+                Transform transform = kvp.Key;
+                if (transform == null || IsAdjustBone(transform.name))
+                {
+                    continue;
+                }
+
+                IKTransformState previous = kvp.Value;
+                Vector3 positionDelta = transform.localPosition - previous.localPosition;
+                bool positionChanged = positionDelta.sqrMagnitude > 0.00000001f;
+                bool rotationChanged = Quaternion.Angle(previous.localRotation, transform.localRotation) > 0.001f;
+                bool scaleChanged = (transform.localScale - previous.localScale).sqrMagnitude > 0.00000001f;
+                if (!positionChanged && !rotationChanged && !scaleChanged)
+                {
+                    continue;
+                }
+
+                SerializedProperty pose = FindOrCreatePoseByBoneName(poses, transform.name);
+                if (pose == null)
+                {
+                    continue;
+                }
+
+                if (positionChanged)
+                {
+                    SerializedProperty position = pose.FindPropertyRelative("position");
+                    position.vector3Value = position.vector3Value + positionDelta;
+                }
+
+                if (rotationChanged)
+                {
+                    SerializedProperty rotation = pose.FindPropertyRelative("rotation");
+                    Quaternion localDelta = NormalizeSafe(Quaternion.Inverse(previous.localRotation) * transform.localRotation);
+                    rotation.quaternionValue = NormalizeSafe(rotation.quaternionValue * localDelta);
+                }
+
+                if (scaleChanged)
+                {
+                    SerializedProperty scale = pose.FindPropertyRelative("scale");
+                    scale.vector3Value = transform.localScale;
+                }
+
+                changed = true;
+                _poseEdited = true;
+            }
+
+            return changed;
+        }
+
+        private bool ApplyIKDrag(Transform effector, Vector3 targetPosition, SerializedProperty poses)
+        {
+            if (effector == null || poses == null)
+            {
+                return false;
+            }
+
+            List<Transform> chain = BuildIKChain(effector);
+            if (chain.Count ==0)
+            {
+                return false;
+            }
+
+            Dictionary<Transform, IKTransformState> previousStates = CaptureTransformStates(chain);
+            List<UnityEngine.Object> undoObjects = new List<UnityEngine.Object>();
+            undoObjects.Add(target);
+            for (int i =0; i < chain.Count; i++)
+            {
+                if (chain[i] != null)
+                {
+                    undoObjects.Add(chain[i]);
+                }
+            }
+
+            Undo.RecordObjects(undoObjects.ToArray(), "IK Edit Bone Pose");
+            SolveIKChainCCD(chain, targetPosition);
+            return CommitIKChainToPose(poses, previousStates);
+        }
+
+        private bool TryGetIKMovementPlane(Transform joint, out Vector3 axisA, out Vector3 axisB, out Vector3 normal, out Color planeColor, out string planeLabel)
+        {
+            axisA = Vector3.right;
+            axisB = Vector3.up;
+            normal = Vector3.forward;
+            planeColor = Color.white;
+            planeLabel = string.Empty;
+
+            if (ikMovementPlane == IKMovementPlane.Free)
+            {
+                return false;
+            }
+
+            Vector3 localAxisA;
+            Vector3 localAxisB;
+            Vector3 localNormal;
+            if (ikMovementPlane == IKMovementPlane.XZ)
+            {
+                localAxisA = Vector3.right;
+                localAxisB = Vector3.forward;
+                localNormal = Vector3.up;
+                planeColor = Handles.yAxisColor;
+                planeLabel = "X/Z";
+            }
+            else if (ikMovementPlane == IKMovementPlane.YZ)
+            {
+                localAxisA = Vector3.up;
+                localAxisB = Vector3.forward;
+                localNormal = Vector3.right;
+                planeColor = Handles.xAxisColor;
+                planeLabel = "Y/Z";
+            }
+            else
+            {
+                localAxisA = Vector3.right;
+                localAxisB = Vector3.up;
+                localNormal = Vector3.forward;
+                planeColor = Handles.zAxisColor;
+                planeLabel = "X/Y";
+            }
+
+            if (ikMovementPlaneSpace == IKMovementPlaneSpace.Local && joint != null)
+            {
+                axisA = joint.TransformDirection(localAxisA).normalized;
+                axisB = joint.TransformDirection(localAxisB).normalized;
+                normal = joint.TransformDirection(localNormal).normalized;
+            }
+            else
+            {
+                axisA = localAxisA;
+                axisB = localAxisB;
+                normal = localNormal;
+            }
+
+            return true;
+        }
+
+        private void GetIKMovementArea(Transform joint, Vector3 normal, float handleSize, out Vector3 center, out float radius)
+        {
+            center = joint != null ? joint.position : Vector3.zero;
+            radius = Mathf.Max(handleSize *4f, 0.04f);
+            if (joint == null)
+            {
+                return;
+            }
+
+            List<Transform> chain = BuildIKChain(joint);
+            if (chain == null || chain.Count <2 || chain[0] == null)
+            {
+                return;
+            }
+
+            float chainReach =0f;
+            for (int i =1; i < chain.Count; i++)
+            {
+                Transform previousJoint = chain[i -1];
+                Transform currentJoint = chain[i];
+                if (previousJoint != null && currentJoint != null)
+                {
+                    chainReach += Vector3.Distance(previousJoint.position, currentJoint.position);
+                }
+            }
+
+            if (chainReach <= Mathf.Epsilon)
+            {
+                return;
+            }
+
+            Vector3 normalizedNormal = normal.sqrMagnitude > Mathf.Epsilon ? normal.normalized : Vector3.up;
+            Transform root = chain[0];
+            Vector3 rootToPlane = root.position - joint.position;
+            float signedDistanceToPlane = Vector3.Dot(rootToPlane, normalizedNormal);
+            center = root.position - normalizedNormal * signedDistanceToPlane;
+            float distanceToPlane = Mathf.Abs(signedDistanceToPlane);
+            float planeRadiusSqr = Mathf.Max(0f, chainReach * chainReach - distanceToPlane * distanceToPlane);
+            radius = Mathf.Max(radius, Mathf.Sqrt(planeRadiusSqr));
+        }
+
+        private void DrawIKMovementPlaneCue(Transform joint, Vector3 axisA, Vector3 axisB, Vector3 normal, Color planeColor, string planeLabel, float handleSize)
+        {
+            if (joint == null)
+            {
+                return;
+            }
+
+            GetIKMovementArea(joint, normal, handleSize, out Vector3 center, out float movementRadius);
+            Vector3 normalizedNormal = normal.sqrMagnitude > Mathf.Epsilon ? normal.normalized : Vector3.up;
+            Color previousColor = Handles.color;
+            Color fillColor = new Color(planeColor.r, planeColor.g, planeColor.b, 0.10f);
+            Color outlineColor = new Color(planeColor.r, planeColor.g, planeColor.b, 0.55f);
+            Handles.color = fillColor;
+            Handles.DrawSolidDisc(center, normalizedNormal, movementRadius);
+            Handles.color = outlineColor;
+            Handles.DrawWireDisc(center, normalizedNormal, movementRadius);
+            Handles.color = previousColor;
+
+            if (ikPlaneLabelStyle == null)
+            {
+                ikPlaneLabelStyle = new GUIStyle(EditorStyles.boldLabel);
+            }
+            ikPlaneLabelStyle.normal.textColor = planeColor;
+            Vector3 labelOffset = (axisA + axisB).sqrMagnitude > Mathf.Epsilon ? (axisA + axisB).normalized * movementRadius *1.05f : Vector3.up * movementRadius;
+            Handles.Label(center + labelOffset, planeLabel, ikPlaneLabelStyle);
+        }
+
+        private Vector3 DrawIKMoveHandle(Transform joint, float handleSize, int controlId, bool isActive)
+        {
+            if (TryGetIKMovementPlane(joint, out Vector3 axisA, out Vector3 axisB, out Vector3 normal, out Color planeColor, out string planeLabel))
+            {
+                if (isActive)
+                {
+                    DrawIKMovementPlaneCue(joint, axisA, axisB, normal, planeColor, planeLabel, handleSize);
+                }
+                Handles.color = isActive ? new Color(planeColor.r, planeColor.g, planeColor.b, 1f) : new Color(0.82f,0.86f,0.9f,0.8f);
+                return Handles.Slider2D(controlId, joint.position, normal, axisA, axisB, handleSize, Handles.SphereHandleCap, Vector2.zero);
+            }
+
+            Handles.color = isActive ? new Color(1f,0.9f,0.12f,1f) : new Color(1f,0.78f,0.2f,0.65f);
+            return Handles.FreeMoveHandle(controlId, joint.position, handleSize, Vector3.zero, Handles.SphereHandleCap);
+        }
+
+        private bool IsIKHandleClick(int controlId)
+        {
+            Event currentEvent = Event.current;
+            return currentEvent != null
+                && currentEvent.type == EventType.MouseDown
+                && currentEvent.button ==0
+                && HandleUtility.nearestControl == controlId;
+        }
+
+        private void DoIKSceneGUI(SceneView scene)
+        {
+            if (!haveValidContext || target == null || targetPose == null)
+            {
+                DrawSkeletonBones();
+                return;
+            }
+
+            if (serializedObject == null || serializedObject.targetObject == null)
+            {
+                DrawSkeletonBones();
+                return;
+            }
+
+            serializedObject.Update();
+            SerializedProperty poses = serializedObject.FindProperty("poses");
+            if (poses == null)
+            {
+                DrawSkeletonBones();
+                return;
+            }
+
+            List<Transform> transforms = CollectIKTransforms();
+            DrawIKSkeleton(transforms);
+            if (transforms.Count ==0)
+            {
+                return;
+            }
+
+            HashSet<Transform> transformSet = new HashSet<Transform>(transforms);
+            if (ikActiveJoint != null && !transformSet.Contains(ikActiveJoint))
+            {
+                ikActiveJoint = null;
+            }
+
+            Color previousColor = Handles.color;
+            bool changed = false;
+            for (int i =0; i < transforms.Count; i++)
+            {
+                Transform joint = transforms[i];
+                if (joint == null || IsAdjustBone(joint.name))
+                {
+                    continue;
+                }
+
+                float handleSize = GetIKHandleSize(joint, transformSet);
+                int handleControlId = GUIUtility.GetControlID(FocusType.Passive);
+                if (IsIKHandleClick(handleControlId))
+                {
+                    ikActiveJoint = joint;
+                    Repaint();
+                    SceneView.RepaintAll();
+                }
+
+                bool isActiveJoint = ikActiveJoint == joint;
+                EditorGUI.BeginChangeCheck();
+                Vector3 newPosition = DrawIKMoveHandle(joint, handleSize, handleControlId, isActiveJoint);
+                if (GUIUtility.hotControl == handleControlId && ikActiveJoint != joint)
+                {
+                    ikActiveJoint = joint;
+                    Repaint();
+                    SceneView.RepaintAll();
+                }
+                if (EditorGUI.EndChangeCheck())
+                {
+                    ikActiveJoint = joint;
+                    changed = ApplyIKDrag(joint, newPosition, poses);
+                    break;
+                }
+            }
+            Handles.color = previousColor;
+
+            bool scenePoseChanged = serializedObject.ApplyModifiedProperties();
+            if (changed || scenePoseChanged)
+            {
+                RegeneratePoseTargetPreviewIfNeeded();
+                EditorUtility.SetDirty(target);
+                Repaint();
+            }
+        }
+
+        private string[] GetIKBoundaryBoneOptions()
+        {
+            if (context != null && context.boneList != null && context.boneList.Length >0)
+            {
+                return context.boneList;
+            }
+            return new string[] { "Position" };
+        }
+
+        private static int IndexOfIKBoundaryBoneOption(string[] options, string boneName)
+        {
+            if (options == null || string.IsNullOrEmpty(boneName))
+            {
+                return BAD_INDEX;
+            }
+
+            for (int i =0; i < options.Length; i++)
+            {
+                if (string.Equals(options[i], boneName, System.StringComparison.OrdinalIgnoreCase))
+                {
+                    return i;
+                }
+            }
+            return BAD_INDEX;
+        }
+
+        private static string FindIKBoundaryBoneOption(string[] options, string boneName)
+        {
+            int index = IndexOfIKBoundaryBoneOption(options, boneName);
+            return index != BAD_INDEX ? options[index] : null;
+        }
+
+        private static bool ContainsIKBoundaryBoneOption(List<string> options, string boneName)
+        {
+            if (options == null || string.IsNullOrEmpty(boneName))
+            {
+                return false;
+            }
+
+            for (int i =0; i < options.Count; i++)
+            {
+                if (string.Equals(options[i], boneName, System.StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private string[] GetIKBoundaryQuickPickOptions(string[] allOptions)
+        {
+            List<string> quickPickOptions = new List<string>();
+            quickPickOptions.Add("Quick Pick...");
+            if (allOptions == null || allOptions.Length ==0)
+            {
+                return quickPickOptions.ToArray();
+            }
+
+            for (int i =0; i < ikCommonBoundaryBoneNames.Length; i++)
+            {
+                string option = FindIKBoundaryBoneOption(allOptions, ikCommonBoundaryBoneNames[i]);
+                if (!string.IsNullOrEmpty(option) && !ContainsIKBoundaryBoneOption(quickPickOptions, option))
+                {
+                    quickPickOptions.Add(option);
+                }
+            }
+            return quickPickOptions.ToArray();
+        }
+
+        private string[] GetFilteredIKBoundaryBoneOptions(string[] allOptions)
+        {
+            if (allOptions == null || allOptions.Length ==0)
+            {
+                return new string[0];
+            }
+
+            string filterText = string.IsNullOrEmpty(ikBoundaryBoneFilter) ? string.Empty : ikBoundaryBoneFilter.Trim();
+            if (string.IsNullOrEmpty(filterText))
+            {
+                return allOptions;
+            }
+
+            List<string> filteredOptions = new List<string>();
+            string currentOption = FindIKBoundaryBoneOption(allOptions, ikBoundaryBoneName);
+            if (!string.IsNullOrEmpty(currentOption))
+            {
+                filteredOptions.Add(currentOption);
+            }
+
+            for (int i =0; i < allOptions.Length; i++)
+            {
+                string option = allOptions[i];
+                if (!string.IsNullOrEmpty(option)
+                    && option.IndexOf(filterText, System.StringComparison.OrdinalIgnoreCase) >=0
+                    && !ContainsIKBoundaryBoneOption(filteredOptions, option))
+                {
+                    filteredOptions.Add(option);
+                }
+            }
+            return filteredOptions.ToArray();
+        }
+
+        private bool SetIKBoundaryBoneName(string[] allOptions, string boneName)
+        {
+            int index = IndexOfIKBoundaryBoneOption(allOptions, boneName);
+            if (index == BAD_INDEX)
+            {
+                return false;
+            }
+
+            ikBoundaryBoneIndex = index;
+            ikBoundaryBoneName = allOptions[index];
+            ikStatusMessage = "";
+            return true;
+        }
+
+        private void SyncIKBoundaryBoneIndex(string[] options)
+        {
+            if (options == null || options.Length ==0)
+            {
+                ikBoundaryBoneIndex = BAD_INDEX;
+                ikBoundaryBoneName = "Position";
+                return;
+            }
+
+            int positionIndex =0;
+            for (int i =0; i < options.Length; i++)
+            {
+                if (options[i] == "Position")
+                {
+                    positionIndex = i;
+                    break;
+                }
+            }
+
+            if (string.IsNullOrEmpty(ikBoundaryBoneName))
+            {
+                ikBoundaryBoneName = "Position";
+            }
+
+            int currentIndex = IndexOfIKBoundaryBoneOption(options, ikBoundaryBoneName);
+            if (currentIndex != BAD_INDEX)
+            {
+                ikBoundaryBoneIndex = currentIndex;
+                ikBoundaryBoneName = options[ikBoundaryBoneIndex];
+                return;
+            }
+
+            ikBoundaryBoneIndex = positionIndex;
+            ikBoundaryBoneName = options[ikBoundaryBoneIndex];
+        }
+
+        private List<Transform> GetPoseAnimationTransforms()
+        {
+            List<Transform> transforms = new List<Transform>();
+            if (targetPose == null || targetPose.poses == null || sourceUMA == null || sourceUMA.skeleton == null)
+            {
+                return transforms;
+            }
+
+            HashSet<Transform> seen = new HashSet<Transform>();
+            for (int i =0; i < targetPose.poses.Length; i++)
+            {
+                var pose = targetPose.poses[i];
+                if (pose == null || !pose.enabled || string.IsNullOrEmpty(pose.bone))
+                {
+                    continue;
+                }
+
+                Transform transform = sourceUMA.skeleton.GetBoneTransform(pose.hash);
+                if (transform == null)
+                {
+                    transform = sourceUMA.skeleton.GetBoneTransform(pose.bone);
+                }
+
+                if (transform != null && seen.Add(transform))
+                {
+                    transforms.Add(transform);
+                }
+            }
+            return transforms;
+        }
+
+        private static bool AllTransformsAreUnder(Transform root, List<Transform> transforms)
+        {
+            if (root == null || transforms == null || transforms.Count ==0)
+            {
+                return false;
+            }
+
+            for (int i =0; i < transforms.Count; i++)
+            {
+                if (transforms[i] == null || !IsAncestorOrSelf(root, transforms[i]))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        private Transform FindCommonAncestor(List<Transform> transforms)
+        {
+            if (transforms == null || transforms.Count ==0 || transforms[0] == null)
+            {
+                return null;
+            }
+
+            Transform candidate = transforms[0];
+            while (candidate != null)
+            {
+                if (AllTransformsAreUnder(candidate, transforms))
+                {
+                    return candidate;
+                }
+                candidate = candidate.parent;
+            }
+            return null;
+        }
+
+        private Transform ResolveAnimationBindingRoot(List<Transform> transforms)
+        {
+            if (sourceUMA == null)
+            {
+                return null;
+            }
+
+            List<Transform> candidates = new List<Transform>();
+            if (sourceUMA.animator != null)
+            {
+                candidates.Add(sourceUMA.animator.transform);
+            }
+            candidates.Add(sourceUMA.transform);
+            if (sourceUMA.umaRoot != null)
+            {
+                candidates.Add(sourceUMA.umaRoot.transform);
+            }
+            if (sourceUMA.skeleton != null)
+            {
+                Transform root = sourceUMA.skeleton.GetRootTransform();
+                if (root != null)
+                {
+                    candidates.Add(root);
+                }
+                Transform global = sourceUMA.skeleton.GetGlobalTransform();
+                if (global != null)
+                {
+                    candidates.Add(global);
+                }
+            }
+
+            for (int i =0; i < candidates.Count; i++)
+            {
+                Transform candidate = candidates[i];
+                if (candidate != null && AllTransformsAreUnder(candidate, transforms))
+                {
+                    return candidate;
+                }
+            }
+
+            return FindCommonAncestor(transforms);
+        }
+
+        private static AnimationCurve ConstantCurve(float value)
+        {
+            return new AnimationCurve(new Keyframe(0f, value));
+        }
+
+        private static void SetTransformCurve(AnimationClip clip, string path, string propertyName, float value)
+        {
+            EditorCurveBinding binding = new EditorCurveBinding();
+            binding.path = path;
+            binding.type = typeof(Transform);
+            binding.propertyName = propertyName;
+            AnimationUtility.SetEditorCurve(clip, binding, ConstantCurve(value));
+        }
+
+        private static string GetAssetNameFromPath(string assetPath)
+        {
+            if (string.IsNullOrEmpty(assetPath))
+            {
+                return "Pose";
+            }
+
+            string fileName = assetPath;
+            int slash = fileName.LastIndexOf('/');
+            if (slash >=0 && slash +1 < fileName.Length)
+            {
+                fileName = fileName.Substring(slash +1);
+            }
+            if (fileName.EndsWith(".anim", System.StringComparison.OrdinalIgnoreCase))
+            {
+                fileName = fileName.Substring(0, fileName.Length -5);
+            }
+            return string.IsNullOrEmpty(fileName) ? "Pose" : fileName;
+        }
+
+        private void SavePoseAsAnimation()
+        {
+            if (sourceUMA == null || sourceUMA.skeleton == null || targetPose == null)
+            {
+                EditorUtility.DisplayDialog("Save Pose Animation", "Assign a built Source UMA before saving an animation.", "OK");
+                return;
+            }
+
+            if (!dynamicDNAConverterMode && haveValidContext)
+            {
+                ApplySourceSkeletonPreview(true);
+            }
+
+            List<Transform> transforms = GetPoseAnimationTransforms();
+            if (transforms.Count ==0)
+            {
+                EditorUtility.DisplayDialog("Save Pose Animation", "No enabled pose bones with valid source transforms were found.", "OK");
+                return;
+            }
+
+            Transform bindingRoot = ResolveAnimationBindingRoot(transforms);
+            if (bindingRoot == null)
+            {
+                EditorUtility.DisplayDialog("Save Pose Animation", "Could not find a common transform root for the pose bones.", "OK");
+                return;
+            }
+
+            string defaultName = targetPose != null && !string.IsNullOrEmpty(targetPose.name) ? targetPose.name + "_Pose" : "UMABonePose_Pose";
+            string assetPath = EditorUtility.SaveFilePanelInProject("Save Pose Animation", defaultName, "anim", "Save current bone pose as a Unity animation clip.");
+            if (string.IsNullOrEmpty(assetPath))
+            {
+                return;
+            }
+
+            AnimationClip clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(assetPath);
+            bool createClip = clip == null;
+            if (createClip && !string.IsNullOrEmpty(AssetDatabase.AssetPathToGUID(assetPath)))
+            {
+                EditorUtility.DisplayDialog("Save Pose Animation", "The selected asset path already exists and is not an AnimationClip.", "OK");
+                return;
+            }
+
+            if (clip == null)
+            {
+                clip = new AnimationClip();
+            }
+            else
+            {
+                clip.ClearCurves();
+            }
+
+            clip.name = GetAssetNameFromPath(assetPath);
+            clip.frameRate =60f;
+
+            int curveBoneCount =0;
+            for (int i =0; i < transforms.Count; i++)
+            {
+                Transform transform = transforms[i];
+                if (transform == null || !IsAncestorOrSelf(bindingRoot, transform))
+                {
+                    continue;
+                }
+
+                string path = transform == bindingRoot ? "" : AnimationUtility.CalculateTransformPath(transform, bindingRoot);
+                Vector3 position = transform.localPosition;
+                Quaternion rotation = NormalizeSafe(transform.localRotation);
+                Vector3 scale = transform.localScale;
+
+                SetTransformCurve(clip, path, "m_LocalPosition.x", position.x);
+                SetTransformCurve(clip, path, "m_LocalPosition.y", position.y);
+                SetTransformCurve(clip, path, "m_LocalPosition.z", position.z);
+                SetTransformCurve(clip, path, "m_LocalRotation.x", rotation.x);
+                SetTransformCurve(clip, path, "m_LocalRotation.y", rotation.y);
+                SetTransformCurve(clip, path, "m_LocalRotation.z", rotation.z);
+                SetTransformCurve(clip, path, "m_LocalRotation.w", rotation.w);
+                SetTransformCurve(clip, path, "m_LocalScale.x", scale.x);
+                SetTransformCurve(clip, path, "m_LocalScale.y", scale.y);
+                SetTransformCurve(clip, path, "m_LocalScale.z", scale.z);
+                curveBoneCount++;
+            }
+
+            if (curveBoneCount ==0)
+            {
+                EditorUtility.DisplayDialog("Save Pose Animation", "No pose bones were under the selected animation binding root.", "OK");
+                return;
+            }
+
+            if (createClip)
+            {
+                AssetDatabase.CreateAsset(clip, assetPath);
+            }
+            else
+            {
+                EditorUtility.SetDirty(clip);
+            }
+
+            AssetDatabase.SaveAssets();
+            Selection.activeObject = clip;
+            EditorGUIUtility.PingObject(clip);
+            Debug.Log($"[UMABonePoseEditor] Saved pose animation '{assetPath}' with curves for {curveBoneCount} bones using root '{bindingRoot.name}'.");
+        }
+
+        private void ResetSkeletonToBasePose(SerializedProperty poses)
+        {
+            if (sourceUMA == null || sourceUMA.skeleton == null)
+            {
+                return;
+            }
+
+            List<UnityEngine.Object> undoObjects = new List<UnityEngine.Object>();
+            if (target != null)
+            {
+                undoObjects.Add(target);
+            }
+            List<Transform> sourceTransforms = CollectIKTransforms();
+            for (int i =0; i < sourceTransforms.Count; i++)
+            {
+                if (sourceTransforms[i] != null)
+                {
+                    undoObjects.Add(sourceTransforms[i]);
+                }
+            }
+            if (undoObjects.Count >0)
+            {
+                Undo.RecordObjects(undoObjects.ToArray(), "Reset Bone Pose Skeleton");
+            }
+
+            if (poses != null)
+            {
+                for (int i =0; i < poses.arraySize; i++)
+                {
+                    SerializedProperty pose = poses.GetArrayElementAtIndex(i);
+                    pose.FindPropertyRelative("position").vector3Value = Vector3.zero;
+                    pose.FindPropertyRelative("rotation").quaternionValue = Quaternion.identity;
+                    pose.FindPropertyRelative("scale").vector3Value = Vector3.one;
+                }
+            }
+            if (serializedObject != null && serializedObject.targetObject != null)
+            {
+                serializedObject.ApplyModifiedProperties();
+            }
+
+            ClearActiveEditState();
+            sourceUMA.skeleton.ResetAll();
+            if (!dynamicDNAConverterMode && haveValidContext && context.activeUMA == sourceUMA)
+            {
+                ApplySourceSkeletonPreview(false, true);
+            }
+
+            _poseEdited = true;
+            ikStatusMessage = "";
+            RegeneratePoseTargetPreviewIfNeeded();
+            EditorUtility.SetDirty(target);
+            Repaint();
+            SceneView.RepaintAll();
+        }
+
+        private bool ShouldProtectBonePoseSceneSelection()
+        {
+            return protectBonePoseSceneSelection
+                && sourceUMA != null
+                && targetPose != null
+                && serializedObject != null
+                && serializedObject.targetObject != null;
+        }
+
+        private void ProtectBonePoseSceneSelection()
+        {
+            bool shouldProtect = ShouldProtectBonePoseSceneSelection();
+            SetBonePoseSelectionProtection(shouldProtect);
+            if (shouldProtect && Event.current != null && Event.current.type == EventType.Layout)
+            {
+                HandleUtility.AddDefaultControl(GUIUtility.GetControlID(FocusType.Passive));
+            }
+        }
+
+        private bool DrawBonePoseSceneEditingOverlay()
+        {
+            if (!ShouldProtectBonePoseSceneSelection())
+            {
+                return false;
+            }
+
+            bool exitRequested = false;
+            Handles.BeginGUI();
+            Rect areaRect = new Rect(8f,8f,180f,24f);
+            GUILayout.BeginArea(areaRect, EditorStyles.toolbar);
+            if (GUILayout.Button("Exit Bone Pose Editing", EditorStyles.toolbarButton))
+            {
+                exitRequested = true;
+            }
+            GUILayout.EndArea();
+            Handles.EndGUI();
+
+            if (!exitRequested)
+            {
+                return false;
+            }
+
+            EndBonePoseSceneEditing();
+            return true;
+        }
+
+        private void EndBonePoseSceneEditing()
+        {
+            protectBonePoseSceneSelection = false;
+            SetBonePoseSelectionProtection(false);
+            useIKEditor = false;
+            ClearActiveEditState();
+            TryRestoreAndRebuildOnExit();
+            Repaint();
+            SceneView.RepaintAll();
+        }
+
         private void DoSceneGUI(SceneView scene)
         {
             if (IsEditorBusy) { DrawSkeletonBones(); return; }
+            ProtectBonePoseSceneSelection();
+            if (DrawBonePoseSceneEditingOverlay())
+            {
+                return;
+            }
+
+            if (useIKEditor)
+            {
+                DoIKSceneGUI(scene);
+                return;
+            }
             if (!haveValidContext || !haveEditTarget || target == null || targetPose == null)
             {
                 DrawSkeletonBones();
@@ -967,7 +2329,7 @@ namespace UMA.PoseTools
                     {
                         //scene.pivot = activeTrans.position;
                         //scene.rotation = activeTrans.rotation;
-                       
+
                         //scene.cameraDistance = 2.0f;
                         context.activeTransChanged = false;
                     }
@@ -1168,6 +2530,11 @@ namespace UMA.PoseTools
             rotation.quaternionValue = Quaternion.identity;
             SerializedProperty scale = pose.FindPropertyRelative("scale");
             scale.vector3Value = Vector3.one;
+            SerializedProperty enabled = pose.FindPropertyRelative("enabled");
+            if (enabled != null)
+            {
+                enabled.boolValue = true;
+            }
             _poseEdited = true;
         }
 
@@ -1177,7 +2544,7 @@ namespace UMA.PoseTools
             {
                 RestoreWeights();
             }
-            BonePoseSavers.Clear(); 
+            BonePoseSavers.Clear();
             if (TryGetRaceData(sourceUMA, out RaceData race))
             {
                 foreach (var converterController in race.dnaConverterList)
@@ -1316,6 +2683,26 @@ namespace UMA.PoseTools
                 UMAData previousSource = saveUMAData;
                 sourceUMA = EditorGUILayout.ObjectField("Source UMA", sourceUMA, typeof(UMAData), true) as UMAData;
                 EditorGUILayout.BeginHorizontal();
+                GUILayout.Space(EditorGUIUtility.labelWidth);
+                if (GUILayout.Button("Find UMA in scene"))
+                {
+                    UMAData data = GameObject.FindFirstObjectByType<UMAData>();
+                    if (data != null)
+                    {
+                        sourceUMA = data;
+                        saveUMAData = data;
+
+                        ApplySourcePreviewMode(previousSource,true);
+                        var active = Selection.activeObject;
+
+                        Selection.activeGameObject = data.gameObject;
+                        SceneView.FrameLastActiveSceneView();
+
+                        Selection.activeObject = active;
+                    }
+                }
+                EditorGUILayout.EndHorizontal();
+                EditorGUILayout.BeginHorizontal();
                 poseTarget = EditorGUILayout.ObjectField("PoseTarget", poseTarget, typeof(UMA.CharacterSystem.DynamicCharacterAvatar), true) as UMA.CharacterSystem.DynamicCharacterAvatar;
                 EditorGUI.BeginDisabledGroup(poseTarget == null);
                 if (GUILayout.Button("Build Now", GUILayout.Width(90f)))
@@ -1346,7 +2733,7 @@ namespace UMA.PoseTools
                     EditorGUILayout.HelpBox("Switch to 'Scene View' and you will see gizmos to help you edit the positions of the pose bones below that you choose to 'Edit'", MessageType.Info);
                 }
             }
-            bool allowPoseEditing = true;
+            bool allowPoseEditing = !useIKEditor;
             if (sourceUMA != null)
             {
                 if (context == null)
@@ -1384,33 +2771,104 @@ namespace UMA.PoseTools
             }
  MirrorAxis = EditorGUILayout.Popup("Mirror Axis", MirrorAxis, MirrorAxises);
  displayMode = EditorGUILayout.Popup("Bone Display Mode", displayMode, strings);
- 
+
+            bool previousUseIKEditor = useIKEditor;
+            useIKEditor = EditorGUILayout.Toggle(useIKEditorGUIContent, useIKEditor);
+            if (useIKEditor != previousUseIKEditor)
+            {
+                if (useIKEditor)
+                {
+                    protectBonePoseSceneSelection = true;
+                    SetBonePoseSelectionProtection(true);
+                }
+                ClearActiveEditState();
+                SceneView.RepaintAll();
+            }
+
+            if (useIKEditor)
+            {
+                allowPoseEditing = false;
+                EditorGUI.indentLevel++;
+                ikHandleBaseSize = EditorGUILayout.Slider(ikHandleBaseSizeGUIContent, ikHandleBaseSize,0.02f,0.6f);
+                ikMovementPlane = (IKMovementPlane)EditorGUILayout.Popup(ikMovementPlaneGUIContent, (int)ikMovementPlane, ikMovementPlaneOptions);
+                using (new EditorGUI.DisabledScope(ikMovementPlane == IKMovementPlane.Free))
+                {
+                    ikMovementPlaneSpace = (IKMovementPlaneSpace)EditorGUILayout.Popup(ikMovementPlaneSpaceGUIContent, (int)ikMovementPlaneSpace, ikMovementPlaneSpaceOptions);
+                }
+                ikUseBoundaryBone = EditorGUILayout.Toggle(ikUseBoundaryGUIContent, ikUseBoundaryBone);
+                if (ikUseBoundaryBone)
+                {
+                    EditorGUI.BeginDisabledGroup(!haveValidContext);
+                    string[] allBoundaryOptions = GetIKBoundaryBoneOptions();
+                    SyncIKBoundaryBoneIndex(allBoundaryOptions);
+
+                    string[] quickPickOptions = GetIKBoundaryQuickPickOptions(allBoundaryOptions);
+                    using (new EditorGUI.DisabledScope(quickPickOptions.Length <=1))
+                    {
+                        int quickPickIndex = EditorGUILayout.Popup(ikBoundaryQuickPickGUIContent,0, quickPickOptions);
+                        if (quickPickIndex >0 && quickPickIndex < quickPickOptions.Length)
+                        {
+                            SetIKBoundaryBoneName(allBoundaryOptions, quickPickOptions[quickPickIndex]);
+                        }
+                    }
+
+                    EditorGUILayout.BeginHorizontal();
+                    ikBoundaryBoneFilter = EditorGUILayout.TextField(ikBoundaryFilterGUIContent, ikBoundaryBoneFilter);
+                    if (GUILayout.Button("x", GUILayout.Width(22f)))
+                    {
+                        ikBoundaryBoneFilter = "";
+                        GUIUtility.keyboardControl =0;
+                    }
+                    EditorGUILayout.EndHorizontal();
+
+                    string[] boundaryOptions = GetFilteredIKBoundaryBoneOptions(allBoundaryOptions);
+                    int boundaryIndex = IndexOfIKBoundaryBoneOption(boundaryOptions, ikBoundaryBoneName);
+                    if (boundaryIndex == BAD_INDEX)
+                    {
+                        boundaryIndex =0;
+                    }
+
+                    using (new EditorGUI.DisabledScope(boundaryOptions.Length ==0))
+                    {
+                        int newBoundaryIndex = EditorGUILayout.Popup(ikBoundaryBoneGUIContent, Mathf.Clamp(boundaryIndex,0, Mathf.Max(0, boundaryOptions.Length -1)), boundaryOptions);
+                        if (boundaryOptions.Length >0 && newBoundaryIndex >=0 && newBoundaryIndex < boundaryOptions.Length)
+                        {
+                            SetIKBoundaryBoneName(allBoundaryOptions, boundaryOptions[newBoundaryIndex]);
+                        }
+                    }
+
+                    if (boundaryOptions.Length ==0)
+                    {
+                        EditorGUILayout.HelpBox("No bones match the boundary filter.", MessageType.Info);
+                    }
+                    EditorGUI.EndDisabledGroup();
+                }
+
+                if (!string.IsNullOrEmpty(ikStatusMessage))
+                {
+                    EditorGUILayout.HelpBox(ikStatusMessage, MessageType.Info);
+                }
+
+                EditorGUI.BeginDisabledGroup(sourceUMA == null || sourceUMA.skeleton == null || targetPose == null);
+                EditorGUILayout.BeginHorizontal();
+                if (GUILayout.Button(resetSkeletonGUIContent))
+                {
+                    ResetSkeletonToBasePose(poses);
+                }
+                if (GUILayout.Button(savePoseAnimationGUIContent))
+                {
+                    SavePoseAsAnimation();
+                }
+                EditorGUILayout.EndHorizontal();
+                EditorGUI.EndDisabledGroup();
+                EditorGUI.indentLevel--;
+            }
+
             if (haveValidContext && !disableMirroring && context.mirrorPlane == UMABonePoseEditorContext.MirrorPlane.Mirror_None)
             {
                 EditorGUILayout.HelpBox("Mirroring plane not detected; Mirror Axis still controls mirrored pose deltas when a mirror pose is updated.", MessageType.Info);
             }
- 
- GUILayout.BeginHorizontal();
-
-            if (GUILayout.Button("Find UMA in scene"))
-            {
-                UMAData data = GameObject.FindFirstObjectByType<UMAData>();
-                if (data != null)
-                {
-                    UMAData previousSource = saveUMAData;
-                    sourceUMA = data;
-                    saveUMAData = data;
-
-                    ApplySourcePreviewMode(previousSource,true);
-                    var active = Selection.activeObject;
-
-                    Selection.activeGameObject = data.gameObject;
-                    SceneView.FrameLastActiveSceneView();
-
-                    Selection.activeObject = active;
-
-                }
-            }
+            GUILayout.BeginHorizontal();
             if (sourceUMA != null)
             {
                 if (GUILayout.Button("Reset UMA"))
@@ -1611,7 +3069,7 @@ namespace UMA.PoseTools
                         _poseEdited = true;
                     }
                 }
-                if (GUILayout.Button("Reset All")) 
+                if (GUILayout.Button("Reset All"))
                 {
                     for (int i =0; i < poses.arraySize; i++)
                     {
@@ -1624,7 +3082,7 @@ namespace UMA.PoseTools
                         scale.vector3Value = Vector3.one;
                     }
                     _poseEdited = true;
-                }        
+                }
                 EditorGUI.EndDisabledGroup();
                 GUILayout.EndHorizontal();
                 for (int i =0; i < poses.arraySize; i++)
@@ -1725,15 +3183,16 @@ namespace UMA.PoseTools
 
                 EditorGUILayout.BeginHorizontal();
 
+                EditorGUI.BeginChangeCheck();
                 filter = GUILayout.TextField(filter);
-                if (GUILayout.Button("Filter", GUILayout.Width(80)))
+                if (EditorGUI.EndChangeCheck())
                 {
-                    ReloadFilteredTree();
+                    ApplyBoneTreeFilter();
                 }
                 if (GUILayout.Button("Clear", GUILayout.Width(80)))
                 {
                     filter = "";
-                    ReloadFullTree();
+                    ApplyBoneTreeFilter();
                 }
 
                 EditorGUILayout.EndHorizontal();
@@ -2016,6 +3475,18 @@ namespace UMA.PoseTools
             return rot;
         }
 
+        private void ApplyBoneTreeFilter()
+        {
+            if (string.IsNullOrEmpty(filter))
+            {
+                ReloadFullTree();
+            }
+            else
+            {
+                ReloadFilteredTree();
+            }
+        }
+
         private void ReloadFilteredTree()
         {
             filtered = true;
@@ -2107,7 +3578,7 @@ namespace UMA.PoseTools
         private void PoseBoneDrawer(SerializedProperty property)
         {
             EditorGUI.indentLevel++;
-            bool allowPoseEditing = true;
+            bool allowPoseEditing = !useIKEditor;
 
             SerializedProperty bone = property.FindPropertyRelative("bone");
             SerializedProperty enabledProp = property.FindPropertyRelative("enabled"); // new flag
@@ -2216,7 +3687,10 @@ namespace UMA.PoseTools
                 }
                 if (GUILayout.Button("Edit", EditorStyles.miniButton, GUILayout.Width(60f)))
                 {
+                    protectBonePoseSceneSelection = true;
+                    SetBonePoseSelectionProtection(true);
                     editBoneIndex = drawBoneIndex;
+                    SceneView.RepaintAll();
                 }
                 if (GUILayout.Button("x", EditorStyles.miniButton, GUILayout.Width(32)))
                 {

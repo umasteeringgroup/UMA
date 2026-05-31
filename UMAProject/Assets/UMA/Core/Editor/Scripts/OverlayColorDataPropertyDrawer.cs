@@ -331,6 +331,7 @@ namespace UMA.Editors
 				selectedSharedColorTablesByProperty[propertyKey] = cachedSharedColorTables[selectedTableIndex];
 			}
 
+			GUILayout.BeginHorizontal();
 			EditorGUI.BeginChangeCheck();
 			int newSelectedTableIndex = EditorGUILayout.Popup(new GUIContent("Shared Color Table"), selectedTableIndex, cachedSharedColorTableOptions);
 			if (EditorGUI.EndChangeCheck())
@@ -338,6 +339,11 @@ namespace UMA.Editors
 				selectedTableIndex = newSelectedTableIndex;
 				selectedSharedColorTablesByProperty[propertyKey] = cachedSharedColorTables[selectedTableIndex];
 			}
+			if (GUILayout.Button("Inspect", EditorStyles.miniButton, GUILayout.Width(64)))
+			{
+				EditorApplication.delayCall += () => InspectorUtlity.InspectTarget(cachedSharedColorTables[selectedTableIndex]);
+			}
+			GUILayout.EndHorizontal();
 
 			selectedTable = cachedSharedColorTables[selectedTableIndex];
 			if (selectedTable == null || selectedTable.colors == null || selectedTable.colors.Length == 0)
@@ -371,7 +377,6 @@ namespace UMA.Editors
 						currentOverlayColorData = property.GetValue<OverlayColorData>();
 					}
 				}
-
 				EditorGUILayout.EndHorizontal();
 			}
 

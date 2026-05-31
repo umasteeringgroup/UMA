@@ -125,7 +125,7 @@ MonoBehaviour:
     moveUpThis: 0
     moveDownThis: 0
     colorsExpanded: 0
-    propertiesExpanded: 0
+    propertiesExpanded: 1
     showSelected: 1
     isSelected: 0
     showDisplayColor: 0

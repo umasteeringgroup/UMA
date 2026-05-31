@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using UnityEditor;
+using UnityEditorInternal;
 using UnityEngine;
-using UMA.CharacterSystem;
 using UMA.PoseTools;
 
 namespace UMA.Editors
@@ -25,9 +25,19 @@ namespace UMA.Editors
 			public bool IsSourceRace;
 		}
 
+		private class TPoseMixerEntry
+		{
+			public UMABonePose BonePose;
+			public string AssetPath;
+			public bool Selected;
+			public float Percentage = 100f;
+		}
+
 		private const int SourceRacePage = 0;
 		private const int BlendshapeCollectionPage = 1;
-		private const int SummaryPage = 2;
+		private const int SetupTPosePage = 2;
+		private const int SummaryPage = 3;
+		private const int WizardPageCount = 4;
 		private const float IntroColumnWidth = 260f;
 		private const float WizardHorizontalPadding = 8f;
 		private const float WizardColumnSpacing = 8f;
@@ -36,15 +46,16 @@ namespace UMA.Editors
 		private UMARecipeBase sourceBaseRecipe;
 		private string newRaceName;
 		private string newBaseRecipeName;
-		private UMABonePose selectedBonePose;
-		private bool keepExistingPoseGroups = true;
+		private bool generateTPose = true;
 		private bool baseRecipeNameUsesDefault = true;
 		private int pageIndex;
 		private Vector2 scrollPosition;
 		private Vector2 compatibilityListScrollPosition;
 		private Vector2 blendshapeListScrollPosition;
+		private ReorderableList tPoseMixerPoseList;
 		private readonly List<BlendshapeEntry> blendshapeEntries = new List<BlendshapeEntry>();
 		private readonly List<CompatibilityRaceEntry> compatibilityRaceEntries = new List<CompatibilityRaceEntry>();
+		private readonly List<TPoseMixerEntry> tPoseMixerEntries = new List<TPoseMixerEntry>();
 		private readonly Dictionary<string, float> sourceBlendshapeDefaults = new Dictionary<string, float>(StringComparer.Ordinal);
 		private readonly List<string> sourceUnbakedPatterns = new List<string>();
 
@@ -72,11 +83,11 @@ namespace UMA.Editors
 
 			newRaceName = sourceRaceDisplayName + "_Copy";
 			newBaseRecipeName = GetDefaultBaseRecipeName(newRaceName);
-			selectedBonePose = null;
-			keepExistingPoseGroups = true;
+			generateTPose = sourceRace != null && sourceRace.TPose != null;
 			baseRecipeNameUsesDefault = true;
 
 			RefreshCompatibilityRaceEntries();
+			RefreshTPoseMixerEntries();
 			CacheSourceBlendshapeState();
 			RefreshBlendshapeEntries();
 		}
@@ -104,7 +115,7 @@ namespace UMA.Editors
 		private void DrawWizardIntroColumn()
 		{
 			EditorGUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.Width(IntroColumnWidth), GUILayout.ExpandHeight(true));
-			EditorGUILayout.LabelField("Step " + (pageIndex + 1) + " of 3", EditorStyles.miniLabel);
+			EditorGUILayout.LabelField("Step " + (pageIndex + 1) + " of " + WizardPageCount, EditorStyles.miniLabel);
 			EditorGUILayout.LabelField(GetPageTitle(), EditorStyles.boldLabel);
 			GUILayout.Space(6f);
 			GUILayout.Label(GetPageIntroText(), EditorStyles.wordWrappedLabel);
@@ -126,6 +137,10 @@ namespace UMA.Editors
 			else if (pageIndex == BlendshapeCollectionPage)
 			{
 				DrawBlendshapeCollectionPage();
+			}
+			else if (pageIndex == SetupTPosePage)
+			{
+				DrawSetupTPosePage();
 			}
 			else
 			{
@@ -182,9 +197,6 @@ namespace UMA.Editors
 			}
 
 			GUILayout.Space(8f);
-			DrawPoseSetupSection();
-
-			GUILayout.Space(8f);
 			DrawCompatibilitySelectionPage();
 
 			GUILayout.Space(8f);
@@ -238,25 +250,78 @@ namespace UMA.Editors
 			EditorGUILayout.HelpBox("Selected blendshape names are copied into the duplicated race. Non-zero default values are stored in RaceData.PrebakedBlendshapes because that is the UMA runtime field that carries name/value bake defaults.", MessageType.Info);
 		}
 
+		private void DrawSetupTPosePage()
+		{
+			EditorGUILayout.LabelField("Setup TPose", EditorStyles.boldLabel);
+			using (new EditorGUI.DisabledScope(true))
+			{
+				EditorGUILayout.ObjectField("Source TPose", sourceRace != null ? sourceRace.TPose : null, typeof(UmaTPose), false);
+			}
+
+			using (new EditorGUI.DisabledScope(sourceRace == null || sourceRace.TPose == null))
+			{
+				generateTPose = EditorGUILayout.Toggle("Generate TPose", generateTPose);
+			}
+
+			if (sourceRace == null || sourceRace.TPose == null)
+			{
+				EditorGUILayout.HelpBox("The source race has no TPose to use as a base, so the duplicate will keep its copied TPose reference.", MessageType.Warning);
+				return;
+			}
+
+			DrawPathPreviewField("Generated TPose Asset Path", GetTargetTPoseAssetPathPreview());
+			if (!generateTPose)
+			{
+				EditorGUILayout.HelpBox("TPose generation is disabled, so the duplicate will keep its copied TPose reference.", MessageType.Info);
+			}
+
+			using (new EditorGUI.DisabledScope(!generateTPose))
+			{
+				EditorGUILayout.BeginHorizontal();
+				if (GUILayout.Button("Refresh", GUILayout.Width(90f)))
+				{
+					RefreshTPoseMixerEntries();
+				}
+				if (GUILayout.Button("Select All", GUILayout.Width(90f)))
+				{
+					SetAllTPoseMixerSelections(true);
+				}
+				if (GUILayout.Button("Select None", GUILayout.Width(90f)))
+				{
+					SetAllTPoseMixerSelections(false);
+				}
+				GUILayout.FlexibleSpace();
+				EditorGUILayout.EndHorizontal();
+
+				GUILayout.Space(4f);
+				if (tPoseMixerEntries.Count == 0)
+				{
+					EditorGUILayout.HelpBox("No UMABonePose assets with Mixer Pose enabled were found in the project.", MessageType.Info);
+				}
+				else
+				{
+					EnsureTPoseMixerPoseList();
+					tPoseMixerPoseList.DoLayoutList();
+					EditorGUILayout.LabelField("Selected Mixer Poses", GetSelectedTPoseMixerCount().ToString());
+				}
+			}
+
+			EditorGUILayout.HelpBox("The generated TPose starts as a copy of the source race TPose, then applies each checked mixer pose in list order using its percentage.", MessageType.Info);
+			DrawValidationMessages();
+		}
+
 		private void DrawSummaryPage()
 		{
 			EditorGUILayout.LabelField("Summary", EditorStyles.boldLabel);
 			EditorGUILayout.LabelField("New Race Name", GetTrimmedValue(newRaceName));
 			DrawPathPreviewField("New RaceData Asset Path", GetTargetRaceAssetPath());
 			DrawPathPreviewField("New Base Recipe Asset Path", GetTargetBaseRecipeAssetPathPreview());
+			EditorGUILayout.LabelField("Generate TPose", ShouldCreateGeneratedTPose() ? "Yes" : "No");
+			DrawPathPreviewField("Generated TPose Asset Path", GetTargetTPoseAssetPathPreview());
 			EditorGUILayout.LabelField("Selected Blendshapes", GetSelectedBlendshapeCount().ToString());
+			EditorGUILayout.LabelField("Selected Mixer Poses", ShouldCreateGeneratedTPose() ? GetSelectedTPoseMixerCount().ToString() : "0");
 			EditorGUILayout.LabelField("Cross Compatible With", GetSelectedCompatibilityRaceCount().ToString());
 			EditorGUILayout.LabelField("Selected Races", GetSelectedCompatibilityRaceSummary());
-			using (new EditorGUI.DisabledScope(true))
-			{
-				EditorGUILayout.ObjectField("Bone Pose", selectedBonePose, typeof(UMABonePose), false);
-			}
-			EditorGUILayout.LabelField("Keep Existing Pose Groups", keepExistingPoseGroups ? "Yes" : "No");
-			if (selectedBonePose != null)
-			{
-				DrawPathPreviewField("Pose DNA Asset Path", GetTargetPoseDnaAssetPathPreview());
-				DrawPathPreviewField("Pose Group Asset Path", GetTargetPoseGroupAssetPathPreview());
-			}
 
 			if (sourceBaseRecipe == null)
 			{
@@ -327,32 +392,49 @@ namespace UMA.Editors
 			EditorGUILayout.EndHorizontal();
 		}
 
-		private void DrawPoseSetupSection()
+		private void EnsureTPoseMixerPoseList()
 		{
-			EditorGUILayout.LabelField("Pose Setup", EditorStyles.boldLabel);
-			selectedBonePose = EditorGUILayout.ObjectField("Bone Pose", selectedBonePose, typeof(UMABonePose), false) as UMABonePose;
-			keepExistingPoseGroups = EditorGUILayout.Toggle("Keep Existing Pose Groups", keepExistingPoseGroups);
-
-			if (selectedBonePose == null)
+			if (tPoseMixerPoseList != null)
 			{
-				EditorGUILayout.HelpBox("Optionally assign a bone pose to create a pose DNA asset and a pose group for the duplicated race. Keep Existing Pose Groups only affects copied bone-pose converter controllers.", MessageType.None);
 				return;
 			}
 
-			if (sourceRace != null && sourceRace.useNewDNA)
+			tPoseMixerPoseList = new ReorderableList(tPoseMixerEntries, typeof(TPoseMixerEntry), true, true, false, false)
 			{
-				EditorGUILayout.HelpBox("This source race uses the new DNA system. The wizard can only create pose groups for races that use legacy DNA converters.", MessageType.Warning);
+				drawHeaderCallback = DrawTPoseMixerListHeader,
+				drawElementCallback = DrawTPoseMixerListElement,
+				elementHeight = EditorGUIUtility.singleLineHeight + 4f
+			};
+		}
+
+		private void DrawTPoseMixerListHeader(Rect rect)
+		{
+			EditorGUI.LabelField(new Rect(rect.x + 4f, rect.y, 36f, rect.height), "Use", EditorStyles.miniBoldLabel);
+			EditorGUI.LabelField(new Rect(rect.x + 44f, rect.y, rect.width - 206f, rect.height), "Mixer Pose", EditorStyles.miniBoldLabel);
+			EditorGUI.LabelField(new Rect(rect.x + rect.width - 154f, rect.y, 150f, rect.height), "Percentage", EditorStyles.miniBoldLabel);
+		}
+
+		private void DrawTPoseMixerListElement(Rect rect, int index, bool isActive, bool isFocused)
+		{
+			if (index < 0 || index >= tPoseMixerEntries.Count)
+			{
 				return;
 			}
 
-			if (sourceRace != null && sourceRace.disableDNAConverters)
+			TPoseMixerEntry entry = tPoseMixerEntries[index];
+			rect.y += 2f;
+			rect.height = EditorGUIUtility.singleLineHeight;
+
+			entry.Selected = EditorGUI.Toggle(new Rect(rect.x + 4f, rect.y, 24f, rect.height), entry.Selected);
+			using (new EditorGUI.DisabledScope(true))
 			{
-				EditorGUILayout.HelpBox("The source race has legacy DNA converters disabled. The duplicate will re-enable them so the new pose group can work.", MessageType.Info);
+				EditorGUI.ObjectField(new Rect(rect.x + 34f, rect.y, rect.width - 198f, rect.height), GUIContent.none, entry.BonePose, typeof(UMABonePose), false);
 			}
 
-			DrawPathPreviewField("Pose DNA Asset Path", GetTargetPoseDnaAssetPathPreview());
-			DrawPathPreviewField("Pose Group Asset Path", GetTargetPoseGroupAssetPathPreview());
-			EditorGUILayout.HelpBox("The wizard will create a Dynamic DNA asset with one pose DNA name and a pose-group controller that drives the selected bone pose from that DNA.", MessageType.Info);
+			using (new EditorGUI.DisabledScope(!entry.Selected))
+			{
+				entry.Percentage = EditorGUI.Slider(new Rect(rect.x + rect.width - 154f, rect.y, 150f, rect.height), entry.Percentage, 0f, 100f);
+			}
 		}
 
 		private void DrawNavigationButtons()
@@ -424,6 +506,11 @@ namespace UMA.Editors
 				return "Blendshape Collection";
 			}
 
+			if (pageIndex == SetupTPosePage)
+			{
+				return "Setup TPose";
+			}
+
 			return "Summary and Create";
 		}
 
@@ -431,7 +518,7 @@ namespace UMA.Editors
 		{
 			if (pageIndex == SourceRacePage)
 			{
-				return "Review the source RaceData that was selected in the Project window, choose the new RaceData name, optionally override the default Base Race Recipe name, optionally create a bone-pose-driven pose group, and decide which races the duplicate should be marked compatible with.";
+				return "Review the source RaceData that was selected in the Project window, choose the new RaceData name, optionally override the default Base Race Recipe name, and decide which races the duplicate should be marked compatible with.";
 			}
 
 			if (pageIndex == BlendshapeCollectionPage)
@@ -439,7 +526,12 @@ namespace UMA.Editors
 				return "Scan the source race's Base Race Recipe slots, collect every unique blendshape name, and choose which ones should be carried into the duplicated race along with their default values.";
 			}
 
-			return "Review the final target asset paths, overwrite warnings, and blendshape count before duplicating the RaceData and its Base Race Recipe.";
+			if (pageIndex == SetupTPosePage)
+			{
+				return "Generate a TPose asset for the duplicated race by applying checked Mixer Pose bone poses in list order with the selected percentages.";
+			}
+
+			return "Review the final target asset paths, overwrite warnings, blendshape count, and TPose setup before duplicating the RaceData and its Base Race Recipe.";
 		}
 
 		private void CacheSourceBlendshapeState()
@@ -595,6 +687,105 @@ namespace UMA.Editors
 			}
 		}
 
+		private void RefreshTPoseMixerEntries()
+		{
+			Dictionary<string, TPoseMixerEntry> previousEntries = new Dictionary<string, TPoseMixerEntry>(StringComparer.Ordinal);
+			List<string> previousOrder = new List<string>();
+			for (int i = 0; i < tPoseMixerEntries.Count; i++)
+			{
+				TPoseMixerEntry entry = tPoseMixerEntries[i];
+				string assetPath = GetTPoseMixerEntryPath(entry);
+				if (string.IsNullOrEmpty(assetPath) || previousEntries.ContainsKey(assetPath))
+				{
+					continue;
+				}
+
+				previousEntries.Add(assetPath, entry);
+				previousOrder.Add(assetPath);
+			}
+
+			Dictionary<string, UMABonePose> mixerPosesByPath = new Dictionary<string, UMABonePose>(StringComparer.Ordinal);
+			string[] poseGuids = AssetDatabase.FindAssets("t:UMABonePose");
+			for (int i = 0; i < poseGuids.Length; i++)
+			{
+				string posePath = AssetDatabase.GUIDToAssetPath(poseGuids[i]);
+				UMABonePose bonePose = AssetDatabase.LoadAssetAtPath<UMABonePose>(posePath);
+				if (bonePose == null || !bonePose.mixerPose || mixerPosesByPath.ContainsKey(posePath))
+				{
+					continue;
+				}
+
+				mixerPosesByPath.Add(posePath, bonePose);
+			}
+
+			List<string> sortedPosePaths = new List<string>(mixerPosesByPath.Keys);
+			sortedPosePaths.Sort((pathA, pathB) => CompareMixerPosePaths(pathA, pathB, mixerPosesByPath));
+
+			tPoseMixerEntries.Clear();
+			HashSet<string> addedPaths = new HashSet<string>(StringComparer.Ordinal);
+			for (int i = 0; i < previousOrder.Count; i++)
+			{
+				string posePath = previousOrder[i];
+				if (!mixerPosesByPath.TryGetValue(posePath, out UMABonePose bonePose) || !previousEntries.TryGetValue(posePath, out TPoseMixerEntry previousEntry))
+				{
+					continue;
+				}
+
+				tPoseMixerEntries.Add(new TPoseMixerEntry
+				{
+					BonePose = bonePose,
+					AssetPath = posePath,
+					Selected = previousEntry.Selected,
+					Percentage = Mathf.Clamp(previousEntry.Percentage, 0f, 100f)
+				});
+				addedPaths.Add(posePath);
+			}
+
+			for (int i = 0; i < sortedPosePaths.Count; i++)
+			{
+				string posePath = sortedPosePaths[i];
+				if (!addedPaths.Add(posePath))
+				{
+					continue;
+				}
+
+				tPoseMixerEntries.Add(new TPoseMixerEntry
+				{
+					BonePose = mixerPosesByPath[posePath],
+					AssetPath = posePath,
+					Selected = false,
+					Percentage = 100f
+				});
+			}
+
+			tPoseMixerPoseList = null;
+		}
+
+		private static int CompareMixerPosePaths(string pathA, string pathB, Dictionary<string, UMABonePose> mixerPosesByPath)
+		{
+			mixerPosesByPath.TryGetValue(pathA, out UMABonePose poseA);
+			mixerPosesByPath.TryGetValue(pathB, out UMABonePose poseB);
+			string nameA = poseA != null ? poseA.name : pathA;
+			string nameB = poseB != null ? poseB.name : pathB;
+			int nameCompare = string.Compare(nameA, nameB, StringComparison.Ordinal);
+			return nameCompare != 0 ? nameCompare : string.Compare(pathA, pathB, StringComparison.Ordinal);
+		}
+
+		private static string GetTPoseMixerEntryPath(TPoseMixerEntry entry)
+		{
+			if (entry == null)
+			{
+				return string.Empty;
+			}
+
+			if (!string.IsNullOrEmpty(entry.AssetPath))
+			{
+				return entry.AssetPath;
+			}
+
+			return entry.BonePose != null ? AssetDatabase.GetAssetPath(entry.BonePose) : string.Empty;
+		}
+
 		private bool MatchesSourceUnbakedPattern(string blendshapeName)
 		{
 			for (int i = 0; i < sourceUnbakedPatterns.Count; i++)
@@ -640,6 +831,14 @@ namespace UMA.Editors
 			}
 		}
 
+		private void SetAllTPoseMixerSelections(bool selected)
+		{
+			for (int i = 0; i < tPoseMixerEntries.Count; i++)
+			{
+				tPoseMixerEntries[i].Selected = selected;
+			}
+		}
+
 		private void SelectSourceRaceOnly()
 		{
 			for (int i = 0; i < compatibilityRaceEntries.Count; i++)
@@ -668,6 +867,20 @@ namespace UMA.Editors
 			for (int i = 0; i < compatibilityRaceEntries.Count; i++)
 			{
 				if (compatibilityRaceEntries[i].Selected)
+				{
+					count++;
+				}
+			}
+
+			return count;
+		}
+
+		private int GetSelectedTPoseMixerCount()
+		{
+			int count = 0;
+			for (int i = 0; i < tPoseMixerEntries.Count; i++)
+			{
+				if (tPoseMixerEntries[i].Selected)
 				{
 					count++;
 				}
@@ -732,11 +945,6 @@ namespace UMA.Editors
 				messages.Add("Enter a valid New Base Race Recipe Name.");
 			}
 
-			if (selectedBonePose != null && sourceRace.useNewDNA)
-			{
-				messages.Add("Bone Pose setup is only supported for races that use legacy DNA converters.");
-			}
-
 			string targetRacePath = GetTargetRaceAssetPath();
 			if (PathsEqual(targetRacePath, GetSourceRaceAssetPath()))
 			{
@@ -762,18 +970,17 @@ namespace UMA.Editors
 				}
 			}
 
-			if (selectedBonePose != null)
+			if (ShouldCreateGeneratedTPose())
 			{
-				string targetPoseDnaPath = GetTargetPoseDnaAssetPath();
-				if (!CanUseTargetPath(targetPoseDnaPath, typeof(DynamicUMADnaAsset), out string poseDnaTargetMessage))
+				string targetTPosePath = GetTargetTPoseAssetPath();
+				if (PathsEqual(targetTPosePath, GetSourceTPoseAssetPath()))
 				{
-					messages.Add(poseDnaTargetMessage);
+					messages.Add("The generated TPose asset path matches the source TPose asset. Choose a different New Race Name.");
 				}
 
-				string targetPoseGroupPath = GetTargetPoseGroupAssetPath();
-				if (!CanUseTargetPath(targetPoseGroupPath, typeof(DynamicDNAConverterController), out string poseGroupTargetMessage))
+				if (!CanUseTargetPath(targetTPosePath, typeof(UmaTPose), out string tPoseTargetMessage))
 				{
-					messages.Add(poseGroupTargetMessage);
+					messages.Add(tPoseTargetMessage);
 				}
 			}
 
@@ -811,14 +1018,9 @@ namespace UMA.Editors
 				warnings.Add("The target Base Race Recipe asset already exists and will require overwrite confirmation before the duplicate is saved.");
 			}
 
-			if (selectedBonePose != null && TargetExistsAsCompatibleType(GetTargetPoseDnaAssetPath(), typeof(DynamicUMADnaAsset)))
+			if (ShouldCreateGeneratedTPose() && TargetExistsAsCompatibleType(GetTargetTPoseAssetPath(), typeof(UmaTPose)))
 			{
-				warnings.Add("The target Pose DNA asset already exists and will require overwrite confirmation before the duplicate is saved.");
-			}
-
-			if (selectedBonePose != null && TargetExistsAsCompatibleType(GetTargetPoseGroupAssetPath(), typeof(DynamicDNAConverterController)))
-			{
-				warnings.Add("The target Pose Group asset already exists and will require overwrite confirmation before the duplicate is saved.");
+				warnings.Add("The target TPose asset already exists and will require overwrite confirmation before the duplicate is saved.");
 			}
 
 			return warnings;
@@ -840,16 +1042,13 @@ namespace UMA.Editors
 
 			string raceAssetPath = GetTargetRaceAssetPath();
 			string recipeAssetPath = GetTargetBaseRecipeAssetPath();
-			string poseDnaAssetPath = GetTargetPoseDnaAssetPath();
-			string poseGroupAssetPath = GetTargetPoseGroupAssetPath();
+			string tPoseAssetPath = GetTargetTPoseAssetPath();
 			RaceData duplicatedRace = null;
 			UMARecipeBase duplicatedRecipe = null;
-			DynamicUMADnaAsset poseDnaAsset = null;
-			DynamicDNAConverterController poseGroupAsset = null;
+			UmaTPose generatedTPose = null;
 			bool createdRaceAsset = false;
 			bool createdRecipeAsset = false;
-			bool createdPoseDnaAsset = false;
-			bool createdPoseGroupAsset = false;
+			bool createdTPoseAsset = false;
 
 			try
 			{
@@ -887,23 +1086,19 @@ namespace UMA.Editors
 					duplicatedRace.baseRaceRecipe = duplicatedRecipe;
 				}
 
-				if (selectedBonePose != null)
+				if (ShouldCreateGeneratedTPose())
 				{
-					poseDnaAsset = GetOrCreatePoseDnaAsset(poseDnaAssetPath, out createdPoseDnaAsset);
-					if (poseDnaAsset == null)
+					generatedTPose = GetOrCreateTPoseAsset(tPoseAssetPath, out createdTPoseAsset);
+					if (generatedTPose == null)
 					{
-						throw new InvalidOperationException("Unable to create or load the duplicated Pose DNA asset.");
+						throw new InvalidOperationException("Unable to create or load the generated TPose asset.");
 					}
 
-					poseGroupAsset = GetOrCreatePoseGroupAsset(poseGroupAssetPath, out createdPoseGroupAsset);
-					if (poseGroupAsset == null)
-					{
-						throw new InvalidOperationException("Unable to create or load the duplicated Pose Group asset.");
-					}
+					ConfigureGeneratedTPoseAsset(generatedTPose);
+					duplicatedRace.TPose = generatedTPose;
 				}
 
 				ApplySelectedBlendshapeSettings(duplicatedRace);
-				ApplyPoseGroupSettings(duplicatedRace, poseDnaAsset, poseGroupAsset);
 				duplicatedRace.SetCrossCompatibleRaces(GetSelectedCompatibilityRaceNames());
 
 				EditorUtility.SetDirty(duplicatedRace);
@@ -911,13 +1106,9 @@ namespace UMA.Editors
 				{
 					EditorUtility.SetDirty(duplicatedRecipe);
 				}
-				if (poseDnaAsset != null)
+				if (generatedTPose != null)
 				{
-					EditorUtility.SetDirty(poseDnaAsset);
-				}
-				if (poseGroupAsset != null)
-				{
-					EditorUtility.SetDirty(poseGroupAsset);
+					EditorUtility.SetDirty(generatedTPose);
 				}
 
 				AssetDatabase.SaveAssets();
@@ -926,7 +1117,7 @@ namespace UMA.Editors
 					UMAUpdateProcessor.UpdateRecipe(duplicatedTextRecipe);
 				}
 				UMAUpdateProcessor.UpdateRace(duplicatedRace);
-				AddAssetsToGlobalLibrary(duplicatedRace, duplicatedRecipe, poseDnaAsset, poseGroupAsset);
+				AddAssetsToGlobalLibrary(duplicatedRace, duplicatedRecipe, generatedTPose);
 				AssetDatabase.Refresh();
 
 				Close();
@@ -934,13 +1125,9 @@ namespace UMA.Editors
 			}
 			catch (Exception ex)
 			{
-				if (createdPoseGroupAsset && !string.IsNullOrEmpty(poseGroupAssetPath))
+				if (createdTPoseAsset && !string.IsNullOrEmpty(tPoseAssetPath))
 				{
-					AssetDatabase.DeleteAsset(poseGroupAssetPath);
-				}
-				if (createdPoseDnaAsset && !string.IsNullOrEmpty(poseDnaAssetPath))
-				{
-					AssetDatabase.DeleteAsset(poseDnaAssetPath);
+					AssetDatabase.DeleteAsset(tPoseAssetPath);
 				}
 				if (createdRecipeAsset && !string.IsNullOrEmpty(recipeAssetPath))
 				{
@@ -957,58 +1144,79 @@ namespace UMA.Editors
 			}
 		}
 
-		private void ApplyPoseGroupSettings(RaceData duplicatedRace, DynamicUMADnaAsset poseDnaAsset, DynamicDNAConverterController poseGroupAsset)
+		private void ConfigureGeneratedTPoseAsset(UmaTPose generatedTPose)
 		{
-			if (duplicatedRace == null || duplicatedRace.useNewDNA)
+			if (generatedTPose == null || sourceRace == null || sourceRace.TPose == null)
 			{
-				return;
+				throw new InvalidOperationException("A source TPose is required to generate the duplicated race TPose.");
 			}
 
-			bool originalDisableDNAConverters = duplicatedRace.disableDNAConverters;
-			if (originalDisableDNAConverters)
+			EditorUtility.CopySerialized(sourceRace.TPose, generatedTPose);
+			generatedTPose.name = GetDefaultTPoseAssetName();
+			generatedTPose.boneInfo = null;
+			generatedTPose.humanInfo = null;
+			generatedTPose.DeSerialize();
+			ApplySelectedMixerPosesToTPose(generatedTPose);
+			generatedTPose.Serialize();
+			EditorUtility.SetDirty(generatedTPose);
+		}
+
+		private int ApplySelectedMixerPosesToTPose(UmaTPose tPose)
+		{
+			if (tPose == null)
 			{
-				duplicatedRace.disableDNAConverters = false;
+				return 0;
 			}
 
-			List<DynamicDNAConverterController> converters = new List<DynamicDNAConverterController>();
-			DynamicDNAConverterController[] existingConverters = duplicatedRace.dnaConverterList;
-			if (existingConverters != null)
+			tPose.DeSerialize();
+			if (tPose.boneInfo == null || tPose.boneInfo.Length == 0)
 			{
-				for (int i = 0; i < existingConverters.Length; i++)
+				return 0;
+			}
+
+			Dictionary<string, int> tPoseBoneIndices = new Dictionary<string, int>(StringComparer.Ordinal);
+			for (int boneIndex = 0; boneIndex < tPose.boneInfo.Length; boneIndex++)
+			{
+				string boneName = tPose.boneInfo[boneIndex].name;
+				if (!string.IsNullOrEmpty(boneName) && !tPoseBoneIndices.ContainsKey(boneName))
 				{
-					DynamicDNAConverterController converter = existingConverters[i];
-					if (converter == null)
+					tPoseBoneIndices.Add(boneName, boneIndex);
+				}
+			}
+
+			int appliedBoneCount = 0;
+			for (int entryIndex = 0; entryIndex < tPoseMixerEntries.Count; entryIndex++)
+			{
+				TPoseMixerEntry entry = tPoseMixerEntries[entryIndex];
+				if (entry == null || !entry.Selected || entry.BonePose == null || entry.BonePose.poses == null)
+				{
+					continue;
+				}
+
+				float weight = Mathf.Clamp01(entry.Percentage / 100f);
+				if (weight <= 0f)
+				{
+					continue;
+				}
+
+				for (int poseIndex = 0; poseIndex < entry.BonePose.poses.Length; poseIndex++)
+				{
+					UMABonePose.PoseBone poseBone = entry.BonePose.poses[poseIndex];
+					if (poseBone == null || !poseBone.enabled || string.IsNullOrEmpty(poseBone.bone) || !tPoseBoneIndices.TryGetValue(poseBone.bone, out int tPoseBoneIndex))
 					{
 						continue;
 					}
 
-					if (!keepExistingPoseGroups && ControllerContainsBonePosePlugin(converter))
-					{
-						continue;
-					}
-
-					converters.Add(converter);
+					SkeletonBone skeletonBone = tPose.boneInfo[tPoseBoneIndex];
+					skeletonBone.position += poseBone.position * weight;
+					skeletonBone.rotation = NormalizeSafe(skeletonBone.rotation * Quaternion.Slerp(Quaternion.identity, NormalizeSafe(poseBone.rotation), weight));
+					skeletonBone.scale = Vector3.Scale(skeletonBone.scale, Vector3.Lerp(Vector3.one, poseBone.scale, weight));
+					tPose.boneInfo[tPoseBoneIndex] = skeletonBone;
+					appliedBoneCount++;
 				}
 			}
 
-			if (selectedBonePose != null)
-			{
-				if (poseDnaAsset == null || poseGroupAsset == null)
-				{
-					throw new InvalidOperationException("Pose setup assets were not created correctly.");
-				}
-
-				ConfigurePoseDnaAsset(poseDnaAsset);
-				ConfigurePoseGroupAsset(poseGroupAsset, poseDnaAsset);
-				converters.Add(poseGroupAsset);
-				duplicatedRace.disableDNAConverters = false;
-			}
-			else
-			{
-				duplicatedRace.disableDNAConverters = originalDisableDNAConverters;
-			}
-
-			duplicatedRace.dnaConverterList = converters.ToArray();
+			return appliedBoneCount;
 		}
 
 		private void AddAssetsToGlobalLibrary(params UnityEngine.Object[] assets)
@@ -1048,83 +1256,23 @@ namespace UMA.Editors
 				: "BaseRaceRecipe_" + trimmedRaceName + "_Recipe";
 		}
 
-		private string GetDefaultPoseDnaAssetName()
+		private string GetDefaultTPoseAssetName()
 		{
 			string trimmedRaceName = GetTrimmedValue(newRaceName);
 			return string.IsNullOrEmpty(trimmedRaceName)
-				? "PoseDNA"
-				: "PoseDNA_" + trimmedRaceName;
+				? "TPose"
+				: "TPose_" + trimmedRaceName;
 		}
 
-		private string GetDefaultPoseGroupAssetName()
+		private static Quaternion NormalizeSafe(Quaternion rotation)
 		{
-			string trimmedRaceName = GetTrimmedValue(newRaceName);
-			return string.IsNullOrEmpty(trimmedRaceName)
-				? "PoseGroup"
-				: "PoseGroup_" + trimmedRaceName;
-		}
-
-		private string GetPoseDnaName()
-		{
-			if (selectedBonePose != null && !string.IsNullOrWhiteSpace(selectedBonePose.name))
+			float magnitude = Mathf.Sqrt(rotation.x * rotation.x + rotation.y * rotation.y + rotation.z * rotation.z + rotation.w * rotation.w);
+			if (magnitude <= Mathf.Epsilon)
 			{
-				return selectedBonePose.name;
+				return Quaternion.identity;
 			}
 
-			string trimmedRaceName = GetTrimmedValue(newRaceName);
-			return string.IsNullOrEmpty(trimmedRaceName) ? "Pose" : trimmedRaceName + "_Pose";
-		}
-
-		private void ConfigurePoseDnaAsset(DynamicUMADnaAsset poseDnaAsset)
-		{
-			poseDnaAsset.name = GetDefaultPoseDnaAssetName();
-			poseDnaAsset.Names = new[] { GetPoseDnaName() };
-			poseDnaAsset.SetCurrentAssetPath();
-			EditorUtility.SetDirty(poseDnaAsset);
-		}
-
-		private void ConfigurePoseGroupAsset(DynamicDNAConverterController poseGroupAsset, DynamicUMADnaAsset poseDnaAsset)
-		{
-			poseGroupAsset.name = GetDefaultPoseGroupAssetName();
-			poseGroupAsset.DNAAsset = poseDnaAsset;
-			SetPoseGroupDisplayValue(poseGroupAsset, "Pose");
-			ClearPlugins(poseGroupAsset);
-
-			DNAEvaluatorList modifyingDna = new DNAEvaluatorList(new List<DNAEvaluator>
-			{
-				new DNAEvaluator(GetPoseDnaName(), DNAEvaluationGraph.Default, 1f)
-			});
-			poseGroupAsset.AddBonePoseConverter(selectedBonePose, 0f, modifyingDna);
-			poseGroupAsset.ValidatePlugins();
-			EditorUtility.SetDirty(poseGroupAsset);
-		}
-
-		private void SetPoseGroupDisplayValue(DynamicDNAConverterController poseGroupAsset, string displayValue)
-		{
-			SerializedObject controllerObject = new SerializedObject(poseGroupAsset);
-			SerializedProperty displayValueProperty = controllerObject.FindProperty("_displayValue");
-			if (displayValueProperty != null)
-			{
-				displayValueProperty.stringValue = displayValue;
-				controllerObject.ApplyModifiedPropertiesWithoutUndo();
-			}
-		}
-
-		private void ClearPlugins(DynamicDNAConverterController controller)
-		{
-			List<DynamicDNAPlugin> plugins = new List<DynamicDNAPlugin>(controller.GetPlugins());
-			for (int i = plugins.Count - 1; i >= 0; i--)
-			{
-				if (plugins[i] != null)
-				{
-					controller.DeletePlugin(plugins[i]);
-				}
-			}
-		}
-
-		private bool ControllerContainsBonePosePlugin(DynamicDNAConverterController controller)
-		{
-			return controller != null && controller.GetPlugins(typeof(BonePoseDNAConverterPlugin)).Count > 0;
+			return new Quaternion(rotation.x / magnitude, rotation.y / magnitude, rotation.z / magnitude, rotation.w / magnitude);
 		}
 
 		private void DuplicateBaseRaceRecipe(UMARecipeBase duplicatedRecipe, RaceData duplicatedRace)
@@ -1238,44 +1386,24 @@ namespace UMA.Editors
 			return newRecipe;
 		}
 
-		private DynamicUMADnaAsset GetOrCreatePoseDnaAsset(string assetPath, out bool createdAsset)
+		private UmaTPose GetOrCreateTPoseAsset(string assetPath, out bool createdAsset)
 		{
 			createdAsset = false;
-			DynamicUMADnaAsset existingPoseDnaAsset = AssetDatabase.LoadMainAssetAtPath(assetPath) as DynamicUMADnaAsset;
-			if (existingPoseDnaAsset != null)
+			UmaTPose existingTPose = AssetDatabase.LoadMainAssetAtPath(assetPath) as UmaTPose;
+			if (existingTPose != null)
 			{
-				return existingPoseDnaAsset;
+				return existingTPose;
 			}
 
-			DynamicUMADnaAsset newPoseDnaAsset = ScriptableObject.CreateInstance<DynamicUMADnaAsset>();
-			if (newPoseDnaAsset == null)
+			UmaTPose newTPose = ScriptableObject.CreateInstance<UmaTPose>();
+			if (newTPose == null)
 			{
 				return null;
 			}
 
-			AssetDatabase.CreateAsset(newPoseDnaAsset, assetPath);
+			AssetDatabase.CreateAsset(newTPose, assetPath);
 			createdAsset = true;
-			return newPoseDnaAsset;
-		}
-
-		private DynamicDNAConverterController GetOrCreatePoseGroupAsset(string assetPath, out bool createdAsset)
-		{
-			createdAsset = false;
-			DynamicDNAConverterController existingPoseGroupAsset = AssetDatabase.LoadMainAssetAtPath(assetPath) as DynamicDNAConverterController;
-			if (existingPoseGroupAsset != null)
-			{
-				return existingPoseGroupAsset;
-			}
-
-			DynamicDNAConverterController newPoseGroupAsset = ScriptableObject.CreateInstance<DynamicDNAConverterController>();
-			if (newPoseGroupAsset == null)
-			{
-				return null;
-			}
-
-			AssetDatabase.CreateAsset(newPoseGroupAsset, assetPath);
-			createdAsset = true;
-			return newPoseGroupAsset;
+			return newTPose;
 		}
 
 		private bool ConfirmOverwriteIfNeeded()
@@ -1291,14 +1419,9 @@ namespace UMA.Editors
 				overwriteTargets.Add(GetTargetBaseRecipeAssetPath());
 			}
 
-			if (selectedBonePose != null && TargetExistsAsCompatibleType(GetTargetPoseDnaAssetPath(), typeof(DynamicUMADnaAsset)))
+			if (ShouldCreateGeneratedTPose() && TargetExistsAsCompatibleType(GetTargetTPoseAssetPath(), typeof(UmaTPose)))
 			{
-				overwriteTargets.Add(GetTargetPoseDnaAssetPath());
-			}
-
-			if (selectedBonePose != null && TargetExistsAsCompatibleType(GetTargetPoseGroupAssetPath(), typeof(DynamicDNAConverterController)))
-			{
-				overwriteTargets.Add(GetTargetPoseGroupAssetPath());
+				overwriteTargets.Add(GetTargetTPoseAssetPath());
 			}
 
 			if (overwriteTargets.Count == 0)
@@ -1355,6 +1478,16 @@ namespace UMA.Editors
 			return sourceBaseRecipe != null ? AssetDatabase.GetAssetPath(sourceBaseRecipe) : string.Empty;
 		}
 
+		private string GetSourceTPoseAssetPath()
+		{
+			return sourceRace != null && sourceRace.TPose != null ? AssetDatabase.GetAssetPath(sourceRace.TPose) : string.Empty;
+		}
+
+		private bool ShouldCreateGeneratedTPose()
+		{
+			return generateTPose && sourceRace != null && sourceRace.TPose != null;
+		}
+
 		private string GetTargetRaceAssetPath()
 		{
 			string folder = GetFolderFromAssetPath(GetSourceRaceAssetPath());
@@ -1383,36 +1516,20 @@ namespace UMA.Editors
 			return GetTargetBaseRecipeAssetPath();
 		}
 
-		private string GetTargetPoseDnaAssetPath()
+		private string GetTargetTPoseAssetPath()
 		{
-			if (selectedBonePose == null)
+			if (!ShouldCreateGeneratedTPose())
 			{
 				return string.Empty;
 			}
 
 			string folder = GetFolderFromAssetPath(GetSourceRaceAssetPath());
-			return Path.Combine(folder, GetDefaultPoseDnaAssetName() + ".asset").Replace('\\', '/');
+			return Path.Combine(folder, GetDefaultTPoseAssetName() + ".asset").Replace('\\', '/');
 		}
 
-		private string GetTargetPoseGroupAssetPath()
+		private string GetTargetTPoseAssetPathPreview()
 		{
-			if (selectedBonePose == null)
-			{
-				return string.Empty;
-			}
-
-			string folder = GetFolderFromAssetPath(GetSourceRaceAssetPath());
-			return Path.Combine(folder, GetDefaultPoseGroupAssetName() + ".asset").Replace('\\', '/');
-		}
-
-		private string GetTargetPoseDnaAssetPathPreview()
-		{
-			return selectedBonePose == null ? "(No pose DNA asset will be created)" : GetTargetPoseDnaAssetPath();
-		}
-
-		private string GetTargetPoseGroupAssetPathPreview()
-		{
-			return selectedBonePose == null ? "(No pose group asset will be created)" : GetTargetPoseGroupAssetPath();
+			return ShouldCreateGeneratedTPose() ? GetTargetTPoseAssetPath() : "(No generated TPose will be created)";
 		}
 
 		private string GetFolderFromAssetPath(string assetPath)
