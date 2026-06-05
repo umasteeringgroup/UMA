@@ -1,0 +1,2 @@
+This folder contains PBR shaders that are not SRP specific, created with Better Shaders (not required).
+UMA can use any shader. These are here specifically to address compatiblity with the Built-in RP, URP and HDRP, and the problems distributing assets that are compatible with the different rendering packages.

@@ -143,7 +143,7 @@ namespace UMA
         [Tooltip("Use this to identify what kind of overlay this is and what it fits.")]
 		public string[] tags;
 
-		[Tooltip("This is used to Use this to identify overlays that are functionally equivalent - Body, etc. this is used to identify overlays that are functionally equivalent - Body, etc. this is used to identify overlays that share the same UV layout and are interchangeable.")]
+		[Tooltip("This is used to identify overlays that share the same UV layout and are interchangeable (eg. for decals that target whatever overlay is currently active on the body, etc.).	")]
         public string overlayGroup;
 
         /// <summary>

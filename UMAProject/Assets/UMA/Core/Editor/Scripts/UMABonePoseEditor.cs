@@ -212,12 +212,14 @@ namespace UMA.PoseTools
         public SkinnedMeshRenderer donorSMR;
         public UmaTPose donorTPose;
         private bool showTPoseToolsSection = true;
+        private bool showMergeBonePoseSection = true;
         private string tposeResultMessage;
         private MessageType tposeResultMessageType = MessageType.Info;
         TreeViewState treeState;
         BoneTreeView boneTreeView;
 
         UMABonePose targetPose = null;
+        private UMABonePose mergeBonePoseSource = null;
         public UMABonePoseEditorContext context = null;
 
         const int BAD_INDEX = -1;
@@ -364,6 +366,12 @@ namespace UMA.PoseTools
         private static GUIContent generateTPoseGUIContent = new GUIContent(
             "Generate TPose from this UMABonePose",
             "Duplicate the Donor TPose, apply this bone pose's transforms, and save the result as a new UmaTPose asset.");
+        private static GUIContent mergeBonePoseSourceGUIContent = new GUIContent(
+            "Source Pose",
+            "UMABonePose asset to merge into the current pose.");
+        private static GUIContent mergeBonePoseButtonGUIContent = new GUIContent(
+            "Merge Pose",
+            "Copy pose entries from the selected UMABonePose into this asset.");
         private static GUIContent useIKEditorGUIContent = new GUIContent(
             "Use IK Editor",
             "Draw all scene joints with round handles and drag non-adjust joints with IK.");
@@ -2896,6 +2904,26 @@ namespace UMA.PoseTools
                 }
                 GUIHelper.EndVerticalPadded();
 
+                GUIHelper.BeginVerticalPadded();
+                showMergeBonePoseSection = EditorGUILayout.Foldout(showMergeBonePoseSection, "Merge Bone Pose", true);
+                if (showMergeBonePoseSection)
+                {
+                    EditorGUI.indentLevel++;
+                    mergeBonePoseSource = EditorGUILayout.ObjectField(mergeBonePoseSourceGUIContent, mergeBonePoseSource, typeof(UMABonePose), false) as UMABonePose;
+                    EditorGUI.BeginDisabledGroup(!allowPoseEditing || mergeBonePoseSource == null || mergeBonePoseSource == targetPose);
+                    if (GUILayout.Button(mergeBonePoseButtonGUIContent))
+                    {
+                        MergeBonePose(mergeBonePoseSource);
+                    }
+                    EditorGUI.EndDisabledGroup();
+                    if (mergeBonePoseSource == targetPose)
+                    {
+                        EditorGUILayout.HelpBox("Select a different UMABonePose to merge from.", MessageType.Info);
+                    }
+                    EditorGUI.indentLevel--;
+                }
+                GUIHelper.EndVerticalPadded();
+
                 EditorGUILayout.HelpBox("A Mixer Pose is used to mix a new pose in the Race Wizard's Pose Creator. It is not required for editing or generating poses in this editor, and does not affect runtime behavior.", MessageType.Info);
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("mixerPose"), new GUIContent("Mixer Pose"));
             }
@@ -3682,6 +3710,113 @@ namespace UMA.PoseTools
             scale.vector3Value = scaleDiff;
 
             _poseEdited = true;
+        }
+
+        private static void CopyPoseBoneValues(SerializedProperty destinationPose, UMABonePose.PoseBone sourcePose)
+        {
+            if (destinationPose == null || sourcePose == null)
+            {
+                return;
+            }
+
+            SerializedProperty bone = destinationPose.FindPropertyRelative("bone");
+            if (bone != null)
+            {
+                bone.stringValue = sourcePose.bone ?? string.Empty;
+            }
+
+            SerializedProperty hash = destinationPose.FindPropertyRelative("hash");
+            if (hash != null)
+            {
+                hash.intValue = sourcePose.hash != 0 ? sourcePose.hash : UMASkeleton.StringToHash(sourcePose.bone);
+            }
+
+            SerializedProperty position = destinationPose.FindPropertyRelative("position");
+            if (position != null)
+            {
+                position.vector3Value = sourcePose.position;
+            }
+
+            SerializedProperty rotation = destinationPose.FindPropertyRelative("rotation");
+            if (rotation != null)
+            {
+                rotation.quaternionValue = sourcePose.rotation;
+            }
+
+            SerializedProperty scale = destinationPose.FindPropertyRelative("scale");
+            if (scale != null)
+            {
+                scale.vector3Value = sourcePose.scale;
+            }
+
+            SerializedProperty category = destinationPose.FindPropertyRelative("category");
+            if (category != null)
+            {
+                category.stringValue = sourcePose.category ?? string.Empty;
+            }
+
+            SerializedProperty enabled = destinationPose.FindPropertyRelative("enabled");
+            if (enabled != null)
+            {
+                enabled.boolValue = sourcePose.enabled;
+            }
+        }
+
+        private void MergeBonePose(UMABonePose sourcePose)
+        {
+            if (sourcePose == null || sourcePose == targetPose || serializedObject == null || serializedObject.targetObject == null)
+            {
+                return;
+            }
+
+            if (sourcePose.poses == null || sourcePose.poses.Length == 0)
+            {
+                EditorUtility.DisplayDialog("Merge Bone Pose", "The selected pose has no bone entries to merge.", "OK");
+                return;
+            }
+
+            SerializedProperty poses = serializedObject.FindProperty("poses");
+            if (poses == null)
+            {
+                return;
+            }
+
+            Undo.RecordObject(target, "Merge Bone Pose");
+
+            int updatedCount = 0;
+            int addedCount = 0;
+            for (int i = 0; i < sourcePose.poses.Length; i++)
+            {
+                UMABonePose.PoseBone sourceBone = sourcePose.poses[i];
+                if (sourceBone == null || string.IsNullOrEmpty(sourceBone.bone))
+                {
+                    continue;
+                }
+
+                SerializedProperty destinationPose = FindPoseByBoneName(poses, sourceBone.bone);
+                if (destinationPose == null)
+                {
+                    int insertIndex = poses.arraySize;
+                    poses.InsertArrayElementAtIndex(insertIndex);
+                    destinationPose = poses.GetArrayElementAtIndex(insertIndex);
+                    addedCount++;
+                }
+                else
+                {
+                    updatedCount++;
+                }
+
+                CopyPoseBoneValues(destinationPose, sourceBone);
+            }
+
+            serializedObject.ApplyModifiedProperties();
+            _poseEdited = true;
+            EditorUtility.SetDirty(target);
+            RegeneratePoseTargetPreviewIfNeeded();
+            Repaint();
+            SceneView.RepaintAll();
+
+            Debug.Log($"[UMABonePoseEditor] Merged pose '{sourcePose.name}' into '{targetPose.name}': updated {updatedCount} bones and added {addedCount} bones.");
         }
 
         private static void FlipBone(SerializedProperty poses, int i)

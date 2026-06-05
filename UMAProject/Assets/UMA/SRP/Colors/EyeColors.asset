@@ -1,0 +1,178 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 534edf300d8929243a0d291e413e2f0b, type: 3}
+  m_Name: EyeColors
+  m_EditorClassIdentifier: 
+  channelCount: 2
+  sharedColorName: Eyes
+  colors:
+  - name: Gray
+    channelMask:
+    - {r: 0.35220122, g: 0.35220122, b: 0.35220122, a: 1}
+    - {r: 1, g: 1, b: 1, a: 0}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+    - {r: 0, g: 0, b: 0, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      alwaysUpdateParms: 0
+      serializedProperties: []
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 1
+    deleteThis: 0
+    moveUpThis: 0
+    moveDownThis: 0
+    colorsExpanded: 1
+    propertiesExpanded: 0
+    showSelected: 1
+    isSelected: 0
+    showDisplayColor: 0
+    displayColor: {r: 0, g: 0, b: 0, a: 1}
+  - name: Brown
+    channelMask:
+    - {r: 0.4716981, g: 0.15413252, b: 0.06971635, a: 1}
+    - {r: 0, g: 0, b: 0, a: 0}
+    channelAdditiveMask:
+    - {r: 0.42767292, g: 0.1613506, b: 0.022862988, a: 1}
+    - {r: 0, g: 0, b: 0, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      alwaysUpdateParms: 0
+      serializedProperties: []
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 1
+    deleteThis: 0
+    moveUpThis: 0
+    moveDownThis: 0
+    colorsExpanded: 1
+    propertiesExpanded: 0
+    showSelected: 1
+    isSelected: 0
+    showDisplayColor: 0
+    displayColor: {r: 0.2830189, g: 0.11982255, b: 0.0026699454, a: 1}
+  - name: Hazelish
+    channelMask:
+    - {r: 0.67295593, g: 0.41380107, b: 0.25182936, a: 1}
+    - {r: 0, g: 0, b: 0, a: 0}
+    channelAdditiveMask:
+    - {r: 0.15723258, g: 0.15574925, b: 0.15574925, a: 0}
+    - {r: 0, g: 0, b: 0, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      alwaysUpdateParms: 0
+      serializedProperties: []
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 1
+    deleteThis: 0
+    moveUpThis: 0
+    moveDownThis: 0
+    colorsExpanded: 1
+    propertiesExpanded: 0
+    showSelected: 1
+    isSelected: 1
+    showDisplayColor: 0
+    displayColor: {r: 0.61960787, g: 0.34901962, b: 0, a: 1}
+  - name: Gold
+    channelMask:
+    - {r: 0.8050314, g: 0.56732607, b: 0.3721371, a: 1}
+    - {r: 0, g: 0, b: 0, a: 0}
+    channelAdditiveMask:
+    - {r: 0.31446534, g: 0.17808175, b: 0.07218854, a: 1}
+    - {r: 0, g: 0, b: 0, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      alwaysUpdateParms: 0
+      serializedProperties: []
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 1
+    deleteThis: 0
+    moveUpThis: 0
+    moveDownThis: 0
+    colorsExpanded: 1
+    propertiesExpanded: 0
+    showSelected: 1
+    isSelected: 0
+    showDisplayColor: 1
+    displayColor: {r: 0.7176471, g: 0.627451, b: 0.42352945, a: 1}
+  - name: Green
+    channelMask:
+    - {r: 0, g: 1, b: 0.07926488, a: 1}
+    - {r: 0, g: 0, b: 0, a: 0}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+    - {r: 0, g: 0, b: 0, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      alwaysUpdateParms: 0
+      serializedProperties: []
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 1
+    deleteThis: 0
+    moveUpThis: 0
+    moveDownThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 1
+    showSelected: 1
+    isSelected: 0
+    showDisplayColor: 0
+    displayColor: {r: 0.12449611, g: 0.7372549, b: 0.086274505, a: 1}
+  - name: Blue
+    channelMask:
+    - {r: 0.22352941, g: 0.6, b: 1, a: 1}
+    - {r: 0, g: 0, b: 0, a: 0}
+    channelAdditiveMask:
+    - {r: 0.028301716, g: 0.24485148, b: 1, a: 1}
+    - {r: 0, g: 0, b: 0, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      alwaysUpdateParms: 0
+      serializedProperties: []
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 1
+    deleteThis: 0
+    moveUpThis: 0
+    moveDownThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
+    showSelected: 1
+    isSelected: 0
+    showDisplayColor: 0
+    displayColor: {r: 1, g: 1, b: 1, a: 1}
+  - name: Silver
+    channelMask:
+    - {r: 0.764151, g: 0.764151, b: 0.764151, a: 1}
+    - {r: 0.06289297, g: 0.06289297, b: 0.06289297, a: 0}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+    - {r: 0, g: 0, b: 0, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      alwaysUpdateParms: 0
+      serializedProperties: []
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 1
+    deleteThis: 0
+    moveUpThis: 0
+    moveDownThis: 0
+    colorsExpanded: 1
+    propertiesExpanded: 0
+    showSelected: 1
+    isSelected: 0
+    showDisplayColor: 0
+    displayColor: {r: 0.7924528, g: 0.7924528, b: 0.7924528, a: 1}

@@ -31,6 +31,7 @@ namespace UMA
         public bool showSelected = false;
         public bool isSelected = false;
         public bool showDisplayColor = false;
+        public bool showSelectFromFoldout = false;
 #endif
         public Color displayColor = Color.white;
 

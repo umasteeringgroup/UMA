@@ -49,6 +49,8 @@ namespace UMA.Editors
         private bool donorPropertiesFoldout;
         private bool applyMaterialsFoldout;
         private bool mainDonorFoldout;
+        private bool compactView = true;
+        private int compactViewSelectedColorIndex = 0;
         private List<DonorMaterialPropertySelection> donorPropertySelections = new List<DonorMaterialPropertySelection>();
         private List<int> applyMaterialIndices = new List<int>();
 
@@ -92,6 +94,14 @@ namespace UMA.Editors
             }
 
             EditorGUILayout.LabelField("Shared Color Table", EditorStyles.boldLabel);
+            compactView = EditorGUILayout.Toggle("Compact View", compactView);
+
+            if (compactView)
+            {
+                DoCompactView(sct);
+                return;
+            }
+
             EditorGUILayout.BeginHorizontal();
             if (GUILayout.Button("Expand All"))
             {
@@ -218,6 +228,46 @@ namespace UMA.Editors
 
                 serializedObject.ApplyModifiedProperties();
             }
+        }
+
+        private void DoCompactView(SharedColorTable sct)
+        {
+            SerializedProperty colorsProperty = serializedObject.FindProperty("colors");
+            if (colorsProperty == null || colorsProperty.arraySize == 0)
+            {
+                EditorGUILayout.HelpBox("No colors are available yet.", MessageType.Info);
+                return;
+            }
+
+            compactViewSelectedColorIndex = Mathf.Clamp(compactViewSelectedColorIndex, 0, colorsProperty.arraySize - 1);
+
+            string[] colorOptions = new string[colorsProperty.arraySize];
+            for (int i = 0; i < colorsProperty.arraySize; i++)
+            {
+                SerializedProperty colorProperty = colorsProperty.GetArrayElementAtIndex(i);
+                SerializedProperty colorNameProperty = colorProperty.FindPropertyRelative("name");
+                string colorName = colorNameProperty != null ? colorNameProperty.stringValue : string.Empty;
+                if (string.IsNullOrEmpty(colorName))
+                {
+                    colorName = "Color " + (i + 1);
+                }
+
+                colorOptions[i] = (i + 1) + ": " + colorName;
+            }
+
+            compactViewSelectedColorIndex = EditorGUILayout.Popup("Select color to view", compactViewSelectedColorIndex, colorOptions);
+
+            SerializedProperty selectedColorProperty = colorsProperty.GetArrayElementAtIndex(compactViewSelectedColorIndex);
+            SerializedProperty selectedColorNameProperty = selectedColorProperty.FindPropertyRelative("name");
+            if (selectedColorNameProperty != null)
+            {
+                selectedColorNameProperty.isExpanded = true;
+            }
+
+            EditorGUILayout.Space();
+            EditorGUILayout.PropertyField(selectedColorProperty, true);
+            serializedObject.ApplyModifiedProperties();
+
         }
 
         private void MoveColor(SharedColorTable sharedColorTable, int fromIndex, int toIndex)

@@ -9,7 +9,6 @@ namespace UMA.Editors
     [CustomPropertyDrawer(typeof(OverlayColorData),true)]
 	public class OverlayColorDataPropertyDrawer : PropertyDrawer
 	{
-		public static bool displayColorFoldout = false;
 		private const string SharedColorTableFoldoutLabel = "select from Shared Color Table";
 		private const double SharedColorTableCacheSeconds = 2.0;
 		private static bool sharedColorTableFoldout = false;
@@ -18,6 +17,7 @@ namespace UMA.Editors
 		private static SharedColorTable[] cachedSharedColorTables = new SharedColorTable[0];
 		private static GUIContent[] cachedSharedColorTableOptions = new GUIContent[0];
 		private static readonly Dictionary<string, SharedColorTable> selectedSharedColorTablesByProperty = new Dictionary<string, SharedColorTable>();
+		private static GUIStyle opaqueBlackBoxStyle;
 		GUIContent Modulate = new GUIContent("Multiplier");
 		GUIContent Additive = new GUIContent("Additive");
 		GUIContent Channels = new GUIContent("Channel Count");
@@ -35,6 +35,25 @@ namespace UMA.Editors
 			} */
 
 			return new GUIContent(fallbackText, tooltip);
+		}
+
+		private static GUIStyle GetOpaqueBlackBoxStyle()
+		{
+			if (opaqueBlackBoxStyle == null)
+			{
+				opaqueBlackBoxStyle = new GUIStyle(GUI.skin.box);
+				Texture2D blackTexture = Texture2D.blackTexture;
+				opaqueBlackBoxStyle.normal.background = blackTexture;
+				opaqueBlackBoxStyle.hover.background = blackTexture;
+				opaqueBlackBoxStyle.active.background = blackTexture;
+				opaqueBlackBoxStyle.focused.background = blackTexture;
+				opaqueBlackBoxStyle.onNormal.background = blackTexture;
+				opaqueBlackBoxStyle.onHover.background = blackTexture;
+				opaqueBlackBoxStyle.onActive.background = blackTexture;
+				opaqueBlackBoxStyle.onFocused.background = blackTexture;
+			}
+
+			return opaqueBlackBoxStyle;
 		}
 
 
@@ -154,7 +173,7 @@ namespace UMA.Editors
             EditorGUILayout.EndHorizontal();
 			if (name.isExpanded)
 			{
-				EditorGUILayout.BeginVertical(GUI.skin.box);
+				EditorGUILayout.BeginVertical(GetOpaqueBlackBoxStyle());
 				bool appliedSharedColor = DrawSharedColorTableSelector(property, ocd, dca);
 				if (appliedSharedColor)
 				{
@@ -170,8 +189,9 @@ namespace UMA.Editors
                 EditorGUILayout.PropertyField(property.FindPropertyRelative("name"));
 				EditorGUILayout.PropertyField(property.FindPropertyRelative("isBaseColor"));
 				EditorGUILayout.PropertyField(property.FindPropertyRelative("showDisplayColor"));
-				displayColorFoldout = EditorGUILayout.Foldout(displayColorFoldout, "Display Color");
-				if (displayColorFoldout)	
+				
+				ocd.showSelectFromFoldout = EditorGUILayout.Foldout(ocd.showSelectFromFoldout, "Display Color");
+				if (ocd.showSelectFromFoldout)	
 				{
 					EditorGUILayout.HelpBox("This color is used for display purposes in user editors and does not affect the actual colors used in the character. It can be useful to set this to the approximate color that will be shown after combining onto the layers.", MessageType.Info);
                 	EditorGUILayout.PropertyField(displayColor);
@@ -295,7 +315,8 @@ namespace UMA.Editors
 				}
 				EditorGUILayout.EndVertical();
             }
-            GUILayout.Box(GUIContent.none, GUILayout.ExpandWidth(true), GUILayout.Height(1));
+			Rect separatorRect = GUILayoutUtility.GetRect(GUIContent.none, GUIStyle.none, GUILayout.ExpandWidth(true), GUILayout.Height(2));
+			EditorGUI.DrawRect(separatorRect, Color.black);
             property.serializedObject.ApplyModifiedProperties();
             EditorGUI.EndProperty();
 		}

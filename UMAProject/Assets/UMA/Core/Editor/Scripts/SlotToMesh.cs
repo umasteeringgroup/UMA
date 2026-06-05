@@ -80,6 +80,7 @@ namespace UMA
                     PrefabUtility.SaveAsPrefabAsset(go, goName);
                     AssetDatabase.SaveAssets();
                     AssetDatabase.Refresh();
+                    DestroyImmediate(go);
                     EditorUtility.DisplayDialog("UMA Prefab Saver", "Conversion complete", "OK");
                 }
             }
