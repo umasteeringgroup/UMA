@@ -878,7 +878,7 @@ namespace UMA.Editors
             GUILayout.Label("Common Parameters", EditorStyles.boldLabel);
             normalReferenceMesh = EditorGUILayout.ObjectField("Seams Mesh (Optional)  ", normalReferenceMesh, typeof(SkinnedMeshRenderer), false) as SkinnedMeshRenderer;
 
-            slotMaterial = EditorGUILayout.ObjectField("UMAMaterial\t ", slotMaterial, typeof(UMAMaterial), false) as UMAMaterial;
+            // slotMaterial = EditorGUILayout.ObjectField("UMAMaterial\t ", slotMaterial, typeof(UMAMaterial), false) as UMAMaterial;
             slotFolder = EditorGUILayout.ObjectField("Slot Destination Folder", slotFolder, typeof(UnityEngine.Object), false) as UnityEngine.Object;
 
             alwaysRecreateSlots = EditorGUILayout.Toggle(new GUIContent("Always recreate slots", "If enabled, any existing SlotDataAsset at the target path will be deleted and recreated instead of updated."), alwaysRecreateSlots);
