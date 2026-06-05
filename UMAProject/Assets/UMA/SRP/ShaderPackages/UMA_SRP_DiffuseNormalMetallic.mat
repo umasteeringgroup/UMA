@@ -81,7 +81,7 @@ Material:
     - _BumpScale: 1
     - _ColorModulation: 1
     - _CullMode: 2
-    - _Cutoff: 0.5
+    - _Cutoff: 0
     - _DETAIL_MULX2: 0
     - _DetailAlbedoMapScale: 1
     - _DetailNormalMapScale: 1

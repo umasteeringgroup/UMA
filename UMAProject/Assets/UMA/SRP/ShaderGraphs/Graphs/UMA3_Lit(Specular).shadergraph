@@ -1817,8 +1817,8 @@
     "m_ObjectId": "0a13e827cdfd469e87dda752ac9ed76a",
     "m_Title": "NormalMap",
     "m_Position": {
-        "x": -954.9998779296875,
-        "y": 350.0000305175781
+        "x": -955.3331909179688,
+        "y": 349.9998474121094
     }
 }
 
@@ -3242,6 +3242,7 @@
     "isMainTexture": false,
     "useTilingAndOffset": false,
     "useTexelSize": true,
+    "isHDR": false,
     "m_Modifiable": true,
     "m_DefaultType": 0
 }
@@ -3569,8 +3570,8 @@
     "m_ObjectId": "30eb404d377b4ee995f488277ff0881a",
     "m_Title": "Emission",
     "m_Position": {
-        "x": -942.0,
-        "y": 981.0000610351563
+        "x": -942.66650390625,
+        "y": 980.6666259765625
     }
 }
 
@@ -5095,6 +5096,7 @@
     "isMainTexture": false,
     "useTilingAndOffset": false,
     "useTexelSize": false,
+    "isHDR": false,
     "m_Modifiable": true,
     "m_DefaultType": 0
 }
@@ -5234,8 +5236,8 @@
     "m_ObjectId": "7062b1d5057b4266b6f536a6c9279cea",
     "m_Title": "Smoothness",
     "m_Position": {
-        "x": 178.99998474121095,
-        "y": -182.00003051757813
+        "x": 178.66688537597657,
+        "y": -182.00009155273438
     }
 }
 
@@ -5452,6 +5454,7 @@
     "isMainTexture": false,
     "useTilingAndOffset": false,
     "useTexelSize": true,
+    "isHDR": false,
     "m_Modifiable": true,
     "m_DefaultType": 3
 }
@@ -6732,6 +6735,7 @@
     "isMainTexture": false,
     "useTilingAndOffset": false,
     "useTexelSize": true,
+    "isHDR": false,
     "m_Modifiable": true,
     "m_DefaultType": 0
 }
@@ -6923,8 +6927,8 @@
     "m_ObjectId": "a79adeb299a4447aa2aa6b76e1e220d0",
     "m_Title": "BaseColor",
     "m_Position": {
-        "x": -685.9998779296875,
-        "y": -520.0
+        "x": -686.66650390625,
+        "y": -520.0000610351563
     }
 }
 
@@ -7246,8 +7250,8 @@
     "m_ObjectId": "b2b9a4313d984ffc87575fd0102198b8",
     "m_Title": "Detail Maps",
     "m_Position": {
-        "x": -122.0,
-        "y": 389.0000305175781
+        "x": -122.66650390625,
+        "y": 388.66656494140627
     }
 }
 
@@ -7361,8 +7365,8 @@
     "m_ObjectId": "b4ab1432e21d4fdcadb52c542f96596b",
     "m_Title": "Occlusion",
     "m_Position": {
-        "x": -925.9998779296875,
-        "y": 662.0000610351563
+        "x": -926.66650390625,
+        "y": 662.0
     }
 }
 
@@ -7548,6 +7552,7 @@
     "isMainTexture": false,
     "useTilingAndOffset": false,
     "useTexelSize": true,
+    "isHDR": false,
     "m_Modifiable": true,
     "m_DefaultType": 1
 }
@@ -8010,6 +8015,7 @@
     "isMainTexture": false,
     "useTilingAndOffset": true,
     "useTexelSize": true,
+    "isHDR": false,
     "m_Modifiable": true,
     "m_DefaultType": 4
 }
@@ -8777,8 +8783,8 @@
     "m_ObjectId": "d4e1442d04854ba19c672a0dc0154e44",
     "m_Title": "Detail UVs",
     "m_Position": {
-        "x": -876.9998779296875,
-        "y": 1309.999755859375
+        "x": -877.333251953125,
+        "y": 1309.9998779296875
     }
 }
 
@@ -8876,6 +8882,7 @@
     "isMainTexture": false,
     "useTilingAndOffset": false,
     "useTexelSize": true,
+    "isHDR": false,
     "m_Modifiable": true,
     "m_DefaultType": 0
 }
@@ -9812,6 +9819,7 @@
     "isMainTexture": false,
     "useTilingAndOffset": false,
     "useTexelSize": true,
+    "isHDR": false,
     "m_Modifiable": true,
     "m_DefaultType": 3
 }
@@ -10019,8 +10027,8 @@
     "m_ObjectId": "f4abc26fcbb04c9c82fae6329be6c22b",
     "m_Title": "Specular",
     "m_Position": {
-        "x": -963.9998779296875,
-        "y": -41.000030517578128
+        "x": -964.66650390625,
+        "y": -41.33342742919922
     }
 }
 
