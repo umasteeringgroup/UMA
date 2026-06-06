@@ -219,7 +219,9 @@ namespace UMA.PoseTools
         BoneTreeView boneTreeView;
 
         UMABonePose targetPose = null;
-        private UMABonePose mergeBonePoseSource = null;
+        private readonly List<UMABonePose> mergeBonePoseSources = new List<UMABonePose>();
+        private UMABonePose mergeBonePoseAddCandidate = null;
+        private string persistentStateKeyPrefix = string.Empty;
         public UMABonePoseEditorContext context = null;
 
         const int BAD_INDEX = -1;
@@ -366,9 +368,12 @@ namespace UMA.PoseTools
         private static GUIContent generateTPoseGUIContent = new GUIContent(
             "Generate TPose from this UMABonePose",
             "Duplicate the Donor TPose, apply this bone pose's transforms, and save the result as a new UmaTPose asset.");
-        private static GUIContent mergeBonePoseSourceGUIContent = new GUIContent(
-            "Source Pose",
-            "UMABonePose asset to merge into the current pose.");
+        private static GUIContent mergeBonePoseListGUIContent = new GUIContent(
+            "Merge Bone Poses",
+            "UMABonePose assets merged from top to bottom.");
+        private static GUIContent mergeBonePoseAddGUIContent = new GUIContent(
+            "Add Pose",
+            "Select a UMABonePose to append to the merge order.");
         private static GUIContent mergeBonePoseButtonGUIContent = new GUIContent(
             "Merge Pose",
             "Copy pose entries from the selected UMABonePose into this asset.");
@@ -441,6 +446,12 @@ namespace UMA.PoseTools
                 return;
             }
 
+            if (Selection.activeObject is UMABonePose selectedBonePose && selectedBonePose != null)
+            {
+                _protectedBonePoseSelection = selectedBonePose;
+                return;
+            }
+
             UMABonePose poseToRestore = _protectedBonePoseSelection;
             _restoringProtectedBonePoseSelection = true;
             EditorApplication.delayCall += () =>
@@ -474,6 +485,159 @@ namespace UMA.PoseTools
             }
         }
 
+        private string GetPersistentStateKeyPrefix()
+        {
+            if (targetPose == null)
+            {
+                return string.Empty;
+            }
+
+            string assetPath = AssetDatabase.GetAssetPath(targetPose);
+            if (string.IsNullOrEmpty(assetPath))
+            {
+                return "UMA_BonePoseEditor_" + targetPose.name;
+            }
+
+            string assetGuid = AssetDatabase.AssetPathToGUID(assetPath);
+            if (string.IsNullOrEmpty(assetGuid))
+            {
+                return "UMA_BonePoseEditor_" + targetPose.name;
+            }
+
+            return "UMA_BonePoseEditor_" + assetGuid;
+        }
+
+        private static void SavePersistentAssetReference(string key, UnityEngine.Object asset)
+        {
+            string assetPath = asset != null ? AssetDatabase.GetAssetPath(asset) : string.Empty;
+            string assetGuid = string.IsNullOrEmpty(assetPath) ? string.Empty : AssetDatabase.AssetPathToGUID(assetPath);
+            EditorPrefs.SetString(key, assetGuid ?? string.Empty);
+        }
+
+        private static T LoadPersistentAssetReference<T>(string key) where T : UnityEngine.Object
+        {
+            string assetGuid = EditorPrefs.GetString(key, string.Empty);
+            if (string.IsNullOrEmpty(assetGuid))
+            {
+                return null;
+            }
+
+            string assetPath = AssetDatabase.GUIDToAssetPath(assetGuid);
+            if (string.IsNullOrEmpty(assetPath))
+            {
+                return null;
+            }
+
+            return AssetDatabase.LoadAssetAtPath<T>(assetPath);
+        }
+
+        private static List<T> LoadPersistentAssetReferenceList<T>(string key) where T : UnityEngine.Object
+        {
+            List<T> assets = new List<T>();
+            string assetGuids = EditorPrefs.GetString(key, string.Empty);
+            if (string.IsNullOrEmpty(assetGuids))
+            {
+                return assets;
+            }
+
+            string[] assetGuidList = assetGuids.Split(new[] { '\n' }, System.StringSplitOptions.RemoveEmptyEntries);
+            for (int i = 0; i < assetGuidList.Length; i++)
+            {
+                string assetGuid = assetGuidList[i].Trim();
+                if (string.IsNullOrEmpty(assetGuid))
+                {
+                    continue;
+                }
+
+                string assetPath = AssetDatabase.GUIDToAssetPath(assetGuid);
+                if (string.IsNullOrEmpty(assetPath))
+                {
+                    continue;
+                }
+
+                T asset = AssetDatabase.LoadAssetAtPath<T>(assetPath);
+                if (asset != null)
+                {
+                    assets.Add(asset);
+                }
+            }
+
+            return assets;
+        }
+
+        private static void SavePersistentAssetReferenceList<T>(string key, IList<T> assets) where T : UnityEngine.Object
+        {
+            List<string> assetGuids = new List<string>();
+            if (assets != null)
+            {
+                for (int i = 0; i < assets.Count; i++)
+                {
+                    T asset = assets[i];
+                    if (asset == null)
+                    {
+                        continue;
+                    }
+
+                    string assetPath = AssetDatabase.GetAssetPath(asset);
+                    if (string.IsNullOrEmpty(assetPath))
+                    {
+                        continue;
+                    }
+
+                    string assetGuid = AssetDatabase.AssetPathToGUID(assetPath);
+                    if (!string.IsNullOrEmpty(assetGuid))
+                    {
+                        assetGuids.Add(assetGuid);
+                    }
+                }
+            }
+
+            EditorPrefs.SetString(key, string.Join("\n", assetGuids.ToArray()));
+        }
+
+        private void LoadPersistentEditorState()
+        {
+            if (string.IsNullOrEmpty(persistentStateKeyPrefix))
+            {
+                return;
+            }
+
+            disableMirroring = EditorPrefs.GetBool(persistentStateKeyPrefix + ".DisableMirroring", false);
+            MirrorAxis = Mathf.Clamp(EditorPrefs.GetInt(persistentStateKeyPrefix + ".MirrorAxis", 0), 0, MirrorAxises.Length - 1);
+            displayMode = Mathf.Clamp(EditorPrefs.GetInt(persistentStateKeyPrefix + ".BoneDisplayMode", 0), 0, strings.Length - 1);
+            donorTPose = LoadPersistentAssetReference<UmaTPose>(persistentStateKeyPrefix + ".DonorTPose");
+            mergeBonePoseSources.Clear();
+            mergeBonePoseSources.AddRange(LoadPersistentAssetReferenceList<UMABonePose>(persistentStateKeyPrefix + ".MergeBonePoseSources"));
+            if (mergeBonePoseSources.Count == 0)
+            {
+                UMABonePose legacyMergeSource = LoadPersistentAssetReference<UMABonePose>(persistentStateKeyPrefix + ".MergeBonePoseSource");
+                if (legacyMergeSource != null)
+                {
+                    mergeBonePoseSources.Add(legacyMergeSource);
+                }
+            }
+
+            if (disableMirroring)
+            {
+                mirrorBoneIndex = BAD_INDEX;
+            }
+        }
+
+        private void SavePersistentEditorState()
+        {
+            if (string.IsNullOrEmpty(persistentStateKeyPrefix))
+            {
+                return;
+            }
+
+            EditorPrefs.SetBool(persistentStateKeyPrefix + ".DisableMirroring", disableMirroring);
+            EditorPrefs.SetInt(persistentStateKeyPrefix + ".MirrorAxis", MirrorAxis);
+            EditorPrefs.SetInt(persistentStateKeyPrefix + ".BoneDisplayMode", displayMode);
+            SavePersistentAssetReference(persistentStateKeyPrefix + ".DonorTPose", donorTPose);
+            SavePersistentAssetReferenceList(persistentStateKeyPrefix + ".MergeBonePoseSources", mergeBonePoseSources);
+            SavePersistentAssetReference(persistentStateKeyPrefix + ".MergeBonePoseSource", mergeBonePoseSources.Count > 0 ? mergeBonePoseSources[0] : null);
+        }
+
         public void OnEnable()
         {
             if (IsEditorBusy || target == null)
@@ -497,6 +661,9 @@ namespace UMA.PoseTools
             boneTreeView = new BoneTreeView(treeState);
 
             targetPose = target as UMABonePose;
+            persistentStateKeyPrefix = GetPersistentStateKeyPrefix();
+            LoadPersistentEditorState();
+            mergeBonePoseAddCandidate = null;
 
             if (!dynamicDNAConverterMode && sourceUMA != null)
             {
@@ -527,6 +694,7 @@ namespace UMA.PoseTools
 
         private void HandleBeforeAssemblyReload()
         {
+            SavePersistentEditorState();
             TryRestoreAndRebuildOnExit();
             try { EditorApplication.update -= this.OnUpdate; } catch { }
 #if UNITY_2019_1_OR_NEWER
@@ -538,6 +706,7 @@ namespace UMA.PoseTools
 
         public void OnDisable()
         {
+            SavePersistentEditorState();
             if (!ShouldProtectBonePoseSceneSelection())
             {
                 SetBonePoseSelectionProtection(false);
@@ -2367,8 +2536,10 @@ namespace UMA.PoseTools
 
             bool exitRequested = false;
             Handles.BeginGUI();
-            Rect areaRect = new Rect(8f,8f,180f,24f);
+            Rect areaRect = new Rect(8f,8f,280f,60f);
+            
             GUILayout.BeginArea(areaRect, EditorStyles.toolbar);
+            GUILayout.Label("Bone Pose Editing Mode - " + (useIKEditor ? "IK Tool Active" : "Pose Tool Active"), EditorStyles.miniLabel);
             if (GUILayout.Button("Exit Bone Pose Editing", EditorStyles.toolbarButton))
             {
                 exitRequested = true;
@@ -2382,6 +2553,11 @@ namespace UMA.PoseTools
             }
 
             EndBonePoseSceneEditing();
+            if (Event.current != null)
+            {
+                Event.current.Use();
+            }
+            GUIUtility.ExitGUI();
             return true;
         }
 
@@ -2799,6 +2975,7 @@ namespace UMA.PoseTools
             }
 
             bool allowPoseEditing = !useIKEditor;
+            bool persistentSettingsChanged = false;
 
             if (!dynamicDNAConverterMode)
             {
@@ -2888,7 +3065,12 @@ namespace UMA.PoseTools
                 if (showTPoseToolsSection)
                 {
                     EditorGUI.indentLevel++;
+                    EditorGUI.BeginChangeCheck();
                     donorTPose = EditorGUILayout.ObjectField(donorTPoseGUIContent, donorTPose, typeof(UmaTPose), false) as UmaTPose;
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        persistentSettingsChanged = true;
+                    }
                     bool canGenerateTPose = donorTPose != null && target != null;
                     EditorGUI.BeginDisabledGroup(!canGenerateTPose);
                     if (GUILayout.Button(generateTPoseGUIContent))
@@ -2909,16 +3091,26 @@ namespace UMA.PoseTools
                 if (showMergeBonePoseSection)
                 {
                     EditorGUI.indentLevel++;
-                    mergeBonePoseSource = EditorGUILayout.ObjectField(mergeBonePoseSourceGUIContent, mergeBonePoseSource, typeof(UMABonePose), false) as UMABonePose;
-                    EditorGUI.BeginDisabledGroup(!allowPoseEditing || mergeBonePoseSource == null || mergeBonePoseSource == targetPose);
+                    EditorGUILayout.LabelField(mergeBonePoseListGUIContent, EditorStyles.boldLabel);
+                    if (DrawMergeBonePoseList(allowPoseEditing))
+                    {
+                        persistentSettingsChanged = true;
+                    }
+
+                    if (mergeBonePoseSources.Count == 0)
+                    {
+                        EditorGUILayout.HelpBox("Add one or more UMABonePose assets to merge, in the order they should be applied.", MessageType.Info);
+                    }
+
+                    EditorGUI.BeginDisabledGroup(!allowPoseEditing || !HasValidMergeBonePoseSources());
                     if (GUILayout.Button(mergeBonePoseButtonGUIContent))
                     {
-                        MergeBonePose(mergeBonePoseSource);
+                        MergeBonePose(mergeBonePoseSources);
                     }
                     EditorGUI.EndDisabledGroup();
-                    if (mergeBonePoseSource == targetPose)
+                    if (mergeBonePoseSources.Count > 0 && !HasValidMergeBonePoseSources())
                     {
-                        EditorGUILayout.HelpBox("Select a different UMABonePose to merge from.", MessageType.Info);
+                        EditorGUILayout.HelpBox("The merge list does not contain any valid source poses.", MessageType.Info);
                     }
                     EditorGUI.indentLevel--;
                 }
@@ -2952,14 +3144,19 @@ namespace UMA.PoseTools
             GUIHelper.BeginVerticalPadded();
             // Global toggle to disable mirroring logic
             bool prevDisableMirroring = disableMirroring;
+            EditorGUI.BeginChangeCheck();
             disableMirroring = EditorGUILayout.Toggle("Disable Mirroring", disableMirroring);
+            MirrorAxis = EditorGUILayout.Popup("Mirror Axis", MirrorAxis, MirrorAxises);
+            displayMode = EditorGUILayout.Popup("Bone Display Mode", displayMode, strings);
+            if (EditorGUI.EndChangeCheck())
+            {
+                persistentSettingsChanged = true;
+            }
             if (disableMirroring && !prevDisableMirroring)
             {
             // Clear mirror index so UI does not show mirroring status when disabled
             mirrorBoneIndex = BAD_INDEX;
             }
- MirrorAxis = EditorGUILayout.Popup("Mirror Axis", MirrorAxis, MirrorAxises);
- displayMode = EditorGUILayout.Popup("Bone Display Mode", displayMode, strings);
 
             bool previousUseIKEditor = useIKEditor;
             useIKEditor = EditorGUILayout.Toggle(useIKEditorGUIContent, useIKEditor);
@@ -2972,6 +3169,11 @@ namespace UMA.PoseTools
                 }
                 ClearActiveEditState();
                 SceneView.RepaintAll();
+            }
+
+            if (persistentSettingsChanged)
+            {
+                SavePersistentEditorState();
             }
 
             if (useIKEditor)
@@ -3601,16 +3803,40 @@ namespace UMA.PoseTools
 
             clonedTPose.Serialize();
 
-            string assetPath = AssetDatabase.GetAssetPath(target);
-            string directory = string.IsNullOrEmpty(assetPath) ? "Assets" : System.IO.Path.GetDirectoryName(assetPath);
-            string newAssetName = bonePose.name + "_TPose";
-            string newAssetPath = AssetDatabase.GenerateUniqueAssetPath(directory + "/" + newAssetName + ".asset");
+            string defaultName = !string.IsNullOrEmpty(bonePose.name) ? bonePose.name + "_TPose" : "UMABonePose_TPose";
+            string assetPath = EditorUtility.SaveFilePanelInProject("Generate TPose", defaultName, "asset", "Save the generated TPose asset with a custom name.");
+            if (string.IsNullOrEmpty(assetPath))
+            {
+                return;
+            }
 
-            AssetDatabase.CreateAsset(clonedTPose, newAssetPath);
+            UmaTPose existingTPose = AssetDatabase.LoadAssetAtPath<UmaTPose>(assetPath);
+            bool createAsset = existingTPose == null;
+            if (createAsset && !string.IsNullOrEmpty(AssetDatabase.AssetPathToGUID(assetPath)))
+            {
+                EditorUtility.DisplayDialog("Generate TPose", "The selected asset path already exists and is not a UmaTPose.", "OK");
+                return;
+            }
+
+            clonedTPose.name = GetAssetNameFromPath(assetPath);
+            UmaTPose savedTPose = clonedTPose;
+
+            if (createAsset)
+            {
+                AssetDatabase.CreateAsset(clonedTPose, assetPath);
+            }
+            else
+            {
+                EditorUtility.CopySerialized(clonedTPose, existingTPose);
+                existingTPose.name = clonedTPose.name;
+                EditorUtility.SetDirty(existingTPose);
+                savedTPose = existingTPose;
+            }
+
             AssetDatabase.SaveAssets();
 
             System.Text.StringBuilder messageBuilder = new System.Text.StringBuilder();
-            messageBuilder.AppendLine($"Generated TPose '{newAssetName}' with {replaced} matching bone{(replaced == 1 ? "" : "s")} applied.");
+            messageBuilder.AppendLine($"Generated TPose '{savedTPose.name}' with {replaced} matching bone{(replaced == 1 ? "" : "s")} applied.");
             if (ignoredBones.Count > 0)
             {
                 messageBuilder.AppendLine("Bones not found in TPose: " + string.Join(", ", ignoredBones));
@@ -3623,7 +3849,8 @@ namespace UMA.PoseTools
             tposeResultMessage = messageBuilder.ToString().TrimEnd();
             tposeResultMessageType = replaced > 0 ? MessageType.Info : MessageType.Warning;
 
-            EditorGUIUtility.PingObject(clonedTPose);
+            Selection.activeObject = savedTPose;
+            EditorGUIUtility.PingObject(savedTPose);
             Debug.Log($"[UMABonePoseEditor] {tposeResultMessage.Replace("\n", " ")}");
         }
 
@@ -3712,6 +3939,268 @@ namespace UMA.PoseTools
             _poseEdited = true;
         }
 
+        private bool HasValidMergeBonePoseSources()
+        {
+            if (mergeBonePoseSources == null)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < mergeBonePoseSources.Count; i++)
+            {
+                UMABonePose sourcePose = mergeBonePoseSources[i];
+                if (sourcePose != null && sourcePose != targetPose && sourcePose.poses != null && sourcePose.poses.Length > 0)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool AddMergeBonePoseSource(UMABonePose sourcePose)
+        {
+            if (sourcePose == null || sourcePose == targetPose)
+            {
+                return false;
+            }
+
+            mergeBonePoseSources.Add(sourcePose);
+            return true;
+        }
+
+        private void MoveMergeBonePoseSource(int fromIndex, int toIndex)
+        {
+            if (fromIndex < 0 || toIndex < 0 || fromIndex >= mergeBonePoseSources.Count || toIndex >= mergeBonePoseSources.Count || fromIndex == toIndex)
+            {
+                return;
+            }
+
+            UMABonePose movingPose = mergeBonePoseSources[fromIndex];
+            mergeBonePoseSources[fromIndex] = mergeBonePoseSources[toIndex];
+            mergeBonePoseSources[toIndex] = movingPose;
+        }
+
+        private bool HandleMergeBonePoseDragAndDrop(Rect dropArea)
+        {
+            Event currentEvent = Event.current;
+            if (currentEvent == null || !dropArea.Contains(currentEvent.mousePosition))
+            {
+                return false;
+            }
+
+            UnityEngine.Object[] draggedObjects = DragAndDrop.objectReferences;
+            if (draggedObjects == null || draggedObjects.Length == 0)
+            {
+                return false;
+            }
+
+            bool hasValidDrop = false;
+            for (int i = 0; i < draggedObjects.Length; i++)
+            {
+                if (draggedObjects[i] is UMABonePose draggedPose && draggedPose != null && draggedPose != targetPose)
+                {
+                    hasValidDrop = true;
+                    break;
+                }
+
+                if (draggedObjects[i] is RaceData raceData && raceData != null)
+                {
+                    hasValidDrop = true;
+                    break;
+                }
+            }
+
+            if (!hasValidDrop)
+            {
+                return false;
+            }
+
+            if (currentEvent.type == EventType.DragUpdated)
+            {
+                DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
+                currentEvent.Use();
+                return false;
+            }
+
+            if (currentEvent.type == EventType.DragPerform)
+            {
+                DragAndDrop.AcceptDrag();
+                bool addedAny = false;
+                for (int i = 0; i < draggedObjects.Length; i++)
+                {
+                    if (draggedObjects[i] is UMABonePose draggedPose && AddMergeBonePoseSource(draggedPose))
+                    {
+                        addedAny = true;
+                    }
+
+                    if (draggedObjects[i] is RaceData raceData && raceData != null)
+                    {
+                        IReadOnlyList<UMABonePose> basePoses = GetRaceDataBaseBonePoses(raceData);
+                        if (basePoses != null)
+                        {
+                            for (int j = 0; j < basePoses.Count; j++)
+                            {
+                                if (AddMergeBonePoseSource(basePoses[j]))
+                                {
+                                    addedAny = true;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                currentEvent.Use();
+                return addedAny;
+            }
+
+            return false;
+        }
+
+        private static bool HasRaceDataBaseBonePoses(RaceData raceData)
+        {
+            return GetRaceDataBaseBonePoses(raceData).Count > 0;
+        }
+
+        private static IReadOnlyList<UMABonePose> GetRaceDataBaseBonePoses(RaceData raceData)
+        {
+            List<UMABonePose> basePoses = new List<UMABonePose>();
+            if (raceData == null || raceData.DNACollection == null)
+            {
+                return basePoses;
+            }
+
+            IList<DNAGroup> dnaGroups = raceData.DNACollection.DNAGroups;
+            if (dnaGroups == null)
+            {
+                return basePoses;
+            }
+
+            for (int gi = 0; gi < dnaGroups.Count; gi++)
+            {
+                DNAGroup dnaGroup = dnaGroups[gi];
+                if (dnaGroup == null || dnaGroup.dnaList == null)
+                {
+                    continue;
+                }
+
+                for (int di = 0; di < dnaGroup.dnaList.Count; di++)
+                {
+                    DNA dna = dnaGroup.dnaList[di];
+                    if (dna == null || dna.effects == null)
+                    {
+                        continue;
+                    }
+
+                    for (int ei = 0; ei < dna.effects.Count; ei++)
+                    {
+                        if (dna.effects[ei] is DNAEffect_BonePose bonePoseEffect
+                            && bonePoseEffect.isBasePose
+                            && bonePoseEffect.bonePose != null)
+                        {
+                            UMABonePose bp = bonePoseEffect.bonePose;
+                            if (bp != null && !basePoses.Contains(bp))
+                            {
+                                basePoses.Add(bp);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return basePoses;
+        }
+
+        private bool DrawMergeBonePoseList(bool allowPoseEditing)
+        {
+            bool changed = false;
+
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            EditorGUILayout.BeginHorizontal();
+            EditorGUI.BeginDisabledGroup(!allowPoseEditing);
+            mergeBonePoseAddCandidate = EditorGUILayout.ObjectField(mergeBonePoseAddGUIContent, mergeBonePoseAddCandidate, typeof(UMABonePose), false) as UMABonePose;
+            EditorGUI.BeginDisabledGroup(mergeBonePoseAddCandidate == null || mergeBonePoseAddCandidate == targetPose);
+            if (GUILayout.Button("Add", GUILayout.Width(50f)))
+            {
+                if (AddMergeBonePoseSource(mergeBonePoseAddCandidate))
+                {
+                    mergeBonePoseAddCandidate = null;
+                    changed = true;
+                }
+            }
+            EditorGUI.EndDisabledGroup();
+            if (GUILayout.Button("Clear", GUILayout.Width(60f)))
+            {
+                mergeBonePoseSources.Clear();
+                mergeBonePoseAddCandidate = null;
+                changed = true;
+            }
+            EditorGUI.EndDisabledGroup();
+            EditorGUILayout.EndHorizontal();
+
+            if (mergeBonePoseSources.Count > 0)
+            {
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField("#", GUILayout.Width(24f));
+                EditorGUILayout.LabelField("Bone Pose", GUILayout.ExpandWidth(true));
+                EditorGUILayout.LabelField("Order", GUILayout.Width(72f));
+                EditorGUILayout.LabelField(string.Empty, GUILayout.Width(24f));
+                EditorGUILayout.EndHorizontal();
+
+                EditorGUI.BeginDisabledGroup(!allowPoseEditing);
+                for (int i = 0; i < mergeBonePoseSources.Count; i++)
+                {
+                    EditorGUILayout.BeginHorizontal();
+                    EditorGUILayout.LabelField((i + 1).ToString(), GUILayout.Width(24f));
+
+                    EditorGUI.BeginChangeCheck();
+                    mergeBonePoseSources[i] = EditorGUILayout.ObjectField(mergeBonePoseSources[i], typeof(UMABonePose), false) as UMABonePose;
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        changed = true;
+                    }
+
+                    EditorGUI.BeginDisabledGroup(i == 0);
+                    if (GUILayout.Button("^", GUILayout.Width(22f)))
+                    {
+                        MoveMergeBonePoseSource(i, i - 1);
+                        changed = true;
+                    }
+                    EditorGUI.EndDisabledGroup();
+
+                    EditorGUI.BeginDisabledGroup(i == mergeBonePoseSources.Count - 1);
+                    if (GUILayout.Button("v", GUILayout.Width(22f)))
+                    {
+                        MoveMergeBonePoseSource(i, i + 1);
+                        changed = true;
+                    }
+                    EditorGUI.EndDisabledGroup();
+
+                    if (GUILayout.Button("X", GUILayout.Width(24f)))
+                    {
+                        mergeBonePoseSources.RemoveAt(i);
+                        changed = true;
+                        EditorGUILayout.EndHorizontal();
+                        i--;
+                        continue;
+                    }
+
+                    EditorGUILayout.EndHorizontal();
+                }
+                EditorGUI.EndDisabledGroup();
+            }
+
+            Rect dropArea = GUILayoutUtility.GetRect(GUIContent.none, EditorStyles.helpBox, GUILayout.ExpandWidth(true), GUILayout.Height(36f));
+            GUI.Box(dropArea, "Drop UMABonePose assets here to append");
+            if (allowPoseEditing && HandleMergeBonePoseDragAndDrop(dropArea))
+            {
+                changed = true;
+            }
+
+            EditorGUILayout.EndVertical();
+            return changed;
+        }
+
         private static void CopyPoseBoneValues(SerializedProperty destinationPose, UMABonePose.PoseBone sourcePose)
         {
             if (destinationPose == null || sourcePose == null)
@@ -3762,16 +4251,28 @@ namespace UMA.PoseTools
             }
         }
 
-        private void MergeBonePose(UMABonePose sourcePose)
+        private void MergeBonePose(IList<UMABonePose> sourcePoses)
         {
-            if (sourcePose == null || sourcePose == targetPose || serializedObject == null || serializedObject.targetObject == null)
+            if (sourcePoses == null || serializedObject == null || serializedObject.targetObject == null)
             {
                 return;
             }
 
-            if (sourcePose.poses == null || sourcePose.poses.Length == 0)
+            List<UMABonePose> validSourcePoses = new List<UMABonePose>();
+            for (int i = 0; i < sourcePoses.Count; i++)
             {
-                EditorUtility.DisplayDialog("Merge Bone Pose", "The selected pose has no bone entries to merge.", "OK");
+                UMABonePose sourcePose = sourcePoses[i];
+                if (sourcePose == null || sourcePose == targetPose || sourcePose.poses == null || sourcePose.poses.Length == 0)
+                {
+                    continue;
+                }
+
+                validSourcePoses.Add(sourcePose);
+            }
+
+            if (validSourcePoses.Count == 0)
+            {
+                EditorUtility.DisplayDialog("Merge Bone Pose", "Add one or more valid UMABonePose assets to the merge list.", "OK");
                 return;
             }
 
@@ -3785,28 +4286,37 @@ namespace UMA.PoseTools
 
             int updatedCount = 0;
             int addedCount = 0;
-            for (int i = 0; i < sourcePose.poses.Length; i++)
+            for (int sourcePoseIndex = 0; sourcePoseIndex < validSourcePoses.Count; sourcePoseIndex++)
             {
-                UMABonePose.PoseBone sourceBone = sourcePose.poses[i];
-                if (sourceBone == null || string.IsNullOrEmpty(sourceBone.bone))
+                UMABonePose sourcePose = validSourcePoses[sourcePoseIndex];
+                if (sourcePose.poses == null || sourcePose.poses.Length == 0)
                 {
                     continue;
                 }
 
-                SerializedProperty destinationPose = FindPoseByBoneName(poses, sourceBone.bone);
-                if (destinationPose == null)
+                for (int i = 0; i < sourcePose.poses.Length; i++)
                 {
-                    int insertIndex = poses.arraySize;
-                    poses.InsertArrayElementAtIndex(insertIndex);
-                    destinationPose = poses.GetArrayElementAtIndex(insertIndex);
-                    addedCount++;
-                }
-                else
-                {
-                    updatedCount++;
-                }
+                    UMABonePose.PoseBone sourceBone = sourcePose.poses[i];
+                    if (sourceBone == null || string.IsNullOrEmpty(sourceBone.bone))
+                    {
+                        continue;
+                    }
 
-                CopyPoseBoneValues(destinationPose, sourceBone);
+                    SerializedProperty destinationPose = FindPoseByBoneName(poses, sourceBone.bone);
+                    if (destinationPose == null)
+                    {
+                        int insertIndex = poses.arraySize;
+                        poses.InsertArrayElementAtIndex(insertIndex);
+                        destinationPose = poses.GetArrayElementAtIndex(insertIndex);
+                        addedCount++;
+                    }
+                    else
+                    {
+                        updatedCount++;
+                    }
+
+                    CopyPoseBoneValues(destinationPose, sourceBone);
+                }
             }
 
             serializedObject.ApplyModifiedProperties();
@@ -3816,7 +4326,7 @@ namespace UMA.PoseTools
             Repaint();
             SceneView.RepaintAll();
 
-            Debug.Log($"[UMABonePoseEditor] Merged pose '{sourcePose.name}' into '{targetPose.name}': updated {updatedCount} bones and added {addedCount} bones.");
+            Debug.Log($"[UMABonePoseEditor] Merged {validSourcePoses.Count} bone pose{(validSourcePoses.Count == 1 ? string.Empty : "s")} into '{targetPose.name}': updated {updatedCount} bones and added {addedCount} bones.");
         }
 
         private static void FlipBone(SerializedProperty poses, int i)

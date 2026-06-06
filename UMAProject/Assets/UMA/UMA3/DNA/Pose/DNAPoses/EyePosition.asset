@@ -92,8 +92,22 @@ MonoBehaviour:
     enabled: 1
   - bone: NoseMiddle
     hash: 865884795
-    position: {x: -0.000007716131, y: -0.011363223, z: -0.0004990697}
+    position: {x: -0.000030555206, y: -0.011599548, z: 0.004081428}
     rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: LeftUpperLid
+    hash: -209628701
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.0019272144, y: -0.0000000142853285, z: -0.0000000025155478, w: 0.99999815}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightUpperLid
+    hash: 683767470
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.0019272144, y: -0.0000000142853285, z: -0.0000000025155478, w: -0.99999815}
     scale: {x: 1, y: 1, z: 1}
     category: 
     enabled: 1

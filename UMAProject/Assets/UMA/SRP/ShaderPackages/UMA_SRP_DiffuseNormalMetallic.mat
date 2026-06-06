@@ -94,7 +94,7 @@ Material:
     - _GlossyReflections: 1
     - _HalfLambertStrength: 1
     - _METALLICSPECGLOSSMAP: 0
-    - _Metallic: 0
+    - _Metallic: 0.402
     - _MetallicModulation: 1
     - _Mode: 0
     - _NORMALMAP: 0
@@ -106,9 +106,9 @@ Material:
     - _QueueOffset: 0
     - _RimLightPower: 4
     - _RimLightingModulation: 0
-    - _Smoothness: 0
+    - _Smoothness: 0.388
     - _SmoothnessModulation: 1
-    - _SmoothnessSRC: 0
+    - _SmoothnessSRC: 1
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1

@@ -27,20 +27,6 @@ MonoBehaviour:
     scale: {x: 0.6555771, y: 0.55107564, z: 0.65886164}
     category: 
     enabled: 1
-  - bone: RightOuterBreast
-    hash: -1043063424
-    position: {x: 0, y: 0, z: 0}
-    rotation: {x: 0, y: 0, z: 0, w: 1}
-    scale: {x: 1.3, y: 1.2, z: 1.2}
-    category: 
-    enabled: 1
-  - bone: LeftOuterBreast
-    hash: 361754685
-    position: {x: 0, y: 0, z: 0}
-    rotation: {x: -0, y: 0, z: 0, w: -1}
-    scale: {x: 1.3, y: 1.2, z: 1.2}
-    category: 
-    enabled: 1
   - bone: NeckAdjust
     hash: 1605701185
     position: {x: 0, y: 0, z: 0}
@@ -59,7 +45,7 @@ MonoBehaviour:
     hash: -1471957022
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 1}
-    scale: {x: 0.9820392, y: 0.99999934, z: 1}
+    scale: {x: 0.8994943, y: 0.9999984, z: 1}
     category: 
     enabled: 1
   - bone: RightShoulder
@@ -115,6 +101,34 @@ MonoBehaviour:
     hash: 130111906
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: Spine1Adjust
+    hash: 473121629
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.8823656, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: SpineAdjust
+    hash: 1842365421
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.95794976, y: 0.9999988, z: 0.9999988}
+    category: 
+    enabled: 1
+  - bone: LeftUpperLid
+    hash: -209628701
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.043162797, y: -0.000000005090674, z: -0.000000002880368, w: 0.9990681}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightUpperLid
+    hash: 683767470
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.043162797, y: -0.000000005090674, z: -0.000000002880368, w: -0.9990681}
     scale: {x: 1, y: 1, z: 1}
     category: 
     enabled: 1

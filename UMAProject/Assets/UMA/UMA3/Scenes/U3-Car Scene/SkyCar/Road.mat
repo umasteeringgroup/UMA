@@ -8,20 +8,18 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Road
-  m_Shader: {fileID: -6465566751694194690, guid: e2c95817ac413714c8f36b80020c9867, type: 3}
+  m_Shader: {fileID: -6465566751694194690, guid: 06af8af7a2cabc14f9e3f4337367e41d, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
-  m_InvalidKeywords:
-  - _METALLICGLOSSMAP
-  - _NORMALMAP
-  - _PARALLAXMAP
+  m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
   stringTagMap: {}
-  disabledShaderPasses: []
+  disabledShaderPasses:
+  - MOTIONVECTORS
   m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
@@ -66,6 +64,10 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _Metallic:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
         m_Texture: {fileID: 2800000, guid: 867ea551f07a55349bbea8c5006d4c4b, type: 3}
         m_Scale: {x: 1, y: 100}
@@ -86,8 +88,21 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - unity_Lightmaps:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_LightmapsInd:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_ShadowMasks:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _AO: 0
     - _BumpScale: 3
     - _ColorModulation: 1
     - _CullMode: 2
@@ -109,6 +124,8 @@ Material:
     - _NormalStrength: 1.41
     - _OcclusionStrength: 1
     - _Parallax: 0.005
+    - _QueueControl: 0
+    - _QueueOffset: 0
     - _RimLightPower: 4
     - _RimLightingModulation: 0
     - _Smoothness: 0
@@ -125,9 +142,23 @@ Material:
     - _UseMaskMap: 0
     - _ZWrite: 1
     m_Colors:
+    - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 0.764151, g: 0.764151, b: 0.764151, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _RimLightColor: {r: 1, g: 1, b: 1, a: 1}
     - _Tint: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
+--- !u!114 &4794084213220738188
+MonoBehaviour:
+  m_ObjectHideFlags: 11
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0353a89b1f911e48b9e16bdc9f2e058, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Editor::UnityEditor.Rendering.Universal.AssetVersion
+  version: 10
