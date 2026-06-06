@@ -125,9 +125,6 @@
         },
         {
             "m_Id": "ce4ca7646b824892bb06c706b99826e2"
-        },
-        {
-            "m_Id": "1b121148832e4a7689becf6add1230a2"
         }
     ],
     "m_GroupDatas": [],
@@ -544,9 +541,6 @@
             },
             {
                 "m_Id": "f0d73ad7117d4fe4bdfbf9ca9e732227"
-            },
-            {
-                "m_Id": "1b121148832e4a7689becf6add1230a2"
             }
         ]
     },
@@ -982,40 +976,6 @@
     "m_SSSTransmission": true,
     "m_EnergyConservingSpecular": true,
     "m_ClearCoat": false
-}
-
-{
-    "m_SGVersion": 0,
-    "m_Type": "UnityEditor.ShaderGraph.BlockNode",
-    "m_ObjectId": "1b121148832e4a7689becf6add1230a2",
-    "m_Group": {
-        "m_Id": ""
-    },
-    "m_Name": "SurfaceDescription.AlphaClipThreshold",
-    "m_DrawState": {
-        "m_Expanded": true,
-        "m_Position": {
-            "serializedVersion": "2",
-            "x": 0.0,
-            "y": 0.0,
-            "width": 0.0,
-            "height": 0.0
-        }
-    },
-    "m_Slots": [
-        {
-            "m_Id": "b9f159113ffc42b1ae6ee683983dd3af"
-        }
-    ],
-    "synonyms": [],
-    "m_Precision": 0,
-    "m_PreviewExpanded": true,
-    "m_DismissedVersion": 0,
-    "m_PreviewMode": 0,
-    "m_CustomColors": {
-        "m_SerializableColors": []
-    },
-    "m_SerializedDescriptor": "SurfaceDescription.AlphaClipThreshold"
 }
 
 {
@@ -2992,22 +2952,6 @@
 
 {
     "m_SGVersion": 0,
-    "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
-    "m_ObjectId": "b9f159113ffc42b1ae6ee683983dd3af",
-    "m_Id": 0,
-    "m_DisplayName": "Alpha Clip Threshold",
-    "m_SlotType": 0,
-    "m_Hidden": false,
-    "m_ShaderOutputName": "AlphaClipThreshold",
-    "m_StageCapability": 2,
-    "m_Value": 0.5,
-    "m_DefaultValue": 0.5,
-    "m_Labels": [],
-    "m_LiteralMode": false
-}
-
-{
-    "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.PropertyNode",
     "m_ObjectId": "bb6c65f1cfc248bd94e7371eaa4d642a",
     "m_Group": {
@@ -3238,10 +3182,10 @@
         "m_Expanded": true,
         "m_Position": {
             "serializedVersion": "2",
-            "x": -194.0000457763672,
-            "y": 585.3333740234375,
-            "width": 129.3333282470703,
-            "height": 150.66656494140626
+            "x": -224.6666259765625,
+            "y": 518.6666870117188,
+            "width": 129.33331298828126,
+            "height": 150.66668701171876
         }
     },
     "m_Slots": [

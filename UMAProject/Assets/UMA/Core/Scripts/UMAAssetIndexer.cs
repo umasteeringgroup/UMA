@@ -4652,7 +4652,11 @@ namespace UMA
                     AddType(s, CurrentType, FolderFilter);
                 }
             }
+            Debug.Log("Library rebuild complete. Rebuilding index and saving...");
             ForceSave();
+            Debug.Log("Index rebuild complete. Unloading unused assets...");
+            Resources.UnloadUnusedAssets();
+            Debug.Log("All done.");
         }
 
         private void AddType(string s, Type CurrentType, List<string> FolderFilter)

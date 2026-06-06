@@ -1787,8 +1787,8 @@
     "m_ObjectId": "0a13e827cdfd469e87dda752ac9ed76a",
     "m_Title": "NormalMap",
     "m_Position": {
-        "x": -954.9999389648438,
-        "y": 349.99993896484377
+        "x": -955.3333740234375,
+        "y": 350.0
     }
 }
 
@@ -3098,6 +3098,7 @@
     "isMainTexture": false,
     "useTilingAndOffset": false,
     "useTexelSize": true,
+    "isHDR": false,
     "m_Modifiable": true,
     "m_DefaultType": 0
 }
@@ -3467,8 +3468,8 @@
     "m_ObjectId": "30eb404d377b4ee995f488277ff0881a",
     "m_Title": "Emission",
     "m_Position": {
-        "x": -941.9998779296875,
-        "y": 980.9999389648438
+        "x": -942.666748046875,
+        "y": 980.666748046875
     }
 }
 
@@ -5037,6 +5038,7 @@
     "isMainTexture": false,
     "useTilingAndOffset": false,
     "useTexelSize": false,
+    "isHDR": false,
     "m_Modifiable": true,
     "m_DefaultType": 0
 }
@@ -5218,8 +5220,8 @@
     "m_ObjectId": "7062b1d5057b4266b6f536a6c9279cea",
     "m_Title": "Smoothness",
     "m_Position": {
-        "x": 147.00001525878907,
-        "y": -171.0
+        "x": 146.66668701171876,
+        "y": -171.3333740234375
     }
 }
 
@@ -5436,6 +5438,7 @@
     "isMainTexture": false,
     "useTilingAndOffset": false,
     "useTexelSize": true,
+    "isHDR": false,
     "m_Modifiable": true,
     "m_DefaultType": 3
 }
@@ -6023,8 +6026,8 @@
     "m_ObjectId": "840e4948a2894ca1bd6c9e7e0d9bf623",
     "m_Title": "Metallic",
     "m_Position": {
-        "x": -861.9999389648438,
-        "y": -311.0
+        "x": -862.666748046875,
+        "y": -311.3333740234375
     }
 }
 
@@ -6575,6 +6578,7 @@
     "isMainTexture": false,
     "useTilingAndOffset": false,
     "useTexelSize": true,
+    "isHDR": false,
     "m_Modifiable": true,
     "m_DefaultType": 0
 }
@@ -6867,6 +6871,7 @@
     "isMainTexture": false,
     "useTilingAndOffset": false,
     "useTexelSize": true,
+    "isHDR": false,
     "m_Modifiable": true,
     "m_DefaultType": 0
 }
@@ -6968,8 +6973,8 @@
     "m_ObjectId": "a79adeb299a4447aa2aa6b76e1e220d0",
     "m_Title": "BaseColor",
     "m_Position": {
-        "x": -972.9999389648438,
-        "y": -667.9999389648438
+        "x": -973.3333740234375,
+        "y": -668.0
     }
 }
 
@@ -7316,8 +7321,8 @@
     "m_ObjectId": "b2b9a4313d984ffc87575fd0102198b8",
     "m_Title": "Detail Maps",
     "m_Position": {
-        "x": -121.99999237060547,
-        "y": 388.99993896484377
+        "x": -122.66667175292969,
+        "y": 388.6666259765625
     }
 }
 
@@ -7431,8 +7436,8 @@
     "m_ObjectId": "b4ab1432e21d4fdcadb52c542f96596b",
     "m_Title": "Occlusion",
     "m_Position": {
-        "x": -925.9998779296875,
-        "y": 662.0000610351563
+        "x": -926.6666870117188,
+        "y": 662.0001831054688
     }
 }
 
@@ -7560,6 +7565,7 @@
     "isMainTexture": false,
     "useTilingAndOffset": false,
     "useTexelSize": true,
+    "isHDR": false,
     "m_Modifiable": true,
     "m_DefaultType": 1
 }
@@ -8017,6 +8023,7 @@
     "isMainTexture": false,
     "useTilingAndOffset": true,
     "useTexelSize": true,
+    "isHDR": false,
     "m_Modifiable": true,
     "m_DefaultType": 4
 }
@@ -8713,8 +8720,8 @@
     "m_ObjectId": "d4e1442d04854ba19c672a0dc0154e44",
     "m_Title": "Detail UVs",
     "m_Position": {
-        "x": -876.9999389648438,
-        "y": 1310.0
+        "x": -877.3334350585938,
+        "y": 1309.9998779296875
     }
 }
 
@@ -9640,6 +9647,7 @@
     "isMainTexture": false,
     "useTilingAndOffset": false,
     "useTexelSize": true,
+    "isHDR": false,
     "m_Modifiable": true,
     "m_DefaultType": 3
 }

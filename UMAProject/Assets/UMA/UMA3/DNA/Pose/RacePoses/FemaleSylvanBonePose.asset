@@ -103,70 +103,84 @@ MonoBehaviour:
     rotation: {x: 0, y: 0, z: 0, w: 1}
     scale: {x: 1.1, y: 1, z: 1.1}
     category: 
-    enabled: 0
+    enabled: 1
   - bone: RightEyebrowLow
     hash: -1640515339
     position: {x: 0, y: -0.005, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 1}
     scale: {x: 1, y: 1, z: 1}
     category: 
-    enabled: 0
+    enabled: 1
   - bone: RightLowCheek
     hash: -1122647396
     position: {x: -0, y: -0.005, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 1}
     scale: {x: 1, y: 1, z: 1}
     category: 
-    enabled: 0
+    enabled: 1
   - bone: RightEyebrowUp
     hash: 1246724795
     position: {x: 0, y: -0.005, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 1}
     scale: {x: 1, y: 1, z: 1}
     category: 
-    enabled: 0
+    enabled: 1
   - bone: RightEyebrowMiddle
     hash: 1695671804
     position: {x: 0, y: -0.005, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 1}
     scale: {x: 1, y: 1, z: 1}
     category: 
-    enabled: 0
+    enabled: 1
   - bone: LeftEye
     hash: 27653119
     position: {x: -0, y: -0.005, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 1}
     scale: {x: 1.1, y: 1, z: 1.1}
     category: 
-    enabled: 0
+    enabled: 1
   - bone: LeftEyebrowLow
     hash: 2129323926
     position: {x: -0, y: -0.005, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 1}
     scale: {x: 1, y: 1, z: 1}
     category: 
-    enabled: 0
+    enabled: 1
   - bone: LeftLowCheek
     hash: 1716905425
     position: {x: 0, y: -0.005, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 1}
     scale: {x: 1, y: 1, z: 1}
     category: 
-    enabled: 0
+    enabled: 1
   - bone: LeftEyebrowUp
     hash: 1123680177
     position: {x: -0, y: -0.005, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 1}
     scale: {x: 1, y: 1, z: 1}
     category: 
-    enabled: 0
+    enabled: 1
   - bone: LeftEyebrowMiddle
     hash: -356417641
     position: {x: -0, y: -0.005, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 1}
     scale: {x: 1, y: 1, z: 1}
     category: 
-    enabled: 0
+    enabled: 1
+  - bone: LeftUpperLid
+    hash: -209628701
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.047465, y: -1.1115853e-11, z: -1.7445058e-11, w: 0.9988729}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightUpperLid
+    hash: 683767470
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.047465, y: 1.1115853e-11, z: 1.7445058e-11, w: 0.9988729}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
   tweenPoses: []
   tweenWeights: []
   mixerPose: 0
