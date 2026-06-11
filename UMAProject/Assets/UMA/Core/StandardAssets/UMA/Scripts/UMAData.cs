@@ -1760,6 +1760,10 @@ namespace UMA
 			/// <param name="dna">DNA.</param>
 			public void AddDna(UMADnaBase dna)
 			{
+				if (umaDna == null)
+				{
+					umaDna = new Dictionary<int, UMADnaBase>();
+				}
 				if (umaDna.ContainsKey(dna.DNATypeHash))
 				{
 					return;
@@ -1823,6 +1827,10 @@ namespace UMA
 			/// <param name="type">Type.</param>
 			public UMADnaBase GetDna(Type type)
 			{
+				if (umaDna == null)
+				{
+					return null;
+				}
                 if (umaDna.TryGetValue(UMAUtils.StringToHash(type.Name), out var dna))
                 {
                     return dna;

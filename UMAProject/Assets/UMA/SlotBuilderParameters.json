@@ -1,10 +1,10 @@
 {
     "slotName": "UMA30_Body",
     "RootBone": "Global",
-    "createOverlay": false,
+    "createOverlay": true,
     "createRecipe": true,
-    "isBaseRaceRecipe": false,
-    "addToGlobalLibrary": false,
+    "isBaseRaceRecipe": true,
+    "addToGlobalLibrary": true,
     "binarySerialization": true,
     "calcTangents": false,
     "clearNormals": false,
@@ -29,7 +29,7 @@
     "alwaysRecreateSlots": true,
     "Tags": [],
     "slotMaterialPath": "Assets/UMA/SRP/ShaderGraphs/UMAMaterial/UMAMaterial_UMA_URP_HAIR.asset",
-    "slotFolderPath": "Assets/temp",
+    "slotFolderPath": "Assets/temp/Shepherdess",
     "generateSlotLods": true,
     "useUnityLodGenerator": true,
     "slotLodMaxLevels": 8,
@@ -45,7 +45,7 @@
     "filterIgnoreMeshesContaining": "UMA30",
     "filterOnlyIncludeMeshesEnabled": false,
     "filterOnlyIncludeMeshesContaining": "robe",
-    "lastDroppedFbxPath": "Assets/temp/UMA2_wolverine.fbx",
+    "lastDroppedFbxPath": "Assets/temp/Shepherdess_selected.fbx",
     "pendingSmrsCompactView": false,
     "pendingSmrsFilterEnabled": false
 }

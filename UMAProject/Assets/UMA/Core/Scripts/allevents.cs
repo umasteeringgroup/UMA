@@ -1,9 +1,16 @@
 ﻿using UnityEngine;
+using UMA.CharacterSystem;
 using UMA;
+
 namespace UMA
 {
     public class allevents : MonoBehaviour
     {
+        public void CharacterStart(DynamicCharacterAvatar dca)
+        {
+            Debug.Log("Character Start");
+        }
+
         public void CharacterBegun(UMAData umaData)
         {
             Debug.Log("Character Begun");

@@ -2659,7 +2659,7 @@ namespace UMA
         /// <param name="ot"></param>
         private void RefreshType(Type ot)
         {
-            Debug.Log($"Refreshing type {ot.Name} in UMAAssetIndexer.");
+            //Debug.Log($"Refreshing type {ot.Name} in UMAAssetIndexer.");
             string typeString = ot.Name;
 
             List<string> FolderFilter = null;

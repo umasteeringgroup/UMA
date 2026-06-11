@@ -178,7 +178,7 @@ namespace UMA.CharacterSystem
         [Tooltip("When changing the race of the Avatar, cache the current state?")]
         public bool cacheCurrentState = true;
         [Tooltip("If true the existing skeleton is cleared and then rebuilt when the race is changed. Turn this off if you experience animation issues.")]
-        public bool rebuildSkeleton = false;
+        public bool rebuildSkeleton = true;
         [Tooltip("Always rebuild the skeleton. This will clear out additional animated bones from slots.")]
         public bool alwaysRebuildSkeleton = false;
         [Tooltip("This will force the animator to rebind after avatar generation. You will know if you need to do this.")]

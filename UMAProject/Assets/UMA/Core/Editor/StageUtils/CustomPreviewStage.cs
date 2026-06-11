@@ -18,7 +18,10 @@ namespace UMA
 
         public void SetupScene(SceneView sceneView)
         {
-            scene = EditorSceneManager.NewPreviewScene();
+            var customPreviewScene = EditorSceneManager.NewPreviewScene();
+            customPreviewScene.name = "Preview Scene "+titleContent.text;
+            scene = customPreviewScene;
+
             GameObject lightingObject = new GameObject("Directional Light");
             lightingObject.transform.rotation = Quaternion.Euler(50, 330, 0);
             lightingObject.AddComponent<Light>().type = LightType.Directional;

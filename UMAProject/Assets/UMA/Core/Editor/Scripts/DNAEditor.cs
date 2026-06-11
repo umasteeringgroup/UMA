@@ -696,7 +696,7 @@ public class DNAEditor : Editor
             }
         }
         EditorGUILayout.EndHorizontal();
-        if (dca == null)
+        if (dca == null && showHelp)
         {
             EditorGUILayout.HelpBox("Select a DynamicCharacterAvatar in the hierarchy to enable the bone picker.", MessageType.Info);
         }

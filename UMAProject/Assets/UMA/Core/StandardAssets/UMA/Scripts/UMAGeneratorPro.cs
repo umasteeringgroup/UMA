@@ -552,7 +552,12 @@ namespace UMA
                         }
 
                         // First pass material
-                        var firstPass = gm.material;
+                        Material firstPass = gm.material != null ? gm.material : gm.umaMaterial != null ? gm.umaMaterial.material : null;
+                        if (firstPass == null)
+                        {
+                            continue;
+                        }
+
                         newMats.Add(firstPass);
 
                         gm.skinnedMeshRenderer = renderer;
@@ -574,9 +579,12 @@ namespace UMA
                         // Optional second pass
                         if (gm.umaMaterial.secondPass != null)
                         {
-							Material secondPass = GameObject.Instantiate(gm.umaMaterial.secondPass);
-
-                            gm.secondPassMaterial = secondPass;
+Material secondPass = gm.secondPassMaterial;
+                            if (secondPass == null || secondPass == firstPass || secondPass.shader != gm.umaMaterial.secondPass.shader)
+                            {
+                                secondPass = GameObject.Instantiate(gm.umaMaterial.secondPass);
+                                gm.secondPassMaterial = secondPass;
+                            }
 
                             UMAGeneratorPro.ApplyMaterialParameters(gm, umaData, secondPass);
                             UMADefaultMeshCombiner.CopyMaterialTextures(secondPass, gm.material, gm.umaMaterial);

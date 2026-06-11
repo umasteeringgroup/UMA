@@ -13,7 +13,9 @@ MonoBehaviour:
   m_Name: UMA3Hair
   m_EditorClassIdentifier: 
   _material: {fileID: 2100000, guid: 39055ade9321e8c40b31784cc9332f4e, type: 2}
+  _HDRPMaterial: {fileID: 0}
   _secondPass: {fileID: 2100000, guid: 6eebbc33ce23fd343a1c99344fe0f8ba, type: 2}
+  _HDRPSecondPass: {fileID: 0}
   materialType: 8
   channels:
   - channelType: 3
@@ -23,6 +25,7 @@ MonoBehaviour:
     Compression: 0
     DownSample: 0
     ConvertRenderTexture: 0
+    UseExistingTextureForChannel: 0
     NonShaderTexture: 0
   - channelType: 3
     textureFormat: 0
@@ -31,6 +34,7 @@ MonoBehaviour:
     Compression: 0
     DownSample: 0
     ConvertRenderTexture: 0
+    UseExistingTextureForChannel: 0
     NonShaderTexture: 0
   generateMipMaps: 1
   MipMapBias: 0

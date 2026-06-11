@@ -1489,8 +1489,22 @@ namespace UMA
                 _sourceSlotName = (string)source._sourceSlotName.Clone();
             }
             slotGroup = source.slotGroup;
-            tags = (string[])source.tags.Clone();
-            Races = (string[])source.Races.Clone();
+            if (source.tags != null)
+            {
+                tags = (string[])source.tags.Clone();
+            }
+            else
+            {
+                tags = new string[0];
+            }
+            if (source.Races != null)
+            {
+                Races = (string[])source.Races.Clone();
+            }
+            else
+            {
+                Races = new string[0];
+            }
         }
     }
 }

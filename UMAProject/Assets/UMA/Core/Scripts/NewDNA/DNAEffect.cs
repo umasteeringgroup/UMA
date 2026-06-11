@@ -27,6 +27,7 @@ namespace UMA
         private DNACurve _TemplateCurve = null;
         public bool expanded;
         public bool selected;
+        public bool showHelp;
 
 
         public string title
@@ -69,6 +70,7 @@ namespace UMA
 #if UNITY_EDITOR
         public virtual void DoGui(bool showDescription, bool showHelp, out AnimationCurve curveToCopy)
         {
+            this.showHelp = showHelp;
             curveToCopy = null;
             if (showHelp)
             {
@@ -104,7 +106,10 @@ namespace UMA
             GUILayout.EndHorizontal();
             minMapping = EditorGUILayout.DelayedFloatField("Min", minMapping);
             maxMapping = EditorGUILayout.DelayedFloatField("Max", maxMapping);
-            EditorGUILayout.HelpBox("You can load a template curve here. This will set the Min, Max and Curve values to the values in the template curve. The template curve is not saved.", MessageType.Info);
+            if (showHelp)
+            {
+                EditorGUILayout.HelpBox("You can load a template curve here. This will set the Min, Max and Curve values to the values in the template curve. The template curve is not saved.", MessageType.Info);
+            }
             bool wasNull = _TemplateCurve == null;
             _TemplateCurve = EditorGUILayout.ObjectField("Template Curve", _TemplateCurve, typeof(DNACurve), false) as DNACurve;
             if (_TemplateCurve != null && wasNull)

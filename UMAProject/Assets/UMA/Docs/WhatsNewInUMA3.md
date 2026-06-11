@@ -19,7 +19,7 @@ The biggest changes for most users are:
 - Better wardrobe authoring, including overlay positioning in the recipe editor and placeholder/wildcard slots for overlay-only recipes.
 - A cleaner wearable item API on `DynamicCharacterAvatar` for setting, appending, removing, clearing, and querying equipped items.
 - New and improved mesh hide, mesh modifier, decal, texture utility, UDIM, and ShaderGraph workflows.
-- Better runtime setup and validation, including generator creation/help in the Welcome window and a stronger recommendation to rebuild the UMA Library after importing a beta update.
+- Better runtime setup and validation, including generator creation/help in the Welcome window and a stronger recommendation to rebuild the UMA Library after importing an UMA update.
 
 ## Start Here
 
@@ -47,7 +47,7 @@ Useful entry scenes include:
 
 ## New UMA 3 Content Library
 
-UMA 3 adds a new content tree at `Assets/UMA/UMA3`. This is the main place to look for the new beta-era content and examples.
+UMA 3 adds a new content tree at `Assets/UMA/UMA3`. This is the main place to look for the new UMA 3-era content and examples.
 
 Important folders include:
 - `Animation`: UMA 3 pose and idle animation assets.
@@ -71,7 +71,7 @@ The `Wearables` folder contains a much larger wardrobe set than the old samples,
 
 ## Better First-Run And Project Setup
 
-The Welcome window now presents UMA 3 Beta guidance and a dedicated What's New section. It directs users to rebuild the UMA Library after importing a new beta update and provides checks for common setup problems.
+The Welcome window now presents UMA 3 guidance and a dedicated What's New section. It directs users to rebuild the UMA Library after importing a new update and provides checks for common setup problems.
 
 User impact:
 - First-time setup is clearer.
@@ -79,7 +79,7 @@ User impact:
 - The Welcome window can help add or activate an UMA Generator and set safer generator defaults.
 - UMA 3 is moving toward less manual generator setup; the branch notes call out runtime generator creation as a major direction.
 
-When updating from an earlier UMA 3 beta, rebuild the library before testing scenes or judging missing content. Many systems rely on the asset index to locate recipes, races, overlays, slots, addressable metadata, and generated content.
+When updating from an earlier UMA 3 release, rebuild the library before testing scenes or judging missing content. Many systems rely on the asset index to locate recipes, races, overlays, slots, addressable metadata, and generated content.
 
 ## New DNA System
 
@@ -310,7 +310,7 @@ Also see:
 
 ## Migration Notes From UMA 2
 
-UMA 3 is a beta branch and contains significant asset, API, and workflow changes. When upgrading a project, treat the upgrade as a migration, not a small patch.
+UMA 3 is contains significant asset, API, and workflow changes. When upgrading a project, treat the upgrade as a migration, not a small patch.
 
 Recommended migration checklist:
 
@@ -331,7 +331,7 @@ Compatibility notes:
 - `RaceData.backwardsCompatibleWith` is deprecated. Use Cross Compatible Races.
 - Legacy DNA can still exist, but new UMA 3 races can opt into the new DNA system with `useNewDNA` and a `DNACollection`.
 - UMA 2 and UMA 3 content are split more clearly. Check paths before assuming old sample locations still apply.
-- Some branch changes are beta cleanup: removed temp/test content, moved examples, updated packages, and refreshed generated assets.
+- Some branch changes are cleanup from beta process: removed temp/test content, moved examples, updated packages, and refreshed generated assets.
 
 ## What To Try First By Role
 

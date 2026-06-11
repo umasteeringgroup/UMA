@@ -725,22 +725,32 @@ private static Dictionary<string, float> BuildBakedBlendshapeDict(BlendShapeSett
             {
                 if (i >= submeshCount) break;
                 var cm = combinedMaterialList[i];
-                _materialBuffer.Add(cm.material);
+                Material firstPass = cm.material != null ? cm.material : cm.umaMaterial != null ? cm.umaMaterial.material : null;
+                if (firstPass == null)
+                    continue;
+
+                _materialBuffer.Add(firstPass);
                 _submeshBuffer.Add(mesh.GetSubMesh(i));
                 for (int k = 0; k < cm.materialFragments.Count; k++)
                     cm.materialFragments[k].slotData.submeshIndex = i;
+                if (cm.umaMaterial.materialType == UMAMaterial.MaterialType.UseExistingTextures)
+                {
+                    UMAGeneratorPro.ApplyMaterialParameters(cm, umaData, firstPass);
+                }
                 if (cm.umaMaterial.secondPass != null)
                 {
                     Material secondPass = cm.secondPassMaterial;
-                    if (secondPass == null)
+                    if (secondPass == null || secondPass == firstPass || secondPass.shader != cm.umaMaterial.secondPass.shader)
                     {
                         secondPass = UnityEngine.Object.Instantiate(cm.umaMaterial.secondPass);
                         cm.secondPassMaterial = secondPass;
-                        UMAGeneratorPro.ApplyMaterialParameters(cm, umaData, secondPass);
-                        CopyMaterialTextures(secondPass, cm.material, cm.umaMaterial);
-                        if (cm.material.HasProperty("_OverlayCount"))
-                            SetCompositingParameters(secondPass, cm);
                     }
+
+                    UMAGeneratorPro.ApplyMaterialParameters(cm, umaData, secondPass);
+                    CopyMaterialTextures(secondPass, cm.material, cm.umaMaterial);
+                    if (cm.material.HasProperty("_OverlayCount"))
+                        SetCompositingParameters(secondPass, cm);
+
                     _materialBuffer.Add(secondPass);
                     _submeshBuffer.Add(mesh.GetSubMesh(i));
                 }

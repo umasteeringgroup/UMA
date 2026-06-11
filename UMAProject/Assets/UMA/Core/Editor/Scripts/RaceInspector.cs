@@ -999,18 +999,33 @@ namespace UMA.Editors
 
 		private RaceData GetCompatibleRaceData(string raceName)
 		{
-			RaceData foundRace = null;
+			if (string.IsNullOrWhiteSpace(raceName))
+			{
+				return null;
+			}
+
 			string[] foundRacesStrings = AssetDatabase.FindAssets("t:RaceData");
 			for (int i = 0; i < foundRacesStrings.Length; i++)
 			{
-				RaceData thisFoundRace = AssetDatabase.LoadAssetAtPath<RaceData>(AssetDatabase.GUIDToAssetPath(foundRacesStrings[i]));
-				if (thisFoundRace.raceName == raceName)
+				string assetPath = AssetDatabase.GUIDToAssetPath(foundRacesStrings[i]);
+				if (string.IsNullOrWhiteSpace(assetPath))
 				{
-					foundRace = thisFoundRace;
-					break;
+					continue;
+				}
+
+				RaceData thisFoundRace = AssetDatabase.LoadAssetAtPath<RaceData>(assetPath);
+				if (thisFoundRace == null)
+				{
+					continue;
+				}
+
+				if (string.Equals(thisFoundRace.raceName, raceName, StringComparison.Ordinal))
+				{
+					return thisFoundRace;
 				}
 			}
-			return foundRace;
+
+			return null;
 		}
 
 		private void DrawCCUI(string ccRaceName, SerializedProperty baseRaceRecipe, SerializedProperty thisCCSettings)

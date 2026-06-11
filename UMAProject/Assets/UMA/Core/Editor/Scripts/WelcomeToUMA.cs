@@ -482,11 +482,11 @@ namespace UMA
             AddText("- Mesh Hide workflows saw substantial work, including compression updates, raycast fixes, and editor improvements.");
             AddText("- Mesh Modifier fixes and ongoing DNA tuning were added for better avatar authoring and deformation control.");
             AddText("- Decal placement and utilities were updated, including improved behavior when matching by slot group.");
-            AddText("- Pose assets, updated slots, rebuilt blendshape content, and recipe updates were included across the beta work.");
+            AddText("- Pose assets, updated slots, rebuilt blendshape content, and recipe updates were included across the release 3.0 work.");
             AddSeperator();
 
             AddText("<b>Project cleanup and migration toward UMA 3</b>");
-            AddText("- Legacy UMA 2, temp, and test content was removed or moved out as the branch converged on the new beta structure.");
+            AddText("- Legacy UMA 2, temp, and test content was removed or moved out as the branch converged on the new release 3.0 structure.");
             AddText("- Validators and utilities were added to help keep wearable and project assets in the expected folder layout.");
             AddText("- Default settings and package organization were updated to better fit the new branch layout.");
             AddSeperator();
@@ -2371,16 +2371,9 @@ namespace UMA
         private void DoWelcome()
         {
             ClearLog();
-            AddLargeText("Welcome to UMA 3 Beta");
+            AddLargeText("Welcome to UMA 3!");
 
-            AddText("Thank you for trying the UMA 3 Beta. This version represents the next generation of UMA, with major improvements to performance, workflows, and extensibility.");
-            AddText("");
-
-            AddText("As a beta tester, your feedback is essential. Please report any issues, unexpected behavior, or missing features to the UMA GitHub issue tracker:");
-            AddText("https://github.com/umasteeringgroup/UMA/issues");
-            AddText("");
-
-            AddText("If this is your first time opening the project after importing a new UMA 3 Beta update, you should <b>rebuild the UMA Library</b>.");
+            AddText("If this is your first time opening the project after importing a new UMA 3 update, you should <b>rebuild the UMA Library</b>.");
             AddText("This process only takes a moment and ensures UMA correctly detects and indexes all assets.");
             LogLine l = AddText("Rebuild the Library after importing a new version!");
             AddText("");
@@ -2391,7 +2384,7 @@ namespace UMA
             AddText("If you are new to UMA, please check out the <b>'Basics'</b> section on the left for an introduction to the core concepts.");
             AddText("");
 
-            AddText("To see UMA 3 Beta in action, open one of the sample scenes using the button on the left.");
+            AddText("To see UMA 3 in action, open one of the sample scenes using the button on the left.");
             AddText("");
 
             AddText("For help, support, and discussion, please join the <b>UMA Discord</b> (see Links).");

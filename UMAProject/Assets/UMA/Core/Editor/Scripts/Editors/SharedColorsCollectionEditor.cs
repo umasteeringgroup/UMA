@@ -12,7 +12,7 @@ namespace UMA.Editors
         static readonly string[] quickPickNames = new string[3] { "Hair", "Skin", "Eyes" };
         string[] names = new string[16] { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16" };
         int[] channels = new int[16] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 };
-        int selectedQuickPickIndex = 0;
+        static int selectedQuickPickIndex = 0;
 
         private static void AddSharedColor(UMAData.UMARecipe recipe, int channelCount, string colorName)
         {
