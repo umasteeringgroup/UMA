@@ -311,7 +311,7 @@
         },
         "preventRotation": false
     },
-    "m_Path": "Shader Graphs",
+    "m_Path": "UMA",
     "m_GraphPrecision": 1,
     "m_PreviewMode": 2,
     "m_OutputNode": {
@@ -774,6 +774,7 @@
     "isMainTexture": false,
     "useTilingAndOffset": false,
     "useTexelSize": true,
+    "isHDR": false,
     "m_Modifiable": true,
     "m_DefaultType": 0
 }
@@ -1542,6 +1543,12 @@
 
 {
     "m_SGVersion": 0,
+    "m_Type": "UnityEditor.Rendering.BuiltIn.ShaderGraph.BuiltInUnlitSubTarget",
+    "m_ObjectId": "9fc7b33b226e4729b1a523f03bb18ace"
+}
+
+{
+    "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
     "m_ObjectId": "a20be7e9befa41b39f76e4ff82a28cce",
     "m_Id": 4,
@@ -2049,14 +2056,6 @@
 
 {
     "m_SGVersion": 0,
-    "m_Type": "UnityEditor.Rendering.BuiltIn.ShaderGraph.BuiltInLitSubTarget",
-    "m_ObjectId": "daf356d2435442b78f959ea6d5b9839a",
-    "m_WorkflowMode": 1,
-    "m_NormalDropOffSpace": 0
-}
-
-{
-    "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.CategoryData",
     "m_ObjectId": "ddaae7e147824e368b9be1443d18d243",
     "m_Name": "",
@@ -2160,7 +2159,7 @@
     "m_ObjectId": "e4a02530594841cbb85345344cdd8096",
     "m_Datas": [],
     "m_ActiveSubTarget": {
-        "m_Id": "daf356d2435442b78f959ea6d5b9839a"
+        "m_Id": "9fc7b33b226e4729b1a523f03bb18ace"
     },
     "m_AllowMaterialOverride": false,
     "m_SurfaceType": 0,
@@ -2338,8 +2337,8 @@
     "m_AlphaMode": 0,
     "m_RenderFace": 2,
     "m_AlphaClip": false,
-    "m_CastShadows": true,
-    "m_ReceiveShadows": true,
+    "m_CastShadows": false,
+    "m_ReceiveShadows": false,
     "m_DisableTint": false,
     "m_Sort3DAs2DCompatible": false,
     "m_AdditionalMotionVectorMode": 0,

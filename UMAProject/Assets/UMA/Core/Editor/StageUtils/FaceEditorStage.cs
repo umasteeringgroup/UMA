@@ -1478,7 +1478,8 @@ namespace UMA
         {
             if (overlayMaterial == null)
             {
-                Shader s = Shader.Find("UMA/Diffuse");
+                //Shader s = Shader.Find("UMA/Diffuse");
+                Shader s = Shader.Find("UMA/UMA_SG_Diffuse");
                 overlayMaterial = new Material(s) { hideFlags = HideFlags.HideAndDontSave };
                 if (overlayMaterial.HasProperty("_BaseMap"))
                 {
@@ -1491,7 +1492,8 @@ namespace UMA
             }
             if (overlayLineMaterial == null)
             {
-                Shader s = Shader.Find("UMA/Diffuse");
+                //Shader s = Shader.Find("UMA/Diffuse");
+                Shader s = Shader.Find("UMA/UMA_SG_Diffuse");
                 overlayLineMaterial = new Material(s) { hideFlags = HideFlags.HideAndDontSave };
                 if (overlayLineMaterial.HasProperty("_BaseMap"))
                 {
