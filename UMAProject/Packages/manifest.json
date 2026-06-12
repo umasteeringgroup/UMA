@@ -20,6 +20,7 @@
     "com.unity.package-validation-suite": "0.83.0-preview",
     "com.unity.project-auditor": "2.0.0",
     "com.unity.render-pipelines.core": "17.3.0",
+    "com.unity.render-pipelines.high-definition": "17.3.0",
     "com.unity.render-pipelines.universal": "17.3.0",
     "com.unity.render-pipelines.universal-config": "17.0.3",
     "com.unity.shadergraph": "17.3.0",
