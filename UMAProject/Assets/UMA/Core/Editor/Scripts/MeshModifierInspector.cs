@@ -222,6 +222,18 @@ namespace UMA
                 EditorGUILayout.IntField("All Stacks", totalStackCount);
             }
 
+            using (new EditorGUI.DisabledScope(mm == null || mm.EditorModifiers == null || mm.EditorModifiers.Count == 0))
+            {
+                if (GUILayout.Button("Rebuild Runtime Modifiers from Editor Modifiers"))
+                {
+                    Undo.RecordObject(mm, "Rebuild Runtime Modifiers");
+                    mm.runtimeModifiers = SplitEditorToRuntime(mm.EditorModifiers);
+                    EditorUtility.SetDirty(mm);
+                    AssetDatabase.SaveAssetIfDirty(mm);
+                    serializedObject.Update();
+                }
+            }
+
             EnsureFoldoutList();
 
             using (new EditorGUILayout.VerticalScope(_boxedStyle))
@@ -292,6 +304,123 @@ namespace UMA
             if (_runtimeModifiersProp == null || index < 0 || index >= _runtimeModifiersProp.arraySize) return;
             _runtimeModifiersProp.DeleteArrayElementAtIndex(index);
             EnsureFoldoutListFor(_runtimeModifiersProp.arraySize);
+        }
+
+        private static List<MeshModifier.Modifier> SplitEditorToRuntime(List<MeshModifier.Modifier> editorModifiers)
+        {
+            List<MeshModifier.Modifier> result = new List<MeshModifier.Modifier>();
+            if (editorModifiers == null)
+            {
+                return result;
+            }
+
+            foreach (MeshModifier.Modifier mod in editorModifiers)
+            {
+                if (mod == null)
+                {
+                    continue;
+                }
+
+                if (mod.keepAsIs)
+                {
+                    // Clone the modifier and add it directly without splitting by slot
+                    MeshModifier.Modifier clone = CloneModifier(mod);
+                    if (clone != null)
+                    {
+                        result.Add(clone);
+                    }
+                    continue;
+                }
+
+                if (mod.adjustments == null || mod.adjustments.vertexAdjustments == null)
+                {
+                    continue;
+                }
+
+                foreach (VertexAdjustment va in mod.adjustments.vertexAdjustments)
+                {
+                    if (va == null || string.IsNullOrEmpty(va.slotName))
+                    {
+                        continue;
+                    }
+
+                    string slotKey = va.slotName;
+                    MeshModifier.Modifier target = null;
+                    foreach (MeshModifier.Modifier existing in result)
+                    {
+                        if (existing.keepAsIs || existing.adjustments == null)
+                        {
+                            continue;
+                        }
+
+                        if (existing.SlotName == slotKey
+                            && existing.adjustments.AdjustmentType == va.GetType()
+                            && existing.DNAName == mod.DNAName
+                            && Mathf.Approximately(existing.Scale, mod.Scale))
+                        {
+                            target = existing;
+                            break;
+                        }
+                    }
+
+                    if (target == null)
+                    {
+                        target = new MeshModifier.Modifier();
+                        target.keepAsIs = false;
+                        target.SlotName = slotKey;
+                        target.ModifierName = mod.ModifierName;
+                        target.DNAName = mod.DNAName;
+                        target.Scale = mod.Scale;
+                        target.adjustments = (VertexAdjustmentCollection)Activator.CreateInstance(mod.adjustments.GetType());
+                        target.TemplateAdjustment = mod.TemplateAdjustment != null ? mod.TemplateAdjustment.ShallowCopy() : null;
+                        result.Add(target);
+                    }
+
+                    VertexAdjustment vaClone = va.ShallowCopy();
+                    if (vaClone != null)
+                    {
+                        target.adjustments.Add(vaClone);
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        private static MeshModifier.Modifier CloneModifier(MeshModifier.Modifier source)
+        {
+            if (source == null)
+            {
+                return null;
+            }
+
+            MeshModifier.Modifier clone = new MeshModifier.Modifier();
+            clone.ModifierName = source.ModifierName;
+            clone.SlotName = source.SlotName;
+            clone.DNAName = source.DNAName;
+            clone.Scale = source.Scale;
+            clone.keepAsIs = source.keepAsIs;
+            clone.manuallyModified = source.manuallyModified;
+            clone.isTemporary = source.isTemporary;
+            clone.TemplateAdjustment = source.TemplateAdjustment != null ? source.TemplateAdjustment.ShallowCopy() : null;
+
+            if (source.adjustments != null)
+            {
+                clone.adjustments = (VertexAdjustmentCollection)Activator.CreateInstance(source.adjustments.GetType());
+                if (source.adjustments.vertexAdjustments != null)
+                {
+                    foreach (VertexAdjustment va in source.adjustments.vertexAdjustments)
+                    {
+                        VertexAdjustment vaClone = va != null ? va.ShallowCopy() : null;
+                        if (vaClone != null)
+                        {
+                            clone.adjustments.Add(vaClone);
+                        }
+                    }
+                }
+            }
+
+            return clone;
         }
 
         private void DrawModifierList(MeshModifier mm, SerializedProperty listProp, string labelPrefix, bool allowAddRemove)

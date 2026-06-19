@@ -1097,7 +1097,7 @@ namespace UMA
 
         private void OnDisable()
         {
-            Debug.Log($"[UMALattice] OnDisable on '{name}' (instance {GetInstanceID()})");
+            //Debug.Log($"[UMALattice] OnDisable on '{name}' (instance {GetInstanceID()})");
             UnsubscribeFromUMA();
             RestoreTarget();
         }

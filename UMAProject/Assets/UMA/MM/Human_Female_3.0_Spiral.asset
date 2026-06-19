@@ -1,0 +1,834 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3022e3cc0dfedfb46969c949a86882f3, type: 3}
+  m_Name: Human_Female_3.0_Spiral
+  m_EditorClassIdentifier: UMA_Core::UMA.MeshModifier
+  splitDiagnostics: 'Split diagnostics:
+
+    - Editor stacks: 1
+
+    - Stacks using
+    Modifier.SlotName: 0
+
+    - Stacks using adjustment.slotName fallback: 0
+
+    -
+    Editor adjustments total: 0
+
+    - Stacks skipped (null/missing adjustments):
+    0
+
+    - Adjustments null: 0
+
+    - Adjustments missing slotName: 0
+
+    - Adjustments
+    added to runtime: 0
+
+    - Runtime stacks created: 1
+
+'
+  runtimeModifiers:
+  - ModifierName: Spiral
+    isTemporary: 0
+    manuallyModified: 0
+    keepAsIs: 1
+    SlotName: UMA30_Eyes_slot
+    DNAName: 
+    Scale: 1
+    adjustments:
+      rid: 4044961852046991957
+  editorModifiers:
+  - ModifierName: Spiral
+    isTemporary: 0
+    manuallyModified: 0
+    keepAsIs: 1
+    SlotName: UMA30_Eyes_slot
+    DNAName: 
+    Scale: 1
+    adjustments:
+      rid: 4044961852046991957
+  references:
+    version: 2
+    RefIds:
+    - rid: 4044961852046991957
+      type: {class: VertexBlendshapeAdjustmentCollection, ns: UMA, asm: UMA_Core}
+      data:
+        vertexAdjustments:
+        - rid: 4044961852046991958
+        - rid: 4044961852046991959
+        - rid: 4044961852046991960
+        - rid: 4044961852046991961
+        - rid: 4044961852046991962
+        - rid: 4044961852046991963
+        - rid: 4044961852046991964
+        - rid: 4044961852046991965
+        - rid: 4044961852046991966
+        - rid: 4044961852046991967
+        - rid: 4044961852046991968
+        - rid: 4044961852046991969
+        - rid: 4044961852046991970
+        - rid: 4044961852046991971
+        - rid: 4044961852046991972
+        - rid: 4044961852046991973
+        - rid: 4044961852046991974
+        - rid: 4044961852046991975
+        - rid: 4044961852046991976
+        - rid: 4044961852046991977
+        - rid: 4044961852046991978
+        - rid: 4044961852046991979
+        - rid: 4044961852046991980
+        - rid: 4044961852046991981
+        - rid: 4044961852046991982
+        - rid: 4044961852046991983
+        - rid: 4044961852046991984
+        - rid: 4044961852046991985
+        - rid: 4044961852046991986
+        - rid: 4044961852046991987
+        - rid: 4044961852046991988
+        - rid: 4044961852046991989
+        - rid: 4044961852046991990
+        - rid: 4044961852046991991
+        - rid: 4044961852046991992
+        - rid: 4044961852046991993
+        - rid: 4044961852046991994
+        - rid: 4044961852046991995
+        - rid: 4044961852046991996
+        - rid: 4044961852046991997
+        - rid: 4044961852046991998
+        - rid: 4044961852046991999
+        - rid: 4044961852046992000
+        - rid: 4044961852046992001
+        - rid: 4044961852046992002
+        - rid: 4044961852046992003
+        - rid: 4044961852046992004
+        - rid: 4044961852046992005
+        - rid: 4044961852046992006
+        - rid: 4044961852046992007
+        - rid: 4044961852046992008
+        - rid: 4044961852046992009
+        - rid: 4044961852046992010
+        - rid: 4044961852046992011
+        - rid: 4044961852046992012
+        - rid: 4044961852046992013
+        - rid: 4044961852046992014
+        - rid: 4044961852046992015
+        - rid: 4044961852046992016
+        - rid: 4044961852046992017
+        - rid: 4044961852046992018
+        - rid: 4044961852046992019
+        - rid: 4044961852046992020
+        - rid: 4044961852046992021
+    - rid: 4044961852046991958
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 256
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: -0.0038997754, y: 0, z: 0.0026056767}
+        normal: {x: -0.033667665, y: -0.0149973035, z: 0.1692219}
+        tangent: {x: -0.8679529, y: -0.03077151, z: -1.0110409}
+    - rid: 4044961852046991959
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 257
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: -0.00331641, y: 0, z: 0.0033164024}
+        normal: {x: 0, y: -0.014995575, z: 0.17252918}
+        tangent: {x: -1.1308129, y: 0, z: -0.99140716}
+    - rid: 4044961852046991960
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 259
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: -0.0043331087, y: 0, z: 0.0017946959}
+        normal: {x: -0.06603228, y: -0.0149947405, z: 0.1593872}
+        tangent: {x: -0.750705, y: -0.0599612, z: -1.0117297}
+    - rid: 4044961852046991961
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 260
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: -0.0026057288, y: 0, z: 0.0038998127}
+        normal: {x: 0.03366752, y: -0.0149973035, z: 0.16922192}
+        tangent: {x: -1.3977988, y: 0.030771364, z: -0.89747405}
+    - rid: 4044961852046991962
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 261
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: -0.0046000034, y: 0, z: 0.0009148121}
+        normal: {x: -0.09584084, y: -0.014995933, z: 0.14346284}
+        tangent: {x: -0.6276016, y: -0.088564105, z: -0.98656046}
+    - rid: 4044961852046991963
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 262
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: -0.0017947406, y: 0, z: 0.0043331385}
+        normal: {x: 0.066031836, y: -0.014994502, z: 0.15938635}
+        tangent: {x: -1.7477593, y: 0.05996084, z: -0.61829793}
+    - rid: 4044961852046991964
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 263
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: -0.0046902373, y: 0, z: 0}
+        normal: {x: -0.12198045, y: -0.014994442, z: 0.122002505}
+        tangent: {x: -0.46558195, y: -0.116008274, z: -0.9053326}
+    - rid: 4044961852046991965
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 264
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: -0.00091486797, y: 0, z: 0.004600048}
+        normal: {x: 0.095840715, y: -0.014995933, z: 0.14346257}
+        tangent: {x: -1.9472216, y: 0.08856397, z: -0.24748635}
+    - rid: 4044961852046991966
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 265
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: -0.004600104, y: 0, z: -0.0009150505}
+        normal: {x: -0.14346488, y: -0.014997423, z: 0.095853105}
+        tangent: {x: -0.33085245, y: -0.13911757, z: -0.8035337}
+    - rid: 4044961852046991967
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 266
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: 0, y: 0, z: 0.004690051}
+        normal: {x: 0.121980555, y: -0.014994323, z: 0.12200188}
+        tangent: {x: -0.31216174, y: 0.11600839, z: 0.7885527}
+    - rid: 4044961852046991968
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 267
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: -0.004333187, y: 0, z: -0.0017949343}
+        normal: {x: -0.15941192, y: -0.0149978995, z: 0.06601967}
+        tangent: {x: -0.2840672, y: -0.15635091, z: -0.7609998}
+    - rid: 4044961852046991969
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 268
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: 0.0009150915, y: 0, z: 0.004600048}
+        normal: {x: 0.14346497, y: -0.014996946, z: 0.095848314}
+        tangent: {x: 0.007680893, y: 0.13911785, z: -0.031015601}
+    - rid: 4044961852046991970
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 269
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: -0.0038997643, y: 0, z: -0.002605915}
+        normal: {x: -0.16921952, y: -0.014996469, z: 0.03365707}
+        tangent: {x: -0.22040647, y: -0.16805744, z: -0.67912847}
+    - rid: 4044961852046991971
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 270
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: 0.0017949678, y: 0, z: 0.0043331385}
+        normal: {x: 0.15941125, y: -0.014997661, z: 0.06601875}
+        tangent: {x: -0.02503711, y: 0.15635028, z: -0.22580087}
+    - rid: 4044961852046991972
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 271
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: -0.0033164248, y: 0, z: -0.0033166409}
+        normal: {x: -0.1725221, y: -0.014994442, z: 0}
+        tangent: {x: -0.14398152, y: -0.17251292, z: -0.55140007}
+    - rid: 4044961852046991973
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 272
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: 0.0026058517, y: 0, z: 0.0038996935}
+        normal: {x: 0.16921546, y: -0.014995933, z: 0.03366047}
+        tangent: {x: -0.022844374, y: 0.16805328, z: -0.23711552}
+    - rid: 4044961852046991974
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 273
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: -0.0026056282, y: 0, z: -0.0039000511}
+        normal: {x: -0.16921237, y: -0.014995217, z: -0.03365729}
+        tangent: {x: -0.078630865, y: -0.168785, z: -0.40615687}
+    - rid: 4044961852046991975
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 274
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: 0.0033166446, y: 0, z: 0.0033164024}
+        normal: {x: 0.1725218, y: -0.014994323, z: 0}
+        tangent: {x: -0.07854164, y: 0.1725126, z: -0.41205886}
+    - rid: 4044961852046991976
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 275
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: -0.0017947443, y: 0, z: -0.004333377}
+        normal: {x: -0.15939792, y: -0.014995456, z: -0.06601894}
+        tangent: {x: -0.026044488, y: -0.15723643, z: -0.24036369}
+    - rid: 4044961852046991977
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 276
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: 0.0038999878, y: 0, z: 0.0026055574}
+        normal: {x: 0.1692172, y: -0.01499629, z: -0.03366156}
+        tangent: {x: -0.14939797, y: 0.1687902, z: -0.5636871}
+    - rid: 4044961852046991978
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 277
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: -0.00091486797, y: 0, z: -0.0046002865}
+        normal: {x: -0.14345424, y: -0.014996171, z: -0.095855325}
+        tangent: {x: 0.006082535, y: -0.13892846, z: 0.15224202}
+    - rid: 4044961852046991979
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 278
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: 0.0043334104, y: 0, z: 0.0017946959}
+        normal: {x: 0.15939723, y: -0.014995456, z: -0.06601986}
+        tangent: {x: -0.23366052, y: 0.15723574, z: -0.6945417}
+    - rid: 4044961852046991980
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 279
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: 0, y: 0, z: -0.0046904087}
+        normal: {x: -0.1219948, y: -0.014995813, z: -0.122000046}
+        tangent: {x: -1.9899213, y: -0.11478368, z: 0.01213631}
+    - rid: 4044961852046991981
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 280
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: 0.0046003275, y: 0, z: 0.0009148121}
+        normal: {x: 0.14346488, y: -0.014997065, z: -0.09584936}
+        tangent: {x: -0.35770524, y: 0.13893946, z: -0.82797396}
+    - rid: 4044961852046991982
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 281
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: 0.0009150915, y: 0, z: -0.0046002865}
+        normal: {x: -0.09584826, y: -0.014994979, z: -0.14345156}
+        tangent: {x: -1.9942503, y: -0.08945231, z: 0.08087903}
+    - rid: 4044961852046991983
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 282
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: 0.004690338, y: 0, z: 0}
+        normal: {x: 0.12199186, y: -0.014995217, z: -0.121998556}
+        tangent: {x: -0.48859417, y: 0.1147829, z: -0.92895466}
+    - rid: 4044961852046991984
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 283
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: 0.0017949641, y: 0, z: -0.004333377}
+        normal: {x: -0.06602167, y: -0.014995933, z: -0.15939909}
+        tangent: {x: -1.8436272, y: -0.060894966, z: -0.49608287}
+    - rid: 4044961852046991985
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 284
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: 0.004600227, y: 0, z: -0.0009151697}
+        normal: {x: 0.095834866, y: -0.014994085, z: -0.14345327}
+        tangent: {x: -0.5661266, y: 0.089440726, z: -0.95389116}
+    - rid: 4044961852046991986
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 285
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: 0.0026059523, y: 0, z: -0.0039000511}
+        normal: {x: -0.033667117, y: -0.014997184, z: -0.16922198}
+        tangent: {x: -1.4279174, y: -0.030259881, z: -0.8808048}
+    - rid: 4044961852046991987
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 286
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: 0.0043333285, y: 0, z: -0.0017949343}
+        normal: {x: 0.06602212, y: -0.014995933, z: -0.15939909}
+        tangent: {x: -0.7159891, y: 0.06089537, z: -0.99641}
+    - rid: 4044961852046991988
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 287
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: 0.0033166334, y: 0, z: -0.0033166409}
+        normal: {x: 0, y: -0.014996469, z: -0.17253403}
+        tangent: {x: -1.0652804, y: 0, z: -0.997867}
+    - rid: 4044961852046991989
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 288
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: 0.003899999, y: 0, z: -0.002605915}
+        normal: {x: 0.033667207, y: -0.014997184, z: -0.16922182}
+        tangent: {x: -0.91692066, y: 0.030259961, z: -1.0192766}
+    - rid: 4044961852046991990
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 545
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: 0.0038997754, y: 0, z: 0.0026056767}
+        normal: {x: 0.03366765, y: -0.014997184, z: 0.16922191}
+        tangent: {x: 0.8679529, y: -0.03077149, z: -1.0110409}
+    - rid: 4044961852046991991
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 546
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: 0.00331641, y: 0, z: 0.0033164024}
+        normal: {x: 0, y: -0.014995575, z: 0.17252931}
+        tangent: {x: 1.1308129, y: 0, z: -0.99140716}
+    - rid: 4044961852046991992
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 548
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: 0.0043331087, y: 0, z: 0.0017946959}
+        normal: {x: 0.066032246, y: -0.014994621, z: 0.1593871}
+        tangent: {x: 0.750705, y: -0.059961163, z: -1.0117297}
+    - rid: 4044961852046991993
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 549
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: 0.0026057288, y: 0, z: 0.0038998127}
+        normal: {x: -0.033667535, y: -0.0149973035, z: 0.16922249}
+        tangent: {x: 1.3977989, y: 0.03077137, z: -0.89747405}
+    - rid: 4044961852046991994
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 550
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: 0.0046000034, y: 0, z: 0.0009148121}
+        normal: {x: 0.09584078, y: -0.014995933, z: 0.14346275}
+        tangent: {x: 0.6276017, y: -0.08856404, z: -0.98656046}
+    - rid: 4044961852046991995
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 551
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: 0.0017947406, y: 0, z: 0.0043331385}
+        normal: {x: -0.06603178, y: -0.014994621, z: 0.15938716}
+        tangent: {x: 1.7477593, y: 0.059960745, z: -0.61829793}
+    - rid: 4044961852046991996
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 552
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: 0.0046902373, y: 0, z: 0}
+        normal: {x: 0.12198038, y: -0.014994442, z: 0.122002885}
+        tangent: {x: 0.46558183, y: -0.11600818, z: -0.90533257}
+    - rid: 4044961852046991997
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 553
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: 0.00091486797, y: 0, z: 0.004600048}
+        normal: {x: -0.09584071, y: -0.014996052, z: 0.14346345}
+        tangent: {x: 1.9472216, y: 0.088563934, z: -0.24748635}
+    - rid: 4044961852046991998
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 554
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: 0.004600104, y: 0, z: -0.0009150505}
+        normal: {x: 0.14346485, y: -0.014997542, z: 0.09585332}
+        tangent: {x: 0.33085245, y: -0.13911754, z: -0.8035337}
+    - rid: 4044961852046991999
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 555
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: 0, y: 0, z: 0.004690051}
+        normal: {x: -0.121980585, y: -0.014994442, z: 0.12200308}
+        tangent: {x: 0.31216168, y: 0.11600836, z: 0.78855264}
+    - rid: 4044961852046992000
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 556
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: 0.004333187, y: 0, z: -0.0017949343}
+        normal: {x: 0.15941192, y: -0.0149978995, z: 0.06602013}
+        tangent: {x: 0.2840672, y: -0.1563509, z: -0.76099986}
+    - rid: 4044961852046992001
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 557
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: -0.0009150915, y: 0, z: 0.004600048}
+        normal: {x: -0.14346497, y: -0.014996946, z: 0.095848076}
+        tangent: {x: -0.007680893, y: 0.13911785, z: -0.031015571}
+    - rid: 4044961852046992002
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 558
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: 0.0038997643, y: 0, z: -0.002605915}
+        normal: {x: 0.16921946, y: -0.014996469, z: 0.033657923}
+        tangent: {x: 0.22040647, y: -0.16805735, z: -0.67912847}
+    - rid: 4044961852046992003
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 559
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: -0.0017949678, y: 0, z: 0.0043331385}
+        normal: {x: -0.15941125, y: -0.014997661, z: 0.06601806}
+        tangent: {x: 0.02503711, y: 0.15635031, z: -0.22580087}
+    - rid: 4044961852046992004
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 560
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: 0.0033164248, y: 0, z: -0.0033166409}
+        normal: {x: 0.17252207, y: -0.014994442, z: 0}
+        tangent: {x: 0.14398152, y: -0.17251287, z: -0.55140007}
+    - rid: 4044961852046992005
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 561
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: -0.0026058517, y: 0, z: 0.0038996935}
+        normal: {x: -0.16921544, y: -0.014995933, z: 0.033661045}
+        tangent: {x: 0.022844374, y: 0.16805325, z: -0.23711553}
+    - rid: 4044961852046992006
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 562
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: 0.0026056282, y: 0, z: -0.0039000511}
+        normal: {x: 0.1692124, y: -0.014995217, z: -0.03365816}
+        tangent: {x: 0.078630865, y: -0.168785, z: -0.40615687}
+    - rid: 4044961852046992007
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 563
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: -0.0033166446, y: 0, z: 0.0033164024}
+        normal: {x: -0.17252178, y: -0.014994323, z: 0}
+        tangent: {x: 0.07854164, y: 0.17251259, z: -0.41205886}
+    - rid: 4044961852046992008
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 564
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: 0.0017947443, y: 0, z: -0.004333377}
+        normal: {x: 0.15939793, y: -0.014995575, z: -0.066020325}
+        tangent: {x: 0.026044488, y: -0.1572364, z: -0.24036369}
+    - rid: 4044961852046992009
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 565
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: -0.0038999878, y: 0, z: 0.0026055574}
+        normal: {x: -0.16921721, y: -0.01499629, z: -0.033662137}
+        tangent: {x: 0.14939797, y: 0.1687902, z: -0.5636871}
+    - rid: 4044961852046992010
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 566
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: 0.00091486797, y: 0, z: -0.0046002865}
+        normal: {x: 0.1434542, y: -0.01499629, z: -0.095856674}
+        tangent: {x: -0.006082535, y: -0.13892834, z: 0.152242}
+    - rid: 4044961852046992011
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 567
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: -0.0043334104, y: 0, z: 0.0017946959}
+        normal: {x: -0.15939723, y: -0.014995456, z: -0.06602009}
+        tangent: {x: 0.23366052, y: 0.15723571, z: -0.6945417}
+    - rid: 4044961852046992012
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 568
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: 0, y: 0, z: -0.0046904087}
+        normal: {x: 0.121994756, y: -0.014995933, z: -0.12200119}
+        tangent: {x: 1.9899213, y: -0.11478357, z: 0.012136295}
+    - rid: 4044961852046992013
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 569
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: -0.0046003275, y: 0, z: 0.0009148121}
+        normal: {x: -0.14346486, y: -0.014997184, z: -0.09584981}
+        tangent: {x: 0.35770524, y: 0.13893944, z: -0.8279739}
+    - rid: 4044961852046992014
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 570
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: -0.0009150915, y: 0, z: -0.0046002865}
+        normal: {x: 0.09584831, y: -0.014995217, z: -0.14345253}
+        tangent: {x: 1.9942503, y: -0.08945232, z: 0.08087934}
+    - rid: 4044961852046992015
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 571
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: -0.004690338, y: 0, z: 0}
+        normal: {x: -0.12199181, y: -0.0149953365, z: -0.12199898}
+        tangent: {x: 0.48859417, y: 0.11478285, z: -0.92895466}
+    - rid: 4044961852046992016
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 572
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: -0.0017949641, y: 0, z: -0.004333377}
+        normal: {x: 0.06602175, y: -0.014996052, z: -0.15940017}
+        tangent: {x: 1.8436271, y: -0.06089501, z: -0.4960829}
+    - rid: 4044961852046992017
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 573
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: -0.004600227, y: 0, z: -0.0009151697}
+        normal: {x: -0.09583487, y: -0.014994085, z: -0.1434533}
+        tangent: {x: 0.5661266, y: 0.089440726, z: -0.95389116}
+    - rid: 4044961852046992018
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 574
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: -0.0026059523, y: 0, z: -0.0039000511}
+        normal: {x: 0.033667155, y: -0.0149973035, z: -0.16922258}
+        tangent: {x: 1.4279174, y: -0.030259896, z: -0.8808047}
+    - rid: 4044961852046992019
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 575
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: -0.0043333285, y: 0, z: -0.0017949343}
+        normal: {x: -0.066022165, y: -0.014995933, z: -0.1593992}
+        tangent: {x: 0.715989, y: 0.060895417, z: -0.9964099}
+    - rid: 4044961852046992020
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 576
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: -0.0033166334, y: 0, z: -0.0033166409}
+        normal: {x: 0, y: -0.014996469, z: -0.17253423}
+        tangent: {x: 1.0652804, y: 0, z: -0.997867}
+    - rid: 4044961852046992021
+      type: {class: VertexBlendshapeAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 577
+        weight: 1
+        _name: Vertex Blendshape
+        active: 0
+        slotName: UMA30_Eyes_slot
+        delta: {x: -0.003899999, y: 0, z: -0.002605915}
+        normal: {x: -0.033667233, y: -0.014997184, z: -0.16922197}
+        tangent: {x: 0.9169206, y: 0.03025999, z: -1.0192766}

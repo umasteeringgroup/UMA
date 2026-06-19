@@ -1029,7 +1029,7 @@ namespace UMA
             GUIHelper.EndVerticalPadded();
         }
 
-        private void ExtractBlendshapes(string blendShapeName, string dnaName, List<bool> selected, List<string> slots)
+        public void ExtractBlendshapes(string blendShapeName, string dnaName, List<bool> selected, List<string> slots)
         {
             foreach (var strSlot in slots)
             {

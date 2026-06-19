@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using System;
+using System.IO;
 using System.Text;
 
 namespace UMA.Editors
@@ -87,6 +88,7 @@ namespace UMA.Editors
         private bool exportIncludeRig = true;
         private string persistedSectionStateKey;
         private string persistedSectionStateCache;
+        private int extractBlendshapeIndex;
 
         public override bool HasPreviewGUI() => true;
         MeshPreview MeshPreview;
@@ -816,6 +818,35 @@ namespace UMA.Editors
                 if (!haveWeldSource) { EditorGUI.EndDisabledGroup(); }
                 GUIHelper.EndVerticalPadded(10);
                 #endregion 
+
+                #region Blendshape_To_MeshModifier
+                GUIHelper.BeginVerticalPadded(10, new Color(0.92f, 0.86f, 0.98f));
+                GUILayout.Label("Blendshape To MeshModifier", EditorStyles.boldLabel);
+
+                string[] slotBlendshapeNames = GetSlotBlendshapeNames(slot);
+                if (slotBlendshapeNames.Length == 0)
+                {
+                    EditorGUILayout.HelpBox("No blendshapes found on this slot.", MessageType.Info);
+                }
+                else
+                {
+                    extractBlendshapeIndex = Mathf.Clamp(extractBlendshapeIndex, 0, slotBlendshapeNames.Length - 1);
+                    extractBlendshapeIndex = EditorGUILayout.Popup("Blendshape", extractBlendshapeIndex, slotBlendshapeNames);
+
+                    GUILayout.BeginHorizontal();
+                    if (GUILayout.Button("Extract to MeshModifier"))
+                    {
+                        ExtractSingleBlendshapeMeshModifier(slot, slotBlendshapeNames[extractBlendshapeIndex]);
+                    }
+                    if (GUILayout.Button("Extract all"))
+                    {
+                        ExtractAllBlendshapesToMeshModifiers(slot, slotBlendshapeNames);
+                    }
+                    GUILayout.EndHorizontal();
+                }
+                GUIHelper.EndVerticalPadded(10);
+                #endregion
+
                 #region info
                 GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
                 GUILayout.Label("This mesh");
@@ -955,6 +986,222 @@ namespace UMA.Editors
             angle %= 360f;
             if (angle < 0) angle += 360f;
             return angle;
+        }
+
+        private static string[] GetSlotBlendshapeNames(SlotDataAsset slotDataAsset)
+        {
+            if (slotDataAsset == null || UMAMeshData.IsNullOrEmptyMeshData(slotDataAsset.meshData) || slotDataAsset.meshData.blendShapes == null)
+            {
+                return Array.Empty<string>();
+            }
+
+            HashSet<string> names = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var blendshape in slotDataAsset.meshData.blendShapes)
+            {
+                if (blendshape == null || string.IsNullOrEmpty(blendshape.shapeName))
+                {
+                    continue;
+                }
+
+                names.Add(blendshape.shapeName);
+            }
+
+            List<string> sortedNames = new List<string>(names);
+            sortedNames.Sort(StringComparer.Ordinal);
+            return sortedNames.ToArray();
+        }
+
+        private static string GetMeshModifierSlotKey(SlotDataAsset slotDataAsset)
+        {
+            if (slotDataAsset == null)
+            {
+                return string.Empty;
+            }
+
+            if (!string.IsNullOrEmpty(slotDataAsset.sourceSlot))
+            {
+                return slotDataAsset.sourceSlot;
+            }
+
+            if (!string.IsNullOrEmpty(slotDataAsset.slotName))
+            {
+                return slotDataAsset.slotName;
+            }
+
+            return slotDataAsset.name;
+        }
+
+        private static UMA.MeshModifier CreateBlendshapeMeshModifier(SlotDataAsset slotDataAsset, string blendshapeName)
+        {
+            if (slotDataAsset == null || UMAMeshData.IsNullOrEmptyMeshData(slotDataAsset.meshData) || slotDataAsset.meshData.blendShapes == null)
+            {
+                return null;
+            }
+
+            UMABlendShape foundShape = null;
+            foreach (var shape in slotDataAsset.meshData.blendShapes)
+            {
+                if (shape != null && string.Equals(shape.shapeName, blendshapeName, StringComparison.Ordinal))
+                {
+                    foundShape = shape;
+                    break;
+                }
+            }
+
+            if (foundShape == null || foundShape.frames == null || foundShape.frames.Length == 0)
+            {
+                return null;
+            }
+
+            UMABlendFrame frame = foundShape.frames[foundShape.frames.Length - 1];
+            if (frame == null || frame.deltaVertices == null || frame.deltaVertices.Length == 0)
+            {
+                return null;
+            }
+
+            var meshModifier = ScriptableObject.CreateInstance<UMA.MeshModifier>();
+            meshModifier.EditorModifiers = new List<UMA.MeshModifier.Modifier>();
+
+            string slotKey = GetMeshModifierSlotKey(slotDataAsset);
+            var newMod = new UMA.MeshModifier.Modifier
+            {
+                ModifierName = blendshapeName,
+                DNAName = string.Empty,
+                Scale = 1.0f,
+                SlotName = slotKey,
+                keepAsIs = true,
+                adjustments = new VertexBlendshapeAdjustmentCollection(),
+                TemplateAdjustment = new VertexBlendshapeAdjustment()
+            };
+
+            for (int i = 0; i < frame.deltaVertices.Length; i++)
+            {
+                if (frame.deltaVertices[i] == Vector3.zero)
+                {
+                    continue;
+                }
+
+                var vba = new VertexBlendshapeAdjustment
+                {
+                    vertexIndex = i,
+                    slotName = slotKey,
+                    delta = frame.deltaVertices[i],
+                    tangent = Vector3.zero,
+                    normal = Vector3.zero
+                };
+
+                if (frame.HasTangents() && frame.deltaTangents != null && i < frame.deltaTangents.Length)
+                {
+                    vba.tangent = frame.deltaTangents[i];
+                }
+
+                if (frame.HasNormals() && frame.deltaNormals != null && i < frame.deltaNormals.Length)
+                {
+                    vba.normal = frame.deltaNormals[i];
+                }
+
+                newMod.adjustments.Add(vba);
+            }
+
+            if (newMod.adjustments.Count() == 0)
+            {
+                DestroyImmediate(meshModifier);
+                return null;
+            }
+
+            meshModifier.EditorModifiers.Add(newMod);
+            meshModifier.SyncRuntimeModifiersFromEditorModifiers();
+            return meshModifier;
+        }
+
+        private static void ExtractSingleBlendshapeMeshModifier(SlotDataAsset slotDataAsset, string blendshapeName)
+        {
+            var meshModifier = CreateBlendshapeMeshModifier(slotDataAsset, blendshapeName);
+            if (meshModifier == null)
+            {
+                EditorUtility.DisplayDialog("Extract Blendshape", "Could not extract this blendshape.", "OK");
+                return;
+            }
+
+            string slotBaseName = !string.IsNullOrEmpty(slotDataAsset.slotName) ? slotDataAsset.slotName : slotDataAsset.name;
+            string defaultAssetName = (slotBaseName + "_" + blendshapeName).Replace(' ', '_') + ".asset";
+            string path = EditorUtility.SaveFilePanelInProject("Save MeshModifier", defaultAssetName, "asset", "Save MeshModifier asset");
+            if (string.IsNullOrEmpty(path))
+            {
+                DestroyImmediate(meshModifier);
+                return;
+            }
+
+            path = AssetDatabase.GenerateUniqueAssetPath(path);
+            AssetDatabase.CreateAsset(meshModifier, path);
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            Selection.activeObject = meshModifier;
+            EditorUtility.FocusProjectWindow();
+        }
+
+        private static void ExtractAllBlendshapesToMeshModifiers(SlotDataAsset slotDataAsset, string[] blendshapeNames)
+        {
+            if (slotDataAsset == null || blendshapeNames == null || blendshapeNames.Length == 0)
+            {
+                EditorUtility.DisplayDialog("Extract Blendshapes", "No blendshapes available to extract.", "OK");
+                return;
+            }
+
+            string slotAssetPath = AssetDatabase.GetAssetPath(slotDataAsset);
+            string startFolder = Application.dataPath;
+            if (!string.IsNullOrEmpty(slotAssetPath))
+            {
+                string slotFolder = Path.GetDirectoryName(slotAssetPath);
+                if (!string.IsNullOrEmpty(slotFolder))
+                {
+                    string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+                    startFolder = Path.GetFullPath(Path.Combine(projectRoot, slotFolder));
+                }
+            }
+
+            string selectedFolder = EditorUtility.SaveFolderPanel("Select folder for extracted MeshModifiers", startFolder, "");
+            if (string.IsNullOrEmpty(selectedFolder))
+            {
+                return;
+            }
+
+            string relativeFolder = FileUtil.GetProjectRelativePath(selectedFolder).Replace("\\", "/");
+            if (string.IsNullOrEmpty(relativeFolder) || !relativeFolder.StartsWith("Assets", StringComparison.Ordinal))
+            {
+                EditorUtility.DisplayDialog("Invalid Folder", "Please choose a folder inside this Unity project.", "OK");
+                return;
+            }
+
+            string slotBaseName = !string.IsNullOrEmpty(slotDataAsset.slotName) ? slotDataAsset.slotName : slotDataAsset.name;
+            int createdCount = 0;
+
+            AssetDatabase.StartAssetEditing();
+            try
+            {
+                foreach (string blendshapeName in blendshapeNames)
+                {
+                    var meshModifier = CreateBlendshapeMeshModifier(slotDataAsset, blendshapeName);
+                    if (meshModifier == null)
+                    {
+                        continue;
+                    }
+
+                    string fileName = (slotBaseName + "_" + blendshapeName).Replace(' ', '_') + ".asset";
+                    string fullAssetPath = (relativeFolder + "/" + fileName).Replace("\\", "/");
+                    string uniquePath = AssetDatabase.GenerateUniqueAssetPath(fullAssetPath);
+                    AssetDatabase.CreateAsset(meshModifier, uniquePath);
+                    createdCount++;
+                }
+            }
+            finally
+            {
+                AssetDatabase.StopAssetEditing();
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
+            }
+
+            EditorUtility.DisplayDialog("Extract Blendshapes", $"Created {createdCount} MeshModifier assets.", "OK");
         }
 
         private void RestorePersistedSectionState()

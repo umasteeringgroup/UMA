@@ -538,8 +538,8 @@ namespace UMA.Editors
 		private static string GetPropertyStateKey(SerializedProperty property)
 		{
 			UnityEngine.Object targetObject = property.serializedObject.targetObject;
-			int targetId = targetObject != null ? targetObject.GetInstanceID() : 0;
-			return targetId.ToString() + ":" + property.propertyPath;
+			string entityID = targetObject != null ? targetObject.GetEntityId().ToString() : "null";
+			return entityID + ":" + property.propertyPath;
 		}
 
 

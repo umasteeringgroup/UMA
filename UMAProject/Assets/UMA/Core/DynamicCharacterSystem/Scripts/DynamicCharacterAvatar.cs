@@ -3723,14 +3723,18 @@ namespace UMA.CharacterSystem
 
             if (controllerToUse == null)
             {
-                List<string> compat = activeRace.data.GetCrossCompatibleRaces();
-                for (int i = 0; i < compat.Count; i++)
+                RaceData raceData = activeRace.data;
+                if (raceData != null)
                 {
-                    string s = compat[i];
-                    controllerToUse = raceAnimationControllers.GetAnimatorForRace(s);
-                    if (controllerToUse)
+                    List<string> compat = activeRace.data.GetCrossCompatibleRaces();
+                    for (int i = 0; i < compat.Count; i++)
                     {
-                        break;
+                        string s = compat[i];
+                        controllerToUse = raceAnimationControllers.GetAnimatorForRace(s);
+                        if (controllerToUse)
+                        {
+                            break;
+                        }
                     }
                 }
                 if (controllerToUse == null)

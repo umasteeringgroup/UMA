@@ -1655,6 +1655,78 @@ namespace UMA.Editors
 			return GetSelectedPhysicsElements().Count > 0;
 		}
 
+		[MenuItem("Assets/UMA/Create DNA for selected Modifiers", false, 2008)]
+		private static void CreateDnaForSelectedMeshModifiersMenu()
+		{
+			var meshModifiers = GetSelectedMeshModifiers();
+			if (meshModifiers.Count == 0)
+			{
+				EditorUtility.DisplayDialog("Create DNA for selected Modifiers", "Select one or more MeshModifier assets in the Project window.", "OK");
+				return;
+			}
+
+			int createdCount = 0;
+			List<string> createdNames = new List<string>();
+			try
+			{
+				for (int i = 0; i < meshModifiers.Count; i++)
+				{
+					MeshModifier meshModifier = meshModifiers[i];
+					if (meshModifier == null)
+					{
+						continue;
+					}
+
+					string dnaName = GetDnaNameFromMeshModifier(meshModifier);
+					string assetPath = GetDnaAssetPathForMeshModifier(meshModifier, dnaName);
+					var dna = ScriptableObject.CreateInstance<DNA>();
+					foreach(var modifier in meshModifier.runtimeModifiers)
+					{
+						modifier.DNAName = dnaName;
+					}
+					dna.name = dnaName;
+					dna.displayName = dnaName;
+					dna.effects = new List<DNAEffect>();
+					dna.effects.Add(new DNAEffect_MeshModifier
+					{
+						EffectName = dnaName,
+						meshModifier = meshModifier,
+						minMapping = 0f,
+						maxMapping = 1f,
+						curve = AnimationCurve.Linear(0f, 0f, 1f, 1f)
+					});
+
+					AssetDatabase.CreateAsset(dna, assetPath);
+					EditorUtility.SetDirty(dna);
+					createdCount++;
+					createdNames.Add(dnaName);
+				}
+			}
+			finally
+			{
+				AssetDatabase.SaveAssets();
+				AssetDatabase.Refresh();
+			}
+
+			string message = "Created DNA assets: " + createdCount;
+			if (createdNames.Count > 0)
+			{
+				message += "\n\nCreated:";
+				for (int i = 0; i < createdNames.Count; i++)
+				{
+					message += "\n- " + createdNames[i];
+				}
+			}
+
+			EditorUtility.DisplayDialog("Create DNA for selected Modifiers", message, "OK");
+		}
+
+		[MenuItem("Assets/UMA/Create DNA for selected Modifiers", true)]
+		private static bool CreateDnaForSelectedMeshModifiersMenu_Validate()
+		{
+			return GetSelectedMeshModifiers().Count > 0;
+		}
+
 						[MenuItem("Assets/UMA/Add Race(s) to Selected Recipes", true)]
 		private static bool AddRacesToSelectedRecipesMenu_Validate()
 		{
@@ -1930,6 +2002,52 @@ namespace UMA.Editors
 				}
 			}
 			return elements;
+		}
+
+		private static List<MeshModifier> GetSelectedMeshModifiers()
+		{
+			var selected = Selection.GetFiltered(typeof(MeshModifier), SelectionMode.Assets);
+			var meshModifiers = new List<MeshModifier>(selected.Length);
+			for (int i = 0; i < selected.Length; i++)
+			{
+				var meshModifier = selected[i] as MeshModifier;
+				if (meshModifier != null)
+				{
+					meshModifiers.Add(meshModifier);
+				}
+			}
+			return meshModifiers;
+		}
+
+		private static string GetDnaNameFromMeshModifier(MeshModifier meshModifier)
+		{
+			string modifierName = meshModifier != null ? meshModifier.name : string.Empty;
+			if (string.IsNullOrEmpty(modifierName))
+			{
+				return "DNA";
+			}
+
+			int lastUnderscore = modifierName.LastIndexOf('_');
+			if (lastUnderscore >= 0 && lastUnderscore < modifierName.Length - 1)
+			{
+				return modifierName.Substring(lastUnderscore + 1);
+			}
+
+			return modifierName;
+		}
+
+		private static string GetDnaAssetPathForMeshModifier(MeshModifier meshModifier, string dnaName)
+		{
+			string meshModifierPath = AssetDatabase.GetAssetPath(meshModifier);
+			string folder = string.IsNullOrEmpty(meshModifierPath) ? "Assets" : Path.GetDirectoryName(meshModifierPath);
+			if (string.IsNullOrEmpty(folder))
+			{
+				folder = "Assets";
+			}
+
+			string fileName = string.IsNullOrEmpty(dnaName) ? "DNA" : dnaName;
+			string assetPath = Path.Combine(folder, fileName + ".asset").Replace('\\', '/');
+			return AssetDatabase.GenerateUniqueAssetPath(assetPath);
 		}
 
 		private static UMAMaterial.MaterialChannel[] BuildChannelsForMaterial(Material material)

@@ -93,6 +93,75 @@ namespace UMA
         // Runtime modifiers are split by slot and used during mesh generation.
         public List<Modifier> runtimeModifiers = new List<Modifier>();
 
+
+        public List<Modifier> GetScaledRuntimeModifiers(float value)
+        {
+            List<Modifier> scaledModifiers = new List<Modifier>();
+            if (runtimeModifiers == null || runtimeModifiers.Count == 0)
+            {
+                return scaledModifiers;
+            }
+
+            for (int i = 0; i < runtimeModifiers.Count; i++)
+            {
+                Modifier scaledModifier = CloneRuntimeModifier(runtimeModifiers[i]);
+                if (scaledModifier == null)
+                {
+                    continue;
+                }
+
+                scaledModifier.Scale *= value;
+                scaledModifiers.Add(scaledModifier);
+            }
+
+            return scaledModifiers;
+        }
+
+        private static Modifier CloneRuntimeModifier(Modifier source)
+        {
+            if (source == null)
+            {
+                return null;
+            }
+
+            Modifier clone = new Modifier();
+            clone.SlotName = source.SlotName;
+            clone.DNAName = source.DNAName;
+            clone.Scale = source.Scale;
+            clone.adjustments = CloneAdjustmentCollection(source.adjustments);
+#if UNITY_EDITOR
+            clone.ModifierName = source.ModifierName;
+            clone.isTemporary = source.isTemporary;
+            clone.TemplateAdjustment = source.TemplateAdjustment != null ? source.TemplateAdjustment.ShallowCopy() : null;
+            clone.manuallyModified = source.manuallyModified;
+            clone.keepAsIs = source.keepAsIs;
+#endif
+            return clone;
+        }
+
+        private static VertexAdjustmentCollection CloneAdjustmentCollection(VertexAdjustmentCollection source)
+        {
+            if (source == null)
+            {
+                return null;
+            }
+
+            VertexAdjustmentCollection clone = (VertexAdjustmentCollection)Activator.CreateInstance(source.GetType());
+            if (source.vertexAdjustments == null)
+            {
+                return clone;
+            }
+
+            for (int i = 0; i < source.vertexAdjustments.Count; i++)
+            {
+                VertexAdjustment adjustment = source.vertexAdjustments[i];
+                clone.vertexAdjustments.Add(adjustment != null ? adjustment.ShallowCopy() : null);
+            }
+
+            return clone;
+        }
+
+
         public List<Modifier> RuntimeModifiers
         {
             get { return runtimeModifiers; } 
@@ -115,7 +184,7 @@ namespace UMA
             set { editorModifiers = value; }
         }
 
-        private void SyncRuntimeModifiersFromEditorModifiers()
+        public void SyncRuntimeModifiersFromEditorModifiers()
         {
           if (editorModifiers == null || editorModifiers.Count == 0)
             {
@@ -186,7 +255,7 @@ namespace UMA
             }
         }
 
-     private static void SplitModifierBySlot(List<Modifier> target, Modifier source, ref int adjustmentsNull, ref int adjustmentsMissingSlotName, ref int adjustmentsAdded)
+     public static void SplitModifierBySlot(List<Modifier> target, Modifier source, ref int adjustmentsNull, ref int adjustmentsMissingSlotName, ref int adjustmentsAdded)
         {
             if (source == null)
             {

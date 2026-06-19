@@ -664,7 +664,14 @@ namespace UMA
                     var c = list[i];
                     if (c != null)
                     {
-						ver = ver * 31 + (int)c.GetEntityId();
+						EntityId entityID = c.GetEntityId();
+#if UNITY_6000_5_OR_NEWER
+						ulong rawData = EntityId.ToULong(entityID);
+						int intval = (int)(rawData & 0xFFFFFFFF) ^ (int)(rawData >> 32);
+#else
+					    int intval = (int)entityID;
+#endif						
+						ver = ver * 31 + intval;
                         ver = ver * 31 + (c.name != null ? c.name.GetHashCode() : 0);
                     }
                     else

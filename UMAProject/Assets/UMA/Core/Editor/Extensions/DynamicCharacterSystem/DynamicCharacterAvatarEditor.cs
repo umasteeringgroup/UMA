@@ -5,7 +5,8 @@ using UnityEditor.SceneManagement;
 using System;
 using UMA.Editors;
 using UMA.CharacterSystem;
-using UMA; // Added for MeshModifier
+using UMA;
+
 
 
 namespace UMA.CharacterSystem.Editors
@@ -1146,10 +1147,12 @@ namespace UMA.CharacterSystem.Editors
 
                         if (!Mathf.Approximately(oldValue, inst.Value))
                         {
-                            Undo.RecordObject(umaData, "Change DNA Value");
+                            // This causes a massive slowdown during slider changes because it regenerates the avatar on every tiny change, but without it, changes aren't registered in the undo system and don't mark the scene dirty, which is worse. We could optimize by only regenerating on slider release, but that adds complexity and isn't a huge deal for now.
+                            // Undo.RecordObject(umaData, "Change DNA Value");
                             EditorUtility.SetDirty(umaData);
                             wasChanged = true;
                             GenerateSingleUMA();
+                            oldValue = inst.Value; // update oldValue to avoid multiple undos during slider drag
                         }
                         if (newEnabled != inst.enabled)
                         {
@@ -1221,10 +1224,11 @@ namespace UMA.CharacterSystem.Editors
 
                             if (!Mathf.Approximately(oldValue, inst.Value))
                             {
-                                Undo.RecordObject(umaData, "Change DNA Value");
+                                //Undo.RecordObject(umaData, "Change DNA Value");
                                 EditorUtility.SetDirty(umaData);
                                 wasChanged = true;
                                 GenerateSingleUMA();
+                                oldValue = inst.Value; // update oldValue to avoid multiple undos during slider drag
                             }
                             if (newEnabled != inst.enabled)
                             {
@@ -2571,7 +2575,10 @@ namespace UMA.CharacterSystem.Editors
             {
                 if (thisDCA.editorTimeGeneration)
                 {
+                    var stopwatch = System.Diagnostics.Stopwatch.StartNew();
                     GenerateSingleUMA();
+                    stopwatch.Stop();
+                    Debug.Log($"UMA generation completed in {stopwatch.ElapsedMilliseconds} ms");
                 }
                 else
                 {
