@@ -222,6 +222,17 @@ namespace UMA.Editors
 				EditorUtility.SetDirty(normalizer);
 			}
 
+			EditorGUI.BeginChangeCheck();
+			float newStripEdgeNormalCurveDegrees = EditorGUILayout.Slider("Strip Edge Normal Curve", normalizer.stripEdgeNormalCurveDegrees, -45f, 45f);
+			if (EditorGUI.EndChangeCheck())
+			{
+				Undo.RecordObject(normalizer, "Change Strip Edge Normal Curve");
+				normalizer.stripEdgeNormalCurveDegrees = newStripEdgeNormalCurveDegrees;
+				normalizer.ApplyStripNormalCurveToPreviewMesh();
+				EditorUtility.SetDirty(normalizer);
+				SceneView.RepaintAll();
+			}
+
 			EditorGUILayout.LabelField("Normal Visualization", EditorStyles.boldLabel);
 			EditorGUI.BeginChangeCheck();
 			bool showCoveringNormals = EditorGUILayout.Toggle("Show Covering Normals", normalizer.showCoveringMeshNormals);
@@ -435,7 +446,7 @@ namespace UMA.Editors
 				return "Build a preview, project normals, and select a matching SlotDataAsset before copying normals.";
 			}
 
-			normalizer.ApplyNormalEffectivenessToPreviewMesh();
+			normalizer.ApplyStripNormalCurveToPreviewMesh();
 			Vector3[] previewNormals = normalizer.previewMesh.normals;
 			if (previewNormals == null || previewNormals.Length != slotDataAsset.meshData.vertexCount)
 			{

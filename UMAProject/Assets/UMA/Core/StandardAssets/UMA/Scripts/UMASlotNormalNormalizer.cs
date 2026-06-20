@@ -35,6 +35,9 @@ namespace UMA
 		[Tooltip("Effectiveness of the normal projection. 0 = no change, 1 = full projection to covering mesh normals.")]
 		[Range(0f, 1f)]
 		public float normalEffectiveness = 1f;
+		[Tooltip("Rotates edge vertex normals away from the connected strip-center vertex to give hair cards a slight curve. 0 = no curve.")]
+		[Range(-45f, 45f)]
+		public float stripEdgeNormalCurveDegrees = 0f;
 
 		[Header("Projection Debug")]
 		public bool enableDebugVisualization = false;
@@ -56,7 +59,10 @@ namespace UMA
 
 		private UMAMetaballMesher.ScalarField _coveringField;
 		private Vector3[] _sourceNormalsForEffectiveness;
+		private Vector3[] _baseProjectedNormalsForCurve;
 		private Vector3[] _projectedNormalsForEffectiveness;
+		private List<int>[] _stripCurveNeighbours;
+		private Mesh _stripCurveNeighboursMesh;
 		private readonly List<ProjectionDebugRay> _projectionDebugRays = new List<ProjectionDebugRay>();
 		private readonly List<Vector3> _projectionDebugClusterCentroids = new List<Vector3>();
 		private readonly List<Vector3> _projectionDebugUnresolved = new List<Vector3>();
@@ -66,6 +72,8 @@ namespace UMA
 		private const float MinMetaballRadius = 0.001f;
 		private const int MaxBlurIterations = 4;
 		private const float ProjectionRayEpsilon = 0.0001f;
+		private const int MaxFieldRaySteps = 512;
+		private const int FieldIsoRefinementSteps = 8;
 
 		private enum ProjectionFallback
 		{
@@ -274,6 +282,12 @@ namespace UMA
 				return;
 			}
 
+			if (_coveringField == null)
+			{
+				Debug.LogWarning("[UMASlotNormalNormalizer] Reconstruct the covering mesh before projecting normals. The scalar field is missing.", this);
+				return;
+			}
+
 			Vector3[] vertices = previewMesh.vertices;
 			Vector3[] coveringVerticesForCentroid = coveringMesh.vertices;
 			List<Vector3> coveringPositions = new List<Vector3>(coveringVerticesForCentroid.Length);
@@ -354,9 +368,13 @@ namespace UMA
 				Vector3 clusterCentroid = globalCentroid;
 				bool clustered = clusterId >= 0 && clusterCentroids.TryGetValue(clusterId, out clusterCentroid);
 				Vector3 origin = clustered ? clusterCentroid : globalCentroid;
-				if (!PointInMesh(coveringMesh, origin))
+				if (!PointInField(_coveringField, origin))
 				{
 					origin = Vector3.Lerp(origin, coveringCentroid, 0.5f);
+				}
+				if (!PointInField(_coveringField, origin))
+				{
+					origin = coveringCentroid;
 				}
 
 				Vector3 rayDir = vertex - origin;
@@ -371,29 +389,29 @@ namespace UMA
 
 				Vector3 projectedNormal;
 				ProjectionFallback usedFallback;
-				if (TryRayProjection(coveringMesh, origin, rayDir, normalDotThreshold, maxRayDistance, out projectedNormal, out Vector3 hitPoint))
+				if (TryFieldProjection(_coveringField, origin, rayDir, normalDotThreshold, maxRayDistance, out projectedNormal, out Vector3 hitPoint))
 				{
 					usedFallback = ProjectionFallback.AcceptedRay;
 					acceptedHits++;
 					AddDebugRay(origin, hitPoint, acceptedRayColor);
 				}
-				else if (TryRayProjection(coveringMesh, origin, -rayDir, normalDotThreshold, maxRayDistance, out projectedNormal, out hitPoint))
+				else if (TryFieldProjection(_coveringField, origin, -rayDir, normalDotThreshold, maxRayDistance, out projectedNormal, out hitPoint))
 				{
 					usedFallback = ProjectionFallback.ReverseRay;
 					AddDebugRay(origin, origin - rayDir * Mathf.Min(maxRayDistance, previewBounds.size.magnitude), rejectedRayColor);
 					AddDebugRay(origin, hitPoint, acceptedRayColor);
 				}
-				else if (sampleNormals != null && i < sampleNormals.Length && sampleNormals[i].sqrMagnitude > 1e-12f && TryRayProjection(coveringMesh, vertex + sampleNormals[i].normalized * ProjectionRayEpsilon, sampleNormals[i].normalized, normalDotThreshold, maxRayDistance, out projectedNormal, out hitPoint))
+				else if (sampleNormals != null && i < sampleNormals.Length && sampleNormals[i].sqrMagnitude > 1e-12f && TryFieldProjection(_coveringField, vertex + sampleNormals[i].normalized * ProjectionRayEpsilon, sampleNormals[i].normalized, normalDotThreshold, maxRayDistance, out projectedNormal, out hitPoint))
 				{
 					usedFallback = ProjectionFallback.SampleNormalRay;
 					AddDebugRay(vertex, hitPoint, acceptedRayColor);
 				}
-				else if (clustered && clusterAxes.TryGetValue(clusterId, out Vector3 axis) && TryClusterAxisProjection(coveringMesh, vertex, clusterCentroid, axis, normalDotThreshold, maxRayDistance, out projectedNormal, out hitPoint))
+				else if (clustered && clusterAxes.TryGetValue(clusterId, out Vector3 axis) && TryClusterAxisProjection(_coveringField, vertex, clusterCentroid, axis, normalDotThreshold, maxRayDistance, out projectedNormal, out hitPoint))
 				{
 					usedFallback = ProjectionFallback.ClusterAxisRay;
 					AddDebugRay(vertex, hitPoint, acceptedRayColor);
 				}
-				else if (TryNearestCoveringVertexNormal(coveringMesh, vertex, normalDotThreshold, out projectedNormal))
+				else if (TryFieldNormal(_coveringField, vertex, rayDir, normalDotThreshold, out projectedNormal))
 				{
 					usedFallback = ProjectionFallback.NearestCoveringVertex;
 					AddDebugRay(vertex, vertex + projectedNormal * normalDisplayLength, acceptedRayColor);
@@ -428,10 +446,10 @@ namespace UMA
 			}
 
 			_sourceNormalsForEffectiveness = sampleNormals;
-			_projectedNormalsForEffectiveness = normals;
-			ApplyNormalEffectivenessToPreviewMesh();
+			_baseProjectedNormalsForCurve = CopyNormals(normals);
+			ApplyStripNormalCurveToPreviewMesh();
 
-			Debug.Log($"[UMASlotNormalNormalizer] Normal projection complete. Vertices={vertices.Length}, accepted primary hits={acceptedHits}, clusters={clusterCentroids.Count}, primary={fallbackCounts[(int)ProjectionFallback.AcceptedRay]}, reverse={fallbackCounts[(int)ProjectionFallback.ReverseRay]}, sampleNormal={fallbackCounts[(int)ProjectionFallback.SampleNormalRay]}, clusterAxis={fallbackCounts[(int)ProjectionFallback.ClusterAxisRay]}, nearestVertex={fallbackCounts[(int)ProjectionFallback.NearestCoveringVertex]}, centroidFallback={fallbackCounts[(int)ProjectionFallback.CentroidFallback]}.", this);
+			Debug.Log($"[UMASlotNormalNormalizer] Normal projection complete. Vertices={vertices.Length}, accepted primary field hits={acceptedHits}, clusters={clusterCentroids.Count}, primary={fallbackCounts[(int)ProjectionFallback.AcceptedRay]}, reverse={fallbackCounts[(int)ProjectionFallback.ReverseRay]}, sampleNormal={fallbackCounts[(int)ProjectionFallback.SampleNormalRay]}, clusterAxis={fallbackCounts[(int)ProjectionFallback.ClusterAxisRay]}, fieldNormal={fallbackCounts[(int)ProjectionFallback.NearestCoveringVertex]}, centroidFallback={fallbackCounts[(int)ProjectionFallback.CentroidFallback]}.", this);
 		}
 
 		public void ApplyNormalEffectivenessToPreviewMesh()
@@ -464,6 +482,17 @@ namespace UMA
 			previewMesh.RecalculateTangents();
 		}
 
+		public void ApplyStripNormalCurveToPreviewMesh()
+		{
+			if (previewMesh == null || _baseProjectedNormalsForCurve == null || _baseProjectedNormalsForCurve.Length != previewMesh.vertexCount)
+			{
+				return;
+			}
+
+			_projectedNormalsForEffectiveness = ApplyStripEdgeNormalCurve(previewMesh, _baseProjectedNormalsForCurve, stripEdgeNormalCurveDegrees);
+			ApplyNormalEffectivenessToPreviewMesh();
+		}
+
 		public bool HasEffectiveNormalPreview()
 		{
 			if (previewMesh == null || _sourceNormalsForEffectiveness == null || _projectedNormalsForEffectiveness == null)
@@ -478,30 +507,246 @@ namespace UMA
 		private void ClearNormalEffectivenessCache()
 		{
 			_sourceNormalsForEffectiveness = null;
+			_baseProjectedNormalsForCurve = null;
 			_projectedNormalsForEffectiveness = null;
+			_stripCurveNeighbours = null;
+			_stripCurveNeighboursMesh = null;
 		}
 
-		private bool TryRayProjection(Mesh mesh, Vector3 origin, Vector3 direction, float dotThreshold, float rayDistance, out Vector3 normal, out Vector3 hitPoint)
+		private Vector3[] ApplyStripEdgeNormalCurve(Mesh mesh, Vector3[] sourceNormals, float angleDegrees)
+		{
+			Vector3[] curvedNormals = CopyNormals(sourceNormals);
+			if (mesh == null || Mathf.Abs(angleDegrees) < 0.0001f)
+			{
+				return curvedNormals;
+			}
+
+			Vector3[] vertices = mesh.vertices;
+			if (vertices == null || vertices.Length != curvedNormals.Length)
+			{
+				return curvedNormals;
+			}
+
+			List<int>[] neighbours = GetStripCurveNeighbours(mesh);
+			for (int i = 0; i < curvedNormals.Length; i++)
+			{
+				if (!TryGetStripCenterNeighbour(i, neighbours, vertices, out int centerIndex))
+				{
+					continue;
+				}
+
+				Vector3 normal = curvedNormals[i];
+				Vector3 awayFromCenter = vertices[i] - vertices[centerIndex];
+				if (normal.sqrMagnitude < 1e-12f || awayFromCenter.sqrMagnitude < 1e-12f)
+				{
+					continue;
+				}
+
+				normal.Normalize();
+				awayFromCenter.Normalize();
+				Vector3 rotationAxis = Vector3.Cross(normal, awayFromCenter);
+				if (rotationAxis.sqrMagnitude < 1e-12f)
+				{
+					continue;
+				}
+
+				curvedNormals[i] = (Quaternion.AngleAxis(angleDegrees, rotationAxis.normalized) * normal).normalized;
+			}
+
+			return curvedNormals;
+		}
+
+		private List<int>[] GetStripCurveNeighbours(Mesh mesh)
+		{
+			if (_stripCurveNeighbours != null && _stripCurveNeighboursMesh == mesh)
+			{
+				return _stripCurveNeighbours;
+			}
+
+			_stripCurveNeighbours = BuildVertexNeighbours(mesh);
+			_stripCurveNeighboursMesh = mesh;
+			return _stripCurveNeighbours;
+		}
+
+		private static List<int>[] BuildVertexNeighbours(Mesh mesh)
+		{
+			int vertexCount = mesh.vertexCount;
+			List<int>[] neighbours = new List<int>[vertexCount];
+			for (int i = 0; i < vertexCount; i++)
+			{
+				neighbours[i] = new List<int>();
+			}
+
+			int[] triangles = mesh.triangles;
+			for (int i = 0; i < triangles.Length; i += 3)
+			{
+				int a = triangles[i];
+				int b = triangles[i + 1];
+				int c = triangles[i + 2];
+				if (a < 0 || b < 0 || c < 0 || a >= vertexCount || b >= vertexCount || c >= vertexCount)
+				{
+					continue;
+				}
+
+				AddUniqueNeighbour(neighbours[a], b);
+				AddUniqueNeighbour(neighbours[a], c);
+				AddUniqueNeighbour(neighbours[b], a);
+				AddUniqueNeighbour(neighbours[b], c);
+				AddUniqueNeighbour(neighbours[c], a);
+				AddUniqueNeighbour(neighbours[c], b);
+			}
+
+			return neighbours;
+		}
+
+		private static void AddUniqueNeighbour(List<int> neighbours, int vertexIndex)
+		{
+			if (!neighbours.Contains(vertexIndex))
+			{
+				neighbours.Add(vertexIndex);
+			}
+		}
+
+		private static bool TryGetStripCenterNeighbour(int vertexIndex, List<int>[] neighbours, Vector3[] vertices, out int centerIndex)
+		{
+			centerIndex = -1;
+			if (neighbours == null || vertexIndex < 0 || vertexIndex >= neighbours.Length || neighbours[vertexIndex].Count != 3)
+			{
+				return false;
+			}
+
+			List<int> connected = neighbours[vertexIndex];
+			float bestEdgePairDot = float.MaxValue;
+			for (int a = 0; a < connected.Count - 1; a++)
+			{
+				for (int b = a + 1; b < connected.Count; b++)
+				{
+					Vector3 aDirection = vertices[connected[a]] - vertices[vertexIndex];
+					Vector3 bDirection = vertices[connected[b]] - vertices[vertexIndex];
+					if (aDirection.sqrMagnitude < 1e-12f || bDirection.sqrMagnitude < 1e-12f)
+					{
+						continue;
+					}
+
+					float dot = Vector3.Dot(aDirection.normalized, bDirection.normalized);
+					if (dot < bestEdgePairDot)
+					{
+						bestEdgePairDot = dot;
+						centerIndex = connected[3 - a - b];
+					}
+				}
+			}
+
+			return centerIndex >= 0;
+		}
+
+		private static Vector3[] CopyNormals(Vector3[] normals)
+		{
+			if (normals == null)
+			{
+				return null;
+			}
+
+			Vector3[] copy = new Vector3[normals.Length];
+			for (int i = 0; i < normals.Length; i++)
+			{
+				copy[i] = normals[i];
+			}
+
+			return copy;
+		}
+
+		private bool TryFieldProjection(UMAMetaballMesher.ScalarField field, Vector3 origin, Vector3 direction, float dotThreshold, float rayDistance, out Vector3 normal, out Vector3 hitPoint)
 		{
 			normal = Vector3.zero;
 			hitPoint = Vector3.zero;
-			if (direction.sqrMagnitude < 1e-12f)
+			if (field == null || direction.sqrMagnitude < 1e-12f)
 			{
 				return false;
 			}
 
 			Vector3 dir = direction.normalized;
 			Vector3 rayOrigin = origin + dir * ProjectionRayEpsilon;
-			if (!RaycastCoveringMeshFacing(mesh, rayOrigin, dir, rayDistance, dotThreshold, out hitPoint, out Vector3 hitNormal, out float _))
+			float limit = rayDistance > 0f ? rayDistance : Mathf.Max(field.SizeX, Mathf.Max(field.SizeY, field.SizeZ)) * field.VoxelSize;
+			float stepDistance = Mathf.Max(field.VoxelSize * 0.5f, ProjectionRayEpsilon);
+			int steps = Mathf.Clamp(Mathf.CeilToInt(limit / stepDistance), 4, MaxFieldRaySteps);
+			stepDistance = limit / steps;
+
+			Vector3 previousPoint = rayOrigin;
+			float previousValue = field.SampleValue(previousPoint) - field.Iso;
+			for (int step = 1; step <= steps; step++)
+			{
+				Vector3 currentPoint = rayOrigin + dir * (stepDistance * step);
+				float currentValue = field.SampleValue(currentPoint) - field.Iso;
+				if ((previousValue >= 0f && currentValue <= 0f) || (previousValue <= 0f && currentValue >= 0f))
+				{
+					hitPoint = RefineFieldIsoHit(field, previousPoint, currentPoint, previousValue >= 0f);
+					return TryFieldNormal(field, hitPoint, dir, dotThreshold, out normal);
+				}
+
+				previousPoint = currentPoint;
+				previousValue = currentValue;
+			}
+
+			return false;
+		}
+
+		private static Vector3 RefineFieldIsoHit(UMAMetaballMesher.ScalarField field, Vector3 insidePoint, Vector3 outsidePoint, bool firstPointInside)
+		{
+			Vector3 a = insidePoint;
+			Vector3 b = outsidePoint;
+			if (!firstPointInside)
+			{
+				a = outsidePoint;
+				b = insidePoint;
+			}
+
+			for (int i = 0; i < FieldIsoRefinementSteps; i++)
+			{
+				Vector3 mid = (a + b) * 0.5f;
+				if (field.SampleValue(mid) >= field.Iso)
+				{
+					a = mid;
+				}
+				else
+				{
+					b = mid;
+				}
+			}
+
+			return (a + b) * 0.5f;
+		}
+
+		private static bool TryFieldNormal(UMAMetaballMesher.ScalarField field, Vector3 point, Vector3 direction, float dotThreshold, out Vector3 normal)
+		{
+			normal = Vector3.zero;
+			if (field == null || direction.sqrMagnitude < 1e-12f)
 			{
 				return false;
 			}
 
-			normal = hitNormal.normalized;
+			Vector3 candidateNormal = field.SampleOutwardNormal(point);
+			if (candidateNormal.sqrMagnitude < 1e-12f)
+			{
+				return false;
+			}
+
+			Vector3 dir = direction.normalized;
+			candidateNormal.Normalize();
+			if (Vector3.Dot(candidateNormal, dir) < dotThreshold)
+			{
+				candidateNormal = -candidateNormal;
+				if (Vector3.Dot(candidateNormal, dir) < dotThreshold)
+				{
+					return false;
+				}
+			}
+
+			normal = candidateNormal;
 			return true;
 		}
 
-		private bool TryClusterAxisProjection(Mesh mesh, Vector3 vertex, Vector3 clusterCentroid, Vector3 axis, float dotThreshold, float rayDistance, out Vector3 normal, out Vector3 hitPoint)
+		private bool TryClusterAxisProjection(UMAMetaballMesher.ScalarField field, Vector3 vertex, Vector3 clusterCentroid, Vector3 axis, float dotThreshold, float rayDistance, out Vector3 normal, out Vector3 hitPoint)
 		{
 			Vector3 outwardAxis = axis.sqrMagnitude > 1e-12f ? axis.normalized : (vertex - clusterCentroid).normalized;
 			if (Vector3.Dot(outwardAxis, vertex - clusterCentroid) < 0f)
@@ -509,7 +754,12 @@ namespace UMA
 				outwardAxis = -outwardAxis;
 			}
 
-			return TryRayProjection(mesh, vertex + outwardAxis * ProjectionRayEpsilon, outwardAxis, dotThreshold, rayDistance, out normal, out hitPoint);
+			return TryFieldProjection(field, vertex + outwardAxis * ProjectionRayEpsilon, outwardAxis, dotThreshold, rayDistance, out normal, out hitPoint);
+		}
+
+		private static bool PointInField(UMAMetaballMesher.ScalarField field, Vector3 point)
+		{
+			return field != null && field.SampleValue(point) >= field.Iso;
 		}
 
 		private void AddDebugRay(Vector3 start, Vector3 end, Color color)
@@ -566,6 +816,7 @@ namespace UMA
 			}
 
 			float epsSqr = eps * eps;
+			Dictionary<Vector3Int, List<int>> pointGrid = BuildPointGrid(points, eps);
 			int clusterId = 0;
 			for (int i = 0; i < points.Count; i++)
 			{
@@ -574,7 +825,7 @@ namespace UMA
 					continue;
 				}
 
-				List<int> neighbours = RegionQuery(points, i, epsSqr);
+				List<int> neighbours = RegionQuery(points, pointGrid, eps, i, epsSqr);
 				if (neighbours.Count < minPts)
 				{
 					clusterIds[i] = -1;
@@ -597,7 +848,7 @@ namespace UMA
 					}
 
 					clusterIds[current] = clusterId;
-					List<int> currentNeighbours = RegionQuery(points, current, epsSqr);
+					List<int> currentNeighbours = RegionQuery(points, pointGrid, eps, current, epsSqr);
 					if (currentNeighbours.Count >= minPts)
 					{
 						foreach (int neighbour in currentNeighbours)
@@ -624,15 +875,59 @@ namespace UMA
 			return clusterIds;
 		}
 
-		private static List<int> RegionQuery(List<Vector3> points, int pointIndex, float epsSqr)
+		private static Dictionary<Vector3Int, List<int>> BuildPointGrid(List<Vector3> points, float cellSize)
+		{
+			Dictionary<Vector3Int, List<int>> grid = new Dictionary<Vector3Int, List<int>>();
+			for (int i = 0; i < points.Count; i++)
+			{
+				Vector3Int cell = GetPointGridCell(points[i], cellSize);
+				if (!grid.TryGetValue(cell, out List<int> indices))
+				{
+					indices = new List<int>();
+					grid.Add(cell, indices);
+				}
+
+				indices.Add(i);
+			}
+
+			return grid;
+		}
+
+		private static Vector3Int GetPointGridCell(Vector3 point, float cellSize)
+		{
+			float invCellSize = 1f / Mathf.Max(cellSize, ProjectionRayEpsilon);
+			return new Vector3Int(
+				Mathf.FloorToInt(point.x * invCellSize),
+				Mathf.FloorToInt(point.y * invCellSize),
+				Mathf.FloorToInt(point.z * invCellSize));
+		}
+
+		private static List<int> RegionQuery(List<Vector3> points, Dictionary<Vector3Int, List<int>> pointGrid, float eps, int pointIndex, float epsSqr)
 		{
 			List<int> result = new List<int>();
 			Vector3 p = points[pointIndex];
-			for (int i = 0; i < points.Count; i++)
+			Vector3Int centerCell = GetPointGridCell(p, eps);
+			for (int z = -1; z <= 1; z++)
 			{
-				if ((points[i] - p).sqrMagnitude <= epsSqr)
+				for (int y = -1; y <= 1; y++)
 				{
-					result.Add(i);
+					for (int x = -1; x <= 1; x++)
+					{
+						Vector3Int cell = new Vector3Int(centerCell.x + x, centerCell.y + y, centerCell.z + z);
+						if (!pointGrid.TryGetValue(cell, out List<int> indices))
+						{
+							continue;
+						}
+
+						for (int i = 0; i < indices.Count; i++)
+						{
+							int index = indices[i];
+							if ((points[index] - p).sqrMagnitude <= epsSqr)
+							{
+								result.Add(index);
+							}
+						}
+					}
 				}
 			}
 
@@ -1324,7 +1619,7 @@ namespace UMA
 #if UNITY_EDITOR
 		private void OnValidate()
 		{
-			ApplyNormalEffectivenessToPreviewMesh();
+			ApplyStripNormalCurveToPreviewMesh();
 		}
 #endif
 	}

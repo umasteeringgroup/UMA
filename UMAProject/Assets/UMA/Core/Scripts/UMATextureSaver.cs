@@ -15,23 +15,22 @@ public class UMATextureSaver : MonoBehaviour
         public class UMAUVTextureInfo
         {
             public string objectNameRelativeToPrefab;
+            public int materialIndex; // which material on the renderer this texture belongs to
+            public string materialName; // material name for validation on restore
             public string materialKeyword;
             public Texture2D texture;
+            public int rendererIndex; // disambiguates multiple Renderer components on the same GameObject (0-based index among same-path renderers)
         }
 
         public List<UMAUVTextureInfo> uvTextureInfos = new List<UMAUVTextureInfo>();
 
-
+#if UNITY_EDITOR
+        // editor only testing stuff
         public void Update() {
             if (forceClear) {
-                // clear the textures from the materials, but don't clear the uvTextureInfos list
-                GameObject prefab = this.gameObject; // Assuming this script is attached to the prefab instance. Adjust as needed.
-                if (prefab == null)
-                {
-                    Debug.LogWarning("Prefab is null, cannot clear texture references.");
-                    return;
-                }
-                var renderers = prefab.GetComponentsInChildren<Renderer>();
+                // Clear the textures from the materials, but don't clear the uvTextureInfos list.
+                // Intentionally uses sharedMaterials — this is a build-time tool that mutates material assets directly.
+                var renderers = GetComponentsInChildren<Renderer>(true);
                 foreach (var renderer in renderers)
                 {
                     foreach (var mat in renderer.sharedMaterials)
@@ -58,22 +57,38 @@ public class UMATextureSaver : MonoBehaviour
                 forceRestore = false;
             }
         }
+#endif
 
 
         public void SaveTextureReferences() {
-            GameObject prefab = this.gameObject; // Assuming this script is attached to the prefab instance. Adjust as needed.
-            if (prefab == null)
-            {
-                Debug.LogWarning("Prefab is null, cannot save texture references.");
-                return;
-            }
             uvTextureInfos.Clear();
 
-            var renderers = prefab.GetComponentsInChildren<Renderer>();
+            var renderers = GetComponentsInChildren<Renderer>(true);
+
+            // Assign a rendererIndex per unique path to disambiguate multiple Renderers on the same GameObject.
+            var pathCounts = new Dictionary<string, int>();
+            var rendererIndices = new Dictionary<Renderer, int>();
             foreach (var renderer in renderers)
             {
-                foreach (var mat in renderer.sharedMaterials)
+                var relPath = GetRelativePath(transform, renderer.transform);
+                if (relPath == null) continue;
+                if (!pathCounts.TryGetValue(relPath, out int count))
+                    count = 0;
+                rendererIndices[renderer] = count;
+                pathCounts[relPath] = count + 1;
+            }
+
+            foreach (var renderer in renderers)
+            {
+                var relPath = GetRelativePath(transform, renderer.transform);
+                if (relPath == null) continue;
+                if (!rendererIndices.TryGetValue(renderer, out int rIdx))
+                    rIdx = 0;
+
+                var materials = renderer.sharedMaterials;
+                for (int matIdx = 0; matIdx < materials.Length; matIdx++)
                 {
+                    var mat = materials[matIdx];
                     if (mat == null) continue;
                     // Save all the textures in the material to uvTextureInfos
                     var matTextures = mat.GetTexturePropertyNames();    
@@ -84,10 +99,14 @@ public class UMATextureSaver : MonoBehaviour
                         {
                             uvTextureInfos.Add(new UMAUVTextureInfo
                             {
-                                objectNameRelativeToPrefab = GetRelativePath(prefab.transform, renderer.transform),
+                                objectNameRelativeToPrefab = relPath,
+                                materialIndex = matIdx,
+                                materialName = StripMaterialInstanceSuffix(mat.name),
                                 materialKeyword = texName,
-                                texture = tex
+                                texture = tex,
+                                rendererIndex = rIdx
                             });
+                            Debug.Log("SVTXR: Saved texture reference for renderer " + renderer.name + " material " + mat.name + " texture property " + texName + " texture " + tex.name);
                         }
                     }
                 }
@@ -101,42 +120,105 @@ public class UMATextureSaver : MonoBehaviour
 
         public void RestoreTextureReferences()
         {
-            GameObject prefab = this.gameObject; // Assuming this script is attached to the prefab instance. Adjust as needed.
-            if (prefab == null)
-            {
-                Debug.LogWarning("Prefab is null, cannot restore texture references.");
-                return;
-            }
-
-            var renderers = prefab.GetComponentsInChildren<Renderer>();
-            // build a dictionary of relative path to renderer
-            Dictionary<string, Renderer> rendererDict = new Dictionary<string, Renderer>();
+            var renderers = GetComponentsInChildren<Renderer>(true);
+            // Build a dictionary of relative path -> list of renderers (handles multiple Renderer components on the same GameObject).
+            var rendererDict = new Dictionary<string, List<Renderer>>();
             foreach (var renderer in renderers)
             {
-                string relativePath = GetRelativePath(prefab.transform, renderer.transform);
-                if (!rendererDict.ContainsKey(relativePath))
+                string relativePath = GetRelativePath(transform, renderer.transform);
+                if (relativePath == null) continue;
+                if (!rendererDict.TryGetValue(relativePath, out var list))
                 {
-                    rendererDict.Add(relativePath, renderer);
+                    list = new List<Renderer>();
+                    rendererDict.Add(relativePath, list);
                 }
+                list.Add(renderer);
             }
-            // restore textures using the dictionary
+
+            // Restore textures using the dictionary.
             foreach (var uvInfo in uvTextureInfos)
             {
-                if (rendererDict.TryGetValue(uvInfo.objectNameRelativeToPrefab, out var renderer))
+                bool found = false;
+                if (rendererDict.TryGetValue(uvInfo.objectNameRelativeToPrefab, out var rendererList))
                 {
-                    foreach (var mat in renderer.sharedMaterials)
+                    // Select the correct renderer by index; clamp to avoid out-of-range on data mismatch.
+                    int rIdx = Mathf.Clamp(uvInfo.rendererIndex, 0, rendererList.Count - 1);
+                    var renderer = rendererList[rIdx];
+
+                    var materials = renderer.sharedMaterials;
+                    if (uvInfo.materialIndex < 0 || uvInfo.materialIndex >= materials.Length)
                     {
-                        if (mat == null) continue;
-                        if (mat.HasProperty(uvInfo.materialKeyword))
+                        Debug.LogWarning("SVTXR: Material index " + uvInfo.materialIndex + " is out of range for renderer " + renderer.name);
+                        continue;
+                    }
+
+                    var mat = materials[uvInfo.materialIndex];
+                    if (mat == null) 
+                    {
+                        Debug.LogWarning("SVTXR: Material is null for renderer " + renderer.name + " at index " + uvInfo.materialIndex);  
+                        continue;
+                    }
+                    // Validate material name matches (in case materials were reordered).
+                    // Compare against the stripped base name to handle Unity's " (Instance)" suffix on material instances.
+                    if (!string.IsNullOrEmpty(uvInfo.materialName))
+                    {
+                        string currentName = StripMaterialInstanceSuffix(mat.name);
+                        if (currentName != uvInfo.materialName)
                         {
-                            mat.SetTexture(uvInfo.materialKeyword, uvInfo.texture);
+                            Debug.LogWarning("SVTXR: Material name mismatch. Expected '" + uvInfo.materialName + "' but found '" + currentName + "' on renderer " + renderer.name);
                         }
                     }
+                    if (mat.shader.name == "Hidden/InternalErrorShader") 
+                    {
+                        string original = mat.GetTag("OriginalShader", false, "");
+                        if(string.IsNullOrEmpty(original)) {
+                            Debug.LogWarning("SVTXR: Material " + mat.name + " has error shader but no OriginalShader tag");
+                            continue;
+                        }
+                        if(original == "Hidden/InternalErrorShader") {
+                            Debug.LogWarning("SVTXR: Material " + mat.name + " has error shader as OriginalShader tag");
+                            continue;
+                        }
+                        var restoredShader = Shader.Find(original);
+                        if(restoredShader != null) {
+                            mat.shader = restoredShader;
+                        }
+                        else {
+                            Debug.LogWarning("SVTXR: Could not find original shader " + original + " for material " + mat.name);
+                            continue;
+                        }
+                    }
+                    if (mat.HasProperty(uvInfo.materialKeyword))
+                    {
+                        mat.SetTexture(uvInfo.materialKeyword, uvInfo.texture);
+                        Debug.Log("SVTXR: Restored texture reference for renderer " + renderer.name + " material " + mat.name + " texture property " + uvInfo.materialKeyword + " texture " + uvInfo.texture.name);
+                        found = true;
+                    }
+                    else
+                    {
+                        Debug.LogWarning("SVTXR: Material " + mat.name + " does not have property " + uvInfo.materialKeyword);
+                    }
+                }
+                if (!found)
+                {
+                    Debug.LogWarning("SVTXR: Could not find renderer or property for UV info: " + uvInfo.objectNameRelativeToPrefab);
                 }
             }
         }
 
-        public string GetRelativePath(Transform root, Transform target)
+        /// <summary>
+        /// Strips Unity's " (Instance)" suffix from material names so saved names match across instantiations.
+        /// </summary>
+        private static string StripMaterialInstanceSuffix(string materialName)
+        {
+            if (string.IsNullOrEmpty(materialName)) return materialName;
+            const string suffix = " (Instance)";
+            if (materialName.EndsWith(suffix))
+                return materialName.Substring(0, materialName.Length - suffix.Length);
+            return materialName;
+        }
+
+        public static string GetRelativePath(Transform root, Transform target)
         {
             if (target == root) return "";
             // get the path from root to target
@@ -146,6 +228,11 @@ public class UMATextureSaver : MonoBehaviour
             {
                 path = current.name + "/" + path;
                 current = current.parent;
+            }
+            if (current == null)
+            {
+                Debug.LogWarning("SVTXR: Target " + target.name + " is not a descendant of root " + root.name);
+                return null;
             }
             return path;
         }
