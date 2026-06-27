@@ -210,8 +210,15 @@ namespace UMA
                 var n = allNames[i];
                 if (!RaceDNAValues.ContainsKey(n))
                 {
-                    // TODO: if you can query a real default from DNA assets, use that; otherwise use 0.5f
-                    RaceDNAValues[n] = 0.5f;
+					if (useNewDNA)
+                    {
+						DNACollection.dnaDictionary.TryGetValue(n, out var dnaDef);
+                        RaceDNAValues[n] = dnaDef != null ? dnaDef.defaultValue : 0.5f;
+                    }
+					else
+                    {
+                    	RaceDNAValues[n] = 0.5f;
+					}
                 }
             }
             return RaceDNAValues;

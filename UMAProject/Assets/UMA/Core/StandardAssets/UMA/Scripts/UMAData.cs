@@ -1366,7 +1366,7 @@ namespace UMA
 		/// The UMARecipe class contains the race, DNA, and color data required to build a UMA character.
 		/// </summary>
 		[System.Serializable]
-		public class UMARecipe
+		public class UMARecipe 
 		{
 			public RaceData raceData;
 			public string recipeName; // only used when DynamicCharacterAvatar merges the recipe with the avatar.
@@ -1590,9 +1590,9 @@ namespace UMA
 						{
 							if (d != null)
 							{
-								float defaultValue = 0.5f;
+								float defaultValue = d.defaultValue;
 								if (overrides != null && overrides.TryGetValue(d.name, out var overrideValue))
-								{
+								{									
 									defaultValue = Mathf.Clamp01(overrideValue);
 								}
 								else if (dict != null && dict.TryGetValue(d.name, out var dnaAsset) && dnaAsset != null)
@@ -1679,7 +1679,7 @@ namespace UMA
                         {
                             continue;
                         }
-                        float value = 0.5f;
+                        float value = dnaDef.defaultValue;
                         if (overrides != null && overrides.TryGetValue(name, out var ov))
                         {
                             value = Mathf.Clamp01(ov);

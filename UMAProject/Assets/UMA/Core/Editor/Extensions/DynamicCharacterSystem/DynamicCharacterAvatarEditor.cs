@@ -815,6 +815,7 @@ namespace UMA.CharacterSystem.Editors
             _groupNamesCache = names;
         }
 
+        public static bool fullRebuild = false;
         private bool DoNewDNA(bool wasChanged)
         {
             // Ensure active race and collection
@@ -825,6 +826,8 @@ namespace UMA.CharacterSystem.Editors
                 EditorGUILayout.HelpBox("No active race. Select a race to add DNA from RaceData.DNACollection.", MessageType.Info);
                 return wasChanged;
             }
+
+            fullRebuild = EditorGUILayout.Toggle("Force Full Rebuild", fullRebuild);
 
             // Initialize DNACollection if needed
             if (raceData.DNACollection == null)
@@ -870,6 +873,7 @@ namespace UMA.CharacterSystem.Editors
                 }
 
                 bool anyReset = false;
+#region DNA Header                
                 // Header with Reset button
                 EditorGUILayout.BeginHorizontal();
                 //EditorGUILayout.LabelField("Assigned New DNA", EditorStyles.boldLabel);
@@ -1015,6 +1019,7 @@ namespace UMA.CharacterSystem.Editors
                             {
                                 continue;
                             }
+                            Debug.Log($"Resetting DNA '{inst.Name}' from {inst.Value} to default value {defaultValue}");
                             if (!Mathf.Approximately(inst.Value, defaultValue))
                             {
                                 inst.Value = defaultValue;
@@ -1044,7 +1049,7 @@ namespace UMA.CharacterSystem.Editors
 
                 }
                 EditorGUILayout.EndHorizontal();
-
+#endregion
                 if (anyReset)
                 {
                     EditorUtility.SetDirty(umaData);
@@ -1092,7 +1097,10 @@ namespace UMA.CharacterSystem.Editors
                         EditorGUILayout.BeginHorizontal();
                         bool newEnabled = EditorGUILayout.ToggleLeft(inst.Name, inst.enabled, GUILayout.Width(140));
                         float oldValue = inst.Value;
+                        EditorGUI.BeginChangeCheck();
                         inst.Value = EditorGUILayout.Slider(inst.Value, 0f, 1f);
+                        bool valueChanged = EditorGUI.EndChangeCheck();
+#region DNA Buttons                        
                         if (GUILayout.Button("Reset", GUILayout.Width(50)))
                         {
                             if (_nameToDnaCache.TryGetValue(inst.Name, out var dnaAsset) && dnaAsset != null)
@@ -1102,7 +1110,9 @@ namespace UMA.CharacterSystem.Editors
                                 inst.Value = defaultValue;
                                 EditorUtility.SetDirty(umaData);
                                 wasChanged = true;
+                                Debug.Log($"Resetting DNA '{inst.Name}' to default value {defaultValue}");
                                 GenerateSingleUMA();
+                                Debug.Log("Dna reset completed. Value is now: " + inst.Value + " (default was: " + defaultValue + ")");
                             }
                             else if (collection.dnaDictionary != null && collection.dnaDictionary.TryGetValue(inst.Name, out var dnaAsset2) && dnaAsset2 != null)
                             {
@@ -1111,7 +1121,11 @@ namespace UMA.CharacterSystem.Editors
                                 inst.Value = defaultValue;
                                 EditorUtility.SetDirty(umaData);
                                 wasChanged = true;
-                                GenerateSingleUMA();
+                                Debug.Log($"Resetting DNA '{inst.Name}' to default value {defaultValue}");
+                                dca.ForceUpdate(true,true,true);
+                                DoTargetedBuild(dnaAsset2.GetBuildType());
+                                Debug.Log("Dna reset and targeted build completed. Value is now: " + inst.Value + " (default was: " + defaultValue + ")"    );
+                                // GenerateSingleUMA();
                             }
                             else
                             {
@@ -1134,6 +1148,28 @@ namespace UMA.CharacterSystem.Editors
                                 EditorUtility.DisplayDialog("DNA Not Found", $"DNA asset '{inst.Name}' not found in collection.", "OK");
                             }
                         }
+                        if (GUILayout.Button("?", GUILayout.Width(20)))
+                        {
+                            // Evaluate the current raw value of the DNA and show it in a dialog, 
+                            // this is useful for DNAs that have non-linear curves or other complex behavior that makes the slider value not directly indicative of the actual effect on the avatar
+                            string evaluatedValueStr = "";
+                            // get this DNA.
+                            // for each DNAEffect in the DNA, call GetMappedValue, and show the results in the dialog
+                            if (_nameToDnaCache.TryGetValue(inst.Name, out var dnaAsset))
+                            {
+                                if (dnaAsset != null && dnaAsset.effects != null)
+                                {
+                                    for (int ebi = 0; ebi < dnaAsset.effects.Count; ebi++)
+                                    {
+                                        var effect = dnaAsset.effects[ebi];
+                                        if (effect == null) continue;
+                                        float evaluatedValue = effect.GetMappedValue(inst.Value);
+                                        evaluatedValueStr += $"{ebi}: {effect.GetType().Name}: {evaluatedValue:F4}\n";
+                                    }
+                                }
+                            }
+                            EditorUtility.DisplayDialog("Evaluated DNA Value", $"The evaluated value of '{inst.Name}' is:\n{evaluatedValueStr}", "OK");
+                        }
                         if (GUILayout.Button("X", GUILayout.Width(20)))
                         {
                             // Remove this DNAInstance
@@ -1143,16 +1179,33 @@ namespace UMA.CharacterSystem.Editors
                             GenerateSingleUMA();
                             return true; // early exit after mutation to avoid index issues
                         }
+#endregion                        
                         EditorGUILayout.EndHorizontal();
 
-                        if (!Mathf.Approximately(oldValue, inst.Value))
+                        if (valueChanged)
                         {
-                            // This causes a massive slowdown during slider changes because it regenerates the avatar on every tiny change, but without it, changes aren't registered in the undo system and don't mark the scene dirty, which is worse. We could optimize by only regenerating on slider release, but that adds complexity and isn't a huge deal for now.
-                            // Undo.RecordObject(umaData, "Change DNA Value");
-                            EditorUtility.SetDirty(umaData);
-                            wasChanged = true;
-                            GenerateSingleUMA();
+                            Debug.Log($"DNA '{inst.Name}' value changed from {oldValue} to {inst.Value}");
+                            // Get the DNA asset and its build type, then do a targeted build
+                            if (_nameToDnaCache.TryGetValue(inst.Name, out var dnaAsset) && dnaAsset != null)
+                            {
+                                var buildType = dnaAsset.GetBuildType();
+                                EditorUtility.SetDirty(umaData);
+                                wasChanged = true;
+                                DoTargetedBuild(buildType);
+                            }
+                            else
+                            {
+                                // Fallback: full build if DNA asset not found in cache
+                                EditorUtility.SetDirty(umaData);
+                                wasChanged = true;
+                                GenerateSingleUMA();
+                            }
                             oldValue = inst.Value; // update oldValue to avoid multiple undos during slider drag
+                        }
+                        else
+                        {
+                            //Debug.Log($"DNA '{inst.Name}' value unchanged at {inst.Value}");
+
                         }
                         if (newEnabled != inst.enabled)
                         {
@@ -1423,6 +1476,55 @@ namespace UMA.CharacterSystem.Editors
             EditorGUILayout.EndHorizontal();
 
             return wasChanged;
+        }
+
+        private void DoTargetedBuild(UMA.DNAInstanceCollection.DNABuildType buildType)
+        {
+            if (thisDCA == null)
+            {
+                return;
+            }
+    
+            bool buildTexture = (buildType & UMA.DNAInstanceCollection.DNABuildType.Texture) != 0;
+            bool buildMesh = (buildType & UMA.DNAInstanceCollection.DNABuildType.Mesh) != 0;
+            bool buildRig = (buildType & UMA.DNAInstanceCollection.DNABuildType.Rig) != 0;
+            bool buildBlendShape = (buildType & UMA.DNAInstanceCollection.DNABuildType.BlendShape) != 0;
+            bool buildSharedColors = (buildType & UMA.DNAInstanceCollection.DNABuildType.SharedColors) != 0;
+            bool buildMeshModifiers = (buildType & UMA.DNAInstanceCollection.DNABuildType.MeshModifiers) != 0;
+
+            if (buildSharedColors | buildMeshModifiers )
+            {
+                GenerateSingleUMA();
+                return;
+            }
+            var sw = System.Diagnostics.Stopwatch.StartNew();            
+            thisDCA.Dirty(buildRig, buildTexture, buildMesh);
+            var generator = UMAAssetIndexer.Instance.Generator;
+            generator.GenerateSingleUMA(thisDCA,false);
+            sw.Stop();
+            Debug.Log($"UMA Generation took {sw.ElapsedMilliseconds} ms");
+        }
+
+        private void DoTimedGeneration(bool full, DNAInstanceCollection.DNABuildType buildType)
+        {
+            if (thisDCA == null)
+            {
+                return;
+            }
+
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            if (!full)
+            {
+                thisDCA.Dirty(true, true, true);
+                var generator = UMAAssetIndexer.Instance.Generator;
+                generator.GenerateSingleUMA(thisDCA,false);
+            }
+            else
+            {
+                GenerateSingleUMA();
+            }
+            sw.Stop();
+            Debug.Log($"UMA Generation {(full ? "Full" : "Partial")} took {sw.ElapsedMilliseconds} ms");
         }
 
         private bool ShowDNA(bool wasChanged)
@@ -2424,6 +2526,19 @@ namespace UMA.CharacterSystem.Editors
             EditorGUILayout.PropertyField(serializedObject.FindProperty("RecreateAnimatorOnRaceChange"));
 
 
+            // Show the animator controller initialization parameters.
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("initializeAnimatorWhenAdded"), new GUIContent("Initialize Animator When Added"));
+
+            bool initAnimatorWhenAdded = serializedObject.FindProperty("initializeAnimatorWhenAdded").boolValue;
+            if (initAnimatorWhenAdded)
+            {
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("applyRootMotion"), new GUIContent("Apply Root Motion"));
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("animatePhysics"), new GUIContent("Animate Physics"));
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("animatorUpdateMode"), new GUIContent("Animator Update Mode"));
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("animatorCullingMode"), new GUIContent("Animator Culling Mode"));
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("animatorFireEvents"), new GUIContent("Animator Fire Events"));
+            }
+
             if (EditorGUI.EndChangeCheck())
             {
                 serializedObject.ApplyModifiedProperties();
@@ -2506,10 +2621,17 @@ namespace UMA.CharacterSystem.Editors
 
                 dca.LoadDefaultWardrobe();
 
+                if (dca.activeRace.racedata.useNewDNA == false)
+                {
+                    var dna = dca.predefinedDNA.Clone();
+                    dca.BuildCharacter(false, true);
+                    dca.predefinedDNA = dna;
+                }
+                else
+                {
+                    dca.BuildCharacter(false, true);
+                }
                 // save the predefined DNA...
-                var dna = dca.predefinedDNA.Clone();
-                dca.BuildCharacter(false, true);
-                dca.predefinedDNA = dna;
 
                 int oldScaleFactor = ugb.InitialScaleFactor;
                 int oldAtlasResolution = ugb.atlasResolution;
@@ -2520,7 +2642,6 @@ namespace UMA.CharacterSystem.Editors
 
 
                 dca.activeRace.racedata.ResetDNA();
-
                 ugb.GenerateSingleUMA(dca.umaData, false);
 
                 ugb.FreezeTime = false;
@@ -2534,6 +2655,31 @@ namespace UMA.CharacterSystem.Editors
                     mi.ResetMountPoint();
                 }
                 dca.umaData.RestoreSavedItems();
+            }
+        }
+
+        private void DumpDNA(string dnaName, string spot)
+        {
+            if (thisDCA == null)
+            {
+                return;
+            }
+
+            var characterDNA = thisDCA.GetDNA();
+            if (characterDNA != null)
+            {
+                if (characterDNA.ContainsKey(dnaName))
+                {
+                    Debug.Log($"DNA {dnaName} value: {characterDNA[dnaName].Value} at spot {spot}");
+                }
+                else
+                {
+                    Debug.Log($"DNA {dnaName} not found at spot {spot}");
+                }
+            }
+            else
+            {
+                Debug.Log("Character DNA is null.");
             }
         }
 

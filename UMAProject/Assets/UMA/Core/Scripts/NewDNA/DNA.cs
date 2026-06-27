@@ -27,6 +27,17 @@ namespace UMA
             UMA.CustomAssetUtility.CreateAsset<DNA>();
         }
 #endif
+
+        public DNABuildType GetBuildType()
+        {
+            DNABuildType updateFlags = DNABuildType.None;
+            foreach (var effect in effects)
+            {
+                updateFlags |= effect.AreaEffect;
+            }
+            return updateFlags;
+        }
+        
         public DNABuildType AfterRecipeGeneration(UMAData avatar, float value)
         {
             DNABuildType updateFlags = DNABuildType.None;

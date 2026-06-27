@@ -20,6 +20,12 @@ namespace UMA
 		[SerializeField]
 		public List<WardrobeRecipeThumb> wardrobeRecipeThumbs = new List<WardrobeRecipeThumb>();
 
+	    [Tooltip("When true, the thumbnail is generated from the recipe's texture. When false, the thumbnail is generated from the recipe's wardrobe slot.")]
+		[SerializeField]
+		public bool thumbnailFromTexture;
+		[SerializeField]	
+		public Rect thumbnailRect = new Rect(0.25f, 0.25f, 0.5f, 0.5f);
+
 		public string wardrobeSlot = "None";
 
 		[SerializeField]

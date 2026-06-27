@@ -1860,14 +1860,9 @@ namespace UMA
 			CreateTransforms(skeleton);
 
 			Mesh mesh = new Mesh();//renderer.sharedMesh;
-			if (UMAAssetIndexer.Instance.Generator.Use32BitBuffers)
-			{
-				mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
-			}
-			else
-			{
-				mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt16;
-			}
+			// Use 32-bit indices when vertex count exceeds UInt16 max (65535) or when forced globally
+			bool needs32Bit = vertexCount > 65535 || UMAAssetIndexer.Instance.Generator.Use32BitBuffers;
+			mesh.indexFormat = needs32Bit ? UnityEngine.Rendering.IndexFormat.UInt32 : UnityEngine.Rendering.IndexFormat.UInt16;
 #if UNITY_EDITOR
 			if (UnityEditor.PrefabUtility.IsAddedComponentOverride(renderer))
 			{

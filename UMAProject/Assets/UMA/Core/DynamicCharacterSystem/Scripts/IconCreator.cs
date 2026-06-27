@@ -47,6 +47,10 @@ public class IconCreator : MonoBehaviour
     private Texture2D flatHover = null;
     private Texture2D flatActive = null;
     private string currentStatus = "";
+    [Range(-1.0f, 1.0f)]
+    public float brightness = 0.0f;
+    [Range(-1.0f, 1.0f)]
+    public float contrast = 0.0f;
 
     Texture2D MakeTex(Color c)
     {
@@ -288,6 +292,25 @@ public class IconCreator : MonoBehaviour
                 var uwr = recipe as UMAWardrobeRecipe;
                 if (uwr != null)
                 {
+                    // If thumbnailFromTexture is enabled, generate thumbnail from recipe texture instead of camera capture
+                    if (uwr.thumbnailFromTexture)
+                    {
+                        string raceName = avatar.activeRace.racedata.raceName;
+                        string textureOutputPath = GenerateThumbnailFromRecipeTexture(uwr, region, raceName, sequence);
+                        if (!string.IsNullOrEmpty(textureOutputPath))
+                        {
+#if UNITY_EDITOR
+                            UpdateWardrobeRecipeThumb(uwr, textureOutputPath);
+#endif
+                            currentStatus = $"Generated texture thumbnail for recipe: {uwr.name}";
+                        }
+                        else
+                        {
+                            currentStatus = $"Failed to generate texture thumbnail for recipe: {uwr.name} (no texture found in recipe)";
+                        }
+                        continue;
+                    }
+
                     currentStatus = $"Rendering recipe: {uwr.name} for region: {region}";
                     avatar.ClearWearableItems(region);
                     avatar.SetWearableItem(uwr);
@@ -346,6 +369,138 @@ public class IconCreator : MonoBehaviour
             string region = kvp.Key;
             yield return StartCoroutine(RenderRegion(region));
         }
+    }
+
+    private string GenerateThumbnailFromRecipeTexture(UMAWardrobeRecipe uwr, string region, string raceName, int sequence)
+    {
+        if (uwr == null)
+        {
+            return null;
+        }
+
+        // Unpack the recipe to access slot/overlay data
+        UMAData.UMARecipe umaRecipe = uwr.GetCachedRecipe();
+        if (umaRecipe == null || umaRecipe.slotDataList == null || umaRecipe.slotDataList.Length == 0)
+        {
+            Debug.LogWarning($"IconCreator: Recipe '{uwr.name}' has no slots.");
+            return null;
+        }
+
+        SlotData firstSlot = umaRecipe.slotDataList[0];
+        foreach (var slot in umaRecipe.slotDataList)
+        {
+            if (slot != null && slot.OverlayCount > 0)
+            {
+                firstSlot = slot;
+                break;
+            }
+        }
+        if (firstSlot == null || firstSlot.OverlayCount == 0)
+        {
+            Debug.LogWarning($"IconCreator: Recipe '{uwr.name}' first slot has no overlays.");
+            return null;
+        }
+
+        OverlayData firstOverlay = firstSlot.GetOverlay(0);
+        if (firstOverlay == null || firstOverlay.asset == null)
+        {
+            Debug.LogWarning($"IconCreator: Recipe '{uwr.name}' first overlay asset is null.");
+            return null;
+        }
+
+        Texture[] textureList = firstOverlay.asset.textureList;
+        if (textureList == null || textureList.Length == 0 || textureList[0] == null)
+        {
+            Debug.LogWarning($"IconCreator: Recipe '{uwr.name}' has no textures in first overlay.");
+            return null;
+        }
+
+        Texture sourceTexture = textureList[0];
+        Texture2D readableTexture = GetReadableTexture2D(sourceTexture);
+        if (readableTexture == null)
+        {
+            Debug.LogWarning($"IconCreator: Failed to get readable texture for recipe '{uwr.name}'.");
+            return null;
+        }
+
+        try
+        {
+            // Crop using thumbnailRect (normalized UV coordinates, 0-1 range)
+            Rect thumbnailRect = uwr.thumbnailRect;
+            int srcWidth = readableTexture.width;
+            int srcHeight = readableTexture.height;
+
+            int cropX = Mathf.RoundToInt(thumbnailRect.x * srcWidth);
+            int cropY = Mathf.RoundToInt(thumbnailRect.y * srcHeight);
+            int cropWidth = Mathf.RoundToInt(thumbnailRect.width * srcWidth);
+            int cropHeight = Mathf.RoundToInt(thumbnailRect.height * srcHeight);
+
+            // Clamp to valid range
+            cropX = Mathf.Clamp(cropX, 0, srcWidth - 1);
+            cropY = Mathf.Clamp(cropY, 0, srcHeight - 1);
+            cropWidth = Mathf.Clamp(cropWidth, 1, srcWidth - cropX);
+            cropHeight = Mathf.Clamp(cropHeight, 1, srcHeight - cropY);
+
+            Color[] pixels = readableTexture.GetPixels(cropX, cropY, cropWidth, cropHeight);
+
+            // Create output texture and convert to grayscale with brightness/contrast
+            Texture2D outputTexture = new Texture2D(cropWidth, cropHeight, TextureFormat.RGBA32, false);
+            Color[] outputPixels = new Color[pixels.Length];
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                float gray = pixels[i].grayscale;
+                gray = ApplyBrightnessContrast(gray, brightness, contrast);
+                outputPixels[i] = new Color(gray, gray, gray, pixels[i].a);
+            }
+            outputTexture.SetPixels(outputPixels);
+            outputTexture.Apply();
+
+            // Save to PNG
+            string outputFolder = GetOutputFolder(region, raceName);
+            string outputPath = Path.Combine(outputFolder, SanitizePathSegment(sequence + "_" + uwr.name) + ".png");
+            byte[] pngBytes = outputTexture.EncodeToPNG();
+            File.WriteAllBytes(outputPath, pngBytes);
+
+            Destroy(outputTexture);
+            return outputPath;
+        }
+        finally
+        {
+            Destroy(readableTexture);
+        }
+    }
+
+    private static Texture2D GetReadableTexture2D(Texture source)
+    {
+        if (source == null)
+        {
+            return null;
+        }
+
+        RenderTexture tmp = RenderTexture.GetTemporary(
+            source.width, source.height, 0,
+            RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB);
+
+        Graphics.Blit(source, tmp);
+        RenderTexture previous = RenderTexture.active;
+        RenderTexture.active = tmp;
+
+        Texture2D result = new Texture2D(source.width, source.height, TextureFormat.RGBA32, false);
+        result.ReadPixels(new Rect(0, 0, tmp.width, tmp.height), 0, 0);
+        result.Apply();
+
+        RenderTexture.active = previous;
+        RenderTexture.ReleaseTemporary(tmp);
+        return result;
+    }
+
+    private static float ApplyBrightnessContrast(float gray, float brightnessValue, float contrastValue)
+    {
+        // Apply brightness (additive: -1 = black, 0 = no change, +1 = white)
+        gray = Mathf.Clamp01(gray + brightnessValue);
+        // Apply contrast (multiply around 0.5 midpoint: -1 = flat gray, 0 = no change, +1 = max contrast)
+        gray = Mathf.Clamp01((gray - 0.5f) * (1f + contrastValue) + 0.5f);
+        return gray;
     }
 
     private CameraRegions GetCameraRegionsForRegion(string region)

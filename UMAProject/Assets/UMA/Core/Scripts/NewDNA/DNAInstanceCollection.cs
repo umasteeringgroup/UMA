@@ -21,6 +21,7 @@ namespace UMA
             Rig = 1 << 2,
             BlendShape = 1 << 3,
             SharedColors = 1 << 4,
+            MeshModifiers = 1 << 5,
             Base = Mesh | Rig | Texture,
             All = Texture | Mesh | Rig | BlendShape | SharedColors
         }

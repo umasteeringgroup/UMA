@@ -54,6 +54,14 @@ namespace UMA.CharacterSystem
         [Tooltip("If true, the Animator will be rebuilt anytime the race changes")]
         public bool RecreateAnimatorOnRaceChange = true;
 
+
+        public bool initializeAnimatorWhenAdded = false;
+        public bool applyRootMotion = true;
+        public bool animatePhysics = false;
+        public AnimatorUpdateMode animatorUpdateMode = AnimatorUpdateMode.Normal;
+        public AnimatorCullingMode animatorCullingMode = AnimatorCullingMode.CullCompletely;
+        public bool animatorFireEvents = true;
+        
         [NonSerialized]
         public bool ignoreMeshHideAssets = false;
 
@@ -3761,6 +3769,15 @@ namespace UMA.CharacterSystem
                 GameObject.DestroyImmediate(thisAnimator);
                 // todo.. this sometimes blows up with the component already exists!!!
                 thisAnimator = gameObject.AddComponent<Animator>();
+                    if (initializeAnimatorWhenAdded)
+                    {
+                        thisAnimator.applyRootMotion = applyRootMotion;
+                        thisAnimator.animatePhysics = animatePhysics;
+                        thisAnimator.updateMode = animatorUpdateMode;
+                        thisAnimator.cullingMode = animatorCullingMode;
+                        thisAnimator.fireEvents = animatorFireEvents;
+                    }         
+
             }
 
             if (controllerToUse != null)
@@ -3768,6 +3785,14 @@ namespace UMA.CharacterSystem
                 if (thisAnimator == null && addAnimator)
                 {
                     thisAnimator = gameObject.AddComponent<Animator>();
+                    if (initializeAnimatorWhenAdded)
+                    {
+                        thisAnimator.applyRootMotion = applyRootMotion;
+                        thisAnimator.animatePhysics = animatePhysics;
+                        thisAnimator.updateMode = animatorUpdateMode;
+                        thisAnimator.cullingMode = animatorCullingMode;
+                        thisAnimator.fireEvents = animatorFireEvents;
+                    }         
                 }
 
                 if (thisAnimator != null)
@@ -4731,7 +4756,6 @@ namespace UMA.CharacterSystem
                     RestoreDNA = false;
                 }
             tm.Restart();
-
             SetUMADataOptions();
             ClearModifiers();
 
@@ -4749,7 +4773,6 @@ namespace UMA.CharacterSystem
             Ticks_Phase1 += tm.ElapsedTicks;
 
             List<string> HideTags = new();
-
             tm.Restart();
             if ((this.WardrobeRecipes.Count > 0 || this._additiveRecipes.Count > 0) && activeRace.racedata != null)
             {
@@ -5146,6 +5169,10 @@ namespace UMA.CharacterSystem
 #endif
         private void ApplyPredefinedDNA()
         {
+            if (activeRace.data.useNewDNA)
+            {
+                return;
+            }
             if (this.predefinedDNA != null)
             {
                 if (this.predefinedDNA.PreloadValues.Count > 0)
@@ -5244,7 +5271,6 @@ namespace UMA.CharacterSystem
 #if SUPER_LOGGING
                 Debug.Log("Load Character: " + gameObject.name);
 #endif
-
             SetUMADataOptions();
             blendShapeSettings.ignoreBlendShapes = !loadBlendShapes;
             atlasResolutionScale = this.AtlasResolutionScale;
@@ -5338,7 +5364,7 @@ namespace UMA.CharacterSystem
             List<SlotData> smooshSlots = new List<SlotData>();
             List<SlotData> clippingPlanes = new List<SlotData>();
 
-
+            // DumpDNA("chinPosition", "before overlay sorting");
             for (int i = 0; i < umaRecipe.slotDataList.Length; i++)
             {
                 SlotData sd = umaRecipe.slotDataList[i];
@@ -5431,16 +5457,21 @@ namespace UMA.CharacterSystem
                     }
                 }
             }
+            // DumpDNA("chinPosition", "before dnaInstanceCollection");
             if (currentRaceData != null && currentRaceData.useNewDNA)
             {
                 bool needsInitialDNA = dnaInstanceCollection == null || dnaInstanceCollection.dnaInstances == null || dnaInstanceCollection.dnaInstances.Count == 0;
                 if (resetNewDNAOnNextBuild || (!restoreDNA && needsInitialDNA))
                 {
+                    // DumpDNA("chinPosition", "before initialize dna");
                     umaRecipe.InitializeDNA();
+                    // DumpDNA("chinPosition", "after initialize dna");
                 }
                 else
                 {
+                    // DumpDNA("chinPosition", "before add missing dna");
                     umaRecipe.AddMissingDNAForRace();
+                    // DumpDNA("chinPosition", "after add missing dna");
                 }
             }
             else
@@ -5455,6 +5486,7 @@ namespace UMA.CharacterSystem
             dnaInstanceCollection?.AfterRecipeGenerated(this);
             // AfterRecipeGenerated
 
+            //      DumpDNA("chinPosition", "before UpdateColors");
             UpdateColors();
 
             //New event that allows for tweaking the resulting recipe before the character is actually generated
@@ -5482,7 +5514,9 @@ namespace UMA.CharacterSystem
                RebuildSkeletonThisBuild = true;
             }
 
+   // DumpDNA("chinPosition", "before ApplyPredefinedDNA");
             ApplyPredefinedDNA();
+            // DumpDNA("chinPosition", "after ApplyPredefinedDNA");
             KeepAvatar = keepAvatar;
             ForceRebindAnimator = forceRebindAnimator;
             //But the ExpressionPlayer needs to be Initialized AFTER Load
@@ -5497,19 +5531,24 @@ namespace UMA.CharacterSystem
             // Add saved DNA
             if (restoreDNA)
             {
+                // DumpDNA("chinPosition", "before restore DNA");
                 umaRecipe.ClearDna();
                 for (int i = 0; i < CurrentDNA.Length; i++)
                 {
                     UMADnaBase ud = CurrentDNA[i];
                     umaRecipe.AddDna(ud);
                 }
+                // DumpDNA("chinPosition", "after restore DNA");
             }
             
             AddMeshModifiers(baseRaceRecipe as UMATextRecipe);
             for(int i=0;i<wardrobeRecipes.Count;i++)
             {
+                // DumpDNA("chinPosition", $"before AddMeshModifiers for wardrobeRecipes[{i}]");
                 AddMeshModifiers(wardrobeRecipes[i] as UMATextRecipe);
+                //  DumpDNA("chinPosition", $"after AddMeshModifiers for wardrobeRecipes[{i}]");
             }
+
 
             //AddMeshModifiers(baseRaceRecipe, List < UMAWardrobeRecipe > Replaces, List < UMARecipeBase > wardrobeRecipes, UMARecipeBase[] AdditionalRecipes);
             ApplyDNAToModifiers();

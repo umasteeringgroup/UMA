@@ -696,6 +696,17 @@ namespace UMA.Editors
                 EditorGUILayout.HelpBox("Compatible races are used to assign this recipe to a race or races. Recipes are restricted to the races to which they are assigned - you cannot assign wardrobe items to races that are not compatible. Thumbnails can be used to attach sprites to the recipe for use in UI design.", MessageType.Info);
             }
 			GUILayout.Space(10);
+			//		public bool thumbnailFromTexture;
+		    //public Rect thumbnailRect = new Rect(0.25f, 0.25f, 0.5f, 0.5f);
+
+			EditorGUI.BeginChangeCheck();
+			EditorGUILayout.PropertyField(serializedObject.FindProperty("thumbnailFromTexture"), new GUIContent("Generate from Texture?"));
+			EditorGUILayout.PropertyField(serializedObject.FindProperty("thumbnailRect"), new GUIContent("Thumbnail Rect (if generating from texture)"));
+			if (EditorGUI.EndChangeCheck())
+			{
+				serializedObject.ApplyModifiedProperties();
+				doUpdate = true; 
+			}
 			return doUpdate;
 		}
 
@@ -1266,6 +1277,10 @@ namespace UMA.Editors
 						GUILayout.Space(10);
 						EditorGUILayout.LabelField(mha.name, GUILayout.ExpandWidth(true));
 						GUILayout.Label($"[{mha.AssetSlotName}]", GUILayout.Width(90.0f));
+						if (GUILayout.Button("ping", GUILayout.Width(65)))
+						{
+							EditorGUIUtility.PingObject(mha);
+						}
 						if (GUILayout.Button("Inspect", GUILayout.Width(65)))
 						{
 							InspectMe.Add(mha);
@@ -1345,6 +1360,10 @@ namespace UMA.Editors
 					{
 						EditorGUILayout.LabelField(mm.name, GUILayout.ExpandWidth(true));
 						//GUILayout.Label($"[{mm.SlotName}]", GUILayout.Width(90.0f));
+						if (GUILayout.Button("ping", GUILayout.Width(65)))
+						{
+							EditorGUIUtility.PingObject(mm);
+						}
 						if (GUILayout.Button("Inspect", GUILayout.Width(65)))
 						{
 							InspectMe.Add(mm);

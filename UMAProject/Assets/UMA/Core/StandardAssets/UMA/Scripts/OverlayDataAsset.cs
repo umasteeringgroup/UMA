@@ -146,6 +146,8 @@ namespace UMA
 		[Tooltip("This is used to identify overlays that share the same UV layout and are interchangeable (eg. for decals that target whatever overlay is currently active on the body, etc.).	")]
         public string overlayGroup;
 
+
+
         /// <summary>
         /// The UMA material.
         /// </summary>
@@ -163,6 +165,61 @@ namespace UMA
 		/// You can't count on this field to contain a value unless it was set during the cleanup phase by the indexer!
 		/// </summary>
 		public string materialName;
+
+		/// <summary>
+		/// Occlusion Entries for occluding triangles, currently only supported by powertools.
+		/// </summary>
+		[System.Serializable]
+		public class OcclusionEntry
+		{
+			/// <summary>
+			/// This entry works only on one particular slot identified by it's hash
+			/// </summary>
+			public int slotNameHash;
+			/// <summary>
+			/// each of the slots submeshes has an array of UInt32 that contains a boolean mask for which triangles this overlay occludes. The triangle masks are ascending (1,2,4...)
+			/// </summary>
+			public SubMeshOcclusion[] occlusion;
+			[System.Serializable]
+			public struct SubMeshOcclusion
+			{
+				public System.Int32[][] occlusionLODs;
+			}
+
+			public class OcclusionEntryComparer : IComparer
+			{
+				static OcclusionEntryComparer _instance;
+				private OcclusionEntryComparer() { }
+				public static OcclusionEntryComparer Instance
+				{
+					get
+					{
+						if (_instance == null) _instance = new OcclusionEntryComparer();
+						return _instance;
+					}
+				}
+
+				public int Compare(object x, object y)
+				{
+					var xo = (x as OcclusionEntry);
+					var xv = (xo == null) ? (int)x : xo.slotNameHash;
+
+					var yo = (y as OcclusionEntry);
+					var yv = (yo == null) ? (int)y : yo.slotNameHash;
+
+					if (xv < yv)
+						return -1;
+					if (xv > yv)
+						return 1;
+					return 0;
+				}
+			}
+		}
+		/// <summary>
+		/// Occlusion Entries for occluding triangles, currently only supported by powertools.
+		/// It is important that the OcclusionEntries be sorted by slotNameHash ascending to allow fast binary lookup
+		/// </summary>
+		public OcclusionEntry[] OcclusionEntries;
 
 		/// <summary>
 		/// This overlay was auto generated as a LOD overlay based on another overlay.
@@ -333,7 +390,7 @@ namespace UMA
 			return nameHash;
         }
 
-        /*public void SortOcclusion()
+        public void SortOcclusion()
 		{
 			if (OcclusionEntries != null)
 			{
@@ -342,6 +399,6 @@ namespace UMA
 				UnityEditor.EditorUtility.SetDirty(this);
 #endif
 			}
-		} */
+		} 
     }
 }

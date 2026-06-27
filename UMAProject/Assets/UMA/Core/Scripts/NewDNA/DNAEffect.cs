@@ -55,7 +55,7 @@ namespace UMA
             }
         }
 
-        protected float GetMappedValue(float value)
+        public float GetMappedValue(float value)
         { 
             if (curve != null && curve.length > 0)
             {

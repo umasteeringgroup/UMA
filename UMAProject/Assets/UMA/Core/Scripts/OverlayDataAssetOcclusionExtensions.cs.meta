@@ -1,0 +1,19 @@
+fileFormatVersion: 2
+guid: 635648212a8b8ca488b07543e5ec6d88
+timeCreated: 1468021226
+licenseType: Store
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 14249
+  packageName: UMA Power Tools 2
+  packageVersion: 2.10.1
+  assetPath: Assets/UMA/Extensions/UMAPowerTools/Scripts/OverlayDataAssetOcclusionExtensions.cs
+  uploadId: 385976

@@ -401,6 +401,15 @@ namespace UMA
                         // Cache original bounds from first renderer only
                         umaData.originalMeshBounds = renderers[0].sharedMesh.bounds;
                     }
+
+                // Ensure 32-bit index format when vertex count exceeds UInt16 range
+                var smr = renderers[currentRendererIndex];
+                if (smr != null && smr.sharedMesh != null && smr.sharedMesh.vertexCount > 65535
+                    && smr.sharedMesh.indexFormat != UnityEngine.Rendering.IndexFormat.UInt32)
+                {
+                    smr.sharedMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+                }
+
                 // Materials assignment
 #if UMA_COMBINER_TIMINGS
                 var swMatzi = System.Diagnostics.Stopwatch.StartNew();

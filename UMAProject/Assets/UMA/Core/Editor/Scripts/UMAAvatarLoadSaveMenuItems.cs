@@ -1727,6 +1727,49 @@ namespace UMA.Editors
 			return GetSelectedMeshModifiers().Count > 0;
 		}
 
+		[MenuItem("Assets/UMA/Enable Thumbnail From Texture for selected wardrobe items", false, 2009)]
+		private static void EnableThumbnailFromTextureForSelectedWardrobeItemsMenu()
+		{
+			var selectedRecipes = GetSelectedWardrobeRecipes();
+			if (selectedRecipes.Count == 0)
+			{
+				EditorUtility.DisplayDialog("Enable Thumbnail From Texture", "Select one or more UMAWardrobeRecipe assets in the Project window.", "OK");
+				return;
+			}
+
+			int updatedCount = 0;
+			try
+			{
+				for (int i = 0; i < selectedRecipes.Count; i++)
+				{
+					var recipe = selectedRecipes[i];
+					if (recipe == null)
+					{
+						continue;
+					}
+
+					Undo.RecordObject(recipe, "Enable Thumbnail From Texture");
+					recipe.thumbnailFromTexture = true;
+					EditorUtility.SetDirty(recipe);
+					AssetDatabase.SaveAssetIfDirty(recipe);
+					updatedCount++;
+				}
+			}
+			finally
+			{
+				AssetDatabase.SaveAssets();
+				AssetDatabase.Refresh();
+			}
+
+			EditorUtility.DisplayDialog("Enable Thumbnail From Texture", "Enabled thumbnailFromTexture on " + updatedCount + " wardrobe recipe(s).", "OK");
+		}
+
+		[MenuItem("Assets/UMA/Enable Thumbnail From Texture for selected wardrobe items", true)]
+		private static bool EnableThumbnailFromTextureForSelectedWardrobeItemsMenu_Validate()
+		{
+			return GetSelectedWardrobeRecipes().Count > 0;
+		}
+
 						[MenuItem("Assets/UMA/Add Race(s) to Selected Recipes", true)]
 		private static bool AddRacesToSelectedRecipesMenu_Validate()
 		{

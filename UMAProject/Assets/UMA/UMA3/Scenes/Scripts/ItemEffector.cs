@@ -1,16 +1,21 @@
 using UMA.CharacterSystem;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace UMA
 {
 
-    public class ItemEffector : MonoBehaviour
+    public class ItemEffector : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {
         public IItemSelector itemSelector;
         public UMAWardrobeRecipe recipe;
         public string category;
         public Sprite clearImage;
+
+        // Hover header support
+        private Text categoryHeaderText;
+        private string categoryHeaderDefault;
 
 
         public void SetupClearbutton()
@@ -27,7 +32,7 @@ namespace UMA
                 }
             }
             Text text = GetComponentInChildren<Text>();
-            if (text != null)
+            if (text != null) 
             {
                     text.text = "Clear";
             }            
@@ -91,6 +96,36 @@ namespace UMA
             {
                 itemSelector.ClearItem(category);
             }
+        }
+
+        /// <summary>
+        /// Store a reference to the category header Text so hover can update it.
+        /// </summary>
+        public void SetCategoryHeader(Text headerText)
+        {
+            categoryHeaderText = headerText;
+            if (categoryHeaderText != null)
+            {
+                categoryHeaderDefault = categoryHeaderText.text;
+            }
+        }
+
+        public void OnPointerEnter(PointerEventData eventData)
+        {
+            if (recipe == null || categoryHeaderText == null)
+                return;
+
+            categoryHeaderDefault = categoryHeaderText.text;
+            string displayName = !string.IsNullOrEmpty(recipe.DisplayValue) ? recipe.DisplayValue : recipe.name;
+            categoryHeaderText.text = displayName;
+        }
+
+        public void OnPointerExit(PointerEventData eventData)
+        {
+            if (categoryHeaderText == null)
+                return;
+
+            categoryHeaderText.text = categoryHeaderDefault;
         }
     }
 }

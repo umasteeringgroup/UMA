@@ -355,7 +355,7 @@ namespace UMA
                             if (headerText != null) headerText.text = key;
                         }
 
-                        AddWardrobeItemsForCategory(container, categoryItems, key);
+                        AddWardrobeItemsForCategory(container, categoryItems, key, header);
                     }
                 }
 
@@ -363,10 +363,12 @@ namespace UMA
             }
         }
 
-        private void AddWardrobeItemsForCategory(GameObject container, List<UMAWardrobeRecipe> items, string category)
+        private void AddWardrobeItemsForCategory(GameObject container, List<UMAWardrobeRecipe> items, string category, GameObject categoryHeader = null)
         {
             if (container != null)
             {
+                Text headerTextComponent = categoryHeader != null ? categoryHeader.GetComponent<Text>() : null;
+
                 GameObject gridContainer = SafeInstantiatePrefab(ItemContainer, container.transform);
                 if (gridContainer == null) return;
 
@@ -378,6 +380,7 @@ namespace UMA
                     {
                         clearEffector.clearImage = clearImage;
                         clearEffector.Setup(this, null, category);
+                        clearEffector.SetCategoryHeader(headerTextComponent);
                     }
                 }
 
@@ -387,7 +390,10 @@ namespace UMA
                     if (itemObj == null) continue;
                     ItemEffector effector = itemObj.GetComponent<ItemEffector>();
                     if (effector != null)
+                    {
                         effector.Setup(this, item, category);
+                        effector.SetCategoryHeader(headerTextComponent);
+                    }
                 }
             }
         }

@@ -7,7 +7,10 @@ using System.Runtime.Serialization.Json;
 using TreeViewItem = UnityEditor.IMGUI.Controls.TreeViewItem<int>;
 using TreeView = UnityEditor.IMGUI.Controls.TreeView<int>;
 using TreeViewState = UnityEditor.IMGUI.Controls.TreeViewState<int>;
+using UMA.CharacterSystem;
+
 #endif
+
 
 
 #if UNITY_EDITOR
@@ -3120,6 +3123,21 @@ namespace UMA.PoseTools
                     if (!string.IsNullOrEmpty(tposeResultMessage))
                     {
                         EditorGUILayout.HelpBox(tposeResultMessage, tposeResultMessageType);
+                    }
+                    if (canGenerateTPose && sourceUMA != null && sourceUMA is DynamicCharacterAvatar)
+                    {
+                        DynamicCharacterAvatar dca = sourceUMA as DynamicCharacterAvatar;
+                        RaceData race = dca.activeRace.data;
+
+                        if (race != null && race.TPose != donorTPose)
+                        {
+                            if (GUILayout.Button("Reset Race T-pose to Donor T-pose"))
+                            {
+                                race.TPose = donorTPose;
+                                dca.GenerateNow();
+                            }
+                        }
+                        EditorGUILayout.HelpBox("The generated T-Pose will be saved to the same folder as the Bone Pose asset.", MessageType.Info);
                     }
                     EditorGUI.indentLevel--;
                 }

@@ -3,6 +3,7 @@ using UMA;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Collections.Generic;
 
 namespace UMA
 {
@@ -22,9 +23,37 @@ namespace UMA
         public int asciiStringSize;
         public int binarySize;
 
+        public Stack<string> avatarDefinitionQueue = new Stack<string>();
+        public string lastAvatarDefinition;
+
+
+        public void Start()
+        {
+            // Cache the initial avatar definition for inspector display only.
+            // The queue is populated by GenerateANewUMA, which pushes the current
+            // avatar before randomizing — this avoids a duplicate initial entry.
+            lastAvatarDefinition = Avatar.GetAvatarDefinitionString(false);
+        }
+
         public void GenerateANewUMA()
         {
+            // save the current one to the queue before generating a new one
+            lastAvatarDefinition = Avatar.GetAvatarDefinitionString(false);
+            avatarDefinitionQueue.Push(lastAvatarDefinition);
+
             Randomizer.Randomize(Avatar);
+            Avatar.BuildCharacter(false);
+        }
+
+        public void GoBack()
+        {
+            if (avatarDefinitionQueue.Count == 0)
+            {
+                return;
+            }            
+            Debug.Log("Loading previous avatar definition from queue.");
+            lastAvatarDefinition = avatarDefinitionQueue.Pop();
+            Avatar.LoadAvatarDefinition(lastAvatarDefinition);
             Avatar.BuildCharacter(false);
         }
 

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 4da2252ea95840741abcbf4d0e29b8f0
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 14249
+  packageName: UMA Power Tools 2
+  packageVersion: 2.10.1
+  assetPath: Assets/UMA/Extensions/UMAPowerTools/Scripts/PowerToolsRuntime.cs
+  uploadId: 385976

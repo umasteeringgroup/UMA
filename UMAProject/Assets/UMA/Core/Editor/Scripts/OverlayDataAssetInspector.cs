@@ -3,6 +3,7 @@ using System;
 using UnityEditor;
 using UnityEngine;
 
+
 namespace UMA.Editors
 {
     [CustomEditor(typeof(OverlayDataAsset))]
@@ -25,6 +26,7 @@ namespace UMA.Editors
         private SerializedProperty _dontMergeDuplicates;
         private bool _showOverlayValueCopy;
         private OverlayDataAsset _sourceOverlay;
+        private bool _allCutouts;
         private bool _copyOverlayMaterial = true;
         private bool _copyOverlayTextureChannels = true;
         private static GUIContent _editTextureButtonContent;
@@ -64,6 +66,17 @@ namespace UMA.Editors
             {
                 // tagsList init can run during reload
                 try { od.tagsList = GUIHelper.InitTagsList("tags", serializedObject); } catch { }
+            }
+
+            _allCutouts = true;
+            foreach (var t in targets)
+            {
+                var overlay = t as OverlayDataAsset;
+                if (overlay != null && overlay.overlayType != OverlayDataAsset.OverlayType.Cutout)
+                {
+                    _allCutouts = false;
+                    break;
+                }
             }
 
             EditorApplication.update -= DoDelayedSave;
@@ -495,6 +508,17 @@ namespace UMA.Editors
             {
                 GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
                 if (_occlusionEntries != null) { EditorGUILayout.PropertyField(_occlusionEntries, true); }
+
+                // Drag-drop SlotDataAssets to precompute triangle occlusion (Cutout overlays only)
+                if (_allCutouts)
+                {
+                    GUILayout.Space(10);
+                    EditorGUILayout.HelpBox("Drag Slot Data Assets here to setup triangle occlusion for this cutout overlay.", MessageType.Info);
+                    Rect dropRect = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
+                    GUI.Box(dropRect, "Drop Slot Data Assets here");
+                    OcclusionDropAreaGUI(dropRect);
+                }
+
                 GUIHelper.EndVerticalPadded(10);
             }
 
@@ -885,6 +909,47 @@ namespace UMA.Editors
                         }
                     }
                     Event.current.Use();
+                }
+            }
+        }
+
+        private void OcclusionDropAreaGUI(Rect dropArea)
+        {
+            var evt = Event.current;
+
+            if (evt.type == EventType.DragUpdated)
+            {
+                if (dropArea.Contains(evt.mousePosition))
+                {
+                    DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
+                }
+            }
+
+            if (evt.type == EventType.DragPerform)
+            {
+                if (dropArea.Contains(evt.mousePosition))
+                {
+                    DragAndDrop.AcceptDrag();
+                    var draggedObjects = DragAndDrop.objectReferences;
+                    foreach (var t in targets)
+                    {
+                        var overlay = t as OverlayDataAsset;
+                        if (overlay == null) continue;
+
+                        for (int i = 0; i < draggedObjects.Length; i++)
+                        {
+                            if (draggedObjects[i] is SlotDataAsset slotAsset && slotAsset != null)
+                            {
+                                overlay.UpdateOcclusion(slotAsset);
+                            }
+                        }
+                    }
+                    // Mark dirty for delayed save
+                    if (target is OverlayDataAsset od)
+                    {
+                        od.lastActionTime = Time.realtimeSinceStartup;
+                        od.doSave = true;
+                    }
                 }
             }
         }
