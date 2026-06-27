@@ -58,12 +58,14 @@ namespace UMA
             base.Apply(avatar, dna, value);
             if (avatar != null && !string.IsNullOrEmpty(BoneName))
             {
-                Transform boneTransform = avatar.skeleton.GetBoneTransform(BoneName);
-                if (boneTransform != null)
+                var skeleton = avatar.skeleton;
+                if (skeleton != null)
                 {
+                    int hash = UMAUtils.StringToHash(BoneName);
                     float angle = RotationAngle * GetMappedValue(value);
-                    Quaternion rotation = Quaternion.AngleAxis(angle, RotationAxis);
-                    boneTransform.localRotation *= rotation;
+                    Quaternion deltaRotation = Quaternion.AngleAxis(angle, RotationAxis);
+                    Quaternion currentRotation = skeleton.GetRotation(hash);
+                    skeleton.SetRotation(hash, currentRotation * deltaRotation);
                 }
             }
         }

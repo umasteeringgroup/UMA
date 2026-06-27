@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace UMA
@@ -38,24 +39,34 @@ namespace UMA
 			}
 		}
 
-		internal void Add(ref Matrix4x4 sourceEffectivePose, ref Vector3 vertice, ref Vector3 normal, ref Vector4 tangent, float weight, int boneIndex)
+		internal void Add(ref Matrix4x4 m, ref Vector3 vert, ref Vector3 norm, ref Vector4 tan, float weight, int boneIndex)
 		{
-			if (count == 0)
-			{
-				tangentSign = tangent.w > 0;
-			}
-			var v = sourceEffectivePose.MultiplyPoint3x4(vertice);
-			globalVertex.x += v.x * weight;
-			globalVertex.y += v.y * weight;
-			globalVertex.z += v.z * weight;
-			v = sourceEffectivePose.MultiplyVector(normal);
-			globalNormal.x += v.x * weight;
-			globalNormal.y += v.y * weight;
-			globalNormal.z += v.z * weight;
-			v = sourceEffectivePose.MultiplyVector(new Vector3(tangent.x, tangent.y, tangent.z));
-			globalTangent.x += v.x * weight;
-			globalTangent.y += v.y * weight;
-			globalTangent.z += v.z * weight;
+			if (count == 0) { tangentSign = tan.w > 0; }
+
+			// Inline MultiplyPoint3x4 (avoids Unity engine call overhead)
+			float vx = m.m00 * vert.x + m.m01 * vert.y + m.m02 * vert.z + m.m03;
+			float vy = m.m10 * vert.x + m.m11 * vert.y + m.m12 * vert.z + m.m13;
+			float vz = m.m20 * vert.x + m.m21 * vert.y + m.m22 * vert.z + m.m23;
+			globalVertex.x += vx * weight;
+			globalVertex.y += vy * weight;
+			globalVertex.z += vz * weight;
+
+			// Inline MultiplyVector for normal (no translation)
+			float nx = m.m00 * norm.x + m.m01 * norm.y + m.m02 * norm.z;
+			float ny = m.m10 * norm.x + m.m11 * norm.y + m.m12 * norm.z;
+			float nz = m.m20 * norm.x + m.m21 * norm.y + m.m22 * norm.z;
+			globalNormal.x += nx * weight;
+			globalNormal.y += ny * weight;
+			globalNormal.z += nz * weight;
+
+			// Inline MultiplyVector for tangent direction
+			float tx = tan.x, ty = tan.y, tz = tan.z;
+			float rtx = m.m00 * tx + m.m01 * ty + m.m02 * tz;
+			float rty = m.m10 * tx + m.m11 * ty + m.m12 * tz;
+			float rtz = m.m20 * tx + m.m21 * ty + m.m22 * tz;
+			globalTangent.x += rtx * weight;
+			globalTangent.y += rty * weight;
+			globalTangent.z += rtz * weight;
 
 			// Check if this bone index already has a weight
 			for (int i = 0; i < count; i++)
@@ -102,47 +113,50 @@ namespace UMA
 
 		public void SkinVertex(Matrix4x4[] matrices, ref Vector3 vector)
 		{
-			vector.x = 0;
-			vector.y = 0;
-			vector.z = 0;
+			float gx = globalVertex.x, gy = globalVertex.y, gz = globalVertex.z;
+			float rx = 0, ry = 0, rz = 0;
 			for (int i = 0; i < count; i++)
 			{
-				var v = matrices[_idx[i]].MultiplyPoint3x4(globalVertex);
+				var m = matrices[_idx[i]];
 				float w = _w[i];
-				vector.x += v.x * w;
-				vector.y += v.y * w;
-				vector.z += v.z * w;
+				// Inline MultiplyPoint3x4
+				rx += (m.m00 * gx + m.m01 * gy + m.m02 * gz + m.m03) * w;
+				ry += (m.m10 * gx + m.m11 * gy + m.m12 * gz + m.m13) * w;
+				rz += (m.m20 * gx + m.m21 * gy + m.m22 * gz + m.m23) * w;
 			}
+			vector.x = rx; vector.y = ry; vector.z = rz;
 		}
 
 		public void SkinNormal(Matrix4x4[] matrices, ref Vector3 normal)
 		{
-			normal.x = 0;
-			normal.y = 0;
-			normal.z = 0;
+			float gx = globalNormal.x, gy = globalNormal.y, gz = globalNormal.z;
+			float rx = 0, ry = 0, rz = 0;
 			for (int i = 0; i < count; i++)
 			{
-				var v = matrices[_idx[i]].MultiplyVector(globalNormal);
+				var m = matrices[_idx[i]];
 				float w = _w[i];
-				normal.x += v.x * w;
-				normal.y += v.y * w;
-				normal.z += v.z * w;
+				// Inline MultiplyVector (no translation)
+				rx += (m.m00 * gx + m.m01 * gy + m.m02 * gz) * w;
+				ry += (m.m10 * gx + m.m11 * gy + m.m12 * gz) * w;
+				rz += (m.m20 * gx + m.m21 * gy + m.m22 * gz) * w;
 			}
+			normal.x = rx; normal.y = ry; normal.z = rz;
 		}
 
 		public void SkinTangent(Matrix4x4[] matrices, ref Vector4 tangent)
 		{
-			tangent.x = 0;
-			tangent.y = 0;
-			tangent.z = 0;
+			float gx = globalTangent.x, gy = globalTangent.y, gz = globalTangent.z;
+			float rx = 0, ry = 0, rz = 0;
 			for (int i = 0; i < count; i++)
 			{
-				var v = matrices[_idx[i]].MultiplyVector(globalTangent);
+				var m = matrices[_idx[i]];
 				float w = _w[i];
-				tangent.x += v.x * w;
-				tangent.y += v.y * w;
-				tangent.z += v.z * w;
+				// Inline MultiplyVector (no translation)
+				rx += (m.m00 * gx + m.m01 * gy + m.m02 * gz) * w;
+				ry += (m.m10 * gx + m.m11 * gy + m.m12 * gz) * w;
+				rz += (m.m20 * gx + m.m21 * gy + m.m22 * gz) * w;
 			}
+			tangent.x = rx; tangent.y = ry; tangent.z = rz;
 			tangent.w = tangentSign ? 1f : -1f;
 		}
 

@@ -125,7 +125,10 @@ namespace UMA
 
 			umaData.GotoTPose();
 
+			// Apply both old and new DNA systems before reading bone transforms
 			umaData.ApplyDNA();
+			if (umaData.umaRecipe.raceData.useNewDNA)
+				umaData.NewDNAApply();
 			umaData.FireDNAAppliedEvents();
 
 			MergeSkeletons(combinedMeshArray);

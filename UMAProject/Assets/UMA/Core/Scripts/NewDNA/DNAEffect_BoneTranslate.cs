@@ -50,10 +50,12 @@ namespace UMA
             base.Apply(avatar, dna, value);
             if (avatar != null && !string.IsNullOrEmpty(BoneName))
             {
-                Transform boneTransform = avatar.skeleton.GetBoneTransform(BoneName);
-                if (boneTransform != null)
+                var skeleton = avatar.skeleton;
+                if (skeleton != null)
                 {
-                    boneTransform.localPosition += Translation * GetMappedValue(value);
+                    int hash = UMAUtils.StringToHash(BoneName);
+                    Vector3 currentPos = skeleton.GetPosition(hash);
+                    skeleton.SetPosition(hash, currentPos + Translation * GetMappedValue(value));
                 }
             }
         }

@@ -53,12 +53,14 @@ namespace UMA
             base.Apply(avatar, dna, value);
             if (avatar != null && !string.IsNullOrEmpty(BoneName))
             {
-                Transform boneTransform = avatar.skeleton.GetBoneTransform(BoneName);
-                if (boneTransform != null)
+                var skeleton = avatar.skeleton;
+                if (skeleton != null)
                 {
-                    Vector3 ScaleAmount = ScaleFactor * GetMappedValue(value);
-                    Vector3 ResultScale = Vector3.one + ScaleAmount;
-                    boneTransform.localScale = Vector3.Scale(boneTransform.localScale, ResultScale);
+                    int hash = UMAUtils.StringToHash(BoneName);
+                    Vector3 currentScale = skeleton.GetScale(hash);
+                    Vector3 scaleAmount = ScaleFactor * GetMappedValue(value);
+                    Vector3 resultScale = Vector3.Scale(currentScale, Vector3.one + scaleAmount);
+                    skeleton.SetScale(hash, resultScale);
                 }
             }
         }
