@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System;
 
 /*
@@ -15,24 +15,24 @@ A triangle is occluded when all three of its vertices are occluded. These result
 GetOcclusion retrieves the precomputed bitmask at runtime by slot name hash and submesh index
 
 Why it exists
-Without this, a cutout overlay still renders all triangles — the GPU shades transparent pixels wastefully. This extension lets the UMA combiner exclude fully-hidden triangles from the final mesh entirely, reducing draw calls and vertex shader work. It's an advanced optimization in the "Power Tools" extension package.
+Without this, a cutout overlay still renders all triangles � the GPU shades transparent pixels wastefully. This extension lets the UMA combiner exclude fully-hidden triangles from the final mesh entirely, reducing draw calls and vertex shader work. It's an advanced optimization in the "Power Tools" extension package.
 */
 
 /*Overlay cutout texture (R channel)
-         │
-         ▼
-  Per-vertex occlusion check (UV → pixel R==0?)
-         │
-         ▼
-  Per-triangle mask (all 3 verts occluded → hide triangle)
-         │
-         ▼
+         �
+         ?
+  Per-vertex occlusion check (UV ? pixel R==0?)
+         �
+         ?
+  Per-triangle mask (all 3 verts occluded ? hide triangle)
+         �
+         ?
   Stored in OverlayDataAsset.OcclusionEntries[]
-         │
-         ▼
+         �
+         ?
   Retrieved at mesh combine time via GetOcclusion()
-         │
-         ▼
+         �
+         ?
   Occluded triangles skipped in final mesh*/
 
 
@@ -57,7 +57,7 @@ public static System.Int32[] GetOcclusion(this OverlayDataAsset asset, int slotN
 			return null;
 
 		var entry = asset.OcclusionEntries[occlusionIndex];
-		if (entry.occlusion == null || entry.occlusion.Length <= subMesh)
+		if (entry.occlusion == null || entry.occlusion.Length <= subMesh) 
 			return null;
 
 		var subOcclusion = entry.occlusion[subMesh];
@@ -121,10 +121,13 @@ public static System.Int32[] GetOcclusion(this OverlayDataAsset asset, int slotN
 
 		static int GetOcclusionIndex(this OverlayDataAsset asset, int slotNameHash)
 		{
-			return Array.BinarySearch(asset.OcclusionEntries, slotNameHash, OverlayDataAsset.OcclusionEntry.OcclusionEntryComparer.Instance);
+		if (asset.OcclusionEntries == null)
+			return -1;
+
+		return Array.BinarySearch(asset.OcclusionEntries, slotNameHash, OverlayDataAsset.OcclusionEntry.OcclusionEntryComparer.Instance);
 		}
 
-		private static void ProcessSlot(OverlayDataAsset.OcclusionEntry entry, SlotDataAsset slot)
+	private static void ProcessSlot(OverlayDataAsset.OcclusionEntry entry, SlotDataAsset slot)
 		{
 			bool[] vertexCutout = new bool[slot.meshData.vertexCount];
 			for (int i = 0; i < slot.meshData.vertexCount; i++)

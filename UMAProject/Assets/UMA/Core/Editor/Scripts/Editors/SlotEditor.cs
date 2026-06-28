@@ -227,11 +227,14 @@ namespace UMA.Editors
             bool select;
             bool _foldOut = FoldOut;
             bool missingPlaceholderTags = HasMissingPlaceholderTags();
+            bool needsFixup = NeedsFixup();
 
             string barLabel = _slotData.isPlaceholderSlot
                 ? _name + "      (Placeholder Wildcard)"
                 : _name + "      (" + _slotData.asset.name + ")";
-            if (missingPlaceholderTags)
+            if (needsFixup)
+                barLabel += "  [Needs Fixup]";
+            if (missingPlaceholderTags || needsFixup)
             {
                 DrawSlotFoldoutBarButton(ref _foldOut, barLabel, "Asset", out select, out delete, GetRedFoldoutStyle());
             }
@@ -756,6 +759,39 @@ namespace UMA.Editors
         private bool HasMissingPlaceholderTags()
         {
             return _slotData.isPlaceholderSlot && (_slotData.tags == null || _slotData.tags.Length == 0);
+        }
+
+        private bool NeedsFixup()
+        {
+            if (_slotData == null || _slotData.isPlaceholderSlot || _slotData.asset == null)
+                return false;
+
+            var md = _slotData.asset.meshData;
+            if (UMAMeshData.IsNullOrEmptyMeshData(md))
+                return false;
+
+            // Legacy UMA 2 slot that still has isLegacySlot flag
+            if (_slotData.asset.isLegacySlot)
+                return true;
+
+            // Has legacy bone weights (not yet converted to managed format)
+            if (md.boneWeights != null && md.boneWeights.Length > 0 && md.ManagedBoneWeights == null)
+                return true;
+
+            // Dual bone weight systems (both legacy and managed present)
+            if (md.boneWeights != null && md.boneWeights.Length > 0 && md.ManagedBoneWeights != null && md.ManagedBoneWeights.Length > 0)
+                return true;
+
+            // Missing vertex colors
+            int vertCount = md.vertices != null ? md.vertices.Length : md.vertexCount;
+            if (vertCount > 0 && (md.colors32 == null || md.colors32.Length != vertCount))
+                return true;
+
+            // vertexCount mismatch
+            if (md.vertexCount != vertCount)
+                return true;
+
+            return false;
         }
 
         private static GUIStyle GetRedFoldoutStyle()

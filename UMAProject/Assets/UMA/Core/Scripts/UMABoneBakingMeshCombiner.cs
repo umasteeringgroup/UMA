@@ -110,6 +110,26 @@ namespace UMA
 
 			PopulateSkeleton(combinedMeshArray);
 
+#if UNITY_EDITOR
+			// Diagnostic: check if any slot's meshData is missing umaBones (legacy UMA 2 data)
+			{
+				int slotsMissingBones = 0;
+				int totalSourceBones = 0;
+				foreach (var ci in combinedMeshArray)
+				{
+					if (ci.meshData.umaBones == null || ci.meshData.umaBoneCount == 0)
+						slotsMissingBones++;
+					else
+						totalSourceBones += ci.meshData.umaBoneCount;
+				}
+				if (slotsMissingBones > 0)
+				{
+					Debug.LogWarning($"[UMABoneBakingMeshCombiner] PopulateSkeleton: {slotsMissingBones} slot(s) have no umaBones (legacy UMA 2 data). " +
+						$"Skeleton has {umaSkeleton.boneCount} total bones from {totalSourceBones} source bone entries across {combinedMeshArray.Length - slotsMissingBones} slot(s) with bones.");
+				}
+			}
+#endif
+
 			umaData.umaRecipe.ClearDNAConverters();
 			for (int i = 0; i < umaData.umaRecipe.slotDataList.Length; i++)
 			{
@@ -131,6 +151,31 @@ namespace UMA
 			umaSkeleton.SetAnimatedBone(umaSkeleton.rootBoneHash);
 
 			umaData.GotoTPose();
+
+#if UNITY_EDITOR
+			// Diagnostic: verify boneInfo names from TPose actually matched skeleton bones.
+			// GotoTPose uses boneInfo[i].name hashes (different from humanInfo[i].boneName
+			// used by MarkAnimatedBones). Silently skipped bones mean no position was set.
+			{
+				var tpose = umaData.umaRecipe.raceData?.TPose;
+				if (tpose != null && tpose.boneInfo != null)
+				{
+					int found = 0;
+					int skipped = 0;
+					for (int i = 0; i < tpose.boneInfo.Length; i++)
+					{
+						int hash = UMAUtils.StringToHash(tpose.boneInfo[i].name);
+						if (umaSkeleton.HasBone(hash)) found++;
+						else skipped++;
+					}
+					if (skipped > 0)
+					{
+						Debug.LogWarning($"[UMABoneBakingMeshCombiner] GotoTPose: {skipped} of {tpose.boneInfo.Length} boneInfo entries not found in skeleton. " +
+							$"These bones were not positioned. Check that TPose boneInfo names match mesh bone names.");
+					}
+				}
+			}
+#endif
 
 			// Apply both old and new DNA systems before reading bone transforms
 			umaData.ApplyDNA();
@@ -328,9 +373,25 @@ namespace UMA
 				}
 			}
 			animatedBonesCount = animatedBones.Count;
+			int foundCount = 0;
+			int missingCount = 0;
 			foreach (var animatedBone in animatedBones)
 			{
-				umaSkeleton.SetAnimatedBone(animatedBone);
+				if (umaSkeleton.HasBone(animatedBone))
+				{
+					umaSkeleton.SetAnimatedBone(animatedBone);
+					foundCount++;
+				}
+				else
+				{
+					missingCount++;
+				}
+			}
+
+			if (missingCount > 0)
+			{
+				Debug.LogWarning($"[UMABoneBakingMeshCombiner] MarkAnimatedBones: {missingCount} of {animatedBonesCount} humanoid bones not found in skeleton. " +
+					$"These bones will collapse to their preserved parent. Check that TPose humanInfo boneNames match the mesh bone names.");
 			}
 		}
 
@@ -364,11 +425,23 @@ namespace UMA
 			{
 				umaMesh.boneNameHashes[entry.Value] = entry.Key;
 			}
+
+#if UNITY_EDITOR
+			if (mergedBones.Count <= 1)
+			{
+				Debug.LogWarning($"[UMABoneBakingMeshCombiner] MergeSkeletons: only {mergedBones.Count} merged bone(s). " +
+					$"All vertices will be weighted to a single bone — mesh may appear invisible. " +
+					$"Skeleton has {umaSkeleton.boneCount} bones. Check that bones are marked as preserved.");
+			}
+#endif
 		}
 
 
 		private void PopulateMatrix(SkinnedMeshCombinerRetargeting.CombineInstance[] combinedInstances)
 		{
+			int identityBindPoses = 0;
+			int totalBindPoses = 0;
+
 			foreach (var combineInstance in combinedInstances)
 			{
 				var meshData = combineInstance.meshData;
@@ -386,8 +459,28 @@ namespace UMA
 					var boneXform = umaSkeleton.GetBoneTransform(boneNameHash);
 					var boneMatrix = boneXform.localToWorldMatrix;
 					MatrixMultiply(ref combineInstance.resolvedBoneMatrixes[i], ref boneMatrix, ref meshData.bindPoses[i]);
+
+					// Track identity bind poses (common in legacy UMA 2 data)
+					if (meshData.bindPoses != null && i < meshData.bindPoses.Length)
+					{
+						totalBindPoses++;
+						if (meshData.bindPoses[i] == Matrix4x4.identity)
+							identityBindPoses++;
+					}
 				}
 			}
+
+#if UNITY_EDITOR
+			if (identityBindPoses > 0 && identityBindPoses == totalBindPoses)
+			{
+				Debug.LogWarning($"[UMABoneBakingMeshCombiner] PopulateMatrix: ALL {totalBindPoses} bind poses are identity. " +
+					$"This causes incorrect skinning — vertices will not transform correctly. Legacy UMA 2 slots may need reimport.");
+			}
+			else if (identityBindPoses > 0)
+			{
+				Debug.LogWarning($"[UMABoneBakingMeshCombiner] PopulateMatrix: {identityBindPoses} of {totalBindPoses} bind poses are identity.");
+			}
+#endif
 
 			// Bind poses are defined relative to the SkinnedMeshRenderer transform,
 			// not renderer.rootBone. The baked vertices must therefore be written in
@@ -489,12 +582,21 @@ namespace UMA
                 {
 					var materialDefinition = generatedMaterial.materialFragments[materialDefinitionIndex];
 					var slotData = materialDefinition.slotData;
-					// Ensure bone weights are loaded (critical after domain reload when LoadedBoneweights is reset)
-					var md = slotData.asset.meshData;
-					if (md.boneWeights != null && md.boneWeights.Length > 0 && (md.ManagedBonesPerVertex == null || md.ManagedBonesPerVertex.Length == 0))
-						slotData.asset.EnsureBoneWeights();
-					combineInstance = new SkinnedMeshCombinerRetargeting.CombineInstance();
-					combineInstance.meshData = md;
+				// Shallow-copy the asset mesh data to prevent mutating shared
+				// asset state across builds. The bone-baking combiner pipeline
+				// (ConvertLegacyBoneWeights / LoadBoneWeights) writes to
+				// ManagedBoneWeights, ManagedBonesPerVertex, and vertexCount
+				// on the source, which would permanently corrupt the asset.
+				var md = slotData.asset.meshData;
+				combineInstance = new SkinnedMeshCombinerRetargeting.CombineInstance();
+				combineInstance.meshData = md.ShallowCopy(null);
+
+				// Ensure bone weights on the copy (not the asset)
+				var copyMd = combineInstance.meshData;
+				int vertCount = copyMd.vertices != null ? copyMd.vertices.Length : copyMd.vertexCount;
+				bool needsConversion = (copyMd.ManagedBonesPerVertex == null || copyMd.ManagedBonesPerVertex.Length != vertCount);
+				if (needsConversion && copyMd.boneWeights != null && copyMd.boneWeights.Length > 0)
+					copyMd.LoadBoneWeights();
 					// Apply mesh modifiers (position bones, etc.) — default combiner does this
 					if (slotData.meshModifiers != null && slotData.meshModifiers.Count > 0)
 					{
@@ -541,9 +643,14 @@ namespace UMA
 				var generatedMaterial = umaData.generatedMaterials.materials[materialIndex];
 				if (generatedMaterial.umaMaterial.materialType != UMAMaterial.MaterialType.Atlas)
 				{
-					var fragment = generatedMaterial.materialFragments[0];
-					int vertexCount = fragment.slotData.asset.meshData.vertices.Length;
-					idx += vertexCount;
+					// Non-atlas materials: skip all fragments (each contributed vertices
+					// to the combined mesh via BuildCombineInstances).
+					for (int fragIdx = 0; fragIdx < generatedMaterial.materialFragments.Count; fragIdx++)
+					{
+						var fragment = generatedMaterial.materialFragments[fragIdx];
+						int vertexCount = fragment.slotData.asset.meshData.vertices.Length;
+						idx += vertexCount;
+					}
 					continue;
 				}
 

@@ -29,7 +29,7 @@ namespace UMA.Editors
                 {
                     SlotData slot = new SlotData(sd);
                     slot.AddOverlay(new OverlayData(DraggedOverlays[0]));
-                    slot = _recipe.MergeSlot(slot, false);
+                    slot = _recipe.MergeSlot(slot, false); 
                 }
                 return;
             }

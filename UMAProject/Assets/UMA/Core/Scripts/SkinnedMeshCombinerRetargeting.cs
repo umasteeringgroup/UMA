@@ -80,34 +80,41 @@ namespace UMA
 					&& source.meshData.ManagedBonesPerVertex.Length == srcVertexCount;
 
 				if (!useManagedWeights && source.meshData.boneWeights != null && source.meshData.boneWeights.Length > 0)
-				{
-					// Convert legacy UMABoneWeight to BoneWeight1 format on-the-fly
-					ConvertLegacyBoneWeights(source.meshData);
-					useManagedWeights = true;
-				}
+			{
+				// Convert legacy UMABoneWeight to BoneWeight1 format on-the-fly
+				ConvertLegacyBoneWeights(source.meshData);
+				// Re-validate after conversion — lengths must match vertex count
+				useManagedWeights = source.meshData.ManagedBoneWeights != null
+					&& source.meshData.ManagedBonesPerVertex != null
+					&& source.meshData.ManagedBoneWeights.Length > 0
+					&& source.meshData.ManagedBonesPerVertex.Length == srcVertexCount;
+			}
 
-				// Fallback: if neither format is available, try loading/converting via the asset API
-				if (!useManagedWeights && source.meshData.vertexCount > 0 && source.meshData.boneWeights != null && source.meshData.boneWeights.Length > 0)
-				{
-					source.meshData.LoadBoneWeights();
-					useManagedWeights = source.meshData.ManagedBoneWeights != null
-						&& source.meshData.ManagedBonesPerVertex != null
-						&& source.meshData.ManagedBoneWeights.Length > 0
-						&& source.meshData.ManagedBonesPerVertex.Length == source.meshData.vertexCount;
-				}
+			// Fallback: if neither format is available, try loading/converting via the asset API.
+			// Use srcVertexCount (not meshData.vertexCount which can be stale/zero) for the
+			// entry guard and the post-conversion validation.
+			if (!useManagedWeights && srcVertexCount > 0 && source.meshData.boneWeights != null && source.meshData.boneWeights.Length > 0)
+			{
+				source.meshData.LoadBoneWeights();
+				useManagedWeights = source.meshData.ManagedBoneWeights != null
+					&& source.meshData.ManagedBonesPerVertex != null
+					&& source.meshData.ManagedBoneWeights.Length > 0
+					&& source.meshData.ManagedBonesPerVertex.Length == srcVertexCount;
+			}
 
 	
-				if (useManagedWeights)
-				{
-					context.sourceManagedBoneWeights = source.meshData.ManagedBoneWeights;
-					context.sourceManagedBonesPerVertex = source.meshData.ManagedBonesPerVertex;				context.sourceWeightOffsets = BuildWeightOffsets(source.meshData.ManagedBonesPerVertex);					context.sourceBoneWeightBaseOffset = vertexIndex;
-					context.targetManagedBoneWeights = target._boneWeightsManagedList;
-					context.targetManagedBonesPerVertex = target._bonesPerVertexManagedList;
-					context.targetVertexIndexOffset = vertexIndex;
+			if (useManagedWeights)
+			{
+				context.sourceManagedBoneWeights = source.meshData.ManagedBoneWeights;
+				context.sourceManagedBonesPerVertex = source.meshData.ManagedBonesPerVertex;				context.sourceWeightOffsets = BuildWeightOffsets(source.meshData.ManagedBonesPerVertex);					context.sourceBoneWeightBaseOffset = vertexIndex;
+				context.targetManagedBoneWeights = target._boneWeightsManagedList;
+				context.targetManagedBonesPerVertex = target._bonesPerVertexManagedList;
+				context.targetVertexIndexOffset = vertexIndex;
 				// Set up blendShapeContext with same source weights
 				blendShapeContext.sourceManagedBoneWeights = context.sourceManagedBoneWeights;
 				blendShapeContext.sourceManagedBonesPerVertex = context.sourceManagedBonesPerVertex;			blendShapeContext.sourceWeightOffsets = context.sourceWeightOffsets;				blendShapeContext.targetBoneIndices = context.targetBoneIndices;
-				blendShapeContext.resolvedBoneMatrixes = context.resolvedBoneMatrixes;				}
+				blendShapeContext.resolvedBoneMatrixes = context.resolvedBoneMatrixes;
+			}
 
 				bool isBakingBlendShapesOnThisSource = false;
 				if (bakeBlendShapes && HasContent(source.meshData.blendShapes))
