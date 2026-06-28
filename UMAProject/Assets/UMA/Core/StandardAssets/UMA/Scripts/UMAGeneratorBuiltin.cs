@@ -402,7 +402,6 @@ namespace UMA
 
         public bool GenerateSingleUMA(UMAData data, bool fireEvents)
 		{
-            Debug.Log("GenerateSingleUMA called for " + data.name);
 #if UMA_DEBUG
             if (!umaDatasGenerated.Contains(data))
             {
@@ -609,7 +608,6 @@ namespace UMA
             Debug.Log($"Total for last UMA = {ToMS(validation + meshpreprocess + BegunEvents + preapply + textureprocessing+ meshUpdates + skeletonUpdates+raceblendshapes+endEvents)} ms");
             Debug.Log($"Ticks = {System.Diagnostics.Stopwatch.Frequency}");
 #endif
-            Debug.Log($"GenerateSingleUMA completed for {data.name} in {ToMS(validation + meshpreprocess + BegunEvents + preapply + textureprocessing + meshUpdates + skeletonUpdates + raceblendshapes + endEvents)} ms"); 
             ValidateMesh(umaData);
             return true;
 		}

@@ -123,6 +123,13 @@ namespace UMA
 			AddHumanoidBones();
 			MarkAnimatedBones();
 
+			// CRITICAL: The root bone ("Global") must be marked as preserved so
+			// EnsureBoneHierarchy recreates its Transform if EndSkeletonUpdate
+			// previously destroyed it. The parent chain (e.g. "Root") is protected
+			// by EndSkeletonUpdate's anchor-chain logic and does not need explicit
+			// preservation here.
+			umaSkeleton.SetAnimatedBone(umaSkeleton.rootBoneHash);
+
 			umaData.GotoTPose();
 
 			// Apply both old and new DNA systems before reading bone transforms
@@ -130,6 +137,12 @@ namespace UMA
 			if (umaData.umaRecipe.raceData.useNewDNA)
 				umaData.NewDNAApply();
 			umaData.FireDNAAppliedEvents();
+
+			// Force Transform hierarchy to match skeleton cache before computing matrices.
+			// Without this, the Animator may have shifted Transforms since the last build,
+			// causing PopulateMatrix to use cache values that differ from what the
+			// SkinnedMeshRenderer will see at runtime.
+			umaSkeleton.EnsureBoneHierarchy();
 
 			MergeSkeletons(combinedMeshArray);
 			PopulateMatrix(combinedMeshArray);
@@ -159,12 +172,45 @@ namespace UMA
             umaData.firstBake = false;
 
 			umaData.umaGenerator.UpdateAvatar(umaData);
+			RefreshFinalBindPoses();
 			umaData.SetRendererAssets(umaData.generatedMaterials.rendererAssets.ToArray());
 			//FireSlotAtlasNotification(umaData, materials);
 
 #if UNITY_EDITOR
 			UnityEditor.EditorUtility.SetDirty(this);
 #endif
+		}
+
+		private void RefreshFinalBindPoses()
+		{
+			if (myRenderer == null || myRenderer.sharedMesh == null || myRenderer.bones == null)
+				return;
+
+			var bones = myRenderer.bones;
+			var bindposes = myRenderer.sharedMesh.bindposes;
+			if (bindposes == null || bindposes.Length != bones.Length)
+				return;
+
+			var rendererMatrix = myRenderer.transform.localToWorldMatrix;
+			float maxAngleDelta = 0f;
+			int maxAngleIndex = 0;
+
+			for (int i = 0; i < bones.Length; i++)
+			{
+				if (bones[i] == null)
+					continue;
+
+				var updatedBindPose = bones[i].worldToLocalMatrix * rendererMatrix;
+				float angleDelta = Quaternion.Angle(bindposes[i].rotation, updatedBindPose.rotation);
+				if (angleDelta > maxAngleDelta)
+				{
+					maxAngleDelta = angleDelta;
+					maxAngleIndex = i;
+				}
+				bindposes[i] = updatedBindPose;
+			}
+
+			myRenderer.sharedMesh.bindposes = bindposes;
 		}
 
 		private void ApplyBlendShapes()
@@ -267,25 +313,36 @@ namespace UMA
 				for(int i = 0; i < meshData.boneNameHashes.Length; i++)
 				{
 					var boneNameHash = meshData.boneNameHashes[i];
-					var boneMatrix = umaSkeleton.GetLocalToWorldMatrix(boneNameHash);
+					// Ensure a Transform exists for this bone so we always use the
+					// Unity-computed localToWorldMatrix (not the skeleton cache's
+					// CalculateMatrix fallback, which can disagree for non-preserved
+					// bones whose cache data may not match the actual hierarchy).
+					if (!umaSkeleton.HasBoneTransform(boneNameHash))
+						umaSkeleton.EnsureBoneTransform(boneNameHash);
+
+					var boneXform = umaSkeleton.GetBoneTransform(boneNameHash);
+					var boneMatrix = boneXform.localToWorldMatrix;
 					MatrixMultiply(ref combineInstance.resolvedBoneMatrixes[i], ref boneMatrix, ref meshData.bindPoses[i]);
 				}
 			}
 
-			// inverseResolvedBoneMatrixes = rootMatrix.inverse for all bones (algebraic identity)
-			// boneMatrix * bindPoses[i] = boneMatrix * boneMatrix⁻¹ * rootMatrix = rootMatrix
-			// so inverseResolvedBoneMatrixes[i] = (rootMatrix)⁻¹ for every bone
+			// Bind poses are defined relative to the SkinnedMeshRenderer transform,
+			// not renderer.rootBone. The baked vertices must therefore be written in
+			// renderer local space, matching Unity's bind pose convention:
+			// bindpose = bone.worldToLocalMatrix * renderer.localToWorldMatrix.
 			ListHelper<Matrix4x4>.AllocateArray(ref _inverseResolvedBoneMatrixes, out inverseResolvedBoneMatrixes, umaMesh.bonesCount);
-			var rootMatrix = umaSkeleton.GetLocalToWorldMatrix(umaSkeleton.rootBoneHash);
+			var rootMatrix = myRenderer != null ? myRenderer.transform.localToWorldMatrix : Matrix4x4.identity;
 			var rootMatrixInv = rootMatrix.inverse;
 
 			for (int i = 0; i < umaMesh.bonesCount; i++)
 			{
-				var boneMatrix = umaSkeleton.GetLocalToWorldMatrix(umaMesh.boneNameHashes[i]);
+				var boneXform = umaSkeleton.GetBoneTransform(umaMesh.boneNameHashes[i]);
+				var boneMatrix = boneXform != null ? boneXform.localToWorldMatrix : umaSkeleton.GetLocalToWorldMatrix(umaMesh.boneNameHashes[i]);
 				var boneMatrixInv = boneMatrix.inverse;
 				MatrixMultiply(ref umaMesh.bindPoses[i], ref boneMatrixInv, ref rootMatrix);
 				inverseResolvedBoneMatrixes[i] = rootMatrixInv;
 			}
+
 		}
 
 		private void MatrixMultiply(ref Matrix4x4 result, ref Matrix4x4 lhs, ref Matrix4x4 rhs)
@@ -375,6 +432,16 @@ namespace UMA
 						slotData.asset.EnsureBoneWeights();
 					combineInstance = new SkinnedMeshCombinerRetargeting.CombineInstance();
 					combineInstance.meshData = md;
+					// Apply mesh modifiers (position bones, etc.) — default combiner does this
+					if (slotData.meshModifiers != null && slotData.meshModifiers.Count > 0)
+					{
+						for (int m = 0; m < slotData.meshModifiers.Count; m++)
+						{
+							var mod = slotData.meshModifiers[m];
+							if (mod != null)
+								combineInstance.meshData = mod.Process(combineInstance.meshData);
+						}
+					}
 					combineInstance.targetSubmeshIndices = new int[combineInstance.meshData.subMeshCount];
 					for (int i = 0; i < combineInstance.meshData.subMeshCount; i++)
 					{

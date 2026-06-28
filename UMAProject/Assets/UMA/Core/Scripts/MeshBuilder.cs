@@ -281,6 +281,30 @@ namespace UMA
 
 			mesh.RecalculateBounds();
 			skeleton.EnsureBoneHierarchy();
+
+			// Ensure all bones referenced in _boneNameHashes have Transforms created.
+			// The default combiner calls UMAMeshData.CreateTransforms() which creates
+			// Transforms for ALL bones. UMAImprovedSkeleton.EnsureBoneHierarchy() only
+			// creates Transforms for preserved bones. Without this, non-preserved bones
+			// fall back to FindPreservedParent in HashesToTransforms, producing different
+			// bone references than the base UMASkeleton would, causing a mismatch between
+			// the pre-skinned vertex data and what the SkinnedMeshRenderer computes.
+			if (_boneNameHashes != null)
+			{
+				for (int i = 0; i < _boneNameHashes.Count; i++)
+				{
+					int hash = _boneNameHashes[i];
+					// Use the skeleton's own EnsureBone path to create missing Transforms
+					if (!skeleton.HasBoneTransform(hash))
+					{
+						// Force creation of the bone Transform by ensuring it via the
+						// UMATransform path — the skeleton already has the cache data
+						// from PopulateSkeleton, we just need the Transform GameObject.
+						skeleton.EnsureBoneTransform(hash);
+					}
+				}
+			}
+
 			renderer.bones = skeleton.HashesToTransforms(_boneNameHashes);
 			renderer.sharedMesh = mesh;
 		}

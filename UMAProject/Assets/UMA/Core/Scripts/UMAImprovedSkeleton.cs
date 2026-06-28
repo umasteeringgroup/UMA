@@ -59,8 +59,28 @@ namespace UMA
 		public override void EndSkeletonUpdate()
 		{
 			updating = false;
+
+			// Gather the chain of bone hashes from root up to the external parent.
+			// These bones anchor the skeleton in the scene hierarchy and must never
+			// be destroyed. Typically this includes "Global" (root) and "Root".
+			var protectedBones = new HashSet<int>();
+			int currentHash = rootBoneHash;
+			while (currentHash != 0 && boneHashData.ContainsKey(currentHash))
+			{
+				protectedBones.Add(currentHash);
+				BoneDataBoneBaking bd;
+				if (boneHashData.TryGetValue(currentHash, out bd) && bd.parentBoneNameHash != currentHash)
+					currentHash = bd.parentBoneNameHash;
+				else
+					break;
+			}
+
 			foreach (var entry in boneHashData)
 			{
+				// Never destroy bones that anchor the skeleton to the scene hierarchy
+				if (protectedBones.Contains(entry.Value.boneNameHash))
+					continue;
+
 				if (!entry.Value.preserved && entry.Value.boneTransform != null)
 				{
 					if (entry.Value.boneTransform.childCount > 0)
@@ -235,6 +255,21 @@ namespace UMA
 		}
 
 		/// <summary>
+		/// Gets the Transform for a bone using this skeleton's boneHashData dictionary.
+		/// Overrides the base class which accesses a separate dictionary.
+		/// </summary>
+		public override Transform GetBoneTransform(int nameHash)
+		{
+			BoneDataBoneBaking res;
+			if (boneHashData.TryGetValue(nameHash, out res))
+			{
+				res.accessedFrame = frame;
+				return res.boneTransform;
+			}
+			return null;
+		}
+
+		/// <summary>
 		/// Gets the game object for a transform in the skeleton.
 		/// </summary>
 		/// <returns>The game object or null, if not found.</returns>
@@ -289,6 +324,58 @@ namespace UMA
 			{
 				throw new Exception("Bone not found.");
 			}
+		}
+
+		/// <summary>
+		/// Ensures the bone has a Transform GameObject created, properly parented
+		/// and positioned within the preserved skeleton hierarchy. Overrides the base
+		/// to set up parent linkage via FindPreservedParent, matching what
+		/// EnsureBoneHierarchy does for preserved bones.
+		/// </summary>
+		public override void EnsureBoneTransform(int nameHash)
+		{
+			BoneDataBoneBaking bd;
+			if (!boneHashData.TryGetValue(nameHash, out bd) || bd == null) return;
+			if (bd.boneTransform != null) return;
+
+			// Create the Transform
+			var go = new GameObject(bd.umaTransform.name);
+			bd.boneTransform = go.transform;
+
+			// Ensure the matrix is computed before setting up local transform
+			UpdateMatrix(bd);
+
+			if (bd.boneNameHash == rootBoneHash)
+			{
+				bd.boneTransform.localRotation = bd.rotation;
+				bd.boneTransform.localScale = Vector3.one;
+				bd.boneTransform.localPosition = bd.position;
+			}
+			else
+			{
+				var parent = FindPreservedParent(bd.parentBoneNameHash);
+				bd.boneTransform.parent = parent.boneTransform;
+				bd.boneTransform.localRotation = Quaternion.Inverse(parent.grotation) * bd.grotation;
+				bd.boneTransform.localScale = new Vector3(
+					bd.gscale.x / parent.gscale.x,
+					bd.gscale.y / parent.gscale.y,
+					bd.gscale.z / parent.gscale.z);
+				bd.boneTransform.localPosition = parent.localToWorld.inverse.MultiplyPoint(bd.gposition);
+			}
+		}
+
+		/// <summary>
+		/// Returns true if the bone has a Transform GameObject created.
+		/// Uses the local boneHashData dictionary (not the base class one).
+		/// </summary>
+		public override bool HasBoneTransform(int nameHash)
+		{
+			BoneDataBoneBaking bd;
+			if (boneHashData.TryGetValue(nameHash, out bd) && bd != null)
+			{
+				return bd.boneTransform != null;
+			}
+			return false;
 		}
 
 		/// <summary>
@@ -634,7 +721,19 @@ namespace UMA
 			Transform[] res = new Transform[boneNameHashes.Length];
 			for (int i = 0; i < boneNameHashes.Length; i++)
 			{
-				res[i] = FindPreservedParent(boneNameHashes[i]).boneTransform;
+				// Direct lookup first (matching base UMASkeleton behavior).
+				// This ensures the SkinnedMeshRenderer receives the same bone Transforms
+				// that the default combiner would provide, not preserved ancestors.
+				BoneDataBoneBaking bd;
+				if (boneHashData.TryGetValue(boneNameHashes[i], out bd) && bd != null && bd.boneTransform != null)
+				{
+					res[i] = bd.boneTransform;
+				}
+				else
+				{
+					// Fall back to preserved ancestor when bone has no Transform of its own
+					res[i] = FindPreservedParent(boneNameHashes[i]).boneTransform;
+				}
 			}
 			return res;
 		}
@@ -644,7 +743,17 @@ namespace UMA
 			Transform[] res = new Transform[boneNameHashes.Count];
 			for (int i = 0; i < boneNameHashes.Count; i++)
 			{
-				res[i] = FindPreservedParent(boneNameHashes[i]).boneTransform;
+				// Direct lookup first (matching base UMASkeleton behavior).
+				BoneDataBoneBaking bd;
+				if (boneHashData.TryGetValue(boneNameHashes[i], out bd) && bd != null && bd.boneTransform != null)
+				{
+					res[i] = bd.boneTransform;
+				}
+				else
+				{
+					// Fall back to preserved ancestor when bone has no Transform of its own
+					res[i] = FindPreservedParent(boneNameHashes[i]).boneTransform;
+				}
 			}
 			return res;
 		}
@@ -753,9 +862,14 @@ namespace UMA
 		{
 			if (db.boneNameHash == rootBoneHash)
 			{
-				var parentRotation = Quaternion.Euler(-90, 0, 0);
+				// Read parent rotation from the actual Transform hierarchy instead of
+				// hardcoding Euler(-90,0,0). This correctly handles both FixupRotations
+				// true (Root at 270,0,0) and false (Root at 0,0,0).
+				Quaternion parentRotation = Quaternion.identity;
+				if (db.boneTransform != null && db.boneTransform.parent != null)
+					parentRotation = db.boneTransform.parent.localRotation;
 				db.gposition = parentRotation * db.position;
-				db.grotation = parentRotation * Quaternion.Euler(90, 90, 0);
+				db.grotation = parentRotation * db.rotation;
 				db.gscale = db.scale;
 			}
 			else

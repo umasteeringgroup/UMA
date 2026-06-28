@@ -350,6 +350,33 @@ namespace UMA
 		}
 
 		/// <summary>
+		/// Returns true if the bone has a Transform GameObject created.
+		/// </summary>
+		public virtual bool HasBoneTransform(int nameHash)
+		{
+			BoneData res;
+			if (boneHashData.TryGetValue(nameHash, out res))
+			{
+				return res.boneTransform != null;
+			}
+			return false;
+		}
+
+		/// <summary>
+		/// Ensures the bone has a Transform GameObject created.
+		/// Base implementation creates a GameObject and sets it up from the cache.
+		/// </summary>
+		public virtual void EnsureBoneTransform(int nameHash)
+		{
+			BoneData res;
+			if (boneHashData.TryGetValue(nameHash, out res) && res.boneTransform == null)
+			{
+				var go = new GameObject(res.umaTransform.name);
+				res.boneTransform = go.transform;
+			}
+		}
+
+		/// <summary>
 		/// Gets the transform for a bone in the skeleton using the bone name.
 		/// </summary>
 		/// <param name="boneName"></param>
