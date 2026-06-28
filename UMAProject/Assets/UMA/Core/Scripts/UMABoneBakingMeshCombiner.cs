@@ -134,12 +134,13 @@ namespace UMA
 			MergeSkeletons(combinedMeshArray);
 			PopulateMatrix(combinedMeshArray);
 
-			SkinnedMeshCombinerRetargeting.CombineMeshes(umaMesh, combinedMeshArray, inverseResolvedBoneMatrixes, umaData.blendShapeSettings);
+			SkinnedMeshCombinerRetargeting.CombineMeshes(umaMesh, combinedMeshArray, inverseResolvedBoneMatrixes, umaData.blendShapeSettings, uniformTargetPoses: true);
 
-			RecalculateUV();
+			if (updatedAtlas)
+				RecalculateUV();
 
-	        umaMesh.ApplyDataToUnityMesh(myRenderer, umaSkeleton);
 			umaMesh.ReleaseBuffers();
+	        umaMesh.ApplyDataToUnityMesh(myRenderer, umaSkeleton);
 	        umaSkeleton.EndSkeletonUpdate();
 
 	        ApplyBlendShapes();
@@ -226,14 +227,12 @@ namespace UMA
 
 		private void MergeSkeletons(SkinnedMeshCombinerRetargeting.CombineInstance[] combinedInstances)
 		{
-			if (mergeBoneDictionary != null && mergeBoneDictionaryCapacity < animatedBonesCount)
-				mergeBoneDictionary = null;
-
 			if (mergeBoneDictionary == null)
-			{
 				mergeBoneDictionary = new Dictionary<int, int>(animatedBonesCount);
-				mergeBoneDictionaryCapacity = animatedBonesCount;
-			}
+			else
+				mergeBoneDictionary.Clear();
+			mergeBoneDictionaryCapacity = animatedBonesCount;
+
 			var mergedBones = mergeBoneDictionary;
 			foreach (var combineInstance in combinedInstances)
 			{
@@ -249,11 +248,7 @@ namespace UMA
 						mergedBones.Add(targetHash, targetIndex);
 					}
 					combineInstance.targetBoneIndices[i] = targetIndex;
-					if (!mergedBones.ContainsKey(targetHash))
-					{
-						mergedBones.Add(targetHash, mergedBones.Count);
-					}
-				}				
+				}
 			}
 			umaMesh.PrepareBones(mergedBones.Count);
 			foreach (var entry in mergedBones)
@@ -277,16 +272,19 @@ namespace UMA
 				}
 			}
 
-			Matrix4x4 temp;
+			// inverseResolvedBoneMatrixes = rootMatrix.inverse for all bones (algebraic identity)
+			// boneMatrix * bindPoses[i] = boneMatrix * boneMatrix⁻¹ * rootMatrix = rootMatrix
+			// so inverseResolvedBoneMatrixes[i] = (rootMatrix)⁻¹ for every bone
 			ListHelper<Matrix4x4>.AllocateArray(ref _inverseResolvedBoneMatrixes, out inverseResolvedBoneMatrixes, umaMesh.bonesCount);
 			var rootMatrix = umaSkeleton.GetLocalToWorldMatrix(umaSkeleton.rootBoneHash);
+			var rootMatrixInv = rootMatrix.inverse;
+
 			for (int i = 0; i < umaMesh.bonesCount; i++)
 			{
 				var boneMatrix = umaSkeleton.GetLocalToWorldMatrix(umaMesh.boneNameHashes[i]);
-				temp = boneMatrix.inverse;
-				MatrixMultiply(ref umaMesh.bindPoses[i], ref temp, ref rootMatrix);
-				MatrixMultiply(ref temp, ref boneMatrix, ref umaMesh.bindPoses[i]);
-				inverseResolvedBoneMatrixes[i] = temp.inverse;
+				var boneMatrixInv = boneMatrix.inverse;
+				MatrixMultiply(ref umaMesh.bindPoses[i], ref boneMatrixInv, ref rootMatrix);
+				inverseResolvedBoneMatrixes[i] = rootMatrixInv;
 			}
 		}
 
@@ -371,8 +369,12 @@ namespace UMA
                 {
 					var materialDefinition = generatedMaterial.materialFragments[materialDefinitionIndex];
 					var slotData = materialDefinition.slotData;
+					// Ensure bone weights are loaded (critical after domain reload when LoadedBoneweights is reset)
+					var md = slotData.asset.meshData;
+					if (md.boneWeights != null && md.boneWeights.Length > 0 && (md.ManagedBonesPerVertex == null || md.ManagedBonesPerVertex.Length == 0))
+						slotData.asset.EnsureBoneWeights();
 					combineInstance = new SkinnedMeshCombinerRetargeting.CombineInstance();
-					combineInstance.meshData = slotData.asset.meshData;
+					combineInstance.meshData = md;
 					combineInstance.targetSubmeshIndices = new int[combineInstance.meshData.subMeshCount];
 					for (int i = 0; i < combineInstance.meshData.subMeshCount; i++)
 					{

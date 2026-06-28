@@ -139,9 +139,8 @@ namespace UMA
 				_bonesPerVertexManagedList = new List<byte>(vertexCount);
 			else
 				_bonesPerVertexManagedList.Clear();
-			// Pre-allocate: zero bones per vertex initially
-			for (int i = 0; i < vertexCount; i++)
-				_bonesPerVertexManagedList.Add(0);
+			// Fast pre-allocate: AddRange uses internal Array.Copy, not per-element Add
+			_bonesPerVertexManagedList.AddRange(new byte[vertexCount]);
 
 			ListHelper<Vector3>.AllocateArray(ref _vertices, out vertices, vertexCount);
 			if (has_normals)

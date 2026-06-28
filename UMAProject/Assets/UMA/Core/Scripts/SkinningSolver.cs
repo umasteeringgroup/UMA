@@ -127,6 +127,18 @@ namespace UMA
 			vector.x = rx; vector.y = ry; vector.z = rz;
 		}
 
+		/// <summary>
+		/// Fast path: all target matrices are the same (e.g. bone baking with uniform root inverse).
+		/// Avoids the per-influence loop — single MultiplyPoint3x4.
+		/// </summary>
+		public void SkinVertex(ref Matrix4x4 matrix, ref Vector3 vector)
+		{
+			float gx = globalVertex.x, gy = globalVertex.y, gz = globalVertex.z;
+			vector.x = matrix.m00 * gx + matrix.m01 * gy + matrix.m02 * gz + matrix.m03;
+			vector.y = matrix.m10 * gx + matrix.m11 * gy + matrix.m12 * gz + matrix.m13;
+			vector.z = matrix.m20 * gx + matrix.m21 * gy + matrix.m22 * gz + matrix.m23;
+		}
+
 		public void SkinNormal(Matrix4x4[] matrices, ref Vector3 normal)
 		{
 			float gx = globalNormal.x, gy = globalNormal.y, gz = globalNormal.z;
@@ -143,6 +155,17 @@ namespace UMA
 			normal.x = rx; normal.y = ry; normal.z = rz;
 		}
 
+		/// <summary>
+		/// Fast path: all target matrices are the same. Single MultiplyVector.
+		/// </summary>
+		public void SkinNormal(ref Matrix4x4 matrix, ref Vector3 normal)
+		{
+			float gx = globalNormal.x, gy = globalNormal.y, gz = globalNormal.z;
+			normal.x = matrix.m00 * gx + matrix.m01 * gy + matrix.m02 * gz;
+			normal.y = matrix.m10 * gx + matrix.m11 * gy + matrix.m12 * gz;
+			normal.z = matrix.m20 * gx + matrix.m21 * gy + matrix.m22 * gz;
+		}
+
 		public void SkinTangent(Matrix4x4[] matrices, ref Vector4 tangent)
 		{
 			float gx = globalTangent.x, gy = globalTangent.y, gz = globalTangent.z;
@@ -157,6 +180,18 @@ namespace UMA
 				rz += (m.m20 * gx + m.m21 * gy + m.m22 * gz) * w;
 			}
 			tangent.x = rx; tangent.y = ry; tangent.z = rz;
+			tangent.w = tangentSign ? 1f : -1f;
+		}
+
+		/// <summary>
+		/// Fast path: all target matrices are the same. Single MultiplyVector.
+		/// </summary>
+		public void SkinTangent(ref Matrix4x4 matrix, ref Vector4 tangent)
+		{
+			float gx = globalTangent.x, gy = globalTangent.y, gz = globalTangent.z;
+			tangent.x = matrix.m00 * gx + matrix.m01 * gy + matrix.m02 * gz;
+			tangent.y = matrix.m10 * gx + matrix.m11 * gy + matrix.m12 * gz;
+			tangent.z = matrix.m20 * gx + matrix.m21 * gy + matrix.m22 * gz;
 			tangent.w = tangentSign ? 1f : -1f;
 		}
 

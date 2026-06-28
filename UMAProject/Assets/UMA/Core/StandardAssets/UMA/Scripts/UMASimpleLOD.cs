@@ -23,7 +23,7 @@ namespace UMA.Examples
         [Tooltip("Look for LOD slots in the library.")]
         public bool swapSlots;
 
-        [Tooltip("This value is subtracted from the slot LOD counter.")]
+        [Tooltip("This value is subtracted from the slot LOD counter.")] 
         public int lodOffset;
 
         [Tooltip("This is the max LOD to search for if the current LOD can't be found.")]

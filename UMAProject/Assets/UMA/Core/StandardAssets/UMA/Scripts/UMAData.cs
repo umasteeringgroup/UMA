@@ -2440,6 +2440,10 @@ namespace UMA
 			/// <param name="umaData">UMA data.</param>
 			public void ApplyDNA(UMAData umaData)
 			{
+				if (umaData.umaRecipe.raceData != null && umaData.umaRecipe.raceData.useNewDNA)
+				{
+					return;
+				}
 				foreach (var dnaEntry in umaDna)
 				{
 					//DynamicDNAPlugins FEATURE: Allow more than one converter to use the same dna
@@ -2453,15 +2457,6 @@ namespace UMA
 							dnaConverters[i](umaData, umaData.GetSkeleton());
 						}
 					}
-					else
-					{
-						if (Debug.isDebugBuild)
-                        {
-#if UNITY_EDITOR
-							Debug.LogWarning("**UMA: Cannot apply dna: " + dnaEntry.Value.GetType().Name + " using key " + dnaEntry.Key);
-#endif
-						}
-                    }
 				}
 			}
 

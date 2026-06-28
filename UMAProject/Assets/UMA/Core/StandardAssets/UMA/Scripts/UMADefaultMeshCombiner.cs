@@ -618,16 +618,20 @@ namespace UMA
 
                     while (vertexCount-- > 0)
                     {
+#if UNITY_EDITOR
                         try
                         {
+#endif
                         umaMesh.uv[idx].x = atlasXMin + atlasXRange * umaMesh.uv[idx].x;
                         umaMesh.uv[idx].y = atlasYMin + atlasYRange * umaMesh.uv[idx].y;
-                            }
+#if UNITY_EDITOR
+                        }
                         catch
                         {
                             Debug.LogError("Error adjusting UVs for " + sd.slotName + " atlasRect:" + tempAtlasRect + " atlasRes:" + atlasResolution + " uvArea:" + sd.UVArea + " idx:" + idx + " umaMesh.uv.len:" + umaMesh.uv.Length);
                             throw;
                         }
+#endif
                         idx++;
                     }
                 }
@@ -672,11 +676,16 @@ private static Dictionary<string, float> BuildBakedBlendshapeDict(BlendShapeSett
                     var slotData = fragment.slotData;
                     if (slotData == null || slotData.asset == null || UMAMeshData.IsNullOrEmptyMeshData(slotData.asset.meshData)) continue;
 
+                    // Lazy-copy meshData: skip ShallowCopy when possible (no vertex overrides, no UV remap)
+                    bool hasVertexOverrides = umaData.VertexOverrides.ContainsKey(slotData.slotName);
+                    bool needsCopy = hasVertexOverrides || slotData.UVRemapped;
                     combineInstance = new SkinnedMeshCombiner.CombineInstance
                     {
-                        meshData = (umaData.VertexOverrides.ContainsKey(slotData.slotName))
-                            ? slotData.asset.meshData.ShallowCopy(umaData.VertexOverrides[slotData.slotName])
-                            : slotData.asset.meshData.ShallowCopy(null),
+                        meshData = needsCopy
+                            ? (hasVertexOverrides
+                                ? slotData.asset.meshData.ShallowCopy(umaData.VertexOverrides[slotData.slotName])
+                                : slotData.asset.meshData.ShallowCopy(null))
+                            : slotData.asset.meshData,
                         slotData = slotData
                     };
                     combineInstance.meshData.SlotName = slotData.slotName;
@@ -739,7 +748,8 @@ private static Dictionary<string, float> BuildBakedBlendshapeDict(BlendShapeSett
                     continue;
 
                 _materialBuffer.Add(firstPass);
-                _submeshBuffer.Add(mesh.GetSubMesh(i));
+                var subMesh = mesh.GetSubMesh(i);
+                _submeshBuffer.Add(subMesh);
                 for (int k = 0; k < cm.materialFragments.Count; k++)
                     cm.materialFragments[k].slotData.submeshIndex = i;
                 if (cm.umaMaterial.materialType == UMAMaterial.MaterialType.UseExistingTextures)
@@ -761,7 +771,7 @@ private static Dictionary<string, float> BuildBakedBlendshapeDict(BlendShapeSett
                         SetCompositingParameters(secondPass, cm);
 
                     _materialBuffer.Add(secondPass);
-                    _submeshBuffer.Add(mesh.GetSubMesh(i));
+                    _submeshBuffer.Add(subMesh);
                 }
                 cm.skinnedMeshRenderer = renderer;
             }

@@ -402,6 +402,7 @@ namespace UMA
 
         public bool GenerateSingleUMA(UMAData data, bool fireEvents)
 		{
+            Debug.Log("GenerateSingleUMA called for " + data.name);
 #if UMA_DEBUG
             if (!umaDatasGenerated.Contains(data))
             {
@@ -608,8 +609,263 @@ namespace UMA
             Debug.Log($"Total for last UMA = {ToMS(validation + meshpreprocess + BegunEvents + preapply + textureprocessing+ meshUpdates + skeletonUpdates+raceblendshapes+endEvents)} ms");
             Debug.Log($"Ticks = {System.Diagnostics.Stopwatch.Frequency}");
 #endif
+            Debug.Log($"GenerateSingleUMA completed for {data.name} in {ToMS(validation + meshpreprocess + BegunEvents + preapply + textureprocessing + meshUpdates + skeletonUpdates + raceblendshapes + endEvents)} ms"); 
+            ValidateMesh(umaData);
             return true;
 		}
+
+        private void ValidateMesh(UMAData umaData)
+        {
+            if (umaData == null) return;
+
+            var renderers = umaData.GetRenderers();
+            if (renderers == null || renderers.Length == 0)
+            {
+                Debug.LogWarning("[ValidateMesh] No renderers on " + umaData.name);
+                return;
+            }
+
+            int errorCount = 0;
+            for (int r = 0; r < renderers.Length; r++)
+            {
+                var smr = renderers[r];
+                if (smr == null) continue;
+                var mesh = smr.sharedMesh;
+                if (mesh == null)
+                {
+                    Debug.LogWarning($"[ValidateMesh] Renderer {r} has no mesh on {umaData.name}");
+                    errorCount++;
+                    continue;
+                }
+
+                string prefix = $"[ValidateMesh] {umaData.name} R{r} mesh='{mesh.name}'";
+
+                // --- Vertex count ---
+                if (mesh.vertexCount == 0)
+                {
+                    Debug.LogWarning($"{prefix}: vertexCount=0 (empty mesh)");
+                    errorCount++;
+                    continue;
+                }
+
+                // --- Vertices (NaN, Inf, zero-extent) ---
+                var verts = mesh.vertices;
+                if (verts == null || verts.Length == 0)
+                {
+                    Debug.LogWarning($"{prefix}: vertices array is null/empty");
+                    errorCount++;
+                }
+                else
+                {
+                    int nanVerts = 0, infVerts = 0, zeroVerts = 0;
+                    Bounds vertBounds = new Bounds(verts[0], Vector3.zero);
+                    bool firstValid = !IsBadVector(verts[0]);
+                    for (int i = 0; i < verts.Length; i++)
+                    {
+                        var v = verts[i];
+                        if (float.IsNaN(v.x) || float.IsNaN(v.y) || float.IsNaN(v.z)) nanVerts++;
+                        if (float.IsInfinity(v.x) || float.IsInfinity(v.y) || float.IsInfinity(v.z)) infVerts++;
+                        if (v == Vector3.zero) zeroVerts++;
+                        if (!IsBadVector(v))
+                        {
+                            if (!firstValid) { vertBounds = new Bounds(v, Vector3.zero); firstValid = true; }
+                            else vertBounds.Encapsulate(v);
+                        }
+                    }
+                    if (nanVerts > 0) { Debug.LogWarning($"{prefix}: {nanVerts}/{verts.Length} vertices are NaN"); errorCount++; }
+                    if (infVerts > 0) { Debug.LogWarning($"{prefix}: {infVerts}/{verts.Length} vertices are Infinity"); errorCount++; }
+                    if (!firstValid) { Debug.LogWarning($"{prefix}: ALL vertices are NaN/Inf"); errorCount++; }
+                    else if (vertBounds.size.magnitude < 0.0001f)
+                    {
+                        Debug.LogWarning($"{prefix}: vertex bounds collapsed (extent={vertBounds.size.magnitude:F6}, center={vertBounds.center}) — possible all-zero or degenerate");
+                        errorCount++;
+                    }
+                }
+
+                // --- Normals ---
+                var norms = mesh.normals;
+                if (norms != null && norms.Length > 0)
+                {
+                    int nanNorms = 0, zeroNorms = 0;
+                    for (int i = 0; i < norms.Length; i++)
+                    {
+                        var n = norms[i];
+                        if (float.IsNaN(n.x) || float.IsNaN(n.y) || float.IsNaN(n.z)) nanNorms++;
+                        if (n == Vector3.zero) zeroNorms++;
+                    }
+                    if (nanNorms > 0) { Debug.LogWarning($"{prefix}: {nanNorms}/{norms.Length} normals are NaN"); errorCount++; }
+                    if (zeroNorms == norms.Length) { Debug.LogWarning($"{prefix}: ALL normals are zero"); errorCount++; }
+                }
+
+                // --- Tangents ---
+                var tans = mesh.tangents;
+                if (tans != null && tans.Length > 0)
+                {
+                    int nanTans = 0;
+                    for (int i = 0; i < tans.Length; i++)
+                    {
+                        var t = tans[i];
+                        if (float.IsNaN(t.x) || float.IsNaN(t.y) || float.IsNaN(t.z) || float.IsNaN(t.w)) nanTans++;
+                    }
+                    if (nanTans > 0) { Debug.LogWarning($"{prefix}: {nanTans}/{tans.Length} tangents are NaN"); errorCount++; }
+                }
+
+                // --- UVs ---
+                var uv = mesh.uv;
+                if (uv != null && uv.Length > 0)
+                {
+                    int nanUV = 0;
+                    for (int i = 0; i < uv.Length; i++)
+                    {
+                        var u = uv[i];
+                        if (float.IsNaN(u.x) || float.IsNaN(u.y)) nanUV++;
+                    }
+                    if (nanUV > 0) { Debug.LogWarning($"{prefix}: {nanUV}/{uv.Length} UVs are NaN"); errorCount++; }
+                }
+
+                // --- Bone Weights ---
+                var bw = mesh.boneWeights;
+                var bwpv = mesh.GetBonesPerVertex();
+                if (bwpv != null && bwpv.Length > 0)
+                {
+                    int zeroWeightVerts = 0;
+                    int totalBoneInfluences = 0;
+                    for (int i = 0; i < bwpv.Length; i++)
+                    {
+                        if (bwpv[i] == 0) zeroWeightVerts++;
+                        totalBoneInfluences += bwpv[i];
+                    }
+                    if (zeroWeightVerts > 0)
+                        Debug.LogWarning($"{prefix}: {zeroWeightVerts}/{bwpv.Length} vertices have ZERO bone influences");
+                    if (totalBoneInfluences == 0)
+                    {
+                        Debug.LogWarning($"{prefix}: NO bone influences at all — mesh won't skin");
+                        errorCount++;
+                    }
+                }
+                else if (bw != null && bw.Length > 0)
+                {
+                    int zeroWeightVerts = 0;
+                    for (int i = 0; i < bw.Length; i++)
+                    {
+                        var w = bw[i];
+                        if (w.weight0 + w.weight1 + w.weight2 + w.weight3 <= 0f) zeroWeightVerts++;
+                    }
+                    if (zeroWeightVerts > 0)
+                        Debug.LogWarning($"{prefix}: {zeroWeightVerts}/{bw.Length} legacy bone weights sum to zero");
+                    if (zeroWeightVerts == bw.Length)
+                    {
+                        Debug.LogWarning($"{prefix}: ALL legacy bone weights are zero — mesh won't skin");
+                        errorCount++;
+                    }
+                }
+
+                // --- Bones / Bind Poses ---
+                var bones = smr.bones;
+                var bindPoses = mesh.bindposes;
+                if (bones == null || bones.Length == 0)
+                {
+                    Debug.LogWarning($"{prefix}: no bones assigned to renderer");
+                    errorCount++;
+                }
+                if (bindPoses == null || bindPoses.Length == 0)
+                {
+                    Debug.LogWarning($"{prefix}: no bind poses on mesh");
+                    errorCount++;
+                }
+                else
+                {
+                    int nanBindPoses = 0;
+                    for (int i = 0; i < bindPoses.Length; i++)
+                    {
+                        var m = bindPoses[i];
+                        for (int row = 0; row < 4; row++)
+                        {
+                            float val = m[row, 0];
+                            if (float.IsNaN(val) || float.IsInfinity(val)) { nanBindPoses++; break; }
+                        }
+                    }
+                    if (nanBindPoses > 0) { Debug.LogWarning($"{prefix}: {nanBindPoses}/{bindPoses.Length} bind poses contain NaN/Inf"); errorCount++; }
+                }
+                if (bones != null && bindPoses != null && bones.Length != bindPoses.Length)
+                {
+                    Debug.LogWarning($"{prefix}: bone count mismatch — renderer has {bones.Length} bones, mesh has {bindPoses.Length} bind poses");
+                    errorCount++;
+                }
+
+                // Check for null bones in renderer
+                if (bones != null)
+                {
+                    int nullBones = 0;
+                    for (int i = 0; i < bones.Length; i++)
+                    {
+                        if (bones[i] == null) nullBones++;
+                    }
+                    if (nullBones > 0)
+                    {
+                        Debug.LogWarning($"{prefix}: {nullBones}/{bones.Length} bones are NULL on renderer");
+                        errorCount++;
+                    }
+                }
+
+                // --- Triangles / Submeshes ---
+                int subMeshCount = mesh.subMeshCount;
+                if (subMeshCount == 0)
+                {
+                    Debug.LogWarning($"{prefix}: subMeshCount=0 (no triangles)");
+                    errorCount++;
+                }
+                else
+                {
+                    int totalTris = 0;
+                    for (int sm = 0; sm < subMeshCount; sm++)
+                    {
+                        var tris = mesh.GetTriangles(sm);
+                        if (tris == null || tris.Length == 0)
+                        {
+                            Debug.LogWarning($"{prefix}: submesh {sm} has no triangles");
+                        }
+                        else
+                        {
+                            totalTris += tris.Length;
+                            // Check for out-of-range indices
+                            int maxIdx = mesh.vertexCount - 1;
+                            int badIdx = 0;
+                            for (int t = 0; t < tris.Length; t++)
+                            {
+                                if (tris[t] < 0 || tris[t] > maxIdx) badIdx++;
+                            }
+                            if (badIdx > 0)
+                            {
+                                Debug.LogWarning($"{prefix}: submesh {sm} has {badIdx}/{tris.Length} triangle indices out of range [0,{maxIdx}]");
+                                errorCount++;
+                            }
+                        }
+                    }
+                    if (totalTris == 0)
+                    {
+                        Debug.LogWarning($"{prefix}: all submeshes have zero triangles");
+                        errorCount++;
+                    }
+                }
+            }
+
+            if (errorCount == 0)
+            {
+                Debug.Log($"[ValidateMesh] {umaData.name}: PASSED — no issues detected.");
+            }
+            else
+            {
+                Debug.LogWarning($"[ValidateMesh] {umaData.name}: {errorCount} issue(s) found.");
+            }
+        }
+
+        private static bool IsBadVector(Vector3 v)
+        {
+            return float.IsNaN(v.x) || float.IsNaN(v.y) || float.IsNaN(v.z)
+                || float.IsInfinity(v.x) || float.IsInfinity(v.y) || float.IsInfinity(v.z);
+        } 
+
 
 		private static void ApplyManualRendererBounds(UMAData umaData, SkinnedMeshRenderer[] renderers)
         {

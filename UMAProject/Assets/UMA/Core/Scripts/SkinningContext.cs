@@ -14,6 +14,7 @@ namespace UMA
 	{
 		internal SkinningSolver solver;
 		public Matrix4x4[] targetEffectivePoses;
+		public bool uniformTargetPoses;
 		public Vector3[] vertices;
 		public Vector3[] normals;
 		public Vector4[] tangents;
@@ -90,6 +91,12 @@ namespace UMA
 		{
 			solver.Reset();
 
+			// Cache source geometry lookups for the inner loop
+			var srcVerts = vertices;
+			var srcNorms = normals;
+			var srcTans = tangents;
+			var srcMatrices = resolvedBoneMatrixes;
+
 			// Use precomputed prefix-sum offset (Phase 1 optimization)
 			int weightOffset = sourceWeightOffsets != null ? sourceWeightOffsets[sourceBoneWeightIndex] : 0;
 
@@ -101,8 +108,8 @@ namespace UMA
 
 				int origBone = bw.boneIndex;
 				int newBone = targetBoneIndices[origBone];
-				solver.Add(ref resolvedBoneMatrixes[origBone], ref vertices[sourceVertexIndex],
-					ref normals[sourceVertexIndex], ref tangents[sourceVertexIndex], bw.weight, newBone);
+				solver.Add(ref srcMatrices[origBone], ref srcVerts[sourceVertexIndex],
+					ref srcNorms[sourceVertexIndex], ref srcTans[sourceVertexIndex], bw.weight, newBone);
 			}
 
 			// Unity requires bone weights in descending order
@@ -112,9 +119,18 @@ namespace UMA
 			byte written = solver.UpdateBoneWeights(targetManagedBoneWeights);
 			targetManagedBonesPerVertex[targetIndex] = written;
 
-			solver.SkinVertex(targetEffectivePoses, ref outVertex);
-			solver.SkinNormal(targetEffectivePoses, ref outNormal);
-			solver.SkinTangent(targetEffectivePoses, ref outTangent);
+			if (uniformTargetPoses)
+			{
+				solver.SkinVertex(ref targetEffectivePoses[0], ref outVertex);
+				solver.SkinNormal(ref targetEffectivePoses[0], ref outNormal);
+				solver.SkinTangent(ref targetEffectivePoses[0], ref outTangent);
+			}
+			else
+			{
+				solver.SkinVertex(targetEffectivePoses, ref outVertex);
+				solver.SkinNormal(targetEffectivePoses, ref outNormal);
+				solver.SkinTangent(targetEffectivePoses, ref outTangent);
+			}
 		}
 		/// <summary>
 		/// Process a blendshape delta vertex using managed BoneWeight1 data without writing bone weights.
@@ -122,6 +138,12 @@ namespace UMA
 		public void ProcessBlendShapeVertexManaged(int sourceVertexIndex, int sourceBoneWeightIndex, ref Vector3 outDeltaVertex, ref Vector3 outDeltaNormal, ref Vector4 outDeltaTangent)
 		{
 			solver.Reset();
+
+			// Cache source geometry lookups for the inner loop
+			var srcVerts = vertices;
+			var srcNorms = normals;
+			var srcTans = tangents;
+			var srcMatrices = resolvedBoneMatrixes;
 
 			// Use precomputed prefix-sum offset (Phase 1 optimization)
 			int weightOffset = sourceWeightOffsets != null ? sourceWeightOffsets[sourceBoneWeightIndex] : 0;
@@ -134,16 +156,25 @@ namespace UMA
 
 				int origBone = bw.boneIndex;
 				int newBone = targetBoneIndices[origBone];
-				solver.Add(ref resolvedBoneMatrixes[origBone], ref vertices[sourceVertexIndex],
-					ref normals[sourceVertexIndex], ref tangents[sourceVertexIndex], bw.weight, newBone);
+				solver.Add(ref srcMatrices[origBone], ref srcVerts[sourceVertexIndex],
+					ref srcNorms[sourceVertexIndex], ref srcTans[sourceVertexIndex], bw.weight, newBone);
 			}
 
 			// Unity requires bone weights in descending order
 			solver.SortWeightsDescending();
 
-			solver.SkinVertex(targetEffectivePoses, ref outDeltaVertex);
-			solver.SkinNormal(targetEffectivePoses, ref outDeltaNormal);
-			solver.SkinTangent(targetEffectivePoses, ref outDeltaTangent);
+			if (uniformTargetPoses)
+			{
+				solver.SkinVertex(ref targetEffectivePoses[0], ref outDeltaVertex);
+				solver.SkinNormal(ref targetEffectivePoses[0], ref outDeltaNormal);
+				solver.SkinTangent(ref targetEffectivePoses[0], ref outDeltaTangent);
+			}
+			else
+			{
+				solver.SkinVertex(targetEffectivePoses, ref outDeltaVertex);
+				solver.SkinNormal(targetEffectivePoses, ref outDeltaNormal);
+				solver.SkinTangent(targetEffectivePoses, ref outDeltaTangent);
+			}
 		}
 	}
 #endif

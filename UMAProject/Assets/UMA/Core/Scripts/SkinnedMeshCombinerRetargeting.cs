@@ -40,7 +40,7 @@ namespace UMA
 		/// </summary>
 		/// <param name="target">Target.</param>
 		/// <param name="sources">Sources.</param>
-		public static void CombineMeshes(MeshBuilder target, CombineInstance[] sources, Matrix4x4[] inverseTargetBoneMatrixes, BlendShapeSettings blendShapeSettings)
+		public static void CombineMeshes(MeshBuilder target, CombineInstance[] sources, Matrix4x4[] inverseTargetBoneMatrixes, BlendShapeSettings blendShapeSettings, bool uniformTargetPoses = false)
 		{
 			if (blendShapeSettings == null)
 				blendShapeSettings = new BlendShapeSettings();
@@ -58,8 +58,10 @@ namespace UMA
 			int vertexIndex = 0;
 			var context = new SkinningContext();
 			context.targetEffectivePoses = inverseTargetBoneMatrixes;
+			context.uniformTargetPoses = uniformTargetPoses;
 			var blendShapeContext = new SkinningContext();
 			blendShapeContext.targetEffectivePoses = inverseTargetBoneMatrixes;
+			blendShapeContext.uniformTargetPoses = uniformTargetPoses;
 
 
 			foreach (var source in sources)
@@ -70,10 +72,12 @@ namespace UMA
 				context.resolvedBoneMatrixes = source.resolvedBoneMatrixes;
 
 				// Detect managed (BoneWeight1) bone weight data; convert legacy if needed
+				// Use vertices.Length as the authoritative vertex count — meshData.vertexCount can be stale/zero
+				int srcVertexCount = source.meshData.vertices != null ? source.meshData.vertices.Length : source.meshData.vertexCount;
 				bool useManagedWeights = source.meshData.ManagedBoneWeights != null
 					&& source.meshData.ManagedBonesPerVertex != null
 					&& source.meshData.ManagedBoneWeights.Length > 0
-					&& source.meshData.ManagedBonesPerVertex.Length == source.meshData.vertexCount;
+					&& source.meshData.ManagedBonesPerVertex.Length == srcVertexCount;
 
 				if (!useManagedWeights && source.meshData.boneWeights != null && source.meshData.boneWeights.Length > 0)
 				{
@@ -82,6 +86,17 @@ namespace UMA
 					useManagedWeights = true;
 				}
 
+				// Fallback: if neither format is available, try loading/converting via the asset API
+				if (!useManagedWeights && source.meshData.vertexCount > 0 && source.meshData.boneWeights != null && source.meshData.boneWeights.Length > 0)
+				{
+					source.meshData.LoadBoneWeights();
+					useManagedWeights = source.meshData.ManagedBoneWeights != null
+						&& source.meshData.ManagedBonesPerVertex != null
+						&& source.meshData.ManagedBoneWeights.Length > 0
+						&& source.meshData.ManagedBonesPerVertex.Length == source.meshData.vertexCount;
+				}
+
+	
 				if (useManagedWeights)
 				{
 					context.sourceManagedBoneWeights = source.meshData.ManagedBoneWeights;
@@ -235,6 +250,10 @@ namespace UMA
 							context.ProcessVertexManaged(i, i, vertexIndex + i,
 								ref target.vertices[vertexIndex + i], ref target.normals[vertexIndex + i], ref target.tangents[vertexIndex + i]);
 						}
+					}
+					else
+					{
+						Debug.LogWarning($"[CombineMeshes] useManagedWeights=false for slot '{source.meshData.SlotName}' — vertices will not be skinned, bone weights not written");
 					}
 				}
 
