@@ -710,6 +710,9 @@ namespace UMA
         [Tooltip("The animated bones. These are root bones. Add a bone animator (SwayBoneAnimator or UnityJointAnimator) to animate bones for hair, jiggle, etc. Create the Bone Animators from the UMA right-click ment in the project.")]
         public BaseUpdatedObject[] animatedBones = new BaseUpdatedObject[0];
 
+        [Tooltip("The bones in this list will not be baked out with the BoneBakingMeshCombiner.")]
+        public string[] UnbakedAnimatedBones = new string[0];
+
         [Tooltip("This object is a clipping plane, and is not added to the model.")]
         public bool isClippingPlane = false;
 
@@ -1416,6 +1419,7 @@ namespace UMA
             clone.useAtlasOverlay = useAtlasOverlay;
             clone.overlayScale = overlayScale;
             clone.animatedBones = (animatedBones != null) ? (BaseUpdatedObject[])animatedBones.Clone() : new BaseUpdatedObject[0];
+            clone.UnbakedAnimatedBones = (UnbakedAnimatedBones != null) ? (string[])UnbakedAnimatedBones.Clone() : new string[0];
             clone.isClippingPlane = isClippingPlane;
             clone.isSmooshable = isSmooshable;
             clone.smooshOffset = smooshOffset;
@@ -1479,6 +1483,7 @@ namespace UMA
             name = (string)source.name.Clone();
             overlayScale = source.overlayScale;
             animatedBones = source.animatedBones;
+            UnbakedAnimatedBones = source.UnbakedAnimatedBones;
             meshData = source.meshData;
             subMeshIndex = source.subMeshIndex;
             isClippingPlane = source.isClippingPlane;

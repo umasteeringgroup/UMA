@@ -266,8 +266,6 @@ namespace UMA
 
 				if (target.has_blendShapes)
 				{
-					//Debug.Log("Target BlendShapes");
-					Vector3 Dummy = new Vector3();
 					blendShapeContext.targetBoneIndices = source.targetBoneIndices;
 					blendShapeContext.resolvedBoneMatrixes = source.resolvedBoneMatrixes;
 

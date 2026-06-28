@@ -90,6 +90,12 @@ namespace UMA.Editors
         private string persistedSectionStateCache;
         private int extractBlendshapeIndex;
 
+        // Animated bones selection
+        private bool animatedBonesFoldout;
+        private List<bool> boneSelection = new List<bool>();
+        private Vector2 boneSelectionScrollPos;
+        private string boneFilter = string.Empty;
+
         public override bool HasPreviewGUI() => true;
         MeshPreview MeshPreview;
         Mesh meshToPreview;
@@ -352,6 +358,85 @@ namespace UMA.Editors
             {
                 Editor.DrawPropertiesExcluding(serializedObject, RegularSlotFields);
             }
+
+            // Animated Bones Selection — appears below the animatedBones array field
+            GUIHelper.BeginVerticalPadded(10, new Color(0.85f, 0.90f, 1f));
+            animatedBonesFoldout = EditorGUILayout.Foldout(animatedBonesFoldout, "Animated Bones Selection");
+            if (animatedBonesFoldout)
+            {
+                if (slot != null && !UMAMeshData.IsNullOrEmptyMeshData(slot.meshData) && slot.meshData.umaBones != null)
+                {
+                    int boneCount = slot.meshData.umaBones.Length;
+                    while (boneSelection.Count < boneCount)
+                        boneSelection.Add(false);
+                    if (boneSelection.Count > boneCount)
+                        boneSelection.RemoveRange(boneCount, boneSelection.Count - boneCount);
+
+                    // Filter
+                    boneFilter = EditorGUILayout.TextField("Filter", boneFilter);
+                    string filterLower = boneFilter?.Trim().ToLowerInvariant() ?? string.Empty;
+
+                    // Select by type buttons
+                    EditorGUILayout.LabelField("Select by type", EditorStyles.boldLabel);
+                    GUILayout.BeginHorizontal();
+                    if (GUILayout.Button("Eyes"))     SelectBonesByKeyword("eye");
+                    if (GUILayout.Button("Cheeks"))   SelectBonesByKeyword("cheek");
+                    if (GUILayout.Button("Lips"))     SelectBonesByKeyword("lip");
+                    if (GUILayout.Button("Nose"))     SelectBonesByKeyword("nose");
+                    GUILayout.EndHorizontal();
+                    GUILayout.BeginHorizontal();
+                    if (GUILayout.Button("Eyelids"))  SelectBonesByKeyword("lid");
+                    if (GUILayout.Button("Face"))     SelectBonesByKeywords("eye", "cheek", "lip", "nose", "lid", "maxilar");
+                    GUILayout.EndHorizontal();
+
+                    // Clear Selection row
+                    GUILayout.BeginHorizontal();
+                    if (GUILayout.Button("Clear Selection"))
+                    {
+                        for (int i = 0; i < boneSelection.Count; i++)
+                            boneSelection[i] = false;
+                    }
+                    GUILayout.EndHorizontal();
+
+                    boneSelectionScrollPos = EditorGUILayout.BeginScrollView(boneSelectionScrollPos, GUILayout.Height(200));
+                    for (int i = 0; i < boneCount; i++)
+                    {
+                        string boneName = slot.meshData.umaBones[i]?.name ?? $"Bone {i}";
+                        if (!string.IsNullOrEmpty(filterLower) && boneName.ToLowerInvariant().IndexOf(filterLower, StringComparison.Ordinal) < 0)
+                            continue;
+                        boneSelection[i] = EditorGUILayout.ToggleLeft(boneName, boneSelection[i]);
+                    }
+                    EditorGUILayout.EndScrollView();
+
+                    EditorGUILayout.Space(4);
+                    if (GUILayout.Button("Add Checked to Animated Bones"))
+                    {
+                        AddCheckedBonesToAnimated();
+                    }
+                    if (GUILayout.Button("Add to Unbaked Animated Bones"))
+                    {
+                        AddCheckedBonesToUnbaked();
+                    }
+
+                    EditorGUILayout.Space(8);
+                    GUILayout.BeginHorizontal();
+                    if (GUILayout.Button("Clear All Animated Bones"))
+                    {
+                        ClearAnimatedBones();
+                    }
+                    if (GUILayout.Button("Clear All Unbaked Animated Bones"))
+                    {
+                        ClearUnbakedAnimatedBones();
+                    }
+                    GUILayout.EndHorizontal();
+                }
+                else
+                {
+                    EditorGUILayout.HelpBox("Mesh data or bone list is not available.", MessageType.Info);
+                }
+            }
+            GUIHelper.EndVerticalPadded(10);
+
             EditorGUILayout.HelpBox("Exports this SlotDataAsset to glTF 2.0 (.glb) with mesh, UVs, and skinning data. This is a minimal export (no materials or textures).", MessageType.Info);
             exportIncludeRig = EditorGUILayout.ToggleLeft("Include Rig", exportIncludeRig);
             GUILayout.BeginHorizontal();
@@ -894,6 +979,7 @@ namespace UMA.Editors
 
                 GUIHelper.EndVerticalPadded(10);
                 #endregion
+
                 #region Preview
 
                 GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
@@ -2501,6 +2587,183 @@ namespace UMA.Editors
         private static bool IsIdentity(Matrix4x4 m)
         {
             return m == Matrix4x4.identity;
+        }
+
+        private void SelectBonesByKeyword(string keyword)
+        {
+            var slotAsset = target as SlotDataAsset;
+            if (slotAsset == null || UMAMeshData.IsNullOrEmptyMeshData(slotAsset.meshData) || slotAsset.meshData.umaBones == null)
+                return;
+
+            string kw = keyword.ToLowerInvariant();
+            var bones = slotAsset.meshData.umaBones;
+            while (boneSelection.Count < bones.Length)
+                boneSelection.Add(false);
+
+            for (int i = 0; i < bones.Length; i++)
+            {
+                string name = (bones[i]?.name ?? string.Empty).ToLowerInvariant();
+                if (name.IndexOf(kw, StringComparison.Ordinal) >= 0)
+                    boneSelection[i] = true;
+            }
+        }
+
+        private void SelectBonesByKeywords(params string[] keywords)
+        {
+            var slotAsset = target as SlotDataAsset;
+            if (slotAsset == null || UMAMeshData.IsNullOrEmptyMeshData(slotAsset.meshData) || slotAsset.meshData.umaBones == null)
+                return;
+
+            var bones = slotAsset.meshData.umaBones;
+            while (boneSelection.Count < bones.Length)
+                boneSelection.Add(false);
+
+            for (int i = 0; i < bones.Length; i++)
+            {
+                string name = (bones[i]?.name ?? string.Empty).ToLowerInvariant();
+                for (int k = 0; k < keywords.Length; k++)
+                {
+                    if (name.IndexOf(keywords[k].ToLowerInvariant(), StringComparison.Ordinal) >= 0)
+                    {
+                        boneSelection[i] = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        private void AddCheckedBonesToAnimated()
+        {
+            var slotAsset = target as SlotDataAsset;
+            if (slotAsset == null || UMAMeshData.IsNullOrEmptyMeshData(slotAsset.meshData) || slotAsset.meshData.umaBones == null)
+                return;
+
+            var bones = slotAsset.meshData.umaBones;
+            var selectedNames = new List<string>();
+            for (int i = 0; i < boneSelection.Count && i < bones.Length; i++)
+            {
+                if (boneSelection[i])
+                    selectedNames.Add(bones[i]?.name ?? $"Bone_{i}");
+            }
+
+            if (selectedNames.Count == 0)
+            {
+                EditorUtility.DisplayDialog("Animated Bones", "No bones selected.", "OK");
+                return;
+            }
+
+            // Create BaseUpdatedObject entries for each selected bone
+            var existingList = slotAsset.animatedBones != null
+                ? new List<BaseUpdatedObject>(slotAsset.animatedBones)
+                : new List<BaseUpdatedObject>();
+
+            string assetPath = AssetDatabase.GetAssetPath(slotAsset);
+            int added = 0;
+            foreach (string boneName in selectedNames)
+            {
+                // Skip if already present
+                bool alreadyExists = false;
+                foreach (var existing in existingList)
+                {
+                    if (existing != null && existing.name == boneName)
+                    {
+                        alreadyExists = true;
+                        break;
+                    }
+                }
+                if (alreadyExists) continue;
+
+                var anim = ScriptableObject.CreateInstance<BaseUpdatedObject>();
+                anim.name = boneName;
+                if (!string.IsNullOrEmpty(assetPath))
+                {
+                    AssetDatabase.AddObjectToAsset(anim, slotAsset);
+                }
+                existingList.Add(anim);
+                added++;
+            }
+
+            slotAsset.animatedBones = existingList.ToArray();
+            EditorUtility.SetDirty(slotAsset);
+            if (!string.IsNullOrEmpty(assetPath))
+                AssetDatabase.SaveAssetIfDirty(slotAsset);
+
+            EditorUtility.DisplayDialog("Animated Bones",
+                $"Added {added} bone(s) to animated bones list. {selectedNames.Count - added} already existed.",
+                "OK");
+        }
+
+        private void AddCheckedBonesToUnbaked()
+        {
+            var slotAsset = target as SlotDataAsset;
+            if (slotAsset == null || UMAMeshData.IsNullOrEmptyMeshData(slotAsset.meshData) || slotAsset.meshData.umaBones == null)
+                return;
+
+            var bones = slotAsset.meshData.umaBones;
+            var selectedNames = new List<string>();
+            for (int i = 0; i < boneSelection.Count && i < bones.Length; i++)
+            {
+                if (boneSelection[i])
+                    selectedNames.Add(bones[i]?.name ?? $"Bone_{i}");
+            }
+
+            if (selectedNames.Count == 0)
+            {
+                EditorUtility.DisplayDialog("Unbaked Animated Bones", "No bones selected.", "OK");
+                return;
+            }
+
+            var existingList = slotAsset.UnbakedAnimatedBones != null
+                ? new List<string>(slotAsset.UnbakedAnimatedBones)
+                : new List<string>();
+
+            int added = 0;
+            foreach (string boneName in selectedNames)
+            {
+                if (!existingList.Contains(boneName))
+                {
+                    existingList.Add(boneName);
+                    added++;
+                }
+            }
+
+            slotAsset.UnbakedAnimatedBones = existingList.ToArray();
+            EditorUtility.SetDirty(slotAsset);
+            string assetPath = AssetDatabase.GetAssetPath(slotAsset);
+            if (!string.IsNullOrEmpty(assetPath))
+                AssetDatabase.SaveAssetIfDirty(slotAsset);
+
+            EditorUtility.DisplayDialog("Unbaked Animated Bones",
+                $"Added {added} bone(s) to unbaked animated bones list. {selectedNames.Count - added} already existed.",
+                "OK");
+        }
+
+        private void ClearAnimatedBones()
+        {
+            var slotAsset = target as SlotDataAsset;
+            if (slotAsset == null) return;
+
+            slotAsset.animatedBones = new BaseUpdatedObject[0];
+            EditorUtility.SetDirty(slotAsset);
+            string assetPath = AssetDatabase.GetAssetPath(slotAsset);
+            if (!string.IsNullOrEmpty(assetPath))
+                AssetDatabase.SaveAssetIfDirty(slotAsset);
+
+            EditorUtility.DisplayDialog("Animated Bones", "Cleared all animated bones.", "OK");
+        }
+
+        private void ClearUnbakedAnimatedBones()
+        {
+            var slotAsset = target as SlotDataAsset;
+            if (slotAsset == null) return;
+
+            slotAsset.UnbakedAnimatedBones = new string[0];
+            EditorUtility.SetDirty(slotAsset);
+            string assetPath = AssetDatabase.GetAssetPath(slotAsset);
+            if (!string.IsNullOrEmpty(assetPath))
+                AssetDatabase.SaveAssetIfDirty(slotAsset);
+
+            EditorUtility.DisplayDialog("Unbaked Animated Bones", "Cleared all unbaked animated bones.", "OK");
         }
 
         private void FixupUMA2Slots()

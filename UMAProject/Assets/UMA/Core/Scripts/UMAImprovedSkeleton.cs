@@ -49,7 +49,7 @@ namespace UMA
 		/// <value>The bone count.</value>
 		public override int boneCount { get { return boneHashData.Count; } }
 
-		Dictionary<int, BoneDataBoneBaking> boneHashData;
+		new Dictionary<int, BoneDataBoneBaking> boneHashData;
 		public override void BeginSkeletonUpdate()
 		{
 			updating = true;

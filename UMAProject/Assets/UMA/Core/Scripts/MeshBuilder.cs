@@ -324,6 +324,22 @@ namespace UMA
 			bonesCount = count;
 			ListHelper<int>.AllocateArray(ref _boneNameHashes, out boneNameHashes, count);
 			ListHelper<Matrix4x4>.AllocateArray(ref _bindPoses, out bindPoses, count);
+			// AllocateArray returns the raw backing array which may be larger than count
+			// from a previous build with more bones. Trim to exact size to prevent stale
+			// bind poses leaking into the Unity mesh (causes BINDPOSE/BONE COUNT MISMATCH).
+			if (bindPoses.Length > count)
+			{
+				System.Array.Resize(ref bindPoses, count);
+				// Update the backing list so future calls don't return the old oversized array
+				_bindPoses = new List<Matrix4x4>(count);
+				ListHelper<Matrix4x4>.SetCount(_bindPoses, count);
+			}
+			if (boneNameHashes.Length > count)
+			{
+				System.Array.Resize(ref boneNameHashes, count);
+				_boneNameHashes = new List<int>(count);
+				ListHelper<int>.SetCount(_boneNameHashes, count);
+			}
 		}
 	}
 }

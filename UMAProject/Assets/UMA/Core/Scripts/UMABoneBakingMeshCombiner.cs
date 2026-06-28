@@ -152,31 +152,6 @@ namespace UMA
 
 			umaData.GotoTPose();
 
-#if UNITY_EDITOR
-			// Diagnostic: verify boneInfo names from TPose actually matched skeleton bones.
-			// GotoTPose uses boneInfo[i].name hashes (different from humanInfo[i].boneName
-			// used by MarkAnimatedBones). Silently skipped bones mean no position was set.
-			{
-				var tpose = umaData.umaRecipe.raceData?.TPose;
-				if (tpose != null && tpose.boneInfo != null)
-				{
-					int found = 0;
-					int skipped = 0;
-					for (int i = 0; i < tpose.boneInfo.Length; i++)
-					{
-						int hash = UMAUtils.StringToHash(tpose.boneInfo[i].name);
-						if (umaSkeleton.HasBone(hash)) found++;
-						else skipped++;
-					}
-					if (skipped > 0)
-					{
-						Debug.LogWarning($"[UMABoneBakingMeshCombiner] GotoTPose: {skipped} of {tpose.boneInfo.Length} boneInfo entries not found in skeleton. " +
-							$"These bones were not positioned. Check that TPose boneInfo names match mesh bone names.");
-					}
-				}
-			}
-#endif
-
 			// Apply both old and new DNA systems before reading bone transforms
 			umaData.ApplyDNA();
 			if (umaData.umaRecipe.raceData.useNewDNA)
@@ -372,6 +347,25 @@ namespace UMA
 					animatedBones.Add(UMAUtils.StringToHash(tpose.humanInfo[i].boneName));
 				}
 			}
+
+			// Also collect bone hashes from each slot's UnbakedAnimatedBones list.
+			// These are bones the user explicitly wants preserved during bone baking.
+			var slotDataList = umaData.umaRecipe.slotDataList;
+			if (slotDataList != null)
+			{
+				for (int s = 0; s < slotDataList.Length; s++)
+				{
+					var slot = slotDataList[s];
+					if (slot?.asset?.UnbakedAnimatedBones == null) continue;
+					for (int b = 0; b < slot.asset.UnbakedAnimatedBones.Length; b++)
+					{
+						string boneName = slot.asset.UnbakedAnimatedBones[b];
+						if (!string.IsNullOrEmpty(boneName))
+							animatedBones.Add(UMAUtils.StringToHash(boneName));
+					}
+				}
+			}
+
 			animatedBonesCount = animatedBones.Count;
 			int foundCount = 0;
 			int missingCount = 0;
@@ -614,14 +608,19 @@ namespace UMA
 					}
 					combineInstance.targetSubmeshIndices[slotData.asset.subMeshIndex] = materialIndex;
                     combinedMeshList.Add(combineInstance);
-					for (int i = 0; i < materialDefinition.overlayData.Length; i++)
+					if (materialDefinition.overlayData != null)
 					{
-						var occlusion = materialDefinition.overlayData[i].asset.GetOcclusion(slotData.asset.nameHash, slotData.asset.subMeshIndex);
-						if (occlusion != null)
+						for (int i = 0; i < materialDefinition.overlayData.Length; i++)
 						{
-							if (combineInstance.triangleOcclusion == null)
-								combineInstance.triangleOcclusion = new int[combineInstance.meshData.subMeshCount][];
-							combineInstance.triangleOcclusion[slotData.asset.subMeshIndex] = occlusion;
+							var overlay = materialDefinition.overlayData[i];
+							if (overlay == null || overlay.asset == null) continue;
+							var occlusion = overlay.asset.GetOcclusion(slotData.asset.nameHash, slotData.asset.subMeshIndex);
+							if (occlusion != null)
+							{
+								if (combineInstance.triangleOcclusion == null)
+									combineInstance.triangleOcclusion = new int[combineInstance.meshData.subMeshCount][];
+								combineInstance.triangleOcclusion[slotData.asset.subMeshIndex] = occlusion;
+							}
 						}
 					}
 
