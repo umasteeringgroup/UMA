@@ -165,6 +165,7 @@ namespace UMA
 				var materials = combinedMaterialList.ToArray();
 				myRenderer.sharedMaterials = materials;
 			}
+			ApplySecondPassMaterials();
 			//umaData.myRenderer.sharedMesh.RecalculateBounds();
 			myRenderer.sharedMesh.name = "UMAMesh";
 
@@ -211,6 +212,68 @@ namespace UMA
 			}
 
 			myRenderer.sharedMesh.bindposes = bindposes;
+		}
+
+		/// <summary>
+		/// Handles second-pass materials by duplicating the first-pass submesh
+		/// and appending the second-pass material, matching the default combiner's
+		/// AssignRendererMaterials pattern.
+		/// </summary>
+		private void ApplySecondPassMaterials()
+		{
+			if (myRenderer == null || myRenderer.sharedMesh == null)
+				return;
+
+			var genMaterials = umaData.generatedMaterials.materials;
+
+			// Fast path: count second-pass materials first
+			int secondPassCount = 0;
+			for (int i = 0; i < genMaterials.Count; i++)
+				if (genMaterials[i].umaMaterial.secondPass != null)
+					secondPassCount++;
+			if (secondPassCount == 0)
+				return;
+
+			var mesh = myRenderer.sharedMesh;
+			int baseSubMeshCount = mesh.subMeshCount;
+			var newSubMeshes = new System.Collections.Generic.List<UnityEngine.Rendering.SubMeshDescriptor>(baseSubMeshCount + secondPassCount);
+			var newMaterials = new System.Collections.Generic.List<Material>(baseSubMeshCount + secondPassCount);
+			var currentMats = myRenderer.sharedMaterials;
+
+			for (int i = 0; i < genMaterials.Count; i++)
+			{
+				if (i >= baseSubMeshCount) break;
+
+				var gm = genMaterials[i];
+
+				// First pass
+				var subMesh = mesh.GetSubMesh(i);
+				newSubMeshes.Add(subMesh);
+				newMaterials.Add(i < currentMats.Length ? currentMats[i] : null);
+
+				// Second pass — duplicates the same submesh right after the first pass
+				if (gm.umaMaterial.secondPass != null)
+				{
+					Material secondPass = gm.secondPassMaterial;
+					if (secondPass == null)
+					{
+						secondPass = UnityEngine.Object.Instantiate(gm.umaMaterial.secondPass);
+						gm.secondPassMaterial = secondPass;
+					}
+
+					UMAGeneratorPro.ApplyMaterialParameters(gm, umaData, secondPass);
+					UMADefaultMeshCombiner.CopyMaterialTextures(secondPass, gm.material, gm.umaMaterial);
+					if (gm.material != null && gm.material.HasProperty("_OverlayCount"))
+						UMADefaultMeshCombiner.SetCompositingParameters(secondPass, gm);
+
+					newSubMeshes.Add(subMesh);
+					newMaterials.Add(secondPass);
+				}
+			}
+
+			mesh.subMeshCount = newSubMeshes.Count;
+			mesh.SetSubMeshes(newSubMeshes.ToArray(), UnityEngine.Rendering.MeshUpdateFlags.DontRecalculateBounds | UnityEngine.Rendering.MeshUpdateFlags.DontValidateIndices);
+			myRenderer.sharedMaterials = newMaterials.ToArray();
 		}
 
 		private void ApplyBlendShapes()

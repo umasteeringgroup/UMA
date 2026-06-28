@@ -64,7 +64,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.WhiteBalance
   active: 1
   temperature:
-    m_OverrideState: 1
+    m_OverrideState: 0
     m_Value: 7.2
   tint:
     m_OverrideState: 0
@@ -90,7 +90,7 @@ MonoBehaviour:
     m_Value: {x: 0.5, y: 0.5}
   intensity:
     m_OverrideState: 1
-    m_Value: 0.417
+    m_Value: 0.427
   smoothness:
     m_OverrideState: 0
     m_Value: 0.2
@@ -177,7 +177,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.DepthOfField
   active: 1
   mode:
-    m_OverrideState: 1
+    m_OverrideState: 0
     m_Value: 2
   gaussianStart:
     m_OverrideState: 1

@@ -608,7 +608,7 @@ namespace UMA
             Debug.Log($"Total for last UMA = {ToMS(validation + meshpreprocess + BegunEvents + preapply + textureprocessing+ meshUpdates + skeletonUpdates+raceblendshapes+endEvents)} ms");
             Debug.Log($"Ticks = {System.Diagnostics.Stopwatch.Frequency}");
 #endif
-            ValidateMesh(umaData);
+            //ValidateMesh(umaData);
             return true;
 		}
 
