@@ -1184,7 +1184,6 @@ namespace UMA.CharacterSystem.Editors
 
                         if (valueChanged)
                         {
-                            Debug.Log($"DNA '{inst.Name}' value changed from {oldValue} to {inst.Value}");
                             // Get the DNA asset and its build type, then do a targeted build
                             if (_nameToDnaCache.TryGetValue(inst.Name, out var dnaAsset) && dnaAsset != null)
                             {
@@ -1484,6 +1483,10 @@ namespace UMA.CharacterSystem.Editors
             {
                 return;
             }
+
+            // If we are bone baking, we need to do a full build. 
+            var generator = UMAAssetIndexer.Instance.Generator;
+            var meshCombiner = generator.meshCombiner;
     
             bool buildTexture = (buildType & UMA.DNAInstanceCollection.DNABuildType.Texture) != 0;
             bool buildMesh = (buildType & UMA.DNAInstanceCollection.DNABuildType.Mesh) != 0;
@@ -1492,14 +1495,13 @@ namespace UMA.CharacterSystem.Editors
             bool buildSharedColors = (buildType & UMA.DNAInstanceCollection.DNABuildType.SharedColors) != 0;
             bool buildMeshModifiers = (buildType & UMA.DNAInstanceCollection.DNABuildType.MeshModifiers) != 0;
 
-            if (buildSharedColors | buildMeshModifiers )
+            if (buildSharedColors | buildMeshModifiers || meshCombiner.GetType() == typeof(UMABoneBakingMeshCombiner))
             {
                 GenerateSingleUMA();
                 return;
             }
             var sw = System.Diagnostics.Stopwatch.StartNew();            
             thisDCA.Dirty(buildRig, buildTexture, buildMesh);
-            var generator = UMAAssetIndexer.Instance.Generator;
             generator.GenerateSingleUMA(thisDCA,false);
             sw.Stop();
             Debug.Log($"UMA Generation took {sw.ElapsedMilliseconds} ms");

@@ -76,6 +76,35 @@ namespace UMA.Examples
         [Tooltip("When useInternalMeshLOD is true, then slots that have been built with LOD will swap LOD levels based on the zone. This is much faster than the previous version that required a mesh rebuild.")]
         public bool useInternalMeshLOD = true;
 
+        /// <summary>
+        /// Records what LOD was actually set per slot during UpdateInternalLOD calls.
+        /// Read by the editor inspector to show ground-truth LOD status.
+        /// </summary>
+        [System.Serializable]
+        public struct SlotLodEntry
+        {
+            public string slotName;
+            public int globalDesiredLOD;
+            public int slotLodCount;
+            public int actualChosenLod;
+            public bool wasSuppressed;
+            public bool wasDroppedByMaxLod;
+            public bool hadAnyLOD;
+            public int count;       // number of times this slot has been updated
+            public double totalMS;  // accumulated milliseconds across updates
+        }
+
+        /// <summary>
+        /// Per-slot LOD status accumulated across UpdateInternalLOD calls.
+        /// Keyed by slot name. Entries are updated in-place; never cleared.
+        /// </summary>
+        public Dictionary<string, SlotLodEntry> SlotLodStatuses = new Dictionary<string, SlotLodEntry>();
+
+        /// <summary>
+        /// Total milliseconds spent in UpdateInternalLOD across all calls.
+        /// </summary>
+        public double TotalLodUpdateMS { get; private set; }
+
         private DynamicCharacterAvatar _avatar;
         private UMAData _umaData;
 
@@ -179,14 +208,13 @@ namespace UMA.Examples
 
         public void CharacterBegun(UMAData umaData)
         {
-            Debug.Log("CharacterBegun received for " + gameObject.name);
             initialized = true;
             DoLODCheck(umaData);
         }
 
         private void DoLODCheck(UMAData umaData)
         {
-            Debug.Log("Performing LOD check for " + gameObject.name);
+            //Debug.Log("Performing LOD check for " + gameObject.name);
             if (PerformLodCheck())
             {
                 _initialFallbackApplied = false;
@@ -276,7 +304,7 @@ namespace UMA.Examples
 
         public bool PerformLodCheck()
         {
-            Debug.Log("PerformLodCheck called for " + gameObject.name);
+            //Debug.Log("PerformLodCheck called for " + gameObject.name);
             if (_umaData == null)
             {
                 _umaData = gameObject.GetComponent<UMAData>();
@@ -353,6 +381,10 @@ namespace UMA.Examples
             if (useSlotDropping || swapSlots)
             {
                 updatedSlots = ProcessRecipe(effectiveLevel);
+                if (useInternalMeshLOD && updatedSlots)
+                {
+                    Debug.LogWarning("Warning! UMASimpleLOD: useInternalMeshLOD is true, but slots were swapped. This may cause internal LOD to be out of sync with the actual slot data.");
+                }
             }
 
             if (_currentLOD != effectiveLevel)
@@ -369,13 +401,17 @@ namespace UMA.Examples
 
             if (updatedTextures || updatedSlots)
             {
+                Debug.Log($"[UMASimpleLOD] LOD {effectiveLevel} applied for {gameObject.name}: " +
+                    $"atlasScale={_umaData.atlasResolutionScale}, updatedTextures={updatedTextures}, updatedSlots={updatedSlots}");
                 if (_avatar != null)
                 {
+                    Debug.Log($"[UMASimpleLOD] Forcing _avatar update for {gameObject.name} due to LOD change. updatedTextures={updatedTextures}, updatedSlots={updatedSlots}");
                     _avatar.ForceUpdate(updatedSlots, updatedTextures, updatedSlots);
                     return true;
                 }
                 else
                 {
+                    Debug.Log($"[UMASimpleLOD] Forcing UMAData update for {gameObject.name} due to LOD change. updatedTextures={updatedTextures}, updatedSlots={updatedSlots}");
                     _umaData.Dirty(updatedSlots, updatedTextures, updatedSlots);
                 }
             }
@@ -385,7 +421,9 @@ namespace UMA.Examples
 
         public void UpdateInternalLOD()
         {
-            Debug.Log("Updating Internal LOD");
+           // Debug.Log("Updating Internal LOD");
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+
             if (_umaData == null || _umaData.umaRecipe == null || _umaData.GetRenderers() == null)
             {
                 return;
@@ -407,29 +445,78 @@ namespace UMA.Examples
                 return;
             }
 
-            // Check if any slot has multiple internal LOD ranges
+            // First pass: check for any LOD slots AND populate per-slot tracking dictionary
             bool anyHasLOD = false;
             for (int i = 0; i < slots.Length; i++)
             {
                 var sd = slots[i];
-                if (sd == null || sd.asset == null || UMAMeshData.IsNullOrEmptyMeshData(sd.asset.meshData)) continue;
-                int sm = sd.asset.subMeshIndex;
-                if (sd.asset.meshData.submeshes == null || sm < 0 || sm >= sd.asset.meshData.subMeshCount) continue;
-                var smt = sd.asset.meshData.submeshes[sm];
-                if (smt == null) continue;
+                if (sd == null) continue;
 
-                int lodCount = smt.LODCount();
-                if (lodCount > 1)
+                string key = sd.slotName;
+                if (string.IsNullOrEmpty(key)) continue;
+
+                // Get or create the entry for this slot
+                SlotLodEntry entry;
+                if (!SlotLodStatuses.TryGetValue(key, out entry))
                 {
-                    anyHasLOD = true;
-                    break;
+                    entry = new SlotLodEntry { slotName = key };
                 }
-                if (anyHasLOD) break;
+
+                entry.globalDesiredLOD = desiredLOD;
+                entry.slotLodCount = 0;
+                entry.actualChosenLod = 0;
+                entry.wasSuppressed = sd.Suppressed;
+                entry.wasDroppedByMaxLod = false;
+                entry.hadAnyLOD = false;
+                entry.count++;
+
+                if (sd.asset != null && !UMAMeshData.IsNullOrEmptyMeshData(sd.asset.meshData))
+                {
+                    int sm = sd.asset.subMeshIndex;
+                    if (sm >= 0 && sm < sd.asset.meshData.subMeshCount)
+                    {
+                        var smt = sd.asset.meshData.submeshes[sm];
+                        if (smt != null)
+                        {
+                            int lodCount = smt.LODCount();
+                            entry.slotLodCount = lodCount;
+                            if (lodCount > 1)
+                            {
+                                anyHasLOD = true;
+                                entry.hadAnyLOD = true;
+
+                                int slotDesired = desiredLOD;
+                                if (slotDesired < 0) slotDesired = 0;
+                                if (slotDesired >= lodCount) slotDesired = lodCount - 1;
+
+                                int chosenLod = lodCount - 1;
+                                for (int l = slotDesired; l < lodCount; l++)
+                                {
+                                    if (smt.HasLODLevel(l) && smt.GetTriangleCount(l) > 0)
+                                    {
+                                        chosenLod = l;
+                                        break;
+                                    }
+                                }
+                                entry.actualChosenLod = chosenLod;
+                            }
+                        }
+                    }
+                }
+
+                // Check MaxLod dropping (matches the renderer loop condition)
+                if (!entry.wasSuppressed && sd.MaxLod > -1 && desiredLOD > sd.MaxLod)
+                {
+                    entry.wasDroppedByMaxLod = true;
+                }
+
+                SlotLodStatuses[key] = entry;
             }
+
             if (!anyHasLOD)
             {
                 Debug.Log("[UMASimpleLOD] No slots with multiple LODs found; skipping internal LOD update.");
-                // Nothing with multiple LODs � just keep UMAData in sync and exit
+                // Nothing with multiple LODs — just keep UMAData in sync and exit
                 _umaData.currentLODLevel = desiredLOD;
                 return;
             }
@@ -612,16 +699,65 @@ namespace UMA.Examples
                     submeshIndices[targetSubmesh].AddRange(localTris);
                 }
 
+                CopySecondPassSubmeshIndices(r, submeshIndices);
+
                 // Push new indices back to the Mesh. Only indices change; vertices, bones stay intact.
                 var mesh = smr.sharedMesh;
                 for (int sm = 0; sm < subMeshCount; sm++)
                 {
-                    Debug.Log("Updating renderer " + r + " submesh " + sm + " with " + submeshIndices[sm].Count + " indices for LOD " + desiredLOD);    
+                    //Debug.Log("Updating renderer " + r + " submesh " + sm + " with " + submeshIndices[sm].Count + " indices for LOD " + desiredLOD);    
                     var arr = submeshIndices[sm].Count > 0 ? submeshIndices[sm].ToArray() : Array.Empty<int>();
                     // SetIndices updates only the given submesh
                     mesh.SetIndices(arr, MeshTopology.Triangles, sm, false);
                 }
                 // Not changing bounds; leave as-is for performance. If needed: mesh.RecalculateBounds();
+            }
+
+            sw.Stop();
+            double elapsedMS = sw.Elapsed.TotalMilliseconds;
+            TotalLodUpdateMS += elapsedMS;
+
+            // Add the elapsed time to every slot that was part of this update.
+            // Snapshot keys first — dict[key]=value bumps the version counter in Unity's runtime.
+            var keys = new List<string>(SlotLodStatuses.Keys);
+            for (int i = 0; i < keys.Count; i++)
+            {
+                var entry = SlotLodStatuses[keys[i]];
+                entry.totalMS += elapsedMS;
+                SlotLodStatuses[keys[i]] = entry;
+            }
+
+#if UNITY_EDITOR
+            // Force the inspector to repaint so the LOD status grid updates promptly
+            UnityEditor.EditorUtility.SetDirty(this);
+#endif
+        }
+
+        private void CopySecondPassSubmeshIndices(int rendererIndex, List<int>[] submeshIndices)
+        {
+            if (_umaData == null || _umaData.generatedMaterials == null || _umaData.generatedMaterials.materials == null || submeshIndices == null)
+                return;
+
+            var rendererAsset = _umaData.GetRendererAsset(rendererIndex);
+            var materials = _umaData.generatedMaterials.materials;
+            int finalSubmeshIndex = 0;
+
+            for (int i = 0; i < materials.Count; i++)
+            {
+                var generatedMaterial = materials[i];
+                if (generatedMaterial == null || generatedMaterial.rendererAsset != rendererAsset)
+                    continue;
+
+                int firstPassIndex = finalSubmeshIndex++;
+                if (generatedMaterial.umaMaterial == null || generatedMaterial.umaMaterial.secondPass == null)
+                    continue;
+
+                int secondPassIndex = finalSubmeshIndex++;
+                if (firstPassIndex < 0 || firstPassIndex >= submeshIndices.Length || secondPassIndex < 0 || secondPassIndex >= submeshIndices.Length)
+                    continue;
+
+                submeshIndices[secondPassIndex].Clear();
+                submeshIndices[secondPassIndex].AddRange(submeshIndices[firstPassIndex]);
             }
         }
 
@@ -657,7 +793,7 @@ namespace UMA.Examples
         // Apply BufferZone/BufferPercent hysteresis around the current LOD boundaries
         private int ApplyBufferHysteresis(int currentLevel, int targetLevel, float cameraDistance)
         {
-            Debug.Log("Applying hysteresis: currentLevel=" + currentLevel + " targetLevel=" + targetLevel + " cameraDistance=" + cameraDistance);
+            //Debug.Log("Applying hysteresis: currentLevel=" + currentLevel + " targetLevel=" + targetLevel + " cameraDistance=" + cameraDistance);
             if (currentLevel < 0) return targetLevel; // first time, adopt target
             if (targetLevel == currentLevel) return currentLevel;
 
@@ -791,7 +927,7 @@ namespace UMA.Examples
 
         private bool ProcessRecipe(int currentLevel)
         {
-            Debug.Log("Processing recipe for LOD level " + currentLevel);
+            //Debug.Log("Processing recipe for LOD level " + currentLevel);
             bool changedSlots = false;
 
             if (_umaData.umaRecipe.slotDataList == null)

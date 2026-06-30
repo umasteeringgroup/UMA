@@ -14,14 +14,14 @@ namespace UMA.Editors
 			Undo.RecordObject(generator, "Toggle Scene Bone Baking");
 			if (generator.meshCombiner is UMABoneBakingMeshCombiner)
 			{
-				var defaultMeshCombiner = Object.FindObjectOfType<UMADefaultMeshCombiner>();
+				var defaultMeshCombiner = Object.FindFirstObjectByType<UMADefaultMeshCombiner>();
 				if (defaultMeshCombiner == null)
 					defaultMeshCombiner = Spawn<UMADefaultMeshCombiner>(generator.transform.parent);
 				generator.meshCombiner = defaultMeshCombiner;
 			}
 			else
 			{
-				var boneBakingMeshCombiner = Object.FindObjectOfType<UMABoneBakingMeshCombiner>();
+				var boneBakingMeshCombiner = Object.FindFirstObjectByType<UMABoneBakingMeshCombiner>();
 				if (boneBakingMeshCombiner == null)
 					boneBakingMeshCombiner = Spawn<UMABoneBakingMeshCombiner>(generator.transform.parent);
 				generator.meshCombiner = boneBakingMeshCombiner;

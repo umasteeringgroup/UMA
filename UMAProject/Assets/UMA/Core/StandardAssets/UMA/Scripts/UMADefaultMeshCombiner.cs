@@ -706,13 +706,6 @@ private static Dictionary<string, float> BuildBakedBlendshapeDict(BlendShapeSett
                     if (slotData.meshHideMask != null)
                         combineInstance.triangleMask = slotData.meshHideMask;
 
-                 // Do not generate internal-LOD triangle masks for the legacy combiner.
-                    // Legacy `SkinnedMeshCombiner` always copies the base triangle buffer (`GetTriangles()`),
-                    // so a mask sized from `GetTriangles(lod)` will not match and will trigger runtime errors.
-#if UNITY_6000_2_OR_NEWER
-                   // Intentionally left as MeshHide-only. Internal LOD is applied later when the final mesh is set up via LOD ranges.
-#endif
-
                     var smCount2 = combineInstance.meshData.subMeshCount;
                     if (smCount2 == 0) continue;
 
@@ -739,6 +732,7 @@ private static Dictionary<string, float> BuildBakedBlendshapeDict(BlendShapeSett
             _submeshBuffer.Clear();
             var mesh = renderer.sharedMesh;
             var submeshCount = mesh.subMeshCount;
+
             for (int i = 0; i < combinedMaterialList.Count; i++)
             {
                 if (i >= submeshCount) break;
@@ -747,11 +741,17 @@ private static Dictionary<string, float> BuildBakedBlendshapeDict(BlendShapeSett
                 if (firstPass == null)
                     continue;
 
-                _materialBuffer.Add(firstPass);
                 var subMesh = mesh.GetSubMesh(i);
+                int firstPassSubmeshIndex = _submeshBuffer.Count;
                 _submeshBuffer.Add(subMesh);
+                _materialBuffer.Add(firstPass);
+
                 for (int k = 0; k < cm.materialFragments.Count; k++)
-                    cm.materialFragments[k].slotData.submeshIndex = i;
+                {
+                    if (cm.materialFragments[k].slotData != null)
+                        cm.materialFragments[k].slotData.submeshIndex = firstPassSubmeshIndex;
+                }
+
                 if (cm.umaMaterial.materialType == UMAMaterial.MaterialType.UseExistingTextures)
                 {
                     UMAGeneratorPro.ApplyMaterialParameters(cm, umaData, firstPass);

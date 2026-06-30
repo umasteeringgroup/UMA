@@ -61,6 +61,11 @@ public class DNAEditor : Editor
 
     private void OnEnable()
     {
+        // Force re-initialization after domain reload — non-serialized fields
+        // like effectTypes/effectNames are lost, and Initialize() running from
+        // OnInspectorGUI may race with assembly loading.
+        initialized = false;
+
         // Load persisted UI state
         editorExpanded = EditorPrefs.GetBool(PrefKey_AddNewExpanded, true);
 
@@ -69,6 +74,9 @@ public class DNAEditor : Editor
         {
             dcaContext = ctx;
         }
+
+        // Eagerly populate effect types so they're ready before the first repaint
+        Initialize();
     }
 
     private void OnDisable()
@@ -81,7 +89,7 @@ public class DNAEditor : Editor
     void Initialize()
     {
         if (initialized) return;
-        initialized = true;
+
         // Find all non-abstract, non-generic subclasses of DNAEffect
         var baseType = typeof(DNAEffect);
         var assemblies = AppDomain.CurrentDomain.GetAssemblies();
@@ -92,6 +100,7 @@ public class DNAEditor : Editor
             Type[] types;
             try { types = asm.GetTypes(); }
             catch (ReflectionTypeLoadException e) { types = e.Types; }
+            catch { continue; }
             if (types == null) continue;
             foreach (var t in types)
             {
@@ -105,6 +114,11 @@ public class DNAEditor : Editor
         }
         effectTypes = typesList.ToArray();
         effectTypeNames = namesList.ToArray();
+
+        // Only mark initialized if we actually found types; otherwise leave
+        // initialized=false so the next call (e.g., after assembly reload
+        // completes) retries the reflection scan.
+        initialized = (effectTypes.Length > 0);
     }
 
     public override void OnInspectorGUI()
@@ -192,6 +206,22 @@ public class DNAEditor : Editor
             }
         }
         GUILayout.EndHorizontal();
+        GUILayout.BeginHorizontal();
+        if (GUILayout.Button("Disable all"))
+        {
+            foreach (var effect in targetDNA.effects)
+            {
+                effect.enabled = false;
+            }
+        }
+        if (GUILayout.Button("Enable all"))
+        {
+            foreach (var effect in targetDNA.effects)
+            {
+                effect.enabled = true;
+            }
+        }
+        GUILayout.EndHorizontal();
         int deleteme = -1;
         for (int i = 0; i < targetDNA.effects.Count; i++)
         {
@@ -227,7 +257,9 @@ public class DNAEditor : Editor
         }
         bool deletemeFlag = false;
         bool selected = effect.selected;
-        effect.expanded = GUIHelper.FoldoutBarWithDeleteAndSelect(effect.expanded, effect.title, ref selected, out deletemeFlag);
+        string effectTitle = effect.title + (effect.enabled == false ? " (Disabled)" : "");
+
+        effect.expanded = GUIHelper.FoldoutBarWithDeleteAndSelect(effect.expanded, effectTitle, ref selected, out deletemeFlag);
         effect.selected = selected;
 
         if (deletemeFlag)
@@ -256,7 +288,7 @@ public class DNAEditor : Editor
                 deleteme = i; // Mark this index for deletion
             }
             EditorGUILayout.EndHorizontal();
-
+            effect.enabled = EditorGUILayout.Toggle("Enabled", effect.enabled);
             // Custom drawing for bone effects to add bone picker next to text field
             if (!DrawBoneEffectGUIWithPicker(effect, targetDNA, showHelp))
             {
@@ -311,6 +343,11 @@ public class DNAEditor : Editor
     {
         GUIHelper.BeginVerticalPadded(3, new Color(0.75f, 0.875f, 1f, 0.3f));
         EditorGUILayout.LabelField("Add the New Effect", EditorStyles.boldLabel);
+
+        if (!initialized)
+        {
+            Initialize();
+        }
 
         if (effectTypes != null && effectTypes.Length > 0)
         {
@@ -481,12 +518,35 @@ public class DNAEditor : Editor
         return null;
     }
 
+    /// <summary>
+    /// Finds the first DynamicCharacterAvatar in any open scene. Returns null if none found.
+    /// </summary>
+    private static DynamicCharacterAvatar FindFirstSceneDCA()
+    {
+        for (int i = 0; i < SceneManager.sceneCount; i++)
+        {
+            var scene = SceneManager.GetSceneAt(i);
+            if (!scene.isLoaded) continue;
+            var roots = scene.GetRootGameObjects();
+            for (int j = 0; j < roots.Length; j++)
+            {
+                var dca = roots[j].GetComponentInChildren<DynamicCharacterAvatar>(true);
+                if (dca != null) return dca;
+            }
+        }
+        return null;
+    }
+
     // Returns true if handled with custom drawer
     private bool DrawBoneEffectGUIWithPicker(DNAEffect effect, DNA owner, bool showHelp)
     {
-        // Only show picker when active selection has a DCA
+        // Resolve DCA: prefer active selection, fall back to first scene DCA
         var activeGO = Selection.activeGameObject;
-        var dca = activeGO != null ? activeGO.GetComponent<DynamicCharacterAvatar>() : null;
+        var dca = (activeGO != null) ? activeGO.GetComponent<DynamicCharacterAvatar>() : null;
+        if (dca == null)
+        {
+            dca = FindFirstSceneDCA();
+        }
 
         if (effect is DNAEffect_BoneTranslate e1)
         {
@@ -677,54 +737,81 @@ public class DNAEditor : Editor
             EditorUtility.SetDirty(owner);
             BuildCharacterIfPossible();
         }
-        using (new EditorGUI.DisabledScope(dca == null))
+
+        if (GUILayout.Button("Pick Bone...", GUILayout.Width(90)))
         {
-            if (GUILayout.Button("\u25BE", GUILayout.Width(24)))
+            if (dca == null)
+                dca = FindFirstSceneDCA();
+
+            string filter = getBone();
+            ShowBonePickerMenu(dca, filter, (picked) =>
             {
-                ShowBonePickerMenu(dca, (picked) =>
+                Undo.RecordObject(owner, "Set Bone Name");
+                setBone(picked);
+                if (string.IsNullOrEmpty(effect.EffectName))
                 {
-                    Undo.RecordObject(owner, "Set Bone Name");
-                    setBone(picked);
-                    // If EffectName is blank, set a helpful default label
-                    if (string.IsNullOrEmpty(effect.EffectName))
-                    {
-                        effect.EffectName = $"{effect.baseEffectName}: {picked}";
-                    }
-                    EditorUtility.SetDirty(owner);
-                    Repaint();
-                });
-            }
+                    effect.EffectName = $"{effect.baseEffectName}: {picked}";
+                }
+                EditorUtility.SetDirty(owner);
+                Repaint();
+            });
         }
         EditorGUILayout.EndHorizontal();
-        if (dca == null && showHelp)
+        if (dca == null)
         {
-            EditorGUILayout.HelpBox("Select a DynamicCharacterAvatar in the hierarchy to enable the bone picker.", MessageType.Info);
+            EditorGUILayout.HelpBox("No DynamicCharacterAvatar found in selection or scene. Type a bone name manually, or place a DCA in the scene to enable the bone picker.", MessageType.Info);
         }
     }
 
-    private void ShowBonePickerMenu(DynamicCharacterAvatar dca, Action<string> onPicked)
+    private void ShowBonePickerMenu(DynamicCharacterAvatar dca, string filter, Action<string> onPicked)
     {
-        if (dca == null) return;
-        var names = CollectBoneNames(dca);
         var menu = new GenericMenu();
-        // Group by first camel word
-        foreach (var name in names)
+
+        if (dca == null)
         {
-            if (string.IsNullOrEmpty(name)) continue;
-            string first;
-            string rest;
-            SplitCamelFirstAndRest(name, out first, out rest);
-            if (string.IsNullOrEmpty(first)) first = name;
-            if (string.IsNullOrEmpty(rest)) rest = name; // ensure selectable item
-            var content = new GUIContent(first + "/" + rest);
-            menu.AddItem(content, false, (obj) =>
-            {
-                onPicked?.Invoke((string)obj);
-            }, name);
+            menu.AddDisabledItem(new GUIContent("No DCA in selection or scene"));
+            menu.AddDisabledItem(new GUIContent("Place a DynamicCharacterAvatar in the scene first"));
+            menu.ShowAsContext();
+            return;
         }
+
+        var names = CollectBoneNames(dca);
+
+        // Filter names by the search string (case-insensitive contains)
+        if (!string.IsNullOrEmpty(filter))
+        {
+            var filtered = new List<string>(names.Count);
+            for (int i = 0; i < names.Count; i++)
+            {
+                if (names[i].IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0)
+                    filtered.Add(names[i]);
+            }
+            names = filtered;
+        }
+
         if (names.Count == 0)
         {
-            menu.AddDisabledItem(new GUIContent("No bones found"));
+            menu.AddDisabledItem(new GUIContent(string.IsNullOrEmpty(filter)
+                ? "No bones found on this DCA"
+                : $"No bones matching \"{filter}\""));
+        }
+        else
+        {
+            // Group by first camel word
+            foreach (var name in names)
+            {
+                if (string.IsNullOrEmpty(name)) continue;
+                string first;
+                string rest;
+                SplitCamelFirstAndRest(name, out first, out rest);
+                if (string.IsNullOrEmpty(first)) first = name;
+                if (string.IsNullOrEmpty(rest)) rest = name;
+                var content = new GUIContent(first + "/" + rest);
+                menu.AddItem(content, false, (obj) =>
+                {
+                    onPicked?.Invoke((string)obj);
+                }, name);
+            }
         }
         menu.ShowAsContext();
     }

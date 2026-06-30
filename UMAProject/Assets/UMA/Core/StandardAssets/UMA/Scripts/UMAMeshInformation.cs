@@ -9,6 +9,7 @@ namespace UMA
     [DisallowMultipleComponent]
     public class UMAMeshInformation : MonoBehaviour
     {
+#pragma warning disable CS0414 // fields assigned via Unity serialization, read via inspector
         [SerializeField] private string _meshType = "None";
         [SerializeField] private string _meshName = "";
         [SerializeField] private int _vertexCount;
@@ -30,6 +31,7 @@ namespace UMA
         [SerializeField] private int _colorCount;
         [SerializeField] private int _uvChannelCount;
         [SerializeField] private int[] _uvChannelVertexCounts = new int[0];
+#pragma warning restore CS0414
 
         private void Awake()
         {

@@ -19,15 +19,16 @@ MonoBehaviour:
   - rid: 7828207344866296360
   - rid: 7828207344866296361
   - rid: 7828207344866296362
-  - rid: 7828207344866296363
-  - rid: 7828207344866296364
   - rid: 7828207344866296365
   - rid: 7828207344866296366
+  - rid: 4044962116219175899
+  - rid: 4044962116778590459
+  - rid: 4044962116778590460
   displayName: upperMuscle
   references:
     version: 2
     RefIds:
-    - rid: 7828207344866296359
+    - rid: 4044962116219175899
       type: {class: DNAEffect_BoneScale, ns: UMA, asm: UMA_Core}
       data:
         curve:
@@ -35,9 +36,144 @@ MonoBehaviour:
           m_Curve:
           - serializedVersion: 3
             time: 0
-            value: 0.43
-            inSlope: 0.13999999
-            outSlope: 0.13999999
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.5
+            value: 0.5
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        minMapping: -1
+        maxMapping: 1
+        expanded: 0
+        selected: 0
+        showHelp: 0
+        enabled: 1
+        EffectName: Neck
+        BoneName: NeckAdjust
+        ScaleFactor: {x: 0.6, y: 0, z: 0.5}
+    - rid: 4044962116778590459
+      type: {class: DNAEffect_BoneScale, ns: UMA, asm: UMA_Core}
+      data:
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.5
+            value: 0.5
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        minMapping: -1
+        maxMapping: 1
+        expanded: 0
+        selected: 0
+        showHelp: 0
+        enabled: 1
+        EffectName: RightArmAdjust
+        BoneName: RightArmAdjust
+        ScaleFactor: {x: 0.4, y: 0, z: 0.4}
+    - rid: 4044962116778590460
+      type: {class: DNAEffect_BoneScale, ns: UMA, asm: UMA_Core}
+      data:
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.5
+            value: 0.5
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        minMapping: -1
+        maxMapping: 1
+        expanded: 0
+        selected: 0
+        showHelp: 0
+        enabled: 1
+        EffectName: LeftArmAdjust
+        BoneName: LeftArmAdjust
+        ScaleFactor: {x: 0.4, y: 0, z: 0.4}
+    - rid: 7828207344866296359
+      type: {class: DNAEffect_BoneScale, ns: UMA, asm: UMA_Core}
+      data:
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: -0.043312073
+            value: 0.47315186
+            inSlope: 0.049415685
+            outSlope: 0.049415685
             tangentMode: 34
             weightedMode: 0
             inWeight: 0
@@ -45,8 +181,8 @@ MonoBehaviour:
           - serializedVersion: 3
             time: 0.5
             value: 0.5
-            inSlope: 0.13999999
-            outSlope: 0.13999999
+            inSlope: 0.09470783
+            outSlope: 0.09470783
             tangentMode: 34
             weightedMode: 0
             inWeight: 0.33333334
@@ -65,11 +201,13 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
-        expanded: 1
+        expanded: 0
         selected: 0
+        showHelp: 0
+        enabled: 1
         EffectName: Spine1Adjust
         BoneName: Spine1Adjust
-        ScaleFactor: {x: 1, y: 1, z: 1}
+        ScaleFactor: {x: 1, y: 0.2, z: 0}
     - rid: 7828207344866296360
       type: {class: DNAEffect_BoneScale, ns: UMA, asm: UMA_Core}
       data:
@@ -110,9 +248,11 @@ MonoBehaviour:
         maxMapping: 1
         expanded: 0
         selected: 1
+        showHelp: 0
+        enabled: 1
         EffectName: SpineAdjust
         BoneName: SpineAdjust
-        ScaleFactor: {x: 1, y: 1, z: 1}
+        ScaleFactor: {x: 0.6, y: 0, z: 0}
     - rid: 7828207344866296361
       type: {class: DNAEffect_BoneScale, ns: UMA, asm: UMA_Core}
       data:
@@ -151,11 +291,13 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
-        expanded: 0
+        expanded: 1
         selected: 1
+        showHelp: 0
+        enabled: 1
         EffectName: LeftTrapezius
         BoneName: LeftTrapezius
-        ScaleFactor: {x: 1, y: 1, z: 1}
+        ScaleFactor: {x: 1, y: -1, z: 5}
     - rid: 7828207344866296362
       type: {class: DNAEffect_BoneScale, ns: UMA, asm: UMA_Core}
       data:
@@ -194,97 +336,13 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
-        expanded: 0
+        expanded: 1
         selected: 1
+        showHelp: 0
+        enabled: 1
         EffectName: RightTrapezius
         BoneName: RightTrapezius
-        ScaleFactor: {x: 1, y: 1, z: 1}
-    - rid: 7828207344866296363
-      type: {class: DNAEffect_BoneScale, ns: UMA, asm: UMA_Core}
-      data:
-        curve:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 0.43
-            inSlope: 0.13999999
-            outSlope: 0.13999999
-            tangentMode: 34
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0.33333334
-          - serializedVersion: 3
-            time: 0.5
-            value: 0.5
-            inSlope: 0.13999999
-            outSlope: 0.13999999
-            tangentMode: 34
-            weightedMode: 0
-            inWeight: 0.33333334
-            outWeight: 0.33333334
-          - serializedVersion: 3
-            time: 1
-            value: 0.57
-            inSlope: 0.13999999
-            outSlope: 0.13999999
-            tangentMode: 34
-            weightedMode: 0
-            inWeight: 0.33333334
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-        minMapping: -1
-        maxMapping: 1
-        expanded: 0
-        selected: 1
-        EffectName: LeftShoulderAdjust
-        BoneName: LeftShoulderAdjust
-        ScaleFactor: {x: 1, y: 1, z: 1}
-    - rid: 7828207344866296364
-      type: {class: DNAEffect_BoneScale, ns: UMA, asm: UMA_Core}
-      data:
-        curve:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 0.43
-            inSlope: 0.13999999
-            outSlope: 0.13999999
-            tangentMode: 34
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0.33333334
-          - serializedVersion: 3
-            time: 0.5
-            value: 0.5
-            inSlope: 0.13999999
-            outSlope: 0.13999999
-            tangentMode: 34
-            weightedMode: 0
-            inWeight: 0.33333334
-            outWeight: 0.33333334
-          - serializedVersion: 3
-            time: 1
-            value: 0.57
-            inSlope: 0.13999999
-            outSlope: 0.13999999
-            tangentMode: 34
-            weightedMode: 0
-            inWeight: 0.33333334
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-        minMapping: -1
-        maxMapping: 1
-        expanded: 0
-        selected: 1
-        EffectName: RightShoulderAdjust
-        BoneName: RightShoulderAdjust
-        ScaleFactor: {x: 1, y: 1, z: 1}
+        ScaleFactor: {x: 1, y: -1, z: 5}
     - rid: 7828207344866296365
       type: {class: DNAEffect_BoneTranslate, ns: UMA, asm: UMA_Core}
       data:
@@ -325,9 +383,11 @@ MonoBehaviour:
         maxMapping: 1
         expanded: 0
         selected: 1
+        showHelp: 0
+        enabled: 1
         EffectName: LeftShoulder
         BoneName: LeftShoulder
-        Translation: {x: 0, y: 0, z: 0}
+        Translation: {x: -0.3, y: 0, z: 0}
     - rid: 7828207344866296366
       type: {class: DNAEffect_BoneTranslate, ns: UMA, asm: UMA_Core}
       data:
@@ -368,6 +428,8 @@ MonoBehaviour:
         maxMapping: 1
         expanded: 0
         selected: 1
+        showHelp: 0
+        enabled: 1
         EffectName: RightShoulder
         BoneName: RightShoulder
-        Translation: {x: 0, y: 0, z: 0}
+        Translation: {x: 0.3, y: 0, z: 0}

@@ -262,12 +262,10 @@ namespace UMA
 
 			for (int i = 0; i < genMaterials.Count; i++)
 			{
-				if (i >= baseSubMeshCount) break;
-
 				var gm = genMaterials[i];
 
-				// First pass
-				var subMesh = mesh.GetSubMesh(i);
+				// First pass — use existing submesh if available, otherwise empty
+				var subMesh = i < baseSubMeshCount ? mesh.GetSubMesh(i) : new UnityEngine.Rendering.SubMeshDescriptor(0, 0, MeshTopology.Triangles);
 				newSubMeshes.Add(subMesh);
 				newMaterials.Add(i < currentMats.Length ? currentMats[i] : null);
 
@@ -464,7 +462,7 @@ namespace UMA
 				}
 			}
 
-#if UNITY_EDITOR
+#if false
 			if (identityBindPoses > 0 && identityBindPoses == totalBindPoses)
 			{
 				Debug.LogWarning($"[UMABoneBakingMeshCombiner] PopulateMatrix: ALL {totalBindPoses} bind poses are identity. " +
@@ -576,12 +574,14 @@ namespace UMA
                 {
 					var materialDefinition = generatedMaterial.materialFragments[materialDefinitionIndex];
 					var slotData = materialDefinition.slotData;
-				// Shallow-copy the asset mesh data to prevent mutating shared
-				// asset state across builds. The bone-baking combiner pipeline
-				// (ConvertLegacyBoneWeights / LoadBoneWeights) writes to
-				// ManagedBoneWeights, ManagedBonesPerVertex, and vertexCount
-				// on the source, which would permanently corrupt the asset.
-				var md = slotData.asset.meshData;
+					if (slotData == null || slotData.asset == null || UMAMeshData.IsNullOrEmptyMeshData(slotData.asset.meshData)) continue;
+
+					// Shallow-copy the asset mesh data to prevent mutating shared
+					// asset state across builds. The bone-baking combiner pipeline
+					// (ConvertLegacyBoneWeights / LoadBoneWeights) writes to
+					// ManagedBoneWeights, ManagedBonesPerVertex, and vertexCount
+					// on the source, which would permanently corrupt the asset.
+					var md = slotData.asset.meshData;
 				combineInstance = new SkinnedMeshCombinerRetargeting.CombineInstance();
 				combineInstance.meshData = md.ShallowCopy(null);
 

@@ -109,6 +109,63 @@ namespace UMA.Editors
             return totalTriangles;
         }
 
+        private static void DrawCurrentLodStatusGrid(UMASimpleLOD lod)
+        {
+            if (lod == null)
+                return;
+
+            var statuses = lod.SlotLodStatuses;
+            if (statuses == null || statuses.Count == 0)
+            {
+                EditorGUILayout.HelpBox("No LOD status data available. LOD has not been updated yet.", MessageType.Info);
+                return;
+            }
+
+            EditorGUILayout.LabelField("Current LOD Status", EditorStyles.boldLabel);
+
+            // Header row
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Slot Name", EditorStyles.boldLabel, GUILayout.MinWidth(100));
+            EditorGUILayout.LabelField("LODs", EditorStyles.boldLabel, GUILayout.Width(40));
+            EditorGUILayout.LabelField("Level", EditorStyles.boldLabel, GUILayout.Width(45));
+            EditorGUILayout.LabelField("Calls", EditorStyles.boldLabel, GUILayout.Width(45));
+            EditorGUILayout.LabelField("MS", EditorStyles.boldLabel, GUILayout.Width(55));
+            EditorGUILayout.LabelField("Status", EditorStyles.boldLabel, GUILayout.Width(85));
+            EditorGUILayout.EndHorizontal();
+
+            foreach (var kvp in statuses)
+            {
+                var entry = kvp.Value;
+                if (string.IsNullOrEmpty(entry.slotName))
+                    continue;
+
+                string status;
+                if (entry.wasSuppressed)
+                    status = "Suppressed";
+                else if (entry.wasDroppedByMaxLod)
+                    status = "Dropped";
+                else if (!entry.hadAnyLOD)
+                    status = "No LODs";
+                else
+                    status = "OK";
+
+                string lodCountStr = entry.slotLodCount > 0 ? entry.slotLodCount.ToString() : "-";
+                string levelStr = entry.hadAnyLOD ? entry.actualChosenLod.ToString() : "-";
+
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField(entry.slotName, GUILayout.MinWidth(100));
+                EditorGUILayout.LabelField(lodCountStr, GUILayout.Width(40));
+                EditorGUILayout.LabelField(levelStr, GUILayout.Width(45));
+                EditorGUILayout.LabelField(entry.count.ToString(), GUILayout.Width(45));
+                EditorGUILayout.LabelField(entry.totalMS.ToString("F1"), GUILayout.Width(55));
+                EditorGUILayout.LabelField(status, GUILayout.Width(85));
+                EditorGUILayout.EndHorizontal();
+            }
+
+            EditorGUILayout.Space(3);
+            EditorGUILayout.LabelField("Total Update MS: " + lod.TotalLodUpdateMS.ToString("F1"), EditorStyles.boldLabel);
+        }
+
         private static string GetSlotKey(SlotData slot)
         {
             if (slot == null)
@@ -329,57 +386,59 @@ namespace UMA.Editors
                         "When enabled, you can force a specific LOD level at edit time."),
                         lod.editorOverrideLOD);
 
-                            using (new EditorGUI.DisabledScope(!lod.editorOverrideLOD))
-                            {
-                                int max = lod.maxLOD;
-                                if (max < 1)
-                                {
-                                    max = 1;
-                                }
-
-                                int currentForced = Mathf.Clamp(lod.editorForcedLOD, 0, max - 1);
-                                int desired = EditorGUILayout.IntSlider(new GUIContent(
-                                    "Current LOD Level",
-                                    "Forces the UMA to rebuild at the selected LOD level (edit time)."),
-                                    currentForced,
-                                    0,
-                                    max - 1);
-
-                                // Display current triangle count
-                                int triangleCount = GetCurrentTriangleCount(lod);
-                                if (triangleCount >= 0)
-                                {
-                                    EditorGUILayout.LabelField("Triangle Count", triangleCount.ToString("N0"));
-                                }
-
-                                if (desired != currentForced)
-                                {
-
-                                    lod.editorForcedLOD = desired;
-                                    lod.DoManualLODCheck(desired);
-                                    if (lod.useInternalMeshLOD)
-                                    {
-                                        lod.UpdateInternalLOD();
-                                        return;
-                                    }
-                                    EditorUtility.SetDirty(lod);
-                                    ForceEditTimeRebuild(lod.gameObject);
-                                }
-                            }
-                        }
-                    }
-
-                    if(Application.isPlaying)
+                    using (new EditorGUI.DisabledScope(!lod.editorOverrideLOD))
                     {
-                        EditorGUILayout.LabelField("Current LOD", lod.CurrentLOD.ToString());
-
-                        // Display current triangle count in play mode too
-                        int playModeTriCount = GetCurrentTriangleCount(lod);
-                        if (playModeTriCount >= 0)
+                        int max = lod.maxLOD;
+                        if (max < 1)
                         {
-                            EditorGUILayout.LabelField("Triangle Count", playModeTriCount.ToString("N0"));
+                            max = 1;
+                        }
+
+                        int currentForced = Mathf.Clamp(lod.editorForcedLOD, 0, max - 1);
+                        int desired = EditorGUILayout.IntSlider(new GUIContent(
+                            "Current LOD Level",
+                            "Forces the UMA to rebuild at the selected LOD level (edit time)."),
+                            currentForced,
+                            0,
+                            max - 1);
+
+                        // Display current triangle count
+                        int triangleCount = GetCurrentTriangleCount(lod);
+                        if (triangleCount >= 0)
+                        {
+                            EditorGUILayout.LabelField("Triangle Count", triangleCount.ToString("N0"));
+                        }
+
+                        if (desired != currentForced)
+                        {
+                            lod.editorForcedLOD = desired;
+                            lod.DoManualLODCheck(desired);
+                            if (lod.useInternalMeshLOD)
+                            {
+                                lod.UpdateInternalLOD();
+                                return;
+                            }
+                            EditorUtility.SetDirty(lod);
+                            ForceEditTimeRebuild(lod.gameObject);
                         }
                     }
+                }
+            }
+
+            if (Application.isPlaying)
+            {
+                EditorGUILayout.LabelField("Current LOD", lod.CurrentLOD.ToString());
+
+                // Display current triangle count in play mode too
+                int playModeTriCount = GetCurrentTriangleCount(lod);
+                if (playModeTriCount >= 0)
+                {
+                    EditorGUILayout.LabelField("Triangle Count", playModeTriCount.ToString("N0"));
+                }
+
+                EditorGUILayout.Space(5);
+                DrawCurrentLodStatusGrid(lod);
+            }
 
             DrawDefaultInspector();
 

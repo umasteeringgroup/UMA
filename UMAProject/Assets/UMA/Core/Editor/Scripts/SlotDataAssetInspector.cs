@@ -579,6 +579,16 @@ namespace UMA.Editors
                                     string.Format("LOD{0}", i),
                                     string.Format("triangles={0}, offset={1}, count={2}", triCount, r.offset, r.count));
                             }
+
+                            EditorGUILayout.Space(5);
+                            if (GUILayout.Button("Remove all LOD"))
+                            {
+                                int[] lod0 = smt.GetBaseTriangles();
+                                smt.SetTriangles(lod0);
+                                smt.SetLodRanges(null);
+                                EditorUtility.SetDirty(slot);
+                                AssetDatabase.SaveAssetIfDirty(slot);
+                            }
                         }
                         else
                         {

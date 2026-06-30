@@ -153,7 +153,7 @@ namespace UMA.Editors
             serializedObject.ApplyModifiedProperties();
         }
 
-        private void DrawHeader()
+        private new void DrawHeader()
         {
             GUILayout.Space(4);
 

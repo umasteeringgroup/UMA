@@ -25,7 +25,7 @@ namespace UMA.Editors
 					selectedTransform = selectedTransform.parent;
 					avatar = selectedTransform.GetComponent<UMAAvatarBase>();
 				}
-				if (avatar != null && PrefabUtility.GetPrefabObject(avatar.umaData.umaRoot) == null)
+				if (avatar != null && !PrefabUtility.IsPartOfPrefabInstance(avatar.umaData.umaRoot))
 				{
 					if (saved.Add(avatar))
 					{

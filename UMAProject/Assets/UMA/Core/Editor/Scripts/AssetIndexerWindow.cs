@@ -2409,7 +2409,7 @@ namespace UMA.Controls
         #endregion
 
         #region GUI Rectangles
-        int sidePanelWidth = 300;
+        int sidePanelWidth = 380;
 
         float positionwidth
         {
@@ -2884,11 +2884,11 @@ namespace UMA.Controls
             GUILayout.Label("Utilities Panel", EditorStyles.toolbarButton,GUILayout.ExpandWidth(true));
             GUILayout.BeginHorizontal();
 
-            if (GUILayout.Button("Sel None"))
+            if (GUILayout.Button("Clear Selection"))
             {
                 ClearSelection();
             }
-            if (GUILayout.Button("Sel All"))
+            if (GUILayout.Button("Select All"))
             {
                 SelectAll();
             }
@@ -3467,7 +3467,7 @@ namespace UMA.Controls
             {
                 umaTexture = EditorGUILayout.ObjectField("Texture: ", umaTexture, typeof(Texture2D), false) as Texture2D;
 
-                if (GUILayout.Button("Find texture in OVL"))
+                if (GUILayout.Button("Find texture in Overlays"))
                 {
                     FindOverlaysWithTexture(umaTexture);
                 }
@@ -4672,7 +4672,7 @@ namespace UMA.Controls
 			}
 
 			MenuRect.x += 100;
-			MenuRect.width = 100;
+			MenuRect.width = 200;
 
 			bool newShowUtilities = GUI.Toggle(MenuRect, ShowUtilities, "Show Utilities", EditorStyles.toolbarButton);
 
@@ -4684,13 +4684,13 @@ namespace UMA.Controls
 
             if (UAI != null && EditorUtility.IsDirty(UAI))
             {
-                MenuRect.x += 100;
+                MenuRect.x += 200;
                 MenuRect.width = 150;
                 GUI.Label(MenuRect, new GUIContent("Unsaved Changes"), EditorStyles.boldLabel);
             }
 
             Rect FillRect = new Rect(rect);
-			FillRect.x += 530;
+			FillRect.x += 700;
 			FillRect.width -= 530;
 			GUI.Box(FillRect, "", EditorStyles.toolbar);
         }

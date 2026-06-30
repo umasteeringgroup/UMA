@@ -1,0 +1,4 @@
+[*.cs]
+
+# IDE0052: Remove unread private members
+dotnet_diagnostic.IDE0052.severity = none

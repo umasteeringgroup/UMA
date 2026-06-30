@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System.Collections.Generic;
+using UMA.Controls;
 using UnityEditor;
 using UnityEngine;
 
@@ -225,27 +226,29 @@ namespace UMA.Editors
         {
             bool delete;
             bool select;
+            bool selectInLibrary;
             bool _foldOut = FoldOut;
             bool missingPlaceholderTags = HasMissingPlaceholderTags();
             bool needsFixup = NeedsFixup();
 
             string barLabel = _slotData.isPlaceholderSlot
                 ? _name + "      (Placeholder Wildcard)"
-                : _name + "      (" + _slotData.asset.name + ")";
+                : _name + "      (" + _slotData.asset.name + ")" + GetLodSuffix(_slotData);
             if (needsFixup)
                 barLabel += "  [Needs Fixup]";
-            if (missingPlaceholderTags || needsFixup)
-            {
-                DrawSlotFoldoutBarButton(ref _foldOut, barLabel, "Asset", out select, out delete, GetRedFoldoutStyle());
-            }
-            else
-            {
-                GUIHelper.FoldoutBarButton(ref _foldOut, barLabel, "Asset", out select, out delete);
-            }
+
+            // Draw foldout bar with Asset, Lib, and X buttons
+            DrawSlotFoldoutBar(ref _foldOut, barLabel, out select, out selectInLibrary, out delete,
+                missingPlaceholderTags || needsFixup ? GetRedFoldoutStyle() : EditorStyles.foldout);
 
             FoldOut = _foldOut;
 
             Delete = delete;
+
+            if (selectInLibrary && !_slotData.isPlaceholderSlot)
+            {
+                SelectInLibrary(_slotData);
+            }
 
             if (select && !_slotData.isPlaceholderSlot)
             {
@@ -761,6 +764,22 @@ namespace UMA.Editors
             return _slotData.isPlaceholderSlot && (_slotData.tags == null || _slotData.tags.Length == 0);
         }
 
+        private static string GetLodSuffix(SlotData slotData)
+        {
+            if (slotData == null || slotData.asset == null)
+                return " (No LOD)";
+
+            var md = slotData.asset.meshData;
+            if (UMAMeshData.IsNullOrEmptyMeshData(md))
+                return " (No LOD)";
+
+            if (md.submeshes == null || md.submeshes.Length == 0 || md.submeshes[0] == null)
+                return " (No LOD)";
+
+            int lodCount = md.submeshes[0].LODCount();
+            return lodCount > 0 ? $" ({lodCount} LODs)" : " (No LOD)";
+        }
+
         private bool NeedsFixup()
         {
             if (_slotData == null || _slotData.isPlaceholderSlot || _slotData.asset == null)
@@ -808,14 +827,54 @@ namespace UMA.Editors
             return style;
         }
 
-        private static void DrawSlotFoldoutBarButton(ref bool foldout, string content, string button, out bool pressed, out bool delete, GUIStyle foldoutStyle)
+        private static void DrawSlotFoldoutBar(ref bool foldout, string content, out bool assetPressed, out bool libPressed, out bool delete, GUIStyle foldoutStyle)
         {
             GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
             GUILayout.Space(10);
             foldout = EditorGUILayout.Foldout(foldout, content, true, foldoutStyle);
-            pressed = GUILayout.Button(button, EditorStyles.miniButton, GUILayout.ExpandWidth(false));
+            assetPressed = GUILayout.Button("Asset", EditorStyles.miniButton, GUILayout.ExpandWidth(false));
+            libPressed = GUILayout.Button("Lib", EditorStyles.miniButton, GUILayout.ExpandWidth(false));
             delete = GUILayout.Button("\u0078", EditorStyles.miniButton, GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
+        }
+
+        private void SelectInLibrary(SlotData slotData)
+        {
+            if (slotData == null || slotData.asset == null)
+                return;
+
+            // Ping the asset
+            EditorGUIUtility.PingObject(slotData.asset);
+
+            // Open the Global Library window docked next to the Scene view
+            var sceneView = EditorWindow.GetWindow<SceneView>();
+            var libraryWindow = sceneView != null
+                ? EditorWindow.GetWindow<AssetIndexerWindow>("Global Library", typeof(SceneView))
+                : AssetIndexerWindow.GetWindow();
+
+            libraryWindow.Focus();
+
+            // Delay the selection to let the window initialize its tree view
+            EditorApplication.delayCall += () =>
+            {
+                if (libraryWindow == null || libraryWindow.treeView == null || libraryWindow.treeView.treeModel == null)
+                    return;
+
+                var treeElements = new List<AssetTreeElement>();
+                TreeElementUtility.TreeToList(libraryWindow.treeView.treeModel.root, treeElements);
+
+                string slotName = slotData.slotName;
+                foreach (var element in treeElements)
+                {
+                    if (element.ai != null && element.ai._Name == slotName)
+                    {
+                        libraryWindow.treeView.SetSelection(new List<int> { element.id });
+                        libraryWindow.treeView.FrameItem(element.id);
+                        libraryWindow.Repaint();
+                        return;
+                    }
+                }
+            };
         }
 
         private bool ApplyUMAMaterialToSlotAndOverlays(UMAMaterial umaMat)
