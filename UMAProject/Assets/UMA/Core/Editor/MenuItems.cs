@@ -13,7 +13,7 @@ namespace UMA.Editors
 			if (generator == null) return;
 			var selection = EditorUtility.DisplayDialogComplex(
 				"Select Mesh Combiner",
-				"Choose which mesh combiner the UMA generator should use.",
+				"Choose which mesh combiner the UMA generator should use.\n\nCurrently in use: " + GetCombinerName(generator.meshCombiner),
 				"Jobified Combiner",
 				"Bone Baking Combiner",
 				"Default Combiner");
@@ -58,6 +58,23 @@ namespace UMA.Editors
 			{
 				PrefabUtility.RecordPrefabInstancePropertyModifications(generator);
 			}
+		}
+
+		private static string GetCombinerName(UMAMeshCombiner combiner)
+		{
+			if (combiner is UMAJobifiedMeshCombiner)
+			{
+				return "Jobified Combiner";
+			}
+			if (combiner is UMABoneBakingMeshCombiner)
+			{
+				return "Bone Baking Combiner";
+			}
+			if (combiner is UMADefaultMeshCombiner)
+			{
+				return "Default Combiner";
+			}
+			return combiner == null ? "None" : combiner.GetType().Name;
 		}
 
 		private static T Spawn<T>(Transform parent)

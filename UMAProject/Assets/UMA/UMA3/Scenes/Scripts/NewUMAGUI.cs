@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using UMA;
@@ -84,6 +85,9 @@ namespace UMA
         [Header("Misc")]
         public List<RuntimeAnimatorController> Animators = new List<RuntimeAnimatorController>();
 
+        [Header("Timing Buttons")]
+        public bool showTimingButtons = false;
+
         private List<string> ConsoleLog = new List<string>();
         private List<string> PendingLog = new List<string>();
         private GameObject currentButton;
@@ -92,6 +96,11 @@ namespace UMA
         // Resume guard
         private bool resumedRecently = false;
         private float resumeBlockTime = 1.0f; // seconds to wait after resume
+
+        // Timing state
+        private string _timingResult = "";
+        private bool _timingInProgress = false;
+        private Coroutine _timingCoroutine;
 
         private void Start()
         {
@@ -748,6 +757,176 @@ namespace UMA
         {
             yield return null;
             SafeInstantiatePrefab(prefab, parent);
+        }
+
+        #endregion
+        int iterations = 10;
+        #region Timing Buttons
+
+        private void OnGUI()
+        {
+            if (!showTimingButtons || _timingInProgress) return;
+
+            float buttonWidth = 220f;
+            float buttonHeight = 30f;
+            float startX = 10f;
+            float startY = 10f;
+            float spacing = 5f;
+
+            var generator = UMAAssetIndexer.Instance != null ? UMAAssetIndexer.Instance.generator : null;
+            if (generator == null) return;
+
+            // Button 1: Jobified Combiner
+            if (GUI.Button(new Rect(startX, startY, buttonWidth, buttonHeight), "10xTime/Jobified"))
+            {
+                iterations = 10; // Reset iterations for each test
+                _timingCoroutine = StartCoroutine(TimeBuildCoroutine(typeof(UMAJobifiedMeshCombiner)));
+            }
+
+            if (GUI.Button(new Rect(startX + buttonWidth + spacing, startY, buttonWidth, buttonHeight), "1xTime/Jobified"))
+            {
+                iterations = 1; // Reset iterations for each test
+                _timingCoroutine = StartCoroutine(TimeBuildCoroutine(typeof(UMAJobifiedMeshCombiner)));
+            }
+
+            // Button 2: Bone Baking Combiner
+            startY += buttonHeight + spacing;
+            if (GUI.Button(new Rect(startX, startY, buttonWidth, buttonHeight), "10xTime/Bone Baking Combiner"))
+            {
+                iterations = 10; // Reset iterations for each test
+                _timingCoroutine = StartCoroutine(TimeBuildCoroutine(typeof(UMABoneBakingMeshCombiner)));
+            }
+
+            if (GUI.Button(new Rect(startX + buttonWidth + spacing, startY, buttonWidth, buttonHeight), "1xTime/Bone Baking Combiner"))
+            {
+                iterations = 1; // Reset iterations for each test
+                _timingCoroutine = StartCoroutine(TimeBuildCoroutine(typeof(UMABoneBakingMeshCombiner)));
+            }
+
+            // Button 3: Default Combiner
+            startY += buttonHeight + spacing;
+            if (GUI.Button(new Rect(startX, startY, buttonWidth, buttonHeight), "10xTime/Default Combiner"))
+            {
+                iterations = 10; // Reset iterations for each test
+                _timingCoroutine = StartCoroutine(TimeBuildCoroutine(typeof(UMADefaultMeshCombiner)));
+            }
+
+            if (GUI.Button(new Rect(startX + buttonWidth + spacing, startY, buttonWidth, buttonHeight), "1xTime/Default Combiner"))
+            {
+                iterations = 1; // Reset iterations for each test
+                _timingCoroutine = StartCoroutine(TimeBuildCoroutine(typeof(UMADefaultMeshCombiner)));
+            }
+
+            // Show timing result
+            if (!string.IsNullOrEmpty(_timingResult))
+            {
+                startY += buttonHeight + spacing;
+                var resultStyle = new GUIStyle(GUI.skin.label)
+                {
+                    fontSize = 16,
+                    normal = { textColor = Color.white },
+                    alignment = TextAnchor.UpperLeft,
+                    wordWrap = true
+                };
+                var resultRect = new Rect(startX, startY, 400f, 80f);
+                GUI.Label(resultRect, _timingResult, resultStyle);
+            }
+        }
+
+
+
+        private System.Collections.IEnumerator TimeBuildCoroutine(System.Type combinerType)
+        {
+            if (avatar == null || avatar.umaData == null) yield break;
+
+            var generator = UMAAssetIndexer.Instance != null ? UMAAssetIndexer.Instance.generator : null;
+            if (generator == null)
+            {
+                _timingResult = "Error: No UMAGenerator found.";
+                yield break;
+            }
+
+            // Find or create the mesh combiner component
+            var existingCombiner = (UMAMeshCombiner)UnityEngine.Object.FindFirstObjectByType(combinerType);
+            UMAMeshCombiner combiner;
+            if (existingCombiner != null)
+            {
+                combiner = existingCombiner;
+            }
+            else
+            {
+                var go = new GameObject(combinerType.Name);
+                if (generator.transform.parent != null)
+                    go.transform.SetParent(generator.transform.parent, false);
+                combiner = (UMAMeshCombiner)go.AddComponent(combinerType);
+            }
+
+            generator.meshCombiner = combiner;
+            avatar.umaData.OnCharacterUpdated += OnTimedBuildComplete;
+
+            _timingInProgress = true;
+            _timingResult = "";
+            _timingBuildComplete = false;
+
+            float totalTime = 0f;
+            int completedBuilds = 0;
+
+            for (int i = 0; i < iterations; i++)
+            {
+#if !USE_BUILD_CHARACTER
+                float startTime = Time.realtimeSinceStartup;
+                avatar.Dirty(false,false,true);
+                generator.GenerateSingleUMA(avatar,false);
+                float elapsed = Time.realtimeSinceStartup - startTime;
+                totalTime += elapsed;
+                ++completedBuilds;
+#else                
+                _timingBuildComplete = false;
+                float startTime = Time.realtimeSinceStartup;
+                avatar.BuildCharacter(true);
+
+                // Wait for the build to finish with a 60-second timeout
+                float timeout = Time.realtimeSinceStartup + 60f;
+                while (!_timingBuildComplete && Time.realtimeSinceStartup < timeout)
+                {
+                    yield return null;
+                }
+
+                float elapsed = Time.realtimeSinceStartup - startTime;
+
+                if (_timingBuildComplete)
+                {
+                    totalTime += elapsed;
+                    completedBuilds++;
+                }
+                else
+                {
+                    _timingResult = $"ERROR: Build timed out at iteration {i + 1}.";
+                    break;
+                }
+
+                // Brief pause between builds to let things settle
+                yield return new WaitForSeconds(0.1f);
+#endif                
+            }
+
+            avatar.umaData.OnCharacterUpdated -= OnTimedBuildComplete;
+
+            if (completedBuilds > 0)
+            {
+                float avg = totalTime / completedBuilds;
+                string combinerName = combinerType.Name.Replace("UMA", "").Replace("MeshCombiner", "").Replace("Mesh", "");
+                _timingResult = $"{combinerName}\nTotal: {totalTime:F3}s | Avg: {avg:F4}s | Builds: {completedBuilds}";
+            }
+
+            _timingInProgress = false;
+            _timingCoroutine = null;
+        }
+
+        private bool _timingBuildComplete;
+        private void OnTimedBuildComplete(UMAData data)
+        {
+            _timingBuildComplete = true;
         }
 
         #endregion

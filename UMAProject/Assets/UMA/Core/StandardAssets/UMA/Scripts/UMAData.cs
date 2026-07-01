@@ -731,7 +731,15 @@ namespace UMA
 				return;
 			}
 
-			if (skeleton != null)
+			// A UMAImprovedSkeleton (built by UMABoneBakingMeshCombiner) only creates real
+			// Transforms for "preserved" (animated) bones and destroys the rest in
+			// EndSkeletonUpdate. A standard skinning combiner (Default/Jobified) needs a
+			// real Transform for every bone, so a leftover UMAImprovedSkeleton from a
+			// previous bone-baking build must never be reused here - always rebuild a
+			// plain UMASkeleton in that case so missing bone Transforms get recreated.
+			bool recoveringFromBoneBaking = skeleton is UMAImprovedSkeleton;
+
+			if (skeleton != null && !recoveringFromBoneBaking)
 			{
 				if (skeleton.isValid())
                 {
@@ -741,6 +749,25 @@ namespace UMA
 
 			Transform globalTransform = EnsureUmaRootAndGlobal();
 			skeleton = new UMASkeleton(globalTransform);
+
+			if (recoveringFromBoneBaking)
+			{
+				// UMABoneBakingMeshCombiner calls UpdateAvatar() as part of its own build,
+				// which can nudge live bone Transform rotations slightly to match Unity's
+				// normalized Avatar muscle space (see its RefreshFinalBindPoses(), which
+				// exists for the exact same reason on the bone-baking side). Those Transforms
+				// are shared and persist after bone baking finishes. Default/Jobified skin
+				// against static, per-slot authored bind poses, so bones must be re-pinned to
+				// the authored TPose + DNA pose here - otherwise they silently inherit whatever
+				// pose bone baking's Animator rebind left behind, producing a small but visible
+				// full-body lean on the next Default/Jobified build.
+				GotoTPose();
+				ApplyDNA();
+				if (umaRecipe.raceData.useNewDNA)
+				{
+					NewDNAApply();
+				}
+			}
 		}
 
 

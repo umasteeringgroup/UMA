@@ -9,15 +9,7 @@ namespace UMA.Editors
         {
             base.OnInspectorGUI();
             EditorGUILayout.Space();
-            EditorGUILayout.LabelField("Available Mesh Combiners", EditorStyles.boldLabel);
-            var generator = (UMAGenerator)target;
-            if (generator.availableMeshCombiners != null)
-            {
-                foreach (var meshCombiner in generator.availableMeshCombiners)
-                {
-                    EditorGUILayout.ObjectField(meshCombiner, typeof(UMAMeshCombiner), false);
-                }
-            }
+           /// EditorGUILayout.LabelField("Available Mesh Combiners", EditorStyles.boldLabel);
         }
     }
 }

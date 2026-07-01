@@ -57,7 +57,10 @@ namespace UMA
                 if (skeleton != null)
                 {
                     int hash = UMAUtils.StringToHash(BoneName);
-                    Vector3 currentScale = skeleton.GetScale(hash);
+                    var bone = skeleton.GetBoneTransform(hash);
+                    if (bone == null) return;
+                    //Vector3 currentScale = skeleton.GetScale(hash);
+                    Vector3 currentScale = bone.localScale;
                     Vector3 scaleAmount = ScaleFactor * GetMappedValue(value);
                     Vector3 resultScale = Vector3.Scale(currentScale, Vector3.one + scaleAmount);
                     skeleton.SetScale(hash, resultScale);

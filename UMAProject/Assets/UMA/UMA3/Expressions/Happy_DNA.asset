@@ -27,8 +27,8 @@ MonoBehaviour:
           serializedVersion: 2
           m_Curve:
           - serializedVersion: 3
-            time: 0
-            value: 0
+            time: 0.002281189
+            value: 0.23529053
             inSlope: 0
             outSlope: 0
             tangentMode: 0
@@ -45,8 +45,8 @@ MonoBehaviour:
             inWeight: 0
             outWeight: 0
           - serializedVersion: 3
-            time: 1
-            value: 1
+            time: 0.9962158
+            value: 0.78900146
             inSlope: 0
             outSlope: 0
             tangentMode: 0
@@ -58,7 +58,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
-        expanded: 0
+        enabled: 1
+        expanded: 1
         selected: 0
+        showHelp: 0
         EffectName: 
         bonePose: {fileID: 11400000, guid: f11b353130a11e1459bb016819878044, type: 2}
+        isBasePose: 0

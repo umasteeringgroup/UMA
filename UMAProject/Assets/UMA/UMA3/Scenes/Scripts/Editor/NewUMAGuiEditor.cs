@@ -23,6 +23,7 @@ namespace UMA.EditorTools
         private static bool _containersFoldout;
         private static bool _buttonsFoldout;
         private static bool _miscFoldout;
+        private static bool _timingFoldout;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void InitializeStatics()
@@ -37,6 +38,7 @@ namespace UMA.EditorTools
             _containersFoldout = false;
             _buttonsFoldout = false;
             _miscFoldout = false;
+            _timingFoldout = false;
         }
 
         // ---- Reorderable list cache ----
@@ -97,6 +99,8 @@ namespace UMA.EditorTools
         // Misc
         private SerializedProperty _animatorsProp;
         private SerializedProperty _currentAnimatorProp;
+        // Timing
+        private SerializedProperty _showTimingButtonsProp;
 
         private void OnEnable()
         {
@@ -154,6 +158,8 @@ namespace UMA.EditorTools
             // Misc
             _animatorsProp = serializedObject.FindProperty("Animators");
             _currentAnimatorProp = serializedObject.FindProperty("currentAnimator");
+            // Timing
+            _showTimingButtonsProp = serializedObject.FindProperty("showTimingButtons");
         }
 
         public override void OnInspectorGUI()
@@ -275,6 +281,22 @@ namespace UMA.EditorTools
                 EditorGUI.indentLevel++;
                 DrawListWithButtons(_animatorsProp, "Animators", typeof(RuntimeAnimatorController));
                 EditorGUILayout.PropertyField(_currentAnimatorProp);
+                EditorGUI.indentLevel--;
+            }
+
+            // --- Timing ---
+            if (DrawFoldoutHeader("Timing", ref _timingFoldout))
+            {
+                EditorGUI.indentLevel++;
+                EditorGUILayout.PropertyField(_showTimingButtonsProp, new GUIContent("Show Timing Buttons"));
+                if (_showTimingButtonsProp.boolValue)
+                {
+                    EditorGUILayout.HelpBox(
+                        "When enabled, three IMGUI buttons appear in the Game View " +
+                        "allowing you to time builds with each mesh combiner (10 iterations each). " +
+                        "Designed for testing in game builds.",
+                        MessageType.Info);
+                }
                 EditorGUI.indentLevel--;
             }
 

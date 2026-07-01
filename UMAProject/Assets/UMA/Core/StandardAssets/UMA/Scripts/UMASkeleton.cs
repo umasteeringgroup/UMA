@@ -734,7 +734,7 @@ namespace UMA
 			}
 			else
 			{
-				throw new Exception("Bone not found.");
+				return Vector3.zero;
 			}
 		}
 
@@ -751,11 +751,11 @@ namespace UMA
 				db.accessedFrame = frame;
 				return boneHashData[rootBoneHash].boneTransform.parent.parent.worldToLocalMatrix.MultiplyPoint(db.boneTransform.position);
 			}
-			else
-			{
-				throw new Exception("Bone not found.");
-			}
+			return Vector3.zero;
 		}
+
+		
+
 
 		/// <summary>
 		/// Gets the scale of a bone.
@@ -770,10 +770,7 @@ namespace UMA
 				db.accessedFrame = frame;
 				return db.boneTransform.localScale;
 			}
-			else
-			{
-				throw new Exception("Bone not found.");
-			}
+			return Vector3.one;
 		}
 
 		/// <summary>
@@ -791,7 +788,7 @@ namespace UMA
 			}
 			else
 			{
-				throw new Exception("Bone not found. BoneHash: " + nameHash);
+				return Quaternion.identity;
 			}
 		}
 

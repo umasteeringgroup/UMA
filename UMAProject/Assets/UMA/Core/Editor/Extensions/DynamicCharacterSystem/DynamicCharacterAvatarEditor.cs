@@ -523,11 +523,41 @@ namespace UMA.CharacterSystem.Editors
             return wasChanged;
         }
 
+
+
+
+        private bool _buildRig, _buildTexture, _buildMesh;
+
+        private void LoopBuild()
+        {
+            int iterations = 10;
+            for (int i = 0; i < iterations; i++)
+            {
+                UMAGenerator generator = UMAAssetIndexer.Instance.generator;
+                thisDCA.Dirty(_buildRig,_buildTexture,_buildMesh);
+                generator.GenerateSingleUMA(thisDCA,false);
+            }
+        }
+
         private bool ShowEditorCustomizationGUI()
         {
             bool wasChanged = false;
             BeginVerticalPadded();
-
+            EditorGUILayout.BeginHorizontal();
+            _buildRig = GUILayout.Toggle(_buildRig, "Build Rig", "Button");
+            _buildTexture = GUILayout.Toggle(_buildTexture, "Build Texture", "Button");
+            _buildMesh = GUILayout.Toggle(_buildMesh, "Build Mesh", "Button");
+            if (GUILayout.Button("Generate UMA"))
+            {
+                UMAGenerator generator = UMAAssetIndexer.Instance.generator;
+                thisDCA.Dirty(_buildRig, _buildTexture, _buildMesh);
+                generator.GenerateSingleUMA(thisDCA,false);                
+            }
+            if (GUILayout.Button("Loop Build 10x"))
+            {
+                LoopBuild();
+            }
+            EditorGUILayout.EndHorizontal();
             EditorGUILayout.BeginHorizontal();
             if (GUILayout.Button("Save Preset"))
             {
@@ -1517,16 +1547,25 @@ namespace UMA.CharacterSystem.Editors
             bool buildSharedColors = (buildType & UMA.DNAInstanceCollection.DNABuildType.SharedColors) != 0;
             bool buildMeshModifiers = (buildType & UMA.DNAInstanceCollection.DNABuildType.MeshModifiers) != 0;
 
-            if (buildSharedColors | buildMeshModifiers || meshCombiner.GetType() == typeof(UMABoneBakingMeshCombiner))
+            if (meshCombiner.GetType() == typeof(UMADefaultMeshCombiner) )
+            {
+                buildMesh = true;
+                buildRig = false;
+            }
+
+            var sw = System.Diagnostics.Stopwatch.StartNew();      
+            if (fullRebuild | buildSharedColors | buildMeshModifiers | buildBlendShape /*|| meshCombiner.GetType() == typeof(UMABoneBakingMeshCombiner)*/)
             {
                 GenerateSingleUMA();
-                return;
             }
-            var sw = System.Diagnostics.Stopwatch.StartNew();            
-            thisDCA.Dirty(buildRig, buildTexture, buildMesh);
-            generator.GenerateSingleUMA(thisDCA,false);
+            else
+            {      
+                thisDCA.Dirty(buildRig, buildTexture, buildMesh);
+                generator.GenerateSingleUMA(thisDCA,false);
+            }
             sw.Stop();
-            Debug.Log($"UMA Generation took {sw.ElapsedMilliseconds} ms");
+            string combinerType = meshCombiner != null ? meshCombiner.GetType().Name : "null";
+            Debug.Log($"UMA Generation took {sw.ElapsedMilliseconds} ms Buildflags: Rig={buildRig}, Texture={buildTexture}, Mesh={buildMesh}, FullRebuild={fullRebuild}, Combiner={combinerType}");
         }
 
         private void DoTimedGeneration(bool full, DNAInstanceCollection.DNABuildType buildType)

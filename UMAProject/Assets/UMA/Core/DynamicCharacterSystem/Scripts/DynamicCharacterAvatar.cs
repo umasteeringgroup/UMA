@@ -3905,6 +3905,11 @@ namespace UMA.CharacterSystem
         #endregion
 
         #region FULL EXPORT
+        /// <summary>
+        /// Returns an AvatarDefinition string for the current avatar.
+        /// [DEPRECATED] Use <see cref="GetAvatarDefinitionString"/> directly instead.
+        /// </summary>
+        [Obsolete("Use GetAvatarDefinitionString() instead.")]
         public string GetCurrentRecipe()
         {
             // return an AvatarDefinitionString instead of a UMATextRecipe string
@@ -3963,7 +3968,7 @@ namespace UMA.CharacterSystem
             {
                 try
                 {
-                    File.WriteAllText(filePath, GetCurrentRecipe());
+                    File.WriteAllText(filePath, GetAvatarDefinitionString(false, false));
                 }
                 catch (Exception e)
                 {
@@ -4292,10 +4297,12 @@ namespace UMA.CharacterSystem
             OldImportSettings(UMATextRecipe.PackedLoadDCS((settingsToLoad as UMATextRecipe).recipeString), customLoadOptions);
         }
         /// <summary>
-        /// Load settings from an existing recipe string, optionally customizing what is loaded from the recipe
+        /// Load settings from an existing recipe string, optionally customizing what is loaded from the recipe.
+        /// [DEPRECATED] Use <see cref="LoadAvatarDefinition(string, bool, bool, bool, bool, bool)"/> instead.
         /// </summary>
         /// <param name="settingsToLoad"></param>
         /// <param name="customLoadOptions"></param>
+        [Obsolete("Use LoadAvatarDefinition(string) instead.")]
         public void OldLoadFromRecipeString(string settingsToLoad, LoadOptions customLoadOptions = LoadOptions.useDefaults, bool ClearWardrobe = false)
         {
             if (ClearWardrobe)

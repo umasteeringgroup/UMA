@@ -32,6 +32,10 @@ namespace UMA
 		{
 			if (umaData.umaRoot == null)
 			{
+				DestroyGeneratedRenderers();
+				umaData.SetRenderers(null);
+				umaData.SetRendererAssets(null);
+
 				GameObject newRoot = new GameObject("Root");
 				newRoot.transform.parent = umaData.transform;
 				newRoot.transform.localPosition = Vector3.zero;
@@ -74,6 +78,26 @@ namespace UMA
 					umaSkeleton = new UMAImprovedSkeleton(umaData.umaRoot.transform.Find("Global"));
 					umaData.skeleton = umaSkeleton;
 				}
+			}
+		}
+
+		private void DestroyGeneratedRenderers()
+		{
+			var renderers = umaData.GetComponentsInChildren<SkinnedMeshRenderer>(true);
+			for (int i = 0; i < renderers.Length; i++)
+			{
+				var renderer = renderers[i];
+				if (renderer == null || renderer.gameObject == null)
+				{
+					continue;
+				}
+
+				if (!renderer.gameObject.name.StartsWith("UMARenderer", StringComparison.Ordinal))
+				{
+					continue;
+				}
+
+				UMAUtils.DestroySceneObject(renderer.gameObject);
 			}
 		}
 
@@ -245,35 +269,32 @@ namespace UMA
 				return;
 
 			var genMaterials = umaData.generatedMaterials.materials;
-
-			// Fast path: count second-pass materials first
 			int secondPassCount = 0;
 			for (int i = 0; i < genMaterials.Count; i++)
-				if (genMaterials[i].umaMaterial.secondPass != null)
+			{
+				if (genMaterials[i].umaMaterial != null && genMaterials[i].umaMaterial.secondPass != null)
+				{
 					secondPassCount++;
-			if (secondPassCount == 0)
-				return;
+				}
+			}
 
 			var mesh = myRenderer.sharedMesh;
-			int baseSubMeshCount = mesh.subMeshCount;
-			var newSubMeshes = new System.Collections.Generic.List<UnityEngine.Rendering.SubMeshDescriptor>(baseSubMeshCount + secondPassCount);
-			var newMaterials = new System.Collections.Generic.List<Material>(baseSubMeshCount + secondPassCount);
-			var currentMats = myRenderer.sharedMaterials;
+			var newSubMeshes = new System.Collections.Generic.List<UnityEngine.Rendering.SubMeshDescriptor>(genMaterials.Count + secondPassCount);
+			var newMaterials = new System.Collections.Generic.List<Material>(genMaterials.Count + secondPassCount);
 
 			for (int i = 0; i < genMaterials.Count; i++)
 			{
 				var gm = genMaterials[i];
+				Material firstPass = gm.material != null ? gm.material : gm.umaMaterial != null ? gm.umaMaterial.material : null;
 
-				// First pass — use existing submesh if available, otherwise empty
-				var subMesh = i < baseSubMeshCount ? mesh.GetSubMesh(i) : new UnityEngine.Rendering.SubMeshDescriptor(0, 0, MeshTopology.Triangles);
+				var subMesh = i < mesh.subMeshCount ? mesh.GetSubMesh(i) : new UnityEngine.Rendering.SubMeshDescriptor(0, 0, MeshTopology.Triangles);
 				newSubMeshes.Add(subMesh);
-				newMaterials.Add(i < currentMats.Length ? currentMats[i] : null);
+				newMaterials.Add(firstPass);
 
-				// Second pass — duplicates the same submesh right after the first pass
-				if (gm.umaMaterial.secondPass != null)
+				if (gm.umaMaterial != null && gm.umaMaterial.secondPass != null)
 				{
 					Material secondPass = gm.secondPassMaterial;
-					if (secondPass == null)
+					if (secondPass == null || secondPass == firstPass || secondPass.shader != gm.umaMaterial.secondPass.shader)
 					{
 						secondPass = UnityEngine.Object.Instantiate(gm.umaMaterial.secondPass);
 						gm.secondPassMaterial = secondPass;
@@ -282,11 +303,15 @@ namespace UMA
 					UMAGeneratorPro.ApplyMaterialParameters(gm, umaData, secondPass);
 					UMADefaultMeshCombiner.CopyMaterialTextures(secondPass, gm.material, gm.umaMaterial);
 					if (gm.material != null && gm.material.HasProperty("_OverlayCount"))
+					{
 						UMADefaultMeshCombiner.SetCompositingParameters(secondPass, gm);
+					}
 
 					newSubMeshes.Add(subMesh);
 					newMaterials.Add(secondPass);
 				}
+
+				gm.skinnedMeshRenderer = myRenderer;
 			}
 
 			mesh.subMeshCount = newSubMeshes.Count;

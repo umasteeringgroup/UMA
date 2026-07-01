@@ -41,8 +41,9 @@ Use `DynamicCharacterAvatar` to build and control UMA characters at runtime.
   - Adjust DNA: `SetDNA("height", 0.65f, rebuild:true)`.
   - Update shared colors: `SetColorValue("Skin", new Color(1,0.8f,0.7f)); UpdateColors(true);`
 - Save/Load
-  - Save current avatar to a DCS recipe string: `GetCurrentRecipe()`.
-  - Load from a DCS recipe string: `LoadFromRecipeString(recipeString)`.
+  - Save current avatar to an AvatarDefinition string: `GetAvatarDefinitionString(false)`.
+  - Load from an AvatarDefinition string: `LoadAvatarDefinition(avatarDefinitionString)`.
+  - `GetCurrentRecipe()` and `LoadFromRecipeString(...)` are deprecated - use the AvatarDefinition APIs above instead.
 
 See `Docs/DynamicCharacterAvatar.md` for a deep dive (lifecycle, events, wardrobe collections, colors, DNA, Addressables flow, troubleshooting).
 
