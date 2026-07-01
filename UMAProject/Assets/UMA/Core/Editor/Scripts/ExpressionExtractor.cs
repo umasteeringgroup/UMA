@@ -432,7 +432,7 @@ namespace UMA.PoseTools
             return AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path);
         }
 
-        [MenuItem("UMA/Pose Tools/Expression Extractor", priority = 2)]
+        [MenuItem("UMA/Tools/Pose Tools/Expression Extractor", priority = 24)]
         public static void OpenExpressionExtractor()
         {
             EditorWindow win = GetWindow(typeof(ExpressionExtractor));
