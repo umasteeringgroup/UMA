@@ -5,44 +5,59 @@ namespace UMA.Editors
 {
 	public class MenuItems 
 	{
-		private const string _SceneBoneBaking = "UMA/Tools/Scene Bone Baking";
-		[MenuItem(_SceneBoneBaking)]
-		static void ToggleBoneBaking()
+		private const string _MeshCombiner = "UMA/Tools/Select Mesh Combiner";
+		[MenuItem(_MeshCombiner)]
+		static void SelectMeshCombiner()
 		{
 			var generator = UMAAssetIndexer.Instance.generator;
 			if (generator == null) return;
-			Undo.RecordObject(generator, "Toggle Scene Bone Baking");
-			if (generator.meshCombiner is UMABoneBakingMeshCombiner)
+			var selection = EditorUtility.DisplayDialogComplex(
+				"Select Mesh Combiner",
+				"Choose which mesh combiner the UMA generator should use.",
+				"Jobified Combiner",
+				"Bone Baking Combiner",
+				"Default Combiner");
+			switch (selection)
 			{
-				var defaultMeshCombiner = Object.FindFirstObjectByType<UMADefaultMeshCombiner>();
-				if (defaultMeshCombiner == null)
-					defaultMeshCombiner = Spawn<UMADefaultMeshCombiner>(generator.transform.parent);
-				generator.meshCombiner = defaultMeshCombiner;
+				case 0:
+					UseMeshCombiner<UMAJobifiedMeshCombiner>(generator);
+					break;
+				case 1:
+					UseMeshCombiner<UMABoneBakingMeshCombiner>(generator);
+					break;
+				case 2:
+					UseMeshCombiner<UMADefaultMeshCombiner>(generator);
+					break;
 			}
-			else
+		}
+
+		[MenuItem(_MeshCombiner, true)]
+		static bool SelectMeshCombinerActive()
+		{
+			Menu.SetChecked(_MeshCombiner, false);
+			return UMAAssetIndexer.Instance.generator != null;
+		}
+
+		private static void UseMeshCombiner<T>(UMAGenerator generator)
+			where T : UMAMeshCombiner
+		{
+			if (generator.meshCombiner is T)
 			{
-				var boneBakingMeshCombiner = Object.FindFirstObjectByType<UMABoneBakingMeshCombiner>();
-				if (boneBakingMeshCombiner == null)
-					boneBakingMeshCombiner = Spawn<UMABoneBakingMeshCombiner>(generator.transform.parent);
-				generator.meshCombiner = boneBakingMeshCombiner;
+				return;
 			}
+
+			var meshCombiner = Object.FindFirstObjectByType<T>();
+			if (meshCombiner == null)
+			{
+				meshCombiner = Spawn<T>(generator.transform.parent);
+			}
+
+			Undo.RecordObject(generator, "Select Mesh Combiner");
+			generator.meshCombiner = meshCombiner;
 			if (PrefabUtility.IsPartOfAnyPrefab(generator))
 			{
 				PrefabUtility.RecordPrefabInstancePropertyModifications(generator);
 			}
-		}
-
-		[MenuItem(_SceneBoneBaking, true)]
-		static bool ToggleBoneBakingActive()
-		{
-			var generator = UMAAssetIndexer.Instance.generator;
-			if (generator == null)
-			{
-				Menu.SetChecked(_SceneBoneBaking, false);
-				return false;
-			}
-			Menu.SetChecked(_SceneBoneBaking, generator.meshCombiner is UMABoneBakingMeshCombiner);
-			return true;
 		}
 
 		private static T Spawn<T>(Transform parent)
