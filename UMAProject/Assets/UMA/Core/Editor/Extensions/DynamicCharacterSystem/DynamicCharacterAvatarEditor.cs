@@ -26,6 +26,28 @@ namespace UMA.CharacterSystem.Editors
         public static bool showAdvanced = false;
         public static bool showCurrentRendererBounds = false;
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void StaticInitializeOnLoad()
+        {
+            showHelp = false;
+            showWardrobe = false;
+            showUtils = true;
+            showEditorCustomization = true;
+            showPrefinedDNA = false;
+            showAnimatorGUI = false;
+            showBlendshapes = false;
+            showUMAFramework = false;
+            showUMAData = false;
+            showAdvanced = false;
+            showCurrentRendererBounds = false;
+            currentcolorfilter = 0;
+            _unknownAssignedGroupFoldout = false;
+            fullRebuild = false;
+            AllowVertexSelection = false;
+            _newDnaGroupIndex = 0;
+            _newDnaInGroupIndex = 0;
+        }
+
         public static int currentcolorfilter =0;
         public string[] colorfilters = { "Base", "All", "Hide ColorDNA" };
         public List<string> baseColorNames = new List<string>();

@@ -36,7 +36,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.ai.navigation": {
-      "version": "2.0.11",
+      "version": "2.0.13",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -84,18 +84,18 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.collab-proxy": {
-      "version": "2.11.4",
+      "version": "2.12.4",
       "depth": 0,
       "source": "registry",
       "dependencies": {},
       "url": "https://packages.unity.com"
     },
     "com.unity.collections": {
-      "version": "2.6.4",
+      "version": "2.6.6",
       "depth": 0,
       "source": "registry",
       "dependencies": {
-        "com.unity.burst": "1.8.25",
+        "com.unity.burst": "1.8.28",
         "com.unity.mathematics": "1.3.2",
         "com.unity.test-framework": "1.4.6",
         "com.unity.nuget.mono-cecil": "1.11.6",
@@ -104,7 +104,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.editorcoroutines": {
-      "version": "1.0.1",
+      "version": "1.1.0",
       "depth": 1,
       "source": "registry",
       "dependencies": {},
@@ -117,17 +117,17 @@
       "dependencies": {}
     },
     "com.unity.formats.fbx": {
-      "version": "5.1.5",
+      "version": "5.1.6",
       "depth": 0,
       "source": "registry",
       "dependencies": {
-        "com.autodesk.fbx": "5.1.1",
+        "com.autodesk.fbx": "5.1.3",
         "com.unity.timeline": "1.7.1"
       },
       "url": "https://packages.unity.com"
     },
     "com.unity.ide.rider": {
-      "version": "3.0.39",
+      "version": "3.0.40",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -206,7 +206,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.performance.profile-analyzer": {
-      "version": "1.3.4",
+      "version": "1.4.0",
       "depth": 0,
       "source": "registry",
       "dependencies": {},
@@ -325,7 +325,7 @@
       }
     },
     "com.unity.splines": {
-      "version": "2.8.3",
+      "version": "2.8.4",
       "depth": 1,
       "source": "registry",
       "dependencies": {
@@ -346,7 +346,7 @@
       }
     },
     "com.unity.test-framework.performance": {
-      "version": "3.2.0",
+      "version": "3.5.0",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -356,7 +356,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.timeline": {
-      "version": "1.8.11",
+      "version": "1.8.12",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -386,7 +386,7 @@
       }
     },
     "com.unity.visualscripting": {
-      "version": "1.9.10",
+      "version": "1.9.11",
       "depth": 0,
       "source": "registry",
       "dependencies": {

@@ -877,13 +877,13 @@ namespace UMA.Examples
                 else
                 {
                     // if there are NO lods for this slot, just return the current slot name.
-                    return baseSlotName;
+                    return currentSlotName;
                 }
             }
 
             // get all the Lods. Fill out the lodlevels.
             string[] SlotLods = new string[maxLOD];
-            string lastSlot = baseSlotName;
+            string lastSlot = currentSlotName;
             int foundLODS = 0;
 
             for (int i = 0; i < maxLOD; i++)
@@ -978,8 +978,13 @@ namespace UMA.Examples
                     // if there is a new LOD slot, then switch to that, and schedule for regeneration
                     if (newSlot != null && newSlot != string.Empty && newSlot != slot.slotName)
                     {
-                        _umaData.umaRecipe.slotDataList[i] = UMAAssetIndexer.Instance.InstantiateSlot(newSlot, slot.GetOverlayList());
-                        changedSlots = true;
+                        SlotData replacementSlot = UMAAssetIndexer.Instance.InstantiateSlot(newSlot);
+                        if (replacementSlot != null)
+                        {
+                            replacementSlot.SetOverlayList(slot.GetOverlayList());
+                            _umaData.umaRecipe.slotDataList[i] = replacementSlot;
+                            changedSlots = true;
+                        }
                     }
                 }
             }

@@ -236,16 +236,18 @@ namespace UMA.CharacterSystem
             }
 
             GameObject sourceRoot = source.transform.root.gameObject;
-            SkinnedMeshRenderer[] sourceRenderers = sourceRoot.GetComponentsInChildren<SkinnedMeshRenderer>(true);
-            if (sourceRenderers.Length != 1 || sourceRenderers[0] != source)
+            var sourceRenderers = new List<SkinnedMeshRenderer>();
+            sourceRoot.GetComponentsInChildren<SkinnedMeshRenderer>(true, sourceRenderers);
+            if (sourceRenderers.Count != 1 || sourceRenderers[0] != source)
             {
                 return false;
             }
 
             baseInstanceRoot = Instantiate(sourceRoot, transform, false);
             baseInstanceRoot.name = GetBaseInstanceName(sourceRoot);
-            SkinnedMeshRenderer[] instanceRenderers = baseInstanceRoot.GetComponentsInChildren<SkinnedMeshRenderer>(true);
-            if (instanceRenderers.Length != 1)
+            var instanceRenderers = new List<SkinnedMeshRenderer>();
+            baseInstanceRoot.GetComponentsInChildren<SkinnedMeshRenderer>(true, instanceRenderers);
+            if (instanceRenderers.Count != 1)
             {
                 DestroyUnityObject(baseInstanceRoot);
                 ClearBaseInstanceState();
@@ -286,8 +288,9 @@ namespace UMA.CharacterSystem
             GameObject adoptedRoot = null;
             SkinnedMeshRenderer adoptedRenderer = null;
             List<GameObject> duplicateRoots = null;
-            Transform[] candidates = transform.GetComponentsInChildren<Transform>(true);
-            for (int i = 0; i < candidates.Length; i++)
+            var candidates = new List<Transform>();
+            transform.GetComponentsInChildren<Transform>(true, candidates);
+            for (int i = 0; i < candidates.Count; i++)
             {
                 Transform candidateRoot = candidates[i];
                 if (candidateRoot == null || candidateRoot == transform || !IsRouteInstanceName(candidateRoot.gameObject.name, expectedName))
@@ -332,8 +335,9 @@ namespace UMA.CharacterSystem
 
             string expectedName = GetBaseInstanceName(source.transform.root.gameObject);
             List<GameObject> duplicateRoots = null;
-            Transform[] candidates = transform.GetComponentsInChildren<Transform>(true);
-            for (int i = 0; i < candidates.Length; i++)
+            var candidates = new List<Transform>();
+            transform.GetComponentsInChildren<Transform>(true, candidates);
+            for (int i = 0; i < candidates.Count; i++)
             {
                 Transform candidateRoot = candidates[i];
                 if (candidateRoot == null || candidateRoot == transform || candidateRoot.gameObject == keepRoot || !IsRouteInstanceName(candidateRoot.gameObject.name, expectedName))
@@ -377,8 +381,9 @@ namespace UMA.CharacterSystem
                 return null;
             }
 
-            SkinnedMeshRenderer[] renderers = root.GetComponentsInChildren<SkinnedMeshRenderer>(true);
-            for (int i = 0; i < renderers.Length; i++)
+            var renderers = new List<SkinnedMeshRenderer>();
+            root.GetComponentsInChildren<SkinnedMeshRenderer>(true, renderers);
+            for (int i = 0; i < renderers.Count; i++)
             {
                 if (IsRendererForSource(renderers[i], source))
                 {
@@ -534,9 +539,10 @@ namespace UMA.CharacterSystem
                 return;
             }
 
-            Transform[] transforms = root.GetComponentsInChildren<Transform>(true);
-            originalTransformStates = new TransformState[transforms.Length];
-            for (int i = 0; i < transforms.Length; i++)
+            var transforms = new List<Transform>();
+            root.GetComponentsInChildren<Transform>(true, transforms);
+            originalTransformStates = new TransformState[transforms.Count];
+            for (int i = 0; i < transforms.Count; i++)
             {
                 originalTransformStates[i] = new TransformState(transforms[i]);
             }
@@ -667,8 +673,9 @@ namespace UMA.CharacterSystem
                 return;
             }
 
-            UMAGeneratedBone[] generatedBones = root.GetComponentsInChildren<UMAGeneratedBone>(true);
-            for (int i = generatedBones.Length - 1; i >= 0; i--)
+            List<UMAGeneratedBone> generatedBones = new List<UMAGeneratedBone>();
+            root.GetComponentsInChildren<UMAGeneratedBone>(true, generatedBones);
+            for (int i = generatedBones.Count - 1; i >= 0; i--)
             {
                 if (generatedBones[i] != null)
                 {

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 438fea526ed7b544593cd66001a31e49
+timeCreated: 1430988066
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39941
+  packageName: 'The Blacksmith: Characters'
+  packageVersion: 1.0.3590
+  assetPath: Assets/Animation/Chal_Walk.controller
+  uploadId: 82418

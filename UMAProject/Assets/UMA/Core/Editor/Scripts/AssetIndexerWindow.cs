@@ -230,7 +230,7 @@ namespace UMA.Controls
         GenericMenu _AddressablesMenu;
         GenericMenu _ItemsMenu;
         GenericMenu _ToolsMenu;
-        bool ShowUtilities;
+        bool ShowUtilities = true;
         UMAMaterial umaMaterial;
         RaceData umaRaceData;
         OverlayDataAsset umaOverlay;
@@ -3579,7 +3579,8 @@ namespace UMA.Controls
                 AssetDatabase.SaveAssets();
             }
 
-            EditorUtility.DisplayDialog("Slot LOD", "Updated " + updated + " slot(s). Skipped " + skipped + ".", "OK");
+            //EditorUtility.DisplayDialog("Slot LOD", "Updated " + updated + " slot(s). Skipped " + skipped + ".", "OK");
+            EditorUtility.DisplayDialog("Slot LOD", "Updated " + updated + " slot(s). Skipped " + skipped + ".\n\nReminder: Mesh Hide Assets are not automatically updated. Use 'Gen LOD on ALL MHA' in the Mesh Hide Assets utilities panel to regenerate their LOD masks.", "OK");
         }
 
 

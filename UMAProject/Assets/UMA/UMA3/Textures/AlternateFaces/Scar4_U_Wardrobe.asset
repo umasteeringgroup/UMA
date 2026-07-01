@@ -26,6 +26,13 @@ MonoBehaviour:
   - race: Human Male 3.0
     filename: Assets/UMA/UMA3/Wearables/Icons/Face/Human Male 3.0/7_Scar4_U_Wardrobe.png
     thumb: {fileID: 21300000, guid: 62f859b3ebae5284fadc30b44d62e0d2, type: 3}
+  thumbnailFromTexture: 1
+  thumbnailRect:
+    serializedVersion: 2
+    x: 0.25
+    y: 0.25
+    width: 0.5
+    height: 0.5
   wardrobeSlot: Face
   Appended: 0
   Hides: []

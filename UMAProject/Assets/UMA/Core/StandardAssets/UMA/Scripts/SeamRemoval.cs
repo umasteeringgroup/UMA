@@ -24,12 +24,13 @@ namespace UMA
 	    {
 	        if (runScript && separatedMesh && unifiedMesh)
 	        {
-	            SkinnedMeshRenderer[] originalMeshes = separatedMesh.gameObject.GetComponentsInChildren<SkinnedMeshRenderer>();
-	            SkinnedMeshRenderer referenceMesh = unifiedMesh.gameObject.GetComponentInChildren<SkinnedMeshRenderer>();
+				var originalMeshes = new List<SkinnedMeshRenderer>();
+				separatedMesh.gameObject.GetComponentsInChildren<SkinnedMeshRenderer>(true, originalMeshes);
+				var referenceMesh = unifiedMesh.gameObject.GetComponentInChildren<SkinnedMeshRenderer>();
 
 	            float sqrthreshold = threshold * threshold;
 
-	            for (int meshIndex = 0; meshIndex < originalMeshes.Length; meshIndex++)
+	            for (int meshIndex = 0; meshIndex < originalMeshes.Count; meshIndex++)
 	            {
 	                SeamRemoval.PerformSeamRemoval(originalMeshes[meshIndex], referenceMesh, sqrthreshold, true);
 	            }

@@ -26,6 +26,13 @@ MonoBehaviour:
   - race: Human Male 3.0
     filename: Assets/UMA/UMA3/Wearables/Icons/Hair/Human Male 3.0/13_HairAnimeMessy_Recipe.png
     thumb: {fileID: 21300000, guid: df05d6cb04a5cee42b2df0a5e0d8573b, type: 3}
+  thumbnailFromTexture: 0
+  thumbnailRect:
+    serializedVersion: 2
+    x: 0.25
+    y: 0.25
+    width: 0.5
+    height: 0.5
   wardrobeSlot: Hair
   Appended: 0
   Hides: []
@@ -35,7 +42,7 @@ MonoBehaviour:
   MeshHideAssets: []
   MeshHideAssetCollections: []
   MeshModifiers:
-  - {fileID: 11400000, guid: 386e0c1d555a6d74b833641fcbc98d8a, type: 2}
+  - {fileID: 11400000, guid: 64508efc6ade67e4f9d161620abbba81, type: 2}
   OverrideDNA:
     PreloadValues: []
   disabled: 0

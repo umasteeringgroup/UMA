@@ -60,6 +60,7 @@ namespace UMA
         public List<string> LegsDNA = new List<string>();
         public List<string> BodyDNA = new List<string>();
 
+
         [Header("Items")]
         public List<UMAWardrobeRecipe> FaceItems = new List<UMAWardrobeRecipe>();
         public List<UMAWardrobeRecipe> HairItems = new List<UMAWardrobeRecipe>();

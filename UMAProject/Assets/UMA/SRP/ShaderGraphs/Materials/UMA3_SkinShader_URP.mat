@@ -161,7 +161,7 @@ Material:
     - _Occlusion_Strength: 1
     - _QueueControl: 0
     - _QueueOffset: 0
-    - _SSSBlend: 0.402
+    - _SSSBlend: 0.2
     - _SSSDistortion: 0
     - _SSSTransmission: 0
     - _Saturation: 1

@@ -2031,8 +2031,22 @@ namespace UMA
 			{
 				if ((slot == null) || (slot.asset == null && !slot.isPlaceholderSlot))
 				{
+					if (slot == null)
+					{
+						Debug.LogWarning($"MergeSlot called with null slot in recipe {recipeName}.");
+					}
+					else if (slot.asset == null)
+					{
+						Debug.LogWarning($"MergeSlot called with null slot asset in recipe {recipeName} Slot {slot.slotName}.");
+					}
+					else
+					{
+						Debug.LogWarning($"MergeSlot called with placeholder slot asset in recipe {recipeName} Slot {slot.slotName}. Placeholder slot ignored.");
+					}
 					return null;
 				}
+
+				//Debug.Log($"Merging slot {slot.slotName} into recipe {recipeName}.");
 
 				int overlayCount = 0;
 #if TEST_INSERTFIX
@@ -2718,9 +2732,6 @@ namespace UMA
 					}
 				}
 				slotDataList = slots.ToArray();
-				//DynamicUMADna:: This is a good place to compress the dnaValues list
-				//DynamicUMADna:: This is a good place to compress the slotDataList
-				//DynamicUMADna:: This is a good place to compress the sharedColors
 			}
 
 

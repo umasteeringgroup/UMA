@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 8a8569a68a0f8f2498efdbdb7da8c159
+timeCreated: 1430298300
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39941
+  packageName: 'The Blacksmith: Characters'
+  packageVersion: 1.0.3590
+  assetPath: Assets/Art/Props/Materials/challenger_sword.mat
+  uploadId: 82418

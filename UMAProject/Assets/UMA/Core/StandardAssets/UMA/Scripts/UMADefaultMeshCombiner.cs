@@ -41,6 +41,12 @@ namespace UMA
             Ticks_EnsureUMADataSetup = 0;
             Ticks_BuildActiveModifiers = 0;
         }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void StaticInitializeOnLoad()
+        {
+            ResetCombinerTimings();
+        }
 #endif
 
         UMAData umaData;

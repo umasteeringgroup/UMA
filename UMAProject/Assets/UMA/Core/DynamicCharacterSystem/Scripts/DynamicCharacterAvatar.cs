@@ -17,6 +17,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UMA.PoseTools;//so we can set the expression set based on the race
 using UnityEngine.SceneManagement;
+using System.Linq;
 
 #if UMA_ADDRESSABLES
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -5660,9 +5661,24 @@ namespace UMA.CharacterSystem
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         public static void StaticInitializeOnLoad()
         {
+            Ticks_LoadCharacter = 0;
+            Ticks_BuildCharacter = 0;
+            Ticks_InitializeBuild = 0;
+            Ticks_Phase1 = 0;
+            Ticks_Phase2 = 0;
+            Ticks_Phase3 = 0;
+            Ticks_Phase4 = 0;
+            Ticks_LoadPhase1 = 0;
+            Ticks_LoadPhase2 = 0;
+            Ticks_LoadPhase3 = 0;
+            Ticks_LoadPhase4 = 0;
+            Ticks_LoadPhase5 = 0;
+            debugExpressionPlayer = null;
+            firstAvatar = null;
             SmooshTargets = new Dictionary<string, Mesh>();
             CleanupSmooshScene();
 #if UNITY_EDITOR
+            smooshSceneEditorHooksRegistered = false;
             RegisterSmooshSceneEditorHooks();
 #endif
         }
@@ -6149,10 +6165,64 @@ namespace UMA.CharacterSystem
                     }
 #endif
                 }
+#if UMA_TESTING_COMPRESSION                
                 // compress the umaData.umaRecipe.slotDataList
+                var SlotDataList = umaRecipe.slotDataList.ToArray();
                 umaRecipe.Compress();
+                var CompressedSlotDataList = umaRecipe.slotDataList.ToArray();
+                CompareSlotDataLists(SlotDataList, CompressedSlotDataList);
+#endif                
             }
         }
+
+        private void CompareSlotDataLists(SlotData[] originalList, SlotData[] compressedList)
+        {
+            var originalNames = GetSlotNames(originalList);
+            var compressedNames = GetSlotNames(compressedList);
+
+            for (int i = 0; i < originalList.Length; i++)
+            {
+                var sd = originalList[i];
+                if (sd == null)
+                {
+                    continue;
+                }
+                if (!compressedNames.Contains(sd.slotName))
+                {
+                    Debug.LogWarning($"Slot '{sd.slotName}' was removed during compression.");
+                }
+            }
+            int originalnulls = CountNulls(originalList);
+            int compressednulls = CountNulls(compressedList);
+            Debug.Log($"Compression complete. Original count: {originalList.Length}, Compressed count: {compressedList.Length}");
+        }
+
+        private HashSet<string> GetSlotNames(SlotData[] list)
+        {
+            HashSet<string> names = new HashSet<string>();
+            for (int i = 0; i < list.Length; i++)
+            {
+                if (list[i] != null && !string.IsNullOrEmpty(list[i].slotName))
+                {
+                    names.Add(list[i].slotName);
+                }
+            }
+            return names;
+        }
+
+        private int CountNulls(SlotData[] list)
+        {
+           int count = 0;
+           for (int i = 0; i < list.Length; i++)
+           {
+               if (list[i] == null)
+               {
+                   count++;
+               }
+           }
+           return count;
+        }
+
 
         /// <summary>
         /// Checks whether the resulting slots in the recipe should actually be there when the build contained recipes that were cross compatible.

@@ -257,44 +257,70 @@ namespace UMA
 
         public void RefreshEffectorsFromChildren()
         {
-            UMAEffector[] childEffectors = GetComponentsInChildren<UMAEffector>(true);
-            List<UMAEffector> orderedEffectors = new List<UMAEffector>(childEffectors.Length);
+            List<UMAEffector> childEffectors = new List<UMAEffector>();
+            GetComponentsInChildren<UMAEffector>(true, childEffectors);
 
-            for (int i = 0; i < childEffectors.Length; i++)
+            int validCount = 0;
+            for (int i = 0; i < childEffectors.Count; i++)
             {
-                UMAEffector effector = childEffectors[i];
-                if (effector == null || effector.gameObject == gameObject)
-                    continue;
-
-                orderedEffectors.Add(effector);
+                UMAEffector e = childEffectors[i];
+                if (e != null && e.gameObject != gameObject)
+                    validCount++;
             }
 
-            if (!AreEffectorsEqual(effectors, orderedEffectors))
-                effectors = orderedEffectors.ToArray();
+            if (!EffectorsMatch(childEffectors, validCount))
+            {
+                UMAEffector[] newArray = new UMAEffector[validCount];
+                int w = 0;
+                for (int i = 0; i < childEffectors.Count; i++)
+                {
+                    UMAEffector e = childEffectors[i];
+                    if (e != null && e.gameObject != gameObject)
+                        newArray[w++] = e;
+                }
+                effectors = newArray;
+            }
         }
 
-        private static bool AreEffectorsEqual(UMAEffector[] current, List<UMAEffector> next)
+        private bool EffectorsMatch(List<UMAEffector> next, int nextValidCount)
         {
-            List<UMAEffector> currentList = new List<UMAEffector>(current != null ? current.Length : 0);
-            if (current != null)
-            {
-                for (int i = 0; i < current.Length; i++)
-                {
-                    UMAEffector effector = current[i];
-                    if (effector == null || effector.gameObject == null)
-                        continue;
+            if (effectors == null)
+                return nextValidCount == 0;
 
-                    currentList.Add(effector);
-                }
+            // Count valid entries in current without allocating
+            int curValidCount = 0;
+            for (int i = 0; i < effectors.Length; i++)
+            {
+                UMAEffector e = effectors[i];
+                if (e != null && e.gameObject != null)
+                    curValidCount++;
             }
 
-            if (currentList.Count != next.Count)
+            if (curValidCount != nextValidCount)
                 return false;
 
-            for (int i = 0; i < currentList.Count; i++)
+            // Walk both sequences simultaneously — zero allocation
+            int nextIdx = 0;
+            for (int curIdx = 0; curIdx < effectors.Length; curIdx++)
             {
-                if (!ReferenceEquals(currentList[i], next[i]))
+                UMAEffector cur = effectors[curIdx];
+                if (cur == null || cur.gameObject == null)
+                    continue;
+
+                // Skip nulls and self in next
+                while (nextIdx < next.Count)
+                {
+                    UMAEffector nxt = next[nextIdx];
+                    if (nxt != null && nxt.gameObject != gameObject)
+                        break;
+                    nextIdx++;
+                }
+
+                if (nextIdx >= next.Count)
                     return false;
+                if (!ReferenceEquals(cur, next[nextIdx]))
+                    return false;
+                nextIdx++;
             }
 
             return true;

@@ -23,13 +23,14 @@ namespace UMA
         public AnimationCurve curve = new AnimationCurve(new Keyframe(0, 0), new Keyframe(0.5f, 0.5f), new Keyframe(1, 1));
         public float minMapping = -1.0f; // The minimum value to map. This will be the base value when the adjusted input is 0.
         public float maxMapping = 1.0f; // The maximum value to map. This will be the maximum value when the adjusted input is 1.
+
+        public bool enabled = true;
+
 #if UNITY_EDITOR
         private DNACurve _TemplateCurve = null;
         public bool expanded;
         public bool selected;
         public bool showHelp;
-        public bool enabled = true;
-
 
         public string title
         {

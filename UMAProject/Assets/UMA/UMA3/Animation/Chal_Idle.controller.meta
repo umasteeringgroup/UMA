@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 3fba2850d73a5ac4aa59cb69563bae05
+timeCreated: 1430307304
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39941
+  packageName: 'The Blacksmith: Characters'
+  packageVersion: 1.0.3590
+  assetPath: Assets/Animation/Chal_Idle.controller
+  uploadId: 82418

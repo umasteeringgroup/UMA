@@ -1364,10 +1364,6 @@ namespace UMA
 			BoneIndexEntry entry;
 			if (bonesCollection.TryGetValue(boneTransform, out entry))
 			{
-				// Fast path: single entry — no need to compare bind poses
-				if (entry.index >= 0)
-					return entry.index;
-
 				for (int i = 0; i < entry.Count; i++)
 				{
 					var res = entry[i];

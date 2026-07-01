@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEditor;
 using UMA.Examples;
 using UMA.CharacterSystem;
@@ -16,6 +17,15 @@ namespace UMA.Editors
         private static bool _optionsFoldout = true;
         private static Vector2 _slotScroll;
         private static Dictionary<string, bool> _slotSelection = new Dictionary<string, bool>(64);
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void StaticInitializeOnLoad()
+        {
+            _internalSlotLodFoldout = false;
+            _optionsFoldout = true;
+            _slotScroll = Vector2.zero;
+            _slotSelection = new Dictionary<string, bool>(64);
+        }
 
         private static int LoadInt(string key, int defaultValue)
         {
@@ -367,6 +377,90 @@ namespace UMA.Editors
             }
         }
 
+        private static void DrawSlotBasedLodSection(UMASimpleLOD lod)
+        {
+            if (lod == null)
+            {
+                return;
+            }
+
+            bool hasSlotBasedLod = lod.swapSlots || lod.useSlotDropping;
+            if (!hasSlotBasedLod)
+            {
+                return;
+            }
+
+            EditorGUILayout.Space(5);
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                EditorGUILayout.LabelField("Slot-Based LOD", EditorStyles.boldLabel);
+
+                EditorGUI.indentLevel++;
+                EditorGUILayout.LabelField("Mode", lod.swapSlots ? "Swap Slots" : "Slot Dropping");
+                EditorGUILayout.LabelField("Current LOD Level", lod.CurrentLOD.ToString());
+                if (lod.lodOffset != 0)
+                {
+                    EditorGUILayout.LabelField("LOD Offset", lod.lodOffset.ToString());
+                }
+                EditorGUI.indentLevel--;
+
+                var umaData = lod.GetComponent<UMAData>();
+                var recipe = (umaData != null) ? umaData.umaRecipe : null;
+                var slots = (recipe != null) ? recipe.slotDataList : null;
+
+                if (slots == null || slots.Length == 0)
+                {
+                    EditorGUILayout.HelpBox("No slot data available yet. Build the character to see slot LOD info.", MessageType.Info);
+                    return;
+                }
+
+                EditorGUILayout.Space(3);
+                EditorGUILayout.LabelField("Equipped Slots", EditorStyles.boldLabel);
+
+                int lodVariantCount = 0;
+                int baseSlotCount = 0;
+                for (int i = 0; i < slots.Length; i++)
+                {
+                    var sd = slots[i];
+                    if (sd == null)
+                    {
+                        continue;
+                    }
+
+                    string slotName = sd.slotName;
+                    bool isLodVariant = slotName.IndexOf("_LOD", StringComparison.Ordinal) >= 0;
+
+                    EditorGUILayout.BeginHorizontal();
+                    if (sd.Suppressed)
+                    {
+                        GUI.color = Color.gray;
+                    }
+                    EditorGUILayout.LabelField(slotName, EditorStyles.wordWrappedLabel);
+                    if (isLodVariant)
+                    {
+                        EditorGUILayout.LabelField("(LOD variant)", EditorStyles.miniLabel, GUILayout.Width(80));
+                        lodVariantCount++;
+                    }
+                    else
+                    {
+                        EditorGUILayout.LabelField("(base)", EditorStyles.miniLabel, GUILayout.Width(50));
+                        baseSlotCount++;
+                    }
+                    if (sd.Suppressed)
+                    {
+                        EditorGUILayout.LabelField("[dropped]", EditorStyles.miniLabel, GUILayout.Width(60));
+                        GUI.color = Color.white;
+                    }
+                    EditorGUILayout.EndHorizontal();
+                }
+
+                EditorGUILayout.Space(3);
+                EditorGUILayout.LabelField(
+                    string.Format("LOD variants: {0}  |  Base slots: {1}  |  Total: {2}", lodVariantCount, baseSlotCount, slots.Length),
+                    EditorStyles.miniLabel);
+            }
+        }
+
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
@@ -374,6 +468,7 @@ namespace UMA.Editors
             var lod = (UMASimpleLOD)target;
 
             DrawInternalSlotLodSection(lod);
+            DrawSlotBasedLodSection(lod);
 
             if (!Application.isPlaying)
             {
@@ -386,59 +481,60 @@ namespace UMA.Editors
                         "When enabled, you can force a specific LOD level at edit time."),
                         lod.editorOverrideLOD);
 
-                    using (new EditorGUI.DisabledScope(!lod.editorOverrideLOD))
-                    {
-                        int max = lod.maxLOD;
-                        if (max < 1)
-                        {
-                            max = 1;
-                        }
-
-                        int currentForced = Mathf.Clamp(lod.editorForcedLOD, 0, max - 1);
-                        int desired = EditorGUILayout.IntSlider(new GUIContent(
-                            "Current LOD Level",
-                            "Forces the UMA to rebuild at the selected LOD level (edit time)."),
-                            currentForced,
-                            0,
-                            max - 1);
-
-                        // Display current triangle count
-                        int triangleCount = GetCurrentTriangleCount(lod);
-                        if (triangleCount >= 0)
-                        {
-                            EditorGUILayout.LabelField("Triangle Count", triangleCount.ToString("N0"));
-                        }
-
-                        if (desired != currentForced)
-                        {
-                            lod.editorForcedLOD = desired;
-                            lod.DoManualLODCheck(desired);
-                            if (lod.useInternalMeshLOD)
+                            using (new EditorGUI.DisabledScope(!lod.editorOverrideLOD))
                             {
-                                lod.UpdateInternalLOD();
-                                return;
+                                int max = lod.maxLOD;
+                                if (max < 1)
+                                {
+                                    max = 1;
+                                }
+
+                                int currentForced = Mathf.Clamp(lod.editorForcedLOD, 0, max - 1);
+                                int desired = EditorGUILayout.IntSlider(new GUIContent(
+                                    "Current LOD Level",
+                                    "Forces the UMA to rebuild at the selected LOD level (edit time)."),
+                                    currentForced,
+                                    0,
+                                    max - 1);
+
+                                // Display current triangle count
+                                int triangleCount = GetCurrentTriangleCount(lod);
+                                if (triangleCount >= 0)
+                                {
+                                    EditorGUILayout.LabelField("Triangle Count", triangleCount.ToString("N0"));
+                                }
+
+                                if (desired != currentForced)
+                                {
+
+                                    lod.editorForcedLOD = desired;
+                                    lod.DoManualLODCheck(desired);
+                                    if (lod.useInternalMeshLOD)
+                                    {
+                                        lod.UpdateInternalLOD();
+                                        return;
+                                    }
+                                    EditorUtility.SetDirty(lod);
+                                    ForceEditTimeRebuild(lod.gameObject);
+                                }
                             }
-                            EditorUtility.SetDirty(lod);
-                            ForceEditTimeRebuild(lod.gameObject);
                         }
                     }
-                }
-            }
 
-            if (Application.isPlaying)
-            {
-                EditorGUILayout.LabelField("Current LOD", lod.CurrentLOD.ToString());
+                    if(Application.isPlaying)
+                    {
+                        EditorGUILayout.LabelField("Current LOD", lod.CurrentLOD.ToString());
 
-                // Display current triangle count in play mode too
-                int playModeTriCount = GetCurrentTriangleCount(lod);
-                if (playModeTriCount >= 0)
-                {
-                    EditorGUILayout.LabelField("Triangle Count", playModeTriCount.ToString("N0"));
-                }
+                        // Display current triangle count in play mode too
+                        int playModeTriCount = GetCurrentTriangleCount(lod);
+                        if (playModeTriCount >= 0)
+                        {
+                            EditorGUILayout.LabelField("Triangle Count", playModeTriCount.ToString("N0"));
+                        }
 
-                EditorGUILayout.Space(5);
-                DrawCurrentLodStatusGrid(lod);
-            }
+                        EditorGUILayout.Space(5);
+                        DrawCurrentLodStatusGrid(lod);
+                    }
 
             DrawDefaultInspector();
 

@@ -59,6 +59,18 @@ namespace UMA
         public static long Ticks_AssignBones;
         public static long Ticks_BuildCloth;
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void StaticInitializeOnLoad()
+        {
+            ResetTimings();
+#if UMA_MESHAPI_2021
+            UseParallelBoneWeights = true;
+            UseParallelUVRemap = true;
+            FixupRotation = Quaternion.Euler(0f, 270f, 90f);
+            BoundsInflationFraction = 0.01f;
+#endif
+        }
+
         public static void ResetTimings()
         {
             Ticks_CombineInternalTotal = 0;

@@ -12,6 +12,18 @@ namespace UMA.Editors
         public static Dictionary<string, string> TemporarySlotTags = new Dictionary<string, string>();
         public static Dictionary<string, int> SelectedRace = new Dictionary<string, int>();
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void StaticInitializeOnLoad()
+        {
+            TemporarySlotTags = new Dictionary<string, string>();
+            SelectedRace = new Dictionary<string, int>();
+            _foldout = new Dictionary<string, bool>();
+            _utilitiesFoldout = new Dictionary<string, bool>();
+            _recentOverlayAssets.Clear();
+            _recentOverlayNames.Clear();
+            _recentOverlaysLoaded = false;
+        }
+
         private readonly UMAData.UMARecipe _recipe;
         private readonly SlotData _slotData;
         private readonly UnityEngine.Object _recipeContext;

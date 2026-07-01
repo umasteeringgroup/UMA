@@ -1047,12 +1047,12 @@ namespace UMA.Decals
             {
                 return;
             }
-
-            var animators = Avatar.GetComponentsInChildren<Animator>(true);
+			var animators = new List<Animator>();
+        	Avatar.GetComponentsInChildren<Animator>(true, animators);
             if (PauseAvatarAnimation)
             {
                 // Cache current speeds and set to 0
-                for (int i = 0; i < animators.Length; i++)
+                for (int i = 0; i < animators.Count; i++)
                 {
                     var a = animators[i];
                     if (a == null)

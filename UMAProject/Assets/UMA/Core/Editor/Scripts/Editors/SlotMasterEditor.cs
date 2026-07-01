@@ -10,6 +10,14 @@ namespace UMA.Editors
         public static string LastSlot = "";
         public static Dictionary<string, bool> OpenSlots = new Dictionary<string, bool>();
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void StaticInitializeOnLoad()
+        {
+            LastSlot = "";
+            OpenSlots = new Dictionary<string, bool>();
+            _slotPickerID = -1;
+        }
+
         protected readonly UMAData.UMARecipe _recipe;
         protected readonly UnityEngine.Object _recipeContext;
         protected readonly List<SlotEditor> _slotEditors = new List<SlotEditor>();

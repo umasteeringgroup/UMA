@@ -4558,7 +4558,7 @@ namespace UMA
             TypeFromString.Clear();
             for (int i = 0; i < Types.Length; i++)
             {
-                Type st = Types[i];
+                Type st = Types[i];            
                 TypeFromString.Add(st.Name, st);
             }
         }

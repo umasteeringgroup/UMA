@@ -1318,8 +1318,9 @@ namespace UMA
             hitPoint = default;
             hitNormal = default;
 
-            var smrs = avatar.GetComponentsInChildren<SkinnedMeshRenderer>(true);
-            if (smrs == null || smrs.Length == 0) return false;
+            var smrs = new List<SkinnedMeshRenderer>();
+            avatar.GetComponentsInChildren<SkinnedMeshRenderer>(true, smrs);
+            if (smrs == null || smrs.Count == 0) return false;
 
             Mesh bakeMesh = new Mesh();
             MeshHit best = new MeshHit { distance = float.MaxValue, triangleIndex = -1 };

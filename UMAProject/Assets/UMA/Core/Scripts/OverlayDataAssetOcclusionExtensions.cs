@@ -41,6 +41,16 @@ namespace UMA
 {
 	public static class OverlayDataAssetOcclusionExtensions
 	{
+		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+		private static void StaticInitializeOnLoad()
+		{
+			pixels = null;
+			pixelsTexture = null;
+			uScale = 0f;
+			vScale = 0f;
+			stride = 0;
+		}
+
 		public static void CleanUp()
 		{
 			pixels = null;
