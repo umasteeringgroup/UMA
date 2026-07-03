@@ -763,6 +763,8 @@ namespace UMA
         int iterations = 10;
         #region Timing Buttons
 
+        bool forceFullRebuild = false;
+
         private void OnGUI()
         {
             if (!showTimingButtons || _timingInProgress) return;
@@ -816,6 +818,12 @@ namespace UMA
                 iterations = 1; // Reset iterations for each test
                 _timingCoroutine = StartCoroutine(TimeBuildCoroutine(typeof(UMADefaultMeshCombiner)));
             }
+
+            if (GUI.Button(new Rect(startX, startY + buttonHeight + spacing, buttonWidth * 2 + spacing, buttonHeight), "Force Full Rebuild Before timing   "))
+            {
+                forceFullRebuild = true;
+            }
+
 
             // Show timing result
             if (!string.IsNullOrEmpty(_timingResult))
@@ -875,7 +883,7 @@ namespace UMA
             {
 #if !USE_BUILD_CHARACTER
                 float startTime = Time.realtimeSinceStartup;
-                avatar.Dirty(false,false,true);
+                avatar.Dirty(true,false,true);
                 generator.GenerateSingleUMA(avatar,false);
                 float elapsed = Time.realtimeSinceStartup - startTime;
                 totalTime += elapsed;

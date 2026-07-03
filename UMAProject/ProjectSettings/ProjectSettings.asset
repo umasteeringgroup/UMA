@@ -834,7 +834,7 @@ PlayerSettings:
   webEnableSubmoduleStrippingCompatibility: 0
   scriptingDefineSymbols:
     Android: __BETTERSHADERS__
-    Standalone: UMA_DNACOLLECTIONS;__BETTERSHADERS__;UMA_BURSTCOMPILE;ZUMA_UNSAFE
+    Standalone: UMA_DNACOLLECTIONS;__BETTERSHADERS__;UMA_BURSTCOMPILE;UMA_UNSAFE
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend:

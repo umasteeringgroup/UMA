@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
@@ -40,9 +40,9 @@ namespace UMA
 			}
 			internal void RestoreUMATransform()
 			{
-				umaTransform.rotation = rotation;
-				umaTransform.position = position;
-				umaTransform.scale = scale;
+				rotation = umaTransform.rotation;
+				position = umaTransform.position;
+				scale = umaTransform.scale;
 			}
 		}
 
@@ -305,6 +305,7 @@ namespace UMA
 					db.position = position;
 					db.rotation = rotation;
 					db.scale = scale;
+					InvalidateMatrix(db);
 				}
 				else
 				{
@@ -313,6 +314,7 @@ namespace UMA
 						db.boneTransform.localPosition = position;
 						db.boneTransform.localRotation = rotation;
 						db.boneTransform.localScale = scale;
+						InvalidateMatrix(db);
 					}
 					else
 					{
@@ -393,12 +395,14 @@ namespace UMA
 				{
 					db.accessedFrame = frame;
 					db.position = position;
+					InvalidateMatrix(db);
 				}
 				else
 				{
 					if (db.boneTransform != null)
 					{
 						db.boneTransform.localPosition = position;
+						InvalidateMatrix(db);
 					}
 					else
 					{
@@ -424,12 +428,14 @@ namespace UMA
 				{
 					db.accessedFrame = frame;
 					db.position = db.position + delta * weight;
+					InvalidateMatrix(db);
 				}
 				else
 				{
 					if (db.boneTransform != null)
 					{
 						db.boneTransform.localPosition = db.boneTransform.localPosition + delta * weight;
+						InvalidateMatrix(db);
 					}
 					else
 					{
@@ -455,16 +461,46 @@ namespace UMA
 				{
 					db.accessedFrame = frame;
 					db.scale = scale;
+					InvalidateMatrix(db);
 				}
 				else
 				{
 					if (db.boneTransform != null)
 					{
 						db.boneTransform.localScale = scale;
+						InvalidateMatrix(db);
 					}
 					else
 					{
 						throw new Exception("Attempting to SetScale on non animated bone: " + db.umaTransform.name);
+					}
+				}
+			}
+		}
+
+		public override void SetScaleRelative(int nameHash, Vector3 scale, float weight = 1f)
+		{
+			BoneDataBoneBaking db;
+			if (boneHashData.TryGetValue(nameHash, out db))
+			{
+				if (updating)
+				{
+					db.accessedFrame = frame;
+					scale.Scale(db.scale);
+					db.scale = Vector3.Lerp(db.scale, scale, weight);
+					InvalidateMatrix(db);
+				}
+				else
+				{
+					if (db.boneTransform != null)
+					{
+						scale.Scale(db.boneTransform.localScale);
+						db.boneTransform.localScale = Vector3.Lerp(db.boneTransform.localScale, scale, weight);
+						InvalidateMatrix(db);
+					}
+					else
+					{
+						throw new Exception("Attempting to SetScaleRelative on non animated bone: " + db.umaTransform.name);
 					}
 				}
 			}
@@ -485,16 +521,46 @@ namespace UMA
 				{
 					db.accessedFrame = frame;
 					db.rotation = rotation;
+					InvalidateMatrix(db);
 				}
 				else
 				{
 					if (db.boneTransform != null)
 					{
 						db.boneTransform.localRotation = rotation;
+						InvalidateMatrix(db);
 					}
 					else
 					{
 						throw new Exception("Attempting to SetRotation on non animated bone: " + db.umaTransform.name);
+					}
+				}
+			}
+		}
+
+		public override void SetRotationRelative(int nameHash, Quaternion rotation, float weight)
+		{
+			BoneDataBoneBaking db;
+			if (boneHashData.TryGetValue(nameHash, out db))
+			{
+				if (updating)
+				{
+					db.accessedFrame = frame;
+					Quaternion fullRotation = db.rotation * rotation;
+					db.rotation = Quaternion.Slerp(db.rotation, fullRotation, weight);
+					InvalidateMatrix(db);
+				}
+				else
+				{
+					if (db.boneTransform != null)
+					{
+						Quaternion fullRotation = db.boneTransform.localRotation * rotation;
+						db.boneTransform.localRotation = Quaternion.Slerp(db.boneTransform.localRotation, fullRotation, weight);
+						InvalidateMatrix(db);
+					}
+					else
+					{
+						throw new Exception("Attempting to SetRotationRelative on non animated bone: " + db.umaTransform.name);
 					}
 				}
 			}
@@ -512,6 +578,7 @@ namespace UMA
 					db.rotation = Quaternion.Slerp(db.rotation, db.boneTransform.localRotation, weight);
 					db.scale = Vector3.Lerp(db.scale, scale, weight);
 					db.accessedFrame = frame;
+					InvalidateMatrix(db);
 				}
 				else
 				{
@@ -520,6 +587,7 @@ namespace UMA
 						db.boneTransform.localPosition = Vector3.Lerp(db.boneTransform.localPosition, position, weight);
 						db.boneTransform.localRotation = Quaternion.Slerp(db.boneTransform.localRotation, db.boneTransform.localRotation, weight);
 						db.boneTransform.localScale = Vector3.Lerp(db.boneTransform.localScale, scale, weight);
+						InvalidateMatrix(db);
 					}
 					else
 					{
@@ -552,6 +620,7 @@ namespace UMA
 					var fullScale = scale;
 					fullScale.Scale(db.scale);
 					db.scale = Vector3.Lerp(db.scale, fullScale, weight);
+					InvalidateMatrix(db);
 				}
 				else
 				{
@@ -563,6 +632,7 @@ namespace UMA
 						var fullScale = scale;
 						fullScale.Scale(db.boneTransform.localScale);
 						db.boneTransform.localScale = Vector3.Lerp(db.boneTransform.localScale, fullScale, weight);
+						InvalidateMatrix(db);
 					}
 					else
 					{
@@ -583,6 +653,7 @@ namespace UMA
 			{
 				db.preserved = false;
 				db.RestoreUMATransform();
+				InvalidateMatrix(db);
 				return true;
 			}
 
@@ -598,6 +669,7 @@ namespace UMA
 			{
 				db.preserved = false;
 				db.RestoreUMATransform();
+				db.matrixFrame = -1;
 			}
 			if (updating)
 			{
@@ -617,6 +689,7 @@ namespace UMA
 				db.boneTransform.localPosition = db.position;
 				db.boneTransform.localRotation = db.rotation;
 				db.boneTransform.localScale = db.scale;
+				InvalidateMatrix(db);
 				return true;
 			}
 
@@ -880,6 +953,44 @@ namespace UMA
 				db.grotation = parentdb.grotation * db.rotation;
 			}
 			db.localToWorld = Matrix4x4.TRS(db.gposition, db.grotation, db.gscale);
+		}
+
+		private void InvalidateMatrix(BoneDataBoneBaking db)
+		{
+			if (db == null)
+			{
+				return;
+			}
+
+			int changedHash = db.boneNameHash;
+			foreach (var bone in boneHashData.Values)
+			{
+				if (bone.boneNameHash == changedHash || IsDescendantOf(bone, changedHash))
+				{
+					bone.matrixFrame = -1;
+				}
+			}
+		}
+
+		private bool IsDescendantOf(BoneDataBoneBaking bone, int parentHash)
+		{
+			int currentHash = bone.parentBoneNameHash;
+			while (currentHash != 0 && currentHash != bone.boneNameHash)
+			{
+				if (currentHash == parentHash)
+				{
+					return true;
+				}
+
+				BoneDataBoneBaking parent;
+				if (!boneHashData.TryGetValue(currentHash, out parent))
+				{
+					return false;
+				}
+				currentHash = parent.parentBoneNameHash;
+			}
+
+			return false;
 		}
 
 		public void ForceUpdateMatrices()

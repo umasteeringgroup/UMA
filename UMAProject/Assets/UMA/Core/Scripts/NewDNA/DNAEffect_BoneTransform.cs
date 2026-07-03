@@ -47,19 +47,21 @@ namespace UMA
             base.Apply(avatar, dna, value);
             if (avatar != null && !string.IsNullOrEmpty(boneName))  
             {
-                Transform boneTransform = avatar.skeleton.GetBoneTransform(boneName);
-                if (boneTransform != null)
+                var skeleton = avatar.skeleton;
+                int hash = UMAUtils.StringToHash(boneName);
+                if (skeleton != null && skeleton.HasBone(hash))
                 {
                     value = GetMappedValue(value);
-                    // Apply position, rotation, and scale
-                    Vector3 scaleDelta = (boneTransform.localScale - Scale) * value;
-                    Vector3 positionDelta = (boneTransform.localPosition - Position) * value;
+                    Vector3 currentPosition = skeleton.GetPosition(hash);
+                    Quaternion currentRotation = skeleton.GetRotation(hash);
+                    Vector3 currentScale = skeleton.GetScale(hash);
+                    Vector3 scaleDelta = (currentScale - Scale) * value;
+                    Vector3 positionDelta = (currentPosition - Position) * value;
                     Quaternion rotationQuat = Quaternion.Euler(Rotation);
 
-
-                    boneTransform.localPosition +=  positionDelta;
-                    boneTransform.localRotation = Quaternion.Slerp(boneTransform.localRotation, rotationQuat * boneTransform.localRotation, value);
-                    boneTransform.localScale += scaleDelta;
+                    skeleton.SetPosition(hash, currentPosition + positionDelta);
+                    skeleton.SetRotation(hash, Quaternion.Slerp(currentRotation, rotationQuat * currentRotation, value));
+                    skeleton.SetScale(hash, currentScale + scaleDelta);
                 }
             }
         }

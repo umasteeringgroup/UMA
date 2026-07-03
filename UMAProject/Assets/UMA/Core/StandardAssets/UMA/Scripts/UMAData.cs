@@ -761,12 +761,7 @@ namespace UMA
 				// the authored TPose + DNA pose here - otherwise they silently inherit whatever
 				// pose bone baking's Animator rebind left behind, producing a small but visible
 				// full-body lean on the next Default/Jobified build.
-				GotoTPose();
-				ApplyDNA();
-				if (umaRecipe.raceData.useNewDNA)
-				{
-					NewDNAApply();
-				}
+				ResetToTPoseAndApplyDNA();
 			}
 		}
 
@@ -830,6 +825,30 @@ namespace UMA
             }
             return updateFlags;
         }
+
+		public void ResetToTPoseAndApplyDNA()
+		{
+			if (skeleton == null)
+			{
+				return;
+			}
+
+			skeleton.ResetAll();
+			if (rawAvatar)
+			{
+				return;
+			}
+
+			GotoTPose();
+			if (umaRecipe?.raceData != null && umaRecipe.raceData.useNewDNA)
+			{
+				NewDNAApply();
+			}
+			else
+			{
+				ApplyDNA();
+			}
+		}
 
         public DNABuildType NewDNAPostApply()
         {

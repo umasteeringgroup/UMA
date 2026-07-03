@@ -163,7 +163,7 @@ namespace UMA
 					umaData.umaRecipe.AddDNAUpdater(slotData.asset.slotDNA);
 				}
 			}
-			umaSkeleton.ResetAll();
+			umaData.ResetToTPoseAndApplyDNA();
 			AddHumanoidBones();
 			MarkAnimatedBones();
 
@@ -173,13 +173,6 @@ namespace UMA
 			// by EndSkeletonUpdate's anchor-chain logic and does not need explicit
 			// preservation here.
 			umaSkeleton.SetAnimatedBone(umaSkeleton.rootBoneHash);
-
-			umaData.GotoTPose();
-
-			// Apply both old and new DNA systems before reading bone transforms
-			umaData.ApplyDNA();
-			if (umaData.umaRecipe.raceData.useNewDNA)
-				umaData.NewDNAApply();
 			umaData.FireDNAAppliedEvents();
 
 			// Force Transform hierarchy to match skeleton cache before computing matrices.

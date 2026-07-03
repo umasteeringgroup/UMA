@@ -1173,22 +1173,7 @@ namespace UMA
 
             umaData.FirePreUpdateUMABody();
 
-            // Keep this to ensure a clean baseline. Removing it caused skeleton issues.
-            umaData.skeleton.ResetAll();
-
-            // Put the skeleton into TPose so rotations will be valid for generating avatar
-            if (!umaData.rawAvatar)
-            {
-                umaData.GotoTPose();
-                if (umaData.umaRecipe.raceData.useNewDNA == false)
-                {
-                    umaData.ApplyDNA();
-                }
-                else
-                {
-                    umaData.NewDNAApply();
-                }
-            }
+            umaData.ResetToTPoseAndApplyDNA();
 
             // Only restore items if enabled, as this can be expensive
             if (SaveAndRestoreIgnoredItems)

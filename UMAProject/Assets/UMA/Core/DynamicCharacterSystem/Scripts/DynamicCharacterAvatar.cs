@@ -4302,7 +4302,6 @@ namespace UMA.CharacterSystem
         /// </summary>
         /// <param name="settingsToLoad"></param>
         /// <param name="customLoadOptions"></param>
-        [Obsolete("Use LoadAvatarDefinition(string) instead.")]
         public void OldLoadFromRecipeString(string settingsToLoad, LoadOptions customLoadOptions = LoadOptions.useDefaults, bool ClearWardrobe = false)
         {
             if (ClearWardrobe)
