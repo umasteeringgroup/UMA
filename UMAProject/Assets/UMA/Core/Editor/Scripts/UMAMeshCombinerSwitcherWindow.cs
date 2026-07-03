@@ -59,6 +59,13 @@ namespace UMA.Editors
 
             EditorGUILayout.Space(4f);
 
+            EditorGUILayout.HelpBox(
+                "Switching mesh combiners requires a full character rebuild to take effect. " +
+                "Existing generated characters will not reflect the change until they are rebuilt.",
+                MessageType.Warning);
+
+            EditorGUILayout.Space(6f);
+
             // ── Current combiner indicator ──────────────────────
             EditorGUILayout.LabelField("Generator:", _generator.name, EditorStyles.miniLabel);
             var current = GetCurrentCombiner();

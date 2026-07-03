@@ -828,6 +828,7 @@ namespace UMA.Editors
         private static GUIStyle GetRedFoldoutStyle()
         {
             GUIStyle style = new GUIStyle(EditorStyles.foldout);
+            /*
             style.normal.textColor = Color.red;
             style.onNormal.textColor = Color.red;
             style.hover.textColor = Color.red;
@@ -835,7 +836,7 @@ namespace UMA.Editors
             style.focused.textColor = Color.red;
             style.onFocused.textColor = Color.red;
             style.active.textColor = Color.red;
-            style.onActive.textColor = Color.red;
+            style.onActive.textColor = Color.red;*/
             return style;
         }
 
