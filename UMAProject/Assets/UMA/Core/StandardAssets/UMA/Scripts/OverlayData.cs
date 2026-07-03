@@ -703,7 +703,9 @@ namespace UMA
 				{
 					if ((overlay1.asset != overlay2.asset) ||
 						(overlay1.rect != overlay2.rect) ||
-						(overlay1.colorData != overlay2.colorData))
+						(overlay1.colorData != overlay2.colorData) ||
+						(overlay1.colorData.IsASharedColor != overlay2.colorData.IsASharedColor) ||  
+						(overlay1.colorData.IsASharedColor && (overlay1.colorData.name != overlay2.colorData.name)))
                     {
 						return false;
                     }
