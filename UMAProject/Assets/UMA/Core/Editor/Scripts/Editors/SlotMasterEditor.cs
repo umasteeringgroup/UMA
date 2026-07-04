@@ -183,6 +183,37 @@ namespace UMA.Editors
             _recipe.MergeSlot(slot, false);
         }
 
+        private void SaveRecipeContext()
+        {
+            if (_recipeContext == null)
+            {
+                return;
+            }
+
+            if (_recipeContext is UMARecipeBase recipeBase)
+            {
+                recipeBase.Save(_recipe);
+                EditorUtility.SetDirty(recipeBase);
+                if (EditorUtility.IsPersistent(recipeBase))
+                {
+                    AssetDatabase.SaveAssetIfDirty(recipeBase);
+                }
+
+                if (recipeBase is UMATextRecipe textRecipe)
+                {
+                    UMAUpdateProcessor.UpdateRecipe(textRecipe);
+                }
+
+                return;
+            }
+
+            EditorUtility.SetDirty(_recipeContext);
+            if (EditorUtility.IsPersistent(_recipeContext))
+            {
+                AssetDatabase.SaveAssetIfDirty(_recipeContext);
+            }
+        }
+
         protected void RecursiveScanFoldersForAssets(string path)
         {
             var assetFiles = System.IO.Directory.GetFiles(path, "*.asset");
@@ -632,6 +663,7 @@ namespace UMA.Editors
 
                     _slotEditors.RemoveAt(i);
                     _recipe.SetSlot(editor.idx, null);
+                    SaveRecipeContext();
                     i--;
                     changed = true;
                 }

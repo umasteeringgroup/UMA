@@ -701,11 +701,14 @@ namespace UMA
 			{
 				if (overlay2)
 				{
+					bool overlay1HasSharedColor = overlay1.colorData != null && overlay1.colorData.IsASharedColor;
+					bool overlay2HasSharedColor = overlay2.colorData != null && overlay2.colorData.IsASharedColor;
+
 					if ((overlay1.asset != overlay2.asset) ||
-						(overlay1.rect != overlay2.rect) ||
+						(overlay1.rect != overlay2.rect) ||						
 						(overlay1.colorData != overlay2.colorData) ||
-						(overlay1.colorData.IsASharedColor != overlay2.colorData.IsASharedColor) ||  
-						(overlay1.colorData.IsASharedColor && (overlay1.colorData.name != overlay2.colorData.name)))
+						(overlay1HasSharedColor != overlay2HasSharedColor) ||  
+						(overlay1HasSharedColor && (overlay1.colorData.name != overlay2.colorData.name)))
                     {
 						return false;
                     }

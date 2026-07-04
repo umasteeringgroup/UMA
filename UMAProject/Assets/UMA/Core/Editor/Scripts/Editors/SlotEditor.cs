@@ -369,6 +369,7 @@ namespace UMA.Editors
                                         _slotData.asset = AssetDatabase.LoadAssetAtPath<SlotDataAsset>(AssetDatabase.GetAssetPath(_slotData.asset));
                                         _slotData.UpdateFromAsset(_slotData.asset);
                                         changed = true;
+                                        SaveRecipeContext();
                                         GUIUtility.ExitGUI();
                                     }
                                 }
@@ -498,6 +499,7 @@ namespace UMA.Editors
                                 _dnaDirty = true;
                                 _meshDirty = true;
                                 changed = true;
+                                SaveRecipeContext();
                                 GUIUtility.ExitGUI();
                             }
                         }
@@ -681,6 +683,7 @@ namespace UMA.Editors
                             _textureDirty = true;
                             _meshDirty = true;
                             changed = true;
+                            SaveRecipeContext();
                             GUIUtility.ExitGUI();
                         }
 
@@ -709,6 +712,7 @@ namespace UMA.Editors
                             _overlayData.RemoveAt(i);
                             _textureDirty = true;
                             changed = true;
+                            SaveRecipeContext();
                             GUIUtility.ExitGUI();
                         }
                     }
@@ -757,6 +761,7 @@ namespace UMA.Editors
                             _textureDirty = true;
                             _meshDirty = true;
                             changed = true;
+                            SaveRecipeContext();
                             GUIUtility.ExitGUI();
                         }
                     }
