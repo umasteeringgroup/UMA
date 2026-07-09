@@ -357,21 +357,18 @@ namespace UMA
                         // Unpack DNA
                         splitter[0] = ';';
                         string[] Dna = s.Substring(2).Trim().Split(splitter, StringSplitOptions.RemoveEmptyEntries);
-                        if (Dna.Length > 0)
+                        List<DnaDef> theDna = new List<DnaDef>();
+                        foreach (string d in Dna)
                         {
-                            List<DnaDef> theDna = new List<DnaDef>();
-                            foreach (string d in Dna)
+                            splitter[0] = '=';
+                            string[] dnaval = d.Split(splitter, StringSplitOptions.RemoveEmptyEntries);
+                            if (dnaval.Length > 1)
                             {
-                                splitter[0] = '=';
-                                string[] dnaval = d.Split(splitter, StringSplitOptions.RemoveEmptyEntries);
-                                if (dnaval.Length > 1)
-                                {
-                                    DnaDef newDna = new DnaDef(dnaval[0], Convert.ToInt32(dnaval[1], 16));
-                                    theDna.Add(newDna);
-                                }
+                                DnaDef newDna = new DnaDef(dnaval[0], Convert.ToInt32(dnaval[1], 16));
+                                theDna.Add(newDna);
                             }
-                            adf.Dna = theDna.ToArray();
                         }
+                        adf.Dna = theDna.ToArray();
                         break;
                 }
             }
@@ -415,22 +412,20 @@ namespace UMA
                         // Unpack DNA
                         splitter[0] = ';';
                         string[] Dna = s.Substring(2).Trim().Split(splitter, StringSplitOptions.RemoveEmptyEntries);
-                        if (Dna.Length > 0)
+                        List<DnaDef> theDna = new List<DnaDef>();
+                        for (int i1 = 0; i1 < Dna.Length; i1++)
                         {
-                            List<DnaDef> theDna = new List<DnaDef>();
-                            for (int i1 = 0; i1 < Dna.Length; i1++)
+                            string d = Dna[i1];
+                            splitter[0] = '=';
+                            string[] dnaval = d.Split(splitter, StringSplitOptions.RemoveEmptyEntries);
+                            if (dnaval.Length > 1)
                             {
-                                string d = Dna[i1];
-                                splitter[0] = '=';
-                                string[] dnaval = d.Split(splitter, StringSplitOptions.RemoveEmptyEntries);
-                                if (dnaval.Length > 1)
-                                {
-                                    DnaDef newDna = new DnaDef(dnaval[0], Convert.ToInt32(dnaval[1], 16));
-                                    theDna.Add(newDna);
-                                }
+                                DnaDef newDna = new DnaDef(dnaval[0], Convert.ToInt32(dnaval[1], 16));
+                                theDna.Add(newDna);
                             }
-                            adf.Dna = theDna.ToArray();
                         }
+                        adf.Dna = theDna.ToArray();
+                        
                         break;
                 }
             }
