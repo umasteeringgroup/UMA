@@ -68,7 +68,7 @@ namespace UMA.Editors
 
 				using (new EditorGUI.DisabledScope(wardrobeSlotOptions.Length == 0))
 				{
-					selectedWardrobeSlotIndex = EditorGUILayout.Popup("Wardrobe Slot", selectedWardrobeSlotIndex, wardrobeSlotOptions);
+					selectedWardrobeSlotIndex = EditorGUILayout.Popup("Wardrobe Region", selectedWardrobeSlotIndex, wardrobeSlotOptions);
 				}
 
 				using (new EditorGUI.DisabledScope(baseSlotOptions.Length == 0 && baseTagOptions.Length == 0))

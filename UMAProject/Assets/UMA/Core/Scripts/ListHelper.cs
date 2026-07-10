@@ -5,23 +5,51 @@ namespace UMA
 {
 	public static class ListHelper<T>
 	{
-		static FieldInfo _listFieldInfo;
-		static FieldInfo _sizeFieldInfo;
-		static ListHelper()
+		private static FieldInfo _listFieldInfo;
+		private static FieldInfo _sizeFieldInfo;
+
+		private static FieldInfo ListFieldInfo
 		{
-			var type = typeof(List<T>);
-			_listFieldInfo = type.GetField("_items", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-			_sizeFieldInfo = type.GetField("_size", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+			get
+			{
+				if (_listFieldInfo == null)
+				{
+					_listFieldInfo = typeof(List<T>).GetField("_items", BindingFlags.Instance | BindingFlags.NonPublic);
+					if (_listFieldInfo == null)
+					{
+						throw new System.MissingFieldException(typeof(List<T>).FullName, "_items");
+					}
+				}
+
+				return _listFieldInfo;
+			}
+		}
+
+		private static FieldInfo SizeFieldInfo
+		{
+			get
+			{
+				if (_sizeFieldInfo == null)
+				{
+					_sizeFieldInfo = typeof(List<T>).GetField("_size", BindingFlags.Instance | BindingFlags.NonPublic);
+					if (_sizeFieldInfo == null)
+					{
+						throw new System.MissingFieldException(typeof(List<T>).FullName, "_size");
+					}
+				}
+
+				return _sizeFieldInfo;
+			}
 		}
 
 		public static T[] GetRawList(List<T> list)
 		{
-			return _listFieldInfo.GetValue(list) as T[];
+			return ListFieldInfo.GetValue(list) as T[];
 		}
 
 		public static void SetCount(List<T> list, int size)
 		{
-			_sizeFieldInfo.SetValue(list, size);
+			SizeFieldInfo.SetValue(list, size);
 		}
 
 		public static void AllocateList(ref List<T> list, int size)

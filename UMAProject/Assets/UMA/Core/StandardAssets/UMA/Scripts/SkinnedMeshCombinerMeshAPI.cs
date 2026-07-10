@@ -69,6 +69,8 @@ namespace UMA
             FixupRotation = Quaternion.Euler(0f, 270f, 90f);
             BoundsInflationFraction = 0.01f;
 #endif
+            _uvTransforms.Clear();
+            _uvProcessedSlots.Clear();
         }
 
         public static void ResetTimings()

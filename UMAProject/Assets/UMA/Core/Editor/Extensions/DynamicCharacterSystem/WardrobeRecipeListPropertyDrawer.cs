@@ -791,7 +791,7 @@ namespace UMA.CharacterSystem.Editors
                     {
                         selectedSlotIndex = 0;
                     }
-                    GUILayout.Label("Wardrobe Slot", GUILayout.Width(85));
+                    GUILayout.Label("Wardrobe Region", GUILayout.Width(85));
                     selectedSlotIndex = EditorGUILayout.Popup(selectedSlotIndex, thisDCA.activeRace.data.wardrobeSlots.ToArray(), GUILayout.Width(120));
                     if (selectedSlotIndex >= 0 && selectedSlotIndex < thisDCA.activeRace.data.wardrobeSlots.Count)
                     {

@@ -6,6 +6,14 @@ namespace UMA
 {
 	public class UMARandomAvatar : MonoBehaviour
 	{
+		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+		private static void RuntimeInitializeOnLoad()
+		{
+#if false
+			lastValidCharacter = null;
+#endif
+		}
+
 		public List<UMARandomizer> Randomizers;
 		public GameObject prefab;
 		public GameObject ParentObject;
@@ -104,6 +112,7 @@ namespace UMA
 			//DumpWardrobeToConsole(RandomAvatar);
         }
 
+#if false
 		public static DynamicCharacterAvatar lastValidCharacter = null;
         public void DumpWardrobeToConsole(DynamicCharacterAvatar Avatar)
 		{
@@ -121,7 +130,7 @@ namespace UMA
                 }
             }
         }
-
+#endif
         public RandomWardrobeSlot GetRandomWardrobe(List<RandomWardrobeSlot> wardrobeSlots)
 		{
 			// Sum weights

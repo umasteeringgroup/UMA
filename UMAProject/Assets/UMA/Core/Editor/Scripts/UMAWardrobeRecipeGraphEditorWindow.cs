@@ -3419,7 +3419,7 @@ namespace UMA.Editors
 
             _selectedWardrobeSlot = Mathf.Max(0, wardrobeSlots.IndexOf(_asset.wardrobeSlot));
             EditorGUI.BeginChangeCheck();
-            int newWardrobeIndex = EditorGUILayout.Popup("Wardrobe Slot", _selectedWardrobeSlot, wardrobeSlots.ToArray());
+            int newWardrobeIndex = EditorGUILayout.Popup("Wardrobe Region", _selectedWardrobeSlot, wardrobeSlots.ToArray());
             if (EditorGUI.EndChangeCheck())
             {
                 _asset.wardrobeSlot = wardrobeSlots[newWardrobeIndex];

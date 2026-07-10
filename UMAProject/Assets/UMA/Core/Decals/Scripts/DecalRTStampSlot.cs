@@ -88,6 +88,13 @@ namespace UMA
 
         // Dilation material cache for final-RT bleed (to kill seams)
         private static Material _dilateMat;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void RuntimeInitializeOnLoad()
+        {
+            _dilateMat = null;
+        }
+
         [Header("Dilation")]
         [Tooltip("If true, dilate RGB colors across padding regardless of alpha (fixes seams across opaque islands).")]
         public bool rgbOnlyDilation = true;

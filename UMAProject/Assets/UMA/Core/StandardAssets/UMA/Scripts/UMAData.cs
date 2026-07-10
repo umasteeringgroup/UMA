@@ -2473,6 +2473,8 @@ namespace UMA
 #pragma warning disable 618
 			public void PreApplyDNA(UMAData umaData, bool fixUpUMADnaToDynamicUMADna = false)
 			{
+				Debug.Log("PreApplyDNA called for recipe " + umaData.umaRecipe.recipeName);
+
                 EnsureAllDNAPresent();
 				//clear any color adjusters from all overlays in the recipe
 				umaData.umaRecipe.ClearOverlayColorAdjusters();
@@ -2500,6 +2502,7 @@ namespace UMA
 			/// <param name="umaData">UMA data.</param>
 			public void ApplyDNA(UMAData umaData)
 			{
+				Debug.Log("ApplyDNA called for recipe " + umaData.umaRecipe.recipeName);
 				if (umaData.umaRecipe.raceData != null && umaData.umaRecipe.raceData.useNewDNA)
 				{
 					return;
@@ -2879,7 +2882,9 @@ namespace UMA
 					{
 						for (int i = 0; i < recipe.slotDataList.Length; i++)
 						{
-							MergeSlot(recipe.slotDataList[i], dontSerialize, mergeMatchingOverlays, recipe.recipeName);
+							var sd = recipe.slotDataList[i];
+							if (sd == null) continue;
+							MergeSlot(sd, dontSerialize, mergeMatchingOverlays, recipe.recipeName);
 						}
 					}
 				}

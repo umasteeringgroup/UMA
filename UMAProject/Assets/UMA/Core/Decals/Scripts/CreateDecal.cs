@@ -18,6 +18,14 @@ namespace UMA.Decals
     public class CreateDecal : MonoBehaviour
     {
 		public static int MatrixLevel = 0;
+
+		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+		private static void RuntimeInitializeOnLoad()
+		{
+			MatrixLevel = 0;
+			_lineMat = null;
+		}
+
 		public enum rebuildMethod
 		{
 			FullRebuild,

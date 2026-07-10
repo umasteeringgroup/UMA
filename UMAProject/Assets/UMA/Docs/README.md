@@ -64,8 +64,8 @@ DCA composes the final character from your race and wardrobe selections and driv
   - If Addressables are used, DCA preloads assets by label/group and resumes build when loads complete.
 
 Key scenes to test
-- `Assets/UMA/Examples/SceneLoader/SceneLoader.unity`
-- `Assets/UMA/Examples/DynamicCharacterSystem Examples/UMA DCS Demo - Simple Setup.unity`
+- `U3-Character Creator` - a full character creation scene, shows how to let the end user customize an UMA.
+- `U3-Ragdolls and Shooting Example` - Shows how to hit specific parts of the UMA, Ragdoll it, and revive it.
 
 ## Key Editor Windows
 - Global Library (UMA Asset Indexer): UMA > Global Library - inspect and manage indexed content.
@@ -80,7 +80,7 @@ Key scenes to test
 - `Docs/`: This documentation.
 
 ## Support Matrix
-- Unity 6000.2.4f1
+- Unity 6.3
 - .NET Framework 4.7.1
 - C# 9
 

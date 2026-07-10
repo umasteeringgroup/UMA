@@ -19,7 +19,7 @@ namespace UMA.Editors
         private static Dictionary<string, bool> _slotSelection = new Dictionary<string, bool>(64);
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void StaticInitializeOnLoad()
+        private static void RuntimeInitializeOnLoad()
         {
             _internalSlotLodFoldout = false;
             _optionsFoldout = true;

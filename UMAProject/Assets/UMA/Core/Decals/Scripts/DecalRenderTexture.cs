@@ -22,6 +22,18 @@ namespace UMA {
 	public sealed class DecalRenderTexture : ScriptableObject {
 		private DecalRenderTexture() { }
 
+		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+		private static void RuntimeInitializeOnLoad()
+		{
+			_lastStamp = null;
+			_snapshotSequence = 0;
+			_dbgSequence = 0;
+			_dbgSmr = null;
+			_dbgSmrTriangles = null;
+			_dbgTriToOrdinal = null;
+			lastSlotForIndex = null;
+		}
+
 		private static bool NeedsRenderTargetYFlip()
 		{
 			if(UMAAssetIndexer.Instance.generator.flipDecalMode == UMAGeneratorBuiltin.FlipDecalMode.Auto) {

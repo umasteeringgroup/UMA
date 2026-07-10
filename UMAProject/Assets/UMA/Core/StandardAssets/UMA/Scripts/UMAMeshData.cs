@@ -47,11 +47,19 @@ namespace UMA
 	public class SubMeshTriangles {
     public static int smtNumber;
     public int smtID;
- [SerializeField]
+ 	[SerializeField]
     public List<UMALodRange> lodRanges;
 		// Keep track of all allocated native arrays for proper disposal.
-		public static List<SubMeshTriangles> nativeTrianglesAllocated = new List<SubMeshTriangles>();
-    [SerializeField]
+	public static List<SubMeshTriangles> nativeTrianglesAllocated = new List<SubMeshTriangles>();
+
+		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+		public static void StaticInitializeOnLoad()
+		{
+			smtNumber = 0;
+			nativeTrianglesAllocated = new List<SubMeshTriangles>();
+		}
+
+	[SerializeField]
     private int[] triangles;
     public NativeArray<int> nativeTriangles;
 
@@ -678,6 +686,9 @@ namespace UMA
 		public static void StaticInitializeOnLoad()
 		{
 			SubmeshBuffers = new Dictionary<int, NativeArray<int>>();
+#if USE_UNSAFE_CODE
+			gBoneWeightsArray = new BoneWeight[MAX_VERTEX_COUNT];
+#endif
 		}
 
 		public int BoneWeightOffset(int vertexIndex)

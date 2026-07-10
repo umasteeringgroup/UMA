@@ -190,6 +190,13 @@ namespace UMA
 			{
 				static OcclusionEntryComparer _instance;
 				private OcclusionEntryComparer() { }
+
+				[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+				private static void StaticInitializeOnLoad()
+				{
+					_instance = null;
+				}
+
 				public static OcclusionEntryComparer Instance
 				{
 					get

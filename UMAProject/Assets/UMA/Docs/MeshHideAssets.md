@@ -82,7 +82,17 @@ Only selectable slots can be painted. The wireframe and red hidden-face overlay 
 
 Example: for a jacket, leave the jacket visible as reference, but make the body torso and arms selectable. Paint the body triangles hidden under the jacket. Do not make the jacket selectable unless you actually want to hide parts of the jacket mesh.
 
-## 7. Paint the Triangles to Hide
+## 7. Seed an Initial Hidden-Face Selection with Raycast Occlusion
+
+Use the `Raycast Occlusion` tools to project an initial set of obscured faces before manual painting. This provides a fast first pass for areas that are clearly covered by the active wardrobe item and reduces the amount of hand-editing required.
+
+1. In the visibility section, ensure that the meshes you want to use are visible - the occluding slots, and the slots you are calculating. 
+2. Go to the `Raycast Occlusion` section. 
+3. Adjust the outward and inward distances if your meshes need a wider or narrower search range.
+4. Click `Raycast Occlusion To MeshHideAssets` to generate the initial hidden-face selection.
+5. Review the result, then refine it manually using the Face Tools controls.
+
+## 8. Paint the Triangles to Hide
 
 Use the `Face Tools` panel to control selection.
 
@@ -104,7 +114,7 @@ You can temporarily paint while `Paint Mode` is off:
 - `Shift` + left-drag adds hidden triangles.
 - `Ctrl` + left-drag removes hidden triangles.
 
-This is useful when you normally use rectangle selection but need to touch up a small area quickly.
+This is useful when you normally use rectangle selection but need to touch up a small area quickly. Note: Paint mod is much easier for touchup.
 
 ### Paint Mode
 
@@ -119,9 +129,9 @@ Enable `Paint Mode` for continuous brush painting.
 - Use `Load` to paint with a grayscale or alpha `Brush Texture` mask.
 - For `Circle`, `Square`, and `Load`, adjust `Radius` to control brush size.
 
-Hidden triangles are shown with a red overlay. Unhidden selectable triangles show as wireframe. Orbit, pan, and zoom the Scene view as usual, then continue painting.
+Hidden triangles are shown with a red overlay. Unhidden selectable triangles show as wireframe. Orbit, pan, and zoom the Scene view as usual, then continue painting. If the camera is not focuse on the mesh, press the `Reset Camera` button to focus it.
 
-## 8. Check the Result Against the Clothing
+## 9. Check the Result Against the Clothing
 
 Before saving, switch visibility back and forth to confirm the hide mask is doing the intended job.
 
@@ -131,9 +141,9 @@ Before saving, switch visibility back and forth to confirm the hide mask is doin
 4. Remove hidden triangles that are visible outside the clothing.
 5. Add hidden triangles anywhere the covered slot still pokes through.
 
-Prefer hiding slightly more covered geometry rather than leaving tiny poke-through islands, but avoid hiding triangles that can be seen during normal poses.
+Prefer hiding slightly more covered geometry rather than leaving tiny poke-through islands, but avoid hiding triangles that can be seen during normal poses. Note: If you have triangles that poke through a seam, it's best to fix in the source. If that's not possible, consider createing a Mesh Modifier to move the vertexes inward, and add that to the recipe also (separate process).
 
-## 9. Save the Mesh Hide Assets
+## 10. Save the Mesh Hide Assets
 
 When the selection is ready, click `Create MeshHideAssets (Split by Slot)`. This button appears in the `Face Tools` panel and the `Mesh Hide Assets` panel.
 
@@ -148,7 +158,9 @@ For example, saving `Jacket_BodyHides.asset` with hidden faces on `HumanMaleTors
 
 If the stage was opened by dropping an existing collection, saving updates that collection. If you save over existing generated assets, Unity asks before overwriting.
 
-## 10. Add the Collection to the Wardrobe Recipe
+Close the FaceEditor stage using the `Close` button at the top right of the panel in the scene view.
+
+## 11. Add the Collection to the Wardrobe Recipe
 
 Mesh hides usually belong on the wardrobe recipe that causes the hide. For example, body hides for a jacket should usually be assigned to the jacket wardrobe recipe.
 
@@ -159,7 +171,7 @@ Mesh hides usually belong on the wardrobe recipe that causes the hide. For examp
 
 You can also add individual per-slot `MeshHideAsset` assets under `Mesh Hide Assets`, but a collection is easier to manage when one clothing item hides several slots.
 
-## 11. Test the Wardrobe Item
+## 12. Test the Wardrobe Item
 
 1. Return to the normal scene stage.
 2. Rebuild the DCA with the wardrobe item active.

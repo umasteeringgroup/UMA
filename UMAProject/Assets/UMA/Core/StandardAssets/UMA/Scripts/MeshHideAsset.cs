@@ -43,6 +43,12 @@ namespace UMA
 
         public static TriangleHideStrategy HideStrategy = TriangleHideStrategy.Conservative;
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void StaticInitializeOnLoad()
+        {
+            HideStrategy = TriangleHideStrategy.Conservative;
+        }
+
 #if UNITY_EDITOR
         public bool NeedsRebuildFromUV()
         {

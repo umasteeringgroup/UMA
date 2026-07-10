@@ -13,7 +13,7 @@ namespace UMA.Editors
         public static Dictionary<string, int> SelectedRace = new Dictionary<string, int>();
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void StaticInitializeOnLoad()
+        private static void RuntimeInitializeOnLoad()
         {
             TemporarySlotTags = new Dictionary<string, string>();
             SelectedRace = new Dictionary<string, int>();

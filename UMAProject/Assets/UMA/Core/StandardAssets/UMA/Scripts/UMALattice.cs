@@ -982,8 +982,8 @@ namespace UMA
             return Mathf.Lerp(1f, edgeFade, damping);
         }
 
-        private static readonly AnimationCurve s_easeInCurve = CreateEaseInCurve();
-        private static readonly AnimationCurve s_easeOutCurve = CreateEaseOutCurve();
+        private static AnimationCurve s_easeInCurve = CreateEaseInCurve();
+        private static AnimationCurve s_easeOutCurve = CreateEaseOutCurve();
 
         private static AnimationCurve CreateEaseInCurve()
         {
@@ -1087,7 +1087,7 @@ namespace UMA
             return Binomial(n, i) * Mathf.Pow(t, i) * Mathf.Pow(1f - t, n - i);
         }
 
-        private static readonly int[,] _binomCache = new int[13, 13];
+        private static int[,] _binomCache = new int[13, 13];
         private static bool _binomCacheBuilt;
 
         private static int Binomial(int n, int k)
@@ -1113,6 +1113,15 @@ namespace UMA
         }
 
         // -------- Unity lifecycle --------
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void StaticInitializeOnLoad()
+        {
+            s_easeInCurve = CreateEaseInCurve();
+            s_easeOutCurve = CreateEaseOutCurve();
+            _binomCache = new int[13, 13];
+            _binomCacheBuilt = false;
+        }
+
         private void OnEnable()
         {
            // Debug.Log($"[UMALattice] OnEnable on '{name}' (instance {GetInstanceID()})");

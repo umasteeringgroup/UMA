@@ -5665,7 +5665,7 @@ namespace UMA.CharacterSystem
 #endif
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        public static void StaticInitializeOnLoad()
+        public static void RuntimeInitializeOnLoad()
         {
             Ticks_LoadCharacter = 0;
             Ticks_BuildCharacter = 0;

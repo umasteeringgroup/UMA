@@ -3,7 +3,7 @@
     "RootBone": "Global",
     "createOverlay": true,
     "createRecipe": true,
-    "isBaseRaceRecipe": true,
+    "isBaseRaceRecipe": false,
     "addToGlobalLibrary": true,
     "binarySerialization": true,
     "calcTangents": false,
@@ -29,7 +29,7 @@
     "alwaysRecreateSlots": true,
     "Tags": [],
     "slotMaterialPath": "Assets/UMA/SRP/ShaderGraphs/UMAMaterial/UMAMaterial_UMA_URP_HAIR.asset",
-    "slotFolderPath": "Assets/temp/Shepherdess",
+    "slotFolderPath": "Assets/temp",
     "generateSlotLods": true,
     "useUnityLodGenerator": true,
     "slotLodMaxLevels": 8,
@@ -39,13 +39,13 @@
     "slotLodBoundaryWeight": 20.0,
     "scrollPos": {
         "x": 0.0,
-        "y": 0.0
+        "y": 127.0
     },
     "filterIgnoreMeshesEnabled": true,
     "filterIgnoreMeshesContaining": "UMA30",
     "filterOnlyIncludeMeshesEnabled": false,
     "filterOnlyIncludeMeshesContaining": "robe",
-    "lastDroppedFbxPath": "Assets/temp/Shepherdess_selected.fbx",
+    "lastDroppedFbxPath": "Assets/temp/Pigtails_rigged.fbx",
     "pendingSmrsCompactView": false,
     "pendingSmrsFilterEnabled": false
 }

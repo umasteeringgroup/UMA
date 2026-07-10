@@ -45,7 +45,7 @@ namespace UMA
             public readonly Dictionary<int, int> TheirToOur = new Dictionary<int, int>();
             public readonly Dictionary<int, int> OurToTheir = new Dictionary<int, int>();
         }
-        private static readonly ConditionalWeakTable<SlotDataAsset, VertexMap> _vertexMaps = new ConditionalWeakTable<SlotDataAsset, VertexMap>();
+        private static ConditionalWeakTable<SlotDataAsset, VertexMap> _vertexMaps = new ConditionalWeakTable<SlotDataAsset, VertexMap>();
         private static VertexMap GetOrCreateVertexMap(SlotDataAsset slot)
         {
             if (slot == null) return null;
@@ -62,6 +62,9 @@ namespace UMA
             _vertexMaps.TryGetValue(slot, out var map);
             return map;
         }
+
+
+
 
         public static bool TryGetLastDebug(out SkinnedMeshRenderer smr, out int[] triIndices, out Dictionary<int, int> triToOrdinal, out int sequence)
         {
@@ -1912,7 +1915,8 @@ namespace UMA
             Vector4[] outTangents,
             bool debug)
         {
-            var bindposes = shared.bindposes;
+            List<Matrix4x4> bindPoses = new List<Matrix4x4>(shared.bindposeCount);
+            shared.GetBindposes(bindPoses);
             var bonesPerVertex = shared.GetBonesPerVertex();
             var allWeights = shared.GetAllBoneWeights();
 
@@ -1972,7 +1976,7 @@ namespace UMA
                     if (!perSlot.TryGetValue(hash, out var slotBindPose))
                         continue;
 
-                    var canonicalBindPose = bindposes[boneIndex];
+                    var canonicalBindPose = bindPoses[boneIndex];
                     if (!CompareSkinningMatrices(canonicalBindPose, slotBindPose))
                     {
                         if (!correctionComputed)
@@ -2001,7 +2005,7 @@ namespace UMA
 
             for (int i = 0; i < outVerts.Length; i++)
             {
-                if (!needsCorrection[i]) continue;
+                if (!needsCorrection[i]) continue; 
 
                 Vector3 p = outVerts[i];
                 Vector4 hp = new Vector4(p.x, p.y, p.z, 1f);

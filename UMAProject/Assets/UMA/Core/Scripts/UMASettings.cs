@@ -64,6 +64,13 @@ namespace UMA
 #endif
         public GameObject generatorPrefab;
 		public static UMASettings instance;
+#if !UNITY_EDITOR
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        public static void InitializeOnLoad()
+        {
+            instance = GetSettings();
+        }
+#endif        
 #if UNITY_EDITOR
         public GameObject characterPrefab;
         public TextureMerge textureMerge;

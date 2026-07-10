@@ -19,6 +19,17 @@ namespace UMA
         private static readonly List<SubMeshDescriptor> _submeshBuffer = new List<SubMeshDescriptor>(32);
         private static readonly List<UMAData.GeneratedMaterial> _filteredMaterials = new List<UMAData.GeneratedMaterial>(32);
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void StaticInitializeOnLoad()
+        {
+            _materialBuffer.Clear();
+            _submeshBuffer.Clear();
+            _filteredMaterials.Clear();
+#if UMA_COMBINER_TIMINGS
+            ResetCombinerTimings();
+#endif
+        }
+
         // Optional timings (enable by define UMA_COMBINER_TIMINGS)
 #if UMA_COMBINER_TIMINGS
         public static long Ticks_BuildCombineInstances;
@@ -40,12 +51,6 @@ namespace UMA
             Ticks_ClearDNA = 0;
             Ticks_EnsureUMADataSetup = 0;
             Ticks_BuildActiveModifiers = 0;
-        }
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void StaticInitializeOnLoad()
-        {
-            ResetCombinerTimings();
         }
 #endif
 

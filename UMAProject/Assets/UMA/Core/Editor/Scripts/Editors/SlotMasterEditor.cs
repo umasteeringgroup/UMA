@@ -11,7 +11,7 @@ namespace UMA.Editors
         public static Dictionary<string, bool> OpenSlots = new Dictionary<string, bool>();
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void StaticInitializeOnLoad()
+        private static void RuntimeInitializeOnLoad()
         {
             LastSlot = "";
             OpenSlots = new Dictionary<string, bool>();

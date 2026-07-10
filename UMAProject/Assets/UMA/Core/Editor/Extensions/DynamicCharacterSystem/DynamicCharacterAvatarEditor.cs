@@ -27,7 +27,7 @@ namespace UMA.CharacterSystem.Editors
         public static bool showCurrentRendererBounds = false;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void StaticInitializeOnLoad()
+        private static void RuntimeInitializeOnLoad()
         {
             showHelp = false;
             showWardrobe = false;
@@ -43,7 +43,6 @@ namespace UMA.CharacterSystem.Editors
             currentcolorfilter = 0;
             _unknownAssignedGroupFoldout = false;
             fullRebuild = false;
-            AllowVertexSelection = false;
             _newDnaGroupIndex = 0;
             _newDnaInGroupIndex = 0;
         }
@@ -759,6 +758,17 @@ namespace UMA.CharacterSystem.Editors
                 {
                     if (race.useNewDNA)
                     {
+                        // Warn if old predefined DNA is still present under the New DNA system
+                        if (thisDCA.predefinedDNA != null && thisDCA.predefinedDNA.Count > 0)
+                        {
+                            EditorGUILayout.HelpBox("Warning: Old predefined DNA found! This can cause errors!", MessageType.Warning);
+                            if (GUILayout.Button("Clear old Predefined DNA"))
+                            {
+                                thisDCA.predefinedDNA.Clear();
+                                serializedObject.Update();
+                                wasChanged = true;
+                            }
+                        }
                         wasChanged = DoNewDNA(wasChanged);
                     }
                     else
@@ -1693,8 +1703,6 @@ namespace UMA.CharacterSystem.Editors
 
             return wasChanged;
         }
-
-        private static bool AllowVertexSelection;
 
         private Color[] defaultColors = new Color[] 
         { 
@@ -2781,7 +2789,7 @@ namespace UMA.CharacterSystem.Editors
                     var stopwatch = System.Diagnostics.Stopwatch.StartNew();
                     GenerateSingleUMA();
                     stopwatch.Stop();
-                    Debug.Log($"UMA generation completed in {stopwatch.ElapsedMilliseconds} ms");
+                    //Debug.Log($"UMA generation completed in {stopwatch.ElapsedMilliseconds} ms");
                 }
                 else
                 {

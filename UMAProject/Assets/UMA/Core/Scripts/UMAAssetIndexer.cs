@@ -801,7 +801,7 @@ namespace UMA
         #endregion
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        public static void StaticInitializeOnLoad()
+        public static void RuntimeInitializeOnLoad()
         {
 
             SortOrder = "Name";

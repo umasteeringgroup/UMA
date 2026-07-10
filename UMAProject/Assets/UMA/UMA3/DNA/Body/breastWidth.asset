@@ -1,0 +1,113 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ad596f39ce5a904d93ccd9240c400e1, type: 3}
+  m_Name: breastWidth
+  m_EditorClassIdentifier: UMA_Core::UMA.DNA
+  description: Converted DNA Asset for breastSize
+  defaultValue: 0.5
+  effects:
+  - rid: 7828207344866296468
+  - rid: 7828207344866296469
+  displayName: breastSize
+  references:
+    version: 2
+    RefIds:
+    - rid: 7828207344866296468
+      type: {class: DNAEffect_BoneScale, ns: UMA, asm: UMA_Core}
+      data:
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0.0027809143
+            value: -0.25402832
+            inSlope: 0.85372704
+            outSlope: 0.85372704
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0.11369467
+          - serializedVersion: 3
+            time: 0.5
+            value: 0.5
+            inSlope: 1.6473442
+            outSlope: 1.6473442
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 1.0029907
+            value: 1.3944168
+            inSlope: 1.7781974
+            outSlope: 1.7781974
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        minMapping: -1
+        maxMapping: 1
+        enabled: 1
+        expanded: 1
+        selected: 0
+        showHelp: 0
+        EffectName: LeftOuterBreast
+        BoneName: LeftOuterBreast
+        ScaleFactor: {x: 0.3, y: 0, z: 0}
+    - rid: 7828207344866296469
+      type: {class: DNAEffect_BoneScale, ns: UMA, asm: UMA_Core}
+      data:
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0.0027809143
+            value: -0.25402832
+            inSlope: 0.85372704
+            outSlope: 0.85372704
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0.11369467
+          - serializedVersion: 3
+            time: 0.5
+            value: 0.5
+            inSlope: 1.6473442
+            outSlope: 1.6473442
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 1.0029907
+            value: 1.3944168
+            inSlope: 1.7781974
+            outSlope: 1.7781974
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        minMapping: -1
+        maxMapping: 1
+        enabled: 1
+        expanded: 1
+        selected: 0
+        showHelp: 0
+        EffectName: RightOuterBreast
+        BoneName: RightOuterBreast
+        ScaleFactor: {x: 0.3, y: 0, z: 0}

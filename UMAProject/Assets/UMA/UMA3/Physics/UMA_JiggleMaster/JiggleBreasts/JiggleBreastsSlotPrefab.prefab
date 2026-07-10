@@ -44,11 +44,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cb90f032b376b62419f45154a3b24b22, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _breastStiffness: 0
-  _breastMass: 1
-  _breastDamping: 0
+  _breastStiffness: 1
+  _breastMass: 0.3
+  _breastDamping: 1
   _breastGravity: 0.75
-  _breastSquashAndStretch: 0
+  _breastInertia: 0
+  _breastMaxJiggleDistance: 0.05
+  _breastTargetDistance: 0.07
+  _breastPositionWeight: 1
+  _breastRotationWeight: 0.15
+  _breastSquashAndStretch: 1
   _breastFrontStretch: 1
   _breastSideStretch: 1
   _jigglers: []

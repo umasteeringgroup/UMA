@@ -20,6 +20,11 @@ namespace UMA.Examples
 		public float Mass;
 		public float Damping;
 		public float Gravity;
+		public float Inertia;
+		public float MaxJiggleDistance;
+		public float TargetDistance;
+		public float PositionWeight;
+		public float RotationWeight;
 		public bool SquashAndStretch = true;
 		public float SideStretch;
 		public float FrontStretch;
@@ -28,6 +33,12 @@ namespace UMA.Examples
 		public Vector3 Velocity = Vector3.zero;
 		public Vector3 Acceleration = Vector3.zero;
 		public Vector3 DynamicPosition = Vector3.zero;
+		public Vector3 RestLocalPosition = Vector3.zero;
+		public Quaternion RestLocalRotation = Quaternion.identity;
+		public Vector3 RestLocalScale = Vector3.one;
+		public Vector3 PreviousTargetPosition = Vector3.zero;
+		public bool DynamicPositionInitialized;
+		public bool RestPoseInitialized;
 	}
 }
 
