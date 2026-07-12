@@ -56,16 +56,33 @@ namespace UMA
         [Tooltip("Downward world-space acceleration.")]
         public float gravity = 0.1f;
 
-        [Range(0f, 1f)]
-        [Tooltip("How much free links resist being carried by root movement. Higher values create more swing lag.")]
+        [Range(0f, 5f)]
+        [Tooltip("How much free links resist being carried by parent movement. Values >1 allow exaggerated lag.")]
         public float inertia = 0.65f;
 
-        [Tooltip("Base world-space distance each particle can move from its rest target. The allowed range grows down the chain.")]
+        [Range(0f, 25f)]
+        [Tooltip("Global motion multiplier. Scales inertia response and gravity. Increase for more swing (runtime tunable).")]
+        public float forceMultiplier = 15f;
+
+        [Tooltip("Base world-space distance each particle can move from its rest target. The allowed range grows slightly down the chain.")]
         public float maxDistance = 0.35f;
 
         [Range(1, 8)]
-        [Tooltip("Number of length-constraint passes. Longer chains usually need 2-4.")]
+        [Tooltip("Number of length-constraint passes. Use 1-2 for most chains; higher stabilizes long chains but costs more.")]
         public int constraintIterations = 3;
+
+        [Header("Smoothing")]
+        [Range(0f, 1f)]
+        [Tooltip("Low-pass for parent motion delta. Higher = smoother, less twitchy response to animation. 0 = no smoothing.")]
+        public float targetSmoothing = 0.35f;
+
+        [Range(0f, 1f)]
+        [Tooltip("Low-pass for final bone rotation. Higher = smoother visual output.")]
+        public float rotationSmoothing = 0.5f;
+
+        [Range(0f, 20f)]
+        [Tooltip("Caps velocity to prevent snapping when clamping or high inertia. 0 = disabled.")]
+        public float maxVelocity = 5f;
 
         [Header("Bone Output")]
         [Range(0f, 1f)]
@@ -110,7 +127,10 @@ namespace UMA
             public Vector3 dynamicPosition;
             public Vector3 previousTargetPosition;
             public Vector3 velocity;
+            public Vector3 smoothedDelta;
+            public Quaternion previousAppliedRotation;
             public bool initialized;
+            public bool hasPreviousAppliedRotation;
         }
 
         void Start()
@@ -173,7 +193,11 @@ namespace UMA
             bool freezeXValue,
             bool freezeYValue,
             bool freezeZValue,
-            IList<Transform> exclusionTransforms = null)
+            IList<Transform> exclusionTransforms = null,
+            float forceMultiplierValue = 1f,
+            float targetSmoothingValue = 0.35f,
+            float rotationSmoothingValue = 0.5f,
+            float maxVelocityValue = 5f)
         {
             _drivenExternally = true;
             rootBone = chainRoot;
@@ -194,6 +218,10 @@ namespace UMA
             damping = dampingValue;
             gravity = gravityValue;
             inertia = inertiaValue;
+            forceMultiplier = forceMultiplierValue;
+            targetSmoothing = targetSmoothingValue;
+            rotationSmoothing = rotationSmoothingValue;
+            maxVelocity = maxVelocityValue;
             maxDistance = maxDistanceValue;
             constraintIterations = constraintIterationsValue;
             rotationWeight = rotationWeightValue;
@@ -272,7 +300,9 @@ namespace UMA
             {
                 ChainParticle particle = _particles[i];
                 particle.initialized = false;
+                particle.hasPreviousAppliedRotation = false;
                 particle.velocity = Vector3.zero;
+                particle.smoothedDelta = Vector3.zero;
             }
         }
 
@@ -333,6 +363,13 @@ namespace UMA
                     continue;
                 }
 
+                Vector3 worldOffset = GetVirtualEndWorldOffsetByRotation(parent, localEndOffset);
+                float worldLen = worldOffset.magnitude;
+                if (worldLen <= Epsilon)
+                {
+                    worldLen = Mathf.Max(endLength, 0.001f);
+                }
+
                 ChainParticle endParticle = new ChainParticle
                 {
                     transform = null,
@@ -341,7 +378,7 @@ namespace UMA
                     restLocalPosition = localEndOffset,
                     restLocalRotation = Quaternion.identity,
                     restLocalScale = Vector3.one,
-                    restLength = GetVirtualEndWorldOffset(parent, localEndOffset).magnitude,
+                    restLength = worldLen,
                     isVirtualEnd = true
                 };
 
@@ -378,12 +415,32 @@ namespace UMA
 
         private Vector3 GetVirtualEndWorldOffset(ChainParticle parent, Vector3 localEndOffset)
         {
-            if (parent != null && parent.transform != null)
+            return GetVirtualEndWorldOffsetByRotation(parent, localEndOffset);
+        }
+
+        private static Vector3 GetVirtualEndWorldOffsetByRotation(ChainParticle parent, Vector3 localEndOffset)
+        {
+            if (parent == null)
             {
-                return parent.transform.TransformVector(localEndOffset);
+                return localEndOffset;
             }
 
-            return parent != null ? parent.targetRotation * localEndOffset : localEndOffset;
+            if (parent.initialized)
+            {
+                return parent.targetRotation * localEndOffset;
+            }
+
+            if (parent.transform != null)
+            {
+                return parent.transform.rotation * localEndOffset;
+            }
+
+            if (parent.targetRotation != default(Quaternion))
+            {
+                return parent.targetRotation * localEndOffset;
+            }
+
+            return localEndOffset;
         }
 
         private void SimulateChain()
@@ -398,7 +455,8 @@ namespace UMA
             InitializeParticlesIfNeeded();
             SimulateParticles(deltaTime);
             SatisfyLengthConstraints();
-            ApplyParticlesToBones();
+            EnforcePostConstraintLimits();
+            ApplyParticlesToBones(deltaTime);
         }
 
         private void RestoreRestTransforms()
@@ -448,19 +506,40 @@ namespace UMA
                 particle.dynamicPosition = particle.targetPosition;
                 particle.previousTargetPosition = particle.targetPosition;
                 particle.velocity = Vector3.zero;
+                particle.smoothedDelta = Vector3.zero;
                 particle.initialized = true;
+                particle.hasPreviousAppliedRotation = false;
             }
         }
 
         private void SimulateParticles(float deltaTime)
         {
-            float simulationStep = Mathf.Clamp(deltaTime > 0f ? deltaTime * 60f : 1f, 0f, 2f);
-            float dampingFactor = Mathf.Pow(Mathf.Clamp01(1f - damping), simulationStep);
+            // Clamp delta to avoid explosions; use squared delta scale like SwayBone which is framerate independent for inertia kicks
+            float rawDelta = Mathf.Clamp(deltaTime, 0f, 0.033f);
+            float simulationStep = Mathf.Clamp(rawDelta * 60f, 0f, 2f);
             float safeMass = Mathf.Max(mass, 0.0001f);
-            float clampedInertia = Mathf.Clamp01(inertia);
+            float clampedInertia = Mathf.Clamp(inertia, 0f, 5f);
+            float forceMult = Mathf.Max(0f, forceMultiplier);
             float clampedMaxDistance = Mathf.Max(maxDistance, 0.001f);
             Vector3 freezeMask = new Vector3(freezeX ? 0f : 1f, freezeY ? 0f : 1f, freezeZ ? 0f : 1f);
-            Vector3 rootDelta = _particles.Count > 0 ? _particles[0].targetPosition - _particles[0].previousTargetPosition : Vector3.zero;
+
+            // Your posted preset: damping 0.99 causes near-zero velocity survival and then ProjectOnPlane snaps look like jerks.
+            // Cap effective damping and remap >=0.9 to still leave motion like SwayBone does.
+            float effectiveDamping = Mathf.Clamp(damping, 0f, 0.95f);
+            // If stiffness is tiny (0.022 in preset) compensate to avoid drift dominating inertia
+            float effectiveStiffness = Mathf.Max(stiffness, 0.01f);
+
+            float dampingFactor = Mathf.Pow(Mathf.Clamp01(1f - effectiveDamping), simulationStep);
+            float targetSmooth = Mathf.Clamp01(targetSmoothing);
+            bool useDeltaSmoothing = targetSmooth > 0.001f;
+            float deltaLerp = useDeltaSmoothing ? 1f - Mathf.Pow(targetSmooth, simulationStep) : 1f;
+            // Inverse: 0 smoothing = immediate, 1 = very smoothed – so we invert lerp sense to keep stable
+            // Actually we want smoothedDelta to approach raw delta; lerp factor for smoothing: higher targetSmoothing means slower follow
+            // Use: smoothed = Lerp(smoothed, rawDelta, 1 - smoothingBlend)
+            float smoothingBlend = Mathf.Clamp01(targetSmoothing);
+            float rawFollow = 1f - smoothingBlend; // 0.65 default means 35% smoothing for your preset converted below
+
+            float maxVel = maxVelocity > 0f ? maxVelocity : float.MaxValue;
 
             for (int i = 0; i < _particles.Count; i++)
             {
@@ -470,27 +549,60 @@ namespace UMA
                     particle.dynamicPosition = particle.targetPosition;
                     particle.previousTargetPosition = particle.targetPosition;
                     particle.velocity = Vector3.zero;
+                    particle.smoothedDelta = Vector3.zero;
                     continue;
                 }
 
                 float depthWeight = _maxDepth > 0 ? Mathf.Clamp01((float)particle.depth / _maxDepth) : 1f;
                 float inertiaWeight = Mathf.Lerp(0.35f, 1f, depthWeight);
                 float stiffnessWeight = Mathf.Lerp(0.65f, 0.15f, depthWeight);
-                float particleMaxDistance = clampedMaxDistance * Mathf.Max(1f, particle.depth);
+                float particleMaxDistance = ComputeMaxDistance(clampedMaxDistance, depthWeight);
 
-                if (rootDelta.sqrMagnitude > Epsilon && clampedInertia < 1f)
+                Vector3 rawTargetDelta = particle.targetPosition - particle.previousTargetPosition;
+
+                // Low-pass target delta to avoid twitch from animation jitter / head bob
+                if (useDeltaSmoothing)
                 {
-                    Vector3 carriedMotion = rootDelta * (1f - clampedInertia) * Mathf.Lerp(1f, 0.35f, depthWeight);
-                    particle.dynamicPosition += carriedMotion;
+                    // Exponential moving average
+                    particle.smoothedDelta = Vector3.Lerp(particle.smoothedDelta, rawTargetDelta, rawFollow);
+                }
+                else
+                {
+                    particle.smoothedDelta = rawTargetDelta;
                 }
 
-                Vector3 force = (particle.targetPosition - particle.dynamicPosition) * stiffness * stiffnessWeight;
-                force += Vector3.down * (gravity / 10f) * inertiaWeight;
+                Vector3 deltaForInertia = particle.smoothedDelta;
+
+                // Cap huge deltas (teleport) to avoid explosion
+                if (deltaForInertia.sqrMagnitude > 1f)
+                {
+                    deltaForInertia = deltaForInertia.normalized * 1f;
+                }
+
+                if (deltaForInertia.sqrMagnitude > Epsilon && forceMult > 0f)
+                {
+                    float depthInertiaScale = Mathf.Lerp(0.35f, 1f, depthWeight);
+                    // Don't multiply by simulationStep again – targetDelta already per-frame, and we already have velocity decay.
+                    // This matches SwayBone's approach which keeps sway smooth regardless of framerate.
+                    // old: * simulationStep caused double time scaling -> jerky when deltaTime varies
+                    particle.velocity -= deltaForInertia * clampedInertia * depthInertiaScale * forceMult;
+                }
+
+                Vector3 force = (particle.targetPosition - particle.dynamicPosition) * effectiveStiffness * stiffnessWeight;
+                force += Vector3.down * (gravity / 10f) * inertiaWeight * forceMult;
                 Vector3 acceleration = force / safeMass;
 
-                particle.velocity += acceleration * simulationStep;
+                particle.velocity += acceleration * rawDelta;
                 particle.velocity *= dampingFactor;
-                particle.dynamicPosition += particle.velocity * simulationStep;
+                particle.velocity = Vector3.Scale(particle.velocity, freezeMask);
+
+                // Velocity clamp – main fix for jerking when clamping to maxDistance then projecting velocity
+                if (maxVel < float.MaxValue && particle.velocity.sqrMagnitude > maxVel * maxVel)
+                {
+                    particle.velocity = particle.velocity.normalized * maxVel;
+                }
+
+                particle.dynamicPosition += particle.velocity * rawDelta * 60f * 0.016f; // normalize to ~60fps baseline
 
                 ApplyMotionLimits(particle, freezeMask, particleMaxDistance);
 
@@ -498,19 +610,44 @@ namespace UMA
             }
         }
 
+        private float ComputeMaxDistance(float baseDistance, float depthWeight)
+        {
+            return baseDistance * (1f + depthWeight * 0.75f);
+        }
+
         private void ApplyMotionLimits(ChainParticle particle, Vector3 freezeMask, float particleMaxDistance)
         {
             Vector3 offset = particle.dynamicPosition - particle.targetPosition;
             offset = Vector3.Scale(offset, freezeMask);
-            if (offset.sqrMagnitude > particleMaxDistance * particleMaxDistance)
+            float sqrMax = particleMaxDistance * particleMaxDistance;
+            if (offset.sqrMagnitude > sqrMax)
             {
-                Vector3 clampedOffset = offset.normalized * particleMaxDistance;
+                Vector3 clampedOffset = offset.sqrMagnitude > Epsilon ? offset.normalized * particleMaxDistance : Vector3.zero;
                 particle.dynamicPosition = particle.targetPosition + clampedOffset;
-                particle.velocity = Vector3.ProjectOnPlane(particle.velocity, clampedOffset.normalized);
+                // Soften velocity projection: lerp toward plane instead of instant cut to avoid snap
+                if (clampedOffset.sqrMagnitude > Epsilon)
+                {
+                    Vector3 projected = Vector3.ProjectOnPlane(particle.velocity, clampedOffset.normalized);
+                    particle.velocity = Vector3.Lerp(particle.velocity, projected, 0.5f);
+                }
             }
             else
             {
                 particle.dynamicPosition = particle.targetPosition + offset;
+            }
+        }
+
+        private void EnforcePostConstraintLimits()
+        {
+            float clampedMaxDistance = Mathf.Max(maxDistance, 0.001f);
+            Vector3 freezeMask = new Vector3(freezeX ? 0f : 1f, freezeY ? 0f : 1f, freezeZ ? 0f : 1f);
+
+            for (int i = 1; i < _particles.Count; i++)
+            {
+                ChainParticle particle = _particles[i];
+                float depthWeight = _maxDepth > 0 ? Mathf.Clamp01((float)particle.depth / _maxDepth) : 1f;
+                float particleMaxDistance = ComputeMaxDistance(clampedMaxDistance, depthWeight);
+                ApplyMotionLimits(particle, freezeMask, particleMaxDistance);
             }
         }
 
@@ -522,33 +659,32 @@ namespace UMA
                 for (int i = 1; i < _particles.Count; i++)
                 {
                     ChainParticle particle = _particles[i];
+                    if (particle.restLength <= Epsilon)
+                    {
+                        continue;
+                    }
+
                     ChainParticle parent = _particles[particle.parentIndex];
                     Vector3 direction = particle.dynamicPosition - parent.dynamicPosition;
                     float distance = direction.magnitude;
-                    if (distance <= Epsilon || particle.restLength <= Epsilon)
+                    if (distance <= Epsilon)
                     {
                         continue;
                     }
 
-                    Vector3 correction = direction * ((distance - particle.restLength) / distance);
-                    float parentInverseMass = parent.parentIndex < 0 ? 0f : 1f;
-                    const float particleInverseMass = 1f;
-                    float inverseMassSum = parentInverseMass + particleInverseMass;
-                    if (inverseMassSum <= Epsilon)
-                    {
-                        continue;
-                    }
-
-                    parent.dynamicPosition += correction * (parentInverseMass / inverseMassSum);
-                    particle.dynamicPosition -= correction * (particleInverseMass / inverseMassSum);
+                    Vector3 desired = parent.dynamicPosition + direction * (particle.restLength / distance);
+                    particle.dynamicPosition = desired;
                 }
             }
         }
 
-        private void ApplyParticlesToBones()
+        private void ApplyParticlesToBones(float deltaTime)
         {
             float clampedRotationWeight = Mathf.Clamp01(rotationWeight);
             float clampedPositionWeight = Mathf.Clamp01(positionWeight);
+            float rotSmooth = Mathf.Clamp01(rotationSmoothing);
+            bool useRotSmooth = rotSmooth > 0.001f && Application.isPlaying;
+            float rotSmoothingFactor = useRotSmooth ? 1f - Mathf.Pow(rotSmooth, Mathf.Clamp(deltaTime * 10f, 0f, 1f)) : 1f;
 
             for (int i = 0; i < _realParticleIndices.Count; i++)
             {
@@ -575,6 +711,12 @@ namespace UMA
                 if (childIndex < 0 || clampedRotationWeight <= 0f)
                 {
                     bone.rotation = particle.targetRotation;
+                    // store for smoothing even when no child
+                    if (useRotSmooth)
+                    {
+                        particle.previousAppliedRotation = bone.rotation;
+                        particle.hasPreviousAppliedRotation = true;
+                    }
                     continue;
                 }
 
@@ -584,11 +726,32 @@ namespace UMA
                 if (restDirection.sqrMagnitude <= Epsilon || dynamicDirection.sqrMagnitude <= Epsilon)
                 {
                     bone.rotation = particle.targetRotation;
+                    if (useRotSmooth)
+                    {
+                        particle.previousAppliedRotation = bone.rotation;
+                        particle.hasPreviousAppliedRotation = true;
+                    }
                     continue;
                 }
 
                 Quaternion rotationDelta = Quaternion.FromToRotation(restDirection.normalized, dynamicDirection.normalized);
-                bone.rotation = Quaternion.Slerp(Quaternion.identity, rotationDelta, clampedRotationWeight) * particle.targetRotation;
+                Quaternion desiredRotation = Quaternion.Slerp(Quaternion.identity, rotationDelta, clampedRotationWeight) * particle.targetRotation;
+
+                if (useRotSmooth && particle.hasPreviousAppliedRotation)
+                {
+                    // Angular smoothing like SwayBone visually – prevents micro pops
+                    bone.rotation = Quaternion.Slerp(particle.previousAppliedRotation, desiredRotation, rotSmoothingFactor);
+                }
+                else
+                {
+                    bone.rotation = desiredRotation;
+                }
+
+                if (useRotSmooth)
+                {
+                    particle.previousAppliedRotation = bone.rotation;
+                    particle.hasPreviousAppliedRotation = true;
+                }
             }
         }
 
@@ -610,5 +773,42 @@ namespace UMA
 
             return particle.childIndices[0];
         }
+
+#if UNITY_EDITOR
+        private void OnDrawGizmosSelected()
+        {
+            if (_particles == null || _particles.Count == 0)
+            {
+                return;
+            }
+
+            Gizmos.color = Color.cyan;
+            for (int i = 1; i < _particles.Count; i++)
+            {
+                ChainParticle p = _particles[i];
+                ChainParticle parent = _particles[p.parentIndex];
+                Gizmos.DrawLine(parent.dynamicPosition, p.dynamicPosition);
+            }
+
+            for (int i = 0; i < _particles.Count; i++)
+            {
+                ChainParticle p = _particles[i];
+                if (p.isVirtualEnd)
+                {
+                    Gizmos.color = new Color(1f, 0.5f, 0f, 0.6f);
+                }
+                else if (p.parentIndex < 0)
+                {
+                    Gizmos.color = Color.green;
+                }
+                else
+                {
+                    Gizmos.color = Color.yellow;
+                }
+                Gizmos.DrawWireSphere(p.dynamicPosition, 0.012f);
+                Gizmos.DrawWireSphere(p.targetPosition, 0.008f);
+            }
+        }
+#endif
     }
 }

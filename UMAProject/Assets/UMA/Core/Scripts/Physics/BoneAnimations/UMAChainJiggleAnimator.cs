@@ -61,9 +61,13 @@ namespace UMA
         [Tooltip("Downward world-space acceleration.")]
         public float gravity = 0.1f;
 
-        [Range(0f, 1f)]
-        [Tooltip("How much root/parent movement pushes particles in the opposite direction.")]
+        [Range(0f, 5f)]
+        [Tooltip("How much root/parent movement pushes particles in the opposite direction. Values >1 allow exaggerated lag.")]
         public float inertia = 0.65f;
+
+        [Range(0f, 25f)]
+        [Tooltip("Global motion multiplier. Scales inertia response and gravity. Increase for more swing. Tunable at runtime.")]
+        public float forceMultiplier = 15f;
 
         [Tooltip("Maximum world-space distance each particle can move from its rest target.")]
         public float maxDistance = 0.35f;
@@ -71,6 +75,19 @@ namespace UMA
         [Range(1, 8)]
         [Tooltip("Number of length-constraint passes. Longer chains usually need 2-4.")]
         public int constraintIterations = 3;
+
+        [Header("Smoothing")]
+        [Range(0f, 1f)]
+        [Tooltip("Low-pass for parent motion delta. Higher=smoother.")]
+        public float targetSmoothing = 0.35f;
+
+        [Range(0f, 1f)]
+        [Tooltip("Low-pass for final bone rotation.")]
+        public float rotationSmoothing = 0.5f;
+
+        [Range(0f, 20f)]
+        [Tooltip("Caps velocity to prevent snapping. 0=disabled.")]
+        public float maxVelocity = 5f;
 
         [Header("Bone Output")]
         [Range(0f, 1f)]
@@ -147,7 +164,11 @@ namespace UMA
                 freezeXValue: freezeX,
                 freezeYValue: freezeY,
                 freezeZValue: freezeZ,
-                exclusionTransforms: exclusions);
+                exclusionTransforms: exclusions,
+                forceMultiplierValue: forceMultiplier,
+                targetSmoothingValue: targetSmoothing,
+                rotationSmoothingValue: rotationSmoothing,
+                maxVelocityValue: maxVelocity);
 
             if (!_chainJiggles.Contains(chainJiggle))
             {
