@@ -2141,6 +2141,7 @@ namespace UMA
 							if (originalOverlay != null && overlay.asset.dontMergeDuplicates != true)
 							{
 								originalOverlay.CopyColors(overlay);//also copies textures
+								originalOverlay.Supressed = overlay.Supressed;
 								if (overlay.colorData.HasName())
 								{
 									int sharedIndex;

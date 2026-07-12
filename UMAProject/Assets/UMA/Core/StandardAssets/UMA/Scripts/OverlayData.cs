@@ -307,6 +307,7 @@ namespace UMA
 		public OverlayData Duplicate()
 		{
 			var res = new OverlayData(asset);
+			res.Supressed = Supressed;
 			res.rect = rect;
 			res.instanceTransformed = instanceTransformed;
 			res.Rotation = Rotation;
