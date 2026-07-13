@@ -8,6 +8,7 @@ Contents
 - Getting started with DynamicCharacterAvatar (DCA)
 - How DCA builds characters
 - Wardrobe Recipe Editor
+- Mesh Modifier sculpting
 - Texture Arrays and UDIMs
 - Addressables generation (SingleGroupGenerator)
 - Decal system
@@ -88,6 +89,7 @@ For detailed topics, see the dedicated docs:
 - `WhatsNewInUMA3.md`
 - `DynamicCharacterAvatar.md`
 - `WardrobeRecipeEditor.md`
+- `MeshModifierSculpting.md`
 - `Textures-UDIM-Arrays.md`
 - `Addressables.md`
 - `Decals.md`

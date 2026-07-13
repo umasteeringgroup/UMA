@@ -16,7 +16,6 @@ namespace UMA
         public string ID;
         public Vector3 Position;
         public Quaternion Orientation;
-        public string IgnoreTag = "UMAIgnore";
 
         [Tooltip("If true the object will scale to bone DNA")]
         public bool setScale = true;
@@ -34,7 +33,7 @@ namespace UMA
         void Start()
         {
             Initialize();
-            gameObject.tag = IgnoreTag;
+            UMASettings.TryAssignIgnoreTag(gameObject);
         }
 
         private bool Initialize()

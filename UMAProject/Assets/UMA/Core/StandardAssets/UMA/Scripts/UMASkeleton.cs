@@ -42,6 +42,7 @@ namespace UMA
 		public bool isUpdating { get { return updating; } }
 
 		private Dictionary<int, BoneData> boneHashDataLookup;
+		private string ignoreTag;
 
 #if UNITY_EDITOR
 		// Dictionary backup to support code reload
@@ -84,11 +85,12 @@ namespace UMA
 		public UMASkeleton(Transform rootBone)
 		{
 			rootBoneHash = UMAUtils.StringToHash(rootBone.name);
+			ignoreTag = UMASettings.GetValidatedIgnoreTag(rootBone.gameObject);
 			this.boneHashData = new Dictionary<int, BoneData>();
 			BeginSkeletonUpdate();
 			AddBonesRecursive(rootBone);
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            ValidateHierarchy(rootBone, UMAAssetIndexer.Instance?.Generator?.ignoreTag);
+            ValidateHierarchy(rootBone, ignoreTag);
             ValidateBoneDictionary(rootBone);
 #endif
 			EndSkeletonUpdate();
@@ -148,11 +150,7 @@ namespace UMA
 		{
 			if (transform == null) return;
 
-			// Only skip when ignoreTag is a valid, non-empty tag and not the default "Untagged"
-			var gen = UMAAssetIndexer.Instance != null ? UMAAssetIndexer.Instance.Generator : null;
-			var ignoreTag = gen != null ? gen.ignoreTag : null;
-			if (!string.IsNullOrEmpty(ignoreTag) && !string.Equals(ignoreTag, "Untagged", StringComparison.Ordinal)
-				&& transform.CompareTag(ignoreTag))
+			if (!string.IsNullOrEmpty(ignoreTag) && transform.CompareTag(ignoreTag))
 			{
 				return;
 			}
@@ -811,7 +809,7 @@ namespace UMA
 					{
 						Debug.LogError($"[UMA] Missing bone hash {boneNameHashes[i]} in UMASkeleton. " +
 									   "This is usually caused by using an ignore tag that hides parts of the rig, or duplicate bone names. " +
-									   "Verify UMAAssetIndexer.Generator.ignoreTag is not set to 'Untagged' and that bone names are unique.");
+									   "Verify the UMA Project Settings Ignore Tag is valid and that bone names are unique.");
 						reported = true;
 					}
 #endif

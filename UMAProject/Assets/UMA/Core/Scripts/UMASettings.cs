@@ -15,6 +15,12 @@ namespace UMA
 
     public class UMASettings : ScriptableObject
     {
+        public const string DefaultIgnoreTag = "UMAIgnore";
+
+        [SerializeField]
+        [Tooltip("UMA ignores objects with this tag when rebuilding the skeleton.")]
+        public string IgnoreTag = DefaultIgnoreTag;
+
         // Runtime toggle for MeshAPI combiner (Unity 2022.2+)
         [Tooltip("Enable the MeshData API based combiner on Unity 2022.2+. Falls back to legacy combiner when disabled or on older Unity.")]
         public bool useMeshAPICombiner = false;
@@ -32,8 +38,6 @@ namespace UMA
 
         [SerializeField]
         public string UMAVersion = "UMA 2.13.f3";
-        [SerializeField]
-        public string IgnoreTag = "UMAIgnore";
         [SerializeField]
         public string KeepTag = "UMAKeepChain";
         public string[] tagLookupValues = new string[] { "Head", "Hair", "Torso", "Legs", "Feet", "Hands", "Smooshable", "Unsmooshable", "KeepChain", "Ignore" };
@@ -159,6 +163,72 @@ namespace UMA
 			UpdateAlwaysOverrides(settings); //VES added
 			return settings;
 		}
+
+        /// <summary>
+        /// Returns the configured ignore tag, falling back to UMA's default when the
+        /// settings asset is unavailable or contains a value that would ignore every
+        /// untagged transform.
+        /// </summary>
+        public static string GetIgnoreTag()
+        {
+            if (instance == null)
+            {
+                instance = GetSettings();
+            }
+
+            string tag = instance != null ? instance.IgnoreTag : null;
+            if (string.IsNullOrWhiteSpace(tag) || string.Equals(tag, "Untagged", StringComparison.Ordinal))
+            {
+                return DefaultIgnoreTag;
+            }
+
+            return tag.Trim();
+        }
+
+        /// <summary>
+        /// Resolves the configured ignore tag and verifies that it exists in Unity's
+        /// tag list. Returns null and reports a useful error instead of allowing
+        /// CompareTag or GameObject.tag to throw a UnityException.
+        /// </summary>
+        public static string GetValidatedIgnoreTag(GameObject probe)
+        {
+            string tag = GetIgnoreTag();
+            if (probe == null)
+            {
+                return tag;
+            }
+
+            try
+            {
+                probe.CompareTag(tag);
+                return tag;
+            }
+            catch (UnityException exception)
+            {
+                UnityEngine.Debug.LogError(
+                    $"[UMA] The configured IgnoreTag '{tag}' is not defined in Unity's Tags and Layers settings. " +
+                    $"Ignore-tag processing has been disabled for this operation. {exception.Message}",
+                    probe);
+                return null;
+            }
+        }
+
+        public static bool TryAssignIgnoreTag(GameObject target)
+        {
+            if (target == null)
+            {
+                return false;
+            }
+
+            string tag = GetValidatedIgnoreTag(target);
+            if (string.IsNullOrEmpty(tag))
+            {
+                return false;
+            }
+
+            target.tag = tag;
+            return true;
+        }
 
 
 

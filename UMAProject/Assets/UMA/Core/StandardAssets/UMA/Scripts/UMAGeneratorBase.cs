@@ -46,8 +46,11 @@ namespace UMA
 
         [Tooltip("The default overlay to display if a slot has meshData and no overlays assigned")]
         public OverlayDataAsset defaultOverlayAsset;
-        [Tooltip("UMA will ignore items with this tag when rebuilding the skeleton.")]
-        public string ignoreTag = "UMAIgnore";
+
+        public string ignoreTag
+        {
+            get { return UMASettings.GetIgnoreTag(); }
+        }
 
         [Tooltip("UMA will keep items with this tag when rebuilding the skeleton. Any new bone created during the build process will be replaced with the previous copy, keeping components and references intact.")]
         public string keepTag = "UMAKeepChain";

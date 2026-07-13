@@ -395,6 +395,19 @@ namespace UMA
 
             DrawPropertiesIncluding(m_CustomSettings, new string[] { "IgnoreTag", "KeepTag", "tagLookupValues" });
 
+            string configuredIgnoreTag = m_CustomSettings.FindProperty("IgnoreTag").stringValue;
+            string effectiveIgnoreTag = string.IsNullOrWhiteSpace(configuredIgnoreTag) ||
+                string.Equals(configuredIgnoreTag, "Untagged", StringComparison.Ordinal)
+                ? UMASettings.DefaultIgnoreTag
+                : configuredIgnoreTag.Trim();
+            if (Array.IndexOf(UnityEditorInternal.InternalEditorUtility.tags, effectiveIgnoreTag) < 0)
+            {
+                EditorGUILayout.HelpBox(
+                    $"Ignore Tag '{effectiveIgnoreTag}' is not defined in Project Settings > Tags and Layers. " +
+                    "UMA will skip ignore-tag processing until the tag is added.",
+                    MessageType.Error);
+            }
+
             EditorGUILayout.LabelField("Groups", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox("These groups are used by UMA to identify slots with the same UV layout for decals", MessageType.Info);
             DrawPropertiesIncluding(m_CustomSettings, new string[] { "groupNames" });

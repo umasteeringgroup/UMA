@@ -250,6 +250,7 @@ namespace UMA
         public void SaveMountedItems()
         {
             GameObject holder = null;
+            string ignoreTag = UMASettings.GetValidatedIgnoreTag(gameObject);
 
             // Find or create holder using for loops (no foreach alloc)
             var rootTf = gameObject.transform;
@@ -265,14 +266,11 @@ namespace UMA
 
             if (holder == null)
             {
-                string ignoreTag = umaGenerator.ignoreTag;
-                if (string.IsNullOrEmpty(ignoreTag))
-                {
-                    ignoreTag = "UMAIgnore";
-                }
-
                 holder = new GameObject(HolderObjectName);
-                holder.tag = ignoreTag;
+                if (!string.IsNullOrEmpty(ignoreTag))
+                {
+                    holder.tag = ignoreTag;
+                }
                 holder.SetActive(false);
                 holder.transform.parent = rootTf;
             }
@@ -280,9 +278,11 @@ namespace UMA
             if (umaRoot == null) return;
 
             // Use iterative traversal to avoid recursion + per-node allocations
-            string igTag = umaGenerator.ignoreTag;
-            string kpTag = umaGenerator.keepTag;
-            SaveBonesIterative(umaRoot.transform, holder.transform, igTag, kpTag);
+            string kpTag = ValidateTagForTraversal(
+                umaRoot.transform,
+                umaGenerator != null ? umaGenerator.keepTag : null,
+                "keep");
+            SaveBonesIterative(umaRoot.transform, holder.transform, ignoreTag, kpTag);
         }
 
         // Add this new helper inside class UMAData; it supersedes SaveBonesRecursively at call sites
@@ -321,13 +321,22 @@ namespace UMA
         }
         public void SaveBonesRecursively(Transform bone, Transform holder, string ignoreTag, string keepTag)
         {
+            ignoreTag = ValidateTagForTraversal(bone, ignoreTag, "ignore");
+            keepTag = ValidateTagForTraversal(bone, keepTag, "keep");
+            SaveBonesRecursivelyInternal(bone, holder, ignoreTag, keepTag);
+        }
+
+        private void SaveBonesRecursivelyInternal(Transform bone, Transform holder, string ignoreTag, string keepTag)
+        {
             List<Transform> childlist = new List<Transform>();
 
-            if (bone.CompareTag(ignoreTag) || bone.CompareTag(keepTag))
+            bool isIgnored = !string.IsNullOrEmpty(ignoreTag) && bone.CompareTag(ignoreTag);
+            bool keep = !string.IsNullOrEmpty(keepTag) && bone.CompareTag(keepTag);
+            if (isIgnored || keep)
             {
                 if (bone.parent != null)
                 {
-                    AddSavedItem(bone,bone.CompareTag(keepTag));
+                    AddSavedItem(bone, keep);
                     bone.SetParent(holder, false);
                 }
             }
@@ -342,8 +351,31 @@ namespace UMA
                 for (int i = 0; i < childlist.Count; i++)
                 {
                     Transform child = childlist[i];
-                    SaveBonesRecursively(child, holder, umaGenerator.ignoreTag, umaGenerator.keepTag);
+                    SaveBonesRecursivelyInternal(child, holder, ignoreTag, keepTag);
                 }
+            }
+        }
+
+        private static string ValidateTagForTraversal(Transform probe, string tag, string purpose)
+        {
+            if (probe == null || string.IsNullOrWhiteSpace(tag) || string.Equals(tag, "Untagged", StringComparison.Ordinal))
+            {
+                return null;
+            }
+
+            tag = tag.Trim();
+            try
+            {
+                probe.CompareTag(tag);
+                return tag;
+            }
+            catch (UnityException exception)
+            {
+                Debug.LogError(
+                    $"[UMA] The configured {purpose} tag '{tag}' is not defined in Unity's Tags and Layers settings. " +
+                    $"That tag has been disabled for this traversal. {exception.Message}",
+                    probe);
+                return null;
             }
         }
         public void AddSavedItem(Transform transform, bool replace)
