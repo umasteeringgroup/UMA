@@ -641,61 +641,7 @@ namespace UMA.Controls
             // ***********************************************************************************
             // File Menu items
             // ***********************************************************************************
-            AddMenuItemWithCallback(FileMenu, "Rebuild From Project", () =>
-            {
-                if (UAI == null) return;
-                UAI.RebuildLibrary();
-                m_Initialized = false;
-                Repaint();
-            });
-
-            AddMenuItemWithCallback(FileMenu, "Rebuild From Project (include text assets)", () =>
-            {
-                if (UAI == null) return;
-                UAI.SaveKeeps();
-                UAI.Clear();
-                UAI.BuildStringTypes();
-                UAI.AddEverything(true);
-                UAI.RestoreKeeps();
-                UAI.ForceSave();
-                Resources.UnloadUnusedAssets();
-                m_Initialized = false;
-                Repaint();
-            });
-            AddMenuItemWithCallback(FileMenu, "Clear References", () =>
-            {
-                if (UAI == null) return;
-                UAI.RemoveReferences();
-                Resources.UnloadUnusedAssets();
-                m_Initialized = false;
-                Repaint();
-                EditorUtility.DisplayDialog("Repair", "References Removed", "OK");
-            });
-
-            AddMenuItemWithCallback(FileMenu, "Repair and remove invalid items", () =>
-            {
-                if (UAI == null) return;
-                UAI.BuildStringTypes();
-                UAI.RepairAndCleanup();
-                Resources.UnloadUnusedAssets();
-                m_Initialized = false;
-                Repaint();
-                EditorUtility.DisplayDialog("Repair", "AssetIndex successfully repaired", "OK");
-            });
-            /* AddMenuItemWithCallback(FileMenu, "Add Build refs to all non-addressables", () => 
-			{
-				UAI.AddReferences();
-				RecountTypes();
-				Resources.UnloadUnusedAssets();
-				Repaint();
-			});
-			AddMenuItemWithCallback(FileMenu, "Clear build refs from all items", () => 
-			{
-				UAI.ClearReferences();
-				Resources.UnloadUnusedAssets();
-				RecountTypes();
-				Repaint();
-			}); */
+            AddMenuItemWithCallback(FileMenu, "Asset Index Cleaner...", () => EditorApplication.ExecuteMenuItem("UMA/Asset Index Cleaner"));
             FileMenu.AddSeparator("");
             AddMenuItemWithCallback(FileMenu, "Toggle Utilities Panel", () =>
             {
@@ -703,42 +649,6 @@ namespace UMA.Controls
                 Repaint();
             });
             FileMenu.AddSeparator("");
-
-            AddMenuItemWithCallback(FileMenu, "Empty Index", () =>
-            {
-                if (UAI == null) return;
-                UAI.Clear();
-                m_Initialized = false;
-                Repaint();
-            });
-
-
-            AddMenuItemWithCallback(FileMenu, "Backup Index", () =>
-            {
-                if (UAI == null) return;
-                // string index = UAI.Backup();
-                string filename = EditorUtility.SaveFilePanel("Backup Index", "", "librarybackup", "bak");
-                if (!string.IsNullOrEmpty(filename))
-                {
-                    try
-                    {
-                        string backup = UAI.Backup();
-                        System.IO.File.WriteAllText(filename, backup);
-                        backup = "";
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.LogException(ex);
-                        EditorUtility.DisplayDialog("Error", "Error writing backup: " + ex.Message, "OK");
-                    }
-                }
-            });
-
-            AddMenuItemWithCallback(FileMenu, "Save to disk", () =>
-            {
-                if (UAI == null) return;
-                UMAAssetIndexer.Instance.ForceSave();
-            });
 
 			AddMenuItemWithCallback(ToolsMenu, "Save all baked slots to disk", () =>
 			{
@@ -749,40 +659,6 @@ namespace UMA.Controls
 			{
 				SaveSelectedBakedSlotsToDisk();
 			});
-
-            AddMenuItemWithCallback(FileMenu, "Rebuild Dictionaries", () =>
-            {
-                if (UAI == null) return;
-                UMAAssetIndexer.Instance.UpdateSerializedDictionaryItems();
-                Repaint();
-            });
-
-            AddMenuItemWithCallback(FileMenu, "Restore Index", () =>
-            {
-                if (UAI == null) return;
-                string filename = EditorUtility.OpenFilePanel("Restore", "", "bak");
-                if (!string.IsNullOrEmpty(filename))
-                {
-                    try
-                    {
-                        string backup = System.IO.File.ReadAllText(filename);
-                        EditorUtility.DisplayProgressBar("Restore", "Restoring index", 0);
-                        if (!UAI.Restore(backup))
-                        {
-                            EditorUtility.DisplayDialog("Error", "Unable to restore index. Please review the console for more information.", "OK");
-                        }
-                        backup = "";
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.LogException(ex);
-                        EditorUtility.DisplayDialog("Error", "Error writing backup: " + ex.Message, "OK");
-                    }
-                    EditorUtility.ClearProgressBar();
-                    m_Initialized = false;
-                    Repaint();
-                }
-            });
 
 #if UMA_ADDRESSABLES
 
