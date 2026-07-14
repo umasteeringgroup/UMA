@@ -8,7 +8,7 @@ namespace UMA
 {
     public class AssetIndexerFilterEditor : EditorWindow
     {
-        [MenuItem("UMA/Global Library Filters", priority = 99)]
+        [MenuItem("UMA/Asset Index/Global Library Filters", priority = 99)]
         public static AssetIndexerFilterEditor GetWindow()
         {
             var window = GetWindow<AssetIndexerFilterEditor>();

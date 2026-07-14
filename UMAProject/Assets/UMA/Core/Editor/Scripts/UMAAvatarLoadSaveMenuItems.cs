@@ -3473,7 +3473,7 @@ namespace UMA.Editors
 
 
 
-		[UnityEditor.MenuItem("Assets/Add Selected Assets to UMA Global Library")]
+		[UnityEditor.MenuItem("UMA/Asset Index/Add Selected Assets to Global Library")]
 		public static void AddSelectedToGlobalLibrary()
 		{
 			int added = 0;

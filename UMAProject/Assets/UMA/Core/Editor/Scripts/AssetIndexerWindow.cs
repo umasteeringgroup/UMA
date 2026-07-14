@@ -581,7 +581,7 @@ namespace UMA.Controls
             return selectedAssets[0];
         }
 
-        [MenuItem("UMA/Global Library", priority = 99)]
+        [MenuItem("UMA/Asset Index/Global Library", priority = 99)]
         public static AssetIndexerWindow GetWindow()
         {
             var window = GetWindow<AssetIndexerWindow>();
@@ -641,7 +641,7 @@ namespace UMA.Controls
             // ***********************************************************************************
             // File Menu items
             // ***********************************************************************************
-            AddMenuItemWithCallback(FileMenu, "Asset Index Cleaner...", () => EditorApplication.ExecuteMenuItem("UMA/Asset Index Cleaner"));
+            AddMenuItemWithCallback(FileMenu, "Asset Index Cleaner...", () => EditorApplication.ExecuteMenuItem("UMA/Asset Index/Utilities"));
             FileMenu.AddSeparator("");
             AddMenuItemWithCallback(FileMenu, "Toggle Utilities Panel", () =>
             {

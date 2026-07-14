@@ -13,7 +13,7 @@ namespace UMA
         private Vector2 scrollPosition;
         private string lastResult = "No maintenance operation has been run in this window.";
 
-        [MenuItem("UMA/Asset Index Utilities", priority = 100)]
+        [MenuItem("UMA/Asset Index/Utilities", priority = 100)]
         public static void ShowWindow()
         {
             AssetIndexUtilities window = GetWindow<AssetIndexUtilities>();
@@ -24,14 +24,14 @@ namespace UMA
         }
 
         // Keep the original command, but route it to the maintenance window.
-        [MenuItem("UMA/Cleanup Types", priority = 101)]
+        [MenuItem("UMA/Asset Index/Cleanup Types", priority = 101)]
         private static void OpenFromCleanupTypesMenu()
         {
             ShowWindow();
         }
 
-        [MenuItem("UMA/Asset Index Cleaner", true)]
-        [MenuItem("UMA/Cleanup Types", true)]
+        [MenuItem("UMA/Asset Index/Utilities", true)]
+        [MenuItem("UMA/Asset Index/Cleanup Types", true)]
         private static bool ValidateMenu()
         {
             return !EditorApplication.isCompiling;
