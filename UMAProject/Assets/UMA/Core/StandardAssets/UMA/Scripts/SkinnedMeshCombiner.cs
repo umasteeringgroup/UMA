@@ -50,8 +50,12 @@ namespace UMA
 		{
 			public UMAMeshData meshData;
 			public int[] targetSubmeshIndices;
-			public BitArray[] triangleMask;
+            public BitArray[] triangleMask;
             public SlotData slotData;
+            // UMAJobifiedMeshCombiner sets this only for modifier stacks that can be
+            // represented by the MeshData API's sparse Burst path. Other combiners and
+            // unsupported/custom adjustment types retain their managed preprocessing.
+            public bool applyMeshModifiersInJobs;
 		}
 
 		private enum MeshComponents

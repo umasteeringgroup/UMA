@@ -358,6 +358,15 @@ namespace UMA
                             var blendShapes = SkinnedMeshCombiner.GetBlendshapeSources(tempMesh, umaData.umaRecipe);
                             tempMesh.blendShapes = blendShapes.ToArray();
                         }
+                        // ShallowInstanceMesh deliberately shares the source UV array. A mesh-only
+                        // rebuild still needs the current atlas mapping, but must never write it
+                        // back into the SlotDataAsset mesh.
+                        if (tempMesh.uv != null)
+                        {
+                            tempMesh.uv = (Vector2[])tempMesh.uv.Clone();
+                            tempMesh.uvModified = true;
+                        }
+                        RecalculateUV(tempMesh);
                         tempMesh.ApplyDataToUnityMesh(renderers[currentRendererIndex], umaData.skeleton, umaData);
                         inst.slotData.vertexOffset = 0;
                         inst.slotData.submeshIndex = 0;
@@ -392,17 +401,17 @@ namespace UMA
                             }
                         }
 #endif
-                        if (updatedAtlas)
-                        {
 #if UMA_COMBINER_TIMINGS
-                            var swUV = System.Diagnostics.Stopwatch.StartNew();
+                        var swUV = System.Diagnostics.Stopwatch.StartNew();
 #endif
-                            RecalculateUV(umaMesh);
+                        // CombineMeshes starts from source UVs on every mesh rebuild. Apply
+                        // the current atlas transform even when the atlas itself was not
+                        // regenerated (for example, a mesh-only build).
+                        RecalculateUV(umaMesh);
 #if UMA_COMBINER_TIMINGS
-                            swUV.Stop();
-                            Ticks_LegacyUV += swUV.ElapsedTicks;
+                        swUV.Stop();
+                        Ticks_LegacyUV += swUV.ElapsedTicks;
 #endif
-                        }
                         umaMesh.ApplyDataToUnityMesh(renderers[currentRendererIndex], umaData.skeleton, umaData);
                     }
                     ApplyClothIfNeeded(null);

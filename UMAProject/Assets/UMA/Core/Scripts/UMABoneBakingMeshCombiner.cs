@@ -186,8 +186,9 @@ namespace UMA
 
 			SkinnedMeshCombinerRetargeting.CombineMeshes(umaMesh, combinedMeshArray, inverseResolvedBoneMatrixes, umaData.blendShapeSettings, uniformTargetPoses: true);
 
-			if (updatedAtlas)
-				RecalculateUV();
+			// CombineMeshes starts from source UVs on every mesh rebuild. Reapply the
+			// existing atlas mapping even when this update only rebuilt the mesh.
+			RecalculateUV();
 
 			umaMesh.ReleaseBuffers();
 	        umaMesh.ApplyDataToUnityMesh(myRenderer, umaSkeleton);
@@ -682,6 +683,35 @@ namespace UMA
 					float atlasYMin = tempAtlasRect.yMin / atlasResolution;
 					float atlasYMax = tempAtlasRect.yMax / atlasResolution;
 					float atlasYRange = atlasYMax - atlasYMin;
+					var slotData = fragment.slotData;
+
+					// Match the default/jobified combiners for shared atlas rects.
+					if (fragment.isRectShared && slotData.useAtlasOverlay && fragment.overlayList != null)
+					{
+						OverlayData foundRect = null;
+						for (int i = 0; i < fragment.overlayList.Count; i++)
+						{
+							OverlayData overlay = fragment.overlayList[i];
+							if (slotData.slotName != null && overlay.overlayName != null && overlay.overlayName.Contains(slotData.slotName))
+							{
+								foundRect = overlay;
+								break;
+							}
+						}
+						if (foundRect != null && foundRect.rect != Rect.zero)
+						{
+							var size = foundRect.rect.size * generatedMaterial.resolutionScale;
+							var offsetX = foundRect.rect.x * generatedMaterial.resolutionScale.x;
+							var offsetY = foundRect.rect.y * generatedMaterial.resolutionScale.y;
+							atlasXMin += offsetX / generatedMaterial.cropResolution.x;
+							atlasXRange = size.x / generatedMaterial.cropResolution.x;
+							atlasYMin += offsetY / generatedMaterial.cropResolution.y;
+							atlasYRange = size.y / generatedMaterial.cropResolution.y;
+						}
+					}
+
+					// SlotData owns the normalized rect for subsequent mesh-only rebuilds.
+					slotData.UVArea.Set(atlasXMin, atlasYMin, atlasXRange, atlasYRange);
 
 					while (vertexCount-- > 0)
                     {

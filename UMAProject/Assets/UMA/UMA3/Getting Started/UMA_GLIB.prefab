@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6782112333398131214}
   - component: {fileID: 7066486438860346000}
-  - component: {fileID: 7275351159514515506}
+  - component: {fileID: -5793867491450410269}
   m_Layer: 0
   m_Name: UMA_GLIB
   m_TagString: Untagged
@@ -57,7 +57,6 @@ MonoBehaviour:
   FitPercentageDecrease: 0.5
   SharperFitTextures: 1
   defaultOverlayAsset: {fileID: 11400000, guid: 3229b50ab18d98647981be0f3ce77903, type: 2}
-  ignoreTag: UMAIgnore
   keepTag: UMAKeepChain
   defaultRendererAsset: {fileID: 11400000, guid: 2ffdda70ea6184d4eab8ca0976e7f37c, type: 2}
   MultiThreadTextureConversion: 1
@@ -65,7 +64,7 @@ MonoBehaviour:
   Use32BitBuffers: 0
   alwaysRegenerateRenderers: 0
   SaveAndRestoreIgnoredItems: 0
-  meshCombiner: {fileID: 7275351159514515506}
+  meshCombiner: {fileID: -5793867491450410269}
   flipDecalMode: 0
   InitialScaleFactor: 1
   AutomaticScaling: 1
@@ -81,7 +80,7 @@ MonoBehaviour:
   autoSetRaceBlendshapes: 0
   AllowReadFromMesh: 0
   umaDatasGenerated: []
---- !u!114 &7275351159514515506
+--- !u!114 &-5793867491450410269
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -90,6 +89,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 6782112333398131213}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 10a9eb5309083c449ab447538c71855e, type: 3}
+  m_Script: {fileID: 11500000, guid: 6cb02512637c3904a9c5f38f9ae07e93, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier: UMA_Core::UMA.UMAJobifiedMeshCombiner

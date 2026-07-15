@@ -763,8 +763,6 @@ namespace UMA
         int iterations = 10;
         #region Timing Buttons
 
-        bool forceFullRebuild = false;
-
         private void OnGUI()
         {
             if (!showTimingButtons || _timingInProgress) return;
@@ -819,12 +817,6 @@ namespace UMA
                 _timingCoroutine = StartCoroutine(TimeBuildCoroutine(typeof(UMADefaultMeshCombiner)));
             }
 
-            if (GUI.Button(new Rect(startX, startY + buttonHeight + spacing, buttonWidth * 2 + spacing, buttonHeight), "Force Full Rebuild Before timing   "))
-            {
-                forceFullRebuild = true;
-            }
-
-
             // Show timing result
             if (!string.IsNullOrEmpty(_timingResult))
             {
@@ -878,9 +870,21 @@ namespace UMA
 
             float totalTime = 0f;
             int completedBuilds = 0;
+            string timingError = null;
 
             for (int i = 0; i < iterations; i++)
             {
+                // Each sample starts from a completed full character build using the combiner
+                // under test. This is intentionally outside the measured interval.
+                _timingBuildComplete = false;
+                avatar.BuildCharacter(true);
+                yield return WaitForTimedBuildCompletion();
+                if (!_timingBuildComplete)
+                {
+                    timingError = $"ERROR: Untimed full build timed out at iteration {i + 1}.";
+                    break;
+                }
+
 #if !USE_BUILD_CHARACTER
                 float startTime = Time.realtimeSinceStartup;
                 avatar.Dirty(true,false,true);
@@ -892,13 +896,7 @@ namespace UMA
                 _timingBuildComplete = false;
                 float startTime = Time.realtimeSinceStartup;
                 avatar.BuildCharacter(true);
-
-                // Wait for the build to finish with a 60-second timeout
-                float timeout = Time.realtimeSinceStartup + 60f;
-                while (!_timingBuildComplete && Time.realtimeSinceStartup < timeout)
-                {
-                    yield return null;
-                }
+                yield return WaitForTimedBuildCompletion();
 
                 float elapsed = Time.realtimeSinceStartup - startTime;
 
@@ -909,13 +907,14 @@ namespace UMA
                 }
                 else
                 {
-                    _timingResult = $"ERROR: Build timed out at iteration {i + 1}.";
+                    timingError = $"ERROR: Timed build timed out at iteration {i + 1}.";
                     break;
                 }
+#endif
 
-                // Brief pause between builds to let things settle
+                // Do not include this frame boundary in either the full-build warm-up or the
+                // measured interval. It also lets the completed renderer state settle.
                 yield return new WaitForSeconds(0.1f);
-#endif                
             }
 
             avatar.umaData.OnCharacterUpdated -= OnTimedBuildComplete;
@@ -923,8 +922,13 @@ namespace UMA
             if (completedBuilds > 0)
             {
                 float avg = totalTime / completedBuilds;
-                string combinerName = combinerType.Name.Replace("UMA", "").Replace("MeshCombiner", "").Replace("Mesh", "");
-                _timingResult = $"{combinerName}\nTotal: {totalTime:F3}s | Avg: {avg:F4}s | Builds: {completedBuilds}";
+                _timingResult = $"Combiner: {combinerType.Name}\nTotal: {totalTime:F3}s | Avg: {avg:F4}s | Timed Builds: {completedBuilds}";
+                if (!string.IsNullOrEmpty(timingError))
+                    _timingResult += $"\n{timingError}";
+            }
+            else if (!string.IsNullOrEmpty(timingError))
+            {
+                _timingResult = $"Combiner: {combinerType.Name}\n{timingError}";
             }
 
             _timingInProgress = false;
@@ -932,6 +936,13 @@ namespace UMA
         }
 
         private bool _timingBuildComplete;
+        private IEnumerator WaitForTimedBuildCompletion()
+        {
+            float timeout = Time.realtimeSinceStartup + 60f;
+            while (!_timingBuildComplete && Time.realtimeSinceStartup < timeout)
+                yield return null;
+        }
+
         private void OnTimedBuildComplete(UMAData data)
         {
             _timingBuildComplete = true;
