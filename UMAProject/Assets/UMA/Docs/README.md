@@ -14,6 +14,7 @@ Contents
 - Decal system
 - UMA Asset Indexer
 - RaceData and DNA
+- DNA creation for artists
 - Shader notes (UDIM + normal arrays)
 
 ## Core Concepts and Workflow
@@ -95,4 +96,6 @@ For detailed topics, see the dedicated docs:
 - `Decals.md`
 - `UMAAssetIndexer.md`
 - `RaceData.md`
+- `DNACreationGuide.md`
+- `NewDNASystem.md`
 - `Shaders-UDIM.md`

@@ -1,13 +1,12 @@
 #if UNITY_EDITOR
 using UnityEditor;
-using UnityEditor.EditorTools;
 using UnityEngine;
 
 namespace UMA
 {
     /// <summary>
     /// Holds the saved Scene View camera state and provides static Save/Restore methods
-    /// used by the EditorTool classes below.
+    /// used by the UMA Toolbar overlay.
     /// </summary>
     public static class UMAEditorTools
     {
@@ -15,14 +14,6 @@ namespace UMA
         private static Quaternion? savedRotation;
         private static float? savedSize;
         private static bool? savedOrthographic;
-
-        internal static readonly GUIContent SaveCameraIcon = new GUIContent(
-            EditorGUIUtility.IconContent("d_SceneViewCamera").image,
-            "Save Scene View Camera");
-
-        internal static readonly GUIContent RestoreCameraIcon = new GUIContent(
-            EditorGUIUtility.IconContent("d_ViewToolOrbit").image,
-            "Restore Scene View Camera");
 
         /// <summary>
         /// True when a camera state has been saved (at least once).
@@ -79,48 +70,6 @@ namespace UMA
             sceneView.orthographic = savedOrthographic.Value;
 
             Debug.Log($"[UMAEditorTools] Scene View camera restored. Pivot: {savedPivot.Value}, Size: {savedSize.Value:F2}, Ortho: {savedOrthographic.Value}");
-        }
-    }
-
-    /// <summary>
-    /// Editor tool: saves the current Scene View camera position.
-    /// Appears in the Scene View toolbar.
-    /// </summary>
-    [EditorTool("Save Scene View Camera")]
-    public class SaveSceneViewCameraTool : EditorTool
-    {
-        public override GUIContent toolbarIcon => UMAEditorTools.SaveCameraIcon;
-
-        public override void OnActivated()
-        {
-            UMAEditorTools.SaveCameraState(SceneView.lastActiveSceneView);
-
-            // Switch back to the previous tool so this acts as a one-shot command.
-            EditorApplication.delayCall += () =>
-            {
-                ToolManager.RestorePreviousTool();
-            };
-        }
-    }
-
-    /// <summary>
-    /// Editor tool: restores the Scene View camera to the last saved position.
-    /// Appears in the Scene View toolbar. Shows a warning if no state has been saved yet.
-    /// </summary>
-    [EditorTool("Restore Scene View Camera")]
-    public class RestoreSceneViewCameraTool : EditorTool
-    {
-        public override GUIContent toolbarIcon => UMAEditorTools.RestoreCameraIcon;
-
-        public override void OnActivated()
-        {
-            UMAEditorTools.RestoreCameraState(SceneView.lastActiveSceneView);
-
-            // Switch back to the previous tool so this acts as a one-shot command.
-            EditorApplication.delayCall += () =>
-            {
-                ToolManager.RestorePreviousTool();
-            };
         }
     }
 }

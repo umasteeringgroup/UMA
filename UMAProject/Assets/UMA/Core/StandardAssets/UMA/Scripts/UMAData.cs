@@ -784,15 +784,9 @@ namespace UMA
 
 			if (recoveringFromBoneBaking)
 			{
-				// UMABoneBakingMeshCombiner calls UpdateAvatar() as part of its own build,
-				// which can nudge live bone Transform rotations slightly to match Unity's
-				// normalized Avatar muscle space (see its RefreshFinalBindPoses(), which
-				// exists for the exact same reason on the bone-baking side). Those Transforms
-				// are shared and persist after bone baking finishes. Default/Jobified skin
-				// against static, per-slot authored bind poses, so bones must be re-pinned to
-				// the authored TPose + DNA pose here - otherwise they silently inherit whatever
-				// pose bone baking's Animator rebind left behind, producing a small but visible
-				// full-body lean on the next Default/Jobified build.
+				// The improved skeleton retains only preserved Transforms. Re-pin the plain
+				// skeleton to its authored TPose + DNA pose after recreating the missing
+				// source bones so Default/Jobified can use the authored bind poses.
 				ResetToTPoseAndApplyDNA();
 			}
 		}
@@ -976,6 +970,21 @@ namespace UMA
 			{
 				animatedBonesTable.Add(hash, animatedBonesTable.Count);
 			}
+		}
+
+		/// <summary>
+		/// Reapplies the preserved-bone set after a skeleton reset. Bone-baking
+		/// combiners register this set while assembling the mesh; the generator's
+		/// later shape pass resets the skeleton cache and must restore the set before
+		/// the improved skeleton removes unpreserved transforms.
+		/// </summary>
+		public void RestoreRegisteredAnimatedBones()
+		{
+			if (skeleton == null || animatedBonesTable == null)
+				return;
+
+			foreach (int hash in animatedBonesTable.Keys)
+				skeleton.SetAnimatedBone(hash);
 		}
 
 		public Transform GetGlobalTransform()

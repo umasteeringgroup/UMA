@@ -789,21 +789,35 @@ namespace UMA
                 _timingCoroutine = StartCoroutine(TimeBuildCoroutine(typeof(UMAJobifiedMeshCombiner)));
             }
 
-            // Button 2: Bone Baking Combiner
+            // Button 2: Default Bone Baking Combiner
             startY += buttonHeight + spacing;
-            if (GUI.Button(new Rect(startX, startY, buttonWidth, buttonHeight), "10xTime/Bone Baking Combiner"))
+            if (GUI.Button(new Rect(startX, startY, buttonWidth, buttonHeight), "10xTime/Default Bone Baking"))
+            {
+                iterations = 10; // Reset iterations for each test
+                _timingCoroutine = StartCoroutine(TimeBuildCoroutine(typeof(UMADefaultBoneBakingMeshCombiner)));
+            }
+
+            if (GUI.Button(new Rect(startX + buttonWidth + spacing, startY, buttonWidth, buttonHeight), "1xTime/Default Bone Baking"))
+            {
+                iterations = 1; // Reset iterations for each test
+                _timingCoroutine = StartCoroutine(TimeBuildCoroutine(typeof(UMADefaultBoneBakingMeshCombiner)));
+            }
+
+            // Button 3: Legacy Bone Baking Combiner
+            startY += buttonHeight + spacing;
+            if (GUI.Button(new Rect(startX, startY, buttonWidth, buttonHeight), "10xTime/Legacy Bone Baking"))
             {
                 iterations = 10; // Reset iterations for each test
                 _timingCoroutine = StartCoroutine(TimeBuildCoroutine(typeof(UMABoneBakingMeshCombiner)));
             }
 
-            if (GUI.Button(new Rect(startX + buttonWidth + spacing, startY, buttonWidth, buttonHeight), "1xTime/Bone Baking Combiner"))
+            if (GUI.Button(new Rect(startX + buttonWidth + spacing, startY, buttonWidth, buttonHeight), "1xTime/Legacy Bone Baking"))
             {
                 iterations = 1; // Reset iterations for each test
                 _timingCoroutine = StartCoroutine(TimeBuildCoroutine(typeof(UMABoneBakingMeshCombiner)));
             }
 
-            // Button 3: Default Combiner
+            // Button 4: Default Combiner
             startY += buttonHeight + spacing;
             if (GUI.Button(new Rect(startX, startY, buttonWidth, buttonHeight), "10xTime/Default Combiner"))
             {
@@ -847,7 +861,18 @@ namespace UMA
             }
 
             // Find or create the mesh combiner component
-            var existingCombiner = (UMAMeshCombiner)UnityEngine.Object.FindFirstObjectByType(combinerType);
+            UMAMeshCombiner existingCombiner = null;
+            var combinerCandidates = UnityEngine.Object.FindObjectsByType<UMAMeshCombiner>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+            for (int i = 0; i < combinerCandidates.Length; i++)
+            {
+                if (combinerCandidates[i].GetType() == combinerType)
+                {
+                    existingCombiner = combinerCandidates[i];
+                    break;
+                }
+            }
             UMAMeshCombiner combiner;
             if (existingCombiner != null)
             {

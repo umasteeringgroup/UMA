@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System;
@@ -21,6 +21,7 @@ namespace UMA
 			public Matrix4x4[] resolvedBoneMatrixes;
 			public int[] targetBoneIndices;
 			public System.Int32[][] triangleOcclusion;
+			public BitArray[] triangleMask;
 		}
 
 		private enum MeshComponents
@@ -412,7 +413,19 @@ namespace UMA
 						int destMesh = source.targetSubmeshIndices[i];
 
 						var targetSubMesh = target.submeshes[destMesh];
-						if (source.triangleOcclusion != null && source.triangleOcclusion[i] != null)
+						if (source.triangleMask != null && i < source.triangleMask.Length && source.triangleMask[i] != null)
+						{
+							int copiedIndices = CopyIntArrayAdd(
+								subTriangles,
+								0,
+								targetSubMesh.triangles,
+								targetSubMesh.triangleCount,
+								triangleLength,
+								vertexIndex,
+								source.triangleMask[i]);
+							targetSubMesh.triangleCount += copiedIndices;
+						}
+						else if (source.triangleOcclusion != null && source.triangleOcclusion[i] != null)
 						{
 							var triangles = CopyIntArrayAdd(subTriangles, 0, targetSubMesh.triangles, targetSubMesh.triangleCount, triangleLength, vertexIndex, source.triangleOcclusion[i]);
 							targetSubMesh.triangleCount += triangles*3;
@@ -617,7 +630,14 @@ namespace UMA
 				{
 					if (source.targetSubmeshIndices[i] >= 0)
 					{
-						target.submeshes[source.targetSubmeshIndices[i]].triangleCount += source.meshData.submeshes[i].GetBaseTriangles().Length;
+						int triangleIndexCount = source.meshData.submeshes[i].GetBaseTriangles().Length;
+						if (source.triangleMask != null && i < source.triangleMask.Length && source.triangleMask[i] != null)
+						{
+							triangleIndexCount -= Math.Min(
+								triangleIndexCount,
+								UMAUtils.GetCardinality(source.triangleMask[i]) * 3);
+						}
+						target.submeshes[source.targetSubmeshIndices[i]].triangleCount += triangleIndexCount;
 					}
 				}
 			}
@@ -836,6 +856,30 @@ namespace UMA
 			{
 				dest[destIndex++] = source[sourceIndex++] + add;
 			}
+		}
+
+		private static int CopyIntArrayAdd(int[] source, int sourceIndex, int[] dest, int destIndex, int count, int add, BitArray hiddenTriangles)
+		{
+			int sourceEnd = sourceIndex + count;
+			int triangleIndex = 0;
+			int copiedIndices = 0;
+
+			while (sourceIndex + 2 < sourceEnd)
+			{
+				bool hidden = triangleIndex < hiddenTriangles.Length && hiddenTriangles[triangleIndex];
+				if (!hidden)
+				{
+					dest[destIndex++] = source[sourceIndex] + add;
+					dest[destIndex++] = source[sourceIndex + 1] + add;
+					dest[destIndex++] = source[sourceIndex + 2] + add;
+					copiedIndices += 3;
+				}
+
+				sourceIndex += 3;
+				triangleIndex++;
+			}
+
+			return copiedIndices;
 		}
 
 		private static T[] EnsureArrayLength<T>(T[] oldArray, int newLength)

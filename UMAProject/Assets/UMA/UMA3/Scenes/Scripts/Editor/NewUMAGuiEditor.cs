@@ -292,7 +292,7 @@ namespace UMA.EditorTools
                 if (_showTimingButtonsProp.boolValue)
                 {
                     EditorGUILayout.HelpBox(
-                        "When enabled, three IMGUI buttons appear in the Game View " +
+                        "When enabled, four IMGUI button rows appear in the Game View " +
                         "allowing you to time builds with each mesh combiner (10 iterations each). " +
                         "Designed for testing in game builds.",
                         MessageType.Info);

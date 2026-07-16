@@ -8,7 +8,8 @@ namespace UMA.Editors
         private enum CombinerMode
         {
             Jobified,
-            BoneBaking,
+            DefaultBoneBaking,
+            BoneBakingCompatibility,
             Default
         }
 
@@ -83,8 +84,12 @@ namespace UMA.Editors
                 "Fast, job-based parallel mesh combining. Good for most use cases.",
                 current);
 
-            DrawCombinerToggle("Bone Baking", CombinerMode.BoneBaking,
-                "Bakes bone weights into the vertex data for reduced skinning cost at runtime. Best for static or semi-static characters.",
+            DrawCombinerToggle("Default Bone Baking", CombinerMode.DefaultBoneBaking,
+                "Recommended bone-baking combiner. Reuses the Default combiner's renderer, material, and multi-renderer pipeline while baking unused bones.",
+                current);
+
+            DrawCombinerToggle("Bone Baking (Compatibility)", CombinerMode.BoneBakingCompatibility,
+                "Compatibility component for existing scenes that reference UMABoneBakingMeshCombiner. It uses the same default-derived baking implementation.",
                 current);
 
             DrawCombinerToggle("Default", CombinerMode.Default,
@@ -115,7 +120,9 @@ namespace UMA.Editors
         {
             var combiner = _generator.meshCombiner;
             if (combiner is UMAJobifiedMeshCombiner) return "Jobified Combiner";
-            if (combiner is UMABoneBakingMeshCombiner) return "Bone Baking Combiner";
+            if (combiner != null && combiner.GetType() == typeof(UMADefaultBoneBakingMeshCombiner)) return "Default Bone Baking Combiner";
+            if (combiner != null && combiner.GetType() == typeof(UMABoneBakingMeshCombiner)) return "Bone Baking (Compatibility) Combiner";
+            if (combiner is UMADefaultBoneBakingMeshCombiner) return "Default Bone Baking Combiner";
             if (combiner is UMADefaultMeshCombiner) return "Default Combiner";
             return combiner == null ? "None" : combiner.GetType().Name;
         }
@@ -127,7 +134,10 @@ namespace UMA.Editors
                 case CombinerMode.Jobified:
                     UseMeshCombiner<UMAJobifiedMeshCombiner>();
                     break;
-                case CombinerMode.BoneBaking:
+                case CombinerMode.DefaultBoneBaking:
+                    UseMeshCombiner<UMADefaultBoneBakingMeshCombiner>();
+                    break;
+                case CombinerMode.BoneBakingCompatibility:
                     UseMeshCombiner<UMABoneBakingMeshCombiner>();
                     break;
                 case CombinerMode.Default:
@@ -143,10 +153,19 @@ namespace UMA.Editors
             var generator = gen ?? _generator;
             if (generator == null) return;
 
-            if (generator.meshCombiner is T)
+            if (generator.meshCombiner != null && generator.meshCombiner.GetType() == typeof(T))
                 return;
 
-            var meshCombiner = Object.FindFirstObjectByType<T>();
+            T meshCombiner = null;
+            var candidates = Object.FindObjectsByType<T>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            for (int i = 0; i < candidates.Length; i++)
+            {
+                if (candidates[i].GetType() == typeof(T))
+                {
+                    meshCombiner = candidates[i];
+                    break;
+                }
+            }
             if (meshCombiner == null)
             {
                 var go = new GameObject(typeof(T).Name);

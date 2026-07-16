@@ -1175,6 +1175,16 @@ namespace UMA
 
             umaData.ResetToTPoseAndApplyDNA();
 
+            if (umaData.skeleton is UMAImprovedSkeleton)
+            {
+                // ResetAll clears the bone-baking preservation flags. Restore them and
+                // apply the post-DNA cache only during a real shape update. Mesh-only
+                // rebuilds never enter this path and therefore leave the animated pose
+                // untouched.
+                umaData.RestoreRegisteredAnimatedBones();
+                umaData.skeleton.EnsureBoneHierarchy();
+            }
+
             // Only restore items if enabled, as this can be expensive
             if (SaveAndRestoreIgnoredItems)
             {

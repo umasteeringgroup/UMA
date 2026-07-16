@@ -86,10 +86,11 @@ namespace UMA
 					if (entry.Value.boneTransform.childCount > 0)
 					{
 						var parent = FindPreservedParent(entry.Value.parentBoneNameHash);
-						for (int i = 0; i < entry.Value.boneTransform.childCount; i++)
-						{
-							entry.Value.boneTransform.GetChild(i).parent = parent.boneTransform;
-						}
+						// Reparenting changes childCount and shifts every remaining child to
+						// index zero. A forward index loop skips every other child and can
+						// destroy preserved descendants with the discarded parent.
+						while (entry.Value.boneTransform.childCount > 0)
+							entry.Value.boneTransform.GetChild(0).parent = parent.boneTransform;
 					}
 					UMAUtils.DestroySceneObject(entry.Value.boneTransform.gameObject);
 					entry.Value.boneTransform = null;
@@ -1090,30 +1091,16 @@ namespace UMA
 		public override Quaternion GetTPoseCorrectedRotation(int nameHash, Quaternion tPoseRotation)
 		{
 			BoneDataBoneBaking db;
-			if (boneHashData.TryGetValue(nameHash, out db))
+			if (boneHashData.TryGetValue(nameHash, out db) && db.boneTransform != null)
 			{
-				//bool debug = db.umaTransform.name == "Spine";
-				var parentHash = ResolvePreservedHash(db.parentBoneNameHash);
-				if (parentHash != db.parentBoneNameHash)
-				{
-					Quaternion parentOffset = Quaternion.identity;
-					BoneDataBoneBaking immediateParent;
-					if (boneHashData.TryGetValue(db.parentBoneNameHash, out immediateParent))
-					{
-						BoneDataBoneBaking parent = boneHashData[parentHash];
-						parentOffset = Quaternion.Inverse(parent.grotation) * immediateParent.grotation;
-						var normalRotationToTPoseRotation = Quaternion.Inverse(tPoseRotation) * db.rotation;
-						var resultingRotation = normalRotationToTPoseRotation * parentOffset;
-						return resultingRotation;
-					}
-				}
-				return tPoseRotation;
+				// EnsureBoneHierarchy has already flattened baked parents and assigned
+				// the preserved bone's effective local rotation. Avatar creation must use
+				// that result rather than recomputing an offset from the original hierarchy.
+				return db.boneTransform.localRotation;
 			}
-			else
-			{
-				Debug.LogError("Bone not found! Hash: " + nameHash);
-				return tPoseRotation;
-			}
+
+			Debug.LogError("Bone transform not found! Hash: " + nameHash);
+			return tPoseRotation;
 		}
 
 		public void DrawDebug(Color color, float duration)

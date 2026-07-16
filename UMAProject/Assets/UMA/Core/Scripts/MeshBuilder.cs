@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections.Generic;
 using System;
 using Unity.Collections;
@@ -191,7 +191,7 @@ namespace UMA
 		/// </summary>
 		/// <param name="renderer">Target renderer.</param>
 		/// <param name="skeleton">Skeleton.</param>
-		public void ApplyDataToUnityMesh(SkinnedMeshRenderer renderer, UMASkeleton skeleton)
+		public void ApplyDataToUnityMesh(SkinnedMeshRenderer renderer, UMASkeleton skeleton, bool ensureBoneHierarchy = true)
 		{
 			Mesh mesh = renderer.sharedMesh;
 #if UNITY_EDITOR
@@ -240,7 +240,21 @@ namespace UMA
 				mesh.SetTriangles(submeshes[i]._triangles, i);
 			}
 
-			mesh.bindposes = bindPoses;
+			// ListHelper exposes the list's backing array, whose capacity can be larger
+			// than the current bone count after a later build uses fewer baked bones.
+			// Unity requires one bind pose per renderer bone, so never publish stale
+			// capacity entries.
+			if (bindPoses != null && bindPoses.Length == bonesCount)
+			{
+				mesh.bindposes = bindPoses;
+			}
+			else
+			{
+				var exactBindPoses = new Matrix4x4[bonesCount];
+				if (bindPoses != null)
+					Array.Copy(bindPoses, exactBindPoses, Math.Min(bindPoses.Length, bonesCount));
+				mesh.bindposes = exactBindPoses;
+			}
 
 			//Apply the blendshape data from the slot asset back to the combined UMA unity mesh.
 			#region Blendshape support, copied from UMAMeshData
@@ -280,7 +294,12 @@ namespace UMA
 			#endregion
 
 			mesh.RecalculateBounds();
-			skeleton.EnsureBoneHierarchy();
+			// Bone baking computes against the skeleton's cached post-DNA matrices. On a
+			// mesh-only rebuild it must not copy that rest pose over live animated bones.
+			// The normal combiner keeps the default behavior; the baking combiner only
+			// creates target transforms that are actually missing.
+			if (ensureBoneHierarchy)
+				skeleton.EnsureBoneHierarchy();
 
 			// Ensure all bones referenced in _boneNameHashes have Transforms created.
 			// The default combiner calls UMAMeshData.CreateTransforms() which creates

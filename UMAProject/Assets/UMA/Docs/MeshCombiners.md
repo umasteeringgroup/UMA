@@ -1,6 +1,6 @@
 # Mesh Combiners
 
-UMA provides three mesh combiners that control how slot geometry is assembled into the final `SkinnedMeshRenderer`. Each combiner makes different trade-offs between performance, flexibility, and runtime cost. You can switch between them at any time with the **UMA → Tools → Mesh Combiner Switcher** window.
+UMA provides three mesh-combining strategies that control how slot geometry is assembled into the final `SkinnedMeshRenderer`: Default, Jobified, and Default Bone Baking. Each makes different trade-offs between performance, flexibility, and runtime cost. You can switch between them with **UMA -> Tools -> Mesh Combiner Switcher**.
 
 ---
 
@@ -53,9 +53,9 @@ The Jobified Combiner replaces the legacy combine path with Unity's C# Job Syste
 
 ---
 
-## UMABoneBakingMeshCombiner
+## UMADefaultBoneBakingMeshCombiner
 
-The Bone Baking Combiner takes a fundamentally different approach: instead of preserving every bone for runtime skinning, it bakes bone weights directly into vertex positions at build time. Only bones that are actually needed for animation are kept.
+The Default Bone Baking Combiner takes a fundamentally different approach: instead of preserving every bone for runtime skinning, it bakes unused bone weights directly into vertex positions at build time. Only bones needed for animation are kept. It derives from `UMADefaultMeshCombiner`, so it shares the Default combiner's renderer, material, UV, mesh-modifier, mesh-hide, and blendshape-source pipeline.
 
 ### Highlights
 
@@ -63,13 +63,14 @@ The Bone Baking Combiner takes a fundamentally different approach: instead of pr
 - **Lower runtime skinning cost.** The GPU evaluates fewer bone matrices per vertex, which reduces vertex shader work. This is especially beneficial on mobile platforms and in scenes with many characters.
 - **Additional animated bones per slot.** Each `SlotDataAsset` can specify an **Unbaked Animated Bones** list. Bones named in that list are preserved even if they are not part of the standard humanoid set. This lets you keep tail, hair, cape, or weapon bones that need to animate.
 - **Custom skeleton management.** The combiner uses `UMAImprovedSkeleton`, a subclass of `UMASkeleton`, which only creates real Unity `Transform` objects for preserved bones. Non-preserved bones exist as cache data only, saving hierarchy overhead.
+- **Default-combiner renderer support.** It supports multiple renderer assets and the Default combiner's material handling, rather than forcing all generated geometry into a single renderer.
+- **Mesh-only rebuild safety.** The baking pass reads cached post-DNA matrices without copying the rest pose over a live animated hierarchy. A mesh rebuild therefore does not reset the current animation pose.
 - **Works with blendshapes and mesh modifiers.** The combiner applies DNA, mesh modifiers, and blendshape baking before the bone-baking pass, so all deformation is captured in the final vertex positions.
 
 ### Trade-offs
 
 - **Not compatible with runtime re-parenting or dynamic bone attachments.** Because non-preserved bones have no live Transforms, you cannot attach objects or effects to them at runtime.
 - **Requires a rebuild to change animation bones.** If you later decide a previously baked bone should animate, the character must be regenerated.
-- **Single renderer only.** The Bone Baking Combiner produces one combined `SkinnedMeshRenderer`. It does not support multiple renderer assets.
 - **Initial build cost.** The baking process is more expensive than a single-frame Default or Jobified build because it computes the final posed vertex positions. However, this cost is paid once at generation time, not per frame.
 
 ### Best For
@@ -80,12 +81,18 @@ The Bone Baking Combiner takes a fundamentally different approach: instead of pr
 
 ---
 
+## UMABoneBakingMeshCombiner (Compatibility)
+
+`UMABoneBakingMeshCombiner` is retained for existing prefabs, scenes, and scripts. It now subclasses `UMADefaultBoneBakingMeshCombiner`, so it has the same behavior and feature support. Use `UMADefaultBoneBakingMeshCombiner` for new generator setups; use the compatibility component only when preserving an existing serialized component type matters.
+
+---
+
 ## Choosing a Combiner
 
 | Combiner | Runtime Skinning | Build Speed | Best Use Case |
 |---|---|---|---|
 | **Default** | Full skeleton | Moderate (single-threaded) | Debugging, no Burst setups, simple recipes |
 | **Jobified** | Full skeleton | Fast (parallel, Burst) | Many characters, frequent rebuilds, desktop/console |
-| **Bone Baking** | Reduced skeleton | Slower build, faster runtime | NPCs, mobile, static/semi-static characters |
+| **Default Bone Baking** | Reduced skeleton | Slower build, faster runtime | NPCs, mobile, static/semi-static characters |
 
 Switching combiners requires a full character rebuild. Existing generated characters will not reflect the change until they are regenerated.

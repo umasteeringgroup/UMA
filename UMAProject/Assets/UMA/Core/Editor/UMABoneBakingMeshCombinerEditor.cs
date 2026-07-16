@@ -1,16 +1,17 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEditor;
 
 namespace UMA
 {
-	[CustomEditor(typeof(UMABoneBakingMeshCombiner))]
+	[CustomEditor(typeof(UMADefaultBoneBakingMeshCombiner), true)]
 	public class UMABoneBakingMeshCombinerEditor : Editor
 	{
 		public override void OnInspectorGUI()
 		{
 			base.OnInspectorGUI();
-			EditorGUILayout.LabelField("Cached Arrays", (target as UMABoneBakingMeshCombiner).CachedBoneWeights.ToString());
-			EditorGUILayout.LabelField("Entries", (target as UMABoneBakingMeshCombiner).CachedBoneWeightEntries.ToString());
+			var combiner = (UMADefaultBoneBakingMeshCombiner)target;
+			EditorGUILayout.LabelField("Cached Arrays", combiner.CachedBoneWeights.ToString());
+			EditorGUILayout.LabelField("Entries", combiner.CachedBoneWeightEntries.ToString());
 		}
 
 		[MenuItem("UMA/Debug/Compare Combiners On Selected")]
@@ -26,10 +27,19 @@ namespace UMA
 			if (umaData == null) { Debug.LogError("No UMAData."); return; }
 			var generator = umaData.umaGenerator as UMAGeneratorBuiltin;
 			if (generator == null) { Debug.LogError("No UMAGeneratorBuiltin."); return; }
-			var boneBaking = generator.meshCombiner as UMABoneBakingMeshCombiner;
-			if (boneBaking == null) { Debug.LogError("Combiner is not UMABoneBakingMeshCombiner."); return; }
+			var boneBaking = generator.meshCombiner as UMADefaultBoneBakingMeshCombiner;
+			if (boneBaking == null) { Debug.LogError("Combiner is not a bone-baking mesh combiner."); return; }
 
-			var defaultCombiner = generator.GetComponent<UMADefaultMeshCombiner>();
+			UMADefaultMeshCombiner defaultCombiner = null;
+			var defaultCandidates = generator.GetComponents<UMADefaultMeshCombiner>();
+			for (int i = 0; i < defaultCandidates.Length; i++)
+			{
+				if (defaultCandidates[i].GetType() == typeof(UMADefaultMeshCombiner))
+				{
+					defaultCombiner = defaultCandidates[i];
+					break;
+				}
+			}
 			if (defaultCombiner == null)
 				defaultCombiner = generator.gameObject.AddComponent<UMADefaultMeshCombiner>();
 

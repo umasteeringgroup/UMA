@@ -41,6 +41,32 @@ namespace UMA.Editors
 			return EditorApplication.isCompiling || EditorApplication.isUpdating;
 		}
 
+		/// <summary>
+		/// Rebuilds every DynamicCharacterAvatar in the active scene that has
+		/// editor-time generation enabled.
+		/// </summary>
+		internal static void RebuildAllEditorUMA()
+		{
+			if (IsEditorBusy()) return;
+			Scene scene = SceneManager.GetActiveScene();
+			if (scene == null) return;
+
+			GameObject[] sceneObjs = scene.GetRootGameObjects();
+			foreach (GameObject go in sceneObjs)
+			{
+				DynamicCharacterAvatar[] dcas = go.GetComponentsInChildren<DynamicCharacterAvatar>(false);
+				if (dcas.Length == 0) continue;
+
+				foreach (DynamicCharacterAvatar dca in dcas)
+				{
+					if (dca != null && dca.editorTimeGeneration)
+					{
+						dca.GenerateSingleUMA();
+					}
+				}
+			}
+		}
+
 		private void OnBeforeAssemblyReload()
 		{
 			// No event subscriptions in this editor, but keep hook for parity and future safety
@@ -271,30 +297,11 @@ namespace UMA.Editors
 
             }
 
-            if (!EditorApplication.isPlaying)
+			if (!EditorApplication.isPlaying)
 			{
 				if (GUILayout.Button("Rebuild all editor UMA"))
 				{
-					if (IsEditorBusy()) return;
-					Scene scene = SceneManager.GetActiveScene();
-					if (scene != null)
-					{
-						GameObject[] sceneObjs = scene.GetRootGameObjects();
-						foreach (GameObject go in sceneObjs)
-						{
-							DynamicCharacterAvatar[] dcas = go.GetComponentsInChildren<DynamicCharacterAvatar>(false);
-							if (dcas.Length > 0)
-							{
-								foreach (DynamicCharacterAvatar dca in dcas)
-								{
-									if (dca != null && dca.editorTimeGeneration)
-									{
-										dca.GenerateSingleUMA();
-									}
-								}
-							}
-						}
-					}
+					RebuildAllEditorUMA();
 				}
 			}
 			serializedObject.ApplyModifiedProperties();
