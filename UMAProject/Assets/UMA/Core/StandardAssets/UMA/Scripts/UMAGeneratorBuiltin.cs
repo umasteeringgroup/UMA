@@ -612,6 +612,25 @@ namespace UMA
             return true;
 		}
 
+        /// <summary>
+        /// Generates an UMA while controlling whether the rebuilt Animator should
+        /// immediately evaluate its current pose. Edit-time partial builds disable
+        /// evaluation so humanoid retargeting cannot overwrite the DNA skeleton.
+        /// </summary>
+        public bool GenerateSingleUMA(UMAData data, bool fireEvents, bool evaluateAnimatorPose)
+        {
+            bool previousValue = evaluateAnimatorPoseAfterAvatarUpdate;
+            evaluateAnimatorPoseAfterAvatarUpdate = evaluateAnimatorPose;
+            try
+            {
+                return GenerateSingleUMA(data, fireEvents);
+            }
+            finally
+            {
+                evaluateAnimatorPoseAfterAvatarUpdate = previousValue;
+            }
+        }
+
         private void ValidateMesh(UMAData umaData)
         {
             if (umaData == null) return;

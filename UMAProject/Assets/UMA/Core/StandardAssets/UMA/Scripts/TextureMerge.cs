@@ -98,33 +98,54 @@ namespace UMA
 			Texture2D tex = new Texture2D(rt.width, rt.height, TextureFormat.ARGB32, false, true);
 			RenderTexture activeTexture = RenderTexture.active;
 			bool bkUpSRGBWrite = GL.sRGBWrite;
+			RenderTexture outputMap = null;
 
-			// Disabling linear to srgb conversion is not enough. It seems that Unity always does the conversion when reading from a RenderTexture.
-			// As a workaround, we will nead to create a non-linear texture to blit to, so the conversion happens, but it's OK for it to happen.
-			GL.sRGBWrite = false;            
-          RenderTexture outputMap = new RenderTexture(rt.width, rt.height, 32, rt.format, RenderTextureReadWrite.sRGB);
-            outputMap.enableRandomWrite = true;
-            outputMap.Create();
-            RenderTexture.active = outputMap;
-            GL.Clear(true, true, Color.black);
-            Graphics.Blit(rt, outputMap);	
-			// End of workaround.
+            try
+            {
+			    // Disabling linear to srgb conversion is not enough. It seems that Unity always does the conversion when reading from a RenderTexture.
+			    // As a workaround, create a non-linear texture to blit to so the conversion happens in the intended place.
+			    GL.sRGBWrite = false;
+                outputMap = new RenderTexture(rt.width, rt.height, 32, rt.format, RenderTextureReadWrite.sRGB);
+                outputMap.enableRandomWrite = true;
+                outputMap.Create();
+                RenderTexture.active = outputMap;
+                GL.Clear(true, true, Color.black);
+                Graphics.Blit(rt, outputMap);
 
-			tex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
-
-            GL.sRGBWrite = bkUpSRGBWrite;
-			RenderTexture.active = activeTexture;
-
-			outputMap.Release();
-			DestroyImmediate(outputMap);
-			return tex;
+			    tex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
+			    return tex;
+            }
+            catch
+            {
+                UMAUtils.DestroySceneObject(tex);
+                throw;
+            }
+            finally
+            {
+                GL.sRGBWrite = bkUpSRGBWrite;
+			    RenderTexture.active = activeTexture;
+                if (outputMap != null)
+                {
+                    if (outputMap.IsCreated())
+                    {
+                        outputMap.Release();
+                    }
+                    UMAUtils.DestroySceneObject(outputMap);
+                }
+            }
         }
 
         public static void SaveRenderTexture(RenderTexture texture, string textureName, bool isNormal = false)
         {
-            Texture2D tex;
-            tex = GetRTPixels(texture);
-            SaveTexture2D(tex, textureName);
+            Texture2D tex = GetRTPixels(texture);
+            try
+            {
+                SaveTexture2D(tex, textureName);
+            }
+            finally
+            {
+                UMAUtils.DestroySceneObject(tex);
+            }
         }
 
         private static void SaveTexture2D(Texture2D texture, string textureName)
@@ -223,6 +244,12 @@ namespace UMA
 				}
 				finally
 				{
+#if UMA_ADVANCED_BLENDMODES
+					if (scratch != null)
+					{
+						RenderTexture.ReleaseTemporary(scratch);
+					}
+#endif
 					GL.PopMatrix();
 					RenderTexture.active = backup;
 				}
@@ -326,44 +353,49 @@ namespace UMA
             }
 
             var source = RenderTexture.GetTemporary(destination.width, destination.height, 0, destination.format, RenderTextureReadWrite.Linear);
-
-			switch (channelType)
-			{
-				case UMAMaterial.ChannelType.NormalMap:
-                    for (int i = 0; i < normalPostProcesses.Count; i++)
-					{
-                        UMAPostProcess postProcess = normalPostProcesses[i];
-                        Graphics.Blit(destination, source);
-						postProcess.Process(source, destination);
-					}
-					break;
-				case UMAMaterial.ChannelType.Texture:
-					for (int i = 0; i < dataPostProcesses.Count; i++)
-                    {
-                        UMAPostProcess postProcess = dataPostProcesses[i];
-                        Graphics.Blit(destination, source);
-                        postProcess.Process(source, destination);
-                    }
-					break;
-				case UMAMaterial.ChannelType.DiffuseTexture:
-					for (int i = 0; i < diffusePostProcesses.Count; i++)
-                    {
-                        UMAPostProcess postProcess = diffusePostProcesses[i];
-                        Graphics.Blit(destination, source);
-                        postProcess.Process(source, destination);
-                    }
-					break;
-				case UMAMaterial.ChannelType.DetailNormalMap:
-					for (int i = 0; i < detailNormalPostProcesses.Count; i++)
-                    {
-                        UMAPostProcess postProcess = detailNormalPostProcesses[i];
-                        Graphics.Blit(destination, source);
-                        postProcess.Process(source, destination);
-                    }
-					break;
-			}
-			RenderTexture.active = null;
-			RenderTexture.ReleaseTemporary(source);
+            try
+            {
+			    switch (channelType)
+			    {
+				    case UMAMaterial.ChannelType.NormalMap:
+                        for (int i = 0; i < normalPostProcesses.Count; i++)
+					    {
+                            UMAPostProcess postProcess = normalPostProcesses[i];
+                            Graphics.Blit(destination, source);
+						    postProcess.Process(source, destination);
+					    }
+					    break;
+				    case UMAMaterial.ChannelType.Texture:
+					    for (int i = 0; i < dataPostProcesses.Count; i++)
+                        {
+                            UMAPostProcess postProcess = dataPostProcesses[i];
+                            Graphics.Blit(destination, source);
+                            postProcess.Process(source, destination);
+                        }
+					    break;
+				    case UMAMaterial.ChannelType.DiffuseTexture:
+					    for (int i = 0; i < diffusePostProcesses.Count; i++)
+                        {
+                            UMAPostProcess postProcess = diffusePostProcesses[i];
+                            Graphics.Blit(destination, source);
+                            postProcess.Process(source, destination);
+                        }
+					    break;
+				    case UMAMaterial.ChannelType.DetailNormalMap:
+					    for (int i = 0; i < detailNormalPostProcesses.Count; i++)
+                        {
+                            UMAPostProcess postProcess = detailNormalPostProcesses[i];
+                            Graphics.Blit(destination, source);
+                            postProcess.Process(source, destination);
+                        }
+					    break;
+			    }
+            }
+            finally
+            {
+			    RenderTexture.active = null;
+			    RenderTexture.ReleaseTemporary(source);
+            }
 		}
 
 		public void Reset()

@@ -70,6 +70,11 @@ namespace UMA
         [NonSerialized]
         public bool FreezeTime;
 
+        // Partial edit-time builds need to rebuild the Avatar without immediately
+        // sampling its Animator. Sampling here can overwrite the freshly applied DNA
+        // skeleton with a retargeted animation pose.
+        protected bool evaluateAnimatorPoseAfterAvatarUpdate = true;
+
         public bool SaveAndRestoreIgnoredItems;
 
         protected OverlayData _defaultOverlayData;
@@ -288,7 +293,7 @@ namespace UMA
                 wasCopied = true;
             }
 
-            public void RestoreAnimatorState(Animator animator, UMAData umaData)
+            public void RestoreAnimatorState(Animator animator, UMAData umaData, bool evaluatePose = true)
             {
                 if (wasCopied == false)
                 {
@@ -352,7 +357,7 @@ namespace UMA
                 }
 
                 umaData.FireAnimatorStateRestoredEvent();
-                if (animator.isInitialized)
+                if (animator.isInitialized && evaluatePose)
                 {
 #if UNITY_EDITOR
                     if (FreezeTime || animator.enabled == false)
@@ -408,7 +413,7 @@ namespace UMA
                         {
                             animator = umaData.gameObject.AddComponent<Animator>();
                         }
-                        SetAvatar(umaData, animator);
+                        SetAvatar(umaData, animator, !evaluateAnimatorPoseAfterAvatarUpdate);
                         animator.runtimeAnimatorController = umaData.animationController;
                         umaData.animator = animator;
 
@@ -426,7 +431,7 @@ namespace UMA
                         if (!umaData.KeepAvatar || animator.avatar == null)
                         {
                             UMAUtils.DestroyAvatar(animator.avatar);
-                            SetAvatar(umaData, animator);
+                            SetAvatar(umaData, animator, !evaluateAnimatorPoseAfterAvatarUpdate);
                         }
 
                         umaTransform.SetParent(oldParent, false);
@@ -435,7 +440,7 @@ namespace UMA
 
                         if (animator.runtimeAnimatorController != null)
                         {
-                            snapshot.RestoreAnimatorState(animator, umaData);
+                            snapshot.RestoreAnimatorState(animator, umaData, evaluateAnimatorPoseAfterAvatarUpdate);
                         }
                         if (umaData.ForceRebindAnimator)
                         {
@@ -451,7 +456,7 @@ namespace UMA
         /// </summary>
         /// <param name="umaData">UMA data.</param>
         /// <param name="animator">Animator.</param>
-        public static void SetAvatar(UMAData umaData, Animator animator)
+        public static void SetAvatar(UMAData umaData, Animator animator, bool preserveDnaHipsTransform = false)
         {
             var umaTPose = umaData.GetTPose();
 
@@ -459,7 +464,7 @@ namespace UMA
             {
                 case RaceData.UMATarget.Humanoid:
                     umaTPose.DeSerialize();
-                    var avatar = CreateAvatar(umaData, umaTPose);
+                    var avatar = CreateAvatar(umaData, umaTPose, preserveDnaHipsTransform);
                     if (avatar != null)
                     {
                         animator.avatar = avatar;
@@ -526,7 +531,7 @@ namespace UMA
         /// <returns>The human avatar.</returns>
         /// <param name="umaData">UMA data.</param>
         /// <param name="umaTPose">UMA TPose.</param>
-        public static Avatar CreateAvatar(UMAData umaData, UmaTPose umaTPose)
+        public static Avatar CreateAvatar(UMAData umaData, UmaTPose umaTPose, bool preserveDnaHipsTransform = false)
         {
             //Debug.Log("Avatar: Creating humanoid avatar for " + umaData.name);
             umaTPose.DeSerialize();
@@ -539,6 +544,31 @@ namespace UMA
                 res.name = umaData.name;
                 if (umaTPose.HasExtractedHumanPose())
                 {
+                    // SetHumanPose retargets its normalized bodyPosition against the
+                    // newly proportioned Avatar. During a partial edit-time DNA build
+                    // that can move Hips even when the active DNA touches only child
+                    // bones. Preserve the already-correct post-DNA Hips transform while
+                    // still restoring the serialized muscle pose.
+                    Transform hips = null;
+                    Vector3 hipsPosition = default;
+                    Quaternion hipsRotation = default;
+                    Vector3 hipsScale = default;
+                    if (preserveDnaHipsTransform && umaData.skeleton != null)
+                    {
+                        string hipsBoneName = umaTPose.BoneNameFromHumanName("Hips");
+                        if (string.IsNullOrEmpty(hipsBoneName))
+                        {
+                            hipsBoneName = "Hips";
+                        }
+                        hips = umaData.skeleton.GetBoneTransform(hipsBoneName);
+                        if (hips != null)
+                        {
+                            hipsPosition = hips.position;
+                            hipsRotation = hips.rotation;
+                            hipsScale = hips.localScale;
+                        }
+                    }
+
                     HumanPose pose = umaTPose.GetHumanPose();
                     var handler = new HumanPoseHandler(res, umaData.transform);
                     try
@@ -548,6 +578,11 @@ namespace UMA
                     finally
                     {
                         handler.Dispose();
+                        if (hips != null)
+                        {
+                            hips.SetPositionAndRotation(hipsPosition, hipsRotation);
+                            hips.localScale = hipsScale;
+                        }
                     }
                 }
                 return res;

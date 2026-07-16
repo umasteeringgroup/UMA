@@ -534,7 +534,7 @@ namespace UMA.CharacterSystem.Editors
             {
                 UMAGenerator generator = UMAAssetIndexer.Instance.generator;
                 thisDCA.Dirty(_buildRig,_buildTexture,_buildMesh);
-                generator.GenerateSingleUMA(thisDCA,false);
+                generator.GenerateSingleUMA(thisDCA, false, Application.isPlaying);
             }
         }
 
@@ -550,7 +550,7 @@ namespace UMA.CharacterSystem.Editors
             {
                 UMAGenerator generator = UMAAssetIndexer.Instance.generator;
                 thisDCA.Dirty(_buildRig, _buildTexture, _buildMesh);
-                generator.GenerateSingleUMA(thisDCA,false);                
+                generator.GenerateSingleUMA(thisDCA, false, Application.isPlaying);
             }
             if (GUILayout.Button("Loop Build 10x"))
             {
@@ -1210,6 +1210,10 @@ namespace UMA.CharacterSystem.Editors
                                 EditorUtility.DisplayDialog("DNA Not Found", $"DNA asset '{inst.Name}' not found in collection.", "OK");
                             }
                         }
+                        if (GUILayout.Button("Log", GUILayout.Width(35)))
+                        {
+                            LogHipsPosition(inst.Name, inst.Value);
+                        }
                         if (GUILayout.Button("?", GUILayout.Width(20)))
                         {
                             // Evaluate the current raw value of the DNA and show it in a dialog, 
@@ -1324,6 +1328,10 @@ namespace UMA.CharacterSystem.Editors
                                 {
                                     EditorUtility.DisplayDialog("DNA Not Found", $"DNA asset '{inst.Name}' not found in collection.", "OK");
                                 }
+                            }
+                            if (GUILayout.Button("Log", GUILayout.Width(35)))
+                            {
+                                LogHipsPosition(inst.Name, inst.Value);
                             }
                             if (GUILayout.Button("X", GUILayout.Width(20)))
                             {
@@ -1539,6 +1547,30 @@ namespace UMA.CharacterSystem.Editors
             return wasChanged;
         }
 
+        private void LogHipsPosition(string dnaName, float dnaValue)
+        {
+            if (thisDCA == null)
+            {
+                return;
+            }
+
+            var dca = thisDCA;
+            Transform hips = dca.skeleton != null ? dca.skeleton.GetBoneTransform("Hips") : null;
+            if (hips == null && dca.animator != null && dca.animator.isHuman)
+            {
+                hips = dca.animator.GetBoneTransform(HumanBodyBones.Hips);
+            }
+
+            if (hips != null)
+            {
+                Debug.Log($"Live DNA '{dnaName}' = {dnaValue:F4}: Hips position {hips.position.ToString("F5")}", dca);
+            }
+            else
+            {
+                Debug.LogWarning($"Live DNA '{dnaName}' = {dnaValue:F4}: Hips bone was not found.", dca);
+            }
+        }
+
         private void DoTargetedBuild(UMA.DNAInstanceCollection.DNABuildType buildType)
         {
             if (thisDCA == null)
@@ -1565,7 +1597,7 @@ namespace UMA.CharacterSystem.Editors
             else
             {      
                 thisDCA.Dirty(buildRig, buildTexture, buildMesh);
-                generator.GenerateSingleUMA(thisDCA,false);
+                generator.GenerateSingleUMA(thisDCA, false, Application.isPlaying);
             }
             sw.Stop();
             //string combinerType = meshCombiner != null ? meshCombiner.GetType().Name : "null";
@@ -1584,7 +1616,7 @@ namespace UMA.CharacterSystem.Editors
             {
                 thisDCA.Dirty(true, true, true);
                 var generator = UMAAssetIndexer.Instance.Generator;
-                generator.GenerateSingleUMA(thisDCA,false);
+                generator.GenerateSingleUMA(thisDCA, false, Application.isPlaying);
             }
             else
             {

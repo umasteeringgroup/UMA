@@ -1342,15 +1342,15 @@ namespace UMA
             for(int i=0;i<LoadedItems.Count;i++)
             {
                 CachedOp c = LoadedItems[i];
-                if (c.Expired)
+                if (c.Expired && c.Operation.IsDone)
                 {
-                    Addressables.Release(c.Operation);
                     Cleanup.Add(c);
                 }
             }
-            if (Cleanup.Count > 0)
+
+            foreach (CachedOp cachedOp in Cleanup)
             {
-                LoadedItems.RemoveAll(x => Cleanup.Contains(x));
+                Unload(cachedOp.Operation);
             }
         }
 #endif
@@ -3662,17 +3662,47 @@ namespace UMA
 #endif
         }
 #if UMA_ADDRESSABLES
+        private void ReleaseAddressableReference(UnityEngine.Object obj)
+        {
+            if (obj == null || !TypeToLookup.ContainsKey(obj.GetType()))
+            {
+                return;
+            }
+
+            System.Type indexedType = TypeToLookup[obj.GetType()];
+            Dictionary<string, AssetItem> typeDictionary = GetAssetDictionary(indexedType);
+            string itemName = AssetItem.GetEvilName(obj);
+
+            if (typeDictionary.TryGetValue(itemName, out AssetItem assetItem))
+            {
+                assetItem.ReleaseItem();
+            }
+        }
+
         public void Unload(AsyncOperationHandle<IList<UnityEngine.Object>> AssetOperation)
         {
 #if SUPER_LOGGING
             Debug.Log("Unloading AsyncOperationHandle<> in Indexer.Unload()");
 #endif
-            foreach(UnityEngine.Object obj in AssetOperation.Result)
-            {
-                ReleaseReference(obj);
-            }
-            Addressables.Release(AssetOperation);
+            // Remove our bookkeeping before releasing the handle. A released handle can
+            // become invalid immediately, but its value is still sufficient to find the
+            // CachedOp while it is valid.
             LoadedItems.RemoveAll(x => x.Operation.Equals(AssetOperation));
+
+            if (!AssetOperation.IsValid())
+            {
+                return;
+            }
+
+            if (AssetOperation.Status == AsyncOperationStatus.Succeeded && AssetOperation.Result != null)
+            {
+                foreach(UnityEngine.Object obj in AssetOperation.Result)
+                {
+                    ReleaseAddressableReference(obj);
+                }
+            }
+
+            Addressables.Release(AssetOperation);
         }
 
         public void UnloadAll(bool forceResourceUnload)
@@ -3680,7 +3710,10 @@ namespace UMA
 
             foreach (CachedOp op in LoadedItems)
 			{
-				Addressables.Release(op.Operation);
+				if (op.Operation.IsValid())
+                {
+				    Addressables.Release(op.Operation);
+                }
 			}
 			Dictionary<string, AssetItem> SlotDic = GetAssetDictionary(typeof(SlotDataAsset));
 			Dictionary<string, AssetItem> OverlayDic = GetAssetDictionary(typeof(OverlayDataAsset));

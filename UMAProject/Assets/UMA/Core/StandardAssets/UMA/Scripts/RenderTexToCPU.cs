@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -23,6 +24,7 @@ namespace UMA
         public int textureIndex;
         public Texture2D newTexture;
         public bool recreateMips;
+        private bool sourceTextureReleased;
         public static int copiesEnqueued = 0;
         public static int copiesDequeued = 0;
         public static int unableToQueue = 0;
@@ -63,71 +65,96 @@ namespace UMA
 
         public void DoAsyncCopy()
         {
-            AsyncGPUReadback.Request(texture, 0, (AsyncGPUReadbackRequest asyncAction) =>
+            try
             {
-                QueueCopy(asyncAction);
-            });
+                AsyncGPUReadback.Request(texture, 0, (AsyncGPUReadbackRequest asyncAction) =>
+                {
+                    QueueCopy(asyncAction);
+                });
+            }
+            catch
+            {
+                errorUploads++;
+                ReleaseSourceTexture();
+                renderTexturesCleanedMissed++;
+            }
         }
 
 
         private void QueueCopy(AsyncGPUReadbackRequest asyncAction)
         {
-            var entityId = texture.GetEntityId();
-            if (renderTexturesToCPU.ContainsKey(entityId))
+            if (sourceTextureReleased || texture == null)
             {
-                renderTexturesToCPU.Remove(entityId);
+                return;
             }
+
+            var entityId = texture.GetEntityId();
+            renderTexturesToCPU.Remove(entityId);
 
             // if it's still valid, then create the texture and enqueue the apply method
             if (generatedMaterial != null && generatedMaterial.material != null)
             {
-                var w = asyncAction.width;
-                var h = asyncAction.height;
-
-
-                if (w != texture.width || h != texture.height)
+                try
                 {
+                    if (asyncAction.hasError)
+                    {
+                        errorUploads++;
+                        ReleaseSourceTexture();
+                        renderTexturesCleanedMissed++;
+                        return;
+                    }
+
+                    var w = asyncAction.width;
+                    var h = asyncAction.height;
+
+                    if (w != texture.width || h != texture.height)
+                    {
 #if UNITY_EDITOR
-
-                    // the texture has changed since we started the copy, so we can't use it.
-                    // we need to clean up the texture
-                    Debug.LogWarning("Texture size changed during copy, discarding copy. RenderTexture will remain in VRAM");
+                        Debug.LogWarning("Texture size changed during copy; discarding the asynchronous atlas copy.");
 #endif
+                        errorUploads++;
+                        ReleaseSourceTexture();
+                        renderTexturesCleanedMissed++;
+                        return;
+                    }
 
-                    return;
-                }
+                    GraphicsFormat gf = GraphicsFormatUtility.GetGraphicsFormat(texture.format,false);
+                    TextureFormat tf = GraphicsFormatUtility.GetTextureFormat(gf);
+                    newTexture = new Texture2D(texture.width, texture.height, tf, texture.mipmapCount > 0, true);
 
-                GraphicsFormat gf = GraphicsFormatUtility.GetGraphicsFormat(texture.format,false);
-                TextureFormat tf = GraphicsFormatUtility.GetTextureFormat(gf);
-                // texture.format
-                newTexture = new Texture2D(texture.width, texture.height, tf, texture.mipmapCount > 0, true);
-
-                // newTexture = new Texture2D(texture.width, texture.height, TextureFormat.RGBA32, texture.mipmapCount > 0, true);
-                newTexture.SetPixelData(asyncAction.GetData<byte>(), 0);
+                    newTexture.SetPixelData(asyncAction.GetData<byte>(), 0);
 #if UNITY_EDITOR
-                // We can't count on the callback due to the fact that the editor may not be playing.
-                // therefor, just run the apply during editing directly.
-                if (!Application.isPlaying)
-                {
-                    ApplyTexture();
-                    return;
-                }
+                    // We can't count on the generator update loop while editing.
+                    if (!Application.isPlaying)
+                    {
+                        ApplyTexture();
+                        return;
+                    }
 #endif
-                if (ApplyInline)
-                {
-                    // this will remove the rendertexture, etc.
-                    ApplyTexture();
+                    if (ApplyInline)
+                    {
+                        ApplyTexture();
+                    }
+                    else
+                    {
+                        copiesEnqueued++;
+                        renderTexturesToFree.Add(entityId, texture);
+                        QueuedCopies.Enqueue(this);
+                    }
                 }
-                else
+                catch
                 {
-                    copiesEnqueued++;
-                    renderTexturesToFree.Add(entityId, texture);
-                    QueuedCopies.Enqueue(this);
+                    errorUploads++;
+                    DestroyNewTexture();
+                    ReleaseSourceTexture();
+                    renderTexturesCleanedMissed++;
                 }
             }
             else
             {
                 unableToQueue++;
+                ReleaseSourceTexture();
+                renderTexturesCleanedMissed++;
             }
         }
 
@@ -159,7 +186,6 @@ namespace UMA
             {
                 copiesDequeued++;
                 RenderTexToCPU copy = QueuedCopies.Dequeue();
-                renderTexturesToFree.Remove(copy.texture.GetEntityId());
                 copy.ApplyTexture();
                 number--;
                 if (number <= 0)
@@ -175,28 +201,65 @@ namespace UMA
             {
                 try
                 {
+                    if (newTexture == null || texture == null || generatedMaterial.resultingAtlasList == null ||
+                        textureIndex < 0 || textureIndex >= generatedMaterial.resultingAtlasList.Length)
+                    {
+                        throw new InvalidOperationException("Asynchronous atlas copy target is no longer valid.");
+                    }
 
                     newTexture.Apply(texture.mipmapCount > 0);  
                     generatedMaterial.material.SetTexture(textureName, newTexture);
                     generatedMaterial.resultingAtlasList[textureIndex] = newTexture;
-                    RenderTexture.ReleaseTemporary(texture);
                     renderTexturesCleanedApplied++;
                     texturesUploaded++;
                 }
                 catch 
                 {
                     errorUploads++;
+                    DestroyNewTexture();
+                    renderTexturesCleanedMissed++;
+                }
+                finally
+                {
+                    ReleaseSourceTexture();
                 }
             }
             else
             {
                 misseduploads++;
-                // we made it to the application, but the material has since died.
-                // we need to clean up the texture
-                UMAUtils.DestroySceneObject(newTexture);
-                RenderTexture.ReleaseTemporary(texture);
+                DestroyNewTexture();
+                ReleaseSourceTexture();
                 renderTexturesCleanedMissed++;
             }
+        }
+
+        private void DestroyNewTexture()
+        {
+            if (newTexture != null)
+            {
+                UMAUtils.DestroySceneObject(newTexture);
+                newTexture = null;
+            }
+        }
+
+        private void ReleaseSourceTexture()
+        {
+            if (sourceTextureReleased)
+            {
+                return;
+            }
+
+            sourceTextureReleased = true;
+            if (texture == null)
+            {
+                return;
+            }
+
+            EntityId entityId = texture.GetEntityId();
+            renderTexturesToCPU.Remove(entityId);
+            renderTexturesToFree.Remove(entityId);
+            RenderTexture.ReleaseTemporary(texture);
+            texture = null;
         }
     }
 }

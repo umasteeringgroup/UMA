@@ -238,6 +238,9 @@ namespace UMA
                 }
                 // yield return null;
             }
+            RenderTexture pendingTemporaryTexture = null;
+            RenderTexture pendingPersistentTexture = null;
+            Texture2D pendingTexture2D = null;
             try
             {
                 for (int atlasIndex = umaData.generatedMaterials.materials.Count - 1; atlasIndex >= 0; atlasIndex--)
@@ -331,6 +334,7 @@ namespace UMA
                                     {
                                         // Temporary RT for drawing; will be released after copy
                                         destinationTexture = RenderTexture.GetTemporary(ww, hh, 0, channelTextureFormat, RenderTextureReadWrite.Linear);
+                                        pendingTemporaryTexture = destinationTexture;
                                         if (destinationTexture.useMipMap != umaGenerator.convertMipMaps)
                                         {
                                             if (destinationTexture.IsCreated())
@@ -364,6 +368,7 @@ namespace UMA
                                             {
                                                 useMipMap = materialUseMipMap // && !umaGenerator.convertRenderTexture;
                                             };
+                                            pendingPersistentTexture = destinationTexture;
                                         }
                                     }
 
@@ -408,6 +413,7 @@ namespace UMA
                                             resultingTextures[textureChannelNumber] = destinationTexture;
                                             // Now asynchronously copy and reset it
                                             RenderTexToCPU rt2cpu = new RenderTexToCPU(destinationTexture, generatedMaterial, channels[textureChannelNumber].materialPropertyName, textureChannelNumber, umaGenerator);
+                                            pendingTemporaryTexture = null;
                                             rt2cpu.DoAsyncCopy();
                                         }
                                         else
@@ -433,6 +439,7 @@ namespace UMA
                                             else
                                             {
                                                 tempTexture = new Texture2D(destinationTexture.width, destinationTexture.height, texFmt, umaGenerator.convertMipMaps, true);
+                                                pendingTexture2D = tempTexture;
                                             }
 
                                             bool usedGpuCopy = false;
@@ -457,9 +464,11 @@ namespace UMA
                                             }
 
                                             RenderTexture.ReleaseTemporary(destinationTexture);
+                                            pendingTemporaryTexture = null;
 
                                             resultingTextures[textureChannelNumber] = tempTexture as Texture;
                                             SetMaterialTexture(generatedMaterial, slotData, textureChannelNumber, tempTexture);
+                                            pendingTexture2D = null;
                                         }
                                         #endregion
                                     }
@@ -467,6 +476,7 @@ namespace UMA
                                     {
                                         SetMaterialTexture(generatedMaterial, slotData, textureChannelNumber, destinationTexture);
                                         resultingTextures[textureChannelNumber] = destinationTexture;
+                                        pendingPersistentTexture = null;
                                     }
 
                                     break;
@@ -558,6 +568,22 @@ namespace UMA
             }
             finally
             {
+                if (pendingTemporaryTexture != null)
+                {
+                    RenderTexture.ReleaseTemporary(pendingTemporaryTexture);
+                }
+                if (pendingPersistentTexture != null)
+                {
+                    if (pendingPersistentTexture.IsCreated())
+                    {
+                        pendingPersistentTexture.Release();
+                    }
+                    UMAUtils.DestroySceneObject(pendingPersistentTexture);
+                }
+                if (pendingTexture2D != null)
+                {
+                    UMAUtils.DestroySceneObject(pendingTexture2D);
+                }
                 RenderTexture.active = null;
             }
         }

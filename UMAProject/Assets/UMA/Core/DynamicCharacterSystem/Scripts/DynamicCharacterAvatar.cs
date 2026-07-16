@@ -235,6 +235,7 @@ namespace UMA.CharacterSystem
 
 #if UMA_ADDRESSABLES
         private Queue<AsyncOp> LoadedHandles = new Queue<AsyncOp>();
+        private HashSet<AsyncOp> DelayedHandles = new HashSet<AsyncOp>();
 #endif
         [Tooltip("Change to lower this specific DCA's atlas resolution. Leave 1.0f for resolution to be automatic.")]
         [Range(0.0f, 1.0f)]
@@ -575,6 +576,7 @@ namespace UMA.CharacterSystem
             _wardrobeCollections = new Dictionary<string, UMAWardrobeCollection>();
 #if UMA_ADDRESSABLES
             LoadedHandles = new Queue<AsyncOp>();
+            DelayedHandles = new HashSet<AsyncOp>();
 #endif
             SuppressedRecipes.Clear();
             HiddenSlots.Clear();
@@ -877,7 +879,7 @@ namespace UMA.CharacterSystem
                     ugb.atlasResolution = ugb.editorAtlasResolution;
 
                     this.Dirty(updateRig, updateTextures, updateMesh);
-                    ugb.GenerateSingleUMA(this, false); // don't fire completed events in the editor
+                    ugb.GenerateSingleUMA(this, false, Application.isPlaying); // don't fire completed events in the editor
                     ugb.FreezeTime = false;
                     ugb.InitialScaleFactor = oldScaleFactor;
                     ugb.atlasResolution = oldAtlasResolution;
@@ -5146,12 +5148,17 @@ namespace UMA.CharacterSystem
 
         public bool UnloadAllQueuedHandles()
         {
-            bool hadHandles = LoadedHandles.Count > 0;
+            bool hadHandles = LoadedHandles.Count > 0 || DelayedHandles.Count > 0;
             while (LoadedHandles.Count > 0)
             {
                 AsyncOp Op = LoadedHandles.Dequeue();
                 UnloadOldestQueuedHandle(Op);
             }
+            foreach (AsyncOp Op in DelayedHandles)
+            {
+                UnloadOldestQueuedHandle(Op);
+            }
+            DelayedHandles.Clear();
             LoadQueue.Clear();
             return hadHandles;
         }
@@ -5162,7 +5169,11 @@ namespace UMA.CharacterSystem
             {
                 if (Op.Status == AsyncOperationStatus.Failed)
                 {
-                    Debug.LogError("LoadWhenReady failed - Async OP could not load bundles!" + Op.OperationException.Message);
+                    string errorMessage = Op.OperationException != null ? Op.OperationException.Message : "Unknown Addressables error.";
+                    Debug.LogError("LoadWhenReady failed - Async OP could not load bundles!" + errorMessage);
+                    RemoveQueuedHandle(Op);
+                    LoadQueue.Remove(Op);
+                    UnloadOldestQueuedHandle(Op);
                     return;
                 }
                 if (Op.IsDone)
@@ -5176,6 +5187,7 @@ namespace UMA.CharacterSystem
                         AsyncOp OldOp = LoadedHandles.Dequeue();
                         if (gameObject.activeInHierarchy && DelayUnload > 0.0f)  
                         {
+                            DelayedHandles.Add(OldOp);
                             StartCoroutine(CleanupAfterDelay(OldOp));
                         }
                         else
@@ -5188,6 +5200,22 @@ namespace UMA.CharacterSystem
             catch (Exception ex)
             {
                 Debug.LogException(ex, this);
+                RemoveQueuedHandle(Op);
+                LoadQueue.Remove(Op);
+                UnloadOldestQueuedHandle(Op);
+            }
+        }
+
+        private void RemoveQueuedHandle(AsyncOp Op)
+        {
+            int handleCount = LoadedHandles.Count;
+            for (int i = 0; i < handleCount; i++)
+            {
+                AsyncOp queuedOp = LoadedHandles.Dequeue();
+                if (!queuedOp.Equals(Op))
+                {
+                    LoadedHandles.Enqueue(queuedOp);
+                }
             }
         }
 
@@ -5195,9 +5223,16 @@ namespace UMA.CharacterSystem
         {
             if (Op.IsValid())
             {
-                // Todo: Should we call AssetIndexer.Instance.Unload(Op) instead?
-                //       Unity seems to handle this OK with it's internal reference counting.
-                UnityEngine.AddressableAssets.Addressables.Release(Op);
+                Op.Completed -= LoadWhenReady;
+                UMAAssetIndexer indexer = UMAAssetIndexer.bareInstance;
+                if (indexer != null)
+                {
+                    indexer.Unload(Op);
+                }
+                else
+                {
+                    UnityEngine.AddressableAssets.Addressables.Release(Op);
+                }
             }
         }
 
@@ -5208,6 +5243,7 @@ namespace UMA.CharacterSystem
         IEnumerator CleanupAfterDelay(AsyncOp Op)
         {
             yield return new WaitForSeconds(DelayUnload);
+            DelayedHandles.Remove(Op);
             UnloadOldestQueuedHandle(Op);
         } 
 #endif
@@ -6874,6 +6910,12 @@ namespace UMA.CharacterSystem
                 AsyncOp Op = LoadedHandles.Dequeue();
                 UnloadOldestQueuedHandle(Op);
             }
+            foreach (AsyncOp Op in DelayedHandles)
+            {
+                UnloadOldestQueuedHandle(Op);
+            }
+            DelayedHandles.Clear();
+            LoadQueue.Clear();
 #endif
             if (umaData != null)
             {

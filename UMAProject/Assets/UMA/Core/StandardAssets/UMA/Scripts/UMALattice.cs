@@ -82,6 +82,7 @@ namespace UMA
         [NonSerialized] private MeshFilter _bakedMeshFilter;
         [NonSerialized] private MeshRenderer _bakedMeshRenderer;
         [NonSerialized] private Material[] _bakedMaterials;
+        [NonSerialized] private List<Texture2D> _bakedTextures;
         [NonSerialized] private bool _targetRendererWasEnabled;
         [NonSerialized] private MeshRenderer _targetFilterMeshRenderer;
         [NonSerialized] private bool _targetFilterRendererWasEnabled;
@@ -678,6 +679,7 @@ namespace UMA
                         DestroyImmediate(_bakedMaterials[i]);
                 }
             }
+            DestroyBakedTextures();
 
             int materialCount = selectedSlot != null ? Mathf.Max(1, targetSubMeshCount) : sourceMaterials.Length;
             _bakedMaterials = new Material[materialCount];
@@ -713,7 +715,14 @@ namespace UMA
                         RenderTexture rt = (RenderTexture)tex;
                         Texture2D baked = BakeRenderTextureToTexture2D(rt, propName);
                         if (baked != null)
+                        {
                             clone.SetTexture(propName, baked);
+                            if (_bakedTextures == null)
+                            {
+                                _bakedTextures = new List<Texture2D>();
+                            }
+                            _bakedTextures.Add(baked);
+                        }
                     }
                 }
 
@@ -863,6 +872,7 @@ namespace UMA
                 }
                 _bakedMaterials = null;
             }
+            DestroyBakedTextures();
 
             if (_bakedMeshRenderer != null)
             {
@@ -891,6 +901,23 @@ namespace UMA
             _targetFilterMeshRenderer = null;
             _targetFilterRendererWasEnabled = false;
             _targetFilterRendererInitialized = false;
+        }
+
+        private void DestroyBakedTextures()
+        {
+            if (_bakedTextures == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < _bakedTextures.Count; i++)
+            {
+                if (_bakedTextures[i] != null)
+                {
+                    DestroyImmediate(_bakedTextures[i]);
+                }
+            }
+            _bakedTextures.Clear();
         }
 
         private static Bounds TransformBounds(Bounds sourceBounds, Matrix4x4 matrix)
