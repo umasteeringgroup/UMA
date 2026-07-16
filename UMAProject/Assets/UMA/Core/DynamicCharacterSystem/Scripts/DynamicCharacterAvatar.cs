@@ -767,8 +767,20 @@ namespace UMA.CharacterSystem
 #if UNITY_EDITOR
 
         public bool nextBuildSlotsOnly = false;
+        private const string EditorGenerationPausedSessionKey = "UMA.Toolbar.EditorGenerationPaused";
         private int generateWait = 0;
         const int maxWait = 60;
+
+        /// <summary>
+        /// Temporarily suppresses editor-time generation requests made through
+        /// GenerateSingleUMA and RegenerateNow. Explicit editor tools can opt out
+        /// of the pause for user-requested rebuilds.
+        /// </summary>
+        public static bool EditorGenerationPaused
+        {
+            get { return SessionState.GetBool(EditorGenerationPausedSessionKey, false); }
+            set { SessionState.SetBool(EditorGenerationPausedSessionKey, value); }
+        }
 
         public void RebuildCurrentRecipe()
         {
@@ -787,13 +799,28 @@ namespace UMA.CharacterSystem
 
         public void GenerateSingleUMA(bool slotsOnly = false)
         {
-            generateWait = 0;
-            nextBuildSlotsOnly = slotsOnly;
-            EditorApplication.delayCall += InternalGenerateSingleUMA;
+            GenerateSingleUMA(slotsOnly, false);
         }
 
-        private void InternalGenerateSingleUMA()
+        public void GenerateSingleUMA(bool slotsOnly, bool ignoreEditorPause)
         {
+            if (EditorGenerationPaused && !ignoreEditorPause)
+            {
+                return;
+            }
+
+            generateWait = 0;
+            nextBuildSlotsOnly = slotsOnly;
+            EditorApplication.delayCall += () => InternalGenerateSingleUMA(ignoreEditorPause);
+        }
+
+        private void InternalGenerateSingleUMA(bool ignoreEditorPause)
+        {
+            if (EditorGenerationPaused && !ignoreEditorPause)
+            {
+                return;
+            }
+
             generateWait++;
             if (EditorApplication.isCompiling || EditorApplication.isUpdating)
             {
@@ -803,7 +830,7 @@ namespace UMA.CharacterSystem
                     return;
                 }
                 // Try again after compiling and updating finished.
-                EditorApplication.delayCall += InternalGenerateSingleUMA;
+                EditorApplication.delayCall += () => InternalGenerateSingleUMA(ignoreEditorPause);
                 return;
             }
 
@@ -817,6 +844,16 @@ namespace UMA.CharacterSystem
 
         public void RegenerateNow(bool updateRig=true, bool updateTextures=false, bool updateMesh=false)
         {
+            RegenerateNow(updateRig, updateTextures, updateMesh, false);
+        }
+
+        public void RegenerateNow(bool updateRig, bool updateTextures, bool updateMesh, bool ignoreEditorPause)
+        {
+            if (EditorGenerationPaused && !ignoreEditorPause)
+            {
+                return;
+            }
+
             UMAGenerator ugb = umaGenerator;
             if (ugb != null)
             {

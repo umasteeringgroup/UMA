@@ -61,7 +61,9 @@ namespace UMA.Editors
 				{
 					if (dca != null && dca.editorTimeGeneration)
 					{
-						dca.GenerateSingleUMA();
+						// This method is only invoked by explicit editor commands, so it
+						// remains available while automatic editor generation is paused.
+						dca.GenerateSingleUMA(false, true);
 					}
 				}
 			}

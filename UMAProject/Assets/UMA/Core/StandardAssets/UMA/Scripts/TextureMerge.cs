@@ -299,6 +299,7 @@ namespace UMA
                 }
 #endif
                 tr.textureEventParms.umaData.FireAtlasUpdatedEvent(tr.textureEventParms);
+				tr.textureEventParms.renderTexture = null;
             }
         }
 

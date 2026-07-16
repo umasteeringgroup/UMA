@@ -12,6 +12,18 @@ namespace UMA
 	public static class SkinnedMeshCombinerRetargeting
 	{
 		/// <summary>
+		/// Runs the per-vertex retargeting math through Burst jobs when the source is
+		/// large enough to amortize native-buffer setup.
+		/// </summary>
+		public static bool UseJobifiedSkinning = true;
+
+		/// <summary>
+		/// Small meshes remain on the managed path because scheduling and buffer copies
+		/// cost more than the parallel work they save.
+		/// </summary>
+		public static int JobifiedSkinningVertexThreshold = 256;
+
+		/// <summary>
 		/// Container for source mesh data.
 		/// </summary>
 		public class CombineInstance
@@ -104,19 +116,42 @@ namespace UMA
 			}
 
 	
+			int[] sourceWeightOffsets = null;
 			if (useManagedWeights)
 			{
+				sourceWeightOffsets = BuildWeightOffsets(source.meshData.ManagedBonesPerVertex);
 				context.sourceManagedBoneWeights = source.meshData.ManagedBoneWeights;
-				context.sourceManagedBonesPerVertex = source.meshData.ManagedBonesPerVertex;				context.sourceWeightOffsets = BuildWeightOffsets(source.meshData.ManagedBonesPerVertex);					context.sourceBoneWeightBaseOffset = vertexIndex;
+				context.sourceManagedBonesPerVertex = source.meshData.ManagedBonesPerVertex;
+				context.sourceWeightOffsets = sourceWeightOffsets;
+				context.sourceBoneWeightBaseOffset = vertexIndex;
 				context.targetManagedBoneWeights = target._boneWeightsManagedList;
 				context.targetManagedBonesPerVertex = target._bonesPerVertexManagedList;
 				context.targetVertexIndexOffset = vertexIndex;
 				// Set up blendShapeContext with same source weights
 				blendShapeContext.sourceManagedBoneWeights = context.sourceManagedBoneWeights;
-				blendShapeContext.sourceManagedBonesPerVertex = context.sourceManagedBonesPerVertex;			blendShapeContext.sourceWeightOffsets = context.sourceWeightOffsets;				blendShapeContext.targetBoneIndices = context.targetBoneIndices;
+				blendShapeContext.sourceManagedBonesPerVertex = context.sourceManagedBonesPerVertex;
+				blendShapeContext.sourceWeightOffsets = context.sourceWeightOffsets;
+				blendShapeContext.targetBoneIndices = context.targetBoneIndices;
 				blendShapeContext.resolvedBoneMatrixes = context.resolvedBoneMatrixes;
 			}
 
+			bool canUseJobifiedSkinning = UseJobifiedSkinning
+				&& useManagedWeights
+				&& uniformTargetPoses
+				&& inverseTargetBoneMatrixes != null
+				&& inverseTargetBoneMatrixes.Length > 0
+				&& vertexCount >= Math.Max(1, JobifiedSkinningVertexThreshold);
+			using (var jobifiedSkinning = canUseJobifiedSkinning
+				? new BoneBakingSkinningJobContext(
+					vertexCount,
+					source.meshData.ManagedBoneWeights,
+					source.meshData.ManagedBonesPerVertex,
+					sourceWeightOffsets,
+					source.targetBoneIndices,
+					source.resolvedBoneMatrixes,
+					inverseTargetBoneMatrixes[0])
+				: null)
+			{
 				bool isBakingBlendShapesOnThisSource = false;
 				if (bakeBlendShapes && HasContent(source.meshData.blendShapes))
 				{
@@ -235,11 +270,28 @@ namespace UMA
 						context.tangents = target.tangents;
 						if (useManagedWeights)
 						{
-							for (int i = 0; i < vertexCount; i++)
+							if (jobifiedSkinning != null)
 							{
-								// Geometry is at target[vertexIndex+i]; bone weight source is at i
-								context.ProcessVertexManaged(vertexIndex + i, i, vertexIndex + i,
-									ref target.vertices[vertexIndex + i], ref target.normals[vertexIndex + i], ref target.tangents[vertexIndex + i]);
+								jobifiedSkinning.ProcessVertices(
+									target.vertices,
+									target.normals,
+									target.tangents,
+									vertexIndex,
+									target.vertices,
+									target.normals,
+									target.tangents,
+									vertexIndex,
+									target._boneWeightsManagedList,
+									target._bonesPerVertexManagedList);
+							}
+							else
+							{
+								for (int i = 0; i < vertexCount; i++)
+								{
+									// Geometry is at target[vertexIndex+i]; bone weight source is at i
+									context.ProcessVertexManaged(vertexIndex + i, i, vertexIndex + i,
+										ref target.vertices[vertexIndex + i], ref target.normals[vertexIndex + i], ref target.tangents[vertexIndex + i]);
+								}
 							}
 						}
 					}
@@ -252,11 +304,28 @@ namespace UMA
 					context.tangents = source.meshData.tangents;
 					if (useManagedWeights)
 					{
-						for (int i = 0; i < vertexCount; i++)
+						if (jobifiedSkinning != null)
 						{
-							// Geometry at source[i], bone weight at source[i], output to target[vertexIndex+i]
-							context.ProcessVertexManaged(i, i, vertexIndex + i,
-								ref target.vertices[vertexIndex + i], ref target.normals[vertexIndex + i], ref target.tangents[vertexIndex + i]);
+							jobifiedSkinning.ProcessVertices(
+								source.meshData.vertices,
+								source.meshData.normals,
+								source.meshData.tangents,
+								0,
+								target.vertices,
+								target.normals,
+								target.tangents,
+								vertexIndex,
+								target._boneWeightsManagedList,
+								target._bonesPerVertexManagedList);
+						}
+						else
+						{
+							for (int i = 0; i < vertexCount; i++)
+							{
+								// Geometry at source[i], bone weight at source[i], output to target[vertexIndex+i]
+								context.ProcessVertexManaged(i, i, vertexIndex + i,
+									ref target.vertices[vertexIndex + i], ref target.normals[vertexIndex + i], ref target.tangents[vertexIndex + i]);
+							}
 						}
 					}
 					else
@@ -323,23 +392,38 @@ namespace UMA
 							var targetFrame = targetBlendShape.frames[frameIndex];
 							blendShapeContext.vertices = frame.deltaVertices;
 							blendShapeContext.normals = HasContent(frame.deltaNormals) ? frame.deltaNormals : frame.deltaVertices;
-							// Build Vector4 tangents from Vector3 deltas for the solver
-							var srcTangents = new Vector4[frame.deltaVertices.Length];
-							var srcT = HasContent(frame.deltaTangents) ? frame.deltaTangents : frame.deltaVertices;
-							for (int t = 0; t < srcTangents.Length; t++)
-								srcTangents[t] = new Vector4(srcT[t].x, srcT[t].y, srcT[t].z, 1f);
-							blendShapeContext.tangents = srcTangents;
 
 							if (useManagedWeights)
 							{
-								for (int j = 0; j < vertexCount; j++)
+								if (jobifiedSkinning != null)
 								{
-									var outTan = new Vector4();
-									blendShapeContext.ProcessBlendShapeVertexManaged(j, j,
-										ref targetFrame.deltaVertices[vertexIndex + j],
-										ref targetFrame.deltaNormals[vertexIndex + j],
-										ref outTan);
-									targetFrame.deltaTangents[vertexIndex + j] = new Vector3(outTan.x, outTan.y, outTan.z);
+									jobifiedSkinning.ProcessBlendShape(
+										frame.deltaVertices,
+										frame.deltaNormals,
+										frame.deltaTangents,
+										targetFrame.deltaVertices,
+										targetFrame.deltaNormals,
+										targetFrame.deltaTangents,
+										vertexIndex);
+								}
+								else
+								{
+									// Build Vector4 tangents from Vector3 deltas for the managed solver.
+									var srcTangents = new Vector4[frame.deltaVertices.Length];
+									var srcT = HasContent(frame.deltaTangents) ? frame.deltaTangents : frame.deltaVertices;
+									for (int t = 0; t < srcTangents.Length; t++)
+										srcTangents[t] = new Vector4(srcT[t].x, srcT[t].y, srcT[t].z, 1f);
+									blendShapeContext.tangents = srcTangents;
+
+									for (int j = 0; j < vertexCount; j++)
+									{
+										var outTan = new Vector4();
+										blendShapeContext.ProcessBlendShapeVertexManaged(j, j,
+											ref targetFrame.deltaVertices[vertexIndex + j],
+											ref targetFrame.deltaNormals[vertexIndex + j],
+											ref outTan);
+										targetFrame.deltaTangents[vertexIndex + j] = new Vector3(outTan.x, outTan.y, outTan.z);
+									}
 								}
 							}
 						}
@@ -437,8 +521,9 @@ namespace UMA
 						}
 					}
 				}
+			}
 
-				vertexIndex += vertexCount;
+			vertexIndex += vertexCount;
 			}
 		}
 

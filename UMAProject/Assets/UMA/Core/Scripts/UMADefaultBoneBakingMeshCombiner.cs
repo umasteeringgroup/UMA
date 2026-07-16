@@ -14,9 +14,11 @@ namespace UMA
         private readonly Dictionary<int, int> mergedBones = new Dictionary<int, int>(128);
         private List<Matrix4x4> inverseTargetMatrixBuffer = new List<Matrix4x4>(128);
         private readonly List<MeshBuilder> rendererMeshes = new List<MeshBuilder>(2);
+        private readonly List<Vector2[]> rendererUVSnapshots = new List<Vector2[]>(2);
         private UMAImprovedSkeleton bakingSkeleton;
         private Matrix4x4[] inverseTargetMatrices;
         private bool preserveExternalSkeleton;
+        private bool preserveUVsForRigOnlyBuild;
 
         public bool dontCacheBoneWeights;
 
@@ -45,6 +47,9 @@ namespace UMA
         public override void Preprocess(UMAData data)
         {
             // A shape change alters the matrices used to bake discarded bones.
+            // Remember when this is the only reason the mesh is being rebuilt so the
+            // existing atlas UVs can survive the otherwise rig-only update unchanged.
+            preserveUVsForRigOnlyBuild = data.isShapeDirty && !data.isMeshDirty;
             data.isMeshDirty |= data.isShapeDirty;
         }
 
@@ -120,6 +125,9 @@ namespace UMA
             Dictionary<string, float> bakedBlendshapes)
         {
             MeshBuilder targetMesh = GetRendererMesh(currentRendererIndex);
+            Vector2[] previousUVs = preserveUVsForRigOnlyBuild && !updatedAtlas
+                ? CapturePreviousUVs(targetMesh, renderers[currentRendererIndex], currentRendererIndex)
+                : null;
             var sources = CreateBakingSources(combinedMeshList);
 
             MergeSkeletons(sources, targetMesh);
@@ -132,7 +140,8 @@ namespace UMA
                 umaData.blendShapeSettings,
                 uniformTargetPoses: true);
 
-            RecalculateUV(targetMesh, materialsForRenderer);
+            if (!RestorePreviousUVs(targetMesh, previousUVs))
+                RecalculateUV(targetMesh, materialsForRenderer, updatedAtlas);
             targetMesh.ReleaseBuffers();
 
             // Target transforms are preserved bones. Missing transforms may be created,
@@ -152,6 +161,8 @@ namespace UMA
         {
             if (bakingSkeleton != null && bakingSkeleton.isUpdating)
                 bakingSkeleton.EndSkeletonUpdate();
+
+            preserveUVsForRigOnlyBuild = false;
         }
 
         private MeshBuilder GetRendererMesh(int rendererIndex)
@@ -381,7 +392,61 @@ namespace UMA
             }
         }
 
-        private void RecalculateUV(MeshBuilder mesh, List<UMAData.GeneratedMaterial> materialsForRenderer)
+        private Vector2[] CapturePreviousUVs(MeshBuilder mesh, SkinnedMeshRenderer renderer, int rendererIndex)
+        {
+            Vector2[] sourceUVs = null;
+            int sourceVertexCount = 0;
+
+            if (mesh != null && mesh.has_uv && mesh.uv != null && mesh.vertexCount > 0 && mesh.uv.Length >= mesh.vertexCount)
+            {
+                sourceUVs = mesh.uv;
+                sourceVertexCount = mesh.vertexCount;
+            }
+            else
+            {
+                Mesh unityMesh = renderer != null ? renderer.sharedMesh : null;
+                if (unityMesh != null && unityMesh.isReadable && unityMesh.vertexCount > 0)
+                {
+                    Vector2[] unityUVs = unityMesh.uv;
+                    if (unityUVs != null && unityUVs.Length == unityMesh.vertexCount)
+                    {
+                        sourceUVs = unityUVs;
+                        sourceVertexCount = unityUVs.Length;
+                    }
+                }
+            }
+
+            if (sourceUVs == null || sourceVertexCount == 0)
+                return null;
+
+            while (rendererUVSnapshots.Count <= rendererIndex)
+                rendererUVSnapshots.Add(null);
+
+            Vector2[] snapshot = rendererUVSnapshots[rendererIndex];
+            if (snapshot == null || snapshot.Length != sourceVertexCount)
+            {
+                snapshot = new Vector2[sourceVertexCount];
+                rendererUVSnapshots[rendererIndex] = snapshot;
+            }
+
+            Array.Copy(sourceUVs, 0, snapshot, 0, sourceVertexCount);
+            return snapshot;
+        }
+
+        private static bool RestorePreviousUVs(MeshBuilder mesh, Vector2[] previousUVs)
+        {
+            if (previousUVs == null || mesh == null || !mesh.has_uv || mesh.uv == null ||
+                mesh.vertexCount != previousUVs.Length || mesh.uv.Length < mesh.vertexCount)
+                return false;
+
+            Array.Copy(previousUVs, 0, mesh.uv, 0, mesh.vertexCount);
+            return true;
+        }
+
+        private void RecalculateUV(
+            MeshBuilder mesh,
+            List<UMAData.GeneratedMaterial> materialsForRenderer,
+            bool updatedAtlas)
         {
             if (mesh.uv == null) return;
 
@@ -403,39 +468,57 @@ namespace UMA
                         continue;
                     }
 
-                    Rect atlasRect = fragment.atlasRegion;
-                    float atlasXMin = atlasRect.xMin / atlasResolution;
-                    float atlasYMin = atlasRect.yMin / atlasResolution;
-                    float atlasXRange = atlasRect.width / atlasResolution;
-                    float atlasYRange = atlasRect.height / atlasResolution;
+                    Rect cachedUVArea = slot.UVArea;
+                    bool useCachedUVArea = preserveUVsForRigOnlyBuild && !updatedAtlas && IsValidUVArea(cachedUVArea);
+                    float atlasXMin;
+                    float atlasYMin;
+                    float atlasXRange;
+                    float atlasYRange;
 
-                    if (fragment.isRectShared && slot.useAtlasOverlay && fragment.overlayList != null)
+                    if (useCachedUVArea)
                     {
-                        OverlayData sharedRect = null;
-                        for (int o = 0; o < fragment.overlayList.Count; o++)
+                        atlasXMin = cachedUVArea.xMin;
+                        atlasYMin = cachedUVArea.yMin;
+                        atlasXRange = cachedUVArea.width;
+                        atlasYRange = cachedUVArea.height;
+                    }
+                    else
+                    {
+                        Rect atlasRect = fragment.atlasRegion;
+                        atlasXMin = atlasRect.xMin / atlasResolution;
+                        atlasYMin = atlasRect.yMin / atlasResolution;
+                        atlasXRange = atlasRect.width / atlasResolution;
+                        atlasYRange = atlasRect.height / atlasResolution;
+
+                        if (fragment.isRectShared && slot.useAtlasOverlay && fragment.overlayList != null)
                         {
-                            var overlay = fragment.overlayList[o];
-                            if (overlay != null && slot.slotName != null && overlay.overlayName != null &&
-                                overlay.overlayName.Contains(slot.slotName))
+                            OverlayData sharedRect = null;
+                            for (int o = 0; o < fragment.overlayList.Count; o++)
                             {
-                                sharedRect = overlay;
-                                break;
+                                var overlay = fragment.overlayList[o];
+                                if (overlay != null && slot.slotName != null && overlay.overlayName != null &&
+                                    overlay.overlayName.Contains(slot.slotName))
+                                {
+                                    sharedRect = overlay;
+                                    break;
+                                }
+                            }
+
+                            if (sharedRect != null && sharedRect.rect != Rect.zero)
+                            {
+                                Vector2 size = sharedRect.rect.size * generatedMaterial.resolutionScale;
+                                float offsetX = sharedRect.rect.x * generatedMaterial.resolutionScale.x;
+                                float offsetY = sharedRect.rect.y * generatedMaterial.resolutionScale.x;
+                                atlasXMin += offsetX / generatedMaterial.cropResolution.x;
+                                atlasXRange = size.x / generatedMaterial.cropResolution.x;
+                                atlasYMin += offsetY / generatedMaterial.cropResolution.y;
+                                atlasYRange = size.y / generatedMaterial.cropResolution.y;
                             }
                         }
 
-                        if (sharedRect != null && sharedRect.rect != Rect.zero)
-                        {
-                            Vector2 size = sharedRect.rect.size * generatedMaterial.resolutionScale;
-                            float offsetX = sharedRect.rect.x * generatedMaterial.resolutionScale.x;
-                            float offsetY = sharedRect.rect.y * generatedMaterial.resolutionScale.x;
-                            atlasXMin += offsetX / generatedMaterial.cropResolution.x;
-                            atlasXRange = size.x / generatedMaterial.cropResolution.x;
-                            atlasYMin += offsetY / generatedMaterial.cropResolution.y;
-                            atlasYRange = size.y / generatedMaterial.cropResolution.y;
-                        }
+                        slot.UVArea.Set(atlasXMin, atlasYMin, atlasXRange, atlasYRange);
                     }
 
-                    slot.UVArea.Set(atlasXMin, atlasYMin, atlasXRange, atlasYRange);
                     int end = Math.Min(vertexIndex + vertexCount, mesh.uv.Length);
                     while (vertexIndex < end)
                     {
@@ -447,6 +530,17 @@ namespace UMA
                     }
                 }
             }
+        }
+
+        private static bool IsValidUVArea(Rect area)
+        {
+            return IsFinite(area.x) && IsFinite(area.y) && IsFinite(area.width) && IsFinite(area.height) &&
+                area.width > Mathf.Epsilon && area.height > Mathf.Epsilon;
+        }
+
+        private static bool IsFinite(float value)
+        {
+            return !float.IsNaN(value) && !float.IsInfinity(value);
         }
 
         private void ApplyBlendShapeWeights(SkinnedMeshRenderer renderer)
