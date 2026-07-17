@@ -104,8 +104,9 @@ namespace UMA
             {
 			    // Disabling linear to srgb conversion is not enough. It seems that Unity always does the conversion when reading from a RenderTexture.
 			    // As a workaround, create a non-linear texture to blit to so the conversion happens in the intended place.
-			    GL.sRGBWrite = false;
+                GL.sRGBWrite = false;
                 outputMap = new RenderTexture(rt.width, rt.height, 32, rt.format, RenderTextureReadWrite.sRGB);
+                outputMap.name = "UMA RT Readback | " + rt.name;
                 outputMap.enableRandomWrite = true;
                 outputMap.Create();
                 RenderTexture.active = outputMap;
@@ -196,6 +197,7 @@ namespace UMA
 						{
 							// Create a temporary texture that is the size of the overlay rect in atlas space.
 							scratch = RenderTexture.GetTemporary((int)tr.rect.width, (int)tr.rect.height, 0, target.format, RenderTextureReadWrite.Linear);
+							scratch.name = "UMA RT Scratch | " + target.name;
 
 							float fw = (float)width;
 							float fh = (float)height;
@@ -353,6 +355,7 @@ namespace UMA
             }
 
             var source = RenderTexture.GetTemporary(destination.width, destination.height, 0, destination.format, RenderTextureReadWrite.Linear);
+            source.name = "UMA RT Post Process | " + destination.name;
             try
             {
 			    switch (channelType)

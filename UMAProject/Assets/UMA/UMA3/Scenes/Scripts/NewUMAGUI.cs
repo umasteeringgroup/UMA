@@ -87,6 +87,7 @@ namespace UMA
 
         [Header("Timing Buttons")]
         public bool showTimingButtons = false;
+        public bool bakeAllBlendShapesForTiming = false;
 
         private List<string> ConsoleLog = new List<string>();
         private List<string> PendingLog = new List<string>();
@@ -101,6 +102,10 @@ namespace UMA
         private string _timingResult = "";
         private bool _timingInProgress = false;
         private Coroutine _timingCoroutine;
+        private TimingBlendShapeSnapshot _timingBlendShapeSnapshot;
+        private UMAGenerator _timingGenerator;
+        private UMAMeshCombiner _timingOriginalCombiner;
+        private GameObject _timingCreatedCombinerObject;
 
         private void Start()
         {
@@ -119,6 +124,11 @@ namespace UMA
         private void OnDisable()
         {
             Application.logMessageReceived -= HandleLog;
+            if (_timingCoroutine != null)
+            {
+                StopCoroutine(_timingCoroutine);
+            }
+            CleanupTimingRun();
         }
 
         void Update()
@@ -776,6 +786,12 @@ namespace UMA
             var generator = UMAAssetIndexer.Instance != null ? UMAAssetIndexer.Instance.generator : null;
             if (generator == null) return;
 
+            bakeAllBlendShapesForTiming = GUI.Toggle(
+                new Rect(startX, startY, buttonWidth * 2f + spacing, buttonHeight),
+                bakeAllBlendShapesForTiming,
+                "Bake all blendshapes at 0.5 (unchecked loads all)");
+            startY += buttonHeight + spacing;
+
             // Button 1: Jobified Combiner
             if (GUI.Button(new Rect(startX, startY, buttonWidth, buttonHeight), "10xTime/Jobified"))
             {
@@ -873,6 +889,9 @@ namespace UMA
                     break;
                 }
             }
+            _timingGenerator = generator;
+            _timingOriginalCombiner = generator.meshCombiner;
+
             UMAMeshCombiner combiner;
             if (existingCombiner != null)
             {
@@ -884,9 +903,13 @@ namespace UMA
                 if (generator.transform.parent != null)
                     go.transform.SetParent(generator.transform.parent, false);
                 combiner = (UMAMeshCombiner)go.AddComponent(combinerType);
+                _timingCreatedCombinerObject = go;
             }
 
             generator.meshCombiner = combiner;
+            bool bakeAllBlendShapes = bakeAllBlendShapesForTiming;
+            _timingBlendShapeSnapshot = CaptureTimingBlendShapeSettings();
+            int blendShapeCount = ConfigureTimingBlendShapes(bakeAllBlendShapes);
             avatar.umaData.OnCharacterUpdated += OnTimedBuildComplete;
 
             _timingInProgress = true;
@@ -901,6 +924,7 @@ namespace UMA
             {
                 // Each sample starts from a completed full character build using the combiner
                 // under test. This is intentionally outside the measured interval.
+                ConfigureTimingBlendShapes(bakeAllBlendShapes);
                 _timingBuildComplete = false;
                 avatar.BuildCharacter(true);
                 yield return WaitForTimedBuildCompletion();
@@ -911,6 +935,7 @@ namespace UMA
                 }
 
 #if !USE_BUILD_CHARACTER
+                ConfigureTimingBlendShapes(bakeAllBlendShapes);
                 float startTime = Time.realtimeSinceStartup;
                 avatar.Dirty(true,false,true);
                 generator.GenerateSingleUMA(avatar,false);
@@ -918,6 +943,7 @@ namespace UMA
                 totalTime += elapsed;
                 ++completedBuilds;
 #else                
+                ConfigureTimingBlendShapes(bakeAllBlendShapes);
                 _timingBuildComplete = false;
                 float startTime = Time.realtimeSinceStartup;
                 avatar.BuildCharacter(true);
@@ -942,12 +968,13 @@ namespace UMA
                 yield return new WaitForSeconds(0.1f);
             }
 
-            avatar.umaData.OnCharacterUpdated -= OnTimedBuildComplete;
+            CleanupTimingRun();
 
             if (completedBuilds > 0)
             {
                 float avg = totalTime / completedBuilds;
-                _timingResult = $"Combiner: {combinerType.Name}\nTotal: {totalTime:F3}s | Avg: {avg:F4}s | Timed Builds: {completedBuilds}";
+                string blendShapeMode = bakeAllBlendShapes ? "baked at 0.5" : "loaded";
+                _timingResult = $"Combiner: {combinerType.Name}\nBlendshapes: {blendShapeCount} {blendShapeMode}\nTotal: {totalTime:F3}s | Avg: {avg:F4}s | Timed Builds: {completedBuilds}";
                 if (!string.IsNullOrEmpty(timingError))
                     _timingResult += $"\n{timingError}";
             }
@@ -956,6 +983,119 @@ namespace UMA
                 _timingResult = $"Combiner: {combinerType.Name}\n{timingError}";
             }
 
+        }
+
+        private sealed class TimingBlendShapeSnapshot
+        {
+            public bool loadBlendShapes;
+            public bool ignoreBlendShapes;
+            public bool forceBakedBlendShapeValue;
+            public float forcedBakedBlendShapeValue;
+            public Dictionary<string, BlendShapeData> blendShapes;
+        }
+
+        private TimingBlendShapeSnapshot CaptureTimingBlendShapeSettings()
+        {
+            if (avatar.blendShapeSettings == null)
+            {
+                avatar.blendShapeSettings = new BlendShapeSettings();
+            }
+
+            var settings = avatar.blendShapeSettings;
+            var snapshot = new TimingBlendShapeSnapshot
+            {
+                loadBlendShapes = avatar.loadBlendShapes,
+                ignoreBlendShapes = settings.ignoreBlendShapes,
+                forceBakedBlendShapeValue = settings.forceBakedBlendShapeValue,
+                forcedBakedBlendShapeValue = settings.forcedBakedBlendShapeValue,
+                blendShapes = new Dictionary<string, BlendShapeData>()
+            };
+
+            foreach (var entry in settings.blendShapes)
+            {
+                snapshot.blendShapes.Add(entry.Key, entry.Value == null
+                    ? null
+                    : new BlendShapeData { isBaked = entry.Value.isBaked, value = entry.Value.value });
+            }
+            return snapshot;
+        }
+
+        private int ConfigureTimingBlendShapes(bool bakeAll)
+        {
+            var settings = avatar.blendShapeSettings;
+            avatar.loadBlendShapes = true;
+            settings.ignoreBlendShapes = false;
+            settings.forceBakedBlendShapeValue = bakeAll;
+            settings.forcedBakedBlendShapeValue = 0.5f;
+
+            var names = new HashSet<string>();
+            var recipe = avatar.umaRecipe;
+            if (recipe?.slotDataList != null)
+            {
+                for (int slotIndex = 0; slotIndex < recipe.slotDataList.Length; slotIndex++)
+                {
+                    var meshData = recipe.slotDataList[slotIndex]?.asset?.meshData;
+                    if (meshData == null) continue;
+
+                    var shapes = SkinnedMeshCombiner.GetBlendshapeSources(meshData, recipe);
+                    for (int shapeIndex = 0; shapeIndex < shapes.Count; shapeIndex++)
+                    {
+                        var shape = shapes[shapeIndex];
+                        if (shape != null && !string.IsNullOrEmpty(shape.shapeName))
+                        {
+                            names.Add(shape.shapeName);
+                        }
+                    }
+                }
+            }
+
+            settings.blendShapes.Clear();
+            foreach (string name in names)
+            {
+                settings.blendShapes.Add(name, new BlendShapeData
+                {
+                    isBaked = bakeAll,
+                    value = bakeAll ? 0.5f : 0f
+                });
+            }
+            return names.Count;
+        }
+
+        private void RestoreTimingBlendShapeSettings(TimingBlendShapeSnapshot snapshot)
+        {
+            if (snapshot == null || avatar == null || avatar.blendShapeSettings == null) return;
+
+            var settings = avatar.blendShapeSettings;
+            avatar.loadBlendShapes = snapshot.loadBlendShapes;
+            settings.ignoreBlendShapes = snapshot.ignoreBlendShapes;
+            settings.forceBakedBlendShapeValue = snapshot.forceBakedBlendShapeValue;
+            settings.forcedBakedBlendShapeValue = snapshot.forcedBakedBlendShapeValue;
+            settings.blendShapes.Clear();
+            foreach (var entry in snapshot.blendShapes)
+            {
+                settings.blendShapes.Add(entry.Key, entry.Value);
+            }
+        }
+
+        private void CleanupTimingRun()
+        {
+            if (avatar != null && avatar.umaData != null)
+            {
+                avatar.umaData.OnCharacterUpdated -= OnTimedBuildComplete;
+            }
+            RestoreTimingBlendShapeSettings(_timingBlendShapeSnapshot);
+            _timingBlendShapeSnapshot = null;
+            if (_timingGenerator != null)
+            {
+                _timingGenerator.meshCombiner = _timingOriginalCombiner;
+            }
+            if (_timingCreatedCombinerObject != null)
+            {
+                Destroy(_timingCreatedCombinerObject);
+            }
+            _timingGenerator = null;
+            _timingOriginalCombiner = null;
+            _timingCreatedCombinerObject = null;
             _timingInProgress = false;
             _timingCoroutine = null;
         }

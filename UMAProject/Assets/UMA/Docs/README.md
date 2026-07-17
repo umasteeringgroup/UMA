@@ -7,15 +7,19 @@ Contents
 - Core concepts and workflow
 - Getting started with DynamicCharacterAvatar (DCA)
 - How DCA builds characters
+- DNA creation and the new DNA system
 - Wardrobe Recipe Editor
+- Race, slot, and overlay authoring
 - Mesh Modifier sculpting
+- Mesh hiding and face editing
+- Mesh combiners and bone baking
+- Bone animators and secondary motion
+- Clothing conformer
 - Texture Arrays and UDIMs
 - Addressables generation (SingleGroupGenerator)
 - Decal system
 - UMA Asset Indexer
-- RaceData and DNA
-- DNA creation for artists
-- Shader notes (UDIM + normal arrays)
+- Clean-build performance planning
 
 ## Core Concepts and Workflow
 - UMA builds characters at runtime from `RaceData`, `SlotDataAsset` (meshes), and `OverlayDataAsset` (textures/material data).
@@ -71,8 +75,12 @@ Key scenes to test
 
 ## Key Editor Windows
 - Global Library (UMA Asset Indexer): UMA > Global Library - inspect and manage indexed content.
+- Documentation Browser: UMA > View Documentation - open the dockable Markdown document list and select a guide for the UMA Markdown Viewer.
 - Prefab Maker: UMA > Prefab Maker - bake a character to a non-UMA prefab.
 - Texture Combiner: UMA > Texture Channel Combiner - author/pack channels into single textures.
+- Mesh Combiner Switcher: UMA > Tools > Mesh Combiner Switcher - change and test the active mesh combiner.
+- UMA Toolbar: use the Scene View's dockable UMA Toolbar for camera state, rebuild modes, combiner selection, skeleton display, diagnostics, and tools.
+- Vertex and Face Editors: edit vertex selections, sculpt mesh modifiers, and paint mesh-hide faces from the stage tools.
 
 ## Important Folders
 - `Assets/UMA/Core/`: Core runtime and editor code.
@@ -90,12 +98,41 @@ For detailed topics, see the dedicated docs:
 - `WhatsNewInUMA3.md`
 - `DynamicCharacterAvatar.md`
 - `WardrobeRecipeEditor.md`
+- `RaceData.md`
+- `SlotDataAsset.md`
+- `OverlayDataAsset.md`
+- `DNACreationGuide.md`
+- `NewDNASystem.md`
+- `MeshCombiners.md`
+- `MeshHideAssets.md`
 - `MeshModifierSculpting.md`
+- `BoneAnimators.md`
+- `ClothingConformer.md`
 - `Textures-UDIM-Arrays.md`
 - `Addressables.md`
 - `Decals.md`
 - `UMAAssetIndexer.md`
-- `RaceData.md`
-- `DNACreationGuide.md`
-- `NewDNASystem.md`
-- `Shaders-UDIM.md`
+- `DynamicCharacterBuildOptimizationPlan.md`
+
+## Documentation Map
+
+The Markdown guides in this folder cover the main UMA 3 workflows:
+
+- [`WhatsNewInUMA3.md`](WhatsNewInUMA3.md) - feature and migration summary.
+- [`DynamicCharacterAvatar.md`](DynamicCharacterAvatar.md) - DCA lifecycle, wardrobe, DNA, colors, and loading.
+- [`WardrobeRecipeEditor.md`](WardrobeRecipeEditor.md) - authoring wearable recipes, overlays, placeholders, and wildcards.
+- [`RaceData.md`](RaceData.md) - race setup, defaults, compatibility, and DNA configuration.
+- [`SlotDataAsset.md`](SlotDataAsset.md) - mesh slots, weights, LODs, and slot authoring.
+- [`OverlayDataAsset.md`](OverlayDataAsset.md) - overlay textures, colors, materials, and properties.
+- [`DNACreationGuide.md`](DNACreationGuide.md) - artist-friendly DNA creation workflow.
+- [`NewDNASystem.md`](NewDNASystem.md) - DNA groups, instances, curves, and effects.
+- [`MeshCombiners.md`](MeshCombiners.md) - available mesh combiners, selection, and testing.
+- [`MeshHideAssets.md`](MeshHideAssets.md) - creating and using mesh-hide assets and collections.
+- [`MeshModifierSculpting.md`](MeshModifierSculpting.md) - vertex editing and sculpt-mode mesh modifiers.
+- [`BoneAnimators.md`](BoneAnimators.md) - bone animation, sampling, and secondary motion tools.
+- [`ClothingConformer.md`](ClothingConformer.md) - conforming clothing meshes to UMA body meshes.
+- [`Textures-UDIM-Arrays.md`](Textures-UDIM-Arrays.md) - UDIM, Texture2DArray, and shader workflows.
+- [`Addressables.md`](Addressables.md) - exporting and loading UMA content with Addressables.
+- [`Decals.md`](Decals.md) - slot decals and RenderTexture decal stamping.
+- [`UMAAssetIndexer.md`](UMAAssetIndexer.md) - indexing, rebuilding, and troubleshooting UMA assets.
+- [`DynamicCharacterBuildOptimizationPlan.md`](DynamicCharacterBuildOptimizationPlan.md) - planned clean-build performance improvements.

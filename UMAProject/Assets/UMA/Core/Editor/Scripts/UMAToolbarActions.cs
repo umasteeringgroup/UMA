@@ -280,20 +280,39 @@ namespace UMA.Editors
             if (meshCombiner == null)
             {
                 GameObject combinerObject = new GameObject(typeof(T).Name);
-                Undo.RegisterCreatedObjectUndo(combinerObject, "Create UMA Mesh Combiner");
-                if (generator.transform.parent != null)
+                if (Application.isPlaying)
                 {
-                    Undo.SetTransformParent(combinerObject.transform, generator.transform.parent, "Parent UMA Mesh Combiner");
+                    if (generator.transform.parent != null)
+                    {
+                        combinerObject.transform.SetParent(generator.transform.parent, false);
+                    }
+                    meshCombiner = combinerObject.AddComponent<T>();
                 }
-                meshCombiner = Undo.AddComponent<T>(combinerObject);
+                else
+                {
+                    Undo.RegisterCreatedObjectUndo(combinerObject, "Create UMA Mesh Combiner");
+                    if (generator.transform.parent != null)
+                    {
+                        Undo.SetTransformParent(combinerObject.transform, generator.transform.parent, "Parent UMA Mesh Combiner");
+                    }
+                    meshCombiner = Undo.AddComponent<T>(combinerObject);
+                }
             }
 
-            Undo.RecordObject(generator, "Switch UMA Mesh Combiner");
-            generator.meshCombiner = meshCombiner;
-            EditorUtility.SetDirty(generator);
-            if (PrefabUtility.IsPartOfAnyPrefab(generator))
+            if (!Application.isPlaying)
             {
-                PrefabUtility.RecordPrefabInstancePropertyModifications(generator);
+                Undo.RecordObject(generator, "Switch UMA Mesh Combiner");
+            }
+
+            generator.meshCombiner = meshCombiner;
+
+            if (!Application.isPlaying)
+            {
+                EditorUtility.SetDirty(generator);
+                if (PrefabUtility.IsPartOfAnyPrefab(generator))
+                {
+                    PrefabUtility.RecordPrefabInstancePropertyModifications(generator);
+                }
             }
 
             Debug.Log($"[UMA Toolbar] Mesh combiner switched to {typeof(T).Name}. Rebuild characters to apply it.");

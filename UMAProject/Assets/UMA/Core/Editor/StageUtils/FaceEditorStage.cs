@@ -213,6 +213,10 @@ namespace UMA
         [SerializeField]
         private List<SerializedSlotTriangleKey> selectedSlotTrianglesSerialized = new List<SerializedSlotTriangleKey>();
 
+        // Snapshot of the face selection when the stage was opened or the selection was saved.
+        // Visibility changes are intentionally excluded because they are restored when the stage closes.
+        private readonly HashSet<SlotTriangleKey> savedSelectionSnapshot = new HashSet<SlotTriangleKey>();
+
         [SerializeField]
         private List<SlotSelectionEntry> slotSelectionEntries = new List<SlotSelectionEntry>();
         private bool paintMode;
@@ -578,6 +582,7 @@ namespace UMA
 
             ValidateMeshHideAssets();
             LoadSelections();
+            CaptureSavedSelectionSnapshot();
             MarkOverlayMeshDirty();
 
             return true;
@@ -1607,6 +1612,8 @@ namespace UMA
         {
             AdjustWindowRects();
 
+            DrawStageCloseButton(sceneView);
+
             DrawPanel(faceToolsPanelCollapsed ? FaceEditorToolsCollapsedWindow : FaceEditorToolsWindow, "Face Tools", ref faceToolsPanelCollapsed, PanelCollapsePrefKeyPrefix + "FaceTools", () => DoToolsWindow(0));
             DrawPanel(visibilityPanelCollapsed ? VisibleWearablesCollapsedWindow : VisibleWearablesWindow, "Visibility", ref visibilityPanelCollapsed, PanelCollapsePrefKeyPrefix + "Visibility", () => DoVisibilityWindow(0));
             DrawPanel(meshHideAssetsPanelCollapsed ? MeshHideAssetsCollapsedWindow : MeshHideAssetsWindow, "Mesh Hide Assets", ref meshHideAssetsPanelCollapsed, PanelCollapsePrefKeyPrefix + "MeshHideAssets", () => DoMeshHideAssetsWindow(0));
@@ -1633,7 +1640,7 @@ namespace UMA
             {
                 if (GUI.Button(rightButtonRect, "Close", EditorStyles.miniButton))
                 {
-                    StageUtility.GoBackToPreviousStage();
+                    RequestClose();
                 }
             }
 
@@ -1664,6 +1671,83 @@ namespace UMA
                     GUILayout.EndArea();
                 }
             }
+        }
+
+        private void DrawStageCloseButton(SceneView sceneView)
+        {
+            if (sceneView == null || closing)
+            {
+                return;
+            }
+
+            const float buttonWidth = 86f;
+            const float buttonHeight = 26f;
+            const float margin = 8f;
+            Rect buttonRect = new Rect(sceneView.position.width - buttonWidth - margin, 28f, buttonWidth, buttonHeight);
+
+            Color previousBackground = GUI.backgroundColor;
+            GUI.backgroundColor = new Color(0.82f, 0.25f, 0.2f, 1f);
+            bool pressed = GUI.Button(buttonRect, "Close", EditorStyles.miniButton);
+            GUI.backgroundColor = previousBackground;
+            if (pressed)
+            {
+                RequestClose();
+                Event.current.Use();
+            }
+        }
+
+        private void CaptureSavedSelectionSnapshot()
+        {
+            savedSelectionSnapshot.Clear();
+            if (selectedSlotTriangles == null)
+            {
+                return;
+            }
+
+            foreach (SlotTriangleKey key in selectedSlotTriangles)
+            {
+                savedSelectionSnapshot.Add(key);
+            }
+        }
+
+        private bool HasUnsavedSelectionChanges()
+        {
+            return selectedSlotTriangles != null && !savedSelectionSnapshot.SetEquals(selectedSlotTriangles);
+        }
+
+        private void RequestClose()
+        {
+            if (closing)
+            {
+                return;
+            }
+
+            if (HasUnsavedSelectionChanges())
+            {
+                int choice = EditorUtility.DisplayDialogComplex(
+                    "Face Editor",
+                    "The face selection has unsaved changes. Save before closing?",
+                    "Save",
+                    "Discard",
+                    "Cancel");
+
+                if (choice == 2)
+                {
+                    return;
+                }
+
+                if (choice == 0)
+                {
+                    hasSaved = false;
+                    SaveSelections();
+                    if (!hasSaved)
+                    {
+                        return;
+                    }
+                }
+            }
+
+            StageUtility.GoBackToPreviousStage();
         }
 
         public void AdjustWindowRects()
@@ -5015,6 +5099,7 @@ namespace UMA
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             hasSaved = true;
+            CaptureSavedSelectionSnapshot();
 
             if (collection != null)
             {

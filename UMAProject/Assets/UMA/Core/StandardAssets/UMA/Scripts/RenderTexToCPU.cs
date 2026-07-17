@@ -258,7 +258,7 @@ namespace UMA
             EntityId entityId = texture.GetEntityId();
             renderTexturesToCPU.Remove(entityId);
             renderTexturesToFree.Remove(entityId);
-            RenderTexture.ReleaseTemporary(texture);
+            UMARenderTextureTracker.ReleaseTemporary(texture);
             texture = null;
         }
     }

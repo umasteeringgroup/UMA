@@ -11,6 +11,31 @@ namespace UMA.Editors.Tests
     {
         [Test]
         [Category("UMA")]
+        [Category("BlendShapes")]
+        public void ForcedBakedBlendShapeValueOverridesRuntimeUpdates()
+        {
+            var gameObject = new GameObject("UMA_ForcedBlendShapeValueTest");
+            try
+            {
+                var umaData = gameObject.AddComponent<UMAData>();
+                umaData.blendShapeSettings.forceBakedBlendShapeValue = true;
+                umaData.blendShapeSettings.forcedBakedBlendShapeValue = 0.5f;
+                umaData.blendShapeSettings.blendShapes.Add(
+                    "TestShape",
+                    new BlendShapeData { isBaked = true, value = 0.5f });
+
+                umaData.SetBlendShape("TestShape", 0.9f, false, true);
+
+                Assert.AreEqual(0.5f, umaData.blendShapeSettings.blendShapes["TestShape"].value);
+            }
+            finally
+            {
+                Object.DestroyImmediate(gameObject);
+            }
+        }
+
+        [Test]
+        [Category("UMA")]
         [Category("MeshCombiner")]
         [Category("BoneBaking")]
         public void DefaultBoneBakingCombinerUsesDefaultCombinerPipeline()

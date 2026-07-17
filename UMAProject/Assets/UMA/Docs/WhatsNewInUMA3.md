@@ -3,10 +3,98 @@
 UMA 3 is the next major branch of UMA. It is currently represented by the repository's `develop` branch and has not yet been merged into the default branch. This document is written for users who want to know what they can do differently in UMA 3, what to try first, and what to watch for when moving content from UMA 2.
 
 Scope of this document:
-- Compared `origin/develop` against `origin/master` on May 27, 2026.
+- The original branch comparison was made on May 27, 2026. This document now also includes the changes committed from May 30 through July 16, 2026.
 - `origin/master` is the repository's default branch in this checkout, so it is treated here as the current main-line baseline.
 - The merge base used by Git was `1ab11b099730cfa78259aba6f875cdec230ca766`.
-- The branch diff is very large and includes many generated assets, imported assets, scene changes, and project cleanup. This document focuses on user-facing changes.
+- The branch diff is very large and includes generated assets, imported assets, scene changes, and project cleanup. This document summarizes the user-facing code, tooling, workflow, documentation, content, and reliability changes.
+
+## Updates Since the Original May 29 Snapshot
+
+The following changes landed after the first version of this document and are included in the current UMA 3 branch through July 16, 2026.
+
+### Bone Baking And Mesh Combiners
+
+- Added the `UMADefaultBoneBakingMeshCombiner`, derived from the default combiner pipeline, with `UMABoneBakingMeshCombiner` retained as a compatibility component for existing scenes.
+- Added shared retargeting, mesh-building, and improved-skeleton support for baking bone influence into generated meshes while preserving explicitly unbaked animated bones.
+- Added parallel/jobified bone-baking skinning through `BoneBakingSkinningJobContext` and the retargeting path.
+- Fixed accumulated bindposes, DNA accumulation, rig-only rebuild state, hips rotation preservation, and skeleton recovery when switching between baked and normal combiners.
+- Fixed atlas UV preservation for mesh-only and rig-only builds, including bone-baking and jobified combiner paths.
+- Added second-pass material support and improved jobified-combiner pass-two behavior.
+- Added bone-baking skeleton tests covering default and compatibility combiners, rig-only UV behavior, bindposes, DNA effects, preserved bones, and jobified paths.
+- Added an editor combiner switcher and exposed both bone-baking combiners in the combiner tests, editor UI, `NewUMAGUI`, documentation, and the UMA Toolbar.
+- Expanded `NewUMAGUI` timing tests to cover all supported combiners and added a controlled option to load blendshapes normally or bake every available blendshape at value `0.5`.
+
+### UMA Toolbar And Diagnostics
+
+- Added a dockable Scene View overlay named **UMA Toolbar**.
+- Moved Scene View camera save/restore actions into the toolbar.
+- Added selected-UMA full, rig/DNA-only, mesh-only, and texture-only rebuild actions, plus a rebuild-all-editor-UMAs action.
+- Added active-combiner selection, UMA focus targets, skeleton and bone-name display, automatic editor-generation pause, and a tools menu.
+- Added selected-UMA diagnostics showing race, dirty flags, skeleton and generated-mesh counts, active combiner, generator timings, and rebuild timing.
+- Added runtime-data inspection and expanded diagnostics access from UMA editor tools.
+
+### Texture Lifetime, Atlas Reliability, And Resource Cleanup
+
+- Added names and ownership metadata to UMA atlas `RenderTexture` instances so textures can be associated with a character, atlas, material, and channel.
+- Added the **UMA Render Textures** diagnostics window, grouped by character, with refresh, auto-refresh, selection, orphan detection, and release/destroy actions.
+- Improved cleanup of temporary, persistent, pending-readback, and replaced atlas textures to reduce leaks during repeated builds.
+- Added safer texture saver and normalizer cleanup paths and improved RenderTexture-to-CPU cleanup accounting.
+- Added support for forcing selected texture channels to use existing atlas textures to reduce VRAM use.
+- Fixed material parameter initialization when existing textures are used, normal-map handling for already-swizzled data, and several SRP texture/material edge cases.
+- Organized SRP-specific materials and shader assets and added HDRP diffuse ShaderGraph support alongside the existing URP workflows.
+
+### DNA, Skeleton, And Pose Authoring
+
+- Added and expanded bone-pose conversion, build, mixing, and editing workflows, including IK editing and improved pose diagnostics.
+- Added bone animator samples and improved bone visualizer tooling.
+- Fixed DNA accumulation in bone-baking builds and corrected several bone-scale, bone-transform, and DNA effect interactions.
+- Fixed empty DNA lists becoming null during avatar-definition unmarshalling.
+- Expanded the new DNA documentation and artist-facing DNA creation guide.
+
+### Mesh Hiding, Vertex Editing, And Sculpting
+
+- Added mesh-modifier sculpt mode with Add, Remove, Smooth, brush shape, radius, falloff, symmetry, and normal-update options.
+- Added mesh-hide face selection and raycast-occlusion workflows, including better submesh and LOD validation.
+- Updated ignore-tag handling across mesh-hide, overlay, generator, skeleton, and mounted-item paths.
+- Corrected suppressed-overlay behavior so suppression is applied to the intended overlay data.
+- Added prominent top-right Close buttons to the vertex and face editor stages with Save/Discard/Cancel prompts for unsaved selections and sculpt previews.
+- Expanded the artist-facing `MeshHideAssets.md` guide from the MeshHideAssets manual and added separate documentation for mesh combiners and mesh-modifier sculpting.
+
+### Clothing Conformer And Secondary Motion
+
+- Added the Clothing Conformer runtime component, bind-data assets, mesh-conforming utilities, editor, sample bind assets, and editor tests.
+- Added and corrected chain-jiggler and secondary-motion workflows, including new UMA chain-jiggle animation support and sample content.
+- Updated clothing and sample character scenes to exercise conforming and secondary motion.
+
+### Wardrobe, Recipe, And Editor Workflow Improvements
+
+- Added a wardrobe recipe graph editor for Unity 6.4 and newer.
+- Improved recipe auto-save behavior and corrected cases where recipe changes were not persisted.
+- Improved static-load clearing so repeated editor and runtime loads do not retain stale generated state.
+- Improved slot and recipe inspectors, race tooling, overlay inspection, shared-color editing, mesh information viewing, and slot normal normalization.
+- Added asset-index cleanup utilities and consolidated asset cleanup into a guided dialog.
+- Consolidated UMA menu items and expanded editor test, smoke-test, and tool entry points.
+- Improved Simple LOD rebuild behavior and generated-mesh cleanup across combiners.
+
+### Content, Materials, And Samples
+
+- Added and refreshed UMA 3 race content, including Half-Orc updates, female-face fixes, baked T-poses, pose assets, hair and wardrobe content, and updated sample scenes.
+- Added or refreshed sample scenes for bone animators, clothing conforming, mesh combiners, save/load, character creation, and runtime construction.
+- Updated UMA 3 SRP materials, shader packages, hair and skin assets, and release-facing material defaults.
+
+### New And Updated Documentation
+
+Since the initial snapshot, the documentation set now also includes:
+
+- `Docs/BoneAnimators.md`
+- `Docs/ClothingConformer.md`
+- `Docs/DNACreationGuide.md`
+- `Docs/MeshCombiners.md`
+- `Docs/MeshModifierSculpting.md`
+- `Docs/NewDNASystem.md`
+- `Docs/DynamicCharacterBuildOptimizationPlan.md`
+
+The README documentation map was expanded to link every current Markdown guide in `Assets/UMA/Docs`.
 
 ## At A Glance
 
@@ -236,9 +324,11 @@ The UMA 3 branch includes many runtime and editor performance improvements. Most
 
 Highlights include:
 - Job/Burst-aware mesh combining code paths.
+- Parallel bone baking and improved jobified mesh-combiner pass-two processing.
 - Array pooling in mesh-combining hot paths to reduce garbage collection pressure.
 - A Mesh API combiner option in UMA settings.
 - Texture merge capacity reuse and RenderTexture format handling.
+- Clean rig-only and mesh-only rebuild behavior for atlas UVs, bindposes, DNA, and skeleton transforms.
 - Runtime generator setup and validation improvements.
 - Better behavior around renderer regeneration and renderer bounds.
 
@@ -293,16 +383,24 @@ User impact:
 The branch includes new docs in `Docs` plus UMA 3 PDFs under `Assets/UMA/UMA3/Documentation`.
 
 Start with:
+- `Docs/WhatsNewInUMA3.md`
 - `Docs/DynamicCharacterAvatar.md`
 - `Docs/WardrobeRecipeEditor.md`
 - `Docs/SlotDataAsset.md`
 - `Docs/OverlayDataAsset.md`
 - `Docs/RaceData.md`
+- `Docs/DNACreationGuide.md`
+- `Docs/NewDNASystem.md`
+- `Docs/MeshCombiners.md`
 - `Docs/MeshHideAssets.md`
+- `Docs/MeshModifierSculpting.md`
+- `Docs/BoneAnimators.md`
+- `Docs/ClothingConformer.md`
 - `Docs/Decals.md`
 - `Docs/Textures-UDIM-Arrays.md`
 - `Docs/Addressables.md`
 - `Docs/UMAAssetIndexer.md`
+- `Docs/DynamicCharacterBuildOptimizationPlan.md`
 
 Also see:
 - `Assets/UMA/UMA3/Documentation/Working with the new DNA.pdf`

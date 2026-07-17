@@ -101,6 +101,7 @@ namespace UMA.EditorTools
         private SerializedProperty _currentAnimatorProp;
         // Timing
         private SerializedProperty _showTimingButtonsProp;
+        private SerializedProperty _bakeAllBlendShapesForTimingProp;
 
         private void OnEnable()
         {
@@ -160,6 +161,7 @@ namespace UMA.EditorTools
             _currentAnimatorProp = serializedObject.FindProperty("currentAnimator");
             // Timing
             _showTimingButtonsProp = serializedObject.FindProperty("showTimingButtons");
+            _bakeAllBlendShapesForTimingProp = serializedObject.FindProperty("bakeAllBlendShapesForTiming");
         }
 
         public override void OnInspectorGUI()
@@ -289,11 +291,13 @@ namespace UMA.EditorTools
             {
                 EditorGUI.indentLevel++;
                 EditorGUILayout.PropertyField(_showTimingButtonsProp, new GUIContent("Show Timing Buttons"));
+                EditorGUILayout.PropertyField(_bakeAllBlendShapesForTimingProp, new GUIContent("Bake All Blendshapes At 0.5"));
                 if (_showTimingButtonsProp.boolValue)
                 {
                     EditorGUILayout.HelpBox(
                         "When enabled, four IMGUI button rows appear in the Game View " +
-                        "allowing you to time builds with each mesh combiner (10 iterations each). " +
+                        "allowing you to time builds with each mesh combiner. Blendshapes are all loaded " +
+                        "when baking is unchecked, or all baked at weight 0.5 when checked. " +
                         "Designed for testing in game builds.",
                         MessageType.Info);
                 }

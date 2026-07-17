@@ -46,7 +46,6 @@ namespace UMA
         };
         UMAData umaData;
         RenderTexture destinationTexture;
-        Texture[] resultingTextures;
         UMAGeneratorBase umaGenerator;
 
 
@@ -176,6 +175,7 @@ namespace UMA
                 var entityId = tempRenderTexture.GetEntityId();
                 if (!RenderTexToCPU.renderTexturesToCPU.ContainsKey(entityId) && RenderTexToCPU.SafeToFree(tempRenderTexture))
                 {
+                    UMARenderTextureTracker.Untrack(tempRenderTexture);
                     if (tempRenderTexture.IsCreated())
                     {
                         tempRenderTexture.Release();
@@ -193,6 +193,7 @@ namespace UMA
         {
             source.filterMode = filter;
             RenderTexture rt = new RenderTexture(newWidth, newHeight, 0, source.format, RenderTextureReadWrite.Linear);
+            rt.name = string.Format("{0} | Resized {1}x{2}", source.name, newWidth, newHeight);
             rt.filterMode = FilterMode.Point;
 
             RenderTexture bkup = RenderTexture.active;
@@ -269,11 +270,9 @@ namespace UMA
                     var channels = slotData.material.channels;
                     bool materialUseMipMap = slotData.material.generateMipMaps;
 
-                    // Reuse resultingTextures array when possible
-                    if (resultingTextures == null || resultingTextures.Length != channels.Length)
-                        resultingTextures = new Texture[channels.Length];
-                    else
-                        Array.Clear(resultingTextures, 0, resultingTextures.Length);
+                    // Each generated material owns its atlas array. Sharing this array between
+                    // materials loses references to earlier atlases when the next material is built.
+                    Texture[] resultingTextures = new Texture[channels.Length];
 
                     for (int textureChannelNumber = channels.Length - 1; textureChannelNumber >= 0; textureChannelNumber--)
                     {
@@ -372,12 +371,14 @@ namespace UMA
                                         }
                                     }
 
-#if UNITY_EDITOR
-                                    if (Debug.isDebugBuild)
-                                    {
-                                        destinationTexture.name = slotData.material.name + " Chan " + textureChannelNumber + " frame: " + Time.frameCount;
-                                    }
-#endif
+                                    UMARenderTextureTracker.Track(
+                                        destinationTexture,
+                                        umaData,
+                                        atlasIndex,
+                                        textureChannelNumber,
+                                        slotData.material != null ? slotData.material.name : null,
+                                        channels[textureChannelNumber].materialPropertyName,
+                                        CopyRTtoTex);
                                     destinationTexture.filterMode = FilterMode.Point;
 
                                     //This draws all the rects
@@ -463,7 +464,7 @@ namespace UMA
                                                 tempTexture.Apply(true);
                                             }
 
-                                            RenderTexture.ReleaseTemporary(destinationTexture);
+                                            UMARenderTextureTracker.ReleaseTemporary(destinationTexture);
                                             pendingTemporaryTexture = null;
 
                                             resultingTextures[textureChannelNumber] = tempTexture as Texture;
@@ -562,6 +563,15 @@ namespace UMA
                                     break;
                                 }
                         }
+
+                        ReleaseReplacedGeneratedTexture(previousResults, textureChannelNumber, resultingTextures[textureChannelNumber]);
+                    }
+                    if (previousResults != null)
+                    {
+                        for (int textureChannelNumber = channels.Length; textureChannelNumber < previousResults.Length; textureChannelNumber++)
+                        {
+                            ReleasePreviousGeneratedTexture(previousResults, textureChannelNumber);
+                        }
                     }
                     generatedMaterial.resultingAtlasList = resultingTextures;
                 }
@@ -570,10 +580,11 @@ namespace UMA
             {
                 if (pendingTemporaryTexture != null)
                 {
-                    RenderTexture.ReleaseTemporary(pendingTemporaryTexture);
+                    UMARenderTextureTracker.ReleaseTemporary(pendingTemporaryTexture);
                 }
                 if (pendingPersistentTexture != null)
                 {
+                    UMARenderTextureTracker.Untrack(pendingPersistentTexture);
                     if (pendingPersistentTexture.IsCreated())
                     {
                         pendingPersistentTexture.Release();
@@ -586,6 +597,17 @@ namespace UMA
                 }
                 RenderTexture.active = null;
             }
+        }
+
+        private static void ReleaseReplacedGeneratedTexture(Texture[] previousResults, int textureChannelNumber, Texture replacement)
+        {
+            if (previousResults == null || textureChannelNumber < 0 || textureChannelNumber >= previousResults.Length ||
+                ReferenceEquals(previousResults[textureChannelNumber], replacement))
+            {
+                return;
+            }
+
+            ReleasePreviousGeneratedTexture(previousResults, textureChannelNumber);
         }
 
         public static void SetCompositingProperties(UMAData.GeneratedMaterial generatedMaterial, Material material, UMAData.MaterialFragment fragment)

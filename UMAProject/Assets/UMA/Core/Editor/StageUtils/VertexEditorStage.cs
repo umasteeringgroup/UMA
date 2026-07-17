@@ -65,6 +65,7 @@ namespace UMA
         public Mesh BakedMesh;
         [SerializeField]
         private List<VertexSelection> SelectedVertexes = new List<VertexSelection>();
+        private readonly HashSet<VertexSelectionKey> savedSelectionSnapshot = new HashSet<VertexSelectionKey>();
         PhysicsScene phyScene;
 
         private Vector3[] bakedVertices;
@@ -865,6 +866,43 @@ namespace UMA
 
 
         GUIStyle HelpBoxStyle;
+        private struct VertexSelectionKey : IEquatable<VertexSelectionKey>
+        {
+            public readonly string slotName;
+            public readonly int vertexIndex;
+            public readonly bool isActive;
+
+            public VertexSelectionKey(string slotName, int vertexIndex, bool isActive)
+            {
+                this.slotName = slotName;
+                this.vertexIndex = vertexIndex;
+                this.isActive = isActive;
+            }
+
+            public bool Equals(VertexSelectionKey other)
+            {
+                return vertexIndex == other.vertexIndex &&
+                       isActive == other.isActive &&
+                       string.Equals(slotName, other.slotName, StringComparison.Ordinal);
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is VertexSelectionKey other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    int hash = slotName != null ? slotName.GetHashCode() : 0;
+                    hash = (hash * 397) ^ vertexIndex;
+                    hash = (hash * 397) ^ (isActive ? 1 : 0);
+                    return hash;
+                }
+            }
+        }
+
         [Serializable]
         public class VertexSelection
         {
@@ -3206,6 +3244,7 @@ namespace UMA
             // Do not regenerate here: editor-time DCA generation destroys and replaces
             // the generated materials/atlas textures after this preview has captured them.
             cachedVisibilityHeight = -1f;
+            CaptureSavedSelectionSnapshot();
 
             return true;
         }
@@ -4188,6 +4227,7 @@ namespace UMA
         {
             Handles.BeginGUI();
             EnsureGUIStyles();
+            DrawStageCloseButton(sceneView);
             GUILayout.BeginArea(leftPanelRect, EditorStyles.helpBox);
             {
                 if (slotWeightEditorMode)
@@ -4230,6 +4270,130 @@ namespace UMA
 
 
             Handles.EndGUI();
+        }
+
+        private void DrawStageCloseButton(SceneView sceneView)
+        {
+            if (sceneView == null || closing)
+            {
+                return;
+            }
+
+            const float buttonWidth = 86f;
+            const float buttonHeight = 26f;
+            const float margin = 8f;
+            Rect buttonRect = new Rect(sceneView.position.width - buttonWidth - margin, 28f, buttonWidth, buttonHeight);
+
+            Color previousBackground = GUI.backgroundColor;
+            GUI.backgroundColor = new Color(0.82f, 0.25f, 0.2f, 1f);
+            bool pressed = GUI.Button(buttonRect, "Close", EditorStyles.miniButton);
+            GUI.backgroundColor = previousBackground;
+            if (pressed)
+            {
+                RequestClose();
+                Event.current.Use();
+            }
+        }
+
+        private void CaptureSavedSelectionSnapshot()
+        {
+            savedSelectionSnapshot.Clear();
+            if (SelectedVertexes == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < SelectedVertexes.Count; i++)
+            {
+                VertexSelection selection = SelectedVertexes[i];
+                if (selection == null || selection.slot == null)
+                {
+                    continue;
+                }
+
+                savedSelectionSnapshot.Add(new VertexSelectionKey(
+                    selection.slot.slotName,
+                    selection.vertexIndexOnSlot,
+                    selection.isActive));
+            }
+        }
+
+        private bool HasUnsavedSelectionChanges()
+        {
+            if (SelectedVertexes == null)
+            {
+                return savedSelectionSnapshot.Count != 0;
+            }
+
+            HashSet<VertexSelectionKey> current = new HashSet<VertexSelectionKey>();
+            for (int i = 0; i < SelectedVertexes.Count; i++)
+            {
+                VertexSelection selection = SelectedVertexes[i];
+                if (selection == null || selection.slot == null)
+                {
+                    continue;
+                }
+
+                current.Add(new VertexSelectionKey(
+                    selection.slot.slotName,
+                    selection.vertexIndexOnSlot,
+                    selection.isActive));
+            }
+
+            return !savedSelectionSnapshot.SetEquals(current);
+        }
+
+        private bool TrySaveSelectionsForClose()
+        {
+            hasSaved = false;
+            SaveSelections();
+            return hasSaved;
+        }
+
+        private void RequestClose()
+        {
+            if (closing)
+            {
+                return;
+            }
+
+            bool selectionChanged = HasUnsavedSelectionChanges();
+            bool sculptChanged = HasSculptChanges();
+            if (selectionChanged || sculptChanged)
+            {
+                string message = selectionChanged && sculptChanged
+                    ? "The vertex selection and sculpt preview have unsaved changes. Save before closing?"
+                    : selectionChanged
+                        ? "The vertex selection has unsaved changes. Save before closing?"
+                        : "The sculpt preview has unsaved changes. Save before closing?";
+
+                int choice = EditorUtility.DisplayDialogComplex(
+                    "Vertex Editor",
+                    message,
+                    "Save",
+                    "Discard",
+                    "Cancel");
+
+                if (choice == 2)
+                {
+                    return;
+                }
+
+                if (choice == 0)
+                {
+                    if (selectionChanged && !TrySaveSelectionsForClose())
+                    {
+                        return;
+                    }
+
+                    if (sculptChanged && !SaveSculptModifier())
+                    {
+                        return;
+                    }
+                }
+            }
+
+            StageUtility.GoBackToPreviousStage();
         }
 
         private float GetVisibilitySectionHeightEstimate(float maxHeight)
@@ -5112,13 +5276,13 @@ namespace UMA
             RefreshSculptCollider();
         }
 
-        private void SaveSculptModifier()
+        private bool SaveSculptModifier()
         {
-            if (!HasSculptChanges() || sculptSlot == null) return;
+            if (!HasSculptChanges() || sculptSlot == null) return false;
             string last = EditorPrefs.GetString("UMA_MeshModifierSaveFolder_" + Application.dataPath.GetHashCode(), "Assets");
             if (!AssetDatabase.IsValidFolder(last)) last = "Assets";
             string path = EditorUtility.SaveFilePanelInProject("Save Sculpt MeshModifier", string.IsNullOrWhiteSpace(sculptModifierName) ? "SculptModifier" : sculptModifierName, "asset", "Save sculpt changes as a MeshModifier", last);
-            if (string.IsNullOrEmpty(path)) return;
+            if (string.IsNullOrEmpty(path)) return false;
             EditorPrefs.SetString("UMA_MeshModifierSaveFolder_" + Application.dataPath.GetHashCode(), System.IO.Path.GetDirectoryName(path));
             MeshModifier asset = CustomAssetUtility.ReplaceAsset<MeshModifier>(path, false);
             MeshModifier.Modifier mod = new MeshModifier.Modifier { ModifierName = string.IsNullOrWhiteSpace(sculptModifierName) ? GetSculptSlotKey() + " Sculpt" : sculptModifierName, SlotName = GetSculptSlotKey(), Scale = 1f, DNAName = string.Empty, adjustments = new VertexDeltaAdjustmentCollection() };
@@ -5137,6 +5301,7 @@ namespace UMA
             EditorUtility.SetDirty(asset);
             AssetDatabase.SaveAssetIfDirty(asset);
             Selection.activeObject = asset;
+            return true;
         }
 
         private UMAMeshData BuildSculptedSlotMeshData()
@@ -5319,6 +5484,8 @@ namespace UMA
                 SerializedSelections ss = SerializedSelections.FromSelections(SelectedVertexes);
                 string json = JsonUtility.ToJson(ss);
                 File.WriteAllText(path, json);
+                hasSaved = true;
+                CaptureSavedSelectionSnapshot();
             }
         }
 

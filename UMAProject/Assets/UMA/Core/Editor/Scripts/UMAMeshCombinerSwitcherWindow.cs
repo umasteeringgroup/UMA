@@ -150,37 +150,7 @@ namespace UMA.Editors
         private void UseMeshCombiner<T>(UMAGenerator gen = null)
             where T : UMAMeshCombiner
         {
-            var generator = gen ?? _generator;
-            if (generator == null) return;
-
-            if (generator.meshCombiner != null && generator.meshCombiner.GetType() == typeof(T))
-                return;
-
-            T meshCombiner = null;
-            var candidates = Object.FindObjectsByType<T>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-            for (int i = 0; i < candidates.Length; i++)
-            {
-                if (candidates[i].GetType() == typeof(T))
-                {
-                    meshCombiner = candidates[i];
-                    break;
-                }
-            }
-            if (meshCombiner == null)
-            {
-                var go = new GameObject(typeof(T).Name);
-                go.transform.parent = generator.transform.parent;
-                meshCombiner = go.AddComponent<T>();
-            }
-
-            Undo.RecordObject(generator, "Switch Mesh Combiner");
-            generator.meshCombiner = meshCombiner;
-            if (PrefabUtility.IsPartOfAnyPrefab(generator))
-            {
-                PrefabUtility.RecordPrefabInstancePropertyModifications(generator);
-            }
-
-            Debug.Log($"[UMA] Mesh combiner switched to {typeof(T).Name}");
+            UMAToolbarActions.UseMeshCombiner<T>(gen ?? _generator);
         }
     }
 }

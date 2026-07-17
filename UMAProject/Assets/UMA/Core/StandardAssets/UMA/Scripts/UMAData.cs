@@ -19,6 +19,8 @@ namespace UMA
         public bool loadAllFrames = true;
         public bool loadNormals = true;
         public bool loadTangents = true;
+		public bool forceBakedBlendShapeValue = false;
+		public float forcedBakedBlendShapeValue = 0.5f;
 		public HashSet<string> filteredBlendshapes = new HashSet<string>();
 		public Dictionary<string, BlendShapeData> blendShapes = new Dictionary<string, BlendShapeData>();
 	}
@@ -3156,6 +3158,7 @@ namespace UMA
 									bool safe = RenderTexToCPU.SafeToFree(tempRenderTexture);
 									if (safe)
 									{
+										UMARenderTextureTracker.Untrack(tempRenderTexture);
 										if (tempRenderTexture.IsCreated())
 										{
 											tempRenderTexture.Release();
@@ -3603,16 +3606,19 @@ namespace UMA
 			BlendShapeData data;
 			if (blendShapeSettings.blendShapes.TryGetValue(name, out data))
 			{
+				float appliedWeight = data.isBaked && blendShapeSettings.forceBakedBlendShapeValue
+					? blendShapeSettings.forcedBakedBlendShapeValue
+					: weight;
 				if (bakedOnly)
 				{
 					if (data.isBaked)
 					{
-						data.value = weight;
+						data.value = appliedWeight;
 					}
 					return;
 				}
 				// not baked only pass...
-				data.value = weight;
+				data.value = appliedWeight;
 			}
 			else
 			{
