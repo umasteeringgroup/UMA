@@ -13,7 +13,7 @@ namespace UMA
         private Vector2 scrollPos;
         Texture2D texture;
 
-        [MenuItem("UMA/Tools/Convert ZB Alpha to Substance Alpha")]
+        [MenuItem("UMA/Textures/Convert ZB Alpha to Substance Alpha")]
         public static void ShowWindow()
         {
             GetWindow<ConvertToSubstance>(true, "Convert Grayscale to Subtance Alpha", true);

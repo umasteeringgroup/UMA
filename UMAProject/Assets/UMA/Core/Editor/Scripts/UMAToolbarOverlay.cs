@@ -155,7 +155,7 @@ namespace UMA.Editors
                 menu.AddItem(
                     new GUIContent("Open Global Library"),
                     false,
-                    () => EditorApplication.ExecuteMenuItem("UMA/Asset Index/Global Library"));
+                    () => EditorApplication.ExecuteMenuItem("UMA/Global Library"));
                 menu.DropDown(worldBound);
                 return;
             }
@@ -168,7 +168,7 @@ namespace UMA.Editors
             menu.AddItem(
                 new GUIContent("Open Mesh Combiner Window"),
                 false,
-                () => EditorApplication.ExecuteMenuItem("UMA/Tools/Mesh Combiner Switcher"));
+                () => EditorApplication.ExecuteMenuItem("UMA/Tools/Mesh Tools/Mesh Combiner Switcher"));
             menu.DropDown(worldBound);
         }
 
@@ -355,9 +355,9 @@ namespace UMA.Editors
         private void ShowToolsMenu()
         {
             var menu = new GenericMenu();
-            AddMenuCommand(menu, "Quick Finder", "UMA/Quick Finder");
-            AddMenuCommand(menu, "Global Library", "UMA/Asset Index/Global Library");
-            AddMenuCommand(menu, "Mesh Combiner Switcher", "UMA/Tools/Mesh Combiner Switcher");
+            AddMenuCommand(menu, "Quick Finder", "UMA/Asset Management/Quick Finder");
+            AddMenuCommand(menu, "Global Library", "UMA/Global Library");
+            AddMenuCommand(menu, "Mesh Combiner Switcher", "UMA/Tools/Mesh Tools/Mesh Combiner Switcher");
             AddMenuCommand(menu, "Runtime Data Viewer", "UMA/Debug/Runtime Data Viewer");
             menu.AddSeparator(string.Empty);
             AddMenuCommand(menu, "Race Smoke Test", "UMA/Testing/Race Smoke Test...");

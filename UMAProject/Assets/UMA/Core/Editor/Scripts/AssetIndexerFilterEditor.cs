@@ -8,13 +8,13 @@ namespace UMA
 {
     public class AssetIndexerFilterEditor : EditorWindow
     {
-        [MenuItem("UMA/Asset Index/Global Library Filters", priority = 99)]
+        [MenuItem("UMA/Global Library Filters", priority = 21)]
         public static AssetIndexerFilterEditor GetWindow()
         {
             var window = GetWindow<AssetIndexerFilterEditor>();
 
             Texture icon = AssetDatabase.LoadAssetAtPath<Texture>("Assets/UMA/InternalDataStore/UMA32.png");
-            window.titleContent = new GUIContent(UmaAboutWindow.umaVersion + " Global Library Fiilters", icon);
+            window.titleContent = new GUIContent(UmaAboutWindow.umaVersion + " Global Library Filters", icon);
             window.minSize = new Vector2(800, 420);
             window.maxSize = new Vector2(800, 420);
 

@@ -1278,7 +1278,7 @@ namespace UMA.Editors
 			return GetSelectedTextRecipes().Count > 0;
 		}
 
-		[MenuItem("UMA/Consolidate Current Scene Assets", false, 2300)]
+		[MenuItem("UMA/Asset Management/Consolidate Current Scene Assets", false, 2300)]
 		private static void ConsolidateCurrentSceneAssetsMenu()
 		{
 			UmaConsolidateCurrentSceneAssetsWindow.Open();
@@ -1419,7 +1419,7 @@ namespace UMA.Editors
 			return GetSelectedTextures().Count > 0;
 		}
 
-		[MenuItem("UMA/Textures/Repair Overlays with too many textures", priority = 29)]
+		[MenuItem("UMA/Textures/Repair Overlays with too many textures", priority = 129)]
 		private static void RepairOverlaysWithTooManyTexturesMenu()
 		{
 			UMAAssetIndexer indexer = UMAAssetIndexer.Instance;
@@ -2949,7 +2949,7 @@ namespace UMA.Editors
 
 		[UnityEditor.MenuItem("GameObject/UMA/Save Atlas Textures")]
 		[MenuItem("CONTEXT/DynamicCharacterAvatar/Save Selected Avatars generated textures to PNG", false, 10)]
-		[MenuItem("UMA/Runtime/Save Selected Avatar Atlas Textures")]
+		[MenuItem("UMA/Avatar/Runtime/Save Selected Avatar Atlas Textures", priority = 120)]
 		public static void SaveSelectedAvatarsPNG()
 		{
 			if (Selection.gameObjects.Length != 1)
@@ -3258,7 +3258,7 @@ namespace UMA.Editors
 
         [UnityEditor.MenuItem("CONTEXT/DynamicCharacterAvatar/Save as UMA Preset")]
 		[UnityEditor.MenuItem("GameObject/UMA/Save as UMA Preset")]
-		[MenuItem("UMA/Load and Save/Save Selected Avatar as UMA Preset", priority = 1)]
+		[MenuItem("UMA/Avatar/Load and Save/Save Selected Avatar as UMA Preset", priority = 121)]
 		public static void SaveSelectedAvatarsPreset()
 		{
 			for (int i = 0; i < Selection.gameObjects.Length; i++)
@@ -3300,7 +3300,7 @@ namespace UMA.Editors
 
 		[UnityEditor.MenuItem("CONTEXT/DynamicCharacterAvatar/Save as Character text file (runtime only)")]
 		[UnityEditor.MenuItem("GameObject/UMA/Save as Character Text file (runtime only)")]
-		[MenuItem("UMA/Load and Save/Save Selected Avatar(s) Txt", priority = 1)]
+		[MenuItem("UMA/Avatar/Load and Save/Save Selected Avatar(s) Txt", priority = 122)]
 		public static void SaveSelectedAvatarsTxt()
 		{
 			for (int i = 0; i < Selection.gameObjects.Length; i++)
@@ -3375,7 +3375,7 @@ namespace UMA.Editors
 
 		[UnityEditor.MenuItem("GameObject/UMA/Save as Character Asset (runtime only)")]
 		[UnityEditor.MenuItem("CONTEXT/DynamicCharacterAvatar/Save as Asset (runtime only)")]
-		[MenuItem("UMA/Load and Save/Save Selected Avatar(s) asset", priority = 1)]
+		[MenuItem("UMA/Avatar/Load and Save/Save Selected Avatar(s) asset", priority = 123)]
 		public static void SaveSelectedAvatarsAsset()
 		{
 			for (int i = 0; i < Selection.gameObjects.Length; i++)
@@ -3413,7 +3413,7 @@ namespace UMA.Editors
 
 		[UnityEditor.MenuItem("GameObject/UMA/Load from AvatarDefinition file (runtime only)")]
 		[UnityEditor.MenuItem("CONTEXT/DynamicCharacterAvatar/Load Avatar from an AvatarDefinition file (runtime only)")]
-		[MenuItem("UMA/Load and Save/Load Selected Avatar(s) txt", priority = 1)]
+		[MenuItem("UMA/Avatar/Load and Save/Load Selected Avatar(s) txt", priority = 124)]
 		public static void LoadSelectedAvatarsTxt()
 		{
 			for (int i = 0; i < Selection.gameObjects.Length; i++)
@@ -3446,7 +3446,7 @@ namespace UMA.Editors
 		//@jaimi this is the equivalent of your previous JSON save but the resulting file does not need a special load method
 		[UnityEditor.MenuItem("GameObject/UMA/Save as AvatarDefinition (runtime only)")]
 		[UnityEditor.MenuItem("CONTEXT/DynamicCharacterAvatar/Save as Optimized AvatarDefinition File")]
-		[MenuItem("UMA/Load and Save/Save DynamicCharacterAvatar(s) AvatarDefinition (optimized)", priority = 1)]
+		[MenuItem("UMA/Avatar/Load and Save/Save DynamicCharacterAvatar(s) AvatarDefinition (optimized)", priority = 125)]
 		public static void SaveSelectedAvatarsDefinition()
 		{
 			if (!Application.isPlaying)
@@ -3473,7 +3473,7 @@ namespace UMA.Editors
 
 
 
-		[UnityEditor.MenuItem("UMA/Asset Index/Add Selected Assets to Global Library")]
+		[UnityEditor.MenuItem("UMA/Asset Management/Add Selected Assets to Global Library")]
 		public static void AddSelectedToGlobalLibrary()
 		{
 			int added = 0;

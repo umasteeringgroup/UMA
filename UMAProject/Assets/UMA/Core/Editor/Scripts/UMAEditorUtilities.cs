@@ -339,9 +339,9 @@ namespace UMA
 #endif
 
 #if UMA_HOTKEYS
-		[MenuItem("UMA/Toggle Hotkeys (enabled)",priority =30)]
+		[MenuItem("UMA/Project Setup/Toggle Hotkeys (enabled)",priority =130)]
 #else
-		[MenuItem("UMA/Toggle Hotkeys (disabled)", priority = 30)]
+		[MenuItem("UMA/Project Setup/Toggle Hotkeys (disabled)", priority = 130)]
 #endif
 		public static void ToggleUMAHotkeys()
 		{
@@ -571,7 +571,7 @@ namespace UMA
 			return asset;
 		}
 
-		[MenuItem("UMA/Create Wardrobe Recipe from selected slot and overlay")]
+		[MenuItem("UMA/Content Creation/Wardrobe/Create Wardrobe Recipe from selected slot and overlay")]
 		public static void SaveAsRecipe()
 		{
 			SlotDataAsset sd = null;

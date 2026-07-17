@@ -660,7 +660,7 @@ namespace UMA
 		}
 
 #if UNITY_EDITOR
-		[UnityEditor.MenuItem("UMA/Create Dynamic DNA Converter Controller")]
+		[UnityEditor.MenuItem("UMA/Content Creation/DNA/Create Dynamic DNA Converter Controller")]
 		public static DynamicDNAConverterController CreateDynamicDNAConverterControllerAsset()
 		{
 			return UMA.CustomAssetUtility.CreateAsset<DynamicDNAConverterController>();

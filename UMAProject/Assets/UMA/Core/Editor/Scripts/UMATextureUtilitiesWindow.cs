@@ -509,7 +509,7 @@ namespace UMA.Editors
         private Vector2 droppedTextureListScroll;
         private Vector2 scrollRight;
 
-        [MenuItem("UMA/Textures/Texture Utilities", priority = 27)]
+        [MenuItem("UMA/Textures/Texture Utilities", priority = 127)]
         public static void ShowWindow()
         {
             Open();

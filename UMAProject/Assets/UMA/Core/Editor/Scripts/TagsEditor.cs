@@ -34,7 +34,7 @@ namespace UMA
         bool Cleanup = false;
         Stopwatch stopWatch = new Stopwatch();
 
-        [MenuItem("UMA/Tags Editor")]
+        [MenuItem("UMA/Editors/Tags Editor")]
         static void Init()
         {
             UnityEditor.EditorWindow window = GetWindow(typeof(TagsEditor), true);

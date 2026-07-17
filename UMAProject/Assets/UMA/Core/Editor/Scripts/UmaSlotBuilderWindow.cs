@@ -2320,7 +2320,7 @@ namespace UMA.Editors
             }
         }
 
-        [MenuItem("UMA/Slot Builder", priority = 20)]
+        [MenuItem("UMA/Content Creation/Slots/Slot Builder", priority = 120)]
         public static void OpenUmaTexturePrepareWindow() 
         {
             UmaSlotBuilderWindow window = (UmaSlotBuilderWindow)EditorWindow.GetWindow(typeof(UmaSlotBuilderWindow));

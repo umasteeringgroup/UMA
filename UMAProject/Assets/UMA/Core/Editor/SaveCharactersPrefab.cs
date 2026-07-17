@@ -11,7 +11,7 @@ namespace UMA.Editors
 			return System.IO.Directory.Exists(System.IO.Directory.GetCurrentDirectory() + "/" + path);
 		}
 
-		[MenuItem("UMA/Tools/Save Character Prefabs")]
+		[MenuItem("UMA/Content Creation/Prefabs/Save Character Prefabs")]
 		static void SaveCharacterPrefabsMenuItem()
 		{
 			var newCharacters = new List<GameObject>();

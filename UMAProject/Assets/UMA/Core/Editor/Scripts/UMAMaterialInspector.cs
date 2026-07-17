@@ -902,7 +902,7 @@ namespace UMA.Editors
         private int _scannedOverlayCount;
         private int _unassignedOverlayCount;
 
-        [MenuItem("UMA/Find UMAMaterial in Overlays", priority = 26)]
+        [MenuItem("UMA/Asset Management/Find UMAMaterial in Overlays", priority = 126)]
         public static void Open()
         {
             Open(null);

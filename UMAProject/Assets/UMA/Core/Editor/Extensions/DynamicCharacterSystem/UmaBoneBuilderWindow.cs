@@ -47,7 +47,7 @@ namespace UMA.Editors
 			return false;
 		}
 
-		[MenuItem("UMA/Bone Builder", priority = 20)]
+		[MenuItem("UMA/Content Creation/Bones/Bone Builder", priority = 120)]
         public static void OpenUmaTexturePrepareWindow()
         {
             UmaBoneBuilderWindow window = (UmaBoneBuilderWindow)EditorWindow.GetWindow(typeof(UmaBoneBuilderWindow));

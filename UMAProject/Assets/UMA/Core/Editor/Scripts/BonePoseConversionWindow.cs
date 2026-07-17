@@ -59,7 +59,7 @@ namespace UMA.PoseTools
         private string _status = "Ready";
         private bool _settingsDirty;
 
-        [MenuItem("UMA/Tools/Pose Tools/Bone Pose Converter", priority = 21)]
+        [MenuItem("UMA/Tools/Pose Tools/Bone Pose Converter", priority = 121)]
         public static void OpenWindow()
         {
             var win = GetWindow<BonePoseConversionWindow>(false, "Bone Pose Converter", true);

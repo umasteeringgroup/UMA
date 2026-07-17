@@ -16,7 +16,7 @@ namespace UMA
         public UnityEngine.Object slotFolder;
 
 
-        [MenuItem("UMA/Slot To Mesh", priority = 20)]
+        [MenuItem("UMA/Tools/Mesh Tools/Slot To Mesh", priority = 120)]
         public static void OpenSlotToMeshWindow()
         {
             SlotToMesh window = (SlotToMesh)EditorWindow.GetWindow(typeof(SlotToMesh));

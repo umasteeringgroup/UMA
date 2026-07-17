@@ -17,7 +17,7 @@ namespace UMA.Editors
         private CombinerMode _selected;
         private Vector2 _scrollPos;
 
-        [MenuItem("UMA/Tools/Mesh Combiner Switcher", priority = 11)]
+        [MenuItem("UMA/Tools/Mesh Tools/Mesh Combiner Switcher", priority = 111)]
         public static void ShowWindow()
         {
             var window = GetWindow<UMAMeshCombinerSwitcherWindow>();

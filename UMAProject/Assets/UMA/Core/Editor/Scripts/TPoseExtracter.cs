@@ -49,7 +49,7 @@ namespace UMA.Editors
 			return command.context is UMAAvatarBase;
 	    }
 
-	    [MenuItem("UMA/Extract T-Pose", priority = 30)]
+	    [MenuItem("UMA/Tools/Pose Tools/Extract T-Pose", priority = 130)]
 	    static void ExtractTPose()
 	    {
 			TryExtractSelectedTPose();

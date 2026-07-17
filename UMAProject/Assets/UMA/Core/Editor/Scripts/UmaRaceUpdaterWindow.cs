@@ -130,7 +130,7 @@ namespace UMA.Editors
 		}
 
 
-		[MenuItem("UMA/Race Updater")]
+		[MenuItem("UMA/Editors/Race Updater")]
 		public static void OpenUmaTexturePrepareWindow()
 		{
 			UmaRaceUpdaterWindow window = (UmaRaceUpdaterWindow)EditorWindow.GetWindow(typeof(UmaRaceUpdaterWindow));

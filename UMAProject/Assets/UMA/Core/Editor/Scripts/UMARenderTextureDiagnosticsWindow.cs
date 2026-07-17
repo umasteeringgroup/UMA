@@ -34,7 +34,7 @@ namespace UMA.Editors
         private int trackedTextureCount;
         private double nextAutoRefreshTime;
 
-        [MenuItem("UMA/Tools/Render Texture Diagnostics", priority = 12)]
+        [MenuItem("UMA/Debug/Render Texture Diagnostics", priority = 112)]
         public static void ShowWindow()
         {
             UMARenderTextureDiagnosticsWindow window = GetWindow<UMARenderTextureDiagnosticsWindow>();

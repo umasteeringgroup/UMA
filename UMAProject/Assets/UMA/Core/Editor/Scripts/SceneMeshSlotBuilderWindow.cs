@@ -74,7 +74,7 @@ namespace UMA.Editors
         private RaceData lastWardrobeRace;
         private Vector2 scrollPosition;
 
-        [MenuItem("UMA/Scene Mesh Slot Builder", priority = 21)]
+        [MenuItem("UMA/Content Creation/Slots/Scene Mesh Slot Builder", priority = 121)]
         public static void OpenWindow()
         {
             ShowWindow(null);

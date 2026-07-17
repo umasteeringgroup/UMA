@@ -265,7 +265,7 @@ namespace UMA
 
     internal static class UMAClothingConformerMenu
     {
-        [MenuItem("UMA/Clothing Conformer/Add To Selected UMA")]
+        [MenuItem("UMA/Avatar/Clothing Conformer/Add To Selected UMA", priority = 116)]
         private static void AddToSelectedUMA()
         {
             GameObject selected = Selection.activeGameObject;
@@ -282,7 +282,7 @@ namespace UMA
             EditorUtility.SetDirty(conformer);
         }
 
-        [MenuItem("UMA/Clothing Conformer/Demo Bind First Clothing Slot On Selected UMA")]
+        [MenuItem("UMA/Avatar/Clothing Conformer/Demo Bind First Clothing Slot On Selected UMA", priority = 117)]
         private static void BindFirstClothingSlotDemo()
         {
             GameObject selected = Selection.activeGameObject;

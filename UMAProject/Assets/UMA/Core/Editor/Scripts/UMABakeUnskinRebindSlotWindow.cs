@@ -31,7 +31,7 @@ namespace UMA.Editors
         [SerializeField] private DynamicCharacterAvatar avatar;
         [SerializeField] private Transform newRigRoot;
 
-        [MenuItem("UMA/Bake Unskin Rebind/Create SlotDataAsset")]
+        [MenuItem("UMA/Tools/Slot Tools/Bake Unskin Rebind/Create SlotDataAsset")]
         private static void OpenWindow()
         {
             GetWindow<UMABakeUnskinRebindSlotWindow>("Bake Rebind Slot");

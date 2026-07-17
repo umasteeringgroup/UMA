@@ -94,7 +94,7 @@ namespace UMA.Editors
         private readonly Dictionary<string, VisualElement> headingElements = new Dictionary<string, VisualElement>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, Button> outlineButtons = new Dictionary<string, Button>(StringComparer.OrdinalIgnoreCase);
 
-        [MenuItem(DocumentationMenuPath, priority = 0)]
+        [MenuItem(DocumentationMenuPath, priority = 1)]
         public static void ViewDocumentation()
         {
             UMADocumentationWindow.ShowWindow();
