@@ -3073,7 +3073,7 @@ namespace UMA
 			umaGenerator.addDirtyUMA(this);
 		}
 
-		void OnDestroy()
+		protected virtual void OnDestroy()
 		{
 			if (staticCharacter)
             {

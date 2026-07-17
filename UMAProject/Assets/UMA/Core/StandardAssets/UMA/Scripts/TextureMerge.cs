@@ -44,6 +44,49 @@ namespace UMA
 		private int textureMergeRectCount;
 		private TextureMergeRect[] textureMergeRects;
 
+		private void OnDisable()
+		{
+			ReleaseCachedMaterials();
+		}
+
+		private void OnDestroy()
+		{
+			ReleaseCachedMaterials();
+		}
+
+		/// <summary>
+		/// Releases the transient material instances used to draw atlas rectangles.
+		/// They are a cache owned by this TextureMerge instance, not the source material asset.
+		/// </summary>
+		private void ReleaseCachedMaterials()
+		{
+			if (textureMergeRects == null)
+			{
+				return;
+			}
+
+			for (int i = 0; i < textureMergeRects.Length; i++)
+			{
+				Material cachedMaterial = textureMergeRects[i].mat;
+				// The source material is an asset owned by the TextureMerge configuration.
+				// Only the per-rectangle clones belong to this cache.
+				if (cachedMaterial != null && cachedMaterial != material)
+				{
+					if (Application.isPlaying)
+					{
+						Destroy(cachedMaterial);
+					}
+					else
+					{
+						DestroyImmediate(cachedMaterial);
+					}
+				}
+			}
+
+			textureMergeRects = null;
+			textureMergeRectCount = 0;
+		}
+
 		public void EnsurePreviewRectCapacity(int count)
 		{
 			EnsureCapacity(count);

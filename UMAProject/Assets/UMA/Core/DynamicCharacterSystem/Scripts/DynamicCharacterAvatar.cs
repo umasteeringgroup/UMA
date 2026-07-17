@@ -1053,9 +1053,11 @@ namespace UMA.CharacterSystem
                 }
         }
 
-        void OnDestroy()
+        protected override void OnDestroy()
         {
             Cleanup();
+            // Unity does not automatically invoke UMAData's teardown when this derived message exists.
+            base.OnDestroy();
         }
 
 #if UNITY_EDITOR
