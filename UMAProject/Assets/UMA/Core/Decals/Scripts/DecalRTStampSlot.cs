@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UMA.CharacterSystem;
-using UnityEditor;
 
 namespace UMA
 {
@@ -222,22 +221,39 @@ namespace UMA
             _subscribed = true;
         }
 
-      bool AlreadProcessed(string overlayGroup, string propertyName, int frame)
+		private bool WasStampProcessed(DecalRTStampAsset stamp, RenderTexture targetTexture, SlotData targetSlot, string propertyName, int frame)
         {
-            string key = (overlayGroup ?? string.Empty) + "|" + (propertyName ?? string.Empty);
+			int stampId = stamp != null ? stamp.GetInstanceID() : 0;
+			int textureId = targetTexture != null ? targetTexture.GetInstanceID() : 0;
+			string slotKey = GetSlotMatchKey(targetSlot);
+			string key = stampId + "|" + textureId + "|" + slotKey + "|" + (propertyName ?? string.Empty);
             int lastFrame;
             if (alreadyProcessed.TryGetValue(key, out lastFrame))
             {
-                if (lastFrame == frame)
-                {
-                    return true;
-                }
-                alreadyProcessed[key] = frame;
-                return false;
+				return lastFrame == frame;
             }
-            alreadyProcessed[key] = frame;
             return false;
         }
+
+		private void MarkStampProcessed(DecalRTStampAsset stamp, RenderTexture targetTexture, SlotData targetSlot, string propertyName, int frame)
+		{
+			int stampId = stamp != null ? stamp.GetInstanceID() : 0;
+			int textureId = targetTexture != null ? targetTexture.GetInstanceID() : 0;
+			string slotKey = GetSlotMatchKey(targetSlot);
+			string key = stampId + "|" + textureId + "|" + slotKey + "|" + (propertyName ?? string.Empty);
+			alreadyProcessed[key] = frame;
+		}
+
+		private static string GetSlotMatchKey(SlotData slot)
+		{
+			if (slot == null)
+			{
+				return string.Empty;
+			}
+
+			string slotGroup = slot.asset != null ? slot.asset.slotGroup : null;
+			return !string.IsNullOrEmpty(slotGroup) ? "group:" + slotGroup : "name:" + slot.slotName;
+		}
 
 
 
@@ -269,13 +285,6 @@ namespace UMA
                 //Debug.Log("HandleAtlasUpdated called"); 
                 if (umaData == null || parms == null || parms.overlayData == null) return;
 
-                var overlayGroup = parms.overlayData.asset != null ? parms.overlayData.asset.overlayGroup : null;
-                if (AlreadProcessed(overlayGroup, parms.materialPropertyName, Time.frameCount))
-                {
-                    Debug.Log("[DecalRTStampSlot] Already processed this overlay/property this frame, skipping.");
-                    return;
-                }
-
                 if (_avatar == null) _avatar = umaData as DynamicCharacterAvatar;
                 if (_avatar == null) return;
                 if (overlayStamps == null || overlayStamps.Count == 0) return;
@@ -299,10 +308,15 @@ namespace UMA
                     {
                         var stamp = set.stamps[st];
                         if (stamp == null) continue;
+						if (WasStampProcessed(stamp, parms.renderTexture, parms.slotData, parms.materialPropertyName, currenttime))
+						{
+							continue;
+						}
 
                         bool ok = DecalRenderTexture.ApplySlotStamps(_avatar, umaData, stamp, parms);
                         if (ok)
                         {
+							MarkStampProcessed(stamp, parms.renderTexture, parms.slotData, parms.materialPropertyName, currenttime);
                             anyApplied = true;
                             if (stamp.bleedPixels > maxBleedPixels) maxBleedPixels = stamp.bleedPixels;
                         }

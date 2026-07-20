@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace UMA.Examples
 {
@@ -6,7 +7,29 @@ namespace UMA.Examples
     {
 
         protected Animator animator;
+        private UMAPlayerActions controls;
         public float DirectionDampTime = .25f;
+
+        private void Awake()
+        {
+            controls = new UMAPlayerActions();
+        }
+
+        private void OnEnable()
+        {
+            controls?.Enable();
+        }
+
+        private void OnDisable()
+        {
+            controls?.Disable();
+        }
+
+        private void OnDestroy()
+        {
+            controls?.Dispose();
+            controls = null;
+        }
 
         void Start()
         {
@@ -27,8 +50,9 @@ namespace UMA.Examples
         {
             if (animator)
             {
-                float h = Input.GetAxis("Horizontal");
-                float v = Input.GetAxis("Vertical");
+                Vector2 move = controls != null ? controls.Player.Move.ReadValue<Vector2>() : Vector2.zero;
+                float h = move.x;
+                float v = move.y;
 
                 animator.SetFloat("Speed", h * h + v * v);
                 animator.SetFloat("Direction", h, DirectionDampTime, Time.deltaTime);

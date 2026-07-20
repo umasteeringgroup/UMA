@@ -165,6 +165,15 @@ namespace UMA
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Zoom"",
+                    ""type"": ""Value"",
+                    ""id"": ""c79bdf43-c727-4be5-9799-0d2e3ca6d58c"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
                 }
             ],
             ""bindings"": [
@@ -299,6 +308,17 @@ namespace UMA
                     ""action"": ""GlobalUndo"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""a2da2591-ca83-482c-8c8e-7fae9e94284c"",
+                    ""path"": ""<Mouse>/scroll"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";New Control Scheme;Keyboard and Mouse"",
+                    ""action"": ""Zoom"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -343,6 +363,7 @@ namespace UMA
             m_Player_Shoot = m_Player.FindAction("Shoot", throwIfNotFound: true);
             m_Player_Undo = m_Player.FindAction("Undo", throwIfNotFound: true);
             m_Player_GlobalUndo = m_Player.FindAction("GlobalUndo", throwIfNotFound: true);
+            m_Player_Zoom = m_Player.FindAction("Zoom", throwIfNotFound: true);
         }
 
         ~@UMAPlayerActions()
@@ -431,6 +452,7 @@ namespace UMA
         private readonly InputAction m_Player_Shoot;
         private readonly InputAction m_Player_Undo;
         private readonly InputAction m_Player_GlobalUndo;
+        private readonly InputAction m_Player_Zoom;
         /// <summary>
         /// Provides access to input actions defined in input action map "Player".
         /// </summary>
@@ -474,6 +496,10 @@ namespace UMA
             /// Provides access to the underlying input action "Player/GlobalUndo".
             /// </summary>
             public InputAction @GlobalUndo => m_Wrapper.m_Player_GlobalUndo;
+            /// <summary>
+            /// Provides access to the underlying input action "Player/Zoom".
+            /// </summary>
+            public InputAction @Zoom => m_Wrapper.m_Player_Zoom;
             /// <summary>
             /// Provides access to the underlying input action map instance.
             /// </summary>
@@ -524,6 +550,9 @@ namespace UMA
                 @GlobalUndo.started += instance.OnGlobalUndo;
                 @GlobalUndo.performed += instance.OnGlobalUndo;
                 @GlobalUndo.canceled += instance.OnGlobalUndo;
+                @Zoom.started += instance.OnZoom;
+                @Zoom.performed += instance.OnZoom;
+                @Zoom.canceled += instance.OnZoom;
             }
 
             /// <summary>
@@ -559,6 +588,9 @@ namespace UMA
                 @GlobalUndo.started -= instance.OnGlobalUndo;
                 @GlobalUndo.performed -= instance.OnGlobalUndo;
                 @GlobalUndo.canceled -= instance.OnGlobalUndo;
+                @Zoom.started -= instance.OnZoom;
+                @Zoom.performed -= instance.OnZoom;
+                @Zoom.canceled -= instance.OnZoom;
             }
 
             /// <summary>
@@ -681,6 +713,13 @@ namespace UMA
             /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
             /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
             void OnGlobalUndo(InputAction.CallbackContext context);
+            /// <summary>
+            /// Method invoked when associated input action "Zoom" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+            /// </summary>
+            /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+            /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+            /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+            void OnZoom(InputAction.CallbackContext context);
         }
     }
 }

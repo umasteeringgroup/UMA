@@ -26,6 +26,7 @@ namespace UMA
             eventsHooked = true;
             AssemblyReloadEvents.beforeAssemblyReload += ExitStageIfActive;
             CompilationPipeline.compilationStarted += _ => ExitStageIfActive();
+            EditorApplication.playModeStateChanged += _ => ExitStageIfActive();
 #endif
         }
 
@@ -477,6 +478,11 @@ namespace UMA
 
         public static FaceEditorStage ShowStage(DynamicCharacterAvatar DCA, MeshHideAsset hideAsset)
         {
+            if (!CanOpenForDynamicCharacterAvatar(DCA))
+            {
+                return null;
+            }
+
             FaceEditorStage stage = ScriptableObject.CreateInstance<FaceEditorStage>();
             stage.titleContent = new GUIContent();
             stage.titleContent.text = "Mesh Hide Editor";
@@ -489,6 +495,11 @@ namespace UMA
 
         public static FaceEditorStage ShowStage(DynamicCharacterAvatar DCA, MeshHideAssetCollection hideCollection)
         {
+            if (!CanOpenForDynamicCharacterAvatar(DCA))
+            {
+                return null;
+            }
+
             FaceEditorStage stage = ScriptableObject.CreateInstance<FaceEditorStage>();
             stage.titleContent = new GUIContent();
             stage.titleContent.text = "Mesh Hide Editor";
@@ -497,6 +508,20 @@ namespace UMA
             stage.CurrentHideCollection = hideCollection;
             StageUtility.GoToStage(stage, true);
             return stage;
+        }
+
+        private static bool CanOpenForDynamicCharacterAvatar(DynamicCharacterAvatar dca)
+        {
+            if (dca == null || PrefabStageUtility.GetPrefabStage(dca.gameObject) == null)
+            {
+                return true;
+            }
+
+            EditorUtility.DisplayDialog(
+                "UMA Mesh Editors Are Unavailable in Prefab Mode",
+                "The Face Editor and Vertex Editor work from a generated DynamicCharacterAvatar in an open scene. They cannot edit a DynamicCharacterAvatar while its prefab is open in Prefab Mode.\n\nExit Prefab Mode, then select a DynamicCharacterAvatar in the Scene Hierarchy and open this tool again.",
+                "OK");
+            return false;
         }
 
         protected override GUIContent CreateHeaderContent()

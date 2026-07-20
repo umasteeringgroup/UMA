@@ -299,81 +299,28 @@ namespace UMA
                 DoWelcome();
                 currentButton = 0;
             }
-            if (GUILayout.Button("Basics", GUILayout.Height(40)))
+            if (GUILayout.Button("Getting Started", GUILayout.Height(40)))
             {
-                ClearLog();
-                AddText("UMA is a runtime character creation system for Unity3D");
-                AddText("It relies on a library of indexed items to create characters");
-                AddText("The library data can be in Resources and/or in Addressable Bundles");
-                AddSeperator();
-                AddText("UMA uses a generator to create characters. This is a scriptable object.");
-                AddText("This prefab will be added as needed to a scene for UMA to work.");
-                AddText("The generator has settings for texture merging, mesh combining, and more.");
-                AddText("To get started, use the 'Add an UMA to the current scene' button");
-                AddText("This will add an editable UMA character to the scene");
-                AddSeperator();
-                AddText("UMA uses recipes to define meshes, textures, and other data");
-                AddText("   There are two types of recipes - basic <b>Text Recipes</b> and <b>Wardrobe Recipes.");
-                AddText("   <b>Text recipes</b> are used to define the base character, or to provide utility functions (like add a capsule collider)");
-                AddText("   <b>Wardrobe recipes</b> are used to define wearable items, who can use them, and what 'slot' they use when equipped.");
-                AddText("   Wardrobe recipes have advanced functions to hide parts of the character, switch out slotdatas when needed, smoosh hair under a hat, etc.");
-                AddText("");
-                AddText("<b>Base parts of an UMA</b>");
-                AddText(" ");
-                AddText("   <b>SlotData:</b>");
-                if (initialSettings != null && initialSettings.Slots != null)
-                {
-                    AddImage(initialSettings.Slots, "");
-                }
-                else
-                {
-                    AddText("(Preview image not available)", LogType.Info);
-                }
-                AddText("A SlotData contains a mesh part, along with any rig parts needed.");
-                AddText("These are combined into a Skinned Mesh when the character is built.");
-
-                AddText(" ");
-                AddText("   <b>OverlayData:</b>");
-                if (initialSettings != null && initialSettings.Overlays != null)
-                {
-                    AddImage(initialSettings.Overlays, "");
-                }
-                else
-                {
-                    AddText("(Preview image not available)", LogType.Info);
-                }
-                AddText("An OverlayData contains texture parts that are colorized and combined to build textures.");
-                AddText("Overlays contain all the textures needed for a single layer - for example, the albedo, normal, and metallic.");
-                AddText("Overlays are layered on top of each other to build the final texture for a slotdata.");
-                AddText(" ");
-                AddText("   <b>DNA:</b>  This is used to adjust the meshes when built, either bone modifications or blendshapes");
-                AddText("   <b>Recipes:</b>  These are used to tie slotdata and overlays together, to build skinned meshes");
-                AddText("   <b>RaceData:</b>  This defines a base recipe for the character, what wardrobe slots are available, what DNA converters are used, etc.");
-                AddSeperator();
-                AddText("We recommend to watch the videos on youtube for a deeper dive into how UMA works");
-                AddText("https://www.youtube.com/@SecretAnorak/videos");
+                DoGettingStarted();
                 currentButton = 1;
             }
 
-            if (GUILayout.Button("What's New in UMA 3"))
+            if (GUILayout.Button("What's New", GUILayout.Height(40)))
             {
                 ClearLog();
                 currentButton = 2;
                 DoWhatsNew();
             }
-            if (GUILayout.Button("View Documentation", GUILayout.Height(40)))
+            if (GUILayout.Button("Documentation Browser", GUILayout.Height(40)))
             {
-                ClearLog();
-                currentButton = 6;
-                DoDocumentation();
+                UMADocumentationWindow.ShowWindow();
             }
 
-           /* if (GUILayout.Button("Add an UMA to current scene", GUILayout.Height(40)))
+            if (GUILayout.Button("Create UMA Character", GUILayout.Height(40)))
             {
-                ClearLog();
-                DoAddToScenePage();
-                currentButton = 2;
-            }*/
+                CreateUMACharacter();
+                currentButton = 10;
+            }
             if (GUILayout.Button("Example Scenes", GUILayout.Height(40)))
             {
                 ClearLog();
@@ -411,7 +358,7 @@ namespace UMA
             }
             if (initialSettings != null && initialSettings.showWelcomeToUMA)
             {
-                if (GUILayout.Button("Turn this off!!"))
+                if (GUILayout.Button("Don't Show at Startup", GUILayout.Height(30)))
                 {
                     currentButton = 9;
                     ClearLog();
@@ -439,68 +386,134 @@ namespace UMA
             GUIHelper.EndInsetArea();
         }
 
+        private string GetVersionName()
+        {
+            if (initialSettings != null && !string.IsNullOrEmpty(initialSettings.UMAVersion))
+            {
+                return initialSettings.UMAVersion;
+            }
+
+            try
+            {
+                UMASettings settings = UMASettings.GetOrCreateSettings();
+                if (settings != null && !string.IsNullOrEmpty(settings.UMAVersion))
+                {
+                    return settings.UMAVersion;
+                }
+            }
+            catch
+            {
+                // The rest of the welcome window remains useful without UMASettings.
+            }
+
+            return "UMA";
+        }
+
+        private void DoGettingStarted()
+        {
+            ClearLog();
+            scrollPosition = Vector2.zero;
+            AddLargeText("Getting Started with " + GetVersionName());
+
+            AddText("UMA is a runtime character creation system for Unity. It builds characters from indexed assets and recipes.");
+            AddText("Assets can be loaded from Resources or Addressables. Use <b>UMA > Global Library</b> to browse the index, and rebuild it after importing or moving UMA content.");
+            AddSeperator();
+
+            AddText("<b>1. Create a character</b>");
+            AddText("Click <b>Create UMA Character</b> on the left, or use <b>GameObject > UMA > Create New Dynamic Character Avatar</b>.");
+            AddText("Select the new Dynamic Character Avatar to choose its race, wardrobe, colors, DNA, build options, and editor-time generation settings.");
+            AddText("UMA creates the generator at runtime when one is needed. A generator normally does not need to be placed in every scene by hand.");
+            AddSeperator();
+
+            AddText("<b>2. Work with the core assets</b>");
+            AddText("<b>RaceData:</b> Defines the base recipe, compatible wardrobe slots, DNA converters, cross-compatible races, and race-specific build data.");
+            AddText("<b>SlotDataAsset:</b> Contains a skinned mesh part, its rig data, material assignment, tags, blendshapes, LOD settings, and animated-bone metadata.");
+            if (initialSettings != null && initialSettings.Slots != null)
+            {
+                AddImage(initialSettings.Slots, "");
+            }
+            AddText("<b>OverlayDataAsset:</b> Supplies texture layers and material-channel data. Overlays can be tinted, share colors, and be positioned or aligned in recipe editors.");
+            if (initialSettings != null && initialSettings.Overlays != null)
+            {
+                AddImage(initialSettings.Overlays, "");
+            }
+            AddText("<b>Wardrobe Recipe:</b> Packages wearable content, compatible races, slot suppression, mesh hiding, replacement rules, thumbnails, and other wardrobe behavior.");
+            AddText("<b>DNA:</b> Drives modular character changes such as bone transforms, blendshapes, poses, mesh modifiers, and colors.");
+            AddSeperator();
+
+            AddText("<b>3. Use the current editor workflow</b>");
+            AddText("Enable the <b>UMA Toolbar</b> from the Scene view Overlays menu for character rebuild modes, mesh-combiner selection, focus and skeleton controls, editor-generation pause, diagnostics, and common tools.");
+            AddText("Use <b>UMA > Content Creation</b> for slot, wardrobe, bone, and prefab authoring. Asset management, texture, animation, project setup, testing, and debug commands are grouped in their matching UMA submenus.");
+            AddText("Open the <b>Documentation Browser</b> for the Markdown guides shipped with this UMA installation.");
+        }
+
+        private void CreateUMACharacter()
+        {
+            ClearLog();
+            scrollPosition = Vector2.zero;
+            AddLargeText("Create UMA Character");
+
+            const string menuPath = "GameObject/UMA/Create New Dynamic Character Avatar";
+            if (EditorApplication.ExecuteMenuItem(menuPath))
+            {
+                AddText("Created and selected a new Dynamic Character Avatar in the current scene.");
+                AddText("Use its Inspector to select a race, equip wardrobe, edit DNA and colors, and enable editor-time generation.");
+            }
+            else
+            {
+                AddText("Unity could not run <b>" + menuPath + "</b>.", LogType.Error);
+                AddText("Confirm that the Dynamic Character System scripts are present and compiled.", LogType.Warning);
+            }
+        }
+
         private void DoWhatsNew()
         {
             ClearLog();
-            AddLargeText("What's New in UMA 3");
+            scrollPosition = Vector2.zero;
+            AddLargeText("What's New in " + GetVersionName());
 
-            AddText("The UMA 3 branch includes a large editor and workflow refresh aimed at making UMA easier to author, debug, and ship in modern Unity projects.");
-            AddText("");
-
-            AddText("<b> Highlights:</b>");
-            AddText("- UMAGenerator is now generated and added to the scenes at runtime as needed. This simplifies setup and allows for better error handling when generators are missing or misconfigured.");
-            AddText("- Overlay Positioning tools are right in the recipe editor, with new alignment dialogs to make it easier to place and adjust overlay rects.");
-            AddText("- Placeholder wildcard slots allow recipes to carry overlays on placeholder entries and apply them to matching tagged slots at build time, improving flexibility for wardrobe items.");
-            AddText("- Jobified Mesh Combiner and Texture Merge systems for better performance when building characters, along with support for multiple RenderTexture formats.");
-            AddText("- Updated Mesh Modifiers system");
-            AddText("- Completely rewritten DNA System with modular support for modifiers, blendshapes, bone adjustments, Bone poses, color changes, and more in a single unified system, with live editing support in the editor.");
-            AddText("- New UMA Model with blendshapes and race generation support - create many races from one model. Unified model improves asset sharing across races and simplifies authoring.");
-            AddText("- UDIM Support in slot builder - splits meshes into multiple UDIM tiles based on material assignment, with support for both UDIM and non-UDIM workflows.");
-            AddText("- Race based baked blendshapes for improved performance and flexibility.");
+            AddText("UMA NextGen combines a refreshed authoring workflow with faster character builds, expanded deformation tools, and better diagnostics for modern Unity projects.");
             AddSeperator();
 
-            AddText("<b>Editor workflow upgrades</b>");
-            AddText("- New overlay positioning tools and alignment dialogs make it much easier to place and refine overlay rects.");
-            AddText("- The icon creator and updated recipe/slot tooling improve day-to-day content authoring workflows.");
-            AddText("- Shared Color Table, dialog, and builder updates continue the push toward a cleaner editor experience.");
-            AddText("- Face editor, vertex editor, and related editor stages received ongoing fixes and polish.");
+            AddText("<b>Performance and character building</b>");
+            AddText("- Jobified mesh combining and texture merging reduce main-thread character-build work.");
+            AddText("- Bone-baking mesh combiners can bake supported skeletal motion into meshes, with race-baked blendshape and second-pass material support.");
+            AddText("- Partial rebuild modes can update the rig and DNA, mesh, or textures without forcing a full character rebuild.");
+            AddText("- Array pooling, parallel bone baking, improved combiner pass-two processing, and texture-lifetime fixes reduce allocations and retained temporary resources.");
             AddSeperator();
 
-            AddText("<b>Wildcard and placeholder slot support</b>");
-            AddText("- Placeholder slots that are not asset-backed were added for overlay wildcard workflows.");
-            AddText("- This enables recipes to carry overlays on placeholder entries and apply them to matching tagged slots at build time.");
-            AddText("- Related editor improvements were added around slot inspection, matching criteria, and overlay editing.");
+            AddText("<b>Scene and diagnostics workflow</b>");
+            AddText("- The dockable Scene view UMA Toolbar provides rebuild commands, combiner switching, character focus, skeleton visualization, generation pause, diagnostics, and shortcuts to common tools.");
+            AddText("- Selected-character diagnostics report mesh, skeleton, generator, and build state.");
+            AddText("- Render Texture Diagnostics helps find live UMA render textures and track unexpected texture lifetime.");
+            AddText("- Editor tests and race smoke tests are available from <b>UMA > Testing</b>.");
             AddSeperator();
 
-            AddText("<b>Materials, shaders, and rendering</b>");
-            AddText("- ShaderGraph support and shader package updates were added across the branch.");
-            AddText("- UMA materials, color lookup tables, and render pipeline compatibility received broad updates.");
-            AddText("- Support for multiple RenderTexture formats was added, along with related scene consolidation improvements.");
+            AddText("<b>Authoring and deformation</b>");
+            AddText("- The modular DNA system supports bone transforms, blendshapes, bone poses, mesh modifiers, overlay UVs, shared colors, and live editor updates.");
+            AddText("- Mesh Modifier sculpt mode includes Add, Remove, and Smooth brushes, falloff and masking controls, mirroring, and save options.");
+            AddText("- The Clothing Conformer can bind wardrobe meshes to a built character and conform selected clothing slots.");
+            AddText("- Decal tools support slot-based content and RenderTexture stamping for tattoos, scars, wounds, makeup, and other layered details.");
+            AddText("- Slot building supports UDIM workflows, race-baked blendshapes, unbaked animated bones, and updated mesh-processing tools.");
+            AddText("- Bone Pose tools include updated building, mixing, conversion, extraction, and IK-assisted workflows.");
             AddSeperator();
 
-            AddText("<b>Mesh, decals, and avatar systems</b>");
-            AddText("- Mesh Hide workflows saw substantial work, including compression updates, raycast fixes, and editor improvements.");
-            AddText("- Mesh Modifier fixes and ongoing DNA tuning were added for better avatar authoring and deformation control.");
-            AddText("- Decal placement and utilities were updated, including improved behavior when matching by slot group.");
-            AddText("- Pose assets, updated slots, rebuilt blendshape content, and recipe updates were included across the release 3.0 work.");
+            AddText("<b>Recipes, overlays, and content management</b>");
+            AddText("- Recipe editors include overlay positioning and alignment tools, improved shared-color handling, icon creation, mesh hiding, and updated slot workflows.");
+            AddText("- Wildcard placeholder slots can carry overlays and apply them to slots selected by matching rules and tags.");
+            AddText("- DynamicCharacterAvatar's wearable-item API distinguishes replacing an equipped item from appending layered wardrobe content.");
+            AddText("- Global Library maintenance and filtering are consolidated into dedicated top-level tools, while the remaining UMA commands are organized by workflow.");
+            AddText("- Asset cleanup, validation, Quick Finder, Favorites, and Addressables workflows are available from the Global Library and Asset Management tools.");
+            AddText("- Refreshed UMA 3 races, wardrobe, materials, poses, and sample scenes demonstrate character creation, DNA, decals, equipment, save/load, Timeline, and runtime construction.");
             AddSeperator();
 
-            AddText("<b>Project cleanup and migration toward UMA 3</b>");
-            AddText("- Legacy UMA 2, temp, and test content was removed or moved out as the branch converged on the new release 3.0 structure.");
-            AddText("- Validators and utilities were added to help keep wearable and project assets in the expected folder layout.");
-            AddText("- Default settings and package organization were updated to better fit the new branch layout.");
+            AddText("<b>Documentation and Unity support</b>");
+            AddText("- The Documentation Browser lists the Markdown guides shipped in <b>Assets/UMA/Docs</b>; the Markdown viewer adds an outline, source preview, zoom, links, and automatic reload.");
+            AddText("- ShaderGraph packages and UMA materials cover Built-in, URP, and HDRP workflows, including multiple RenderTexture formats and existing-texture channels.");
+            AddText("- Unity 6.4 or newer includes an experimental node-graph editor for wardrobe recipes. Continue using the standard recipe editor for the complete production workflow while graph-editor parity work is in progress.");
             AddSeperator();
 
-            AddText("<b>Highlights from recent UMA 3 changesets</b>");
-            AddText("- Added overlay positioning and alignment tooling.");
-            AddText("- Added placeholder wildcard slots.");
-            AddText("- Updated icon creator, slots, recipes, dialogs, and builders.");
-            AddText("- Improved Mesh Hide, Mesh Modifier, decal, and vertex editing workflows.");
-            AddText("- Refreshed shader packages, ShaderGraphs, shared color tooling, and supporting utilities.");
-            AddText("- Removed older UMA 2 example and temporary content as part of the UMA 3 cleanup.");
-            AddText("");
-
-            AddText("If you are updating from an earlier beta snapshot, rebuild the UMA library after importing changes so the asset index reflects the latest folder layout and tooling updates.");
+            AddText("After importing an UMA update or moving content, use <b>UMA > Global Library Maintenance</b> to rebuild or repair the asset index. Open the Documentation Browser for detailed setup, migration, and authoring guides.");
         }
 
         private void ReimportShaderFolder()
@@ -722,58 +735,6 @@ namespace UMA
                 AddText("Stacktrace:");
                 AddText(ex.StackTrace);
             }
-        }
-
-        private void DoDocumentation()
-        {
-            ClearLog();
-            UMAMarkdownViewer.ViewDocumentation();
-            /*
-            string basePath = null;
-            try
-            {
-                basePath = UMAEditorUtilities.FindUMAFullPath();
-            }
-            catch (Exception ex)
-            {
-                AddText($"Error finding UMA base path: {ex.Message}", LogType.Error);
-                return;
-            }
-
-            if (string.IsNullOrEmpty(basePath))
-            {
-                AddText("UMA base path not found.", LogType.Error);
-                return;
-            }
-
-            string path = string.Empty;
-            try
-            {
-                path = Path.Combine(basePath, "UMA Documentation.PDF");
-            }
-            catch (Exception ex)
-            {
-                AddText($"Error building documentation path: {ex.Message}", LogType.Error);
-                return;
-            }
-
-            try
-            {
-                if (System.IO.File.Exists(path))
-                {
-                    AddText($"PDF File \"{path}\" should open in a new window");
-                    System.Diagnostics.Process.Start(path);
-                }
-                else
-                {
-                    AddText($"UMA Documentation file not found: {path}", LogType.Error);
-                    EditorUtility.DisplayDialog("UMA Documentation", "The UMA Documentation file is missing. Please reinstall UMA to get the documentation.", "OK");
-                }
-            }
-            catch (Exception ex)
-            {
-                AddText($"Error opening documentation: {ex.Message}", LogType.Error);
-            } */
         }
 
         private void DrawContent(int currentButton)
@@ -1010,135 +971,31 @@ namespace UMA
         #region Scene Scan Button
         private void ScanScene()
         {
-            UMAGenerator[] generators;
+            AddText("Checking scene");
+
+            DynamicCharacterAvatar[] avatars;
             try
             {
-                generators = FindObjectsByType<UMAGenerator>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+                avatars = FindObjectsByType<DynamicCharacterAvatar>(FindObjectsInactive.Include, FindObjectsSortMode.None);
             }
             catch (Exception ex)
             {
-                AddText($"Error scanning scene for UMAGenerator: {ex.Message}", LogType.Error);
+                AddText($"Unable to enumerate Dynamic Character Avatars: {ex.Message}", LogType.Error);
                 return;
             }
 
-            AddText("Checking for generator");
-            if (generators == null || generators.Length == 0)
+            int avatarCount = avatars != null ? avatars.Length : 0;
+            if (avatarCount == 0)
             {
-                AddText("UMA Generator not found in scene", LogType.Error);
-                LogLine l = AddText(text: "Add UMA Generator to Scene", LogType.Error);
-                l.ButtonAction = (line) => DoAddGenerator(l);
-            }
-            else if (generators.Length > 1)
-            {
-                AddText("Multiple UMA Generators found in scene!", LogType.Error);
-                AddText("This can cause problems, please remove all but one generator from the scene", LogType.Error);
-#if UNITY_6000_0_OR_NEWER
-#else
-                AddText("Note: You can use the 'Filter' field in the hierarchy with t:UMAGENARATOR to find them", LogType.Error);
-#endif
+                AddText("No Dynamic Character Avatars were found in the active scene.");
             }
             else
             {
-                UMAGenerator gen = generators[0];
-                if (gen == null || gen.gameObject == null)
-                {
-                    AddText("UMA Generator reference is invalid", LogType.Error);
-                    return;
-                }
-
-                if (!gen.gameObject.activeInHierarchy)
-                {
-                    AddText("UMA Generator is not active in the scene", LogType.Error);
-                    AddText("UMA Generator must be active in the scene to work correctly", LogType.Error);
-                    LogLine l = AddText(text: "Activate Generator", LogType.Error);
-                    l.ButtonAction = (line) => DoActivateGenerator(l);
-                }
-                else
-                {
-                    AddText("UMA Generator found and active in scene...");
-                }
-                AddSeperator();
-                AddText("Checking Generator settings");
-                if (gen.textureMerge != null)
-                {
-                    AddText("Texture Merge is set up correctly");
-                }
-                else
-                {
-                    AddText("Texture Merge is not set up correctly", LogType.Error);
-                    AddText("Please assign a Texture Merge to the UMA Generator", LogType.Error);
-                    LogLine l = AddText(text: "Add Texture Merge Object", LogType.Error);
-                    l.ButtonAction = (line) => DoAddTextureMerge(l);
-                }
-                AddSeperator();
-                if (gen.meshCombiner != null)
-                {
-                    AddText("Mesh Combiner is set up correctly");
-                }
-                else
-                {
-                    AddText("Mesh Combiner is not set up correctly", LogType.Error);
-                    AddText("Please add an UMAMeshCombiner component to the generator and assign field!", LogType.Error);
-                    LogLine l = AddText(text: "Add MeshCombiner automatically", LogType.Error);
-                    l.ButtonAction = (line) => DoAddMeshCombiner(l);
-                }
-                if (gen.InitialScaleFactor != 1)
-                {
-                    AddSeperator();
-                    AddText("Warning: Initial Scale Factor is not set to 1", LogType.Warning);
-                    AddText("This will cause all textures to be scaled down.", LogType.Warning);
-                    AddText("Please verify and ensure this is what you intend", LogType.Warning);
-                    LogLine l = AddText(text: "Set Initial Scale Factor", LogType.Warning);
-                    l.ButtonAction = (line) => DoSetInitialScaleFactor(l);
-                }
-                if (gen.editorInitialScaleFactor == 1)
-                {
-                    AddSeperator();
-                    AddText("Warning: Editor Initial Scale Factor is set to 1", LogType.Warning);
-                    AddText("-- This will cause all textures to be native size in the editor.");
-                    AddText("-- This can cause slowdowns in the editor.");
-                    AddText("Please verify this is what you intend", LogType.Warning);
-                    LogLine l = AddText(text: "Set Editor Initial Scale Factor", LogType.Warning);
-                    l.ButtonAction = (line) => DoSetEditorInitialScaleFactor(l);
-                }
-                if (gen.fitAtlas == false || gen.SharperFitTextures == false || gen.AtlasOverflowFitMethod != UMAGeneratorBase.FitMethod.BestFitSquare || gen.atlasResolution < 2048 || gen.convertMipMaps == false || gen.SaveAndRestoreIgnoredItems == false)
-                {
-                    AddSeperator();
-                    AddText("Checking for optimal generator settings");
-                    if (gen.fitAtlas == false)
-                    {
-                        AddText("Fit Atlas is NOT enabled", LogType.Warning);
-                        AddText("-- This can cause textures to be missing");
-                    }
-                    if (gen.SharperFitTextures == false)
-                    {
-                        AddText("Sharper Fit Textures is NOT enabled", LogType.Warning);
-                        AddText("-- This can cause blurry textures");
-                    }
-                    if (gen.AtlasOverflowFitMethod != UMAGeneratorBase.FitMethod.BestFitSquare)
-                    {
-                        AddText("Atlas Overflow Fit Method is NOT set to BestFitSquare", LogType.Warning);
-                        AddText(" -- This can cause blurry textures on overflow!");
-                    }
-                    AddText("Please verify and ensure this is what you intend");
-
-                    if (gen.SaveAndRestoreIgnoredItems == false)
-                    {
-                        AddText("Warning: Save and Restore Ignored Items is NOT enabled", LogType.Warning);
-                        AddText("-- This can cause items to be lost IF you attach gameObjects to the rig");
-                        AddText("Please verify and ensure this is what you intend", LogType.Warning);
-                    }
-                    if (gen.convertMipMaps == false)
-                    {
-                        AddText("Warning: Convert MipMaps is NOT enabled", LogType.Warning);
-                        AddText("-- This can cause excess texture usage");
-                        AddText("-- and loss of detail in far characters");
-                        AddText("Please verify and ensure this is what you intend", LogType.Warning);
-                    }
-                    LogLine l = AddText(text: "Set optimal generator settings", LogType.Warning);
-                    l.ButtonAction = (line) => DoSetAtlasGenerationParms(l);
-                }
+                AddText($"Found {avatarCount} Dynamic Character Avatar{(avatarCount == 1 ? string.Empty : "s")}.");
             }
+
+            AddText("A scene-level UMA Generator is not required. UMA creates one automatically when a character needs it.");
+            AddText("Scene check complete");
         }
         #endregion
 
@@ -1377,6 +1234,11 @@ namespace UMA
                     }
                     if (AI.Item == null)
                     {
+                        if (IsGeneratedBakedSlotReference(AI._Name))
+                        {
+                            continue;
+                        }
+
                         AddText($"Error: SlotDataAsset {AI._Name} is missing!", LogType.Error);
                         LogLine l = AddText("Repair Library");
                         l.ButtonAction = (line) => DoLibraryRepair(l);
@@ -1677,6 +1539,14 @@ namespace UMA
             }
         }
 
+        private static bool IsGeneratedBakedSlotReference(string slotName)
+        {
+            // Race-baked slots are transient index entries. They are generated from
+            // their source SlotDataAsset when the race requests them.
+            return !string.IsNullOrEmpty(slotName)
+                && slotName.IndexOf("_baked_", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
         private void CheckWardrobeRecipes()
         {
             UMAAssetIndexer lib = null;
@@ -1769,12 +1639,13 @@ namespace UMA
                     }
                     if (s.isPlaceholderSlot == false)
                     {
-                        if (!lib.HasAsset<SlotDataAsset>(s.id))
+                        bool slotExists = lib.HasAsset<SlotDataAsset>(s.id);
+                        if (!slotExists && !IsGeneratedBakedSlotReference(s.id))
                         {
                             AddText($"Wardrobe Recipe {uwr.name} has a slot '{s.id}' that does not exist in the library!", LogType.Error);
                             AddText("To fix this, restore the missing slot, add it to the library, and then validate the slot", LogType.Error);
                         }
-                        else
+                        else if (slotExists)
                         {
                             SlotDataAsset sd = null;
                             try { sd = lib.GetAsset<SlotDataAsset>(s.id); } catch { /* ignore */ }
@@ -1891,12 +1762,13 @@ namespace UMA
                             }
                             if (s.isPlaceholderSlot == false)
                             {   
-                                if (!lib.HasAsset<SlotDataAsset>(s.id))
+                                bool slotExists = lib.HasAsset<SlotDataAsset>(s.id);
+                                if (!slotExists && !IsGeneratedBakedSlotReference(s.id))
                                 {
                                     AddText($"Text Recipe {utr.name} has a slot '{s.id}' that does not exist in the library!", LogType.Error);
                                     AddText("To fix this, restore the missing slot, add it to the library, and then validate the slot", LogType.Error);
                                 }
-                                else
+                                else if (slotExists)
                                 {
                                     SlotDataAsset sd = null;
                                     try { sd = lib.GetAsset<SlotDataAsset>(s.id); } catch { /* ignore */ }
@@ -2159,132 +2031,6 @@ namespace UMA
             InspectorUtlity.InspectTarget(ai.Item);
             yield break;
         }
-        private void DoSetAtlasGenerationParms(LogLine line)
-        {
-            UMAGenerator[] generators = FindObjectsByType<UMAGenerator>(FindObjectsSortMode.None);
-            if (generators.Length == 1 && generators[0] != null)
-            {
-                generators[0].fitAtlas = true;
-                generators[0].SharperFitTextures = true;
-                generators[0].AtlasOverflowFitMethod = UMAGeneratorBase.FitMethod.BestFitSquare;
-                generators[0].SaveAndRestoreIgnoredItems = true;
-                generators[0].convertMipMaps = true;
-                generators[0].atlasResolution = 2048;
-                line?.Resolve("Atlas Generation parameters set. Please verify the settings on the generator!");
-                Repaint();
-            }
-            else
-            {
-                line?.Error("No or Multiple UMA Generators found in scene!");
-            }
-        }
-
-        private void DoSetInitialScaleFactor(LogLine line)
-        {
-            UMAGenerator[] generators = FindObjectsByType<UMAGenerator>(FindObjectsSortMode.None);
-            if (generators.Length == 1 && generators[0] != null)
-            {
-                generators[0].InitialScaleFactor = 1;
-                line?.Resolve("Initial Scale Factor set");
-            }
-            else
-            {
-                line?.Error("No or Multiple UMA Generators found in scene!");
-            }
-        }
-
-        private void DoSetEditorInitialScaleFactor(LogLine line)
-        {
-            UMAGenerator[] generators = FindObjectsByType<UMAGenerator>(FindObjectsSortMode.None);
-            if (generators.Length == 1 && generators[0] != null)
-            {
-                generators[0].editorInitialScaleFactor = 4;
-                line?.Resolve("Editor Initial Scale Factor set");
-            }
-            else
-            {
-                line?.Error("No or Multiple UMA Generators found in scene!");
-            }
-        }
-
-        private void DoAddMeshCombiner(LogLine line)
-        {
-            UMAGenerator[] generators = FindObjectsByType<UMAGenerator>(FindObjectsSortMode.None);
-            if (generators.Length == 1 && generators[0] != null)
-            {
-                UMAMeshCombiner uc = generators[0].gameObject.AddComponent<UMAMeshCombiner>();
-                line?.Resolve("MeshCombiner added to generator. Be sure to save!");
-            }
-            else
-            {
-                line?.Error("No or Multiple UMA Generators found in scene!");
-            }
-        }
-
-        private void DoAddTextureMerge(LogLine line)
-        {
-            var settings = UMASettings.GetOrCreateSettings();
-            var tx = settings != null ? settings.textureMerge : null;
-            if (tx == null)
-            {
-                line?.Error("Texture Merge not found in project!");
-            }
-            else
-            {
-                UMAGenerator[] generators = FindObjectsByType<UMAGenerator>(FindObjectsSortMode.None);
-                if (generators.Length == 1 && generators[0] != null)
-                {
-                    generators[0].textureMerge = tx;
-                    line?.Resolve("Texture Merge assigned to UMA Generator");
-                }
-                else
-                {
-                    line?.Error("No or Multiple UMA Generators found in scene!");
-                }
-            }
-            Repaint();
-        }
-
-        private void DoAddGenerator(LogLine line)
-        {
-            UMASettings m_settings = null;
-            try { m_settings = UMASettings.GetOrCreateSettings(); } catch { /* ignore */ }
-            if (m_settings == null || m_settings.generatorPrefab == null)
-            {
-                line?.Error("Generator prefab not found in project settings!");
-                return;
-            }
-            GameObject go = null;
-            try
-            {
-                go = GameObject.Instantiate(m_settings.generatorPrefab);
-                if (go != null) go.name = "UMAGenerator";
-                line?.Resolve("UMA Generator added to scene. Be sure to save.");
-                Repaint();
-            }
-            catch (Exception ex)
-            {
-                line?.Error($"Failed to add UMA Generator: {ex.Message}");
-            }
-        }
-
-        private void DoActivateGenerator(LogLine line)
-        {
-            UMAGenerator[] generators = FindObjectsByType<UMAGenerator>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-            if (generators.Length == 1 && generators[0] != null && generators[0].gameObject != null)
-            {
-                generators[0].gameObject.SetActive(true);
-                if (line != null)
-                {
-                    line.Resolve("UMA Generator activated in scene");
-                    Repaint();
-                }
-            }
-            else
-            {
-                line?.Error("No or Multiple UMA Generators found in scene!");
-            }
-        }
 
         private void DoLibraryRebuild(LogLine line)
         {
@@ -2306,91 +2052,33 @@ namespace UMA
         }
         #endregion
 
-        private void DoAddToScenePage()
-        {
-            UMASettings settings = null;
-            try { settings = UMASettings.GetOrCreateSettings(); } catch { /* ignore */ }
-
-            ClearLog();
-
-            if (settings == null)
-            {
-                AddText("UMASettings not found!", LogType.Error);
-                return;
-            }
-
-            if (settings.characterPrefab == null)
-            {
-                AddText("Character prefab not found in project settings!", LogType.Error);
-                AddText("Please assign a character prefab in the UMASettings object", LogType.Error);
-                AddText("By default This is the UMADynamicCharacterAvatar prefab in the 'Getting Started' folder");
-                return;
-            }
-
-            UMAGenerator[] generators = null;
-            try { generators = FindObjectsByType<UMAGenerator>(FindObjectsSortMode.None); } catch { /* ignore */ }
-            generators = generators ?? Array.Empty<UMAGenerator>();
-
-            if (generators.Length == 0)
-            {
-                if (settings.generatorPrefab == null)
-                {
-                    AddText("Generator prefab not found in project settings!", LogType.Error);
-                    AddText("Please assign a generator prefab in the UMASettings object", LogType.Error);
-                    AddText("By defalt this is the UMA_GLIB prefab in the 'Getting Started' folder");
-                    return;
-                }
-                try
-                {
-                    GameObject gen = GameObject.Instantiate(settings.generatorPrefab);
-                    if (gen != null) gen.name = settings.generatorPrefab.name;
-                    AddText($"UMA Generator {settings.generatorPrefab.name} added to scene. Be sure to save.");
-                }
-                catch (Exception ex)
-                {
-                    AddText($"Failed to add UMA Generator: {ex.Message}", LogType.Error);
-                }
-            }
-            else
-            {
-                AddText("UMA Generator already found in scene - Not added.");
-            }
-
-            try
-            {
-                GameObject go = GameObject.Instantiate(settings.characterPrefab);
-                if (go != null) go.name = settings.characterPrefab.name;
-                AddText($"UMA Character {settings.characterPrefab.name} added to scene. Be sure to save.");
-            }
-            catch (Exception ex)
-            {
-                AddText($"Failed to add UMA Character: {ex.Message}", LogType.Error);
-            }
-        }
-
         private void DoWelcome()
         {
             ClearLog();
-            AddLargeText("Welcome to UMA 3!");
+            scrollPosition = Vector2.zero;
+            AddLargeText("Welcome to " + GetVersionName());
 
-            AddText("If this is your first time opening the project after importing a new UMA 3 update, you should <b>rebuild the UMA Library</b>.");
-            AddText("This process only takes a moment and ensures UMA correctly detects and indexes all assets.");
-            LogLine l = AddText("Rebuild the Library after importing a new version!");
-            AddText("");
+            AddText("UMA NextGen builds customizable, runtime-ready characters from races, slots, overlays, recipes, DNA, and indexed project content.");
+            AddText("This window links the most useful setup, authoring, maintenance, diagnostics, and documentation workflows in the current UMA editor.");
+            AddSeperator();
 
-            AddText("To get started, click the <b>'Add UMA to Current Scene'</b> button on the left.");
-            AddText("");
+            AddText("<b>Quick start</b>");
+            AddText("1. Click <b>Create UMA Character</b> to add and select a Dynamic Character Avatar.");
+            AddText("2. Choose a race and enable editor-time generation in the avatar Inspector.");
+            AddText("3. Use <b>Getting Started</b> for the core asset model, or open an <b>Example Scene</b>.");
+            AddText("4. Enable the <b>UMA Toolbar</b> in the Scene view Overlays menu for rebuild, focus, skeleton, combiner, and diagnostics controls.");
+            AddSeperator();
 
-            AddText("If you are new to UMA, please check out the <b>'Basics'</b> section on the left for an introduction to the core concepts.");
-            AddText("");
+            AddText("<b>After installing or updating UMA</b>");
+            AddText("Rebuild the Global Library so new and moved slots, overlays, races, recipes, and other indexed assets are available.");
+            LogLine rebuildLine = AddText("Rebuild the Global Library now");
+            rebuildLine.ButtonAction = line => DoLibraryRebuild(rebuildLine);
+            AddSeperator();
 
-            AddText("To see UMA 3 in action, open one of the sample scenes using the button on the left.");
-            AddText("");
-
-            AddText("For help, support, and discussion, please join the <b>UMA Discord</b> (see Links).");
-            AddText("You can also explore the <b>UMA Wiki</b> for documentation and guides (see Links).");
-
-            l.ButtonAction = (line) => DoLibraryRebuild(l);
+            AddText("<b>Learn and troubleshoot</b>");
+            AddText("Open the <b>Documentation Browser</b> to browse the Markdown guides included with this installation.");
+            AddText("Use <b>Scan Scene</b> or <b>Scan Project</b> for common setup and asset problems, and the UMA diagnostics tools for character-build or RenderTexture investigation.");
+            AddText("The <b>Links</b> page includes the UMA Discord, Wiki, forum, GitHub repository, Asset Store page, and video channel.");
         }
 
         #region LinksButton

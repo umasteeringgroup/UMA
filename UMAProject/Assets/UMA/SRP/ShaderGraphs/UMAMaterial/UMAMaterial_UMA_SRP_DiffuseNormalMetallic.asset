@@ -25,6 +25,7 @@ MonoBehaviour:
     Compression: 0
     DownSample: 0
     ConvertRenderTexture: 0
+    UseExistingTextureForChannel: 0
     NonShaderTexture: 0
   - channelType: 0
     textureFormat: 0
@@ -33,6 +34,7 @@ MonoBehaviour:
     Compression: 0
     DownSample: 0
     ConvertRenderTexture: 0
+    UseExistingTextureForChannel: 0
     NonShaderTexture: 0
   - channelType: 0
     textureFormat: 0
@@ -41,6 +43,7 @@ MonoBehaviour:
     Compression: 0
     DownSample: 0
     ConvertRenderTexture: 0
+    UseExistingTextureForChannel: 0
     NonShaderTexture: 0
   generateMipMaps: 1
   MipMapBias: 0

@@ -1809,6 +1809,24 @@ namespace UMA.CharacterSystem.Editors
             Handles.color = previousColor;
         }
 
+        private bool CanOpenMeshEditor(bool showDialog = true)
+        {
+            if (thisDCA == null || PrefabStageUtility.GetPrefabStage(thisDCA.gameObject) == null)
+            {
+                return true;
+            }
+
+            if (showDialog)
+            {
+                EditorUtility.DisplayDialog(
+                    "UMA Mesh Editors Are Unavailable in Prefab Mode",
+                    "The Face Editor and Vertex Editor work from a generated DynamicCharacterAvatar in an open scene. They cannot edit a DynamicCharacterAvatar while its prefab is open in Prefab Mode.\n\nExit Prefab Mode, then select a DynamicCharacterAvatar in the Scene Hierarchy and open this tool again.",
+                    "OK");
+            }
+
+            return false;
+        }
+
         
 
 
@@ -1822,17 +1840,23 @@ namespace UMA.CharacterSystem.Editors
             // Buttons row
             if (GUILayout.Button("Create New Mesh Modifier"))
             {
-                thisDCA.ignoreMeshHideAssets = true;
-                thisDCA.GenerateNow();
-                VertexEditorStage.ShowStage(thisDCA, null);
+                if (CanOpenMeshEditor())
+                {
+                    thisDCA.ignoreMeshHideAssets = true;
+                    thisDCA.GenerateNow();
+                    VertexEditorStage.ShowStage(thisDCA, null);
+                }
             }
 
             EditorGUILayout.HelpBox("Mesh Hide Assets work on faces - these allow you to hide specific faces. This is useful for poke through.", MessageType.None);
             if (GUILayout.Button("Create New Mesh Hide Asset"))
             {
-                thisDCA.ignoreMeshHideAssets = true;
-                thisDCA.GenerateNow();
-                FaceEditorStage.ShowStage(thisDCA, (MeshHideAsset)null);
+                if (CanOpenMeshEditor())
+                {
+                    thisDCA.ignoreMeshHideAssets = true;
+                    thisDCA.GenerateNow();
+                    FaceEditorStage.ShowStage(thisDCA, (MeshHideAsset)null);
+                }
             }
 
             if (GUILayout.Button("Create Slot From Scene Mesh"))
@@ -1871,7 +1895,15 @@ namespace UMA.CharacterSystem.Editors
                             break;
                         }
                     }
-                    if (valid)
+                    if (valid && !CanOpenMeshEditor(evt.type == EventType.DragPerform))
+                    {
+                        DragAndDrop.visualMode = DragAndDropVisualMode.Rejected;
+                        if (evt.type == EventType.DragPerform)
+                        {
+                            evt.Use();
+                        }
+                    }
+                    if (valid && CanOpenMeshEditor(false))
                     {
                         DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
                         if (evt.type == EventType.DragPerform)

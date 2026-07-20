@@ -37,8 +37,8 @@ namespace UMA.Editors
             public bool weightRecalculatedNormalsByTriangleSize;
         }
 
-        static string[] RegularSlotFields = new string[] { "slotName", "CharacterBegun", "SlotAtlassed", "SlotProcessed", "SlotBeginProcessing", "DNAApplied", "CharacterCompleted", "_slotDNALegacy", "tags", "isWildCardSlot", "Races", "smooshOffset", "smooshExpand", "Welds" };
-        static string[] WildcardSlotFields = new string[] { "slotName", "CharacterBegun", "SlotAtlassed", "SlotProcessed", "SlotBeginProcessing", "DNAApplied", "CharacterCompleted", "_slotDNALegacy", "tags", "isWildCardSlot", "Races", "_rendererAsset", "maxLOD", "useAtlasOverlay", "overlayScale", "_slotDNA", "meshData", "subMeshIndex", "Welds" };
+        static string[] RegularSlotFields = new string[] { "slotName", "slotGroup", "CharacterBegun", "SlotAtlassed", "SlotProcessed", "SlotBeginProcessing", "DNAApplied", "CharacterCompleted", "_slotDNALegacy", "tags", "isWildCardSlot", "Races", "smooshOffset", "smooshExpand", "Welds" };
+        static string[] WildcardSlotFields = new string[] { "slotName", "slotGroup", "CharacterBegun", "SlotAtlassed", "SlotProcessed", "SlotBeginProcessing", "DNAApplied", "CharacterCompleted", "_slotDNALegacy", "tags", "isWildCardSlot", "Races", "_rendererAsset", "maxLOD", "useAtlasOverlay", "overlayScale", "_slotDNA", "meshData", "subMeshIndex", "Welds" };
         private static readonly string[] TriplanarUvChannelLabels = new string[] { "0 (uv)", "1 (uv2)", "2 (uv3)", "3 (uv4)" };
         SerializedProperty slotName;
         SerializedProperty CharacterBegun;
@@ -492,13 +492,16 @@ namespace UMA.Editors
                     groupNames = Array.Empty<string>();
                 }
 
-                int selectedGroupIndex = 0;
-                for (int i = 0; i < groupNames.Length; i++)
+                int selectedGroupIndex = -1;
+                if (!slotGroupProp.hasMultipleDifferentValues)
                 {
-                    if (string.Equals(groupNames[i], slotGroupProp.stringValue, StringComparison.Ordinal))
+                    for (int i = 0; i < groupNames.Length; i++)
                     {
-                        selectedGroupIndex = i;
-                        break;
+                        if (string.Equals(groupNames[i], slotGroupProp.stringValue, StringComparison.Ordinal))
+                        {
+                            selectedGroupIndex = i;
+                            break;
+                        }
                     }
                 }
 
@@ -506,32 +509,50 @@ namespace UMA.Editors
                 EditorGUILayout.PropertyField(slotGroupProp, new GUIContent("Slot Group"), GUILayout.ExpandWidth(true));
                 using (new EditorGUI.DisabledScope(groupNames.Length == 0))
                 {
-                    selectedGroupIndex = EditorGUILayout.Popup(selectedGroupIndex, groupNames, GUILayout.Width(110));
+                    EditorGUI.BeginChangeCheck();
+                    EditorGUI.showMixedValue = slotGroupProp.hasMultipleDifferentValues;
+                    int newSelectedGroupIndex = EditorGUILayout.Popup(selectedGroupIndex, groupNames, GUILayout.Width(110));
+                    EditorGUI.showMixedValue = false;
+                    if (EditorGUI.EndChangeCheck() && newSelectedGroupIndex >= 0)
+                    {
+                        slotGroupProp.stringValue = groupNames[newSelectedGroupIndex];
+                        forceUpdate = true;
+                    }
                 }
-                if (GUILayout.Button("Apply", GUILayout.Width(60)))
-                {
-                    string value;
-                    if (groupNames.Length > 0)
-                    {
-                        value = groupNames[Mathf.Clamp(selectedGroupIndex, 0, groupNames.Length - 1)];
-                    }
-                    else
-                    {
-                        value = slotGroupProp.stringValue;
-                    }
 
-                    foreach (var t in targets)
+                string enteredGroup = slotGroupProp.hasMultipleDifferentValues
+                    ? string.Empty
+                    : (slotGroupProp.stringValue ?? string.Empty).Trim();
+                bool groupAlreadyRegistered = false;
+                for (int groupIndex = 0; groupIndex < groupNames.Length; groupIndex++)
+                {
+                    if (string.Equals(groupNames[groupIndex], enteredGroup, StringComparison.Ordinal))
                     {
-                        var sda = t as SlotDataAsset;
-                        if (sda == null)
-                        {
-                            continue;
-                        }
-                        sda.slotGroup = value;
-                        EditorUtility.SetDirty(sda);
+                        groupAlreadyRegistered = true;
+                        break;
                     }
-                    forceUpdate = true;
-                    GUI.changed = true;
+                }
+
+                using (new EditorGUI.DisabledScope(settings == null || string.IsNullOrEmpty(enteredGroup) || groupAlreadyRegistered))
+                {
+                    if (GUILayout.Button(new GUIContent("Add", "Add the typed Slot Group to the UMA Settings pick list."), GUILayout.Width(45)))
+                    {
+                        Undo.RecordObject(settings, "Add UMA Slot Group");
+                        var updatedGroups = new List<string>(groupNames) { enteredGroup };
+                        settings.groupNames = updatedGroups.ToArray();
+                        EditorUtility.SetDirty(settings);
+                        AssetDatabase.SaveAssetIfDirty(settings);
+                        forceUpdate = true;
+                    }
+                }
+
+                using (new EditorGUI.DisabledScope(slotGroupProp.hasMultipleDifferentValues || string.IsNullOrEmpty(slotGroupProp.stringValue)))
+                {
+                    if (GUILayout.Button("Clear", GUILayout.Width(45)))
+                    {
+                        slotGroupProp.stringValue = string.Empty;
+                        forceUpdate = true;
+                    }
                 }
                 GUILayout.EndHorizontal();
             }

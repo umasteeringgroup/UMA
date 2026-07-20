@@ -7,6 +7,8 @@ using UnityEditor;
 #endif
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
 
 /// <summary>
 /// Runtime helper to orbit a camera around an UMA avatar and place decal slots on left click.
@@ -47,6 +49,8 @@ namespace UMA.Decals
         public OverlayDataAsset MeshDecalOverlay;
         [Tooltip("OverlayDataAsset used for texture-based decals (must reference the correct UMAMaterial).")]
         public OverlayDataAsset TextureDecalOverlay;
+        [Tooltip("Overlay group on the avatar that receives RenderTexture decals. Leave blank to use TextureDecalOverlay.overlayGroup for backward compatibility.")]
+        public string TargetOverlayGroup;
         [Tooltip("DecalRTStampSlot used to store generated DecalRTStampAssets when using RenderTexture decals.")]
         public DecalRTStampSlot StampField; // Added field per request
 
@@ -183,6 +187,17 @@ namespace UMA.Decals
         private Rect ScreenArea = new Rect(20f, 20f, 420, 1024);
 
         private bool _initialized;
+        private UMAPlayerActions controls;
+
+        private void Awake()
+        {
+            controls = new UMAPlayerActions();
+        }
+
+        private void OnEnable()
+        {
+            controls?.Enable();
+        }
 
         void Start()
         {
@@ -229,12 +244,20 @@ namespace UMA.Decals
 
 		private void OnDisable()
         {
+			controls?.Disable();
+
             // Ensure we restore animators if this component is disabled while paused
             if (PauseAvatarAnimation)
             {
                 PauseAvatarAnimation = false;
                 ApplyAnimationPauseState();
             }
+        }
+
+        private void OnDestroy()
+        {
+            controls?.Dispose();
+            controls = null;
         }
 
         static void EnsureLineMaterial()
@@ -322,31 +345,6 @@ namespace UMA.Decals
         private void OnGUI() {
 			GUILayout.BeginArea(ScreenArea, GUI.skin.window);
 
-#if UNITY_EDITOR
-			if (StampField != null)
-			{
-				if (EditorUtility.IsDirty(StampField))
-				{
-					GUILayout.Label("Stamp Slot Modified (Unsaved Changes)");
-					if (GUILayout.Button("Save Moified Stamps"))
-					{
-						AssetDatabase.SaveAssetIfDirty(StampField);
-                    }
-                }
-			}
-
-			GUILayout.Space(6);
-			GUILayout.Label("Generate Utility Slot");
-			GUILayout.BeginHorizontal();
-			GUILayout.Label("Slot Name:", GUILayout.Width(100));
-			GeneratedSlotName = GUILayout.TextField(GeneratedSlotName ?? string.Empty, GUILayout.Width(200));
-			GUILayout.EndHorizontal();
-			if (GUILayout.Button("Generate and Save a Slot"))
-			{
-				GenerateAndSaveSlot();
-			}
-#endif
-
             // Use scroll view for expandable content
             _scrollPosition = GUILayout.BeginScrollView(_scrollPosition);
 			if(EnableTriangleDebug) {
@@ -359,7 +357,10 @@ namespace UMA.Decals
 			GUILayout.EndScrollView();
 			GUILayout.EndArea();
 
-			DrawRightPanel();
+			if (decalMethod == DecalMethod.RenderTexture)
+			{
+				DrawRightPanel();
+			}
 
 			// Apply pause state from the toggle each GUI frame
 			ApplyAnimationPauseState();
@@ -648,10 +649,11 @@ namespace UMA.Decals
 			GUILayout.Space(5);
 
 			// Active Overlay Selection
-			GUILayout.Label("Active Overlay:");
 			if(decalMethod == DecalMethod.SlotDecal) {
+				DrawRuntimeInfoBox("Slot Decal setup: assign a mesh decal overlay with a compatible UMAMaterial. Placements create and merge a small decal slot into the avatar recipe.");
+				GUILayout.Label("Slot Decal Setup:");
 				GUILayout.BeginHorizontal();
-				GUILayout.Label("Mesh Decal:", GUILayout.Width(100));
+				GUILayout.Label("Decal Overlay:", GUILayout.Width(100));
 #if UNITY_EDITOR
                 MeshDecalOverlay = (OverlayDataAsset)EditorGUI.ObjectField(GUILayoutUtility.GetRect(200, 18), MeshDecalOverlay, typeof(OverlayDataAsset), false);
 #else
@@ -659,14 +661,30 @@ namespace UMA.Decals
 #endif
 				GUILayout.EndHorizontal();
 			} else {
+				DrawRuntimeInfoBox("RenderTexture setup: choose the source decal overlay, enter the overlayGroup used by the destination overlays, and assign a Stamp Slot installed through an UMA utility slot.");
+				GUILayout.Label("RenderTexture Decal Setup:");
 				GUILayout.BeginHorizontal();
-				GUILayout.Label("Texture Decal:", GUILayout.Width(100));
+				GUILayout.Label("Source Overlay:", GUILayout.Width(100));
 #if UNITY_EDITOR
                 TextureDecalOverlay = (OverlayDataAsset)EditorGUI.ObjectField(GUILayoutUtility.GetRect(200, 18), TextureDecalOverlay, typeof(OverlayDataAsset), false);
 #else
 				GUILayout.Label(TextureDecalOverlay != null ? TextureDecalOverlay.name : "None", GUILayout.Width(200));
 #endif
 				GUILayout.EndHorizontal();
+
+				GUILayout.BeginHorizontal();
+				GUILayout.Label("Target Group:", GUILayout.Width(100));
+				TargetOverlayGroup = GUILayout.TextField(TargetOverlayGroup ?? string.Empty, GUILayout.Width(200));
+				GUILayout.EndHorizontal();
+				string sourceGroup = TextureDecalOverlay != null ? TextureDecalOverlay.overlayGroup : string.Empty;
+				if (string.IsNullOrWhiteSpace(TargetOverlayGroup) && !string.IsNullOrEmpty(sourceGroup))
+				{
+					GUILayout.Label($"Using source group fallback: {sourceGroup}");
+				}
+				else if (string.IsNullOrWhiteSpace(TargetOverlayGroup))
+				{
+					GUILayout.Label("Target Overlay Group is required.");
+				}
 
 				GUILayout.BeginHorizontal();
 				GUILayout.Label("Stamp Field:", GUILayout.Width(100));
@@ -676,6 +694,10 @@ namespace UMA.Decals
 				GUILayout.Label(StampField != null ? StampField.name : "None", GUILayout.Width(200));
 #endif
 				GUILayout.EndHorizontal();
+
+#if UNITY_EDITOR
+				DrawRuntimeRenderTextureUtilityTools();
+#endif
 			}
 
 			GUILayout.Space(5);
@@ -744,10 +766,6 @@ namespace UMA.Decals
 				}
 				GUILayout.EndHorizontal();
 
-				GUILayout.BeginHorizontal();
-				AutoAddOverlays = GUILayout.Toggle(AutoAddOverlays, "Auto Add Overlays", GUILayout.Width(140));
-				DrawRenderTexturesImmediately = GUILayout.Toggle(DrawRenderTexturesImmediately, "Draw RT Immediately", GUILayout.Width(140));
-				GUILayout.EndHorizontal();
 			}
 
 
@@ -767,6 +785,38 @@ namespace UMA.Decals
 			PauseAvatarAnimation = GUILayout.Toggle(PauseAvatarAnimation, "Pause Animation", GUILayout.Width(140));
 			GUILayout.EndHorizontal();
 		}
+
+		private static void DrawRuntimeInfoBox(string message)
+		{
+			GUILayout.BeginVertical(GUI.skin.box);
+			GUILayout.Label(message);
+			GUILayout.EndVertical();
+		}
+
+#if UNITY_EDITOR
+		private void DrawRuntimeRenderTextureUtilityTools()
+		{
+			GUILayout.Space(6);
+			GUILayout.Label("RenderTexture Utility Slot:");
+			if (StampField != null && EditorUtility.IsDirty(StampField))
+			{
+				GUILayout.Label("Stamp Slot has unsaved changes.");
+				if (GUILayout.Button("Save Modified Stamps"))
+				{
+					AssetDatabase.SaveAssetIfDirty(StampField);
+				}
+			}
+
+			GUILayout.BeginHorizontal();
+			GUILayout.Label("Slot Name:", GUILayout.Width(100));
+			GeneratedSlotName = GUILayout.TextField(GeneratedSlotName ?? string.Empty, GUILayout.Width(200));
+			GUILayout.EndHorizontal();
+			if (GUILayout.Button("Generate and Save a Slot"))
+			{
+				GenerateAndSaveSlot();
+			}
+		}
+#endif
 
 
 		private void ToTriangleDebugMode() {
@@ -913,13 +963,13 @@ namespace UMA.Decals
             if (EnableTriangleDebug)
             {
                 EnsureDebugBake();
-                bool shift = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
-				bool ctrl = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
+				bool shift = IsShiftPressed();
+				bool ctrl = IsControlPressed();
 				if(shift) {
 					HandlePaintMode();
 				} else if(ctrl) {
 					HandleUVAdjustMode();
-				} else if(Input.GetMouseButtonDown(0)) {
+				} else if(WasMouseButtonPressedThisFrame(0)) {
 					HandleTriangleToggleClick();
 				}
             }
@@ -935,10 +985,10 @@ namespace UMA.Decals
 			}
 
 			// Begin drag
-			if (Input.GetMouseButtonDown(0))
+			if (WasMouseButtonPressedThisFrame(0))
 			{
 				_uvAdjustActive = true;
-				_uvAdjustLastMouse = Input.mousePosition;
+				_uvAdjustLastMouse = GetPointerPosition();
 
 				// Build a vertex set for all currently selected triangles (remove-set + add-set)
 				_uvAdjustVerts = new HashSet<int>();
@@ -986,7 +1036,7 @@ namespace UMA.Decals
 			}
 
 			// End drag
-			if (Input.GetMouseButtonUp(0))
+			if (WasMouseButtonReleasedThisFrame(0))
 			{
 				_uvAdjustActive = false;
 				_uvAdjustVerts = null;
@@ -994,12 +1044,12 @@ namespace UMA.Decals
 			}
 
 			// Drag
-			if (!_uvAdjustActive || !Input.GetMouseButton(0) || _uvAdjustVerts == null || _uvAdjustVerts.Count == 0)
+			if (!_uvAdjustActive || !IsMouseButtonPressed(0) || _uvAdjustVerts == null || _uvAdjustVerts.Count == 0)
 			{
 				return;
 			}
 
-			Vector2 mouse = Input.mousePosition;
+			Vector2 mouse = GetPointerPosition();
 			Vector2 mouseDelta = mouse - _uvAdjustLastMouse;
 			_uvAdjustLastMouse = mouse;
 			if (mouseDelta.sqrMagnitude < 0.01f)
@@ -1298,14 +1348,15 @@ namespace UMA.Decals
 
         private void HandleOrbitInput()
         {
-            if (!Input.GetMouseButton(OrbitMouseButton))
+            if (!IsMouseButtonPressed(OrbitMouseButton))
             {
                 return;
             }
 
-            float dx = Input.GetAxis("Mouse X");
-            float dy = Input.GetAxis("Mouse Y");
-            bool shift = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+            Vector2 look = controls != null ? controls.Player.Look.ReadValue<Vector2>() : Vector2.zero;
+            float dx = look.x;
+            float dy = look.y;
+            bool shift = IsShiftPressed();
 
             // Normalize by screen size for consistent feel
             float normX = dx / Mathf.Max(1f, Screen.width);
@@ -1327,7 +1378,10 @@ namespace UMA.Decals
 
         private void HandleZoom()
         {
-            float scroll = Input.mouseScrollDelta.y;
+            var mouse = Mouse.current;
+            // Input System reports a typical mouse-wheel notch as +/-120 on Windows;
+            // normalize that to the pre-migration scroll-delta scale used here.
+            float scroll = mouse != null ? mouse.scroll.ReadValue().y / 120f : 0f;
             if (Mathf.Abs(scroll) > 0.0001f)
             {
                 _distance -= scroll * ZoomSensitivity;
@@ -1352,7 +1406,7 @@ namespace UMA.Decals
 
         private void HandlePlacement()
         {
-            if (!Input.GetMouseButtonDown(PlaceMouseButton))
+            if (!WasMouseButtonPressedThisFrame(PlaceMouseButton))
             {
                 return;
             }
@@ -1379,6 +1433,16 @@ namespace UMA.Decals
                     Debug.LogWarning("TextureDecalOverlay is missing. Cannot place RT decal.");
                     return;
                 }
+                if (string.IsNullOrEmpty(GetEffectiveTargetOverlayGroup()))
+                {
+                    Debug.LogWarning("TargetOverlayGroup is missing and the source overlay has no overlayGroup. Cannot save a replayable RT decal.");
+                    return;
+                }
+                if (StampField == null)
+                {
+                    Debug.LogWarning("StampField is missing. Assign a DecalRTStampSlot before placing RT decals.");
+                    return;
+                }
                 //Debug.Log($"Applying RT decal. {TextureDecalOverlay.name}");
             }
 
@@ -1388,7 +1452,7 @@ namespace UMA.Decals
                 return;
             }
 
-            Ray ray = OrbitCamera.ScreenPointToRay(Input.mousePosition);
+            Ray ray = OrbitCamera.ScreenPointToRay(GetPointerPosition());
 
             if (randomizeRotation)
             {
@@ -1448,7 +1512,8 @@ namespace UMA.Decals
                     forceLinearSampling = false,
                     useHitNormalForProjection = this.useHitNormalForProjection,
                     uvExpandPixels = DecalRTUVExpandPixels,
-					bleedPixels = decalRTDilation
+					bleedPixels = decalRTDilation,
+					targetOverlayGroup = GetEffectiveTargetOverlayGroup()
                 };
 
                 if (Avatar.umaData == null)
@@ -1491,7 +1556,9 @@ namespace UMA.Decals
 
 						// Clone the last stamp (runtime instance) so we can add to the stamp slot set
 						var clone = ScriptableObject.CreateInstance<DecalRTStampAsset>();
-					clone.overlayGroup = last.overlayGroup;
+						clone.overlayGroup = last.overlayGroup;
+						clone.sourceOverlay = last.sourceOverlay;
+						clone.sourceOverlayName = last.sourceOverlayName;
 						clone.bleedPixels = last.bleedPixels;
 						clone.forceLinearSampling = last.forceLinearSampling;
                        clone.invertY = last.invertY;
@@ -1572,6 +1639,15 @@ namespace UMA.Decals
             {
                 RefreshLastDecalDebug();
             }
+		}
+
+		private string GetEffectiveTargetOverlayGroup()
+		{
+			if (!string.IsNullOrWhiteSpace(TargetOverlayGroup))
+			{
+				return TargetOverlayGroup.Trim();
+			}
+			return TextureDecalOverlay != null ? TextureDecalOverlay.overlayGroup : null;
 		}
 
 		private void TryApplyStampToCurrentAtlases(DecalRTStampAsset stamp)
@@ -1756,13 +1832,13 @@ private void CreateDebugSphere()
            SlotData chosenSlot = null;
 			if (umaData.umaRecipe != null)
 			{
-				if (!string.IsNullOrEmpty(ssChosen.slotName))
-				{
-					chosenSlot = umaData.umaRecipe.GetSlot(ssChosen.slotName);
-				}
-				if (chosenSlot == null && !string.IsNullOrEmpty(ssChosen.slotGroup))
+				if (!string.IsNullOrEmpty(ssChosen.slotGroup))
 				{
 					chosenSlot = umaData.umaRecipe.GetSlotBySlotGroup(ssChosen.slotGroup);
+				}
+				else if (!string.IsNullOrEmpty(ssChosen.slotName))
+				{
+					chosenSlot = umaData.umaRecipe.GetSlot(ssChosen.slotName);
 				}
 			}
 			if (chosenSlot == null)
@@ -1915,7 +1991,7 @@ private void CreateDebugSphere()
                 return false;
             }
 
-            Ray ray = OrbitCamera.ScreenPointToRay(Input.mousePosition);
+            Ray ray = OrbitCamera.ScreenPointToRay(GetPointerPosition());
             var v = _dbgBaked.vertices;
             var t = _dbgSmrTriangles;
             var tr = _dbgSmr.transform;
@@ -1976,7 +2052,7 @@ private void CreateDebugSphere()
                 return;
             }
 
-            if (Input.GetMouseButtonDown(0) && !_paintActive)
+            if (WasMouseButtonPressedThisFrame(0) && !_paintActive)
             {
                 if (FindBestTriangleUnderMouse(out int startTri, out bool inDecal))
                 {
@@ -2002,14 +2078,14 @@ private void CreateDebugSphere()
                     ApplyPaintToTriangle(startTri);
                 }
             }
-            else if (Input.GetMouseButton(0) && _paintActive)
+            else if (IsMouseButtonPressed(0) && _paintActive)
             {
                 if (FindBestTriangleUnderMouse(out int tri, out bool _))
                 {
                     ApplyPaintToTriangle(tri);
                 }
             }
-            else if (Input.GetMouseButtonUp(0) && _paintActive)
+            else if (WasMouseButtonReleasedThisFrame(0) && _paintActive)
             {
                 _paintActive = false;
                 _paintVisited.Clear();
@@ -2293,6 +2369,101 @@ private void CreateDebugSphere()
             }
         }
 
+        private static ButtonControl GetMouseButtonControl(int button)
+        {
+            var mouse = Mouse.current;
+            if (mouse == null)
+            {
+                return null;
+            }
+
+            switch (button)
+            {
+                case 0: return mouse.leftButton;
+                case 1: return mouse.rightButton;
+                case 2: return mouse.middleButton;
+                case 3: return mouse.backButton;
+                case 4: return mouse.forwardButton;
+                default: return null;
+            }
+        }
+
+        private InputAction GetMouseButtonAction(int button)
+        {
+            if (controls == null)
+            {
+                return null;
+            }
+
+            switch (button)
+            {
+                case 0: return controls.Player.Shoot;
+                case 1: return controls.Player.Undo;
+                default: return null;
+            }
+        }
+
+        private bool IsMouseButtonPressed(int button)
+        {
+            var action = GetMouseButtonAction(button);
+            if (action != null)
+            {
+                return action.IsPressed();
+            }
+
+            return GetMouseButtonControl(button)?.isPressed ?? false;
+        }
+
+        private bool WasMouseButtonPressedThisFrame(int button)
+        {
+            var action = GetMouseButtonAction(button);
+            if (action != null)
+            {
+                return action.WasPressedThisFrame();
+            }
+
+            return GetMouseButtonControl(button)?.wasPressedThisFrame ?? false;
+        }
+
+        private bool WasMouseButtonReleasedThisFrame(int button)
+        {
+            var action = GetMouseButtonAction(button);
+            if (action != null)
+            {
+                return action.WasReleasedThisFrame();
+            }
+
+            return GetMouseButtonControl(button)?.wasReleasedThisFrame ?? false;
+        }
+
+        private bool IsShiftPressed()
+        {
+            if (controls != null && controls.Player.Run.IsPressed())
+            {
+                return true;
+            }
+
+            var keyboard = Keyboard.current;
+            return keyboard != null && keyboard.rightShiftKey.isPressed;
+        }
+
+        private bool IsControlPressed()
+        {
+            if (controls != null && controls.Player.Crouch.IsPressed())
+            {
+                return true;
+            }
+
+            var keyboard = Keyboard.current;
+            return keyboard != null && keyboard.rightCtrlKey.isPressed;
+        }
+
+        private static Vector2 GetPointerPosition()
+        {
+            var mouse = Mouse.current;
+            return mouse != null ? mouse.position.ReadValue() : Vector2.zero;
+        }
+
         // Returns true if the current pointer is over any UI element (uGUI) or inside this script's IMGUI panel.
         private bool IsPointerOverUI()
         {
@@ -2307,11 +2478,13 @@ private void CreateDebugSphere()
 
 #if(UNITY_IOS || UNITY_ANDROID)
             // Touches
-            if (Input.touchCount > 0)
+            var touchscreen = Touchscreen.current;
+            if (touchscreen != null)
             {
-                for (int i = 0; i < Input.touchCount; i++)
+                for (int i = 0; i < touchscreen.touches.Count; i++)
                 {
-                    if (EventSystem.current.IsPointerOverGameObject(Input.touches[i].fingerId))
+                    var touch = touchscreen.touches[i];
+                    if (touch.press.isPressed && EventSystem.current.IsPointerOverGameObject(touch.touchId.ReadValue()))
                         return true;
                 }
             }
@@ -2319,7 +2492,7 @@ private void CreateDebugSphere()
             }
 
             // Check IMGUI area used by this component
-            Vector2 mp = Input.mousePosition;
+            Vector2 mp = GetPointerPosition();
             Vector2 guiPos = new Vector2(mp.x, Screen.height - mp.y); // convert to IMGUI coords (top-left origin)
             if (ScreenArea.Contains(guiPos))
             {

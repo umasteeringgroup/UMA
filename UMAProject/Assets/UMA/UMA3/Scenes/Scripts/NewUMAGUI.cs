@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Text;
 using UMA;
 using UMA.CharacterSystem;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;

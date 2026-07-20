@@ -1,7 +1,10 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 //Added to detect whether the pointer is over a UI element...
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
 
 namespace UMA.Examples
 {
@@ -44,6 +47,8 @@ namespace UMA.Examples
         private UMAData umaData;
         private Rigidbody _rigidbody;
         private GameObject TargetGO;
+        private UMAPlayerActions controls;
+        private readonly List<TouchControl> activeTouches = new List<TouchControl>();
 
         bool switchingTarget = false;
         float smoothing = 7f;
@@ -56,6 +61,27 @@ namespace UMA.Examples
         class TempTransform {
             public Vector3 position;
             public Quaternion rotation;
+        }
+
+        private void Awake()
+        {
+            controls = new UMAPlayerActions();
+        }
+
+        private void OnEnable()
+        {
+            controls?.Enable();
+        }
+
+        private void OnDisable()
+        {
+            controls?.Disable();
+        }
+
+        private void OnDestroy()
+        {
+            controls?.Dispose();
+            controls = null;
         }
 
         // Use this for initialization
@@ -195,37 +221,46 @@ namespace UMA.Examples
 				return newTransform;
 			}
 
+            CollectActiveTouches();
+
             //DOS Modified tweaked this to be selectable
-            if (Input.GetMouseButton((int)mouseButtonToUse) && Input.touchCount == 0)
+            if (IsOrbitButtonPressed() && activeTouches.Count == 0)
             {
-                x += Input.GetAxis("Mouse X") * xSpeed * 0.04f;
-                y -= Input.GetAxis("Mouse Y") * ySpeed * 0.02f;
+                Vector2 look = controls != null ? controls.Player.Look.ReadValue<Vector2>() : Vector2.zero;
+                x += look.x * xSpeed * 0.04f;
+                y -= look.y * ySpeed * 0.02f;
             }
-            else if (Input.touchCount == 1)
+            else if (activeTouches.Count == 1)
             {
-                if (AlwaysOn || EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId) == false)
+                var touchZero = activeTouches[0];
+                if (AlwaysOn || !IsPointerOverUI(touchZero))
                 {
-                    Touch touchZero = Input.GetTouch(0);
-                    x += touchZero.deltaPosition.x * (xSpeed / 5)/* * distance */ * 0.04f;
-                    y -= touchZero.deltaPosition.y * (ySpeed / 5) * 0.02f;
+                    Vector2 touchDelta = touchZero.delta.ReadValue();
+                    x += touchDelta.x * (xSpeed / 5)/* * distance */ * 0.04f;
+                    y -= touchDelta.y * (ySpeed / 5) * 0.02f;
                 }
             }
 
-            if (EventSystem.current.currentSelectedGameObject == null || AlwaysOn == true)
+            if (EventSystem.current == null || EventSystem.current.currentSelectedGameObject == null || AlwaysOn == true)
             {
-                if (Input.touchCount == 2 && pinchToZoom)
+                if (activeTouches.Count == 2 && pinchToZoom)
                 {
                     // Store both touches.
-                    Touch touchZero = Input.GetTouch(0);
-                    Touch touchOne = Input.GetTouch(1);
+                    var touchZero = activeTouches[0];
+                    var touchOne = activeTouches[1];
+
+                    Vector2 touchZeroPosition = touchZero.position.ReadValue();
+                    Vector2 touchOnePosition = touchOne.position.ReadValue();
+                    Vector2 touchZeroDelta = touchZero.delta.ReadValue();
+                    Vector2 touchOneDelta = touchOne.delta.ReadValue();
 
                     // Find the position in the previous frame of each touch.
-                    Vector2 touchZeroPrevPos = touchZero.position - touchZero.deltaPosition;
-                    Vector2 touchOnePrevPos = touchOne.position - touchOne.deltaPosition;
+                    Vector2 touchZeroPrevPos = touchZeroPosition - touchZeroDelta;
+                    Vector2 touchOnePrevPos = touchOnePosition - touchOneDelta;
 
                     // Find the magnitude of the vector (the distance) between the touches in each frame.
                     float prevTouchDeltaMag = (touchZeroPrevPos - touchOnePrevPos).magnitude;
-                    float touchDeltaMag = (touchZero.position - touchOne.position).magnitude;
+                    float touchDeltaMag = (touchZeroPosition - touchOnePosition).magnitude;
 
                     // Find the difference in the distances between each frame. Flip it so it goes the right way
                     float deltaMagnitudeDiff = ((prevTouchDeltaMag - touchDeltaMag) * -1) * ZoomSensitivity;
@@ -233,7 +268,10 @@ namespace UMA.Examples
                 }
                 else
                 {
-                    distance = Mathf.Clamp(distance - Input.GetAxis("Mouse ScrollWheel") * scrollrate, distanceMin, distanceMax);
+                    var mouse = Mouse.current;
+                    // Input System reports a typical mouse-wheel notch as +/-120 on Windows.
+                    float scroll = mouse != null ? mouse.scroll.ReadValue().y / 120f : 0f;
+                    distance = Mathf.Clamp(distance - scroll * scrollrate, distanceMin, distanceMax);
                 }
             }
 
@@ -262,6 +300,48 @@ namespace UMA.Examples
                 transform.position = position;
             }
             return newTransform;
+        }
+
+        private void CollectActiveTouches()
+        {
+            activeTouches.Clear();
+            var touchscreen = Touchscreen.current;
+            if (touchscreen == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < touchscreen.touches.Count; i++)
+            {
+                var touch = touchscreen.touches[i];
+                if (touch.press.isPressed)
+                {
+                    activeTouches.Add(touch);
+                }
+            }
+        }
+
+        private bool IsOrbitButtonPressed()
+        {
+            if (controls != null)
+            {
+                if (mouseButtonToUse == mouseBtnOpts.Left)
+                {
+                    return controls.Player.Shoot.IsPressed();
+                }
+                if (mouseButtonToUse == mouseBtnOpts.Right)
+                {
+                    return controls.Player.Undo.IsPressed();
+                }
+            }
+
+            var mouse = Mouse.current;
+            return mouse != null && mouse.middleButton.isPressed;
+        }
+
+        private static bool IsPointerOverUI(TouchControl touch)
+        {
+            return EventSystem.current != null && EventSystem.current.IsPointerOverGameObject(touch.touchId.ReadValue());
         }
 
         public static float ClampAngle(float angle, float min, float max)
