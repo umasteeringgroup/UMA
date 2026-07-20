@@ -141,6 +141,7 @@ namespace UMA
         private enum SculptTool { Add, Remove, Smooth, Grab }
         private enum SculptFalloff { Constant, Linear, Smooth, EaseIn, EaseOut, EaseInOut, Sharp, UserDefined }
         private enum SculptMaskTool { None, Paint, Erase }
+        private enum AutosculptAxis { X, Y, Z }
         private enum VertexPaintTool { Paint, Erase, Smear, Blur, Burn, Dodge, Noise, Clear }
         private enum VertexPaintBrushShape { Circle, Square, Bitmap }
 
@@ -159,6 +160,23 @@ namespace UMA
             public SlotData slot;
             public int localIndex;
             public int bakedIndex;
+        }
+
+        private struct AutosculptTriangle
+        {
+            public Vector3 a;
+            public Vector3 b;
+            public Vector3 c;
+        }
+
+        private sealed class AutosculptOccluderMap
+        {
+            public AutosculptAxis axis;
+            public Vector2 origin;
+            public float cellSize;
+            public readonly Dictionary<Vector2Int, List<AutosculptTriangle>> cells =
+                new Dictionary<Vector2Int, List<AutosculptTriangle>>();
+            public readonly List<AutosculptTriangle> largeTriangles = new List<AutosculptTriangle>();
         }
 
         [SerializeField] private SceneToolMode sceneToolMode = SceneToolMode.Select;
@@ -209,6 +227,13 @@ namespace UMA
         private Vector3[] sculptGrabStartVertices;
         private float[] sculptGrabWeights;
         private float[] sculptGrabMirroredWeights;
+        [SerializeField] private bool showAutosculpt = false;
+        [SerializeField] private string autosculptOccluderSlotName = string.Empty;
+        [SerializeField] private AutosculptAxis autosculptAxis = AutosculptAxis.Y;
+        [SerializeField] private bool autosculptClothify = false;
+        [SerializeField] private float autosculptClothEffect = 0.25f;
+        [SerializeField] private string autosculptStatusMessage = string.Empty;
+        [SerializeField] private MessageType autosculptStatusType = MessageType.Info;
 
         [SerializeField] private VertexPaintTool vertexPaintTool = VertexPaintTool.Paint;
         [SerializeField] private VertexPaintBrushShape vertexPaintBrushShape = VertexPaintBrushShape.Circle;
@@ -7644,6 +7669,459 @@ namespace UMA
             }
         }
 
+        private SlotData GetAutosculptOccluderSlot()
+        {
+            if (string.IsNullOrEmpty(autosculptOccluderSlotName)) return null;
+            for (int i = 0; i < sculptSlots.Count; i++)
+            {
+                SlotData slot = sculptSlots[i];
+                if (slot != null && string.Equals(slot.slotName, autosculptOccluderSlotName, StringComparison.Ordinal))
+                    return slot;
+            }
+            return null;
+        }
+
+        private void DrawAutosculptOptions()
+        {
+            EditorGUILayout.Space(6f);
+            showAutosculpt = EditorGUILayout.Foldout(showAutosculpt, "Autosculpt", true);
+            if (!showAutosculpt) return;
+
+            GUIHelper.BeginVerticalPadded(5, new Color(0.9f, 0.94f, 1f), EditorStyles.helpBox);
+            EditorGUILayout.HelpBox(
+                "Choose the slot that should remain unchanged. Target vertices cast outward along the selected local axis toward that occluder, then move inward using the current Radius, Effect %, Falloff, mask, and X Symmetry settings.",
+                MessageType.Info);
+
+            List<string> occluderNames = new List<string>(sculptSlots.Count + 1) { "Select Occluder..." };
+            int selectedOccluder = 0;
+            for (int i = 0; i < sculptSlots.Count; i++)
+            {
+                SlotData slot = sculptSlots[i];
+                if (slot == null) continue;
+                occluderNames.Add(slot.slotName);
+                if (string.Equals(slot.slotName, autosculptOccluderSlotName, StringComparison.Ordinal))
+                    selectedOccluder = occluderNames.Count - 1;
+            }
+
+            int requestedOccluder = EditorGUILayout.Popup("Source / Occluder", selectedOccluder, occluderNames.ToArray());
+            if (requestedOccluder != selectedOccluder)
+            {
+                autosculptOccluderSlotName = requestedOccluder > 0
+                    ? occluderNames[requestedOccluder]
+                    : string.Empty;
+                autosculptStatusMessage = string.Empty;
+            }
+            else if (selectedOccluder == 0 && !string.IsNullOrEmpty(autosculptOccluderSlotName))
+            {
+                autosculptOccluderSlotName = string.Empty;
+            }
+
+            autosculptAxis = (AutosculptAxis)EditorGUILayout.EnumPopup(
+                new GUIContent("Axis", "Local model axis used to cast toward the occluder and pull target vertices toward the model center."),
+                autosculptAxis);
+            autosculptClothify = EditorGUILayout.Toggle(
+                new GUIContent("Clothify", "Vary the inward displacement with deterministic surface noise to create small cloth-like wrinkles."),
+                autosculptClothify);
+            EditorGUI.BeginDisabledGroup(!autosculptClothify);
+            autosculptClothEffect = EditorGUILayout.Slider(
+                new GUIContent("Cloth Effect", "Wrinkle intensity applied only to vertices moved by Autosculpt."),
+                autosculptClothEffect,
+                0f,
+                1f);
+            EditorGUI.EndDisabledGroup();
+
+            SlotData occluder = GetAutosculptOccluderSlot();
+            bool currentIsOccluder = occluder != null && sculptSlot != null &&
+                string.Equals(occluder.slotName, sculptSlot.slotName, StringComparison.Ordinal);
+            EditorGUI.BeginDisabledGroup(occluder == null || sculptSlot == null || currentIsOccluder);
+            if (GUILayout.Button(new GUIContent(
+                    "Autosculpt Current Slot",
+                    "Autosculpt only the current slot, leaving the selected occluder unchanged.")))
+            {
+                ApplyAutosculpt(false);
+            }
+            EditorGUI.EndDisabledGroup();
+
+            bool hasAllSlotTarget = false;
+            if (occluder != null)
+            {
+                for (int i = 0; i < sculptSlots.Count; i++)
+                {
+                    if (sculptSlots[i] != null &&
+                        !string.Equals(sculptSlots[i].slotName, occluder.slotName, StringComparison.Ordinal))
+                    {
+                        hasAllSlotTarget = true;
+                        break;
+                    }
+                }
+            }
+            EditorGUI.BeginDisabledGroup(occluder == null || !hasAllSlotTarget);
+            if (GUILayout.Button(new GUIContent(
+                    "Autosculpt All Slots",
+                    "Autosculpt every visible editable slot except the selected occluder.")))
+            {
+                ApplyAutosculpt(true);
+            }
+            EditorGUI.EndDisabledGroup();
+
+            if (currentIsOccluder)
+            {
+                EditorGUILayout.HelpBox(
+                    "The current slot is the occluder, so use Autosculpt All Slots or select a different current slot.",
+                    MessageType.None);
+            }
+            if (!string.IsNullOrEmpty(autosculptStatusMessage))
+                EditorGUILayout.HelpBox(autosculptStatusMessage, autosculptStatusType);
+            GUIHelper.EndVerticalPadded(5);
+        }
+
+        private void ApplyAutosculpt(bool allSlots)
+        {
+            EndSculptStroke(true);
+            EnsureSculptSession();
+            SlotData occluder = GetAutosculptOccluderSlot();
+            if (occluder == null || BakedMesh == null || VertexObject == null)
+            {
+                autosculptStatusType = MessageType.Warning;
+                autosculptStatusMessage = "Autosculpt skipped: select a valid visible occluder slot.";
+                return;
+            }
+
+            List<SlotData> targets = new List<SlotData>();
+            if (allSlots)
+            {
+                for (int i = 0; i < sculptSlots.Count; i++)
+                {
+                    SlotData candidate = sculptSlots[i];
+                    if (candidate != null &&
+                        !string.Equals(candidate.slotName, occluder.slotName, StringComparison.Ordinal))
+                    {
+                        targets.Add(candidate);
+                    }
+                }
+            }
+            else if (sculptSlot != null &&
+                     !string.Equals(sculptSlot.slotName, occluder.slotName, StringComparison.Ordinal))
+            {
+                targets.Add(sculptSlot);
+            }
+
+            if (targets.Count == 0)
+            {
+                autosculptStatusType = MessageType.Warning;
+                autosculptStatusMessage = "Autosculpt skipped: there are no valid target slots.";
+                return;
+            }
+
+            RefreshBakedMeshCaches();
+            AutosculptOccluderMap occluderMap = BuildAutosculptOccluderMap(occluder);
+            if (occluderMap == null)
+            {
+                autosculptStatusType = MessageType.Warning;
+                autosculptStatusMessage = "Autosculpt skipped: the selected occluder has no visible triangles.";
+                return;
+            }
+
+            Vector3[] vertices = BakedMesh.vertices;
+            Vector3[] before = (Vector3[])vertices.Clone();
+            Vector3 modelCenter = BakedMesh.bounds.center;
+            Vector3 axis = GetAutosculptAxisVector(autosculptAxis);
+            float searchDistance = Mathf.Max(0.0001f, sculptRadius);
+            float maximumPull = searchDistance * Mathf.Clamp01(sculptStrengthPercent * 0.01f);
+
+            Undo.IncrementCurrentGroup();
+            int undoGroup = Undo.GetCurrentGroup();
+            Undo.SetCurrentGroupName("Autosculpt Mesh");
+            Undo.RegisterCompleteObjectUndo(new UnityEngine.Object[] { this, BakedMesh }, "Autosculpt Mesh");
+
+            int movedVertices = 0;
+            int affectedSlots = 0;
+            try
+            {
+                for (int targetIndex = 0; targetIndex < targets.Count; targetIndex++)
+                {
+                    SlotData target = targets[targetIndex];
+                    SculptSlotEditState state = GetOrCreateSculptSlotState(target);
+                    if (state == null) continue;
+                    bool slotChanged = false;
+                    EditorUtility.DisplayProgressBar(
+                        "Autosculpt",
+                        "Projecting " + target.slotName + " against " + occluder.slotName,
+                        targetIndex / (float)Mathf.Max(1, targets.Count));
+
+                    for (int localIndex = 0; localIndex < state.count; localIndex++)
+                    {
+                        int bakedIndex = state.start + localIndex;
+                        if (bakedIndex < 0 || bakedIndex >= before.Length) continue;
+                        Vector3 position = before[bakedIndex];
+                        if (!TryGetAutosculptPull(
+                                position,
+                                modelCenter,
+                                axis,
+                                occluderMap,
+                                searchDistance,
+                                out Vector3 inwardDirection,
+                                out float hitDistance))
+                        {
+                            continue;
+                        }
+
+                        float falloff = EvaluateSculptFalloff(hitDistance / searchDistance);
+                        float mask = state.mask != null && localIndex < state.mask.Length ? state.mask[localIndex] : 0f;
+                        float pull = maximumPull * falloff * (1f - mask);
+                        if (autosculptClothify && autosculptClothEffect > 0f)
+                        {
+                            float wrinkle = EvaluateAutosculptNoise(position);
+                            pull *= Mathf.Max(0f, 1f + wrinkle * Mathf.Clamp01(autosculptClothEffect) * 0.35f);
+                        }
+                        if (pull <= 0.0000001f) continue;
+
+                        Vector3 newPosition = position + inwardDirection * pull;
+                        if ((newPosition - vertices[bakedIndex]).sqrMagnitude <= 0.000000000001f) continue;
+                        vertices[bakedIndex] = newPosition;
+                        movedVertices++;
+                        slotChanged = true;
+                    }
+                    if (slotChanged) affectedSlots++;
+                }
+            }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
+            }
+
+            if (movedVertices > 0)
+            {
+                BakedMesh.vertices = vertices;
+                BakedMesh.RecalculateNormals();
+                BakedMesh.RecalculateBounds();
+                RefreshBakedMeshCaches();
+                RefreshSculptCollider();
+                sculptHoverValid = false;
+                EditorUtility.SetDirty(BakedMesh);
+                EditorUtility.SetDirty(this);
+                RepaintLinkedEditors();
+                SceneView.RepaintAll();
+                autosculptStatusType = MessageType.Info;
+                autosculptStatusMessage =
+                    $"Autosculpt moved {movedVertices} vertices across {affectedSlots} slot(s). Continue sculpting or save through the normal Sculpt workflow.";
+            }
+            else
+            {
+                autosculptStatusType = MessageType.Info;
+                autosculptStatusMessage =
+                    "Autosculpt found no target vertices beneath the occluder within the current Sculpt Radius.";
+            }
+            Undo.CollapseUndoOperations(undoGroup);
+        }
+
+        private AutosculptOccluderMap BuildAutosculptOccluderMap(SlotData occluder)
+        {
+            if (occluder == null || bakedVertices == null || bakedTriangles == null) return null;
+            List<AutosculptTriangle> triangles = new List<AutosculptTriangle>();
+            for (int triangleIndex = 0; triangleIndex + 2 < bakedTriangles.Length; triangleIndex += 3)
+            {
+                int bakedA = bakedTriangles[triangleIndex];
+                int bakedB = bakedTriangles[triangleIndex + 1];
+                int bakedC = bakedTriangles[triangleIndex + 2];
+                if (bakedA < 0 || bakedB < 0 || bakedC < 0 ||
+                    bakedA >= bakedVertices.Length || bakedB >= bakedVertices.Length || bakedC >= bakedVertices.Length)
+                {
+                    continue;
+                }
+                if (!TryGetSlotForBakedVertex(bakedA, out SlotData triangleSlot, out _) ||
+                    triangleSlot == null ||
+                    !string.Equals(triangleSlot.slotName, occluder.slotName, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                AutosculptTriangle triangle = new AutosculptTriangle
+                {
+                    a = bakedVertices[bakedA],
+                    b = bakedVertices[bakedB],
+                    c = bakedVertices[bakedC]
+                };
+                triangles.Add(triangle);
+                if (sculptSymmetryX)
+                {
+                    triangles.Add(new AutosculptTriangle
+                    {
+                        a = ReflectLocalX(triangle.a),
+                        b = ReflectLocalX(triangle.b),
+                        c = ReflectLocalX(triangle.c)
+                    });
+                }
+            }
+            if (triangles.Count == 0) return null;
+
+            Vector2 minimum = new Vector2(float.PositiveInfinity, float.PositiveInfinity);
+            Vector2 maximum = new Vector2(float.NegativeInfinity, float.NegativeInfinity);
+            for (int i = 0; i < triangles.Count; i++)
+            {
+                AutosculptTriangle triangle = triangles[i];
+                minimum = Vector2.Min(minimum, ProjectAutosculptPoint(triangle.a, autosculptAxis));
+                minimum = Vector2.Min(minimum, ProjectAutosculptPoint(triangle.b, autosculptAxis));
+                minimum = Vector2.Min(minimum, ProjectAutosculptPoint(triangle.c, autosculptAxis));
+                maximum = Vector2.Max(maximum, ProjectAutosculptPoint(triangle.a, autosculptAxis));
+                maximum = Vector2.Max(maximum, ProjectAutosculptPoint(triangle.b, autosculptAxis));
+                maximum = Vector2.Max(maximum, ProjectAutosculptPoint(triangle.c, autosculptAxis));
+            }
+
+            AutosculptOccluderMap map = new AutosculptOccluderMap
+            {
+                axis = autosculptAxis,
+                origin = minimum,
+                cellSize = Mathf.Max(0.0001f, Mathf.Max(maximum.x - minimum.x, maximum.y - minimum.y) / 64f)
+            };
+            for (int i = 0; i < triangles.Count; i++) AddAutosculptTriangleToMap(map, triangles[i]);
+            return map;
+        }
+
+        private static void AddAutosculptTriangleToMap(AutosculptOccluderMap map, AutosculptTriangle triangle)
+        {
+            Vector2 a = ProjectAutosculptPoint(triangle.a, map.axis);
+            Vector2 b = ProjectAutosculptPoint(triangle.b, map.axis);
+            Vector2 c = ProjectAutosculptPoint(triangle.c, map.axis);
+            Vector2 minimum = Vector2.Min(a, Vector2.Min(b, c));
+            Vector2 maximum = Vector2.Max(a, Vector2.Max(b, c));
+            Vector2Int minCell = GetAutosculptCell(map, minimum);
+            Vector2Int maxCell = GetAutosculptCell(map, maximum);
+            long cellCount = (long)(maxCell.x - minCell.x + 1) * (maxCell.y - minCell.y + 1);
+            if (cellCount > 4096)
+            {
+                map.largeTriangles.Add(triangle);
+                return;
+            }
+
+            for (int x = minCell.x; x <= maxCell.x; x++)
+            {
+                for (int y = minCell.y; y <= maxCell.y; y++)
+                {
+                    Vector2Int key = new Vector2Int(x, y);
+                    if (!map.cells.TryGetValue(key, out List<AutosculptTriangle> cell))
+                    {
+                        cell = new List<AutosculptTriangle>();
+                        map.cells.Add(key, cell);
+                    }
+                    cell.Add(triangle);
+                }
+            }
+        }
+
+        private bool TryGetAutosculptPull(
+            Vector3 position,
+            Vector3 modelCenter,
+            Vector3 axis,
+            AutosculptOccluderMap map,
+            float maxDistance,
+            out Vector3 inwardDirection,
+            out float hitDistance)
+        {
+            float side = Vector3.Dot(position - modelCenter, axis);
+            if (Mathf.Abs(side) > 0.000001f)
+            {
+                Vector3 outward = side > 0f ? axis : -axis;
+                if (TryGetAutosculptHitDistance(position, outward, map, maxDistance, out hitDistance))
+                {
+                    inwardDirection = -outward;
+                    return true;
+                }
+                inwardDirection = Vector3.zero;
+                return false;
+            }
+
+            bool positiveHit = TryGetAutosculptHitDistance(position, axis, map, maxDistance, out float positiveDistance);
+            bool negativeHit = TryGetAutosculptHitDistance(position, -axis, map, maxDistance, out float negativeDistance);
+            if (!positiveHit && !negativeHit)
+            {
+                inwardDirection = Vector3.zero;
+                hitDistance = 0f;
+                return false;
+            }
+            bool usePositive = positiveHit && (!negativeHit || positiveDistance <= negativeDistance);
+            inwardDirection = usePositive ? -axis : axis;
+            hitDistance = usePositive ? positiveDistance : negativeDistance;
+            return true;
+        }
+
+        private static bool TryGetAutosculptHitDistance(
+            Vector3 position,
+            Vector3 outwardDirection,
+            AutosculptOccluderMap map,
+            float maxDistance,
+            out float hitDistance)
+        {
+            float originOffset = Mathf.Min(0.0001f, maxDistance * 0.01f);
+            Vector3 rayOrigin = position - outwardDirection * originOffset;
+            float closest = maxDistance + originOffset;
+            bool found = false;
+            Vector2Int cellKey = GetAutosculptCell(map, ProjectAutosculptPoint(position, map.axis));
+            if (map.cells.TryGetValue(cellKey, out List<AutosculptTriangle> cell))
+                TestAutosculptTriangles(rayOrigin, outwardDirection, cell, ref closest, ref found);
+            TestAutosculptTriangles(rayOrigin, outwardDirection, map.largeTriangles, ref closest, ref found);
+            hitDistance = found ? Mathf.Max(0f, closest - originOffset) : 0f;
+            return found && hitDistance <= maxDistance;
+        }
+
+        private static void TestAutosculptTriangles(
+            Vector3 rayOrigin,
+            Vector3 rayDirection,
+            List<AutosculptTriangle> triangles,
+            ref float closest,
+            ref bool found)
+        {
+            for (int i = 0; i < triangles.Count; i++)
+            {
+                AutosculptTriangle triangle = triangles[i];
+                if (RayTriangleIntersect(rayOrigin, rayDirection, triangle.a, triangle.b, triangle.c, out float distance) &&
+                    distance < closest)
+                {
+                    closest = distance;
+                    found = true;
+                }
+            }
+        }
+
+        private float EvaluateAutosculptNoise(Vector3 position)
+        {
+            if (sculptSymmetryX) position.x = Mathf.Abs(position.x);
+            float frequency = 1f / Mathf.Max(0.002f, sculptRadius * 0.35f);
+            position *= frequency;
+            float noise = (
+                Mathf.PerlinNoise(position.x + 13.71f, position.y + 31.17f) +
+                Mathf.PerlinNoise(position.y + 47.53f, position.z + 7.91f) +
+                Mathf.PerlinNoise(position.z + 23.29f, position.x + 59.83f)) / 3f;
+            return noise * 2f - 1f;
+        }
+
+        private static Vector3 GetAutosculptAxisVector(AutosculptAxis axis)
+        {
+            switch (axis)
+            {
+                case AutosculptAxis.X: return Vector3.right;
+                case AutosculptAxis.Z: return Vector3.forward;
+                default: return Vector3.up;
+            }
+        }
+
+        private static Vector2 ProjectAutosculptPoint(Vector3 point, AutosculptAxis axis)
+        {
+            switch (axis)
+            {
+                case AutosculptAxis.X: return new Vector2(point.y, point.z);
+                case AutosculptAxis.Z: return new Vector2(point.x, point.y);
+                default: return new Vector2(point.x, point.z);
+            }
+        }
+
+        private static Vector2Int GetAutosculptCell(AutosculptOccluderMap map, Vector2 point)
+        {
+            return new Vector2Int(
+                Mathf.FloorToInt((point.x - map.origin.x) / map.cellSize),
+                Mathf.FloorToInt((point.y - map.origin.y) / map.cellSize));
+        }
+
         private void DrawSculptOptions()
         {
             EnsureSculptSession();
@@ -7714,6 +8192,7 @@ namespace UMA
             if (GUILayout.Button("Clear Mask")) Array.Clear(sculptMask, 0, sculptMask.Length);
             if (GUILayout.Button("Invert Mask")) for (int i = 0; i < sculptMask.Length; i++) sculptMask[i] = 1f - sculptMask[i];
             GUILayout.EndHorizontal();
+            DrawAutosculptOptions();
             sculptModifierName = EditorGUILayout.TextField("Modifier Name", sculptModifierName);
             EditorGUI.BeginDisabledGroup(!HasSculptChanges());
             if (GUILayout.Button("Save MeshModifier")) SaveSculptModifier();
