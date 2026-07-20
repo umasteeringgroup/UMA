@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a8c35dde900aa5e4ba94b4984a9197a2, type: 3}
+  m_Name: Pigtails_Animator
+  m_EditorClassIdentifier: UMA_Core::UMA.UMAChainJiggleAnimator
+  Chains:
+  - AnchorBoneName: Pigtail_r.003
+    ExcludedBoneNames: []
+  - AnchorBoneName: Pigtail_l.003
+    ExcludedBoneNames: []
+  endLength: 0.15
+  endOffset: {x: 0, y: 0, z: 0}
+  stiffness: 0.088
+  mass: 0.8
+  damping: 0.246
+  gravity: 9.66
+  inertia: 0.73
+  forceMultiplier: 15
+  maxDistance: 0.35
+  constraintIterations: 3
+  targetSmoothing: 0.35
+  rotationSmoothing: 0.5
+  maxVelocity: 4.01
+  rotationWeight: 1
+  positionWeight: 0
+  freezeX: 0
+  freezeY: 0
+  freezeZ: 0
