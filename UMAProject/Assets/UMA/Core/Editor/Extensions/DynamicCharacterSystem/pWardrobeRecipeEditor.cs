@@ -791,7 +791,7 @@ namespace UMA.Editors
 			{
 				foreach (MeshHideAsset theAsset in recipe.MeshHideAssets)
 				{
-					if (theAsset.GetEntityId() == mha.GetEntityId())
+					if (theAsset.GetUmaObjectId() == mha.GetUmaObjectId())
 					{
 						found = true;
 						break;
@@ -806,7 +806,7 @@ namespace UMA.Editors
 			{
 				foreach (MeshModifier theMM in recipe.MeshModifiers)
 				{
-					if (theMM.GetEntityId() == mm.GetEntityId())
+					if (theMM.GetUmaObjectId() == mm.GetUmaObjectId())
 					{
 						found = true;
 						break;
@@ -1258,7 +1258,7 @@ namespace UMA.Editors
 				{
 					EditorUtility.SetDirty(target);
 					AssetDatabase.SaveAssetIfDirty(target);
-					string path = AssetDatabase.GetAssetPath(target.GetEntityId());
+					string path = AssetDatabase.GetAssetPath(target.GetUmaObjectId());
 					AssetDatabase.ImportAsset(path);
 					Repaint();
 				}
@@ -1402,14 +1402,14 @@ namespace UMA.Editors
 				{
 					recipe.MeshHideAssets.RemoveAll(x => x == null);
 					EditorUtility.SetDirty(target);
-					string path = AssetDatabase.GetAssetPath(target.GetEntityId());
+					string path = AssetDatabase.GetAssetPath(target.GetUmaObjectId());
 					AssetDatabase.ImportAsset(path);
 				}
 				if (deleteme != null)
 				{
 					recipe.MeshHideAssets.Remove(deleteme);
 					EditorUtility.SetDirty(target);
-					string path = AssetDatabase.GetAssetPath(target.GetEntityId());
+					string path = AssetDatabase.GetAssetPath(target.GetUmaObjectId());
 					AssetDatabase.ImportAsset(path);
 				}
 				// EditorGUILayout.PropertyField(meshHides, true);
@@ -1652,7 +1652,7 @@ namespace UMA.Editors
             {
                 foreach (MeshModifier theMM in recipe.MeshModifiers)
                 {
-                    if (theMM.GetEntityId() == mm.GetEntityId())
+                    if (theMM.GetUmaObjectId() == mm.GetUmaObjectId())
                     {
                         found = true;
                         break;
@@ -1663,7 +1663,7 @@ namespace UMA.Editors
             {
                 recipe.MeshModifiers.Add(mm);
                 EditorUtility.SetDirty(target);
-                string path = AssetDatabase.GetAssetPath(target.GetEntityId());
+                string path = AssetDatabase.GetAssetPath(target.GetUmaObjectId());
                 AssetDatabase.ImportAsset(path);
                 Repaint();
             }
@@ -1676,7 +1676,7 @@ namespace UMA.Editors
             {
                 foreach (MeshHideAssetCollection theAsset in recipe.MeshHideAssetCollections)
                 {
-                    if (theAsset.GetEntityId() == mhac.GetEntityId())
+                    if (theAsset.GetUmaObjectId() == mhac.GetUmaObjectId())
                     {
                         found = true;
                         break;
@@ -1689,11 +1689,11 @@ namespace UMA.Editors
                 EditorUtility.SetDirty(target);
 #if UNITY_6000_3_OR_NEWER
                 AssetDatabase.SaveAssetIfDirty(target);
-                string path = AssetDatabase.GetAssetPath(target.GetEntityId());
+                string path = AssetDatabase.GetAssetPath(target.GetUmaObjectId());
                 AssetDatabase.ImportAsset(path);
 #else
 				AssetDatabase.SaveAssets();
-				string path = AssetDatabase.GetAssetPath(target.GetEntityId());
+				string path = AssetDatabase.GetAssetPath(target.GetUmaObjectId());
                 AssetDatabase.ImportAsset(path);
 #endif
                 Repaint();
@@ -1718,7 +1718,7 @@ namespace UMA.Editors
                 {
 					if (theAsset!=null)
 					{
-						if (theAsset.GetEntityId() == mha.GetEntityId())
+						if (theAsset.GetUmaObjectId() == mha.GetUmaObjectId())
 						{
 							found = true;
 							break;
@@ -1730,7 +1730,7 @@ namespace UMA.Editors
             {
                 recipe.MeshHideAssets.Add(mha);
                 EditorUtility.SetDirty(target);
-                string path = AssetDatabase.GetAssetPath(target.GetEntityId());
+                string path = AssetDatabase.GetAssetPath(target.GetUmaObjectId());
                 AssetDatabase.ImportAsset(path);
                 Repaint();
                 /*

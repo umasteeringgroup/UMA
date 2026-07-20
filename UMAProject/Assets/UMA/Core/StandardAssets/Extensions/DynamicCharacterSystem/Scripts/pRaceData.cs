@@ -669,15 +669,11 @@ namespace UMA
                 for (int i = 0; i < list.Length; i++)
                 {
                     var c = list[i];
-                    if (c != null)
-                    {
-						EntityId entityID = c.GetEntityId();
-#if UNITY_6000_5_OR_NEWER
-						ulong rawData = EntityId.ToULong(entityID);
+					if (c != null)
+					{
+						UMAObjectId entityID = c.GetUmaObjectId();
+						ulong rawData = UMAObjectId.ToULong(entityID);
 						int intval = (int)(rawData & 0xFFFFFFFF) ^ (int)(rawData >> 32);
-#else
-					    int intval = (int)entityID;
-#endif						
 						ver = ver * 31 + intval;
                         ver = ver * 31 + (c.name != null ? c.name.GetHashCode() : 0);
                     }

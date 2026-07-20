@@ -31,11 +31,11 @@ namespace UMA.Editors
             public double milliseconds;
         }
 
-        private static readonly Dictionary<int, Action<UMAData>> PendingBuildHandlers =
-            new Dictionary<int, Action<UMAData>>();
+        private static readonly Dictionary<UMAObjectId, Action<UMAData>> PendingBuildHandlers =
+            new Dictionary<UMAObjectId, Action<UMAData>>();
 
-        private static readonly Dictionary<int, BuildTiming> LastBuildTimings =
-            new Dictionary<int, BuildTiming>();
+        private static readonly Dictionary<UMAObjectId, BuildTiming> LastBuildTimings =
+            new Dictionary<UMAObjectId, BuildTiming>();
 
         internal static event Action DiagnosticsChanged;
 
@@ -162,7 +162,7 @@ namespace UMA.Editors
 
         private static void BeginBuildTiming(DynamicCharacterAvatar avatar, string description)
         {
-            int instanceId = avatar.GetInstanceID();
+            UMAObjectId instanceId = avatar.GetUmaObjectId();
             Action<UMAData> previousHandler;
             if (PendingBuildHandlers.TryGetValue(instanceId, out previousHandler))
             {
@@ -205,7 +205,7 @@ namespace UMA.Editors
             }
 
             BuildTiming timing;
-            if (!LastBuildTimings.TryGetValue(avatar.GetInstanceID(), out timing))
+            if (!LastBuildTimings.TryGetValue(avatar.GetUmaObjectId(), out timing))
             {
                 return false;
             }

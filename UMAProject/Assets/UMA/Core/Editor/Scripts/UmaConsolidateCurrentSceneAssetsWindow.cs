@@ -575,7 +575,7 @@ internal class UmaConsolidateCurrentSceneAssetsWindow : EditorWindow
 			}
 
 			var dependencySources = new List<UnityEngine.Object>();
-			var sourceIds = new HashSet<EntityId>();
+			var sourceIds = new HashSet<UMAObjectId>();
 
 			for (int r = 0; r < rootObjects.Length; r++)
 			{
@@ -597,7 +597,7 @@ internal class UmaConsolidateCurrentSceneAssetsWindow : EditorWindow
 					var go = tr.gameObject;
 					if (go != null)
 					{
-						EntityId goId = go.GetEntityId();
+						UMAObjectId goId = go.GetUmaObjectId();
 						if (!sourceIds.Contains(goId))
 						{
 							sourceIds.Add(goId);
@@ -617,7 +617,7 @@ internal class UmaConsolidateCurrentSceneAssetsWindow : EditorWindow
 								continue;
 							}
 
-							EntityId componentId = component.GetEntityId();
+							UMAObjectId componentId = component.GetUmaObjectId();
 							if (sourceIds.Contains(componentId))
 							{
 								continue;

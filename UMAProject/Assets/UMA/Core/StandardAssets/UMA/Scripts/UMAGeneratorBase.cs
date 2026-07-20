@@ -90,12 +90,12 @@ namespace UMA
 #endif
 #endif
 
-        public static HashSet<EntityId> CreatedAvatars = new HashSet<EntityId>();
+        public static HashSet<UMAObjectId> CreatedAvatars = new HashSet<UMAObjectId>();
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         public static void StaticInitializeOnLoad()
         {
-            CreatedAvatars = new HashSet<EntityId>();
+            CreatedAvatars = new HashSet<UMAObjectId>();
             newBones = new List<SkeletonBone>();
         }
 
@@ -540,7 +540,7 @@ namespace UMA
             try
             {
                 Avatar res = AvatarBuilder.BuildHumanAvatar(umaData.gameObject, description);
-                CreatedAvatars.Add(res.GetEntityId());
+                CreatedAvatars.Add(res.GetUmaObjectId());
                 res.name = umaData.name;
                 if (umaTPose.HasExtractedHumanPose())
                 {
@@ -603,7 +603,7 @@ namespace UMA
         {
             Avatar res = AvatarBuilder.BuildGenericAvatar(umaData.gameObject, umaData.umaRecipe.GetRace().genericRootMotionTransformName);
             res.name = umaData.name;
-            CreatedAvatars.Add(res.GetEntityId());
+            CreatedAvatars.Add(res.GetUmaObjectId());
             return res;
         }
 

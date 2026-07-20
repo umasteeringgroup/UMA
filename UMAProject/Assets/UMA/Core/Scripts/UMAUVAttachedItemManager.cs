@@ -30,10 +30,10 @@ namespace UMA
 
         public void OnDestroy()
         {
-            //Debug.Log($"Destroy {GetEntityId()}");
+            //Debug.Log($"Destroy {GetUmaObjectId()}");
             if (gameObject != null)
             {
-                //Debug.Log($"Destroying Item {GetEntityId()}");
+                //Debug.Log($"Destroying Item {GetUmaObjectId()}");
                 foreach(var attachedItem in attachedItems.Values)
                 {
                     attachedItem.CleanUp();

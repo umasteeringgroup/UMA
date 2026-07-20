@@ -91,7 +91,7 @@ namespace UMA.CharacterSystem
                     var target = conv.poseToApply;
                     bool match =
                         target == pose ||
-                        (target != null && pose != null && target.GetEntityId() == pose.GetEntityId());
+                        (target != null && pose != null && target.GetUmaObjectId() == pose.GetUmaObjectId());
 
                     if (match)
                     {

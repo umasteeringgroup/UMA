@@ -3044,7 +3044,7 @@ namespace UMA.PoseTools
 
                 bool sourceChanged = (sourceUMA == null && saveUMAData != null)
                     || (sourceUMA != null && saveUMAData == null)
-                    || (sourceUMA != null && saveUMAData != null && sourceUMA.GetEntityId() != saveUMAData.GetEntityId());
+                    || (sourceUMA != null && saveUMAData != null && sourceUMA.GetUmaObjectId() != saveUMAData.GetUmaObjectId());
                 if (sourceChanged)
                 {
                     saveUMAData = sourceUMA;

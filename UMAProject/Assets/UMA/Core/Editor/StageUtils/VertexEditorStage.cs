@@ -9572,7 +9572,7 @@ namespace UMA
 
         private static string GetSceneViewDiagnosticId(SceneView sceneView)
         {
-            return sceneView != null ? sceneView.GetInstanceID().ToString() : "null";
+            return sceneView != null ? sceneView.GetUmaObjectId().ToString() : "null";
         }
 
         private static string GetSceneViewDrawMode(SceneView sceneView)

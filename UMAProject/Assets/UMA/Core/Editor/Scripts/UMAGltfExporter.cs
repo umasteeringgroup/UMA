@@ -971,12 +971,12 @@ namespace UMA.Editors
 
             Matrix4x4[] bindposes = mesh.bindposes != null ? mesh.bindposes : new Matrix4x4[0];
             Dictionary<int, int> remap = new Dictionary<int, int>();
-            Dictionary<EntityId, int> seen = new Dictionary<EntityId, int>();
+            Dictionary<UMAObjectId, int> seen = new Dictionary<UMAObjectId, int>();
 
             for (int i = 0; i < bones.Length; i++)
             {
                 Transform bone = bones[i];
-                EntityId key = bone != null ? bone.GetEntityId() : int.MinValue + i;
+                UMAObjectId key = bone != null ? bone.GetUmaObjectId() : int.MinValue + i;
 
                 int dedupedIndex;
                 if (!seen.TryGetValue(key, out dedupedIndex))
@@ -1178,7 +1178,7 @@ namespace UMA.Editors
             private readonly bool _embedImages;
             private readonly Dictionary<Material, int> _materialMap = new Dictionary<Material, int>();
             private readonly Dictionary<string, int> _imageMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-            private readonly Dictionary<EntityId, int> _runtimeTextureMap = new Dictionary<EntityId, int>();
+            private readonly Dictionary<UMAObjectId, int> _runtimeTextureMap = new Dictionary<UMAObjectId, int>();
             private readonly Dictionary<string, int> _samplerMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             private readonly Dictionary<string, int> _textureMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             private int _runtimeTextureCounter;
@@ -1469,7 +1469,7 @@ namespace UMA.Editors
                 // Check if we already processed this runtime texture
                 if (isRuntimeTexture)
                 {
-                    EntityId instanceId = texture.GetEntityId();
+                    UMAObjectId instanceId = texture.GetUmaObjectId();
                     int existingIndex;
                     if (_runtimeTextureMap.TryGetValue(instanceId, out existingIndex))
                     {
@@ -1478,7 +1478,7 @@ namespace UMA.Editors
                 }
 
                 int imageIndex;
-                string imageKey = isRuntimeTexture ? texture.GetEntityId().ToString() : assetPath;
+                string imageKey = isRuntimeTexture ? texture.GetUmaObjectId().ToString() : assetPath;
 
                 if (!_imageMap.TryGetValue(imageKey, out imageIndex))
                 {
@@ -1526,7 +1526,7 @@ namespace UMA.Editors
                 {
                     if (isRuntimeTexture)
                     {
-                        _runtimeTextureMap[texture.GetEntityId()] = textureIndex;
+                        _runtimeTextureMap[texture.GetUmaObjectId()] = textureIndex;
                     }
                     return textureIndex;
                 }
@@ -1542,7 +1542,7 @@ namespace UMA.Editors
 
                 if (isRuntimeTexture)
                 {
-                    _runtimeTextureMap[texture.GetEntityId()] = textureIndex;
+                    _runtimeTextureMap[texture.GetUmaObjectId()] = textureIndex;
                 }
 
                 return textureIndex;

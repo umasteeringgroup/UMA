@@ -153,7 +153,7 @@ namespace UMA.Editors
                 texture.format,
                 texture.depth,
                 texture.IsCreated() ? "Created" : "Not created",
-                texture.GetInstanceID());
+                texture.GetUmaObjectId());
             if (entry.isTracked)
             {
                 details += entry.ownership.temporary ? " | Temporary" : " | Persistent atlas";
@@ -233,13 +233,13 @@ namespace UMA.Editors
             Refresh();
         }
 
-        private static UMAData FindOwner(int umaDataInstanceId)
+        private static UMAData FindOwner(UMAObjectId umaDataInstanceId)
         {
             UMAData[] umaDataComponents = Resources.FindObjectsOfTypeAll<UMAData>();
             for (int index = 0; index < umaDataComponents.Length; index++)
             {
                 UMAData umaData = umaDataComponents[index];
-                if (umaData != null && umaData.GetInstanceID() == umaDataInstanceId)
+                if (umaData != null && umaData.GetUmaObjectId() == umaDataInstanceId)
                 {
                     return umaData;
                 }

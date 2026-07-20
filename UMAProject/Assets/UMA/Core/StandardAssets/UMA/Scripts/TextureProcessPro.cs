@@ -172,7 +172,7 @@ namespace UMA
             RenderTexture tempRenderTexture = tempTexture as RenderTexture;
             if (tempRenderTexture != null)
             {
-                var entityId = tempRenderTexture.GetEntityId();
+                var entityId = tempRenderTexture.GetUmaObjectId();
                 if (!RenderTexToCPU.renderTexturesToCPU.ContainsKey(entityId) && RenderTexToCPU.SafeToFree(tempRenderTexture))
                 {
                     UMARenderTextureTracker.Untrack(tempRenderTexture);

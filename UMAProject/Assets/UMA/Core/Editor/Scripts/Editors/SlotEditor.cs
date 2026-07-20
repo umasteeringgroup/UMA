@@ -264,7 +264,7 @@ namespace UMA.Editors
 
             if (select && !_slotData.isPlaceholderSlot)
             {
-                EditorGUIUtility.PingObject(_slotData.asset.GetEntityId());
+                EditorGUIUtility.PingObject(_slotData.asset.GetUmaObjectId());
                 InspectorUtlity.InspectTarget(_slotData.asset);
             }
 

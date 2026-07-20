@@ -839,7 +839,7 @@ namespace UMA
             if (_bakedMeshFilter != null && _bakedMeshRenderer != null) return;
             if (targetRenderer == null) return;
 
-            string previewName = "UMALattice Baked Preview " + GetInstanceID();
+            string previewName = "UMALattice Baked Preview " + GetHashCode();
             GameObject previewObject = GameObject.Find(previewName);
             if (previewObject == null) previewObject = new GameObject(previewName);
             previewObject.hideFlags = HideFlags.DontSave;

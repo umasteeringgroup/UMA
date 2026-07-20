@@ -19,7 +19,7 @@ namespace UMA
 
         private class TemplateMaterialEntry
         {
-            public EntityId materialInstanceID;
+            public UMAObjectId materialInstanceID;
             public string materialName;
             public bool expanded = true;
             public readonly System.Collections.Generic.List<TemplatePropertyEntry> properties = new System.Collections.Generic.List<TemplatePropertyEntry>();
@@ -270,7 +270,7 @@ namespace UMA
                 return;
             }
 
-            var addedMaterials = new System.Collections.Generic.HashSet<EntityId>();
+            var addedMaterials = new System.Collections.Generic.HashSet<UMAObjectId>();
             for (int i = 0; i < materials.Length; i++)
             {
                 Material material = materials[i];
@@ -279,7 +279,7 @@ namespace UMA
                     continue;
                 }
 
-                EntityId materialInstanceID = material.GetEntityId();
+                UMAObjectId materialInstanceID = material.GetUmaObjectId();
                 if (!addedMaterials.Add(materialInstanceID))
                 {
                     continue;

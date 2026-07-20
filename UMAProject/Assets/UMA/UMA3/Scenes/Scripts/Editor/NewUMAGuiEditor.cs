@@ -492,7 +492,7 @@ namespace UMA.EditorTools
         {
             if (obj == null) return "__null__";
             string path = AssetDatabase.GetAssetPath(obj);
-            return string.IsNullOrEmpty(path) ? obj.GetInstanceID().ToString() : path;
+            return string.IsNullOrEmpty(path) ? obj.GetUmaObjectId().ToString() : path;
         }
 
         #endregion

@@ -223,8 +223,8 @@ namespace UMA
 
 		private bool WasStampProcessed(DecalRTStampAsset stamp, RenderTexture targetTexture, SlotData targetSlot, string propertyName, int frame)
         {
-			int stampId = stamp != null ? stamp.GetInstanceID() : 0;
-			int textureId = targetTexture != null ? targetTexture.GetInstanceID() : 0;
+			UMAObjectId stampId = stamp != null ? stamp.GetUmaObjectId() : 0;
+			UMAObjectId textureId = targetTexture != null ? targetTexture.GetUmaObjectId() : 0;
 			string slotKey = GetSlotMatchKey(targetSlot);
 			string key = stampId + "|" + textureId + "|" + slotKey + "|" + (propertyName ?? string.Empty);
             int lastFrame;
@@ -237,8 +237,8 @@ namespace UMA
 
 		private void MarkStampProcessed(DecalRTStampAsset stamp, RenderTexture targetTexture, SlotData targetSlot, string propertyName, int frame)
 		{
-			int stampId = stamp != null ? stamp.GetInstanceID() : 0;
-			int textureId = targetTexture != null ? targetTexture.GetInstanceID() : 0;
+			UMAObjectId stampId = stamp != null ? stamp.GetUmaObjectId() : 0;
+			UMAObjectId textureId = targetTexture != null ? targetTexture.GetUmaObjectId() : 0;
 			string slotKey = GetSlotMatchKey(targetSlot);
 			string key = stampId + "|" + textureId + "|" + slotKey + "|" + (propertyName ?? string.Empty);
 			alreadyProcessed[key] = frame;

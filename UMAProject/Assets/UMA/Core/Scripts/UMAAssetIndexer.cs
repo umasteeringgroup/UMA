@@ -4150,11 +4150,7 @@ namespace UMA
         {
             AssetItem ai = null;
             ai = new AssetItem(TypeToLookup[type], o);
-#if UNITY_6000_3_OR_NEWER
-            ai._Path = AssetDatabase.GetAssetPath(o.GetEntityId());
-#else
-            ai._Path = AssetDatabase.GetAssetPath(o.GetEntityId());
-#endif
+            ai._Path = AssetDatabase.GetAssetPath(o.GetUmaObjectId());
             return AddAssetItem(ai);
         }
 
@@ -4982,11 +4978,7 @@ namespace UMA
                     if (obj != null)
                     {
                         ai._Name = ai.EvilName;
-#if UNITY_6000_3_OR_NEWER
-                        ai._Path = AssetDatabase.GetAssetPath(obj.GetEntityId());
-#else
-                        ai._Path = AssetDatabase.GetAssetPath(obj.GetEntityId());
-#endif
+                        ai._Path = AssetDatabase.GetAssetPath(obj.GetUmaObjectId());
                         ai._Guid = AssetDatabase.AssetPathToGUID(ai._Path);
                     }
                     else

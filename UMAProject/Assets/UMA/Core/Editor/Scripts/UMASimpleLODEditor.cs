@@ -192,7 +192,7 @@ namespace UMA.Editors
             {
                 return path;
             }
-            return slot.asset.GetEntityId().ToString();
+            return slot.asset.GetUmaObjectId().ToString();
         }
 
         private static bool GetSlotSelected(string key)

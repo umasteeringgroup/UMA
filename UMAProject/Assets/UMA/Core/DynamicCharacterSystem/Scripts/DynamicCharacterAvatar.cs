@@ -2152,8 +2152,8 @@ namespace UMA.CharacterSystem
             }
             if (removeAllMatching)
             {
-                var EntityID = utr.GetEntityId();
-                AdditiveRecipes[thisRecipeSlot].RemoveAll((x => x.GetEntityId() == EntityID));     
+                var EntityID = utr.GetUmaObjectId();
+                AdditiveRecipes[thisRecipeSlot].RemoveAll((x => x.GetUmaObjectId() == EntityID));
             }
             else
             {
@@ -2176,8 +2176,8 @@ namespace UMA.CharacterSystem
             }
             if (removeAllMatching)
             {
-                var entityID = utr.GetEntityId();
-                AdditiveRecipes[thisRecipeSlot].RemoveAll((x => x.GetEntityId() == entityID));
+                var entityID = utr.GetUmaObjectId();
+                AdditiveRecipes[thisRecipeSlot].RemoveAll((x => x.GetUmaObjectId() == entityID));
             }
             else
             {
@@ -5872,7 +5872,7 @@ namespace UMA.CharacterSystem
             Array.Copy(SmooshTarget.meshData.submeshes[0].getManagedTriangles(), triangles, SmooshTarget.meshData.submeshes[0].getManagedTriangles().Length);
             m.SetTriangles(triangles, 0);
 
-            Physics.BakeMesh(m.GetEntityId(), false);
+            Physics.BakeMesh(m.GetUmaObjectId(), false);
 
             SmooshScene = GetOrCreateSmooshScene();
 

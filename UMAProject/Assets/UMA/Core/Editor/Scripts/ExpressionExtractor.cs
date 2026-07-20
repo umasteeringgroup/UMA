@@ -336,7 +336,7 @@ namespace UMA.PoseTools
         {
             if (poseAnimation != null && gameObject != null)
             {
-                Debug.Log($"[ExpressionExtractor] Going to time: {time} GameObject {gameObject.GetEntityId()} name {gameObject.name}");
+                Debug.Log($"[ExpressionExtractor] Going to time: {time} GameObject {gameObject.GetUmaObjectId()} name {gameObject.name}");
                 poseAnimation.SampleAnimation(gameObject, time);
                 EditorUtility.SetDirty(gameObject);
                 SceneView.RepaintAll();

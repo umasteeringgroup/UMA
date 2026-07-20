@@ -66,16 +66,16 @@ namespace UMA
         private bool _showSplitDiagnostics = true;
 
         // Persist foldout states per asset entity id (not across domain reload, but stable during play/compiles)
-        private static readonly Dictionary<EntityId, List<bool>> FoldoutStates = new Dictionary<EntityId, List<bool>>();
-        private static readonly Dictionary<EntityId, List<bool>> VertexFoldoutStates = new Dictionary<EntityId, List<bool>>();
-        private static readonly Dictionary<EntityId, List<bool>> EditorFoldoutStates = new Dictionary<EntityId, List<bool>>();
-        private static readonly Dictionary<EntityId, List<bool>> EditorVertexFoldoutStates = new Dictionary<EntityId, List<bool>>();
+        private static readonly Dictionary<UMAObjectId, List<bool>> FoldoutStates = new Dictionary<UMAObjectId, List<bool>>();
+        private static readonly Dictionary<UMAObjectId, List<bool>> VertexFoldoutStates = new Dictionary<UMAObjectId, List<bool>>();
+        private static readonly Dictionary<UMAObjectId, List<bool>> EditorFoldoutStates = new Dictionary<UMAObjectId, List<bool>>();
+        private static readonly Dictionary<UMAObjectId, List<bool>> EditorVertexFoldoutStates = new Dictionary<UMAObjectId, List<bool>>();
 
-        private EntityId _instanceId;
+        private UMAObjectId _instanceId;
 
         private void OnEnable()
         {
-            _instanceId = target != null ? target.GetEntityId() : 0; 
+            _instanceId = target != null ? target.GetUmaObjectId() : 0;
             AcquireProperties();
             EnsureFoldoutList();
         }

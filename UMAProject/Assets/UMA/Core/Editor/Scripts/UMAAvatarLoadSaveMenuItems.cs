@@ -2355,7 +2355,7 @@ namespace UMA.Editors
 								Texture texture = m.GetTexture(propertyName);
 								if (texture is Texture2D || texture is RenderTexture)
 								{
-									string path = AssetDatabase.GetAssetPath(texture.GetEntityId());
+									string path = AssetDatabase.GetAssetPath(texture.GetUmaObjectId());
 									if (string.IsNullOrEmpty(path))
 									{
 										bool isNormal = (propertyName.ToLower().Contains("bumpmap") || propertyName.ToLower().Contains("normal"));
@@ -2486,7 +2486,7 @@ namespace UMA.Editors
 			originalBonesArrays.Add(origBones);
 			originalMeshes.Add(origMesh);
 
-			Dictionary<EntityId, int> instanceIdToNewIndex = new Dictionary<EntityId, int>();
+			Dictionary<UMAObjectId, int> instanceIdToNewIndex = new Dictionary<UMAObjectId, int>();
 			Dictionary<int, int> indexRemap = new Dictionary<int, int>();
 			List<Transform> uniqueBones = new List<Transform>();
 			List<Matrix4x4> uniqueBindPoses = new List<Matrix4x4>();
@@ -2495,7 +2495,7 @@ namespace UMA.Editors
 			for (int b = 0; b < origBones.Length; b++)
 			{
 				Transform bone = origBones[b];
-				EntityId key = bone != null ? bone.GetEntityId() : ~b;
+				UMAObjectId key = bone != null ? bone.GetUmaObjectId() : ~b;
 
 				int existingNewIndex;
 				if (instanceIdToNewIndex.TryGetValue(key, out existingNewIndex))
@@ -2795,7 +2795,7 @@ namespace UMA.Editors
 							Texture texture = m.GetTexture(propertyName);
 							if (texture is Texture2D || texture is RenderTexture)
 							{
-								string path = AssetDatabase.GetAssetPath(texture.GetEntityId());
+								string path = AssetDatabase.GetAssetPath(texture.GetUmaObjectId());
 								if (string.IsNullOrEmpty(path))
 								{
 									bool isNormal = (propertyName.ToLower().Contains("bumpmap") || propertyName.ToLower().Contains("normal"));

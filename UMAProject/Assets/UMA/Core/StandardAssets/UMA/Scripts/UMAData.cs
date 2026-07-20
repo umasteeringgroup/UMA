@@ -394,7 +394,7 @@ namespace UMA
 				if (usi.replaceExisting)
 				{
 					var newBone = skeleton.GetBoneTransform(usi.Object.name);
-					if (newBone.gameObject.GetEntityId() != usi.Object.gameObject.GetEntityId())
+					if (newBone.gameObject.GetUmaObjectId() != usi.Object.gameObject.GetUmaObjectId())
 					{
                         skeleton.ReplaceBone(usi);
 						DestroyImmediate(newBone.gameObject);
@@ -3150,7 +3150,7 @@ namespace UMA
                             if (tempTexture is RenderTexture)
 							{
 								RenderTexture tempRenderTexture = tempTexture as RenderTexture;
-								var entityId = tempRenderTexture.GetEntityId();
+								var entityId = tempRenderTexture.GetUmaObjectId();
 								if (!RenderTexToCPU.renderTexturesToCPU.ContainsKey(entityId))
 								{
                                     // this will be cleared up when the async call is completed.

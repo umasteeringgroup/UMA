@@ -14,7 +14,7 @@ namespace UMA
         public struct Ownership
         {
             public string characterName;
-            public int umaDataInstanceId;
+            public UMAObjectId umaDataInstanceId;
             public int atlasIndex;
             public int channelIndex;
             public string materialName;
@@ -28,8 +28,8 @@ namespace UMA
         }
 
         private const string RenderTextureNamePrefix = "UMA RT | ";
-        private static readonly Dictionary<int, Ownership> ownershipByTextureId =
-            new Dictionary<int, Ownership>();
+        private static readonly Dictionary<UMAObjectId, Ownership> ownershipByTextureId =
+            new Dictionary<UMAObjectId, Ownership>();
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void Reset()
@@ -57,7 +57,7 @@ namespace UMA
             Ownership ownership = new Ownership
             {
                 characterName = GetCharacterName(umaData),
-                umaDataInstanceId = umaData != null ? umaData.GetInstanceID() : 0,
+                umaDataInstanceId = umaData != null ? umaData.GetUmaObjectId() : 0,
                 atlasIndex = atlasIndex,
                 channelIndex = channelIndex,
                 materialName = string.IsNullOrEmpty(materialName) ? "Unknown Material" : materialName,
@@ -65,7 +65,7 @@ namespace UMA
                 temporary = temporary
             };
 
-            ownershipByTextureId[texture.GetInstanceID()] = ownership;
+            ownershipByTextureId[texture.GetUmaObjectId()] = ownership;
             texture.name = string.Format(
                 "{0}{1} [{2}] | Atlas {3} | {4} | {5}{6}",
                 RenderTextureNamePrefix,
@@ -79,7 +79,7 @@ namespace UMA
 
         public static bool TryGetOwnership(RenderTexture texture, out Ownership ownership)
         {
-            if (texture != null && ownershipByTextureId.TryGetValue(texture.GetInstanceID(), out ownership))
+            if (texture != null && ownershipByTextureId.TryGetValue(texture.GetUmaObjectId(), out ownership))
             {
                 return true;
             }
@@ -98,7 +98,7 @@ namespace UMA
                 return;
             }
 
-            ownershipByTextureId.Remove(texture.GetInstanceID());
+            ownershipByTextureId.Remove(texture.GetUmaObjectId());
             if (!string.IsNullOrEmpty(texture.name) && texture.name.StartsWith(RenderTextureNamePrefix, StringComparison.Ordinal))
             {
                 texture.name = "Released " + texture.name;
@@ -123,7 +123,7 @@ namespace UMA
         /// </summary>
         public static List<RenderTexture> FindOrphanedRenderTextures()
         {
-            HashSet<int> referencedTextureIds = GetLiveCharacterRenderTextureIds();
+            HashSet<UMAObjectId> referencedTextureIds = GetLiveCharacterRenderTextureIds();
             List<RenderTexture> orphanedTextures = new List<RenderTexture>();
             RenderTexture[] renderTextures = Resources.FindObjectsOfTypeAll<RenderTexture>();
             for (int textureIndex = 0; textureIndex < renderTextures.Length; textureIndex++)
@@ -131,7 +131,7 @@ namespace UMA
                 RenderTexture texture = renderTextures[textureIndex];
                 if (texture == null || string.IsNullOrEmpty(texture.name) ||
                     !texture.name.StartsWith(RenderTextureNamePrefix, StringComparison.Ordinal) ||
-                    referencedTextureIds.Contains(texture.GetInstanceID()) ||
+                    referencedTextureIds.Contains(texture.GetUmaObjectId()) ||
                     ReferenceEquals(RenderTexture.active, texture))
                 {
                     continue;
@@ -204,9 +204,9 @@ namespace UMA
             return umaData.gameObject != null ? umaData.gameObject.name : umaData.name;
         }
 
-        private static HashSet<int> GetLiveCharacterRenderTextureIds()
+        private static HashSet<UMAObjectId> GetLiveCharacterRenderTextureIds()
         {
-            HashSet<int> textureIds = new HashSet<int>();
+            HashSet<UMAObjectId> textureIds = new HashSet<UMAObjectId>();
             UMAData[] umaDataComponents = Resources.FindObjectsOfTypeAll<UMAData>();
             for (int umaDataIndex = 0; umaDataIndex < umaDataComponents.Length; umaDataIndex++)
             {
@@ -251,7 +251,7 @@ namespace UMA
             return textureIds;
         }
 
-        private static void AddRenderTextures(Texture[] textures, HashSet<int> textureIds)
+        private static void AddRenderTextures(Texture[] textures, HashSet<UMAObjectId> textureIds)
         {
             if (textures == null)
             {
@@ -263,12 +263,12 @@ namespace UMA
                 RenderTexture renderTexture = textures[textureIndex] as RenderTexture;
                 if (renderTexture != null)
                 {
-                    textureIds.Add(renderTexture.GetInstanceID());
+                    textureIds.Add(renderTexture.GetUmaObjectId());
                 }
             }
         }
 
-        private static void AddMaterialRenderTextures(Material material, HashSet<int> textureIds)
+        private static void AddMaterialRenderTextures(Material material, HashSet<UMAObjectId> textureIds)
         {
             if (material == null)
             {
@@ -281,7 +281,7 @@ namespace UMA
                 RenderTexture renderTexture = material.GetTexture(texturePropertyNames[propertyIndex]) as RenderTexture;
                 if (renderTexture != null)
                 {
-                    textureIds.Add(renderTexture.GetInstanceID());
+                    textureIds.Add(renderTexture.GetUmaObjectId());
                 }
             }
         }
@@ -309,8 +309,8 @@ namespace UMA
                 return false;
             }
 
-            int umaDataInstanceId;
-            if (!int.TryParse(characterAndId.Substring(idStart + 2, idEnd - idStart - 2), out umaDataInstanceId))
+            UMAObjectId umaDataInstanceId;
+            if (!UMAObjectId.TryParse(characterAndId.Substring(idStart + 2, idEnd - idStart - 2), out umaDataInstanceId))
             {
                 return false;
             }
