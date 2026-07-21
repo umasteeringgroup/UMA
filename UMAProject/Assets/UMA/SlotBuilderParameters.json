@@ -1,10 +1,10 @@
 {
     "slotName": "UMA30_Body",
     "RootBone": "Global",
-    "createOverlay": true,
-    "createRecipe": true,
+    "createOverlay": false,
+    "createRecipe": false,
     "isBaseRaceRecipe": false,
-    "addToGlobalLibrary": true,
+    "addToGlobalLibrary": false,
     "binarySerialization": true,
     "calcTangents": false,
     "clearNormals": false,
@@ -39,9 +39,9 @@
     "slotLodBoundaryWeight": 20.0,
     "scrollPos": {
         "x": 0.0,
-        "y": 127.0
+        "y": 0.0
     },
-    "filterIgnoreMeshesEnabled": true,
+    "filterIgnoreMeshesEnabled": false,
     "filterIgnoreMeshesContaining": "UMA30",
     "filterOnlyIncludeMeshesEnabled": false,
     "filterOnlyIncludeMeshesContaining": "robe",

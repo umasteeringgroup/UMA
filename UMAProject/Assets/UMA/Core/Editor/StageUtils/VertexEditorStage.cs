@@ -155,6 +155,7 @@ namespace UMA
             public int count;
             public Vector3[] originalVertices;
             public Vector3[] originalNormals;
+            public bool hasOriginalNormals;
             public float[] mask;
         }
 
@@ -201,6 +202,9 @@ namespace UMA
         [SerializeField] private int sculptSlotIndex = 0;
         [SerializeField] private bool sculptDefaultSlotChosen = false;
         [SerializeField] private string sculptModifierName = string.Empty;
+        [SerializeField] private string sculptBlendshapeName = string.Empty;
+        [SerializeField] private string sculptBlendshapeStatusMessage = string.Empty;
+        [SerializeField] private MessageType sculptBlendshapeStatusType = MessageType.Info;
         [SerializeField] private string sculptNewSlotName = string.Empty;
         private readonly List<SlotData> sculptSlots = new List<SlotData>();
         private readonly List<string> sculptSlotNames = new List<string>();
@@ -1229,6 +1233,8 @@ namespace UMA
             stage.titleContent.image = EditorGUIUtility.IconContent("GameObject Icon").image;
             stage.thisDCA = DCA;
             stage.Currentmodifier = modifier;
+            stage.sceneToolMode = SceneToolMode.Sculpt;
+            stage.editorMode = MeshModifierEditor.EditorMode.MeshModifiers;
             CaptureSceneViewModeBeforeOpening(stage);
             StageUtility.GoToStage(stage, true);
             return stage;
@@ -7400,6 +7406,7 @@ namespace UMA
             if (allNormals != null && start + count <= allNormals.Length)
             {
                 Array.Copy(allNormals, start, state.originalNormals, 0, count);
+                state.hasOriginalNormals = true;
             }
             sculptSlotStates[slot] = state;
             return state;
@@ -7456,6 +7463,8 @@ namespace UMA
             BuildSculptConnectedComponents();
             if (string.IsNullOrEmpty(sculptModifierName))
                 sculptModifierName = IsSculptAllSlotsMode ? "All Slots Sculpt" : GetSculptSlotKey() + " Sculpt";
+            if (string.IsNullOrEmpty(sculptBlendshapeName))
+                sculptBlendshapeName = sculptModifierName;
             if (string.IsNullOrEmpty(sculptNewSlotName)) sculptNewSlotName = sculptSlot.slotName + "_modified";
         }
 
@@ -8491,6 +8500,20 @@ namespace UMA
             EditorGUI.EndDisabledGroup();
 
             EditorGUILayout.Space(6f);
+            GUILayout.Label("Save Sculpt as Blendshape", EditorStyles.miniBoldLabel);
+            sculptBlendshapeName = EditorGUILayout.TextField("Blendshape Name", sculptBlendshapeName);
+            EditorGUI.BeginDisabledGroup(!HasSculptChanges() || string.IsNullOrWhiteSpace(sculptBlendshapeName));
+            if (GUILayout.Button(new GUIContent(
+                    "Save Sculpt as Blendshape",
+                    "Add or replace a 100%-weight blendshape on every SlotDataAsset changed by this sculpt session.")))
+            {
+                SaveSculptAsBlendshape();
+            }
+            EditorGUI.EndDisabledGroup();
+            if (!string.IsNullOrEmpty(sculptBlendshapeStatusMessage))
+                EditorGUILayout.HelpBox(sculptBlendshapeStatusMessage, sculptBlendshapeStatusType);
+
+            EditorGUILayout.Space(6f);
             GUILayout.Label("Save Slot Mesh", EditorStyles.miniBoldLabel);
             EditorGUI.BeginDisabledGroup(IsSculptAllSlotsMode || !HasCurrentSculptChanges());
             if (GUILayout.Button(new GUIContent("Save slot modifications to base slot", "Overwrite the selected SlotDataAsset's MeshData with the sculpted vertex positions.")))
@@ -8558,6 +8581,10 @@ namespace UMA
                 if (HasSculptChanges(state))
                     changed.Add(state);
             }
+            changed.Sort((left, right) => string.Compare(
+                left != null && left.slot != null ? left.slot.slotName : string.Empty,
+                right != null && right.slot != null ? right.slot.slotName : string.Empty,
+                StringComparison.Ordinal));
             return changed;
         }
 
@@ -8591,6 +8618,191 @@ namespace UMA
                 ? (string.IsNullOrWhiteSpace(sculptModifierName) ? "SculptModifier" : sculptModifierName)
                 : (string.IsNullOrWhiteSpace(vertexPaintModifierName) ? "VertexPaintModifier" : vertexPaintModifierName);
             return modifierEditor.SaveToAsset(defaultName, "Save MeshModifier");
+        }
+
+        private void SaveSculptAsBlendshape()
+        {
+            EndSculptStroke(true);
+            string blendshapeName = string.IsNullOrWhiteSpace(sculptBlendshapeName)
+                ? string.Empty
+                : sculptBlendshapeName.Trim();
+            if (string.IsNullOrEmpty(blendshapeName))
+            {
+                sculptBlendshapeStatusType = MessageType.Warning;
+                sculptBlendshapeStatusMessage = "Enter a blendshape name before saving.";
+                return;
+            }
+
+            List<SculptSlotEditState> changedStates = GetChangedSculptStates();
+            if (changedStates.Count == 0)
+            {
+                sculptBlendshapeStatusType = MessageType.Warning;
+                sculptBlendshapeStatusMessage = "Sculpt at least one slot before creating a blendshape.";
+                return;
+            }
+
+            List<SlotDataAsset> targets = new List<SlotDataAsset>();
+            Dictionary<SlotDataAsset, UMABlendShape> shapes = new Dictionary<SlotDataAsset, UMABlendShape>();
+            Dictionary<SlotDataAsset, string> targetSlotNames = new Dictionary<SlotDataAsset, string>();
+            List<string> errors = new List<string>();
+            int replacementCount = 0;
+
+            for (int i = 0; i < changedStates.Count; i++)
+            {
+                SculptSlotEditState state = changedStates[i];
+                string slotName = state != null && state.slot != null ? state.slot.slotName : "Unknown";
+                SlotDataAsset target = state != null && state.slot != null ? state.slot.asset : null;
+                if (target == null)
+                {
+                    errors.Add("Slot '" + slotName + "' has no SlotDataAsset.");
+                    continue;
+                }
+                if (string.IsNullOrEmpty(AssetDatabase.GetAssetPath(target)))
+                {
+                    errors.Add("Slot '" + slotName + "' does not reference a saved project asset.");
+                    continue;
+                }
+                if (shapes.ContainsKey(target))
+                {
+                    errors.Add(
+                        "Slots '" + targetSlotNames[target] + "' and '" + slotName +
+                        "' share SlotDataAsset '" + target.name + "'. Give them independent slot assets before saving different sculpt results as blendshapes.");
+                    continue;
+                }
+                if (!TryBuildSculptBlendshape(state, blendshapeName, out UMABlendShape shape, out string error))
+                {
+                    errors.Add("Slot '" + slotName + "': " + error);
+                    continue;
+                }
+
+                targets.Add(target);
+                shapes.Add(target, shape);
+                targetSlotNames.Add(target, slotName);
+                if (HasBlendshape(target.meshData, blendshapeName)) replacementCount++;
+            }
+
+            if (errors.Count > 0)
+            {
+                sculptBlendshapeStatusType = MessageType.Error;
+                sculptBlendshapeStatusMessage = "Blendshape save failed. " + errors[0];
+                EditorUtility.DisplayDialog(
+                    "Unable to Save Sculpt as Blendshape",
+                    string.Join("\n\n", errors),
+                    "OK");
+                return;
+            }
+
+            if (replacementCount > 0 && !EditorUtility.DisplayDialog(
+                    "Replace Sculpt Blendshape",
+                    "A blendshape named '" + blendshapeName + "' already exists on " + replacementCount +
+                    " of the " + targets.Count + " sculpted SlotDataAsset(s). Replace the existing blendshape data?",
+                    "Replace",
+                    "Cancel"))
+            {
+                return;
+            }
+
+            Undo.IncrementCurrentGroup();
+            int undoGroup = Undo.GetCurrentGroup();
+            Undo.SetCurrentGroupName("Save Sculpt as Blendshape");
+            UnityEngine.Object[] undoTargets = new UnityEngine.Object[targets.Count];
+            for (int i = 0; i < targets.Count; i++) undoTargets[i] = targets[i];
+            Undo.RegisterCompleteObjectUndo(undoTargets, "Save Sculpt as Blendshape");
+
+            for (int i = 0; i < targets.Count; i++)
+            {
+                SlotDataAsset target = targets[i];
+                AddOrReplaceBlendshape(target.meshData, shapes[target]);
+                EditorUtility.SetDirty(target);
+            }
+            AssetDatabase.SaveAssets();
+            Undo.CollapseUndoOperations(undoGroup);
+
+            sculptBlendshapeName = blendshapeName;
+            sculptBlendshapeStatusType = MessageType.Info;
+            sculptBlendshapeStatusMessage =
+                "Saved blendshape '" + blendshapeName + "' on " + targets.Count +
+                " sculpted SlotDataAsset(s). Regenerate the avatar to load the saved blendshape.";
+            RepaintLinkedEditors();
+        }
+
+        private bool TryBuildSculptBlendshape(
+            SculptSlotEditState state,
+            string blendshapeName,
+            out UMABlendShape shape,
+            out string error)
+        {
+            shape = null;
+            error = string.Empty;
+            if (state == null || state.slot == null || state.slot.asset == null ||
+                UMAMeshData.IsNullOrEmptyMeshData(state.slot.asset.meshData))
+            {
+                error = "The source mesh data is unavailable.";
+                return false;
+            }
+            if (BakedMesh == null || state.originalVertices == null || state.originalVertices.Length != state.count ||
+                state.start < 0 || state.start + state.count > BakedMesh.vertexCount ||
+                state.slot.asset.meshData.vertexCount != state.count)
+            {
+                error = "The source topology no longer matches the sculpt preview.";
+                return false;
+            }
+
+            Vector3[] currentVertices = BakedMesh.vertices;
+            Vector3[] deltaVertices = new Vector3[state.count];
+            for (int i = 0; i < state.count; i++)
+                deltaVertices[i] = currentVertices[state.start + i] - state.originalVertices[i];
+
+            Vector3[] deltaNormals = new Vector3[0];
+            Vector3[] currentNormals = BakedMesh.normals;
+            if (state.hasOriginalNormals && state.originalNormals != null &&
+                state.originalNormals.Length == state.count && currentNormals != null &&
+                state.start + state.count <= currentNormals.Length)
+            {
+                deltaNormals = new Vector3[state.count];
+                for (int i = 0; i < state.count; i++)
+                    deltaNormals[i] = currentNormals[state.start + i] - state.originalNormals[i];
+            }
+
+            shape = new UMABlendShape
+            {
+                shapeName = blendshapeName,
+                frames = new[]
+                {
+                    new UMABlendFrame
+                    {
+                        frameWeight = 100f,
+                        deltaVertices = deltaVertices,
+                        deltaNormals = deltaNormals,
+                        deltaTangents = new Vector3[0]
+                    }
+                }
+            };
+            return true;
+        }
+
+        private static bool HasBlendshape(UMAMeshData meshData, string blendshapeName)
+        {
+            if (meshData == null || meshData.blendShapes == null) return false;
+            for (int i = 0; i < meshData.blendShapes.Length; i++)
+            {
+                UMABlendShape shape = meshData.blendShapes[i];
+                if (shape != null && string.Equals(shape.shapeName, blendshapeName, StringComparison.Ordinal))
+                    return true;
+            }
+            return false;
+        }
+
+        private static void AddOrReplaceBlendshape(UMAMeshData meshData, UMABlendShape shape)
+        {
+            List<UMABlendShape> shapes = meshData.blendShapes != null
+                ? new List<UMABlendShape>(meshData.blendShapes)
+                : new List<UMABlendShape>();
+            int existing = shapes.FindIndex(item => item != null &&
+                string.Equals(item.shapeName, shape.shapeName, StringComparison.Ordinal));
+            if (existing >= 0) shapes[existing] = shape;
+            else shapes.Add(shape);
+            meshData.blendShapes = shapes.ToArray();
         }
 
         private UMAMeshData BuildSculptedSlotMeshData()

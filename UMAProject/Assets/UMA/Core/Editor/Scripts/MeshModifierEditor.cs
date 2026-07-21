@@ -66,7 +66,7 @@ namespace UMA
         public GUIStyle selectedButton;
         public GUIStyle unselectedButton;
         public enum EditorMode { MeshModifiers, VertexAdjustments, Blendshapes }
-        public EditorMode editorMode = EditorMode.VertexAdjustments;
+        public EditorMode editorMode = EditorMode.MeshModifiers;
 
         private enum AuthoringWorkflow
         {
@@ -76,7 +76,7 @@ namespace UMA
             BlendshapeExtraction
         }
 
-        [SerializeField] private AuthoringWorkflow authoringWorkflow = AuthoringWorkflow.AdvancedVertexAdjustments;
+        [SerializeField] private AuthoringWorkflow authoringWorkflow = AuthoringWorkflow.Sculpt;
         [SerializeField] private EditorMode advancedEditorMode = EditorMode.VertexAdjustments;
         [SerializeField] private bool showBuildOptions = true;
 
@@ -204,6 +204,8 @@ namespace UMA
         public void Setup(DynamicCharacterAvatar DCA, VertexEditorStage vstage, MeshModifier modifier)
         {
             thisDCA = DCA;
+            authoringWorkflow = AuthoringWorkflow.Sculpt;
+            editorMode = EditorMode.MeshModifiers;
             wasKeepAnimator = DCA.KeepAnimatorController;
             wasAnimatorEnabled = DCA.gameObject.GetComponent<Animator>().enabled;
             wasRaceFixup = DCA.activeRace.data.FixupRotations;
@@ -216,6 +218,8 @@ namespace UMA
 
             SlotNameToModifiers.Clear();
             vertexEditorStage = vstage;
+            vertexEditorStage.ActivateSculptAuthoringMode();
+            vertexEditorStage.editorMode = editorMode;
             ModifierTypes = AppDomain.CurrentDomain.GetAllDerivedTypes(typeof(VertexAdjustmentCollection));
             ModifierTypeNames = new string[ModifierTypes.Length];
             for (int i = 0; i < ModifierTypes.Length; i++)
