@@ -138,7 +138,10 @@ namespace UMA
         enum SelectionBrushShape { Point, Circle };
 
         private enum SceneToolMode { Select, SelectionBrush, Sculpt, VertexPaint }
-        private enum SculptTool { Add, Remove, Smooth, Grab }
+        private enum SculptTool { Add, Remove, Smooth, Grab, Crease, Pinch, Plane, Boundary, ElasticDeform }
+        private enum SculptPlaneMode { Flatten, Fill, Scrape }
+        private enum SculptBoundaryMode { Grab, Bend, Expand, Inflate, Twist, Smooth }
+        private enum SculptElasticMode { Grab, Scale, Twist }
         private enum SculptFalloff { Constant, Linear, Smooth, EaseIn, EaseOut, EaseInOut, Sharp, UserDefined }
         private enum SculptMaskTool { None, Paint, Erase }
         private enum AutosculptAxis { X, Y, Z }
@@ -185,6 +188,12 @@ namespace UMA
         [SerializeField] private SculptMaskTool sculptMaskTool = SculptMaskTool.None;
         [SerializeField] private float sculptRadius = 0.05f;
         [SerializeField] private float sculptStrengthPercent = 25f;
+        [SerializeField] private float sculptCreaseDepth = -0.35f;
+        [SerializeField] private float sculptPinchStrength = 0.65f;
+        [SerializeField] private SculptPlaneMode sculptPlaneMode = SculptPlaneMode.Flatten;
+        [SerializeField] private SculptBoundaryMode sculptBoundaryMode = SculptBoundaryMode.Grab;
+        [SerializeField] private SculptElasticMode sculptElasticMode = SculptElasticMode.Grab;
+        [SerializeField] private float sculptElasticVolumePreservation = 0.65f;
         [SerializeField] private bool sculptSymmetryX = false;
         [SerializeField] private bool sculptConnectedOnly = false;
         [SerializeField] private bool sculptUpdateNormalsWhileSculpting = false;
@@ -206,6 +215,7 @@ namespace UMA
         private Vector3[] sculptOriginalVertices;
         private Vector3[] sculptOriginalNormals;
         private List<int>[] sculptNeighbors;
+        private HashSet<int> sculptBoundaryVertices;
         private List<int>[] sculptCoincidentVertices;
         private int[] sculptConnectedComponents;
         private int sculptHoverConnectedComponent = -1;
@@ -227,6 +237,12 @@ namespace UMA
         private Vector3[] sculptGrabStartVertices;
         private float[] sculptGrabWeights;
         private float[] sculptGrabMirroredWeights;
+        private Vector2 sculptGrabStartGuiPoint;
+        private Vector3 sculptGrabStartLocalPoint;
+        private Vector3 sculptGrabStartLocalNormal;
+        private Vector3 sculptGrabStartLocalTangent;
+        private Vector3 sculptStrokePlanePoint;
+        private Vector3 sculptStrokePlaneNormal;
         [SerializeField] private bool showAutosculpt = false;
         [SerializeField] private string autosculptOccluderSlotName = string.Empty;
         [SerializeField] private AutosculptAxis autosculptAxis = AutosculptAxis.Y;
@@ -353,7 +369,6 @@ namespace UMA
         private const float LeftPanelPadding = 6f;
         private const float LeftPanelHeaderHeight = 18f;
 
-        public Vector2 VertexEditorScrollLocation = Vector2.zero;
         public Rect VertexEditorToolsWindow = new Rect(10, 10, 300, 300);
 
 
@@ -3601,10 +3616,6 @@ namespace UMA
         {
          Rect r = SceneView.lastActiveSceneView.position;
             float panelWidth = Mathf.Clamp(r.width * 0.33f, LeftPanelWidthMin, LeftPanelWidthMax);
-            if (panelWidth > 300f)
-            {
-                panelWidth = 300f;
-            }
             leftPanelRect = new Rect(LeftPanelPadding, LeftPanelPadding, panelWidth, r.height - (LeftPanelPadding * 2f));
         }
 
@@ -3901,7 +3912,7 @@ namespace UMA
             if (currentEvent.type == EventType.MouseDown && currentEvent.button == 0 && sculptHoverValid)
             {
                 BeginSculptStroke();
-                if (sculpting && IsSculptGrabMode)
+                if (sculpting && IsSculptDragMode)
                 {
                     if (!InitializeSculptGrab(sceneView, currentEvent.mousePosition))
                         EndSculptStroke(false);
@@ -4087,15 +4098,19 @@ namespace UMA
             sculptUndoGroup = Undo.GetCurrentGroup();
             string undoName = sculptMaskTool != SculptMaskTool.None
                 ? "Paint Sculpt Mask"
-                : sculptTool == SculptTool.Grab ? "Grab Mesh" : "Sculpt Mesh";
+                : IsSculptDragMode ? ObjectNames.NicifyVariableName(sculptTool.ToString()) + " Mesh" : "Sculpt Mesh";
             Undo.SetCurrentGroupName(undoName);
             Undo.RegisterCompleteObjectUndo(new UnityEngine.Object[] { this, BakedMesh }, undoName);
             Array.Clear(sculptStrokeApplied, 0, sculptStrokeApplied.Length);
             Array.Clear(sculptStrokeLimit, 0, sculptStrokeLimit.Length);
+            sculptStrokePlanePoint = VertexObject.transform.InverseTransformPoint(sculptHoverPoint);
+            sculptStrokePlaneNormal = VertexObject.transform.InverseTransformDirection(sculptHoverNormal).normalized;
             sculpting = true; sculptHasLastSample = false;
         }
 
-        private bool IsSculptGrabMode => sculptTool == SculptTool.Grab && sculptMaskTool == SculptMaskTool.None;
+        // Cloth can join this anchored-drag path later without changing the stroke lifecycle.
+        private bool IsSculptDragMode => sculptMaskTool == SculptMaskTool.None &&
+            (sculptTool == SculptTool.Grab || sculptTool == SculptTool.Boundary || sculptTool == SculptTool.ElasticDeform);
 
         private bool InitializeSculptGrab(SceneView sceneView, Vector2 guiPoint)
         {
@@ -4121,19 +4136,36 @@ namespace UMA
 
             sculptGrabStartPlanePoint = startRay.GetPoint(enter);
             sculptGrabStartBrushPoint = sculptHoverPoint;
+            sculptGrabStartGuiPoint = guiPoint;
+            sculptGrabStartLocalPoint = VertexObject.transform.InverseTransformPoint(sculptGrabStartBrushPoint);
+            sculptGrabStartLocalNormal = VertexObject.transform.InverseTransformDirection(sculptHoverNormal).normalized;
+            sculptGrabStartLocalTangent = VertexObject.transform.InverseTransformDirection(sculptHoverTangent).normalized;
             sculptGrabStartVertices = new Vector3[sculptSlotVertexCount];
             Vector3[] vertices = BakedMesh.vertices;
             Array.Copy(vertices, sculptSlotStart, sculptGrabStartVertices, 0, sculptSlotVertexCount);
 
             sculptGrabWeights = new float[sculptSlotVertexCount];
             sculptGrabMirroredWeights = sculptSymmetryX ? new float[sculptSlotVertexCount] : null;
-            Vector3 localPoint = VertexObject.transform.InverseTransformPoint(sculptGrabStartBrushPoint);
+            Vector3 localPoint = sculptGrabStartLocalPoint;
             Vector3 mirroredPoint = ReflectLocalX(localPoint);
             int connectedComponent = sculptConnectedOnly ? sculptHoverConnectedComponent : -1;
             int mirroredComponent = sculptConnectedOnly && sculptGrabMirroredWeights != null
                 ? FindSculptConnectedComponentAtPoint(mirroredPoint)
                 : -1;
             float strength = sculptStrengthPercent * 0.01f;
+
+            if (sculptTool == SculptTool.Boundary)
+            {
+                if (!BuildSculptBoundaryWeights(localPoint, connectedComponent, strength, sculptGrabWeights))
+                {
+                    return false;
+                }
+                if (sculptGrabMirroredWeights != null)
+                    BuildSculptBoundaryWeights(mirroredPoint, mirroredComponent, strength, sculptGrabMirroredWeights);
+                sculptGrabInitialized = true;
+                return true;
+            }
+
             for (int i = 0; i < sculptSlotVertexCount; i++)
             {
                 float unmaskedStrength = strength * (1f - sculptMask[i]);
@@ -4162,6 +4194,84 @@ namespace UMA
             return true;
         }
 
+        private bool BuildSculptBoundaryWeights(Vector3 localPoint, int connectedComponent, float strength, float[] weights)
+        {
+            if (weights == null || sculptBoundaryVertices == null || sculptBoundaryVertices.Count == 0 ||
+                sculptGrabStartVertices == null || sculptNeighbors == null)
+            {
+                return false;
+            }
+
+            int origin = -1;
+            float closestDistance = float.PositiveInfinity;
+            foreach (int boundaryVertex in sculptBoundaryVertices)
+            {
+                if (boundaryVertex < 0 || boundaryVertex >= sculptSlotVertexCount) continue;
+                if (IsSculptAllSlotsMode && sculptCrossSlotSeamsBuilt &&
+                    sculptCrossSlotSeams.ContainsKey(sculptSlotStart + boundaryVertex))
+                {
+                    // A per-slot open edge welded to another visible slot is not an exposed garment boundary.
+                    continue;
+                }
+                if (sculptConnectedOnly &&
+                    (connectedComponent < 0 || sculptConnectedComponents == null ||
+                     sculptConnectedComponents[boundaryVertex] != connectedComponent))
+                {
+                    continue;
+                }
+                float distance = Vector3.Distance(sculptGrabStartVertices[boundaryVertex], localPoint);
+                if (distance < closestDistance)
+                {
+                    closestDistance = distance;
+                    origin = boundaryVertex;
+                }
+            }
+            if (origin < 0 || closestDistance > sculptRadius * 1.5f) return false;
+
+            float[] distances = new float[sculptSlotVertexCount];
+            bool[] queued = new bool[sculptSlotVertexCount];
+            for (int i = 0; i < distances.Length; i++) distances[i] = float.PositiveInfinity;
+            Queue<int> queue = new Queue<int>();
+            distances[origin] = 0f;
+            queue.Enqueue(origin);
+            queued[origin] = true;
+
+            while (queue.Count > 0)
+            {
+                int vertex = queue.Dequeue();
+                queued[vertex] = false;
+                List<int> neighbors = sculptNeighbors[vertex];
+                for (int i = 0; i < neighbors.Count; i++)
+                {
+                    int neighbor = neighbors[i];
+                    if (sculptConnectedOnly && sculptConnectedComponents != null &&
+                        sculptConnectedComponents[neighbor] != connectedComponent)
+                    {
+                        continue;
+                    }
+                    float candidate = distances[vertex] +
+                        Vector3.Distance(sculptGrabStartVertices[vertex], sculptGrabStartVertices[neighbor]);
+                    if (candidate >= distances[neighbor] || candidate > sculptRadius) continue;
+                    distances[neighbor] = candidate;
+                    if (!queued[neighbor])
+                    {
+                        queue.Enqueue(neighbor);
+                        queued[neighbor] = true;
+                    }
+                }
+            }
+
+            bool hasWeight = false;
+            for (int i = 0; i < distances.Length; i++)
+            {
+                if (float.IsInfinity(distances[i]) || distances[i] > sculptRadius) continue;
+                weights[i] = EvaluateSculptFalloff(distances[i] / Mathf.Max(sculptRadius, 0.000001f)) *
+                    strength * (1f - sculptMask[i]);
+                hasWeight |= weights[i] > 0f;
+            }
+            return hasWeight;
+        }
+
         private void ApplySculptGrab(Vector2 guiPoint)
         {
             if (!sculpting || !sculptGrabInitialized || VertexObject == null || BakedMesh == null ||
@@ -4179,7 +4289,7 @@ namespace UMA
             Vector3 currentPlanePoint = ray.GetPoint(enter);
             Vector3 worldDelta = currentPlanePoint - sculptGrabStartPlanePoint;
             Vector3 localDelta = VertexObject.transform.InverseTransformVector(worldDelta);
-            Vector3 mirroredLocalDelta = ReflectLocalX(localDelta);
+            Vector2 guiDelta = guiPoint - sculptGrabStartGuiPoint;
             Vector3[] vertices = BakedMesh.vertices;
             bool[] processed = new bool[sculptSlotVertexCount];
 
@@ -4204,21 +4314,28 @@ namespace UMA
                 float totalWeight = primaryWeight + mirroredWeight;
                 if (totalWeight <= 0f) continue;
 
-                Vector3 grabOffset;
-                if (mirroredWeight > 0f)
+                int referenceIndex = coincident[0];
+                Vector3 startPosition = sculptGrabStartVertices[referenceIndex];
+                Vector3 grabbedPosition;
+                if (primaryWeight > 0f && mirroredWeight > 0f)
                 {
-                    // Blend overlapping symmetry brushes without doubling their strength.
-                    Vector3 blendedDirection =
-                        (localDelta * primaryWeight + mirroredLocalDelta * mirroredWeight) / totalWeight;
-                    grabOffset = blendedDirection * Mathf.Max(primaryWeight, mirroredWeight);
+                    Vector3 primaryTarget = EvaluateSculptDragTarget(
+                        referenceIndex, startPosition, primaryWeight, localDelta, guiDelta, false);
+                    Vector3 mirroredTarget = EvaluateSculptDragTarget(
+                        referenceIndex, startPosition, mirroredWeight, localDelta, guiDelta, true);
+                    grabbedPosition = Vector3.Lerp(primaryTarget, mirroredTarget, mirroredWeight / totalWeight);
+                }
+                else if (primaryWeight > 0f)
+                {
+                    grabbedPosition = EvaluateSculptDragTarget(
+                        referenceIndex, startPosition, primaryWeight, localDelta, guiDelta, false);
                 }
                 else
                 {
-                    grabOffset = localDelta * primaryWeight;
+                    grabbedPosition = EvaluateSculptDragTarget(
+                        referenceIndex, startPosition, mirroredWeight, localDelta, guiDelta, true);
                 }
 
-                int referenceIndex = coincident[0];
-                Vector3 grabbedPosition = sculptGrabStartVertices[referenceIndex] + grabOffset;
                 for (int coincidentIndex = 0; coincidentIndex < coincident.Count; coincidentIndex++)
                 {
                     int localIndex = coincident[coincidentIndex];
@@ -4242,6 +4359,90 @@ namespace UMA
             EditorUtility.SetDirty(this);
         }
 
+        private Vector3 EvaluateSculptDragTarget(
+            int localIndex,
+            Vector3 startPosition,
+            float weight,
+            Vector3 primaryLocalDelta,
+            Vector2 guiDelta,
+            bool mirrored)
+        {
+            Vector3 localDelta = mirrored ? ReflectLocalX(primaryLocalDelta) : primaryLocalDelta;
+            Vector3 origin = mirrored ? ReflectLocalX(sculptGrabStartLocalPoint) : sculptGrabStartLocalPoint;
+            Vector3 normal = mirrored ? ReflectLocalX(sculptGrabStartLocalNormal).normalized : sculptGrabStartLocalNormal;
+            Vector3 tangent = mirrored ? ReflectLocalX(sculptGrabStartLocalTangent).normalized : sculptGrabStartLocalTangent;
+            Vector3 radial = startPosition - origin;
+            float signedDrag = Vector3.Dot(localDelta, tangent) / Mathf.Max(sculptRadius, 0.000001f);
+            if (Mathf.Abs(signedDrag) < 0.0001f)
+                signedDrag = (guiDelta.x - guiDelta.y) * 0.0025f;
+            float mirroredRotationSign = mirrored ? -1f : 1f;
+
+            if (sculptTool == SculptTool.Grab)
+                return startPosition + localDelta * weight;
+
+            if (sculptTool == SculptTool.ElasticDeform)
+            {
+                switch (sculptElasticMode)
+                {
+                    case SculptElasticMode.Scale:
+                        return origin + radial * Mathf.Max(0.05f, 1f + signedDrag * weight);
+                    case SculptElasticMode.Twist:
+                        return origin + Quaternion.AngleAxis(signedDrag * 120f * weight * mirroredRotationSign, normal) * radial;
+                    default:
+                    {
+                        Vector3 target = startPosition + localDelta * weight;
+                        if (sculptElasticVolumePreservation > 0f && localDelta.sqrMagnitude > 0.000000000001f)
+                        {
+                            Vector3 deltaDirection = localDelta.normalized;
+                            Vector3 perpendicular = radial - Vector3.Project(radial, deltaDirection);
+                            if (perpendicular.sqrMagnitude > 0.000000000001f)
+                            {
+                                target += perpendicular.normalized * localDelta.magnitude * weight *
+                                    (1f - Mathf.Clamp01(weight)) * sculptElasticVolumePreservation * 0.35f;
+                            }
+                        }
+                        return target;
+                    }
+                }
+            }
+
+            if (sculptTool == SculptTool.Boundary)
+            {
+                switch (sculptBoundaryMode)
+                {
+                    case SculptBoundaryMode.Bend:
+                        return origin + Quaternion.AngleAxis(signedDrag * 90f * weight * mirroredRotationSign, tangent) * radial;
+                    case SculptBoundaryMode.Expand:
+                    {
+                        Vector3 planarRadial = Vector3.ProjectOnPlane(radial, normal);
+                        Vector3 normalRadial = radial - planarRadial;
+                        return origin + normalRadial + planarRadial * Mathf.Max(0.05f, 1f + signedDrag * weight);
+                    }
+                    case SculptBoundaryMode.Inflate:
+                        return startPosition + normal * signedDrag * sculptRadius * weight;
+                    case SculptBoundaryMode.Twist:
+                        return origin + Quaternion.AngleAxis(signedDrag * 120f * weight * mirroredRotationSign, normal) * radial;
+                    case SculptBoundaryMode.Smooth:
+                    {
+                        List<int> neighbors = sculptNeighbors != null && localIndex >= 0 && localIndex < sculptNeighbors.Length
+                            ? sculptNeighbors[localIndex]
+                            : null;
+                        if (neighbors == null || neighbors.Count == 0) return startPosition;
+                        Vector3 average = Vector3.zero;
+                        for (int i = 0; i < neighbors.Count; i++) average += sculptGrabStartVertices[neighbors[i]];
+                        average /= neighbors.Count;
+                        float blend = Mathf.Clamp01((localDelta.magnitude / Mathf.Max(sculptRadius, 0.000001f) +
+                            guiDelta.magnitude * 0.0025f) * weight);
+                        return Vector3.Lerp(startPosition, average, blend);
+                    }
+                    default:
+                        return startPosition + localDelta * weight;
+                }
+            }
+
+            return startPosition;
+        }
+
         private void ClearSculptGrabState()
         {
             sculptGrabInitialized = false;
@@ -4262,7 +4463,7 @@ namespace UMA
 
         private void ApplySculptSample(Vector3 worldPoint, Vector3 worldNormal)
         {
-            if (!sculpting || sculptOriginalVertices == null || IsSculptGrabMode) return;
+            if (!sculpting || sculptOriginalVertices == null || IsSculptDragMode) return;
             Vector3[] vertices = BakedMesh.vertices;
             Vector3 localPoint = VertexObject.transform.InverseTransformPoint(worldPoint);
             Vector3 localNormal = VertexObject.transform.InverseTransformDirection(worldNormal).normalized;
@@ -4270,7 +4471,10 @@ namespace UMA
             float maxEffect = sculptRadius * strength;
             Vector3[] before = (Vector3[])vertices.Clone();
             int connectedComponent = sculptConnectedOnly ? sculptHoverConnectedComponent : -1;
-            ApplySculptBrushPass(localPoint, localNormal, maxEffect, vertices, before, connectedComponent);
+            Vector3 planePoint = sculptTool == SculptTool.Plane ? sculptStrokePlanePoint : localPoint;
+            Vector3 planeNormal = sculptTool == SculptTool.Plane ? sculptStrokePlaneNormal : localNormal;
+            ApplySculptBrushPass(
+                localPoint, localNormal, maxEffect, vertices, before, connectedComponent, planePoint, planeNormal);
             if (sculptSymmetryX)
             {
                 Vector3 mirroredPoint = ReflectLocalX(localPoint);
@@ -4285,7 +4489,9 @@ namespace UMA
                         maxEffect,
                         vertices,
                         before,
-                        mirroredComponent);
+                        mirroredComponent,
+                        ReflectLocalX(planePoint),
+                        ReflectLocalX(planeNormal).normalized);
                 }
             }
             BakedMesh.vertices = vertices;
@@ -4307,7 +4513,9 @@ namespace UMA
             float maxEffect,
             Vector3[] vertices,
             Vector3[] samplePositions,
-            int connectedComponent)
+            int connectedComponent,
+            Vector3 deformationPoint,
+            Vector3 deformationNormal)
         {
             if (sculptConnectedOnly && connectedComponent < 0) return;
             for (int i = 0; i < sculptSlotVertexCount; i++)
@@ -4321,11 +4529,22 @@ namespace UMA
                 float distance = Vector3.Distance(samplePositions[baked], localPoint);
                 if (distance > sculptRadius) continue;
                 float falloff = EvaluateSculptFalloff(distance / sculptRadius);
-                ApplySculptVertex(i, falloff, maxEffect, localNormal, vertices, samplePositions);
+                ApplySculptVertex(
+                    i, falloff, maxEffect, localPoint, localNormal, deformationPoint, deformationNormal,
+                    vertices, samplePositions);
             }
         }
 
-        private void ApplySculptVertex(int index, float falloff, float maxEffect, Vector3 normal, Vector3[] vertices, Vector3[] before)
+        private void ApplySculptVertex(
+            int index,
+            float falloff,
+            float maxEffect,
+            Vector3 brushPoint,
+            Vector3 brushNormal,
+            Vector3 deformationPoint,
+            Vector3 deformationNormal,
+            Vector3[] vertices,
+            Vector3[] before)
         {
             if (index < 0 || index >= sculptSlotVertexCount) return;
             List<int> coincident = sculptCoincidentVertices != null && sculptCoincidentVertices[index] != null
@@ -4372,9 +4591,40 @@ namespace UMA
                 for (int i = 0; i < coincident.Count; i++) vertices[sculptSlotStart + coincident[i]] = smoothedPosition;
                 SynchronizeCrossSlotSculptPosition(coincident, smoothedPosition, vertices);
             }
+            else if (sculptTool == SculptTool.Pinch || sculptTool == SculptTool.Crease)
+            {
+                Vector3 sourcePosition = vertices[sculptSlotStart + coincident[0]];
+                Vector3 towardCenter = Vector3.ProjectOnPlane(brushPoint - sourcePosition, brushNormal);
+                Vector3 displacement = towardCenter.sqrMagnitude > 0.000000000001f
+                    ? towardCenter.normalized * amount * sculptPinchStrength
+                    : Vector3.zero;
+                if (sculptTool == SculptTool.Crease)
+                    displacement += brushNormal * amount * sculptCreaseDepth;
+                Vector3 pinchedPosition = sourcePosition + displacement;
+                for (int i = 0; i < coincident.Count; i++) vertices[sculptSlotStart + coincident[i]] = pinchedPosition;
+                SynchronizeCrossSlotSculptPosition(coincident, pinchedPosition, vertices);
+            }
+            else if (sculptTool == SculptTool.Plane)
+            {
+                Vector3 sourcePosition = vertices[sculptSlotStart + coincident[0]];
+                Vector3 planeNormal = deformationNormal.sqrMagnitude > 0.000000000001f
+                    ? deformationNormal.normalized
+                    : brushNormal;
+                float signedDistance = Vector3.Dot(sourcePosition - deformationPoint, planeNormal);
+                if ((sculptPlaneMode == SculptPlaneMode.Fill && signedDistance >= 0f) ||
+                    (sculptPlaneMode == SculptPlaneMode.Scrape && signedDistance <= 0f))
+                {
+                    return;
+                }
+                Vector3 moveToPlane = -planeNormal * signedDistance;
+                if (moveToPlane.magnitude > amount) moveToPlane = moveToPlane.normalized * amount;
+                Vector3 planarPosition = sourcePosition + moveToPlane;
+                for (int i = 0; i < coincident.Count; i++) vertices[sculptSlotStart + coincident[i]] = planarPosition;
+                SynchronizeCrossSlotSculptPosition(coincident, planarPosition, vertices);
+            }
             else
             {
-                Vector3 displacement = normal * amount * (sculptTool == SculptTool.Add ? 1f : -1f);
+                Vector3 displacement = brushNormal * amount * (sculptTool == SculptTool.Add ? 1f : -1f);
                 Vector3 weldedPosition = vertices[sculptSlotStart + coincident[0]] + displacement;
                 for (int i = 0; i < coincident.Count; i++) vertices[sculptSlotStart + coincident[i]] = weldedPosition;
                 SynchronizeCrossSlotSculptPosition(coincident, weldedPosition, vertices);
@@ -5254,9 +5504,7 @@ namespace UMA
             {
                 if (slotWeightEditorMode)
                 {
-                    VertexEditorScrollLocation = GUILayout.BeginScrollView(VertexEditorScrollLocation);
                     DoToolsPanel();
-                    GUILayout.EndScrollView();
                     GUILayout.EndArea();
                     Handles.EndGUI();
                     return;
@@ -5276,9 +5524,7 @@ namespace UMA
 
                 GUILayout.BeginArea(toolsRect);
                 {
-                    VertexEditorScrollLocation = GUILayout.BeginScrollView(VertexEditorScrollLocation);
                     DoToolsPanel();
-                    GUILayout.EndScrollView();
                 }
                 GUILayout.EndArea();
 
@@ -5599,6 +5845,7 @@ namespace UMA
         }
 
         private Vector2 ToolsPos = new Vector2(0, 0);
+        private const float ToolsPanelRightPadding = 10f;
         private GUIStyle smallButtonStyle;
         private GUIStyle threeButtonStyle;
         bool doneButton = false;
@@ -5722,7 +5969,14 @@ namespace UMA
                 ToolWindowAreaHeight = VertexEditorToolsWindow.height;
             }
             ToolsPos = GUILayout.BeginScrollView(ToolsPos);
-            GUILayout.BeginArea(new Rect(0, 0, VertexEditorToolsWindow.width - 12, ToolsPos.y + ToolWindowAreaHeight));
+            GUIStyle verticalScrollbar = GUI.skin.verticalScrollbar;
+            float scrollbarWidth = verticalScrollbar != null && verticalScrollbar.fixedWidth > 0f
+                ? verticalScrollbar.fixedWidth
+                : 16f;
+            float toolsContentWidth = Mathf.Max(
+                120f,
+                leftPanelRect.width - scrollbarWidth - ToolsPanelRightPadding);
+            GUILayout.BeginArea(new Rect(0, 0, toolsContentWidth, ToolsPos.y + ToolWindowAreaHeight));
             SceneView sceneView = SceneView.lastActiveSceneView;
             if (slotWeightEditorMode)
             {
@@ -7170,6 +7424,7 @@ namespace UMA
             sculptOriginalVertices = null;
             sculptOriginalNormals = null;
             sculptNeighbors = null;
+            sculptBoundaryVertices = null;
             sculptCoincidentVertices = null;
             sculptConnectedComponents = null;
             sculptHoverConnectedComponent = -1;
@@ -7196,6 +7451,7 @@ namespace UMA
                 if (a < 0 || b < 0 || c < 0 || a >= sculptSlotVertexCount || b >= sculptSlotVertexCount || c >= sculptSlotVertexCount) continue;
                 AddSculptEdge(a, b); AddSculptEdge(b, c); AddSculptEdge(c, a);
             }
+            sculptBoundaryVertices = GetSculptSlotBoundaryVertices(sculptSlotStart, sculptSlotVertexCount);
             BuildSculptCoincidentVertexMap();
             BuildSculptConnectedComponents();
             if (string.IsNullOrEmpty(sculptModifierName))
@@ -8160,13 +8416,49 @@ namespace UMA
                 new GUIContent("Add", "Add: move vertices outward along the averaged surface normal."),
                 new GUIContent("Remove", "Remove: move vertices inward along the averaged surface normal."),
                 new GUIContent("Smooth", "Smooth: relax vertices toward their connected neighbors."),
-                new GUIContent("Grab", "Grab: drag vertices parallel to the Scene camera's view plane.") };
-            sculptTool = (SculptTool)GUILayout.SelectionGrid((int)sculptTool, tools, 2, EditorStyles.miniButton);
+                new GUIContent("Grab", "Grab: drag vertices parallel to the Scene camera's view plane."),
+                new GUIContent("Crease", "Crease: pinch vertices toward the stroke while adding an adjustable ridge or indentation."),
+                new GUIContent("Pinch", "Pinch: draw vertices together across the surface without adding depth."),
+                new GUIContent("Plane", "Plane: flatten, fill, or scrape vertices toward the plane captured at stroke start."),
+                new GUIContent("Boundary", "Boundary: deform the nearest open edge and propagate the effect into the garment."),
+                new GUIContent("Elastic", "Elastic Deform: broad grab, scale, or twist deformation with smooth volume-aware falloff.") };
+            sculptTool = (SculptTool)GUILayout.SelectionGrid((int)sculptTool, tools, 3, EditorStyles.miniButton);
             GUILayout.EndHorizontal();
             sculptRadius = EditorGUILayout.Slider(new GUIContent("Radius", "World-space brush radius."), sculptRadius, 0.001f, 0.5f);
             sculptStrengthPercent = EditorGUILayout.Slider(new GUIContent("Effect %", "Maximum effect a vertex can receive during one stroke. For Grab, this controls how closely the center follows the cursor."), sculptStrengthPercent, 0f, 100f);
             sculptFalloff = (SculptFalloff)EditorGUILayout.EnumPopup("Falloff", sculptFalloff);
             if (sculptFalloff == SculptFalloff.UserDefined) sculptCustomFalloff = EditorGUILayout.CurveField("Curve", sculptCustomFalloff, Color.green, new Rect(0, 0, 1, 1));
+            if (sculptTool == SculptTool.Crease)
+            {
+                sculptPinchStrength = EditorGUILayout.Slider(new GUIContent("Pinch", "How strongly vertices converge toward the stroke."), sculptPinchStrength, 0f, 2f);
+                sculptCreaseDepth = EditorGUILayout.Slider(new GUIContent("Depth", "Negative values cut a crease; positive values raise a ridge."), sculptCreaseDepth, -1f, 1f);
+            }
+            else if (sculptTool == SculptTool.Pinch)
+            {
+                sculptPinchStrength = EditorGUILayout.Slider(new GUIContent("Pinch", "How strongly vertices converge toward the stroke."), sculptPinchStrength, 0f, 2f);
+            }
+            else if (sculptTool == SculptTool.Plane)
+            {
+                sculptPlaneMode = (SculptPlaneMode)EditorGUILayout.EnumPopup("Plane Mode", sculptPlaneMode);
+                EditorGUILayout.HelpBox(
+                    "The first point of each stroke fixes the working plane. Flatten affects both sides, Fill raises only recessed vertices, and Scrape lowers only protruding vertices.",
+                    MessageType.None);
+            }
+            else if (sculptTool == SculptTool.Boundary)
+            {
+                sculptBoundaryMode = (SculptBoundaryMode)EditorGUILayout.EnumPopup("Boundary Mode", sculptBoundaryMode);
+                if (sculptBoundaryVertices == null || sculptBoundaryVertices.Count == 0)
+                    EditorGUILayout.HelpBox("The selected slot has no open mesh boundary.", MessageType.Warning);
+                else
+                    EditorGUILayout.HelpBox("Start the drag near an open hem, cuff, collar, sleeve, or skirt edge. Radius controls how far the deformation propagates across the surface.", MessageType.None);
+            }
+            else if (sculptTool == SculptTool.ElasticDeform)
+            {
+                sculptElasticMode = (SculptElasticMode)EditorGUILayout.EnumPopup("Elastic Mode", sculptElasticMode);
+                if (sculptElasticMode == SculptElasticMode.Grab)
+                    sculptElasticVolumePreservation = EditorGUILayout.Slider(new GUIContent("Preserve Volume", "Adds a small perpendicular bulge through the transition area to reduce visible volume loss."), sculptElasticVolumePreservation, 0f, 1f);
+                EditorGUILayout.HelpBox("Drag across the view plane. Scale and Twist use the drag direction along the surface tangent to determine their sign and amount.", MessageType.None);
+            }
             sculptSymmetryX = EditorGUILayout.Toggle(
                 new GUIContent(
                     "X Symmetry",
@@ -8177,11 +8469,11 @@ namespace UMA
                     "Connected Only",
                     "Restrict the brush to the connected surface under its center. This prevents nearby disconnected layers in the same slot, such as the fabric behind a pocket, from being modified."),
                 sculptConnectedOnly);
-            sculptUpdateNormalsWhileSculpting = EditorGUILayout.Toggle(new GUIContent("Update Normals While Sculpting", "Recalculate mesh normals after every brush sample. This improves live surface feedback but costs more CPU time."), sculptUpdateNormalsWhileSculpting);
-            if (sculptTool == SculptTool.Grab)
+            sculptUpdateNormalsWhileSculpting = EditorGUILayout.Toggle(new GUIContent("Live Normal Updates", "Recalculate mesh normals after every brush sample. This improves live surface feedback but costs more CPU time."), sculptUpdateNormalsWhileSculpting);
+            if (IsSculptDragMode)
             {
                 EditorGUILayout.HelpBox(
-                    "Press on the surface, then drag in the Scene view to pull the frozen brush area parallel to the camera. The target slot is locked until the mouse is released; All Slots still keeps connected slot boundaries welded.",
+                    "Press on the surface, then drag in the Scene view. The affected area and target slot are frozen until release; All Slots still keeps connected slot boundaries welded.",
                     MessageType.None);
             }
             GUILayout.BeginHorizontal();

@@ -491,7 +491,7 @@ namespace UMA
 
             AddText("<b>Authoring and deformation</b>");
             AddText("- The modular DNA system supports bone transforms, blendshapes, bone poses, mesh modifiers, overlay UVs, shared colors, and live editor updates.");
-            AddText("- Mesh Modifier sculpt mode includes Add, Remove, and Smooth brushes, falloff and masking controls, mirroring, and save options.");
+            AddText("- Mesh Modifier sculpt mode includes Add, Remove, Smooth, Grab, Crease, Pinch, Plane, Boundary, and Elastic Deform brushes, plus falloff, masking, mirroring, and save options. Cloth simulation brushes are reserved for a later update.");
             AddText("- The Clothing Conformer can bind wardrobe meshes to a built character and conform selected clothing slots.");
             AddText("- Decal tools support slot-based content and RenderTexture stamping for tattoos, scars, wounds, makeup, and other layered details.");
             AddText("- Slot building supports UDIM workflows, race-baked blendshapes, unbaked animated bones, and updated mesh-processing tools.");
