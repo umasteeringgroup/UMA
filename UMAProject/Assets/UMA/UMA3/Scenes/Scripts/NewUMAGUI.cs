@@ -93,6 +93,13 @@ namespace UMA
         private GameObject currentButton;
         private string currentInfoText;
 
+        // DNA is kept per race for the lifetime of this UI. This lets a user return to a
+        // previously edited race without carrying its values into a different race.
+        private readonly Dictionary<string, Dictionary<string, float>> raceDnaSnapshots =
+            new Dictionary<string, Dictionary<string, float>>(StringComparer.Ordinal);
+        private DynamicCharacterAvatar pendingDnaRestoreAvatar;
+        private string pendingDnaRestoreRaceName;
+
         // Resume guard
         private bool resumedRecently = false;
         private float resumeBlockTime = 1.0f; // seconds to wait after resume
@@ -123,6 +130,7 @@ namespace UMA
         private void OnDisable()
         {
             Application.logMessageReceived -= HandleLog;
+            CancelPendingDnaRestore();
             if (_timingCoroutine != null)
             {
                 StopCoroutine(_timingCoroutine);
@@ -698,11 +706,122 @@ namespace UMA
 
         public void OnRaceClick(string raceName)
         {
-            if (avatar != null)
+            if (avatar == null)
             {
-                avatar.ChangeRace(raceName);
-                ShowInfo();
+                return;
             }
+
+            string previousRaceName = avatar.activeRace != null ? avatar.activeRace.name : null;
+            SaveDnaForRace(previousRaceName);
+
+            bool restoringSavedDna =
+                !string.Equals(previousRaceName, raceName, StringComparison.Ordinal) &&
+                raceDnaSnapshots.ContainsKey(raceName);
+
+            if (restoringSavedDna)
+            {
+                RestoreDnaForRaceWhenRecipeUpdated(raceName);
+            }
+
+            if (!avatar.ChangeRace(raceName))
+            {
+                CancelPendingDnaRestore();
+            }
+
+            ShowInfo();
+        }
+
+        private void SaveDnaForRace(string raceName)
+        {
+            if (string.IsNullOrEmpty(raceName) || avatar == null)
+            {
+                return;
+            }
+
+            Debug.Log($"Saving DNA snapshot for race {raceName}");
+
+            Dictionary<string, DnaSetter> currentDna = avatar.GetDNA();
+            if (currentDna == null || currentDna.Count == 0)
+            {
+                return;
+            }
+
+            Dictionary<string, float> snapshot = new Dictionary<string, float>(StringComparer.Ordinal);
+            foreach (KeyValuePair<string, DnaSetter> dna in currentDna)
+            {
+                if (dna.Value != null)
+                {
+                    snapshot[dna.Key] = dna.Value.Get();
+                }
+            }
+
+            if (snapshot.Count > 0)
+            {
+                raceDnaSnapshots[raceName] = snapshot;
+            }
+            Debug.Log($"Saved {snapshot.Count} DNA values for race {raceName}");
+        }
+
+        private void RestoreDnaForRaceWhenRecipeUpdated(string raceName)
+        {
+            Debug.Log($"Scheduling DNA Update for {raceName} after recipe update");
+            CancelPendingDnaRestore();
+
+            pendingDnaRestoreAvatar = avatar;
+            pendingDnaRestoreRaceName = raceName;
+            if (pendingDnaRestoreAvatar.RecipeUpdated == null)
+            {
+                pendingDnaRestoreAvatar.RecipeUpdated = new UMADataEvent();
+            }
+            pendingDnaRestoreAvatar.RecipeUpdated.AddListener(RestoreDnaOnRecipeUpdated);
+        }
+
+        private void RestoreDnaOnRecipeUpdated(UMAData umaData)
+        {
+            Debug.Log($"Recipe updated Event for race {pendingDnaRestoreRaceName}, restoring DNA snapshot");
+            DynamicCharacterAvatar restoreAvatar = pendingDnaRestoreAvatar;
+            string raceName = pendingDnaRestoreRaceName;
+            CancelPendingDnaRestore();
+
+            if (restoreAvatar == null || restoreAvatar.activeRace == null ||
+                !string.Equals(restoreAvatar.activeRace.name, raceName, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            RestoreDnaForRace(restoreAvatar, raceName);
+        }
+
+        private void RestoreDnaForRace(DynamicCharacterAvatar restoreAvatar, string raceName)
+        {
+            Debug.Log($"Restoring DNA snapshot for race {raceName}");
+            Dictionary<string, float> snapshot;
+            if (!raceDnaSnapshots.TryGetValue(raceName, out snapshot) || snapshot.Count == 0)
+            {
+                Debug.Log($"No DNA snapshot found for race {raceName}, skipping restore");
+                return;
+            }
+
+            Dictionary<string, DnaSetter> currentDna = restoreAvatar.GetDNA();
+            foreach (KeyValuePair<string, float> savedDna in snapshot)
+            {
+                if (currentDna.ContainsKey(savedDna.Key))
+                {
+                    restoreAvatar.SetDNA(savedDna.Key, savedDna.Value, false);
+                }
+            }
+            Debug.Log($"Restored {snapshot.Count} DNA values for race {raceName}");
+        }
+
+        private void CancelPendingDnaRestore()
+        {
+            if (pendingDnaRestoreAvatar != null && pendingDnaRestoreAvatar.RecipeUpdated != null)
+            {
+                pendingDnaRestoreAvatar.RecipeUpdated.RemoveListener(RestoreDnaOnRecipeUpdated);
+            }
+
+            pendingDnaRestoreAvatar = null;
+            pendingDnaRestoreRaceName = null;
         }
 
         public void OnBackClick()
