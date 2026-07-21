@@ -18,6 +18,6 @@ MonoBehaviour:
   - AnchorBoneName: Pigtail_r.003
     ExcludedBoneNames: []
   AnchorBoneName: 
-  inertia: 0.101
-  limit: 1.077
-  elasticity: 1.23
+  inertia: 0.822
+  limit: 1.13
+  elasticity: 1.2
