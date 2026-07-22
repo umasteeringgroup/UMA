@@ -1515,7 +1515,7 @@ namespace UMA.Controls
 #else
                     AssetDatabase.SaveAssets();
 #endif
-                    string path = AssetDatabase.GetAssetPath(uwr.GetUmaObjectId());
+                    string path = AssetDatabase.GetAssetPath(uwr.GetEntityId());
                     AssetDatabase.ImportAsset(path);
                     return true;
                 }
@@ -1552,7 +1552,7 @@ namespace UMA.Controls
                     AssetDatabase.SaveAssets();
 #endif
 
-                    string path = AssetDatabase.GetAssetPath(uwr.GetUmaObjectId());
+                    string path = AssetDatabase.GetAssetPath(uwr.GetEntityId());
                     AssetDatabase.ImportAsset(path);
                     return true;
                 }
@@ -1714,7 +1714,7 @@ namespace UMA.Controls
                     AssetDatabase.SaveAssets();
 #endif
 
-                    string path = AssetDatabase.GetAssetPath(uwr.GetUmaObjectId());
+                    string path = AssetDatabase.GetAssetPath(uwr.GetEntityId());
                     AssetDatabase.ImportAsset(path);
                 }
             }
@@ -1736,7 +1736,7 @@ namespace UMA.Controls
                     AssetDatabase.SaveAssets();
 #endif
 
-                    string path = AssetDatabase.GetAssetPath(uwr.GetUmaObjectId());
+                    string path = AssetDatabase.GetAssetPath(uwr.GetEntityId());
                     AssetDatabase.ImportAsset(path);
                 }
             }
@@ -1759,7 +1759,7 @@ namespace UMA.Controls
                     AssetDatabase.SaveAssets();
 #endif
 
-                    string path = AssetDatabase.GetAssetPath(uwr.GetUmaObjectId());
+                    string path = AssetDatabase.GetAssetPath(uwr.GetEntityId());
                     AssetDatabase.ImportAsset(path);
                 }
             }
@@ -1781,7 +1781,7 @@ namespace UMA.Controls
                     AssetDatabase.SaveAssets();
 #endif
 
-                    string path = AssetDatabase.GetAssetPath(uwr.GetUmaObjectId());
+                    string path = AssetDatabase.GetAssetPath(uwr.GetEntityId());
                     AssetDatabase.ImportAsset(path);
                 }
             }
@@ -4195,7 +4195,21 @@ namespace UMA.Controls
                         continue;
                     }
                     SlotDataAsset slot =assetItem.Item as SlotDataAsset;
+                    if (slot == null)
+                    {
+                        errors++;
+                        SelectByAssetItems(new List<AssetItem>() { MHAS[i] });
+                        Debug.Log($"MHAERR Slot '{item.AssetSlotName}' is not a valid SlotDataAsset: " + MHAS[i]._Name);
+                        continue;
+                    }
 
+                    if (slot.meshData == null)
+                    {
+                        errors++;
+                        SelectByAssetItems(new List<AssetItem>() { MHAS[i] });
+                        Debug.Log("MHAERR Slot has no meshData: " + MHAS[i]._Name);
+                        continue;
+                    }
                     if (item.SubmeshCount != slot.meshData.subMeshCount)
                     {
                         errors++;

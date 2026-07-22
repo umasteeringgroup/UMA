@@ -58,6 +58,13 @@ namespace UMA
 		[Tooltip("Number of iterations to process each frame")]
 		public int IterationCount = 1;
 
+		[Min(0)]
+		[Tooltip("Number of complete frames to wait before processing the next UMA. Values above zero limit generation to one UMA per eligible frame.")]
+		public int InterFrameDelay = 0;
+
+		[NonSerialized]
+		private int interFrameDelayRemaining;
+
 		[Tooltip("Enable Process All Pending to force the generate to process all pending UMA during the next frame")]
 		public bool processAllPending = false;
 
@@ -236,7 +243,20 @@ namespace UMA
 		public override void Work()
 		{
 			RenderTexToCPU.ApplyInline = applyInline;
-            if (!IsIdle())
+
+			int configuredInterFrameDelay = Mathf.Max(0, InterFrameDelay);
+			if (configuredInterFrameDelay == 0)
+			{
+				interFrameDelayRemaining = 0;
+			}
+
+			bool waitingForInterFrameDelay = interFrameDelayRemaining > 0;
+			if (waitingForInterFrameDelay)
+			{
+				interFrameDelayRemaining--;
+			}
+
+            if (!IsIdle() && !waitingForInterFrameDelay)
 			{
                 // forceGarbageCollect is incremented every time the mesh/rig is built.
                 // it does not increment on texture changes or rig adjustments.
@@ -270,6 +290,11 @@ namespace UMA
 					for (int i = 0; i < count; i++)
 					{
 						OnDirtyUpdate();
+						if (configuredInterFrameDelay > 0)
+						{
+							interFrameDelayRemaining = configuredInterFrameDelay;
+							break;
+						}
 						if (IsIdle())
 						{
 							break;

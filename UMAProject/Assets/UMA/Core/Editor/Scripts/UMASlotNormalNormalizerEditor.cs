@@ -480,7 +480,7 @@ namespace UMA.Editors
 			slotDataAsset.ValidateMeshData();
 			EditorUtility.SetDirty(slotDataAsset);
 			AssetDatabase.SaveAssetIfDirty(slotDataAsset);
-			string path = AssetDatabase.GetAssetPath(slotDataAsset.GetUmaObjectId());
+			string path = AssetDatabase.GetAssetPath(slotDataAsset.GetEntityId());
 			if (!string.IsNullOrEmpty(path))
 			{
 				AssetDatabase.ImportAsset(path);

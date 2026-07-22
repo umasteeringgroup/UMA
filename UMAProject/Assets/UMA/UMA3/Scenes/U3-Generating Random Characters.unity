@@ -131,8 +131,9 @@ GameObject:
   - component: {fileID: 84395076}
   - component: {fileID: 84395075}
   - component: {fileID: 84395074}
+  - component: {fileID: 84395078}
   m_Layer: 0
-  m_Name: Cube
+  m_Name: GeneratorParms
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -145,7 +146,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 84395073}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -231,6 +232,48 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &84395078
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 84395073}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a4d6ca436f8402b9fe10d30b8fc2487, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UMA_Core::UMA.UMAGeneratorOverride
+  fitAtlas: 1
+  SharperFitTextures: 1
+  AtlasOverflowFitMethod: 1
+  FitPercentageDecrease: 0.9
+  convertMipMaps: 0
+  atlasResolution: 1024
+  convertRenderTexture: 1
+  useAsyncConversion: 0
+  asyncMipRegen: 1
+  MaxQueuedConversionsPerFrame: 8
+  InitialScaleFactor: 1
+  IterationCount: 1
+  InterFrameDelay: 0
+  collectGarbage: 1
+  garbageCollectionRate: 0
+  processAllPending: 0
+  SaveAndRestoreIgnoredItems: 0
+  showInHierarchy: 0
+  AutomaticScaling: 0
+  ScaleGPUMemoryCutoffMB: 1024
+  ScaleSystemMemoryCutoffMB: 16384
+  editorAtlasResolution: 1024
+  editorInitialScaleFactor: 4
+  applyInline: 0
+  defaultRendererAsset: {fileID: 0}
+  defaultOverlayAsset: {fileID: 0}
+  alwaysRegenerateRenderers: 0
+  Use32BitBuffers: 1
+  textureMerge: {fileID: 0}
+  meshCombiner: {fileID: 0}
 --- !u!1001 &102816001
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -245,15 +288,15 @@ PrefabInstance:
       objectReference: {fileID: 153068, guid: 07f355e97c3d63d43aca902b562409f4, type: 3}
     - target: {fileID: 2885161576314354680, guid: 11b6342601a487e45a8ca8ed561a9b7a, type: 3}
       propertyPath: GridXSize
-      value: 8
+      value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 2885161576314354680, guid: 11b6342601a487e45a8ca8ed561a9b7a, type: 3}
       propertyPath: GridZSize
-      value: 12
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 2885161576314354680, guid: 11b6342601a487e45a8ca8ed561a9b7a, type: 3}
       propertyPath: GridDistance
-      value: 2
+      value: 1.5
       objectReference: {fileID: 0}
     - target: {fileID: 2885161576314354680, guid: 11b6342601a487e45a8ca8ed561a9b7a, type: 3}
       propertyPath: ParentObject
@@ -261,7 +304,7 @@ PrefabInstance:
       objectReference: {fileID: 587163906}
     - target: {fileID: 2885161576314354680, guid: 11b6342601a487e45a8ca8ed561a9b7a, type: 3}
       propertyPath: RandomOffset
-      value: 2.97
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 2885161576314354680, guid: 11b6342601a487e45a8ca8ed561a9b7a, type: 3}
       propertyPath: RandomRotation
@@ -334,10 +377,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 2885161576785399288, guid: 11b6342601a487e45a8ca8ed561a9b7a, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1693305530}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 11b6342601a487e45a8ca8ed561a9b7a, type: 3}
 --- !u!1 &382995770
 GameObject:
@@ -509,6 +549,7 @@ GameObject:
   - component: {fileID: 807120816}
   - component: {fileID: 807120815}
   - component: {fileID: 807120819}
+  - component: {fileID: 807120820}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -642,6 +683,35 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
+--- !u!114 &807120820
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 807120814}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: acd130e191723a94f9a8c180c5be9101, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UMA.Examples.UMAMouseOrbitImproved
+  mouseButtonToUse: 1
+  target: {fileID: 0}
+  distance: 0
+  xSpeed: 120
+  ySpeed: 120
+  scrollrate: 3
+  yMinLimit: -20
+  yMaxLimit: 80
+  distanceMin: 0.5
+  distanceMax: 15
+  Offset: {x: 0, y: 0, z: 0}
+  AlwaysOn: 0
+  ZoomSensitivity: 1
+  singleTouchOrbiting: 1
+  pinchToZoom: 1
+  Clip: 0
+  TargetBone: 0
 --- !u!850595691 &1561521895
 LightingSettings:
   m_ObjectHideFlags: 0
@@ -709,26 +779,6 @@ LightingSettings:
   m_PVRFilteringAtrousPositionSigmaIndirect: 2
   m_PVRFilteringAtrousPositionSigmaAO: 1
   m_RespectSceneVisibilityWhenBakingGI: 0
---- !u!1 &1693305524 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 2885161576785399288, guid: 11b6342601a487e45a8ca8ed561a9b7a, type: 3}
-  m_PrefabInstance: {fileID: 102816001}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &1693305530
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1693305524}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b19a6b26dd4b48845b0237118b8cfb36, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UMA_Core::UMA.FPSCounter
-  Text: {fileID: 0}
-  updateRate: 0.5
-  updateTime: 0
 --- !u!1001 &2062995032
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -795,6 +845,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4152062717022191466, guid: 4d4ce01dbd7484b439df783927a00c65, type: 3}
       propertyPath: m_ConstrainProportionsScale
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6016044893721848575, guid: 4d4ce01dbd7484b439df783927a00c65, type: 3}
+      propertyPath: m_Shadows.m_Type
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []

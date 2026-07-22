@@ -464,7 +464,7 @@ namespace UMA
                 return;
             }
 #if UNITY_EDITOR
-            _Path = AssetDatabase.GetAssetPath(Item.GetUmaObjectId());
+            _Path = AssetDatabase.GetAssetPath(Item.GetEntityId());
             _Guid = AssetDatabase.AssetPathToGUID(_Path);
 #endif
             _TheType = Type;

@@ -5000,8 +5000,22 @@ namespace UMA.CharacterSystem
 #endif
         }
 
-        private static void ProcessMeshHides(Dictionary<string, List<MeshHideAsset>> MeshHideDictionary, List<UMATextRecipe> allRecipes)
+        private static void ProcessMeshHides(Dictionary<string, List<MeshHideAsset>> MeshHideDictionary, List<UMATextRecipe> allRecipes, UMAData.UMARecipe buildRecipe)
         {
+            Dictionary<string, SlotDataAsset> buildSlots = null;
+            if (buildRecipe != null && buildRecipe.slotDataList != null)
+            {
+                buildSlots = new Dictionary<string, SlotDataAsset>(buildRecipe.slotDataList.Length, StringComparer.Ordinal);
+                for (int slotIndex = 0; slotIndex < buildRecipe.slotDataList.Length; slotIndex++)
+                {
+                    SlotData buildSlot = buildRecipe.slotDataList[slotIndex];
+                    if (buildSlot != null && !string.IsNullOrEmpty(buildSlot.slotName) && !buildSlots.ContainsKey(buildSlot.slotName))
+                    {
+                        buildSlots.Add(buildSlot.slotName, buildSlot.asset);
+                    }
+                }
+            }
+
             for (int i = 0; i < allRecipes.Count; i++)
             {
                 var utr = allRecipes[i];
@@ -5045,7 +5059,33 @@ namespace UMA.CharacterSystem
                     {
                         var meshHide = worklist[mh];
                         if (meshHide == null) continue;
-                        var slotName = meshHide.AssetSlotName;
+
+                        string assetSlotName = meshHide.AssetSlotName;
+                        SlotDataAsset referencedSlot = null;
+                        if (buildSlots != null && !string.IsNullOrEmpty(assetSlotName))
+                        {
+                            buildSlots.TryGetValue(assetSlotName, out referencedSlot);
+                        }
+
+                        // A collection may contain masks for slots that are not part of this
+                        // character. Fall back to the indexed slot so malformed assets are still
+                        // diagnosed before they can enter a later build.
+                        if (referencedSlot == null)
+                        {
+                            referencedSlot = meshHide.asset;
+                        }
+
+                        if (!meshHide.IsCompatibleWithSlot(referencedSlot, out string incompatibility))
+                        {
+                            string referencedSlotName = referencedSlot != null ? referencedSlot.slotName : assetSlotName;
+                            string slotDescription = string.IsNullOrEmpty(referencedSlotName)
+                                ? "no referenced slot"
+                                : $"slot '{referencedSlotName}'";
+                            Debug.LogError($"MeshHideAsset '{meshHide.name}' is incompatible with {slotDescription} and will be skipped during this character build: {incompatibility}.", meshHide);
+                            continue;
+                        }
+
+                        var slotName = referencedSlot.slotName;
                         if (!MeshHideDictionary.TryGetValue(slotName, out var list))
                         {
                             list = new List<MeshHideAsset>(4);
@@ -5435,7 +5475,7 @@ namespace UMA.CharacterSystem
             }
             else
             {
-                ProcessMeshHides(MeshHideDictionary, wardrobeRecipes);
+                ProcessMeshHides(MeshHideDictionary, wardrobeRecipes, umaRecipe);
             }
             umaRecipe.UpdateMeshHideMasks();
             if (usingFbxRoute && fbxRouteRuntime != null)
@@ -5872,7 +5912,7 @@ namespace UMA.CharacterSystem
             Array.Copy(SmooshTarget.meshData.submeshes[0].getManagedTriangles(), triangles, SmooshTarget.meshData.submeshes[0].getManagedTriangles().Length);
             m.SetTriangles(triangles, 0);
 
-            Physics.BakeMesh(m.GetUmaObjectId(), false);
+            Physics.BakeMesh(m.GetEntityId(), false);
 
             SmooshScene = GetOrCreateSmooshScene();
 

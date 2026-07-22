@@ -4150,7 +4150,7 @@ namespace UMA
         {
             AssetItem ai = null;
             ai = new AssetItem(TypeToLookup[type], o);
-            ai._Path = AssetDatabase.GetAssetPath(o.GetUmaObjectId());
+            ai._Path = AssetDatabase.GetAssetPath(o.GetEntityId());
             return AddAssetItem(ai);
         }
 
@@ -4978,7 +4978,7 @@ namespace UMA
                     if (obj != null)
                     {
                         ai._Name = ai.EvilName;
-                        ai._Path = AssetDatabase.GetAssetPath(obj.GetUmaObjectId());
+                        ai._Path = AssetDatabase.GetAssetPath(obj.GetEntityId());
                         ai._Guid = AssetDatabase.AssetPathToGUID(ai._Path);
                     }
                     else

@@ -2355,7 +2355,7 @@ namespace UMA.Editors
 								Texture texture = m.GetTexture(propertyName);
 								if (texture is Texture2D || texture is RenderTexture)
 								{
-									string path = AssetDatabase.GetAssetPath(texture.GetUmaObjectId());
+									string path = AssetDatabase.GetAssetPath(texture.GetEntityId());
 									if (string.IsNullOrEmpty(path))
 									{
 										bool isNormal = (propertyName.ToLower().Contains("bumpmap") || propertyName.ToLower().Contains("normal"));
@@ -2795,7 +2795,7 @@ namespace UMA.Editors
 							Texture texture = m.GetTexture(propertyName);
 							if (texture is Texture2D || texture is RenderTexture)
 							{
-								string path = AssetDatabase.GetAssetPath(texture.GetUmaObjectId());
+								string path = AssetDatabase.GetAssetPath(texture.GetEntityId());
 								if (string.IsNullOrEmpty(path))
 								{
 									bool isNormal = (propertyName.ToLower().Contains("bumpmap") || propertyName.ToLower().Contains("normal"));

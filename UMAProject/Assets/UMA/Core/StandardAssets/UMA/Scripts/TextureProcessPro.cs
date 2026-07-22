@@ -431,9 +431,12 @@ namespace UMA
                                                 ? previousResults[textureChannelNumber] as Texture2D
                                                 : null;
 
+                                            bool requiresMipChain = umaGenerator.convertMipMaps && (ww > 1 || hh > 1);
+
                                             if (prevTex2D != null &&
                                                 prevTex2D.width == ww && prevTex2D.height == hh &&
-                                                prevTex2D.format == texFmt)
+                                                prevTex2D.format == texFmt &&
+                                                (prevTex2D.mipmapCount > 1) == requiresMipChain)
                                             {
                                                 tempTexture = prevTex2D;
                                             }
@@ -448,7 +451,18 @@ namespace UMA
                                             {
                                                 try
                                                 {
-                                                    // Copy all mips if available
+                                                    // Atlas drawing and post processing update mip 0. Generate the
+                                                    // completed RT mip chain before copying it; otherwise lower mips
+                                                    // can contain uninitialized (usually black) data.
+                                                    if (umaGenerator.convertMipMaps && destinationTexture.useMipMap && destinationTexture.mipmapCount > 1)
+                                                    {
+                                                        if (RenderTexture.active == destinationTexture)
+                                                        {
+                                                            RenderTexture.active = null;
+                                                        }
+                                                        destinationTexture.GenerateMips();
+                                                    }
+
                                                     Graphics.CopyTexture(destinationTexture, tempTexture);
                                                     usedGpuCopy = true;
                                                 }
@@ -461,7 +475,7 @@ namespace UMA
                                                 var asyncAction = AsyncGPUReadback.Request(destinationTexture, 0);
                                                 asyncAction.WaitForCompletion();
                                                 tempTexture.SetPixelData(asyncAction.GetData<byte>(), 0);
-                                                tempTexture.Apply(true);
+                                                tempTexture.Apply(umaGenerator.convertMipMaps);
                                             }
 
                                             UMARenderTextureTracker.ReleaseTemporary(destinationTexture);

@@ -297,7 +297,10 @@ namespace UMA
         private Texture2D vertexPaintCachedBrushSource;
         private Material vertexColorPreviewMaterial;
 
+        private const int SculptSlotSpecialOptionCount = 2;
         private bool IsSculptAllSlotsMode => sculptSlotIndex == 0;
+        private bool IsSculptAllNonBaseSlotsMode => sculptSlotIndex == 1;
+        private bool IsSculptMultiSlotMode => IsSculptAllSlotsMode || IsSculptAllNonBaseSlotsMode;
         private bool IsVertexPaintAllSlotsMode => vertexPaintSlotIndex == 0;
 
         string[] selectFrom = new string[] { "All Slots" };
@@ -3969,8 +3972,9 @@ namespace UMA
                 if (hit.collider == null || hit.collider.gameObject != VertexObject) continue;
                 SlotData hitSlot = GetSlotForTriangle(hit.triangleIndex);
                 if (hitSlot == null) continue;
-                if (!IsSculptAllSlotsMode && (sculptSlot == null || hitSlot.slotName != sculptSlot.slotName)) continue;
-                if (IsSculptAllSlotsMode && !ReferenceEquals(hitSlot, sculptSlot))
+                if (!IsSculptSlotIncludedInTarget(hitSlot)) continue;
+                if (!IsSculptMultiSlotMode && (sculptSlot == null || hitSlot.slotName != sculptSlot.slotName)) continue;
+                if (IsSculptMultiSlotMode && !ReferenceEquals(hitSlot, sculptSlot))
                 {
                     EndSculptStroke(true);
                     ActivateSculptSlot(hitSlot);
@@ -4213,7 +4217,7 @@ namespace UMA
             foreach (int boundaryVertex in sculptBoundaryVertices)
             {
                 if (boundaryVertex < 0 || boundaryVertex >= sculptSlotVertexCount) continue;
-                if (IsSculptAllSlotsMode && sculptCrossSlotSeamsBuilt &&
+                if (IsSculptMultiSlotMode && sculptCrossSlotSeamsBuilt &&
                     sculptCrossSlotSeams.ContainsKey(sculptSlotStart + boundaryVertex))
                 {
                     // A per-slot open edge welded to another visible slot is not an exposed garment boundary.
@@ -5699,7 +5703,7 @@ namespace UMA
             scrollContentLines += 1.5f; // spacing + invert button
             scrollContentLines += 2f; // safety margin / possible helpbox
 
-            float estimated = header + ((scrollContentLines * (line + vSpacing)) + (LeftPanelPadding * 2f));
+            float estimated = header + ((scrollContentLines * (line + vSpacing)) + (LeftPanelPadding * 2f)) + 8f;
             return Mathf.Clamp(estimated, 50f, maxHeight);
         }
 
@@ -5709,13 +5713,14 @@ namespace UMA
             DoToolsWindow(VertexEditorToolsWindowID);
         }
 
-      private void DrawVisibilityPanel(float availableHeight)
+        private void DrawVisibilityPanel(float availableHeight)
         {
+            GUILayout.BeginVertical(EditorStyles.helpBox);
             GUILayout.Label("Visibility", EditorStyles.boldLabel);
 
             // Fill the remainder of the visibility section with the scroll view.
             float headerHeight = Mathf.Max(LeftPanelHeaderHeight, EditorGUIUtility.singleLineHeight);
-            float scrollHeight = Mathf.Max(0f, availableHeight - headerHeight);
+            float scrollHeight = Mathf.Max(0f, availableHeight - headerHeight - 8f);
             VisibleWearablesLocation = GUILayout.BeginScrollView(VisibleWearablesLocation, GUILayout.Height(scrollHeight));
             bool wasChanged = false;
             bool wasRecipeChanged = false;
@@ -5848,6 +5853,7 @@ namespace UMA
                 RebuildMesh(true);
                 RepaintLinkedEditors();
             }
+            GUILayout.EndVertical();
         }
 
         private Vector2 ToolsPos = new Vector2(0, 0);
@@ -5990,7 +5996,10 @@ namespace UMA
             }
             else
             {
+                GUILayout.BeginHorizontal();
+                GUILayout.Space(3f);
                 DrawAuthoringWorkflowToolbar();
+                GUILayout.EndHorizontal();
                 if (GetAuthoringWorkflowIndex() == 2)
                 {
                     GUILayout.Label("Advanced Selection", EditorStyles.miniBoldLabel);
@@ -7216,7 +7225,7 @@ namespace UMA
                 return;
             }
             List<SculptSlotEditState> changedStates = GetChangedSculptStates();
-            bool useSlotSuffix = changedStates.Count > 1 || IsSculptAllSlotsMode;
+            bool useSlotSuffix = changedStates.Count > 1 || IsSculptMultiSlotMode;
             for (int i = 0; i < changedStates.Count; i++)
             {
                 MeshModifier.Modifier sculptModifier = CreateSculptModifierStack(changedStates[i], useSlotSuffix);
@@ -7310,13 +7319,68 @@ namespace UMA
             }
         }
 
+        private void FrameAllNonBaseSculptSlots()
+        {
+            if (VertexObject == null || BakedMesh == null || BakedMesh.vertexCount == 0)
+            {
+                return;
+            }
+
+            Vector3[] vertices = BakedMesh.vertices;
+            bool hasBounds = false;
+            Bounds bounds = new Bounds();
+            for (int slotIndex = 0; slotIndex < sculptSlots.Count; slotIndex++)
+            {
+                SlotData slot = sculptSlots[slotIndex];
+                if (!IsSculptSlotIncludedInTarget(slot) || slot.asset == null)
+                {
+                    continue;
+                }
+
+                int start = GetVisibleBakedVertexIndex(slot, 0);
+                int count = slot.asset.meshData.vertexCount;
+                if (start < 0 || start + count > vertices.Length)
+                {
+                    continue;
+                }
+
+                for (int vertexIndex = start; vertexIndex < start + count; vertexIndex++)
+                {
+                    Vector3 point = VertexObject.transform.TransformPoint(vertices[vertexIndex]);
+                    if (!hasBounds)
+                    {
+                        bounds = new Bounds(point, Vector3.zero);
+                        hasBounds = true;
+                    }
+                    else
+                    {
+                        bounds.Encapsulate(point);
+                    }
+                }
+            }
+
+            if (!hasBounds)
+            {
+                return;
+            }
+
+            bounds.Expand(Mathf.Max(0.001f, bounds.size.magnitude * 0.01f));
+            SceneView sceneView = openedSceneView != null ? openedSceneView : SceneView.lastActiveSceneView;
+            if (sceneView != null)
+            {
+                sceneView.Frame(bounds, false);
+                sceneView.Repaint();
+            }
+        }
+
         private void RefreshSculptSlots(SlotData preferredSlot = null)
         {
-            bool preserveAllSlots = sculptSlotIndex == 0;
+            bool preserveMultiSlotTarget = IsSculptMultiSlotMode;
             if (preferredSlot == null) preferredSlot = sculptSlot;
             sculptSlots.Clear();
             sculptSlotNames.Clear();
             sculptSlotNames.Add("All Slots");
+            sculptSlotNames.Add("All non-base slots");
             if (thisDCA != null && thisDCA.umaData != null && thisDCA.umaData.umaRecipe != null)
             {
                 foreach (SlotData slot in thisDCA.umaData.umaRecipe.slotDataList)
@@ -7328,39 +7392,42 @@ namespace UMA
                     }
                 }
             }
-            sculptSlotIndex = Mathf.Clamp(sculptSlotIndex, 0, sculptSlots.Count);
-            if (preserveAllSlots)
+            sculptSlotIndex = Mathf.Clamp(sculptSlotIndex, 0, sculptSlots.Count + SculptSlotSpecialOptionCount - 1);
+            if (preserveMultiSlotTarget)
             {
-                sculptSlotIndex = 0;
+                sculptSlotIndex = IsSculptAllSlotsMode ? 0 : 1;
             }
             else if (preferredSlot != null)
             {
                 int found = sculptSlots.FindIndex(slot => ReferenceEquals(slot, preferredSlot));
                 if (found < 0) found = sculptSlots.FindIndex(slot => slot != null && slot.slotName == preferredSlot.slotName);
-                if (found >= 0) sculptSlotIndex = found + 1;
+                if (found >= 0) sculptSlotIndex = found + SculptSlotSpecialOptionCount;
             }
         }
 
         private void EnsureSculptSession(bool force = false)
         {
-            SlotData preferredSlot = sculptSlotIndex > 0 && sculptSlotIndex <= sculptSlots.Count
-                ? sculptSlots[sculptSlotIndex - 1]
+            SlotData preferredSlot = sculptSlotIndex >= SculptSlotSpecialOptionCount &&
+                                     sculptSlotIndex < sculptSlots.Count + SculptSlotSpecialOptionCount
+                ? sculptSlots[sculptSlotIndex - SculptSlotSpecialOptionCount]
                 : sculptSlot;
             RefreshSculptSlots(preferredSlot);
             if (!sculptDefaultSlotChosen)
             {
-                sculptSlotIndex = 0;
+                sculptSlotIndex = FindDefaultSculptSlotIndex() + SculptSlotSpecialOptionCount;
                 sculptDefaultSlotChosen = true;
             }
             SlotData requested = null;
             if (sculptSlots.Count > 0)
             {
-                requested = IsSculptAllSlotsMode
-                    ? (sculptSlots.Contains(sculptSlot) ? sculptSlot : sculptSlots[0])
-                    : sculptSlots[Mathf.Clamp(sculptSlotIndex - 1, 0, sculptSlots.Count - 1)];
+                requested = IsSculptMultiSlotMode
+                    ? (sculptSlots.Contains(sculptSlot) && IsSculptSlotIncludedInTarget(sculptSlot)
+                        ? sculptSlot
+                        : FindFirstSculptTargetSlot())
+                    : sculptSlots[Mathf.Clamp(sculptSlotIndex - SculptSlotSpecialOptionCount, 0, sculptSlots.Count - 1)];
             }
             ActivateSculptSlot(requested, force);
-            if (IsSculptAllSlotsMode)
+            if (IsSculptMultiSlotMode)
             {
                 EnsureCrossSlotSculptSeams();
             }
@@ -7462,7 +7529,11 @@ namespace UMA
             BuildSculptCoincidentVertexMap();
             BuildSculptConnectedComponents();
             if (string.IsNullOrEmpty(sculptModifierName))
-                sculptModifierName = IsSculptAllSlotsMode ? "All Slots Sculpt" : GetSculptSlotKey() + " Sculpt";
+                sculptModifierName = IsSculptAllSlotsMode
+                    ? "All Slots Sculpt"
+                    : IsSculptAllNonBaseSlotsMode
+                        ? "All Non-Base Slots Sculpt"
+                        : GetSculptSlotKey() + " Sculpt";
             if (string.IsNullOrEmpty(sculptBlendshapeName))
                 sculptBlendshapeName = sculptModifierName;
             if (string.IsNullOrEmpty(sculptNewSlotName)) sculptNewSlotName = sculptSlot.slotName + "_modified";
@@ -7491,7 +7562,7 @@ namespace UMA
             sculptCrossSlotSeams.Clear();
             sculptCrossSlotSeamGroups.Clear();
             sculptCrossSlotSeamsBuilt = true;
-            if (!IsSculptAllSlotsMode || BakedMesh == null || sculptSlots.Count < 2)
+            if (!IsSculptMultiSlotMode || BakedMesh == null || sculptSlots.Count < 2)
             {
                 return;
             }
@@ -7504,7 +7575,8 @@ namespace UMA
             for (int slotIndex = 0; slotIndex < sculptSlots.Count; slotIndex++)
             {
                 SlotData slot = sculptSlots[slotIndex];
-                if (slot == null || slot.asset == null || UMAMeshData.IsNullOrEmptyMeshData(slot.asset.meshData))
+                if (!IsSculptSlotIncludedInTarget(slot) || slot == null || slot.asset == null ||
+                    UMAMeshData.IsNullOrEmptyMeshData(slot.asset.meshData))
                 {
                     continue;
                 }
@@ -7603,7 +7675,7 @@ namespace UMA
 
         private void SynchronizeCrossSlotSculptPosition(List<int> localIndices, Vector3 targetPosition, Vector3[] vertices)
         {
-            if (!IsSculptAllSlotsMode || !sculptCrossSlotSeamsBuilt || localIndices == null)
+            if (!IsSculptMultiSlotMode || !sculptCrossSlotSeamsBuilt || localIndices == null)
             {
                 return;
             }
@@ -7634,7 +7706,7 @@ namespace UMA
 
         private void SynchronizeCrossSlotSculptMask(List<int> localIndices, float targetMask)
         {
-            if (!IsSculptAllSlotsMode || !sculptCrossSlotSeamsBuilt || localIndices == null)
+            if (!IsSculptMultiSlotMode || !sculptCrossSlotSeamsBuilt || localIndices == null)
             {
                 return;
             }
@@ -7665,7 +7737,7 @@ namespace UMA
 
         private void SynchronizeCrossSlotSculptNormals()
         {
-            if (!IsSculptAllSlotsMode || sculptCrossSlotSeamGroups.Count == 0 || BakedMesh == null)
+            if (!IsSculptMultiSlotMode || sculptCrossSlotSeamGroups.Count == 0 || BakedMesh == null)
             {
                 return;
             }
@@ -7700,33 +7772,33 @@ namespace UMA
         private int FindDefaultSculptSlotIndex()
         {
             if (sculptSlots.Count == 0) return 0;
-            HashSet<string> baseSlotNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            try
-            {
-                RaceData race = thisDCA != null && thisDCA.activeRace != null ? thisDCA.activeRace.data : null;
-                UMARecipeBase baseRecipeAsset = race != null ? race.baseRaceRecipe : null;
-                UMAData.UMARecipe baseRecipe = baseRecipeAsset != null ? baseRecipeAsset.GetCachedRecipe() : null;
-                if (baseRecipe != null && baseRecipe.slotDataList != null)
-                {
-                    for (int i = 0; i < baseRecipe.slotDataList.Length; i++)
-                    {
-                        SlotData baseSlot = baseRecipe.slotDataList[i];
-                        if (baseSlot != null && !string.IsNullOrEmpty(baseSlot.slotName))
-                            baseSlotNames.Add(baseSlot.slotName);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.LogWarning("Unable to determine the default non-base sculpt slot: " + ex.Message);
-            }
-
             for (int i = 0; i < sculptSlots.Count; i++)
             {
                 SlotData slot = sculptSlots[i];
-                if (slot != null && !baseSlotNames.Contains(slot.slotName)) return i;
+                if (!IsBaseSculptSlot(slot)) return i;
             }
             return 0;
+        }
+
+        private SlotData FindFirstSculptTargetSlot()
+        {
+            for (int i = 0; i < sculptSlots.Count; i++)
+            {
+                SlotData slot = sculptSlots[i];
+                if (IsSculptSlotIncludedInTarget(slot)) return slot;
+            }
+            return null;
+        }
+
+        private bool IsSculptSlotIncludedInTarget(SlotData slot)
+        {
+            return slot != null && (!IsSculptAllNonBaseSlotsMode || !IsBaseSculptSlot(slot));
+        }
+
+        private bool IsBaseSculptSlot(SlotData slot)
+        {
+            RaceData race = thisDCA != null && thisDCA.activeRace != null ? thisDCA.activeRace.data : null;
+            return slot != null && RaceBaseRecipeContainsSlot(race, slot.asset);
         }
 
         private void BuildSculptCoincidentVertexMap()
@@ -8411,13 +8483,26 @@ namespace UMA
             if (frameSlot)
             {
                 if (IsSculptAllSlotsMode) FrameAllEditableSlots();
+                else if (IsSculptAllNonBaseSlotsMode) FrameAllNonBaseSculptSlots();
                 else FrameSelectedSculptSlot();
             }
-            if (IsSculptAllSlotsMode)
+            if (IsSculptMultiSlotMode)
+            {
+                string targetDescription = IsSculptAllNonBaseSlotsMode
+                    ? "All non-base slots is active. Each stroke targets the non-base slot under the pointer; base-race slots are ignored."
+                    : "All Slots is active. Each stroke targets the slot under the pointer.";
+                EditorGUILayout.HelpBox(
+                    $"{targetDescription} Current target: {(sculptSlot != null ? sculptSlot.slotName : "None")}. Co-located boundary vertices are welded across targeted slots and every affected slot is retained.",
+                    MessageType.None);
+            }
+            if (sculptSlot == null || sculptMask == null)
             {
                 EditorGUILayout.HelpBox(
-                    $"All Slots is active. Each stroke targets the slot under the pointer. Current target: {(sculptSlot != null ? sculptSlot.slotName : "None")}. Co-located boundary vertices are welded across slots and every affected slot is retained.",
-                    MessageType.None);
+                    IsSculptAllNonBaseSlotsMode
+                        ? "No visible editable non-base slot is available for this avatar. Select a specific slot or All Slots."
+                        : "No visible editable slot is available.",
+                    MessageType.Warning);
+                return;
             }
             GUILayout.BeginHorizontal();
             GUILayout.Label("Tool", GUILayout.Width(92));
@@ -8482,7 +8567,7 @@ namespace UMA
             if (IsSculptDragMode)
             {
                 EditorGUILayout.HelpBox(
-                    "Press on the surface, then drag in the Scene view. The affected area and target slot are frozen until release; All Slots still keeps connected slot boundaries welded.",
+                    "Press on the surface, then drag in the Scene view. The affected area and target slot are frozen until release; multi-slot targets keep connected slot boundaries welded.",
                     MessageType.None);
             }
             GUILayout.BeginHorizontal();
@@ -8515,7 +8600,7 @@ namespace UMA
 
             EditorGUILayout.Space(6f);
             GUILayout.Label("Save Slot Mesh", EditorStyles.miniBoldLabel);
-            EditorGUI.BeginDisabledGroup(IsSculptAllSlotsMode || !HasCurrentSculptChanges());
+            EditorGUI.BeginDisabledGroup(IsSculptMultiSlotMode || !HasCurrentSculptChanges());
             if (GUILayout.Button(new GUIContent("Save slot modifications to base slot", "Overwrite the selected SlotDataAsset's MeshData with the sculpted vertex positions.")))
                 SaveSculptToBaseSlot();
             sculptNewSlotName = EditorGUILayout.TextField("New Slot Name", sculptNewSlotName);
@@ -8525,8 +8610,8 @@ namespace UMA
             EditorGUI.EndDisabledGroup();
             EditorGUI.EndDisabledGroup();
             EditorGUILayout.HelpBox(
-                IsSculptAllSlotsMode
-                    ? "Drag over any visible slot to sculpt it. Connected slot boundaries remain welded, and Save MeshModifier includes every directly or indirectly affected slot. Select a specific slot to write or create a SlotDataAsset."
+                IsSculptMultiSlotMode
+                    ? "Drag over any targetable slot to sculpt it. Connected target-slot boundaries remain welded, and Save MeshModifier includes every directly or indirectly affected slot. Select a specific slot to write or create a SlotDataAsset."
                     : "Drag on the selected slot to sculpt. Edits on other slots remain available for MeshModifier saving.",
                 MessageType.Info);
         }

@@ -83,6 +83,15 @@ namespace UMA
             get { return _defaultOverlayData; }
         }
 
+        /// <summary>
+        /// Updates the default overlay asset and its runtime OverlayData instance.
+        /// </summary>
+        public void SetDefaultOverlayAsset(OverlayDataAsset overlayAsset)
+        {
+            defaultOverlayAsset = overlayAsset;
+            _defaultOverlayData = overlayAsset != null ? new OverlayData(overlayAsset) : null;
+        }
+
 #if UNITY_EDITOR
 #if UMA_ADDRESSABLES
         [Tooltip("If Addressables are enabled, skip the recipe lookup and just load the items. This should be for testing only.")]

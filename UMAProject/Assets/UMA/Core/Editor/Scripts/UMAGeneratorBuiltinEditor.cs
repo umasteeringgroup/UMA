@@ -13,6 +13,7 @@ namespace UMA.Editors
 		SerializedProperty meshCombiner;
 		SerializedProperty InitialScaleFactor;
 		SerializedProperty IterationCount;
+		SerializedProperty InterFrameDelay;
 		SerializedProperty garbageCollectionRate;
 		SerializedProperty processAllPending;
 		SerializedProperty applyInline;
@@ -97,6 +98,7 @@ namespace UMA.Editors
 			meshCombiner = serializedObject.FindProperty("meshCombiner");
 			InitialScaleFactor = serializedObject.FindProperty("InitialScaleFactor");
 			IterationCount = serializedObject.FindProperty("IterationCount");
+			InterFrameDelay = serializedObject.FindProperty("InterFrameDelay");
 			processAllPending = serializedObject.FindProperty("processAllPending");
 			applyInline = serializedObject.FindProperty("applyInline");
 			garbageCollectionRate = serializedObject.FindProperty("garbageCollectionRate");
@@ -155,6 +157,7 @@ namespace UMA.Editors
 				DrawIfPresent(MaxQueuedConversionsPerFrame);
 				DrawIfPresent(InitialScaleFactor);
 				DrawIfPresent(IterationCount);
+				DrawIfPresent(InterFrameDelay);
 				DrawIfPresent(collectGarbage);
 				DrawIfPresent(garbageCollectionRate);
 				DrawIfPresent(processAllPending);

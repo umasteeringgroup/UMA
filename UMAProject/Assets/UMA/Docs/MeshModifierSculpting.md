@@ -66,15 +66,15 @@ Hold **Alt** to use normal Scene navigation. Sculpting is suspended during Alt n
 
 ### Slot
 
-The **Slot** menu contains **All Slots** followed by every visible editable slot. Choose a specific slot when you want the brush and raycast to ignore everything else. Choose **All Slots** when a session must cross garments or body parts: the slot under the pointer becomes the target for that stroke, and UMA retains changes made to every touched slot.
+The **Slot** menu contains **All Slots**, **All non-base slots**, then every visible editable slot. A base slot is any slot supplied by the active race's base recipe. Choose a specific slot when you want the brush and raycast to ignore everything else. Choose **All Slots** when a session must cross garments or body parts. Choose **All non-base slots** to sculpt every clothing or added slot while ignoring the base-race body slots. In either multi-slot target, the slot under the pointer becomes the target for that stroke and UMA retains changes made to every touched slot.
 
-In **All Slots** mode, co-located boundary vertices are treated as welded across slots. Position, mask, and normal changes are synchronized at those seams, which helps keep connected pieces together. A Boundary stroke ignores a per-slot open edge when UMA recognizes it as a seam joined to another visible slot.
+In either multi-slot target, co-located boundary vertices are treated as welded across targeted slots. Position, mask, and normal changes are synchronized at those seams, which helps keep connected pieces together. A Boundary stroke ignores a per-slot open edge when UMA recognizes it as a seam joined to another targetable slot.
 
-When Sculpt mode is opened for the first time, UMA defaults to **All Slots**. The panel reports the current target as the pointer moves over editable geometry.
+When Sculpt mode is opened for the first time, UMA selects the first visible non-base slot. If the avatar has no non-base slot, it falls back to the first visible editable slot.
 
-Select the small target button beside **Slot** to calculate the selected slot's world-space bounds and frame them in the Scene view. With **All Slots** selected, it frames all editable slots. Framing does not lock the camera.
+Select the small target button beside **Slot** to calculate the selected slot's world-space bounds and frame them in the Scene view. With **All Slots** selected, it frames all editable slots; with **All non-base slots**, it frames only non-base slots. Framing does not lock the camera.
 
-Changing the selected slot ends the current stroke but retains that slot's edits in the sculpt session. **Save MeshModifier** includes all changed slots, even if you later select a different slot. The commands that overwrite a base slot or create a new slot require one specific slot and are disabled while **All Slots** is selected.
+Changing the selected slot ends the current stroke but retains that slot's edits in the sculpt session. **Save MeshModifier** includes all changed slots, even if you later select a different slot. The commands that overwrite a base slot or create a new slot require one specific slot and are disabled while either multi-slot target is selected.
 
 The saved modifier uses the slot's source-slot key when one is available. This allows the modifier to target the correct UMA slot rather than an incidental generated instance name.
 
@@ -242,7 +242,7 @@ For each target vertex, UMA casts outward in the positive or negative direction 
 
 1. Generate the avatar with the target and occluder slots visible, open Sculpt mode, and expand **Autosculpt**.
 2. In **Source / Occluder**, select the slot that must remain unchanged. For example, choose a shirt to move the body or an under-layer away from it.
-3. Select the target from the main **Slot** menu. Choose a specific slot for a focused operation. With **All Slots** selected, **Autosculpt Current Slot** uses the current target reported in the Sculpt panel, while **Autosculpt All Slots** processes every visible editable slot except the occluder.
+3. Select the target from the main **Slot** menu. Choose a specific slot for a focused operation. With **All Slots** or **All non-base slots** selected, **Autosculpt Current Slot** uses the current target reported in the Sculpt panel, while **Autosculpt All Slots** processes every visible editable slot except the occluder.
 4. Choose the **Axis** that best passes from the model center through the overlap: **X** for left/right projection, **Y** for up/down, or **Z** for front/back. **Y** is the default, but the best choice depends on the garment and intersection.
 5. Set **Radius** slightly larger than the clearance or overlap AutoSculpt must find. Vertices whose rays do not reach the occluder within this distance are unchanged.
 6. Set **Effect %** for the maximum pull. The maximum displacement is Radius multiplied by Effect %. Start low and run additional passes if necessary.
@@ -268,13 +268,13 @@ Ending or interrupting an interaction safely resets per-stroke tracking. This in
 
 1. Finish the current stroke by releasing the mouse.
 2. Inspect the result from several angles and use Undo or Smooth where needed.
-3. Set **Modifier Name**. The default is `<SlotName> Sculpt` for a specific slot or `All Slots Sculpt` in **All Slots** mode.
+3. Set **Modifier Name**. The default is `<SlotName> Sculpt` for a specific slot, `All Slots Sculpt` in **All Slots** mode, or `All Non-Base Slots Sculpt` in **All non-base slots** mode.
 4. Select **Save MeshModifier**.
 5. Choose a location under the project's `Assets` folder.
 
 The selected save folder is remembered for the project. Saving to an existing path replaces the Mesh Modifier asset at that path.
 
-The saved asset contains one modifier stack for each changed slot. Each stack uses a `VertexDeltaAdjustmentCollection` containing only that slot's nonzero vertex deltas. This means an **All Slots** sculpt or **Autosculpt All Slots** result can be kept together in one Mesh Modifier asset. It does not include:
+The saved asset contains one modifier stack for each changed slot. Each stack uses a `VertexDeltaAdjustmentCollection` containing only that slot's nonzero vertex deltas. This means an **All Slots**, **All non-base slots**, or **Autosculpt All Slots** result can be kept together in one Mesh Modifier asset. It does not include:
 
 - Selection state.
 - The sculpt mask.
@@ -293,7 +293,7 @@ Sculpt mode can store the current sculpt deltas as a blendshape directly on ever
 4. If that name already exists on any target slot, choose **Replace** to replace its existing blendshape data or **Cancel** to leave every target unchanged.
 5. Regenerate the avatar before testing the saved blendshape.
 
-The operation supports a specific slot, **All Slots**, and **Autosculpt All Slots**. Only slots with nonzero sculpt deltas are changed. Saving is registered as one Unity Undo operation and writes the affected `SlotDataAsset` assets immediately.
+The operation supports a specific slot, **All Slots**, **All non-base slots**, and **Autosculpt All Slots**. Only slots with nonzero sculpt deltas are changed. Saving is registered as one Unity Undo operation and writes the affected `SlotDataAsset` assets immediately.
 
 Two changed slot instances cannot save different results to the same source `SlotDataAsset`. UMA stops the entire operation in that ambiguous case; give the instances independent slot assets and save again.
 
@@ -301,7 +301,7 @@ The blendshape stores only deformation introduced during the current sculpt sess
 
 ## Save the Sculpt into a Slot
 
-Sculpt mode also offers two ways to bake the current specific slot's sculpted vertex and normal changes directly into slot `MeshData`. These commands are disabled in **All Slots** mode. Select the slot you intend to save first. The operations apply only the delta created during the sculpt session, so unrelated generated DNA and Mesh Modifier deformation are not baked into the source mesh.
+Sculpt mode also offers two ways to bake the current specific slot's sculpted vertex and normal changes directly into slot `MeshData`. These commands are disabled in either multi-slot target. Select the slot you intend to save first. The operations apply only the delta created during the sculpt session, so unrelated generated DNA and Mesh Modifier deformation are not baked into the source mesh.
 
 ### Overwrite the base slot
 
@@ -353,7 +353,7 @@ For clean, production-friendly results:
 
 ### The brush appears on one slot but not another
 
-This is intentional when a specific slot is selected. The raycast must hit that slot. Select the correct slot, choose **All Slots**, or temporarily hide overlapping geometry to expose the target.
+This is intentional when a specific slot is selected. The raycast must hit that slot. Select the correct slot, choose **All Slots** or **All non-base slots**, or temporarily hide overlapping geometry to expose the target.
 
 ### Nothing moves
 
@@ -384,7 +384,7 @@ No vertex currently differs from the sculpt session's original preview. Perform 
 - Confirm the selected slot has an exposed open edge.
 - Start closer to the hem, cuff, collar, or other opening; the nearest valid boundary must be close to the brush.
 - Increase Radius so the edge is within range.
-- In **All Slots** mode, remember that a co-located edge joined to another visible slot is treated as a welded seam rather than an exposed boundary.
+- In either multi-slot target, remember that a co-located edge joined to another targetable slot is treated as a welded seam rather than an exposed boundary.
 
 ### AutoSculpt moves no vertices
 
@@ -407,7 +407,7 @@ Mesh Modifiers address source-slot vertex indices. Confirm that the other charac
 - Plane uses the first sample's point and surface normal for the complete stroke.
 - Connected Only uses the topology component beneath the brush center, not spatial proximity alone.
 - AutoSculpt uses axis-aligned ray/triangle tests against the chosen occluder; Radius is its search distance and Radius × Effect % is its maximum pull.
-- **All Slots** synchronizes recognized co-located seam vertices and saves every changed slot as its own modifier stack.
+- **All Slots** and **All non-base slots** synchronize recognized co-located seam vertices across their targetable slots and save every changed slot as its own modifier stack.
 - The preview mesh collider is refreshed during sculpting so later samples follow the changed surface.
 - Normals and bounds are recalculated when the stroke ends.
 - The modifier is stored using `VertexDeltaAdjustmentCollection`; no sculpt-specific runtime data format is required.

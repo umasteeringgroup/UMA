@@ -90,7 +90,7 @@ namespace UMA.Editors
 				doSave = false;
 				lastActionTime = Time.realtimeSinceStartup;
 				EditorUtility.SetDirty(race);
-				string path = AssetDatabase.GetAssetPath(race.GetUmaObjectId());
+				string path = AssetDatabase.GetAssetPath(race.GetEntityId());
 				AssetDatabase.ImportAsset(path);
 				UMAUpdateProcessor.UpdateRace(race);
 			}

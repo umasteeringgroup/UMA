@@ -124,7 +124,7 @@ namespace UMA
         /// </summary>
         public static UMAObjectId GetUmaObjectId(this UnityEngine.Object obj)
         {
-#if UNITY_6000_5_OR_NEWER
+#if UNITY_6000_3_OR_NEWER
             return new UMAObjectId(obj.GetEntityId());
 #else
             return new UMAObjectId(obj.GetInstanceID());

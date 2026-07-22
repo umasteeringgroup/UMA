@@ -24,7 +24,7 @@ RenderSettings:
   m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
   m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
   m_AmbientIntensity: 1
-  m_AmbientMode: 0
+  m_AmbientMode: 3
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
   m_SkyboxMaterial: {fileID: 10304, guid: 0000000000000000f000000000000000, type: 0}
   m_HaloStrength: 0.5
@@ -37,7 +37,7 @@ RenderSettings:
   m_ReflectionBounces: 1
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
-  m_Sun: {fileID: 0}
+  m_Sun: {fileID: 1085465257}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -265,7 +265,7 @@ LightingSettings:
   m_Name: Settings.lighting
   serializedVersion: 10
   m_EnableBakedLightmaps: 1
-  m_EnableRealtimeLightmaps: 1
+  m_EnableRealtimeLightmaps: 0
   m_RealtimeEnvironmentLighting: 1
   m_BounceScale: 1
   m_AlbedoBoost: 1
@@ -358,6 +358,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 6bf1e7d4f0f7f014c97e78ceb7e21901, type: 2}
   - {fileID: 11400000, guid: f3ac0ca2b2909754fbdb795e47e96b80, type: 2}
   - {fileID: 11400000, guid: 511aa62754b82734e8a3ef2c7730b4d1, type: 2}
+  - {fileID: 11400000, guid: 8900db45718eb61469e720617c9deeb7, type: 2}
   hairColor:
     name: Hair
     channelMask: []
@@ -511,6 +512,7 @@ MonoBehaviour:
     showSelected: 0
     isSelected: 0
     showDisplayColor: 1
+    showSelectFromFoldout: 0
     displayColor: {r: 0.38823533, g: 0.14901961, b: 0.09019608, a: 1}
   eyeColor:
     name: Eyes
@@ -533,6 +535,7 @@ MonoBehaviour:
     showSelected: 0
     isSelected: 0
     showDisplayColor: 0
+    showSelectFromFoldout: 0
     displayColor: {r: 1, g: 1, b: 1, a: 1}
   LoadFromAvatarDef: 0
   AvatarDef: 'BB*
@@ -575,7 +578,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 997165924250026383, guid: 4d4ce01dbd7484b439df783927a00c65, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: 0.48
       objectReference: {fileID: 0}
     - target: {fileID: 997165924250026383, guid: 4d4ce01dbd7484b439df783927a00c65, type: 3}
       propertyPath: m_LocalPosition.z
@@ -625,6 +628,10 @@ PrefabInstance:
       propertyPath: m_LocalPosition.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7934725514109054171, guid: 4d4ce01dbd7484b439df783927a00c65, type: 3}
+      propertyPath: m_Intensity
+      value: 0.5
+      objectReference: {fileID: 0}
     - target: {fileID: 8870628006574664633, guid: 4d4ce01dbd7484b439df783927a00c65, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -645,6 +652,11 @@ PrefabInstance:
 --- !u!4 &982534146 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 997165924250026383, guid: 4d4ce01dbd7484b439df783927a00c65, type: 3}
+  m_PrefabInstance: {fileID: 848818962}
+  m_PrefabAsset: {fileID: 0}
+--- !u!108 &1085465257 stripped
+Light:
+  m_CorrespondingSourceObject: {fileID: 7934725514109054171, guid: 4d4ce01dbd7484b439df783927a00c65, type: 3}
   m_PrefabInstance: {fileID: 848818962}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &1227335756

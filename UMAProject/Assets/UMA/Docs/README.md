@@ -13,6 +13,7 @@ Contents
 - Mesh Modifier sculpting
 - Mesh hiding and face editing
 - Mesh combiners and bone baking
+- UMA Generator setup and performance tuning
 - Bone animators and secondary motion
 - Clothing conformer
 - Texture Arrays and UDIMs
@@ -127,6 +128,7 @@ The Markdown guides in this folder cover the main UMA 3 workflows:
 - [`DNACreationGuide.md`](DNACreationGuide.md) - artist-friendly DNA creation workflow.
 - [`NewDNASystem.md`](NewDNASystem.md) - DNA groups, instances, curves, and effects.
 - [`MeshCombiners.md`](MeshCombiners.md) - available mesh combiners, selection, and testing.
+- [`UMAGeneratorSetup.md`](UMAGeneratorSetup.md) - generator prefab setup, parameter guidance, and platform performance profiles.
 - [`MeshHideAssets.md`](MeshHideAssets.md) - creating and using mesh-hide assets and collections.
 - [`MeshModifierSculpting.md`](MeshModifierSculpting.md) - vertex editing and sculpt-mode mesh modifiers.
 - [`BoneAnimators.md`](BoneAnimators.md) - bone animation, sampling, and secondary motion tools.

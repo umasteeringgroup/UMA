@@ -450,7 +450,7 @@ namespace UMA.Editors
                         {
                             _overlayData.asset.material = _slotData.material;
                             EditorUtility.SetDirty(_overlayData.asset);
-                            string path = AssetDatabase.GetAssetPath(_overlayData.asset.GetUmaObjectId());
+                            string path = AssetDatabase.GetAssetPath(_overlayData.asset.GetEntityId());
                             AssetDatabase.ImportAsset(path);
                         }
                     }

@@ -22,6 +22,13 @@ MonoBehaviour:
   - race: Human Male 3.0
     filename: Assets/UMA/UMA3/Wearables/Icons/Chest/Human Male 3.0/6_male_jacket_hive_Recipe.png
     thumb: {fileID: 21300000, guid: 47d54bfcce3eb624ba2e07ff791a054a, type: 3}
+  thumbnailFromTexture: 0
+  thumbnailRect:
+    serializedVersion: 2
+    x: 0.25
+    y: 0.25
+    width: 0.5
+    height: 0.5
   wardrobeSlot: Chest
   Appended: 0
   Hides: []

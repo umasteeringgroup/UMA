@@ -1258,7 +1258,7 @@ namespace UMA.Editors
 				{
 					EditorUtility.SetDirty(target);
 					AssetDatabase.SaveAssetIfDirty(target);
-					string path = AssetDatabase.GetAssetPath(target.GetUmaObjectId());
+					string path = AssetDatabase.GetAssetPath(target.GetEntityId());
 					AssetDatabase.ImportAsset(path);
 					Repaint();
 				}
@@ -1402,14 +1402,14 @@ namespace UMA.Editors
 				{
 					recipe.MeshHideAssets.RemoveAll(x => x == null);
 					EditorUtility.SetDirty(target);
-					string path = AssetDatabase.GetAssetPath(target.GetUmaObjectId());
+					string path = AssetDatabase.GetAssetPath(target.GetEntityId());
 					AssetDatabase.ImportAsset(path);
 				}
 				if (deleteme != null)
 				{
 					recipe.MeshHideAssets.Remove(deleteme);
 					EditorUtility.SetDirty(target);
-					string path = AssetDatabase.GetAssetPath(target.GetUmaObjectId());
+					string path = AssetDatabase.GetAssetPath(target.GetEntityId());
 					AssetDatabase.ImportAsset(path);
 				}
 				// EditorGUILayout.PropertyField(meshHides, true);
@@ -1663,7 +1663,7 @@ namespace UMA.Editors
             {
                 recipe.MeshModifiers.Add(mm);
                 EditorUtility.SetDirty(target);
-                string path = AssetDatabase.GetAssetPath(target.GetUmaObjectId());
+                string path = AssetDatabase.GetAssetPath(target.GetEntityId());
                 AssetDatabase.ImportAsset(path);
                 Repaint();
             }
@@ -1689,11 +1689,11 @@ namespace UMA.Editors
                 EditorUtility.SetDirty(target);
 #if UNITY_6000_3_OR_NEWER
                 AssetDatabase.SaveAssetIfDirty(target);
-                string path = AssetDatabase.GetAssetPath(target.GetUmaObjectId());
+                string path = AssetDatabase.GetAssetPath(target.GetEntityId());
                 AssetDatabase.ImportAsset(path);
 #else
 				AssetDatabase.SaveAssets();
-				string path = AssetDatabase.GetAssetPath(target.GetUmaObjectId());
+				string path = AssetDatabase.GetAssetPath(target.GetEntityId());
                 AssetDatabase.ImportAsset(path);
 #endif
                 Repaint();
@@ -1730,7 +1730,7 @@ namespace UMA.Editors
             {
                 recipe.MeshHideAssets.Add(mha);
                 EditorUtility.SetDirty(target);
-                string path = AssetDatabase.GetAssetPath(target.GetUmaObjectId());
+                string path = AssetDatabase.GetAssetPath(target.GetEntityId());
                 AssetDatabase.ImportAsset(path);
                 Repaint();
                 /*
