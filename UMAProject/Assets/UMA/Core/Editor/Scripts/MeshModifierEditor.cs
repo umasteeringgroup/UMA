@@ -66,7 +66,19 @@ namespace UMA
         public GUIStyle selectedButton;
         public GUIStyle unselectedButton;
         public enum EditorMode { MeshModifiers, VertexAdjustments, Blendshapes }
-        public EditorMode editorMode = EditorMode.VertexAdjustments;
+        public EditorMode editorMode = EditorMode.MeshModifiers;
+
+        private enum AuthoringWorkflow
+        {
+            Sculpt,
+            VertexPaint,
+            AdvancedVertexAdjustments,
+            BlendshapeExtraction
+        }
+
+        [SerializeField] private AuthoringWorkflow authoringWorkflow = AuthoringWorkflow.Sculpt;
+        [SerializeField] private EditorMode advancedEditorMode = EditorMode.VertexAdjustments;
+        [SerializeField] private bool showBuildOptions = true;
 
         private bool suppressUndoRebuild = false;
         private bool activeAdjustmentInteractiveUndoArmed = false;
@@ -192,6 +204,8 @@ namespace UMA
         public void Setup(DynamicCharacterAvatar DCA, VertexEditorStage vstage, MeshModifier modifier)
         {
             thisDCA = DCA;
+            authoringWorkflow = AuthoringWorkflow.Sculpt;
+            editorMode = EditorMode.MeshModifiers;
             wasKeepAnimator = DCA.KeepAnimatorController;
             wasAnimatorEnabled = DCA.gameObject.GetComponent<Animator>().enabled;
             wasRaceFixup = DCA.activeRace.data.FixupRotations;
@@ -204,12 +218,19 @@ namespace UMA
 
             SlotNameToModifiers.Clear();
             vertexEditorStage = vstage;
+            vertexEditorStage.ActivateSculptAuthoringMode();
+            vertexEditorStage.editorMode = editorMode;
             ModifierTypes = AppDomain.CurrentDomain.GetAllDerivedTypes(typeof(VertexAdjustmentCollection));
             ModifierTypeNames = new string[ModifierTypes.Length];
             for (int i = 0; i < ModifierTypes.Length; i++)
             {
                 ModifierTypeNames[i] = ObjectNames.NicifyVariableName(ModifierTypes[i].Name); 
                 ModifierTypeNames[i] = ModifierTypeNames[i].Replace(" Collection", "");
+                if (ModifierTypes[i] == typeof(VertexDeltaAdjustmentCollection) ||
+                    ModifierTypes[i] == typeof(VertexColorAdjustmentCollection))
+                {
+                    ModifierTypeNames[i] += " (Precision)";
+                }
             }
 
             if (modifier == null)
@@ -513,153 +534,264 @@ namespace UMA
                 return;
             }
 
-            GUIStyle VertexModeStyle = unselectedButton;
-            GUIStyle MeshModifierModeStyle = unselectedButton;
-            GUIStyle BlendshapeStyle = unselectedButton;
+            SyncWorkflowFromSceneTool();
+            DrawWorkflowNavigation();
+            DrawAssetControls();
 
-            if (editorMode == EditorMode.MeshModifiers)
+            switch (authoringWorkflow)
             {
-                MeshModifierModeStyle = selectedButton;
+                case AuthoringWorkflow.Sculpt:
+                    EditorGUILayout.HelpBox(
+                        "Sculpt changes vertex positions with a brush in the Scene view. Use the Scene controls to choose the slot, brush, falloff, symmetry, and save target.",
+                        MessageType.Info);
+                    break;
+                case AuthoringWorkflow.VertexPaint:
+                    EditorGUILayout.HelpBox(
+                        "Vertex Paint changes vertex colors with a brush in the Scene view. It creates the existing Set Color adjustments when saved as a MeshModifier.",
+                        MessageType.Info);
+                    break;
+                case AuthoringWorkflow.AdvancedVertexAdjustments:
+                    DrawAdvancedVertexAdjustments();
+                    break;
+                case AuthoringWorkflow.BlendshapeExtraction:
+                    DrawBlendshapeExtractor();
+                    break;
             }
-            else if (editorMode == EditorMode.VertexAdjustments)
+
+            vertexEditorStage.editorMode = editorMode;
+        }
+
+        private void SyncWorkflowFromSceneTool()
+        {
+            if (vertexEditorStage == null)
             {
-                VertexModeStyle = selectedButton;
+                return;
+            }
+
+            if (vertexEditorStage.IsSculptAuthoringMode)
+            {
+                authoringWorkflow = AuthoringWorkflow.Sculpt;
+                editorMode = EditorMode.MeshModifiers;
+            }
+            else if (vertexEditorStage.IsVertexPaintAuthoringMode)
+            {
+                authoringWorkflow = AuthoringWorkflow.VertexPaint;
+                editorMode = EditorMode.MeshModifiers;
+            }
+            else if (authoringWorkflow == AuthoringWorkflow.Sculpt || authoringWorkflow == AuthoringWorkflow.VertexPaint)
+            {
+                authoringWorkflow = AuthoringWorkflow.AdvancedVertexAdjustments;
+                editorMode = advancedEditorMode;
+            }
+        }
+
+        private void DrawWorkflowNavigation()
+        {
+            GUILayout.Label("Authoring Workflow", centeredLabel);
+            int selectedWorkflow = GUILayout.Toolbar(
+                (int)authoringWorkflow,
+                new[] { "Sculpt", "Vertex Paint", "Advanced", "Blendshapes" });
+            if (selectedWorkflow != (int)authoringWorkflow)
+            {
+                SwitchAuthoringWorkflow((AuthoringWorkflow)selectedWorkflow);
+            }
+        }
+
+        private void SwitchAuthoringWorkflow(AuthoringWorkflow workflow)
+        {
+            RegisterUndoSnapshot("Switch Mesh Modifier Workflow");
+            authoringWorkflow = workflow;
+            bulkModifierInteractiveUndoArmed = false;
+            activeAdjustmentInteractiveUndoArmed = false;
+
+            if (workflow == AuthoringWorkflow.Sculpt)
+            {
+                editorMode = EditorMode.MeshModifiers;
+                ClearActiveAdjustmentForWorkflowChange();
+                vertexEditorStage.ActivateSculptAuthoringMode();
+            }
+            else if (workflow == AuthoringWorkflow.VertexPaint)
+            {
+                editorMode = EditorMode.MeshModifiers;
+                ClearActiveAdjustmentForWorkflowChange();
+                vertexEditorStage.ActivateVertexPaintAuthoringMode();
+            }
+            else if (workflow == AuthoringWorkflow.AdvancedVertexAdjustments)
+            {
+                editorMode = advancedEditorMode;
+                vertexEditorStage.ActivateSelectionAuthoringMode();
             }
             else
             {
-                BlendshapeStyle = selectedButton;
-            }
-            GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
-            GUILayout.Label("Modifiers", centeredLabel);
-
-
-            bool newIncludeAdHocAdjustments = GUILayout.Toggle(IncludeAdHocAdjustments, "Include Ad-Hoc adjustments");
-            if (newIncludeAdHocAdjustments != IncludeAdHocAdjustments)
-            {
-                RegisterUndoSnapshot("Toggle Include Ad-Hoc Adjustments");
-                IncludeAdHocAdjustments = newIncludeAdHocAdjustments;
-                MarkEditorStateDirty();
+                editorMode = EditorMode.Blendshapes;
+                ClearActiveAdjustmentForWorkflowChange();
+                vertexEditorStage.ActivateSelectionAuthoringMode();
             }
 
-            bool newIncludeBulkModifiers = GUILayout.Toggle(IncludeBulkModifiers, "Include Bulk Modifiers");
-            if (newIncludeBulkModifiers != IncludeBulkModifiers)
+            vertexEditorStage.editorMode = editorMode;
+            MarkEditorStateDirty();
+        }
+
+        internal bool IsAdvancedVertexAdjustmentWorkflow =>
+            authoringWorkflow == AuthoringWorkflow.AdvancedVertexAdjustments;
+
+        internal bool IsBlendshapeExtractionWorkflow =>
+            authoringWorkflow == AuthoringWorkflow.BlendshapeExtraction;
+
+        internal void SelectSculptWorkflowFromStage()
+        {
+            SwitchAuthoringWorkflow(AuthoringWorkflow.Sculpt);
+        }
+
+        internal void SelectVertexPaintWorkflowFromStage()
+        {
+            SwitchAuthoringWorkflow(AuthoringWorkflow.VertexPaint);
+        }
+
+        internal void SelectAdvancedWorkflowFromStage()
+        {
+            SwitchAuthoringWorkflow(AuthoringWorkflow.AdvancedVertexAdjustments);
+        }
+
+        internal void SelectBlendshapeWorkflowFromStage()
+        {
+            SwitchAuthoringWorkflow(AuthoringWorkflow.BlendshapeExtraction);
+        }
+
+        private void ClearActiveAdjustmentForWorkflowChange()
+        {
+            deActivateCurrentSelection();
+            vertexEditorStage.SetActive(null);
+            activeAdjustment = null;
+        }
+
+        private void DrawAssetControls()
+        {
+            GUIHelper.BeginVerticalPadded(8, new Color(0.75f, 0.875f, 1f));
+            GUILayout.Label("Mesh Modifier Asset", centeredLabel);
+            if (GUILayout.Button("Save to Asset"))
             {
-                RegisterUndoSnapshot("Toggle Include Bulk Modifiers");
-                IncludeBulkModifiers = newIncludeBulkModifiers;
-                if (IncludeBulkModifiers == false)
+                SaveToAsset();
+            }
+
+            showBuildOptions = EditorGUILayout.Foldout(showBuildOptions, "Build and Preview Options", true);
+            if (showBuildOptions)
+            {
+                bool newIncludeAdHocAdjustments = GUILayout.Toggle(IncludeAdHocAdjustments, "Include Advanced Per-Vertex Adjustments");
+                if (newIncludeAdHocAdjustments != IncludeAdHocAdjustments)
                 {
-                    IncludeActiveOnlyBulk = false;
+                    RegisterUndoSnapshot("Toggle Include Per-Vertex Adjustments");
+                    IncludeAdHocAdjustments = newIncludeAdHocAdjustments;
+                    MarkEditorStateDirty();
+                }
+
+                bool newIncludeBulkModifiers = GUILayout.Toggle(IncludeBulkModifiers, "Include Advanced Vertex-Set Modifiers");
+                if (newIncludeBulkModifiers != IncludeBulkModifiers)
+                {
+                    RegisterUndoSnapshot("Toggle Include Vertex-Set Modifiers");
+                    IncludeBulkModifiers = newIncludeBulkModifiers;
+                    if (!IncludeBulkModifiers)
+                    {
+                        IncludeActiveOnlyBulk = false;
+                    }
+                    MarkEditorStateDirty();
+                }
+
+                using (new EditorGUI.DisabledScope(!IncludeBulkModifiers))
+                {
+                    bool newIncludeActiveOnlyBulk = GUILayout.Toggle(IncludeActiveOnlyBulk, "Only Active Vertex-Set Modifier");
+                    if (newIncludeActiveOnlyBulk != IncludeActiveOnlyBulk)
+                    {
+                        RegisterUndoSnapshot("Toggle Include Active Vertex-Set Modifier");
+                        IncludeActiveOnlyBulk = newIncludeActiveOnlyBulk;
+                        MarkEditorStateDirty();
+                    }
+                }
+
+                bool newRebuildOnChanges = GUILayout.Toggle(RebuildOnChanges, "Rebuild on changes");
+                if (newRebuildOnChanges != RebuildOnChanges)
+                {
+                    RegisterUndoSnapshot("Toggle Rebuild On Changes");
+                    RebuildOnChanges = newRebuildOnChanges;
+                    MarkEditorStateDirty();
+                }
+
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("Rebuild Now"))
+                {
+                    RegisterUndoSnapshot("Rebuild Character", true);
+                    DoCharacterRebuild();
+                    MarkEditorStateDirty(true);
+                }
+                if (GUILayout.Button("Rebuild to T-Pose"))
+                {
+                    RegisterUndoSnapshot("Rebuild Character To T-Pose", true);
+                    DoCharacterRebuild(true);
+                    MarkEditorStateDirty(true);
+                }
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("Reset Build"))
+                {
+                    RegisterUndoSnapshot("Reset Character Build", true);
+                    DoCharacterReset();
+                    MarkEditorStateDirty(true);
+                }
+                if (GUILayout.Button("Recalculate Normals"))
+                {
+                    RegisterUndoSnapshot("Recalculate Normals");
+                    vertexEditorStage.RecalculateNormals();
+                    MarkEditorStateDirty();
+                }
+                GUILayout.EndHorizontal();
+            }
+
+            GUIHelper.EndVerticalPadded(8);
+        }
+
+        private void DrawAdvancedVertexAdjustments()
+        {
+            EditorGUILayout.Space(4f);
+            GUILayout.Label("Advanced Vertex Adjustments", centeredLabel);
+            EditorGUILayout.HelpBox(
+                "Use these precision tools for exact values, isolated repairs, normals, UVs, resets, blendshape data, or one identical adjustment across an explicit vertex set. Sculpt and Vertex Paint are the preferred brush workflows for position and color authoring.",
+                MessageType.Info);
+
+            int selectedAdvancedMode = advancedEditorMode == EditorMode.VertexAdjustments ? 0 : 1;
+            int newAdvancedMode = GUILayout.Toolbar(
+                selectedAdvancedMode,
+                new[] { "Per-Vertex Precision", "Vertex Sets / Bulk" });
+            EditorMode requestedMode = newAdvancedMode == 0 ? EditorMode.VertexAdjustments : EditorMode.MeshModifiers;
+            if (requestedMode != advancedEditorMode)
+            {
+                RegisterUndoSnapshot("Switch Advanced Adjustment Mode");
+                advancedEditorMode = requestedMode;
+                editorMode = requestedMode;
+                bulkModifierInteractiveUndoArmed = false;
+                activeAdjustmentInteractiveUndoArmed = false;
+                if (requestedMode == EditorMode.MeshModifiers)
+                {
+                    ClearActiveAdjustmentForWorkflowChange();
                 }
                 MarkEditorStateDirty();
             }
 
-            bool newIncludeActiveOnlyBulk = GUILayout.Toggle(IncludeActiveOnlyBulk, "Only Active Bulk Modifier");
-            if (newIncludeActiveOnlyBulk != IncludeActiveOnlyBulk)
-            {
-                RegisterUndoSnapshot("Toggle Include Active Bulk Modifier");
-                IncludeActiveOnlyBulk = newIncludeActiveOnlyBulk;
-                MarkEditorStateDirty();
-            }
-
-            bool newRebuildOnChanges = GUILayout.Toggle(RebuildOnChanges, "Rebuild on changes");
-            if (newRebuildOnChanges != RebuildOnChanges)
-            {
-                RegisterUndoSnapshot("Toggle Rebuild On Changes");
-                RebuildOnChanges = newRebuildOnChanges;
-                MarkEditorStateDirty();
-            }
-
-            if (GUILayout.Button("Rebuild Now"))
-            {
-                RegisterUndoSnapshot("Rebuild Character", true);
-                DoCharacterRebuild();
-                MarkEditorStateDirty(true);
-            }
-            if (GUILayout.Button("Rebuild to TPose"))
-            {
-                RegisterUndoSnapshot("Rebuild Character To T-Pose", true);
-                DoCharacterRebuild(true);
-                MarkEditorStateDirty(true);
-            }
-
-            if (GUILayout.Button("Reset Build"))
-            {
-                RegisterUndoSnapshot("Reset Character Build", true);
-                DoCharacterReset();
-                MarkEditorStateDirty(true);
-            }
-            if (GUILayout.Button("Save to Asset"))
-            {
-                // Get the name of the new asset to save it to.
-                // Create a new MeshModifier asset and save it.
-                // split all the modifiers (ad-hoc and bulk) into a list of modifiers.
-                // save the list of modifiers to the asset.
-
-                SaveToAsset();
-            }
-            if (GUILayout.Button("Recalculate Normals"))
-            {
-                RegisterUndoSnapshot("Recalculate Normals");
-                vertexEditorStage.RecalculateNormals();
-                MarkEditorStateDirty();
-            }
-
-            if (IncludeBulkModifiers == false)
-            {
-                IncludeActiveOnlyBulk = false;
-            }
-
-            GUIHelper.EndVerticalPadded(10);
-
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Ad-hoc Adjustments", VertexModeStyle))
-            {
-                RegisterUndoSnapshot("Switch To Ad-Hoc Adjustments");
-                editorMode = EditorMode.VertexAdjustments;
-                bulkModifierInteractiveUndoArmed = false;
-                activeAdjustmentInteractiveUndoArmed = false;
-                MarkEditorStateDirty();
-            }
-            if (GUILayout.Button("Bulk Add Active", MeshModifierModeStyle))
-            {
-                RegisterUndoSnapshot("Switch To Bulk Modifiers");
-                editorMode = EditorMode.MeshModifiers;
-                bulkModifierInteractiveUndoArmed = false;
-                activeAdjustmentInteractiveUndoArmed = false;
-                deActivateCurrentSelection();
-                vertexEditorStage.SetActive(null);
-                MarkEditorStateDirty();
-            }
-            if (GUILayout.Button("Extract Blendshapes", BlendshapeStyle))
-            {
-                RegisterUndoSnapshot("Switch To Blendshape Extractor");
-                editorMode = EditorMode.Blendshapes;
-                bulkModifierInteractiveUndoArmed = false;
-                activeAdjustmentInteractiveUndoArmed = false;
-                deActivateCurrentSelection();
-                vertexEditorStage.SetActive(null);
-                MarkEditorStateDirty();
-            }
+            editorMode = advancedEditorMode;
             vertexEditorStage.editorMode = editorMode;
-            GUILayout.EndHorizontal();
-
-            if (editorMode == EditorMode.MeshModifiers)
-            {
-                DrawMeshModifiers();
-            }
-            else if (editorMode == EditorMode.VertexAdjustments)
+            if (advancedEditorMode == EditorMode.VertexAdjustments)
             {
                 DrawAdHocAdjustments();
             }
             else
             {
-                DrawBlendshapeExtractor();
+                DrawMeshModifiers();
             }
         }
 
         private static string MeshModifierSaveFolderKey => $"UMA_MeshModifierSaveFolder_{Application.dataPath.GetHashCode()}";
 
-        public void SaveToAsset()
+        public bool SaveToAsset(string defaultName = "MeshModifier", string dialogTitle = "Save MeshModifier")
         {
             // Get the last used folder for this project, default to "Assets"
             string lastFolder = EditorPrefs.GetString(MeshModifierSaveFolderKey, "Assets");
@@ -670,21 +802,28 @@ namespace UMA
                 lastFolder = "Assets";
             }
 
-            string path = EditorUtility.SaveFilePanelInProject("Save MeshModifier", "MeshModifier", "asset", "Save current MeshModifier to project", lastFolder);
-            if (!string.IsNullOrEmpty(path))
+            string suggestedName = string.IsNullOrWhiteSpace(defaultName) ? "MeshModifier" : defaultName;
+            string path = EditorUtility.SaveFilePanelInProject(dialogTitle, suggestedName, "asset", "Save current MeshModifier to project", lastFolder);
+            if (string.IsNullOrEmpty(path))
             {
-                // Remember the folder for next time
-                string folder = System.IO.Path.GetDirectoryName(path);
-                EditorPrefs.SetString(MeshModifierSaveFolderKey, folder);
-
-                string BaseName = System.IO.Path.GetFileNameWithoutExtension(path);
-                MeshModifier meshModifier = CustomAssetUtility.ReplaceAsset<MeshModifier>(path, false);
-                List<MeshModifier.Modifier> editorSnapshot = BuildEditorModifierSnapshot(includeBulkModifiers: true, includeAdHocModifiers: true, onlyActiveBulkModifier: false);
-                meshModifier.EditorModifiers = editorSnapshot;
-                meshModifier.RuntimeModifiers = SplitModifierStacksBySlot(editorSnapshot);
-                EditorUtility.SetDirty(meshModifier);
-                AssetDatabase.SaveAssetIfDirty(meshModifier);
+                return false;
             }
+
+            // Remember the folder for next time
+            string folder = System.IO.Path.GetDirectoryName(path);
+            EditorPrefs.SetString(MeshModifierSaveFolderKey, folder);
+
+            vertexEditorStage?.PrepareVertexPaintAdjustmentsForSave();
+            MeshModifier meshModifier = CustomAssetUtility.ReplaceAsset<MeshModifier>(path, false);
+            List<MeshModifier.Modifier> editorSnapshot = BuildEditorModifierSnapshot(includeBulkModifiers: true, includeAdHocModifiers: true, onlyActiveBulkModifier: false);
+            vertexEditorStage?.AppendPendingSculptModifier(editorSnapshot);
+            meshModifier.EditorModifiers = editorSnapshot;
+            meshModifier.RuntimeModifiers = SplitModifierStacksBySlot(editorSnapshot);
+            EditorUtility.SetDirty(meshModifier);
+            AssetDatabase.SaveAssetIfDirty(meshModifier);
+            vertexEditorStage?.MarkVertexPaintSaved();
+            Selection.activeObject = meshModifier;
+            return true;
         }
 
         private void HydrateAdHocAdjustmentsFromEditorModifiers()
@@ -1029,7 +1168,7 @@ namespace UMA
             GUIHelper.EndVerticalPadded();
         }
 
-        private void ExtractBlendshapes(string blendShapeName, string dnaName, List<bool> selected, List<string> slots)
+        public void ExtractBlendshapes(string blendShapeName, string dnaName, List<bool> selected, List<string> slots)
         {
             foreach (var strSlot in slots)
             {
@@ -1179,7 +1318,7 @@ namespace UMA
             */
             if (allowAdd)
             {
-                EditorGUILayout.LabelField("Add Vertex Modifier", centeredLabel);
+                EditorGUILayout.LabelField("Add Precision Adjustment", centeredLabel);
 
                 GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
 
@@ -1224,7 +1363,7 @@ namespace UMA
                 GUIHelper.EndVerticalPadded(10);
             }
 
-            GUILayout.Label("Adjustments", centeredLabel);
+            GUILayout.Label("Per-Vertex Adjustments", centeredLabel);
 
             vertexScrollPos = EditorGUILayout.BeginScrollView(vertexScrollPos);
 
@@ -1901,8 +2040,10 @@ namespace UMA
 
         private void DrawMeshModifiers()
         {
-            EditorGUILayout.LabelField("Mesh Modifiers", centeredLabel);
-            EditorGUILayout.HelpBox("Recalculate normals to modifier will create a normal rotation modifier from the current normals and tangents to the recalculate normals and tangents. You should run this before doing any mesh modifications.", MessageType.Info);
+            EditorGUILayout.LabelField("Vertex-Set Modifiers", centeredLabel);
+            EditorGUILayout.HelpBox(
+                "Vertex-set modifiers apply one exact adjustment to every Active vertex in the current selection. Use Select or Select Brush in the Scene view to define the set. Recalculate Normals to Reset Modifier creates a normal-rotation baseline and should be run before other mesh adjustments when that workflow is required.",
+                MessageType.Info);
             if (GUILayout.Button("Recalculate Normals to Reset Modifier"))
             {
                 RegisterUndoSnapshot("Create Reset Normals Modifier", true);
@@ -1958,7 +2099,7 @@ namespace UMA
                 MarkEditorStateDirty(true);
             }
 
-            EditorGUILayout.LabelField("Extract Bulk Modifier of Type:");
+            EditorGUILayout.LabelField("Adjustment Type");
             int newSelectedType = EditorGUILayout.Popup(selectedType, ModifierTypeNames);
             if (newSelectedType != selectedType)
             {
@@ -1970,12 +2111,12 @@ namespace UMA
             int activeCount = vertexEditorStage.GetActiveSelectedVertexCount();
             if (activeCount == 0)
             {
-                EditorGUILayout.LabelField("No vertexes selected", centeredLabel);
-                EditorGUILayout.HelpBox("Please selectvertexes For Bulk Modifier", MessageType.Info);
+                EditorGUILayout.LabelField("No active vertices selected", centeredLabel);
+                EditorGUILayout.HelpBox("Select vertices in the Scene view and mark them Active to create a vertex-set modifier.", MessageType.Info);
             }
             else
             {
-                if (GUILayout.Button("Add Collection for selected vertexes"))
+                if (GUILayout.Button("Create Modifier From Active Vertices"))
                 {
                     RegisterUndoSnapshot("Add Bulk Modifier Collection");
                     MeshModifier.Modifier newMod = new MeshModifier.Modifier();
@@ -2080,7 +2221,7 @@ namespace UMA
                 // DrawCurrentModifier();
             }
 
-            EditorGUILayout.LabelField("Mesh Modifier Collections", centeredLabel);
+            EditorGUILayout.LabelField("Vertex-Set Modifier Collections", centeredLabel);
             EditorGUILayout.BeginHorizontal();
             using (new EditorGUI.DisabledScope(currentModifier == null || currentModifier.adjustments == null))
             {

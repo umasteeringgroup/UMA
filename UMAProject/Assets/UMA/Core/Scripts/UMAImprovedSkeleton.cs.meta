@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 0b79d12d50f83e04abdd086b78b16220
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 14249
+  packageName: UMA Power Tools 2
+  packageVersion: 2.10.1
+  assetPath: Assets/UMA/Extensions/UMAPowerTools/Scripts/UMAImprovedSkeleton.cs
+  uploadId: 385976

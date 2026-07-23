@@ -22,6 +22,13 @@ MonoBehaviour:
   - race: Human Female 3.0
     filename: Assets/UMA/UMA3/Wearables/Icons/Face/Human Female 3.0/5_LightMakeup2_F_Wardrobe.png
     thumb: {fileID: 21300000, guid: 320a1d21bc4167f4a94b7ee808e32ee7, type: 3}
+  thumbnailFromTexture: 1
+  thumbnailRect:
+    serializedVersion: 2
+    x: 0.25
+    y: 0.25
+    width: 0.5
+    height: 0.5
   wardrobeSlot: Face
   Appended: 0
   Hides: []

@@ -4,6 +4,16 @@ namespace UMA
 {
 	public class UMAGenerator : UMAGeneratorBuiltin 
 	{
+		public void setMeshComber(UMAMeshCombiner meshCombiner)
+		{
+			if (meshCombiner == null)
+			{
+				Debug.LogError("UMAGenerator.setMeshComber: meshCombiner is null");
+				return;
+			}
+		    this.meshCombiner = meshCombiner;
+		}
+
 		public override void Awake()
 		{
 			base.Awake();

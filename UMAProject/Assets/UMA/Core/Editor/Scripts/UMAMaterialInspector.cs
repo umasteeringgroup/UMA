@@ -401,6 +401,7 @@ namespace UMA.Editors
             //if (channelListExpanded)
             //GUIHelper.FoldoutBar(channelListExpanded, "Texture Channels");
             {
+                DrawUseExistingTextureChannelWarning(list, materialType);
                 GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
                 GUILayout.Label("Texture Channels", _centeredStyle);
                 EditorGUILayout.PropertyField(list.FindPropertyRelative("Array.size"));
@@ -547,6 +548,42 @@ namespace UMA.Editors
                     GUILayout.Space(8);
                 }
                 GUIHelper.EndVerticalPadded(10);
+            }
+        }
+
+        private static void DrawUseExistingTextureChannelWarning(SerializedProperty channels, UMAMaterial.MaterialType materialType)
+        {
+            if (!IsGeneratedTextureMaterialType(materialType) || channels == null)
+            {
+                return;
+            }
+
+            List<string> affectedChannels = null;
+            for (int i = 0; i < channels.arraySize; i++)
+            {
+                SerializedProperty channel = channels.GetArrayElementAtIndex(i);
+                SerializedProperty useExistingTexture = channel.FindPropertyRelative("UseExistingTextureForChannel");
+                if (useExistingTexture == null || !useExistingTexture.boolValue)
+                {
+                    continue;
+                }
+
+                if (affectedChannels == null)
+                {
+                    affectedChannels = new List<string>();
+                }
+
+                SerializedProperty propertyName = channel.FindPropertyRelative("materialPropertyName");
+                affectedChannels.Add(propertyName != null && !string.IsNullOrEmpty(propertyName.stringValue)
+                    ? propertyName.stringValue
+                    : $"Channel {i}");
+            }
+
+            if (affectedChannels != null)
+            {
+                EditorGUILayout.HelpBox(
+                    $"Use Existing Texture is enabled for: {string.Join(", ", affectedChannels)}. These channels bypass compositing and generated texture creation; overlay textures are assigned directly.",
+                    MessageType.Warning);
             }
         }
 
@@ -902,7 +939,7 @@ namespace UMA.Editors
         private int _scannedOverlayCount;
         private int _unassignedOverlayCount;
 
-        [MenuItem("UMA/Find UMAMaterial in Overlays", priority = 26)]
+        [MenuItem("UMA/Asset Management/Find UMAMaterial in Overlays", priority = 126)]
         public static void Open()
         {
             Open(null);

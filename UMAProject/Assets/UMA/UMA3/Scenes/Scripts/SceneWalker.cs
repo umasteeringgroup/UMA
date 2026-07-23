@@ -2,6 +2,8 @@
 
 namespace UMA.Examples
 {
+	using UnityEngine.InputSystem;
+
 	[AddComponentMenu("Camera-Control/Simple Scene Walker")]
 	public class SceneWalker : MonoBehaviour
 	{
@@ -20,54 +22,61 @@ namespace UMA.Examples
 		Vector3 rotation = new Vector3(0, 0, 0);
 
 		Quaternion originalRotation;
+		private UMAPlayerActions controls;
+
+		private void Awake()
+		{
+			controls = new UMAPlayerActions();
+		}
+
+		private void OnEnable()
+		{
+			controls?.Enable();
+		}
+
+		private void OnDisable()
+		{
+			controls?.Disable();
+		}
+
+		private void OnDestroy()
+		{
+			controls?.Dispose();
+			controls = null;
+		}
 
 		void Update()
 		{
-			if (Input.GetMouseButton(0) || Input.GetMouseButton(1))
+			if (controls != null && (controls.Player.Shoot.IsPressed() || controls.Player.Undo.IsPressed()))
 			{
-				// Read the mouse input axis
-				rotation.x += Input.GetAxis("Mouse X") * sensitivityX;
-				rotation.y -= Input.GetAxis("Mouse Y") * sensitivityY;
+				Vector2 look = controls.Player.Look.ReadValue<Vector2>();
+				rotation.x += look.x * sensitivityX;
+				rotation.y -= look.y * sensitivityY;
 
 				rotation.y = ClampAngle(rotation.y, yMinLimit, yMaxLimit);
 				transform.localRotation = Quaternion.Euler(rotation.y, rotation.x, 0);
 			}
 
 			float speed = forwardSpeed;
-			if (Input.GetKey(KeyCode.LeftShift))
+			if (controls != null && controls.Player.Run.IsPressed())
 			{
 				speed *= runMultiplier;
 			}
 
-			if (Input.GetKey(KeyCode.W))
+			Vector2 move = controls != null ? controls.Player.Move.ReadValue<Vector2>() : Vector2.zero;
+			if (!Mathf.Approximately(move.y, 0f))
 			{
-				ChangePosition(speed);
+				ChangePosition(move.y * speed);
 			}
-			if (Input.GetKey(KeyCode.S))
-			{
-				ChangePosition(0 - speed);
-			}
-			if (Input.GetKey(KeyCode.A))
+			if (!Mathf.Approximately(move.x, 0f))
 			{
 				if (strafeMode)
 				{
-					StrafePosition(-speed);
+					StrafePosition(move.x * speed);
 				}
 				else
 				{
-					rotation.x = ClampAngle(rotation.x - keyRotationSpeed * Time.deltaTime);
-					transform.localRotation = Quaternion.Euler(rotation.y, rotation.x, 0);
-				}
-			}
-			if (Input.GetKey(KeyCode.D))
-			{
-				if (strafeMode)
-				{
-					StrafePosition(speed);
-				}
-				else
-				{
-					rotation.x = ClampAngle(rotation.x + keyRotationSpeed * Time.deltaTime);
+					rotation.x = ClampAngle(rotation.x + move.x * keyRotationSpeed * Time.deltaTime);
 					transform.localRotation = Quaternion.Euler(rotation.y, rotation.x, 0);
 				}
 			}

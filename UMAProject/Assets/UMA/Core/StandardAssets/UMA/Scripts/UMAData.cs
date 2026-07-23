@@ -19,6 +19,8 @@ namespace UMA
         public bool loadAllFrames = true;
         public bool loadNormals = true;
         public bool loadTangents = true;
+		public bool forceBakedBlendShapeValue = false;
+		public float forcedBakedBlendShapeValue = 0.5f;
 		public HashSet<string> filteredBlendshapes = new HashSet<string>();
 		public Dictionary<string, BlendShapeData> blendShapes = new Dictionary<string, BlendShapeData>();
 	}
@@ -250,6 +252,7 @@ namespace UMA
         public void SaveMountedItems()
         {
             GameObject holder = null;
+            string ignoreTag = UMASettings.GetValidatedIgnoreTag(gameObject);
 
             // Find or create holder using for loops (no foreach alloc)
             var rootTf = gameObject.transform;
@@ -265,14 +268,11 @@ namespace UMA
 
             if (holder == null)
             {
-                string ignoreTag = umaGenerator.ignoreTag;
-                if (string.IsNullOrEmpty(ignoreTag))
-                {
-                    ignoreTag = "UMAIgnore";
-                }
-
                 holder = new GameObject(HolderObjectName);
-                holder.tag = ignoreTag;
+                if (!string.IsNullOrEmpty(ignoreTag))
+                {
+                    holder.tag = ignoreTag;
+                }
                 holder.SetActive(false);
                 holder.transform.parent = rootTf;
             }
@@ -280,9 +280,11 @@ namespace UMA
             if (umaRoot == null) return;
 
             // Use iterative traversal to avoid recursion + per-node allocations
-            string igTag = umaGenerator.ignoreTag;
-            string kpTag = umaGenerator.keepTag;
-            SaveBonesIterative(umaRoot.transform, holder.transform, igTag, kpTag);
+            string kpTag = ValidateTagForTraversal(
+                umaRoot.transform,
+                umaGenerator != null ? umaGenerator.keepTag : null,
+                "keep");
+            SaveBonesIterative(umaRoot.transform, holder.transform, ignoreTag, kpTag);
         }
 
         // Add this new helper inside class UMAData; it supersedes SaveBonesRecursively at call sites
@@ -321,13 +323,22 @@ namespace UMA
         }
         public void SaveBonesRecursively(Transform bone, Transform holder, string ignoreTag, string keepTag)
         {
+            ignoreTag = ValidateTagForTraversal(bone, ignoreTag, "ignore");
+            keepTag = ValidateTagForTraversal(bone, keepTag, "keep");
+            SaveBonesRecursivelyInternal(bone, holder, ignoreTag, keepTag);
+        }
+
+        private void SaveBonesRecursivelyInternal(Transform bone, Transform holder, string ignoreTag, string keepTag)
+        {
             List<Transform> childlist = new List<Transform>();
 
-            if (bone.CompareTag(ignoreTag) || bone.CompareTag(keepTag))
+            bool isIgnored = !string.IsNullOrEmpty(ignoreTag) && bone.CompareTag(ignoreTag);
+            bool keep = !string.IsNullOrEmpty(keepTag) && bone.CompareTag(keepTag);
+            if (isIgnored || keep)
             {
                 if (bone.parent != null)
                 {
-                    AddSavedItem(bone,bone.CompareTag(keepTag));
+                    AddSavedItem(bone, keep);
                     bone.SetParent(holder, false);
                 }
             }
@@ -342,8 +353,31 @@ namespace UMA
                 for (int i = 0; i < childlist.Count; i++)
                 {
                     Transform child = childlist[i];
-                    SaveBonesRecursively(child, holder, umaGenerator.ignoreTag, umaGenerator.keepTag);
+                    SaveBonesRecursivelyInternal(child, holder, ignoreTag, keepTag);
                 }
+            }
+        }
+
+        private static string ValidateTagForTraversal(Transform probe, string tag, string purpose)
+        {
+            if (probe == null || string.IsNullOrWhiteSpace(tag) || string.Equals(tag, "Untagged", StringComparison.Ordinal))
+            {
+                return null;
+            }
+
+            tag = tag.Trim();
+            try
+            {
+                probe.CompareTag(tag);
+                return tag;
+            }
+            catch (UnityException exception)
+            {
+                Debug.LogError(
+                    $"[UMA] The configured {purpose} tag '{tag}' is not defined in Unity's Tags and Layers settings. " +
+                    $"That tag has been disabled for this traversal. {exception.Message}",
+                    probe);
+                return null;
             }
         }
         public void AddSavedItem(Transform transform, bool replace)
@@ -360,7 +394,7 @@ namespace UMA
 				if (usi.replaceExisting)
 				{
 					var newBone = skeleton.GetBoneTransform(usi.Object.name);
-					if (newBone.gameObject.GetEntityId() != usi.Object.gameObject.GetEntityId())
+					if (newBone.gameObject.GetUmaObjectId() != usi.Object.gameObject.GetUmaObjectId())
 					{
                         skeleton.ReplaceBone(usi);
 						DestroyImmediate(newBone.gameObject);
@@ -731,7 +765,15 @@ namespace UMA
 				return;
 			}
 
-			if (skeleton != null)
+			// A UMAImprovedSkeleton (built by UMABoneBakingMeshCombiner) only creates real
+			// Transforms for "preserved" (animated) bones and destroys the rest in
+			// EndSkeletonUpdate. A standard skinning combiner (Default/Jobified) needs a
+			// real Transform for every bone, so a leftover UMAImprovedSkeleton from a
+			// previous bone-baking build must never be reused here - always rebuild a
+			// plain UMASkeleton in that case so missing bone Transforms get recreated.
+			bool recoveringFromBoneBaking = skeleton is UMAImprovedSkeleton;
+
+			if (skeleton != null && !recoveringFromBoneBaking)
 			{
 				if (skeleton.isValid())
                 {
@@ -741,6 +783,14 @@ namespace UMA
 
 			Transform globalTransform = EnsureUmaRootAndGlobal();
 			skeleton = new UMASkeleton(globalTransform);
+
+			if (recoveringFromBoneBaking)
+			{
+				// The improved skeleton retains only preserved Transforms. Re-pin the plain
+				// skeleton to its authored TPose + DNA pose after recreating the missing
+				// source bones so Default/Jobified can use the authored bind poses.
+				ResetToTPoseAndApplyDNA();
+			}
 		}
 
 
@@ -803,6 +853,30 @@ namespace UMA
             }
             return updateFlags;
         }
+
+		public void ResetToTPoseAndApplyDNA()
+		{
+			if (skeleton == null)
+			{
+				return;
+			}
+
+			skeleton.ResetAll();
+			if (rawAvatar)
+			{
+				return;
+			}
+
+			GotoTPose();
+			if (umaRecipe?.raceData != null && umaRecipe.raceData.useNewDNA)
+			{
+				NewDNAApply();
+			}
+			else
+			{
+				ApplyDNA();
+			}
+		}
 
         public DNABuildType NewDNAPostApply()
         {
@@ -898,6 +972,21 @@ namespace UMA
 			{
 				animatedBonesTable.Add(hash, animatedBonesTable.Count);
 			}
+		}
+
+		/// <summary>
+		/// Reapplies the preserved-bone set after a skeleton reset. Bone-baking
+		/// combiners register this set while assembling the mesh; the generator's
+		/// later shape pass resets the skeleton cache and must restore the set before
+		/// the improved skeleton removes unpreserved transforms.
+		/// </summary>
+		public void RestoreRegisteredAnimatedBones()
+		{
+			if (skeleton == null || animatedBonesTable == null)
+				return;
+
+			foreach (int hash in animatedBonesTable.Keys)
+				skeleton.SetAnimatedBone(hash);
 		}
 
 		public Transform GetGlobalTransform()
@@ -1366,7 +1455,7 @@ namespace UMA
 		/// The UMARecipe class contains the race, DNA, and color data required to build a UMA character.
 		/// </summary>
 		[System.Serializable]
-		public class UMARecipe
+		public class UMARecipe 
 		{
 			public RaceData raceData;
 			public string recipeName; // only used when DynamicCharacterAvatar merges the recipe with the avatar.
@@ -1590,9 +1679,9 @@ namespace UMA
 						{
 							if (d != null)
 							{
-								float defaultValue = 0.5f;
+								float defaultValue = d.defaultValue;
 								if (overrides != null && overrides.TryGetValue(d.name, out var overrideValue))
-								{
+								{									
 									defaultValue = Mathf.Clamp01(overrideValue);
 								}
 								else if (dict != null && dict.TryGetValue(d.name, out var dnaAsset) && dnaAsset != null)
@@ -1679,7 +1768,7 @@ namespace UMA
                         {
                             continue;
                         }
-                        float value = 0.5f;
+                        float value = dnaDef.defaultValue;
                         if (overrides != null && overrides.TryGetValue(name, out var ov))
                         {
                             value = Mathf.Clamp01(ov);
@@ -1760,6 +1849,10 @@ namespace UMA
 			/// <param name="dna">DNA.</param>
 			public void AddDna(UMADnaBase dna)
 			{
+				if (umaDna == null)
+				{
+					umaDna = new Dictionary<int, UMADnaBase>();
+				}
 				if (umaDna.ContainsKey(dna.DNATypeHash))
 				{
 					return;
@@ -1823,6 +1916,10 @@ namespace UMA
 			/// <param name="type">Type.</param>
 			public UMADnaBase GetDna(Type type)
 			{
+				if (umaDna == null)
+				{
+					return null;
+				}
                 if (umaDna.TryGetValue(UMAUtils.StringToHash(type.Name), out var dna))
                 {
                     return dna;
@@ -2023,8 +2120,22 @@ namespace UMA
 			{
 				if ((slot == null) || (slot.asset == null && !slot.isPlaceholderSlot))
 				{
+					if (slot == null)
+					{
+						Debug.LogWarning($"MergeSlot called with null slot in recipe {recipeName}.");
+					}
+					else if (slot.asset == null)
+					{
+						Debug.LogWarning($"MergeSlot called with null slot asset in recipe {recipeName} Slot {slot.slotName}.");
+					}
+					else
+					{
+						Debug.LogWarning($"MergeSlot called with placeholder slot asset in recipe {recipeName} Slot {slot.slotName}. Placeholder slot ignored.");
+					}
 					return null;
 				}
+
+				//Debug.Log($"Merging slot {slot.slotName} into recipe {recipeName}.");
 
 				int overlayCount = 0;
 #if TEST_INSERTFIX
@@ -2073,6 +2184,7 @@ namespace UMA
 							if (originalOverlay != null && overlay.asset.dontMergeDuplicates != true)
 							{
 								originalOverlay.CopyColors(overlay);//also copies textures
+								originalOverlay.Supressed = overlay.Supressed;
 								if (overlay.colorData.HasName())
 								{
 									int sharedIndex;
@@ -2405,6 +2517,8 @@ namespace UMA
 #pragma warning disable 618
 			public void PreApplyDNA(UMAData umaData, bool fixUpUMADnaToDynamicUMADna = false)
 			{
+				Debug.Log("PreApplyDNA called for recipe " + umaData.umaRecipe.recipeName);
+
                 EnsureAllDNAPresent();
 				//clear any color adjusters from all overlays in the recipe
 				umaData.umaRecipe.ClearOverlayColorAdjusters();
@@ -2432,6 +2546,11 @@ namespace UMA
 			/// <param name="umaData">UMA data.</param>
 			public void ApplyDNA(UMAData umaData)
 			{
+				Debug.Log("ApplyDNA called for recipe " + umaData.umaRecipe.recipeName);
+				if (umaData.umaRecipe.raceData != null && umaData.umaRecipe.raceData.useNewDNA)
+				{
+					return;
+				}
 				foreach (var dnaEntry in umaDna)
 				{
 					//DynamicDNAPlugins FEATURE: Allow more than one converter to use the same dna
@@ -2445,15 +2564,6 @@ namespace UMA
 							dnaConverters[i](umaData, umaData.GetSkeleton());
 						}
 					}
-					else
-					{
-						if (Debug.isDebugBuild)
-                        {
-#if UNITY_EDITOR
-							Debug.LogWarning("**UMA: Cannot apply dna: " + dnaEntry.Value.GetType().Name + " using key " + dnaEntry.Key);
-#endif
-						}
-                    }
 				}
 			}
 
@@ -2715,9 +2825,6 @@ namespace UMA
 					}
 				}
 				slotDataList = slots.ToArray();
-				//DynamicUMADna:: This is a good place to compress the dnaValues list
-				//DynamicUMADna:: This is a good place to compress the slotDataList
-				//DynamicUMADna:: This is a good place to compress the sharedColors
 			}
 
 
@@ -2819,7 +2926,9 @@ namespace UMA
 					{
 						for (int i = 0; i < recipe.slotDataList.Length; i++)
 						{
-							MergeSlot(recipe.slotDataList[i], dontSerialize, mergeMatchingOverlays, recipe.recipeName);
+							var sd = recipe.slotDataList[i];
+							if (sd == null) continue;
+							MergeSlot(sd, dontSerialize, mergeMatchingOverlays, recipe.recipeName);
 						}
 					}
 				}
@@ -2964,7 +3073,7 @@ namespace UMA
 			umaGenerator.addDirtyUMA(this);
 		}
 
-		void OnDestroy()
+		protected virtual void OnDestroy()
 		{
 			if (staticCharacter)
             {
@@ -3041,7 +3150,7 @@ namespace UMA
                             if (tempTexture is RenderTexture)
 							{
 								RenderTexture tempRenderTexture = tempTexture as RenderTexture;
-								var entityId = tempRenderTexture.GetEntityId();
+								var entityId = tempRenderTexture.GetUmaObjectId();
 								if (!RenderTexToCPU.renderTexturesToCPU.ContainsKey(entityId))
 								{
                                     // this will be cleared up when the async call is completed.
@@ -3049,6 +3158,7 @@ namespace UMA
 									bool safe = RenderTexToCPU.SafeToFree(tempRenderTexture);
 									if (safe)
 									{
+										UMARenderTextureTracker.Untrack(tempRenderTexture);
 										if (tempRenderTexture.IsCreated())
 										{
 											tempRenderTexture.Release();
@@ -3496,16 +3606,19 @@ namespace UMA
 			BlendShapeData data;
 			if (blendShapeSettings.blendShapes.TryGetValue(name, out data))
 			{
+				float appliedWeight = data.isBaked && blendShapeSettings.forceBakedBlendShapeValue
+					? blendShapeSettings.forcedBakedBlendShapeValue
+					: weight;
 				if (bakedOnly)
 				{
 					if (data.isBaked)
 					{
-						data.value = weight;
+						data.value = appliedWeight;
 					}
 					return;
 				}
 				// not baked only pass...
-				data.value = weight;
+				data.value = appliedWeight;
 			}
 			else
 			{

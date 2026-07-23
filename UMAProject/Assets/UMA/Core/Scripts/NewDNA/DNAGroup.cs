@@ -17,6 +17,16 @@ namespace UMA
         [Tooltip("The maximum total value for this group.")]
         public float MaxTotalValue = 0.0f;
 
+        public float GetDefaultValue(string dnaName)
+        {
+            var dna = dnaList.Find(d => d.name == dnaName);
+            if (dna != null)
+            {
+                return dna.defaultValue;
+            }
+            return -99f; // Default to -99 if not found, or you could throw an exception or handle it differently
+        }
+
 #if UNITY_EDITOR
         // Editor-only persisted foldout state for inspectors
         [SerializeField, HideInInspector]

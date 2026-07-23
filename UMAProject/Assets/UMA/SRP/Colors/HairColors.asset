@@ -39,9 +39,9 @@ MonoBehaviour:
           name: 
           Value: 0
         p10:
-          stringRepresentation: Color;#FDE6A2FF;_BaseColor
+          stringRepresentation: Color;#FDECBAFF;_BaseColor
           name: _BaseColor
-          Value: {r: 0.99371064, g: 0.90387046, b: 0.6343498, a: 1}
+          Value: {r: 0.99215686, g: 0.92595494, b: 0.7302275, a: 1}
         p9:
           stringRepresentation: 
           name: 
@@ -106,9 +106,76 @@ MonoBehaviour:
           name: 
           Value: 0
         p10:
-          stringRepresentation: Color;#FFE086FF;_RootColor
+          stringRepresentation: Color;#DFCC93FF;_RootColor
           name: _RootColor
-          Value: {r: 1, g: 0.87936425, b: 0.5251572, a: 1}
+          Value: {r: 0.8745098, g: 0.7993596, b: 0.57717645, a: 1}
+        p9:
+          stringRepresentation: 
+          name: 
+          Value: {x: 0, y: 0, z: 0, w: 0}
+        p8:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p7:
+          stringRepresentation: 
+          name: 
+          Value: {fileID: 0}
+        p6:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p5:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p4:
+          stringRepresentation: 
+          name: 
+          Value:
+            e00: 0
+            e01: 0
+            e02: 0
+            e03: 0
+            e10: 0
+            e11: 0
+            e12: 0
+            e13: 0
+            e20: 0
+            e21: 0
+            e22: 0
+            e23: 0
+            e30: 0
+            e31: 0
+            e32: 0
+            e33: 0
+        p3:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p2:
+          stringRepresentation: 
+          name: 
+        p1:
+          stringRepresentation: 
+          name: 
+          offset: 0
+          size: 0
+        propertType: UMAColorProperty
+      - p12:
+          stringRepresentation: 
+          name: 
+          Translate: {x: 0, y: 0}
+          Rotate: 0
+          Scale: {x: 1, y: 1}
+        p11:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p10:
+          stringRepresentation: Color;#FFEFC2FF;_Tip_Color
+          name: _Tip_Color
+          Value: {r: 1, g: 0.9389014, b: 0.759, a: 1}
         p9:
           stringRepresentation: 
           name: 
@@ -173,6 +240,7 @@ MonoBehaviour:
     showSelected: 1
     isSelected: 0
     showDisplayColor: 1
+    showSelectFromFoldout: 0
     displayColor: {r: 1, g: 0.8411773, b: 0.51257855, a: 1}
   - name: Red
     channelMask:
@@ -265,9 +333,76 @@ MonoBehaviour:
           name: 
           Value: 0
         p10:
-          stringRepresentation: Color;#ED7410FF;_BaseColor
+          stringRepresentation: Color;#ED8D3FFF;_BaseColor
           name: _BaseColor
-          Value: {r: 0.9308176, g: 0.4567665, b: 0.061468877, a: 1}
+          Value: {r: 0.92941177, g: 0.5548883, b: 0.24536471, a: 1}
+        p9:
+          stringRepresentation: 
+          name: 
+          Value: {x: 0, y: 0, z: 0, w: 0}
+        p8:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p7:
+          stringRepresentation: 
+          name: 
+          Value: {fileID: 0}
+        p6:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p5:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p4:
+          stringRepresentation: 
+          name: 
+          Value:
+            e00: 0
+            e01: 0
+            e02: 0
+            e03: 0
+            e10: 0
+            e11: 0
+            e12: 0
+            e13: 0
+            e20: 0
+            e21: 0
+            e22: 0
+            e23: 0
+            e30: 0
+            e31: 0
+            e32: 0
+            e33: 0
+        p3:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p2:
+          stringRepresentation: 
+          name: 
+        p1:
+          stringRepresentation: 
+          name: 
+          offset: 0
+          size: 0
+        propertType: UMAColorProperty
+      - p12:
+          stringRepresentation: 
+          name: 
+          Translate: {x: 0, y: 0}
+          Rotate: 0
+          Scale: {x: 1, y: 1}
+        p11:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p10:
+          stringRepresentation: Color;#EF954AFF;_Tip_Color
+          name: _Tip_Color
+          Value: {r: 0.93710685, g: 0.58508897, b: 0.29174072, a: 1}
         p9:
           stringRepresentation: 
           name: 
@@ -332,6 +467,7 @@ MonoBehaviour:
     showSelected: 1
     isSelected: 0
     showDisplayColor: 1
+    showSelectFromFoldout: 0
     displayColor: {r: 0.68235296, g: 0.2901961, b: 0.121568635, a: 1}
   - name: Chestnut
     channelMask:
@@ -480,6 +616,73 @@ MonoBehaviour:
           offset: 0
           size: 0
         propertType: UMAColorProperty
+      - p12:
+          stringRepresentation: 
+          name: 
+          Translate: {x: 0, y: 0}
+          Rotate: 0
+          Scale: {x: 1, y: 1}
+        p11:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p10:
+          stringRepresentation: Color;#704B30FF;_Tip_Color
+          name: _Tip_Color
+          Value: {r: 0.43921572, g: 0.29411766, b: 0.18823531, a: 1}
+        p9:
+          stringRepresentation: 
+          name: 
+          Value: {x: 0, y: 0, z: 0, w: 0}
+        p8:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p7:
+          stringRepresentation: 
+          name: 
+          Value: {fileID: 0}
+        p6:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p5:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p4:
+          stringRepresentation: 
+          name: 
+          Value:
+            e00: 0
+            e01: 0
+            e02: 0
+            e03: 0
+            e10: 0
+            e11: 0
+            e12: 0
+            e13: 0
+            e20: 0
+            e21: 0
+            e22: 0
+            e23: 0
+            e30: 0
+            e31: 0
+            e32: 0
+            e33: 0
+        p3:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p2:
+          stringRepresentation: 
+          name: 
+        p1:
+          stringRepresentation: 
+          name: 
+          offset: 0
+          size: 0
+        propertType: UMAColorProperty
     foldout: 0
     showAdvanced: 0
     isBaseColor: 1
@@ -491,6 +694,7 @@ MonoBehaviour:
     showSelected: 1
     isSelected: 0
     showDisplayColor: 1
+    showSelectFromFoldout: 0
     displayColor: {r: 0.34117648, g: 0.227451, b: 0.1764706, a: 1}
   - name: Auburn
     channelMask:
@@ -583,9 +787,76 @@ MonoBehaviour:
           name: 
           Value: 0
         p10:
-          stringRepresentation: Color;#202020FF;_RootColor
+          stringRepresentation: Color;#531F08FF;_RootColor
           name: _RootColor
-          Value: {r: 0.1254902, g: 0.1254902, b: 0.1254902, a: 1}
+          Value: {r: 0.32704395, g: 0.12028275, b: 0.02982473, a: 1}
+        p9:
+          stringRepresentation: 
+          name: 
+          Value: {x: 0, y: 0, z: 0, w: 0}
+        p8:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p7:
+          stringRepresentation: 
+          name: 
+          Value: {fileID: 0}
+        p6:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p5:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p4:
+          stringRepresentation: 
+          name: 
+          Value:
+            e00: 0
+            e01: 0
+            e02: 0
+            e03: 0
+            e10: 0
+            e11: 0
+            e12: 0
+            e13: 0
+            e20: 0
+            e21: 0
+            e22: 0
+            e23: 0
+            e30: 0
+            e31: 0
+            e32: 0
+            e33: 0
+        p3:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p2:
+          stringRepresentation: 
+          name: 
+        p1:
+          stringRepresentation: 
+          name: 
+          offset: 0
+          size: 0
+        propertType: UMAColorProperty
+      - p12:
+          stringRepresentation: 
+          name: 
+          Translate: {x: 0, y: 0}
+          Rotate: 0
+          Scale: {x: 1, y: 1}
+        p11:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p10:
+          stringRepresentation: Color;#602207FF;_Tip_Color
+          name: _Tip_Color
+          Value: {r: 0.3773585, g: 0.13383481, b: 0.027293192, a: 1}
         p9:
           stringRepresentation: 
           name: 
@@ -646,10 +917,11 @@ MonoBehaviour:
     moveUpThis: 0
     moveDownThis: 0
     colorsExpanded: 0
-    propertiesExpanded: 0
+    propertiesExpanded: 1
     showSelected: 1
     isSelected: 0
     showDisplayColor: 1
+    showSelectFromFoldout: 0
     displayColor: {r: 0.37106913, g: 0.12016188, b: 0.010501893, a: 1}
   - name: Brown
     channelMask:
@@ -742,9 +1014,76 @@ MonoBehaviour:
           name: 
           Value: 0
         p10:
-          stringRepresentation: Color;#000000FF;_RootColor
+          stringRepresentation: Color;#352418FF;_RootColor
           name: _RootColor
-          Value: {r: 0, g: 0, b: 0, a: 1}
+          Value: {r: 0.20754719, g: 0.14253789, b: 0.09463628, a: 1}
+        p9:
+          stringRepresentation: 
+          name: 
+          Value: {x: 0, y: 0, z: 0, w: 0}
+        p8:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p7:
+          stringRepresentation: 
+          name: 
+          Value: {fileID: 0}
+        p6:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p5:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p4:
+          stringRepresentation: 
+          name: 
+          Value:
+            e00: 0
+            e01: 0
+            e02: 0
+            e03: 0
+            e10: 0
+            e11: 0
+            e12: 0
+            e13: 0
+            e20: 0
+            e21: 0
+            e22: 0
+            e23: 0
+            e30: 0
+            e31: 0
+            e32: 0
+            e33: 0
+        p3:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p2:
+          stringRepresentation: 
+          name: 
+        p1:
+          stringRepresentation: 
+          name: 
+          offset: 0
+          size: 0
+        propertType: UMAColorProperty
+      - p12:
+          stringRepresentation: 
+          name: 
+          Translate: {x: 0, y: 0}
+          Rotate: 0
+          Scale: {x: 1, y: 1}
+        p11:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p10:
+          stringRepresentation: Color;#452E1DFF;_Tip_Color
+          name: _Tip_Color
+          Value: {r: 0.27044016, g: 0.18083462, b: 0.11480947, a: 1}
         p9:
           stringRepresentation: 
           name: 
@@ -809,6 +1148,7 @@ MonoBehaviour:
     showSelected: 1
     isSelected: 0
     showDisplayColor: 1
+    showSelectFromFoldout: 0
     displayColor: {r: 0.2264151, g: 0.15808031, b: 0.12744749, a: 1}
   - name: Black
     channelMask:
@@ -957,6 +1297,73 @@ MonoBehaviour:
           offset: 0
           size: 0
         propertType: UMAColorProperty
+      - p12:
+          stringRepresentation: 
+          name: 
+          Translate: {x: 0, y: 0}
+          Rotate: 0
+          Scale: {x: 1, y: 1}
+        p11:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p10:
+          stringRepresentation: Color;#151515FF;_Tip_Color
+          name: _Tip_Color
+          Value: {r: 0.08176088, g: 0.08176088, b: 0.08176088, a: 1}
+        p9:
+          stringRepresentation: 
+          name: 
+          Value: {x: 0, y: 0, z: 0, w: 0}
+        p8:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p7:
+          stringRepresentation: 
+          name: 
+          Value: {fileID: 0}
+        p6:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p5:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p4:
+          stringRepresentation: 
+          name: 
+          Value:
+            e00: 0
+            e01: 0
+            e02: 0
+            e03: 0
+            e10: 0
+            e11: 0
+            e12: 0
+            e13: 0
+            e20: 0
+            e21: 0
+            e22: 0
+            e23: 0
+            e30: 0
+            e31: 0
+            e32: 0
+            e33: 0
+        p3:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p2:
+          stringRepresentation: 
+          name: 
+        p1:
+          stringRepresentation: 
+          name: 
+          offset: 0
+          size: 0
+        propertType: UMAColorProperty
     foldout: 0
     showAdvanced: 0
     isBaseColor: 1
@@ -968,6 +1375,7 @@ MonoBehaviour:
     showSelected: 1
     isSelected: 0
     showDisplayColor: 1
+    showSelectFromFoldout: 0
     displayColor: {r: 0, g: 0, b: 0, a: 1}
   - name: Gray
     channelMask:
@@ -993,9 +1401,9 @@ MonoBehaviour:
           name: 
           Value: 0
         p10:
-          stringRepresentation: Color;#C9C9FAFF;_RootColor
+          stringRepresentation: Color;#C9C9E6FF;_RootColor
           name: _RootColor
-          Value: {r: 0.78675675, g: 0.78675675, b: 0.9811321, a: 1}
+          Value: {r: 0.78675675, g: 0.78675675, b: 0.9019608, a: 1}
         p9:
           stringRepresentation: 
           name: 
@@ -1060,9 +1468,76 @@ MonoBehaviour:
           name: 
           Value: 0
         p10:
-          stringRepresentation: Color;#DADAFDFF;_BaseColor
+          stringRepresentation: Color;#D0D0E4FF;_BaseColor
           name: _BaseColor
-          Value: {r: 0.8530911, g: 0.8530911, b: 0.99371064, a: 1}
+          Value: {r: 0.81725395, g: 0.81725395, b: 0.8930817, a: 1}
+        p9:
+          stringRepresentation: 
+          name: 
+          Value: {x: 0, y: 0, z: 0, w: 0}
+        p8:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p7:
+          stringRepresentation: 
+          name: 
+          Value: {fileID: 0}
+        p6:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p5:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p4:
+          stringRepresentation: 
+          name: 
+          Value:
+            e00: 0
+            e01: 0
+            e02: 0
+            e03: 0
+            e10: 0
+            e11: 0
+            e12: 0
+            e13: 0
+            e20: 0
+            e21: 0
+            e22: 0
+            e23: 0
+            e30: 0
+            e31: 0
+            e32: 0
+            e33: 0
+        p3:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p2:
+          stringRepresentation: 
+          name: 
+        p1:
+          stringRepresentation: 
+          name: 
+          offset: 0
+          size: 0
+        propertType: UMAColorProperty
+      - p12:
+          stringRepresentation: 
+          name: 
+          Translate: {x: 0, y: 0}
+          Rotate: 0
+          Scale: {x: 1, y: 1}
+        p11:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p10:
+          stringRepresentation: Color;#D1D1D1FF;_Tip_Color
+          name: _Tip_Color
+          Value: {r: 0.8196079, g: 0.8196079, b: 0.8196079, a: 1}
         p9:
           stringRepresentation: 
           name: 
@@ -1127,6 +1602,7 @@ MonoBehaviour:
     showSelected: 1
     isSelected: 0
     showDisplayColor: 1
+    showSelectFromFoldout: 0
     displayColor: {r: 0.91194963, g: 0.91194963, b: 0.91194963, a: 1}
   - name: Platinum
     channelMask:
@@ -1152,9 +1628,9 @@ MonoBehaviour:
           name: 
           Value: 0
         p10:
-          stringRepresentation: Color;#E4E4E400;_RootColor
+          stringRepresentation: Color;#E4E4E4FF;_RootColor
           name: _RootColor
-          Value: {r: 0.8930817, g: 0.8930817, b: 0.8930817, a: 0}
+          Value: {r: 0.8930817, g: 0.8930817, b: 0.8930817, a: 1}
         p9:
           stringRepresentation: 
           name: 
@@ -1219,9 +1695,76 @@ MonoBehaviour:
           name: 
           Value: 0
         p10:
-          stringRepresentation: Color;#FFFFFF00;_BaseColor
+          stringRepresentation: Color;#FFFFFFFF;_BaseColor
           name: _BaseColor
-          Value: {r: 1, g: 1, b: 1, a: 0}
+          Value: {r: 1, g: 1, b: 1, a: 1}
+        p9:
+          stringRepresentation: 
+          name: 
+          Value: {x: 0, y: 0, z: 0, w: 0}
+        p8:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p7:
+          stringRepresentation: 
+          name: 
+          Value: {fileID: 0}
+        p6:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p5:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p4:
+          stringRepresentation: 
+          name: 
+          Value:
+            e00: 0
+            e01: 0
+            e02: 0
+            e03: 0
+            e10: 0
+            e11: 0
+            e12: 0
+            e13: 0
+            e20: 0
+            e21: 0
+            e22: 0
+            e23: 0
+            e30: 0
+            e31: 0
+            e32: 0
+            e33: 0
+        p3:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p2:
+          stringRepresentation: 
+          name: 
+        p1:
+          stringRepresentation: 
+          name: 
+          offset: 0
+          size: 0
+        propertType: UMAColorProperty
+      - p12:
+          stringRepresentation: 
+          name: 
+          Translate: {x: 0, y: 0}
+          Rotate: 0
+          Scale: {x: 1, y: 1}
+        p11:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p10:
+          stringRepresentation: Color;#D1D1D1FF;_Tip_Color
+          name: _Tip_Color
+          Value: {r: 0.8196079, g: 0.8196079, b: 0.8196079, a: 1}
         p9:
           stringRepresentation: 
           name: 
@@ -1281,11 +1824,12 @@ MonoBehaviour:
     deleteThis: 0
     moveUpThis: 0
     moveDownThis: 0
-    colorsExpanded: 0
+    colorsExpanded: 1
     propertiesExpanded: 1
     showSelected: 1
     isSelected: 0
     showDisplayColor: 0
+    showSelectFromFoldout: 0
     displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Green
     channelMask:
@@ -1434,6 +1978,73 @@ MonoBehaviour:
           offset: 0
           size: 0
         propertType: UMAColorProperty
+      - p12:
+          stringRepresentation: 
+          name: 
+          Translate: {x: 0, y: 0}
+          Rotate: 0
+          Scale: {x: 1, y: 1}
+        p11:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p10:
+          stringRepresentation: Color;#418841FF;_Tip_Color
+          name: _Tip_Color
+          Value: {r: 0.25490198, g: 0.53333336, b: 0.25490198, a: 1}
+        p9:
+          stringRepresentation: 
+          name: 
+          Value: {x: 0, y: 0, z: 0, w: 0}
+        p8:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p7:
+          stringRepresentation: 
+          name: 
+          Value: {fileID: 0}
+        p6:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p5:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p4:
+          stringRepresentation: 
+          name: 
+          Value:
+            e00: 0
+            e01: 0
+            e02: 0
+            e03: 0
+            e10: 0
+            e11: 0
+            e12: 0
+            e13: 0
+            e20: 0
+            e21: 0
+            e22: 0
+            e23: 0
+            e30: 0
+            e31: 0
+            e32: 0
+            e33: 0
+        p3:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p2:
+          stringRepresentation: 
+          name: 
+        p1:
+          stringRepresentation: 
+          name: 
+          offset: 0
+          size: 0
+        propertType: UMAColorProperty
     foldout: 0
     showAdvanced: 0
     isBaseColor: 1
@@ -1445,6 +2056,7 @@ MonoBehaviour:
     showSelected: 1
     isSelected: 0
     showDisplayColor: 1
+    showSelectFromFoldout: 0
     displayColor: {r: 0.03524382, g: 0.33962262, b: 0.057250757, a: 1}
   - name: Cyan
     channelMask:
@@ -1593,6 +2205,73 @@ MonoBehaviour:
           offset: 0
           size: 0
         propertType: UMAColorProperty
+      - p12:
+          stringRepresentation: 
+          name: 
+          Translate: {x: 0, y: 0}
+          Rotate: 0
+          Scale: {x: 1, y: 1}
+        p11:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p10:
+          stringRepresentation: Color;#93F7E2FF;_Tip_Color
+          name: _Tip_Color
+          Value: {r: 0.5764706, g: 0.9686275, b: 0.8862746, a: 1}
+        p9:
+          stringRepresentation: 
+          name: 
+          Value: {x: 0, y: 0, z: 0, w: 0}
+        p8:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p7:
+          stringRepresentation: 
+          name: 
+          Value: {fileID: 0}
+        p6:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p5:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p4:
+          stringRepresentation: 
+          name: 
+          Value:
+            e00: 0
+            e01: 0
+            e02: 0
+            e03: 0
+            e10: 0
+            e11: 0
+            e12: 0
+            e13: 0
+            e20: 0
+            e21: 0
+            e22: 0
+            e23: 0
+            e30: 0
+            e31: 0
+            e32: 0
+            e33: 0
+        p3:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p2:
+          stringRepresentation: 
+          name: 
+        p1:
+          stringRepresentation: 
+          name: 
+          offset: 0
+          size: 0
+        propertType: UMAColorProperty
     foldout: 0
     showAdvanced: 0
     isBaseColor: 1
@@ -1604,6 +2283,7 @@ MonoBehaviour:
     showSelected: 1
     isSelected: 0
     showDisplayColor: 1
+    showSelectFromFoldout: 0
     displayColor: {r: 0.3109054, g: 0.754717, b: 0.6611005, a: 1}
   - name: Magenta
     channelMask:
@@ -1629,9 +2309,9 @@ MonoBehaviour:
           name: 
           Value: 0
         p10:
-          stringRepresentation: Color;#65006AFF;_BaseColor
+          stringRepresentation: Color;#66166AFF;_BaseColor
           name: _BaseColor
-          Value: {r: 0.39688691, g: 0, b: 0.41509432, a: 1}
+          Value: {r: 0.40005887, g: 0.08438432, b: 0.41568628, a: 1}
         p9:
           stringRepresentation: 
           name: 
@@ -1696,9 +2376,76 @@ MonoBehaviour:
           name: 
           Value: 0
         p10:
-          stringRepresentation: Color;#3B063BFF;_RootColor
+          stringRepresentation: Color;#3B133BFF;_RootColor
           name: _RootColor
-          Value: {r: 0.23270428, g: 0.024148531, b: 0.23270428, a: 1}
+          Value: {r: 0.23137255, g: 0.07519607, b: 0.23137255, a: 1}
+        p9:
+          stringRepresentation: 
+          name: 
+          Value: {x: 0, y: 0, z: 0, w: 0}
+        p8:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p7:
+          stringRepresentation: 
+          name: 
+          Value: {fileID: 0}
+        p6:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p5:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p4:
+          stringRepresentation: 
+          name: 
+          Value:
+            e00: 0
+            e01: 0
+            e02: 0
+            e03: 0
+            e10: 0
+            e11: 0
+            e12: 0
+            e13: 0
+            e20: 0
+            e21: 0
+            e22: 0
+            e23: 0
+            e30: 0
+            e31: 0
+            e32: 0
+            e33: 0
+        p3:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p2:
+          stringRepresentation: 
+          name: 
+        p1:
+          stringRepresentation: 
+          name: 
+          offset: 0
+          size: 0
+        propertType: UMAColorProperty
+      - p12:
+          stringRepresentation: 
+          name: 
+          Translate: {x: 0, y: 0}
+          Rotate: 0
+          Scale: {x: 1, y: 1}
+        p11:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p10:
+          stringRepresentation: Color;#67236AFF;_Tip_Color
+          name: _Tip_Color
+          Value: {r: 0.40242395, g: 0.13717647, b: 0.41568628, a: 1}
         p9:
           stringRepresentation: 
           name: 
@@ -1759,8 +2506,9 @@ MonoBehaviour:
     moveUpThis: 0
     moveDownThis: 0
     colorsExpanded: 0
-    propertiesExpanded: 0
+    propertiesExpanded: 1
     showSelected: 1
     isSelected: 0
     showDisplayColor: 1
+    showSelectFromFoldout: 0
     displayColor: {r: 0.3584906, g: 0.10709622, b: 0.34810242, a: 1}

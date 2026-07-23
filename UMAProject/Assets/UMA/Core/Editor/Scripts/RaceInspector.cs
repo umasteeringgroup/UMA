@@ -6,6 +6,7 @@ using UnityEditor;
 using UnityEditorInternal;
 using System.Collections.Generic;
 using System;
+using System.IO;
 using System.Text.RegularExpressions;
 
 namespace UMA.Editors
@@ -30,6 +31,7 @@ namespace UMA.Editors
 			}
 		}
 		public static bool showRaceGeneration = false;
+		public static bool showUtilities = false;
 		protected RaceData race;
 		protected bool _needsUpdate;
 		protected string _errorMessage;
@@ -58,13 +60,17 @@ namespace UMA.Editors
 		// Cached blendshape lookup for baseRaceRecipe slots
 		private string[] _bsSlotNames = Array.Empty<string>();
 		private Dictionary<string, string[]> _bsBySlot = new Dictionary<string, string[]>();
-		private EntityId _lastBaseRecipeId = 0;
+		private UMAObjectId _lastBaseRecipeId = 0;
 		private bool _bsCacheValid = false;
 		// UI selections for add-from-slot
 		private int _prebakeAddSlotIndex = 0;
 		private int _prebakeAddShapeIndex = 0;
 		private int _unbakedAddSlotIndex = 0;
 		private int _unbakedAddShapeIndex = 0;
+
+		// Blendshape extraction UI
+		private string[] _allBlendshapeNames = Array.Empty<string>();
+		private int _selectedExtractBlendshapeIndex = 0;
 		#endregion
 
 		public void OnEnable() {
@@ -104,7 +110,7 @@ namespace UMA.Editors
 			// Pull the baseRaceRecipe reference
 			var baseRecipeProp = serializedObject.FindProperty("baseRaceRecipe");
 			var baseRecipe = baseRecipeProp != null ? baseRecipeProp.objectReferenceValue as UMARecipeBase : null;
-			EntityId recipeId = baseRecipe != null ? baseRecipe.GetEntityId() : 0;
+			UMAObjectId recipeId = baseRecipe != null ? baseRecipe.GetUmaObjectId() : 0;
 			if (_bsCacheValid && recipeId == _lastBaseRecipeId)
 			{
 				return;
@@ -151,17 +157,220 @@ namespace UMA.Editors
 			}
 			slotNames.Sort(StringComparer.Ordinal);
 			_bsSlotNames = slotNames.ToArray();
-			// reset indices if out of range
-			_prebakeAddSlotIndex = Mathf.Clamp(_prebakeAddSlotIndex, 0, Math.Max(0, _bsSlotNames.Length - 1));
-			_unbakedAddSlotIndex = Mathf.Clamp(_unbakedAddSlotIndex, 0, Math.Max(0, _bsSlotNames.Length - 1));
-			_prebakeAddShapeIndex = 0;
-			_unbakedAddShapeIndex = 0;
+		// Build a global unique list of blendshape names across all slots
+		var allNamesSet = new HashSet<string>(StringComparer.Ordinal);
+		foreach (var kvp in _bsBySlot)
+		{
+			var arr = kvp.Value;
+			if (arr == null) continue;
+			for (int n = 0; n < arr.Length; n++)
+			{
+				if (!string.IsNullOrEmpty(arr[n])) allNamesSet.Add(arr[n]);
+			}
+		}
+		var allNamesList = new List<string>(allNamesSet);
+		allNamesList.Sort(StringComparer.Ordinal);
+		_allBlendshapeNames = allNamesList.ToArray();
+		// reset indices if out of range
+		_prebakeAddSlotIndex = Mathf.Clamp(_prebakeAddSlotIndex, 0, Math.Max(0, _bsSlotNames.Length - 1));
+		_unbakedAddSlotIndex = Mathf.Clamp(_unbakedAddSlotIndex, 0, Math.Max(0, _bsSlotNames.Length - 1));
+		_prebakeAddShapeIndex = 0;
+		_unbakedAddShapeIndex = 0;
+	}
+
+	public static Vector3 StaticBounds= new Vector3(0.75f, 1f, 0.5f);
+	public static Vector3 StaticBoundsCenter = new Vector3(0, 1f, 0);
+
+	public void DoUtilitiesGUI()
+	{
+		EnsureBlendshapeCache();
+		GUILayout.BeginHorizontal();
+		if (_allBlendshapeNames == null || _allBlendshapeNames.Length == 0)
+		{
+			EditorGUILayout.LabelField("No blendshapes found in baseRaceRecipe");
+		}
+		else
+		{
+			_selectedExtractBlendshapeIndex = EditorGUILayout.Popup("Blendshape", _selectedExtractBlendshapeIndex, _allBlendshapeNames);
+		}
+		GUILayout.EndHorizontal();
+		if (_allBlendshapeNames != null && _allBlendshapeNames.Length > 0)
+		{
+			GUILayout.BeginHorizontal();
+			if (GUILayout.Button("Extract to MeshModifier"))
+			{
+				ExtractBlendshapeToMeshModifier();
+			}
+			if (GUILayout.Button("Extract all"))
+			{
+				ExtractAllBlendshapesToMeshModifiers();
+			}
+			GUILayout.EndHorizontal();
+		}
+	}
+
+	private void ExtractBlendshapeToMeshModifier()
+	{
+		var blendName = _allBlendshapeNames[Mathf.Clamp(_selectedExtractBlendshapeIndex, 0, _allBlendshapeNames.Length - 1)];
+		var mm = ScriptableObject.CreateInstance<UMA.MeshModifier>();
+		mm.EditorModifiers = new List<UMA.MeshModifier.Modifier>();
+		
+		var baseRecipeProp = serializedObject.FindProperty("baseRaceRecipe");
+		var baseRecipe = baseRecipeProp != null ? baseRecipeProp.objectReferenceValue as UMARecipeBase : null;
+		if (baseRecipe != null)
+		{
+			var cached = baseRecipe.GetCachedRecipe();
+			if (cached != null)
+			{
+				var slots = cached.GetAllSlots();
+				if (slots != null)
+				{
+					foreach (var sd in slots)
+					{
+						if (sd == null || sd.asset == null || UMAMeshData.IsNullOrEmptyMeshData(sd.asset.meshData)) continue;
+						var md = sd.asset.meshData;
+						var shapes = md.blendShapes;
+						if (shapes == null || shapes.Length == 0) continue;
+						
+						UMABlendShape foundShape = null;
+						foreach (var bs in shapes)
+						{
+							if (bs != null && bs.shapeName == blendName)
+							{
+								foundShape = bs;
+								break;
+							}
+						}
+						if (foundShape == null) continue;
+						if (TryCreateBlendshapeModifier(sd, foundShape, blendName, sd.slotName, out var newMod))
+						{
+							mm.EditorModifiers.Add(newMod);
+						}
+					}
+				}
+			}
 		}
 
-		public static Vector3 StaticBounds= new Vector3(0.75f, 1f, 0.5f);
-		public static Vector3 StaticBoundsCenter = new Vector3(0, 1f, 0);
+		if (mm.EditorModifiers.Count == 0)
+		{
+			DestroyImmediate(mm);
+			EditorUtility.DisplayDialog("MeshModifier", "No contributing vertices were found for the selected blendshape.", "OK");
+			return;
+		}
+		
+		mm.SyncRuntimeModifiersFromEditorModifiers();
+		var defaultName = ("MeshModifier_" + race.raceName + "_" + blendName).Replace(' ', '_') + ".asset";
+		var path = EditorUtility.SaveFilePanelInProject("Save MeshModifier", defaultName, "asset", "Save MeshModifier asset");
+		if (!string.IsNullOrEmpty(path))
+		{
+			AssetDatabase.CreateAsset(mm, path);
+			AssetDatabase.SaveAssets();
+			AssetDatabase.Refresh();
+			EditorUtility.FocusProjectWindow();
+			Selection.activeObject = mm;
+			EditorUtility.DisplayDialog("MeshModifier Created", $"MeshModifier created at {path}", "OK");
+		}
+	}
 
-		public override void OnInspectorGUI()
+	private void ExtractAllBlendshapesToMeshModifiers()
+	{
+		var baseRecipeProp = serializedObject.FindProperty("baseRaceRecipe");
+		var baseRecipe = baseRecipeProp != null ? baseRecipeProp.objectReferenceValue as UMARecipeBase : null;
+		if (baseRecipe == null)
+		{
+			EditorUtility.DisplayDialog("Extract All", "No baseRaceRecipe assigned.", "OK");
+			return;
+		}
+
+		var cached = baseRecipe.GetCachedRecipe();
+		if (cached == null)
+		{
+			EditorUtility.DisplayDialog("Extract All", "Could not load cached recipe.", "OK");
+			return;
+		}
+
+		// Determine a sensible starting folder (next to the base recipe asset)
+		string startFolder = Application.dataPath;
+		string recipePath = AssetDatabase.GetAssetPath(baseRecipe);
+		if (!string.IsNullOrEmpty(recipePath))
+		{
+			string recipeFolder = Path.GetDirectoryName(recipePath);
+			if (!string.IsNullOrEmpty(recipeFolder))
+			{
+				string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+				startFolder = Path.GetFullPath(Path.Combine(projectRoot, recipeFolder));
+			}
+		}
+
+		string selectedFolder = EditorUtility.SaveFolderPanel("Select folder for extracted MeshModifiers", startFolder, "");
+		if (string.IsNullOrEmpty(selectedFolder))
+			return;
+
+		string relativeFolder = FileUtil.GetProjectRelativePath(selectedFolder).Replace("\\", "/");
+		if (string.IsNullOrEmpty(relativeFolder) || !relativeFolder.StartsWith("Assets", StringComparison.Ordinal))
+		{
+			EditorUtility.DisplayDialog("Invalid Folder", "Please choose a folder inside this Unity project.", "OK");
+			return;
+		}
+
+		var slots = cached.GetAllSlots();
+		if (slots == null)
+		{
+			EditorUtility.DisplayDialog("Extract All", "No slots found in the recipe.", "OK");
+			return;
+		}
+
+		int createdCount = 0;
+		AssetDatabase.StartAssetEditing();
+		try
+		{
+			foreach (string blendName in _allBlendshapeNames)
+			{
+				var mm = ScriptableObject.CreateInstance<UMA.MeshModifier>();
+				mm.EditorModifiers = new List<UMA.MeshModifier.Modifier>();
+
+				foreach (var sd in slots)
+				{
+					if (sd == null || sd.asset == null || UMAMeshData.IsNullOrEmptyMeshData(sd.asset.meshData)) continue;
+					var shapes = sd.asset.meshData.blendShapes;
+					if (shapes == null || shapes.Length == 0) continue;
+
+					UMABlendShape foundShape = null;
+					foreach (var bs in shapes)
+					{
+						if (bs != null && bs.shapeName == blendName) { foundShape = bs; break; }
+					}
+					if (foundShape == null) continue;
+						if (TryCreateBlendshapeModifier(sd, foundShape, blendName, sd.asset.sourceSlot, out var newMod))
+						{
+							mm.EditorModifiers.Add(newMod);
+						}
+				}
+
+				if (mm.EditorModifiers.Count == 0)
+				{
+					DestroyImmediate(mm);
+					continue;
+				}
+
+				mm.SyncRuntimeModifiersFromEditorModifiers();
+				string fileName = (race.raceName + "_" + blendName).Replace(' ', '_') + ".asset";
+				string assetPath = AssetDatabase.GenerateUniqueAssetPath((relativeFolder + "/" + fileName).Replace("\\", "/"));
+				AssetDatabase.CreateAsset(mm, assetPath);
+				createdCount++;
+			}
+		}
+		finally
+		{
+			AssetDatabase.StopAssetEditing();
+			AssetDatabase.SaveAssets();
+			AssetDatabase.Refresh();
+		}
+
+		EditorUtility.DisplayDialog("Extract All", $"Created {createdCount} MeshModifier assets.", "OK");
+	}
+
+	public override void OnInspectorGUI()
 		{
 			if (lastActionTime == 0)
 			{
@@ -238,6 +447,12 @@ namespace UMA.Editors
 				DrawUnbakedShapesToIncludeList();
 			}
 
+			// Utilities section
+			showUtilities = EditorGUILayout.Foldout(showUtilities, "Utilities");
+			if (showUtilities)
+			{
+				DoUtilitiesGUI();
+			}
 
 			/* tags GUI */
 			SerializedProperty tags = serializedObject.FindProperty("tags");
@@ -318,9 +533,6 @@ namespace UMA.Editors
 			}
 
 			#endregion
-
-
-
 			try
 			{
 				PreInspectorGUI(ref _needsUpdate);
@@ -353,6 +565,54 @@ namespace UMA.Editors
 			{
 				UMAUpdateProcessor.UpdateRace(ra);
 			}
+		}
+
+		private bool TryCreateBlendshapeModifier(SlotData sd, UMABlendShape foundShape, string blendName, string slotName, out UMA.MeshModifier.Modifier modifier)
+		{
+			modifier = null;
+			if (sd == null || foundShape == null || foundShape.frames == null || foundShape.frames.Length == 0)
+			{
+				return false;
+			}
+
+			var frame = foundShape.frames[foundShape.frames.Length - 1];
+			if (frame == null || frame.deltaVertices == null || frame.deltaVertices.Length == 0)
+			{
+				return false;
+			}
+
+			var adjustments = new VertexBlendshapeAdjustmentCollection();
+			for (int i = 0; i < frame.deltaVertices.Length; i++)
+			{
+				var delta = frame.deltaVertices[i];
+				if (delta == Vector3.zero)
+				{
+					continue;
+				}
+
+				var vba = new VertexBlendshapeAdjustment();
+				vba.vertexIndex = i;
+				vba.slotName = slotName;
+				vba.delta = delta;
+				vba.tangent = frame.HasTangents() ? frame.deltaTangents[i] : Vector3.zero;
+				vba.normal = frame.HasNormals() ? frame.deltaNormals[i] : Vector3.zero;
+				adjustments.Add(vba);
+			}
+
+			if (adjustments.Count() == 0)
+			{
+				return false;
+			}
+
+			modifier = new UMA.MeshModifier.Modifier();
+			modifier.ModifierName = blendName;
+			modifier.DNAName = string.Empty;
+			modifier.Scale = 1.0f;
+			modifier.SlotName = slotName;
+			modifier.keepAsIs = true;
+			modifier.adjustments = adjustments;
+			modifier.TemplateAdjustment = new VertexBlendshapeAdjustment();
+			return true;
 		}
 
 		#region DCS functions
@@ -999,18 +1259,33 @@ namespace UMA.Editors
 
 		private RaceData GetCompatibleRaceData(string raceName)
 		{
-			RaceData foundRace = null;
+			if (string.IsNullOrWhiteSpace(raceName))
+			{
+				return null;
+			}
+
 			string[] foundRacesStrings = AssetDatabase.FindAssets("t:RaceData");
 			for (int i = 0; i < foundRacesStrings.Length; i++)
 			{
-				RaceData thisFoundRace = AssetDatabase.LoadAssetAtPath<RaceData>(AssetDatabase.GUIDToAssetPath(foundRacesStrings[i]));
-				if (thisFoundRace.raceName == raceName)
+				string assetPath = AssetDatabase.GUIDToAssetPath(foundRacesStrings[i]);
+				if (string.IsNullOrWhiteSpace(assetPath))
 				{
-					foundRace = thisFoundRace;
-					break;
+					continue;
+				}
+
+				RaceData thisFoundRace = AssetDatabase.LoadAssetAtPath<RaceData>(assetPath);
+				if (thisFoundRace == null)
+				{
+					continue;
+				}
+
+				if (string.Equals(thisFoundRace.raceName, raceName, StringComparison.Ordinal))
+				{
+					return thisFoundRace;
 				}
 			}
-			return foundRace;
+
+			return null;
 		}
 
 		private void DrawCCUI(string ccRaceName, SerializedProperty baseRaceRecipe, SerializedProperty thisCCSettings)

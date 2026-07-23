@@ -17,10 +17,56 @@ MonoBehaviour:
   effects:
   - rid: 7828207344866296344
   - rid: 7828207344866296345
+  - rid: 4044962116778590458
   displayName: forearmLength
   references:
     version: 2
     RefIds:
+    - rid: 4044962116778590458
+      type: {class: DNAEffect_BoneScale, ns: UMA, asm: UMA_Core}
+      data:
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.5
+            value: 0.5
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        minMapping: -1
+        maxMapping: 1
+        expanded: 0
+        selected: 0
+        showHelp: 0
+        enabled: 1
+        EffectName: 'UMA.Effect_BoneScale: RightArmAdjust'
+        BoneName: RightArmAdjust
+        ScaleFactor: {x: 1, y: 1, z: 1}
     - rid: 7828207344866296344
       type: {class: DNAEffect_BoneScale, ns: UMA, asm: UMA_Core}
       data:
@@ -33,6 +79,9 @@ MonoBehaviour:
         minMapping: -1
         maxMapping: 1
         expanded: 1
+        selected: 0
+        showHelp: 0
+        enabled: 1
         EffectName: LeftForeArm
         BoneName: LeftForeArm
         ScaleFactor: {x: 0, y: 0.3, z: 0}
@@ -48,6 +97,9 @@ MonoBehaviour:
         minMapping: -1
         maxMapping: 1
         expanded: 1
+        selected: 0
+        showHelp: 0
+        enabled: 1
         EffectName: RightForeArm
         BoneName: RightForeArm
         ScaleFactor: {x: 0, y: 0.3, z: 0}

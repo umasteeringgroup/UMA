@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UMA.CharacterSystem;
 using UnityEditor;
 using UnityEditorInternal;
@@ -11,359 +12,492 @@ namespace UMA.EditorTools
     [CustomEditor(typeof(NewUMAGUI))]
     public class NewUMAGuiEditor : Editor
     {
-        private const string FaceItemsPropertyName = "FaceItems";
-        private const string HairItemsPropertyName = "HairItems";
-        private const string LegsItemsPropertyName = "LegsItems";
-        private const string BodyItemsPropertyName = "BodyItems";
+        // ---- Foldout states (collapsed by default) ----
+        private static bool _umaFoldout;
+        private static bool _guiPrefabsFoldout;
+        private static bool _cameraAnimFoldout;
+        private static bool _testFoldout;
+        private static bool _colorTablesFoldout;
+        private static bool _dnaFoldout;
+        private static bool _itemsFoldout;
+        private static bool _containersFoldout;
+        private static bool _buttonsFoldout;
+        private static bool _miscFoldout;
+        private static bool _timingFoldout;
 
-        private static readonly string[] ItemPropertyNames =
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void InitializeStatics()
         {
-            FaceItemsPropertyName,
-            HairItemsPropertyName,
-            LegsItemsPropertyName,
-            BodyItemsPropertyName,
-        };
+            _umaFoldout = false;
+            _guiPrefabsFoldout = false;
+            _cameraAnimFoldout = false;
+            _testFoldout = false;
+            _colorTablesFoldout = false;
+            _dnaFoldout = false;
+            _itemsFoldout = false;
+            _containersFoldout = false;
+            _buttonsFoldout = false;
+            _miscFoldout = false;
+            _timingFoldout = false;
+        }
 
-        private readonly Dictionary<string, ReorderableList> _itemLists = new Dictionary<string, ReorderableList>();
+        // ---- Reorderable list cache ----
+        private readonly Dictionary<string, ReorderableList> _listCache = new Dictionary<string, ReorderableList>();
 
+        // ---- Serialized properties ----
+        // UMA
+        private SerializedProperty _avatarProp;
+        private SerializedProperty _showConsoleProp;
+        // GUI Prefabs
+        private SerializedProperty _colorSelectorProp;
+        private SerializedProperty _dnaAdjusterProp;
+        private SerializedProperty _colorLabelProp;
+        private SerializedProperty _gridContainerProp;
+        private SerializedProperty _itemProp;
+        private SerializedProperty _itemContainerProp;
+        private SerializedProperty _infoTextProp;
+        private SerializedProperty _logLabelProp;
+        // Camera Animation
+        private SerializedProperty _facePosProp;
+        private SerializedProperty _legsPosProp;
+        private SerializedProperty _bodyPosProp;
+        private SerializedProperty _faceBoneNameProp;
+        private SerializedProperty _legsBoneNameProp;
+        private SerializedProperty _faceBoneOffsetProp;
+        private SerializedProperty _legsBoneOffsetProp;
+        private SerializedProperty _lerpSpeedProp;
+        private SerializedProperty _lerpCurveProp;
+        // Test
+        private SerializedProperty _labelsProp;
+        // Color Tables
+        private SerializedProperty _faceColorsProp;
+        private SerializedProperty _hairColorsProp;
+        private SerializedProperty _legsColorsProp;
+        private SerializedProperty _bodyColorsProp;
+        // DNA
+        private SerializedProperty _faceDNAProp;
+        private SerializedProperty _hairDNAProp;
+        private SerializedProperty _legsDNAProp;
+        private SerializedProperty _bodyDNAProp;
+        // Items
         private SerializedProperty _faceItemsProp;
         private SerializedProperty _hairItemsProp;
         private SerializedProperty _legsItemsProp;
         private SerializedProperty _bodyItemsProp;
+        // Containers
+        private SerializedProperty _dnaContainerProp;
+        private SerializedProperty _itemsContainerProp;
+        private SerializedProperty _logDetailContainerProp;
+        // Buttons
+        private SerializedProperty _faceButtonProp;
+        private SerializedProperty _legsButtonProp;
+        private SerializedProperty _bodyButtonProp;
+        private SerializedProperty _hairButtonProp;
+        private SerializedProperty _backButtonProp;
+        private SerializedProperty _clearImageProp;
+        private SerializedProperty _poseImageProp;
+        // Misc
+        private SerializedProperty _animatorsProp;
+        private SerializedProperty _currentAnimatorProp;
+        // Timing
+        private SerializedProperty _showTimingButtonsProp;
+        private SerializedProperty _bakeAllBlendShapesForTimingProp;
 
         private void OnEnable()
         {
-            _faceItemsProp = serializedObject.FindProperty(FaceItemsPropertyName);
-            _hairItemsProp = serializedObject.FindProperty(HairItemsPropertyName);
-            _legsItemsProp = serializedObject.FindProperty(LegsItemsPropertyName);
-            _bodyItemsProp = serializedObject.FindProperty(BodyItemsPropertyName);
+            // UMA
+            _avatarProp = serializedObject.FindProperty("avatar");
+            _showConsoleProp = serializedObject.FindProperty("showConsole");
+            // GUI Prefabs
+            _colorSelectorProp = serializedObject.FindProperty("ColorSelector");
+            _dnaAdjusterProp = serializedObject.FindProperty("DNAAdjuster");
+            _colorLabelProp = serializedObject.FindProperty("ColorLabel");
+            _gridContainerProp = serializedObject.FindProperty("GridContainer");
+            _itemProp = serializedObject.FindProperty("Item");
+            _itemContainerProp = serializedObject.FindProperty("ItemContainer");
+            _infoTextProp = serializedObject.FindProperty("InfoText");
+            _logLabelProp = serializedObject.FindProperty("LogLabel");
+            // Camera Animation
+            _facePosProp = serializedObject.FindProperty("FacePos");
+            _legsPosProp = serializedObject.FindProperty("LegsPos");
+            _bodyPosProp = serializedObject.FindProperty("BodyPos");
+            _faceBoneNameProp = serializedObject.FindProperty("FaceBoneName");
+            _legsBoneNameProp = serializedObject.FindProperty("LegsBoneName");
+            _faceBoneOffsetProp = serializedObject.FindProperty("FaceBoneOffset");
+            _legsBoneOffsetProp = serializedObject.FindProperty("LegsBoneOffset");
+            _lerpSpeedProp = serializedObject.FindProperty("lerpSpeed");
+            _lerpCurveProp = serializedObject.FindProperty("lerpCurve");
+            // Test
+            _labelsProp = serializedObject.FindProperty("Labels");
+            // Color Tables
+            _faceColorsProp = serializedObject.FindProperty("FaceColors");
+            _hairColorsProp = serializedObject.FindProperty("HairColors");
+            _legsColorsProp = serializedObject.FindProperty("LegsColors");
+            _bodyColorsProp = serializedObject.FindProperty("BodyColors");
+            // DNA
+            _faceDNAProp = serializedObject.FindProperty("FaceDNA");
+            _hairDNAProp = serializedObject.FindProperty("HairDNA");
+            _legsDNAProp = serializedObject.FindProperty("LegsDNA");
+            _bodyDNAProp = serializedObject.FindProperty("BodyDNA");
+            // Items
+            _faceItemsProp = serializedObject.FindProperty("FaceItems");
+            _hairItemsProp = serializedObject.FindProperty("HairItems");
+            _legsItemsProp = serializedObject.FindProperty("LegsItems");
+            _bodyItemsProp = serializedObject.FindProperty("BodyItems");
+            // Containers
+            _dnaContainerProp = serializedObject.FindProperty("DNAContainer");
+            _itemsContainerProp = serializedObject.FindProperty("ItemsContainer");
+            _logDetailContainerProp = serializedObject.FindProperty("LogDetailContainer");
+            // Buttons
+            _faceButtonProp = serializedObject.FindProperty("FaceButton");
+            _legsButtonProp = serializedObject.FindProperty("LegsButton");
+            _bodyButtonProp = serializedObject.FindProperty("BodyButton");
+            _hairButtonProp = serializedObject.FindProperty("HairButton");
+            _backButtonProp = serializedObject.FindProperty("BackButton");
+            _clearImageProp = serializedObject.FindProperty("clearImage");
+            _poseImageProp = serializedObject.FindProperty("PoseImage");
+            // Misc
+            _animatorsProp = serializedObject.FindProperty("Animators");
+            _currentAnimatorProp = serializedObject.FindProperty("currentAnimator");
+            // Timing
+            _showTimingButtonsProp = serializedObject.FindProperty("showTimingButtons");
+            _bakeAllBlendShapesForTimingProp = serializedObject.FindProperty("bakeAllBlendShapesForTiming");
         }
 
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
-            DrawInspectorWithCustomItems();
+
+            // --- Script field (read-only) ---
+            using (new EditorGUI.DisabledScope(true))
+            {
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("m_Script"), true);
+            }
+
+            // --- UMA ---
+            if (DrawFoldoutHeader("UMA", ref _umaFoldout))
+            {
+                EditorGUI.indentLevel++;
+                EditorGUILayout.PropertyField(_avatarProp);
+                EditorGUILayout.PropertyField(_showConsoleProp);
+                EditorGUI.indentLevel--;
+            }
+
+            // --- GUI Prefabs ---
+            if (DrawFoldoutHeader("GUI Prefabs", ref _guiPrefabsFoldout))
+            {
+                EditorGUI.indentLevel++;
+                EditorGUILayout.PropertyField(_colorSelectorProp);
+                EditorGUILayout.PropertyField(_dnaAdjusterProp);
+                EditorGUILayout.PropertyField(_colorLabelProp);
+                EditorGUILayout.PropertyField(_gridContainerProp);
+                EditorGUILayout.PropertyField(_itemProp);
+                EditorGUILayout.PropertyField(_itemContainerProp);
+                EditorGUILayout.PropertyField(_infoTextProp);
+                EditorGUILayout.PropertyField(_logLabelProp);
+                EditorGUI.indentLevel--;
+            }
+
+            // --- Camera Animation ---
+            if (DrawFoldoutHeader("Camera Animation", ref _cameraAnimFoldout))
+            {
+                EditorGUI.indentLevel++;
+                EditorGUILayout.PropertyField(_facePosProp);
+                EditorGUILayout.PropertyField(_legsPosProp);
+                EditorGUILayout.PropertyField(_bodyPosProp);
+                EditorGUILayout.PropertyField(_faceBoneNameProp);
+                EditorGUILayout.PropertyField(_legsBoneNameProp);
+                EditorGUILayout.PropertyField(_faceBoneOffsetProp);
+                EditorGUILayout.PropertyField(_legsBoneOffsetProp);
+                EditorGUILayout.PropertyField(_lerpSpeedProp);
+                EditorGUILayout.PropertyField(_lerpCurveProp);
+                EditorGUI.indentLevel--;
+            }
+
+            // --- Test ---
+            if (DrawFoldoutHeader("Test", ref _testFoldout))
+            {
+                DrawListWithButtons(_labelsProp, "Labels", typeof(string));
+            }
+
+            // --- Color Tables ---
+            if (DrawFoldoutHeader("Color Tables", ref _colorTablesFoldout))
+            {
+                EditorGUI.indentLevel++;
+                DrawListWithButtons(_faceColorsProp, "Face Colors", typeof(SharedColorTable));
+                DrawListWithButtons(_hairColorsProp, "Hair Colors", typeof(SharedColorTable));
+                DrawListWithButtons(_legsColorsProp, "Legs Colors", typeof(SharedColorTable));
+                DrawListWithButtons(_bodyColorsProp, "Body Colors", typeof(SharedColorTable));
+                EditorGUI.indentLevel--;
+            }
+
+            // --- DNA ---
+            if (DrawFoldoutHeader("DNA", ref _dnaFoldout))
+            {
+                EditorGUI.indentLevel++;
+                DrawListWithButtons(_faceDNAProp, "Face DNA", typeof(string));
+                DrawListWithButtons(_hairDNAProp, "Hair DNA", typeof(string));
+                DrawListWithButtons(_legsDNAProp, "Legs DNA", typeof(string));
+                DrawListWithButtons(_bodyDNAProp, "Body DNA", typeof(string));
+                EditorGUI.indentLevel--;
+            }
+
+            // --- Items ---
+            if (DrawFoldoutHeader("Items", ref _itemsFoldout))
+            {
+                EditorGUI.indentLevel++;
+                DrawListWithButtons(_faceItemsProp, "Face Items", typeof(UMAWardrobeRecipe));
+                DrawListWithButtons(_hairItemsProp, "Hair Items", typeof(UMAWardrobeRecipe));
+                DrawListWithButtons(_legsItemsProp, "Legs Items", typeof(UMAWardrobeRecipe));
+                DrawListWithButtons(_bodyItemsProp, "Body Items", typeof(UMAWardrobeRecipe));
+                EditorGUI.indentLevel--;
+            }
+
+            // --- Containers ---
+            if (DrawFoldoutHeader("Containers", ref _containersFoldout))
+            {
+                EditorGUI.indentLevel++;
+                EditorGUILayout.PropertyField(_dnaContainerProp);
+                EditorGUILayout.PropertyField(_itemsContainerProp);
+                EditorGUILayout.PropertyField(_logDetailContainerProp);
+                EditorGUI.indentLevel--;
+            }
+
+            // --- Buttons ---
+            if (DrawFoldoutHeader("Buttons", ref _buttonsFoldout))
+            {
+                EditorGUI.indentLevel++;
+                EditorGUILayout.PropertyField(_faceButtonProp);
+                EditorGUILayout.PropertyField(_legsButtonProp);
+                EditorGUILayout.PropertyField(_bodyButtonProp);
+                EditorGUILayout.PropertyField(_hairButtonProp);
+                EditorGUILayout.PropertyField(_backButtonProp);
+                EditorGUILayout.PropertyField(_clearImageProp);
+                EditorGUILayout.PropertyField(_poseImageProp);
+                EditorGUI.indentLevel--;
+            }
+
+            // --- Misc ---
+            if (DrawFoldoutHeader("Misc", ref _miscFoldout))
+            {
+                EditorGUI.indentLevel++;
+                DrawListWithButtons(_animatorsProp, "Animators", typeof(RuntimeAnimatorController));
+                EditorGUILayout.PropertyField(_currentAnimatorProp);
+                EditorGUI.indentLevel--;
+            }
+
+            // --- Timing ---
+            if (DrawFoldoutHeader("Timing", ref _timingFoldout))
+            {
+                EditorGUI.indentLevel++;
+                EditorGUILayout.PropertyField(_showTimingButtonsProp, new GUIContent("Show Timing Buttons"));
+                EditorGUILayout.PropertyField(_bakeAllBlendShapesForTimingProp, new GUIContent("Bake All Blendshapes At 0.5"));
+                if (_showTimingButtonsProp.boolValue)
+                {
+                    EditorGUILayout.HelpBox(
+                        "When enabled, four IMGUI button rows appear in the Game View " +
+                        "allowing you to time builds with each mesh combiner. Blendshapes are all loaded " +
+                        "when baking is unchecked, or all baked at weight 0.5 when checked. " +
+                        "Designed for testing in game builds.",
+                        MessageType.Info);
+                }
+                EditorGUI.indentLevel--;
+            }
+
             serializedObject.ApplyModifiedProperties();
         }
 
-        private void DrawInspectorWithCustomItems()
+        #region Foldout header
+
+        private static bool DrawFoldoutHeader(string title, ref bool foldout)
         {
-            SerializedProperty iterator = serializedObject.GetIterator();
-            bool enterChildren = true;
-            bool itemsDrawn = false;
-
-            while (iterator.NextVisible(enterChildren))
-            {
-                enterChildren = false;
-
-                if (iterator.propertyPath == "m_Script")
-                {
-                    using (new EditorGUI.DisabledScope(true))
-                    {
-                        EditorGUILayout.PropertyField(iterator, true);
-                    }
-
-                    continue;
-                }
-
-                if (iterator.propertyPath == FaceItemsPropertyName)
-                {
-                    DrawItemsSection();
-                    itemsDrawn = true;
-                    continue;
-                }
-
-                if (IsItemProperty(iterator.propertyPath))
-                {
-                    continue;
-                }
-
-                EditorGUILayout.PropertyField(iterator, true);
-            }
-
-            if (!itemsDrawn)
-            {
-                DrawItemsSection();
-            }
+            EditorGUILayout.Space(2);
+            foldout = EditorGUILayout.Foldout(foldout, title, true, EditorStyles.foldoutHeader);
+            return foldout;
         }
 
-        private void DrawItemsSection()
+        #endregion
+
+        #region List drawing
+
+        private void DrawListWithButtons(SerializedProperty listProp, string label, Type elementType)
         {
-            EditorGUILayout.Space();
-            EditorGUILayout.LabelField("Items", EditorStyles.boldLabel);
-            DrawItemListBlock(_faceItemsProp, "Face Items");
-            DrawItemListBlock(_hairItemsProp, "Hair Items");
-            DrawItemListBlock(_legsItemsProp, "Legs Items");
-            DrawItemListBlock(_bodyItemsProp, "Body Items");
+            if (listProp == null) return;
+
+            ReorderableList list = GetOrCreateList(listProp, label);
+            list.DoLayoutList();
+
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+
+            if (GUILayout.Button("Sort", GUILayout.Width(60)))
+            {
+                SortList(listProp, elementType, label);
+            }
+
+            if (GUILayout.Button("Remove Duplicates", GUILayout.Width(130)))
+            {
+                RemoveDuplicates(listProp, elementType, label);
+            }
+
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.Space(2);
         }
 
-        private void DrawItemListBlock(SerializedProperty listProperty, string label)
+        private ReorderableList GetOrCreateList(SerializedProperty listProp, string label)
         {
-            if (listProperty == null)
+            string key = listProp.propertyPath;
+            if (_listCache.TryGetValue(key, out ReorderableList existing))
             {
-                return;
+                existing.serializedProperty = listProp;
+                return existing;
             }
 
-            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            var rl = new ReorderableList(serializedObject, listProp, true, true, true, true);
+            rl.drawHeaderCallback = rect => EditorGUI.LabelField(rect, label);
+            rl.drawElementCallback = (rect, index, isActive, isFocused) =>
             {
-                using (new EditorGUILayout.HorizontalScope())
-                {
-                    EditorGUILayout.LabelField(label, EditorStyles.boldLabel);
-                    GUILayout.FlexibleSpace();
-
-                    using (new EditorGUI.DisabledScope(listProperty.arraySize <= 1))
-                    {
-                        if (GUILayout.Button("Sort", GUILayout.Width(70f)))
-                        {
-                            SortItems(listProperty.propertyPath, "Sort " + label);
-                        }
-                    }
-
-                    using (new EditorGUI.DisabledScope(listProperty.arraySize == 0))
-                    {
-                        if (GUILayout.Button("Remove Duplicates", GUILayout.Width(140f)))
-                        {
-                            RemoveDuplicateItems(listProperty.propertyPath, "Remove duplicate " + label);
-                        }
-                    }
-                }
-
-                GetOrCreateList(listProperty, label).DoLayoutList();
-                DrawDropArea(listProperty.propertyPath, label);
-            }
-        }
-
-        private ReorderableList GetOrCreateList(SerializedProperty listProperty, string label)
-        {
-            if (_itemLists.TryGetValue(listProperty.propertyPath, out ReorderableList existingList))
-            {
-                existingList.serializedProperty = listProperty;
-                return existingList;
-            }
-
-            string propertyPath = listProperty.propertyPath;
-            ReorderableList list = new ReorderableList(serializedObject, listProperty, true, true, true, true);
-            list.drawHeaderCallback = (Rect rect) =>
-            {
-                EditorGUI.LabelField(rect, label);
-            };
-            list.drawElementCallback = (Rect rect, int index, bool isActive, bool isFocused) =>
-            {
-                SerializedProperty property = serializedObject.FindProperty(propertyPath);
-                if (property == null || index < 0 || index >= property.arraySize)
-                {
-                    return;
-                }
-
-                rect.y += 2f;
+                var prop = listProp.GetArrayElementAtIndex(index);
+                if (prop == null) return;
+                rect.y += 2;
                 rect.height = EditorGUIUtility.singleLineHeight;
-                EditorGUI.PropertyField(rect, property.GetArrayElementAtIndex(index), GUIContent.none);
+                EditorGUI.PropertyField(rect, prop, GUIContent.none);
             };
-            list.onAddCallback = (ReorderableList currentList) =>
-            {
-                SerializedProperty property = serializedObject.FindProperty(propertyPath);
-                if (property == null)
-                {
-                    return;
-                }
-
-                Undo.RecordObject(target, "Add " + label);
-                property.arraySize++;
-                property.GetArrayElementAtIndex(property.arraySize - 1).objectReferenceValue = null;
-                ApplyAndRefresh();
-            };
-            list.onRemoveCallback = (ReorderableList currentList) =>
-            {
-                SerializedProperty property = serializedObject.FindProperty(propertyPath);
-                if (property == null || currentList.index < 0 || currentList.index >= property.arraySize)
-                {
-                    return;
-                }
-
-                Undo.RecordObject(target, "Remove " + label);
-                property.DeleteArrayElementAtIndex(currentList.index);
-                ApplyAndRefresh();
-            };
-
-            _itemLists[propertyPath] = list;
-            return list;
+            rl.elementHeight = EditorGUIUtility.singleLineHeight + 2;
+            _listCache[key] = rl;
+            return rl;
         }
 
-        private void DrawDropArea(string propertyPath, string label)
+        #endregion
+
+        #region Sort
+
+        private void SortList(SerializedProperty listProp, Type elementType, string label)
         {
-            Rect dropArea = GUILayoutUtility.GetRect(0f, 42f, GUILayout.ExpandWidth(true));
-            GUI.Box(dropArea, "Drag & Drop UMAWardrobeRecipe assets here", EditorStyles.helpBox);
-            HandleDragDrop(dropArea, propertyPath, label);
+            int count = listProp.arraySize;
+            if (count <= 1) return;
+
+            if (elementType == typeof(string))
+            {
+                SortStringList(listProp, label);
+            }
+            else
+            {
+                SortObjectList(listProp, label);
+            }
         }
 
-        private void HandleDragDrop(Rect area, string propertyPath, string label)
+        private void SortStringList(SerializedProperty listProp, string label)
         {
-            Event currentEvent = Event.current;
-            if (!area.Contains(currentEvent.mousePosition))
-            {
-                return;
-            }
+            int count = listProp.arraySize;
+            var values = new string[count];
+            for (int i = 0; i < count; i++)
+                values[i] = listProp.GetArrayElementAtIndex(i).stringValue ?? "";
 
-            if (currentEvent.type != EventType.DragUpdated && currentEvent.type != EventType.DragPerform)
-            {
-                return;
-            }
+            Array.Sort(values, StringComparer.OrdinalIgnoreCase);
 
-            bool hasWardrobeRecipe = false;
-            foreach (UnityEngine.Object droppedObject in DragAndDrop.objectReferences)
-            {
-                if (droppedObject is UMAWardrobeRecipe)
-                {
-                    hasWardrobeRecipe = true;
-                    break;
-                }
-            }
+            Undo.RecordObject(target, "Sort " + label);
+            for (int i = 0; i < count; i++)
+                listProp.GetArrayElementAtIndex(i).stringValue = values[i];
 
-            DragAndDrop.visualMode = hasWardrobeRecipe ? DragAndDropVisualMode.Copy : DragAndDropVisualMode.Rejected;
-
-            if (currentEvent.type == EventType.DragPerform && hasWardrobeRecipe)
-            {
-                DragAndDrop.AcceptDrag();
-
-                SerializedProperty property = serializedObject.FindProperty(propertyPath);
-                if (property != null)
-                {
-                    bool addedAny = false;
-                    Undo.RecordObject(target, "Add dropped " + label);
-
-                    foreach (UnityEngine.Object droppedObject in DragAndDrop.objectReferences)
-                    {
-                        UMAWardrobeRecipe recipe = droppedObject as UMAWardrobeRecipe;
-                        if (recipe == null || ContainsRecipe(property, recipe))
-                        {
-                            continue;
-                        }
-
-                        property.arraySize++;
-                        property.GetArrayElementAtIndex(property.arraySize - 1).objectReferenceValue = recipe;
-                        addedAny = true;
-                    }
-
-                    if (addedAny)
-                    {
-                        ApplyAndRefresh();
-                    }
-                }
-            }
-
-            currentEvent.Use();
-        }
-
-        private void SortItems(string propertyPath, string undoName)
-        {
-            SerializedProperty property = serializedObject.FindProperty(propertyPath);
-            if (property == null || property.arraySize <= 1)
-            {
-                return;
-            }
-
-            List<UMAWardrobeRecipe> items = ReadRecipes(property);
-            items.Sort(CompareRecipesByName);
-
-            Undo.RecordObject(target, undoName);
-            WriteRecipes(property, items);
             ApplyAndRefresh();
         }
 
-        private void RemoveDuplicateItems(string propertyPath, string undoName)
+        private void SortObjectList(SerializedProperty listProp, string label)
         {
-            SerializedProperty property = serializedObject.FindProperty(propertyPath);
-            if (property == null || property.arraySize == 0)
-            {
-                return;
-            }
+            int count = listProp.arraySize;
+            var objects = new UnityEngine.Object[count];
+            for (int i = 0; i < count; i++)
+                objects[i] = listProp.GetArrayElementAtIndex(i).objectReferenceValue;
 
-            List<UMAWardrobeRecipe> uniqueItems = new List<UMAWardrobeRecipe>();
-            HashSet<UMAWardrobeRecipe> seenRecipes = new HashSet<UMAWardrobeRecipe>();
-            for (int index = 0; index < property.arraySize; index++)
+            Array.Sort(objects, (a, b) =>
             {
-                UMAWardrobeRecipe recipe = property.GetArrayElementAtIndex(index).objectReferenceValue as UMAWardrobeRecipe;
-                if (seenRecipes.Add(recipe))
-                {
-                    uniqueItems.Add(recipe);
-                }
-            }
+                string na = a != null ? a.name : "";
+                string nb = b != null ? b.name : "";
+                return string.Compare(na, nb, StringComparison.OrdinalIgnoreCase);
+            });
 
-            if (uniqueItems.Count == property.arraySize)
-            {
-                return;
-            }
+            Undo.RecordObject(target, "Sort " + label);
+            listProp.arraySize = count;
+            for (int i = 0; i < count; i++)
+                listProp.GetArrayElementAtIndex(i).objectReferenceValue = objects[i];
 
-            Undo.RecordObject(target, undoName);
-            WriteRecipes(property, uniqueItems);
             ApplyAndRefresh();
         }
 
-        private static int CompareRecipesByName(UMAWardrobeRecipe left, UMAWardrobeRecipe right)
+        #endregion
+
+        #region Remove Duplicates
+
+        private void RemoveDuplicates(SerializedProperty listProp, Type elementType, string label)
         {
-            if (ReferenceEquals(left, right))
+            if (listProp.arraySize <= 1) return;
+
+            if (elementType == typeof(string))
             {
-                return 0;
+                RemoveStringDuplicates(listProp, label);
             }
-
-            if (left == null)
+            else
             {
-                return 1;
-            }
-
-            if (right == null)
-            {
-                return -1;
-            }
-
-            return StringComparer.OrdinalIgnoreCase.Compare(left.name, right.name);
-        }
-
-        private static bool IsItemProperty(string propertyPath)
-        {
-            for (int index = 0; index < ItemPropertyNames.Length; index++)
-            {
-                if (ItemPropertyNames[index] == propertyPath)
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        private static List<UMAWardrobeRecipe> ReadRecipes(SerializedProperty property)
-        {
-            List<UMAWardrobeRecipe> items = new List<UMAWardrobeRecipe>(property.arraySize);
-            for (int index = 0; index < property.arraySize; index++)
-            {
-                items.Add(property.GetArrayElementAtIndex(index).objectReferenceValue as UMAWardrobeRecipe);
-            }
-
-            return items;
-        }
-
-        private static void WriteRecipes(SerializedProperty property, List<UMAWardrobeRecipe> items)
-        {
-            property.arraySize = items.Count;
-            for (int index = 0; index < items.Count; index++)
-            {
-                property.GetArrayElementAtIndex(index).objectReferenceValue = items[index];
+                RemoveObjectDuplicates(listProp, label);
             }
         }
 
-        private static bool ContainsRecipe(SerializedProperty property, UMAWardrobeRecipe recipe)
+        private void RemoveStringDuplicates(SerializedProperty listProp, string label)
         {
-            for (int index = 0; index < property.arraySize; index++)
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var keep = new List<string>();
+
+            for (int i = 0; i < listProp.arraySize; i++)
             {
-                if (property.GetArrayElementAtIndex(index).objectReferenceValue == recipe)
-                {
-                    return true;
-                }
+                string val = listProp.GetArrayElementAtIndex(i).stringValue ?? "";
+                if (seen.Add(val))
+                    keep.Add(val);
             }
 
-            return false;
+            if (keep.Count == listProp.arraySize) return;
+
+            Undo.RecordObject(target, "Remove duplicates " + label);
+            listProp.arraySize = keep.Count;
+            for (int i = 0; i < keep.Count; i++)
+                listProp.GetArrayElementAtIndex(i).stringValue = keep[i];
+
+            ApplyAndRefresh();
         }
+
+        private void RemoveObjectDuplicates(SerializedProperty listProp, string label)
+        {
+            var seen = new HashSet<string>();
+            var keep = new List<UnityEngine.Object>();
+
+            for (int i = 0; i < listProp.arraySize; i++)
+            {
+                var obj = listProp.GetArrayElementAtIndex(i).objectReferenceValue;
+                string key = GetDedupeKey(obj);
+                if (seen.Add(key))
+                    keep.Add(obj);
+            }
+
+            if (keep.Count == listProp.arraySize) return;
+
+            Undo.RecordObject(target, "Remove duplicates " + label);
+            listProp.arraySize = keep.Count;
+            for (int i = 0; i < keep.Count; i++)
+                listProp.GetArrayElementAtIndex(i).objectReferenceValue = keep[i];
+
+            ApplyAndRefresh();
+        }
+
+        private static string GetDedupeKey(UnityEngine.Object obj)
+        {
+            if (obj == null) return "__null__";
+            string path = AssetDatabase.GetAssetPath(obj);
+            return string.IsNullOrEmpty(path) ? obj.GetUmaObjectId().ToString() : path;
+        }
+
+        #endregion
+
+        #region Utility
 
         private void ApplyAndRefresh()
         {
@@ -372,6 +506,8 @@ namespace UMA.EditorTools
             GUI.changed = true;
             Repaint();
         }
+
+        #endregion
     }
 }
 #endif

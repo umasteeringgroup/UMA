@@ -42,6 +42,7 @@ namespace UMA
 		public bool isUpdating { get { return updating; } }
 
 		private Dictionary<int, BoneData> boneHashDataLookup;
+		private string ignoreTag;
 
 #if UNITY_EDITOR
 		// Dictionary backup to support code reload
@@ -84,11 +85,12 @@ namespace UMA
 		public UMASkeleton(Transform rootBone)
 		{
 			rootBoneHash = UMAUtils.StringToHash(rootBone.name);
+			ignoreTag = UMASettings.GetValidatedIgnoreTag(rootBone.gameObject);
 			this.boneHashData = new Dictionary<int, BoneData>();
 			BeginSkeletonUpdate();
 			AddBonesRecursive(rootBone);
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            ValidateHierarchy(rootBone, UMAAssetIndexer.Instance?.Generator?.ignoreTag);
+            ValidateHierarchy(rootBone, ignoreTag);
             ValidateBoneDictionary(rootBone);
 #endif
 			EndSkeletonUpdate();
@@ -148,11 +150,7 @@ namespace UMA
 		{
 			if (transform == null) return;
 
-			// Only skip when ignoreTag is a valid, non-empty tag and not the default "Untagged"
-			var gen = UMAAssetIndexer.Instance != null ? UMAAssetIndexer.Instance.Generator : null;
-			var ignoreTag = gen != null ? gen.ignoreTag : null;
-			if (!string.IsNullOrEmpty(ignoreTag) && !string.Equals(ignoreTag, "Untagged", StringComparison.Ordinal)
-				&& transform.CompareTag(ignoreTag))
+			if (!string.IsNullOrEmpty(ignoreTag) && transform.CompareTag(ignoreTag))
 			{
 				return;
 			}
@@ -347,6 +345,33 @@ namespace UMA
 				return res.boneTransform;
 			}
 			return null;
+		}
+
+		/// <summary>
+		/// Returns true if the bone has a Transform GameObject created.
+		/// </summary>
+		public virtual bool HasBoneTransform(int nameHash)
+		{
+			BoneData res;
+			if (boneHashData.TryGetValue(nameHash, out res))
+			{
+				return res.boneTransform != null;
+			}
+			return false;
+		}
+
+		/// <summary>
+		/// Ensures the bone has a Transform GameObject created.
+		/// Base implementation creates a GameObject and sets it up from the cache.
+		/// </summary>
+		public virtual void EnsureBoneTransform(int nameHash)
+		{
+			BoneData res;
+			if (boneHashData.TryGetValue(nameHash, out res) && res.boneTransform == null)
+			{
+				var go = new GameObject(res.umaTransform.name);
+				res.boneTransform = go.transform;
+			}
 		}
 
 		/// <summary>
@@ -612,10 +637,10 @@ namespace UMA
 				db.accessedFrame = frame;
 				db.boneTransform.localPosition += position * weight;
 				Quaternion fullRotation = db.boneTransform.localRotation * rotation;
-				db.boneTransform.localRotation = Quaternion.Slerp(db.boneTransform.localRotation, fullRotation, weight);
+				db.boneTransform.localRotation = Quaternion.SlerpUnclamped(db.boneTransform.localRotation, fullRotation, weight);
 				var fullScale = scale;
 				fullScale.Scale(db.boneTransform.localScale);
-				db.boneTransform.localScale = Vector3.Lerp(db.boneTransform.localScale, fullScale, weight);
+				db.boneTransform.localScale = Vector3.LerpUnclamped(db.boneTransform.localScale, fullScale, weight);
 			}
 		}
 
@@ -707,7 +732,7 @@ namespace UMA
 			}
 			else
 			{
-				throw new Exception("Bone not found.");
+				return Vector3.zero;
 			}
 		}
 
@@ -724,11 +749,11 @@ namespace UMA
 				db.accessedFrame = frame;
 				return boneHashData[rootBoneHash].boneTransform.parent.parent.worldToLocalMatrix.MultiplyPoint(db.boneTransform.position);
 			}
-			else
-			{
-				throw new Exception("Bone not found.");
-			}
+			return Vector3.zero;
 		}
+
+		
+
 
 		/// <summary>
 		/// Gets the scale of a bone.
@@ -743,10 +768,7 @@ namespace UMA
 				db.accessedFrame = frame;
 				return db.boneTransform.localScale;
 			}
-			else
-			{
-				throw new Exception("Bone not found.");
-			}
+			return Vector3.one;
 		}
 
 		/// <summary>
@@ -764,7 +786,7 @@ namespace UMA
 			}
 			else
 			{
-				throw new Exception("Bone not found. BoneHash: " + nameHash);
+				return Quaternion.identity;
 			}
 		}
 
@@ -787,7 +809,7 @@ namespace UMA
 					{
 						Debug.LogError($"[UMA] Missing bone hash {boneNameHashes[i]} in UMASkeleton. " +
 									   "This is usually caused by using an ignore tag that hides parts of the rig, or duplicate bone names. " +
-									   "Verify UMAAssetIndexer.Generator.ignoreTag is not set to 'Untagged' and that bone names are unique.");
+									   "Verify the UMA Project Settings Ignore Tag is valid and that bone names are unique.");
 						reported = true;
 					}
 #endif

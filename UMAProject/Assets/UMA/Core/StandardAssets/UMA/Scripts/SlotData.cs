@@ -266,7 +266,7 @@ namespace UMA
         {
             overlayScale = 1.0f;
             rendererAsset = null;
-
+            isDisabled = false;
             overSmoosh = 0.01f;
             smooshDistance = 0.001f;
             smooshInvertY = true;

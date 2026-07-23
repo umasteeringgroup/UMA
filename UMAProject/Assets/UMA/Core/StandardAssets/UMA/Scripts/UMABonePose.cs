@@ -249,13 +249,13 @@ namespace UMA.PoseTools
 				return;
 			}
 
-			if (weight <= 0f)
+			if (Mathf.Approximately(weight, 0f))
 			{
 				return;
 			}
 
-			// Interpolate through tweens if provided
-			if (tweenPoses != null && tweenPoses.Length > 0 && weight < 1f)
+			// Interpolate through tweens if provided (only for positive weights; tween curves aren't designed for inverse interpolation).
+			if (weight > 0f && tweenPoses != null && tweenPoses.Length > 0 && weight < 1f)
 			{
 				weight = ApplyPoseTweens(umaSkeleton, weight);
 				// If tweens consumed entire weight (returned 0) exit early

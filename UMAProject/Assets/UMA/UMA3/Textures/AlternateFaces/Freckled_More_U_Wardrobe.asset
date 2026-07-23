@@ -26,6 +26,13 @@ MonoBehaviour:
   - race: Human Male 3.0
     filename: Assets/UMA/UMA3/Wearables/Icons/Face/Human Male 3.0/4_Freckled_More_U_Wardrobe.png
     thumb: {fileID: 21300000, guid: ac2a39a4bb361044a83fa2d586629cc4, type: 3}
+  thumbnailFromTexture: 1
+  thumbnailRect:
+    serializedVersion: 2
+    x: 0.25
+    y: 0.25
+    width: 0.5
+    height: 0.5
   wardrobeSlot: Face
   Appended: 0
   Hides: []

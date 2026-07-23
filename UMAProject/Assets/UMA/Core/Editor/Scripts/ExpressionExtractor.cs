@@ -336,7 +336,7 @@ namespace UMA.PoseTools
         {
             if (poseAnimation != null && gameObject != null)
             {
-                Debug.Log($"[ExpressionExtractor] Going to time: {time} GameObject {gameObject.GetEntityId()} name {gameObject.name}");
+                Debug.Log($"[ExpressionExtractor] Going to time: {time} GameObject {gameObject.GetUmaObjectId()} name {gameObject.name}");
                 poseAnimation.SampleAnimation(gameObject, time);
                 EditorUtility.SetDirty(gameObject);
                 SceneView.RepaintAll();
@@ -432,7 +432,7 @@ namespace UMA.PoseTools
             return AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path);
         }
 
-        [MenuItem("UMA/Pose Tools/Expression Extractor", priority = 2)]
+        [MenuItem("UMA/Tools/Pose Tools/Expression Extractor", priority = 124)]
         public static void OpenExpressionExtractor()
         {
             EditorWindow win = GetWindow(typeof(ExpressionExtractor));

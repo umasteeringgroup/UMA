@@ -15,7 +15,7 @@ namespace UMA
         /// </summary>
         public MeshModifier meshModifier;
         public override string Description => "Applies a mesh modifier to the character's mesh.";
-        public override DNAInstanceCollection.DNABuildType AreaEffect => DNAInstanceCollection.DNABuildType.Mesh;
+        public override DNAInstanceCollection.DNABuildType AreaEffect => DNAInstanceCollection.DNABuildType.MeshModifiers;
 
 #if UNITY_EDITOR
         /// <inheritdoc />
@@ -35,7 +35,7 @@ namespace UMA
             base.AfterRecipeGenerated(avatar, dna, value);
             if (avatar != null && meshModifier != null)
             {
-                avatar.AddMeshModifiers(meshModifier.RuntimeModifiers);
+                avatar.AddMeshModifiers(meshModifier.GetScaledRuntimeModifiers(GetMappedValue(value)));
             }
         }
     }

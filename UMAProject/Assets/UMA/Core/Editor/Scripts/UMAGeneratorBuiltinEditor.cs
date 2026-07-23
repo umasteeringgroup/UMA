@@ -13,6 +13,7 @@ namespace UMA.Editors
 		SerializedProperty meshCombiner;
 		SerializedProperty InitialScaleFactor;
 		SerializedProperty IterationCount;
+		SerializedProperty InterFrameDelay;
 		SerializedProperty garbageCollectionRate;
 		SerializedProperty processAllPending;
 		SerializedProperty applyInline;
@@ -39,6 +40,34 @@ namespace UMA.Editors
         private static bool IsEditorBusy()
 		{
 			return EditorApplication.isCompiling || EditorApplication.isUpdating;
+		}
+
+		/// <summary>
+		/// Rebuilds every DynamicCharacterAvatar in the active scene that has
+		/// editor-time generation enabled.
+		/// </summary>
+		internal static void RebuildAllEditorUMA()
+		{
+			if (IsEditorBusy()) return;
+			Scene scene = SceneManager.GetActiveScene();
+			if (scene == null) return;
+
+			GameObject[] sceneObjs = scene.GetRootGameObjects();
+			foreach (GameObject go in sceneObjs)
+			{
+				DynamicCharacterAvatar[] dcas = go.GetComponentsInChildren<DynamicCharacterAvatar>(false);
+				if (dcas.Length == 0) continue;
+
+				foreach (DynamicCharacterAvatar dca in dcas)
+				{
+					if (dca != null && dca.editorTimeGeneration)
+					{
+						// This method is only invoked by explicit editor commands, so it
+						// remains available while automatic editor generation is paused.
+						dca.GenerateSingleUMA(false, true);
+					}
+				}
+			}
 		}
 
 		private void OnBeforeAssemblyReload()
@@ -69,6 +98,7 @@ namespace UMA.Editors
 			meshCombiner = serializedObject.FindProperty("meshCombiner");
 			InitialScaleFactor = serializedObject.FindProperty("InitialScaleFactor");
 			IterationCount = serializedObject.FindProperty("IterationCount");
+			InterFrameDelay = serializedObject.FindProperty("InterFrameDelay");
 			processAllPending = serializedObject.FindProperty("processAllPending");
 			applyInline = serializedObject.FindProperty("applyInline");
 			garbageCollectionRate = serializedObject.FindProperty("garbageCollectionRate");
@@ -127,6 +157,7 @@ namespace UMA.Editors
 				DrawIfPresent(MaxQueuedConversionsPerFrame);
 				DrawIfPresent(InitialScaleFactor);
 				DrawIfPresent(IterationCount);
+				DrawIfPresent(InterFrameDelay);
 				DrawIfPresent(collectGarbage);
 				DrawIfPresent(garbageCollectionRate);
 				DrawIfPresent(processAllPending);
@@ -271,30 +302,11 @@ namespace UMA.Editors
 
             }
 
-            if (!EditorApplication.isPlaying)
+			if (!EditorApplication.isPlaying)
 			{
 				if (GUILayout.Button("Rebuild all editor UMA"))
 				{
-					if (IsEditorBusy()) return;
-					Scene scene = SceneManager.GetActiveScene();
-					if (scene != null)
-					{
-						GameObject[] sceneObjs = scene.GetRootGameObjects();
-						foreach (GameObject go in sceneObjs)
-						{
-							DynamicCharacterAvatar[] dcas = go.GetComponentsInChildren<DynamicCharacterAvatar>(false);
-							if (dcas.Length > 0)
-							{
-								foreach (DynamicCharacterAvatar dca in dcas)
-								{
-									if (dca != null && dca.editorTimeGeneration)
-									{
-										dca.GenerateSingleUMA();
-									}
-								}
-							}
-						}
-					}
+					RebuildAllEditorUMA();
 				}
 			}
 			serializedObject.ApplyModifiedProperties();

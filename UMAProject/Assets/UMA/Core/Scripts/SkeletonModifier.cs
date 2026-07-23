@@ -93,7 +93,7 @@ namespace UMA.CharacterSystem
 
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        public static void StaticInitializeOnLoad()
+        public static void RuntimeInitializeOnLoad()
         {
             // Initialize the default values for the skeleton modifiers?
             skelAddDefaults = new Dictionary<SkeletonPropType, Vector3>

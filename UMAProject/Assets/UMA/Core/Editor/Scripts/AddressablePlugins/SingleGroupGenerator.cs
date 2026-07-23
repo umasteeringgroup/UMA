@@ -28,6 +28,14 @@ namespace UMA
             // File.AppendAllText("D:\\DebugGenerator.txt", message + Environment.NewLine);
         }
 
+        static void MakeAssetWritable(UnityEngine.Object asset) { //VES added: the build server syncs assets Perforce-read-only, so the strip's SetDirty + ForceSave/SaveAssets silently fails to persist (SBP then bundles the un-stripped on-disk asset).
+            if (asset == null) return;
+            string assetPath = AssetDatabase.GetAssetPath(asset);
+            if (string.IsNullOrEmpty(assetPath)) return;
+            string fullPath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(Application.dataPath), assetPath); //VES changed: anchor to the project root (parent of Assets/) so clearing read-only is independent of the process working directory
+            if (File.Exists(fullPath))
+                File.SetAttributes(fullPath, File.GetAttributes(fullPath) & ~FileAttributes.ReadOnly);
+        }
 
         public string Menu
         {
@@ -73,27 +81,25 @@ namespace UMA
 
                 RecipeExtraLabels = new Dictionary<string, List<string>>();
                 
-                    var WardrobeCollections = Index.GetAllAssets<UMAWardrobeCollection>();
-                    foreach (var wc in WardrobeCollections)
-                    {
-                        if (wc == null) continue;
-                        string label = wc.AssignedLabel;
-                        List<string> recipes = wc.wardrobeCollection.GetAllRecipeNamesInCollection();
-                        foreach (string recipe in recipes)
-                        {
+                var WardrobeCollections = Index.GetAllAssets<UMAWardrobeCollection>();
+					foreach(var wc in WardrobeCollections) {
+						if(wc == null)
+							continue;
+						string label = wc.AssignedLabel;
+						List<string> recipes = wc.wardrobeCollection.GetAllRecipeNamesInCollection();
+						foreach(string recipe in recipes) {
 #if UMA_VES
-                        if (VesUmaLabelMaker.DO_NOT_INCLUDE_LABELS.Contains(label))
-                        {   //VES added
-                            continue;
-                        }
+							if(VesUmaLabelMaker.DO_NOT_INCLUDE_LABELS.Contains(label)) {   //VES added
+								continue;
+							}
 #endif
-                            if (RecipeExtraLabels.ContainsKey(recipe) == false)
-                            {
-                                RecipeExtraLabels.Add(recipe, new List<string>());
-                            }
-                            RecipeExtraLabels[recipe].Add(label);
-                    }
-                }
+							if(RecipeExtraLabels.ContainsKey(recipe) == false) {
+								RecipeExtraLabels.Add(recipe, new List<string>());
+							}
+							RecipeExtraLabels[recipe].Add(label);
+						}
+					}
+				
 
                 float pos = 0.0f;
                 float inc = 1.0f / Recipes.Count;
@@ -133,14 +139,14 @@ namespace UMA
                             // search for the asset in the recipe path, including children.
                             // if it exists, then add the label to the asset.
 
-                            string path = AssetDatabase.GetAssetPath(ai.Item.GetEntityId());
+                            string path = AssetDatabase.GetAssetPath(ai.Item.GetUmaObjectId());
                             string filename = System.IO.Path.GetFileName(path);
                             string basePath = System.IO.Path.GetDirectoryName(path);
 
                             Debug.Log("Looking for asset: " + filename + " in path: " + basePath);
                             AssetItem ai2 = GetLocalAssetItemIfExist(basePath, filename, ai._Type.Name, ai);
 
-                            if (ai._SerializedItem.GetEntityId() != ai2._SerializedItem.GetEntityId())
+                            if (ai._SerializedItem.GetUmaObjectId() != ai2._SerializedItem.GetUmaObjectId())
                             {
                                 AddressableItems[ai].Add(uwr.AssignedLabel);
                             }
@@ -230,7 +236,7 @@ namespace UMA
                     }
                     ai.AddressableLabels = sb.ToString();
 
-                    bool found = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(ai.Item.GetEntityId(), out string itemGUID, out long localID);
+                    bool found = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(ai.Item.GetUmaObjectId(), out string itemGUID, out long localID);
 
                     UMAAddressablesSupport.Instance.AddItemToSharedGroup(itemGUID, ai.AddressableAddress, AddressableItems[ai], sharedGroup);
 
@@ -242,52 +248,72 @@ namespace UMA
                             Debug.Log("Invalid Slotdata in recipe: " + ai._Name + ". Skipping.");
                             continue;
                         }
-                        if (sda.SlotProcessed != null)
+                        //VES removed if (sda.SlotProcessed != null) {
+                        if (stripUVAttachedShaders)
                         {
-                            if (stripUVAttachedShaders)
+                            UnityEngine.Events.UnityEventBase[] launcherEvents = { sda.CharacterBegun, sda.SlotAtlassed, sda.DNAApplied, sda.CharacterCompleted, sda.SlotProcessed, sda.SlotBeginProcessing }; //VES added
+                            foreach (UnityEngine.Events.UnityEventBase evt in launcherEvents) //VES changed from var evt = sda.SlotProcessed: launchers are wired to multiple slot events (e.g. DNAApplied OnDnaAppliedBootstrapper), not only SlotProcessed
                             {
-                                var evt = sda.SlotProcessed;
+                                if (evt == null) continue; //VES added
                                 int count = evt.GetPersistentEventCount();
                                 for (int i = 0; i < count; i++)
                                 {
-                                    Debug.Log("Stripping UVAttachedItem shaders for slot " + sda.name);
-
                                     UnityEngine.Object target = evt.GetPersistentTarget(i);
-                                    if (target is UMA.UMAUVAttachedItemLauncher)
+                                    UMA.UMAUVAttachedItemLauncher UVitem = target as UMA.UMAUVAttachedItemLauncher;
+                                    if (UVitem == null && target is GameObject) UVitem = (target as GameObject).GetComponent<UMA.UMAUVAttachedItemLauncher>(); //VES added: persistent target can be the GameObject rather than the component
+                                    if (UVitem == null && target is Component) UVitem = (target as Component).GetComponent<UMA.UMAUVAttachedItemLauncher>(); //VES added
+                                    if (UVitem == null) continue;
+                                    GameObject prefab = UVitem.prefab;
+                                    if (prefab == null) continue;
+                                    UMATextureSaver saver = prefab.GetComponent<UMATextureSaver>();
+                                    if (saver != null) {
+                                        // has to be done before stripping the shader, so the saver can save the texture references while the original 
+                                        // shaders are still on the materials. If we wait to do this after stripping, then the saver won't find any 
+                                        // textures on the materials to save, and they will be lost when we swap in the error shader.
+                                        saver.SaveTextureReferences(); //VES save texture references before stripping shaders, so they can be restored in the player
+                                    }
+                                    Debug.Log("Stripping UVAttachedItem shaders for slot " + sda.name);
+                                    Renderer[] mrs = prefab.GetComponentsInChildren<Renderer>(true); //VES changed from prefab.GetComponentsInChildren<MeshRenderer>(): Renderer covers SkinnedMeshRenderer - skinned attachment prefabs (MS/IV/direct pressure) were never stripped and shipped URP Lit copies per bundle
+                                    if (mrs == null) continue;
+                                    if (mrs.Length == 0) continue;
+                                    for (int j = 0; j < mrs.Length; j++)
                                     {
-                                        var UVitem = target as UMA.UMAUVAttachedItemLauncher;
-                                        if (UVitem != null)
-                                        {
-                                            GameObject prefab = UVitem.prefab;
-                                            if (prefab != null)
-                                            {
-                                                MeshRenderer[] mrs = prefab.GetComponentsInChildren<MeshRenderer>();
-                                                if (mrs == null) continue;
-                                                if (mrs.Length == 0) continue;
-                                                for (int j = 0; j < mrs.Length; j++)
-                                                {
-                                                    MeshRenderer mr = mrs[j];
-                                                    if (mr == null) continue;
-                                                    if (mr.sharedMaterial == null) continue;
-                                                    var mats = mr.sharedMaterials;
-                                                    if (mats == null) continue;
-                                                    for(int k = 0; k < mats.Length; k++)
-                                                    {
-                                                        Material mat = mats[k];
-                                                        if (mat.shader.name.Contains("Hidden/InternalErrorShader"))
-                                                            continue; // already stripped
-                                                        // Store shader name in a tag
-                                                        mat.SetOverrideTag("OriginalShader", mat.shader.name);
-                                                        // Strip shader reference
-                                                        mat.shader = Shader.Find("Hidden/InternalErrorShader");
-                                                        EditorUtility.SetDirty(mat);
-                                                    }
-                                                }
-                                            }
+                                        Renderer mr = mrs[j]; //VES changed from MeshRenderer
+                                        if (mr == null) continue;
+                                        if (mr.sharedMaterial == null) continue;
+                                        Material[] mats = mr.sharedMaterials;
+                                        if (mats == null) continue; //VES added
+                                        for (int k = 0; k < mats.Length; k++) {
+                                            Material mat = mats[k];
+											if(mat == null || mat.shader == null) //VES added || mat.shader == null
+	                                            continue;
+                                            if(mat.shader.name.Contains("Hidden/InternalErrorShader"))
+	                                            continue;
+                                            MakeAssetWritable(mat); //VES added: mat (e.g. GlovedHandMaterial.mat) is Perforce read-only on the build server; without this the swap below never persists and the bundle keeps the URP Lit copy
+                                            mat.SetOverrideTag("OriginalShader", mat.shader.name);
+                                            mat.shader = Shader.Find("Hidden/InternalErrorShader");
+                                            EditorUtility.SetDirty(mat);
                                         }
                                     }
                                 }
-
+                            }
+                        }
+                        if (sda.material != null)
+                        {
+                            if (ClearMaterials)
+                            {
+                                MakeAssetWritable(sda); //VES added: slot asset is Perforce read-only on the build server, so the strip can't persist without this
+                                sda.materialName = sda.material.name;
+                                sda.material = null;
+                                EditorUtility.SetDirty(sda);
+                            }
+                            else
+                            {
+                                if (sda.material == null)
+                                {
+                                    sda.material = Index.GetAsset<UMAMaterial>(sda.materialName);
+                                    EditorUtility.SetDirty(sda);
+                                }
                             }
                         }
                     }
@@ -301,6 +327,7 @@ namespace UMA
                         }
                         if (stripTextures)
                         {
+                            MakeAssetWritable(od); //VES added: overlay asset is Perforce read-only on the build server, so the texture/material strip below can't persist without this
                             // Ensure textures get the same labels and are added to the index as addressable items before stripping
                             var overlayLabels = AddressableItems[ai];
                             for (int i = 0; i < od.textureList.Length; i++)
@@ -317,9 +344,9 @@ namespace UMA
                                     var texAI = Index.GetAssetItemForObject(tex);
 
                                     // 2) Create or move the texture entry to the shared group with the same labels
-                                    string texPath = AssetDatabase.GetAssetPath(tex.GetEntityId());
+                                    string texPath = AssetDatabase.GetAssetPath(tex.GetUmaObjectId());
                                     string address = AssetItem.AddressableFolder + "Texture2D-" + tex.name + "-" + texPath.GetHashCode();
-                                    bool texFound = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(tex.GetEntityId(), out string texGUID, out long texLocalId);
+                                    bool texFound = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(tex.GetUmaObjectId(), out string texGUID, out long texLocalId);
                                     if (texFound)
                                     {
                                         UMAAddressablesSupport.Instance.AddItemToSharedGroup(texGUID, address, overlayLabels, sharedGroup);
@@ -358,9 +385,9 @@ namespace UMA
                                 var tex = od.alphaMask;
                                 Index.AddIfIndexed(tex);
                                 var texAI = Index.GetAssetItemForObject(tex);
-                                string texPath = AssetDatabase.GetAssetPath(tex.GetEntityId());
+                                string texPath = AssetDatabase.GetAssetPath(tex.GetUmaObjectId());
                                 string address = AssetItem.AddressableFolder + "Texture2D-" + tex.name + "-" + texPath.GetHashCode();
-                                bool texFound = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(tex.GetEntityId(), out string texGUID, out long texLocalId);
+                                bool texFound = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(tex.GetUmaObjectId(), out string texGUID, out long texLocalId);
                                 if (texFound)
                                 {
                                     UMAAddressablesSupport.Instance.AddItemToSharedGroup(texGUID, address, AddressableItems[ai], sharedGroup);
@@ -386,6 +413,7 @@ namespace UMA
                         {
                             if (ClearMaterials)
                             {
+                                MakeAssetWritable(od); //VES added: overlay asset is Perforce read-only on the build server (idempotent with the strip-textures call above), so the strip can't persist without this
                                 od.materialName = od.material.name;
                                 od.material = null;
                                 EditorUtility.SetDirty(od);
@@ -404,9 +432,13 @@ namespace UMA
                         {
                             if (um.material != null)
                             {
+                                MakeAssetWritable(um); //VES added: both the UMAMaterial and its material are Perforce read-only on the build server
+                                MakeAssetWritable(um.material); //VES added
                                 um.ShaderName = um.material.shader.name;
                                 um.MaterialName = um.material.name;
                                 um.material.shader = null;
+                                EditorUtility.SetDirty(um); //VES added: was missing, so this shader strip never persisted even when writable
+                                EditorUtility.SetDirty(um.material); //VES added
                             }
                         }
 #if INCL_TEXTURE2D
@@ -418,10 +450,10 @@ namespace UMA
                                 Debug.Log("Texture is not Texture2D!!! " + tex.name);
                                 continue;
                             }
-                            string path = AssetDatabase.GetAssetPath(tex.GetEntityId());
+                            string path = AssetDatabase.GetAssetPath(tex.GetUmaObjectId());
                             string Address = "Texture2D-" + tex.name + "-" + path.GetHashCode();
 
-                            found = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(tex.GetEntityId(), out string texGUID, out long texlocalID);
+                            found = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(tex.GetUmaObjectId(), out string texGUID, out long texlocalID);
                             if (found)
                             {
                                 UMAAddressablesSupport.Instance.AddItemToSharedGroup(texGUID, AssetItem.AddressableFolder + Address, AddressableItems[ai], sharedGroup);

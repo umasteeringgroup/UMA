@@ -230,7 +230,7 @@ namespace UMA.Controls
         GenericMenu _AddressablesMenu;
         GenericMenu _ItemsMenu;
         GenericMenu _ToolsMenu;
-        bool ShowUtilities;
+        bool ShowUtilities = true;
         UMAMaterial umaMaterial;
         RaceData umaRaceData;
         OverlayDataAsset umaOverlay;
@@ -581,7 +581,7 @@ namespace UMA.Controls
             return selectedAssets[0];
         }
 
-        [MenuItem("UMA/Global Library", priority = 99)]
+        [MenuItem("UMA/Global Library", priority = 20)]
         public static AssetIndexerWindow GetWindow()
         {
             var window = GetWindow<AssetIndexerWindow>();
@@ -641,61 +641,7 @@ namespace UMA.Controls
             // ***********************************************************************************
             // File Menu items
             // ***********************************************************************************
-            AddMenuItemWithCallback(FileMenu, "Rebuild From Project", () =>
-            {
-                if (UAI == null) return;
-                UAI.RebuildLibrary();
-                m_Initialized = false;
-                Repaint();
-            });
-
-            AddMenuItemWithCallback(FileMenu, "Rebuild From Project (include text assets)", () =>
-            {
-                if (UAI == null) return;
-                UAI.SaveKeeps();
-                UAI.Clear();
-                UAI.BuildStringTypes();
-                UAI.AddEverything(true);
-                UAI.RestoreKeeps();
-                UAI.ForceSave();
-                Resources.UnloadUnusedAssets();
-                m_Initialized = false;
-                Repaint();
-            });
-            AddMenuItemWithCallback(FileMenu, "Clear References", () =>
-            {
-                if (UAI == null) return;
-                UAI.RemoveReferences();
-                Resources.UnloadUnusedAssets();
-                m_Initialized = false;
-                Repaint();
-                EditorUtility.DisplayDialog("Repair", "References Removed", "OK");
-            });
-
-            AddMenuItemWithCallback(FileMenu, "Repair and remove invalid items", () =>
-            {
-                if (UAI == null) return;
-                UAI.BuildStringTypes();
-                UAI.RepairAndCleanup();
-                Resources.UnloadUnusedAssets();
-                m_Initialized = false;
-                Repaint();
-                EditorUtility.DisplayDialog("Repair", "AssetIndex successfully repaired", "OK");
-            });
-            /* AddMenuItemWithCallback(FileMenu, "Add Build refs to all non-addressables", () => 
-			{
-				UAI.AddReferences();
-				RecountTypes();
-				Resources.UnloadUnusedAssets();
-				Repaint();
-			});
-			AddMenuItemWithCallback(FileMenu, "Clear build refs from all items", () => 
-			{
-				UAI.ClearReferences();
-				Resources.UnloadUnusedAssets();
-				RecountTypes();
-				Repaint();
-			}); */
+            AddMenuItemWithCallback(FileMenu, "Global Library Maintenance...", () => EditorApplication.ExecuteMenuItem("UMA/Global Library Maintenance"));
             FileMenu.AddSeparator("");
             AddMenuItemWithCallback(FileMenu, "Toggle Utilities Panel", () =>
             {
@@ -703,42 +649,6 @@ namespace UMA.Controls
                 Repaint();
             });
             FileMenu.AddSeparator("");
-
-            AddMenuItemWithCallback(FileMenu, "Empty Index", () =>
-            {
-                if (UAI == null) return;
-                UAI.Clear();
-                m_Initialized = false;
-                Repaint();
-            });
-
-
-            AddMenuItemWithCallback(FileMenu, "Backup Index", () =>
-            {
-                if (UAI == null) return;
-                // string index = UAI.Backup();
-                string filename = EditorUtility.SaveFilePanel("Backup Index", "", "librarybackup", "bak");
-                if (!string.IsNullOrEmpty(filename))
-                {
-                    try
-                    {
-                        string backup = UAI.Backup();
-                        System.IO.File.WriteAllText(filename, backup);
-                        backup = "";
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.LogException(ex);
-                        EditorUtility.DisplayDialog("Error", "Error writing backup: " + ex.Message, "OK");
-                    }
-                }
-            });
-
-            AddMenuItemWithCallback(FileMenu, "Save to disk", () =>
-            {
-                if (UAI == null) return;
-                UMAAssetIndexer.Instance.ForceSave();
-            });
 
 			AddMenuItemWithCallback(ToolsMenu, "Save all baked slots to disk", () =>
 			{
@@ -749,40 +659,6 @@ namespace UMA.Controls
 			{
 				SaveSelectedBakedSlotsToDisk();
 			});
-
-            AddMenuItemWithCallback(FileMenu, "Rebuild Dictionaries", () =>
-            {
-                if (UAI == null) return;
-                UMAAssetIndexer.Instance.UpdateSerializedDictionaryItems();
-                Repaint();
-            });
-
-            AddMenuItemWithCallback(FileMenu, "Restore Index", () =>
-            {
-                if (UAI == null) return;
-                string filename = EditorUtility.OpenFilePanel("Restore", "", "bak");
-                if (!string.IsNullOrEmpty(filename))
-                {
-                    try
-                    {
-                        string backup = System.IO.File.ReadAllText(filename);
-                        EditorUtility.DisplayProgressBar("Restore", "Restoring index", 0);
-                        if (!UAI.Restore(backup))
-                        {
-                            EditorUtility.DisplayDialog("Error", "Unable to restore index. Please review the console for more information.", "OK");
-                        }
-                        backup = "";
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.LogException(ex);
-                        EditorUtility.DisplayDialog("Error", "Error writing backup: " + ex.Message, "OK");
-                    }
-                    EditorUtility.ClearProgressBar();
-                    m_Initialized = false;
-                    Repaint();
-                }
-            });
 
 #if UMA_ADDRESSABLES
 
@@ -1659,7 +1535,7 @@ namespace UMA.Controls
                 bool found = false;
                 foreach (MeshHideAsset theAsset in uwr.MeshHideAssets)
                 {
-                    if (theAsset.GetEntityId() == AddedMHA.GetEntityId())
+                    if (theAsset.GetUmaObjectId() == AddedMHA.GetUmaObjectId())
                     {
                         found = true;
                         break;
@@ -2409,7 +2285,7 @@ namespace UMA.Controls
         #endregion
 
         #region GUI Rectangles
-        int sidePanelWidth = 300;
+        int sidePanelWidth = 380;
 
         float positionwidth
         {
@@ -2884,11 +2760,11 @@ namespace UMA.Controls
             GUILayout.Label("Utilities Panel", EditorStyles.toolbarButton,GUILayout.ExpandWidth(true));
             GUILayout.BeginHorizontal();
 
-            if (GUILayout.Button("Sel None"))
+            if (GUILayout.Button("Clear Selection"))
             {
                 ClearSelection();
             }
-            if (GUILayout.Button("Sel All"))
+            if (GUILayout.Button("Select All"))
             {
                 SelectAll();
             }
@@ -3467,7 +3343,7 @@ namespace UMA.Controls
             {
                 umaTexture = EditorGUILayout.ObjectField("Texture: ", umaTexture, typeof(Texture2D), false) as Texture2D;
 
-                if (GUILayout.Button("Find texture in OVL"))
+                if (GUILayout.Button("Find texture in Overlays"))
                 {
                     FindOverlaysWithTexture(umaTexture);
                 }
@@ -3579,7 +3455,8 @@ namespace UMA.Controls
                 AssetDatabase.SaveAssets();
             }
 
-            EditorUtility.DisplayDialog("Slot LOD", "Updated " + updated + " slot(s). Skipped " + skipped + ".", "OK");
+            //EditorUtility.DisplayDialog("Slot LOD", "Updated " + updated + " slot(s). Skipped " + skipped + ".", "OK");
+            EditorUtility.DisplayDialog("Slot LOD", "Updated " + updated + " slot(s). Skipped " + skipped + ".\n\nReminder: Mesh Hide Assets are not automatically updated. Use 'Gen LOD on ALL MHA' in the Mesh Hide Assets utilities panel to regenerate their LOD masks.", "OK");
         }
 
 
@@ -4318,7 +4195,21 @@ namespace UMA.Controls
                         continue;
                     }
                     SlotDataAsset slot =assetItem.Item as SlotDataAsset;
+                    if (slot == null)
+                    {
+                        errors++;
+                        SelectByAssetItems(new List<AssetItem>() { MHAS[i] });
+                        Debug.Log($"MHAERR Slot '{item.AssetSlotName}' is not a valid SlotDataAsset: " + MHAS[i]._Name);
+                        continue;
+                    }
 
+                    if (slot.meshData == null)
+                    {
+                        errors++;
+                        SelectByAssetItems(new List<AssetItem>() { MHAS[i] });
+                        Debug.Log("MHAERR Slot has no meshData: " + MHAS[i]._Name);
+                        continue;
+                    }
                     if (item.SubmeshCount != slot.meshData.subMeshCount)
                     {
                         errors++;
@@ -4517,7 +4408,7 @@ namespace UMA.Controls
                             {
                                 continue;
                             }
-                            if (tex != null && o.textureList[j].GetEntityId() == tex.GetEntityId())
+                            if (tex != null && o.textureList[j].GetUmaObjectId() == tex.GetUmaObjectId())
                             {
                                 badItems.Add(ovls[i]);
                             }
@@ -4672,7 +4563,7 @@ namespace UMA.Controls
 			}
 
 			MenuRect.x += 100;
-			MenuRect.width = 100;
+			MenuRect.width = 200;
 
 			bool newShowUtilities = GUI.Toggle(MenuRect, ShowUtilities, "Show Utilities", EditorStyles.toolbarButton);
 
@@ -4684,13 +4575,13 @@ namespace UMA.Controls
 
             if (UAI != null && EditorUtility.IsDirty(UAI))
             {
-                MenuRect.x += 100;
+                MenuRect.x += 200;
                 MenuRect.width = 150;
                 GUI.Label(MenuRect, new GUIContent("Unsaved Changes"), EditorStyles.boldLabel);
             }
 
             Rect FillRect = new Rect(rect);
-			FillRect.x += 530;
+			FillRect.x += 700;
 			FillRect.width -= 530;
 			GUI.Box(FillRect, "", EditorStyles.toolbar);
         }

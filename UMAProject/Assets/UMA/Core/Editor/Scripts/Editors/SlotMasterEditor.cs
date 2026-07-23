@@ -10,6 +10,14 @@ namespace UMA.Editors
         public static string LastSlot = "";
         public static Dictionary<string, bool> OpenSlots = new Dictionary<string, bool>();
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void RuntimeInitializeOnLoad()
+        {
+            LastSlot = "";
+            OpenSlots = new Dictionary<string, bool>();
+            _slotPickerID = -1;
+        }
+
         protected readonly UMAData.UMARecipe _recipe;
         protected readonly UnityEngine.Object _recipeContext;
         protected readonly List<SlotEditor> _slotEditors = new List<SlotEditor>();
@@ -29,7 +37,7 @@ namespace UMA.Editors
                 {
                     SlotData slot = new SlotData(sd);
                     slot.AddOverlay(new OverlayData(DraggedOverlays[0]));
-                    slot = _recipe.MergeSlot(slot, false);
+                    slot = _recipe.MergeSlot(slot, false); 
                 }
                 return;
             }
@@ -173,6 +181,37 @@ namespace UMA.Editors
         {
             var slot = new SlotData(added);
             _recipe.MergeSlot(slot, false);
+        }
+
+        private void SaveRecipeContext()
+        {
+            if (_recipeContext == null)
+            {
+                return;
+            }
+
+            if (_recipeContext is UMARecipeBase recipeBase)
+            {
+                recipeBase.Save(_recipe);
+                EditorUtility.SetDirty(recipeBase);
+                if (EditorUtility.IsPersistent(recipeBase))
+                {
+                    AssetDatabase.SaveAssetIfDirty(recipeBase);
+                }
+
+                if (recipeBase is UMATextRecipe textRecipe)
+                {
+                    UMAUpdateProcessor.UpdateRecipe(textRecipe);
+                }
+
+                return;
+            }
+
+            EditorUtility.SetDirty(_recipeContext);
+            if (EditorUtility.IsPersistent(_recipeContext))
+            {
+                AssetDatabase.SaveAssetIfDirty(_recipeContext);
+            }
         }
 
         protected void RecursiveScanFoldersForAssets(string path)
@@ -624,6 +663,7 @@ namespace UMA.Editors
 
                     _slotEditors.RemoveAt(i);
                     _recipe.SetSlot(editor.idx, null);
+                    SaveRecipeContext();
                     i--;
                     changed = true;
                 }

@@ -27,6 +27,17 @@ namespace UMA
             UMA.CustomAssetUtility.CreateAsset<DNA>();
         }
 #endif
+
+        public DNABuildType GetBuildType()
+        {
+            DNABuildType updateFlags = DNABuildType.None;
+            foreach (var effect in effects)
+            {
+                updateFlags |= effect.AreaEffect;
+            }
+            return updateFlags;
+        }
+        
         public DNABuildType AfterRecipeGeneration(UMAData avatar, float value)
         {
             DNABuildType updateFlags = DNABuildType.None;
@@ -51,6 +62,10 @@ namespace UMA
             DNABuildType updateFlags = DNABuildType.None;
             foreach (var effect in effects)
             {
+                if (!effect.enabled)
+                {
+                    continue;
+                }
                 updateFlags |= effect.AreaEffect;
                 effect.PreApply(avatar, this, value);
             }
@@ -61,6 +76,10 @@ namespace UMA
             DNABuildType updateFlags = DNABuildType.None;
             foreach (var effect in effects)
             {
+                if (!effect.enabled)
+                {
+                    continue;
+                }
                 updateFlags |= effect.AreaEffect;
                 effect.Apply(avatar, this, value);
             }
@@ -86,6 +105,10 @@ namespace UMA
                 {
                     continue;
                 }
+                if (!effect.enabled)
+                {
+                    continue;
+                }
 
                 updateFlags |= effect.AreaEffect;
                 effect.Apply(avatar, this, value);
@@ -98,6 +121,10 @@ namespace UMA
             DNABuildType updateFlags = DNABuildType.None;
             foreach (var effect in effects)
             {
+                if (!effect.enabled)
+                {
+                    continue;
+                }
                 updateFlags |= effect.AreaEffect;
                 effect.PostApply(avatar, this, value);
             }

@@ -2,7 +2,7 @@
     "slotName": "UMA30_Body",
     "RootBone": "Global",
     "createOverlay": false,
-    "createRecipe": true,
+    "createRecipe": false,
     "isBaseRaceRecipe": false,
     "addToGlobalLibrary": false,
     "binarySerialization": true,
@@ -41,11 +41,11 @@
         "x": 0.0,
         "y": 0.0
     },
-    "filterIgnoreMeshesEnabled": true,
+    "filterIgnoreMeshesEnabled": false,
     "filterIgnoreMeshesContaining": "UMA30",
     "filterOnlyIncludeMeshesEnabled": false,
     "filterOnlyIncludeMeshesContaining": "robe",
-    "lastDroppedFbxPath": "Assets/temp/UMA2_wolverine.fbx",
+    "lastDroppedFbxPath": "Assets/temp/Pigtails_rigged.fbx",
     "pendingSmrsCompactView": false,
     "pendingSmrsFilterEnabled": false
 }

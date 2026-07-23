@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEditor;
 using UMA.Examples;
 using UMA.CharacterSystem;
@@ -16,6 +17,15 @@ namespace UMA.Editors
         private static bool _optionsFoldout = true;
         private static Vector2 _slotScroll;
         private static Dictionary<string, bool> _slotSelection = new Dictionary<string, bool>(64);
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void RuntimeInitializeOnLoad()
+        {
+            _internalSlotLodFoldout = false;
+            _optionsFoldout = true;
+            _slotScroll = Vector2.zero;
+            _slotSelection = new Dictionary<string, bool>(64);
+        }
 
         private static int LoadInt(string key, int defaultValue)
         {
@@ -109,6 +119,63 @@ namespace UMA.Editors
             return totalTriangles;
         }
 
+        private static void DrawCurrentLodStatusGrid(UMASimpleLOD lod)
+        {
+            if (lod == null)
+                return;
+
+            var statuses = lod.SlotLodStatuses;
+            if (statuses == null || statuses.Count == 0)
+            {
+                EditorGUILayout.HelpBox("No LOD status data available. LOD has not been updated yet.", MessageType.Info);
+                return;
+            }
+
+            EditorGUILayout.LabelField("Current LOD Status", EditorStyles.boldLabel);
+
+            // Header row
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Slot Name", EditorStyles.boldLabel, GUILayout.MinWidth(100));
+            EditorGUILayout.LabelField("LODs", EditorStyles.boldLabel, GUILayout.Width(40));
+            EditorGUILayout.LabelField("Level", EditorStyles.boldLabel, GUILayout.Width(45));
+            EditorGUILayout.LabelField("Calls", EditorStyles.boldLabel, GUILayout.Width(45));
+            EditorGUILayout.LabelField("MS", EditorStyles.boldLabel, GUILayout.Width(55));
+            EditorGUILayout.LabelField("Status", EditorStyles.boldLabel, GUILayout.Width(85));
+            EditorGUILayout.EndHorizontal();
+
+            foreach (var kvp in statuses)
+            {
+                var entry = kvp.Value;
+                if (string.IsNullOrEmpty(entry.slotName))
+                    continue;
+
+                string status;
+                if (entry.wasSuppressed)
+                    status = "Suppressed";
+                else if (entry.wasDroppedByMaxLod)
+                    status = "Dropped";
+                else if (!entry.hadAnyLOD)
+                    status = "No LODs";
+                else
+                    status = "OK";
+
+                string lodCountStr = entry.slotLodCount > 0 ? entry.slotLodCount.ToString() : "-";
+                string levelStr = entry.hadAnyLOD ? entry.actualChosenLod.ToString() : "-";
+
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField(entry.slotName, GUILayout.MinWidth(100));
+                EditorGUILayout.LabelField(lodCountStr, GUILayout.Width(40));
+                EditorGUILayout.LabelField(levelStr, GUILayout.Width(45));
+                EditorGUILayout.LabelField(entry.count.ToString(), GUILayout.Width(45));
+                EditorGUILayout.LabelField(entry.totalMS.ToString("F1"), GUILayout.Width(55));
+                EditorGUILayout.LabelField(status, GUILayout.Width(85));
+                EditorGUILayout.EndHorizontal();
+            }
+
+            EditorGUILayout.Space(3);
+            EditorGUILayout.LabelField("Total Update MS: " + lod.TotalLodUpdateMS.ToString("F1"), EditorStyles.boldLabel);
+        }
+
         private static string GetSlotKey(SlotData slot)
         {
             if (slot == null)
@@ -125,7 +192,7 @@ namespace UMA.Editors
             {
                 return path;
             }
-            return slot.asset.GetEntityId().ToString();
+            return slot.asset.GetUmaObjectId().ToString();
         }
 
         private static bool GetSlotSelected(string key)
@@ -310,6 +377,90 @@ namespace UMA.Editors
             }
         }
 
+        private static void DrawSlotBasedLodSection(UMASimpleLOD lod)
+        {
+            if (lod == null)
+            {
+                return;
+            }
+
+            bool hasSlotBasedLod = lod.swapSlots || lod.useSlotDropping;
+            if (!hasSlotBasedLod)
+            {
+                return;
+            }
+
+            EditorGUILayout.Space(5);
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                EditorGUILayout.LabelField("Slot-Based LOD", EditorStyles.boldLabel);
+
+                EditorGUI.indentLevel++;
+                EditorGUILayout.LabelField("Mode", lod.swapSlots ? "Swap Slots" : "Slot Dropping");
+                EditorGUILayout.LabelField("Current LOD Level", lod.CurrentLOD.ToString());
+                if (lod.lodOffset != 0)
+                {
+                    EditorGUILayout.LabelField("LOD Offset", lod.lodOffset.ToString());
+                }
+                EditorGUI.indentLevel--;
+
+                var umaData = lod.GetComponent<UMAData>();
+                var recipe = (umaData != null) ? umaData.umaRecipe : null;
+                var slots = (recipe != null) ? recipe.slotDataList : null;
+
+                if (slots == null || slots.Length == 0)
+                {
+                    EditorGUILayout.HelpBox("No slot data available yet. Build the character to see slot LOD info.", MessageType.Info);
+                    return;
+                }
+
+                EditorGUILayout.Space(3);
+                EditorGUILayout.LabelField("Equipped Slots", EditorStyles.boldLabel);
+
+                int lodVariantCount = 0;
+                int baseSlotCount = 0;
+                for (int i = 0; i < slots.Length; i++)
+                {
+                    var sd = slots[i];
+                    if (sd == null)
+                    {
+                        continue;
+                    }
+
+                    string slotName = sd.slotName;
+                    bool isLodVariant = slotName.IndexOf("_LOD", StringComparison.Ordinal) >= 0;
+
+                    EditorGUILayout.BeginHorizontal();
+                    if (sd.Suppressed)
+                    {
+                        GUI.color = Color.gray;
+                    }
+                    EditorGUILayout.LabelField(slotName, EditorStyles.wordWrappedLabel);
+                    if (isLodVariant)
+                    {
+                        EditorGUILayout.LabelField("(LOD variant)", EditorStyles.miniLabel, GUILayout.Width(80));
+                        lodVariantCount++;
+                    }
+                    else
+                    {
+                        EditorGUILayout.LabelField("(base)", EditorStyles.miniLabel, GUILayout.Width(50));
+                        baseSlotCount++;
+                    }
+                    if (sd.Suppressed)
+                    {
+                        EditorGUILayout.LabelField("[dropped]", EditorStyles.miniLabel, GUILayout.Width(60));
+                        GUI.color = Color.white;
+                    }
+                    EditorGUILayout.EndHorizontal();
+                }
+
+                EditorGUILayout.Space(3);
+                EditorGUILayout.LabelField(
+                    string.Format("LOD variants: {0}  |  Base slots: {1}  |  Total: {2}", lodVariantCount, baseSlotCount, slots.Length),
+                    EditorStyles.miniLabel);
+            }
+        }
+
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
@@ -317,6 +468,7 @@ namespace UMA.Editors
             var lod = (UMASimpleLOD)target;
 
             DrawInternalSlotLodSection(lod);
+            DrawSlotBasedLodSection(lod);
 
             if (!Application.isPlaying)
             {
@@ -379,6 +531,9 @@ namespace UMA.Editors
                         {
                             EditorGUILayout.LabelField("Triangle Count", playModeTriCount.ToString("N0"));
                         }
+
+                        EditorGUILayout.Space(5);
+                        DrawCurrentLodStatusGrid(lod);
                     }
 
             DrawDefaultInspector();

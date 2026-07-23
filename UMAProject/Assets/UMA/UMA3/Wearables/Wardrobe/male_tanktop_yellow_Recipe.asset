@@ -22,6 +22,13 @@ MonoBehaviour:
   - race: Human Male 3.0
     filename: Assets/UMA/UMA3/Wearables/Icons/Chest/Human Male 3.0/7_male_tanktop_yellow_Recipe.png
     thumb: {fileID: 21300000, guid: 44e4221783439a040bb57aa6d53981cd, type: 3}
+  thumbnailFromTexture: 0
+  thumbnailRect:
+    serializedVersion: 2
+    x: 0.25
+    y: 0.25
+    width: 0.5
+    height: 0.5
   wardrobeSlot: Chest
   Appended: 0
   Hides: []
@@ -34,8 +41,7 @@ MonoBehaviour:
   OverrideDNA:
     PreloadValues: []
   disabled: 0
-  recipeString: '{"version":3,"packedSlotDataList":[],"slotsV2":[],"slotsV3":[{"id":"male_tanktop_yellow_slot","scale":100,"copyIdx":-1,"overlays":[{"id":"male_tanktop_yellow_bb_male_tanktop_yellow_mat.001","colorIdx":0,"rect":[0.0,0.0,0.0,0.0],"isTransformed":false,"scale":{"x":1.0,"y":1.0,"z":0.0},"rotation":0.0,"blendModes":[0,0,0],"Tags":[],"tiling":[false,false,false],"uvOverride":0,"translate":{"x":0.0,"y":0.0}}],"Tags":[],"Races":[],"blendShapeTarget":"","overSmoosh":0.009999999776482582,"smooshDistance":0.0010000000474974514,"smooshInvertX":false,"smooshInvertY":true,"smooshInvertZ":false,"smooshInvertDist":true,"smooshTargetTag":"","smooshableTag":"","isSwapSlot":false,"swapTag":"LongHair","uvOverride":0,"isDisabled":false,"expandAlongNormal":0,"isPlaceholderSlot":false}],"colors":[],"fColors":[{"name":"-","colors":[255,255,255,255,0,0,0,0],"ShaderParms":[],"alwaysUpdate":false,"alwaysUpdateParms":false,"isBaseColor":false,"displayColor":-1}],"sharedColorCount":0,"race":"Human
-    Male 3.0","packedDna":[],"uvOverride":0,"isWardrobe":false}'
+  recipeString: '{"version":3,"packedSlotDataList":[],"slotsV2":[],"slotsV3":[{"id":"male_tanktop_yellow_slot","scale":100,"copyIdx":-1,"overlays":[{"id":"male_tanktop_yellow_bb_male_tanktop_yellow_mat.001","colorIdx":0,"rect":[0.0,0.0,0.0,0.0],"isTransformed":false,"scale":{"x":1.0,"y":1.0,"z":0.0},"rotation":0.0,"blendModes":[0,0,0],"Tags":[],"tiling":[false,false,false],"uvOverride":0,"translate":{"x":0.0,"y":0.0}}],"Tags":[],"Races":[],"blendShapeTarget":"","overSmoosh":0.009999999776482582,"smooshDistance":0.0010000000474974514,"smooshInvertX":false,"smooshInvertY":true,"smooshInvertZ":false,"smooshInvertDist":true,"smooshTargetTag":"","smooshableTag":"","isSwapSlot":false,"swapTag":"LongHair","uvOverride":0,"isDisabled":false,"expandAlongNormal":0,"isPlaceholderSlot":false}],"colors":[],"fColors":[{"name":"-","colors":[255,255,255,255,0,0,0,0],"ShaderParms":[],"alwaysUpdate":false,"alwaysUpdateParms":false,"isBaseColor":false,"displayColor":-1}],"sharedColorCount":0,"race":"","packedDna":[],"uvOverride":0,"isWardrobe":false}'
   forceKeep: 0
   labelLocalFiles: 0
   noAutoAdd: 0

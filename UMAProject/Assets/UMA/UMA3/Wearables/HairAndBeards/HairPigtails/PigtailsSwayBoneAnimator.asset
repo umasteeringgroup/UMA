@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 44ea7e4d7cd8f1340912b4dfdd1a693d, type: 3}
+  m_Name: PigtailsSwayBoneAnimator
+  m_EditorClassIdentifier: UMA_Core::UMA.SwayBoneAnimator
+  Chains:
+  - AnchorBoneName: Pigtail_l.003
+    ExcludedBoneNames: []
+  - AnchorBoneName: Pigtail_r.003
+    ExcludedBoneNames: []
+  AnchorBoneName: 
+  inertia: 0.822
+  limit: 1.13
+  elasticity: 1.2

@@ -23,11 +23,14 @@ namespace UMA
         public AnimationCurve curve = new AnimationCurve(new Keyframe(0, 0), new Keyframe(0.5f, 0.5f), new Keyframe(1, 1));
         public float minMapping = -1.0f; // The minimum value to map. This will be the base value when the adjusted input is 0.
         public float maxMapping = 1.0f; // The maximum value to map. This will be the maximum value when the adjusted input is 1.
+
+        public bool enabled = true;
+
 #if UNITY_EDITOR
         private DNACurve _TemplateCurve = null;
         public bool expanded;
         public bool selected;
-
+        public bool showHelp;
 
         public string title
         {
@@ -54,7 +57,7 @@ namespace UMA
             }
         }
 
-        protected float GetMappedValue(float value)
+        public float GetMappedValue(float value)
         { 
             if (curve != null && curve.length > 0)
             {
@@ -69,6 +72,7 @@ namespace UMA
 #if UNITY_EDITOR
         public virtual void DoGui(bool showDescription, bool showHelp, out AnimationCurve curveToCopy)
         {
+            this.showHelp = showHelp;
             curveToCopy = null;
             if (showHelp)
             {
@@ -80,6 +84,7 @@ namespace UMA
             // select: 0,1,0
             // select: 1,0,1
             EffectName = EditorGUILayout.DelayedTextField("Effect Name", EffectName);
+            enabled = EditorGUILayout.Toggle("Enabled", enabled);
             GUILayout.BeginHorizontal();
             curve = EditorGUILayout.CurveField("Curve", curve);
             if (curve != null)
@@ -104,7 +109,10 @@ namespace UMA
             GUILayout.EndHorizontal();
             minMapping = EditorGUILayout.DelayedFloatField("Min", minMapping);
             maxMapping = EditorGUILayout.DelayedFloatField("Max", maxMapping);
-            EditorGUILayout.HelpBox("You can load a template curve here. This will set the Min, Max and Curve values to the values in the template curve. The template curve is not saved.", MessageType.Info);
+            if (showHelp)
+            {
+                EditorGUILayout.HelpBox("You can load a template curve here. This will set the Min, Max and Curve values to the values in the template curve. The template curve is not saved.", MessageType.Info);
+            }
             bool wasNull = _TemplateCurve == null;
             _TemplateCurve = EditorGUILayout.ObjectField("Template Curve", _TemplateCurve, typeof(DNACurve), false) as DNACurve;
             if (_TemplateCurve != null && wasNull)

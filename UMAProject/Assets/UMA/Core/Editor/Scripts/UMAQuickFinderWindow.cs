@@ -43,7 +43,7 @@ namespace UMA.Editors
 
         private string statusMessage;
 
-        [MenuItem("UMA/Quick Finder", priority = 22)]
+        [MenuItem("UMA/Asset Management/Quick Finder", priority = 122)]
         public static void ShowWindow()
         {
             UMAQuickFinderWindow window = GetWindow<UMAQuickFinderWindow>(WindowTitle);

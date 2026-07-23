@@ -18,7 +18,7 @@ namespace UMA
 		[SerializeField]
 		protected string lastKnownDuplicateAssetPath = "";
 		[SerializeField]
-		protected EntityId lastKnownInstanceID = 0;
+		protected UMAObjectId lastKnownInstanceID = 0;
 
         #region INameProvider
         public string GetAssetName()
@@ -80,13 +80,13 @@ namespace UMA
 				{
 					lastKnownAssetPath = currentAssetPath;
 					lastKnownDuplicateAssetPath = UnityEditor.AssetDatabase.GenerateUniqueAssetPath(currentAssetPath);
-					lastKnownInstanceID = GetEntityId();
+					lastKnownInstanceID = this.GetUmaObjectId();
 					DoUpdate = true;
 				}
 				//The user has duplicated the file so update the paths AND the ID
 				else if (currentAssetPath != lastKnownAssetPath && currentAssetPath == lastKnownDuplicateAssetPath)
 				{
-					if (GetEntityId() == lastKnownInstanceID)
+					if (this.GetUmaObjectId() == lastKnownInstanceID)
 					{
 						lastKnownAssetPath = currentAssetPath;
 						lastKnownDuplicateAssetPath = UnityEditor.AssetDatabase.GenerateUniqueAssetPath(currentAssetPath);
@@ -96,7 +96,7 @@ namespace UMA
 						dnaTypeHash = GenerateUniqueDnaTypeHash();
 						lastKnownAssetPath = currentAssetPath;
 						lastKnownDuplicateAssetPath = UnityEditor.AssetDatabase.GenerateUniqueAssetPath(currentAssetPath);
-						lastKnownInstanceID = GetEntityId();
+						lastKnownInstanceID = this.GetUmaObjectId();
 					}
 					DoUpdate = true;
 				}
@@ -109,7 +109,7 @@ namespace UMA
 						lastKnownAssetPath = updatedlastKnownDuplicateAssetPath;
 						DoUpdate = true;
 					}
-					var updatedlastKnownInstanceID = GetEntityId();
+					var updatedlastKnownInstanceID = this.GetUmaObjectId();
 					if (updatedlastKnownInstanceID != lastKnownInstanceID)
 					{
 						lastKnownInstanceID = updatedlastKnownInstanceID;

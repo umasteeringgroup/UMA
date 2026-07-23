@@ -1,27 +1,31 @@
-﻿using UnityEngine;
+using UnityEngine;
+
+#if UNITY_EDITOR
+using UnityEditor;
+using UnityEngine.Rendering;
+#endif
 
 namespace UMA
 {
     public class UMABoneVisualizer : MonoBehaviour
     {
-
+        public UMAData umaData;
         public Transform rootNode;
         public bool DrawAsBones;
         public bool DrawAdjustBones;
-        public bool AlwaysDrawGizmos;
+        public bool AlwaysDrawGizmos = true;
+        public bool DrawBoneNames;
         public Mesh BoneMesh;
         public string Filter;
-        private string lastFilter;
-
-        private Transform[] childNodes;
-        private Vector3 Scale = new Vector3();
+        public Color BoneColor = new Color(0.1f, 0.65f, 1f, 1f);
+        public Color RootBoneColor = Color.green;
+        public Color SelectedBoneColor = Color.yellow;
+        public float LineThickness = 3f;
+        public float JointSize = 0.015f;
 
         void Start()
         {
-            if (rootNode == null || BoneMesh == null)
-            {
-                Setup();
-            }
+            Setup();
 
             if (Application.isPlaying)
             {
@@ -31,44 +35,30 @@ namespace UMA
             }
         }
 
-        /// <summary>
-        /// Find the root node and the Bone mesh if they aren't setup on the component.
-        /// </summary>
         private void Setup()
         {
-            if (rootNode == null)
+            if (umaData == null)
             {
-                rootNode = RecursiveFindBone(this.gameObject.transform, "Hips");
+                umaData = GetComponent<UMAData>();
+                if (umaData == null)
+                {
+                    umaData = GetComponentInParent<UMAData>();
+                }
+                if (umaData == null)
+                {
+                    umaData = GetComponentInChildren<UMAData>();
+                }
+            }
+
+            if (rootNode == null && umaData != null && umaData.skeleton != null)
+            {
+                rootNode = umaData.skeleton.GetRootTransform();
             }
 
             if (BoneMesh == null)
             {
                 BoneMesh = Resources.Load<Mesh>("PlaceholderAssets/BoneMesh");
             }
-        }
-
-        /// <summary>
-        /// Find a bone in the hierarchy
-        /// </summary>
-        /// <param name="bone"></param>
-        /// <param name="boneName"></param>
-        /// <returns></returns>
-        private Transform RecursiveFindBone(Transform bone, string boneName)
-        {
-            if (bone.name == boneName)
-            {
-                return bone;
-            }
-
-            for (int i = 0; i < bone.childCount; i++)
-            {
-                var result = RecursiveFindBone(bone.GetChild(i), boneName);
-                if (result != null)
-                {
-                    return result;
-                }
-            }
-            return null;
         }
 
         private void OnDrawGizmos()
@@ -79,9 +69,6 @@ namespace UMA
             }
         }
 
-        /// <summary>
-        /// Draw the bones
-        /// </summary>
         void OnDrawGizmosSelected()
         {
             DrawBoneGizmos();
@@ -89,99 +76,136 @@ namespace UMA
 
         void DrawBoneGizmos()
         {
-            if (rootNode == null)
+            if (umaData == null || umaData.skeleton == null)
             {
                 Setup();
             }
 
-            if (rootNode != null)
+            if (umaData == null || umaData.skeleton == null)
             {
-                if (childNodes == null || childNodes.Length == 0)
-                {
-                    //get all joints to draw
-                    PopulateChildren();
-                }
-                else if (childNodes.Length > 0)
-                {
-                    if (childNodes[0] == null || childNodes[0].gameObject == null || childNodes[0].gameObject.transform == null)
-                    {
-                        PopulateChildren();
-                    }
-                }
+                return;
+            }
 
-
-                foreach (Transform child in childNodes)
-                {
-                    if (transform == null)
-                    {
-                        Setup();
-                        return;
-                    }
-                    if (child == rootNode)
-                    {
-                        //list includes the root, if root then larger, green cube
-                        Gizmos.color = Color.green;
-                        Gizmos.DrawSphere(child.position, 0.01f);
-                    }
-                    else
-                    {
-                        if (!DrawAdjustBones)
-                        {
-                            if (child.gameObject.name.ToLower().Contains("adjust"))
-                            {
-                                continue;
-                            }
-                        }
-                        if (!string.IsNullOrEmpty(Filter))
-                        {
-                            if (!child.gameObject.name.ToLower().Contains(Filter.ToLower()))
-                            {
-                                continue;
-                            }
-                        }
-                        if (DrawAsBones && BoneMesh != null)
-                        {
-                            float BoneLength = Vector3.Distance(child.position, child.parent.position);
-
-                            Scale.Set(BoneLength / 10.0f, BoneLength / 10.0f, BoneLength);
-                            Vector3 relativePos = child.transform.position - child.parent.transform.position;
-
-                            if (relativePos.magnitude < 0.001f)
-                            {
-                                continue;
-                            }
-
-                            Quaternion rotation = (relativePos == Vector3.zero) ? Quaternion.identity : Quaternion.LookRotation(relativePos);
 #if UNITY_EDITOR
-                            if (child == UnityEditor.Selection.activeTransform)
-                            {
-                                Gizmos.color = Color.yellow;
-                            }
+            DrawSceneHandles();
+#else
+            DrawRuntimeGizmos();
 #endif
-                            Gizmos.DrawMesh(BoneMesh, child.parent.position, rotation, Scale);
-                            Gizmos.color = Color.green;
-                        }
-                        else
-                        {
-                            Gizmos.color = Color.blue;
-                            Gizmos.DrawLine(child.position, child.parent.position);
-                            Gizmos.DrawCube(child.position, new Vector3(.01f, .01f, .01f));
-                        }
-                    }
-                }
+        }
 
+#if UNITY_EDITOR
+        private void DrawSceneHandles()
+        {
+            CompareFunction previousZTest = Handles.zTest;
+            Handles.zTest = CompareFunction.Always;
+
+            try
+            {
+                foreach (UMASkeleton.BoneData bone in umaData.skeleton.boneHashData.Values)
+                {
+                    DrawBoneHandle(bone);
+                }
+            }
+            finally
+            {
+                Handles.zTest = previousZTest;
             }
         }
 
-        /// <summary>
-        /// Cache the bones
-        /// </summary>
+        private void DrawBoneHandle(UMASkeleton.BoneData bone)
+        {
+            if (bone == null || bone.boneTransform == null || !ShouldDrawBone(bone.boneTransform))
+            {
+                return;
+            }
+
+            Transform boneTransform = bone.boneTransform;
+            Transform parentTransform = GetParentTransform(bone);
+            Color color = GetBoneColor(boneTransform, parentTransform == null);
+            float handleSize = HandleUtility.GetHandleSize(boneTransform.position);
+            float jointSize = Mathf.Max(0.001f, JointSize * handleSize);
+
+            using (new Handles.DrawingScope(color))
+            {
+                if (parentTransform != null)
+                {
+                    Handles.DrawAAPolyLine(Mathf.Max(1f, LineThickness), parentTransform.position, boneTransform.position);
+                }
+
+                Handles.SphereHandleCap(0, boneTransform.position, Quaternion.identity, jointSize, EventType.Repaint);
+
+                if (DrawBoneNames)
+                {
+                    Handles.Label(boneTransform.position, boneTransform.name);
+                }
+            }
+        }
+#endif
+
+        private void DrawRuntimeGizmos()
+        {
+            foreach (UMASkeleton.BoneData bone in umaData.skeleton.boneHashData.Values)
+            {
+                if (bone == null || bone.boneTransform == null || !ShouldDrawBone(bone.boneTransform))
+                {
+                    continue;
+                }
+
+                Transform parentTransform = GetParentTransform(bone);
+                Gizmos.color = GetBoneColor(bone.boneTransform, parentTransform == null);
+                if (parentTransform != null)
+                {
+                    Gizmos.DrawLine(parentTransform.position, bone.boneTransform.position);
+                }
+                Gizmos.DrawSphere(bone.boneTransform.position, JointSize);
+            }
+        }
+
+        private Transform GetParentTransform(UMASkeleton.BoneData bone)
+        {
+            if (bone == null || umaData == null || umaData.skeleton == null)
+            {
+                return null;
+            }
+
+            UMASkeleton.BoneData parentBone;
+            if (umaData.skeleton.boneHashData.TryGetValue(bone.parentBoneNameHash, out parentBone) && parentBone != null)
+            {
+                return parentBone.boneTransform;
+            }
+
+            return bone.boneTransform != null ? bone.boneTransform.parent : null;
+        }
+
+        private bool ShouldDrawBone(Transform boneTransform)
+        {
+            if (boneTransform == null)
+            {
+                return false;
+            }
+
+            if (!DrawAdjustBones && boneTransform.name.ToLowerInvariant().Contains("adjust"))
+            {
+                return false;
+            }
+
+            return string.IsNullOrEmpty(Filter) || boneTransform.name.ToLowerInvariant().Contains(Filter.ToLowerInvariant());
+        }
+
+        private Color GetBoneColor(Transform boneTransform, bool isRoot)
+        {
+#if UNITY_EDITOR
+            if (boneTransform == Selection.activeTransform)
+            {
+                return SelectedBoneColor;
+            }
+#endif
+            return isRoot ? RootBoneColor : BoneColor;
+        }
+
         public void PopulateChildren()
         {
-            if (rootNode != null)
-            {
-                childNodes = rootNode.GetComponentsInChildren<Transform>();
-            }
+            Setup();
         }
     }
 }

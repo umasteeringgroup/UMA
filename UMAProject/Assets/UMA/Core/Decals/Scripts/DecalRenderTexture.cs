@@ -22,6 +22,18 @@ namespace UMA {
 	public sealed class DecalRenderTexture : ScriptableObject {
 		private DecalRenderTexture() { }
 
+		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+		private static void RuntimeInitializeOnLoad()
+		{
+			_lastStamp = null;
+			_snapshotSequence = 0;
+			_dbgSequence = 0;
+			_dbgSmr = null;
+			_dbgSmrTriangles = null;
+			_dbgTriToOrdinal = null;
+			lastSlotForIndex = null;
+		}
+
 		private static bool NeedsRenderTargetYFlip()
 		{
 			if(UMAAssetIndexer.Instance.generator.flipDecalMode == UMAGeneratorBuiltin.FlipDecalMode.Auto) {
@@ -71,6 +83,7 @@ namespace UMA {
 			public int bleedPixels = 2; // #15.2 edge dilation
 			public bool useHitNormalForProjection = false; // project using hit triangle normal instead of ray dir
 			public float uvExpandPixels = 0.75f; // expand stamped tris in UV space (pixels) to reduce seams
+			public string targetOverlayGroup; // replay target; falls back to the source overlay group for legacy callers
 		}
 
 		private static int _dbgSequence;
@@ -400,10 +413,16 @@ namespace UMA {
 
 				// Prepare Stamp Asset cache
 				var stampAsset = ScriptableObject.CreateInstance<DecalRTStampAsset>();
-				stampAsset.overlayGroup = overlay != null ? overlay.overlayGroup : null;
+				stampAsset.sourceOverlay = overlay;
+				stampAsset.sourceOverlayName = overlay != null
+					? (string.IsNullOrEmpty(overlay.overlayName) ? overlay.name : overlay.overlayName)
+					: null;
+				stampAsset.overlayGroup = !string.IsNullOrWhiteSpace(options.targetOverlayGroup)
+					? options.targetOverlayGroup.Trim()
+					: (overlay != null ? overlay.overlayGroup : null);
 				if (string.IsNullOrEmpty(stampAsset.overlayGroup))
 				{
-					LogWarn("DecalRenderTexture: Stamping overlay with empty overlayGroup. RT stamps now replay only by overlayGroup; this stamp will not be reapplied unless you set OverlayDataAsset.overlayGroup on the source overlay.");
+					LogWarn("DecalRenderTexture: The target overlay group is empty. This stamp cannot be matched during atlas rebuilds. Set CreateDecal.TargetOverlayGroup or the source OverlayDataAsset.overlayGroup.");
 				}
 
 				stampAsset.bleedPixels = options.bleedPixels;
@@ -538,8 +557,9 @@ namespace UMA {
 
 		/// <summary>
 		/// Apply a specific slot's stamp into a provided target RenderTexture during compositing.
-		/// Limits drawing to SlotStamp with the exact slotName, resolves overlay channel by materialPropertyName
-		/// against the overlay's UMAMaterial channels, clips to the runtime slot UVArea, and uses the same masking rule.
+		/// Limits drawing to the atlas callback whose overlay group and slot identity match the recorded stamp.
+		/// Slot identity uses slotGroup when recorded, otherwise slotName. Resolves the source channel by
+		/// materialPropertyName, clips to the runtime slot UVArea, and uses the same masking rule.
 		/// Returns true if anything was drawn.
 		/// </summary>
 		public static bool ApplySlotStamps(
@@ -548,11 +568,17 @@ namespace UMA {
 		DecalRTStampAsset stamp,
 		TextureEventParms parms)
 		{
+			if (parms == null)
+			{
+				LogWarn("ApplySlotStamps: Missing required parameter: parms");
+				return false;
+			}
 			string materialPropertyName = parms.materialPropertyName;
 			RenderTexture targetTexture = parms.renderTexture;
-         string srcOverlayGroup      = parms.overlayData.asset != null ? parms.overlayData.asset.overlayGroup : null;
+			OverlayDataAsset targetOverlay = parms.overlayData != null ? parms.overlayData.asset : null;
+			string targetOverlayGroup = targetOverlay != null ? targetOverlay.overlayGroup : null;
 
-            if (avatar == null || umaData == null || stamp == null || string.IsNullOrEmpty(materialPropertyName) || targetTexture == null) 
+            if (avatar == null || umaData == null || stamp == null || string.IsNullOrEmpty(materialPropertyName) || targetTexture == null || targetOverlay == null)
 			{
 				var missing = new List<string>(6);
 				if(avatar == null)
@@ -565,6 +591,8 @@ namespace UMA {
 					missing.Add("materialPropertyName");
 				if(targetTexture == null)
 					missing.Add("targetTexture");
+				if(targetOverlay == null)
+					missing.Add("targetOverlay");
 				LogWarn("ApplySlotStamps: Missing required parameter(s): " + string.Join(", ", missing));
 				return false;
 			}
@@ -573,8 +601,8 @@ namespace UMA {
 				// as the overlay that was originally stamped.
 				if (!string.IsNullOrEmpty(stamp.overlayGroup))
 				{
-					if (string.IsNullOrEmpty(srcOverlayGroup) ||
-						!string.Equals(stamp.overlayGroup, srcOverlayGroup, StringComparison.Ordinal))
+					if (string.IsNullOrEmpty(targetOverlayGroup) ||
+						!string.Equals(stamp.overlayGroup, targetOverlayGroup, StringComparison.Ordinal))
 					{
 						return false;
 					}
@@ -590,23 +618,38 @@ namespace UMA {
                 LogInfo($"ApplySlotStamps: Begin for property '{materialPropertyName}'. ColorSpace={QualitySettings.activeColorSpace}");
 				//LogTextureInfo("ApplySlotStamps target RT", targetTexture);
 				//Debug.Log("ApplySlotStamps: Begin for property '" + materialPropertyName + "'.");
-                // Resolve overlay
-                OverlayDataAsset overlay = parms.overlayData.asset;
-
-				overlay.EnsureMaterial();
-				if (overlay.material == null || overlay.material.channels == null)
+				// The triggering overlay selects the target group. The saved source overlay supplies
+				// the actual decal textures, so a decal overlay does not have to share the target group.
+				OverlayDataAsset sourceOverlay = stamp.sourceOverlay;
+				if (sourceOverlay == null && !string.IsNullOrEmpty(stamp.sourceOverlayName) && UMAAssetIndexer.Instance != null)
 				{
-					LogWarn("ApplySlotStamps: Overlay material or material channels are missing.");
+					sourceOverlay = UMAAssetIndexer.Instance.GetAsset<OverlayDataAsset>(stamp.sourceOverlayName);
+				}
+				if (sourceOverlay == null && string.IsNullOrEmpty(stamp.sourceOverlayName))
+				{
+					// Backward compatibility for stamps created before source overlays were recorded.
+					sourceOverlay = targetOverlay;
+				}
+				if (sourceOverlay == null)
+				{
+					LogWarn($"ApplySlotStamps: Source overlay '{stamp.sourceOverlayName}' could not be resolved.");
 					return false;
 				}
-				if (overlay.textureList == null || overlay.textureList.Length == 0)
+
+				sourceOverlay.EnsureMaterial();
+				if (sourceOverlay.material == null || sourceOverlay.material.channels == null)
 				{
-					LogWarn("ApplySlotStamps: Overlay texture list is empty.");
+					LogWarn("ApplySlotStamps: Source overlay material or material channels are missing.");
+					return false;
+				}
+				if (sourceOverlay.textureList == null || sourceOverlay.textureList.Length == 0)
+				{
+					LogWarn("ApplySlotStamps: Source overlay texture list is empty.");
 					return false;
 				}
 
-				int channelIndex = overlay.material.GetChannelIndex(materialPropertyName);
-				if(channelIndex < 0 || channelIndex >= overlay.textureList.Length) {
+				int channelIndex = sourceOverlay.material.GetChannelIndex(materialPropertyName);
+				if(channelIndex < 0 || channelIndex >= sourceOverlay.textureList.Length) {
 					// Channel for property not found in overlay
 					return false;
 				}
@@ -622,9 +665,9 @@ namespace UMA {
 
 				// Optional masking
 				Texture maskTex = null;
-				try { if(overlay.alphaMask != null) maskTex = overlay.alphaMask; } catch { }
-				if(maskTex == null && overlay.textureList != null && overlay.textureList.Length > 0) {
-					maskTex = overlay.textureList[0];
+				try { if(sourceOverlay.alphaMask != null) maskTex = sourceOverlay.alphaMask; } catch { }
+				if(maskTex == null && sourceOverlay.textureList != null && sourceOverlay.textureList.Length > 0) {
+					maskTex = sourceOverlay.textureList[0];
 				}
 
 				stampMat.SetFloat("_UseMask", maskTex != null ? 1f : 0f);
@@ -653,26 +696,11 @@ namespace UMA {
 							continue;
 						if (slotStamp.debugDontUse)
 							continue;
-						SlotData slot = null;
-						if (!string.IsNullOrEmpty(slotStamp.slotName))
+						SlotData slot = parms.slotData;
+						if (!SlotStampMatchesSlot(slotStamp, slot))
 						{
-							slot = umaData.umaRecipe.GetSlot(slotStamp.slotName);
+							continue;
 						}
-						if (slot == null && !string.IsNullOrEmpty(slotStamp.slotGroup))
-						{
-							slot = umaData.umaRecipe.GetSlotBySlotGroup(slotStamp.slotGroup);
-						}
-						if (slot == null && slotStamp.slotHash != 0)
-						{
-							try
-							{
-								slot = umaData.GetSlotByHash(slotStamp.slotHash);
-							}
-							catch { }
-						}
-
-						// ?? No slot to apply it to!
-						if (slot == null) continue;
 
                         // SlotData.UVArea is treated as bottom-left UV space (same convention as mesh UVs).
                         // I need the UV Area that is stored on the Slot. Should it be stored on the Overlay instead?
@@ -682,10 +710,10 @@ namespace UMA {
                         if (slot == null || slot.asset == null)
 							continue;
 
-                       // The stamp set itself is already gated by overlayGroup above; we still require the
-						// triggering overlay asset to exist on the slot to avoid applying a group-match stamp
-						// to unrelated slots.
-						if (!slot.hasOverlay(parms.overlayData.asset.nameHash))
+						// Group replay must not depend on which overlay happened to raise the atlas event.
+						// A group can contain several overlay assets and the first callback may not be the
+						// exact overlay used by this slot.
+						if (!SlotHasOverlayGroup(slot, stamp.overlayGroup))
 							continue;
 
 						int vcount = (slotStamp.normBaseUV != null) ? slotStamp.normBaseUV.Length : 0;
@@ -789,7 +817,7 @@ namespace UMA {
 						}
 
 						// Source texture for resolved channel
-						var srcTex = overlay.textureList[channelIndex];
+						var srcTex = sourceOverlay.textureList[channelIndex];
 						if (srcTex == null)
 							continue;
 						stampMat.color = Color.white;
@@ -911,6 +939,49 @@ namespace UMA {
 			#endif
 		}
 
+		private static bool SlotHasOverlayGroup(SlotData slot, string overlayGroup)
+		{
+			if (slot == null || string.IsNullOrEmpty(overlayGroup))
+			{
+				return false;
+			}
+
+			var overlays = slot.GetOverlayList();
+			if (overlays == null)
+			{
+				return false;
+			}
+
+			for (int overlayIndex = 0; overlayIndex < overlays.Count; overlayIndex++)
+			{
+				var overlay = overlays[overlayIndex];
+				if (overlay != null && overlay.asset != null &&
+					string.Equals(overlay.asset.overlayGroup, overlayGroup, StringComparison.Ordinal))
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
+		private static bool SlotStampMatchesSlot(DecalRTStampAsset.SlotStamp slotStamp, SlotData slot)
+		{
+			if (slotStamp == null || slot == null)
+			{
+				return false;
+			}
+
+			if (!string.IsNullOrEmpty(slotStamp.slotGroup))
+			{
+				string runtimeGroup = slot.asset != null ? slot.asset.slotGroup : null;
+				return !string.IsNullOrEmpty(runtimeGroup) &&
+					string.Equals(slotStamp.slotGroup, runtimeGroup, StringComparison.Ordinal);
+			}
+
+			return !string.IsNullOrEmpty(slotStamp.slotName) &&
+				string.Equals(slotStamp.slotName, slot.slotName, StringComparison.Ordinal);
+		}
+
 		#region Mesh Raycast (copied style from DecalSlotBuilder)
 		private struct MeshHit {
 			public SkinnedMeshRenderer smr;
@@ -930,8 +1001,10 @@ namespace UMA {
 			hitPoint = default;
 			hitNormal = default;
 
-			var smrs = avatar.GetComponentsInChildren<SkinnedMeshRenderer>(true);
-			if(smrs == null || smrs.Length == 0)
+
+			var smrs = new List<SkinnedMeshRenderer>();
+			avatar.GetComponentsInChildren<SkinnedMeshRenderer>(true, smrs);
+			if(smrs == null || smrs.Count == 0)
 				return false;
 
 			Mesh bakeMesh = new Mesh();

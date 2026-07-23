@@ -13,7 +13,7 @@ namespace UMA.Editors
         private static bool initialSearchCompleted = false;
         private static Vector2 scrollPosition = Vector2.zero;
 
-        [MenuItem("UMA/Favorites")]
+        [MenuItem("UMA/Asset Management/Favorites")]
         public static void ShowWindow()
         {
             RefreshFavoriteListCategories();

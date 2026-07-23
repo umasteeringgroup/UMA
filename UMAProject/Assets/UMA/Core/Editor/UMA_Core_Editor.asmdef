@@ -3,6 +3,7 @@
     "rootNamespace": "",
     "references": [
         "UMA_Core",
+        "Assembly-CSharp",
         "Unity.Addressables.Editor",
         "Unity.ResourceManager",
         "Unity.Addressables",

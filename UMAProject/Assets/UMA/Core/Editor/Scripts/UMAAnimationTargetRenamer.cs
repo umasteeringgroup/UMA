@@ -22,7 +22,7 @@ namespace UMA
 		public List<RemapperCurveData> CurveDatas;
 		private bool initialized;
 
-		[MenuItem("UMA/Animation Clip Target Renamer")]
+		[MenuItem("UMA/Animation/Animation Clip Target Renamer")]
 		public static void OpenWindow()
 		{
 			UMAAnimationPathRenamer renamer = GetWindow<UMAAnimationPathRenamer>("Animation Clip Target Renamer");

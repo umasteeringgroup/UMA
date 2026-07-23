@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &1
+MonoBehaviour:
+  m_ObjectHideFlags: 53
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 88da235ee80df394e99ee865506eb9e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.HighDefinition.Editor::UnityEditor.Rendering.HighDefinition.HDUserSettings
+  m_WizardPopupAlreadyShownOnce: 0
+  m_WizardNeedRestartAfterChangingToDX12: 0
+  m_WizardNeedToRunFixAllAgainAfterDomainReload: 0
+  m_WizardFixAllAfterDomainReloadInclusiveMode: 0
+  m_WizardPopupAtStart: 1
+  m_OpenConfigs: 01000000

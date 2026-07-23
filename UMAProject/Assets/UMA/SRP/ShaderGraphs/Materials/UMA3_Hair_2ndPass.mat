@@ -26,12 +26,10 @@ Material:
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - _SURFACE_TYPE_TRANSPARENT
-  m_InvalidKeywords:
-  - BOOLEAN_ANISOTROPIC_ON
-  - _ENUMCLIPQUALITY_ON_DITHER
-  m_LightmapFlags: 2
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
+  m_DoubleSidedGI: 1
   m_CustomRenderQueue: 3000
   stringTagMap:
     RenderType: Transparent
@@ -51,6 +49,18 @@ Material:
         m_Texture: {fileID: 2800000, guid: 1e1b55cbbcc61dd4bbdcb318022edd7b, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _DetailAlbedoMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailMask:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailNormalMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _EmissionMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -67,12 +77,24 @@ Material:
         m_Texture: {fileID: 2800000, guid: ce7333787ae7c804085f021d89588716, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _MainTex:
+        m_Texture: {fileID: 2800000, guid: 30084075ed2d2c741abbe76618b30f1c, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
         m_Texture: {fileID: 2800000, guid: fba38fae484e7574a946d1527940b2b2, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _OcclusionMap:
         m_Texture: {fileID: 2800000, guid: 3b5730ae8280ddc4c987dc4cfb524c44, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ParallaxMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SpecGlossMap:
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - unity_Lightmaps:
@@ -91,22 +113,35 @@ Material:
     m_Floats:
     - BOOLEAN_ANISOTROPIC: 1
     - _AOOccludeAll: 1
+    - _AddPrecomputedVelocity: 0
     - _AlphaClip: 0
     - _AlphaClip2: 0.5
     - _AlphaModulation: 2
     - _AlphaToMask: 0
     - _Blend: 0
     - _BlendModePreserveSpecular: 0
-    - _BumpScale: 1
+    - _BumpScale: 0.5
     - _CastShadows: 0
+    - _ClearCoatMask: 0
+    - _ClearCoatSmoothness: 0
     - _Cull: 0
+    - _Cutoff: 0.5
+    - _DetailAlbedoMapScale: 1
+    - _DetailNormalMapScale: 1
     - _Displace: 0.005
     - _DstBlend: 10
     - _DstBlendAlpha: 10
     - _ENUMCLIPQUALITY_ON: 2
+    - _EnvironmentReflections: 0
     - _FlowMapFlipGreen: 0
+    - _GlossMapScale: 0
+    - _Glossiness: 0
+    - _GlossyReflections: 0
     - _ID_Intesity: 1
+    - _Metallic: 0.2
     - _OcclusionInensity: 1
+    - _OcclusionStrength: 1
+    - _Parallax: 0.005
     - _QueueControl: 0
     - _QueueOffset: 0
     - _ReceiveShadows: 1
@@ -114,9 +149,11 @@ Material:
     - _Root_Shift: 0.2
     - _Root_Tip_Intensity: 0.4
     - _ShadowClip: 0.5
-    - _Smoothness: 0.25
+    - _Smoothness: 0.193
+    - _SmoothnessTextureChannel: 0
+    - _SpecularHighlights: 1
     - _SpecularMix: 0.5
-    - _SpecularMultiplier: 0.25
+    - _SpecularMultiplier: 0.199
     - _SpecularPowerScale: 30
     - _SpecularShift: 0
     - _SpecularShiftMax: 0
@@ -136,9 +173,12 @@ Material:
     - _ZWriteControl: 0
     m_Colors:
     - _BaseColor: {r: 0.8196079, g: 0.8196079, b: 0.8196079, a: 1}
+    - _Color: {r: 0.8196079, g: 0.8196079, b: 0.8196079, a: 1}
+    - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _EmissiveColor: {r: 0, g: 0, b: 0, a: 0}
     - _Normal: {r: 0, g: 0, b: 0, a: 0}
     - _RootColor: {r: 0.8196079, g: 0.8196079, b: 0.8196079, a: 1}
+    - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
     - _SpecularTint: {r: 0.654902, g: 0.24259722, b: 0.00759451, a: 1}
     - _Tip_Color: {r: 0.8196079, g: 0.8196079, b: 0.8196079, a: 1}
     - _VertexBaseColor: {r: 0, g: 0, b: 0, a: 0}

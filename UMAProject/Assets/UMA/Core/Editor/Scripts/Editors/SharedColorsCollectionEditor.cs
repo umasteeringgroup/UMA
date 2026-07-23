@@ -23,6 +23,23 @@ namespace UMA.Editors
             recipe.sharedColors = sharedColors.ToArray();
         }
 
+        public void OpenSharedColor(UMAData.UMARecipe recipe, int sharedColorIndex)
+        {
+            if (recipe == null || recipe.sharedColors == null)
+            {
+                return;
+            }
+
+            _foldout = true;
+            for (int i = 0; i < recipe.sharedColors.Length; i++)
+            {
+                if (recipe.sharedColors[i] != null)
+                {
+                    recipe.sharedColors[i].foldout = i == sharedColorIndex;
+                }
+            }
+        }
+
         public bool OnGUI(UMAData.UMARecipe _recipe)
         {
             GUILayout.BeginHorizontal(EditorStyles.toolbarButton);

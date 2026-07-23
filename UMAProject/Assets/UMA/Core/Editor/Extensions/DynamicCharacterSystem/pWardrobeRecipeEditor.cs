@@ -696,6 +696,17 @@ namespace UMA.Editors
                 EditorGUILayout.HelpBox("Compatible races are used to assign this recipe to a race or races. Recipes are restricted to the races to which they are assigned - you cannot assign wardrobe items to races that are not compatible. Thumbnails can be used to attach sprites to the recipe for use in UI design.", MessageType.Info);
             }
 			GUILayout.Space(10);
+			//		public bool thumbnailFromTexture;
+		    //public Rect thumbnailRect = new Rect(0.25f, 0.25f, 0.5f, 0.5f);
+
+			EditorGUI.BeginChangeCheck();
+			EditorGUILayout.PropertyField(serializedObject.FindProperty("thumbnailFromTexture"), new GUIContent("Generate from Texture?"));
+			EditorGUILayout.PropertyField(serializedObject.FindProperty("thumbnailRect"), new GUIContent("Thumbnail Rect (if generating from texture)"));
+			if (EditorGUI.EndChangeCheck())
+			{
+				serializedObject.ApplyModifiedProperties();
+				doUpdate = true; 
+			}
 			return doUpdate;
 		}
 
@@ -780,7 +791,7 @@ namespace UMA.Editors
 			{
 				foreach (MeshHideAsset theAsset in recipe.MeshHideAssets)
 				{
-					if (theAsset.GetEntityId() == mha.GetEntityId())
+					if (theAsset.GetUmaObjectId() == mha.GetUmaObjectId())
 					{
 						found = true;
 						break;
@@ -795,7 +806,7 @@ namespace UMA.Editors
 			{
 				foreach (MeshModifier theMM in recipe.MeshModifiers)
 				{
-					if (theMM.GetEntityId() == mm.GetEntityId())
+					if (theMM.GetUmaObjectId() == mm.GetUmaObjectId())
 					{
 						found = true;
 						break;
@@ -967,7 +978,7 @@ namespace UMA.Editors
 			List<string> newSuppressWardrobeSlot = new List<string>();
 			if (selectedWardrobeSlotIndex == -1)
 			{
-				EditorGUILayout.LabelField("No Compatible Races set. You need to select a compatible race in order to set a wardrobe slot");
+				EditorGUILayout.LabelField("No Compatible Races set. You need to select a compatible race in order to set a wardrobe region");
 				newWardrobeSlot = "None";
 			}
 			else if (selectedWardrobeSlotIndex == -2)
@@ -979,7 +990,7 @@ namespace UMA.Editors
 			{
 				newWardrobeSlot = wardrobeSlot;
 				GUILayout.BeginHorizontal();
-				EditorGUILayout.PrefixLabel("Wardrobe Slot");
+				EditorGUILayout.PrefixLabel("Wardrobe Region");
 				if (GUILayout.Button(wardrobeSlot, EditorStyles.miniButton))
 				{
 					SelectingSlot = !SelectingSlot;
@@ -997,7 +1008,7 @@ namespace UMA.Editors
 					}
 					GUILayout.EndHorizontal();
 					GUILayout.BeginHorizontal();
-					GUILayout.Label("Select Wardrobe Slot or press cancel");
+					GUILayout.Label("Select Wardrobe Region or press cancel");
 					if (GUILayout.Button("Cancel", EditorStyles.miniButton, GUILayout.Width(70)))
 					{
 						SelectingSlot = false;
@@ -1038,7 +1049,7 @@ namespace UMA.Editors
 			}
 			if (ShowHelp)
 			{
-				EditorGUILayout.HelpBox("Wardrobe Slot: This assigns the recipe to a Wardrobe Slot. The wardrobe slots are defined on the race. Characters can have only one recipe per Wardrobe Slot at a time, so for example, adding a 'beard' recipe to a character will replace the existing 'beard' if there is one", MessageType.Info);
+				EditorGUILayout.HelpBox("Wardrobe Region: This assigns the recipe to a Wardrobe Region. The wardrobe regions are defined on the race. Characters can have only one recipe per Wardrobe Region at a time (unless the recipe is marked cumulative), so for example, adding a 'beard' recipe to a character will replace the existing 'beard' if there is one", MessageType.Info);
 			}
 			#endregion
 
@@ -1071,7 +1082,7 @@ namespace UMA.Editors
 			*/
 			if (ShowHelp)
 			{
-				EditorGUILayout.HelpBox("Suppress: This will stop a different wardrobe slot from displaying. For example, if you have a full-length robe assigned to a 'chest' wardrobe slot, you would want to suppress whatever is assigned to the 'legs' wardrobe slot, so they don't poke through. This is typically used for dresses, robes, and other items that cover multiple body areas.", MessageType.Info);
+				EditorGUILayout.HelpBox("Suppress: This will stop a different wardrobe region from displaying. For example, if you have a full-length robe assigned to a 'chest' wardrobe region, you would want to suppress whatever is assigned to the 'legs' wardrobe region, so they don't poke through. This is typically used for dresses, robes, and other items that cover multiple body areas.", MessageType.Info);
 			}
 			#endregion
 
@@ -1266,6 +1277,10 @@ namespace UMA.Editors
 						GUILayout.Space(10);
 						EditorGUILayout.LabelField(mha.name, GUILayout.ExpandWidth(true));
 						GUILayout.Label($"[{mha.AssetSlotName}]", GUILayout.Width(90.0f));
+						if (GUILayout.Button("ping", GUILayout.Width(65)))
+						{
+							EditorGUIUtility.PingObject(mha);
+						}
 						if (GUILayout.Button("Inspect", GUILayout.Width(65)))
 						{
 							InspectMe.Add(mha);
@@ -1345,6 +1360,10 @@ namespace UMA.Editors
 					{
 						EditorGUILayout.LabelField(mm.name, GUILayout.ExpandWidth(true));
 						//GUILayout.Label($"[{mm.SlotName}]", GUILayout.Width(90.0f));
+						if (GUILayout.Button("ping", GUILayout.Width(65)))
+						{
+							EditorGUIUtility.PingObject(mm);
+						}
 						if (GUILayout.Button("Inspect", GUILayout.Width(65)))
 						{
 							InspectMe.Add(mm);
@@ -1633,7 +1652,7 @@ namespace UMA.Editors
             {
                 foreach (MeshModifier theMM in recipe.MeshModifiers)
                 {
-                    if (theMM.GetEntityId() == mm.GetEntityId())
+                    if (theMM.GetUmaObjectId() == mm.GetUmaObjectId())
                     {
                         found = true;
                         break;
@@ -1657,7 +1676,7 @@ namespace UMA.Editors
             {
                 foreach (MeshHideAssetCollection theAsset in recipe.MeshHideAssetCollections)
                 {
-                    if (theAsset.GetEntityId() == mhac.GetEntityId())
+                    if (theAsset.GetUmaObjectId() == mhac.GetUmaObjectId())
                     {
                         found = true;
                         break;
@@ -1699,7 +1718,7 @@ namespace UMA.Editors
                 {
 					if (theAsset!=null)
 					{
-						if (theAsset.GetEntityId() == mha.GetEntityId())
+						if (theAsset.GetUmaObjectId() == mha.GetUmaObjectId())
 						{
 							found = true;
 							break;

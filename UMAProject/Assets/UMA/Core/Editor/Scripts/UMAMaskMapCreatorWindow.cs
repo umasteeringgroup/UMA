@@ -48,7 +48,7 @@ namespace UMA.Editors
         private int customWidth = 1024;
         private int customHeight = 1024;
 
-        [MenuItem("UMA/Textures/Create MaskMap", priority = 25)]
+        [MenuItem("UMA/Textures/Create MaskMap", priority = 125)]
         private static void OpenWindow()
         {
             UMAMaskMapCreatorWindow window = GetWindow<UMAMaskMapCreatorWindow>(true, "UMA MaskMap Creator");

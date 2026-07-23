@@ -48,27 +48,41 @@ MonoBehaviour:
   overlayStamps:
   - name: AutoRTDecals
     overlays: []
-    Groups: []
+    Groups:
+    - Skin
     stamps:
+    - {fileID: 11400000, guid: 1baee6776968d7c4f91d9b5f89c4dfd0, type: 2}
+    - {fileID: 11400000, guid: b44f850c7e2022f4e8fc9d421b7a2c88, type: 2}
+    - {fileID: 11400000, guid: 84196ab6bb20f0b49aa4c22b4242e0a6, type: 2}
+    - {fileID: 11400000, guid: f5e8fdbbd95ac8041afb86b873ccaaf0, type: 2}
+    - {fileID: 11400000, guid: 0cd1ac40a68bbaa47842673a3fcc77c7, type: 2}
+    - {fileID: 11400000, guid: f505cce46f136784aa5043afd249348f, type: 2}
+    - {fileID: 11400000, guid: 68c3a272092d76645b58add94e08a4d5, type: 2}
+    - {fileID: 11400000, guid: bf4b7a51bdb65ee4d8c01a9223be6482, type: 2}
+    - {fileID: 11400000, guid: a088532af960f5347b736c5979e5a168, type: 2}
+    - {fileID: 11400000, guid: be055fa93df71f84cbe391f8b74e61c6, type: 2}
+    - {fileID: 11400000, guid: a1393eac9f75b124e9adb3c12c0494b8, type: 2}
+    - {fileID: 11400000, guid: 9c72b5c5c01ac0a429b3806d54c3835f, type: 2}
+    - {fileID: 11400000, guid: 98414a88edc58f94a939f51b54232c19, type: 2}
+    - {fileID: 11400000, guid: b80c0439fa3534d41bb0d88204407b2d, type: 2}
+    - {fileID: 11400000, guid: ff8faf3c4e4ec0f4095c8defe33c16bd, type: 2}
     - {fileID: 0}
     - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 11400000, guid: ba98789ba9d926640b17d1e5f086ee69, type: 2}
-    - {fileID: 11400000, guid: d309baae1a054f2498cd022a86d14bc3, type: 2}
-    - {fileID: 11400000, guid: 057f3cfd84b24ba4783bd13b7aeefbe0, type: 2}
-    - {fileID: 11400000, guid: 5dc7127464dc47a48ab0552829175064, type: 2}
-    - {fileID: 11400000, guid: 73310e01d2952794fa5899ff34df1a34, type: 2}
-    - {fileID: 11400000, guid: 0eb221390dc419348aebcdf8cbc0292f, type: 2}
-    - {fileID: 11400000, guid: 76032230dd1c5224996c7f9ca9a351f2, type: 2}
+    - {fileID: 11400000, guid: 20a3d5e7c945f0541ac5a526ff618574, type: 2}
+    - {fileID: 11400000, guid: c9d8e88dcd674154ab4531a43df49520, type: 2}
+    - {fileID: 11400000, guid: a190557bcddb0f346b4c59853dd73ca3, type: 2}
+    - {fileID: 11400000, guid: 83f433db78c1eda4cab8823e34b5184b, type: 2}
+    - {fileID: 11400000, guid: 362e438fe104a7940859fe7335c5092c, type: 2}
+    - {fileID: 11400000, guid: d71735b287375324e82a6a630a8e82fe, type: 2}
+    - {fileID: 11400000, guid: 9c016234e8d476043af20aca6337c44b, type: 2}
+    - {fileID: 11400000, guid: 62532ce2e615a0a42852f6db2cccbd04, type: 2}
+    - {fileID: 11400000, guid: 4166a42216912a04bbf32e8245e29f2a, type: 2}
+    - {fileID: 11400000, guid: 0e768c898910d2d4c9a2ba83a3e3651b, type: 2}
+    - {fileID: 11400000, guid: fe9346d1149d79b44812ebb1338e95ae, type: 2}
+    - {fileID: 11400000, guid: 0c7bcee13dda2bb47bbe27d5309b4943, type: 2}
+    - {fileID: 11400000, guid: 2b9c1e2e84511de42942d4fd2512f320, type: 2}
+    - {fileID: 11400000, guid: ed5e6c8d277ce3440866cd5676cd9ecb, type: 2}
+    - {fileID: 11400000, guid: 567f96a4edc09164284365d824981bc2, type: 2}
+    - {fileID: 11400000, guid: b667ea35f8f7ccd41a10eae7f33d0f61, type: 2}
   enableDebug: 0
   rgbOnlyDilation: 1

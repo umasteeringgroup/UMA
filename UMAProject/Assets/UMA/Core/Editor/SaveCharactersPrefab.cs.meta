@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: a45e384cbb72ef3468891c0dde78c0e8
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 14249
+  packageName: UMA Power Tools 2
+  packageVersion: 2.10.1
+  assetPath: Assets/UMA/Extensions/UMAPowerTools/Scripts/Editor/SaveCharactersPrefab.cs
+  uploadId: 385976

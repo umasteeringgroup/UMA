@@ -50,8 +50,12 @@ namespace UMA
 		{
 			public UMAMeshData meshData;
 			public int[] targetSubmeshIndices;
-			public BitArray[] triangleMask;
+            public BitArray[] triangleMask;
             public SlotData slotData;
+            // UMAJobifiedMeshCombiner sets this only for modifier stacks that can be
+            // represented by the MeshData API's sparse Burst path. Other combiners and
+            // unsupported/custom adjustment types retain their managed preprocessing.
+            public bool applyMeshModifiersInJobs;
 		}
 
 		private enum MeshComponents
@@ -914,7 +918,7 @@ namespace UMA
                 long diff = (long)a[ia].hash - (long)b[ib].hash;
                 if (diff == 0)
                 {
-                    // Same hash – keep first (a), skip duplicate
+                    // Same hash ï¿½ keep first (a), skip duplicate
                     dest[id++] = a[ia];
                     ia++;
                     ib++;
@@ -1218,36 +1222,30 @@ namespace UMA
 
 #if USE_NATIVE_ARRAYS
             NativeArray<byte> sourceBonesPerIndex = data.unityBonesPerVertex;
-            int sourcecount = sourceBonesPerIndex.Length;
-            int destcount = destBonesPerVertex.Length; // should be 0.
 
             NativeArray<byte>.Copy(sourceBonesPerIndex, 0,destBonesPerVertex,destIndex, sourceBonesPerIndex.Length);
-            NativeArray<BoneWeight1>.Copy(data.unityBoneWeights, 0, dest, destBoneweightIndex, data.unityBoneWeights.Length);
-            BoneWeight1 b = new BoneWeight1();
+            // Remap bone indices in a single pass â€” no need for a separate Copy that gets overwritten
             for (int i = 0; i < data.unityBoneWeights.Length; i++)
             {
-                b.boneIndex = boneMapping[data.unityBoneWeights[i].boneIndex];
-                b.weight = data.unityBoneWeights[i].weight;
-
-                dest[i + destBoneweightIndex] = b;
+                var src = data.unityBoneWeights[i];
+                dest[i + destBoneweightIndex] = new BoneWeight1
+                {
+                    boneIndex = boneMapping[src.boneIndex],
+                    weight = src.weight
+                };
             }
 #else
-                try
-                {
-                    NativeArray<byte>.Copy(data.ManagedBonesPerVertex, 0, destBonesPerVertex, destIndex, data.ManagedBonesPerVertex.Length);
-                    NativeArray<BoneWeight1>.Copy(data.ManagedBoneWeights, 0, dest, destBoneweightIndex, data.ManagedBoneWeights.Length);
-                }
-                catch
-                {
-                    Debug.LogError("Error copying bone weights");
-                }
+                NativeArray<byte>.Copy(data.ManagedBonesPerVertex, 0, destBonesPerVertex, destIndex, data.ManagedBonesPerVertex.Length);
 
-                BoneWeight1 b = new BoneWeight1();
+                // Single-pass remap: skip the now-redundant BoneWeight1 Copy
                 for (int i = 0; i < data.ManagedBoneWeights.Length; i++)
                 {
-                    b.boneIndex = boneMapping[data.ManagedBoneWeights[i].boneIndex];
-                    b.weight = data.ManagedBoneWeights[i].weight;
-                    dest[i + destBoneweightIndex] = b;
+                    var src = data.ManagedBoneWeights[i];
+                    dest[i + destBoneweightIndex] = new BoneWeight1
+                    {
+                        boneIndex = boneMapping[src.boneIndex],
+                        weight = src.weight
+                    };
                 }
 #endif
             }
@@ -1374,22 +1372,16 @@ namespace UMA
 				{
 					var res = entry[i];
 					if (res >= bindPosesList.Count)
-					{
 						continue;
-                    }
 					if (index >= bindPoses.Length)
-					{
 						continue;
-					}
 
-                    if (CompareSkinningMatrices(bindPosesList[res], ref bindPoses[index]))
-					{
+					if (CompareSkinningMatrices(bindPosesList[res], ref bindPoses[index]))
 						return res;
-					}
 				}
 				var idx = bindPosesList.Count;
 
-                entry.AddIndex(idx);
+				entry.AddIndex(idx);
 				bindPosesList.Add(bindPoses[index]);
 				bonesList.Add(boneTransform);
 				return idx;

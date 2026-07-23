@@ -344,7 +344,7 @@ namespace UMA
 
         #region PUBLIC STATIC METHODS
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        public static void StaticInitializeOnLoad()
+        public static void RuntimeInitializeOnLoad()
         {
 			_pluginTypes = null;
         }

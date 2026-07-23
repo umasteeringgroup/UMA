@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System.Collections.Generic;
+using UMA.Controls;
 using UnityEditor;
 using UnityEngine;
 
@@ -10,6 +11,18 @@ namespace UMA.Editors
         public List<SlotData> BlendShapeSlots = new List<SlotData>();
         public static Dictionary<string, string> TemporarySlotTags = new Dictionary<string, string>();
         public static Dictionary<string, int> SelectedRace = new Dictionary<string, int>();
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void RuntimeInitializeOnLoad()
+        {
+            TemporarySlotTags = new Dictionary<string, string>();
+            SelectedRace = new Dictionary<string, int>();
+            _foldout = new Dictionary<string, bool>();
+            _utilitiesFoldout = new Dictionary<string, bool>();
+            _recentOverlayAssets.Clear();
+            _recentOverlayNames.Clear();
+            _recentOverlaysLoaded = false;
+        }
 
         private readonly UMAData.UMARecipe _recipe;
         private readonly SlotData _slotData;
@@ -225,28 +238,33 @@ namespace UMA.Editors
         {
             bool delete;
             bool select;
+            bool selectInLibrary;
             bool _foldOut = FoldOut;
             bool missingPlaceholderTags = HasMissingPlaceholderTags();
+            bool needsFixup = NeedsFixup();
 
             string barLabel = _slotData.isPlaceholderSlot
                 ? _name + "      (Placeholder Wildcard)"
-                : _name + "      (" + _slotData.asset.name + ")";
-            if (missingPlaceholderTags)
-            {
-                DrawSlotFoldoutBarButton(ref _foldOut, barLabel, "Asset", out select, out delete, GetRedFoldoutStyle());
-            }
-            else
-            {
-                GUIHelper.FoldoutBarButton(ref _foldOut, barLabel, "Asset", out select, out delete);
-            }
+                : _name + "      (" + _slotData.asset.name + ")" + GetLodSuffix(_slotData);
+            if (needsFixup)
+                barLabel += "  [Needs Fixup]";
+
+            // Draw foldout bar with Asset, Lib, and X buttons
+            DrawSlotFoldoutBar(ref _foldOut, barLabel, out select, out selectInLibrary, out delete,
+                missingPlaceholderTags || needsFixup ? GetRedFoldoutStyle() : EditorStyles.foldout);
 
             FoldOut = _foldOut;
 
             Delete = delete;
 
+            if (selectInLibrary && !_slotData.isPlaceholderSlot)
+            {
+                SelectInLibrary(_slotData);
+            }
+
             if (select && !_slotData.isPlaceholderSlot)
             {
-                EditorGUIUtility.PingObject(_slotData.asset.GetEntityId());
+                EditorGUIUtility.PingObject(_slotData.asset.GetUmaObjectId());
                 InspectorUtlity.InspectTarget(_slotData.asset);
             }
 
@@ -351,6 +369,7 @@ namespace UMA.Editors
                                         _slotData.asset = AssetDatabase.LoadAssetAtPath<SlotDataAsset>(AssetDatabase.GetAssetPath(_slotData.asset));
                                         _slotData.UpdateFromAsset(_slotData.asset);
                                         changed = true;
+                                        SaveRecipeContext();
                                         GUIUtility.ExitGUI();
                                     }
                                 }
@@ -480,6 +499,7 @@ namespace UMA.Editors
                                 _dnaDirty = true;
                                 _meshDirty = true;
                                 changed = true;
+                                SaveRecipeContext();
                                 GUIUtility.ExitGUI();
                             }
                         }
@@ -663,6 +683,7 @@ namespace UMA.Editors
                             _textureDirty = true;
                             _meshDirty = true;
                             changed = true;
+                            SaveRecipeContext();
                             GUIUtility.ExitGUI();
                         }
 
@@ -691,6 +712,7 @@ namespace UMA.Editors
                             _overlayData.RemoveAt(i);
                             _textureDirty = true;
                             changed = true;
+                            SaveRecipeContext();
                             GUIUtility.ExitGUI();
                         }
                     }
@@ -739,6 +761,7 @@ namespace UMA.Editors
                             _textureDirty = true;
                             _meshDirty = true;
                             changed = true;
+                            SaveRecipeContext();
                             GUIUtility.ExitGUI();
                         }
                     }
@@ -758,9 +781,59 @@ namespace UMA.Editors
             return _slotData.isPlaceholderSlot && (_slotData.tags == null || _slotData.tags.Length == 0);
         }
 
+        private static string GetLodSuffix(SlotData slotData)
+        {
+            if (slotData == null || slotData.asset == null)
+                return " (No LOD)";
+
+            var md = slotData.asset.meshData;
+            if (UMAMeshData.IsNullOrEmptyMeshData(md))
+                return " (No LOD)";
+
+            if (md.submeshes == null || md.submeshes.Length == 0 || md.submeshes[0] == null)
+                return " (No LOD)";
+
+            int lodCount = md.submeshes[0].LODCount();
+            return lodCount > 0 ? $" ({lodCount} LODs)" : " (No LOD)";
+        }
+
+        private bool NeedsFixup()
+        {
+            if (_slotData == null || _slotData.isPlaceholderSlot || _slotData.asset == null)
+                return false;
+
+            var md = _slotData.asset.meshData;
+            if (UMAMeshData.IsNullOrEmptyMeshData(md))
+                return false;
+
+            // Legacy UMA 2 slot that still has isLegacySlot flag
+            if (_slotData.asset.isLegacySlot)
+                return true;
+
+            // Has legacy bone weights (not yet converted to managed format)
+            if (md.boneWeights != null && md.boneWeights.Length > 0 && md.ManagedBoneWeights == null)
+                return true;
+
+            // Dual bone weight systems (both legacy and managed present)
+            if (md.boneWeights != null && md.boneWeights.Length > 0 && md.ManagedBoneWeights != null && md.ManagedBoneWeights.Length > 0)
+                return true;
+
+            // Missing vertex colors
+            int vertCount = md.vertices != null ? md.vertices.Length : md.vertexCount;
+            if (vertCount > 0 && (md.colors32 == null || md.colors32.Length != vertCount))
+                return true;
+
+            // vertexCount mismatch
+            if (md.vertexCount != vertCount)
+                return true;
+
+            return false;
+        }
+
         private static GUIStyle GetRedFoldoutStyle()
         {
             GUIStyle style = new GUIStyle(EditorStyles.foldout);
+            /*
             style.normal.textColor = Color.red;
             style.onNormal.textColor = Color.red;
             style.hover.textColor = Color.red;
@@ -768,18 +841,58 @@ namespace UMA.Editors
             style.focused.textColor = Color.red;
             style.onFocused.textColor = Color.red;
             style.active.textColor = Color.red;
-            style.onActive.textColor = Color.red;
+            style.onActive.textColor = Color.red;*/
             return style;
         }
 
-        private static void DrawSlotFoldoutBarButton(ref bool foldout, string content, string button, out bool pressed, out bool delete, GUIStyle foldoutStyle)
+        private static void DrawSlotFoldoutBar(ref bool foldout, string content, out bool assetPressed, out bool libPressed, out bool delete, GUIStyle foldoutStyle)
         {
             GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
             GUILayout.Space(10);
             foldout = EditorGUILayout.Foldout(foldout, content, true, foldoutStyle);
-            pressed = GUILayout.Button(button, EditorStyles.miniButton, GUILayout.ExpandWidth(false));
+            assetPressed = GUILayout.Button("Asset", EditorStyles.miniButton, GUILayout.ExpandWidth(false));
+            libPressed = GUILayout.Button("Lib", EditorStyles.miniButton, GUILayout.ExpandWidth(false));
             delete = GUILayout.Button("\u0078", EditorStyles.miniButton, GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
+        }
+
+        private void SelectInLibrary(SlotData slotData)
+        {
+            if (slotData == null || slotData.asset == null)
+                return;
+
+            // Ping the asset
+            EditorGUIUtility.PingObject(slotData.asset);
+
+            // Open the Global Library window docked next to the Scene view
+            var sceneView = EditorWindow.GetWindow<SceneView>();
+            var libraryWindow = sceneView != null
+                ? EditorWindow.GetWindow<AssetIndexerWindow>("Global Library", typeof(SceneView))
+                : AssetIndexerWindow.GetWindow();
+
+            libraryWindow.Focus();
+
+            // Delay the selection to let the window initialize its tree view
+            EditorApplication.delayCall += () =>
+            {
+                if (libraryWindow == null || libraryWindow.treeView == null || libraryWindow.treeView.treeModel == null)
+                    return;
+
+                var treeElements = new List<AssetTreeElement>();
+                TreeElementUtility.TreeToList(libraryWindow.treeView.treeModel.root, treeElements);
+
+                string slotName = slotData.slotName;
+                foreach (var element in treeElements)
+                {
+                    if (element.ai != null && element.ai._Name == slotName)
+                    {
+                        libraryWindow.treeView.SetSelection(new List<int> { element.id });
+                        libraryWindow.treeView.FrameItem(element.id);
+                        libraryWindow.Repaint();
+                        return;
+                    }
+                }
+            };
         }
 
         private bool ApplyUMAMaterialToSlotAndOverlays(UMAMaterial umaMat)

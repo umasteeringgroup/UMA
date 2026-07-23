@@ -204,7 +204,7 @@ void OnGUI()
 	}
 }
 
-		[MenuItem("UMA/Prefab Maker", priority = 20)]
+		[MenuItem("UMA/Content Creation/Prefabs/Prefab Maker", priority = 120)]
 		public static void OpenUmaPrefabWindow()
 		{
 			UmaPrefabSaverWindow window = (UmaPrefabSaverWindow)EditorWindow.GetWindow(typeof(UmaPrefabSaverWindow));

@@ -17,6 +17,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UMA.PoseTools;//so we can set the expression set based on the race
 using UnityEngine.SceneManagement;
+using System.Linq;
 
 #if UMA_ADDRESSABLES
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -54,6 +55,14 @@ namespace UMA.CharacterSystem
         [Tooltip("If true, the Animator will be rebuilt anytime the race changes")]
         public bool RecreateAnimatorOnRaceChange = true;
 
+
+        public bool initializeAnimatorWhenAdded = false;
+        public bool applyRootMotion = true;
+        public bool animatePhysics = false;
+        public AnimatorUpdateMode animatorUpdateMode = AnimatorUpdateMode.Normal;
+        public AnimatorCullingMode animatorCullingMode = AnimatorCullingMode.CullCompletely;
+        public bool animatorFireEvents = true;
+        
         [NonSerialized]
         public bool ignoreMeshHideAssets = false;
 
@@ -178,7 +187,7 @@ namespace UMA.CharacterSystem
         [Tooltip("When changing the race of the Avatar, cache the current state?")]
         public bool cacheCurrentState = true;
         [Tooltip("If true the existing skeleton is cleared and then rebuilt when the race is changed. Turn this off if you experience animation issues.")]
-        public bool rebuildSkeleton = false;
+        public bool rebuildSkeleton = true;
         [Tooltip("Always rebuild the skeleton. This will clear out additional animated bones from slots.")]
         public bool alwaysRebuildSkeleton = false;
         [Tooltip("This will force the animator to rebind after avatar generation. You will know if you need to do this.")]
@@ -226,6 +235,7 @@ namespace UMA.CharacterSystem
 
 #if UMA_ADDRESSABLES
         private Queue<AsyncOp> LoadedHandles = new Queue<AsyncOp>();
+        private HashSet<AsyncOp> DelayedHandles = new HashSet<AsyncOp>();
 #endif
         [Tooltip("Change to lower this specific DCA's atlas resolution. Leave 1.0f for resolution to be automatic.")]
         [Range(0.0f, 1.0f)]
@@ -566,6 +576,7 @@ namespace UMA.CharacterSystem
             _wardrobeCollections = new Dictionary<string, UMAWardrobeCollection>();
 #if UMA_ADDRESSABLES
             LoadedHandles = new Queue<AsyncOp>();
+            DelayedHandles = new HashSet<AsyncOp>();
 #endif
             SuppressedRecipes.Clear();
             HiddenSlots.Clear();
@@ -758,8 +769,20 @@ namespace UMA.CharacterSystem
 #if UNITY_EDITOR
 
         public bool nextBuildSlotsOnly = false;
+        private const string EditorGenerationPausedSessionKey = "UMA.Toolbar.EditorGenerationPaused";
         private int generateWait = 0;
         const int maxWait = 60;
+
+        /// <summary>
+        /// Temporarily suppresses editor-time generation requests made through
+        /// GenerateSingleUMA and RegenerateNow. Explicit editor tools can opt out
+        /// of the pause for user-requested rebuilds.
+        /// </summary>
+        public static bool EditorGenerationPaused
+        {
+            get { return SessionState.GetBool(EditorGenerationPausedSessionKey, false); }
+            set { SessionState.SetBool(EditorGenerationPausedSessionKey, value); }
+        }
 
         public void RebuildCurrentRecipe()
         {
@@ -778,13 +801,28 @@ namespace UMA.CharacterSystem
 
         public void GenerateSingleUMA(bool slotsOnly = false)
         {
-            generateWait = 0;
-            nextBuildSlotsOnly = slotsOnly;
-            EditorApplication.delayCall += InternalGenerateSingleUMA;
+            GenerateSingleUMA(slotsOnly, false);
         }
 
-        private void InternalGenerateSingleUMA()
+        public void GenerateSingleUMA(bool slotsOnly, bool ignoreEditorPause)
         {
+            if (EditorGenerationPaused && !ignoreEditorPause)
+            {
+                return;
+            }
+
+            generateWait = 0;
+            nextBuildSlotsOnly = slotsOnly;
+            EditorApplication.delayCall += () => InternalGenerateSingleUMA(ignoreEditorPause);
+        }
+
+        private void InternalGenerateSingleUMA(bool ignoreEditorPause)
+        {
+            if (EditorGenerationPaused && !ignoreEditorPause)
+            {
+                return;
+            }
+
             generateWait++;
             if (EditorApplication.isCompiling || EditorApplication.isUpdating)
             {
@@ -794,7 +832,7 @@ namespace UMA.CharacterSystem
                     return;
                 }
                 // Try again after compiling and updating finished.
-                EditorApplication.delayCall += InternalGenerateSingleUMA;
+                EditorApplication.delayCall += () => InternalGenerateSingleUMA(ignoreEditorPause);
                 return;
             }
 
@@ -808,6 +846,16 @@ namespace UMA.CharacterSystem
 
         public void RegenerateNow(bool updateRig=true, bool updateTextures=false, bool updateMesh=false)
         {
+            RegenerateNow(updateRig, updateTextures, updateMesh, false);
+        }
+
+        public void RegenerateNow(bool updateRig, bool updateTextures, bool updateMesh, bool ignoreEditorPause)
+        {
+            if (EditorGenerationPaused && !ignoreEditorPause)
+            {
+                return;
+            }
+
             UMAGenerator ugb = umaGenerator;
             if (ugb != null)
             {
@@ -831,7 +879,7 @@ namespace UMA.CharacterSystem
                     ugb.atlasResolution = ugb.editorAtlasResolution;
 
                     this.Dirty(updateRig, updateTextures, updateMesh);
-                    ugb.GenerateSingleUMA(this, false); // don't fire completed events in the editor
+                    ugb.GenerateSingleUMA(this, false, Application.isPlaying); // don't fire completed events in the editor
                     ugb.FreezeTime = false;
                     ugb.InitialScaleFactor = oldScaleFactor;
                     ugb.atlasResolution = oldAtlasResolution;
@@ -1005,9 +1053,11 @@ namespace UMA.CharacterSystem
                 }
         }
 
-        void OnDestroy()
+        protected override void OnDestroy()
         {
             Cleanup();
+            // Unity does not automatically invoke UMAData's teardown when this derived message exists.
+            base.OnDestroy();
         }
 
 #if UNITY_EDITOR
@@ -2102,8 +2152,8 @@ namespace UMA.CharacterSystem
             }
             if (removeAllMatching)
             {
-                var EntityID = utr.GetEntityId();
-                AdditiveRecipes[thisRecipeSlot].RemoveAll((x => x.GetEntityId() == EntityID));     
+                var EntityID = utr.GetUmaObjectId();
+                AdditiveRecipes[thisRecipeSlot].RemoveAll((x => x.GetUmaObjectId() == EntityID));
             }
             else
             {
@@ -2126,8 +2176,8 @@ namespace UMA.CharacterSystem
             }
             if (removeAllMatching)
             {
-                var entityID = utr.GetEntityId();
-                AdditiveRecipes[thisRecipeSlot].RemoveAll((x => x.GetEntityId() == entityID));
+                var entityID = utr.GetUmaObjectId();
+                AdditiveRecipes[thisRecipeSlot].RemoveAll((x => x.GetUmaObjectId() == entityID));
             }
             else
             {
@@ -3723,14 +3773,18 @@ namespace UMA.CharacterSystem
 
             if (controllerToUse == null)
             {
-                List<string> compat = activeRace.data.GetCrossCompatibleRaces();
-                for (int i = 0; i < compat.Count; i++)
+                RaceData raceData = activeRace.data;
+                if (raceData != null)
                 {
-                    string s = compat[i];
-                    controllerToUse = raceAnimationControllers.GetAnimatorForRace(s);
-                    if (controllerToUse)
+                    List<string> compat = activeRace.data.GetCrossCompatibleRaces();
+                    for (int i = 0; i < compat.Count; i++)
                     {
-                        break;
+                        string s = compat[i];
+                        controllerToUse = raceAnimationControllers.GetAnimatorForRace(s);
+                        if (controllerToUse)
+                        {
+                            break;
+                        }
                     }
                 }
                 if (controllerToUse == null)
@@ -3757,6 +3811,15 @@ namespace UMA.CharacterSystem
                 GameObject.DestroyImmediate(thisAnimator);
                 // todo.. this sometimes blows up with the component already exists!!!
                 thisAnimator = gameObject.AddComponent<Animator>();
+                    if (initializeAnimatorWhenAdded)
+                    {
+                        thisAnimator.applyRootMotion = applyRootMotion;
+                        thisAnimator.animatePhysics = animatePhysics;
+                        thisAnimator.updateMode = animatorUpdateMode;
+                        thisAnimator.cullingMode = animatorCullingMode;
+                        thisAnimator.fireEvents = animatorFireEvents;
+                    }         
+
             }
 
             if (controllerToUse != null)
@@ -3764,6 +3827,14 @@ namespace UMA.CharacterSystem
                 if (thisAnimator == null && addAnimator)
                 {
                     thisAnimator = gameObject.AddComponent<Animator>();
+                    if (initializeAnimatorWhenAdded)
+                    {
+                        thisAnimator.applyRootMotion = applyRootMotion;
+                        thisAnimator.animatePhysics = animatePhysics;
+                        thisAnimator.updateMode = animatorUpdateMode;
+                        thisAnimator.cullingMode = animatorCullingMode;
+                        thisAnimator.fireEvents = animatorFireEvents;
+                    }         
                 }
 
                 if (thisAnimator != null)
@@ -3875,6 +3946,11 @@ namespace UMA.CharacterSystem
         #endregion
 
         #region FULL EXPORT
+        /// <summary>
+        /// Returns an AvatarDefinition string for the current avatar.
+        /// [DEPRECATED] Use <see cref="GetAvatarDefinitionString"/> directly instead.
+        /// </summary>
+        [Obsolete("Use GetAvatarDefinitionString() instead.")]
         public string GetCurrentRecipe()
         {
             // return an AvatarDefinitionString instead of a UMATextRecipe string
@@ -3933,7 +4009,7 @@ namespace UMA.CharacterSystem
             {
                 try
                 {
-                    File.WriteAllText(filePath, GetCurrentRecipe());
+                    File.WriteAllText(filePath, GetAvatarDefinitionString(false, false));
                 }
                 catch (Exception e)
                 {
@@ -4262,7 +4338,8 @@ namespace UMA.CharacterSystem
             OldImportSettings(UMATextRecipe.PackedLoadDCS((settingsToLoad as UMATextRecipe).recipeString), customLoadOptions);
         }
         /// <summary>
-        /// Load settings from an existing recipe string, optionally customizing what is loaded from the recipe
+        /// Load settings from an existing recipe string, optionally customizing what is loaded from the recipe.
+        /// [DEPRECATED] Use <see cref="LoadAvatarDefinition(string, bool, bool, bool, bool, bool)"/> instead.
         /// </summary>
         /// <param name="settingsToLoad"></param>
         /// <param name="customLoadOptions"></param>
@@ -4727,7 +4804,6 @@ namespace UMA.CharacterSystem
                     RestoreDNA = false;
                 }
             tm.Restart();
-
             SetUMADataOptions();
             ClearModifiers();
 
@@ -4745,7 +4821,6 @@ namespace UMA.CharacterSystem
             Ticks_Phase1 += tm.ElapsedTicks;
 
             List<string> HideTags = new();
-
             tm.Restart();
             if ((this.WardrobeRecipes.Count > 0 || this._additiveRecipes.Count > 0) && activeRace.racedata != null)
             {
@@ -4925,8 +5000,22 @@ namespace UMA.CharacterSystem
 #endif
         }
 
-        private static void ProcessMeshHides(Dictionary<string, List<MeshHideAsset>> MeshHideDictionary, List<UMATextRecipe> allRecipes)
+        private static void ProcessMeshHides(Dictionary<string, List<MeshHideAsset>> MeshHideDictionary, List<UMATextRecipe> allRecipes, UMAData.UMARecipe buildRecipe)
         {
+            Dictionary<string, SlotDataAsset> buildSlots = null;
+            if (buildRecipe != null && buildRecipe.slotDataList != null)
+            {
+                buildSlots = new Dictionary<string, SlotDataAsset>(buildRecipe.slotDataList.Length, StringComparer.Ordinal);
+                for (int slotIndex = 0; slotIndex < buildRecipe.slotDataList.Length; slotIndex++)
+                {
+                    SlotData buildSlot = buildRecipe.slotDataList[slotIndex];
+                    if (buildSlot != null && !string.IsNullOrEmpty(buildSlot.slotName) && !buildSlots.ContainsKey(buildSlot.slotName))
+                    {
+                        buildSlots.Add(buildSlot.slotName, buildSlot.asset);
+                    }
+                }
+            }
+
             for (int i = 0; i < allRecipes.Count; i++)
             {
                 var utr = allRecipes[i];
@@ -4970,7 +5059,33 @@ namespace UMA.CharacterSystem
                     {
                         var meshHide = worklist[mh];
                         if (meshHide == null) continue;
-                        var slotName = meshHide.AssetSlotName;
+
+                        string assetSlotName = meshHide.AssetSlotName;
+                        SlotDataAsset referencedSlot = null;
+                        if (buildSlots != null && !string.IsNullOrEmpty(assetSlotName))
+                        {
+                            buildSlots.TryGetValue(assetSlotName, out referencedSlot);
+                        }
+
+                        // A collection may contain masks for slots that are not part of this
+                        // character. Fall back to the indexed slot so malformed assets are still
+                        // diagnosed before they can enter a later build.
+                        if (referencedSlot == null)
+                        {
+                            referencedSlot = meshHide.asset;
+                        }
+
+                        if (!meshHide.IsCompatibleWithSlot(referencedSlot, out string incompatibility))
+                        {
+                            string referencedSlotName = referencedSlot != null ? referencedSlot.slotName : assetSlotName;
+                            string slotDescription = string.IsNullOrEmpty(referencedSlotName)
+                                ? "no referenced slot"
+                                : $"slot '{referencedSlotName}'";
+                            Debug.LogError($"MeshHideAsset '{meshHide.name}' is incompatible with {slotDescription} and will be skipped during this character build: {incompatibility}.", meshHide);
+                            continue;
+                        }
+
+                        var slotName = referencedSlot.slotName;
                         if (!MeshHideDictionary.TryGetValue(slotName, out var list))
                         {
                             list = new List<MeshHideAsset>(4);
@@ -5075,12 +5190,17 @@ namespace UMA.CharacterSystem
 
         public bool UnloadAllQueuedHandles()
         {
-            bool hadHandles = LoadedHandles.Count > 0;
+            bool hadHandles = LoadedHandles.Count > 0 || DelayedHandles.Count > 0;
             while (LoadedHandles.Count > 0)
             {
                 AsyncOp Op = LoadedHandles.Dequeue();
                 UnloadOldestQueuedHandle(Op);
             }
+            foreach (AsyncOp Op in DelayedHandles)
+            {
+                UnloadOldestQueuedHandle(Op);
+            }
+            DelayedHandles.Clear();
             LoadQueue.Clear();
             return hadHandles;
         }
@@ -5091,7 +5211,11 @@ namespace UMA.CharacterSystem
             {
                 if (Op.Status == AsyncOperationStatus.Failed)
                 {
-                    Debug.LogError("LoadWhenReady failed - Async OP could not load bundles!" + Op.OperationException.Message);
+                    string errorMessage = Op.OperationException != null ? Op.OperationException.Message : "Unknown Addressables error.";
+                    Debug.LogError("LoadWhenReady failed - Async OP could not load bundles!" + errorMessage);
+                    RemoveQueuedHandle(Op);
+                    LoadQueue.Remove(Op);
+                    UnloadOldestQueuedHandle(Op);
                     return;
                 }
                 if (Op.IsDone)
@@ -5105,6 +5229,7 @@ namespace UMA.CharacterSystem
                         AsyncOp OldOp = LoadedHandles.Dequeue();
                         if (gameObject.activeInHierarchy && DelayUnload > 0.0f)  
                         {
+                            DelayedHandles.Add(OldOp);
                             StartCoroutine(CleanupAfterDelay(OldOp));
                         }
                         else
@@ -5117,6 +5242,22 @@ namespace UMA.CharacterSystem
             catch (Exception ex)
             {
                 Debug.LogException(ex, this);
+                RemoveQueuedHandle(Op);
+                LoadQueue.Remove(Op);
+                UnloadOldestQueuedHandle(Op);
+            }
+        }
+
+        private void RemoveQueuedHandle(AsyncOp Op)
+        {
+            int handleCount = LoadedHandles.Count;
+            for (int i = 0; i < handleCount; i++)
+            {
+                AsyncOp queuedOp = LoadedHandles.Dequeue();
+                if (!queuedOp.Equals(Op))
+                {
+                    LoadedHandles.Enqueue(queuedOp);
+                }
             }
         }
 
@@ -5124,9 +5265,16 @@ namespace UMA.CharacterSystem
         {
             if (Op.IsValid())
             {
-                // Todo: Should we call AssetIndexer.Instance.Unload(Op) instead?
-                //       Unity seems to handle this OK with it's internal reference counting.
-                UnityEngine.AddressableAssets.Addressables.Release(Op);
+                Op.Completed -= LoadWhenReady;
+                UMAAssetIndexer indexer = UMAAssetIndexer.bareInstance;
+                if (indexer != null)
+                {
+                    indexer.Unload(Op);
+                }
+                else
+                {
+                    UnityEngine.AddressableAssets.Addressables.Release(Op);
+                }
             }
         }
 
@@ -5137,11 +5285,16 @@ namespace UMA.CharacterSystem
         IEnumerator CleanupAfterDelay(AsyncOp Op)
         {
             yield return new WaitForSeconds(DelayUnload);
+            DelayedHandles.Remove(Op);
             UnloadOldestQueuedHandle(Op);
         } 
 #endif
         private void ApplyPredefinedDNA()
         {
+            if (activeRace.data.useNewDNA)
+            {
+                return;
+            }
             if (this.predefinedDNA != null)
             {
                 if (this.predefinedDNA.PreloadValues.Count > 0)
@@ -5240,7 +5393,6 @@ namespace UMA.CharacterSystem
 #if SUPER_LOGGING
                 Debug.Log("Load Character: " + gameObject.name);
 #endif
-
             SetUMADataOptions();
             blendShapeSettings.ignoreBlendShapes = !loadBlendShapes;
             atlasResolutionScale = this.AtlasResolutionScale;
@@ -5323,7 +5475,7 @@ namespace UMA.CharacterSystem
             }
             else
             {
-                ProcessMeshHides(MeshHideDictionary, wardrobeRecipes);
+                ProcessMeshHides(MeshHideDictionary, wardrobeRecipes, umaRecipe);
             }
             umaRecipe.UpdateMeshHideMasks();
             if (usingFbxRoute && fbxRouteRuntime != null)
@@ -5334,7 +5486,7 @@ namespace UMA.CharacterSystem
             List<SlotData> smooshSlots = new List<SlotData>();
             List<SlotData> clippingPlanes = new List<SlotData>();
 
-
+            // DumpDNA("chinPosition", "before overlay sorting");
             for (int i = 0; i < umaRecipe.slotDataList.Length; i++)
             {
                 SlotData sd = umaRecipe.slotDataList[i];
@@ -5427,16 +5579,21 @@ namespace UMA.CharacterSystem
                     }
                 }
             }
+            // DumpDNA("chinPosition", "before dnaInstanceCollection");
             if (currentRaceData != null && currentRaceData.useNewDNA)
             {
                 bool needsInitialDNA = dnaInstanceCollection == null || dnaInstanceCollection.dnaInstances == null || dnaInstanceCollection.dnaInstances.Count == 0;
                 if (resetNewDNAOnNextBuild || (!restoreDNA && needsInitialDNA))
                 {
+                    // DumpDNA("chinPosition", "before initialize dna");
                     umaRecipe.InitializeDNA();
+                    // DumpDNA("chinPosition", "after initialize dna");
                 }
                 else
                 {
+                    // DumpDNA("chinPosition", "before add missing dna");
                     umaRecipe.AddMissingDNAForRace();
+                    // DumpDNA("chinPosition", "after add missing dna");
                 }
             }
             else
@@ -5451,6 +5608,7 @@ namespace UMA.CharacterSystem
             dnaInstanceCollection?.AfterRecipeGenerated(this);
             // AfterRecipeGenerated
 
+            //      DumpDNA("chinPosition", "before UpdateColors");
             UpdateColors();
 
             //New event that allows for tweaking the resulting recipe before the character is actually generated
@@ -5478,7 +5636,9 @@ namespace UMA.CharacterSystem
                RebuildSkeletonThisBuild = true;
             }
 
+   // DumpDNA("chinPosition", "before ApplyPredefinedDNA");
             ApplyPredefinedDNA();
+            // DumpDNA("chinPosition", "after ApplyPredefinedDNA");
             KeepAvatar = keepAvatar;
             ForceRebindAnimator = forceRebindAnimator;
             //But the ExpressionPlayer needs to be Initialized AFTER Load
@@ -5493,19 +5653,24 @@ namespace UMA.CharacterSystem
             // Add saved DNA
             if (restoreDNA)
             {
+                // DumpDNA("chinPosition", "before restore DNA");
                 umaRecipe.ClearDna();
                 for (int i = 0; i < CurrentDNA.Length; i++)
                 {
                     UMADnaBase ud = CurrentDNA[i];
                     umaRecipe.AddDna(ud);
                 }
+                // DumpDNA("chinPosition", "after restore DNA");
             }
             
             AddMeshModifiers(baseRaceRecipe as UMATextRecipe);
             for(int i=0;i<wardrobeRecipes.Count;i++)
             {
+                // DumpDNA("chinPosition", $"before AddMeshModifiers for wardrobeRecipes[{i}]");
                 AddMeshModifiers(wardrobeRecipes[i] as UMATextRecipe);
+                //  DumpDNA("chinPosition", $"after AddMeshModifiers for wardrobeRecipes[{i}]");
             }
+
 
             //AddMeshModifiers(baseRaceRecipe, List < UMAWardrobeRecipe > Replaces, List < UMARecipeBase > wardrobeRecipes, UMARecipeBase[] AdditionalRecipes);
             ApplyDNAToModifiers();
@@ -5615,11 +5780,26 @@ namespace UMA.CharacterSystem
 #endif
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        public static void StaticInitializeOnLoad()
+        public static void RuntimeInitializeOnLoad()
         {
+            Ticks_LoadCharacter = 0;
+            Ticks_BuildCharacter = 0;
+            Ticks_InitializeBuild = 0;
+            Ticks_Phase1 = 0;
+            Ticks_Phase2 = 0;
+            Ticks_Phase3 = 0;
+            Ticks_Phase4 = 0;
+            Ticks_LoadPhase1 = 0;
+            Ticks_LoadPhase2 = 0;
+            Ticks_LoadPhase3 = 0;
+            Ticks_LoadPhase4 = 0;
+            Ticks_LoadPhase5 = 0;
+            debugExpressionPlayer = null;
+            firstAvatar = null;
             SmooshTargets = new Dictionary<string, Mesh>();
             CleanupSmooshScene();
 #if UNITY_EDITOR
+            smooshSceneEditorHooksRegistered = false;
             RegisterSmooshSceneEditorHooks();
 #endif
         }
@@ -6106,10 +6286,64 @@ namespace UMA.CharacterSystem
                     }
 #endif
                 }
+#if UMA_TESTING_COMPRESSION                
                 // compress the umaData.umaRecipe.slotDataList
+                var SlotDataList = umaRecipe.slotDataList.ToArray();
                 umaRecipe.Compress();
+                var CompressedSlotDataList = umaRecipe.slotDataList.ToArray();
+                CompareSlotDataLists(SlotDataList, CompressedSlotDataList);
+#endif                
             }
         }
+
+        private void CompareSlotDataLists(SlotData[] originalList, SlotData[] compressedList)
+        {
+            var originalNames = GetSlotNames(originalList);
+            var compressedNames = GetSlotNames(compressedList);
+
+            for (int i = 0; i < originalList.Length; i++)
+            {
+                var sd = originalList[i];
+                if (sd == null)
+                {
+                    continue;
+                }
+                if (!compressedNames.Contains(sd.slotName))
+                {
+                    Debug.LogWarning($"Slot '{sd.slotName}' was removed during compression.");
+                }
+            }
+            int originalnulls = CountNulls(originalList);
+            int compressednulls = CountNulls(compressedList);
+            Debug.Log($"Compression complete. Original count: {originalList.Length}, Compressed count: {compressedList.Length}");
+        }
+
+        private HashSet<string> GetSlotNames(SlotData[] list)
+        {
+            HashSet<string> names = new HashSet<string>();
+            for (int i = 0; i < list.Length; i++)
+            {
+                if (list[i] != null && !string.IsNullOrEmpty(list[i].slotName))
+                {
+                    names.Add(list[i].slotName);
+                }
+            }
+            return names;
+        }
+
+        private int CountNulls(SlotData[] list)
+        {
+           int count = 0;
+           for (int i = 0; i < list.Length; i++)
+           {
+               if (list[i] == null)
+               {
+                   count++;
+               }
+           }
+           return count;
+        }
+
 
         /// <summary>
         /// Checks whether the resulting slots in the recipe should actually be there when the build contained recipes that were cross compatible.
@@ -6718,6 +6952,12 @@ namespace UMA.CharacterSystem
                 AsyncOp Op = LoadedHandles.Dequeue();
                 UnloadOldestQueuedHandle(Op);
             }
+            foreach (AsyncOp Op in DelayedHandles)
+            {
+                UnloadOldestQueuedHandle(Op);
+            }
+            DelayedHandles.Clear();
+            LoadQueue.Clear();
 #endif
             if (umaData != null)
             {

@@ -210,8 +210,15 @@ namespace UMA
                 var n = allNames[i];
                 if (!RaceDNAValues.ContainsKey(n))
                 {
-                    // TODO: if you can query a real default from DNA assets, use that; otherwise use 0.5f
-                    RaceDNAValues[n] = 0.5f;
+					if (useNewDNA)
+                    {
+						DNACollection.dnaDictionary.TryGetValue(n, out var dnaDef);
+                        RaceDNAValues[n] = dnaDef != null ? dnaDef.defaultValue : 0.5f;
+                    }
+					else
+                    {
+                    	RaceDNAValues[n] = 0.5f;
+					}
                 }
             }
             return RaceDNAValues;
@@ -662,9 +669,12 @@ namespace UMA
                 for (int i = 0; i < list.Length; i++)
                 {
                     var c = list[i];
-                    if (c != null)
-                    {
-						ver = ver * 31 + (int)c.GetEntityId();
+					if (c != null)
+					{
+						UMAObjectId entityID = c.GetUmaObjectId();
+						ulong rawData = UMAObjectId.ToULong(entityID);
+						int intval = (int)(rawData & 0xFFFFFFFF) ^ (int)(rawData >> 32);
+						ver = ver * 31 + intval;
                         ver = ver * 31 + (c.name != null ? c.name.GetHashCode() : 0);
                     }
                     else

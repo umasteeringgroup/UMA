@@ -402,7 +402,7 @@ namespace UMA
                 return assetPath.Replace('\\', '/');
             }
 
-            return target != null ? target.GetEntityId().ToString() : "UMAAssetIndexer";
+            return target != null ? target.GetUmaObjectId().ToString() : "UMAAssetIndexer";
         }
     }
 }

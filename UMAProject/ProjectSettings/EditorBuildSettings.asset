@@ -5,13 +5,9 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 0
-    path: Assets/UMA/Examples/DynamicCharacterSystem Examples/UMA DCS Demo - Random
-      Characters.unity
-    guid: 23bb4999598a61e4989ccef2415039cf
-  - enabled: 0
-    path: Assets/UMA/Examples/Physics Examples/RagdollExample.unity
-    guid: 5cc55c23c33870e49a6f3c5aa01a6ab0
+  - enabled: 1
+    path: Assets/UMA/UMA3/Scenes/U3-Character Creator.unity
+    guid: ea5be93f09ae3a3429238ad8d8593138
   m_configObjects:
     com.unity.addressableassets: {fileID: 11400000, guid: e8c3b7ff4064e884395807073f06a4b8, type: 2}
     com.unity.input.settings: {fileID: 11400000, guid: 6cca730068c643e478f447dcc8dc6b6f, type: 2}

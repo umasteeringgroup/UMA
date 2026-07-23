@@ -103,7 +103,7 @@ namespace UMA.Editors
         }
 
 
-        [MenuItem("UMA/Textures/Texture Format Updater", priority = 28)]
+        [MenuItem("UMA/Textures/Texture Format Updater", priority = 128)]
         public static void OpenUmaTexturePrepareWindow()
         {
             MassChangeImporterSettings window = (MassChangeImporterSettings)EditorWindow.GetWindow(typeof(MassChangeImporterSettings));

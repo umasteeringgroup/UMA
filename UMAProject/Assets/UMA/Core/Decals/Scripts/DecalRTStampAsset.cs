@@ -10,9 +10,9 @@ namespace UMA
         [Serializable]
         public class SlotStamp
         {
-            public string slotName;           // Identifies the target slot in the recipe at apply time
-            public string slotGroup;          // Helpful for matching when slotName is missing, changed, or slot is replaced with a different slot that uses the same UV 
-            public int slotHash;            // Cached hash of slotName for faster matching
+            public string slotName;           // Used for replay matching only when slotGroup is empty
+            public string slotGroup;          // Preferred replay identity when available
+            public int slotHash;               // Cached identity retained for editor/debug data; replay does not fall back to it
             public string umaMaterialName;    // Helpful for matching generated materials
             public Vector2[] normBaseUV;      // UV0 normalized to [0..1] within SlotData.UVArea at record time
             public Vector2[] overlayUV;       // UV1 used for overlay sampling [0..1]
@@ -50,7 +50,12 @@ namespace UMA
             }
         }
 
-        public string overlayGroup;           // group used for stamping - replay matches by overlay group so stamps can be applied across overlays that share the same group
+        [Tooltip("Overlay group that receives this stamp when UMA rebuilds the atlas.")]
+        public string overlayGroup;           // target group used for replay
+        [Tooltip("Overlay whose textures are sampled by this stamp. This can be different from the target overlay group.")]
+        public OverlayDataAsset sourceOverlay;
+        [Tooltip("Indexer name used to restore the source overlay when a direct asset reference is unavailable (for example after JSON restore).")]
+        public string sourceOverlayName;
         public int bleedPixels;               // default dilation at record time
         public bool forceLinearSampling;      // default sampling mode at record time
         public bool invertY;                  // if true, Y is inverted during stamping (normalized space)

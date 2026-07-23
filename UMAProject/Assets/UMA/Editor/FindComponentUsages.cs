@@ -9,7 +9,7 @@ namespace UMA
 		private MonoScript targetMonoScript;
 		private Vector2 scrollPos;
 
-		[MenuItem("UMA/Tools/Find Component Usages")]
+		[MenuItem("UMA/Asset Management/Find Component Usages")]
 		public static void ShowWindow()
 		{
 			GetWindow<FindComponentUsagesWindow>(true, "Find Component Usages", true);

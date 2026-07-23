@@ -194,23 +194,6 @@ namespace UMA.Editors
                 }
             }
 
-#if false
-            GUILayout.Space(4);
-            if (GUILayout.Button("Open in Node Recipe Editor (Do not use!)"))
-            {
-                var win = EditorWindow.GetWindow<UMANodeRecipeEditorWindow>("UMA Node Recipe Editor");
-                if (target is UMATextRecipe tr && win != null)
-                {
-                    var mi = typeof(UMANodeRecipeEditorWindow).GetMethod("LoadRecipe", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-                    if (mi != null)
-                    {
-                        mi.Invoke(win, new object[] { tr });
-                    }
-                }
-                win.Show();
-                win.Focus();
-            }
-#endif
 
             if (target as UMATextRecipe != null)
             {

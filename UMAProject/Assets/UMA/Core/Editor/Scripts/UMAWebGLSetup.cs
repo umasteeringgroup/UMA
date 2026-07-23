@@ -4,7 +4,7 @@ namespace UMA
 {
     public class UMAWebGLSetup
     {
-        [MenuItem("UMA/WebGL/Enable Embedded Resources")]
+        [MenuItem("UMA/Project Setup/WebGL/Enable Embedded Resources")]
         public static void UMAEnableWebGLResources()
         {
             if (PlayerSettings.WebGL.useEmbeddedResources == true)

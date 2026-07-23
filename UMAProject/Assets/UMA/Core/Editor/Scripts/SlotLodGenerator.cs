@@ -154,11 +154,7 @@ namespace UMA.Editors
                  Debug.Log($"Applied {ranges.Count} LODs to slot. smt.LODCount={smt.LODCount()} triLen={(appended != null ? appended.Count : 0)}");
 
                 AssetDatabase.SaveAssetIfDirty(slot);
-#if UNITY_6000_3_OR_NEWER
                 string path = AssetDatabase.GetAssetPath(slot.GetEntityId());
-#else
-                string path = AssetDatabase.GetAssetPath(slot.GetEntityId());
-#endif
                 if (!string.IsNullOrEmpty(path))
                 {
                     AssetDatabase.SaveAssets();

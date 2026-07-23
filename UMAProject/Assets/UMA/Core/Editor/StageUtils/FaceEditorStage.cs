@@ -26,6 +26,7 @@ namespace UMA
             eventsHooked = true;
             AssemblyReloadEvents.beforeAssemblyReload += ExitStageIfActive;
             CompilationPipeline.compilationStarted += _ => ExitStageIfActive();
+            EditorApplication.playModeStateChanged += _ => ExitStageIfActive();
 #endif
         }
 
@@ -212,6 +213,10 @@ namespace UMA
         // In-memory authoritative source is `selectedSlotTriangles`.
         [SerializeField]
         private List<SerializedSlotTriangleKey> selectedSlotTrianglesSerialized = new List<SerializedSlotTriangleKey>();
+
+        // Snapshot of the face selection when the stage was opened or the selection was saved.
+        // Visibility changes are intentionally excluded because they are restored when the stage closes.
+        private readonly HashSet<SlotTriangleKey> savedSelectionSnapshot = new HashSet<SlotTriangleKey>();
 
         [SerializeField]
         private List<SlotSelectionEntry> slotSelectionEntries = new List<SlotSelectionEntry>();
@@ -473,6 +478,11 @@ namespace UMA
 
         public static FaceEditorStage ShowStage(DynamicCharacterAvatar DCA, MeshHideAsset hideAsset)
         {
+            if (!CanOpenForDynamicCharacterAvatar(DCA))
+            {
+                return null;
+            }
+
             FaceEditorStage stage = ScriptableObject.CreateInstance<FaceEditorStage>();
             stage.titleContent = new GUIContent();
             stage.titleContent.text = "Mesh Hide Editor";
@@ -485,6 +495,11 @@ namespace UMA
 
         public static FaceEditorStage ShowStage(DynamicCharacterAvatar DCA, MeshHideAssetCollection hideCollection)
         {
+            if (!CanOpenForDynamicCharacterAvatar(DCA))
+            {
+                return null;
+            }
+
             FaceEditorStage stage = ScriptableObject.CreateInstance<FaceEditorStage>();
             stage.titleContent = new GUIContent();
             stage.titleContent.text = "Mesh Hide Editor";
@@ -493,6 +508,20 @@ namespace UMA
             stage.CurrentHideCollection = hideCollection;
             StageUtility.GoToStage(stage, true);
             return stage;
+        }
+
+        private static bool CanOpenForDynamicCharacterAvatar(DynamicCharacterAvatar dca)
+        {
+            if (dca == null || PrefabStageUtility.GetPrefabStage(dca.gameObject) == null)
+            {
+                return true;
+            }
+
+            EditorUtility.DisplayDialog(
+                "UMA Mesh Editors Are Unavailable in Prefab Mode",
+                "The Face Editor and Vertex Editor work from a generated DynamicCharacterAvatar in an open scene. They cannot edit a DynamicCharacterAvatar while its prefab is open in Prefab Mode.\n\nExit Prefab Mode, then select a DynamicCharacterAvatar in the Scene Hierarchy and open this tool again.",
+                "OK");
+            return false;
         }
 
         protected override GUIContent CreateHeaderContent()
@@ -578,6 +607,7 @@ namespace UMA
 
             ValidateMeshHideAssets();
             LoadSelections();
+            CaptureSavedSelectionSnapshot();
             MarkOverlayMeshDirty();
 
             return true;
@@ -1478,7 +1508,8 @@ namespace UMA
         {
             if (overlayMaterial == null)
             {
-                Shader s = Shader.Find("UMA/Diffuse");
+                //Shader s = Shader.Find("UMA/Diffuse");
+                Shader s = Shader.Find("UMA/UMA_SG_Diffuse");
                 overlayMaterial = new Material(s) { hideFlags = HideFlags.HideAndDontSave };
                 if (overlayMaterial.HasProperty("_BaseMap"))
                 {
@@ -1491,7 +1522,8 @@ namespace UMA
             }
             if (overlayLineMaterial == null)
             {
-                Shader s = Shader.Find("UMA/Diffuse");
+                //Shader s = Shader.Find("UMA/Diffuse");
+                Shader s = Shader.Find("UMA/UMA_SG_Diffuse");
                 overlayLineMaterial = new Material(s) { hideFlags = HideFlags.HideAndDontSave };
                 if (overlayLineMaterial.HasProperty("_BaseMap"))
                 {
@@ -1605,6 +1637,8 @@ namespace UMA
         {
             AdjustWindowRects();
 
+            DrawStageCloseButton(sceneView);
+
             DrawPanel(faceToolsPanelCollapsed ? FaceEditorToolsCollapsedWindow : FaceEditorToolsWindow, "Face Tools", ref faceToolsPanelCollapsed, PanelCollapsePrefKeyPrefix + "FaceTools", () => DoToolsWindow(0));
             DrawPanel(visibilityPanelCollapsed ? VisibleWearablesCollapsedWindow : VisibleWearablesWindow, "Visibility", ref visibilityPanelCollapsed, PanelCollapsePrefKeyPrefix + "Visibility", () => DoVisibilityWindow(0));
             DrawPanel(meshHideAssetsPanelCollapsed ? MeshHideAssetsCollapsedWindow : MeshHideAssetsWindow, "Mesh Hide Assets", ref meshHideAssetsPanelCollapsed, PanelCollapsePrefKeyPrefix + "MeshHideAssets", () => DoMeshHideAssetsWindow(0));
@@ -1631,7 +1665,7 @@ namespace UMA
             {
                 if (GUI.Button(rightButtonRect, "Close", EditorStyles.miniButton))
                 {
-                    StageUtility.GoBackToPreviousStage();
+                    RequestClose();
                 }
             }
 
@@ -1662,6 +1696,83 @@ namespace UMA
                     GUILayout.EndArea();
                 }
             }
+        }
+
+        private void DrawStageCloseButton(SceneView sceneView)
+        {
+            if (sceneView == null || closing)
+            {
+                return;
+            }
+
+            const float buttonWidth = 86f;
+            const float buttonHeight = 26f;
+            const float margin = 8f;
+            Rect buttonRect = new Rect(sceneView.position.width - buttonWidth - margin, 28f, buttonWidth, buttonHeight);
+
+            Color previousBackground = GUI.backgroundColor;
+            GUI.backgroundColor = new Color(0.82f, 0.25f, 0.2f, 1f);
+            bool pressed = GUI.Button(buttonRect, "Close", EditorStyles.miniButton);
+            GUI.backgroundColor = previousBackground;
+            if (pressed)
+            {
+                RequestClose();
+                Event.current.Use();
+            }
+        }
+
+        private void CaptureSavedSelectionSnapshot()
+        {
+            savedSelectionSnapshot.Clear();
+            if (selectedSlotTriangles == null)
+            {
+                return;
+            }
+
+            foreach (SlotTriangleKey key in selectedSlotTriangles)
+            {
+                savedSelectionSnapshot.Add(key);
+            }
+        }
+
+        private bool HasUnsavedSelectionChanges()
+        {
+            return selectedSlotTriangles != null && !savedSelectionSnapshot.SetEquals(selectedSlotTriangles);
+        }
+
+        private void RequestClose()
+        {
+            if (closing)
+            {
+                return;
+            }
+
+            if (HasUnsavedSelectionChanges())
+            {
+                int choice = EditorUtility.DisplayDialogComplex(
+                    "Face Editor",
+                    "The face selection has unsaved changes. Save before closing?",
+                    "Save",
+                    "Discard",
+                    "Cancel");
+
+                if (choice == 2)
+                {
+                    return;
+                }
+
+                if (choice == 0)
+                {
+                    hasSaved = false;
+                    SaveSelections();
+                    if (!hasSaved)
+                    {
+                        return;
+                    }
+                }
+            }
+
+            StageUtility.GoBackToPreviousStage();
         }
 
         public void AdjustWindowRects()
@@ -5013,6 +5124,7 @@ namespace UMA
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             hasSaved = true;
+            CaptureSavedSelectionSnapshot();
 
             if (collection != null)
             {

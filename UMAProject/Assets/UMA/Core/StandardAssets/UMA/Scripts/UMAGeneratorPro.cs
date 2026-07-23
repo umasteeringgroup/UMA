@@ -278,7 +278,9 @@ namespace UMA
 					for (int j = 0; j < slot.OverlayCount; j++)
 					{
 						var overlay = slot.GetOverlay(j);
-						if (overlay != null)
+						// The first overlay is the base and is always required. Suppression
+						// applies only to additional overlays.
+						if (overlay != null && (j == 0 || !overlay.Supressed))
 						{
 							validOverlayCount++;
 #if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
@@ -344,11 +346,11 @@ namespace UMA
 					for (int j = 1; j < slot.OverlayCount; j++)
 					{
 						OverlayData overlay = slot.GetOverlay(j);
-						tempMaterialDefinition.overrides.Add(umaData.GetTextureOverrides(overlay.overlayName));
-						if (overlay == null)
+						if (overlay == null || overlay.Supressed)
                         {
                             continue;
                         }
+						tempMaterialDefinition.overrides.Add(umaData.GetTextureOverrides(overlay.overlayName));
 
                         if (IsUVCoordinates(overlay.rect))
 						{
@@ -552,7 +554,12 @@ namespace UMA
                         }
 
                         // First pass material
-                        var firstPass = gm.material;
+                        Material firstPass = gm.material != null ? gm.material : gm.umaMaterial != null ? gm.umaMaterial.material : null;
+                        if (firstPass == null)
+                        {
+                            continue;
+                        }
+
                         newMats.Add(firstPass);
 
                         gm.skinnedMeshRenderer = renderer;
@@ -574,9 +581,12 @@ namespace UMA
                         // Optional second pass
                         if (gm.umaMaterial.secondPass != null)
                         {
-							Material secondPass = GameObject.Instantiate(gm.umaMaterial.secondPass);
-
-                            gm.secondPassMaterial = secondPass;
+Material secondPass = gm.secondPassMaterial;
+                            if (secondPass == null || secondPass == firstPass || secondPass.shader != gm.umaMaterial.secondPass.shader)
+                            {
+                                secondPass = GameObject.Instantiate(gm.umaMaterial.secondPass);
+                                gm.secondPassMaterial = secondPass;
+                            }
 
                             UMAGeneratorPro.ApplyMaterialParameters(gm, umaData, secondPass);
                             UMADefaultMeshCombiner.CopyMaterialTextures(secondPass, gm.material, gm.umaMaterial);

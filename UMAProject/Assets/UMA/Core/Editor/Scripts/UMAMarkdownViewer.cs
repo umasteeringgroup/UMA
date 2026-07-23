@@ -94,26 +94,10 @@ namespace UMA.Editors
         private readonly Dictionary<string, VisualElement> headingElements = new Dictionary<string, VisualElement>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, Button> outlineButtons = new Dictionary<string, Button>(StringComparer.OrdinalIgnoreCase);
 
-        [MenuItem(DocumentationMenuPath, priority = 0)]
+        [MenuItem(DocumentationMenuPath, priority = 1)]
         public static void ViewDocumentation()
         {
-            string selectedPath = EditorUtility.OpenFilePanelWithFilters(
-                "View Markdown Documentation",
-                GetDocumentationBrowserDirectory(),
-                new[] { "Markdown files", "md,markdown,mdown,mkdn", "All files", "*" });
-
-            if (string.IsNullOrEmpty(selectedPath))
-            {
-                return;
-            }
-
-            if (!IsMarkdownPath(selectedPath))
-            {
-                EditorUtility.DisplayDialog("View Documentation", "Select a Markdown file.", "OK");
-                return;
-            }
-
-            Open(NormalizeAssetPath(selectedPath));
+            UMADocumentationWindow.ShowWindow();
         }
 
         [MenuItem(MenuPath, false, 2000)]
@@ -240,18 +224,6 @@ namespace UMA.Editors
             return extension == ".md" || extension == ".markdown" || extension == ".mdown" || extension == ".mkdn";
         }
 
-        private static string GetDocumentationBrowserDirectory()
-        {
-            string path = UMAEditorUtilities.FindUMAFullPath();
-            string docsDirectory = Path.Combine(path, "Docs");
-            if (Directory.Exists(docsDirectory))
-            {
-                return docsDirectory;
-            }
-
-            return path;
-        }
-
         private static bool HasOpenViewerWindow()
         {
             return Resources.FindObjectsOfTypeAll<UMAMarkdownViewer>().Length > 0;
@@ -331,6 +303,8 @@ namespace UMA.Editors
 
             assetPath = markdownAssetPath.Replace('\\', '/');
             scrollPosition = Vector2.zero;
+            pendingAnchorFragment = null;
+            pendingAnchorAttempts = 0;
             Reload();
             if (!string.IsNullOrEmpty(anchorFragment))
             {

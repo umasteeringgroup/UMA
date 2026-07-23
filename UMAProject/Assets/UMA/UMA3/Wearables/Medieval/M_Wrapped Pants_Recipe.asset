@@ -22,6 +22,13 @@ MonoBehaviour:
   - race: Human Male 3.0
     filename: Assets/UMA/UMA3/Wearables/Icons/Legs/Human Male 3.0/1_M_Wrapped Pants_Recipe.png
     thumb: {fileID: 21300000, guid: 7a902858aa86f8a47a3eacceac67f848, type: 3}
+  thumbnailFromTexture: 0
+  thumbnailRect:
+    serializedVersion: 2
+    x: 0.25
+    y: 0.25
+    width: 0.5
+    height: 0.5
   wardrobeSlot: Legs
   Appended: 0
   Hides: []

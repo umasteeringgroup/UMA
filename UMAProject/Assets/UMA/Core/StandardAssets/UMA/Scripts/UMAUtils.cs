@@ -109,15 +109,18 @@ namespace UMA
 
 		public static Material GetDefaultDiffuseMaterial()
 		{
-			Shader shader = Shader.Find("UMA/Diffuse");
+			Shader shader = Shader.Find("UMA/UMA_SG_Diffuse");
+				//Shader shader = Shader.Find("UMA/Diffuse"); --- IGNORE ---
 			if (shader == null)
 			{
 #if UNITY_EDITOR
-				Debug.LogWarning("UMA/Diffuse shader not found");
+				Debug.LogWarning("UMA/UMA_SG_Diffuse shader not found");
 #endif
 				return null;
 			}
 			Material material = new Material(shader);
+			material.SetTexture("_BaseMap", Texture2D.whiteTexture);
+			material.SetTexture("_BumpMap", Texture2D.normalTexture);
 			return material;
 		}
 
@@ -254,7 +257,7 @@ namespace UMA
 				return;
 			}
 
-			var DestroyInstance = obj.GetEntityId();
+			var DestroyInstance = obj.GetUmaObjectId();
 			if (obj is Avatar && !UMAGeneratorBase.CreatedAvatars.Contains(DestroyInstance))
 			{
 				return;
@@ -284,7 +287,7 @@ namespace UMA
 				return;
 			}
 
-			EntityId DestroyInstance = obj.GetEntityId();
+			UMAObjectId DestroyInstance = obj.GetUmaObjectId();
 			if (obj is Avatar && !UMAGeneratorBase.CreatedAvatars.Contains(DestroyInstance))
 			{
 				return;

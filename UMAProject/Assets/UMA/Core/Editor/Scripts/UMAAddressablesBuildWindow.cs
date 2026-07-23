@@ -10,7 +10,7 @@ namespace UMA
 #if UMA_ADDRESSABLES
 public class UMAAddressablesBuildWindow : EditorWindow
 {
-    [MenuItem("UMA/Sample Addressables Build")]
+    [MenuItem("UMA/Project Setup/Addressables/Sample Addressables Build")]
     public static void OpenWindow()
     {
         CreateWindow<UMAAddressablesBuildWindow>()

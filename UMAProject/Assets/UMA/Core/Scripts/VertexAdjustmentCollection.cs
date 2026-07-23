@@ -236,7 +236,7 @@ namespace UMA
         {
             if (!mesh.colors32Modified)
             {
-                if (original.colors32 == null || mesh.colors32.Length == 0)
+                if (original.colors32 == null || original.colors32.Length != original.vertices.Length)
                 {
                     mesh.colors32 = new Color32[original.vertices.Length];
                     Array.Fill(mesh.colors32, new Color32(255, 255, 255, 255));
@@ -260,7 +260,7 @@ namespace UMA
         {    
             if (!mesh.colors32Modified)
             {
-                if (original.colors32 == null || mesh.colors32.Length == 0)
+                if (original.colors32 == null || original.colors32.Length != original.vertices.Length)
                 {
                     mesh.colors32 = new Color32[original.vertices.Length];    
                     Array.Fill(mesh.colors32, new Color32(255, 255, 255, 255));                

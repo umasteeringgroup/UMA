@@ -68,7 +68,7 @@ namespace UMA.Editors
 
 				using (new EditorGUI.DisabledScope(wardrobeSlotOptions.Length == 0))
 				{
-					selectedWardrobeSlotIndex = EditorGUILayout.Popup("Wardrobe Slot", selectedWardrobeSlotIndex, wardrobeSlotOptions);
+					selectedWardrobeSlotIndex = EditorGUILayout.Popup("Wardrobe Region", selectedWardrobeSlotIndex, wardrobeSlotOptions);
 				}
 
 				using (new EditorGUI.DisabledScope(baseSlotOptions.Length == 0 && baseTagOptions.Length == 0))
@@ -1278,7 +1278,7 @@ namespace UMA.Editors
 			return GetSelectedTextRecipes().Count > 0;
 		}
 
-		[MenuItem("UMA/Consolidate Current Scene Assets", false, 2300)]
+		[MenuItem("UMA/Asset Management/Consolidate Current Scene Assets", false, 2300)]
 		private static void ConsolidateCurrentSceneAssetsMenu()
 		{
 			UmaConsolidateCurrentSceneAssetsWindow.Open();
@@ -1419,7 +1419,7 @@ namespace UMA.Editors
 			return GetSelectedTextures().Count > 0;
 		}
 
-		[MenuItem("UMA/Textures/Repair Overlays with too many textures", priority = 29)]
+		[MenuItem("UMA/Textures/Repair Overlays with too many textures", priority = 129)]
 		private static void RepairOverlaysWithTooManyTexturesMenu()
 		{
 			UMAAssetIndexer indexer = UMAAssetIndexer.Instance;
@@ -1653,6 +1653,121 @@ namespace UMA.Editors
 		private static bool UpdateSelectedPhysicsElementsMenu_Validate()
 		{
 			return GetSelectedPhysicsElements().Count > 0;
+		}
+
+		[MenuItem("Assets/UMA/Create DNA for selected Modifiers", false, 2008)]
+		private static void CreateDnaForSelectedMeshModifiersMenu()
+		{
+			var meshModifiers = GetSelectedMeshModifiers();
+			if (meshModifiers.Count == 0)
+			{
+				EditorUtility.DisplayDialog("Create DNA for selected Modifiers", "Select one or more MeshModifier assets in the Project window.", "OK");
+				return;
+			}
+
+			int createdCount = 0;
+			List<string> createdNames = new List<string>();
+			try
+			{
+				for (int i = 0; i < meshModifiers.Count; i++)
+				{
+					MeshModifier meshModifier = meshModifiers[i];
+					if (meshModifier == null)
+					{
+						continue;
+					}
+
+					string dnaName = GetDnaNameFromMeshModifier(meshModifier);
+					string assetPath = GetDnaAssetPathForMeshModifier(meshModifier, dnaName);
+					var dna = ScriptableObject.CreateInstance<DNA>();
+					foreach(var modifier in meshModifier.runtimeModifiers)
+					{
+						modifier.DNAName = dnaName;
+					}
+					dna.name = dnaName;
+					dna.displayName = dnaName;
+					dna.effects = new List<DNAEffect>();
+					dna.effects.Add(new DNAEffect_MeshModifier
+					{
+						EffectName = dnaName,
+						meshModifier = meshModifier,
+						minMapping = 0f,
+						maxMapping = 1f,
+						curve = AnimationCurve.Linear(0f, 0f, 1f, 1f)
+					});
+
+					AssetDatabase.CreateAsset(dna, assetPath);
+					EditorUtility.SetDirty(dna);
+					createdCount++;
+					createdNames.Add(dnaName);
+				}
+			}
+			finally
+			{
+				AssetDatabase.SaveAssets();
+				AssetDatabase.Refresh();
+			}
+
+			string message = "Created DNA assets: " + createdCount;
+			if (createdNames.Count > 0)
+			{
+				message += "\n\nCreated:";
+				for (int i = 0; i < createdNames.Count; i++)
+				{
+					message += "\n- " + createdNames[i];
+				}
+			}
+
+			EditorUtility.DisplayDialog("Create DNA for selected Modifiers", message, "OK");
+		}
+
+		[MenuItem("Assets/UMA/Create DNA for selected Modifiers", true)]
+		private static bool CreateDnaForSelectedMeshModifiersMenu_Validate()
+		{
+			return GetSelectedMeshModifiers().Count > 0;
+		}
+
+		[MenuItem("Assets/UMA/Enable Thumbnail From Texture for selected wardrobe items", false, 2009)]
+		private static void EnableThumbnailFromTextureForSelectedWardrobeItemsMenu()
+		{
+			var selectedRecipes = GetSelectedWardrobeRecipes();
+			if (selectedRecipes.Count == 0)
+			{
+				EditorUtility.DisplayDialog("Enable Thumbnail From Texture", "Select one or more UMAWardrobeRecipe assets in the Project window.", "OK");
+				return;
+			}
+
+			int updatedCount = 0;
+			try
+			{
+				for (int i = 0; i < selectedRecipes.Count; i++)
+				{
+					var recipe = selectedRecipes[i];
+					if (recipe == null)
+					{
+						continue;
+					}
+
+					Undo.RecordObject(recipe, "Enable Thumbnail From Texture");
+					recipe.thumbnailFromTexture = true;
+					EditorUtility.SetDirty(recipe);
+					AssetDatabase.SaveAssetIfDirty(recipe);
+					updatedCount++;
+				}
+			}
+			finally
+			{
+				AssetDatabase.SaveAssets();
+				AssetDatabase.Refresh();
+			}
+
+			EditorUtility.DisplayDialog("Enable Thumbnail From Texture", "Enabled thumbnailFromTexture on " + updatedCount + " wardrobe recipe(s).", "OK");
+		}
+
+		[MenuItem("Assets/UMA/Enable Thumbnail From Texture for selected wardrobe items", true)]
+		private static bool EnableThumbnailFromTextureForSelectedWardrobeItemsMenu_Validate()
+		{
+			return GetSelectedWardrobeRecipes().Count > 0;
 		}
 
 						[MenuItem("Assets/UMA/Add Race(s) to Selected Recipes", true)]
@@ -1930,6 +2045,52 @@ namespace UMA.Editors
 				}
 			}
 			return elements;
+		}
+
+		private static List<MeshModifier> GetSelectedMeshModifiers()
+		{
+			var selected = Selection.GetFiltered(typeof(MeshModifier), SelectionMode.Assets);
+			var meshModifiers = new List<MeshModifier>(selected.Length);
+			for (int i = 0; i < selected.Length; i++)
+			{
+				var meshModifier = selected[i] as MeshModifier;
+				if (meshModifier != null)
+				{
+					meshModifiers.Add(meshModifier);
+				}
+			}
+			return meshModifiers;
+		}
+
+		private static string GetDnaNameFromMeshModifier(MeshModifier meshModifier)
+		{
+			string modifierName = meshModifier != null ? meshModifier.name : string.Empty;
+			if (string.IsNullOrEmpty(modifierName))
+			{
+				return "DNA";
+			}
+
+			int lastUnderscore = modifierName.LastIndexOf('_');
+			if (lastUnderscore >= 0 && lastUnderscore < modifierName.Length - 1)
+			{
+				return modifierName.Substring(lastUnderscore + 1);
+			}
+
+			return modifierName;
+		}
+
+		private static string GetDnaAssetPathForMeshModifier(MeshModifier meshModifier, string dnaName)
+		{
+			string meshModifierPath = AssetDatabase.GetAssetPath(meshModifier);
+			string folder = string.IsNullOrEmpty(meshModifierPath) ? "Assets" : Path.GetDirectoryName(meshModifierPath);
+			if (string.IsNullOrEmpty(folder))
+			{
+				folder = "Assets";
+			}
+
+			string fileName = string.IsNullOrEmpty(dnaName) ? "DNA" : dnaName;
+			string assetPath = Path.Combine(folder, fileName + ".asset").Replace('\\', '/');
+			return AssetDatabase.GenerateUniqueAssetPath(assetPath);
 		}
 
 		private static UMAMaterial.MaterialChannel[] BuildChannelsForMaterial(Material material)
@@ -2325,7 +2486,7 @@ namespace UMA.Editors
 			originalBonesArrays.Add(origBones);
 			originalMeshes.Add(origMesh);
 
-			Dictionary<EntityId, int> instanceIdToNewIndex = new Dictionary<EntityId, int>();
+			Dictionary<UMAObjectId, int> instanceIdToNewIndex = new Dictionary<UMAObjectId, int>();
 			Dictionary<int, int> indexRemap = new Dictionary<int, int>();
 			List<Transform> uniqueBones = new List<Transform>();
 			List<Matrix4x4> uniqueBindPoses = new List<Matrix4x4>();
@@ -2334,7 +2495,7 @@ namespace UMA.Editors
 			for (int b = 0; b < origBones.Length; b++)
 			{
 				Transform bone = origBones[b];
-				EntityId key = bone != null ? bone.GetEntityId() : ~b;
+				UMAObjectId key = bone != null ? bone.GetUmaObjectId() : ~b;
 
 				int existingNewIndex;
 				if (instanceIdToNewIndex.TryGetValue(key, out existingNewIndex))
@@ -2788,7 +2949,7 @@ namespace UMA.Editors
 
 		[UnityEditor.MenuItem("GameObject/UMA/Save Atlas Textures")]
 		[MenuItem("CONTEXT/DynamicCharacterAvatar/Save Selected Avatars generated textures to PNG", false, 10)]
-		[MenuItem("UMA/Runtime/Save Selected Avatar Atlas Textures")]
+		[MenuItem("UMA/Avatar/Runtime/Save Selected Avatar Atlas Textures", priority = 120)]
 		public static void SaveSelectedAvatarsPNG()
 		{
 			if (Selection.gameObjects.Length != 1)
@@ -3097,7 +3258,7 @@ namespace UMA.Editors
 
         [UnityEditor.MenuItem("CONTEXT/DynamicCharacterAvatar/Save as UMA Preset")]
 		[UnityEditor.MenuItem("GameObject/UMA/Save as UMA Preset")]
-		[MenuItem("UMA/Load and Save/Save Selected Avatar as UMA Preset", priority = 1)]
+		[MenuItem("UMA/Avatar/Load and Save/Save Selected Avatar as UMA Preset", priority = 121)]
 		public static void SaveSelectedAvatarsPreset()
 		{
 			for (int i = 0; i < Selection.gameObjects.Length; i++)
@@ -3139,7 +3300,7 @@ namespace UMA.Editors
 
 		[UnityEditor.MenuItem("CONTEXT/DynamicCharacterAvatar/Save as Character text file (runtime only)")]
 		[UnityEditor.MenuItem("GameObject/UMA/Save as Character Text file (runtime only)")]
-		[MenuItem("UMA/Load and Save/Save Selected Avatar(s) Txt", priority = 1)]
+		[MenuItem("UMA/Avatar/Load and Save/Save Selected Avatar(s) Txt", priority = 122)]
 		public static void SaveSelectedAvatarsTxt()
 		{
 			for (int i = 0; i < Selection.gameObjects.Length; i++)
@@ -3214,7 +3375,7 @@ namespace UMA.Editors
 
 		[UnityEditor.MenuItem("GameObject/UMA/Save as Character Asset (runtime only)")]
 		[UnityEditor.MenuItem("CONTEXT/DynamicCharacterAvatar/Save as Asset (runtime only)")]
-		[MenuItem("UMA/Load and Save/Save Selected Avatar(s) asset", priority = 1)]
+		[MenuItem("UMA/Avatar/Load and Save/Save Selected Avatar(s) asset", priority = 123)]
 		public static void SaveSelectedAvatarsAsset()
 		{
 			for (int i = 0; i < Selection.gameObjects.Length; i++)
@@ -3252,7 +3413,7 @@ namespace UMA.Editors
 
 		[UnityEditor.MenuItem("GameObject/UMA/Load from AvatarDefinition file (runtime only)")]
 		[UnityEditor.MenuItem("CONTEXT/DynamicCharacterAvatar/Load Avatar from an AvatarDefinition file (runtime only)")]
-		[MenuItem("UMA/Load and Save/Load Selected Avatar(s) txt", priority = 1)]
+		[MenuItem("UMA/Avatar/Load and Save/Load Selected Avatar(s) txt", priority = 124)]
 		public static void LoadSelectedAvatarsTxt()
 		{
 			for (int i = 0; i < Selection.gameObjects.Length; i++)
@@ -3285,7 +3446,7 @@ namespace UMA.Editors
 		//@jaimi this is the equivalent of your previous JSON save but the resulting file does not need a special load method
 		[UnityEditor.MenuItem("GameObject/UMA/Save as AvatarDefinition (runtime only)")]
 		[UnityEditor.MenuItem("CONTEXT/DynamicCharacterAvatar/Save as Optimized AvatarDefinition File")]
-		[MenuItem("UMA/Load and Save/Save DynamicCharacterAvatar(s) AvatarDefinition (optimized)", priority = 1)]
+		[MenuItem("UMA/Avatar/Load and Save/Save DynamicCharacterAvatar(s) AvatarDefinition (optimized)", priority = 125)]
 		public static void SaveSelectedAvatarsDefinition()
 		{
 			if (!Application.isPlaying)
@@ -3312,7 +3473,7 @@ namespace UMA.Editors
 
 
 
-		[UnityEditor.MenuItem("Assets/Add Selected Assets to UMA Global Library")]
+		[UnityEditor.MenuItem("UMA/Asset Management/Add Selected Assets to Global Library")]
 		public static void AddSelectedToGlobalLibrary()
 		{
 			int added = 0;

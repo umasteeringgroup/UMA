@@ -37,7 +37,7 @@ RenderSettings:
   m_ReflectionBounces: 1
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
-  m_Sun: {fileID: 0}
+  m_Sun: {fileID: 1704335919}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -527,6 +527,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 4d4ce01dbd7484b439df783927a00c65, type: 3}
+--- !u!108 &1704335919 stripped
+Light:
+  m_CorrespondingSourceObject: {fileID: 7934725514109054171, guid: 4d4ce01dbd7484b439df783927a00c65, type: 3}
+  m_PrefabInstance: {fileID: 1704335918}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1895529841
 GameObject:
   m_ObjectHideFlags: 0
@@ -568,7 +573,7 @@ MonoBehaviour:
   lowestSubdivLevelOverride: 0
   highestSubdivLevelOverride: 3
   overridesSubdivLevels: 0
-  mightNeedRebaking: 0
+  mightNeedRebaking: 1
   cachedTransform:
     e00: 0
     e01: 0

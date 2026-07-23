@@ -43,6 +43,12 @@ namespace UMA
 
         public static TriangleHideStrategy HideStrategy = TriangleHideStrategy.Conservative;
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void StaticInitializeOnLoad()
+        {
+            HideStrategy = TriangleHideStrategy.Conservative;
+        }
+
 #if UNITY_EDITOR
         public bool NeedsRebuildFromUV()
         {
@@ -364,6 +370,15 @@ namespace UMA
         [SerializeField]
         private List<UMALodRange> lodOffsets = new List<UMALodRange>();
 
+        // Slot and mask data are immutable during normal player operation. Cache only
+        // successful play-mode checks so repeated character builds can take the fast path.
+        [NonSerialized]
+        private SlotDataAsset _lastCompatibleSlot;
+        [NonSerialized]
+        private UMAMeshData _lastCompatibleMeshData;
+        [NonSerialized]
+        private BitArray[] _lastCompatibleTriangleFlags;
+
         public int SubmeshCount
         {
             get
@@ -377,6 +392,90 @@ namespace UMA
                     return 0;
                 }
             }
+        }
+
+        /// <summary>
+        /// Checks whether this asset's base triangle masks match the referenced slot mesh.
+        /// </summary>
+        /// <param name="slot">The slot this MeshHideAsset will be applied to.</param>
+        /// <param name="reason">A description of the first incompatibility found.</param>
+        /// <returns>True when the mask can be safely applied to the slot.</returns>
+        public bool IsCompatibleWithSlot(SlotDataAsset slot, out string reason)
+        {
+            if (slot == null)
+            {
+                reason = "the referenced slot could not be resolved";
+                return false;
+            }
+
+            if (UMAMeshData.IsNullOrEmptyMeshData(slot.meshData))
+            {
+                reason = "the referenced slot has no mesh data";
+                return false;
+            }
+
+            if (_triangleFlags == null)
+            {
+                reason = "the triangle mask has not been initialized";
+                return false;
+            }
+
+            if (Application.isPlaying &&
+                ReferenceEquals(_lastCompatibleSlot, slot) &&
+                ReferenceEquals(_lastCompatibleMeshData, slot.meshData) &&
+                ReferenceEquals(_lastCompatibleTriangleFlags, _triangleFlags))
+            {
+                reason = null;
+                return true;
+            }
+
+            if (_triangleFlags.Length != slot.meshData.subMeshCount)
+            {
+                reason = $"submesh count mismatch (mask: {_triangleFlags.Length}, slot: {slot.meshData.subMeshCount})";
+                return false;
+            }
+
+            if (slot.meshData.submeshes == null || slot.meshData.submeshes.Length < slot.meshData.subMeshCount)
+            {
+                reason = "the referenced slot has incomplete submesh data";
+                return false;
+            }
+
+            for (int submesh = 0; submesh < _triangleFlags.Length; submesh++)
+            {
+                BitArray flags = _triangleFlags[submesh];
+                if (flags == null)
+                {
+                    reason = $"submesh {submesh} has no triangle mask";
+                    return false;
+                }
+
+                // GetTriangleCount returns the index-buffer count for the requested LOD
+                // without copying its triangle array.
+                int indexCount = slot.meshData.submeshes[submesh].GetTriangleCount(0);
+                if ((indexCount % 3) != 0)
+                {
+                    reason = $"submesh {submesh} has an invalid triangle index count ({indexCount})";
+                    return false;
+                }
+
+                int triangleCount = indexCount / 3;
+                if (flags.Count != triangleCount)
+                {
+                    reason = $"submesh {submesh} triangle count mismatch (mask: {flags.Count}, slot: {triangleCount})";
+                    return false;
+                }
+            }
+
+            if (Application.isPlaying)
+            {
+                _lastCompatibleSlot = slot;
+                _lastCompatibleMeshData = slot.meshData;
+                _lastCompatibleTriangleFlags = _triangleFlags;
+            }
+
+            reason = null;
+            return true;
         }
 
         /// <summary>

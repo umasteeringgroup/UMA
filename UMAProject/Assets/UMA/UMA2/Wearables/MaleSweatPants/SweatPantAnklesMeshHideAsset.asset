@@ -13,7 +13,13 @@ MonoBehaviour:
   m_Name: SweatPantAnklesMeshHideAsset
   m_EditorClassIdentifier: 
   _asset: {fileID: 0}
+  AssetHash: 0
+  _serializedHiddenVertexesByUV:
+    flags: 
+    Count: 0
+  _serializedHiddenVertexesByUVCompressed: 000004001f8b080000000000000aedc101010000008090feafee080a0000000000000000000000000000000000000000000000000000000000000018a6fc1f0100800000
   _assetSlotName: MaleLegs
   _serializedFlags:
   - flags: ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f8fffffffff3f00a90100208601feb97ff8ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff9ff7ffffffffffffffff0f080000000000fcf1fffdffffffff0f00
     Count: 884
+  lodOffsets: []

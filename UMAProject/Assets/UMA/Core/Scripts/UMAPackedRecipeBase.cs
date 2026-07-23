@@ -609,6 +609,7 @@ namespace UMA
 			{
 				if (UMAPackRecipe.SlotIsValid(umaRecipe.slotDataList[i]) && !umaRecipe.slotDataList[i].dontSerialize)
 				{
+				    var sAsset = umaRecipe.slotDataList[i].asset;
 					PackedSlotDataV3 tempPackedSlotData = new PackedSlotDataV3();
 					umaPackRecipe.slotsV3[i] = tempPackedSlotData;
 
@@ -638,6 +639,9 @@ namespace UMA
 					tempPackedSlotData.uvOverride = umaRecipe.slotDataList[i].UVSet;
 					tempPackedSlotData.isDisabled = umaRecipe.slotDataList[i].isDisabled;
 					tempPackedSlotData.expandAlongNormal = umaRecipe.slotDataList[i].expandAlongNormal;
+
+					//Debug.Log("Packing slot " + sAsset.slotName + ". isDisabled: " + umaRecipe.slotDataList[i].isDisabled );
+
 
 					bool copiedOverlays = false;
 					for (int i2 = 0; i2 < i; i2++)
@@ -1167,6 +1171,8 @@ namespace UMA
 					tags = packedSlot.Tags != null ? (string[])packedSlot.Tags.Clone() : new string[0],
 					Races = packedSlot.Races ?? Array.Empty<string>()
 				};
+
+				//Debug.Log("Unpacking slot " + sAsset.slotName + ". isDisabled: " + slotData.isDisabled + " expandAlongNormal: " + slotData.expandAlongNormal);
 
 				umaRecipe.slotDataList[i] = slotData;
 

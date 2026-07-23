@@ -22,6 +22,8 @@ public static class DecalRTStampEditor
         var clone = ScriptableObject.CreateInstance<DecalRTStampAsset>();
         clone.bleedPixels = last.bleedPixels;
         clone.overlayGroup = last.overlayGroup;
+        clone.sourceOverlay = last.sourceOverlay;
+        clone.sourceOverlayName = last.sourceOverlayName;
         clone.forceLinearSampling = last.forceLinearSampling;
         clone.invertY = last.invertY;
         clone.slots = new System.Collections.Generic.List<DecalRTStampAsset.SlotStamp>(last.slots.Count);

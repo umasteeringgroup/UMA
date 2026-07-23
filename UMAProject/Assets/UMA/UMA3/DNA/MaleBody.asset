@@ -33,4 +33,4 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 5b9b5ccd127971a4fb354de990f56a37, type: 2}
   - {fileID: 11400000, guid: c2ddc1007f02f7947888f78cc120d48d, type: 2}
   MaxTotalValue: 0
-  editorFoldout: 0
+  editorFoldout: 1

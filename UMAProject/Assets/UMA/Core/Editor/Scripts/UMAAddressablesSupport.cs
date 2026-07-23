@@ -29,11 +29,11 @@ namespace UMA
         public string umaBaseName = "UMA_Base";
 
 #if UMA_ADDRESSABLES
-        Dictionary<EntityId, List<UMATextRecipe>> SlotTracker = new Dictionary<EntityId, List<UMATextRecipe>>();
-        Dictionary<EntityId, List<UMATextRecipe>> OverlayTracker = new Dictionary<EntityId, List<UMATextRecipe>>();
-        Dictionary<EntityId, List<UMATextRecipe>> TextureTracker = new Dictionary<EntityId, List<UMATextRecipe>>();
-        Dictionary<EntityId, AddressableAssetGroup> GroupTracker = new Dictionary<EntityId, AddressableAssetGroup>();
-        Dictionary<EntityId, string> AddressLookup = new Dictionary<EntityId, string>();
+        Dictionary<UMAObjectId, List<UMATextRecipe>> SlotTracker = new Dictionary<UMAObjectId, List<UMATextRecipe>>();
+        Dictionary<UMAObjectId, List<UMATextRecipe>> OverlayTracker = new Dictionary<UMAObjectId, List<UMATextRecipe>>();
+        Dictionary<UMAObjectId, List<UMATextRecipe>> TextureTracker = new Dictionary<UMAObjectId, List<UMATextRecipe>>();
+        Dictionary<UMAObjectId, AddressableAssetGroup> GroupTracker = new Dictionary<UMAObjectId, AddressableAssetGroup>();
+        Dictionary<UMAObjectId, string> AddressLookup = new Dictionary<UMAObjectId, string>();
 
         private AddressableAssetSettings _AddressableSettings;
         private static readonly UMAAddressablesSupport addressablesSupport = new UMAAddressablesSupport();
@@ -150,7 +150,7 @@ namespace UMA
                     //}
                     //else
                     //{
-                    EntityId slotInstance = sd.asset.GetEntityId();
+                    UMAObjectId slotInstance = sd.asset.GetUmaObjectId();
 
                     if (!SlotTracker.ContainsKey(slotInstance))
                     {
@@ -178,7 +178,7 @@ namespace UMA
                             continue;
                         }*/
 
-                        EntityId OverlayInstance = od.asset.GetEntityId();
+                        UMAObjectId OverlayInstance = od.asset.GetUmaObjectId();
 
                         if (!OverlayTracker.ContainsKey(OverlayInstance))
                         {
@@ -193,7 +193,7 @@ namespace UMA
                         foreach (Texture tx in od.textureArray)
                         {
                             if (tx == null) continue;
-                            EntityId TextureID = tx.GetEntityId();
+                            UMAObjectId TextureID = tx.GetUmaObjectId();
                             if (!TextureTracker.ContainsKey(TextureID))
                             {
                                 TextureTracker.Add(TextureID, new List<UMATextRecipe>());
@@ -232,7 +232,7 @@ namespace UMA
             }
         }
 
-        private void AddAddressableAssets(Dictionary<EntityId, List<UMATextRecipe>> tracker, AddressableAssetGroup sharedGroup)
+        private void AddAddressableAssets(Dictionary<UMAObjectId, List<UMATextRecipe>> tracker, AddressableAssetGroup sharedGroup)
         {
             float pos = 0.0f;
             float inc = 1.0f / tracker.Keys.Count;
@@ -241,7 +241,7 @@ namespace UMA
             // if an item is in 1 group, then it goes in that group.
             // if it's in more than 1 group, then it goes into the shared group.
             // if it's not in any group... not sure how we got there, but it does nothing.
-            foreach (KeyValuePair<EntityId, List<UMATextRecipe>> kp in tracker)
+            foreach (KeyValuePair<UMAObjectId, List<UMATextRecipe>> kp in tracker)
             {
                 try
                 {
@@ -260,7 +260,7 @@ namespace UMA
                                 Debug.LogWarning("Warning: No wardrobe found for item: " + kp.Key);
                                 continue;
                             case 1:
-                                ae = AddressableUtility.AddressableSettings.CreateOrMoveEntry(GUID, GroupTracker[kp.Value[0].GetEntityId()], false, false);
+                                ae = AddressableUtility.AddressableSettings.CreateOrMoveEntry(GUID, GroupTracker[kp.Value[0].GetUmaObjectId()], false, false);
                                 break;
                             default:
                                 ae = AddressableUtility.AddressableSettings.CreateOrMoveEntry(GUID, sharedGroup, false, false);
@@ -346,28 +346,28 @@ namespace UMA
 
         private void AddOverlayFromCollection(OverlayDataAsset overlayDataAsset, UMAWardrobeCollection uwc)
         {
-            if (!OverlayTracker.ContainsKey(overlayDataAsset.GetEntityId()))
+            if (!OverlayTracker.ContainsKey(overlayDataAsset.GetUmaObjectId()))
             {
-                OverlayTracker.Add(overlayDataAsset.GetEntityId(), new List<UMATextRecipe>());
+                OverlayTracker.Add(overlayDataAsset.GetUmaObjectId(), new List<UMATextRecipe>());
             }
-            OverlayTracker[overlayDataAsset.GetEntityId()].Add(uwc);
+            OverlayTracker[overlayDataAsset.GetUmaObjectId()].Add(uwc);
             foreach (Texture tex in overlayDataAsset.textureList)
             {
-                if (!TextureTracker.ContainsKey(tex.GetEntityId()))
+                if (!TextureTracker.ContainsKey(tex.GetUmaObjectId()))
                 {
-                    TextureTracker.Add(tex.GetEntityId(), new List<UMATextRecipe>());
+                    TextureTracker.Add(tex.GetUmaObjectId(), new List<UMATextRecipe>());
                 }
-                TextureTracker[tex.GetEntityId()].Add(uwc);
+                TextureTracker[tex.GetUmaObjectId()].Add(uwc);
             }
         }
 
         private void AddSlotFromCollection(SlotDataAsset slotDataAsset, UMAWardrobeCollection uwc)
         {
-            if (!SlotTracker.ContainsKey(slotDataAsset.GetEntityId()))
+            if (!SlotTracker.ContainsKey(slotDataAsset.GetUmaObjectId()))
             {
-                SlotTracker.Add(slotDataAsset.GetEntityId(), new List<UMATextRecipe>());
+                SlotTracker.Add(slotDataAsset.GetUmaObjectId(), new List<UMATextRecipe>());
             }
-            SlotTracker[slotDataAsset.GetEntityId()].Add(uwc);
+            SlotTracker[slotDataAsset.GetUmaObjectId()].Add(uwc);
         }
 
         /// <summary>
@@ -452,7 +452,7 @@ namespace UMA
 
         private void AddAssetItemToGroup(AddressableAssetGroup theGroup, AssetItem theItem, string Address, string Label)
         {
-            bool found = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(theItem.Item.GetEntityId(), out string itemGUID, out long localID);
+            bool found = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(theItem.Item.GetUmaObjectId(), out string itemGUID, out long localID);
             if (found)
             {
                 AddressableAssetEntry ae = AddressableUtility.AddressableSettings.CreateOrMoveEntry(itemGUID, theGroup, false, false);
@@ -462,7 +462,7 @@ namespace UMA
         }
         private void AddItemToGroup(AddressableAssetGroup theGroup, UnityEngine.Object theItem, string Address, string Label)
         {
-            bool found = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(theItem.GetEntityId(), out string itemGUID, out long localID);
+            bool found = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(theItem.GetUmaObjectId(), out string itemGUID, out long localID);
             if (found)
             {
                 AddressableAssetEntry ae = AddressableUtility.AddressableSettings.CreateOrMoveEntry(itemGUID, theGroup, false, false);
@@ -525,9 +525,9 @@ namespace UMA
                         if (tex == null) continue;
                         if (tex as Texture2D == null) continue;
 
-                        string Address = "Texture2D-" + tex.name + "-" + tex.GetEntityId();
+                        string Address = "Texture2D-" + tex.name + "-" + tex.GetUmaObjectId();
 
-                        bool found = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(tex.GetEntityId(), out string texGUID, out long texlocalID);
+                        bool found = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(tex.GetUmaObjectId(), out string texGUID, out long texlocalID);
                         if (found)
                         {
                             AddItemToGroup(theGroup, tex, Address, recipe.AssignedLabel);
@@ -639,7 +639,7 @@ namespace UMA
                 List<string> labels = plugin.ProcessItem(ai);
                 if (labels != null && labels.Count > 0)
                 {
-                    bool found = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(ai.Item.GetEntityId(), out string itemGUID, out long localID);
+                    bool found = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(ai.Item.GetUmaObjectId(), out string itemGUID, out long localID);
                     if (found)
                     {
                         ai.IsAddressable = true;
@@ -664,9 +664,9 @@ namespace UMA
                                     Debug.Log("Texture is not Texture2D!!! " + tex.name);
                                     continue;
                                 }
-                                string Address = "Texture2D-" + tex.name + "-" + tex.GetEntityId();
+                                string Address = "Texture2D-" + tex.name + "-" + tex.GetUmaObjectId();
 
-                                found = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(tex.GetEntityId(), out string texGUID, out long texlocalID);
+                                found = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(tex.GetUmaObjectId(), out string texGUID, out long texlocalID);
                                 if (found)
                                 {
                                     AddItemToSharedGroup(texGUID, AssetItem.AddressableFolder + Address, labels, sharedGroup);
@@ -696,10 +696,10 @@ namespace UMA
                 //**********************************************************************************************
                 //*  Clear out the old data
                 //**********************************************************************************************
-                SlotTracker = new Dictionary<EntityId, List<UMATextRecipe>>();
-                OverlayTracker = new Dictionary<EntityId, List<UMATextRecipe>>();
-                TextureTracker = new Dictionary<EntityId, List<UMATextRecipe>>();
-                GroupTracker = new Dictionary<EntityId, AddressableAssetGroup>();
+                SlotTracker = new Dictionary<UMAObjectId, List<UMATextRecipe>>();
+                OverlayTracker = new Dictionary<UMAObjectId, List<UMATextRecipe>>();
+                TextureTracker = new Dictionary<UMAObjectId, List<UMATextRecipe>>();
+                GroupTracker = new Dictionary<UMAObjectId, AddressableAssetGroup>();
 
                 ClearAddressableFlags(typeof(SlotDataAsset));
                 ClearAddressableFlags(typeof(OverlayDataAsset));
@@ -776,12 +776,12 @@ namespace UMA
                     AddressableAssetGroup recipeGroup = AddressableUtility.AddressableSettings.CreateGroup(groupName, false, false, true, AddressableUtility.AddressableSettings.DefaultGroup.Schemas);
                     recipeGroup.GetSchema<BundledAssetGroupSchema>().BundleMode = BundledAssetGroupSchema.BundlePackingMode.PackTogether;
 
-                    if (GroupTracker.ContainsKey(uwr.GetEntityId()))
+                    if (GroupTracker.ContainsKey(uwr.GetUmaObjectId()))
                     {
                         Debug.Log("Group already exists????? " + uwr.name);
                         continue;
                     }
-                    GroupTracker.Add(uwr.GetEntityId(), recipeGroup);
+                    GroupTracker.Add(uwr.GetUmaObjectId(), recipeGroup);
                     pos += inc;
                 }
 

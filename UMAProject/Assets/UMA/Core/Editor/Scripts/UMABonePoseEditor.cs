@@ -7,7 +7,10 @@ using System.Runtime.Serialization.Json;
 using TreeViewItem = UnityEditor.IMGUI.Controls.TreeViewItem<int>;
 using TreeView = UnityEditor.IMGUI.Controls.TreeView<int>;
 using TreeViewState = UnityEditor.IMGUI.Controls.TreeViewState<int>;
+using UMA.CharacterSystem;
+
 #endif
+
 
 
 #if UNITY_EDITOR
@@ -256,6 +259,7 @@ namespace UMA.PoseTools
         private bool mirrorActive = true;
         private bool useIKEditor = false;
         private bool protectBonePoseSceneSelection = true;
+        private bool lockBonePoseEditor = false;
         private float ikHandleBaseSize =0.2f;
         private bool ikUseBoundaryBone = false;
         private int ikBoundaryBoneIndex = BAD_INDEX;
@@ -368,6 +372,9 @@ namespace UMA.PoseTools
         private static GUIContent generateTPoseGUIContent = new GUIContent(
             "Generate TPose from this UMABonePose",
             "Duplicate the Donor TPose, apply this bone pose's transforms, and save the result as a new UmaTPose asset.");
+        private static GUIContent generateTPoseFromSourceUMAGUIContent = new GUIContent(
+            "Generate TPose from current source UMA pose",
+            "Capture the current bone transforms of the source UMA as a new UmaTPose asset.");
         private static GUIContent mergeBonePoseListGUIContent = new GUIContent(
             "Merge Bone Poses",
             "UMABonePose assets merged from top to bottom.");
@@ -2510,7 +2517,8 @@ namespace UMA.PoseTools
 
         private bool ShouldProtectBonePoseSceneSelection()
         {
-            return protectBonePoseSceneSelection
+            return lockBonePoseEditor
+                && protectBonePoseSceneSelection
                 && sourceUMA != null
                 && targetPose != null
                 && serializedObject != null
@@ -2563,6 +2571,7 @@ namespace UMA.PoseTools
 
         private void EndBonePoseSceneEditing()
         {
+            lockBonePoseEditor = false;
             protectBonePoseSceneSelection = false;
             SetBonePoseSelectionProtection(false);
             useIKEditor = false;
@@ -2937,6 +2946,32 @@ namespace UMA.PoseTools
 
             linkedTranslationBoneNames.RemoveWhere(boneName => FindPoseByBoneName(poses, boneName) == null);
 
+            // Lock checkbox at the top of the editor
+            {
+                bool prevLock = lockBonePoseEditor;
+                lockBonePoseEditor = EditorGUILayout.Toggle("Lock the bone pose editor", lockBonePoseEditor);
+                if (lockBonePoseEditor != prevLock)
+                {
+                    if (!lockBonePoseEditor)
+                    {
+                        // Unlocking: release protection and exit scene editing
+                        protectBonePoseSceneSelection = false;
+                        SetBonePoseSelectionProtection(false);
+                        ClearActiveEditState();
+                        Repaint();
+                        SceneView.RepaintAll();
+                    }
+                    else
+                    {
+                        // Locking: enable protection
+                        protectBonePoseSceneSelection = true;
+                        SetBonePoseSelectionProtection(true);
+                        Repaint();
+                        SceneView.RepaintAll();
+                    }
+                }
+            }
+
             if (doBoneAdd)
             {
                 if (addBoneNames != null && addBoneNames.Count >0)
@@ -3009,7 +3044,7 @@ namespace UMA.PoseTools
 
                 bool sourceChanged = (sourceUMA == null && saveUMAData != null)
                     || (sourceUMA != null && saveUMAData == null)
-                    || (sourceUMA != null && saveUMAData != null && sourceUMA.GetEntityId() != saveUMAData.GetEntityId());
+                    || (sourceUMA != null && saveUMAData != null && sourceUMA.GetUmaObjectId() != saveUMAData.GetUmaObjectId());
                 if (sourceChanged)
                 {
                     saveUMAData = sourceUMA;
@@ -3078,9 +3113,31 @@ namespace UMA.PoseTools
                         GenerateTPoseFromBonePose();
                     }
                     EditorGUI.EndDisabledGroup();
+                    bool canGenerateFromSource = sourceUMA != null && donorTPose != null && target != null;
+                    EditorGUI.BeginDisabledGroup(!canGenerateFromSource);
+                    if (GUILayout.Button(generateTPoseFromSourceUMAGUIContent))
+                    {
+                        GenerateTPoseFromSourceUMA();
+                    }
+                    EditorGUI.EndDisabledGroup();
                     if (!string.IsNullOrEmpty(tposeResultMessage))
                     {
                         EditorGUILayout.HelpBox(tposeResultMessage, tposeResultMessageType);
+                    }
+                    if (canGenerateTPose && sourceUMA != null && sourceUMA is DynamicCharacterAvatar)
+                    {
+                        DynamicCharacterAvatar dca = sourceUMA as DynamicCharacterAvatar;
+                        RaceData race = dca.activeRace.data;
+
+                        if (race != null && race.TPose != donorTPose)
+                        {
+                            if (GUILayout.Button("Reset Race T-pose to Donor T-pose"))
+                            {
+                                race.TPose = donorTPose;
+                                dca.GenerateNow();
+                            }
+                        }
+                        EditorGUILayout.HelpBox("The generated T-Pose will be saved to the same folder as the Bone Pose asset.", MessageType.Info);
                     }
                     EditorGUI.indentLevel--;
                 }
@@ -3708,6 +3765,148 @@ namespace UMA.PoseTools
             if (unmappedBones.Count >0)
             {
                 Debug.LogWarning($"Could not map {unmappedBones.Count} bones from Donor SMR to source: {string.Join(", ", unmappedBones)}");
+            }
+        }
+
+        private void GenerateTPoseFromSourceUMA()
+        {
+            tposeResultMessage = null;
+
+            if (sourceUMA == null)
+            {
+                tposeResultMessage = "No Source UMA assigned.";
+                tposeResultMessageType = MessageType.Error;
+                return;
+            }
+
+            if (donorTPose == null)
+            {
+                tposeResultMessage = "No Donor TPose assigned.";
+                tposeResultMessageType = MessageType.Error;
+                return;
+            }
+
+            donorTPose.DeSerialize();
+            if (donorTPose.boneInfo == null || donorTPose.boneInfo.Length ==0)
+            {
+                tposeResultMessage = "Donor TPose has no bone info.";
+                tposeResultMessageType = MessageType.Error;
+                return;
+            }
+
+            if (sourceUMA.skeleton == null)
+            {
+                tposeResultMessage = "Source UMA has no skeleton. A built UMA is required.";
+                tposeResultMessageType = MessageType.Error;
+                return;
+            }
+
+            Transform sourceHips = sourceUMA.skeleton.GetBoneTransform("Hips");
+            if (sourceHips == null)
+            {
+                Animator animator = sourceUMA.GetComponentInChildren<Animator>();
+                if (animator != null)
+                {
+                    sourceHips = animator.GetBoneTransform(HumanBodyBones.Hips);
+                }
+            }
+
+            if (sourceHips == null)
+            {
+                tposeResultMessage = "Source UMA has no Hips bone. Cannot generate a TPose from the source pose.";
+                tposeResultMessageType = MessageType.Error;
+                return;
+            }
+
+            UmaTPose newTPose = donorTPose.Clone();
+            newTPose.DeSerialize();
+
+            HashSet<string> sourceHipsBoneNames = new HashSet<string>(System.StringComparer.Ordinal);
+            AddTransformSubtreeBoneNames(sourceHips, sourceHipsBoneNames);
+
+            int updatedBones =0;
+            for (int boneIndex =0; boneIndex < newTPose.boneInfo.Length; boneIndex++)
+            {
+                SkeletonBone skeletonBone = newTPose.boneInfo[boneIndex];
+                if (string.IsNullOrEmpty(skeletonBone.name) || !sourceHipsBoneNames.Contains(skeletonBone.name))
+                {
+                    continue;
+                }
+
+                Transform sourceBone = sourceUMA.skeleton.GetBoneTransform(skeletonBone.name);
+                if (sourceBone == null)
+                {
+                    continue;
+                }
+
+                skeletonBone.position = sourceBone.localPosition;
+                skeletonBone.rotation = sourceBone.localRotation;
+                skeletonBone.scale = sourceBone.localScale;
+                newTPose.boneInfo[boneIndex] = skeletonBone;
+                updatedBones++;
+            }
+
+            if (updatedBones ==0)
+            {
+                tposeResultMessage = "No matching Hips subtree bones were found between the source UMA and Donor TPose.";
+                tposeResultMessageType = MessageType.Warning;
+                return;
+            }
+
+            newTPose.Serialize();
+
+            string defaultName = !string.IsNullOrEmpty(sourceUMA.name) ? sourceUMA.name + "_TPose" : "SourceUMA_TPose";
+            string assetPath = EditorUtility.SaveFilePanelInProject("Generate TPose from Source UMA", defaultName, "asset",
+                "Save the generated TPose asset with a custom name.");
+            if (string.IsNullOrEmpty(assetPath))
+            {
+                return;
+            }
+
+            UmaTPose existingTPose = AssetDatabase.LoadAssetAtPath<UmaTPose>(assetPath);
+            bool createAsset = existingTPose == null;
+            if (createAsset && AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(assetPath) != null)
+            {
+                EditorUtility.DisplayDialog("Generate TPose", "The selected asset path already exists and is not a UmaTPose.", "OK");
+                return;
+            }
+
+            newTPose.name = GetAssetNameFromPath(assetPath);
+            UmaTPose savedTPose = newTPose;
+
+            if (createAsset)
+            {
+                AssetDatabase.CreateAsset(newTPose, assetPath);
+            }
+            else
+            {
+                EditorUtility.CopySerialized(newTPose, existingTPose);
+                existingTPose.name = newTPose.name;
+                EditorUtility.SetDirty(existingTPose);
+                savedTPose = existingTPose;
+            }
+
+            AssetDatabase.SaveAssets();
+
+            tposeResultMessage = $"Generated TPose '{savedTPose.name}' from source UMA '{sourceUMA.name}' using Donor TPose root data and {updatedBones} Hips subtree bone{(updatedBones ==1 ? "" : "s")}.";
+            tposeResultMessageType = MessageType.Info;
+
+            Selection.activeObject = savedTPose;
+            EditorGUIUtility.PingObject(savedTPose);
+            Debug.Log($"[UMABonePoseEditor] {tposeResultMessage}");
+        }
+
+        private static void AddTransformSubtreeBoneNames(Transform root, HashSet<string> boneNames)
+        {
+            if (root == null || boneNames == null)
+            {
+                return;
+            }
+
+            boneNames.Add(root.name);
+            for (int childIndex =0; childIndex < root.childCount; childIndex++)
+            {
+                AddTransformSubtreeBoneNames(root.GetChild(childIndex), boneNames);
             }
         }
 

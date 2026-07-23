@@ -31,11 +31,11 @@ Use an A-pose or T-pose before opening the editor stage. A neutral pose makes it
 
 Use the pose setup your project already uses for DCA previewing. Common approaches are:
 
-- Temporarily assign an Animator state or preview clip that holds the character in A-pose or T-pose.
+- Temporarily assign an Animator state or preview clip that holds the character in A-pose or T-pose. UMA includes `UMA_APose_Controller` and `UMA_TPose_Controller` in `Assets/UMA/UMA3/Animation` for Mecanim avatars.
 - Use the race's default pose if it is already a neutral authoring pose.
 - Disable gameplay animation while authoring, then force the character to rebuild in that pose.
 
-After changing pose, confirm the Scene view shows the character in the intended pose. If the character is still mid-animation, pause or disable the animator before continuing.
+After changing pose, confirm the Scene view shows the character in the intended pose. If the character is still mid-animation, pause or disable the animator before continuing. If the race overrides the Animator, update that override as well.
 
 ## 3. Make the Character Build
 
@@ -43,8 +43,9 @@ The Face Editor Stage works from the DCA's built mesh. Before opening it, make s
 
 1. Select the DCA.
 2. Confirm the race, base recipe, and wardrobe recipes are assigned.
-3. Use the DCA inspector controls to build or regenerate the character. If your setup builds automatically, wait until the generated skinned mesh is visible.
-4. Check the character in the Scene view. The clothing you are using as reference should be visible, and the slots you plan to hide should exist under it.
+3. Turn on `Editor Time Generation` if it is not already enabled.
+4. Use the DCA inspector controls to build or regenerate the character. If your setup builds automatically, wait until the generated skinned mesh is visible.
+5. Check the character in the Scene view. The clothing you are using as reference should be visible, and the slots you plan to hide should exist under it.
 
 If the generated character is missing slots, fix the DCA recipe first. The Face Editor Stage can only save hides for slots that exist in the current built recipe.
 
@@ -82,7 +83,23 @@ Only selectable slots can be painted. The wireframe and red hidden-face overlay 
 
 Example: for a jacket, leave the jacket visible as reference, but make the body torso and arms selectable. Paint the body triangles hidden under the jacket. Do not make the jacket selectable unless you actually want to hide parts of the jacket mesh.
 
-## 7. Paint the Triangles to Hide
+## 7. Seed an Initial Hidden-Face Selection with Raycast Occlusion
+
+Use the `Raycast Occlusion` tools to project an initial set of obscured faces before manual painting. This provides a fast first pass for areas that are clearly covered by the active wardrobe item and reduces the amount of hand-editing required.
+
+1. In `Selectable Slots`, enable the body or inner-garment slots that should receive the hides. These are the **target** slots.
+2. Keep both the target slots and the clothing that covers them visible. Leave clothing that is only acting as the cover **not selectable**, so it is used as an occluder rather than a target. Hide any other visible slot that should not influence the raycast.
+3. Go to the `Raycast Occlusion` section. The tool tests every vertex on each selected target slot both outward along its normal and inward against the other visible slots.
+4. Start with the default distances (`0.1` outward and `0.02` inward) unless your character scale or mesh spacing calls for a wider or narrower search range.
+5. Choose a `Triangle Strategy`:
+   - `Strict`: hide a triangle only when all three of its vertices are occluded.
+   - `Weighted`: hide a triangle when at least two vertices are occluded.
+   - `Conservative`: hide a triangle when any vertex is occluded. This is the default and is usually the best first pass for avoiding poke-through.
+6. Leave `Add to existing hides` off for a new pass; it replaces the current raycast result for the processed target slots. Turn it on when you want to keep the current selection and add more faces.
+7. Click `Raycast Occlusion To MeshHideAssets` to generate the initial hidden-face selection. Use `Draw debug rays` only when you need to diagnose an unexpected result.
+8. Review the result, then refine it manually using the Face Tools controls. The raycast updates the stage selection; save the Mesh Hide Assets after the manual review.
+
+## 8. Paint the Triangles to Hide
 
 Use the `Face Tools` panel to control selection.
 
@@ -104,7 +121,7 @@ You can temporarily paint while `Paint Mode` is off:
 - `Shift` + left-drag adds hidden triangles.
 - `Ctrl` + left-drag removes hidden triangles.
 
-This is useful when you normally use rectangle selection but need to touch up a small area quickly.
+This is useful when you normally use rectangle selection but need to touch up a small area quickly. `Paint Mode` is usually faster for a larger touch-up.
 
 ### Paint Mode
 
@@ -119,9 +136,9 @@ Enable `Paint Mode` for continuous brush painting.
 - Use `Load` to paint with a grayscale or alpha `Brush Texture` mask.
 - For `Circle`, `Square`, and `Load`, adjust `Radius` to control brush size.
 
-Hidden triangles are shown with a red overlay. Unhidden selectable triangles show as wireframe. Orbit, pan, and zoom the Scene view as usual, then continue painting.
+Hidden triangles are shown with a red overlay. Unhidden selectable triangles show as wireframe. Orbit, pan, and zoom the Scene view as usual, then continue painting. If the camera is not focused on the mesh, press the `Reset Camera` button to focus it.
 
-## 8. Check the Result Against the Clothing
+## 9. Check the Result Against the Clothing
 
 Before saving, switch visibility back and forth to confirm the hide mask is doing the intended job.
 
@@ -131,9 +148,9 @@ Before saving, switch visibility back and forth to confirm the hide mask is doin
 4. Remove hidden triangles that are visible outside the clothing.
 5. Add hidden triangles anywhere the covered slot still pokes through.
 
-Prefer hiding slightly more covered geometry rather than leaving tiny poke-through islands, but avoid hiding triangles that can be seen during normal poses.
+Prefer hiding slightly more covered geometry rather than leaving tiny poke-through islands, but avoid hiding triangles that can be seen during normal poses. If triangles poke through a seam, fix the source mesh when possible. Otherwise, consider a separate Mesh Modifier that moves the vertices inward, then add that modifier to the recipe.
 
-## 9. Save the Mesh Hide Assets
+## 10. Save the Mesh Hide Assets
 
 When the selection is ready, click `Create MeshHideAssets (Split by Slot)`. This button appears in the `Face Tools` panel and the `Mesh Hide Assets` panel.
 
@@ -148,7 +165,9 @@ For example, saving `Jacket_BodyHides.asset` with hidden faces on `HumanMaleTors
 
 If the stage was opened by dropping an existing collection, saving updates that collection. If you save over existing generated assets, Unity asks before overwriting.
 
-## 10. Add the Collection to the Wardrobe Recipe
+Close the Face Editor stage using the `Close` button at the top right of the panel in the Scene view.
+
+## 11. Add the Collection to the Wardrobe Recipe
 
 Mesh hides usually belong on the wardrobe recipe that causes the hide. For example, body hides for a jacket should usually be assigned to the jacket wardrobe recipe.
 
@@ -159,7 +178,7 @@ Mesh hides usually belong on the wardrobe recipe that causes the hide. For examp
 
 You can also add individual per-slot `MeshHideAsset` assets under `Mesh Hide Assets`, but a collection is easier to manage when one clothing item hides several slots.
 
-## 11. Test the Wardrobe Item
+## 12. Test the Wardrobe Item
 
 1. Return to the normal scene stage.
 2. Rebuild the DCA with the wardrobe item active.

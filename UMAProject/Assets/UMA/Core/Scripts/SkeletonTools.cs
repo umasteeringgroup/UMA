@@ -5,7 +5,7 @@ namespace UMA
 	public static class SkeletonTools
 	{
 #if UNITY_EDITOR
-		[UnityEditor.MenuItem("UMA/Verify Slot Mesh")]
+		[UnityEditor.MenuItem("UMA/Tools/Mesh Tools/Verify Slot Mesh")]
 		static void Start()
 		{
 			var transforms = UnityEditor.Selection.GetTransforms(UnityEditor.SelectionMode.Editable);

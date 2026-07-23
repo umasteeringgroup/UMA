@@ -61,10 +61,10 @@ namespace UMA.Editors
 
             GUILayout.Space(2f);
             copyCompatibleRaces = EditorGUILayout.ToggleLeft("Compatible Races", copyCompatibleRaces);
-            copyWardrobeSlot = EditorGUILayout.ToggleLeft("Wardrobe Slot", copyWardrobeSlot);
+            copyWardrobeSlot = EditorGUILayout.ToggleLeft("Wardrobe Region", copyWardrobeSlot);
             copyHides = EditorGUILayout.ToggleLeft("Hides Base Slot(s)", copyHides);
             copyReplaces = EditorGUILayout.ToggleLeft("Replaces", copyReplaces);
-            copySuppressWardrobeSlots = EditorGUILayout.ToggleLeft("Wardrobe Slots to Suppress", copySuppressWardrobeSlots);
+            copySuppressWardrobeSlots = EditorGUILayout.ToggleLeft("Wardrobe Regions to Suppress", copySuppressWardrobeSlots);
 
             bool hasSource = sourceWardrobeRecipe != null;
             bool isSelfReference = sourceWardrobeRecipe == targetWardrobeRecipe;

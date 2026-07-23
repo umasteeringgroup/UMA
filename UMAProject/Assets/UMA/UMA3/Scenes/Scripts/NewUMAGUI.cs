@@ -1,9 +1,9 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using UMA;
 using UMA.CharacterSystem;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -60,6 +60,7 @@ namespace UMA
         public List<string> LegsDNA = new List<string>();
         public List<string> BodyDNA = new List<string>();
 
+
         [Header("Items")]
         public List<UMAWardrobeRecipe> FaceItems = new List<UMAWardrobeRecipe>();
         public List<UMAWardrobeRecipe> HairItems = new List<UMAWardrobeRecipe>();
@@ -83,14 +84,34 @@ namespace UMA
         [Header("Misc")]
         public List<RuntimeAnimatorController> Animators = new List<RuntimeAnimatorController>();
 
+        [Header("Timing Buttons")]
+        public bool showTimingButtons = false;
+        public bool bakeAllBlendShapesForTiming = false;
+
         private List<string> ConsoleLog = new List<string>();
         private List<string> PendingLog = new List<string>();
         private GameObject currentButton;
         private string currentInfoText;
 
+        // DNA is kept per race for the lifetime of this UI. This lets a user return to a
+        // previously edited race without carrying its values into a different race.
+        private readonly Dictionary<string, Dictionary<string, float>> raceDnaSnapshots =
+            new Dictionary<string, Dictionary<string, float>>(StringComparer.Ordinal);
+        private DynamicCharacterAvatar pendingDnaRestoreAvatar;
+        private string pendingDnaRestoreRaceName;
+
         // Resume guard
         private bool resumedRecently = false;
         private float resumeBlockTime = 1.0f; // seconds to wait after resume
+
+        // Timing state
+        private string _timingResult = "";
+        private bool _timingInProgress = false;
+        private Coroutine _timingCoroutine;
+        private TimingBlendShapeSnapshot _timingBlendShapeSnapshot;
+        private UMAGenerator _timingGenerator;
+        private UMAMeshCombiner _timingOriginalCombiner;
+        private GameObject _timingCreatedCombinerObject;
 
         private void Start()
         {
@@ -109,6 +130,12 @@ namespace UMA
         private void OnDisable()
         {
             Application.logMessageReceived -= HandleLog;
+            CancelPendingDnaRestore();
+            if (_timingCoroutine != null)
+            {
+                StopCoroutine(_timingCoroutine);
+            }
+            CleanupTimingRun();
         }
 
         void Update()
@@ -355,7 +382,7 @@ namespace UMA
                             if (headerText != null) headerText.text = key;
                         }
 
-                        AddWardrobeItemsForCategory(container, categoryItems, key);
+                        AddWardrobeItemsForCategory(container, categoryItems, key, header);
                     }
                 }
 
@@ -363,10 +390,12 @@ namespace UMA
             }
         }
 
-        private void AddWardrobeItemsForCategory(GameObject container, List<UMAWardrobeRecipe> items, string category)
+        private void AddWardrobeItemsForCategory(GameObject container, List<UMAWardrobeRecipe> items, string category, GameObject categoryHeader = null)
         {
             if (container != null)
             {
+                Text headerTextComponent = categoryHeader != null ? categoryHeader.GetComponent<Text>() : null;
+
                 GameObject gridContainer = SafeInstantiatePrefab(ItemContainer, container.transform);
                 if (gridContainer == null) return;
 
@@ -378,6 +407,7 @@ namespace UMA
                     {
                         clearEffector.clearImage = clearImage;
                         clearEffector.Setup(this, null, category);
+                        clearEffector.SetCategoryHeader(headerTextComponent);
                     }
                 }
 
@@ -387,7 +417,10 @@ namespace UMA
                     if (itemObj == null) continue;
                     ItemEffector effector = itemObj.GetComponent<ItemEffector>();
                     if (effector != null)
+                    {
                         effector.Setup(this, item, category);
+                        effector.SetCategoryHeader(headerTextComponent);
+                    }
                 }
             }
         }
@@ -673,11 +706,122 @@ namespace UMA
 
         public void OnRaceClick(string raceName)
         {
-            if (avatar != null)
+            if (avatar == null)
             {
-                avatar.ChangeRace(raceName);
-                ShowInfo();
+                return;
             }
+
+            string previousRaceName = avatar.activeRace != null ? avatar.activeRace.name : null;
+            SaveDnaForRace(previousRaceName);
+
+            bool restoringSavedDna =
+                !string.Equals(previousRaceName, raceName, StringComparison.Ordinal) &&
+                raceDnaSnapshots.ContainsKey(raceName);
+
+            if (restoringSavedDna)
+            {
+                RestoreDnaForRaceWhenRecipeUpdated(raceName);
+            }
+
+            if (!avatar.ChangeRace(raceName))
+            {
+                CancelPendingDnaRestore();
+            }
+
+            ShowInfo();
+        }
+
+        private void SaveDnaForRace(string raceName)
+        {
+            if (string.IsNullOrEmpty(raceName) || avatar == null)
+            {
+                return;
+            }
+
+            Debug.Log($"Saving DNA snapshot for race {raceName}");
+
+            Dictionary<string, DnaSetter> currentDna = avatar.GetDNA();
+            if (currentDna == null || currentDna.Count == 0)
+            {
+                return;
+            }
+
+            Dictionary<string, float> snapshot = new Dictionary<string, float>(StringComparer.Ordinal);
+            foreach (KeyValuePair<string, DnaSetter> dna in currentDna)
+            {
+                if (dna.Value != null)
+                {
+                    snapshot[dna.Key] = dna.Value.Get();
+                }
+            }
+
+            if (snapshot.Count > 0)
+            {
+                raceDnaSnapshots[raceName] = snapshot;
+            }
+            Debug.Log($"Saved {snapshot.Count} DNA values for race {raceName}");
+        }
+
+        private void RestoreDnaForRaceWhenRecipeUpdated(string raceName)
+        {
+            Debug.Log($"Scheduling DNA Update for {raceName} after recipe update");
+            CancelPendingDnaRestore();
+
+            pendingDnaRestoreAvatar = avatar;
+            pendingDnaRestoreRaceName = raceName;
+            if (pendingDnaRestoreAvatar.RecipeUpdated == null)
+            {
+                pendingDnaRestoreAvatar.RecipeUpdated = new UMADataEvent();
+            }
+            pendingDnaRestoreAvatar.RecipeUpdated.AddListener(RestoreDnaOnRecipeUpdated);
+        }
+
+        private void RestoreDnaOnRecipeUpdated(UMAData umaData)
+        {
+            Debug.Log($"Recipe updated Event for race {pendingDnaRestoreRaceName}, restoring DNA snapshot");
+            DynamicCharacterAvatar restoreAvatar = pendingDnaRestoreAvatar;
+            string raceName = pendingDnaRestoreRaceName;
+            CancelPendingDnaRestore();
+
+            if (restoreAvatar == null || restoreAvatar.activeRace == null ||
+                !string.Equals(restoreAvatar.activeRace.name, raceName, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            RestoreDnaForRace(restoreAvatar, raceName);
+        }
+
+        private void RestoreDnaForRace(DynamicCharacterAvatar restoreAvatar, string raceName)
+        {
+            Debug.Log($"Restoring DNA snapshot for race {raceName}");
+            Dictionary<string, float> snapshot;
+            if (!raceDnaSnapshots.TryGetValue(raceName, out snapshot) || snapshot.Count == 0)
+            {
+                Debug.Log($"No DNA snapshot found for race {raceName}, skipping restore");
+                return;
+            }
+
+            Dictionary<string, DnaSetter> currentDna = restoreAvatar.GetDNA();
+            foreach (KeyValuePair<string, float> savedDna in snapshot)
+            {
+                if (currentDna.ContainsKey(savedDna.Key))
+                {
+                    restoreAvatar.SetDNA(savedDna.Key, savedDna.Value, false);
+                }
+            }
+            Debug.Log($"Restored {snapshot.Count} DNA values for race {raceName}");
+        }
+
+        private void CancelPendingDnaRestore()
+        {
+            if (pendingDnaRestoreAvatar != null && pendingDnaRestoreAvatar.RecipeUpdated != null)
+            {
+                pendingDnaRestoreAvatar.RecipeUpdated.RemoveListener(RestoreDnaOnRecipeUpdated);
+            }
+
+            pendingDnaRestoreAvatar = null;
+            pendingDnaRestoreRaceName = null;
         }
 
         public void OnBackClick()
@@ -741,6 +885,350 @@ namespace UMA
         {
             yield return null;
             SafeInstantiatePrefab(prefab, parent);
+        }
+
+        #endregion
+        int iterations = 10;
+        #region Timing Buttons
+
+        private void OnGUI()
+        {
+            if (!showTimingButtons || _timingInProgress) return;
+
+            float buttonWidth = 220f;
+            float buttonHeight = 30f;
+            float startX = 10f;
+            float startY = 10f;
+            float spacing = 5f;
+
+            var generator = UMAAssetIndexer.Instance != null ? UMAAssetIndexer.Instance.generator : null;
+            if (generator == null) return;
+
+            bakeAllBlendShapesForTiming = GUI.Toggle(
+                new Rect(startX, startY, buttonWidth * 2f + spacing, buttonHeight),
+                bakeAllBlendShapesForTiming,
+                "Bake all blendshapes at 0.5 (unchecked loads all)");
+            startY += buttonHeight + spacing;
+
+            // Button 1: Jobified Combiner
+            if (GUI.Button(new Rect(startX, startY, buttonWidth, buttonHeight), "10xTime/Jobified"))
+            {
+                iterations = 10; // Reset iterations for each test
+                _timingCoroutine = StartCoroutine(TimeBuildCoroutine(typeof(UMAJobifiedMeshCombiner)));
+            }
+
+            if (GUI.Button(new Rect(startX + buttonWidth + spacing, startY, buttonWidth, buttonHeight), "1xTime/Jobified"))
+            {
+                iterations = 1; // Reset iterations for each test
+                _timingCoroutine = StartCoroutine(TimeBuildCoroutine(typeof(UMAJobifiedMeshCombiner)));
+            }
+
+            // Button 2: Default Bone Baking Combiner
+            startY += buttonHeight + spacing;
+            if (GUI.Button(new Rect(startX, startY, buttonWidth, buttonHeight), "10xTime/Default Bone Baking"))
+            {
+                iterations = 10; // Reset iterations for each test
+                _timingCoroutine = StartCoroutine(TimeBuildCoroutine(typeof(UMADefaultBoneBakingMeshCombiner)));
+            }
+
+            if (GUI.Button(new Rect(startX + buttonWidth + spacing, startY, buttonWidth, buttonHeight), "1xTime/Default Bone Baking"))
+            {
+                iterations = 1; // Reset iterations for each test
+                _timingCoroutine = StartCoroutine(TimeBuildCoroutine(typeof(UMADefaultBoneBakingMeshCombiner)));
+            }
+
+            // Button 3: Legacy Bone Baking Combiner
+            startY += buttonHeight + spacing;
+            if (GUI.Button(new Rect(startX, startY, buttonWidth, buttonHeight), "10xTime/Legacy Bone Baking"))
+            {
+                iterations = 10; // Reset iterations for each test
+                _timingCoroutine = StartCoroutine(TimeBuildCoroutine(typeof(UMABoneBakingMeshCombiner)));
+            }
+
+            if (GUI.Button(new Rect(startX + buttonWidth + spacing, startY, buttonWidth, buttonHeight), "1xTime/Legacy Bone Baking"))
+            {
+                iterations = 1; // Reset iterations for each test
+                _timingCoroutine = StartCoroutine(TimeBuildCoroutine(typeof(UMABoneBakingMeshCombiner)));
+            }
+
+            // Button 4: Default Combiner
+            startY += buttonHeight + spacing;
+            if (GUI.Button(new Rect(startX, startY, buttonWidth, buttonHeight), "10xTime/Default Combiner"))
+            {
+                iterations = 10; // Reset iterations for each test
+                _timingCoroutine = StartCoroutine(TimeBuildCoroutine(typeof(UMADefaultMeshCombiner)));
+            }
+
+            if (GUI.Button(new Rect(startX + buttonWidth + spacing, startY, buttonWidth, buttonHeight), "1xTime/Default Combiner"))
+            {
+                iterations = 1; // Reset iterations for each test
+                _timingCoroutine = StartCoroutine(TimeBuildCoroutine(typeof(UMADefaultMeshCombiner)));
+            }
+
+            // Show timing result
+            if (!string.IsNullOrEmpty(_timingResult))
+            {
+                startY += buttonHeight + spacing;
+                var resultStyle = new GUIStyle(GUI.skin.label)
+                {
+                    fontSize = 16,
+                    normal = { textColor = Color.white },
+                    alignment = TextAnchor.UpperLeft,
+                    wordWrap = true
+                };
+                var resultRect = new Rect(startX, startY, 400f, 80f);
+                GUI.Label(resultRect, _timingResult, resultStyle);
+            }
+        }
+
+
+
+        private System.Collections.IEnumerator TimeBuildCoroutine(System.Type combinerType)
+        {
+            if (avatar == null || avatar.umaData == null) yield break;
+
+            var generator = UMAAssetIndexer.Instance != null ? UMAAssetIndexer.Instance.generator : null;
+            if (generator == null)
+            {
+                _timingResult = "Error: No UMAGenerator found.";
+                yield break;
+            }
+
+            // Find or create the mesh combiner component
+            UMAMeshCombiner existingCombiner = null;
+            var combinerCandidates = UnityEngine.Object.FindObjectsByType<UMAMeshCombiner>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+            for (int i = 0; i < combinerCandidates.Length; i++)
+            {
+                if (combinerCandidates[i].GetType() == combinerType)
+                {
+                    existingCombiner = combinerCandidates[i];
+                    break;
+                }
+            }
+            _timingGenerator = generator;
+            _timingOriginalCombiner = generator.meshCombiner;
+
+            UMAMeshCombiner combiner;
+            if (existingCombiner != null)
+            {
+                combiner = existingCombiner;
+            }
+            else
+            {
+                var go = new GameObject(combinerType.Name);
+                if (generator.transform.parent != null)
+                    go.transform.SetParent(generator.transform.parent, false);
+                combiner = (UMAMeshCombiner)go.AddComponent(combinerType);
+                _timingCreatedCombinerObject = go;
+            }
+
+            generator.meshCombiner = combiner;
+            bool bakeAllBlendShapes = bakeAllBlendShapesForTiming;
+            _timingBlendShapeSnapshot = CaptureTimingBlendShapeSettings();
+            int blendShapeCount = ConfigureTimingBlendShapes(bakeAllBlendShapes);
+            avatar.umaData.OnCharacterUpdated += OnTimedBuildComplete;
+
+            _timingInProgress = true;
+            _timingResult = "";
+            _timingBuildComplete = false;
+
+            float totalTime = 0f;
+            int completedBuilds = 0;
+            string timingError = null;
+
+            for (int i = 0; i < iterations; i++)
+            {
+                // Each sample starts from a completed full character build using the combiner
+                // under test. This is intentionally outside the measured interval.
+                ConfigureTimingBlendShapes(bakeAllBlendShapes);
+                _timingBuildComplete = false;
+                avatar.BuildCharacter(true);
+                yield return WaitForTimedBuildCompletion();
+                if (!_timingBuildComplete)
+                {
+                    timingError = $"ERROR: Untimed full build timed out at iteration {i + 1}.";
+                    break;
+                }
+
+#if !USE_BUILD_CHARACTER
+                ConfigureTimingBlendShapes(bakeAllBlendShapes);
+                float startTime = Time.realtimeSinceStartup;
+                avatar.Dirty(true,false,true);
+                generator.GenerateSingleUMA(avatar,false);
+                float elapsed = Time.realtimeSinceStartup - startTime;
+                totalTime += elapsed;
+                ++completedBuilds;
+#else                
+                ConfigureTimingBlendShapes(bakeAllBlendShapes);
+                _timingBuildComplete = false;
+                float startTime = Time.realtimeSinceStartup;
+                avatar.BuildCharacter(true);
+                yield return WaitForTimedBuildCompletion();
+
+                float elapsed = Time.realtimeSinceStartup - startTime;
+
+                if (_timingBuildComplete)
+                {
+                    totalTime += elapsed;
+                    completedBuilds++;
+                }
+                else
+                {
+                    timingError = $"ERROR: Timed build timed out at iteration {i + 1}.";
+                    break;
+                }
+#endif
+
+                // Do not include this frame boundary in either the full-build warm-up or the
+                // measured interval. It also lets the completed renderer state settle.
+                yield return new WaitForSeconds(0.1f);
+            }
+
+            CleanupTimingRun();
+
+            if (completedBuilds > 0)
+            {
+                float avg = totalTime / completedBuilds;
+                string blendShapeMode = bakeAllBlendShapes ? "baked at 0.5" : "loaded";
+                _timingResult = $"Combiner: {combinerType.Name}\nBlendshapes: {blendShapeCount} {blendShapeMode}\nTotal: {totalTime:F3}s | Avg: {avg:F4}s | Timed Builds: {completedBuilds}";
+                if (!string.IsNullOrEmpty(timingError))
+                    _timingResult += $"\n{timingError}";
+            }
+            else if (!string.IsNullOrEmpty(timingError))
+            {
+                _timingResult = $"Combiner: {combinerType.Name}\n{timingError}";
+            }
+
+        }
+
+        private sealed class TimingBlendShapeSnapshot
+        {
+            public bool loadBlendShapes;
+            public bool ignoreBlendShapes;
+            public bool forceBakedBlendShapeValue;
+            public float forcedBakedBlendShapeValue;
+            public Dictionary<string, BlendShapeData> blendShapes;
+        }
+
+        private TimingBlendShapeSnapshot CaptureTimingBlendShapeSettings()
+        {
+            if (avatar.blendShapeSettings == null)
+            {
+                avatar.blendShapeSettings = new BlendShapeSettings();
+            }
+
+            var settings = avatar.blendShapeSettings;
+            var snapshot = new TimingBlendShapeSnapshot
+            {
+                loadBlendShapes = avatar.loadBlendShapes,
+                ignoreBlendShapes = settings.ignoreBlendShapes,
+                forceBakedBlendShapeValue = settings.forceBakedBlendShapeValue,
+                forcedBakedBlendShapeValue = settings.forcedBakedBlendShapeValue,
+                blendShapes = new Dictionary<string, BlendShapeData>()
+            };
+
+            foreach (var entry in settings.blendShapes)
+            {
+                snapshot.blendShapes.Add(entry.Key, entry.Value == null
+                    ? null
+                    : new BlendShapeData { isBaked = entry.Value.isBaked, value = entry.Value.value });
+            }
+            return snapshot;
+        }
+
+        private int ConfigureTimingBlendShapes(bool bakeAll)
+        {
+            var settings = avatar.blendShapeSettings;
+            avatar.loadBlendShapes = true;
+            settings.ignoreBlendShapes = false;
+            settings.forceBakedBlendShapeValue = bakeAll;
+            settings.forcedBakedBlendShapeValue = 0.5f;
+
+            var names = new HashSet<string>();
+            var recipe = avatar.umaRecipe;
+            if (recipe?.slotDataList != null)
+            {
+                for (int slotIndex = 0; slotIndex < recipe.slotDataList.Length; slotIndex++)
+                {
+                    var meshData = recipe.slotDataList[slotIndex]?.asset?.meshData;
+                    if (meshData == null) continue;
+
+                    var shapes = SkinnedMeshCombiner.GetBlendshapeSources(meshData, recipe);
+                    for (int shapeIndex = 0; shapeIndex < shapes.Count; shapeIndex++)
+                    {
+                        var shape = shapes[shapeIndex];
+                        if (shape != null && !string.IsNullOrEmpty(shape.shapeName))
+                        {
+                            names.Add(shape.shapeName);
+                        }
+                    }
+                }
+            }
+
+            settings.blendShapes.Clear();
+            foreach (string name in names)
+            {
+                settings.blendShapes.Add(name, new BlendShapeData
+                {
+                    isBaked = bakeAll,
+                    value = bakeAll ? 0.5f : 0f
+                });
+            }
+            return names.Count;
+        }
+
+        private void RestoreTimingBlendShapeSettings(TimingBlendShapeSnapshot snapshot)
+        {
+            if (snapshot == null || avatar == null || avatar.blendShapeSettings == null) return;
+
+            var settings = avatar.blendShapeSettings;
+            avatar.loadBlendShapes = snapshot.loadBlendShapes;
+            settings.ignoreBlendShapes = snapshot.ignoreBlendShapes;
+            settings.forceBakedBlendShapeValue = snapshot.forceBakedBlendShapeValue;
+            settings.forcedBakedBlendShapeValue = snapshot.forcedBakedBlendShapeValue;
+            settings.blendShapes.Clear();
+            foreach (var entry in snapshot.blendShapes)
+            {
+                settings.blendShapes.Add(entry.Key, entry.Value);
+            }
+        }
+
+        private void CleanupTimingRun()
+        {
+            if (avatar != null && avatar.umaData != null)
+            {
+                avatar.umaData.OnCharacterUpdated -= OnTimedBuildComplete;
+            }
+            RestoreTimingBlendShapeSettings(_timingBlendShapeSnapshot);
+            _timingBlendShapeSnapshot = null;
+            if (_timingGenerator != null)
+            {
+                _timingGenerator.meshCombiner = _timingOriginalCombiner;
+            }
+            if (_timingCreatedCombinerObject != null)
+            {
+                Destroy(_timingCreatedCombinerObject);
+            }
+            _timingGenerator = null;
+            _timingOriginalCombiner = null;
+            _timingCreatedCombinerObject = null;
+            _timingInProgress = false;
+            _timingCoroutine = null;
+        }
+
+        private bool _timingBuildComplete;
+        private IEnumerator WaitForTimedBuildCompletion()
+        {
+            float timeout = Time.realtimeSinceStartup + 60f;
+            while (!_timingBuildComplete && Time.realtimeSinceStartup < timeout)
+                yield return null;
+        }
+
+        private void OnTimedBuildComplete(UMAData data)
+        {
+            _timingBuildComplete = true;
         }
 
         #endregion

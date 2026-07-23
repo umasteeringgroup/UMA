@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using UnityEditorInternal;
 using System.Runtime.CompilerServices;
 using System;
-using PlasticGui.Gluon.WorkspaceWindow.Views.IncomingChanges;
 
 namespace UMA.Editors
 {

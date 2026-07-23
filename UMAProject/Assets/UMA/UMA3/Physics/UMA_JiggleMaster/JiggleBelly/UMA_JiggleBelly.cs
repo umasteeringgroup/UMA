@@ -1,7 +1,6 @@
 ﻿//Based on jiggle bone code from Michael Cook (Fishypants), Adapted for UMA by Phil Taylor (DankP3).
 
 
-using System.Collections.Generic;
 using UnityEngine;
 using UMA.CharacterSystem;
 
@@ -17,7 +16,12 @@ namespace UMA.Examples
 		public float _bellyStiffness = 0.15f;
 		public float _bellyMass = 0.9f;
 		public float _bellyDamping = 0.15f;
-		public float _bellyGravity = 0.75f;
+		public float _bellyGravity = 0f;
+		public float _bellyInertia = 0.65f;
+		public float _bellyMaxJiggleDistance = 0.2f;
+		public float _bellyTargetDistance = 0.35f;
+		public float _bellyPositionWeight = 1f;
+		public float _bellyRotationWeight = 0.15f;
 		public bool _bellySquashAndStretch = true;
 		public float _bellyFrontStretch = 0.2f;
 		public float _bellySideStretch = 0.15f;
@@ -28,13 +32,20 @@ namespace UMA.Examples
 
 		//Reference to avatar and its componenets
 		private DynamicCharacterAvatar _avatar;
-		private Dictionary<string, DnaSetter> _dna;
 		private SkinnedMeshRenderer _renderer;
 		private string _skeleton = "other";
 		private string _currentAvatar;
 
-		//We have the option to monitor for changes in belly size in the DNA and transfer that to the terminal, since the stretch code overrides and needs to be compensated
+		// Scale is applied relative to the cached rest pose, which already includes DNA.
 		private float _anatomyScaleFactor = 1;
+
+		// Rest-pose state (cached once per character)
+		private Vector3 _restLocalPosition = Vector3.zero;
+		private Quaternion _restLocalRotation = Quaternion.identity;
+		private Vector3 _restLocalScale = Vector3.one;
+		private bool _restPoseInitialized;
+		private bool _dynamicPositionInitialized;
+		private Vector3 _previousTargetPosition = Vector3.zero;
 
 		// Target and dynamic positions
 		private Vector3 _targetPos;
@@ -43,9 +54,6 @@ namespace UMA.Examples
 		// Bone settings
 		private Transform _monitoredBone;
 		private Vector3 _boneAxis;
-		private float _targetDistance = 2.0f;
-		private Vector3 _upDirection;
-		private Vector3 _extraRotation;
 
 		//Dynamic variables for jiggle movements
 		private Vector3 _force = new Vector3();
@@ -81,7 +89,6 @@ namespace UMA.Examples
                 return;
             }
 
-            _dna = _avatar.GetDNA();
 			_initialized = false;
 			_skeleton = GetSkeleton(_avatar.activeRace.name);
 			//Check if current skeleton is supported by jigglebone recipe and only run this code if the avatar has changed
@@ -96,8 +103,7 @@ namespace UMA.Examples
 					{
 						_monitoredBone = bone;
 						_boneAxis = new Vector3(0, 0, 1);
-						_upDirection = new Vector3(-1, 0, 0);
-						_extraRotation = new Vector3(0, 0, -90);
+
 						UpdateJiggleBone();
 					}
 				}
@@ -108,7 +114,9 @@ namespace UMA.Examples
 			}
 			else if (_skeleton != "other")
 			{
-				_anatomyScaleFactor = _dna["belly"].Get() * 2;
+				_anatomyScaleFactor = 1f;
+				_restPoseInitialized = false;
+				_dynamicPositionInitialized = false;
 				_initialized = true;
 			}
 
@@ -133,16 +141,55 @@ namespace UMA.Examples
 
 		void InitializeBone()
 		{
-			Vector3 targetPos = _monitoredBone.position + _monitoredBone.TransformDirection(new Vector3((_boneAxis.x * _targetDistance), (_boneAxis.y * _targetDistance), (_boneAxis.z * _targetDistance)));
+			InitializeRestPose();
+
+			float targetDistance = Mathf.Max(_bellyTargetDistance, 0.001f);
+			Vector3 restPosition = GetRestWorldPosition();
+			Vector3 targetPos = restPosition + GetWorldBoneAxis(GetRestWorldRotation(), _boneAxis) * targetDistance;
 			_dynamicPos = targetPos;
+			_previousTargetPosition = targetPos;
+			_force = Vector3.zero;
+			_acceleration = Vector3.zero;
+			_velocity = Vector3.zero;
+			_dynamicPositionInitialized = true;
+		}
+
+		private void InitializeRestPose()
+		{
+			if (_restPoseInitialized || _monitoredBone == null)
+			{
+				return;
+			}
+
+			_restLocalPosition = _monitoredBone.localPosition;
+			_restLocalRotation = _monitoredBone.localRotation;
+			_restLocalScale = _monitoredBone.localScale;
+			_restPoseInitialized = true;
+		}
+
+		private Vector3 GetRestWorldPosition()
+		{
+			Transform parent = _monitoredBone.parent;
+			return parent != null ? parent.TransformPoint(_restLocalPosition) : _restLocalPosition;
+		}
+
+		private Quaternion GetRestWorldRotation()
+		{
+			Transform parent = _monitoredBone.parent;
+			return parent != null ? parent.rotation * _restLocalRotation : _restLocalRotation;
+		}
+
+		private static Vector3 GetWorldBoneAxis(Quaternion boneRotation, Vector3 boneAxis)
+		{
+			Vector3 localAxis = boneAxis.sqrMagnitude > 0.000001f ? boneAxis.normalized : Vector3.forward;
+			Vector3 worldAxis = boneRotation * localAxis;
+			return worldAxis.sqrMagnitude > 0.000001f ? worldAxis.normalized : Vector3.forward;
 		}
 
 		public void UpdateJiggleBone()
 		{
-
-			//_anatomyScaleFactor = _dna["belly"].Get() *2;
+			_anatomyScaleFactor = 1f;
 			InitializeBone();
-
 		}
 
 		void LateUpdate()
@@ -159,41 +206,88 @@ namespace UMA.Examples
 		private void MonitorJiggling()
 		{
 			//Get variables - only really need to set these if we have deviated from the defaults
+			if (_monitoredBone == null)
+			{
+				return;
+			}
 
-			// Reset the bone rotation so we can recalculate the upVector and forwardVector
-			_monitoredBone.rotation = new Quaternion();
-			//transform.localRotation = originalQuat;
+			InitializeRestPose();
 
+			Quaternion restRotation = GetRestWorldRotation();
+			Vector3 bonePosition = GetRestWorldPosition();
+			Vector3 worldAxis = GetWorldBoneAxis(restRotation, _boneAxis);
+			float targetDistance = Mathf.Max(_bellyTargetDistance, 0.001f);
+			_targetPos = bonePosition + worldAxis * targetDistance;
+			_monitoredBone.localRotation = _restLocalRotation;
 
-			// Update forwardVector and upVector
-			Vector3 upVector = _monitoredBone.TransformDirection(_upDirection);
+			if (!_dynamicPositionInitialized)
+			{
+				_dynamicPos = _targetPos;
+				_velocity = Vector3.zero;
+				_force = Vector3.zero;
+				_acceleration = Vector3.zero;
+				_previousTargetPosition = _targetPos;
+				_dynamicPositionInitialized = true;
+			}
 
+			float stiffness = _bellyStiffness;
+			float mass = Mathf.Max(_bellyMass, 0.0001f);
+			float damping = _bellyDamping;
+			float gravity = _bellyGravity;
+			float inertia = _bellyInertia;
+			float maxJiggleDistance = Mathf.Max(_bellyMaxJiggleDistance, 0.001f);
+			float positionWeight = Mathf.Max(0f, _bellyPositionWeight);
+			float rotationWeight = Mathf.Clamp01(_bellyRotationWeight);
 
-			// Calculate target position
-			_targetPos = _monitoredBone.position + _monitoredBone.TransformDirection(new Vector3((_boneAxis.x * _targetDistance), (_boneAxis.y * _targetDistance), (_boneAxis.z * _targetDistance)));
+			float simulationStep = Mathf.Clamp(Time.deltaTime > 0f ? Time.deltaTime * 60f : 1f, 0f, 2f);
+			float dampingFactor = Mathf.Pow(Mathf.Clamp01(1f - damping), simulationStep);
+			Vector3 targetDelta = _targetPos - _previousTargetPosition;
+			if (targetDelta.sqrMagnitude > 0.000001f)
+			{
+				_velocity -= targetDelta * Mathf.Clamp01(inertia) * simulationStep;
+			}
 
-			// Calculate force, acceleration, and velocity per X, Y and Z
-			_force.x = (_targetPos.x - _dynamicPos.x) * _bellyStiffness;
-			_acceleration.x = _force.x / _bellyMass;
-			_velocity.x += _acceleration.x * (1 - _bellyDamping);
+			_force = (_targetPos - _dynamicPos) * stiffness;
+			_force += Vector3.down * (gravity / 10f);
+			_acceleration = _force / mass;
+			_velocity += _acceleration * simulationStep;
+			_velocity *= dampingFactor;
 
-			_force.y = (_targetPos.y - _dynamicPos.y) * _bellyStiffness;
-			_force.y -= _bellyGravity / 10; // Add some gravity
-			_acceleration.y = _force.y / _bellyMass;
-			_velocity.y += _acceleration.y * (1 - _bellyDamping);
+			// Update dynamic position from velocity only. Force should not be applied directly to position.
+			_dynamicPos += _velocity * simulationStep;
+			Vector3 targetOffset = _dynamicPos - _targetPos;
+			if (targetOffset.sqrMagnitude > maxJiggleDistance * maxJiggleDistance)
+			{
+				Vector3 clampedOffset = targetOffset.normalized * maxJiggleDistance;
+				_dynamicPos = _targetPos + clampedOffset;
+				_velocity = Vector3.ProjectOnPlane(_velocity, clampedOffset.normalized);
+				targetOffset = clampedOffset;
+			}
 
-			_force.z = (_targetPos.z - _dynamicPos.z) * _bellyStiffness;
-			_acceleration.z = _force.z / _bellyMass;
-			_velocity.z += _acceleration.z * (1 - _bellyDamping);
+			_previousTargetPosition = _targetPos;
 
-			// Update dynamic postion
-			_dynamicPos += _velocity + _force;
+			Vector3 worldPositionOffset = targetOffset * positionWeight;
+			Transform parent = _monitoredBone.parent;
+			if (parent != null)
+			{
+				_monitoredBone.localPosition = _restLocalPosition + parent.InverseTransformVector(worldPositionOffset);
+			}
+			else
+			{
+				_monitoredBone.position = bonePosition + worldPositionOffset;
+			}
 
-			// Set bone rotation to look at dynamicPos     
-			_monitoredBone.LookAt(_dynamicPos, upVector);
-
-			//Apply extra rotation
-			_monitoredBone.Rotate(_extraRotation, Space.Self);
+			Vector3 movedBonePosition = parent != null ? parent.TransformPoint(_monitoredBone.localPosition) : _monitoredBone.position;
+			Vector3 dynamicDirection = _dynamicPos - movedBonePosition;
+			if (rotationWeight > 0f && dynamicDirection.sqrMagnitude > 0.000001f)
+			{
+				Quaternion jiggleRotation = Quaternion.FromToRotation(worldAxis, dynamicDirection.normalized);
+				_monitoredBone.rotation = Quaternion.Slerp(Quaternion.identity, jiggleRotation, rotationWeight) * restRotation;
+			}
+			else
+			{
+				_monitoredBone.rotation = restRotation;
+			}
 
 
 			// ==================================================
@@ -245,7 +339,11 @@ namespace UMA.Examples
                 }
 
                 // Set the bone scale
-                _monitoredBone.localScale = new Vector3(xStretch, yStretch, zStretch) * _anatomyScaleFactor;
+                _monitoredBone.localScale = Vector3.Scale(_restLocalScale, new Vector3(xStretch, yStretch, zStretch)) * _anatomyScaleFactor;
+			}
+			else
+			{
+				_monitoredBone.localScale = _restLocalScale * _anatomyScaleFactor;
 			}
 
 		}
@@ -260,6 +358,11 @@ namespace UMA.Examples
 			ujb._bellyMass = _bellyMass;
 			ujb._bellyDamping = _bellyDamping;
 			ujb._bellyGravity = _bellyGravity;
+			ujb._bellyInertia = _bellyInertia;
+			ujb._bellyMaxJiggleDistance = _bellyMaxJiggleDistance;
+			ujb._bellyTargetDistance = _bellyTargetDistance;
+			ujb._bellyPositionWeight = _bellyPositionWeight;
+			ujb._bellyRotationWeight = _bellyRotationWeight;
 			ujb._bellySquashAndStretch = _bellySquashAndStretch;
 			ujb._bellyFrontStretch = _bellyFrontStretch;
 			ujb._bellySideStretch = _bellySideStretch;

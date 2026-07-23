@@ -38,7 +38,7 @@ namespace UMA
             VertexEditorStage.OpenCurrentCharacterWeightViewer(avatar);
         }
 
-        [MenuItem("UMA/View Current Character Weights", priority = 23)]
+        [MenuItem("UMA/Avatar/View Current Character Weights", priority = 123)]
         private static void OpenSelectedCurrentCharacterWeights()
         {
             DynamicCharacterAvatar avatar = GetSelectedDynamicCharacterAvatar();
@@ -51,7 +51,7 @@ namespace UMA
             Open(avatar);
         }
 
-        [MenuItem("UMA/View Current Character Weights", true)]
+        [MenuItem("UMA/Avatar/View Current Character Weights", true, priority = 123)]
         private static bool OpenSelectedCurrentCharacterWeights_Validate()
         {
             return GetSelectedDynamicCharacterAvatar() != null;
