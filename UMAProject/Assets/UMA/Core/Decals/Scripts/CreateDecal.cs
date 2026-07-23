@@ -179,12 +179,20 @@ namespace UMA.Decals
         [Tooltip("Mouse button (0 = left) used to place decals.")]
         public int PlaceMouseButton = 0;
 
+        [Header("Guidance")]
+        [Tooltip("Show the getting-started panel when the decal creator opens.")]
+        public bool ShowStartupInstructions = true;
+
         // Internal orbit state
         private float _yaw;
         private float _pitch;
         private float _distance = 5f;
         private Vector3 _targetPos;
         private Rect ScreenArea = new Rect(20f, 20f, 420, 1024);
+        private Rect _instructionsArea;
+        private GUIStyle _instructionsTitleStyle;
+        private GUIStyle _instructionsTextStyle;
+        private GUIStyle _instructionsSectionStyle;
 
         private bool _initialized;
         private UMAPlayerActions controls;
@@ -362,8 +370,72 @@ namespace UMA.Decals
 				DrawRightPanel();
 			}
 
+			DrawStartupInstructions();
+
 			// Apply pause state from the toggle each GUI frame
 			ApplyAnimationPauseState();
+		}
+
+		private void DrawStartupInstructions()
+		{
+			if (!ShowStartupInstructions)
+			{
+				_instructionsArea = Rect.zero;
+				return;
+			}
+
+			float panelWidth = Mathf.Clamp(Screen.width - 40f, 320f, 560f);
+			float panelHeight = Mathf.Clamp(Screen.height - 40f, 260f, 300f);
+			_instructionsArea = new Rect(
+				(Screen.width - panelWidth) * 0.5f,
+				(Screen.height - panelHeight) * 0.5f,
+				panelWidth,
+				panelHeight);
+
+			if (_instructionsTitleStyle == null)
+			{
+				_instructionsTitleStyle = new GUIStyle(GUI.skin.label)
+				{
+					alignment = TextAnchor.MiddleCenter,
+					fontSize = 18,
+					fontStyle = FontStyle.Bold,
+					wordWrap = true
+				};
+				_instructionsTextStyle = new GUIStyle(GUI.skin.label)
+				{
+					alignment = TextAnchor.UpperLeft,
+					wordWrap = true
+				};
+				_instructionsSectionStyle = new GUIStyle(_instructionsTextStyle)
+				{
+					fontStyle = FontStyle.Bold
+				};
+			}
+
+			GUILayout.BeginArea(_instructionsArea, GUI.skin.window);
+			GUILayout.Label("Create Your First Decal", _instructionsTitleStyle);
+			GUILayout.Space(8f);
+			GUILayout.Label(
+				"Choose a decal method and confirm the required overlay settings in the panel on the left. " +
+				"When you are ready, close this guide and click directly on the character to place the decal. " +
+				"Use the left panel to fine-tune its size, rotation, projection, and other placement settings.",
+				_instructionsTextStyle);
+			GUILayout.Space(10f);
+			GUILayout.Label("Scene controls", _instructionsSectionStyle);
+			GUILayout.Label(
+				"Right-click + drag: orbit   |   Shift + right-click + drag: vertical pan   |   Mouse wheel: zoom",
+				_instructionsTextStyle);
+			GUILayout.FlexibleSpace();
+			GUILayout.BeginHorizontal();
+			GUILayout.FlexibleSpace();
+			if (GUILayout.Button("Close", GUILayout.Width(120f), GUILayout.Height(30f)))
+			{
+				ShowStartupInstructions = false;
+				_instructionsArea = Rect.zero;
+			}
+			GUILayout.FlexibleSpace();
+			GUILayout.EndHorizontal();
+			GUILayout.EndArea();
 		}
 
 #if UNITY_EDITOR
@@ -636,7 +708,15 @@ namespace UMA.Decals
 		}
 		private void DrawLeftPanel() {
 
-
+			GUILayout.BeginHorizontal();
+			GUILayout.Label("Decal Creator");
+			GUILayout.FlexibleSpace();
+			if (GUILayout.Button("Help", GUILayout.Width(60f)))
+			{
+				ShowStartupInstructions = true;
+			}
+			GUILayout.EndHorizontal();
+			GUILayout.Space(5f);
 
 			// Decal Method Toggle
 			GUILayout.BeginHorizontal();
@@ -2467,6 +2547,12 @@ private void CreateDebugSphere()
         // Returns true if the current pointer is over any UI element (uGUI) or inside this script's IMGUI panel.
         private bool IsPointerOverUI()
         {
+            // Treat the startup guide as modal so the Close click cannot also place a decal.
+            if (ShowStartupInstructions)
+            {
+                return true;
+            }
+
             // Check uGUI (EventSystem)
             if (EventSystem.current != null)
             {

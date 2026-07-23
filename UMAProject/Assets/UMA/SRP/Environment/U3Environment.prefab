@@ -78,7 +78,7 @@ Light:
   serializedVersion: 12
   m_Type: 1
   m_Color: {r: 1, g: 0.98039216, b: 0.9019608, a: 1}
-  m_Intensity: 0.3
+  m_Intensity: 0.5
   m_Range: 10
   m_SpotAngle: 120.03466
   m_InnerSpotAngle: 21.80208
