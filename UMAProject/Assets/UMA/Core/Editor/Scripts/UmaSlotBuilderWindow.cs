@@ -1838,11 +1838,6 @@ namespace UMA.Editors
                 return null;
             }
             
-            if (material == null)
-            {
-                Debug.LogError("No UMAMaterial specified! You must specify an UMAMaterial to build a slot.");
-                return null;
-            }
 
             if (slotFolder == null)
             {

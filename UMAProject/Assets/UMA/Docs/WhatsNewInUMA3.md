@@ -1,5 +1,16 @@
 # What's New in UMA 3
 
+## Changes Since the Initial UMA 3.0 Release
+
+- Added faster jobified and bone-baking mesh combiners, parallel processing, and generation optimizations.
+- Introduced MeshModifier sculpting, multiple brush modes, AutoSculpt, clothing-wide sculpting, and blendshape export.
+- Added the Clothing Conformer workflow for fitting garments to modified characters.
+- Expanded decal authoring with RenderTexture decals, stamp editing, documentation, diagnostics, and guided scene instructions.
+- Improved HDRP and Shader Graph support, including automated HDRP project setup and material repair.
+- Added the UMA Toolbar, diagnostics, documentation browser, recipe graph editor, and streamlined menus.
+- Fixed texture leaks, atlas and mesh-only builds, bindposes, DNA accumulation, LOD behavior, recipe saving, and skeleton stability.
+- Updated compatibility for recent Unity 6 releases and refreshed sample content, hair, eyebrows, lighting, and scenes.
+
 UMA 3 is the next major branch of UMA. It is currently represented by the repository's `develop` branch and has not yet been merged into the default branch. This document is written for users who want to know what they can do differently in UMA 3, what to try first, and what to watch for when moving content from UMA 2.
 
 Scope of this document:
