@@ -3096,7 +3096,7 @@ namespace UMA
             UMAAssetIndexer indexer = UMAAssetIndexer.Instance;
             if (indexer != null && indexer.generator != null)
             {
-                indexer.generator.removeUMA(this);
+                indexer.generator.removeUMA(this, true);
             }
 
             if (isOfficiallyCreated)

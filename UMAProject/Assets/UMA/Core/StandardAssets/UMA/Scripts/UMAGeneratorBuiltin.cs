@@ -45,6 +45,8 @@ namespace UMA
             public UMAData.GeneratedMaterials PreviousGeneratedMaterials;
             public bool HasPreservedGeneratedMaterials;
             public bool PreviousNeedsMaterialClear;
+            public SkinnedMeshRenderer[] PreviousRenderers;
+            public Mesh[] PreviousRendererMeshes;
             public RenderTexture PreviousActiveRenderTexture;
             public bool HasRenderTextureBackup;
             public RaceData Race;
@@ -1506,6 +1508,10 @@ namespace UMA
                 CacheDefaultOverlayMaterial(data);
 
                 bool hasExistingRenderer = HasExistingRenderer(data);
+                if (hasExistingRenderer)
+                {
+                    CaptureExistingRendererMeshes(state, data);
+                }
                 if (data.RebuildSkeletonThisBuild && !hasExistingRenderer)
                 {
                     if (data.umaRoot != null)
@@ -2033,6 +2039,64 @@ namespace UMA
             return false;
         }
 
+        private static void CaptureExistingRendererMeshes(
+            MultiStepGenerationState state,
+            UMAData data)
+        {
+            SkinnedMeshRenderer[] renderers = data.GetRenderers();
+            if (renderers == null || renderers.Length == 0)
+            {
+                return;
+            }
+
+            state.PreviousRenderers =
+                (SkinnedMeshRenderer[])renderers.Clone();
+            state.PreviousRendererMeshes =
+                new Mesh[renderers.Length];
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                SkinnedMeshRenderer renderer = renderers[i];
+                if (renderer != null)
+                {
+                    state.PreviousRendererMeshes[i] =
+                        renderer.sharedMesh;
+                }
+            }
+        }
+
+        private static void CleanCapturedRendererMeshes(
+            MultiStepGenerationState state)
+        {
+            if (state?.PreviousRendererMeshes == null)
+            {
+                return;
+            }
+
+            for (int i = 0;
+                 i < state.PreviousRendererMeshes.Length;
+                 i++)
+            {
+                Mesh mesh = state.PreviousRendererMeshes[i];
+                SkinnedMeshRenderer renderer =
+                    state.PreviousRenderers != null &&
+                    i < state.PreviousRenderers.Length
+                        ? state.PreviousRenderers[i]
+                        : null;
+                if (renderer != null &&
+                    renderer.sharedMesh == mesh)
+                {
+                    renderer.sharedMesh = null;
+                }
+                if (mesh != null)
+                {
+                    UMAUtils.DestroySceneObject(mesh);
+                }
+            }
+
+            state.PreviousRendererMeshes = null;
+            state.PreviousRenderers = null;
+        }
+
         private static void PreserveGeneratedMaterials(
             MultiStepGenerationState state)
         {
@@ -2193,6 +2257,21 @@ namespace UMA
         /// <inheritdoc/>
         public override void removeUMA(UMAData umaToRemove)
         {
+            RemoveUMA(umaToRemove, false);
+        }
+
+        /// <inheritdoc/>
+        public override void removeUMA(
+            UMAData umaToRemove,
+            bool isBeingDestroyed)
+        {
+            RemoveUMA(umaToRemove, isBeingDestroyed);
+        }
+
+        private void RemoveUMA(
+            UMAData umaToRemove,
+            bool isBeingDestroyed)
+        {
             if (activeMultiStepGeneration != null &&
                 activeMultiStepGeneration.Data == umaToRemove)
             {
@@ -2201,6 +2280,21 @@ namespace UMA
                 {
                     activeMultiStepGeneration.MeshOperation?.Cancel();
                     activeMultiStepGeneration.CancellationIssued = true;
+                }
+
+                if (isBeingDestroyed)
+                {
+                    // UMAData.OnDestroy normally cleans the generated
+                    // materials currently assigned to UMAData. During an
+                    // incremental rebuild, however, the visible set is held
+                    // separately while the replacement set is generated.
+                    // Restore the visible set while UMAData is still valid
+                    // and clean the pending set now. OnDestroy will then
+                    // clean the restored visible set through its normal path.
+                    CleanCapturedRendererMeshes(
+                        activeMultiStepGeneration);
+                    RollbackPreservedGeneratedMaterials(
+                        activeMultiStepGeneration);
                 }
             }
 

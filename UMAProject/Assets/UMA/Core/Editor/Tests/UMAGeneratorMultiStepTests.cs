@@ -979,6 +979,211 @@ namespace UMA.Editors.Tests
             }
         }
 
+        [Test]
+        [Category("UMA")]
+        [Category("MeshCombiner")]
+        [Category("MultiStepMeshCombiner")]
+        [Category("IncrementalRendererPreservation")]
+        [Category("IncrementalDestroyCleanup")]
+        public void DestroyingActiveUmaCleansCurrentAndPendingGeneratedAssets()
+        {
+            GameObject generatorObject = null;
+            GameObject avatarObject = null;
+            GameObject rendererObject = null;
+            RaceData race = null;
+            UMAMaterial umaMaterial = null;
+            TextureMerge textureMerge = null;
+            Material previousMaterial = null;
+            Texture2D previousTexture = null;
+            Mesh previousMesh = null;
+            Material pendingMaterial = null;
+            Texture2D pendingTexture = null;
+            UMAAssetIndexer indexer = null;
+            UMAGenerator originalGenerator = null;
+            try
+            {
+                generatorObject =
+                    new GameObject("Destroy cleanup generator");
+                var generator =
+                    generatorObject.AddComponent<SchedulerTestGenerator>();
+                var combiner =
+                    generatorObject.AddComponent<FakeMultiStepMeshCombiner>();
+                textureMerge =
+                    ScriptableObject.CreateInstance<TextureMerge>();
+                generator.textureMerge = textureMerge;
+                combiner.stepsToComplete = 5;
+                ConfigureGenerator(generator, combiner);
+
+                avatarObject =
+                    new GameObject("Destroy cleanup UMA");
+                UMAData data = CreateUmaData(avatarObject, out race);
+
+                rendererObject =
+                    new GameObject("Current live renderer");
+                rendererObject.transform.SetParent(
+                    avatarObject.transform,
+                    false);
+                var previousRenderer =
+                    rendererObject.AddComponent<SkinnedMeshRenderer>();
+                previousMesh = new Mesh { name = "Current live mesh" };
+                previousRenderer.sharedMesh = previousMesh;
+                previousRenderer.rootBone = avatarObject.transform;
+
+                Shader shader =
+                    Shader.Find("Hidden/InternalErrorShader");
+                Assert.NotNull(shader);
+                previousMaterial = new Material(shader);
+                previousTexture = new Texture2D(2, 2);
+                previousMaterial.mainTexture = previousTexture;
+                previousRenderer.sharedMaterial = previousMaterial;
+
+                umaMaterial =
+                    ScriptableObject.CreateInstance<UMAMaterial>();
+                umaMaterial.materialType =
+                    UMAMaterial.MaterialType.Atlas;
+                umaMaterial.material = previousMaterial;
+                var previousGeneratedMaterial =
+                    new UMAData.GeneratedMaterial
+                    {
+                        umaMaterial = umaMaterial,
+                        material = previousMaterial,
+                        resultingAtlasList =
+                            new Texture[] { previousTexture },
+                        skinnedMeshRenderer = previousRenderer
+                    };
+                var previousGeneratedMaterials =
+                    new UMAData.GeneratedMaterials();
+                previousGeneratedMaterials.materials.Add(
+                    previousGeneratedMaterial);
+
+                data.generatedMaterials =
+                    previousGeneratedMaterials;
+                data.SetRenderers(
+                    new[] { previousRenderer });
+                data.SetRendererAssets(
+                    new UMARendererAsset[] { null });
+                data.isTextureDirty = true;
+                data.isMeshDirty = true;
+                data.needsMaterialClear = true;
+
+                generator.addDirtyUMA(data);
+                generator.Work();
+
+                Assert.AreNotSame(
+                    previousGeneratedMaterials,
+                    data.generatedMaterials);
+                pendingMaterial = new Material(shader);
+                pendingTexture = new Texture2D(2, 2);
+                pendingMaterial.mainTexture = pendingTexture;
+                data.generatedMaterials.materials.Add(
+                    new UMAData.GeneratedMaterial
+                    {
+                        umaMaterial = umaMaterial,
+                        material = pendingMaterial,
+                        resultingAtlasList =
+                            new Texture[] { pendingTexture }
+                    });
+
+                indexer = UMAAssetIndexer.Instance;
+                Assert.NotNull(indexer);
+                originalGenerator = indexer.generator;
+                indexer.generator = generator;
+
+                FakeMeshCombineOperation operation =
+                    combiner.lastOperation;
+                MethodInfo onDestroy = typeof(UMAData).GetMethod(
+                    "OnDestroy",
+                    BindingFlags.Instance | BindingFlags.NonPublic);
+                Assert.NotNull(onDestroy);
+                onDestroy.Invoke(data, null);
+                UnityEngine.Object.DestroyImmediate(avatarObject);
+                avatarObject = null;
+                rendererObject = null;
+
+                Assert.AreEqual(
+                    1,
+                    operation.cancelCalls,
+                    "UMAData destruction must notify and cancel the active operation.");
+                Assert.IsTrue(
+                    previousMesh == null,
+                    "The mesh used by the current renderer must be destroyed.");
+                Assert.IsTrue(
+                    previousMaterial == null,
+                    "The current generated material must be destroyed.");
+                Assert.IsTrue(
+                    previousTexture == null,
+                    "The current generated atlas must be destroyed.");
+                Assert.IsTrue(
+                    pendingMaterial == null,
+                    "The pending generated material must be destroyed.");
+                Assert.IsTrue(
+                    pendingTexture == null,
+                    "The pending generated atlas must be destroyed.");
+
+                generator.Work();
+
+                Assert.IsTrue(operation.disposed);
+                Assert.IsTrue(generator.IsIdle());
+            }
+            finally
+            {
+                if (indexer != null)
+                {
+                    indexer.generator = originalGenerator;
+                }
+                if (avatarObject != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(
+                        avatarObject);
+                }
+                if (generatorObject != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(
+                        generatorObject);
+                }
+                if (previousMesh != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(
+                        previousMesh);
+                }
+                if (previousMaterial != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(
+                        previousMaterial);
+                }
+                if (previousTexture != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(
+                        previousTexture);
+                }
+                if (pendingMaterial != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(
+                        pendingMaterial);
+                }
+                if (pendingTexture != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(
+                        pendingTexture);
+                }
+                if (umaMaterial != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(
+                        umaMaterial);
+                }
+                if (textureMerge != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(
+                        textureMerge);
+                }
+                if (race != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(
+                        race);
+                }
+            }
+        }
+
         private static void ConfigureGenerator(
             SchedulerTestGenerator generator,
             UMAMeshCombiner combiner)
