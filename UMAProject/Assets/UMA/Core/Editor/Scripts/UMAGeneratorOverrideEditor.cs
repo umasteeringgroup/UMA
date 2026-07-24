@@ -68,6 +68,7 @@ namespace UMA.Editors
                 Draw("InitialScaleFactor");
                 Draw("IterationCount");
                 Draw("InterFrameDelay");
+                Draw("MaxMultiStepWorkMilliseconds", "Max Multi-Step Work (ms)");
                 Draw("collectGarbage");
                 Draw("garbageCollectionRate");
                 Draw("processAllPending");

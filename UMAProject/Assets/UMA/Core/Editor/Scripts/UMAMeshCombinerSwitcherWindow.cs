@@ -8,6 +8,7 @@ namespace UMA.Editors
         private enum CombinerMode
         {
             Jobified,
+            Incremental,
             DefaultBoneBaking,
             BoneBakingCompatibility,
             Default
@@ -84,6 +85,10 @@ namespace UMA.Editors
                 "Fast, job-based parallel mesh combining. Good for most use cases.",
                 current);
 
+            DrawCombinerToggle("Incremental", CombinerMode.Incremental,
+                "Amortizes mesh generation and blendshape loading over multiple frames using the generator's Max Multi-Step Work budget.",
+                current);
+
             DrawCombinerToggle("Default Bone Baking", CombinerMode.DefaultBoneBaking,
                 "Recommended bone-baking combiner. Reuses the Default combiner's renderer, material, and multi-renderer pipeline while baking unused bones.",
                 current);
@@ -120,6 +125,7 @@ namespace UMA.Editors
         {
             var combiner = _generator.meshCombiner;
             if (combiner is UMAJobifiedMeshCombiner) return "Jobified Combiner";
+            if (combiner is UMAIncrementalMeshCombiner) return "Incremental Combiner";
             if (combiner != null && combiner.GetType() == typeof(UMADefaultBoneBakingMeshCombiner)) return "Default Bone Baking Combiner";
             if (combiner != null && combiner.GetType() == typeof(UMABoneBakingMeshCombiner)) return "Bone Baking (Compatibility) Combiner";
             if (combiner is UMADefaultBoneBakingMeshCombiner) return "Default Bone Baking Combiner";
@@ -133,6 +139,9 @@ namespace UMA.Editors
             {
                 case CombinerMode.Jobified:
                     UseMeshCombiner<UMAJobifiedMeshCombiner>();
+                    break;
+                case CombinerMode.Incremental:
+                    UseMeshCombiner<UMAIncrementalMeshCombiner>();
                     break;
                 case CombinerMode.DefaultBoneBaking:
                     UseMeshCombiner<UMADefaultBoneBakingMeshCombiner>();

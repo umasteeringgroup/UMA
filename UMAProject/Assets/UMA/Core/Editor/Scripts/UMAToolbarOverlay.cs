@@ -161,6 +161,7 @@ namespace UMA.Editors
             }
 
             AddCombinerItem<UMAJobifiedMeshCombiner>(menu, generator, "Jobified");
+            AddCombinerItem<UMAIncrementalMeshCombiner>(menu, generator, "Incremental");
             AddCombinerItem<UMADefaultMeshCombiner>(menu, generator, "Default");
             AddCombinerItem<UMADefaultBoneBakingMeshCombiner>(menu, generator, "Default Bone Baking");
             AddCombinerItem<UMABoneBakingMeshCombiner>(menu, generator, "Bone Baking Compatibility");

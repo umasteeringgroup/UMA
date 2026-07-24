@@ -3,6 +3,7 @@
 using System;
 using UnityEngine;
 using System.Collections.Generic;
+using Unity.Profiling;
 using static UMA.DNAInstanceCollection;
 
 namespace UMA
@@ -12,6 +13,13 @@ namespace UMA
 	/// </summary>
 	public abstract class UMAGeneratorBuiltin : UMAGeneratorBase
 	{
+        private static readonly ProfilerMarker MultiStepAtomicStepMarker =
+            new ProfilerMarker("UMA.Generator.MultiStep.AtomicStep");
+        private static readonly ProfilerMarker MultiStepFinalizeMarker =
+            new ProfilerMarker("UMA.Generator.MultiStep.Finalize");
+        private static readonly ProfilerMarker MultiStepCancellationMarker =
+            new ProfilerMarker("UMA.Generator.MultiStep.CancelOrRestart");
+
 		[NonSerialized]
 		protected UMAData umaData;
 
@@ -28,6 +36,36 @@ namespace UMA
 		private LinkedList<UMAData> dirtyUmas = new LinkedList<UMAData>();
 		public UMAMeshCombiner meshCombiner;
 		private HashSet<string> raceNames;
+
+        private sealed class MultiStepGenerationState
+        {
+            public UMAData Data;
+            public IUMAMeshCombineOperation MeshOperation;
+            public UMAMeshCombiner MeshCombiner;
+            public UMAData.GeneratedMaterials PreviousGeneratedMaterials;
+            public bool HasPreservedGeneratedMaterials;
+            public bool PreviousNeedsMaterialClear;
+            public RenderTexture PreviousActiveRenderTexture;
+            public bool HasRenderTextureBackup;
+            public RaceData Race;
+            public bool FireEvents;
+            public long MeshStepTicks;
+            public bool MeshCompletionAccounted;
+            public uint RequestVersion;
+            public bool RestartRequested;
+            public bool DiscardRequested;
+            public bool CancellationIssued;
+            public long StartTimestamp;
+        }
+
+        [NonSerialized]
+        private MultiStepGenerationState activeMultiStepGeneration;
+        [NonSerialized]
+        private UMAMeshCombineTimeSlice scheduledMultiStepTimeSlice;
+        [NonSerialized]
+        private bool hasScheduledMultiStepTimeSlice;
+        [NonSerialized]
+        private UMAMeshCombineStatus lastMultiStepStatus = UMAMeshCombineStatus.Completed;
 
 		public enum FlipDecalMode
 		{
@@ -61,6 +99,10 @@ namespace UMA
 		[Min(0)]
 		[Tooltip("Number of complete frames to wait before processing the next UMA. Values above zero limit generation to one UMA per eligible frame.")]
 		public int InterFrameDelay = 0;
+
+        [Min(0f)]
+        [Tooltip("Soft main-thread budget, in milliseconds, for incremental mesh-combiner work during one Work call. Zero means unlimited. The current atomic step is allowed to finish before the generator yields.")]
+        public float MaxMultiStepWorkMilliseconds = 2.0f;
 
 		[NonSerialized]
 		private int interFrameDelayRemaining;
@@ -125,6 +167,31 @@ namespace UMA
         public long raceblendshapesTicks;
         [NonSerialized]
         public long endEventsTicks;
+        [NonSerialized]
+        public long multiStepBudgetOverrunCount;
+        [NonSerialized]
+        public float lastMultiStepAtomicStepMilliseconds;
+        [NonSerialized]
+        public float maximumMultiStepAtomicStepMilliseconds;
+        [NonSerialized]
+        public long multiStepWaitingForAsyncCount;
+        [NonSerialized]
+        public long multiStepRestartCount;
+        [NonSerialized]
+        public long multiStepCancellationCount;
+        [NonSerialized]
+        public long multiStepFailureCount;
+        [NonSerialized]
+        public long lastMultiStepGenerationLatencyTicks;
+        [NonSerialized]
+        public long maximumMultiStepGenerationLatencyTicks;
+
+        public string ActiveMultiStepStage =>
+            activeMultiStepGeneration?.MeshOperation?.StageName ??
+            (activeMultiStepGeneration != null ? "Generator Finalization" : string.Empty);
+
+        public float ActiveMultiStepProgress =>
+            activeMultiStepGeneration?.MeshOperation?.Progress ?? 0f;
 
         public float averageTextureProcessingTime
         {
@@ -256,7 +323,10 @@ namespace UMA
 				interFrameDelayRemaining--;
 			}
 
-            if (!IsIdle() && !waitingForInterFrameDelay)
+            // InterFrameDelay gates starting the next UMA. An active multi-step
+            // operation must continue to be polled so worker jobs and staged
+            // resources are not stranded between eligible start frames.
+            if (!IsIdle() && (!waitingForInterFrameDelay || activeMultiStepGeneration != null))
 			{
                 // forceGarbageCollect is incremented every time the mesh/rig is built.
                 // it does not increment on texture changes or rig adjustments.
@@ -281,15 +351,47 @@ namespace UMA
 				// We get the count (and multiply by two for slow gen) in case bad events add more items to the queue.
 				if (processAllPending)
 				{
-					count = umaDirtyList.Count;
+					count = Mathf.Max(
+                        activeMultiStepGeneration != null ? 1 : 0,
+                        umaDirtyList.Count);
                 }
 				pendingUmas = umaDirtyList.Count;
 
 				if (hasPendingUMAS())
 				{
+                    UMAMeshCombineTimeSlice multiStepTimeSlice = CreateMultiStepTimeSlice();
 					for (int i = 0; i < count; i++)
 					{
-						OnDirtyUpdate();
+                        // A shared slice covers every incremental operation
+                        // advanced by this Work call. processAllPending and
+                        // IterationCount may increase throughput, but never
+                        // replace the configured deadline.
+                        if (activeMultiStepGeneration == null &&
+                            meshCombiner is IUMAMultiStepMeshCombiner &&
+                            multiStepTimeSlice.IsExpired)
+                        {
+                            break;
+                        }
+
+                        RunDirtyUpdate(multiStepTimeSlice);
+                        while (activeMultiStepGeneration != null &&
+                               lastMultiStepStatus == UMAMeshCombineStatus.InProgress &&
+                               !multiStepTimeSlice.IsExpired)
+                        {
+                            lastMultiStepStatus = ContinueDirtyUpdate(multiStepTimeSlice);
+                        }
+
+                        if (activeMultiStepGeneration != null)
+                        {
+                            // WaitingForAsync always yields. InProgress yields
+                            // only after the shared soft deadline is exhausted.
+                            break;
+                        }
+                        if (meshCombiner is IUMAMultiStepMeshCombiner &&
+                            multiStepTimeSlice.IsExpired)
+                        {
+                            break;
+                        }
 						if (configuredInterFrameDelay > 0)
 						{
 							interFrameDelayRemaining = configuredInterFrameDelay;
@@ -1047,37 +1149,996 @@ namespace UMA
 		{
 			try
 			{
-                if (umaDirtyList.Count < 1)
-				{
-					return;
-				}
-
-				UMAData umaData = umaDirtyList[0];
-				try
-				{
-					GenerateSingleUMA(umaDirtyList[0], true);
-				}
-				catch (Exception ex)
-				{
-					if (Debug.isDebugBuild)
-					{
-                        Debug.LogError($"Exception while generating UMA {umaData.name}: {ex.Message}", umaData.gameObject);
-						Debug.LogException(ex);
-					}
-				}
-                umaDirtyList.RemoveAt(0);
-				umaData.MoveToList(cleanUmas);
-				umaData = null;
-				return;
+                UMAMeshCombineTimeSlice timeSlice = hasScheduledMultiStepTimeSlice
+                    ? scheduledMultiStepTimeSlice
+                    : UMAMeshCombineTimeSlice.Unlimited;
+                lastMultiStepStatus = activeMultiStepGeneration != null
+                    ? ContinueDirtyUpdate(timeSlice)
+                    : StartDirtyUpdate(timeSlice);
 			}
 			catch (Exception ex)
 			{
-				if (Debug.isDebugBuild)
-				{
-					UnityEngine.Debug.LogException(ex);
-				}
+                if (activeMultiStepGeneration != null)
+                {
+                    FailDirtyUpdate(ex);
+                }
+                else
+                {
+                    if (Debug.isDebugBuild)
+                    {
+                        UnityEngine.Debug.LogException(ex);
+                    }
+
+                    if (umaDirtyList.Count > 0)
+                    {
+                        CompleteDirtyUpdate(umaDirtyList[0]);
+                    }
+                }
+                lastMultiStepStatus = UMAMeshCombineStatus.Failed;
 			}
 		}
+
+        private void RunDirtyUpdate(UMAMeshCombineTimeSlice timeSlice)
+        {
+            scheduledMultiStepTimeSlice = timeSlice;
+            hasScheduledMultiStepTimeSlice = true;
+            lastMultiStepStatus = UMAMeshCombineStatus.Completed;
+            try
+            {
+                // Retain the virtual entry point so existing generator
+                // subclasses that customize OnDirtyUpdate keep their behavior.
+                OnDirtyUpdate();
+            }
+            finally
+            {
+                hasScheduledMultiStepTimeSlice = false;
+                scheduledMultiStepTimeSlice = default;
+            }
+        }
+
+        private UMAMeshCombineTimeSlice CreateMultiStepTimeSlice()
+        {
+            float configuredBudget = MaxMultiStepWorkMilliseconds;
+            if (float.IsNaN(configuredBudget) ||
+                float.IsInfinity(configuredBudget) ||
+                configuredBudget < 0f)
+            {
+                configuredBudget = 0f;
+            }
+
+            return new UMAMeshCombineTimeSlice(
+                configuredBudget,
+                GetMultiStepTimestamp,
+                GetMultiStepTimestampFrequency());
+        }
+
+        /// <summary>
+        /// Monotonic timestamp hook used by deterministic scheduler tests.
+        /// </summary>
+        protected virtual long GetMultiStepTimestamp()
+        {
+            return System.Diagnostics.Stopwatch.GetTimestamp();
+        }
+
+        /// <summary>
+        /// Frequency for <see cref="GetMultiStepTimestamp"/>.
+        /// </summary>
+        protected virtual long GetMultiStepTimestampFrequency()
+        {
+            return System.Diagnostics.Stopwatch.Frequency;
+        }
+
+        /// <summary>
+        /// Starts the current dirty UMA. Existing combiners retain the original
+        /// synchronous GenerateSingleUMA path. Only an explicitly multi-step
+        /// combiner creates resumable generator state.
+        /// </summary>
+        private UMAMeshCombineStatus StartDirtyUpdate(UMAMeshCombineTimeSlice timeSlice)
+        {
+            if (umaDirtyList.Count < 1)
+            {
+                return UMAMeshCombineStatus.Completed;
+            }
+
+            UMAData data = umaDirtyList[0];
+            uint requestVersion = data != null
+                ? data.GenerationRequestVersion
+                : 0u;
+            if (!(meshCombiner is IUMAMultiStepMeshCombiner multiStepCombiner))
+            {
+                try
+                {
+                    GenerateSingleUMA(data, true);
+                }
+                catch (Exception ex)
+                {
+                    LogGenerationException(data, ex);
+                }
+
+                CompleteDirtyUpdate(data, requestVersion);
+                return UMAMeshCombineStatus.Completed;
+            }
+
+            var state = new MultiStepGenerationState
+            {
+                Data = data,
+                FireEvents = true,
+                MeshCombiner = meshCombiner,
+                RequestVersion = requestVersion,
+                StartTimestamp =
+                    System.Diagnostics.Stopwatch.GetTimestamp()
+            };
+            activeMultiStepGeneration = state;
+
+            try
+            {
+                if (!PrepareMultiStepGeneration(state, multiStepCombiner))
+                {
+                    CompleteDirtyUpdate(data, state.RequestVersion);
+                    return UMAMeshCombineStatus.Completed;
+                }
+
+                if (state.MeshOperation == null)
+                {
+                    if (timeSlice.IsExpired)
+                    {
+                        return UMAMeshCombineStatus.InProgress;
+                    }
+                    FinishMultiStepGeneration(state);
+                    CompleteDirtyUpdate(data, state.RequestVersion);
+                    return UMAMeshCombineStatus.Completed;
+                }
+
+                if (timeSlice.IsExpired)
+                {
+                    return UMAMeshCombineStatus.InProgress;
+                }
+
+                return ContinueDirtyUpdate(timeSlice);
+            }
+            catch (Exception ex)
+            {
+                FailDirtyUpdate(ex);
+                return UMAMeshCombineStatus.Failed;
+            }
+        }
+
+        /// <summary>
+        /// Advances one bounded unit of an active mesh operation and performs
+        /// post-mesh generation only after the operation completes.
+        /// </summary>
+        private UMAMeshCombineStatus ContinueDirtyUpdate(UMAMeshCombineTimeSlice timeSlice)
+        {
+            MultiStepGenerationState state = activeMultiStepGeneration;
+            if (state == null)
+            {
+                return UMAMeshCombineStatus.Completed;
+            }
+
+            try
+            {
+                if (state.DiscardRequested ||
+                    state.Data == null)
+                {
+                    return AdvanceDiscardCancellation(state);
+                }
+
+                if (state.RestartRequested ||
+                    state.RequestVersion !=
+                    state.Data.GenerationRequestVersion ||
+                    state.MeshCombiner != meshCombiner)
+                {
+                    state.RestartRequested = true;
+                    return AdvanceRestartCancellation(state);
+                }
+
+                IUMAMeshCombineOperation operation = state.MeshOperation;
+                if (operation == null)
+                {
+                    if (timeSlice.IsExpired)
+                    {
+                        return UMAMeshCombineStatus.InProgress;
+                    }
+                    FinishMultiStepGeneration(state);
+                    CompleteDirtyUpdate(
+                        state.Data,
+                        state.RequestVersion);
+                    return UMAMeshCombineStatus.Completed;
+                }
+
+                if (state.MeshCompletionAccounted)
+                {
+                    if (timeSlice.IsExpired)
+                    {
+                        return UMAMeshCombineStatus.InProgress;
+                    }
+                    FinishMultiStepGeneration(state);
+                    CompleteDirtyUpdate(
+                        state.Data,
+                        state.RequestVersion);
+                    return UMAMeshCombineStatus.Completed;
+                }
+
+                if (timeSlice.IsExpired &&
+                    operation.Status != UMAMeshCombineStatus.Completed &&
+                    operation.Status != UMAMeshCombineStatus.Failed &&
+                    operation.Status != UMAMeshCombineStatus.Cancelled)
+                {
+                    return UMAMeshCombineStatus.InProgress;
+                }
+
+                UMAMeshCombineStepResult result;
+                var meshStepStopwatch = System.Diagnostics.Stopwatch.StartNew();
+                double remainingMilliseconds = timeSlice.RemainingMilliseconds;
+                try
+                {
+                    using (MultiStepAtomicStepMarker.Auto())
+                    {
+                        switch (operation.Status)
+                        {
+                            case UMAMeshCombineStatus.Completed:
+                                result = UMAMeshCombineStepResult.Completed();
+                                break;
+                            case UMAMeshCombineStatus.Failed:
+                                result = UMAMeshCombineStepResult.Failed(
+                                    operation.Error ??
+                                    new InvalidOperationException("The multi-step mesh operation failed without an error."));
+                                break;
+                            case UMAMeshCombineStatus.Cancelled:
+                                result = UMAMeshCombineStepResult.Cancelled();
+                                break;
+                            default:
+                                result = operation.Step(timeSlice);
+                                break;
+                        }
+                    }
+                }
+                finally
+                {
+                    meshStepStopwatch.Stop();
+                    state.MeshStepTicks += meshStepStopwatch.ElapsedTicks;
+                    lastMultiStepAtomicStepMilliseconds =
+                        (float)(meshStepStopwatch.ElapsedTicks * 1000d /
+                                System.Diagnostics.Stopwatch.Frequency);
+                    maximumMultiStepAtomicStepMilliseconds = Mathf.Max(
+                        maximumMultiStepAtomicStepMilliseconds,
+                        lastMultiStepAtomicStepMilliseconds);
+                    if (!double.IsPositiveInfinity(remainingMilliseconds) &&
+                        lastMultiStepAtomicStepMilliseconds > remainingMilliseconds)
+                    {
+                        multiStepBudgetOverrunCount++;
+                    }
+                }
+
+                switch (result.Status)
+                {
+                    case UMAMeshCombineStatus.InProgress:
+                        return result.Status;
+                    case UMAMeshCombineStatus.WaitingForAsync:
+                        multiStepWaitingForAsyncCount++;
+                        return result.Status;
+
+                    case UMAMeshCombineStatus.Completed:
+                        if (state.RestartRequested ||
+                            state.RequestVersion !=
+                            state.Data.GenerationRequestVersion ||
+                            state.MeshCombiner != meshCombiner)
+                        {
+                            state.RestartRequested = true;
+                            return AdvanceRestartCancellation(state);
+                        }
+                        CommitPreservedGeneratedMaterials(state);
+                        AccountForCompletedMultiStepMesh(state);
+                        // Generator finalization is part of the completed UMA
+                        // transaction. It remains atomic so events and queue
+                        // state cannot expose a half-finished avatar.
+                        using (MultiStepFinalizeMarker.Auto())
+                        {
+                            FinishMultiStepGeneration(state);
+                        }
+                        CompleteDirtyUpdate(
+                            state.Data,
+                            state.RequestVersion);
+                        return UMAMeshCombineStatus.Completed;
+
+                    case UMAMeshCombineStatus.Cancelled:
+                        CancelDirtyUpdate();
+                        return UMAMeshCombineStatus.Cancelled;
+
+                    case UMAMeshCombineStatus.Failed:
+                        throw result.Error ?? operation.Error ??
+                              new InvalidOperationException("The multi-step mesh operation failed without an error.");
+
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
+            catch (Exception ex)
+            {
+                FailDirtyUpdate(ex);
+                return UMAMeshCombineStatus.Failed;
+            }
+        }
+
+        private void AccountForCompletedMultiStepMesh(MultiStepGenerationState state)
+        {
+            if (state.MeshCompletionAccounted)
+            {
+                return;
+            }
+
+            meshUpdatesTicks += state.MeshStepTicks;
+            state.Data.isAtlasDirty = false;
+            state.Data.isMeshDirty = false;
+            SlotsChanged++;
+            forceGarbageCollect++;
+            state.MeshCompletionAccounted = true;
+            long latencyTicks =
+                System.Diagnostics.Stopwatch.GetTimestamp() -
+                state.StartTimestamp;
+            lastMultiStepGenerationLatencyTicks = latencyTicks;
+            maximumMultiStepGenerationLatencyTicks = Math.Max(
+                maximumMultiStepGenerationLatencyTicks,
+                latencyTicks);
+        }
+
+        private bool PrepareMultiStepGeneration(
+            MultiStepGenerationState state,
+            IUMAMultiStepMeshCombiner multiStepCombiner)
+        {
+            UMAData data = state.Data;
+#if UMA_DEBUG
+            if (data != null && !umaDatasGenerated.Contains(data))
+            {
+                umaDatasGenerated.Add(data);
+            }
+#endif
+            if (data == null)
+            {
+                return false;
+            }
+
+            FreezeTime = true;
+            umaData = data;
+            var stageStopwatch = System.Diagnostics.Stopwatch.StartNew();
+            try
+            {
+                CacheDefaultOverlayMaterial(data);
+
+                bool hasExistingRenderer = HasExistingRenderer(data);
+                if (data.RebuildSkeletonThisBuild && !hasExistingRenderer)
+                {
+                    if (data.umaRoot != null)
+                    {
+                        SaveMountedItems(data);
+                    }
+                    DestroyImmediate(data.umaRoot, false);
+                    data.umaRoot = null;
+                    data.RebuildSkeletonThisBuild = false;
+                    data.isShapeDirty = true;
+                }
+                else if (data.RebuildSkeletonThisBuild)
+                {
+                    // A destructive skeleton reset would invalidate the bones
+                    // used by the renderer that must remain visible during a
+                    // multi-frame rebuild. Retain the current skeleton while
+                    // the replacement mesh is staged.
+                    data.RebuildSkeletonThisBuild = false;
+                    data.isShapeDirty = true;
+                }
+
+                if (!data.Validate())
+                {
+                    return false;
+                }
+
+                if (data.isTextureDirty &&
+                    data.isMeshDirty &&
+                    hasExistingRenderer)
+                {
+                    PreserveGeneratedMaterials(state);
+                }
+
+                if (data.isTextureDirty && data.needsMaterialClear)
+                {
+                    Debug.Log("Cleaning Textures and Generated Materials for UMAData");
+                    data.CleanTextures();
+                    data.generatedMaterials = new UMAData.GeneratedMaterials();
+                    data.needsMaterialClear = false;
+                }
+
+                validationTicks += stageStopwatch.ElapsedTicks;
+                stageStopwatch.Restart();
+
+                state.PreviousActiveRenderTexture = RenderTexture.active;
+                state.HasRenderTextureBackup = true;
+
+                meshCombiner.Preprocess(data);
+                meshpreprocessTicks += stageStopwatch.ElapsedTicks;
+                stageStopwatch.Restart();
+
+                data.FireCharacterBegunEvents();
+                BegunEventsTicks += stageStopwatch.ElapsedTicks;
+                stageStopwatch.Restart();
+
+                if (!data.rawAvatar)
+                {
+                    PreApply(data);
+                }
+                preapplyTicks += stageStopwatch.ElapsedTicks;
+                stageStopwatch.Restart();
+
+                state.Race = data.umaRecipe.raceData;
+                if (state.Race.useNewDNA)
+                {
+                    data.NewDNAPreApply();
+                }
+
+                if (data.isTextureDirty)
+                {
+                    var textureGenerator = new UMAGeneratorPro();
+                    textureGenerator.ProcessTexture(this, data, !data.isMeshDirty, InitialScaleFactor);
+                    data.isTextureDirty = false;
+                    data.isAtlasDirty |= data.isMeshDirty;
+                    TextureChanged++;
+                }
+                textureprocessingTicks += stageStopwatch.ElapsedTicks;
+                stageStopwatch.Restart();
+
+                if (data.isMeshDirty)
+                {
+                    data.force32bit = Calculate32bitness();
+                    state.MeshOperation = multiStepCombiner.BeginUpdateUMAMesh(
+                        data.isAtlasDirty,
+                        data,
+                        atlasResolution);
+                    if (state.MeshOperation == null)
+                    {
+                        throw new InvalidOperationException(
+                            $"{meshCombiner.GetType().Name} returned a null multi-step mesh operation.");
+                    }
+                    state.MeshStepTicks += stageStopwatch.ElapsedTicks;
+                }
+
+                return true;
+            }
+            finally
+            {
+                // FreezeTime affects animator restoration, not background mesh
+                // preparation. Do not leave this generator-global flag enabled
+                // while the operation waits across frames.
+                FreezeTime = false;
+            }
+        }
+
+        private void FinishMultiStepGeneration(MultiStepGenerationState state)
+        {
+            UMAData data = state.Data;
+            umaData = data;
+            FreezeTime = true;
+            var stageStopwatch = System.Diagnostics.Stopwatch.StartNew();
+            try
+            {
+                if (data.isShapeDirty)
+                {
+                    UpdateUMABody(data);
+                    data.isShapeDirty = false;
+                    DnaChanged++;
+                }
+                else if (data.skeleton.isUpdating)
+                {
+                    data.skeleton.EndSkeletonUpdate();
+                }
+                skeletonUpdatesTicks += stageStopwatch.ElapsedTicks;
+                stageStopwatch.Restart();
+
+                SkinnedMeshRenderer[] renderers = data.GetRenderers();
+                if (autoSetRaceBlendshapes)
+                {
+                    if (raceNames == null)
+                    {
+                        RaceData[] races = UMAAssetIndexer.Instance.GetAllRaces();
+                        raceNames = new HashSet<string>();
+                        for (int i = 0; i < races.Length; i++)
+                        {
+                            RaceData race = races[i];
+                            raceNames.Add(race.raceName);
+                        }
+                    }
+
+                    if (raceNames != null && raceNames.Count > 0)
+                    {
+                        for (int rendererIndex = 0; rendererIndex < renderers.Length; rendererIndex++)
+                        {
+                            SkinnedMeshRenderer renderer = renderers[rendererIndex];
+                            if (renderer.sharedMesh.blendShapeCount <= 0)
+                            {
+                                continue;
+                            }
+
+                            for (int shapeIndex = 0;
+                                 shapeIndex < renderer.sharedMesh.blendShapeCount;
+                                 shapeIndex++)
+                            {
+                                string shapeName = renderer.sharedMesh.GetBlendShapeName(shapeIndex);
+                                if (shapeName == state.Race.raceName)
+                                {
+                                    renderer.SetBlendShapeWeight(shapeIndex, 1.0f);
+                                }
+                                else if (raceNames.Contains(shapeName))
+                                {
+                                    renderer.SetBlendShapeWeight(shapeIndex, 0.0f);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                ApplyManualRendererBounds(data, renderers);
+                data.SetupEmbeddedPhysics();
+                raceblendshapesTicks += stageStopwatch.ElapsedTicks;
+                stageStopwatch.Restart();
+
+                RestoreMultiStepRenderTexture(state);
+
+                data.dirty = false;
+                if (state.FireEvents)
+                {
+                    UMAReady();
+                }
+                else
+                {
+                    data.Show();
+                }
+                endEventsTicks += stageStopwatch.ElapsedTicks;
+            }
+            finally
+            {
+                FreezeTime = false;
+            }
+        }
+
+        private void CompleteDirtyUpdate(UMAData completedData)
+        {
+            CompleteDirtyUpdate(completedData, null);
+        }
+
+        private void CompleteDirtyUpdate(
+            UMAData completedData,
+            uint? completedRequestVersion)
+        {
+            MultiStepGenerationState state = activeMultiStepGeneration;
+            activeMultiStepGeneration = null;
+            try
+            {
+                state?.MeshOperation?.Dispose();
+            }
+            catch (Exception ex)
+            {
+                if (Debug.isDebugBuild)
+                {
+                    Debug.LogException(ex);
+                }
+            }
+
+            bool hasNewerRequest =
+                completedData != null &&
+                completedRequestVersion.HasValue &&
+                completedData.GenerationRequestVersion !=
+                completedRequestVersion.Value;
+            if (hasNewerRequest)
+            {
+                completedData.dirty = true;
+                if (!umaDirtyList.Contains(completedData))
+                {
+                    umaDirtyList.Add(completedData);
+                }
+                completedData.MoveToList(dirtyUmas);
+                if (umaData == completedData)
+                {
+                    umaData = null;
+                }
+                return;
+            }
+
+            if (umaDirtyList.Count > 0 && umaDirtyList[0] == completedData)
+            {
+                umaDirtyList.RemoveAt(0);
+            }
+            else
+            {
+                umaDirtyList.Remove(completedData);
+            }
+
+            if (completedData != null)
+            {
+                completedData.MoveToList(cleanUmas);
+            }
+            if (umaData == completedData)
+            {
+                umaData = null;
+            }
+        }
+
+        private UMAMeshCombineStatus AdvanceRestartCancellation(
+            MultiStepGenerationState state)
+        {
+            using (MultiStepCancellationMarker.Auto())
+            {
+                return AdvanceCancellationInternal(state, true);
+            }
+        }
+
+        private UMAMeshCombineStatus AdvanceDiscardCancellation(
+            MultiStepGenerationState state)
+        {
+            using (MultiStepCancellationMarker.Auto())
+            {
+                return AdvanceCancellationInternal(state, false);
+            }
+        }
+
+        private UMAMeshCombineStatus AdvanceCancellationInternal(
+            MultiStepGenerationState state,
+            bool restart)
+        {
+            if (restart)
+            {
+                return AdvanceRestartCancellationInternal(state);
+            }
+            return AdvanceDiscardCancellationInternal(state);
+        }
+
+        private UMAMeshCombineStatus AdvanceRestartCancellationInternal(
+            MultiStepGenerationState state)
+        {
+            UMAMeshCombineStatus status =
+                PollCancellation(state);
+            if (status == UMAMeshCombineStatus.InProgress ||
+                status == UMAMeshCombineStatus.WaitingForAsync)
+            {
+                return status;
+            }
+
+            RestartDirtyUpdate(state);
+            return UMAMeshCombineStatus.Cancelled;
+        }
+
+        private UMAMeshCombineStatus AdvanceDiscardCancellationInternal(
+            MultiStepGenerationState state)
+        {
+            UMAMeshCombineStatus status =
+                PollCancellation(state);
+            if (status == UMAMeshCombineStatus.InProgress ||
+                status == UMAMeshCombineStatus.WaitingForAsync)
+            {
+                return status;
+            }
+
+            FinishDiscardedDirtyUpdate(state);
+            return UMAMeshCombineStatus.Cancelled;
+        }
+
+        private static UMAMeshCombineStatus PollCancellation(
+            MultiStepGenerationState state)
+        {
+            IUMAMeshCombineOperation operation = state.MeshOperation;
+            if (operation == null)
+            {
+                return UMAMeshCombineStatus.Cancelled;
+            }
+
+            if (!state.CancellationIssued)
+            {
+                operation.Cancel();
+                state.CancellationIssued = true;
+            }
+
+            UMAMeshCombineStatus status = operation.Status;
+            if (status != UMAMeshCombineStatus.Cancelled &&
+                status != UMAMeshCombineStatus.Completed &&
+                status != UMAMeshCombineStatus.Failed)
+            {
+                UMAMeshCombineStepResult result =
+                    operation.Step(UMAMeshCombineTimeSlice.Unlimited);
+                status = result.Status;
+                if (status == UMAMeshCombineStatus.Failed)
+                {
+                    throw result.Error ?? operation.Error ??
+                        new InvalidOperationException(
+                            "The stale multi-step mesh operation failed while cancelling.");
+                }
+            }
+
+            if (status == UMAMeshCombineStatus.Failed)
+            {
+                throw operation.Error ??
+                    new InvalidOperationException(
+                        "The multi-step mesh operation failed while cancelling.");
+            }
+            return status;
+        }
+
+        private void RestartDirtyUpdate(MultiStepGenerationState state)
+        {
+            multiStepRestartCount++;
+            activeMultiStepGeneration = null;
+            try
+            {
+                state.MeshOperation?.Dispose();
+            }
+            catch (Exception ex)
+            {
+                if (Debug.isDebugBuild)
+                {
+                    Debug.LogException(ex);
+                }
+            }
+
+            RollbackPreservedGeneratedMaterials(state);
+            RestoreMultiStepRenderTexture(state);
+            FreezeTime = false;
+
+            if (state.Data != null)
+            {
+                state.Data.dirty = true;
+                if (!umaDirtyList.Contains(state.Data))
+                {
+                    umaDirtyList.Add(state.Data);
+                }
+                state.Data.MoveToList(dirtyUmas);
+            }
+            if (umaData == state.Data)
+            {
+                umaData = null;
+            }
+        }
+
+        private void FinishDiscardedDirtyUpdate(
+            MultiStepGenerationState state)
+        {
+            multiStepCancellationCount++;
+            activeMultiStepGeneration = null;
+            try
+            {
+                state.MeshOperation?.Dispose();
+            }
+            catch (Exception ex)
+            {
+                if (Debug.isDebugBuild)
+                {
+                    Debug.LogException(ex);
+                }
+            }
+
+            RollbackPreservedGeneratedMaterials(state);
+            RestoreMultiStepRenderTexture(state);
+            FreezeTime = false;
+            umaDirtyList.Remove(state.Data);
+            if (umaData == state.Data)
+            {
+                umaData = null;
+            }
+        }
+
+        private void FailDirtyUpdate(Exception exception)
+        {
+            multiStepFailureCount++;
+            MultiStepGenerationState state = activeMultiStepGeneration;
+            UMAData failedData = state?.Data;
+            try
+            {
+                state?.MeshOperation?.Cancel();
+            }
+            catch (Exception cancellationException)
+            {
+                if (Debug.isDebugBuild)
+                {
+                    Debug.LogException(cancellationException);
+                }
+            }
+
+            RestoreMultiStepRenderTexture(state);
+            FreezeTime = false;
+            LogGenerationException(failedData, exception);
+            CompleteDirtyUpdate(
+                failedData,
+                state != null ? state.RequestVersion : (uint?)null);
+            RollbackPreservedGeneratedMaterials(state);
+        }
+
+        private void CancelDirtyUpdate()
+        {
+            CancelActiveDirtyUpdate(true);
+        }
+
+        private void CancelActiveDirtyUpdate(bool moveToCleanList)
+        {
+            MultiStepGenerationState state = activeMultiStepGeneration;
+            if (state == null)
+            {
+                return;
+            }
+
+            multiStepCancellationCount++;
+            activeMultiStepGeneration = null;
+            try
+            {
+                state.MeshOperation?.Cancel();
+                state.MeshOperation?.Dispose();
+            }
+            catch (Exception ex)
+            {
+                if (Debug.isDebugBuild)
+                {
+                    Debug.LogException(ex);
+                }
+            }
+
+            RollbackPreservedGeneratedMaterials(state);
+            RestoreMultiStepRenderTexture(state);
+            FreezeTime = false;
+
+            if (umaDirtyList.Count > 0 && umaDirtyList[0] == state.Data)
+            {
+                umaDirtyList.RemoveAt(0);
+            }
+            else
+            {
+                umaDirtyList.Remove(state.Data);
+            }
+
+            if (moveToCleanList && state.Data != null)
+            {
+                state.Data.MoveToList(cleanUmas);
+            }
+            if (umaData == state.Data)
+            {
+                umaData = null;
+            }
+        }
+
+        private static void RestoreMultiStepRenderTexture(MultiStepGenerationState state)
+        {
+            if (state == null || !state.HasRenderTextureBackup)
+            {
+                return;
+            }
+
+            RenderTexture.active = state.PreviousActiveRenderTexture;
+            state.HasRenderTextureBackup = false;
+        }
+
+        private static bool HasExistingRenderer(UMAData data)
+        {
+            if (data == null)
+            {
+                return false;
+            }
+
+            SkinnedMeshRenderer[] renderers = data.GetRenderers();
+            if (renderers == null)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                if (renderers[i] != null &&
+                    renderers[i].sharedMesh != null)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private static void PreserveGeneratedMaterials(
+            MultiStepGenerationState state)
+        {
+            if (state == null ||
+                state.HasPreservedGeneratedMaterials ||
+                state.Data == null)
+            {
+                return;
+            }
+
+            UMAData data = state.Data;
+            state.PreviousGeneratedMaterials =
+                data.generatedMaterials ??
+                new UMAData.GeneratedMaterials();
+            state.PreviousNeedsMaterialClear =
+                data.needsMaterialClear;
+            state.HasPreservedGeneratedMaterials = true;
+            data.generatedMaterials =
+                new UMAData.GeneratedMaterials();
+        }
+
+        private static void CommitPreservedGeneratedMaterials(
+            MultiStepGenerationState state)
+        {
+            if (state == null ||
+                !state.HasPreservedGeneratedMaterials)
+            {
+                return;
+            }
+
+            UMAData data = state.Data;
+            UMAData.GeneratedMaterials previous =
+                state.PreviousGeneratedMaterials;
+            state.PreviousGeneratedMaterials = null;
+            state.HasPreservedGeneratedMaterials = false;
+
+            CleanDetachedGeneratedMaterials(data, previous);
+        }
+
+        private static void RollbackPreservedGeneratedMaterials(
+            MultiStepGenerationState state)
+        {
+            if (state == null ||
+                !state.HasPreservedGeneratedMaterials)
+            {
+                return;
+            }
+
+            UMAData data = state.Data;
+            UMAData.GeneratedMaterials generatedDuringBuild =
+                data != null ? data.generatedMaterials : null;
+            if (data != null)
+            {
+                data.generatedMaterials =
+                    state.PreviousGeneratedMaterials ??
+                    new UMAData.GeneratedMaterials();
+                data.needsMaterialClear =
+                    state.PreviousNeedsMaterialClear;
+            }
+
+            state.PreviousGeneratedMaterials = null;
+            state.HasPreservedGeneratedMaterials = false;
+            CleanDetachedGeneratedMaterials(
+                data,
+                generatedDuringBuild);
+        }
+
+        private static void CleanDetachedGeneratedMaterials(
+            UMAData data,
+            UMAData.GeneratedMaterials materials)
+        {
+            if (data == null ||
+                materials == null ||
+                materials == data.generatedMaterials)
+            {
+                return;
+            }
+
+            UMAData.GeneratedMaterials current =
+                data.generatedMaterials;
+            try
+            {
+                data.generatedMaterials = materials;
+                data.CleanTextures();
+            }
+            finally
+            {
+                data.generatedMaterials = current;
+            }
+        }
+
+        private static void LogGenerationException(UMAData data, Exception exception)
+        {
+            if (!Debug.isDebugBuild)
+            {
+                return;
+            }
+
+            if (data != null)
+            {
+                Debug.LogError(
+                    $"Exception while generating UMA {data.name}: {exception.Message}",
+                    data.gameObject);
+            }
+            Debug.LogException(exception);
+        }
 
 		private void UpdateUMAMesh(bool updatedAtlas)
 		{
@@ -1122,6 +2183,7 @@ namespace UMA
 
         public void ClearAllPending()
         {
+            CancelActiveDirtyUpdate(false);
             umaDirtyList.Clear();
             cleanUmas.Clear();
             dirtyUmas.Clear();
@@ -1131,6 +2193,17 @@ namespace UMA
         /// <inheritdoc/>
         public override void removeUMA(UMAData umaToRemove)
         {
+            if (activeMultiStepGeneration != null &&
+                activeMultiStepGeneration.Data == umaToRemove)
+            {
+                activeMultiStepGeneration.DiscardRequested = true;
+                if (!activeMultiStepGeneration.CancellationIssued)
+                {
+                    activeMultiStepGeneration.MeshOperation?.Cancel();
+                    activeMultiStepGeneration.CancellationIssued = true;
+                }
+            }
+
             // Remove from the various lists if it exists
             umaDirtyList.Remove(umaToRemove);
             cleanUmas.Remove(umaToRemove);
@@ -1142,8 +2215,15 @@ namespace UMA
 		{
 			if (umaToAdd)
 			{
+                umaToAdd.BeginGenerationRequest();
+                if (activeMultiStepGeneration != null &&
+                    activeMultiStepGeneration.Data == umaToAdd)
+                {
+                    activeMultiStepGeneration.RestartRequested = true;
+                }
+
                 // guard against duplicates
-                if (!updatePending(umaToAdd))
+                if (!umaDirtyList.Contains(umaToAdd))
                 {
 					//Debug.Log("Adding to dirty list");
                     umaDirtyList.Add(umaToAdd);
@@ -1152,20 +2232,33 @@ namespace UMA
 			}
 		}
 
+        protected virtual void OnDisable()
+        {
+            CancelActiveDirtyUpdate(false);
+        }
+
+        protected virtual void OnDestroy()
+        {
+            CancelActiveDirtyUpdate(false);
+        }
+
 		public void Clear()
         {
+            CancelActiveDirtyUpdate(false);
 			umaDirtyList.Clear();
         }
 
 		/// <inheritdoc/>
 		public override bool IsIdle()
 		{
-			return (umaDirtyList.Count == 0);// && RenderTexToCPU.PendingCopies() == 0);
+			return umaDirtyList.Count == 0 &&
+                activeMultiStepGeneration == null;
         }
 
 		public bool hasPendingUMAS()
         {
-            return umaDirtyList.Count > 0;
+            return umaDirtyList.Count > 0 ||
+                activeMultiStepGeneration != null;
         }
 
         /// <inheritdoc/>

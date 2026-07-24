@@ -1,6 +1,6 @@
 # Mesh Combiners
 
-UMA provides three mesh-combining strategies that control how slot geometry is assembled into the final `SkinnedMeshRenderer`: Default, Jobified, and Default Bone Baking. Each makes different trade-offs between performance, flexibility, and runtime cost. You can switch between them with **UMA -> Tools -> Mesh Combiner Switcher**.
+UMA provides four primary mesh-combining strategies that control how slot geometry is assembled into the final `SkinnedMeshRenderer`: Default, Jobified, Incremental, and Default Bone Baking. Each makes different trade-offs between performance, flexibility, and runtime cost. You can switch between them with **UMA -> Tools -> Mesh Tools -> Mesh Combiner Switcher** or the Scene View UMA toolbar.
 
 ---
 
@@ -53,6 +53,45 @@ The Jobified Combiner replaces the legacy combine path with Unity's C# Job Syste
 
 ---
 
+## UMAIncrementalMeshCombiner
+
+The Incremental Combiner retains a staged mesh-in-process across generator
+updates. It moves suitable CPU preparation to Jobs or worker tasks and parcels
+main-thread mesh API work according to **Max Multi-Step Work (ms)** on the UMA
+Generator.
+
+### Highlights
+
+- **Lower frame spikes.** Base-mesh application, renderer finalization, and
+  individual blendshape frames can be processed over multiple frames.
+- **Atomic publication.** The visible avatar and its slot/material metadata are
+  replaced only after the staged build succeeds.
+- **Safe rebuilds.** Recipe changes and newer dirty requests cancel stale work
+  at a safe boundary and start from a fresh snapshot.
+- **Synchronous compatibility.** Direct synchronous combiner calls still
+  complete before returning.
+
+### Trade-offs
+
+- **Soft budget.** Unity mesh API calls and graphics uploads cannot be
+  interrupted once started and may exceed the configured budget.
+- **Longer avatar latency.** Smaller budgets reduce frame spikes but can require
+  more frames before the character is ready.
+- **Texture generation remains separate.** Expensive texture composition can
+  still be an atomic generator stage.
+
+### Best For
+
+- Runtime character creators and crowds generated during gameplay.
+- Avatars with many blendshapes or complex multi-renderer recipes.
+- Projects where consistent frame pacing is more important than completing
+  every mesh in one frame.
+
+See [IncrementalMeshCombiner.md](IncrementalMeshCombiner.md) for generator
+setup, profiling, Human Female 3.0 blendshape testing, and rollout guidance.
+
+---
+
 ## UMADefaultBoneBakingMeshCombiner
 
 The Default Bone Baking Combiner takes a fundamentally different approach: instead of preserving every bone for runtime skinning, it bakes unused bone weights directly into vertex positions at build time. Only bones needed for animation are kept. It derives from `UMADefaultMeshCombiner`, so it shares the Default combiner's renderer, material, UV, mesh-modifier, mesh-hide, and blendshape-source pipeline.
@@ -93,6 +132,7 @@ The Default Bone Baking Combiner takes a fundamentally different approach: inste
 |---|---|---|---|
 | **Default** | Full skeleton | Moderate (single-threaded) | Debugging, no Burst setups, simple recipes |
 | **Jobified** | Full skeleton | Fast (parallel, Burst) | Many characters, frequent rebuilds, desktop/console |
+| **Incremental** | Full skeleton | Budgeted over multiple frames | Runtime generation with strict frame-pacing goals |
 | **Default Bone Baking** | Reduced skeleton | Slower build, faster runtime | NPCs, mobile, static/semi-static characters |
 
 Switching combiners requires a full character rebuild. Existing generated characters will not reflect the change until they are regenerated.

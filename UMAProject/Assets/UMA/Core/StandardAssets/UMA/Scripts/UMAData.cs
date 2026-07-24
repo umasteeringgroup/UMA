@@ -1010,6 +1010,24 @@ namespace UMA
 		public bool cancelled { get; private set; }
 		[NonSerialized]
 		public bool dirty = false;
+		[NonSerialized]
+		private uint generationRequestVersion;
+
+		/// <summary>
+		/// Monotonically increasing identifier for the latest generation
+		/// request. Multi-frame generators use this to prevent an older build
+		/// from clearing changes requested while that build was in progress.
+		/// </summary>
+		public uint GenerationRequestVersion => generationRequestVersion;
+
+		internal uint BeginGenerationRequest()
+		{
+			unchecked
+			{
+				generationRequestVersion++;
+			}
+			return generationRequestVersion;
+		}
 
 		private bool isOfficiallyCreated = false;
 		/// <summary>
@@ -3064,11 +3082,6 @@ namespace UMA
 		public virtual void Dirty()
 		{
 			//Debug.Log($"Setting Dirty");
-			if (dirty)
-            {
-                return;
-            }
-
             dirty = true;
 			umaGenerator.addDirtyUMA(this);
 		}
@@ -3078,6 +3091,12 @@ namespace UMA
 			if (staticCharacter)
             {
                 return;
+            }
+
+            UMAAssetIndexer indexer = UMAAssetIndexer.Instance;
+            if (indexer != null && indexer.generator != null)
+            {
+                indexer.generator.removeUMA(this);
             }
 
             if (isOfficiallyCreated)

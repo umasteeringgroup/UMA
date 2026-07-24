@@ -417,6 +417,13 @@ This selects the component that assembles slot geometry.
 
 For mobile crowds, Bone Baking can reduce steady-state GPU and Transform cost. For customizable player characters, Jobified is usually the first configuration to test. Use Default as a compatibility and debugging baseline.
 
+The opt-in **UMA Incremental Mesh Combiner** is intended for avatars whose mesh
+generation or blendshape loading causes visible frame spikes. It advances one
+staged mesh over multiple generator updates using the generator's **Max
+Multi-Step Work (ms)** soft budget. See
+[IncrementalMeshCombiner.md](IncrementalMeshCombiner.md) for setup, profiling,
+blendshape stress testing, and rollout guidance.
+
 ## Texture Merging, Reuse, and Caching
 
 Several important performance choices are authored outside the generator Inspector.

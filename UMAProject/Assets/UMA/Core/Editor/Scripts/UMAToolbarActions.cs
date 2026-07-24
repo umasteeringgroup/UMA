@@ -228,6 +228,10 @@ namespace UMA.Editors
             {
                 return "Jobified";
             }
+            if (combiner is UMAIncrementalMeshCombiner)
+            {
+                return "Incremental";
+            }
             if (combiner != null && combiner.GetType() == typeof(UMADefaultBoneBakingMeshCombiner))
             {
                 return "Default Bone Baking";
