@@ -316,23 +316,39 @@ namespace UMA
             return result;
         }
 
-        // TODO: change to scriptable object and load in Initialize
+        // Runtime cache only. Serializing this field can persist a reference to
+        // the UMAGenerator component on a prefab asset. A prefab component is
+        // non-null, but Unity never updates it because it is not in a scene.
+        [NonSerialized]
         public UMAGenerator generator;
 
         public UMAGenerator Generator
         {
             get
             {
-                if (generator == null)
+                if (!IsUsableSceneGenerator(generator))
                 {
+                    generator = null;
                     generator = GameObject.FindFirstObjectByType<UMAGenerator>(FindObjectsInactive.Exclude);
-                    if (generator == null)
+                    if (!IsUsableSceneGenerator(generator))
                     {
+                        generator = null;
                         CreateGenerator();
                     }
                 }
                 return generator;
             }
+        }
+
+        private static bool IsUsableSceneGenerator(UMAGenerator candidate)
+        {
+            if (candidate == null || candidate.gameObject == null)
+            {
+                return false;
+            }
+
+            Scene scene = candidate.gameObject.scene;
+            return scene.IsValid() && scene.isLoaded;
         }
 
         public void Awake()
@@ -794,7 +810,9 @@ namespace UMA
         {
             get
             {
-                return generator;
+                return IsUsableSceneGenerator(generator)
+                    ? generator
+                    : null;
             }
         }
 
@@ -808,6 +826,10 @@ namespace UMA
             SortOrders = new string[] { "Name", "AssetName" };
             WasChecked = false;
             TypeFromString = new Dictionary<string, System.Type>();
+            if (theIndexer != null)
+            {
+                theIndexer.generator = null;
+            }
             theIndexer = null;
 /*
             // This method is called after all assemblies are loaded, so we can initialize static data here if needed.
@@ -941,6 +963,11 @@ namespace UMA
                         return null;
                     }
 
+                    // The generator is a scene-only runtime cache. Explicitly
+                    // clear it before initialization to recover from older
+                    // AssetIndexer assets that serialized a prefab component.
+                    theIndexer.generator = null;
+
 #if UNITY_EDITOR
                     //DebugSerializationStatic("Rebulding Lookup Tables");
 #endif
@@ -984,24 +1011,24 @@ namespace UMA
                 if (theIndexer != null)
                 {
                     // Debug.Log("playmde. creating generator");
-                    if (theIndexer.generator != null)
+                    if (IsUsableSceneGenerator(theIndexer.generator))
                     {
                         //Debug.Log("Entered Edit Mode. Destroying generator");
                         GameObject.DestroyImmediate(theIndexer.generator.gameObject);
-                        theIndexer.generator = null;
                     }
+                    theIndexer.generator = null;
                 }
             }
             if (obj == PlayModeStateChange.EnteredEditMode)
             {
                 if (theIndexer != null)
                 {
-                    if (theIndexer.generator != null)
+                    if (IsUsableSceneGenerator(theIndexer.generator))
                     {
                         //Debug.Log("Entered Edit Mode. Destroying generator");
                         GameObject.DestroyImmediate(theIndexer.generator.gameObject);
-                        theIndexer.generator = null;
                     }
+                    theIndexer.generator = null;
                 }
                 //Debug.Log("playmde. exiting playmode");
                 //theIndexer.generator = null;
@@ -1220,10 +1247,27 @@ namespace UMA
         {
 #if UMA_VES //VES added
 			if(SceneManager.GetActiveScene().name.StartsWith("Init")) {
-				generator = GameObject.Find("CoreManagers").GetComponentInChildren<UMAGenerator>();
+                GameObject coreManagers = GameObject.Find("CoreManagers");
+				generator = coreManagers != null
+                    ? coreManagers.GetComponentInChildren<UMAGenerator>()
+                    : null;
 				return;
 			}
 #endif
+            if (IsUsableSceneGenerator(generator))
+            {
+                return;
+            }
+            generator = null;
+
+            generator = GameObject.FindFirstObjectByType<UMAGenerator>(
+                FindObjectsInactive.Exclude);
+            if (IsUsableSceneGenerator(generator))
+            {
+                return;
+            }
+            generator = null;
+
             UMASettings settings = UMASettings.GetSettingsFromResources();
             if (settings == null)
             {
@@ -1231,44 +1275,75 @@ namespace UMA
                 return;
             }
 
-            if (generator == null || generator.gameObject == null)
+            if (settings.generatorPrefab == null)
             {
-                GameObject goat = GameObject.Find(generatorName);
-                if (goat != null)
+                Debug.LogError(
+                    "UMASettings does not specify a Generator Prefab. UMA will not work.");
+                return;
+            }
+
+            UMAGenerator prefabGenerator =
+                settings.generatorPrefab.GetComponent<UMAGenerator>();
+            if (prefabGenerator == null)
+            {
+                Debug.LogError(
+                    $"The configured UMA Generator Prefab '{settings.generatorPrefab.name}' " +
+                    "does not contain an UMAGenerator component.",
+                    settings.generatorPrefab);
+                return;
+            }
+
+            GameObject namedGenerator = GameObject.Find(generatorName);
+            if (namedGenerator != null)
+            {
+                generator = namedGenerator.GetComponent<UMAGenerator>();
+                if (IsUsableSceneGenerator(generator))
                 {
-                    generator = goat.GetComponent<UMAGenerator>();
-                    if (generator != null)
-                    {
-                        generator.gameObject.hideFlags = HideFlags.DontSave;
-                        return;
-                    }
+                    generator.gameObject.hideFlags = HideFlags.DontSave;
+                    return;
                 }
-                //Debug.Log("Creating generator");
-                GameObject go = GameObject.Instantiate(settings.generatorPrefab);
-                go.name = generatorName;
-                generator = go.GetComponent<UMAGenerator>();
-                if (generator != null)
+                generator = null;
+            }
+
+            GameObject go = GameObject.Instantiate(settings.generatorPrefab);
+            go.name = generatorName;
+            generator = go.GetComponent<UMAGenerator>();
+            if (!IsUsableSceneGenerator(generator))
+            {
+                Debug.LogError(
+                    $"Unable to create a scene UMAGenerator from prefab " +
+                    $"'{settings.generatorPrefab.name}'.",
+                    settings.generatorPrefab);
+                if (Application.isPlaying)
                 {
-                    if (!generator.showInHierarchy)
-                    {
-                        go.hideFlags = HideFlags.HideAndDontSave | HideFlags.DontUnloadUnusedAsset;
-                    }
-                    else
-                    {
-                        go.hideFlags = HideFlags.DontSave | HideFlags.DontUnloadUnusedAsset;
-                    }
+                    GameObject.Destroy(go);
                 }
+                else
+                {
+                    GameObject.DestroyImmediate(go);
+                }
+                generator = null;
+                return;
+            }
+
+            if (!generator.showInHierarchy)
+            {
+                go.hideFlags = HideFlags.HideAndDontSave | HideFlags.DontUnloadUnusedAsset;
+            }
+            else
+            {
+                go.hideFlags = HideFlags.DontSave | HideFlags.DontUnloadUnusedAsset;
+            }
 
 #if UNITY_EDITOR
-                if (EditorApplication.isPlaying)
-                {
-                    GameObject.DontDestroyOnLoad(go);
-                }
-#else
+            if (EditorApplication.isPlaying)
+            {
                 GameObject.DontDestroyOnLoad(go);
-#endif
-                go.SetActive(true);
             }
+#else
+            GameObject.DontDestroyOnLoad(go);
+#endif
+            go.SetActive(true);
         }
 
 #if UNITY_EDITOR

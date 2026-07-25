@@ -3093,10 +3093,16 @@ namespace UMA
                 return;
             }
 
-            UMAAssetIndexer indexer = UMAAssetIndexer.Instance;
-            if (indexer != null && indexer.generator != null)
+            // Destruction can run while a scene is unloading. Never use the
+            // creating Instance/Generator accessors from teardown, because
+            // that can instantiate a replacement generator into a scene that
+            // is already being destroyed.
+            UMAAssetIndexer indexer = UMAAssetIndexer.bareInstance;
+            UMAGenerator existingGenerator =
+                indexer != null ? indexer.bareGenerator : null;
+            if (existingGenerator != null)
             {
-                indexer.generator.removeUMA(this, true);
+                existingGenerator.removeUMA(this, true);
             }
 
             if (isOfficiallyCreated)
