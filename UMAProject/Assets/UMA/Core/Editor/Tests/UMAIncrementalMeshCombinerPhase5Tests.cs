@@ -393,6 +393,9 @@ namespace UMA.Editors.Tests
                 loader =
                     pending.CreateIncrementalBlendShapeLoader();
                 Assert.AreEqual(3, loader.TotalFrameCount);
+                Assert.IsFalse(loader.IsInitialized);
+                loader.CompletePreparation();
+                Assert.IsTrue(loader.IsInitialized);
 
                 pending.CompleteJobs();
                 pending.ApplyPreparedBaseMesh(outputMesh);
@@ -563,6 +566,34 @@ namespace UMA.Editors.Tests
                     operation.Step(
                         UMAMeshCombineTimeSlice.Unlimited).Status);
                 AssertOriginalMetadata();
+                var diagnostics =
+                    operation as IUMAMeshCombineOperationDiagnostics;
+                Assert.NotNull(diagnostics);
+                Assert.AreEqual(
+                    "Create BlendShape Loader",
+                    diagnostics.AtomicStepName);
+                var preparationTimingNames = new List<string>();
+                while (diagnostics.TryDequeueCompletedTiming(
+                           out UMAMeshCombineStepTiming timing))
+                {
+                    preparationTimingNames.Add(timing.StepName);
+                    Assert.GreaterOrEqual(timing.StopwatchTicks, 0L);
+                }
+                CollectionAssert.Contains(
+                    preparationTimingNames,
+                    "Prepare: Source Analysis");
+                CollectionAssert.Contains(
+                    preparationTimingNames,
+                    "Prepare: MeshData Allocation");
+                CollectionAssert.Contains(
+                    preparationTimingNames,
+                    "Prepare: Bone/Modifier Jobs");
+                CollectionAssert.Contains(
+                    preparationTimingNames,
+                    "Prepare: Other Setup and Allocation");
+                CollectionAssert.Contains(
+                    preparationTimingNames,
+                    "Prepare: Capture Slot Metadata");
 
                 operation.Cancel();
                 UMAMeshCombineStatus cancellationStatus;

@@ -3,6 +3,7 @@ using UnityEditor;
 using UnityEngine.SceneManagement;
 using UMA.CharacterSystem;
 using System.Timers;
+using System.Collections.Generic;
 
 namespace UMA.Editors
 {
@@ -31,6 +32,12 @@ namespace UMA.Editors
 		SerializedProperty AutomaticScaling;
 		SerializedProperty ScaleGPUMemoryCutoffMB;
 		SerializedProperty ScaleSystemMemoryCutoffMB;
+		private readonly List<UMAGeneratorBuiltin.MultiStepBudgetOverrunStatistic>
+			multiStepBudgetOverrunStatistics =
+				new List<UMAGeneratorBuiltin.MultiStepBudgetOverrunStatistic>();
+		private readonly List<UMAGeneratorBuiltin.MultiStepAtomicStepStatistic>
+			multiStepAtomicStepStatistics =
+				new List<UMAGeneratorBuiltin.MultiStepAtomicStepStatistic>();
 
         public static bool showGenerationSettings = false;
 		public static bool showAdvancedSettings = false;
@@ -143,6 +150,18 @@ namespace UMA.Editors
 				UMATime.StopwatchTicksToMilliseconds(ticks));
 		}
 
+		private static string FormatAtomicStep(
+			string stepName,
+			float milliseconds)
+		{
+			return string.IsNullOrEmpty(stepName)
+				? string.Format("{0:F3} ms", milliseconds)
+				: string.Format(
+					"{0}: {1:F3} ms",
+					stepName,
+					milliseconds);
+		}
+
 		public override void OnInspectorGUI()
 		{
 			if (IsEditorBusy())
@@ -246,10 +265,36 @@ namespace UMA.Editors
 						string.Format("{0:P1}", generator.ActiveMultiStepProgress));
 					EditorGUILayout.LabelField(
 						"Last Atomic Step",
-						string.Format("{0:F3} ms", generator.lastMultiStepAtomicStepMilliseconds));
+						FormatAtomicStep(
+							generator.lastMultiStepAtomicStepName,
+							generator.lastMultiStepAtomicStepMilliseconds));
 					EditorGUILayout.LabelField(
-						"Maximum Atomic Step",
-						string.Format("{0:F3} ms", generator.maximumMultiStepAtomicStepMilliseconds));
+						"Longest Atomic Step",
+						FormatAtomicStep(
+							generator.maximumMultiStepAtomicStepName,
+							generator.maximumMultiStepAtomicStepMilliseconds));
+					generator.GetMultiStepAtomicStepStatistics(
+						multiStepAtomicStepStatistics);
+					if (multiStepAtomicStepStatistics.Count > 0)
+					{
+						EditorGUILayout.LabelField(
+							"Step and Phase Times",
+							EditorStyles.miniBoldLabel);
+						EditorGUI.indentLevel++;
+						foreach (UMAGeneratorBuiltin.MultiStepAtomicStepStatistic
+								 statistic in multiStepAtomicStepStatistics)
+						{
+							EditorGUILayout.LabelField(
+								statistic.StepName,
+								string.Format(
+									"{0}  |  avg {1:F3} ms  |  max {2:F3} ms  |  total {3:F3} ms",
+									statistic.Count,
+									statistic.AverageMilliseconds,
+									statistic.MaximumMilliseconds,
+									statistic.TotalMilliseconds));
+						}
+						EditorGUI.indentLevel--;
+					}
 					EditorGUILayout.LabelField(
 						"Last Generation Latency",
 						FormatStopwatchMilliseconds(generator.lastMultiStepGenerationLatencyTicks));
@@ -262,6 +307,34 @@ namespace UMA.Editors
 					EditorGUILayout.LabelField(
 						"Budget Overruns",
 						generator.multiStepBudgetOverrunCount.ToString());
+					if (generator.multiStepBudgetOverrunCount > 0)
+					{
+						EditorGUILayout.LabelField(
+							"Last Budget Overrun",
+							string.Format(
+								"{0}: {1:F3} ms (+{2:F3} ms)",
+								generator.lastMultiStepBudgetOverrunStepName,
+								generator.lastMultiStepBudgetOverrunStepMilliseconds,
+								generator.lastMultiStepBudgetOverrunAmountMilliseconds));
+						generator.GetMultiStepBudgetOverrunStatistics(
+							multiStepBudgetOverrunStatistics);
+						EditorGUILayout.LabelField(
+							"Budget Overrun Steps",
+							EditorStyles.miniBoldLabel);
+						EditorGUI.indentLevel++;
+						foreach (UMAGeneratorBuiltin.MultiStepBudgetOverrunStatistic
+								 statistic in multiStepBudgetOverrunStatistics)
+						{
+							EditorGUILayout.LabelField(
+								statistic.StepName,
+								string.Format(
+									"{0}  |  max {1:F3} ms  |  max +{2:F3} ms",
+									statistic.Count,
+									statistic.MaximumStepMilliseconds,
+									statistic.MaximumOverrunMilliseconds));
+						}
+						EditorGUI.indentLevel--;
+					}
 					EditorGUILayout.LabelField(
 						"Async Waits",
 						generator.multiStepWaitingForAsyncCount.ToString());

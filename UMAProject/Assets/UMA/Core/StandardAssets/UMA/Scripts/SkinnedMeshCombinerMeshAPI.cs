@@ -72,6 +72,8 @@ namespace UMA
         public static long Ticks_PackNormalsTangents;
         public static long Ticks_PackColUV01;
         public static long Ticks_PackUV23;
+        public static long Ticks_ModifierPreparationAndSchedule;
+        public static long Ticks_BoundsJobsSchedule;
         public static long Ticks_IndexJobsSchedule;
         public static long Ticks_IndexJobsComplete;
         public static long Ticks_UVRemap;
@@ -115,6 +117,8 @@ namespace UMA
             Ticks_PackNormalsTangents = 0;
             Ticks_PackColUV01 = 0;
             Ticks_PackUV23 = 0;
+            Ticks_ModifierPreparationAndSchedule = 0;
+            Ticks_BoundsJobsSchedule = 0;
             Ticks_IndexJobsSchedule = 0;
             Ticks_IndexJobsComplete = 0;
             Ticks_UVRemap = 0;
@@ -127,6 +131,46 @@ namespace UMA
             Ticks_AddBlendShapeFrame = 0;
             BlendShapeFramesPrepared = 0;
             BlendShapeFramesApplied = 0;
+        }
+
+        internal readonly struct RendererPreparationTimingSnapshot
+        {
+            public long Total { get; }
+            public long AnalyzeSources { get; }
+            public long AnalyzeBlendShapes { get; }
+            public long AllocateMeshData { get; }
+            public long BuildBoneWeights { get; }
+            public long CopyPositions { get; }
+            public long PackNormalsTangents { get; }
+            public long PackColorUV { get; }
+            public long PackAdditionalUV { get; }
+            public long ModifierPreparationAndSchedule { get; }
+            public long BoundsJobsSchedule { get; }
+            public long IndexJobsSchedule { get; }
+            public long UVRemap { get; }
+
+            private RendererPreparationTimingSnapshot(bool capture)
+            {
+                Total = Ticks_CombineInternalTotal;
+                AnalyzeSources = Ticks_AnalyzeSources;
+                AnalyzeBlendShapes = Ticks_AnalyzeBlendshapes;
+                AllocateMeshData = Ticks_AllocateMeshData;
+                BuildBoneWeights = Ticks_BuildBoneWeights;
+                CopyPositions = Ticks_CopyPositionsAndBounds;
+                PackNormalsTangents = Ticks_PackNormalsTangents;
+                PackColorUV = Ticks_PackColUV01;
+                PackAdditionalUV = Ticks_PackUV23;
+                ModifierPreparationAndSchedule =
+                    Ticks_ModifierPreparationAndSchedule;
+                BoundsJobsSchedule = Ticks_BoundsJobsSchedule;
+                IndexJobsSchedule = Ticks_IndexJobsSchedule;
+                UVRemap = Ticks_UVRemap;
+            }
+
+            public static RendererPreparationTimingSnapshot Capture()
+            {
+                return new RendererPreparationTimingSnapshot(true);
+            }
         }
 
 #if UMA_MESHAPI_2021
@@ -1269,10 +1313,11 @@ namespace UMA
                 CreateIncrementalBlendShapeLoader()
             {
                 return new IncrementalBlendShapeLoader(
-                    Batch.Sources,
+                    IncrementalBlendShapeLoader.CaptureSources(
+                        Batch.Sources,
+                        UmaData.umaRecipe,
+                        SourceVertexOffsets),
                     BlendShapeNames,
-                    UmaData.umaRecipe,
-                    SourceVertexOffsets,
                     VertexCount,
                     LoadAllBlendShapeFrames);
             }
@@ -1740,6 +1785,7 @@ namespace UMA
                 }
 
                 preparationStage = "bone, modifier, and bounds job scheduling";
+                sw.Restart();
                 // Schedule all independent native work before the single completion point.
                 if (UseParallelBoneWeights && bwRemap.IsCreated && nativeBoneWeights.Length > 0)
                 {
@@ -1889,6 +1935,10 @@ namespace UMA
                     }
                 }
 
+                sw.Stop();
+                Ticks_ModifierPreparationAndSchedule +=
+                    sw.ElapsedTicks;
+                sw.Restart();
                 int boundsBatchCount = Math.Max(
                     1,
                     (vertexCount +
@@ -1923,6 +1973,8 @@ namespace UMA
                     }.Schedule(boundsPartialsHandle);
                 scheduledJobs = JobHandle.CombineDependencies(scheduledJobs, boundsHandle);
                 jobsScheduled = true;
+                sw.Stop();
+                Ticks_BoundsJobsSchedule += sw.ElapsedTicks;
 
                 preparationStage = "index job scheduling";
                 // Each source/submesh writes to a precomputed, exclusive range in the output
@@ -2477,9 +2529,39 @@ namespace UMA
                 public int VertexCount;
             }
 
-            private readonly ShapePlan[] shapes;
+            internal readonly struct SourceSnapshot
+            {
+                public UMABlendShape[] Shapes { get; }
+                public int VertexOffset { get; }
+                public int VertexCount { get; }
+
+                public SourceSnapshot(
+                    UMABlendShape[] shapes,
+                    int vertexOffset,
+                    int vertexCount)
+                {
+                    Shapes = shapes;
+                    VertexOffset = vertexOffset;
+                    VertexCount = vertexCount;
+                }
+            }
+
+            private sealed class InitializationResult
+            {
+                public ShapePlan[] Shapes;
+                public Vector3[] DeltaVertices;
+                public Vector3[] DeltaNormals;
+                public Vector3[] DeltaTangents;
+                public Vector3[] SpareDeltaVertices;
+                public Vector3[] SpareDeltaNormals;
+                public Vector3[] SpareDeltaTangents;
+                public long ElapsedTicks;
+            }
+
+            private ShapePlan[] shapes;
             private readonly int vertexCount;
             private readonly bool loadAllFrames;
+            private readonly int totalFrameCount;
             private Vector3[] deltaVertices;
             private Vector3[] deltaNormals;
             private Vector3[] deltaTangents;
@@ -2488,73 +2570,65 @@ namespace UMA
             private Vector3[] spareDeltaTangents;
             private readonly CancellationTokenSource cancellation =
                 new CancellationTokenSource();
+            private Task<InitializationResult> initializationTask;
             private Task preparationTask;
             private Task lookaheadTask;
+            private bool initialized;
+            private long initializationElapsedTicks;
+            private bool initializationTimingConsumed;
             private int shapeIndex;
             private int frameIndex;
             private bool disposed;
 
             internal IncrementalBlendShapeLoader(
-                SkinnedMeshCombiner.CombineInstance[] sources,
+                SourceSnapshot[] sources,
                 Dictionary<string, BlendShapeVertexData> metadata,
-                UMAData.UMARecipe recipe,
-                int[] sourceVertexOffsets,
                 int vertexCount,
                 bool loadAllFrames)
             {
                 this.vertexCount = vertexCount;
                 this.loadAllFrames = loadAllFrames;
-                shapes = BuildShapePlans(
-                    sources,
-                    metadata,
-                    recipe,
-                    sourceVertexOffsets);
-
-                bool needsNormals = false;
-                bool needsTangents = false;
-                for (int i = 0; i < shapes.Length; i++)
+                totalFrameCount =
+                    CalculateTotalFrameCount(metadata);
+                if (totalFrameCount == 0)
                 {
-                    needsNormals |= shapes[i].HasNormals;
-                    needsTangents |= shapes[i].HasTangents;
+                    shapes = Array.Empty<ShapePlan>();
+                    deltaVertices = Array.Empty<Vector3>();
+                    spareDeltaVertices = Array.Empty<Vector3>();
+                    initialized = true;
+                    initializationTimingConsumed = true;
+                    return;
                 }
-
-                deltaVertices = vertexCount > 0
-                    ? new Vector3[vertexCount]
-                    : Array.Empty<Vector3>();
-                deltaNormals = needsNormals
-                    ? new Vector3[vertexCount]
-                    : null;
-                deltaTangents = needsTangents
-                    ? new Vector3[vertexCount]
-                    : null;
-                spareDeltaVertices = vertexCount > 0
-                    ? new Vector3[vertexCount]
-                    : Array.Empty<Vector3>();
-                spareDeltaNormals = needsNormals
-                    ? new Vector3[vertexCount]
-                    : null;
-                spareDeltaTangents = needsTangents
-                    ? new Vector3[vertexCount]
-                    : null;
-
-                if (shapes.Length > 0)
-                {
-                    ScheduleCurrentFrame();
-                }
+                CancellationToken token = cancellation.Token;
+                initializationTask = Task.Run(
+                    () => BuildInitialization(
+                        sources,
+                        metadata,
+                        vertexCount,
+                        token),
+                    token);
             }
 
             public bool IsComplete =>
+                initialized &&
                 shapeIndex >= shapes.Length;
 
+            public bool IsInitialized => initialized;
+
             public bool HasPendingPreparation =>
-                preparationTask != null &&
-                !preparationTask.IsCompleted;
+                (!initialized &&
+                 initializationTask != null &&
+                 !initializationTask.IsCompleted) ||
+                (preparationTask != null &&
+                 !preparationTask.IsCompleted);
 
             /// <summary>
             /// True while either the current frame or its lookahead frame is
             /// still using one of the reusable buffers.
             /// </summary>
             public bool HasOutstandingPreparation =>
+                (initializationTask != null &&
+                 !initializationTask.IsCompleted) ||
                 HasPendingPreparation ||
                 (lookaheadTask != null &&
                  !lookaheadTask.IsCompleted);
@@ -2563,25 +2637,25 @@ namespace UMA
 
             public int TotalFrameCount
             {
-                get
-                {
-                    int total = 0;
-                    for (int i = 0; i < shapes.Length; i++)
-                    {
-                        total += shapes[i].FrameWeights.Length;
-                    }
-                    return total;
-                }
+                get { return totalFrameCount; }
             }
 
             public string CurrentShapeName =>
-                IsComplete ? string.Empty : shapes[shapeIndex].Name;
+                !initialized
+                    ? "Initializing"
+                    : IsComplete
+                        ? string.Empty
+                        : shapes[shapeIndex].Name;
 
             public int CurrentFrameIndex => frameIndex;
 
             public UMAMeshCombineStepResult Step(Mesh mesh)
             {
                 ThrowIfDisposed();
+                if (!TryCompleteInitialization(false))
+                {
+                    return UMAMeshCombineStepResult.WaitingForAsync();
+                }
                 if (IsComplete)
                 {
                     return UMAMeshCombineStepResult.Completed();
@@ -2652,6 +2726,7 @@ namespace UMA
             public void CompletePreparation()
             {
                 ThrowIfDisposed();
+                TryCompleteInitialization(true);
                 Task task = preparationTask;
                 if (task == null)
                 {
@@ -2671,6 +2746,171 @@ namespace UMA
                         $"Failed preparing blendshape '{CurrentShapeName}' frame {frameIndex}.",
                         exception);
                 }
+            }
+
+            internal static SourceSnapshot[] CaptureSources(
+                SkinnedMeshCombiner.CombineInstance[] sources,
+                UMAData.UMARecipe recipe,
+                int[] sourceVertexOffsets)
+            {
+                if (sources == null)
+                {
+                    return Array.Empty<SourceSnapshot>();
+                }
+
+                var snapshots = new SourceSnapshot[sources.Length];
+                for (int sourceIndex = 0;
+                     sourceIndex < sources.Length;
+                     sourceIndex++)
+                {
+                    UMAMeshData meshData = sources[sourceIndex].meshData;
+                    List<UMABlendShape> sourceShapes =
+                        SkinnedMeshCombiner.GetBlendshapeSources(
+                            meshData,
+                            recipe);
+                    snapshots[sourceIndex] = new SourceSnapshot(
+                        sourceShapes != null
+                            ? sourceShapes.ToArray()
+                            : Array.Empty<UMABlendShape>(),
+                        sourceVertexOffsets[sourceIndex],
+                        meshData.vertexCount);
+                }
+                return snapshots;
+            }
+
+            private static int CalculateTotalFrameCount(
+                Dictionary<string, BlendShapeVertexData> metadata)
+            {
+                if (metadata == null)
+                {
+                    return 0;
+                }
+                int total = 0;
+                foreach (BlendShapeVertexData info in metadata.Values)
+                {
+                    if (info != null && info.frameCount > 0)
+                    {
+                        total = checked(total + info.frameCount);
+                    }
+                }
+                return total;
+            }
+
+            private static InitializationResult BuildInitialization(
+                SourceSnapshot[] sources,
+                Dictionary<string, BlendShapeVertexData> metadata,
+                int vertexCount,
+                CancellationToken token)
+            {
+                var stopwatch =
+                    System.Diagnostics.Stopwatch.StartNew();
+                token.ThrowIfCancellationRequested();
+                ShapePlan[] builtShapes =
+                    BuildShapePlans(sources, metadata, token);
+
+                bool needsNormals = false;
+                bool needsTangents = false;
+                for (int i = 0; i < builtShapes.Length; i++)
+                {
+                    token.ThrowIfCancellationRequested();
+                    needsNormals |= builtShapes[i].HasNormals;
+                    needsTangents |= builtShapes[i].HasTangents;
+                }
+
+                var result = new InitializationResult
+                {
+                    Shapes = builtShapes,
+                    DeltaVertices =
+                        builtShapes.Length > 0 &&
+                        vertexCount > 0
+                        ? new Vector3[vertexCount]
+                        : Array.Empty<Vector3>(),
+                    DeltaNormals = needsNormals
+                        ? new Vector3[vertexCount]
+                        : null,
+                    DeltaTangents = needsTangents
+                        ? new Vector3[vertexCount]
+                        : null,
+                    SpareDeltaVertices =
+                        builtShapes.Length > 0 &&
+                        vertexCount > 0
+                        ? new Vector3[vertexCount]
+                        : Array.Empty<Vector3>(),
+                    SpareDeltaNormals = needsNormals
+                        ? new Vector3[vertexCount]
+                        : null,
+                    SpareDeltaTangents = needsTangents
+                        ? new Vector3[vertexCount]
+                        : null
+                };
+                token.ThrowIfCancellationRequested();
+                stopwatch.Stop();
+                result.ElapsedTicks = stopwatch.ElapsedTicks;
+                return result;
+            }
+
+            private bool TryCompleteInitialization(bool wait)
+            {
+                if (initialized)
+                {
+                    return true;
+                }
+
+                Task<InitializationResult> task = initializationTask;
+                if (task == null)
+                {
+                    throw new InvalidOperationException(
+                        "Blendshape loader initialization was not scheduled.");
+                }
+                if (!wait && !task.IsCompleted)
+                {
+                    return false;
+                }
+
+                InitializationResult result;
+                try
+                {
+                    result = task.GetAwaiter().GetResult();
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception exception)
+                {
+                    throw new InvalidOperationException(
+                        "Failed preparing incremental blendshape plans and buffers.",
+                        exception);
+                }
+
+                shapes = result.Shapes;
+                deltaVertices = result.DeltaVertices;
+                deltaNormals = result.DeltaNormals;
+                deltaTangents = result.DeltaTangents;
+                spareDeltaVertices = result.SpareDeltaVertices;
+                spareDeltaNormals = result.SpareDeltaNormals;
+                spareDeltaTangents = result.SpareDeltaTangents;
+                initializationElapsedTicks = result.ElapsedTicks;
+                initializationTask = null;
+                initialized = true;
+                if (shapes.Length > 0)
+                {
+                    ScheduleCurrentFrame();
+                }
+                return true;
+            }
+
+            internal bool TryConsumeInitializationTicks(
+                out long elapsedTicks)
+            {
+                if (!initialized || initializationTimingConsumed)
+                {
+                    elapsedTicks = 0L;
+                    return false;
+                }
+                initializationTimingConsumed = true;
+                elapsedTicks = initializationElapsedTicks;
+                return true;
             }
 
             private void ScheduleCurrentFrame()
@@ -2876,10 +3116,9 @@ namespace UMA
             }
 
             private static ShapePlan[] BuildShapePlans(
-                SkinnedMeshCombiner.CombineInstance[] sources,
+                SourceSnapshot[] sources,
                 Dictionary<string, BlendShapeVertexData> metadata,
-                UMAData.UMARecipe recipe,
-                int[] sourceVertexOffsets)
+                CancellationToken token)
             {
                 if (metadata == null ||
                     metadata.Count == 0)
@@ -2889,9 +3128,46 @@ namespace UMA
 
                 var result =
                     new List<ShapePlan>(metadata.Count);
+                var sourceShapesByName =
+                    new Dictionary<string, UMABlendShape>[sources.Length];
+                for (int sourceIndex = 0;
+                     sourceIndex < sources.Length;
+                     sourceIndex++)
+                {
+                    token.ThrowIfCancellationRequested();
+                    UMABlendShape[] sourceShapes =
+                        sources[sourceIndex].Shapes;
+                    var byName =
+                        new Dictionary<string, UMABlendShape>(
+                            sourceShapes?.Length ?? 0,
+                            StringComparer.Ordinal);
+                    if (sourceShapes != null)
+                    {
+                        for (int shapeIndex = 0;
+                             shapeIndex < sourceShapes.Length;
+                             shapeIndex++)
+                        {
+                            UMABlendShape sourceShape =
+                                sourceShapes[shapeIndex];
+                            if (sourceShape != null &&
+                                !string.IsNullOrEmpty(
+                                    sourceShape.shapeName) &&
+                                !byName.ContainsKey(
+                                    sourceShape.shapeName))
+                            {
+                                byName.Add(
+                                    sourceShape.shapeName,
+                                    sourceShape);
+                            }
+                        }
+                    }
+                    sourceShapesByName[sourceIndex] = byName;
+                }
+
                 foreach (KeyValuePair<string, BlendShapeVertexData>
                          entry in metadata)
                 {
+                    token.ThrowIfCancellationRequested();
                     BlendShapeVertexData info = entry.Value;
                     if (info == null ||
                         info.frameCount <= 0)
@@ -2904,35 +3180,21 @@ namespace UMA
                          sourceIndex < sources.Length;
                          sourceIndex++)
                     {
-                        SkinnedMeshCombiner.CombineInstance source =
+                        SourceSnapshot source =
                             sources[sourceIndex];
-                        List<UMABlendShape> sourceShapes =
-                            SkinnedMeshCombiner.GetBlendshapeSources(
-                                source.meshData,
-                                recipe);
-                        if (sourceShapes == null)
+                        if (sourceShapesByName[sourceIndex]
+                            .TryGetValue(
+                                entry.Key,
+                                out UMABlendShape sourceShape))
                         {
-                            continue;
-                        }
-                        for (int sourceShapeIndex = 0;
-                             sourceShapeIndex < sourceShapes.Count;
-                             sourceShapeIndex++)
-                        {
-                            UMABlendShape sourceShape =
-                                sourceShapes[sourceShapeIndex];
-                            if (sourceShape != null &&
-                                sourceShape.shapeName == entry.Key)
+                            sourcePlans.Add(new SourcePlan
                             {
-                                sourcePlans.Add(new SourcePlan
-                                {
-                                    Shape = sourceShape,
-                                    VertexOffset =
-                                        sourceVertexOffsets[sourceIndex],
-                                    VertexCount =
-                                        source.meshData.vertexCount
-                                });
-                                break;
-                            }
+                                Shape = sourceShape,
+                                VertexOffset =
+                                    source.VertexOffset,
+                                VertexCount =
+                                    source.VertexCount
+                            });
                         }
                     }
 
@@ -2979,9 +3241,11 @@ namespace UMA
                     return;
                 }
                 cancellation.Cancel();
+                WaitForCleanup(initializationTask);
                 WaitForCleanup(preparationTask);
                 WaitForCleanup(lookaheadTask);
                 cancellation.Dispose();
+                initializationTask = null;
                 preparationTask = null;
                 lookaheadTask = null;
                 disposed = true;

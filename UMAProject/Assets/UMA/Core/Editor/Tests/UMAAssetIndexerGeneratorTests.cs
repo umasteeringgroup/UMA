@@ -120,6 +120,61 @@ namespace UMA.Editors.Tests
             }
         }
 
+        [Test]
+        [Category("UMA")]
+        [Category("GeneratorOverrideEditor")]
+        public void GeneratorOverridePickerUsesOnlyCombinersOnCurrentGameObject()
+        {
+            GameObject overrideObject = null;
+            try
+            {
+                overrideObject =
+                    new GameObject("Generator override editor fixture");
+                overrideObject.SetActive(false);
+
+                UMAGeneratorOverride generatorOverride =
+                    overrideObject.AddComponent<UMAGeneratorOverride>();
+                UMADefaultMeshCombiner defaultCombiner =
+                    overrideObject.AddComponent<UMADefaultMeshCombiner>();
+                UMAIncrementalMeshCombiner incrementalCombiner =
+                    overrideObject.AddComponent<UMAIncrementalMeshCombiner>();
+
+                GameObject child = new GameObject("Child combiner");
+                child.transform.SetParent(overrideObject.transform, false);
+                UMADefaultBoneBakingMeshCombiner childCombiner =
+                    child.AddComponent<UMADefaultBoneBakingMeshCombiner>();
+
+                MethodInfo getAttachedCombiners =
+                    typeof(UMAGeneratorOverrideEditor).GetMethod(
+                        "GetAttachedMeshCombiners",
+                        BindingFlags.Static | BindingFlags.NonPublic);
+                Assert.NotNull(getAttachedCombiners);
+
+                var attachedCombiners =
+                    (UMAMeshCombiner[])getAttachedCombiners.Invoke(
+                        null,
+                        new object[] { generatorOverride });
+
+                CollectionAssert.AreEquivalent(
+                    new UMAMeshCombiner[]
+                    {
+                        defaultCombiner,
+                        incrementalCombiner
+                    },
+                    attachedCombiners);
+                CollectionAssert.DoesNotContain(
+                    attachedCombiners,
+                    childCombiner);
+            }
+            finally
+            {
+                if (overrideObject != null)
+                {
+                    Object.DestroyImmediate(overrideObject);
+                }
+            }
+        }
+
     }
 }
 

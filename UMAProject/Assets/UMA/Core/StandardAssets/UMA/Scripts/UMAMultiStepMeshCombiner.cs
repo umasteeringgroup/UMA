@@ -248,6 +248,44 @@ namespace UMA
     }
 
     /// <summary>
+    /// Optional diagnostic detail for a multi-step operation. The generator
+    /// samples this immediately before calling Step so timing is attributed to
+    /// the atomic unit that actually ran, even when Step advances the visible
+    /// operation stage.
+    /// </summary>
+    public interface IUMAMeshCombineOperationDiagnostics
+    {
+        /// <summary>
+        /// Stable, human-readable category for the next atomic unit of work.
+        /// Unlike StageName, this value should avoid per-avatar or per-frame
+        /// details so repeated timings can be grouped in generator statistics.
+        /// </summary>
+        string AtomicStepName { get; }
+
+        /// <summary>
+        /// Returns completed nested or worker timing samples that should be
+        /// included in generator step statistics. Returns false when no sample
+        /// is waiting.
+        /// </summary>
+        bool TryDequeueCompletedTiming(
+            out UMAMeshCombineStepTiming timing);
+    }
+
+    public readonly struct UMAMeshCombineStepTiming
+    {
+        public string StepName { get; }
+        public long StopwatchTicks { get; }
+
+        public UMAMeshCombineStepTiming(
+            string stepName,
+            long stopwatchTicks)
+        {
+            StepName = stepName;
+            StopwatchTicks = stopwatchTicks;
+        }
+    }
+
+    /// <summary>
     /// Owns the state and temporary resources for one incremental UMA mesh
     /// combination.
     /// </summary>

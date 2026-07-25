@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
@@ -425,6 +426,38 @@ namespace UMA.Editors.Tests
                 Assert.GreaterOrEqual(
                     generator.maximumMultiStepAtomicStepMilliseconds,
                     generator.lastMultiStepAtomicStepMilliseconds);
+                Assert.AreEqual(
+                    "Ready",
+                    generator.maximumMultiStepAtomicStepName,
+                    "The completed operation must retain the name sampled before Step advanced its stage.");
+                Assert.AreEqual(
+                    "Ready",
+                    generator.lastMultiStepBudgetOverrunStepName);
+                var overruns =
+                    new List<UMAGeneratorBuiltin.MultiStepBudgetOverrunStatistic>();
+                generator.GetMultiStepBudgetOverrunStatistics(overruns);
+                Assert.AreEqual(1, overruns.Count);
+                Assert.AreEqual("Ready", overruns[0].StepName);
+                Assert.AreEqual(1, overruns[0].Count);
+                Assert.Greater(overruns[0].MaximumStepMilliseconds, 1f);
+                Assert.Greater(overruns[0].MaximumOverrunMilliseconds, 0f);
+                var stepTimings =
+                    new List<UMAGeneratorBuiltin.MultiStepAtomicStepStatistic>();
+                generator.GetMultiStepAtomicStepStatistics(stepTimings);
+                Assert.AreEqual(1, stepTimings.Count);
+                Assert.AreEqual("Ready", stepTimings[0].StepName);
+                Assert.AreEqual(1, stepTimings[0].Count);
+                Assert.Greater(stepTimings[0].AverageMilliseconds, 1d);
+                Assert.AreEqual(
+                    stepTimings[0].TotalMilliseconds,
+                    stepTimings[0].AverageMilliseconds,
+                    0.0001d);
+
+                generator.ResetStatistics();
+                generator.GetMultiStepBudgetOverrunStatistics(overruns);
+                Assert.IsEmpty(overruns);
+                generator.GetMultiStepAtomicStepStatistics(stepTimings);
+                Assert.IsEmpty(stepTimings);
             }
             finally
             {
@@ -475,7 +508,12 @@ namespace UMA.Editors.Tests
                 generator.meshUpdatesTicks = 3;
                 generator.multiStepBudgetOverrunCount = 4;
                 generator.lastMultiStepAtomicStepMilliseconds = 5f;
+                generator.lastMultiStepAtomicStepName = "Last Step";
                 generator.maximumMultiStepAtomicStepMilliseconds = 6f;
+                generator.maximumMultiStepAtomicStepName = "Longest Step";
+                generator.lastMultiStepBudgetOverrunStepName = "Overrun Step";
+                generator.lastMultiStepBudgetOverrunStepMilliseconds = 7f;
+                generator.lastMultiStepBudgetOverrunAmountMilliseconds = 2f;
                 generator.lastMultiStepGenerationLatencyTicks = 7;
                 generator.maximumMultiStepGenerationLatencyTicks = 8;
                 generator.multiStepDiscardedMeshTicks = 9;
@@ -487,7 +525,18 @@ namespace UMA.Editors.Tests
                 Assert.AreEqual(0, generator.meshUpdatesTicks);
                 Assert.AreEqual(0, generator.multiStepBudgetOverrunCount);
                 Assert.AreEqual(0f, generator.lastMultiStepAtomicStepMilliseconds);
+                Assert.AreEqual(string.Empty, generator.lastMultiStepAtomicStepName);
                 Assert.AreEqual(0f, generator.maximumMultiStepAtomicStepMilliseconds);
+                Assert.AreEqual(string.Empty, generator.maximumMultiStepAtomicStepName);
+                Assert.AreEqual(
+                    string.Empty,
+                    generator.lastMultiStepBudgetOverrunStepName);
+                Assert.AreEqual(
+                    0f,
+                    generator.lastMultiStepBudgetOverrunStepMilliseconds);
+                Assert.AreEqual(
+                    0f,
+                    generator.lastMultiStepBudgetOverrunAmountMilliseconds);
                 Assert.AreEqual(0, generator.lastMultiStepGenerationLatencyTicks);
                 Assert.AreEqual(0, generator.maximumMultiStepGenerationLatencyTicks);
                 Assert.AreEqual(0, generator.multiStepDiscardedMeshTicks);

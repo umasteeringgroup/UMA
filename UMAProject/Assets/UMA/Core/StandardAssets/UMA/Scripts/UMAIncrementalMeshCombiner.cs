@@ -1348,6 +1348,8 @@ namespace UMA
         public bool RendererFinalized { get; set; }
         internal UMAIncrementalRendererFinalizationStage
             FinalizationStage { get; set; }
+        internal UMAIncrementalRendererSchedulingStage
+            SchedulingStage { get; set; }
 
         public UMAIncrementalRendererPlan(
             int rendererIndex,
@@ -1427,12 +1429,20 @@ namespace UMA
         Completed
     }
 
+    internal enum UMAIncrementalRendererSchedulingStage
+    {
+        PrepareMesh,
+        CreateBlendShapeLoader,
+        Completed
+    }
+
     /// <summary>
     /// Per-avatar resumable state owned by
     /// <see cref="UMAIncrementalMeshCombiner"/>.
     /// </summary>
     public sealed class UMAIncrementalMeshCombineOperation :
-        IUMAMeshCombineOperation
+        IUMAMeshCombineOperation,
+        IUMAMeshCombineOperationDiagnostics
     {
         private static readonly ProfilerMarker BuildPlanMarker =
             new ProfilerMarker("UMA.IncrementalMesh.BuildPlan");
@@ -1465,6 +1475,9 @@ namespace UMA
         private readonly UMAData data;
         private readonly int atlasResolution;
         private UMAIncrementalMeshCombinePlan plan;
+        private readonly Queue<UMAMeshCombineStepTiming>
+            completedTimings =
+                new Queue<UMAMeshCombineStepTiming>();
         private OperationStage stage = OperationStage.BuildPlan;
         private int rendererCursor;
         private bool cancellationRequested;
@@ -1486,6 +1499,15 @@ namespace UMA
         {
             get
             {
+                if (stage == OperationStage.ScheduleRenderers &&
+                    plan?.Renderers != null &&
+                    rendererCursor < plan.Renderers.Length)
+                {
+                    return
+                        $"Renderer {rendererCursor}: " +
+                        GetRendererSchedulingStepName(
+                            plan.Renderers[rendererCursor]);
+                }
                 if (stage == OperationStage.ProcessRenderers &&
                     plan?.Renderers != null &&
                     plan.Renderers.Length > 0)
@@ -1519,6 +1541,118 @@ namespace UMA
                 }
                 return stage.ToString();
             }
+        }
+
+        public string AtomicStepName
+        {
+            get
+            {
+                switch (stage)
+                {
+                    case OperationStage.BuildPlan:
+                        return "Build Plan";
+                    case OperationStage.ScheduleRenderers:
+                        return plan?.Renderers != null &&
+                               rendererCursor < plan.Renderers.Length
+                            ? GetRendererSchedulingStepName(
+                                plan.Renderers[rendererCursor])
+                            : "Complete Renderer Scheduling";
+                    case OperationStage.ProcessRenderers:
+                        return GetRendererAtomicStepName();
+                    case OperationStage.Commit:
+                        return "Commit Mesh";
+                    case OperationStage.Completed:
+                        return "Completed";
+                    case OperationStage.Cancelled:
+                        return "Cancelled";
+                    case OperationStage.Failed:
+                        return "Failed";
+                    default:
+                        return stage.ToString();
+                }
+            }
+        }
+
+        private static string GetRendererSchedulingStepName(
+            UMAIncrementalRendererPlan rendererPlan)
+        {
+            if (rendererPlan == null)
+            {
+                return "Prepare Renderer";
+            }
+            switch (rendererPlan.SchedulingStage)
+            {
+                case UMAIncrementalRendererSchedulingStage.PrepareMesh:
+                    return "Prepare Renderer Mesh";
+                case UMAIncrementalRendererSchedulingStage
+                    .CreateBlendShapeLoader:
+                    return "Create BlendShape Loader";
+                case UMAIncrementalRendererSchedulingStage.Completed:
+                    return "Complete Renderer Scheduling";
+                default:
+                    return rendererPlan.SchedulingStage.ToString();
+            }
+        }
+
+        private string GetRendererAtomicStepName()
+        {
+            UMAIncrementalRendererPlan[] renderers = plan?.Renderers;
+            if (renderers == null || renderers.Length == 0)
+            {
+                return "Advance to Commit";
+            }
+
+            for (int offset = 0; offset < renderers.Length; offset++)
+            {
+                int index = (rendererCursor + offset) % renderers.Length;
+                UMAIncrementalRendererPlan rendererPlan = renderers[index];
+                if (rendererPlan.BaseMeshApplied)
+                {
+                    continue;
+                }
+                if (rendererPlan.IsEmpty ||
+                    (rendererPlan.Pending != null &&
+                     rendererPlan.Pending.IsCompleted))
+                {
+                    return "Apply Base Mesh";
+                }
+            }
+
+            for (int offset = 0; offset < renderers.Length; offset++)
+            {
+                int index = (rendererCursor + offset) % renderers.Length;
+                UMAIncrementalRendererPlan rendererPlan = renderers[index];
+                SkinnedMeshCombinerMeshAPI.IncrementalBlendShapeLoader loader =
+                    rendererPlan.BlendShapeLoader;
+                if (rendererPlan.BaseMeshApplied &&
+                    loader != null &&
+                    !loader.IsComplete &&
+                    !loader.HasPendingPreparation)
+                {
+                    return loader.IsInitialized
+                        ? "Add BlendShape Frame"
+                        : "Complete BlendShape Worker Preparation";
+                }
+            }
+
+            for (int offset = 0; offset < renderers.Length; offset++)
+            {
+                int index = (rendererCursor + offset) % renderers.Length;
+                UMAIncrementalRendererPlan rendererPlan = renderers[index];
+                SkinnedMeshCombinerMeshAPI.IncrementalBlendShapeLoader loader =
+                    rendererPlan.BlendShapeLoader;
+                if (rendererPlan.BaseMeshApplied &&
+                    !rendererPlan.RendererFinalized &&
+                    (loader == null || loader.IsComplete))
+                {
+                    return "Finalize Renderer: " +
+                           rendererPlan.FinalizationStage;
+                }
+            }
+
+            return HasPendingJobs
+                ? "Poll Renderer Jobs"
+                : "Advance Renderer Pipeline";
         }
 
         public float Progress
@@ -1639,6 +1773,18 @@ namespace UMA
 
         public Exception Error { get; private set; }
 
+        public bool TryDequeueCompletedTiming(
+            out UMAMeshCombineStepTiming timing)
+        {
+            if (completedTimings.Count == 0)
+            {
+                timing = default;
+                return false;
+            }
+            timing = completedTimings.Dequeue();
+            return true;
+        }
+
         public UMAMeshCombineStepResult Step(
             UMAMeshCombineTimeSlice timeSlice)
         {
@@ -1647,6 +1793,7 @@ namespace UMA
                 throw new ObjectDisposedException(
                     nameof(UMAIncrementalMeshCombineOperation));
             }
+            CaptureCompletedWorkerTimings();
             if (stage == OperationStage.Completed)
             {
                 return UMAMeshCombineStepResult.Completed();
@@ -1694,10 +1841,12 @@ namespace UMA
                         {
                             using (ScheduleRendererMarker.Auto())
                             {
-                                ScheduleRenderer(
-                                    plan.Renderers[rendererCursor]);
+                                if (AdvanceRendererScheduling(
+                                        plan.Renderers[rendererCursor]))
+                                {
+                                    rendererCursor++;
+                                }
                             }
-                            rendererCursor++;
                         }
                         if (rendererCursor >= plan.Renderers.Length)
                         {
@@ -1885,6 +2034,28 @@ namespace UMA
             return UMAMeshCombineStepResult.InProgress();
         }
 
+        private void CaptureCompletedWorkerTimings()
+        {
+            if (plan?.Renderers == null)
+            {
+                return;
+            }
+            for (int i = 0; i < plan.Renderers.Length; i++)
+            {
+                SkinnedMeshCombinerMeshAPI.IncrementalBlendShapeLoader
+                    loader = plan.Renderers[i]?.BlendShapeLoader;
+                if (loader != null &&
+                    loader.TryConsumeInitializationTicks(
+                        out long elapsedTicks))
+                {
+                    completedTimings.Enqueue(
+                        new UMAMeshCombineStepTiming(
+                            "BlendShape Plan and Buffer Preparation (Worker)",
+                            elapsedTicks));
+                }
+            }
+        }
+
         internal void RunSynchronously()
         {
             while (true)
@@ -1911,36 +2082,178 @@ namespace UMA
             }
         }
 
-        private void ScheduleRenderer(
+        private bool AdvanceRendererScheduling(
             UMAIncrementalRendererPlan rendererPlan)
         {
-            if (rendererPlan.IsEmpty)
+            switch (rendererPlan.SchedulingStage)
             {
-                return;
-            }
-            rendererPlan.Pending =
-                SkinnedMeshCombinerMeshAPI.PrepareIncrementalCombine(
-                    new SkinnedMeshCombinerMeshAPI.RendererBatch
+                case UMAIncrementalRendererSchedulingStage.PrepareMesh:
+                    if (!rendererPlan.IsEmpty)
                     {
-                        Renderer = rendererPlan.StagingRenderer,
-                        Sources = rendererPlan.Sources,
-                        CurrentRendererIndex =
-                            rendererPlan.RendererIndex,
-                        AtlasResolution = plan.AtlasResolution,
-                        RendererAsset =
-                            rendererPlan.RendererAsset,
-                        HasRendererAssetOverride = true,
-                        SkipSkeletonUpdate = true
-                    },
-                    plan.Data,
-                    plan.BakedBlendshapes,
-                    plan.Data.markDynamic,
-                    false,
-                    plan.BoundsRotation);
-            rendererPlan.BlendShapeLoader =
-                rendererPlan.Pending
-                    .CreateIncrementalBlendShapeLoader();
-            plan.CaptureScheduledSlotMetadata(rendererPlan);
+                        SkinnedMeshCombinerMeshAPI
+                            .RendererPreparationTimingSnapshot before =
+                                SkinnedMeshCombinerMeshAPI
+                                    .RendererPreparationTimingSnapshot
+                                    .Capture();
+                        rendererPlan.Pending =
+                            SkinnedMeshCombinerMeshAPI
+                                .PrepareIncrementalCombine(
+                                    new SkinnedMeshCombinerMeshAPI
+                                        .RendererBatch
+                                    {
+                                        Renderer =
+                                            rendererPlan.StagingRenderer,
+                                        Sources = rendererPlan.Sources,
+                                        CurrentRendererIndex =
+                                            rendererPlan.RendererIndex,
+                                        AtlasResolution =
+                                            plan.AtlasResolution,
+                                        RendererAsset =
+                                            rendererPlan.RendererAsset,
+                                        HasRendererAssetOverride = true,
+                                        SkipSkeletonUpdate = true
+                                    },
+                                    plan.Data,
+                                    plan.BakedBlendshapes,
+                                    plan.Data.markDynamic,
+                                    false,
+                                    plan.BoundsRotation);
+                        SkinnedMeshCombinerMeshAPI
+                            .RendererPreparationTimingSnapshot after =
+                                SkinnedMeshCombinerMeshAPI
+                                    .RendererPreparationTimingSnapshot
+                                    .Capture();
+                        EnqueueRendererPreparationTimings(
+                            before,
+                            after);
+                        var metadataStopwatch =
+                            System.Diagnostics.Stopwatch.StartNew();
+                        plan.CaptureScheduledSlotMetadata(
+                            rendererPlan);
+                        metadataStopwatch.Stop();
+                        EnqueueCompletedTiming(
+                            "Prepare: Capture Slot Metadata",
+                            metadataStopwatch.ElapsedTicks);
+                    }
+                    rendererPlan.SchedulingStage =
+                        UMAIncrementalRendererSchedulingStage
+                            .CreateBlendShapeLoader;
+                    return false;
+
+                case UMAIncrementalRendererSchedulingStage
+                    .CreateBlendShapeLoader:
+                    if (!rendererPlan.IsEmpty)
+                    {
+                        rendererPlan.BlendShapeLoader =
+                            rendererPlan.Pending
+                                .CreateIncrementalBlendShapeLoader();
+                    }
+                    rendererPlan.SchedulingStage =
+                        UMAIncrementalRendererSchedulingStage.Completed;
+                    return true;
+
+                case UMAIncrementalRendererSchedulingStage.Completed:
+                    return true;
+
+                default:
+                    throw new InvalidOperationException(
+                        $"Unsupported renderer scheduling stage {rendererPlan.SchedulingStage}.");
+            }
+        }
+
+        private void EnqueueRendererPreparationTimings(
+            SkinnedMeshCombinerMeshAPI.RendererPreparationTimingSnapshot before,
+            SkinnedMeshCombinerMeshAPI.RendererPreparationTimingSnapshot after)
+        {
+            long analyzeSources =
+                after.AnalyzeSources - before.AnalyzeSources;
+            long analyzeBlendShapes =
+                after.AnalyzeBlendShapes - before.AnalyzeBlendShapes;
+            long allocateMeshData =
+                after.AllocateMeshData - before.AllocateMeshData;
+            long buildBoneWeights =
+                after.BuildBoneWeights - before.BuildBoneWeights;
+            long copyPositions =
+                after.CopyPositions - before.CopyPositions;
+            long packNormalsTangents =
+                after.PackNormalsTangents - before.PackNormalsTangents;
+            long packColorUV =
+                after.PackColorUV - before.PackColorUV;
+            long packAdditionalUV =
+                after.PackAdditionalUV - before.PackAdditionalUV;
+            long modifierPreparation =
+                after.ModifierPreparationAndSchedule -
+                before.ModifierPreparationAndSchedule;
+            long boundsScheduling =
+                after.BoundsJobsSchedule - before.BoundsJobsSchedule;
+            long indexScheduling =
+                after.IndexJobsSchedule - before.IndexJobsSchedule;
+            long uvRemap = after.UVRemap - before.UVRemap;
+            long total = after.Total - before.Total;
+
+            EnqueueCompletedTiming(
+                "Prepare: Source Analysis",
+                analyzeSources);
+            EnqueueCompletedTiming(
+                "Prepare: BlendShape Analysis",
+                analyzeBlendShapes);
+            EnqueueCompletedTiming(
+                "Prepare: MeshData Allocation",
+                allocateMeshData);
+            EnqueueCompletedTiming(
+                "Prepare: Bone Mapping and Weights",
+                buildBoneWeights);
+            EnqueueCompletedTiming(
+                "Prepare: Position Copy",
+                copyPositions);
+            EnqueueCompletedTiming(
+                "Prepare: Normal/Tangent Packing",
+                packNormalsTangents);
+            EnqueueCompletedTiming(
+                "Prepare: Color/UV Packing",
+                packColorUV);
+            EnqueueCompletedTiming(
+                "Prepare: Additional UV Packing",
+                packAdditionalUV);
+            EnqueueCompletedTiming(
+                "Prepare: Bone/Modifier Jobs",
+                modifierPreparation);
+            EnqueueCompletedTiming(
+                "Prepare: Bounds Jobs",
+                boundsScheduling);
+            EnqueueCompletedTiming(
+                "Prepare: Index/Mask Jobs",
+                indexScheduling);
+            EnqueueCompletedTiming(
+                "Prepare: UV Transform Jobs",
+                uvRemap);
+
+            long measured =
+                analyzeSources +
+                analyzeBlendShapes +
+                allocateMeshData +
+                buildBoneWeights +
+                copyPositions +
+                packNormalsTangents +
+                packColorUV +
+                packAdditionalUV +
+                modifierPreparation +
+                boundsScheduling +
+                indexScheduling +
+                uvRemap;
+            EnqueueCompletedTiming(
+                "Prepare: Other Setup and Allocation",
+                Math.Max(0L, total - measured));
+        }
+
+        private void EnqueueCompletedTiming(
+            string stepName,
+            long elapsedTicks)
+        {
+            completedTimings.Enqueue(
+                new UMAMeshCombineStepTiming(
+                    stepName,
+                    Math.Max(0L, elapsedTicks)));
         }
 
         private static void ApplyBaseMesh(

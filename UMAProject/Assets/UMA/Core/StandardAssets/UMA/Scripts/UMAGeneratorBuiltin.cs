@@ -37,6 +37,62 @@ namespace UMA
 		public UMAMeshCombiner meshCombiner;
 		private HashSet<string> raceNames;
 
+        public readonly struct MultiStepBudgetOverrunStatistic
+        {
+            public string StepName { get; }
+            public long Count { get; }
+            public float MaximumStepMilliseconds { get; }
+            public float MaximumOverrunMilliseconds { get; }
+
+            internal MultiStepBudgetOverrunStatistic(
+                string stepName,
+                long count,
+                float maximumStepMilliseconds,
+                float maximumOverrunMilliseconds)
+            {
+                StepName = stepName;
+                Count = count;
+                MaximumStepMilliseconds = maximumStepMilliseconds;
+                MaximumOverrunMilliseconds = maximumOverrunMilliseconds;
+            }
+        }
+
+        public readonly struct MultiStepAtomicStepStatistic
+        {
+            public string StepName { get; }
+            public long Count { get; }
+            public double TotalMilliseconds { get; }
+            public double AverageMilliseconds =>
+                Count > 0 ? TotalMilliseconds / Count : 0d;
+            public float MaximumMilliseconds { get; }
+
+            internal MultiStepAtomicStepStatistic(
+                string stepName,
+                long count,
+                double totalMilliseconds,
+                float maximumMilliseconds)
+            {
+                StepName = stepName;
+                Count = count;
+                TotalMilliseconds = totalMilliseconds;
+                MaximumMilliseconds = maximumMilliseconds;
+            }
+        }
+
+        private sealed class MultiStepAtomicStepAccumulator
+        {
+            public long Count;
+            public double TotalMilliseconds;
+            public float MaximumMilliseconds;
+        }
+
+        private sealed class MultiStepBudgetOverrunAccumulator
+        {
+            public long Count;
+            public float MaximumStepMilliseconds;
+            public float MaximumOverrunMilliseconds;
+        }
+
         private sealed class MultiStepGenerationState
         {
             public UMAData Data;
@@ -176,7 +232,17 @@ namespace UMA
         [NonSerialized]
         public float lastMultiStepAtomicStepMilliseconds;
         [NonSerialized]
+        public string lastMultiStepAtomicStepName;
+        [NonSerialized]
         public float maximumMultiStepAtomicStepMilliseconds;
+        [NonSerialized]
+        public string maximumMultiStepAtomicStepName;
+        [NonSerialized]
+        public string lastMultiStepBudgetOverrunStepName;
+        [NonSerialized]
+        public float lastMultiStepBudgetOverrunStepMilliseconds;
+        [NonSerialized]
+        public float lastMultiStepBudgetOverrunAmountMilliseconds;
         [NonSerialized]
         public long multiStepWaitingForAsyncCount;
         [NonSerialized]
@@ -191,6 +257,12 @@ namespace UMA
         public long maximumMultiStepGenerationLatencyTicks;
         [NonSerialized]
         public long multiStepDiscardedMeshTicks;
+        [NonSerialized]
+        private Dictionary<string, MultiStepBudgetOverrunAccumulator>
+            multiStepBudgetOverrunsByStep;
+        [NonSerialized]
+        private Dictionary<string, MultiStepAtomicStepAccumulator>
+            multiStepAtomicStepsByName;
 
         public string ActiveMultiStepStage =>
             activeMultiStepGeneration?.MeshOperation?.StageName ??
@@ -198,6 +270,89 @@ namespace UMA
 
         public float ActiveMultiStepProgress =>
             activeMultiStepGeneration?.MeshOperation?.Progress ?? 0f;
+
+        public void GetMultiStepBudgetOverrunStatistics(
+            List<MultiStepBudgetOverrunStatistic> results)
+        {
+            if (results == null)
+            {
+                throw new ArgumentNullException(nameof(results));
+            }
+
+            results.Clear();
+            if (multiStepBudgetOverrunsByStep == null)
+            {
+                return;
+            }
+
+            foreach (KeyValuePair<string, MultiStepBudgetOverrunAccumulator>
+                     entry in multiStepBudgetOverrunsByStep)
+            {
+                MultiStepBudgetOverrunAccumulator value = entry.Value;
+                results.Add(new MultiStepBudgetOverrunStatistic(
+                    entry.Key,
+                    value.Count,
+                    value.MaximumStepMilliseconds,
+                    value.MaximumOverrunMilliseconds));
+            }
+            results.Sort(CompareMultiStepBudgetOverrunStatistics);
+        }
+
+        public void GetMultiStepAtomicStepStatistics(
+            List<MultiStepAtomicStepStatistic> results)
+        {
+            if (results == null)
+            {
+                throw new ArgumentNullException(nameof(results));
+            }
+
+            results.Clear();
+            if (multiStepAtomicStepsByName == null)
+            {
+                return;
+            }
+
+            foreach (KeyValuePair<string, MultiStepAtomicStepAccumulator>
+                     entry in multiStepAtomicStepsByName)
+            {
+                MultiStepAtomicStepAccumulator value = entry.Value;
+                results.Add(new MultiStepAtomicStepStatistic(
+                    entry.Key,
+                    value.Count,
+                    value.TotalMilliseconds,
+                    value.MaximumMilliseconds));
+            }
+            results.Sort(CompareMultiStepAtomicStepStatistics);
+        }
+
+        private static int CompareMultiStepAtomicStepStatistics(
+            MultiStepAtomicStepStatistic left,
+            MultiStepAtomicStepStatistic right)
+        {
+            int maximumComparison =
+                right.MaximumMilliseconds.CompareTo(
+                    left.MaximumMilliseconds);
+            return maximumComparison != 0
+                ? maximumComparison
+                : string.CompareOrdinal(left.StepName, right.StepName);
+        }
+
+        private static int CompareMultiStepBudgetOverrunStatistics(
+            MultiStepBudgetOverrunStatistic left,
+            MultiStepBudgetOverrunStatistic right)
+        {
+            int countComparison = right.Count.CompareTo(left.Count);
+            if (countComparison != 0)
+            {
+                return countComparison;
+            }
+            int timeComparison =
+                right.MaximumStepMilliseconds.CompareTo(
+                    left.MaximumStepMilliseconds);
+            return timeComparison != 0
+                ? timeComparison
+                : string.CompareOrdinal(left.StepName, right.StepName);
+        }
 
         public float averageTextureProcessingTime
         {
@@ -458,7 +613,14 @@ namespace UMA
             endEventsTicks = 0;
             multiStepBudgetOverrunCount = 0;
             lastMultiStepAtomicStepMilliseconds = 0f;
+            lastMultiStepAtomicStepName = string.Empty;
             maximumMultiStepAtomicStepMilliseconds = 0f;
+            maximumMultiStepAtomicStepName = string.Empty;
+            lastMultiStepBudgetOverrunStepName = string.Empty;
+            lastMultiStepBudgetOverrunStepMilliseconds = 0f;
+            lastMultiStepBudgetOverrunAmountMilliseconds = 0f;
+            multiStepBudgetOverrunsByStep?.Clear();
+            multiStepAtomicStepsByName?.Clear();
             multiStepWaitingForAsyncCount = 0;
             multiStepRestartCount = 0;
             multiStepCancellationCount = 0;
@@ -1418,6 +1580,8 @@ namespace UMA
                 }
 
                 UMAMeshCombineStepResult result;
+                string atomicStepName =
+                    GetMultiStepAtomicStepName(operation);
                 var meshStepStopwatch = System.Diagnostics.Stopwatch.StartNew();
                 double remainingMilliseconds = timeSlice.RemainingMilliseconds;
                 try
@@ -1450,13 +1614,26 @@ namespace UMA
                     lastMultiStepAtomicStepMilliseconds =
                         (float)UMATime.StopwatchTicksToMilliseconds(
                             meshStepStopwatch.ElapsedTicks);
-                    maximumMultiStepAtomicStepMilliseconds = Mathf.Max(
-                        maximumMultiStepAtomicStepMilliseconds,
+                    lastMultiStepAtomicStepName = atomicStepName;
+                    RecordMultiStepAtomicStep(
+                        atomicStepName,
                         lastMultiStepAtomicStepMilliseconds);
+                    RecordCompletedMultiStepTimings(operation);
+                    if (lastMultiStepAtomicStepMilliseconds >
+                        maximumMultiStepAtomicStepMilliseconds)
+                    {
+                        maximumMultiStepAtomicStepMilliseconds =
+                            lastMultiStepAtomicStepMilliseconds;
+                        maximumMultiStepAtomicStepName = atomicStepName;
+                    }
                     if (!double.IsPositiveInfinity(remainingMilliseconds) &&
                         lastMultiStepAtomicStepMilliseconds > remainingMilliseconds)
                     {
-                        multiStepBudgetOverrunCount++;
+                        RecordMultiStepBudgetOverrun(
+                            atomicStepName,
+                            lastMultiStepAtomicStepMilliseconds,
+                            (float)(lastMultiStepAtomicStepMilliseconds -
+                                    remainingMilliseconds));
                     }
                 }
 
@@ -1508,6 +1685,105 @@ namespace UMA
             {
                 FailDirtyUpdate(ex);
                 return UMAMeshCombineStatus.Failed;
+            }
+        }
+
+        private static string GetMultiStepAtomicStepName(
+            IUMAMeshCombineOperation operation)
+        {
+            var diagnostics =
+                operation as IUMAMeshCombineOperationDiagnostics;
+            string stepName = diagnostics?.AtomicStepName;
+            if (string.IsNullOrEmpty(stepName))
+            {
+                stepName = operation?.StageName;
+            }
+            return string.IsNullOrEmpty(stepName)
+                ? "Unnamed Mesh Step"
+                : stepName;
+        }
+
+        private void RecordMultiStepBudgetOverrun(
+            string stepName,
+            float stepMilliseconds,
+            float overrunMilliseconds)
+        {
+            multiStepBudgetOverrunCount++;
+            lastMultiStepBudgetOverrunStepName = stepName;
+            lastMultiStepBudgetOverrunStepMilliseconds = stepMilliseconds;
+            lastMultiStepBudgetOverrunAmountMilliseconds =
+                Mathf.Max(0f, overrunMilliseconds);
+
+            if (multiStepBudgetOverrunsByStep == null)
+            {
+                multiStepBudgetOverrunsByStep =
+                    new Dictionary<string, MultiStepBudgetOverrunAccumulator>(
+                        StringComparer.Ordinal);
+            }
+            if (!multiStepBudgetOverrunsByStep.TryGetValue(
+                    stepName,
+                    out MultiStepBudgetOverrunAccumulator accumulator))
+            {
+                accumulator = new MultiStepBudgetOverrunAccumulator();
+                multiStepBudgetOverrunsByStep.Add(stepName, accumulator);
+            }
+
+            accumulator.Count++;
+            accumulator.MaximumStepMilliseconds = Mathf.Max(
+                accumulator.MaximumStepMilliseconds,
+                stepMilliseconds);
+            accumulator.MaximumOverrunMilliseconds = Mathf.Max(
+                accumulator.MaximumOverrunMilliseconds,
+                overrunMilliseconds);
+        }
+
+        private void RecordMultiStepAtomicStep(
+            string stepName,
+            float stepMilliseconds)
+        {
+            if (multiStepAtomicStepsByName == null)
+            {
+                multiStepAtomicStepsByName =
+                    new Dictionary<string, MultiStepAtomicStepAccumulator>(
+                        StringComparer.Ordinal);
+            }
+            if (!multiStepAtomicStepsByName.TryGetValue(
+                    stepName,
+                    out MultiStepAtomicStepAccumulator accumulator))
+            {
+                accumulator = new MultiStepAtomicStepAccumulator();
+                multiStepAtomicStepsByName.Add(stepName, accumulator);
+            }
+
+            accumulator.Count++;
+            accumulator.TotalMilliseconds += stepMilliseconds;
+            accumulator.MaximumMilliseconds = Mathf.Max(
+                accumulator.MaximumMilliseconds,
+                stepMilliseconds);
+        }
+
+        private void RecordCompletedMultiStepTimings(
+            IUMAMeshCombineOperation operation)
+        {
+            var diagnostics =
+                operation as IUMAMeshCombineOperationDiagnostics;
+            if (diagnostics == null)
+            {
+                return;
+            }
+
+            while (diagnostics.TryDequeueCompletedTiming(
+                       out UMAMeshCombineStepTiming timing))
+            {
+                if (string.IsNullOrEmpty(timing.StepName) ||
+                    timing.StopwatchTicks < 0)
+                {
+                    continue;
+                }
+                RecordMultiStepAtomicStep(
+                    timing.StepName,
+                    (float)UMATime.StopwatchTicksToMilliseconds(
+                        timing.StopwatchTicks));
             }
         }
 
