@@ -29,13 +29,45 @@ namespace UMA
 
 		private DynamicCharacterAvatar RandomAvatar;
 		private GameObject character;
+		private readonly List<GameObject> generatedCharacters = new List<GameObject>();
+		private bool initialRandomStateCaptured;
+		private Random.State initialRandomState;
+
+		public int GeneratedCharacterCount
+		{
+			get
+			{
+				RemoveDestroyedCharacterReferences();
+				return generatedCharacters.Count;
+			}
+		}
 
 		// Use this for initialization
 		void Start()
 		{
+			GenerateCharacters(false);
+		}
+
+		/// <summary>
+		/// Generates the configured avatar or avatar grid. Passing true restores
+		/// the random state captured before the first run so profiling restarts
+		/// generate the same crowd.
+		/// </summary>
+		public void GenerateCharacters(bool repeatInitialRandomSequence)
+		{
 			if (ParentObject == null)
 			{
 				ParentObject = this.gameObject;
+			}
+
+			if (!initialRandomStateCaptured)
+			{
+				initialRandomState = Random.state;
+				initialRandomStateCaptured = true;
+			}
+			else if (repeatInitialRandomSequence)
+			{
+				Random.state = initialRandomState;
 			}
 
 			if (!GenerateGrid)
@@ -81,6 +113,39 @@ namespace UMA
 			}
 		}
 
+		/// <summary>
+		/// Destroys avatars created by this crowd controller and returns the
+		/// number scheduled for destruction.
+		/// </summary>
+		public int DestroyGeneratedCharacters()
+		{
+			RemoveDestroyedCharacterReferences();
+			int destroyed = generatedCharacters.Count;
+			for (int i = 0; i < generatedCharacters.Count; i++)
+			{
+				GameObject generatedCharacter = generatedCharacters[i];
+				if (generatedCharacter != null)
+				{
+					Destroy(generatedCharacter);
+				}
+			}
+			generatedCharacters.Clear();
+			RandomAvatar = null;
+			character = null;
+			return destroyed;
+		}
+
+		private void RemoveDestroyedCharacterReferences()
+		{
+			for (int i = generatedCharacters.Count - 1; i >= 0; i--)
+			{
+				if (generatedCharacters[i] == null)
+				{
+					generatedCharacters.RemoveAt(i);
+				}
+			}
+		}
+
 		private Quaternion RandRotation(Quaternion src)
 		{
 			Vector3 Euler = src.eulerAngles;
@@ -97,6 +162,7 @@ namespace UMA
 				{
 					go.transform.parent = ParentObject.transform;
 				}
+				generatedCharacters.Add(go);
 				RandomAvatar = go.GetComponent<DynamicCharacterAvatar>();
 				go.name = Name;
 				// Event for possible networking here

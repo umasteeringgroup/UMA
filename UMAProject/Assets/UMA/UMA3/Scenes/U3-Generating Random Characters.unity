@@ -289,6 +289,7 @@ MonoBehaviour:
   m_Name:
   m_EditorClassIdentifier: UMA_Core::UMA.UMAGeneratorRuntimeStatistics
   Generator: {fileID: 0}
+  CrowdGenerator: {fileID: 0}
   ShowRuntimeControls: 1
   AutoSaveWhenGeneratorBecomesIdle: 1
   AutoSaveIdleFrameDelay: 2
@@ -297,8 +298,8 @@ MonoBehaviour:
     serializedVersion: 2
     x: 10
     y: 10
-    width: 310
-    height: 145
+    width: 520
+    height: 235
 --- !u!1001 &102816001
 PrefabInstance:
   m_ObjectHideFlags: 0

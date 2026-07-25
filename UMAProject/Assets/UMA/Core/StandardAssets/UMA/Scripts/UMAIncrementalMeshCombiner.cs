@@ -63,6 +63,36 @@ namespace UMA
             UMAData data,
             int atlasResolution)
         {
+            ValidateBuildPlanInputs(data);
+            UpdateBuildPlanMeshHideMasks(data);
+            EnsureBuildPlanSkeleton(data);
+            BuildPlanActiveModifiers(data);
+            UMAIncrementalMeshCombinePlan plan =
+                CreateBuildPlan(data, atlasResolution);
+            try
+            {
+                for (int rendererIndex = 0;
+                     rendererIndex < plan.Renderers.Length;
+                     rendererIndex++)
+                {
+                    BuildRendererPlan(
+                        plan,
+                        rendererIndex,
+                        updatedAtlas);
+                }
+                EnsureBuildPlanRendererSkeleton(plan);
+                CaptureBuildPlanMetadata(plan);
+                return plan;
+            }
+            catch
+            {
+                plan.Dispose();
+                throw;
+            }
+        }
+
+        internal static void ValidateBuildPlanInputs(UMAData data)
+        {
             if (data.umaRecipe == null)
             {
                 throw new InvalidOperationException(
@@ -74,8 +104,15 @@ namespace UMA
                 throw new InvalidOperationException(
                     "Incremental mesh generation requires generated renderer materials.");
             }
+        }
 
+        internal static void UpdateBuildPlanMeshHideMasks(UMAData data)
+        {
             data.umaRecipe.UpdateMeshHideMasks(data.currentLODLevel);
+        }
+
+        internal static void EnsureBuildPlanSkeleton(UMAData data)
+        {
             if (data.umaRoot == null)
             {
                 data.SetupSkeleton();
@@ -89,9 +126,17 @@ namespace UMA
                 throw new InvalidOperationException(
                     "Incremental mesh generation could not initialize the UMA skeleton.");
             }
+        }
 
+        internal static void BuildPlanActiveModifiers(UMAData data)
+        {
             data.BuildActiveModifiers();
+        }
 
+        internal static UMAIncrementalMeshCombinePlan CreateBuildPlan(
+            UMAData data,
+            int atlasResolution)
+        {
             var rendererAssets = data.generatedMaterials.rendererAssets.ToArray();
             var previousRenderers = data.GetRenderers();
             var rendererPlans =
@@ -111,51 +156,71 @@ namespace UMA
                 rendererPlans,
                 bakedBlendshapes,
                 boundsRotation);
+            return plan;
+        }
 
+        internal void BuildRendererPlan(
+            UMAIncrementalMeshCombinePlan plan,
+            int rendererIndex,
+            bool updatedAtlas)
+        {
+            UMAData data = plan.Data;
+            UMARendererAsset rendererAsset =
+                plan.RendererAssets[rendererIndex];
+            var stagingRenderer = CreateStagingRenderer(
+                data,
+                rendererIndex,
+                rendererAsset);
             try
             {
-                for (int rendererIndex = 0;
-                     rendererIndex < rendererAssets.Length;
-                     rendererIndex++)
-                {
-                    UMARendererAsset rendererAsset = rendererAssets[rendererIndex];
-                    var stagingRenderer = CreateStagingRenderer(
+                var materials = FilterMaterials(data, rendererAsset);
+                UMAClothProperties clothProperties;
+                SkinnedMeshCombiner.CombineInstance[] sources =
+                    BuildCombineInstances(
                         data,
+                        materials,
                         rendererIndex,
-                        rendererAsset);
-                    var materials = FilterMaterials(data, rendererAsset);
-                    UMAClothProperties clothProperties;
-                    SkinnedMeshCombiner.CombineInstance[] sources =
-                        BuildCombineInstances(
-                            data,
-                            materials,
-                            rendererIndex,
-                            out clothProperties);
+                        out clothProperties);
 
-                    if (updatedAtlas)
-                    {
-                        SetSlotUVAreas(materials, atlasResolution);
-                    }
-
-                    rendererPlans[rendererIndex] =
-                        new UMAIncrementalRendererPlan(
-                            rendererIndex,
-                            rendererAsset,
-                            stagingRenderer,
-                            materials,
-                            sources,
-                            clothProperties);
+                if (updatedAtlas)
+                {
+                    SetSlotUVAreas(materials, plan.AtlasResolution);
                 }
 
-                EnsureIncrementalSkeleton(data, rendererPlans);
-                plan.CaptureBuildMetadataAndRestore();
-                return plan;
+                plan.Renderers[rendererIndex] =
+                    new UMAIncrementalRendererPlan(
+                        rendererIndex,
+                        rendererAsset,
+                        stagingRenderer,
+                        materials,
+                        sources,
+                        clothProperties);
+                plan.CaptureBuiltRendererMetadataAndRestore(
+                    plan.Renderers[rendererIndex]);
             }
             catch
             {
-                plan.Dispose();
+                Mesh mesh = stagingRenderer.sharedMesh;
+                stagingRenderer.sharedMesh = null;
+                if (mesh != null)
+                {
+                    UMAUtils.DestroySceneObject(mesh);
+                }
+                UMAUtils.DestroySceneObject(stagingRenderer.gameObject);
                 throw;
             }
+        }
+
+        internal static void EnsureBuildPlanRendererSkeleton(
+            UMAIncrementalMeshCombinePlan plan)
+        {
+            EnsureIncrementalSkeleton(plan.Data, plan.Renderers);
+        }
+
+        internal static void CaptureBuildPlanMetadata(
+            UMAIncrementalMeshCombinePlan plan)
+        {
+            plan.CaptureBuildMetadataAndRestore();
         }
 
         private static void EnsureIncrementalSkeleton(
@@ -891,21 +956,48 @@ namespace UMA
 
         public void CaptureBuildMetadataAndRestore()
         {
-            for (int i = 0; i < slotMetadata.Count; i++)
-            {
-                UMAIncrementalSlotMetadataState state = slotMetadata[i];
-                state.PlannedUVArea = state.Slot.UVArea;
-                state.PlannedUVAreaUpdateFrame =
-                    state.Slot.uvAreaUpdateFrame;
-            }
-            for (int i = 0; i < materialMetadata.Count; i++)
-            {
-                UMAIncrementalMaterialMetadataState state =
-                    materialMetadata[i];
-                state.PlannedMaterialIndex =
-                    state.Material.materialIndex;
-            }
             RestoreOriginalMetadata(false);
+        }
+
+        public void CaptureBuiltRendererMetadataAndRestore(
+            UMAIncrementalRendererPlan rendererPlan)
+        {
+            for (int i = 0;
+                 i < rendererPlan.Sources.Length;
+                 i++)
+            {
+                SlotData slot =
+                    rendererPlan.Sources[i].slotData;
+                UMAIncrementalSlotMetadataState state =
+                    FindSlotState(slot);
+                if (state == null)
+                {
+                    continue;
+                }
+                state.PlannedUVArea = slot.UVArea;
+                state.PlannedUVAreaUpdateFrame =
+                    slot.uvAreaUpdateFrame;
+                slot.UVArea = state.OriginalUVArea;
+                slot.uvAreaUpdateFrame =
+                    state.OriginalUVAreaUpdateFrame;
+            }
+            for (int i = 0;
+                 i < rendererPlan.Materials.Length;
+                 i++)
+            {
+                UMAData.GeneratedMaterial material =
+                    rendererPlan.Materials[i];
+                UMAIncrementalMaterialMetadataState state =
+                    FindMaterialState(material);
+                if (state == null)
+                {
+                    continue;
+                }
+                state.PlannedMaterialIndex =
+                    material.materialIndex;
+                material.materialIndex =
+                    state.OriginalMaterialIndex;
+            }
         }
 
         public void CaptureScheduledSlotMetadata(
@@ -927,6 +1019,33 @@ namespace UMA
                 state.PlannedVertexOffset = slot.vertexOffset;
                 slot.skinnedMeshRenderer = state.OriginalRenderer;
                 slot.vertexOffset = state.OriginalVertexOffset;
+            }
+        }
+
+        public void CaptureScheduledSlotMetadata(
+            UMAIncrementalRendererPlan rendererPlan,
+            int[] sourceVertexOffsets)
+        {
+            for (int sourceIndex = 0;
+                 sourceIndex < rendererPlan.Sources.Length;
+                 sourceIndex++)
+            {
+                SlotData slot =
+                    rendererPlan.Sources[sourceIndex].slotData;
+                UMAIncrementalSlotMetadataState state =
+                    FindSlotState(slot);
+                if (state == null)
+                {
+                    continue;
+                }
+                state.PlannedRenderer =
+                    rendererPlan.RendererIndex;
+                state.PlannedVertexOffset =
+                    sourceVertexOffsets[sourceIndex];
+                slot.skinnedMeshRenderer =
+                    state.OriginalRenderer;
+                slot.vertexOffset =
+                    state.OriginalVertexOffset;
             }
         }
 
@@ -1341,10 +1460,17 @@ namespace UMA
         public UMAClothProperties ClothProperties { get; }
         public bool IsEmpty => Sources.Length == 0;
         public SkinnedMeshCombinerMeshAPI.PendingCombine Pending { get; set; }
+        public SkinnedMeshCombinerMeshAPI
+            .IncrementalCombinePreparation Preparation { get; set; }
+        public SkinnedMeshCombinerMeshAPI
+            .RendererPreparationTimingSnapshot PreparationTimingBefore
+            { get; set; }
         public SkinnedMeshCombinerMeshAPI.IncrementalBlendShapeLoader
             BlendShapeLoader { get; set; }
         public ClothSkinningCoefficient[] PreparedCloth { get; set; }
         public bool BaseMeshApplied { get; set; }
+        internal UMAIncrementalBaseMeshApplicationStage
+            BaseMeshApplicationStage { get; set; }
         public bool RendererFinalized { get; set; }
         internal UMAIncrementalRendererFinalizationStage
             FinalizationStage { get; set; }
@@ -1372,11 +1498,27 @@ namespace UMA
             Exception firstException = null;
             try
             {
-                BlendShapeLoader?.Dispose();
+                Preparation?.Dispose();
             }
             catch (Exception exception)
             {
                 firstException = exception;
+            }
+            finally
+            {
+                Preparation = null;
+            }
+
+            try
+            {
+                BlendShapeLoader?.Dispose();
+            }
+            catch (Exception exception)
+            {
+                if (firstException == null)
+                {
+                    firstException = exception;
+                }
             }
             finally
             {
@@ -1429,6 +1571,14 @@ namespace UMA
         Completed
     }
 
+    internal enum UMAIncrementalBaseMeshApplicationStage
+    {
+        PrepareOutput,
+        ApplyWritableMeshData,
+        ApplySkinning,
+        Completed
+    }
+
     internal enum UMAIncrementalRendererSchedulingStage
     {
         PrepareMesh,
@@ -1470,6 +1620,19 @@ namespace UMA
             Failed
         }
 
+        private enum BuildPlanStage
+        {
+            ValidateInputs,
+            UpdateMeshHideMasks,
+            EnsureSkeleton,
+            BuildActiveModifiers,
+            CreatePlan,
+            BuildRenderers,
+            EnsureRendererSkeleton,
+            CaptureMetadata,
+            Completed
+        }
+
         private readonly UMAIncrementalMeshCombiner owner;
         private readonly bool updatedAtlas;
         private readonly UMAData data;
@@ -1479,6 +1642,9 @@ namespace UMA
             completedTimings =
                 new Queue<UMAMeshCombineStepTiming>();
         private OperationStage stage = OperationStage.BuildPlan;
+        private BuildPlanStage buildPlanStage =
+            BuildPlanStage.ValidateInputs;
+        private int buildPlanRendererCursor;
         private int rendererCursor;
         private bool cancellationRequested;
         private bool disposed;
@@ -1550,7 +1716,7 @@ namespace UMA
                 switch (stage)
                 {
                     case OperationStage.BuildPlan:
-                        return "Build Plan";
+                        return GetBuildPlanAtomicStepName();
                     case OperationStage.ScheduleRenderers:
                         return plan?.Renderers != null &&
                                rendererCursor < plan.Renderers.Length
@@ -1573,6 +1739,35 @@ namespace UMA
             }
         }
 
+        private string GetBuildPlanAtomicStepName()
+        {
+            switch (buildPlanStage)
+            {
+                case BuildPlanStage.ValidateInputs:
+                    return "Build Plan: Validate Inputs";
+                case BuildPlanStage.UpdateMeshHideMasks:
+                    return "Build Plan: Mesh Hide Masks";
+                case BuildPlanStage.EnsureSkeleton:
+                    return "Build Plan: Ensure Skeleton";
+                case BuildPlanStage.BuildActiveModifiers:
+                    return "Build Plan: Active Modifiers";
+                case BuildPlanStage.CreatePlan:
+                    return "Build Plan: Create State";
+                case BuildPlanStage.BuildRenderers:
+                    return plan != null
+                        ? $"Build Plan: Renderer {buildPlanRendererCursor}"
+                        : "Build Plan: Renderer";
+                case BuildPlanStage.EnsureRendererSkeleton:
+                    return "Build Plan: Renderer Skeleton";
+                case BuildPlanStage.CaptureMetadata:
+                    return "Build Plan: Capture Metadata";
+                case BuildPlanStage.Completed:
+                    return "Build Plan: Complete";
+                default:
+                    return "Build Plan";
+            }
+        }
+
         private static string GetRendererSchedulingStepName(
             UMAIncrementalRendererPlan rendererPlan)
         {
@@ -1583,7 +1778,9 @@ namespace UMA
             switch (rendererPlan.SchedulingStage)
             {
                 case UMAIncrementalRendererSchedulingStage.PrepareMesh:
-                    return "Prepare Renderer Mesh";
+                    return rendererPlan.Preparation != null
+                        ? rendererPlan.Preparation.AtomicStepName
+                        : "Prepare Renderer: Begin";
                 case UMAIncrementalRendererSchedulingStage
                     .CreateBlendShapeLoader:
                     return "Create BlendShape Loader";
@@ -1614,7 +1811,8 @@ namespace UMA
                     (rendererPlan.Pending != null &&
                      rendererPlan.Pending.IsCompleted))
                 {
-                    return "Apply Base Mesh";
+                    return GetBaseMeshApplicationStepName(
+                        rendererPlan);
                 }
             }
 
@@ -1653,6 +1851,31 @@ namespace UMA
             return HasPendingJobs
                 ? "Poll Renderer Jobs"
                 : "Advance Renderer Pipeline";
+        }
+
+        private static string GetBaseMeshApplicationStepName(
+            UMAIncrementalRendererPlan rendererPlan)
+        {
+            if (rendererPlan.IsEmpty)
+            {
+                return "Apply Base Mesh: Empty Renderer";
+            }
+            switch (rendererPlan.BaseMeshApplicationStage)
+            {
+                case UMAIncrementalBaseMeshApplicationStage
+                    .PrepareOutput:
+                    return "Apply Base Mesh: Prepare Output";
+                case UMAIncrementalBaseMeshApplicationStage
+                    .ApplyWritableMeshData:
+                    return "Apply Base Mesh: Writable MeshData";
+                case UMAIncrementalBaseMeshApplicationStage
+                    .ApplySkinning:
+                    return "Apply Base Mesh: Skinning";
+                case UMAIncrementalBaseMeshApplicationStage.Completed:
+                    return "Apply Base Mesh: Complete";
+                default:
+                    return "Apply Base Mesh";
+            }
         }
 
         public float Progress
@@ -1737,6 +1960,14 @@ namespace UMA
                     SkinnedMeshCombinerMeshAPI.PendingCombine pending =
                         plan.Renderers[i]?.Pending;
                     if (pending != null && !pending.IsCompleted)
+                    {
+                        return true;
+                    }
+                    SkinnedMeshCombinerMeshAPI
+                        .IncrementalCombinePreparation preparation =
+                            plan.Renderers[i]?.Preparation;
+                    if (preparation != null &&
+                        preparation.HasPendingJobs)
                     {
                         return true;
                     }
@@ -1827,13 +2058,8 @@ namespace UMA
                     case OperationStage.BuildPlan:
                         using (BuildPlanMarker.Auto())
                         {
-                            plan = owner.BuildPlan(
-                                updatedAtlas,
-                                data,
-                                atlasResolution);
+                            AdvanceBuildPlan();
                         }
-                        stage = OperationStage.ScheduleRenderers;
-                        rendererCursor = 0;
                         return UMAMeshCombineStepResult.InProgress();
 
                     case OperationStage.ScheduleRenderers:
@@ -1876,6 +2102,86 @@ namespace UMA
                 Error = exception;
                 stage = OperationStage.Failed;
                 return UMAMeshCombineStepResult.Failed(exception);
+            }
+        }
+
+        private void AdvanceBuildPlan()
+        {
+            switch (buildPlanStage)
+            {
+                case BuildPlanStage.ValidateInputs:
+                    UMAIncrementalMeshCombiner
+                        .ValidateBuildPlanInputs(data);
+                    buildPlanStage =
+                        BuildPlanStage.UpdateMeshHideMasks;
+                    return;
+
+                case BuildPlanStage.UpdateMeshHideMasks:
+                    UMAIncrementalMeshCombiner
+                        .UpdateBuildPlanMeshHideMasks(data);
+                    buildPlanStage =
+                        BuildPlanStage.EnsureSkeleton;
+                    return;
+
+                case BuildPlanStage.EnsureSkeleton:
+                    UMAIncrementalMeshCombiner
+                        .EnsureBuildPlanSkeleton(data);
+                    buildPlanStage =
+                        BuildPlanStage.BuildActiveModifiers;
+                    return;
+
+                case BuildPlanStage.BuildActiveModifiers:
+                    UMAIncrementalMeshCombiner
+                        .BuildPlanActiveModifiers(data);
+                    buildPlanStage =
+                        BuildPlanStage.CreatePlan;
+                    return;
+
+                case BuildPlanStage.CreatePlan:
+                    plan = UMAIncrementalMeshCombiner
+                        .CreateBuildPlan(data, atlasResolution);
+                    buildPlanRendererCursor = 0;
+                    buildPlanStage =
+                        plan.Renderers.Length > 0
+                            ? BuildPlanStage.BuildRenderers
+                            : BuildPlanStage.EnsureRendererSkeleton;
+                    return;
+
+                case BuildPlanStage.BuildRenderers:
+                    owner.BuildRendererPlan(
+                        plan,
+                        buildPlanRendererCursor,
+                        updatedAtlas);
+                    buildPlanRendererCursor++;
+                    if (buildPlanRendererCursor >=
+                        plan.Renderers.Length)
+                    {
+                        buildPlanStage =
+                            BuildPlanStage.EnsureRendererSkeleton;
+                    }
+                    return;
+
+                case BuildPlanStage.EnsureRendererSkeleton:
+                    UMAIncrementalMeshCombiner
+                        .EnsureBuildPlanRendererSkeleton(plan);
+                    buildPlanStage =
+                        BuildPlanStage.CaptureMetadata;
+                    return;
+
+                case BuildPlanStage.CaptureMetadata:
+                    UMAIncrementalMeshCombiner
+                        .CaptureBuildPlanMetadata(plan);
+                    buildPlanStage = BuildPlanStage.Completed;
+                    return;
+
+                case BuildPlanStage.Completed:
+                    stage = OperationStage.ScheduleRenderers;
+                    rendererCursor = 0;
+                    return;
+
+                default:
+                    throw new InvalidOperationException(
+                        $"Unsupported build-plan stage {buildPlanStage}.");
             }
         }
 
@@ -1940,9 +2246,16 @@ namespace UMA
 
                     using (ApplyBaseMeshMarker.Auto())
                     {
-                        ApplyBaseMesh(rendererPlan);
+                        AdvanceBaseMeshApplication(
+                            rendererPlan);
                     }
-                    rendererPlan.BaseMeshApplied = true;
+                    if (rendererPlan
+                            .BaseMeshApplicationStage ==
+                        UMAIncrementalBaseMeshApplicationStage
+                            .Completed)
+                    {
+                        rendererPlan.BaseMeshApplied = true;
+                    }
                     rendererCursor =
                         (index + 1) % renderers.Length;
                     return UMAMeshCombineStepResult.InProgress();
@@ -2090,46 +2403,59 @@ namespace UMA
                 case UMAIncrementalRendererSchedulingStage.PrepareMesh:
                     if (!rendererPlan.IsEmpty)
                     {
-                        SkinnedMeshCombinerMeshAPI
-                            .RendererPreparationTimingSnapshot before =
+                        if (rendererPlan.Preparation == null)
+                        {
+                            rendererPlan.PreparationTimingBefore =
                                 SkinnedMeshCombinerMeshAPI
                                     .RendererPreparationTimingSnapshot
                                     .Capture();
+                            rendererPlan.Preparation =
+                                SkinnedMeshCombinerMeshAPI
+                                    .BeginIncrementalCombinePreparation(
+                                        new SkinnedMeshCombinerMeshAPI
+                                            .RendererBatch
+                                        {
+                                            Renderer =
+                                                rendererPlan.StagingRenderer,
+                                            Sources =
+                                                rendererPlan.Sources,
+                                            CurrentRendererIndex =
+                                                rendererPlan.RendererIndex,
+                                            AtlasResolution =
+                                                plan.AtlasResolution,
+                                            RendererAsset =
+                                                rendererPlan.RendererAsset,
+                                            HasRendererAssetOverride =
+                                                true,
+                                            SkipSkeletonUpdate = true
+                                        },
+                                        plan.Data,
+                                        plan.BakedBlendshapes,
+                                        plan.Data.markDynamic,
+                                        false,
+                                        plan.BoundsRotation);
+                            return false;
+                        }
+                        if (!rendererPlan.Preparation.Step())
+                        {
+                            return false;
+                        }
+
                         rendererPlan.Pending =
-                            SkinnedMeshCombinerMeshAPI
-                                .PrepareIncrementalCombine(
-                                    new SkinnedMeshCombinerMeshAPI
-                                        .RendererBatch
-                                    {
-                                        Renderer =
-                                            rendererPlan.StagingRenderer,
-                                        Sources = rendererPlan.Sources,
-                                        CurrentRendererIndex =
-                                            rendererPlan.RendererIndex,
-                                        AtlasResolution =
-                                            plan.AtlasResolution,
-                                        RendererAsset =
-                                            rendererPlan.RendererAsset,
-                                        HasRendererAssetOverride = true,
-                                        SkipSkeletonUpdate = true
-                                    },
-                                    plan.Data,
-                                    plan.BakedBlendshapes,
-                                    plan.Data.markDynamic,
-                                    false,
-                                    plan.BoundsRotation);
-                        SkinnedMeshCombinerMeshAPI
-                            .RendererPreparationTimingSnapshot after =
-                                SkinnedMeshCombinerMeshAPI
-                                    .RendererPreparationTimingSnapshot
-                                    .Capture();
+                            rendererPlan.Preparation.TakeResult();
+                        rendererPlan.Preparation.Dispose();
+                        rendererPlan.Preparation = null;
                         EnqueueRendererPreparationTimings(
-                            before,
-                            after);
+                            rendererPlan.PreparationTimingBefore,
+                            SkinnedMeshCombinerMeshAPI
+                                .RendererPreparationTimingSnapshot
+                                .Capture());
                         var metadataStopwatch =
                             System.Diagnostics.Stopwatch.StartNew();
                         plan.CaptureScheduledSlotMetadata(
-                            rendererPlan);
+                            rendererPlan,
+                            rendererPlan.Pending
+                                .SourceVertexOffsets);
                         metadataStopwatch.Stop();
                         EnqueueCompletedTiming(
                             "Prepare: Capture Slot Metadata",
@@ -2256,11 +2582,14 @@ namespace UMA
                     Math.Max(0L, elapsedTicks)));
         }
 
-        private static void ApplyBaseMesh(
+        private static void AdvanceBaseMeshApplication(
             UMAIncrementalRendererPlan rendererPlan)
         {
             if (rendererPlan.IsEmpty)
             {
+                rendererPlan.BaseMeshApplicationStage =
+                    UMAIncrementalBaseMeshApplicationStage
+                        .Completed;
                 return;
             }
             if (rendererPlan.Pending == null ||
@@ -2270,9 +2599,45 @@ namespace UMA
                     $"Renderer {rendererPlan.RendererIndex} was applied before its native jobs completed.");
             }
 
-            rendererPlan.PreparedCloth =
-                rendererPlan.Pending.ApplyPreparedBaseMesh(
-                    rendererPlan.StagingRenderer.sharedMesh);
+            Mesh mesh = rendererPlan.StagingRenderer.sharedMesh;
+            switch (rendererPlan.BaseMeshApplicationStage)
+            {
+                case UMAIncrementalBaseMeshApplicationStage
+                    .PrepareOutput:
+                    rendererPlan.Pending.PrepareOutputMesh();
+                    rendererPlan.BaseMeshApplicationStage =
+                        UMAIncrementalBaseMeshApplicationStage
+                            .ApplyWritableMeshData;
+                    return;
+
+                case UMAIncrementalBaseMeshApplicationStage
+                    .ApplyWritableMeshData:
+                    rendererPlan.Pending
+                        .ApplyIncrementalWritableMeshData(mesh);
+                    rendererPlan.BaseMeshApplicationStage =
+                        UMAIncrementalBaseMeshApplicationStage
+                            .ApplySkinning;
+                    return;
+
+                case UMAIncrementalBaseMeshApplicationStage
+                    .ApplySkinning:
+                    rendererPlan.PreparedCloth =
+                        rendererPlan.Pending
+                            .ApplyIncrementalBaseMeshSkinning(
+                                mesh);
+                    rendererPlan.BaseMeshApplicationStage =
+                        UMAIncrementalBaseMeshApplicationStage
+                            .Completed;
+                    return;
+
+                case UMAIncrementalBaseMeshApplicationStage
+                    .Completed:
+                    return;
+
+                default:
+                    throw new InvalidOperationException(
+                        $"Unsupported base-mesh application stage {rendererPlan.BaseMeshApplicationStage}.");
+            }
         }
 
         private bool FinalizeRenderer(

@@ -555,23 +555,53 @@ namespace UMA.Editors.Tests
                 operation =
                     combiner.BeginUpdateUMAMesh(true, data, 512);
 
-                Assert.AreEqual(
-                    UMAMeshCombineStatus.InProgress,
-                    operation.Step(
-                        UMAMeshCombineTimeSlice.Unlimited).Status);
-                AssertOriginalMetadata();
-
-                Assert.AreEqual(
-                    UMAMeshCombineStatus.InProgress,
-                    operation.Step(
-                        UMAMeshCombineTimeSlice.Unlimited).Status);
-                AssertOriginalMetadata();
                 var diagnostics =
                     operation as IUMAMeshCombineOperationDiagnostics;
                 Assert.NotNull(diagnostics);
+                var observedPreparationSteps =
+                    new List<string>();
+                int preparationAttempts = 0;
+                while (diagnostics.AtomicStepName !=
+                       "Create BlendShape Loader")
+                {
+                    Assert.Less(
+                        preparationAttempts++,
+                        10000,
+                        "Incremental renderer preparation did not reach blendshape-loader creation.");
+                    observedPreparationSteps.Add(
+                        diagnostics.AtomicStepName);
+                    UMAMeshCombineStepResult result =
+                        operation.Step(
+                            UMAMeshCombineTimeSlice.Unlimited);
+                    Assert.AreNotEqual(
+                        UMAMeshCombineStatus.Failed,
+                        result.Status,
+                        result.Error?.ToString());
+                    AssertOriginalMetadata();
+                    if (result.Status ==
+                        UMAMeshCombineStatus.WaitingForAsync)
+                    {
+                        Thread.Yield();
+                    }
+                }
                 Assert.AreEqual(
                     "Create BlendShape Loader",
                     diagnostics.AtomicStepName);
+                CollectionAssert.Contains(
+                    observedPreparationSteps,
+                    "Build Plan: Validate Inputs");
+                CollectionAssert.Contains(
+                    observedPreparationSteps,
+                    "Build Plan: Renderer 0");
+                CollectionAssert.Contains(
+                    observedPreparationSteps,
+                    "Prepare Renderer: Analyze");
+                CollectionAssert.Contains(
+                    observedPreparationSteps,
+                    "Prepare Renderer: Allocate MeshData");
+                CollectionAssert.Contains(
+                    observedPreparationSteps,
+                    "Prepare Renderer: Source 0");
                 var preparationTimingNames = new List<string>();
                 while (diagnostics.TryDequeueCompletedTiming(
                            out UMAMeshCombineStepTiming timing))
@@ -632,12 +662,21 @@ namespace UMA.Editors.Tests
                 operation =
                     combiner.BeginUpdateUMAMesh(true, data, 512);
                 int attempts = 0;
+                var secondRunSteps = new List<string>();
                 while (operation.StageName != "Commit")
                 {
                     Assert.Less(
                         attempts++,
                         10000,
                         "The failure-injection operation did not reach commit.");
+                    var secondDiagnostics =
+                        operation as
+                            IUMAMeshCombineOperationDiagnostics;
+                    if (secondDiagnostics != null)
+                    {
+                        secondRunSteps.Add(
+                            secondDiagnostics.AtomicStepName);
+                    }
                     UMAMeshCombineStepResult stepResult =
                         operation.Step(
                             UMAMeshCombineTimeSlice.Unlimited);
@@ -652,6 +691,15 @@ namespace UMA.Editors.Tests
                         throw stepResult.Error;
                     }
                 }
+                CollectionAssert.Contains(
+                    secondRunSteps,
+                    "Apply Base Mesh: Prepare Output");
+                CollectionAssert.Contains(
+                    secondRunSteps,
+                    "Apply Base Mesh: Writable MeshData");
+                CollectionAssert.Contains(
+                    secondRunSteps,
+                    "Apply Base Mesh: Skinning");
 
                 generatedMaterial.umaMaterial = null;
                 UMAMeshCombineStepResult failedCommit =

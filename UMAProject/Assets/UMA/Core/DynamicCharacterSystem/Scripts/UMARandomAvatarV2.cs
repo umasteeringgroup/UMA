@@ -47,6 +47,9 @@ namespace UMA
 			private Transform transform;
 			private List<DynamicCharacterAvatar> generatedDCAs = new List<DynamicCharacterAvatar>();
 
+			public int GeneratedCharacterCount =>
+				generatedDCAs != null ? generatedDCAs.Count : 0;
+
 			public void Init(GameObject componentGO)
 			{
 				if (ParentObject == null)
@@ -78,6 +81,28 @@ namespace UMA
 				}
 
 				if (!Sequential) RandomizeAll(Randomization);
+			}
+
+			public int DestroyGeneratedCharacters()
+			{
+				if (generatedDCAs == null)
+				return 0;
+
+				int destroyedCount = 0;
+				for (int i = generatedDCAs.Count - 1; i >= 0; i--)
+				{
+					DynamicCharacterAvatar avatar = generatedDCAs[i];
+					if (avatar == null)
+						continue;
+
+					destroyedCount++;
+					if (Application.isPlaying)
+						GameObject.Destroy(avatar.gameObject);
+					else
+						GameObject.DestroyImmediate(avatar.gameObject);
+				}
+				generatedDCAs.Clear();
+				return destroyedCount;
 			}
 
 			public void RandomizeAll(System.Action<DynamicCharacterAvatar, bool, bool> Randomization, bool randChar = true, bool randWardrobe = true)
@@ -153,6 +178,8 @@ namespace UMA
 		// --- Existing Character Randomization ---
 		public List<DynamicCharacterAvatar> ExistingDCAs = new List<DynamicCharacterAvatar>();
 
+		private Random.State initialGenerationRandomState;
+		private bool hasInitialGenerationRandomState;
 
 
 		// Use this for initialization
@@ -161,8 +188,9 @@ namespace UMA
 			switch (mode)
 			{
 				case Mode.Generate:
-					Generation.Init(this.gameObject);
-					Generation.Start(Randomize);
+					initialGenerationRandomState = Random.state;
+					hasInitialGenerationRandomState = true;
+					GenerateCharacters(false);
 					break;
 				case Mode.UseExisting:
 					foreach (DynamicCharacterAvatar DCA in ExistingDCAs)
@@ -173,6 +201,43 @@ namespace UMA
 					Debug.LogError($"Mode {mode} not recognized");
 					break;
 			}
+		}
+
+		/// <summary>
+		/// Generates the configured character set. Reusing the initial random
+		/// state makes a restarted performance run use the same workload.
+		/// </summary>
+		public void GenerateCharacters(bool repeatInitialRandomSequence)
+		{
+			if (mode != Mode.Generate)
+				return;
+
+			Random.State previousState = Random.state;
+			if (repeatInitialRandomSequence &&
+				hasInitialGenerationRandomState)
+			{
+				Random.state = initialGenerationRandomState;
+			}
+			try
+			{
+				Generation.Init(gameObject);
+				Generation.Start(Randomize);
+			}
+			finally
+			{
+				if (repeatInitialRandomSequence &&
+					hasInitialGenerationRandomState)
+				{
+					Random.state = previousState;
+				}
+			}
+		}
+
+		public int DestroyGeneratedCharacters()
+		{
+			return mode == Mode.Generate
+				? Generation.DestroyGeneratedCharacters()
+				: 0;
 		}
 
 		private void OnDestroy()

@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -42,6 +43,12 @@ namespace UMA
         [Tooltip("Generator to measure. Leave empty to find the active scene generator at runtime.")]
         public UMAGeneratorBuiltin Generator;
 
+        [Tooltip("Crowd generator restarted by the runtime timing panel. Leave empty to find it in the active scene.")]
+        public UMARandomAvatarV2 CrowdGenerator;
+
+        [Tooltip("Legacy crowd generator restarted by the runtime timing panel. Leave empty to find it in the active scene.")]
+        public UMARandomAvatar LegacyCrowdGenerator;
+
         [Tooltip("Show Reset Timing and Save Timing CSV controls in a development or release player.")]
         public bool ShowRuntimeControls = true;
 
@@ -56,7 +63,7 @@ namespace UMA
         public string FileNamePrefix = "UMA-Generator-Statistics";
 
         [Tooltip("Screen-space position and size of the runtime timing controls.")]
-        public Rect RuntimeControlsRect = new Rect(10f, 10f, 310f, 145f);
+        public Rect RuntimeControlsRect = new Rect(10f, 10f, 520f, 235f);
 
         public string LastSavedPath { get; private set; }
         public string LastStatus { get; private set; }
@@ -68,11 +75,22 @@ namespace UMA
         private bool generatorWasBusy;
         private bool autoSaveCompleted;
         private int idleFramesAfterBusy;
+        private GUIStyle pathStyle;
+        private Coroutine restartCrowdCoroutine;
+        private int ignoredFrameSamples;
+        private UMAGeneratorBuiltin restartDisabledGenerator;
+        private bool restartRestoreGeneratorEnabled;
 
         private void OnEnable()
         {
             RestartFrameCapture();
             ResolveGenerator();
+        }
+
+        private void OnDisable()
+        {
+            RestoreGeneratorAfterCrowdRestart();
+            restartCrowdCoroutine = null;
         }
 
         private void Update()
@@ -132,6 +150,15 @@ namespace UMA
             GUI.enabled = true;
             GUILayout.EndHorizontal();
 
+            GUI.enabled =
+                restartCrowdCoroutine == null &&
+                ResolveCrowdGenerator();
+            if (GUILayout.Button("Reset Timing && Restart Crowd"))
+            {
+                RestartCrowdGeneration();
+            }
+            GUI.enabled = true;
+
             RuntimeCapture capture = GetRuntimeCapture();
             GUILayout.Label(
                 string.Format(
@@ -144,6 +171,18 @@ namespace UMA
             {
                 GUILayout.Label(LastStatus);
             }
+            if (pathStyle == null)
+            {
+                pathStyle = new GUIStyle(GUI.skin.label)
+                {
+                    wordWrap = true
+                };
+            }
+            GUILayout.Label(
+                string.IsNullOrEmpty(LastSavedPath)
+                    ? $"Output folder: {Application.persistentDataPath}"
+                    : $"Last file: {LastSavedPath}",
+                pathStyle);
             GUILayout.EndArea();
         }
 
@@ -160,6 +199,21 @@ namespace UMA
             idleFramesAfterBusy = 0;
             autoSaveCompleted = false;
             LastStatus = "Timing reset.";
+        }
+
+        public void RestartCrowdGeneration()
+        {
+            if (restartCrowdCoroutine != null)
+            {
+                return;
+            }
+            if (!ResolveCrowdGenerator())
+            {
+                LastStatus = "No generated Crowd controller was found.";
+                return;
+            }
+            restartCrowdCoroutine =
+                StartCoroutine(RestartCrowdGenerationRoutine());
         }
 
         /// <summary>
@@ -235,6 +289,11 @@ namespace UMA
 
         private void RecordFrameTiming()
         {
+            if (ignoredFrameSamples > 0)
+            {
+                ignoredFrameSamples--;
+                return;
+            }
             double frameMilliseconds = Time.unscaledDeltaTime * 1000d;
             capturedFrameCount++;
             totalFrameMilliseconds += frameMilliseconds;
@@ -249,7 +308,139 @@ namespace UMA
             capturedFrameCount = 0;
             totalFrameMilliseconds = 0d;
             maximumFrameMilliseconds = 0d;
+            // Time.unscaledDeltaTime on the next Update describes the frame
+            // that contained the reset (and possibly scene/crowd setup).
+            ignoredFrameSamples = 1;
             captureStopwatch.Restart();
+        }
+
+        private bool ResolveCrowdGenerator()
+        {
+            if (CrowdGenerator != null &&
+                CrowdGenerator.mode == UMARandomAvatarV2.Mode.Generate)
+            {
+                return true;
+            }
+            CrowdGenerator = FindFirstObjectByType<UMARandomAvatarV2>(
+                FindObjectsInactive.Include);
+            if (CrowdGenerator != null &&
+                CrowdGenerator.mode == UMARandomAvatarV2.Mode.Generate)
+            {
+                return true;
+            }
+
+            CrowdGenerator = null;
+            if (LegacyCrowdGenerator == null)
+            {
+                LegacyCrowdGenerator =
+                    FindFirstObjectByType<UMARandomAvatar>(
+                        FindObjectsInactive.Include);
+            }
+            return LegacyCrowdGenerator != null;
+        }
+
+        private IEnumerator RestartCrowdGenerationRoutine()
+        {
+            LastStatus = "Waiting for the current Crowd run to finish...";
+            ResolveGenerator();
+            while (Generator != null && !Generator.IsIdle())
+            {
+                yield return null;
+                ResolveGenerator();
+            }
+
+            bool generatorWasEnabled =
+                Generator != null && Generator.enabled;
+            if (Generator != null)
+            {
+                restartDisabledGenerator = Generator;
+                restartRestoreGeneratorEnabled =
+                    generatorWasEnabled;
+                Generator.enabled = false;
+            }
+
+            try
+            {
+                int destroyed = DestroyGeneratedCrowdCharacters();
+                LastStatus =
+                    $"Removing {destroyed} generated characters...";
+                // Destroy is deferred in players. Two frame boundaries allow
+                // UMA OnDestroy cleanup and queue removal to complete.
+                yield return null;
+                yield return null;
+
+                try
+                {
+                    GenerateCrowdCharacters();
+                    ResolveGenerator();
+                    Generator?.ResetStatistics();
+                    RestartFrameCapture();
+                    generatorWasBusy =
+                        Generator != null &&
+                        (!Generator.IsIdle() ||
+                         Generator.QueueSize() > 0);
+                    idleFramesAfterBusy = 0;
+                    autoSaveCompleted = false;
+                    LastStatus =
+                        $"Restarted {GetGeneratedCrowdCharacterCount()} characters with timing reset.";
+                }
+                catch (Exception exception)
+                {
+                    LastStatus =
+                        $"Crowd restart failed: {exception.Message}";
+                    UnityEngine.Debug.LogException(
+                        exception,
+                        this);
+                }
+            }
+            finally
+            {
+                RestoreGeneratorAfterCrowdRestart();
+                restartCrowdCoroutine = null;
+            }
+        }
+
+        private int DestroyGeneratedCrowdCharacters()
+        {
+            if (CrowdGenerator != null)
+            {
+                return CrowdGenerator.DestroyGeneratedCharacters();
+            }
+            return LegacyCrowdGenerator != null
+                ? LegacyCrowdGenerator.DestroyGeneratedCharacters()
+                : 0;
+        }
+
+        private void GenerateCrowdCharacters()
+        {
+            if (CrowdGenerator != null)
+            {
+                CrowdGenerator.GenerateCharacters(true);
+                return;
+            }
+            LegacyCrowdGenerator?.GenerateCharacters(true);
+        }
+
+        private int GetGeneratedCrowdCharacterCount()
+        {
+            if (CrowdGenerator != null)
+            {
+                return CrowdGenerator.Generation.GeneratedCharacterCount;
+            }
+            return LegacyCrowdGenerator != null
+                ? LegacyCrowdGenerator.GeneratedCharacterCount
+                : 0;
+        }
+
+        private void RestoreGeneratorAfterCrowdRestart()
+        {
+            if (restartDisabledGenerator != null)
+            {
+                restartDisabledGenerator.enabled =
+                    restartRestoreGeneratorEnabled;
+            }
+            restartDisabledGenerator = null;
+            restartRestoreGeneratorEnabled = false;
         }
 
         private static string SanitizeFileName(string value)
@@ -419,7 +610,7 @@ namespace UMA
             List<StatisticsRow> rows,
             UMAGeneratorBuiltin generator)
         {
-            AddCounterRow(rows, "Pending UMAs", generator.pendingUmas);
+            AddCounterRow(rows, "Pending UMAs", generator.QueueSize());
             AddCounterRow(rows, "Generated UMAs",
                 generator.umaDatasGenerated != null
                     ? generator.umaDatasGenerated.Count
@@ -540,7 +731,7 @@ namespace UMA
             AppendCsvValue(builder, row.MaximumMilliseconds);
             AppendCsvValue(builder, row.BudgetOverrunCount);
             AppendCsvValue(builder, row.MaximumOverrunMilliseconds);
-            AppendCsvValue(builder, row.Notes, true);
+            AppendCsvValue(builder, string.Empty, true);
         }
 
         private static void AppendCsvValue(
@@ -595,7 +786,6 @@ namespace UMA
             public double MaximumMilliseconds;
             public long BudgetOverrunCount;
             public double MaximumOverrunMilliseconds;
-            public string Notes;
         }
     }
 }

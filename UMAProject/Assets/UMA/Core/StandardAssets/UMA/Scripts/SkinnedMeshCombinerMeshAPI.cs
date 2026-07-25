@@ -1034,7 +1034,9 @@ namespace UMA
             public bool JobsScheduled;
             public Allocator NativeAllocator;
             private bool jobsCompleted;
+            private bool outputMeshPrepared;
             private bool meshDataApplied;
+            private bool baseMeshFinalized;
             private bool rendererFinalized;
             private bool disposed;
 
@@ -1138,6 +1140,10 @@ namespace UMA
 
             public Mesh PrepareOutputMesh()
             {
+                if (outputMeshPrepared)
+                {
+                    return Batch.Renderer.sharedMesh;
+                }
                 CompleteJobs();
                 ValidateCompletedIndexJobs();
                 if (!BoundsResult.IsCreated || BoundsResult[0].IsValid == 0)
@@ -1199,6 +1205,7 @@ namespace UMA
                     }, MeshUpdateFlags.DontRecalculateBounds | MeshUpdateFlags.DontValidateIndices);
                 }
                 stopwatch.Stop(); Ticks_SetSubmeshes += stopwatch.ElapsedTicks;
+                outputMeshPrepared = true;
                 return Batch.Renderer.sharedMesh;
             }
 
@@ -1250,6 +1257,28 @@ namespace UMA
                 }
 
                 PrepareOutputMesh();
+                ApplyIncrementalWritableMeshData(mesh);
+                ApplyIncrementalBaseMeshSkinning(mesh);
+                return PreparedCloth;
+            }
+
+            /// <summary>
+            /// Applies the prepared writable MeshData without also assigning
+            /// skinning metadata. This Unity API call is main-thread-only but
+            /// can now be budgeted separately from output preparation and
+            /// bone-weight assignment.
+            /// </summary>
+            public void ApplyIncrementalWritableMeshData(Mesh mesh)
+            {
+                if (!outputMeshPrepared)
+                {
+                    throw new InvalidOperationException(
+                        "Output mesh metadata must be prepared before writable MeshData is applied.");
+                }
+                if (meshDataApplied)
+                {
+                    return;
+                }
                 bool createdMesh = mesh == null;
                 if (createdMesh) mesh = new Mesh();
                 try
@@ -1270,8 +1299,6 @@ namespace UMA
                     }
                     stopwatch.Stop();
                     Ticks_ApplyMeshData += stopwatch.ElapsedTicks;
-                    FinalizeBaseMesh(mesh);
-                    return PreparedCloth;
                 }
                 catch
                 {
@@ -1279,6 +1306,22 @@ namespace UMA
                         UMAUtils.DestroySceneObject(mesh);
                     throw;
                 }
+            }
+
+            /// <summary>
+            /// Assigns bind poses, bone weights, name, and bounds after the
+            /// writable vertex/index streams have been applied.
+            /// </summary>
+            public ClothSkinningCoefficient[]
+                ApplyIncrementalBaseMeshSkinning(Mesh mesh)
+            {
+                if (!meshDataApplied)
+                {
+                    throw new InvalidOperationException(
+                        "Writable MeshData must be applied before base-mesh skinning metadata.");
+                }
+                FinalizeBaseMesh(mesh);
+                return PreparedCloth;
             }
 
             public ClothSkinningCoefficient[] FinalizeAppliedMesh(Mesh mesh)
@@ -1366,6 +1409,10 @@ namespace UMA
 
             private void FinalizeBaseMesh(Mesh mesh)
             {
+                if (baseMeshFinalized)
+                {
+                    return;
+                }
                 mesh.ClearBlendShapes();
                 var stopwatch = System.Diagnostics.Stopwatch.StartNew();
                 mesh.bindposes = BindPoses.ToArray();
@@ -1375,6 +1422,7 @@ namespace UMA
                 if (string.IsNullOrEmpty(mesh.name))
                     mesh.name = "UMAMesh (MeshAPI)";
                 mesh.bounds = PreparedBounds;
+                baseMeshFinalized = true;
             }
 
             public void Dispose()
