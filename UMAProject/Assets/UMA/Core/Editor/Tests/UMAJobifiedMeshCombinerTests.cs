@@ -274,11 +274,13 @@ namespace UMA.Editors.Tests
         [Category("MeshCombiner")]
         public void MeshDataCombinePreservesEveryVertexAndIndexChannel()
         {
-            var gameObject = new GameObject("MeshData channel contract test");
+            var gameObject = new GameObject("root");
             var asset = ScriptableObject.CreateInstance<SlotDataAsset>();
             Mesh outputMesh = null;
             try
             {
+                int rootHash =
+                    UMAUtils.StringToHash(gameObject.name);
                 asset.name = "ChannelContractSlot";
                 asset.subMeshIndex = 0;
                 asset.meshData = new UMAMeshData
@@ -306,8 +308,14 @@ namespace UMA.Editors.Tests
                     subMeshCount = 1,
                     submeshes = new[] { new SubMeshTriangles(new[] { 0, 1, 2 }) },
                     bindPoses = new[] { Matrix4x4.identity },
-                    boneNameHashes = new[] { 123 },
-                    umaBones = new[] { new UMATransform { hash = 123, name = "root" } },
+                    boneNameHashes = new[] { rootHash },
+                    umaBones = new[]
+                    {
+                        new UMATransform(
+                            gameObject.transform,
+                            rootHash,
+                            0)
+                    },
                     ManagedBonesPerVertex = new byte[] { 1, 1, 1 },
                     ManagedBoneWeights = new[]
                     {
@@ -330,8 +338,14 @@ namespace UMA.Editors.Tests
                 outputMesh.triangles = new[] { 0, 1, 2 };
                 outputMesh.AddBlendShapeFrame("StaleShape", 100f, new Vector3[3], new Vector3[3], new Vector3[3]);
                 renderer.sharedMesh = outputMesh;
+                renderer.rootBone = gameObject.transform;
+                renderer.bones =
+                    new[] { gameObject.transform };
                 var umaData = gameObject.AddComponent<UMAData>();
+                umaData.umaRoot = gameObject;
                 umaData.umaRecipe = new UMAData.UMARecipe();
+                umaData.skeleton =
+                    new UMASkeleton(gameObject.transform);
                 umaData.force32bit = true;
 
                 SkinnedMeshCombinerMeshAPI.CombineIntoRenderer(
@@ -407,13 +421,15 @@ namespace UMA.Editors.Tests
         [Category("MeshCombiner")]
         public void AtlasUVRemapWaitsForBoundsJobAndCompletes(int vertexCount)
         {
-            var gameObject = new GameObject("Atlas UV dependency test");
+            var gameObject = new GameObject("root");
             var asset = ScriptableObject.CreateInstance<SlotDataAsset>();
             var umaMaterial = ScriptableObject.CreateInstance<UMAMaterial>();
             Mesh outputMesh = null;
             bool previousParallelUV = SkinnedMeshCombinerMeshAPI.UseParallelUVRemap;
             try
             {
+                int rootHash =
+                    UMAUtils.StringToHash(gameObject.name);
                 var vertices = new Vector3[vertexCount];
                 var normals = new Vector3[vertexCount];
                 var uvs = new Vector2[vertexCount];
@@ -440,8 +456,14 @@ namespace UMA.Editors.Tests
                     subMeshCount = 1,
                     submeshes = new[] { new SubMeshTriangles(new[] { 0, 1, 2 }) },
                     bindPoses = new[] { Matrix4x4.identity },
-                    boneNameHashes = new[] { 123 },
-                    umaBones = new[] { new UMATransform { hash = 123, name = "root" } },
+                    boneNameHashes = new[] { rootHash },
+                    umaBones = new[]
+                    {
+                        new UMATransform(
+                            gameObject.transform,
+                            rootHash,
+                            0)
+                    },
                     ManagedBonesPerVertex = bonesPerVertex,
                     ManagedBoneWeights = boneWeights
                 };
@@ -454,8 +476,14 @@ namespace UMA.Editors.Tests
                     targetSubmeshIndices = new[] { 0 }
                 };
                 var renderer = gameObject.AddComponent<SkinnedMeshRenderer>();
+                renderer.rootBone = gameObject.transform;
+                renderer.bones =
+                    new[] { gameObject.transform };
                 var umaData = gameObject.AddComponent<UMAData>();
+                umaData.umaRoot = gameObject;
                 umaData.umaRecipe = new UMAData.UMARecipe();
+                umaData.skeleton =
+                    new UMASkeleton(gameObject.transform);
 
                 umaMaterial.materialType = UMAMaterial.MaterialType.Atlas;
                 var generatedMaterial = new UMAData.GeneratedMaterial

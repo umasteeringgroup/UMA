@@ -48,6 +48,7 @@ namespace UMA.Editors
             public long multiStepFailures;
             public long lastMultiStepLatencyTicks;
             public long maximumMultiStepLatencyTicks;
+            public long multiStepDiscardedMeshTicks;
 
             public static GeneratorCounterSnapshot Capture(UMAGeneratorBuiltin generator)
             {
@@ -85,7 +86,9 @@ namespace UMA.Editors
                     lastMultiStepLatencyTicks =
                         generator.lastMultiStepGenerationLatencyTicks,
                     maximumMultiStepLatencyTicks =
-                        generator.maximumMultiStepGenerationLatencyTicks
+                        generator.maximumMultiStepGenerationLatencyTicks,
+                    multiStepDiscardedMeshTicks =
+                        generator.multiStepDiscardedMeshTicks
                 };
             }
 
@@ -127,7 +130,10 @@ namespace UMA.Editors
                     lastMultiStepLatencyTicks =
                         end.lastMultiStepLatencyTicks,
                     maximumMultiStepLatencyTicks =
-                        end.maximumMultiStepLatencyTicks
+                        end.maximumMultiStepLatencyTicks,
+                    multiStepDiscardedMeshTicks =
+                        end.multiStepDiscardedMeshTicks -
+                        start.multiStepDiscardedMeshTicks
                 };
             }
         }

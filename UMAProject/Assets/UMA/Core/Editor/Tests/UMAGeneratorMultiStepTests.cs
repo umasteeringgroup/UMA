@@ -448,6 +448,64 @@ namespace UMA.Editors.Tests
         [Category("MeshCombiner")]
         [Category("MultiStepMeshCombiner")]
         [Category("GeneratorScheduler")]
+        public void StopwatchTicksUsePlatformFrequency()
+        {
+            double oneSecondMilliseconds =
+                UMATime.StopwatchTicksToMilliseconds(
+                    System.Diagnostics.Stopwatch.Frequency);
+
+            Assert.AreEqual(1000d, oneSecondMilliseconds, 0.0001d);
+        }
+
+        [Test]
+        [Category("UMA")]
+        [Category("MeshCombiner")]
+        [Category("MultiStepMeshCombiner")]
+        [Category("GeneratorScheduler")]
+        public void ResetStatisticsClearsIncrementalAndStageMetrics()
+        {
+            GameObject generatorObject = null;
+            try
+            {
+                generatorObject = new GameObject("Statistics reset generator");
+                var generator =
+                    generatorObject.AddComponent<SchedulerTestGenerator>();
+                generator.ElapsedTicks = 1;
+                generator.validationTicks = 2;
+                generator.meshUpdatesTicks = 3;
+                generator.multiStepBudgetOverrunCount = 4;
+                generator.lastMultiStepAtomicStepMilliseconds = 5f;
+                generator.maximumMultiStepAtomicStepMilliseconds = 6f;
+                generator.lastMultiStepGenerationLatencyTicks = 7;
+                generator.maximumMultiStepGenerationLatencyTicks = 8;
+                generator.multiStepDiscardedMeshTicks = 9;
+
+                generator.ResetStatistics();
+
+                Assert.AreEqual(0, generator.ElapsedTicks);
+                Assert.AreEqual(0, generator.validationTicks);
+                Assert.AreEqual(0, generator.meshUpdatesTicks);
+                Assert.AreEqual(0, generator.multiStepBudgetOverrunCount);
+                Assert.AreEqual(0f, generator.lastMultiStepAtomicStepMilliseconds);
+                Assert.AreEqual(0f, generator.maximumMultiStepAtomicStepMilliseconds);
+                Assert.AreEqual(0, generator.lastMultiStepGenerationLatencyTicks);
+                Assert.AreEqual(0, generator.maximumMultiStepGenerationLatencyTicks);
+                Assert.AreEqual(0, generator.multiStepDiscardedMeshTicks);
+            }
+            finally
+            {
+                if (generatorObject != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(generatorObject);
+                }
+            }
+        }
+
+        [Test]
+        [Category("UMA")]
+        [Category("MeshCombiner")]
+        [Category("MultiStepMeshCombiner")]
+        [Category("GeneratorScheduler")]
         public void GeneratorOverrideCapturesAppliesAndRestoresMultiStepBudget()
         {
             GameObject generatorObject = null;
