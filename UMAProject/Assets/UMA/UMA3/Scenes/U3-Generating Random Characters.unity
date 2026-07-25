@@ -249,14 +249,14 @@ MonoBehaviour:
   AtlasOverflowFitMethod: 1
   FitPercentageDecrease: 0.9
   convertMipMaps: 0
-  atlasResolution: 1024
-  convertRenderTexture: 1
+  atlasResolution: 512
+  convertRenderTexture: 0
   useAsyncConversion: 0
-  asyncMipRegen: 1
+  asyncMipRegen: 0
   MaxQueuedConversionsPerFrame: 8
   InitialScaleFactor: 1
   IterationCount: 1
-  InterFrameDelay: 0
+  InterFrameDelay: 1
   MaxMultiStepWorkMilliseconds: 2
   collectGarbage: 1
   garbageCollectionRate: 0
@@ -289,11 +289,11 @@ PrefabInstance:
       objectReference: {fileID: 153068, guid: 07f355e97c3d63d43aca902b562409f4, type: 3}
     - target: {fileID: 2885161576314354680, guid: 11b6342601a487e45a8ca8ed561a9b7a, type: 3}
       propertyPath: GridXSize
-      value: 7
+      value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 2885161576314354680, guid: 11b6342601a487e45a8ca8ed561a9b7a, type: 3}
       propertyPath: GridZSize
-      value: 7
+      value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 2885161576314354680, guid: 11b6342601a487e45a8ca8ed561a9b7a, type: 3}
       propertyPath: GridDistance
@@ -699,8 +699,8 @@ MonoBehaviour:
   mouseButtonToUse: 1
   target: {fileID: 587163907}
   distance: 8
-  xSpeed: 120
-  ySpeed: 120
+  xSpeed: 80
+  ySpeed: 80
   scrollrate: 3
   yMinLimit: -20
   yMaxLimit: 80

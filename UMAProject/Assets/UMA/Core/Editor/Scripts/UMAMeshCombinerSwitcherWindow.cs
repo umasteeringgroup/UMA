@@ -15,6 +15,7 @@ namespace UMA.Editors
         }
 
         private UMAGenerator _generator;
+        private UMAGeneratorOverride _generatorParms;
         private CombinerMode _selected;
         private Vector2 _scrollPos;
 
@@ -39,21 +40,21 @@ namespace UMA.Editors
 
         private void RefreshGenerator()
         {
-            if (UMAAssetIndexer.Instance != null)
-            {
-                _generator = UMAAssetIndexer.Instance.generator;
-            }
+            _generator = UMAToolbarActions.GetGenerator();
+            _generatorParms = _generator == null
+                ? UMAToolbarActions.GetGeneratorParms()
+                : null;
         }
 
         private void OnGUI()
         {
-            if (_generator == null)
+            if (_generator == null && _generatorParms == null)
             {
                 RefreshGenerator();
-                if (_generator == null)
+                if (_generator == null && _generatorParms == null)
                 {
                     EditorGUILayout.HelpBox(
-                        "No UMA generator found. Open the Global Library or assign a generator in the UMAAssetIndexer.",
+                        "No scene UMAGenerator or GeneratorParms object was found.",
                         MessageType.Warning);
                     return;
                 }
@@ -69,7 +70,10 @@ namespace UMA.Editors
             EditorGUILayout.Space(6f);
 
             // ── Current combiner indicator ──────────────────────
-            EditorGUILayout.LabelField("Generator:", _generator.name, EditorStyles.miniLabel);
+            EditorGUILayout.LabelField(
+                _generator != null ? "Generator:" : "Generator Parameters:",
+                _generator != null ? _generator.name : _generatorParms.name,
+                EditorStyles.miniLabel);
             var current = GetCurrentCombiner();
             EditorGUILayout.LabelField("Current:", current, EditorStyles.boldLabel);
 
@@ -123,7 +127,9 @@ namespace UMA.Editors
 
         private string GetCurrentCombiner()
         {
-            var combiner = _generator.meshCombiner;
+            UMAMeshCombiner combiner = _generator != null
+                ? _generator.meshCombiner
+                : _generatorParms != null ? _generatorParms.meshCombiner : null;
             if (combiner is UMAJobifiedMeshCombiner) return "Jobified Combiner";
             if (combiner is UMAIncrementalMeshCombiner) return "Incremental Combiner";
             if (combiner != null && combiner.GetType() == typeof(UMADefaultBoneBakingMeshCombiner)) return "Default Bone Baking Combiner";
@@ -159,7 +165,10 @@ namespace UMA.Editors
         private void UseMeshCombiner<T>(UMAGenerator gen = null)
             where T : UMAMeshCombiner
         {
-            UMAToolbarActions.UseMeshCombiner<T>(gen ?? _generator);
+            UMAGenerator targetGenerator = gen ?? _generator;
+            UMAToolbarActions.UseMeshCombinerForTargets<T>(
+                targetGenerator,
+                targetGenerator == null ? _generatorParms : null);
         }
     }
 }

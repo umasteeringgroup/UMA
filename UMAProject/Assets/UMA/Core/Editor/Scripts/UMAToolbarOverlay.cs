@@ -148,10 +148,14 @@ namespace UMA.Editors
         private void ShowCombinerMenu()
         {
             UMAGenerator generator = UMAToolbarActions.GetGenerator();
+            UMAGeneratorOverride generatorParms = generator == null
+                ? UMAToolbarActions.GetGeneratorParms()
+                : null;
             var menu = new GenericMenu();
-            if (generator == null)
+            if (generator == null && generatorParms == null)
             {
-                menu.AddDisabledItem(new GUIContent("No UMA Generator Found"));
+                menu.AddDisabledItem(
+                    new GUIContent("No UMA Generator or GeneratorParms Found"));
                 menu.AddItem(
                     new GUIContent("Open Global Library"),
                     false,
@@ -166,6 +170,11 @@ namespace UMA.Editors
             AddCombinerItem<UMADefaultBoneBakingMeshCombiner>(menu, generator, "Default Bone Baking");
             AddCombinerItem<UMABoneBakingMeshCombiner>(menu, generator, "Bone Baking Compatibility");
             menu.AddSeparator(string.Empty);
+            if (generator == null)
+            {
+                menu.AddDisabledItem(
+                    new GUIContent("Target: " + generatorParms.gameObject.name));
+            }
             menu.AddItem(
                 new GUIContent("Open Mesh Combiner Window"),
                 false,
@@ -232,7 +241,19 @@ namespace UMA.Editors
             AddTarget(menu, "Select First Renderer", UMAToolbarActions.GetFirstRenderer(avatar));
             menu.AddSeparator(string.Empty);
             UMAGenerator generator = UMAToolbarActions.GetGenerator();
-            AddTarget(menu, "Select Generator", generator != null ? generator.gameObject : null);
+            if (generator != null)
+            {
+                AddTarget(menu, "Select Generator", generator.gameObject);
+            }
+            else
+            {
+                UMAGeneratorOverride generatorParms =
+                    UMAToolbarActions.GetGeneratorParms();
+                AddTarget(
+                    menu,
+                    "Select Generator Parameters",
+                    generatorParms != null ? generatorParms.gameObject : null);
+            }
             menu.DropDown(worldBound);
         }
 

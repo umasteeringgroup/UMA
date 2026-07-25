@@ -217,13 +217,65 @@ namespace UMA.Editors
 
         internal static UMAGenerator GetGenerator()
         {
-            UMAAssetIndexer indexer = UMAAssetIndexer.Instance;
-            return indexer != null ? indexer.generator : null;
+            // Do not initialize UMAAssetIndexer here. Opening or repainting the
+            // toolbar must not create a hidden generator in a generator-less scene.
+            UMAGenerator generator = Object.FindFirstObjectByType<UMAGenerator>(
+                FindObjectsInactive.Exclude);
+            if (generator != null)
+            {
+                return generator;
+            }
+
+            UMAAssetIndexer indexer = UMAAssetIndexer.bareInstance;
+            return indexer != null ? indexer.bareGenerator : null;
+        }
+
+        internal static UMAGeneratorOverride GetGeneratorParms()
+        {
+            UMAGeneratorOverride[] candidates =
+                Object.FindObjectsByType<UMAGeneratorOverride>(
+                    FindObjectsInactive.Exclude,
+                    FindObjectsSortMode.None);
+
+            UMAGeneratorOverride fallback = null;
+            for (int i = 0; i < candidates.Length; i++)
+            {
+                UMAGeneratorOverride candidate = candidates[i];
+                if (candidate == null)
+                {
+                    continue;
+                }
+
+                if (candidate.gameObject.name.Equals(
+                    "GeneratorParms",
+                    StringComparison.OrdinalIgnoreCase))
+                {
+                    return candidate;
+                }
+
+                if (fallback == null)
+                {
+                    fallback = candidate;
+                }
+            }
+
+            return fallback;
         }
 
         internal static string GetCurrentCombinerName(UMAGenerator generator)
         {
-            UMAMeshCombiner combiner = generator != null ? generator.meshCombiner : null;
+            return GetCurrentCombinerNameForTargets(
+                generator,
+                generator == null ? GetGeneratorParms() : null);
+        }
+
+        internal static string GetCurrentCombinerNameForTargets(
+            UMAGenerator generator,
+            UMAGeneratorOverride generatorParms)
+        {
+            UMAMeshCombiner combiner = generator != null
+                ? generator.meshCombiner
+                : generatorParms != null ? generatorParms.meshCombiner : null;
             if (combiner is UMAJobifiedMeshCombiner)
             {
                 return "Jobified";
@@ -253,25 +305,52 @@ namespace UMA.Editors
 
         internal static bool IsCurrentCombiner<T>(UMAGenerator generator) where T : UMAMeshCombiner
         {
-            return generator != null && generator.meshCombiner != null &&
-                   generator.meshCombiner.GetType() == typeof(T);
+            return IsCurrentCombinerForTargets<T>(
+                generator,
+                generator == null ? GetGeneratorParms() : null);
+        }
+
+        internal static bool IsCurrentCombinerForTargets<T>(
+            UMAGenerator generator,
+            UMAGeneratorOverride generatorParms)
+            where T : UMAMeshCombiner
+        {
+            UMAMeshCombiner combiner = generator != null
+                ? generator.meshCombiner
+                : generatorParms != null ? generatorParms.meshCombiner : null;
+            return combiner != null && combiner.GetType() == typeof(T);
         }
 
         internal static void UseMeshCombiner<T>(UMAGenerator generator) where T : UMAMeshCombiner
         {
-            if (generator == null)
+            UseMeshCombinerForTargets<T>(
+                generator,
+                generator == null ? GetGeneratorParms() : null);
+        }
+
+        internal static void UseMeshCombinerForTargets<T>(
+            UMAGenerator generator,
+            UMAGeneratorOverride generatorParms)
+            where T : UMAMeshCombiner
+        {
+            if (generator == null && generatorParms == null)
             {
-                Debug.LogWarning("[UMA Toolbar] No UMA generator is assigned in the Global Library.");
+                Debug.LogWarning(
+                    "[UMA Toolbar] No scene UMAGenerator or GeneratorParms object was found.");
                 return;
             }
 
-            if (IsCurrentCombiner<T>(generator))
+            if (IsCurrentCombinerForTargets<T>(generator, generatorParms))
             {
                 return;
             }
 
             T meshCombiner = null;
-            T[] candidates = Object.FindObjectsByType<T>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            T[] candidates = generator == null
+                ? generatorParms.GetComponentsInChildren<T>(true)
+                : Object.FindObjectsByType<T>(
+                    FindObjectsInactive.Include,
+                    FindObjectsSortMode.None);
             for (int i = 0; i < candidates.Length; i++)
             {
                 if (candidates[i] != null && candidates[i].GetType() == typeof(T))
@@ -284,42 +363,64 @@ namespace UMA.Editors
             if (meshCombiner == null)
             {
                 GameObject combinerObject = new GameObject(typeof(T).Name);
+                Transform combinerParent = generator != null
+                    ? generator.transform.parent
+                    : generatorParms.transform;
                 if (Application.isPlaying)
                 {
-                    if (generator.transform.parent != null)
+                    if (combinerParent != null)
                     {
-                        combinerObject.transform.SetParent(generator.transform.parent, false);
+                        combinerObject.transform.SetParent(combinerParent, false);
                     }
                     meshCombiner = combinerObject.AddComponent<T>();
                 }
                 else
                 {
                     Undo.RegisterCreatedObjectUndo(combinerObject, "Create UMA Mesh Combiner");
-                    if (generator.transform.parent != null)
+                    if (combinerParent != null)
                     {
-                        Undo.SetTransformParent(combinerObject.transform, generator.transform.parent, "Parent UMA Mesh Combiner");
+                        Undo.SetTransformParent(
+                            combinerObject.transform,
+                            combinerParent,
+                            "Parent UMA Mesh Combiner");
                     }
                     meshCombiner = Undo.AddComponent<T>(combinerObject);
                 }
             }
 
+            Object configurationTarget = generator != null
+                ? (Object)generator
+                : generatorParms;
             if (!Application.isPlaying)
             {
-                Undo.RecordObject(generator, "Switch UMA Mesh Combiner");
+                Undo.RecordObject(configurationTarget, "Switch UMA Mesh Combiner");
             }
 
-            generator.meshCombiner = meshCombiner;
+            if (generator != null)
+            {
+                generator.meshCombiner = meshCombiner;
+            }
+            else
+            {
+                generatorParms.meshCombiner = meshCombiner;
+            }
 
             if (!Application.isPlaying)
             {
-                EditorUtility.SetDirty(generator);
-                if (PrefabUtility.IsPartOfAnyPrefab(generator))
+                EditorUtility.SetDirty(configurationTarget);
+                if (PrefabUtility.IsPartOfAnyPrefab(configurationTarget))
                 {
-                    PrefabUtility.RecordPrefabInstancePropertyModifications(generator);
+                    PrefabUtility.RecordPrefabInstancePropertyModifications(
+                        configurationTarget);
                 }
             }
 
-            Debug.Log($"[UMA Toolbar] Mesh combiner switched to {typeof(T).Name}. Rebuild characters to apply it.");
+            string targetName = generator != null
+                ? generator.name
+                : generatorParms.name + " (GeneratorParms)";
+            Debug.Log(
+                $"[UMA Toolbar] Mesh combiner on '{targetName}' switched to " +
+                $"{typeof(T).Name}. Rebuild characters to apply it.");
             DiagnosticsChanged?.Invoke();
         }
 

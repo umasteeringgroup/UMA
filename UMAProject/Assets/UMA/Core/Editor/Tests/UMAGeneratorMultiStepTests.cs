@@ -615,6 +615,70 @@ namespace UMA.Editors.Tests
         [Test]
         [Category("UMA")]
         [Category("MeshCombiner")]
+        [Category("CombinerSwitcher")]
+        public void ToolbarUsesGeneratorParmsWhenSceneGeneratorIsMissing()
+        {
+            GameObject generatorParmsObject = null;
+            try
+            {
+                generatorParmsObject =
+                    new GameObject("GeneratorParms");
+                generatorParmsObject.SetActive(false);
+
+                UMAGeneratorOverride generatorParms =
+                    generatorParmsObject.AddComponent<UMAGeneratorOverride>();
+                generatorParms.meshCombiner =
+                    generatorParmsObject.AddComponent<UMADefaultMeshCombiner>();
+
+                Type toolbarActionsType =
+                    typeof(UMAMeshCombinerSwitcherWindow)
+                        .Assembly.GetType(
+                            "UMA.Editors.UMAToolbarActions");
+                Assert.NotNull(toolbarActionsType);
+
+                MethodInfo getName =
+                    toolbarActionsType.GetMethod(
+                        "GetCurrentCombinerNameForTargets",
+                        BindingFlags.Static |
+                        BindingFlags.NonPublic);
+                Assert.NotNull(getName);
+                Assert.AreEqual(
+                    "Default",
+                    getName.Invoke(
+                        null,
+                        new object[] { null, generatorParms }));
+
+                MethodInfo useCombiner =
+                    toolbarActionsType.GetMethod(
+                        "UseMeshCombinerForTargets",
+                        BindingFlags.Static |
+                        BindingFlags.NonPublic);
+                Assert.NotNull(useCombiner);
+                useCombiner
+                    .MakeGenericMethod(typeof(UMAIncrementalMeshCombiner))
+                    .Invoke(
+                        null,
+                        new object[] { null, generatorParms });
+
+                Assert.IsInstanceOf<UMAIncrementalMeshCombiner>(
+                    generatorParms.meshCombiner);
+                Assert.AreSame(
+                    generatorParmsObject.transform,
+                    generatorParms.meshCombiner.transform.parent);
+            }
+            finally
+            {
+                if (generatorParmsObject != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(
+                        generatorParmsObject);
+                }
+            }
+        }
+
+        [Test]
+        [Category("UMA")]
+        [Category("MeshCombiner")]
         [Category("MultiStepMeshCombiner")]
         [Category("GeneratorScheduler")]
         public void NewDirtyRequestCancelsStaleOperationAndRebuildsLatestRequest()
