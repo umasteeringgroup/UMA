@@ -177,6 +177,91 @@ namespace UMA.Editors.Tests
         [Test]
         [Category("UMA")]
         [Category("MeshCombiner")]
+        public void SuccessfulImmutableSourceValidationIsCachedAndInvalidated()
+        {
+            UMAMeshData meshData = CreateValidValidationMeshData();
+            MethodInfo validateCachedMethod =
+                typeof(SkinnedMeshCombinerMeshAPI).GetMethod(
+                    "ValidateImmutableSourceMeshCached",
+                    BindingFlags.Static | BindingFlags.NonPublic);
+            Assert.NotNull(validateCachedMethod);
+
+            try
+            {
+                SkinnedMeshCombinerMeshAPI
+                    .ClearSourceValidationCache();
+
+                Assert.DoesNotThrow(
+                    () => validateCachedMethod.Invoke(
+                        null,
+                        new object[] { meshData, "cached source" }));
+                Assert.AreEqual(
+                    1,
+                    SkinnedMeshCombinerMeshAPI
+                        .SourceValidationCacheMisses);
+                Assert.AreEqual(
+                    0,
+                    SkinnedMeshCombinerMeshAPI
+                        .SourceValidationCacheHits);
+
+                Assert.DoesNotThrow(
+                    () => validateCachedMethod.Invoke(
+                        null,
+                        new object[] { meshData, "cached source" }));
+                Assert.AreEqual(
+                    1,
+                    SkinnedMeshCombinerMeshAPI
+                        .SourceValidationCacheMisses);
+                Assert.AreEqual(
+                    1,
+                    SkinnedMeshCombinerMeshAPI
+                        .SourceValidationCacheHits);
+
+                meshData.normals =
+                    new[] { Vector3.forward, Vector3.forward };
+                TargetInvocationException invalidException =
+                    Assert.Throws<TargetInvocationException>(
+                        () => validateCachedMethod.Invoke(
+                            null,
+                            new object[]
+                            {
+                                meshData,
+                                "changed source"
+                            }));
+                StringAssert.Contains(
+                    "normals entries",
+                    invalidException.InnerException?.Message);
+
+                meshData.normals = null;
+                Assert.DoesNotThrow(
+                    () => validateCachedMethod.Invoke(
+                        null,
+                        new object[] { meshData, "repaired source" }));
+                Assert.DoesNotThrow(
+                    () => validateCachedMethod.Invoke(
+                        null,
+                        new object[] { meshData, "repaired source" }));
+                Assert.AreEqual(
+                    3,
+                    SkinnedMeshCombinerMeshAPI
+                        .SourceValidationCacheMisses);
+                Assert.AreEqual(
+                    2,
+                    SkinnedMeshCombinerMeshAPI
+                        .SourceValidationCacheHits);
+            }
+            finally
+            {
+                meshData.submeshes?[0]
+                    ?.DisposeNativeTriangles(true);
+                SkinnedMeshCombinerMeshAPI
+                    .ClearSourceValidationCache();
+            }
+        }
+
+        [Test]
+        [Category("UMA")]
+        [Category("MeshCombiner")]
         public void IndexRangeValidationCannotSpillIntoAnotherSubmesh()
         {
             var validateMethod = typeof(SkinnedMeshCombinerMeshAPI).GetMethod("ValidateIndexDestinationRange", BindingFlags.Static | BindingFlags.NonPublic);
@@ -982,6 +1067,42 @@ namespace UMA.Editors.Tests
             Assert.AreEqual(format, descriptor.format);
             Assert.AreEqual(dimension, descriptor.dimension);
             Assert.AreEqual(stream, descriptor.stream);
+        }
+
+        private static UMAMeshData CreateValidValidationMeshData()
+        {
+            const int rootHash = 1;
+            return new UMAMeshData
+            {
+                vertexCount = 1,
+                vertices = new[] { Vector3.zero },
+                subMeshCount = 1,
+                submeshes = new[]
+                {
+                    new SubMeshTriangles(
+                        new[] { 0, 0, 0 })
+                },
+                bindPoses = new[] { Matrix4x4.identity },
+                boneNameHashes = new[] { rootHash },
+                umaBones = new[]
+                {
+                    new UMATransform
+                    {
+                        hash = rootHash,
+                        name = "root"
+                    }
+                },
+                ManagedBonesPerVertex =
+                    new byte[] { 1 },
+                ManagedBoneWeights = new[]
+                {
+                    new BoneWeight1
+                    {
+                        boneIndex = 0,
+                        weight = 1f
+                    }
+                }
+            };
         }
     }
 }

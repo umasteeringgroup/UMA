@@ -627,6 +627,12 @@ namespace UMA
             AddCounterRow(rows, "Cancellations",
                 generator.multiStepCancellationCount);
             AddCounterRow(rows, "Failures", generator.multiStepFailureCount);
+            AddCounterRow(rows, "Source Validation Cache Hits",
+                SkinnedMeshCombinerMeshAPI.SourceValidationCacheHits);
+            AddCounterRow(rows, "Source Validation Cache Misses",
+                SkinnedMeshCombinerMeshAPI.SourceValidationCacheMisses);
+            AddCounterRow(rows, "Source Validation Cache Bypasses",
+                SkinnedMeshCombinerMeshAPI.SourceValidationCacheBypasses);
             AddCounterRow(rows, "Render Texture Copies Enqueued",
                 RenderTexToCPU.copiesEnqueued);
             AddCounterRow(rows, "Render Texture Copies Dequeued",

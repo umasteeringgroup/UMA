@@ -257,7 +257,7 @@ MonoBehaviour:
   MaxQueuedConversionsPerFrame: 8
   InitialScaleFactor: 1
   IterationCount: 1
-  InterFrameDelay: 1
+  InterFrameDelay: 0
   MaxMultiStepWorkMilliseconds: 2
   collectGarbage: 1
   garbageCollectionRate: 0
@@ -286,10 +286,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3f1fd4e912a34650bf32829d529ec1da, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: UMA_Core::UMA.UMAGeneratorRuntimeStatistics
   Generator: {fileID: 0}
   CrowdGenerator: {fileID: 0}
+  LegacyCrowdGenerator: {fileID: 0}
   ShowRuntimeControls: 1
   AutoSaveWhenGeneratorBecomesIdle: 1
   AutoSaveIdleFrameDelay: 2

@@ -5,6 +5,7 @@ using System;
 using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Unity.Burst;
@@ -86,10 +87,26 @@ namespace UMA
         public static long Ticks_AddBlendShapeFrame;
         public static long BlendShapeFramesPrepared;
         public static long BlendShapeFramesApplied;
+        private static readonly object SourceValidationCacheLock =
+            new object();
+        private static ConditionalWeakTable<UMAMeshData, SourceValidationStamp>
+            sourceValidationCache =
+                new ConditionalWeakTable<UMAMeshData, SourceValidationStamp>();
+        private static long sourceValidationCacheHits;
+        private static long sourceValidationCacheMisses;
+        private static long sourceValidationCacheBypasses;
+
+        public static long SourceValidationCacheHits =>
+            Interlocked.Read(ref sourceValidationCacheHits);
+        public static long SourceValidationCacheMisses =>
+            Interlocked.Read(ref sourceValidationCacheMisses);
+        public static long SourceValidationCacheBypasses =>
+            Interlocked.Read(ref sourceValidationCacheBypasses);
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void StaticInitializeOnLoad()
         {
+            ClearSourceValidationCache();
             ResetTimings();
 #if UMA_MESHAPI_2021
             UseParallelBoneWeights = true;
@@ -131,6 +148,28 @@ namespace UMA
             Ticks_AddBlendShapeFrame = 0;
             BlendShapeFramesPrepared = 0;
             BlendShapeFramesApplied = 0;
+        }
+
+        public static void ResetSourceValidationCacheStatistics()
+        {
+            Interlocked.Exchange(ref sourceValidationCacheHits, 0);
+            Interlocked.Exchange(ref sourceValidationCacheMisses, 0);
+            Interlocked.Exchange(ref sourceValidationCacheBypasses, 0);
+        }
+
+        /// <summary>
+        /// Clears cached successful validation results. Runtime source assets
+        /// are treated as immutable, while generated or modifier-produced mesh
+        /// data is never entered into this cache.
+        /// </summary>
+        public static void ClearSourceValidationCache()
+        {
+            lock (SourceValidationCacheLock)
+            {
+                sourceValidationCache =
+                    new ConditionalWeakTable<UMAMeshData, SourceValidationStamp>();
+            }
+            ResetSourceValidationCacheStatistics();
         }
 
         internal readonly struct RendererPreparationTimingSnapshot
@@ -3552,6 +3591,100 @@ namespace UMA
         #region UMA helpers
         [Flags] private enum MeshComponents { none = 0, has_normals = 1, has_tangents = 2, has_colors32 = 4, has_uv = 8, has_uv2 = 16, has_uv3 = 32, has_uv4 = 64, has_blendShapes = 128, has_clothSkinning = 256 }
         internal class BlendShapeVertexData { public bool hasNormals; public bool hasTangents; public int frameCount; public float[] frameWeights; }
+
+        private sealed class SourceValidationStamp
+        {
+            private readonly int vertexCount;
+            private readonly int subMeshCount;
+            private readonly Vector3[] vertices;
+            private readonly Vector3[] normals;
+            private readonly Vector4[] tangents;
+            private readonly Color32[] colors32;
+            private readonly Vector2[] uv;
+            private readonly Vector2[] uv2;
+            private readonly Vector2[] uv3;
+            private readonly Vector2[] uv4;
+            private readonly SubMeshTriangles[] submeshes;
+            private readonly SubMeshTriangles[] submeshEntries;
+            private readonly byte[] bonesPerVertex;
+            private readonly BoneWeight1[] boneWeights;
+            private readonly int[] boneNameHashes;
+            private readonly Matrix4x4[] bindPoses;
+            private readonly UMATransform[] umaBones;
+
+            public SourceValidationStamp(UMAMeshData meshData)
+            {
+                vertexCount = meshData.vertexCount;
+                subMeshCount = meshData.subMeshCount;
+                vertices = meshData.vertices;
+                normals = meshData.normals;
+                tangents = meshData.tangents;
+                colors32 = meshData.colors32;
+                uv = meshData.uv;
+                uv2 = meshData.uv2;
+                uv3 = meshData.uv3;
+                uv4 = meshData.uv4;
+                submeshes = meshData.submeshes;
+                if (submeshes != null && subMeshCount > 0)
+                {
+                    int count = Math.Min(subMeshCount, submeshes.Length);
+                    submeshEntries = new SubMeshTriangles[count];
+                    Array.Copy(submeshes, submeshEntries, count);
+                }
+                bonesPerVertex = meshData.ManagedBonesPerVertex;
+                boneWeights = meshData.ManagedBoneWeights;
+                boneNameHashes = meshData.boneNameHashes;
+                bindPoses = meshData.bindPoses;
+                umaBones = meshData.umaBones;
+            }
+
+            public bool Matches(UMAMeshData meshData)
+            {
+                if (meshData == null ||
+                    meshData.vertexCount != vertexCount ||
+                    meshData.subMeshCount != subMeshCount ||
+                    !ReferenceEquals(meshData.vertices, vertices) ||
+                    !ReferenceEquals(meshData.normals, normals) ||
+                    !ReferenceEquals(meshData.tangents, tangents) ||
+                    !ReferenceEquals(meshData.colors32, colors32) ||
+                    !ReferenceEquals(meshData.uv, uv) ||
+                    !ReferenceEquals(meshData.uv2, uv2) ||
+                    !ReferenceEquals(meshData.uv3, uv3) ||
+                    !ReferenceEquals(meshData.uv4, uv4) ||
+                    !ReferenceEquals(meshData.submeshes, submeshes) ||
+                    !ReferenceEquals(
+                        meshData.ManagedBonesPerVertex,
+                        bonesPerVertex) ||
+                    !ReferenceEquals(meshData.ManagedBoneWeights, boneWeights) ||
+                    !ReferenceEquals(meshData.boneNameHashes, boneNameHashes) ||
+                    !ReferenceEquals(meshData.bindPoses, bindPoses) ||
+                    !ReferenceEquals(meshData.umaBones, umaBones))
+                {
+                    return false;
+                }
+
+                if (submeshEntries == null)
+                {
+                    return subMeshCount <= 0;
+                }
+                if (meshData.submeshes == null ||
+                    meshData.submeshes.Length < submeshEntries.Length)
+                {
+                    return false;
+                }
+                for (int i = 0; i < submeshEntries.Length; i++)
+                {
+                    if (!ReferenceEquals(
+                            meshData.submeshes[i],
+                            submeshEntries[i]))
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        }
+
         private static void ValidateSources(SkinnedMeshCombiner.CombineInstance[] sources)
         {
             if (sources == null || sources.Length == 0)
@@ -3581,68 +3714,190 @@ namespace UMA
                     throw new InvalidOperationException($"Combine source '{sourceName}' opted into jobified modifiers with an unsupported or mutable adjustment stack.");
                 if (source.applyMeshModifiersInJobs && source.slotData.asset.meshData.vertexCount != vertexCount)
                     throw new InvalidOperationException($"Combine source '{sourceName}' changed topology after its jobified mesh modifiers were authored.");
-                if (meshData.vertices == null || vertexCount <= 0 || meshData.vertices.Length != vertexCount)
-                    throw new InvalidOperationException($"Combine source '{sourceName}' has invalid vertex data.");
-                ValidateOptionalVertexChannel(meshData.normals, vertexCount, sourceName, "normals");
-                ValidateOptionalVertexChannel(meshData.tangents, vertexCount, sourceName, "tangents");
-                ValidateOptionalVertexChannel(meshData.colors32, vertexCount, sourceName, "colors");
-                ValidateOptionalVertexChannel(meshData.uv, vertexCount, sourceName, "UV0");
-                ValidateOptionalVertexChannel(meshData.uv2, vertexCount, sourceName, "UV1");
-                ValidateOptionalVertexChannel(meshData.uv3, vertexCount, sourceName, "UV2");
-                ValidateOptionalVertexChannel(meshData.uv4, vertexCount, sourceName, "UV3");
-                if (meshData.submeshes == null || meshData.subMeshCount <= 0 || meshData.submeshes.Length < meshData.subMeshCount)
-                    throw new InvalidOperationException($"Combine source '{sourceName}' has invalid submesh data.");
-                if (source.targetSubmeshIndices == null || source.targetSubmeshIndices.Length < meshData.subMeshCount)
-                    throw new InvalidOperationException($"Combine source '{sourceName}' does not map every source submesh.");
-
-                for (int submesh = 0; submesh < meshData.subMeshCount; submesh++)
+                if (CanCacheSourceValidation(source))
                 {
-                    if (meshData.submeshes[submesh] == null)
-                        throw new InvalidOperationException($"Combine source '{sourceName}' has a null submesh at index {submesh}.");
-                    int target = source.targetSubmeshIndices[submesh];
-                    if (target < -1)
-                        throw new InvalidOperationException($"Combine source '{sourceName}' maps submesh {submesh} to invalid output submesh {target}.");
+                    ValidateImmutableSourceMeshCached(
+                        meshData,
+                        sourceName);
                 }
-
-                if (meshData.ManagedBonesPerVertex == null || meshData.ManagedBonesPerVertex.Length != vertexCount)
-                    throw new InvalidOperationException($"Combine source '{sourceName}' has {meshData.ManagedBonesPerVertex?.Length ?? 0} bones-per-vertex entries for {vertexCount} vertices.");
-                if (meshData.ManagedBoneWeights == null)
-                    throw new InvalidOperationException($"Combine source '{sourceName}' has no bone weight data.");
-                if (meshData.boneNameHashes == null || meshData.bindPoses == null || meshData.boneNameHashes.Length != meshData.bindPoses.Length)
-                    throw new InvalidOperationException($"Combine source '{sourceName}' has inconsistent bone hashes and bind poses.");
-                for (int bindPose = 0; bindPose < meshData.bindPoses.Length; bindPose++)
+                else
                 {
-                    if (!IsFinite(meshData.bindPoses[bindPose]))
-                        throw new InvalidOperationException($"Combine source '{sourceName}' bind pose {bindPose} contains a non-finite value.");
+                    Interlocked.Increment(
+                        ref sourceValidationCacheBypasses);
+                    ValidateSourceMeshData(meshData, sourceName);
                 }
-                if (meshData.umaBones == null)
-                    throw new InvalidOperationException($"Combine source '{sourceName}' has no UMA bone hierarchy data.");
-                int previousBoneHash = int.MinValue;
-                for (int bone = 0; bone < meshData.umaBones.Length; bone++)
-                {
-                    var transform = meshData.umaBones[bone];
-                    if (transform == null)
-                        throw new InvalidOperationException($"Combine source '{sourceName}' has a null UMA bone transform at index {bone}.");
-                    if (bone > 0 && transform.hash < previousBoneHash)
-                        throw new InvalidOperationException($"Combine source '{sourceName}' UMA bone hierarchy is not sorted by hash at index {bone}.");
-                    if (!IsFinite(transform.position) || !IsFinite(transform.rotation) || !IsFinite(transform.scale))
-                        throw new InvalidOperationException($"Combine source '{sourceName}' UMA bone transform {bone} contains a non-finite value.");
-                    previousBoneHash = transform.hash;
-                }
+                ValidateSourceSubmeshMapping(
+                    source,
+                    meshData,
+                    sourceName);
+            }
+        }
 
-                long expectedWeightCount = 0;
-                for (int vertex = 0; vertex < vertexCount; vertex++)
-                    expectedWeightCount += meshData.ManagedBonesPerVertex[vertex];
-                if (expectedWeightCount != meshData.ManagedBoneWeights.Length)
-                    throw new InvalidOperationException($"Combine source '{sourceName}' declares {expectedWeightCount} bone weights but stores {meshData.ManagedBoneWeights.Length}.");
-                for (int weight = 0; weight < meshData.ManagedBoneWeights.Length; weight++)
+        private static bool CanCacheSourceValidation(
+            SkinnedMeshCombiner.CombineInstance source)
+        {
+#if UNITY_EDITOR
+            // Serialized mesh arrays can be edited in place without changing
+            // their managed references. Runtime source assets are immutable,
+            // but edit-time authoring data must always be validated afresh.
+            if (!Application.isPlaying)
+            {
+                return false;
+            }
+#endif
+            if (source?.meshData == null ||
+                source.slotData?.asset == null ||
+                !ReferenceEquals(
+                    source.meshData,
+                    source.slotData.asset.meshData))
+            {
+                return false;
+            }
+            if (source.applyMeshModifiersInJobs)
+            {
+                return true;
+            }
+            List<MeshModifier.Modifier> modifiers =
+                source.slotData.meshModifiers;
+            return modifiers == null || modifiers.Count == 0;
+        }
+
+        private static void ValidateImmutableSourceMeshCached(
+            UMAMeshData meshData,
+            string sourceName)
+        {
+            lock (SourceValidationCacheLock)
+            {
+                if (sourceValidationCache.TryGetValue(
+                        meshData,
+                        out SourceValidationStamp stamp) &&
+                    stamp.Matches(meshData))
                 {
-                    int boneIndex = meshData.ManagedBoneWeights[weight].boneIndex;
-                    if ((uint)boneIndex >= (uint)meshData.boneNameHashes.Length)
-                        throw new InvalidOperationException($"Combine source '{sourceName}' bone weight {weight} references invalid bone {boneIndex}.");
-                    float value = meshData.ManagedBoneWeights[weight].weight;
-                    if (!IsFinite(value) || value < 0f)
-                        throw new InvalidOperationException($"Combine source '{sourceName}' bone weight {weight} has invalid value {value}.");
+                    Interlocked.Increment(
+                        ref sourceValidationCacheHits);
+                    return;
+                }
+                sourceValidationCache.Remove(meshData);
+            }
+
+            Interlocked.Increment(ref sourceValidationCacheMisses);
+            ValidateSourceMeshData(meshData, sourceName);
+            var successfulStamp =
+                new SourceValidationStamp(meshData);
+
+            lock (SourceValidationCacheLock)
+            {
+                sourceValidationCache.Remove(meshData);
+                sourceValidationCache.Add(
+                    meshData,
+                    successfulStamp);
+            }
+        }
+
+        private static void ValidateSourceMeshData(
+            UMAMeshData meshData,
+            string sourceName)
+        {
+            int vertexCount = meshData.vertexCount;
+            if (meshData.vertices == null ||
+                vertexCount <= 0 ||
+                meshData.vertices.Length != vertexCount)
+                throw new InvalidOperationException($"Combine source '{sourceName}' has invalid vertex data.");
+            ValidateOptionalVertexChannel(meshData.normals, vertexCount, sourceName, "normals");
+            ValidateOptionalVertexChannel(meshData.tangents, vertexCount, sourceName, "tangents");
+            ValidateOptionalVertexChannel(meshData.colors32, vertexCount, sourceName, "colors");
+            ValidateOptionalVertexChannel(meshData.uv, vertexCount, sourceName, "UV0");
+            ValidateOptionalVertexChannel(meshData.uv2, vertexCount, sourceName, "UV1");
+            ValidateOptionalVertexChannel(meshData.uv3, vertexCount, sourceName, "UV2");
+            ValidateOptionalVertexChannel(meshData.uv4, vertexCount, sourceName, "UV3");
+            if (meshData.submeshes == null ||
+                meshData.subMeshCount <= 0 ||
+                meshData.submeshes.Length < meshData.subMeshCount)
+                throw new InvalidOperationException($"Combine source '{sourceName}' has invalid submesh data.");
+
+            for (int submesh = 0; submesh < meshData.subMeshCount; submesh++)
+            {
+                if (meshData.submeshes[submesh] == null)
+                    throw new InvalidOperationException($"Combine source '{sourceName}' has a null submesh at index {submesh}.");
+            }
+
+            if (meshData.ManagedBonesPerVertex == null ||
+                meshData.ManagedBonesPerVertex.Length != vertexCount)
+                throw new InvalidOperationException($"Combine source '{sourceName}' has {meshData.ManagedBonesPerVertex?.Length ?? 0} bones-per-vertex entries for {vertexCount} vertices.");
+            if (meshData.ManagedBoneWeights == null)
+                throw new InvalidOperationException($"Combine source '{sourceName}' has no bone weight data.");
+            if (meshData.boneNameHashes == null ||
+                meshData.bindPoses == null ||
+                meshData.boneNameHashes.Length != meshData.bindPoses.Length)
+                throw new InvalidOperationException($"Combine source '{sourceName}' has inconsistent bone hashes and bind poses.");
+            for (int bindPose = 0;
+                 bindPose < meshData.bindPoses.Length;
+                 bindPose++)
+            {
+                if (!IsFinite(meshData.bindPoses[bindPose]))
+                    throw new InvalidOperationException($"Combine source '{sourceName}' bind pose {bindPose} contains a non-finite value.");
+            }
+            if (meshData.umaBones == null)
+                throw new InvalidOperationException($"Combine source '{sourceName}' has no UMA bone hierarchy data.");
+            int previousBoneHash = int.MinValue;
+            for (int bone = 0; bone < meshData.umaBones.Length; bone++)
+            {
+                var transform = meshData.umaBones[bone];
+                if (transform == null)
+                    throw new InvalidOperationException($"Combine source '{sourceName}' has a null UMA bone transform at index {bone}.");
+                if (bone > 0 && transform.hash < previousBoneHash)
+                    throw new InvalidOperationException($"Combine source '{sourceName}' UMA bone hierarchy is not sorted by hash at index {bone}.");
+                if (!IsFinite(transform.position) ||
+                    !IsFinite(transform.rotation) ||
+                    !IsFinite(transform.scale))
+                    throw new InvalidOperationException($"Combine source '{sourceName}' UMA bone transform {bone} contains a non-finite value.");
+                previousBoneHash = transform.hash;
+            }
+
+            long expectedWeightCount = 0;
+            for (int vertex = 0; vertex < vertexCount; vertex++)
+                expectedWeightCount +=
+                    meshData.ManagedBonesPerVertex[vertex];
+            if (expectedWeightCount != meshData.ManagedBoneWeights.Length)
+                throw new InvalidOperationException($"Combine source '{sourceName}' declares {expectedWeightCount} bone weights but stores {meshData.ManagedBoneWeights.Length}.");
+            for (int weight = 0;
+                 weight < meshData.ManagedBoneWeights.Length;
+                 weight++)
+            {
+                int boneIndex =
+                    meshData.ManagedBoneWeights[weight].boneIndex;
+                if ((uint)boneIndex >=
+                    (uint)meshData.boneNameHashes.Length)
+                    throw new InvalidOperationException($"Combine source '{sourceName}' bone weight {weight} references invalid bone {boneIndex}.");
+                float value =
+                    meshData.ManagedBoneWeights[weight].weight;
+                if (!IsFinite(value) || value < 0f)
+                    throw new InvalidOperationException($"Combine source '{sourceName}' bone weight {weight} has invalid value {value}.");
+            }
+        }
+
+        private static void ValidateSourceSubmeshMapping(
+            SkinnedMeshCombiner.CombineInstance source,
+            UMAMeshData meshData,
+            string sourceName)
+        {
+            if (source.targetSubmeshIndices == null ||
+                source.targetSubmeshIndices.Length <
+                    meshData.subMeshCount)
+            {
+                throw new InvalidOperationException(
+                    $"Combine source '{sourceName}' does not map every source submesh.");
+            }
+            for (int submesh = 0;
+                 submesh < meshData.subMeshCount;
+                 submesh++)
+            {
+                int target =
+                    source.targetSubmeshIndices[submesh];
+                if (target < -1)
+                {
+                    throw new InvalidOperationException(
+                        $"Combine source '{sourceName}' maps submesh {submesh} to invalid output submesh {target}.");
                 }
             }
         }

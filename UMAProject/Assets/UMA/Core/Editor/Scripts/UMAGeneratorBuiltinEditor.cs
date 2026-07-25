@@ -347,6 +347,18 @@ namespace UMA.Editors
 					EditorGUILayout.LabelField(
 						"Failures",
 						generator.multiStepFailureCount.ToString());
+					EditorGUILayout.LabelField(
+						"Source Validation Cache Hits",
+						SkinnedMeshCombinerMeshAPI
+							.SourceValidationCacheHits.ToString());
+					EditorGUILayout.LabelField(
+						"Source Validation Cache Misses",
+						SkinnedMeshCombinerMeshAPI
+							.SourceValidationCacheMisses.ToString());
+					EditorGUILayout.LabelField(
+						"Source Validation Cache Bypasses",
+						SkinnedMeshCombinerMeshAPI
+							.SourceValidationCacheBypasses.ToString());
 				}
 				else
 				{

@@ -628,6 +628,8 @@ namespace UMA
             lastMultiStepGenerationLatencyTicks = 0;
             maximumMultiStepGenerationLatencyTicks = 0;
             multiStepDiscardedMeshTicks = 0;
+            SkinnedMeshCombinerMeshAPI
+                .ResetSourceValidationCacheStatistics();
         }
 
 #pragma warning disable 618
