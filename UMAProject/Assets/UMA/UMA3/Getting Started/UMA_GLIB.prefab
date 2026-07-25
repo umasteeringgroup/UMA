@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6782112333398131214}
   - component: {fileID: 7066486438860346000}
-  - component: {fileID: 263169762735457112}
+  - component: {fileID: 7037109643035162990}
   m_Layer: 0
   m_Name: UMA_GLIB
   m_TagString: Untagged
@@ -64,7 +64,7 @@ MonoBehaviour:
   Use32BitBuffers: 0
   alwaysRegenerateRenderers: 0
   SaveAndRestoreIgnoredItems: 0
-  meshCombiner: {fileID: 263169762735457112}
+  meshCombiner: {fileID: 7037109643035162990}
   flipDecalMode: 0
   InitialScaleFactor: 1
   AutomaticScaling: 1
@@ -82,7 +82,7 @@ MonoBehaviour:
   autoSetRaceBlendshapes: 0
   AllowReadFromMesh: 0
   umaDatasGenerated: []
---- !u!114 &263169762735457112
+--- !u!114 &7037109643035162990
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

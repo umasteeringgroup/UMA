@@ -697,8 +697,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UMA.Examples.UMAMouseOrbitImproved
   mouseButtonToUse: 1
-  target: {fileID: 0}
-  distance: 0
+  target: {fileID: 587163907}
+  distance: 8
   xSpeed: 120
   ySpeed: 120
   scrollrate: 3
