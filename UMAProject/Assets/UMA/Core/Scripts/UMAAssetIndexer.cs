@@ -1308,6 +1308,7 @@ namespace UMA
             GameObject go = GameObject.Instantiate(settings.generatorPrefab);
             go.name = generatorName;
             generator = go.GetComponent<UMAGenerator>();
+            /*
             if (!IsUsableSceneGenerator(generator))
             {
                 Debug.LogError(
@@ -1324,7 +1325,7 @@ namespace UMA
                 }
                 generator = null;
                 return;
-            }
+            }*/
 
             if (!generator.showInHierarchy)
             {
