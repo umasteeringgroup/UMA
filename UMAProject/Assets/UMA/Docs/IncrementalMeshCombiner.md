@@ -8,8 +8,10 @@ fewest possible frames.
 
 The combiner produces the same UMA renderer content as the default mesh
 combiner, but retains a mesh-in-process and advances it through bounded steps.
-Suitable CPU preparation runs through Jobs or a worker task. Unity mesh API
-calls, renderer changes, and graphics uploads remain on the main thread.
+Suitable CPU preparation runs through Jobs or worker tasks. Renderer pipelines
+advance independently, so UMA can apply a completed renderer while another
+renderer's Jobs are still running. Unity mesh API calls, renderer changes, and
+graphics uploads remain on the main thread.
 
 ## When to Use It
 
@@ -72,9 +74,11 @@ must continue to be polled and advanced.
 
 ## Blendshape Generation
 
-Blendshape delta preparation runs one frame at a time on a worker task. Each
-`Mesh.AddBlendShapeFrame` call is a separate main-thread step, allowing a mesh
-with many blendshapes to remain in process across generator updates.
+Blendshape delta preparation runs one frame at a time on a worker task. Two
+reusable delta-buffer sets allow the worker to prepare the next frame while
+Unity adds the current frame. Each `Mesh.AddBlendShapeFrame` call remains a
+separate main-thread step, allowing a mesh with many blendshapes to remain in
+process across generator updates.
 
 For the supplied worst-case test:
 
@@ -87,11 +91,38 @@ For the supplied worst-case test:
 Disabling **Load BlendShapes** on the DCA bypasses this stress path and does not
 provide a useful blendshape performance comparison.
 
+## Mesh Modifiers
+
+Additive vertex-delta modifier stacks use the jobified modifier path. UMA
+validates and snapshots their managed inputs on the main thread, then uses
+worker Jobs to:
+
+- Calculate scaled vertex deltas.
+- Sort and combine adjustments that affect the same vertex.
+- Apply the compacted deltas.
+- Recalculate normals and tangents for affected sources.
+
+Sources are independent work items during surface-frame recalculation, allowing
+slots with modifiers to run concurrently where worker capacity is available.
+This is particularly useful for recipes containing many modifiers or thousands
+of individual vertex adjustments.
+
+Custom, derived, or order-dependent adjustment collections continue to use
+their managed `Process` implementation. UMA cannot move arbitrary custom code
+to a worker safely because it may use Unity APIs, mutate shared objects, or
+depend on adjustment order. Use plain `VertexDeltaAdjustmentCollection`
+instances when a modifier should qualify for the jobified path.
+
 ## Atomic Publication and Rebuilds
 
 The new renderers and meshes are staged away from the visible avatar. UMA
 publishes renderer hierarchy, slot metadata, generated-material references, and
 the finished meshes together only after all stages succeed.
+
+Renderer finalization is also divided into separate budgeted units for native
+mesh and bone binding, material assignment and upload, and cloth and hierarchy
+setup. These operations are completed on the detached renderer before the
+small publication transaction.
 
 If generation is cancelled or fails before publication:
 

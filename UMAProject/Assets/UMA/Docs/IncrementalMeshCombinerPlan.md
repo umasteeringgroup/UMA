@@ -40,15 +40,30 @@ Last updated: 2026-07-24
   blendshape stress instructions, and rollout checklists are available.
   Crowd and platform acceptance captures remain hardware-specific and must be
   recorded on each shipping target.
+- Post-review concurrency pass complete: the union skeleton is prepared once,
+  renderer pipelines advance independently, completed renderers no longer wait
+  behind slower renderer Jobs, bounds and unmasked index copies are divided
+  into parallel batches, and atlas UV remapping runs across vertices.
+  Blendshape preparation now uses two reusable buffers so the next frame can
+  be prepared while Unity adds the current frame. Native finalization,
+  material/upload work, and cloth/hierarchy setup are separate budgeted units.
+  Slot and material metadata lookups are reference-indexed, and the existing
+  timing counters now cover stream packing and cloth preparation.
+- Modifier concurrency pass complete: compatible additive vertex-delta stacks
+  are reduced to immutable native snapshots on the main thread. Worker Jobs
+  calculate scaled records, sort and compact duplicate vertex adjustments,
+  apply the compacted deltas, and rebuild normals and tangents per affected
+  source. Custom and order-dependent modifier implementations retain their
+  managed fallback. A 4,096-adjustment stress fixture verifies compaction,
+  positions, normals, and tangent orthogonality.
 
 Current Unity `6000.3.18f1` verification:
 
 - Generator scheduler: 13/13 passing.
 - Focused incremental combiner: 5/5 passing.
 - Full multi-step category: 21/21 passing.
-- Broad MeshCombiner category: 43/47 passing. The remaining four are the
-  recorded pre-existing bone-baking reflection and synthetic bind-pose
-  failures; no incremental combiner test fails.
+- Broad MeshCombiner category retains recorded pre-existing bone-baking and
+  synthetic bind-pose fixture failures; no incremental combiner test fails.
 
 ## Objective
 
