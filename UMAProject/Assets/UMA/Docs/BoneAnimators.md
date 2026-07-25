@@ -223,11 +223,109 @@ the scene must have a physics setup. Best for heavy, pendulum-like chains.
 
 **Menu path:** `Assets → Create → UMA → Physics → UnitySpringJointAnimator`
 
-Stub for a spring-joint-based animator. Currently only resolves the anchor bone.
+Creates Unity `Rigidbody` and `SpringJoint` components directly on an UMA bone
+hierarchy. Each animated bone is connected to the preceding bone, while the top-level
+anchor remains kinematic and follows the character animation. The result reacts to
+gravity, character movement, and optional collisions using Unity's built-in physics
+solver.
 
-| Field | Description |
-|---|---|
-| `AnchorBoneName` | Root anchor bone. |
+Use this animator for hair, tails, hanging accessories, and other chains that should
+stretch and settle like springs. For animation-driven jiggle without Unity
+rigidbodies, use `UMAChainJiggleAnimator` instead.
+
+#### Defining chains
+
+| Field | Default | Description |
+|---|---|---|
+| `Chains` | empty | Multi-chain configuration. Add one entry for each independent chain, such as the left and right sides of pigtails. When this list contains entries, the legacy single-chain fields are ignored. |
+| `Chains > Anchor Bone Name` | *(required)* | Root and connection point for the chain. It is kinematic unless it is also an animated child of another configured chain. |
+| `Chains > Spring Bone Names` | empty | Optional ordered list of animated bones. Leave empty to discover registered descendants automatically. Explicit bones must be descendants of the anchor. |
+| `Chains > Excluded Bone Names` | empty | Subtrees skipped during automatic discovery. This is useful when an anchor has helper or unrelated child branches. |
+| `Anchor Bone Name` | empty | Legacy single-chain anchor. Used only when `Chains` is empty. Existing assets that only specify this field continue to work. |
+| `Swing Bone Names` | empty | Optional ordered bone list for the legacy anchor. Leave empty for automatic descendant discovery. |
+| `Max Depth` | 0 | Maximum hierarchy depth processed below each anchor. Zero processes the complete hierarchy. |
+| `Registered Bones Only` | on | Limits automatic discovery to transforms registered in the UMA skeleton. Keep enabled for normal UMA content. Disable only when a chain intentionally uses unregistered helper transforms. |
+
+The inspector includes an **Add Chain From Slot** helper. Drop or assign a
+`SlotDataAsset`, choose an anchor from its UMA bones, and click
+**Add a chain for this bone**. You can then add explicit spring bones or exclusions to
+the new chain entry if automatic discovery is not appropriate.
+
+#### Spring settings
+
+| Field | Default | Description |
+|---|---|---|
+| `Spring` | 50 | Force that pulls a segment back toward its initial distance from the preceding body. Higher values make the chain firmer and faster to return. |
+| `Damper` | 5 | Resistance to oscillation. Increase this if the chain continues bouncing for too long. |
+| `Min Distance` | 0 | Minimum-distance offset Unity applies relative to the segment's initial distance. |
+| `Max Distance` | 0 | Maximum-distance offset Unity applies relative to the segment's initial distance. |
+| `Tolerance` | 0.025 | Distance error accepted by Unity's joint solver. |
+| `Enable Connected Body Collision` | off | Allows adjacent bodies connected by a spring to collide. Leave off for most hair and accessory chains to reduce instability. |
+| `Enable Preprocessing` | on | Enables Unity's joint preprocessing. Disable only when diagnosing an unstable or impossible joint configuration. |
+
+`SpringJoint` attempts to preserve the distance between the two rigidbodies when the
+joint starts. `Min Distance` and `Max Distance` are evaluated relative to that initial
+separation; they are not absolute bone lengths.
+
+#### Rigidbody settings
+
+| Field | Default | Description |
+|---|---|---|
+| `Bone Mass` | 0.1 | Mass assigned to rigidbodies created on animated bones. |
+| `Linear Damping` | 0.15 | Slows translational motion. |
+| `Angular Damping` | 0.15 | Slows rotational motion. |
+| `Use Gravity` | on | Applies the project Physics gravity to animated bones. |
+| `Interpolate` | on | Interpolates dynamic rigidbodies for smoother rendered motion. |
+| `Collision Detection` | Discrete | Collision mode for animated rigidbodies. Use a continuous mode only for fast chains with colliders. |
+| `Bone Constraints` | None | Optional Rigidbody position or rotation constraints. |
+| `Max Angular Velocity` | 20 | Angular-velocity limit for animator-created rigidbodies. Zero keeps Unity's project default. |
+| `Max Depenetration Velocity` | 3 | Maximum speed used to separate overlapping colliders. Zero keeps Unity's project default. |
+
+#### Collider and layer settings
+
+| Field | Default | Description |
+|---|---|---|
+| `Add Bone Colliders` | off | Adds an owned `SphereCollider` to each animated bone. Enable only when the chain needs physical collision. |
+| `Bone Collider Radius` | 0.025 | Radius of animated-bone colliders. |
+| `Add Anchor Colliders` | off | Adds an owned `SphereCollider` to fixed chain anchors. |
+| `Anchor Collider Radius` | 0.04 | Radius of anchor colliders. |
+| `Anchor Collider Center` | (0,0,0) | Local offset of anchor colliders. |
+| `Bone Layer` | -1 | Layer assigned to configured objects. `-1` preserves the layer already on each bone. Use a dedicated physics layer when colliders are enabled. |
+
+#### Runtime behavior and safe rebuilding
+
+- Physics components created by the animator are marked as animator-owned. Rebuilding
+  the same UMA reuses those components instead of adding duplicates.
+- If a configured chain becomes shorter or an exclusion is added, stale owned joints,
+  rigidbodies, and colliders are removed.
+- Existing artist-authored rigidbodies are used as connection points without changing
+  their mass, gravity, damping, or constraints.
+- Existing colliders are not modified. Optional colliders created by the animator are
+  tracked separately.
+- Changing `Bone Layer` back to `-1`, or removing a bone from the chain, restores the
+  original layer.
+- Destroying the UMA destroys both current skeleton components and any spring physics
+  attached to those bones.
+
+#### Practical setup
+
+1. Create the animator asset and assign it to the slot that supplies the spring bones.
+2. Add a chain and select the bone immediately above the first bone that should move
+   as its anchor.
+3. Start with automatic discovery. Use an explicit ordered list when the hierarchy
+   contains multiple branches, or add exclusions for branches that should remain
+   animation-driven.
+4. Leave colliders disabled while tuning the motion. Adjust `Spring`, `Damper`, mass,
+   and gravity first.
+5. If collision is needed, enable bone colliders, assign a dedicated `Bone Layer`, and
+   configure the Physics collision matrix so hair or accessories only collide with the
+   intended character or environment layers.
+6. Add all animated chain bones to **Unbaked Animated Bones** when using the Bone
+   Baking Mesh Combiner.
+
+> **Tuning tip:** If a chain stretches too far, raise `Spring` before raising mass. If
+> it jitters, increase `Damper`, keep connected-body collision disabled, and verify
+> that collider radii do not overlap in the rest pose.
 
 ---
 
@@ -242,7 +340,7 @@ Stub for a spring-joint-based animator. Currently only resolves the anchor bone.
 | **MC2ClothAnimator** | Magica Cloth 2 mesh cloth | Magica Cloth 2 solver |
 | **TwistBoneAnimator** | Forearm/calf twist chains | Driver → ratio inheritance |
 | **UnityJointAnimator** | Pendulum chains (real physics) | Rigidbody + CharacterJoint |
-| **UnitySpringJointAnimator** | Stub / placeholder | — |
+| **UnitySpringJointAnimator** | Springy hair, tails, and accessories using Unity physics | Rigidbody + SpringJoint |
 
 ---
 
