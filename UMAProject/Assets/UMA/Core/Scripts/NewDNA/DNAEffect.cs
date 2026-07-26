@@ -84,7 +84,6 @@ namespace UMA
             // select: 0,1,0
             // select: 1,0,1
             EffectName = EditorGUILayout.DelayedTextField("Effect Name", EffectName);
-            enabled = EditorGUILayout.Toggle("Enabled", enabled);
             GUILayout.BeginHorizontal();
             curve = EditorGUILayout.CurveField("Curve", curve);
             if (curve != null)

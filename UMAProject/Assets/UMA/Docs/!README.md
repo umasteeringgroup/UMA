@@ -14,6 +14,7 @@ New and returning users should begin with these two guides:
 Artists creating new content should continue with:
 
 - [Content Creation](ContentCreation.md) — practical Blender and Maya workflows for preparing meshes, textures, slots, overlays, and wardrobe.
+- [UMA Tools for Blender](UMAToolsForBlender.md) — Blender validation, rigging, weight, UDIM, import, and dependable UMA FBX export workflows.
 - [Creating a New Race](CreatingANewRace.md) — the complete race-authoring process from source model through runtime validation.
 
 You can open these guides inside Unity from `UMA > View Documentation`.
@@ -42,6 +43,7 @@ You can open these guides inside Unity from `UMA > View Documentation`.
 ### Artist content creation
 
 - [Content Creation](ContentCreation.md)
+- [UMA Tools for Blender](UMAToolsForBlender.md)
 - [Creating a New Race](CreatingANewRace.md)
 - [RaceData](RaceData.md)
 - [SlotDataAsset](SlotDataAsset.md)

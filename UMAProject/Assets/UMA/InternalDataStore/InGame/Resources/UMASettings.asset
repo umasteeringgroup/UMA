@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ad6e21078dbc88344b21463ab3922a67, type: 3}
   m_Name: UMASettings
   m_EditorClassIdentifier: 
+  IgnoreTag: UMAIgnore
   useMeshAPICombiner: 0
   DebugMemoryUsage: 0
   DisableDecalCallbacks: 0
@@ -19,8 +20,7 @@ MonoBehaviour:
     Use the project settings instead.\n Modifying settings that need compiler\n directives
     set will NOT work if you\n edit them in the inspector!"
   Initialized: 1
-  UMAVersion: UMA NextGen 3.0
-  IgnoreTag: UMAIgnore
+  UMAVersion: UMA NextGen 3.0f3
   KeepTag: UMAKeepChain
   tagLookupValues:
   - Head

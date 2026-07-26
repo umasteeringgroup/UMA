@@ -207,6 +207,8 @@ For extracting existing slot blendshapes into Mesh Modifiers, see [MeshModifiers
 
 ## Export from Blender 4.x
 
+UMA Tools for Blender provides UMA-specific error checking, rigging and weight utilities, UDIM helpers, and a consistent FBX export preset. Download it and follow its preflight workflow in [UMA Tools for Blender](UMAToolsForBlender.md).
+
 Normalize the asset before export:
 
 1. Select the mesh and armature.

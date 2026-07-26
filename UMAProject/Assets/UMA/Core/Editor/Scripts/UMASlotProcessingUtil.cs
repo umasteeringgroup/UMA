@@ -394,122 +394,149 @@ namespace UMA.Editors
                 return;
             }
 
-            GameObject tempGameObject = UnityEngine.Object.Instantiate(mesh.transform.parent.gameObject) as GameObject;
-            var resultingSkinnedMeshes = tempGameObject.GetComponentsInChildren<SkinnedMeshRenderer>();
-            SkinnedMeshRenderer resultingSkinnedMesh = null;
-            foreach (var skinnedMesh in resultingSkinnedMeshes)
-            {
-                if (skinnedMesh.name == mesh.name)
-                {
-                    resultingSkinnedMesh = skinnedMesh;
-                }
-            }
+            GameObject tempGameObject = null;
+            GameObject newObject = null;
+            string meshAssetName = null;
+            string skinnedName = null;
 
-            Mesh resultingMesh;
-            if (prefabMesh != null)
-            {
-                resultingMesh = SeamRemoval.PerformSeamRemoval(resultingSkinnedMesh, prefabMesh, 0.0001f, calcTangents);
-                resultingSkinnedMesh.sharedMesh = resultingMesh;
-                SkinnedMeshAligner.AlignBindPose(prefabMesh, resultingSkinnedMesh);
-            }
-            else
-            {
-                resultingMesh = (Mesh)GameObject.Instantiate(resultingSkinnedMesh.sharedMesh);
-                if (calcTangents)
-                {
-                    resultingMesh.RecalculateTangents();
-                }
-            }
-
-            var usedBonesDictionaryUpdate = CompileUsedBonesDictionary(resultingMesh, new List<int>());
-            if (usedBonesDictionaryUpdate.Count != resultingSkinnedMesh.bones.Length)
-            {
-                resultingMesh = BuildNewReduceBonesMesh(resultingMesh, usedBonesDictionaryUpdate);
-            }
-
-            string meshAssetName = path + '/' + mesh.name + "_TempMesh.asset";
-
-            AssetDatabase.CreateAsset(resultingMesh, meshAssetName);
-
-            tempGameObject.name = mesh.transform.parent.gameObject.name;
-            Transform[] transformList = tempGameObject.GetComponentsInChildren<Transform>();
-
-            GameObject newObject = new GameObject();
-
-            for (int i = 0; i < transformList.Length; i++)
-            {
-                if (transformList[i].name == rootBone)
-                {
-                    transformList[i].parent = newObject.transform;
-                }
-                else if (transformList[i].name == mesh.name)
-                {
-                    transformList[i].parent = newObject.transform;
-                }
-            }
-
-            GameObject.DestroyImmediate(tempGameObject);
-            resultingSkinnedMesh = newObject.GetComponentInChildren<SkinnedMeshRenderer>();
-            if (resultingSkinnedMesh)
-            {
-                if (usedBonesDictionaryUpdate.Count != resultingSkinnedMesh.bones.Length)
-                {
-
-                    resultingSkinnedMesh.bones = BuildNewReducedBonesList(resultingSkinnedMesh.bones, usedBonesDictionaryUpdate);
-                }
-                resultingSkinnedMesh.sharedMesh = resultingMesh;
-            }
-
-            string SkinnedName = path + '/' + assetName + "_TempSkinned.prefab";
-
-            Debug.Log($"Saving prefab to {SkinnedName}");
-            var skinnedResult = PrefabUtility.SaveAsPrefabAsset(newObject, SkinnedName);
-
-            var meshgo = skinnedResult.transform.Find(mesh.name);
-            finalMeshRenderer = meshgo.GetComponent<SkinnedMeshRenderer>();
-
-            slot.UpdateMeshData(finalMeshRenderer, rootBone, false, subMesh, clearNormals, clearTangents);
-            slot.meshData.SlotName = slot.slotName;
-#if UNITY_6000_2_OR_NEWER
-            // Try to carry LOD ranges from the source mesh (if available)
-            var srcMesh = mesh != null ? mesh.sharedMesh : null;
-            if (srcMesh != null)
-            {
-                CopyLodRangesFromSourceMesh(slot, 0, srcMesh, subMesh);
-            }
-#endif
-            var cloth = mesh.GetComponent<Cloth>();
-            if (cloth != null)
-            {
-                slot.meshData.RetrieveDataFromUnityCloth(cloth);
-            }
-
-#if UNITY_EDITOR
-            // If the slot was previously built with internal LODs, regenerate them after updating mesh data.
             try
             {
-                if (slot != null && slot.HasSlotBuilderParamsSnapshot)
+                tempGameObject = UnityEngine.Object.Instantiate(mesh.transform.parent.gameObject) as GameObject;
+                var resultingSkinnedMeshes = tempGameObject.GetComponentsInChildren<SkinnedMeshRenderer>();
+                SkinnedMeshRenderer resultingSkinnedMesh = null;
+                foreach (var skinnedMesh in resultingSkinnedMeshes)
                 {
-                    var snap = slot.GetSlotBuilderParamsSnapshot();
-                    if (snap.hasData && snap.generateSlotLods)
+                    if (skinnedMesh.name == mesh.name)
                     {
-                        var sbp = new SlotBuilderParameters();
-                        sbp.generateSlotLods = true;
-                        sbp.slotLodMaxLevels = snap.slotLodMaxLevels;
-                        sbp.slotLodMinTriangles = snap.slotLodMinTriangles;
-                        sbp.slotLodTargetReductionPerLevel = snap.slotLodTargetReductionPerLevel;
-                        sbp.slotLodPreserveBoundaryEdges = snap.slotLodPreserveBoundaryEdges;
-                        sbp.slotLodBoundaryWeight = snap.slotLodBoundaryWeight;
-                        GenerateSlotLodsIfEnabled(sbp, slot);
+                        resultingSkinnedMesh = skinnedMesh;
                     }
                 }
-            }
-            catch { }
+
+                Mesh resultingMesh;
+                if (prefabMesh != null)
+                {
+                    resultingMesh = SeamRemoval.PerformSeamRemoval(resultingSkinnedMesh, prefabMesh, 0.0001f, calcTangents);
+                    resultingSkinnedMesh.sharedMesh = resultingMesh;
+                    SkinnedMeshAligner.AlignBindPose(prefabMesh, resultingSkinnedMesh);
+                }
+                else
+                {
+                    resultingMesh = (Mesh)GameObject.Instantiate(resultingSkinnedMesh.sharedMesh);
+                    if (calcTangents)
+                    {
+                        resultingMesh.RecalculateTangents();
+                    }
+                }
+
+                var usedBonesDictionaryUpdate = CompileUsedBonesDictionary(resultingMesh, new List<int>());
+                if (usedBonesDictionaryUpdate.Count != resultingSkinnedMesh.bones.Length)
+                {
+                    resultingMesh = BuildNewReduceBonesMesh(resultingMesh, usedBonesDictionaryUpdate);
+                }
+
+                meshAssetName = path + '/' + mesh.name + "_TempMesh.asset";
+
+                AssetDatabase.CreateAsset(resultingMesh, meshAssetName);
+
+                tempGameObject.name = mesh.transform.parent.gameObject.name;
+                Transform[] transformList = tempGameObject.GetComponentsInChildren<Transform>();
+
+                newObject = new GameObject();
+
+                for (int i = 0; i < transformList.Length; i++)
+                {
+                    if (transformList[i].name == rootBone)
+                    {
+                        transformList[i].parent = newObject.transform;
+                    }
+                    else if (transformList[i].name == mesh.name)
+                    {
+                        transformList[i].parent = newObject.transform;
+                    }
+                }
+
+                GameObject.DestroyImmediate(tempGameObject);
+                tempGameObject = null;
+                resultingSkinnedMesh = newObject.GetComponentInChildren<SkinnedMeshRenderer>();
+                if (resultingSkinnedMesh)
+                {
+                    if (usedBonesDictionaryUpdate.Count != resultingSkinnedMesh.bones.Length)
+                    {
+
+                        resultingSkinnedMesh.bones = BuildNewReducedBonesList(resultingSkinnedMesh.bones, usedBonesDictionaryUpdate);
+                    }
+                    resultingSkinnedMesh.sharedMesh = resultingMesh;
+                }
+
+                skinnedName = path + '/' + assetName + "_TempSkinned.prefab";
+
+                Debug.Log($"Saving prefab to {skinnedName}");
+                var skinnedResult = PrefabUtility.SaveAsPrefabAsset(newObject, skinnedName);
+
+                var meshgo = skinnedResult.transform.Find(mesh.name);
+                finalMeshRenderer = meshgo.GetComponent<SkinnedMeshRenderer>();
+
+                slot.UpdateMeshData(finalMeshRenderer, rootBone, false, subMesh, clearNormals, clearTangents);
+                slot.meshData.SlotName = slot.slotName;
+#if UNITY_6000_2_OR_NEWER
+                // Try to carry LOD ranges from the source mesh (if available)
+                var srcMesh = mesh != null ? mesh.sharedMesh : null;
+                if (srcMesh != null)
+                {
+                    CopyLodRangesFromSourceMesh(slot, 0, srcMesh, subMesh);
+                }
 #endif
-            AssetDatabase.SaveAssets();
-            // Always clean up here; batch deferral is handled only in CreateSlotData
-            AssetDatabase.DeleteAsset(SkinnedName);
-            AssetDatabase.DeleteAsset(meshAssetName);
+                var cloth = mesh.GetComponent<Cloth>();
+                if (cloth != null)
+                {
+                    slot.meshData.RetrieveDataFromUnityCloth(cloth);
+                }
+
+#if UNITY_EDITOR
+                // If the slot was previously built with internal LODs, regenerate them after updating mesh data.
+                try
+                {
+                    if (slot != null && slot.HasSlotBuilderParamsSnapshot)
+                    {
+                        var snap = slot.GetSlotBuilderParamsSnapshot();
+                        if (snap.hasData && snap.generateSlotLods)
+                        {
+                            var sbp = new SlotBuilderParameters();
+                            sbp.generateSlotLods = true;
+                            sbp.slotLodMaxLevels = snap.slotLodMaxLevels;
+                            sbp.slotLodMinTriangles = snap.slotLodMinTriangles;
+                            sbp.slotLodTargetReductionPerLevel = snap.slotLodTargetReductionPerLevel;
+                            sbp.slotLodPreserveBoundaryEdges = snap.slotLodPreserveBoundaryEdges;
+                            sbp.slotLodBoundaryWeight = snap.slotLodBoundaryWeight;
+                            GenerateSlotLodsIfEnabled(sbp, slot);
+                        }
+                    }
+                }
+                catch { }
+#endif
+                AssetDatabase.SaveAssets();
+            }
+            finally
+            {
+                if (tempGameObject != null)
+                {
+                    GameObject.DestroyImmediate(tempGameObject);
+                }
+                if (newObject != null)
+                {
+                    GameObject.DestroyImmediate(newObject);
+                }
+
+                // Always clean up here; batch deferral is handled only in CreateSlotData.
+                if (!string.IsNullOrEmpty(skinnedName))
+                {
+                    AssetDatabase.DeleteAsset(skinnedName);
+                }
+                if (!string.IsNullOrEmpty(meshAssetName))
+                {
+                    AssetDatabase.DeleteAsset(meshAssetName);
+                }
+            }
         }
 
         // Helper: create an OverlayDataAsset for a slot using the source Unity material and UMAMaterial channels
