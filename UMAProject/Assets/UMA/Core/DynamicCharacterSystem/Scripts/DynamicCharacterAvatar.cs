@@ -1274,8 +1274,6 @@ namespace UMA.CharacterSystem
                 }
             }
 
-            Debug.Log("DNA count for avatar definition: " + Dna.Count);
-
             // *****************************************************
             // Get Colors
             // *****************************************************
@@ -6965,7 +6963,7 @@ namespace UMA.CharacterSystem
                 ClearFbxRouteRuntime();
                 if (UMAAssetIndexer.bareInstance != null)
                 {
-                    var generator = UMAAssetIndexer.bareInstance.generator;
+                    var generator = UMAAssetIndexer.bareInstance.bareGenerator;
                     if (generator != null)
                     {
                         generator.removeUMA(umaData);

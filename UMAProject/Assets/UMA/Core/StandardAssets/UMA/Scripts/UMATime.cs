@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System.Diagnostics;
 
 namespace UMA
 {
@@ -22,10 +23,20 @@ namespace UMA
         /// <summary>
         /// Report Time Spendt This Frame
         /// </summary>
-        /// <param name="ticks">10,000,000 ticks is 1 second (1/10,000ms)</param>
+        /// <param name="ticks">Ticks measured by <see cref="Stopwatch"/>.</param>
         public static void ReportTimeSpendtThisFrameTicks(long ticks)
 		{
-			ReportTimeSpendtThisFrame(ticks / 10000000f);
+			ReportTimeSpendtThisFrame((float)(ticks / (double)Stopwatch.Frequency));
+		}
+
+		/// <summary>
+		/// Converts ticks measured by <see cref="Stopwatch"/> to milliseconds.
+		/// Stopwatch frequency is platform dependent and must not be treated as
+		/// TimeSpan ticks.
+		/// </summary>
+		public static double StopwatchTicksToMilliseconds(long ticks)
+		{
+			return ticks * 1000d / Stopwatch.Frequency;
 		}
 
 		/// <summary>

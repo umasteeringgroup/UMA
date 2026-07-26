@@ -42,6 +42,9 @@ namespace UMA
         [Min(0)]
         [Tooltip("Number of complete frames to wait before processing the next UMA. Values above zero limit generation to one UMA per eligible frame.")]
         public int InterFrameDelay;
+        [Min(0f)]
+        [Tooltip("Soft main-thread budget, in milliseconds, for incremental mesh-combiner work during one generator update. Zero means unlimited.")]
+        public float MaxMultiStepWorkMilliseconds = 2f;
         public bool collectGarbage = true;
         [Range(0, 128)]
         public int garbageCollectionRate;
@@ -121,6 +124,12 @@ namespace UMA
             InitialScaleFactor = Mathf.Clamp(InitialScaleFactor, 1, 16);
             IterationCount = Mathf.Max(1, IterationCount);
             InterFrameDelay = Mathf.Max(0, InterFrameDelay);
+            if (float.IsNaN(MaxMultiStepWorkMilliseconds) ||
+                float.IsInfinity(MaxMultiStepWorkMilliseconds))
+            {
+                MaxMultiStepWorkMilliseconds = 2f;
+            }
+            MaxMultiStepWorkMilliseconds = Mathf.Max(0f, MaxMultiStepWorkMilliseconds);
             garbageCollectionRate = Mathf.Clamp(garbageCollectionRate, 0, 128);
             ScaleGPUMemoryCutoffMB = Mathf.Max(0f, ScaleGPUMemoryCutoffMB);
             ScaleSystemMemoryCutoffMB = Mathf.Max(0f, ScaleSystemMemoryCutoffMB);
@@ -173,6 +182,7 @@ namespace UMA
             generator.InitialScaleFactor = InitialScaleFactor;
             generator.IterationCount = IterationCount;
             generator.InterFrameDelay = InterFrameDelay;
+            generator.MaxMultiStepWorkMilliseconds = MaxMultiStepWorkMilliseconds;
             generator.collectGarbage = collectGarbage;
             generator.garbageCollectionRate = garbageCollectionRate;
             generator.processAllPending = processAllPending;
@@ -240,6 +250,7 @@ namespace UMA
             private int initialScaleFactor;
             private int iterationCount;
             private int interFrameDelay;
+            private float maxMultiStepWorkMilliseconds;
             private bool collectGarbage;
             private int garbageCollectionRate;
             private bool processAllPending;
@@ -275,6 +286,7 @@ namespace UMA
                     initialScaleFactor = generator.InitialScaleFactor,
                     iterationCount = generator.IterationCount,
                     interFrameDelay = generator.InterFrameDelay,
+                    maxMultiStepWorkMilliseconds = generator.MaxMultiStepWorkMilliseconds,
                     collectGarbage = generator.collectGarbage,
                     garbageCollectionRate = generator.garbageCollectionRate,
                     processAllPending = generator.processAllPending,
@@ -310,6 +322,7 @@ namespace UMA
                 generator.InitialScaleFactor = initialScaleFactor;
                 generator.IterationCount = iterationCount;
                 generator.InterFrameDelay = interFrameDelay;
+                generator.MaxMultiStepWorkMilliseconds = maxMultiStepWorkMilliseconds;
                 generator.collectGarbage = collectGarbage;
                 generator.garbageCollectionRate = garbageCollectionRate;
                 generator.processAllPending = processAllPending;

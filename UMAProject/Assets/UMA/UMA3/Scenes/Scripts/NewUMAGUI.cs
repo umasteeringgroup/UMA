@@ -923,7 +923,21 @@ namespace UMA
                 _timingCoroutine = StartCoroutine(TimeBuildCoroutine(typeof(UMAJobifiedMeshCombiner)));
             }
 
-            // Button 2: Default Bone Baking Combiner
+            // Button 2: Incremental Combiner
+            startY += buttonHeight + spacing;
+            if (GUI.Button(new Rect(startX, startY, buttonWidth, buttonHeight), "10xTime/Incremental"))
+            {
+                iterations = 10; // Reset iterations for each test
+                _timingCoroutine = StartCoroutine(TimeBuildCoroutine(typeof(UMAIncrementalMeshCombiner)));
+            }
+
+            if (GUI.Button(new Rect(startX + buttonWidth + spacing, startY, buttonWidth, buttonHeight), "1xTime/Incremental"))
+            {
+                iterations = 1; // Reset iterations for each test
+                _timingCoroutine = StartCoroutine(TimeBuildCoroutine(typeof(UMAIncrementalMeshCombiner)));
+            }
+
+            // Button 3: Default Bone Baking Combiner
             startY += buttonHeight + spacing;
             if (GUI.Button(new Rect(startX, startY, buttonWidth, buttonHeight), "10xTime/Default Bone Baking"))
             {
@@ -937,7 +951,7 @@ namespace UMA
                 _timingCoroutine = StartCoroutine(TimeBuildCoroutine(typeof(UMADefaultBoneBakingMeshCombiner)));
             }
 
-            // Button 3: Legacy Bone Baking Combiner
+            // Button 4: Legacy Bone Baking Combiner
             startY += buttonHeight + spacing;
             if (GUI.Button(new Rect(startX, startY, buttonWidth, buttonHeight), "10xTime/Legacy Bone Baking"))
             {
@@ -951,7 +965,7 @@ namespace UMA
                 _timingCoroutine = StartCoroutine(TimeBuildCoroutine(typeof(UMABoneBakingMeshCombiner)));
             }
 
-            // Button 4: Default Combiner
+            // Button 5: Default Combiner
             startY += buttonHeight + spacing;
             if (GUI.Button(new Rect(startX, startY, buttonWidth, buttonHeight), "10xTime/Default Combiner"))
             {
@@ -1055,11 +1069,35 @@ namespace UMA
 #if !USE_BUILD_CHARACTER
                 ConfigureTimingBlendShapes(bakeAllBlendShapes);
                 float startTime = Time.realtimeSinceStartup;
-                avatar.Dirty(true,false,true);
-                generator.GenerateSingleUMA(avatar,false);
-                float elapsed = Time.realtimeSinceStartup - startTime;
-                totalTime += elapsed;
-                ++completedBuilds;
+                if (combiner is IUMAMultiStepMeshCombiner)
+                {
+                    // The incremental workflow must run through the
+                    // generator queue so its configured frame budget is part
+                    // of the timing result.
+                    _timingBuildComplete = false;
+                    avatar.BuildCharacter(true);
+                    yield return WaitForTimedBuildCompletion();
+                    if (_timingBuildComplete)
+                    {
+                        totalTime +=
+                            Time.realtimeSinceStartup - startTime;
+                        completedBuilds++;
+                    }
+                    else
+                    {
+                        timingError =
+                            $"ERROR: Timed build timed out at iteration {i + 1}.";
+                        break;
+                    }
+                }
+                else
+                {
+                    avatar.Dirty(true,false,true);
+                    generator.GenerateSingleUMA(avatar,false);
+                    totalTime +=
+                        Time.realtimeSinceStartup - startTime;
+                    ++completedBuilds;
+                }
 #else                
                 ConfigureTimingBlendShapes(bakeAllBlendShapes);
                 _timingBuildComplete = false;

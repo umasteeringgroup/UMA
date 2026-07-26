@@ -3,6 +3,7 @@ using UnityEditor;
 using UnityEngine.SceneManagement;
 using UMA.CharacterSystem;
 using System.Timers;
+using System.Collections.Generic;
 
 namespace UMA.Editors
 {
@@ -14,6 +15,7 @@ namespace UMA.Editors
 		SerializedProperty InitialScaleFactor;
 		SerializedProperty IterationCount;
 		SerializedProperty InterFrameDelay;
+		SerializedProperty MaxMultiStepWorkMilliseconds;
 		SerializedProperty garbageCollectionRate;
 		SerializedProperty processAllPending;
 		SerializedProperty applyInline;
@@ -30,6 +32,12 @@ namespace UMA.Editors
 		SerializedProperty AutomaticScaling;
 		SerializedProperty ScaleGPUMemoryCutoffMB;
 		SerializedProperty ScaleSystemMemoryCutoffMB;
+		private readonly List<UMAGeneratorBuiltin.MultiStepBudgetOverrunStatistic>
+			multiStepBudgetOverrunStatistics =
+				new List<UMAGeneratorBuiltin.MultiStepBudgetOverrunStatistic>();
+		private readonly List<UMAGeneratorBuiltin.MultiStepAtomicStepStatistic>
+			multiStepAtomicStepStatistics =
+				new List<UMAGeneratorBuiltin.MultiStepAtomicStepStatistic>();
 
         public static bool showGenerationSettings = false;
 		public static bool showAdvancedSettings = false;
@@ -99,6 +107,7 @@ namespace UMA.Editors
 			InitialScaleFactor = serializedObject.FindProperty("InitialScaleFactor");
 			IterationCount = serializedObject.FindProperty("IterationCount");
 			InterFrameDelay = serializedObject.FindProperty("InterFrameDelay");
+			MaxMultiStepWorkMilliseconds = serializedObject.FindProperty("MaxMultiStepWorkMilliseconds");
 			processAllPending = serializedObject.FindProperty("processAllPending");
 			applyInline = serializedObject.FindProperty("applyInline");
 			garbageCollectionRate = serializedObject.FindProperty("garbageCollectionRate");
@@ -134,6 +143,25 @@ namespace UMA.Editors
 			}
 		}
 
+		private static string FormatStopwatchMilliseconds(long ticks)
+		{
+			return string.Format(
+				"{0:F3} ms",
+				UMATime.StopwatchTicksToMilliseconds(ticks));
+		}
+
+		private static string FormatAtomicStep(
+			string stepName,
+			float milliseconds)
+		{
+			return string.IsNullOrEmpty(stepName)
+				? string.Format("{0:F3} ms", milliseconds)
+				: string.Format(
+					"{0}: {1:F3} ms",
+					stepName,
+					milliseconds);
+		}
+
 		public override void OnInspectorGUI()
 		{
 			if (IsEditorBusy())
@@ -158,6 +186,7 @@ namespace UMA.Editors
 				DrawIfPresent(InitialScaleFactor);
 				DrawIfPresent(IterationCount);
 				DrawIfPresent(InterFrameDelay);
+				DrawIfPresent(MaxMultiStepWorkMilliseconds, "Max Multi-Step Work (ms)");
 				DrawIfPresent(collectGarbage);
 				DrawIfPresent(garbageCollectionRate);
 				DrawIfPresent(processAllPending);
@@ -211,23 +240,129 @@ namespace UMA.Editors
 				EditorGUILayout.LabelField("Generation Metrics", centeredLabel);
 				if (Application.isPlaying && generator != null)
 				{
-					EditorGUILayout.LabelField("Elapsed Time", string.Format("{0} ms", generator.ElapsedTicks / 10000));
-					EditorGUILayout.LabelField("Validation Time", string.Format("{0} ms", generator.validationTicks / 10000));
-					EditorGUILayout.LabelField("MeshProcessing Time", string.Format("{0} ms", generator.meshpreprocessTicks / 10000));
-					EditorGUILayout.LabelField("Begun Events Time", string.Format("{0} ms", generator.BegunEventsTicks / 10000));
-					EditorGUILayout.LabelField("preApply Time", string.Format("{0} ms", generator.preapplyTicks / 10000));
-					EditorGUILayout.LabelField("Texture Processing Time", string.Format("{0} ms", generator.textureprocessingTicks / 10000));
-					EditorGUILayout.LabelField("Mesh Updates Time", string.Format("{0} ms", generator.meshUpdatesTicks / 10000));
-					EditorGUILayout.LabelField("Skeleton Updates Time", string.Format("{0} ms", generator.skeletonUpdatesTicks / 10000));
-					EditorGUILayout.LabelField("Race Blendshapes Time", string.Format("{0} ms", generator.raceblendshapesTicks / 10000));
-					EditorGUILayout.LabelField("End Events Time", string.Format("{0} ms", generator.endEventsTicks / 10000));
+					EditorGUILayout.LabelField("Generator Work Time", FormatStopwatchMilliseconds(generator.ElapsedTicks));
+					EditorGUILayout.LabelField("Validation Time", FormatStopwatchMilliseconds(generator.validationTicks));
+					EditorGUILayout.LabelField("Mesh Processing Time", FormatStopwatchMilliseconds(generator.meshpreprocessTicks));
+					EditorGUILayout.LabelField("Begun Events Time", FormatStopwatchMilliseconds(generator.BegunEventsTicks));
+					EditorGUILayout.LabelField("Pre Apply Time", FormatStopwatchMilliseconds(generator.preapplyTicks));
+					EditorGUILayout.LabelField("Texture Processing Time", FormatStopwatchMilliseconds(generator.textureprocessingTicks));
+					EditorGUILayout.LabelField("Successful Mesh Work Time", FormatStopwatchMilliseconds(generator.meshUpdatesTicks));
+					EditorGUILayout.LabelField("Skeleton Updates Time", FormatStopwatchMilliseconds(generator.skeletonUpdatesTicks));
+					EditorGUILayout.LabelField("Race Blendshapes Time", FormatStopwatchMilliseconds(generator.raceblendshapesTicks));
+					EditorGUILayout.LabelField("End Events Time", FormatStopwatchMilliseconds(generator.endEventsTicks));
 					EditorGUILayout.LabelField("Average Mesh Time", string.Format("{0:F4} ms", generator.averageMeshUpdatesTime));
 					EditorGUILayout.LabelField("Average Texture Time", string.Format("{0:F4} ms", generator.averageTextureProcessingTime));
 					EditorGUILayout.LabelField("Average Skeleton Time", string.Format("{0:F4} ms", generator.averageSkeletonUpdatesTime));
+
+					EditorGUILayout.Space(10);
+					EditorGUILayout.LabelField("Incremental Compiler Metrics", centeredLabel);
+					EditorGUILayout.LabelField("Active Stage",
+						string.IsNullOrEmpty(generator.ActiveMultiStepStage)
+							? "Idle"
+							: generator.ActiveMultiStepStage);
+					EditorGUILayout.LabelField(
+						"Active Progress",
+						string.Format("{0:P1}", generator.ActiveMultiStepProgress));
+					EditorGUILayout.LabelField(
+						"Last Atomic Step",
+						FormatAtomicStep(
+							generator.lastMultiStepAtomicStepName,
+							generator.lastMultiStepAtomicStepMilliseconds));
+					EditorGUILayout.LabelField(
+						"Longest Atomic Step",
+						FormatAtomicStep(
+							generator.maximumMultiStepAtomicStepName,
+							generator.maximumMultiStepAtomicStepMilliseconds));
+					generator.GetMultiStepAtomicStepStatistics(
+						multiStepAtomicStepStatistics);
+					if (multiStepAtomicStepStatistics.Count > 0)
+					{
+						EditorGUILayout.LabelField(
+							"Step and Phase Times",
+							EditorStyles.miniBoldLabel);
+						EditorGUI.indentLevel++;
+						foreach (UMAGeneratorBuiltin.MultiStepAtomicStepStatistic
+								 statistic in multiStepAtomicStepStatistics)
+						{
+							EditorGUILayout.LabelField(
+								statistic.StepName,
+								string.Format(
+									"{0}  |  avg {1:F3} ms  |  max {2:F3} ms  |  total {3:F3} ms",
+									statistic.Count,
+									statistic.AverageMilliseconds,
+									statistic.MaximumMilliseconds,
+									statistic.TotalMilliseconds));
+						}
+						EditorGUI.indentLevel--;
+					}
+					EditorGUILayout.LabelField(
+						"Last Generation Latency",
+						FormatStopwatchMilliseconds(generator.lastMultiStepGenerationLatencyTicks));
+					EditorGUILayout.LabelField(
+						"Maximum Generation Latency",
+						FormatStopwatchMilliseconds(generator.maximumMultiStepGenerationLatencyTicks));
+					EditorGUILayout.LabelField(
+						"Discarded Mesh Work",
+						FormatStopwatchMilliseconds(generator.multiStepDiscardedMeshTicks));
+					EditorGUILayout.LabelField(
+						"Budget Overruns",
+						generator.multiStepBudgetOverrunCount.ToString());
+					if (generator.multiStepBudgetOverrunCount > 0)
+					{
+						EditorGUILayout.LabelField(
+							"Last Budget Overrun",
+							string.Format(
+								"{0}: {1:F3} ms (+{2:F3} ms)",
+								generator.lastMultiStepBudgetOverrunStepName,
+								generator.lastMultiStepBudgetOverrunStepMilliseconds,
+								generator.lastMultiStepBudgetOverrunAmountMilliseconds));
+						generator.GetMultiStepBudgetOverrunStatistics(
+							multiStepBudgetOverrunStatistics);
+						EditorGUILayout.LabelField(
+							"Budget Overrun Steps",
+							EditorStyles.miniBoldLabel);
+						EditorGUI.indentLevel++;
+						foreach (UMAGeneratorBuiltin.MultiStepBudgetOverrunStatistic
+								 statistic in multiStepBudgetOverrunStatistics)
+						{
+							EditorGUILayout.LabelField(
+								statistic.StepName,
+								string.Format(
+									"{0}  |  max {1:F3} ms  |  max +{2:F3} ms",
+									statistic.Count,
+									statistic.MaximumStepMilliseconds,
+									statistic.MaximumOverrunMilliseconds));
+						}
+						EditorGUI.indentLevel--;
+					}
+					EditorGUILayout.LabelField(
+						"Async Waits",
+						generator.multiStepWaitingForAsyncCount.ToString());
+					EditorGUILayout.LabelField(
+						"Restarts",
+						generator.multiStepRestartCount.ToString());
+					EditorGUILayout.LabelField(
+						"Cancellations",
+						generator.multiStepCancellationCount.ToString());
+					EditorGUILayout.LabelField(
+						"Failures",
+						generator.multiStepFailureCount.ToString());
+					EditorGUILayout.LabelField(
+						"Source Validation Cache Hits",
+						SkinnedMeshCombinerMeshAPI
+							.SourceValidationCacheHits.ToString());
+					EditorGUILayout.LabelField(
+						"Source Validation Cache Misses",
+						SkinnedMeshCombinerMeshAPI
+							.SourceValidationCacheMisses.ToString());
+					EditorGUILayout.LabelField(
+						"Source Validation Cache Bypasses",
+						SkinnedMeshCombinerMeshAPI
+							.SourceValidationCacheBypasses.ToString());
 				}
 				else
 				{
-					EditorGUILayout.LabelField("Elapsed Time", "N/A");
+					EditorGUILayout.LabelField("Generator Work Time", "N/A");
 				}
 				
 
@@ -259,24 +394,22 @@ namespace UMA.Editors
 					EditorGUILayout.LabelField("Applied Cleanup", string.Format("{0}", RenderTexToCPU.renderTexturesCleanedApplied));
 					EditorGUILayout.LabelField("Not Applied Cleanup", string.Format("{0}", RenderTexToCPU.renderTexturesCleanedMissed));
 					EditorGUILayout.LabelField("Total Cleanup", string.Format("{0}", RenderTexToCPU.renderTexturesCleanedUMAData + RenderTexToCPU.renderTexturesCleanedApplied + RenderTexToCPU.renderTexturesCleanedMissed));
-					if (GUILayout.Button("Reset editor statistics") && generator != null)
-					{
-						generator.ElapsedTicks = 0;
-						generator.DnaChanged = 0;
-						generator.TextureChanged = 0;
-						generator.SlotsChanged = 0;
-						generator.TexturesProcessed = 0;
-						RenderTexToCPU.copiesEnqueued = 0;
-						RenderTexToCPU.copiesDequeued = 0;
-						RenderTexToCPU.unableToQueue = 0;
-						RenderTexToCPU.misseduploads = 0;
-						RenderTexToCPU.errorUploads = 0;
-						RenderTexToCPU.texturesUploaded = 0;
-						RenderTexToCPU.renderTexturesCleanedUMAData = 0;
-						RenderTexToCPU.renderTexturesCleanedApplied = 0;
-						RenderTexToCPU.renderTexturesCleanedMissed = 0;
-					}
                 }
+
+				if (GUILayout.Button("Reset editor statistics") && generator != null)
+				{
+					generator.ResetStatistics();
+					RenderTexToCPU.copiesEnqueued = 0;
+					RenderTexToCPU.copiesDequeued = 0;
+					RenderTexToCPU.unableToQueue = 0;
+					RenderTexToCPU.misseduploads = 0;
+					RenderTexToCPU.errorUploads = 0;
+					RenderTexToCPU.texturesUploaded = 0;
+					RenderTexToCPU.renderTexturesCleanedUMAData = 0;
+					RenderTexToCPU.renderTexturesCleanedApplied = 0;
+					RenderTexToCPU.renderTexturesCleanedMissed = 0;
+				}
+
                 SerializedProperty umaDatasGenerated = serializedObject.FindProperty("umaDatasGenerated");
 
                 if (umaDatasGenerated != null)

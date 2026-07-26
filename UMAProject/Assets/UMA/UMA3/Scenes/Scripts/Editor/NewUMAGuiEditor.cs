@@ -295,7 +295,7 @@ namespace UMA.EditorTools
                 if (_showTimingButtonsProp.boolValue)
                 {
                     EditorGUILayout.HelpBox(
-                        "When enabled, four IMGUI button rows appear in the Game View " +
+                        "When enabled, five IMGUI button rows appear in the Game View " +
                         "allowing you to time builds with each mesh combiner. Blendshapes are all loaded " +
                         "when baking is unchecked, or all baked at weight 0.5 when checked. " +
                         "Designed for testing in game builds.",

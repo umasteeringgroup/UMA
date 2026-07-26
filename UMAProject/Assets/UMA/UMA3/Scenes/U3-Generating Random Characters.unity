@@ -132,6 +132,7 @@ GameObject:
   - component: {fileID: 84395075}
   - component: {fileID: 84395074}
   - component: {fileID: 84395078}
+  - component: {fileID: 84395079}
   m_Layer: 0
   m_Name: GeneratorParms
   m_TagString: Untagged
@@ -249,14 +250,15 @@ MonoBehaviour:
   AtlasOverflowFitMethod: 1
   FitPercentageDecrease: 0.9
   convertMipMaps: 0
-  atlasResolution: 1024
-  convertRenderTexture: 1
+  atlasResolution: 512
+  convertRenderTexture: 0
   useAsyncConversion: 0
-  asyncMipRegen: 1
+  asyncMipRegen: 0
   MaxQueuedConversionsPerFrame: 8
   InitialScaleFactor: 1
   IterationCount: 1
   InterFrameDelay: 0
+  MaxMultiStepWorkMilliseconds: 2
   collectGarbage: 1
   garbageCollectionRate: 0
   processAllPending: 0
@@ -274,6 +276,31 @@ MonoBehaviour:
   Use32BitBuffers: 1
   textureMerge: {fileID: 0}
   meshCombiner: {fileID: 0}
+--- !u!114 &84395079
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 84395073}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f1fd4e912a34650bf32829d529ec1da, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UMA_Core::UMA.UMAGeneratorRuntimeStatistics
+  Generator: {fileID: 0}
+  CrowdGenerator: {fileID: 0}
+  LegacyCrowdGenerator: {fileID: 0}
+  ShowRuntimeControls: 1
+  AutoSaveWhenGeneratorBecomesIdle: 1
+  AutoSaveIdleFrameDelay: 2
+  FileNamePrefix: UMA-Crowd-Generator-Statistics
+  RuntimeControlsRect:
+    serializedVersion: 2
+    x: 10
+    y: 10
+    width: 520
+    height: 235
 --- !u!1001 &102816001
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -288,11 +315,11 @@ PrefabInstance:
       objectReference: {fileID: 153068, guid: 07f355e97c3d63d43aca902b562409f4, type: 3}
     - target: {fileID: 2885161576314354680, guid: 11b6342601a487e45a8ca8ed561a9b7a, type: 3}
       propertyPath: GridXSize
-      value: 7
+      value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 2885161576314354680, guid: 11b6342601a487e45a8ca8ed561a9b7a, type: 3}
       propertyPath: GridZSize
-      value: 8
+      value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 2885161576314354680, guid: 11b6342601a487e45a8ca8ed561a9b7a, type: 3}
       propertyPath: GridDistance
@@ -696,10 +723,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UMA.Examples.UMAMouseOrbitImproved
   mouseButtonToUse: 1
-  target: {fileID: 0}
-  distance: 0
-  xSpeed: 120
-  ySpeed: 120
+  target: {fileID: 587163907}
+  distance: 8
+  xSpeed: 80
+  ySpeed: 80
   scrollrate: 3
   yMinLimit: -20
   yMaxLimit: 80

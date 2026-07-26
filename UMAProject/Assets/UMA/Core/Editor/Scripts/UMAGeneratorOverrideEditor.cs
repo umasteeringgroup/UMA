@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
@@ -68,6 +69,7 @@ namespace UMA.Editors
                 Draw("InitialScaleFactor");
                 Draw("IterationCount");
                 Draw("InterFrameDelay");
+                Draw("MaxMultiStepWorkMilliseconds", "Max Multi-Step Work (ms)");
                 Draw("collectGarbage");
                 Draw("garbageCollectionRate");
                 Draw("processAllPending");
@@ -117,10 +119,153 @@ namespace UMA.Editors
                 Draw("Use32BitBuffers");
                 Draw("showInHierarchy");
                 Draw("textureMerge");
-                Draw("meshCombiner");
+                DrawMeshCombinerPicker();
             }
 
             serializedObject.ApplyModifiedProperties();
+        }
+
+        private void DrawMeshCombinerPicker()
+        {
+            SerializedProperty property =
+                serializedObject.FindProperty("meshCombiner");
+            if (property == null)
+            {
+                return;
+            }
+
+            if (serializedObject.isEditingMultipleObjects ||
+                property.hasMultipleDifferentValues)
+            {
+                EditorGUILayout.PropertyField(
+                    property,
+                    new GUIContent("Mesh Combiner"));
+                return;
+            }
+
+            UMAGeneratorOverride generatorOverride =
+                target as UMAGeneratorOverride;
+            UMAMeshCombiner[] attachedCombiners =
+                GetAttachedMeshCombiners(generatorOverride);
+
+            if (attachedCombiners.Length == 0)
+            {
+                EditorGUILayout.PropertyField(
+                    property,
+                    new GUIContent("Mesh Combiner"));
+                EditorGUILayout.HelpBox(
+                    "Attach one or more UMAMeshCombiner components to this GameObject " +
+                    "to select them here.",
+                    MessageType.Info);
+                return;
+            }
+
+            var choices = new List<UMAMeshCombiner>();
+            var labels = new List<GUIContent>();
+
+            choices.Add(null);
+            labels.Add(
+                new GUIContent(
+                    "None (Keep Generator's Current)",
+                    "Do not override the generator's current Mesh Combiner."));
+
+            UMAMeshCombiner current =
+                property.objectReferenceValue as UMAMeshCombiner;
+            bool currentIsAttached = false;
+            for (int i = 0; i < attachedCombiners.Length; i++)
+            {
+                if (attachedCombiners[i] == current)
+                {
+                    currentIsAttached = true;
+                    break;
+                }
+            }
+
+            // Preserve and display an existing external assignment until the user
+            // deliberately chooses an attached component or None.
+            if (current != null && !currentIsAttached)
+            {
+                choices.Add(current);
+                labels.Add(
+                    new GUIContent(
+                        "External: " + GetCombinerLabel(current),
+                        "This Mesh Combiner is not attached to the current GameObject."));
+            }
+
+            for (int i = 0; i < attachedCombiners.Length; i++)
+            {
+                UMAMeshCombiner combiner = attachedCombiners[i];
+                choices.Add(combiner);
+                labels.Add(
+                    new GUIContent(
+                        GetCombinerLabel(combiner, attachedCombiners, i),
+                        "Use this attached Mesh Combiner for the generator override."));
+            }
+
+            int selectedIndex = choices.IndexOf(current);
+            if (selectedIndex < 0)
+            {
+                selectedIndex = 0;
+            }
+
+            EditorGUI.BeginChangeCheck();
+            selectedIndex = EditorGUILayout.Popup(
+                new GUIContent(
+                    "Mesh Combiner",
+                    "Select a Mesh Combiner attached to this GameObject."),
+                selectedIndex,
+                labels.ToArray());
+            if (EditorGUI.EndChangeCheck())
+            {
+                property.objectReferenceValue = choices[selectedIndex];
+            }
+        }
+
+        internal static UMAMeshCombiner[] GetAttachedMeshCombiners(
+            UMAGeneratorOverride generatorOverride)
+        {
+            return generatorOverride != null
+                ? generatorOverride.GetComponents<UMAMeshCombiner>()
+                : new UMAMeshCombiner[0];
+        }
+
+        private static string GetCombinerLabel(UMAMeshCombiner combiner)
+        {
+            return combiner == null
+                ? "Missing Mesh Combiner"
+                : ObjectNames.NicifyVariableName(combiner.GetType().Name);
+        }
+
+        private static string GetCombinerLabel(
+            UMAMeshCombiner combiner,
+            UMAMeshCombiner[] attachedCombiners,
+            int combinerIndex)
+        {
+            string label = GetCombinerLabel(combiner);
+            int duplicateNumber = 1;
+            bool hasDuplicate = false;
+
+            for (int i = 0; i < attachedCombiners.Length; i++)
+            {
+                if (attachedCombiners[i] == null ||
+                    attachedCombiners[i].GetType() != combiner.GetType())
+                {
+                    continue;
+                }
+
+                if (i < combinerIndex)
+                {
+                    duplicateNumber++;
+                }
+                else if (i > combinerIndex)
+                {
+                    hasDuplicate = true;
+                }
+            }
+
+            return hasDuplicate || duplicateNumber > 1
+                ? label + " (" + duplicateNumber + ")"
+                : label;
         }
 
         private void Draw(string propertyName, string explicitLabel = null)

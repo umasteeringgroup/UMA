@@ -132,6 +132,22 @@ namespace UMA
         public abstract void removeUMA(UMAData umaToRemove);
 
         /// <summary>
+        /// Removes UMAData from the update queue and notifies the generator
+        /// when the UMAData is being destroyed. Generators without staged
+        /// work retain the standard removal behavior.
+        /// </summary>
+        /// <param name="umaToRemove">UMA data to remove.</param>
+        /// <param name="isBeingDestroyed">
+        /// True when removal is part of UMAData destruction.
+        /// </param>
+        public virtual void removeUMA(
+            UMAData umaToRemove,
+            bool isBeingDestroyed)
+        {
+            removeUMA(umaToRemove);
+        }
+
+        /// <summary>
         /// Adds the dirty UMA to the update queue.
         /// </summary>
         /// <param name="umaToAdd">UMA data to add.</param>

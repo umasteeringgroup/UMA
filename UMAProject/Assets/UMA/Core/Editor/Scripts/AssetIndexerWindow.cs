@@ -1543,7 +1543,7 @@ namespace UMA.Controls
                 }
                 if (!found)
                 {
-                    Debug.Log("Updating item: " + ai._Name);
+                   // Debug.Log("Updating item: " + ai._Name);
                     uwr.MeshHideAssets.Add(AddedMHA);
                     EditorUtility.SetDirty(uwr);
 #if (UNITY_2020_3 && UNITY_2020_3_16_OR_NEWER) || UNITY_2021_1_17_OR_NEWER
@@ -3893,7 +3893,7 @@ namespace UMA.Controls
                 SlotDataAsset slot = slotItem.Item as SlotDataAsset;
                 if (slot != null)
                 {
-                    Debug.Log($"Restoring converted slot {slot.slotName}");
+                    //Debug.Log($"Restoring converted slot {slot.slotName}");
                     this.RestoreSlot(slot);
                     EditorUtility.SetDirty(slot);
                     AssetDatabase.SaveAssetIfDirty(slot);
@@ -3924,7 +3924,7 @@ namespace UMA.Controls
                     {
                         slot.ConvertBonePosesFromLegacy(poseConverter, raceData, x, y, z, postRotate);
                     }
-                    Debug.Log("Updating converted slot");
+                    //Debug.Log("Updating converted slot");
                     EditorUtility.SetDirty(slot);
                     AssetDatabase.SaveAssetIfDirty(slot);
                     UMAUpdateProcessor.UpdateSlot(slot, false);

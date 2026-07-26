@@ -50,7 +50,7 @@ The supplied generator is the safest starting point for a project-specific confi
 
 ### Locate or create the prefab
 
-1. Locate the supplied generator prefab. In this project it is `Assets/UMA/UMA3/Getting Started/UMA_GLIB.prefab`.
+1. Locate the supplied generator prefab. In this project it is `Assets/UMA/Core/Defaults/UMA_GLIB.prefab`.
 2. Duplicate the prefab into a project-owned folder, such as `Assets/Project/UMA/Runtime`.
 3. Give the duplicate a platform or quality-oriented name, such as `UMA_Generator_Mobile` or `UMA_Generator_Desktop`.
 4. Open the duplicate in Prefab Mode.
@@ -416,6 +416,13 @@ This selects the component that assembles slot geometry.
 - **Default Bone Baking:** spends more time at generation to reduce the runtime skeleton and skinning cost; useful for crowds and known animation-bone sets.
 
 For mobile crowds, Bone Baking can reduce steady-state GPU and Transform cost. For customizable player characters, Jobified is usually the first configuration to test. Use Default as a compatibility and debugging baseline.
+
+The opt-in **UMA Incremental Mesh Combiner** is intended for avatars whose mesh
+generation or blendshape loading causes visible frame spikes. It advances one
+staged mesh over multiple generator updates using the generator's **Max
+Multi-Step Work (ms)** soft budget. See
+[IncrementalMeshCombiner.md](IncrementalMeshCombiner.md) for setup, profiling,
+blendshape stress testing, and rollout guidance.
 
 ## Texture Merging, Reuse, and Caching
 

@@ -177,6 +177,91 @@ namespace UMA.Editors.Tests
         [Test]
         [Category("UMA")]
         [Category("MeshCombiner")]
+        public void SuccessfulImmutableSourceValidationIsCachedAndInvalidated()
+        {
+            UMAMeshData meshData = CreateValidValidationMeshData();
+            MethodInfo validateCachedMethod =
+                typeof(SkinnedMeshCombinerMeshAPI).GetMethod(
+                    "ValidateImmutableSourceMeshCached",
+                    BindingFlags.Static | BindingFlags.NonPublic);
+            Assert.NotNull(validateCachedMethod);
+
+            try
+            {
+                SkinnedMeshCombinerMeshAPI
+                    .ClearSourceValidationCache();
+
+                Assert.DoesNotThrow(
+                    () => validateCachedMethod.Invoke(
+                        null,
+                        new object[] { meshData, "cached source" }));
+                Assert.AreEqual(
+                    1,
+                    SkinnedMeshCombinerMeshAPI
+                        .SourceValidationCacheMisses);
+                Assert.AreEqual(
+                    0,
+                    SkinnedMeshCombinerMeshAPI
+                        .SourceValidationCacheHits);
+
+                Assert.DoesNotThrow(
+                    () => validateCachedMethod.Invoke(
+                        null,
+                        new object[] { meshData, "cached source" }));
+                Assert.AreEqual(
+                    1,
+                    SkinnedMeshCombinerMeshAPI
+                        .SourceValidationCacheMisses);
+                Assert.AreEqual(
+                    1,
+                    SkinnedMeshCombinerMeshAPI
+                        .SourceValidationCacheHits);
+
+                meshData.normals =
+                    new[] { Vector3.forward, Vector3.forward };
+                TargetInvocationException invalidException =
+                    Assert.Throws<TargetInvocationException>(
+                        () => validateCachedMethod.Invoke(
+                            null,
+                            new object[]
+                            {
+                                meshData,
+                                "changed source"
+                            }));
+                StringAssert.Contains(
+                    "normals entries",
+                    invalidException.InnerException?.Message);
+
+                meshData.normals = null;
+                Assert.DoesNotThrow(
+                    () => validateCachedMethod.Invoke(
+                        null,
+                        new object[] { meshData, "repaired source" }));
+                Assert.DoesNotThrow(
+                    () => validateCachedMethod.Invoke(
+                        null,
+                        new object[] { meshData, "repaired source" }));
+                Assert.AreEqual(
+                    3,
+                    SkinnedMeshCombinerMeshAPI
+                        .SourceValidationCacheMisses);
+                Assert.AreEqual(
+                    2,
+                    SkinnedMeshCombinerMeshAPI
+                        .SourceValidationCacheHits);
+            }
+            finally
+            {
+                meshData.submeshes?[0]
+                    ?.DisposeNativeTriangles(true);
+                SkinnedMeshCombinerMeshAPI
+                    .ClearSourceValidationCache();
+            }
+        }
+
+        [Test]
+        [Category("UMA")]
+        [Category("MeshCombiner")]
         public void IndexRangeValidationCannotSpillIntoAnotherSubmesh()
         {
             var validateMethod = typeof(SkinnedMeshCombinerMeshAPI).GetMethod("ValidateIndexDestinationRange", BindingFlags.Static | BindingFlags.NonPublic);
@@ -274,11 +359,13 @@ namespace UMA.Editors.Tests
         [Category("MeshCombiner")]
         public void MeshDataCombinePreservesEveryVertexAndIndexChannel()
         {
-            var gameObject = new GameObject("MeshData channel contract test");
+            var gameObject = new GameObject("root");
             var asset = ScriptableObject.CreateInstance<SlotDataAsset>();
             Mesh outputMesh = null;
             try
             {
+                int rootHash =
+                    UMAUtils.StringToHash(gameObject.name);
                 asset.name = "ChannelContractSlot";
                 asset.subMeshIndex = 0;
                 asset.meshData = new UMAMeshData
@@ -306,8 +393,14 @@ namespace UMA.Editors.Tests
                     subMeshCount = 1,
                     submeshes = new[] { new SubMeshTriangles(new[] { 0, 1, 2 }) },
                     bindPoses = new[] { Matrix4x4.identity },
-                    boneNameHashes = new[] { 123 },
-                    umaBones = new[] { new UMATransform { hash = 123, name = "root" } },
+                    boneNameHashes = new[] { rootHash },
+                    umaBones = new[]
+                    {
+                        new UMATransform(
+                            gameObject.transform,
+                            rootHash,
+                            0)
+                    },
                     ManagedBonesPerVertex = new byte[] { 1, 1, 1 },
                     ManagedBoneWeights = new[]
                     {
@@ -330,8 +423,14 @@ namespace UMA.Editors.Tests
                 outputMesh.triangles = new[] { 0, 1, 2 };
                 outputMesh.AddBlendShapeFrame("StaleShape", 100f, new Vector3[3], new Vector3[3], new Vector3[3]);
                 renderer.sharedMesh = outputMesh;
+                renderer.rootBone = gameObject.transform;
+                renderer.bones =
+                    new[] { gameObject.transform };
                 var umaData = gameObject.AddComponent<UMAData>();
+                umaData.umaRoot = gameObject;
                 umaData.umaRecipe = new UMAData.UMARecipe();
+                umaData.skeleton =
+                    new UMASkeleton(gameObject.transform);
                 umaData.force32bit = true;
 
                 SkinnedMeshCombinerMeshAPI.CombineIntoRenderer(
@@ -407,13 +506,15 @@ namespace UMA.Editors.Tests
         [Category("MeshCombiner")]
         public void AtlasUVRemapWaitsForBoundsJobAndCompletes(int vertexCount)
         {
-            var gameObject = new GameObject("Atlas UV dependency test");
+            var gameObject = new GameObject("root");
             var asset = ScriptableObject.CreateInstance<SlotDataAsset>();
             var umaMaterial = ScriptableObject.CreateInstance<UMAMaterial>();
             Mesh outputMesh = null;
             bool previousParallelUV = SkinnedMeshCombinerMeshAPI.UseParallelUVRemap;
             try
             {
+                int rootHash =
+                    UMAUtils.StringToHash(gameObject.name);
                 var vertices = new Vector3[vertexCount];
                 var normals = new Vector3[vertexCount];
                 var uvs = new Vector2[vertexCount];
@@ -440,8 +541,14 @@ namespace UMA.Editors.Tests
                     subMeshCount = 1,
                     submeshes = new[] { new SubMeshTriangles(new[] { 0, 1, 2 }) },
                     bindPoses = new[] { Matrix4x4.identity },
-                    boneNameHashes = new[] { 123 },
-                    umaBones = new[] { new UMATransform { hash = 123, name = "root" } },
+                    boneNameHashes = new[] { rootHash },
+                    umaBones = new[]
+                    {
+                        new UMATransform(
+                            gameObject.transform,
+                            rootHash,
+                            0)
+                    },
                     ManagedBonesPerVertex = bonesPerVertex,
                     ManagedBoneWeights = boneWeights
                 };
@@ -454,8 +561,14 @@ namespace UMA.Editors.Tests
                     targetSubmeshIndices = new[] { 0 }
                 };
                 var renderer = gameObject.AddComponent<SkinnedMeshRenderer>();
+                renderer.rootBone = gameObject.transform;
+                renderer.bones =
+                    new[] { gameObject.transform };
                 var umaData = gameObject.AddComponent<UMAData>();
+                umaData.umaRoot = gameObject;
                 umaData.umaRecipe = new UMAData.UMARecipe();
+                umaData.skeleton =
+                    new UMASkeleton(gameObject.transform);
 
                 umaMaterial.materialType = UMAMaterial.MaterialType.Atlas;
                 var generatedMaterial = new UMAData.GeneratedMaterial
@@ -502,6 +615,404 @@ namespace UMA.Editors.Tests
                 UnityEngine.Object.DestroyImmediate(umaMaterial);
                 UnityEngine.Object.DestroyImmediate(asset);
                 UnityEngine.Object.DestroyImmediate(gameObject);
+            }
+        }
+
+        [Test]
+        [Category("UMA")]
+        [Category("MeshCombiner")]
+        public void LargeModifierStackIsCompactedAndRecalculatesSurfaceFrames()
+        {
+            var gameObject =
+                new GameObject("root");
+            var asset =
+                ScriptableObject.CreateInstance<SlotDataAsset>();
+            Mesh outputMesh = null;
+            bool previousParallelModifiers =
+                SkinnedMeshCombinerMeshAPI
+                    .UseParallelMeshModifiers;
+            try
+            {
+                int rootHash =
+                    UMAUtils.StringToHash("root");
+                asset.name = "LargeModifierStackSlot";
+                asset.subMeshIndex = 0;
+                asset.meshData = new UMAMeshData
+                {
+                    SlotName = asset.slotName,
+                    vertexCount = 4,
+                    vertices = new[]
+                    {
+                        new Vector3(0f, 0f, 0f),
+                        new Vector3(1f, 0f, 0f),
+                        new Vector3(0f, 1f, 0f),
+                        new Vector3(1f, 1f, 0f)
+                    },
+                    normals = new[]
+                    {
+                        Vector3.forward,
+                        Vector3.forward,
+                        Vector3.forward,
+                        Vector3.forward
+                    },
+                    tangents = new[]
+                    {
+                        new Vector4(1f, 0f, 0f, 1f),
+                        new Vector4(1f, 0f, 0f, 1f),
+                        new Vector4(1f, 0f, 0f, 1f),
+                        new Vector4(1f, 0f, 0f, 1f)
+                    },
+                    uv = new[]
+                    {
+                        new Vector2(0f, 0f),
+                        new Vector2(1f, 0f),
+                        new Vector2(0f, 1f),
+                        new Vector2(1f, 1f)
+                    },
+                    subMeshCount = 1,
+                    submeshes = new[]
+                    {
+                        new SubMeshTriangles(
+                            new[] { 0, 1, 2, 2, 1, 3 })
+                    },
+                    bindPoses = new[] { Matrix4x4.identity },
+                    boneNameHashes = new[] { rootHash },
+                    umaBones = new[]
+                    {
+                        new UMATransform
+                        {
+                            hash = rootHash,
+                            name = "root"
+                        }
+                    },
+                    ManagedBonesPerVertex =
+                        new byte[] { 1, 1, 1, 1 },
+                    ManagedBoneWeights = new[]
+                    {
+                        new BoneWeight1
+                        {
+                            boneIndex = 0,
+                            weight = 1f
+                        },
+                        new BoneWeight1
+                        {
+                            boneIndex = 0,
+                            weight = 1f
+                        },
+                        new BoneWeight1
+                        {
+                            boneIndex = 0,
+                            weight = 1f
+                        },
+                        new BoneWeight1
+                        {
+                            boneIndex = 0,
+                            weight = 1f
+                        }
+                    }
+                };
+
+                var slot = new SlotData(asset);
+                const int modifierCount = 64;
+                const int adjustmentsPerModifier = 64;
+                float deltaPerAdjustment =
+                    0.5f /
+                    (modifierCount *
+                     adjustmentsPerModifier);
+                for (int modifierIndex = 0;
+                     modifierIndex < modifierCount;
+                     modifierIndex++)
+                {
+                    var adjustments =
+                        new VertexDeltaAdjustmentCollection();
+                    for (int adjustmentIndex = 0;
+                         adjustmentIndex <
+                         adjustmentsPerModifier;
+                         adjustmentIndex++)
+                    {
+                        adjustments.vertexAdjustments.Add(
+                            new VertexDeltaAdjustment
+                            {
+                                vertexIndex = 0,
+                                weight = 1f,
+                                delta =
+                                    new Vector3(
+                                        0f,
+                                        0f,
+                                        deltaPerAdjustment)
+                            });
+                    }
+                    slot.meshModifiers.Add(
+                        new MeshModifier.Modifier
+                        {
+                            Scale = 1f,
+                            adjustments = adjustments
+                        });
+                }
+
+                var source =
+                    new SkinnedMeshCombiner.CombineInstance
+                    {
+                        meshData = asset.meshData,
+                        slotData = slot,
+                        targetSubmeshIndices =
+                            new[] { 0 },
+                        applyMeshModifiersInJobs = true
+                    };
+                var renderer =
+                    gameObject
+                        .AddComponent<SkinnedMeshRenderer>();
+                renderer.rootBone = gameObject.transform;
+                var umaData =
+                    gameObject.AddComponent<UMAData>();
+                umaData.umaRoot = gameObject;
+                umaData.umaRecipe =
+                    new UMAData.UMARecipe
+                    {
+                        slotDataList = new[] { slot }
+                    };
+                umaData.skeleton =
+                    new UMASkeleton(gameObject.transform);
+
+                SkinnedMeshCombinerMeshAPI
+                    .UseParallelMeshModifiers = true;
+                SkinnedMeshCombinerMeshAPI.CombineIntoRenderer(
+                    renderer,
+                    new[] { source },
+                    umaData,
+                    0,
+                    1024,
+                    new Dictionary<string, float>(),
+                    Quaternion.identity,
+                    false,
+                    false);
+
+                outputMesh = renderer.sharedMesh;
+                Assert.NotNull(outputMesh);
+                Vector3[] outputVertices =
+                    outputMesh.vertices;
+                Assert.That(
+                    outputVertices[0].z,
+                    Is.EqualTo(0.5f).Within(1e-5f));
+
+                Vector3 expectedNormal =
+                    new Vector3(0.5f, 0.5f, 1f)
+                        .normalized;
+                Vector3[] outputNormals =
+                    outputMesh.normals;
+                Assert.That(
+                    Vector3.Distance(
+                        outputNormals[0],
+                        expectedNormal),
+                    Is.LessThan(1e-5f));
+                Vector4 outputTangent =
+                    outputMesh.tangents[0];
+                Vector3 tangentDirection =
+                    new Vector3(
+                        outputTangent.x,
+                        outputTangent.y,
+                        outputTangent.z);
+                Assert.That(
+                    tangentDirection.magnitude,
+                    Is.EqualTo(1f).Within(1e-5f));
+                Assert.That(
+                    Mathf.Abs(
+                        Vector3.Dot(
+                            outputNormals[0],
+                            tangentDirection)),
+                    Is.LessThan(1e-5f));
+            }
+            finally
+            {
+                SkinnedMeshCombinerMeshAPI
+                    .UseParallelMeshModifiers =
+                    previousParallelModifiers;
+                asset.meshData?.submeshes?[0]
+                    ?.DisposeNativeTriangles(true);
+                if (outputMesh != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(
+                        outputMesh);
+                }
+                UnityEngine.Object.DestroyImmediate(asset);
+                UnityEngine.Object.DestroyImmediate(
+                    gameObject);
+            }
+        }
+
+        [Test]
+        [Category("UMA")]
+        [Category("MeshCombiner")]
+        public void PendingLargeModifierJobsDisposeAllNativeResources()
+        {
+            var gameObject = new GameObject("root");
+            var asset =
+                ScriptableObject.CreateInstance<SlotDataAsset>();
+            Mesh outputMesh = null;
+            SkinnedMeshCombinerMeshAPI.PendingCombine pending =
+                null;
+            try
+            {
+                int rootHash =
+                    UMAUtils.StringToHash("root");
+                asset.name = "PendingModifierCleanupSlot";
+                asset.subMeshIndex = 0;
+                asset.meshData = new UMAMeshData
+                {
+                    SlotName = asset.slotName,
+                    vertexCount = 3,
+                    vertices = new[]
+                    {
+                        Vector3.zero,
+                        Vector3.right,
+                        Vector3.up
+                    },
+                    normals = new[]
+                    {
+                        Vector3.forward,
+                        Vector3.forward,
+                        Vector3.forward
+                    },
+                    tangents = new[]
+                    {
+                        new Vector4(1f, 0f, 0f, 1f),
+                        new Vector4(1f, 0f, 0f, 1f),
+                        new Vector4(1f, 0f, 0f, 1f)
+                    },
+                    uv = new[]
+                    {
+                        Vector2.zero,
+                        Vector2.right,
+                        Vector2.up
+                    },
+                    subMeshCount = 1,
+                    submeshes = new[]
+                    {
+                        new SubMeshTriangles(
+                            new[] { 0, 1, 2 })
+                    },
+                    bindPoses = new[] { Matrix4x4.identity },
+                    boneNameHashes = new[] { rootHash },
+                    umaBones = new[]
+                    {
+                        new UMATransform
+                        {
+                            hash = rootHash,
+                            name = "root"
+                        }
+                    },
+                    ManagedBonesPerVertex =
+                        new byte[] { 1, 1, 1 },
+                    ManagedBoneWeights = new[]
+                    {
+                        new BoneWeight1
+                        {
+                            boneIndex = 0,
+                            weight = 1f
+                        },
+                        new BoneWeight1
+                        {
+                            boneIndex = 0,
+                            weight = 1f
+                        },
+                        new BoneWeight1
+                        {
+                            boneIndex = 0,
+                            weight = 1f
+                        }
+                    }
+                };
+
+                var slot = new SlotData(asset);
+                var adjustments =
+                    new VertexDeltaAdjustmentCollection();
+                for (int i = 0; i < 4096; i++)
+                {
+                    adjustments.vertexAdjustments.Add(
+                        new VertexDeltaAdjustment
+                        {
+                            vertexIndex = i % 3,
+                            weight = 1f,
+                            delta =
+                                new Vector3(
+                                    0f,
+                                    0f,
+                                    0.00001f)
+                        });
+                }
+                slot.meshModifiers.Add(
+                    new MeshModifier.Modifier
+                    {
+                        Scale = 1f,
+                        adjustments = adjustments
+                    });
+                var renderer =
+                    gameObject
+                        .AddComponent<SkinnedMeshRenderer>();
+                outputMesh =
+                    new Mesh
+                    {
+                        name =
+                            "Pending modifier cleanup mesh"
+                    };
+                renderer.sharedMesh = outputMesh;
+                renderer.rootBone = gameObject.transform;
+                var data = gameObject.AddComponent<UMAData>();
+                data.umaRoot = gameObject;
+                data.umaRecipe =
+                    new UMAData.UMARecipe
+                    {
+                        slotDataList = new[] { slot }
+                    };
+                data.skeleton =
+                    new UMASkeleton(gameObject.transform);
+
+                pending =
+                    SkinnedMeshCombinerMeshAPI
+                        .PrepareIncrementalCombine(
+                            new SkinnedMeshCombinerMeshAPI
+                                .RendererBatch
+                            {
+                                Renderer = renderer,
+                                Sources = new[]
+                                {
+                                    new SkinnedMeshCombiner
+                                        .CombineInstance
+                                    {
+                                        meshData =
+                                            asset.meshData,
+                                        slotData = slot,
+                                        targetSubmeshIndices =
+                                            new[] { 0 },
+                                        applyMeshModifiersInJobs =
+                                            true
+                                    }
+                                },
+                                CurrentRendererIndex = 0,
+                                AtlasResolution = 512
+                            },
+                            data,
+                            new Dictionary<string, float>(),
+                            false,
+                            false,
+                            Quaternion.identity);
+
+                Assert.DoesNotThrow(() => pending.Dispose());
+                pending = null;
+            }
+            finally
+            {
+                pending?.Dispose();
+                asset.meshData?.submeshes?[0]
+                    ?.DisposeNativeTriangles(true);
+                if (outputMesh != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(
+                        outputMesh);
+                }
+                UnityEngine.Object.DestroyImmediate(asset);
+                UnityEngine.Object.DestroyImmediate(
+                    gameObject);
             }
         }
 
@@ -556,6 +1067,42 @@ namespace UMA.Editors.Tests
             Assert.AreEqual(format, descriptor.format);
             Assert.AreEqual(dimension, descriptor.dimension);
             Assert.AreEqual(stream, descriptor.stream);
+        }
+
+        private static UMAMeshData CreateValidValidationMeshData()
+        {
+            const int rootHash = 1;
+            return new UMAMeshData
+            {
+                vertexCount = 1,
+                vertices = new[] { Vector3.zero },
+                subMeshCount = 1,
+                submeshes = new[]
+                {
+                    new SubMeshTriangles(
+                        new[] { 0, 0, 0 })
+                },
+                bindPoses = new[] { Matrix4x4.identity },
+                boneNameHashes = new[] { rootHash },
+                umaBones = new[]
+                {
+                    new UMATransform
+                    {
+                        hash = rootHash,
+                        name = "root"
+                    }
+                },
+                ManagedBonesPerVertex =
+                    new byte[] { 1 },
+                ManagedBoneWeights = new[]
+                {
+                    new BoneWeight1
+                    {
+                        boneIndex = 0,
+                        weight = 1f
+                    }
+                }
+            };
         }
     }
 }

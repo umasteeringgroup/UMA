@@ -24,7 +24,7 @@ internal class UmaConsolidateCurrentSceneAssetsWindow : EditorWindow
 			public bool Selected = true;
 		}
 
-		private const string DefaultDestinationFolder = "Assets/UMA/UMA3/Examples/ExampleAssets";
+		private const string DefaultDestinationFolder = "Assets/UMA/Examples/ExampleAssets";
        private const string DefaultSourceFolder = "Assets";
        private const string PrefsPrefix = "UMA.ConsolidateCurrentSceneAssets.";
 		private const string PrefsDestFolderPath = PrefsPrefix + "DestFolderPath";

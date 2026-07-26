@@ -215,11 +215,17 @@ namespace UMA.Examples
             TempTransform newTransform = new TempTransform();
             Vector3 tgt = GetTarget(dstTarget);
 
-			//if the target height is less than or equal to 0, it is building or downloading- in this case dont move the camera
-			if(tgt.y <= 0f)
-			{
-				return newTransform;
-			}
+            // A generated UMA can temporarily resolve to its root position
+            // while its skeleton is still being built or downloaded. Scene
+            // targets such as a crowd container are allowed to sit at ground
+            // level and should remain valid orbit targets.
+            Transform activeTarget = dstTarget != null ? dstTarget : target;
+            if (activeTarget != null &&
+                activeTarget.GetComponent<UMAData>() != null &&
+                tgt.y <= 0f)
+            {
+                return newTransform;
+            }
 
             CollectActiveTouches();
 

@@ -1246,7 +1246,7 @@ namespace UMA.Editors
 						MeshModifier mm = EditorGUIUtility.GetObjectPickerObject() as MeshModifier;
 						if (mm != null)
 						{
-							Debug.Log("Dropped Mesh Modifier");
+							//Debug.Log("Dropped Mesh Modifier");
 							AddMeshModifier(recipe, mm);
 						}
 					}

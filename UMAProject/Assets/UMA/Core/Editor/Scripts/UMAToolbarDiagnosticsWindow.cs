@@ -165,22 +165,67 @@ namespace UMA.Editors
         private static void DrawGeneratorSummary()
         {
             UMAGenerator generator = UMAToolbarActions.GetGenerator();
+            UMAGeneratorOverride generatorParms = generator == null
+                ? UMAToolbarActions.GetGeneratorParms()
+                : null;
             EditorGUILayout.LabelField("Generator", EditorStyles.boldLabel);
-            if (generator == null)
+            if (generator == null && generatorParms == null)
             {
-                EditorGUILayout.HelpBox("No generator is assigned in the UMA Global Library.", MessageType.Warning);
+                EditorGUILayout.HelpBox(
+                    "No scene UMAGenerator or GeneratorParms object was found.",
+                    MessageType.Warning);
                 return;
             }
 
             using (new EditorGUI.DisabledScope(true))
             {
-                EditorGUILayout.ObjectField("Generator", generator, typeof(UMAGenerator), true);
-                EditorGUILayout.IntField("Atlas Resolution", generator.atlasResolution);
+                if (generator != null)
+                {
+                    EditorGUILayout.ObjectField(
+                        "Generator",
+                        generator,
+                        typeof(UMAGenerator),
+                        true);
+                    EditorGUILayout.IntField(
+                        "Atlas Resolution",
+                        generator.atlasResolution);
+                }
+                else
+                {
+                    EditorGUILayout.ObjectField(
+                        "Generator Parameters",
+                        generatorParms,
+                        typeof(UMAGeneratorOverride),
+                        true);
+                    EditorGUILayout.IntField(
+                        "Atlas Resolution",
+                        generatorParms.atlasResolution);
+                }
             }
-            EditorGUILayout.LabelField("Mesh Combiner", UMAToolbarActions.GetCurrentCombinerName(generator));
-            EditorGUILayout.LabelField("Average Rig Update", generator.averageSkeletonUpdatesTime.ToString("F2") + " ms");
-            EditorGUILayout.LabelField("Average Mesh Update", generator.averageMeshUpdatesTime.ToString("F2") + " ms");
-            EditorGUILayout.LabelField("Average Texture Update", generator.averageTextureProcessingTime.ToString("F2") + " ms");
+            EditorGUILayout.LabelField(
+                "Mesh Combiner",
+                UMAToolbarActions.GetCurrentCombinerNameForTargets(
+                    generator,
+                    generatorParms));
+
+            if (generator != null)
+            {
+                EditorGUILayout.LabelField(
+                    "Average Rig Update",
+                    generator.averageSkeletonUpdatesTime.ToString("F2") + " ms");
+                EditorGUILayout.LabelField(
+                    "Average Mesh Update",
+                    generator.averageMeshUpdatesTime.ToString("F2") + " ms");
+                EditorGUILayout.LabelField(
+                    "Average Texture Update",
+                    generator.averageTextureProcessingTime.ToString("F2") + " ms");
+            }
+            else
+            {
+                EditorGUILayout.HelpBox(
+                    "Runtime timing statistics are available after a scene generator is loaded.",
+                    MessageType.Info);
+            }
         }
 
         private static void DrawActions(DynamicCharacterAvatar avatar)

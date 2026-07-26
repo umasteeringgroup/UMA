@@ -1010,6 +1010,24 @@ namespace UMA
 		public bool cancelled { get; private set; }
 		[NonSerialized]
 		public bool dirty = false;
+		[NonSerialized]
+		private uint generationRequestVersion;
+
+		/// <summary>
+		/// Monotonically increasing identifier for the latest generation
+		/// request. Multi-frame generators use this to prevent an older build
+		/// from clearing changes requested while that build was in progress.
+		/// </summary>
+		public uint GenerationRequestVersion => generationRequestVersion;
+
+		internal uint BeginGenerationRequest()
+		{
+			unchecked
+			{
+				generationRequestVersion++;
+			}
+			return generationRequestVersion;
+		}
 
 		private bool isOfficiallyCreated = false;
 		/// <summary>
@@ -3064,11 +3082,6 @@ namespace UMA
 		public virtual void Dirty()
 		{
 			//Debug.Log($"Setting Dirty");
-			if (dirty)
-            {
-                return;
-            }
-
             dirty = true;
 			umaGenerator.addDirtyUMA(this);
 		}
@@ -3078,6 +3091,18 @@ namespace UMA
 			if (staticCharacter)
             {
                 return;
+            }
+
+            // Destruction can run while a scene is unloading. Never use the
+            // creating Instance/Generator accessors from teardown, because
+            // that can instantiate a replacement generator into a scene that
+            // is already being destroyed.
+            UMAAssetIndexer indexer = UMAAssetIndexer.bareInstance;
+            UMAGenerator existingGenerator =
+                indexer != null ? indexer.bareGenerator : null;
+            if (existingGenerator != null)
+            {
+                existingGenerator.removeUMA(this, true);
             }
 
             if (isOfficiallyCreated)
