@@ -97,12 +97,25 @@ The following changes landed after the first version of this document and are in
 
 Since the initial snapshot, the documentation set now also includes:
 
+- `Docs/ContentCreation.md`
+- `Docs/CreatingANewRace.md`
+- `Docs/GettingStarted.md`
 - `Docs/BoneAnimators.md`
 - `Docs/ClothingConformer.md`
 - `Docs/DNACreationGuide.md`
+- `Docs/DynamicCharacterAvatar.md`
 - `Docs/MeshCombiners.md`
+- `Docs/MeshModifiers.md`
 - `Docs/MeshModifierSculpting.md`
 - `Docs/NewDNASystem.md`
+- `Docs/OverlayDataAsset.md`
+- `Docs/RaceData.md`
+- `Docs/RandomAvatar.md`
+- `Docs/RendererAssetsAndCloth.md`
+- `Docs/SlotDataAsset.md`
+- `Docs/UMAAssetIndexer.md`
+- `Docs/UMAMaterial.md`
+- `Docs/UMASimpleLOD.md`
 - `Docs/DynamicCharacterBuildOptimizationPlan.md`
 
 The README documentation map was expanded to link every current Markdown guide in `Assets/UMA/Docs`.
@@ -153,7 +166,7 @@ Important folders include:
 - `Colors`: shared color tables for eyes, hair, lips, makeup, skin, and tattoos.
 - `Decals`: decal sample assets, overlays, materials, and demo content.
 - `DNA`: body, face, pose, and race DNA assets for the new DNA workflows.
-- `Documentation`: UMA 3 PDFs plus archived UMA 2 documentation.
+- `Documentation`: archived source documentation retained for reference. Current guides are Markdown files in `Assets/UMA/Docs`.
 - `Expressions`: expression-related content.
 - `FBX`: imported model sources and supporting assets.
 - `Getting Started`: starter prefab content.
@@ -202,7 +215,8 @@ User impact:
 Relevant files and folders:
 - `Assets/UMA/Core/Scripts/NewDNA`
 - `Assets/UMA/UMA3/DNA`
-- `Assets/UMA/UMA3/Documentation/Working with the new DNA.pdf`
+- `Docs/NewDNASystem.md`
+- `Docs/DNACreationGuide.md`
 - `Assets/UMA/Core/StandardAssets/UMA/Scripts/RaceData.cs`
 
 ## Race And Model Authoring Improvements
@@ -273,14 +287,14 @@ Mesh modifier improvements include:
 - New and updated mesh modifier editor paths.
 - Mesh modifier examples under `Assets/UMA/UMA3/MeshModifiers`.
 - Integration with the new DNA effect system through mesh modifier DNA effects.
-- Documentation in `Assets/UMA/UMA3/Documentation/Instruction Manual for Using Mesh Modifiers with UMA.pdf`.
+- Artist and technical-artist workflows in `Docs/MeshModifiers.md` and `Docs/MeshModifierSculpting.md`.
 
 User impact:
 - Clothing can hide covered body triangles more reliably.
 - Content creators have better tools for fixing clipping and deformation problems.
 - DNA, wardrobe recipes, and mesh modifiers can work together more cleanly.
 
-For details, see `Docs/MeshHideAssets.md`.
+For details, see `Docs/MeshHideAssets.md`, `Docs/MeshModifiers.md`, and `Docs/MeshModifierSculpting.md`.
 
 ## Decal System Improvements
 
@@ -391,20 +405,28 @@ User impact:
 
 ## Documentation Added Or Updated
 
-The branch includes new docs in `Docs` plus UMA 3 PDFs under `Assets/UMA/UMA3/Documentation`.
+Current UMA documentation is maintained as Markdown in `Assets/UMA/Docs`. The older PDF and UMA 2 documentation folders are archival sources rather than the active manuals.
 
 Start with:
 - `Docs/WhatsNewInUMA3.md`
+- `Docs/GettingStarted.md`
+- `Docs/ContentCreation.md`
+- `Docs/CreatingANewRace.md`
 - `Docs/DynamicCharacterAvatar.md`
 - `Docs/WardrobeRecipeEditor.md`
 - `Docs/SlotDataAsset.md`
 - `Docs/OverlayDataAsset.md`
 - `Docs/RaceData.md`
+- `Docs/UMAMaterial.md`
 - `Docs/DNACreationGuide.md`
 - `Docs/NewDNASystem.md`
 - `Docs/MeshCombiners.md`
 - `Docs/MeshHideAssets.md`
+- `Docs/MeshModifiers.md`
 - `Docs/MeshModifierSculpting.md`
+- `Docs/UMASimpleLOD.md`
+- `Docs/RandomAvatar.md`
+- `Docs/RendererAssetsAndCloth.md`
 - `Docs/BoneAnimators.md`
 - `Docs/ClothingConformer.md`
 - `Docs/Decals.md`
@@ -412,10 +434,6 @@ Start with:
 - `Docs/Addressables.md`
 - `Docs/UMAAssetIndexer.md`
 - `Docs/DynamicCharacterBuildOptimizationPlan.md`
-
-Also see:
-- `Assets/UMA/UMA3/Documentation/Working with the new DNA.pdf`
-- `Assets/UMA/UMA3/Documentation/Instruction Manual for Using Mesh Modifiers with UMA.pdf`
 
 ## Migration Notes From UMA 2
 
@@ -452,7 +470,7 @@ For character artists:
 - Review placeholder slots for overlay-only items.
 
 For technical artists:
-- Review `Assets/UMA/UMA3/DNA` and the new DNA PDF.
+- Review `Assets/UMA/UMA3/DNA`, `Docs/DNACreationGuide.md`, and `Docs/NewDNASystem.md`.
 - Try the DNA slider sample scene.
 - Review ShaderGraphs in `Assets/UMA/Core/ShaderGraphs`.
 - Review mesh modifiers and mesh hide workflows.

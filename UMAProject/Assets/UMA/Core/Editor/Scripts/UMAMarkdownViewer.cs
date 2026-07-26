@@ -2843,7 +2843,9 @@ namespace UMA.Editors
             int characterIndex = 0;
             while (characterIndex < text.Length)
             {
-                if (text[characterIndex] == '\\' && characterIndex + 1 < text.Length)
+                if (text[characterIndex] == '\\'
+                    && characterIndex + 1 < text.Length
+                    && IsMarkdownEscapableCharacter(text[characterIndex + 1]))
                 {
                     output.Append(EscapeRichText(text[characterIndex + 1].ToString()));
                     characterIndex += 2;
@@ -3031,9 +3033,29 @@ namespace UMA.Editors
             return true;
         }
 
+        private static bool IsMarkdownEscapableCharacter(char character)
+        {
+            // CommonMark only treats a backslash as an escape when it precedes
+            // ASCII punctuation. Preserve separators in paths such as
+            // C:\GitHub\UMA instead of consuming each backslash.
+            return (character >= '!' && character <= '/')
+                || (character >= ':' && character <= '@')
+                || (character >= '[' && character <= '`')
+                || (character >= '{' && character <= '~');
+        }
+
         private static string EscapeRichText(string value)
         {
-            return value.Replace("<", "&lt;").Replace(">", "&gt;");
+            if (string.IsNullOrEmpty(value))
+            {
+                return string.Empty;
+            }
+
+            // Unity's rich-text renderer does not decode HTML entities, so
+            // &lt; and &gt; are shown literally. A greater-than character is
+            // safe outside a tag. Use TextCore's noparse scope for a literal
+            // less-than character so it cannot begin a rich-text tag.
+            return value.Replace("<", "<noparse><</noparse>");
         }
 
         private static string TrimSingleTrailingNewline(string value)

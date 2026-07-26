@@ -12,10 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a21b01507d5987b4689b5f16296f8eb8, type: 3}
   m_Name: Samples
   m_EditorClassIdentifier: 
-  Favorites:
-  - path: Assets/UMA/Examples/DynamicCharacterSystem Examples/Assets/GUI
-    GUID: dbd6031144876184a8e4239369a79855
-    name: GUI
-    asset: {fileID: 102900000, guid: dbd6031144876184a8e4239369a79855, type: 3}
-    favoriteList: {fileID: 11400000}
+  Favorites: []
   exPanded: 1

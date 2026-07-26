@@ -4,6 +4,9 @@ This workspace contains the UMA (Unity Multipurpose Avatar) core, content, and s
 
 Contents
 - What's New in UMA 3
+- Getting started with UMA
+- Artist content creation
+- Creating a new race from start to finish
 - Core concepts and workflow
 - Getting started with DynamicCharacterAvatar (DCA)
 - How DCA builds characters
@@ -11,6 +14,9 @@ Contents
 - Wardrobe Recipe Editor
 - Race, slot, and overlay authoring
 - Mesh Modifier sculpting
+- UMA Materials
+- LOD and random-avatar setup
+- Renderer assets and cloth
 - Mesh hiding and face editing
 - Mesh combiners and bone baking
 - UMA Generator setup and performance tuning
@@ -29,8 +35,10 @@ Contents
 - Addressables (optional): UMA can export recipes and dependencies into Addressables for streaming/load-on-demand.
 
 Recommended Validation
-1. Open Examples: `Assets/UMA/Examples/SceneLoader/SceneLoader.unity`.
-2. Play the DCS demo scene to verify DNA sliders, wardrobe, and race switching work without errors.
+1. Open `Assets/UMA/UMA3/Scenes/U3-Character Creator.unity`.
+2. Enter Play mode and verify the character generates, DNA changes apply, and wardrobe items can be equipped.
+
+New users and content artists should begin with [`GettingStarted.md`](GettingStarted.md) and [`ContentCreation.md`](ContentCreation.md).
 
 ## Getting Started with DynamicCharacterAvatar (DCA)
 Use `DynamicCharacterAvatar` to build and control UMA characters at runtime.
@@ -52,7 +60,7 @@ Use `DynamicCharacterAvatar` to build and control UMA characters at runtime.
   - Load from an AvatarDefinition string: `LoadAvatarDefinition(avatarDefinitionString)`.
   - `GetCurrentRecipe()` and `LoadFromRecipeString(...)` are deprecated - use the AvatarDefinition APIs above instead.
 
-See `Docs/DynamicCharacterAvatar.md` for a deep dive (lifecycle, events, wardrobe collections, colors, DNA, Addressables flow, troubleshooting).
+See [`DynamicCharacterAvatar.md`](DynamicCharacterAvatar.md) for lifecycle, events, wardrobe, colors, DNA, saving, Addressables, and troubleshooting.
 
 ## How DCA Builds Characters
 DCA composes the final character from your race and wardrobe selections and drives UMA's generator to produce meshes and textures.
@@ -85,10 +93,10 @@ Key scenes to test
 
 ## Important Folders
 - `Assets/UMA/Core/`: Core runtime and editor code.
-- `Assets/UMA/Content/`: Shared UMA content (races, slots, overlays, UMAMaterials).
+- `Assets/UMA/UMA3/`: Current UMA 3 races, slots, overlays, wearables, materials, settings, and scenes.
 - `Assets/UMA/Examples/`: Samples and demo scenes.
 - `Assets/SourceShaders/`: BetterShaders authoring sources for UMA shader variants.
-- `Docs/`: This documentation.
+- `Assets/UMA/Docs/`: Current Markdown documentation.
 
 ## Support Matrix
 - Unity 6.3
@@ -97,16 +105,24 @@ Key scenes to test
 
 For detailed topics, see the dedicated docs:
 - `WhatsNewInUMA3.md`
+- `GettingStarted.md`
+- `ContentCreation.md`
+- `CreatingANewRace.md`
 - `DynamicCharacterAvatar.md`
 - `WardrobeRecipeEditor.md`
 - `RaceData.md`
 - `SlotDataAsset.md`
 - `OverlayDataAsset.md`
+- `UMAMaterial.md`
 - `DNACreationGuide.md`
 - `NewDNASystem.md`
 - `MeshCombiners.md`
 - `MeshHideAssets.md`
+- `MeshModifiers.md`
 - `MeshModifierSculpting.md`
+- `UMASimpleLOD.md`
+- `RandomAvatar.md`
+- `RendererAssetsAndCloth.md`
 - `BoneAnimators.md`
 - `ClothingConformer.md`
 - `Textures-UDIM-Arrays.md`
@@ -120,17 +136,25 @@ For detailed topics, see the dedicated docs:
 The Markdown guides in this folder cover the main UMA 3 workflows:
 
 - [`WhatsNewInUMA3.md`](WhatsNewInUMA3.md) - feature and migration summary.
-- [`DynamicCharacterAvatar.md`](DynamicCharacterAvatar.md) - DCA lifecycle, wardrobe, DNA, colors, and loading.
+- [`GettingStarted.md`](GettingStarted.md) - generator setup, Global Library setup, and first-avatar workflow.
+- [`ContentCreation.md`](ContentCreation.md) - artist workflow from DCC export through slots, overlays, recipes, races, and validation.
+- [`CreatingANewRace.md`](CreatingANewRace.md) - complete artist-facing race workflow from source model through runtime validation.
+- [`DynamicCharacterAvatar.md`](DynamicCharacterAvatar.md) - DCA lifecycle, wardrobe, DNA, colors, saving, loading, and performance.
 - [`WardrobeRecipeEditor.md`](WardrobeRecipeEditor.md) - authoring wearable recipes, overlays, placeholders, and wildcards.
-- [`RaceData.md`](RaceData.md) - race setup, defaults, compatibility, and DNA configuration.
-- [`SlotDataAsset.md`](SlotDataAsset.md) - mesh slots, weights, LODs, and slot authoring.
-- [`OverlayDataAsset.md`](OverlayDataAsset.md) - overlay textures, colors, materials, and properties.
+- [`RaceData.md`](RaceData.md) - complete artist-facing race setup, compatibility, bounds, blendshapes, and DNA configuration.
+- [`SlotDataAsset.md`](SlotDataAsset.md) - artist workflow for mesh slots, weights, materials, LODs, clipping, and blendshapes.
+- [`OverlayDataAsset.md`](OverlayDataAsset.md) - artist workflow for overlay textures, channels, cropped details, colors, and cutouts.
+- [`UMAMaterial.md`](UMAMaterial.md) - material types, shader channels, atlas behavior, and texture-reuse settings.
 - [`DNACreationGuide.md`](DNACreationGuide.md) - artist-friendly DNA creation workflow.
 - [`NewDNASystem.md`](NewDNASystem.md) - DNA groups, instances, curves, and effects.
 - [`MeshCombiners.md`](MeshCombiners.md) - available mesh combiners, selection, and testing.
 - [`UMAGeneratorSetup.md`](UMAGeneratorSetup.md) - generator prefab setup, parameter guidance, and platform performance profiles.
 - [`MeshHideAssets.md`](MeshHideAssets.md) - creating and using mesh-hide assets and collections.
+- [`MeshModifiers.md`](MeshModifiers.md) - mesh modifier concepts, authoring modes, recipes, DNA, and blendshapes.
 - [`MeshModifierSculpting.md`](MeshModifierSculpting.md) - vertex editing and sculpt-mode mesh modifiers.
+- [`UMASimpleLOD.md`](UMASimpleLOD.md) - runtime LOD setup and performance-aware artist guidance.
+- [`RandomAvatar.md`](RandomAvatar.md) - random-character components, content pools, and repeatable testing.
+- [`RendererAssetsAndCloth.md`](RendererAssetsAndCloth.md) - renderer settings, material routing, cloth preparation, and validation.
 - [`BoneAnimators.md`](BoneAnimators.md) - bone animation, sampling, and secondary motion tools.
 - [`ClothingConformer.md`](ClothingConformer.md) - conforming clothing meshes to UMA body meshes.
 - [`Textures-UDIM-Arrays.md`](Textures-UDIM-Arrays.md) - UDIM, Texture2DArray, and shader workflows.
