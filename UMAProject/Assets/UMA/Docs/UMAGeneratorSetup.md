@@ -50,7 +50,7 @@ The supplied generator is the safest starting point for a project-specific confi
 
 ### Locate or create the prefab
 
-1. Locate the supplied generator prefab. In this project it is `Assets/UMA/UMA3/Getting Started/UMA_GLIB.prefab`.
+1. Locate the supplied generator prefab. In this project it is `Assets/UMA/Core/Defaults/UMA_GLIB.prefab`.
 2. Duplicate the prefab into a project-owned folder, such as `Assets/Project/UMA/Runtime`.
 3. Give the duplicate a platform or quality-oriented name, such as `UMA_Generator_Mobile` or `UMA_Generator_Desktop`.
 4. Open the duplicate in Prefab Mode.

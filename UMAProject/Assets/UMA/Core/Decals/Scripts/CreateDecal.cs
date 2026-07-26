@@ -1542,7 +1542,7 @@ namespace UMA.Decals
             if (decalMethod == DecalMethod.SlotDecal) {
 				// DecalSlotBuilder.enableDebug = true;
 				// Build decal slot
-                Debug.Log($"Creating Mesh decal. {MeshDecalOverlay.name}");
+                //Debug.Log($"Creating Mesh decal. {MeshDecalOverlay.name}");
                 var slotAsset = DecalSlotBuilder.CreateDecalSlot(
 					Avatar,
 					ray,

@@ -4,14 +4,21 @@ This guide builds a first UMA 3 character using the current project settings and
 
 ## Before You Begin
 
-Confirm the UMA package and UMA 3 content are present. The standard starter prefabs are in:
+Confirm the UMA package is present. The shared starter prefabs are in:
 
-`Assets/UMA/UMA3/Getting Started`
+`Assets/UMA/Core/Defaults`
 
 The folder contains:
 
 - `UMA_GLIB`: generator and supporting scene setup
 - `UMADynamicCharacterAvatar`: standard character prefab
+
+Optional UMA 3 sample prefabs are in:
+
+`Assets/UMA/UMA3/Getting Started`
+
+That folder contains:
+
 - `UMADynamicCharacterAvatar-LOD`: character prefab with LOD support
 - `UMARandomGeneratedCharacter` and `UMARandomGeneratedCharacterV2`: random-generation examples
 - `UMADefaultUtilityEnvironment`: simple preview environment

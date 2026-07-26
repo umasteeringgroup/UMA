@@ -20,7 +20,7 @@ MonoBehaviour:
   - Human Male 3.0
   wardrobeRecipeThumbs:
   - race: Human Male 3.0
-    filename: Assets/UMA/UMA3/Wearables/Icons/Tattoo/Human Male 3.0/1_WolfTattooU3Recipe.png
+    filename: Assets/UMA2/Wearables/Tattoos/1_WolfTattooU3Recipe.png
     thumb: {fileID: 21300000, guid: 3404c6e948b0b2140bed04a6dba90038, type: 3}
   wardrobeSlot: Tattoo
   Appended: 1

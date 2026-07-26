@@ -1274,8 +1274,6 @@ namespace UMA.CharacterSystem
                 }
             }
 
-            Debug.Log("DNA count for avatar definition: " + Dna.Count);
-
             // *****************************************************
             // Get Colors
             // *****************************************************
