@@ -65,6 +65,8 @@ namespace UMA
         public bool addrStripUVAttachedShaders = false; 
 
         public bool showWelcomeToUMA = true;
+        [Tooltip("Show the UMA Toolbar overlay in the Scene view.")]
+        public bool showToolbar = true;
 #endif
         public GameObject generatorPrefab;
 		public static UMASettings instance;
@@ -110,6 +112,7 @@ namespace UMA
         {
             var settings = CustomAssetUtility.CreateAsset<UMASettings>("", true, "UMASettings", true);
             settings.showWelcomeToUMA = true;
+            settings.showToolbar = true;
             settings.generatorPrefab = null;
             settings.characterPrefab = null;
             settings.DiscordInvite = "https://discord.gg/KdteVKd";
@@ -320,6 +323,22 @@ namespace UMA
                 var settings = GetOrCreateSettings();
                 return settings.cleanRegenOnSave;
             }
+        }
+
+        public static bool ShowToolbar
+        {
+            get
+            {
+                var settings = GetOrCreateSettings();
+                return settings == null || settings.showToolbar;
+            }
+        }
+
+        public static event Action<bool> ToolbarVisibilityChanged;
+
+        public static void NotifyToolbarVisibilityChanged(bool show)
+        {
+            ToolbarVisibilityChanged?.Invoke(show);
         }
 
         public static bool IgnoreBackupFolders

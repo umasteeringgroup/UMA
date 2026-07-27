@@ -261,7 +261,7 @@ namespace UMA
             }
         }
 
-        public void DrawBoolProperty(string propertyName, string label, string tooltip)
+        public void DrawBoolProperty(string propertyName, string label, string tooltip, Action<bool> onChanged = null)
         {
             SerializedProperty prop = m_CustomSettings.FindProperty(propertyName);
             EditorGUI.BeginChangeCheck();
@@ -269,6 +269,7 @@ namespace UMA
             if (EditorGUI.EndChangeCheck())
             {
                 m_CustomSettings.ApplyModifiedProperties();
+                onChanged?.Invoke(prop.boolValue);
             }
         }
 
@@ -457,6 +458,11 @@ namespace UMA
 
             DrawBoolProperty("ignoreBackupFolders", "Ignore Backup Folders", "If true, UMA will ignore any folders named 'Backup' when indexing assets. This can help prevent issues with automatic backup systems.");
             DrawBoolProperty("showWelcomeToUMA", "Show Welcome Window", "If true, UMA will show the welcome window when the project is loaded");
+            DrawBoolProperty(
+                "showToolbar",
+                "Show UMA Toolbar",
+                "If true, UMA will show the UMA Toolbar overlay in the Scene view.",
+                UMASettings.NotifyToolbarVisibilityChanged);
 
 
 

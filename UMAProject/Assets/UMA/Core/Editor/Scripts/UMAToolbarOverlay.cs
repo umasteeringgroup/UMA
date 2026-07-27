@@ -14,6 +14,8 @@ namespace UMA.Editors
     [Overlay(typeof(SceneView), "UMA Toolbar", true)]
     public sealed class UMAToolbarOverlay : ToolbarOverlay
     {
+        private bool applyingVisibilitySetting;
+
         public UMAToolbarOverlay() : base(
             SaveSceneViewCameraButton.Id,
             RestoreSceneViewCameraButton.Id,
@@ -27,6 +29,47 @@ namespace UMA.Editors
             UMADiagnosticsButton.Id,
             UMAToolsDropdown.Id)
         {
+        }
+
+        public override void OnCreated()
+        {
+            base.OnCreated();
+            UMASettings.ToolbarVisibilityChanged += ApplyVisibilitySetting;
+            displayedChanged += HandleDisplayedChanged;
+            ApplyVisibilitySetting(UMASettings.ShowToolbar);
+        }
+
+        public override void OnWillBeDestroyed()
+        {
+            displayedChanged -= HandleDisplayedChanged;
+            UMASettings.ToolbarVisibilityChanged -= ApplyVisibilitySetting;
+            base.OnWillBeDestroyed();
+        }
+
+        private void HandleDisplayedChanged(bool isDisplayed)
+        {
+            if (isDisplayed && !UMASettings.ShowToolbar)
+            {
+                ApplyVisibilitySetting(false);
+            }
+        }
+
+        private void ApplyVisibilitySetting(bool show)
+        {
+            if (applyingVisibilitySetting || displayed == show)
+            {
+                return;
+            }
+
+            applyingVisibilitySetting = true;
+            try
+            {
+                displayed = show;
+            }
+            finally
+            {
+                applyingVisibilitySetting = false;
+            }
         }
     }
 

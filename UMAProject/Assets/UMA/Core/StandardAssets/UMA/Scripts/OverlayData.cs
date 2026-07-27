@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using static UMA.OverlayDataAsset;
@@ -285,6 +285,9 @@ namespace UMA
         [Range(0.0f,360.0f)]
 		public float Rotation;
 
+		[Tooltip("Multiplies the overlay's current channel color when prefilling transparent RGB inside this overlay's atlas area. Color.clear disables the prefill.")]
+		public Color TransparentMultiplier = Color.clear;
+
 		#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 		public class OverlayProceduralData
 		{
@@ -313,6 +316,7 @@ namespace UMA
 			res.Rotation = Rotation;
 			res.Scale = new Vector2(Scale.x,Scale.y) ;
 			res.Translate = new Vector2(Translate.x, Translate.y);
+			res.TransparentMultiplier = TransparentMultiplier;
             if (tags == null)
             {
                 res.tags = new string[0];
@@ -707,6 +711,7 @@ namespace UMA
 
 					if ((overlay1.asset != overlay2.asset) ||
 						(overlay1.rect != overlay2.rect) ||						
+						(overlay1.TransparentMultiplier != overlay2.TransparentMultiplier) ||
 						(overlay1.colorData != overlay2.colorData) ||
 						(overlay1HasSharedColor != overlay2HasSharedColor) ||  
 						(overlay1HasSharedColor && (overlay1.colorData.name != overlay2.colorData.name)))
@@ -729,7 +734,7 @@ namespace UMA
 		}
 
 		/// <summary>
-		/// Compares two overlay.assets and overlay.rects to see if they are the same. Mainly for comparing overlays from AssetBundles.
+		/// Compares two overlays by asset identity and recipe-specific use data. Mainly for comparing overlays from AssetBundles.
 		/// </summary>
 		/// <param name="overlay1"></param>
 		/// <param name="overlay2"></param>
@@ -742,7 +747,8 @@ namespace UMA
 				{
 					return ((overlay1.asset.overlayName == overlay2.asset.overlayName) &&
 							(overlay1.asset.material.Equals(overlay2.asset.material)) &&
-							(overlay1.rect == overlay2.rect));
+							(overlay1.rect == overlay2.rect) &&
+							(overlay1.TransparentMultiplier == overlay2.TransparentMultiplier));
 				}
 				return false;
 			}

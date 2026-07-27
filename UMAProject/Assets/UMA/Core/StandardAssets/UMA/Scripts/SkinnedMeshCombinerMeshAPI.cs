@@ -1,6 +1,11 @@
 #if UNITY_2021_3_OR_NEWER
 #define UMA_MESHAPI_2021
 #endif
+#if UNITY_WEBGL
+#undef UMA_UNSAFE
+#else
+#define UMA_UNSAFE
+#endif
 using System;
 using System.Buffers;
 using System.Collections;
@@ -2461,7 +2466,7 @@ namespace UMA
                     Vector3[] dv = null;
                     Vector3[] dn = null;
                     Vector3[] dt = null;
-#if UMA_UNSAFE && UNITY_6000_0_OR_NEWER
+#if UMA_UNSAFE 
                     Vector3[] dnPooled = null;
                     Vector3[] dtPooled = null;
 #endif
@@ -2469,7 +2474,7 @@ namespace UMA
                     // Unity 6's span overload, where we can pass the exact vertex-count slice.
                     try
                     {
-#if UMA_UNSAFE && UNITY_6000_0_OR_NEWER
+#if UMA_UNSAFE 
                         dv = pool.Rent(vertexCount);
                         Array.Clear(dv, 0, vertexCount);
 
@@ -2551,7 +2556,7 @@ namespace UMA
                         // Unity requires (array == null) OR (array.Length == mesh.vertexCount).
                         if (!info.hasNormals) dn = null;
                         if (!info.hasTangents) dt = null;
-#if UMA_UNSAFE && UNITY_6000_0_OR_NEWER
+#if UMA_UNSAFE 
                         ReadOnlySpan<Vector3> verts = new ReadOnlySpan<Vector3>(dv, 0, vertexCount);
                         ReadOnlySpan<Vector3> norms = default;
                         ReadOnlySpan<Vector3> tangs = default;
@@ -2574,7 +2579,7 @@ namespace UMA
                     }
                     finally
                     {
-#if UMA_UNSAFE && UNITY_6000_0_OR_NEWER
+#if UMA_UNSAFE 
                         // Return only the pooled arrays (original references)
                         if (dv != null) pool.Return(dv, false);
                         if (dnPooled != null) pool.Return(dnPooled, false);

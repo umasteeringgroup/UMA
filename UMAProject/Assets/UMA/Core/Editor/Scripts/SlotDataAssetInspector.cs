@@ -1072,7 +1072,8 @@ namespace UMA.Editors
             }
 
             // Display information on rotations here. 
-            DrawTransformDebugInfo();
+            // commented out for now, but can be useful for debugging.
+            // DrawTransformDebugInfo();
 
 
 
