@@ -533,6 +533,10 @@ namespace UMA.Editors
                             }
                             if (OK)
                             {
+                                if (_recipeContext != null)
+                                {
+                                    Undo.RecordObject(_recipeContext, "Add Additional Blendshape Slot");
+                                }
                                 var newSlot = new SlotData(addedSlot);
                                 newSlot.blendShapeTargetSlot = _slotData.slotName;
                                 newSlot.SetOverlayList(new List<OverlayData>());
@@ -541,6 +545,7 @@ namespace UMA.Editors
                                 _textureDirty = true;
                                 _meshDirty = true;
                                 changed = true;
+                                SaveRecipeContext();
                                 GUIUtility.ExitGUI();
                             }
                         }

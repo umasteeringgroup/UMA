@@ -122,6 +122,10 @@ namespace UMA
             {
                 slotWeightEditorWindow.Repaint();
             }
+            if (touchupWeightsWindow != null)
+            {
+                touchupWeightsWindow.Repaint();
+            }
         }
 
         private void RefreshVisibleSlotListsIfNeeded()
@@ -138,6 +142,8 @@ namespace UMA
         enum SelectionBrushShape { Point, Circle };
 
         private enum SceneToolMode { Select, SelectionBrush, Sculpt, VertexPaint }
+        private enum TouchupWeightTool { Select, Paint }
+        private enum TouchupWeightPaintMode { Replace, Add, Remove, Smooth }
         private enum SculptTool { Add, Remove, Smooth, Grab, Crease, Pinch, Plane, Boundary, ElasticDeform }
         private enum SculptPlaneMode { Flatten, Fill, Scrape }
         private enum SculptBoundaryMode { Grab, Bend, Expand, Inflate, Twist, Smooth }
@@ -387,11 +393,46 @@ namespace UMA
 
         private MeshModifierEditor modifierEditor;
         private UmaSlotWeightEditorWindow slotWeightEditorWindow;
+        private UmaTouchupWeightsWindow touchupWeightsWindow;
         private bool slotWeightEditorMode;
         private bool slotWeightEditorReadOnly;
+        private bool touchupWeightsMode;
         private bool ownsSlotWeightPreviewAvatar;
         private SlotDataAsset slotWeightEditorSlotAsset;
         private RaceData slotWeightEditorRace;
+        private SlotData touchupWeightSlot;
+        private int touchupWeightBoneHash;
+        private List<VertexWeightEntry> touchupPreviewWeights;
+        private readonly HashSet<int> touchupPreviewVertexIndices = new HashSet<int>();
+        private Color32[] touchupBaseColors;
+        private Color32[] touchupDisplayColors;
+        private List<BoneWeight1>[] touchupAssetWeights;
+        private List<BoneWeight1>[] touchupWorkingWeights;
+        private int[][] touchupConnectedVertices;
+        private TouchupWeightTool touchupWeightTool;
+        private TouchupWeightPaintMode touchupWeightPaintMode;
+        private float touchupPaintAmount = 0.1f;
+        private bool touchupPaintSelectedVerticesOnly;
+        private bool touchupSmoothSelectedBoneOnly;
+        private bool touchupAutoMaskConnectedVertices = true;
+        [SerializeField] private bool touchupLiveUpdate;
+        private HashSet<int> touchupCrossSlotMaskedVertices;
+        private bool touchupPaintStrokeActive;
+        private bool touchupPaintStrokeBlocked;
+        private readonly Dictionary<int, List<BoneWeight1>> touchupPaintStrokeWeights =
+            new Dictionary<int, List<BoneWeight1>>();
+        private readonly Dictionary<int, List<BoneWeight1>> touchupPendingPaintWeights =
+            new Dictionary<int, List<BoneWeight1>>();
+        private readonly HashSet<int> touchupSavedPositionVertexIndices = new HashSet<int>();
+        private readonly HashSet<int> touchupLivePositionVertexIndices = new HashSet<int>();
+        private readonly Dictionary<int, Vector3> touchupSkinningPositionOffsets =
+            new Dictionary<int, Vector3>();
+        private Vector3[] touchupSkinningSourceVertices;
+        private int touchupSkinningSourceMeshId;
+        private string touchupPaintStatusMessage = string.Empty;
+        private MessageType touchupPaintStatusType = MessageType.Info;
+        private int touchupWeightsRevision;
+        private readonly Matrix4x4[] touchupHandleBatch = new Matrix4x4[1023];
         private SkinnedMeshRenderer stageSkinnedMeshRenderer;
         private bool stageSkinnedMeshRendererWasEnabled;
         [SerializeField] private bool showOriginalMaterials = false;
@@ -1158,6 +1199,32 @@ namespace UMA
                 return false;
             }
 
+            if (touchupWeightsMode)
+            {
+                var touchupSlots = thisDCA.umaData.umaRecipe.slotDataList;
+                for (int i = 0; i < touchupSlots.Length; i++)
+                {
+                    SlotData slot = touchupSlots[i];
+                    if (!IsSelectableSlot(slot) || !IsSlotOnStageRenderer(slot))
+                    {
+                        continue;
+                    }
+
+                    int slotStart = slot.vertexOffset;
+                    int slotVertexCount = slot.asset.meshData.vertexCount;
+                    if (slotStart >= 0 &&
+                        bakedVertexIndex >= slotStart &&
+                        bakedVertexIndex < slotStart + slotVertexCount)
+                    {
+                        foundSlot = slot;
+                        slotVertexIndex = bakedVertexIndex - slotStart;
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
             int runningOffset = 0;
             var slots = thisDCA.umaData.umaRecipe.slotDataList;
             for (int i = 0; i < slots.Length; i++)
@@ -1187,6 +1254,19 @@ namespace UMA
             if (!IsSelectableSlot(slot) || slotVertexIndex < 0)
             {
                 return -1;
+            }
+
+            if (touchupWeightsMode)
+            {
+                if (!IsSlotOnStageRenderer(slot) || slotVertexIndex >= slot.asset.meshData.vertexCount)
+                {
+                    return -1;
+                }
+
+                int bakedVertexIndex = slot.vertexOffset + slotVertexIndex;
+                return BakedMesh != null && bakedVertexIndex >= 0 && bakedVertexIndex < BakedMesh.vertexCount
+                    ? bakedVertexIndex
+                    : -1;
             }
 
             int runningOffset = 0;
@@ -1274,7 +1354,17 @@ namespace UMA
             List<RaceData> races = GetCompatibleRacesForSlotWeightEditor(slotAsset);
             if (races.Count == 0)
             {
-                EditorUtility.DisplayDialog("View and Edit weights", "No compatible race with a matching base slot was found for this slot.", "OK");
+                races = GetAllPreviewRacesForSlotWeightEditor();
+                if (races.Count == 0)
+                {
+                    EditorUtility.DisplayDialog("View and Edit weights", "No race assets are available to use as a slot-weight preview.", "OK");
+                    return;
+                }
+
+                UmaSlotWeightEditorRacePickerWindow.Open(
+                    slotAsset,
+                    races,
+                    "This slot is not part of a race base recipe. Choose a race to supply the preview skeleton; the selected slot will be added temporarily for weight editing.");
                 return;
             }
 
@@ -1337,6 +1427,35 @@ namespace UMA
             stage.ownsSlotWeightPreviewAvatar = false;
             stage.slotWeightEditorSlotAsset = null;
             stage.slotWeightEditorRace = GetAvatarRaceData(avatar);
+            CaptureSceneViewModeBeforeOpening(stage);
+            StageUtility.GoToStage(stage, true);
+        }
+
+        public static void OpenTouchupWeights(DynamicCharacterAvatar avatar)
+        {
+            if (!TryValidateCurrentCharacterWeightAvatar(avatar, out string errorMessage))
+            {
+                EditorUtility.DisplayDialog("Touchup Weights", errorMessage, "OK");
+                return;
+            }
+
+            VertexEditorStage stage = ScriptableObject.CreateInstance<VertexEditorStage>();
+            stage.titleContent = new GUIContent
+            {
+                text = "Touchup Weights",
+                image = EditorGUIUtility.IconContent("SkinnedMeshRenderer Icon").image
+            };
+            stage.thisDCA = avatar;
+            stage.Currentmodifier = null;
+            stage.slotWeightEditorMode = true;
+            stage.slotWeightEditorReadOnly = false;
+            stage.touchupWeightsMode = true;
+            stage.ownsSlotWeightPreviewAvatar = false;
+            stage.slotWeightEditorRace = GetAvatarRaceData(avatar);
+            stage.sceneToolMode = SceneToolMode.SelectionBrush;
+            stage.selectionBrushShape = SelectionBrushShape.Circle;
+            stage.currentDefineMode = DefineMode.DefineVertexSet;
+            stage.currentMode = selectMode.Add;
             CaptureSceneViewModeBeforeOpening(stage);
             StageUtility.GoToStage(stage, true);
         }
@@ -1422,6 +1541,1630 @@ namespace UMA
             get { return slotWeightEditorReadOnly; }
         }
 
+        internal bool IsTouchupWeightsMode
+        {
+            get { return touchupWeightsMode; }
+        }
+
+        internal List<SlotData> GetTouchupWeightSlots()
+        {
+            List<SlotData> result = new List<SlotData>();
+            if (thisDCA == null || thisDCA.umaData == null || thisDCA.umaData.umaRecipe == null ||
+                thisDCA.umaData.umaRecipe.slotDataList == null)
+            {
+                return result;
+            }
+
+            SlotData[] slots = thisDCA.umaData.umaRecipe.slotDataList;
+            HashSet<SlotDataAsset> seenAssets = new HashSet<SlotDataAsset>();
+            for (int i = 0; i < slots.Length; i++)
+            {
+                SlotData slot = slots[i];
+                if (IsSelectableSlot(slot) && IsSlotOnStageRenderer(slot) && seenAssets.Add(slot.asset))
+                {
+                    result.Add(slot);
+                }
+            }
+            return result;
+        }
+
+        private bool IsSlotOnStageRenderer(SlotData slot)
+        {
+            if (slot == null || thisDCA == null || thisDCA.umaData == null ||
+                thisDCA.umaData.RendererCount <= 1)
+            {
+                return slot != null;
+            }
+
+            SkinnedMeshRenderer renderer = stageSkinnedMeshRenderer != null
+                ? stageSkinnedMeshRenderer
+                : GetCurrentSkinnedMeshRenderer();
+            int rendererIndex = thisDCA.umaData.GetRendererIndex(renderer);
+            return rendererIndex >= 0 &&
+                   ReferenceEquals(slot.rendererAsset, thisDCA.umaData.GetRendererAsset(rendererIndex));
+        }
+
+        internal SlotData TouchupWeightSlot
+        {
+            get { return touchupWeightSlot; }
+        }
+
+        internal int TouchupWeightBoneHash
+        {
+            get { return touchupWeightBoneHash; }
+            set
+            {
+                if (touchupWeightBoneHash == value)
+                {
+                    return;
+                }
+                touchupWeightBoneHash = value;
+                RefreshTouchupWeightVisualization();
+            }
+        }
+
+        internal int TouchupSelectionCount
+        {
+            get { return GetTouchupSelectedVertices().Count; }
+        }
+
+        internal int TouchupWeightsRevision
+        {
+            get { return touchupWeightsRevision; }
+        }
+
+        internal bool HasPendingTouchupPaintWeights
+        {
+            get { return touchupPendingPaintWeights.Count > 0; }
+        }
+
+        internal void SetTouchupWeightSlot(SlotData slot)
+        {
+            if (!touchupWeightsMode || ReferenceEquals(touchupWeightSlot, slot))
+            {
+                return;
+            }
+
+            if (touchupPreviewWeights != null && touchupPreviewVertexIndices.Count > 0)
+            {
+                List<int> previewVertexIndices = new List<int>(touchupPreviewVertexIndices);
+                touchupPreviewWeights = null;
+                touchupPreviewVertexIndices.Clear();
+                RecalculateTouchupVertexPositions(previewVertexIndices);
+            }
+
+            touchupWeightSlot = slot;
+            SelectedVertexes.Clear();
+            currentSelected = -1;
+            touchupPreviewWeights = null;
+            touchupPreviewVertexIndices.Clear();
+            touchupPendingPaintWeights.Clear();
+            touchupSavedPositionVertexIndices.Clear();
+            touchupLivePositionVertexIndices.Clear();
+            touchupSkinningPositionOffsets.Clear();
+            ResetTouchupPaintData();
+            RefreshVisibleSlotLists();
+            selectionSlot = 0;
+            if (slot != null)
+            {
+                for (int i = 1; i < selectFrom.Length; i++)
+                {
+                    if (string.Equals(selectFrom[i], slot.slotName, StringComparison.Ordinal))
+                    {
+                        selectionSlot = i;
+                        break;
+                    }
+                }
+            }
+
+            touchupWeightBoneHash = FindDominantTouchupBoneHash(slot);
+            EnsureTouchupPaintData(out _);
+            RefreshTouchupWeightVisualization();
+            RepaintLinkedEditors();
+            SceneView.RepaintAll();
+        }
+
+        internal List<VertexSelection> GetTouchupSelectedVertices()
+        {
+            List<VertexSelection> result = new List<VertexSelection>();
+            if (touchupWeightSlot == null || SelectedVertexes == null)
+            {
+                return result;
+            }
+
+            for (int i = 0; i < SelectedVertexes.Count; i++)
+            {
+                VertexSelection selection = SelectedVertexes[i];
+                if (selection != null && SelectionMatchesTouchupSlot(selection))
+                {
+                    result.Add(selection);
+                }
+            }
+            return result;
+        }
+
+        internal VertexSelection GetFirstTouchupSelectedVertex()
+        {
+            if (touchupWeightSlot == null || SelectedVertexes == null)
+            {
+                return null;
+            }
+
+            for (int i = 0; i < SelectedVertexes.Count; i++)
+            {
+                if (SelectionMatchesTouchupSlot(SelectedVertexes[i]))
+                {
+                    return SelectedVertexes[i];
+                }
+            }
+            return null;
+        }
+
+        internal List<BoneOption> GetTouchupBoneOptions()
+        {
+            if (touchupWeightSlot == null)
+            {
+                return new List<BoneOption>();
+            }
+
+            return GetEditableBoneOptions(new VertexSelection
+            {
+                slot = touchupWeightSlot,
+                vertexIndexOnSlot = 0
+            });
+        }
+
+        internal void ClearTouchupSelection()
+        {
+            SelectedVertexes.Clear();
+            currentSelected = -1;
+            touchupPreviewWeights = null;
+            touchupPreviewVertexIndices.Clear();
+            RefreshTouchupWeightVisualization();
+            RepaintLinkedEditors();
+            SceneView.RepaintAll();
+        }
+
+        internal void SetTouchupWeightPreview(List<VertexWeightEntry> weights)
+        {
+            touchupPreviewWeights = new List<VertexWeightEntry>();
+            if (weights != null)
+            {
+                for (int i = 0; i < weights.Count; i++)
+                {
+                    if (weights[i] != null)
+                    {
+                        touchupPreviewWeights.Add(weights[i].Clone());
+                    }
+                }
+            }
+
+            touchupPreviewVertexIndices.Clear();
+            List<VertexSelection> selected = GetTouchupSelectedVertices();
+            for (int i = 0; i < selected.Count; i++)
+            {
+                touchupPreviewVertexIndices.Add(selected[i].vertexIndexOnSlot);
+            }
+            RecalculateTouchupVertexPositions(touchupPreviewVertexIndices);
+            RefreshTouchupWeightVisualization();
+        }
+
+        internal void ClearTouchupWeightPreview()
+        {
+            List<int> previewVertexIndices = new List<int>(touchupPreviewVertexIndices);
+            touchupPreviewWeights = null;
+            touchupPreviewVertexIndices.Clear();
+            RecalculateTouchupVertexPositions(previewVertexIndices);
+            RefreshTouchupWeightVisualization();
+        }
+
+        internal bool TrySavePendingTouchupPaintWeights(out string statusMessage)
+        {
+            statusMessage = string.Empty;
+            if (touchupPendingPaintWeights.Count == 0)
+            {
+                statusMessage = "There are no painted weight changes to save.";
+                return false;
+            }
+            if (touchupWeightSlot == null || touchupWeightSlot.asset == null)
+            {
+                statusMessage = "The painted slot is no longer available.";
+                return false;
+            }
+
+            if (!TryRewriteSlotAssetVertexWeights(
+                    touchupWeightSlot,
+                    touchupPendingPaintWeights,
+                    "Paint Vertex Weights",
+                    out statusMessage))
+            {
+                return false;
+            }
+
+            int savedVertexCount = touchupPendingPaintWeights.Count;
+            List<int> savedVertexIndices = new List<int>(touchupPendingPaintWeights.Keys);
+            AssetDatabase.SaveAssetIfDirty(touchupWeightSlot.asset);
+            touchupPendingPaintWeights.Clear();
+            touchupSavedPositionVertexIndices.UnionWith(savedVertexIndices);
+            touchupWeightsRevision++;
+            touchupPaintStatusType = MessageType.Info;
+            touchupPaintStatusMessage =
+                "Saved painted weights for " + savedVertexCount + " vertex(es).";
+            statusMessage = touchupPaintStatusMessage;
+            RecalculateTouchupVertexPositions(savedVertexIndices);
+            RefreshTouchupWeightVisualization();
+            RepaintLinkedEditors();
+            return true;
+        }
+
+        internal void RevertPendingTouchupPaintWeights()
+        {
+            if (touchupPendingPaintWeights.Count == 0)
+            {
+                return;
+            }
+
+            List<int> revertedVertexIndices = new List<int>(touchupPendingPaintWeights.Keys);
+            touchupPendingPaintWeights.Clear();
+            ResetTouchupPaintData();
+            EnsureTouchupPaintData(out _);
+            RecalculateTouchupVertexPositions(revertedVertexIndices);
+            touchupWeightsRevision++;
+            touchupPaintStatusType = MessageType.Info;
+            touchupPaintStatusMessage = "Reverted unsaved painted weight changes.";
+            RefreshTouchupWeightVisualization();
+            RepaintLinkedEditors();
+        }
+
+        internal bool TrySaveTouchupWeights(List<VertexWeightEntry> editedWeights, out string statusMessage)
+        {
+            statusMessage = string.Empty;
+            List<VertexSelection> selectedVertices = GetTouchupSelectedVertices();
+            if (touchupWeightSlot == null || touchupWeightSlot.asset == null)
+            {
+                statusMessage = "Choose a slot before saving weights.";
+                return false;
+            }
+            if (selectedVertices.Count == 0)
+            {
+                statusMessage = "Select at least one vertex on the current slot.";
+                return false;
+            }
+            if (!TryGetSlotMeshData(touchupWeightSlot, out UMAMeshData meshData, out statusMessage))
+            {
+                return false;
+            }
+            if (!HasValidManagedBoneWeights(meshData) && !HasValidLegacyBoneWeights(meshData))
+            {
+                statusMessage = "The SlotDataAsset has no valid managed or legacy weights to preserve.";
+                return false;
+            }
+
+            List<VertexWeightEntry> normalizedWeights = NormalizeTouchupWeights(editedWeights, out statusMessage);
+            if (normalizedWeights == null)
+            {
+                return false;
+            }
+            for (int i = 0; i < normalizedWeights.Count; i++)
+            {
+                VertexWeightEntry weight = normalizedWeights[i];
+                if (GetBoundBoneIndex(meshData, weight.boneHash) >= 0)
+                {
+                    continue;
+                }
+                if (weight.boneHash == 0)
+                {
+                    statusMessage = "A weight references a bone without a usable UMA hash.";
+                    return false;
+                }
+                if (thisDCA == null || thisDCA.umaData == null || thisDCA.umaData.skeleton == null ||
+                    thisDCA.umaData.skeleton.GetBoneTransform(weight.boneHash) == null)
+                {
+                    statusMessage = "Bone '" + weight.boneName + "' is not available on the current character skeleton.";
+                    return false;
+                }
+            }
+
+            Undo.RecordObject(touchupWeightSlot.asset, "Touchup Slot Weights");
+            if (!EnsureEditedWeightBonesAreBound(meshData, normalizedWeights, out statusMessage))
+            {
+                return false;
+            }
+
+            List<BoneWeight1> targetWeights = BuildTargetBoneWeights(meshData, normalizedWeights, out statusMessage);
+            if (targetWeights == null)
+            {
+                return false;
+            }
+
+            Dictionary<int, List<BoneWeight1>> weightsByVertex = new Dictionary<int, List<BoneWeight1>>();
+            for (int i = 0; i < selectedVertices.Count; i++)
+            {
+                int vertexIndex = selectedVertices[i].vertexIndexOnSlot;
+                if (!weightsByVertex.ContainsKey(vertexIndex))
+                {
+                    weightsByVertex.Add(vertexIndex, new List<BoneWeight1>(targetWeights));
+                }
+            }
+
+            if (!TryRewriteSlotAssetVertexWeights(
+                    touchupWeightSlot,
+                    weightsByVertex,
+                    selectedVertices.Count == 1 ? "Touchup Vertex Weights" : "Touchup Vertex Weights",
+                    out statusMessage))
+            {
+                return false;
+            }
+
+            AssetDatabase.SaveAssetIfDirty(touchupWeightSlot.asset);
+            List<int> savedVertexIndices = new List<int>(weightsByVertex.Keys);
+            touchupSavedPositionVertexIndices.UnionWith(savedVertexIndices);
+            touchupPreviewWeights = null;
+            touchupPreviewVertexIndices.Clear();
+            ResetTouchupPaintData();
+            EnsureTouchupPaintData(out _);
+            RecalculateTouchupVertexPositions(savedVertexIndices);
+            touchupWeightsRevision++;
+            statusMessage = "Saved weights for " + weightsByVertex.Count + " " +
+                            (weightsByVertex.Count == 1 ? "vertex" : "vertices") +
+                            " to " + touchupWeightSlot.asset.slotName + ".";
+            RefreshTouchupWeightVisualization();
+            RepaintLinkedEditors();
+            SceneView.RepaintAll();
+            return true;
+        }
+
+        private List<VertexWeightEntry> NormalizeTouchupWeights(List<VertexWeightEntry> editedWeights, out string statusMessage)
+        {
+            statusMessage = string.Empty;
+            if (editedWeights == null || editedWeights.Count == 0)
+            {
+                statusMessage = "Add at least one bone weight before saving.";
+                return null;
+            }
+
+            List<VertexWeightEntry> result = new List<VertexWeightEntry>();
+            float total = 0f;
+            for (int i = 0; i < editedWeights.Count; i++)
+            {
+                VertexWeightEntry source = editedWeights[i];
+                if (source == null)
+                {
+                    continue;
+                }
+
+                float weight = Mathf.Clamp01(source.weight);
+                if (weight <= 0f)
+                {
+                    continue;
+                }
+
+                VertexWeightEntry copy = source.Clone();
+                copy.weight = weight;
+                result.Add(copy);
+                total += weight;
+            }
+
+            if (result.Count == 0 || total <= Mathf.Epsilon)
+            {
+                statusMessage = "At least one bone weight must be greater than zero.";
+                return null;
+            }
+
+            for (int i = 0; i < result.Count; i++)
+            {
+                result[i].weight /= total;
+            }
+            return result;
+        }
+
+        private void ResetTouchupPaintData()
+        {
+            touchupAssetWeights = null;
+            touchupWorkingWeights = null;
+            touchupConnectedVertices = null;
+            touchupCrossSlotMaskedVertices = null;
+            touchupDisplayColors = null;
+            touchupPaintStrokeWeights.Clear();
+            touchupPaintStrokeActive = false;
+            touchupPaintStrokeBlocked = false;
+        }
+
+        private bool EnsureTouchupPaintData(out string statusMessage)
+        {
+            statusMessage = string.Empty;
+            if (!TryGetSlotMeshData(touchupWeightSlot, out UMAMeshData meshData, out statusMessage))
+            {
+                return false;
+            }
+
+            if (touchupAssetWeights != null && touchupAssetWeights.Length == meshData.vertexCount &&
+                touchupWorkingWeights != null && touchupWorkingWeights.Length == meshData.vertexCount &&
+                touchupConnectedVertices != null && touchupConnectedVertices.Length == meshData.vertexCount &&
+                touchupCrossSlotMaskedVertices != null)
+            {
+                return true;
+            }
+
+            bool hasManagedWeights = HasValidManagedBoneWeights(meshData);
+            bool hasLegacyWeights = HasValidLegacyBoneWeights(meshData);
+            if (!hasManagedWeights && !hasLegacyWeights)
+            {
+                statusMessage = "The selected slot has no usable bone weights.";
+                return false;
+            }
+
+            touchupAssetWeights = new List<BoneWeight1>[meshData.vertexCount];
+            touchupWorkingWeights = new List<BoneWeight1>[meshData.vertexCount];
+            int managedOffset = 0;
+            for (int vertexIndex = 0; vertexIndex < meshData.vertexCount; vertexIndex++)
+            {
+                List<BoneWeight1> weights;
+                if (hasManagedWeights)
+                {
+                    int weightCount = meshData.ManagedBonesPerVertex[vertexIndex];
+                    weights = new List<BoneWeight1>(weightCount);
+                    for (int weightIndex = 0; weightIndex < weightCount; weightIndex++)
+                    {
+                        weights.Add(meshData.ManagedBoneWeights[managedOffset + weightIndex]);
+                    }
+                    managedOffset += weightCount;
+                }
+                else
+                {
+                    TryGetLegacyWeightsForVertex(meshData, vertexIndex, out weights);
+                }
+
+                touchupAssetWeights[vertexIndex] =
+                    weights != null ? CloneBoneWeightList(weights) : new List<BoneWeight1>();
+                touchupWorkingWeights[vertexIndex] =
+                    CloneBoneWeightList(touchupAssetWeights[vertexIndex]);
+            }
+
+            foreach (KeyValuePair<int, List<BoneWeight1>> pendingWeight in touchupPendingPaintWeights)
+            {
+                if (pendingWeight.Key >= 0 && pendingWeight.Key < touchupWorkingWeights.Length)
+                {
+                    touchupWorkingWeights[pendingWeight.Key] =
+                        CloneBoneWeightList(pendingWeight.Value);
+                }
+            }
+
+            touchupConnectedVertices = BuildTouchupConnectedVertices(meshData);
+            touchupCrossSlotMaskedVertices = BuildTouchupCrossSlotVertexMask();
+            return true;
+        }
+
+        private int[][] BuildTouchupConnectedVertices(UMAMeshData meshData)
+        {
+            HashSet<int>[] connected = new HashSet<int>[meshData.vertexCount];
+            for (int i = 0; i < connected.Length; i++)
+            {
+                connected[i] = new HashSet<int>();
+            }
+
+            if (meshData.submeshes != null)
+            {
+                for (int submeshIndex = 0; submeshIndex < meshData.submeshes.Length; submeshIndex++)
+                {
+                    SubMeshTriangles submesh = meshData.submeshes[submeshIndex];
+                    if (submesh == null)
+                    {
+                        continue;
+                    }
+
+                    int[] triangles = submesh.getManagedTriangles(0);
+                    if (triangles == null)
+                    {
+                        continue;
+                    }
+
+                    for (int triangleIndex = 0; triangleIndex + 2 < triangles.Length; triangleIndex += 3)
+                    {
+                        int vertex0 = triangles[triangleIndex];
+                        int vertex1 = triangles[triangleIndex + 1];
+                        int vertex2 = triangles[triangleIndex + 2];
+                        AddTouchupConnection(connected, vertex0, vertex1);
+                        AddTouchupConnection(connected, vertex0, vertex2);
+                        AddTouchupConnection(connected, vertex1, vertex2);
+                    }
+                }
+            }
+
+            int[][] result = new int[connected.Length][];
+            for (int i = 0; i < connected.Length; i++)
+            {
+                result[i] = new int[connected[i].Count];
+                connected[i].CopyTo(result[i]);
+            }
+            return result;
+        }
+
+        private HashSet<int> BuildTouchupCrossSlotVertexMask()
+        {
+            HashSet<int> result = new HashSet<int>();
+            if (touchupWeightSlot == null || touchupWeightSlot.asset == null ||
+                BakedMesh == null || thisDCA == null || thisDCA.umaData == null ||
+                thisDCA.umaData.umaRecipe == null)
+            {
+                return result;
+            }
+
+            if (bakedVertices == null || bakedVertices.Length != BakedMesh.vertexCount)
+            {
+                RefreshBakedMeshCaches();
+            }
+            if (bakedVertices == null)
+            {
+                return result;
+            }
+
+            float tolerance = Mathf.Max(0.00001f, BakedMesh.bounds.size.magnitude * 0.00001f);
+            float toleranceSqr = tolerance * tolerance;
+            float inverseTolerance = 1f / tolerance;
+            Dictionary<Vector3Int, List<Vector3>> otherSlotPositions =
+                new Dictionary<Vector3Int, List<Vector3>>();
+
+            SlotData[] slots = thisDCA.umaData.umaRecipe.slotDataList;
+            for (int slotIndex = 0; slotIndex < slots.Length; slotIndex++)
+            {
+                SlotData slot = slots[slotIndex];
+                if (slot == null || ReferenceEquals(slot, touchupWeightSlot) ||
+                    !IsSelectableSlot(slot) || !IsSlotOnStageRenderer(slot))
+                {
+                    continue;
+                }
+
+                int bakedStart = slot.vertexOffset;
+                int vertexCount = slot.asset.meshData.vertexCount;
+                if (bakedStart < 0 || bakedStart + vertexCount > bakedVertices.Length)
+                {
+                    continue;
+                }
+
+                for (int vertexIndex = 0; vertexIndex < vertexCount; vertexIndex++)
+                {
+                    Vector3 position = bakedVertices[bakedStart + vertexIndex];
+                    Vector3Int key = GetTouchupPositionCell(position, inverseTolerance);
+                    if (!otherSlotPositions.TryGetValue(key, out List<Vector3> positions))
+                    {
+                        positions = new List<Vector3>();
+                        otherSlotPositions.Add(key, positions);
+                    }
+                    positions.Add(position);
+                }
+            }
+
+            int activeStart = touchupWeightSlot.vertexOffset;
+            int activeCount = touchupWeightSlot.asset.meshData.vertexCount;
+            if (activeStart < 0 || activeStart + activeCount > bakedVertices.Length)
+            {
+                return result;
+            }
+
+            for (int vertexIndex = 0; vertexIndex < activeCount; vertexIndex++)
+            {
+                Vector3 position = bakedVertices[activeStart + vertexIndex];
+                Vector3Int cell = GetTouchupPositionCell(position, inverseTolerance);
+                bool matched = false;
+                for (int x = -1; x <= 1 && !matched; x++)
+                {
+                    for (int y = -1; y <= 1 && !matched; y++)
+                    {
+                        for (int z = -1; z <= 1 && !matched; z++)
+                        {
+                            Vector3Int neighborCell = new Vector3Int(
+                                cell.x + x,
+                                cell.y + y,
+                                cell.z + z);
+                            if (!otherSlotPositions.TryGetValue(neighborCell, out List<Vector3> positions))
+                            {
+                                continue;
+                            }
+
+                            for (int positionIndex = 0; positionIndex < positions.Count; positionIndex++)
+                            {
+                                if ((position - positions[positionIndex]).sqrMagnitude <= toleranceSqr)
+                                {
+                                    result.Add(vertexIndex);
+                                    matched = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        private static Vector3Int GetTouchupPositionCell(Vector3 position, float inverseTolerance)
+        {
+            return new Vector3Int(
+                Mathf.FloorToInt(position.x * inverseTolerance),
+                Mathf.FloorToInt(position.y * inverseTolerance),
+                Mathf.FloorToInt(position.z * inverseTolerance));
+        }
+
+        private static void AddTouchupConnection(HashSet<int>[] connected, int vertex0, int vertex1)
+        {
+            if (vertex0 < 0 || vertex1 < 0 || vertex0 >= connected.Length || vertex1 >= connected.Length ||
+                vertex0 == vertex1)
+            {
+                return;
+            }
+
+            connected[vertex0].Add(vertex1);
+            connected[vertex1].Add(vertex0);
+        }
+
+        private bool ApplyTouchupWeightPaintBrush(Event currentEvent)
+        {
+            if (touchupPaintStrokeBlocked)
+            {
+                return false;
+            }
+
+            if (touchupPreviewWeights != null)
+            {
+                touchupPaintStrokeBlocked = true;
+                touchupPaintStatusType = MessageType.Warning;
+                touchupPaintStatusMessage =
+                    "Save or revert the numeric weight edits in the Touchup Weights window before painting.";
+                return false;
+            }
+
+            if (!EnsureTouchupPaintData(out string statusMessage))
+            {
+                touchupPaintStrokeBlocked = true;
+                touchupPaintStatusType = MessageType.Error;
+                touchupPaintStatusMessage = statusMessage;
+                return false;
+            }
+
+            List<int> candidates = GetTouchupBrushVertexIndices(
+                currentEvent,
+                touchupPaintSelectedVerticesOnly);
+            if (touchupAutoMaskConnectedVertices &&
+                touchupCrossSlotMaskedVertices != null &&
+                touchupCrossSlotMaskedVertices.Count > 0)
+            {
+                int unmaskedCandidateCount = candidates.Count;
+                candidates.RemoveAll(vertexIndex =>
+                    touchupCrossSlotMaskedVertices.Contains(vertexIndex));
+                if (unmaskedCandidateCount > 0 && candidates.Count == 0)
+                {
+                    touchupPaintStatusType = MessageType.Info;
+                    touchupPaintStatusMessage =
+                        "All vertices under the brush are protected by Auto-mask Connected Vertices.";
+                }
+            }
+            if (candidates.Count == 0)
+            {
+                return false;
+            }
+
+            UMAMeshData meshData = touchupWeightSlot.asset.meshData;
+            int selectedBoneIndex = GetBoundBoneIndex(meshData, touchupWeightBoneHash);
+            bool operationCanAddBone =
+                 (touchupWeightPaintMode == TouchupWeightPaintMode.Replace ||
+                 touchupWeightPaintMode == TouchupWeightPaintMode.Add) &&
+                touchupPaintAmount > BoneWeightMismatchTolerance;
+            if (selectedBoneIndex < 0 && operationCanAddBone)
+            {
+                Undo.RecordObject(touchupWeightSlot.asset, "Bind Weight Paint Bone");
+                VertexWeightEntry newBinding = new VertexWeightEntry
+                {
+                    boneIndex = -1,
+                    boneHash = touchupWeightBoneHash,
+                    boneName = GetBoneDisplayName(touchupWeightBoneHash, -1),
+                    weight = 1f
+                };
+                if (!EnsureEditedWeightBonesAreBound(
+                        meshData,
+                        new List<VertexWeightEntry> { newBinding },
+                        out statusMessage))
+                {
+                    touchupPaintStrokeBlocked = true;
+                    touchupPaintStatusType = MessageType.Error;
+                    touchupPaintStatusMessage = statusMessage;
+                    return false;
+                }
+                selectedBoneIndex = newBinding.boneIndex;
+            }
+
+            if (!touchupPaintStrokeActive)
+            {
+                touchupPaintStrokeActive = true;
+                touchupPaintStrokeWeights.Clear();
+            }
+
+            List<int> changedVertices = new List<int>();
+            for (int i = 0; i < candidates.Count; i++)
+            {
+                int vertexIndex = candidates[i];
+                string strokeKey = "weight:" + vertexIndex;
+                if (selectionBrushedVerticesThisStroke.Contains(strokeKey))
+                {
+                    continue;
+                }
+                selectionBrushedVerticesThisStroke.Add(strokeKey);
+
+                List<BoneWeight1> paintedWeights = BuildPaintedTouchupWeights(
+                    vertexIndex,
+                    selectedBoneIndex);
+                if (paintedWeights == null ||
+                    BoneWeightListsApproximatelyEqual(touchupWorkingWeights[vertexIndex], paintedWeights))
+                {
+                    continue;
+                }
+
+                touchupWorkingWeights[vertexIndex] = paintedWeights;
+                touchupPaintStrokeWeights[vertexIndex] = CloneBoneWeightList(paintedWeights);
+                changedVertices.Add(vertexIndex);
+            }
+
+            if (changedVertices.Count == 0)
+            {
+                return false;
+            }
+
+            UpdateTouchupWeightVisualization(changedVertices);
+            RepaintLinkedEditors();
+            return true;
+        }
+
+        private List<BoneWeight1> BuildPaintedTouchupWeights(int vertexIndex, int selectedBoneIndex)
+        {
+            List<BoneWeight1> currentWeights = CloneBoneWeightList(touchupWorkingWeights[vertexIndex]);
+            float amount = Mathf.Clamp01(touchupPaintAmount);
+
+            switch (touchupWeightPaintMode)
+            {
+                case TouchupWeightPaintMode.Replace:
+                    if (selectedBoneIndex < 0)
+                    {
+                        return currentWeights;
+                    }
+                    return SetTouchupBoneWeight(currentWeights, selectedBoneIndex, amount);
+
+                case TouchupWeightPaintMode.Add:
+                    if (selectedBoneIndex < 0)
+                    {
+                        return currentWeights;
+                    }
+                    SetWeightInMap(currentWeights, selectedBoneIndex,
+                        GetWeightFromList(currentWeights, selectedBoneIndex) + amount);
+                    return NormalizeTouchupBoneWeightList(currentWeights, touchupWorkingWeights[vertexIndex]);
+
+                case TouchupWeightPaintMode.Remove:
+                    if (selectedBoneIndex < 0)
+                    {
+                        return currentWeights;
+                    }
+                    SetWeightInMap(currentWeights, selectedBoneIndex,
+                        Mathf.Max(0f, GetWeightFromList(currentWeights, selectedBoneIndex) - amount));
+                    return NormalizeTouchupBoneWeightList(currentWeights, touchupWorkingWeights[vertexIndex]);
+
+                case TouchupWeightPaintMode.Smooth:
+                    return touchupSmoothSelectedBoneOnly
+                        ? SmoothTouchupSelectedBone(vertexIndex, currentWeights, selectedBoneIndex, amount)
+                        : SmoothAllTouchupWeights(vertexIndex, currentWeights, amount);
+            }
+
+            return currentWeights;
+        }
+
+        private List<BoneWeight1> SmoothTouchupSelectedBone(
+            int vertexIndex,
+            List<BoneWeight1> currentWeights,
+            int selectedBoneIndex,
+            float amount)
+        {
+            if (selectedBoneIndex < 0 || touchupConnectedVertices == null ||
+                vertexIndex < 0 || vertexIndex >= touchupConnectedVertices.Length)
+            {
+                return currentWeights;
+            }
+
+            int[] connected = touchupConnectedVertices[vertexIndex];
+            if (connected == null || connected.Length == 0)
+            {
+                return currentWeights;
+            }
+
+            float connectedWeight = 0f;
+            for (int i = 0; i < connected.Length; i++)
+            {
+                connectedWeight += GetWeightFromList(
+                    touchupWorkingWeights[connected[i]],
+                    selectedBoneIndex);
+            }
+            float averageWeight = connectedWeight / connected.Length;
+            float smoothedWeight = Mathf.Lerp(
+                GetWeightFromList(currentWeights, selectedBoneIndex),
+                averageWeight,
+                amount);
+            return SetTouchupBoneWeight(currentWeights, selectedBoneIndex, smoothedWeight);
+        }
+
+        private List<BoneWeight1> SmoothAllTouchupWeights(
+            int vertexIndex,
+            List<BoneWeight1> currentWeights,
+            float amount)
+        {
+            if (touchupConnectedVertices == null ||
+                vertexIndex < 0 || vertexIndex >= touchupConnectedVertices.Length)
+            {
+                return currentWeights;
+            }
+
+            int[] connected = touchupConnectedVertices[vertexIndex];
+            if (connected == null || connected.Length == 0)
+            {
+                return currentWeights;
+            }
+
+            Dictionary<int, float> currentMap = BuildWeightMap(currentWeights);
+            Dictionary<int, float> averageMap = new Dictionary<int, float>();
+            for (int i = 0; i < connected.Length; i++)
+            {
+                AddWeightsToWeightMap(averageMap, touchupWorkingWeights[connected[i]], 1f / connected.Length);
+            }
+
+            HashSet<int> boneIndices = new HashSet<int>(currentMap.Keys);
+            boneIndices.UnionWith(averageMap.Keys);
+            List<BoneWeight1> result = new List<BoneWeight1>(boneIndices.Count);
+            foreach (int boneIndex in boneIndices)
+            {
+                currentMap.TryGetValue(boneIndex, out float currentWeight);
+                averageMap.TryGetValue(boneIndex, out float averageWeight);
+                result.Add(new BoneWeight1
+                {
+                    boneIndex = boneIndex,
+                    weight = Mathf.Lerp(currentWeight, averageWeight, amount)
+                });
+            }
+            return NormalizeTouchupBoneWeightList(result, currentWeights);
+        }
+
+        private List<BoneWeight1> SetTouchupBoneWeight(
+            List<BoneWeight1> currentWeights,
+            int selectedBoneIndex,
+            float targetWeight)
+        {
+            targetWeight = Mathf.Clamp01(targetWeight);
+            float otherWeightTotal = 0f;
+            for (int i = 0; i < currentWeights.Count; i++)
+            {
+                if (currentWeights[i].boneIndex != selectedBoneIndex)
+                {
+                    otherWeightTotal += Mathf.Max(0f, currentWeights[i].weight);
+                }
+            }
+
+            if (otherWeightTotal <= Mathf.Epsilon)
+            {
+                return new List<BoneWeight1>
+                {
+                    new BoneWeight1 { boneIndex = selectedBoneIndex, weight = 1f }
+                };
+            }
+
+            List<BoneWeight1> result = new List<BoneWeight1>(currentWeights.Count + 1);
+            float remainingWeight = 1f - targetWeight;
+            for (int i = 0; i < currentWeights.Count; i++)
+            {
+                BoneWeight1 weight = currentWeights[i];
+                if (weight.boneIndex == selectedBoneIndex)
+                {
+                    continue;
+                }
+
+                float scaledWeight = Mathf.Max(0f, weight.weight) / otherWeightTotal * remainingWeight;
+                if (scaledWeight > BoneWeightMismatchTolerance)
+                {
+                    result.Add(new BoneWeight1
+                    {
+                        boneIndex = weight.boneIndex,
+                        weight = scaledWeight
+                    });
+                }
+            }
+            if (targetWeight > BoneWeightMismatchTolerance)
+            {
+                result.Add(new BoneWeight1
+                {
+                    boneIndex = selectedBoneIndex,
+                    weight = targetWeight
+                });
+            }
+            result.Sort((left, right) => right.weight.CompareTo(left.weight));
+            return result;
+        }
+
+        private static void SetWeightInMap(List<BoneWeight1> weights, int boneIndex, float value)
+        {
+            for (int i = 0; i < weights.Count; i++)
+            {
+                if (weights[i].boneIndex != boneIndex)
+                {
+                    continue;
+                }
+
+                weights[i] = new BoneWeight1 { boneIndex = boneIndex, weight = value };
+                return;
+            }
+            weights.Add(new BoneWeight1 { boneIndex = boneIndex, weight = value });
+        }
+
+        private List<BoneWeight1> NormalizeTouchupBoneWeightList(
+            List<BoneWeight1> weights,
+            List<BoneWeight1> fallback)
+        {
+            Dictionary<int, float> totals = new Dictionary<int, float>();
+            float total = 0f;
+            for (int i = 0; i < weights.Count; i++)
+            {
+                float value = Mathf.Max(0f, weights[i].weight);
+                if (value <= BoneWeightMismatchTolerance)
+                {
+                    continue;
+                }
+
+                totals.TryGetValue(weights[i].boneIndex, out float existing);
+                totals[weights[i].boneIndex] = existing + value;
+                total += value;
+            }
+
+            if (total <= Mathf.Epsilon)
+            {
+                return CloneBoneWeightList(fallback);
+            }
+
+            List<BoneWeight1> result = new List<BoneWeight1>(totals.Count);
+            foreach (KeyValuePair<int, float> pair in totals)
+            {
+                result.Add(new BoneWeight1
+                {
+                    boneIndex = pair.Key,
+                    weight = pair.Value / total
+                });
+            }
+            result.Sort((left, right) => right.weight.CompareTo(left.weight));
+            return result;
+        }
+
+        private static float GetWeightFromList(List<BoneWeight1> weights, int boneIndex)
+        {
+            if (weights == null)
+            {
+                return 0f;
+            }
+
+            float result = 0f;
+            for (int i = 0; i < weights.Count; i++)
+            {
+                if (weights[i].boneIndex == boneIndex)
+                {
+                    result += weights[i].weight;
+                }
+            }
+            return result;
+        }
+
+        private static List<BoneWeight1> CloneBoneWeightList(List<BoneWeight1> weights)
+        {
+            return weights != null ? new List<BoneWeight1>(weights) : new List<BoneWeight1>();
+        }
+
+        private static bool BoneWeightListsApproximatelyEqual(
+            List<BoneWeight1> left,
+            List<BoneWeight1> right)
+        {
+            if (left == null || right == null || left.Count != right.Count)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < left.Count; i++)
+            {
+                BoneWeight1 weight = left[i];
+                if (Mathf.Abs(weight.weight - GetWeightFromList(right, weight.boneIndex)) >
+                    BoneWeightMismatchTolerance)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        private void EndTouchupWeightPaintStroke(bool commit)
+        {
+            if (!touchupPaintStrokeActive)
+            {
+                touchupPaintStrokeBlocked = false;
+                return;
+            }
+
+            touchupPaintStrokeActive = false;
+            touchupPaintStrokeBlocked = false;
+            if (touchupPaintStrokeWeights.Count == 0)
+            {
+                return;
+            }
+
+            List<int> strokeVertexIndices = new List<int>(touchupPaintStrokeWeights.Keys);
+            if (commit)
+            {
+                foreach (KeyValuePair<int, List<BoneWeight1>> paintedVertex in touchupPaintStrokeWeights)
+                {
+                    touchupPendingPaintWeights[paintedVertex.Key] =
+                        CloneBoneWeightList(paintedVertex.Value);
+                }
+                touchupPaintStatusType = MessageType.Info;
+                touchupPaintStatusMessage =
+                    "Painted " + touchupPaintStrokeWeights.Count +
+                    " vertex(es). Use Save Weights to write the pending changes.";
+            }
+            else
+            {
+                ResetTouchupPaintData();
+                EnsureTouchupPaintData(out _);
+                touchupPaintStatusType = MessageType.Info;
+                touchupPaintStatusMessage = "Discarded the current weight-paint stroke.";
+            }
+
+            RecalculateTouchupVertexPositions(strokeVertexIndices);
+            touchupPaintStrokeWeights.Clear();
+            RepaintLinkedEditors();
+        }
+
+        private bool SelectionMatchesTouchupSlot(VertexSelection selection)
+        {
+            return selection != null && selection.slot != null && touchupWeightSlot != null &&
+                   (ReferenceEquals(selection.slot, touchupWeightSlot) ||
+                    string.Equals(selection.slot.slotName, touchupWeightSlot.slotName, StringComparison.Ordinal));
+        }
+
+        private void InitializeTouchupWeights()
+        {
+            List<SlotData> slots = GetTouchupWeightSlots();
+            if (slots.Count > 0)
+            {
+                SetTouchupWeightSlot(slots[0]);
+            }
+            else
+            {
+                RefreshTouchupWeightVisualization();
+            }
+        }
+
+        private int FindDominantTouchupBoneHash(SlotData slot)
+        {
+            if (slot == null || slot.asset == null || UMAMeshData.IsNullOrEmptyMeshData(slot.asset.meshData))
+            {
+                return 0;
+            }
+
+            UMAMeshData meshData = slot.asset.meshData;
+            Dictionary<int, float> totalsByBoneIndex = new Dictionary<int, float>();
+            if (HasValidManagedBoneWeights(meshData))
+            {
+                for (int i = 0; i < meshData.ManagedBoneWeights.Length; i++)
+                {
+                    BoneWeight1 weight = meshData.ManagedBoneWeights[i];
+                    totalsByBoneIndex.TryGetValue(weight.boneIndex, out float total);
+                    totalsByBoneIndex[weight.boneIndex] = total + weight.weight;
+                }
+            }
+            else if (HasValidLegacyBoneWeights(meshData))
+            {
+                for (int vertexIndex = 0; vertexIndex < meshData.vertexCount; vertexIndex++)
+                {
+                    if (!TryGetLegacyWeightsForVertex(meshData, vertexIndex, out List<BoneWeight1> weights))
+                    {
+                        continue;
+                    }
+                    for (int i = 0; i < weights.Count; i++)
+                    {
+                        BoneWeight1 weight = weights[i];
+                        totalsByBoneIndex.TryGetValue(weight.boneIndex, out float total);
+                        totalsByBoneIndex[weight.boneIndex] = total + weight.weight;
+                    }
+                }
+            }
+
+            int bestBoneIndex = -1;
+            float bestTotal = float.MinValue;
+            foreach (KeyValuePair<int, float> pair in totalsByBoneIndex)
+            {
+                if (pair.Value > bestTotal)
+                {
+                    bestBoneIndex = pair.Key;
+                    bestTotal = pair.Value;
+                }
+            }
+            int bestBoneHash = GetSlotBoneHash(meshData, bestBoneIndex);
+            if (bestBoneHash != 0)
+            {
+                return bestBoneHash;
+            }
+            if (meshData.boneNameHashes != null)
+            {
+                for (int i = 0; i < meshData.boneNameHashes.Length; i++)
+                {
+                    if (meshData.boneNameHashes[i] != 0)
+                    {
+                        return meshData.boneNameHashes[i];
+                    }
+                }
+            }
+            return 0;
+        }
+
+        internal void RefreshTouchupWeightVisualization()
+        {
+            if (!touchupWeightsMode || BakedMesh == null)
+            {
+                return;
+            }
+
+            CaptureTouchupBaseColors();
+            Color32[] colors = (Color32[])touchupBaseColors.Clone();
+
+            if (touchupWeightSlot != null && touchupWeightSlot.asset != null &&
+                !UMAMeshData.IsNullOrEmptyMeshData(touchupWeightSlot.asset.meshData) &&
+                TryGetVisibleBakedVertexIndex(touchupWeightSlot, 0, out int bakedStart))
+            {
+                UMAMeshData meshData = touchupWeightSlot.asset.meshData;
+                int boneIndex = GetBoundBoneIndex(meshData, touchupWeightBoneHash);
+                int vertexCount = Mathf.Min(meshData.vertexCount, colors.Length - bakedStart);
+                if (touchupWorkingWeights != null &&
+                    touchupWorkingWeights.Length == meshData.vertexCount)
+                {
+                    for (int vertexIndex = 0; vertexIndex < vertexCount; vertexIndex++)
+                    {
+                        colors[bakedStart + vertexIndex] = BlenderWeightColor(
+                            GetWeightFromList(touchupWorkingWeights[vertexIndex], boneIndex));
+                    }
+                }
+                else if (boneIndex >= 0 && HasValidManagedBoneWeights(meshData))
+                {
+                    int weightOffset = 0;
+                    for (int vertexIndex = 0; vertexIndex < vertexCount; vertexIndex++)
+                    {
+                        int weightCount = meshData.ManagedBonesPerVertex[vertexIndex];
+                        float displayedWeight = 0f;
+                        for (int weightIndex = 0; weightIndex < weightCount; weightIndex++)
+                        {
+                            BoneWeight1 weight = meshData.ManagedBoneWeights[weightOffset + weightIndex];
+                            if (weight.boneIndex == boneIndex)
+                            {
+                                displayedWeight += weight.weight;
+                            }
+                        }
+                        colors[bakedStart + vertexIndex] = BlenderWeightColor(displayedWeight);
+                        weightOffset += weightCount;
+                    }
+                }
+                else
+                {
+                    for (int vertexIndex = 0; vertexIndex < vertexCount; vertexIndex++)
+                    {
+                        float displayedWeight = 0f;
+                        if (boneIndex >= 0 &&
+                            TryGetLegacyWeightsForVertex(meshData, vertexIndex, out List<BoneWeight1> weights))
+                        {
+                            for (int i = 0; i < weights.Count; i++)
+                            {
+                                if (weights[i].boneIndex == boneIndex)
+                                {
+                                    displayedWeight += weights[i].weight;
+                                }
+                            }
+                        }
+                        colors[bakedStart + vertexIndex] = BlenderWeightColor(displayedWeight);
+                    }
+                }
+
+                if (touchupPreviewWeights != null && touchupPreviewVertexIndices.Count > 0)
+                {
+                    float total = 0f;
+                    float selectedBoneWeight = 0f;
+                    for (int i = 0; i < touchupPreviewWeights.Count; i++)
+                    {
+                        VertexWeightEntry entry = touchupPreviewWeights[i];
+                        float value = Mathf.Clamp01(entry.weight);
+                        total += value;
+                        if (entry.boneHash == touchupWeightBoneHash)
+                        {
+                            selectedBoneWeight += value;
+                        }
+                    }
+                    float displayedWeight = total > Mathf.Epsilon ? selectedBoneWeight / total : 0f;
+                    Color32 previewColor = BlenderWeightColor(displayedWeight);
+                    foreach (int vertexIndex in touchupPreviewVertexIndices)
+                    {
+                        if (vertexIndex >= 0 && vertexIndex < vertexCount)
+                        {
+                            colors[bakedStart + vertexIndex] = previewColor;
+                        }
+                    }
+                }
+            }
+
+            touchupDisplayColors = colors;
+            BakedMesh.colors32 = colors;
+            ApplyVertexDisplayOptions();
+            SceneView.RepaintAll();
+        }
+
+        private void UpdateTouchupWeightVisualization(List<int> vertexIndices)
+        {
+            if (BakedMesh == null || touchupWeightSlot == null || touchupWorkingWeights == null ||
+                vertexIndices == null || vertexIndices.Count == 0)
+            {
+                return;
+            }
+
+            if (touchupDisplayColors == null || touchupDisplayColors.Length != BakedMesh.vertexCount)
+            {
+                RefreshTouchupWeightVisualization();
+                return;
+            }
+
+            int boneIndex = GetBoundBoneIndex(touchupWeightSlot.asset.meshData, touchupWeightBoneHash);
+            int bakedStart = touchupWeightSlot.vertexOffset;
+            for (int i = 0; i < vertexIndices.Count; i++)
+            {
+                int vertexIndex = vertexIndices[i];
+                int bakedIndex = bakedStart + vertexIndex;
+                if (vertexIndex < 0 || vertexIndex >= touchupWorkingWeights.Length ||
+                    bakedIndex < 0 || bakedIndex >= touchupDisplayColors.Length)
+                {
+                    continue;
+                }
+
+                touchupDisplayColors[bakedIndex] = BlenderWeightColor(
+                    GetWeightFromList(touchupWorkingWeights[vertexIndex], boneIndex));
+            }
+
+            BakedMesh.colors32 = touchupDisplayColors;
+            SceneView.RepaintAll();
+        }
+
+        private void OnTouchupLiveUpdate()
+        {
+            if (closing || !touchupWeightsMode || !touchupLiveUpdate)
+            {
+                return;
+            }
+
+            touchupLivePositionVertexIndices.Clear();
+            touchupLivePositionVertexIndices.UnionWith(touchupSavedPositionVertexIndices);
+            touchupLivePositionVertexIndices.UnionWith(touchupPendingPaintWeights.Keys);
+            touchupLivePositionVertexIndices.UnionWith(touchupPaintStrokeWeights.Keys);
+            touchupLivePositionVertexIndices.UnionWith(touchupPreviewVertexIndices);
+            if (touchupLivePositionVertexIndices.Count == 0)
+            {
+                return;
+            }
+
+            RecalculateTouchupVertexPositions(touchupLivePositionVertexIndices);
+            SceneView.RepaintAll();
+        }
+
+        private void RecalculateTouchupVertexPositions(IEnumerable<int> vertexIndices)
+        {
+            if (vertexIndices == null || BakedMesh == null || VertexObject == null ||
+                touchupWeightSlot == null || touchupWeightSlot.asset == null ||
+                !EnsureTouchupPaintData(out _))
+            {
+                return;
+            }
+
+            SkinnedMeshRenderer renderer = stageSkinnedMeshRenderer != null
+                ? stageSkinnedMeshRenderer
+                : GetCurrentSkinnedMeshRenderer();
+            Mesh sourceMesh = renderer != null ? renderer.sharedMesh : null;
+            UMAMeshData meshData = touchupWeightSlot.asset.meshData;
+            if (renderer == null || sourceMesh == null || meshData == null ||
+                thisDCA == null || thisDCA.umaData == null || thisDCA.umaData.skeleton == null)
+            {
+                return;
+            }
+
+            int sourceMeshId = sourceMesh.GetInstanceID();
+            if (touchupSkinningSourceVertices == null ||
+                touchupSkinningSourceMeshId != sourceMeshId ||
+                touchupSkinningSourceVertices.Length != sourceMesh.vertexCount)
+            {
+                touchupSkinningSourceVertices = sourceMesh.vertices;
+                touchupSkinningSourceMeshId = sourceMeshId;
+                touchupSkinningPositionOffsets.Clear();
+            }
+
+            Vector3[] previewVertices = BakedMesh.vertices;
+            int bakedStart = touchupWeightSlot.vertexOffset;
+            bool changed = false;
+            foreach (int vertexIndex in vertexIndices)
+            {
+                int bakedIndex = bakedStart + vertexIndex;
+                if (vertexIndex < 0 || vertexIndex >= meshData.vertexCount ||
+                    vertexIndex >= touchupWorkingWeights.Length ||
+                    vertexIndex >= touchupAssetWeights.Length ||
+                    bakedIndex < 0 || bakedIndex >= previewVertices.Length ||
+                    bakedIndex >= touchupSkinningSourceVertices.Length)
+                {
+                    continue;
+                }
+
+                Vector3 sourcePosition = touchupSkinningSourceVertices[bakedIndex];
+                if (!touchupSkinningPositionOffsets.TryGetValue(bakedIndex, out Vector3 positionOffset))
+                {
+                    if (!TrySkinTouchupVertex(
+                            renderer,
+                            meshData,
+                            sourcePosition,
+                            touchupAssetWeights[vertexIndex],
+                            out Vector3 originalPosition))
+                    {
+                        continue;
+                    }
+                    positionOffset = previewVertices[bakedIndex] - originalPosition;
+                    touchupSkinningPositionOffsets.Add(bakedIndex, positionOffset);
+                }
+
+                bool hasPreviewWeights =
+                    touchupPreviewWeights != null &&
+                    touchupPreviewVertexIndices.Contains(vertexIndex);
+                bool skinned = hasPreviewWeights
+                    ? TrySkinTouchupVertex(
+                        renderer,
+                        meshData,
+                        sourcePosition,
+                        touchupPreviewWeights,
+                        out Vector3 skinnedPosition)
+                    : TrySkinTouchupVertex(
+                        renderer,
+                        meshData,
+                        sourcePosition,
+                        touchupWorkingWeights[vertexIndex],
+                        out skinnedPosition);
+                if (!skinned)
+                {
+                    continue;
+                }
+
+                previewVertices[bakedIndex] = skinnedPosition + positionOffset;
+                changed = true;
+            }
+
+            if (!changed)
+            {
+                return;
+            }
+
+            BakedMesh.vertices = previewVertices;
+            BakedMesh.RecalculateBounds();
+            RefreshBakedMeshCaches();
+            RefreshTouchupSelectionPositions();
+
+            MeshCollider collider = VertexObject.GetComponent<MeshCollider>();
+            if (collider != null)
+            {
+                collider.sharedMesh = null;
+                collider.sharedMesh = BakedMesh;
+            }
+            SceneView.RepaintAll();
+        }
+
+        private bool TrySkinTouchupVertex(
+            SkinnedMeshRenderer renderer,
+            UMAMeshData meshData,
+            Vector3 sourcePosition,
+            List<BoneWeight1> weights,
+            out Vector3 skinnedPosition)
+        {
+            skinnedPosition = Vector3.zero;
+            if (weights == null || weights.Count == 0)
+            {
+                return false;
+            }
+
+            float totalWeight = 0f;
+            for (int i = 0; i < weights.Count; i++)
+            {
+                BoneWeight1 weight = weights[i];
+                float value = Mathf.Max(0f, weight.weight);
+                if (value <= BoneWeightMismatchTolerance)
+                {
+                    continue;
+                }
+                if (!TryGetTouchupSkinMatrix(
+                        renderer,
+                        meshData,
+                        weight.boneIndex,
+                        GetSlotBoneHash(meshData, weight.boneIndex),
+                        out Matrix4x4 skinMatrix))
+                {
+                    return false;
+                }
+
+                skinnedPosition += skinMatrix.MultiplyPoint3x4(sourcePosition) * value;
+                totalWeight += value;
+            }
+
+            if (totalWeight <= Mathf.Epsilon)
+            {
+                return false;
+            }
+            skinnedPosition /= totalWeight;
+            return true;
+        }
+
+        private bool TrySkinTouchupVertex(
+            SkinnedMeshRenderer renderer,
+            UMAMeshData meshData,
+            Vector3 sourcePosition,
+            List<VertexWeightEntry> weights,
+            out Vector3 skinnedPosition)
+        {
+            skinnedPosition = Vector3.zero;
+            if (weights == null || weights.Count == 0)
+            {
+                return false;
+            }
+
+            float totalWeight = 0f;
+            for (int i = 0; i < weights.Count; i++)
+            {
+                VertexWeightEntry weight = weights[i];
+                if (weight == null)
+                {
+                    continue;
+                }
+
+                float value = Mathf.Clamp01(weight.weight);
+                int boneIndex = GetBoundBoneIndex(meshData, weight.boneHash);
+                if (value <= BoneWeightMismatchTolerance)
+                {
+                    continue;
+                }
+                if (!TryGetTouchupSkinMatrix(
+                        renderer,
+                        meshData,
+                        boneIndex,
+                        weight.boneHash,
+                        out Matrix4x4 skinMatrix))
+                {
+                    return false;
+                }
+
+                skinnedPosition += skinMatrix.MultiplyPoint3x4(sourcePosition) * value;
+                totalWeight += value;
+            }
+
+            if (totalWeight <= Mathf.Epsilon)
+            {
+                return false;
+            }
+            skinnedPosition /= totalWeight;
+            return true;
+        }
+
+        private bool TryGetTouchupSkinMatrix(
+            SkinnedMeshRenderer renderer,
+            UMAMeshData meshData,
+            int boneIndex,
+            int boneHash,
+            out Matrix4x4 skinMatrix)
+        {
+            skinMatrix = Matrix4x4.identity;
+            if (renderer == null || meshData == null ||
+                thisDCA == null || thisDCA.umaData == null || thisDCA.umaData.skeleton == null)
+            {
+                return false;
+            }
+
+            if (boneHash == 0)
+            {
+                boneHash = GetSlotBoneHash(meshData, boneIndex);
+            }
+            Transform boneTransform = boneHash != 0
+                ? thisDCA.umaData.skeleton.GetBoneTransform(boneHash)
+                : null;
+            if (boneTransform == null)
+            {
+                return false;
+            }
+
+            Matrix4x4 bindPose =
+                meshData.bindPoses != null &&
+                boneIndex >= 0 &&
+                boneIndex < meshData.bindPoses.Length
+                    ? meshData.bindPoses[boneIndex]
+                    : ResolveBindPoseForBone(boneHash, boneTransform);
+            skinMatrix =
+                renderer.transform.worldToLocalMatrix *
+                boneTransform.localToWorldMatrix *
+                bindPose;
+            return true;
+        }
+
+        private void RefreshTouchupSelectionPositions()
+        {
+            if (SelectedVertexes == null || bakedVertices == null || VertexObject == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < SelectedVertexes.Count; i++)
+            {
+                VertexSelection selection = SelectedVertexes[i];
+                if (!SelectionMatchesTouchupSlot(selection) ||
+                    !TryGetVisibleBakedVertexIndex(
+                        selection.slot,
+                        selection.vertexIndexOnSlot,
+                        out int bakedIndex) ||
+                    bakedIndex < 0 ||
+                    bakedIndex >= bakedVertices.Length)
+                {
+                    continue;
+                }
+                selection.WorldPosition =
+                    VertexObject.transform.TransformPoint(bakedVertices[bakedIndex]);
+            }
+        }
+
+        private void CaptureTouchupBaseColors()
+        {
+            if (touchupBaseColors != null && touchupBaseColors.Length == BakedMesh.vertexCount)
+            {
+                return;
+            }
+
+            Color32[] bakedColors = BakedMesh.colors32;
+            touchupBaseColors = new Color32[BakedMesh.vertexCount];
+            if (bakedColors != null && bakedColors.Length == touchupBaseColors.Length)
+            {
+                Array.Copy(bakedColors, touchupBaseColors, bakedColors.Length);
+                return;
+            }
+
+            Color32 white = new Color32(255, 255, 255, 255);
+            for (int i = 0; i < touchupBaseColors.Length; i++)
+            {
+                touchupBaseColors[i] = white;
+            }
+        }
+
+        private static Color32 BlenderWeightColor(float weight)
+        {
+            float value = Mathf.Clamp01(weight);
+            Color color;
+            if (value <= 0.25f)
+            {
+                color = Color.Lerp(new Color(0f, 0f, 1f), new Color(0f, 1f, 1f), value * 4f);
+            }
+            else if (value <= 0.5f)
+            {
+                color = Color.Lerp(new Color(0f, 1f, 1f), new Color(0f, 1f, 0f), (value - 0.25f) * 4f);
+            }
+            else if (value <= 0.75f)
+            {
+                color = Color.Lerp(new Color(0f, 1f, 0f), new Color(1f, 1f, 0f), (value - 0.5f) * 4f);
+            }
+            else
+            {
+                color = Color.Lerp(new Color(1f, 1f, 0f), new Color(1f, 0f, 0f), (value - 0.75f) * 4f);
+            }
+            color.a = 1f;
+            return color;
+        }
+
         private static List<RaceData> GetCompatibleRacesForSlotWeightEditor(SlotDataAsset slotAsset)
         {
             List<RaceData> races = new List<RaceData>();
@@ -1452,6 +3195,29 @@ namespace UMA
                 }
             }
 
+            List<RaceData> allRaces = GetAllPreviewRacesForSlotWeightEditor();
+            for (int i = 0; i < allRaces.Count; i++)
+            {
+                RaceData race = allRaces[i];
+
+                if (RaceBaseRecipeContainsSlot(race, slotAsset))
+                {
+                    AddUniqueRace(races, race);
+                }
+            }
+
+            return races;
+        }
+
+        private static List<RaceData> GetAllPreviewRacesForSlotWeightEditor()
+        {
+            List<RaceData> races = new List<RaceData>();
+            UMAAssetIndexer indexer = UMAAssetIndexer.Instance;
+            if (indexer == null)
+            {
+                return races;
+            }
+
             RaceData[] allRaces = indexer.GetAllRaces();
             if (allRaces == null)
             {
@@ -1466,10 +3232,7 @@ namespace UMA
                     continue;
                 }
 
-                if (RaceBaseRecipeContainsSlot(race, slotAsset))
-                {
-                    AddUniqueRace(races, race);
-                }
+                AddUniqueRace(races, race);
             }
 
             return races;
@@ -1590,8 +3353,12 @@ namespace UMA
 
             if (targetSlot == null)
             {
-                errorMessage = "The selected race does not contain a base slot matching '" + GetSlotSourceKey(slotAsset) + "'.";
-                return false;
+                targetSlot = new SlotData(slotAsset);
+                SlotData[] expandedSlots = new SlotData[slots.Length + 1];
+                Array.Copy(slots, expandedSlots, slots.Length);
+                expandedSlots[expandedSlots.Length - 1] = targetSlot;
+                previewAvatar.umaData.umaRecipe.slotDataList = expandedSlots;
+                slots = expandedSlots;
             }
 
             for (int i = 0; i < slots.Length; i++)
@@ -1604,6 +3371,28 @@ namespace UMA
 
             targetSlot.asset = slotAsset;
             targetSlot.UpdateFromAsset(slotAsset);
+            if (targetSlot.OverlayCount == 0)
+            {
+                UMAGenerator previewGenerator = previewAvatar.umaData.umaGenerator;
+                OverlayData defaultOverlay = previewGenerator != null
+                    ? previewGenerator.defaultOverlaydata
+                    : null;
+                if (defaultOverlay != null)
+                {
+                    targetSlot.AddOverlay(defaultOverlay.Duplicate());
+                }
+                else if (previewGenerator != null && previewGenerator.defaultOverlayAsset != null)
+                {
+                    // The generator can have a configured asset before Awake creates
+                    // its transient OverlayData instance in an editor preview.
+                    targetSlot.AddOverlay(new OverlayData(previewGenerator.defaultOverlayAsset));
+                }
+                else
+                {
+                    errorMessage = "The selected generator has no default overlay for rendering the temporary slot preview.";
+                    return false;
+                }
+            }
             targetSlot.Suppressed = false;
             return true;
         }
@@ -3312,9 +5101,18 @@ namespace UMA
             base.OnOpenStage();
 
             EnsureEditorEvents();
+            if (touchupWeightsMode)
+            {
+                Undo.undoRedoPerformed += OnTouchupWeightUndoRedo;
+                EditorApplication.update += OnTouchupLiveUpdate;
+            }
             //scene = EditorSceneManager.NewPreviewScene();
 
-            if (slotWeightEditorMode)
+            if (touchupWeightsMode)
+            {
+                touchupWeightsWindow = UmaTouchupWeightsWindow.Open(this);
+            }
+            else if (slotWeightEditorMode)
             {
                 slotWeightEditorWindow = UmaSlotWeightEditorWindow.Open(this, slotWeightEditorSlotAsset);
             }
@@ -3415,6 +5213,10 @@ namespace UMA
             // the generated materials/atlas textures after this preview has captured them.
             cachedVisibilityHeight = -1f;
             CaptureSavedSelectionSnapshot();
+            if (touchupWeightsMode)
+            {
+                InitializeTouchupWeights();
+            }
 
             return true;
         }
@@ -3448,6 +5250,8 @@ namespace UMA
         protected override void OnCloseStage()
         {
             closing = true;
+            Undo.undoRedoPerformed -= OnTouchupWeightUndoRedo;
+            EditorApplication.update -= OnTouchupLiveUpdate;
             EndSculptStroke(true);
             EndVertexPaintStroke(true);
             if (hasOriginalSceneCameraMode)
@@ -3493,7 +5297,7 @@ namespace UMA
             {
                 stageSkinnedMeshRenderer.enabled = stageSkinnedMeshRendererWasEnabled;
             }
-            if (thisDCA != null && !slotWeightEditorReadOnly)
+            if (thisDCA != null && !slotWeightEditorReadOnly && !touchupWeightsMode)
             {
                 var wearables = thisDCA.GetVisibleWearables();
                 foreach (var wearable in wearables)
@@ -3516,6 +5320,11 @@ namespace UMA
                 slotWeightEditorWindow.Close();
                 slotWeightEditorWindow = null;
             }
+            if (touchupWeightsWindow != null)
+            {
+                touchupWeightsWindow.Close();
+                touchupWeightsWindow = null;
+            }
             if (vertexMaterial != null)
             {
                 DestroyImmediate(vertexMaterial);
@@ -3537,6 +5346,25 @@ namespace UMA
                 DestroyImmediate(thisDCA.gameObject);
             }
             base.OnCloseStage();
+        }
+
+        private void OnTouchupWeightUndoRedo()
+        {
+            if (!touchupWeightsMode || closing)
+            {
+                return;
+            }
+
+            ResetTouchupPaintData();
+            EnsureTouchupPaintData(out _);
+            touchupLivePositionVertexIndices.Clear();
+            touchupLivePositionVertexIndices.UnionWith(touchupSavedPositionVertexIndices);
+            touchupLivePositionVertexIndices.UnionWith(touchupPendingPaintWeights.Keys);
+            touchupLivePositionVertexIndices.UnionWith(touchupPreviewVertexIndices);
+            RecalculateTouchupVertexPositions(touchupLivePositionVertexIndices);
+            touchupWeightsRevision++;
+            RefreshTouchupWeightVisualization();
+            RepaintLinkedEditors();
         }
 
         private IEnumerator RegenerateUMA()
@@ -3794,6 +5622,10 @@ namespace UMA
 
                 if (currentEvent.type == EventType.MouseUp)// && currentEvent.button == 0)
                 {
+                    if (touchupWeightsMode && touchupWeightTool == TouchupWeightTool.Paint)
+                    {
+                        EndTouchupWeightPaintStroke(true);
+                    }
                     EndSelectionUndoSnapshot();
                     selectionBrushing = false;
 
@@ -3841,6 +5673,10 @@ namespace UMA
                     pendingStateClickAction = false;
                     replaceSelectionOnRectSelect = false;
                     selectionBrushedVerticesThisStroke.Clear();
+                    if (touchupWeightsMode && touchupWeightTool == TouchupWeightTool.Paint)
+                    {
+                        EndTouchupWeightPaintStroke(true);
+                    }
                     EndSelectionUndoSnapshot();
                 }
 
@@ -5269,10 +7105,20 @@ namespace UMA
             Mesh mesh = GetVertexMesh();
             Material mat = GetVertexMaterial(Color.red);
 
-            RefreshBakedMeshCaches();
+            if (!touchupWeightsMode || bakedNormals == null ||
+                BakedMesh == null || bakedNormals.Length != BakedMesh.vertexCount)
+            {
+                RefreshBakedMeshCaches();
+            }
             Vector3[] normals = bakedNormals;
             if (normals == null)
             {
+                return;
+            }
+
+            if (touchupWeightsMode)
+            {
+                DrawTouchupSelectionHandles(vertexes, mesh, mat, normals);
                 return;
             }
 
@@ -5351,6 +7197,74 @@ namespace UMA
                 mat.SetColor("_Color", newColor);
                 mat.SetPass(0);
                 Graphics.DrawMeshNow(mesh, matrix);
+            }
+        }
+
+        private void DrawTouchupSelectionHandles(
+            List<VertexSelection> vertexes,
+            Mesh mesh,
+            Material material,
+            Vector3[] normals)
+        {
+            if (vertexes == null || vertexes.Count == 0 || Camera.current == null)
+            {
+                return;
+            }
+
+            material.enableInstancing = true;
+            material.SetColor("_Color", InactiveColor);
+            int batchCount = 0;
+            for (int i = 0; i < vertexes.Count; i++)
+            {
+                VertexSelection selection = vertexes[i];
+                if (!SelectionMatchesTouchupSlot(selection) ||
+                    !TryGetVisibleBakedVertexIndex(
+                        selection.slot,
+                        selection.vertexIndexOnSlot,
+                        out int bakedIndex) ||
+                    bakedIndex < 0 ||
+                    bakedIndex >= normals.Length ||
+                    Vector3.Dot(normals[bakedIndex], Camera.current.transform.forward) > 0f)
+                {
+                    continue;
+                }
+
+                touchupHandleBatch[batchCount++] = Matrix4x4.TRS(
+                    selection.WorldPosition,
+                    Quaternion.identity,
+                    Vector3.one * HandlesSize);
+                if (batchCount < touchupHandleBatch.Length)
+                {
+                    continue;
+                }
+
+                Graphics.DrawMeshInstanced(
+                    mesh,
+                    0,
+                    material,
+                    touchupHandleBatch,
+                    batchCount,
+                    null,
+                    UnityEngine.Rendering.ShadowCastingMode.Off,
+                    false,
+                    0,
+                    Camera.current);
+                batchCount = 0;
+            }
+
+            if (batchCount > 0)
+            {
+                Graphics.DrawMeshInstanced(
+                    mesh,
+                    0,
+                    material,
+                    touchupHandleBatch,
+                    batchCount,
+                    null,
+                    UnityEngine.Rendering.ShadowCastingMode.Off,
+                    false,
+                    0,
+                    Camera.current);
             }
         }
 
@@ -5635,6 +7549,17 @@ namespace UMA
                 return;
             }
 
+            if (touchupWeightsMode)
+            {
+                if (touchupWeightsWindow != null &&
+                    !touchupWeightsWindow.TryResolveUnsavedChangesBeforeClose())
+                {
+                    return;
+                }
+                StageUtility.GoBackToPreviousStage();
+                return;
+            }
+
             bool selectionChanged = HasUnsavedSelectionChanges();
             bool sculptChanged = HasSculptChanges();
             bool vertexPaintChanged = vertexPaintDirty;
@@ -5709,7 +7634,10 @@ namespace UMA
 
         private void DoToolsPanel()
         {
-            GUILayout.Label(slotWeightEditorMode ? "Vertex Selection" : "Authoring Workflow", EditorStyles.boldLabel);
+            string panelTitle = touchupWeightsMode
+                ? "Weight Touchup"
+                : slotWeightEditorMode ? "Vertex Selection" : "Authoring Workflow";
+            GUILayout.Label(panelTitle, EditorStyles.boldLabel);
             DoToolsWindow(VertexEditorToolsWindowID);
         }
 
@@ -5990,6 +7918,19 @@ namespace UMA
                 leftPanelRect.width - scrollbarWidth - ToolsPanelRightPadding);
             GUILayout.BeginArea(new Rect(0, 0, toolsContentWidth, ToolsPos.y + ToolWindowAreaHeight));
             SceneView sceneView = SceneView.lastActiveSceneView;
+            if (touchupWeightsMode)
+            {
+                DrawTouchupWeightsTools(sceneView);
+                if (Event.current.type == EventType.Repaint)
+                {
+                    ToolWindowAreaHeight = Mathf.Max(180f, GUILayoutUtility.GetLastRect().yMax + 20f);
+                }
+                GUILayout.EndArea();
+                GUILayout.Space(ToolWindowAreaHeight + 10);
+                GUILayout.EndScrollView();
+                return;
+            }
+
             if (slotWeightEditorMode)
             {
                 DrawAdvancedSelectionToolbar();
@@ -6009,7 +7950,14 @@ namespace UMA
             selectionBrushModeSet = sceneToolMode == SceneToolMode.SelectionBrush;
             selectionBrushModeState = sceneToolMode == SceneToolMode.SelectionBrush;
             EditorGUI.BeginChangeCheck();
-            showOriginalMaterials = EditorGUILayout.Toggle(new GUIContent("Original Materials", "Display the materials from the generated UMA renderer instead of the pastel editor materials."), showOriginalMaterials);
+            if (touchupWeightsMode)
+            {
+                EditorGUILayout.HelpBox("The mesh is shown in Blender-style weight colors for the bone selected in the Touchup Weights window.", MessageType.Info);
+            }
+            else
+            {
+                showOriginalMaterials = EditorGUILayout.Toggle(new GUIContent("Original Materials", "Display the materials from the generated UMA renderer instead of the pastel editor materials."), showOriginalMaterials);
+            }
             showVertexWireframe = EditorGUILayout.Toggle(new GUIContent("Wireframe", "Show or hide Unity's selected-renderer wireframe overlay."), showVertexWireframe);
             if (EditorGUI.EndChangeCheck())
             {
@@ -6170,11 +8118,18 @@ namespace UMA
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Slot Filter", GUILayout.Width(92));
 
-                if (selectionSlot >= selectFrom.Length)
+                if (touchupWeightsMode)
                 {
-                    selectionSlot = 0;
+                    EditorGUILayout.LabelField(touchupWeightSlot != null ? touchupWeightSlot.slotName : "No slot selected");
                 }
-                selectionSlot = EditorGUILayout.Popup(selectionSlot, selectFrom);
+                else
+                {
+                    if (selectionSlot >= selectFrom.Length)
+                    {
+                        selectionSlot = 0;
+                    }
+                    selectionSlot = EditorGUILayout.Popup(selectionSlot, selectFrom);
+                }
                 GUILayout.EndHorizontal();
 
                 if (sceneToolMode == SceneToolMode.Select)
@@ -6385,6 +8340,181 @@ namespace UMA
             GUILayout.Space(ToolWindowAreaHeight + 10);
             GUILayout.EndScrollView();
             // Define a small drag area so the rest of the window is NOT draggable
+        }
+
+        private void DrawTouchupWeightsTools(SceneView sceneView)
+        {
+            sceneToolMode = SceneToolMode.SelectionBrush;
+            currentDefineMode = DefineMode.DefineVertexSet;
+            selectionBrushShape = SelectionBrushShape.Circle;
+            currentMode = selectMode.Add;
+            selectionBrushModeSet = true;
+            selectionBrushModeState = true;
+
+            EditorGUI.BeginChangeCheck();
+            TouchupWeightTool requestedTool = (TouchupWeightTool)GUILayout.Toolbar(
+                (int)touchupWeightTool,
+                new[] { "Select Mode", "Paint Mode" });
+            if (EditorGUI.EndChangeCheck() && requestedTool != touchupWeightTool)
+            {
+                CancelInteraction();
+                touchupWeightTool = requestedTool;
+                selectionBrushedVerticesThisStroke.Clear();
+                touchupPaintStatusMessage = string.Empty;
+            }
+
+            if (touchupWeightTool == TouchupWeightTool.Select)
+            {
+                EditorGUILayout.HelpBox(
+                    "Drag to select vertices on the current slot. Hold Shift to add and Ctrl to remove.",
+                    MessageType.Info);
+            }
+            else
+            {
+                EditorGUILayout.HelpBox(
+                    "Drag over the current slot to paint the bone selected in the Touchup Weights window. " +
+                    "Every painted result is normalized; use Save Weights in that window to write the changes.",
+                    MessageType.Info);
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Bone", GUILayout.Width(72f));
+                EditorGUILayout.LabelField(
+                    GetBoneDisplayName(
+                        touchupWeightBoneHash,
+                        touchupWeightSlot != null && touchupWeightSlot.asset != null
+                            ? GetBoundBoneIndex(touchupWeightSlot.asset.meshData, touchupWeightBoneHash)
+                            : -1),
+                    EditorStyles.miniBoldLabel);
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Amount", GUILayout.Width(72f));
+                touchupPaintAmount = EditorGUILayout.Slider(touchupPaintAmount, 0f, 1f);
+                GUILayout.EndHorizontal();
+
+                GUILayout.Label("Paint Operation", EditorStyles.miniBoldLabel);
+                touchupWeightPaintMode = (TouchupWeightPaintMode)GUILayout.Toolbar(
+                    (int)touchupWeightPaintMode,
+                    new[] { "Replace", "Add", "Remove", "Smooth" });
+
+                touchupPaintSelectedVerticesOnly = EditorGUILayout.Toggle(
+                    new GUIContent(
+                        "Selected Vertices Only",
+                        "Restrict painting to vertices already selected in Select Mode."),
+                    touchupPaintSelectedVerticesOnly);
+                if (touchupPaintSelectedVerticesOnly && TouchupSelectionCount == 0)
+                {
+                    EditorGUILayout.HelpBox(
+                        "Select at least one vertex in Select Mode before painting with this restriction.",
+                        MessageType.Warning);
+                }
+
+                touchupAutoMaskConnectedVertices = EditorGUILayout.Toggle(
+                    new GUIContent(
+                        "Auto-mask Connected Vertices",
+                        "Protect vertices co-located with vertices on another visible slot so weight changes cannot open gaps between slots."),
+                    touchupAutoMaskConnectedVertices);
+                if (touchupAutoMaskConnectedVertices &&
+                    touchupCrossSlotMaskedVertices != null &&
+                    touchupCrossSlotMaskedVertices.Count > 0)
+                {
+                    EditorGUILayout.LabelField(
+                        touchupCrossSlotMaskedVertices.Count + " cross-slot vertices protected.",
+                        EditorStyles.miniLabel);
+                }
+
+                if (touchupWeightPaintMode == TouchupWeightPaintMode.Smooth)
+                {
+                    touchupSmoothSelectedBoneOnly = EditorGUILayout.Toggle(
+                        new GUIContent(
+                            "Selected Bone Only",
+                            "Smooth only the selected bone. When disabled, all influences are smoothed together."),
+                        touchupSmoothSelectedBoneOnly);
+                }
+
+                string operationHelp;
+                switch (touchupWeightPaintMode)
+                {
+                    case TouchupWeightPaintMode.Replace:
+                        operationHelp = "Replace sets the selected bone to Amount and proportionally scales the other influences.";
+                        break;
+                    case TouchupWeightPaintMode.Add:
+                        operationHelp = "Add increases the selected bone by Amount, then normalizes all influences.";
+                        break;
+                    case TouchupWeightPaintMode.Remove:
+                        operationHelp = "Remove subtracts Amount from the selected bone, then normalizes all influences.";
+                        break;
+                    default:
+                        operationHelp = touchupSmoothSelectedBoneOnly
+                            ? "Smooth moves the selected bone toward the average of connected vertices by Amount."
+                            : "Smooth moves all influences toward the average of connected vertices by Amount.";
+                        break;
+                }
+                EditorGUILayout.HelpBox(operationHelp, MessageType.None);
+
+                if (!string.IsNullOrEmpty(touchupPaintStatusMessage))
+                {
+                    EditorGUILayout.HelpBox(touchupPaintStatusMessage, touchupPaintStatusType);
+                }
+            }
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Slot", GUILayout.Width(72f));
+            EditorGUILayout.LabelField(
+                touchupWeightSlot != null ? touchupWeightSlot.slotName : "No slot selected",
+                EditorStyles.miniBoldLabel);
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Brush Radius", GUILayout.Width(88f));
+            selectionBrushRadiusPixels = EditorGUILayout.IntSlider(
+                selectionBrushRadiusPixels,
+                MinSelectionBrushRadiusPixels,
+                MaxSelectionBrushRadiusPixels);
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Handle Size", GUILayout.Width(88f));
+            HandlesSize = EditorGUILayout.Slider(HandlesSize, 0f, 0.04f);
+            GUILayout.EndHorizontal();
+
+            EditorGUI.BeginChangeCheck();
+            touchupLiveUpdate = EditorGUILayout.Toggle(
+                new GUIContent(
+                    "Live update",
+                    "Recalculate edited vertex positions from the current skeleton and preview weights every editor frame."),
+                touchupLiveUpdate);
+            if (EditorGUI.EndChangeCheck() && touchupLiveUpdate)
+            {
+                OnTouchupLiveUpdate();
+            }
+
+            selectObscured = EditorGUILayout.Toggle(
+                new GUIContent("Select Obscured", "Allow the brush to select vertices hidden behind the visible surface."),
+                selectObscured);
+            using (new EditorGUI.DisabledScope(!selectObscured))
+            {
+                selectFacingAway = EditorGUILayout.Toggle(
+                    new GUIContent("Select Backfacing", "Allow the brush to select vertices facing away from the camera."),
+                    selectFacingAway);
+            }
+
+            EditorGUI.BeginChangeCheck();
+            showVertexWireframe = EditorGUILayout.Toggle(
+                new GUIContent("Wireframe", "Show or hide Unity's selected-renderer wireframe overlay."),
+                showVertexWireframe);
+            if (EditorGUI.EndChangeCheck())
+            {
+                ApplyVertexDisplayOptions();
+                SceneView.RepaintAll();
+            }
+
+            if (GUILayout.Button("Reset Camera") && sceneView != null)
+            {
+                Selection.activeObject = VertexObject;
+                sceneView.AlignViewToObject(cameraAnchor.transform);
+                sceneView.FrameSelected(true);
+            }
         }
 
         private void DrawSelectionBrushOptions()
@@ -8981,6 +11111,10 @@ namespace UMA
 
         private void CancelInteraction()
         {
+            if (touchupWeightsMode && touchupPaintStrokeActive)
+            {
+                EndTouchupWeightPaintStroke(true);
+            }
             pendingStateClickAction = false;
             replaceSelectionOnRectSelect = false;
             selectionBrushedVerticesThisStroke.Clear();
@@ -9007,6 +11141,22 @@ namespace UMA
             return currentMode;
         }
 
+        private bool IsAllowedBySelectionSlot(SlotData slot)
+        {
+            if (slot == null)
+            {
+                return false;
+            }
+            if (touchupWeightsMode)
+            {
+                return touchupWeightSlot != null &&
+                       (ReferenceEquals(slot, touchupWeightSlot) ||
+                        string.Equals(slot.slotName, touchupWeightSlot.slotName, StringComparison.Ordinal));
+            }
+            return selectionSlot <= 0 || (selectionSlot < selectFrom.Length &&
+                                          string.Equals(slot.slotName, selectFrom[selectionSlot], StringComparison.Ordinal));
+        }
+
 
         public void SelectAll()
         {
@@ -9016,6 +11166,10 @@ namespace UMA
             {
                 if (TryGetSlotForBakedVertex(i, out SlotData foundSlot, out int foundVert))
                 {
+                    if (!IsAllowedBySelectionSlot(foundSlot))
+                    {
+                        continue;
+                    }
                     SelectedVertexes.Add(new VertexSelection()
                     {
                         vertexIndexOnSlot = foundVert,
@@ -9086,6 +11240,10 @@ namespace UMA
                     EditorUtility.DisplayProgressBar("Inverting Selection", "Processing vertex " + i.ToString(), (float)i / (float)BakedMesh.vertices.Length);
                     if (TryGetSlotForBakedVertex(i, out SlotData foundSlot, out int foundVert))
                     {
+                        if (!IsAllowedBySelectionSlot(foundSlot))
+                        {
+                            continue;
+                        }
                         bool found = false;
                         for (int j = 0; j < SelectedVertexes.Count; j++)
                         {
@@ -9185,12 +11343,9 @@ namespace UMA
                             continue;
                         }
 
-                        if (currentDefineMode == DefineMode.DefineVertexSet && selectionSlot > 0)
+                        if (currentDefineMode == DefineMode.DefineVertexSet && !IsAllowedBySelectionSlot(foundSlot))
                         {
-                            if (foundSlot.slotName != selectFrom[selectionSlot])
-                            {
-                                continue;
-                            }
+                            continue;
                         }
 
                         if (foundSlot != null)
@@ -9230,6 +11385,11 @@ namespace UMA
 
         private bool ApplySelectionBrush(Event currentEvent)
         {
+            if (touchupWeightsMode && touchupWeightTool == TouchupWeightTool.Paint)
+            {
+                return ApplyTouchupWeightPaintBrush(currentEvent);
+            }
+
             if (selectionBrushShape == SelectionBrushShape.Circle)
             {
                 return ApplyCircleSelectionBrush(currentEvent);
@@ -9245,8 +11405,37 @@ namespace UMA
                 return false;
             }
 
-            Vector3[] vertexes = BakedMesh.vertices;
-            Vector3[] normals = BakedMesh.normals;
+            if (touchupWeightsMode)
+            {
+                List<int> touchupCandidates = GetTouchupBrushVertexIndices(currentEvent, false);
+                HashSet<int> strokeCandidates = new HashSet<int>();
+                for (int i = 0; i < touchupCandidates.Count; i++)
+                {
+                    int vertexIndex = touchupCandidates[i];
+                    string selectionKey = touchupWeightSlot.slotName + ":" + vertexIndex;
+                    if (selectionBrushedVerticesThisStroke.Contains(selectionKey))
+                    {
+                        continue;
+                    }
+
+                    selectionBrushedVerticesThisStroke.Add(selectionKey);
+                    strokeCandidates.Add(vertexIndex);
+                }
+
+                bool touchupChanged = ApplyTouchupSelectionCandidates(
+                    strokeCandidates,
+                    GetEffectiveSelectMode(currentEvent));
+                if (touchupChanged)
+                {
+                    RepaintLinkedEditors();
+                    SceneView.RepaintAll();
+                }
+                return touchupChanged;
+            }
+
+            RefreshBakedMeshCaches();
+            Vector3[] vertexes = bakedVertices;
+            Vector3[] normals = bakedNormals;
             if (vertexes == null || vertexes.Length == 0)
             {
                 return false;
@@ -9260,6 +11449,13 @@ namespace UMA
 
             for (int i = 0; i < vertexes.Length; i++)
             {
+                if (!TryGetSlotForBakedVertex(i, out SlotData foundSlot, out int foundVert) ||
+                    foundSlot == null ||
+                    (currentDefineMode == DefineMode.DefineVertexSet && !IsAllowedBySelectionSlot(foundSlot)))
+                {
+                    continue;
+                }
+
                 Vector3 screenPos3 = HandleUtility.WorldToGUIPoint(VertexObject.transform.TransformPoint(vertexes[i]));
                 Vector2 screenPos = new Vector2(screenPos3.x, screenPos3.y);
                 if ((screenPos - brushCenter).sqrMagnitude > radiusSqr)
@@ -9268,16 +11464,6 @@ namespace UMA
                 }
 
                 if (!IsPaintCandidateVisible(i, screenPos, vertexes, normals))
-                {
-                    continue;
-                }
-
-                if (!TryGetSlotForBakedVertex(i, out SlotData foundSlot, out int foundVert) || foundSlot == null)
-                {
-                    continue;
-                }
-
-                if (currentDefineMode == DefineMode.DefineVertexSet && selectionSlot > 0 && foundSlot.slotName != selectFrom[selectionSlot])
                 {
                     continue;
                 }
@@ -9303,6 +11489,146 @@ namespace UMA
             }
 
             return changed;
+        }
+
+        private bool ApplyTouchupSelectionCandidates(HashSet<int> candidates, selectMode mode)
+        {
+            if (candidates == null || candidates.Count == 0 || touchupWeightSlot == null)
+            {
+                return false;
+            }
+
+            HashSet<int> selectedIndices = new HashSet<int>();
+            for (int i = 0; i < SelectedVertexes.Count; i++)
+            {
+                VertexSelection selection = SelectedVertexes[i];
+                if (SelectionMatchesTouchupSlot(selection))
+                {
+                    selectedIndices.Add(selection.vertexIndexOnSlot);
+                }
+            }
+
+            bool changed = false;
+            if (mode == selectMode.Remove || mode == selectMode.InvertSelection)
+            {
+                int removed = SelectedVertexes.RemoveAll(selection =>
+                    SelectionMatchesTouchupSlot(selection) &&
+                    candidates.Contains(selection.vertexIndexOnSlot));
+                changed = removed > 0;
+            }
+
+            if (mode == selectMode.Add || mode == selectMode.InvertSelection)
+            {
+                if (bakedVertices == null || BakedMesh == null ||
+                    bakedVertices.Length != BakedMesh.vertexCount)
+                {
+                    RefreshBakedMeshCaches();
+                }
+                foreach (int vertexIndex in candidates)
+                {
+                    if (selectedIndices.Contains(vertexIndex))
+                    {
+                        continue;
+                    }
+
+                    int bakedIndex = touchupWeightSlot.vertexOffset + vertexIndex;
+                    if (bakedVertices == null || bakedIndex < 0 || bakedIndex >= bakedVertices.Length)
+                    {
+                        continue;
+                    }
+
+                    SelectedVertexes.Add(new VertexSelection
+                    {
+                        vertexIndexOnSlot = vertexIndex,
+                        slot = touchupWeightSlot,
+                        WorldPosition = VertexObject.transform.TransformPoint(bakedVertices[bakedIndex]),
+                        isActive = currentNewVertexState == (int)newVertexState.Active
+                    });
+                    changed = true;
+                }
+            }
+
+            if (changed)
+            {
+                CurrentSelected = -1;
+                SetActive(null);
+            }
+            return changed;
+        }
+
+        private List<int> GetTouchupBrushVertexIndices(Event currentEvent, bool selectedVerticesOnly)
+        {
+            List<int> result = new List<int>();
+            if (touchupWeightSlot == null || touchupWeightSlot.asset == null ||
+                BakedMesh == null || VertexObject == null)
+            {
+                return result;
+            }
+
+            if (bakedVertices == null || bakedVertices.Length != BakedMesh.vertexCount)
+            {
+                RefreshBakedMeshCaches();
+            }
+            if (bakedVertices == null || bakedVertices.Length == 0)
+            {
+                return result;
+            }
+
+            HashSet<int> selectedIndices = null;
+            if (selectedVerticesOnly)
+            {
+                selectedIndices = new HashSet<int>();
+                List<VertexSelection> selectedVertices = GetTouchupSelectedVertices();
+                for (int i = 0; i < selectedVertices.Count; i++)
+                {
+                    selectedIndices.Add(selectedVertices[i].vertexIndexOnSlot);
+                }
+                if (selectedIndices.Count == 0)
+                {
+                    return result;
+                }
+            }
+
+            float radius = Mathf.Clamp(
+                selectionBrushRadiusPixels,
+                MinSelectionBrushRadiusPixels,
+                MaxSelectionBrushRadiusPixels);
+            float radiusSqr = radius * radius;
+            Vector2 brushCenter = currentEvent.mousePosition;
+            int bakedStart = touchupWeightSlot.vertexOffset;
+            int vertexCount = Mathf.Min(
+                touchupWeightSlot.asset.meshData.vertexCount,
+                bakedVertices.Length - bakedStart);
+            if (bakedStart < 0 || vertexCount <= 0)
+            {
+                return result;
+            }
+
+            for (int vertexIndex = 0; vertexIndex < vertexCount; vertexIndex++)
+            {
+                if (selectedIndices != null && !selectedIndices.Contains(vertexIndex))
+                {
+                    continue;
+                }
+
+                int bakedIndex = bakedStart + vertexIndex;
+                Vector3 screenPosition3 = HandleUtility.WorldToGUIPoint(
+                    VertexObject.transform.TransformPoint(bakedVertices[bakedIndex]));
+                Vector2 screenPosition = new Vector2(screenPosition3.x, screenPosition3.y);
+                if ((screenPosition - brushCenter).sqrMagnitude > radiusSqr ||
+                    !IsPaintCandidateVisible(
+                        bakedIndex,
+                        screenPosition,
+                        bakedVertices,
+                        bakedNormals))
+                {
+                    continue;
+                }
+
+                result.Add(vertexIndex);
+            }
+
+            return result;
         }
 
         private bool IsPaintCandidateVisible(int bakedVertexIndex, Vector2 screenPos, Vector3[] vertexes, Vector3[] normals)
@@ -9554,9 +11880,9 @@ namespace UMA
                             return false;
                         }
 
-                        if (currentDefineMode == DefineMode.DefineVertexSet && selectionSlot > 0)
+                        if (currentDefineMode == DefineMode.DefineVertexSet)
                         {
-                            if (vs.slot.slotName != selectFrom[selectionSlot])
+                            if (!IsAllowedBySelectionSlot(vs.slot))
                             {
                                 return false;
                             }
@@ -9789,6 +12115,13 @@ namespace UMA
             vertexPaintSlot = null;
             vertexPaintBaseColors = null;
             vertexPaintColors = null;
+            touchupBaseColors = null;
+            touchupSkinningSourceVertices = null;
+            touchupSkinningSourceMeshId = 0;
+            touchupSkinningPositionOffsets.Clear();
+            touchupSavedPositionVertexIndices.Clear();
+            touchupLivePositionVertexIndices.Clear();
+            ResetTouchupPaintData();
             stageSkinnedMeshRenderer = smr;
             CaptureOriginalVertexMaterials(smr);
             BakedMesh = new Mesh();
@@ -9812,6 +12145,10 @@ namespace UMA
             if (IsVertexPaintModeEnabled)
             {
                 EnsureVertexPaintSession(true);
+            }
+            if (touchupWeightsMode)
+            {
+                RefreshTouchupWeightVisualization();
             }
         }
 
@@ -10084,7 +12421,20 @@ namespace UMA
             if (renderer == null) return;
 
             Material[] applied;
-            if (IsVertexPaintModeEnabled && !showOriginalMaterials)
+            if (touchupWeightsMode)
+            {
+                int materialCount = BakedMesh != null ? Mathf.Max(1, BakedMesh.subMeshCount) : 1;
+                bool[] weightSubmeshes = GetTouchupWeightSubmeshes(materialCount);
+                Material previewMaterial = GetVertexColorPreviewMaterial();
+                applied = new Material[materialCount];
+                for (int i = 0; i < applied.Length; i++)
+                {
+                    applied[i] = weightSubmeshes[i]
+                        ? previewMaterial
+                        : GetOriginalOrPastelMaterial(i);
+                }
+            }
+            else if (IsVertexPaintModeEnabled && !showOriginalMaterials)
             {
                 Material previewMaterial = GetVertexColorPreviewMaterial();
                 int materialCount = BakedMesh != null ? Mathf.Max(1, BakedMesh.subMeshCount) : 1;
@@ -10120,6 +12470,55 @@ namespace UMA
             // selection-only overlay so it cannot remain visible when Wireframe is off.
             EditorUtility.SetSelectedWireframeHidden(renderer, true);
 #pragma warning restore CS0618
+        }
+
+        private bool[] GetTouchupWeightSubmeshes(int materialCount)
+        {
+            bool[] result = new bool[materialCount];
+            if (BakedMesh == null || touchupWeightSlot == null || touchupWeightSlot.asset == null ||
+                UMAMeshData.IsNullOrEmptyMeshData(touchupWeightSlot.asset.meshData))
+            {
+                return result;
+            }
+
+            int vertexStart = touchupWeightSlot.vertexOffset;
+            int vertexEnd = vertexStart + touchupWeightSlot.asset.meshData.vertexCount;
+            for (int submeshIndex = 0;
+                 submeshIndex < BakedMesh.subMeshCount && submeshIndex < result.Length;
+                 submeshIndex++)
+            {
+                int[] indices = BakedMesh.GetIndices(submeshIndex);
+                for (int i = 0; i < indices.Length; i++)
+                {
+                    if (indices[i] >= vertexStart && indices[i] < vertexEnd)
+                    {
+                        result[submeshIndex] = true;
+                        break;
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        private Material GetOriginalOrPastelMaterial(int submeshIndex)
+        {
+            if (originalVertexMaterials != null &&
+                submeshIndex >= 0 &&
+                submeshIndex < originalVertexMaterials.Length &&
+                originalVertexMaterials[submeshIndex] != null)
+            {
+                return originalVertexMaterials[submeshIndex];
+            }
+
+            if (pastelVertexMaterials != null &&
+                submeshIndex >= 0 &&
+                submeshIndex < pastelVertexMaterials.Length)
+            {
+                return pastelVertexMaterials[submeshIndex];
+            }
+
+            return null;
         }
 
         private Material GetVertexColorPreviewMaterial()

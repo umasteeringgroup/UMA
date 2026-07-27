@@ -1835,6 +1835,17 @@ namespace UMA.CharacterSystem.Editors
         {
             GUIHelper.BeginVerticalPadded(10, new Color(0.75f,0.875f,1f));
 
+            GUILayout.Label("Skinning Weights", EditorStyles.boldLabel);
+            EditorGUILayout.HelpBox("Touch up a SlotDataAsset's bone weights directly on this character in its current pose. Use a resizable circle brush to select vertices, inspect Blender-style weight colors, and save the corrected weights back to the slot.", MessageType.None);
+            if (GUILayout.Button("Touchup Weights"))
+            {
+                if (CanOpenMeshEditor())
+                {
+                    VertexEditorStage.OpenTouchupWeights(thisDCA);
+                }
+            }
+
+            EditorGUILayout.Space(6f);
             GUILayout.Label("Mesh Modifier", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox("Mesh Modifiers work on vertexes - these allow you to change vertex positions, scale them along their normal, extract and apply blendshapes, and modify vertex colors for shading (shader must support vertex colors).", MessageType.None);
             // Buttons row
