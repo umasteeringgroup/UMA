@@ -343,8 +343,9 @@ public class IconCreator : MonoBehaviour
                         continue;
                     }
 
-                    string outputFolder = GetOutputFolder(region, avatar.activeRace.racedata.raceName);
-                    string outputPath = Path.Combine(outputFolder, GetThumbnailFileName(uwr));
+                    string captureRaceName = avatar.activeRace.racedata.raceName;
+                    string outputFolder = GetOutputFolder(region, captureRaceName);
+                    string outputPath = GetThumbnailOutputPath(uwr, captureRaceName, outputFolder);
                     if (!CaptureRenderTextureToPng(cameraRegions.camera, outputPath))
                     {
                         currentStatus = $"Failed to capture icon for recipe: {uwr.name}";
@@ -442,7 +443,7 @@ public class IconCreator : MonoBehaviour
             outputTexture.Apply();
 
             string outputFolder = GetOutputFolder(region, raceName);
-            string outputPath = Path.Combine(outputFolder, GetThumbnailFileName(uwr));
+            string outputPath = GetThumbnailOutputPath(uwr, raceName, outputFolder);
             byte[] pngBytes = outputTexture.EncodeToPNG();
             File.WriteAllBytes(outputPath, pngBytes);
 
@@ -628,7 +629,23 @@ public class IconCreator : MonoBehaviour
             Mathf.Max(1, Mathf.RoundToInt(IconDimensions.y)));
     }
 
-    private string GetThumbnailFileName(UMAWardrobeRecipe uwr)
+    private string GetThumbnailOutputPath(
+        UMAWardrobeRecipe uwr,
+        string raceName,
+        string outputFolder)
+    {
+#if UNITY_EDITOR
+        string existingAssetPath = GetExistingThumbnailAssetPath(uwr, raceName);
+        string existingAbsolutePath = GetAbsoluteAssetPath(existingAssetPath);
+        if (IsFileInFolder(existingAbsolutePath, outputFolder))
+        {
+            return existingAbsolutePath;
+        }
+#endif
+        return Path.Combine(outputFolder, GetNewThumbnailFileName(uwr));
+    }
+
+    private string GetNewThumbnailFileName(UMAWardrobeRecipe uwr)
     {
         string identifier = string.Empty;
 #if UNITY_EDITOR
@@ -641,6 +658,70 @@ public class IconCreator : MonoBehaviour
 #endif
         return SanitizePathSegment(uwr.name + identifier) + ".png";
     }
+
+#if UNITY_EDITOR
+    private static string GetExistingThumbnailAssetPath(UMAWardrobeRecipe uwr, string raceName)
+    {
+        if (uwr == null || uwr.wardrobeRecipeThumbs == null)
+        {
+            return null;
+        }
+
+        for (int i = 0; i < uwr.wardrobeRecipeThumbs.Count; i++)
+        {
+            WardrobeRecipeThumb thumbnail = uwr.wardrobeRecipeThumbs[i];
+            if (thumbnail == null || thumbnail.race != raceName)
+            {
+                continue;
+            }
+
+            string spritePath = AssetDatabase.GetAssetPath(thumbnail.thumb);
+            if (!string.IsNullOrEmpty(spritePath))
+            {
+                return spritePath;
+            }
+            if (!string.IsNullOrEmpty(thumbnail.filename))
+            {
+                return thumbnail.filename;
+            }
+        }
+        return null;
+    }
+
+    private static string GetAbsoluteAssetPath(string assetPath)
+    {
+        if (string.IsNullOrWhiteSpace(assetPath))
+        {
+            return null;
+        }
+
+        string normalizedPath = assetPath.Replace('\\', '/');
+        if (!normalizedPath.Equals("Assets", StringComparison.OrdinalIgnoreCase) &&
+            !normalizedPath.StartsWith("Assets/", StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        string relativePath = normalizedPath.Length == "Assets".Length
+            ? string.Empty
+            : normalizedPath.Substring("Assets/".Length);
+        return Path.GetFullPath(Path.Combine(Application.dataPath, relativePath));
+    }
+
+    private static bool IsFileInFolder(string filePath, string folderPath)
+    {
+        if (string.IsNullOrEmpty(filePath) || string.IsNullOrEmpty(folderPath) || !File.Exists(filePath))
+        {
+            return false;
+        }
+
+        string fileDirectory = Path.GetDirectoryName(Path.GetFullPath(filePath));
+        string expectedDirectory = Path.GetFullPath(folderPath)
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        return fileDirectory != null &&
+            fileDirectory.Equals(expectedDirectory, StringComparison.OrdinalIgnoreCase);
+    }
+#endif
 
     private bool CaptureRenderTextureToPng(Camera captureCamera, string outputPath)
     {

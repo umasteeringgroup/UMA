@@ -77,6 +77,11 @@ public class IconCreatorEditor : Editor
             {
                 message += "\n\nCleared packables from " + result.ClearedAtlasCount + " obsolete atlases.";
             }
+            if (result.RemovedAtlasCount > 0)
+            {
+                message += "\n\nRemoved " + result.RemovedAtlasCount +
+                    " generated atlases from the inactive Sprite Atlas version.";
+            }
             if (result.WarningCount > 0)
             {
                 message += "\n\n" + result.WarningCount + " conflicts were logged as warnings.";

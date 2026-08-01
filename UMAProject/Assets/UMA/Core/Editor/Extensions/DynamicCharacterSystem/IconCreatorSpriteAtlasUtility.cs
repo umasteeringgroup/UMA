@@ -21,6 +21,7 @@ public static class IconCreatorSpriteAtlasUtility
         public int SpriteCount { get; }
         public int AtlasCount { get; }
         public int ClearedAtlasCount { get; }
+        public int RemovedAtlasCount { get; }
         public int WarningCount { get; }
 
         public RebuildResult(
@@ -29,6 +30,7 @@ public static class IconCreatorSpriteAtlasUtility
             int spriteCount,
             int atlasCount,
             int clearedAtlasCount,
+            int removedAtlasCount,
             int warningCount)
         {
             OutputFolder = outputFolder;
@@ -36,6 +38,7 @@ public static class IconCreatorSpriteAtlasUtility
             SpriteCount = spriteCount;
             AtlasCount = atlasCount;
             ClearedAtlasCount = clearedAtlasCount;
+            RemovedAtlasCount = removedAtlasCount;
             WarningCount = warningCount;
         }
     }
@@ -64,19 +67,28 @@ public static class IconCreatorSpriteAtlasUtility
         groupKeys.Sort(CompareGroupKeys);
         var rebuiltPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var usedAtlasPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        bool useSpriteAtlasV2 = IsSpriteAtlasV2Enabled(EditorSettings.spritePackerMode);
         int spriteCount = 0;
 
         for (int i = 0; i < groupKeys.Count; i++)
         {
             AtlasGroupKey groupKey = groupKeys[i];
             List<Sprite> sprites = GetSortedSprites(groups[groupKey]);
-            string atlasPath = GetUniqueAtlasPath(atlasFolder, groupKey, usedAtlasPaths);
-            RebuildAtlas(atlasPath, sprites);
+            string atlasPath = GetUniqueAtlasPath(
+                atlasFolder,
+                groupKey,
+                usedAtlasPaths,
+                useSpriteAtlasV2);
+            RebuildAtlas(atlasPath, sprites, useSpriteAtlasV2);
             rebuiltPaths.Add(atlasPath);
             spriteCount += sprites.Count;
         }
 
-        int clearedAtlasCount = ClearObsoleteAtlasPackables(atlasFolder, rebuiltPaths);
+        int clearedAtlasCount = ClearObsoleteAtlasPackables(
+            atlasFolder,
+            rebuiltPaths,
+            useSpriteAtlasV2);
+        int removedAtlasCount = RemoveInactiveAtlasAssets(atlasFolder, useSpriteAtlasV2);
         AssetDatabase.SaveAssets();
 
         for (int i = 0; i < warnings.Count; i++)
@@ -90,6 +102,7 @@ public static class IconCreatorSpriteAtlasUtility
             spriteCount,
             groupKeys.Count,
             clearedAtlasCount,
+            removedAtlasCount,
             warnings.Count);
     }
 
@@ -177,13 +190,7 @@ public static class IconCreatorSpriteAtlasUtility
                 continue;
             }
 
-            SpriteAtlas atlas = AssetDatabase.LoadAssetAtPath<SpriteAtlas>(atlasPath);
-            if (atlas == null)
-            {
-                continue;
-            }
-
-            UnityEngine.Object[] packables = SpriteAtlasExtensions.GetPackables(atlas);
+            UnityEngine.Object[] packables = GetAtlasPackables(atlasPath);
             for (int i = 0; i < packables.Length; i++)
             {
                 string packablePath = AssetDatabase.GetAssetPath(packables[i]);
@@ -213,7 +220,22 @@ public static class IconCreatorSpriteAtlasUtility
         }
     }
 
-    private static void RebuildAtlas(string atlasPath, List<Sprite> sprites)
+    private static void RebuildAtlas(
+        string atlasPath,
+        List<Sprite> sprites,
+        bool useSpriteAtlasV2)
+    {
+        if (useSpriteAtlasV2)
+        {
+            RebuildSpriteAtlasV2(atlasPath, sprites);
+        }
+        else
+        {
+            RebuildSpriteAtlasV1(atlasPath, sprites);
+        }
+    }
+
+    private static void RebuildSpriteAtlasV1(string atlasPath, List<Sprite> sprites)
     {
         SpriteAtlas atlas = AssetDatabase.LoadAssetAtPath<SpriteAtlas>(atlasPath);
         if (atlas == null)
@@ -264,9 +286,62 @@ public static class IconCreatorSpriteAtlasUtility
         EditorUtility.SetDirty(atlas);
     }
 
+    private static void RebuildSpriteAtlasV2(string atlasPath, List<Sprite> sprites)
+    {
+        SpriteAtlasAsset atlas = string.IsNullOrEmpty(AssetDatabase.AssetPathToGUID(atlasPath))
+            ? new SpriteAtlasAsset()
+            : SpriteAtlasAsset.Load(atlasPath);
+        if (atlas == null)
+        {
+            throw new InvalidOperationException("Unable to load Sprite Atlas V2 asset at '" + atlasPath + "'.");
+        }
+
+        try
+        {
+            SetSpriteAtlasV2Packables(atlas, sprites);
+            SpriteAtlasAsset.Save(atlas, atlasPath);
+        }
+        finally
+        {
+            UnityEngine.Object.DestroyImmediate(atlas);
+        }
+
+        AssetDatabase.ImportAsset(atlasPath, ImportAssetOptions.ForceUpdate);
+        ConfigureSpriteAtlasV2Importer(atlasPath);
+    }
+
+    private static void ConfigureSpriteAtlasV2Importer(string atlasPath)
+    {
+        SpriteAtlasImporter importer = AssetImporter.GetAtPath(atlasPath) as SpriteAtlasImporter;
+        if (importer == null)
+        {
+            throw new InvalidOperationException("Unable to load Sprite Atlas V2 importer at '" + atlasPath + "'.");
+        }
+
+        SpriteAtlasPackingSettings packingSettings = importer.packingSettings;
+        packingSettings.padding = 4;
+        packingSettings.enableRotation = false;
+        importer.packingSettings = packingSettings;
+
+        SpriteAtlasTextureSettings textureSettings = importer.textureSettings;
+        textureSettings.generateMipMaps = false;
+        textureSettings.filterMode = FilterMode.Bilinear;
+        textureSettings.sRGB = true;
+        importer.textureSettings = textureSettings;
+
+        TextureImporterPlatformSettings platformSettings =
+            importer.GetPlatformSettings("DefaultTexturePlatform");
+        platformSettings.maxTextureSize = 2048;
+        platformSettings.textureCompression = TextureImporterCompression.Compressed;
+        importer.SetPlatformSettings(platformSettings);
+        importer.includeInBuild = true;
+        importer.SaveAndReimport();
+    }
+
     private static int ClearObsoleteAtlasPackables(
         string atlasFolder,
-        HashSet<string> rebuiltPaths)
+        HashSet<string> rebuiltPaths,
+        bool useSpriteAtlasV2)
     {
         int clearedCount = 0;
         string[] atlasGuids = AssetDatabase.FindAssets("t:SpriteAtlas", new[] { atlasFolder });
@@ -278,23 +353,132 @@ public static class IconCreatorSpriteAtlasUtility
                 continue;
             }
 
-            SpriteAtlas atlas = AssetDatabase.LoadAssetAtPath<SpriteAtlas>(atlasPath);
-            if (atlas == null)
+            if (IsSpriteAtlasV2Path(atlasPath) != useSpriteAtlasV2)
             {
                 continue;
             }
-            UnityEngine.Object[] packables = SpriteAtlasExtensions.GetPackables(atlas);
+
+            UnityEngine.Object[] packables = GetAtlasPackables(atlasPath);
             if (packables.Length == 0)
             {
                 continue;
             }
 
-            Undo.RecordObject(atlas, "Clear Obsolete Thumbnail Sprite Atlas");
-            SpriteAtlasExtensions.Remove(atlas, packables);
-            EditorUtility.SetDirty(atlas);
+            if (useSpriteAtlasV2)
+            {
+                SpriteAtlasAsset atlas = SpriteAtlasAsset.Load(atlasPath);
+                try
+                {
+                    SetSpriteAtlasV2Packables(atlas, Array.Empty<Sprite>());
+                    SpriteAtlasAsset.Save(atlas, atlasPath);
+                }
+                finally
+                {
+                    UnityEngine.Object.DestroyImmediate(atlas);
+                }
+                AssetDatabase.ImportAsset(atlasPath, ImportAssetOptions.ForceUpdate);
+            }
+            else
+            {
+                SpriteAtlas atlas = AssetDatabase.LoadAssetAtPath<SpriteAtlas>(atlasPath);
+                Undo.RecordObject(atlas, "Clear Obsolete Thumbnail Sprite Atlas");
+                SpriteAtlasExtensions.Remove(atlas, packables);
+                EditorUtility.SetDirty(atlas);
+            }
             clearedCount++;
         }
         return clearedCount;
+    }
+
+    private static int RemoveInactiveAtlasAssets(string atlasFolder, bool useSpriteAtlasV2)
+    {
+        int removedCount = 0;
+        string[] atlasGuids = AssetDatabase.FindAssets("t:SpriteAtlas", new[] { atlasFolder });
+        for (int i = 0; i < atlasGuids.Length; i++)
+        {
+            string atlasPath = AssetDatabase.GUIDToAssetPath(atlasGuids[i]);
+            if (!IsManagedAtlasPath(atlasPath, atlasFolder) ||
+                IsSpriteAtlasV2Path(atlasPath) == useSpriteAtlasV2)
+            {
+                continue;
+            }
+
+            if (AssetDatabase.DeleteAsset(atlasPath))
+            {
+                removedCount++;
+            }
+        }
+        return removedCount;
+    }
+
+    private static UnityEngine.Object[] GetAtlasPackables(string atlasPath)
+    {
+        if (IsSpriteAtlasV2Path(atlasPath))
+        {
+            SpriteAtlasAsset atlas = SpriteAtlasAsset.Load(atlasPath);
+            if (atlas == null)
+            {
+                return Array.Empty<UnityEngine.Object>();
+            }
+            try
+            {
+                return GetSpriteAtlasV2Packables(atlas);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(atlas);
+            }
+        }
+
+        SpriteAtlas spriteAtlas = AssetDatabase.LoadAssetAtPath<SpriteAtlas>(atlasPath);
+        return spriteAtlas == null
+            ? Array.Empty<UnityEngine.Object>()
+            : SpriteAtlasExtensions.GetPackables(spriteAtlas);
+    }
+
+    private static UnityEngine.Object[] GetSpriteAtlasV2Packables(SpriteAtlasAsset atlas)
+    {
+        // SpriteAtlasAsset has no public packable getter. Its serialized packable list is
+        // the source data written by SpriteAtlasAsset.Save.
+        var serializedAtlas = new SerializedObject(atlas);
+        SerializedProperty packablesProperty =
+            serializedAtlas.FindProperty("m_ImporterData.packables");
+        if (packablesProperty == null || !packablesProperty.isArray)
+        {
+            return Array.Empty<UnityEngine.Object>();
+        }
+
+        var packables = new List<UnityEngine.Object>(packablesProperty.arraySize);
+        for (int i = 0; i < packablesProperty.arraySize; i++)
+        {
+            UnityEngine.Object packable =
+                packablesProperty.GetArrayElementAtIndex(i).objectReferenceValue;
+            if (packable != null)
+            {
+                packables.Add(packable);
+            }
+        }
+        return packables.ToArray();
+    }
+
+    private static void SetSpriteAtlasV2Packables(
+        SpriteAtlasAsset atlas,
+        IList<Sprite> sprites)
+    {
+        var serializedAtlas = new SerializedObject(atlas);
+        SerializedProperty packablesProperty =
+            serializedAtlas.FindProperty("m_ImporterData.packables");
+        if (packablesProperty == null || !packablesProperty.isArray)
+        {
+            throw new InvalidOperationException("Unable to access Sprite Atlas V2 packables.");
+        }
+
+        packablesProperty.arraySize = sprites.Count;
+        for (int i = 0; i < sprites.Count; i++)
+        {
+            packablesProperty.GetArrayElementAtIndex(i).objectReferenceValue = sprites[i];
+        }
+        serializedAtlas.ApplyModifiedPropertiesWithoutUndo();
     }
 
     private static List<Sprite> GetSortedSprites(HashSet<Sprite> sourceSprites)
@@ -322,17 +506,30 @@ public static class IconCreatorSpriteAtlasUtility
     private static string GetUniqueAtlasPath(
         string atlasFolder,
         AtlasGroupKey groupKey,
-        HashSet<string> usedAtlasPaths)
+        HashSet<string> usedAtlasPaths,
+        bool useSpriteAtlasV2)
     {
         string baseName = AtlasNamePrefix + MakeAssetName(groupKey.Race) + "_" + MakeAssetName(groupKey.Region);
-        string atlasPath = atlasFolder + "/" + baseName + ".spriteatlas";
+        string extension = useSpriteAtlasV2 ? ".spriteatlasv2" : ".spriteatlas";
+        string atlasPath = atlasFolder + "/" + baseName + extension;
         int suffix = 2;
         while (!usedAtlasPaths.Add(atlasPath))
         {
-            atlasPath = atlasFolder + "/" + baseName + "_" + suffix + ".spriteatlas";
+            atlasPath = atlasFolder + "/" + baseName + "_" + suffix + extension;
             suffix++;
         }
         return atlasPath;
+    }
+
+    private static bool IsSpriteAtlasV2Enabled(SpritePackerMode spritePackerMode)
+    {
+        return spritePackerMode == SpritePackerMode.SpriteAtlasV2 ||
+            spritePackerMode == SpritePackerMode.SpriteAtlasV2Build;
+    }
+
+    private static bool IsSpriteAtlasV2Path(string atlasPath)
+    {
+        return atlasPath.EndsWith(".spriteatlasv2", StringComparison.OrdinalIgnoreCase);
     }
 
     private static string MakeAssetName(string value)

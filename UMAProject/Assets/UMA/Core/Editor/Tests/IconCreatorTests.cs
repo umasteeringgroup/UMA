@@ -3,6 +3,8 @@ using System;
 using System.IO;
 using System.Reflection;
 using NUnit.Framework;
+using UMA.CharacterSystem;
+using UnityEditor;
 using UnityEngine;
 
 namespace UMA.Editors.Tests
@@ -161,6 +163,71 @@ namespace UMA.Editors.Tests
                 UnityEngine.Object.DestroyImmediate(sourceTexture);
                 UnityEngine.Object.DestroyImmediate(gameObject);
             }
+        }
+
+        [Test]
+        [Category("UMA")]
+        [Category("IconCreator")]
+        public void ExistingThumbnailPathIsPreservedForMatchingRace()
+        {
+            string folderName = "IconCreatorTests_" + Guid.NewGuid().ToString("N");
+            string assetFolder = "Assets/" + folderName;
+            string absoluteFolder = Path.Combine(Application.dataPath, folderName);
+            string assetPath = assetFolder + "/7_ExistingThumbnail.png";
+            string absolutePath = Path.Combine(absoluteFolder, "7_ExistingThumbnail.png");
+            GameObject gameObject = new GameObject("Icon Creator existing path test");
+            UMAWardrobeRecipe recipe = ScriptableObject.CreateInstance<UMAWardrobeRecipe>();
+            Texture2D texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            try
+            {
+                AssetDatabase.CreateFolder("Assets", folderName);
+                File.WriteAllBytes(absolutePath, texture.EncodeToPNG());
+
+                recipe.name = "Test Recipe";
+                recipe.wardrobeRecipeThumbs.Add(new WardrobeRecipeThumb
+                {
+                    race = "Test Race",
+                    filename = assetPath
+                });
+
+                IconCreator iconCreator = gameObject.AddComponent<IconCreator>();
+                string outputPath = (string)InvokePrivate(
+                    iconCreator,
+                    "GetThumbnailOutputPath",
+                    recipe,
+                    "Test Race",
+                    absoluteFolder);
+
+                Assert.AreEqual(NormalizePath(absolutePath), NormalizePath(outputPath));
+
+                string otherRaceOutputPath = (string)InvokePrivate(
+                    iconCreator,
+                    "GetThumbnailOutputPath",
+                    recipe,
+                    "Other Race",
+                    absoluteFolder);
+
+                Assert.AreNotEqual(NormalizePath(absolutePath), NormalizePath(otherRaceOutputPath));
+                Assert.AreEqual(
+                    NormalizePath(absoluteFolder),
+                    NormalizePath(Path.GetDirectoryName(otherRaceOutputPath)));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(texture);
+                UnityEngine.Object.DestroyImmediate(recipe);
+                UnityEngine.Object.DestroyImmediate(gameObject);
+                AssetDatabase.DeleteAsset(assetFolder);
+                if (Directory.Exists(absoluteFolder))
+                {
+                    Directory.Delete(absoluteFolder, true);
+                }
+            }
+        }
+
+        private static string NormalizePath(string path)
+        {
+            return Path.GetFullPath(path).Replace('\\', '/');
         }
 
         private static object InvokePrivate(object target, string methodName, params object[] arguments)
