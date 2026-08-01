@@ -285,10 +285,8 @@ public class IconCreator : MonoBehaviour
         var recipes = avatar.AvailableRecipes;
         if (recipes != null && recipes.TryGetValue(region, out List<UMATextRecipe> regionRecipes))
         {
-            int sequence = 0;
             foreach (var recipe in regionRecipes)
             {
-                sequence++;
                 var uwr = recipe as UMAWardrobeRecipe;
                 if (uwr != null)
                 {
@@ -296,7 +294,7 @@ public class IconCreator : MonoBehaviour
                     if (uwr.thumbnailFromTexture)
                     {
                         string raceName = avatar.activeRace.racedata.raceName;
-                        string textureOutputPath = GenerateThumbnailFromRecipeTexture(uwr, region, raceName, sequence);
+                        string textureOutputPath = GenerateThumbnailFromRecipeTexture(uwr, region, raceName);
                         if (!string.IsNullOrEmpty(textureOutputPath))
                         {
 #if UNITY_EDITOR
@@ -343,7 +341,7 @@ public class IconCreator : MonoBehaviour
                     }
 
                     string outputFolder = GetOutputFolder(region, avatar.activeRace.racedata.raceName);
-                    string outputPath = Path.Combine(outputFolder, SanitizePathSegment(sequence + "_" + uwr.name) + ".png");
+                    string outputPath = Path.Combine(outputFolder, GetThumbnailFileName(uwr));
                     if (!CaptureRenderTextureToPng(cameraRegions.camera, outputPath))
                     {
                         currentStatus = $"Failed to capture icon for recipe: {uwr.name}";
@@ -371,7 +369,7 @@ public class IconCreator : MonoBehaviour
         }
     }
 
-    private string GenerateThumbnailFromRecipeTexture(UMAWardrobeRecipe uwr, string region, string raceName, int sequence)
+    private string GenerateThumbnailFromRecipeTexture(UMAWardrobeRecipe uwr, string region, string raceName)
     {
         if (uwr == null)
         {
@@ -416,8 +414,13 @@ public class IconCreator : MonoBehaviour
         }
 
         Texture sourceTexture = textureList[0];
-        Texture2D readableTexture = GetReadableTexture2D(sourceTexture);
-        if (readableTexture == null)
+        Vector2Int iconDimensions = GetIconDimensions();
+        Texture2D outputTexture = GetReadableTexture2D(
+            sourceTexture,
+            uwr.thumbnailRect,
+            iconDimensions.x,
+            iconDimensions.y);
+        if (outputTexture == null)
         {
             Debug.LogWarning($"IconCreator: Failed to get readable texture for recipe '{uwr.name}'.");
             return null;
@@ -425,73 +428,75 @@ public class IconCreator : MonoBehaviour
 
         try
         {
-            // Crop using thumbnailRect (normalized UV coordinates, 0-1 range)
-            Rect thumbnailRect = uwr.thumbnailRect;
-            int srcWidth = readableTexture.width;
-            int srcHeight = readableTexture.height;
-
-            int cropX = Mathf.RoundToInt(thumbnailRect.x * srcWidth);
-            int cropY = Mathf.RoundToInt(thumbnailRect.y * srcHeight);
-            int cropWidth = Mathf.RoundToInt(thumbnailRect.width * srcWidth);
-            int cropHeight = Mathf.RoundToInt(thumbnailRect.height * srcHeight);
-
-            // Clamp to valid range
-            cropX = Mathf.Clamp(cropX, 0, srcWidth - 1);
-            cropY = Mathf.Clamp(cropY, 0, srcHeight - 1);
-            cropWidth = Mathf.Clamp(cropWidth, 1, srcWidth - cropX);
-            cropHeight = Mathf.Clamp(cropHeight, 1, srcHeight - cropY);
-
-            Color[] pixels = readableTexture.GetPixels(cropX, cropY, cropWidth, cropHeight);
-
-            // Create output texture and convert to grayscale with brightness/contrast
-            Texture2D outputTexture = new Texture2D(cropWidth, cropHeight, TextureFormat.RGBA32, false);
-            Color[] outputPixels = new Color[pixels.Length];
-            for (int i = 0; i < pixels.Length; i++)
+            Color[] outputPixels = outputTexture.GetPixels();
+            for (int i = 0; i < outputPixels.Length; i++)
             {
-                float gray = pixels[i].grayscale;
+                float gray = outputPixels[i].grayscale;
                 gray = ApplyBrightnessContrast(gray, brightness, contrast);
-                outputPixels[i] = new Color(gray, gray, gray, pixels[i].a);
+                outputPixels[i] = new Color(gray, gray, gray, outputPixels[i].a);
             }
             outputTexture.SetPixels(outputPixels);
             outputTexture.Apply();
 
-            // Save to PNG
             string outputFolder = GetOutputFolder(region, raceName);
-            string outputPath = Path.Combine(outputFolder, SanitizePathSegment(sequence + "_" + uwr.name) + ".png");
+            string outputPath = Path.Combine(outputFolder, GetThumbnailFileName(uwr));
             byte[] pngBytes = outputTexture.EncodeToPNG();
             File.WriteAllBytes(outputPath, pngBytes);
 
-            Destroy(outputTexture);
             return outputPath;
         }
         finally
         {
-            Destroy(readableTexture);
+            DestroyTexture(outputTexture);
         }
     }
 
-    private static Texture2D GetReadableTexture2D(Texture source)
+    private static Texture2D GetReadableTexture2D(Texture source, Rect sourceRect, int width, int height)
     {
-        if (source == null)
+        if (source == null || width < 1 || height < 1)
         {
             return null;
         }
 
+        int sourceX = Mathf.Clamp(Mathf.RoundToInt(sourceRect.x * source.width), 0, source.width - 1);
+        int sourceY = Mathf.Clamp(Mathf.RoundToInt(sourceRect.y * source.height), 0, source.height - 1);
+        int sourceWidth = Mathf.Clamp(Mathf.RoundToInt(sourceRect.width * source.width), 1, source.width - sourceX);
+        int sourceHeight = Mathf.Clamp(Mathf.RoundToInt(sourceRect.height * source.height), 1, source.height - sourceY);
+        Vector2 scale = new Vector2(
+            sourceWidth / (float)source.width,
+            sourceHeight / (float)source.height);
+        Vector2 offset = new Vector2(
+            sourceX / (float)source.width,
+            sourceY / (float)source.height);
+
         RenderTexture tmp = RenderTexture.GetTemporary(
-            source.width, source.height, 0,
+            width, height, 0,
             RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB);
-
-        Graphics.Blit(source, tmp);
         RenderTexture previous = RenderTexture.active;
-        RenderTexture.active = tmp;
+        Texture2D result = null;
+        try
+        {
+            Graphics.Blit(source, tmp, scale, offset);
+            RenderTexture.active = tmp;
 
-        Texture2D result = new Texture2D(source.width, source.height, TextureFormat.RGBA32, false);
-        result.ReadPixels(new Rect(0, 0, tmp.width, tmp.height), 0, 0);
-        result.Apply();
-
-        RenderTexture.active = previous;
-        RenderTexture.ReleaseTemporary(tmp);
-        return result;
+            result = new Texture2D(width, height, TextureFormat.RGBA32, false);
+            result.ReadPixels(new Rect(0, 0, width, height), 0, 0);
+            result.Apply();
+            return result;
+        }
+        catch
+        {
+            if (result != null)
+            {
+                DestroyTexture(result);
+            }
+            throw;
+        }
+        finally
+        {
+            RenderTexture.active = previous;
+            RenderTexture.ReleaseTemporary(tmp);
+        }
     }
 
     private static float ApplyBrightnessContrast(float gray, float brightnessValue, float contrastValue)
@@ -596,6 +601,27 @@ public class IconCreator : MonoBehaviour
         return value;
     }
 
+    private Vector2Int GetIconDimensions()
+    {
+        return new Vector2Int(
+            Mathf.Max(1, Mathf.RoundToInt(IconDimensions.x)),
+            Mathf.Max(1, Mathf.RoundToInt(IconDimensions.y)));
+    }
+
+    private string GetThumbnailFileName(UMAWardrobeRecipe uwr)
+    {
+        string identifier = string.Empty;
+#if UNITY_EDITOR
+        string recipePath = AssetDatabase.GetAssetPath(uwr);
+        string recipeGuid = AssetDatabase.AssetPathToGUID(recipePath);
+        if (!string.IsNullOrEmpty(recipeGuid))
+        {
+            identifier = "_" + recipeGuid.Substring(0, 8);
+        }
+#endif
+        return SanitizePathSegment(uwr.name + identifier) + ".png";
+    }
+
     private bool CaptureRenderTextureToPng(Camera captureCamera, string outputPath)
     {
         if (captureCamera == null || captureCamera.targetTexture == null || string.IsNullOrEmpty(outputPath))
@@ -611,20 +637,61 @@ public class IconCreator : MonoBehaviour
 
         // captureCamera.Render();
 
+        Vector2Int iconDimensions = GetIconDimensions();
+        RenderTexture resizedTexture = RenderTexture.GetTemporary(
+            iconDimensions.x,
+            iconDimensions.y,
+            0,
+            RenderTextureFormat.ARGB32,
+            RenderTextureReadWrite.sRGB);
         RenderTexture previousActive = RenderTexture.active;
-        RenderTexture.active = renderTexture;
+        Texture2D capturedTexture = null;
+        try
+        {
+            Graphics.Blit(renderTexture, resizedTexture);
+            RenderTexture.active = resizedTexture;
 
-        Texture2D capturedTexture = new Texture2D(renderTexture.width, renderTexture.height, TextureFormat.RGBA32, false);
-        capturedTexture.ReadPixels(new Rect(0f, 0f, renderTexture.width, renderTexture.height), 0, 0);
-        capturedTexture.Apply();
+            capturedTexture = new Texture2D(
+                iconDimensions.x,
+                iconDimensions.y,
+                TextureFormat.RGBA32,
+                false);
+            capturedTexture.ReadPixels(
+                new Rect(0f, 0f, iconDimensions.x, iconDimensions.y),
+                0,
+                0);
+            capturedTexture.Apply();
 
-        byte[] pngBytes = capturedTexture.EncodeToPNG();
-        File.WriteAllBytes(outputPath, pngBytes);
-
-        RenderTexture.active = previousActive;
-        Destroy(capturedTexture); 
+            byte[] pngBytes = capturedTexture.EncodeToPNG();
+            File.WriteAllBytes(outputPath, pngBytes);
+        }
+        finally
+        {
+            RenderTexture.active = previousActive;
+            RenderTexture.ReleaseTemporary(resizedTexture);
+            if (capturedTexture != null)
+            {
+                DestroyTexture(capturedTexture);
+            }
+        }
 
         return true;
+    }
+
+    private static void DestroyTexture(Texture2D texture)
+    {
+#if UNITY_EDITOR
+        if (Application.isPlaying)
+        {
+            Destroy(texture);
+        }
+        else
+        {
+            DestroyImmediate(texture);
+        }
+#else
+        Destroy(texture);
+#endif
     }
 
 #if UNITY_EDITOR
@@ -649,6 +716,8 @@ public class IconCreator : MonoBehaviour
             textureImporter.spriteImportMode = SpriteImportMode.Single;
             textureImporter.mipmapEnabled = false;
             textureImporter.alphaIsTransparency = true;
+            textureImporter.filterMode = FilterMode.Bilinear;
+            textureImporter.textureCompression = TextureImporterCompression.Compressed;
             textureImporter.SaveAndReimport();
         }
 
@@ -708,6 +777,12 @@ public class IconCreator : MonoBehaviour
         return "Assets" + normalizedAbsolutePath.Substring(normalizedDataPath.Length);
     }
 #endif
+
+    private void OnValidate()
+    {
+        Vector2Int iconDimensions = GetIconDimensions();
+        IconDimensions = new Vector2(iconDimensions.x, iconDimensions.y);
+    }
 
     private bool ValidateCameraRegion(CameraRegions cameraRegions, out string validationMessage)
     {
