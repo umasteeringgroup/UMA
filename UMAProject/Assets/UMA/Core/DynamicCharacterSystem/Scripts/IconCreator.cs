@@ -36,6 +36,9 @@ public class IconCreator : MonoBehaviour
     // Setup.
     public Vector2 IconDimensions = new Vector2(128, 128);
 
+    [Tooltip("Resize texture-derived thumbnails to Icon Dimensions instead of preserving the source crop resolution.")]
+    public bool ResizeTextureDerivedThumbnails = false;
+
     public float PreviewSize = 128.0f;
     public float scrollAreaHeight = 90.0f;
     public int currentCameraIndex = 0;
@@ -414,7 +417,7 @@ public class IconCreator : MonoBehaviour
         }
 
         Texture sourceTexture = textureList[0];
-        Vector2Int iconDimensions = GetIconDimensions();
+        Vector2Int iconDimensions = GetTextureThumbnailDimensions(sourceTexture, uwr.thumbnailRect);
         Texture2D outputTexture = GetReadableTexture2D(
             sourceTexture,
             uwr.thumbnailRect,
@@ -458,16 +461,13 @@ public class IconCreator : MonoBehaviour
             return null;
         }
 
-        int sourceX = Mathf.Clamp(Mathf.RoundToInt(sourceRect.x * source.width), 0, source.width - 1);
-        int sourceY = Mathf.Clamp(Mathf.RoundToInt(sourceRect.y * source.height), 0, source.height - 1);
-        int sourceWidth = Mathf.Clamp(Mathf.RoundToInt(sourceRect.width * source.width), 1, source.width - sourceX);
-        int sourceHeight = Mathf.Clamp(Mathf.RoundToInt(sourceRect.height * source.height), 1, source.height - sourceY);
+        RectInt sourcePixelRect = GetSourcePixelRect(source, sourceRect);
         Vector2 scale = new Vector2(
-            sourceWidth / (float)source.width,
-            sourceHeight / (float)source.height);
+            sourcePixelRect.width / (float)source.width,
+            sourcePixelRect.height / (float)source.height);
         Vector2 offset = new Vector2(
-            sourceX / (float)source.width,
-            sourceY / (float)source.height);
+            sourcePixelRect.x / (float)source.width,
+            sourcePixelRect.y / (float)source.height);
 
         RenderTexture tmp = RenderTexture.GetTemporary(
             width, height, 0,
@@ -497,6 +497,26 @@ public class IconCreator : MonoBehaviour
             RenderTexture.active = previous;
             RenderTexture.ReleaseTemporary(tmp);
         }
+    }
+
+    private Vector2Int GetTextureThumbnailDimensions(Texture source, Rect sourceRect)
+    {
+        if (ResizeTextureDerivedThumbnails)
+        {
+            return GetIconDimensions();
+        }
+
+        RectInt sourcePixelRect = GetSourcePixelRect(source, sourceRect);
+        return new Vector2Int(sourcePixelRect.width, sourcePixelRect.height);
+    }
+
+    private static RectInt GetSourcePixelRect(Texture source, Rect sourceRect)
+    {
+        int sourceX = Mathf.Clamp(Mathf.RoundToInt(sourceRect.x * source.width), 0, source.width - 1);
+        int sourceY = Mathf.Clamp(Mathf.RoundToInt(sourceRect.y * source.height), 0, source.height - 1);
+        int sourceWidth = Mathf.Clamp(Mathf.RoundToInt(sourceRect.width * source.width), 1, source.width - sourceX);
+        int sourceHeight = Mathf.Clamp(Mathf.RoundToInt(sourceRect.height * source.height), 1, source.height - sourceY);
+        return new RectInt(sourceX, sourceY, sourceWidth, sourceHeight);
     }
 
     private static float ApplyBrightnessContrast(float gray, float brightnessValue, float contrastValue)
@@ -629,27 +649,21 @@ public class IconCreator : MonoBehaviour
             return false;
         }
 
-        RenderTexture renderTexture = captureCamera.targetTexture;
-        if (!renderTexture.IsCreated())
-        {
-            renderTexture.Create();
-        }
-
-        // captureCamera.Render();
-
+        RenderTexture originalTarget = captureCamera.targetTexture;
         Vector2Int iconDimensions = GetIconDimensions();
-        RenderTexture resizedTexture = RenderTexture.GetTemporary(
+        RenderTexture captureTexture = RenderTexture.GetTemporary(
             iconDimensions.x,
             iconDimensions.y,
-            0,
+            originalTarget.depth,
             RenderTextureFormat.ARGB32,
             RenderTextureReadWrite.sRGB);
         RenderTexture previousActive = RenderTexture.active;
         Texture2D capturedTexture = null;
         try
         {
-            Graphics.Blit(renderTexture, resizedTexture);
-            RenderTexture.active = resizedTexture;
+            captureCamera.targetTexture = captureTexture;
+            captureCamera.Render();
+            RenderTexture.active = captureTexture;
 
             capturedTexture = new Texture2D(
                 iconDimensions.x,
@@ -667,8 +681,9 @@ public class IconCreator : MonoBehaviour
         }
         finally
         {
+            captureCamera.targetTexture = originalTarget;
             RenderTexture.active = previousActive;
-            RenderTexture.ReleaseTemporary(resizedTexture);
+            RenderTexture.ReleaseTemporary(captureTexture);
             if (capturedTexture != null)
             {
                 DestroyTexture(capturedTexture);

@@ -44,6 +44,8 @@ namespace UMA.Editors.Tests
             try
             {
                 Camera camera = gameObject.AddComponent<Camera>();
+                camera.clearFlags = CameraClearFlags.SolidColor;
+                camera.backgroundColor = new Color(0.1f, 0.7f, 0.2f, 1f);
                 renderTexture = new RenderTexture(32, 24, 0, RenderTextureFormat.ARGB32);
                 renderTexture.Create();
                 camera.targetTexture = renderTexture;
@@ -64,6 +66,11 @@ namespace UMA.Editors.Tests
                 Assert.IsTrue(loadedTexture.LoadImage(File.ReadAllBytes(outputPath)));
                 Assert.AreEqual(19, loadedTexture.width);
                 Assert.AreEqual(11, loadedTexture.height);
+                Assert.AreSame(renderTexture, camera.targetTexture);
+
+                Color centerPixel = loadedTexture.GetPixel(loadedTexture.width / 2, loadedTexture.height / 2);
+                Assert.Greater(centerPixel.g, centerPixel.r);
+                Assert.Greater(centerPixel.g, centerPixel.b);
             }
             finally
             {
@@ -92,7 +99,7 @@ namespace UMA.Editors.Tests
         [Test]
         [Category("UMA")]
         [Category("IconCreator")]
-        public void RecipeTextureIsResampledToIconDimensions()
+        public void TextureCropCanBeResampledToRequestedDimensions()
         {
             Texture2D sourceTexture = new Texture2D(8, 8, TextureFormat.RGBA32, false);
             Texture2D outputTexture = null;
@@ -117,6 +124,42 @@ namespace UMA.Editors.Tests
                     UnityEngine.Object.DestroyImmediate(outputTexture);
                 }
                 UnityEngine.Object.DestroyImmediate(sourceTexture);
+            }
+        }
+
+        [Test]
+        [Category("UMA")]
+        [Category("IconCreator")]
+        public void TextureDerivedThumbnailPreservesNativeCropDimensionsByDefault()
+        {
+            GameObject gameObject = new GameObject("Icon Creator texture dimension test");
+            Texture2D sourceTexture = new Texture2D(1024, 1024, TextureFormat.RGBA32, false);
+            try
+            {
+                IconCreator iconCreator = gameObject.AddComponent<IconCreator>();
+                iconCreator.IconDimensions = new Vector2(160f, 90f);
+
+                Vector2Int dimensions = (Vector2Int)InvokePrivate(
+                    iconCreator,
+                    "GetTextureThumbnailDimensions",
+                    sourceTexture,
+                    new Rect(0.25f, 0.25f, 0.5f, 0.5f));
+
+                Assert.AreEqual(new Vector2Int(512, 512), dimensions);
+
+                iconCreator.ResizeTextureDerivedThumbnails = true;
+                dimensions = (Vector2Int)InvokePrivate(
+                    iconCreator,
+                    "GetTextureThumbnailDimensions",
+                    sourceTexture,
+                    new Rect(0.25f, 0.25f, 0.5f, 0.5f));
+
+                Assert.AreEqual(new Vector2Int(160, 90), dimensions);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(sourceTexture);
+                UnityEngine.Object.DestroyImmediate(gameObject);
             }
         }
 
