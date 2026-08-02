@@ -252,6 +252,141 @@ namespace UMA.Editors.Tests
             }
         }
 
+        [Test]
+        [Category("UMA")]
+        [Category("IconCreator")]
+        public void DetachedRecipeDoesNotRetainThumbnailAssets()
+        {
+            UMAWardrobeRecipe sourceRecipe = ScriptableObject.CreateInstance<UMAWardrobeRecipe>();
+            UMAWardrobeRecipe detachedRecipe = null;
+            Texture2D texture = new Texture2D(4, 4, TextureFormat.RGBA32, false);
+            Sprite sprite = Sprite.Create(texture, new Rect(0, 0, 4, 4), Vector2.zero);
+            try
+            {
+                sourceRecipe.name = "Detached Recipe Test";
+                sourceRecipe.recipeString = "serialized recipe data";
+                sourceRecipe.thumbnailFromTexture = true;
+                sourceRecipe.wardrobeRecipeThumbs.Add(new WardrobeRecipeThumb("Test Race", sprite));
+
+                detachedRecipe = (UMAWardrobeRecipe)InvokePrivateStatic(
+                    typeof(IconCreator),
+                    "CreateDetachedRecipe",
+                    sourceRecipe);
+
+                Assert.AreNotSame(sourceRecipe, detachedRecipe);
+                Assert.AreEqual(sourceRecipe.name, detachedRecipe.name);
+                Assert.AreEqual(sourceRecipe.recipeString, detachedRecipe.recipeString);
+                Assert.AreEqual(sourceRecipe.thumbnailFromTexture, detachedRecipe.thumbnailFromTexture);
+                Assert.IsNotNull(detachedRecipe.wardrobeRecipeThumbs);
+                Assert.IsEmpty(detachedRecipe.wardrobeRecipeThumbs);
+                Assert.AreEqual(HideFlags.HideAndDontSave, detachedRecipe.hideFlags);
+                Assert.AreSame(sprite, sourceRecipe.wardrobeRecipeThumbs[0].thumb);
+            }
+            finally
+            {
+                if (detachedRecipe != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(detachedRecipe);
+                }
+                UnityEngine.Object.DestroyImmediate(sprite);
+                UnityEngine.Object.DestroyImmediate(texture);
+                UnityEngine.Object.DestroyImmediate(sourceRecipe);
+            }
+        }
+
+        [Test]
+        [Category("UMA")]
+        [Category("IconCreator")]
+        public void ThumbnailWriteOverwritesImportedTextureWithoutChangingGuid()
+        {
+            string folderName = "IconCreatorTests_" + Guid.NewGuid().ToString("N");
+            string assetFolder = "Assets/" + folderName;
+            string absoluteFolder = Path.Combine(Application.dataPath, folderName);
+            string assetPath = assetFolder + "/ExistingThumbnail.png";
+            string absolutePath = Path.Combine(absoluteFolder, "ExistingThumbnail.png");
+            Texture2D initialTexture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            Texture2D replacementTexture = new Texture2D(8, 4, TextureFormat.RGBA32, false);
+            UMAWardrobeRecipe recipe = ScriptableObject.CreateInstance<UMAWardrobeRecipe>();
+            FileStream thumbnailLock = null;
+            System.Threading.Tasks.Task releaseLock = null;
+            try
+            {
+                AssetDatabase.CreateFolder("Assets", folderName);
+                File.WriteAllBytes(absolutePath, initialTexture.EncodeToPNG());
+                AssetDatabase.ImportAsset(assetPath, ImportAssetOptions.ForceSynchronousImport);
+
+                TextureImporter textureImporter = AssetImporter.GetAtPath(assetPath) as TextureImporter;
+                Assert.IsNotNull(textureImporter);
+                textureImporter.textureType = TextureImporterType.Sprite;
+                textureImporter.spriteImportMode = SpriteImportMode.Single;
+                textureImporter.SaveAndReimport();
+
+                string originalGuid = AssetDatabase.AssetPathToGUID(assetPath);
+                Assert.IsNotEmpty(originalGuid);
+                Sprite importedSprite = AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
+                Assert.IsNotNull(importedSprite);
+                Assert.IsNotNull(importedSprite.texture);
+                recipe.wardrobeRecipeThumbs.Add(new WardrobeRecipeThumb("Test Race", importedSprite));
+
+                byte[] replacementBytes = replacementTexture.EncodeToPNG();
+                recipe.wardrobeRecipeThumbs[0].thumb = null;
+                InvokePrivateStatic(
+                    typeof(IconCreator),
+                    "UnloadThumbnailAsset",
+                    assetPath);
+                importedSprite = null;
+                EditorUtility.UnloadUnusedAssetsImmediate(false);
+
+                thumbnailLock = File.Open(
+                    absolutePath,
+                    FileMode.Open,
+                    FileAccess.Read,
+                    FileShare.Read);
+                FileStream lockToRelease = thumbnailLock;
+                releaseLock = System.Threading.Tasks.Task.Run(() =>
+                {
+                    System.Threading.Thread.Sleep(100);
+                    lockToRelease.Dispose();
+                });
+                InvokePrivateStatic(
+                    typeof(IconCreator),
+                    "WriteThumbnailFile",
+                    absolutePath,
+                    replacementBytes);
+                releaseLock.Wait();
+                Assert.IsEmpty(Directory.GetFiles(absoluteFolder, "*.tmp"));
+                AssetDatabase.ImportAsset(assetPath, ImportAssetOptions.ForceSynchronousImport);
+
+                importedSprite = AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
+                Assert.IsNotNull(importedSprite);
+                Assert.AreEqual(8, importedSprite.texture.width);
+                Assert.AreEqual(4, importedSprite.texture.height);
+                Assert.AreEqual(originalGuid, AssetDatabase.AssetPathToGUID(assetPath));
+            }
+            finally
+            {
+                thumbnailLock?.Dispose();
+                releaseLock?.Wait(1000);
+                if (recipe != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(recipe);
+                }
+                if (replacementTexture != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(replacementTexture);
+                }
+                if (initialTexture != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(initialTexture);
+                }
+                AssetDatabase.DeleteAsset(assetFolder);
+                if (Directory.Exists(absoluteFolder))
+                {
+                    Directory.Delete(absoluteFolder, true);
+                }
+            }
+        }
+
         private static string NormalizePath(string path)
         {
             return Path.GetFullPath(path).Replace('\\', '/');
