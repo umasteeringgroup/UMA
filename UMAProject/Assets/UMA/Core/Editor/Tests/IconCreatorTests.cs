@@ -35,6 +35,32 @@ namespace UMA.Editors.Tests
         [Test]
         [Category("UMA")]
         [Category("IconCreator")]
+        public void CaptureSupersamplingIsClampedBetweenOneAndFour()
+        {
+            GameObject gameObject = new GameObject("Icon Creator supersampling test");
+            try
+            {
+                IconCreator iconCreator = gameObject.AddComponent<IconCreator>();
+                iconCreator.CaptureSupersampling = 8;
+
+                InvokePrivate(iconCreator, "OnValidate");
+
+                Assert.AreEqual(4, iconCreator.CaptureSupersampling);
+
+                iconCreator.CaptureSupersampling = 0;
+                InvokePrivate(iconCreator, "OnValidate");
+
+                Assert.AreEqual(1, iconCreator.CaptureSupersampling);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(gameObject);
+            }
+        }
+
+        [Test]
+        [Category("UMA")]
+        [Category("IconCreator")]
         public void CameraCaptureUsesIconDimensions()
         {
             GameObject gameObject = new GameObject("Icon Creator capture test");
@@ -54,6 +80,7 @@ namespace UMA.Editors.Tests
 
                 IconCreator iconCreator = gameObject.AddComponent<IconCreator>();
                 iconCreator.IconDimensions = new Vector2(19f, 11f);
+                iconCreator.CaptureSupersampling = 2;
 
                 bool captured = (bool)InvokePrivate(
                     iconCreator,

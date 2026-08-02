@@ -36,6 +36,10 @@ public class IconCreator : MonoBehaviour
     // Setup.
     public Vector2 IconDimensions = new Vector2(128, 128);
 
+    [Range(1, 4)]
+    [Tooltip("Render camera thumbnails at a higher temporary resolution before downsampling. 2 is recommended.")]
+    public int CaptureSupersampling = 2;
+
     [Tooltip("Resize texture-derived thumbnails to Icon Dimensions instead of preserving the source crop resolution.")]
     public bool ResizeTextureDerivedThumbnails = false;
 
@@ -732,19 +736,42 @@ public class IconCreator : MonoBehaviour
 
         RenderTexture originalTarget = captureCamera.targetTexture;
         Vector2Int iconDimensions = GetIconDimensions();
+        int maxSupersampling = Mathf.Max(
+            1,
+            SystemInfo.maxTextureSize / Mathf.Max(iconDimensions.x, iconDimensions.y));
+        int supersampling = Mathf.Min(GetCaptureSupersampling(), maxSupersampling);
+        Vector2Int captureDimensions = new Vector2Int(
+            iconDimensions.x * supersampling,
+            iconDimensions.y * supersampling);
         RenderTexture captureTexture = RenderTexture.GetTemporary(
-            iconDimensions.x,
-            iconDimensions.y,
+            captureDimensions.x,
+            captureDimensions.y,
             originalTarget.depth,
             RenderTextureFormat.ARGB32,
             RenderTextureReadWrite.sRGB);
+        captureTexture.filterMode = FilterMode.Bilinear;
         RenderTexture previousActive = RenderTexture.active;
+        RenderTexture downsampledTexture = null;
         Texture2D capturedTexture = null;
         try
         {
             captureCamera.targetTexture = captureTexture;
             captureCamera.Render();
-            RenderTexture.active = captureTexture;
+
+            RenderTexture readTexture = captureTexture;
+            if (supersampling > 1)
+            {
+                downsampledTexture = RenderTexture.GetTemporary(
+                    iconDimensions.x,
+                    iconDimensions.y,
+                    0,
+                    RenderTextureFormat.ARGB32,
+                    RenderTextureReadWrite.sRGB);
+                downsampledTexture.filterMode = FilterMode.Bilinear;
+                Graphics.Blit(captureTexture, downsampledTexture);
+                readTexture = downsampledTexture;
+            }
+            RenderTexture.active = readTexture;
 
             capturedTexture = new Texture2D(
                 iconDimensions.x,
@@ -764,6 +791,10 @@ public class IconCreator : MonoBehaviour
         {
             captureCamera.targetTexture = originalTarget;
             RenderTexture.active = previousActive;
+            if (downsampledTexture != null)
+            {
+                RenderTexture.ReleaseTemporary(downsampledTexture);
+            }
             RenderTexture.ReleaseTemporary(captureTexture);
             if (capturedTexture != null)
             {
@@ -788,6 +819,11 @@ public class IconCreator : MonoBehaviour
 #else
         Destroy(texture);
 #endif
+    }
+
+    private int GetCaptureSupersampling()
+    {
+        return Mathf.Clamp(CaptureSupersampling, 1, 4);
     }
 
 #if UNITY_EDITOR
@@ -878,6 +914,7 @@ public class IconCreator : MonoBehaviour
     {
         Vector2Int iconDimensions = GetIconDimensions();
         IconDimensions = new Vector2(iconDimensions.x, iconDimensions.y);
+        CaptureSupersampling = GetCaptureSupersampling();
     }
 
     private bool ValidateCameraRegion(CameraRegions cameraRegions, out string validationMessage)
