@@ -288,9 +288,9 @@ public static class IconCreatorSpriteAtlasUtility
 
     private static void RebuildSpriteAtlasV2(string atlasPath, List<Sprite> sprites)
     {
-        SpriteAtlasAsset atlas = string.IsNullOrEmpty(AssetDatabase.AssetPathToGUID(atlasPath))
-            ? new SpriteAtlasAsset()
-            : SpriteAtlasAsset.Load(atlasPath);
+        SpriteAtlasAsset atlas = AssetFileExists(atlasPath)
+            ? SpriteAtlasAsset.Load(atlasPath)
+            : new SpriteAtlasAsset();
         if (atlas == null)
         {
             throw new InvalidOperationException("Unable to load Sprite Atlas V2 asset at '" + atlasPath + "'.");
@@ -530,6 +530,13 @@ public static class IconCreatorSpriteAtlasUtility
     private static bool IsSpriteAtlasV2Path(string atlasPath)
     {
         return atlasPath.EndsWith(".spriteatlasv2", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool AssetFileExists(string assetPath)
+    {
+        string projectFolder = Directory.GetParent(Application.dataPath).FullName;
+        string absolutePath = Path.GetFullPath(Path.Combine(projectFolder, assetPath));
+        return File.Exists(absolutePath);
     }
 
     private static string MakeAssetName(string value)

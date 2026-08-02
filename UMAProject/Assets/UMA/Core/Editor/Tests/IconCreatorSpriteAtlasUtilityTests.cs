@@ -97,6 +97,45 @@ namespace UMA.Editors.Tests
         [Test]
         [Category("UMA")]
         [Category("IconCreator")]
+        public void SpriteAtlasV2RebuildRecreatesDeletedAssetWithCachedGuid()
+        {
+            string folder = CreateTestFolder();
+            string atlasPath = folder + "/UMAIcons_Deleted_TestRegion.spriteatlasv2";
+            try
+            {
+                Sprite sprite = CreateSpriteAsset(folder, "Replacement");
+                var originalAtlas = new SpriteAtlasAsset();
+                try
+                {
+                    SpriteAtlasAsset.Save(originalAtlas, atlasPath);
+                }
+                finally
+                {
+                    UnityEngine.Object.DestroyImmediate(originalAtlas);
+                }
+                AssetDatabase.ImportAsset(atlasPath, ImportAssetOptions.ForceUpdate);
+
+                Assert.IsTrue(AssetDatabase.DeleteAsset(atlasPath));
+                Assert.IsFalse(File.Exists(Path.GetFullPath(atlasPath)));
+
+                InvokePrivateStatic(
+                    "RebuildAtlas",
+                    atlasPath,
+                    new List<Sprite> { sprite },
+                    true);
+
+                Assert.IsTrue(File.Exists(Path.GetFullPath(atlasPath)));
+                Assert.AreEqual(1, GetSpriteAtlasV2PackableCount(atlasPath));
+            }
+            finally
+            {
+                AssetDatabase.DeleteAsset(folder);
+            }
+        }
+
+        [Test]
+        [Category("UMA")]
+        [Category("IconCreator")]
         public void InactiveGeneratedAtlasVersionIsRemoved()
         {
             string folder = CreateTestFolder();
