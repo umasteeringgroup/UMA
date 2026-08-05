@@ -634,14 +634,7 @@ public class IconCreator : MonoBehaviour
 
     private static void DestroyDetachedRecipe(UMAWardrobeRecipe recipe)
     {
-        if (Application.isPlaying)
-        {
-            Destroy(recipe);
-        }
-        else
-        {
-            DestroyImmediate(recipe);
-        }
+        UMAUtils.DestroySceneObject(recipe);
     }
 
     private static void UnloadThumbnailAsset(string assetPath)
@@ -1237,18 +1230,7 @@ public class IconCreator : MonoBehaviour
 
     private static void DestroyTexture(Texture2D texture)
     {
-#if UNITY_EDITOR
-        if (Application.isPlaying)
-        {
-            Destroy(texture);
-        }
-        else
-        {
-            DestroyImmediate(texture);
-        }
-#else
-        Destroy(texture);
-#endif
+        UMAUtils.DestroySceneObject(texture);
     }
 
     private int GetCaptureSupersampling()

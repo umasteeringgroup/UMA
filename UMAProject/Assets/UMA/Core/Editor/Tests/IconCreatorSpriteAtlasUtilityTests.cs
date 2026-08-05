@@ -1,13 +1,14 @@
 #if UNITY_EDITOR
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using NUnit.Framework;
+using UMA.CharacterSystem;
 using UnityEditor;
 using UnityEditor.U2D;
 using UnityEngine;
-using UnityEngine.U2D;
 
 namespace UMA.Editors.Tests
 {
@@ -36,17 +37,126 @@ namespace UMA.Editors.Tests
         [Test]
         [Category("UMA")]
         [Category("IconCreator")]
+        public void ThumbnailSourcesAreRestrictedToTheConfiguredIconRoot()
+        {
+            const string iconRoot = "Assets/UMA/UMA3/Wearables/Icons";
+            const string atlasFolder = iconRoot + "/SpriteAtlases";
+
+            Assert.IsTrue((bool)InvokePrivateStatic(
+                "IsThumbnailSourcePath",
+                iconRoot + "/Hair/Human Female 3.0/Hair.png",
+                iconRoot,
+                atlasFolder));
+            Assert.IsFalse((bool)InvokePrivateStatic(
+                "IsThumbnailSourcePath",
+                "Assets/UMA2/Wearables/Thumbs/Hair.png",
+                iconRoot,
+                atlasFolder));
+            Assert.IsFalse((bool)InvokePrivateStatic(
+                "IsThumbnailSourcePath",
+                "Assets/UMA/UMA3/Wearables/IconsLegacy/Hair.png",
+                iconRoot,
+                atlasFolder));
+            Assert.IsFalse((bool)InvokePrivateStatic(
+                "IsThumbnailSourcePath",
+                atlasFolder + "/Generated.png",
+                iconRoot,
+                atlasFolder));
+        }
+
+        [Test]
+        [Category("UMA")]
+        [Category("IconCreator")]
+        public void AtlasGroupsOnlyIncludeThumbnailSpritesUnderTheConfiguredRoot()
+        {
+            string folder = CreateTestFolder();
+            string iconRoot = folder + "/Icons";
+            string externalFolder = folder + "/External";
+            AssetDatabase.CreateFolder(folder, "Icons");
+            AssetDatabase.CreateFolder(folder, "External");
+            try
+            {
+                Sprite includedSprite = CreateSpriteAsset(iconRoot, "Included");
+                Sprite excludedSprite = CreateSpriteAsset(externalFolder, "Excluded");
+                CreateWardrobeRecipeAsset(
+                    folder,
+                    "IncludedRecipe",
+                    "IncludedRegion",
+                    "IncludedRace",
+                    includedSprite);
+                CreateWardrobeRecipeAsset(
+                    folder,
+                    "ExcludedRecipe",
+                    "ExcludedRegion",
+                    "ExcludedRace",
+                    excludedSprite);
+                AssetDatabase.SaveAssets();
+
+                Type groupKeyType = typeof(IconCreatorSpriteAtlasUtility).GetNestedType(
+                    "AtlasGroupKey",
+                    BindingFlags.NonPublic);
+                Assert.IsNotNull(groupKeyType);
+                Type assignmentsType = typeof(Dictionary<,>).MakeGenericType(
+                    typeof(string),
+                    groupKeyType);
+                IDictionary assignments = (IDictionary)Activator.CreateInstance(assignmentsType);
+                var warnings = new List<string>();
+                object[] arguments =
+                {
+                    iconRoot,
+                    iconRoot + "/SpriteAtlases",
+                    assignments,
+                    warnings,
+                    0
+                };
+
+                MethodInfo collectGroups = typeof(IconCreatorSpriteAtlasUtility).GetMethod(
+                    "CollectGroups",
+                    BindingFlags.Static | BindingFlags.NonPublic);
+                Assert.IsNotNull(collectGroups);
+                IDictionary groups = (IDictionary)collectGroups.Invoke(null, arguments);
+
+                Assert.AreEqual(1, groups.Count);
+                Assert.AreEqual(1, assignments.Count);
+                Assert.AreEqual(1, (int)arguments[4]);
+                Assert.AreEqual(0, warnings.Count);
+            }
+            finally
+            {
+                AssetDatabase.DeleteAsset(folder);
+            }
+        }
+
+        [Test]
+        [Category("UMA")]
+        [Category("IconCreator")]
         public void SpriteAtlasV2ModesAreDetected()
         {
             Assert.IsTrue((bool)InvokePrivateStatic(
                 "IsSpriteAtlasV2Enabled",
                 SpritePackerMode.SpriteAtlasV2));
-            Assert.IsTrue((bool)InvokePrivateStatic(
+            Assert.IsFalse((bool)InvokePrivateStatic(
                 "IsSpriteAtlasV2Enabled",
                 SpritePackerMode.SpriteAtlasV2Build));
             Assert.IsFalse((bool)InvokePrivateStatic(
                 "IsSpriteAtlasV2Enabled",
                 SpritePackerMode.AlwaysOnAtlas));
+        }
+
+        [Test]
+        [Category("UMA")]
+        [Category("IconCreator")]
+        public void AtlasRebuildRequiresSpriteAtlasV2EnabledInTheEditor()
+        {
+            TargetInvocationException exception = Assert.Throws<TargetInvocationException>(() =>
+                InvokePrivateStatic(
+                    "EnsureSpriteAtlasV2Enabled",
+                    SpritePackerMode.SpriteAtlasV2Build));
+
+            Assert.IsInstanceOf<InvalidOperationException>(exception.InnerException);
+            StringAssert.Contains(
+                "Sprite Atlas V2 - Enabled",
+                exception.InnerException.Message);
         }
 
         [Test]
@@ -64,8 +174,7 @@ namespace UMA.Editors.Tests
                 InvokePrivateStatic(
                     "RebuildAtlas",
                     atlasPath,
-                    new List<Sprite> { firstSprite, secondSprite },
-                    true);
+                    new List<Sprite> { firstSprite, secondSprite });
 
                 string originalGuid = AssetDatabase.AssetPathToGUID(atlasPath);
                 Assert.IsNotEmpty(originalGuid);
@@ -74,8 +183,7 @@ namespace UMA.Editors.Tests
                 InvokePrivateStatic(
                     "RebuildAtlas",
                     atlasPath,
-                    new List<Sprite> { secondSprite },
-                    true);
+                    new List<Sprite> { secondSprite });
 
                 Assert.AreEqual(originalGuid, AssetDatabase.AssetPathToGUID(atlasPath));
                 Assert.AreEqual(1, GetSpriteAtlasV2PackableCount(atlasPath));
@@ -97,7 +205,7 @@ namespace UMA.Editors.Tests
         [Test]
         [Category("UMA")]
         [Category("IconCreator")]
-        public void SpriteAtlasV2RebuildRecreatesDeletedAssetWithCachedGuid()
+        public void SpriteAtlasV2RebuildRecreatesDeletedAsset()
         {
             string folder = CreateTestFolder();
             string atlasPath = folder + "/UMAIcons_Deleted_TestRegion.spriteatlasv2";
@@ -121,49 +229,10 @@ namespace UMA.Editors.Tests
                 InvokePrivateStatic(
                     "RebuildAtlas",
                     atlasPath,
-                    new List<Sprite> { sprite },
-                    true);
+                    new List<Sprite> { sprite });
 
                 Assert.IsTrue(File.Exists(Path.GetFullPath(atlasPath)));
                 Assert.AreEqual(1, GetSpriteAtlasV2PackableCount(atlasPath));
-            }
-            finally
-            {
-                AssetDatabase.DeleteAsset(folder);
-            }
-        }
-
-        [Test]
-        [Category("UMA")]
-        [Category("IconCreator")]
-        public void InactiveGeneratedAtlasVersionIsRemoved()
-        {
-            string folder = CreateTestFolder();
-            string atlasName = "/UMAIcons_TestRace_TestRegion";
-            string v1Path = folder + atlasName + ".spriteatlas";
-            string v2Path = folder + atlasName + ".spriteatlasv2";
-            try
-            {
-                AssetDatabase.CreateAsset(new SpriteAtlas(), v1Path);
-                var v2Atlas = new SpriteAtlasAsset();
-                try
-                {
-                    SpriteAtlasAsset.Save(v2Atlas, v2Path);
-                }
-                finally
-                {
-                    UnityEngine.Object.DestroyImmediate(v2Atlas);
-                }
-                AssetDatabase.ImportAsset(v2Path, ImportAssetOptions.ForceUpdate);
-
-                int removedCount = (int)InvokePrivateStatic(
-                    "RemoveInactiveAtlasAssets",
-                    folder,
-                    true);
-
-                Assert.AreEqual(1, removedCount);
-                Assert.IsFalse(File.Exists(Path.GetFullPath(v1Path)));
-                Assert.IsTrue(File.Exists(Path.GetFullPath(v2Path)));
             }
             finally
             {
@@ -195,6 +264,20 @@ namespace UMA.Editors.Tests
             AssetDatabase.AddObjectToAsset(sprite, texture);
             AssetDatabase.ImportAsset(texturePath, ImportAssetOptions.ForceUpdate);
             return sprite;
+        }
+
+        private static void CreateWardrobeRecipeAsset(
+            string folder,
+            string name,
+            string region,
+            string race,
+            Sprite sprite)
+        {
+            UMAWardrobeRecipe recipe = ScriptableObject.CreateInstance<UMAWardrobeRecipe>();
+            recipe.name = name;
+            recipe.wardrobeSlot = region;
+            recipe.wardrobeRecipeThumbs.Add(new WardrobeRecipeThumb(race, sprite));
+            AssetDatabase.CreateAsset(recipe, folder + "/" + name + ".asset");
         }
 
         private static int GetSpriteAtlasV2PackableCount(string atlasPath)

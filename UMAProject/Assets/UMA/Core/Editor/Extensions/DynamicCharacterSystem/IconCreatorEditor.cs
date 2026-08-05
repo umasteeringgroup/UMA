@@ -39,8 +39,16 @@ public class IconCreatorEditor : Editor
     {
         EditorGUILayout.LabelField("Thumbnail Sprite Atlases", EditorStyles.boldLabel);
         EditorGUILayout.HelpBox(
-            "Rebuilds atlases from the Sprites referenced by wardrobe recipes, grouped by race and wardrobe region.",
+            "Optional. Rebuilds Sprite Atlas V2 assets from the Sprites referenced by wardrobe recipes, " +
+            "grouped by race and wardrobe region.",
             MessageType.Info);
+
+        if (!IconCreatorSpriteAtlasUtility.IsSpriteAtlasV2Enabled())
+        {
+            EditorGUILayout.HelpBox(
+                IconCreatorSpriteAtlasUtility.SpriteAtlasV2RequiredMessage,
+                MessageType.Info);
+        }
 
         string atlasFolder;
         try
@@ -66,6 +74,18 @@ public class IconCreatorEditor : Editor
 
     private static void RebuildThumbnailAtlases(string rootFolder)
     {
+        if (!IconCreatorSpriteAtlasUtility.IsSpriteAtlasV2Enabled())
+        {
+            Debug.LogError(
+                "[IconCreator] " +
+                IconCreatorSpriteAtlasUtility.SpriteAtlasV2RequiredMessage);
+            EditorUtility.DisplayDialog(
+                "Sprite Atlas V2 Required",
+                IconCreatorSpriteAtlasUtility.SpriteAtlasV2RequiredMessage,
+                "OK");
+            return;
+        }
+
         try
         {
             IconCreatorSpriteAtlasUtility.RebuildResult result =
@@ -76,11 +96,6 @@ public class IconCreatorEditor : Editor
             if (result.ClearedAtlasCount > 0)
             {
                 message += "\n\nCleared packables from " + result.ClearedAtlasCount + " obsolete atlases.";
-            }
-            if (result.RemovedAtlasCount > 0)
-            {
-                message += "\n\nRemoved " + result.RemovedAtlasCount +
-                    " generated atlases from the inactive Sprite Atlas version.";
             }
             if (result.WarningCount > 0)
             {
