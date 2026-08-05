@@ -9,6 +9,8 @@ using UnityEditor.U2D;
 using UnityEngine;
 using UnityEngine.U2D;
 
+// Builds optional Sprite Atlas V2 assets from recipe thumbnails under the configured Icon Creator root.
+// Recipes continue referencing their source Sprites; Unity resolves those Sprites to included atlases.
 public static class IconCreatorSpriteAtlasUtility
 {
     private const string AtlasFolderName = "SpriteAtlases";
@@ -121,6 +123,8 @@ public static class IconCreatorSpriteAtlasUtility
         {
             recipePaths.Add(AssetDatabase.GUIDToAssetPath(recipeGuids[i]));
         }
+        // Stable recipe order makes atlas contents repeatable and makes the first assignment win
+        // predictably when the same Sprite is referenced by conflicting race/region groups.
         recipePaths.Sort(ComparePaths);
         recipeCount = 0;
 
@@ -299,6 +303,7 @@ public static class IconCreatorSpriteAtlasUtility
         platformSettings.maxTextureSize = 2048;
         platformSettings.textureCompression = TextureImporterCompression.Compressed;
         importer.SetPlatformSettings(platformSettings);
+        // Included atlases let Unity bind the original recipe Sprite references automatically in builds.
         importer.includeInBuild = true;
         importer.SaveAndReimport();
     }
@@ -307,6 +312,8 @@ public static class IconCreatorSpriteAtlasUtility
         string atlasFolder,
         HashSet<string> rebuiltPaths)
     {
+        // Keep obsolete managed atlas assets but empty their packables. Deleting or recreating them
+        // would churn their .meta GUIDs and could break references outside this tool.
         int clearedCount = 0;
         string[] atlasGuids = AssetDatabase.FindAssets("t:SpriteAtlas", new[] { atlasFolder });
         for (int i = 0; i < atlasGuids.Length; i++)
@@ -387,6 +394,8 @@ public static class IconCreatorSpriteAtlasUtility
         SpriteAtlasAsset atlas,
         IList<Sprite> sprites)
     {
+        // SpriteAtlasAsset exposes no public packable setter in V2, so update the same serialized list
+        // read by GetSpriteAtlasV2Packables before saving through SpriteAtlasAsset.Save.
         var serializedAtlas = new SerializedObject(atlas);
         SerializedProperty packablesProperty =
             serializedAtlas.FindProperty("m_ImporterData.packables");
@@ -467,6 +476,8 @@ public static class IconCreatorSpriteAtlasUtility
 
     private static bool AssetFileExists(string assetPath)
     {
+        // AssetDatabase can retain a stale path after an atlas file is removed outside Unity.
+        // Check the project file directly before choosing between load and create.
         string projectFolder = Directory.GetParent(Application.dataPath).FullName;
         string absolutePath = Path.GetFullPath(Path.Combine(projectFolder, assetPath));
         return File.Exists(absolutePath);

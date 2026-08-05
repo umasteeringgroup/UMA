@@ -294,6 +294,8 @@ public class IconCreator : MonoBehaviour
         public string AssetPath;
     }
 
+    // Owns the temporary reference changes required to release Unity's handles on thumbnails.
+    // Dispose restores those references and managed atlases even when rendering is interrupted.
     private sealed class ThumbnailGenerationSession : IDisposable
     {
         private readonly List<ThumbnailGenerationItem> items;
@@ -562,6 +564,8 @@ public class IconCreator : MonoBehaviour
         List<ThumbnailGenerationItem> items,
         List<ThumbnailReferenceSnapshot> references)
     {
+        // UnloadUnusedAssets cannot release a thumbnail while a loaded recipe still references it.
+        // Only references to files being regenerated are cleared, and the session restores them by path.
         var outputAssetPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         for (int i = 0; i < items.Count; i++)
         {
@@ -617,6 +621,8 @@ public class IconCreator : MonoBehaviour
 
     private static UMAWardrobeRecipe CreateDetachedRecipe(UMAWardrobeRecipe sourceRecipe)
     {
+        // Rendering uses a transient clone so the source recipe can release its thumbnail Sprite
+        // without removing the wardrobe data needed to build the character.
         UMAWardrobeRecipe renderRecipe = Instantiate(sourceRecipe);
         try
         {
@@ -650,6 +656,8 @@ public class IconCreator : MonoBehaviour
 
     private void ReleaseManagedThumbnailAtlases(List<string> atlasAssetPaths)
     {
+        // A loaded atlas can retain the source Sprite after recipe references are cleared. Unload only
+        // atlases created under this Icon Creator root, then reload them when the session is disposed.
         string atlasFolder = GetManagedAtlasAssetFolder();
         UnityEngine.U2D.SpriteAtlas[] loadedAtlases =
             Resources.FindObjectsOfTypeAll<UnityEngine.U2D.SpriteAtlas>();
@@ -1009,6 +1017,8 @@ public class IconCreator : MonoBehaviour
         string outputFolder)
     {
 #if UNITY_EDITOR
+        // Reuse an existing thumbnail in the configured output folder so its filename, .meta file,
+        // and GUID remain stable. The GUID-based name is only for a thumbnail with no reusable file.
         string existingAssetPath = GetExistingThumbnailAssetPath(uwr, raceName);
         string existingAbsolutePath = GetAbsoluteAssetPath(existingAssetPath);
         if (IsFileInFolder(existingAbsolutePath, outputFolder))
@@ -1106,6 +1116,8 @@ public class IconCreator : MonoBehaviour
 
         RenderTexture originalTarget = captureCamera.targetTexture;
         Vector2Int iconDimensions = GetIconDimensions();
+        // Render above the requested icon size, then filter back to the final dimensions. The camera's
+        // serialized target remains untouched, and the temporary allocation is capped by the GPU limit.
         int maxSupersampling = Mathf.Max(
             1,
             SystemInfo.maxTextureSize / Mathf.Max(iconDimensions.x, iconDimensions.y));
@@ -1182,6 +1194,8 @@ public class IconCreator : MonoBehaviour
 #if UNITY_EDITOR
         AssetDatabase.ReleaseCachedFileHandles();
 #endif
+        // Replace the PNG atomically while leaving its Unity .meta file in place. Unity or a file scanner
+        // can briefly reopen imported assets on Windows, so sharing failures are retried with backoff.
         string temporaryPath = outputPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
         try
         {
