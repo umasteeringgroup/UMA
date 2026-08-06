@@ -38,6 +38,7 @@ You can open these guides inside Unity from `UMA > View Documentation`.
 - [Dynamic Character Avatar](DynamicCharacterAvatar.md)
 - [UMA Generator Setup](UMAGeneratorSetup.md)
 - [UMA Asset Indexer and Global Library](UMAAssetIndexer.md)
+- [Icon Creator and Thumbnail Sprite Atlases](IconCreator.md)
 - [Addressables](Addressables.md)
 
 ### Artist content creation
