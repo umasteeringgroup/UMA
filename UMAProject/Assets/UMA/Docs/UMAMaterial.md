@@ -92,8 +92,44 @@ Important fields include:
 - `Down Sample`
 - `Use Existing Texture For Channel`
 - `NonShader Texture`
+- `Overlay Painter Channel Layout` (editor only)
+- `Overlay Painter Physical Output / Import` (editor only)
 
 The channel order is also the order used by every assigned `OverlayDataAsset`.
+
+### Overlay Painter channel layout
+
+Each material channel has editor-only RGBA metadata describing what the shader reads from the physical texture. Overlay Painter uses this layout to expose logical authoring channels, unpack channel-packed textures for painting, and repack them for material preview and export. This metadata is excluded from player builds.
+
+The default `Automatic` mode recognizes the common Unity and UMA conventions, including:
+
+| Texture/property | R | G | B | A |
+|---|---|---|---|---|
+| Base color (`_BaseMap`, `_MainTex`, albedo/diffuse) | Albedo | Albedo | Albedo | Opacity, plus Smoothness when the material selects base-alpha smoothness |
+| Normal/bump | Normal | Normal | Normal | Unused |
+| HDRP/UMA mask map (`_MaskMap`) | Metallic | Ambient Occlusion | Detail Mask | Smoothness |
+| HDRP detail map (`_DetailMap`) | Detail Albedo | Detail Normal Y | Detail Smoothness | Detail Normal X |
+| Metallic/gloss (`_MetallicGlossMap`) | Metallic | Unused | Unused | Smoothness |
+| Specular/gloss (`_SpecGlossMap`, `_SpecularMap`) | Specular | Specular | Specular | Smoothness |
+| Standalone occlusion (`_OcclusionMap`) | Unused | Ambient Occlusion | Unused | Unused |
+| Roughness | Roughness | Unused | Unused | Unused |
+| Emission/emissive | Emission | Emission | Emission | Unused |
+
+`Smoothness` is converted to Overlay Painter's logical `Roughness` channel when unpacked, then inverted again when repacked. Components that the painter does not currently expose, such as opacity, specular, detail mask, height, or thickness, are still documented by the layout and preserved from the source physical texture.
+
+A component can have more than one meaning. For example, a base texture's alpha can drive both opacity and smoothness. The inspector therefore presents each RGBA value as a flags field.
+
+Choose `Custom` when a shader uses a project-specific convention. `Customize Detected Layout` copies the current automatic result into editable fields. `Detect Again` replaces those custom fields from the current shader convention, while `Use Automatic` returns to live inference. Changing these values affects editor authoring/packing only; it does not change how the shader itself samples the texture.
+
+Always verify custom Shader Graphs and hand-written shaders against their source. Property names are useful defaults, but the shader's actual component sampling is authoritative.
+
+### Overlay Painter physical output and import
+
+Each material channel also has an editor-only output contract. `Automatic` derives the encoded file type, importer type, color space, alpha handling, normal convention, mipmaps, compression, filtering, anisotropy, and maximum texture size from the effective RGBA layout and the `UMAMaterial`. `Custom` exposes those values plus optional Unity TextureImporter platform overrides for project-specific shaders and delivery requirements. Existing `UMAMaterial` assets remain in Automatic mode until explicitly customized.
+
+Overlay Painter compiles the selected `UMAMaterial`, active URP/HDRP material, shader properties, channel layouts, sources, texture formats, and GPU packing support into one capability descriptor. The same descriptor creates logical paint channels, controls preview packing, and configures physical export files and importers. Unsupported pipelines, missing or non-texture shader properties, ambiguous component meanings, and unsafe color/import combinations are reported before painting; warnings identify preserved but currently non-editable meanings.
+
+The `UMAMaterial` inspector previews the effective R/G/B/A layout and output/import contract. The export window repeats that resolved physical-texture table with diagnostics so the packed result is visible before files are written. Built-in/Standard is not a certified Overlay Painter workflow; use the active URP or HDRP material selected by the `UMAMaterial`.
 
 ### Channel types
 

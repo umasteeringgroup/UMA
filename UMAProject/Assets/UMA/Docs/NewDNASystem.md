@@ -7,6 +7,10 @@ This document covers creation, assignment, effect reference, runtime behavior, a
 Namespaces: `UMA`, `UMA.CharacterSystem`  
 Key files: `Assets/UMA/Core/Scripts/NewDNA/`
 
+For transient facial expressions, source blending, post-Mecanim rig
+application, immediate shader properties, and build-lane expression DNA, see
+`DynamicExpressionPlayer.md`.
+
 ---
 
 ## Overview — Live DNA vs Legacy DNA

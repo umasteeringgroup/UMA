@@ -21,6 +21,9 @@ namespace UMA
         public override string Description => "Applies a bone pose to the character's skeleton. This is done before any single bone DNA is applied.";
 
         public override DNAInstanceCollection.DNABuildType AreaEffect => DNAInstanceCollection.DNABuildType.Rig;
+        public override ExpressionEffectPhase ExpressionPhases =>
+            ExpressionEffectPhase.EarlyRestore |
+            ExpressionEffectPhase.LateRig;
 #if UNITY_EDITOR
         /// <inheritdoc />
         public override void DoGui(bool showDescription, bool showHelp, out AnimationCurve curveToCopy)
@@ -43,6 +46,43 @@ namespace UMA
             {
                 bonePose.ApplyPose(avatar.skeleton, GetMappedValue(value));
             }
+        }
+
+        public override void CollectExpressionBones(
+            System.Collections.Generic.List<int> boneHashes)
+        {
+            if (boneHashes == null || bonePose == null ||
+                bonePose.poses == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < bonePose.poses.Length; i++)
+            {
+                UMABonePose.PoseBone poseBone = bonePose.poses[i];
+                if (poseBone != null && poseBone.enabled)
+                {
+                    boneHashes.Add(poseBone.hash);
+                }
+            }
+        }
+
+        public override void ApplyExpressionRig(
+            UMAData avatar,
+            DNA dna,
+            float value,
+            System.Predicate<int> shouldApplyBone)
+        {
+            if (avatar == null || avatar.skeleton == null ||
+                bonePose == null)
+            {
+                return;
+            }
+
+            bonePose.ApplyPose(
+                avatar.skeleton,
+                GetMappedValue(value),
+                shouldApplyBone);
         }
 
         /// <inheritdoc />

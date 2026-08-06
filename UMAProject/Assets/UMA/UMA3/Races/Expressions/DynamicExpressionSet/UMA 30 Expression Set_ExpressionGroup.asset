@@ -1,0 +1,474 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 592b2fc0dd244bed981d8c1ff5a1fa78, type: 3}
+  m_Name: UMA 30 Expression Set_ExpressionGroup
+  m_EditorClassIdentifier: UMA_Core::UMA.UMAExpressionGroup
+  expressions:
+  - id: neckUp_Down
+    displayName: Neck Up_Down
+    dna: {fileID: 11400000, guid: df8f986af032f554cb973d8951bcd903, type: 2}
+    roles: 64
+    affectedJoints: 2
+    priority: 0
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: neckLeft_Right
+    displayName: Neck Left_Right
+    dna: {fileID: 11400000, guid: c276643fc7757224d8f44178d20fc09c, type: 2}
+    roles: 64
+    affectedJoints: 2
+    priority: 1
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: neckTiltLeft_Right
+    displayName: Neck Tilt Left_Right
+    dna: {fileID: 11400000, guid: a040b5348caecb04ebf8630c7bbd429e, type: 2}
+    roles: 64
+    affectedJoints: 2
+    priority: 2
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: headUp_Down
+    displayName: Head Up_Down
+    dna: {fileID: 11400000, guid: ceebf0d1aa76c2c41ba384a66af9cd02, type: 2}
+    roles: 64
+    affectedJoints: 1
+    priority: 3
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: headLeft_Right
+    displayName: Head Left_Right
+    dna: {fileID: 11400000, guid: 399081fd3b3412f4290d17c5b4be36b4, type: 2}
+    roles: 64
+    affectedJoints: 1
+    priority: 4
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: headTiltLeft_Right
+    displayName: Head Tilt Left_Right
+    dna: {fileID: 11400000, guid: ca9e713d7d2064948806b634a38f917f, type: 2}
+    roles: 64
+    affectedJoints: 1
+    priority: 5
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: jawOpen_Close
+    displayName: Jaw Open_Close
+    dna: {fileID: 11400000, guid: 695b1bb3db3fcad4aa61828604df8646, type: 2}
+    roles: 16
+    affectedJoints: 4
+    priority: 6
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: jawForward_Back
+    displayName: Jaw Forward_Back
+    dna: {fileID: 11400000, guid: 025141efe0162d34b9c92ce9e497c5c4, type: 2}
+    roles: 16
+    affectedJoints: 4
+    priority: 7
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: jawLeft_Right
+    displayName: Jaw Left_Right
+    dna: {fileID: 11400000, guid: 4868fac76990d5a4bbb7474661a9cceb, type: 2}
+    roles: 16
+    affectedJoints: 4
+    priority: 8
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: mouthLeft_Right
+    displayName: Mouth Left_Right
+    dna: {fileID: 11400000, guid: 54343b88c8e1af7448774e2d8e5d69c7, type: 2}
+    roles: 16
+    affectedJoints: 32
+    priority: 9
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: mouthUp_Down
+    displayName: Mouth Up_Down
+    dna: {fileID: 11400000, guid: 2d79ff89ef3abe24e825710e625fe5f6, type: 2}
+    roles: 16
+    affectedJoints: 32
+    priority: 10
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: mouthNarrow_Pucker
+    displayName: Mouth Narrow_Pucker
+    dna: {fileID: 11400000, guid: 70248ce2a618779408afe1c2011432ac, type: 2}
+    roles: 16
+    affectedJoints: 32
+    priority: 11
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: tongueOut
+    displayName: Tongue Out
+    dna: {fileID: 11400000, guid: 9cf2697b92a896847ac727c0edf524f9, type: 2}
+    roles: 16
+    affectedJoints: 32
+    priority: 12
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: tongueCurl
+    displayName: Tongue Curl
+    dna: {fileID: 11400000, guid: 921ba701f6adda446b977fce3f0bfb1f, type: 2}
+    roles: 16
+    affectedJoints: 32
+    priority: 13
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: tongueUp_Down
+    displayName: Tongue Up_Down
+    dna: {fileID: 11400000, guid: 347a3c5a5dec65f4db4c2e81736fc150, type: 2}
+    roles: 16
+    affectedJoints: 32
+    priority: 14
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: tongueLeft_Right
+    displayName: Tongue Left_Right
+    dna: {fileID: 11400000, guid: 2c23eff6eca456c479393a9a2bbc469c, type: 2}
+    roles: 16
+    affectedJoints: 32
+    priority: 15
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: tongueWide_Narrow
+    displayName: Tongue Wide_Narrow
+    dna: {fileID: 11400000, guid: 9796d73fc80bed842945739877f6141d, type: 2}
+    roles: 16
+    affectedJoints: 32
+    priority: 16
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: leftMouthSmile_Frown
+    displayName: Left Mouth Smile_Frown
+    dna: {fileID: 11400000, guid: 188f504ca89dd4048afe6a51f56070b2, type: 2}
+    roles: 16
+    affectedJoints: 32
+    priority: 17
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: rightMouthSmile_Frown
+    displayName: Right Mouth Smile_Frown
+    dna: {fileID: 11400000, guid: e62db33137968e844a00bbed92a8b0bc, type: 2}
+    roles: 16
+    affectedJoints: 32
+    priority: 18
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: leftLowerLipUp_Down
+    displayName: Left Lower Lip Up_Down
+    dna: {fileID: 11400000, guid: 55009a57723aad041beb3597ddbccc33, type: 2}
+    roles: 16
+    affectedJoints: 32
+    priority: 19
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: rightLowerLipUp_Down
+    displayName: Right Lower Lip Up_Down
+    dna: {fileID: 11400000, guid: c4d60bc190f9aa347a2575442c3b2eae, type: 2}
+    roles: 16
+    affectedJoints: 32
+    priority: 20
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: leftUpperLipUp_Down
+    displayName: Left Upper Lip Up_Down
+    dna: {fileID: 11400000, guid: 75e3bf97742e80c4293829fdbef65f47, type: 2}
+    roles: 16
+    affectedJoints: 32
+    priority: 21
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: rightUpperLipUp_Down
+    displayName: Right Upper Lip Up_Down
+    dna: {fileID: 11400000, guid: aaed4e8dc8bfc36418540014078f5f29, type: 2}
+    roles: 16
+    affectedJoints: 32
+    priority: 22
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: leftCheekPuff_Squint
+    displayName: Left Cheek Puff_Squint
+    dna: {fileID: 11400000, guid: 3805f21dbe92a7c488cd04454a7f8380, type: 2}
+    roles: 16
+    affectedJoints: 32
+    priority: 23
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: rightCheekPuff_Squint
+    displayName: Right Cheek Puff_Squint
+    dna: {fileID: 11400000, guid: bf3a78de1e303444292078777e9f89ac, type: 2}
+    roles: 16
+    affectedJoints: 32
+    priority: 24
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: noseSneer
+    displayName: Nose Sneer
+    dna: {fileID: 11400000, guid: 14bd005d9455f7e44baa8f13ec045a4a, type: 2}
+    roles: 16
+    affectedJoints: 32
+    priority: 25
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: leftEyeOpen_Close
+    displayName: Left Eye Open_Close
+    dna: {fileID: 11400000, guid: 237a5e32e1eff494f98b9e5856044e3d, type: 2}
+    roles: 1
+    affectedJoints: 32
+    priority: 26
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: rightEyeOpen_Close
+    displayName: Right Eye Open_Close
+    dna: {fileID: 11400000, guid: 005b6e3be97b32c49b8f1ea97d6c0a22, type: 2}
+    roles: 2
+    affectedJoints: 32
+    priority: 27
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: leftEyeUp_Down
+    displayName: Left Eye Up_Down
+    dna: {fileID: 11400000, guid: 921300a4ee8303e49ac89f1be1bcb7f4, type: 2}
+    roles: 512
+    affectedJoints: 8
+    priority: 28
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: rightEyeUp_Down
+    displayName: Right Eye Up_Down
+    dna: {fileID: 11400000, guid: 18335958560a1a34c967b8ef873cde0d, type: 2}
+    roles: 1024
+    affectedJoints: 8
+    priority: 29
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: leftEyeIn_Out
+    displayName: Left Eye In_Out
+    dna: {fileID: 11400000, guid: e09da0a2ef17f0f4cbbcc1bc8b6ab245, type: 2}
+    roles: 128
+    affectedJoints: 8
+    priority: 30
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: rightEyeIn_Out
+    displayName: Right Eye In_Out
+    dna: {fileID: 11400000, guid: 772dc5e97749ea54ea229a1b4868cf30, type: 2}
+    roles: 256
+    affectedJoints: 8
+    priority: 31
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: browsIn
+    displayName: Brows In
+    dna: {fileID: 11400000, guid: 7607aa0296e58694a9ca416d864403a8, type: 2}
+    roles: 16
+    affectedJoints: 32
+    priority: 32
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: leftBrowUp_Down
+    displayName: Left Brow Up_Down
+    dna: {fileID: 11400000, guid: 989f1f0d5b14b144c970218ab21da1bb, type: 2}
+    roles: 16
+    affectedJoints: 32
+    priority: 33
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: rightBrowUp_Down
+    displayName: Right Brow Up_Down
+    dna: {fileID: 11400000, guid: 8a9bd6a1605321e49a7e0d7f3991a419, type: 2}
+    roles: 16
+    affectedJoints: 32
+    priority: 34
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: midBrowUp_Down
+    displayName: Mid Brow Up_Down
+    dna: {fileID: 11400000, guid: 27b9e4594961d5f489a6b0fed2924897, type: 2}
+    roles: 16
+    affectedJoints: 32
+    priority: 35
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: leftGrasp
+    displayName: Left Grasp
+    dna: {fileID: 11400000, guid: ffa1fa8594fc1c3469e59b923ade9a59, type: 2}
+    roles: 64
+    affectedJoints: 16
+    priority: 36
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: rightGrasp
+    displayName: Right Grasp
+    dna: {fileID: 11400000, guid: e93113eb0ef6f10419426d0cba4791ff, type: 2}
+    roles: 64
+    affectedJoints: 16
+    priority: 37
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: leftPeace
+    displayName: Left Peace
+    dna: {fileID: 11400000, guid: e5e6c0d42864de6419ee53ea8be397a1, type: 2}
+    roles: 64
+    affectedJoints: 16
+    priority: 38
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: rightPeace
+    displayName: Right Peace
+    dna: {fileID: 11400000, guid: 8c67e6dde651a3349a4c34999b314e47, type: 2}
+    roles: 64
+    affectedJoints: 16
+    priority: 39
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: leftRude
+    displayName: Left Rude
+    dna: {fileID: 11400000, guid: 950819af86b514e4088a7c7127058cd7, type: 2}
+    roles: 64
+    affectedJoints: 16
+    priority: 40
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: rightRude
+    displayName: Right Rude
+    dna: {fileID: 11400000, guid: 74b900dc4ccbdc441b803022b0d176d7, type: 2}
+    roles: 64
+    affectedJoints: 16
+    priority: 41
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: leftPoint
+    displayName: Left Point
+    dna: {fileID: 11400000, guid: 032690d9439b11b4ba68fbb8d4617571, type: 2}
+    roles: 64
+    affectedJoints: 16
+    priority: 42
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: rightPoint
+    displayName: Right Point
+    dna: {fileID: 11400000, guid: e4038711abe664f4eb1c42fe2019fa21, type: 2}
+    roles: 64
+    affectedJoints: 16
+    priority: 43
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: DespairFace
+    displayName: Despair Face
+    dna: {fileID: 11400000, guid: 83f497b37826aff4aaca6d44f9a7e92d, type: 2}
+    roles: 32
+    affectedJoints: 32
+    priority: 44
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: HappyFace
+    displayName: Happy Face
+    dna: {fileID: 11400000, guid: 36b52197fbaa8c043806abd2cd69ddf0, type: 2}
+    roles: 32
+    affectedJoints: 32
+    priority: 45
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: JovialFace
+    displayName: Jovial Face
+    dna: {fileID: 11400000, guid: bf010accacb621b48a74d6da178532bf, type: 2}
+    roles: 32
+    affectedJoints: 32
+    priority: 46
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: SadFace
+    displayName: Sad Face
+    dna: {fileID: 11400000, guid: 4e933f01165e52148bc7e819aed23774, type: 2}
+    roles: 32
+    affectedJoints: 32
+    priority: 47
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: SourFace
+    displayName: Sour Face
+    dna: {fileID: 11400000, guid: d815a9b17f858a64e90be1e8559c72e1, type: 2}
+    roles: 32
+    affectedJoints: 32
+    priority: 48
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: StupidFace
+    displayName: Stupid Face
+    dna: {fileID: 11400000, guid: f418d1f2a05c51b4491fa828996ebda1, type: 2}
+    roles: 32
+    affectedJoints: 32
+    priority: 49
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: YawnFace
+    displayName: Yawn Face
+    dna: {fileID: 11400000, guid: 621eda7e21c36a24db3078eea8c6f2ec, type: 2}
+    roles: 32
+    affectedJoints: 32
+    priority: 50
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0

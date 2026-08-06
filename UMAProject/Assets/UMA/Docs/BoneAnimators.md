@@ -191,6 +191,117 @@ At runtime this registers with a `TwistBoneManager` on the UMA Generator GameObj
 
 ---
 
+### ShoulderControllerAnimator
+
+**Menu path:** `Assets → Create → UMA → Physics → Shoulder Controller Animator`
+
+Redistributes part of the animated upper-arm motion into the clavicle/shoulder and
+then solves the arm back to its Animator-produced endpoint. This improves shoulder
+silhouettes without translating bones or changing the intended hand position.
+
+| Field | Default | Description |
+|---|---|---|
+| `Shoulder Bone Name` | *(required)* | Clavicle/shoulder bone that receives the procedural rotation. |
+| `Arm Bone Name` | *(required)* | Upper-arm descendant driven by that shoulder. |
+| `Lower Arm Bone Name` | empty | Optional override. Otherwise the Humanoid mapping or hierarchy is used. |
+| `Hand Bone Name` | empty | Optional override. Otherwise the Humanoid mapping or hierarchy is used. |
+| `Torso Reference Bone Name` | empty | Optional chest reference used to construct anatomical axes. |
+| `Opposite Shoulder Bone Name` | empty | Optional opposite-side reference that improves the right-axis estimate. |
+| `Side` | Auto | Uses Humanoid mappings, bone-name tokens, then the generated hierarchy to identify left or right. |
+| `Endpoint Mode` | Hand When Available | Preserves the hand position with a two-bone solve, falling back to the upper-arm endpoint when necessary. |
+| `Overall Effect` | 1 | Master influence for all shoulder channels. |
+| `Elevation / Protraction / Retraction / Posterior Roll Effect` | varies | Per-channel 0–1 influence. |
+| `Maximum ... Degrees` | varies | Rotation limit for each channel. |
+| `... Response` | built-in curves | Maps the final arm direction to each channel's response. |
+| `Endpoint Tolerance` | 0.0005 | Maximum world-space endpoint error. Influence is reduced when the requested shoulder motion is unreachable. |
+| `Damping Half Life` | 0 | Optional temporal smoothing. Zero evaluates directly from the current animated pose. |
+| `Preserve Hand Rotation` | on | Restores the Animator-produced hand world rotation after solving. |
+
+The controller runs in `LateUpdate`, after normal Animator evaluation and before the
+UMA twist-bone manager. A custom IK pipeline can disable `Automatic Update` on the
+generated character's `ShoulderControllerRuntime` and call `EvaluateNow()` after its
+own final IK pass.
+
+#### Coordinate-space contract
+
+- Arm-direction analysis and endpoint solving use the final generated world-space
+  transforms.
+- `Root`, `Global`, `Position`, external skeleton roots, DNA adjustments, imported
+  bone roll, and left/right hierarchy differences are therefore already included.
+- `RaceData.FixupRotations` is not applied a second time.
+- Anatomical right/up/forward axes are rebuilt as an orthonormal basis from the
+  generated torso and shoulder positions. Negative-scale/reflected ancestry is
+  detected for diagnostics but is not allowed to reflect the rotation basis.
+- Shoulder and compensating arm rotations are written through the actual parent
+  hierarchy. Minimal from-to corrections retain the animated arm twist.
+
+Use one asset for each independently configured shoulder. Add the shoulder, upper arm,
+lower arm, and hand to **Unbaked Animated Bones** if Bone Baking Mesh Combiner is
+enabled.
+
+---
+
+### PelvisControllerAnimator
+
+**Menu path:** `Assets → Create → UMA → Physics → Pelvis Controller Animator`
+
+Redistributes bilateral leg motion into the single Hips/pelvis bone, stabilizes the
+spine independently, and solves both legs back toward their desired endpoints. It
+runs before `ShoulderControllerRuntime`, allowing the shoulder solver to observe the
+final corrected torso frame.
+
+The Hips, upper-leg, lower-leg, foot, toe, spine, and upper-body reference names can
+be overridden for Generic rigs. Empty fields use Humanoid mappings where available.
+Only one Pelvis Controller may drive a character's Hips transform.
+
+#### Pelvis channels
+
+| Field | Description |
+|---|---|
+| `Stride Rotation Effect` | Transverse pelvis rotation driven by the normalized difference between left and right stride. |
+| `Obliquity Effect` | Pelvic hike/drop driven by the optional planted-foot support difference. |
+| `Pelvic Tilt Effect` | Optional sagittal correction driven by common forward/back leg motion. It defaults to off. |
+| `Torso ... Follow` | Per-axis amount of the new pelvis correction inherited by the upper spine. Zero preserves the Animator-produced upper-torso world orientation. |
+| `Animated Endpoint Preservation` | Foot preservation used with Foot IK disabled. It defaults to one. |
+| `Swing Foot Preservation` | Soft endpoint constraint for a non-planted foot when Foot IK is enabled. |
+| `Plant Threshold / Foot Lock Hysteresis` | Determines when a provider foot becomes or remains the support foot without contact-weight chatter. |
+| `Airborne Effect` | Pelvis correction retained when an active Foot IK source reports both feet airborne. It defaults to zero. |
+| `Minimum Knee Flexion` | Prevents the two-bone solve from locking a knee perfectly straight. |
+
+The requested pelvis correction is limited to the largest contiguous influence
+reachable by both legs. Animated knee positions are retained as bend-plane poles, and
+foot/toe world rotations can be restored after solving.
+
+#### Optional Foot IK
+
+Foot IK defaults to `None`. In this mode the controller requires no Animator IK Pass,
+Humanoid avatar, ground raycasts, or provider. It preserves the final animated foot
+poses according to `Animated Endpoint Preservation`.
+
+| Mode | Behavior |
+|---|---|
+| `None` | No IK-pass work. Works with Humanoid and Generic rigs. |
+| `Automatic` | Uses an `IUMAFootIKProvider` when found, otherwise captures a current Unity Humanoid IK pass when available. |
+| `Unity Humanoid Post Solve` | Captures goals and weights in `OnAnimatorIK`, then preserves Unity's solved feet during the pelvis correction in `LateUpdate`. |
+| `Goal Provider` | Consumes world-space goals from an `IUMAFootIKProvider`. On a Humanoid rig, goals can be submitted to Unity during `OnAnimatorIK`; Generic rigs are solved directly. |
+| `External Post Solve` | Treats the current externally solved foot transforms as hard constraints. The external solver must run before the Pelvis Controller. |
+
+An `IUMAFootIKProvider` supplies optional position/rotation weights, planted weight,
+knee hint, and ground normal for each foot. Unity Humanoid IK modes require **IK Pass**
+on the selected Animator Controller layer. Custom pipelines can disable
+`AutomaticUpdate` on `PelvisControllerRuntime` and call `EvaluateNow()` after their
+foot targets or external solve are ready.
+
+The controller follows the same coordinate-space contract as the Shoulder Controller:
+all analysis and solving uses final world transforms, reflected ancestry is detected
+without reflecting the anatomical basis, and `RaceData.FixupRotations` is not applied
+again.
+
+Add Hips, both complete leg chains, and the configured spine bones to
+**Unbaked Animated Bones** when Bone Baking Mesh Combiner is enabled.
+
+---
+
 ### UnityJointAnimator
 
 **Menu path:** `Assets → Create → UMA → Physics → UnityJointAnimator`

@@ -314,7 +314,13 @@ namespace UMA
             return Vector3.Dot(Vector3.Cross(xAxis, yAxis), zAxis) < 0f;
         }
 
-        private static bool TryGetCanonicalMeshFromRootMatrix(UMAMeshData meshData, string debugName, out Matrix4x4 meshFromRoot)
+        /// <summary>
+        /// Reconstructs the mesh-to-root transform encoded by a slot's bone hierarchy and bind
+        /// poses. Editor previews and standalone tools use this to display raw UMAMeshData in
+        /// canonical character space without generating an avatar.
+        /// </summary>
+        public static bool TryGetCanonicalMeshFromRootMatrix(UMAMeshData meshData, string debugName,
+            out Matrix4x4 meshFromRoot)
         {
             meshFromRoot = Matrix4x4.identity;
             if (UMAMeshData.IsNullOrEmptyMeshData(meshData) || meshData.bindPoses == null || meshData.bindPoses.Length == 0 ||

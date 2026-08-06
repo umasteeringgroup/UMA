@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9448434bf23840d9a9597fff0c687e8f, type: 3}
+  m_Name: UMATaskItem
+  m_EditorClassIdentifier: UMA_Core_Editor::UMATaskItem
+  _taskDate: 2026-07-30
+  _category: 7
+  _title: Generate slots from updated model.
+  _status: 1
+  _description: "Generate new slots from uma3 selected file. \n\nNote: This is Avelines
+    updated male blendshape!"
+  _objectReferences:
+  - {fileID: 919132149155446097, guid: e10e6b1d0e2c7874c99cbf3d31b9836c, type: 3}

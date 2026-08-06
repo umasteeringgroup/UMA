@@ -209,6 +209,12 @@ namespace UMA
 		/// </summary>
 		public PoseTools.UMAExpressionSet expressionSet;
 
+        /// <summary>
+        /// DNA-based expressions available to this race.
+        /// </summary>
+        [Tooltip("DNA-based expression definitions used by DynamicExpressionPlayer.")]
+        public UMAExpressionGroup expressionGroup;
+
 		/// <summary>
 		/// An (optional) set of DNA ranges.
 		/// </summary>

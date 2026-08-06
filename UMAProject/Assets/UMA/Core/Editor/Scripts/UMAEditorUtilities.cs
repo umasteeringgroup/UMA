@@ -14,7 +14,8 @@ namespace UMA
     public static class UMAEditorUtilities
     {
         public static Dictionary<Type, string> FriendlyNames = new Dictionary<Type, string>();
-        private static Texture2D icon;
+        private static Texture icon;
+        private static Texture missingIndexIcon;
 		private static bool ranOnce = false;
         private static bool showIndexedTypes = false;
         private static bool showUnindexedTypes = true;
@@ -28,54 +29,77 @@ namespace UMA
 
         static UMAEditorUtilities()
         {
+            UMASettings.ProjectWindowTypeDisplayChanged -= RefreshProjectWindowTypeDisplay;
+            UMASettings.ProjectWindowTypeDisplayChanged += RefreshProjectWindowTypeDisplay;
+            EditorApplication.update -= RunCallbacks;
 			EditorApplication.update += RunCallbacks;
 		}
 
 		private static void RunCallbacks()
 		{
-			return;
-#pragma warning disable CS0162
-			if (!ranOnce)
+			if (ranOnce)
 			{
-				FriendlyNames = new Dictionary<Type, string>();
-				FriendlyNames.Add(typeof(SlotDataAsset), "Slot");
-				FriendlyNames.Add(typeof(OverlayDataAsset), "Overlay");
-				FriendlyNames.Add(typeof(RaceData), "Race");
-				FriendlyNames.Add(typeof(UMATextRecipe), "Text Recipe");
-				FriendlyNames.Add(typeof(UMAWardrobeRecipe), "Wardrobe Recipe");
-				FriendlyNames.Add(typeof(UMAWardrobeCollection), "Wardrobe Collection");
-				FriendlyNames.Add(typeof(AnimatorController), "Animator Controller");
-				FriendlyNames.Add(typeof(TextAsset), "Text");
-				FriendlyNames.Add(typeof(DynamicUMADnaAsset), "Dynamic DNA");
-
-				string[] iconTextures = AssetDatabase.FindAssets("t:texture UmaIndex");
-				if (iconTextures != null && iconTextures.Length > 0)
-				{
-					icon = AssetDatabase.LoadAssetAtPath<Texture2D>(AssetDatabase.GUIDToAssetPath(iconTextures[0]));
-				}
-				else
-				{
-					if(Debug.isDebugBuild)
-                    {
-                        Debug.LogWarning("Unable to load texture icon");
-                    }
-                }
-				showIndexedTypes = UMASettings.ShowIndexedTypes;
-                showUnindexedTypes = UMASettings.ShowUnindexedTypes;
-
-				if (showIndexedTypes)
-				{
-                    UMAAssetIndexer ai = UMAAssetIndexer.Instance;
-					if (ai != null)
-					{
-						EditorApplication.projectWindowItemOnGUI += DrawItems;
-					}
-				}
-				ranOnce = true;
-				return;
+                EditorApplication.update -= RunCallbacks;
+                return;
 			}
-#pragma warning restore CS0162
+
+            if (EditorApplication.isCompiling || EditorApplication.isUpdating)
+            {
+                return;
+            }
+
+            FriendlyNames = new Dictionary<Type, string>
+            {
+                { typeof(SlotDataAsset), "Slot" },
+                { typeof(OverlayDataAsset), "Overlay" },
+                { typeof(RaceData), "Race" },
+                { typeof(UMATextRecipe), "Text Recipe" },
+                { typeof(UMAWardrobeRecipe), "Wardrobe Recipe" },
+                { typeof(UMAWardrobeCollection), "Wardrobe Collection" },
+                { typeof(AnimatorController), "Animator Controller" },
+                { typeof(TextAsset), "Text" },
+                { typeof(DynamicUMADnaAsset), "Dynamic DNA" }
+            };
+
+            string[] iconTextures = AssetDatabase.FindAssets("t:texture UmaIndex");
+            if (iconTextures != null && iconTextures.Length > 0)
+            {
+                icon = AssetDatabase.LoadAssetAtPath<Texture2D>(
+                    AssetDatabase.GUIDToAssetPath(iconTextures[0]));
+            }
+            else if (Debug.isDebugBuild)
+            {
+                Debug.LogWarning("Unable to load UMA index texture icon.");
+            }
+
+            missingIndexIcon =
+                EditorGUIUtility.IconContent("console.erroricon.sml").image;
+            if (missingIndexIcon == null)
+            {
+                missingIndexIcon =
+                    EditorGUIUtility.IconContent("console.erroricon").image;
+            }
+
+            ranOnce = true;
+            EditorApplication.update -= RunCallbacks;
+            RefreshProjectWindowTypeDisplay();
 		}
+
+        private static void RefreshProjectWindowTypeDisplay()
+        {
+            showIndexedTypes = UMASettings.ShowIndexedTypes;
+            showUnindexedTypes = UMASettings.ShowUnindexedTypes;
+
+            // Remove first so initialization and settings changes can never register
+            // the same Project window callback more than once.
+            EditorApplication.projectWindowItemOnGUI -= DrawItems;
+            if (showIndexedTypes || showUnindexedTypes)
+            {
+                EditorApplication.projectWindowItemOnGUI += DrawItems;
+            }
+
+            EditorApplication.RepaintProjectWindow();
+        }
 
         public static string FindUMAFolder()
         {
@@ -92,7 +116,7 @@ namespace UMA
             string path1 = Path.Combine(Application.dataPath, "UMA");
             if (Directory.Exists(path1.ToString()))
             {
-                Debug.Log("UMA at default location: " + path1);
+                //Debug.Log("UMA at default location: " + path1);
                 return "Assets/UMA";
             }
 
@@ -209,96 +233,193 @@ namespace UMA
 
         private static void DrawItems(string guid, Rect selectionRect)
         {
-            if (!showIndexedTypes)
+            if (String.IsNullOrEmpty(guid))
             {
                 return;
             }
 
-            if (UMAAssetIndexer.Instance == null)
+            UMAAssetIndexer indexer = UMAAssetIndexer.Instance;
+            if (indexer == null)
             {
                 return;
             }
 
-            AssetItem ai = UMAAssetIndexer.Instance.FromGuid(guid);
+            AssetItem ai = indexer.FromGuid(guid);
             if (ai != null)
             {
-                if (FriendlyNames.ContainsKey(ai._Type))
+                if (showIndexedTypes)
                 {
-                    string FriendlyType = FriendlyNames[ai._Type];
-                    // Draw the friendly type
-                    ShowAsset(selectionRect, FriendlyType, icon);
+                    ShowAsset(
+                        selectionRect,
+                        GetFriendlyTypeName(ai._Type),
+                        icon);
                 }
+                return;
             }
-            else
-            {
-                if (showUnindexedTypes == false)
-                {
-                    return;
-                }
-                if (String.IsNullOrEmpty(guid))
-                {
-                    return;
-                }
-                string path = AssetDatabase.GUIDToAssetPath(guid);
 
-                if (string.IsNullOrEmpty(path))
+            string path = AssetDatabase.GUIDToAssetPath(guid);
+            if (string.IsNullOrEmpty(path))
+            {
+                return;
+            }
+
+            UnityEngine.Object asset =
+                AssetDatabase.LoadMainAssetAtPath(path);
+            if (asset == null)
+            {
+                return;
+            }
+
+            Type assetType = asset.GetType();
+            if (!indexer.IsIndexedType(assetType))
+            {
+                return;
+            }
+
+            // GuidTypes is a derived cache and can temporarily be empty or stale
+            // even while the authoritative type dictionary contains the item.
+            // Resolve by the index key as a fallback, but verify the candidate is
+            // this exact project asset so duplicate UMA names are not mislabeled.
+            AssetItem indexedItem =
+                indexer.GetAssetItemForObject(asset);
+            if (IsSameIndexedAsset(indexedItem, asset, guid, path))
+            {
+                if (!indexer.GuidTypes.ContainsKey(guid))
                 {
-                    Debug.Log("Unable to get path for asset: " + guid);
-                    return;
+                    indexer.GuidTypes[guid] = indexedItem;
                 }
-                UnityEngine.Object o = AssetDatabase.LoadMainAssetAtPath(path);
-                if (o == null)
+
+                if (showIndexedTypes)
                 {
-                    Debug.Log("Unable to get asset: " + path);
-                    return;
+                    ShowAsset(
+                        selectionRect,
+                        GetFriendlyTypeName(assetType),
+                        icon);
                 }
-                Type t = o.GetType();
-                if (FriendlyNames.ContainsKey(t))
-                {
-                    string FriendlyType = FriendlyNames[t];
-                    ShowAsset(selectionRect, FriendlyType);
-                }
+                return;
+            }
+
+            if (showUnindexedTypes)
+            {
+                ShowAsset(
+                    selectionRect,
+                    GetFriendlyTypeName(assetType),
+                    missingIndexIcon);
             }
         }
 
-        private static void ShowAsset(Rect selectionRect, string FriendlyType, Texture2D icon)
+        private static bool IsSameIndexedAsset(
+            AssetItem indexedItem,
+            UnityEngine.Object asset,
+            string guid,
+            string path)
         {
-            if (selectionRect.height <= 22 && selectionRect.width > 200)
+            if (indexedItem == null)
             {
-                GUIStyle labelstyle = EditorStyles.miniLabel;
-                Color col = EditorGUIUtility.isProSkin
-                    ? (Color)new Color32(56, 56, 56, 255)
-                    : (Color)new Color32(194, 194, 194, 255);
-
-                Rect newRect = selectionRect;
-                Vector2 labelSize = labelstyle.CalcSize(new GUIContent(FriendlyType));
-                // Display Label
-                newRect.x = ((newRect.width + selectionRect.x) - labelSize.x) - 20;
-                newRect.width = labelSize.x + 1;
-                EditorGUI.DrawRect(newRect, col);
-                GUI.Label(newRect, FriendlyType, labelstyle);
-                // Display Icon
-                newRect.x = newRect.x + newRect.width;
-                newRect.width = 16;
-                GUI.DrawTexture(newRect, icon);
+                return false;
             }
+
+            if (!string.IsNullOrEmpty(indexedItem._Guid) &&
+                string.Equals(
+                    indexedItem._Guid,
+                    guid,
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            if (!string.IsNullOrEmpty(indexedItem._Path) &&
+                string.Equals(
+                    indexedItem._Path.Replace('\\', '/'),
+                    path.Replace('\\', '/'),
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            return indexedItem._SerializedItem == asset;
         }
 
-        private static void ShowAsset(Rect selectionRect, string FriendlyType)
+        private static string GetFriendlyTypeName(Type type)
         {
-            if (selectionRect.height <= 22 && selectionRect.width > 200)
+            if (type == null)
             {
-                GUIStyle labelstyle = EditorStyles.miniLabel;
-                Color col = EditorGUIUtility.isProSkin
-                    ? (Color)new Color32(56, 56, 56, 255)
-                    : (Color)new Color32(194, 194, 194, 255);
+                return "Unknown";
+            }
 
-                Rect newRect = selectionRect;
-                Vector2 labelSize = labelstyle.CalcSize(new GUIContent(FriendlyType));
-                newRect.x = ((newRect.width + selectionRect.x) - labelSize.x) - 4;
-                newRect.width = labelSize.x + 1;
-                EditorGUI.DrawRect(newRect, col);
-                GUI.Label(newRect, FriendlyType, labelstyle);
+            string friendlyName;
+            return FriendlyNames.TryGetValue(type, out friendlyName)
+                ? friendlyName
+                : ObjectNames.NicifyVariableName(type.Name);
+        }
+
+        private static void ShowAsset(
+            Rect selectionRect,
+            string FriendlyType,
+            Texture statusIcon)
+        {
+            if (selectionRect.width <= 0f || selectionRect.height <= 0f)
+            {
+                return;
+            }
+
+            const float iconSize = 16f;
+            const float edgePadding = 2f;
+            GUIStyle labelStyle = EditorStyles.miniLabel;
+            GUIContent labelContent =
+                new GUIContent(FriendlyType, FriendlyType);
+            float desiredLabelWidth =
+                labelStyle.CalcSize(labelContent).x + 2f;
+            float availableWidth = Mathf.Max(
+                iconSize,
+                selectionRect.width - edgePadding * 2f);
+            float badgeWidth = Mathf.Min(
+                desiredLabelWidth + iconSize,
+                availableWidth);
+            float badgeHeight = Mathf.Min(
+                iconSize,
+                selectionRect.height);
+
+            // Right-align in list view and pin to the upper-right in icon/grid
+            // view. The old height/width gate caused the overlay to disappear
+            // entirely when users resized the Project window or changed views.
+            Rect badgeRect = new Rect(
+                selectionRect.xMax - badgeWidth - edgePadding,
+                selectionRect.y + (selectionRect.height <= 22f
+                    ? Mathf.Max(0f, (selectionRect.height - badgeHeight) * 0.5f)
+                    : edgePadding),
+                badgeWidth,
+                badgeHeight);
+
+            float labelWidth = Mathf.Max(
+                0f,
+                badgeRect.width - iconSize);
+            if (labelWidth > 0f)
+            {
+                Rect labelRect = new Rect(
+                    badgeRect.x,
+                    badgeRect.y,
+                    labelWidth,
+                    badgeRect.height);
+                Color background = EditorGUIUtility.isProSkin
+                    ? (Color)new Color32(56, 56, 56, 230)
+                    : (Color)new Color32(194, 194, 194, 230);
+                EditorGUI.DrawRect(labelRect, background);
+                GUI.Label(labelRect, labelContent, labelStyle);
+            }
+
+            if (statusIcon != null)
+            {
+                Rect iconRect = new Rect(
+                    badgeRect.xMax - iconSize,
+                    badgeRect.y,
+                    iconSize,
+                    badgeRect.height);
+                GUI.DrawTexture(
+                    iconRect,
+                    statusIcon,
+                    ScaleMode.ScaleToFit,
+                    true);
             }
         }
 

@@ -30,6 +30,9 @@ namespace UMA
         public override string Description => "Lerps a bones transform to an absolute local position/rotation/scale based on the translated DNA value. ";
 
         public override DNAInstanceCollection.DNABuildType AreaEffect => DNABuildType.Rig;
+        public override ExpressionEffectPhase ExpressionPhases =>
+            ExpressionEffectPhase.EarlyRestore |
+            ExpressionEffectPhase.LateRig;
         /// <inheritdoc />
         public override void Restore(UMAData avatar, DNA dna, float value)
         {
@@ -64,6 +67,61 @@ namespace UMA
                     skeleton.SetScale(hash, currentScale + scaleDelta);
                 }
             }
+        }
+
+        public override void CollectExpressionBones(
+            System.Collections.Generic.List<int> boneHashes)
+        {
+            if (boneHashes != null && !string.IsNullOrEmpty(boneName))
+            {
+                boneHashes.Add(UMAUtils.StringToHash(boneName));
+            }
+        }
+
+        public override void ApplyExpressionRig(
+            UMAData avatar,
+            DNA dna,
+            float value,
+            System.Predicate<int> shouldApplyBone)
+        {
+            if (avatar == null || avatar.skeleton == null ||
+                string.IsNullOrEmpty(boneName))
+            {
+                return;
+            }
+
+            int hash = UMAUtils.StringToHash(boneName);
+            if ((shouldApplyBone != null && !shouldApplyBone(hash)) ||
+                !avatar.skeleton.HasBone(hash))
+            {
+                return;
+            }
+
+            float mappedValue = GetMappedValue(value);
+            Vector3 currentPosition =
+                avatar.skeleton.GetPosition(hash);
+            Quaternion currentRotation =
+                avatar.skeleton.GetRotation(hash);
+            Vector3 currentScale =
+                avatar.skeleton.GetScale(hash);
+            Vector3 scaleDelta =
+                (currentScale - Scale) * mappedValue;
+            Vector3 positionDelta =
+                (currentPosition - Position) * mappedValue;
+            Quaternion rotation = Quaternion.Euler(Rotation);
+
+            avatar.skeleton.SetPosition(
+                hash,
+                currentPosition + positionDelta);
+            avatar.skeleton.SetRotation(
+                hash,
+                Quaternion.Slerp(
+                    currentRotation,
+                    rotation * currentRotation,
+                    mappedValue));
+            avatar.skeleton.SetScale(
+                hash,
+                currentScale + scaleDelta);
         }
 
 #if UNITY_EDITOR

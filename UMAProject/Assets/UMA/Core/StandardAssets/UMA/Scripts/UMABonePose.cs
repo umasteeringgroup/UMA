@@ -144,7 +144,10 @@ namespace UMA.PoseTools
 			}
 		}
 
-		protected float ApplyPoseTweens(UMASkeleton umaSkeleton, float weight)
+		protected float ApplyPoseTweens(
+			UMASkeleton umaSkeleton,
+			float weight,
+			System.Predicate<int> shouldApplyBone = null)
 		{
 			// Guard and sanitize once
 			SanitizeTweens();
@@ -204,7 +207,7 @@ namespace UMA.PoseTools
 			if (weight <= tweenWeights[0])
 			{
 				float adj = weight / Mathf.Max(tweenWeights[0], Mathf.Epsilon);
-				tweenPoses[0].ApplyPose(umaSkeleton, adj);
+				tweenPoses[0].ApplyPose(umaSkeleton, adj, shouldApplyBone);
 				return 0f;
 			}
 			// weight >= last tween weight
@@ -213,7 +216,10 @@ namespace UMA.PoseTools
 			{
 				float weightRange = 1f - tweenWeights[last];
 				float lowerWeight = weightRange > Mathf.Epsilon ? (1f - weight) / weightRange : 0f;
-				tweenPoses[last].ApplyPose(umaSkeleton, lowerWeight);
+				tweenPoses[last].ApplyPose(
+					umaSkeleton,
+					lowerWeight,
+					shouldApplyBone);
 				return 1f - lowerWeight;
 			}
 
@@ -231,12 +237,26 @@ namespace UMA.PoseTools
 			float tUpper = (weight - lowerW) / span;
 			float tLower = 1f - tUpper;
 
-			tweenPoses[lowerIndex].ApplyPose(umaSkeleton, tLower);
-			tweenPoses[upperIndex].ApplyPose(umaSkeleton, tUpper);
+			tweenPoses[lowerIndex].ApplyPose(
+				umaSkeleton,
+				tLower,
+				shouldApplyBone);
+			tweenPoses[upperIndex].ApplyPose(
+				umaSkeleton,
+				tUpper,
+				shouldApplyBone);
 			return 0f;
 		}
 
 		public void ApplyPose(UMASkeleton umaSkeleton, float weight)
+		{
+			ApplyPose(umaSkeleton, weight, null);
+		}
+
+		public void ApplyPose(
+			UMASkeleton umaSkeleton,
+			float weight,
+			System.Predicate<int> shouldApplyBone)
 		{
 			if (umaSkeleton == null || poses == null)
 			{
@@ -257,7 +277,10 @@ namespace UMA.PoseTools
 			// Interpolate through tweens if provided (only for positive weights; tween curves aren't designed for inverse interpolation).
 			if (weight > 0f && tweenPoses != null && tweenPoses.Length > 0 && weight < 1f)
 			{
-				weight = ApplyPoseTweens(umaSkeleton, weight);
+				weight = ApplyPoseTweens(
+					umaSkeleton,
+					weight,
+					shouldApplyBone);
 				// If tweens consumed entire weight (returned 0) exit early
 				if (weight <= 0f) return;
 			}
@@ -266,6 +289,11 @@ namespace UMA.PoseTools
 			{
 				var pb = poses[i];
 				if (pb == null || !pb.enabled) continue;
+				if (shouldApplyBone != null &&
+					!shouldApplyBone(pb.hash))
+				{
+					continue;
+				}
 				umaSkeleton.Morph(pb.hash, pb.position, pb.scale, pb.rotation, weight);
 			}
 		}

@@ -5604,6 +5604,7 @@ namespace UMA.CharacterSystem
             }
             resetNewDNAOnNextBuild = false;
             dnaInstanceCollection?.AfterRecipeGenerated(this);
+            RuntimeDNAsAfterRecipeGenerated(this);
             // AfterRecipeGenerated
 
             //      DumpDNA("chinPosition", "before UpdateColors");

@@ -16,6 +16,8 @@ namespace UMA
         public MeshModifier meshModifier;
         public override string Description => "Applies a mesh modifier to the character's mesh.";
         public override DNAInstanceCollection.DNABuildType AreaEffect => DNAInstanceCollection.DNABuildType.MeshModifiers;
+        public override ExpressionEffectPhase ExpressionPhases =>
+            ExpressionEffectPhase.BuildAfterRecipe;
 
 #if UNITY_EDITOR
         /// <inheritdoc />

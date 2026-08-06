@@ -259,7 +259,7 @@ namespace UMA.Editors
                     EditorGUI.indentLevel--;
                 }
 
-                shaderKeywordsFoldout = EditorGUILayout.Foldout(shaderKeywordsFoldout, "Shader Keywords", true);
+                shaderKeywordsFoldout = EditorGUILayout.Foldout(shaderKeywordsFoldout, "Legacy Shader Keyword Color Mapping", true);
                 if (shaderKeywordsFoldout)
                 {
                     EditorGUI.indentLevel++;
@@ -533,6 +533,8 @@ namespace UMA.Editors
                         EditorGUI.EndDisabledGroup();
                         EditorGUILayout.PropertyField(channel.FindPropertyRelative("sourceTextureName"), new GUIContent("Source Texture Name", "For use with procedural materials, leave empty otherwise."));
 
+                        DrawTextureModificationLayout(channel, source, i);
+
                         EditorGUILayout.PropertyField(NonShaderProperty, new GUIContent("NonShader Texture", "For having a texture get merged by the UMA texture merging process but not used in a shader. E.G. Pixel/UV based ID lookup. The Material Property Name should be empty when this is true."));
                         if (showHelp)
                         {
@@ -549,6 +551,354 @@ namespace UMA.Editors
                 }
                 GUIHelper.EndVerticalPadded(10);
             }
+        }
+
+        private void DrawTextureModificationLayout(SerializedProperty channelProperty, UMAMaterial source, int channelIndex)
+        {
+            SerializedProperty layout = channelProperty.FindPropertyRelative("textureChannelLayout");
+            if (layout == null)
+            {
+                return;
+            }
+
+            SerializedProperty modeProperty = layout.FindPropertyRelative("mode");
+            UMAMaterial.TextureChannelLayoutMode currentMode =
+                (UMAMaterial.TextureChannelLayoutMode)modeProperty.intValue;
+            UMAMaterial.MaterialChannel materialChannel = BuildCurrentMaterialChannel(source, channelProperty, channelIndex);
+            UMAMaterial.TextureChannelLayout detected = UMAMaterial.InferTextureChannelLayout(materialChannel, source != null ? source.material : null);
+
+            EditorGUILayout.Space(4f);
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            EditorGUILayout.LabelField(new GUIContent("Overlay Painter Channel Layout",
+                "Describes what the shader reads from each component so Overlay Painter can unpack and repack the physical texture automatically."), EditorStyles.boldLabel);
+
+            EditorGUI.BeginChangeCheck();
+            UMAMaterial.TextureChannelLayoutMode newMode = (UMAMaterial.TextureChannelLayoutMode)EditorGUILayout.EnumPopup(
+                new GUIContent("Layout", "Automatic follows known Unity/UMA shader conventions. Custom stores the editable RGBA meanings on this UMA Material."), currentMode);
+            if (EditorGUI.EndChangeCheck())
+            {
+                Undo.RecordObject(target, "Change Overlay Painter Channel Layout");
+                modeProperty.intValue = (int)newMode;
+                if (newMode == UMAMaterial.TextureChannelLayoutMode.Custom)
+                {
+                    WriteTextureChannelLayout(layout, detected);
+                    modeProperty.intValue = (int)UMAMaterial.TextureChannelLayoutMode.Custom;
+                }
+                currentMode = newMode;
+            }
+
+            if (currentMode == UMAMaterial.TextureChannelLayoutMode.Automatic)
+            {
+                EditorGUI.BeginDisabledGroup(true);
+                DrawDetectedComponent("R", detected.red);
+                DrawDetectedComponent("G", detected.green);
+                DrawDetectedComponent("B", detected.blue);
+                DrawDetectedComponent("A", detected.alpha);
+                EditorGUI.EndDisabledGroup();
+
+                if (GUILayout.Button(new GUIContent("Customize Detected Layout",
+                    "Copies the detected values into an editable custom layout.")))
+                {
+                    Undo.RecordObject(target, "Customize Overlay Painter Channel Layout");
+                    WriteTextureChannelLayout(layout, detected);
+                    modeProperty.intValue = (int)UMAMaterial.TextureChannelLayoutMode.Custom;
+                }
+            }
+            else
+            {
+                EditorGUILayout.PropertyField(layout.FindPropertyRelative("red"), new GUIContent("R"));
+                EditorGUILayout.PropertyField(layout.FindPropertyRelative("green"), new GUIContent("G"));
+                EditorGUILayout.PropertyField(layout.FindPropertyRelative("blue"), new GUIContent("B"));
+                EditorGUILayout.PropertyField(layout.FindPropertyRelative("alpha"), new GUIContent("A"));
+
+                EditorGUILayout.BeginHorizontal();
+                if (GUILayout.Button(new GUIContent("Detect Again", "Replace the custom values with the currently detected shader convention while remaining in Custom mode.")))
+                {
+                    Undo.RecordObject(target, "Detect Overlay Painter Channel Layout");
+                    WriteTextureChannelLayout(layout, detected);
+                    modeProperty.intValue = (int)UMAMaterial.TextureChannelLayoutMode.Custom;
+                }
+                if (GUILayout.Button(new GUIContent("Use Automatic", "Return to automatic detection. Stored custom values are retained but ignored.")))
+                {
+                    Undo.RecordObject(target, "Use Automatic Overlay Painter Channel Layout");
+                    modeProperty.intValue = (int)UMAMaterial.TextureChannelLayoutMode.Automatic;
+                }
+                EditorGUILayout.EndHorizontal();
+            }
+
+            DrawTextureModificationOutput(channelProperty, materialChannel, source);
+            DrawTextureModificationWarnings(materialChannel, source);
+
+            if (showHelp)
+            {
+                EditorGUILayout.HelpBox("Smoothness is exposed as editable Roughness by Overlay Painter and is inverted when unpacking and repacking. Unsupported meanings are preserved in the physical texture until the painter gains a matching logical channel. A component may have multiple meanings, such as Opacity and Smoothness.", MessageType.Info);
+            }
+            EditorGUILayout.EndVertical();
+        }
+
+        private static void DrawTextureModificationWarnings(UMAMaterial.MaterialChannel channel,
+            UMAMaterial owner)
+        {
+            Material material = owner != null ? owner.material : null;
+            if (!channel.NonShaderTexture && material != null &&
+                !string.IsNullOrWhiteSpace(channel.materialPropertyName))
+            {
+                if (!material.HasProperty(channel.materialPropertyName))
+                {
+                    EditorGUILayout.HelpBox($"Shader '{material.shader.name}' does not contain " +
+                        $"'{channel.materialPropertyName}'. Overlay Painter will reject this material channel.",
+                        MessageType.Error);
+                }
+                else
+                {
+                    int propertyIndex = material.shader.FindPropertyIndex(channel.materialPropertyName);
+                    if (propertyIndex >= 0 &&
+                        material.shader.GetPropertyType(propertyIndex) != ShaderPropertyType.Texture)
+                        EditorGUILayout.HelpBox($"'{channel.materialPropertyName}' is not a texture property. " +
+                            "Overlay Painter will reject this material channel.", MessageType.Error);
+                }
+            }
+
+            UMAMaterial.TextureChannelLayout layout = UMAMaterial.GetTextureChannelLayout(channel, material);
+            string conflicts = string.Empty;
+            for (int component = 0; component < 4; component++)
+            {
+                UMAMaterial.TextureChannelUsage usage = layout.GetComponent(component);
+                if (CountUsageFlags(usage) <= 1) continue;
+                if (conflicts.Length > 0) conflicts += ", ";
+                conflicts += (component == 0 ? "R" : component == 1 ? "G" : component == 2 ? "B" : "A") +
+                             "=" + usage;
+            }
+            if (conflicts.Length > 0)
+                EditorGUILayout.HelpBox("Multiple meanings share one physical component (" + conflicts +
+                    "). The painter cannot edit that component without changing every meaning, so stage preflight " +
+                    "will reject it. Use a safe Custom mapping or split the shader inputs.", MessageType.Error);
+
+            UMAMaterial.TextureChannelOutputSettings output =
+                UMAMaterial.GetTextureChannelOutputSettings(channel, material, owner);
+            bool completeNormal = layout.red == UMAMaterial.TextureChannelUsage.Normal &&
+                                  layout.green == UMAMaterial.TextureChannelUsage.Normal &&
+                                  layout.blue == UMAMaterial.TextureChannelUsage.Normal;
+            if (output.importerType == UMAMaterial.TextureChannelImporterType.NormalMap && !completeNormal)
+                EditorGUILayout.HelpBox("The Normal Map importer requires a complete normal vector in RGB.",
+                    MessageType.Error);
+            if (output.importerType == UMAMaterial.TextureChannelImporterType.NormalMap &&
+                output.colorSpace == UMAMaterial.TextureChannelColorSpace.SRGB)
+                EditorGUILayout.HelpBox("Normal Map import and sRGB color space cannot be combined.",
+                    MessageType.Error);
+
+            HashSet<string> platforms = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
+            for (int i = 0; output.platformOverrides != null && i < output.platformOverrides.Length; i++)
+            {
+                UMAMaterial.TextureChannelPlatformOverrideSettings platform = output.platformOverrides[i];
+                if (!platform.enabled) continue;
+                if (string.IsNullOrWhiteSpace(platform.platformName))
+                    EditorGUILayout.HelpBox("An enabled platform override requires a Unity platform name.",
+                        MessageType.Error);
+                else if (!platforms.Add(platform.platformName))
+                    EditorGUILayout.HelpBox($"Platform '{platform.platformName}' is declared more than once.",
+                        MessageType.Error);
+            }
+        }
+
+        private static int CountUsageFlags(UMAMaterial.TextureChannelUsage usage)
+        {
+            uint bits = (uint)usage;
+            int count = 0;
+            while (bits != 0)
+            {
+                bits &= bits - 1;
+                count++;
+            }
+            return count;
+        }
+
+        private void DrawTextureModificationOutput(SerializedProperty channelProperty,
+            UMAMaterial.MaterialChannel materialChannel, UMAMaterial source)
+        {
+            SerializedProperty output = channelProperty.FindPropertyRelative("textureChannelOutput");
+            if (output == null) return;
+            SerializedProperty mode = output.FindPropertyRelative("mode");
+            UMAMaterial.TextureChannelOutputMode currentMode =
+                (UMAMaterial.TextureChannelOutputMode)mode.intValue;
+            UMAMaterial.TextureChannelOutputSettings detected = UMAMaterial.InferTextureChannelOutputSettings(
+                materialChannel, source != null ? source.material : null, source);
+
+            EditorGUILayout.Space(5f);
+            EditorGUILayout.LabelField(new GUIContent("Physical Output / Import",
+                "Controls how Overlay Painter encodes and imports the physical texture for this material channel."),
+                EditorStyles.boldLabel);
+            EditorGUI.BeginChangeCheck();
+            UMAMaterial.TextureChannelOutputMode selected =
+                (UMAMaterial.TextureChannelOutputMode)EditorGUILayout.EnumPopup("Output", currentMode);
+            if (EditorGUI.EndChangeCheck())
+            {
+                Undo.RecordObject(target, "Change Overlay Painter Output Settings");
+                mode.intValue = (int)selected;
+                if (selected == UMAMaterial.TextureChannelOutputMode.Custom)
+                    WriteTextureChannelOutput(output, detected);
+                currentMode = selected;
+            }
+
+            if (currentMode == UMAMaterial.TextureChannelOutputMode.Automatic)
+            {
+                EditorGUI.BeginDisabledGroup(true);
+                DrawDetectedOutput(detected);
+                EditorGUI.EndDisabledGroup();
+                if (GUILayout.Button(new GUIContent("Customize Detected Output",
+                    "Copies the inferred output and importer values into editable Custom settings.")))
+                {
+                    Undo.RecordObject(target, "Customize Overlay Painter Output");
+                    WriteTextureChannelOutput(output, detected);
+                    mode.intValue = (int)UMAMaterial.TextureChannelOutputMode.Custom;
+                }
+            }
+            else
+            {
+                EditorGUILayout.PropertyField(output.FindPropertyRelative("encoding"), new GUIContent("Encoding"));
+                EditorGUILayout.PropertyField(output.FindPropertyRelative("importerType"), new GUIContent("Importer Type"));
+                EditorGUILayout.PropertyField(output.FindPropertyRelative("colorSpace"), new GUIContent("Color Space"));
+                EditorGUILayout.PropertyField(output.FindPropertyRelative("alphaSource"), new GUIContent("Alpha Source"));
+                EditorGUILayout.PropertyField(output.FindPropertyRelative("compression"), new GUIContent("Compression"));
+                EditorGUILayout.PropertyField(output.FindPropertyRelative("normalConvention"), new GUIContent("Normal Convention"));
+                EditorGUILayout.PropertyField(output.FindPropertyRelative("generateMipMaps"), new GUIContent("Generate Mip Maps"));
+                EditorGUILayout.PropertyField(output.FindPropertyRelative("filterMode"), new GUIContent("Filter Mode"));
+                EditorGUILayout.PropertyField(output.FindPropertyRelative("anisoLevel"), new GUIContent("Aniso Level"));
+                EditorGUILayout.PropertyField(output.FindPropertyRelative("maxTextureSize"), new GUIContent("Max Texture Size"));
+                EditorGUILayout.PropertyField(output.FindPropertyRelative("platformOverrides"),
+                    new GUIContent("Platform Overrides"), true);
+                EditorGUILayout.BeginHorizontal();
+                if (GUILayout.Button("Detect Again"))
+                {
+                    Undo.RecordObject(target, "Detect Overlay Painter Output");
+                    WriteTextureChannelOutput(output, detected);
+                    mode.intValue = (int)UMAMaterial.TextureChannelOutputMode.Custom;
+                }
+                if (GUILayout.Button("Use Automatic"))
+                {
+                    Undo.RecordObject(target, "Use Automatic Overlay Painter Output");
+                    mode.intValue = (int)UMAMaterial.TextureChannelOutputMode.Automatic;
+                }
+                EditorGUILayout.EndHorizontal();
+            }
+        }
+
+        private static void DrawDetectedOutput(UMAMaterial.TextureChannelOutputSettings output)
+        {
+            EditorGUILayout.EnumPopup("Encoding", output.encoding);
+            EditorGUILayout.EnumPopup("Importer Type", output.importerType);
+            EditorGUILayout.EnumPopup("Color Space", output.colorSpace);
+            EditorGUILayout.EnumPopup("Alpha Source", output.alphaSource);
+            EditorGUILayout.EnumPopup("Compression", output.compression);
+            EditorGUILayout.EnumPopup("Normal Convention", output.normalConvention);
+            EditorGUILayout.Toggle("Generate Mip Maps", output.generateMipMaps);
+            EditorGUILayout.EnumPopup("Filter Mode", output.filterMode);
+            EditorGUILayout.IntField("Aniso Level", output.anisoLevel);
+            EditorGUILayout.IntField("Max Texture Size", output.maxTextureSize);
+            EditorGUILayout.LabelField("Platform Overrides",
+                output.platformOverrides != null && output.platformOverrides.Length > 0
+                    ? output.platformOverrides.Length.ToString()
+                    : "None");
+        }
+
+        private static UMAMaterial.MaterialChannel BuildCurrentMaterialChannel(UMAMaterial source,
+            SerializedProperty channelProperty, int channelIndex)
+        {
+            UMAMaterial.MaterialChannel channel = source != null && source.channels != null &&
+                                                  channelIndex >= 0 && channelIndex < source.channels.Length
+                ? source.channels[channelIndex]
+                : new UMAMaterial.MaterialChannel();
+            channel.channelType = (UMAMaterial.ChannelType)channelProperty.FindPropertyRelative("channelType").intValue;
+            channel.materialPropertyName = channelProperty.FindPropertyRelative("materialPropertyName").stringValue;
+            channel.sourceTextureName = channelProperty.FindPropertyRelative("sourceTextureName").stringValue;
+            SerializedProperty layout = channelProperty.FindPropertyRelative("textureChannelLayout");
+            if (layout != null)
+            {
+                channel.textureChannelLayout.mode = (UMAMaterial.TextureChannelLayoutMode)
+                    layout.FindPropertyRelative("mode").intValue;
+                channel.textureChannelLayout.red = (UMAMaterial.TextureChannelUsage)
+                    layout.FindPropertyRelative("red").intValue;
+                channel.textureChannelLayout.green = (UMAMaterial.TextureChannelUsage)
+                    layout.FindPropertyRelative("green").intValue;
+                channel.textureChannelLayout.blue = (UMAMaterial.TextureChannelUsage)
+                    layout.FindPropertyRelative("blue").intValue;
+                channel.textureChannelLayout.alpha = (UMAMaterial.TextureChannelUsage)
+                    layout.FindPropertyRelative("alpha").intValue;
+            }
+            SerializedProperty output = channelProperty.FindPropertyRelative("textureChannelOutput");
+            if (output != null)
+            {
+                channel.textureChannelOutput.mode = (UMAMaterial.TextureChannelOutputMode)
+                    output.FindPropertyRelative("mode").intValue;
+                channel.textureChannelOutput.encoding = (UMAMaterial.TextureChannelOutputEncoding)
+                    output.FindPropertyRelative("encoding").intValue;
+                channel.textureChannelOutput.importerType = (UMAMaterial.TextureChannelImporterType)
+                    output.FindPropertyRelative("importerType").intValue;
+                channel.textureChannelOutput.colorSpace = (UMAMaterial.TextureChannelColorSpace)
+                    output.FindPropertyRelative("colorSpace").intValue;
+                channel.textureChannelOutput.alphaSource = (UMAMaterial.TextureChannelAlphaSource)
+                    output.FindPropertyRelative("alphaSource").intValue;
+                channel.textureChannelOutput.compression = (UMAMaterial.TextureChannelImportCompression)
+                    output.FindPropertyRelative("compression").intValue;
+                channel.textureChannelOutput.normalConvention = (UMAMaterial.TextureChannelNormalConvention)
+                    output.FindPropertyRelative("normalConvention").intValue;
+                channel.textureChannelOutput.generateMipMaps =
+                    output.FindPropertyRelative("generateMipMaps").boolValue;
+                channel.textureChannelOutput.filterMode = (FilterMode)
+                    output.FindPropertyRelative("filterMode").intValue;
+                channel.textureChannelOutput.anisoLevel =
+                    output.FindPropertyRelative("anisoLevel").intValue;
+                channel.textureChannelOutput.maxTextureSize =
+                    output.FindPropertyRelative("maxTextureSize").intValue;
+                SerializedProperty platformOverrides = output.FindPropertyRelative("platformOverrides");
+                if (platformOverrides != null)
+                {
+                    channel.textureChannelOutput.platformOverrides =
+                        new UMAMaterial.TextureChannelPlatformOverrideSettings[platformOverrides.arraySize];
+                    for (int platformIndex = 0; platformIndex < platformOverrides.arraySize; platformIndex++)
+                    {
+                        SerializedProperty platform = platformOverrides.GetArrayElementAtIndex(platformIndex);
+                        channel.textureChannelOutput.platformOverrides[platformIndex] =
+                            new UMAMaterial.TextureChannelPlatformOverrideSettings
+                            {
+                                enabled = platform.FindPropertyRelative("enabled").boolValue,
+                                platformName = platform.FindPropertyRelative("platformName").stringValue,
+                                maxTextureSize = platform.FindPropertyRelative("maxTextureSize").intValue,
+                                compression = (UMAMaterial.TextureChannelImportCompression)
+                                    platform.FindPropertyRelative("compression").intValue
+                            };
+                    }
+                }
+            }
+            return channel;
+        }
+
+        private static void DrawDetectedComponent(string label, UMAMaterial.TextureChannelUsage usage)
+        {
+            EditorGUILayout.EnumFlagsField(label, usage);
+        }
+
+        private static void WriteTextureChannelLayout(SerializedProperty layout, UMAMaterial.TextureChannelLayout value)
+        {
+            layout.FindPropertyRelative("red").intValue = (int)value.red;
+            layout.FindPropertyRelative("green").intValue = (int)value.green;
+            layout.FindPropertyRelative("blue").intValue = (int)value.blue;
+            layout.FindPropertyRelative("alpha").intValue = (int)value.alpha;
+        }
+
+        private static void WriteTextureChannelOutput(SerializedProperty output,
+            UMAMaterial.TextureChannelOutputSettings value)
+        {
+            output.FindPropertyRelative("encoding").intValue = (int)value.encoding;
+            output.FindPropertyRelative("importerType").intValue = (int)value.importerType;
+            output.FindPropertyRelative("colorSpace").intValue = (int)value.colorSpace;
+            output.FindPropertyRelative("alphaSource").intValue = (int)value.alphaSource;
+            output.FindPropertyRelative("compression").intValue = (int)value.compression;
+            output.FindPropertyRelative("normalConvention").intValue = (int)value.normalConvention;
+            output.FindPropertyRelative("generateMipMaps").boolValue = value.generateMipMaps;
+            output.FindPropertyRelative("filterMode").intValue = (int)value.filterMode;
+            output.FindPropertyRelative("anisoLevel").intValue = value.anisoLevel;
+            output.FindPropertyRelative("maxTextureSize").intValue = value.maxTextureSize;
         }
 
         private static void DrawUseExistingTextureChannelWarning(SerializedProperty channels, UMAMaterial.MaterialType materialType)
@@ -614,7 +964,7 @@ namespace UMA.Editors
             }
             else
             {
-                EditorGUILayout.HelpBox("Add shader keywords to this list to have them stored on the UMAMaterial. This is useful for copying shader parameters and values to Shared Colors in the editor", MessageType.Info);
+                EditorGUILayout.HelpBox("Legacy Color Mapping: Add shader keywords to this material. At runtime, the first color assigned to the overlay using this umamaterial will be plugged into the material. It is recommended to use shader property blocks on Shared Colors in place of this, they give you much more flexibility and the ability to use any material property type.", MessageType.Info);
             }
 
             ShaderKeywordInfo[] shaderKeywordInfos = FindShaderKeywords(source.material);

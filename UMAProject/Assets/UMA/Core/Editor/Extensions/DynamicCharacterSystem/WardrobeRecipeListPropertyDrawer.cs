@@ -15,6 +15,7 @@ namespace UMA.CharacterSystem.Editors
         public List<bool> recipeMenuIsAddAll = new List<bool>();
         public string LastRace = "";
         private string lastDropdownSignature = string.Empty;
+        private bool dropdownInitialized;
         public static int lastAdded = -1;
         public static int selectedSlotIndex = 0;
 
@@ -61,7 +62,8 @@ namespace UMA.CharacterSystem.Editors
             }
         }
 
-        private Dictionary<string, List<UMATextRecipe>> GetAvailableRecipesForCurrentRace()
+        private Dictionary<string, List<UMATextRecipe>> GetAvailableRecipesForCurrentRace(
+            RaceData raceData)
         {
             if (thisDCA == null)
             {
@@ -70,7 +72,9 @@ namespace UMA.CharacterSystem.Editors
 
             try
             {
-                thisDCA.preloadWardrobeRecipes?.GetRecipesForRace(thisDCA.activeRace.name, thisDCA.activeRace.data);
+                thisDCA.preloadWardrobeRecipes?.GetRecipesForRace(
+                    thisDCA.activeRace.name,
+                    raceData);
             }
             catch { }
 
@@ -81,30 +85,18 @@ namespace UMA.CharacterSystem.Editors
             }
             catch { }
 
-            if ((availableRecipes == null || availableRecipes.Count == 0) && thisDCA.activeRace != null && thisDCA.activeRace.data != null)
-            {
-                var idx = TryGetIndexer();
-                if (idx != null)
-                {
-                    try { idx.RebuildRaceRecipes(); } catch { }
-                }
-
-                try
-                {
-                    availableRecipes = thisDCA.AvailableRecipes;
-                }
-                catch { }
-            }
-
             return availableRecipes;
         }
 
-        private string BuildDropdownSignature(string race, Dictionary<string, List<UMATextRecipe>> availableRecipes)
+        private string BuildDropdownSignature(
+            string race,
+            RaceData raceData,
+            Dictionary<string, List<UMATextRecipe>> availableRecipes)
         {
             List<string> orderedSlots = new List<string>();
             HashSet<string> seenSlots = new HashSet<string>();
 
-            IList<string> raceSlots = thisDCA?.activeRace?.data != null ? thisDCA.activeRace.data.wardrobeSlots : null;
+            IList<string> raceSlots = raceData != null ? raceData.wardrobeSlots : null;
             if (raceSlots != null)
             {
                 for (int i = 0; i < raceSlots.Count; i++)
@@ -155,14 +147,21 @@ namespace UMA.CharacterSystem.Editors
             return (race ?? string.Empty) + "|" + string.Join(";", slotEntries);
         }
 
-        public void SetupDropdown(string race)
+        public void SetupDropdown(string race, RaceData raceData)
         {
-            var availableRecipes = GetAvailableRecipesForCurrentRace();
-            string currentSignature = BuildDropdownSignature(race, availableRecipes);
+            var availableRecipes = GetAvailableRecipesForCurrentRace(raceData);
+            string currentSignature = BuildDropdownSignature(
+                race,
+                raceData,
+                availableRecipes);
 
-			// Rebuild when race changes, when the live recipe set changes, or when the menu is empty.
-			if (LastRace != race || lastDropdownSignature != currentSignature || recipeMenu.Count == 0 || recipes.Count == 0)
+			// An empty menu is a valid cached result. Rebuild only when its inputs change
+            // or an explicit invalidation occurs.
+			if (!dropdownInitialized ||
+                LastRace != race ||
+                lastDropdownSignature != currentSignature)
             {
+                dropdownInitialized = true;
                 LastRace = race;
                 lastDropdownSignature = currentSignature;
                 recipes.Clear();
@@ -173,7 +172,6 @@ namespace UMA.CharacterSystem.Editors
                 {
                     try
                     {
-                        var raceData = thisDCA.activeRace != null ? thisDCA.activeRace.data : null;
                         IList<string> slots = raceData != null ? raceData.wardrobeSlots : null;
                         if (slots != null && slots.Count > 0)
                         {
@@ -495,6 +493,7 @@ namespace UMA.CharacterSystem.Editors
 
         private void InvalidateDropdownCache()
         {
+            dropdownInitialized = false;
             LastRace = string.Empty;
             lastDropdownSignature = string.Empty;
             recipes.Clear();
@@ -777,7 +776,15 @@ namespace UMA.CharacterSystem.Editors
                 ShowOnlyCompatibleRecipes = GUILayout.Toggle(ShowOnlyCompatibleRecipes, "Compatible Only", GUILayout.ExpandWidth(true));
 
                 string selectedSlot = "";
-                bool hasRace = thisDCA?.activeRace != null && thisDCA.activeRace.data != null;
+                RaceData activeRaceData = null;
+                try
+                {
+                    activeRaceData = thisDCA?.activeRace != null
+                        ? thisDCA.activeRace.data
+                        : null;
+                }
+                catch { }
+                bool hasRace = activeRaceData != null;
 
                 if (!hasRace)
                 {
@@ -787,21 +794,25 @@ namespace UMA.CharacterSystem.Editors
                 }
                 else
                 {
-                    if (selectedSlotIndex >= thisDCA.activeRace.data.wardrobeSlots.Count)
+                    if (selectedSlotIndex >= activeRaceData.wardrobeSlots.Count)
                     {
                         selectedSlotIndex = 0;
                     }
                     GUILayout.Label("Wardrobe Region", GUILayout.Width(85));
-                    selectedSlotIndex = EditorGUILayout.Popup(selectedSlotIndex, thisDCA.activeRace.data.wardrobeSlots.ToArray(), GUILayout.Width(120));
-                    if (selectedSlotIndex >= 0 && selectedSlotIndex < thisDCA.activeRace.data.wardrobeSlots.Count)
+                    selectedSlotIndex = EditorGUILayout.Popup(
+                        selectedSlotIndex,
+                        activeRaceData.wardrobeSlots.ToArray(),
+                        GUILayout.Width(120));
+                    if (selectedSlotIndex >= 0 &&
+                        selectedSlotIndex < activeRaceData.wardrobeSlots.Count)
                     {
-                        selectedSlot = thisDCA.activeRace.data.wardrobeSlots[selectedSlotIndex];
+                        selectedSlot = activeRaceData.wardrobeSlots[selectedSlotIndex];
                     }
                     ShowOnlySelectedSlot = selectedSlotIndex != 0;
                     GUILayout.EndHorizontal();
 
                     GUILayout.BeginHorizontal();
-                    SetupDropdown(thisDCA.activeRace.name);
+                    SetupDropdown(thisDCA.activeRace.name, activeRaceData);
 
                     ToggleAll = GUILayout.Toggle(ToggleAll, "Toggle", GUILayout.ExpandWidth(true));
 
@@ -862,7 +873,8 @@ namespace UMA.CharacterSystem.Editors
                         {
                             try
                             {
-                                if (thisDCA.activeRace.data.IsCrossCompatibleWith(race) || race == thisDCA.activeRace.name)
+                                if (activeRaceData.IsCrossCompatibleWith(race) ||
+                                    race == thisDCA.activeRace.name)
                                 {
                                     compatible = true;
                                 }

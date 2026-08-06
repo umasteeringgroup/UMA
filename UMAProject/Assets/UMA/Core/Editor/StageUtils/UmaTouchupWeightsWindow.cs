@@ -116,12 +116,28 @@ namespace UMA
                     statusMessage = string.Empty;
                 }
             }
+            EditorGUILayout.LabelField(
+                "Selected Bone: " + GetSelectedBoneName(),
+                EditorStyles.miniBoldLabel);
             if (stage.HasPendingTouchupPaintWeights)
             {
                 EditorGUILayout.HelpBox(
-                    "Save or revert the painted weights before changing slots.",
+                    "Save or revert the pending weight changes before changing slots.",
                     MessageType.Info);
             }
+        }
+
+        private string GetSelectedBoneName()
+        {
+            for (int i = 0; i < bones.Count; i++)
+            {
+                VertexEditorStage.BoneOption bone = bones[i];
+                if (bone.boneHash == selectedBoneHash)
+                {
+                    return bone.boneName;
+                }
+            }
+            return selectedBoneHash != 0 ? "Hash " + selectedBoneHash : "None";
         }
 
         private void DrawSelectionSummary()
@@ -204,15 +220,6 @@ namespace UMA
             EditorGUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
             EditorGUILayout.LabelField("Weights", EditorStyles.boldLabel);
 
-            if (stage.HasPendingTouchupPaintWeights)
-            {
-                EditorGUILayout.HelpBox(
-                    "Painted weight changes are pending. Save or revert them before editing individual numeric weights.",
-                    MessageType.Info);
-                EditorGUILayout.EndVertical();
-                return;
-            }
-
             VertexEditorStage.VertexSelection first = stage.GetFirstTouchupSelectedVertex();
             if (first == null)
             {
@@ -291,16 +298,16 @@ namespace UMA
         private void DrawFooter()
         {
             EditorGUILayout.BeginHorizontal();
-            bool hasPendingPaint = stage.HasPendingTouchupPaintWeights;
+            bool hasPendingWeights = stage.HasPendingTouchupPaintWeights;
             bool canSaveNumeric =
                 stage.TouchupSelectionCount > 0 && editableWeights.Count > 0;
-            using (new EditorGUI.DisabledScope(!hasPendingPaint && !canSaveNumeric))
+            using (new EditorGUI.DisabledScope(!hasPendingWeights && !canSaveNumeric))
             {
                 if (GUILayout.Button(
-                        weightsDirty || hasPendingPaint ? "Save Weights *" : "Save Weights",
+                        weightsDirty || hasPendingWeights ? "Save Weights *" : "Save Weights",
                         GUILayout.Height(26f)))
                 {
-                    bool saved = hasPendingPaint
+                    bool saved = hasPendingWeights
                         ? stage.TrySavePendingTouchupPaintWeights(out statusMessage)
                         : stage.TrySaveTouchupWeights(editableWeights, out statusMessage);
                     if (saved)
@@ -315,11 +322,11 @@ namespace UMA
                     }
                 }
             }
-            using (new EditorGUI.DisabledScope(!weightsDirty && !hasPendingPaint))
+            using (new EditorGUI.DisabledScope(!weightsDirty && !hasPendingWeights))
             {
                 if (GUILayout.Button("Revert", GUILayout.Height(26f), GUILayout.Width(72f)))
                 {
-                    if (hasPendingPaint)
+                    if (hasPendingWeights)
                     {
                         stage.RevertPendingTouchupPaintWeights();
                     }
@@ -328,8 +335,8 @@ namespace UMA
                         stage.ClearTouchupWeightPreview();
                     }
                     RefreshSelection(true);
-                    statusMessage = hasPendingPaint
-                        ? "Reverted unsaved painted weight edits."
+                    statusMessage = hasPendingWeights
+                        ? "Reverted unsaved weight edits."
                         : "Reverted unsaved numeric weight edits.";
                     statusType = MessageType.Info;
                 }
@@ -355,7 +362,7 @@ namespace UMA
             int choice = EditorUtility.DisplayDialogComplex(
                 "Unsaved Touchup Weights",
                 stage.HasPendingTouchupPaintWeights
-                    ? "Painted weight changes have not been saved."
+                    ? "Weight changes have not been saved."
                     : "Numeric weight changes have not been saved.",
                 "Save",
                 "Discard",

@@ -2,6 +2,7 @@
 
 using UnityEngine;
 using UMA.CharacterSystem;
+using UMA.PoseTools;
 using System;
 using System.Collections.Generic;
 using System.Collections; // added for BitArray
@@ -40,6 +41,22 @@ namespace UMA.Examples
 
         [Tooltip("Disable the automated processing of LOD changes. This is useful if you want to control when the LOD changes happen, such as in a custom update loop or event system.")]
         public bool disableAutomatedProcessing;
+
+        [Header("Runtime LOD Tuning")]
+        [Tooltip("LOD zone at which embedded bone animators are disabled. For example, 2 enables them at LOD 0 and 1, then disables them at LOD 2 and above. -1 leaves their state unmanaged.")]
+        [Min(-1)]
+        public int disableBoneAnimatorsAtLOD = -1;
+
+        [Tooltip("LOD zone at which the legacy UMA Expression Player is disabled. -1 leaves its state unmanaged.")]
+        [Min(-1)]
+        public int disableUMAExpressionPlayerAtLOD = -1;
+
+        [Tooltip("LOD zone at which the Dynamic Expression Player is disabled. -1 leaves its state unmanaged.")]
+        [Min(-1)]
+        public int disableDynamicExpressionPlayerAtLOD = -1;
+
+        [Tooltip("Components that implement ILODTuning. Each receives OnLODChanged when the distance-zone level changes, whether or not a matching slot or internal mesh LOD exists.")]
+        public MonoBehaviour[] lodTunings = Array.Empty<MonoBehaviour>();
 
         [Header("Buffer / Hysteresis")]
         [Tooltip("If true, BufferPercent is used (as a fraction of the LOD threshold). If false, BufferZone is used in world units.")]
@@ -110,6 +127,8 @@ namespace UMA.Examples
 
         private bool initialized = false;
         private bool _initialFallbackApplied = false;
+        private int _lastTuningLOD = -1;
+        private bool _refreshManagedComponents;
 
         public void SetSwapSlots(bool swapSlots, int lodOffset)
         {
@@ -132,11 +151,15 @@ namespace UMA.Examples
         public void Awake()
         {
             _currentLOD = -1;
+            _lastTuningLOD = -1;
+            _refreshManagedComponents = false;
         }
 
         public void Reset()
         {
             _currentLOD = -1;
+            _lastTuningLOD = -1;
+            _refreshManagedComponents = false;
             NextTime = Time.time;
         }
 
@@ -147,14 +170,18 @@ namespace UMA.Examples
             if (_avatar != null)
             {
                 _avatar.CharacterBegun.AddListener(CharacterBegun);
+                _avatar.CharacterUpdated.AddListener(CharacterUpdated);
             }
             else
             {
                 if (_umaData != null)
                 {
                     _umaData.CharacterCreated.AddListener(CharacterCreated);
+                    _umaData.CharacterUpdated.AddListener(CharacterUpdated);
                 }
             }
+
+            _refreshManagedComponents = _lastTuningLOD >= 0;
         }
 
         public void OnDisable()
@@ -162,11 +189,13 @@ namespace UMA.Examples
             if (_avatar != null)
             {
                 _avatar.CharacterBegun.RemoveListener(CharacterBegun);
+                _avatar.CharacterUpdated.RemoveListener(CharacterUpdated);
             }
 
             if (_umaData != null)
             {
                 _umaData.CharacterCreated.RemoveListener(CharacterCreated);
+                _umaData.CharacterUpdated.RemoveListener(CharacterUpdated);
             }
         }
 
@@ -202,14 +231,22 @@ namespace UMA.Examples
 
         public void CharacterCreated(UMAData umaData)
         {
+            _umaData = umaData;
             initialized = true;
             DoLODCheck(umaData);
         }
 
         public void CharacterBegun(UMAData umaData)
         {
+            _umaData = umaData;
             initialized = true;
             DoLODCheck(umaData);
+        }
+
+        private void CharacterUpdated(UMAData umaData)
+        {
+            _umaData = umaData;
+            _refreshManagedComponents = _lastTuningLOD >= 0;
         }
 
         private void DoLODCheck(UMAData umaData)
@@ -227,6 +264,7 @@ namespace UMA.Examples
             {
                 _currentLOD = 0;
                 _initialFallbackApplied = true;
+                ApplyLODZoneChange(0);
                 if (umaData != null)
                 {
                     umaData.atlasResolutionScale = 1.0f;
@@ -250,15 +288,10 @@ namespace UMA.Examples
                 Debug.Log("UMAData not found!");
                 return;
             }
-            if (lodLevel < 0)
-            {
-                lodLevel = 0;
-            }
-            if (lodLevel >= maxLOD)
-            {
-                lodLevel = maxLOD - 1;
-            }
+            int highestLOD = Mathf.Max(0, maxLOD - 1);
+            lodLevel = Mathf.Clamp(lodLevel, 0, highestLOD);
             _currentLOD = lodLevel + lodOffset;
+            ApplyLODZoneChange(lodLevel);
             ProcessRecipe(_currentLOD);
         }
 
@@ -300,6 +333,17 @@ namespace UMA.Examples
                     NextTime += UnityEngine.Random.Range(0.0f, CheckRange);
                 }
             }
+        }
+
+        public void LateUpdate()
+        {
+            if (!_refreshManagedComponents || _lastTuningLOD < 0)
+            {
+                return;
+            }
+
+            _refreshManagedComponents = false;
+            ApplyManagedRuntimeFeatures(_lastTuningLOD);
         }
 
         public bool PerformLodCheck()
@@ -391,6 +435,7 @@ namespace UMA.Examples
             {
                 lastDist = cameraDistance;
                 _currentLOD = effectiveLevel;
+                ApplyLODZoneChange(effectiveLevel);
 
                 // Only update internal mesh LOD when the LOD level actually changes
                 if (useInternalMeshLOD)
@@ -417,6 +462,88 @@ namespace UMA.Examples
             }
 
             return true;
+        }
+
+        private void ApplyLODZoneChange(int lodLevel)
+        {
+            if (_lastTuningLOD == lodLevel)
+            {
+                return;
+            }
+
+            _lastTuningLOD = lodLevel;
+            ApplyManagedRuntimeFeatures(lodLevel);
+            NotifyLODTunings(lodLevel);
+        }
+
+        private void ApplyManagedRuntimeFeatures(int lodLevel)
+        {
+            if (disableBoneAnimatorsAtLOD >= 0 && _umaData != null)
+            {
+                _umaData.SetBoneAnimatorsEnabled(
+                    lodLevel < disableBoneAnimatorsAtLOD);
+            }
+
+            if (disableUMAExpressionPlayerAtLOD >= 0)
+            {
+                bool enabled =
+                    lodLevel < disableUMAExpressionPlayerAtLOD;
+                UMAExpressionPlayer[] players =
+                    GetComponents<UMAExpressionPlayer>();
+                for (int i = 0; i < players.Length; i++)
+                {
+                    players[i].enabled = enabled;
+                }
+            }
+
+            if (disableDynamicExpressionPlayerAtLOD >= 0)
+            {
+                bool enabled =
+                    lodLevel < disableDynamicExpressionPlayerAtLOD;
+                DynamicExpressionPlayer[] players =
+                    GetComponents<DynamicExpressionPlayer>();
+                for (int i = 0; i < players.Length; i++)
+                {
+                    players[i].enabled = enabled;
+                }
+            }
+        }
+
+        private void NotifyLODTunings(int lodLevel)
+        {
+            if (lodTunings == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < lodTunings.Length; i++)
+            {
+                MonoBehaviour behaviour = lodTunings[i];
+                if (behaviour == null)
+                {
+                    continue;
+                }
+
+                ILODTuning tuning = behaviour as ILODTuning;
+                if (tuning == null)
+                {
+                    Debug.LogWarning(
+                        $"[UMASimpleLOD] '{behaviour.GetType().Name}' on " +
+                        $"'{behaviour.gameObject.name}' does not implement " +
+                        "ILODTuning.",
+                        behaviour);
+                    continue;
+                }
+
+                try
+                {
+                    tuning.OnLODChanged(lodLevel);
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogException(exception, behaviour);
+                }
+            }
         }
 
         public void UpdateInternalLOD()

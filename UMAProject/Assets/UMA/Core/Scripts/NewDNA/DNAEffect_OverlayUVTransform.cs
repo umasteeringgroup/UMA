@@ -24,6 +24,8 @@ namespace UMA
                 return DNABuildType.Texture;
             }
         }
+        public override ExpressionEffectPhase ExpressionPhases =>
+            ExpressionEffectPhase.BuildAfterRecipe;
         public override string Description
         {
             get

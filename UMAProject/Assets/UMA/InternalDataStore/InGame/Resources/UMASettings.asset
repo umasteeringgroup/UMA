@@ -52,7 +52,7 @@ MonoBehaviour:
   - Hands
   cleanRegenOnSave: 1
   autoRepairIndex: 0
-  showIndexedTypes: 0
+  showIndexedTypes: 1
   showUnindexedTypes: 0
   postProcessAllAssets: 0
   useBurstCompiler: 1

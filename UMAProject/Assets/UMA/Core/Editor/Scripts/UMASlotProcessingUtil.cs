@@ -13,6 +13,221 @@ namespace UMA.Editors
     {
         public static SkinnedMeshRenderer finalMeshRenderer;
 
+        internal static string GetUdimGroupName(SlotBuilderParameters sbp)
+        {
+            if (!string.IsNullOrWhiteSpace(sbp.slotName))
+            {
+                return sbp.slotName.Trim();
+            }
+
+            Mesh sourceMesh = sbp.slotMesh != null
+                ? sbp.slotMesh.sharedMesh
+                : null;
+            return sourceMesh != null && !string.IsNullOrWhiteSpace(sourceMesh.name)
+                ? sourceMesh.name.Trim()
+                : "UDIM Slot";
+        }
+
+        internal static string BuildUdimGroupId(SlotBuilderParameters sbp)
+        {
+            UnityEngine.Object source = sbp.slotMesh != null
+                ? sbp.slotMesh.sharedMesh
+                : null;
+            string sourceIdentity;
+            if (source != null &&
+                AssetDatabase.TryGetGUIDAndLocalFileIdentifier(
+                    source,
+                    out string sourceGuid,
+                    out long sourceLocalId) &&
+                !string.IsNullOrEmpty(sourceGuid))
+            {
+                sourceIdentity = sourceGuid + ":" + sourceLocalId;
+            }
+            else
+            {
+                sourceIdentity = source != null
+                    ? source.GetType().FullName + ":" + source.name
+                    : "missing-source-mesh";
+            }
+
+            string identity = string.Join(
+                "|",
+                "UMA-UDIM-SLOT-GROUP-V1",
+                sourceIdentity,
+                GetUdimGroupName(sbp));
+            return Hash128.Compute(identity).ToString();
+        }
+
+        internal static void SetUdimMetadata(
+            SlotDataAsset slot,
+            string groupId,
+            string groupName,
+            int tileNumber,
+            int sourceSubmeshIndex)
+        {
+            if (slot == null)
+            {
+                return;
+            }
+
+            slot.udimGroupId = groupId ?? string.Empty;
+            slot.udimGroupName = groupName ?? string.Empty;
+            slot.udimTileNumber = tileNumber;
+            slot.udimSourceSubmeshIndex = sourceSubmeshIndex;
+        }
+
+        internal static void ClearUdimMetadata(SlotDataAsset slot)
+        {
+            if (slot == null)
+            {
+                return;
+            }
+
+            slot.udimGroupId = string.Empty;
+            slot.udimGroupName = string.Empty;
+            slot.udimTileNumber = 0;
+            slot.udimSourceSubmeshIndex = -1;
+            slot.UdimSharedVertexMap = null;
+        }
+
+        private sealed class ExistingSlotAssetLookup
+        {
+            private readonly Dictionary<string, List<SlotDataAsset>> slotsByName =
+                new Dictionary<string, List<SlotDataAsset>>(StringComparer.Ordinal);
+            private readonly HashSet<string> duplicateWarnings =
+                new HashSet<string>(StringComparer.Ordinal);
+
+            private void AddMatch(string name, SlotDataAsset slot)
+            {
+                if (string.IsNullOrEmpty(name) || slot == null)
+                {
+                    return;
+                }
+
+                if (!slotsByName.TryGetValue(name, out List<SlotDataAsset> matches))
+                {
+                    matches = new List<SlotDataAsset>();
+                    slotsByName.Add(name, matches);
+                }
+
+                if (!matches.Contains(slot))
+                {
+                    matches.Add(slot);
+                }
+            }
+
+            private void AddMatchWithSlotSuffixAlias(string name, SlotDataAsset slot)
+            {
+                AddMatch(name, slot);
+
+                const string slotSuffix = "_slot";
+                if (!string.IsNullOrEmpty(name) &&
+                    name.EndsWith(slotSuffix, StringComparison.OrdinalIgnoreCase))
+                {
+                    AddMatch(name.Substring(0, name.Length - slotSuffix.Length), slot);
+                }
+            }
+
+            private void AddSlotNameAliases(SlotDataAsset slot, string path)
+            {
+                AddMatchWithSlotSuffixAlias(slot.name, slot);
+                AddMatchWithSlotSuffixAlias(slot.slotName, slot);
+
+                string fileName = System.IO.Path.GetFileNameWithoutExtension(path);
+                AddMatchWithSlotSuffixAlias(fileName, slot);
+            }
+
+            public ExistingSlotAssetLookup()
+            {
+                string[] guids = AssetDatabase.FindAssets("t:SlotDataAsset");
+                for (int i = 0; i < guids.Length; i++)
+                {
+                    string path = AssetDatabase.GUIDToAssetPath(guids[i]);
+                    if (string.IsNullOrEmpty(path) ||
+                        !path.StartsWith("Assets/", StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    SlotDataAsset slot = AssetDatabase.LoadAssetAtPath<SlotDataAsset>(path);
+                    if (slot == null || string.IsNullOrEmpty(slot.name))
+                    {
+                        continue;
+                    }
+
+                    AddSlotNameAliases(slot, path);
+                }
+
+                foreach (List<SlotDataAsset> matches in slotsByName.Values)
+                {
+                    matches.Sort((left, right) => string.Compare(
+                        AssetDatabase.GetAssetPath(left),
+                        AssetDatabase.GetAssetPath(right),
+                        StringComparison.OrdinalIgnoreCase));
+                }
+            }
+
+            public SlotDataAsset Find(string slotName, string preferredPath)
+            {
+                if (string.IsNullOrEmpty(slotName) ||
+                    !slotsByName.TryGetValue(slotName, out List<SlotDataAsset> matches) ||
+                    matches.Count == 0)
+                {
+                    return null;
+                }
+
+                SlotDataAsset selected = matches[0];
+                if (!string.IsNullOrEmpty(preferredPath))
+                {
+                    for (int i = 0; i < matches.Count; i++)
+                    {
+                        string candidatePath = AssetDatabase.GetAssetPath(matches[i]);
+                        if (string.Equals(candidatePath, preferredPath, StringComparison.OrdinalIgnoreCase))
+                        {
+                            selected = matches[i];
+                            break;
+                        }
+                    }
+                }
+
+                if (matches.Count > 1 && duplicateWarnings.Add(slotName))
+                {
+                    Debug.LogWarning(
+                        "[SlotBuilder] Found " + matches.Count +
+                        " SlotDataAssets named '" + slotName +
+                        "'. Updating '" + AssetDatabase.GetAssetPath(selected) +
+                        "'. Rename duplicate assets to make this selection unambiguous.");
+                }
+
+                return selected;
+            }
+        }
+
+        private static SlotDataAsset ResolveSlotAssetForWrite(
+            SlotBuilderParameters sbp,
+            ExistingSlotAssetLookup existingSlotLookup,
+            string slotName,
+            string intendedPath)
+        {
+            if (sbp.findAndUpdateExistingSlot && existingSlotLookup != null)
+            {
+                SlotDataAsset existingByName = existingSlotLookup.Find(slotName, intendedPath);
+                if (existingByName != null)
+                {
+                    string existingPath = AssetDatabase.GetAssetPath(existingByName);
+                    if (!string.Equals(existingPath, intendedPath, StringComparison.OrdinalIgnoreCase))
+                    {
+                        Debug.Log(
+                            "[SlotBuilder] Updating existing SlotDataAsset '" +
+                            slotName + "' at '" + existingPath + "'.");
+                    }
+                    return existingByName;
+                }
+            }
+
+            return AssetDatabase.LoadAssetAtPath<SlotDataAsset>(intendedPath);
+        }
+
         // Helper: choose a triangle's UDIM tile by majority vertex membership.
         // If the triangle spans multiple tiles, it will be assigned to the tile that contains the most vertices.
         // Ties are resolved deterministically by choosing the lowest UDIM number (lowest v, then u).
@@ -100,6 +315,8 @@ namespace UMA.Editors
             public Dictionary<SlotDataAsset, OverlayDataAsset> SlotToOverlay = new Dictionary<SlotDataAsset, OverlayDataAsset>();
             public Dictionary<SlotDataAsset, string> SlotToSourceMesh = new Dictionary<SlotDataAsset, string>();
             public Dictionary<SlotDataAsset, List<UnityEngine.Object>> SlotToRecipes = new Dictionary<SlotDataAsset, List<UnityEngine.Object>>();
+            public Dictionary<SlotDataAsset, bool> SlotWasReplaced = new Dictionary<SlotDataAsset, bool>();
+            public Dictionary<SlotDataAsset, string> SlotWrittenPath = new Dictionary<SlotDataAsset, string>();
             public bool IsUDIM;
             // New: paths to temporary assets to delete later (when in batch mode)
             public List<string> TempAssetsToDelete = new List<string>();
@@ -112,6 +329,17 @@ namespace UMA.Editors
                 }
 
                 SlotToSourceMesh[slot] = sourceMeshName;
+            }
+
+            public void AddSlotWrite(SlotDataAsset slot, bool wasReplaced)
+            {
+                if (slot == null)
+                {
+                    return;
+                }
+
+                SlotWasReplaced[slot] = wasReplaced;
+                SlotWrittenPath[slot] = AssetDatabase.GetAssetPath(slot);
             }
 
             public void AddRecipe(SlotDataAsset slot, UnityEngine.Object recipe)
@@ -638,6 +866,9 @@ namespace UMA.Editors
 
         public static SlotBuildResult CreateSlotData(SlotBuilderParameters sbp)
         {
+            ExistingSlotAssetLookup existingSlotLookup =
+                sbp.findAndUpdateExistingSlot ? new ExistingSlotAssetLookup() : null;
+
             if (sbp.useRootFolder)
             {
                 if (!System.IO.Directory.Exists(sbp.slotFolder))
@@ -718,14 +949,18 @@ namespace UMA.Editors
             {
                 theMesh = sbp.slotFolder + '/' + sbp.slotMesh.name + "_TempMesh.asset";
             }
-            if (sbp.binarySerialization)
+            // Bulk processing only needs the renderer long enough for UpdateMeshData to copy it.
+            // Keeping that renderer in memory avoids an expensive mesh import per slot and also
+            // prevents existing-slot updates from colliding with an asset that is still importing.
+            bool createTemporaryAssets = !sbp.batchMode;
+            if (createTemporaryAssets && sbp.binarySerialization)
             {
                 //Work around for mesh being serialized as project format settings (text) when binary is much faster.
                 BinaryAssetWrapper binaryAsset = ScriptableObject.CreateInstance<BinaryAssetWrapper>();
                 AssetDatabase.CreateAsset(binaryAsset, theMesh);
                 AssetDatabase.AddObjectToAsset(resultingMesh, binaryAsset);
             }
-            else
+            else if (createTemporaryAssets)
             {
                 AssetDatabase.CreateAsset(resultingMesh, theMesh);
             }
@@ -781,21 +1016,21 @@ namespace UMA.Editors
                 SkinnedName = sbp.slotFolder + '/' + sbp.assetName + "_TempSkinned.prefab";
             }
 
-            var skinnedResult = PrefabUtility.SaveAsPrefabAsset(newObject, SkinnedName, out bool success);
-            if (!success)
+            SkinnedMeshRenderer finalMeshRenderer = resultingSkinnedMesh;
+            if (createTemporaryAssets)
             {
-                Debug.Log($"failed saving {SkinnedName} prefab");
-            }
-
-            SkinnedMeshRenderer finalMeshRenderer = null;
-
-            int childCount = skinnedResult.transform.childCount;
-            for (int i = 0; i < childCount; i++)
-            {
-                var child = skinnedResult.transform.GetChild(i);
-                if (child.name == sbp.slotMesh.name)
+                var skinnedResult = PrefabUtility.SaveAsPrefabAsset(newObject, SkinnedName, out bool success);
+                if (!success)
                 {
-                    if (child.GetComponent<SkinnedMeshRenderer>() != null)
+                    Debug.Log($"failed saving {SkinnedName} prefab");
+                }
+
+                finalMeshRenderer = null;
+                int childCount = skinnedResult.transform.childCount;
+                for (int i = 0; i < childCount; i++)
+                {
+                    var child = skinnedResult.transform.GetChild(i);
+                    if (child.name == sbp.slotMesh.name && child.GetComponent<SkinnedMeshRenderer>() != null)
                     {
                         finalMeshRenderer = child.GetComponent<SkinnedMeshRenderer>();
                         break;
@@ -837,18 +1072,16 @@ namespace UMA.Editors
 
             if (isUdimMesh)
             {
-                var result = GenerateUDIMSlotsResult(sbp, finalMeshRenderer);
-                AssetDatabase.SaveAssets();
+                var result = GenerateUDIMSlotsResult(sbp, finalMeshRenderer, existingSlotLookup);
+                if (!sbp.batchMode)
+                {
+                    AssetDatabase.SaveAssets();
+                }
                 GameObject.DestroyImmediate(tempGameObject);
                 GameObject.DestroyImmediate(newObject);
                 if (sbp.batchMode)
                 {
-                    // Defer deletion to caller (batch window)
-                    if (result != null)
-                    {
-                        result.TempAssetsToDelete.Add(SkinnedName);
-                        result.TempAssetsToDelete.Add(theMesh);
-                    }
+                    UnityEngine.Object.DestroyImmediate(resultingMesh);
                 }
                 else
                 {
@@ -862,6 +1095,12 @@ namespace UMA.Editors
             var createdSlots = new List<SlotDataAsset>();
             var slotToOverlay = new Dictionary<SlotDataAsset, OverlayDataAsset>();
             var materialToOverlay = new Dictionary<Material, OverlayDataAsset>();
+            var nonUdimResult = new SlotBuildResult
+            {
+                Slots = createdSlots,
+                SlotToOverlay = slotToOverlay,
+                IsUDIM = false
+            };
             string assetDir = sbp.useRootFolder ? sbp.slotFolder : (sbp.slotFolder + '/' + sbp.assetName);
             List<int> nonEmptySubmeshIndices = GetNonEmptySubmeshIndices(finalMeshRenderer.sharedMesh);
             int baseSubmeshIndex = nonEmptySubmeshIndices.Count > 0 ? nonEmptySubmeshIndices[0] : 0;
@@ -894,8 +1133,13 @@ namespace UMA.Editors
                 slotPath = sbp.slotFolder + '/' + sbp.slotName + "_slot.asset";
             }
 
-            SlotDataAsset OldAsset = AssetDatabase.LoadAssetAtPath<SlotDataAsset>(slotPath);
-            if (sbp.batchMode)
+            SlotDataAsset OldAsset = ResolveSlotAssetForWrite(
+                sbp,
+                existingSlotLookup,
+                sbp.slotName,
+                slotPath);
+            bool baseSlotWasReplaced = OldAsset != null;
+            if (sbp.batchMode && !sbp.findAndUpdateExistingSlot)
             {
                 if (OldAsset != null)
                 {
@@ -904,7 +1148,7 @@ namespace UMA.Editors
                 }
             }
 
-            if (sbp.alwaysRecreateSlots)
+            if (sbp.alwaysRecreateSlots && !sbp.findAndUpdateExistingSlot)
             {
                 if (OldAsset != null)
                 {
@@ -915,10 +1159,15 @@ namespace UMA.Editors
 
             if (OldAsset != null)
             {
-                // Overwrite existing slot in place
-                string existingRootBone = slot.meshData.RootBoneName;
+                // The working slot already contains the fully prepared mesh data. Transferring it
+                // avoids running UpdateSlotData's standalone temp-asset pipeline a second time.
                 OldAsset.sourceSubmeshIndex = baseSubmeshIndex;
-                UpdateSlotData(OldAsset, finalMeshRenderer, sbp.material, OldAsset.normalReferenceMesh, existingRootBone, true, sbp.clearNormals, sbp.clearTangents);
+                OldAsset.meshData = slot.meshData;
+                slot.meshData = null;
+                if (OldAsset.meshData != null)
+                {
+                    OldAsset.meshData.SlotName = OldAsset.slotName;
+                }
                 EditorUtility.SetDirty(OldAsset);
 #if UNITY_6000_2_OR_NEWER
                 if (!sbp.generateSlotLods)
@@ -960,6 +1209,9 @@ namespace UMA.Editors
                 }
                 createdSlots.Add(slot);
             }
+            ClearUdimMetadata(slot);
+            EditorUtility.SetDirty(slot);
+            nonUdimResult.AddSlotWrite(slot, baseSlotWasReplaced);
 
             // Create/overwrite overlay for submesh0 if requested (non-UDIM reuse rule applies)
             if (sbp.createOverlays)
@@ -1002,8 +1254,13 @@ namespace UMA.Editors
                     theSlotPath = sbp.slotFolder + '/' + theSlotName + "_slot.asset";
                 }
 
-                var existingAdditional = AssetDatabase.LoadAssetAtPath<SlotDataAsset>(theSlotPath);
-                if (sbp.alwaysRecreateSlots)
+                var existingAdditional = ResolveSlotAssetForWrite(
+                    sbp,
+                    existingSlotLookup,
+                    theSlotName,
+                    theSlotPath);
+                bool additionalSlotWasReplaced = existingAdditional != null;
+                if (sbp.alwaysRecreateSlots && !sbp.findAndUpdateExistingSlot)
                 {
                     if (existingAdditional != null)
                     {
@@ -1013,10 +1270,26 @@ namespace UMA.Editors
                 }
                 if (existingAdditional != null)
                 {
-                    // Update existing submesh slot
-                    string existingRootBone = slot.meshData.RootBoneName;
+                    // Update directly from the renderer that was already prepared for this batch
+                    // item instead of creating and importing another temporary mesh and prefab.
                     existingAdditional.sourceSubmeshIndex = sourceSubmeshIndex;
-                    UpdateSlotData(existingAdditional, finalMeshRenderer, sbp.material, existingAdditional.normalReferenceMesh, existingRootBone, true, sbp.clearNormals, sbp.clearTangents);
+                    existingAdditional.UpdateMeshData(
+                        finalMeshRenderer,
+                        sbp.rootBone,
+                        false,
+                        sourceSubmeshIndex,
+                        sbp.clearNormals,
+                        sbp.clearTangents);
+                    TransformMeshData(existingAdditional, sbp);
+                    if (existingAdditional.meshData != null)
+                    {
+                        existingAdditional.meshData.SlotName = existingAdditional.slotName;
+                    }
+                    var existingAdditionalCloth = sbp.slotMesh.GetComponent<Cloth>();
+                    if (existingAdditionalCloth != null)
+                    {
+                        existingAdditional.meshData.RetrieveDataFromUnityCloth(existingAdditionalCloth);
+                    }
 #if UNITY_6000_2_OR_NEWER
                     if (!sbp.generateSlotLods)
                     {
@@ -1028,8 +1301,10 @@ namespace UMA.Editors
                     }
 #endif
                     GenerateSlotLodsIfEnabled(sbp, existingAdditional);
+                    ClearUdimMetadata(existingAdditional);
                     EditorUtility.SetDirty(existingAdditional);
                     createdSlots.Add(existingAdditional);
+                    nonUdimResult.AddSlotWrite(existingAdditional, additionalSlotWasReplaced);
 
                     // Overlay for this submesh
                     if (sbp.createOverlays)
@@ -1045,6 +1320,7 @@ namespace UMA.Editors
                 var additionalSlot = ScriptableObject.CreateInstance<SlotDataAsset>();
                 additionalSlot.isLegacySlot = false;
                 additionalSlot.name = theSlotName;
+                ClearUdimMetadata(additionalSlot);
                 // Non-UDIM path: ensure udimAdjustment=false
                 additionalSlot.UpdateMeshData(finalMeshRenderer, sbp.rootBone, false, sourceSubmeshIndex, sbp.clearNormals, sbp.clearTangents);
                 TransformMeshData(additionalSlot, sbp);
@@ -1068,6 +1344,7 @@ namespace UMA.Editors
                     UMAAssetIndexer.Instance.EvilAddAsset(typeof(SlotDataAsset), additionalSlot);
                 }
                 createdSlots.Add(additionalSlot);
+                nonUdimResult.AddSlotWrite(additionalSlot, additionalSlotWasReplaced);
 
                 // Overlay creation for additional submeshes (non-UDIM reuse rule)
                 if (sbp.createOverlays)
@@ -1077,39 +1354,32 @@ namespace UMA.Editors
                     slotToOverlay[additionalSlot] = oda;
                 }
             }
-            AssetDatabase.SaveAssets();
+            if (!sbp.batchMode)
+            {
+                AssetDatabase.SaveAssets();
+            }
             GameObject.DestroyImmediate(tempGameObject);
             GameObject.DestroyImmediate(newObject);
 
             if (sbp.batchMode)
             {
-                // Defer deletion to caller
-                var resultBatch = new SlotBuildResult();
-                resultBatch.Slots = createdSlots;
-                resultBatch.SlotToOverlay = slotToOverlay;
-                resultBatch.IsUDIM = false;
                 for (int i = 0; i < createdSlots.Count; i++)
                 {
-                    resultBatch.AddSourceMesh(createdSlots[i], sbp.slotMesh != null ? sbp.slotMesh.name : string.Empty);
+                    nonUdimResult.AddSourceMesh(createdSlots[i], sbp.slotMesh != null ? sbp.slotMesh.name : string.Empty);
                 }
-                resultBatch.TempAssetsToDelete.Add(SkinnedName);
-                resultBatch.TempAssetsToDelete.Add(theMesh);
-                return resultBatch;
+                UnityEngine.Object.DestroyImmediate(resultingMesh);
+                return nonUdimResult;
             }
 
             AssetDatabase.DeleteAsset(SkinnedName);
             AssetDatabase.DeleteAsset(theMesh);
 
             // Build and return result. Recipe creation is handled by the caller (window)
-            var resultNonUdim = new SlotBuildResult();
-            resultNonUdim.Slots = createdSlots;
-            resultNonUdim.SlotToOverlay = slotToOverlay;
-            resultNonUdim.IsUDIM = false;
             for (int i = 0; i < createdSlots.Count; i++)
             {
-                resultNonUdim.AddSourceMesh(createdSlots[i], sbp.slotMesh != null ? sbp.slotMesh.name : string.Empty);
+                nonUdimResult.AddSourceMesh(createdSlots[i], sbp.slotMesh != null ? sbp.slotMesh.name : string.Empty);
             }
-            return resultNonUdim;
+            return nonUdimResult;
         }
 
         private static void TransformMeshData(SlotDataAsset slot, SlotBuilderParameters sbp)
@@ -1564,7 +1834,10 @@ namespace UMA.Editors
         }
 
         // Helper: Generate one slot per UDIM tile per submesh, return result set
-        private static SlotBuildResult GenerateUDIMSlotsResult(SlotBuilderParameters sbp, SkinnedMeshRenderer sourceRenderer)
+        private static SlotBuildResult GenerateUDIMSlotsResult(
+            SlotBuilderParameters sbp,
+            SkinnedMeshRenderer sourceRenderer,
+            ExistingSlotAssetLookup existingSlotLookup)
         {
             Mesh mesh = sourceRenderer.sharedMesh;
             if (mesh == null)
@@ -1580,6 +1853,8 @@ namespace UMA.Editors
 
             int tilesU = sbp.udimTilesU > 0 ? sbp.udimTilesU : 10;
             int tilesV = sbp.udimTilesV > 0 ? sbp.udimTilesV : 10;
+            string udimGroupId = BuildUdimGroupId(sbp);
+            string udimGroupName = GetUdimGroupName(sbp);
 
             Vector2[] uv = mesh.uv;
             string assetDir = sbp.useRootFolder ? sbp.slotFolder : (sbp.slotFolder + '/' + sbp.assetName);
@@ -1587,6 +1862,12 @@ namespace UMA.Editors
             // Track for result
             var createdSlots = new List<SlotDataAsset>();
             var slotToOverlay = new Dictionary<SlotDataAsset, OverlayDataAsset>();
+            var udimResult = new SlotBuildResult
+            {
+                Slots = createdSlots,
+                SlotToOverlay = slotToOverlay,
+                IsUDIM = true
+            };
 
             // First pass: gather triangles per (submesh, tile) and record which original vertices belong to multiple tiles.
             var perSubTileToTris = new Dictionary<int, Dictionary<(int u, int v), List<int>>>();
@@ -1659,7 +1940,7 @@ namespace UMA.Editors
                     }
 #endif
 
-                    // Record tile membership for each original vertex index
+                    // Record tile membership for each original vertex index.
                     if (!oldIndexToTiles.TryGetValue(a, out var setA)) { setA = new HashSet<(int, int)>(); oldIndexToTiles.Add(a, setA); }
                     setA.Add(key);
                     if (!oldIndexToTiles.TryGetValue(b, out var setB)) { setB = new HashSet<(int, int)>(); oldIndexToTiles.Add(b, setB); }
@@ -1675,13 +1956,7 @@ namespace UMA.Editors
 #endif
             }
 
-            // Determine which original vertices are shared across multiple tiles.
-            var sharedOldIndices = new HashSet<int>();
-            foreach (var kv in oldIndexToTiles)
-            {
-                if (kv.Value != null && kv.Value.Count > 1)
-                    sharedOldIndices.Add(kv.Key);
-            }
+            Dictionary<int, int> seamKeyByOriginalVertex = BuildUdimSeamKeys(mesh.vertices, oldIndexToTiles);
 
             var nonEmptyUdimSubmeshOrdinals = new Dictionary<int, int>();
             int nonEmptyUdimSubmeshCount = 0;
@@ -1762,9 +2037,14 @@ namespace UMA.Editors
                             theSlotPath = sbp.slotFolder + '/' + theSlotName + append;
                         }
 
-                        var existing = AssetDatabase.LoadAssetAtPath<SlotDataAsset>(theSlotPath);
+                        var existing = ResolveSlotAssetForWrite(
+                            sbp,
+                            existingSlotLookup,
+                            theSlotName,
+                            theSlotPath);
+                        bool slotWasReplaced = existing != null;
 						SlotPreserveData preserved = null;
-                        if (sbp.alwaysRecreateSlots)
+                        if (sbp.alwaysRecreateSlots && !sbp.findAndUpdateExistingSlot)
                         {
                             if (existing != null)
                             {
@@ -1790,37 +2070,7 @@ namespace UMA.Editors
                             }
 #endif
 
-                            // Populate UDIM seam map (original vertex index -> this slot's local vertex index)
-                            if (sharedOldIndices != null && sharedOldIndices.Count > 0 && cmr.NewToOld != null && cmr.NewToOld.Count > 0)
-                            {
-                                var orig = new List<int>(sharedOldIndices.Count);
-                                var loc = new List<int>(sharedOldIndices.Count);
-                                for (int localIndex = 0; localIndex < cmr.NewToOld.Count; localIndex++)
-                                {
-                                    int oldIndex = cmr.NewToOld[localIndex];
-                                    if (sharedOldIndices.Contains(oldIndex))
-                                    {
-                                        orig.Add(oldIndex);
-                                        loc.Add(localIndex);
-                                    }
-                                }
-                                if (orig.Count > 0)
-                                {
-                                    sda.UdimSharedVertexMap = new SlotDataAsset.UdimSeamMap
-                                    {
-                                        originalIndices = orig.ToArray(),
-                                        localIndices = loc.ToArray()
-                                    };
-                                }
-                                else
-                                {
-                                    sda.UdimSharedVertexMap = null;
-                                }
-                            }
-                            else
-                            {
-                                sda.UdimSharedVertexMap = null;
-                            }
+                            PopulateUdimSeamMap(sda, cmr.NewToOld, seamKeyByOriginalVertex);
                             var cloth = sbp.slotMesh.GetComponent<Cloth>();
                             if (cloth != null)
                             {
@@ -1844,29 +2094,7 @@ namespace UMA.Editors
 								preserved.ApplyTo(sda);
 							}
 
-                            // Populate UDIM seam map (original vertex index -> this slot's local vertex index)
-                            if (sharedOldIndices != null && sharedOldIndices.Count > 0 && cmr.NewToOld != null && cmr.NewToOld.Count > 0)
-                            {
-                                var orig = new List<int>(sharedOldIndices.Count);
-                                var loc = new List<int>(sharedOldIndices.Count);
-                                for (int localIndex = 0; localIndex < cmr.NewToOld.Count; localIndex++)
-                                {
-                                    int oldIndex = cmr.NewToOld[localIndex];
-                                    if (sharedOldIndices.Contains(oldIndex))
-                                    {
-                                        orig.Add(oldIndex);
-                                        loc.Add(localIndex);
-                                    }
-                                }
-                                if (orig.Count > 0)
-                                {
-                                    sda.UdimSharedVertexMap = new SlotDataAsset.UdimSeamMap
-                                    {
-                                        originalIndices = orig.ToArray(),
-                                        localIndices = loc.ToArray()
-                                    };
-                                }
-                            }
+                            PopulateUdimSeamMap(sda, cmr.NewToOld, seamKeyByOriginalVertex);
 
                             var cloth = sbp.slotMesh.GetComponent<Cloth>();
                             if (cloth != null)
@@ -1887,6 +2115,14 @@ namespace UMA.Editors
                             }
 #endif
                         }
+
+                        SetUdimMetadata(
+                            sda,
+                            udimGroupId,
+                            udimGroupName,
+                            udimNumber,
+                            sub);
+                        EditorUtility.SetDirty(sda);
 
                         // If requested, generate internal per-slot LOD buffers/ranges for this UDIM slot.
                         // This must run after UpdateMeshData (meshData exists) and after the asset is created/updated.
@@ -1916,6 +2152,7 @@ namespace UMA.Editors
 #endif
 
                         createdSlots.Add(sda);
+                        udimResult.AddSlotWrite(sda, slotWasReplaced);
 
                         // UDIM rule: always create/overwrite overlay per tile
                         if (sbp.createOverlays)
@@ -1931,12 +2168,11 @@ namespace UMA.Editors
                         UnityEngine.Object.DestroyImmediate(go);
                         UnityEngine.Object.DestroyImmediate(cmr.Mesh);
                         UnityEngine.Object.DestroyImmediate(tileMeshSrc);
-                        var partialResult = new SlotBuildResult { Slots = createdSlots, SlotToOverlay = slotToOverlay, IsUDIM = true };
                         for (int si = 0; si < createdSlots.Count; si++)
                         {
-                            partialResult.AddSourceMesh(createdSlots[si], sourceRenderer != null ? sourceRenderer.name : string.Empty);
+                            udimResult.AddSourceMesh(createdSlots[si], sourceRenderer != null ? sourceRenderer.name : string.Empty);
                         }
-                        return partialResult;
+                        return udimResult;
                     }
                     finally
                     {
@@ -1955,12 +2191,98 @@ namespace UMA.Editors
             }
 
             // Build result for UDIM; recipe creation happens in caller
-            var udimResult = new SlotBuildResult { Slots = createdSlots, SlotToOverlay = slotToOverlay, IsUDIM = true };
             for (int i = 0; i < createdSlots.Count; i++)
             {
                 udimResult.AddSourceMesh(createdSlots[i], sourceRenderer != null ? sourceRenderer.name : string.Empty);
             }
             return udimResult;
+        }
+
+        private static Dictionary<int, int> BuildUdimSeamKeys(
+            Vector3[] sourceVertices,
+            Dictionary<int, HashSet<(int u, int v)>> tileMembershipByOriginalVertex)
+        {
+            var seamKeyByOriginalVertex = new Dictionary<int, int>();
+            if (sourceVertices == null || tileMembershipByOriginalVertex == null)
+            {
+                return seamKeyByOriginalVertex;
+            }
+
+            var originalVerticesByPosition = new Dictionary<Vector3, List<int>>();
+            foreach (KeyValuePair<int, HashSet<(int u, int v)>> membership in tileMembershipByOriginalVertex)
+            {
+                int originalVertexIndex = membership.Key;
+                if (originalVertexIndex < 0 || originalVertexIndex >= sourceVertices.Length)
+                {
+                    continue;
+                }
+
+                Vector3 position = sourceVertices[originalVertexIndex];
+                if (!originalVerticesByPosition.TryGetValue(position, out List<int> vertexIndices))
+                {
+                    vertexIndices = new List<int>();
+                    originalVerticesByPosition.Add(position, vertexIndices);
+                }
+                vertexIndices.Add(originalVertexIndex);
+            }
+
+            foreach (List<int> vertexIndices in originalVerticesByPosition.Values)
+            {
+                var tilesAtPosition = new HashSet<(int u, int v)>();
+                int seamKey = int.MaxValue;
+                for (int vertexIndex = 0; vertexIndex < vertexIndices.Count; vertexIndex++)
+                {
+                    int originalVertexIndex = vertexIndices[vertexIndex];
+                    seamKey = Mathf.Min(seamKey, originalVertexIndex);
+                    if (tileMembershipByOriginalVertex.TryGetValue(originalVertexIndex, out HashSet<(int u, int v)> tiles))
+                    {
+                        tilesAtPosition.UnionWith(tiles);
+                    }
+                }
+
+                if (tilesAtPosition.Count < 2)
+                {
+                    continue;
+                }
+
+                for (int vertexIndex = 0; vertexIndex < vertexIndices.Count; vertexIndex++)
+                {
+                    seamKeyByOriginalVertex[vertexIndices[vertexIndex]] = seamKey;
+                }
+            }
+
+            return seamKeyByOriginalVertex;
+        }
+
+        private static void PopulateUdimSeamMap(
+            SlotDataAsset slot,
+            List<int> localToOriginalVertex,
+            Dictionary<int, int> seamKeyByOriginalVertex)
+        {
+            if (slot == null || localToOriginalVertex == null || seamKeyByOriginalVertex == null)
+            {
+                return;
+            }
+
+            var seamKeys = new List<int>();
+            var localIndices = new List<int>();
+            for (int localIndex = 0; localIndex < localToOriginalVertex.Count; localIndex++)
+            {
+                int originalVertexIndex = localToOriginalVertex[localIndex];
+                if (seamKeyByOriginalVertex.TryGetValue(originalVertexIndex, out int seamKey))
+                {
+                    seamKeys.Add(seamKey);
+                    localIndices.Add(localIndex);
+                }
+            }
+
+            slot.UdimSharedVertexMap = seamKeys.Count > 0
+                ? new SlotDataAsset.UdimSeamMap
+                {
+                    originalIndices = seamKeys.ToArray(),
+                    localIndices = localIndices.ToArray()
+                }
+                : null;
         }
 
         private static void WeldUdimSeamNormalsAverage(List<SlotDataAsset> slots)

@@ -41,6 +41,8 @@ namespace UMA
         public Color oneColorValue;
 
         public override DNAInstanceCollection.DNABuildType AreaEffect => DNAInstanceCollection.DNABuildType.Texture;
+        public override ExpressionEffectPhase ExpressionPhases =>
+            ExpressionEffectPhase.BuildAfterRecipe;
 
         public override string Description => "Sets a shared color property for the avatar. This can be used to modify shader properties or even the UV location of an overlay.";
 

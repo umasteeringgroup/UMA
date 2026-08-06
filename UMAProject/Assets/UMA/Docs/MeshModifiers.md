@@ -85,6 +85,10 @@ Vertex Paint stores color changes on selected slot vertices. Use it when a shade
 
 Confirm that the final shader uses the intended vertex color channels. Painting data that the shader never reads has no visible result.
 
+Use the `Smooth` paint behavior to soften blocky vertex-color transitions. `Smooth Amount %` controls how strongly a stroke blends colors, while `Smooth Radius` controls the world-space neighborhood sampled around each affected vertex. Unlike the topology-based `Blur` behavior, `Smooth` can blend across UV seams and nearby disconnected vertices; oppositely facing surfaces are excluded to reduce color bleeding through thin meshes.
+
+The `General Smooth` section applies one simultaneous smoothing pass to the current slot, or every editable slot when `All Slots` is selected. Its independent `Amount %` and world-space `Radius` controls set the strength and sample area. `Cutoff %` returns results below the threshold to the slot's unmodified color, so imperceptible color spread does not create extra MeshModifier adjustments.
+
 ## Advanced Per-Vertex Precision
 
 Use `Advanced > Per-Vertex Precision` for exact changes on isolated vertices.

@@ -297,7 +297,7 @@ namespace UMA.EditorTools
             }
 
             // --- Misc ---
-            if (DrawFoldoutHeader("Misc", ref _miscFoldout))
+            if (DrawFoldoutHeader("Animation", ref _miscFoldout))
             {
                 EditorGUI.indentLevel++;
                 DrawListWithButtons(_animatorsProp, "Animators", typeof(RuntimeAnimatorController));

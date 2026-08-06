@@ -321,6 +321,8 @@ namespace UMA
         // non-null, but Unity never updates it because it is not in a scene.
         [NonSerialized]
         public UMAGenerator generator;
+        [NonSerialized]
+        private int consolidatedGeneratorInstanceId;
 
         public UMAGenerator Generator
         {
@@ -329,14 +331,79 @@ namespace UMA
                 if (!IsUsableSceneGenerator(generator))
                 {
                     generator = null;
-                    generator = GameObject.FindFirstObjectByType<UMAGenerator>(FindObjectsInactive.Exclude);
+                    generator = FindUsableSceneGenerator();
                     if (!IsUsableSceneGenerator(generator))
                     {
                         generator = null;
                         CreateGenerator();
                     }
                 }
+                ConsolidateInternalGenerators();
                 return generator;
+            }
+        }
+
+        private static UMAGenerator FindUsableSceneGenerator()
+        {
+            UMAGenerator internalGenerator = null;
+            UMAGenerator[] candidates = Resources.FindObjectsOfTypeAll<UMAGenerator>();
+            for (int i = 0; i < candidates.Length; i++)
+            {
+                UMAGenerator candidate = candidates[i];
+                if (!IsUsableSceneGenerator(candidate))
+                {
+                    continue;
+                }
+
+                // A generator explicitly placed by the user takes precedence
+                // over UMA's transient fallback generator.
+                if (!string.Equals(candidate.gameObject.name, generatorName, StringComparison.Ordinal))
+                {
+                    return candidate;
+                }
+
+                if (internalGenerator == null)
+                {
+                    internalGenerator = candidate;
+                }
+            }
+
+            return internalGenerator;
+        }
+
+        private void ConsolidateInternalGenerators()
+        {
+            if (!IsUsableSceneGenerator(generator))
+            {
+                consolidatedGeneratorInstanceId = 0;
+                return;
+            }
+
+            int instanceId = generator.GetInstanceID();
+            if (consolidatedGeneratorInstanceId == instanceId)
+            {
+                return;
+            }
+
+            consolidatedGeneratorInstanceId = instanceId;
+            UMAGenerator[] candidates = Resources.FindObjectsOfTypeAll<UMAGenerator>();
+            for (int i = 0; i < candidates.Length; i++)
+            {
+                UMAGenerator candidate = candidates[i];
+                if (candidate == generator || !IsUsableSceneGenerator(candidate) ||
+                    !string.Equals(candidate.gameObject.name, generatorName, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+#if UNITY_EDITOR
+                if (!EditorApplication.isPlaying)
+                {
+                    GameObject.DestroyImmediate(candidate.gameObject);
+                    continue;
+                }
+#endif
+                GameObject.Destroy(candidate.gameObject);
             }
         }
 
@@ -1260,10 +1327,10 @@ namespace UMA
             }
             generator = null;
 
-            generator = GameObject.FindFirstObjectByType<UMAGenerator>(
-                FindObjectsInactive.Exclude);
+            generator = FindUsableSceneGenerator();
             if (IsUsableSceneGenerator(generator))
             {
+                ConsolidateInternalGenerators();
                 return;
             }
             generator = null;
@@ -1291,18 +1358,6 @@ namespace UMA
                     "does not contain an UMAGenerator component.",
                     settings.generatorPrefab);
                 return;
-            }
-
-            GameObject namedGenerator = GameObject.Find(generatorName);
-            if (namedGenerator != null)
-            {
-                generator = namedGenerator.GetComponent<UMAGenerator>();
-                if (IsUsableSceneGenerator(generator))
-                {
-                    generator.gameObject.hideFlags = HideFlags.DontSave;
-                    return;
-                }
-                generator = null;
             }
 
             GameObject go = GameObject.Instantiate(settings.generatorPrefab);
@@ -1345,6 +1400,7 @@ namespace UMA
             GameObject.DontDestroyOnLoad(go);
 #endif
             go.SetActive(true);
+            ConsolidateInternalGenerators();
         }
 
 #if UNITY_EDITOR
@@ -2640,6 +2696,10 @@ namespace UMA
         {
 
             var settings = UMASettings.GetOrCreateSettings();
+            if (settings == null || !settings.autoRepairIndex)
+            {
+                return false;
+            }
             // Unfortunately that asmdef is not available here
             string autoconfig = "UMA_INDEX_AUTOREPAIR";
             if (EditorPrefs.GetBool(autoconfig, false))
@@ -2665,6 +2725,12 @@ namespace UMA
 
 #if UNITY_EDITOR
         Dictionary<System.Type, HashSet<int>> repairsAttempted = new Dictionary<System.Type, HashSet<int>>();
+
+        private static bool IsMissingAssetRepairEnabled()
+        {
+            UMASettings settings = UMASettings.GetOrCreateSettings();
+            return settings != null && settings.autoRepairIndex;
+        }
 
         public bool AlreadyAttempted<T>(int nameHash)
         {
@@ -2715,7 +2781,8 @@ namespace UMA
             // AND it is not in play mode
             // AND we have not already rebuilt the library because it was corrupt or lost,
             // THEN we rebuild the type library for this specific type and try again.
-            if (!recursionGuard && !indexUpdated && !Application.isPlaying)
+            if (!recursionGuard && !indexUpdated && !Application.isPlaying &&
+                IsMissingAssetRepairEnabled())
             {
                 // If we've never done this before for this item, try again.
                 if (!AlreadyAttempted<T>(nameHash))
@@ -2774,7 +2841,8 @@ namespace UMA
                 // AND it is not in play mode
                 // AND we have not already rebuilt the library because it was corrupt or lost,
                 // THEN we rebuild the type library for this specific type and try again.
-                if (!recursionGuard && !indexUpdated && !Application.isPlaying)
+                if (!recursionGuard && !indexUpdated && !Application.isPlaying &&
+                    IsMissingAssetRepairEnabled())
                 {
                     // If we've never done this before for this item, try again.
                     int nameHash = UMAUtils.StringToHash(name);
@@ -2880,7 +2948,8 @@ namespace UMA
                 // AND it is not in play mode
                 // AND we have not already rebuilt the library because it was corrupt or lost,
                 // THEN we rebuild the type library for this specific type and try again.
-                if (!recursionGuard && !indexUpdated && !Application.isPlaying)
+                if (!recursionGuard && !indexUpdated && !Application.isPlaying &&
+                    settings.autoRepairIndex)
                 {
                     // If we've never done this before for this item, try again.
                     int nameHash = UMAUtils.StringToHash(name);

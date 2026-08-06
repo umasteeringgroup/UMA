@@ -89,6 +89,11 @@ namespace UMA.Editors
         private string persistedSectionStateKey;
         private string persistedSectionStateCache;
         private int extractBlendshapeIndex;
+        private bool udimInfoFoldout;
+        private bool udimSeamMapFoldout;
+        private Vector2 udimSeamMapScrollPosition;
+        private readonly HashSet<int> expandedUdimWeldPointLists = new HashSet<int>();
+        private readonly Dictionary<int, Vector2> udimWeldPointScrollPositions = new Dictionary<int, Vector2>();
 
         // Animated bones selection
         private bool animatedBonesFoldout;
@@ -696,6 +701,20 @@ namespace UMA.Editors
 
             if (slot.utilitiesFoldout)
             {
+                using (new EditorGUI.DisabledScope(targets.Length != 1 || slot == null ||
+                    UMAMeshData.IsNullOrEmptyMeshData(slot.meshData)))
+                {
+                    if (GUILayout.Button(new GUIContent("Open in Overlay Painter",
+                        "Open this slot, or its complete UDIM group, without generating an avatar."),
+                        GUILayout.Height(28f)))
+                    {
+                        UMA.TexturePaint.Editor.TexturePaintStandaloneSetupWindow.ShowForSlot(slot);
+                    }
+                }
+                if (targets.Length != 1)
+                    EditorGUILayout.HelpBox("Select one SlotDataAsset to open Overlay Painter.", MessageType.Info);
+                GUILayout.Space(8f);
+
                 #region UV_Utilities
                 GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
                 GUILayout.Label("UV Utilities", EditorStyles.boldLabel);
@@ -1079,6 +1098,8 @@ namespace UMA.Editors
 
             // Bottom quick-rotate controls for the preview
             GUILayout.Space(12);
+            DrawUdimInfo(slot);
+
             GUIHelper.BeginVerticalPadded(8, new Color(0.90f, 0.95f, 1f));
             GUILayout.Label("Quick Rotate (90�)", EditorStyles.boldLabel);
             GUILayout.BeginHorizontal();
@@ -1102,6 +1123,133 @@ namespace UMA.Editors
                 string path = AssetDatabase.GetAssetPath(target.GetEntityId());
                 AssetDatabase.ImportAsset(path);
                 UMAUpdateProcessor.UpdateSlot(target as SlotDataAsset, false);
+            }
+        }
+
+        private void DrawUdimInfo(SlotDataAsset slotDataAsset)
+        {
+            GUIHelper.BeginVerticalPadded(8, new Color(0.82f, 0.9f, 0.96f));
+            udimInfoFoldout = EditorGUILayout.Foldout(udimInfoFoldout, "UDIM info", true);
+            if (!udimInfoFoldout || slotDataAsset == null)
+            {
+                GUIHelper.EndVerticalPadded(8);
+                return;
+            }
+
+            EditorGUILayout.LabelField("UDIM Member", slotDataAsset.IsUdimMember ? "Yes" : "No");
+            EditorGUILayout.LabelField("Group Name", string.IsNullOrEmpty(slotDataAsset.udimGroupName) ? "-" : slotDataAsset.udimGroupName);
+            EditorGUILayout.LabelField("Group ID", string.IsNullOrEmpty(slotDataAsset.udimGroupId) ? "-" : slotDataAsset.udimGroupId);
+            EditorGUILayout.LabelField("Tile Number", slotDataAsset.udimTileNumber > 0 ? slotDataAsset.udimTileNumber.ToString() : "-");
+            EditorGUILayout.LabelField("Source Submesh", slotDataAsset.udimSourceSubmeshIndex >= 0 ? slotDataAsset.udimSourceSubmeshIndex.ToString() : "-");
+
+            if (!slotDataAsset.IsUdimMember)
+            {
+                EditorGUILayout.HelpBox("This slot has no complete UDIM membership metadata.", MessageType.Info);
+            }
+
+            DrawUdimSeamMap(slotDataAsset.UdimSharedVertexMap);
+            DrawUdimWelds(slotDataAsset.Welds);
+            GUIHelper.EndVerticalPadded(8);
+        }
+
+        private void DrawUdimSeamMap(SlotDataAsset.UdimSeamMap seamMap)
+        {
+            int originalCount = seamMap != null && seamMap.originalIndices != null ? seamMap.originalIndices.Length : 0;
+            int localCount = seamMap != null && seamMap.localIndices != null ? seamMap.localIndices.Length : 0;
+            int pairCount = Mathf.Min(originalCount, localCount);
+
+            udimSeamMapFoldout = EditorGUILayout.Foldout(udimSeamMapFoldout, "Shared Seam Vertices (" + pairCount + ")", true);
+            if (!udimSeamMapFoldout)
+            {
+                return;
+            }
+
+            EditorGUILayout.LabelField("Seam Key Count", originalCount.ToString());
+            EditorGUILayout.LabelField("Local Index Count", localCount.ToString());
+            if (originalCount != localCount)
+            {
+                EditorGUILayout.HelpBox("The seam map has unmatched original and local index counts.", MessageType.Warning);
+            }
+            if (pairCount == 0)
+            {
+                EditorGUILayout.HelpBox("No shared seam vertices are recorded.", MessageType.Info);
+                return;
+            }
+
+            udimSeamMapScrollPosition = EditorGUILayout.BeginScrollView(udimSeamMapScrollPosition, GUILayout.Height(180f));
+            for (int pairIndex = 0; pairIndex < pairCount; pairIndex++)
+            {
+                EditorGUILayout.LabelField("Pair " + pairIndex, "Seam Key " + seamMap.originalIndices[pairIndex] + " -> Local " + seamMap.localIndices[pairIndex]);
+            }
+            EditorGUILayout.EndScrollView();
+        }
+
+        private void DrawUdimWelds(List<SlotDataAsset.Welding> welds)
+        {
+            int weldCount = welds != null ? welds.Count : 0;
+            EditorGUILayout.LabelField("Manual Weld Records", weldCount.ToString());
+            if (weldCount == 0)
+            {
+                return;
+            }
+
+            for (int weldIndex = 0; weldIndex < weldCount; weldIndex++)
+            {
+                SlotDataAsset.Welding weld = welds[weldIndex];
+                if (weld == null)
+                {
+                    EditorGUILayout.LabelField("Weld " + weldIndex, "Missing record");
+                    continue;
+                }
+
+                int pointCount = weld.WeldPoints != null ? weld.WeldPoints.Count : 0;
+                string targetName = string.IsNullOrEmpty(weld.WeldedToSlot) ? "Unnamed Slot" : weld.WeldedToSlot;
+                bool expanded = expandedUdimWeldPointLists.Contains(weldIndex);
+                bool newExpanded = EditorGUILayout.Foldout(
+                    expanded,
+                    targetName + " (" + pointCount + " points, " + weld.MisMatchCount + " mismatches)",
+                    true);
+                if (newExpanded)
+                {
+                    expandedUdimWeldPointLists.Add(weldIndex);
+                }
+                else
+                {
+                    expandedUdimWeldPointLists.Remove(weldIndex);
+                }
+
+                if (!newExpanded)
+                {
+                    continue;
+                }
+
+                if (pointCount == 0)
+                {
+                    EditorGUILayout.HelpBox("No weld points are recorded.", MessageType.Info);
+                    continue;
+                }
+
+                if (!udimWeldPointScrollPositions.TryGetValue(weldIndex, out Vector2 scrollPosition))
+                {
+                    scrollPosition = Vector2.zero;
+                }
+
+                scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition, GUILayout.Height(160f));
+                for (int pointIndex = 0; pointIndex < pointCount; pointIndex++)
+                {
+                    SlotDataAsset.WeldPoint point = weld.WeldPoints[pointIndex];
+                    if (point == null)
+                    {
+                        EditorGUILayout.LabelField("Point " + pointIndex, "Missing record");
+                        continue;
+                    }
+
+                    string pointInfo = "Vertex " + point.ourVertex + " -> " + point.theirVertex +
+                        ", Normal " + point.newNormal + ", Mismatch " + point.misMatch;
+                    EditorGUILayout.LabelField("Point " + pointIndex, pointInfo);
+                }
+                EditorGUILayout.EndScrollView();
+                udimWeldPointScrollPositions[weldIndex] = scrollPosition;
             }
         }
 

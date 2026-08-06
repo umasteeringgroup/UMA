@@ -33,6 +33,10 @@ namespace UMA
             DNABuildType updateFlags = DNABuildType.None;
             foreach (var effect in effects)
             {
+                if (effect == null || !effect.enabled)
+                {
+                    continue;
+                }
                 updateFlags |= effect.AreaEffect;
             }
             return updateFlags;
@@ -43,6 +47,10 @@ namespace UMA
             DNABuildType updateFlags = DNABuildType.None;
             foreach (var effect in effects)
             {
+                if (effect == null || !effect.enabled)
+                {
+                    continue;
+                }
                 updateFlags |= effect.AreaEffect;
                 effect.AfterRecipeGenerated(avatar, this, value);
             }
@@ -53,6 +61,10 @@ namespace UMA
         {
             foreach (var effect in effects)
             {
+                if (effect == null || !effect.enabled)
+                {
+                    continue;
+                }
                 effect.Restore(avatar, this, value);
             }
         }
@@ -62,7 +74,7 @@ namespace UMA
             DNABuildType updateFlags = DNABuildType.None;
             foreach (var effect in effects)
             {
-                if (!effect.enabled)
+                if (effect == null || !effect.enabled)
                 {
                     continue;
                 }
@@ -76,7 +88,7 @@ namespace UMA
             DNABuildType updateFlags = DNABuildType.None;
             foreach (var effect in effects)
             {
-                if (!effect.enabled)
+                if (effect == null || !effect.enabled)
                 {
                     continue;
                 }
@@ -121,7 +133,7 @@ namespace UMA
             DNABuildType updateFlags = DNABuildType.None;
             foreach (var effect in effects)
             {
-                if (!effect.enabled)
+                if (effect == null || !effect.enabled)
                 {
                     continue;
                 }

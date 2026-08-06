@@ -18,6 +18,9 @@ namespace UMA
         public override string Description => "Translates a bone by a specified vector. Normal values for min/max are -1 to 1. The curve takes the incoming 0..1 values and maps to the output values. Create a middle point on the curve at 0.5 for no effect in the center.";
 
         public override DNAInstanceCollection.DNABuildType AreaEffect => DNAInstanceCollection.DNABuildType.Rig;
+        public override ExpressionEffectPhase ExpressionPhases =>
+            ExpressionEffectPhase.EarlyRestore |
+            ExpressionEffectPhase.LateRig;
 #if UNITY_EDITOR
         /// <inheritdoc />
         public override void DoGui(bool showDescription, bool showHelp, out AnimationCurve curveToCopy)
@@ -58,6 +61,41 @@ namespace UMA
                     skeleton.SetPosition(hash, currentPos + Translation * GetMappedValue(value));
                 }
             }
+        }
+
+        public override void CollectExpressionBones(
+            System.Collections.Generic.List<int> boneHashes)
+        {
+            if (boneHashes != null && !string.IsNullOrEmpty(BoneName))
+            {
+                boneHashes.Add(UMAUtils.StringToHash(BoneName));
+            }
+        }
+
+        public override void ApplyExpressionRig(
+            UMAData avatar,
+            DNA dna,
+            float value,
+            System.Predicate<int> shouldApplyBone)
+        {
+            if (avatar == null || avatar.skeleton == null ||
+                string.IsNullOrEmpty(BoneName))
+            {
+                return;
+            }
+
+            int hash = UMAUtils.StringToHash(BoneName);
+            if (shouldApplyBone != null && !shouldApplyBone(hash))
+            {
+                return;
+            }
+
+            Vector3 currentPosition =
+                avatar.skeleton.GetPosition(hash);
+            avatar.skeleton.SetPosition(
+                hash,
+                currentPosition +
+                Translation * GetMappedValue(value));
         }
 
     }

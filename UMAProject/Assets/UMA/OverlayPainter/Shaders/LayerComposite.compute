@@ -1,0 +1,194 @@
+#pragma kernel CSCopyBase
+#pragma kernel CSCompositeLayer
+#pragma kernel CSPrepareEffectSeeds
+#pragma kernel CSJumpFloodEffectSeeds
+#pragma kernel CSResolveEffectDistance
+#pragma kernel CSCompositeLayerEffect
+
+Texture2D<float4> _Base;
+Texture2D<float4> _Layer;
+Texture2D<float4> _LayerMask;
+RWTexture2D<float4> _Composite;
+Texture2D<float2> _EffectSeedsRead;
+RWTexture2D<float2> _EffectSeedsWrite;
+Texture2D<float> _EffectDistanceRead;
+RWTexture2D<float> _EffectDistanceWrite;
+Texture2D<float4> _EffectCurveTexture;
+
+int2 _TextureSize;
+int2 _TileOffset;
+int2 _DispatchSize;
+float _LayerOpacity;
+int _BlendMode;
+int _HasLayerMask;
+int _JumpStep;
+int _EffectType;
+float4 _EffectColor;
+float _EffectWidth;
+float _EffectSmoothness;
+float2 _EffectOffset;
+float _EffectLevel;
+int _EffectBlendMode;
+
+float3 BlendRGB(float3 destination, float3 source, int mode)
+{
+    if (mode == 1) return destination * source;
+    if (mode == 2) return destination + source;
+    if (mode == 3) return destination - source;
+    if (mode == 4) return 1.0 - (1.0 - destination) * (1.0 - source);
+    if (mode == 5)
+    {
+        float3 low = 2.0 * destination * source;
+        float3 high = 1.0 - 2.0 * (1.0 - destination) * (1.0 - source);
+        return lerp(low, high, step(0.5, destination));
+    }
+    return source;
+}
+
+[numthreads(16, 16, 1)]
+void CSCopyBase(uint3 dispatchID : SV_DispatchThreadID)
+{
+    if (any(dispatchID.xy >= (uint2)_DispatchSize)) return;
+    int2 pixel = int2(dispatchID.xy) + _TileOffset;
+    if (any(pixel < 0) || any(pixel >= _TextureSize)) return;
+    _Composite[pixel] = _Base.Load(int3(pixel, 0));
+}
+
+[numthreads(16, 16, 1)]
+void CSCompositeLayer(uint3 dispatchID : SV_DispatchThreadID)
+{
+    if (any(dispatchID.xy >= (uint2)_DispatchSize)) return;
+    int2 pixel = int2(dispatchID.xy) + _TileOffset;
+    if (any(pixel < 0) || any(pixel >= _TextureSize)) return;
+    float4 destination = _Composite[pixel];
+    float4 layer = _Layer.Load(int3(pixel, 0));
+    // Texture2D.whiteTexture is only a few texels wide; loading it with destination
+    // pixel coordinates returns zero outside that extent. Bypass the load entirely
+    // when a layer has no explicit mask.
+    float mask = _HasLayerMask != 0 ? _LayerMask.Load(int3(pixel, 0)).r : 1.0;
+    float alpha = saturate(layer.a * _LayerOpacity * mask);
+    float3 blended = BlendRGB(destination.rgb, layer.rgb, _BlendMode);
+    _Composite[pixel] = float4(lerp(destination.rgb, blended, alpha),
+        alpha + destination.a * (1.0 - alpha));
+}
+
+float EffectAlphaAt(int2 pixel)
+{
+    // The destination cannot represent pixels beyond its texture bounds. Clamp edge probes so a
+    // layer continuing into an adjacent UDIM tile is not mistaken for terminating against empty
+    // space and given a false stroke/shadow along the tile border.
+    pixel = clamp(pixel, int2(0, 0), _TextureSize - 1);
+    float alpha = _Layer.Load(int3(pixel, 0)).a;
+    float mask = _HasLayerMask != 0 ? _LayerMask.Load(int3(pixel, 0)).r : 1.0;
+    return saturate(alpha * mask);
+}
+
+[numthreads(16, 16, 1)]
+void CSPrepareEffectSeeds(uint3 dispatchID : SV_DispatchThreadID)
+{
+    int2 pixel = int2(dispatchID.xy);
+    if (any(pixel >= _TextureSize)) return;
+    float alpha = EffectAlphaAt(pixel);
+    bool inside = alpha > 0.001;
+    bool boundary = inside && (alpha < 0.999 ||
+        EffectAlphaAt(pixel + int2(-1, 0)) <= 0.001 ||
+        EffectAlphaAt(pixel + int2(1, 0)) <= 0.001 ||
+        EffectAlphaAt(pixel + int2(0, -1)) <= 0.001 ||
+        EffectAlphaAt(pixel + int2(0, 1)) <= 0.001);
+    _EffectSeedsWrite[pixel] = boundary ? float2(pixel) : float2(-1.0, -1.0);
+}
+
+[numthreads(16, 16, 1)]
+void CSJumpFloodEffectSeeds(uint3 dispatchID : SV_DispatchThreadID)
+{
+    int2 pixel = int2(dispatchID.xy);
+    if (any(pixel >= _TextureSize)) return;
+    float2 bestSeed = _EffectSeedsRead.Load(int3(pixel, 0));
+    float bestDistanceSquared = bestSeed.x >= 0.0
+        ? dot(bestSeed - float2(pixel), bestSeed - float2(pixel)) : 1e30;
+    [unroll] for (int y = -1; y <= 1; y++)
+    [unroll] for (int x = -1; x <= 1; x++)
+    {
+        int2 candidatePixel = pixel + int2(x, y) * _JumpStep;
+        if (any(candidatePixel < 0) || any(candidatePixel >= _TextureSize)) continue;
+        float2 candidateSeed = _EffectSeedsRead.Load(int3(candidatePixel, 0));
+        if (candidateSeed.x < 0.0) continue;
+        float2 delta = candidateSeed - float2(pixel);
+        float candidateDistanceSquared = dot(delta, delta);
+        if (candidateDistanceSquared >= bestDistanceSquared) continue;
+        bestSeed = candidateSeed;
+        bestDistanceSquared = candidateDistanceSquared;
+    }
+    _EffectSeedsWrite[pixel] = bestSeed;
+}
+
+[numthreads(16, 16, 1)]
+void CSResolveEffectDistance(uint3 dispatchID : SV_DispatchThreadID)
+{
+    int2 pixel = int2(dispatchID.xy);
+    if (any(pixel >= _TextureSize)) return;
+    float2 seed = _EffectSeedsRead.Load(int3(pixel, 0));
+    float maximumDistance = length(float2(_TextureSize));
+    float distanceToEdge = seed.x >= 0.0 ? length(seed - float2(pixel)) : maximumDistance;
+    bool inside = EffectAlphaAt(pixel) > 0.001;
+    distanceToEdge = max(0.001, distanceToEdge);
+    _EffectDistanceWrite[pixel] = inside ? distanceToEdge : -distanceToEdge;
+}
+
+float SampleEffectCurve(float normalizedDistance)
+{
+    int curvePixel = clamp((int)round(saturate(normalizedDistance) * 255.0), 0, 255);
+    return saturate(_EffectCurveTexture.Load(int3(curvePixel, 0, 0)).r);
+}
+
+[numthreads(16, 16, 1)]
+void CSCompositeLayerEffect(uint3 dispatchID : SV_DispatchThreadID)
+{
+    if (any(dispatchID.xy >= (uint2)_DispatchSize)) return;
+    int2 pixel = int2(dispatchID.xy) + _TileOffset;
+    if (any(pixel < 0) || any(pixel >= _TextureSize)) return;
+
+    float sourceAlpha = EffectAlphaAt(pixel);
+    int2 shiftedPixel = pixel - int2(round(_EffectOffset));
+    float signedDistance = -length(float2(_TextureSize));
+    if (all(shiftedPixel >= 0) && all(shiftedPixel < _TextureSize))
+        signedDistance = _EffectDistanceRead.Load(int3(shiftedPixel, 0));
+
+    float coverage = 0.0;
+    float width = max(0.5, _EffectWidth);
+    if (_EffectType == 0)
+    {
+        if (signedDistance >= 0.0) coverage = 1.0;
+        else
+        {
+            float outsideDistance = -signedDistance;
+            if (_EffectSmoothness <= 0.0001) coverage = outsideDistance <= width ? 1.0 : 0.0;
+            else
+            {
+                float featherStart = width * (1.0 - saturate(_EffectSmoothness));
+                coverage = 1.0 - smoothstep(featherStart, width, outsideDistance);
+            }
+        }
+    }
+    else if (_EffectType == 1 || _EffectType == 3)
+    {
+        if (sourceAlpha > 0.0)
+            coverage = signedDistance <= 0.0 ? 1.0 : SampleEffectCurve(signedDistance / width);
+        coverage *= sourceAlpha;
+    }
+    else if (_EffectType == 2 || _EffectType == 4)
+    {
+        coverage = signedDistance >= 0.0 ? 1.0 : SampleEffectCurve((-signedDistance) / width);
+    }
+    else
+    {
+        coverage = sourceAlpha;
+    }
+
+    float alpha = saturate(coverage * _EffectColor.a * _EffectLevel * _LayerOpacity);
+    if (alpha <= 0.00001) return;
+    float4 destination = _Composite[pixel];
+    float3 blended = BlendRGB(destination.rgb, _EffectColor.rgb, _EffectBlendMode);
+    _Composite[pixel] = float4(lerp(destination.rgb, blended, alpha),
+        alpha + destination.a * (1.0 - alpha));
+}

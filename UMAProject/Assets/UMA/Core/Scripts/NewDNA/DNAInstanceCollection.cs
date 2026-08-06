@@ -23,7 +23,7 @@ namespace UMA
             SharedColors = 1 << 4,
             MeshModifiers = 1 << 5,
             Base = Mesh | Rig | Texture,
-            All = Texture | Mesh | Rig | BlendShape | SharedColors
+            All = Texture | Mesh | Rig | BlendShape | SharedColors | MeshModifiers
         }
 
         private DNACollection _DNACollection;

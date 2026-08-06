@@ -34,6 +34,7 @@ using System.Collections.Generic;
 
 namespace UMA
 {
+    [DefaultExecutionOrder(10000)]
     public class TwistBoneManager : MonoBehaviour
     {
         [System.Serializable]

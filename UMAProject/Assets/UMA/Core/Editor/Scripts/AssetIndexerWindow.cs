@@ -1335,6 +1335,13 @@ namespace UMA.Controls
                 objects.Add(raceData.expressionSet);
                 objects.AddRange(GetExpressionSetDependencies(raceData.expressionSet));
             }
+            if (raceData.expressionGroup != null)
+            {
+                objects.Add(raceData.expressionGroup);
+                objects.AddRange(
+                    GetExpressionGroupDependencies(
+                        raceData.expressionGroup));
+            }
 
             if (raceData.dnaConverterList != null)
             {
@@ -1362,6 +1369,66 @@ namespace UMA.Controls
                 if (posepair.inverse != null)
                     objects.Add(posepair.inverse);
             }
+            return objects;
+        }
+
+        private IEnumerable<UnityEngine.Object> GetExpressionGroupDependencies(
+            UMAExpressionGroup expressionGroup)
+        {
+            List<UnityEngine.Object> objects =
+                new List<UnityEngine.Object>();
+            if (expressionGroup == null ||
+                expressionGroup.expressions == null)
+            {
+                return objects;
+            }
+
+            for (int i = 0;
+                 i < expressionGroup.expressions.Count;
+                 i++)
+            {
+                UMAExpressionDefinition definition =
+                    expressionGroup.expressions[i];
+                if (definition != null && definition.dna != null)
+                {
+                    objects.Add(definition.dna);
+                    if (definition.dna.effects == null)
+                    {
+                        continue;
+                    }
+
+                    for (int effectIndex = 0;
+                         effectIndex < definition.dna.effects.Count;
+                         effectIndex++)
+                    {
+                        DNAEffect effect =
+                            definition.dna.effects[effectIndex];
+                        if (effect is DNAEffect_BonePose bonePose &&
+                            bonePose.bonePose != null)
+                        {
+                            objects.Add(bonePose.bonePose);
+                        }
+                        else if (effect is DNAEffect_MeshModifier mesh &&
+                                 mesh.meshModifier != null)
+                        {
+                            objects.Add(mesh.meshModifier);
+                        }
+                        else if (effect is
+                                 DNAEffect_RuntimeMaterialProperty runtime)
+                        {
+                            if (runtime.zeroTextureValue != null)
+                            {
+                                objects.Add(runtime.zeroTextureValue);
+                            }
+                            if (runtime.oneTextureValue != null)
+                            {
+                                objects.Add(runtime.oneTextureValue);
+                            }
+                        }
+                    }
+                }
+            }
+
             return objects;
         }
 

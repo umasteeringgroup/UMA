@@ -51,7 +51,7 @@ namespace UMA.CharacterSystem
         public override void Load(UMA.UMAData.UMARecipe umaRecipe, bool loadSlots = true)
         {
             var packed = PackedLoad();
-            // Legacy safeguard: some historical wardrobe recipes won’t have isWardrobe set
+            // Legacy safeguard: some historical wardrobe recipes wonï¿½t have isWardrobe set
             packed.isWardrobe = true;
             UnpackRecipe(umaRecipe, packed, loadSlots);
         }
@@ -105,9 +105,9 @@ namespace UMA.CharacterSystem
 
 	#if UNITY_EDITOR
 		#if UMA_HOTKEYS
-		[UnityEditor.MenuItem("Assets/Create/UMA/DCS/Wardrobe Recipe %#w")]
+		[UnityEditor.MenuItem("Assets/Create/UMA/Wardrobe/Recipe %#w")]
 		#else
-		[UnityEditor.MenuItem("Assets/Create/UMA/DCS/Wardrobe Recipe")]
+		[UnityEditor.MenuItem("Assets/Create/UMA/Wardrobe/Recipe")]
 		#endif
 		public static void CreateWardrobeRecipeAsset()
 		{

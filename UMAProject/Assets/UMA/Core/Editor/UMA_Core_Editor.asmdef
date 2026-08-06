@@ -3,6 +3,8 @@
     "rootNamespace": "",
     "references": [
         "UMA_Core",
+        "UMA.TexturePaint.Editor",
+        "UMA.TexturePaint.Runtime",
         "Assembly-CSharp",
         "Unity.Addressables.Editor",
         "Unity.ResourceManager",

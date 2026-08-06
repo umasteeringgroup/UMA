@@ -1835,6 +1835,19 @@ namespace UMA.CharacterSystem.Editors
         {
             GUIHelper.BeginVerticalPadded(10, new Color(0.75f,0.875f,1f));
 
+            GUILayout.Label("Overlay Painter", EditorStyles.boldLabel);
+            EditorGUILayout.HelpBox("Reconstruct this generated character by material and paint its source textures or non-destructive overlay layers in 3D. Includes masks, mirrored strokes, splines, normal-map touchup, plugins, and texture export.", MessageType.None);
+            if (GUILayout.Button("Open Overlay Painter"))
+            {
+                if (CanOpenMeshEditor())
+                {
+                    thisDCA.GenerateNow();
+                    UMA.TexturePaint.Editor.TexturePaintStageWindow.ShowStage(thisDCA);
+                }
+            }
+
+            EditorGUILayout.Space(8f);
+
             GUILayout.Label("Skinning Weights", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox("Touch up a SlotDataAsset's bone weights directly on this character in its current pose. Use a resizable circle brush to select vertices, inspect Blender-style weight colors, and save the corrected weights back to the slot.", MessageType.None);
             if (GUILayout.Button("Touchup Weights"))

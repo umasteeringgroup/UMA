@@ -1,0 +1,22 @@
+{
+    "name": "UMA.TexturePaint.Editor",
+    "rootNamespace": "UMA.TexturePaint.Editor",
+    "references": [
+        "UMA_Core",
+        "UMA.TexturePaint.Runtime",
+        "Unity.Addressables.Editor",
+        "Unity.ResourceManager",
+        "Unity.Addressables"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

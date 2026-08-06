@@ -57,6 +57,68 @@ namespace UMA
             }
         }
 
+        /// <summary>
+        /// Declares where this effect can be evaluated by an expression player.
+        /// Build dirtiness remains described separately by <see cref="AreaEffect"/>.
+        /// </summary>
+        public virtual ExpressionEffectPhase ExpressionPhases
+        {
+            get { return ExpressionEffectPhase.None; }
+        }
+
+        public bool RequiresExpressionBuild
+        {
+            get
+            {
+                const ExpressionEffectPhase buildPhases =
+                    ExpressionEffectPhase.BuildAfterRecipe |
+                    ExpressionEffectPhase.BuildPreApply |
+                    ExpressionEffectPhase.BuildApply |
+                    ExpressionEffectPhase.BuildPostApply;
+                return (ExpressionPhases & buildPhases) != 0;
+            }
+        }
+
+        /// <summary>
+        /// Adds the hashes of bones touched by this effect.
+        /// </summary>
+        public virtual void CollectExpressionBones(List<int> boneHashes)
+        {
+        }
+
+        /// <summary>
+        /// Applies a rig effect while honoring a per-bone filter.
+        /// </summary>
+        public virtual void ApplyExpressionRig(
+            UMAData avatar,
+            DNA dna,
+            float value,
+            Predicate<int> shouldApplyBone)
+        {
+            Apply(avatar, dna, value);
+        }
+
+        /// <summary>
+        /// Applies a renderer-safe blendshape effect.
+        /// </summary>
+        public virtual void ApplyExpressionBlendShape(
+            UMAData avatar,
+            DNA dna,
+            float value)
+        {
+            PostApply(avatar, dna, value);
+        }
+
+        /// <summary>
+        /// Applies a renderer material property without rebuilding UMA.
+        /// </summary>
+        public virtual void ApplyExpressionMaterial(
+            UMAData avatar,
+            DNA dna,
+            float value)
+        {
+        }
+
         public float GetMappedValue(float value)
         { 
             if (curve != null && curve.length > 0)
