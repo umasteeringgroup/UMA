@@ -108,6 +108,21 @@ When a tint appears ineffective, check:
 - The overlay uses the intended shared color.
 - Channel masks are not suppressing the tint.
 
+### Transparent Multiplier
+
+**Transparent Multiplier** controls the RGB prefill used inside this overlay's destination area before compositing. UMA multiplies the overlay's current channel color by this value and writes that color behind transparent pixels. `Color.clear` disables the prefill.
+
+Transparent pixels can still carry RGB data even though their alpha is zero. Supplying suitable RGB around and beneath painted areas can reduce dark or discolored fringes after atlas scaling, filtering, mipmap generation, or later blending. This is especially useful for cropped overlays and sparse details whose transparent borders are sampled at a distance.
+
+Choose the value for the meaning of each material channel:
+
+- For base color, use a color compatible with the surrounding surface instead of an unrelated dark or saturated color.
+- For normal maps, preserve a neutral tangent-space normal behind transparent detail rather than introducing a directional normal.
+- For masks or packed data, use neutral values appropriate to each packed component.
+- Use `Color.clear` when the overlay's existing transparent RGB is intentional or prefill is not needed.
+
+Judge the result on the generated atlas and final shader at lower mip levels. A value that removes a color fringe in the albedo channel can be incorrect for a normal or packed mask channel.
+
 ## Rect and Cropped Overlays
 
 An overlay rect defines where a cropped overlay is placed relative to the full texture area. This is useful for small localized details such as tattoos, scars, makeup, emblems, or decals.
@@ -207,6 +222,7 @@ Texture copying increases temporary memory, GPU upload work, and garbage-collect
 - Base overlays provide the required channels.
 - Cropped overlays have enough padding.
 - Shared color names match the recipe and UI.
+- Transparent Multiplier uses channel-appropriate neutral values or is disabled.
 - Cutout or occlusion data targets the intended slots.
 - The overlay is available in the Global Library.
 - The result has been tested at gameplay distance and target atlas resolution.

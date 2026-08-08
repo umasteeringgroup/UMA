@@ -51,6 +51,7 @@ You can open these guides inside Unity from `UMA > View Documentation`.
 - [SlotDataAsset](SlotDataAsset.md)
 - [OverlayDataAsset](OverlayDataAsset.md)
 - [Overlay Painter](OverlayPainter.md)
+- [Weight Touchup](WeightTouchup.md)
 - [Wardrobe Recipe Editor](WardrobeRecipeEditor.md)
 - [UMA Materials](UMAMaterial.md)
 - [Renderer Assets and Cloth](RendererAssetsAndCloth.md)
@@ -73,13 +74,18 @@ You can open these guides inside Unity from `UMA > View Documentation`.
 - [UMA Simple LOD](UMASimpleLOD.md)
 - [Random Avatars](RandomAvatar.md)
 - [Bone Animators](BoneAnimators.md)
+- [Dynamic Expression Player](DynamicExpressionPlayer.md)
+
+### Editor workflow
+
+- [UMA Task List](UMATaskList.md)
 
 ### Engineering and implementation notes
 
 - [Incremental Mesh Combiner Baseline](IncrementalMeshCombinerBaseline.md)
-- [Dynamic Character Build Optimization Plan](DynamicCharacterBuildOptimizationPlan.md)
-- [Mesh Modifier Cloth Brush Plan](MeshModifierClothBrushPlan.md)
-- [Wardrobe Recipe Graph Production Readiness](UMAWardrobeRecipeGraphProductionReadiness.md)
+- [Dynamic Character Build Optimization Plan](Plans/DynamicCharacterBuildOptimizationPlan.md)
+- [Mesh Modifier Cloth Brush Plan](Plans/MeshModifierClothBrushPlan.md)
+- [Wardrobe Recipe Graph Production Readiness](Plans/UMAWardrobeRecipeGraphProductionReadiness.md)
 
 ## Project Layout
 
