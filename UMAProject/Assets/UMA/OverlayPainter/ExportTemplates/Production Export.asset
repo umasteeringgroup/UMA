@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2f07946d59684d93863d4648fd1d5b21, type: 3}
+  m_Script: {fileID: 11500000, guid: 9fb730a5788b4ad7a139b61e5e279277, type: 3}
   m_Name: Production Export
   m_EditorClassIdentifier: UMA.TexturePaint.Runtime::UMA.TexturePaint.TexturePaintExportTemplate
   version: 2
