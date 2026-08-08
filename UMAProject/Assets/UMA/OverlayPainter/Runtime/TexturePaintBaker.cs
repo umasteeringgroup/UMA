@@ -49,7 +49,8 @@ namespace UMA.TexturePaint
 
             foreach (TextureChannelTarget target in set.channels.Values)
                 if (target != null && target.umaChannelIndex == channel.index && target.PreviewTexture != null)
-                    return Read(target.PreviewTexture, DisplayChannelName(channel), resolution, bitDepth, linear);
+                    return Read(set.GetVisibleTexture(target.channel), DisplayChannelName(channel),
+                        resolution, bitDepth, linear);
 
             return Read(channel.sourceTexture, DisplayChannelName(channel), resolution, bitDepth, linear);
         }
@@ -119,6 +120,6 @@ namespace UMA.TexturePaint
         }
 
         private static bool IsLinearChannel(TexturePaintChannel channel)
-            => channel != TexturePaintChannel.Albedo && channel != TexturePaintChannel.Emission;
+            => !TexturePaintChannelUtility.IsColor(channel);
     }
 }

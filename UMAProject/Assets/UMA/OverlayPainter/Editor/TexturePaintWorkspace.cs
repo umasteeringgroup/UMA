@@ -886,20 +886,44 @@ namespace UMA.TexturePaint.Editor
         private void DrawChannelToolbar(TextureSet set)
         {
             TexturePaintChannel[] channels = (TexturePaintChannel[])Enum.GetValues(typeof(TexturePaintChannel));
-            string[] labels = { "Base", "Nrm", "Met", "Rgh", "AO", "Em", "C" };
+            var available = new List<TexturePaintChannel>(channels.Length);
             for (int i = 0; i < channels.Length; i++)
+                if (set?.GetChannel(channels[i]) != null) available.Add(channels[i]);
+            if (available.Count > 7)
             {
-                TexturePaintChannel channel = channels[i];
-                using (new EditorGUI.DisabledScope(set?.GetChannel(channel) == null))
+                DrawCompactChannelToolbar(set);
+                return;
+            }
+            for (int i = 0; i < available.Count; i++)
+            {
+                TexturePaintChannel channel = available[i];
+                bool next = GUILayout.Toggle(selectedChannel == channel,
+                    new GUIContent(ChannelShortName(channel), TexturePaintChannelUtility.DisplayName(channel)),
+                    EditorStyles.toolbarButton, GUILayout.Width(channel == TexturePaintChannel.Albedo ? 38f : 42f));
+                if (next && selectedChannel != channel)
                 {
-                    bool next = GUILayout.Toggle(selectedChannel == channel,
-                        new GUIContent(labels[i], channel.ToString()), EditorStyles.toolbarButton, GUILayout.Width(i == 0 ? 38f : 34f));
-                    if (next && selectedChannel != channel)
-                    {
-                        SetSelectedChannelAndRefreshSource(channel);
-                        ApplyWorkspaceDisplay();
-                    }
+                    SetSelectedChannelAndRefreshSource(channel);
+                    ApplyWorkspaceDisplay();
                 }
+            }
+        }
+
+        private static string ChannelShortName(TexturePaintChannel channel)
+        {
+            switch (channel)
+            {
+                case TexturePaintChannel.Albedo: return "Base";
+                case TexturePaintChannel.Normal: return "Nrm";
+                case TexturePaintChannel.Metallic: return "Met";
+                case TexturePaintChannel.Roughness: return "Rgh";
+                case TexturePaintChannel.AmbientOcclusion: return "AO";
+                case TexturePaintChannel.Emission: return "Em";
+                case TexturePaintChannel.Custom: return "C";
+                case TexturePaintChannel.SkinColorMask: return "Skin";
+                case TexturePaintChannel.Thickness: return "Thick";
+                case TexturePaintChannel.DetailMask: return "Detail";
+                case TexturePaintChannel.NormalControl: return "NC";
+                default: return channel.ToString();
             }
         }
 
@@ -915,7 +939,8 @@ namespace UMA.TexturePaint.Editor
                 if (set?.GetChannel(channel) == null) continue;
                 if (channel == selectedChannel) selected = available.Count;
                 available.Add(channel);
-                labels.Add(channel == TexturePaintChannel.Albedo ? "Base" : channel.ToString());
+                labels.Add(channel == TexturePaintChannel.Albedo ? "Base" :
+                    TexturePaintChannelUtility.DisplayName(channel));
             }
             if (available.Count == 0)
             {
@@ -2237,6 +2262,9 @@ namespace UMA.TexturePaint.Editor
                         effect.level = EditorGUILayout.Slider(
                             new GUIContent("Level", "Effect strength, independent of the selected color's alpha."),
                             effect.level, 0f, 1f);
+                        effect.color = TexturePaintChannelUtility.ConstrainColor(effect.channel, effect.color);
+                        effect.secondaryColor = TexturePaintChannelUtility.ConstrainColor(
+                            effect.channel, effect.secondaryColor);
                     }
                     EditorGUI.indentLevel--;
                 }
@@ -2257,7 +2285,8 @@ namespace UMA.TexturePaint.Editor
                 int selected = authored.IndexOf(current);
                 if (selected < 0) selected = 0;
                 string[] names = new string[authored.Count];
-                for (int i = 0; i < names.Length; i++) names[i] = authored[i].ToString();
+                for (int i = 0; i < names.Length; i++)
+                    names[i] = TexturePaintChannelUtility.DisplayName(authored[i]);
                 selected = EditorGUILayout.Popup(new GUIContent("Channel",
                     "Only channels authored by this layer can receive its effects."), selected, names);
                 return authored[Mathf.Clamp(selected, 0, authored.Count - 1)];
@@ -2409,7 +2438,15 @@ namespace UMA.TexturePaint.Editor
                 ? FillSettingsFromChannelSource(selectedFillSource)
                 : fillLayer?.fillSettings;
             EditorGUI.BeginChangeCheck();
-            paintSource = (TexturePaintBrushSource)GUILayout.Toolbar((int)paintSource, new[] { "Texture", "Overlay", "Color" });
+            if (TexturePaintChannelUtility.IsAuxiliary(selectedChannel))
+            {
+                int sourceIndex = paintSource == TexturePaintBrushSource.Texture ? 0 : 1;
+                sourceIndex = GUILayout.Toolbar(sourceIndex, new[] { "Texture", "Color" });
+                paintSource = sourceIndex == 0 ? TexturePaintBrushSource.Texture :
+                    TexturePaintBrushSource.Color;
+            }
+            else paintSource = (TexturePaintBrushSource)GUILayout.Toolbar((int)paintSource,
+                new[] { "Texture", "Overlay", "Color" });
             bool sourceReady = true;
             switch (paintSource)
             {
@@ -2431,9 +2468,17 @@ namespace UMA.TexturePaint.Editor
                     EditorGUILayout.HelpBox("Overlay textures route to logical channels through UMA material keywords.", MessageType.None);
                     break;
                 default:
-                    paintColor = EditorGUILayout.ColorField("Source Color", paintColor);
+                    if (TexturePaintChannelUtility.IsGrayscale(selectedChannel))
+                    {
+                        float value = EditorGUILayout.Slider("Source Value",
+                            TexturePaintChannelUtility.ScalarValue(paintColor), 0f, 1f);
+                        paintColor = new Color(value, value, value, paintColor.a);
+                    }
+                    else paintColor = EditorGUILayout.ColorField("Source Color", paintColor);
                     break;
             }
+            if (TexturePaintChannelUtility.IsAuxiliary(selectedChannel))
+                EditorGUILayout.HelpBox("Normal Control is painter-owned and has no OverlayData material source. Use a texture, sprite, or grayscale value.", MessageType.None);
             Vector2 tiling = fillSettings?.tiling ?? Vector2.one;
             Vector2 offset = fillSettings?.offset ?? Vector2.zero;
             float rotation = fillSettings?.rotation ?? 0f;
@@ -2523,26 +2568,67 @@ namespace UMA.TexturePaint.Editor
         private void SetSelectedChannelAndRefreshSource(TexturePaintChannel channel)
         {
             selectedChannel = channel;
+            paintColor = TexturePaintChannelUtility.ConstrainColor(channel, paintColor);
             RefreshPaintSourceForChannel();
         }
 
         private void DrawChannelProperties(TextureSet set)
         {
             EditorGUI.BeginChangeCheck();
-            selectedChannel = (TexturePaintChannel)EditorGUILayout.EnumPopup(
+            TexturePaintChannel nextChannel = DrawAvailableChannelPopup(set,
                 new GUIContent("Paint / Preview Channel",
                     "The channel used by the brush, path controls, 2D canvas, and channel-solo preview."),
                 selectedChannel);
+            bool channelChanged = nextChannel != selectedChannel;
+            if (channelChanged)
+                SetSelectedChannelAndRefreshSource(nextChannel);
             if (selectedChannel == TexturePaintChannel.Normal)
                 normalConvention = (TexturePaintNormalConvention)EditorGUILayout.EnumPopup("Convention", normalConvention);
-            if (EditorGUI.EndChangeCheck()) RefreshPaintSourceForChannel();
+            if (EditorGUI.EndChangeCheck() && !channelChanged)
+                RefreshPaintSourceForChannel();
             TextureChannelTarget target = set?.GetChannel(selectedChannel);
             if (target == null) EditorGUILayout.HelpBox("The active target has no matching logical channel.", MessageType.Warning);
+            if (selectedChannel == TexturePaintChannel.NormalControl && set != null)
+            {
+                EditorGUILayout.HelpBox("Neutral gray (0.5) leaves the normal unchanged. Darker values recess the surface; lighter values raise it. The generated normal is used for 3D preview and export.", MessageType.None);
+                EditorGUI.BeginChangeCheck();
+                float strength = EditorGUILayout.Slider(new GUIContent("Height Strength",
+                    "Slope intensity generated from the grayscale height field."),
+                    set.normalControlStrength, 0f, 16f);
+                int radius = EditorGUILayout.IntSlider(new GUIContent("Sample Radius (px)",
+                    "Neighbor distance used to calculate the height gradient."),
+                    set.normalControlRadius, 1, 16);
+                bool invertHeight = EditorGUILayout.Toggle(new GUIContent("Invert Height",
+                    "Reverse raised and recessed height interpretation."), set.normalControlInvert);
+                if (EditorGUI.EndChangeCheck())
+                    ChangeNormalControlSettings(set, strength, radius, invertHeight);
+            }
             bool nextSolo = EditorGUILayout.Toggle(new GUIContent("Solo in 3D", "Preview this logical channel without material shading"), channelSolo);
             if (nextSolo != channelSolo) { channelSolo = nextSolo; if (channelSolo) previewBefore = false; }
             bool nextBefore = EditorGUILayout.Toggle(new GUIContent("Before in 3D",
                 "Show the original source textures while preserving the character material and lighting"), previewBefore);
             if (nextBefore != previewBefore) { previewBefore = nextBefore; if (previewBefore) channelSolo = false; }
+        }
+
+        private static TexturePaintChannel DrawAvailableChannelPopup(TextureSet set, GUIContent label,
+            TexturePaintChannel current)
+        {
+            var channels = new List<TexturePaintChannel>();
+            foreach (TexturePaintChannel channel in Enum.GetValues(typeof(TexturePaintChannel)))
+                if (set?.GetChannel(channel) != null) channels.Add(channel);
+            if (channels.Count == 0)
+            {
+                using (new EditorGUI.DisabledScope(true))
+                    EditorGUILayout.Popup(label, 0, new[] { "No material channels" });
+                return current;
+            }
+            int selected = channels.IndexOf(current);
+            if (selected < 0) selected = 0;
+            string[] names = new string[channels.Count];
+            for (int i = 0; i < channels.Count; i++)
+                names[i] = TexturePaintChannelUtility.DisplayName(channels[i]);
+            selected = EditorGUILayout.Popup(label, selected, names);
+            return channels[Mathf.Clamp(selected, 0, channels.Count - 1)];
         }
 
         private void DrawBrushProperties()
@@ -2677,7 +2763,8 @@ namespace UMA.TexturePaint.Editor
             int selected = available.IndexOf(workspaceAddLayerChannel);
             if (selected < 0) selected = 0;
             string[] names = new string[available.Count];
-            for (int i = 0; i < available.Count; i++) names[i] = available[i].ToString();
+            for (int i = 0; i < available.Count; i++)
+                names[i] = TexturePaintChannelUtility.DisplayName(available[i]);
             selected = EditorGUILayout.Popup("New Channel", selected, names);
             workspaceAddLayerChannel = available[Mathf.Clamp(selected, 0, available.Count - 1)];
             if (GUILayout.Button(new GUIContent("Add Channel",
@@ -2694,7 +2781,7 @@ namespace UMA.TexturePaint.Editor
             TexturePaintLayerChannelSettings settings = layer.GetChannelSettings(channel);
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
             GUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField(channel.ToString(), EditorStyles.boldLabel);
+            EditorGUILayout.LabelField(TexturePaintChannelUtility.DisplayName(channel), EditorStyles.boldLabel);
             bool isActive = selectedChannel == channel;
             using (new EditorGUI.DisabledScope(isActive))
                 if (GUILayout.Button(isActive ? "Active" : "Edit", GUILayout.Width(54f)))
@@ -2763,7 +2850,16 @@ namespace UMA.TexturePaint.Editor
                 }
             }
             EditorGUI.BeginChangeCheck();
-            source.source = (TexturePaintBrushSource)EditorGUILayout.EnumPopup("Type", source.source);
+            if (TexturePaintChannelUtility.IsAuxiliary(channel))
+            {
+                int sourceIndex = source.source == TexturePaintBrushSource.Texture ? 0 : 1;
+                sourceIndex = EditorGUILayout.Popup("Type", sourceIndex,
+                    new[] { "Texture", "Color" });
+                source.source = sourceIndex == 0 ? TexturePaintBrushSource.Texture :
+                    TexturePaintBrushSource.Color;
+                source.sourceOverlay = null;
+            }
+            else source.source = (TexturePaintBrushSource)EditorGUILayout.EnumPopup("Type", source.source);
             switch (source.source)
             {
                 case TexturePaintBrushSource.Texture:
@@ -2796,9 +2892,17 @@ namespace UMA.TexturePaint.Editor
                             "Convention", source.normalConvention);
                     break;
                 default:
-                    source.color = EditorGUILayout.ColorField("Color", source.color);
+                    if (TexturePaintChannelUtility.IsGrayscale(channel))
+                    {
+                        float value = EditorGUILayout.Slider("Value",
+                            TexturePaintChannelUtility.ScalarValue(source.color), 0f, 1f);
+                        source.color = new Color(value, value, value, source.color.a);
+                    }
+                    else source.color = EditorGUILayout.ColorField("Color", source.color);
                     break;
             }
+            if (TexturePaintChannelUtility.IsAuxiliary(channel))
+                EditorGUILayout.HelpBox("Normal Control accepts texture, sprite, or grayscale value sources; it is not present in OverlayData materials.", MessageType.None);
             if (layer.kind == TexturePaintLayerKind.Fill)
             {
                 bool transformDrivenByFirst = shareFillTransform && !isFirstChannel;
@@ -2853,8 +2957,11 @@ namespace UMA.TexturePaint.Editor
             {
                 case TexturePaintChannel.Albedo: return Color.white;
                 case TexturePaintChannel.Normal: return new Color(0.5f, 0.5f, 1f, 1f);
+                case TexturePaintChannel.NormalControl: return new Color(0.5f, 0.5f, 0.5f, 1f);
                 case TexturePaintChannel.Roughness:
-                case TexturePaintChannel.AmbientOcclusion: return Color.white;
+                case TexturePaintChannel.AmbientOcclusion:
+                case TexturePaintChannel.DetailMask: return Color.white;
+                case TexturePaintChannel.SkinColorMask: return Color.clear;
                 default: return Color.black;
             }
         }
@@ -2956,8 +3063,20 @@ namespace UMA.TexturePaint.Editor
                 ? FillSettingsFromChannelSource(source)
                 : layer.fillSettings;
             EditorGUI.BeginChangeCheck();
-            TexturePaintChannel channel = (TexturePaintChannel)EditorGUILayout.EnumPopup(
-                "Fill Channel", editingChannel);
+            var authoredChannels = new List<TexturePaintChannel>();
+            foreach (TexturePaintChannel candidate in Enum.GetValues(typeof(TexturePaintChannel)))
+                if (layer.channels.ContainsKey(candidate)) authoredChannels.Add(candidate);
+            int fillChannelIndex = authoredChannels.IndexOf(editingChannel);
+            if (fillChannelIndex < 0) fillChannelIndex = 0;
+            string[] fillChannelNames = new string[authoredChannels.Count];
+            for (int i = 0; i < authoredChannels.Count; i++)
+                fillChannelNames[i] = TexturePaintChannelUtility.DisplayName(authoredChannels[i]);
+            int nextFillChannelIndex = authoredChannels.Count > 0
+                ? EditorGUILayout.Popup("Fill Channel", fillChannelIndex, fillChannelNames)
+                : 0;
+            TexturePaintChannel channel = authoredChannels.Count > 0
+                ? authoredChannels[Mathf.Clamp(nextFillChannelIndex, 0, authoredChannels.Count - 1)]
+                : editingChannel;
             if (EditorGUI.EndChangeCheck() && channel != editingChannel)
             {
                 SelectLayerChannelForEditing(layer, channel);
@@ -3855,7 +3974,7 @@ namespace UMA.TexturePaint.Editor
             if (channels == null || channels.Count == 0) return string.Empty;
             var names = new List<string>(channels.Count);
             foreach (TexturePaintChannel channel in Enum.GetValues(typeof(TexturePaintChannel)))
-                if (channels.Contains(channel)) names.Add(channel.ToString());
+                if (channels.Contains(channel)) names.Add(TexturePaintChannelUtility.DisplayName(channel));
             return string.Join(" + ", names);
         }
 
@@ -3959,7 +4078,7 @@ namespace UMA.TexturePaint.Editor
                 RenderTexture groupPreview = set.GetSelectedGroupPreview(selectedChannel);
                 if (groupPreview != null) return groupPreview;
             }
-            return before ? target.sourceTexture : target.PreviewTexture;
+            return before ? target.sourceTexture : set.GetVisibleTexture(selectedChannel);
         }
 
         private void ApplySceneViewDisplay(SceneView sceneView)
@@ -4467,8 +4586,12 @@ namespace UMA.TexturePaint.Editor
             switch (channel)
             {
                 case TexturePaintChannel.Normal: return new Color(0.5f, 0.5f, 1f, 1f);
+                case TexturePaintChannel.NormalControl: return new Color(0.5f, 0.5f, 0.5f, 1f);
                 case TexturePaintChannel.Albedo: return Color.white;
                 case TexturePaintChannel.AmbientOcclusion: return Color.white;
+                case TexturePaintChannel.Roughness: return Color.white;
+                case TexturePaintChannel.DetailMask: return Color.white;
+                case TexturePaintChannel.SkinColorMask: return Color.clear;
                 default: return Color.black;
             }
         }

@@ -15,7 +15,12 @@ namespace UMA.TexturePaint
         AmbientOcclusion = 1 << 4,
         Emission = 1 << 5,
         Custom = 1 << 6,
-        All = Albedo | Normal | Metallic | Roughness | AmbientOcclusion | Emission | Custom
+        SkinColorMask = 1 << 7,
+        Thickness = 1 << 8,
+        DetailMask = 1 << 9,
+        NormalControl = 1 << 10,
+        All = Albedo | Normal | Metallic | Roughness | AmbientOcclusion | Emission | Custom |
+              SkinColorMask | Thickness | DetailMask | NormalControl
     }
 
     public enum TexturePaintExportScope { CurrentMaterial, AllMaterials }
@@ -50,7 +55,7 @@ namespace UMA.TexturePaint
     [CreateAssetMenu(menuName = "UMA/Overlay Painter/Export Template", fileName = "Overlay Painter Export Template")]
     public sealed class TexturePaintExportTemplate : ScriptableObject
     {
-        public const int CurrentVersion = 3;
+        public const int CurrentVersion = 5;
         public int version = CurrentVersion;
         public string outputFolder = "Assets/UMA/OverlayPainter/Generated";
         public string filenamePattern = "{avatar}_{material}_{channel}_{resolution}";
@@ -80,6 +85,24 @@ namespace UMA.TexturePaint
 
         public bool Includes(TexturePaintChannel channel) => (channels & ToMask(channel)) != 0;
         public bool Inverts(TexturePaintChannel channel) => (invertedChannels & ToMask(channel)) != 0;
+
+        public void Migrate()
+        {
+            if (version < 4)
+            {
+                const TexturePaintChannelMask legacyAll = TexturePaintChannelMask.Albedo |
+                    TexturePaintChannelMask.Normal | TexturePaintChannelMask.Metallic |
+                    TexturePaintChannelMask.Roughness | TexturePaintChannelMask.AmbientOcclusion |
+                    TexturePaintChannelMask.Emission | TexturePaintChannelMask.Custom;
+                if ((channels & legacyAll) == legacyAll)
+                    channels |= TexturePaintChannelMask.SkinColorMask |
+                                TexturePaintChannelMask.Thickness |
+                                TexturePaintChannelMask.DetailMask;
+            }
+            if (version < 5 && (channels & TexturePaintChannelMask.Normal) != 0)
+                channels |= TexturePaintChannelMask.NormalControl;
+            version = CurrentVersion;
+        }
 
         public static TexturePaintChannelMask ToMask(TexturePaintChannel channel) =>
             (TexturePaintChannelMask)(1 << (int)channel);

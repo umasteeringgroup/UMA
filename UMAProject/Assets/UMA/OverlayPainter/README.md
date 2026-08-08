@@ -26,7 +26,13 @@ The paint source uses a three-way **Texture / Overlay / Color** selector. The Te
 
 ## Painting
 
-- Channels: Albedo, Normal, Metallic, Roughness, Ambient Occlusion, Emission, and a custom channel.
+- Channels: Albedo, Normal, Metallic, Roughness, Ambient Occlusion, Emission, Skin Color Mask,
+  Thickness, Detail Mask, Normal Control, and a custom channel. Normal Control is an automatically
+  available painter-owned grayscale height modifier whenever Normal is supported: neutral gray is
+  unchanged, dark recesses, and light raises. It is combined into the effective normal for both 3D
+  preview and export, but is never bound to the material or exported as a standalone texture. The
+  full toolbar automatically becomes a channel dropdown when a material exposes more than seven
+  logical channels.
 - Tools: paint, erase, blur, smear, clone, dodge, burn, normal touchup, and a brush-plugin mode.
 - **Cap Update Per Stroke** accumulates each target texel against its stroke-start color. Hardness and the brush falloff define the maximum coverage at that location, while Flow controls how quickly paint builds toward it. Repeated stamps therefore preserve a Photoshop-style soft perimeter instead of filling every grazed edge to 100%; a pass closer to the brush center can still increase that texel's coverage.
 - Hardness attenuates both color and stored layer alpha. Source alpha is combined with brush coverage once using source-over math, so partially transparent paint is not unintentionally squared.
@@ -70,7 +76,15 @@ The document losslessly persists editable base pixels, layer pixels, masks, spli
 
 Only one `painter_recovery.asset` is active in the configured folder. It records its source context and is offered only to a matching Overlay Painter launch. A later temporary session can replace recovery belonging to another context. **Save As** creates the permanent editable document; deleting or ignoring the recovery folder does not remove saved documents or exported overlays/textures.
 
-Shader-aware material targets compile the active URP or HDRP material selected by the `UMAMaterial` into one capability descriptor before the stage opens. That descriptor validates shader properties, RGBA meanings, source textures, formats, color space, importer rules, and GPU packing support, then drives logical-channel creation, preview binding, and export. HDRP `_MaskMap` and URP `_MetallicGlossMap` are unpacked into logical Metallic, AO, and Roughness channels and repacked into their documented physical layouts. Smoothness is inverted into the Roughness editing convention. Linear data remains linear, color data remains sRGB, and albedo export dilates RGB beyond transparent UV borders to prevent mip seams. Built-in/Standard is not part of the certified workflow.
+Shader-aware material targets compile the active URP or HDRP material selected by the `UMAMaterial` into one capability descriptor before the stage opens. That descriptor validates shader properties, RGBA meanings, source textures, formats, color space, importer rules, and GPU packing support, then drives logical-channel creation, preview binding, and export. Packed maps are unpacked into their declared logical channels and repacked into their documented physical layouts. Smoothness is inverted into the Roughness editing convention. Skin Color Mask remains RGBA color data, while Thickness and Detail Mask are editable scalar data. Linear data remains linear, color data remains sRGB, and albedo export dilates RGB beyond transparent UV borders to prevent mip seams. Built-in/Standard is not part of the certified workflow.
+
+Normal Control is document-owned auxiliary data and deliberately does not participate in material
+capability discovery or physical packing as an independent channel. A matching-resolution neutral
+gray target is added automatically beside every logical Normal target. The selected Normal preview,
+group preview, physical material binding, flattened bake, and authored-overlay bake all consume the
+same derived effective normal. Authored-overlay export derives a flat-relative normal delta and
+includes its gradient coverage in `OverlayDataAsset.alphaMask`. Documents and recovery snapshots
+retain its pixels, per-layer sources, and texture-set-wide strength, sample radius, and inversion.
 
 Each `UMAMaterial.MaterialChannel` has editor-only **Overlay Painter Channel Layout** and **Physical Output / Import** sections. Automatic mode follows known URP/HDRP conventions and material settings; Custom mode provides explicit RGBA mappings, PNG/EXR encoding, importer type, color space, alpha, normal convention, mipmap, compression, filtering, anisotropy, maximum-size controls, and optional TextureImporter platform overrides. The export window previews the resolved contract and actionable diagnostics before writing files.
 

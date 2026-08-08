@@ -1,11 +1,14 @@
 #pragma kernel CSExtract
 #pragma kernel CSPackChannels
+#pragma kernel CSApplyNormalControl
 
 Texture2D<float4> _Source;
 Texture2D<float4> _Red;
 Texture2D<float4> _Green;
 Texture2D<float4> _Blue;
 Texture2D<float4> _Alpha;
+Texture2D<float4> _NormalBase;
+Texture2D<float4> _NormalControl;
 RWTexture2D<float4> _Destination;
 int2 _TextureSize;
 int2 _TileOffset;
@@ -24,6 +27,10 @@ int _RedInvert;
 int _GreenInvert;
 int _BlueInvert;
 int _AlphaInvert;
+float _NormalControlStrength;
+int _NormalControlRadius;
+int _NormalControlInvert;
+int _NormalControlAuthoredOnly;
 
 float ReadComponent(float4 value, int component)
 {
@@ -58,4 +65,58 @@ void CSPackChannels(uint3 id : SV_DispatchThreadID)
     if (_HasBlue != 0) value.b = ApplyPackedInvert(ReadComponent(_Blue.Load(int3(pixel, 0)), _BlueSourceComponent), _BlueInvert);
     if (_HasAlpha != 0) value.a = ApplyPackedInvert(ReadComponent(_Alpha.Load(int3(pixel, 0)), _AlphaSourceComponent), _AlphaInvert);
     _Destination[pixel] = value;
+}
+
+float4 LoadNormalControl(int2 pixel)
+{
+    return _NormalControl.Load(int3(clamp(pixel, int2(0, 0), _TextureSize - 1), 0));
+}
+
+float ControlHeight(int2 pixel)
+{
+    float4 value = LoadNormalControl(pixel);
+    return _NormalControlAuthoredOnly != 0 ? lerp(0.5, value.r, saturate(value.a)) : value.r;
+}
+
+float3 CombineRNM(float3 baseNormal, float3 detailNormal)
+{
+    float3 t = baseNormal + float3(0.0, 0.0, 1.0);
+    float3 u = detailNormal * float3(-1.0, -1.0, 1.0);
+    return normalize(t * dot(t, u) / max(t.z, 1e-5) - u);
+}
+
+[numthreads(16,16,1)]
+void CSApplyNormalControl(uint3 id : SV_DispatchThreadID)
+{
+    if (any(id.xy >= (uint2)_DispatchSize)) return;
+    int2 pixel = int2(id.xy) + _TileOffset;
+    if (any(pixel < 0) || any(pixel >= _TextureSize)) return;
+
+    int radius = clamp(_NormalControlRadius, 1, 16);
+    float left = ControlHeight(pixel - int2(radius, 0));
+    float right = ControlHeight(pixel + int2(radius, 0));
+    float down = ControlHeight(pixel - int2(0, radius));
+    float up = ControlHeight(pixel + int2(0, radius));
+    float signValue = _NormalControlInvert != 0 ? -1.0 : 1.0;
+    float gradientScale = signValue * _NormalControlStrength / max(1.0, 2.0 * radius);
+    float2 gradient = float2(right - left, up - down) * gradientScale;
+    float3 detailNormal = normalize(float3(-gradient.x, -gradient.y, 1.0));
+
+    float4 encodedBase = _NormalBase.Load(int3(pixel, 0));
+    float3 flat = float3(0.0, 0.0, 1.0);
+    float3 baseNormal = normalize(encodedBase.rgb * 2.0 - 1.0);
+    if (_NormalControlAuthoredOnly != 0)
+        baseNormal = normalize(lerp(flat, baseNormal, saturate(encodedBase.a)));
+    float3 combined = CombineRNM(baseNormal, detailNormal);
+
+    float alpha = encodedBase.a;
+    if (_NormalControlAuthoredOnly != 0)
+    {
+        alpha = max(alpha, LoadNormalControl(pixel).a);
+        alpha = max(alpha, LoadNormalControl(pixel - int2(radius, 0)).a);
+        alpha = max(alpha, LoadNormalControl(pixel + int2(radius, 0)).a);
+        alpha = max(alpha, LoadNormalControl(pixel - int2(0, radius)).a);
+        alpha = max(alpha, LoadNormalControl(pixel + int2(0, radius)).a);
+    }
+    _Destination[pixel] = float4(combined * 0.5 + 0.5, alpha);
 }

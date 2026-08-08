@@ -79,6 +79,7 @@ float4 _EffectTextureColor1;
 float4 _EffectTextureColor2;
 int _EffectTextureBlendMode1;
 int _EffectTextureBlendMode2;
+int _GrayscaleChannel;
 
 float3 BlendRGB(float3 destination, float3 source, int mode)
 {
@@ -366,6 +367,7 @@ void CSCompositeLayerEffect(uint3 dispatchID : SV_DispatchThreadID)
             float alpha1 = saturate(commonCoverage * _EffectTextureOpacity1 *
                 sample1.a * _EffectTextureColor1.a);
             float3 source1 = sample1.rgb * _EffectTextureColor1.rgb;
+            if (_GrayscaleChannel != 0) source1 = dot(source1, float3(0.2126, 0.7152, 0.0722)).xxx;
             float3 blended1 = BlendRGB(destination.rgb, source1, _EffectTextureBlendMode1);
             destination = float4(lerp(destination.rgb, blended1, alpha1), destination.a);
         }
@@ -377,6 +379,7 @@ void CSCompositeLayerEffect(uint3 dispatchID : SV_DispatchThreadID)
             float alpha2 = saturate(commonCoverage * _EffectTextureOpacity2 *
                 sample2.a * _EffectTextureColor2.a);
             float3 source2 = sample2.rgb * _EffectTextureColor2.rgb;
+            if (_GrayscaleChannel != 0) source2 = dot(source2, float3(0.2126, 0.7152, 0.0722)).xxx;
             float3 blended2 = BlendRGB(destination.rgb, source2, _EffectTextureBlendMode2);
             destination = float4(lerp(destination.rgb, blended2, alpha2), destination.a);
         }
@@ -427,6 +430,7 @@ void CSCompositeLayerEffect(uint3 dispatchID : SV_DispatchThreadID)
     if (alpha <= 0.00001) return;
     float4 destination = _Composite[pixel];
     float3 blended = BlendRGB(destination.rgb, _EffectColor.rgb, _EffectBlendMode);
+    if (_GrayscaleChannel != 0) blended = dot(blended, float3(0.2126, 0.7152, 0.0722)).xxx;
     bool clippedEffect = _EffectType == 1 || _EffectType == 3 || _EffectType == 5;
     _Composite[pixel] = float4(lerp(destination.rgb, blended, alpha), clippedEffect
         ? destination.a : alpha + destination.a * (1.0 - alpha));

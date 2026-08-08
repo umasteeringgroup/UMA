@@ -8,6 +8,8 @@ Shader "Hidden/UMA/TexturePaint/SourceExtract"
         [HideInInspector] _SourceIsSRGB ("Source Is sRGB", Int) = 0
         [HideInInspector] _InvertGreen ("Invert Green", Int) = 0
         [HideInInspector] _InvertChannels ("Invert Channels", Int) = 0
+        [HideInInspector] _Grayscale ("Grayscale", Int) = 0
+        [HideInInspector] _SourceComponent ("Source Component", Int) = 0
     }
     SubShader
     {
@@ -25,12 +27,45 @@ Shader "Hidden/UMA/TexturePaint/SourceExtract"
             sampler2D _MainTex;
             float4 _ScaleOffset;
             int _InvertChannels;
+            int _Grayscale;
 
             float4 frag(v2f_img input) : SV_Target
             {
                 float4 source = tex2D(_MainTex, input.uv * _ScaleOffset.xy + _ScaleOffset.zw);
                 if (_InvertChannels != 0) source.rgb = 1.0 - source.rgb;
+                if (_Grayscale != 0)
+                {
+                    float value = dot(source.rgb, float3(0.2126, 0.7152, 0.0722));
+                    source.rgb = value.xxx;
+                }
                 return source;
+            }
+            ENDCG
+        }
+
+        // Extract one scalar component from a packed material texture and replicate it for the
+        // ordinary grayscale painting path.
+        Pass
+        {
+            CGPROGRAM
+            #pragma target 4.5
+            #pragma vertex vert_img
+            #pragma fragment frag
+            #include "UnityCG.cginc"
+
+            sampler2D _MainTex;
+            float4 _ScaleOffset;
+            int _SourceComponent;
+            int _InvertChannels;
+
+            float4 frag(v2f_img input) : SV_Target
+            {
+                float4 source = tex2D(_MainTex, input.uv * _ScaleOffset.xy + _ScaleOffset.zw);
+                float value = _SourceComponent == 0 ? source.r :
+                    _SourceComponent == 1 ? source.g :
+                    _SourceComponent == 2 ? source.b : source.a;
+                if (_InvertChannels != 0) value = 1.0 - value;
+                return float4(value, value, value, 1.0);
             }
             ENDCG
         }

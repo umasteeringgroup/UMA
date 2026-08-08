@@ -65,7 +65,7 @@ Doubling both dimensions creates four times as many pixels. A multi-channel, mul
 Overlay Painter uses four related concepts. Keeping them separate prevents most workflow mistakes.
 
 - **Target**: the slot, group of slots, or logical UDIM group that receives a stroke.
-- **Channel**: the material meaning being edited, such as Albedo, Normal, Metallic, Roughness, Ambient Occlusion, or Emission.
+- **Channel**: the material meaning being edited, such as Albedo, Normal, Metallic, Roughness, Ambient Occlusion, Emission, Skin Color Mask, Thickness, or Detail Mask.
 - **Source**: the texture, sprite, UMA overlay, or solid color stored on one authored layer channel and supplied to a paint, fill, or path operation.
 - **Destination**: the editable base or non-destructive layer that receives the result.
 
@@ -147,6 +147,12 @@ Selecting any valid member of a UDIM group opens the complete exact-ID group as 
 - Each physical tile still owns separate textures and eventually exports its own `OverlayDataAsset`.
 
 When starting from overlays, assign a compatible source overlay for each member in the setup table. Overlay Painter does not guess companion overlays. A member without an assigned source receives semantic-neutral bases.
+
+When opening from a generated character, each preview material is cloned from the live generated
+material so its shader parameters, colors, keywords, and render state are retained. For a UDIM
+target, the first member by tile order is the canonical material-parameter source and those
+parameters are applied to every member. Each member still keeps its own reconstructed,
+native-resolution texture inputs.
 
 --------------------------------------------------------------------------------
 
@@ -273,6 +279,35 @@ Tangent-space normal detail. Normal painting is vector-aware rather than ordinar
 
 Use it for pores, stitching relief, embossed designs, wrinkles, scratches, and small surface deformation that should not change the mesh silhouette.
 
+### Normal Control
+
+Normal Control is Overlay Painter's grayscale height modifier for the Normal channel. It is created
+automatically whenever a target supports Normal, but it is painter-owned auxiliary data: it is not a
+shader property, an `UMAMaterial.MaterialChannel`, or a separate exported runtime texture.
+
+- `0.5` gray is neutral and leaves the composed normal unchanged.
+- Values below `0.5` recess the surface; values above `0.5` raise it.
+- Height gradients bend the normal. A constant dark or light area has no slope in its interior, so
+  only its transitions produce visible normal detail.
+- **Height Strength** scales the generated slope, **Sample Radius** controls the neighboring texel
+  distance used for the gradient, and **Invert Height** reverses raised and recessed interpretation.
+
+Normal Control is a full layer channel. It can be authored with Paint, Fill, Path, Polygon Fill, UV
+Island Fill, groups, layer masks, and layer effects. Color and texture input is constrained to
+grayscale. It accepts a scalar value, `Texture2D`, or `Sprite` source. It does not offer an
+`OverlayDataAsset` source because Normal Control deliberately has no material/overlay texture slot.
+Select **Normal Control** to inspect or paint the height field; select **Normal** to inspect
+the effective normal after Normal Control has been combined with the ordinary normal stack. The 3D
+material preview always receives that effective normal.
+
+The document saves the Normal Control base, every layer-channel texture and source, and the
+strength/radius/invert settings. **Flattened Composite** export bakes the result into the physical
+normal output. **Runtime Overlay (Transparent)** converts authored Normal Control content into a
+flat-relative normal delta and adds its affected pixels to overlay coverage, so the exported UMA
+overlay changes the runtime normal without carrying an internal Normal Control texture. Overlay
+Painter calculates in its canonical OpenGL convention and performs any requested DirectX green
+conversion only at the physical export boundary.
+
 ### Metallic
 
 Controls which areas behave as metal in a metallic workflow. It may occupy one component of a packed mask map.
@@ -301,6 +336,27 @@ Controls emitted color. The final brightness also depends on the shader and its 
 ### Custom
 
 Represents a project-specific channel made available by the material capability descriptor. Its meaning and import rules must be defined by the custom material workflow.
+
+### Skin Color Mask
+
+An RGBA skin-variation channel. RGB stores the color toward which the base skin is shifted, while
+alpha controls the amount and direction of the variation used by the skin shader. It is treated as
+color data, remains fully editable in layers, Fill, Paint, Path, Sprite Sets, save/recovery, preview,
+and export, and is written back to the physical texture property declared by the `UMAMaterial`.
+
+### Thickness
+
+A scalar material-data channel used by shaders for subsurface scattering or thickness response.
+For the UMA3 skin shader, red in `SSS.AO.Detail.Gloss Map` is exposed as Thickness.
+
+### Detail Mask
+
+A scalar material-data channel controlling where shader detail is applied. For the UMA3 skin
+shader, blue in `SSS.AO.Detail.Gloss Map` is exposed as Detail Mask.
+
+The UMA3 `SSS.AO.Detail.Gloss Map` contract is R=Thickness/SSS, G=Ambient Occlusion,
+B=Detail Mask, and A=Smoothness. Overlay Painter presents A as Roughness and performs the
+Smoothness inversion during unpacking and repacking.
 
 ### Channel availability
 
@@ -389,7 +445,9 @@ Overlay source mode samples an `OverlayDataAsset` through one authored channel c
 3. Repeat on other authored channel cards when the layer should sample several logical channels from the same or different overlays.
 4. Paint, fill, or apply the path.
 
-Overlay textures are routed to Albedo, Normal, Metallic, Roughness, Ambient Occlusion, Emission, or Custom according to the overlay's `UMAMaterial` channel layout. This is not a simple texture-list guess.
+Overlay textures are routed to Albedo, Normal, Metallic, Roughness, Ambient Occlusion, Emission,
+Skin Color Mask, Thickness, Detail Mask, or Custom according to the overlay's `UMAMaterial`
+channel layout. This is not a simple texture-list guess.
 
 Important behavior:
 
@@ -686,7 +744,7 @@ Overlay Painter supports six blend modes. These are document-layer blend modes a
 
 ### Blend-mode guidance for data channels
 
-Metallic, Roughness, AO, and packed-map components are numeric material data, not ordinary color artwork. A blend mode that looks familiar in an image editor may create physically undesirable intermediate values.
+Metallic, Roughness, AO, Thickness, Detail Mask, and other packed-map components are numeric material data, not ordinary color artwork. A blend mode that looks familiar in an image editor may create physically undesirable intermediate values.
 
 Recommended approach:
 
@@ -1287,6 +1345,18 @@ Session defaults and optional templates provide:
 The `UMAMaterial` descriptor, not the template, controls physical channel order, component packing, PNG or EXR encoding, color space, normal convention, and importer settings.
 
 Use **Save Overrides as Template** only when output-folder and policy choices should be reused. A template is not required for ordinary export.
+
+### Export content
+
+- **Flattened Composite** exports the reconstructed source plus visible base and layer edits. Normal
+  Control is evaluated against the composed Normal channel before physical packing.
+- **Runtime Overlay (Transparent)** excludes the reconstructed source and direct base edits. It
+  exports visible authored layers and groups as a recipe-ready alpha-bearing overlay. Normal Control
+  is converted to a flat-relative normal contribution, and its gradient footprint participates in
+  the generated coverage mask.
+
+Normal Control never appears as a standalone physical texture in either mode. Its only export result
+is the change it produces in a material-declared Normal output.
 
 ### What export creates
 

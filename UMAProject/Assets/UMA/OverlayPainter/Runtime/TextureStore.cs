@@ -437,11 +437,20 @@ namespace UMA.TexturePaint
         internal ComputeShader channelPackShader;
         internal TexturePaintFillGenerator fillGenerator;
         private RenderTexture selectedGroupPreview;
+        private RenderTexture effectiveNormal;
         private string selectedGroupPreviewId;
         private TexturePaintChannel selectedGroupPreviewChannel;
         private long compositeRevision;
+        private long normalInputRevision;
+        private long effectiveNormalRevision = -1;
+        private float effectiveNormalStrength = float.NaN;
+        private int effectiveNormalRadius = -1;
+        private bool effectiveNormalInvert;
         private long selectedGroupPreviewRevision = -1;
         public bool LayerEffectsAvailable => compositor?.EffectsAvailable == true;
+        [Range(0f, 16f)] public float normalControlStrength = 2f;
+        [Range(1, 16)] public int normalControlRadius = 1;
+        public bool normalControlInvert;
 
         public TextureChannelTarget GetChannel(TexturePaintChannel channel)
         {
@@ -647,6 +656,7 @@ namespace UMA.TexturePaint
                 settings.Normalize();
                 if (settings.source == TexturePaintBrushSource.Color)
                 {
+                    settings.color = TexturePaintChannelUtility.ConstrainColor(pair.Key, settings.color);
                     pair.Value.Reset(null, settings.color);
                     settings.generatorRevision = TexturePaintFillGenerator.CurrentRevision;
                     generatedAny = true;
@@ -1196,7 +1206,8 @@ namespace UMA.TexturePaint
             NormalizeLayerHierarchy();
             RefreshOutdatedFillLayers();
             if (recompose) RecomposeAll();
-            PackPhysicalChannels(dirtyRect);
+            RectInt physicalDirtyRect = UpdateEffectiveNormal(dirtyRect);
+            PackPhysicalChannels(physicalDirtyRect);
             compositeRevision++;
             // Composite and packed textures are also consumed by the 2D view and export. They must
             // be refreshed even when a reconstructed surface has no preview material (notably
@@ -1207,7 +1218,7 @@ namespace UMA.TexturePaint
                 if (!string.IsNullOrEmpty(target.physicalProperty)) continue;
                 if (!string.IsNullOrEmpty(target.materialProperty) && previewMaterial.HasProperty(target.materialProperty))
                 {
-                    previewMaterial.SetTexture(target.materialProperty, target.PreviewTexture);
+                    previewMaterial.SetTexture(target.materialProperty, GetVisibleTexture(target.channel));
                     EnablePreviewTextureKeyword(previewMaterial, target.materialProperty);
                 }
             }
@@ -1279,15 +1290,89 @@ namespace UMA.TexturePaint
             }
         }
 
-        private static void BindPackComponent(ComputeShader shader, int kernel, TexturePhysicalChannelGroup group,
+        private void BindPackComponent(ComputeShader shader, int kernel, TexturePhysicalChannelGroup group,
             int component, string suffix)
         {
             TextureChannelTarget target = group.componentTargets[component];
-            bool valid = target != null && target.PreviewTexture != null;
+            RenderTexture visible = target != null ? GetVisibleTexture(target.channel) : null;
+            bool valid = visible != null;
             shader.SetInt("_Has" + suffix, valid ? 1 : 0);
             shader.SetInt("_" + suffix + "SourceComponent", group.sourceComponents[component]);
             shader.SetInt("_" + suffix + "Invert", group.inverted[component] ? 1 : 0);
-            shader.SetTexture(kernel, "_" + suffix, valid ? (Texture)target.PreviewTexture : Texture2D.blackTexture);
+            shader.SetTexture(kernel, "_" + suffix, valid ? (Texture)visible : Texture2D.blackTexture);
+        }
+
+        private RectInt UpdateEffectiveNormal(RectInt dirtyRect = default)
+        {
+            TextureChannelTarget normal = GetChannel(TexturePaintChannel.Normal);
+            TextureChannelTarget control = GetChannel(TexturePaintChannel.NormalControl);
+            if (normal?.PreviewTexture == null || control?.PreviewTexture == null)
+            {
+                DestroyPreview(effectiveNormal);
+                effectiveNormal = null;
+                effectiveNormalRevision = -1;
+                return dirtyRect;
+            }
+            bool settingsChanged = !Mathf.Approximately(effectiveNormalStrength, normalControlStrength) ||
+                effectiveNormalRadius != normalControlRadius || effectiveNormalInvert != normalControlInvert;
+            if (effectiveNormal != null && effectiveNormalRevision == normalInputRevision &&
+                !settingsChanged) return dirtyRect;
+            bool fullUpdate = settingsChanged;
+            if (effectiveNormal == null || effectiveNormal.width != normal.PreviewTexture.width ||
+                effectiveNormal.height != normal.PreviewTexture.height || effectiveNormal.format != normal.format)
+            {
+                DestroyPreview(effectiveNormal);
+                effectiveNormal = EditableTextureTarget.Create(Name + " Effective Normal",
+                    normal.PreviewTexture.width, normal.PreviewTexture.height, normal.format);
+                dirtyRect = default;
+                fullUpdate = true;
+            }
+            if (fullUpdate) dirtyRect = default;
+            if (!ApplyNormalControl(normal.PreviewTexture, control.PreviewTexture, effectiveNormal,
+                    false, dirtyRect))
+                Graphics.Blit(normal.PreviewTexture, effectiveNormal);
+            effectiveNormalRevision = normalInputRevision;
+            effectiveNormalStrength = normalControlStrength;
+            effectiveNormalRadius = normalControlRadius;
+            effectiveNormalInvert = normalControlInvert;
+            return dirtyRect.width > 0 && dirtyRect.height > 0
+                ? ExpandRect(dirtyRect, Mathf.Clamp(normalControlRadius, 1, 16),
+                    effectiveNormal.width, effectiveNormal.height)
+                : default;
+        }
+
+        internal bool ApplyNormalControl(Texture normalBase, Texture control, RenderTexture destination,
+            bool authoredOnly, RectInt dirtyRect = default)
+        {
+            if (normalBase == null || control == null || destination == null || channelPackShader == null ||
+                !SystemInfo.supportsComputeShaders || !channelPackShader.HasKernel("CSApplyNormalControl")) return false;
+            int kernel = channelPackShader.FindKernel("CSApplyNormalControl");
+            if (!channelPackShader.IsSupported(kernel)) return false;
+            int halo = Mathf.Clamp(normalControlRadius, 1, 16);
+            RectInt rect = ClampRect(dirtyRect, destination.width, destination.height);
+            if (dirtyRect.width > 0 && dirtyRect.height > 0)
+                rect = ExpandRect(rect, halo, destination.width, destination.height);
+            if (rect.width <= 0 || rect.height <= 0) return true;
+            channelPackShader.SetInts("_TextureSize", destination.width, destination.height);
+            channelPackShader.SetInts("_TileOffset", rect.x, rect.y);
+            channelPackShader.SetInts("_DispatchSize", rect.width, rect.height);
+            channelPackShader.SetFloat("_NormalControlStrength", Mathf.Clamp(normalControlStrength, 0f, 16f));
+            channelPackShader.SetInt("_NormalControlRadius", halo);
+            channelPackShader.SetInt("_NormalControlInvert", normalControlInvert ? 1 : 0);
+            channelPackShader.SetInt("_NormalControlAuthoredOnly", authoredOnly ? 1 : 0);
+            channelPackShader.SetTexture(kernel, "_NormalBase", normalBase);
+            channelPackShader.SetTexture(kernel, "_NormalControl", control);
+            channelPackShader.SetTexture(kernel, "_Destination", destination);
+            channelPackShader.Dispatch(kernel, Mathf.CeilToInt(rect.width / 16f),
+                Mathf.CeilToInt(rect.height / 16f), 1);
+            return true;
+        }
+
+        private static RectInt ExpandRect(RectInt rect, int amount, int width, int height)
+        {
+            int xMin = Mathf.Max(0, rect.xMin - amount), yMin = Mathf.Max(0, rect.yMin - amount);
+            int xMax = Mathf.Min(width, rect.xMax + amount), yMax = Mathf.Min(height, rect.yMax + amount);
+            return new RectInt(xMin, yMin, xMax - xMin, yMax - yMin);
         }
 
         private static RectInt ClampRect(RectInt rect, int width, int height)
@@ -1301,7 +1386,8 @@ namespace UMA.TexturePaint
         public RenderTexture GetVisibleTexture(TexturePaintChannel channel)
         {
             TextureChannelTarget target = GetChannel(channel);
-            return target?.PreviewTexture;
+            return channel == TexturePaintChannel.Normal && effectiveNormal != null
+                ? effectiveNormal : target?.PreviewTexture;
         }
 
         public RenderTexture GetSelectedGroupPreview(TexturePaintChannel channel)
@@ -1324,7 +1410,30 @@ namespace UMA.TexturePaint
                 !string.Equals(selectedGroupPreviewId, group.id, StringComparison.Ordinal) ||
                 selectedGroupPreviewChannel != channel)
             {
-                compositor.ComposeGroupPreview(this, group, channel, selectedGroupPreview);
+                if (channel == TexturePaintChannel.Normal &&
+                    GetChannel(TexturePaintChannel.NormalControl) is TextureChannelTarget controlTarget)
+                {
+                    RenderTexture groupNormal = EditableTextureTarget.Create(Name + " Group Base Normal",
+                        target.editable.Width, target.editable.Height, target.format);
+                    RenderTexture groupControl = EditableTextureTarget.Create(Name + " Group Normal Control",
+                        controlTarget.editable.Width, controlTarget.editable.Height, controlTarget.format);
+                    try
+                    {
+                        compositor.ComposeGroupPreview(this, group, TexturePaintChannel.Normal, groupNormal);
+                        compositor.ComposeGroupPreview(this, group, TexturePaintChannel.NormalControl, groupControl);
+                        // A selected-group preview is an isolated authored composite, not the full
+                        // base-backed material result. Treat transparent pixels as a flat normal
+                        // and neutral height, preserving straight-alpha coverage for the 2D view.
+                        if (!ApplyNormalControl(groupNormal, groupControl, selectedGroupPreview, true))
+                            Graphics.Blit(groupNormal, selectedGroupPreview);
+                    }
+                    finally
+                    {
+                        DestroyPreview(groupNormal);
+                        DestroyPreview(groupControl);
+                    }
+                }
+                else compositor.ComposeGroupPreview(this, group, channel, selectedGroupPreview);
                 selectedGroupPreviewId = group.id;
                 selectedGroupPreviewChannel = channel;
                 selectedGroupPreviewRevision = compositeRevision;
@@ -1344,6 +1453,8 @@ namespace UMA.TexturePaint
         {
             NormalizeLayerHierarchy();
             compositor?.Compose(this, channel, rect);
+            if (channel == TexturePaintChannel.Normal || channel == TexturePaintChannel.NormalControl)
+                normalInputRevision++;
         }
 
         public void RecomposeAll()
@@ -1373,6 +1484,8 @@ namespace UMA.TexturePaint
             for (int i = 0; i < layers.Count; i++) layers[i].Dispose();
             DestroyPreview(selectedGroupPreview);
             selectedGroupPreview = null;
+            DestroyPreview(effectiveNormal);
+            effectiveNormal = null;
             tangentSpaceMaps?.Dispose();
             proceduralMeshMaps?.Dispose();
             channels.Clear(); physicalChannelGroups.Clear(); layers.Clear(); sources.Clear(); baseStrokes.Clear();
@@ -1394,8 +1507,11 @@ namespace UMA.TexturePaint
             {
                 case TexturePaintChannel.Albedo: return Color.white;
                 case TexturePaintChannel.Normal: return new Color(0.5f, 0.5f, 1f, 1f);
+                case TexturePaintChannel.NormalControl: return new Color(0.5f, 0.5f, 0.5f, 1f);
                 case TexturePaintChannel.Roughness: return Color.white;
                 case TexturePaintChannel.AmbientOcclusion: return Color.white;
+                case TexturePaintChannel.DetailMask: return Color.white;
+                case TexturePaintChannel.SkinColorMask: return Color.clear;
                 default: return Color.black;
             }
         }
@@ -1882,6 +1998,7 @@ namespace UMA.TexturePaint
             }
             BuildPackedChannelGroups(set);
             if (!hasDeclaredUmaChannels) EnsureMinimumChannels(set);
+            EnsureNormalControlChannel(set);
             BuildSourceBindings(set, generated, surface);
             TextureChannelTarget normal = set.GetChannel(TexturePaintChannel.Normal);
             int mapResolution = normal != null ? Mathf.Min(normal.Texture.width, 2048) : Mathf.Min(DefaultResolution, 2048);
@@ -2057,8 +2174,7 @@ namespace UMA.TexturePaint
 
         private static bool IsVectorChannel(TexturePaintChannel channel)
         {
-            return channel == TexturePaintChannel.Albedo || channel == TexturePaintChannel.Normal ||
-                   channel == TexturePaintChannel.Emission || channel == TexturePaintChannel.Custom;
+            return TexturePaintChannelUtility.IsVector(channel);
         }
 
         private TexturePhysicalChannelGroup CreatePhysicalChannelGroup(TextureSet set, string property, Texture source)
@@ -2181,7 +2297,7 @@ namespace UMA.TexturePaint
             int width = source != null ? source.width : DefaultResolution;
             int height = source != null ? source.height : DefaultResolution;
             width = Mathf.Clamp(width, 16, 4096); height = Mathf.Clamp(height, 16, 4096);
-            bool sRGB = semantic == TexturePaintChannel.Albedo || semantic == TexturePaintChannel.Emission;
+            bool sRGB = TexturePaintChannelUtility.IsColor(semantic);
             RenderTextureFormat format = UMAMaterial.GetCompatibleChannelTextureFormat(requestedFormat);
             // Unity normal-map assets are stored in a platform-dependent packed representation
             // (for example X in alpha). The painter's working contract is always linear,
@@ -2220,6 +2336,36 @@ namespace UMA.TexturePaint
             EnsureChannel(set, TexturePaintChannel.Emission, FindProperty(set.previewMaterial, "_EmissionMap"));
         }
 
+        private void EnsureNormalControlChannel(TextureSet set)
+        {
+            TextureChannelTarget normal = set.GetChannel(TexturePaintChannel.Normal);
+            if (normal == null || set.channels.ContainsKey(TexturePaintChannel.NormalControl)) return;
+            if (normal.Texture == null) return;
+
+            // Normal Control is painter-owned data rather than an UMA material channel, so it is
+            // not restricted to UMAMaterial's export-compatible render-texture formats. Preserve
+            // enough precision around neutral gray for subtle height gradients whenever the GPU
+            // supports it, and always match the normal target's exact texel grid.
+            RenderTextureFormat format = SystemInfo.SupportsRenderTextureFormat(RenderTextureFormat.ARGBHalf)
+                ? RenderTextureFormat.ARGBHalf
+                : RenderTextureFormat.ARGB32;
+            TextureChannelTarget control = new TextureChannelTarget
+            {
+                channel = TexturePaintChannel.NormalControl,
+                materialProperty = null,
+                sourceKeyword = null,
+                umaChannelIndex = -1,
+                sRGB = false,
+                format = format,
+                editable = new EditableTextureTarget(set.Name + " Normal Control", normal.Texture.width,
+                    normal.Texture.height, format, null,
+                    TextureSet.DefaultColor(TexturePaintChannel.NormalControl))
+            };
+            control.composite = EditableTextureTarget.Create(set.Name + " Normal Control Composite",
+                normal.Texture.width, normal.Texture.height, format);
+            set.channels.Add(TexturePaintChannel.NormalControl, control);
+        }
+
         private void EnsureChannel(TextureSet set, TexturePaintChannel channel, string property)
         {
             if (set.channels.ContainsKey(channel)) return;
@@ -2229,7 +2375,11 @@ namespace UMA.TexturePaint
         private static void BuildSourceBindings(TextureSet set, UMAData.GeneratedMaterial generated, ReconstructedSurface surface)
         {
             TextureSourceBinding reconstructedBinding = new TextureSourceBinding { name = "Reconstructed Overlay Stack" };
-            foreach (var pair in set.channels) if (pair.Value.sourceTexture != null) reconstructedBinding.textures[pair.Key] = pair.Value.sourceTexture;
+            foreach (var pair in set.channels)
+            {
+                Texture source = ResolveBoundChannelSource(pair.Value);
+                if (source != null) reconstructedBinding.textures[pair.Key] = source;
+            }
             if (surface?.slotNames != null)
                 for (int slotIndex = 0; slotIndex < surface.slotNames.Count; slotIndex++)
                     if (!string.IsNullOrEmpty(surface.slotNames[slotIndex])) reconstructedBinding.slotNames.Add(surface.slotNames[slotIndex]);
@@ -2245,7 +2395,10 @@ namespace UMA.TexturePaint
                 for (int slotIndex = 0; slotIndex < surface.slotNames.Count; slotIndex++)
                     binding.slotNames.Add(surface.slotNames[slotIndex]);
                 foreach (KeyValuePair<TexturePaintChannel, TextureChannelTarget> pair in set.channels)
-                    if (pair.Value.sourceTexture != null) binding.textures[pair.Key] = pair.Value.sourceTexture;
+                {
+                    Texture source = ResolveBoundChannelSource(pair.Value);
+                    if (source != null) binding.textures[pair.Key] = source;
+                }
                 set.sources.Add(binding);
             }
             if (generated?.materialFragments == null) return;
@@ -2274,6 +2427,30 @@ namespace UMA.TexturePaint
                     Texture[] textures = overlay.asset.textureList;
                     for (int channelIndex = 0; channelIndex < textures.Length; channelIndex++)
                     {
+                        Texture physicalSource = textures[channelIndex];
+                        if (physicalSource == null) continue;
+#if UNITY_EDITOR
+                        TexturePaintMaterialChannelCapability capability =
+                            set.materialCapability?.GetChannel(channelIndex);
+                        if (capability != null)
+                        {
+                            var added = new HashSet<TexturePaintChannel>();
+                            for (int component = 0; component < 4; component++)
+                            {
+                                TexturePaintPhysicalComponentCapability mapping =
+                                    capability.Components[component];
+                                if (mapping?.editable != true || !added.Add(mapping.logicalChannel)) continue;
+                                Texture logicalSource = TexturePaintChannelUtility.IsVector(mapping.logicalChannel)
+                                    ? physicalSource
+                                    : TexturePaintSpriteSource.ResolveTextureComponent(physicalSource,
+                                        mapping.logicalChannel, TexturePaintNormalConvention.OpenGL,
+                                        component, mapping.invert);
+                                if (logicalSource != null)
+                                    binding.textures[mapping.logicalChannel] = logicalSource;
+                            }
+                            continue;
+                        }
+#endif
                         TexturePaintChannel semantic = TexturePaintChannel.Custom;
                         if (set.umaMaterial?.channels != null && channelIndex < set.umaMaterial.channels.Length)
                         {
@@ -2284,7 +2461,7 @@ namespace UMA.TexturePaint
                             semantic = ResolveChannel(channel.sourceTextureName + " " + channel.materialPropertyName, channel.channelType);
 #endif
                         }
-                        binding.textures[semantic] = textures[channelIndex];
+                        binding.textures[semantic] = physicalSource;
                     }
                     bindings.Add(overlay, binding);
                     set.sources.Add(binding);
@@ -2292,10 +2469,22 @@ namespace UMA.TexturePaint
             }
         }
 
+        private static Texture ResolveBoundChannelSource(TextureChannelTarget target)
+        {
+            if (target?.sourceTexture == null) return null;
+            if (target.packedComponent < 0) return target.sourceTexture;
+            return TexturePaintSpriteSource.ResolveTextureComponent(target.sourceTexture,
+                target.channel, TexturePaintNormalConvention.OpenGL, target.packedComponent,
+                target.packedInverted);
+        }
+
         public static TexturePaintChannel ResolveChannel(string property, UMAMaterial.ChannelType type)
         {
             string name = (property ?? string.Empty).ToLowerInvariant();
             if (type == UMAMaterial.ChannelType.NormalMap || type == UMAMaterial.ChannelType.DetailNormalMap || name.Contains("normal") || name.Contains("bump")) return TexturePaintChannel.Normal;
+            if (name.Contains("skinmask") || name.Contains("skin mask")) return TexturePaintChannel.SkinColorMask;
+            if (name.Contains("thickness") || name.Contains("sss")) return TexturePaintChannel.Thickness;
+            if (name.Contains("detailmask") || name.Contains("detail mask")) return TexturePaintChannel.DetailMask;
             if (name.Contains("rough")) return TexturePaintChannel.Roughness;
             if (name.Contains("occlusion") || name.Contains("ambient") || name == "ao") return TexturePaintChannel.AmbientOcclusion;
             if (name.Contains("emission") || name.Contains("emissive")) return TexturePaintChannel.Emission;

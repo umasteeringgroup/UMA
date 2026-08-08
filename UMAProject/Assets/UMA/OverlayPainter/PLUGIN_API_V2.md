@@ -53,7 +53,7 @@ public Task ExecuteAsync(TexturePaintCommandContextV2 context)
 
 The host validates every command before the first mutation, copies submitted buffers, enforces declared channels and bounds, clips writes to reconstructed mesh coverage, creates a non-destructive plugin layer, updates only dirty rectangles, recomposes/re-packs logical channels, and records an undoable transaction. Cancellation or any exception removes the entire pending layer set. Artist-authored visibility is owned by the resulting layer's editable grayscale mask; there is no separate procedural-mask plugin API.
 
-Albedo and Emission accept Linear or SRGB payloads and are canonicalized to linear working values. Normal, Metallic, Roughness, AO, and Custom data require `Data`. Normal commands require `Replace` and are vector-normalized by the host. Plugins cannot write directly to packed physical textures.
+Albedo, Emission, and Skin Color Mask accept Linear or SRGB payloads and are canonicalized to linear working values. Normal, Metallic, Roughness, AO, Thickness, Detail Mask, Normal Control, and Custom data require `Data`. Normal commands require `Replace` and are vector-normalized by the host. Normal Control and the other scalar channels are constrained to grayscale after every plugin blend. Plugins cannot write directly to packed physical textures, and Normal Control is never exposed as an independent material texture or export output.
 
 ## Parameters and persistence
 

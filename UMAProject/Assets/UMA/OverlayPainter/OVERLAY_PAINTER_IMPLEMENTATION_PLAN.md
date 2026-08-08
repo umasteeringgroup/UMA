@@ -364,7 +364,7 @@ Acceptance:
 
 ### Phase 6 — correctness, workflow, and usability hardening
 
-**Implementation status (2026-08-07):** Most originally advertised editing work is implemented, including vector-aware normals, multi-channel layers and sources, grayscale layer masks, group compositing, layer effects, fill transforms, sprite-set workflows, synchronized 2D/3D editing, persistent workspace state, and contextual controls. This phase is now a hardening pass rather than a feature-construction phase.
+**Implementation status (2026-08-08):** Most originally advertised editing work is implemented, including vector-aware normals, the painter-owned Normal Control height workflow, multi-channel layers and sources, grayscale layer masks, group compositing, layer effects, fill transforms, sprite-set workflows, synchronized 2D/3D editing, persistent workspace state, and contextual controls. This phase is now a hardening pass rather than a feature-construction phase.
 
 **Goal:** Close ambiguity, parity, combination coverage, and presentation defects without adding another broad feature wave.
 
@@ -381,6 +381,10 @@ Work:
 9. Complete keyboard, tooltip, focus/hot-control, Alt-navigation, narrow-dock, high-DPI, multi-monitor, error, warning, destructive-confirmation, and empty-state passes.
 10. Choose and document one assembly/domain-reload contract: either restore/reopen the active workspace automatically, or exit safely and present a clear recovery/reopen path. Test the chosen behavior in a clean editor process.
 11. Ensure controls-window, UV-window, stage, compilation, and Unity shutdown behavior cannot orphan resources or silently lose a temporary or saved session.
+12. Certify Normal Control as an automatically available grayscale auxiliary channel whenever Normal
+    exists: neutral preservation, raised/recessed orientation, vector-normal composition, group and
+    layer parity, exact save/recovery, effective 2D/3D preview, flattened export, authored-overlay
+    flat-relative normal output and alpha coverage, and single OpenGL/DirectX boundary conversion.
 
 Acceptance:
 
@@ -388,6 +392,8 @@ Acceptance:
 - UI never implies that an independent UDIM member can be painted or exported outside its logical group.
 - Unsupported material/channel/tool/blend combinations are disabled before mutation with an actionable reason.
 - Mask mode exposes scalar grayscale painting and mask-only effects, never ordinary material-channel or sprite/overlay source selection.
+- Normal Control never binds to a shader property or exports as an independent texture; every preview
+  and export path consumes the same normalized effective normal result.
 - New and experienced users can complete slot-open, paint, mask, path, Save As, reopen, export, and recipe-use workflows without undocumented steps.
 - The selected domain-reload behavior is deterministic, recoverable, documented, and covered by an isolated-process test.
 
@@ -441,6 +447,9 @@ Each cell covers stage open, slot reconstruction, same-island and boundary paint
 - Naming, collision policy, packing, encoding, importing, overlay configuration, rollback, and UMA library registration.
 - Low-alpha, orientation, normal, seam, wrap, slot, UDIM, fill, mask, clone, undo/redo, and 2D-open/closed GPU goldens.
 - Nested-group, group-mask, multi-channel-source, layer-effect, mask-effect, fill-transform, spline-invalidation, and save/reopen combination tests.
+- Normal Control neutral/raised/recessed/vector goldens, automatic-channel and grayscale-source tests,
+  document/recovery round trips, grouped previews, flattened physical normals, and authored-overlay
+  normal-delta/coverage tests.
 - Freehand per-update batching, coalesced compose/pack/bind/repaint, deferred spline rerasterization, and deterministic random brush evolution.
 - Resource ownership, GPU-byte accounting, disposal, cache eviction, plugin filtering, dirty-region fallback, and warm-frame allocation assertions.
 - Isolated-process coverage for the approved assembly/domain-reload behavior and recovery/reopen result.

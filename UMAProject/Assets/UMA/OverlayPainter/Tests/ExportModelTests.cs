@@ -16,6 +16,11 @@ namespace UMA.TexturePaint.Tests
             Assert.That(template.Includes(TexturePaintChannel.Metallic), Is.False);
             Assert.That(template.Inverts(TexturePaintChannel.Roughness), Is.True);
             Assert.That(template.Inverts(TexturePaintChannel.Albedo), Is.False);
+            template.channels = TexturePaintChannelMask.All;
+            Assert.That(template.Includes(TexturePaintChannel.SkinColorMask), Is.True);
+            Assert.That(template.Includes(TexturePaintChannel.Thickness), Is.True);
+            Assert.That(template.Includes(TexturePaintChannel.DetailMask), Is.True);
+            Assert.That(template.Includes(TexturePaintChannel.NormalControl), Is.True);
             Object.DestroyImmediate(template);
         }
 
@@ -33,6 +38,26 @@ namespace UMA.TexturePaint.Tests
             Assert.That(restored.version, Is.EqualTo(TexturePaintExportTemplate.CurrentVersion));
             Assert.That(restored.content, Is.EqualTo(TexturePaintExportContent.AuthoredOverlay));
             Object.DestroyImmediate(restored);
+            Object.DestroyImmediate(template);
+        }
+
+        [Test]
+        public void LegacyAllChannelsTemplateAddsNewSkinMaterialChannels()
+        {
+            TexturePaintExportTemplate template = ScriptableObject.CreateInstance<TexturePaintExportTemplate>();
+            template.version = 3;
+            template.channels = TexturePaintChannelMask.Albedo | TexturePaintChannelMask.Normal |
+                TexturePaintChannelMask.Metallic | TexturePaintChannelMask.Roughness |
+                TexturePaintChannelMask.AmbientOcclusion | TexturePaintChannelMask.Emission |
+                TexturePaintChannelMask.Custom;
+
+            template.Migrate();
+
+            Assert.That(template.version, Is.EqualTo(TexturePaintExportTemplate.CurrentVersion));
+            Assert.That(template.Includes(TexturePaintChannel.SkinColorMask), Is.True);
+            Assert.That(template.Includes(TexturePaintChannel.Thickness), Is.True);
+            Assert.That(template.Includes(TexturePaintChannel.DetailMask), Is.True);
+            Assert.That(template.Includes(TexturePaintChannel.NormalControl), Is.True);
             Object.DestroyImmediate(template);
         }
 

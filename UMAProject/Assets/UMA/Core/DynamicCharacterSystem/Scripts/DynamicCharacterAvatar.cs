@@ -7007,7 +7007,7 @@ namespace UMA.CharacterSystem
             {
                 get
                 {
-                    if (string.IsNullOrWhiteSpace(name))
+                    if (string.IsNullOrWhiteSpace(name) || name == DynamicCharacterAvatar.NO_RACE)
                     {
                         return false;
                     }

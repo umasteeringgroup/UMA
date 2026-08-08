@@ -383,7 +383,8 @@ namespace UMA.TexturePaint
             shader.SetFloat("_LayerOpacity", Mathf.Clamp01(layerOpacity));
             shader.SetInt("_HasLayerMask", layerMask != null ? 1 : 0);
             shader.SetInt("_EffectType", (int)effect.kind);
-            shader.SetVector("_EffectColor", effect.color);
+            shader.SetInt("_GrayscaleChannel", TexturePaintChannelUtility.IsGrayscale(channel) ? 1 : 0);
+            shader.SetVector("_EffectColor", TexturePaintChannelUtility.ConstrainColor(channel, effect.color));
             shader.SetFloat("_EffectWidth", effect.width);
             shader.SetFloat("_EffectSmoothness", effect.smoothness);
             shader.SetVector("_EffectOffset", new Vector4(effect.offset.x, effect.offset.y, 0f, 0f));
@@ -406,8 +407,8 @@ namespace UMA.TexturePaint
             shader.SetFloat("_EffectTextureRotation2", effect.textureRotation2);
             shader.SetFloat("_EffectTextureOpacity1", effect.textureOpacity1);
             shader.SetFloat("_EffectTextureOpacity2", effect.textureOpacity2);
-            shader.SetVector("_EffectTextureColor1", effect.color);
-            shader.SetVector("_EffectTextureColor2", effect.secondaryColor);
+            shader.SetVector("_EffectTextureColor1", TexturePaintChannelUtility.ConstrainColor(channel, effect.color));
+            shader.SetVector("_EffectTextureColor2", TexturePaintChannelUtility.ConstrainColor(channel, effect.secondaryColor));
             shader.SetInt("_EffectTextureBlendMode1", (int)effect.blendMode);
             shader.SetInt("_EffectTextureBlendMode2", (int)effect.secondaryBlendMode);
             shader.SetTexture(compositeLayerEffectKernel, "_Layer", layerTexture);

@@ -712,7 +712,8 @@ namespace UMA.TexturePaint
                 for (int sampleIndex = 0; sampleIndex < count; sampleIndex++)
                 {
                     StrokeSample sample = samples[offset + sampleIndex].sample;
-                    stamps[sampleIndex].color = sample.hasColor ? sample.color : active.color;
+                    stamps[sampleIndex].color = TexturePaintChannelUtility.ConstrainColor(active.channel,
+                        sample.hasColor ? sample.color : active.color);
                 }
                 buffer.SetData(stamps);
                 RectInt rect = default;
@@ -1011,7 +1012,7 @@ namespace UMA.TexturePaint
                             target = target,
                             paintSource = paintTexture,
                             sourceKind = source.source,
-                            color = source.color,
+                            color = TexturePaintChannelUtility.ConstrainColor(channel, source.color),
                             contribution = contribution
                         });
                 }
@@ -1051,7 +1052,7 @@ namespace UMA.TexturePaint
                             target = target,
                             paintSource = paintTexture,
                             sourceKind = TexturePaintBrushSource.Overlay,
-                            color = context.color,
+                            color = TexturePaintChannelUtility.ConstrainColor(channel, context.color),
                             contribution = contribution
                         });
                 }
@@ -1069,7 +1070,7 @@ namespace UMA.TexturePaint
                         target = target,
                         paintSource = resolvedSource,
                         sourceKind = context.paintSource,
-                        color = context.color,
+                        color = TexturePaintChannelUtility.ConstrainColor(context.channel, context.color),
                         contribution = contribution
                     });
             }
@@ -1318,7 +1319,8 @@ namespace UMA.TexturePaint
                 shader.SetVector("_CloneSourceUV", activeContext.cloneSourceUV);
                 shader.SetInt("_Operation", ToShaderOperation(activeContext.tool));
                 shader.SetInt("_BlendMode", (int)activeContext.brush.blendMode);
-                shader.SetVector("_PaintColor", sample.hasColor ? sample.color : active.color);
+                shader.SetVector("_PaintColor", TexturePaintChannelUtility.ConstrainColor(active.channel,
+                    sample.hasColor ? sample.color : active.color));
                 shader.SetInt("_PaintSourceKind", (int)active.sourceKind);
                 shader.SetInt("_VectorNormal", active.channel == TexturePaintChannel.Normal ? 1 : 0);
                 shader.SetInt("_MaskMode", active.isLayerMask ? 1 : 0);
@@ -1566,7 +1568,8 @@ namespace UMA.TexturePaint
             BrushPreset brush, StrokeSample sample)
         {
             if (active.sourceKind == TexturePaintBrushSource.Color)
-                return sample.hasColor ? sample.color : active.color;
+                return TexturePaintChannelUtility.ConstrainColor(active.channel,
+                    sample.hasColor ? sample.color : active.color);
             if (!(active.paintSource is Texture2D texture)) return active.color;
             Vector2 sampleUV = uv;
             if (active.sourceKind == TexturePaintBrushSource.Texture)

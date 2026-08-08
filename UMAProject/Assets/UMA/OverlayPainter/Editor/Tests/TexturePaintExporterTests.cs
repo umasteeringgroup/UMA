@@ -200,6 +200,67 @@ namespace UMA.TexturePaint.Editor.Tests
         }
 
         [Test]
+        public void AuthoredNormalControlExportsFlatRelativeNormalDeltaAndCoverage()
+        {
+            TexturePaintGpuTestFixture.RequireComputeShaders();
+            ConfigureNormalControlExportSet();
+            set.compositor = new TextureLayerCompositor(TexturePaintGpuTestFixture.LoadShader(
+                "LayerComposite.compute"));
+            set.channelPackShader = TexturePaintGpuTestFixture.LoadShader("ChannelPack.compute");
+
+            Texture2D height = Own(new Texture2D(32, 32, TextureFormat.RGBAHalf, false, true));
+            Color[] heightPixels = new Color[32 * 32];
+            for (int i = 0; i < heightPixels.Length; i++)
+                heightPixels[i] = new Color(0.5f, 0.5f, 0.5f, 0f);
+            for (int y = 6; y < 26; y++)
+                heightPixels[y * 32 + 16] = Color.white;
+            height.SetPixels(heightPixels);
+            height.Apply(false, false);
+            TexturePaintLayer layer = set.AddLayer("Raised Detail");
+            layer.channels[TexturePaintChannel.NormalControl] = new EditableTextureTarget(
+                "Raised Detail Normal Control", 32, 32, RenderTextureFormat.ARGBHalf,
+                height, Color.clear);
+            layer.GetChannelSettings(TexturePaintChannel.NormalControl);
+            set.normalControlStrength = 4f;
+
+            template.content = TexturePaintExportContent.AuthoredOverlay;
+            TexturePaintExportPlan plan = TexturePaintExporter.BuildPlan(store, set, "Avatar", template,
+                "Height", null);
+            Assert.That(plan.IsValid, Is.True, string.Join("\n", plan.errors));
+            Assert.That(plan.entries, Has.Count.EqualTo(1),
+                "Normal Control must cause the physical normal channel to be exported.");
+            Assert.That(plan.entries[0].materialChannel.LogicalChannels,
+                Has.Member(TexturePaintChannel.Normal));
+
+            TexturePaintExportResult result = TexturePaintExporter.Export(store, set, null,
+                template, null, "Height", null, false);
+            RememberIndexed(result);
+            Assert.That(result.texturePaths, Has.Count.EqualTo(1));
+            Assert.That(result.alphaMaskPaths, Has.Count.EqualTo(1));
+            Texture2D normal = LoadPng(result.texturePaths[0]);
+            Texture2D coverage = LoadPng(result.alphaMaskPaths[0]);
+            try
+            {
+                Color outside = normal.GetPixel(2, 2);
+                Color leftSlope = normal.GetPixel(15, 16);
+                Color rightSlope = normal.GetPixel(17, 16);
+                Assert.That(outside.r, Is.EqualTo(0.5f).Within(2f / 255f));
+                Assert.That(outside.g, Is.EqualTo(0.5f).Within(2f / 255f));
+                Assert.That(outside.b, Is.GreaterThan(0.98f));
+                Assert.That(leftSlope.r, Is.LessThan(0.48f));
+                Assert.That(rightSlope.r, Is.GreaterThan(0.52f));
+                Assert.That(coverage.GetPixel(15, 16).r, Is.GreaterThan(0.99f),
+                    "The gradient halo must be included in runtime overlay coverage.");
+                Assert.That(coverage.GetPixel(2, 2).r, Is.LessThan(0.01f));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(normal);
+                UnityEngine.Object.DestroyImmediate(coverage);
+            }
+        }
+
+        [Test]
         public void AuthoredOverlayPlanRejectsSourceOverwrite()
         {
             template.content = TexturePaintExportContent.AuthoredOverlay;
@@ -343,6 +404,73 @@ namespace UMA.TexturePaint.Editor.Tests
                     RenderTextureFormat.ARGB32, source, Color.white)
             });
             return created;
+        }
+
+        private void ConfigureNormalControlExportSet()
+        {
+            foreach (TextureChannelTarget target in set.channels.Values) target.Dispose();
+            set.channels.Clear();
+            Texture2D neutral = Own(new Texture2D(32, 32, TextureFormat.RGBA32, false, true));
+            Color[] pixels = new Color[32 * 32];
+            for (int i = 0; i < pixels.Length; i++) pixels[i] = new Color(0.5f, 0.5f, 1f, 1f);
+            neutral.SetPixels(pixels);
+            neutral.Apply(false, false);
+            sourceMaterial.SetTexture("_BumpMap", neutral);
+            umaMaterial.channels = new[]
+            {
+                new UMAMaterial.MaterialChannel
+                {
+                    channelType = UMAMaterial.ChannelType.NormalMap,
+                    textureFormat = RenderTextureFormat.ARGB32,
+                    materialPropertyName = "_BumpMap",
+                    sourceTextureName = "Normal",
+                    DownSample = 1,
+                    textureChannelLayout = new UMAMaterial.TextureChannelLayout
+                    {
+                        mode = UMAMaterial.TextureChannelLayoutMode.Custom,
+                        red = UMAMaterial.TextureChannelUsage.Normal,
+                        green = UMAMaterial.TextureChannelUsage.Normal,
+                        blue = UMAMaterial.TextureChannelUsage.Normal,
+                        alpha = UMAMaterial.TextureChannelUsage.Unused
+                    },
+                    textureChannelOutput = new UMAMaterial.TextureChannelOutputSettings
+                    {
+                        mode = UMAMaterial.TextureChannelOutputMode.Custom,
+                        encoding = UMAMaterial.TextureChannelOutputEncoding.Png8,
+                        importerType = UMAMaterial.TextureChannelImporterType.NormalMap,
+                        colorSpace = UMAMaterial.TextureChannelColorSpace.Linear,
+                        alphaSource = UMAMaterial.TextureChannelAlphaSource.None,
+                        compression = UMAMaterial.TextureChannelImportCompression.Uncompressed,
+                        normalConvention = UMAMaterial.TextureChannelNormalConvention.OpenGL,
+                        generateMipMaps = false,
+                        filterMode = FilterMode.Bilinear,
+                        anisoLevel = 1,
+                        maxTextureSize = 8192,
+                        platformOverrides = Array.Empty<UMAMaterial.TextureChannelPlatformOverrideSettings>()
+                    }
+                }
+            };
+            set.materialCapability = TexturePaintMaterialCapabilityService.Compile(umaMaterial,
+                sourceMaterial, new Texture[] { neutral }, true);
+            set.channels.Add(TexturePaintChannel.Normal, new TextureChannelTarget
+            {
+                channel = TexturePaintChannel.Normal,
+                materialProperty = "_BumpMap",
+                umaChannelIndex = 0,
+                format = RenderTextureFormat.ARGBHalf,
+                sourceTexture = neutral,
+                editable = new EditableTextureTarget("Export Normal", 32, 32,
+                    RenderTextureFormat.ARGBHalf, neutral, new Color(0.5f, 0.5f, 1f, 1f))
+            });
+            set.channels.Add(TexturePaintChannel.NormalControl, new TextureChannelTarget
+            {
+                channel = TexturePaintChannel.NormalControl,
+                materialProperty = null,
+                umaChannelIndex = -1,
+                format = RenderTextureFormat.ARGBHalf,
+                editable = new EditableTextureTarget("Export Normal Control", 32, 32,
+                    RenderTextureFormat.ARGBHalf, null, new Color(0.5f, 0.5f, 0.5f, 1f))
+            });
         }
 
         private void ConfigureUdim(TextureSet targetSet, string slotName, int tile)

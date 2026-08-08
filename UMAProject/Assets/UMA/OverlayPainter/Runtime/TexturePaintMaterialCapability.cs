@@ -189,11 +189,15 @@ namespace UMA.TexturePaint
             UMAMaterial.TextureChannelUsage.Roughness |
             UMAMaterial.TextureChannelUsage.AmbientOcclusion |
             UMAMaterial.TextureChannelUsage.Emission |
+            UMAMaterial.TextureChannelUsage.SkinColorMask |
+            UMAMaterial.TextureChannelUsage.Thickness |
+            UMAMaterial.TextureChannelUsage.DetailMask |
             UMAMaterial.TextureChannelUsage.Custom;
 
         private const UMAMaterial.TextureChannelUsage ColorUsageMask =
             UMAMaterial.TextureChannelUsage.Albedo |
             UMAMaterial.TextureChannelUsage.Emission |
+            UMAMaterial.TextureChannelUsage.SkinColorMask |
             UMAMaterial.TextureChannelUsage.DetailAlbedo;
 
         public static TexturePaintMaterialCapabilityDescriptor Compile(UMAMaterial umaMaterial,
@@ -303,6 +307,9 @@ namespace UMA.TexturePaint
             else if ((supported & UMAMaterial.TextureChannelUsage.Roughness) != 0) channel = TexturePaintChannel.Roughness;
             else if ((supported & UMAMaterial.TextureChannelUsage.AmbientOcclusion) != 0) channel = TexturePaintChannel.AmbientOcclusion;
             else if ((supported & UMAMaterial.TextureChannelUsage.Emission) != 0) channel = TexturePaintChannel.Emission;
+            else if ((supported & UMAMaterial.TextureChannelUsage.SkinColorMask) != 0) channel = TexturePaintChannel.SkinColorMask;
+            else if ((supported & UMAMaterial.TextureChannelUsage.Thickness) != 0) channel = TexturePaintChannel.Thickness;
+            else if ((supported & UMAMaterial.TextureChannelUsage.DetailMask) != 0) channel = TexturePaintChannel.DetailMask;
             else channel = TexturePaintChannel.Custom;
             return true;
         }
@@ -412,8 +419,7 @@ namespace UMA.TexturePaint
             if (logicalChannels.Count > 1) return true;
             foreach (TexturePaintChannel logical in logicalChannels)
             {
-                if (logical == TexturePaintChannel.Albedo || logical == TexturePaintChannel.Normal ||
-                    logical == TexturePaintChannel.Emission || logical == TexturePaintChannel.Custom)
+                if (TexturePaintChannelUtility.IsVector(logical))
                 {
                     bool red = false, green = false, blue = false;
                     for (int i = 0; i < 4; i++)
@@ -559,7 +565,8 @@ namespace UMA.TexturePaint
                 return component == 2 ? 1f : component < 2 ? 0.5f : 1f;
             if ((usage & (UMAMaterial.TextureChannelUsage.Albedo | UMAMaterial.TextureChannelUsage.Opacity |
                           UMAMaterial.TextureChannelUsage.AmbientOcclusion |
-                          UMAMaterial.TextureChannelUsage.Roughness)) != 0) return 1f;
+                          UMAMaterial.TextureChannelUsage.Roughness |
+                          UMAMaterial.TextureChannelUsage.DetailMask)) != 0) return 1f;
             if ((usage & UMAMaterial.TextureChannelUsage.Smoothness) != 0) return 0f;
             if ((usage & (UMAMaterial.TextureChannelUsage.DetailNormalX |
                           UMAMaterial.TextureChannelUsage.DetailNormalY |

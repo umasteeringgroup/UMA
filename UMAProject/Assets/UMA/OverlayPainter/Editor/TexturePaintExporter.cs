@@ -137,6 +137,41 @@ namespace UMA.TexturePaint.Editor
                     set.compositor.ComposeAuthoredLayers(set, pair.Key, composite);
                     logical.Add(pair.Key, composite);
                 }
+                if (logical.TryGetValue(TexturePaintChannel.NormalControl,
+                        out RenderTexture authoredControl))
+                {
+                    if (set.normalControlStrength <= 0.00001f)
+                    {
+                        Destroy(authoredControl);
+                        logical.Remove(TexturePaintChannel.NormalControl);
+                    }
+                    else
+                    {
+                        TextureChannelTarget normalTarget = set.GetChannel(TexturePaintChannel.Normal);
+                        if (normalTarget?.editable?.Front == null) throw new InvalidOperationException(
+                            set.Name + " has Normal Control content but no normal target.");
+                        bool ownsFlatBase = !logical.TryGetValue(TexturePaintChannel.Normal,
+                            out RenderTexture authoredNormal);
+                        if (ownsFlatBase)
+                        {
+                            authoredNormal = EditableTextureTarget.Create(set.Name + " Authored Flat Normal",
+                                normalTarget.editable.Width, normalTarget.editable.Height, normalTarget.format);
+                            Clear(authoredNormal, new Color(0.5f, 0.5f, 1f, 0f));
+                        }
+                        RenderTexture effective = EditableTextureTarget.Create(
+                            set.Name + " Authored Effective Normal", normalTarget.editable.Width,
+                            normalTarget.editable.Height, normalTarget.format);
+                        if (!set.ApplyNormalControl(authoredNormal, authoredControl, effective, true))
+                        {
+                            Destroy(effective);
+                            if (ownsFlatBase) Destroy(authoredNormal);
+                            throw new InvalidOperationException(
+                                set.Name + " could not derive an authored Normal Control overlay.");
+                        }
+                        Destroy(authoredNormal);
+                        logical[TexturePaintChannel.Normal] = effective;
+                    }
+                }
                 if (logical.Count == 0) throw new InvalidOperationException(
                     set.Name + " has no visible authored layer content to export.");
 
@@ -209,10 +244,7 @@ namespace UMA.TexturePaint.Editor
 
             private static bool IsVectorChannel(TexturePaintChannel channel)
             {
-                return channel == TexturePaintChannel.Albedo ||
-                       channel == TexturePaintChannel.Normal ||
-                       channel == TexturePaintChannel.Emission ||
-                       channel == TexturePaintChannel.Custom;
+                return TexturePaintChannelUtility.IsVector(channel);
             }
 
             private static bool CanStoreCoverageInPhysicalAlpha(
@@ -254,6 +286,7 @@ namespace UMA.TexturePaint.Editor
             TexturePaintExportPlan plan = new TexturePaintExportPlan();
             if (store == null) { plan.errors.Add("No texture store is available."); return plan; }
             if (template == null) { plan.errors.Add("Select an export template."); return plan; }
+            template.Migrate();
             if (template.content == TexturePaintExportContent.AuthoredOverlay &&
                 template.overwriteSourceOverlay)
             {
@@ -689,7 +722,12 @@ namespace UMA.TexturePaint.Editor
             TexturePaintMaterialChannelCapability capability)
         {
             for (int i = 0; i < capability.LogicalChannels.Count; i++)
-                if (HasVisibleAuthoredContribution(set, capability.LogicalChannels[i])) return true;
+            {
+                TexturePaintChannel logical = capability.LogicalChannels[i];
+                if (HasVisibleAuthoredContribution(set, logical)) return true;
+                if (logical == TexturePaintChannel.Normal && set.normalControlStrength > 0.00001f &&
+                    HasVisibleAuthoredContribution(set, TexturePaintChannel.NormalControl)) return true;
+            }
             return false;
         }
 

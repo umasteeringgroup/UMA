@@ -23,8 +23,13 @@ MonoBehaviour:
   blendMode: 0
   mirrorStroke: 0
   alignToStroke: 0
-  randomRotation: 0
-  randomHeightVariation: 0
-  randomHeightShrink: 0.3
-  randomHeightGrow: 0.3
+  randomRotation: 1
+  randomSizeVariation: 1
+  randomSizeShrink: 0.3
+  randomSizeGrow: 0.3
+  splatter: 0
+  splatterDistance: 1
+  fade: 0
+  taper: 0
+  fadeTaperLength: 0
   tags: 

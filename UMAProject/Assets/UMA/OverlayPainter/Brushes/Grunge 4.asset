@@ -15,16 +15,21 @@ MonoBehaviour:
   shape: 2
   stampTexture: {fileID: 0}
   stampSprite: {fileID: -1708553999, guid: 62076e4020e2d144ca5d69798f4c1a83, type: 3}
-  size: 0.05
+  size: 0.0309
   hardness: 0.75
   flow: 1
-  spacing: 0.2
+  spacing: 1.83
   rotation: 0
   blendMode: 0
   mirrorStroke: 0
   alignToStroke: 0
-  randomRotation: 0
-  randomHeightVariation: 0
-  randomHeightShrink: 0.3
-  randomHeightGrow: 0.3
+  randomRotation: 1
+  randomSizeVariation: 1
+  randomSizeShrink: 0.89
+  randomSizeGrow: 1
+  splatter: 0
+  splatterDistance: 1
+  fade: 0
+  taper: 0
+  fadeTaperLength: 0
   tags: 

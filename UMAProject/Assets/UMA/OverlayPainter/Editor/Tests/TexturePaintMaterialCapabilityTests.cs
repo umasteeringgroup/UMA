@@ -125,6 +125,75 @@ namespace UMA.TexturePaint.Editor.Tests
         }
 
         [Test]
+        public void SkinColorThicknessAndDetailMaskAreFirstClassEditableChannels()
+        {
+            Shader shader = Shader.Find("Universal Render Pipeline/Lit");
+            Assert.That(shader, Is.Not.Null);
+            Material material = new Material(shader);
+            UMAMaterial uma = ScriptableObject.CreateInstance<UMAMaterial>();
+            try
+            {
+                UMAMaterial.MaterialChannel inferredSkin = Channel(UMAMaterial.ChannelType.Texture,
+                    "_Skinmask");
+                UMAMaterial.TextureChannelLayout inferredLayout =
+                    UMAMaterial.InferTextureChannelLayout(inferredSkin, material);
+                Assert.That(inferredLayout.red, Is.EqualTo(UMAMaterial.TextureChannelUsage.SkinColorMask));
+                Assert.That(inferredLayout.green, Is.EqualTo(UMAMaterial.TextureChannelUsage.SkinColorMask));
+                Assert.That(inferredLayout.blue, Is.EqualTo(UMAMaterial.TextureChannelUsage.SkinColorMask));
+                Assert.That(inferredLayout.alpha, Is.EqualTo(UMAMaterial.TextureChannelUsage.SkinColorMask));
+
+                UMAMaterial.MaterialChannel skin = Channel(UMAMaterial.ChannelType.Texture, "_BaseMap");
+                skin.textureChannelLayout = new UMAMaterial.TextureChannelLayout
+                {
+                    mode = UMAMaterial.TextureChannelLayoutMode.Custom,
+                    red = UMAMaterial.TextureChannelUsage.SkinColorMask,
+                    green = UMAMaterial.TextureChannelUsage.SkinColorMask,
+                    blue = UMAMaterial.TextureChannelUsage.SkinColorMask,
+                    alpha = UMAMaterial.TextureChannelUsage.SkinColorMask
+                };
+                UMAMaterial.MaterialChannel packed = Channel(UMAMaterial.ChannelType.Texture, "_MaskMap");
+                packed.textureChannelLayout = new UMAMaterial.TextureChannelLayout
+                {
+                    mode = UMAMaterial.TextureChannelLayoutMode.Custom,
+                    red = UMAMaterial.TextureChannelUsage.Thickness,
+                    green = UMAMaterial.TextureChannelUsage.AmbientOcclusion,
+                    blue = UMAMaterial.TextureChannelUsage.DetailMask,
+                    alpha = UMAMaterial.TextureChannelUsage.Smoothness
+                };
+                uma.material = material;
+                uma.channels = new[] { skin, packed };
+
+                TexturePaintMaterialCapabilityDescriptor descriptor =
+                    TexturePaintMaterialCapabilityService.Compile(uma, material, null, true);
+                TexturePaintMaterialChannelCapability skinCapability = descriptor.GetChannel(0);
+                TexturePaintMaterialChannelCapability packedCapability = descriptor.GetChannel(1);
+
+                Assert.That(skinCapability.LogicalChannels,
+                    Does.Contain(TexturePaintChannel.SkinColorMask));
+                Assert.That(skinCapability.output.colorSpace,
+                    Is.EqualTo(UMAMaterial.TextureChannelColorSpace.SRGB));
+                Assert.That(skinCapability.requiresPacking, Is.False);
+                Assert.That(packedCapability.Components[0].logicalChannel,
+                    Is.EqualTo(TexturePaintChannel.Thickness));
+                Assert.That(packedCapability.Components[1].logicalChannel,
+                    Is.EqualTo(TexturePaintChannel.AmbientOcclusion));
+                Assert.That(packedCapability.Components[2].logicalChannel,
+                    Is.EqualTo(TexturePaintChannel.DetailMask));
+                Assert.That(packedCapability.Components[2].neutralValue, Is.EqualTo(1f));
+                Assert.That(packedCapability.Components[3].logicalChannel,
+                    Is.EqualTo(TexturePaintChannel.Roughness));
+                Assert.That(packedCapability.Components[3].invert, Is.True);
+                Assert.That(descriptor.Diagnostics.Any(item => item.code == "CHN007"), Is.False,
+                    descriptor.FailureSummary());
+            }
+            finally
+            {
+                Object.DestroyImmediate(uma);
+                Object.DestroyImmediate(material);
+            }
+        }
+
+        [Test]
         public void CustomLayoutAndOutputOverrideAutomaticInference()
         {
             Shader shader = Shader.Find("Universal Render Pipeline/Lit");

@@ -1172,6 +1172,29 @@ namespace UMA.TexturePaint.Editor.Tests
         }
 
         [Test]
+        public void PackedOverlaySourcesExtractTheRequestedLogicalComponent()
+        {
+            Color authored = new Color(0.18f, 0.37f, 0.76f, 0.42f);
+            Texture2D source = Own(new Texture2D(4, 4, TextureFormat.RGBA32, false, true));
+            Color[] pixels = new Color[16];
+            for (int i = 0; i < pixels.Length; i++) pixels[i] = authored;
+            source.SetPixels(pixels);
+            source.Apply(false, false);
+
+            Texture detail = TexturePaintSpriteSource.ResolveTextureComponent(source,
+                TexturePaintChannel.DetailMask, TexturePaintNormalConvention.OpenGL, 2, false);
+            Texture roughness = TexturePaintSpriteSource.ResolveTextureComponent(source,
+                TexturePaintChannel.Roughness, TexturePaintNormalConvention.OpenGL, 3, true);
+
+            AssertColor(ReadTextureCenter(detail), new Color(authored.b, authored.b, authored.b, 1f),
+                0.012f);
+            AssertColor(ReadTextureCenter(roughness),
+                new Color(1f - authored.a, 1f - authored.a, 1f - authored.a, 1f), 0.012f);
+            Assert.That(detail, Is.SameAs(TexturePaintSpriteSource.ResolveTextureComponent(source,
+                TexturePaintChannel.DetailMask, TexturePaintNormalConvention.OpenGL, 2, false)));
+        }
+
+        [Test]
         public void UnityNormalMapTextureIsCanonicalizedBeforePainting()
         {
             Vector3 authored = new Vector3(-0.46f, 0.27f, 0.84f).normalized;
@@ -3032,6 +3055,13 @@ namespace UMA.TexturePaint.Editor.Tests
             Mesh mesh = Own(CreateQuadMesh());
             TextureSet originalSet = CreateSet(TexturePaintChannel.Albedo,
                 new Color(0.17f, 0.37f, 0.71f, 0.83f), material, mesh);
+            AddChannel(originalSet, TexturePaintChannel.Normal,
+                new Color(0.5f, 0.5f, 1f, 1f));
+            AddChannel(originalSet, TexturePaintChannel.NormalControl,
+                new Color(0.5f, 0.5f, 0.5f, 1f));
+            originalSet.normalControlStrength = 6.25f;
+            originalSet.normalControlRadius = 4;
+            originalSet.normalControlInvert = true;
             TextureStore originalStore = CreateStore(originalSet);
             TexturePaintLayer paint = originalSet.AddLayer("Paint Detail");
             paint.logicalLayerId = "logical-skin-detail";
@@ -3052,6 +3082,14 @@ namespace UMA.TexturePaint.Editor.Tests
             EditableTextureTarget paintPixels = originalSet.GetPaintTarget(TexturePaintChannel.Albedo,
                 TexturePaintSourceMode.SourceOverlay);
             paintPixels.Reset(null, new Color(0.77f, 0.23f, 0.11f, 0.61f));
+            EditableTextureTarget normalControlPixels = originalSet.GetPaintTarget(
+                TexturePaintChannel.NormalControl, TexturePaintSourceMode.SourceOverlay);
+            normalControlPixels.Reset(null, new Color(0.82f, 0.82f, 0.82f, 0.47f));
+            TexturePaintChannelSourceSettings normalControlSource = paint.GetChannelSettings(
+                TexturePaintChannel.NormalControl).sourceSettings;
+            normalControlSource.source = TexturePaintBrushSource.Color;
+            normalControlSource.color = new Color(0.21f, 0.21f, 0.21f, 0.73f);
+            normalControlSource.tiling = new Vector2(2.5f, 4.5f);
             TexturePaintLayer splineLayer = originalSet.AddSplineLayer("Surface Path");
             splineLayer.spline.AddPoint(Vector3.zero, Vector2.zero, 0, 0, Vector3.forward);
             splineLayer.spline.AddPoint(Vector3.one, Vector2.one, 0, 1, Vector3.forward);
@@ -3087,6 +3125,10 @@ namespace UMA.TexturePaint.Editor.Tests
                 Folder + "/Round Trip Document.asset");
 
             TextureSet restoredSet = CreateSet(TexturePaintChannel.Albedo, Color.black, material, mesh);
+            AddChannel(restoredSet, TexturePaintChannel.Normal,
+                new Color(0.5f, 0.5f, 1f, 1f));
+            AddChannel(restoredSet, TexturePaintChannel.NormalControl,
+                new Color(0.5f, 0.5f, 0.5f, 1f));
             TextureStore restoredStore = CreateStore(restoredSet);
             TexturePaintDocumentStorage.Restore(reopened, restoredStore);
 
@@ -3115,6 +3157,17 @@ namespace UMA.TexturePaint.Editor.Tests
             Assert.That(restoredSet.layers[0].effects.edgeFade.edgeFadeSize, Is.EqualTo(0.73f));
             AssertColor(ReadCenter(restoredSet.layers[0].channels[TexturePaintChannel.Albedo].Front),
                 new Color(0.77f, 0.23f, 0.11f, 0.61f), 0.004f);
+            Assert.That(restoredSet.normalControlStrength, Is.EqualTo(6.25f));
+            Assert.That(restoredSet.normalControlRadius, Is.EqualTo(4));
+            Assert.That(restoredSet.normalControlInvert, Is.True);
+            AssertColor(ReadCenter(restoredSet.layers[0].channels[TexturePaintChannel.NormalControl].Front),
+                new Color(0.82f, 0.82f, 0.82f, 0.47f), 0.004f);
+            TexturePaintChannelSourceSettings restoredControlSource = restoredSet.layers[0]
+                .GetChannelSettings(TexturePaintChannel.NormalControl).sourceSettings;
+            Assert.That(restoredControlSource.source, Is.EqualTo(TexturePaintBrushSource.Color));
+            AssertColor(restoredControlSource.color,
+                new Color(0.21f, 0.21f, 0.21f, 0.73f), 0.0001f);
+            Assert.That(restoredControlSource.tiling, Is.EqualTo(new Vector2(2.5f, 4.5f)));
             Assert.That(restoredSet.layers[1].spline.PointCount, Is.EqualTo(2));
             Assert.That(restoredSet.layers[1].spline.worldOutControls[0].y, Is.EqualTo(0.7f).Within(0.0001f));
             Assert.That(restoredSet.layers[1].layerMask, Is.Not.Null);
@@ -3206,7 +3259,7 @@ namespace UMA.TexturePaint.Editor.Tests
         }
 
         [Test]
-        public void UmaMaterialLayoutUnpacksAndRepacksCustomPhysicalComponents()
+        public void UmaSkinMaskMapUnpacksAndRepacksThicknessAoDetailAndSmoothness()
         {
             TexturePaintGpuTestFixture.RequireComputeShaders();
             Material preview = Own(new Material(Shader.Find("Standard")) { name = "Custom Packed Preview" });
@@ -3226,8 +3279,9 @@ namespace UMA.TexturePaint.Editor.Tests
                     textureChannelLayout = new UMAMaterial.TextureChannelLayout
                     {
                         mode = UMAMaterial.TextureChannelLayoutMode.Custom,
-                        red = UMAMaterial.TextureChannelUsage.Metallic,
+                        red = UMAMaterial.TextureChannelUsage.Thickness,
                         green = UMAMaterial.TextureChannelUsage.AmbientOcclusion,
+                        blue = UMAMaterial.TextureChannelUsage.DetailMask,
                         alpha = UMAMaterial.TextureChannelUsage.Smoothness
                     }
                 }
@@ -3256,23 +3310,143 @@ namespace UMA.TexturePaint.Editor.Tests
             TextureSet set = store.Sets[0];
 
             Assert.That(set.physicalChannelGroups.ContainsKey("_MetallicGlossMap"), Is.True);
-            Assert.That(ReadCenter(set.GetChannel(TexturePaintChannel.Metallic).Texture).r,
+            Assert.That(ReadCenter(set.GetChannel(TexturePaintChannel.Thickness).Texture).r,
                 Is.EqualTo(0.2f).Within(0.01f));
             Assert.That(ReadCenter(set.GetChannel(TexturePaintChannel.AmbientOcclusion).Texture).r,
                 Is.EqualTo(0.65f).Within(0.01f));
+            Assert.That(ReadCenter(set.GetChannel(TexturePaintChannel.DetailMask).Texture).r,
+                Is.EqualTo(0.37f).Within(0.01f));
             Assert.That(ReadCenter(set.GetChannel(TexturePaintChannel.Roughness).Texture).r,
                 Is.EqualTo(0.75f).Within(0.01f));
 
-            Texture2D metallic = CreateSolidTexture(new Color(0.8f, 0.8f, 0.8f, 1f));
+            Texture2D thickness = CreateSolidTexture(new Color(0.8f, 0.8f, 0.8f, 1f));
             Texture2D occlusion = CreateSolidTexture(new Color(0.3f, 0.3f, 0.3f, 1f));
+            Texture2D detailMask = CreateSolidTexture(new Color(0.9f, 0.9f, 0.9f, 1f));
             Texture2D roughness = CreateSolidTexture(new Color(0.4f, 0.4f, 0.4f, 1f));
-            set.GetChannel(TexturePaintChannel.Metallic).editable.Reset(metallic, Color.black);
+            set.GetChannel(TexturePaintChannel.Thickness).editable.Reset(thickness, Color.black);
             set.GetChannel(TexturePaintChannel.AmbientOcclusion).editable.Reset(occlusion, Color.black);
+            set.GetChannel(TexturePaintChannel.DetailMask).editable.Reset(detailMask, Color.white);
             set.GetChannel(TexturePaintChannel.Roughness).editable.Reset(roughness, Color.white);
             set.BindPreviewTextures();
 
             Color packed = ReadCenter(set.physicalChannelGroups["_MetallicGlossMap"].packed);
-            AssertColor(packed, new Color(0.8f, 0.3f, 0.37f, 0.6f), 0.01f);
+            AssertColor(packed, new Color(0.8f, 0.3f, 0.9f, 0.6f), 0.01f);
+        }
+
+        [Test]
+        public void UmaSkinColorMaskRemainsOneEditableRgbaColorChannel()
+        {
+            Material preview = Own(new Material(Shader.Find("Standard"))
+                { name = "Skin Color Mask Preview" });
+            Color authored = new Color(0.72f, 0.23f, 0.16f, 0.64f);
+            Texture2D source = CreateSolidTexture(authored);
+            preview.SetTexture("_MainTex", source);
+            UMAMaterial umaMaterial = Own(ScriptableObject.CreateInstance<UMAMaterial>());
+            umaMaterial.material = preview;
+            umaMaterial.channels = new[]
+            {
+                new UMAMaterial.MaterialChannel
+                {
+                    channelType = UMAMaterial.ChannelType.Texture,
+                    textureFormat = RenderTextureFormat.ARGB32,
+                    materialPropertyName = "_MainTex",
+                    sourceTextureName = "_Skinmask",
+                    DownSample = 1,
+                    textureChannelLayout = new UMAMaterial.TextureChannelLayout
+                    {
+                        mode = UMAMaterial.TextureChannelLayoutMode.Custom,
+                        red = UMAMaterial.TextureChannelUsage.SkinColorMask,
+                        green = UMAMaterial.TextureChannelUsage.SkinColorMask,
+                        blue = UMAMaterial.TextureChannelUsage.SkinColorMask,
+                        alpha = UMAMaterial.TextureChannelUsage.SkinColorMask
+                    }
+                }
+            };
+            MeshReconstructionResult reconstruction = new MeshReconstructionResult();
+            reconstruction.surfaces.Add(new ReconstructedSurface
+            {
+                index = 0,
+                mesh = Own(CreateQuadMesh()),
+                previewMaterial = preview,
+                sourceMaterial = preview,
+                umaMaterial = umaMaterial,
+                sourceTextures = new Texture[] { source },
+                slotName = "Body",
+                slotNames = new List<string> { "Body" },
+                triangleSlotNames = new[] { "Body", "Body" },
+                triangleIslands = new[] { 0, 0 }
+            });
+
+            TextureStore store = new TextureStore();
+            ownedStores.Add(store);
+            store.Initialize(reconstruction, 128,
+                TexturePaintGpuTestFixture.LoadShader("LayerComposite.compute"),
+                TexturePaintGpuTestFixture.LoadShader("ChannelPack.compute"));
+            TextureSet set = store.Sets[0];
+            TextureChannelTarget skin = set.GetChannel(TexturePaintChannel.SkinColorMask);
+
+            Assert.That(skin, Is.Not.Null);
+            Assert.That(skin.sRGB, Is.True);
+            Assert.That(skin.physicalProperty, Is.Null.Or.Empty,
+                "A complete RGBA Skin Color Mask should not be split into packed scalar targets.");
+            AssertColor(ReadCenter(skin.Texture), authored, 0.012f);
+        }
+
+        [Test]
+        public void UdimPreviewMaterialsUseFirstMemberParametersAndKeepPerTileTextures()
+        {
+            Shader shader = Shader.Find("Standard");
+            Material firstSource = Own(new Material(shader) { name = "Tile 1001 Source" });
+            Material secondSource = Own(new Material(shader) { name = "Tile 1002 Source" });
+            Material firstPreview = Own(new Material(firstSource) { name = "Tile 1001 Preview" });
+            Material secondPreview = Own(new Material(secondSource) { name = "Tile 1002 Preview" });
+            Texture2D firstTexture = CreateSolidTexture(Color.red);
+            Texture2D secondTexture = CreateSolidTexture(Color.green);
+            firstSource.SetFloat("_Glossiness", 0.81f);
+            secondSource.SetFloat("_Glossiness", 0.17f);
+            firstPreview.SetTexture("_MainTex", firstTexture);
+            secondPreview.SetTexture("_MainTex", secondTexture);
+
+            UMAMaterial uma = Own(ScriptableObject.CreateInstance<UMAMaterial>());
+            uma.channels = new[]
+            {
+                new UMAMaterial.MaterialChannel
+                {
+                    channelType = UMAMaterial.ChannelType.Texture,
+                    materialPropertyName = "_MainTex",
+                    sourceTextureName = "_MainTex",
+                    textureFormat = RenderTextureFormat.ARGB32,
+                    DownSample = 1
+                }
+            };
+            var firstSurface = new ReconstructedSurface
+            {
+                sourceMaterial = firstSource,
+                previewMaterial = firstPreview,
+                umaMaterial = uma,
+                sourceTextures = new Texture[] { firstTexture }
+            };
+            var secondSurface = new ReconstructedSurface
+            {
+                sourceMaterial = secondSource,
+                previewMaterial = secondPreview,
+                umaMaterial = uma,
+                sourceTextures = new Texture[] { secondTexture }
+            };
+            var target = new TexturePaintLogicalTarget { isUdim = true };
+            var firstMember = new TexturePaintLogicalTargetMember { udimTileNumber = 1001 };
+            var secondMember = new TexturePaintLogicalTargetMember { udimTileNumber = 1002 };
+            firstMember.surfaces.Add(firstSurface);
+            secondMember.surfaces.Add(secondSurface);
+            target.members.Add(firstMember);
+            target.members.Add(secondMember);
+
+            MeshReconstructor.ApplyCanonicalUdimMaterialProperties(target);
+
+            Assert.That(secondPreview.GetFloat("_Glossiness"), Is.EqualTo(0.81f).Within(0.0001f));
+            Assert.That(firstPreview.GetTexture("_MainTex"), Is.SameAs(firstTexture));
+            Assert.That(secondPreview.GetTexture("_MainTex"), Is.SameAs(secondTexture));
+            Assert.That(secondPreview.name, Is.EqualTo("Tile 1002 Preview"));
         }
 
         [Test]

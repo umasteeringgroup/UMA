@@ -231,6 +231,9 @@ namespace UMA.TexturePaint.Editor
                     fallbackRendererIndex = set.surface?.rendererIndex ?? -1,
                     fallbackSubmeshIndex = set.surface?.sourceSubmeshIndex ?? -1,
                     activeLayer = set.activeLayerIndex,
+                    normalControlStrength = set.normalControlStrength,
+                    normalControlRadius = set.normalControlRadius,
+                    normalControlInvert = set.normalControlInvert,
                     baseStrokes = CloneStrokes(set.baseStrokes),
                     slotNames = set.surface != null ? new List<string>(set.surface.slotNames) : new List<string>()
                 };
@@ -278,6 +281,9 @@ namespace UMA.TexturePaint.Editor
                 TextureSet set = store.Sets[setIndex];
                 TexturePaintDocumentSurface saved = document.FindSurface(set.persistentId) ?? FindFallback(document, set);
                 if (saved == null) continue;
+                set.normalControlStrength = Mathf.Clamp(saved.normalControlStrength, 0f, 16f);
+                set.normalControlRadius = Mathf.Clamp(saved.normalControlRadius, 1, 16);
+                set.normalControlInvert = saved.normalControlInvert;
                 TexturePaintSurfaceFingerprint current = TexturePaintSurfaceFingerprintUtility.Compute(set.surface?.mesh);
                 bool uvChanged = !string.IsNullOrEmpty(saved.uvSignature) &&
                     !string.Equals(saved.uvSignature, current.uv, StringComparison.Ordinal);
@@ -434,6 +440,9 @@ namespace UMA.TexturePaint.Editor
                     fallbackRendererIndex = set.surface?.rendererIndex ?? -1,
                     fallbackSubmeshIndex = set.surface?.sourceSubmeshIndex ?? -1,
                     activeLayer = set.activeLayerIndex,
+                    normalControlStrength = set.normalControlStrength,
+                    normalControlRadius = set.normalControlRadius,
+                    normalControlInvert = set.normalControlInvert,
                     baseStrokes = CloneStrokes(set.baseStrokes),
                     slotNames = set.surface != null ? new List<string>(set.surface.slotNames) : new List<string>()
                 };
@@ -590,6 +599,9 @@ namespace UMA.TexturePaint.Editor
                 fallbackRendererIndex = source.fallbackRendererIndex,
                 fallbackSubmeshIndex = source.fallbackSubmeshIndex,
                 activeLayer = source.activeLayer,
+                normalControlStrength = source.normalControlStrength,
+                normalControlRadius = source.normalControlRadius,
+                normalControlInvert = source.normalControlInvert,
                 baseStrokes = CloneStrokes(source.baseStrokes)
             };
             if (source.baseChannels != null)

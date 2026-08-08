@@ -9,7 +9,75 @@ using UnityEditor;
 
 namespace UMA.TexturePaint
 {
-    public enum TexturePaintChannel { Albedo, Normal, Metallic, Roughness, AmbientOcclusion, Emission, Custom }
+    public enum TexturePaintChannel
+    {
+        Albedo,
+        Normal,
+        Metallic,
+        Roughness,
+        AmbientOcclusion,
+        Emission,
+        Custom,
+        SkinColorMask,
+        Thickness,
+        DetailMask,
+        NormalControl
+    }
+
+    public static class TexturePaintChannelUtility
+    {
+        public static string DisplayName(TexturePaintChannel channel)
+        {
+            switch (channel)
+            {
+                case TexturePaintChannel.AmbientOcclusion: return "Ambient Occlusion";
+                case TexturePaintChannel.SkinColorMask: return "Skin Color Mask";
+                case TexturePaintChannel.DetailMask: return "Detail Mask";
+                case TexturePaintChannel.NormalControl: return "Normal Control";
+                default: return channel.ToString();
+            }
+        }
+
+        public static bool IsColor(TexturePaintChannel channel)
+        {
+            return channel == TexturePaintChannel.Albedo ||
+                   channel == TexturePaintChannel.Emission ||
+                   channel == TexturePaintChannel.SkinColorMask;
+        }
+
+        public static bool IsVector(TexturePaintChannel channel)
+        {
+            return IsColor(channel) || channel == TexturePaintChannel.Normal ||
+                   channel == TexturePaintChannel.Custom;
+        }
+
+        public static bool IsGrayscale(TexturePaintChannel channel)
+        {
+            return channel == TexturePaintChannel.Metallic ||
+                   channel == TexturePaintChannel.Roughness ||
+                   channel == TexturePaintChannel.AmbientOcclusion ||
+                   channel == TexturePaintChannel.Thickness ||
+                   channel == TexturePaintChannel.DetailMask ||
+                   channel == TexturePaintChannel.NormalControl;
+        }
+
+        public static bool IsAuxiliary(TexturePaintChannel channel)
+        {
+            return channel == TexturePaintChannel.NormalControl;
+        }
+
+        public static Color ConstrainColor(TexturePaintChannel channel, Color color)
+        {
+            if (!IsGrayscale(channel)) return color;
+            float value = ScalarValue(color);
+            return new Color(value, value, value, color.a);
+        }
+
+        public static float ScalarValue(Color color)
+        {
+            return Mathf.Clamp01(color.r * 0.2126f + color.g * 0.7152f + color.b * 0.0722f);
+        }
+    }
     public enum TexturePaintSourceMode { SourceTexture, SourceOverlay, BakeOverlays }
     public enum TexturePaintBrushSource { Texture, Overlay, Color }
     public enum TexturePaintTool { Paint, Erase, Blur, Smear, Clone, Dodge, Burn, NormalTouchup, Plugin }
@@ -40,9 +108,11 @@ namespace UMA.TexturePaint
             private readonly bool unityNormalMap;
             private readonly bool sourceSrgb;
             private readonly bool invert;
+            private readonly int component;
 
             public CacheKey(Texture texture, Sprite sprite, TexturePaintChannel channel,
-                TexturePaintNormalConvention convention, bool unityNormalMap, bool invert)
+                TexturePaintNormalConvention convention, bool unityNormalMap, bool invert,
+                int component)
             {
                 textureId = texture != null ? texture.GetInstanceID() : 0;
                 spriteId = sprite != null ? sprite.GetInstanceID() : 0;
@@ -53,12 +123,14 @@ namespace UMA.TexturePaint
                 this.unityNormalMap = unityNormalMap;
                 sourceSrgb = texture != null && texture.isDataSRGB;
                 this.invert = invert;
+                this.component = component;
             }
 
             public bool Equals(CacheKey other)
                 => textureId == other.textureId && spriteId == other.spriteId && channel == other.channel &&
                    convention == other.convention && unityNormalMap == other.unityNormalMap &&
-                   sourceSrgb == other.sourceSrgb && invert == other.invert;
+                   sourceSrgb == other.sourceSrgb && invert == other.invert &&
+                   component == other.component;
 
             public override bool Equals(object obj) => obj is CacheKey other && Equals(other);
 
@@ -72,7 +144,8 @@ namespace UMA.TexturePaint
                     hash = hash * 397 ^ (int)convention;
                     hash = hash * 397 ^ (unityNormalMap ? 1 : 0);
                     hash = hash * 397 ^ (sourceSrgb ? 1 : 0);
-                    return hash * 397 ^ (invert ? 1 : 0);
+                    hash = hash * 397 ^ (invert ? 1 : 0);
+                    return hash * 397 ^ component;
                 }
             }
         }
@@ -101,7 +174,8 @@ namespace UMA.TexturePaint
             // Ordinary complete color/data textures need no extraction. Normal textures do,
             // because both Unity Normal Map assets and raw RGB normal data must be converted to
             // one predictable representation before vector blending.
-            if (sprite == null && channel != TexturePaintChannel.Normal && !invert) return texture;
+            if (sprite == null && channel != TexturePaintChannel.Normal &&
+                !TexturePaintChannelUtility.IsGrayscale(channel) && !invert) return texture;
             return Extract(source, sprite, channel, convention, invert);
         }
 
@@ -127,8 +201,18 @@ namespace UMA.TexturePaint
                     return Resolve(texture2D, null, channel, convention, invert);
                 return Extract(texture2D, null, channel, convention, invert, true);
             }
-            if (channel != TexturePaintChannel.Normal && !invert) return texture;
+            if (channel != TexturePaintChannel.Normal &&
+                !TexturePaintChannelUtility.IsGrayscale(channel) && !invert) return texture;
             return Extract(texture, null, channel, convention, invert, forceUnityPackedNormal);
+        }
+
+        /// <summary>Extracts one scalar component from a packed physical source.</summary>
+        public static Texture ResolveTextureComponent(Texture texture, TexturePaintChannel channel,
+            TexturePaintNormalConvention convention, int component, bool invert)
+        {
+            if (texture == null) return null;
+            return Extract(texture, null, channel, convention, invert, false,
+                Mathf.Clamp(component, 0, 3));
         }
 
         public static Texture2D GetTexture(Sprite sprite)
@@ -145,11 +229,13 @@ namespace UMA.TexturePaint
 
         private static Texture2D Extract(Texture source, Sprite sprite,
             TexturePaintChannel channel, TexturePaintNormalConvention convention, bool invert,
-            bool forceUnityPackedNormal = false)
+            bool forceUnityPackedNormal = false, int component = -1)
         {
             bool normal = channel == TexturePaintChannel.Normal;
+            bool grayscale = TexturePaintChannelUtility.IsGrayscale(channel);
             bool unityNormalMap = normal && (forceUnityPackedNormal || IsUnityNormalMap(source));
-            CacheKey key = new CacheKey(source, sprite, channel, convention, unityNormalMap, invert);
+            CacheKey key = new CacheKey(source, sprite, channel, convention, unityNormalMap, invert,
+                component);
             if (Cache.TryGetValue(key, out Texture2D cached) && cached != null) return cached;
 
             Rect sourceRect = new Rect(0f, 0f, source.width, source.height);
@@ -196,7 +282,7 @@ namespace UMA.TexturePaint
                     break;
             }
 
-            bool linear = normal || !source.isDataSRGB;
+            bool linear = normal || grayscale || component >= 0 || !source.isDataSRGB;
             RenderTexture temporary = RenderTexture.GetTemporary(width, height, 0,
                 RenderTextureFormat.ARGB32, linear
                     ? RenderTextureReadWrite.Linear : RenderTextureReadWrite.Default);
@@ -216,12 +302,16 @@ namespace UMA.TexturePaint
                 material.SetInt("_InvertGreen",
                     normal && convention == TexturePaintNormalConvention.DirectX ? 1 : 0);
                 material.SetInt("_InvertChannels", invert ? 1 : 0);
-                Graphics.Blit(source, temporary, material, normal ? 1 : 0);
+                material.SetInt("_Grayscale", grayscale ? 1 : 0);
+                material.SetInt("_SourceComponent", component);
+                Graphics.Blit(source, temporary, material, component >= 0 ? 1 : normal ? 2 : 0);
                 RenderTexture.active = temporary;
                 result = new Texture2D(width, height, TextureFormat.RGBA32, false, linear)
                 {
                     name = (sprite != null ? sprite.name : source.name) +
-                           (normal ? " (Overlay Painter Normal Source)" :
+                           (component >= 0 ? $" (Overlay Painter {channel} Component {component})" :
+                            normal ? " (Overlay Painter Normal Source)" :
+                            grayscale ? " (Overlay Painter Grayscale Source)" :
                                invert ? " (Overlay Painter Inverted Source)" : " (Overlay Painter Sprite)"),
                     hideFlags = HideFlags.HideAndDontSave,
                     filterMode = source.filterMode,

@@ -897,6 +897,9 @@ namespace UMA.TexturePaint
         public int fallbackRendererIndex;
         public int fallbackSubmeshIndex;
         public int activeLayer = -1;
+        [Range(0f, 16f)] public float normalControlStrength = 2f;
+        [Range(1, 16)] public int normalControlRadius = 1;
+        public bool normalControlInvert;
         public List<TexturePaintDocumentChannel> baseChannels = new List<TexturePaintDocumentChannel>();
         public List<TexturePaintStrokeRecord> baseStrokes = new List<TexturePaintStrokeRecord>();
         public List<TexturePaintDocumentLayer> layers = new List<TexturePaintDocumentLayer>();
@@ -905,7 +908,7 @@ namespace UMA.TexturePaint
     [CreateAssetMenu(menuName = "UMA/Overlay Painter/Document", fileName = "Overlay Painter Document")]
     public sealed class TexturePaintDocument : ScriptableObject
     {
-        public const int CurrentSchemaVersion = 19;
+        public const int CurrentSchemaVersion = 20;
 
         public int schemaVersion = CurrentSchemaVersion;
         public string documentId = Guid.NewGuid().ToString("N");
@@ -939,6 +942,14 @@ namespace UMA.TexturePaint
             {
                 TexturePaintDocumentSurface surface = surfaces[surfaceIndex];
                 if (surface == null) continue;
+                if (loadedSchemaVersion < 20)
+                {
+                    surface.normalControlStrength = 2f;
+                    surface.normalControlRadius = 1;
+                    surface.normalControlInvert = false;
+                }
+                surface.normalControlStrength = Mathf.Clamp(surface.normalControlStrength, 0f, 16f);
+                surface.normalControlRadius = Mathf.Clamp(surface.normalControlRadius, 1, 16);
                 surface.slotNames ??= new List<string>();
                 surface.baseChannels ??= new List<TexturePaintDocumentChannel>();
                 surface.baseStrokes ??= new List<TexturePaintStrokeRecord>();

@@ -579,7 +579,14 @@ namespace UMA.TexturePaint.Editor
             {
                 EditorGUILayout.Space(2f);
                 GUILayout.Label("Paint Source", EditorStyles.boldLabel);
-                paintSource = (TexturePaintBrushSource)GUILayout.Toolbar((int)paintSource,
+                if (TexturePaintChannelUtility.IsAuxiliary(selectedChannel))
+                {
+                    int sourceIndex = paintSource == TexturePaintBrushSource.Texture ? 0 : 1;
+                    sourceIndex = GUILayout.Toolbar(sourceIndex, new[] { "Texture", "Color" });
+                    paintSource = sourceIndex == 0 ? TexturePaintBrushSource.Texture :
+                        TexturePaintBrushSource.Color;
+                }
+                else paintSource = (TexturePaintBrushSource)GUILayout.Toolbar((int)paintSource,
                     new[] { "Texture", "Overlay", "Color" });
                 switch (paintSource)
                 {
@@ -594,18 +601,40 @@ namespace UMA.TexturePaint.Editor
                             EditorGUILayout.HelpBox("Select OverlayData before painting.", MessageType.Warning);
                         break;
                     case TexturePaintBrushSource.Color:
-                        paintColor = EditorGUILayout.ColorField("Color", paintColor);
+                        if (TexturePaintChannelUtility.IsGrayscale(selectedChannel))
+                        {
+                            float value = EditorGUILayout.Slider("Value",
+                                TexturePaintChannelUtility.ScalarValue(paintColor), 0f, 1f);
+                            paintColor = new Color(value, value, value, paintColor.a);
+                        }
+                        else paintColor = EditorGUILayout.ColorField("Color", paintColor);
                         break;
                 }
+                if (TexturePaintChannelUtility.IsAuxiliary(selectedChannel))
+                    EditorGUILayout.HelpBox("Normal Control has no OverlayData material source. Use a texture, sprite, or grayscale value.", MessageType.None);
             }
             if (!maskMode)
             {
                 EditorGUI.BeginChangeCheck();
-                selectedChannel = (TexturePaintChannel)EditorGUILayout.EnumPopup("Channel", selectedChannel);
+                selectedChannel = DrawAvailableChannelPopup(set, new GUIContent("Channel"), selectedChannel);
                 if (selectedChannel == TexturePaintChannel.Normal)
                     normalConvention = (TexturePaintNormalConvention)EditorGUILayout.EnumPopup("Normal Convention", normalConvention);
-                if (EditorGUI.EndChangeCheck()) RefreshPaintSourceForChannel();
+                if (EditorGUI.EndChangeCheck())
+                {
+                    paintColor = TexturePaintChannelUtility.ConstrainColor(selectedChannel, paintColor);
+                    RefreshPaintSourceForChannel();
+                }
                 if (set.GetChannel(selectedChannel) == null) EditorGUILayout.HelpBox("The active slot material does not expose the selected channel.", MessageType.Warning);
+                if (selectedChannel == TexturePaintChannel.NormalControl)
+                {
+                    EditorGUILayout.HelpBox("Neutral gray leaves normals unchanged; dark recesses and light raises the generated normal.", MessageType.None);
+                    EditorGUI.BeginChangeCheck();
+                    float controlStrength = EditorGUILayout.Slider("Height Strength", set.normalControlStrength, 0f, 16f);
+                    int controlRadius = EditorGUILayout.IntSlider("Sample Radius (px)", set.normalControlRadius, 1, 16);
+                    bool controlInvert = EditorGUILayout.Toggle("Invert Height", set.normalControlInvert);
+                    if (EditorGUI.EndChangeCheck())
+                        ChangeNormalControlSettings(set, controlStrength, controlRadius, controlInvert);
+                }
             }
             else
             {

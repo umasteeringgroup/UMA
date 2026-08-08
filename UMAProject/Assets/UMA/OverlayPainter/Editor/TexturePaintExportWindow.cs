@@ -48,6 +48,7 @@ namespace UMA.TexturePaint.Editor
             if (!string.IsNullOrEmpty(state?.exportTemplateGuid))
                 template = AssetDatabase.LoadAssetAtPath<TexturePaintExportTemplate>(AssetDatabase.GUIDToAssetPath(state.exportTemplateGuid));
             if (template == null) UseDescriptorDefaults();
+            else template.Migrate();
         }
 
         private void OnGUI()
@@ -65,7 +66,11 @@ namespace UMA.TexturePaint.Editor
                 typeof(TexturePaintExportTemplate), false);
             if (EditorGUI.EndChangeCheck())
             {
-                if (selected != null) template = selected;
+                if (selected != null)
+                {
+                    template = selected;
+                    template.Migrate();
+                }
                 else UseDescriptorDefaults();
                 RememberTemplateSelection();
                 RebuildPlan();
@@ -94,10 +99,10 @@ namespace UMA.TexturePaint.Editor
                     "Flattened Composite includes the reconstructed character texture. Runtime Overlay exports only visible painter layers and creates a dedicated alpha mask."),
                 template.content);
             if (template.content == TexturePaintExportContent.FlattenedComposite)
-                EditorGUILayout.HelpBox("Exports the complete appearance: reconstructed character textures plus visible painter layers.",
+                EditorGUILayout.HelpBox("Exports the complete appearance: reconstructed character textures plus visible painter layers. Normal Control is baked into each material's physical normal output.",
                     MessageType.Info);
             else
-                EditorGUILayout.HelpBox("Exports visible painter layers over transparency. Direct base painting and reconstructed character textures are excluded. A grayscale alpha mask is generated and assigned to the UMA overlay for runtime blending.",
+                EditorGUILayout.HelpBox("Exports visible painter layers over transparency. Direct base painting and reconstructed character textures are excluded. A grayscale alpha mask is generated and assigned to the UMA overlay for runtime blending. Authored Normal Control becomes a flat-relative normal delta and contributes to that coverage mask; it is not exported separately.",
                     MessageType.Info);
             template.scope = (TexturePaintExportScope)EditorGUILayout.EnumPopup("Materials", template.scope);
             EditorGUILayout.EndVertical();
@@ -276,9 +281,9 @@ namespace UMA.TexturePaint.Editor
                     first.set.physicalChannelGroups.TryGetValue(first.materialProperty,
                         out TexturePhysicalChannelGroup physical)
                     ? physical.packed
-                    : first.set.GetChannel(first.materialChannel.LogicalChannels.Count > 0
+                    : first.set.GetVisibleTexture(first.materialChannel.LogicalChannels.Count > 0
                         ? first.materialChannel.LogicalChannels[0]
-                        : TexturePaintChannel.Custom)?.PreviewTexture;
+                        : TexturePaintChannel.Custom);
                 if (preview != null)
                 {
                     Rect rect = GUILayoutUtility.GetRect(128f, 128f, GUILayout.ExpandWidth(false));

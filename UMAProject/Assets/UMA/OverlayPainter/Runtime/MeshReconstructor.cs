@@ -1195,6 +1195,7 @@ namespace UMA.TexturePaint
                 }
                 if (result.surfaces.Count == 0) throw new InvalidOperationException("No paintable material submeshes were reconstructed.");
                 result.logicalTargets.Rebuild(result.surfaces);
+                ApplyCanonicalUdimMaterialProperties(result.logicalTargets);
                 return result;
             }
             catch
@@ -1346,6 +1347,56 @@ namespace UMA.TexturePaint
             if (submeshCount == 0) mesh.SetIndices(Array.Empty<int>(), MeshTopology.Triangles, 0, false);
             mesh.RecalculateBounds();
             return mesh;
+        }
+
+        /// <summary>
+        /// A built character can contain one generated material instance per UDIM tile. The first
+        /// tile is authoritative for shader parameters, colors, keywords, render state, and other
+        /// non-painted material settings. Every tile retains its own reconstructed native texture
+        /// inputs after those material properties are copied.
+        /// </summary>
+        internal static void ApplyCanonicalUdimMaterialProperties(TexturePaintLogicalTargetCatalog catalog)
+        {
+            if (catalog == null) return;
+            IReadOnlyList<TexturePaintLogicalTarget> targets = catalog.Targets;
+            for (int targetIndex = 0; targetIndex < targets.Count; targetIndex++)
+            {
+                TexturePaintLogicalTarget target = targets[targetIndex];
+                if (target?.isUdim != true || target.members.Count == 0) continue;
+                ApplyCanonicalUdimMaterialProperties(target);
+            }
+        }
+
+        internal static void ApplyCanonicalUdimMaterialProperties(TexturePaintLogicalTarget target)
+        {
+            if (target?.isUdim != true || target.members.Count == 0) return;
+            ReconstructedSurface canonicalSurface = null;
+            for (int memberIndex = 0; memberIndex < target.members.Count && canonicalSurface == null; memberIndex++)
+            {
+                TexturePaintLogicalTargetMember member = target.members[memberIndex];
+                for (int surfaceIndex = 0; member != null && surfaceIndex < member.surfaces.Count; surfaceIndex++)
+                    if (member.surfaces[surfaceIndex]?.sourceMaterial != null)
+                    { canonicalSurface = member.surfaces[surfaceIndex]; break; }
+            }
+            Material canonical = canonicalSurface?.sourceMaterial;
+            if (canonical == null) return;
+
+            for (int memberIndex = 0; memberIndex < target.members.Count; memberIndex++)
+            {
+                TexturePaintLogicalTargetMember member = target.members[memberIndex];
+                for (int surfaceIndex = 0; member != null && surfaceIndex < member.surfaces.Count; surfaceIndex++)
+                {
+                    ReconstructedSurface surface = member.surfaces[surfaceIndex];
+                    Material preview = surface?.previewMaterial;
+                    if (preview == null || preview.shader != canonical.shader) continue;
+                    string previewName = preview.name;
+                    HideFlags previewFlags = preview.hideFlags;
+                    preview.CopyPropertiesFromMaterial(canonical);
+                    preview.name = previewName;
+                    preview.hideFlags = previewFlags;
+                    ApplyStandaloneSources(preview, surface.umaMaterial, surface.sourceTextures);
+                }
+            }
         }
 
         private static bool IsMirrored(Matrix4x4 transform)
@@ -1552,7 +1603,8 @@ namespace UMA.TexturePaint
                 return component == 2 ? 1f : component < 2 ? 0.5f : 1f;
             if ((usage & (UMAMaterial.TextureChannelUsage.Albedo | UMAMaterial.TextureChannelUsage.Opacity |
                           UMAMaterial.TextureChannelUsage.AmbientOcclusion |
-                          UMAMaterial.TextureChannelUsage.Roughness)) != 0) return 1f;
+                          UMAMaterial.TextureChannelUsage.Roughness |
+                          UMAMaterial.TextureChannelUsage.DetailMask)) != 0) return 1f;
             if ((usage & UMAMaterial.TextureChannelUsage.Smoothness) != 0) return 0f;
             if ((usage & (UMAMaterial.TextureChannelUsage.DetailNormalX |
                           UMAMaterial.TextureChannelUsage.DetailNormalY |

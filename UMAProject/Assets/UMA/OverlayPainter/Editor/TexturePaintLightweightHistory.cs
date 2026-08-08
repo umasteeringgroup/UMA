@@ -686,7 +686,7 @@ namespace UMA.TexturePaint.Editor
             TexturePaintChannelSourceSettings source, TexturePaintChannel sourceChannel)
         {
             if (source == null) return;
-            float nextValue = Mathf.Clamp01(source.color.grayscale);
+            float nextValue = TexturePaintChannelUtility.ScalarValue(source.color);
             TexturePaintChannelSourceSettings next = TexturePaintLayerMask.DefaultSourceSettings();
             next.color = new Color(nextValue, nextValue, nextValue, 1f);
             sourceChannel = TexturePaintChannel.Albedo;
@@ -816,6 +816,33 @@ namespace UMA.TexturePaint.Editor
         {
             layer.channelSettings[channel] = value.Clone();
             set.BindPreviewTextures();
+        }
+
+        private void ChangeNormalControlSettings(TextureSet set, float strength, int radius, bool invert)
+        {
+            if (set == null || set.GetChannel(TexturePaintChannel.NormalControl) == null) return;
+            float beforeStrength = set.normalControlStrength;
+            int beforeRadius = set.normalControlRadius;
+            bool beforeInvert = set.normalControlInvert;
+            strength = Mathf.Clamp(strength, 0f, 16f);
+            radius = Mathf.Clamp(radius, 1, 16);
+            if (Mathf.Approximately(beforeStrength, strength) && beforeRadius == radius &&
+                beforeInvert == invert) return;
+
+            void Apply(float nextStrength, int nextRadius, bool nextInvert)
+            {
+                set.normalControlStrength = nextStrength;
+                set.normalControlRadius = nextRadius;
+                set.normalControlInvert = nextInvert;
+                set.BindPreviewTextures(false);
+            }
+
+            Apply(strength, radius, invert);
+            PushLightweightCommand("Edit Normal Control",
+                () => Apply(beforeStrength, beforeRadius, beforeInvert),
+                () => Apply(strength, radius, invert), null,
+                "normal-control:" + set.persistentId);
+            MarkDocumentDirty();
         }
 
         private bool AddLayerChannelWithHistory(TextureSet set, TexturePaintLayer layer,

@@ -215,7 +215,7 @@ namespace UMA.TexturePaint
                 if (target == null) throw new InvalidOperationException($"Surface does not expose {command.channel}.");
                 if (command.rect.xMin < 0 || command.rect.yMin < 0 || command.rect.xMax > target.Texture.width || command.rect.yMax > target.Texture.height)
                     throw new InvalidOperationException("Plugin tile lies outside the target texture.");
-                bool colorChannel = command.channel == TexturePaintChannel.Albedo || command.channel == TexturePaintChannel.Emission;
+                bool colorChannel = TexturePaintChannelUtility.IsColor(command.channel);
                 if (!colorChannel && command.colorSpace != TexturePaintPluginColorSpace.Data)
                     throw new InvalidOperationException($"{command.channel} requires Data color space.");
                 if (colorChannel && command.colorSpace == TexturePaintPluginColorSpace.Data)
@@ -233,6 +233,7 @@ namespace UMA.TexturePaint
             for (int i = 0; i < destination.Length; i++)
             {
                 Color source = Convert(command.pixels[i], command.colorSpace);
+                source = TexturePaintChannelUtility.ConstrainColor(command.channel, source);
                 float coverage = Mathf.Clamp01(command.opacity * maskPixels[i].r);
                 if (command.channel == TexturePaintChannel.Normal)
                 {
@@ -258,6 +259,7 @@ namespace UMA.TexturePaint
                             Mathf.Lerp(destination[i].b, source.b, alpha), alpha + destination[i].a * (1f - alpha));
                         break;
                 }
+                destination[i] = TexturePaintChannelUtility.ConstrainColor(command.channel, destination[i]);
             }
             Texture2D patch = new Texture2D(command.rect.width, command.rect.height, target.Front.graphicsFormat,
                 TextureCreationFlags.None) { hideFlags = HideFlags.HideAndDontSave, name = "Texture Paint Plugin Tile" };

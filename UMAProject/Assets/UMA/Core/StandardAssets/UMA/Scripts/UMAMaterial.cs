@@ -172,7 +172,12 @@ namespace UMA
             DetailAlbedo = 1 << 13,
             DetailNormalX = 1 << 14,
             DetailNormalY = 1 << 15,
-            DetailSmoothness = 1 << 16
+            DetailSmoothness = 1 << 16,
+            /// <summary>
+            /// RGBA skin-variation texture. RGB stores the color the base skin is shifted toward;
+            /// alpha controls the amount and direction of that variation in the skin shader.
+            /// </summary>
+            SkinColorMask = 1 << 17
         }
 
         public enum TextureChannelLayoutMode
@@ -444,7 +449,8 @@ namespace UMA
             TextureChannelLayout layout = GetTextureChannelLayout(channel, sourceMaterial);
             TextureChannelUsage rgb = layout.red | layout.green | layout.blue;
             bool colorData = (rgb & (TextureChannelUsage.Albedo | TextureChannelUsage.Emission |
-                                     TextureChannelUsage.DetailAlbedo)) != 0;
+                                     TextureChannelUsage.DetailAlbedo |
+                                     TextureChannelUsage.SkinColorMask)) != 0;
             bool ordinaryNormal = layout.red == TextureChannelUsage.Normal &&
                                   layout.green == TextureChannelUsage.Normal &&
                                   layout.blue == TextureChannelUsage.Normal &&
@@ -544,6 +550,13 @@ namespace UMA
                 return layout;
             }
 
+            if (EqualsProperty(property, "_Skinmask") || name.Contains("skinmask") ||
+                name.Contains("skin mask"))
+            {
+                SetRgba(ref layout, TextureChannelUsage.SkinColorMask);
+                return layout;
+            }
+
             if (EqualsProperty(property, "_MaskMap"))
             {
                 layout.red = TextureChannelUsage.Metallic;
@@ -596,7 +609,7 @@ namespace UMA
                 return layout;
             }
 
-            if (name.Contains("thickness"))
+            if (name.Contains("thickness") || name.Contains("sss mask") || name.Contains("sssmask"))
             {
                 layout.red = TextureChannelUsage.Thickness;
                 return layout;

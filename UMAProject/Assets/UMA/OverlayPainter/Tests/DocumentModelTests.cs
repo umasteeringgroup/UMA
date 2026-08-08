@@ -92,6 +92,72 @@ namespace UMA.TexturePaint.Tests
         }
 
         [Test]
+        public void SkinAndNormalControlChannelsSurviveDocumentSerialization()
+        {
+            TexturePaintDocument document = ScriptableObject.CreateInstance<TexturePaintDocument>();
+            document.surfaces.Add(new TexturePaintDocumentSurface
+            {
+                normalControlStrength = 5.5f,
+                normalControlRadius = 3,
+                normalControlInvert = true,
+                baseChannels = new System.Collections.Generic.List<TexturePaintDocumentChannel>
+                {
+                    new TexturePaintDocumentChannel { channel = TexturePaintChannel.SkinColorMask },
+                    new TexturePaintDocumentChannel { channel = TexturePaintChannel.Thickness },
+                    new TexturePaintDocumentChannel { channel = TexturePaintChannel.DetailMask },
+                    new TexturePaintDocumentChannel { channel = TexturePaintChannel.NormalControl }
+                },
+                layers = new System.Collections.Generic.List<TexturePaintDocumentLayer>
+                {
+                    new TexturePaintDocumentLayer
+                    {
+                        channels = new System.Collections.Generic.List<TexturePaintDocumentLayerChannel>
+                        {
+                            new TexturePaintDocumentLayerChannel
+                            {
+                                channel = TexturePaintChannel.SkinColorMask,
+                                hasSourceSettings = true,
+                                sourceColor = new Color(0.8f, 0.35f, 0.25f, 0.6f)
+                            },
+                            new TexturePaintDocumentLayerChannel { channel = TexturePaintChannel.Thickness },
+                            new TexturePaintDocumentLayerChannel { channel = TexturePaintChannel.DetailMask },
+                            new TexturePaintDocumentLayerChannel
+                            {
+                                channel = TexturePaintChannel.NormalControl,
+                                hasSourceSettings = true,
+                                sourceColor = new Color(0.72f, 0.72f, 0.72f, 0.4f)
+                            }
+                        }
+                    }
+                }
+            });
+
+            string json = JsonUtility.ToJson(document);
+            TexturePaintDocument restored = ScriptableObject.CreateInstance<TexturePaintDocument>();
+            JsonUtility.FromJsonOverwrite(json, restored);
+
+            Assert.That(restored.surfaces[0].baseChannels[0].channel,
+                Is.EqualTo(TexturePaintChannel.SkinColorMask));
+            Assert.That(restored.surfaces[0].baseChannels[1].channel,
+                Is.EqualTo(TexturePaintChannel.Thickness));
+            Assert.That(restored.surfaces[0].baseChannels[2].channel,
+                Is.EqualTo(TexturePaintChannel.DetailMask));
+            Assert.That(restored.surfaces[0].baseChannels[3].channel,
+                Is.EqualTo(TexturePaintChannel.NormalControl));
+            Assert.That(restored.surfaces[0].normalControlStrength, Is.EqualTo(5.5f));
+            Assert.That(restored.surfaces[0].normalControlRadius, Is.EqualTo(3));
+            Assert.That(restored.surfaces[0].normalControlInvert, Is.True);
+            Assert.That(restored.surfaces[0].layers[0].channels[0].sourceColor,
+                Is.EqualTo(new Color(0.8f, 0.35f, 0.25f, 0.6f)));
+            Assert.That(restored.surfaces[0].layers[0].channels[3].channel,
+                Is.EqualTo(TexturePaintChannel.NormalControl));
+            Assert.That(restored.surfaces[0].layers[0].channels[3].sourceColor,
+                Is.EqualTo(new Color(0.72f, 0.72f, 0.72f, 0.4f)));
+            Object.DestroyImmediate(restored);
+            Object.DestroyImmediate(document);
+        }
+
+        [Test]
         public void PixelDataCanUseExternalTextAssetStorage()
         {
             TextAsset data = new TextAsset("pixel data");
