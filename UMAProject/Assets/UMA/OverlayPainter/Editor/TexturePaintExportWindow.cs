@@ -123,7 +123,17 @@ namespace UMA.TexturePaint.Editor
             template.padding = EditorGUILayout.IntSlider(new GUIContent("Edge Padding",
                 "Extends albedo RGB beneath transparent pixels without changing alpha, preventing texture filtering seams."),
                 template.padding, 0, 64);
-            template.markAddressable = EditorGUILayout.Toggle("Mark Addressable", template.markAddressable);
+#if UMA_ADDRESSABLES
+            template.markAddressable = EditorGUILayout.Toggle(new GUIContent("Mark Addressable",
+                "Register exported textures, alpha masks, and UMA overlays in the Addressables default group."),
+                template.markAddressable);
+#else
+            using (new EditorGUI.DisabledScope(true))
+                EditorGUILayout.Toggle(new GUIContent("Mark Addressable",
+                    "Requires the UMA_ADDRESSABLES scripting define and the Addressables package."), false);
+            EditorGUILayout.LabelField("Addressables integration is not enabled for this project.",
+                EditorStyles.wordWrappedMiniLabel);
+#endif
             EditorGUILayout.EndVertical();
 
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
@@ -406,7 +416,17 @@ namespace UMA.TexturePaint.Editor
             EditorGUILayout.PropertyField(serializedObject.FindProperty("overwritePolicy"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("resolution"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("padding"));
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("markAddressable"));
+#if UMA_ADDRESSABLES
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("markAddressable"),
+                new GUIContent("Mark Addressable"));
+#else
+            using (new EditorGUI.DisabledScope(true))
+                EditorGUILayout.Toggle(new GUIContent("Mark Addressable",
+                    "Requires the UMA_ADDRESSABLES scripting define and the Addressables package."), false);
+            EditorGUILayout.HelpBox("Addressables registration is unavailable until UMA_ADDRESSABLES is enabled. " +
+                "This template's stored setting is preserved and ordinary export remains available.",
+                MessageType.Info);
+#endif
             EditorGUILayout.Space(3f);
             SerializedProperty overwrite = serializedObject.FindProperty("overwriteSourceOverlay");
             EditorGUILayout.PropertyField(overwrite);

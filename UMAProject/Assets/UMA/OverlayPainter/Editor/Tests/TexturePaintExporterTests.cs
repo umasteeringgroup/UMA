@@ -101,6 +101,21 @@ namespace UMA.TexturePaint.Editor.Tests
             Assert.That(plan.overlays[0].path, Does.EndWith("Torso_Summer Edit_Overlay.asset"));
         }
 
+#if !UMA_ADDRESSABLES
+        [Test]
+        public void PlanWarnsWhenStoredTemplateRequestsUnavailableAddressablesIntegration()
+        {
+            template.markAddressable = true;
+
+            TexturePaintExportPlan plan = TexturePaintExporter.BuildPlan(store, set, "Avatar", template,
+                "Without Addressables", null);
+
+            Assert.That(plan.IsValid, Is.True, string.Join("\n", plan.errors));
+            Assert.That(plan.warnings,
+                Has.Some.Contains("UMA_ADDRESSABLES is not enabled"));
+        }
+#endif
+
         [Test]
         public void ExportCreatesRecipeReadyIndexedOverlayWithoutChangingStateOrSource()
         {

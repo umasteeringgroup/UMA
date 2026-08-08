@@ -372,6 +372,11 @@ namespace UMA.TexturePaint.Editor
                     "Only descriptor-ordered physical UMAMaterial channels are written.");
             if (template.createMaterialOverride || template.updateRecipeReferences)
                 plan.warnings.Add("Material overrides and implicit recipe/avatar updates are disabled for release export.");
+#if !UMA_ADDRESSABLES
+            if (template.markAddressable)
+                plan.warnings.Add("Mark Addressable was requested, but UMA_ADDRESSABLES is not enabled. " +
+                    "The export will continue without Addressables registration.");
+#endif
             return plan;
         }
 
@@ -1027,6 +1032,7 @@ namespace UMA.TexturePaint.Editor
                         0.74f + 0.14f * ((i + 1f) / plan.overlays.Count));
                 }
 
+#if UMA_ADDRESSABLES
                 if (template.markAddressable)
                 {
                     for (int i = 0; i < result.texturePaths.Count; i++)
@@ -1039,6 +1045,7 @@ namespace UMA.TexturePaint.Editor
                         if (MarkAddressable(result.overlayPaths[i]))
                             newAddressableGuids.Add(AssetDatabase.AssetPathToGUID(result.overlayPaths[i]));
                 }
+#endif
 
                 operation.ThrowIfCancellationRequested();
                 for (int i = 0; i < result.overlayPaths.Count; i++)
@@ -1168,7 +1175,9 @@ namespace UMA.TexturePaint.Editor
             List<ObjectSnapshot> objectSnapshots, List<string> registeredOverlayNames,
             List<string> newAddressableGuids)
         {
+#if UMA_ADDRESSABLES
             for (int i = 0; i < newAddressableGuids.Count; i++) RemoveAddressable(newAddressableGuids[i]);
+#endif
             if (indexer != null)
             {
                 for (int i = 0; i < registeredOverlayNames.Count; i++)
@@ -1329,27 +1338,80 @@ namespace UMA.TexturePaint.Editor
             return 2048;
         }
 
+#if UMA_ADDRESSABLES
+        private const string AddressableSettingsDefaultTypeName =
+            "UnityEditor.AddressableAssets.AddressableAssetSettingsDefaultObject, Unity.Addressables.Editor";
+
         private static bool MarkAddressable(string path)
         {
-#if UMA_ADDRESSABLES
-            var settings = UnityEditor.AddressableAssets.AddressableAssetSettingsDefaultObject.Settings;
+            object settings = GetAddressableSettings();
             if (settings == null) return false;
             string guid = AssetDatabase.AssetPathToGUID(path);
-            if (settings.FindAssetEntry(guid) != null) return false;
-            settings.CreateOrMoveEntry(guid, settings.DefaultGroup);
+            if (InvokeAddressables(settings, "FindAssetEntry", guid) != null) return false;
+            PropertyInfo defaultGroupProperty = settings.GetType().GetProperty("DefaultGroup",
+                BindingFlags.Instance | BindingFlags.Public);
+            object defaultGroup = defaultGroupProperty?.GetValue(settings);
+            if (defaultGroup == null) throw new InvalidOperationException(
+                "Addressables has no default group for exported Overlay Painter assets.");
+            InvokeAddressables(settings, "CreateOrMoveEntry", guid, defaultGroup);
             return true;
-#else
-            return false;
-#endif
         }
 
         private static void RemoveAddressable(string guid)
         {
-#if UMA_ADDRESSABLES
-            var settings = UnityEditor.AddressableAssets.AddressableAssetSettingsDefaultObject.Settings;
-            settings?.RemoveAssetEntry(guid);
-#endif
+            object settings = GetAddressableSettings();
+            if (settings != null) InvokeAddressables(settings, "RemoveAssetEntry", guid);
         }
+
+        private static object GetAddressableSettings()
+        {
+            Type settingsDefaultType = Type.GetType(AddressableSettingsDefaultTypeName, false);
+            if (settingsDefaultType == null) throw new InvalidOperationException(
+                "UMA_ADDRESSABLES is enabled, but the Addressables editor assembly is unavailable. " +
+                "Install Addressables or remove the UMA_ADDRESSABLES scripting define.");
+            PropertyInfo settingsProperty = settingsDefaultType.GetProperty("Settings",
+                BindingFlags.Static | BindingFlags.Public);
+            if (settingsProperty == null) throw new MissingMemberException(
+                settingsDefaultType.FullName, "Settings");
+            return settingsProperty.GetValue(null);
+        }
+
+        private static object InvokeAddressables(object target, string methodName, params object[] supplied)
+        {
+            MethodInfo[] methods = target.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public);
+            for (int methodIndex = 0; methodIndex < methods.Length; methodIndex++)
+            {
+                MethodInfo method = methods[methodIndex];
+                if (!string.Equals(method.Name, methodName, StringComparison.Ordinal)) continue;
+                ParameterInfo[] parameters = method.GetParameters();
+                if (parameters.Length < supplied.Length) continue;
+                object[] arguments = new object[parameters.Length];
+                bool matches = true;
+                for (int parameterIndex = 0; parameterIndex < parameters.Length; parameterIndex++)
+                {
+                    ParameterInfo parameter = parameters[parameterIndex];
+                    if (parameterIndex < supplied.Length)
+                    {
+                        object value = supplied[parameterIndex];
+                        if (value != null && !parameter.ParameterType.IsInstanceOfType(value))
+                        {
+                            matches = false;
+                            break;
+                        }
+                        arguments[parameterIndex] = value;
+                    }
+                    else if (parameter.HasDefaultValue) arguments[parameterIndex] = parameter.DefaultValue;
+                    else
+                    {
+                        matches = false;
+                        break;
+                    }
+                }
+                if (matches) return method.Invoke(target, arguments);
+            }
+            throw new MissingMethodException(target.GetType().FullName, methodName);
+        }
+#endif
 
         private static void ApplyDeclaredOutputTransform(Texture2D texture,
             TexturePaintMaterialChannelCapability channel, bool invertNormalGreen,

@@ -76,6 +76,7 @@ namespace UMA.TexturePaint.Editor
             CheckAssets(result);
             CheckPipelines(result);
             CheckPluginBoundary(result);
+            CheckOptionalIntegrations(result);
             return result;
         }
 
@@ -241,6 +242,20 @@ namespace UMA.TexturePaint.Editor
                 typeof(TexturePaintReadOnlyImage).GetMethod("CopyPixels") != null &&
                 typeof(TexturePaintReadOnlyImage).GetProperty("pixels") == null,
                 "Plugins receive copied pixel data and validated command contexts.");
+        }
+
+        private static void CheckOptionalIntegrations(TexturePaintReleaseGateReport report)
+        {
+            string asmdefPath = Root + "Editor/UMA.TexturePaint.Editor.asmdef";
+            string fullPath = Path.GetFullPath(asmdefPath);
+            string definition = File.Exists(fullPath) ? File.ReadAllText(fullPath) : string.Empty;
+            bool isolated = definition.Length > 0 &&
+                definition.IndexOf("Unity.Addressables", StringComparison.Ordinal) < 0 &&
+                definition.IndexOf("Unity.ResourceManager", StringComparison.Ordinal) < 0;
+            Add(report, "Optional integrations", "Addressables-free core assembly", isolated,
+                isolated
+                    ? "Mark Addressable is compiled only under UMA_ADDRESSABLES; the core editor asmdef has no package references."
+                    : "Remove Addressables and ResourceManager references from " + asmdefPath + ".");
         }
 
         private static void Add(TexturePaintReleaseGateReport report, string category, string name,
