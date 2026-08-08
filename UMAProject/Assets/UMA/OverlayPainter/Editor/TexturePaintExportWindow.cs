@@ -21,11 +21,13 @@ namespace UMA.TexturePaint.Editor
         private string status;
         [SerializeField] private string exportIdentifier;
         [SerializeField] private string identifierSessionKey;
+        [SerializeField] private bool showMaterialDetails;
 
         public static void Open(TexturePaintStageController controller, DynamicCharacterAvatar avatar,
             TextureSet current, TexturePaintStageState state, TexturePaintDocument document)
         {
             TexturePaintExportWindow window = GetWindow<TexturePaintExportWindow>("Overlay Painter Export");
+            window.minSize = new Vector2(720f, 520f);
             window.controller = controller; window.avatar = avatar; window.current = current;
             window.state = state ?? new TexturePaintStageState(); window.document = document;
             string sessionKey = document != null ? document.documentId : current?.persistentId;
@@ -50,16 +52,16 @@ namespace UMA.TexturePaint.Editor
 
         private void OnGUI()
         {
-            EditorGUILayout.LabelField("Recipe-ready UMA Export", EditorStyles.boldLabel);
-            EditorGUILayout.HelpBox("Export writes one physical texture per UMAMaterial channel and one indexed " +
-                "OverlayDataAsset per slot or UDIM tile. It never changes the paint document, avatar, recipe, or " +
-                "source assets unless Overwrite Source Overlay is explicitly enabled.", MessageType.Info);
-            EditorGUILayout.HelpBox("Texture packing, encoding, importer type, color space, and normal convention " +
-                "come from the UMAMaterial descriptors. A template asset is optional and only saves reusable " +
-                "output overrides such as folder, naming policy, resolution, and padding.", MessageType.None);
+            EditorGUILayout.LabelField("Export UMA Overlay", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Create recipe-ready textures and an indexed OverlayDataAsset.",
+                EditorStyles.wordWrappedMiniLabel);
+            EditorGUILayout.Space(4f);
+
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            EditorGUILayout.LabelField("Preset", EditorStyles.boldLabel);
             EditorGUI.BeginChangeCheck();
             TexturePaintExportTemplate selected = (TexturePaintExportTemplate)EditorGUILayout.ObjectField(
-                "Override Template (Optional)", AssetDatabase.Contains(template) ? template : null,
+                "Export Template (Optional)", AssetDatabase.Contains(template) ? template : null,
                 typeof(TexturePaintExportTemplate), false);
             if (EditorGUI.EndChangeCheck())
             {
@@ -77,43 +79,85 @@ namespace UMA.TexturePaint.Editor
                 RebuildPlan();
             }
             using (new EditorGUI.DisabledScope(template == null))
-                if (GUILayout.Button("Refresh Preview")) RebuildPlan();
+                if (GUILayout.Button("Refresh Plan")) RebuildPlan();
             GUILayout.EndHorizontal();
+            EditorGUILayout.EndVertical();
             if (template == null) return;
 
             scroll = EditorGUILayout.BeginScrollView(scroll);
             EditorGUI.BeginChangeCheck();
+
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            EditorGUILayout.LabelField("1. Content", EditorStyles.boldLabel);
+            template.content = (TexturePaintExportContent)EditorGUILayout.EnumPopup(
+                new GUIContent("Export Mode",
+                    "Flattened Composite includes the reconstructed character texture. Runtime Overlay exports only visible painter layers and creates a dedicated alpha mask."),
+                template.content);
+            if (template.content == TexturePaintExportContent.FlattenedComposite)
+                EditorGUILayout.HelpBox("Exports the complete appearance: reconstructed character textures plus visible painter layers.",
+                    MessageType.Info);
+            else
+                EditorGUILayout.HelpBox("Exports visible painter layers over transparency. Direct base painting and reconstructed character textures are excluded. A grayscale alpha mask is generated and assigned to the UMA overlay for runtime blending.",
+                    MessageType.Info);
+            template.scope = (TexturePaintExportScope)EditorGUILayout.EnumPopup("Materials", template.scope);
+            EditorGUILayout.EndVertical();
+
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            EditorGUILayout.LabelField("2. Naming and Location", EditorStyles.boldLabel);
             exportIdentifier = EditorGUILayout.TextField(new GUIContent("Export Identifier",
                 "Required identifier appended to every new texture and overlay name."), exportIdentifier);
             template.outputFolder = EditorGUILayout.TextField("Output Folder", template.outputFolder);
-            template.scope = (TexturePaintExportScope)EditorGUILayout.EnumPopup("Scope", template.scope);
             template.overwritePolicy = (TexturePaintOverwritePolicy)EditorGUILayout.EnumPopup(
                 "Name Conflict", template.overwritePolicy);
+            EditorGUILayout.EndVertical();
+
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            EditorGUILayout.LabelField("3. Texture Output", EditorStyles.boldLabel);
             template.resolution = Mathf.Max(0, EditorGUILayout.IntField(new GUIContent("Resolution",
-                "0 preserves each physical channel's resolved output resolution."), template.resolution));
-            template.padding = EditorGUILayout.IntSlider("Albedo Padding", template.padding, 0, 64);
+                "Use 0 to preserve each material channel's native resolved resolution."), template.resolution));
+            template.padding = EditorGUILayout.IntSlider(new GUIContent("Edge Padding",
+                "Extends albedo RGB beneath transparent pixels without changing alpha, preventing texture filtering seams."),
+                template.padding, 0, 64);
             template.markAddressable = EditorGUILayout.Toggle("Mark Addressable", template.markAddressable);
-            EditorGUILayout.Space(3f);
-            template.overwriteSourceOverlay = EditorGUILayout.ToggleLeft(new GUIContent(
-                "Overwrite Source Overlay",
-                "Advanced destructive mode. Available only when every member has a persistent source overlay and texture set."),
-                template.overwriteSourceOverlay);
+            EditorGUILayout.EndVertical();
+
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            EditorGUILayout.LabelField("Advanced", EditorStyles.boldLabel);
+            using (new EditorGUI.DisabledScope(template.content == TexturePaintExportContent.AuthoredOverlay))
+                template.overwriteSourceOverlay = EditorGUILayout.ToggleLeft(new GUIContent(
+                    "Overwrite Source Overlay",
+                    "Destructive: replace the persistent source overlay and its texture files instead of creating new assets."),
+                    template.overwriteSourceOverlay);
+            if (template.content == TexturePaintExportContent.AuthoredOverlay)
+            {
+                if (template.overwriteSourceOverlay)
+                {
+                    template.overwriteSourceOverlay = false;
+                    GUI.changed = true;
+                }
+                EditorGUILayout.LabelField("Runtime overlays always create separate assets; source overwrite is disabled.",
+                    EditorStyles.wordWrappedMiniLabel);
+            }
             if (template.overwriteSourceOverlay)
                 EditorGUILayout.HelpBox("The exact source overlays and texture files listed below will be replaced. " +
                     "A second confirmation is required and the transaction restores backups on failure.", MessageType.Warning);
+            EditorGUILayout.EndVertical();
+
             if (EditorGUI.EndChangeCheck())
             {
                 EditorUtility.SetDirty(template);
                 RebuildPlan();
             }
             EditorGUILayout.Space(8f);
-            DrawMaterialCapabilities();
             DrawBindingReports();
+            showMaterialDetails = EditorGUILayout.Foldout(showMaterialDetails,
+                "Material Contract Details", true);
+            if (showMaterialDetails) DrawMaterialCapabilities();
             DrawPlan();
             EditorGUILayout.EndScrollView();
 
             using (new EditorGUI.DisabledScope(plan == null || !plan.IsValid || controller?.Textures == null))
-                if (GUILayout.Button("Export Transaction", GUILayout.Height(28f))) Execute();
+                if (GUILayout.Button("Export", GUILayout.Height(30f))) Execute();
             if (!string.IsNullOrEmpty(status)) EditorGUILayout.HelpBox(status, MessageType.None);
         }
 
@@ -190,8 +234,8 @@ namespace UMA.TexturePaint.Editor
 
         private void DrawPlan()
         {
-            EditorGUILayout.LabelField("Resolved Output Preview", EditorStyles.boldLabel);
-            if (plan == null) { EditorGUILayout.LabelField("No preview."); return; }
+            EditorGUILayout.LabelField("Resolved Outputs", EditorStyles.boldLabel);
+            if (plan == null) { EditorGUILayout.LabelField("No output plan."); return; }
             for (int i = 0; i < plan.errors.Count; i++) EditorGUILayout.HelpBox(plan.errors[i], MessageType.Error);
             for (int i = 0; i < plan.warnings.Count; i++) EditorGUILayout.HelpBox(plan.warnings[i], MessageType.Warning);
             if (plan.entries.Count == 0) EditorGUILayout.HelpBox("No outputs are selected.", MessageType.Warning);
@@ -207,12 +251,25 @@ namespace UMA.TexturePaint.Editor
             for (int i = 0; i < plan.overlays.Count; i++)
             {
                 TexturePaintOverlayPlanEntry overlay = plan.overlays[i];
+                if (!string.IsNullOrEmpty(overlay.alphaMaskPath))
+                {
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label(overlay.targetName +
+                        (overlay.tileNumber > 0 ? " / " + overlay.tileNumber : string.Empty) +
+                        " / Alpha Mask", GUILayout.Width(210f));
+                    GUILayout.Label(overlay.alphaMaskResolution + " x " + overlay.alphaMaskResolution,
+                        GUILayout.Width(90f));
+                    EditorGUILayout.SelectableLabel(overlay.alphaMaskPath,
+                        GUILayout.Height(EditorGUIUtility.singleLineHeight));
+                    GUILayout.EndHorizontal();
+                }
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(overlay.DisplayName, GUILayout.Width(210f));
+                GUILayout.Label("UMA Asset", GUILayout.Width(90f));
                 EditorGUILayout.SelectableLabel(overlay.path, GUILayout.Height(EditorGUIUtility.singleLineHeight));
                 GUILayout.EndHorizontal();
             }
-            if (plan.entries.Count > 0)
+            if (plan.entries.Count > 0 && template.content == TexturePaintExportContent.FlattenedComposite)
             {
                 TexturePaintExportPlanEntry first = plan.entries[0];
                 Texture preview = !string.IsNullOrEmpty(first.materialProperty) &&
@@ -270,13 +327,22 @@ namespace UMA.TexturePaint.Editor
                     throw new InvalidOperationException("Export changed the paint document state unexpectedly.");
                 SessionState.SetString("UMA.TexturePaint.LastExportResult",
                     string.Join(";", result.overlayPaths));
-                status = $"Exported {result.TextureCount} physical textures and {result.overlayPaths.Count} " +
-                    "indexed UMA overlays in {result.resultSets.Count} result sets.";
+                int alphaMasks = result.alphaMaskPaths.Count;
+                status = $"Exported {result.TextureCount} material textures" +
+                    (alphaMasks > 0 ? $", {alphaMasks} alpha masks" : string.Empty) +
+                    $", and {result.overlayPaths.Count} indexed UMA overlays.";
                 RebuildPlan();
             }
             catch (OperationCanceledException) { status = "Export cancelled; transaction rolled back."; }
             catch (Exception exception) { status = "Export failed and was rolled back: " + exception.Message; Debug.LogException(exception); }
-            finally { EditorUtility.ClearProgressBar(); cancellation.Dispose(); }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
+                cancellation.Dispose();
+                TexturePaintStageWindow stage = TexturePaintStageWindow.ActiveStage;
+                if (stage != null && ReferenceEquals(stage.Controller, controller))
+                    stage.DeferAutosaveAfterExternalOperation();
+            }
         }
 
         private void CreateTemplate()

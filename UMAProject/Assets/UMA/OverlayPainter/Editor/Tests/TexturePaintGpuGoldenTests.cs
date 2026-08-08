@@ -14,6 +14,81 @@ namespace UMA.TexturePaint.Editor.Tests
         private const float Flow = 0.75f;
         private const float Strength = 0.8f;
 
+        [Test]
+        public void LayerMaskStrokeIsGrayscaleAndParticipatesInUndoRedo()
+        {
+            using TexturePaintGpuTestFixture fixture = new TexturePaintGpuTestFixture(Color.black);
+            using PaintingEngine engine = TexturePaintGpuTestFixture.CreateEngine();
+            BrushPreset brush = fixture.CreateBrush(1f, 1f, TexturePaintBlendMode.Normal);
+            try
+            {
+                TexturePaintLayer layer = fixture.set.AddLayer("Masked Paint");
+                TexturePaintLayerMask mask = fixture.set.AddLayerMask(layer, 0f);
+                StrokeContext context = fixture.CreateContext(brush, TexturePaintTool.Paint, Color.white,
+                    strength: 1f);
+                context.editLayerMask = true;
+                context.maskValue = 1f;
+                Assert.That(engine.BeginStroke(context, TexturePaintSourceMode.SourceOverlay), Is.True);
+                Assert.That(engine.ApplySample(TexturePaintGpuTestFixture.CenterSample(), 0.2f), Is.True);
+                engine.EndStroke();
+
+                Color[] pixels = TexturePaintGpuTestFixture.ReadPixels(mask.target.Front);
+                Color center = pixels[32 * TexturePaintGpuTestFixture.Size + 32];
+                Assert.That(center.r, Is.GreaterThan(0.98f));
+                Assert.That(center.g, Is.EqualTo(center.r).Within(0.001f));
+                Assert.That(center.b, Is.EqualTo(center.r).Within(0.001f));
+                Assert.That(center.a, Is.EqualTo(1f).Within(0.001f));
+                Assert.That(engine.Undo(), Is.True);
+                Assert.That(TexturePaintGpuTestFixture.ReadPixels(mask.target.Front)
+                    [32 * TexturePaintGpuTestFixture.Size + 32].r, Is.LessThan(0.01f));
+                Assert.That(engine.Redo(), Is.True);
+                Assert.That(TexturePaintGpuTestFixture.ReadPixels(mask.target.Front)
+                    [32 * TexturePaintGpuTestFixture.Size + 32].r, Is.GreaterThan(0.98f));
+            }
+            finally { Object.DestroyImmediate(brush); }
+        }
+
+        [Test]
+        public void PaintingEngineDefensivelyConvertsTextureInputToGrayscaleForMaskStroke()
+        {
+            using TexturePaintGpuTestFixture fixture = new TexturePaintGpuTestFixture(Color.black);
+            using PaintingEngine engine = TexturePaintGpuTestFixture.CreateEngine();
+            BrushPreset brush = fixture.CreateBrush(1f, 1f, TexturePaintBlendMode.Normal);
+            Texture2D source = new Texture2D(1, 1, TextureFormat.RGBA32, false, true);
+            try
+            {
+                source.SetPixel(0, 0, new Color(0.2f, 0.6f, 0.1f, 1f));
+                source.Apply(false, false);
+                TexturePaintLayer layer = fixture.set.AddLayer("Texture Mask");
+                TexturePaintLayerMask mask = fixture.set.AddLayerMask(layer, 0f);
+                StrokeContext context = fixture.CreateContext(brush, TexturePaintTool.Paint, Color.white,
+                    strength: 1f);
+                context.editLayerMask = true;
+                // The editor never exposes texture sources while painting a layer mask. Keep the
+                // engine defensive if malformed or legacy callers still provide one directly.
+                context.paintSource = TexturePaintBrushSource.Texture;
+                context.sourceTexture = source;
+                context.maskSourceChannel = TexturePaintChannel.Albedo;
+
+                Assert.That(engine.BeginStroke(context, TexturePaintSourceMode.SourceOverlay), Is.True);
+                Assert.That(engine.ApplySample(TexturePaintGpuTestFixture.CenterSample(), 0.2f), Is.True);
+                engine.EndStroke();
+
+                Color center = TexturePaintGpuTestFixture.ReadPixels(mask.target.Front)
+                    [32 * TexturePaintGpuTestFixture.Size + 32];
+                float expected = 0.2f * 0.2126f + 0.6f * 0.7152f + 0.1f * 0.0722f;
+                Assert.That(center.r, Is.EqualTo(expected).Within(0.015f));
+                Assert.That(center.g, Is.EqualTo(center.r).Within(0.001f));
+                Assert.That(center.b, Is.EqualTo(center.r).Within(0.001f));
+                Assert.That(center.a, Is.EqualTo(1f).Within(0.001f));
+            }
+            finally
+            {
+                Object.DestroyImmediate(source);
+                Object.DestroyImmediate(brush);
+            }
+        }
+
         [TestCase(TexturePaintBlendMode.Normal)]
         [TestCase(TexturePaintBlendMode.Multiply)]
         [TestCase(TexturePaintBlendMode.Add)]
@@ -35,6 +110,70 @@ namespace UMA.TexturePaint.Editor.Tests
 
                 Color[] expected = ReferencePaint(Base, Paint, blendMode);
                 TexturePaintGpuTestFixture.AssertImage("paint-" + blendMode, expected, fixture.ReadPixels());
+            }
+            finally { Object.DestroyImmediate(brush); }
+        }
+
+        [Test]
+        public void SpriteStampUsesOnlyTheAssignedSpriteRegion()
+        {
+            TexturePaintGpuTestFixture.RequireComputeShaders();
+            using TexturePaintGpuTestFixture fixture = new TexturePaintGpuTestFixture(Color.black);
+            using PaintingEngine engine = TexturePaintGpuTestFixture.CreateEngine();
+            BrushPreset brush = fixture.CreateBrush(1f, 1f, TexturePaintBlendMode.Normal,
+                BrushPreset.Shape.Stamp);
+            Texture2D sheet = new Texture2D(8, 4, TextureFormat.RGBA32, false, true);
+            Sprite sprite = null;
+            try
+            {
+                Color[] pixels = new Color[32];
+                for (int y = 0; y < 4; y++)
+                for (int x = 0; x < 8; x++)
+                    pixels[y * 8 + x] = x < 2 ? Color.white : Color.clear;
+                sheet.SetPixels(pixels);
+                sheet.Apply(false, false);
+                sprite = Sprite.Create(sheet, new Rect(0f, 0f, 2f, 4f), new Vector2(0.5f, 0.5f));
+                brush.stampSprite = sprite;
+
+                StrokeContext context = fixture.CreateContext(brush, TexturePaintTool.Paint,
+                    Color.green, strength: 1f);
+                Assert.That(engine.BeginStroke(context, TexturePaintSourceMode.SourceTexture), Is.True);
+                Assert.That(engine.ApplySample(TexturePaintGpuTestFixture.CenterSample(), 0.2f), Is.True);
+                engine.EndStroke();
+
+                Color center = fixture.ReadPixels()[32 * TexturePaintGpuTestFixture.Size + 32];
+                Assert.That(center.g, Is.GreaterThan(0.98f),
+                    "The atlas center is transparent; an opaque center proves the Sprite region was extracted.");
+            }
+            finally
+            {
+                TexturePaintSpriteSource.ClearCache();
+                if (sprite != null) Object.DestroyImmediate(sprite);
+                Object.DestroyImmediate(sheet);
+                Object.DestroyImmediate(brush);
+            }
+        }
+
+        [Test]
+        public void AnisotropicFootprintScaleExpandsItsGpuDirtyBounds()
+        {
+            TexturePaintGpuTestFixture.RequireComputeShaders();
+            using TexturePaintGpuTestFixture fixture = new TexturePaintGpuTestFixture(Color.black);
+            using PaintingEngine engine = TexturePaintGpuTestFixture.CreateEngine();
+            BrushPreset brush = fixture.CreateBrush(1f, 1f, TexturePaintBlendMode.Normal);
+            try
+            {
+                StrokeContext context = fixture.CreateContext(brush, TexturePaintTool.Paint,
+                    Color.green, strength: 1f);
+                Assert.That(engine.BeginStroke(context, TexturePaintSourceMode.SourceTexture), Is.True);
+                StrokeSample sample = TexturePaintGpuTestFixture.CenterSample();
+                sample.footprintScale = new Vector2(1f, 1.3f);
+                Assert.That(engine.ApplySample(sample, 0.2f), Is.True);
+                engine.EndStroke();
+
+                Color beyondUnscaledBounds = fixture.ReadPixels()[46 * TexturePaintGpuTestFixture.Size + 32];
+                Assert.That(beyondUnscaledBounds.g, Is.GreaterThan(0.9f),
+                    "A grown stamp must not be clipped to the original unscaled dirty rectangle.");
             }
             finally { Object.DestroyImmediate(brush); }
         }
@@ -69,6 +208,75 @@ namespace UMA.TexturePaint.Editor.Tests
                     Assert.That(pixels[i].a, Is.EqualTo(0.25f).Within(0.003f),
                         $"Pixel {i} received a different number of triangle contributions.");
                 }
+            }
+            finally { Object.DestroyImmediate(brush); }
+        }
+
+        [Test]
+        public void DirectUVPaintingOnDenseSmallGeometryProducesOneBoundedFootprint()
+        {
+            const int grid = 33;
+            using TexturePaintGpuTestFixture fixture = new TexturePaintGpuTestFixture(Color.clear);
+            Vector3[] vertices = new Vector3[grid * grid];
+            Vector3[] normals = new Vector3[vertices.Length];
+            Vector2[] uv = new Vector2[vertices.Length];
+            int[] triangles = new int[(grid - 1) * (grid - 1) * 6];
+            for (int y = 0; y < grid; y++)
+            for (int x = 0; x < grid; x++)
+            {
+                int vertex = y * grid + x;
+                uv[vertex] = new Vector2(x / (float)(grid - 1), y / (float)(grid - 1));
+                // Deliberately tiny world geometry. Direct 2D paint must never derive one
+                // projected stamp per polygon from these dimensions.
+                vertices[vertex] = new Vector3(x * 0.00001f, y * 0.00001f, 0f);
+                normals[vertex] = Vector3.forward;
+            }
+            int write = 0;
+            for (int y = 0; y < grid - 1; y++)
+            for (int x = 0; x < grid - 1; x++)
+            {
+                int a = y * grid + x, b = a + 1, c = a + grid, d = c + 1;
+                triangles[write++] = a; triangles[write++] = b; triangles[write++] = d;
+                triangles[write++] = a; triangles[write++] = d; triangles[write++] = c;
+            }
+            fixture.mesh.Clear();
+            fixture.mesh.vertices = vertices;
+            fixture.mesh.normals = normals;
+            fixture.mesh.uv = uv;
+            fixture.mesh.triangles = triangles;
+            fixture.mesh.RecalculateBounds();
+            int triangleCount = triangles.Length / 3;
+            fixture.set.surface.triangleSlotNames = new string[triangleCount];
+            fixture.set.surface.triangleIslands = new int[triangleCount];
+            for (int i = 0; i < triangleCount; i++)
+                fixture.set.surface.triangleSlotNames[i] = "Body";
+
+            using PaintingEngine engine = TexturePaintGpuTestFixture.CreateEngine();
+            BrushPreset brush = fixture.CreateBrush(1f, 1f, TexturePaintBlendMode.Normal);
+            try
+            {
+                StrokeContext context = fixture.CreateContext(brush, TexturePaintTool.Paint,
+                    Color.green, strength: 1f);
+                context.directUV = true;
+                Assert.That(engine.BeginStroke(context, TexturePaintSourceMode.SourceTexture), Is.True);
+                StrokeSample sample = TexturePaintStageWindow.CreateDirectUVSample(fixture.set,
+                    new Vector2(0.5f, 0.5f));
+                Assert.That(sample.triangleIndex, Is.EqualTo(-1),
+                    "The 2D brush must not acquire a triangle projection.");
+                Assert.That(engine.ApplySample(sample, 0.08f), Is.True);
+                engine.EndStroke();
+
+                Color[] pixels = fixture.ReadPixels();
+                Assert.That(pixels[32 * TexturePaintGpuTestFixture.Size + 32].g,
+                    Is.GreaterThan(0.98f));
+                Assert.That(pixels[32 * TexturePaintGpuTestFixture.Size + 50].a,
+                    Is.LessThan(0.01f),
+                    "Small polygons must not fan the 2D stamp into a geometry explosion.");
+                Assert.That(engine.Performance.geometryMaskBuilds, Is.Zero,
+                    "An ordinary 2D brush stroke must not consult mesh coverage.");
+                Assert.That(fixture.set.baseStrokes, Has.Count.EqualTo(1));
+                Assert.That(fixture.set.baseStrokes[0].directUV, Is.True,
+                    "Persisted stroke metadata must retain its texture-space coordinate mode.");
             }
             finally { Object.DestroyImmediate(brush); }
         }

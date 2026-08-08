@@ -48,11 +48,10 @@ namespace UMA.TexturePaint.Tests
         }
 
         [Test]
-        public async Task SuccessfulCommandIsMaskedDirtyAndUndoable()
+        public async Task SuccessfulCommandIsGeometryClippedDirtyAndUndoable()
         {
-            TexturePaintMaskStack masks = new TexturePaintMaskStack();
             await host.ExecuteCommandAsync(new SolidPlugin(TexturePaintChannel.Albedo, TexturePaintPluginColorSpace.Linear,
-                new RectInt(0, 0, 4, 4)), store, masks, null, null, CancellationToken.None);
+                new RectInt(0, 0, 4, 4)), store, null, null, CancellationToken.None);
             Assert.That(set.layers.Count, Is.EqualTo(1));
             Color inside = Read(set.layers[0].channels[TexturePaintChannel.Albedo].Front, 1, 1);
             Color outside = Read(set.layers[0].channels[TexturePaintChannel.Albedo].Front, 7, 7);
@@ -64,24 +63,13 @@ namespace UMA.TexturePaint.Tests
         }
 
         [Test]
-        public async Task BlackMaskCannotBeBypassedByCommandPlugin()
-        {
-            TexturePaintMaskStack masks = new TexturePaintMaskStack();
-            masks.Add(new TexturePaintMask { kind = TexturePaintMaskKind.Black });
-            await host.ExecuteCommandAsync(new SolidPlugin(TexturePaintChannel.Albedo, TexturePaintPluginColorSpace.Linear,
-                new RectInt(0, 0, 8, 8)), store, masks, null, null, CancellationToken.None);
-            Color pixel = Read(set.layers[0].channels[TexturePaintChannel.Albedo].Front, 1, 1);
-            Assert.That(pixel.a, Is.LessThan(0.01f));
-        }
-
-        [Test]
         public void UndeclaredChannelFailsBeforeCommit()
         {
             SolidPlugin plugin = new SolidPlugin(TexturePaintChannel.Roughness, TexturePaintPluginColorSpace.Data,
                 new RectInt(0, 0, 2, 2), TexturePaintChannelMask.Albedo);
-            LogAssert.Expect(LogType.Error, new System.Text.RegularExpressions.Regex("Texture Paint plugin com\\.uma\\.tests\\.solid: Transaction failed"));
+            LogAssert.Expect(LogType.Error, new System.Text.RegularExpressions.Regex("Overlay Painter plugin com\\.uma\\.tests\\.solid: Transaction failed"));
             Assert.ThrowsAsync<InvalidOperationException>(async () => await host.ExecuteCommandAsync(plugin, store,
-                new TexturePaintMaskStack(), null, null, CancellationToken.None));
+                null, null, CancellationToken.None));
             Assert.That(set.layers.Count, Is.Zero);
             Assert.That(host.Diagnostics[host.Diagnostics.Count - 1].severity, Is.EqualTo(TexturePaintPluginDiagnosticSeverity.Error));
         }
@@ -91,9 +79,9 @@ namespace UMA.TexturePaint.Tests
         {
             SolidPlugin plugin = new SolidPlugin(TexturePaintChannel.Roughness, TexturePaintPluginColorSpace.SRGB,
                 new RectInt(0, 0, 2, 2));
-            LogAssert.Expect(LogType.Error, new System.Text.RegularExpressions.Regex("Texture Paint plugin com\\.uma\\.tests\\.solid: Transaction failed"));
+            LogAssert.Expect(LogType.Error, new System.Text.RegularExpressions.Regex("Overlay Painter plugin com\\.uma\\.tests\\.solid: Transaction failed"));
             Assert.ThrowsAsync<InvalidOperationException>(async () => await host.ExecuteCommandAsync(plugin, store,
-                new TexturePaintMaskStack(), null, null, CancellationToken.None));
+                null, null, CancellationToken.None));
             Assert.That(set.layers.Count, Is.Zero);
         }
 
@@ -103,7 +91,7 @@ namespace UMA.TexturePaint.Tests
             CancellationTokenSource source = new CancellationTokenSource(); source.Cancel();
             Assert.That(async () => await host.ExecuteCommandAsync(
                 new SolidPlugin(TexturePaintChannel.Albedo, TexturePaintPluginColorSpace.Linear, new RectInt(0, 0, 2, 2)),
-                store, new TexturePaintMaskStack(), null, null, source.Token), Throws.InstanceOf<OperationCanceledException>());
+                store, null, null, source.Token), Throws.InstanceOf<OperationCanceledException>());
             Assert.That(set.layers.Count, Is.Zero); source.Dispose();
         }
 
@@ -112,7 +100,7 @@ namespace UMA.TexturePaint.Tests
         {
             CancellationTokenSource source = new CancellationTokenSource();
             WaitingPlugin plugin = new WaitingPlugin();
-            Task execution = host.ExecuteCommandAsync(plugin, store, new TexturePaintMaskStack(), null, null, source.Token);
+            Task execution = host.ExecuteCommandAsync(plugin, store, null, null, source.Token);
             Assert.That(plugin.started.Wait(2000), Is.True, "Plugin did not reach its cancellable work phase.");
             source.Cancel();
             Assert.That(async () => await execution, Throws.InstanceOf<OperationCanceledException>());
@@ -139,10 +127,10 @@ namespace UMA.TexturePaint.Tests
         public void CommandMemoryBudgetRejectsPayloadBeforeCommit()
         {
             host.CommandMemoryBudgetBytes = 1;
-            LogAssert.Expect(LogType.Error, new System.Text.RegularExpressions.Regex("Texture Paint plugin com\\.uma\\.tests\\.solid: Transaction failed"));
+            LogAssert.Expect(LogType.Error, new System.Text.RegularExpressions.Regex("Overlay Painter plugin com\\.uma\\.tests\\.solid: Transaction failed"));
             Assert.ThrowsAsync<InvalidOperationException>(async () => await host.ExecuteCommandAsync(
                 new SolidPlugin(TexturePaintChannel.Albedo, TexturePaintPluginColorSpace.Linear, new RectInt(0, 0, 2, 2)),
-                store, new TexturePaintMaskStack(), null, null, CancellationToken.None));
+                store, null, null, CancellationToken.None));
             Assert.That(set.layers.Count, Is.Zero);
         }
 
@@ -150,10 +138,10 @@ namespace UMA.TexturePaint.Tests
         public void SnapshotMemoryBudgetRejectsReadBeforePluginRuns()
         {
             host.SnapshotMemoryBudgetBytes = 1;
-            LogAssert.Expect(LogType.Error, new System.Text.RegularExpressions.Regex("Texture Paint plugin com\\.uma\\.tests\\.solid: Transaction failed"));
+            LogAssert.Expect(LogType.Error, new System.Text.RegularExpressions.Regex("Overlay Painter plugin com\\.uma\\.tests\\.solid: Transaction failed"));
             Assert.ThrowsAsync<InvalidOperationException>(async () => await host.ExecuteCommandAsync(
                 new SolidPlugin(TexturePaintChannel.Albedo, TexturePaintPluginColorSpace.Linear, new RectInt(0, 0, 2, 2)),
-                store, new TexturePaintMaskStack(), null, null, CancellationToken.None));
+                store, null, null, CancellationToken.None));
             Assert.That(set.layers.Count, Is.Zero);
         }
 
@@ -173,7 +161,7 @@ namespace UMA.TexturePaint.Tests
         public async Task NormalCommandsAreRenormalized()
         {
             await host.ExecuteCommandAsync(new SolidPlugin(TexturePaintChannel.Normal, TexturePaintPluginColorSpace.Data,
-                new RectInt(0, 0, 2, 2)), store, new TexturePaintMaskStack(), null, null, CancellationToken.None);
+                new RectInt(0, 0, 2, 2)), store, null, null, CancellationToken.None);
             Color encoded = Read(set.layers[0].channels[TexturePaintChannel.Normal].Front, 1, 1);
             Vector3 decoded = new Vector3(encoded.r * 2f - 1f, encoded.g * 2f - 1f, encoded.b * 2f - 1f);
             Assert.That(decoded.magnitude, Is.EqualTo(1f).Within(0.02f));

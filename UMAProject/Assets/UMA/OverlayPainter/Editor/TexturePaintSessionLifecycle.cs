@@ -71,14 +71,15 @@ namespace UMA.TexturePaint.Editor
                 }
             }
 
-            document = recovered ?? TexturePaintDocumentStorage.CreateTransient(avatar, launchContext);
-            if (recovered != null && !ValidateDocumentLaunchContext(recovered)) return false;
+            TexturePaintDocument requested = launchDocument;
+            launchDocument = null;
+            document = recovered ?? requested ?? TexturePaintDocumentStorage.CreateTransient(avatar, launchContext);
+            if ((recovered != null || requested != null) && !ValidateDocumentLaunchContext(document)) return false;
             controller.AttachDocument(document);
             bool restored = document.surfaces != null && document.surfaces.Count > 0;
             if (restored)
             {
                 TexturePaintDocumentStorage.Restore(document, controller.Textures);
-                TexturePaintDocumentStorage.RestoreMasks(document, controller.Masks);
             }
             TexturePaintDocumentStorage.RecordCurrentRevisions(controller.Textures, persistedTextureRevisions);
             documentRevision = document.revisionId;
@@ -86,6 +87,7 @@ namespace UMA.TexturePaint.Editor
             recoveryDirty = false;
             documentChangeVersion = recovered != null ? 1L : 0L;
             persistenceStatus = recovered != null ? "Recovered the last complete temporary session" :
+                requested != null ? "Loaded " + requested.name :
                 "Temporary session · use Save As to create a project document";
             return true;
         }
@@ -121,7 +123,13 @@ namespace UMA.TexturePaint.Editor
             {
                 TexturePaintStandaloneMemberContext oldMember = saved.members[i];
                 TexturePaintStandaloneMemberContext currentMember = launchContext.members[i];
-                if (!string.Equals(oldMember?.slotGuid, currentMember?.slotGuid, StringComparison.Ordinal)) return false;
+                if (!string.Equals(oldMember?.slotGuid, currentMember?.slotGuid, StringComparison.Ordinal))
+                {
+                    EditorUtility.DisplayDialog("Overlay Painter Context Mismatch",
+                        "This document belongs to a different slot or UDIM member set. Open it from its original slot context.",
+                        "OK");
+                    return false;
+                }
                 if (!string.Equals(oldMember?.sourceFingerprint, currentMember?.sourceFingerprint, StringComparison.Ordinal))
                     changed = true;
             }
@@ -143,6 +151,13 @@ namespace UMA.TexturePaint.Editor
                 closeAfterSave = false;
                 return;
             }
+            // Commit the active controls before taking the persistence snapshot. For a logical
+            // UDIM path this also copies the path settings to every physical member.
+            CaptureActivePaintLayerSettings();
+            TextureSet activeSet = ActiveTextureSet;
+            if (!IsLayerMaskMode(activeSet) &&
+                TryGetActivePathLayer(activeSet, out TexturePaintLayer activePath))
+                CaptureSplineSettings(activePath);
             if (intent == PersistenceIntent.ProjectSave)
             {
                 documentPath = string.IsNullOrEmpty(documentPath) ? AssetDatabase.GetAssetPath(document) : documentPath;
@@ -155,7 +170,7 @@ namespace UMA.TexturePaint.Editor
             document.editorStateJson = JsonUtility.ToJson(BuildState());
             captureChangeVersion = documentChangeVersion;
             persistenceCapture = TexturePaintDocumentStorage.BeginCapture(document, controller.Textures,
-                controller.Masks, persistedTextureRevisions, intent == PersistenceIntent.Recovery);
+                persistedTextureRevisions, intent == PersistenceIntent.Recovery);
             persistenceStatus = intent == PersistenceIntent.ProjectSave ? "Capturing document changes…" :
                 "Updating recovery asset…";
             persistenceProgress = 0f;
@@ -303,6 +318,7 @@ namespace UMA.TexturePaint.Editor
 
         private void FailPersistence(string message)
         {
+            bool reopenAfterFailedClose = closeAfterSave;
             persistenceError = message;
             persistenceStatus = "Save failed";
             recoveryDirty = true;
@@ -313,6 +329,12 @@ namespace UMA.TexturePaint.Editor
             nextAutosaveTime = EditorApplication.timeSinceStartup + AutosaveIntervalSeconds;
             Debug.LogError("Overlay Painter persistence: " + message);
             ShowWorkspaceStatus("Save failed · see Console");
+            if (reopenAfterFailedClose)
+                EditorApplication.delayCall += () =>
+                {
+                    if (controller != null && StageUtility.GetCurrentStage() == this)
+                        TexturePaintDockWindow.ShowDockable();
+                };
             RepaintAll();
         }
 
@@ -358,7 +380,7 @@ namespace UMA.TexturePaint.Editor
             emergency.editorStateJson = JsonUtility.ToJson(BuildState());
             try
             {
-                TexturePaintDocumentStorage.Save(emergency, controller.Textures, controller.Masks, true);
+                TexturePaintDocumentStorage.Save(emergency, controller.Textures, true);
                 TexturePaintRecoveryStore.SaveImmediate(emergency, recoveryContextKey);
                 recoveryDirty = false;
             }
@@ -376,11 +398,14 @@ namespace UMA.TexturePaint.Editor
         {
             if (IsPersistenceActive)
             {
-                EditorUtility.DisplayDialog("Overlay Painter Is Saving",
-                    closeAfterSave
-                        ? "The project document is being committed. The stage will close automatically when it finishes."
-                        : "Wait for the current save to finish before closing the stage.", "OK");
-                return false;
+                // A background autosave is already capturing the same document the user is
+                // closing. Adopt it as the close save and let the dock disappear immediately;
+                // reopening the window with a modal "wait" dialog made a healthy asynchronous
+                // save look like a hung editor. Completion will authorize and close the stage.
+                closeAfterSave = true;
+                persistenceStatus = "Finishing save before closing…";
+                TexturePaintDockWindow.RepaintOpenWindows();
+                return true;
             }
             bool hasRecovery = TexturePaintRecoveryStore.HasRecovery(recoveryContextKey);
             if (documentDirty || hasRecovery)
@@ -401,6 +426,16 @@ namespace UMA.TexturePaint.Editor
             }
             ScheduleAuthorizedStageClose();
             return true;
+        }
+
+        internal void DeferAutosaveAfterExternalOperation()
+        {
+            // Export performs synchronous AssetDatabase work on the editor thread. If the normal
+            // debounce deadline expires during that work, the very next editor update otherwise
+            // starts a large document capture before the user can close the export or painter UI.
+            if (!IsPersistenceActive)
+                nextAutosaveTime = Math.Max(nextAutosaveTime,
+                    EditorApplication.timeSinceStartup + AutosaveIntervalSeconds);
         }
 
         private void ScheduleAuthorizedStageClose()

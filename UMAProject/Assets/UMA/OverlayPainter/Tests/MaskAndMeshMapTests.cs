@@ -7,48 +7,41 @@ namespace UMA.TexturePaint.Tests
     public sealed class MaskAndMeshMapTests
     {
         [Test]
-        public void TextureMasksCombineAndRespectSurfaceOwnership()
+        public void GeometrySelectorsRestrictPolygonsAndUvIslands()
         {
-            Texture2D bitmap = new Texture2D(2, 2, TextureFormat.R8, false, true);
-            bitmap.SetPixels(new[] { Color.white, Color.white, Color.white, Color.white });
-            bitmap.Apply(false, false);
-            TexturePaintMaskStack stack = new TexturePaintMaskStack();
-            stack.Add(new TexturePaintMask
+            TexturePaintGeometrySelection stack = new TexturePaintGeometrySelection();
+            stack.Add(new TexturePaintGeometrySelector
             {
-                kind = TexturePaintMaskKind.Bitmap,
-                grayscaleTexture = bitmap,
-                ownerSurfaceId = "4",
-                operation = TexturePaintMaskOperation.Intersect
+                kind = TexturePaintGeometrySelectorKind.Polygon,
+                surfaceIndex = 4,
+                triangleIndices = { 3 }
             });
-            stack.Add(new TexturePaintMask
+            stack.Add(new TexturePaintGeometrySelector
             {
-                kind = TexturePaintMaskKind.Black,
-                ownerSurfaceId = "4",
-                operation = TexturePaintMaskOperation.Subtract
+                kind = TexturePaintGeometrySelectorKind.UVIsland,
+                uvIslandIndices = { 2 }
             });
 
-            Assert.That(stack.EvaluateTextureMasks(4, "4", Vector2.one * 0.5f), Is.EqualTo(1f));
-            Assert.That(stack.EvaluateTextureMasks(5, "5", Vector2.one * 0.5f), Is.EqualTo(1f));
-            Assert.That(stack.AllowsStructural(5, 0, 0), Is.True);
-            Object.DestroyImmediate(bitmap);
+            Assert.That(stack.AllowsStructural(4, 3, 2), Is.True);
+            Assert.That(stack.AllowsStructural(4, 1, 2), Is.False);
+            Assert.That(stack.AllowsStructural(4, 3, 1), Is.False);
         }
 
         [Test]
         public void TriangleRestrictedPaintingSkipsRedundantGeometryMask()
         {
-            TexturePaintMaskStack empty = new TexturePaintMaskStack();
-            TexturePaintMaskStack structural = new TexturePaintMaskStack();
-            structural.Add(new TexturePaintMask { kind = TexturePaintMaskKind.UVIsland });
-            TexturePaintMaskStack bitmap = new TexturePaintMaskStack();
-            bitmap.Add(new TexturePaintMask { kind = TexturePaintMaskKind.Bitmap });
+            TexturePaintGeometrySelection empty = new TexturePaintGeometrySelection();
+            TexturePaintGeometrySelection structural = new TexturePaintGeometrySelection();
+            structural.Add(new TexturePaintGeometrySelector
+                { kind = TexturePaintGeometrySelectorKind.UVIsland });
 
             Assert.That(PaintingEngine.RequiresGeometryMask(empty, true), Is.False);
             Assert.That(PaintingEngine.RequiresGeometryMask(structural, true), Is.False,
-                "Structural masks are evaluated per contacted triangle before dispatch.");
-            Assert.That(PaintingEngine.RequiresGeometryMask(bitmap, true), Is.True,
-                "Per-pixel masks still require a mask texture.");
+                "Transient selectors are evaluated per contacted triangle before dispatch.");
             Assert.That(PaintingEngine.RequiresGeometryMask(empty, false), Is.True,
                 "Unrestricted projection still needs the mesh coverage mask.");
+            Assert.That(PaintingEngine.RequiresGeometryMask(empty, false, true), Is.False,
+                "A direct 2D texture-space brush must not consult mesh coverage.");
         }
 
         [Test]
@@ -60,7 +53,13 @@ namespace UMA.TexturePaint.Tests
                 enabled = false,
                 locked = true,
                 contribution = 0.35f,
-                opacity = 0.75f
+                opacity = 0.75f,
+                sourceSettings = new TexturePaintChannelSourceSettings
+                {
+                    source = TexturePaintBrushSource.Texture,
+                    invert = true,
+                    tiling = new Vector2(2f, 3f)
+                }
             };
 
             TexturePaintLayerChannelSettings clone = original.Clone();
@@ -69,6 +68,9 @@ namespace UMA.TexturePaint.Tests
             Assert.That(clone.contribution, Is.EqualTo(0.35f));
             Assert.That(clone.enabled, Is.False);
             Assert.That(clone.opacity, Is.EqualTo(0.75f));
+            Assert.That(clone.sourceSettings, Is.Not.SameAs(original.sourceSettings));
+            Assert.That(clone.sourceSettings.invert, Is.True);
+            Assert.That(clone.sourceSettings.tiling, Is.EqualTo(new Vector2(2f, 3f)));
         }
 
         [Test]

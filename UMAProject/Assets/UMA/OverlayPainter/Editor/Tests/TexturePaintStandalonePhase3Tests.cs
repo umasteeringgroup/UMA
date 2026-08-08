@@ -204,7 +204,7 @@ namespace UMA.TexturePaint.Editor.Tests
                 Assert.That(set.layers[0].fillColor, Is.EqualTo(Color.white));
                 Assert.That(set.layers[0].logicalLayerId, Is.Not.Empty);
                 Color normalNeutral = ReadTexturePixel(
-                    controller.Reconstruction.surfaces[0].standaloneSourceTextures[1]);
+                    controller.Reconstruction.surfaces[0].sourceTextures[1]);
                 Assert.That(normalNeutral.r, Is.EqualTo(0.5f).Within(0.01f));
                 Assert.That(normalNeutral.g, Is.EqualTo(0.5f).Within(0.01f));
                 Assert.That(normalNeutral.b, Is.EqualTo(1f).Within(0.01f));

@@ -180,8 +180,8 @@ namespace UMA.TexturePaint.Tests
             {
                 vertices = new[]
                 {
-                    Vector3.zero, Vector3.right, Vector3.one,
-                    Vector3.zero, Vector3.one, Vector3.up
+                    Vector3.zero, Vector3.right, new Vector3(1f, 1f, 0f),
+                    Vector3.zero, new Vector3(1f, 1f, 0f), Vector3.up
                 },
                 uv = new[]
                 {

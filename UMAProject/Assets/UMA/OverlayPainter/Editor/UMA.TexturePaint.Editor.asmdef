@@ -4,6 +4,7 @@
     "references": [
         "UMA_Core",
         "UMA.TexturePaint.Runtime",
+        "Unity.2D.Sprite.Editor",
         "Unity.Addressables.Editor",
         "Unity.ResourceManager",
         "Unity.Addressables"

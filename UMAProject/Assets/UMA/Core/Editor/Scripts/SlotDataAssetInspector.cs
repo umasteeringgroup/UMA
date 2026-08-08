@@ -37,10 +37,9 @@ namespace UMA.Editors
             public bool weightRecalculatedNormalsByTriangleSize;
         }
 
-        static string[] RegularSlotFields = new string[] { "slotName", "slotGroup", "CharacterBegun", "SlotAtlassed", "SlotProcessed", "SlotBeginProcessing", "DNAApplied", "CharacterCompleted", "_slotDNALegacy", "tags", "isWildCardSlot", "Races", "smooshOffset", "smooshExpand", "Welds" };
-        static string[] WildcardSlotFields = new string[] { "slotName", "slotGroup", "CharacterBegun", "SlotAtlassed", "SlotProcessed", "SlotBeginProcessing", "DNAApplied", "CharacterCompleted", "_slotDNALegacy", "tags", "isWildCardSlot", "Races", "_rendererAsset", "maxLOD", "useAtlasOverlay", "overlayScale", "_slotDNA", "meshData", "subMeshIndex", "Welds" };
+        static string[] RegularSlotFields = new string[] { "slotName", "slotGroup", "CharacterBegun", "SlotAtlassed", "SlotProcessed", "SlotBeginProcessing", "DNAApplied", "CharacterCompleted", "_slotDNALegacy", "_oldSlotName", "tags", "isWildCardSlot", "Races", "smooshOffset", "smooshExpand", "Welds" };
+        static string[] WildcardSlotFields = new string[] { "slotName", "slotGroup", "CharacterBegun", "SlotAtlassed", "SlotProcessed", "SlotBeginProcessing", "DNAApplied", "CharacterCompleted", "_slotDNALegacy", "_oldSlotName", "tags", "isWildCardSlot", "Races", "_rendererAsset", "maxLOD", "useAtlasOverlay", "overlayScale", "_slotDNA", "meshData", "subMeshIndex", "Welds" };
         private static readonly string[] TriplanarUvChannelLabels = new string[] { "0 (uv)", "1 (uv2)", "2 (uv3)", "3 (uv4)" };
-        SerializedProperty slotName;
         SerializedProperty CharacterBegun;
         SerializedProperty SlotAtlassed;
         SerializedProperty SlotProcessed;
@@ -53,6 +52,7 @@ namespace UMA.Editors
         SerializedProperty isSmooshable;
         SerializedProperty smooshOffset;
         SerializedProperty smooshExpand;
+        SerializedProperty oldSlotName;
         SlotDataAsset slot;
         SlotDataAsset WeldToSlot = null;
 
@@ -161,7 +161,6 @@ namespace UMA.Editors
             if (serializedObject == null || serializedObject.targetObject == null)
                 return;
 
-            slotName = serializedObject.FindProperty("slotName");
             CharacterBegun = serializedObject.FindProperty("CharacterBegun");
             SlotAtlassed = serializedObject.FindProperty("SlotAtlassed");
             DNAApplied = serializedObject.FindProperty("DNAApplied");
@@ -174,6 +173,7 @@ namespace UMA.Editors
             isSmooshable = serializedObject.FindProperty("isSmooshable");
             smooshExpand = serializedObject.FindProperty("smooshExpand");
             smooshOffset = serializedObject.FindProperty("smooshOffset");
+            oldSlotName = serializedObject.FindProperty("_oldSlotName");
 
             slot = target as SlotDataAsset;
             persistedSectionStateKey = GetPersistedSectionStateKey(slot);
@@ -284,23 +284,6 @@ namespace UMA.Editors
             // Top-level change check (closed at bottom)
             EditorGUI.BeginChangeCheck();
 
-            // Name + tools
-            GUILayout.BeginHorizontal();
-            if (slotName != null)
-                EditorGUILayout.DelayedTextField(slotName);
-            if (GUILayout.Button("Clear Legacy Name", GUILayout.Width(90)))
-            {
-                foreach (var t in targets)
-                {
-                    var slotDataAsset = t as SlotDataAsset;
-                    if (slotDataAsset == null) continue;
-                    slotDataAsset._oldSlotName = "";
-                    EditorUtility.SetDirty(slotDataAsset);
-                    GUI.changed = true;
-                }
-            }
-            GUILayout.EndHorizontal();
-
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("Validate"))
             {
@@ -334,11 +317,18 @@ namespace UMA.Editors
             }
             GUILayout.EndHorizontal();
 
-            // Fixup UMA 2 slots: upgrade legacy slot data to UMA 3 parity
-            if (GUILayout.Button("Fixup UMA 2 -> UMA 3"))
+            using (new EditorGUI.DisabledScope(targets.Length != 1 || slot == null ||
+                UMAMeshData.IsNullOrEmptyMeshData(slot.meshData)))
             {
-                FixupUMA2Slots();
+                if (GUILayout.Button(new GUIContent("Open in Overlay Painter",
+                    "Open this slot, or its complete UDIM group, without generating an avatar."),
+                    GUILayout.Height(28f)))
+                {
+                    UMA.TexturePaint.Editor.TexturePaintStandaloneSetupWindow.ShowForSlot(slot);
+                }
             }
+            if (targets.Length != 1)
+                EditorGUILayout.HelpBox("Select one SlotDataAsset to open Overlay Painter.", MessageType.Info);
 
             if (targetAsset != null && !string.IsNullOrEmpty(targetAsset.Errors))
             {
@@ -353,6 +343,22 @@ namespace UMA.Editors
             {
                 EditorGUILayout.LabelField($"UtilitySlot: " + targetAsset.isUtilitySlot);
             }
+
+            GUILayout.BeginHorizontal();
+            if (oldSlotName != null)
+                EditorGUILayout.PropertyField(oldSlotName, new GUIContent("Old Slot Name"), GUILayout.ExpandWidth(true));
+            if (GUILayout.Button("Clear", GUILayout.Width(45)))
+            {
+                foreach (var t in targets)
+                {
+                    var slotDataAsset = t as SlotDataAsset;
+                    if (slotDataAsset == null) continue;
+                    slotDataAsset._oldSlotName = "";
+                    EditorUtility.SetDirty(slotDataAsset);
+                    GUI.changed = true;
+                }
+            }
+            GUILayout.EndHorizontal();
 
             // Draw base properties
             if (slot.isWildCardSlot)
@@ -701,18 +707,11 @@ namespace UMA.Editors
 
             if (slot.utilitiesFoldout)
             {
-                using (new EditorGUI.DisabledScope(targets.Length != 1 || slot == null ||
-                    UMAMeshData.IsNullOrEmptyMeshData(slot.meshData)))
+                // Fixup UMA 2 slots: upgrade legacy slot data to UMA 3 parity
+                if (GUILayout.Button("Fixup UMA 2 -> UMA 3"))
                 {
-                    if (GUILayout.Button(new GUIContent("Open in Overlay Painter",
-                        "Open this slot, or its complete UDIM group, without generating an avatar."),
-                        GUILayout.Height(28f)))
-                    {
-                        UMA.TexturePaint.Editor.TexturePaintStandaloneSetupWindow.ShowForSlot(slot);
-                    }
+                    FixupUMA2Slots();
                 }
-                if (targets.Length != 1)
-                    EditorGUILayout.HelpBox("Select one SlotDataAsset to open Overlay Painter.", MessageType.Info);
                 GUILayout.Space(8f);
 
                 #region UV_Utilities

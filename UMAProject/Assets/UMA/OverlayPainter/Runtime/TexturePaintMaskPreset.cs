@@ -1,22 +1,6 @@
-using System.Collections.Generic;
-using UnityEngine;
-
 namespace UMA.TexturePaint
 {
-    [CreateAssetMenu(menuName = "UMA/Overlay Painter/Mask Preset", fileName = "Overlay Painter Mask Preset")]
-    public sealed class TexturePaintMaskPreset : ScriptableObject
-    {
-        public List<TexturePaintMask> masks = new List<TexturePaintMask>();
-
-        public void ApplyTo(TexturePaintMaskStack stack)
-        {
-            if (stack == null) return;
-            stack.Clear();
-            for (int i = 0; i < masks.Count; i++)
-            {
-                if (masks[i] == null) continue;
-                stack.Add(JsonUtility.FromJson<TexturePaintMask>(JsonUtility.ToJson(masks[i])));
-            }
-        }
-    }
+    // Intentionally empty. The former artist-facing structural-mask preset was removed in favor
+    // of editable masks owned directly by layers and groups. This source file remains so existing
+    // generated project files do not retain a missing compile item while Unity refreshes them.
 }

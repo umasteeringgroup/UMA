@@ -31,6 +31,7 @@ namespace UMA.CharacterSystem
     [ExecuteInEditMode]
     public class DynamicCharacterAvatar : UMAAvatarBase
     {
+        public const string NO_RACE = "None Set";
         public static long Ticks_LoadCharacter = 0;
         public static long Ticks_BuildCharacter = 0;
         public static long Ticks_InitializeBuild = 0;
@@ -1596,7 +1597,7 @@ namespace UMA.CharacterSystem
         /// </summary>
         bool SetActiveRace()
         {
-            if (activeRace.name == "" || activeRace.name == "None Set")
+            if (activeRace.name == "" || activeRace.name == NO_RACE)
             {
                 activeRace.data = null;
 #if UNITY_EDITOR
@@ -1643,7 +1644,7 @@ namespace UMA.CharacterSystem
 #if UNITY_EDITOR
                 if (Debug.isDebugBuild)
                 {
-                    Debug.LogWarning("[SetActiveRace] could not find baseRaceRecipe for the race " + activeRace.name + ". Have you set one in the raceData?");
+                    Debug.LogWarning("[SetActiveRace] could not find baseRaceRecipe for the race " + activeRace.name + " (" + NO_RACE + "). Have you set one in the raceData?");
                 }
 #endif
                 return false;
@@ -1743,7 +1744,7 @@ namespace UMA.CharacterSystem
                 return false;
             }
             RaceData thisRace = null;
-            if (racename != "None Set")
+            if (racename != NO_RACE)
             {
                 thisRace = UMAAssetIndexer.Instance.GetRace(racename);
             }
@@ -1915,7 +1916,7 @@ namespace UMA.CharacterSystem
         /// </summary>
         public void LoadDefaultWardrobe()
         {
-            if (activeRace.name == "" || activeRace.name == "None Set")
+            if (activeRace.name == "" || activeRace.name == NO_RACE)
             {
                 return;
             }

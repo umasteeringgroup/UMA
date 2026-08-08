@@ -4,6 +4,11 @@
 #pragma kernel CSJumpFloodEffectSeeds
 #pragma kernel CSResolveEffectDistance
 #pragma kernel CSCompositeLayerEffect
+#pragma kernel CSEvaluateLayerMask
+#pragma kernel CSApplyGroupMask
+#pragma kernel CSApplyIsolatedLayer
+#pragma kernel CSUnassociateAlpha
+#pragma kernel CSClear
 
 Texture2D<float4> _Base;
 Texture2D<float4> _Layer;
@@ -14,6 +19,37 @@ RWTexture2D<float2> _EffectSeedsWrite;
 Texture2D<float> _EffectDistanceRead;
 RWTexture2D<float> _EffectDistanceWrite;
 Texture2D<float4> _EffectCurveTexture;
+Texture2D<float4> _EffectTexture1;
+Texture2D<float4> _EffectTexture2;
+SamplerState sampler_linear_repeat;
+
+Texture2D<float4> _MaskBase;
+Texture2D<float4> _MaskOverlay;
+RWTexture2D<float4> _MaskResult;
+Texture2D<float4> _GroupOriginal;
+Texture2D<float4> _GroupResult;
+int2 _MaskBaseSize;
+int _MaskNoiseEnabled;
+int _MaskNoiseSeed;
+float2 _MaskNoiseTiling;
+float2 _MaskNoiseOffset;
+int _MaskNoiseOctaves;
+float _MaskNoiseBalance;
+float _MaskNoiseContrast;
+int _MaskNoiseInvert;
+float _MaskNoiseOpacity;
+int _MaskNoiseCombine;
+int _MaskOverlayEnabled;
+int _MaskOverlayChannel;
+float2 _MaskOverlayTiling;
+float2 _MaskOverlayOffset;
+float _MaskOverlayRotation;
+int _MaskOverlayInvert;
+float _MaskOverlayOpacity;
+int _MaskOverlayCombine;
+int _HasGroupMask;
+float _GroupOpacity;
+int _GroupBlendMode;
 
 int2 _TextureSize;
 int2 _TileOffset;
@@ -29,6 +65,20 @@ float _EffectSmoothness;
 float2 _EffectOffset;
 float _EffectLevel;
 int _EffectBlendMode;
+int _HasEffectTexture1;
+int _HasEffectTexture2;
+float2 _EffectTextureTiling1;
+float2 _EffectTextureTiling2;
+float2 _EffectTextureOffset1;
+float2 _EffectTextureOffset2;
+float _EffectTextureRotation1;
+float _EffectTextureRotation2;
+float _EffectTextureOpacity1;
+float _EffectTextureOpacity2;
+float4 _EffectTextureColor1;
+float4 _EffectTextureColor2;
+int _EffectTextureBlendMode1;
+int _EffectTextureBlendMode2;
 
 float3 BlendRGB(float3 destination, float3 source, int mode)
 {
@@ -43,6 +93,142 @@ float3 BlendRGB(float3 destination, float3 source, int mode)
         return lerp(low, high, step(0.5, destination));
     }
     return source;
+}
+
+float BlendMask(float destination, float source, int mode)
+{
+    if (mode == 1) return destination * source;
+    if (mode == 2) return saturate(destination + source);
+    if (mode == 3) return saturate(destination - source);
+    if (mode == 4) return 1.0 - (1.0 - destination) * (1.0 - source);
+    if (mode == 5)
+        return destination < 0.5 ? 2.0 * destination * source
+            : 1.0 - 2.0 * (1.0 - destination) * (1.0 - source);
+    return source;
+}
+
+float MaskHash(float2 value)
+{
+    value = frac(value * float2(123.34, 456.21));
+    value += dot(value, value + 45.32 + _MaskNoiseSeed * 0.0137);
+    return frac(value.x * value.y);
+}
+
+float MaskValueNoise(float2 position)
+{
+    float2 cell = floor(position);
+    float2 local = frac(position);
+    local = local * local * (3.0 - 2.0 * local);
+    float a = MaskHash(cell);
+    float b = MaskHash(cell + float2(1.0, 0.0));
+    float c = MaskHash(cell + float2(0.0, 1.0));
+    float d = MaskHash(cell + float2(1.0, 1.0));
+    return lerp(lerp(a, b, local.x), lerp(c, d, local.x), local.y);
+}
+
+float MaskFbm(float2 position)
+{
+    float value = 0.0;
+    float amplitude = 0.5;
+    float total = 0.0;
+    [loop] for (int octave = 0; octave < min(_MaskNoiseOctaves, 8); octave++)
+    {
+        value += MaskValueNoise(position) * amplitude;
+        total += amplitude;
+        position = position * 2.031 + 17.17;
+        amplitude *= 0.5;
+    }
+    return total > 0.0 ? value / total : 0.0;
+}
+
+[numthreads(16, 16, 1)]
+void CSEvaluateLayerMask(uint3 dispatchID : SV_DispatchThreadID)
+{
+    int2 pixel = int2(dispatchID.xy);
+    if (any(pixel >= _TextureSize)) return;
+    float2 uv = (float2(pixel) + 0.5) / float2(_TextureSize);
+    int2 basePixel = clamp(int2(uv * _MaskBaseSize), int2(0, 0), _MaskBaseSize - 1);
+    float value = saturate(_MaskBase.Load(int3(basePixel, 0)).r);
+
+    if (_MaskNoiseEnabled != 0)
+    {
+        float noiseValue = MaskFbm(uv * _MaskNoiseTiling + _MaskNoiseOffset);
+        noiseValue = saturate((noiseValue - _MaskNoiseBalance) * _MaskNoiseContrast + 0.5);
+        if (_MaskNoiseInvert != 0) noiseValue = 1.0 - noiseValue;
+        value = lerp(value, BlendMask(value, noiseValue, _MaskNoiseCombine), _MaskNoiseOpacity);
+    }
+
+    if (_MaskOverlayEnabled != 0)
+    {
+        float angleRadians = radians(_MaskOverlayRotation);
+        float sine = sin(angleRadians);
+        float cosine = cos(angleRadians);
+        float2 centered = uv - 0.5;
+        float2 rotated = float2(centered.x * cosine - centered.y * sine,
+            centered.x * sine + centered.y * cosine);
+        float4 sampleValue = _MaskOverlay.SampleLevel(sampler_linear_repeat,
+            rotated * _MaskOverlayTiling + 0.5 + _MaskOverlayOffset, 0);
+        float overlayValue = dot(sampleValue.rgb, float3(0.2126, 0.7152, 0.0722));
+        if (_MaskOverlayChannel == 1) overlayValue = sampleValue.r;
+        else if (_MaskOverlayChannel == 2) overlayValue = sampleValue.g;
+        else if (_MaskOverlayChannel == 3) overlayValue = sampleValue.b;
+        else if (_MaskOverlayChannel == 4) overlayValue = sampleValue.a;
+        if (_MaskOverlayInvert != 0) overlayValue = 1.0 - overlayValue;
+        value = lerp(value, BlendMask(value, saturate(overlayValue), _MaskOverlayCombine),
+            _MaskOverlayOpacity);
+    }
+    _MaskResult[pixel] = float4(value, value, value, 1.0);
+}
+
+[numthreads(16, 16, 1)]
+void CSApplyGroupMask(uint3 dispatchID : SV_DispatchThreadID)
+{
+    if (any(dispatchID.xy >= (uint2)_DispatchSize)) return;
+    int2 pixel = int2(dispatchID.xy) + _TileOffset;
+    if (any(pixel < 0) || any(pixel >= _TextureSize)) return;
+    float mask = _HasGroupMask != 0
+        ? saturate(_LayerMask.Load(int3(pixel, 0)).r) : 1.0;
+    float4 original = _GroupOriginal.Load(int3(pixel, 0));
+    float4 result = _GroupResult.Load(int3(pixel, 0));
+    float alpha = saturate(result.a * mask * _GroupOpacity);
+    // Children are composed against transparent group storage, so RGB is alpha-associated.
+    // Recover the straight group color before this group is treated as one source by its parent;
+    // otherwise every nested translucent group darkens its descendants one additional time.
+    float3 groupColor = result.a > 0.00001 ? result.rgb / result.a : result.rgb;
+    float3 blended = BlendRGB(original.rgb, groupColor, _GroupBlendMode);
+    _Composite[pixel] = float4(lerp(original.rgb, blended, alpha),
+        alpha + original.a * (1.0 - alpha));
+}
+
+[numthreads(16, 16, 1)]
+void CSApplyIsolatedLayer(uint3 dispatchID : SV_DispatchThreadID)
+{
+    if (any(dispatchID.xy >= (uint2)_DispatchSize)) return;
+    int2 pixel = int2(dispatchID.xy) + _TileOffset;
+    if (any(pixel < 0) || any(pixel >= _TextureSize)) return;
+    float4 original = _GroupOriginal.Load(int3(pixel, 0));
+    float4 result = _GroupResult.Load(int3(pixel, 0));
+    _Composite[pixel] = lerp(original, result, saturate(_LayerOpacity));
+}
+
+[numthreads(16, 16, 1)]
+void CSUnassociateAlpha(uint3 dispatchID : SV_DispatchThreadID)
+{
+    if (any(dispatchID.xy >= (uint2)_DispatchSize)) return;
+    int2 pixel = int2(dispatchID.xy) + _TileOffset;
+    if (any(pixel < 0) || any(pixel >= _TextureSize)) return;
+    float4 value = _Composite[pixel];
+    value.rgb = value.a > 0.00001 ? value.rgb / value.a : 0.0;
+    _Composite[pixel] = value;
+}
+
+[numthreads(16, 16, 1)]
+void CSClear(uint3 dispatchID : SV_DispatchThreadID)
+{
+    if (any(dispatchID.xy >= (uint2)_DispatchSize)) return;
+    int2 pixel = int2(dispatchID.xy) + _TileOffset;
+    if (any(pixel < 0) || any(pixel >= _TextureSize)) return;
+    _Composite[pixel] = float4(0.0, 0.0, 0.0, 0.0);
 }
 
 [numthreads(16, 16, 1)]
@@ -67,7 +253,10 @@ void CSCompositeLayer(uint3 dispatchID : SV_DispatchThreadID)
     // when a layer has no explicit mask.
     float mask = _HasLayerMask != 0 ? _LayerMask.Load(int3(pixel, 0)).r : 1.0;
     float alpha = saturate(layer.a * _LayerOpacity * mask);
-    float3 blended = BlendRGB(destination.rgb, layer.rgb, _BlendMode);
+    // An isolated group begins transparent. Its first authored layer must remain visible even
+    // when that layer uses Multiply/Subtract; transparent pixels have no backdrop to blend with.
+    float3 blended = lerp(layer.rgb, BlendRGB(destination.rgb, layer.rgb, _BlendMode),
+        step(0.0001, destination.a));
     _Composite[pixel] = float4(lerp(destination.rgb, blended, alpha),
         alpha + destination.a * (1.0 - alpha));
 }
@@ -90,7 +279,9 @@ void CSPrepareEffectSeeds(uint3 dispatchID : SV_DispatchThreadID)
     if (any(pixel >= _TextureSize)) return;
     float alpha = EffectAlphaAt(pixel);
     bool inside = alpha > 0.001;
-    bool boundary = inside && (alpha < 0.999 ||
+    // A soft or translucent interior is not itself an edge. Seed only the transition to empty
+    // coverage so distance effects retain their falloff instead of becoming a solid fill.
+    bool boundary = inside && (
         EffectAlphaAt(pixel + int2(-1, 0)) <= 0.001 ||
         EffectAlphaAt(pixel + int2(1, 0)) <= 0.001 ||
         EffectAlphaAt(pixel + int2(0, -1)) <= 0.001 ||
@@ -141,6 +332,17 @@ float SampleEffectCurve(float normalizedDistance)
     return saturate(_EffectCurveTexture.Load(int3(curvePixel, 0, 0)).r);
 }
 
+float2 TransformEffectUV(float2 uv, float2 tiling, float2 offset, float rotationDegrees)
+{
+    float angle = radians(rotationDegrees);
+    float sine = sin(angle);
+    float cosine = cos(angle);
+    float2 centered = uv - 0.5;
+    float2 rotated = float2(centered.x * cosine - centered.y * sine,
+        centered.x * sine + centered.y * cosine);
+    return rotated * tiling + 0.5 + offset;
+}
+
 [numthreads(16, 16, 1)]
 void CSCompositeLayerEffect(uint3 dispatchID : SV_DispatchThreadID)
 {
@@ -149,7 +351,44 @@ void CSCompositeLayerEffect(uint3 dispatchID : SV_DispatchThreadID)
     if (any(pixel < 0) || any(pixel >= _TextureSize)) return;
 
     float sourceAlpha = EffectAlphaAt(pixel);
-    int2 shiftedPixel = pixel - int2(round(_EffectOffset));
+    if (_EffectType == 9)
+    {
+        float commonCoverage = saturate(sourceAlpha * _LayerOpacity * _EffectLevel);
+        if (commonCoverage <= 0.00001 ||
+            (_HasEffectTexture1 == 0 && _HasEffectTexture2 == 0)) return;
+        float2 uv = (float2(pixel) + 0.5) / float2(_TextureSize);
+        float4 destination = _Composite[pixel];
+        if (_HasEffectTexture1 != 0)
+        {
+            float4 sample1 = _EffectTexture1.SampleLevel(
+                sampler_linear_repeat, TransformEffectUV(uv, _EffectTextureTiling1,
+                    _EffectTextureOffset1, _EffectTextureRotation1), 0);
+            float alpha1 = saturate(commonCoverage * _EffectTextureOpacity1 *
+                sample1.a * _EffectTextureColor1.a);
+            float3 source1 = sample1.rgb * _EffectTextureColor1.rgb;
+            float3 blended1 = BlendRGB(destination.rgb, source1, _EffectTextureBlendMode1);
+            destination = float4(lerp(destination.rgb, blended1, alpha1), destination.a);
+        }
+        if (_HasEffectTexture2 != 0)
+        {
+            float4 sample2 = _EffectTexture2.SampleLevel(
+                sampler_linear_repeat, TransformEffectUV(uv, _EffectTextureTiling2,
+                    _EffectTextureOffset2, _EffectTextureRotation2), 0);
+            float alpha2 = saturate(commonCoverage * _EffectTextureOpacity2 *
+                sample2.a * _EffectTextureColor2.a);
+            float3 source2 = sample2.rgb * _EffectTextureColor2.rgb;
+            float3 blended2 = BlendRGB(destination.rgb, source2, _EffectTextureBlendMode2);
+            destination = float4(lerp(destination.rgb, blended2, alpha2), destination.a);
+        }
+        _Composite[pixel] = destination;
+        return;
+    }
+
+    // Shadows use XY translation. Stroke uses X as a signed radial edge offset instead:
+    // negative pulls the band into the authored shape, positive pushes it outward.
+    int2 shiftedPixel = _EffectType == 0
+        ? pixel
+        : pixel - int2(round(_EffectOffset));
     float signedDistance = -length(float2(_TextureSize));
     if (all(shiftedPixel >= 0) && all(shiftedPixel < _TextureSize))
         signedDistance = _EffectDistanceRead.Load(int3(shiftedPixel, 0));
@@ -158,27 +397,26 @@ void CSCompositeLayerEffect(uint3 dispatchID : SV_DispatchThreadID)
     float width = max(0.5, _EffectWidth);
     if (_EffectType == 0)
     {
-        if (signedDistance >= 0.0) coverage = 1.0;
-        else
+        float strokeDistance = -signedDistance - _EffectOffset.x;
+        if (strokeDistance >= 0.0 && strokeDistance <= width)
         {
-            float outsideDistance = -signedDistance;
-            if (_EffectSmoothness <= 0.0001) coverage = outsideDistance <= width ? 1.0 : 0.0;
+            if (_EffectSmoothness <= 0.0001) coverage = 1.0;
             else
             {
                 float featherStart = width * (1.0 - saturate(_EffectSmoothness));
-                coverage = 1.0 - smoothstep(featherStart, width, outsideDistance);
+                coverage = 1.0 - smoothstep(featherStart, width, strokeDistance);
             }
         }
     }
     else if (_EffectType == 1 || _EffectType == 3)
     {
-        if (sourceAlpha > 0.0)
-            coverage = signedDistance <= 0.0 ? 1.0 : SampleEffectCurve(signedDistance / width);
+        if (sourceAlpha > 0.0 && signedDistance >= 0.0)
+            coverage = SampleEffectCurve(signedDistance / width);
         coverage *= sourceAlpha;
     }
     else if (_EffectType == 2 || _EffectType == 4)
     {
-        coverage = signedDistance >= 0.0 ? 1.0 : SampleEffectCurve((-signedDistance) / width);
+        if (signedDistance < 0.0) coverage = SampleEffectCurve((-signedDistance) / width);
     }
     else
     {
@@ -189,6 +427,7 @@ void CSCompositeLayerEffect(uint3 dispatchID : SV_DispatchThreadID)
     if (alpha <= 0.00001) return;
     float4 destination = _Composite[pixel];
     float3 blended = BlendRGB(destination.rgb, _EffectColor.rgb, _EffectBlendMode);
-    _Composite[pixel] = float4(lerp(destination.rgb, blended, alpha),
-        alpha + destination.a * (1.0 - alpha));
+    bool clippedEffect = _EffectType == 1 || _EffectType == 3 || _EffectType == 5;
+    _Composite[pixel] = float4(lerp(destination.rgb, blended, alpha), clippedEffect
+        ? destination.a : alpha + destination.a * (1.0 - alpha));
 }

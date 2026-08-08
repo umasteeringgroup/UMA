@@ -5,7 +5,7 @@ namespace UMA.TexturePaint
     internal static class TexturePaintGeometryMask
     {
         public static Texture2D Build(ReconstructedSurface surface, int width, int height, string slotName,
-            int uvIsland, TexturePaintMaskStack masks)
+            int uvIsland, TexturePaintGeometrySelection selection)
         {
             Texture2D result = new Texture2D(width, height, TextureFormat.R8, false, true)
             {
@@ -40,21 +40,9 @@ namespace UMA.TexturePaint
                 Vector3 centerWorld = surface.gameObject != null
                     ? surface.gameObject.transform.TransformPoint((vertices[ia] + vertices[ib] + vertices[ic]) / 3f)
                     : Vector3.zero;
-                if (masks != null && !masks.AllowsStructural(surface.index, triangle, island, surface, centerUV, centerWorld)) continue;
+                if (selection != null && !selection.AllowsStructural(surface.index, triangle, island,
+                    surface, centerUV, centerWorld)) continue;
                 RasterizeTriangle(pixels, width, height, uv[ia], uv[ib], uv[ic]);
-            }
-            if (masks != null)
-            {
-                string surfaceId = surface.index.ToString();
-                for (int y = 0; y < height; y++)
-                for (int x = 0; x < width; x++)
-                {
-                    int pixel = y * width + x;
-                    if (pixels[pixel] == 0) continue;
-                    float value = masks.EvaluateTextureMasks(surface.index, surfaceId,
-                        new Vector2((x + 0.5f) / width, (y + 0.5f) / height));
-                    pixels[pixel] = (byte)Mathf.RoundToInt(value * 255f);
-                }
             }
             result.LoadRawTextureData(pixels);
             result.Apply(false, false);

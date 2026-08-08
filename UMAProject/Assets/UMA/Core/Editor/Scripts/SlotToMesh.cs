@@ -64,23 +64,32 @@ namespace UMA
                     //CustomAssetUtility.SaveAsset<Mesh>(mesh, meshName);
                     AssetDatabase.CreateAsset(mesh, meshName);
 
-                    GameObject go = new GameObject(baseObject.slotName);
-                    go.hideFlags = HideFlags.DontSaveInEditor;
-                    MeshFilter mf = go.AddComponent<MeshFilter>();
-                    mf.mesh = mesh;
-
-                    MeshRenderer mr = go.AddComponent<MeshRenderer>();
-                    mr.materials = new Material[mesh.subMeshCount];
-                    for (int i = 0; i < mesh.subMeshCount; i++)
+                    GameObject go = null;
+                    try
                     {
-                        mr.materials[i] = AssetDatabase.GetBuiltinExtraResource<Material>("Default-Diffuse.mat");
+                        go = new GameObject(baseObject.slotName);
+                        go.hideFlags = HideFlags.HideInHierarchy;
+                        MeshFilter mf = go.AddComponent<MeshFilter>();
+                        mf.mesh = mesh;
+
+                        MeshRenderer mr = go.AddComponent<MeshRenderer>();
+                        mr.materials = new Material[mesh.subMeshCount];
+                        for (int i = 0; i < mesh.subMeshCount; i++)
+                        {
+                            mr.materials[i] = AssetDatabase.GetBuiltinExtraResource<Material>("Default-Diffuse.mat");
+                        }
+
+                        PrefabUtility.SaveAsPrefabAsset(go, goName);
+                        AssetDatabase.SaveAssets();
+                        AssetDatabase.Refresh();
                     }
-
-
-                    PrefabUtility.SaveAsPrefabAsset(go, goName);
-                    AssetDatabase.SaveAssets();
-                    AssetDatabase.Refresh();
-                    DestroyImmediate(go);
+                    finally
+                    {
+                        if (go != null)
+                        {
+                            DestroyImmediate(go);
+                        }
+                    }
                     EditorUtility.DisplayDialog("UMA Prefab Saver", "Conversion complete", "OK");
                 }
             }

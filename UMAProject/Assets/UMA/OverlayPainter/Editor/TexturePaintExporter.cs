@@ -34,6 +34,8 @@ namespace UMA.TexturePaint.Editor
         public string targetName;
         public int tileNumber;
         public string path;
+        public string alphaMaskPath;
+        public int alphaMaskResolution;
         public readonly List<TexturePaintExportPlanEntry> textures = new List<TexturePaintExportPlanEntry>();
         public string DisplayName => targetName + (tileNumber > 0 ? " / " + tileNumber : string.Empty) + " / Overlay";
     }
@@ -54,6 +56,7 @@ namespace UMA.TexturePaint.Editor
         public string targetName;
         public int tileNumber;
         public string overlayPath;
+        public string alphaMaskPath;
         public readonly List<string> texturePaths = new List<string>();
     }
 
@@ -61,6 +64,7 @@ namespace UMA.TexturePaint.Editor
     {
         public string identifier;
         public readonly List<string> texturePaths = new List<string>();
+        public readonly List<string> alphaMaskPaths = new List<string>();
         public readonly List<string> overlayPaths = new List<string>();
         // Retained for source compatibility. Phase 4 never creates material overrides.
         public readonly List<string> materialPaths = new List<string>();
@@ -82,7 +86,11 @@ namespace UMA.TexturePaint.Editor
         private sealed class EncodedOutput
         {
             public TexturePaintExportPlanEntry entry;
+            public TexturePaintOverlayPlanEntry overlay;
+            public string path;
+            public string displayName;
             public string stagingPath;
+            public bool IsAlphaMask => overlay != null;
         }
 
         private sealed class ObjectSnapshot
@@ -98,6 +106,141 @@ namespace UMA.TexturePaint.Editor
             public string importerJson;
         }
 
+        private sealed class AuthoredOverlayBakeContext : IDisposable
+        {
+            private const string ShaderPath =
+                "Assets/UMA/OverlayPainter/Shaders/ExportOverlayPack.shader";
+            private readonly TextureSet set;
+            private readonly Material material;
+            private readonly Dictionary<TexturePaintChannel, RenderTexture> logical =
+                new Dictionary<TexturePaintChannel, RenderTexture>();
+            public RenderTexture Coverage { get; }
+
+            public AuthoredOverlayBakeContext(TextureSet set, int coverageResolution)
+            {
+                this.set = set ?? throw new ArgumentNullException(nameof(set));
+                Shader shader = AssetDatabase.LoadAssetAtPath<Shader>(ShaderPath);
+                if (shader == null) throw new InvalidOperationException(
+                    "Overlay-only export shader is missing: " + ShaderPath);
+                if (set.compositor?.IsAvailable != true) throw new InvalidOperationException(
+                    set.Name + " cannot export authored layers because GPU layer compositing is unavailable.");
+                material = new Material(shader) { hideFlags = HideFlags.HideAndDontSave };
+
+                foreach (KeyValuePair<TexturePaintChannel, TextureChannelTarget> pair in set.channels)
+                {
+                    TextureChannelTarget target = pair.Value;
+                    if (target?.editable?.Front == null ||
+                        !HasVisibleAuthoredContribution(set, pair.Key)) continue;
+                    RenderTexture composite = EditableTextureTarget.Create(
+                        set.Name + " " + pair.Key + " Authored Overlay",
+                        target.editable.Width, target.editable.Height, target.format);
+                    set.compositor.ComposeAuthoredLayers(set, pair.Key, composite);
+                    logical.Add(pair.Key, composite);
+                }
+                if (logical.Count == 0) throw new InvalidOperationException(
+                    set.Name + " has no visible authored layer content to export.");
+
+                Coverage = EditableTextureTarget.Create(set.Name + " Authored Overlay Coverage",
+                    coverageResolution, coverageResolution, RenderTextureFormat.ARGB32);
+                Clear(Coverage, Color.clear);
+                foreach (RenderTexture source in logical.Values)
+                    Graphics.Blit(source, Coverage, material, 1);
+            }
+
+            public Texture2D Bake(TexturePaintExportPlanEntry entry, TexturePaintExportBitDepth bitDepth)
+            {
+                TexturePaintMaterialChannelCapability capability = entry.materialChannel;
+                RenderTextureFormat format = bitDepth == TexturePaintExportBitDepth.HalfFloat
+                    ? RenderTextureFormat.ARGBHalf : RenderTextureFormat.ARGB32;
+                RenderTexture packed = EditableTextureTarget.Create(
+                    entry.DisplayName + " Authored Overlay", entry.resolution, entry.resolution, format);
+                try
+                {
+                    Vector4 defaults = Vector4.zero;
+                    Vector4 hasSource = Vector4.zero;
+                    Vector4 sourceComponents = Vector4.zero;
+                    Vector4 invert = Vector4.zero;
+                    string[] names = { "_Red", "_Green", "_Blue", "_Alpha" };
+                    for (int component = 0; component < 4; component++)
+                    {
+                        TexturePaintPhysicalComponentCapability mapping = capability.Components[component];
+                        defaults[component] = mapping?.neutralValue ?? 0f;
+                        RenderTexture source = null;
+                        if (mapping?.editable == true)
+                            logical.TryGetValue(mapping.logicalChannel, out source);
+                        if (source != null)
+                        {
+                            hasSource[component] = 1f;
+                            sourceComponents[component] = IsVectorChannel(mapping.logicalChannel)
+                                ? component : 0;
+                            invert[component] = mapping.invert ? 1f : 0f;
+                        }
+                        material.SetTexture(names[component], source != null
+                            ? (Texture)source : Texture2D.blackTexture);
+                    }
+                    material.SetVector("_Defaults", defaults);
+                    material.SetVector("_HasSource", hasSource);
+                    material.SetVector("_SourceComponent", sourceComponents);
+                    material.SetVector("_Invert", invert);
+                    material.SetTexture("_Coverage", Coverage);
+                    material.SetInt("_AlphaFromCoverage", CanStoreCoverageInPhysicalAlpha(capability) ? 1 : 0);
+                    Graphics.Blit(Texture2D.blackTexture, packed, material, 0);
+                    bool linear = capability.output.colorSpace !=
+                        UMAMaterial.TextureChannelColorSpace.SRGB;
+                    return TexturePaintBaker.BakeRenderTexture(packed, entry.DisplayName,
+                        0, bitDepth, linear);
+                }
+                finally { Destroy(packed); }
+            }
+
+            public Texture2D BakeCoverage(string name)
+            {
+                return TexturePaintBaker.BakeRenderTexture(Coverage, name, 0,
+                    TexturePaintExportBitDepth.Eight, true);
+            }
+
+            public void Dispose()
+            {
+                foreach (RenderTexture texture in logical.Values) Destroy(texture);
+                logical.Clear();
+                Destroy(Coverage);
+                if (material != null) UnityEngine.Object.DestroyImmediate(material);
+            }
+
+            private static bool IsVectorChannel(TexturePaintChannel channel)
+            {
+                return channel == TexturePaintChannel.Albedo ||
+                       channel == TexturePaintChannel.Normal ||
+                       channel == TexturePaintChannel.Emission ||
+                       channel == TexturePaintChannel.Custom;
+            }
+
+            private static bool CanStoreCoverageInPhysicalAlpha(
+                TexturePaintMaterialChannelCapability capability)
+            {
+                if (!ContainsLogicalChannel(capability, TexturePaintChannel.Albedo)) return false;
+                UMAMaterial.TextureChannelUsage usage = capability.layout.alpha;
+                return usage == UMAMaterial.TextureChannelUsage.Unused ||
+                       usage == UMAMaterial.TextureChannelUsage.Opacity;
+            }
+
+            private static void Clear(RenderTexture texture, Color color)
+            {
+                RenderTexture previous = RenderTexture.active;
+                RenderTexture.active = texture;
+                GL.Clear(false, true, color);
+                RenderTexture.active = previous;
+            }
+
+            private static void Destroy(RenderTexture texture)
+            {
+                if (texture == null) return;
+                if (RenderTexture.active == texture) RenderTexture.active = null;
+                texture.Release();
+                UnityEngine.Object.DestroyImmediate(texture);
+            }
+        }
+
         public static TexturePaintExportPlan BuildPlan(TextureStore store, TextureSet current,
             string contextName, TexturePaintExportTemplate template)
         {
@@ -111,6 +254,13 @@ namespace UMA.TexturePaint.Editor
             TexturePaintExportPlan plan = new TexturePaintExportPlan();
             if (store == null) { plan.errors.Add("No texture store is available."); return plan; }
             if (template == null) { plan.errors.Add("Select an export template."); return plan; }
+            if (template.content == TexturePaintExportContent.AuthoredOverlay &&
+                template.overwriteSourceOverlay)
+            {
+                plan.errors.Add("Authored Overlay export cannot overwrite a source overlay. " +
+                    "Choose a new/versioned output so the character's base textures remain intact.");
+                return plan;
+            }
             if (string.IsNullOrWhiteSpace(identifier))
             {
                 plan.errors.Add("Enter an Export Identifier.");
@@ -152,6 +302,8 @@ namespace UMA.TexturePaint.Editor
                     {
                         TexturePaintMaterialChannelCapability channel = descriptor.Channels[channelIndex];
                         if (!channel.isTexture) continue;
+                        if (template.content == TexturePaintExportContent.AuthoredOverlay &&
+                            !HasVisibleAuthoredContribution(set, channel)) continue;
                         TexturePaintExportPlanEntry entry = BuildTextureEntry(plan, reserved, folder, template,
                             set, binding, channel);
                         if (entry == null) continue;
@@ -160,14 +312,24 @@ namespace UMA.TexturePaint.Editor
                     }
                     if (overlay.textures.Count == 0)
                     {
-                        plan.errors.Add($"{binding.targetName} has no physical UMAMaterial texture channels to export.");
+                        plan.errors.Add(template.content == TexturePaintExportContent.AuthoredOverlay
+                            ? $"{binding.targetName} has no visible authored layer content to export. " +
+                              "Runtime Overlay export excludes the reconstructed base texture and direct base painting."
+                            : $"{binding.targetName} has no physical UMAMaterial texture channels to export.");
                         continue;
                     }
                     overlay.path = ResolveOverlayPath(plan, reserved, folder, template, binding);
                     if (!string.IsNullOrEmpty(overlay.path))
                     {
+                        if (template.content == TexturePaintExportContent.AuthoredOverlay)
+                        {
+                            overlay.alphaMaskResolution = ResolveOverlayMaskResolution(overlay, template);
+                            overlay.alphaMaskPath = ResolveAlphaMaskPath(plan, reserved, folder, template,
+                                binding);
+                        }
                         PreflightOverlayIndex(plan, overlay.path);
-                        plan.overlays.Add(overlay);
+                        if (template.content != TexturePaintExportContent.AuthoredOverlay ||
+                            !string.IsNullOrEmpty(overlay.alphaMaskPath)) plan.overlays.Add(overlay);
                     }
                 }
             }
@@ -500,6 +662,72 @@ namespace UMA.TexturePaint.Editor
             return path;
         }
 
+        private static string ResolveAlphaMaskPath(TexturePaintExportPlan plan,
+            HashSet<string> reserved, string folder, TexturePaintExportTemplate template,
+            MemberBinding binding)
+        {
+            string filename = Sanitize(binding.targetName) + "_" + plan.identifier +
+                (binding.tileNumber > 0 ? "_" + binding.tileNumber : string.Empty) + "_AlphaMask.png";
+            string path = ResolveOutputPath(folder + "/" + filename, template.overwritePolicy,
+                reserved, plan.errors);
+            if (string.IsNullOrEmpty(path)) return null;
+            reserved.Add(path);
+            return path;
+        }
+
+        private static int ResolveOverlayMaskResolution(TexturePaintOverlayPlanEntry overlay,
+            TexturePaintExportTemplate template)
+        {
+            if (template.resolution > 0) return Mathf.Clamp(template.resolution, 1, 8192);
+            int resolution = 0;
+            for (int i = 0; i < overlay.textures.Count; i++)
+                resolution = Mathf.Max(resolution, overlay.textures[i].resolution);
+            return Mathf.Clamp(resolution > 0 ? resolution : FirstResolution(overlay.set), 1, 8192);
+        }
+
+        private static bool HasVisibleAuthoredContribution(TextureSet set,
+            TexturePaintMaterialChannelCapability capability)
+        {
+            for (int i = 0; i < capability.LogicalChannels.Count; i++)
+                if (HasVisibleAuthoredContribution(set, capability.LogicalChannels[i])) return true;
+            return false;
+        }
+
+        private static bool HasVisibleAuthoredContribution(TextureSet set, TexturePaintChannel channel)
+        {
+            if (set == null) return false;
+            for (int i = 0; i < set.layers.Count; i++)
+            {
+                TexturePaintLayer layer = set.layers[i];
+                if (layer == null || layer.kind == TexturePaintLayerKind.Group || !layer.visible ||
+                    layer.opacity <= 0f || !layer.channels.ContainsKey(channel)) continue;
+                TexturePaintLayerChannelSettings settings = layer.GetChannelSettings(channel, false);
+                if (settings != null && (!settings.enabled || settings.opacity <= 0f)) continue;
+                if (VisibleThroughParents(set, layer)) return true;
+            }
+            return false;
+        }
+
+        private static bool VisibleThroughParents(TextureSet set, TexturePaintLayer layer)
+        {
+            string parentId = layer.parentId;
+            int guard = 0;
+            while (!string.IsNullOrEmpty(parentId) && guard++ < set.layers.Count)
+            {
+                TexturePaintLayer parent = null;
+                for (int i = 0; i < set.layers.Count; i++)
+                    if (string.Equals(set.layers[i]?.id, parentId, StringComparison.Ordinal))
+                    {
+                        parent = set.layers[i];
+                        break;
+                    }
+                if (parent == null) break;
+                if (!parent.visible || parent.opacity <= 0f) return false;
+                parentId = parent.parentId;
+            }
+            return true;
+        }
+
         private static void PreflightOverlayIndex(TexturePaintExportPlan plan, string path)
         {
             OverlayDataAsset asset = AssetDatabase.LoadAssetAtPath<OverlayDataAsset>(path);
@@ -555,51 +783,106 @@ namespace UMA.TexturePaint.Editor
             string stagingFolder, List<EncodedOutput> outputs, TexturePaintOperationContext operation,
             Action<string, float> detailedProgress)
         {
-            for (int i = 0; i < plan.entries.Count; i++)
+            Dictionary<TextureSet, AuthoredOverlayBakeContext> overlayContexts =
+                new Dictionary<TextureSet, AuthoredOverlayBakeContext>();
+            try
             {
-                operation.ThrowIfCancellationRequested();
-                TexturePaintExportPlanEntry entry = plan.entries[i];
-                float entryStart = 0.5f * i / Mathf.Max(1, plan.entries.Count);
-                float entrySpan = 0.5f / Mathf.Max(1, plan.entries.Count);
-                Report(operation, detailedProgress,
-                    $"Baking {entry.DisplayName} at {entry.resolution} x {entry.resolution}", entryStart);
-                TexturePaintExportBitDepth bitDepth = ToBitDepth(entry.materialChannel.output.encoding);
-                Texture2D texture = TexturePaintBaker.Bake(entry.set, entry.materialChannel,
-                    entry.resolution, bitDepth);
-                if (texture == null)
-                    throw new InvalidOperationException("Could not bake " + entry.DisplayName + ".");
-                try
+                if (template.content == TexturePaintExportContent.AuthoredOverlay)
                 {
-                    Report(operation, detailedProgress, $"Preparing {entry.DisplayName}",
-                        entryStart + entrySpan * 0.12f);
-                    bool invertNormalGreen = IsNormalChannel(entry.materialChannel) &&
-                        entry.materialChannel.output.normalConvention ==
-                        UMAMaterial.TextureChannelNormalConvention.DirectX;
-                    bool linear = entry.materialChannel.output.colorSpace !=
-                        UMAMaterial.TextureChannelColorSpace.SRGB;
-                    ApplyDeclaredOutputTransform(texture, entry.materialChannel, invertNormalGreen, linear,
-                        operation);
-                    if (ContainsLogicalChannel(entry.materialChannel, TexturePaintChannel.Albedo) &&
-                        template.padding > 0)
+                    for (int i = 0; i < plan.overlays.Count; i++)
                     {
-                        DilateTransparent(texture, template.padding, linear, operation, (pass, passCount) =>
-                            Report(operation, detailedProgress,
-                                $"Padding {entry.DisplayName} ({pass}/{passCount})",
-                                entryStart + entrySpan * (0.18f + 0.54f * pass / Mathf.Max(1f, passCount))));
+                        TexturePaintOverlayPlanEntry overlay = plan.overlays[i];
+                        if (!overlayContexts.ContainsKey(overlay.set))
+                            overlayContexts.Add(overlay.set,
+                                new AuthoredOverlayBakeContext(overlay.set, overlay.alphaMaskResolution));
                     }
-                    Report(operation, detailedProgress, $"Encoding {entry.DisplayName}",
-                        entryStart + entrySpan * 0.78f);
-                    byte[] bytes = bitDepth == TexturePaintExportBitDepth.HalfFloat
-                        ? texture.EncodeToEXR(Texture2D.EXRFlags.CompressZIP)
-                        : texture.EncodeToPNG();
-                    operation.ThrowIfCancellationRequested();
-                    string stagingPath = Path.Combine(stagingFolder, i.ToString("D4") +
-                        Path.GetExtension(entry.path));
-                    File.WriteAllBytes(stagingPath, bytes);
-                    outputs.Add(new EncodedOutput { entry = entry, stagingPath = stagingPath });
                 }
-                finally { UnityEngine.Object.DestroyImmediate(texture); }
-                Report(operation, detailedProgress, $"Prepared {entry.DisplayName}", entryStart + entrySpan);
+
+                for (int i = 0; i < plan.entries.Count; i++)
+                {
+                    operation.ThrowIfCancellationRequested();
+                    TexturePaintExportPlanEntry entry = plan.entries[i];
+                    float entryStart = 0.45f * i / Mathf.Max(1, plan.entries.Count);
+                    float entrySpan = 0.45f / Mathf.Max(1, plan.entries.Count);
+                    Report(operation, detailedProgress,
+                        $"Baking {entry.DisplayName} at {entry.resolution} x {entry.resolution}", entryStart);
+                    TexturePaintExportBitDepth bitDepth = ToBitDepth(entry.materialChannel.output.encoding);
+                    Texture2D texture = template.content == TexturePaintExportContent.AuthoredOverlay
+                        ? overlayContexts[entry.set].Bake(entry, bitDepth)
+                        : TexturePaintBaker.Bake(entry.set, entry.materialChannel,
+                            entry.resolution, bitDepth);
+                    if (texture == null)
+                        throw new InvalidOperationException("Could not bake " + entry.DisplayName + ".");
+                    try
+                    {
+                        Report(operation, detailedProgress, $"Preparing {entry.DisplayName}",
+                            entryStart + entrySpan * 0.12f);
+                        bool invertNormalGreen = IsNormalChannel(entry.materialChannel) &&
+                            entry.materialChannel.output.normalConvention ==
+                            UMAMaterial.TextureChannelNormalConvention.DirectX;
+                        bool linear = entry.materialChannel.output.colorSpace !=
+                            UMAMaterial.TextureChannelColorSpace.SRGB;
+                        ApplyDeclaredOutputTransform(texture, entry.materialChannel, invertNormalGreen, linear,
+                            operation, template.content == TexturePaintExportContent.AuthoredOverlay);
+                        if (ContainsLogicalChannel(entry.materialChannel, TexturePaintChannel.Albedo) &&
+                            template.padding > 0)
+                        {
+                            DilateTransparent(texture, template.padding, linear, operation, (pass, passCount) =>
+                                Report(operation, detailedProgress,
+                                    $"Padding {entry.DisplayName} ({pass}/{passCount})",
+                                    entryStart + entrySpan * (0.18f + 0.54f * pass / Mathf.Max(1f, passCount))));
+                        }
+                        Report(operation, detailedProgress, $"Encoding {entry.DisplayName}",
+                            entryStart + entrySpan * 0.78f);
+                        byte[] bytes = bitDepth == TexturePaintExportBitDepth.HalfFloat
+                            ? texture.EncodeToEXR(Texture2D.EXRFlags.CompressZIP)
+                            : texture.EncodeToPNG();
+                        operation.ThrowIfCancellationRequested();
+                        string stagingPath = Path.Combine(stagingFolder, i.ToString("D4") +
+                            Path.GetExtension(entry.path));
+                        File.WriteAllBytes(stagingPath, bytes);
+                        outputs.Add(new EncodedOutput
+                        {
+                            entry = entry,
+                            path = entry.path,
+                            displayName = entry.DisplayName,
+                            stagingPath = stagingPath
+                        });
+                    }
+                    finally { UnityEngine.Object.DestroyImmediate(texture); }
+                    Report(operation, detailedProgress, $"Prepared {entry.DisplayName}", entryStart + entrySpan);
+                }
+
+                if (template.content != TexturePaintExportContent.AuthoredOverlay) return;
+                for (int i = 0; i < plan.overlays.Count; i++)
+                {
+                    operation.ThrowIfCancellationRequested();
+                    TexturePaintOverlayPlanEntry overlay = plan.overlays[i];
+                    string displayName = overlay.targetName +
+                        (overlay.tileNumber > 0 ? " / " + overlay.tileNumber : string.Empty) +
+                        " / Alpha Mask";
+                    Report(operation, detailedProgress, "Generating " + displayName,
+                        0.45f + 0.05f * i / Mathf.Max(1, plan.overlays.Count));
+                    Texture2D mask = overlayContexts[overlay.set].BakeCoverage(displayName);
+                    try
+                    {
+                        string stagingPath = Path.Combine(stagingFolder,
+                            (plan.entries.Count + i).ToString("D4") + ".png");
+                        File.WriteAllBytes(stagingPath, mask.EncodeToPNG());
+                        outputs.Add(new EncodedOutput
+                        {
+                            overlay = overlay,
+                            path = overlay.alphaMaskPath,
+                            displayName = displayName,
+                            stagingPath = stagingPath
+                        });
+                    }
+                    finally { UnityEngine.Object.DestroyImmediate(mask); }
+                }
+            }
+            finally
+            {
+                foreach (AuthoredOverlayBakeContext context in overlayContexts.Values) context.Dispose();
             }
         }
 
@@ -624,7 +907,7 @@ namespace UMA.TexturePaint.Editor
                 for (int i = 0; i < encoded.Count; i++)
                 {
                     operation.ThrowIfCancellationRequested();
-                    string path = encoded[i].entry.path;
+                    string path = encoded[i].path;
                     string fullPath = Path.GetFullPath(path);
                     if (File.Exists(fullPath))
                     {
@@ -638,8 +921,9 @@ namespace UMA.TexturePaint.Editor
                     }
                     else newFiles.Add(path);
                     File.Copy(encoded[i].stagingPath, fullPath, true);
-                    result.texturePaths.Add(path);
-                    Report(operation, detailedProgress, $"Writing {encoded[i].entry.DisplayName}",
+                    if (encoded[i].IsAlphaMask) result.alphaMaskPaths.Add(path);
+                    else result.texturePaths.Add(path);
+                    Report(operation, detailedProgress, $"Writing {encoded[i].displayName}",
                         0.5f + 0.12f * ((i + 1f) / encoded.Count));
                 }
 
@@ -654,6 +938,15 @@ namespace UMA.TexturePaint.Editor
                         ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ForceUpdate);
                     Report(operation, detailedProgress, $"Configuring {plan.entries[i].DisplayName}",
                         0.62f + 0.12f * ((i + 1f) / plan.entries.Count));
+                }
+                for (int i = 0; i < plan.overlays.Count; i++)
+                {
+                    TexturePaintOverlayPlanEntry overlay = plan.overlays[i];
+                    if (string.IsNullOrEmpty(overlay.alphaMaskPath)) continue;
+                    ConfigureAlphaMaskImporter(overlay.alphaMaskPath);
+                    AssetDatabase.WriteImportSettingsIfDirty(overlay.alphaMaskPath);
+                    AssetDatabase.ImportAsset(overlay.alphaMaskPath,
+                        ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ForceUpdate);
                 }
 
                 for (int i = 0; i < plan.overlays.Count; i++)
@@ -686,7 +979,8 @@ namespace UMA.TexturePaint.Editor
                     {
                         targetName = overlayPlan.targetName,
                         tileNumber = overlayPlan.tileNumber,
-                        overlayPath = overlayPlan.path
+                        overlayPath = overlayPlan.path,
+                        alphaMaskPath = overlayPlan.alphaMaskPath
                     };
                     for (int entryIndex = 0; entryIndex < overlayPlan.textures.Count; entryIndex++)
                         resultSet.texturePaths.Add(overlayPlan.textures[entryIndex].path);
@@ -700,6 +994,9 @@ namespace UMA.TexturePaint.Editor
                     for (int i = 0; i < result.texturePaths.Count; i++)
                         if (MarkAddressable(result.texturePaths[i]))
                             newAddressableGuids.Add(AssetDatabase.AssetPathToGUID(result.texturePaths[i]));
+                    for (int i = 0; i < result.alphaMaskPaths.Count; i++)
+                        if (MarkAddressable(result.alphaMaskPaths[i]))
+                            newAddressableGuids.Add(AssetDatabase.AssetPathToGUID(result.alphaMaskPaths[i]));
                     for (int i = 0; i < result.overlayPaths.Count; i++)
                         if (MarkAddressable(result.overlayPaths[i]))
                             newAddressableGuids.Add(AssetDatabase.AssetPathToGUID(result.overlayPaths[i]));
@@ -731,6 +1028,7 @@ namespace UMA.TexturePaint.Editor
             TexturePaintOverlayPlanEntry plan)
         {
             OverlayDataAsset source = plan.sourceOverlay;
+            bool authoredOverlay = !string.IsNullOrEmpty(plan.alphaMaskPath);
             if (source != null && !ReferenceEquals(source, overlay))
             {
                 overlay.overlayType = source.overlayType;
@@ -740,6 +1038,7 @@ namespace UMA.TexturePaint.Editor
                 overlay.forceKeep = source.forceKeep;
                 overlay.noAutoAdd = source.noAutoAdd;
             }
+            if (authoredOverlay) overlay.overlayType = OverlayDataAsset.OverlayType.Normal;
             int count = Mathf.Max(1, plan.set.umaMaterial?.channels?.Length ?? 0);
             Texture[] textures = new Texture[count];
             string[] names = new string[count];
@@ -757,7 +1056,7 @@ namespace UMA.TexturePaint.Editor
             overlay.textureList = textures;
             overlay.textureNames = names;
             OverlayDataAsset.OverlayBlend[] blends = new OverlayDataAsset.OverlayBlend[count];
-            if (source?.overlayBlend != null)
+            if (!authoredOverlay && source?.overlayBlend != null)
                 Array.Copy(source.overlayBlend, blends, Mathf.Min(source.overlayBlend.Length, blends.Length));
             overlay.overlayBlend = blends;
             int width = 0, height = 0;
@@ -770,7 +1069,11 @@ namespace UMA.TexturePaint.Editor
             }
             if (width <= 0 || height <= 0) width = height = FirstResolution(plan.set);
             overlay.rect = new Rect(0f, 0f, width, height);
-            overlay.alphaMask = null;
+            overlay.alphaMask = string.IsNullOrEmpty(plan.alphaMaskPath) ? null :
+                AssetDatabase.LoadAssetAtPath<Texture2D>(plan.alphaMaskPath);
+            if (!string.IsNullOrEmpty(plan.alphaMaskPath) && overlay.alphaMask == null)
+                throw new InvalidDataException("Exported overlay alpha mask did not import: " +
+                    plan.alphaMaskPath);
         }
 
         private static void RegisterOverlay(UMAAssetIndexer indexer, OverlayDataAsset overlay,
@@ -801,8 +1104,24 @@ namespace UMA.TexturePaint.Editor
                 AssetItem item = indexer.GetAssetItem<OverlayDataAsset>(overlay.overlayName);
                 if (item == null || !ReferenceEquals(item.Item, overlay))
                     throw new InvalidDataException("UMA library lookup failed for overlay '" + overlay.overlayName + "'.");
+                if (!string.IsNullOrEmpty(expected.alphaMaskPath) &&
+                    (overlay.alphaMask == null || !string.Equals(
+                        AssetDatabase.GetAssetPath(overlay.alphaMask), expected.alphaMaskPath,
+                        StringComparison.OrdinalIgnoreCase)))
+                    throw new InvalidDataException("Overlay alpha mask was not assigned correctly: " +
+                        expected.alphaMaskPath);
+                if (!string.IsNullOrEmpty(expected.alphaMaskPath) &&
+                    !result.alphaMaskPaths.Exists(path => string.Equals(path, expected.alphaMaskPath,
+                        StringComparison.OrdinalIgnoreCase)))
+                    throw new InvalidDataException("Overlay alpha mask is missing from the export result: " +
+                        expected.alphaMaskPath);
             }
-            if (result.overlayPaths.Count != plan.overlays.Count || result.texturePaths.Count != plan.entries.Count)
+            int alphaMaskCount = 0;
+            for (int i = 0; i < plan.overlays.Count; i++)
+                if (!string.IsNullOrEmpty(plan.overlays[i].alphaMaskPath)) alphaMaskCount++;
+            if (result.overlayPaths.Count != plan.overlays.Count ||
+                result.texturePaths.Count != plan.entries.Count ||
+                result.alphaMaskPaths.Count != alphaMaskCount)
                 throw new InvalidDataException("The committed export result does not match its preflight plan.");
         }
 
@@ -883,6 +1202,22 @@ namespace UMA.TexturePaint.Editor
                 platform.textureCompression = ToImporterCompression(configured.compression);
                 importer.SetPlatformTextureSettings(platform);
             }
+        }
+
+        private static void ConfigureAlphaMaskImporter(string path)
+        {
+            TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
+            if (importer == null) throw new InvalidDataException(
+                "No TextureImporter was created for overlay alpha mask " + path);
+            importer.textureType = TextureImporterType.Default;
+            importer.sRGBTexture = false;
+            importer.alphaSource = TextureImporterAlphaSource.FromInput;
+            importer.alphaIsTransparency = false;
+            importer.mipmapEnabled = true;
+            importer.textureCompression = TextureImporterCompression.CompressedHQ;
+            importer.filterMode = FilterMode.Bilinear;
+            importer.wrapMode = TextureWrapMode.Clamp;
+            importer.npotScale = TextureImporterNPOTScale.None;
         }
 
         private static TextureImporterCompression ToImporterCompression(
@@ -980,7 +1315,8 @@ namespace UMA.TexturePaint.Editor
 
         private static void ApplyDeclaredOutputTransform(Texture2D texture,
             TexturePaintMaterialChannelCapability channel, bool invertNormalGreen,
-            bool linear, TexturePaintOperationContext operation)
+            bool linear, TexturePaintOperationContext operation,
+            bool preserveAuthoredOverlayAlpha = false)
         {
             Vector4 replace = Vector4.zero;
             Vector4 neutral = Vector4.zero;
@@ -990,6 +1326,9 @@ namespace UMA.TexturePaint.Editor
                 TexturePaintPhysicalComponentCapability mapping = channel.Components[component];
                 bool replaceComponent = mapping == null ||
                     mapping.usage == UMAMaterial.TextureChannelUsage.Unused;
+                if (preserveAuthoredOverlayAlpha && component == 3 &&
+                    ContainsLogicalChannel(channel, TexturePaintChannel.Albedo))
+                    replaceComponent = false;
                 replace[component] = replaceComponent ? 1f : 0f;
                 neutral[component] = mapping?.neutralValue ?? 0f;
                 any |= replaceComponent;
@@ -1007,6 +1346,7 @@ namespace UMA.TexturePaint.Editor
                 material.SetVector("_ReplaceMask", replace);
                 material.SetVector("_NeutralValues", neutral);
                 material.SetFloat("_InvertGreen", invertNormalGreen ? 1f : 0f);
+                material.SetTexture("_MainTex", texture);
                 Graphics.Blit(texture, temporary, material, 3);
                 RenderTexture.active = temporary;
                 texture.ReadPixels(new Rect(0, 0, texture.width, texture.height), 0, 0, false);
@@ -1046,12 +1386,15 @@ namespace UMA.TexturePaint.Editor
             try
             {
                 Graphics.Blit(texture, colorA);
+                material.SetTexture("_MainTex", texture);
                 Graphics.Blit(texture, validA, material, 2);
                 for (int pass = 0; pass < padding; pass++)
                 {
                     operation.ThrowIfCancellationRequested();
+                    material.SetTexture("_MainTex", colorA);
                     material.SetTexture("_ValidityTex", validA);
                     Graphics.Blit(colorA, colorB, material, 0);
+                    material.SetTexture("_MainTex", validA);
                     Graphics.Blit(validA, validB, material, 1);
                     (colorA, colorB) = (colorB, colorA);
                     (validA, validB) = (validB, validA);

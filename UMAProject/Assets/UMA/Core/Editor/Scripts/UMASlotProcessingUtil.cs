@@ -629,7 +629,7 @@ namespace UMA.Editors
 
             try
             {
-                tempGameObject = UnityEngine.Object.Instantiate(mesh.transform.parent.gameObject) as GameObject;
+                tempGameObject = CreateTemporarySceneClone(mesh.transform.parent.gameObject);
                 var resultingSkinnedMeshes = tempGameObject.GetComponentsInChildren<SkinnedMeshRenderer>();
                 SkinnedMeshRenderer resultingSkinnedMesh = null;
                 foreach (var skinnedMesh in resultingSkinnedMeshes)
@@ -669,7 +669,7 @@ namespace UMA.Editors
                 tempGameObject.name = mesh.transform.parent.gameObject.name;
                 Transform[] transformList = tempGameObject.GetComponentsInChildren<Transform>();
 
-                newObject = new GameObject();
+                newObject = new GameObject { hideFlags = HideFlags.HideInHierarchy };
 
                 for (int i = 0; i < transformList.Length; i++)
                 {
@@ -683,8 +683,7 @@ namespace UMA.Editors
                     }
                 }
 
-                GameObject.DestroyImmediate(tempGameObject);
-                tempGameObject = null;
+                DestroyTemporarySceneObject(ref tempGameObject);
                 resultingSkinnedMesh = newObject.GetComponentInChildren<SkinnedMeshRenderer>();
                 if (resultingSkinnedMesh)
                 {
@@ -746,24 +745,58 @@ namespace UMA.Editors
             }
             finally
             {
-                if (tempGameObject != null)
+                // Destroy both scene roots even if Unity reports a problem while destroying one of them.
+                try
                 {
-                    GameObject.DestroyImmediate(tempGameObject);
+                    DestroyTemporarySceneObject(ref tempGameObject);
                 }
-                if (newObject != null)
+                finally
                 {
-                    GameObject.DestroyImmediate(newObject);
+                    try
+                    {
+                        DestroyTemporarySceneObject(ref newObject);
+                    }
+                    finally
+                    {
+                        // Always clean up here; batch deferral is handled only in CreateSlotData.
+                        try
+                        {
+                            if (!string.IsNullOrEmpty(skinnedName))
+                            {
+                                AssetDatabase.DeleteAsset(skinnedName);
+                            }
+                        }
+                        finally
+                        {
+                            if (!string.IsNullOrEmpty(meshAssetName))
+                            {
+                                AssetDatabase.DeleteAsset(meshAssetName);
+                            }
+                        }
+                    }
                 }
+            }
+        }
 
-                // Always clean up here; batch deferral is handled only in CreateSlotData.
-                if (!string.IsNullOrEmpty(skinnedName))
-                {
-                    AssetDatabase.DeleteAsset(skinnedName);
-                }
-                if (!string.IsNullOrEmpty(meshAssetName))
-                {
-                    AssetDatabase.DeleteAsset(meshAssetName);
-                }
+        /// <summary>
+        /// Creates an off-hierarchy copy used only while extracting mesh data. Instantiating a
+        /// scene object otherwise makes the copy a child of the source object's parent.
+        /// </summary>
+        private static GameObject CreateTemporarySceneClone(GameObject source)
+        {
+            GameObject clone = UnityEngine.Object.Instantiate(source);
+            clone.transform.SetParent(null, true);
+            clone.hideFlags = HideFlags.HideInHierarchy;
+            return clone;
+        }
+
+        private static void DestroyTemporarySceneObject(ref GameObject sceneObject)
+        {
+            GameObject objectToDestroy = sceneObject;
+            sceneObject = null;
+            if (objectToDestroy != null)
+            {
+                UnityEngine.Object.DestroyImmediate(objectToDestroy);
             }
         }
 

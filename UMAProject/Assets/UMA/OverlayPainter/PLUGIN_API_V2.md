@@ -1,6 +1,6 @@
 # Overlay Painter Plugin API v2
 
-Plugin API v2 is the only supported extension API. Plugins never receive `TextureStore`, `EditableTextureTarget`, `RenderTexture`, live layers, or mutable masks.
+Plugin API v2 is the only supported extension API. Plugins never receive `TextureStore`, `EditableTextureTarget`, `RenderTexture`, live layers, or editable layer masks.
 
 ## Registration contract
 
@@ -12,7 +12,6 @@ Implement `ITexturePaintExtensionV2` through one or more focused extension point
 - `ITexturePaintBakerV2` — converts immutable snapshots into an in-memory artifact.
 - `ITexturePaintImporterV2` — converts an in-memory artifact into tile commands.
 - `ITexturePaintExporterV2` — converts immutable snapshots into an in-memory artifact; the host UI owns the destination path.
-- `ITexturePaintProceduralMaskV2` — evaluates a read-only procedural mask.
 
 Every plugin supplies a `TexturePaintPluginDescriptor` with:
 
@@ -52,7 +51,7 @@ public Task ExecuteAsync(TexturePaintCommandContextV2 context)
 }
 ```
 
-The host validates every command before the first mutation, copies submitted buffers, enforces declared channels and bounds, applies structural and painted masks per texel, creates a non-destructive plugin layer, updates only dirty rectangles, recomposes/re-packs logical channels, and records an undoable transaction. Cancellation or any exception removes the entire pending layer set.
+The host validates every command before the first mutation, copies submitted buffers, enforces declared channels and bounds, clips writes to reconstructed mesh coverage, creates a non-destructive plugin layer, updates only dirty rectangles, recomposes/re-packs logical channels, and records an undoable transaction. Cancellation or any exception removes the entire pending layer set. Artist-authored visibility is owned by the resulting layer's editable grayscale mask; there is no separate procedural-mask plugin API.
 
 Albedo and Emission accept Linear or SRGB payloads and are canonicalized to linear working values. Normal, Metallic, Roughness, AO, and Custom data require `Data`. Normal commands require `Replace` and are vector-normalized by the host. Plugins cannot write directly to packed physical textures.
 

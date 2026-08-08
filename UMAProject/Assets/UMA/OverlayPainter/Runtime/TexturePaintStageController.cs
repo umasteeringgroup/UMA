@@ -14,8 +14,6 @@ namespace UMA.TexturePaint
         public TexturePaintLogicalLayerController LogicalLayers { get; private set; }
         public TexturePaintDocument Document { get; private set; }
         public TexturePaintLogicalTargetCatalog LogicalTargets => Reconstruction?.logicalTargets;
-        public TexturePaintMaskStack Masks { get; } = new TexturePaintMaskStack();
-
         public void Initialize(DynamicCharacterAvatar avatar, ComputeShader stroke, ComputeShader blur, ComputeShader normal,
             ComputeShader layerComposite = null, ComputeShader channelPack = null, int resolution = 2048,
             Shader fillShader = null, Shader ribbonShader = null)
@@ -158,7 +156,8 @@ namespace UMA.TexturePaint
     [Serializable]
     public sealed class TexturePaintStageState
     {
-        public int version = 12;
+        public const int CurrentVersion = 16;
+        public int version = CurrentVersion;
         public string documentGuid;
         public int selectedSurface;
         public System.Collections.Generic.List<string> selectedSlots = new System.Collections.Generic.List<string>();
@@ -167,6 +166,7 @@ namespace UMA.TexturePaint
         public TexturePaintTool tool;
         public TexturePaintBrushSource paintSource = TexturePaintBrushSource.Color;
         public string sourceTextureGuid;
+        public string sourceSpriteGlobalId;
         public string sourceOverlayGuid;
         public Color sourceColor = Color.white;
         public bool mirrorX;
@@ -182,6 +182,7 @@ namespace UMA.TexturePaint
         public int historyBudgetMB = 256;
         public int coverageBudgetMB = 128;
         public string brushAssetGuid;
+        public string brushLibraryGuid;
         public string exportFolder = "Assets/UMA/OverlayPainter/Generated";
         public string exportTemplateGuid;
         public System.Collections.Generic.List<TexturePaintMaterialState> materials = new System.Collections.Generic.List<TexturePaintMaterialState>();
@@ -204,6 +205,9 @@ namespace UMA.TexturePaint
         public bool channelSolo;
         public bool previewBefore;
         public bool uvPreviewBefore;
+        public bool layerMaskMode;
+        public bool soloLayerMask;
+        public float layerMaskPaintValue = 1f;
         public bool isolateSelectedSlots;
         public bool wireframe;
         public string assetShelfSearch;
@@ -213,6 +217,8 @@ namespace UMA.TexturePaint
         public System.Collections.Generic.List<string> favoriteBrushGuids = new System.Collections.Generic.List<string>();
         public System.Collections.Generic.List<string> recentBrushGuids = new System.Collections.Generic.List<string>();
         public System.Collections.Generic.List<string> brushOrderGuids = new System.Collections.Generic.List<string>();
+        public System.Collections.Generic.List<string> collapsedLayerGroupIds = new System.Collections.Generic.List<string>();
+        public System.Collections.Generic.List<string> collapsedPropertySectionIds = new System.Collections.Generic.List<string>();
     }
 
     [Serializable]

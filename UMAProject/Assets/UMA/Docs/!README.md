@@ -16,6 +16,7 @@ Artists creating new content should continue with:
 - [Content Creation](ContentCreation.md) — practical Blender and Maya workflows for preparing meshes, textures, slots, overlays, and wardrobe.
 - [UMA Tools for Blender](UMAToolsForBlender.md) — Blender validation, rigging, weight, UDIM, import, and dependable UMA FBX export workflows.
 - [Creating a New Race](CreatingANewRace.md) — the complete race-authoring process from source model through runtime validation.
+- [Overlay Painter](OverlayPainter.md) — non-destructive 3D/2D texture painting, layers, material channels, paths, effects, and recipe-ready export.
 
 You can open these guides inside Unity from `UMA > View Documentation`.
 
@@ -49,6 +50,7 @@ You can open these guides inside Unity from `UMA > View Documentation`.
 - [RaceData](RaceData.md)
 - [SlotDataAsset](SlotDataAsset.md)
 - [OverlayDataAsset](OverlayDataAsset.md)
+- [Overlay Painter](OverlayPainter.md)
 - [Wardrobe Recipe Editor](WardrobeRecipeEditor.md)
 - [UMA Materials](UMAMaterial.md)
 - [Renderer Assets and Cloth](RendererAssetsAndCloth.md)

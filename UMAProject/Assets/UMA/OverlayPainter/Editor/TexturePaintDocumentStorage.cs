@@ -30,10 +30,10 @@ namespace UMA.TexturePaint.Editor
             public string Error { get; private set; }
             public float Progress => work.Count == 0 ? 1f : Mathf.Clamp01((float)nextWork / work.Count);
 
-            internal CaptureOperation(TexturePaintDocument source, TextureStore store, TexturePaintMaskStack masks,
+            internal CaptureOperation(TexturePaintDocument source, TextureStore store,
                 IReadOnlyDictionary<EditableTextureTarget, long> persistedRevisions, bool recoverySnapshot)
             {
-                Snapshot = BuildSnapshot(source, store, masks, persistedRevisions, recoverySnapshot, out work,
+                Snapshot = BuildSnapshot(source, store, persistedRevisions, recoverySnapshot, out work,
                     CapturedRevisions);
                 if (work.Count == 0) IsDone = true;
             }
@@ -164,12 +164,12 @@ namespace UMA.TexturePaint.Editor
         }
 
         public static CaptureOperation BeginCapture(TexturePaintDocument source, TextureStore store,
-            TexturePaintMaskStack masks, IReadOnlyDictionary<EditableTextureTarget, long> persistedRevisions,
+            IReadOnlyDictionary<EditableTextureTarget, long> persistedRevisions,
             bool recoverySnapshot)
         {
             if (store == null) throw new ArgumentNullException(nameof(store));
             AssignStableSurfaceIds(store);
-            return new CaptureOperation(source, store, masks, persistedRevisions, recoverySnapshot);
+            return new CaptureOperation(source, store, persistedRevisions, recoverySnapshot);
         }
 
         public static void RecordCurrentRevisions(TextureStore store,
@@ -183,12 +183,17 @@ namespace UMA.TexturePaint.Editor
                 foreach (TextureChannelTarget channel in set.channels.Values)
                     if (channel?.editable != null) destination[channel.editable] = channel.editable.Revision;
                 for (int layerIndex = 0; layerIndex < set.layers.Count; layerIndex++)
-                    foreach (EditableTextureTarget target in set.layers[layerIndex].channels.Values)
+                {
+                    TexturePaintLayer layer = set.layers[layerIndex];
+                    foreach (EditableTextureTarget target in layer.channels.Values)
                         if (target != null) destination[target] = target.Revision;
+                    if (layer.layerMask?.target != null)
+                        destination[layer.layerMask.target] = layer.layerMask.target.Revision;
+                }
             }
         }
 
-        public static void Save(TexturePaintDocument document, TextureStore store, TexturePaintMaskStack masks,
+        public static void Save(TexturePaintDocument document, TextureStore store,
             bool recoverySnapshot = false)
         {
             if (document == null || store == null) return;
@@ -260,7 +265,6 @@ namespace UMA.TexturePaint.Editor
                 }
                 document.surfaces.Add(previous);
             }
-            document.globalMasks = CloneMasks(masks?.Masks);
             EditorUtility.SetDirty(document);
             AssetDatabase.SaveAssetIfDirty(document);
         }
@@ -288,6 +292,7 @@ namespace UMA.TexturePaint.Editor
                 set.baseStrokes.AddRange(CloneStrokes(saved.baseStrokes));
                 for (int i = 0; i < set.layers.Count; i++) set.layers[i].Dispose();
                 set.layers.Clear();
+                set.activeLayerIndex = -1;
                 for (int layerIndex = 0; layerIndex < saved.layers.Count; layerIndex++)
                     RestoreLayer(saved.layers[layerIndex], set);
                 set.activeLayerIndex = Mathf.Clamp(saved.activeLayer, -1, set.layers.Count - 1);
@@ -326,7 +331,7 @@ namespace UMA.TexturePaint.Editor
                         !string.IsNullOrEmpty(saved.uvSignature) && saved.uvSignature != current.uv)
                     {
                         status = TexturePaintBindingStatus.Reprojectable;
-                        message = "Topology matches but UVs changed. Surface-anchored strokes and paths were rebound; raster pixels require rerasterization.";
+                        message = "Topology matches but UVs changed. Surface-anchored strokes and paths were rebound; layer-mask pixels reset to their base values and other raster pixels require rerasterization.";
                     }
                     else
                     {
@@ -361,12 +366,6 @@ namespace UMA.TexturePaint.Editor
             return reports;
         }
 
-        public static void RestoreMasks(TexturePaintDocument document, TexturePaintMaskStack destination)
-        {
-            if (destination == null) return;
-            destination.ReplaceWith(CloneMasks(document?.globalMasks));
-        }
-
         public static void AssignStableSurfaceIds(TextureStore store)
         {
             if (store == null) return;
@@ -390,7 +389,7 @@ namespace UMA.TexturePaint.Editor
         }
 
         private static TexturePaintDocument BuildSnapshot(TexturePaintDocument source, TextureStore store,
-            TexturePaintMaskStack masks, IReadOnlyDictionary<EditableTextureTarget, long> persistedRevisions,
+            IReadOnlyDictionary<EditableTextureTarget, long> persistedRevisions,
             bool recoverySnapshot, out List<PixelCaptureWork> work,
             IDictionary<EditableTextureTarget, long> capturedRevisions)
         {
@@ -408,7 +407,6 @@ namespace UMA.TexturePaint.Editor
             snapshot.lastSavedUtc = DateTime.UtcNow.ToString("O");
             snapshot.recoverySnapshot = recoverySnapshot;
             snapshot.editorStateJson = source.editorStateJson;
-            snapshot.globalMasks = CloneMasks(masks?.Masks);
             work = new List<PixelCaptureWork>();
 
             List<TexturePaintDocumentSurface> previousSurfaces = source.surfaces != null
@@ -476,13 +474,22 @@ namespace UMA.TexturePaint.Editor
                             };
                         string key = PixelStorageKey(set.persistentId, layer.id, pair.Key);
                         TexturePaintPixelData previousPixels = FindLayerPixels(previousLayer, pair.Key);
-                        savedLayer.channels.Add(new TexturePaintDocumentLayerChannel
+                        var savedChannel = new TexturePaintDocumentLayerChannel
                         {
                             channel = pair.Key,
                             settings = settings.Clone(),
                             pixels = PreparePixels(pair.Value, previousPixels, key, persistedRevisions,
                                 capturedRevisions, work)
-                        });
+                        };
+                        savedChannel.SetSourceSettings(settings.sourceSettings);
+                        savedLayer.channels.Add(savedChannel);
+                    }
+                    if (layer.layerMask?.target != null)
+                    {
+                        TexturePaintPixelData previousPixels = previousLayer?.maskPixels;
+                        savedLayer.maskPixels = PreparePixels(layer.layerMask.target, previousPixels,
+                            MaskPixelStorageKey(set.persistentId, layer.id), persistedRevisions,
+                            capturedRevisions, work);
                     }
                     surface.layers.Add(savedLayer);
                 }
@@ -532,6 +539,7 @@ namespace UMA.TexturePaint.Editor
 
         private static TexturePaintDocumentLayer CaptureLayerMetadata(TexturePaintLayer layer)
         {
+            layer.layerMask?.NormalizePaintSource();
             return new TexturePaintDocumentLayer
             {
                 id = layer.id,
@@ -554,7 +562,12 @@ namespace UMA.TexturePaint.Editor
                 pluginVersion = layer.pluginVersion,
                 pluginParametersJson = layer.pluginParametersJson,
                 proceduralGroupKey = layer.proceduralGroupKey,
-                masks = CloneMasks(layer.masks),
+                hasMask = layer.layerMask?.target != null,
+                maskBaseValue = layer.layerMask?.baseValue ?? 1f,
+                maskEffects = layer.layerMask?.effects?.Clone() ?? new TexturePaintLayerMaskEffects(),
+                maskSourceSettings = layer.layerMask?.sourceSettings?.Clone() ??
+                    TexturePaintLayerMask.DefaultSourceSettings(),
+                maskSourceChannel = layer.layerMask?.sourceChannel ?? TexturePaintChannel.Albedo,
                 strokes = CloneStrokes(layer.strokes)
             };
         }
@@ -625,7 +638,13 @@ namespace UMA.TexturePaint.Editor
                 pluginVersion = source.pluginVersion,
                 pluginParametersJson = source.pluginParametersJson,
                 proceduralGroupKey = source.proceduralGroupKey,
-                masks = CloneMasks(source.masks),
+                hasMask = source.hasMask,
+                maskBaseValue = source.maskBaseValue,
+                maskEffects = source.maskEffects?.Clone() ?? new TexturePaintLayerMaskEffects(),
+                maskSourceSettings = source.maskSourceSettings?.Clone() ??
+                    TexturePaintLayerMask.DefaultSourceSettings(),
+                maskSourceChannel = source.maskSourceChannel,
+                maskPixels = ClonePixels(source.maskPixels),
                 strokes = CloneStrokes(source.strokes)
             };
             if (source.channels != null)
@@ -633,12 +652,14 @@ namespace UMA.TexturePaint.Editor
                 {
                     TexturePaintDocumentLayerChannel channel = source.channels[i];
                     if (channel == null) continue;
-                    clone.channels.Add(new TexturePaintDocumentLayerChannel
+                    var clonedChannel = new TexturePaintDocumentLayerChannel
                     {
                         channel = channel.channel,
                         settings = channel.settings?.Clone(),
                         pixels = ClonePixels(channel.pixels)
-                    });
+                    };
+                    clonedChannel.SetSourceSettings(channel.GetSourceSettings());
+                    clone.channels.Add(clonedChannel);
                 }
             return clone;
         }
@@ -695,6 +716,9 @@ namespace UMA.TexturePaint.Editor
                 : $"{surfaceId}/layer/{layerId}/{channel}";
         }
 
+        private static string MaskPixelStorageKey(string surfaceId, string layerId)
+            => $"{surfaceId}/layer/{layerId}/mask";
+
         private static CapturedPixels CompressPixels(byte[] raw)
         {
             byte[] compressed = Compress(raw, System.IO.Compression.CompressionLevel.Fastest);
@@ -715,13 +739,17 @@ namespace UMA.TexturePaint.Editor
                         opacity = 1f,
                         blendMode = layer.blendMode
                     };
-                saved.channels.Add(new TexturePaintDocumentLayerChannel
+                var savedChannel = new TexturePaintDocumentLayerChannel
                 {
                     channel = pair.Key,
                     settings = settings.Clone(),
                     pixels = Capture(pair.Value.Front, pair.Value.Front.sRGB)
-                });
+                };
+                savedChannel.SetSourceSettings(settings.sourceSettings);
+                saved.channels.Add(savedChannel);
             }
+            if (layer.layerMask?.target?.Front != null)
+                saved.maskPixels = Capture(layer.layerMask.target.Front, false);
             return saved;
         }
 
@@ -759,7 +787,6 @@ namespace UMA.TexturePaint.Editor
             layer.pluginParametersJson = saved.pluginParametersJson;
             layer.proceduralGroupKey = saved.proceduralGroupKey;
             layer.NormalizeKindPayload();
-            layer.masks.AddRange(CloneMasks(saved.masks));
             layer.strokes.AddRange(CloneStrokes(saved.strokes));
             for (int i = 0; i < saved.channels.Count; i++)
             {
@@ -773,7 +800,21 @@ namespace UMA.TexturePaint.Editor
                 TexturePaintLayerChannelSettings settings = savedChannel.settings?.Clone() ??
                     new TexturePaintLayerChannelSettings { channel = savedChannel.channel };
                 settings.channel = savedChannel.channel;
+                settings.sourceSettings = savedChannel.GetSourceSettings();
                 layer.channelSettings[savedChannel.channel] = settings;
+            }
+            if (saved.hasMask)
+            {
+                TexturePaintLayerMask mask = set.AddLayerMask(layer, saved.maskBaseValue);
+                if (mask != null)
+                {
+                    mask.effects = saved.maskEffects?.Clone() ?? new TexturePaintLayerMaskEffects();
+                    mask.sourceSettings = saved.maskSourceSettings?.Clone() ??
+                        TexturePaintLayerMask.DefaultSourceSettings();
+                    mask.sourceChannel = saved.maskSourceChannel;
+                    mask.NormalizePaintSource();
+                    Restore(saved.maskPixels, mask.target);
+                }
             }
         }
 
@@ -799,10 +840,12 @@ namespace UMA.TexturePaint.Editor
 
         private static void RestoreReprojectableContent(TexturePaintDocumentSurface saved, TextureSet set)
         {
+            int resetLayerMasks = 0;
             set.baseStrokes.Clear();
             set.baseStrokes.AddRange(CloneStrokes(saved.baseStrokes));
             for (int i = 0; i < set.layers.Count; i++) set.layers[i].Dispose();
             set.layers.Clear();
+            set.activeLayerIndex = -1;
             for (int i = 0; i < saved.layers.Count; i++)
             {
                 TexturePaintDocumentLayer source = saved.layers[i];
@@ -828,9 +871,31 @@ namespace UMA.TexturePaint.Editor
                 layer.pluginParametersJson = source.pluginParametersJson;
                 layer.proceduralGroupKey = source.proceduralGroupKey;
                 layer.NormalizeKindPayload();
-                layer.masks.AddRange(CloneMasks(source.masks)); layer.strokes.AddRange(CloneStrokes(source.strokes));
+                layer.strokes.AddRange(CloneStrokes(source.strokes));
+                if (source.hasMask)
+                {
+                    TexturePaintLayerMask mask = set.AddLayerMask(layer, source.maskBaseValue);
+                    if (mask != null)
+                    {
+                        mask.effects = source.maskEffects?.Clone() ?? new TexturePaintLayerMaskEffects();
+                        mask.sourceSettings = source.maskSourceSettings?.Clone() ??
+                            TexturePaintLayerMask.DefaultSourceSettings();
+                        mask.sourceChannel = source.maskSourceChannel;
+                        mask.NormalizePaintSource();
+                        // Pixel-space masks are not valid after a UV-layout change. Keep the
+                        // authored base value and procedural effects, but reset editable pixels
+                        // instead of silently applying them to unrelated texels.
+                        float value = Mathf.Clamp01(source.maskBaseValue);
+                        mask.target.Reset(null, new Color(value, value, value, 1f));
+                        resetLayerMasks++;
+                    }
+                }
             }
             set.activeLayerIndex = Mathf.Clamp(saved.activeLayer, -1, set.layers.Count - 1);
+            if (resetLayerMasks > 0)
+                Debug.LogWarning($"Overlay Painter reset {resetLayerMasks} editable layer mask" +
+                    (resetLayerMasks == 1 ? string.Empty : "s") +
+                    $" to its base value on '{set.Name}' because the UV layout changed.");
         }
 
         private static bool SlotsOverlap(IReadOnlyList<string> a, IReadOnlyList<string> b)
@@ -931,42 +996,6 @@ namespace UMA.TexturePaint.Editor
         private static TexturePaintSplineSettings CloneSplineSettings(TexturePaintSplineSettings source)
         {
             return source?.Clone();
-        }
-
-        private static List<TexturePaintMask> CloneMasks(IReadOnlyList<TexturePaintMask> source)
-        {
-            List<TexturePaintMask> result = new List<TexturePaintMask>();
-            if (source == null) return result;
-            for (int i = 0; i < source.Count; i++)
-            {
-                TexturePaintMask mask = source[i];
-                if (mask == null) continue;
-                result.Add(new TexturePaintMask
-                {
-                    id = mask.id,
-                    ownerLayerId = mask.ownerLayerId,
-                    ownerSurfaceId = mask.ownerSurfaceId,
-                    name = mask.name,
-                    enabled = mask.enabled,
-                    kind = mask.kind,
-                    operation = mask.operation,
-                    grayscaleTexture = mask.grayscaleTexture,
-                    surfaceIndex = mask.surfaceIndex,
-                    triangleIndices = new List<int>(mask.triangleIndices),
-                    uvIslandIndices = new List<int>(mask.uvIslandIndices),
-                    proceduralPluginId = mask.proceduralPluginId,
-                    invert = mask.invert,
-                    threshold = mask.threshold,
-                    inputMin = mask.inputMin,
-                    inputMax = mask.inputMax,
-                    gamma = mask.gamma,
-                    feather = mask.feather,
-                    blurRadius = mask.blurRadius,
-                    idValue = mask.idValue,
-                    contentRevision = mask.contentRevision
-                });
-            }
-            return result;
         }
 
         private static List<TexturePaintStrokeRecord> CloneStrokes(IReadOnlyList<TexturePaintStrokeRecord> source)

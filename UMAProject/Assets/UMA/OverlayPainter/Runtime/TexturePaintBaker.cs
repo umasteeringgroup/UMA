@@ -31,6 +31,12 @@ namespace UMA.TexturePaint
         }
 
 #if UNITY_EDITOR
+        internal static Texture2D BakeRenderTexture(RenderTexture source, string name, int resolution,
+            TexturePaintExportBitDepth bitDepth, bool linear)
+        {
+            return Read(source, name, resolution, bitDepth, linear);
+        }
+
         public static Texture2D Bake(TextureSet set, TexturePaintMaterialChannelCapability channel,
             int resolution, TexturePaintExportBitDepth bitDepth)
         {

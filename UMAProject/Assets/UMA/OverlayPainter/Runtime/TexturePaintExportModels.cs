@@ -19,6 +19,11 @@ namespace UMA.TexturePaint
     }
 
     public enum TexturePaintExportScope { CurrentMaterial, AllMaterials }
+    public enum TexturePaintExportContent
+    {
+        FlattenedComposite,
+        [InspectorName("Runtime Overlay (Transparent)")] AuthoredOverlay
+    }
     public enum TexturePaintOverwritePolicy { Fail, Overwrite, Versioned }
     public enum TexturePaintExportBitDepth { Eight, Sixteen, HalfFloat }
 
@@ -45,11 +50,13 @@ namespace UMA.TexturePaint
     [CreateAssetMenu(menuName = "UMA/Overlay Painter/Export Template", fileName = "Overlay Painter Export Template")]
     public sealed class TexturePaintExportTemplate : ScriptableObject
     {
-        public const int CurrentVersion = 2;
+        public const int CurrentVersion = 3;
         public int version = CurrentVersion;
         public string outputFolder = "Assets/UMA/OverlayPainter/Generated";
         public string filenamePattern = "{avatar}_{material}_{channel}_{resolution}";
         public TexturePaintExportScope scope = TexturePaintExportScope.AllMaterials;
+        [Tooltip("Flattened Composite includes the reconstructed character textures. Authored Overlay exports only visible painter layers and creates a runtime alpha mask.")]
+        public TexturePaintExportContent content = TexturePaintExportContent.FlattenedComposite;
         public TexturePaintChannelMask channels = TexturePaintChannelMask.All;
         public TexturePaintOverwritePolicy overwritePolicy = TexturePaintOverwritePolicy.Versioned;
         [Tooltip("0 preserves the painted texture's native resolution.")]

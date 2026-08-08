@@ -25,6 +25,8 @@ Shader "Hidden/UMA/TexturePaint/FillGenerator"
             sampler2D _FillSource;
             float4 _FillColor;
             float2 _Tiling;
+            float2 _Offset;
+            float _Rotation;
             float _BlendOffset;
             float _BlendSharpness;
             int _SourceKind;
@@ -68,6 +70,17 @@ Shader "Hidden/UMA/TexturePaint/FillGenerator"
                 return tex2D(_FillSource, frac(uv));
             }
 
+            float2 TransformFillUV(float2 uv, float2 center)
+            {
+                float angle = radians(_Rotation);
+                float sine = sin(angle);
+                float cosine = cos(angle);
+                float2 centered = uv - center;
+                float2 rotated = float2(centered.x * cosine - centered.y * sine,
+                    centered.x * sine + centered.y * cosine);
+                return rotated * _Tiling + center + _Offset;
+            }
+
             float3 TriplanarWeights(float3 normal)
             {
                 float3 weights = abs(normalize(normal));
@@ -85,13 +98,14 @@ Shader "Hidden/UMA/TexturePaint/FillGenerator"
             float4 Frag(Varyings input) : SV_Target
             {
                 if (_SourceKind != 0) return _FillColor;
-                if (_Projection == 0) return SampleTiled(input.uv * _Tiling);
+                if (_Projection == 0)
+                    return SampleTiled(TransformFillUV(input.uv, float2(0.5, 0.5)));
 
                 float3 normal = normalize(input.worldNormal);
                 float3 weights = TriplanarWeights(normal);
-                float2 uvX = input.worldPosition.zy * _Tiling;
-                float2 uvY = input.worldPosition.xz * _Tiling;
-                float2 uvZ = input.worldPosition.xy * _Tiling;
+                float2 uvX = TransformFillUV(input.worldPosition.zy, float2(0.0, 0.0));
+                float2 uvY = TransformFillUV(input.worldPosition.xz, float2(0.0, 0.0));
+                float2 uvZ = TransformFillUV(input.worldPosition.xy, float2(0.0, 0.0));
                 uvX.x *= normal.x < 0.0 ? -1.0 : 1.0;
                 uvY.x *= normal.y < 0.0 ? -1.0 : 1.0;
                 uvZ.x *= normal.z >= 0.0 ? -1.0 : 1.0;

@@ -1,5 +1,16 @@
 Shader "Hidden/UMA/TexturePaint/ExportDilate"
 {
+    Properties
+    {
+        // Graphics.Blit only guarantees its implicit source binding for a declared
+        // _MainTex property. Without this declaration some backends sample Unity's
+        // default gray texture instead of the supplied export texture.
+        [HideInInspector] _MainTex ("Source", 2D) = "black" {}
+        [HideInInspector] _ValidityTex ("Validity", 2D) = "black" {}
+        [HideInInspector] _ReplaceMask ("Replace Mask", Vector) = (0,0,0,0)
+        [HideInInspector] _NeutralValues ("Neutral Values", Vector) = (0,0,0,0)
+        [HideInInspector] _InvertGreen ("Invert Green", Float) = 0
+    }
     SubShader
     {
         Cull Off ZWrite Off ZTest Always

@@ -1,7 +1,7 @@
 # Overlay Painter: Release-Phase Implementation Plan
 
-**Status:** Ready for implementation review  
-**Prepared:** 2026-08-04  
+**Status:** Phases 0–4 implemented; Manual Checkpoint 3 in progress; Phases 5–7 rebaselined for closure
+**Prepared:** 2026-08-04; rebaselined 2026-08-07
 **Unity baseline:** Unity 6.3 and newer  
 **Source review:** `OVERLAY_PAINTER_RELEASE_PHASE_PLAN.md` plus the approved product decisions dated 2026-08-04
 
@@ -268,7 +268,7 @@ Acceptance:
 
 ### Phase 4 — transactional export and UMA library output
 
-**Implementation status (2026-08-04):** Implemented; awaiting Manual Checkpoint 3 validation.
+**Implementation status (2026-08-07):** Implemented; flattened non-UDIM and UDIM export has passed the current manual texture inspection, including native source reconstruction and normal-map output. Active-avatar geometry is split back into native slot surfaces, UVs are restored from each `SlotDataAsset`, and channel sources are rebuilt at native base-texture resolution from the original `MaterialFragment` overlay stack. `resultingAtlasList` is prohibited as an Overlay Painter source. Imported and transiently packed normal inputs are decoded to linear tangent-space RGB before compositing/export. The new **Runtime Overlay (Transparent)** mode and generated `OverlayDataAsset.alphaMask` still require one real-recipe runtime validation before Manual Checkpoint 3 is complete. Do not treat automated export coverage as a substitute for that recipe validation.
 
 Automated checkpoint: the focused Unity 6.3/D3D11 export suite passes 6/6, including default source preservation, UMA index lookup, cancellation rollback, overwrite-source restoration, deterministic naming, and whole-group UDIM expansion. Descriptor precision and physical packed-map round trips pass 4/4 in the release integration suite.
 
@@ -294,6 +294,7 @@ Work:
 11. Implement **Overwrite Source Overlay** as a separate mode available only when the source is a persistent overlay. Show the exact asset and textures affected, require confirmation, create recoverable backups, use Undo where Unity asset semantics allow it, and restore all affected files/index entries on failure.
 12. Make the export transaction failure-atomic from the user's perspective. Preflight all paths and conflicts first; stage new files; import and validate; create overlays; register; then commit the result. Clean temporary artifacts on success or failure.
 13. Store export history outside the paint document, or in non-document editor state, so export cannot mutate the editable document.
+14. Provide two explicit, non-mutating content modes. **Flattened Composite** exports the reconstructed native-resolution source plus visible authored layers. **Runtime Overlay (Transparent)** composites only visible layer/group content over transparent temporary targets, emits only authored physical material channels, generates a union coverage texture, assigns it to `OverlayDataAsset.alphaMask`, and prohibits source-overlay overwrite.
 
 Acceptance:
 
@@ -301,82 +302,120 @@ Acceptance:
 - A newly exported overlay is discoverable in the UMA library and can be selected in a recipe without repair.
 - Reopening a recipe with the overlay reproduces the Overlay Painter preview.
 - Default export leaves every source asset byte-identical.
+- Runtime-overlay export contains no reconstructed base pixels, assigns its generated coverage texture to `OverlayDataAsset.alphaMask`, leaves untouched material channels null, and blends correctly when added after the intended UMA base overlay.
 - Export leaves the document revision, dirty state, content hash, and Undo stack unchanged.
 - Cancel/failure leaves no half-configured overlays, broken index entries, or unreported temporary files.
 - Explicit overwrite changes only the preflight-listed assets and restores them on injected failure.
 
 **Manual checkpoint 3:** Export non-UDIM and multi-tile UDIM results, add them to real recipes, rebuild characters, restart Unity, and verify library persistence, material assignment, texture orientation, packing, naming, and source-asset preservation.
 
-### Phase 5 — performance and resource closure
+Blocking source-quality invariant: an active-avatar session may use generated material metadata to locate slots, overlay stacks, and shader contracts, but it must never read `GeneratedMaterial.resultingAtlasList`. Every editable base channel must come from an original overlay-stack reconstruction at the slot's native base-texture resolution.
 
-**Goal:** Meet the release-plan responsiveness and resource budgets with the new session and slot workflows.
+### Phase 5 — measured performance and resource closure
 
-Work:
+**Implementation status (2026-08-07):** Partially implemented. Dirty-region synchronization, sparse exact-format history, bounded coverage, asynchronous persistence readback, batched path dispatch, cached mesh maps, latency counters, configurable budgets, and lifecycle tests are present. The work below is the remaining closure scope and supersedes the broader Phase 5 wording in older readiness plans.
 
-1. Make editable texture copies, layer targets, tangent/seam maps, and masks demand-driven.
-2. Batch stroke samples per editor frame and compose, pack, bind, and repaint once per dirty target/channel/frame.
-3. Prewarm or GPU-generate geometry/island masks outside stroke events; bound and instrument every cache.
-4. Pool history tiles, compute buffers, stamp arrays, and transient collections.
-5. Cache compute kernel IDs, shader capability decisions, flattened layer graphs, and plugin discovery through editor `TypeCache`/registries.
-6. Add centralized GPU byte accounting and deterministic disposal on target change, window/stage close, domain reload, failed initialization, and canceled export.
-7. Make the 2D window consume shared preview resources and update only when visible or explicitly dirtied.
-8. Profile standalone reconstruction separately by asset load, mesh conversion, collider, spatial index, target catalog, support maps, and source binding.
-9. Move color sampling and any CPU fallback away from full-target synchronous readbacks.
+**Goal:** Measure the current feature-complete editor, freeze one authoritative performance contract, and close the remaining interactive and resource hot paths without weakening correctness.
 
-Acceptance:
+#### Phase 5A — rebaseline and freeze budgets
 
-- Warm 2K stroke P95/P99 and 4K P95 meet the frozen Phase 0 budgets.
-- UDIM boundary crossing is no more than the approved multiple of a same-island stroke.
-- TexturePaint-owned code allocates 0 managed bytes per warm steady paint frame.
-- Closing the 2D window does not introduce recurring painting work or stutter.
-- No monotonic GPU/managed growth appears across 20 open/close, target-switch, mask-edit, and undo/redo cycles.
+1. Complete Manual Checkpoint 3 before performance refactoring changes export or resource ownership assumptions.
+2. Name the reference Windows and macOS hardware, Unity patch version, pipeline, graphics API, project, texture formats, and workload fixtures used for performance sign-off.
+3. Measure these scenarios independently at 2K and 4K where applicable:
+   - Single-channel and three-channel freehand painting.
+   - Mask painting, polygon fill, and UV-island fill.
+   - First spline segment, later point insertion, point dragging, width changes, and layer-effect changes.
+   - Nested groups, multi-channel layers, and distance-based layer effects.
+   - Same-island, physical-slot, and UDIM-boundary strokes.
+   - 2D window open and closed, target switching, undo/redo, autosave, Save As, and repeated open/close.
+4. Capture editor main-thread time, render-thread/GPU time where available, managed allocation, dispatch count, copied/composited/packed pixels, persistence work, live GPU bytes, cache hits/misses, and resource high-water marks.
+5. Resolve the conflicting provisional budgets in older plans and record one approved P95/P99/maximum, allocation, memory, and persistence budget table in this document and the release gate. Until that table is approved, numeric thresholds are diagnostic rather than release sign-off.
 
-**Manual checkpoint 4:** Repeat the torso, low-alpha, long-stroke, first-touch, UDIM-boundary, 2D-closed, and repeated-open stress cases with Unity Profiler and GPU capture evidence.
+#### Phase 5B — interactive hot-path optimization
 
-### Phase 6 — correctness and usability closure
+1. Batch freehand stroke samples produced during one editor update and preserve deterministic spacing, pressure, fade, taper, splatter, randomization, projection, and cross-surface routing.
+2. Coalesce layer composition, physical packing, material binding, texture-change notification, 2D invalidation, and window repainting to at most once per dirty target/channel/editor update unless correctness requires an explicit immediate flush.
+3. Retain deferred spline rerasterization while dragging or changing continuous controls. Commit history and perform the expensive final rerasterization once at the interaction boundary.
+4. Cache all compute kernel IDs and shader capability decisions outside dispatch paths. Cache or incrementally update flattened layer/effect evaluation data instead of rebuilding it for every stamp.
+5. Reuse per-stroke grouping/contact lists, sample buffers, stamp arrays, and compute buffers. Remove owned warm-frame allocations, including diagnostic/UI allocations that occur while painting.
+6. Keep geometry/island masks and distance-effect fields lazy, reusable, bounded, revision-aware, and instrumented. Prewarm only when profiling shows a first-touch pause that cannot be hidden safely.
 
-**Goal:** Remove ambiguous behavior and close all advertised editing paths.
+#### Phase 5C — resource and fallback closure
 
-Work:
-
-1. Complete vector-correct normal composition or restrict unsupported normal blend modes explicitly.
-2. Establish GPU/CPU blend parity and eliminate silent source fallbacks.
-3. Freeze one source/fill/export Y-orientation contract across every supported API.
-4. Validate low-alpha painting, UV wrap, UV seam, physical slot boundary, UDIM boundary, masks, clone, projection, symmetry, undo, and fill invalidation.
-5. Use one vocabulary: Overlay Painter, logical target, UDIM group, physical slot, material channel, logical channel, document, and export result.
-6. Keep layer settings per layer and hide controls that do not apply to the selected layer/source/fill type.
-7. Show a persistent context header with slot/group, tiles, material, pipeline, sources, working resolution, document state, and current target/channel.
-8. Preserve independent 2D and 3D Before/view state; keep Pick and wireframe controls in the 2D window.
-9. Complete keyboard, tooltip, narrow-dock, high-DPI, multi-monitor, error, warning, and empty-state passes.
-10. Ensure window close behavior cannot orphan the stage or lose a temporary/saved session silently.
+1. Allocate editable base copies, channel composites, packed physical targets, layer targets, masks, tangent/seam maps, procedural maps, and isolated previews only when the active material or operation requires them.
+2. Add centralized owned-resource accounting in bytes, including render textures, textures, compute buffers, history, coverage, cached maps, effect distance fields, and persistence staging. Expose current and peak values in diagnostics.
+3. Add explicit cache budgets and deterministic eviction. Pool history tiles and transient GPU resources only where profiling shows a measurable benefit and ownership remains unambiguous.
+4. Replace full-target synchronous CPU paint fallback readbacks with dirty-region/tile work, or explicitly remove that fallback from certified configurations if parity and precision cannot be guaranteed.
+5. Keep color sampling bounded to the requested texel and avoid allocating a new full-resolution intermediate. Reuse or asynchronously stage small readback resources when it improves measured interaction latency.
+6. Profile standalone reconstruction by asset loading, mesh conversion, collider/spatial data, logical-target catalog, support maps, material capability compilation, and source binding. Cache only stable, fingerprinted results.
+7. Prove deterministic disposal on target/document change, 2D window close, stage close, failed initialization, canceled persistence/export, assembly reload, and editor shutdown.
 
 Acceptance:
 
-- Automated goldens pass for all supported operations and boundary combinations.
+- Every approved workload meets the frozen P95/P99/maximum budgets on its named reference hardware.
+- TexturePaint-owned code allocates 0 managed bytes during a warm steady paint update, excluding explicitly documented Unity-owned allocations.
+- Freehand and spline interaction perform no redundant compose/pack/bind/repaint cycle within one editor update.
+- UDIM boundary cost remains within the approved multiplier of the equivalent same-island workload.
+- Closing the 2D window removes its recurring update/repaint work and does not change 3D painting results.
+- No monotonic GPU/managed growth appears across 20 open/close, target-switch, mask-edit, effect-edit, and undo/redo cycles.
+- Certified GPU paths and any retained CPU fallback produce results within the approved precision tolerance.
+
+**Manual checkpoint 4:** Review the frozen budget table and profiler/GPU-capture evidence for every Phase 5A workload. Any unexplained recurring spike, full-target hot-path readback, warm owned allocation, or resource growth is a NO-GO.
+
+### Phase 6 — correctness, workflow, and usability hardening
+
+**Implementation status (2026-08-07):** Most originally advertised editing work is implemented, including vector-aware normals, multi-channel layers and sources, grayscale layer masks, group compositing, layer effects, fill transforms, sprite-set workflows, synchronized 2D/3D editing, persistent workspace state, and contextual controls. This phase is now a hardening pass rather than a feature-construction phase.
+
+**Goal:** Close ambiguity, parity, combination coverage, and presentation defects without adding another broad feature wave.
+
+Work:
+
+1. Prove vector-correct normal painting/composition/export for supported blends and explicitly disable any normal blend or merge operation that cannot be evaluated exactly.
+2. Establish GPU/CPU parity for every retained fallback. If a fallback cannot preserve format, color space, masks, multi-channel behavior, or blending, fail with an actionable capability message instead of silently changing results.
+3. Freeze one source/fill/sprite/path/persistence/export Y-orientation contract across every certified API and add round-trip goldens for it.
+4. Add combination coverage for low alpha, UV wrap/seams, physical-slot and UDIM boundaries, nested groups, group masks, multi-channel sources, fill transforms, layer effects, mask effects, clone, projection, symmetry, undo/redo, Save As/reopen, and fill/spline invalidation.
+5. Use one vocabulary throughout code-facing UI and documentation: Overlay Painter, logical target, UDIM group, physical slot, material channel, logical channel, layer channel, layer mask, document, and export result set.
+6. Keep settings owned by the relevant brush, layer, layer channel, fill channel, spline, mask, or effect. Hide or disable inapplicable controls with an actionable explanation.
+7. Complete the persistent context header so it can expose slot/group, tiles, material, pipeline, sources, working resolution, document state, current target, current layer/mask mode, and current channel without overwhelming narrow layouts.
+8. Preserve independent 2D and 3D Before/view state, mask-mode labeling, Pick, wireframe, navigation, and editing behavior. Verify all tool modes in both views.
+9. Complete keyboard, tooltip, focus/hot-control, Alt-navigation, narrow-dock, high-DPI, multi-monitor, error, warning, destructive-confirmation, and empty-state passes.
+10. Choose and document one assembly/domain-reload contract: either restore/reopen the active workspace automatically, or exit safely and present a clear recovery/reopen path. Test the chosen behavior in a clean editor process.
+11. Ensure controls-window, UV-window, stage, compilation, and Unity shutdown behavior cannot orphan resources or silently lose a temporary or saved session.
+
+Acceptance:
+
+- Automated goldens and integration tests pass for every supported operation and required combination, not only isolated features.
 - UI never implies that an independent UDIM member can be painted or exported outside its logical group.
-- Unsupported material/channel/tool combinations are disabled with an actionable reason.
-- New and experienced users can complete slot-open, paint, Save As, reopen, and export-to-recipe workflows without undocumented steps.
+- Unsupported material/channel/tool/blend combinations are disabled before mutation with an actionable reason.
+- Mask mode exposes scalar grayscale painting and mask-only effects, never ordinary material-channel or sprite/overlay source selection.
+- New and experienced users can complete slot-open, paint, mask, path, Save As, reopen, export, and recipe-use workflows without undocumented steps.
+- The selected domain-reload behavior is deterministic, recoverable, documented, and covered by an isolated-process test.
 
 ### Phase 7 — pipeline/API certification and release candidate
 
-**Goal:** Produce a clean Unity 6.3+ release candidate with an honest support matrix.
+**Implementation status (2026-08-07):** The local Unity 6.3/D3D11 gate passes with non-zero EditMode and PlayMode suites. This is foundational evidence, not completion of the required pipeline/API matrix.
+
+**Goal:** Produce a clean Unity 6.3+ release candidate with an honest, reproducible support matrix and no development artifacts in the release payload.
 
 Work:
 
-1. Run EditMode, GPU golden, integration, stress, recovery, export, and fresh-project tests for URP and HDRP.
-2. Certify D3D11, D3D12, Vulkan, and Metal on appropriate hardware/agents. D3D11 remains the minimum capability configuration.
-3. Validate shader compilation, compute kernels, UAV formats, color space, normal conventions, importer settings, and exported recipe output per matrix cell.
-4. Import into clean Unity 6.3 URP and HDRP projects with no generated documents, recovery data, exports, logs, or local goldens in the package.
-5. Audit assembly boundaries, optional Addressables integration, asset paths/GUID lookup, plugin API diagnostics, package size, `.meta` files, licenses, and uninstall/reinstall.
-6. Update README, slot-first guide, document/recovery guide, material-channel authoring guide, export/overwrite guide, support matrix, performance limits, migration notes, troubleshooting, changelog, and known issues.
+1. Run preflight, EditMode, GPU golden, integration, stress, recovery, export, fresh-project, and isolated-process lifecycle tests in separate URP and HDRP matrix projects.
+2. Certify D3D11, D3D12, Vulkan, and Metal on appropriate named hardware/agents. D3D11 remains the minimum capability configuration.
+3. Validate shader compilation, kernels, UAV/precision formats, color space, normal conventions, importer settings, packing, layer/effect output, exported overlay assets, recipe use, and editor restart per matrix cell.
+4. Run the complete slot-first-to-recipe workflow in clean Unity 6.3 URP and HDRP projects. The imported release must contain no generated documents, recovery data, exports, logs, local goldens, or user content.
+5. Audit assembly boundaries, optional Addressables isolation, asset paths/GUID lookup, Plugin API v2 diagnostics, package size, `.meta` files, licenses, samples, and uninstall/reinstall behavior.
+6. Re-run source-byte preservation and failure-injection cases for default export and explicit source overwrite on the release candidate.
+7. Update and cross-check README, Overlay Painter guide, slot-first guide, document/recovery guide, material-channel authoring guide, export/overwrite guide, support matrix, performance limits, migration notes, troubleshooting, changelog, and known issues. Mark older planning documents historical or synchronize them so they cannot contradict this plan.
 
 Release gate:
 
-- No open P0/P1 correctness, data-loss, performance, or export-library defects.
-- Every required URP/HDRP and API matrix cell passes or the release is NO-GO.
-- Fresh-project slot-first to recipe workflow passes after an editor restart.
-- No source asset is modified in the default workflow.
-- No unexplained release-gate process failure or frame spike remains.
+- Manual Checkpoints 3 and 4 are signed off with retained evidence.
+- No open P0/P1 correctness, data-loss, performance, lifecycle, or export-library defect remains.
+- Every required URP/HDRP and graphics-API matrix cell passes or the release is NO-GO.
+- GPU tests execute on compute-capable release hardware; a skipped GPU suite is not passing evidence.
+- Fresh-project slot-first to recipe use passes after an editor restart.
+- No source asset is modified in the default workflow, and explicit overwrite rollback passes failure injection.
+- No unexplained release-gate process failure, recurring allocation, resource delta, or frame spike remains.
 
 ## 7. Test matrix
 
@@ -401,7 +440,10 @@ Each cell covers stage open, slot reconstruction, same-island and boundary paint
 - Document non-mutation across successful, canceled, failed, and overwrite exports.
 - Naming, collision policy, packing, encoding, importing, overlay configuration, rollback, and UMA library registration.
 - Low-alpha, orientation, normal, seam, wrap, slot, UDIM, fill, mask, clone, undo/redo, and 2D-open/closed GPU goldens.
-- Resource ownership, disposal, cache eviction, plugin filtering, and warm-frame allocation assertions.
+- Nested-group, group-mask, multi-channel-source, layer-effect, mask-effect, fill-transform, spline-invalidation, and save/reopen combination tests.
+- Freehand per-update batching, coalesced compose/pack/bind/repaint, deferred spline rerasterization, and deterministic random brush evolution.
+- Resource ownership, GPU-byte accounting, disposal, cache eviction, plugin filtering, dirty-region fallback, and warm-frame allocation assertions.
+- Isolated-process coverage for the approved assembly/domain-reload behavior and recovery/reopen result.
 
 ### 7.3 Required manual scenarios
 
@@ -414,7 +456,8 @@ Each cell covers stage open, slot reconstruction, same-island and boundary paint
 - Default export followed by recipe use and source-byte comparison.
 - Explicit overwrite with confirmation, injected failure, and restoration.
 - URP/HDRP switching and unsupported/custom shader diagnostics.
-- Narrow/wide docks, 2D window open/closed, stage-close cancellation, high DPI, and editor restart.
+- Narrow/wide docks, 2D window open/closed, mask/path/fill tool modes, Alt navigation, stage-close cancellation, high DPI, multi-monitor, domain reload, and editor restart.
+- Phase 5A profiler workloads at 2K/4K with retained main-thread, GPU, allocation, dispatch, dirty-pixel, persistence, and owned-resource evidence.
 
 ## 8. Migration and compatibility
 
@@ -425,6 +468,7 @@ Each cell covers stage open, slot reconstruction, same-island and boundary paint
 - Existing export templates are migrated to non-destructive defaults. Recipe update and material override flags are not honored silently by the release workflow.
 - Current source overlays and textures require no migration.
 - Temporary recovery assets, generated documents, exports, test logs, and goldens remain outside release package content by validation rule.
+- `OVERLAY_PAINTER_IMPLEMENTATION_PLAN.md` is the authoritative active release roadmap. Older readiness and release-phase plans are historical inputs unless explicitly synchronized with this document.
 
 ## 9. Work-item breakdown and dependencies
 
@@ -444,10 +488,15 @@ Each cell covers stage open, slot reconstruction, same-island and boundary paint
 | TMP-EXP-101 | P0 | Physical export plan, packing, encoding, and naming | TMP-MAT-102, TMP-DOC-102 |
 | TMP-EXP-102 | P0 | Overlay creation and UMA library registration | TMP-EXP-101, TMP-SLOT-104 |
 | TMP-EXP-103 | P0 | Atomic transaction, rollback, and explicit overwrite | TMP-EXP-102 |
-| TMP-PERF-101 | P1 | Lazy resources and centralized accounting | TMP-SLOT-103 |
-| TMP-PERF-102 | P1 | Per-frame stroke batching and mask/history/cache work | TMP-PERF-101 |
-| TMP-COR-101 | P1 | Normal/blend/orientation/fallback correctness | TMP-MAT-101 |
-| TMP-UX-101 | P1 | Context, document, UDIM, layer, and export UI closure | TMP-SLOT-104, TMP-EXP-103 |
+| TMP-PERF-100 | P0 | Freeze reference hardware, workloads, and authoritative performance/resource budgets | TMP-EXP-103, Manual Checkpoint 3 |
+| TMP-PERF-101 | P1 | Lazy editable/composite/packed/map/mask/effect resources and centralized GPU-byte accounting | TMP-PERF-100, TMP-SLOT-103 |
+| TMP-PERF-102 | P1 | Per-update freehand batching and coalesced compose/pack/bind/repaint | TMP-PERF-100, TMP-PERF-101 |
+| TMP-PERF-103 | P1 | Kernel/graph/discovery caching and transient collection/GPU-resource reuse | TMP-PERF-102 |
+| TMP-PERF-104 | P1 | Dirty-region CPU fallback, bounded color sampling, and reconstruction profiling | TMP-PERF-101 |
+| TMP-PERF-105 | P0 | Profiler evidence and Manual Checkpoint 4 sign-off | TMP-PERF-101, TMP-PERF-102, TMP-PERF-103, TMP-PERF-104 |
+| TMP-COR-101 | P1 | Normal/blend/orientation/fallback correctness and combination goldens | TMP-MAT-101, TMP-PERF-105 |
+| TMP-UX-101 | P1 | Context, document, UDIM, layer/mask/effect, input, and error-state hardening | TMP-SLOT-104, TMP-EXP-103, TMP-PERF-105 |
+| TMP-LIFE-101 | P0 | Approve and verify assembly/domain-reload and window/stage shutdown contracts | TMP-DOC-102, TMP-PERF-105 |
 | TMP-TEST-101 | P0 | Automated release matrix and failure injection | All feature items incrementally |
 | TMP-REL-102 | P0 | Fresh-project platform certification and release docs | All preceding items |
 
@@ -459,9 +508,9 @@ Implementation should deliberately pause for user validation at these points:
 
 1. **Checkpoint 0 — contracts:** confirm per-member UDIM overlay output, material export metadata, and naming.
 2. **Checkpoint 1 — documents:** validate temporary/recovery/Save As before slot reconstruction changes.
-3. **Checkpoint 2 — standalone slots:** validate mesh alignment, materials, source overlays, targets, and UDIM painting before export.
-4. **Checkpoint 3 — exported UMA assets:** validate real recipe use and library persistence before performance refactoring.
-5. **Checkpoint 4 — performance:** validate profiler evidence before correctness/UI freeze.
+3. **Checkpoint 2 — standalone slots:** passed; retain the mesh alignment, materials, source overlays, targets, and UDIM evidence.
+4. **Checkpoint 3 — exported UMA assets:** in progress; validate real recipe use and library persistence before performance refactoring.
+5. **Checkpoint 4 — performance:** approve the final budget table and validate profiler/GPU/resource evidence before correctness/UI freeze.
 6. **Release candidate:** validate every required pipeline/API cell and final clean-project workflow.
 
 Any data loss, source mutation in default mode, unrecoverable save, incorrect channel packing, incomplete UDIM output, library registration failure, or unexplained recurring paint spike is a NO-GO at every checkpoint.
@@ -479,6 +528,9 @@ The release phase is complete only when all of the following are true:
 - Export changes neither the document nor source assets by default.
 - Export produces correctly named physical textures and recipe-ready overlay asset(s), registered and persistent in the UMA library.
 - Explicit source overwrite is isolated, confirmed, backed up, and failure-safe.
+- Approved 2K/4K interaction, persistence, allocation, and resource budgets pass on named reference hardware with retained evidence.
+- Warm painting performs no redundant per-update composite/pack/bind/repaint work and no TexturePaint-owned managed allocation.
+- The assembly/domain-reload behavior is explicit, deterministic, recoverable, tested, and documented.
 - URP/HDRP pass on D3D11, D3D12, Vulkan, and Metal as specified.
 - Performance, memory, correctness, usability, recovery, migration, packaging, and documentation gates all pass in clean Unity 6.3+ projects.
 

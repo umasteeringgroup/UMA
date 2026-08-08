@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace UMA.TexturePaint
 {
-    /// <summary>UV-space geometry inputs shared by procedural masks, generators, and model plugins.</summary>
+    /// <summary>UV-space geometry inputs shared by generators and model plugins.</summary>
     public sealed class ProceduralMeshMaps : IDisposable
     {
         public Texture2D position;

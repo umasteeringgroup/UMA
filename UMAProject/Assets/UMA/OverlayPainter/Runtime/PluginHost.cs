@@ -7,11 +7,6 @@ using UnityEngine;
 
 namespace UMA.TexturePaint
 {
-    public interface ITexturePaintProceduralMaskV2 : ITexturePaintExtensionV2
-    {
-        float Evaluate(TexturePaintProceduralMaskSampleV2 sample, TexturePaintPluginParameterSet parameters);
-    }
-
     public sealed class PluginHost : IDisposable
     {
         public TexturePaintLogicalLayerController LogicalLayers { get; set; }
@@ -21,7 +16,6 @@ namespace UMA.TexturePaint
         private readonly List<ITexturePaintBakerV2> bakers = new List<ITexturePaintBakerV2>();
         private readonly List<ITexturePaintImporterV2> importers = new List<ITexturePaintImporterV2>();
         private readonly List<ITexturePaintExporterV2> exporters = new List<ITexturePaintExporterV2>();
-        private readonly List<ITexturePaintProceduralMaskV2> masks = new List<ITexturePaintProceduralMaskV2>();
         private readonly List<ScriptableObject> ownedInstances = new List<ScriptableObject>();
         private readonly List<TexturePaintPluginDiagnostic> diagnostics = new List<TexturePaintPluginDiagnostic>();
         private readonly List<TexturePaintPluginCommit> undo = new List<TexturePaintPluginCommit>();
@@ -129,9 +123,6 @@ namespace UMA.TexturePaint
                     TexturePaintPluginParameterSet copy = CloneParameters(profile.parameters);
                     ValidateParameters(descriptor, copy);
                     parameterProfiles[profile.pluginId] = copy;
-                    for (int maskIndex = 0; maskIndex < masks.Count; maskIndex++)
-                        if (masks[maskIndex].Descriptor.id == profile.pluginId)
-                            TexturePaintProceduralMaskRegistry.Register(masks[maskIndex], copy);
                 }
                 catch (Exception exception)
                 {
@@ -191,7 +182,7 @@ namespace UMA.TexturePaint
         }
 
         public async Task ExecuteCommandAsync(ITexturePaintCommandExtensionV2 plugin, TextureStore store,
-            TexturePaintMaskStack masks, TexturePaintPluginParameterSet parameters,
+            TexturePaintPluginParameterSet parameters,
             IProgress<float> progress, CancellationToken token)
         {
             if (plugin == null) throw new ArgumentNullException(nameof(plugin));
@@ -206,7 +197,7 @@ namespace UMA.TexturePaint
                 await plugin.ExecuteAsync(context);
                 token.ThrowIfCancellationRequested();
                 IReadOnlyList<TexturePaintPluginTileCommand> queued = context.SealAndSnapshot();
-                TexturePaintPluginCommit commit = TexturePaintPluginTransactionExecutor.Commit(store, masks,
+                TexturePaintPluginCommit commit = TexturePaintPluginTransactionExecutor.Commit(store,
                     context.Descriptor, queued, token, progress, parameterSnapshot, LogicalLayers);
                 if (commit.commandCount > 0) PushCommit(commit); else commit.Dispose();
                 AddDiagnostic(plugin.Descriptor.id, TexturePaintPluginDiagnosticSeverity.Info, "Transaction committed.",
@@ -236,7 +227,7 @@ namespace UMA.TexturePaint
             => await ExecuteArtifact(plugin, store, parameters, progress, token, false);
 
         public async Task ExecuteImporterAsync(ITexturePaintImporterV2 plugin, TexturePaintPluginArtifact artifact,
-            TextureStore store, TexturePaintMaskStack masks, TexturePaintPluginParameterSet parameters,
+            TextureStore store, TexturePaintPluginParameterSet parameters,
             IProgress<float> progress, CancellationToken token)
         {
             if (plugin == null) throw new ArgumentNullException(nameof(plugin));
@@ -253,7 +244,7 @@ namespace UMA.TexturePaint
                 await plugin.ImportAsync(artifact, context);
                 token.ThrowIfCancellationRequested();
                 IReadOnlyList<TexturePaintPluginTileCommand> queued = context.SealAndSnapshot();
-                TexturePaintPluginCommit commit = TexturePaintPluginTransactionExecutor.Commit(store, masks,
+                TexturePaintPluginCommit commit = TexturePaintPluginTransactionExecutor.Commit(store,
                     context.Descriptor, queued, token, progress, parameterSnapshot, LogicalLayers);
                 if (commit.commandCount > 0) PushCommit(commit); else commit.Dispose();
                 AddDiagnostic(plugin.Descriptor.id, TexturePaintPluginDiagnosticSeverity.Info, "Import transaction committed.",
@@ -336,11 +327,6 @@ namespace UMA.TexturePaint
             if (instance is ITexturePaintBakerV2 baker) bakers.Add(baker);
             if (instance is ITexturePaintImporterV2 importer) importers.Add(importer);
             if (instance is ITexturePaintExporterV2 exporter) exporters.Add(exporter);
-            if (instance is ITexturePaintProceduralMaskV2 mask)
-            {
-                masks.Add(mask);
-                TexturePaintProceduralMaskRegistry.Register(mask, GetParameters(mask));
-            }
         }
 
         private ITexturePaintExtensionV2 Create(Type type)
@@ -367,7 +353,7 @@ namespace UMA.TexturePaint
                 TexturePaintPluginCapability.Filter | TexturePaintPluginCapability.Generator |
                 TexturePaintPluginCapability.Baker | TexturePaintPluginCapability.Importer |
                 TexturePaintPluginCapability.Exporter | TexturePaintPluginCapability.ReadsMeshMaps |
-                TexturePaintPluginCapability.LongRunning | TexturePaintPluginCapability.ProceduralMask;
+                TexturePaintPluginCapability.LongRunning;
             if ((descriptor.capabilities & ~allCapabilities) != 0)
                 throw new InvalidOperationException("Descriptor contains unknown capability flags.");
             if ((descriptor.declaredChannels & ~TexturePaintChannelMask.All) != 0)
@@ -400,7 +386,6 @@ namespace UMA.TexturePaint
             if (plugin is ITexturePaintBakerV2) result |= TexturePaintPluginCapability.Baker;
             if (plugin is ITexturePaintImporterV2) result |= TexturePaintPluginCapability.Importer;
             if (plugin is ITexturePaintExporterV2) result |= TexturePaintPluginCapability.Exporter;
-            if (plugin is ITexturePaintProceduralMaskV2) result |= TexturePaintPluginCapability.ProceduralMask;
             return result;
         }
 
@@ -498,7 +483,6 @@ namespace UMA.TexturePaint
             extensions.Clear(); brushes.Clear(); commands.Clear(); bakers.Clear(); importers.Clear(); exporters.Clear();
             parameterProfiles.Clear();
             profileDescriptors.Clear();
-            for (int i = 0; i < masks.Count; i++) TexturePaintProceduralMaskRegistry.Unregister(masks[i]); masks.Clear();
             for (int i = 0; i < ownedInstances.Count; i++)
                 if (ownedInstances[i] != null)
                 {

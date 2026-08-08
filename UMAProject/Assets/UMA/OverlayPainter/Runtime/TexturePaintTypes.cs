@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading;
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace UMA.TexturePaint
 {
@@ -11,13 +14,281 @@ namespace UMA.TexturePaint
     public enum TexturePaintBrushSource { Texture, Overlay, Color }
     public enum TexturePaintTool { Paint, Erase, Blur, Smear, Clone, Dodge, Burn, NormalTouchup, Plugin }
     public enum TexturePaintBlendMode { Normal, Multiply, Add, Subtract, Screen, Overlay }
-    public enum TexturePaintMaskKind { None, White, Black, Bitmap, Painted, Slot, Polygon, UVIsland, ID, Procedural }
-    public enum TexturePaintMaskOperation { Add, Subtract, Intersect, Invert }
+    internal enum TexturePaintGeometrySelectorKind { None, Slot, Polygon, UVIsland }
     public enum TexturePaintTangentMode { Corner, Smooth, Broken, Custom }
     public enum TexturePaintPathMode { Stamps, Continuous, Ribbon, Filled }
     public enum TexturePaintPathOrientation { FollowPath, FixedAxis }
     public enum TexturePaintPathCap { Round, Square, Butt }
+    public enum TexturePaintRibbonSide { Left, Right, Both }
+    public enum TexturePaintRibbonBevelTone { Light, Dark }
+    public enum TexturePaintRibbonStitchRows { Single, Double }
     public enum TexturePaintNormalConvention { OpenGL, DirectX }
+
+    /// <summary>
+    /// Resolves direct textures and sprite-sheet regions into paint-source textures. Normal inputs
+    /// are canonicalized into linear OpenGL-style RGB vectors before the painting engine sees them,
+    /// independent of their Unity importer or source convention.
+    /// </summary>
+    public static class TexturePaintSpriteSource
+    {
+        private readonly struct CacheKey : IEquatable<CacheKey>
+        {
+            private readonly int textureId;
+            private readonly int spriteId;
+            private readonly TexturePaintChannel channel;
+            private readonly TexturePaintNormalConvention convention;
+            private readonly bool unityNormalMap;
+            private readonly bool sourceSrgb;
+            private readonly bool invert;
+
+            public CacheKey(Texture texture, Sprite sprite, TexturePaintChannel channel,
+                TexturePaintNormalConvention convention, bool unityNormalMap, bool invert)
+            {
+                textureId = texture != null ? texture.GetInstanceID() : 0;
+                spriteId = sprite != null ? sprite.GetInstanceID() : 0;
+                this.channel = channel;
+                this.convention = channel == TexturePaintChannel.Normal
+                    ? convention
+                    : TexturePaintNormalConvention.OpenGL;
+                this.unityNormalMap = unityNormalMap;
+                sourceSrgb = texture != null && texture.isDataSRGB;
+                this.invert = invert;
+            }
+
+            public bool Equals(CacheKey other)
+                => textureId == other.textureId && spriteId == other.spriteId && channel == other.channel &&
+                   convention == other.convention && unityNormalMap == other.unityNormalMap &&
+                   sourceSrgb == other.sourceSrgb && invert == other.invert;
+
+            public override bool Equals(object obj) => obj is CacheKey other && Equals(other);
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    int hash = textureId;
+                    hash = hash * 397 ^ spriteId;
+                    hash = hash * 397 ^ (int)channel;
+                    hash = hash * 397 ^ (int)convention;
+                    hash = hash * 397 ^ (unityNormalMap ? 1 : 0);
+                    hash = hash * 397 ^ (sourceSrgb ? 1 : 0);
+                    return hash * 397 ^ (invert ? 1 : 0);
+                }
+            }
+        }
+
+        private static readonly Dictionary<CacheKey, Texture2D> Cache =
+            new Dictionary<CacheKey, Texture2D>();
+        private static Material extractionMaterial;
+
+        public static Texture2D Resolve(Texture2D texture, Sprite sprite)
+        {
+            return Resolve(texture, sprite, TexturePaintChannel.Albedo,
+                TexturePaintNormalConvention.OpenGL);
+        }
+
+        public static Texture2D Resolve(Texture2D texture, Sprite sprite,
+            TexturePaintChannel channel, TexturePaintNormalConvention convention)
+        {
+            return Resolve(texture, sprite, channel, convention, false);
+        }
+
+        public static Texture2D Resolve(Texture2D texture, Sprite sprite,
+            TexturePaintChannel channel, TexturePaintNormalConvention convention, bool invert)
+        {
+            Texture2D source = sprite != null ? sprite.texture : texture;
+            if (source == null) return null;
+            // Ordinary complete color/data textures need no extraction. Normal textures do,
+            // because both Unity Normal Map assets and raw RGB normal data must be converted to
+            // one predictable representation before vector blending.
+            if (sprite == null && channel != TexturePaintChannel.Normal && !invert) return texture;
+            return Extract(source, sprite, channel, convention, invert);
+        }
+
+        public static Texture ResolveTexture(Texture texture, TexturePaintChannel channel,
+            TexturePaintNormalConvention convention, bool invert)
+        {
+            return ResolveTexture(texture, channel, convention, invert, false);
+        }
+
+        /// <summary>
+        /// Resolves a texture while explicitly identifying a Unity/UMA packed normal source.
+        /// Generated UMA normal atlases have no TextureImporter, but still use Unity's normal
+        /// packing (typically Y in green and X in alpha), so importer inspection alone cannot
+        /// determine how they must be decoded.
+        /// </summary>
+        public static Texture ResolveTexture(Texture texture, TexturePaintChannel channel,
+            TexturePaintNormalConvention convention, bool invert, bool forceUnityPackedNormal)
+        {
+            if (texture == null) return null;
+            if (texture is Texture2D texture2D)
+            {
+                if (!forceUnityPackedNormal)
+                    return Resolve(texture2D, null, channel, convention, invert);
+                return Extract(texture2D, null, channel, convention, invert, true);
+            }
+            if (channel != TexturePaintChannel.Normal && !invert) return texture;
+            return Extract(texture, null, channel, convention, invert, forceUnityPackedNormal);
+        }
+
+        public static Texture2D GetTexture(Sprite sprite)
+        {
+            return Resolve(null, sprite, TexturePaintChannel.Albedo,
+                TexturePaintNormalConvention.OpenGL);
+        }
+
+        public static Texture2D GetTexture(Sprite sprite, TexturePaintChannel channel,
+            TexturePaintNormalConvention convention)
+        {
+            return Resolve(null, sprite, channel, convention);
+        }
+
+        private static Texture2D Extract(Texture source, Sprite sprite,
+            TexturePaintChannel channel, TexturePaintNormalConvention convention, bool invert,
+            bool forceUnityPackedNormal = false)
+        {
+            bool normal = channel == TexturePaintChannel.Normal;
+            bool unityNormalMap = normal && (forceUnityPackedNormal || IsUnityNormalMap(source));
+            CacheKey key = new CacheKey(source, sprite, channel, convention, unityNormalMap, invert);
+            if (Cache.TryGetValue(key, out Texture2D cached) && cached != null) return cached;
+
+            Rect sourceRect = new Rect(0f, 0f, source.width, source.height);
+            SpritePackingRotation packingRotation = SpritePackingRotation.None;
+            if (sprite != null)
+            {
+                packingRotation = sprite.packingRotation;
+                try { sourceRect = sprite.packed ? sprite.textureRect : sprite.rect; }
+                catch
+                {
+                    Vector2[] uv = sprite.uv;
+                    if (uv == null || uv.Length == 0) return null;
+                    Vector2 minimum = uv[0], maximum = uv[0];
+                    for (int i = 1; i < uv.Length; i++)
+                    {
+                        minimum = Vector2.Min(minimum, uv[i]);
+                        maximum = Vector2.Max(maximum, uv[i]);
+                    }
+                    sourceRect = Rect.MinMaxRect(minimum.x * source.width,
+                        minimum.y * source.height, maximum.x * source.width,
+                        maximum.y * source.height);
+                }
+            }
+
+            int width = Mathf.Max(1, Mathf.RoundToInt(sourceRect.width));
+            int height = Mathf.Max(1, Mathf.RoundToInt(sourceRect.height));
+            Vector2 scale = new Vector2(sourceRect.width / source.width,
+                sourceRect.height / source.height);
+            Vector2 offset = new Vector2(sourceRect.x / source.width,
+                sourceRect.y / source.height);
+            switch (packingRotation)
+            {
+                case SpritePackingRotation.FlipHorizontal:
+                    offset.x += scale.x;
+                    scale.x = -scale.x;
+                    break;
+                case SpritePackingRotation.FlipVertical:
+                    offset.y += scale.y;
+                    scale.y = -scale.y;
+                    break;
+                case SpritePackingRotation.Rotate180:
+                    offset += scale;
+                    scale = -scale;
+                    break;
+            }
+
+            bool linear = normal || !source.isDataSRGB;
+            RenderTexture temporary = RenderTexture.GetTemporary(width, height, 0,
+                RenderTextureFormat.ARGB32, linear
+                    ? RenderTextureReadWrite.Linear : RenderTextureReadWrite.Default);
+            RenderTexture previous = RenderTexture.active;
+            Texture2D result = null;
+            try
+            {
+                Material material = GetExtractionMaterial();
+                if (material == null)
+                {
+                    Debug.LogError("Overlay Painter source extraction shader is unavailable.");
+                    return null;
+                }
+                material.SetVector("_ScaleOffset", new Vector4(scale.x, scale.y, offset.x, offset.y));
+                material.SetInt("_SourceIsNormalMap", unityNormalMap ? 1 : 0);
+                material.SetInt("_SourceIsSRGB", source.isDataSRGB ? 1 : 0);
+                material.SetInt("_InvertGreen",
+                    normal && convention == TexturePaintNormalConvention.DirectX ? 1 : 0);
+                material.SetInt("_InvertChannels", invert ? 1 : 0);
+                Graphics.Blit(source, temporary, material, normal ? 1 : 0);
+                RenderTexture.active = temporary;
+                result = new Texture2D(width, height, TextureFormat.RGBA32, false, linear)
+                {
+                    name = (sprite != null ? sprite.name : source.name) +
+                           (normal ? " (Overlay Painter Normal Source)" :
+                               invert ? " (Overlay Painter Inverted Source)" : " (Overlay Painter Sprite)"),
+                    hideFlags = HideFlags.HideAndDontSave,
+                    filterMode = source.filterMode,
+                    wrapMode = TextureWrapMode.Clamp
+                };
+                result.ReadPixels(new Rect(0f, 0f, width, height), 0, 0, false);
+                // Keep the cache readable so the existing CPU fallback samples the same Sprite
+                // region when compute shaders are unavailable.
+                result.Apply(false, false);
+                Cache[key] = result;
+                return result;
+            }
+            catch
+            {
+                if (result != null) DestroyTexture(result);
+                throw;
+            }
+            finally
+            {
+                RenderTexture.active = previous;
+                RenderTexture.ReleaseTemporary(temporary);
+            }
+        }
+
+        public static void ClearCache()
+        {
+            foreach (Texture2D texture in Cache.Values)
+                if (texture != null) DestroyTexture(texture);
+            Cache.Clear();
+            if (extractionMaterial != null)
+            {
+                if (Application.isPlaying) UnityEngine.Object.Destroy(extractionMaterial);
+                else UnityEngine.Object.DestroyImmediate(extractionMaterial);
+                extractionMaterial = null;
+            }
+        }
+
+        private static Material GetExtractionMaterial()
+        {
+            if (extractionMaterial != null) return extractionMaterial;
+            Shader shader = Shader.Find("Hidden/UMA/TexturePaint/SourceExtract");
+            if (shader == null) return null;
+            extractionMaterial = new Material(shader)
+            {
+                name = "Overlay Painter Source Extract",
+                hideFlags = HideFlags.HideAndDontSave
+            };
+            return extractionMaterial;
+        }
+
+        private static bool IsUnityNormalMap(Texture texture)
+        {
+#if UNITY_EDITOR
+            string path = AssetDatabase.GetAssetPath(texture);
+            return !string.IsNullOrEmpty(path) && AssetImporter.GetAtPath(path) is TextureImporter importer &&
+                   importer.textureType == TextureImporterType.NormalMap;
+#else
+            return false;
+#endif
+        }
+
+        private static void DestroyTexture(Texture2D texture)
+        {
+            if (Application.isPlaying) UnityEngine.Object.Destroy(texture);
+            else UnityEngine.Object.DestroyImmediate(texture);
+        }
+    }
 
     [Serializable]
     public struct TexturePaintSurfaceAnchor
@@ -144,7 +415,11 @@ namespace UMA.TexturePaint
     public sealed class StrokeContext
     {
         public TextureSet textures;
-        public TexturePaintMaskStack mask;
+        internal TexturePaintGeometrySelection geometrySelection;
+        /// <summary>Paint directly in normalized texture UVs without mesh projection or clipping.</summary>
+        public bool directUV;
+        public bool editLayerMask;
+        [Range(0f, 1f)] public float maskValue = 1f;
         public BrushPreset brush;
         public TexturePaintTool tool;
         public TexturePaintChannel channel;
@@ -153,7 +428,13 @@ namespace UMA.TexturePaint
         public Color color = Color.white;
         public TexturePaintBrushSource paintSource = TexturePaintBrushSource.Color;
         public Texture2D sourceTexture;
+        public Sprite sourceSprite;
         public OverlayDataAsset sourceOverlay;
+        public TexturePaintChannel maskSourceChannel = TexturePaintChannel.Albedo;
+        public bool sourceInvert;
+        public TexturePaintNormalConvention normalConvention = TexturePaintNormalConvention.OpenGL;
+        public readonly Dictionary<TexturePaintChannel, TexturePaintChannelSourceSettings> channelSources =
+            new Dictionary<TexturePaintChannel, TexturePaintChannelSourceSettings>();
         public readonly Dictionary<string, OverlayDataAsset> sourceOverlaysBySurfaceId =
             new Dictionary<string, OverlayDataAsset>(StringComparer.Ordinal);
         public float strength = 1f;
@@ -163,6 +444,14 @@ namespace UMA.TexturePaint
         public float projectionDepth;
         public float normalAngleLimit = 90f;
         public bool paintBackfaces;
+        // Ribbon-local side fade. Start and size are normalized against the distance from the
+        // centerline to either side edge, independent of source and destination texture UVs.
+        public bool ribbonEdgeFadeEnabled;
+        public float ribbonEdgeFadeStart = 0.75f;
+        public float ribbonEdgeFadeSize = 1f;
+        public Texture2D ribbonBeginningTexture;
+        public Texture2D ribbonEndTexture;
+        public TexturePaintLayerEffects ribbonEffects;
         public Vector2 cloneSourceUV;
         public PluginHost pluginHost;
         public ITexturePaintBrushV2 brushPlugin;
@@ -171,6 +460,10 @@ namespace UMA.TexturePaint
         public string historyGroupKey;
         public TexturePaintLayer replaceLayer;
         public bool replaceHistoryGroup;
+        // A procedural layer's pixels are a cache derived from its editable model (for example a
+        // spline). Its model-level undo owns history, so capturing full-resolution pixel undo on
+        // every preview regeneration is redundant and can dominate interactive edit time.
+        public bool derivedLayerRaster;
 
         public OverlayDataAsset ResolveSourceOverlay(TextureSet set)
         {
@@ -374,26 +667,32 @@ namespace UMA.TexturePaint
 
         public int InsertPointAfter(int pointIndex)
         {
+            return InsertPointAfter(pointIndex, 0.5f);
+        }
+
+        public int InsertPointAfter(int pointIndex, float segmentT)
+        {
             EnsureControlPoints();
             if ((uint)pointIndex >= (uint)PointCount || PointCount == 0) return -1;
+            float t = Mathf.Clamp(segmentT, 0.001f, 0.999f);
             int next = pointIndex + 1;
             if (next >= PointCount)
             {
                 if (!closed) return -1;
                 next = 0;
             }
-            Vector3 worldA = Vector3.Lerp(worldPoints[pointIndex], worldOutControls[pointIndex], 0.5f);
-            Vector3 worldB = Vector3.Lerp(worldOutControls[pointIndex], worldInControls[next], 0.5f);
-            Vector3 worldC = Vector3.Lerp(worldInControls[next], worldPoints[next], 0.5f);
-            Vector3 worldD = Vector3.Lerp(worldA, worldB, 0.5f);
-            Vector3 worldE = Vector3.Lerp(worldB, worldC, 0.5f);
-            Vector3 worldPoint = Vector3.Lerp(worldD, worldE, 0.5f);
-            Vector2 uvA = Vector2.Lerp(uvPoints[pointIndex], uvOutControls[pointIndex], 0.5f);
-            Vector2 uvB = Vector2.Lerp(uvOutControls[pointIndex], uvInControls[next], 0.5f);
-            Vector2 uvC = Vector2.Lerp(uvInControls[next], uvPoints[next], 0.5f);
-            Vector2 uvD = Vector2.Lerp(uvA, uvB, 0.5f);
-            Vector2 uvE = Vector2.Lerp(uvB, uvC, 0.5f);
-            Vector2 uvPoint = Vector2.Lerp(uvD, uvE, 0.5f);
+            Vector3 worldA = Vector3.Lerp(worldPoints[pointIndex], worldOutControls[pointIndex], t);
+            Vector3 worldB = Vector3.Lerp(worldOutControls[pointIndex], worldInControls[next], t);
+            Vector3 worldC = Vector3.Lerp(worldInControls[next], worldPoints[next], t);
+            Vector3 worldD = Vector3.Lerp(worldA, worldB, t);
+            Vector3 worldE = Vector3.Lerp(worldB, worldC, t);
+            Vector3 worldPoint = Vector3.Lerp(worldD, worldE, t);
+            Vector2 uvA = Vector2.Lerp(uvPoints[pointIndex], uvOutControls[pointIndex], t);
+            Vector2 uvB = Vector2.Lerp(uvOutControls[pointIndex], uvInControls[next], t);
+            Vector2 uvC = Vector2.Lerp(uvInControls[next], uvPoints[next], t);
+            Vector2 uvD = Vector2.Lerp(uvA, uvB, t);
+            Vector2 uvE = Vector2.Lerp(uvB, uvC, t);
+            Vector2 uvPoint = Vector2.Lerp(uvD, uvE, t);
             worldOutControls[pointIndex] = worldA;
             uvOutControls[pointIndex] = uvA;
             worldInControls[next] = worldC;
@@ -407,17 +706,16 @@ namespace UMA.TexturePaint
             uvOutControls.Insert(insertIndex, uvE);
             surfaceIndices.Insert(insertIndex, surfaceIndices[pointIndex]);
             triangleIndices.Insert(insertIndex, triangleIndices[pointIndex]);
-            worldNormals.Insert(insertIndex, Vector3.Slerp(worldNormals[pointIndex], worldNormals[next], 0.5f).normalized);
-            pressures.Insert(insertIndex, Mathf.Lerp(pressures[pointIndex], pressures[next], 0.5f));
-            widths.Insert(insertIndex, Mathf.Lerp(widths[pointIndex], widths[next], 0.5f));
-            flows.Insert(insertIndex, Mathf.Lerp(flows[pointIndex], flows[next], 0.5f));
-            rolls.Insert(insertIndex, Mathf.LerpAngle(rolls[pointIndex], rolls[next], 0.5f));
-            colors.Insert(insertIndex, Color.Lerp(colors[pointIndex], colors[next], 0.5f));
-            offsets.Insert(insertIndex, Mathf.Lerp(offsets[pointIndex], offsets[next], 0.5f));
+            worldNormals.Insert(insertIndex, Vector3.Slerp(worldNormals[pointIndex], worldNormals[next], t).normalized);
+            pressures.Insert(insertIndex, Mathf.Lerp(pressures[pointIndex], pressures[next], t));
+            widths.Insert(insertIndex, Mathf.Lerp(widths[pointIndex], widths[next], t));
+            flows.Insert(insertIndex, Mathf.Lerp(flows[pointIndex], flows[next], t));
+            rolls.Insert(insertIndex, Mathf.LerpAngle(rolls[pointIndex], rolls[next], t));
+            colors.Insert(insertIndex, Color.Lerp(colors[pointIndex], colors[next], t));
+            offsets.Insert(insertIndex, Mathf.Lerp(offsets[pointIndex], offsets[next], t));
             tangentModes.Insert(insertIndex, TexturePaintTangentMode.Smooth);
-            TexturePaintSurfaceAnchor anchor = anchors[pointIndex];
-            anchor.barycentric = Vector3.Lerp(anchors[pointIndex].barycentric, anchors[next].barycentric, 0.5f);
-            anchor.normal = Vector3.Slerp(anchors[pointIndex].normal, anchors[next].normal, 0.5f).normalized;
+            TexturePaintSurfaceAnchor anchor = t < 0.5f ? anchors[pointIndex] : anchors[next];
+            anchor.normal = Vector3.Slerp(anchors[pointIndex].normal, anchors[next].normal, t).normalized;
             anchors.Insert(insertIndex, anchor);
             return insertIndex;
         }

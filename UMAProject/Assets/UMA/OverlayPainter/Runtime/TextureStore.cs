@@ -120,6 +120,8 @@ namespace UMA.TexturePaint
         public string sourceKeyword;
         public int umaChannelIndex = -1;
         public Texture sourceTexture;
+        public TexturePaintNormalConvention sourceNormalConvention = TexturePaintNormalConvention.OpenGL;
+        public bool sourceNormalIsUnityPacked;
         public EditableTextureTarget editable;
         public bool sRGB;
         public RenderTextureFormat format;
@@ -130,6 +132,21 @@ namespace UMA.TexturePaint
 
         public RenderTexture Texture => editable?.Front;
         public RenderTexture PreviewTexture => composite != null ? composite : Texture;
+
+        public Texture ResolveEditableSource(Texture source)
+        {
+            return channel == TexturePaintChannel.Normal
+                ? TexturePaintSpriteSource.ResolveTexture(source, channel, sourceNormalConvention, false,
+                    sourceNormalIsUnityPacked)
+                : source;
+        }
+
+        public void ResetToSource(Texture source)
+        {
+            sourceTexture = source;
+            editable?.Reset(ResolveEditableSource(source), TextureSet.DefaultColor(channel));
+        }
+
         public void Dispose()
         {
             editable?.Dispose();
@@ -168,6 +185,57 @@ namespace UMA.TexturePaint
         public readonly Dictionary<TexturePaintChannel, Texture> textures = new Dictionary<TexturePaintChannel, Texture>();
     }
 
+    /// <summary>
+    /// An editable, grayscale layer mask. The value is replicated to RGB and alpha is kept at one
+    /// so the same GPU painting/filtering path can edit masks without introducing coverage holes.
+    /// </summary>
+    public sealed class TexturePaintLayerMask : IDisposable
+    {
+        [Range(0f, 1f)] public float baseValue = 1f;
+        public EditableTextureTarget target;
+        public TexturePaintLayerMaskEffects effects = new TexturePaintLayerMaskEffects();
+        public TexturePaintChannelSourceSettings sourceSettings = DefaultSourceSettings();
+        public TexturePaintChannel sourceChannel = TexturePaintChannel.Albedo;
+
+        public static TexturePaintChannelSourceSettings DefaultSourceSettings()
+        {
+            return new TexturePaintChannelSourceSettings
+            {
+                source = TexturePaintBrushSource.Color,
+                color = Color.white
+            };
+        }
+
+        public float PaintValue => Mathf.Clamp01(sourceSettings?.color.grayscale ??
+            (baseValue < 0.5f ? 1f : 0f));
+
+        public void SetPaintValue(float value)
+        {
+            value = Mathf.Clamp01(value);
+            sourceSettings = DefaultSourceSettings();
+            sourceSettings.color = new Color(value, value, value, 1f);
+            sourceChannel = TexturePaintChannel.Albedo;
+        }
+
+        public void NormalizePaintSource()
+        {
+            float value = PaintValue;
+            Color grayscale = new Color(value, value, value, 1f);
+            if (sourceSettings != null && sourceSettings.source == TexturePaintBrushSource.Color &&
+                sourceSettings.sourceTexture == null && sourceSettings.sourceSprite == null &&
+                sourceSettings.sourceOverlay == null && !sourceSettings.invert &&
+                sourceChannel == TexturePaintChannel.Albedo && sourceSettings.color == grayscale)
+                return;
+            SetPaintValue(value);
+        }
+
+        public void Dispose()
+        {
+            target?.Dispose();
+            target = null;
+        }
+    }
+
     public sealed class TexturePaintLayer : IDisposable
     {
         public string id = Guid.NewGuid().ToString("N");
@@ -193,7 +261,7 @@ namespace UMA.TexturePaint
         public readonly Dictionary<TexturePaintChannel, EditableTextureTarget> channels = new Dictionary<TexturePaintChannel, EditableTextureTarget>();
         public readonly Dictionary<TexturePaintChannel, TexturePaintLayerChannelSettings> channelSettings =
             new Dictionary<TexturePaintChannel, TexturePaintLayerChannelSettings>();
-        public readonly List<TexturePaintMask> masks = new List<TexturePaintMask>();
+        public TexturePaintLayerMask layerMask;
         public readonly List<TexturePaintStrokeRecord> strokes = new List<TexturePaintStrokeRecord>();
 
         // Layer kind is the authoritative discriminator. Unity's inline serialization can
@@ -205,6 +273,7 @@ namespace UMA.TexturePaint
         {
             effects ??= new TexturePaintLayerEffects();
             effects.Normalize();
+            layerMask?.NormalizePaintSource();
             if (kind == TexturePaintLayerKind.Fill)
             {
                 fillSettings ??= new TexturePaintFillSettings
@@ -241,10 +310,24 @@ namespace UMA.TexturePaint
             return result;
         }
 
+        public bool TryGetFirstAuthoredChannel(out TexturePaintChannel channel)
+        {
+            foreach (TexturePaintChannel candidate in Enum.GetValues(typeof(TexturePaintChannel)))
+            {
+                if (!channels.ContainsKey(candidate)) continue;
+                channel = candidate;
+                return true;
+            }
+            channel = TexturePaintChannel.Albedo;
+            return false;
+        }
+
         public void Dispose()
         {
+            layerMask?.Dispose();
+            layerMask = null;
             foreach (EditableTextureTarget target in channels.Values) target.Dispose();
-            channels.Clear(); channelSettings.Clear(); masks.Clear(); strokes.Clear();
+            channels.Clear(); channelSettings.Clear(); strokes.Clear();
         }
     }
 
@@ -254,7 +337,7 @@ namespace UMA.TexturePaint
     /// </summary>
     public sealed class TexturePaintFillGenerator : IDisposable
     {
-        public const int CurrentRevision = 4;
+        public const int CurrentRevision = 6;
         private const int EdgePaddingPixels = 2;
 
         private readonly Material material;
@@ -273,12 +356,14 @@ namespace UMA.TexturePaint
             };
         }
 
-        public bool Render(TextureSet set, TexturePaintLayer layer, EditableTextureTarget target, Texture source)
+        public bool Render(TextureSet set, TexturePaintLayer layer, EditableTextureTarget target, Texture source,
+            TexturePaintFillSettings settingsOverride = null)
         {
-            if (material == null || set?.surface?.mesh == null || layer?.fillSettings == null ||
+            if (material == null || set?.surface?.mesh == null ||
+                (settingsOverride == null && layer?.fillSettings == null) ||
                 target?.Front == null || source == null) return false;
 
-            TexturePaintFillSettings settings = layer.fillSettings;
+            TexturePaintFillSettings settings = settingsOverride ?? layer.fillSettings;
             settings.Normalize();
             properties.Clear();
             properties.SetTexture("_FillSource", source);
@@ -286,6 +371,8 @@ namespace UMA.TexturePaint
             properties.SetInt("_SourceKind", settings.source == TexturePaintBrushSource.Color ? 1 : 0);
             properties.SetInt("_Projection", (int)settings.projection);
             properties.SetVector("_Tiling", new Vector4(settings.tiling.x, settings.tiling.y, 0f, 0f));
+            properties.SetVector("_Offset", new Vector4(settings.offset.x, settings.offset.y, 0f, 0f));
+            properties.SetFloat("_Rotation", settings.rotation);
             properties.SetInt("_TriplanarBlend", (int)settings.triplanarBlend);
             properties.SetFloat("_BlendOffset", settings.blendOffset);
             properties.SetFloat("_BlendSharpness", settings.blendSharpness);
@@ -349,6 +436,11 @@ namespace UMA.TexturePaint
         internal TextureLayerCompositor compositor;
         internal ComputeShader channelPackShader;
         internal TexturePaintFillGenerator fillGenerator;
+        private RenderTexture selectedGroupPreview;
+        private string selectedGroupPreviewId;
+        private TexturePaintChannel selectedGroupPreviewChannel;
+        private long compositeRevision;
+        private long selectedGroupPreviewRevision = -1;
         public bool LayerEffectsAvailable => compositor?.EffectsAvailable == true;
 
         public TextureChannelTarget GetChannel(TexturePaintChannel channel)
@@ -373,6 +465,60 @@ namespace UMA.TexturePaint
             return target;
         }
 
+        public TexturePaintLayerMask AddLayerMask(TexturePaintLayer layer, float baseValue)
+        {
+            if (layer == null || !layers.Contains(layer)) return null;
+            baseValue = Mathf.Clamp01(baseValue);
+            if (layer.layerMask != null)
+            {
+                layer.layerMask.baseValue = baseValue;
+                layer.layerMask.effects ??= new TexturePaintLayerMaskEffects();
+                layer.layerMask.SetPaintValue(baseValue < 0.5f ? 1f : 0f);
+                layer.layerMask.target?.Reset(null, MaskColor(baseValue));
+                return layer.layerMask;
+            }
+            GetMaskResolution(out int width, out int height);
+            if (width <= 0 || height <= 0) return null;
+            TexturePaintChannelSourceSettings paintSource = TexturePaintLayerMask.DefaultSourceSettings();
+            float initialPaintValue = baseValue < 0.5f ? 1f : 0f;
+            paintSource.color = MaskColor(initialPaintValue);
+            layer.layerMask = new TexturePaintLayerMask
+            {
+                baseValue = baseValue,
+                effects = new TexturePaintLayerMaskEffects(),
+                sourceSettings = paintSource,
+                target = new EditableTextureTarget(layer.name + " Layer Mask", width, height,
+                    RenderTextureFormat.ARGB32, null, MaskColor(baseValue))
+            };
+            return layer.layerMask;
+        }
+
+        public bool RemoveLayerMask(TexturePaintLayer layer)
+        {
+            if (layer?.layerMask == null) return false;
+            layer.layerMask.Dispose();
+            layer.layerMask = null;
+            return true;
+        }
+
+        public void GetMaskResolution(out int width, out int height)
+        {
+            width = 0;
+            height = 0;
+            foreach (TextureChannelTarget channel in channels.Values)
+            {
+                if (channel?.editable?.Front == null) continue;
+                width = Mathf.Max(width, channel.editable.Width);
+                height = Mathf.Max(height, channel.editable.Height);
+            }
+        }
+
+        internal static Color MaskColor(float value)
+        {
+            value = Mathf.Clamp01(value);
+            return new Color(value, value, value, 1f);
+        }
+
         public ProceduralMeshMaps GetProceduralMeshMaps(int maximumResolution = 512,
             TexturePaintOperationContext operation = default)
         {
@@ -390,17 +536,34 @@ namespace UMA.TexturePaint
         }
 
         public TexturePaintLayer AddLayer(string layerName)
+            => AddLayer(layerName, true);
+
+        private TexturePaintLayer AddLayer(string layerName, bool inheritActiveGroup)
         {
-            string parentId = (uint)activeLayerIndex < (uint)layers.Count && layers[activeLayerIndex].kind == TexturePaintLayerKind.Group
-                ? layers[activeLayerIndex].id
-                : null;
+            TexturePaintLayer parent = inheritActiveGroup && (uint)activeLayerIndex < (uint)layers.Count &&
+                layers[activeLayerIndex].kind == TexturePaintLayerKind.Group
+                    ? layers[activeLayerIndex]
+                    : null;
             TexturePaintLayer layer = new TexturePaintLayer
             {
                 name = string.IsNullOrWhiteSpace(layerName) ? $"Layer {layers.Count + 1}" : layerName,
-                parentId = parentId
+                parentId = parent?.id,
+                visible = true
             };
-            layers.Add(layer);
-            activeLayerIndex = layers.Count - 1;
+            if (parent != null)
+            {
+                // The layer list is composited bottom-to-top but displayed top-to-bottom. Insert
+                // immediately before the folder so a newly created child is visibly nested below
+                // it instead of appearing above its parent.
+                int parentIndex = layers.IndexOf(parent);
+                layers.Insert(Mathf.Max(0, parentIndex), layer);
+                activeLayerIndex = layers.IndexOf(layer);
+            }
+            else
+            {
+                layers.Add(layer);
+                activeLayerIndex = layers.Count - 1;
+            }
             return layer;
         }
 
@@ -425,7 +588,7 @@ namespace UMA.TexturePaint
             layer.fillColor = normalized.color;
             layer.channels[channel] = new EditableTextureTarget(layer.name + " " + channel,
                 baseChannel.Texture.width, baseChannel.Texture.height, baseChannel.format, null, Color.clear);
-            layer.GetChannelSettings(channel);
+            layer.GetChannelSettings(channel).sourceSettings = ChannelSourceFromFill(normalized);
             if (!RegenerateFillLayer(layer))
             {
                 layers.Remove(layer);
@@ -452,12 +615,6 @@ namespace UMA.TexturePaint
             TexturePaintFillSettings normalized = settings?.Clone() ?? new TexturePaintFillSettings();
             normalized.Normalize();
             if (baseChannel == null || !CanGenerateFill(channel, normalized)) return false;
-            if (layer.fillChannel != channel)
-            {
-                foreach (EditableTextureTarget oldTarget in layer.channels.Values) oldTarget.Dispose();
-                layer.channels.Clear();
-                layer.channelSettings.Clear();
-            }
             layer.fillChannel = channel;
             layer.fillSettings = normalized;
             layer.fillColor = normalized.color;
@@ -466,8 +623,8 @@ namespace UMA.TexturePaint
                 target = new EditableTextureTarget(layer.name + " " + channel, baseChannel.Texture.width,
                     baseChannel.Texture.height, baseChannel.format, null, Color.clear);
                 layer.channels[channel] = target;
-                layer.GetChannelSettings(channel);
             }
+            layer.GetChannelSettings(channel).sourceSettings = ChannelSourceFromFill(normalized);
             if (!RegenerateFillLayer(layer)) return false;
             BindPreviewTextures();
             return true;
@@ -475,31 +632,124 @@ namespace UMA.TexturePaint
 
         public bool RegenerateFillLayer(TexturePaintLayer layer)
         {
-            if (layer == null || layer.kind != TexturePaintLayerKind.Fill ||
-                !layer.channels.TryGetValue(layer.fillChannel, out EditableTextureTarget target)) return false;
+            if (layer == null || layer.kind != TexturePaintLayerKind.Fill || layer.channels.Count == 0)
+                return false;
             layer.NormalizeKindPayload();
-            if (layer.fillSettings.source == TexturePaintBrushSource.Color)
+            SynchronizeFillChannelTransforms(layer);
+            bool generatedAny = false;
+            foreach (KeyValuePair<TexturePaintChannel, EditableTextureTarget> pair in layer.channels)
             {
-                target.Reset(null, layer.fillSettings.color);
-                layer.fillSettings.generatorRevision = TexturePaintFillGenerator.CurrentRevision;
-                return true;
+                TexturePaintLayerChannelSettings channelSettings = layer.GetChannelSettings(pair.Key);
+                TexturePaintFillSettings settings = channelSettings.sourceSettings != null
+                    ? FillFromChannelSource(channelSettings.sourceSettings)
+                    : pair.Key == layer.fillChannel ? layer.fillSettings : null;
+                if (settings == null) continue;
+                settings.Normalize();
+                if (settings.source == TexturePaintBrushSource.Color)
+                {
+                    pair.Value.Reset(null, settings.color);
+                    settings.generatorRevision = TexturePaintFillGenerator.CurrentRevision;
+                    generatedAny = true;
+                    continue;
+                }
+                Texture source = ResolveFillSource(settings, pair.Key);
+                if (source == null || fillGenerator == null ||
+                    !fillGenerator.Render(this, layer, pair.Value, source, settings)) return false;
+                settings.generatorRevision = TexturePaintFillGenerator.CurrentRevision;
+                generatedAny = true;
             }
-            Texture source = ResolveFillSource(layer.fillSettings, layer.fillChannel);
-            bool generated = source != null && fillGenerator != null && fillGenerator.Render(this, layer, target, source);
-            if (generated) layer.fillSettings.generatorRevision = TexturePaintFillGenerator.CurrentRevision;
-            return generated;
+            if (generatedAny && layer.fillSettings != null)
+                layer.fillSettings.generatorRevision = TexturePaintFillGenerator.CurrentRevision;
+            return generatedAny;
+        }
+
+        public static void SynchronizeFillChannelTransforms(TexturePaintLayer layer)
+        {
+            if (layer?.kind != TexturePaintLayerKind.Fill ||
+                layer.fillSettings?.useFirstChannelTransform != true ||
+                !layer.TryGetFirstAuthoredChannel(out TexturePaintChannel masterChannel)) return;
+
+            TexturePaintChannelSourceSettings master =
+                layer.GetChannelSettings(masterChannel, false)?.sourceSettings;
+            if (master == null && masterChannel == layer.fillChannel)
+                master = ChannelSourceFromFill(layer.fillSettings);
+            if (master == null) return;
+
+            foreach (TexturePaintChannel channel in layer.channels.Keys)
+            {
+                TexturePaintLayerChannelSettings settings = layer.GetChannelSettings(channel);
+                if (settings.sourceSettings == null) continue;
+                settings.sourceSettings.tiling = master.tiling;
+                settings.sourceSettings.offset = master.offset;
+                settings.sourceSettings.rotation = master.rotation;
+            }
+
+            int revision = layer.fillSettings.generatorRevision;
+            layer.fillSettings = FillFromChannelSource(master);
+            layer.fillSettings.useFirstChannelTransform = true;
+            layer.fillSettings.generatorRevision = revision;
+            layer.fillChannel = masterChannel;
+            layer.fillColor = master.color;
+        }
+
+        private static TexturePaintChannelSourceSettings ChannelSourceFromFill(
+            TexturePaintFillSettings settings)
+        {
+            return new TexturePaintChannelSourceSettings
+            {
+                source = settings.source,
+                sourceTexture = settings.sourceTexture,
+                sourceSprite = settings.sourceSprite,
+                sourceOverlay = settings.sourceOverlay,
+                color = settings.color,
+                normalConvention = settings.normalConvention,
+                invert = settings.invert,
+                tiling = settings.tiling,
+                offset = settings.offset,
+                rotation = settings.rotation,
+                projection = settings.projection,
+                triplanarBlend = settings.triplanarBlend,
+                blendOffset = settings.blendOffset,
+                blendSharpness = settings.blendSharpness
+            };
+        }
+
+        private static TexturePaintFillSettings FillFromChannelSource(
+            TexturePaintChannelSourceSettings source)
+        {
+            return new TexturePaintFillSettings
+            {
+                source = source.source,
+                sourceTexture = source.sourceTexture,
+                sourceSprite = source.sourceSprite,
+                sourceOverlay = source.sourceOverlay,
+                color = source.color,
+                normalConvention = source.normalConvention,
+                invert = source.invert,
+                tiling = source.tiling,
+                offset = source.offset,
+                rotation = source.rotation,
+                projection = source.projection,
+                triplanarBlend = source.triplanarBlend,
+                blendOffset = source.blendOffset,
+                blendSharpness = source.blendSharpness
+            };
         }
 
         internal Texture ResolveFillSource(TexturePaintFillSettings settings, TexturePaintChannel channel)
         {
             if (settings == null) return null;
-            if (settings.source == TexturePaintBrushSource.Texture) return settings.sourceTexture;
+            if (settings.source == TexturePaintBrushSource.Texture)
+                return TexturePaintSpriteSource.Resolve(settings.sourceTexture, settings.sourceSprite,
+                    channel, settings.normalConvention, settings.invert);
             if (settings.source != TexturePaintBrushSource.Overlay || settings.sourceOverlay == null) return null;
             for (int i = 0; i < sources.Count; i++)
             {
                 TextureSourceBinding binding = sources[i];
                 if (binding?.overlay?.asset != settings.sourceOverlay) continue;
-                if (binding.textures.TryGetValue(channel, out Texture texture)) return texture;
+                if (binding.textures.TryGetValue(channel, out Texture texture))
+                    return TexturePaintSpriteSource.ResolveTexture(texture, channel,
+                        settings.normalConvention, settings.invert);
             }
             return null;
         }
@@ -512,7 +762,7 @@ namespace UMA.TexturePaint
 
         public TexturePaintLayer AddGroup(string layerName)
         {
-            TexturePaintLayer group = AddLayer(layerName);
+            TexturePaintLayer group = AddLayer(layerName, true);
             group.kind = TexturePaintLayerKind.Group;
             return group;
         }
@@ -530,24 +780,164 @@ namespace UMA.TexturePaint
         {
             if ((uint)fromIndex >= (uint)layers.Count || (uint)toIndex >= (uint)layers.Count || fromIndex == toIndex)
                 return false;
+            NormalizeLayerHierarchy();
             TexturePaintLayer activeLayer = (uint)activeLayerIndex < (uint)layers.Count ? layers[activeLayerIndex] : null;
             TexturePaintLayer movedLayer = layers[fromIndex];
-            layers.RemoveAt(fromIndex);
-            layers.Insert(toIndex, movedLayer);
+            List<TexturePaintLayer> block = GetSubtree(movedLayer);
+            if (block.Count > 1)
+            {
+                if (block.Contains(layers[toIndex])) return false;
+                for (int i = 0; i < block.Count; i++) layers.Remove(block[i]);
+                int insertion = Mathf.Clamp(toIndex - block.Count + 1, 0, layers.Count);
+                layers.InsertRange(insertion, block);
+            }
+            else
+            {
+                layers.RemoveAt(fromIndex);
+                layers.Insert(Mathf.Clamp(toIndex, 0, layers.Count), movedLayer);
+            }
+            NormalizeLayerHierarchy();
             activeLayerIndex = activeLayer != null ? layers.IndexOf(activeLayer) : -1;
             BindPreviewTextures();
             return true;
+        }
+
+        /// <summary>
+        /// Restores the layer-list invariant used by both the UI and compositor: every group's
+        /// children occupy one contiguous block immediately before the group in bottom-to-top
+        /// storage order. Root layers found inside a saved child block are moved above the group.
+        /// </summary>
+        public bool NormalizeLayerHierarchy()
+        {
+            if (layers.Count == 0) return false;
+            TexturePaintLayer activeLayer = (uint)activeLayerIndex < (uint)layers.Count
+                ? layers[activeLayerIndex] : null;
+            var groupsById = new Dictionary<string, TexturePaintLayer>(StringComparer.Ordinal);
+            for (int i = 0; i < layers.Count; i++)
+            {
+                TexturePaintLayer candidate = layers[i];
+                if (candidate?.kind == TexturePaintLayerKind.Group && !string.IsNullOrEmpty(candidate.id))
+                    groupsById[candidate.id] = candidate;
+            }
+
+            bool changed = false;
+            var childrenByGroup = new Dictionary<TexturePaintLayer, List<TexturePaintLayer>>();
+            for (int i = 0; i < layers.Count; i++)
+            {
+                TexturePaintLayer candidate = layers[i];
+                if (candidate == null || string.IsNullOrEmpty(candidate.parentId)) continue;
+                if (string.Equals(candidate.id, candidate.parentId, StringComparison.Ordinal) ||
+                    (groupsById.TryGetValue(candidate.parentId, out TexturePaintLayer knownParent) &&
+                     WouldCreateHierarchyCycle(candidate, knownParent, groupsById)))
+                {
+                    candidate.parentId = null;
+                    changed = true;
+                    continue;
+                }
+                // A document restore can materialize children before their group. Keep an
+                // unresolved id intact until the final bind instead of silently ungrouping an
+                // otherwise valid child midway through reconstruction.
+                if (!groupsById.TryGetValue(candidate.parentId, out TexturePaintLayer parent))
+                    continue;
+                if (!childrenByGroup.TryGetValue(parent, out List<TexturePaintLayer> children))
+                {
+                    children = new List<TexturePaintLayer>();
+                    childrenByGroup.Add(parent, children);
+                }
+                children.Add(candidate);
+            }
+
+            var ordered = new List<TexturePaintLayer>(layers.Count);
+            var emitted = new HashSet<TexturePaintLayer>();
+            for (int i = 0; i < layers.Count; i++)
+            {
+                TexturePaintLayer candidate = layers[i];
+                if (candidate == null || emitted.Contains(candidate)) continue;
+                if (!string.IsNullOrEmpty(candidate.parentId) &&
+                    groupsById.TryGetValue(candidate.parentId, out TexturePaintLayer parent))
+                {
+                    TexturePaintLayer root = parent;
+                    int guard = 0;
+                    while (!string.IsNullOrEmpty(root.parentId) && guard++ < layers.Count &&
+                        groupsById.TryGetValue(root.parentId, out TexturePaintLayer ancestor))
+                        root = ancestor;
+                    EmitHierarchy(root, childrenByGroup, emitted, ordered);
+                }
+                else EmitHierarchy(candidate, childrenByGroup, emitted, ordered);
+            }
+            for (int i = 0; i < layers.Count; i++)
+                EmitHierarchy(layers[i], childrenByGroup, emitted, ordered);
+
+            if (!changed)
+                for (int i = 0; i < layers.Count; i++)
+                    if (!ReferenceEquals(layers[i], ordered[i])) { changed = true; break; }
+            if (!changed) return false;
+            layers.Clear();
+            layers.AddRange(ordered);
+            activeLayerIndex = activeLayer != null ? layers.IndexOf(activeLayer) : -1;
+            return true;
+        }
+
+        private static bool WouldCreateHierarchyCycle(TexturePaintLayer child,
+            TexturePaintLayer parent, Dictionary<string, TexturePaintLayer> groupsById)
+        {
+            var visited = new HashSet<string>(StringComparer.Ordinal) { child.id };
+            TexturePaintLayer cursor = parent;
+            while (cursor != null)
+            {
+                if (string.IsNullOrEmpty(cursor.id) || !visited.Add(cursor.id)) return true;
+                if (string.IsNullOrEmpty(cursor.parentId) ||
+                    !groupsById.TryGetValue(cursor.parentId, out cursor)) return false;
+            }
+            return false;
+        }
+
+        private static void EmitHierarchy(TexturePaintLayer layer,
+            Dictionary<TexturePaintLayer, List<TexturePaintLayer>> childrenByGroup,
+            HashSet<TexturePaintLayer> emitted, List<TexturePaintLayer> ordered)
+        {
+            if (layer == null || emitted.Contains(layer)) return;
+            if (childrenByGroup.TryGetValue(layer, out List<TexturePaintLayer> children))
+                for (int i = 0; i < children.Count; i++)
+                    EmitHierarchy(children[i], childrenByGroup, emitted, ordered);
+            if (emitted.Add(layer)) ordered.Add(layer);
+        }
+
+        private List<TexturePaintLayer> GetSubtree(TexturePaintLayer root)
+        {
+            var ids = new HashSet<string>(StringComparer.Ordinal);
+            if (root?.kind == TexturePaintLayerKind.Group && !string.IsNullOrEmpty(root.id))
+                ids.Add(root.id);
+            bool expanded;
+            do
+            {
+                expanded = false;
+                for (int i = 0; i < layers.Count; i++)
+                {
+                    TexturePaintLayer candidate = layers[i];
+                    if (candidate == null || string.IsNullOrEmpty(candidate.parentId) ||
+                        !ids.Contains(candidate.parentId) || string.IsNullOrEmpty(candidate.id) ||
+                        !ids.Add(candidate.id)) continue;
+                    expanded = true;
+                }
+            } while (expanded);
+            var result = new List<TexturePaintLayer>();
+            for (int i = 0; i < layers.Count; i++)
+                if (ReferenceEquals(layers[i], root) || ids.Contains(layers[i]?.parentId ?? string.Empty) ||
+                    (!string.IsNullOrEmpty(layers[i]?.id) && ids.Contains(layers[i].id)))
+                    result.Add(layers[i]);
+            return result;
         }
 
         public bool RemoveLayerAt(int layerIndex)
         {
             if ((uint)layerIndex >= (uint)layers.Count) return false;
             TexturePaintLayer removed = layers[layerIndex];
-            layers.RemoveAt(layerIndex);
-            removed.Dispose();
+            List<TexturePaintLayer> removedLayers = GetSubtree(removed);
+            for (int i = 0; i < removedLayers.Count; i++) layers.Remove(removedLayers[i]);
+            for (int i = 0; i < removedLayers.Count; i++) removedLayers[i].Dispose();
             if (layers.Count == 0) activeLayerIndex = -1;
-            else if (activeLayerIndex == layerIndex) activeLayerIndex = Mathf.Min(layerIndex, layers.Count - 1);
-            else if (activeLayerIndex > layerIndex) activeLayerIndex--;
+            else activeLayerIndex = Mathf.Clamp(layerIndex - removedLayers.Count + 1, 0, layers.Count - 1);
             BindPreviewTextures();
             return true;
         }
@@ -556,11 +946,28 @@ namespace UMA.TexturePaint
         {
             if ((uint)layerIndex >= (uint)layers.Count) return null;
             TexturePaintLayer source = layers[layerIndex];
-            TexturePaintLayer copy = CloneLayer(source, source.name + " Copy", false);
-            layers.Insert(layerIndex + 1, copy);
-            activeLayerIndex = layerIndex + 1;
+            List<TexturePaintLayer> sourceBlock = GetSubtree(source);
+            var idMap = new Dictionary<string, string>(StringComparer.Ordinal);
+            var copies = new List<TexturePaintLayer>(sourceBlock.Count);
+            for (int i = 0; i < sourceBlock.Count; i++)
+            {
+                TexturePaintLayer original = sourceBlock[i];
+                TexturePaintLayer copy = CloneLayer(original,
+                    ReferenceEquals(original, source) ? source.name + " Copy" : original.name, false);
+                if (!string.IsNullOrEmpty(original.id)) idMap[original.id] = copy.id;
+                copies.Add(copy);
+            }
+            for (int i = 0; i < copies.Count; i++)
+                if (!string.IsNullOrEmpty(copies[i].parentId) &&
+                    idMap.TryGetValue(copies[i].parentId, out string copyParent))
+                    copies[i].parentId = copyParent;
+            int insertionIndex = layers.IndexOf(source) + 1;
+            layers.InsertRange(insertionIndex, copies);
+            TexturePaintLayer rootCopy = copies[sourceBlock.IndexOf(source)];
+            activeLayerIndex = layers.IndexOf(rootCopy);
+            NormalizeLayerHierarchy();
             BindPreviewTextures();
-            return copy;
+            return rootCopy;
         }
 
         /// <summary>
@@ -594,7 +1001,9 @@ namespace UMA.TexturePaint
                 pluginId = source.pluginId,
                 pluginVersion = source.pluginVersion,
                 pluginParametersJson = source.pluginParametersJson,
-                proceduralGroupKey = source.proceduralGroupKey
+                // A duplicate is independent. Sharing the procedural ownership key lets deleting
+                // either copy delete the other copy's generated peers.
+                proceduralGroupKey = preserveIdentity ? source.proceduralGroupKey : null
             };
             copy.NormalizeKindPayload();
             foreach (KeyValuePair<TexturePaintChannel, EditableTextureTarget> pair in source.channels)
@@ -606,8 +1015,22 @@ namespace UMA.TexturePaint
                 TexturePaintLayerChannelSettings settings = source.GetChannelSettings(pair.Key, false);
                 if (settings != null) copy.channelSettings[pair.Key] = settings.Clone();
             }
-            for (int i = 0; i < source.masks.Count; i++)
-                copy.masks.Add(JsonUtility.FromJson<TexturePaintMask>(JsonUtility.ToJson(source.masks[i])));
+            if (source.layerMask?.target?.Front != null)
+            {
+                copy.layerMask = new TexturePaintLayerMask
+                {
+                    baseValue = source.layerMask.baseValue,
+                    effects = source.layerMask.effects?.Clone() ?? new TexturePaintLayerMaskEffects(),
+                    sourceSettings = source.layerMask.sourceSettings?.Clone() ??
+                        TexturePaintLayerMask.DefaultSourceSettings(),
+                    sourceChannel = source.layerMask.sourceChannel,
+                    target = new EditableTextureTarget(copy.name + " Layer Mask",
+                        source.layerMask.target.Width, source.layerMask.target.Height,
+                        RenderTextureFormat.ARGB32, source.layerMask.target.Front,
+                        MaskColor(source.layerMask.baseValue))
+                };
+                copy.layerMask.NormalizePaintSource();
+            }
             for (int i = 0; i < source.strokes.Count; i++)
                 copy.strokes.Add(JsonUtility.FromJson<TexturePaintStrokeRecord>(JsonUtility.ToJson(source.strokes[i])));
             return copy;
@@ -619,34 +1042,60 @@ namespace UMA.TexturePaint
         /// </summary>
         public TexturePaintLayer CreateMergedLayer(int upperLayerIndex)
         {
-            if (upperLayerIndex <= 0 || upperLayerIndex >= layers.Count || compositor == null) return null;
+            if (!CanMergeLayerDown(upperLayerIndex, out _)) return null;
             TexturePaintLayer upper = layers[upperLayerIndex];
             TexturePaintLayer lower = layers[upperLayerIndex - 1];
             if (upper.kind == TexturePaintLayerKind.Group || lower.kind == TexturePaintLayerKind.Group) return null;
-            TexturePaintLayer merged = CloneLayer(lower, lower.name + " + " + upper.name, true);
-            foreach (KeyValuePair<TexturePaintChannel, EditableTextureTarget> pair in upper.channels)
+            TexturePaintLayer merged = new TexturePaintLayer
             {
-                TextureChannelTarget baseChannel = GetChannel(pair.Key);
+                id = lower.id,
+                logicalLayerId = lower.logicalLayerId,
+                paintTargetId = lower.paintTargetId,
+                parentId = lower.parentId,
+                name = lower.name + " + " + upper.name,
+                kind = TexturePaintLayerKind.Paint,
+                visible = true,
+                opacity = 1f,
+                blendMode = TexturePaintBlendMode.Normal,
+                effects = new TexturePaintLayerEffects()
+            };
+            HashSet<TexturePaintChannel> mergedChannels = new HashSet<TexturePaintChannel>(lower.channels.Keys);
+            mergedChannels.UnionWith(upper.channels.Keys);
+            foreach (TexturePaintChannel channel in mergedChannels)
+            {
+                TextureChannelTarget baseChannel = GetChannel(channel);
                 if (baseChannel == null) continue;
-                if (!merged.channels.TryGetValue(pair.Key, out EditableTextureTarget mergedTarget))
+                EditableTextureTarget mergedTarget = new EditableTextureTarget(merged.name + " " + channel,
+                    baseChannel.editable.Width, baseChannel.editable.Height, baseChannel.format, null, Color.clear);
+                merged.channels[channel] = mergedTarget;
+                if (lower.visible && lower.channels.TryGetValue(channel, out EditableTextureTarget lowerTarget))
                 {
-                    mergedTarget = new EditableTextureTarget(merged.name + " " + pair.Key, pair.Value.Width,
-                        pair.Value.Height, baseChannel.format, null, Color.clear);
-                    merged.channels[pair.Key] = mergedTarget;
+                    TexturePaintLayerChannelSettings lowerSettings = lower.GetChannelSettings(channel, false);
+                    if (lowerSettings == null || lowerSettings.enabled)
+                    {
+                        float opacity = lower.opacity * (lowerSettings != null ? lowerSettings.opacity : 1f);
+                        TexturePaintBlendMode blend = lowerSettings != null ? lowerSettings.blendMode : lower.blendMode;
+                        if (!compositor.CompositeLayerInto(mergedTarget.Front, this, lower, lowerTarget,
+                            channel, opacity, blend)) { merged.Dispose(); return null; }
+                    }
                 }
-                TexturePaintLayerChannelSettings upperSettings = upper.GetChannelSettings(pair.Key, false);
-                float upperOpacity = upper.opacity * (upperSettings != null ? upperSettings.opacity : 1f);
-                TexturePaintBlendMode upperBlend = upperSettings != null ? upperSettings.blendMode : upper.blendMode;
-                if (!compositor.CompositeLayerInto(mergedTarget.Front, this, upper, pair.Value,
-                    pair.Key, upperOpacity, upperBlend))
+                if (upper.visible && upper.channels.TryGetValue(channel, out EditableTextureTarget upperTarget))
                 {
-                    merged.Dispose();
-                    return null;
+                    TexturePaintLayerChannelSettings upperSettings = upper.GetChannelSettings(channel, false);
+                    if (upperSettings == null || upperSettings.enabled)
+                    {
+                        float opacity = upper.opacity * (upperSettings != null ? upperSettings.opacity : 1f);
+                        TexturePaintBlendMode blend = upperSettings != null ? upperSettings.blendMode : upper.blendMode;
+                        if (!compositor.CompositeLayerInto(mergedTarget.Front, this, upper, upperTarget,
+                            channel, opacity, blend)) { merged.Dispose(); return null; }
+                    }
                 }
+                if (!compositor.UnassociateAlpha(mergedTarget.Front))
+                { merged.Dispose(); return null; }
                 mergedTarget.CopyFrontToBack();
-                merged.channelSettings[pair.Key] = new TexturePaintLayerChannelSettings
+                merged.channelSettings[channel] = new TexturePaintLayerChannelSettings
                 {
-                    channel = pair.Key,
+                    channel = channel,
                     enabled = true,
                     opacity = 1f,
                     blendMode = TexturePaintBlendMode.Normal
@@ -657,40 +1106,48 @@ namespace UMA.TexturePaint
             return merged;
         }
 
+        public bool CanMergeLayerDown(int upperLayerIndex, out string reason)
+        {
+            reason = null;
+            if (upperLayerIndex <= 0 || upperLayerIndex >= layers.Count || compositor == null)
+            { reason = "There is no adjacent layer below to merge."; return false; }
+            TexturePaintLayer upper = layers[upperLayerIndex];
+            TexturePaintLayer lower = layers[upperLayerIndex - 1];
+            if (upper?.kind == TexturePaintLayerKind.Group || lower?.kind == TexturePaintLayerKind.Group)
+            { reason = "Groups cannot be merged down."; return false; }
+            if (!string.Equals(upper?.parentId, lower?.parentId, StringComparison.Ordinal))
+            { reason = "Layers must be siblings in the same group to merge."; return false; }
+            if (!UsesOnlyNormalBlend(upper) || !UsesOnlyNormalBlend(lower))
+            {
+                reason = "Merge Down is only exact for Normal layer/channel blends. " +
+                    "Change both layers to Normal before merging.";
+                return false;
+            }
+            return true;
+        }
+
+        private static bool UsesOnlyNormalBlend(TexturePaintLayer layer)
+        {
+            if (layer == null || layer.blendMode != TexturePaintBlendMode.Normal) return false;
+            foreach (KeyValuePair<TexturePaintChannel, EditableTextureTarget> channel in layer.channels)
+            {
+                TexturePaintLayerChannelSettings settings = layer.GetChannelSettings(channel.Key, false);
+                if (settings != null && settings.blendMode != TexturePaintBlendMode.Normal) return false;
+            }
+            return true;
+        }
+
         public bool MergeLayerDown(int layerIndex)
         {
             if (layerIndex <= 0 || layerIndex >= layers.Count || compositor == null) return false;
             TexturePaintLayer upper = layers[layerIndex];
             TexturePaintLayer lower = layers[layerIndex - 1];
             if (upper.kind == TexturePaintLayerKind.Group || lower.kind == TexturePaintLayerKind.Group) return false;
-            foreach (KeyValuePair<TexturePaintChannel, EditableTextureTarget> pair in upper.channels)
-            {
-                TextureChannelTarget baseChannel = GetChannel(pair.Key);
-                if (baseChannel == null) continue;
-                if (!lower.channels.TryGetValue(pair.Key, out EditableTextureTarget lowerTarget))
-                {
-                    lowerTarget = new EditableTextureTarget(lower.name + " " + pair.Key, pair.Value.Width, pair.Value.Height,
-                        baseChannel.format, null, Color.clear);
-                    lower.channels[pair.Key] = lowerTarget;
-                }
-                TexturePaintLayerChannelSettings upperSettings = upper.GetChannelSettings(pair.Key, false);
-                float upperOpacity = upper.opacity * (upperSettings != null ? upperSettings.opacity : 1f);
-                TexturePaintBlendMode upperBlend = upperSettings != null ? upperSettings.blendMode : upper.blendMode;
-                if (!compositor.CompositeLayerInto(lowerTarget.Front, this, upper, pair.Value,
-                    pair.Key, upperOpacity, upperBlend)) return false;
-                lowerTarget.CopyFrontToBack();
-                lower.channelSettings[pair.Key] = new TexturePaintLayerChannelSettings
-                {
-                    channel = pair.Key,
-                    enabled = true,
-                    opacity = 1f,
-                    blendMode = TexturePaintBlendMode.Normal
-                };
-            }
-            lower.opacity = 1f;
-            lower.blendMode = TexturePaintBlendMode.Normal;
-            lower.name = lower.name + " + " + upper.name;
+            TexturePaintLayer merged = CreateMergedLayer(layerIndex);
+            if (merged == null) return false;
+            layers[layerIndex - 1] = merged;
             layers.RemoveAt(layerIndex);
+            lower.Dispose();
             upper.Dispose();
             activeLayerIndex = layerIndex - 1;
             BindPreviewTextures();
@@ -729,17 +1186,18 @@ namespace UMA.TexturePaint
             foreach (var pair in source.textures)
             {
                 if (!channels.TryGetValue(pair.Key, out TextureChannelTarget channel)) continue;
-                channel.sourceTexture = pair.Value;
-                channel.editable.Reset(pair.Value, DefaultColor(pair.Key));
+                channel.ResetToSource(pair.Value);
             }
             return true;
         }
 
         public void BindPreviewTextures(bool recompose = true, RectInt dirtyRect = default)
         {
+            NormalizeLayerHierarchy();
             RefreshOutdatedFillLayers();
             if (recompose) RecomposeAll();
             PackPhysicalChannels(dirtyRect);
+            compositeRevision++;
             // Composite and packed textures are also consumed by the 2D view and export. They must
             // be refreshed even when a reconstructed surface has no preview material (notably
             // standalone/test data); only the final material binding depends on this object.
@@ -748,10 +1206,39 @@ namespace UMA.TexturePaint
             {
                 if (!string.IsNullOrEmpty(target.physicalProperty)) continue;
                 if (!string.IsNullOrEmpty(target.materialProperty) && previewMaterial.HasProperty(target.materialProperty))
+                {
                     previewMaterial.SetTexture(target.materialProperty, target.PreviewTexture);
+                    EnablePreviewTextureKeyword(previewMaterial, target.materialProperty);
+                }
             }
             foreach (TexturePhysicalChannelGroup group in physicalChannelGroups.Values)
-                if (previewMaterial.HasProperty(group.materialProperty)) previewMaterial.SetTexture(group.materialProperty, group.packed);
+                if (previewMaterial.HasProperty(group.materialProperty))
+                {
+                    previewMaterial.SetTexture(group.materialProperty, group.packed);
+                    EnablePreviewTextureKeyword(previewMaterial, group.materialProperty);
+                }
+        }
+
+        private static void EnablePreviewTextureKeyword(Material material, string property)
+        {
+            if (material == null || string.IsNullOrEmpty(property)) return;
+            if (string.Equals(property, "_MetallicGlossMap", StringComparison.OrdinalIgnoreCase))
+            {
+                material.EnableKeyword("_METALLICSPECGLOSSMAP");
+                material.EnableKeyword("_METALLICGLOSSMAP");
+            }
+            else if (string.Equals(property, "_SpecGlossMap", StringComparison.OrdinalIgnoreCase))
+            {
+                material.EnableKeyword("_METALLICSPECGLOSSMAP");
+                material.EnableKeyword("_SPECGLOSSMAP");
+            }
+            else if (string.Equals(property, "_MaskMap", StringComparison.OrdinalIgnoreCase))
+                material.EnableKeyword("_MASKMAP");
+            else if (string.Equals(property, "_BumpMap", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(property, "_NormalMap", StringComparison.OrdinalIgnoreCase))
+                material.EnableKeyword("_NORMALMAP");
+            else if (string.Equals(property, "_EmissionMap", StringComparison.OrdinalIgnoreCase))
+                material.EnableKeyword("_EMISSION");
         }
 
         private void RefreshOutdatedFillLayers()
@@ -817,8 +1304,45 @@ namespace UMA.TexturePaint
             return target?.PreviewTexture;
         }
 
+        public RenderTexture GetSelectedGroupPreview(TexturePaintChannel channel)
+        {
+            if ((uint)activeLayerIndex >= (uint)layers.Count) return null;
+            TexturePaintLayer group = layers[activeLayerIndex];
+            if (group?.kind != TexturePaintLayerKind.Group || compositor == null) return null;
+            TextureChannelTarget target = GetChannel(channel);
+            if (target?.editable?.Front == null) return null;
+            if (selectedGroupPreview == null || selectedGroupPreview.width != target.editable.Width ||
+                selectedGroupPreview.height != target.editable.Height || selectedGroupPreview.format != target.format)
+            {
+                DestroyPreview(selectedGroupPreview);
+                selectedGroupPreview = EditableTextureTarget.Create(
+                    Name + " Selected Group " + channel, target.editable.Width,
+                    target.editable.Height, target.format);
+                selectedGroupPreviewRevision = -1;
+            }
+            if (selectedGroupPreviewRevision != compositeRevision ||
+                !string.Equals(selectedGroupPreviewId, group.id, StringComparison.Ordinal) ||
+                selectedGroupPreviewChannel != channel)
+            {
+                compositor.ComposeGroupPreview(this, group, channel, selectedGroupPreview);
+                selectedGroupPreviewId = group.id;
+                selectedGroupPreviewChannel = channel;
+                selectedGroupPreviewRevision = compositeRevision;
+            }
+            return selectedGroupPreview;
+        }
+
+        public Texture GetLayerMaskPreview(TexturePaintLayer layer)
+        {
+            TexturePaintLayerMask mask = layer?.layerMask;
+            if (mask?.target?.Front == null) return null;
+            return compositor?.GetEffectiveLayerMask(layer, mask.target.Width, mask.target.Height) ??
+                mask.target.Front;
+        }
+
         public void CompositeChannel(TexturePaintChannel channel, RectInt rect = default)
         {
+            NormalizeLayerHierarchy();
             compositor?.Compose(this, channel, rect);
         }
 
@@ -838,7 +1362,7 @@ namespace UMA.TexturePaint
             activeLayerIndex = -1;
             baseStrokes.Clear();
             foreach (TextureChannelTarget channel in channels.Values)
-                channel?.editable?.Reset(channel.sourceTexture, DefaultColor(channel.channel));
+                channel?.ResetToSource(channel.sourceTexture);
             BindPreviewTextures();
         }
 
@@ -847,10 +1371,21 @@ namespace UMA.TexturePaint
             foreach (TextureChannelTarget target in channels.Values) target.Dispose();
             foreach (TexturePhysicalChannelGroup group in physicalChannelGroups.Values) group.Dispose();
             for (int i = 0; i < layers.Count; i++) layers[i].Dispose();
+            DestroyPreview(selectedGroupPreview);
+            selectedGroupPreview = null;
             tangentSpaceMaps?.Dispose();
             proceduralMeshMaps?.Dispose();
             channels.Clear(); physicalChannelGroups.Clear(); layers.Clear(); sources.Clear(); baseStrokes.Clear();
             tangentSpaceMaps = null; proceduralMeshMaps = null;
+        }
+
+        private static void DestroyPreview(RenderTexture texture)
+        {
+            if (texture == null) return;
+            if (RenderTexture.active == texture) RenderTexture.active = null;
+            texture.Release();
+            if (Application.isPlaying) UnityEngine.Object.Destroy(texture);
+            else UnityEngine.Object.DestroyImmediate(texture);
         }
 
         internal static Color DefaultColor(TexturePaintChannel channel)
@@ -1182,9 +1717,20 @@ namespace UMA.TexturePaint
             layer.channelSettings.Clear();
             foreach (KeyValuePair<TexturePaintChannel, TexturePaintLayerChannelSettings> pair in template.channelSettings)
                 if (set.GetChannel(pair.Key) != null) layer.channelSettings[pair.Key] = pair.Value.Clone();
-            layer.masks.Clear();
-            for (int i = 0; i < template.masks.Count; i++)
-                layer.masks.Add(JsonUtility.FromJson<TexturePaintMask>(JsonUtility.ToJson(template.masks[i])));
+            if (template.layerMask?.target?.Front != null)
+            {
+                TexturePaintLayerMask mask = set.AddLayerMask(layer, template.layerMask.baseValue);
+                if (mask != null)
+                {
+                    mask.effects = template.layerMask.effects?.Clone() ?? new TexturePaintLayerMaskEffects();
+                    mask.sourceSettings = template.layerMask.sourceSettings?.Clone() ??
+                        TexturePaintLayerMask.DefaultSourceSettings();
+                    mask.sourceChannel = template.layerMask.sourceChannel;
+                    mask.NormalizePaintSource();
+                    mask.target.Reset(template.layerMask.target.Front,
+                        TextureSet.MaskColor(template.layerMask.baseValue));
+                }
+            }
             set.BindPreviewTextures();
             return layer;
         }
@@ -1281,13 +1827,12 @@ namespace UMA.TexturePaint
                 for (int channelIndex = 0; channelIndex < surface.umaMaterial.channels.Length; channelIndex++)
                 {
                     UMAMaterial.MaterialChannel declared = surface.umaMaterial.channels[channelIndex];
-                    declaredSources[channelIndex] = surface.standaloneSourceTextures != null &&
-                                                    channelIndex < surface.standaloneSourceTextures.Length
-                        ? surface.standaloneSourceTextures[channelIndex]
-                        : generated?.resultingAtlasList != null &&
-                                                    channelIndex < generated.resultingAtlasList.Length
-                        ? generated.resultingAtlasList[channelIndex]
-                        : GetMaterialTexture(surface.previewMaterial, declared.materialPropertyName);
+                    declaredSources[channelIndex] = surface.sourceTextures != null &&
+                                                    channelIndex < surface.sourceTextures.Length
+                        ? surface.sourceTextures[channelIndex]
+                        : generated == null
+                            ? GetMaterialTexture(surface.previewMaterial, declared.materialPropertyName)
+                            : null;
                 }
                 set.materialCapability = TexturePaintMaterialCapabilityService.Compile(surface.umaMaterial,
                     surface.previewMaterial, declaredSources, surface.allowMissingSourceTextures);
@@ -1296,22 +1841,34 @@ namespace UMA.TexturePaint
                 {
                     UMAMaterial.MaterialChannel umaChannel = surface.umaMaterial.channels[channelIndex];
                     string property = umaChannel.materialPropertyName;
+                    TexturePaintNormalConvention sourceNormalConvention = TexturePaintNormalConvention.OpenGL;
 #if UNITY_EDITOR
                     Texture source = declaredSources[channelIndex];
+                    TexturePaintMaterialChannelCapability channelCapability =
+                        set.materialCapability.GetChannel(channelIndex);
+                    if (channelCapability != null && channelCapability.output.normalConvention ==
+                        UMAMaterial.TextureChannelNormalConvention.DirectX)
+                    {
+                        sourceNormalConvention = TexturePaintNormalConvention.DirectX;
+                    }
 #else
-                    Texture source = generated?.resultingAtlasList != null && channelIndex < generated.resultingAtlasList.Length
-                        ? generated.resultingAtlasList[channelIndex]
-                        : GetMaterialTexture(surface.previewMaterial, property);
+                    Texture source = surface.sourceTextures != null && channelIndex < surface.sourceTextures.Length
+                        ? surface.sourceTextures[channelIndex]
+                        : generated == null ? GetMaterialTexture(surface.previewMaterial, property) : null;
 #endif
+                    bool sourceNormalIsUnityPacked = surface.sourceNormalIsUnityPacked != null &&
+                        channelIndex < surface.sourceNormalIsUnityPacked.Length &&
+                        surface.sourceNormalIsUnityPacked[channelIndex];
 #if UNITY_EDITOR
                     if (TryAddMaterialChannelFromLayout(set, umaChannel, channelIndex, source,
-                        set.materialCapability.GetChannel(channelIndex)))
+                        channelCapability, sourceNormalConvention, sourceNormalIsUnityPacked))
                     {
                         continue;
                     }
 #endif
                     AddChannel(set, ResolveChannel(property, umaChannel.channelType), property, umaChannel.sourceTextureName,
-                        channelIndex, source, umaChannel.textureFormat);
+                        channelIndex, source, umaChannel.textureFormat, sourceNormalConvention,
+                        sourceNormalIsUnityPacked);
                 }
             }
             else
@@ -1341,7 +1898,8 @@ namespace UMA.TexturePaint
         }
 
         private bool TryAddMaterialChannelFromLayout(TextureSet set, UMAMaterial.MaterialChannel umaChannel,
-            int channelIndex, Texture source, TexturePaintMaterialChannelCapability capability)
+            int channelIndex, Texture source, TexturePaintMaterialChannelCapability capability,
+            TexturePaintNormalConvention sourceNormalConvention, bool sourceNormalIsUnityPacked)
         {
             UMAMaterial.TextureChannelLayout layout = capability != null ? capability.layout :
                 UMAMaterial.GetTextureChannelLayout(umaChannel, set.previewMaterial);
@@ -1404,7 +1962,8 @@ namespace UMA.TexturePaint
                     if (CanUseDirectTexture(pair.Key, pair.Value))
                     {
                         AddChannel(set, pair.Key, umaChannel.materialPropertyName, umaChannel.sourceTextureName,
-                            channelIndex, source, umaChannel.textureFormat);
+                            channelIndex, source, umaChannel.textureFormat, sourceNormalConvention,
+                            sourceNormalIsUnityPacked);
                         return true;
                     }
                 }
@@ -1447,7 +2006,8 @@ namespace UMA.TexturePaint
                     }
 
                     AddChannel(set, pair.Key, property, umaChannel.sourceTextureName, channelIndex,
-                        initial, umaChannel.textureFormat);
+                        initial, umaChannel.textureFormat, sourceNormalConvention,
+                        sourceNormalIsUnityPacked);
                     target = set.GetChannel(pair.Key);
                     DestroyTemporary(extracted);
                 }
@@ -1613,7 +2173,9 @@ namespace UMA.TexturePaint
         }
 
         private void AddChannel(TextureSet set, TexturePaintChannel semantic, string property, string keyword,
-            int umaIndex, Texture source, RenderTextureFormat requestedFormat)
+            int umaIndex, Texture source, RenderTextureFormat requestedFormat,
+            TexturePaintNormalConvention sourceNormalConvention = TexturePaintNormalConvention.OpenGL,
+            bool sourceNormalIsUnityPacked = false)
         {
             if (set.channels.ContainsKey(semantic)) return;
             int width = source != null ? source.width : DefaultResolution;
@@ -1621,6 +2183,15 @@ namespace UMA.TexturePaint
             width = Mathf.Clamp(width, 16, 4096); height = Mathf.Clamp(height, 16, 4096);
             bool sRGB = semantic == TexturePaintChannel.Albedo || semantic == TexturePaintChannel.Emission;
             RenderTextureFormat format = UMAMaterial.GetCompatibleChannelTextureFormat(requestedFormat);
+            // Unity normal-map assets are stored in a platform-dependent packed representation
+            // (for example X in alpha). The painter's working contract is always linear,
+            // OpenGL-style tangent-space RGB. Canonicalize material inputs at the same boundary
+            // already used by brush and sprite sources so compositing and export never preserve
+            // or re-import Unity's internal packing as authored RGB.
+            Texture editableSource = semantic == TexturePaintChannel.Normal
+                ? TexturePaintSpriteSource.ResolveTexture(source, semantic, sourceNormalConvention, false,
+                    sourceNormalIsUnityPacked)
+                : source;
             TextureChannelTarget target = new TextureChannelTarget
             {
                 channel = semantic,
@@ -1628,9 +2199,12 @@ namespace UMA.TexturePaint
                 sourceKeyword = keyword,
                 umaChannelIndex = umaIndex,
                 sourceTexture = source,
+                sourceNormalConvention = sourceNormalConvention,
+                sourceNormalIsUnityPacked = sourceNormalIsUnityPacked,
                 sRGB = sRGB,
                 format = format,
-                editable = new EditableTextureTarget(set.Name + " " + semantic, width, height, format, source, TextureSet.DefaultColor(semantic))
+                editable = new EditableTextureTarget(set.Name + " " + semantic, width, height, format,
+                    editableSource, TextureSet.DefaultColor(semantic))
             };
             target.composite = EditableTextureTarget.Create(set.Name + " " + semantic + " Composite", width, height, format);
             set.channels.Add(semantic, target);
@@ -1654,12 +2228,12 @@ namespace UMA.TexturePaint
 
         private static void BuildSourceBindings(TextureSet set, UMAData.GeneratedMaterial generated, ReconstructedSurface surface)
         {
-            TextureSourceBinding generatedBinding = new TextureSourceBinding { name = "Generated Material" };
-            foreach (var pair in set.channels) if (pair.Value.sourceTexture != null) generatedBinding.textures[pair.Key] = pair.Value.sourceTexture;
+            TextureSourceBinding reconstructedBinding = new TextureSourceBinding { name = "Reconstructed Overlay Stack" };
+            foreach (var pair in set.channels) if (pair.Value.sourceTexture != null) reconstructedBinding.textures[pair.Key] = pair.Value.sourceTexture;
             if (surface?.slotNames != null)
                 for (int slotIndex = 0; slotIndex < surface.slotNames.Count; slotIndex++)
-                    if (!string.IsNullOrEmpty(surface.slotNames[slotIndex])) generatedBinding.slotNames.Add(surface.slotNames[slotIndex]);
-            set.sources.Add(generatedBinding);
+                    if (!string.IsNullOrEmpty(surface.slotNames[slotIndex])) reconstructedBinding.slotNames.Add(surface.slotNames[slotIndex]);
+            set.sources.Add(reconstructedBinding);
             if (surface?.standaloneSourceOverlay != null)
             {
                 OverlayData standaloneOverlay = new OverlayData(surface.standaloneSourceOverlay);

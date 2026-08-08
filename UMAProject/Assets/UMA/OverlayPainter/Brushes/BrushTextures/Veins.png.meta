@@ -1,0 +1,511 @@
+fileFormatVersion: 2
+guid: 751df51516303a34b9beb893286adafe
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 0
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 2
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Veins_0
+      rect:
+        serializedVersion: 2
+        x: 1
+        y: 1537
+        width: 510
+        height: 510
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6492cd62fff60604fb68b971f4a27ad9
+      internalID: 50076373
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Veins_1
+      rect:
+        serializedVersion: 2
+        x: 513
+        y: 1537
+        width: 510
+        height: 510
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: eab3db8ba4955294a9ed739c63860b89
+      internalID: -388052280
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Veins_2
+      rect:
+        serializedVersion: 2
+        x: 1025
+        y: 1537
+        width: 510
+        height: 510
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: dc82b174ad955564c82ae57ca093be14
+      internalID: 571509845
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Veins_3
+      rect:
+        serializedVersion: 2
+        x: 1537
+        y: 1537
+        width: 510
+        height: 510
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: be74e71425747af47810e6b6b117e30e
+      internalID: 1916547229
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Veins_4
+      rect:
+        serializedVersion: 2
+        x: 1
+        y: 1025
+        width: 510
+        height: 510
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4f93def339d01ae4787dd712b747a9b7
+      internalID: 232508263
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Veins_5
+      rect:
+        serializedVersion: 2
+        x: 513
+        y: 1025
+        width: 510
+        height: 510
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ef0e232779bd182469a618024c86bed9
+      internalID: 545433835
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Veins_6
+      rect:
+        serializedVersion: 2
+        x: 1025
+        y: 1025
+        width: 510
+        height: 510
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a76e5f3a97decd14ba63b426e22bbc76
+      internalID: -1187907654
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Veins_7
+      rect:
+        serializedVersion: 2
+        x: 1537
+        y: 1025
+        width: 510
+        height: 510
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: acccf8852339d8f45b4259c7d9a4f94c
+      internalID: 390828124
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Veins_8
+      rect:
+        serializedVersion: 2
+        x: 1
+        y: 513
+        width: 510
+        height: 510
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 41c01d9bd033d2a40b5781f8899738fd
+      internalID: -475426151
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Veins_9
+      rect:
+        serializedVersion: 2
+        x: 513
+        y: 513
+        width: 510
+        height: 510
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a6f7b58f1ddc0df4bb9d3c4878f84cfc
+      internalID: 190719419
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Veins_10
+      rect:
+        serializedVersion: 2
+        x: 1025
+        y: 513
+        width: 510
+        height: 510
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 22ec26734b6bec443958c855a3b42a61
+      internalID: 1960453723
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Veins_11
+      rect:
+        serializedVersion: 2
+        x: 1537
+        y: 513
+        width: 510
+        height: 510
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 040987edb1bd3d4458097b9ebd84af10
+      internalID: 801089289
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Veins_12
+      rect:
+        serializedVersion: 2
+        x: 1
+        y: 1
+        width: 510
+        height: 510
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 60a7b779736b2024199ac6e08b4d85af
+      internalID: 1533013276
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Veins_13
+      rect:
+        serializedVersion: 2
+        x: 513
+        y: 1
+        width: 510
+        height: 510
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f13d798dd3103da4f9ab50f7856e8dd4
+      internalID: 1742789869
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Veins_14
+      rect:
+        serializedVersion: 2
+        x: 1025
+        y: 1
+        width: 510
+        height: 510
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 737e75c35cf8a3e4fb9df6abf394bf48
+      internalID: 1291836234
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Veins_15
+      rect:
+        serializedVersion: 2
+        x: 1537
+        y: 1
+        width: 510
+        height: 510
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4de1bce94094370468f9703bb22cb184
+      internalID: 1080920485
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 4b557c455aa7b8f498a999041be76f53
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Veins_0: 50076373
+      Veins_1: -388052280
+      Veins_10: 1960453723
+      Veins_11: 801089289
+      Veins_12: 1533013276
+      Veins_13: 1742789869
+      Veins_14: 1291836234
+      Veins_15: 1080920485
+      Veins_2: 571509845
+      Veins_3: 1916547229
+      Veins_4: 232508263
+      Veins_5: 545433835
+      Veins_6: -1187907654
+      Veins_7: 390828124
+      Veins_8: -475426151
+      Veins_9: 190719419
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: UMA.OverlayPainter.SpriteGridOptions:{"version":1,"sourceWidth":2048,"sourceHeight":2048,"columns":4,"rows":4,"inset":1,"editSpritesIndividually":false,"globalSettings":{"insetX1":1,"insetY1":1,"insetX2":1,"insetY2":1,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},"spriteSettings":[{"insetX1":1,"insetY1":1,"insetX2":1,"insetY2":1,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":1,"insetY1":1,"insetX2":1,"insetY2":1,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":1,"insetY1":1,"insetX2":1,"insetY2":1,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":1,"insetY1":1,"insetX2":1,"insetY2":1,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":1,"insetY1":1,"insetX2":1,"insetY2":1,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":1,"insetY1":1,"insetX2":1,"insetY2":1,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":1,"insetY1":1,"insetX2":1,"insetY2":1,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":1,"insetY1":1,"insetX2":1,"insetY2":1,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":1,"insetY1":1,"insetX2":1,"insetY2":1,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":1,"insetY1":1,"insetX2":1,"insetY2":1,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":1,"insetY1":1,"insetX2":1,"insetY2":1,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":1,"insetY1":1,"insetX2":1,"insetY2":1,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":1,"insetY1":1,"insetX2":1,"insetY2":1,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":1,"insetY1":1,"insetX2":1,"insetY2":1,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":1,"insetY1":1,"insetX2":1,"insetY2":1,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":1,"insetY1":1,"insetX2":1,"insetY2":1,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25}]}
+  assetBundleName: 
+  assetBundleVariant: 

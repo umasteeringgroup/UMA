@@ -16,7 +16,7 @@ Every region and splitter is persisted in `TexturePaintStageState` schema v10. *
 
 ## 2D and 3D synchronization
 
-The UV canvas and Scene view share the active target, slots, destination layer, channel, brush, masks, undo history, and stroke engine. A 2D stroke is converted to a surface anchor and then dispatched through the same world-space footprint projection used by 3D painting, so it retains cross-slot behavior instead of becoming a separate UV-only paint implementation.
+The UV canvas and Scene view share the active target, slots, destination layer, channel, brush, masks, undo history, and raster engine. Ordinary 2D strokes paint directly in normalized UV space on the active texture set without consulting mesh coverage. They do not convert each cursor position into a world-space surface anchor, build a geometry mask, or dispatch per-triangle projected stamps; that avoids size jitter, hover stalls, and small-polygon projection explosions. Polygon/UV-island fill and spline anchoring still resolve mesh ownership because those operations explicitly require it. The Scene view retains world-space footprint projection, geometry clipping, and cross-slot behavior.
 
 Visible path layers are drawn in both views. In UV mode, enable Path on the tool rail, click empty surface UVs to add points, or drag an existing point. Each edit is projected back to the reconstructed mesh and updates its barycentric surface anchor and controls.
 

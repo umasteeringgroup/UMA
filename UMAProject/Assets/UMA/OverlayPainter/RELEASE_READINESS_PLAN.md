@@ -72,9 +72,8 @@ Acceptance criteria:
 
 ## Milestone 4 — Masks, materials, and channel correctness
 
-- Make masks first-class layer children.
-- Add white, black, bitmap, painted, slot, polygon, UV-island, ID, and procedural masks.
-- Add click, box, lasso, grow, shrink, feather, blur, invert, and levels workflows.
+- Give every Paint, Fill, Path, and Group layer one editable grayscale mask with black/white creation, a mask thumbnail, full 2D/3D painting, mask-owned sources, and mask-only effects.
+- Keep polygon and UV-island fills as ordinary paint operations. Geometry selection remains transient and is not a second artist-mask stack.
 - Paint complete material bundles with per-channel locks and contribution controls.
 - Add shader-aware channel packing, roughness/smoothness inversion, normal convention selection, vector-aware normal blending, linear/sRGB correctness, and UV dilation.
 - Cache position, world normal, curvature, AO, thickness, and ID mesh maps for procedural generators.
@@ -134,11 +133,11 @@ Implemented:
 
 - Removed the unused v1 API entirely and made API v2 the only discovery and execution contract.
 - Added stable API/plugin versioning, reverse-DNS IDs, capability metadata, declared channel access, typed parameter schemas, range validation, duplicate rejection, and persisted parameter profiles.
-- Added safe brush, filter, generator, baker, importer, exporter, and procedural-mask interfaces. Brush extensions can only modulate standard samples; other extensions see immutable copies and in-memory artifact/command contexts.
-- Added sealed, bounded command transactions with preflight validation, copied payloads, cancellation, per-texel global/structural/painted masks, color/data validation, normalized normal vectors, non-destructive plugin layers, dirty-rectangle composition/packing, atomic rollback, dedicated undo/redo, and persisted plugin provenance.
+- Added safe brush, filter, generator, baker, importer, and exporter interfaces. Brush extensions can only modulate standard samples; other extensions see immutable copies and in-memory artifact/command contexts.
+- Added sealed, bounded command transactions with preflight validation, copied payloads, cancellation, reconstructed-mesh clipping, color/data validation, normalized normal vectors, non-destructive plugin layers, dirty-rectangle composition/packing, atomic rollback, dedicated undo/redo, and persisted plugin provenance.
 - Added independent snapshot, command, artifact, and history budgets plus registration/execution diagnostics with timing, command, dirty-pixel, cancellation, and exception data.
 - Rebuilt the plugin window around schemas and extension categories, artifact import/save, progress/cancel, diagnostics, and transaction undo/redo. Migrated both example plugins to v2.
-- Added adversarial tests for mask bypass, undeclared channels, incorrect color spaces, cancellation, dirty bounds, normal precision, memory budgets, profile persistence, and undo/redo.
+- Added adversarial tests for geometry clipping, undeclared channels, incorrect color spaces, cancellation, dirty bounds, normal precision, memory budgets, profile persistence, and undo/redo.
 
 ### Pre-Milestone 8 integrity gate
 

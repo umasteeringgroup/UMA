@@ -29,6 +29,7 @@ namespace UMA.TexturePaint
         public int computeDispatches;
         public int cpuFallbacks;
         public int budgetFallbacks;
+        public int geometryMaskBuilds;
         public double LastPreviewMilliseconds { get; private set; }
         public double MaximumPreviewMilliseconds { get; private set; }
 
@@ -54,7 +55,7 @@ namespace UMA.TexturePaint
         public void Reset()
         {
             previewMilliseconds.Clear(); copiedPixels = composedPixels = 0L;
-            computeDispatches = cpuFallbacks = budgetFallbacks = 0;
+            computeDispatches = cpuFallbacks = budgetFallbacks = geometryMaskBuilds = 0;
             LastPreviewMilliseconds = MaximumPreviewMilliseconds = 0d;
         }
     }

@@ -600,10 +600,12 @@ namespace UMA.TexturePaint.Editor
                 for (int layerIndex = 0; layerIndex < surface.layers.Count; layerIndex++)
                 {
                     TexturePaintDocumentLayer layer = surface.layers[layerIndex];
-                    if (layer?.channels == null) continue;
-                    for (int channelIndex = 0; channelIndex < layer.channels.Count; channelIndex++)
-                        if (layer.channels[channelIndex]?.pixels != null)
-                            yield return layer.channels[channelIndex].pixels;
+                    if (layer == null) continue;
+                    if (layer.maskPixels != null) yield return layer.maskPixels;
+                    if (layer.channels != null)
+                        for (int channelIndex = 0; channelIndex < layer.channels.Count; channelIndex++)
+                            if (layer.channels[channelIndex]?.pixels != null)
+                                yield return layer.channels[channelIndex].pixels;
                 }
             }
         }

@@ -51,6 +51,40 @@ namespace UMA.TexturePaint.Editor.Tests
         public void RecoveryJournalRoundTripsExternalPixelBlob()
         {
             TexturePaintDocument source = CreateDocumentWithPixels(new byte[] { 4, 8, 15, 16, 23, 42 });
+            Sprite sourceSprite = CreateSpriteAsset(Folder + "/Channel Source.png");
+            var savedChannel = new TexturePaintDocumentLayerChannel
+            {
+                channel = TexturePaintChannel.Normal,
+                settings = new TexturePaintLayerChannelSettings
+                {
+                    channel = TexturePaintChannel.Normal,
+                    enabled = false,
+                    locked = true,
+                    contribution = 0.37f,
+                    opacity = 0.63f,
+                    blendMode = TexturePaintBlendMode.Overlay
+                }
+            };
+            savedChannel.SetSourceSettings(new TexturePaintChannelSourceSettings
+            {
+                source = TexturePaintBrushSource.Texture,
+                sourceSprite = sourceSprite,
+                normalConvention = TexturePaintNormalConvention.DirectX,
+                invert = true,
+                tiling = new Vector2(2.5f, 3.5f),
+                offset = new Vector2(-0.2f, 0.4f),
+                rotation = -63f,
+                projection = TexturePaintFillProjection.Triplanar,
+                triplanarBlend = TexturePaintTriplanarBlend.Hard,
+                blendOffset = 0.21f,
+                blendSharpness = 7f
+            });
+            source.surfaces[0].layers.Add(new TexturePaintDocumentLayer
+            {
+                name = "Multi Channel Layer",
+                channels = new System.Collections.Generic.List<TexturePaintDocumentLayerChannel>
+                    { savedChannel }
+            });
             try
             {
                 TexturePaintRecoveryStore.SaveImmediate(source, recoveryKey);
@@ -79,6 +113,27 @@ namespace UMA.TexturePaint.Editor.Tests
                     Assert.That(pixels.compressedBytes, Is.EqualTo(new byte[] { 4, 8, 15, 16, 23, 42 }));
                     Assert.That(pixels.recoveryBlobKey, Is.Null.Or.Empty);
                     Assert.That(AssetDatabase.GetAssetPath(restored), Is.Empty);
+                    TexturePaintDocumentLayerChannel restoredChannel =
+                        restored.surfaces[0].layers[0].channels[0];
+                    TexturePaintChannelSourceSettings restoredSource = restoredChannel.GetSourceSettings();
+                    Assert.That(restoredChannel.settings.enabled, Is.False);
+                    Assert.That(restoredChannel.settings.locked, Is.True);
+                    Assert.That(restoredChannel.settings.contribution, Is.EqualTo(0.37f));
+                    Assert.That(restoredChannel.settings.opacity, Is.EqualTo(0.63f));
+                    Assert.That(restoredChannel.settings.blendMode, Is.EqualTo(TexturePaintBlendMode.Overlay));
+                    Assert.That(restoredSource.sourceSprite, Is.SameAs(sourceSprite));
+                    Assert.That(restoredSource.normalConvention,
+                        Is.EqualTo(TexturePaintNormalConvention.DirectX));
+                    Assert.That(restoredSource.invert, Is.True);
+                    Assert.That(restoredSource.tiling, Is.EqualTo(new Vector2(2.5f, 3.5f)));
+                    Assert.That(restoredSource.offset, Is.EqualTo(new Vector2(-0.2f, 0.4f)));
+                    Assert.That(restoredSource.rotation, Is.EqualTo(-63f));
+                    Assert.That(restoredSource.projection,
+                        Is.EqualTo(TexturePaintFillProjection.Triplanar));
+                    Assert.That(restoredSource.triplanarBlend,
+                        Is.EqualTo(TexturePaintTriplanarBlend.Hard));
+                    Assert.That(restoredSource.blendOffset, Is.EqualTo(0.21f));
+                    Assert.That(restoredSource.blendSharpness, Is.EqualTo(7f));
                 }
                 finally { UnityEngine.Object.DestroyImmediate(restored); }
             }
@@ -154,8 +209,7 @@ namespace UMA.TexturePaint.Editor.Tests
             try
             {
                 TexturePaintDocumentStorage.CaptureOperation capture = TexturePaintDocumentStorage.BeginCapture(
-                    source, store, new TexturePaintMaskStack(),
-                    new System.Collections.Generic.Dictionary<EditableTextureTarget, long>(), true);
+                    source, store, new System.Collections.Generic.Dictionary<EditableTextureTarget, long>(), true);
                 Assert.That(capture.IsDone, Is.True);
                 SetField(stage, "controller", controller);
                 SetField(stage, "document", source);
@@ -192,6 +246,385 @@ namespace UMA.TexturePaint.Editor.Tests
             }
         }
 
+        [Test]
+        public void CloseDuringBackgroundPersistenceIsAcceptedAndCompletesAfterThatSave()
+        {
+            TexturePaintDocument source = TexturePaintDocumentStorage.CreateTransient(null);
+            TextureStore store = new TextureStore();
+            TexturePaintStageWindow stage = ScriptableObject.CreateInstance<TexturePaintStageWindow>();
+            TexturePaintDocumentStorage.CaptureOperation capture = null;
+            try
+            {
+                capture = TexturePaintDocumentStorage.BeginCapture(source, store,
+                    new System.Collections.Generic.Dictionary<EditableTextureTarget, long>(), true);
+                SetField(stage, "persistenceCapture", capture);
+
+                Assert.That(stage.RequestCloseStage(), Is.True,
+                    "Closing the dock should be accepted while an autosave is running.");
+                Assert.That(Field("closeAfterSave").GetValue(stage), Is.True,
+                    "The in-flight autosave should become the final close save.");
+                Assert.That(Field("persistenceStatus").GetValue(stage),
+                    Is.EqualTo("Finishing save before closing…"));
+            }
+            finally
+            {
+                capture?.Cancel();
+                TexturePaintDocument snapshot = capture?.Snapshot;
+                if (snapshot != null && snapshot != source)
+                    UnityEngine.Object.DestroyImmediate(snapshot);
+                store.Dispose();
+                UnityEngine.Object.DestroyImmediate(stage);
+                UnityEngine.Object.DestroyImmediate(source);
+            }
+        }
+
+        [Test]
+        public void ExternalOperationCompletionRestartsAutosaveDebounce()
+        {
+            TexturePaintStageWindow stage = ScriptableObject.CreateInstance<TexturePaintStageWindow>();
+            try
+            {
+                SetField(stage, "nextAutosaveTime", 0d);
+                double before = EditorApplication.timeSinceStartup;
+
+                stage.DeferAutosaveAfterExternalOperation();
+
+                double deadline = (double)Field("nextAutosaveTime").GetValue(stage);
+                Assert.That(deadline, Is.GreaterThanOrEqualTo(before + 29.9d));
+            }
+            finally { UnityEngine.Object.DestroyImmediate(stage); }
+        }
+
+        [Test]
+        public void ProjectDocumentRoundTripsAllLayerSettingsAndEffects()
+        {
+            TexturePaintDocument source = TexturePaintDocumentStorage.CreateTransient(null);
+            try
+            {
+                Texture2D endpointTexture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+                endpointTexture.name = "Ribbon Endpoint Texture";
+                AssetDatabase.CreateAsset(endpointTexture, Folder + "/Ribbon Endpoint Texture.asset");
+                Sprite endpointSprite = Sprite.Create(endpointTexture, new Rect(0f, 0f, 2f, 2f),
+                    new Vector2(0.5f, 0.5f));
+                endpointSprite.name = "Ribbon Endpoint Sprite";
+                AssetDatabase.AddObjectToAsset(endpointSprite, endpointTexture);
+                AssetDatabase.ImportAsset(Folder + "/Ribbon Endpoint Texture.asset",
+                    ImportAssetOptions.ForceSynchronousImport);
+                Texture2D overlayTexture2 = new Texture2D(2, 2, TextureFormat.RGBA32, false)
+                {
+                    name = "Layer Effect Texture 2"
+                };
+                AssetDatabase.CreateAsset(overlayTexture2, Folder + "/Layer Effect Texture 2.asset");
+                TexturePaintLayerEffects effects = CreateNonDefaultEffects();
+                effects.textureOverlay.texture1 = endpointTexture;
+                effects.textureOverlay.texture2 = overlayTexture2;
+                TexturePaintFillSettings fill = new TexturePaintFillSettings
+                {
+                    generatorRevision = 7,
+                    source = TexturePaintBrushSource.Texture,
+                    invert = true,
+                    color = new Color(0.11f, 0.22f, 0.33f, 0.44f),
+                    normalConvention = TexturePaintNormalConvention.DirectX,
+                    projection = TexturePaintFillProjection.Triplanar,
+                    tiling = new Vector2(2.5f, -3.25f),
+                    useFirstChannelTransform = true,
+                    triplanarBlend = TexturePaintTriplanarBlend.Hard,
+                    blendOffset = 0.17f,
+                    blendSharpness = 11f
+                };
+                TexturePaintLayerSettings paint = new TexturePaintLayerSettings
+                {
+                    tool = TexturePaintTool.Clone,
+                    channel = TexturePaintChannel.Emission,
+                    source = TexturePaintBrushSource.Texture,
+                    destination = TexturePaintSourceMode.SourceOverlay,
+                    brushShape = BrushPreset.Shape.Stamp,
+                    brushSize = 0.123f,
+                    brushHardness = 0.27f,
+                    brushFlow = 0.61f,
+                    brushSpacing = 1.7f,
+                    brushRotation = -90f,
+                    brushBlendMode = TexturePaintBlendMode.Screen,
+                    brushMirrorStroke = true,
+                    brushAlignToStroke = true,
+                    brushStampSprite = endpointSprite,
+                    brushRandomizationVersion = 1,
+                    brushRandomRotation = true,
+                    brushRandomSizeVariation = true,
+                    brushRandomSizeShrink = 0.21f,
+                    brushRandomSizeGrow = 0.44f,
+                    brushSplatter = true,
+                    brushSplatterDistance = 0.73f,
+                    brushFade = true,
+                    brushTaper = true,
+                    brushFadeTaperLength = 0.91f,
+                    color = new Color(0.8f, 0.2f, 0.6f, 0.4f),
+                    normalConvention = TexturePaintNormalConvention.DirectX,
+                    strength = 0.73f,
+                    limitStrokeCoverage = true,
+                    mirrorX = true,
+                    stabilization = 0.31f,
+                    directionSmoothing = 0.82f,
+                    projectionDepth = 0.19f,
+                    normalAngleLimit = 47f,
+                    paintBackfaces = true,
+                    pressureAffectsFlow = false,
+                    pressureAffectsSize = true
+                };
+                TexturePaintSplineSettings path = new TexturePaintSplineSettings
+                {
+                    tool = TexturePaintTool.Paint,
+                    channel = TexturePaintChannel.Roughness,
+                    source = TexturePaintBrushSource.Color,
+                    destination = TexturePaintSourceMode.SourceOverlay,
+                    brushShape = BrushPreset.Shape.Square,
+                    brushSize = 0.234f,
+                    brushHardness = 0.38f,
+                    brushFlow = 0.72f,
+                    brushSpacing = 2.3f,
+                    brushRotation = 90f,
+                    brushBlendMode = TexturePaintBlendMode.Multiply,
+                    brushMirrorStroke = true,
+                    brushAlignToStroke = true,
+                    brushStampSprite = endpointSprite,
+                    brushRandomizationVersion = 1,
+                    brushRandomRotation = true,
+                    brushRandomSizeVariation = true,
+                    brushRandomSizeShrink = 0.19f,
+                    brushRandomSizeGrow = 0.52f,
+                    brushSplatter = true,
+                    brushSplatterDistance = 1.42f,
+                    brushFade = true,
+                    brushTaper = true,
+                    brushFadeTaperLength = 1.37f,
+                    ribbonBeginningTexture = endpointTexture,
+                    ribbonEndSprite = endpointSprite,
+                    color = new Color(0.7f, 0.4f, 0.1f, 0.9f),
+                    normalConvention = TexturePaintNormalConvention.DirectX,
+                    strength = 0.64f,
+                    limitStrokeCoverage = true,
+                    mirrorX = true,
+                    stabilization = 0.42f,
+                    directionSmoothing = 0.67f,
+                    projectionDepth = 0.28f,
+                    normalAngleLimit = 63f,
+                    paintBackfaces = true,
+                    pressureAffectsFlow = false,
+                    pressureAffectsSize = true,
+                    pathMode = TexturePaintPathMode.Ribbon,
+                    orientation = TexturePaintPathOrientation.FixedAxis,
+                    startCap = TexturePaintPathCap.Butt,
+                    endCap = TexturePaintPathCap.Square,
+                    radialSymmetry = 5,
+                    symmetryAxis = new Vector3(0.2f, 0.8f, 0.5f).normalized
+                };
+                TexturePaintDocumentSurface surface = new TexturePaintDocumentSurface
+                {
+                    stableId = "all-settings",
+                    activeLayer = 2
+                };
+                surface.layers.Add(new TexturePaintDocumentLayer
+                {
+                    name = "Fill",
+                    kind = TexturePaintLayerKind.Fill,
+                    visible = false,
+                    opacity = 0.43f,
+                    blendMode = TexturePaintBlendMode.Multiply,
+                    effects = effects.Clone(),
+                    fillChannel = TexturePaintChannel.Metallic,
+                    fillColor = fill.color,
+                    fillSettings = fill
+                });
+                surface.layers.Add(new TexturePaintDocumentLayer
+                {
+                    name = "Paint",
+                    kind = TexturePaintLayerKind.Paint,
+                    opacity = 0.54f,
+                    blendMode = TexturePaintBlendMode.Screen,
+                    effects = effects.Clone(),
+                    paintSettings = paint,
+                    channels = new System.Collections.Generic.List<TexturePaintDocumentLayerChannel>
+                    {
+                        new TexturePaintDocumentLayerChannel
+                        {
+                            channel = TexturePaintChannel.Emission,
+                            settings = new TexturePaintLayerChannelSettings
+                            {
+                                channel = TexturePaintChannel.Emission,
+                                enabled = false,
+                                locked = true,
+                                contribution = 0.35f,
+                                opacity = 0.46f,
+                                blendMode = TexturePaintBlendMode.Add,
+                                sourceSettings = new TexturePaintChannelSourceSettings
+                                {
+                                    source = TexturePaintBrushSource.Color,
+                                    color = new Color(0.2f, 0.4f, 0.6f, 0.8f),
+                                    invert = true,
+                                    tiling = new Vector2(2f, 3f)
+                                }
+                            }
+                        }
+                    }
+                });
+                surface.layers.Add(new TexturePaintDocumentLayer
+                {
+                    name = "Path",
+                    kind = TexturePaintLayerKind.Spline,
+                    opacity = 0.65f,
+                    blendMode = TexturePaintBlendMode.Overlay,
+                    effects = effects.Clone(),
+                    spline = new TexturePaintSpline { name = "Saved Ribbon", closed = true, worldSpace = true },
+                    splineSettings = path,
+                    pluginId = "test.plugin",
+                    pluginVersion = "2.1",
+                    pluginParametersJson = "{\"amount\":0.75}",
+                    proceduralGroupKey = "saved-path"
+                });
+                source.surfaces.Add(surface);
+
+                string pathName = Folder + "/All Settings.asset";
+                using TexturePaintProjectSaveOperation operation =
+                    new TexturePaintProjectSaveOperation(source, null, pathName);
+                Complete(operation);
+                Assert.That(operation.HasError, Is.False, operation.Error);
+                TexturePaintDocument saved = operation.SavedDocument;
+                Assert.That(saved, Is.Not.Null);
+                Assert.That(saved.surfaces[0].activeLayer, Is.EqualTo(2));
+                AssertJsonEqual(fill, saved.surfaces[0].layers[0].fillSettings);
+                AssertJsonEqual(paint, saved.surfaces[0].layers[1].paintSettings);
+                AssertJsonEqual(path, saved.surfaces[0].layers[2].splineSettings);
+                AssertJsonEqual(effects, saved.surfaces[0].layers[2].effects);
+                AssertJsonEqual(surface.layers[1].channels[0].settings,
+                    saved.surfaces[0].layers[1].channels[0].settings);
+                AssertJsonEqual(surface.layers[1].channels[0].settings.sourceSettings,
+                    saved.surfaces[0].layers[1].channels[0].GetSourceSettings());
+                Assert.That(saved.surfaces[0].layers[2].pluginParametersJson,
+                    Is.EqualTo("{\"amount\":0.75}"));
+            }
+            finally
+            {
+                if (source != null && string.IsNullOrEmpty(AssetDatabase.GetAssetPath(source)))
+                    UnityEngine.Object.DestroyImmediate(source);
+            }
+        }
+
+        [Test]
+        public void SelectingRestoredPathAppliesSavedRibbonRotationAndBrushValues()
+        {
+            TexturePaintStageWindow stage = ScriptableObject.CreateInstance<TexturePaintStageWindow>();
+            BrushPreset transient = ScriptableObject.CreateInstance<BrushPreset>();
+            using TextureSet set = new TextureSet();
+            try
+            {
+                SetField(stage, "transientBrush", transient);
+                TexturePaintSplineSettings settings = new TexturePaintSplineSettings
+                {
+                    brushRotation = 90f,
+                    brushBlendMode = TexturePaintBlendMode.Multiply,
+                    brushMirrorStroke = true,
+                    brushAlignToStroke = true,
+                    symmetryAxis = Vector3.forward
+                };
+                TexturePaintLayer layer = set.AddSplineLayer("Restored Ribbon");
+                layer.splineSettings = settings;
+                set.activeLayerIndex = set.layers.IndexOf(layer);
+                MethodInfo restore = typeof(TexturePaintStageWindow).GetMethod("SyncActiveLayerSelection",
+                    BindingFlags.Instance | BindingFlags.NonPublic);
+                Assert.That(restore, Is.Not.Null);
+                restore.Invoke(stage, new object[] { set });
+
+                Assert.That(transient.rotation, Is.EqualTo(90f));
+                Assert.That(transient.blendMode, Is.EqualTo(TexturePaintBlendMode.Multiply));
+                Assert.That(transient.mirrorStroke, Is.True);
+                Assert.That(transient.alignToStroke, Is.True);
+                Assert.That(Field("radialSymmetryAxis").GetValue(stage), Is.EqualTo(Vector3.forward));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(transient);
+                UnityEngine.Object.DestroyImmediate(stage);
+            }
+        }
+
+        [Test]
+        public void TextureOverlayEditsDoNotRequireRibbonReprojection()
+        {
+            MethodInfo changed = typeof(TexturePaintStageWindow).GetMethod(
+                "RibbonProjectionEffectsChanged", BindingFlags.Static | BindingFlags.NonPublic);
+            Assert.That(changed, Is.Not.Null);
+            TexturePaintLayerEffects before = new TexturePaintLayerEffects();
+            TexturePaintLayerEffects after = before.Clone();
+            after.textureOverlay.enabled = true;
+            after.textureOverlay.textureTiling1 = new Vector2(7f, 3f);
+            after.textureOverlay.textureOpacity2 = 0.42f;
+
+            Assert.That((bool)changed.Invoke(null, new object[] { before, after }), Is.False,
+                "UV-space texture overlays should update through compositing without rerendering a ribbon.");
+
+            after.innerGlow.enabled = true;
+            Assert.That((bool)changed.Invoke(null, new object[] { before, after }), Is.True,
+                "Ribbon-local effects still require world-space path reprojection.");
+        }
+
+        private static TexturePaintLayerEffects CreateNonDefaultEffects()
+        {
+            TexturePaintLayerEffects effects = new TexturePaintLayerEffects();
+            TexturePaintLayerEffectSettings[] values =
+            {
+                effects.stroke, effects.innerShadow, effects.outerShadow, effects.innerGlow,
+                effects.outerGlow, effects.colorOverlay, effects.edgeFade, effects.bevelEdge,
+                effects.proceduralStitch, effects.textureOverlay
+            };
+            for (int i = 0; i < values.Length; i++)
+            {
+                TexturePaintLayerEffectSettings effect = values[i];
+                effect.enabled = true;
+                effect.channel = (TexturePaintChannel)(i % 6);
+                effect.color = new Color(0.1f * (i + 1), 0.07f * i, 0.04f * i, 0.9f);
+                effect.width = 3f + i;
+                effect.smoothness = 0.1f * i;
+                effect.curve = new AnimationCurve(new Keyframe(0f, 1f), new Keyframe(0.4f, 0.7f),
+                    new Keyframe(1f, 0.2f));
+                effect.curve.preWrapMode = WrapMode.PingPong;
+                effect.curve.postWrapMode = WrapMode.Loop;
+                effect.offset = new Vector2(i + 0.25f, -i - 0.5f);
+                effect.blendMode = TexturePaintBlendMode.Screen;
+                effect.level = Mathf.Clamp01(0.2f + i * 0.1f);
+                effect.edgeFadeStart = 0.15f + i * 0.05f;
+                effect.edgeFadeSize = 0.3f + i * 0.05f;
+                effect.ribbonSide = (TexturePaintRibbonSide)(i % 3);
+                effect.secondaryColor = new Color(0.03f * i, 0.08f * i, 0.11f * i, 0.7f);
+                effect.ribbonLeftTone = i % 2 == 0
+                    ? TexturePaintRibbonBevelTone.Light : TexturePaintRibbonBevelTone.Dark;
+                effect.ribbonRightTone = i % 2 == 0
+                    ? TexturePaintRibbonBevelTone.Dark : TexturePaintRibbonBevelTone.Light;
+                effect.ribbonLeftOffset = i + 0.75f;
+                effect.ribbonRightOffset = -i - 0.25f;
+                effect.stitchRows = i % 2 == 0
+                    ? TexturePaintRibbonStitchRows.Single : TexturePaintRibbonStitchRows.Double;
+                effect.stitchThreadSize = 0.01f + i * 0.005f;
+                effect.stitchLength = 0.04f + i * 0.03f;
+                effect.stitchInset = 0.02f + i * 0.02f;
+                effect.textureTiling1 = new Vector2(1.25f + i, -2.5f - i);
+                effect.textureTiling2 = new Vector2(-3.75f - i, 4.5f + i);
+                effect.textureOffset1 = new Vector2(0.05f * i, -0.07f * i);
+                effect.textureOffset2 = new Vector2(-0.09f * i, 0.11f * i);
+                effect.textureRotation1 = 7.5f * i;
+                effect.textureRotation2 = -11.25f * i;
+                effect.textureOpacity1 = 0.15f + i * 0.05f;
+                effect.textureOpacity2 = 0.2f + i * 0.04f;
+                effect.secondaryBlendMode = TexturePaintBlendMode.Subtract;
+            }
+            return effects;
+        }
+
+        private static void AssertJsonEqual(object expected, object actual)
+        {
+            Assert.That(actual, Is.Not.Null);
+            Assert.That(JsonUtility.ToJson(actual), Is.EqualTo(JsonUtility.ToJson(expected)));
+        }
+
         private static TexturePaintDocument CreateDocumentWithPixels(byte[] bytes)
         {
             TexturePaintDocument document = ScriptableObject.CreateInstance<TexturePaintDocument>();
@@ -218,6 +651,21 @@ namespace UMA.TexturePaint.Editor.Tests
                 }
             });
             return document;
+        }
+
+        private static Sprite CreateSpriteAsset(string path)
+        {
+            var texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            texture.SetPixels(new[] { Color.red, Color.green, Color.blue, Color.white });
+            texture.Apply();
+            System.IO.File.WriteAllBytes(System.IO.Path.GetFullPath(path), texture.EncodeToPNG());
+            UnityEngine.Object.DestroyImmediate(texture);
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport);
+            var importer = (TextureImporter)AssetImporter.GetAtPath(path);
+            importer.textureType = TextureImporterType.Sprite;
+            importer.spriteImportMode = SpriteImportMode.Single;
+            importer.SaveAndReimport();
+            return AssetDatabase.LoadAssetAtPath<Sprite>(path);
         }
 
         private static void Complete(TexturePaintProjectSaveOperation operation)

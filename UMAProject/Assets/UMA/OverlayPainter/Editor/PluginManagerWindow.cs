@@ -132,7 +132,7 @@ namespace UMA.TexturePaint.Editor
             Begin(plugin.Descriptor.displayName);
             try
             {
-                await controller.Plugins.ExecuteCommandAsync(plugin, controller.Textures, controller.Masks, values,
+                await controller.Plugins.ExecuteCommandAsync(plugin, controller.Textures, values,
                     new Progress<float>(Report), cancellation.Token);
                 SceneView.RepaintAll();
             }
@@ -180,7 +180,7 @@ namespace UMA.TexturePaint.Editor
                 {
                     name = Path.GetFileNameWithoutExtension(path), extension = Path.GetExtension(path).TrimStart('.'), bytes = File.ReadAllBytes(path)
                 };
-                await controller.Plugins.ExecuteImporterAsync(plugin, artifact, controller.Textures, controller.Masks,
+                await controller.Plugins.ExecuteImporterAsync(plugin, artifact, controller.Textures,
                     values, new Progress<float>(Report), cancellation.Token);
                 SceneView.RepaintAll();
             }

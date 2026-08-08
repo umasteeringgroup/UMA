@@ -82,7 +82,7 @@ namespace UMA.TexturePaint.Editor.Tests
             AssetDatabase.DeleteAsset(Folder);
             if (indexerAssetBytes != null && !string.IsNullOrEmpty(indexerAssetPath))
             {
-                File.WriteAllBytes(Path.GetFullPath(indexerAssetPath), indexerAssetBytes);
+                RestoreAssetBytes(indexerAssetPath, indexerAssetBytes);
                 AssetDatabase.ImportAsset(indexerAssetPath, ImportAssetOptions.ForceSynchronousImport |
                     ImportAssetOptions.ForceUpdate);
             }
@@ -125,6 +125,91 @@ namespace UMA.TexturePaint.Editor.Tests
                 "Export history must not mutate paint document/editor state.");
             Assert.That(File.ReadAllBytes(Path.GetFullPath(AssetDatabase.GetAssetPath(sourceTexture))),
                 Is.EqualTo(sourceBefore), "Default export must leave source textures byte-identical.");
+        }
+
+        [Test]
+        public void AuthoredOverlayExportExcludesBaseAndAssignsGeneratedAlphaMask()
+        {
+            ComputeShader compositorShader = AssetDatabase.LoadAssetAtPath<ComputeShader>(
+                "Assets/UMA/OverlayPainter/Shaders/LayerComposite.compute");
+            Assert.That(compositorShader, Is.Not.Null);
+            set.compositor = new TextureLayerCompositor(compositorShader);
+
+            Texture2D authored = Own(new Texture2D(32, 32, TextureFormat.RGBA32, false, true));
+            Color[] pixels = new Color[32 * 32];
+            for (int y = 12; y < 20; y++)
+            for (int x = 12; x < 20; x++) pixels[y * 32 + x] = new Color(0f, 1f, 0f, 1f);
+            authored.SetPixels(pixels);
+            authored.Apply(false, false);
+            TexturePaintLayer layer = set.AddLayer("Runtime Marking");
+            layer.channels[TexturePaintChannel.Albedo] = new EditableTextureTarget(
+                "Runtime Marking Albedo", 32, 32, RenderTextureFormat.ARGB32,
+                authored, Color.clear);
+            layer.GetChannelSettings(TexturePaintChannel.Albedo);
+            long baseRevision = set.GetChannel(TexturePaintChannel.Albedo).editable.Revision;
+            long layerRevision = layer.channels[TexturePaintChannel.Albedo].Revision;
+
+            template.content = TexturePaintExportContent.AuthoredOverlay;
+            TexturePaintExportPlan plan = TexturePaintExporter.BuildPlan(store, set, "Avatar", template,
+                "Runtime", null);
+            Assert.That(plan.IsValid, Is.True, string.Join("\n", plan.errors));
+            Assert.That(plan.overlays[0].alphaMaskPath, Does.EndWith("Torso_Runtime_AlphaMask.png"));
+
+            TexturePaintExportResult result = TexturePaintExporter.Export(store, set, null, template, null,
+                "Runtime", null, false);
+            RememberIndexed(result);
+
+            Assert.That(set.GetChannel(TexturePaintChannel.Albedo).editable.Revision,
+                Is.EqualTo(baseRevision));
+            Assert.That(layer.channels[TexturePaintChannel.Albedo].Revision,
+                Is.EqualTo(layerRevision), "Overlay-only export must not mutate authored pixels.");
+
+            Assert.That(result.texturePaths, Has.Count.EqualTo(1));
+            Assert.That(result.alphaMaskPaths, Has.Count.EqualTo(1),
+                "The dedicated alpha mask should be reported separately from material textures.");
+            TexturePaintExportResultSet resultSet = result.resultSets[0];
+            Assert.That(resultSet.alphaMaskPath, Is.Not.Empty);
+            OverlayDataAsset overlay = AssetDatabase.LoadAssetAtPath<OverlayDataAsset>(resultSet.overlayPath);
+            Assert.That(overlay, Is.Not.Null);
+            Assert.That(overlay.overlayType, Is.EqualTo(OverlayDataAsset.OverlayType.Normal));
+            Assert.That(AssetDatabase.GetAssetPath(overlay.alphaMask),
+                Is.EqualTo(resultSet.alphaMaskPath));
+            Assert.That(overlay.textureList[0], Is.Not.Null);
+
+            Texture2D exportedColor = LoadPng(AssetDatabase.GetAssetPath(overlay.textureList[0]));
+            Texture2D exportedMask = LoadPng(resultSet.alphaMaskPath);
+            try
+            {
+                Color outside = exportedColor.GetPixel(2, 2);
+                Color inside = exportedColor.GetPixel(16, 16);
+                Color maskOutside = exportedMask.GetPixel(2, 2);
+                Color maskInside = exportedMask.GetPixel(16, 16);
+                Assert.That(outside.a, Is.EqualTo(0f).Within(1f / 255f),
+                    "The reconstructed red base must not make overlay-only export opaque.");
+                Assert.That(inside.g, Is.GreaterThan(0.9f));
+                Assert.That(inside.a, Is.GreaterThan(0.99f));
+                Assert.That(maskOutside.a, Is.EqualTo(0f).Within(1f / 255f));
+                Assert.That(maskInside.a, Is.GreaterThan(0.99f));
+                Assert.That(maskInside.r, Is.GreaterThan(0.99f));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(exportedColor);
+                UnityEngine.Object.DestroyImmediate(exportedMask);
+            }
+        }
+
+        [Test]
+        public void AuthoredOverlayPlanRejectsSourceOverwrite()
+        {
+            template.content = TexturePaintExportContent.AuthoredOverlay;
+            template.overwriteSourceOverlay = true;
+
+            TexturePaintExportPlan plan = TexturePaintExporter.BuildPlan(store, set, "Avatar", template,
+                "Runtime", null);
+
+            Assert.That(plan.IsValid, Is.False);
+            Assert.That(plan.errors, Has.Some.Contains("cannot overwrite a source overlay"));
         }
 
         [Test]
@@ -305,6 +390,36 @@ namespace UMA.TexturePaint.Editor.Tests
             UnityEngine.Object.DestroyImmediate(temporary);
             AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport);
             return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+        }
+
+        private static Texture2D LoadPng(string path)
+        {
+            Texture2D texture = new Texture2D(2, 2, TextureFormat.RGBA32, false, true);
+            Assert.That(texture.LoadImage(File.ReadAllBytes(Path.GetFullPath(path)), false), Is.True);
+            return texture;
+        }
+
+        private static void RestoreAssetBytes(string assetPath, byte[] bytes)
+        {
+            string fullPath = Path.GetFullPath(assetPath);
+            // Save/import can briefly keep a memory-mapped handle alive on Windows even after
+            // ReleaseCachedFileHandles. Retrying only this exact test-owned restoration avoids a
+            // false release-gate failure without weakening cleanup or leaving the indexer changed.
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+            for (int attempt = 0; ; attempt++)
+            {
+                AssetDatabase.ReleaseCachedFileHandles();
+                try
+                {
+                    File.WriteAllBytes(fullPath, bytes);
+                    return;
+                }
+                catch (IOException) when (attempt < 19)
+                {
+                    System.Threading.Thread.Sleep(25);
+                }
+            }
         }
 
         private static void EnsureFolder(string folder)

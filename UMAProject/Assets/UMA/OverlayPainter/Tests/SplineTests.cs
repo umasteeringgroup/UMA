@@ -69,6 +69,33 @@ namespace UMA.TexturePaint.Tests
         }
 
         [Test]
+        public void InsertPointAtRequestedFractionPreservesBothBezierSubcurves()
+        {
+            const float splitT = 0.27f;
+            TexturePaintSpline spline = new TexturePaintSpline { smoothHandles = false };
+            spline.AddPoint(Vector3.zero, Vector2.zero, 0, 0, Vector3.forward);
+            spline.AddPoint(new Vector3(2f, 0f), new Vector2(2f, 0f), 0, 1, Vector3.forward);
+            spline.SetWorldControl(0, false, new Vector3(0.25f, 1.5f), new Vector2(0.25f, 1.5f));
+            spline.SetWorldControl(1, true, new Vector3(1.5f, -0.75f), new Vector2(1.5f, -0.75f));
+            spline.EvaluateSegment(0, 1, splitT * 0.6f,
+                out Vector3 expectedFirstWorld, out Vector2 expectedFirstUV);
+            spline.EvaluateSegment(0, 1, splitT + (1f - splitT) * 0.4f,
+                out Vector3 expectedSecondWorld, out Vector2 expectedSecondUV);
+
+            int inserted = spline.InsertPointAfter(0, splitT);
+            spline.EvaluateSegment(0, inserted, 0.6f,
+                out Vector3 actualFirstWorld, out Vector2 actualFirstUV);
+            spline.EvaluateSegment(inserted, 2, 0.4f,
+                out Vector3 actualSecondWorld, out Vector2 actualSecondUV);
+
+            Assert.That(inserted, Is.EqualTo(1));
+            Assert.That(Vector3.Distance(actualFirstWorld, expectedFirstWorld), Is.LessThan(0.00001f));
+            Assert.That(Vector2.Distance(actualFirstUV, expectedFirstUV), Is.LessThan(0.00001f));
+            Assert.That(Vector3.Distance(actualSecondWorld, expectedSecondWorld), Is.LessThan(0.00001f));
+            Assert.That(Vector2.Distance(actualSecondUV, expectedSecondUV), Is.LessThan(0.00001f));
+        }
+
+        [Test]
         public void ReverseAndRemoveMaintainSplineCollections()
         {
             TexturePaintSpline spline = new TexturePaintSpline();

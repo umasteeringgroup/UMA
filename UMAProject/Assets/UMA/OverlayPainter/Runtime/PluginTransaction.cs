@@ -96,7 +96,7 @@ namespace UMA.TexturePaint
             return new TexturePaintReadContextV2(images, surfaceIds);
         }
 
-        public static TexturePaintPluginCommit Commit(TextureStore store, TexturePaintMaskStack masks,
+        public static TexturePaintPluginCommit Commit(TextureStore store,
             TexturePaintPluginDescriptor descriptor, IReadOnlyList<TexturePaintPluginTileCommand> commands,
             System.Threading.CancellationToken token, IProgress<float> progress,
             TexturePaintPluginParameterSet parameters = null,
@@ -132,10 +132,11 @@ namespace UMA.TexturePaint
                         layer.channels.Add(command.channel, target);
                         layer.GetChannelSettings(command.channel);
                     }
-                    string maskKey = set.persistentId + "|" + target.Width + "x" + target.Height + "|" + (masks?.Signature ?? 0);
+                    string maskKey = set.persistentId + "|" + target.Width + "x" + target.Height;
                     if (!geometryMasks.TryGetValue(maskKey, out Texture2D geometryMask))
                     {
-                        geometryMask = TexturePaintGeometryMask.Build(set.surface, target.Width, target.Height, null, -1, masks);
+                        geometryMask = TexturePaintGeometryMask.Build(set.surface, target.Width,
+                            target.Height, null, -1, null);
                         geometryMasks.Add(maskKey, geometryMask);
                     }
                     Apply(target, baseTarget, command, geometryMask);

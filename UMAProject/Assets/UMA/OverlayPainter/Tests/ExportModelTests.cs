@@ -20,6 +20,23 @@ namespace UMA.TexturePaint.Tests
         }
 
         [Test]
+        public void ExportContentModeDefaultsToFlattenedAndSurvivesSerialization()
+        {
+            TexturePaintExportTemplate template = ScriptableObject.CreateInstance<TexturePaintExportTemplate>();
+            Assert.That(template.content, Is.EqualTo(TexturePaintExportContent.FlattenedComposite));
+            template.content = TexturePaintExportContent.AuthoredOverlay;
+
+            string json = JsonUtility.ToJson(template);
+            TexturePaintExportTemplate restored = ScriptableObject.CreateInstance<TexturePaintExportTemplate>();
+            JsonUtility.FromJsonOverwrite(json, restored);
+
+            Assert.That(restored.version, Is.EqualTo(TexturePaintExportTemplate.CurrentVersion));
+            Assert.That(restored.content, Is.EqualTo(TexturePaintExportContent.AuthoredOverlay));
+            Object.DestroyImmediate(restored);
+            Object.DestroyImmediate(template);
+        }
+
+        [Test]
         public void FingerprintSeparatesTopologyUvAndGeometryChanges()
         {
             Mesh mesh = MakeQuad();
@@ -48,7 +65,7 @@ namespace UMA.TexturePaint.Tests
                 overlayGuid = "overlay", materialGuid = "material"
             });
             TexturePaintStageState restored = JsonUtility.FromJson<TexturePaintStageState>(JsonUtility.ToJson(state));
-            Assert.That(restored.version, Is.EqualTo(10));
+            Assert.That(restored.version, Is.EqualTo(TexturePaintStageState.CurrentVersion));
             Assert.That(restored.exportTemplateGuid, Is.EqualTo("template"));
             Assert.That(restored.exportRecords.Count, Is.EqualTo(1));
             Assert.That(restored.exportRecords[0].overlayGuid, Is.EqualTo("overlay"));
@@ -78,10 +95,12 @@ namespace UMA.TexturePaint.Tests
             state.favoriteBrushGuids.Add("favorite");
             state.recentBrushGuids.Add("recent");
             state.brushOrderGuids.Add("ordered");
+            state.collapsedLayerGroupIds.Add("collapsed-group");
+            state.collapsedPropertySectionIds.Add("properties.layer-channels");
 
             TexturePaintStageState restored = JsonUtility.FromJson<TexturePaintStageState>(JsonUtility.ToJson(state));
 
-            Assert.That(restored.version, Is.EqualTo(10));
+            Assert.That(restored.version, Is.EqualTo(TexturePaintStageState.CurrentVersion));
             Assert.That(restored.tool, Is.EqualTo(TexturePaintTool.Smear));
             Assert.That(restored.workspaceLeftWidth, Is.EqualTo(271f));
             Assert.That(restored.workspaceRightWidth, Is.EqualTo(347f));
@@ -94,6 +113,9 @@ namespace UMA.TexturePaint.Tests
             Assert.That(restored.favoriteBrushGuids, Is.EqualTo(new[] { "favorite" }));
             Assert.That(restored.recentBrushGuids, Is.EqualTo(new[] { "recent" }));
             Assert.That(restored.brushOrderGuids, Is.EqualTo(new[] { "ordered" }));
+            Assert.That(restored.collapsedLayerGroupIds, Is.EqualTo(new[] { "collapsed-group" }));
+            Assert.That(restored.collapsedPropertySectionIds,
+                Is.EqualTo(new[] { "properties.layer-channels" }));
         }
 
         private static Mesh MakeQuad()

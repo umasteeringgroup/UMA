@@ -23,8 +23,7 @@ namespace UMA.TexturePaint
         Importer = 1 << 4,
         Exporter = 1 << 5,
         ReadsMeshMaps = 1 << 6,
-        LongRunning = 1 << 7,
-        ProceduralMask = 1 << 8
+        LongRunning = 1 << 7
     }
 
     public enum TexturePaintPluginParameterType { Float, Integer, Boolean, Color, String, Texture, Enum }
@@ -290,23 +289,6 @@ namespace UMA.TexturePaint
     {
         Task<TexturePaintPluginArtifact> ExportAsync(TexturePaintReadContextV2 context,
             TexturePaintPluginParameterSet parameters, IProgress<float> progress, CancellationToken token);
-    }
-
-    public readonly struct TexturePaintProceduralMaskSampleV2
-    {
-        public readonly string surfaceId;
-        public readonly int surfaceIndex;
-        public readonly int triangleIndex;
-        public readonly int uvIsland;
-        public readonly Vector2 uv;
-        public readonly Vector3 worldPosition;
-
-        public TexturePaintProceduralMaskSampleV2(string surfaceId, int surfaceIndex, int triangleIndex,
-            int uvIsland, Vector2 uv, Vector3 worldPosition)
-        {
-            this.surfaceId = surfaceId; this.surfaceIndex = surfaceIndex; this.triangleIndex = triangleIndex;
-            this.uvIsland = uvIsland; this.uv = uv; this.worldPosition = worldPosition;
-        }
     }
 
     public enum TexturePaintPluginDiagnosticSeverity { Info, Warning, Error }

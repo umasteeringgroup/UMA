@@ -33,8 +33,11 @@ namespace UMA.TexturePaint
         public Material previewMaterial;
         public UMAMaterial umaMaterial;
         public UMAData.GeneratedMaterial generatedMaterial;
-        public Texture[] standaloneSourceTextures;
-        public List<Texture> ownedStandaloneSourceTextures;
+        /// <summary>Native-resolution channel composites rebuilt from this slot's original overlay stack.</summary>
+        public Texture[] sourceTextures;
+        public List<Texture> ownedSourceTextures;
+        /// <summary>True only when a reconstructed normal channel uses Unity/UMA runtime packing.</summary>
+        public bool[] sourceNormalIsUnityPacked;
         public OverlayDataAsset standaloneSourceOverlay;
         public bool allowMissingSourceTextures;
         public int[] triangleIslands;
@@ -1044,15 +1047,15 @@ namespace UMA.TexturePaint
             {
                 ReconstructedSurface surface = surfaces[i];
                 Destroy(surface.previewMaterial);
-                if (surface.ownedStandaloneSourceTextures != null)
-                    for (int sourceIndex = 0; sourceIndex < surface.ownedStandaloneSourceTextures.Count; sourceIndex++)
+                if (surface.ownedSourceTextures != null)
+                    for (int sourceIndex = 0; sourceIndex < surface.ownedSourceTextures.Count; sourceIndex++)
                     {
-                        if (surface.ownedStandaloneSourceTextures[sourceIndex] is RenderTexture renderTexture)
+                        if (surface.ownedSourceTextures[sourceIndex] is RenderTexture renderTexture)
                         {
                             if (RenderTexture.active == renderTexture) RenderTexture.active = null;
                             renderTexture.Release();
                         }
-                        Destroy(surface.ownedStandaloneSourceTextures[sourceIndex]);
+                        Destroy(surface.ownedSourceTextures[sourceIndex]);
                     }
                 Destroy(surface.mesh);
             }
@@ -1101,6 +1104,14 @@ namespace UMA.TexturePaint
                 result.Dispose();
                 throw new InvalidOperationException("The DynamicCharacterAvatar has no generated SkinnedMeshRenderer.");
             }
+            TextureMerge textureMergeConfiguration = avatar.umaData.umaGenerator != null
+                ? avatar.umaData.umaGenerator.textureMerge : null;
+            if (textureMergeConfiguration == null)
+            {
+                result.Dispose();
+                throw new InvalidOperationException(
+                    "Overlay Painter cannot reconstruct native overlay textures because the active UMA generator has no TextureMerge configuration.");
+            }
 
             try
             {
@@ -1124,17 +1135,21 @@ namespace UMA.TexturePaint
                         string[] triangleSlotNames = FindTriangleSlotNames(baked, submesh, generated, slotNames);
                         List<SurfaceSlice> slices = BuildSurfaceSlices(baked.GetTriangles(submesh), triangleSlotNames,
                             slotNames, slots);
-                        if (FindCollapsedUdimSlotNames(slots).Count > 0 && slices.Count == 1 && slotNames.Count > 1)
-                        {
-                            Debug.LogWarning($"Overlay Painter kept '{sourceMaterial.name}' as one preview surface because " +
-                                "triangle ownership could not safely separate every UDIM member. Rebuild the affected slots " +
-                                "and verify their generated vertex ownership before painting across this target.", avatar);
-                        }
                         for (int sliceIndex = 0; sliceIndex < slices.Count; sliceIndex++)
                         {
                             SurfaceSlice slice = slices[sliceIndex];
+                            if (slice.slots == null || slice.slots.Count != 1)
+                                throw new InvalidOperationException(
+                                    $"Overlay Painter cannot safely reconstruct native textures for '{sourceMaterial.name}' because " +
+                                    "its generated triangles do not resolve to exactly one source slot. Generated atlases are intentionally " +
+                                    "not used as a fallback; rebuild the affected slot vertex ownership.");
+                            SlotData sourceSlot = slice.slots[0];
+                            UMAData.MaterialFragment sourceFragment = FindMaterialFragment(generated, sourceSlot);
+                            if (sourceFragment == null)
+                                throw new InvalidOperationException(
+                                    $"Overlay Painter could not find the original overlay stack for slot '{sourceSlot.slotName}'.");
                             Mesh extracted = ExtractTriangles(baked, slice.triangles, toAvatar,
-                                $"Material {submesh}{slice.suffix}");
+                                $"Material {submesh}{slice.suffix}", sourceSlot);
                             GameObject child = new GameObject($"{rendererIndex:D2}_{submesh:D2}_{sourceMaterial.name}{slice.suffix}");
                             child.transform.SetParent(result.root.transform, false);
                             child.AddComponent<MeshFilter>().sharedMesh = extracted;
@@ -1144,6 +1159,10 @@ namespace UMA.TexturePaint
                                 name = sourceMaterial.name + " (Overlay Painter Preview)",
                                 hideFlags = HideFlags.HideAndDontSave
                             };
+                            Texture[] sourceTextures = BuildNativeOverlaySources(umaMaterial, sourceFragment,
+                                textureMergeConfiguration, out List<Texture> ownedSources,
+                                out bool[] packedNormalSources);
+                            ApplyStandaloneSources(preview, umaMaterial, sourceTextures);
                             renderer.sharedMaterial = preview;
                             MeshCollider collider = child.AddComponent<MeshCollider>();
                             collider.sharedMesh = extracted;
@@ -1159,6 +1178,10 @@ namespace UMA.TexturePaint
                                 previewMaterial = preview,
                                 generatedMaterial = generated,
                                 umaMaterial = umaMaterial,
+                                sourceTextures = sourceTextures,
+                                ownedSourceTextures = ownedSources,
+                                sourceNormalIsUnityPacked = packedNormalSources,
+                                allowMissingSourceTextures = true,
                                 triangleIslands = UVIslandUtility.BuildTriangleIslands(extracted),
                                 slotName = slice.slotNames[0],
                                 slotNames = slice.slotNames,
@@ -1245,8 +1268,9 @@ namespace UMA.TexturePaint
                         sourceMaterial = source,
                         previewMaterial = preview,
                         umaMaterial = context.umaMaterial,
-                        standaloneSourceTextures = sourceTextures,
-                        ownedStandaloneSourceTextures = ownedSources,
+                        sourceTextures = sourceTextures,
+                        ownedSourceTextures = ownedSources,
+                        sourceNormalIsUnityPacked = new bool[sourceTextures.Length],
                         standaloneSourceOverlay = member.overlay,
                         allowMissingSourceTextures = true,
                         triangleIslands = UVIslandUtility.BuildTriangleIslands(mesh),
@@ -1332,6 +1356,153 @@ namespace UMA.TexturePaint
             return Vector3.Dot(Vector3.Cross(xAxis, yAxis), zAxis) < 0f;
         }
 
+        private static UMAData.MaterialFragment FindMaterialFragment(UMAData.GeneratedMaterial generated,
+            SlotData slot)
+        {
+            if (generated?.materialFragments == null || slot == null) return null;
+            for (int i = 0; i < generated.materialFragments.Count; i++)
+            {
+                UMAData.MaterialFragment fragment = generated.materialFragments[i];
+                if (fragment?.slotData == null) continue;
+                if (ReferenceEquals(fragment.slotData, slot) ||
+                    string.Equals(fragment.slotData.slotName, slot.slotName, StringComparison.Ordinal))
+                    return fragment;
+            }
+            return null;
+        }
+
+        private static Texture[] BuildNativeOverlaySources(UMAMaterial umaMaterial,
+            UMAData.MaterialFragment sourceFragment, TextureMerge configuration,
+            out List<Texture> ownedSources, out bool[] packedNormalSources)
+        {
+            if (umaMaterial?.channels == null) throw new ArgumentNullException(nameof(umaMaterial));
+            if (sourceFragment == null) throw new ArgumentNullException(nameof(sourceFragment));
+            if (configuration == null) throw new ArgumentNullException(nameof(configuration));
+            int count = umaMaterial.channels.Length;
+            Texture[] sources = new Texture[count];
+            ownedSources = new List<Texture>();
+            packedNormalSources = new bool[count];
+            TextureMerge merge = UnityEngine.Object.Instantiate(configuration);
+            merge.name = configuration.name + " (Overlay Painter Native Reconstruction)";
+            merge.hideFlags = HideFlags.HideAndDontSave;
+            try
+            {
+                int overlayCount = 1 + (sourceFragment.AdditionalOverlays?.Length ?? 0);
+                merge.EnsurePreviewRectCapacity(Mathf.Max(1, overlayCount));
+                Texture reference = FindFragmentTexture(sourceFragment, 0);
+                int referenceWidth = reference != null ? reference.width : 0;
+                int referenceHeight = reference != null ? reference.height : 0;
+                for (int channelIndex = 0; channelIndex < count; channelIndex++)
+                {
+                    Texture channelReference = FindFragmentTexture(sourceFragment, channelIndex);
+                    if (channelReference == null) continue;
+                    int width = Mathf.Clamp(channelReference.width, 16, 16384);
+                    int height = Mathf.Clamp(channelReference.height, 16, 16384);
+                    int layoutWidth = referenceWidth > 0 ? referenceWidth : width;
+                    int layoutHeight = referenceHeight > 0 ? referenceHeight : height;
+                    float slotScale = Mathf.Max(0.0001f, sourceFragment.slotData?.overlayScale ?? 1f);
+                    UMAData.MaterialFragment fragment = CloneFragmentForNativeReconstruction(sourceFragment,
+                        width, height);
+                    UMAData.GeneratedMaterial native = new UMAData.GeneratedMaterial
+                    {
+                        umaMaterial = umaMaterial,
+                        material = umaMaterial.material,
+                        cropResolution = new Vector2(width, height),
+                        resolutionScale = new Vector2(width / (float)Mathf.Max(1, layoutWidth) / slotScale,
+                            height / (float)Mathf.Max(1, layoutHeight) / slotScale),
+                        materialFragments = new List<UMAData.MaterialFragment> { fragment }
+                    };
+
+                    RenderTextureFormat requested = UMAMaterial.GetCompatibleChannelTextureFormat(
+                        umaMaterial.channels[channelIndex].textureFormat);
+                    RenderTexture output = EditableTextureTarget.Create(
+                        $"{sourceFragment.slotData?.slotName} Channel {channelIndex} Native Overlay Composite",
+                        width, height, requested);
+                    output.filterMode = umaMaterial.MatFilterMode;
+                    merge.Reset();
+                    merge.SetupSlotAndOverlayStack(native, 0, channelIndex, null);
+                    TextureMerge.TextureMergeRect[] rects = merge.GetPreviewRects();
+                    for (int rectIndex = 0; rects != null && rectIndex < overlayCount && rectIndex < rects.Length;
+                         rectIndex++)
+                    {
+                        TextureMerge.TextureMergeRect rect = rects[rectIndex];
+                        // Native reconstruction is read-only. Do not fire atlas/decal callbacks or
+                        // rewrite SlotData.UVArea while drawing the authoring source.
+                        rect.textureEventParms = null;
+                        rects[rectIndex] = rect;
+                    }
+                    UMAMaterial.ChannelType channelType = umaMaterial.channels[channelIndex].channelType;
+                    Color background = UMAMaterial.GetBackgroundColor(channelType);
+                    if (umaMaterial.MaskWithCurrentColor &&
+                        (channelType == UMAMaterial.ChannelType.DiffuseTexture ||
+                         channelType == UMAMaterial.ChannelType.Texture))
+                        background = umaMaterial.maskMultiplier * merge.camBackgroundColor;
+                    merge.DrawAllRects(output, width, height, background, true);
+                    merge.PostProcess(output, channelType);
+                    sources[channelIndex] = output;
+                    ownedSources.Add(output);
+                    packedNormalSources[channelIndex] = channelType == UMAMaterial.ChannelType.NormalMap ||
+                                                        channelType == UMAMaterial.ChannelType.DetailNormalMap;
+                }
+                return sources;
+            }
+            catch
+            {
+                for (int i = 0; i < ownedSources.Count; i++)
+                {
+                    if (ownedSources[i] is RenderTexture renderTexture) renderTexture.Release();
+                    Destroy(ownedSources[i]);
+                }
+                ownedSources.Clear();
+                throw;
+            }
+            finally
+            {
+                Destroy(merge);
+            }
+        }
+
+        private static Texture FindFragmentTexture(UMAData.MaterialFragment fragment, int channelIndex)
+        {
+            Texture[] baseTextures = fragment?.baseOverlay?.textureList;
+            if (baseTextures != null && (uint)channelIndex < (uint)baseTextures.Length &&
+                baseTextures[channelIndex] != null) return baseTextures[channelIndex];
+            UMAData.textureData[] overlays = fragment?.AdditionalOverlays;
+            for (int i = 0; overlays != null && i < overlays.Length; i++)
+            {
+                Texture[] textures = overlays[i]?.textureList;
+                if (textures != null && (uint)channelIndex < (uint)textures.Length && textures[channelIndex] != null)
+                    return textures[channelIndex];
+            }
+            return null;
+        }
+
+        private static UMAData.MaterialFragment CloneFragmentForNativeReconstruction(
+            UMAData.MaterialFragment source, int width, int height)
+        {
+            return new UMAData.MaterialFragment
+            {
+                size = source.size,
+                baseColor = source.baseColor,
+                umaMaterial = source.umaMaterial,
+                rects = source.rects,
+                AdditionalOverlays = source.AdditionalOverlays,
+                overlayColors = source.overlayColors,
+                channelMask = source.channelMask,
+                channelAdditiveMask = source.channelAdditiveMask,
+                slotData = source.slotData,
+                overlayData = source.overlayData,
+                atlasRegion = new Rect(0f, 0f, width, height),
+                isRectShared = false,
+                isNoTextures = source.isNoTextures,
+                overlayList = source.overlayList,
+                rectFragment = null,
+                baseOverlay = source.baseOverlay,
+                baseVertexInMesh = source.baseVertexInMesh,
+                overrides = source.overrides
+            };
+        }
+
         private static Texture[] BuildStandaloneSources(UMAMaterial umaMaterial, OverlayDataAsset overlay,
             int resolution, out List<Texture> ownedSources)
         {
@@ -1412,7 +1583,8 @@ namespace UMA.TexturePaint
             return TexturePaintMath.BarycentricToUV(uv[triangles[offset]], uv[triangles[offset + 1]], uv[triangles[offset + 2]], barycentric);
         }
 
-        private static Mesh ExtractTriangles(Mesh source, int[] sourceTriangles, Matrix4x4 transform, string nameSuffix)
+        private static Mesh ExtractTriangles(Mesh source, int[] sourceTriangles, Matrix4x4 transform,
+            string nameSuffix, SlotData nativeUvSlot = null)
         {
             Vector3[] sourceVertices = source.vertices;
             Vector3[] sourceNormals = source.normals;
@@ -1443,7 +1615,11 @@ namespace UMA.TexturePaint
                         Vector3 t = transform.MultiplyVector(new Vector3(st.x, st.y, st.z)).normalized;
                         tangents.Add(new Vector4(t.x, t.y, t.z, st.w));
                     }
-                    if (sourceUV.Length == sourceVertices.Length) uv.Add(sourceUV[sourceIndex]);
+                    Vector2[] nativeUV = nativeUvSlot?.asset?.meshData?.uv;
+                    int nativeIndex = nativeUvSlot != null ? sourceIndex - nativeUvSlot.vertexOffset : -1;
+                    if (nativeUV != null && (uint)nativeIndex < (uint)nativeUV.Length)
+                        uv.Add(nativeUV[nativeIndex]);
+                    else if (sourceUV.Length == sourceVertices.Length) uv.Add(sourceUV[sourceIndex]);
                     if (sourceColors.Length == sourceVertices.Length) colors.Add(sourceColors[sourceIndex]);
                 }
                 triangles[i] = destination;
@@ -1464,13 +1640,14 @@ namespace UMA.TexturePaint
         internal static List<SurfaceSlice> BuildSurfaceSlices(int[] sourceTriangles, string[] triangleSlotNames,
             List<string> surfaceSlotNames, List<SlotData> slots)
         {
-            HashSet<string> splitSlotNames = FindCollapsedUdimSlotNames(slots);
-            if (splitSlotNames.Count == 0)
+            HashSet<string> splitSlotNames = FindNativeSlotNames(slots);
+            if (splitSlotNames.Count <= 1)
                 return new List<SurfaceSlice> { CreateSurfaceSlice(string.Empty, sourceTriangles, triangleSlotNames, surfaceSlotNames, slots) };
 
             // Splitting is only safe when every triangle has authoritative slot ownership and every
-            // UDIM member we intend to split owns geometry on this surface. Otherwise retain the
-            // original surface instead of fabricating or dropping a physical paint endpoint.
+            // source slot we intend to split owns geometry on this surface. Otherwise retain the
+            // original surface so the caller can issue an explicit reconstruction error instead
+            // of silently substituting the generated atlas.
             var ownedSplitSlots = new HashSet<string>(StringComparer.Ordinal);
             int expectedTriangleCount = sourceTriangles.Length / 3;
             if (triangleSlotNames == null || triangleSlotNames.Length != expectedTriangleCount)
@@ -1527,7 +1704,8 @@ namespace UMA.TexturePaint
             for (int slotIndex = 0; slotIndex < orderedSlots.Count; slotIndex++)
             {
                 SlotData slot = orderedSlots[slotIndex];
-                if (slot == null || !trianglesBySlot.TryGetValue(slot.slotName, out List<int> memberTriangles) ||
+                if (slot == null || emittedSlots.Contains(slot.slotName) ||
+                    !trianglesBySlot.TryGetValue(slot.slotName, out List<int> memberTriangles) ||
                     memberTriangles.Count == 0) continue;
                 emittedSlots.Add(slot.slotName);
                 result.Add(CreateSurfaceSlice("_" + slot.slotName, memberTriangles.ToArray(),
@@ -1558,25 +1736,15 @@ namespace UMA.TexturePaint
                 : new List<SurfaceSlice> { CreateSurfaceSlice(string.Empty, sourceTriangles, triangleSlotNames, surfaceSlotNames, slots) };
         }
 
-        private static HashSet<string> FindCollapsedUdimSlotNames(List<SlotData> slots)
+        private static HashSet<string> FindNativeSlotNames(List<SlotData> slots)
         {
-            var slotsByGroup = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
+            var result = new HashSet<string>(StringComparer.Ordinal);
             for (int i = 0; i < slots.Count; i++)
             {
                 SlotData slot = slots[i];
-                SlotDataAsset asset = slot?.asset;
-                if (asset == null || !asset.IsUdimMember || string.IsNullOrEmpty(slot.slotName)) continue;
-                if (!slotsByGroup.TryGetValue(asset.udimGroupId, out HashSet<string> groupSlots))
-                {
-                    groupSlots = new HashSet<string>(StringComparer.Ordinal);
-                    slotsByGroup.Add(asset.udimGroupId, groupSlots);
-                }
-                groupSlots.Add(slot.slotName);
+                if (slot?.asset == null || string.IsNullOrEmpty(slot.slotName)) continue;
+                result.Add(slot.slotName);
             }
-
-            var result = new HashSet<string>(StringComparer.Ordinal);
-            foreach (HashSet<string> groupSlots in slotsByGroup.Values)
-                if (groupSlots.Count > 1) result.UnionWith(groupSlots);
             return result;
         }
 

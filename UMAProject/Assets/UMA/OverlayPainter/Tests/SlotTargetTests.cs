@@ -121,6 +121,9 @@ namespace UMA.TexturePaint.Tests
             TexturePaintLayer primary = set1001.AddLayer("Skin Paint");
             primary.effects.stroke.enabled = true;
             primary.effects.stroke.width = 6f;
+            primary.effects.edgeFade.enabled = true;
+            primary.effects.edgeFade.edgeFadeStart = 0.7f;
+            primary.effects.edgeFade.edgeFadeSize = 0.9f;
             var created = new List<TexturePaintLogicalLayerMember>();
 
             bool linked = logicalLayers.LinkAndRepair(catalog.FindById("udim:body"), set1001, primary,
@@ -134,6 +137,9 @@ namespace UMA.TexturePaint.Tests
             Assert.That(binding.members[0].layer.paintTargetId, Is.EqualTo("udim:body"));
             Assert.That(binding.members[1].layer.effects.stroke.enabled, Is.True);
             Assert.That(binding.members[1].layer.effects.stroke.width, Is.EqualTo(6f));
+            Assert.That(binding.members[1].layer.effects.edgeFade.enabled, Is.True);
+            Assert.That(binding.members[1].layer.effects.edgeFade.edgeFadeStart, Is.EqualTo(0.7f));
+            Assert.That(binding.members[1].layer.effects.edgeFade.edgeFadeSize, Is.EqualTo(0.9f));
             Assert.That(binding.members[1].layer.effects, Is.Not.SameAs(primary.effects));
             Assert.That(logicalLayers.Activate(binding), Is.True);
             Assert.That(set1001.layers[set1001.activeLayerIndex], Is.SameAs(binding.members[0].layer));
@@ -195,7 +201,7 @@ namespace UMA.TexturePaint.Tests
         }
 
         [Test]
-        public void NonUdimSlotsSharingOneSurfaceAreNotCombinedOrSplit()
+        public void NonUdimSlotsSharingOneGeneratedSurfaceSplitIntoNativeSlotSurfaces()
         {
             SlotDataAsset shirt = CreateSlot("Shirt");
             SlotDataAsset shoes = CreateSlot("Shoes");
@@ -213,7 +219,9 @@ namespace UMA.TexturePaint.Tests
             };
             catalog.Rebuild(new[] { surface });
 
-            Assert.That(slices.Count, Is.EqualTo(1));
+            Assert.That(slices.Count, Is.EqualTo(2));
+            Assert.That(new[] { slices[0].slotNames[0], slices[1].slotNames[0] },
+                Is.EquivalentTo(new[] { "Shirt", "Shoes" }));
             Assert.That(catalog.Targets.Count, Is.EqualTo(2));
             Assert.That(catalog.FindBySlot("Shirt"), Is.Not.SameAs(catalog.FindBySlot("Shoes")));
         }
