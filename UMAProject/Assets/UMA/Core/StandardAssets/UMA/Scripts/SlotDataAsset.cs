@@ -1504,6 +1504,7 @@ namespace UMA
             udimGroupName = source.udimGroupName;
             udimTileNumber = source.udimTileNumber;
             udimSourceSubmeshIndex = source.udimSourceSubmeshIndex;
+#if UNITY_EDITOR
             if (source.UdimSharedVertexMap != null)
             {
                 UdimSharedVertexMap = new UdimSeamMap
@@ -1520,6 +1521,7 @@ namespace UMA
             {
                 UdimSharedVertexMap = null;
             }
+#endif
             if (source._sourceSlotName != null)
             {
                 _sourceSlotName = (string)source._sourceSlotName.Clone();
