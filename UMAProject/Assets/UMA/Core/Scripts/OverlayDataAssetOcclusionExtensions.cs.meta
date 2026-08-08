@@ -10,10 +10,3 @@ MonoImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 14249
-  packageName: UMA Power Tools 2
-  packageVersion: 2.10.1
-  assetPath: Assets/UMA/Extensions/UMAPowerTools/Scripts/OverlayDataAssetOcclusionExtensions.cs
-  uploadId: 385976

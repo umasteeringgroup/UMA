@@ -1,0 +1,511 @@
+fileFormatVersion: 2
+guid: 7d61c9d89fb3a3548a922c5301745b67
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 0
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 2
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Splotches_0
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 1552
+        width: 480
+        height: 480
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7a23ee36244e20b4ca4c44d5bb6f8037
+      internalID: 1568103822
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Splotches_1
+      rect:
+        serializedVersion: 2
+        x: 528
+        y: 1552
+        width: 480
+        height: 480
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 26a1a29ae8d1c4b4e94bd9f9e2d722cb
+      internalID: -748422884
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Splotches_2
+      rect:
+        serializedVersion: 2
+        x: 1040
+        y: 1552
+        width: 480
+        height: 480
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4c80fda3e04b0aa478e98cdf863b5b71
+      internalID: 1174414681
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Splotches_3
+      rect:
+        serializedVersion: 2
+        x: 1552
+        y: 1552
+        width: 480
+        height: 480
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7bee37e908bec824fb34b373c179e9e8
+      internalID: 14967340
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Splotches_4
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 1040
+        width: 480
+        height: 480
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 499a7d47d60730f4d98643fdb848a9dd
+      internalID: 1703696803
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Splotches_5
+      rect:
+        serializedVersion: 2
+        x: 528
+        y: 1040
+        width: 480
+        height: 480
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 579cec4126ead27478d829eec50ebb6d
+      internalID: 2110750828
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Splotches_6
+      rect:
+        serializedVersion: 2
+        x: 1040
+        y: 1040
+        width: 480
+        height: 480
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9b204ccd46081b943aef530b5a5b9c8c
+      internalID: 1397679731
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Splotches_7
+      rect:
+        serializedVersion: 2
+        x: 1552
+        y: 1040
+        width: 480
+        height: 480
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a54195c259d39654bb6f2130a9796655
+      internalID: -857433734
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Splotches_8
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 528
+        width: 480
+        height: 480
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d4dfc126f05330d4184f34301d49dde7
+      internalID: -1125922126
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Splotches_9
+      rect:
+        serializedVersion: 2
+        x: 528
+        y: 528
+        width: 480
+        height: 480
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 80aa453afa9fea8438c484efd128faec
+      internalID: 1254252069
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Splotches_10
+      rect:
+        serializedVersion: 2
+        x: 1040
+        y: 528
+        width: 480
+        height: 480
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 578cbe3373ebda84bab7b1ffe53d2d1c
+      internalID: 116912703
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Splotches_11
+      rect:
+        serializedVersion: 2
+        x: 1552
+        y: 528
+        width: 480
+        height: 480
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d102bc2bcc8440949835040ecf1a1450
+      internalID: 1225805732
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Splotches_12
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 16
+        width: 480
+        height: 480
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: de5494ebba3c74d438b501aa70fce353
+      internalID: -1272420510
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Splotches_13
+      rect:
+        serializedVersion: 2
+        x: 528
+        y: 16
+        width: 480
+        height: 480
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 747c1a3d1af08d442ab3307aa6053550
+      internalID: -1851046918
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Splotches_14
+      rect:
+        serializedVersion: 2
+        x: 1040
+        y: 16
+        width: 480
+        height: 480
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 00ecf8a5ff81cd9419bc81447a594d6f
+      internalID: -1499802147
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Splotches_15
+      rect:
+        serializedVersion: 2
+        x: 1552
+        y: 16
+        width: 480
+        height: 480
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 48fe0dc48a48ab44cbd95cdd9018f236
+      internalID: 1505729689
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: e89917ab94a2ab6469b09071b430c261
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Splotches_0: 1568103822
+      Splotches_1: -748422884
+      Splotches_10: 116912703
+      Splotches_11: 1225805732
+      Splotches_12: -1272420510
+      Splotches_13: -1851046918
+      Splotches_14: -1499802147
+      Splotches_15: 1505729689
+      Splotches_2: 1174414681
+      Splotches_3: 14967340
+      Splotches_4: 1703696803
+      Splotches_5: 2110750828
+      Splotches_6: 1397679731
+      Splotches_7: -857433734
+      Splotches_8: -1125922126
+      Splotches_9: 1254252069
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: UMA.OverlayPainter.SpriteGridOptions:{"version":1,"sourceWidth":2048,"sourceHeight":2048,"columns":4,"rows":4,"inset":16,"editSpritesIndividually":false,"globalSettings":{"insetX1":16,"insetY1":16,"insetX2":16,"insetY2":16,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},"spriteSettings":[{"insetX1":16,"insetY1":16,"insetX2":16,"insetY2":16,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":16,"insetY1":16,"insetX2":16,"insetY2":16,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":16,"insetY1":16,"insetX2":16,"insetY2":16,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":16,"insetY1":16,"insetX2":16,"insetY2":16,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":16,"insetY1":16,"insetX2":16,"insetY2":16,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":16,"insetY1":16,"insetX2":16,"insetY2":16,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":16,"insetY1":16,"insetX2":16,"insetY2":16,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":16,"insetY1":16,"insetX2":16,"insetY2":16,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":16,"insetY1":16,"insetX2":16,"insetY2":16,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":16,"insetY1":16,"insetX2":16,"insetY2":16,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":16,"insetY1":16,"insetX2":16,"insetY2":16,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":16,"insetY1":16,"insetX2":16,"insetY2":16,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":16,"insetY1":16,"insetX2":16,"insetY2":16,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":16,"insetY1":16,"insetX2":16,"insetY2":16,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":16,"insetY1":16,"insetX2":16,"insetY2":16,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":16,"insetY1":16,"insetX2":16,"insetY2":16,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25}]}
+  assetBundleName: 
+  assetBundleVariant: 

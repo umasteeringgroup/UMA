@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ad6e21078dbc88344b21463ab3922a67, type: 3}
   m_Name: UMASettings
   m_EditorClassIdentifier: 
+  IgnoreTag: UMAIgnore
   useMeshAPICombiner: 0
   DebugMemoryUsage: 0
   DisableDecalCallbacks: 0
@@ -19,8 +20,7 @@ MonoBehaviour:
     Use the project settings instead.\n Modifying settings that need compiler\n directives
     set will NOT work if you\n edit them in the inspector!"
   Initialized: 1
-  UMAVersion: UMA NextGen 3.0
-  IgnoreTag: UMAIgnore
+  UMAVersion: UMA NextGen 3.0f3
   KeepTag: UMAKeepChain
   tagLookupValues:
   - Head
@@ -52,7 +52,7 @@ MonoBehaviour:
   - Hands
   cleanRegenOnSave: 1
   autoRepairIndex: 0
-  showIndexedTypes: 0
+  showIndexedTypes: 1
   showUnindexedTypes: 0
   postProcessAllAssets: 0
   useBurstCompiler: 1
@@ -70,6 +70,7 @@ MonoBehaviour:
   addrIncludeOther: 0
   addrStripUVAttachedShaders: 0
   showWelcomeToUMA: 0
+  showToolbar: 1
   generatorPrefab: {fileID: 6782112333398131213, guid: a54fde34eec40964b94d71ee0aba9889, type: 3}
   characterPrefab: {fileID: 153068, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
   textureMerge: {fileID: 11400000, guid: d242fc6cda21e9b42b95a0c72bb3bee1, type: 2}

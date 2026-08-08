@@ -2677,69 +2677,84 @@ namespace UMA.Editors
 							dca.editorTimeGeneration = false;
 						}
 
-						GameObject newAvatar = GameObject.Instantiate(baseObject);
-
-						if (dca != null)
+						GameObject newAvatar = null;
+						try
 						{
-							dca.editorTimeGeneration = prevEditorTimeGen;
-						}
+							newAvatar = GameObject.Instantiate(baseObject);
 
-						var cloneDca = newAvatar.GetComponent<DynamicCharacterAvatar>();
-						if (cloneDca != null)
-						{
-							DestroyImmediate(cloneDca);
-						}
-
-						var cloneLod = newAvatar.GetComponent<UMASimpleLOD>();
-						if (cloneLod != null)
-						{
-							DestroyImmediate(cloneLod);
-						}
-
-						SkinnedMeshRenderer[] cloneRenderers = newAvatar.GetComponentsInChildren<SkinnedMeshRenderer>(true);
-						for (int r = 0; r < cloneRenderers.Length; r++)
-						{
-							cloneRenderers[r].enabled = true;
-						}
-
-						if (AddStandaloneDNA)
-						{
-							if (avatar is DynamicCharacterAvatar)
+							if (dca != null)
 							{
-								DynamicCharacterAvatar avt = avatar as DynamicCharacterAvatar;
-								StandAloneDNA sda = newAvatar.AddComponent<UMA.StandAloneDNA>();
-								sda.PackedDNA = UMAPackedRecipeBase.GetPackedDNA(avt.umaData._umaRecipe);
-								sda.avatarDefinition = avt.GetAvatarDefinition(true);
-								sda.umaData = avt.umaData;
+								dca.editorTimeGeneration = prevEditorTimeGen;
+							}
+
+							var cloneDca = newAvatar.GetComponent<DynamicCharacterAvatar>();
+							if (cloneDca != null)
+							{
+								DestroyImmediate(cloneDca);
+							}
+
+							var cloneLod = newAvatar.GetComponent<UMASimpleLOD>();
+							if (cloneLod != null)
+							{
+								DestroyImmediate(cloneLod);
+							}
+
+							SkinnedMeshRenderer[] cloneRenderers = newAvatar.GetComponentsInChildren<SkinnedMeshRenderer>(true);
+							for (int r = 0; r < cloneRenderers.Length; r++)
+							{
+								cloneRenderers[r].enabled = true;
+							}
+
+							if (AddStandaloneDNA)
+							{
+								if (avatar is DynamicCharacterAvatar)
+								{
+									DynamicCharacterAvatar avt = avatar as DynamicCharacterAvatar;
+									StandAloneDNA sda = newAvatar.AddComponent<UMA.StandAloneDNA>();
+									sda.PackedDNA = UMAPackedRecipeBase.GetPackedDNA(avt.umaData._umaRecipe);
+									sda.avatarDefinition = avt.GetAvatarDefinition(true);
+									sda.umaData = avt.umaData;
+								}
+								else
+								{
+									UMAData uda = newAvatar.GetComponent<UMAData>();
+									StandAloneDNA sda = newAvatar.AddComponent<UMA.StandAloneDNA>();
+									sda.PackedDNA = UMAPackedRecipeBase.GetPackedDNA(uda._umaRecipe);
+									Debug.LogWarning("Avatar is not a DynamicCharacterAvatar. AvatarDefinition will not be set on StandAloneDNA.");
+									sda.umaData = uda;
+								}
 							}
 							else
 							{
-								UMAData uda = newAvatar.GetComponent<UMAData>();
-								StandAloneDNA sda = newAvatar.AddComponent<UMA.StandAloneDNA>();
-								sda.PackedDNA = UMAPackedRecipeBase.GetPackedDNA(uda._umaRecipe);
-								Debug.LogWarning("Avatar is not a DynamicCharacterAvatar. AvatarDefinition will not be set on StandAloneDNA.");
-								sda.umaData = uda;
+								var ud = newAvatar.GetComponent<UMAData>();
+								if (ud != null)
+								{
+									DestroyImmediate(ud);
+								}
 							}
-						}
-						else
-						{
-							var ud = newAvatar.GetComponent<UMAData>();
-							if (ud != null)
+
+							var cloneExpressionPlayer = newAvatar.GetComponent<UMAExpressionPlayer>();
+							if (cloneExpressionPlayer != null)
 							{
-								DestroyImmediate(ud);
+								DestroyImmediate(cloneExpressionPlayer);
+							}
+
+							newAvatar.name = CharName;
+							string prefabName = Folder + "/" + CharName + ".prefab";
+							prefabName = CustomAssetUtility.UnityFriendlyPath(prefabName);
+							PrefabUtility.SaveAsPrefabAssetAndConnect(newAvatar, prefabName, InteractionMode.AutomatedAction);
+						}
+						finally
+						{
+							if (dca != null)
+							{
+								dca.editorTimeGeneration = prevEditorTimeGen;
+							}
+							if (newAvatar != null)
+							{
+								DestroyImmediate(newAvatar);
 							}
 						}
-
-						var cloneExpressionPlayer = newAvatar.GetComponent<UMAExpressionPlayer>();
-						if (cloneExpressionPlayer != null)
-						{
-							DestroyImmediate(cloneExpressionPlayer);
-						}
-
-						newAvatar.name = CharName;
-						string prefabName = Folder + "/" + CharName + ".prefab";
-						prefabName = CustomAssetUtility.UnityFriendlyPath(prefabName);
-						PrefabUtility.SaveAsPrefabAssetAndConnect(newAvatar, prefabName, InteractionMode.AutomatedAction);
 					}
 				}
 			}

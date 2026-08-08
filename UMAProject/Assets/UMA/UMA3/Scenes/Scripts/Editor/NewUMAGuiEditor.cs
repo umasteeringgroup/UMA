@@ -235,10 +235,29 @@ namespace UMA.EditorTools
             if (DrawFoldoutHeader("DNA", ref _dnaFoldout))
             {
                 EditorGUI.indentLevel++;
-                DrawListWithButtons(_faceDNAProp, "Face DNA", typeof(string));
-                DrawListWithButtons(_hairDNAProp, "Hair DNA", typeof(string));
-                DrawListWithButtons(_legsDNAProp, "Legs DNA", typeof(string));
-                DrawListWithButtons(_bodyDNAProp, "Body DNA", typeof(string));
+                DrawListWithButtons(_faceDNAProp, "Face DNA", typeof(string), false);
+                DrawListWithButtons(_hairDNAProp, "Hair DNA", typeof(string), false);
+                DrawListWithButtons(_legsDNAProp, "Legs DNA", typeof(string), false);
+                DrawListWithButtons(_bodyDNAProp, "Body DNA", typeof(string), false);
+
+                EditorGUILayout.Space(3);
+                EditorGUILayout.BeginHorizontal();
+                if (GUILayout.Button(new GUIContent(
+                    "Remove Duplicates",
+                    "Remove duplicate DNA names across every DNA section. The first occurrence in Face, Hair, Legs, then Body is preserved.")))
+                {
+                    RemoveAllDnaDuplicates();
+                }
+                if (GUILayout.Button(new GUIContent(
+                    "Add Missing DNA",
+                    "Choose one or more races, review DNA not currently shown by this control, and assign each entry to a section.")))
+                {
+                    serializedObject.ApplyModifiedProperties();
+                    NewUMAGuiMissingDnaWindow.Open(
+                        target as NewUMAGUI,
+                        RefreshDnaProperties);
+                }
+                EditorGUILayout.EndHorizontal();
                 EditorGUI.indentLevel--;
             }
 
@@ -278,7 +297,7 @@ namespace UMA.EditorTools
             }
 
             // --- Misc ---
-            if (DrawFoldoutHeader("Misc", ref _miscFoldout))
+            if (DrawFoldoutHeader("Animation", ref _miscFoldout))
             {
                 EditorGUI.indentLevel++;
                 DrawListWithButtons(_animatorsProp, "Animators", typeof(RuntimeAnimatorController));
@@ -320,7 +339,11 @@ namespace UMA.EditorTools
 
         #region List drawing
 
-        private void DrawListWithButtons(SerializedProperty listProp, string label, Type elementType)
+        private void DrawListWithButtons(
+            SerializedProperty listProp,
+            string label,
+            Type elementType,
+            bool showRemoveDuplicates = true)
         {
             if (listProp == null) return;
 
@@ -335,7 +358,8 @@ namespace UMA.EditorTools
                 SortList(listProp, elementType, label);
             }
 
-            if (GUILayout.Button("Remove Duplicates", GUILayout.Width(130)))
+            if (showRemoveDuplicates &&
+                GUILayout.Button("Remove Duplicates", GUILayout.Width(130)))
             {
                 RemoveDuplicates(listProp, elementType, label);
             }
@@ -497,6 +521,97 @@ namespace UMA.EditorTools
 
         #endregion
 
+        #region DNA maintenance
+
+        private void RemoveAllDnaDuplicates()
+        {
+            serializedObject.ApplyModifiedProperties();
+
+            NewUMAGUI gui = target as NewUMAGUI;
+            if (gui == null)
+            {
+                return;
+            }
+
+            Undo.RecordObject(gui, "Remove duplicate UMA GUI DNA");
+            int removed = RemoveDnaDuplicates(
+                gui.FaceDNA,
+                gui.HairDNA,
+                gui.LegsDNA,
+                gui.BodyDNA);
+
+            if (removed == 0)
+            {
+                return;
+            }
+
+            RecordDnaChanges(gui);
+            RefreshDnaProperties();
+            Debug.Log(
+                $"Removed {removed} duplicate DNA entr{(removed == 1 ? "y" : "ies")} " +
+                $"from '{gui.name}'.",
+                gui);
+        }
+
+        internal static int RemoveDnaDuplicates(params List<string>[] dnaLists)
+        {
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            int removed = 0;
+
+            if (dnaLists == null)
+            {
+                return removed;
+            }
+
+            for (int listIndex = 0; listIndex < dnaLists.Length; listIndex++)
+            {
+                List<string> dnaList = dnaLists[listIndex];
+                if (dnaList == null)
+                {
+                    continue;
+                }
+
+                for (int dnaIndex = 0; dnaIndex < dnaList.Count;)
+                {
+                    string dnaName = dnaList[dnaIndex] ?? string.Empty;
+                    if (seen.Add(dnaName))
+                    {
+                        dnaIndex++;
+                        continue;
+                    }
+
+                    dnaList.RemoveAt(dnaIndex);
+                    removed++;
+                }
+            }
+
+            return removed;
+        }
+
+        internal static void RecordDnaChanges(NewUMAGUI gui)
+        {
+            if (gui == null)
+            {
+                return;
+            }
+
+            EditorUtility.SetDirty(gui);
+            if (PrefabUtility.IsPartOfPrefabInstance(gui))
+            {
+                PrefabUtility.RecordPrefabInstancePropertyModifications(gui);
+            }
+        }
+
+        private void RefreshDnaProperties()
+        {
+            serializedObject.Update();
+            _listCache.Clear();
+            GUI.changed = true;
+            Repaint();
+        }
+
+        #endregion
+
         #region Utility
 
         private void ApplyAndRefresh()
@@ -508,6 +623,599 @@ namespace UMA.EditorTools
         }
 
         #endregion
+    }
+
+    internal sealed class NewUMAGuiMissingDnaWindow : EditorWindow
+    {
+        private enum WorkflowStep
+        {
+            SelectRaces,
+            AssignSections
+        }
+
+        private enum DnaSection
+        {
+            Face,
+            Hair,
+            Legs,
+            Body
+        }
+
+        private sealed class RaceChoice
+        {
+            public RaceData race;
+            public bool selected;
+        }
+
+        private sealed class MissingDnaChoice
+        {
+            public string dnaName;
+            public readonly List<string> raceNames = new List<string>();
+            public bool add = true;
+            public DnaSection section;
+        }
+
+        private NewUMAGUI targetGui;
+        private Action onApplied;
+        private readonly List<RaceChoice> raceChoices = new List<RaceChoice>();
+        private readonly List<MissingDnaChoice> missingDna = new List<MissingDnaChoice>();
+        private WorkflowStep step;
+        private Vector2 scrollPosition;
+        private string raceFilter = string.Empty;
+        private string dnaFilter = string.Empty;
+
+        internal static void Open(NewUMAGUI gui, Action onApplied)
+        {
+            if (gui == null)
+            {
+                return;
+            }
+
+            NewUMAGuiMissingDnaWindow window =
+                CreateInstance<NewUMAGuiMissingDnaWindow>();
+            window.titleContent = new GUIContent("Add Missing UMA DNA");
+            window.minSize = new Vector2(620f, 420f);
+            window.targetGui = gui;
+            window.onApplied = onApplied;
+            window.LoadRaces();
+            window.ShowUtility();
+        }
+
+        private void OnGUI()
+        {
+            if (targetGui == null)
+            {
+                EditorGUILayout.HelpBox(
+                    "The NewUMAGUI target is no longer available.",
+                    MessageType.Warning);
+                if (GUILayout.Button("Close"))
+                {
+                    Close();
+                }
+                return;
+            }
+
+            switch (step)
+            {
+                case WorkflowStep.SelectRaces:
+                    DrawRaceSelection();
+                    break;
+                case WorkflowStep.AssignSections:
+                    DrawSectionAssignment();
+                    break;
+            }
+        }
+
+        private void LoadRaces()
+        {
+            raceChoices.Clear();
+
+            string[] raceGuids = AssetDatabase.FindAssets("t:RaceData");
+            var seen = new HashSet<RaceData>();
+            for (int i = 0; i < raceGuids.Length; i++)
+            {
+                string path = AssetDatabase.GUIDToAssetPath(raceGuids[i]);
+                RaceData race = AssetDatabase.LoadAssetAtPath<RaceData>(path);
+                if (race == null || !seen.Add(race))
+                {
+                    continue;
+                }
+
+                raceChoices.Add(new RaceChoice
+                {
+                    race = race,
+                    selected = IsCurrentAvatarRace(race)
+                });
+            }
+
+            raceChoices.Sort((left, right) =>
+            {
+                string leftName = GetRaceDisplayName(left.race);
+                string rightName = GetRaceDisplayName(right.race);
+                return string.Compare(
+                    leftName,
+                    rightName,
+                    StringComparison.OrdinalIgnoreCase);
+            });
+
+            if (raceChoices.Count == 1)
+            {
+                raceChoices[0].selected = true;
+            }
+        }
+
+        private bool IsCurrentAvatarRace(RaceData race)
+        {
+            return targetGui != null &&
+                targetGui.avatar != null &&
+                targetGui.avatar.activeRace != null &&
+                targetGui.avatar.activeRace.data == race;
+        }
+
+        private void DrawRaceSelection()
+        {
+            EditorGUILayout.LabelField(
+                "Select Races",
+                EditorStyles.boldLabel);
+            EditorGUILayout.HelpBox(
+                "Choose the races this control must support. UMA will combine their DNA names and compare them with all four DNA sections.",
+                MessageType.Info);
+
+            EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button("Select All", GUILayout.Width(90f)))
+            {
+                SetAllRacesSelected(true);
+            }
+            if (GUILayout.Button("Select None", GUILayout.Width(90f)))
+            {
+                SetAllRacesSelected(false);
+            }
+            GUILayout.FlexibleSpace();
+            raceFilter = EditorGUILayout.TextField(
+                new GUIContent("Filter"),
+                raceFilter,
+                GUILayout.Width(260f));
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.Space(3f);
+            scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
+            int shown = 0;
+            for (int i = 0; i < raceChoices.Count; i++)
+            {
+                RaceChoice choice = raceChoices[i];
+                string displayName = GetRaceDisplayName(choice.race);
+                if (!MatchesFilter(displayName, raceFilter))
+                {
+                    continue;
+                }
+
+                shown++;
+                choice.selected = EditorGUILayout.ToggleLeft(
+                    new GUIContent(
+                        displayName,
+                        AssetDatabase.GetAssetPath(choice.race)),
+                    choice.selected);
+            }
+            EditorGUILayout.EndScrollView();
+
+            if (raceChoices.Count == 0)
+            {
+                EditorGUILayout.HelpBox(
+                    "No RaceData assets were found in the project.",
+                    MessageType.Warning);
+            }
+            else if (shown == 0)
+            {
+                EditorGUILayout.HelpBox(
+                    "No races match the current filter.",
+                    MessageType.Info);
+            }
+
+            EditorGUILayout.Space(4f);
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            using (new EditorGUI.DisabledScope(
+                !raceChoices.Any(choice => choice.selected)))
+            {
+                if (GUILayout.Button("Find Missing DNA", GUILayout.Width(150f)))
+                {
+                    BuildMissingDnaList();
+                }
+            }
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private void DrawSectionAssignment()
+        {
+            EditorGUILayout.LabelField(
+                "Assign Missing DNA",
+                EditorStyles.boldLabel);
+            EditorGUILayout.HelpBox(
+                "Choose which missing DNA entries to add and select the NewUMAGUI section that should display each one. Suggested sections are only a starting point.",
+                MessageType.Info);
+
+            EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button("Select All", GUILayout.Width(90f)))
+            {
+                SetAllMissingSelected(true);
+            }
+            if (GUILayout.Button("Select None", GUILayout.Width(90f)))
+            {
+                SetAllMissingSelected(false);
+            }
+            DrawSetAllSectionMenu();
+            GUILayout.FlexibleSpace();
+            dnaFilter = EditorGUILayout.TextField(
+                new GUIContent("Filter"),
+                dnaFilter,
+                GUILayout.Width(260f));
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.Space(3f);
+            DrawMissingDnaHeader();
+            scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
+            int shown = 0;
+            for (int i = 0; i < missingDna.Count; i++)
+            {
+                MissingDnaChoice choice = missingDna[i];
+                string raceSummary = string.Join(", ", choice.raceNames);
+                if (!MatchesFilter(choice.dnaName, dnaFilter) &&
+                    !MatchesFilter(raceSummary, dnaFilter))
+                {
+                    continue;
+                }
+
+                shown++;
+                EditorGUILayout.BeginHorizontal();
+                choice.add = EditorGUILayout.Toggle(
+                    choice.add,
+                    GUILayout.Width(24f));
+                EditorGUILayout.LabelField(
+                    new GUIContent(choice.dnaName, raceSummary),
+                    GUILayout.MinWidth(220f));
+                choice.section = (DnaSection)EditorGUILayout.EnumPopup(
+                    choice.section,
+                    GUILayout.Width(100f));
+                EditorGUILayout.LabelField(
+                    raceSummary,
+                    EditorStyles.miniLabel,
+                    GUILayout.MinWidth(180f));
+                EditorGUILayout.EndHorizontal();
+            }
+            EditorGUILayout.EndScrollView();
+
+            if (missingDna.Count == 0)
+            {
+                EditorGUILayout.HelpBox(
+                    "The selected races do not contain any DNA missing from this control.",
+                    MessageType.Info);
+            }
+            else if (shown == 0)
+            {
+                EditorGUILayout.HelpBox(
+                    "No missing DNA matches the current filter.",
+                    MessageType.Info);
+            }
+
+            EditorGUILayout.Space(4f);
+            EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button("Back", GUILayout.Width(90f)))
+            {
+                step = WorkflowStep.SelectRaces;
+                scrollPosition = Vector2.zero;
+            }
+            GUILayout.FlexibleSpace();
+            using (new EditorGUI.DisabledScope(
+                !missingDna.Any(choice => choice.add)))
+            {
+                if (GUILayout.Button("Add Selected DNA", GUILayout.Width(150f)))
+                {
+                    AddSelectedDna();
+                }
+            }
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private void DrawMissingDnaHeader()
+        {
+            EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+            GUILayout.Space(24f);
+            EditorGUILayout.LabelField(
+                "DNA Name",
+                EditorStyles.miniBoldLabel,
+                GUILayout.MinWidth(220f));
+            EditorGUILayout.LabelField(
+                "Section",
+                EditorStyles.miniBoldLabel,
+                GUILayout.Width(100f));
+            EditorGUILayout.LabelField(
+                "Used By Race",
+                EditorStyles.miniBoldLabel,
+                GUILayout.MinWidth(180f));
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private void DrawSetAllSectionMenu()
+        {
+            if (!GUILayout.Button(
+                new GUIContent("Set Selected Section"),
+                EditorStyles.miniButton,
+                GUILayout.Width(145f)))
+            {
+                return;
+            }
+
+            var menu = new GenericMenu();
+            foreach (DnaSection section in Enum.GetValues(typeof(DnaSection)))
+            {
+                DnaSection capturedSection = section;
+                menu.AddItem(
+                    new GUIContent(section.ToString()),
+                    false,
+                    () => SetSelectedMissingSection(capturedSection));
+            }
+            menu.ShowAsContext();
+        }
+
+        private void SetAllRacesSelected(bool selected)
+        {
+            for (int i = 0; i < raceChoices.Count; i++)
+            {
+                raceChoices[i].selected = selected;
+            }
+        }
+
+        private void SetAllMissingSelected(bool selected)
+        {
+            for (int i = 0; i < missingDna.Count; i++)
+            {
+                missingDna[i].add = selected;
+            }
+        }
+
+        private void SetSelectedMissingSection(DnaSection section)
+        {
+            for (int i = 0; i < missingDna.Count; i++)
+            {
+                if (missingDna[i].add)
+                {
+                    missingDna[i].section = section;
+                }
+            }
+        }
+
+        private void BuildMissingDnaList()
+        {
+            missingDna.Clear();
+            var existing = new HashSet<string>(
+                EnumerateCurrentDna(),
+                StringComparer.OrdinalIgnoreCase);
+            var choicesByName = new Dictionary<string, MissingDnaChoice>(
+                StringComparer.OrdinalIgnoreCase);
+
+            for (int raceIndex = 0; raceIndex < raceChoices.Count; raceIndex++)
+            {
+                RaceChoice raceChoice = raceChoices[raceIndex];
+                if (!raceChoice.selected || raceChoice.race == null)
+                {
+                    continue;
+                }
+
+                List<string> raceDna = raceChoice.race.GetDNANames();
+                if (raceDna == null)
+                {
+                    continue;
+                }
+
+                string raceName = GetRaceDisplayName(raceChoice.race);
+                for (int dnaIndex = 0; dnaIndex < raceDna.Count; dnaIndex++)
+                {
+                    string dnaName = raceDna[dnaIndex];
+                    if (string.IsNullOrWhiteSpace(dnaName) ||
+                        existing.Contains(dnaName))
+                    {
+                        continue;
+                    }
+
+                    if (!choicesByName.TryGetValue(
+                        dnaName,
+                        out MissingDnaChoice choice))
+                    {
+                        choice = new MissingDnaChoice
+                        {
+                            dnaName = dnaName,
+                            section = GuessSection(dnaName)
+                        };
+                        choicesByName.Add(dnaName, choice);
+                        missingDna.Add(choice);
+                    }
+
+                    if (!choice.raceNames.Contains(raceName))
+                    {
+                        choice.raceNames.Add(raceName);
+                    }
+                }
+            }
+
+            missingDna.Sort((left, right) =>
+                string.Compare(
+                    left.dnaName,
+                    right.dnaName,
+                    StringComparison.OrdinalIgnoreCase));
+            for (int i = 0; i < missingDna.Count; i++)
+            {
+                missingDna[i].raceNames.Sort(StringComparer.OrdinalIgnoreCase);
+            }
+
+            step = WorkflowStep.AssignSections;
+            scrollPosition = Vector2.zero;
+        }
+
+        private IEnumerable<string> EnumerateCurrentDna()
+        {
+            if (targetGui.FaceDNA != null)
+            {
+                foreach (string dna in targetGui.FaceDNA)
+                {
+                    yield return dna ?? string.Empty;
+                }
+            }
+            if (targetGui.HairDNA != null)
+            {
+                foreach (string dna in targetGui.HairDNA)
+                {
+                    yield return dna ?? string.Empty;
+                }
+            }
+            if (targetGui.LegsDNA != null)
+            {
+                foreach (string dna in targetGui.LegsDNA)
+                {
+                    yield return dna ?? string.Empty;
+                }
+            }
+            if (targetGui.BodyDNA != null)
+            {
+                foreach (string dna in targetGui.BodyDNA)
+                {
+                    yield return dna ?? string.Empty;
+                }
+            }
+        }
+
+        private void AddSelectedDna()
+        {
+            Undo.RecordObject(targetGui, "Add missing UMA GUI DNA");
+            var existing = new HashSet<string>(
+                EnumerateCurrentDna(),
+                StringComparer.OrdinalIgnoreCase);
+            int added = 0;
+
+            for (int i = 0; i < missingDna.Count; i++)
+            {
+                MissingDnaChoice choice = missingDna[i];
+                if (!choice.add || !existing.Add(choice.dnaName))
+                {
+                    continue;
+                }
+
+                GetSectionList(choice.section).Add(choice.dnaName);
+                added++;
+            }
+
+            if (added > 0)
+            {
+                NewUMAGuiEditor.RecordDnaChanges(targetGui);
+                onApplied?.Invoke();
+                Debug.Log(
+                    $"Added {added} missing DNA entr{(added == 1 ? "y" : "ies")} " +
+                    $"to '{targetGui.name}'.",
+                    targetGui);
+            }
+
+            Close();
+        }
+
+        private List<string> GetSectionList(DnaSection section)
+        {
+            switch (section)
+            {
+                case DnaSection.Face:
+                    if (targetGui.FaceDNA == null)
+                    {
+                        targetGui.FaceDNA = new List<string>();
+                    }
+                    return targetGui.FaceDNA;
+                case DnaSection.Hair:
+                    if (targetGui.HairDNA == null)
+                    {
+                        targetGui.HairDNA = new List<string>();
+                    }
+                    return targetGui.HairDNA;
+                case DnaSection.Legs:
+                    if (targetGui.LegsDNA == null)
+                    {
+                        targetGui.LegsDNA = new List<string>();
+                    }
+                    return targetGui.LegsDNA;
+                default:
+                    if (targetGui.BodyDNA == null)
+                    {
+                        targetGui.BodyDNA = new List<string>();
+                    }
+                    return targetGui.BodyDNA;
+            }
+        }
+
+        private static DnaSection GuessSection(string dnaName)
+        {
+            string lowerName = (dnaName ?? string.Empty).ToLowerInvariant();
+            if (ContainsAny(lowerName, "hair", "brow", "beard", "mustache"))
+            {
+                return DnaSection.Hair;
+            }
+            if (ContainsAny(
+                lowerName,
+                "leg",
+                "thigh",
+                "calf",
+                "knee",
+                "ankle",
+                "foot",
+                "feet"))
+            {
+                return DnaSection.Legs;
+            }
+            if (ContainsAny(
+                lowerName,
+                "head",
+                "face",
+                "forehead",
+                "eye",
+                "ear",
+                "nose",
+                "mouth",
+                "lip",
+                "jaw",
+                "chin",
+                "cheek"))
+            {
+                return DnaSection.Face;
+            }
+            return DnaSection.Body;
+        }
+
+        private static bool ContainsAny(string value, params string[] terms)
+        {
+            for (int i = 0; i < terms.Length; i++)
+            {
+                if (value.Contains(terms[i]))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private static bool MatchesFilter(string value, string filter)
+        {
+            return string.IsNullOrWhiteSpace(filter) ||
+                (!string.IsNullOrEmpty(value) &&
+                    value.IndexOf(
+                        filter,
+                        StringComparison.OrdinalIgnoreCase) >= 0);
+        }
+
+        private static string GetRaceDisplayName(RaceData race)
+        {
+            if (race == null)
+            {
+                return "(Missing Race)";
+            }
+            return string.IsNullOrWhiteSpace(race.raceName)
+                ? race.name
+                : race.raceName;
+        }
     }
 }
 #endif

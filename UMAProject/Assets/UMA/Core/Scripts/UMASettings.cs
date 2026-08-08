@@ -65,6 +65,8 @@ namespace UMA
         public bool addrStripUVAttachedShaders = false; 
 
         public bool showWelcomeToUMA = true;
+        [Tooltip("Show the UMA Toolbar overlay in the Scene view.")]
+        public bool showToolbar = true;
 #endif
         public GameObject generatorPrefab;
 		public static UMASettings instance;
@@ -93,6 +95,10 @@ namespace UMA
         [Header("Default UMA Folder")]
         [Tooltip("The UMA folder, relative to the Assets folder. Usually Assets/UMA")]
         public string UMAFolder = "Assets/UMA";
+        [Header("Overlay Painter")]
+        [Tooltip("Project folder used for the temporary Overlay Painter recovery asset and its data files. " +
+            "This folder must be below Assets and can be excluded from source control.")]
+        public string texturePaintRecoveryFolder = "Assets/UMA/Temp";
 
         [Header("Welcome page textures")]
         public Texture2D Overlays;
@@ -110,6 +116,7 @@ namespace UMA
         {
             var settings = CustomAssetUtility.CreateAsset<UMASettings>("", true, "UMASettings", true);
             settings.showWelcomeToUMA = true;
+            settings.showToolbar = true;
             settings.generatorPrefab = null;
             settings.characterPrefab = null;
             settings.DiscordInvite = "https://discord.gg/KdteVKd";
@@ -322,12 +329,51 @@ namespace UMA
             }
         }
 
+        public static bool ShowToolbar
+        {
+            get
+            {
+                var settings = GetOrCreateSettings();
+                return settings == null || settings.showToolbar;
+            }
+        }
+
+        public static event Action<bool> ToolbarVisibilityChanged;
+        public static event Action ProjectWindowTypeDisplayChanged;
+
+        public static void NotifyToolbarVisibilityChanged(bool show)
+        {
+            ToolbarVisibilityChanged?.Invoke(show);
+        }
+
+        public static void NotifyProjectWindowTypeDisplayChanged()
+        {
+            ProjectWindowTypeDisplayChanged?.Invoke();
+        }
+
         public static bool IgnoreBackupFolders
         {
             get
             {
                 var settings = GetOrCreateSettings();
                 return settings.ignoreBackupFolders;
+            }
+        }
+        public static string TexturePaintRecoveryFolder
+        {
+            get
+            {
+                var settings = GetOrCreateSettings();
+                string configured = settings != null ? settings.texturePaintRecoveryFolder : null;
+                if (string.IsNullOrWhiteSpace(configured)) return "Assets/UMA/Temp";
+                configured = configured.Trim().Replace('\\', '/').TrimEnd('/');
+                string[] parts = configured.Split('/');
+                if (!configured.StartsWith("Assets/", StringComparison.OrdinalIgnoreCase) || parts.Length < 2)
+                    return "Assets/UMA/Temp";
+                for (int i = 0; i < parts.Length; i++)
+                    if (string.IsNullOrWhiteSpace(parts[i]) || parts[i] == "." || parts[i] == "..")
+                        return "Assets/UMA/Temp";
+                return configured;
             }
         }
         public static bool AutoRepairIndex { get { var settings = GetOrCreateSettings(); return settings.autoRepairIndex; } }

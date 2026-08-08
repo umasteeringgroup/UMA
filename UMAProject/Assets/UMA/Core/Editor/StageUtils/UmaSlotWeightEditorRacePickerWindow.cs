@@ -9,20 +9,22 @@ namespace UMA
         private SlotDataAsset slotAsset;
         private List<RaceData> races = new List<RaceData>();
         private int selectedRaceIndex;
+        private string helpMessage;
 
-        public static void Open(SlotDataAsset slotAsset, List<RaceData> races)
+        public static void Open(SlotDataAsset slotAsset, List<RaceData> races, string helpMessage = null)
         {
             UmaSlotWeightEditorRacePickerWindow window = CreateInstance<UmaSlotWeightEditorRacePickerWindow>();
             window.titleContent = new GUIContent("Select Preview Race");
             window.minSize = new Vector2(420f, 130f);
-            window.Initialize(slotAsset, races);
+            window.Initialize(slotAsset, races, helpMessage);
             window.ShowUtility();
             window.Focus();
         }
 
-        private void Initialize(SlotDataAsset slotAsset, List<RaceData> races)
+        private void Initialize(SlotDataAsset slotAsset, List<RaceData> races, string helpMessage)
         {
             this.slotAsset = slotAsset;
+            this.helpMessage = helpMessage;
             this.races.Clear();
             if (races != null)
             {
@@ -50,6 +52,10 @@ namespace UMA
             }
 
             EditorGUILayout.LabelField("Slot", slotAsset.slotName);
+            if (!string.IsNullOrEmpty(helpMessage))
+            {
+                EditorGUILayout.HelpBox(helpMessage, MessageType.Info);
+            }
             string[] raceNames = new string[races.Count];
             for (int i = 0; i < races.Count; i++)
             {

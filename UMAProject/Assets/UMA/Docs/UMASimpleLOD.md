@@ -74,6 +74,32 @@ The random range spreads crowd updates so every avatar does not rebuild on the s
 
 Increase these values for large crowds or slow-moving characters. Reduce them only when fast camera movement makes delayed transitions obvious.
 
+## Runtime Feature Tuning
+
+The three `Disable ... At LOD` fields can suspend costly runtime systems at a
+selected distance zone:
+
+- `Disable Bone Animators At LOD`
+- `Disable UMA Expression Player At LOD`
+- `Disable Dynamic Expression Player At LOD`
+
+The selected level is inclusive. A value of `2` enables the system at LOD 0 and
+1, then disables it at LOD 2 and above. The default value of `-1` leaves that
+system unmanaged.
+
+For project-specific behavior, implement `ILODTuning` on a `MonoBehaviour`:
+
+```csharp
+public void OnLODChanged(int lodLevel)
+{
+    // LOD zero is the highest-detail distance zone.
+}
+```
+
+Add that component to the `LOD Tunings` array. The callback occurs whenever the
+distance zone changes, even if the avatar has no slot or internal mesh LOD for
+that level.
+
 ## Manual Processing
 
 Enable `Disable Automated Processing` when another system controls LOD decisions.

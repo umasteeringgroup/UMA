@@ -11,6 +11,22 @@ namespace UMA.Editors.Tests
     {
         [Test]
         [Category("UMA")]
+        [Category("Toolbar")]
+        public void ToolbarVisibilityDefaultsToEnabled()
+        {
+            UMASettings settings = ScriptableObject.CreateInstance<UMASettings>();
+            try
+            {
+                Assert.IsTrue(settings.showToolbar);
+            }
+            finally
+            {
+                Object.DestroyImmediate(settings);
+            }
+        }
+
+        [Test]
+        [Category("UMA")]
         [Category("GeneratorBootstrap")]
         public void GeneratorCacheIsNotSerialized()
         {

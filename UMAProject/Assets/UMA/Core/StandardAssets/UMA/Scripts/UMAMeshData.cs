@@ -13,7 +13,6 @@ using System.Runtime.InteropServices;
 using UnityEngine.Rendering;
 using UMA.PoseTools;
 using System.Text;
-using System.IO.Hashing;
 
 
 namespace UMA
@@ -2135,13 +2134,17 @@ namespace UMA
 				return 0;
 			}
 
-			var hasher = new XxHash64();
+			ulong hash = UMAUtils.Hash64OffsetBasis;
 
 			unsafe
 			{
 				fixed (Vector3* vptr = vertices)
 				{
-					hasher.Append(new ReadOnlySpan<byte>(vptr, vertices.Length * sizeof(Vector3)));
+					hash = UMAUtils.Hash64(
+						new ReadOnlySpan<byte>(
+							vptr,
+							vertices.Length * sizeof(Vector3)),
+						hash);
 				}
 			}
 
@@ -2162,14 +2165,16 @@ namespace UMA
 				{
 					fixed (int* tptr = tris)
 					{
-						hasher.Append(new ReadOnlySpan<byte>(tptr, tris.Length * sizeof(int)));
+						hash = UMAUtils.Hash64(
+							new ReadOnlySpan<byte>(
+								tptr,
+								tris.Length * sizeof(int)),
+							hash);
 					}
 				}
 			}
 
-			Span<byte> hashBytes = stackalloc byte[8];
-			hasher.GetHashAndReset(hashBytes);
-			return BitConverter.ToUInt64(hashBytes);
+			return hash;
         }
 
 #if false
@@ -2363,13 +2368,10 @@ namespace UMA
 			boneNameHashes = new int[bones.Length];
 			for (int i = 0; i < bones.Length; i++)
 			{
-				try
+				Transform bone = bones[i];
+				if (bone != null)
 				{
-					boneNameHashes[i] = UMAUtils.StringToHash(bones[i].name);
-				}
-				catch (Exception ex)
-				{
-					Debug.LogError($"Error computing hash for bone {i} : " + ex.Message);
+					boneNameHashes[i] = UMAUtils.StringToHash(bone.name);
 				}
 			}
 		}

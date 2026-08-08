@@ -18,6 +18,8 @@ namespace UMA
         }
 #endif
         public override DNAInstanceCollection.DNABuildType AreaEffect => DNAInstanceCollection.DNABuildType.BlendShape;
+        public override ExpressionEffectPhase ExpressionPhases =>
+            ExpressionEffectPhase.LateBlendShape;
         public override void PostApply(UMAData avatar, DNA dna, float value)
         {
             base.PostApply(avatar, dna, value);
@@ -25,9 +27,14 @@ namespace UMA
             {
                 value = GetMappedValue(value);
                 var skinnedMeshRenderers = avatar.GetRenderers();
+                if (skinnedMeshRenderers == null)
+                {
+                    return;
+                }
                 foreach (var smr in skinnedMeshRenderers)
                 {
-                    if (smr is SkinnedMeshRenderer skinnedMeshRenderer)
+                    if (smr is SkinnedMeshRenderer skinnedMeshRenderer &&
+                        skinnedMeshRenderer.sharedMesh != null)
                     {
                         int blendShapeIndex = skinnedMeshRenderer.sharedMesh.GetBlendShapeIndex(BlendShapeName);
                         if (blendShapeIndex >= 0)

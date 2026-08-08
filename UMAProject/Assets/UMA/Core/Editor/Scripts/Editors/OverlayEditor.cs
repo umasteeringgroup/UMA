@@ -433,6 +433,21 @@ namespace UMA.Editors
                 OpenPositioningPopup();
             }
 
+            Color transparentMultiplier = EditorGUILayout.ColorField(
+                new GUIContent(
+                    "Transparent Multiplier",
+                    "Prefills transparent RGB inside this overlay's destination area using the overlay's current channel color multiplied by this color. Color.clear disables the prefill."),
+                _overlayData.TransparentMultiplier);
+            if (transparentMultiplier != _overlayData.TransparentMultiplier)
+            {
+                if (_recipeContext != null)
+                {
+                    Undo.RecordObject(_recipeContext, "Change Overlay Transparent Multiplier");
+                }
+                _overlayData.TransparentMultiplier = transparentMultiplier;
+                changed = true;
+            }
+
             bool hasBackingSlotAsset = _slotData != null && !_slotData.isPlaceholderSlot && _slotData.asset != null;
             if (_slotData != null && _slotData.isPlaceholderSlot)
             {
@@ -1368,6 +1383,8 @@ namespace UMA.Editors
                 rects[0].advancedBlending = false;
                 rects[0].textureChannel = 0;
                 rects[0].channelType = UMAMaterial.ChannelType.DiffuseTexture;
+                rects[0].transparentPrefill = false;
+                rects[0].transparentPrefillColor = Color.clear;
 
                 Rect previewOverlayRect = GetPreviewOverlayAtlasRect(width, height, referenceTexture);
                 rects[1].tex = overlayTexture != null ? overlayTexture : Texture2D.blackTexture;
@@ -1385,6 +1402,8 @@ namespace UMA.Editors
                 rects[1].advancedBlending = false;
                 rects[1].textureChannel = 0;
                 rects[1].channelType = UMAMaterial.ChannelType.DiffuseTexture;
+                rects[1].transparentPrefill = false;
+                rects[1].transparentPrefillColor = Color.clear;
 
                 Texture baseAlpha = SelectedBaseOverlay != null && SelectedBaseOverlay.asset != null ? SelectedBaseOverlay.asset.GetAlphaMask() : null;
                 Texture overlayAlpha = _overlayData != null && _overlayData.asset != null ? _overlayData.asset.GetAlphaMask() : null;
@@ -1392,6 +1411,15 @@ namespace UMA.Editors
                 Color baseAdditive = SelectedBaseOverlay != null && SelectedBaseOverlay.colorData != null ? SelectedBaseOverlay.colorData.GetAdditive(0) : OverlayColorData.EmptyAdditive;
                 Color overlayMultiply = _overlayData != null && _overlayData.colorData != null ? _overlayData.colorData.GetTint(0) : Color.white;
                 Color overlayAdditive = _overlayData != null && _overlayData.colorData != null ? _overlayData.colorData.GetAdditive(0) : OverlayColorData.EmptyAdditive;
+
+                ConfigurePreviewTransparentPrefill(
+                    ref rects[0],
+                    SelectedBaseOverlay,
+                    baseMultiply);
+                ConfigurePreviewTransparentPrefill(
+                    ref rects[1],
+                    _overlayData,
+                    overlayMultiply);
 
                 PreparePreviewMaterial(rects[0].mat, rects[0].tex, baseAlpha, baseMultiply, baseAdditive);
                 PreparePreviewMaterial(rects[1].mat, rects[1].tex, overlayAlpha, overlayMultiply, overlayAdditive);
@@ -1407,6 +1435,27 @@ namespace UMA.Editors
                 textureMerge.DrawAllRects(_previewRenderTexture, width, height, backgroundColor, true);
                 GUI.DrawTexture(previewRect, _previewRenderTexture, ScaleMode.StretchToFill, false);
                 return true;
+            }
+
+            private static void ConfigurePreviewTransparentPrefill(
+                ref TextureMerge.TextureMergeRect mergeRect,
+                OverlayData overlay,
+                Color channelMultiplier)
+            {
+                if (overlay == null ||
+                    overlay.TransparentMultiplier == Color.clear ||
+                    overlay.TransparentMultiplier.a <= 0f)
+                {
+                    mergeRect.transparentPrefill = false;
+                    mergeRect.transparentPrefillColor = Color.clear;
+                    return;
+                }
+
+                Color prefillColor =
+                    channelMultiplier * overlay.TransparentMultiplier;
+                prefillColor.a = 0f;
+                mergeRect.transparentPrefillColor = prefillColor;
+                mergeRect.transparentPrefill = true;
             }
 
             private Rect GetPreviewOverlayAtlasRect(int atlasWidth, int atlasHeight, Texture baseReferenceTexture)

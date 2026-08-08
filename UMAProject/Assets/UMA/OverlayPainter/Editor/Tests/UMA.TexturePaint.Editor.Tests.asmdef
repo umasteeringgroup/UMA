@@ -1,0 +1,17 @@
+{
+    "name": "UMA.TexturePaint.Editor.Tests",
+    "rootNamespace": "UMA.TexturePaint.Editor.Tests",
+    "references": [
+        "UMA_Core",
+        "UMA.TexturePaint.Runtime",
+        "UMA.TexturePaint.Editor",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": ["Editor"],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": ["nunit.framework.dll"],
+    "autoReferenced": false,
+    "defineConstraints": ["UNITY_INCLUDE_TESTS"],
+    "noEngineReferences": false
+}

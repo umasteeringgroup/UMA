@@ -261,7 +261,7 @@ namespace UMA
             }
         }
 
-        public void DrawBoolProperty(string propertyName, string label, string tooltip)
+        public void DrawBoolProperty(string propertyName, string label, string tooltip, Action<bool> onChanged = null)
         {
             SerializedProperty prop = m_CustomSettings.FindProperty(propertyName);
             EditorGUI.BeginChangeCheck();
@@ -269,6 +269,7 @@ namespace UMA
             if (EditorGUI.EndChangeCheck())
             {
                 m_CustomSettings.ApplyModifiedProperties();
+                onChanged?.Invoke(prop.boolValue);
             }
         }
 
@@ -299,14 +300,16 @@ namespace UMA
             };
         }
 
-        private void DrawFolderSetting(SerializedProperty prop, string label, string tooltip, bool mustStartWithAssets, Action onChanged = null)
+        private void DrawFolderSetting(SerializedProperty prop, string label, string tooltip, bool mustStartWithAssets,
+            Action onChanged = null, bool allowMissing = false, string emptyFallback = null)
         {
             string current = prop.stringValue;
             // Validation
             string relPath = current;
             if (string.IsNullOrEmpty(relPath))
             {
-                relPath = label.Contains("UMA") ? "Assets/UMA" : "UMA/Core/ShaderPackages";
+                relPath = !string.IsNullOrEmpty(emptyFallback) ? emptyFallback :
+                    label.Contains("UMA") ? "Assets/UMA" : "UMA/Core/ShaderPackages";
             }
 
             if (!relPath.StartsWith("Assets"))
@@ -323,9 +326,14 @@ namespace UMA
             }
 
             bool exists = AssetDatabase.IsValidFolder(relPath);
-            if (!exists)
+            if (!exists && !allowMissing)
             {
                 EditorGUILayout.HelpBox($"{label} path '{prop.stringValue}' does not exist. Please set a valid folder.", MessageType.Error);
+            }
+            else if (!exists)
+            {
+                EditorGUILayout.HelpBox($"{label} path '{prop.stringValue}' will be created when recovery is first saved.",
+                    MessageType.Info);
             }
 
             EditorGUILayout.BeginHorizontal();
@@ -440,6 +448,8 @@ namespace UMA
             // Folder settings (UMAFolder & ShaderFolder) directly after the help box as requested
             SerializedProperty umaFolderProp = m_CustomSettings.FindProperty("UMAFolder");
             SerializedProperty shaderFolderProp = m_CustomSettings.FindProperty("ShaderFolder");
+            SerializedProperty texturePaintRecoveryFolderProp =
+                m_CustomSettings.FindProperty("texturePaintRecoveryFolder");
             if (umaFolderProp != null)
             {
                 DrawFolderSetting(umaFolderProp, "UMA Folder", "The UMA folder, relative to the Assets folder.", true, () => { UMABasePath = ""; });
@@ -448,15 +458,52 @@ namespace UMA
             {
                 DrawFolderSetting(shaderFolderProp, "Shader Folder", "The folder where the UMA shaders are located, relative to the Assets folder.", false, null);
             }
+            if (texturePaintRecoveryFolderProp != null)
+            {
+                DrawFolderSetting(texturePaintRecoveryFolderProp, "Overlay Painter Recovery Folder",
+                    "Folder below Assets for painter_recovery.asset and its data files. This folder can be ignored by source control.",
+                    true, null, true, "Assets/UMA/Temp");
+                string recoveryFolder = texturePaintRecoveryFolderProp.stringValue?.Replace('\\', '/').TrimEnd('/');
+                string[] recoveryParts = string.IsNullOrEmpty(recoveryFolder)
+                    ? Array.Empty<string>() : recoveryFolder.Split('/');
+                bool belowAssets = !string.IsNullOrEmpty(recoveryFolder) &&
+                    recoveryFolder.StartsWith("Assets/", StringComparison.OrdinalIgnoreCase) &&
+                    recoveryParts.Length > 1;
+                for (int i = 0; belowAssets && i < recoveryParts.Length; i++)
+                    if (string.IsNullOrWhiteSpace(recoveryParts[i]) || recoveryParts[i] == "." ||
+                        recoveryParts[i] == "..")
+                        belowAssets = false;
+                if (!belowAssets)
+                    EditorGUILayout.HelpBox("Overlay Painter Recovery Folder must be below Assets. " +
+                        "Overlay Painter will use Assets/UMA/Temp until this value is corrected.",
+                        MessageType.Error);
+                else
+                    EditorGUILayout.HelpBox("Recovery creates painter_recovery.asset and a sibling data folder here. " +
+                        "Exclude this folder from source control if temporary recovery should remain local.",
+                        MessageType.None);
+            }
 
             DrawBoolProperty("cleanRegenOnSave", "Clean Regen On Save", "If true, UMA will destroy all UMAS when saving, then regenerate after save - Saving large amounts of memory in the scene file");
             DrawBoolProperty("postProcessAllAssets", "Post Process All Assets", "If true, UMA will post process all assets in the project on startup");
             DrawBoolProperty("autoRepairIndex", "Index Auto Repair", "If true, UMA will attempt to repair any missing items in the UMA Global Library");
-            DrawBoolProperty("showIndexedTypes", "Show Indexed Types", "If true, UMA will show all indexed types in the project window");
-            DrawBoolProperty("showUnindexedTypes", "Show Unindexed Types", "If true, UMA will show all unindexed types in the project window");
+            DrawBoolProperty(
+                "showIndexedTypes",
+                "Show Indexed Types",
+                "If true, UMA will show all indexed types in the project window",
+                _ => UMASettings.NotifyProjectWindowTypeDisplayChanged());
+            DrawBoolProperty(
+                "showUnindexedTypes",
+                "Show Unindexed Types",
+                "If true, UMA will show all unindexed types in the project window",
+                _ => UMASettings.NotifyProjectWindowTypeDisplayChanged());
 
             DrawBoolProperty("ignoreBackupFolders", "Ignore Backup Folders", "If true, UMA will ignore any folders named 'Backup' when indexing assets. This can help prevent issues with automatic backup systems.");
             DrawBoolProperty("showWelcomeToUMA", "Show Welcome Window", "If true, UMA will show the welcome window when the project is loaded");
+            DrawBoolProperty(
+                "showToolbar",
+                "Show UMA Toolbar",
+                "If true, UMA will show the UMA Toolbar overlay in the Scene view.",
+                UMASettings.NotifyToolbarVisibilityChanged);
 
 
 

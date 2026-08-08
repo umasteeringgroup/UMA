@@ -179,6 +179,8 @@ Keep the maximum influence count consistent with the project's Unity skin-weight
 
 For loose garments, copy weights section by section when a single nearest-surface transfer reaches across folds or between legs. Maya's transferred weights are a starting point, not a finished deformation pass.
 
+After importing and building the slot, [Weight Touchup](WeightTouchup.md) can correct small skinning problems directly on a generated character in a revealing pose. It saves changes to the source `SlotDataAsset`, so use it for final UMA-side corrections rather than per-character adjustments.
+
 ### Additional bones
 
 Hair, tails, cloth rigs, and accessories may need extra bones. Ensure that:
@@ -206,6 +208,8 @@ Before committing to a blendshape-heavy workflow:
 For extracting existing slot blendshapes into Mesh Modifiers, see [MeshModifiers.md](MeshModifiers.md).
 
 ## Export from Blender 4.x
+
+UMA Tools for Blender provides UMA-specific error checking, rigging and weight utilities, UDIM helpers, and a consistent FBX export preset. Download it and follow its preflight workflow in [UMA Tools for Blender](UMAToolsForBlender.md).
 
 Normalize the asset before export:
 
@@ -401,6 +405,7 @@ Test extreme DNA, improve skinning, add mesh hides, author a corrective Mesh Mod
 - [CreatingANewRace.md](CreatingANewRace.md)
 - [RaceData.md](RaceData.md)
 - [SlotDataAsset.md](SlotDataAsset.md)
+- [WeightTouchup.md](WeightTouchup.md)
 - [OverlayDataAsset.md](OverlayDataAsset.md)
 - [UMAMaterial.md](UMAMaterial.md)
 - [RendererAssetsAndCloth.md](RendererAssetsAndCloth.md)

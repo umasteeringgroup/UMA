@@ -52,6 +52,8 @@ namespace UMA.Editors
             public string overlayName;
             public string recipeNames;
             public int lodLevelCount;
+            public bool wasReplaced;
+            public string writtenPath;
         }
 
         private class SlotBuilderResultsWindow : EditorWindow
@@ -61,6 +63,8 @@ namespace UMA.Editors
             private const float OverlayWidth = 220f;
             private const float RecipeWidth = 320f;
             private const float LodWidth = 90f;
+            private const float ReplacedWidth = 80f;
+            private const float WrittenPathWidth = 420f;
             private const float ActionWidth = 60f;
 
             [SerializeField]
@@ -77,14 +81,14 @@ namespace UMA.Editors
 
                 var window = CreateInstance<SlotBuilderResultsWindow>();
                 window.titleContent = new GUIContent("Slot Builder Results");
-                window.minSize = new Vector2(1220f, 260f);
+                window.minSize = new Vector2(1720f, 260f);
                 window._rows = rows;
                 window.ShowUtility();
             }
 
             private void OnGUI()
             {
-                EditorGUILayout.LabelField("Created " + _rows.Count + " slot(s).", EditorStyles.boldLabel);
+                EditorGUILayout.LabelField("Created or updated " + _rows.Count + " slot(s).", EditorStyles.boldLabel);
                 EditorGUILayout.Space(4f);
 
                 using (new EditorGUILayout.HorizontalScope())
@@ -94,6 +98,8 @@ namespace UMA.Editors
                     GUILayout.Label("Overlay", EditorStyles.miniBoldLabel, GUILayout.Width(OverlayWidth));
                     GUILayout.Label("Recipe", EditorStyles.miniBoldLabel, GUILayout.Width(RecipeWidth));
                     GUILayout.Label("LOD Levels", EditorStyles.miniBoldLabel, GUILayout.Width(LodWidth));
+                    GUILayout.Label("Replaced", EditorStyles.miniBoldLabel, GUILayout.Width(ReplacedWidth));
+                    GUILayout.Label("Written To", EditorStyles.miniBoldLabel, GUILayout.Width(WrittenPathWidth));
                     GUILayout.Label("Inspect", EditorStyles.miniBoldLabel, GUILayout.Width(ActionWidth));
                     GUILayout.Label("Ping", EditorStyles.miniBoldLabel, GUILayout.Width(ActionWidth));
                 }
@@ -114,6 +120,8 @@ namespace UMA.Editors
                             GUILayout.Label(new GUIContent(row.overlayName, row.overlayName), GUILayout.Width(OverlayWidth));
                             GUILayout.Label(new GUIContent(row.recipeNames, row.recipeNames), GUILayout.Width(RecipeWidth));
                             GUILayout.Label(row.lodLevelCount.ToString(), GUILayout.Width(LodWidth));
+                            GUILayout.Label(row.wasReplaced ? "Yes" : "No", GUILayout.Width(ReplacedWidth));
+                            GUILayout.Label(new GUIContent(row.writtenPath, row.writtenPath), GUILayout.Width(WrittenPathWidth));
 
                             using (new EditorGUI.DisabledScope(row.slotAsset == null))
                             {
@@ -499,6 +507,7 @@ namespace UMA.Editors
             public bool invertY;
             public bool invertZ;
             public bool alwaysRecreateSlots;
+            public bool findAndUpdateExistingSlot;
             public List<string> Tags = new List<string>();
             // New: persist material and folder by asset path
             public string slotMaterialPath;
@@ -560,6 +569,7 @@ namespace UMA.Editors
         public bool invertY;
         public bool invertZ;
         public bool alwaysRecreateSlots = false;
+        public bool findAndUpdateExistingSlot = false;
         public Vector2 scrollPos = Vector2.zero;
 
         [System.Serializable]
@@ -653,6 +663,7 @@ namespace UMA.Editors
                 state.invertY = invertY;
                 state.invertZ = invertZ;
                 state.alwaysRecreateSlots = alwaysRecreateSlots;
+                state.findAndUpdateExistingSlot = findAndUpdateExistingSlot;
                 state.scrollPos = scrollPos;
                 // Copy KeepBones strings
                 state.KeepBones = new List<string>(KeepBones != null ? KeepBones.Count : 0);
@@ -732,6 +743,11 @@ namespace UMA.Editors
                 invertY = state.invertY;
                 invertZ = state.invertZ;
                 alwaysRecreateSlots = state.alwaysRecreateSlots;
+                findAndUpdateExistingSlot = state.findAndUpdateExistingSlot;
+                if (findAndUpdateExistingSlot)
+                {
+                    alwaysRecreateSlots = false;
+                }
 
                 generateSlotLods = state.generateSlotLods;
                 useUnityLodGenerator = state.useUnityLodGenerator;
@@ -881,7 +897,21 @@ namespace UMA.Editors
             // slotMaterial = EditorGUILayout.ObjectField("UMAMaterial\t ", slotMaterial, typeof(UMAMaterial), false) as UMAMaterial;
             slotFolder = EditorGUILayout.ObjectField("Slot Destination Folder", slotFolder, typeof(UnityEngine.Object), false) as UnityEngine.Object;
 
-            alwaysRecreateSlots = EditorGUILayout.Toggle(new GUIContent("Always recreate slots", "If enabled, any existing SlotDataAsset at the target path will be deleted and recreated instead of updated."), alwaysRecreateSlots);
+            findAndUpdateExistingSlot = EditorGUILayout.Toggle(
+                new GUIContent(
+                    "Find and update existing slot",
+                    "Search all project assets for a SlotDataAsset with the same name and update it in place, regardless of its folder."),
+                findAndUpdateExistingSlot);
+            if (findAndUpdateExistingSlot)
+            {
+                alwaysRecreateSlots = false;
+                EditorGUILayout.HelpBox("This will overwrite slots with the same name.", MessageType.Warning);
+            }
+
+            using (new EditorGUI.DisabledScope(findAndUpdateExistingSlot))
+            {
+                alwaysRecreateSlots = EditorGUILayout.Toggle(new GUIContent("Always recreate slots", "If enabled, any existing SlotDataAsset at the target path will be deleted and recreated instead of updated."), alwaysRecreateSlots);
+            }
             //EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
             EditorGUILayout.BeginHorizontal();
             isBaseRaceRecipe = EditorGUILayout.Toggle("Is Base Race Recipe", isBaseRaceRecipe);
@@ -905,7 +935,7 @@ namespace UMA.Editors
             //EditorGUILayout.LabelField(slotName + "_Recipe");
             //EditorGUILayout.EndHorizontal();
             EditorGUILayout.BeginHorizontal();
-            binarySerialization = EditorGUILayout.Toggle(new GUIContent("Binary Serialization", "Forces the created Mesh object to be serialized as binary. Recommended for large meshes and blendshapes."), binarySerialization);
+            binarySerialization = EditorGUILayout.Toggle(new GUIContent("Binary Serialization", "Forces the temporary Mesh object used by a single build to be serialized as binary. Bulk processing keeps temporary meshes in memory and does not import them."), binarySerialization);
             addToGlobalLibrary = EditorGUILayout.Toggle("Add To Global Library", addToGlobalLibrary);
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.BeginHorizontal();
@@ -1680,6 +1710,11 @@ namespace UMA.Editors
 
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
+                var updatedSlots = new HashSet<SlotDataAsset>(aggregate.Slots);
+                foreach (SlotDataAsset updatedSlot in updatedSlots)
+                {
+                    UMAUpdateProcessor.UpdateSlot(updatedSlot);
+                }
                 showResults = aggregate.Slots.Count > 0;
             }
 
@@ -1893,6 +1928,7 @@ namespace UMA.Editors
             sbp.invertY = invertY;
             sbp.invertZ = invertZ;
             sbp.alwaysRecreateSlots = alwaysRecreateSlots;
+            sbp.findAndUpdateExistingSlot = findAndUpdateExistingSlot;
             sbp.clearNormals = clearNormals;
             sbp.clearTangents = clearTangents;
             sbp.udimTilesU = udimTilesU;
@@ -2175,6 +2211,28 @@ namespace UMA.Editors
                 }
             }
 
+            if (result.SlotWasReplaced != null)
+            {
+                foreach (var kv in result.SlotWasReplaced)
+                {
+                    if (kv.Key != null)
+                    {
+                        aggregate.SlotWasReplaced[kv.Key] = kv.Value;
+                    }
+                }
+            }
+
+            if (result.SlotWrittenPath != null)
+            {
+                foreach (var kv in result.SlotWrittenPath)
+                {
+                    if (kv.Key != null)
+                    {
+                        aggregate.SlotWrittenPath[kv.Key] = kv.Value;
+                    }
+                }
+            }
+
             aggregate.IsUDIM |= result.IsUDIM;
         }
 
@@ -2201,7 +2259,15 @@ namespace UMA.Editors
                     sourceMeshName = GetSourceMeshName(result, slot),
                     overlayName = GetCreatedOverlayName(result, slot),
                     recipeNames = GetCreatedRecipeNames(result, slot),
-                    lodLevelCount = GetCreatedLodLevelCount(slot)
+                    lodLevelCount = GetCreatedLodLevelCount(slot),
+                    wasReplaced = result.SlotWasReplaced != null &&
+                        result.SlotWasReplaced.TryGetValue(slot, out bool wasReplaced) &&
+                        wasReplaced,
+                    writtenPath = result.SlotWrittenPath != null &&
+                        result.SlotWrittenPath.TryGetValue(slot, out string writtenPath) &&
+                        !string.IsNullOrEmpty(writtenPath)
+                            ? writtenPath
+                            : AssetDatabase.GetAssetPath(slot)
                 });
             }
 

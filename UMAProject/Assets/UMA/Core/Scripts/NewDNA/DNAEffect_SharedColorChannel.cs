@@ -39,6 +39,8 @@ namespace UMA
 
 
         public override DNAInstanceCollection.DNABuildType AreaEffect => DNAInstanceCollection.DNABuildType.Texture;
+        public override ExpressionEffectPhase ExpressionPhases =>
+            ExpressionEffectPhase.BuildAfterRecipe;
 
         /// <inheritdoc />
         public override void AfterRecipeGenerated(UMAData avatar, DNA dna, float value)

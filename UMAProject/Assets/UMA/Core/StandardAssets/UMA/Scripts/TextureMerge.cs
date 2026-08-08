@@ -26,7 +26,10 @@ namespace UMA
 		public Shader dataShader;
 		public Shader cutoutShader;
 		public Shader detailNormalShader;
+		public Shader transparentPrefillShader;
 		private Vector2 pivotPoint = new Vector2();
+		private Material transparentPrefillMaterial;
+		private bool reportedMissingTransparentPrefillShader;
 
 		[System.NonSerialized]
 		public Color camBackgroundColor = new Color(0, 0, 0, 0);
@@ -60,6 +63,19 @@ namespace UMA
 		/// </summary>
 		private void ReleaseCachedMaterials()
 		{
+			if (transparentPrefillMaterial != null)
+			{
+				if (Application.isPlaying)
+				{
+					Destroy(transparentPrefillMaterial);
+				}
+				else
+				{
+					DestroyImmediate(transparentPrefillMaterial);
+				}
+				transparentPrefillMaterial = null;
+			}
+
 			if (textureMergeRects == null)
 			{
 				return;
@@ -115,6 +131,8 @@ namespace UMA
 			public bool advancedBlending;
 			public int textureChannel;
 			public UMAMaterial.ChannelType channelType;
+			public bool transparentPrefill;
+			public Color transparentPrefillColor;
 			// Needed for decals
 			public TextureEventParms textureEventParms;
         }
@@ -222,6 +240,11 @@ namespace UMA
 					//the matrix needs to be in the original atlas dimensions because the textureMergeRects are in that space.
 					GL.LoadPixelMatrix(0, width, height, 0);
 
+					for (int i = 0; i < textureMergeRectCount; i++)
+					{
+						DrawTransparentPrefill(ref textureMergeRects[i]);
+					}
+
 #if UMA_ADVANCED_BLENDMODES
 
 					// This draws the entire atlas.
@@ -315,17 +338,18 @@ namespace UMA
             }
 
             //Debug.Log("Drawing rect for texture: " + tr.tex.name + " at " + tr.rect);
-            GL.PushMatrix();
+			GL.PushMatrix();
 			try
 			{
+				Rect drawRect = tr.rect;
 
 				if (tr.transform)
 				{
-					tr.rect.x += tr.position.x;
-					tr.rect.y += tr.position.y;
+					drawRect.x += tr.position.x;
+					drawRect.y += tr.position.y;
 
 					// rotate around the pivot
-					pivotPoint.Set(tr.rect.x + (tr.rect.width / 2.0f), tr.rect.y + (tr.rect.height / 2.0f));
+					pivotPoint.Set(drawRect.x + (drawRect.width / 2.0f), drawRect.y + (drawRect.height / 2.0f));
 
 					Matrix4x4 newMat = Matrix4x4.TRS(pivotPoint, Quaternion.Euler(0, 0, tr.rotation), tr.scale) * Matrix4x4.TRS(-pivotPoint, Quaternion.identity, Vector3.one);
 
@@ -341,7 +365,7 @@ namespace UMA
 					tr.tex.mipMapBias = 0f;
 				}
 
-				Graphics.DrawTexture(tr.rect, tr.tex, tr.mat);
+				Graphics.DrawTexture(drawRect, tr.tex, tr.mat);
 			}
 			finally {
 				GL.PopMatrix();
@@ -374,6 +398,81 @@ namespace UMA
 				tr.textureEventParms.renderTexture = null;
             }
         }
+
+		private void DrawTransparentPrefill(ref TextureMergeRect tr)
+		{
+			if (!tr.transparentPrefill)
+			{
+				return;
+			}
+
+			Material fillMaterial = GetTransparentPrefillMaterial();
+			if (fillMaterial == null)
+			{
+				return;
+			}
+
+			GL.PushMatrix();
+			try
+			{
+				Rect drawRect = tr.rect;
+				if (tr.transform)
+				{
+					drawRect.x += tr.position.x;
+					drawRect.y += tr.position.y;
+					pivotPoint.Set(
+						drawRect.x + (drawRect.width * 0.5f),
+						drawRect.y + (drawRect.height * 0.5f));
+					GL.MultMatrix(
+						Matrix4x4.TRS(
+							pivotPoint,
+							Quaternion.Euler(0f, 0f, tr.rotation),
+							tr.scale) *
+						Matrix4x4.TRS(
+							-pivotPoint,
+							Quaternion.identity,
+							Vector3.one));
+				}
+
+				fillMaterial.SetColor("_Color", tr.transparentPrefillColor);
+				Graphics.DrawTexture(drawRect, Texture2D.whiteTexture, fillMaterial);
+			}
+			finally
+			{
+				GL.PopMatrix();
+			}
+		}
+
+		private Material GetTransparentPrefillMaterial()
+		{
+			if (transparentPrefillMaterial != null)
+			{
+				return transparentPrefillMaterial;
+			}
+
+			Shader fillShader = transparentPrefillShader != null
+				? transparentPrefillShader
+				: Shader.Find("Hidden/UMA/TransparentPrefill");
+			if (fillShader == null)
+			{
+				if (!reportedMissingTransparentPrefillShader)
+				{
+					reportedMissingTransparentPrefillShader = true;
+					Debug.LogWarning(
+						"UMA could not find the Hidden/UMA/TransparentPrefill shader. " +
+						"Per-overlay transparent prefills will be skipped.",
+						this);
+				}
+				return null;
+			}
+
+			transparentPrefillMaterial = new Material(fillShader)
+			{
+				name = "UMA Transparent Prefill",
+				hideFlags = HideFlags.HideAndDontSave
+			};
+			return transparentPrefillMaterial;
+		}
 
 		public void PostProcess(RenderTexture destination, UMAMaterial.ChannelType channelType)
 		{
@@ -481,6 +580,8 @@ namespace UMA
 
 		private void SetupMaterialAndBaseOverlay(ref TextureMergeRect textureMergeRect, UMAData.MaterialFragment source, int textureChannel, UMAData umaData)
 		{
+			textureMergeRect.transparentPrefill = false;
+			textureMergeRect.transparentPrefillColor = Color.clear;
 			if (source.isNoTextures)
             {
                 return;
@@ -503,6 +604,11 @@ namespace UMA
 			textureMergeRect.channelType = source.slotData.material.channels[textureChannel].channelType;
 			textureMergeRect.textureChannel = textureChannel;
             textureMergeRect.textureEventParms = tep;
+			ConfigureTransparentPrefill(
+				ref textureMergeRect,
+				source,
+				0,
+				textureChannel);
 
             switch (source.slotData.material.channels[textureChannel].channelType)
 			{
@@ -760,9 +866,16 @@ namespace UMA
 			textureMergeRect.rect = overlayRect;
 			textureMergeRect.tex = source.AdditionalOverlays[i2].textureList[textureType];
 			textureMergeRect.advancedBlending = false;
+			textureMergeRect.transparentPrefill = false;
+			textureMergeRect.transparentPrefillColor = Color.clear;
             // JRRM debug
             textureMergeRect.textureChannel = textureType;
             textureMergeRect.channelType = source.slotData.material.channels[textureType].channelType;
+			ConfigureTransparentPrefill(
+				ref textureMergeRect,
+				source,
+				i2 + 1,
+				textureType);
 
 
             if (source.AdditionalOverlays[i2].overlayType == OverlayDataAsset.OverlayType.Normal)
@@ -793,6 +906,42 @@ namespace UMA
 			{
 				textureMergeRect.mat.shader = cutoutShader;
 			}
+		}
+
+		private static void ConfigureTransparentPrefill(
+			ref TextureMergeRect textureMergeRect,
+			UMAData.MaterialFragment source,
+			int overlayIndex,
+			int textureChannel)
+		{
+			UMAMaterial.ChannelType channelType = textureMergeRect.channelType;
+			if (channelType != UMAMaterial.ChannelType.Texture &&
+				channelType != UMAMaterial.ChannelType.DiffuseTexture)
+			{
+				return;
+			}
+
+			if (source.overlayData == null ||
+				overlayIndex < 0 ||
+				overlayIndex >= source.overlayData.Length)
+			{
+				return;
+			}
+
+			OverlayData overlay = source.overlayData[overlayIndex];
+			if (overlay == null ||
+				overlay.TransparentMultiplier == Color.clear ||
+				overlay.TransparentMultiplier.a <= 0f)
+			{
+				return;
+			}
+
+			Color prefillColor =
+				source.GetMultiplier(overlayIndex, textureChannel) *
+				overlay.TransparentMultiplier;
+			prefillColor.a = 0f;
+			textureMergeRect.transparentPrefillColor = prefillColor;
+			textureMergeRect.transparentPrefill = true;
 		}
 	}
 }

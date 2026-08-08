@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9fb730a5788b4ad7a139b61e5e279277, type: 3}
+  m_Name: Production Export
+  m_EditorClassIdentifier: UMA.TexturePaint.Runtime::UMA.TexturePaint.TexturePaintExportTemplate
+  version: 2
+  outputFolder: Assets/UMA/OverlayPainter/Generated
+  filenamePattern: '{avatar}_{material}_{channel}_{resolution}'
+  scope: 1
+  channels: 127
+  overwritePolicy: 2
+  resolution: 0
+  bitDepth: 0
+  padding: 8
+  invertedChannels: 0
+  normalConvention: 0
+  exportLogicalChannels: 0
+  exportMaterialPacking: 1
+  customPacking: []
+  createOrUpdateOverlay: 1
+  overwriteSourceOverlay: 0
+  createMaterialOverride: 0
+  updateRecipeReferences: 0
+  markAddressable: 0

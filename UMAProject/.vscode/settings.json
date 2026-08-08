@@ -62,6 +62,7 @@
         "*.prefab": "yaml",
         "*.unity": "yaml"
     },
+    "files.saveConflictResolution": "askUser",
     "explorer.fileNesting.enabled": true,
     "explorer.fileNesting.patterns": {
         "*.sln": "*.csproj"

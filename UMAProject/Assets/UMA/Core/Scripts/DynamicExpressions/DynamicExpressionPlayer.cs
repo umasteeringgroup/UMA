@@ -3,7 +3,8 @@ using UnityEngine;
 using System.Collections.Generic;
 using UMA.CharacterSystem;
 
-public class DynamicExpressionPlayer : MonoBehaviour
+#if false
+public class DynamicExpressionPlayerPrototype : MonoBehaviour
 {
     [Header("Eye Movement Settings")]
     public bool EnableSaccades = true;
@@ -547,4 +548,12 @@ public class DynamicExpressionPlayer : MonoBehaviour
         UnityEditor.SceneView.RepaintAll(); // refresh gizmos & scene view
     }
 #endif
+}
+#endif
+
+// Keep the runtime type declaration in this file so existing serialized
+// components retain the original MonoScript GUID.
+public sealed partial class DynamicExpressionPlayer :
+    MonoBehaviour, IRuntimeDNAProvider
+{
 }

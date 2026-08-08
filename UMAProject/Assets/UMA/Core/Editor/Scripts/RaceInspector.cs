@@ -370,6 +370,190 @@ namespace UMA.Editors
 		EditorUtility.DisplayDialog("Extract All", $"Created {createdCount} MeshModifier assets.", "OK");
 	}
 
+    private static void AppendExpressionTargetWarnings(
+        RaceData targetRace,
+        List<ExpressionValidationMessage> results)
+    {
+        if (targetRace == null || targetRace.expressionGroup == null ||
+            targetRace.expressionGroup.expressions == null) return;
+
+        var bones = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var blendShapes =
+            new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var overlays =
+            new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var sharedColors =
+            new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        if (targetRace.TPose != null)
+        {
+            if (targetRace.TPose.boneInfo == null &&
+                targetRace.TPose.serializedChunk != null &&
+                targetRace.TPose.serializedChunk.Length > 0)
+                targetRace.TPose.DeSerialize();
+            if (targetRace.TPose.boneInfo != null)
+                for (int i = 0; i < targetRace.TPose.boneInfo.Length; i++)
+                    bones.Add(targetRace.TPose.boneInfo[i].name);
+        }
+
+        UMAData.UMARecipe recipe = null;
+        if (targetRace.baseRaceRecipe != null)
+        {
+            try
+            {
+                recipe = targetRace.baseRaceRecipe.GetCachedRecipe();
+            }
+            catch (Exception exception)
+            {
+                results.Add(new ExpressionValidationMessage(
+                    ExpressionValidationSeverity.Warning,
+                    "Could not inspect base recipe expression targets: " +
+                    exception.Message));
+            }
+        }
+        if (recipe != null)
+        {
+            if (recipe.sharedColors != null)
+                for (int i = 0; i < recipe.sharedColors.Length; i++)
+                    if (recipe.sharedColors[i] != null)
+                        sharedColors.Add(recipe.sharedColors[i].name);
+            SlotData[] slots = recipe.GetAllSlots();
+            if (slots != null)
+                for (int slotIndex = 0;
+                     slotIndex < slots.Length;
+                     slotIndex++)
+                {
+                    SlotData slot = slots[slotIndex];
+                    if (slot == null) continue;
+                    if (slot.asset != null &&
+                        slot.asset.meshData != null &&
+                        slot.asset.meshData.blendShapes != null)
+                        for (int shapeIndex = 0;
+                             shapeIndex <
+                             slot.asset.meshData.blendShapes.Length;
+                             shapeIndex++)
+                        {
+                            UMABlendShape shape =
+                                slot.asset.meshData
+                                    .blendShapes[shapeIndex];
+                            if (shape != null)
+                                blendShapes.Add(shape.shapeName);
+                        }
+                    List<OverlayData> slotOverlays =
+                        slot.GetOverlayList();
+                    if (slotOverlays == null) continue;
+                    for (int overlayIndex = 0;
+                         overlayIndex < slotOverlays.Count;
+                         overlayIndex++)
+                    {
+                        OverlayData overlay =
+                            slotOverlays[overlayIndex];
+                        if (overlay != null && overlay.asset != null)
+                            overlays.Add(overlay.overlayName);
+                    }
+                }
+        }
+
+        for (int definitionIndex = 0;
+             definitionIndex <
+             targetRace.expressionGroup.expressions.Count;
+             definitionIndex++)
+        {
+            UMAExpressionDefinition definition =
+                targetRace.expressionGroup.expressions[definitionIndex];
+            if (definition?.dna?.effects == null) continue;
+            for (int effectIndex = 0;
+                 effectIndex < definition.dna.effects.Count;
+                 effectIndex++)
+            {
+                DNAEffect effect = definition.dna.effects[effectIndex];
+                if (effect == null || !effect.enabled) continue;
+                if (bones.Count > 0)
+                    ValidateExpressionBoneTarget(effect, bones,
+                        definition, definitionIndex, results);
+                if (effect is DNAEffect_BlendShape blendShape &&
+                    blendShapes.Count > 0 &&
+                    !blendShapes.Contains(blendShape.BlendShapeName))
+                    AddMissingExpressionTarget(results, definition,
+                        definitionIndex, "blendshape",
+                        blendShape.BlendShapeName);
+                if (effect is DNAEffect_OverlayUVTransform uv &&
+                    overlays.Count > 0 &&
+                    !overlays.Contains(uv.overlayName))
+                    AddMissingExpressionTarget(results, definition,
+                        definitionIndex, "overlay", uv.overlayName);
+
+                string sharedColor = null;
+                if (effect is DNAEffect_SharedColor color)
+                    sharedColor = color.sharedColorName;
+                else if (effect is DNAEffect_SharedColorChannel channel)
+                    sharedColor = channel.SharedColorName;
+                else if (effect is DNAEffect_SharedColorProperty property)
+                    sharedColor = property.sharedColorName;
+                else if (effect is
+                    DNAEffect_RuntimeMaterialProperty runtime)
+                    sharedColor = runtime.sharedColorName;
+                if (!string.IsNullOrWhiteSpace(sharedColor) &&
+                    sharedColors.Count > 0 &&
+                    !sharedColors.Contains(sharedColor))
+                    AddMissingExpressionTarget(results, definition,
+                        definitionIndex, "shared color", sharedColor);
+            }
+        }
+    }
+
+    private static void ValidateExpressionBoneTarget(
+        DNAEffect effect,
+        HashSet<string> bones,
+        UMAExpressionDefinition definition,
+        int definitionIndex,
+        List<ExpressionValidationMessage> results)
+    {
+        if (effect is DNAEffect_BonePose pose &&
+            pose.bonePose?.poses != null)
+        {
+            for (int i = 0; i < pose.bonePose.poses.Length; i++)
+            {
+                UMA.PoseTools.UMABonePose.PoseBone poseBone =
+                    pose.bonePose.poses[i];
+                if (poseBone != null && poseBone.enabled &&
+                    !bones.Contains(poseBone.bone))
+                    AddMissingExpressionTarget(results, definition,
+                        definitionIndex, "bone", poseBone.bone);
+            }
+            return;
+        }
+
+        string bone = null;
+        if (effect is DNAEffect_BoneRotate rotate)
+            bone = rotate.BoneName;
+        else if (effect is DNAEffect_BoneTranslate translate)
+            bone = translate.BoneName;
+        else if (effect is DNAEffect_BoneScale scale)
+            bone = scale.BoneName;
+        else if (effect is DNAEffect_BoneTransform transform)
+            bone = transform.boneName;
+        if (!string.IsNullOrWhiteSpace(bone) && !bones.Contains(bone))
+            AddMissingExpressionTarget(results, definition,
+                definitionIndex, "bone", bone);
+    }
+
+    private static void AddMissingExpressionTarget(
+        List<ExpressionValidationMessage> results,
+        UMAExpressionDefinition definition,
+        int definitionIndex,
+        string targetType,
+        string targetName)
+    {
+        results.Add(new ExpressionValidationMessage(
+            ExpressionValidationSeverity.Warning,
+            "Expression '" + definition.id + "' references " +
+            targetType + " '" + targetName +
+            "', which is not present in the race's base assets. " +
+            "It may be supplied by wardrobe at runtime.",
+            definitionIndex));
+    }
+
 	public override void OnInspectorGUI()
 		{
 			if (lastActionTime == 0)
@@ -387,6 +571,48 @@ namespace UMA.Editors
 			race.genericRootMotionTransformName = EditorGUILayout.TextField("Root Motion Transform", race.genericRootMotionTransformName);
 			race.TPose = EditorGUILayout.ObjectField(new GUIContent("T-Pose", "The UMA T-Pose asset can be created by selecting the race fbx and choosing the Extract T-Pose dropdown. Only needs to be done once per race."), race.TPose, typeof(UmaTPose), false) as UmaTPose;
 			race.expressionSet = EditorGUILayout.ObjectField(new GUIContent("Expression Set", "The Expression Set asset is used by the Expression player."), race.expressionSet, typeof(UMA.PoseTools.UMAExpressionSet), false) as UMA.PoseTools.UMAExpressionSet;
+            race.expressionGroup = EditorGUILayout.ObjectField(
+                new GUIContent(
+                    "Expression Group",
+                    "DNA-based expressions used by DynamicExpressionPlayer. " +
+                    "When assigned, this is preferred over the legacy Expression Set."),
+                race.expressionGroup,
+                typeof(UMAExpressionGroup),
+                false) as UMAExpressionGroup;
+            if (race.expressionGroup != null &&
+                race.expressionSet != null)
+            {
+                EditorGUILayout.HelpBox(
+                    "Both expression systems are assigned. " +
+                    "DynamicExpressionPlayer uses Expression Group; " +
+                    "UMAExpressionPlayer continues to use Expression Set.",
+                    MessageType.Info);
+            }
+            if (race.expressionGroup != null)
+            {
+                var expressionValidation =
+                    new List<ExpressionValidationMessage>();
+                race.expressionGroup.Validate(expressionValidation);
+                AppendExpressionTargetWarnings(race,
+                    expressionValidation);
+                for (int i = 0; i < expressionValidation.Count; i++)
+                {
+                    ExpressionValidationMessage message =
+                        expressionValidation[i];
+                    if (message.severity ==
+                        ExpressionValidationSeverity.Info)
+                    {
+                        continue;
+                    }
+                    MessageType messageType = message.severity ==
+                        ExpressionValidationSeverity.Error
+                            ? MessageType.Error
+                            : MessageType.Warning;
+                    EditorGUILayout.HelpBox(
+                        "Expression Group: " + message.message,
+                        messageType);
+                }
+            }
 			EditorGUILayout.HelpBox("Fixup Rotations should be true for Blender FBX slots", MessageType.Info);
 			race.FixupRotations = EditorGUILayout.Toggle("Fixup Rotations", race.FixupRotations);
 

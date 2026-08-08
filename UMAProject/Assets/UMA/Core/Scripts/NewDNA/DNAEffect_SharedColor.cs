@@ -47,6 +47,8 @@ namespace UMA
 #endif
         // Updating a sharedcolor only touches textures
         public override DNAInstanceCollection.DNABuildType AreaEffect => DNABuildType.Texture;
+        public override ExpressionEffectPhase ExpressionPhases =>
+            ExpressionEffectPhase.BuildAfterRecipe;
         /// <inheritdoc />
         public override void AfterRecipeGenerated(UMAData avatar, DNA dna, float value)
         {            

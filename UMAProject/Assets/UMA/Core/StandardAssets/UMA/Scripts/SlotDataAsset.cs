@@ -85,6 +85,17 @@ namespace UMA
         public bool NoAutoAdd { get { return noAutoAdd; } set { noAutoAdd = value; } }
         #endregion
 
+        [Tooltip("Stable identifier shared by every slot produced from the same UDIM source mesh.")]
+        public string udimGroupId;
+        [Tooltip("Display name for the logical UDIM paint target.")]
+        public string udimGroupName;
+        [Tooltip("UDIM tile number, such as 1001 or 1002. Zero means this is not a UDIM member.")]
+        public int udimTileNumber;
+        [Tooltip("Submesh index in the source mesh from which this UDIM tile was split.")]
+        public int udimSourceSubmeshIndex = -1;
+
+        public bool IsUdimMember => !string.IsNullOrEmpty(udimGroupId) && udimTileNumber > 0;
+
 #if UNITY_EDITOR
         [Tooltip("This is only used when updating the slot with drag and drop below. It is not used at runtime nor is it included in the build")]
         public SkinnedMeshRenderer normalReferenceMesh;
@@ -119,7 +130,7 @@ namespace UMA
 
         public List<Welding> Welds = new List<Welding>();
 
-        // Editor-only: per-slot mapping of UDIM shared (seam) vertex original indices to the new local indices.
+        // Editor-only: per-slot mapping of UDIM shared seam keys to the new local indices.
         [System.Serializable]
         public class UdimSeamMap
         {
@@ -127,7 +138,7 @@ namespace UMA
             public int[] localIndices;
         }
 
-        [Tooltip("Editor-only: mapping of shared UDIM seam vertex indices (original -> local) for this split slot")] public UdimSeamMap UdimSharedVertexMap;
+        [Tooltip("Editor-only: mapping of shared UDIM seam keys to local vertex indices for this split slot")] public UdimSeamMap UdimSharedVertexMap;
 
         [System.Serializable]
         public struct SlotBuilderParametersSnapshot
@@ -1489,6 +1500,28 @@ namespace UMA
             isClippingPlane = source.isClippingPlane;
             isSmooshable = source.isSmooshable;
             isBaked = source.isBaked;
+            udimGroupId = source.udimGroupId;
+            udimGroupName = source.udimGroupName;
+            udimTileNumber = source.udimTileNumber;
+            udimSourceSubmeshIndex = source.udimSourceSubmeshIndex;
+#if UNITY_EDITOR
+            if (source.UdimSharedVertexMap != null)
+            {
+                UdimSharedVertexMap = new UdimSeamMap
+                {
+                    originalIndices = source.UdimSharedVertexMap.originalIndices != null
+                        ? (int[])source.UdimSharedVertexMap.originalIndices.Clone()
+                        : null,
+                    localIndices = source.UdimSharedVertexMap.localIndices != null
+                        ? (int[])source.UdimSharedVertexMap.localIndices.Clone()
+                        : null
+                };
+            }
+            else
+            {
+                UdimSharedVertexMap = null;
+            }
+#endif
             if (source._sourceSlotName != null)
             {
                 _sourceSlotName = (string)source._sourceSlotName.Clone();

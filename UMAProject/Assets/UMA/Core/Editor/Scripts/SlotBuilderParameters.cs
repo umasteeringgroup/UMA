@@ -14,6 +14,7 @@ namespace UMA.Editors
         public bool nameByMaterial;
         public bool keepAllBones;
         public bool alwaysRecreateSlots;
+        public bool findAndUpdateExistingSlot;
         public bool createOverlays;
         public bool createRecipe;
         public bool isBaseRaceRecipe;

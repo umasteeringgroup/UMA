@@ -13,11 +13,11 @@
         "Unity.Mathematics",
         "Unity.Mathematics.Editor",
         "Unity.Collections.BurstCompatibilityGen",
-        ""
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
-    "allowUnsafeCode": false,
+    "allowUnsafeCode": true,
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,

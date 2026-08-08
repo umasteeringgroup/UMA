@@ -1,0 +1,113 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ad596f39ce5a904d93ccd9240c400e1, type: 3}
+  m_Name: leftCheekPuff_Squint_ExpressionDNA
+  m_EditorClassIdentifier: UMA_Core::UMA.DNA
+  description: Converted from UMA 30 Expression Set legacy expression channel leftCheekPuff_Squint.
+  defaultValue: 0.5
+  effects:
+  - rid: 1854487571644023194
+  - rid: 1854487571644023195
+  displayName: leftCheekPuff_Squint
+  references:
+    version: 2
+    RefIds:
+    - rid: 1854487571644023194
+      type: {class: DNAEffect_BonePose, ns: UMA, asm: UMA_Core}
+      data:
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.5
+            value: 0
+            inSlope: -0
+            outSlope: 2
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 2
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        minMapping: 0
+        maxMapping: 1
+        enabled: 1
+        expanded: 0
+        selected: 0
+        showHelp: 0
+        EffectName: Primary Pose
+        bonePose: {fileID: 11400000, guid: e886c912e5b299b4aae79c55ffc63877, type: 2}
+        isBasePose: 0
+    - rid: 1854487571644023195
+      type: {class: DNAEffect_BonePose, ns: UMA, asm: UMA_Core}
+      data:
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: -2
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.5
+            value: 0
+            inSlope: -2
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 0
+            inSlope: -0
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        minMapping: 0
+        maxMapping: 1
+        enabled: 1
+        expanded: 0
+        selected: 0
+        showHelp: 0
+        EffectName: Inverse Pose
+        bonePose: {fileID: 11400000, guid: 05c4870c46674c74c9f632710626c140, type: 2}
+        isBasePose: 0

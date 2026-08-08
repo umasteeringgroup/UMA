@@ -49,6 +49,10 @@ namespace UMA
         }
         public string AddressableLabels;
 		public int ReferenceCount;
+#if UNITY_EDITOR
+        [System.NonSerialized]
+        private bool failedEditorSearch;
+#endif
 
         #endregion
         #region Properties
@@ -173,6 +177,7 @@ namespace UMA
 		private Object GetItem()
 		{
 #if UNITY_EDITOR
+            bool attemptedEditorSearch = false;
 			Object itemObject = AssetDatabase.LoadAssetAtPath(_Path, _Type);
 			if (itemObject == null)
 			{
@@ -188,8 +193,13 @@ namespace UMA
 				}
 				// No guid, or couldn't even find by GUID.
 				// Let's search for it?
-				if (itemObject == null)
+				if (itemObject == null &&
+                    UMASettings.AutoRepairIndex &&
+                    !failedEditorSearch &&
+                    !EditorApplication.isCompiling &&
+                    !EditorApplication.isUpdating)
 				{
+                    attemptedEditorSearch = true;
 					string s = _Type.Name;
 					string[] guids = AssetDatabase.FindAssets(_Name + " t:" + s);
 					if (guids.Length > 0)
@@ -200,6 +210,16 @@ namespace UMA
 					}
 				}
 			}
+            if (itemObject != null)
+            {
+                failedEditorSearch = false;
+            }
+            else if (attemptedEditorSearch)
+            {
+                // Keep retrying the inexpensive stored path and GUID lookups so a moved
+                // asset can recover. Only suppress another project-wide name search.
+                failedEditorSearch = true;
+            }
 #else
 			Object itemObject = null;
 #endif

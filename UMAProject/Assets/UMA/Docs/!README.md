@@ -14,7 +14,9 @@ New and returning users should begin with these two guides:
 Artists creating new content should continue with:
 
 - [Content Creation](ContentCreation.md) — practical Blender and Maya workflows for preparing meshes, textures, slots, overlays, and wardrobe.
+- [UMA Tools for Blender](UMAToolsForBlender.md) — Blender validation, rigging, weight, UDIM, import, and dependable UMA FBX export workflows.
 - [Creating a New Race](CreatingANewRace.md) — the complete race-authoring process from source model through runtime validation.
+- [Overlay Painter](OverlayPainter.md) — non-destructive 3D/2D texture painting, layers, material channels, paths, effects, and recipe-ready export.
 
 You can open these guides inside Unity from `UMA > View Documentation`.
 
@@ -37,15 +39,19 @@ You can open these guides inside Unity from `UMA > View Documentation`.
 - [Dynamic Character Avatar](DynamicCharacterAvatar.md)
 - [UMA Generator Setup](UMAGeneratorSetup.md)
 - [UMA Asset Indexer and Global Library](UMAAssetIndexer.md)
+- [Icon Creator and Thumbnail Sprite Atlases](IconCreator.md)
 - [Addressables](Addressables.md)
 
 ### Artist content creation
 
 - [Content Creation](ContentCreation.md)
+- [UMA Tools for Blender](UMAToolsForBlender.md)
 - [Creating a New Race](CreatingANewRace.md)
 - [RaceData](RaceData.md)
 - [SlotDataAsset](SlotDataAsset.md)
 - [OverlayDataAsset](OverlayDataAsset.md)
+- [Overlay Painter](OverlayPainter.md)
+- [Weight Touchup](WeightTouchup.md)
 - [Wardrobe Recipe Editor](WardrobeRecipeEditor.md)
 - [UMA Materials](UMAMaterial.md)
 - [Renderer Assets and Cloth](RendererAssetsAndCloth.md)
@@ -68,13 +74,18 @@ You can open these guides inside Unity from `UMA > View Documentation`.
 - [UMA Simple LOD](UMASimpleLOD.md)
 - [Random Avatars](RandomAvatar.md)
 - [Bone Animators](BoneAnimators.md)
+- [Dynamic Expression Player](DynamicExpressionPlayer.md)
+
+### Editor workflow
+
+- [UMA Task List](UMATaskList.md)
 
 ### Engineering and implementation notes
 
 - [Incremental Mesh Combiner Baseline](IncrementalMeshCombinerBaseline.md)
-- [Dynamic Character Build Optimization Plan](DynamicCharacterBuildOptimizationPlan.md)
-- [Mesh Modifier Cloth Brush Plan](MeshModifierClothBrushPlan.md)
-- [Wardrobe Recipe Graph Production Readiness](UMAWardrobeRecipeGraphProductionReadiness.md)
+- [Dynamic Character Build Optimization Plan](Plans/DynamicCharacterBuildOptimizationPlan.md)
+- [Mesh Modifier Cloth Brush Plan](Plans/MeshModifierClothBrushPlan.md)
+- [Wardrobe Recipe Graph Production Readiness](Plans/UMAWardrobeRecipeGraphProductionReadiness.md)
 
 ## Project Layout
 

@@ -1,6 +1,11 @@
 #if UNITY_2021_3_OR_NEWER
 #define UMA_MESHAPI_2021
 #endif
+#if UNITY_WEBGL
+#undef UMA_UNSAFE
+#else
+#define UMA_UNSAFE
+#endif
 using System;
 using System.Buffers;
 using System.Collections.Generic;

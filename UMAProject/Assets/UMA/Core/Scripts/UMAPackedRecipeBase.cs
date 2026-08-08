@@ -255,6 +255,8 @@ namespace UMA
 			public bool[] tiling;
 			public int uvOverride;
 			public Vector2 translate;
+			public Color transparentMultiplier = Color.clear;
+			public bool hasTransparentMultiplier;
 		}
 
 #if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
@@ -691,6 +693,8 @@ namespace UMA
 						tempPackedOverlay.scale = overlayData.Scale;
 						tempPackedOverlay.rotation = overlayData.Rotation;
 						tempPackedOverlay.translate = new Vector2(overlayData.Translate.x, overlayData.Translate.y);
+						tempPackedOverlay.transparentMultiplier = overlayData.TransparentMultiplier;
+						tempPackedOverlay.hasTransparentMultiplier = true;
 						tempPackedOverlay.blendModes = new int[overlayData.GetOverlayBlendsLength()];
 						tempPackedOverlay.Tags = overlayData.tags.Clone() as string[];
 						tempPackedOverlay.uvOverride = overlayData.UVSet;
@@ -743,6 +747,21 @@ namespace UMA
 
 			umaPackRecipe.fColors = packedColorEntries.ToArray();
 			return umaPackRecipe;
+		}
+
+		private static void ApplyPackedTransparentMultiplier(
+			OverlayData overlayData,
+			PackedOverlayDataV3 packedOverlay)
+		{
+			if (overlayData == null || packedOverlay == null)
+			{
+				return;
+			}
+
+			overlayData.TransparentMultiplier =
+				packedOverlay.hasTransparentMultiplier
+					? packedOverlay.transparentMultiplier
+					: Color.clear;
 		}
 
 		public static bool UnpackRecipeVersion1(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe)
@@ -1122,6 +1141,7 @@ namespace UMA
 							_overlayAssetCache.Add(po.id, oAsset);
 						}
 						overlayData = new OverlayData(oAsset);
+						ApplyPackedTransparentMultiplier(overlayData, po);
 						if (po.rect != null && po.rect.Length == 4)
 							overlayData.rect = new Rect(po.rect[0], po.rect[1], po.rect[2], po.rect[3]);
 						if (po.Tags != null)
@@ -1226,6 +1246,7 @@ namespace UMA
 						// Fast construct new OverlayData from asset
 						overlayData = new OverlayData(oAsset);
 					}
+					ApplyPackedTransparentMultiplier(overlayData, po);
 
 					// Rect & transform
 					overlayData.rect = new Rect(po.rect[0], po.rect[1], po.rect[2], po.rect[3]);
@@ -1358,6 +1379,7 @@ namespace UMA
 									PackedOverlayDataV3 packedOverlay = packedSlot.overlays[i2];
 									OverlayData overlayData = context.InstantiateOverlay(packedOverlay.id);
 									if (overlayData == null) continue;
+									ApplyPackedTransparentMultiplier(overlayData, packedOverlay);
 
 									overlayData.rect = new Rect(
 										packedOverlay.rect[0],
@@ -1444,6 +1466,7 @@ namespace UMA
 								PackedOverlayDataV3 packedOverlay = packedSlot.overlays[i2];
 
 								OverlayData overlayData = context.InstantiateOverlay(packedOverlay.id);
+								ApplyPackedTransparentMultiplier(overlayData, packedOverlay);
 
 								overlayData.rect = new Rect(
 									packedOverlay.rect[0],

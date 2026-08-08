@@ -53,9 +53,15 @@ namespace UMA.PoseTools
         // Draw all serialized properties except those we render manually in the expression table
         private void DrawNonExpressionProperties()
         {
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("expressionSet"), new GUIContent("Expression Set"), false);
+            SerializedProperty expressionSetProperty =
+                serializedObject.FindProperty("expressionSet");
+            if (expressionSetProperty != null)
+            {
+                EditorGUILayout.PropertyField(expressionSetProperty,
+                    new GUIContent("Expression Set"), false);
+            }
 
-            var prop = serializedObject.GetIterator(); 
+            var prop = serializedObject.GetIterator();
             bool enterChildren = true;
             while (prop.NextVisible(enterChildren))
             {

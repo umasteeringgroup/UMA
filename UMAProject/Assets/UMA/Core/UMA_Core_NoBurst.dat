@@ -6,7 +6,13 @@
         "Unity.ResourceManager",
         "Unity.Addressables",
         "Addressable_Editor",
-        "UnityEngine.UI"
+        "UnityEngine.UI",
+        "Unity.Collections",
+        "Unity.Jobs",
+        "Unity.Mathematics",
+        "Unity.Mathematics.Editor",
+        "Unity.Collections.BurstCompatibilityGen",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

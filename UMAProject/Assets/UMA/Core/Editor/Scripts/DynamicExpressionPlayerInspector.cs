@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+#if false
 using UnityEngine;
 using UnityEditor;
 using UMA;
@@ -6,10 +6,10 @@ using UMA.PoseTools;
 using System.IO;
 using System.Collections.Generic;
 
-[CustomEditor(typeof(DynamicExpressionPlayer))]
-public class DynamicExpressionPlayerInspector : Editor
+[CustomEditor(typeof(DynamicExpressionPlayerPrototype))]
+public class DynamicExpressionPlayerPrototypeInspector : Editor
 {
-    private DynamicExpressionPlayer _player;
+    private DynamicExpressionPlayerPrototype _player;
     private bool _showExpressions = true;
     private Vector2 _scroll;
     private bool _autoSimulate;
@@ -32,7 +32,7 @@ public class DynamicExpressionPlayerInspector : Editor
 
     void OnEnable()
     {
-        _player = target as DynamicExpressionPlayer;
+        _player = target as DynamicExpressionPlayerPrototype;
     }
 
     public override void OnInspectorGUI() 

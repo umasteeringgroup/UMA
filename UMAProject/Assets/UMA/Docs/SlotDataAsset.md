@@ -23,6 +23,32 @@ See [ContentCreation.md](ContentCreation.md).
 
 `Assets > Create > UMA > Core > Custom Slot Asset` creates an empty custom asset, but it does not capture production mesh data for you.
 
+## Update an Existing Slot
+
+Enable **Find and update existing slot** in Slot Builder when a rebuilt FBX should refresh an established `SlotDataAsset` without moving it or creating a duplicate in the destination folder.
+
+Slot Builder searches the project for the same UMA slot name. If an asset with that name also exists at the intended output path, that path is preferred. Otherwise, the matching asset can be updated wherever it currently resides. Duplicate UMA slot names are ambiguous; Slot Builder chooses deterministically, writes a warning to the Console, and reports the path it used. Rename duplicates before relying on this workflow.
+
+For an existing non-UDIM slot, Slot Builder writes the newly captured mesh data into the existing asset. The asset identity and its existing authoring metadata remain in place, so recipes and other references continue to point to it. Mesh data, source-submesh information, generated LOD data, and other options produced by the current build are refreshed.
+
+Use the update workflow when:
+
+- An FBX was re-exported with corrected positions, normals, tangents, weights, or blendshapes.
+- The slot asset already has recipe references or artist-authored metadata that should remain attached.
+- Existing content must stay at its current project path.
+
+Before updating, commit or back up the asset. A changed vertex count, order, triangle layout, submesh layout, or UV layout can invalidate Mesh Hide Assets, Mesh Modifiers, cloth coefficients, decals, and other indexed content even though the slot asset reference itself is preserved.
+
+**Always recreate slots** is a different operation. When enabled, an asset at the intended target path is deleted and recreated instead of updated. It is disabled while **Find and update existing slot** is active. Use recreation when preserving the existing asset is not required, then verify references and metadata afterward.
+
+After processing, inspect the **Slot Builder Results** window:
+
+- **Replaced** is **Yes** when an existing slot asset was found and written instead of creating a new slot.
+- **Written To** is the actual asset path, which may differ from the configured destination when project-wide name matching found an established slot elsewhere.
+- **Inspect** opens the resulting asset and **Ping** locates it in the Project window.
+
+Rebuild representative avatars after every in-place update and repeat all topology-dependent validation.
+
 ## Stable Slot Name
 
 `slotName` is used by recipes, cross-compatibility mappings, LOD lookup, mesh hides, and Mesh Modifiers.
@@ -182,6 +208,8 @@ The inspector includes advanced utilities for:
 - glTF export
 
 These operations modify production data. Work under source control and validate the character after each operation.
+
+For small skinning corrections that are easiest to judge on an assembled, posed character, use [Weight Touchup](WeightTouchup.md).
 
 ## Cloth
 

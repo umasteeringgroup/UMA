@@ -1,0 +1,115 @@
+#pragma kernel CSBlur
+
+Texture2D<float4> _Source;
+Texture2D<float4> _Stamp;
+Texture2D<float4> _PaintMask;
+Texture2D<float4> _GeometryMask;
+Texture2D<float4> _StrokeBase;
+RWTexture2D<float4> _Destination;
+RWTexture2D<float> _StrokeCoverage;
+SamplerState sampler_linear_clamp;
+
+int2 _TextureSize;
+int2 _TileOffset;
+int2 _DispatchSize;
+int2 _CoverageOffset;
+float2 _BrushCenter;
+float4 _UVToBrush;
+float2 _FootprintScale;
+float _Hardness;
+float _Flow;
+float _Strength;
+float _Rotation;
+int _Shape;
+int _LimitStrokeCoverage;
+int _RestrictToTriangle;
+int _TriangleBoundaryMask;
+float _TriangleBoundaryPadding;
+float2 _TriangleUV0;
+float2 _TriangleUV1;
+float2 _TriangleUV2;
+
+float Cross2D(float2 a, float2 b)
+{
+    return a.x * b.y - a.y * b.x;
+}
+
+bool InsideOwnedEdge(float2 a, float2 b, float2 sampleUV, float orientation, bool boundary)
+{
+    float2 edge = b - a;
+    float edgeValue = orientation * Cross2D(edge, sampleUV - a);
+    if (boundary)
+    {
+        float2 boundaryPadding = _TriangleBoundaryPadding / float2(_TextureSize);
+        float texelExtent = abs(edge.y) * boundaryPadding.x + abs(edge.x) * boundaryPadding.y;
+        return edgeValue >= -texelExtent - 1e-7;
+    }
+    if (edgeValue > 1e-7) return true;
+    if (edgeValue < -1e-7) return false;
+    float2 ownedDirection = orientation > 0.0 ? edge : -edge;
+    return ownedDirection.y > 0.0 || (abs(ownedDirection.y) <= 1e-7 && ownedDirection.x < 0.0);
+}
+
+bool InsideTriangle(float2 sampleUV)
+{
+    if (_RestrictToTriangle == 0) return true;
+    float area = Cross2D(_TriangleUV1 - _TriangleUV0, _TriangleUV2 - _TriangleUV0);
+    if (abs(area) < 1e-9) return false;
+    float orientation = area >= 0.0 ? 1.0 : -1.0;
+    return InsideOwnedEdge(_TriangleUV0, _TriangleUV1, sampleUV, orientation, (_TriangleBoundaryMask & 1) != 0) &&
+        InsideOwnedEdge(_TriangleUV1, _TriangleUV2, sampleUV, orientation, (_TriangleBoundaryMask & 2) != 0) &&
+        InsideOwnedEdge(_TriangleUV2, _TriangleUV0, sampleUV, orientation, (_TriangleBoundaryMask & 4) != 0);
+}
+
+float BrushCoverage(float2 uv)
+{
+    if (!InsideTriangle(uv)) return 0.0;
+    float2 uvDelta = uv - _BrushCenter;
+    float2 delta = float2(dot(uvDelta, _UVToBrush.xy), dot(uvDelta, _UVToBrush.zw));
+    float s, c; sincos(-_Rotation, s, c);
+    delta = float2(delta.x * c - delta.y * s, delta.x * s + delta.y * c);
+    delta /= max(abs(_FootprintScale), 1e-5);
+    float d = _Shape == 1 ? max(abs(delta.x), abs(delta.y)) : length(delta);
+    if (d >= 1.0) return 0.0;
+    float w = d <= _Hardness ? 1.0 : 1.0 - saturate((d - _Hardness) / max(1.0 - _Hardness, 1e-5));
+    if (_Shape == 2) w *= _Stamp.SampleLevel(sampler_linear_clamp, delta * 0.5 + 0.5, 0).a;
+    return saturate(w * _Strength * _PaintMask.SampleLevel(sampler_linear_clamp, uv, 0).r *
+        _GeometryMask.SampleLevel(sampler_linear_clamp, uv, 0).r);
+}
+
+[numthreads(16, 16, 1)]
+void CSBlur(uint3 dispatchID : SV_DispatchThreadID)
+{
+    if (any(dispatchID.xy >= (uint2)_DispatchSize)) return;
+    int2 pixel = int2(dispatchID.xy) + _TileOffset;
+    if (any(pixel < 0) || any(pixel >= _TextureSize)) return;
+    float2 uv = (float2(pixel) + 0.5) / float2(_TextureSize);
+    float coverageLimit = BrushCoverage(uv);
+    float weight = saturate(coverageLimit * _Flow);
+    if (weight <= 0.00001) return;
+    float4 sum = 0;
+    float kernel[3] = { 1.0, 2.0, 1.0 };
+    float total = 0;
+    [unroll] for (int y = -1; y <= 1; y++)
+    [unroll] for (int x = -1; x <= 1; x++)
+    {
+        int2 samplePixel = clamp(pixel + int2(x, y), int2(0, 0), _TextureSize - 1);
+        float k = kernel[x + 1] * kernel[y + 1];
+        sum += _Source.Load(int3(samplePixel, 0)) * k;
+        total += k;
+    }
+    float4 current = _Source.Load(int3(pixel, 0));
+    float4 candidate = sum / total;
+    if (_LimitStrokeCoverage != 0)
+    {
+        int2 coveragePixel = pixel - _CoverageOffset;
+        float usedCoverage = saturate(_StrokeCoverage[coveragePixel]);
+        float contribution = min(weight, max(0.0, coverageLimit - usedCoverage));
+        if (contribution <= 0.00001) return;
+        _StrokeCoverage[coveragePixel] = saturate(usedCoverage + contribution);
+        float4 strokeBase = _StrokeBase.Load(int3(coveragePixel, 0));
+        _Destination[pixel] = current + contribution * (candidate - strokeBase);
+        return;
+    }
+    _Destination[pixel] = lerp(current, candidate, weight);
+}

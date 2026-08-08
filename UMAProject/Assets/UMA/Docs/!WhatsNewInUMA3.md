@@ -1,5 +1,27 @@
 # What's New in UMA 3
 
+## What's New Since the UMA 3.02 Release
+
+- Added Overlay Painter, with synchronized 2D and 3D painting, brushes, paths, masks, layer groups, channel-aware compositing, normal generation from height data, and texture/overlay export.
+- Added the Dynamic Expression Player, providing race-specific expression groups, layered input sources, procedural eye and blink support, runtime bone, blendshape, and material effects, plus legacy migration and diagnostics.
+- Improved Icon Creator with deterministic thumbnail generation, supersampled camera captures, stable asset paths and GUIDs, safer overwrites, and optional Sprite Atlas V2 generation organized by race and wardrobe region.
+- Added posed-character skinning-weight touchup, including brush-based vertex selection, weight visualization, normalization, preview, and saving changes to the source SlotDataAsset.
+- Expanded Slot Builder and UDIM workflows with in-place slot updates, preserved metadata, improved seam and weld handling, UDIM inspection, and direct Overlay Painter access for slots and UDIM groups.
+- Added the Pelvis Controller Animator and expanded secondary animation tooling and tests for pelvis, shoulder, torso, and leg correction.
+- Improved WebGL and no-Burst support, added optional UMA Toolbar visibility, and expanded DNA cleanup, validation, and editor diagnostics.
+- Improved texture and editor reliability, including transparent atlas prefill, overlay-level base-color multiplication, wardrobe-recipe cloning and conversion, project-item status display, and broader automated test coverage.
+
+## What's New Since the UMA 3.01 Release
+
+- Added the Incremental Mesh Combiner, which spreads expensive mesh generation across frames while keeping the current character visible and animated until its replacement mesh is ready.
+- Moved more mesh preparation, blendshape processing, source analysis, and mesh-modifier work off the main thread, with successful validation caching to reduce repeated work.
+- Added detailed incremental-generation statistics, including per-step average and maximum times, budget overruns, runtime timing, and CSV export for crowd profiling.
+- Improved generator reliability, including automatic scene-generator creation, safe cleanup when an avatar is destroyed during generation, and better toolbar and combiner-switching support.
+- Completed the Unity Spring Joint Animator and expanded the bone-animation documentation and tests.
+- Improved the crowd and character-creator samples, including restartable crowd profiling, timing resets, camera navigation fixes, and generator diagnostics.
+- Reorganized shared Core and SRP assets so the optional `Assets/UMA/UMA3` sample and content folder can be removed without breaking retained UMA systems.
+- Refreshed the documentation browser, artist-facing guides, shader assignments, materials, and release folder layout.
+
 ## Changes Since the Initial UMA 3.0 Release
 
 - Added faster jobified and bone-baking mesh combiners, parallel processing, and generation optimizations.

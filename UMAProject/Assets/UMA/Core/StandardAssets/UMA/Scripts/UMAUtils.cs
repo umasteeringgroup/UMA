@@ -28,6 +28,41 @@ namespace UMA
 		public static int StringToHash(string name) { return Animator.StringToHash(name); }
 
 		/// <summary>
+		/// The initial state used by <see cref="Hash64"/>.
+		/// </summary>
+		public const ulong Hash64OffsetBasis = 14695981039346656037UL;
+
+		private const ulong Hash64Prime = 1099511628211UL;
+
+		/// <summary>
+		/// Calculates a stable 64-bit FNV-1a hash.
+		/// </summary>
+		/// <param name="data">The bytes to append to the hash.</param>
+		/// <param name="hash">
+		/// The initial or previously returned hash state. Omit this parameter
+		/// to begin a new hash.
+		/// </param>
+		/// <returns>
+		/// The updated hash. Pass this value back as <paramref name="hash"/> to
+		/// incrementally hash another block of data.
+		/// </returns>
+		public static ulong Hash64(
+			System.ReadOnlySpan<byte> data,
+			ulong hash = Hash64OffsetBasis)
+		{
+			unchecked
+			{
+				for (int i = 0; i < data.Length; i++)
+				{
+					hash ^= data[i];
+					hash *= Hash64Prime;
+				}
+			}
+
+			return hash;
+		}
+
+		/// <summary>
 		/// Gaussian random value.
 		/// </summary>
 		/// <returns>Random value centered on mean.</returns>

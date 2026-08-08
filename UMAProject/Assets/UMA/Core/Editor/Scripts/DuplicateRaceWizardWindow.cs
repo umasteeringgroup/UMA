@@ -1076,6 +1076,7 @@ namespace UMA.Editors
 				duplicatedRace.useFbxRoute = sourceRace.useFbxRoute;
 				duplicatedRace.useNewDNA = sourceRace.useNewDNA;
 				duplicatedRace.expressionSet = sourceRace.expressionSet;
+                duplicatedRace.expressionGroup = sourceRace.expressionGroup;
 				duplicatedRace.useManualRendererBounds = sourceRace.useManualRendererBounds;
 				duplicatedRace.manualRendererBounds = sourceRace.manualRendererBounds;
 				duplicatedRace.manualRendererBoundsCenter = sourceRace.manualRendererBoundsCenter;

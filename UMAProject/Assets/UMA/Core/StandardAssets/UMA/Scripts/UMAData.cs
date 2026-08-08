@@ -794,63 +794,183 @@ namespace UMA
 		}
 
 
+        [NonSerialized]
+        private List<IRuntimeDNAProvider> _runtimeDNAProviders;
+
+        public void RegisterRuntimeDNAProvider(
+            IRuntimeDNAProvider provider)
+        {
+            if (provider == null)
+            {
+                return;
+            }
+
+            if (_runtimeDNAProviders == null)
+            {
+                _runtimeDNAProviders =
+                    new List<IRuntimeDNAProvider>(2);
+            }
+
+            if (!_runtimeDNAProviders.Contains(provider))
+            {
+                _runtimeDNAProviders.Add(provider);
+            }
+        }
+
+        public void UnregisterRuntimeDNAProvider(
+            IRuntimeDNAProvider provider)
+        {
+            if (provider == null || _runtimeDNAProviders == null)
+            {
+                return;
+            }
+
+            _runtimeDNAProviders.Remove(provider);
+        }
+
+        public DNABuildType RuntimeDNAsAfterRecipeGenerated(
+            DynamicCharacterAvatar avatar)
+        {
+            DNABuildType flags = DNABuildType.None;
+            if (_runtimeDNAProviders == null)
+            {
+                return flags;
+            }
+
+            for (int i = 0; i < _runtimeDNAProviders.Count; i++)
+            {
+                IRuntimeDNAProvider provider =
+                    _runtimeDNAProviders[i];
+                if (provider != null)
+                {
+                    flags |= provider.AfterRecipeGenerated(avatar);
+                }
+            }
+
+            return flags;
+        }
+
+        private DNABuildType RuntimeDNAsPreApply()
+        {
+            DNABuildType flags = DNABuildType.None;
+            if (_runtimeDNAProviders == null)
+            {
+                return flags;
+            }
+
+            for (int i = 0; i < _runtimeDNAProviders.Count; i++)
+            {
+                IRuntimeDNAProvider provider =
+                    _runtimeDNAProviders[i];
+                if (provider != null)
+                {
+                    flags |= provider.PreApply(this);
+                }
+            }
+
+            return flags;
+        }
+
+        private DNABuildType RuntimeDNAsApply()
+        {
+            DNABuildType flags = DNABuildType.None;
+            if (_runtimeDNAProviders == null)
+            {
+                return flags;
+            }
+
+            for (int i = 0; i < _runtimeDNAProviders.Count; i++)
+            {
+                IRuntimeDNAProvider provider =
+                    _runtimeDNAProviders[i];
+                if (provider != null)
+                {
+                    flags |= provider.Apply(this);
+                }
+            }
+
+            return flags;
+        }
+
+        private DNABuildType RuntimeDNAsPostApply()
+        {
+            DNABuildType flags = DNABuildType.None;
+            if (_runtimeDNAProviders == null)
+            {
+                return flags;
+            }
+
+            for (int i = 0; i < _runtimeDNAProviders.Count; i++)
+            {
+                IRuntimeDNAProvider provider =
+                    _runtimeDNAProviders[i];
+                if (provider != null)
+                {
+                    flags |= provider.PostApply(this);
+                }
+            }
+
+            return flags;
+        }
+
 		public DNABuildType NewDNAPreApply()
 		{
-			if (dnaInstanceCollection == null || dnaInstanceCollection.dnaInstances.Count == 0)
-			{
-				return DNABuildType.None;
-			}
-
 			DNABuildType updateFlags = DNABuildType.None;
 
-			foreach (var dnainstance in dnaInstanceCollection.dnaInstances)
-			{
-				//dnaInstanceCollection.
-				if (dnainstance != null && dnainstance.enabled)
-				{
-					var dna = dnaInstanceCollection.GetDNA(dnainstance.Name);
-					if (dna != null)
-					{
-						updateFlags |= dna.PreApply(this, dnainstance.Value);
-					}
-				}
-			}
+            if (dnaInstanceCollection != null &&
+                dnaInstanceCollection.dnaInstances != null)
+            {
+			    foreach (var dnainstance in dnaInstanceCollection.dnaInstances)
+			    {
+				    if (dnainstance != null && dnainstance.enabled)
+				    {
+					    var dna = dnaInstanceCollection.GetDNA(dnainstance.Name);
+					    if (dna != null)
+					    {
+						    updateFlags |= dna.PreApply(this, dnainstance.Value);
+					    }
+				    }
+			    }
+            }
+
+            updateFlags |= RuntimeDNAsPreApply();
 			return updateFlags;
         }
 
         public DNABuildType NewDNAApply()
         {
-            if (dnaInstanceCollection == null || dnaInstanceCollection.dnaInstances.Count == 0)
-            {
-                return DNABuildType.None;
-            }
-
             DNABuildType updateFlags = DNABuildType.None;
 
-            // Base bone poses must run after ResetAll but before the rest of the rig effects.
-            foreach (var dnainstance in dnaInstanceCollection.dnaInstances)
+            if (dnaInstanceCollection != null &&
+                dnaInstanceCollection.dnaInstances != null)
             {
-				if (dnainstance != null && dnainstance.enabled)
-				{
-					var dna = dnaInstanceCollection.GetDNA(dnainstance.Name);
-					if (dna != null)
-					{
-						updateFlags |= dna.ApplyBaseBonePoseEffects(this, dnainstance.Value);
-					}
-				}
+                // Base bone poses must run after ResetAll but before the rest of the rig effects.
+                foreach (var dnainstance in dnaInstanceCollection.dnaInstances)
+                {
+				    if (dnainstance != null && dnainstance.enabled)
+				    {
+					    var dna = dnaInstanceCollection.GetDNA(dnainstance.Name);
+					    if (dna != null)
+					    {
+						    updateFlags |= dna.ApplyBaseBonePoseEffects(this, dnainstance.Value);
+					    }
+				    }
+                }
+
+                foreach (var dnainstance in dnaInstanceCollection.dnaInstances)
+                {
+				    if (dnainstance != null && dnainstance.enabled)
+				    {
+					    var dna = dnaInstanceCollection.GetDNA(dnainstance.Name);
+					    if (dna != null)
+					    {
+						    updateFlags |= dna.ApplyNonBaseEffects(this, dnainstance.Value);
+					    }
+				    }
+                }
             }
 
-            foreach (var dnainstance in dnaInstanceCollection.dnaInstances)
-            {
-				if (dnainstance != null && dnainstance.enabled)
-				{
-					var dna = dnaInstanceCollection.GetDNA(dnainstance.Name);
-					if (dna != null)
-					{
-						updateFlags |= dna.ApplyNonBaseEffects(this, dnainstance.Value);
-					}
-				}
-            }
+            updateFlags |= RuntimeDNAsApply();
             return updateFlags;
         }
 
@@ -880,24 +1000,25 @@ namespace UMA
 
         public DNABuildType NewDNAPostApply()
         {
-            if (dnaInstanceCollection == null || dnaInstanceCollection.dnaInstances.Count == 0)
-            {
-                return DNABuildType.None;
-            }
-
             DNABuildType updateFlags = DNABuildType.None;
 
-            foreach (var dnainstance in dnaInstanceCollection.dnaInstances)
+            if (dnaInstanceCollection != null &&
+                dnaInstanceCollection.dnaInstances != null)
             {
-				if (dnainstance != null && dnainstance.enabled)
-				{
-					var dna = dnaInstanceCollection.GetDNA(dnainstance.Name);
-					if (dna != null)
-					{
-						updateFlags |= dna.PostApply(this, dnainstance.Value);
-					}
-				}
+                foreach (var dnainstance in dnaInstanceCollection.dnaInstances)
+                {
+				    if (dnainstance != null && dnainstance.enabled)
+				    {
+					    var dna = dnaInstanceCollection.GetDNA(dnainstance.Name);
+					    if (dna != null)
+					    {
+						    updateFlags |= dna.PostApply(this, dnainstance.Value);
+					    }
+				    }
+                }
             }
+
+            updateFlags |= RuntimeDNAsPostApply();
             return updateFlags;
         }
 
@@ -1477,6 +1598,8 @@ namespace UMA
 		{
 			public RaceData raceData;
 			public string recipeName; // only used when DynamicCharacterAvatar merges the recipe with the avatar.
+			[Tooltip("Serialized non-destructive state for the Overlay Painter editor stage.")]
+			public string texturePaintStageState;
 			public DNAInstanceCollection dnaInstanceCollection;
             Dictionary<int, UMADnaBase> _umaDna;
 			protected Dictionary<int, UMADnaBase> umaDna
@@ -2535,7 +2658,7 @@ namespace UMA
 #pragma warning disable 618
 			public void PreApplyDNA(UMAData umaData, bool fixUpUMADnaToDynamicUMADna = false)
 			{
-				Debug.Log("PreApplyDNA called for recipe " + umaData.umaRecipe.recipeName);
+				//Debug.Log("PreApplyDNA called for recipe " + umaData.umaRecipe.recipeName);
 
                 EnsureAllDNAPresent();
 				//clear any color adjusters from all overlays in the recipe
@@ -2564,7 +2687,7 @@ namespace UMA
 			/// <param name="umaData">UMA data.</param>
 			public void ApplyDNA(UMAData umaData)
 			{
-				Debug.Log("ApplyDNA called for recipe " + umaData.umaRecipe.recipeName);
+				// Debug.Log("ApplyDNA called for recipe " + umaData.umaRecipe.recipeName);
 				if (umaData.umaRecipe.raceData != null && umaData.umaRecipe.raceData.useNewDNA)
 				{
 					return;
@@ -2955,9 +3078,31 @@ namespace UMA
 
 
 		List<BaseUpdatedObject> boneAnimators = new List<BaseUpdatedObject>();
+        private bool _boneAnimatorsEnabled = true;
+
+        /// <summary>
+        /// True when embedded bone animators are allowed to update this avatar.
+        /// </summary>
+        public bool BoneAnimatorsEnabled
+        {
+            get { return _boneAnimatorsEnabled; }
+        }
+
+        /// <summary>
+        /// Enables or disables embedded bone animator updates for this avatar.
+        /// </summary>
+        public void SetBoneAnimatorsEnabled(bool enabled)
+        {
+            _boneAnimatorsEnabled = enabled;
+        }
 
         public void FixedUpdate()
         {
+            if (!_boneAnimatorsEnabled)
+            {
+                return;
+            }
+
 			for(int i=0; i < boneAnimators.Count; i++)
 			{
 				boneAnimators[i].FixedUpdate(); 

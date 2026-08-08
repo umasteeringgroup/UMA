@@ -153,7 +153,7 @@ namespace UMA.CharacterSystem
 		#endregion
 
 #if UNITY_EDITOR
-		[UnityEditor.MenuItem("Assets/Create/UMA/DCS/Wardrobe Collection")]
+		[UnityEditor.MenuItem("Assets/Create/UMA/Wardrobe/Collection")]
 		public static void CreateWardrobeCollectionAsset()
 		{
 			UMA.CustomAssetUtility.CreateAsset<UMAWardrobeCollection>();

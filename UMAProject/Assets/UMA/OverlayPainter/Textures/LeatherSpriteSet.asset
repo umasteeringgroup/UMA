@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e6d19d11b87f48a79a08cc592bbb8ebc, type: 3}
+  m_Name: LeatherSpriteSet
+  m_EditorClassIdentifier: UMA.TexturePaint::UMA.TexturePaint.OverlayPainterSpriteSet
+  setName: Leather
+  spriteSheets:
+  - channel: 0
+    spriteSheet: {fileID: 2800000, guid: 56620daab9d7d1b4e99f5743a72f3f96, type: 3}
+    inverted: 0
+  - channel: 3
+    spriteSheet: {fileID: 2800000, guid: b53bff0ab88afa046b0a5d7f10ba3a0e, type: 3}
+    inverted: 1
+  - channel: 1
+    spriteSheet: {fileID: 2800000, guid: 821e32b3a7aa5de4eb1e79c12c300e79, type: 3}
+    inverted: 0
+  spriteNames:
+  - Light Brown Fine-Grain Leather
+  - Distressed Brown Leather
+  - Black Fine-Grain Leather
+  - Black Crackle Leather
+  - Black Wrinkled Leather
+  - Tan Snakeskin Leather
+  - Medium Brown Ostrich Leather
+  - Dark Brown Pebbled Leather
+  - Burgundy Pebbled Leather
+  - Taupe Nubuck Leather
+  - Deep Teal Suede Leather
+  - Burnt Orange Suede Leather
+  - Black Crosshatch Leather
+  - Brown Quilted Leather
+  - Distressed Charcoal Leather
+  - Black Antique Crackle Leather

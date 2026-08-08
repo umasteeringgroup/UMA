@@ -36,6 +36,13 @@ public class IconCreator : MonoBehaviour
     // Setup.
     public Vector2 IconDimensions = new Vector2(128, 128);
 
+    [Range(1, 4)]
+    [Tooltip("Render camera thumbnails at a higher temporary resolution before downsampling. 2 is recommended.")]
+    public int CaptureSupersampling = 2;
+
+    [Tooltip("Resize texture-derived thumbnails to Icon Dimensions instead of preserving the source crop resolution.")]
+    public bool ResizeTextureDerivedThumbnails = false;
+
     public float PreviewSize = 128.0f;
     public float scrollAreaHeight = 90.0f;
     public int currentCameraIndex = 0;
@@ -47,6 +54,7 @@ public class IconCreator : MonoBehaviour
     private Texture2D flatHover = null;
     private Texture2D flatActive = null;
     private string currentStatus = "";
+    private bool isRendering = false;
     [Range(-1.0f, 1.0f)]
     public float brightness = 0.0f;
     [Range(-1.0f, 1.0f)]
@@ -221,7 +229,7 @@ public class IconCreator : MonoBehaviour
         GUILayout.Label("Region to Render", GUILayout.Width(110f));
 
         bool hasRaceRegions = raceRegions != null && raceRegions.Count > 0;
-        GUI.enabled = hasRaceRegions;
+        GUI.enabled = hasRaceRegions && !isRendering;
 
         string selectedRegionLabel = hasRaceRegions ? raceRegions[selectedRegionIndex] : "No regions available";
         if (GUILayout.Button(selectedRegionLabel, GUILayout.Width(220f)))
@@ -272,106 +280,484 @@ public class IconCreator : MonoBehaviour
     }
 
 
+    private sealed class ThumbnailGenerationItem
+    {
+        public string OutputPath;
+        public UMAWardrobeRecipe SourceRecipe;
+        public UMAWardrobeRecipe RenderRecipe;
+    }
+
+#if UNITY_EDITOR
+    private sealed class ThumbnailReferenceSnapshot
+    {
+        public WardrobeRecipeThumb Thumbnail;
+        public string AssetPath;
+    }
+
+    // Owns the temporary reference changes required to release Unity's handles on thumbnails.
+    // Dispose restores those references and managed atlases even when rendering is interrupted.
+    private sealed class ThumbnailGenerationSession : IDisposable
+    {
+        private readonly List<ThumbnailGenerationItem> items;
+        private readonly List<ThumbnailReferenceSnapshot> references;
+        private readonly List<string> atlasAssetPaths;
+        private bool recipesChanged;
+
+        public ThumbnailGenerationSession(
+            List<ThumbnailGenerationItem> items,
+            List<ThumbnailReferenceSnapshot> references,
+            List<string> atlasAssetPaths)
+        {
+            this.items = items;
+            this.references = references;
+            this.atlasAssetPaths = atlasAssetPaths;
+        }
+
+        public void MarkRecipeChanged()
+        {
+            recipesChanged = true;
+        }
+
+        public void Dispose()
+        {
+            for (int i = 0; i < atlasAssetPaths.Count; i++)
+            {
+                AssetDatabase.LoadAssetAtPath<UnityEngine.U2D.SpriteAtlas>(atlasAssetPaths[i]);
+            }
+
+            bool referencesRestored = true;
+            for (int i = 0; i < references.Count; i++)
+            {
+                ThumbnailReferenceSnapshot reference = references[i];
+                try
+                {
+                    if (reference.Thumbnail != null)
+                    {
+                        Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(reference.AssetPath);
+                        reference.Thumbnail.thumb = sprite;
+                        referencesRestored &= sprite != null;
+                    }
+                }
+                catch (Exception exception)
+                {
+                    referencesRestored = false;
+                    Debug.LogException(exception);
+                }
+            }
+
+            for (int i = 0; i < items.Count; i++)
+            {
+                UMAWardrobeRecipe renderRecipe = items[i].RenderRecipe;
+                if (renderRecipe == null || renderRecipe == items[i].SourceRecipe)
+                {
+                    continue;
+                }
+
+                try
+                {
+                    DestroyDetachedRecipe(renderRecipe);
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogException(exception);
+                }
+            }
+
+            if (recipesChanged && referencesRestored)
+            {
+                try
+                {
+                    AssetDatabase.SaveAssets();
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogException(exception);
+                }
+            }
+            else if (recipesChanged)
+            {
+                Debug.LogError(
+                    "IconCreator: Thumbnail references could not be restored. " +
+                    "Recipe changes were not saved to protect the original assets.");
+            }
+        }
+    }
+#else
+    private sealed class ThumbnailGenerationSession : IDisposable
+    {
+        public void Dispose()
+        {
+        }
+    }
+#endif
+
     private IEnumerator RenderRegion(string region)
     {
-        var ugb = UMAAssetIndexer.Instance.Generator;
-
+        if (isRendering)
+        {
+            yield break;
+        }
         if (string.IsNullOrEmpty(region))
         {
             currentStatus = "No region selected for rendering.";
             yield break;
         }
-        currentStatus = $"Rendering region: {region}";
-        var recipes = avatar.AvailableRecipes;
-        if (recipes != null && recipes.TryGetValue(region, out List<UMATextRecipe> regionRecipes))
+
+        isRendering = true;
+        ThumbnailGenerationSession session = null;
+        try
         {
-            int sequence = 0;
-            foreach (var recipe in regionRecipes)
+            Dictionary<string, List<ThumbnailGenerationItem>> preparedRecipes =
+                PrepareThumbnailGeneration(new List<string> { region }, out session);
+#if UNITY_EDITOR
+            yield return Resources.UnloadUnusedAssets();
+            AssetDatabase.ReleaseCachedFileHandles();
+#endif
+            if (preparedRecipes.TryGetValue(region, out List<ThumbnailGenerationItem> regionRecipes))
             {
-                sequence++;
-                var uwr = recipe as UMAWardrobeRecipe;
-                if (uwr != null)
+                IEnumerator renderer = RenderPreparedRegion(
+                    region,
+                    regionRecipes,
+                    session);
+                while (renderer.MoveNext())
                 {
-                    // If thumbnailFromTexture is enabled, generate thumbnail from recipe texture instead of camera capture
-                    if (uwr.thumbnailFromTexture)
-                    {
-                        string raceName = avatar.activeRace.racedata.raceName;
-                        string textureOutputPath = GenerateThumbnailFromRecipeTexture(uwr, region, raceName, sequence);
-                        if (!string.IsNullOrEmpty(textureOutputPath))
-                        {
-#if UNITY_EDITOR
-                            UpdateWardrobeRecipeThumb(uwr, textureOutputPath);
-#endif
-                            currentStatus = $"Generated texture thumbnail for recipe: {uwr.name}";
-                        }
-                        else
-                        {
-                            currentStatus = $"Failed to generate texture thumbnail for recipe: {uwr.name} (no texture found in recipe)";
-                        }
-                        continue;
-                    }
-
-                    currentStatus = $"Rendering recipe: {uwr.name} for region: {region}";
-                    avatar.ClearWearableItems(region);
-                    avatar.SetWearableItem(uwr);
-                    avatar.BuildCharacter();
-                    ugb.GenerateSingleUMA(avatar, true);
-                    // Wait until the avatar has finished updating before attempting to capture the icon.
-
-                    // wait a frame to ensure character is rendered with the new wardrobe item before capturing the icon.
-                    yield return null;
-                    // ensure wearable items are cleared after rendering the icon so that the avatar is back to a clean state for the next recipe to be rendered.
-                    // and that the last one doesn't affect the next region to be rendered.
-                    avatar.ClearWearableItems(region);
-                    CameraRegions cameraRegions = GetCameraRegionsForRegion(region);
-                    if (cameraRegions == null)
-                    {
-                        currentStatus = $"No camera configured for region: {region}";
-                        continue;
-                    }
-
-                    if (cameraRegions.camera == null)
-                    {
-                        currentStatus = $"Camera is missing for region: {region}";
-                        continue;
-                    }
-
-                    if (cameraRegions.camera.targetTexture == null)
-                    {
-                        currentStatus = $"Camera target texture is missing for region: {region}";
-                        continue;
-                    }
-
-                    string outputFolder = GetOutputFolder(region, avatar.activeRace.racedata.raceName);
-                    string outputPath = Path.Combine(outputFolder, SanitizePathSegment(sequence + "_" + uwr.name) + ".png");
-                    if (!CaptureRenderTextureToPng(cameraRegions.camera, outputPath))
-                    {
-                        currentStatus = $"Failed to capture icon for recipe: {uwr.name}";
-                        continue;
-                    }
-
-#if UNITY_EDITOR
-                    UpdateWardrobeRecipeThumb(uwr, outputPath);
-#endif
-                    // todo: update the manual progress bar here to show progress for each region and recipe being rendered.
+                    yield return renderer.Current;
                 }
             }
+        }
+        finally
+        {
+            session?.Dispose();
+            isRendering = false;
+        }
+    }
+
+    private IEnumerator RenderAllRegions()
+    {
+        if (isRendering)
+        {
+            yield break;
+        }
+
+        Dictionary<string, List<UMATextRecipe>> availableRecipes = avatar.AvailableRecipes;
+        if (availableRecipes == null)
+        {
+            yield break;
+        }
+
+        isRendering = true;
+        ThumbnailGenerationSession session = null;
+        try
+        {
+            List<string> regions = new List<string>(availableRecipes.Keys);
+            Dictionary<string, List<ThumbnailGenerationItem>> preparedRecipes =
+                PrepareThumbnailGeneration(regions, out session);
+#if UNITY_EDITOR
+            yield return Resources.UnloadUnusedAssets();
+            AssetDatabase.ReleaseCachedFileHandles();
+#endif
+            for (int i = 0; i < regions.Count; i++)
+            {
+                string region = regions[i];
+                if (preparedRecipes.TryGetValue(region, out List<ThumbnailGenerationItem> regionRecipes))
+                {
+                    IEnumerator renderer = RenderPreparedRegion(
+                        region,
+                        regionRecipes,
+                        session);
+                    while (renderer.MoveNext())
+                    {
+                        yield return renderer.Current;
+                    }
+                }
+            }
+        }
+        finally
+        {
+            session?.Dispose();
+            isRendering = false;
+        }
+    }
+
+    private Dictionary<string, List<ThumbnailGenerationItem>> PrepareThumbnailGeneration(
+        List<string> regions,
+        out ThumbnailGenerationSession session)
+    {
+        session = null;
+        var result = new Dictionary<string, List<ThumbnailGenerationItem>>();
+        Dictionary<string, List<UMATextRecipe>> availableRecipes = avatar.AvailableRecipes;
+        if (availableRecipes == null || avatar.activeRace.racedata == null)
+        {
+            return result;
+        }
+
+        string raceName = avatar.activeRace.racedata.raceName;
+        var allItems = new List<ThumbnailGenerationItem>();
+        for (int regionIndex = 0; regionIndex < regions.Count; regionIndex++)
+        {
+            string region = regions[regionIndex];
+            var preparedRegion = new List<ThumbnailGenerationItem>();
+            result.Add(region, preparedRegion);
+            if (!availableRecipes.TryGetValue(region, out List<UMATextRecipe> regionRecipes))
+            {
+                continue;
+            }
+
+            string outputFolder = GetOutputFolder(region, raceName);
+            for (int recipeIndex = 0; recipeIndex < regionRecipes.Count; recipeIndex++)
+            {
+                UMAWardrobeRecipe sourceRecipe = regionRecipes[recipeIndex] as UMAWardrobeRecipe;
+                if (sourceRecipe == null)
+                {
+                    continue;
+                }
+
+                var item = new ThumbnailGenerationItem
+                {
+                    OutputPath = GetThumbnailOutputPath(sourceRecipe, raceName, outputFolder),
+                    SourceRecipe = sourceRecipe,
+                    RenderRecipe = sourceRecipe
+                };
+#if UNITY_EDITOR
+                item.RenderRecipe = CreateDetachedRecipe(sourceRecipe);
+#endif
+                preparedRegion.Add(item);
+                allItems.Add(item);
+            }
+        }
+
+#if UNITY_EDITOR
+        UMAWardrobeRecipe[] sourceRecipes = GetDistinctSourceRecipes(allItems);
+        if (sourceRecipes.Length > 0)
+        {
+            Undo.RecordObjects(sourceRecipes, "Update Wardrobe Recipe Thumbnails");
+        }
+        var references = new List<ThumbnailReferenceSnapshot>();
+        var atlasAssetPaths = new List<string>();
+        session = new ThumbnailGenerationSession(allItems, references, atlasAssetPaths);
+        ReleaseManagedThumbnailAtlases(atlasAssetPaths);
+        ReleaseThumbnailReferences(availableRecipes, allItems, references);
+#else
+        session = new ThumbnailGenerationSession();
+#endif
+        return result;
+    }
+
+#if UNITY_EDITOR
+    private static UMAWardrobeRecipe[] GetDistinctSourceRecipes(List<ThumbnailGenerationItem> items)
+    {
+        var recipes = new List<UMAWardrobeRecipe>();
+        var seen = new HashSet<UMAWardrobeRecipe>();
+        for (int i = 0; i < items.Count; i++)
+        {
+            UMAWardrobeRecipe recipe = items[i].SourceRecipe;
+            if (recipe != null && seen.Add(recipe))
+            {
+                recipes.Add(recipe);
+            }
+        }
+        return recipes.ToArray();
+    }
+
+    private void ReleaseThumbnailReferences(
+        Dictionary<string, List<UMATextRecipe>> availableRecipes,
+        List<ThumbnailGenerationItem> items,
+        List<ThumbnailReferenceSnapshot> references)
+    {
+        // UnloadUnusedAssets cannot release a thumbnail while a loaded recipe still references it.
+        // Only references to files being regenerated are cleared, and the session restores them by path.
+        var outputAssetPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        for (int i = 0; i < items.Count; i++)
+        {
+            string assetPath = GetAssetRelativePath(items[i].OutputPath);
+            if (!string.IsNullOrEmpty(assetPath))
+            {
+                outputAssetPaths.Add(assetPath.Replace('\\', '/'));
+            }
+        }
+
+        var visitedRecipes = new HashSet<UMAWardrobeRecipe>();
+        foreach (KeyValuePair<string, List<UMATextRecipe>> pair in availableRecipes)
+        {
+            List<UMATextRecipe> recipes = pair.Value;
+            for (int recipeIndex = 0; recipeIndex < recipes.Count; recipeIndex++)
+            {
+                UMAWardrobeRecipe recipe = recipes[recipeIndex] as UMAWardrobeRecipe;
+                if (recipe == null || !visitedRecipes.Add(recipe) || recipe.wardrobeRecipeThumbs == null)
+                {
+                    continue;
+                }
+
+                for (int thumbnailIndex = 0; thumbnailIndex < recipe.wardrobeRecipeThumbs.Count; thumbnailIndex++)
+                {
+                    WardrobeRecipeThumb thumbnail = recipe.wardrobeRecipeThumbs[thumbnailIndex];
+                    if (thumbnail == null || thumbnail.thumb == null)
+                    {
+                        continue;
+                    }
+
+                    string assetPath = AssetDatabase.GetAssetPath(thumbnail.thumb).Replace('\\', '/');
+                    if (!outputAssetPaths.Contains(assetPath))
+                    {
+                        continue;
+                    }
+
+                    references.Add(new ThumbnailReferenceSnapshot
+                    {
+                        Thumbnail = thumbnail,
+                        AssetPath = assetPath
+                    });
+                    thumbnail.thumb = null;
+                }
+            }
+        }
+
+        foreach (string assetPath in outputAssetPaths)
+        {
+            UnloadThumbnailAsset(assetPath);
+        }
+        AssetDatabase.ReleaseCachedFileHandles();
+    }
+
+    private static UMAWardrobeRecipe CreateDetachedRecipe(UMAWardrobeRecipe sourceRecipe)
+    {
+        // Rendering uses a transient clone so the source recipe can release its thumbnail Sprite
+        // without removing the wardrobe data needed to build the character.
+        UMAWardrobeRecipe renderRecipe = Instantiate(sourceRecipe);
+        try
+        {
+            renderRecipe.name = sourceRecipe.name;
+            renderRecipe.hideFlags = HideFlags.HideAndDontSave;
+            renderRecipe.wardrobeRecipeThumbs = new List<WardrobeRecipeThumb>();
+            return renderRecipe;
+        }
+        catch
+        {
+            DestroyDetachedRecipe(renderRecipe);
+            throw;
+        }
+    }
+
+    private static void DestroyDetachedRecipe(UMAWardrobeRecipe recipe)
+    {
+        UMAUtils.DestroySceneObject(recipe);
+    }
+
+    private static void UnloadThumbnailAsset(string assetPath)
+    {
+        Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
+        if (sprite == null)
+        {
+            return;
+        }
+
+        Resources.UnloadAsset(sprite);
+    }
+
+    private void ReleaseManagedThumbnailAtlases(List<string> atlasAssetPaths)
+    {
+        // A loaded atlas can retain the source Sprite after recipe references are cleared. Unload only
+        // atlases created under this Icon Creator root, then reload them when the session is disposed.
+        string atlasFolder = GetManagedAtlasAssetFolder();
+        UnityEngine.U2D.SpriteAtlas[] loadedAtlases =
+            Resources.FindObjectsOfTypeAll<UnityEngine.U2D.SpriteAtlas>();
+        for (int i = 0; i < loadedAtlases.Length; i++)
+        {
+            UnityEngine.U2D.SpriteAtlas atlas = loadedAtlases[i];
+            string atlasPath = AssetDatabase.GetAssetPath(atlas).Replace('\\', '/');
+            if (!atlasPath.StartsWith(atlasFolder + "/", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            atlasAssetPaths.Add(atlasPath);
+            Resources.UnloadAsset(atlas);
+        }
+    }
+
+    private string GetManagedAtlasAssetFolder()
+    {
+        string normalizedRootFolder = NormalizeRootFolder(rootFolder).Replace('\\', '/').Trim('/');
+        return string.IsNullOrEmpty(normalizedRootFolder)
+            ? "Assets/SpriteAtlases"
+            : "Assets/" + normalizedRootFolder + "/SpriteAtlases";
+    }
+#endif
+
+    private IEnumerator RenderPreparedRegion(
+        string region,
+        List<ThumbnailGenerationItem> recipes,
+        ThumbnailGenerationSession session)
+    {
+        var ugb = UMAAssetIndexer.Instance.Generator;
+        currentStatus = $"Rendering region: {region}";
+        for (int i = 0; i < recipes.Count; i++)
+        {
+            ThumbnailGenerationItem item = recipes[i];
+            UMAWardrobeRecipe uwr = item.RenderRecipe;
+            if (uwr.thumbnailFromTexture)
+            {
+                string textureOutputPath = GenerateThumbnailFromRecipeTexture(
+                    uwr,
+                    item.OutputPath);
+                if (!string.IsNullOrEmpty(textureOutputPath))
+                {
+#if UNITY_EDITOR
+                    if (UpdateWardrobeRecipeThumb(item.SourceRecipe, textureOutputPath))
+                    {
+                        session.MarkRecipeChanged();
+                    }
+#endif
+                    currentStatus = $"Generated texture thumbnail for recipe: {uwr.name}";
+                }
+                else
+                {
+                    currentStatus = $"Failed to generate texture thumbnail for recipe: {uwr.name} (no texture found in recipe)";
+                }
+                continue;
+            }
+
+            currentStatus = $"Rendering recipe: {uwr.name} for region: {region}";
+            avatar.ClearWearableItems(region);
+            avatar.SetWearableItem(uwr);
+            avatar.BuildCharacter();
+            ugb.GenerateSingleUMA(avatar, true);
+            yield return null;
+            avatar.ClearWearableItems(region);
+
+            CameraRegions cameraRegions = GetCameraRegionsForRegion(region);
+            if (cameraRegions == null)
+            {
+                currentStatus = $"No camera configured for region: {region}";
+                continue;
+            }
+            if (cameraRegions.camera == null)
+            {
+                currentStatus = $"Camera is missing for region: {region}";
+                continue;
+            }
+            if (cameraRegions.camera.targetTexture == null)
+            {
+                currentStatus = $"Camera target texture is missing for region: {region}";
+                continue;
+            }
+            if (!CaptureRenderTextureToPng(cameraRegions.camera, item.OutputPath))
+            {
+                currentStatus = $"Failed to capture icon for recipe: {uwr.name}";
+                continue;
+            }
+
+#if UNITY_EDITOR
+            if (UpdateWardrobeRecipeThumb(item.SourceRecipe, item.OutputPath))
+            {
+                session.MarkRecipeChanged();
+            }
+#endif
         }
         currentStatus = $"Finished rendering region: {region}";
     }
 
-
-    private IEnumerator RenderAllRegions()
-    {
-        Dictionary<string, List<UMATextRecipe>> recipes = avatar.AvailableRecipes;
-        foreach(var kvp in recipes)
-        {
-            string region = kvp.Key;
-            yield return StartCoroutine(RenderRegion(region));
-        }
-    }
-
-    private string GenerateThumbnailFromRecipeTexture(UMAWardrobeRecipe uwr, string region, string raceName, int sequence)
+    private string GenerateThumbnailFromRecipeTexture(UMAWardrobeRecipe uwr, string outputPath)
     {
         if (uwr == null)
         {
@@ -416,8 +802,13 @@ public class IconCreator : MonoBehaviour
         }
 
         Texture sourceTexture = textureList[0];
-        Texture2D readableTexture = GetReadableTexture2D(sourceTexture);
-        if (readableTexture == null)
+        Vector2Int iconDimensions = GetTextureThumbnailDimensions(sourceTexture, uwr.thumbnailRect);
+        Texture2D outputTexture = GetReadableTexture2D(
+            sourceTexture,
+            uwr.thumbnailRect,
+            iconDimensions.x,
+            iconDimensions.y);
+        if (outputTexture == null)
         {
             Debug.LogWarning($"IconCreator: Failed to get readable texture for recipe '{uwr.name}'.");
             return null;
@@ -425,73 +816,90 @@ public class IconCreator : MonoBehaviour
 
         try
         {
-            // Crop using thumbnailRect (normalized UV coordinates, 0-1 range)
-            Rect thumbnailRect = uwr.thumbnailRect;
-            int srcWidth = readableTexture.width;
-            int srcHeight = readableTexture.height;
-
-            int cropX = Mathf.RoundToInt(thumbnailRect.x * srcWidth);
-            int cropY = Mathf.RoundToInt(thumbnailRect.y * srcHeight);
-            int cropWidth = Mathf.RoundToInt(thumbnailRect.width * srcWidth);
-            int cropHeight = Mathf.RoundToInt(thumbnailRect.height * srcHeight);
-
-            // Clamp to valid range
-            cropX = Mathf.Clamp(cropX, 0, srcWidth - 1);
-            cropY = Mathf.Clamp(cropY, 0, srcHeight - 1);
-            cropWidth = Mathf.Clamp(cropWidth, 1, srcWidth - cropX);
-            cropHeight = Mathf.Clamp(cropHeight, 1, srcHeight - cropY);
-
-            Color[] pixels = readableTexture.GetPixels(cropX, cropY, cropWidth, cropHeight);
-
-            // Create output texture and convert to grayscale with brightness/contrast
-            Texture2D outputTexture = new Texture2D(cropWidth, cropHeight, TextureFormat.RGBA32, false);
-            Color[] outputPixels = new Color[pixels.Length];
-            for (int i = 0; i < pixels.Length; i++)
+            Color[] outputPixels = outputTexture.GetPixels();
+            for (int i = 0; i < outputPixels.Length; i++)
             {
-                float gray = pixels[i].grayscale;
+                float gray = outputPixels[i].grayscale;
                 gray = ApplyBrightnessContrast(gray, brightness, contrast);
-                outputPixels[i] = new Color(gray, gray, gray, pixels[i].a);
+                outputPixels[i] = new Color(gray, gray, gray, outputPixels[i].a);
             }
             outputTexture.SetPixels(outputPixels);
             outputTexture.Apply();
 
-            // Save to PNG
-            string outputFolder = GetOutputFolder(region, raceName);
-            string outputPath = Path.Combine(outputFolder, SanitizePathSegment(sequence + "_" + uwr.name) + ".png");
             byte[] pngBytes = outputTexture.EncodeToPNG();
-            File.WriteAllBytes(outputPath, pngBytes);
+            WriteThumbnailFile(outputPath, pngBytes);
 
-            Destroy(outputTexture);
             return outputPath;
         }
         finally
         {
-            Destroy(readableTexture);
+            DestroyTexture(outputTexture);
         }
     }
 
-    private static Texture2D GetReadableTexture2D(Texture source)
+    private static Texture2D GetReadableTexture2D(Texture source, Rect sourceRect, int width, int height)
     {
-        if (source == null)
+        if (source == null || width < 1 || height < 1)
         {
             return null;
         }
 
+        RectInt sourcePixelRect = GetSourcePixelRect(source, sourceRect);
+        Vector2 scale = new Vector2(
+            sourcePixelRect.width / (float)source.width,
+            sourcePixelRect.height / (float)source.height);
+        Vector2 offset = new Vector2(
+            sourcePixelRect.x / (float)source.width,
+            sourcePixelRect.y / (float)source.height);
+
         RenderTexture tmp = RenderTexture.GetTemporary(
-            source.width, source.height, 0,
+            width, height, 0,
             RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB);
-
-        Graphics.Blit(source, tmp);
         RenderTexture previous = RenderTexture.active;
-        RenderTexture.active = tmp;
+        Texture2D result = null;
+        try
+        {
+            Graphics.Blit(source, tmp, scale, offset);
+            RenderTexture.active = tmp;
 
-        Texture2D result = new Texture2D(source.width, source.height, TextureFormat.RGBA32, false);
-        result.ReadPixels(new Rect(0, 0, tmp.width, tmp.height), 0, 0);
-        result.Apply();
+            result = new Texture2D(width, height, TextureFormat.RGBA32, false);
+            result.ReadPixels(new Rect(0, 0, width, height), 0, 0);
+            result.Apply();
+            return result;
+        }
+        catch
+        {
+            if (result != null)
+            {
+                DestroyTexture(result);
+            }
+            throw;
+        }
+        finally
+        {
+            RenderTexture.active = previous;
+            RenderTexture.ReleaseTemporary(tmp);
+        }
+    }
 
-        RenderTexture.active = previous;
-        RenderTexture.ReleaseTemporary(tmp);
-        return result;
+    private Vector2Int GetTextureThumbnailDimensions(Texture source, Rect sourceRect)
+    {
+        if (ResizeTextureDerivedThumbnails)
+        {
+            return GetIconDimensions();
+        }
+
+        RectInt sourcePixelRect = GetSourcePixelRect(source, sourceRect);
+        return new Vector2Int(sourcePixelRect.width, sourcePixelRect.height);
+    }
+
+    private static RectInt GetSourcePixelRect(Texture source, Rect sourceRect)
+    {
+        int sourceX = Mathf.Clamp(Mathf.RoundToInt(sourceRect.x * source.width), 0, source.width - 1);
+        int sourceY = Mathf.Clamp(Mathf.RoundToInt(sourceRect.y * source.height), 0, source.height - 1);
+        int sourceWidth = Mathf.Clamp(Mathf.RoundToInt(sourceRect.width * source.width), 1, source.width - sourceX);
+        int sourceHeight = Mathf.Clamp(Mathf.RoundToInt(sourceRect.height * source.height), 1, source.height - sourceY);
+        return new RectInt(sourceX, sourceY, sourceWidth, sourceHeight);
     }
 
     private static float ApplyBrightnessContrast(float gray, float brightnessValue, float contrastValue)
@@ -596,6 +1004,109 @@ public class IconCreator : MonoBehaviour
         return value;
     }
 
+    private Vector2Int GetIconDimensions()
+    {
+        return new Vector2Int(
+            Mathf.Max(1, Mathf.RoundToInt(IconDimensions.x)),
+            Mathf.Max(1, Mathf.RoundToInt(IconDimensions.y)));
+    }
+
+    private string GetThumbnailOutputPath(
+        UMAWardrobeRecipe uwr,
+        string raceName,
+        string outputFolder)
+    {
+#if UNITY_EDITOR
+        // Reuse an existing thumbnail in the configured output folder so its filename, .meta file,
+        // and GUID remain stable. The GUID-based name is only for a thumbnail with no reusable file.
+        string existingAssetPath = GetExistingThumbnailAssetPath(uwr, raceName);
+        string existingAbsolutePath = GetAbsoluteAssetPath(existingAssetPath);
+        if (IsFileInFolder(existingAbsolutePath, outputFolder))
+        {
+            return existingAbsolutePath;
+        }
+#endif
+        return Path.Combine(outputFolder, GetNewThumbnailFileName(uwr));
+    }
+
+    private string GetNewThumbnailFileName(UMAWardrobeRecipe uwr)
+    {
+        string identifier = string.Empty;
+#if UNITY_EDITOR
+        string recipePath = AssetDatabase.GetAssetPath(uwr);
+        string recipeGuid = AssetDatabase.AssetPathToGUID(recipePath);
+        if (!string.IsNullOrEmpty(recipeGuid))
+        {
+            identifier = "_" + recipeGuid.Substring(0, 8);
+        }
+#endif
+        return SanitizePathSegment(uwr.name + identifier) + ".png";
+    }
+
+#if UNITY_EDITOR
+    private static string GetExistingThumbnailAssetPath(UMAWardrobeRecipe uwr, string raceName)
+    {
+        if (uwr == null || uwr.wardrobeRecipeThumbs == null)
+        {
+            return null;
+        }
+
+        for (int i = 0; i < uwr.wardrobeRecipeThumbs.Count; i++)
+        {
+            WardrobeRecipeThumb thumbnail = uwr.wardrobeRecipeThumbs[i];
+            if (thumbnail == null || thumbnail.race != raceName)
+            {
+                continue;
+            }
+
+            string spritePath = AssetDatabase.GetAssetPath(thumbnail.thumb);
+            if (!string.IsNullOrEmpty(spritePath))
+            {
+                return spritePath;
+            }
+            if (!string.IsNullOrEmpty(thumbnail.filename))
+            {
+                return thumbnail.filename;
+            }
+        }
+        return null;
+    }
+
+    private static string GetAbsoluteAssetPath(string assetPath)
+    {
+        if (string.IsNullOrWhiteSpace(assetPath))
+        {
+            return null;
+        }
+
+        string normalizedPath = assetPath.Replace('\\', '/');
+        if (!normalizedPath.Equals("Assets", StringComparison.OrdinalIgnoreCase) &&
+            !normalizedPath.StartsWith("Assets/", StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        string relativePath = normalizedPath.Length == "Assets".Length
+            ? string.Empty
+            : normalizedPath.Substring("Assets/".Length);
+        return Path.GetFullPath(Path.Combine(Application.dataPath, relativePath));
+    }
+
+    private static bool IsFileInFolder(string filePath, string folderPath)
+    {
+        if (string.IsNullOrEmpty(filePath) || string.IsNullOrEmpty(folderPath) || !File.Exists(filePath))
+        {
+            return false;
+        }
+
+        string fileDirectory = Path.GetDirectoryName(Path.GetFullPath(filePath));
+        string expectedDirectory = Path.GetFullPath(folderPath)
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        return fileDirectory != null &&
+            fileDirectory.Equals(expectedDirectory, StringComparison.OrdinalIgnoreCase);
+    }
+#endif
+
     private bool CaptureRenderTextureToPng(Camera captureCamera, string outputPath)
     {
         if (captureCamera == null || captureCamera.targetTexture == null || string.IsNullOrEmpty(outputPath))
@@ -603,45 +1114,161 @@ public class IconCreator : MonoBehaviour
             return false;
         }
 
-        RenderTexture renderTexture = captureCamera.targetTexture;
-        if (!renderTexture.IsCreated())
-        {
-            renderTexture.Create();
-        }
-
-        // captureCamera.Render();
-
+        RenderTexture originalTarget = captureCamera.targetTexture;
+        Vector2Int iconDimensions = GetIconDimensions();
+        // Render above the requested icon size, then filter back to the final dimensions. The camera's
+        // serialized target remains untouched, and the temporary allocation is capped by the GPU limit.
+        int maxSupersampling = Mathf.Max(
+            1,
+            SystemInfo.maxTextureSize / Mathf.Max(iconDimensions.x, iconDimensions.y));
+        int supersampling = Mathf.Min(GetCaptureSupersampling(), maxSupersampling);
+        Vector2Int captureDimensions = new Vector2Int(
+            iconDimensions.x * supersampling,
+            iconDimensions.y * supersampling);
+        RenderTexture captureTexture = RenderTexture.GetTemporary(
+            captureDimensions.x,
+            captureDimensions.y,
+            originalTarget.depth,
+            RenderTextureFormat.ARGB32,
+            RenderTextureReadWrite.sRGB);
+        captureTexture.filterMode = FilterMode.Bilinear;
         RenderTexture previousActive = RenderTexture.active;
-        RenderTexture.active = renderTexture;
+        RenderTexture downsampledTexture = null;
+        Texture2D capturedTexture = null;
+        try
+        {
+            captureCamera.targetTexture = captureTexture;
+            captureCamera.Render();
 
-        Texture2D capturedTexture = new Texture2D(renderTexture.width, renderTexture.height, TextureFormat.RGBA32, false);
-        capturedTexture.ReadPixels(new Rect(0f, 0f, renderTexture.width, renderTexture.height), 0, 0);
-        capturedTexture.Apply();
+            RenderTexture readTexture = captureTexture;
+            if (supersampling > 1)
+            {
+                downsampledTexture = RenderTexture.GetTemporary(
+                    iconDimensions.x,
+                    iconDimensions.y,
+                    0,
+                    RenderTextureFormat.ARGB32,
+                    RenderTextureReadWrite.sRGB);
+                downsampledTexture.filterMode = FilterMode.Bilinear;
+                Graphics.Blit(captureTexture, downsampledTexture);
+                readTexture = downsampledTexture;
+            }
+            RenderTexture.active = readTexture;
 
-        byte[] pngBytes = capturedTexture.EncodeToPNG();
-        File.WriteAllBytes(outputPath, pngBytes);
+            capturedTexture = new Texture2D(
+                iconDimensions.x,
+                iconDimensions.y,
+                TextureFormat.RGBA32,
+                false);
+            capturedTexture.ReadPixels(
+                new Rect(0f, 0f, iconDimensions.x, iconDimensions.y),
+                0,
+                0);
+            capturedTexture.Apply();
 
-        RenderTexture.active = previousActive;
-        Destroy(capturedTexture); 
+            byte[] pngBytes = capturedTexture.EncodeToPNG();
+            WriteThumbnailFile(outputPath, pngBytes);
+        }
+        finally
+        {
+            captureCamera.targetTexture = originalTarget;
+            RenderTexture.active = previousActive;
+            if (downsampledTexture != null)
+            {
+                RenderTexture.ReleaseTemporary(downsampledTexture);
+            }
+            RenderTexture.ReleaseTemporary(captureTexture);
+            if (capturedTexture != null)
+            {
+                DestroyTexture(capturedTexture);
+            }
+        }
 
         return true;
     }
 
+    private static void WriteThumbnailFile(string outputPath, byte[] pngBytes)
+    {
+        const int maxWriteAttempts = 8;
+        const int retryDelayMilliseconds = 25;
 #if UNITY_EDITOR
-    private void UpdateWardrobeRecipeThumb(UMAWardrobeRecipe uwr, string outputPath)
+        AssetDatabase.ReleaseCachedFileHandles();
+#endif
+        // Replace the PNG atomically while leaving its Unity .meta file in place. Unity or a file scanner
+        // can briefly reopen imported assets on Windows, so sharing failures are retried with backoff.
+        string temporaryPath = outputPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        try
+        {
+            for (int attempt = 1; attempt <= maxWriteAttempts; attempt++)
+            {
+                try
+                {
+                    if (!File.Exists(temporaryPath))
+                    {
+                        File.WriteAllBytes(temporaryPath, pngBytes);
+                    }
+                    if (File.Exists(outputPath))
+                    {
+                        File.Replace(temporaryPath, outputPath, null);
+                    }
+                    else
+                    {
+                        File.Move(temporaryPath, outputPath);
+                    }
+                    return;
+                }
+                catch (IOException exception)
+                {
+                    if (attempt == maxWriteAttempts)
+                    {
+                        throw new IOException(
+                            "Unable to replace thumbnail '" + outputPath +
+                            "' after " + maxWriteAttempts + " attempts.",
+                            exception);
+                    }
+#if UNITY_EDITOR
+                    AssetDatabase.ReleaseCachedFileHandles();
+#endif
+                    System.Threading.Thread.Sleep(retryDelayMilliseconds * attempt);
+                }
+            }
+        }
+        finally
+        {
+            if (File.Exists(temporaryPath))
+            {
+                File.Delete(temporaryPath);
+            }
+        }
+    }
+
+    private static void DestroyTexture(Texture2D texture)
+    {
+        UMAUtils.DestroySceneObject(texture);
+    }
+
+    private int GetCaptureSupersampling()
+    {
+        return Mathf.Clamp(CaptureSupersampling, 1, 4);
+    }
+
+#if UNITY_EDITOR
+    private bool UpdateWardrobeRecipeThumb(UMAWardrobeRecipe uwr, string outputPath)
     {
         if (uwr == null || avatar == null || avatar.activeRace.data == null || string.IsNullOrEmpty(outputPath))
         {
-            return;
+            return false;
         }
 
         string relativePath = GetAssetRelativePath(outputPath);
         if (string.IsNullOrEmpty(relativePath))
         {
-            return;
+            return false;
         }
 
-        AssetDatabase.ImportAsset(relativePath, ImportAssetOptions.ForceUpdate);
+        AssetDatabase.ImportAsset(
+            relativePath,
+            ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
         TextureImporter textureImporter = AssetImporter.GetAtPath(relativePath) as TextureImporter;
         if (textureImporter != null)
         {
@@ -649,17 +1276,18 @@ public class IconCreator : MonoBehaviour
             textureImporter.spriteImportMode = SpriteImportMode.Single;
             textureImporter.mipmapEnabled = false;
             textureImporter.alphaIsTransparency = true;
+            textureImporter.filterMode = FilterMode.Bilinear;
+            textureImporter.textureCompression = TextureImporterCompression.Compressed;
             textureImporter.SaveAndReimport();
         }
 
         Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(relativePath);
         if (sprite == null)
         {
-            return;
+            return false;
         }
 
         string raceName = avatar.activeRace.data.raceName;
-        Undo.RecordObject(uwr, "Update Wardrobe Recipe Thumbnail");
 
         if (uwr.wardrobeRecipeThumbs == null)
         {
@@ -687,8 +1315,7 @@ public class IconCreator : MonoBehaviour
         wardrobeRecipeThumb.thumb = sprite;
 
         EditorUtility.SetDirty(uwr);
-        AssetDatabase.SaveAssets();
-        AssetDatabase.Refresh();
+        return true;
     }
 
     private string GetAssetRelativePath(string absolutePath)
@@ -708,6 +1335,13 @@ public class IconCreator : MonoBehaviour
         return "Assets" + normalizedAbsolutePath.Substring(normalizedDataPath.Length);
     }
 #endif
+
+    private void OnValidate()
+    {
+        Vector2Int iconDimensions = GetIconDimensions();
+        IconDimensions = new Vector2(iconDimensions.x, iconDimensions.y);
+        CaptureSupersampling = GetCaptureSupersampling();
+    }
 
     private bool ValidateCameraRegion(CameraRegions cameraRegions, out string validationMessage)
     {

@@ -893,6 +893,14 @@ namespace UMA
 
         private void OnGUI()
         {
+
+            if (GUI.Button(new Rect(150, 50, 150, 30), "Force BuildCharacter"))
+            {
+                if (avatar != null)
+                {
+                    avatar.BuildCharacter(true);
+                }
+            }
             if (!showTimingButtons || _timingInProgress) return;
 
             float buttonWidth = 220f;

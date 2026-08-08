@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -28,8 +29,86 @@ public class IconCreatorEditor : Editor
         DrawCameraRegions();
         EditorGUILayout.Space();
         DrawPropertiesExcluding(serializedObject, "m_Script", "rootFolder", "regionToCameraList");
+        EditorGUILayout.Space();
+        DrawSpriteAtlasControls();
 
         serializedObject.ApplyModifiedProperties();
+    }
+
+    private void DrawSpriteAtlasControls()
+    {
+        EditorGUILayout.LabelField("Thumbnail Sprite Atlases", EditorStyles.boldLabel);
+        EditorGUILayout.HelpBox(
+            "Optional. Rebuilds Sprite Atlas V2 assets from the Sprites referenced by wardrobe recipes, " +
+            "grouped by race and wardrobe region.",
+            MessageType.Info);
+
+        if (!IconCreatorSpriteAtlasUtility.IsSpriteAtlasV2Enabled())
+        {
+            EditorGUILayout.HelpBox(
+                IconCreatorSpriteAtlasUtility.SpriteAtlasV2RequiredMessage,
+                MessageType.Info);
+        }
+
+        string atlasFolder;
+        try
+        {
+            atlasFolder = IconCreatorSpriteAtlasUtility.GetAtlasFolder(rootFolderProperty.stringValue);
+        }
+        catch (ArgumentException exception)
+        {
+            EditorGUILayout.HelpBox(exception.Message, MessageType.Error);
+            return;
+        }
+        EditorGUILayout.LabelField("Output Folder", atlasFolder);
+
+        using (new EditorGUI.DisabledScope(EditorApplication.isPlayingOrWillChangePlaymode))
+        {
+            if (GUILayout.Button("Rebuild Thumbnail Atlases"))
+            {
+                serializedObject.ApplyModifiedProperties();
+                RebuildThumbnailAtlases(rootFolderProperty.stringValue);
+            }
+        }
+    }
+
+    private static void RebuildThumbnailAtlases(string rootFolder)
+    {
+        if (!IconCreatorSpriteAtlasUtility.IsSpriteAtlasV2Enabled())
+        {
+            Debug.LogError(
+                "[IconCreator] " +
+                IconCreatorSpriteAtlasUtility.SpriteAtlasV2RequiredMessage);
+            EditorUtility.DisplayDialog(
+                "Sprite Atlas V2 Required",
+                IconCreatorSpriteAtlasUtility.SpriteAtlasV2RequiredMessage,
+                "OK");
+            return;
+        }
+
+        try
+        {
+            IconCreatorSpriteAtlasUtility.RebuildResult result =
+                IconCreatorSpriteAtlasUtility.Rebuild(rootFolder);
+            string message =
+                "Rebuilt " + result.AtlasCount + " atlases from " + result.SpriteCount +
+                " referenced Sprites across " + result.RecipeCount + " wardrobe recipes.";
+            if (result.ClearedAtlasCount > 0)
+            {
+                message += "\n\nCleared packables from " + result.ClearedAtlasCount + " obsolete atlases.";
+            }
+            if (result.WarningCount > 0)
+            {
+                message += "\n\n" + result.WarningCount + " conflicts were logged as warnings.";
+            }
+            message += "\n\nOutput: " + result.OutputFolder;
+            EditorUtility.DisplayDialog("Thumbnail Sprite Atlases", message, "OK");
+        }
+        catch (Exception exception)
+        {
+            Debug.LogException(exception);
+            EditorUtility.DisplayDialog("Thumbnail Sprite Atlases", exception.Message, "OK");
+        }
     }
 
     private void DrawRootFolder()

@@ -112,7 +112,7 @@ namespace UMA
             UMAAssetIndexer.Instance.ReleaseReference(slot);
             List<DynamicCharacterAvatar> Avatars = GetSceneEditTimeAvatars();
 
-            Debug.Log($"Rebuilding {Avatars.Count} Avatars");
+            //Debug.Log($"Rebuilding {Avatars.Count} Avatars");
             foreach (DynamicCharacterAvatar dca in Avatars)
             {
                 UMAData ud = dca.gameObject.GetComponent<UMAData>();

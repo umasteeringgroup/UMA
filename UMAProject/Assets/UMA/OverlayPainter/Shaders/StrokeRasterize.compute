@@ -1,0 +1,394 @@
+#pragma kernel CSMain
+#pragma kernel CSInPlace
+#pragma kernel CSBatchInPlace
+#pragma kernel CSFillMasked
+
+Texture2D<float4> _Source;
+Texture2D<float4> _Stamp;
+Texture2D<float4> _PaintMask;
+Texture2D<float4> _GeometryMask;
+Texture2D<float4> _PaintSource;
+Texture2D<float4> _StrokeBase;
+RWTexture2D<float4> _Destination;
+RWTexture2D<float> _StrokeCoverage;
+SamplerState sampler_linear_clamp;
+
+int2 _TextureSize;
+int2 _TileOffset;
+int2 _DispatchSize;
+int2 _CoverageOffset;
+float2 _BrushCenter;
+float2 _PreviousUV;
+float2 _CloneSourceUV;
+float4 _UVToBrush;
+float2 _FootprintScale;
+float2 _SourceUVScale;
+float2 _SourceUVOffset;
+float _Hardness;
+float _Flow;
+float _Strength;
+float _Rotation;
+int _Shape;
+int _Operation;
+int _BlendMode;
+int _PaintSourceKind;
+int _VectorNormal;
+int _MaskMode;
+float _MaskEraseValue;
+int _LimitStrokeCoverage;
+int _RestrictToTriangle;
+int _TriangleBoundaryMask;
+float _TriangleBoundaryPadding;
+float2 _TriangleUV0;
+float2 _TriangleUV1;
+float2 _TriangleUV2;
+float4 _PaintColor;
+
+struct BatchStamp
+{
+    float2 center;
+    float4 uvToBrush;
+    float rotation;
+    float flow;
+    float4 color;
+    float2 footprintScale;
+    float2 sourceUVScale;
+    float2 sourceUVOffset;
+};
+StructuredBuffer<BatchStamp> _BatchStamps;
+int _BatchCount;
+
+float Cross2D(float2 a, float2 b)
+{
+    return a.x * b.y - a.y * b.x;
+}
+
+bool InsideOwnedEdge(float2 a, float2 b, float2 sampleUV, float orientation, bool boundary)
+{
+    float2 edge = b - a;
+    float edgeValue = orientation * Cross2D(edge, sampleUV - a);
+    if (boundary)
+    {
+        float2 boundaryPadding = _TriangleBoundaryPadding / float2(_TextureSize);
+        float texelExtent = abs(edge.y) * boundaryPadding.x + abs(edge.x) * boundaryPadding.y;
+        return edgeValue >= -texelExtent - 1e-7;
+    }
+    if (edgeValue > 1e-7) return true;
+    if (edgeValue < -1e-7) return false;
+    float2 ownedDirection = orientation > 0.0 ? edge : -edge;
+    return ownedDirection.y > 0.0 || (abs(ownedDirection.y) <= 1e-7 && ownedDirection.x < 0.0);
+}
+
+bool InsideTriangle(float2 sampleUV)
+{
+    if (_RestrictToTriangle == 0) return true;
+    float area = Cross2D(_TriangleUV1 - _TriangleUV0, _TriangleUV2 - _TriangleUV0);
+    if (abs(area) < 1e-9) return false;
+    float orientation = area >= 0.0 ? 1.0 : -1.0;
+    return InsideOwnedEdge(_TriangleUV0, _TriangleUV1, sampleUV, orientation, (_TriangleBoundaryMask & 1) != 0) &&
+        InsideOwnedEdge(_TriangleUV1, _TriangleUV2, sampleUV, orientation, (_TriangleBoundaryMask & 2) != 0) &&
+        InsideOwnedEdge(_TriangleUV2, _TriangleUV0, sampleUV, orientation, (_TriangleBoundaryMask & 4) != 0);
+}
+
+float2 BrushLocalUV(float2 uv)
+{
+    float2 uvDelta = uv - _BrushCenter;
+    float2 delta = float2(dot(uvDelta, _UVToBrush.xy), dot(uvDelta, _UVToBrush.zw));
+    float s, c;
+    sincos(-_Rotation, s, c);
+    delta = float2(delta.x * c - delta.y * s, delta.x * s + delta.y * c);
+    delta /= max(abs(_FootprintScale), 1e-5);
+    return (delta * 0.5 + 0.5) * _SourceUVScale + _SourceUVOffset;
+}
+
+float BrushCoverage(float2 uv)
+{
+    if (!InsideTriangle(uv)) return 0.0;
+    float2 uvDelta = uv - _BrushCenter;
+    float2 delta = float2(dot(uvDelta, _UVToBrush.xy), dot(uvDelta, _UVToBrush.zw));
+    float s, c;
+    sincos(-_Rotation, s, c);
+    delta = float2(delta.x * c - delta.y * s, delta.x * s + delta.y * c);
+    delta /= max(abs(_FootprintScale), 1e-5);
+    float distanceToCenter = _Shape == 1 ? max(abs(delta.x), abs(delta.y)) : length(delta);
+    if (distanceToCenter >= 1.0) return 0.0;
+    float weight = distanceToCenter <= _Hardness ? 1.0 : 1.0 - saturate((distanceToCenter - _Hardness) / max(1.0 - _Hardness, 1e-5));
+    if (_Shape == 2)
+        weight *= _Stamp.SampleLevel(sampler_linear_clamp, delta * 0.5 + 0.5, 0).a;
+    weight *= _PaintMask.SampleLevel(sampler_linear_clamp, uv, 0).r;
+    weight *= _GeometryMask.SampleLevel(sampler_linear_clamp, uv, 0).r;
+    return saturate(weight * _Strength);
+}
+
+float3 BlendRGB(float3 destination, float3 source, int mode)
+{
+    if (mode == 1) return destination * source;
+    if (mode == 2) return destination + source;
+    if (mode == 3) return destination - source;
+    if (mode == 4) return 1.0 - (1.0 - destination) * (1.0 - source);
+    if (mode == 5)
+    {
+        float3 low = 2.0 * destination * source;
+        float3 high = 1.0 - 2.0 * (1.0 - destination) * (1.0 - source);
+        return lerp(low, high, step(0.5, destination));
+    }
+    return source;
+}
+
+// Layer textures store straight alpha. Keeping RGB unassociated with partial coverage prevents
+// the compositor from multiplying brush/edge coverage into the color a second time.
+float4 CompositeStraightAlpha(float4 destination, float3 source, float sourceAlpha)
+{
+    sourceAlpha = saturate(sourceAlpha);
+    float outputAlpha = sourceAlpha + destination.a * (1.0 - sourceAlpha);
+    float3 outputPremultiplied = source * sourceAlpha +
+        destination.rgb * destination.a * (1.0 - sourceAlpha);
+    return float4(outputAlpha > 1e-7 ? outputPremultiplied / outputAlpha : float3(0.0, 0.0, 0.0), outputAlpha);
+}
+
+float4 DepositStraightAlpha(float4 current, float4 strokeBase, float3 candidate, float contribution)
+{
+    float outputAlpha = current.a + contribution * (1.0 - strokeBase.a);
+    float3 outputPremultiplied = current.rgb * current.a +
+        contribution * (candidate - strokeBase.rgb * strokeBase.a);
+    return float4(outputAlpha > 1e-7 ? outputPremultiplied / outputAlpha : float3(0.0, 0.0, 0.0), outputAlpha);
+}
+
+float4 NormalizeMaskValue(float4 value)
+{
+    if (_MaskMode == 0) return value;
+    float gray = saturate(dot(value.rgb, float3(0.2126, 0.7152, 0.0722)));
+    return float4(gray, gray, gray, 1.0);
+}
+
+[numthreads(16, 16, 1)]
+void CSMain(uint3 dispatchID : SV_DispatchThreadID)
+{
+    if (any(dispatchID.xy >= (uint2)_DispatchSize)) return;
+    int2 pixel = int2(dispatchID.xy) + _TileOffset;
+    if (any(pixel < 0) || any(pixel >= _TextureSize)) return;
+    float2 uv = (float2(pixel) + 0.5) / float2(_TextureSize);
+    float coverageLimit = BrushCoverage(uv);
+    float weight = saturate(coverageLimit * _Flow);
+    if (weight <= 0.00001) return;
+    float4 current = _Source.Load(int3(pixel, 0));
+    float4 desired = _PaintColor;
+    if (_Operation == 0 && _PaintSourceKind == 0)
+        desired = _PaintSource.SampleLevel(sampler_linear_clamp, BrushLocalUV(uv), 0);
+    else if (_Operation == 0 && _PaintSourceKind == 1)
+        desired = _PaintSource.SampleLevel(sampler_linear_clamp, uv, 0);
+    if (_Operation == 1) desired = _MaskMode != 0
+        ? float4(_MaskEraseValue, _MaskEraseValue, _MaskEraseValue, 1.0)
+        : float4(1, 1, 1, current.a);
+    else if (_Operation == 2)
+    {
+        float2 smearUV = uv - (_BrushCenter - _PreviousUV);
+        desired = _Source.SampleLevel(sampler_linear_clamp, smearUV, 0);
+    }
+    else if (_Operation == 3)
+    {
+        float2 cloneUV = _CloneSourceUV + (uv - _BrushCenter);
+        desired = _Source.SampleLevel(sampler_linear_clamp, cloneUV, 0);
+    }
+    else if (_Operation == 4) desired = float4(1, 1, 1, current.a);
+    else if (_Operation == 5) desired = float4(0, 0, 0, current.a);
+    desired = NormalizeMaskValue(desired);
+    float sourceWeight = _Operation == 0 ? weight * desired.a : weight;
+    float sourceCoverageLimit = _Operation == 0 ? coverageLimit * desired.a : coverageLimit;
+    if (_LimitStrokeCoverage != 0)
+    {
+        int2 coveragePixel = pixel - _CoverageOffset;
+        float usedCoverage = saturate(_StrokeCoverage[coveragePixel]);
+        float contribution = min(sourceWeight, max(0.0, sourceCoverageLimit - usedCoverage));
+        if (contribution <= 0.00001) return;
+        _StrokeCoverage[coveragePixel] = saturate(usedCoverage + contribution);
+        float4 strokeBase = _StrokeBase.Load(int3(coveragePixel, 0));
+        float3 candidate = BlendRGB(strokeBase.rgb, desired.rgb, _BlendMode);
+        // contribution already contains source alpha; deposit toward a fully covered
+        // layer texel so partial-alpha paint is not multiplied a second time.
+        float4 deposited = _Operation == 0
+            ? DepositStraightAlpha(current, strokeBase, candidate, contribution)
+            : current + contribution * (float4(candidate, 1.0) - strokeBase);
+        if (_VectorNormal != 0)
+            deposited.rgb = normalize(deposited.rgb * 2.0 - 1.0) * 0.5 + 0.5;
+        _Destination[pixel] = NormalizeMaskValue(deposited);
+        return;
+    }
+    float3 blended = BlendRGB(current.rgb, desired.rgb, _BlendMode);
+    if (_VectorNormal != 0)
+    {
+        float3 currentNormal = normalize(current.rgb * 2.0 - 1.0);
+        float3 desiredNormal = normalize(desired.rgb * 2.0 - 1.0);
+        blended = normalize(lerp(currentNormal, desiredNormal, sourceWeight)) * 0.5 + 0.5;
+        _Destination[pixel] = NormalizeMaskValue(float4(blended,
+            sourceWeight + current.a * (1.0 - sourceWeight)));
+        return;
+    }
+    _Destination[pixel] = NormalizeMaskValue(_Operation == 0
+        ? CompositeStraightAlpha(current, blended, sourceWeight)
+        : float4(lerp(current.rgb, blended, sourceWeight),
+            sourceWeight + current.a * (1.0 - sourceWeight)));
+}
+
+[numthreads(16, 16, 1)]
+void CSInPlace(uint3 dispatchID : SV_DispatchThreadID)
+{
+    if (any(dispatchID.xy >= (uint2)_DispatchSize)) return;
+    int2 pixel = int2(dispatchID.xy) + _TileOffset;
+    if (any(pixel < 0) || any(pixel >= _TextureSize)) return;
+    float2 uv = (float2(pixel) + 0.5) / float2(_TextureSize);
+    float coverageLimit = BrushCoverage(uv);
+    float weight = saturate(coverageLimit * _Flow);
+    if (weight <= 0.00001) return;
+    float4 current = _Destination[pixel];
+    float4 desired = _PaintColor;
+    if (_Operation == 0 && _PaintSourceKind == 0)
+        desired = _PaintSource.SampleLevel(sampler_linear_clamp, BrushLocalUV(uv), 0);
+    else if (_Operation == 0 && _PaintSourceKind == 1)
+        desired = _PaintSource.SampleLevel(sampler_linear_clamp, uv, 0);
+    if (_Operation == 1) desired = _MaskMode != 0
+        ? float4(_MaskEraseValue, _MaskEraseValue, _MaskEraseValue, 1.0)
+        : float4(1, 1, 1, current.a);
+    else if (_Operation == 4) desired = float4(1, 1, 1, current.a);
+    else if (_Operation == 5) desired = float4(0, 0, 0, current.a);
+    desired = NormalizeMaskValue(desired);
+    float sourceWeight = _Operation == 0 ? weight * desired.a : weight;
+    float sourceCoverageLimit = _Operation == 0 ? coverageLimit * desired.a : coverageLimit;
+    if (_LimitStrokeCoverage != 0)
+    {
+        int2 coveragePixel = pixel - _CoverageOffset;
+        float usedCoverage = saturate(_StrokeCoverage[coveragePixel]);
+        float contribution = min(sourceWeight, max(0.0, sourceCoverageLimit - usedCoverage));
+        if (contribution <= 0.00001) return;
+        _StrokeCoverage[coveragePixel] = saturate(usedCoverage + contribution);
+        float4 strokeBase = _StrokeBase.Load(int3(coveragePixel, 0));
+        float3 candidate = BlendRGB(strokeBase.rgb, desired.rgb, _BlendMode);
+        float4 deposited = _Operation == 0
+            ? DepositStraightAlpha(current, strokeBase, candidate, contribution)
+            : current + contribution * (float4(candidate, 1.0) - strokeBase);
+        if (_VectorNormal != 0) deposited.rgb = normalize(deposited.rgb * 2.0 - 1.0) * 0.5 + 0.5;
+        _Destination[pixel] = NormalizeMaskValue(deposited);
+        return;
+    }
+    float3 blended = BlendRGB(current.rgb, desired.rgb, _BlendMode);
+    if (_VectorNormal != 0)
+    {
+        float3 a = normalize(current.rgb * 2.0 - 1.0);
+        float3 b = normalize(desired.rgb * 2.0 - 1.0);
+        blended = normalize(lerp(a, b, sourceWeight)) * 0.5 + 0.5;
+        _Destination[pixel] = NormalizeMaskValue(float4(blended,
+            sourceWeight + current.a * (1.0 - sourceWeight)));
+        return;
+    }
+    _Destination[pixel] = NormalizeMaskValue(_Operation == 0
+        ? CompositeStraightAlpha(current, blended, sourceWeight)
+        : float4(lerp(current.rgb, blended, sourceWeight),
+            sourceWeight + current.a * (1.0 - sourceWeight)));
+}
+
+float BatchCoverage(float2 uv, BatchStamp stamp)
+{
+    float2 deltaUV = uv - stamp.center;
+    float2 delta = float2(dot(deltaUV, stamp.uvToBrush.xy), dot(deltaUV, stamp.uvToBrush.zw));
+    float s, c; sincos(-stamp.rotation, s, c);
+    delta = float2(delta.x * c - delta.y * s, delta.x * s + delta.y * c);
+    delta /= max(abs(stamp.footprintScale), 1e-5);
+    float distanceToCenter = _Shape == 1 ? max(abs(delta.x), abs(delta.y)) : length(delta);
+    if (distanceToCenter >= 1.0) return 0.0;
+    float value = distanceToCenter <= _Hardness ? 1.0 :
+        1.0 - saturate((distanceToCenter - _Hardness) / max(1.0 - _Hardness, 1e-5));
+    if (_Shape == 2) value *= _Stamp.SampleLevel(sampler_linear_clamp, delta * 0.5 + 0.5, 0).a;
+    value *= _GeometryMask.SampleLevel(sampler_linear_clamp, uv, 0).r;
+    return saturate(value * _Strength);
+}
+
+[numthreads(16, 16, 1)]
+void CSBatchInPlace(uint3 dispatchID : SV_DispatchThreadID)
+{
+    if (any(dispatchID.xy >= (uint2)_DispatchSize)) return;
+    int2 pixel = int2(dispatchID.xy) + _TileOffset;
+    if (any(pixel < 0) || any(pixel >= _TextureSize)) return;
+    float2 uv = (float2(pixel) + 0.5) / float2(_TextureSize);
+    float4 current = _Destination[pixel];
+    int2 coveragePixel = pixel - _CoverageOffset;
+    float usedCoverage = _LimitStrokeCoverage != 0 ? saturate(_StrokeCoverage[coveragePixel]) : 0.0;
+    float4 strokeBase = _LimitStrokeCoverage != 0 ? _StrokeBase.Load(int3(coveragePixel, 0)) : current;
+    [loop] for (int sampleIndex = 0; sampleIndex < _BatchCount; sampleIndex++)
+    {
+        BatchStamp stamp = _BatchStamps[sampleIndex];
+        float coverageLimit = BatchCoverage(uv, stamp);
+        float weight = saturate(coverageLimit * stamp.flow);
+        if (weight <= 0.00001) continue;
+        float4 desired = stamp.color;
+        if (_Operation == 0 && _PaintSourceKind == 0)
+        {
+            float2 deltaUV = uv - stamp.center;
+            float2 delta = float2(dot(deltaUV, stamp.uvToBrush.xy), dot(deltaUV, stamp.uvToBrush.zw));
+            float s, c; sincos(-stamp.rotation, s, c);
+            delta = float2(delta.x * c - delta.y * s, delta.x * s + delta.y * c);
+            delta /= max(abs(stamp.footprintScale), 1e-5);
+            float2 sourceUV = (delta * 0.5 + 0.5) * stamp.sourceUVScale + stamp.sourceUVOffset;
+            desired = _PaintSource.SampleLevel(sampler_linear_clamp, sourceUV, 0);
+        }
+        else if (_Operation == 0 && _PaintSourceKind == 1)
+            desired = _PaintSource.SampleLevel(sampler_linear_clamp, uv, 0);
+        if (_Operation == 1) desired = _MaskMode != 0
+            ? float4(_MaskEraseValue, _MaskEraseValue, _MaskEraseValue, 1.0)
+            : float4(1, 1, 1, current.a);
+        else if (_Operation == 4) desired = float4(1, 1, 1, current.a);
+        else if (_Operation == 5) desired = float4(0, 0, 0, current.a);
+        desired = NormalizeMaskValue(desired);
+        float sourceWeight = _Operation == 0 ? weight * desired.a : weight;
+        float sourceLimit = _Operation == 0 ? coverageLimit * desired.a : coverageLimit;
+        float3 candidate = BlendRGB(_LimitStrokeCoverage != 0 ? strokeBase.rgb : current.rgb, desired.rgb, _BlendMode);
+        if (_LimitStrokeCoverage != 0)
+        {
+            float contribution = min(sourceWeight, max(0.0, sourceLimit - usedCoverage));
+            if (contribution <= 0.00001) continue;
+            usedCoverage = saturate(usedCoverage + contribution);
+            current = _Operation == 0
+                ? DepositStraightAlpha(current, strokeBase, candidate, contribution)
+                : current + contribution * (float4(candidate, 1.0) - strokeBase);
+        }
+        else
+        {
+            if (_VectorNormal != 0)
+            {
+                float3 a = normalize(current.rgb * 2.0 - 1.0);
+                float3 b = normalize(desired.rgb * 2.0 - 1.0);
+                current.rgb = normalize(lerp(a, b, sourceWeight)) * 0.5 + 0.5;
+                current.a = sourceWeight + current.a * (1.0 - sourceWeight);
+            }
+            else if (_Operation == 0)
+                current = CompositeStraightAlpha(current, candidate, sourceWeight);
+            else
+            {
+                current.rgb = lerp(current.rgb, candidate, sourceWeight);
+                current.a = sourceWeight + current.a * (1.0 - sourceWeight);
+            }
+        }
+    }
+    if (_LimitStrokeCoverage != 0) _StrokeCoverage[coveragePixel] = usedCoverage;
+    if (_VectorNormal != 0) current.rgb = normalize(current.rgb * 2.0 - 1.0) * 0.5 + 0.5;
+    _Destination[pixel] = NormalizeMaskValue(current);
+}
+
+[numthreads(16, 16, 1)]
+void CSFillMasked(uint3 dispatchID : SV_DispatchThreadID)
+{
+    int2 pixel = int2(dispatchID.xy);
+    if (any(pixel >= _TextureSize)) return;
+    float coverage = saturate(_GeometryMask.Load(int3(pixel, 0)).r * _Strength);
+    if (coverage <= 0.00001) return;
+    float4 current = _Destination[pixel];
+    float2 uv = (float2(pixel) + 0.5) / float2(_TextureSize);
+    float4 desired = _PaintColor;
+    if (_PaintSourceKind != 2)
+        desired = _PaintSource.SampleLevel(sampler_linear_clamp, uv, 0);
+    desired = NormalizeMaskValue(desired);
+    float3 blended = BlendRGB(current.rgb, desired.rgb, _BlendMode);
+    float4 result = _MaskMode != 0
+        ? float4(lerp(current.rgb, blended, coverage), 1.0)
+        : CompositeStraightAlpha(current, blended, coverage * desired.a);
+    _Destination[pixel] = NormalizeMaskValue(result);
+}
