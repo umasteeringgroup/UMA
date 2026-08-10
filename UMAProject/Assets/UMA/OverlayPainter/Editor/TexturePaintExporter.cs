@@ -140,7 +140,7 @@ namespace UMA.TexturePaint.Editor
                 if (logical.TryGetValue(TexturePaintChannel.NormalControl,
                         out RenderTexture authoredControl))
                 {
-                    if (set.normalControlStrength <= 0.00001f)
+                    if (!set.HasEnabledNormalControlStrength())
                     {
                         Destroy(authoredControl);
                         logical.Remove(TexturePaintChannel.NormalControl);
@@ -730,7 +730,7 @@ namespace UMA.TexturePaint.Editor
             {
                 TexturePaintChannel logical = capability.LogicalChannels[i];
                 if (HasVisibleAuthoredContribution(set, logical)) return true;
-                if (logical == TexturePaintChannel.Normal && set.normalControlStrength > 0.00001f &&
+                if (logical == TexturePaintChannel.Normal && set.HasEnabledNormalControlStrength() &&
                     HasVisibleAuthoredContribution(set, TexturePaintChannel.NormalControl)) return true;
             }
             return false;

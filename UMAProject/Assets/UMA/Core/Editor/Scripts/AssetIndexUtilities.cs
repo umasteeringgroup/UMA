@@ -36,6 +36,8 @@ namespace UMA
                 "Run UMAAssetIndexer maintenance from this window. Close the UMA Global Library before changing the index.",
                 MessageType.Info);
 
+
+
             UMAAssetIndexer indexer = UMAAssetIndexer.Instance;
             using (new EditorGUI.DisabledScope(true))
             {
@@ -134,7 +136,13 @@ namespace UMA
         {
             EditorGUILayout.Space(6f);
             EditorGUILayout.LabelField("Rebuild", EditorStyles.boldLabel);
-
+            EditorGUILayout.HelpBox("Adjust the per-asset-type folder filters in the UMA Global Library window before rebuilding the index. If a type exists in the filters, then it will only be added if it is under one of the folders for that type (including subfolders)", MessageType.Info);
+            if (GUILayout.Button(new GUIContent(
+                    "Global Library Filters...",
+                    "Configure the per-asset-type folder filters used when rebuilding the Global Library.")))
+            {
+                AssetIndexerFilterEditor.GetWindow();
+            }
             if (GUILayout.Button("Rebuild Library From Project"))
             {
                 if (ConfirmAndRequireLibraryClosed("Rebuild UMA Asset Index", "This clears the current index and scans the project again using configured type and folder filters."))

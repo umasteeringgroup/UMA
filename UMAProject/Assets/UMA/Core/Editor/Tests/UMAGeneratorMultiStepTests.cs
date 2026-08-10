@@ -1376,13 +1376,28 @@ namespace UMA.Editors.Tests
 
         private static UMAData CreateUmaData(GameObject gameObject, out RaceData race)
         {
-            race = ScriptableObject.CreateInstance<RaceData>();
-            race.name = "MultiStepSchedulerRace";
-            race.useNewDNA = false;
+            RaceData sourceRace = UMAAssetIndexer.Instance.GetAsset<RaceData>("Human Female 3.0");
+            Assert.NotNull(
+                sourceRace,
+                "The multi-step generator tests require the indexed HumanFemale30 race.");
+
+            // Tests destroy their fixture race during cleanup, so use a clone rather than the
+            // indexed project asset. This retains the real race's TPose and validation settings
+            // without allowing a test to mutate or destroy HumanFemale30.
+            race = UnityEngine.Object.Instantiate(sourceRace);
+            race.name = sourceRace.name;
 
             var recipe = new UMAData.UMARecipe
             {
-                slotDataList = Array.Empty<SlotData>()
+                // Scheduler tests do not need real geometry, but UMA recipes must contain at
+                // least one valid slot. A placeholder keeps validation honest without making
+                // these timing tests load and process the full base race recipe.
+                slotDataList = new[]
+                {
+                    SlotData.CreatePlaceholder(
+                        "MultiStepSchedulerPlaceholder",
+                        Array.Empty<string>())
+                }
             };
             recipe.SetRace(race);
 

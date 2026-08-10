@@ -4,6 +4,7 @@
     "references": [
         "UMA_Core",
         "UMA.TexturePaint.Runtime",
+        "UMA.TexturePaint.Examples",
         "UnityEngine.TestRunner"
     ],
     "includePlatforms": [],

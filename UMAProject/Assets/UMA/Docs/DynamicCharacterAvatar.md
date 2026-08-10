@@ -4,6 +4,8 @@
 
 Use a DCA when a character needs to be customized, saved, loaded, or rebuilt while the game is running. For a fixed background character that never changes, a prebuilt or baked character may be more appropriate.
 
+For converting a generated avatar into a non-UMA prefab or creating slots from scene meshes, see [Prefab and Scene-Building Tools](PrefabAndSceneBuildingTools.md).
+
 ## Before You Start
 
 Make sure the project has:

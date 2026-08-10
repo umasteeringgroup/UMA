@@ -5,15 +5,16 @@ using UnityEngine;
 public static class SceneNoteRenderer
 {
     private const string MENU_PATH = "UMA/Notes/Show Notes";
-    private static bool notesEnabled = true;
+    private static bool notesEnabled = false;
     private static bool initialized = false;
     private static GUIStyle titleStyle;
     private static GUIStyle infoStyle;
 
     static SceneNoteRenderer()
     {
-        // Default ON
-        notesEnabled = EditorPrefs.GetBool(MENU_PATH, true);
+        // Notes are opt-in because even optimized editor overlays should not affect projects that
+        // do not use them. Existing users retain their saved preference.
+        notesEnabled = EditorPrefs.GetBool(MENU_PATH, false);
         SceneView.duringSceneGui += OnSceneGUI;
 
         // Ensure menu checkmark matches state
@@ -56,45 +57,58 @@ public static class SceneNoteRenderer
 
     private static void OnSceneGUI(SceneView view)
     {
-        if (!notesEnabled)
+        if (!notesEnabled || view == null || view.camera == null ||
+            Event.current == null || Event.current.type != EventType.Repaint)
             return;
 
         EnsureInitialized();
 
-        var notes = Object.FindObjectsByType<SceneNote>(FindObjectsSortMode.None);
-        if (notes == null || notes.Length == 0)
+        var notes = SceneNote.ActiveNotes;
+        if (notes == null || notes.Count == 0)
             return;
 
         Handles.BeginGUI();
-
-        foreach (var note in notes)
+        Color originalColor = GUI.color;
+        try
         {
-            if (!note.Visible)
-                continue;
+            float viewWidth = view.position.width;
+            float viewHeight = view.position.height;
+            foreach (SceneNote note in notes)
+            {
+                if (note == null || !note.isActiveAndEnabled || !note.Visible ||
+                    !note.gameObject.scene.IsValid() || !note.gameObject.scene.isLoaded ||
+                    SceneVisibilityManager.instance.IsHidden(note.gameObject)) continue;
 
-            Vector3 worldPos = note.transform.position + note.Offset;
-            Vector2 guiPos = HandleUtility.WorldToGUIPoint(worldPos);
+                Vector3 worldPos = note.transform.position + note.Offset;
+                Vector3 viewportPos = view.camera.WorldToViewportPoint(worldPos);
+                if (viewportPos.z <= 0f) continue;
 
-            Rect rect = new Rect(
-                guiPos.x - note.Size.x / 2,
-                guiPos.y - note.Size.y / 2,
-                note.Size.x,
-                note.Size.y
-            );
+                Vector2 guiPos = HandleUtility.WorldToGUIPoint(worldPos);
+                float width = Mathf.Max(1f, note.Size.x);
+                float height = Mathf.Max(1f, note.Size.y);
+                Rect rect = new Rect(guiPos.x - width * 0.5f, guiPos.y - height * 0.5f,
+                    width, height);
+                if (rect.xMax < 0f || rect.yMax < 0f || rect.xMin > viewWidth ||
+                    rect.yMin > viewHeight) continue;
 
-            // Background
-            Color old = GUI.color;
-            GUI.color = note.Color;
-            GUI.Box(rect, GUIContent.none);
-            GUI.color = old;
+                GUI.color = note.Color;
+                GUI.Box(rect, GUIContent.none);
+                GUI.color = originalColor;
 
-            // Text
-            GUILayout.BeginArea(rect);
-            GUILayout.Label("<b>" + note.Title + "</b>", titleStyle);
-            GUILayout.Label(note.Info, infoStyle);
-            GUILayout.EndArea();
+                const float padding = 4f;
+                float titleHeight = titleStyle.lineHeight + 2f;
+                Rect titleRect = new Rect(rect.x + padding, rect.y + padding,
+                    Mathf.Max(0f, rect.width - padding * 2f), titleHeight);
+                Rect infoRect = new Rect(titleRect.x, titleRect.yMax,
+                    titleRect.width, Mathf.Max(0f, rect.yMax - padding - titleRect.yMax));
+                GUI.Label(titleRect, note.Title ?? string.Empty, titleStyle);
+                GUI.Label(infoRect, note.Info ?? string.Empty, infoStyle);
+            }
         }
-
-        Handles.EndGUI();
+        finally
+        {
+            GUI.color = originalColor;
+            Handles.EndGUI();
+        }
     }
 }

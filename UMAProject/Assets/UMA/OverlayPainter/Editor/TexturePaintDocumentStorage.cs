@@ -570,6 +570,9 @@ namespace UMA.TexturePaint.Editor
                 pluginId = layer.pluginId,
                 pluginVersion = layer.pluginVersion,
                 pluginParametersJson = layer.pluginParametersJson,
+                pluginParameters = layer.pluginParameters?.Clone() ?? new TexturePaintPluginParameterSet(),
+                pluginStale = layer.pluginStale,
+                pluginLastError = layer.pluginLastError,
                 proceduralGroupKey = layer.proceduralGroupKey,
                 hasMask = layer.layerMask?.target != null,
                 maskBaseValue = layer.layerMask?.baseValue ?? 1f,
@@ -577,6 +580,13 @@ namespace UMA.TexturePaint.Editor
                 maskSourceSettings = layer.layerMask?.sourceSettings?.Clone() ??
                     TexturePaintLayerMask.DefaultSourceSettings(),
                 maskSourceChannel = layer.layerMask?.sourceChannel ?? TexturePaintChannel.Albedo,
+                maskPluginId = layer.layerMask?.pluginId,
+                maskPluginVersion = layer.layerMask?.pluginVersion,
+                maskPluginParametersJson = layer.layerMask?.pluginParametersJson,
+                maskPluginParameters = layer.layerMask?.pluginParameters?.Clone() ??
+                    new TexturePaintPluginParameterSet(),
+                maskPluginStale = layer.layerMask?.pluginStale ?? true,
+                maskPluginLastError = layer.layerMask?.pluginLastError,
                 strokes = CloneStrokes(layer.strokes)
             };
         }
@@ -649,6 +659,9 @@ namespace UMA.TexturePaint.Editor
                 pluginId = source.pluginId,
                 pluginVersion = source.pluginVersion,
                 pluginParametersJson = source.pluginParametersJson,
+                pluginParameters = source.pluginParameters?.Clone() ?? new TexturePaintPluginParameterSet(),
+                pluginStale = source.pluginStale,
+                pluginLastError = source.pluginLastError,
                 proceduralGroupKey = source.proceduralGroupKey,
                 hasMask = source.hasMask,
                 maskBaseValue = source.maskBaseValue,
@@ -656,6 +669,13 @@ namespace UMA.TexturePaint.Editor
                 maskSourceSettings = source.maskSourceSettings?.Clone() ??
                     TexturePaintLayerMask.DefaultSourceSettings(),
                 maskSourceChannel = source.maskSourceChannel,
+                maskPluginId = source.maskPluginId,
+                maskPluginVersion = source.maskPluginVersion,
+                maskPluginParametersJson = source.maskPluginParametersJson,
+                maskPluginParameters = source.maskPluginParameters?.Clone() ??
+                    new TexturePaintPluginParameterSet(),
+                maskPluginStale = source.maskPluginStale,
+                maskPluginLastError = source.maskPluginLastError,
                 maskPixels = ClonePixels(source.maskPixels),
                 strokes = CloneStrokes(source.strokes)
             };
@@ -797,6 +817,12 @@ namespace UMA.TexturePaint.Editor
             layer.pluginId = saved.pluginId;
             layer.pluginVersion = saved.pluginVersion;
             layer.pluginParametersJson = saved.pluginParametersJson;
+            layer.pluginParameters = saved.pluginParameters?.Clone() ??
+                (!string.IsNullOrEmpty(saved.pluginParametersJson)
+                    ? JsonUtility.FromJson<TexturePaintPluginParameterSet>(saved.pluginParametersJson)
+                    : new TexturePaintPluginParameterSet());
+            layer.pluginStale = saved.pluginStale;
+            layer.pluginLastError = saved.pluginLastError;
             layer.proceduralGroupKey = saved.proceduralGroupKey;
             layer.NormalizeKindPayload();
             layer.strokes.AddRange(CloneStrokes(saved.strokes));
@@ -824,6 +850,13 @@ namespace UMA.TexturePaint.Editor
                     mask.sourceSettings = saved.maskSourceSettings?.Clone() ??
                         TexturePaintLayerMask.DefaultSourceSettings();
                     mask.sourceChannel = saved.maskSourceChannel;
+                    mask.pluginId = saved.maskPluginId;
+                    mask.pluginVersion = saved.maskPluginVersion;
+                    mask.pluginParametersJson = saved.maskPluginParametersJson;
+                    mask.pluginParameters = saved.maskPluginParameters?.Clone() ??
+                        new TexturePaintPluginParameterSet();
+                    mask.pluginStale = saved.maskPluginStale;
+                    mask.pluginLastError = saved.maskPluginLastError;
                     mask.NormalizePaintSource();
                     Restore(saved.maskPixels, mask.target);
                 }
@@ -881,6 +914,14 @@ namespace UMA.TexturePaint.Editor
                 layer.splineSettings = layer.IsSplineLayer ? CloneSplineSettings(source.splineSettings) : null;
                 layer.pluginId = source.pluginId; layer.pluginVersion = source.pluginVersion;
                 layer.pluginParametersJson = source.pluginParametersJson;
+                layer.pluginParameters = source.pluginParameters?.Clone() ??
+                    new TexturePaintPluginParameterSet();
+                // Cached procedural pixels are tied to the saved UV layout and are deliberately
+                // not restored by this reprojectable-content path. Preserve the definition, but
+                // require Plugin layers to regenerate against the new layout.
+                layer.pluginStale = source.kind == TexturePaintLayerKind.Plugin || source.pluginStale;
+                layer.pluginLastError = source.kind == TexturePaintLayerKind.Plugin
+                    ? null : source.pluginLastError;
                 layer.proceduralGroupKey = source.proceduralGroupKey;
                 layer.NormalizeKindPayload();
                 layer.strokes.AddRange(CloneStrokes(source.strokes));
@@ -893,6 +934,13 @@ namespace UMA.TexturePaint.Editor
                         mask.sourceSettings = source.maskSourceSettings?.Clone() ??
                             TexturePaintLayerMask.DefaultSourceSettings();
                         mask.sourceChannel = source.maskSourceChannel;
+                        mask.pluginId = source.maskPluginId;
+                        mask.pluginVersion = source.maskPluginVersion;
+                        mask.pluginParametersJson = source.maskPluginParametersJson;
+                        mask.pluginParameters = source.maskPluginParameters?.Clone() ??
+                            new TexturePaintPluginParameterSet();
+                        mask.pluginStale = true;
+                        mask.pluginLastError = null;
                         mask.NormalizePaintSource();
                         // Pixel-space masks are not valid after a UV-layout change. Keep the
                         // authored base value and procedural effects, but reset editable pixels

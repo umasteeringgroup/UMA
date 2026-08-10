@@ -8,9 +8,9 @@ namespace UMA
     /// A version-independent identifier for a live Unity object.
     /// </summary>
     /// <remarks>
-    /// Unity 6.5 replaced the 32-bit instance ID API with EntityId. Keeping the
-    /// native value as raw data lets UMA use one key type without reducing the
-    /// 6.5 identifier to a potentially colliding hash or integer.
+    /// Unity 6.3 introduced EntityId, and later Unity versions widen its native
+    /// representation. Keeping the native value as raw data lets UMA use one key
+    /// type without reducing wider identifiers to a potentially colliding integer.
     /// </remarks>
     [Serializable]
     public struct UMAObjectId : IEquatable<UMAObjectId>
@@ -119,16 +119,11 @@ namespace UMA
     public static class UMAObjectIdExtensions
     {
         /// <summary>
-        /// Gets Unity's unique identifier for an object using the API available in
-        /// the current editor version.
+        /// Gets Unity's unique identifier for an object.
         /// </summary>
         public static UMAObjectId GetUmaObjectId(this UnityEngine.Object obj)
         {
-#if UNITY_6000_3_OR_NEWER
             return new UMAObjectId(obj.GetEntityId());
-#else
-            return new UMAObjectId(obj.GetInstanceID());
-#endif
         }
     }
 }

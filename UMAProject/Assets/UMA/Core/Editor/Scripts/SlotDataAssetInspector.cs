@@ -281,6 +281,42 @@ namespace UMA.Editors
             SlotDataAsset targetAsset = target as SlotDataAsset;
             serializedObject.Update();
 
+            bool hasAssetNameMismatch = false;
+            for (int targetIndex = 0; targetIndex < targets.Length; targetIndex++)
+            {
+                SlotDataAsset candidate = targets[targetIndex] as SlotDataAsset;
+                string candidatePath = AssetDatabase.GetAssetPath(candidate);
+                string fileName = string.IsNullOrEmpty(candidatePath)
+                    ? string.Empty : Path.GetFileNameWithoutExtension(candidatePath);
+                if (candidate != null && !string.IsNullOrEmpty(fileName) && candidate.name != fileName)
+                {
+                    hasAssetNameMismatch = true;
+                    break;
+                }
+            }
+            if (hasAssetNameMismatch)
+            {
+                EditorGUILayout.HelpBox(
+                    "The Unity object name does not match the slot asset filename. Use this repair " +
+                    "to preserve UMA's logical Slot Name while correcting the file-facing name.",
+                    MessageType.Warning);
+                if (GUILayout.Button("Repair Asset Name Safely"))
+                {
+                    foreach (UnityEngine.Object selected in targets)
+                    {
+                        if (!(selected is SlotDataAsset candidate)) continue;
+                        string candidatePath = AssetDatabase.GetAssetPath(candidate);
+                        if (string.IsNullOrEmpty(candidatePath)) continue;
+                        string logicalName = candidate.slotName;
+                        Undo.RecordObject(candidate, "Repair Slot Asset Name");
+                        candidate.PrepareForAssetPath(candidatePath, logicalName);
+                        EditorUtility.SetDirty(candidate);
+                        AssetDatabase.SaveAssetIfDirty(candidate);
+                    }
+                    serializedObject.Update();
+                }
+            }
+
             // Top-level change check (closed at bottom)
             EditorGUI.BeginChangeCheck();
 

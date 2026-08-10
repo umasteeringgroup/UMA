@@ -1,16 +1,14 @@
 #if UNITY_2021_3_OR_NEWER
 #define UMA_MESHAPI_2021
 #endif
-#if UNITY_WEBGL
-#undef UMA_UNSAFE
-#else
-#define UMA_UNSAFE
-#endif
 using System;
 using System.Buffers;
 using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Jobs;
+#if UMA_BURSTCOMPILE
+using Unity.Burst;
+#endif
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -519,7 +517,7 @@ namespace UMA
                 Ticks_BuildBoneWeights += stopwatch.ElapsedTicks;
 
                 stopwatch.Restart();
-#if UMA_UNSAFE
+#if UMA_BURSTCOMPILE && !UNITY_WEBGL
                 float expand =
                     instance.slotData != null &&
                     instance.slotData.expandAlongNormal != 0
@@ -566,7 +564,7 @@ namespace UMA
                 if (hasNormals || hasTangents)
                 {
                     stopwatch.Restart();
-#if UMA_UNSAFE
+#if UMA_BURSTCOMPILE && !UNITY_WEBGL
                     PackNormTanUnsafe(
                         normalsTangents,
                         vertexOffset,
@@ -604,7 +602,7 @@ namespace UMA
                 if (hasColors32 || hasUV || hasUV2)
                 {
                     stopwatch.Restart();
-#if UMA_UNSAFE
+#if UMA_BURSTCOMPILE && !UNITY_WEBGL
                     PackColUV01Unsafe(
                         colorsUV,
                         vertexOffset,
@@ -646,7 +644,7 @@ namespace UMA
                 if (hasUV3 || hasUV4)
                 {
                     stopwatch.Restart();
-#if UMA_UNSAFE
+#if UMA_BURSTCOMPILE && !UNITY_WEBGL
                     PackUV23Unsafe(
                         additionalUV,
                         vertexOffset,
@@ -1160,17 +1158,31 @@ namespace UMA
                     if (uvTransforms.IsCreated &&
                         uvTransforms.Length > 0)
                     {
-                        JobHandle handle =
-                            new ApplyUVTransformsJob
-                            {
-                                Vertices = colorsUV,
-                                Transforms = uvTransforms
-                            }.Schedule(
-                                colorsUV.Length,
-                                128,
-                                boundsHandle);
-                        CombineScheduledJob(handle);
-                        meshStreamHandle = handle;
+#if UMA_BURSTCOMPILE
+                        if (UseParallelUVRemap &&
+                            BurstCompiler.IsEnabled)
+                        {
+                            JobHandle handle =
+                                new ApplyUVTransformsJob
+                                {
+                                    Vertices = colorsUV,
+                                    Transforms = uvTransforms
+                                }.Schedule(
+                                    colorsUV.Length,
+                                    128,
+                                    boundsHandle);
+                            CombineScheduledJob(handle);
+                            meshStreamHandle = handle;
+                        }
+                        else
+#endif
+                        {
+                            boundsHandle.Complete();
+                            ApplyUVTransforms(
+                                colorsUV,
+                                uvTransforms);
+                            meshStreamHandle = boundsHandle;
+                        }
                     }
                     stopwatch.Stop();
                     Ticks_UVRemap += stopwatch.ElapsedTicks;

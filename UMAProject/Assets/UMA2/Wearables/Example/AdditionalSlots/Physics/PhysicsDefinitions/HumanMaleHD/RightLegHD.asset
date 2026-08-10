@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d7148fed8e84254e8597f83852f2e34, type: 3}
+  m_Name: RightLegHD
+  m_EditorClassIdentifier: 
+  isRoot: 0
+  boneName: RightLeg
+  mass: 1
+  colliders:
+  - colliderType: 2
+    colliderCentre: {x: -0.15, y: -0.01, z: -0.03}
+    boxDimensions: {x: 0, y: 0, z: 0}
+    sphereRadius: 0
+    capsuleRadius: 0.08
+    capsuleHeight: 0.31
+    capsuleAlignment: 0
+  - colliderType: 2
+    colliderCentre: {x: -0.41, y: -0.01, z: -0.01}
+    boxDimensions: {x: 0, y: 0, z: 0}
+    sphereRadius: 0
+    capsuleRadius: 0.06
+    capsuleHeight: 0.35
+    capsuleAlignment: 0
+  parentBone: RightUpLeg
+  axis: {x: 0, y: -1, z: 0}
+  swingAxis: {x: 0, y: 0, z: 1}
+  lowTwistLimit: -90
+  highTwistLimit: 0
+  swing1Limit: 0
+  swing2Limit: 0
+  enablePreprocessing: 0

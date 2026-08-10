@@ -6,6 +6,9 @@ Shader "Hidden/UMA/TexturePaint/RibbonProjection"
         _PaintSource ("Paint Source", 2D) = "white" {}
         _GeometryMask ("Geometry Mask", 2D) = "white" {}
         _PaintColor ("Paint Color", Color) = (1,1,1,1)
+        [HideInInspector] _StrokeEnabled ("Stroke Enabled", Int) = 0
+        [HideInInspector] _StrokeColor ("Stroke Color", Color) = (0,0,0,1)
+        [HideInInspector] _StrokeParameters ("Stroke Width Offset Smoothness Level", Vector) = (2,0,0.25,1)
     }
     SubShader
     {
@@ -67,10 +70,7 @@ Shader "Hidden/UMA/TexturePaint/RibbonProjection"
 
             int _StrokeEnabled;
             float4 _StrokeColor;
-            float _StrokeWidth;
-            float _StrokeOffset;
-            float _StrokeSmoothness;
-            float _StrokeLevel;
+            float4 _StrokeParameters;
 
             int _InnerShadowEnabled;
             int _InnerShadowSide;
@@ -509,15 +509,6 @@ Shader "Hidden/UMA/TexturePaint/RibbonProjection"
                     contributed = true;
                 }
 
-                coverage = RibbonStrokeCoverage(bestAcross, acrossPerPixel,
-                    _StrokeWidth, _StrokeOffset, _StrokeSmoothness);
-                alpha = coverage * _StrokeColor.a * _StrokeLevel * commonWeight * shapeAlpha;
-                if (_StrokeEnabled != 0 && alpha > 0.00001)
-                {
-                    result = CompositeStraightAlpha(result, _StrokeColor.rgb, alpha);
-                    contributed = true;
-                }
-
                 if (insideRibbon)
                 {
                     float sideFade = RibbonSideFade(bestAcross);
@@ -622,6 +613,18 @@ Shader "Hidden/UMA/TexturePaint/RibbonProjection"
                             contributed = true;
                         }
                     }
+                }
+
+                // Stroke is foreground decoration. An inward (negative) offset deliberately
+                // moves some or all of it over the authored ribbon, so it must composite after
+                // the ribbon paint contribution instead of being immediately painted over.
+                coverage = RibbonStrokeCoverage(bestAcross, acrossPerPixel,
+                    _StrokeParameters.x, _StrokeParameters.y, _StrokeParameters.z);
+                alpha = coverage * _StrokeColor.a * _StrokeParameters.w * commonWeight * shapeAlpha;
+                if (_StrokeEnabled != 0 && alpha > 0.00001)
+                {
+                    result = CompositeStraightAlpha(result, _StrokeColor.rgb, alpha);
+                    contributed = true;
                 }
 
                 if (!contributed) discard;

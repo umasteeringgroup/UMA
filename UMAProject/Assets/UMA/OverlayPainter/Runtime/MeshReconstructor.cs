@@ -39,6 +39,12 @@ namespace UMA.TexturePaint
         /// <summary>True only when a reconstructed normal channel uses Unity/UMA runtime packing.</summary>
         public bool[] sourceNormalIsUnityPacked;
         public OverlayDataAsset standaloneSourceOverlay;
+        /// <summary>
+        /// True when this surface was opened from the textures already assigned to a non-composited
+        /// UMA material. Those texture assets are a read-only base; Overlay Painter edits remain in
+        /// its layer stack and exported outputs.
+        /// </summary>
+        public bool usesReadOnlyMaterialSources;
         public bool allowMissingSourceTextures;
         public int[] triangleIslands;
         private Dictionary<Vector2Int, List<int>> uvTriangleGrid;
@@ -50,6 +56,7 @@ namespace UMA.TexturePaint
         private Vector2[] cachedUV;
         private int[] cachedTriangles;
         private int[] cachedTriangleBoundaryMasks;
+        private int[] cachedTriangleTopologyComponents;
         private Dictionary<Vector3Int, List<int>> spatialTriangleGrid;
         private readonly List<int> spatialCandidates = new List<int>();
         private readonly HashSet<int> spatialSeen = new HashSet<int>();
@@ -124,6 +131,52 @@ namespace UMA.TexturePaint
         public bool TryClosestSurfacePoint(Vector3 worldPoint, Vector3 normalHint, int preferredTriangle,
             IList<string> allowedSlots, out Vector3 surfacePoint, out Vector3 surfaceNormal,
             out Vector2 surfaceUV, out int triangleIndex, out Vector3 barycentric)
+            => TryClosestSurfacePoint(worldPoint, normalHint, preferredTriangle, allowedSlots, -1,
+                out surfacePoint, out surfaceNormal, out surfaceUV, out triangleIndex, out barycentric);
+
+        /// <summary>
+        /// Resolves a path sample only against the polygon strip connected by shared geometric
+        /// edges to <paramref name="connectedTriangle"/>. UV seams and duplicated hard-edge
+        /// vertices remain connected because connectivity is based on vertex positions, not UVs
+        /// or vertex indices. This prevents a 3D path from falling onto a nearby, overlapping but
+        /// topologically separate layer of the same mesh.
+        /// </summary>
+        public bool TryClosestConnectedSurfacePoint(Vector3 worldPoint, Vector3 normalHint,
+            int connectedTriangle, IList<string> allowedSlots, out Vector3 surfacePoint,
+            out Vector3 surfaceNormal, out Vector2 surfaceUV, out int triangleIndex,
+            out Vector3 barycentric)
+        {
+            int component = GetTriangleTopologyComponent(connectedTriangle);
+            if (component < 0)
+            {
+                surfacePoint = Vector3.zero; surfaceNormal = Vector3.up; surfaceUV = Vector2.zero;
+                triangleIndex = -1; barycentric = Vector3.zero;
+                return false;
+            }
+            return TryClosestSurfacePoint(worldPoint, normalHint, connectedTriangle, allowedSlots,
+                component, out surfacePoint, out surfaceNormal, out surfaceUV, out triangleIndex,
+                out barycentric);
+        }
+
+        public int GetTriangleTopologyComponent(int triangleIndex)
+        {
+            EnsureTriangleTopologyComponents();
+            return cachedTriangleTopologyComponents != null &&
+                   (uint)triangleIndex < (uint)cachedTriangleTopologyComponents.Length
+                ? cachedTriangleTopologyComponents[triangleIndex]
+                : -1;
+        }
+
+        public bool AreTrianglesTopologyConnected(int firstTriangle, int secondTriangle)
+        {
+            int first = GetTriangleTopologyComponent(firstTriangle);
+            return first >= 0 && first == GetTriangleTopologyComponent(secondTriangle);
+        }
+
+        private bool TryClosestSurfacePoint(Vector3 worldPoint, Vector3 normalHint,
+            int preferredTriangle, IList<string> allowedSlots, int requiredTopologyComponent,
+            out Vector3 surfacePoint, out Vector3 surfaceNormal, out Vector2 surfaceUV,
+            out int triangleIndex, out Vector3 barycentric)
         {
             surfacePoint = Vector3.zero; surfaceNormal = Vector3.up; surfaceUV = Vector2.zero;
             triangleIndex = -1; barycentric = Vector3.zero;
@@ -147,6 +200,8 @@ namespace UMA.TexturePaint
             {
                 int offset = candidate * 3;
                 if (candidate < 0 || offset + 2 >= cachedTriangles.Length) return false;
+                if (requiredTopologyComponent >= 0 &&
+                    GetTriangleTopologyComponent(candidate) != requiredTopologyComponent) return false;
                 string candidateSlot = GetTriangleSlotName(candidate);
                 if (allowedSlots != null && allowedSlots.Count > 0 &&
                     !string.IsNullOrEmpty(candidateSlot) && !ContainsSlot(allowedSlots, candidateSlot)) return false;
@@ -538,6 +593,95 @@ namespace UMA.TexturePaint
             cachedTangents = mesh.tangents;
             cachedUV = mesh.uv;
             cachedTriangles = mesh.triangles;
+        }
+
+        private void EnsureTriangleTopologyComponents()
+        {
+            if (cachedTriangleTopologyComponents != null) return;
+            EnsureMeshData();
+            int triangleCount = cachedTriangles != null ? cachedTriangles.Length / 3 : 0;
+            cachedTriangleTopologyComponents = new int[triangleCount];
+            if (triangleCount == 0) return;
+
+            int[] parent = new int[triangleCount];
+            for (int triangle = 0; triangle < triangleCount; triangle++) parent[triangle] = triangle;
+
+            int Find(int triangle)
+            {
+                int root = triangle;
+                while (parent[root] != root) root = parent[root];
+                while (parent[triangle] != triangle)
+                {
+                    int next = parent[triangle];
+                    parent[triangle] = root;
+                    triangle = next;
+                }
+                return root;
+            }
+
+            void Union(int first, int second)
+            {
+                int firstRoot = Find(first), secondRoot = Find(second);
+                if (firstRoot != secondRoot) parent[secondRoot] = firstRoot;
+            }
+
+            var owners = new Dictionary<GeometryEdgeKey, int>(triangleCount * 2);
+            for (int triangle = 0; triangle < triangleCount; triangle++)
+            {
+                int offset = triangle * 3;
+                Vector3 a = cachedVertices[cachedTriangles[offset]];
+                Vector3 b = cachedVertices[cachedTriangles[offset + 1]];
+                Vector3 c = cachedVertices[cachedTriangles[offset + 2]];
+                Connect(new GeometryEdgeKey(a, b), triangle);
+                Connect(new GeometryEdgeKey(b, c), triangle);
+                Connect(new GeometryEdgeKey(c, a), triangle);
+            }
+
+            void Connect(GeometryEdgeKey edge, int triangle)
+            {
+                if (owners.TryGetValue(edge, out int owner)) Union(owner, triangle);
+                else owners.Add(edge, triangle);
+            }
+
+            var componentIds = new Dictionary<int, int>();
+            for (int triangle = 0; triangle < triangleCount; triangle++)
+            {
+                int root = Find(triangle);
+                if (!componentIds.TryGetValue(root, out int component))
+                {
+                    component = componentIds.Count;
+                    componentIds.Add(root, component);
+                }
+                cachedTriangleTopologyComponents[triangle] = component;
+            }
+        }
+
+        private readonly struct GeometryEdgeKey : IEquatable<GeometryEdgeKey>
+        {
+            private readonly Vector3 first;
+            private readonly Vector3 second;
+
+            public GeometryEdgeKey(Vector3 a, Vector3 b)
+            {
+                // Sort endpoints so opposite triangle winding produces the same key.
+                if (Compare(a, b) <= 0) { first = a; second = b; }
+                else { first = b; second = a; }
+            }
+
+            public bool Equals(GeometryEdgeKey other) => first.Equals(other.first) && second.Equals(other.second);
+            public override bool Equals(object obj) => obj is GeometryEdgeKey other && Equals(other);
+            public override int GetHashCode()
+            {
+                unchecked { return first.GetHashCode() * 397 ^ second.GetHashCode(); }
+            }
+
+            private static int Compare(Vector3 left, Vector3 right)
+            {
+                int x = left.x.CompareTo(right.x);
+                if (x != 0) return x;
+                int y = left.y.CompareTo(right.y);
+                return y != 0 ? y : left.z.CompareTo(right.z);
+            }
         }
 
         internal int GetTriangleBoundaryMask(int triangleIndex)
@@ -1015,6 +1159,12 @@ namespace UMA.TexturePaint
         public GameObject root;
         public readonly List<ReconstructedSurface> surfaces = new List<ReconstructedSurface>();
         public readonly TexturePaintLogicalTargetCatalog logicalTargets = new TexturePaintLogicalTargetCatalog();
+        public readonly List<string> warnings = new List<string>();
+
+        internal void AddWarning(string warning)
+        {
+            if (!string.IsNullOrWhiteSpace(warning) && !warnings.Contains(warning)) warnings.Add(warning);
+        }
 
         public bool Raycast(Ray ray, out ReconstructedSurface surface, out RaycastHit hit)
         {
@@ -1106,12 +1256,6 @@ namespace UMA.TexturePaint
             }
             TextureMerge textureMergeConfiguration = avatar.umaData.umaGenerator != null
                 ? avatar.umaData.umaGenerator.textureMerge : null;
-            if (textureMergeConfiguration == null)
-            {
-                result.Dispose();
-                throw new InvalidOperationException(
-                    "Overlay Painter cannot reconstruct native overlay textures because the active UMA generator has no TextureMerge configuration.");
-            }
 
             try
             {
@@ -1129,23 +1273,42 @@ namespace UMA.TexturePaint
                         Material sourceMaterial = materials[submesh];
                         if (sourceMaterial == null) continue;
                         FindGeneratedMaterial(avatar.umaData, sourceRenderer, sourceMaterial, submesh,
-                            out UMAData.GeneratedMaterial generated, out UMAMaterial umaMaterial);
+                            out UMAData.GeneratedMaterial generated, out UMAMaterial umaMaterial,
+                            out bool isSecondPass);
+                        if (isSecondPass)
+                        {
+                            result.AddWarning(
+                                $"Overlay Painter skipped duplicate second-pass geometry for '{sourceMaterial.name}'. " +
+                                "The matching first-pass slot geometry remains paintable; the second pass is a render-only duplicate and is not imported.");
+                            continue;
+                        }
+                        bool usesMaterialSources = UsesReadOnlyMaterialSources(umaMaterial);
                         List<SlotData> slots = FindSlots(generated);
                         List<string> slotNames = FindSlotNames(slots, submesh);
+                        if (usesMaterialSources)
+                        {
+                            string materialName = umaMaterial?.name ?? sourceMaterial.name;
+                            result.AddWarning(
+                                $"Slot '{string.Join(", ", slotNames)}' was loaded from non-atlased UMA material '{materialName}'. " +
+                                $"Overlay Painter is using the textures currently assigned to '{sourceMaterial.name}' as its read-only base. " +
+                                "Painting and export will not update those source texture assets.");
+                        }
                         string[] triangleSlotNames = FindTriangleSlotNames(baked, submesh, generated, slotNames);
                         List<SurfaceSlice> slices = BuildSurfaceSlices(baked.GetTriangles(submesh), triangleSlotNames,
                             slotNames, slots);
                         for (int sliceIndex = 0; sliceIndex < slices.Count; sliceIndex++)
                         {
                             SurfaceSlice slice = slices[sliceIndex];
-                            if (slice.slots == null || slice.slots.Count != 1)
+                            if (!usesMaterialSources && (slice.slots == null || slice.slots.Count != 1))
                                 throw new InvalidOperationException(
                                     $"Overlay Painter cannot safely reconstruct native textures for '{sourceMaterial.name}' because " +
                                     "its generated triangles do not resolve to exactly one source slot. Generated atlases are intentionally " +
                                     "not used as a fallback; rebuild the affected slot vertex ownership.");
-                            SlotData sourceSlot = slice.slots[0];
-                            UMAData.MaterialFragment sourceFragment = FindMaterialFragment(generated, sourceSlot);
-                            if (sourceFragment == null)
+                            SlotData sourceSlot = slice.slots != null && slice.slots.Count == 1
+                                ? slice.slots[0] : null;
+                            UMAData.MaterialFragment sourceFragment = usesMaterialSources
+                                ? null : FindMaterialFragment(generated, sourceSlot);
+                            if (!usesMaterialSources && sourceFragment == null)
                                 throw new InvalidOperationException(
                                     $"Overlay Painter could not find the original overlay stack for slot '{sourceSlot.slotName}'.");
                             Mesh extracted = ExtractTriangles(baked, slice.triangles, toAvatar,
@@ -1159,9 +1322,23 @@ namespace UMA.TexturePaint
                                 name = sourceMaterial.name + " (Overlay Painter Preview)",
                                 hideFlags = HideFlags.HideAndDontSave
                             };
-                            Texture[] sourceTextures = BuildNativeOverlaySources(umaMaterial, sourceFragment,
-                                textureMergeConfiguration, out List<Texture> ownedSources,
-                                out bool[] packedNormalSources);
+                            Texture[] sourceTextures;
+                            List<Texture> ownedSources;
+                            bool[] packedNormalSources;
+                            if (usesMaterialSources)
+                            {
+                                sourceTextures = BuildReadOnlyMaterialSources(umaMaterial, sourceMaterial);
+                                ownedSources = new List<Texture>();
+                                packedNormalSources = new bool[sourceTextures.Length];
+                            }
+                            else
+                            {
+                                if (textureMergeConfiguration == null)
+                                    throw new InvalidOperationException(
+                                        "Overlay Painter cannot reconstruct native overlay textures because the active UMA generator has no TextureMerge configuration.");
+                                sourceTextures = BuildNativeOverlaySources(umaMaterial, sourceFragment,
+                                    textureMergeConfiguration, out ownedSources, out packedNormalSources);
+                            }
                             ApplyStandaloneSources(preview, umaMaterial, sourceTextures);
                             renderer.sharedMaterial = preview;
                             MeshCollider collider = child.AddComponent<MeshCollider>();
@@ -1181,6 +1358,7 @@ namespace UMA.TexturePaint
                                 sourceTextures = sourceTextures,
                                 ownedSourceTextures = ownedSources,
                                 sourceNormalIsUnityPacked = packedNormalSources,
+                                usesReadOnlyMaterialSources = usesMaterialSources,
                                 allowMissingSourceTextures = true,
                                 triangleIslands = UVIslandUtility.BuildTriangleIslands(extracted),
                                 slotName = slice.slotNames[0],
@@ -1422,6 +1600,34 @@ namespace UMA.TexturePaint
             return null;
         }
 
+        internal static bool UsesReadOnlyMaterialSources(UMAMaterial umaMaterial)
+        {
+            return umaMaterial != null &&
+                   umaMaterial.materialType == UMAMaterial.MaterialType.UseExistingTextures;
+        }
+
+        internal static Texture[] BuildReadOnlyMaterialSources(UMAMaterial umaMaterial,
+            Material assignedMaterial)
+        {
+            int count = umaMaterial?.channels != null ? umaMaterial.channels.Length : 0;
+            Texture[] sources = new Texture[count];
+            Material templateMaterial = umaMaterial?.material;
+            for (int channelIndex = 0; channelIndex < count; channelIndex++)
+            {
+                UMAMaterial.MaterialChannel channel = umaMaterial.channels[channelIndex];
+                string property = !string.IsNullOrWhiteSpace(channel.materialPropertyName)
+                    ? channel.materialPropertyName
+                    : channel.sourceTextureName;
+                if (string.IsNullOrWhiteSpace(property)) continue;
+                if (assignedMaterial != null && assignedMaterial.HasProperty(property))
+                    sources[channelIndex] = assignedMaterial.GetTexture(property);
+                if (sources[channelIndex] == null && templateMaterial != null &&
+                    templateMaterial != assignedMaterial && templateMaterial.HasProperty(property))
+                    sources[channelIndex] = templateMaterial.GetTexture(property);
+            }
+            return sources;
+        }
+
         private static Texture[] BuildNativeOverlaySources(UMAMaterial umaMaterial,
             UMAData.MaterialFragment sourceFragment, TextureMerge configuration,
             out List<Texture> ownedSources, out bool[] packedNormalSources)
@@ -1453,7 +1659,7 @@ namespace UMA.TexturePaint
                     int layoutHeight = referenceHeight > 0 ? referenceHeight : height;
                     float slotScale = Mathf.Max(0.0001f, sourceFragment.slotData?.overlayScale ?? 1f);
                     UMAData.MaterialFragment fragment = CloneFragmentForNativeReconstruction(sourceFragment,
-                        width, height);
+                        umaMaterial, width, height);
                     UMAData.GeneratedMaterial native = new UMAData.GeneratedMaterial
                     {
                         umaMaterial = umaMaterial,
@@ -1529,13 +1735,16 @@ namespace UMA.TexturePaint
         }
 
         private static UMAData.MaterialFragment CloneFragmentForNativeReconstruction(
-            UMAData.MaterialFragment source, int width, int height)
+            UMAData.MaterialFragment source, UMAMaterial umaMaterial, int width, int height)
         {
             return new UMAData.MaterialFragment
             {
                 size = source.size,
                 baseColor = source.baseColor,
-                umaMaterial = source.umaMaterial,
+                // Native reconstruction receives the authoritative material explicitly. The
+                // source SlotData can be synthetic or detached from its asset, so TextureMerge
+                // must not have to recover this relationship through SlotData.material.
+                umaMaterial = umaMaterial ?? source.umaMaterial,
                 rects = source.rects,
                 AdditionalOverlays = source.AdditionalOverlays,
                 overlayColors = source.overlayColors,
@@ -1813,11 +2022,13 @@ namespace UMA.TexturePaint
             };
         }
 
-        private static void FindGeneratedMaterial(UMAData data, SkinnedMeshRenderer renderer, Material material, int materialIndex,
-            out UMAData.GeneratedMaterial generated, out UMAMaterial umaMaterial)
+        internal static void FindGeneratedMaterial(UMAData data, SkinnedMeshRenderer renderer,
+            Material material, int materialIndex, out UMAData.GeneratedMaterial generated,
+            out UMAMaterial umaMaterial, out bool isSecondPass)
         {
             generated = null;
             umaMaterial = null;
+            isSecondPass = false;
             if (data.generatedMaterials == null || data.generatedMaterials.materials == null) return;
             List<UMAData.GeneratedMaterial> candidates = data.generatedMaterials.materials;
             // Prefer exact generated material instances. A material index is only meaningful inside its renderer.
@@ -1828,6 +2039,22 @@ namespace UMA.TexturePaint
                 if (candidate.material != material || (candidate.skinnedMeshRenderer != null && candidate.skinnedMeshRenderer != renderer)) continue;
                 generated = candidate;
                 umaMaterial = candidate.umaMaterial;
+                return;
+            }
+            // UMA duplicates the first-pass submesh when a UMAMaterial declares a second pass.
+            // Resolve that material explicitly so the caller can suppress the duplicate geometry.
+            for (int i = 0; i < candidates.Count; i++)
+            {
+                UMAData.GeneratedMaterial candidate = candidates[i];
+                if (candidate == null ||
+                    (candidate.skinnedMeshRenderer != null && candidate.skinnedMeshRenderer != renderer)) continue;
+                Material generatedSecondPass = candidate.secondPassMaterial;
+                Material declaredSecondPass = candidate.umaMaterial?.secondPass;
+                if (generatedSecondPass != material &&
+                    (generatedSecondPass != null || declaredSecondPass != material)) continue;
+                generated = candidate;
+                umaMaterial = candidate.umaMaterial;
+                isSecondPass = true;
                 return;
             }
             for (int i = 0; i < candidates.Count; i++)

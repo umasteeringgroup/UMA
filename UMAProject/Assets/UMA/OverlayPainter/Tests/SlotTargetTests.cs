@@ -8,6 +8,7 @@ namespace UMA.TexturePaint.Tests
     public sealed class SlotTargetTests
     {
         private readonly List<SlotDataAsset> createdAssets = new List<SlotDataAsset>();
+        private readonly List<Object> createdObjects = new List<Object>();
 
         [TearDown]
         public void TearDown()
@@ -15,6 +16,9 @@ namespace UMA.TexturePaint.Tests
             for (int i = 0; i < createdAssets.Count; i++)
                 if (createdAssets[i] != null) Object.DestroyImmediate(createdAssets[i]);
             createdAssets.Clear();
+            for (int i = createdObjects.Count - 1; i >= 0; i--)
+                if (createdObjects[i] != null) Object.DestroyImmediate(createdObjects[i]);
+            createdObjects.Clear();
         }
 
         [Test]
@@ -242,6 +246,80 @@ namespace UMA.TexturePaint.Tests
             Assert.That(slices[0].triangles, Is.EqualTo(new[] { 0, 1, 2, 3, 4, 5 }));
         }
 
+        [TestCase(UMAMaterial.MaterialType.UseExistingTextures, true)]
+        [TestCase(UMAMaterial.MaterialType.UseExistingMaterial, false)]
+        [TestCase(UMAMaterial.MaterialType.Atlas, false)]
+        [TestCase(UMAMaterial.MaterialType.NoAtlas, false)]
+        public void OnlyExistingMaterialModesUseReadOnlyMaterialSources(
+            UMAMaterial.MaterialType materialType, bool expected)
+        {
+            UMAMaterial umaMaterial = Track(ScriptableObject.CreateInstance<UMAMaterial>());
+            umaMaterial.materialType = materialType;
+
+            Assert.That(MeshReconstructor.UsesReadOnlyMaterialSources(umaMaterial), Is.EqualTo(expected));
+        }
+
+        [Test]
+        public void ReadOnlyMaterialSourcesComeFromTheAssignedRuntimeMaterial()
+        {
+            Shader shader = Shader.Find("Unlit/Texture") ?? Shader.Find("Sprites/Default") ??
+                            Shader.Find("Standard");
+            Assert.That(shader, Is.Not.Null);
+            Texture2D templateTexture = Track(new Texture2D(2, 2) { name = "Template Texture" });
+            Texture2D assignedTexture = Track(new Texture2D(2, 2) { name = "Assigned Texture" });
+            Material template = Track(new Material(shader) { name = "UMA Template" });
+            Material assigned = Track(new Material(shader) { name = "Generated Runtime Material" });
+            template.SetTexture("_MainTex", templateTexture);
+            assigned.SetTexture("_MainTex", assignedTexture);
+            UMAMaterial umaMaterial = Track(ScriptableObject.CreateInstance<UMAMaterial>());
+            umaMaterial.material = template;
+            umaMaterial.materialType = UMAMaterial.MaterialType.UseExistingTextures;
+            umaMaterial.channels = new[]
+            {
+                new UMAMaterial.MaterialChannel
+                {
+                    channelType = UMAMaterial.ChannelType.TintedTexture,
+                    materialPropertyName = "_MainTex"
+                }
+            };
+
+            Texture[] sources = MeshReconstructor.BuildReadOnlyMaterialSources(umaMaterial, assigned);
+
+            Assert.That(sources, Has.Length.EqualTo(1));
+            Assert.That(sources[0], Is.SameAs(assignedTexture));
+        }
+
+        [Test]
+        public void GeneratedSecondPassIsRecognizedAsDuplicateGeometry()
+        {
+            Shader shader = Shader.Find("Unlit/Texture") ?? Shader.Find("Sprites/Default") ??
+                            Shader.Find("Standard");
+            Assert.That(shader, Is.Not.Null);
+            GameObject avatarObject = Track(new GameObject("Generated Avatar"));
+            UMAData data = avatarObject.AddComponent<UMAData>();
+            SkinnedMeshRenderer renderer = avatarObject.AddComponent<SkinnedMeshRenderer>();
+            Material firstPass = Track(new Material(shader) { name = "First Pass" });
+            Material secondPass = Track(new Material(shader) { name = "Second Pass(Clone)" });
+            UMAMaterial umaMaterial = Track(ScriptableObject.CreateInstance<UMAMaterial>());
+            UMAData.GeneratedMaterial generated = new UMAData.GeneratedMaterial
+            {
+                material = firstPass,
+                secondPassMaterial = secondPass,
+                umaMaterial = umaMaterial,
+                skinnedMeshRenderer = renderer,
+                materialIndex = 0
+            };
+            data.generatedMaterials.materials.Add(generated);
+
+            MeshReconstructor.FindGeneratedMaterial(data, renderer, secondPass, 1,
+                out UMAData.GeneratedMaterial resolved, out UMAMaterial resolvedUmaMaterial,
+                out bool isSecondPass);
+
+            Assert.That(resolved, Is.SameAs(generated));
+            Assert.That(resolvedUmaMaterial, Is.SameAs(umaMaterial));
+            Assert.That(isSecondPass, Is.True);
+        }
+
         private SlotDataAsset CreateSlot(string slotName, string groupId = null, string groupName = null, int tile = 0)
         {
             SlotDataAsset asset = ScriptableObject.CreateInstance<SlotDataAsset>();
@@ -251,6 +329,12 @@ namespace UMA.TexturePaint.Tests
             asset.udimTileNumber = tile;
             createdAssets.Add(asset);
             return asset;
+        }
+
+        private T Track<T>(T value) where T : Object
+        {
+            createdObjects.Add(value);
+            return value;
         }
 
         private static ReconstructedSurface CreateSurface(SlotDataAsset asset)

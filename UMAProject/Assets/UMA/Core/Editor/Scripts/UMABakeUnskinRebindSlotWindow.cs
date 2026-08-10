@@ -573,6 +573,7 @@ namespace UMA.Editors
                     slot.meshData.SlotName = slot.slotName;
                 }
 
+                slot.PrepareForAssetPath(slotAssetPath, slotName);
                 AssetDatabase.CreateAsset(slot, slotAssetPath);
                 EditorUtility.SetDirty(slot);
                 createdAssetPaths.Add(slotAssetPath);

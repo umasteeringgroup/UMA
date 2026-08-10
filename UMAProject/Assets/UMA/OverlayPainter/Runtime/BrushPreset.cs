@@ -28,6 +28,8 @@ namespace UMA.TexturePaint
         public float randomSizeGrow = 0.3f;
         public bool splatter;
         [Range(0.01f, 2f)] public float splatterDistance = 1f;
+        [Tooltip("Randomly varies each splatter stamp from zero to the current paint strength.")]
+        public bool randomStrength;
         public bool fade;
         public bool taper;
         [Tooltip("World-space distance over which Fade and Taper reach zero. Zero uses three times the brush size.")]
@@ -65,6 +67,7 @@ namespace UMA.TexturePaint
             randomSizeGrow = source.randomSizeGrow;
             splatter = source.splatter;
             splatterDistance = source.splatterDistance;
+            randomStrength = source.randomStrength;
             fade = source.fade;
             taper = source.taper;
             fadeTaperLength = source.fadeTaperLength;

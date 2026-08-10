@@ -373,7 +373,7 @@ Work:
 1. Prove vector-correct normal painting/composition/export for supported blends and explicitly disable any normal blend or merge operation that cannot be evaluated exactly.
 2. Establish GPU/CPU parity for every retained fallback. If a fallback cannot preserve format, color space, masks, multi-channel behavior, or blending, fail with an actionable capability message instead of silently changing results.
 3. Freeze one source/fill/sprite/path/persistence/export Y-orientation contract across every certified API and add round-trip goldens for it.
-4. Add combination coverage for low alpha, UV wrap/seams, physical-slot and UDIM boundaries, nested groups, group masks, multi-channel sources, fill transforms, layer effects, mask effects, clone, projection, symmetry, undo/redo, Save As/reopen, and fill/spline invalidation.
+4. Add combination coverage for low alpha, UV wrap/seams, physical-slot and UDIM boundaries, nested groups, group masks, multi-channel sources, fill transforms, layer effects (including Image Adjustments), mask effects, clone, projection, symmetry, undo/redo, Save As/reopen, 2D/3D spline-domain isolation and handle selection repair, per-layer Normal Control strength, deterministic splatter strength, and fill/spline invalidation.
 5. Use one vocabulary throughout code-facing UI and documentation: Overlay Painter, logical target, UDIM group, physical slot, material channel, logical channel, layer channel, layer mask, document, and export result set.
 6. Keep settings owned by the relevant brush, layer, layer channel, fill channel, spline, mask, or effect. Hide or disable inapplicable controls with an actionable explanation.
 7. Complete the persistent context header so it can expose slot/group, tiles, material, pipeline, sources, working resolution, document state, current target, current layer/mask mode, and current channel without overwhelming narrow layouts.
@@ -385,6 +385,11 @@ Work:
     exists: neutral preservation, raised/recessed orientation, vector-normal composition, group and
     layer parity, exact save/recovery, effective 2D/3D preview, flattened export, authored-overlay
     flat-relative normal output and alpha coverage, and single OpenGL/DirectX boundary conversion.
+13. Treat generators and filters as persistent Plugin layers. Store typed parameters per layer, read
+    only the logical-target composite below the layer, cache multi-channel output, support normal
+    visibility/blend/group/mask/effect/export behavior, mark dependencies stale, retain cached output
+    when an implementation is missing, and replace all peers atomically with Undo/Redo while retaining
+    the last good result on cancellation or failure.
 
 Acceptance:
 
@@ -395,6 +400,9 @@ Acceptance:
 - Normal Control never binds to a shader property or exports as an independent texture; every preview
   and export path consumes the same normalized effective normal result.
 - New and experienced users can complete slot-open, paint, mask, path, Save As, reopen, export, and recipe-use workflows without undocumented steps.
+- Production generators and filters include documented Quilt/Embroidery/Perforation/Atlas Scatter,
+  multi-channel/mask Text with Custom-ribbon following, and Kuwahara/quantization Stylization, with
+  focused schema, persistence, cancellation, mask, and output tests.
 - The selected domain-reload behavior is deterministic, recoverable, documented, and covered by an isolated-process test.
 
 ### Phase 7 — pipeline/API certification and release candidate
@@ -441,17 +449,27 @@ Each cell covers stage open, slot reconstruction, same-island and boundary paint
 - `UMAMeshData` conversion and bounds/topology fidelity.
 - Material layout inference/custom overrides and export/import descriptor compilation.
 - Semantic neutral values and first-channel white Fill behavior.
-- Source overlay channel compatibility and per-member UDIM source binding.
+- Source overlay channel compatibility, per-member UDIM source binding, native-resolution
+  character-overlay reconstruction, and proof that generated atlases are never authoring/export
+  inputs.
 - Temporary session, Save As, incremental persistence, corruption, migration, and crash recovery.
 - Document non-mutation across successful, canceled, failed, and overwrite exports.
 - Naming, collision policy, packing, encoding, importing, overlay configuration, rollback, and UMA library registration.
-- Low-alpha, orientation, normal, seam, wrap, slot, UDIM, fill, mask, clone, undo/redo, and 2D-open/closed GPU goldens.
+- Low-alpha, orientation, reconstructed tangent-space RGB normals, seam, wrap, slot, UDIM, fill,
+  mask, clone, undo/redo, direct-UV painting on small geometry, and 2D-open/closed GPU goldens.
 - Nested-group, group-mask, multi-channel-source, layer-effect, mask-effect, fill-transform, spline-invalidation, and save/reopen combination tests.
-- Normal Control neutral/raised/recessed/vector goldens, automatic-channel and grayscale-source tests,
+- Normal Control neutral/raised/recessed/vector goldens, independent per-layer Height Strength,
+  automatic-channel and grayscale-source tests,
   document/recovery round trips, grouped previews, flattened physical normals, and authored-overlay
   normal-delta/coverage tests.
-- Freehand per-update batching, coalesced compose/pack/bind/repaint, deferred spline rerasterization, and deterministic random brush evolution.
+- Freehand per-update batching, coalesced compose/pack/bind/repaint, deferred spline rerasterization,
+  deterministic random rotation/size/splatter strength, and saved brush/session evolution.
 - Resource ownership, GPU-byte accounting, disposal, cache eviction, plugin filtering, dirty-region fallback, and warm-frame allocation assertions.
+- Plugin API v2 independent read/write declarations, bounded requested-map/channel snapshots,
+  write-only metadata, compact tile commands, signed concave/convex curvature, non-readable parameter
+  textures, complete logical-channel coverage, below-stack Plugin-layer capture, typed parameter and
+  texture-reference persistence, stale/missing-plugin behavior, group/mask/effect composition, atomic
+  regenerate/cancel/failure/undo, and Agify normal-detail/multi-channel/persistence tests.
 - Isolated-process coverage for the approved assembly/domain-reload behavior and recovery/reopen result.
 
 ### 7.3 Required manual scenarios

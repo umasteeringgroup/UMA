@@ -176,7 +176,7 @@ Material:
     - _RequireSplitLighting: 0
     - _RimLightPower: 4
     - _RimLightingModulation: 0
-    - _Smoothness: 0
+    - _Smoothness: 0.137
     - _SmoothnessModulation: 1
     - _SmoothnessSRC: 0
     - _SmoothnessTextureChannel: 0

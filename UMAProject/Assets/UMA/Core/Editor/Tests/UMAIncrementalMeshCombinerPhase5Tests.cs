@@ -691,9 +691,18 @@ namespace UMA.Editors.Tests
                         throw stepResult.Error;
                     }
                 }
-                CollectionAssert.Contains(
-                    secondRunSteps,
-                    "Apply Base Mesh: Prepare Output");
+                // AtomicStepName is sampled before Step. A renderer job may
+                // finish between those calls, so that Step can consume
+                // PrepareOutput after the test observed Poll Renderer Jobs.
+                // Writable MeshData below proves PrepareOutput completed.
+                Assert.IsTrue(
+                    secondRunSteps.Contains(
+                        "Apply Base Mesh: Prepare Output") ||
+                    secondRunSteps.Contains(
+                        "Poll Renderer Jobs"),
+                    "The operation must either expose Prepare Output before stepping, " +
+                    "or expose the async poll that can become ready and execute Prepare Output " +
+                    "inside the same Step call.");
                 CollectionAssert.Contains(
                     secondRunSteps,
                     "Apply Base Mesh: Writable MeshData");
@@ -777,12 +786,14 @@ namespace UMA.Editors.Tests
             }
         }
 
-        [Test]
+        [TestCase(true)]
+        [TestCase(false)]
         [Category("UMA")]
         [Category("MeshCombiner")]
         [Category("IncrementalMeshCombiner")]
         [Category("FeatureParity")]
-        public void MultipleRenderersAtlasSecondPassClothAndEmptyRendererCommitCorrectly()
+        public void MultipleRenderersAtlasSecondPassClothAndEmptyRendererCommitCorrectly(
+            bool useBurstUVJob)
         {
             GameObject root = null;
             GameObject global = null;
@@ -798,6 +809,10 @@ namespace UMA.Editors.Tests
             Material secondMaterial = null;
             Material secondPassTemplate = null;
             UMAData.GeneratedMaterial firstGenerated = null;
+            bool previousParallelUV =
+                SkinnedMeshCombinerMeshAPI.UseParallelUVRemap;
+            SkinnedMeshCombinerMeshAPI.UseParallelUVRemap =
+                useBurstUVJob;
             try
             {
                 root = new GameObject("Multi-renderer UMA");
@@ -947,6 +962,8 @@ namespace UMA.Editors.Tests
             }
             finally
             {
+                SkinnedMeshCombinerMeshAPI.UseParallelUVRemap =
+                    previousParallelUV;
                 if (root != null)
                 {
                     SkinnedMeshRenderer[] renderers =

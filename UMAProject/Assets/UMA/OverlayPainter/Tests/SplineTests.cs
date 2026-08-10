@@ -41,6 +41,31 @@ namespace UMA.TexturePaint.Tests
         }
 
         [Test]
+        public void TwoDimensionalSamplingUsesOnlyTheUvCurve()
+        {
+            TexturePaintSpline spline = new TexturePaintSpline { worldSpace = false, useBezier = false };
+            spline.AddPoint(new Vector3(100f, 200f, 300f), new Vector2(0.1f, 0.2f), 9, 42,
+                Vector3.down);
+            spline.AddPoint(new Vector3(-100f, -200f, -300f), new Vector2(0.9f, 0.8f), 12, 77,
+                Vector3.left);
+
+            var samples = spline.Sample(0.1f, 3);
+
+            Assert.That(samples, Is.Not.Empty);
+            Assert.That(samples[0].worldPosition,
+                Is.EqualTo(new Vector3(samples[0].uv.x, samples[0].uv.y, 0f)));
+            Assert.That(samples[samples.Count - 1].worldPosition,
+                Is.EqualTo(new Vector3(samples[samples.Count - 1].uv.x,
+                    samples[samples.Count - 1].uv.y, 0f)));
+            for (int i = 0; i < samples.Count; i++)
+            {
+                Assert.That(samples[i].surfaceIndex, Is.EqualTo(3));
+                Assert.That(samples[i].triangleIndex, Is.EqualTo(-1));
+                Assert.That(samples[i].worldNormal, Is.EqualTo(Vector3.forward));
+            }
+        }
+
+        [Test]
         public void LinkedHandlesRemainCollinearAndOpposed()
         {
             TexturePaintSpline spline = new TexturePaintSpline { smoothHandles = true };
@@ -251,6 +276,73 @@ namespace UMA.TexturePaint.Tests
 
             Assert.That(spline.worldOutControls[0], Is.EqualTo(Vector3.right));
             Assert.That(spline.worldInControls[0], Is.EqualTo(Vector3.zero));
+        }
+
+        [Test]
+        public void StraightTangentsPointTowardAdjacentNodesInWorldAndUvSpace()
+        {
+            TexturePaintSpline spline = new TexturePaintSpline();
+            spline.AddPoint(Vector3.zero, Vector2.zero, 0, 0, Vector3.forward);
+            spline.AddPoint(new Vector3(3f, 3f, 0f), new Vector2(0.3f, 0.6f), 0, 1, Vector3.forward);
+            spline.AddPoint(new Vector3(9f, 0f, 0f), new Vector2(0.9f, 0.3f), 0, 2, Vector3.forward);
+
+            spline.SetTangentMode(1, TexturePaintTangentMode.Straight);
+
+            Assert.That(Vector3.Distance(spline.worldInControls[1], new Vector3(2f, 2f, 0f)),
+                Is.LessThan(0.00001f));
+            Assert.That(Vector3.Distance(spline.worldOutControls[1], new Vector3(5f, 2f, 0f)),
+                Is.LessThan(0.00001f));
+            Assert.That(Vector2.Distance(spline.uvInControls[1], new Vector2(0.2f, 0.4f)),
+                Is.LessThan(0.00001f));
+            Assert.That(Vector2.Distance(spline.uvOutControls[1], new Vector2(0.5f, 0.5f)),
+                Is.LessThan(0.00001f));
+        }
+
+        [Test]
+        public void StraightTangentRefreshesWhenAnAdjacentPointMoves()
+        {
+            TexturePaintSpline spline = new TexturePaintSpline();
+            spline.AddPoint(Vector3.zero, Vector2.zero, 0, 0, Vector3.forward);
+            spline.AddPoint(Vector3.right * 3f, Vector2.right * 0.3f, 0, 1, Vector3.forward);
+            spline.SetTangentMode(0, TexturePaintTangentMode.Straight);
+            spline.worldPoints[1] = Vector3.up * 6f;
+            spline.uvPoints[1] = Vector2.up * 0.6f;
+
+            spline.RefreshStraightTangents();
+
+            Assert.That(Vector3.Distance(spline.worldOutControls[0], Vector3.up * 2f),
+                Is.LessThan(0.00001f));
+            Assert.That(Vector2.Distance(spline.uvOutControls[0], Vector2.up * 0.2f),
+                Is.LessThan(0.00001f));
+        }
+
+        [Test]
+        public void EditingAStraightHandleChangesItToCustom()
+        {
+            TexturePaintSpline spline = new TexturePaintSpline();
+            spline.AddPoint(Vector3.zero, Vector2.zero, 0, 0, Vector3.forward);
+            spline.AddPoint(Vector3.right, Vector2.right, 0, 1, Vector3.forward);
+            spline.SetTangentMode(0, TexturePaintTangentMode.Straight);
+
+            spline.SetWorldControl(0, false, Vector3.up, Vector2.up);
+
+            Assert.That(spline.tangentModes[0], Is.EqualTo(TexturePaintTangentMode.Custom));
+            Assert.That(spline.worldOutControls[0], Is.EqualTo(Vector3.up));
+        }
+
+        [Test]
+        public void EditingACollapsedCornerHandleChangesItToCustom()
+        {
+            TexturePaintSpline spline = new TexturePaintSpline();
+            spline.AddPoint(Vector3.zero, Vector2.zero, 0, 0, Vector3.forward);
+            spline.AddPoint(Vector3.right, Vector2.right, 0, 1, Vector3.forward);
+            spline.SetTangentMode(0, TexturePaintTangentMode.Corner);
+
+            spline.SetWorldControl(0, false, Vector3.up, Vector2.up);
+
+            Assert.That(spline.tangentModes[0], Is.EqualTo(TexturePaintTangentMode.Custom));
+            Assert.That(spline.worldOutControls[0], Is.EqualTo(Vector3.up));
+            Assert.That(spline.uvOutControls[0], Is.EqualTo(Vector2.up));
         }
     }
 }

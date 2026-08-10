@@ -29,9 +29,20 @@ namespace UMA.TexturePaint
         private readonly Dictionary<string, Texture2D> geometryMasks = new Dictionary<string, Texture2D>();
         private readonly Queue<string> geometryMaskOrder = new Queue<string>();
         private readonly Dictionary<int, Texture2D> ribbonCurveTextures = new Dictionary<int, Texture2D>();
+        private Mesh directUVRibbonMesh;
         private readonly Dictionary<TextureSet, TexturePaintStrokeRecord> activeStrokeRecords =
             new Dictionary<TextureSet, TexturePaintStrokeRecord>();
         private readonly List<StrokeRecordBinding> activeStrokeBindings = new List<StrokeRecordBinding>();
+        // Procedural paths clear their layer before being regenerated. Retain the previous raster
+        // bounds so a smaller replacement can also recompose pixels that are no longer touched by
+        // the new path. Keys include the history group because a target can be reassigned after a
+        // layer is duplicated or converted.
+        private readonly Dictionary<string, RectInt> proceduralRasterBounds =
+            new Dictionary<string, RectInt>(StringComparer.Ordinal);
+        private readonly Dictionary<ActiveTarget, RectInt> previousProceduralBounds =
+            new Dictionary<ActiveTarget, RectInt>();
+        private readonly Dictionary<ActiveTarget, RectInt> currentProceduralBounds =
+            new Dictionary<ActiveTarget, RectInt>();
         private RenderTexture disabledStrokeCoverage;
         private bool strokeStarted;
         private bool captureActiveStrokeHistory = true;
@@ -383,11 +394,12 @@ namespace UMA.TexturePaint
         /// </summary>
         public bool ApplyRibbon(IReadOnlyList<TexturePaintRibbonSegment> segments,
             IReadOnlyList<StrokeSample> centerlineSamples, bool sourceAlongY, bool reverseSourceAxis,
-            bool closed = false)
+            bool closed = false, bool directUV = false)
         {
             if (!strokeStarted || activeContext == null || ribbonMaterial == null ||
                 !ribbonMaterial.shader.isSupported || segments == null || segments.Count == 0 ||
                 activeContext.tool != TexturePaintTool.Paint) return false;
+            directUV |= activeContext.directUV;
             Stopwatch stopwatch = Stopwatch.StartNew();
 
             TexturePaintRibbonSegment[] data = new TexturePaintRibbonSegment[segments.Count];
@@ -423,7 +435,7 @@ namespace UMA.TexturePaint
             for (int targetIndex = 0; targetIndex < activeTargets.Count; targetIndex++)
             {
                 ActiveTarget active = activeTargets[targetIndex];
-                Mesh mesh = active.textures?.surface?.mesh;
+                Mesh mesh = directUV ? GetDirectUVRibbonMesh() : active.textures?.surface?.mesh;
                 if (mesh == null || active.target?.Front == null || active.target.Back == null) continue;
                 RectInt rect = new RectInt(0, 0, active.target.Width, active.target.Height);
                 if (captureActiveStrokeHistory)
@@ -439,7 +451,7 @@ namespace UMA.TexturePaint
                 // Ribbon projection already rasterizes the destination mesh in UV space. An
                 // unrestricted CPU geometry mask merely repeats that coverage at full texture
                 // resolution, so build one only when a structural selector actually clips it.
-                Texture2D geometryMask = HasGeometryRestrictions(activeContext.geometrySelection)
+                Texture2D geometryMask = !directUV && HasGeometryRestrictions(activeContext.geometrySelection)
                     ? GetGeometryMask(active, unrestricted) : null;
                 ribbonProperties.Clear();
                 ribbonProperties.SetBuffer("_RibbonSegments", segmentBuffer);
@@ -479,7 +491,7 @@ namespace UMA.TexturePaint
                 ribbonProperties.SetInt("_EdgeFadeEnabled", activeContext.ribbonEdgeFadeEnabled ? 1 : 0);
                 ribbonProperties.SetFloat("_EdgeFadeStart", Mathf.Clamp01(activeContext.ribbonEdgeFadeStart));
                 ribbonProperties.SetFloat("_EdgeFadeSize", Mathf.Clamp01(activeContext.ribbonEdgeFadeSize));
-                Matrix4x4 localToWorld = active.textures.surface.gameObject != null
+                Matrix4x4 localToWorld = !directUV && active.textures.surface.gameObject != null
                     ? active.textures.surface.gameObject.transform.localToWorldMatrix
                     : Matrix4x4.identity;
                 var effectPasses = new List<TexturePaintLayerEffectSettings>();
@@ -492,8 +504,7 @@ namespace UMA.TexturePaint
                         TexturePaintLayerEffectSettings effect = ribbonEffects.Stack[effectIndex];
                         if (!TexturePaintLayerEffects.EnabledFor(effect, active.channel) ||
                             effect.kind == TexturePaintLayerEffectKind.EdgeFade ||
-                            effect.kind == TexturePaintLayerEffectKind.ColorOverlay ||
-                            effect.kind == TexturePaintLayerEffectKind.TextureOverlay) continue;
+                            TexturePaintLayerEffects.IsCompositeOnlyEffect(effect.kind)) continue;
                         effectPasses.Add(effect);
                     }
                 }
@@ -534,6 +545,26 @@ namespace UMA.TexturePaint
             foreach (TextureSet set in changedSets) set.BindPreviewTextures(false);
             Performance.RecordPreview(stopwatch.Elapsed.TotalMilliseconds);
             return changed;
+        }
+
+        private Mesh GetDirectUVRibbonMesh()
+        {
+            if (directUVRibbonMesh != null) return directUVRibbonMesh;
+            directUVRibbonMesh = new Mesh
+            {
+                name = "Overlay Painter Direct UV Ribbon Quad",
+                hideFlags = HideFlags.HideAndDontSave,
+                vertices = new[]
+                {
+                    new Vector3(0f, 0f, 0f), new Vector3(1f, 0f, 0f),
+                    new Vector3(1f, 1f, 0f), new Vector3(0f, 1f, 0f)
+                },
+                normals = new[] { Vector3.forward, Vector3.forward, Vector3.forward, Vector3.forward },
+                uv = new[] { Vector2.zero, Vector2.right, Vector2.one, Vector2.up },
+                triangles = new[] { 0, 1, 2, 0, 2, 3 }
+            };
+            directUVRibbonMesh.RecalculateBounds();
+            return directUVRibbonMesh;
         }
 
         private void DisableRibbonEffects(MaterialPropertyBlock properties)
@@ -605,10 +636,11 @@ namespace UMA.TexturePaint
             bool enabled = TexturePaintLayerEffects.EnabledFor(effect, channel);
             properties.SetInt("_StrokeEnabled", enabled ? 1 : 0);
             properties.SetColor("_StrokeColor", effect?.color ?? Color.clear);
-            properties.SetFloat("_StrokeWidth", effect?.width ?? 2f);
-            properties.SetFloat("_StrokeOffset", effect?.offset.x ?? 0f);
-            properties.SetFloat("_StrokeSmoothness", effect?.smoothness ?? 0.25f);
-            properties.SetFloat("_StrokeLevel", effect?.level ?? 1f);
+            properties.SetVector("_StrokeParameters", new Vector4(
+                effect?.width ?? 2f,
+                effect?.offset.x ?? 0f,
+                effect?.smoothness ?? 0.25f,
+                effect?.level ?? 1f));
         }
 
         private void BindRibbonDistanceEffect(MaterialPropertyBlock properties, string prefix,
@@ -827,6 +859,8 @@ namespace UMA.TexturePaint
                 activeStampTexture = null;
                 activeContext = null;
                 activeTargets.Clear();
+                previousProceduralBounds.Clear();
+                currentProceduralBounds.Clear();
                 captureActiveStrokeHistory = true;
                 return;
             }
@@ -841,6 +875,7 @@ namespace UMA.TexturePaint
             for (int i = 0; i < activeTargets.Count; i++)
                 if (activeTargets[i].textures != null) changedSets.Add(activeTargets[i].textures);
             EndInteractiveCompositing();
+            RefreshClearedProceduralBounds(changedSets, commit);
             foreach (TextureSet set in changedSets)
             {
                 // Interactive painting deliberately reuses the previous distance field so a 2K
@@ -848,7 +883,8 @@ namespace UMA.TexturePaint
                 // its layer, however, so that reusable field can describe the empty layer while
                 // the replacement ribbon is rasterized. Recompose after leaving interactive mode
                 // to rebuild the field from the completed layer before packing the final preview.
-                if (TextureLayerCompositor.HasDistanceEffects(set)) set.BindPreviewTextures();
+                if (activeContext?.derivedLayerRaster != true &&
+                    TextureLayerCompositor.HasDistanceEffects(set)) set.BindPreviewTextures();
             }
             activeBrushContext = null; activeStampTexture = null; activeContext = null; activeTargets.Clear(); strokeStarted = false;
             captureActiveStrokeHistory = true;
@@ -904,7 +940,10 @@ namespace UMA.TexturePaint
                             continue;
                         clearedLayers.Add(candidate);
                         foreach (EditableTextureTarget target in candidate.channels.Values)
+                        {
                             target.Reset(null, Color.clear);
+                            proceduralRasterBounds.Remove(ProceduralBoundsKey(historyGroupKey, target));
+                        }
                         candidate.strokes.Clear();
                         changed |= candidate.channels.Count > 0;
                     }
@@ -912,7 +951,11 @@ namespace UMA.TexturePaint
             }
             if (layer != null && !clearedLayers.Contains(layer))
             {
-                foreach (EditableTextureTarget target in layer.channels.Values) target.Reset(null, Color.clear);
+                foreach (EditableTextureTarget target in layer.channels.Values)
+                {
+                    target.Reset(null, Color.clear);
+                    proceduralRasterBounds.Remove(ProceduralBoundsKey(historyGroupKey, target));
+                }
                 layer.strokes.Clear();
                 changed = layer.channels.Count > 0;
             }
@@ -1147,6 +1190,20 @@ namespace UMA.TexturePaint
 
         private void PrepareProceduralReplacement(StrokeContext context)
         {
+            previousProceduralBounds.Clear();
+            currentProceduralBounds.Clear();
+            if (context.derivedLayerRaster)
+            {
+                for (int i = 0; i < activeTargets.Count; i++)
+                {
+                    ActiveTarget active = activeTargets[i];
+                    string key = ProceduralBoundsKey(context.historyGroupKey, active);
+                    previousProceduralBounds[active] = proceduralRasterBounds.TryGetValue(key,
+                        out RectInt previous)
+                        ? previous
+                        : new RectInt(0, 0, active.target.Width, active.target.Height);
+                }
+            }
             bool reverted = history.RevertLatest(context.historyGroupKey);
             bool replacementChanged = reverted;
             HashSet<TextureSet> changedSets = new HashSet<TextureSet>();
@@ -1230,9 +1287,14 @@ namespace UMA.TexturePaint
             return false;
         }
 
-        private static void CompositeChangedTarget(ActiveTarget active, RectInt rect)
+        private void CompositeChangedTarget(ActiveTarget active, RectInt rect)
         {
             if (active?.textures == null) return;
+            if (activeContext?.derivedLayerRaster == true && rect.width > 0 && rect.height > 0)
+            {
+                currentProceduralBounds.TryGetValue(active, out RectInt accumulated);
+                currentProceduralBounds[active] = Union(accumulated, rect);
+            }
             if (active.isLayerMask)
             {
                 foreach (TextureChannelTarget channel in active.textures.channels.Values)
@@ -1246,6 +1308,69 @@ namespace UMA.TexturePaint
                 return;
             }
             active.textures.CompositeChannel(active.channel, rect);
+        }
+
+        private void RefreshClearedProceduralBounds(HashSet<TextureSet> changedSets, bool commit)
+        {
+            if (activeContext?.derivedLayerRaster != true || previousProceduralBounds.Count == 0) return;
+            var fullyRefreshed = new HashSet<TextureSet>();
+            foreach (TextureSet set in changedSets)
+            {
+                if (!TextureLayerCompositor.HasDistanceEffects(set)) continue;
+                set.BindPreviewTextures();
+                fullyRefreshed.Add(set);
+            }
+
+            foreach (KeyValuePair<ActiveTarget, RectInt> pair in previousProceduralBounds)
+            {
+                ActiveTarget active = pair.Key;
+                if (active?.textures == null || fullyRefreshed.Contains(active.textures)) continue;
+                RectInt previous = pair.Value;
+                if (previous.width <= 0 || previous.height <= 0) continue;
+                // The new footprint was composited incrementally while painting. Recompose the old
+                // footprint once more so the area exposed by a shrink reflects the cleared layer.
+                CompositeTargetWithoutRecording(active, previous);
+                active.textures.BindPreviewTextures(false, previous);
+            }
+
+            for (int i = 0; i < activeTargets.Count; i++)
+            {
+                ActiveTarget active = activeTargets[i];
+                string key = ProceduralBoundsKey(activeContext.historyGroupKey, active);
+                if (commit && currentProceduralBounds.TryGetValue(active, out RectInt current) &&
+                    current.width > 0 && current.height > 0)
+                    proceduralRasterBounds[key] = current;
+                else proceduralRasterBounds.Remove(key);
+            }
+            previousProceduralBounds.Clear();
+            currentProceduralBounds.Clear();
+        }
+
+        private static void CompositeTargetWithoutRecording(ActiveTarget active, RectInt rect)
+        {
+            if (active.isLayerMask)
+            {
+                foreach (TextureChannelTarget channel in active.textures.channels.Values)
+                    if (channel != null)
+                    {
+                        int width = channel.composite != null ? channel.composite.width : channel.editable.Width;
+                        int height = channel.composite != null ? channel.composite.height : channel.editable.Height;
+                        active.textures.CompositeChannel(channel.channel, ScaleRect(rect,
+                            active.target.Width, active.target.Height, width, height));
+                    }
+                return;
+            }
+            active.textures.CompositeChannel(active.channel, rect);
+        }
+
+        private static string ProceduralBoundsKey(string historyGroupKey, ActiveTarget active)
+            => ProceduralBoundsKey(historyGroupKey, active?.target);
+
+        private static string ProceduralBoundsKey(string historyGroupKey, EditableTextureTarget target)
+        {
+            EntityId targetId = target?.Front != null
+                ? target.Front.GetEntityId() : EntityId.None;
+            return (historyGroupKey ?? string.Empty) + "|" + targetId;
         }
 
         private static RectInt ScaleRect(RectInt rect, int sourceWidth, int sourceHeight,
@@ -1706,7 +1831,8 @@ namespace UMA.TexturePaint
         {
             ReconstructedSurface surface = active.textures?.surface;
             if (surface == null) return null;
-            int meshId = surface.mesh != null ? surface.mesh.GetInstanceID() : 0;
+            EntityId meshId = surface.mesh != null
+                ? surface.mesh.GetEntityId() : EntityId.None;
             string surfaceId = !string.IsNullOrEmpty(active.textures?.persistentId)
                 ? active.textures.persistentId : surface.index.ToString();
             string key = surfaceId + "|" + meshId + "|" + active.target.Width + "|" +
@@ -1914,6 +2040,11 @@ namespace UMA.TexturePaint
             ReleaseGeometryMasks();
             foreach (Texture2D curve in ribbonCurveTextures.Values) Destroy(curve);
             ribbonCurveTextures.Clear();
+            Destroy(directUVRibbonMesh);
+            directUVRibbonMesh = null;
+            proceduralRasterBounds.Clear();
+            previousProceduralBounds.Clear();
+            currentProceduralBounds.Clear();
             history.Dispose();
             Destroy(ribbonMaterial);
         }

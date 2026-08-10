@@ -279,6 +279,15 @@ namespace UMA.Editors
             Magnify,
         }
 
+        private enum PreviewChannel
+        {
+            RGBA,
+            Red,
+            Green,
+            Blue,
+            Alpha,
+        }
+
         private const float ToolPanelWidth = 190f;
         private const float DroppedTextureListWidth = 220f;
         private const float PreviewImageDefaultHeight = 512f;
@@ -338,6 +347,9 @@ namespace UMA.Editors
         private Texture2D diskOriginalTexture;
         private string diskOriginalTextureDirectory;
         private Texture2D previewTexture;     // displayed texture: currentTexture or BCS-adjusted copy
+        private Texture2D channelPreviewTexture;
+        private Texture2D channelPreviewSource;
+        private PreviewChannel channelPreviewSourceChannel;
         private readonly List<Texture2D> droppedTextureAssets = new List<Texture2D>();
         private readonly Dictionary<Texture2D, QueuedTextureState> queuedTextureStates = new Dictionary<Texture2D, QueuedTextureState>();
         private int selectedDroppedTextureIndex = -1;
@@ -346,6 +358,7 @@ namespace UMA.Editors
         private bool combineBackgroundOnSave;
         private BackgroundScaleMode backgroundScaleMode = BackgroundScaleMode.MatchWidth;
         private PreviewDisplayMode previewDisplayMode = PreviewDisplayMode.Fit;
+        private PreviewChannel previewChannel = PreviewChannel.RGBA;
         private Vector2 previewCenterNormalized = new Vector2(0.5f, 0.5f);
         private bool previewMousePanning;
         private int previewMousePanButton = -1;
@@ -359,6 +372,7 @@ namespace UMA.Editors
         // Cached pixel buffers used by live preview and destructive edits.
         private Color32[] cachedCurrentPixels;
         private Color32[] previewPixelBuffer;
+        private Color32[] channelPreviewPixelBuffer;
         private int cachedPixelWidth;
         private int cachedPixelHeight;
 
@@ -541,6 +555,7 @@ namespace UMA.Editors
             DestroyTexture(ref diskOriginalTexture);
             diskOriginalTextureDirectory = null;
             DestroyTexture(ref previewTexture);
+            InvalidateChannelPreview();
             DestroyTexture(ref normalIndentWorkingNormal);
             normalIndentPixels = null;
             normalIndentOriginalPixels = null;
@@ -844,6 +859,7 @@ namespace UMA.Editors
 
             EnsurePreviewTexture();
             Texture2D toShow = GetPreviewTextureToShow();
+            toShow = GetChannelPreviewTexture(toShow);
             if (toShow != null)
             {
                 if (previewDisplayMode == PreviewDisplayMode.Magnify)
@@ -915,6 +931,18 @@ namespace UMA.Editors
                 }
             }
 
+            GUILayout.FlexibleSpace();
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+            EditorGUILayout.LabelField("Channels", GUILayout.Width(56f));
+            EditorGUI.BeginChangeCheck();
+            previewChannel = (PreviewChannel)GUILayout.Toolbar((int)previewChannel, new[] { "RGBA", "R", "G", "B", "A" }, EditorStyles.toolbarButton, GUILayout.Width(180f));
+            if (EditorGUI.EndChangeCheck())
+            {
+                InvalidateChannelPreview();
+                Repaint();
+            }
             GUILayout.FlexibleSpace();
             EditorGUILayout.EndHorizontal();
         }
@@ -1017,7 +1045,9 @@ namespace UMA.Editors
 
         private void DrawPreviewTextureWithVisibleAreas(Rect textureRect, Texture2D texture, Rect visibleRect)
         {
-            if (currentTool == Tool.NormalIndent && normalIndentWorkingNormal != null)
+            if (previewChannel == PreviewChannel.RGBA
+                && currentTool == Tool.NormalIndent
+                && normalIndentWorkingNormal != null)
             {
                 DrawNormalIndentPreviewTexture(textureRect, visibleRect);
                 return;
@@ -1051,12 +1081,85 @@ namespace UMA.Editors
 
         private Texture2D GetPreviewTextureToShow()
         {
-            if (currentTool == Tool.NormalIndent && normalIndentWorkingNormal != null)
+            if (previewChannel == PreviewChannel.RGBA
+                && currentTool == Tool.NormalIndent
+                && normalIndentWorkingNormal != null)
             {
                 return normalIndentWorkingNormal;
             }
 
             return previewTexture != null ? previewTexture : currentTexture;
+        }
+
+        private Texture2D GetChannelPreviewTexture(Texture2D source)
+        {
+            if (source == null
+                || previewChannel == PreviewChannel.RGBA)
+            {
+                InvalidateChannelPreview();
+                return source;
+            }
+
+            bool changed = channelPreviewTexture == null
+                || channelPreviewSource != source
+                || channelPreviewSourceChannel != previewChannel
+                || channelPreviewTexture.width != source.width
+                || channelPreviewTexture.height != source.height;
+            if (!changed)
+            {
+                return channelPreviewTexture;
+            }
+
+            if (Event.current.type != EventType.Repaint)
+            {
+                return channelPreviewTexture != null ? channelPreviewTexture : source;
+            }
+
+            Color32[] sourcePixels = source.GetPixels32();
+            if (channelPreviewPixelBuffer == null || channelPreviewPixelBuffer.Length != sourcePixels.Length)
+            {
+                channelPreviewPixelBuffer = new Color32[sourcePixels.Length];
+            }
+
+            for (int index = 0; index < sourcePixels.Length; index++)
+            {
+                Color32 pixel = sourcePixels[index];
+                byte value;
+                switch (previewChannel)
+                {
+                    case PreviewChannel.Red:
+                        value = pixel.r;
+                        break;
+                    case PreviewChannel.Green:
+                        value = pixel.g;
+                        break;
+                    case PreviewChannel.Blue:
+                        value = pixel.b;
+                        break;
+                    default:
+                        value = pixel.a;
+                        break;
+                }
+
+                channelPreviewPixelBuffer[index] = new Color32(value, value, value, 255);
+            }
+
+            if (channelPreviewTexture == null
+                || channelPreviewTexture.width != source.width
+                || channelPreviewTexture.height != source.height)
+            {
+                DestroyTexture(ref channelPreviewTexture);
+                channelPreviewTexture = new Texture2D(source.width, source.height, TextureFormat.RGBA32, false, false)
+                {
+                    hideFlags = HideFlags.HideAndDontSave,
+                };
+            }
+
+            channelPreviewTexture.SetPixels32(channelPreviewPixelBuffer);
+            channelPreviewTexture.Apply(false, false);
+            channelPreviewSource = source;
+            channelPreviewSourceChannel = previewChannel;
+            return channelPreviewTexture;
         }
 
         private void DrawNormalIndentPreviewTexture(Rect textureRect, Rect visibleRect)
@@ -5902,6 +6005,7 @@ namespace UMA.Editors
             ApplyBcs32(previewPixelBuffer, brightness, contrast, saturation, hueDegrees);
             previewTexture.SetPixels32(previewPixelBuffer);
             previewTexture.Apply(false, false);
+            InvalidateChannelPreview();
 
             lastBrightness = brightness;
             lastContrast = contrast;
@@ -7484,13 +7588,21 @@ namespace UMA.Editors
         private void InvalidatePreview()
         {
             DestroyTexture(ref previewTexture);
+            InvalidateChannelPreview();
             Repaint();
+        }
+
+        private void InvalidateChannelPreview()
+        {
+            DestroyTexture(ref channelPreviewTexture);
+            channelPreviewSource = null;
         }
 
         private void InvalidateCachedPixels()
         {
             cachedCurrentPixels = null;
             previewPixelBuffer = null;
+            channelPreviewPixelBuffer = null;
             cachedPixelWidth = 0;
             cachedPixelHeight = 0;
         }

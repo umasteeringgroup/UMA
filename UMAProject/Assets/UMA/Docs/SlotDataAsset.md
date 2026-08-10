@@ -4,6 +4,8 @@ A `SlotDataAsset` is UMA's reusable mesh asset. Body sections, clothing, hair, a
 
 The asset stores captured mesh data rather than acting as a prefab renderer.
 
+For batch slot updates and folder synchronization, see [Examine Slots](ExamineSlots.md). For creating a slot from scene geometry, see [Prefab and Scene-Building Tools](PrefabAndSceneBuildingTools.md).
+
 ## Create a Slot
 
 The recommended workflow is:

@@ -290,8 +290,8 @@ namespace UMA
             public bool WasReflected;
         }
 
-        private readonly Dictionary<int, Registration> _registrations =
-            new Dictionary<int, Registration>();
+        private readonly Dictionary<EntityId, Registration> _registrations =
+            new Dictionary<EntityId, Registration>();
 
         private UMAData _umaData;
         private bool _subscribed;
@@ -368,7 +368,7 @@ namespace UMA
             _umaData = data;
             Subscribe();
 
-            int key = asset.GetInstanceID();
+            EntityId key = asset.GetEntityId();
             Registration registration;
             if (!_registrations.TryGetValue(key, out registration))
             {

@@ -13,9 +13,12 @@ namespace UMA.Editors
         private const string WindowTitle = "UMA Testing";
 
         [SerializeField] private RaceData selectedRace;
+        [SerializeField] private bool testAllIndexedRaces;
         [SerializeField] private Vector2 scrollPosition;
 
         private UMATestReport lastReport;
+        private int lastRunRaceCount;
+        private bool lastRunCancelled;
 
         [MenuItem("UMA/Testing/Race Smoke Test...", priority = 2000)]
         public static void OpenWindow()
@@ -57,13 +60,29 @@ namespace UMA.Editors
         private void OnGUI()
         {
             EditorGUILayout.LabelField("Race Smoke Test", EditorStyles.boldLabel);
-            selectedRace = (RaceData)EditorGUILayout.ObjectField("Race", selectedRace, typeof(RaceData), false);
-
-            using (new EditorGUI.DisabledScope(selectedRace == null))
+            testAllIndexedRaces = EditorGUILayout.ToggleLeft(
+                "Test All Indexed Races", testAllIndexedRaces);
+            using (new EditorGUI.DisabledScope(testAllIndexedRaces))
             {
-                if (GUILayout.Button("Run Race Smoke Test", GUILayout.Height(30f)))
+                selectedRace = (RaceData)EditorGUILayout.ObjectField("Race", selectedRace,
+                    typeof(RaceData), false);
+            }
+
+            if (testAllIndexedRaces)
+            {
+                EditorGUILayout.HelpBox(
+                    "Runs every RaceData returned by the UMA Asset Index. Failures are grouped by race, and the run can be cancelled between races.",
+                    MessageType.Info);
+            }
+
+            using (new EditorGUI.DisabledScope(!testAllIndexedRaces && selectedRace == null))
+            {
+                string buttonLabel = testAllIndexedRaces
+                    ? "Run All Indexed Race Smoke Tests" : "Run Race Smoke Test";
+                if (GUILayout.Button(buttonLabel, GUILayout.Height(30f)))
                 {
-                    RunSelectedRaceSmokeTest();
+                    if (testAllIndexedRaces) RunAllIndexedRaceSmokeTests();
+                    else RunSelectedRaceSmokeTest();
                 }
             }
 
@@ -91,18 +110,55 @@ namespace UMA.Editors
 
         private void RunSelectedRaceSmokeTest()
         {
+            lastRunRaceCount = selectedRace != null ? 1 : 0;
+            lastRunCancelled = false;
             lastReport = UMARaceSmokeTestRunner.Run(selectedRace);
+            LogLastReport();
+        }
+
+        private void RunAllIndexedRaceSmokeTests()
+        {
+            lastRunRaceCount = 0;
+            lastRunCancelled = false;
+            try
+            {
+                lastReport = UMARaceSmokeTestRunner.RunAllIndexed(null,
+                    (index, count, race) =>
+                    {
+                        bool keepGoing = !EditorUtility.DisplayCancelableProgressBar(
+                            "UMA Race Smoke Test",
+                            "Testing " + (race != null && !string.IsNullOrEmpty(race.raceName)
+                                ? race.raceName : "indexed race " + (index + 1)) +
+                            " (" + (index + 1) + " of " + count + ")",
+                            count > 0 ? index / (float)count : 0f);
+                        if (keepGoing) lastRunRaceCount = index + 1;
+                        else lastRunCancelled = true;
+                        return keepGoing;
+                    });
+            }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
+            }
+
+            LogLastReport();
+        }
+
+        private void LogLastReport()
+        {
+            if (lastReport == null) return;
+            Object context = lastReport.Race;
             if (lastReport.HasErrors)
             {
-                Debug.LogError(lastReport.ToLogString(), selectedRace);
+                Debug.LogError(lastReport.ToLogString(), context);
             }
             else if (lastReport.HasWarnings)
             {
-                Debug.LogWarning(lastReport.ToLogString(), selectedRace);
+                Debug.LogWarning(lastReport.ToLogString(), context);
             }
             else
             {
-                Debug.Log(lastReport.ToLogString(), selectedRace);
+                Debug.Log(lastReport.ToLogString(), context);
             }
         }
 
@@ -118,6 +174,13 @@ namespace UMA.Editors
             EditorGUILayout.LabelField("Errors", lastReport.ErrorCount.ToString());
             EditorGUILayout.LabelField("Warnings", lastReport.WarningCount.ToString());
             EditorGUILayout.LabelField("Passes", lastReport.PassCount.ToString());
+            if (testAllIndexedRaces || lastReport.Race == null)
+            {
+                EditorGUILayout.LabelField("Races Processed", lastRunRaceCount.ToString());
+                if (lastRunCancelled)
+                    EditorGUILayout.HelpBox("The all-races run was cancelled between races.",
+                        MessageType.Warning);
+            }
 
             EditorGUILayout.BeginHorizontal();
             if (GUILayout.Button("Copy Results"))
@@ -126,7 +189,8 @@ namespace UMA.Editors
             }
             if (GUILayout.Button("Log Results"))
             {
-                Debug.Log(lastReport.ToLogString(), selectedRace);
+                Object context = lastReport.Race;
+                Debug.Log(lastReport.ToLogString(), context);
             }
             EditorGUILayout.EndHorizontal();
 

@@ -28,7 +28,9 @@ using UnityEngine;
 using UnityEngine.Jobs;
 using Unity.Collections;
 using Unity.Jobs;
+#if UMA_BURSTCOMPILE
 using Unity.Burst;
+#endif
 using Unity.Mathematics;
 using System.Collections.Generic;
 
@@ -68,7 +70,9 @@ namespace UMA
             public int jointCount;
         }
 
+    #if UMA_BURSTCOMPILE
         [BurstCompile]
+    #endif
         private struct TwistJointData
         {
             public int characterIndex;
@@ -355,7 +359,9 @@ namespace UMA
             }
         }
 
+    #if UMA_BURSTCOMPILE
         [BurstCompile]
+    #endif
         private struct ReadDriverRotationsJob : IJobParallelForTransform
         {
             [ReadOnly] public NativeArray<TwistJointData> joints;
@@ -374,7 +380,9 @@ namespace UMA
             }
         }
 
+    #if UMA_BURSTCOMPILE
         [BurstCompile]
+    #endif
         private struct CalculateTwistJob : IJobParallelFor
         {
             [ReadOnly] public NativeArray<TwistJointData> joints;
@@ -473,7 +481,9 @@ namespace UMA
             }
         }
 
+    #if UMA_BURSTCOMPILE
         [BurstCompile]
+    #endif
         private struct ApplyTwistJob : IJobParallelForTransform
         {
             [ReadOnly] public NativeArray<TwistJointData> joints;

@@ -4,6 +4,8 @@ This guide is for artists and technical artists creating bodies, clothing, hair,
 
 The most important rule is simple: build and test against the exact race you intend to support. UMA can combine and reshape content at runtime, but it cannot repair an incompatible skeleton, missing weights, broken UVs, or a poor neutral fit.
 
+For Scene Mesh Slot Builder, Bone Builder, Prefab Maker, and generated-character prefab saving, see [Prefab and Scene-Building Tools](PrefabAndSceneBuildingTools.md). The broader editor-tool directory is [UMA Editor Utilities](UMAEditorUtilities.md).
+
 ## The UMA Content Model
 
 UMA assembles a character from a few reusable asset types:

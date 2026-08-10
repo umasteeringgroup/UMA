@@ -33,9 +33,13 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: 0
         maxMapping: 1
+        enabled: 1
         expanded: 0
+        selected: 0
+        showHelp: 0
         EffectName: HumanMaleDynamicDNA_ThinPose
-        bonePose: {fileID: 11400000, guid: 9cef2a4a284502a47a1f476fd12006be, type: 2}
+        bonePose: {fileID: 11400000, guid: f60105763b02f274aa0264a5e3132bac, type: 2}
+        isBasePose: 0
     - rid: 7828207344866296473
       type: {class: DNAEffect_BonePose, ns: UMA, asm: UMA_Core}
       data:
@@ -47,9 +51,13 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: 0
         maxMapping: 1
+        enabled: 1
         expanded: 0
+        selected: 0
+        showHelp: 0
         EffectName: HumanMaleDynamicDNAStartingPose
-        bonePose: {fileID: 11400000, guid: ef6e26a07163fe949a2543a5da963fe5, type: 2}
+        bonePose: {fileID: 11400000, guid: 8ed9a5b3d595dc044a74a678957a69fb, type: 2}
+        isBasePose: 0
     - rid: 7828207344866296474
       type: {class: DNAEffect_BonePose, ns: UMA, asm: UMA_Core}
       data:
@@ -61,6 +69,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: 0
         maxMapping: 1
+        enabled: 1
         expanded: 0
+        selected: 0
+        showHelp: 0
         EffectName: HumanMaleDynamicDNA_BulkyPose
-        bonePose: {fileID: 11400000, guid: a12733777f479d84486d6b40b98ea37f, type: 2}
+        bonePose: {fileID: 11400000, guid: e0f41c3c6fe76af4b809550963cc4bf9, type: 2}
+        isBasePose: 0

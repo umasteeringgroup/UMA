@@ -196,6 +196,12 @@ namespace UMA.TexturePaint
         public TexturePaintLayerMaskEffects effects = new TexturePaintLayerMaskEffects();
         public TexturePaintChannelSourceSettings sourceSettings = DefaultSourceSettings();
         public TexturePaintChannel sourceChannel = TexturePaintChannel.Albedo;
+        public string pluginId;
+        public string pluginVersion;
+        public string pluginParametersJson;
+        public TexturePaintPluginParameterSet pluginParameters = new TexturePaintPluginParameterSet();
+        public bool pluginStale = true;
+        public string pluginLastError;
 
         public static TexturePaintChannelSourceSettings DefaultSourceSettings()
         {
@@ -257,6 +263,9 @@ namespace UMA.TexturePaint
         public string pluginId;
         public string pluginVersion;
         public string pluginParametersJson;
+        public TexturePaintPluginParameterSet pluginParameters = new TexturePaintPluginParameterSet();
+        public bool pluginStale = true;
+        public string pluginLastError;
         public string proceduralGroupKey;
         public readonly Dictionary<TexturePaintChannel, EditableTextureTarget> channels = new Dictionary<TexturePaintChannel, EditableTextureTarget>();
         public readonly Dictionary<TexturePaintChannel, TexturePaintLayerChannelSettings> channelSettings =
@@ -272,6 +281,9 @@ namespace UMA.TexturePaint
         public void NormalizeKindPayload()
         {
             effects ??= new TexturePaintLayerEffects();
+            pluginParameters ??= !string.IsNullOrEmpty(pluginParametersJson)
+                ? JsonUtility.FromJson<TexturePaintPluginParameterSet>(pluginParametersJson)
+                : new TexturePaintPluginParameterSet();
             effects.Normalize();
             layerMask?.NormalizePaintSource();
             if (kind == TexturePaintLayerKind.Fill)
@@ -286,7 +298,7 @@ namespace UMA.TexturePaint
             }
             if (IsSplineLayer)
             {
-                spline ??= new TexturePaintSpline { name = name, worldSpace = false };
+                spline ??= new TexturePaintSpline { name = name, worldSpace = true };
                 splineSettings ??= new TexturePaintSplineSettings();
                 return;
             }
@@ -298,13 +310,21 @@ namespace UMA.TexturePaint
 
         public TexturePaintLayerChannelSettings GetChannelSettings(TexturePaintChannel channel, bool create = true)
         {
-            if (channelSettings.TryGetValue(channel, out TexturePaintLayerChannelSettings result)) return result;
+            if (channelSettings.TryGetValue(channel, out TexturePaintLayerChannelSettings result))
+            {
+                // Per-channel source state is part of the layer invariant. Older documents and
+                // channels created before source settings moved into each channel can legitimately
+                // deserialize this field as null, so repair it at the common access point.
+                result.sourceSettings ??= new TexturePaintChannelSourceSettings();
+                return result;
+            }
             if (!create) return null;
             result = new TexturePaintLayerChannelSettings
             {
                 channel = channel,
                 opacity = 1f,
-                blendMode = blendMode
+                blendMode = blendMode,
+                sourceSettings = new TexturePaintChannelSourceSettings()
             };
             channelSettings[channel] = result;
             return result;
@@ -456,6 +476,56 @@ namespace UMA.TexturePaint
         {
             channels.TryGetValue(channel, out TextureChannelTarget result);
             return result;
+        }
+
+        internal float NormalControlReferenceStrength => normalControlStrength > 0.00001f
+            ? normalControlStrength : 1f;
+
+        public float ResolveNormalControlStrength(TexturePaintLayerChannelSettings settings)
+        {
+            return Mathf.Clamp(settings?.hasNormalControlStrength == true
+                ? settings.normalControlStrength : normalControlStrength, 0f, 16f);
+        }
+
+        internal float ResolveNormalControlLayerScale(TexturePaintLayerChannelSettings settings)
+        {
+            return ResolveNormalControlStrength(settings) / NormalControlReferenceStrength;
+        }
+
+        internal bool HasEnabledNormalControlStrength()
+        {
+            for (int i = 0; i < layers.Count; i++)
+            {
+                TexturePaintLayer layer = layers[i];
+                if (layer == null || !layer.visible || layer.opacity <= 0f ||
+                    !layer.channels.ContainsKey(TexturePaintChannel.NormalControl) ||
+                    !IsVisibleThroughParentGroups(layer)) continue;
+                TexturePaintLayerChannelSettings settings = layer.GetChannelSettings(
+                    TexturePaintChannel.NormalControl, false);
+                if (settings != null && (!settings.enabled || settings.opacity <= 0f)) continue;
+                if (ResolveNormalControlStrength(settings) > 0.00001f) return true;
+            }
+            return false;
+        }
+
+        private bool IsVisibleThroughParentGroups(TexturePaintLayer layer)
+        {
+            string parentId = layer?.parentId;
+            int guard = 0;
+            while (!string.IsNullOrEmpty(parentId) && guard++ < layers.Count)
+            {
+                TexturePaintLayer parent = null;
+                for (int i = 0; i < layers.Count; i++)
+                    if (string.Equals(layers[i]?.id, parentId, StringComparison.Ordinal))
+                    {
+                        parent = layers[i];
+                        break;
+                    }
+                if (parent == null || parent.kind != TexturePaintLayerKind.Group ||
+                    !parent.visible || parent.opacity <= 0f) return false;
+                parentId = parent.parentId;
+            }
+            return string.IsNullOrEmpty(parentId);
         }
 
         public EditableTextureTarget GetPaintTarget(TexturePaintChannel channel, TexturePaintSourceMode mode)
@@ -777,11 +847,21 @@ namespace UMA.TexturePaint
             return group;
         }
 
+        public TexturePaintLayer AddPluginLayer(string layerName = null)
+        {
+            TexturePaintLayer layer = AddLayer(string.IsNullOrWhiteSpace(layerName)
+                ? $"Plugin Layer {layers.Count + 1}" : layerName);
+            layer.kind = TexturePaintLayerKind.Plugin;
+            layer.pluginStale = true;
+            layer.pluginParameters = new TexturePaintPluginParameterSet();
+            return layer;
+        }
+
         public TexturePaintLayer AddSplineLayer(string layerName = null)
         {
             TexturePaintLayer layer = AddLayer(string.IsNullOrWhiteSpace(layerName) ? $"Spline Layer {layers.Count + 1}" : layerName);
             layer.kind = TexturePaintLayerKind.Spline;
-            layer.spline = new TexturePaintSpline { name = layer.name, worldSpace = false };
+            layer.spline = new TexturePaintSpline { name = layer.name, worldSpace = true };
             layer.splineSettings = new TexturePaintSplineSettings();
             return layer;
         }
@@ -1011,10 +1091,18 @@ namespace UMA.TexturePaint
                 pluginId = source.pluginId,
                 pluginVersion = source.pluginVersion,
                 pluginParametersJson = source.pluginParametersJson,
+                pluginParameters = source.pluginParameters?.Clone() ?? new TexturePaintPluginParameterSet(),
+                pluginStale = source.pluginStale,
+                pluginLastError = source.pluginLastError,
                 // A duplicate is independent. Sharing the procedural ownership key lets deleting
                 // either copy delete the other copy's generated peers.
                 proceduralGroupKey = preserveIdentity ? source.proceduralGroupKey : null
             };
+            if (!preserveIdentity && copy.kind == TexturePaintLayerKind.Plugin)
+            {
+                copy.pluginStale = true;
+                copy.pluginLastError = null;
+            }
             copy.NormalizeKindPayload();
             foreach (KeyValuePair<TexturePaintChannel, EditableTextureTarget> pair in source.channels)
             {
@@ -1034,6 +1122,13 @@ namespace UMA.TexturePaint
                     sourceSettings = source.layerMask.sourceSettings?.Clone() ??
                         TexturePaintLayerMask.DefaultSourceSettings(),
                     sourceChannel = source.layerMask.sourceChannel,
+                    pluginId = source.layerMask.pluginId,
+                    pluginVersion = source.layerMask.pluginVersion,
+                    pluginParametersJson = source.layerMask.pluginParametersJson,
+                    pluginParameters = source.layerMask.pluginParameters?.Clone() ??
+                        new TexturePaintPluginParameterSet(),
+                    pluginStale = source.layerMask.pluginStale,
+                    pluginLastError = source.layerMask.pluginLastError,
                     target = new EditableTextureTarget(copy.name + " Layer Mask",
                         source.layerMask.target.Width, source.layerMask.target.Height,
                         RenderTextureFormat.ARGB32, source.layerMask.target.Front,
@@ -1125,6 +1220,8 @@ namespace UMA.TexturePaint
             TexturePaintLayer lower = layers[upperLayerIndex - 1];
             if (upper?.kind == TexturePaintLayerKind.Group || lower?.kind == TexturePaintLayerKind.Group)
             { reason = "Groups cannot be merged down."; return false; }
+            if (upper?.kind == TexturePaintLayerKind.Plugin || lower?.kind == TexturePaintLayerKind.Plugin)
+            { reason = "Plugin layers must be duplicated or converted explicitly before flattening."; return false; }
             if (!string.Equals(upper?.parentId, lower?.parentId, StringComparison.Ordinal))
             { reason = "Layers must be siblings in the same group to merge."; return false; }
             if (!UsesOnlyNormalBlend(upper) || !UsesOnlyNormalBlend(lower))
@@ -1313,7 +1410,8 @@ namespace UMA.TexturePaint
                 effectiveNormalRevision = -1;
                 return dirtyRect;
             }
-            bool settingsChanged = !Mathf.Approximately(effectiveNormalStrength, normalControlStrength) ||
+            float referenceStrength = NormalControlReferenceStrength;
+            bool settingsChanged = !Mathf.Approximately(effectiveNormalStrength, referenceStrength) ||
                 effectiveNormalRadius != normalControlRadius || effectiveNormalInvert != normalControlInvert;
             if (effectiveNormal != null && effectiveNormalRevision == normalInputRevision &&
                 !settingsChanged) return dirtyRect;
@@ -1332,7 +1430,7 @@ namespace UMA.TexturePaint
                     false, dirtyRect))
                 Graphics.Blit(normal.PreviewTexture, effectiveNormal);
             effectiveNormalRevision = normalInputRevision;
-            effectiveNormalStrength = normalControlStrength;
+            effectiveNormalStrength = referenceStrength;
             effectiveNormalRadius = normalControlRadius;
             effectiveNormalInvert = normalControlInvert;
             return dirtyRect.width > 0 && dirtyRect.height > 0
@@ -1356,7 +1454,7 @@ namespace UMA.TexturePaint
             channelPackShader.SetInts("_TextureSize", destination.width, destination.height);
             channelPackShader.SetInts("_TileOffset", rect.x, rect.y);
             channelPackShader.SetInts("_DispatchSize", rect.width, rect.height);
-            channelPackShader.SetFloat("_NormalControlStrength", Mathf.Clamp(normalControlStrength, 0f, 16f));
+            channelPackShader.SetFloat("_NormalControlStrength", NormalControlReferenceStrength);
             channelPackShader.SetInt("_NormalControlRadius", halo);
             channelPackShader.SetInt("_NormalControlInvert", normalControlInvert ? 1 : 0);
             channelPackShader.SetInt("_NormalControlAuthoredOnly", authoredOnly ? 1 : 0);
@@ -1455,6 +1553,37 @@ namespace UMA.TexturePaint
             compositor?.Compose(this, channel, rect);
             if (channel == TexturePaintChannel.Normal || channel == TexturePaintChannel.NormalControl)
                 normalInputRevision++;
+        }
+
+        internal bool CompositeBelowLayer(TexturePaintChannel channel, TexturePaintLayer boundaryLayer,
+            RenderTexture destination)
+        {
+            if (compositor?.ComposeBelowLayer(this, channel, boundaryLayer, destination) != true)
+                return false;
+            if (channel != TexturePaintChannel.Normal ||
+                GetChannel(TexturePaintChannel.NormalControl)?.Texture == null) return true;
+
+            RenderTexture control = null;
+            RenderTexture effective = null;
+            try
+            {
+                RenderTextureDescriptor descriptor = destination.descriptor;
+                descriptor.depthBufferBits = 0;
+                descriptor.msaaSamples = 1;
+                descriptor.enableRandomWrite = true;
+                control = RenderTexture.GetTemporary(descriptor);
+                effective = RenderTexture.GetTemporary(descriptor);
+                if (compositor.ComposeBelowLayer(this, TexturePaintChannel.NormalControl,
+                        boundaryLayer, control) &&
+                    ApplyNormalControl(destination, control, effective, false))
+                    Graphics.Blit(effective, destination);
+                return true;
+            }
+            finally
+            {
+                if (control != null) RenderTexture.ReleaseTemporary(control);
+                if (effective != null) RenderTexture.ReleaseTemporary(effective);
+            }
         }
 
         public void RecomposeAll()
@@ -1797,6 +1926,9 @@ namespace UMA.TexturePaint
                 case TexturePaintLayerKind.Spline:
                     layer = set.AddSplineLayer(template.name);
                     break;
+                case TexturePaintLayerKind.Plugin:
+                    layer = set.AddPluginLayer(template.name);
+                    break;
                 default:
                     layer = set.AddLayer(template.name);
                     break;
@@ -1821,6 +1953,9 @@ namespace UMA.TexturePaint
             layer.pluginId = template.pluginId;
             layer.pluginVersion = template.pluginVersion;
             layer.pluginParametersJson = template.pluginParametersJson;
+            layer.pluginParameters = template.pluginParameters?.Clone() ?? new TexturePaintPluginParameterSet();
+            layer.pluginStale = template.pluginStale;
+            layer.pluginLastError = template.pluginLastError;
             layer.proceduralGroupKey = template.proceduralGroupKey;
             layer.NormalizeKindPayload();
             layer.parentId = ResolvePhysicalParentId(templateSet, set, template.parentId);
@@ -1842,6 +1977,13 @@ namespace UMA.TexturePaint
                     mask.sourceSettings = template.layerMask.sourceSettings?.Clone() ??
                         TexturePaintLayerMask.DefaultSourceSettings();
                     mask.sourceChannel = template.layerMask.sourceChannel;
+                    mask.pluginId = template.layerMask.pluginId;
+                    mask.pluginVersion = template.layerMask.pluginVersion;
+                    mask.pluginParametersJson = template.layerMask.pluginParametersJson;
+                    mask.pluginParameters = template.layerMask.pluginParameters?.Clone() ??
+                        new TexturePaintPluginParameterSet();
+                    mask.pluginStale = template.layerMask.pluginStale;
+                    mask.pluginLastError = template.layerMask.pluginLastError;
                     mask.NormalizePaintSource();
                     mask.target.Reset(template.layerMask.target.Front,
                         TextureSet.MaskColor(template.layerMask.baseValue));
@@ -2374,7 +2516,12 @@ namespace UMA.TexturePaint
 
         private static void BuildSourceBindings(TextureSet set, UMAData.GeneratedMaterial generated, ReconstructedSurface surface)
         {
-            TextureSourceBinding reconstructedBinding = new TextureSourceBinding { name = "Reconstructed Overlay Stack" };
+            TextureSourceBinding reconstructedBinding = new TextureSourceBinding
+            {
+                name = surface?.usesReadOnlyMaterialSources == true
+                    ? "UMAMaterial Source Textures (Read Only)"
+                    : "Reconstructed Overlay Stack"
+            };
             foreach (var pair in set.channels)
             {
                 Texture source = ResolveBoundChannelSource(pair.Value);

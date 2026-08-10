@@ -322,7 +322,7 @@ namespace UMA
         [NonSerialized]
         public UMAGenerator generator;
         [NonSerialized]
-        private int consolidatedGeneratorInstanceId;
+        private EntityId consolidatedGeneratorEntityId;
 
         public UMAGenerator Generator
         {
@@ -375,17 +375,17 @@ namespace UMA
         {
             if (!IsUsableSceneGenerator(generator))
             {
-                consolidatedGeneratorInstanceId = 0;
+                consolidatedGeneratorEntityId = EntityId.None;
                 return;
             }
 
-            int instanceId = generator.GetInstanceID();
-            if (consolidatedGeneratorInstanceId == instanceId)
+            EntityId entityId = generator.GetEntityId();
+            if (consolidatedGeneratorEntityId == entityId)
             {
                 return;
             }
 
-            consolidatedGeneratorInstanceId = instanceId;
+            consolidatedGeneratorEntityId = entityId;
             UMAGenerator[] candidates = Resources.FindObjectsOfTypeAll<UMAGenerator>();
             for (int i = 0; i < candidates.Length; i++)
             {

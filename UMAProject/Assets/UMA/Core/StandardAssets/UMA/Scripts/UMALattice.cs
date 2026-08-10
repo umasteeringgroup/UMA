@@ -1151,7 +1151,7 @@ namespace UMA
 
         private void OnEnable()
         {
-           // Debug.Log($"[UMALattice] OnEnable on '{name}' (instance {GetInstanceID()})");
+           // Debug.Log($"[UMALattice] OnEnable on '{name}' (entity {GetEntityId()})");
             EnsureInitialized();
             RefreshEffectorsFromChildren();
             DeferDeformUntilReady();
@@ -1159,7 +1159,7 @@ namespace UMA
 
         private void OnDisable()
         {
-            //Debug.Log($"[UMALattice] OnDisable on '{name}' (instance {GetInstanceID()})");
+            //Debug.Log($"[UMALattice] OnDisable on '{name}' (entity {GetEntityId()})");
             UnsubscribeFromUMA();
             RestoreTarget();
         }

@@ -4,6 +4,8 @@ An `OverlayDataAsset` describes an image layer that UMA can place on a slot. Ski
 
 The asset does not contain a second mesh. It identifies textures, material behavior, placement, blend settings, and optional occlusion data used while UMA builds the character's final materials.
 
+For batch completeness checks, dependency-folder validation, material assignment, texture relinking, and controlled folder synchronization, see [Examine Overlays](ExamineOverlays.md).
+
 ## Where Overlays Fit
 
 UMA assembles surface content in this order:

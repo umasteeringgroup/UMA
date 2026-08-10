@@ -347,7 +347,7 @@ namespace UMA.Controls
 
 					// Create a persisted clone so we don't mutate the in-memory instance in-place
 					var clone = UnityEngine.Object.Instantiate(slot);
-					clone.name = Path.GetFileNameWithoutExtension(targetPath);
+					clone.PrepareForAssetPath(targetPath, slot.slotName);
 					Undo.RegisterCreatedObjectUndo(clone, "Save baked slot");
 					AssetDatabase.CreateAsset(clone, targetPath);
 					EditorUtility.SetDirty(clone);
@@ -3917,17 +3917,18 @@ namespace UMA.Controls
                 return;
             }
 
-            // Preserve original slotName & asset name before copy
+            // Preserve the logical slot identity before copying the backup payload.
             string originalSlotName = slot.slotName;
-            string originalAssetName = slot.name; // Unity asset name (may differ)
 
             try
             {
                 // Use provided Assign() API to copy all relevant data
                 slot.Assign(backup);
 
-                // Restore identifying names to keep this asset as the active (non-backup) slot
-                slot.name = originalAssetName;
+                // Restore both Unity's file-facing object name and UMA's logical identifier.
+                // Assign copies the backup's names, which must not leak into the persistent target.
+                string originalPath = AssetDatabase.GetAssetPath(slot);
+                slot.PrepareForAssetPath(originalPath, originalSlotName);
 
                 // If legacy status should be restored to true (backup is legacy)
                 slot.isLegacySlot = backup.isLegacySlot;

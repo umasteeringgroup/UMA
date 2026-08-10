@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+#if UMA_BURSTCOMPILE
 using Unity.Burst;
+#endif
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
@@ -249,7 +251,9 @@ namespace UMA
         }
     }
 
+#if UMA_BURSTCOMPILE
     [BurstCompile]
+#endif
     internal struct BoneBakingSkinningJob : IJobParallelFor
     {
         public NativeArray<Vector3> Vertices;

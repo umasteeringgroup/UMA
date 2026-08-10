@@ -2792,7 +2792,7 @@ namespace UMA
                 for (int i = 0; i < slotDataList.Length; i++)
 				{
                     SlotData slotData = slotDataList[i];
-                    if (slotData != null && slotData.asset.slotDNA != null)
+                    if (slotData != null && slotData.asset != null && slotData.asset.slotDNA != null)
 					{
 						var dnaTypeHash = slotData.asset.slotDNA.DNATypeHash;
 						//'old' dna converters return a typehash based on the type name. 
@@ -3618,7 +3618,7 @@ namespace UMA
             for (int i = 0; i < umaRecipe.slotDataList.Length; i++)
 			{
                 SlotData slotData = umaRecipe.slotDataList[i];
-                if (slotData != null && slotData.asset.CharacterBegun != null)
+                if (slotData != null && slotData.asset != null && slotData.asset.CharacterBegun != null)
 				{
                     slotData.asset.Begin(this);
 					slotData.asset.CharacterBegun.Invoke(this);
@@ -3645,7 +3645,7 @@ namespace UMA
             for (int i = 0; i < umaRecipe.slotDataList.Length; i++)
 			{
                 SlotData slotData = umaRecipe.slotDataList[i];
-                if (slotData != null && slotData.asset.DNAApplied != null)
+                if (slotData != null && slotData.asset != null && slotData.asset.DNAApplied != null)
 				{
 					slotData.asset.DNAApplied.Invoke(this);
                     if (slotData.asset.SlotProcessed != null)
@@ -3668,7 +3668,7 @@ namespace UMA
             for (int i = 0; i < umaRecipe.slotDataList.Length; i++)
 			{
                 SlotData slotData = umaRecipe.slotDataList[i];
-                if (slotData != null && slotData.asset.CharacterCompleted != null)
+                if (slotData != null && slotData.asset != null && slotData.asset.CharacterCompleted != null)
 				{
 					slotData.asset.Completed(this);
 					if (fireEvents)

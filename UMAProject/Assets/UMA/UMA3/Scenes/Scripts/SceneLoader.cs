@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+namespace UMA
+{
 public class SceneLoader : MonoBehaviour
 {
     [System.Serializable]
@@ -29,4 +31,5 @@ public class SceneLoader : MonoBehaviour
         GUILayout.EndArea();
     }
 
+}
 }
