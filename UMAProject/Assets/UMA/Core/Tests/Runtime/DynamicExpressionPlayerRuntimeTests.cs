@@ -190,6 +190,34 @@ namespace UMA.Tests
                 player.AnimatorLookAtPosition);
         }
 
+        [Test]
+        [Category("UMA")]
+        [Category("DynamicExpression")]
+        public void SidedHorizontalGazeTurnsBothEyesTogether()
+        {
+            UMAExpressionDefinition left =
+                Definition("left_eye_in_out", NewDNA("left_eye", 0.5f));
+            left.roles = ExpressionRole.EyeHorizontalLeft;
+            UMAExpressionDefinition right =
+                Definition("right_eye_in_out", NewDNA("right_eye", 0.5f));
+            right.roles = ExpressionRole.EyeHorizontalRight;
+            GameObject avatar = Track(new GameObject("SaccadeAvatar"));
+            DynamicExpressionPlayer player =
+                avatar.AddComponent<DynamicExpressionPlayer>();
+            player.expressionGroupOverride = NewGroup(left, right);
+            ConfigurePlayer(player);
+            player.Rebind();
+
+            player.SetProceduralGazeDirection(Vector2.right);
+
+            Assert.IsTrue(player.TryGetExpression(left.id,
+                out float leftValue));
+            Assert.IsTrue(player.TryGetExpression(right.id,
+                out float rightValue));
+            Assert.AreEqual(1f, leftValue, 0.0001f);
+            Assert.AreEqual(0f, rightValue, 0.0001f);
+        }
+
         [UnityTest]
         [Category("UMA")]
         [Category("DynamicExpression")]

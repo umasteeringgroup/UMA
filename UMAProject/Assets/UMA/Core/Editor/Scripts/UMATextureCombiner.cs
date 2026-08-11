@@ -17,7 +17,7 @@ namespace UMA
         static void Open()
         {
             // Get the compute shader
-            textureComputeShader = Resources.Load<ComputeShader>("Shader/Combiner");
+            textureComputeShader = LoadCombinerShader();
             if (textureComputeShader == null)
             {
                 EditorUtility.DisplayDialog("Error!","Compute shader 'Combiner' not found","OK");
@@ -68,7 +68,7 @@ namespace UMA
         {
             if (textureComputeShader == null)
             {
-                textureComputeShader = Resources.Load<ComputeShader>("Shader/Combiner");
+                textureComputeShader = LoadCombinerShader();
                 kernel = textureComputeShader.FindKernel("Combiner");
             }
             if (textureR == null)
@@ -92,6 +92,16 @@ namespace UMA
             }
 
             UpdateRenderTextures(false);
+        }
+
+        private static ComputeShader LoadCombinerShader()
+        {
+            ComputeShader shader =
+                UMAPathUtility.LoadInstallAsset<ComputeShader>(
+                    "InternalDataStore/InGame/Resources/Shader/Combiner.compute");
+            return shader != null
+                ? shader
+                : Resources.Load<ComputeShader>("Shader/Combiner");
         }
 
         void DrawBox(Rect r)

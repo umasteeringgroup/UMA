@@ -17,6 +17,17 @@ namespace UMA
     {
         public const string DefaultIgnoreTag = "UMAIgnore";
 
+#if UNITY_EDITOR
+        private const string DefaultSettingsRelativePath =
+            "InternalDataStore/InGame/Resources/UMASettings.asset";
+        private const string DefaultGeneratorRelativePath =
+            "Core/Defaults/UMA_GLIB.prefab";
+        private const string DefaultCharacterRelativePath =
+            "Core/Defaults/UMADynamicCharacterAvatar.prefab";
+        private const string DefaultTextureMergeRelativePath =
+            "Core/StandardAssets/UMA/Atlas/TextureMerge.asset";
+#endif
+
         [SerializeField]
         [Tooltip("UMA ignores objects with this tag when rebuilding the skeleton.")]
         public string IgnoreTag = DefaultIgnoreTag;
@@ -149,8 +160,81 @@ namespace UMA
         private static UMASettings LoadPreferredSettings()
         {
             UMASettings settings = Resources.Load<UMASettings>("UMAProjectSettings");
-            return settings != null ? settings : Resources.Load<UMASettings>("UMASettings");
+            if (settings != null) return settings;
+#if UNITY_EDITOR
+            settings = LoadInstallDefaultSettings();
+            if (settings != null) return settings;
+#endif
+            return Resources.Load<UMASettings>("UMASettings");
         }
+
+#if UNITY_EDITOR
+        private static UMASettings LoadInstallDefaultSettings()
+        {
+            return AssetDatabase.LoadAssetAtPath<UMASettings>(
+                UMAPathUtility.ResolveInstallAssetPath(
+                    DefaultSettingsRelativePath));
+        }
+
+        private static T LoadInstallDefaultAsset<T>(string relativePath)
+            where T : UnityEngine.Object
+        {
+            return UMAPathUtility.LoadInstallAsset<T>(relativePath);
+        }
+
+        private static bool RestoreMissingDefaultReferences(
+            UMASettings settings,
+            UMASettings installDefault)
+        {
+            if (settings == null) return false;
+            bool changed = false;
+
+            if (settings.generatorPrefab == null)
+            {
+                settings.generatorPrefab = installDefault != null
+                    ? installDefault.generatorPrefab : null;
+                if (settings.generatorPrefab == null)
+                    settings.generatorPrefab =
+                        LoadInstallDefaultAsset<GameObject>(
+                            DefaultGeneratorRelativePath);
+                changed |= settings.generatorPrefab != null;
+            }
+            if (settings.characterPrefab == null)
+            {
+                settings.characterPrefab = installDefault != null
+                    ? installDefault.characterPrefab : null;
+                if (settings.characterPrefab == null)
+                    settings.characterPrefab =
+                        LoadInstallDefaultAsset<GameObject>(
+                            DefaultCharacterRelativePath);
+                changed |= settings.characterPrefab != null;
+            }
+            if (settings.textureMerge == null)
+            {
+                settings.textureMerge = installDefault != null
+                    ? installDefault.textureMerge : null;
+                if (settings.textureMerge == null)
+                    settings.textureMerge =
+                        LoadInstallDefaultAsset<TextureMerge>(
+                            DefaultTextureMergeRelativePath);
+                changed |= settings.textureMerge != null;
+            }
+            if (settings.Overlays == null && installDefault != null &&
+                installDefault.Overlays != null)
+            {
+                settings.Overlays = installDefault.Overlays;
+                changed = true;
+            }
+            if (settings.Slots == null && installDefault != null &&
+                installDefault.Slots != null)
+            {
+                settings.Slots = installDefault.Slots;
+                changed = true;
+            }
+
+            return changed;
+        }
+#endif
 
         /// <summary>
         /// Returns the configured ignore tag, falling back to UMA's default when the
@@ -222,12 +306,74 @@ namespace UMA
 
         public static UMASettings GetOrCreateSettings()
         {
+#if UNITY_EDITOR
+            UMASettings settings = AssetDatabase.LoadAssetAtPath<UMASettings>(
+                UMAPathUtility.ProjectSettingsPath);
+            UMASettings installDefault = LoadInstallDefaultSettings();
+            if (settings == null && !UMAPathUtility.IsPackageInstallation)
+                settings = installDefault;
+            if (settings == null)
+            {
+                settings = installDefault != null
+                    ? Instantiate(installDefault)
+                    : ScriptableObject.CreateInstance<UMASettings>();
+                settings.name = "UMAProjectSettings";
+                settings.UMAFolder = UMAPathUtility.InstallAssetRoot;
+                settings.texturePaintRecoveryFolder =
+                    UMAPathUtility.OverlayPainterRecoveryRoot;
+                settings.useMeshAPICombiner = false;
+                UpdateAlwaysOverrides(settings); //VES added
+                UMAPathUtility.EnsureAssetFolder(
+                    UMAPathUtility.ProjectResourcesRoot);
+                AssetDatabase.CreateAsset(settings,
+                    UMAPathUtility.ProjectSettingsPath);
+                AssetDatabase.SaveAssets();
+            }
+
+            bool changed = RestoreMissingDefaultReferences(
+                settings, installDefault);
+            if (UMAPathUtility.IsPackageInstallation)
+            {
+                if (!string.Equals(settings.UMAFolder,
+                    UMAPathUtility.InstallAssetRoot,
+                    StringComparison.OrdinalIgnoreCase))
+                {
+                    settings.UMAFolder = UMAPathUtility.InstallAssetRoot;
+                    changed = true;
+                }
+                if (string.IsNullOrWhiteSpace(
+                        settings.texturePaintRecoveryFolder) ||
+                    settings.texturePaintRecoveryFolder.StartsWith(
+                        UMAPathUtility.LegacyInstallRoot + "/",
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    settings.texturePaintRecoveryFolder =
+                        UMAPathUtility.OverlayPainterRecoveryRoot;
+                    changed = true;
+                }
+                if (!string.IsNullOrEmpty(settings.ShaderFolder) &&
+                    settings.ShaderFolder.StartsWith(
+                        UMAPathUtility.LegacyInstallRoot + "/",
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    settings.ShaderFolder = settings.ShaderFolder.Substring(
+                        UMAPathUtility.LegacyInstallRoot.Length + 1);
+                    changed = true;
+                }
+            }
+            if (changed)
+            {
+                EditorUtility.SetDirty(settings);
+                AssetDatabase.SaveAssetIfDirty(settings);
+            }
+            UpdateAlwaysOverrides(settings); //VES added
+            instance = settings;
+            return settings;
+#else
             if (instance != null)
             {
                 return instance;
             }
-
-#if !UNITY_EDITOR
             UMASettings resourceSettings = LoadPreferredSettings();
             if (resourceSettings != null)
             {
@@ -235,60 +381,6 @@ namespace UMA
                 instance = resourceSettings;
                 return resourceSettings;
             }
-#endif
-#if UNITY_EDITOR
-            UMASettings settings = AssetDatabase.LoadAssetAtPath<UMASettings>(UMAPathUtility.ProjectSettingsPath);
-            UMASettings packagedDefault = Resources.Load<UMASettings>("UMASettings");
-            if (settings == null && !UMAPathUtility.IsPackageInstallation)
-                settings = packagedDefault;
-            if (settings == null)
-            {
-                settings = packagedDefault != null
-                    ? Instantiate(packagedDefault)
-                    : ScriptableObject.CreateInstance<UMASettings>();
-                settings.name = "UMAProjectSettings";
-                settings.UMAFolder = UMAPathUtility.InstallAssetRoot;
-                settings.texturePaintRecoveryFolder = UMAPathUtility.OverlayPainterRecoveryRoot;
-                settings.useMeshAPICombiner = false;
-                UpdateAlwaysOverrides(settings); //VES added
-                UMAPathUtility.EnsureAssetFolder(UMAPathUtility.ProjectResourcesRoot);
-                AssetDatabase.CreateAsset(settings, UMAPathUtility.ProjectSettingsPath);
-                AssetDatabase.SaveAssets();
-            }
-            if (UMAPathUtility.IsPackageInstallation)
-            {
-                bool changed = false;
-                if (!string.Equals(settings.UMAFolder, UMAPathUtility.InstallAssetRoot,
-                    StringComparison.OrdinalIgnoreCase))
-                {
-                    settings.UMAFolder = UMAPathUtility.InstallAssetRoot;
-                    changed = true;
-                }
-                if (string.IsNullOrWhiteSpace(settings.texturePaintRecoveryFolder) ||
-                    settings.texturePaintRecoveryFolder.StartsWith(UMAPathUtility.LegacyInstallRoot + "/",
-                        StringComparison.OrdinalIgnoreCase))
-                {
-                    settings.texturePaintRecoveryFolder = UMAPathUtility.OverlayPainterRecoveryRoot;
-                    changed = true;
-                }
-                if (!string.IsNullOrEmpty(settings.ShaderFolder) &&
-                    settings.ShaderFolder.StartsWith(UMAPathUtility.LegacyInstallRoot + "/",
-                        StringComparison.OrdinalIgnoreCase))
-                {
-                    settings.ShaderFolder = settings.ShaderFolder.Substring(
-                        UMAPathUtility.LegacyInstallRoot.Length + 1);
-                    changed = true;
-                }
-                if (changed)
-                {
-                    EditorUtility.SetDirty(settings);
-                    AssetDatabase.SaveAssetIfDirty(settings);
-                }
-            }
-            UpdateAlwaysOverrides(settings); //VES added
-            instance = settings;
-            return settings;
-#else
             var settings = ScriptableObject.CreateInstance<UMASettings>();
             // settings.cities = new List<string>();
             settings.useMeshAPICombiner = false;
@@ -301,7 +393,11 @@ namespace UMA
 
         public static UMASettings GetSettingsFromResources()
         {
+#if UNITY_EDITOR
+            UMASettings settings = GetOrCreateSettings();
+#else
             UMASettings settings = LoadPreferredSettings();
+#endif
             UpdateAlwaysOverrides(settings); //VES added
             return settings;
         }

@@ -20,7 +20,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: UMA_Mat_Diffuse
+  m_Name: UMA_Mat_Diffuse_ShaderGraph
   m_Shader: {fileID: -6465566751694194690, guid: aa1e9a9819aa50e419d23dd6d2c02679, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0

@@ -4,6 +4,7 @@ using System.IO;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.Compilation;
+using UnityEngine;
 
 namespace UMA.Editors.Tests
 {
@@ -40,6 +41,35 @@ namespace UMA.Editors.Tests
             Assert.That(AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(
                 UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/StrokeRasterize.compute")),
                 Is.Not.Null);
+            UMASettings settings =
+                AssetDatabase.LoadAssetAtPath<UMASettings>(
+                    UMAPathUtility.ResolveInstallAssetPath(
+                        "InternalDataStore/InGame/Resources/UMASettings.asset"));
+            GameObject generatorPrefab =
+                AssetDatabase.LoadAssetAtPath<GameObject>(
+                    UMAPathUtility.ResolveInstallAssetPath(
+                        "Core/Defaults/UMA_GLIB.prefab"));
+            Assert.That(settings, Is.Not.Null);
+            Assert.That(generatorPrefab, Is.Not.Null);
+            Assert.That(settings.generatorPrefab, Is.EqualTo(generatorPrefab));
+
+            string[] shippedResourcePaths =
+            {
+                "InternalDataStore/InGame/Resources/AssetIndexer.asset",
+                "InternalDataStore/InGame/Resources/UmaBanner.png",
+                "InternalDataStore/Editor/Resources/UMAWelcomeScenes.asset",
+                "InternalDataStore/InGame/Resources/Shader/Combiner.compute",
+                "InternalDataStore/InGame/Resources/Shader/NormalShader.compute",
+                "InternalDataStore/InGame/Resources/Shader/DQSkin.compute",
+                "InternalDataStore/InGame/Resources/PlaceholderAssets/bonemesh.fbx"
+            };
+            for (int i = 0; i < shippedResourcePaths.Length; i++)
+            {
+                string path = UMAPathUtility.ResolveInstallAssetPath(
+                    shippedResourcePaths[i]);
+                Assert.That(AssetDatabase.LoadMainAssetAtPath(path),
+                    Is.Not.Null, path);
+            }
         }
 
         [Test]

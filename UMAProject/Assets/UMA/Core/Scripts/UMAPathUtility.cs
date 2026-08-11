@@ -97,6 +97,17 @@ namespace UMA
             return Normalize(Path.GetFullPath(Path.Combine(projectRoot, normalized)));
         }
 
+        /// <summary>
+        /// Loads a shipped UMA asset from the active installation root. This works
+        /// for both an Assets/UMA checkout and a UPM package installation.
+        /// </summary>
+        public static T LoadInstallAsset<T>(string relativePath)
+            where T : UnityEngine.Object
+        {
+            return AssetDatabase.LoadAssetAtPath<T>(
+                ResolveInstallAssetPath(relativePath));
+        }
+
         public static bool IsWritableProjectAssetPath(string assetPath)
         {
             string normalized = Normalize(assetPath);

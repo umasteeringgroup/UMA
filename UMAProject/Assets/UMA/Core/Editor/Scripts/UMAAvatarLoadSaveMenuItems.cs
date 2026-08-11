@@ -3137,7 +3137,12 @@ namespace UMA.Editors
 		/// <returns></returns>
 		private static Texture2D SConvertNormalMap(Texture2D normalMap)
 		{
-			ComputeShader normalMapConverter = Resources.Load<ComputeShader>("Shader/NormalShader");
+			ComputeShader normalMapConverter =
+                UMAPathUtility.LoadInstallAsset<ComputeShader>(
+                    "InternalDataStore/InGame/Resources/Shader/NormalShader.compute");
+            if (normalMapConverter == null)
+                normalMapConverter =
+                    Resources.Load<ComputeShader>("Shader/NormalShader");
 			int kernel = normalMapConverter.FindKernel("NormalCvt");
 			// RenderTexture normalMapRenderTex = new RenderTexture(normalMap.width, normalMap.height, 24);
 			var normalMapRenderTex = RenderTexture.GetTemporary(normalMap.width, normalMap.height, 24);
@@ -3158,7 +3163,12 @@ namespace UMA.Editors
 
 		public static Texture2D SConvertNormalMap(RenderTexture normalMap)
 		{
-			ComputeShader normalMapConverter = Resources.Load<ComputeShader>("Shader/NormalShader");
+			ComputeShader normalMapConverter =
+                UMAPathUtility.LoadInstallAsset<ComputeShader>(
+                    "InternalDataStore/InGame/Resources/Shader/NormalShader.compute");
+            if (normalMapConverter == null)
+                normalMapConverter =
+                    Resources.Load<ComputeShader>("Shader/NormalShader");
 			int kernel = normalMapConverter.FindKernel("NormalCvt");
 			RenderTexture normalMapRenderTex = new RenderTexture(normalMap.width, normalMap.height, 24);
 			normalMapRenderTex.enableRandomWrite = true;

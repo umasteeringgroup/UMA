@@ -866,6 +866,17 @@ namespace UMA
 
         private static UMAAssetIndexer LoadPreferredIndexer()
         {
+#if UNITY_EDITOR
+            UMAAssetIndexer projectIndexer =
+                AssetDatabase.LoadAssetAtPath<UMAAssetIndexer>(
+                    UMAPathUtility.ProjectIndexerPath);
+            if (projectIndexer != null) return projectIndexer;
+
+            UMAAssetIndexer installDefault =
+                UMAPathUtility.LoadInstallAsset<UMAAssetIndexer>(
+                    "InternalDataStore/InGame/Resources/AssetIndexer.asset");
+            if (installDefault != null) return installDefault;
+#endif
             UMAAssetIndexer indexer = Resources.Load("AssetIndexerProject") as UMAAssetIndexer;
             return indexer != null ? indexer : Resources.Load("AssetIndexer") as UMAAssetIndexer;
         }

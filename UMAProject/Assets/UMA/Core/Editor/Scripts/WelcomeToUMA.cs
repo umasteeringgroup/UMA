@@ -59,7 +59,10 @@ namespace UMA
             Texture umaTex = null;
             try
             {
-                umaTex = Resources.Load("UMABanner") as Texture;
+                umaTex = UMAPathUtility.LoadInstallAsset<Texture>(
+                    "InternalDataStore/InGame/Resources/UmaBanner.png");
+                if (umaTex == null)
+                    umaTex = Resources.Load("UMABanner") as Texture;
             }
             catch { /* ignore */ }
 
@@ -2127,8 +2130,17 @@ namespace UMA
             UMAWelcomeScenes scenes = null;
             try
             {
-                scenes = (UMAWelcomeScenes)Resources.Load("UMAWelcomeScenesProject");
-                if (scenes == null) scenes = (UMAWelcomeScenes)Resources.Load("UMAWelcomeScenes");
+                scenes = AssetDatabase.LoadAssetAtPath<UMAWelcomeScenes>(
+                    UMAPathUtility.WelcomeScenesPath);
+                if (scenes == null)
+                    scenes = UMAPathUtility.LoadInstallAsset<UMAWelcomeScenes>(
+                        "InternalDataStore/Editor/Resources/UMAWelcomeScenes.asset");
+                if (scenes == null)
+                    scenes = Resources.Load<UMAWelcomeScenes>(
+                        "UMAWelcomeScenesProject");
+                if (scenes == null)
+                    scenes = Resources.Load<UMAWelcomeScenes>(
+                        "UMAWelcomeScenes");
             }
             catch { /* ignore */ }
 

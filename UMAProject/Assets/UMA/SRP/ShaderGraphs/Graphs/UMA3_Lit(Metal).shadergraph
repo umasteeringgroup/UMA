@@ -1464,7 +1464,7 @@
 }
 
 {
-    "m_SGVersion": 1,
+    "m_SGVersion": 2,
     "m_Type": "UnityEditor.ShaderGraph.ShaderKeyword",
     "m_ObjectId": "01ea1101a69e428789c4af94e2dc6567",
     "m_Guid": {
@@ -1488,7 +1488,8 @@
     "m_KeywordStages": 2,
     "m_Entries": [],
     "m_Value": 0,
-    "m_IsEditable": true
+    "m_IsEditable": true,
+    "m_IsShaderBuildSettingsCompatible": false
 }
 
 {
@@ -1788,7 +1789,7 @@
     "m_Title": "NormalMap",
     "m_Position": {
         "x": -955.3333740234375,
-        "y": 350.0
+        "y": 349.9998779296875
     }
 }
 
@@ -2442,7 +2443,7 @@
 }
 
 {
-    "m_SGVersion": 1,
+    "m_SGVersion": 2,
     "m_Type": "UnityEditor.ShaderGraph.ShaderKeyword",
     "m_ObjectId": "1b76428c117a4c45b8e70968dd0d7a70",
     "m_Guid": {
@@ -2466,7 +2467,8 @@
     "m_KeywordStages": 63,
     "m_Entries": [],
     "m_Value": 0,
-    "m_IsEditable": true
+    "m_IsEditable": true,
+    "m_IsShaderBuildSettingsCompatible": false
 }
 
 {
@@ -3468,8 +3470,8 @@
     "m_ObjectId": "30eb404d377b4ee995f488277ff0881a",
     "m_Title": "Emission",
     "m_Position": {
-        "x": -942.666748046875,
-        "y": 980.666748046875
+        "x": -942.6666870117188,
+        "y": 980.6665649414063
     }
 }
 
@@ -5220,8 +5222,8 @@
     "m_ObjectId": "7062b1d5057b4266b6f536a6c9279cea",
     "m_Title": "Smoothness",
     "m_Position": {
-        "x": 146.66668701171876,
-        "y": -171.3333740234375
+        "x": 146.66656494140626,
+        "y": -171.33343505859376
     }
 }
 
@@ -5590,7 +5592,7 @@
 }
 
 {
-    "m_SGVersion": 1,
+    "m_SGVersion": 2,
     "m_Type": "UnityEditor.ShaderGraph.ShaderKeyword",
     "m_ObjectId": "7bccf3c0f3004926b77c3ee7f7931437",
     "m_Guid": {
@@ -5614,7 +5616,8 @@
     "m_KeywordStages": 63,
     "m_Entries": [],
     "m_Value": 0,
-    "m_IsEditable": true
+    "m_IsEditable": true,
+    "m_IsShaderBuildSettingsCompatible": false
 }
 
 {
@@ -6026,7 +6029,7 @@
     "m_ObjectId": "840e4948a2894ca1bd6c9e7e0d9bf623",
     "m_Title": "Metallic",
     "m_Position": {
-        "x": -862.666748046875,
+        "x": -862.6666870117188,
         "y": -311.3333740234375
     }
 }
@@ -6877,7 +6880,7 @@
 }
 
 {
-    "m_SGVersion": 1,
+    "m_SGVersion": 2,
     "m_Type": "UnityEditor.ShaderGraph.ShaderKeyword",
     "m_ObjectId": "a597e0e556d64ee28fd0878bc14600fb",
     "m_Guid": {
@@ -6901,7 +6904,8 @@
     "m_KeywordStages": 63,
     "m_Entries": [],
     "m_Value": 0,
-    "m_IsEditable": true
+    "m_IsEditable": true,
+    "m_IsShaderBuildSettingsCompatible": false
 }
 
 {
@@ -6974,7 +6978,7 @@
     "m_Title": "BaseColor",
     "m_Position": {
         "x": -973.3333740234375,
-        "y": -668.0
+        "y": -668.0000610351563
     }
 }
 
@@ -7321,7 +7325,7 @@
     "m_ObjectId": "b2b9a4313d984ffc87575fd0102198b8",
     "m_Title": "Detail Maps",
     "m_Position": {
-        "x": -122.66667175292969,
+        "x": -122.66668701171875,
         "y": 388.6666259765625
     }
 }
@@ -7437,7 +7441,7 @@
     "m_Title": "Occlusion",
     "m_Position": {
         "x": -926.6666870117188,
-        "y": 662.0001831054688
+        "y": 661.9998779296875
     }
 }
 
@@ -7910,7 +7914,7 @@
 }
 
 {
-    "m_SGVersion": 1,
+    "m_SGVersion": 2,
     "m_Type": "UnityEditor.ShaderGraph.ShaderKeyword",
     "m_ObjectId": "c0f94f20476d4cd2a9006beb48b573f0",
     "m_Guid": {
@@ -7934,7 +7938,8 @@
     "m_KeywordStages": 63,
     "m_Entries": [],
     "m_Value": 0,
-    "m_IsEditable": true
+    "m_IsEditable": true,
+    "m_IsShaderBuildSettingsCompatible": false
 }
 
 {
@@ -8720,8 +8725,8 @@
     "m_ObjectId": "d4e1442d04854ba19c672a0dc0154e44",
     "m_Title": "Detail UVs",
     "m_Position": {
-        "x": -877.3334350585938,
-        "y": 1309.9998779296875
+        "x": -877.3333740234375,
+        "y": 1310.0
     }
 }
 
@@ -9077,7 +9082,7 @@
 }
 
 {
-    "m_SGVersion": 1,
+    "m_SGVersion": 2,
     "m_Type": "UnityEditor.ShaderGraph.ShaderKeyword",
     "m_ObjectId": "da36870823594ea691d7b828667706e6",
     "m_Guid": {
@@ -9101,7 +9106,8 @@
     "m_KeywordStages": 63,
     "m_Entries": [],
     "m_Value": 0,
-    "m_IsEditable": true
+    "m_IsEditable": true,
+    "m_IsShaderBuildSettingsCompatible": false
 }
 
 {
@@ -9157,7 +9163,7 @@
 }
 
 {
-    "m_SGVersion": 1,
+    "m_SGVersion": 2,
     "m_Type": "UnityEditor.ShaderGraph.ShaderKeyword",
     "m_ObjectId": "db8e937a2f18475a9d773b58a77ca7d9",
     "m_Guid": {
@@ -9181,7 +9187,8 @@
     "m_KeywordStages": 63,
     "m_Entries": [],
     "m_Value": 0,
-    "m_IsEditable": true
+    "m_IsEditable": true,
+    "m_IsShaderBuildSettingsCompatible": false
 }
 
 {

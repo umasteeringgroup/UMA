@@ -155,7 +155,15 @@ namespace UMA
         {
             if (SkinShader == null)
             {
-                SkinShader = Resources.Load<ComputeShader>("Shader/DQSkin");
+#if UNITY_EDITOR
+                SkinShader = UMAPathUtility.LoadInstallAsset<ComputeShader>(
+                    "InternalDataStore/InGame/Resources/Shader/DQSkin.compute");
+#endif
+                if (SkinShader == null)
+                {
+                    SkinShader =
+                        Resources.Load<ComputeShader>("Shader/DQSkin");
+                }
             }
         }
 
