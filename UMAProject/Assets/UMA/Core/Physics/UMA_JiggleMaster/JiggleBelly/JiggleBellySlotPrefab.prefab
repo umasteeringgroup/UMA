@@ -48,6 +48,11 @@ MonoBehaviour:
   _bellyMass: 0.9
   _bellyDamping: 0.15
   _bellyGravity: 0.75
+  _bellyInertia: 0.65
+  _bellyMaxJiggleDistance: 0.2
+  _bellyTargetDistance: 0.35
+  _bellyPositionWeight: 1
+  _bellyRotationWeight: 0.15
   _bellySquashAndStretch: 1
   _bellyFrontStretch: 0.2
   _bellySideStretch: 0.15

@@ -37,6 +37,7 @@ namespace UMA.Examples
 		private string _currentAvatar;
 
 		//make a list to store our bones and their custom data
+		[System.NonSerialized]
 		public List<JiggleElement> _jigglers = new List <JiggleElement>();
 		private JiggleElement _jiggler;
 
