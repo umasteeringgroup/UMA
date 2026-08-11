@@ -6,11 +6,7 @@ using System.Collections.Generic;
 using UMA.CharacterSystem;
 
 #if UMA_ADDRESSABLES
-using UnityEngine.AddressableAssets;
-using UnityEngine.ResourceManagement.AsyncOperations;
-using AsyncOp = UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<System.Collections.Generic.IList<UnityEngine.Object>>;
-using UnityEngine.ResourceManagement.ResourceLocations;
-
+using AsyncOp = UMA.UMAAddressableOperation;
 #endif
 using PackSlot = UMA.UMAPackedRecipeBase.PackedSlotDataV3;
 using SlotRecipes = System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<UMA.UMATextRecipe>>;
@@ -868,6 +864,35 @@ namespace UMA
         #region Static Fields
         static UMAAssetIndexer theIndexer = null;
 
+        private static UMAAssetIndexer LoadPreferredIndexer()
+        {
+            UMAAssetIndexer indexer = Resources.Load("AssetIndexerProject") as UMAAssetIndexer;
+            return indexer != null ? indexer : Resources.Load("AssetIndexer") as UMAAssetIndexer;
+        }
+
+#if UNITY_EDITOR
+        private static UMAAssetIndexer EnsureProjectOwnedIndexer(UMAAssetIndexer indexer)
+        {
+            if (indexer == null || !UMAPathUtility.IsPackageInstallation) return indexer;
+
+            UMAAssetIndexer projectIndexer = AssetDatabase.LoadAssetAtPath<UMAAssetIndexer>(
+                UMAPathUtility.ProjectIndexerPath);
+            if (projectIndexer != null) return projectIndexer;
+
+            string sourcePath = AssetDatabase.GetAssetPath(indexer);
+            if (!sourcePath.StartsWith("Packages/", StringComparison.OrdinalIgnoreCase)) return indexer;
+
+            projectIndexer = Instantiate(indexer);
+            projectIndexer.name = "AssetIndexerProject";
+            projectIndexer.generator = null;
+            UMAPathUtility.EnsureAssetFolder(UMAPathUtility.ProjectResourcesRoot);
+            AssetDatabase.CreateAsset(projectIndexer, UMAPathUtility.ProjectIndexerPath);
+            EditorUtility.SetDirty(projectIndexer);
+            AssetDatabase.SaveAssetIfDirty(projectIndexer);
+            return projectIndexer;
+        }
+#endif
+
         public static UMAAssetIndexer bareInstance
         {
             get { return theIndexer; }
@@ -1021,7 +1046,10 @@ namespace UMA
 #endif
 
                     //var st = StartTimer();
-                    theIndexer = Resources.Load("AssetIndexer") as UMAAssetIndexer;
+                    theIndexer = LoadPreferredIndexer();
+#if UNITY_EDITOR
+                    theIndexer = EnsureProjectOwnedIndexer(theIndexer);
+#endif
                     if (theIndexer == null)
                     {
 #if UNITY_EDITOR
@@ -1553,6 +1581,16 @@ namespace UMA
         public void ForceSave()
         {
             var st = StartTimer();
+#if UNITY_EDITOR
+            UMAAssetIndexer writableIndexer = EnsureProjectOwnedIndexer(this);
+            if (!ReferenceEquals(writableIndexer, this))
+            {
+                theIndexer = writableIndexer;
+                writableIndexer.ForceSave();
+                StopTimer(st, "ForceSave");
+                return;
+            }
+#endif
             EditorUtility.SetDirty(this);
             // Save all assets
             //AssetDatabase.SaveAssetIfDirty(this);
@@ -3182,7 +3220,7 @@ namespace UMA
             return recipe.AssignedLabel;
         }
 
-        public AsyncOperationHandle<IList<UnityEngine.Object>> PreloadWardrobe(DynamicCharacterAvatar avatar, bool keepLoaded = false)
+        public AsyncOp PreloadWardrobe(DynamicCharacterAvatar avatar, bool keepLoaded = false)
 		{
 			List<string> keys = new List<string>();
 			RaceData race = GetAsset<RaceData>(avatar.activeRace.name);
@@ -3225,7 +3263,7 @@ namespace UMA
 		}
 
 
-        public AsyncOperationHandle<IList<UnityEngine.Object>> Preload(DynamicCharacterAvatar avatar, bool keepLoaded = false)
+        public AsyncOp Preload(DynamicCharacterAvatar avatar, bool keepLoaded = false)
 		{
 			List<string> keys = new List<string>();
 			RaceData race = GetAsset<RaceData>(avatar.activeRace.name);
@@ -3277,7 +3315,7 @@ namespace UMA
 			return op;
 		}
 
-		public AsyncOperationHandle<IList<UnityEngine.Object>> Preload(RaceData theRace, bool keepLoaded = false)
+		public AsyncOp Preload(RaceData theRace, bool keepLoaded = false)
 		{
             if (theRace == null || theRace.baseRaceRecipe == null)
             {
@@ -3286,7 +3324,7 @@ namespace UMA
 			return LoadLabel(GetLabel(theRace.baseRaceRecipe), keepLoaded);
 		}
 
-		public AsyncOperationHandle<IList<UnityEngine.Object>> Preload(List<RaceData> theRaces, bool keepLoaded = false)
+		public AsyncOp Preload(List<RaceData> theRaces, bool keepLoaded = false)
 		{
 			List<string> keys = new List<string>();
 			foreach(RaceData rc in theRaces)
@@ -3307,7 +3345,7 @@ namespace UMA
 			return LoadLabelList(keys, keepLoaded);
 		}
 
-		public AsyncOperationHandle<IList<UnityEngine.Object>> LoadLabel(string label, bool keepLoaded = false)
+		public AsyncOp LoadLabel(string label, bool keepLoaded = false)
 		{
 			List<string> keys = new List<string>();
 			keys.Add(label);
@@ -3322,7 +3360,7 @@ namespace UMA
             return sb.ToString();
         }
 
-		public AsyncOperationHandle<IList<UnityEngine.Object>> Preload(UMATextRecipe theRecipe, bool keepLoaded = false)
+		public AsyncOp Preload(UMATextRecipe theRecipe, bool keepLoaded = false)
 		{
 #if SUPER_LOGGING
 			Debug.Log("Preloading: " + theRecipe.name);
@@ -3332,7 +3370,7 @@ namespace UMA
 			return LoadLabelList(keys, keepLoaded);
 		}
 
-		public AsyncOperationHandle<IList<UnityEngine.Object>> Preload(List<UMATextRecipe> theRecipes, bool keepLoaded = false)
+		public AsyncOp Preload(List<UMATextRecipe> theRecipes, bool keepLoaded = false)
 		{
 			List<string> Keys = new List<string>();
 
@@ -3343,14 +3381,7 @@ namespace UMA
 
 			return LoadLabelList(Keys,keepLoaded);
 		}
-#if UNITY_EDITOR
-        async void ValidateSingleKey(string s)
-        {
-            var result = await Addressables.LoadResourceLocationsAsync(s).Task;
-        }
-#endif
-
-        public AsyncOperationHandle<IList<UnityEngine.Object>> LoadLabelList(List<string> Keys, bool keepLoaded)
+        public AsyncOp LoadLabelList(List<string> Keys, bool keepLoaded)
         {
             if (Keys == null)
             {
@@ -3365,7 +3396,7 @@ namespace UMA
             if (Keys.Count == 0)
             {
                 IList<UnityEngine.Object> emptyResult = new List<UnityEngine.Object>();
-                return Addressables.ResourceManager.CreateCompletedOperation(emptyResult, null);
+                return UMAAddressablesRuntimeBridge.CreateCompleted(emptyResult);
             }
 
             foreach (string label in Keys)
@@ -3383,38 +3414,16 @@ namespace UMA
             }
             }
 
-            var op = Addressables.LoadAssetsAsync<UnityEngine.Object>(Keys, result =>
+            AsyncOp op = UMAAddressablesRuntimeBridge.LoadAssets(Keys);
+            if (op.Status == UMAAddressableOperationStatus.Failed)
             {
-                    // The last items is now passed here AFTER the completed event, breaking everything.
-                    // change to event model here.
-            }, Addressables.MergeMode.Union, true);
-            if (op.Status == AsyncOperationStatus.Failed)
-            {
-                if (op.OperationException is InvalidKeyException exk)
-                {
-                    string badMessage = "Resources for the following recipes cannot be loaded from the Addressables System: ";
-                    if (exk.Key is List<string> badKeys && badKeys.Count > 0)
-                    {
-                        throw new UMAInvalidKeyException(badMessage+KeysToString(badMessage,badKeys), badKeys);
-                    }
-                    else
-                    {
-                        badMessage = "Resources for the following recipes cannot be loaded from the Addressables System: "+exk.Key.ToString()+" - " + KeysToString("Resource Keys = ",Keys);
-                        throw new UMAInvalidKeyException(badMessage, exk.Key as List<string>);
-                    }
-                }
-                else
-                {
-
-                    if (op.OperationException != null)
-                    {
-                        throw new Exception("An exception of type: " + op.OperationException.GetType().ToString() + " was thrown while loading recipes from the Addressables system. Message is:  " + op.OperationException.Message);
-                    }
-                    else
-                    {
-                        throw new Exception("Addressables call failed but an exception was not specified.");
-                }
-            }
+                string detail = op.OperationException != null
+                    ? op.OperationException.Message
+                    : "Addressables call failed but an exception was not specified.";
+                throw new UMAInvalidKeyException(
+                    "Resources for the following recipes cannot be loaded from the Addressables System: " +
+                    KeysToString(string.Empty, Keys) + ". " + detail,
+                    Keys);
             }
             op.Completed += ProcessItems;
             if (!keepLoaded)
@@ -3434,7 +3443,7 @@ namespace UMA
         // We need to ensure that the operation succeeded, and that the result value is not null
         private void ProcessItems(AsyncOp Op)
         {
-			if (Op.IsDone && Op.Status == AsyncOperationStatus.Succeeded)
+			if (Op.IsDone && Op.Status == UMAAddressableOperationStatus.Succeeded)
             {
                 if (Op.Result != null)
                 {
@@ -3824,7 +3833,7 @@ namespace UMA
             }
         }
 
-        public void Unload(AsyncOperationHandle<IList<UnityEngine.Object>> AssetOperation)
+        public void Unload(AsyncOp AssetOperation)
         {
 #if SUPER_LOGGING
             Debug.Log("Unloading AsyncOperationHandle<> in Indexer.Unload()");
@@ -3839,7 +3848,7 @@ namespace UMA
                 return;
             }
 
-            if (AssetOperation.Status == AsyncOperationStatus.Succeeded && AssetOperation.Result != null)
+            if (AssetOperation.Status == UMAAddressableOperationStatus.Succeeded && AssetOperation.Result != null)
             {
                 foreach(UnityEngine.Object obj in AssetOperation.Result)
                 {
@@ -3847,7 +3856,7 @@ namespace UMA
                 }
             }
 
-            Addressables.Release(AssetOperation);
+            UMAAddressablesRuntimeBridge.Release(AssetOperation);
         }
 
         public void UnloadAll(bool forceResourceUnload)
@@ -3857,7 +3866,7 @@ namespace UMA
 			{
 				if (op.Operation.IsValid())
                 {
-				    Addressables.Release(op.Operation);
+				    UMAAddressablesRuntimeBridge.Release(op.Operation);
                 }
 			}
 			Dictionary<string, AssetItem> SlotDic = GetAssetDictionary(typeof(SlotDataAsset));
@@ -4049,8 +4058,7 @@ namespace UMA
                     ai._SerializedItem = null;
                 }
 #if UMA_ADDRESSABLES
-                AddressableInfo ainfo = AddressableUtility.GetAddressableInfo(ai._Guid);
-                if (ainfo != null)
+                if (UMAAddressableEditorBridge.TryGetAddressableInfo(ai._Guid, out UMAAddressableEditorBridge.Info ainfo))
                 {
                     ai.IsAddressable = true;
                     ai.AddressableAddress = ainfo.AddressableAddress;
@@ -4932,8 +4940,8 @@ namespace UMA
 #if UMA_ADDRESSABLES
                     if (removeUnlabeled)
                     {
-                        AddressableInfo ainfo = AddressableUtility.GetAddressableInfo(guids[i]);
-                        if (ainfo == null || ainfo.AddressableLabels == null || ainfo.AddressableLabels.Length == 0)
+                        if (!UMAAddressableEditorBridge.TryGetAddressableInfo(guids[i], out UMAAddressableEditorBridge.Info ainfo) ||
+                            string.IsNullOrEmpty(ainfo.AddressableLabels))
                         {
                             // if we are removing unlabeled assets, and there are no labels, skip this asset.
                             continue;
@@ -5103,8 +5111,7 @@ namespace UMA
                 ai.AddressableAddress = "";
 #if UNITY_EDITOR
 #if UMA_ADDRESSABLES
-                AddressableInfo ainfo = AddressableUtility.GetAddressableInfo(ai._Guid);
-                if (ainfo != null)
+                if (UMAAddressableEditorBridge.TryGetAddressableInfo(ai._Guid, out UMAAddressableEditorBridge.Info ainfo))
                 {
                     ai.AddressableAddress = ainfo.AddressableAddress;
                     ai.IsAddressable = true;

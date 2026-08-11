@@ -29,6 +29,27 @@ namespace UMA
 
             GUILayout.Label("Add a scene to the welcome scenes by selecting the scene asset and clicking the add button.", EditorStyles.boldLabel);
             UMAWelcomeScenes uws = (UMAWelcomeScenes)target;
+            string targetPath = AssetDatabase.GetAssetPath(uws);
+            if (targetPath.StartsWith("Packages/", System.StringComparison.OrdinalIgnoreCase))
+            {
+                EditorGUILayout.HelpBox(
+                    "This is UMA's read-only package default. Create a project copy before editing welcome scenes.",
+                    MessageType.Info);
+                if (GUILayout.Button("Create Project Welcome Scenes Copy"))
+                {
+                    UMAWelcomeScenes copy = AssetDatabase.LoadAssetAtPath<UMAWelcomeScenes>(UMAPathUtility.WelcomeScenesPath);
+                    if (copy == null)
+                    {
+                        copy = Instantiate(uws);
+                        copy.name = "UMAWelcomeScenesProject";
+                        UMAPathUtility.EnsureAssetFolder(UMAPathUtility.ProjectEditorResourcesRoot);
+                        AssetDatabase.CreateAsset(copy, UMAPathUtility.WelcomeScenesPath);
+                        AssetDatabase.SaveAssetIfDirty(copy);
+                    }
+                    Selection.activeObject = copy;
+                }
+                return;
+            }
 
             GUILayout.BeginHorizontal();
             sceneAsset = (SceneAsset)EditorGUILayout.ObjectField("Add Scene Asset", sceneAsset, typeof(SceneAsset), false);
@@ -92,8 +113,8 @@ namespace UMA
 
                     tex.name = uws.umaScenes[i].shortName + ".png";
                     byte[] bytes = tex.EncodeToPNG();
-                    string assetPath = "Assets/UMA/InternalDataStore/Editor/" + tex.name;
-                    string fullPath = Path.Combine(Application.dataPath, assetPath.Substring("Assets/".Length));
+                    string assetPath = UMAPathUtility.WelcomeCaptureRoot + "/" + tex.name;
+                    string fullPath = UMAPathUtility.ResolveAbsolutePath(assetPath);
                     string directoryPath = Path.GetDirectoryName(fullPath);
                     if (!string.IsNullOrEmpty(directoryPath))
                     {

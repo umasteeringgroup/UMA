@@ -1407,7 +1407,7 @@ namespace UMA
 
         private static string NormalizeAssetFolder(string folder)
         {
-            if (string.IsNullOrEmpty(folder)) folder = "Assets/UMA/ClothingConformer";
+            if (string.IsNullOrEmpty(folder)) folder = UMAPathUtility.ClothingConformerRoot;
             folder = folder.Replace("\\", "/");
             if (!folder.StartsWith("Assets", StringComparison.Ordinal))
             {

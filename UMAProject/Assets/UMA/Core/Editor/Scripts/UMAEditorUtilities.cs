@@ -103,39 +103,12 @@ namespace UMA
 
         public static string FindUMAFolder()
         {
-            string basePath = FindUMAFullPath();
-            // return the path relative to the Assets folder
-            string folder = basePath.Replace(Application.dataPath, "Assets");
-            return folder;
+            return UMAPathUtility.InstallAssetRoot;
         }
 
         public static string FindUMAFullPath()
         {
-            string folder = "/UMA";
-
-            string path1 = Path.Combine(Application.dataPath, "UMA");
-            if (Directory.Exists(path1.ToString()))
-            {
-                //Debug.Log("UMA at default location: " + path1);
-                return "Assets/UMA";
-            }
-
-            // search the project for the UMA folder
-            string[] folders = AssetDatabase.FindAssets("UMA t:Folder");
-            if (folders != null && folders.Length > 0)
-            {
-                foreach (string guid in folders)
-                {
-                    string path = AssetDatabase.GUIDToAssetPath(guid);
-                    if (path.EndsWith(folder, StringComparison.OrdinalIgnoreCase))
-                    {
-                        return path;
-                    }
-                }
-            }
-
-            // if we didn't find it, return the default path
-            return "Assets/UMA";
+            return UMAPathUtility.InstallAssetRoot;
         }
         public static NamedBuildTarget CurrentNamedBuildTarget
         {
@@ -436,7 +409,16 @@ namespace UMA
 
 		public static void RenameFiles(string oldpattern,string newpattern, string completeMessage, string notFoundMessage)
 		{
-			string assetPath = Path.Combine(Application.dataPath, "UMA");
+			if (UMAPathUtility.IsPackageInstallation)
+			{
+				EditorUtility.DisplayDialog(
+					"UMA package is read-only",
+					"Assembly definitions cannot be enabled or disabled inside an installed package.",
+					"OK");
+				return;
+			}
+
+			string assetPath = UMAPathUtility.ResolveAbsolutePath(UMAPathUtility.InstallAssetRoot);
 			string[] files = Directory.GetFiles(assetPath, "*"+oldpattern, SearchOption.AllDirectories);
 
 			if (files.Length == 0)

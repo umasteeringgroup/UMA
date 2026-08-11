@@ -4,7 +4,7 @@
     "references": [
         "UMA_Core",
         "UMA.TexturePaint.Runtime",
-        "Unity.2D.Sprite.Editor"
+        "GUID:270a2b1433f4413fbe3998444ae4eedb"
     ],
     "includePlatforms": [
         "Editor"

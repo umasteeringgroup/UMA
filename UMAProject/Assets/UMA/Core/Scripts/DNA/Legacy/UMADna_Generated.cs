@@ -11,8 +11,6 @@
 //#TEMPLATE Save UmaDna_Save_Fragment.cs.txt
 //
 
-using UnityEngine.AI;
-
 namespace UMA
 {
 

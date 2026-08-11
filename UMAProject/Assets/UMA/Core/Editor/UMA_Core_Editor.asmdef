@@ -5,15 +5,10 @@
         "UMA_Core",
         "UMA.TexturePaint.Editor",
         "UMA.TexturePaint.Runtime",
-        "Assembly-CSharp",
-        "Unity.Addressables.Editor",
-        "Unity.ResourceManager",
-        "Unity.Addressables",
-        "Addressable_Editor",
+        "UMA_Editor",
+        "GUID:270a2b1433f4413fbe3998444ae4eedb",
         "Unity.Mathematics",
-        "Unity.Burst",
-        "UnityEngine.TestRunner",
-        "UnityEditor.TestRunner"
+        "Unity.Burst"
     ],
     "includePlatforms": [
         "Editor"

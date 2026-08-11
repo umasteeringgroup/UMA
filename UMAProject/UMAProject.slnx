@@ -1,19 +1,24 @@
 ﻿<Solution>
-  <Project Path="asset-store-tools-editor.csproj" />
-  <Project Path="UMA_Core.csproj" />
   <Project Path="UMA_Core_Editor.csproj" />
-  <Project Path="Addressable_Editor.csproj" />
+  <Project Path="asset-store-tools-editor.csproj" />
   <Project Path="JBooth.BetterShaders.Editor.csproj" />
+  <Project Path="UMA_Core.csproj" />
   <Project Path="Assembly-CSharp.csproj" />
   <Project Path="UMA.TexturePaint.Editor.Tests.csproj" />
   <Project Path="UMA.TexturePaint.Tests.csproj" />
   <Project Path="UMA.TexturePaint.Editor.csproj" />
-  <Project Path="UMA.TexturePaint.Examples.csproj" />
-  <Project Path="UMA_Core_Editor_Tests.csproj" />
+  <Project Path="UMA3.Samples.csproj" />
   <Project Path="UMA.TexturePaint.Runtime.csproj" />
-  <Project Path="Assembly-CSharp-Editor.csproj" />
+  <Project Path="UMA_Editor.csproj" />
+  <Project Path="UMA_Core_Editor_Tests.csproj" />
+  <Project Path="UMA.TexturePaint.Examples.csproj" />
+  <Project Path="UMA_Utilities_Editor.csproj" />
+  <Project Path="UMA.TestRunner.Editor.csproj" />
   <Project Path="Shaderpackager-editor.csproj" />
   <Project Path="Samples.csproj" />
+  <Project Path="UMA3.Samples.Editor.csproj" />
   <Project Path="JBooth.BetterShaders.Samples.csproj" />
   <Project Path="UMA_Core_Runtime_Tests.csproj" />
+  <Project Path="UMA.TexturePaint.Sprite.Editor.csproj" />
+  <Project Path="UMA.PackageSupport.Editor.csproj" />
 </Solution>

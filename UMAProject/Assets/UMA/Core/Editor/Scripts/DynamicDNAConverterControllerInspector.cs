@@ -15,7 +15,7 @@ namespace UMA.Editors
 	public class DynamicDNAConverterControllerInspector : Editor
 	{
 		public static UnityEngine.Object folder = null;
-		public static string folderPath = "Assets/UMA";
+		public static string folderPath = UMAPathUtility.ProjectDataRoot;
 
         [MenuItem("Assets/Create/UMA/DNA/Legacy/Dynamic DNA Converter Controller")]
 		public static void CreateDynamicDNAConverterController()

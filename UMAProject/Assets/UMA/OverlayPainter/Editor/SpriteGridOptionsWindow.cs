@@ -2,10 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using UMA.Editors.PackageSupport;
 using UnityEditor;
-using UnityEditor.U2D.Sprites;
 using UnityEngine;
-using UnityEngine.U2D;
 
 namespace UMA.TexturePaint.Editor
 {
@@ -622,6 +621,16 @@ namespace UMA.TexturePaint.Editor
                 "as equally divided sprite sheets. Rows are named from the top-left, moving left-to-right.",
                 MessageType.Info);
 
+            if (!SpriteGridEditorBackend.IsAvailable)
+            {
+                EditorGUILayout.HelpBox(
+                    "Sprite sheet slicing requires Unity's optional 2D Sprite package. " +
+                    "Overlay Painter and its other tools remain available without it.",
+                    MessageType.Warning);
+                if (GUILayout.Button("Install 2D Sprite..."))
+                    UMAPackageDependencyWindow.OpenAndSelect("com.unity.2d.sprite");
+            }
+
             EditorGUILayout.LabelField("Copy Existing Setup", EditorStyles.boldLabel);
             copyFromSpriteSheet = (Texture2D)EditorGUILayout.ObjectField(
                 "Source Sprite Sheet", copyFromSpriteSheet, typeof(Texture2D), false);
@@ -765,7 +774,8 @@ namespace UMA.TexturePaint.Editor
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Cancel", GUILayout.Width(90f))) Close();
-            if (GUILayout.Button("Apply", GUILayout.Width(90f))) Apply();
+            using (new EditorGUI.DisabledScope(!SpriteGridEditorBackend.IsAvailable))
+                if (GUILayout.Button("Apply", GUILayout.Width(90f))) Apply();
             GUILayout.EndHorizontal();
             EditorGUILayout.EndScrollView();
             EditorGUILayout.EndVertical();
@@ -898,19 +908,19 @@ namespace UMA.TexturePaint.Editor
                 out SpriteGridSavedConfiguration configuration);
             if (!hasSavedSettings)
             {
-                var factories = new SpriteDataProviderFactories();
-                factories.Init();
-                ISpriteEditorDataProvider provider = factories.GetSpriteEditorDataProviderFromObject(importer);
-                if (provider == null)
+                ISpriteGridEditorBackend backend = SpriteGridEditorBackend.Current;
+                if (backend == null)
                 {
-                    copyStatus = "The selected source has no readable sprite setup.";
+                    copyStatus = "The source has no saved Overlay Painter setup. Install the " +
+                        "2D Sprite package to read its Unity sprite rectangles.";
                     return;
                 }
-                provider.InitSpriteEditorDataProvider();
-                SpriteRect[] spriteRects = provider.GetSpriteRects() ?? Array.Empty<SpriteRect>();
-                RectInt[] rects = spriteRects.Select(item => new RectInt(
-                    Mathf.RoundToInt(item.rect.x), Mathf.RoundToInt(item.rect.y),
-                    Mathf.RoundToInt(item.rect.width), Mathf.RoundToInt(item.rect.height))).ToArray();
+                if (!backend.TryReadSpriteRects(importer, out RectInt[] rects,
+                        out string readError))
+                {
+                    copyStatus = readError;
+                    return;
+                }
                 if (!SpriteGridProcessor.TryBuildConfigurationFromRects(sourceWidth, sourceHeight,
                         rects, columns, rows, out configuration))
                 {
@@ -1236,6 +1246,11 @@ namespace UMA.TexturePaint.Editor
             IReadOnlyList<SpriteGridOptions> optionsBySprite,
             SpriteGridSavedConfiguration savedConfiguration)
         {
+            ISpriteGridEditorBackend backend = SpriteGridEditorBackend.Current;
+            if (backend == null)
+                throw new InvalidOperationException(
+                    "Sprite sheet slicing requires Unity's 2D Sprite package.");
+
             TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
             if (importer == null) throw new InvalidOperationException("Asset does not use a TextureImporter.");
             importer.GetSourceTextureWidthAndHeight(out int sourceWidth, out int sourceHeight);
@@ -1257,38 +1272,8 @@ namespace UMA.TexturePaint.Editor
             importer.SaveAndReimport();
 
             importer = AssetImporter.GetAtPath(path) as TextureImporter;
-            var factories = new SpriteDataProviderFactories();
-            factories.Init();
-            ISpriteEditorDataProvider provider = factories.GetSpriteEditorDataProviderFromObject(importer);
-            if (provider == null) throw new InvalidOperationException("Unity sprite data provider is unavailable.");
-            provider.InitSpriteEditorDataProvider();
-            SpriteRect[] existing = provider.GetSpriteRects() ?? Array.Empty<SpriteRect>();
-            var idsByName = existing.GroupBy(item => item.name)
-                .ToDictionary(group => group.Key, group => group.First().spriteID);
             string baseName = Path.GetFileNameWithoutExtension(path);
-            var spriteRects = new SpriteRect[rects.Length];
-            var nameIdPairs = new SpriteNameFileIdPair[rects.Length];
-            for (int i = 0; i < rects.Length; i++)
-            {
-                string spriteName = $"{baseName}_{i}";
-                GUID spriteId = idsByName.TryGetValue(spriteName, out GUID existingId)
-                    ? existingId
-                    : i < existing.Length ? existing[i].spriteID : GUID.Generate();
-                spriteRects[i] = new SpriteRect
-                {
-                    name = spriteName,
-                    rect = new Rect(rects[i].x, rects[i].y, rects[i].width, rects[i].height),
-                    alignment = SpriteAlignment.Center,
-                    pivot = new Vector2(0.5f, 0.5f),
-                    border = Vector4.zero,
-                    spriteID = spriteId
-                };
-                nameIdPairs[i] = new SpriteNameFileIdPair(spriteName, spriteId);
-            }
-            provider.SetSpriteRects(spriteRects);
-            ISpriteNameFileIdDataProvider nameProvider = provider.GetDataProvider<ISpriteNameFileIdDataProvider>();
-            nameProvider?.SetNameFileIdPairs(nameIdPairs);
-            provider.Apply();
+            backend.ApplySpriteRects(importer, baseName, rects);
             importer.SaveAndReimport();
 
             // Pixel work intentionally runs after the sprite rectangles have been applied. The

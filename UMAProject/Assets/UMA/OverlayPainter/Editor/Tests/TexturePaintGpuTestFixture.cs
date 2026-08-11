@@ -75,7 +75,7 @@ namespace UMA.TexturePaint.Editor.Tests
         public static ComputeShader LoadShader(string filename)
         {
             ComputeShader shader = AssetDatabase.LoadAssetAtPath<ComputeShader>(
-                "Assets/UMA/OverlayPainter/Shaders/" + filename);
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/" + filename));
             Assert.That(shader, Is.Not.Null, "Missing production compute shader " + filename + ".");
             return shader;
         }

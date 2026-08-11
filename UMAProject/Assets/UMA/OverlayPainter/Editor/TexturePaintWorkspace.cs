@@ -13,7 +13,8 @@ namespace UMA.TexturePaint.Editor
         private const float WorkspaceToolRailWidth = 48f;
         private const float WorkspaceSplitterSize = 4f;
         private const string LayerDragKey = "UMA.TexturePaint.LayerIndex";
-        private const string ToolRailIconPath = "Assets/UMA/OverlayPainter/Editor/Icons/TexturePaintIcons.png";
+        private static string ToolRailIconPath =>
+            UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Editor/Icons/TexturePaintIcons.png");
         private const int ToolRailIconCount = 13;
         private const int DocumentPickerControlId = 0x5450444F;
         private const string DocumentAssetFolder = "Assets";

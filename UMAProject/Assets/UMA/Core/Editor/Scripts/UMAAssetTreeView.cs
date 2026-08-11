@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
@@ -559,7 +558,7 @@ namespace UMA.Controls
 
 							if (GUI.Button(ButtonRect, "Update Groups", EditorStyles.toolbarButton))
 							{
-								UMAAddressablesSupport.Instance.AddRecipeGroup(recipe);
+								UMAAddressablesEditorBridge.AddRecipeGroup(recipe);
 								owningWindow.LoadedLabels.Add(recipe.AssignedLabel);
 							}
 						}
@@ -570,7 +569,7 @@ namespace UMA.Controls
 
 							if (GUI.Button(ButtonRect, "Make Addressable", EditorStyles.toolbarButton))
 							{
-								UMAAddressablesSupport.Instance.AddRecipeGroup(recipe);
+								UMAAddressablesEditorBridge.AddRecipeGroup(recipe);
 								owningWindow.LoadedLabels.Add(recipe.AssignedLabel);
 							}
 						}

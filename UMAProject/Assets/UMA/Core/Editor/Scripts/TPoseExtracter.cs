@@ -132,7 +132,7 @@ namespace UMA.Editors
 	            }
 
 			// Default path
-			string path = "Assets/UMA/Content/Generated/TPoses";
+			string path = UMAPathUtility.GeneratedTPosesRoot;
 
 			string[] inds = AssetDatabase.FindAssets("AssetIndexer t:umaassetindexer");
 			if (inds.Length > 0)
@@ -174,7 +174,7 @@ namespace UMA.Editors
 				asset.Serialize();
 			}
 
-			string path = "Assets/UMA/Content/Generated/TPoses";
+			string path = UMAPathUtility.GeneratedTPosesRoot;
 			if (!string.IsNullOrEmpty(assetPath))
 			{
 				var assetDirectory = new FileInfo(assetPath).Directory.FullName + Path.DirectorySeparatorChar + "TPoses";

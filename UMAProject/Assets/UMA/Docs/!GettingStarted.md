@@ -6,7 +6,7 @@ This guide builds a first UMA 3 character using the current project settings and
 
 Confirm the UMA package is present. The shared starter prefabs are in:
 
-`Assets/UMA/Core/Defaults`
+`<UMA install>/Core/Defaults`
 
 The folder contains:
 
@@ -15,7 +15,7 @@ The folder contains:
 
 Optional UMA 3 sample prefabs are in:
 
-`Assets/UMA/UMA3/Getting Started`
+`<UMA install>/UMA3/Getting Started`
 
 That folder contains:
 
@@ -169,7 +169,7 @@ The older `GetCurrentRecipe()` and old recipe-string loading APIs remain only fo
 
 Current UMA 3 examples are under:
 
-`Assets/UMA/UMA3/Scenes`
+`<UMA install>/UMA3/Scenes`
 
 Good starting points include:
 
@@ -213,6 +213,7 @@ Confirm the race enables the intended DNA system and has its DNA collection or l
 
 ## Next Steps
 
+- [PackageInstallation.md](PackageInstallation.md)
 - [ContentCreation.md](ContentCreation.md)
 - [WardrobeRecipeEditor.md](WardrobeRecipeEditor.md)
 - [RaceData.md](RaceData.md)

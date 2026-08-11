@@ -17,8 +17,8 @@ namespace UMA.Editors.Tests
     [Category("UMA Release Tests")]
     public sealed class UMAReleaseTests
     {
-        private const string UmaFolder = "Assets/UMA";
-        private const string Uma3Folder = "Assets/UMA/UMA3";
+        private static string UmaFolder => UMAPathUtility.InstallAssetRoot;
+        private static string Uma3Folder => UMAPathUtility.ResolveInstallAssetPath("UMA3");
         private const string Uma2Folder = "Assets/UMA2";
         private static readonly Regex GuidReference = new Regex(
             @"\bguid:\s*([0-9a-fA-F]{32})\b", RegexOptions.Compiled);
@@ -68,8 +68,8 @@ namespace UMA.Editors.Tests
             var report = new StringBuilder();
             report.AppendLine($"Asset Validation found {issues.Count} package-boundary " +
                 $"issue{(issues.Count == 1 ? string.Empty : "s")}.");
-            report.AppendLine("UMA3 assets may reference Assets/UMA only. " +
-                "UMA2 assets may reference Assets/UMA or Assets/UMA2.");
+            report.AppendLine($"UMA3 assets may reference {UmaFolder} only. " +
+                $"UMA2 assets may reference {UmaFolder} or Assets/UMA2.");
             report.AppendLine("Package Manager and Unity built-in resources are external prerequisites " +
                 "and are not treated as exported project assets.");
             for (int i = 0; i < issues.Count; i++)

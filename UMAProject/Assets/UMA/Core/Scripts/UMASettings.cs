@@ -90,15 +90,15 @@ namespace UMA
         public string GithubURL;
         public string YoutubeURL;
         [Header("Shader Folder")]
-        [Tooltip("The folder where the UMA shaders are located, relative to the Assets folder. Usually UMA/Core/ShaderPackages")]
+        [Tooltip("The UMA-relative folder where the legacy shader packages are located.")]
         public string ShaderFolder;
         [Header("Default UMA Folder")]
-        [Tooltip("The UMA folder, relative to the Assets folder. Usually Assets/UMA")]
+        [Tooltip("Resolved UMA installation asset path. UMA may be below Assets or installed as a UPM package.")]
         public string UMAFolder = "Assets/UMA";
         [Header("Overlay Painter")]
         [Tooltip("Project folder used for the temporary Overlay Painter recovery asset and its data files. " +
             "This folder must be below Assets and can be excluded from source control.")]
-        public string texturePaintRecoveryFolder = "Assets/UMA/Temp";
+        public string texturePaintRecoveryFolder = UMAPathUtility.OverlayPainterRecoveryRoot;
 
         [Header("Welcome page textures")]
         public Texture2D Overlays;
@@ -136,40 +136,21 @@ namespace UMA
 
         public static string FindUMAFullPath()
         {
-            // Try to locate the InternalDataStore folder anywhere in the project
-            string[] folderGuids = AssetDatabase.FindAssets("InternalDataStore t:Folder");
-            if (folderGuids != null && folderGuids.Length >0)
-            {
-                for (int i =0; i < folderGuids.Length; i++)
-                {
-                    string path = AssetDatabase.GUIDToAssetPath(folderGuids[i]);
-                    if (string.IsNullOrEmpty(path)) continue;
-
-                    string normalized = path.Replace('\\', '/').TrimEnd('/');
-                    int idx = normalized.LastIndexOf("/InternalDataStore", StringComparison.OrdinalIgnoreCase);
-                    if (idx >=0)
-            {
-                        // parent of InternalDataStore
-                        string parent = normalized.Substring(0, idx);
-                        if (string.IsNullOrEmpty(parent))
-                {
-                            parent = "Assets";
-                        }
-                        return parent;
-                    }
-                }
-            }
-
-            // if we didn't find it, return the default path. Let the chips fall where they may.
-            return "Assets/UMA";
+            return UMAPathUtility.InstallAssetRoot;
         }
 #endif
 
 		public static UMASettings GetSettings() {
-			var settings = Resources.Load<UMASettings>("UMASettings");
+			var settings = LoadPreferredSettings();
 			UpdateAlwaysOverrides(settings); //VES added
 			return settings;
 		}
+
+        private static UMASettings LoadPreferredSettings()
+        {
+            UMASettings settings = Resources.Load<UMASettings>("UMAProjectSettings");
+            return settings != null ? settings : Resources.Load<UMASettings>("UMASettings");
+        }
 
         /// <summary>
         /// Returns the configured ignore tag, falling back to UMA's default when the
@@ -246,24 +227,63 @@ namespace UMA
                 return instance;
             }
 
-			var o = Resources.Load<UMASettings>("UMASettings");
-			if (o != null)
-			{
-				instance = o;
-				return o;
-			}
+#if !UNITY_EDITOR
+            UMASettings resourceSettings = LoadPreferredSettings();
+            if (resourceSettings != null)
+            {
+                UpdateAlwaysOverrides(resourceSettings);
+                instance = resourceSettings;
+                return resourceSettings;
+            }
+#endif
 #if UNITY_EDITOR
-
-            string path = FindUMAFullPath() + "/InternalDataStore/InGame/Resources/UMASettings.asset";
-            var settings = AssetDatabase.LoadAssetAtPath<UMASettings>(path);
+            UMASettings settings = AssetDatabase.LoadAssetAtPath<UMASettings>(UMAPathUtility.ProjectSettingsPath);
+            UMASettings packagedDefault = Resources.Load<UMASettings>("UMASettings");
+            if (settings == null && !UMAPathUtility.IsPackageInstallation)
+                settings = packagedDefault;
             if (settings == null)
             {
-                settings = ScriptableObject.CreateInstance<UMASettings>();
-                // settings.cities = new List<string>();
+                settings = packagedDefault != null
+                    ? Instantiate(packagedDefault)
+                    : ScriptableObject.CreateInstance<UMASettings>();
+                settings.name = "UMAProjectSettings";
+                settings.UMAFolder = UMAPathUtility.InstallAssetRoot;
+                settings.texturePaintRecoveryFolder = UMAPathUtility.OverlayPainterRecoveryRoot;
                 settings.useMeshAPICombiner = false;
                 UpdateAlwaysOverrides(settings); //VES added
-                AssetDatabase.CreateAsset(settings, path);
+                UMAPathUtility.EnsureAssetFolder(UMAPathUtility.ProjectResourcesRoot);
+                AssetDatabase.CreateAsset(settings, UMAPathUtility.ProjectSettingsPath);
                 AssetDatabase.SaveAssets();
+            }
+            if (UMAPathUtility.IsPackageInstallation)
+            {
+                bool changed = false;
+                if (!string.Equals(settings.UMAFolder, UMAPathUtility.InstallAssetRoot,
+                    StringComparison.OrdinalIgnoreCase))
+                {
+                    settings.UMAFolder = UMAPathUtility.InstallAssetRoot;
+                    changed = true;
+                }
+                if (string.IsNullOrWhiteSpace(settings.texturePaintRecoveryFolder) ||
+                    settings.texturePaintRecoveryFolder.StartsWith(UMAPathUtility.LegacyInstallRoot + "/",
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    settings.texturePaintRecoveryFolder = UMAPathUtility.OverlayPainterRecoveryRoot;
+                    changed = true;
+                }
+                if (!string.IsNullOrEmpty(settings.ShaderFolder) &&
+                    settings.ShaderFolder.StartsWith(UMAPathUtility.LegacyInstallRoot + "/",
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    settings.ShaderFolder = settings.ShaderFolder.Substring(
+                        UMAPathUtility.LegacyInstallRoot.Length + 1);
+                    changed = true;
+                }
+                if (changed)
+                {
+                    EditorUtility.SetDirty(settings);
+                    AssetDatabase.SaveAssetIfDirty(settings);
+                }
             }
             UpdateAlwaysOverrides(settings); //VES added
             instance = settings;
@@ -281,7 +301,7 @@ namespace UMA
 
         public static UMASettings GetSettingsFromResources()
         {
-            UMASettings settings = Resources.Load<UMASettings>("UMASettings");
+            UMASettings settings = LoadPreferredSettings();
             UpdateAlwaysOverrides(settings); //VES added
             return settings;
         }
@@ -297,6 +317,7 @@ namespace UMA
         }
 
         static void UpdateAlwaysOverrides(UMASettings settings) { //VES added
+            if (settings == null) return;
 #if UNITY_EDITOR
 #if UMA_ALWAYS_STRIP_MATERIALS
             settings.addrStripMaterials = true;
@@ -365,14 +386,14 @@ namespace UMA
             {
                 var settings = GetOrCreateSettings();
                 string configured = settings != null ? settings.texturePaintRecoveryFolder : null;
-                if (string.IsNullOrWhiteSpace(configured)) return "Assets/UMA/Temp";
+                if (string.IsNullOrWhiteSpace(configured)) return UMAPathUtility.OverlayPainterRecoveryRoot;
                 configured = configured.Trim().Replace('\\', '/').TrimEnd('/');
                 string[] parts = configured.Split('/');
                 if (!configured.StartsWith("Assets/", StringComparison.OrdinalIgnoreCase) || parts.Length < 2)
-                    return "Assets/UMA/Temp";
+                    return UMAPathUtility.OverlayPainterRecoveryRoot;
                 for (int i = 0; i < parts.Length; i++)
                     if (string.IsNullOrWhiteSpace(parts[i]) || parts[i] == "." || parts[i] == "..")
-                        return "Assets/UMA/Temp";
+                        return UMAPathUtility.OverlayPainterRecoveryRoot;
                 return configured;
             }
         }

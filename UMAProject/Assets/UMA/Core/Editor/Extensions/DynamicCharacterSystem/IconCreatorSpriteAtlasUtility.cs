@@ -499,6 +499,7 @@ public static class IconCreatorSpriteAtlasUtility
 
     private static string GetAssetRootFolder(string rootFolder)
     {
+        rootFolder = RedirectPackageOwnedOutput(rootFolder);
         string dataPath = Path.GetFullPath(Application.dataPath).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
         string projectPath = Directory.GetParent(dataPath).FullName;
         string rootPath;
@@ -533,6 +534,31 @@ public static class IconCreatorSpriteAtlasUtility
 
         string relativePath = rootPath.Substring(dataPath.Length).Replace('\\', '/');
         return "Assets" + relativePath;
+    }
+
+    private static string RedirectPackageOwnedOutput(string rootFolder)
+    {
+        if (!UMA.UMAPathUtility.IsPackageInstallation || string.IsNullOrWhiteSpace(rootFolder))
+        {
+            return rootFolder;
+        }
+
+        string normalized = rootFolder.Replace('\\', '/').TrimEnd('/');
+        string legacyRoot = UMA.UMAPathUtility.LegacyInstallRoot;
+        string installRoot = UMA.UMAPathUtility.InstallAssetRoot;
+        if (normalized.Equals(legacyRoot, StringComparison.OrdinalIgnoreCase) ||
+            normalized.StartsWith(legacyRoot + "/", StringComparison.OrdinalIgnoreCase))
+        {
+            return UMA.UMAPathUtility.ProjectDataRoot + normalized.Substring(legacyRoot.Length);
+        }
+
+        if (normalized.Equals(installRoot, StringComparison.OrdinalIgnoreCase) ||
+            normalized.StartsWith(installRoot + "/", StringComparison.OrdinalIgnoreCase))
+        {
+            return UMA.UMAPathUtility.ProjectDataRoot + normalized.Substring(installRoot.Length);
+        }
+
+        return rootFolder;
     }
 
     private static void EnsureAssetFolder(string assetFolder)

@@ -12,7 +12,7 @@ namespace UMA.TexturePaint.Editor.Tests
 {
     public sealed class TexturePaintReleaseIntegrationTests
     {
-        private const string Folder = "Assets/UMA/OverlayPainter/GeneratedReleaseTests";
+        private const string Folder = "Assets/UMAProjectData/Tests/OverlayPainter/GeneratedReleaseTests";
         private readonly List<Object> ownedObjects = new List<Object>();
         private readonly List<TextureStore> ownedStores = new List<TextureStore>();
         private string indexerAssetPath;
@@ -1663,7 +1663,7 @@ namespace UMA.TexturePaint.Editor.Tests
         {
             using TexturePaintGpuTestFixture fixture = new TexturePaintGpuTestFixture(Color.clear);
             Shader shader = AssetDatabase.LoadAssetAtPath<Shader>(
-                "Assets/UMA/OverlayPainter/Shaders/FillLayer.shader");
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/FillLayer.shader"));
             Assert.That(shader, Is.Not.Null, "Missing production Fill generator shader.");
             using TexturePaintFillGenerator generator = new TexturePaintFillGenerator(shader);
             fixture.set.fillGenerator = generator;
@@ -1702,7 +1702,7 @@ namespace UMA.TexturePaint.Editor.Tests
         {
             using TexturePaintGpuTestFixture fixture = new TexturePaintGpuTestFixture(Color.clear);
             Shader shader = AssetDatabase.LoadAssetAtPath<Shader>(
-                "Assets/UMA/OverlayPainter/Shaders/FillLayer.shader");
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/FillLayer.shader"));
             Assert.That(shader, Is.Not.Null, "Missing production Fill generator shader.");
             using TexturePaintFillGenerator generator = new TexturePaintFillGenerator(shader);
             fixture.set.fillGenerator = generator;
@@ -1798,7 +1798,7 @@ namespace UMA.TexturePaint.Editor.Tests
         {
             using TexturePaintGpuTestFixture fixture = new TexturePaintGpuTestFixture(Color.clear);
             Shader shader = AssetDatabase.LoadAssetAtPath<Shader>(
-                "Assets/UMA/OverlayPainter/Shaders/FillLayer.shader");
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/FillLayer.shader"));
             Assert.That(shader, Is.Not.Null, "Missing production Fill generator shader.");
             using TexturePaintFillGenerator generator = new TexturePaintFillGenerator(shader);
             fixture.set.fillGenerator = generator;
@@ -1834,7 +1834,7 @@ namespace UMA.TexturePaint.Editor.Tests
                 new Vector2(0.75f, 0.75f), new Vector2(0.25f, 0.75f)
             };
             Shader shader = AssetDatabase.LoadAssetAtPath<Shader>(
-                "Assets/UMA/OverlayPainter/Shaders/FillLayer.shader");
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/FillLayer.shader"));
             Assert.That(shader, Is.Not.Null, "Missing production Fill generator shader.");
             using TexturePaintFillGenerator generator = new TexturePaintFillGenerator(shader);
             fixture.set.fillGenerator = generator;
@@ -1866,7 +1866,7 @@ namespace UMA.TexturePaint.Editor.Tests
         {
             using TexturePaintGpuTestFixture fixture = new TexturePaintGpuTestFixture(Color.clear);
             Shader shader = AssetDatabase.LoadAssetAtPath<Shader>(
-                "Assets/UMA/OverlayPainter/Shaders/FillLayer.shader");
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/FillLayer.shader"));
             Assert.That(shader, Is.Not.Null, "Missing production Fill generator shader.");
             using TexturePaintFillGenerator generator = new TexturePaintFillGenerator(shader);
             fixture.set.fillGenerator = generator;
@@ -1898,7 +1898,7 @@ namespace UMA.TexturePaint.Editor.Tests
         {
             using TexturePaintGpuTestFixture fixture = new TexturePaintGpuTestFixture(Color.clear);
             Shader shader = AssetDatabase.LoadAssetAtPath<Shader>(
-                "Assets/UMA/OverlayPainter/Shaders/FillLayer.shader");
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/FillLayer.shader"));
             Assert.That(shader, Is.Not.Null, "Missing production Fill generator shader.");
             using TexturePaintFillGenerator generator = new TexturePaintFillGenerator(shader);
             fixture.set.fillGenerator = generator;
@@ -2484,7 +2484,7 @@ namespace UMA.TexturePaint.Editor.Tests
                 BrushPreset.Shape.Square);
             brush.size = 0.2f;
             Shader ribbonShader = AssetDatabase.LoadAssetAtPath<Shader>(
-                "Assets/UMA/OverlayPainter/Shaders/RibbonProjection.shader");
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/RibbonProjection.shader"));
             Assert.That(ribbonShader, Is.Not.Null);
             Assert.That(ribbonShader.isSupported, Is.True);
             using PaintingEngine engine = new PaintingEngine(null, null, null, ribbonShader);
@@ -2529,7 +2529,7 @@ namespace UMA.TexturePaint.Editor.Tests
                 BrushPreset.Shape.Square);
             brush.size = 0.4f;
             Shader ribbonShader = AssetDatabase.LoadAssetAtPath<Shader>(
-                "Assets/UMA/OverlayPainter/Shaders/RibbonProjection.shader");
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/RibbonProjection.shader"));
             Assert.That(ribbonShader, Is.Not.Null);
             Assert.That(ribbonShader.isSupported, Is.True);
             using PaintingEngine engine = new PaintingEngine(null, null, null, ribbonShader);
@@ -2595,7 +2595,7 @@ namespace UMA.TexturePaint.Editor.Tests
                 BrushPreset.Shape.Square);
             brush.size = 0.3f;
             Shader ribbonShader = AssetDatabase.LoadAssetAtPath<Shader>(
-                "Assets/UMA/OverlayPainter/Shaders/RibbonProjection.shader");
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/RibbonProjection.shader"));
             using PaintingEngine engine = new PaintingEngine(null, null, null, ribbonShader);
             try
             {
@@ -2643,7 +2643,7 @@ namespace UMA.TexturePaint.Editor.Tests
                 BrushPreset.Shape.Square);
             brush.size = 0.25f;
             Shader ribbonShader = AssetDatabase.LoadAssetAtPath<Shader>(
-                "Assets/UMA/OverlayPainter/Shaders/RibbonProjection.shader");
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/RibbonProjection.shader"));
             using PaintingEngine engine = new PaintingEngine(null, null, null, ribbonShader);
             try
             {
@@ -2717,7 +2717,7 @@ namespace UMA.TexturePaint.Editor.Tests
                 BrushPreset.Shape.Square);
             brush.size = 0.25f;
             Shader ribbonShader = AssetDatabase.LoadAssetAtPath<Shader>(
-                "Assets/UMA/OverlayPainter/Shaders/RibbonProjection.shader");
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/RibbonProjection.shader"));
             using PaintingEngine engine = new PaintingEngine(null, null, null, ribbonShader);
             try
             {
@@ -2783,7 +2783,7 @@ namespace UMA.TexturePaint.Editor.Tests
                 BrushPreset.Shape.Square);
             brush.size = 0.08f;
             Shader ribbonShader = AssetDatabase.LoadAssetAtPath<Shader>(
-                "Assets/UMA/OverlayPainter/Shaders/RibbonProjection.shader");
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/RibbonProjection.shader"));
             using PaintingEngine engine = new PaintingEngine(null, null, null, ribbonShader);
             try
             {
@@ -2852,7 +2852,7 @@ namespace UMA.TexturePaint.Editor.Tests
                 BrushPreset.Shape.Square);
             brush.size = 0.12f;
             Shader ribbonShader = AssetDatabase.LoadAssetAtPath<Shader>(
-                "Assets/UMA/OverlayPainter/Shaders/RibbonProjection.shader");
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/RibbonProjection.shader"));
             using PaintingEngine engine = new PaintingEngine(null, null, null, ribbonShader);
             try
             {
@@ -2972,7 +2972,7 @@ namespace UMA.TexturePaint.Editor.Tests
             // an untouched middle tile. A 0.2 half-width fits only two tiles on this unit path.
             brush.size = 0.16f;
             Shader ribbonShader = AssetDatabase.LoadAssetAtPath<Shader>(
-                "Assets/UMA/OverlayPainter/Shaders/RibbonProjection.shader");
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/RibbonProjection.shader"));
             using PaintingEngine engine = new PaintingEngine(null, null, null, ribbonShader);
             try
             {
@@ -3010,7 +3010,7 @@ namespace UMA.TexturePaint.Editor.Tests
                 BrushPreset.Shape.Square);
             brush.size = 0.35f;
             Shader ribbonShader = AssetDatabase.LoadAssetAtPath<Shader>(
-                "Assets/UMA/OverlayPainter/Shaders/RibbonProjection.shader");
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/RibbonProjection.shader"));
             using PaintingEngine engine = new PaintingEngine(null, null, null, ribbonShader);
             try
             {
@@ -3101,7 +3101,7 @@ namespace UMA.TexturePaint.Editor.Tests
                 BrushPreset.Shape.Square);
             brush.size = 0.25f;
             Shader ribbonShader = AssetDatabase.LoadAssetAtPath<Shader>(
-                "Assets/UMA/OverlayPainter/Shaders/RibbonProjection.shader");
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/RibbonProjection.shader"));
             using PaintingEngine engine = new PaintingEngine(null, null, null, ribbonShader);
             try
             {
@@ -3215,7 +3215,7 @@ namespace UMA.TexturePaint.Editor.Tests
                 BrushPreset.Shape.Square);
             brush.size = 0.2f;
             Shader ribbonShader = AssetDatabase.LoadAssetAtPath<Shader>(
-                "Assets/UMA/OverlayPainter/Shaders/RibbonProjection.shader");
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/RibbonProjection.shader"));
             Assert.That(ribbonShader, Is.Not.Null);
             Assert.That(ribbonShader.isSupported, Is.True);
             using PaintingEngine engine = new PaintingEngine(null, null, null, ribbonShader);
@@ -3310,7 +3310,7 @@ namespace UMA.TexturePaint.Editor.Tests
                 BrushPreset.Shape.Square);
             brush.size = 0.2f;
             Shader ribbonShader = AssetDatabase.LoadAssetAtPath<Shader>(
-                "Assets/UMA/OverlayPainter/Shaders/RibbonProjection.shader");
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/RibbonProjection.shader"));
             Assert.That(ribbonShader, Is.Not.Null);
             Assert.That(ribbonShader.isSupported, Is.True);
             using PaintingEngine engine = new PaintingEngine(null, null, null, ribbonShader);
@@ -3377,7 +3377,7 @@ namespace UMA.TexturePaint.Editor.Tests
                 BrushPreset.Shape.Square);
             brush.size = 0.2f;
             Shader ribbonShader = AssetDatabase.LoadAssetAtPath<Shader>(
-                "Assets/UMA/OverlayPainter/Shaders/RibbonProjection.shader");
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/RibbonProjection.shader"));
             Assert.That(ribbonShader, Is.Not.Null);
             using PaintingEngine engine = new PaintingEngine(null, null, null, ribbonShader);
             try
@@ -4003,7 +4003,7 @@ namespace UMA.TexturePaint.Editor.Tests
             overlayAsset.material = umaMaterial;
             fragment.umaMaterial = umaMaterial;
             TextureMerge merge = AssetDatabase.LoadAssetAtPath<TextureMerge>(
-                "Assets/UMA/Core/StandardAssets/UMA/Atlas/TextureMerge.asset");
+                UMAPathUtility.ResolveInstallAssetPath("Core/StandardAssets/UMA/Atlas/TextureMerge.asset"));
             Assert.That(merge, Is.Not.Null);
             MethodInfo reconstruct = typeof(MeshReconstructor).GetMethod("BuildNativeOverlaySources",
                 BindingFlags.Static | BindingFlags.NonPublic);
@@ -4089,7 +4089,8 @@ namespace UMA.TexturePaint.Editor.Tests
                 keyCode = KeyCode.LeftAlt
             };
 
-            Assert.That(TexturePaintStageWindow.ShouldYieldToSceneNavigation(altDown), Is.True);
+            Assert.That(TexturePaintStageWindow.ShouldYieldToSceneNavigation(altDown), Is.True,
+                $"type={altDown.type}, rawType={altDown.rawType}, alt={altDown.alt}, modifiers={altDown.modifiers}");
             Assert.That(TexturePaintStageWindow.ShouldYieldToSceneNavigation(altDrag), Is.True);
             Assert.That(TexturePaintStageWindow.ShouldYieldToSceneNavigation(ordinaryDrag), Is.False);
             Assert.That(TexturePaintStageWindow.ShouldYieldToSceneNavigation(altKey), Is.False);

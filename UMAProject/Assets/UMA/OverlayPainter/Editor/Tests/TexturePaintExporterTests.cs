@@ -11,7 +11,7 @@ namespace UMA.TexturePaint.Editor.Tests
 {
     public sealed class TexturePaintExporterTests
     {
-        private const string Folder = "Assets/UMA/OverlayPainter/GeneratedTests";
+        private const string Folder = "Assets/UMAProjectData/Tests/OverlayPainter/GeneratedTests";
         private TextureStore store;
         private TextureSet set;
         private Material sourceMaterial;
@@ -146,7 +146,7 @@ namespace UMA.TexturePaint.Editor.Tests
         public void AuthoredOverlayExportExcludesBaseAndAssignsGeneratedAlphaMask()
         {
             ComputeShader compositorShader = AssetDatabase.LoadAssetAtPath<ComputeShader>(
-                "Assets/UMA/OverlayPainter/Shaders/LayerComposite.compute");
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/LayerComposite.compute"));
             Assert.That(compositorShader, Is.Not.Null);
             set.compositor = new TextureLayerCompositor(compositorShader);
 

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Production Export
   m_EditorClassIdentifier: UMA.TexturePaint.Runtime::UMA.TexturePaint.TexturePaintExportTemplate
   version: 2
-  outputFolder: Assets/UMA/OverlayPainter/Generated
+  outputFolder: Assets/UMAProjectData/OverlayPainter/Generated
   filenamePattern: '{avatar}_{material}_{channel}_{resolution}'
   scope: 1
   channels: 127

@@ -620,16 +620,22 @@ namespace UMA.Editors
         public int udimTilesU = 10;
         public int udimTilesV = 10;
 
-        // File path in UMA root folder for persistence
+        // Project-owned editor state. Package content may be immutable.
         private static string GetPersistFilePath()
         {
 #if UNITY_EDITOR
-            string umaRoot = UMA.UMASettings.FindUMAFullPath(); // e.g., "Assets/UMA"
-            if (string.IsNullOrEmpty(umaRoot)) umaRoot = "Assets/UMA";
-            // Convert to absolute path
-            string rel = umaRoot.StartsWith("Assets/") ? umaRoot.Substring("Assets/".Length) : umaRoot.TrimStart('/');
-            string absRoot = Path.Combine(Application.dataPath, rel.Replace('/', Path.DirectorySeparatorChar));
-            return Path.Combine(absRoot, "SlotBuilderParameters.json");
+            string projectRoot = Directory.GetParent(Application.dataPath)?.FullName ?? Application.dataPath;
+            return Path.Combine(projectRoot, "ProjectSettings", "UMA", "SlotBuilderParameters.json");
+#else
+            return string.Empty;
+#endif
+        }
+
+        private static string GetDefaultPersistFilePath()
+        {
+#if UNITY_EDITOR
+            return UMAPathUtility.ResolveAbsolutePath(
+                UMAPathUtility.ResolveInstallAssetPath("SlotBuilderParameters.json"));
 #else
             return string.Empty;
 #endif
@@ -714,6 +720,7 @@ namespace UMA.Editors
             try
             {
                 string fp = GetPersistFilePath();
+                if (string.IsNullOrEmpty(fp) || !File.Exists(fp)) fp = GetDefaultPersistFilePath();
                 if (string.IsNullOrEmpty(fp) || !File.Exists(fp)) return;
                 string json = File.ReadAllText(fp);
                 if (string.IsNullOrEmpty(json)) return;
@@ -794,12 +801,14 @@ namespace UMA.Editors
                 // New: restore slotMaterial and slotFolder from paths
                 if (!string.IsNullOrEmpty(state.slotMaterialPath))
                 {
-                    var mat = AssetDatabase.LoadAssetAtPath<UMAMaterial>(state.slotMaterialPath);
+                    string materialPath = UMAPathUtility.ResolveLegacyInstallAssetPath(state.slotMaterialPath);
+                    var mat = AssetDatabase.LoadAssetAtPath<UMAMaterial>(materialPath);
                     if (mat != null) slotMaterial = mat;
                 }
                 if (!string.IsNullOrEmpty(state.slotFolderPath))
                 {
-                    var folderObj = AssetDatabase.LoadMainAssetAtPath(state.slotFolderPath);
+                    string folderPath = UMAPathUtility.ResolveLegacyInstallAssetPath(state.slotFolderPath);
+                    var folderObj = AssetDatabase.LoadMainAssetAtPath(folderPath);
                     if (folderObj != null) slotFolder = folderObj;
                 }
             }

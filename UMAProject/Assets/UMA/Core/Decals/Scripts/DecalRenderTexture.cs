@@ -4,7 +4,6 @@ using UnityEngine;
 using UMA.CharacterSystem;
 using System.Collections; // added
 using System.IO;
-using JetBrains.Annotations; // added
 
 namespace UMA {
 	/// <summary>
@@ -1408,7 +1407,7 @@ namespace UMA {
 					folder = Path.GetDirectoryName(stampPath).Replace('\\', '/');
 					if (!folder.StartsWith("Assets", StringComparison.Ordinal))
 					{
-						folder = "Assets/UMA/GeneratedDecalStamps";
+						folder = UMAPathUtility.GeneratedDecalsRoot;
 					}
 					string projectRoot = Path.GetDirectoryName(Application.dataPath);
 					string absFolder = Path.Combine(projectRoot, folder);
@@ -1539,12 +1538,12 @@ namespace UMA {
 				string stampPath = UnityEditor.AssetDatabase.GetAssetPath(stamp);
 				if (!string.IsNullOrEmpty(stampPath)) {
 					folder = Path.GetDirectoryName(stampPath).Replace('\\', '/');
-					if (!folder.StartsWith("Assets")) folder = "Assets/UMA/GeneratedDecalStamps";
+					if (!folder.StartsWith("Assets")) folder = UMAPathUtility.GeneratedDecalsRoot;
 					string projectRoot = Path.GetDirectoryName(Application.dataPath);
 					string abs = Path.Combine(projectRoot, folder);
 					if (!Directory.Exists(abs)) Directory.CreateDirectory(abs);
 				} else {
-					folder = "Assets/UMA/GeneratedDecalStamps";
+					folder = UMAPathUtility.GeneratedDecalsRoot;
 					string abs = Path.Combine(Path.GetDirectoryName(Application.dataPath), folder);
 					if (!Directory.Exists(abs)) Directory.CreateDirectory(abs);
 				}

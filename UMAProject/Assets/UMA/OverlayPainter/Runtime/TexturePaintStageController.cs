@@ -183,7 +183,7 @@ namespace UMA.TexturePaint
         public int coverageBudgetMB = 128;
         public string brushAssetGuid;
         public string brushLibraryGuid;
-        public string exportFolder = "Assets/UMA/OverlayPainter/Generated";
+        public string exportFolder = UMAPathUtility.OverlayPainterGeneratedRoot;
         public string exportTemplateGuid;
         public System.Collections.Generic.List<TexturePaintMaterialState> materials = new System.Collections.Generic.List<TexturePaintMaterialState>();
         public System.Collections.Generic.List<string> exportedTexturePaths = new System.Collections.Generic.List<string>();

@@ -47,8 +47,14 @@ namespace UMA.Editors
     public static class UMAReleaseValidationRepairUtility
     {
         private const string Uma2Root = "Assets/UMA2";
-        private const string Uma3Root = "Assets/UMA/UMA3";
-        private const string UniversalRoot = "Assets/UMA/Universal";
+        private static string Uma3Root => UMAPathUtility.ResolveInstallAssetPath("UMA3");
+        private static string UniversalRoot => UMAPathUtility.ResolveInstallAssetPath("Universal");
+        private static string WritableUma3Root => UMAPathUtility.IsPackageInstallation
+            ? UMAPathUtility.ProjectDataRoot + "/UMA3"
+            : Uma3Root;
+        private static string WritableUniversalRoot => UMAPathUtility.IsPackageInstallation
+            ? UMAPathUtility.ProjectDataRoot + "/Universal"
+            : UniversalRoot;
 
         private readonly struct SavedMaterialPropertyCollection
         {
@@ -315,8 +321,8 @@ namespace UMA.Editors
             string root = destinationScope switch
             {
                 UMAReleaseDestinationScope.UMA2 => Uma2Root,
-                UMAReleaseDestinationScope.UMA3 => Uma3Root,
-                _ => UniversalRoot
+                UMAReleaseDestinationScope.UMA3 => WritableUma3Root,
+                _ => WritableUniversalRoot
             };
             return root + "/" + CategoryForAsset(sourcePath);
         }

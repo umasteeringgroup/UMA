@@ -1,0 +1,28 @@
+{
+    "name": "UMA.TestRunner.Editor",
+    "rootNamespace": "UMA.Editors",
+    "references": [
+        "UMA_Core_Editor",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "UMA_TEST_FRAMEWORK"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.unity.test-framework",
+            "expression": "1.0.0",
+            "define": "UMA_TEST_FRAMEWORK"
+        }
+    ],
+    "noEngineReferences": false
+}

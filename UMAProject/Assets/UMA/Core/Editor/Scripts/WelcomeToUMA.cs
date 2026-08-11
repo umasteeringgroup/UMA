@@ -1,4 +1,3 @@
-using JetBrains.Annotations;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -7,9 +6,7 @@ using UMA.CharacterSystem;
 using UMA.Editors;
 using UnityEditor;
 using UnityEditor.SceneManagement;
-using UnityEditor.TerrainTools;
 using UnityEngine;
-using UnityEngine.AI;
 
 namespace UMA
 {
@@ -508,7 +505,7 @@ namespace UMA
             AddSeperator();
 
             AddText("<b>Documentation and Unity support</b>");
-            AddText("- The Documentation Browser lists the Markdown guides shipped in <b>Assets/UMA/Docs</b>; the Markdown viewer adds an outline, source preview, zoom, links, and automatic reload.");
+            AddText($"- The Documentation Browser lists the Markdown guides shipped in <b>{UMAPathUtility.ResolveInstallAssetPath("Docs")}</b>; the Markdown viewer adds an outline, source preview, zoom, links, and automatic reload.");
             AddText("- ShaderGraph packages and UMA materials cover Built-in, URP, and HDRP workflows, including multiple RenderTexture formats and existing-texture channels.");
             AddText("- Unity 6.4 or newer includes an experimental node-graph editor for wardrobe recipes. Continue using the standard recipe editor for the complete production workflow while graph-editor parity work is in progress.");
             AddSeperator();
@@ -539,7 +536,7 @@ namespace UMA
 
             try
             {
-                path = Path.Combine(path, "Core", "ShaderPackages");
+                path = UMAPathUtility.Normalize(path + "/Core/ShaderPackages");
             }
             catch (Exception ex)
             {
@@ -547,7 +544,7 @@ namespace UMA
                 return;
             }
 
-            if (Directory.Exists(path))
+            if (AssetDatabase.IsValidFolder(path))
             {
                 AddText($"Reimporting shaders in {path}");
                 try
@@ -1010,7 +1007,7 @@ namespace UMA
             {
                 AddText("Cannot load Global Library from resources! Please reimport or restore the file.");
                 AddText("The library is normaly at the following location:");
-                AddText(" Assets/UMA/InternalDataSore/InGame/Resources/AssetIndexer.asset");
+                AddText(" " + AssetDatabase.GetAssetPath(UMAAssetIndexer.Instance));
                 return;
             }
             CheckQualitySettings();
@@ -2128,7 +2125,12 @@ namespace UMA
             Rect SceneRect = new Rect(0, 0, ContentRect.width, ht);
 
             UMAWelcomeScenes scenes = null;
-            try { scenes = (UMAWelcomeScenes)Resources.Load("UMAWelcomeScenes"); } catch { /* ignore */ }
+            try
+            {
+                scenes = (UMAWelcomeScenes)Resources.Load("UMAWelcomeScenesProject");
+                if (scenes == null) scenes = (UMAWelcomeScenes)Resources.Load("UMAWelcomeScenes");
+            }
+            catch { /* ignore */ }
 
             if (scenes != null && scenes.umaScenes != null)
             {

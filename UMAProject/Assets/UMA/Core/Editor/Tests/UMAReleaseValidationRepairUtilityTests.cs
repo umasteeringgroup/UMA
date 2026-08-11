@@ -55,7 +55,7 @@ namespace UMA.Editors.Tests
         {
             UMAReleaseValidationReport report = CreateReport(
                 "Assets/UMA2/Races/HumanMale/RaceData/Test.asset",
-                "Assets/UMA/UMA3/Races/Test.asset");
+                UMAPathUtility.ResolveInstallAssetPath("UMA3/Races/Test.asset"));
 
             var plans = UMAReleaseValidationRepairUtility.BuildAutoMovePlan(report);
 
@@ -79,7 +79,10 @@ namespace UMA.Editors.Tests
             string destination = UMAReleaseValidationRepairUtility.GetDestinationFolder(
                 CandidatePath, UMAReleaseDestinationScope.Universal);
 
-            Assert.That(destination, Is.EqualTo("Assets/UMA/Universal/Textures"));
+            string expectedRoot = UMAPathUtility.IsPackageInstallation
+                ? UMAPathUtility.ProjectDataRoot + "/Universal"
+                : UMAPathUtility.ResolveInstallAssetPath("Universal");
+            Assert.That(destination, Is.EqualTo(expectedRoot + "/Textures"));
         }
 
         [Test]

@@ -6,6 +6,8 @@ UMA Addressables are driven by the **UMA Global Library** (`UMAAssetIndexer`). U
 
 > Addressables are optional. A normal UMA project can keep using Resources and direct asset references. Enable them when there is a real content-loading or memory-management reason to do so.
 
+The UMA package does not declare Addressables as a dependency. UMA's Addressables runtime and editor implementations are isolated in assemblies constrained by `UMA_ADDRESSABLES`; normal `UMA_Core` and editor assemblies use dependency-neutral bridges. This keeps projects without Addressables compiling cleanly. See [PackageInstallation.md](PackageInstallation.md) for package-layout details.
+
 ## How the UMA workflow works
 
 The standard UMA generator is `SingleGroupGenerator`. It creates or updates an Addressables group called `UMA_SharedItems`, configured to **Pack Separately**, and writes the corresponding group, address, and label information into the UMA Global Library.

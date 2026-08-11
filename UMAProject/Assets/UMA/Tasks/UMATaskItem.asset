@@ -15,7 +15,7 @@ MonoBehaviour:
   _taskDate: 2026-07-30
   _category: 7
   _title: Generate slots from updated model.
-  _status: 1
+  _status: 3
   _description: "Generate new slots from uma3 selected file. \n\nNote: This is Avelines
     updated male blendshape"
   _objectReferences:

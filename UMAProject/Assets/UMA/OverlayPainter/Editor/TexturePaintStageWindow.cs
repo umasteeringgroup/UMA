@@ -12,7 +12,7 @@ namespace UMA.TexturePaint.Editor
 {
     public sealed partial class TexturePaintStageWindow : PreviewSceneStage
     {
-        private const string ShaderRoot = "Assets/UMA/OverlayPainter/Shaders/";
+        private static string ShaderRoot => UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders") + "/";
         private const float SplineInsertTolerancePixels = 8f;
         private static bool eventsHooked;
         private static readonly int[] RibbonRotationValues = { -180, -90, 0, 90, 180 };
@@ -116,7 +116,7 @@ namespace UMA.TexturePaint.Editor
         [SerializeField] private bool performanceExpanded;
         [SerializeField, Range(16, 1024)] private int historyBudgetMB = 256;
         [SerializeField, Range(16, 512)] private int coverageBudgetMB = 128;
-        [SerializeField] private string exportFolder = "Assets/UMA/OverlayPainter/Generated";
+        [SerializeField] private string exportFolder = UMAPathUtility.OverlayPainterGeneratedRoot;
 
         private TexturePaintStageController controller;
         private TexturePaintDocument document;
@@ -4929,8 +4929,12 @@ namespace UMA.TexturePaint.Editor
 
         internal static bool ShouldYieldToSceneNavigation(Event current)
         {
-            if (current == null || !current.alt) return false;
+            if (current == null) return false;
+            bool altHeld = current.alt ||
+                (current.modifiers & EventModifiers.Alt) != EventModifiers.None;
+            if (!altHeld) return false;
             return current.type == EventType.MouseDown || current.type == EventType.MouseDrag ||
+                current.rawType == EventType.MouseDown || current.rawType == EventType.MouseDrag ||
                 current.rawType == EventType.MouseUp;
         }
 
@@ -5343,8 +5347,9 @@ namespace UMA.TexturePaint.Editor
             if (!string.IsNullOrEmpty(state.sourceOverlayGuid)) paintSourceOverlay = AssetDatabase.LoadAssetAtPath<OverlayDataAsset>(AssetDatabase.GUIDToAssetPath(state.sourceOverlayGuid));
             if (!string.IsNullOrEmpty(state.exportFolder))
             {
-                exportFolder = state.exportFolder == "Assets/UMA/TexturePaintStage/Generated"
-                    ? "Assets/UMA/OverlayPainter/Generated"
+                exportFolder = state.exportFolder == "Assets/UMA/TexturePaintStage/Generated" ||
+                    state.exportFolder == "Assets/UMA/OverlayPainter/Generated"
+                    ? UMAPathUtility.OverlayPainterGeneratedRoot
                     : state.exportFolder;
             }
             if (!string.IsNullOrEmpty(state.brushAssetGuid))

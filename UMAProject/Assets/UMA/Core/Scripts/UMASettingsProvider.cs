@@ -48,10 +48,7 @@ namespace UMA
 
         public static string FindUMAFolder()
         {
-            string basePath = FindUMAFullPath();
-            // return the path relative to the Assets folder
-            string folder = basePath.Replace(Application.dataPath, "Assets");
-            return folder;
+            return UMAPathUtility.InstallAssetRoot;
         }
 
         protected internal static bool ContainsPropertyName(string[] propertyNames, string propertyName)
@@ -74,58 +71,7 @@ namespace UMA
 
         public static string FindUMAFullPath()
         {
-            // Use the configured UMAFolder setting if available
-            string projectRoot = Directory.GetParent(Application.dataPath).FullName.Replace('\\', '/');
-            try
-            {
-                var settings = UMASettings.GetOrCreateSettings();
-                if (settings != null)
-                {
-                    string configured = settings.UMAFolder;
-                    if (string.IsNullOrEmpty(configured))
-                    {
-                        configured = "Assets/UMA"; // default
-                    }
-
-                    // Normalize path to start with Assets/
-                    if (!configured.StartsWith("Assets", StringComparison.OrdinalIgnoreCase))
-                    {
-                        configured = Path.Combine("Assets", configured).Replace('\\', '/');
-                    }
-
-                    string full = Path.Combine(projectRoot, configured).Replace('\\', '/');
-                    if (Directory.Exists(full))
-                    {
-                        return full;
-                    }
-                }
-            }
-            catch
-            {
-                // Swallow any errors (e.g. during domain reload) and fall back to search
-            }
-
-            // Fallback search (original behaviour) if configured path missing
-            string folder = "UMA";
-            string[] folders = AssetDatabase.FindAssets("UMA t:Folder");
-            if (folders != null && folders.Length > 0)
-            {
-                foreach (string guid in folders)
-                {
-                    string path = AssetDatabase.GUIDToAssetPath(guid);
-                    if (path.EndsWith(folder, StringComparison.OrdinalIgnoreCase))
-                    {
-                        // convert to full path
-                        string fullPath = Path.Combine(projectRoot, path).Replace('\\', '/');
-                        if (Directory.Exists(fullPath))
-                        {
-                            return fullPath;
-                        }
-                    }
-                }
-            }
-            // default full path
-            return Path.Combine(Application.dataPath, folder).Replace('\\', '/');
+            return UMAPathUtility.ResolveAbsolutePath(UMAPathUtility.InstallAssetRoot);
         }
 
         private SerializedObject m_CustomSettings;
@@ -216,27 +162,8 @@ namespace UMA
             if (EditorGUI.EndChangeCheck())
             {
                 Debug.Log($"{label} changed to {boolValue} burst = {burst}");
-                if (burst)
-                {
-                    if (boolValue)
-                    {
-                        string sourceFile = Path.Combine(BasePath,  "core", "uma_core_burst.dat");
-                        string destFile = Path.Combine(BasePath,"core", "uma_core.asmdef");
-                        Debug.Log($"Burst changed to {boolValue}-Copying from {sourceFile} to {destFile}");
-                        File.Copy(sourceFile, destFile, true);
-                        AssetDatabase.Refresh();
-                        Debug.Log("File copied");
-                    }
-                    else
-                    {
-                        string sourceFile = Path.Combine(BasePath,"core", "uma_core_noburst.dat");
-                        string destFile = Path.Combine(BasePath,"core", "uma_core.asmdef");
-                        Debug.Log($"Burst changed to {boolValue}-Copying from {sourceFile} to {destFile}");
-                        File.Copy(sourceFile, destFile, true);
-                        AssetDatabase.Refresh();
-                        Debug.Log("File copied");
-                    }
-                }
+                // Package content may be immutable. Burst is controlled solely by the
+                // project define and package dependency; never rewrite UMA_Core.asmdef.
                 m_CustomSettings.ApplyModifiedProperties();
                 if (boolValue)
                 {
@@ -309,10 +236,12 @@ namespace UMA
             if (string.IsNullOrEmpty(relPath))
             {
                 relPath = !string.IsNullOrEmpty(emptyFallback) ? emptyFallback :
-                    label.Contains("UMA") ? "Assets/UMA" : "UMA/Core/ShaderPackages";
+                    label.Contains("UMA") ? UMAPathUtility.InstallAssetRoot : "Core/ShaderPackages";
             }
 
-            if (!relPath.StartsWith("Assets"))
+            bool isAssetPath = relPath.StartsWith("Assets/", StringComparison.OrdinalIgnoreCase) ||
+                               relPath.StartsWith("Packages/", StringComparison.OrdinalIgnoreCase);
+            if (!isAssetPath)
             {
                 if (mustStartWithAssets)
                 {
@@ -320,8 +249,7 @@ namespace UMA
                 }
                 else
                 {
-                    // For shader folder we allow omission of Assets prefix but add for validation
-                    relPath = Path.Combine("Assets", relPath).Replace('\\', '/');
+                    relPath = UMAPathUtility.ResolveInstallAssetPath(relPath);
                 }
             }
 
@@ -345,8 +273,12 @@ namespace UMA
                 if (!string.IsNullOrEmpty(prop.stringValue))
                 {
                     string attempt = prop.stringValue;
-                    if (!attempt.StartsWith("Assets")) attempt = Path.Combine("Assets", attempt).Replace('\\', '/');
-                    string fullAttempt = Path.Combine(Directory.GetParent(Application.dataPath).FullName, attempt).Replace('\\', '/');
+                    if (!attempt.StartsWith("Assets/", StringComparison.OrdinalIgnoreCase) &&
+                        !attempt.StartsWith("Packages/", StringComparison.OrdinalIgnoreCase))
+                        attempt = mustStartWithAssets
+                            ? Path.Combine("Assets", attempt).Replace('\\', '/')
+                            : UMAPathUtility.ResolveInstallAssetPath(attempt);
+                    string fullAttempt = UMAPathUtility.ResolveAbsolutePath(attempt);
                     if (Directory.Exists(fullAttempt)) startPath = fullAttempt;
                 }
                 string folderPicked = EditorUtility.OpenFolderPanel($"Select {label}", startPath, "");
@@ -358,8 +290,9 @@ namespace UMA
                     if (folderPicked.StartsWith(proj))
                     {
                         string rel = folderPicked.Substring(proj.Length + 1); // remove trailing '/'
-                        if (!rel.StartsWith("Assets")) rel = Path.Combine("Assets", rel).Replace('\\', '/');
-                        newVal = rel;
+                        bool valid = rel.StartsWith("Assets/", StringComparison.OrdinalIgnoreCase) ||
+                                     (!mustStartWithAssets && rel.StartsWith("Packages/", StringComparison.OrdinalIgnoreCase));
+                        if (valid) newVal = rel;
                     }
                 }
             }
@@ -452,17 +385,20 @@ namespace UMA
                 m_CustomSettings.FindProperty("texturePaintRecoveryFolder");
             if (umaFolderProp != null)
             {
-                DrawFolderSetting(umaFolderProp, "UMA Folder", "The UMA folder, relative to the Assets folder.", true, () => { UMABasePath = ""; });
+                DrawFolderSetting(umaFolderProp, "UMA Folder",
+                    "Resolved UMA installation path below Assets or Packages.", false,
+                    () => { UMABasePath = ""; UMAPathUtility.InvalidateInstallPathCache(); });
             }
             if (shaderFolderProp != null)
             {
-                DrawFolderSetting(shaderFolderProp, "Shader Folder", "The folder where the UMA shaders are located, relative to the Assets folder.", false, null);
+                DrawFolderSetting(shaderFolderProp, "Shader Folder",
+                    "UMA-relative folder where the legacy shader packages are located.", false, null);
             }
             if (texturePaintRecoveryFolderProp != null)
             {
                 DrawFolderSetting(texturePaintRecoveryFolderProp, "Overlay Painter Recovery Folder",
                     "Folder below Assets for painter_recovery.asset and its data files. This folder can be ignored by source control.",
-                    true, null, true, "Assets/UMA/Temp");
+                    true, null, true, UMAPathUtility.OverlayPainterRecoveryRoot);
                 string recoveryFolder = texturePaintRecoveryFolderProp.stringValue?.Replace('\\', '/').TrimEnd('/');
                 string[] recoveryParts = string.IsNullOrEmpty(recoveryFolder)
                     ? Array.Empty<string>() : recoveryFolder.Split('/');
@@ -475,7 +411,7 @@ namespace UMA
                         belowAssets = false;
                 if (!belowAssets)
                     EditorGUILayout.HelpBox("Overlay Painter Recovery Folder must be below Assets. " +
-                        "Overlay Painter will use Assets/UMA/Temp until this value is corrected.",
+                        $"Overlay Painter will use {UMAPathUtility.OverlayPainterRecoveryRoot} until this value is corrected.",
                         MessageType.Error);
                 else
                     EditorGUILayout.HelpBox("Recovery creates painter_recovery.asset and a sibling data folder here. " +

@@ -1,9 +1,8 @@
 {
-    "name": "Addressable_Editor",
+    "name": "UMA_Editor",
     "rootNamespace": "",
     "references": [
-        "Unity.Addressables.Editor",
-        "Unity.ResourceManager"
+        "UMA_Core"
     ],
     "includePlatforms": [
         "Editor"

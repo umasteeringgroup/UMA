@@ -2,8 +2,8 @@
 
 using System.Text;
 using UMA.CharacterSystem;
+using UMA.Editors.PackageSupport;
 using UnityEditor;
-using UnityEditor.TestTools.TestRunner.Api;
 using UnityEngine;
 
 namespace UMA.Editors
@@ -32,20 +32,23 @@ namespace UMA.Editors
         [MenuItem("UMA/Testing/Run UMA Editor Tests", priority = 2001)]
         public static void RunUmaEditorTests()
         {
-            TestRunnerApi api = ScriptableObject.CreateInstance<TestRunnerApi>();
-            ExecutionSettings settings = new ExecutionSettings(new Filter
+            if (!UMATestRunnerBackend.TryRunEditModeCategory("UMA", out string errorMessage))
             {
-                testMode = TestMode.EditMode,
-                categoryNames = new[] { "UMA" }
-            });
-
-            api.Execute(settings);
+                Debug.LogWarning("[UMA] " + errorMessage);
+                UMAPackageDependencyWindow.OpenAndSelect("com.unity.test-framework");
+                return;
+            }
             Debug.Log("[UMA] Started UMA EditMode tests through Unity Test Runner.");
         }
 
         [MenuItem("UMA/Testing/Open Unity Test Runner", priority = 2002)]
         public static void OpenUnityTestRunner()
         {
+            if (!UMATestRunnerBackend.IsAvailable)
+            {
+                UMAPackageDependencyWindow.OpenAndSelect("com.unity.test-framework");
+                return;
+            }
             if (!EditorApplication.ExecuteMenuItem("Window/General/Test Runner"))
             {
                 EditorApplication.ExecuteMenuItem("Window/Analysis/Test Runner");

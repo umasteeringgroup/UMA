@@ -23,7 +23,8 @@ namespace UMA
         {
             if (index >= 0 && index < umaScenes.Count)
             {
-                UnityEditor.SceneManagement.EditorSceneManager.OpenScene(umaScenes[index].scenePath);
+                string scenePath = UMAPathUtility.ResolveLegacyInstallAssetPath(umaScenes[index].scenePath);
+                UnityEditor.SceneManagement.EditorSceneManager.OpenScene(scenePath);
             }
         }
         public void LoadScene(string sceneName)

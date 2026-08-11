@@ -3,15 +3,11 @@
     "rootNamespace": "",
     "references": [
         "Unity.Timeline",
-        "Unity.ResourceManager",
-        "Unity.Addressables",
-        "Addressable_Editor",
         "UnityEngine.UI",
         "Unity.Burst",
         "Unity.Collections",
         "Unity.Jobs",
         "Unity.Mathematics",
-        "Unity.Mathematics.Editor",
         "Unity.Collections.BurstCompatibilityGen",
         "Unity.InputSystem"
     ],

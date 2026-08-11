@@ -32,10 +32,27 @@ namespace UMA
         }
     }
 
+    [InitializeOnLoad]
     public class AddressableUtility
     {
         private static readonly AddressableUtility addressableUtility = new AddressableUtility();
         private static AddressableAssetSettings _AddressableSettings;
+
+        static AddressableUtility()
+        {
+            UMAAddressableEditorBridge.AddressableInfoResolver = ResolveAddressableInfo;
+        }
+
+        private static UMAAddressableEditorBridge.Info ResolveAddressableInfo(string guid)
+        {
+            AddressableInfo info = GetAddressableInfo(guid);
+            return info == null
+                ? default
+                : new UMAAddressableEditorBridge.Info(
+                    info.AddressableAddress,
+                    info.AddressableGroup,
+                    info.AddressableLabels);
+        }
 
         public static AddressableAssetSettings AddressableSettings
         {

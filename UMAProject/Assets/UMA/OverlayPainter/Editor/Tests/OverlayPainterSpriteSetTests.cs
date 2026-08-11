@@ -40,7 +40,7 @@ namespace UMA.TexturePaint.Editor.Tests
         public void LeatherSampleHasThreeAlignedSixteenSpriteSheets()
         {
             OverlayPainterSpriteSet spriteSet = AssetDatabase.LoadAssetAtPath<OverlayPainterSpriteSet>(
-                "Assets/UMA/OverlayPainter/Textures/LeatherSpriteSet.asset");
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Textures/LeatherSpriteSet.asset"));
 
             Assert.That(spriteSet, Is.Not.Null);
             Assert.That(spriteSet.spriteSheets, Has.Count.EqualTo(3));

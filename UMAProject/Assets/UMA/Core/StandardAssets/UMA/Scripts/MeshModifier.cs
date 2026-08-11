@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UMA;
 using UnityEngine;
-using UnityEngine.XR;
 
 namespace UMA
 {

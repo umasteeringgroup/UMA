@@ -28,7 +28,6 @@ namespace UMA
 		public UMARandomAvatarEvent RandomAvatarGenerated;
 
 		private DynamicCharacterAvatar RandomAvatar;
-		private GameObject character;
 		private readonly List<GameObject> generatedCharacters = new List<GameObject>();
 		private bool initialRandomStateCaptured;
 		private Random.State initialRandomState;
@@ -131,7 +130,6 @@ namespace UMA
 			}
 			generatedCharacters.Clear();
 			RandomAvatar = null;
-			character = null;
 			return destroyed;
 		}
 

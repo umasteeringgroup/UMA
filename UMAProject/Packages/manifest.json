@@ -1,7 +1,6 @@
 {
   "dependencies": {
     "com.unity.2d.sprite": "1.0.0",
-    "com.unity.addressables": "2.9.1",
     "com.unity.ai.navigation": "2.0.13",
     "com.unity.animation.rigging": "1.4.1",
     "com.unity.burst": "1.8.29",
@@ -9,7 +8,6 @@
     "com.unity.collab-proxy": "2.12.4",
     "com.unity.collections": "2.6.6",
     "com.unity.ext.nunit": "2.0.5",
-    "com.unity.formats.fbx": "5.1.6",
     "com.unity.ide.rider": "3.0.40",
     "com.unity.ide.visualstudio": "2.0.27",
     "com.unity.inputsystem": "1.19.0",

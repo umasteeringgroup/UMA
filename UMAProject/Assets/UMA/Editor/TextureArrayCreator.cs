@@ -4,6 +4,18 @@ using UnityEngine.Experimental.Rendering;
 
 public class TextureArrayCreator
 {
+    private static string GetWritableOutputFolder(string sourceAssetPath)
+    {
+        string folder = System.IO.Path.GetDirectoryName(sourceAssetPath)?.Replace('\\', '/');
+        if (UMA.UMAPathUtility.IsWritableProjectAssetPath(folder)) return folder;
+
+        string fallback = UMA.UMAPathUtility.GeneratedRoot + "/TextureArrays";
+        UMA.UMAPathUtility.EnsureAssetFolder(fallback);
+        Debug.LogWarning(
+            $"The source textures are in read-only package content. The texture array will be saved in '{fallback}'.");
+        return fallback;
+    }
+
     private static Texture2D[] GetSelectedTextures()
     {
         Object[] selectedObjects = Selection.objects;
@@ -61,7 +73,7 @@ public class TextureArrayCreator
 
         // Determine base name and folder from the first texture (assuming UDIM naming)
         string firstPath = AssetDatabase.GetAssetPath(textures[0]);
-        string folder = System.IO.Path.GetDirectoryName(firstPath);
+        string folder = GetWritableOutputFolder(firstPath);
         string baseName = GetBaseNameWithoutUDIM(textures[0].name);
         string assetPath = System.IO.Path.Combine(folder, baseName + ".asset").Replace('\\', '/');
 
@@ -151,7 +163,7 @@ public class TextureArrayCreator
         array.anisoLevel = 4;
 
         string firstPath = AssetDatabase.GetAssetPath(textures[0]);
-        string folder = System.IO.Path.GetDirectoryName(firstPath);
+        string folder = GetWritableOutputFolder(firstPath);
         string baseName = GetBaseNameWithoutUDIM(textures[0].name);
         array.name = baseName;
 
@@ -220,7 +232,7 @@ public class TextureArrayCreator
 
         // Name based on first UDIM (strip UDIM number)
         string firstPath = AssetDatabase.GetAssetPath(textures[0]);
-        string folder = System.IO.Path.GetDirectoryName(firstPath);
+        string folder = GetWritableOutputFolder(firstPath);
         string baseName = GetBaseNameWithoutUDIM(textures[0].name);
         array.name = baseName;
 

@@ -11,14 +11,14 @@ namespace UMA.TexturePaint.Editor.Tests
 {
     public sealed class TexturePaintDocumentPersistenceTests
     {
-        private const string Folder = "Assets/UMA/OverlayPainter/GeneratedPersistenceTests";
+        private const string Folder = "Assets/UMAProjectData/Tests/OverlayPainter/GeneratedPersistenceTests";
         private string recoveryKey;
 
         [SetUp]
         public void SetUp()
         {
             AssetDatabase.DeleteAsset(Folder);
-            AssetDatabase.CreateFolder("Assets/UMA/OverlayPainter", "GeneratedPersistenceTests");
+            UMAPathUtility.EnsureAssetFolder(Folder);
             TexturePaintRecoveryStore.RecoveryFolderOverride = Folder + "/Recovery";
             recoveryKey = "test-" + Guid.NewGuid().ToString("N");
         }

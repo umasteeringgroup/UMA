@@ -4,8 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using UMA.Editors.PackageSupport;
 using UnityEditor;
-using UnityEditor.TestTools.TestRunner.Api;
 using UnityEngine;
 
 namespace UMA.Editors
@@ -26,7 +26,6 @@ namespace UMA.Editors
         private MessageType statusType = MessageType.Info;
         private bool waitingForReport;
         private DateTime reportWriteTimeBeforeRun;
-        private TestRunnerApi testRunnerApi;
 
         [MenuItem("UMA/Testing/Release Asset Validation...", priority = 2004)]
         public static void OpenWindow()
@@ -536,18 +535,21 @@ namespace UMA.Editors
         private void RunValidation()
         {
             if (waitingForReport) return;
+            if (!UMATestRunnerBackend.IsAvailable)
+            {
+                statusMessage = "Running validation requires Unity Test Framework. " +
+                    "Install it from UMA Package Dependencies.";
+                statusType = MessageType.Warning;
+                UMAPackageDependencyWindow.OpenAndSelect("com.unity.test-framework");
+                return;
+            }
             string path = UMAReleaseValidationReport.GetAbsolutePath();
             reportWriteTimeBeforeRun = File.Exists(path)
                 ? File.GetLastWriteTimeUtc(path) : DateTime.MinValue;
             waitingForReport = true;
             statusMessage = "Running Asset Validation. The grid will reload when it finishes.";
             statusType = MessageType.Info;
-            testRunnerApi = ScriptableObject.CreateInstance<TestRunnerApi>();
-            testRunnerApi.Execute(new ExecutionSettings(new Filter
-            {
-                testMode = TestMode.EditMode,
-                categoryNames = new[] { "Asset Validation" }
-            }));
+            UMATestRunnerBackend.TryRunEditModeCategory("Asset Validation", out _);
             Repaint();
         }
 

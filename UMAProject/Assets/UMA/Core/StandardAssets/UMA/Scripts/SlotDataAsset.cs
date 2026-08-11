@@ -1494,7 +1494,7 @@ namespace UMA
 #if UNITY_EDITOR
             if (persistentAsset)
             {
-                if (string.IsNullOrWhiteSpace(assetPath)) assetPath = "Assets/UMA/Generated/Slots";
+                if (string.IsNullOrWhiteSpace(assetPath)) assetPath = UMAPathUtility.GeneratedSlotsRoot;
                 if (!System.IO.Directory.Exists(assetPath)) System.IO.Directory.CreateDirectory(assetPath);
                 string safeName = newAssetName.Replace(':', '_').Replace('/', '_').Replace('\\', '_');
                 string fullPath = AssetDatabase.GenerateUniqueAssetPath(System.IO.Path.Combine(assetPath, safeName + ".asset"));

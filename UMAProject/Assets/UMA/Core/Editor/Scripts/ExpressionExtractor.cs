@@ -12,7 +12,7 @@ namespace UMA.PoseTools
         public GameObject gameObject;
         public RuntimeAnimatorController Controller;
         public UnityEngine.Object expressionFolder;
-        public string OutputPath = "Assets/UMA/Expressions/";
+        public string OutputPath = UMAPathUtility.GeneratedExpressionsRoot + "/";
         private AnimationClip poseAnimation;
 
         [Serializable]

@@ -12,6 +12,19 @@ namespace UMA.Tests
 {
     public sealed class DynamicExpressionPlayerRuntimeTests
     {
+        private struct SetLocalRotationJob : IAnimationJob
+        {
+            public TransformStreamHandle bone;
+            public Quaternion rotation;
+
+            public void ProcessAnimation(AnimationStream stream)
+            {
+                bone.SetLocalRotation(stream, rotation);
+            }
+
+            public void ProcessRootMotion(AnimationStream stream) { }
+        }
+
         [DefaultExecutionOrder(10000)]
         public sealed class LateFrameProbe : MonoBehaviour
         {
@@ -86,19 +99,20 @@ namespace UMA.Tests
             probe.data = data;
             probe.boneName = boneName;
 
-            AnimationClip clip = Track(new AnimationClip());
-            clip.wrapMode = WrapMode.Loop;
-            clip.SetCurve(boneName, typeof(Transform),
-                "localEulerAnglesRaw.z",
-                AnimationCurve.Constant(0f, 1f, 12f));
             PlayableGraph graph = PlayableGraph.Create(
                 "DynamicExpressionPlayerRuntimeTest");
             graph.SetTimeUpdateMode(DirectorUpdateMode.GameTime);
             AnimationPlayableOutput output =
                 AnimationPlayableOutput.Create(
                     graph, "Animation", animator);
-            AnimationClipPlayable playable =
-                AnimationClipPlayable.Create(graph, clip);
+            AnimationScriptPlayable playable =
+                AnimationScriptPlayable.Create(graph,
+                    new SetLocalRotationJob
+                    {
+                        bone = animator.BindStreamTransform(
+                            data.skeleton.GetBoneTransform(boneName)),
+                        rotation = Quaternion.Euler(0f, 0f, 12f)
+                    });
             output.SetSourcePlayable(playable);
             graph.Play();
 
