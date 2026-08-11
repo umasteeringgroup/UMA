@@ -134,6 +134,50 @@ namespace UMA.Editors.Tests
                 "and folders:\n" + string.Join("\n", failures));
         }
 
+        [Test]
+        public void PackageMetadataGuidsAreUnique()
+        {
+            string installRoot = UMAPathUtility.ResolveAbsolutePath(
+                UMAPathUtility.InstallAssetRoot);
+            var pathsByGuid = new Dictionary<string, List<string>>(
+                StringComparer.OrdinalIgnoreCase);
+            var failures = new List<string>();
+
+            foreach (string metaPath in Directory.EnumerateFiles(
+                         installRoot, "*.meta", SearchOption.AllDirectories))
+            {
+                string guid = ReadMetaGuid(metaPath);
+                string displayPath = NormalizeAssetPath(metaPath)
+                    .Substring(NormalizeAssetPath(installRoot).Length)
+                    .TrimStart('/');
+                if (string.IsNullOrWhiteSpace(guid))
+                {
+                    failures.Add(displayPath + " -> missing GUID");
+                    continue;
+                }
+
+                AddPath(pathsByGuid, guid, displayPath);
+            }
+
+            AddDuplicateFailures(pathsByGuid, "duplicate asset GUID",
+                failures);
+            Assert.That(failures, Is.Empty,
+                "UMA package metadata must contain unique GUIDs:\n" +
+                string.Join("\n", failures));
+        }
+
+        private static string ReadMetaGuid(string metaPath)
+        {
+            foreach (string line in File.ReadLines(metaPath))
+            {
+                if (!line.StartsWith("guid:",
+                        StringComparison.OrdinalIgnoreCase))
+                    continue;
+                return line.Substring("guid:".Length).Trim();
+            }
+            return null;
+        }
+
         private static void AddPath(
             Dictionary<string, List<string>> pathsByKey,
             string key,

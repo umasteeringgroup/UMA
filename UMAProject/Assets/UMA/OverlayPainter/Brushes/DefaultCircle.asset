@@ -10,10 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 48b9e2357bf64ec4b9b2c18327d81a20, type: 3}
-  m_Name: Default Circle
+  m_Name: DefaultCircle
   m_EditorClassIdentifier: UMA.TexturePaint.Runtime::UMA.TexturePaint.BrushPreset
   shape: 0
   stampTexture: {fileID: 0}
+  stampSprite: {fileID: 0}
   size: 0.05
   hardness: 0.75
   flow: 1
@@ -22,3 +23,14 @@ MonoBehaviour:
   blendMode: 0
   mirrorStroke: 0
   alignToStroke: 0
+  randomRotation: 0
+  randomSizeVariation: 0
+  randomSizeShrink: 0.3
+  randomSizeGrow: 0.3
+  splatter: 0
+  splatterDistance: 1
+  randomStrength: 0
+  fade: 0
+  taper: 0
+  fadeTaperLength: 0
+  tags: 
