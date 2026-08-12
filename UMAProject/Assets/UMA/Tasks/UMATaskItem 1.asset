@@ -15,7 +15,7 @@ MonoBehaviour:
   _taskDate: 2026-07-31
   _category: 25
   _title: Test all hair items and touchup weights as needed
-  _status: 0
+  _status: 3
   _description: Some of the hair get incorrect weights during the copy (check pony
     tails, pig tails. long hair.)
   _objectReferences: []

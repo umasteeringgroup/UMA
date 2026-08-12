@@ -6,7 +6,6 @@ using UnityEditor;
 using UnityEngine;
 using UMA.CharacterSystem;
 using UnityEditorInternal;
-using UnityEngine.AI;
 
 namespace UMA.Editors
 {

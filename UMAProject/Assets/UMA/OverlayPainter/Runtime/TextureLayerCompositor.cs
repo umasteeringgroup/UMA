@@ -146,6 +146,38 @@ namespace UMA.TexturePaint
             return true;
         }
 
+        internal bool ComposeBelowLayer(TextureSet set, TexturePaintChannel channel,
+            TexturePaintLayer boundaryLayer, RenderTexture destination)
+        {
+            TextureChannelTarget baseChannel = set?.GetChannel(channel);
+            int boundary = set?.layers.IndexOf(boundaryLayer) ?? -1;
+            if (baseChannel?.editable?.Front == null || destination == null || boundary < 0)
+                return false;
+            RectInt rect = new RectInt(0, 0, destination.width, destination.height);
+            if (!IsAvailable)
+            {
+                Graphics.Blit(baseChannel.editable.Front, destination);
+                return false;
+            }
+
+            CopyInto(baseChannel.editable.Front, destination, rect);
+            for (int i = 0; i < set.layers.Count; i++)
+            {
+                TexturePaintLayer layer = set.layers[i];
+                if (layer == null || TryGetParentGroup(set, layer, out _)) continue;
+                if (layer.kind == TexturePaintLayerKind.Group)
+                {
+                    if (i < boundary || HasDescendantBefore(set, layer, boundary))
+                        CompositeGroupChildren(destination, set, layer, channel, rect, 0, boundary);
+                }
+                else if (i < boundary)
+                    CompositeAuthoredLayer(destination, set, layer, channel, rect, 0);
+            }
+            PruneEffectDistanceCache();
+            PruneLayerMaskCache();
+            return true;
+        }
+
         internal void ComposeGroupPreview(TextureSet set, TexturePaintLayer group,
             TexturePaintChannel channel, RenderTexture destination)
         {
@@ -172,18 +204,21 @@ namespace UMA.TexturePaint
         }
 
         private void CompositeGroupChildren(RenderTexture destination, TextureSet set,
-            TexturePaintLayer group, TexturePaintChannel channel, RectInt rect, int depth)
+            TexturePaintLayer group, TexturePaintChannel channel, RectInt rect, int depth,
+            int maximumLayerIndexExclusive = int.MaxValue)
         {
             if (group?.visible != true || group.opacity <= 0f) return;
             if (applyGroupMaskKernel < 0 || clearKernel < 0)
             {
-                CompositeGroupChildrenUnmasked(destination, set, group, channel, rect, depth);
+                CompositeGroupChildrenUnmasked(destination, set, group, channel, rect, depth,
+                    maximumLayerIndexExclusive);
                 return;
             }
             CompositeScratch scratch = GetCompositeScratch(depth, destination);
             CopyInto(destination, scratch.original, rect);
             ClearInto(scratch.result, rect);
-            CompositeGroupChildrenUnmasked(scratch.result, set, group, channel, rect, depth + 1);
+            CompositeGroupChildrenUnmasked(scratch.result, set, group, channel, rect, depth + 1,
+                maximumLayerIndexExclusive);
             Texture mask = group.layerMask != null && evaluateLayerMaskKernel >= 0
                 ? GetEffectiveLayerMask(group, destination.width, destination.height) : null;
             shader.SetInts("_TextureSize", destination.width, destination.height);
@@ -200,7 +235,8 @@ namespace UMA.TexturePaint
         }
 
         private void CompositeGroupChildrenUnmasked(RenderTexture destination, TextureSet set,
-            TexturePaintLayer group, TexturePaintChannel channel, RectInt rect, int depth)
+            TexturePaintLayer group, TexturePaintChannel channel, RectInt rect, int depth,
+            int maximumLayerIndexExclusive = int.MaxValue)
         {
             for (int i = 0; i < set.layers.Count; i++)
             {
@@ -208,10 +244,39 @@ namespace UMA.TexturePaint
                 if (child == null ||
                     !string.Equals(child.parentId, group.id, System.StringComparison.Ordinal)) continue;
                 if (child.kind == TexturePaintLayerKind.Group)
-                    CompositeGroupChildren(destination, set, child, channel, rect, depth);
-                else
+                {
+                    if (i < maximumLayerIndexExclusive ||
+                        HasDescendantBefore(set, child, maximumLayerIndexExclusive))
+                        CompositeGroupChildren(destination, set, child, channel, rect, depth,
+                            maximumLayerIndexExclusive);
+                }
+                else if (i < maximumLayerIndexExclusive)
                     CompositeAuthoredLayer(destination, set, child, channel, rect, depth);
             }
+        }
+
+        private static bool HasDescendantBefore(TextureSet set, TexturePaintLayer group,
+            int maximumLayerIndexExclusive)
+        {
+            if (set == null || group == null) return false;
+            int limit = Mathf.Min(maximumLayerIndexExclusive, set.layers.Count);
+            for (int i = 0; i < limit; i++)
+            {
+                TexturePaintLayer candidate = set.layers[i];
+                string parentId = candidate?.parentId;
+                int guard = 0;
+                while (!string.IsNullOrEmpty(parentId) && guard++ < set.layers.Count)
+                {
+                    if (string.Equals(parentId, group.id, System.StringComparison.Ordinal)) return true;
+                    TexturePaintLayer parent = null;
+                    for (int parentIndex = 0; parentIndex < set.layers.Count; parentIndex++)
+                        if (string.Equals(set.layers[parentIndex]?.id, parentId,
+                                System.StringComparison.Ordinal))
+                        { parent = set.layers[parentIndex]; break; }
+                    parentId = parent?.parentId;
+                }
+            }
+            return false;
         }
 
         private void ClearInto(RenderTexture destination, RectInt rect)
@@ -313,7 +378,7 @@ namespace UMA.TexturePaint
             {
                 TexturePaintLayerEffectSettings effect = effects.Stack[i];
                 if (!IsCompositeEffect(effect, ribbonLocal)) continue;
-                CompositeEffect(scratch.result, layerTarget.Front, layerMask, distance,
+                CompositeEffect(scratch.result, scratch.original, layerTarget.Front, layerMask, distance,
                     effect, 1f, channel, rect);
             }
             if (applyIsolatedLayerKernel < 0)
@@ -324,6 +389,8 @@ namespace UMA.TexturePaint
             shader.SetInts("_TextureSize", destination.width, destination.height);
             shader.SetInts("_TileOffset", rect.x, rect.y);
             shader.SetFloat("_LayerOpacity", Mathf.Clamp01(opacity));
+            shader.SetFloat("_LayerValueScale", channel == TexturePaintChannel.NormalControl
+                ? set.ResolveNormalControlLayerScale(layer.GetChannelSettings(channel, false)) : 1f);
             shader.SetTexture(applyIsolatedLayerKernel, "_GroupOriginal", scratch.original);
             shader.SetTexture(applyIsolatedLayerKernel, "_GroupResult", scratch.result);
             shader.SetTexture(applyIsolatedLayerKernel, "_Composite", destination);
@@ -335,8 +402,7 @@ namespace UMA.TexturePaint
             bool ribbonLocal)
         {
             if (effect?.enabled != true) return false;
-            if (effect.kind == TexturePaintLayerEffectKind.ColorOverlay ||
-                effect.kind == TexturePaintLayerEffectKind.TextureOverlay) return true;
+            if (TexturePaintLayerEffects.IsCompositeOnlyEffect(effect.kind)) return true;
             if (ribbonLocal) return false;
             return TexturePaintLayerEffects.IsDistanceEffect(effect.kind);
         }
@@ -369,14 +435,13 @@ namespace UMA.TexturePaint
             return true;
         }
 
-        private void CompositeEffect(RenderTexture destination, Texture layerTexture, Texture layerMask,
-            RenderTexture distance, TexturePaintLayerEffectSettings effect, float layerOpacity,
-            TexturePaintChannel channel, RectInt rect)
+        private void CompositeEffect(RenderTexture destination, Texture original, Texture layerTexture,
+            Texture layerMask, RenderTexture distance, TexturePaintLayerEffectSettings effect,
+            float layerOpacity, TexturePaintChannel channel, RectInt rect)
         {
             if (!EffectsAvailable || !TexturePaintLayerEffects.EnabledFor(effect, channel) ||
                 destination == null || layerTexture == null) return;
-            bool requiresDistance = effect.kind != TexturePaintLayerEffectKind.ColorOverlay &&
-                effect.kind != TexturePaintLayerEffectKind.TextureOverlay;
+            bool requiresDistance = !TexturePaintLayerEffects.IsCompositeOnlyEffect(effect.kind);
             if (requiresDistance && distance == null) return;
             shader.SetInts("_TextureSize", destination.width, destination.height);
             shader.SetInts("_TileOffset", rect.x, rect.y);
@@ -389,6 +454,10 @@ namespace UMA.TexturePaint
             shader.SetFloat("_EffectSmoothness", effect.smoothness);
             shader.SetVector("_EffectOffset", new Vector4(effect.offset.x, effect.offset.y, 0f, 0f));
             shader.SetFloat("_EffectLevel", effect.level);
+            shader.SetFloat("_EffectSaturation", effect.saturation);
+            shader.SetFloat("_EffectBrightness", effect.brightness);
+            shader.SetFloat("_EffectContrast", effect.contrast);
+            shader.SetFloat("_EffectHue", effect.hue);
             shader.SetInt("_EffectBlendMode", effect.kind == TexturePaintLayerEffectKind.ColorOverlay
                 ? (int)effect.blendMode : (int)TexturePaintBlendMode.Normal);
             shader.SetInt("_HasEffectTexture1", effect.texture1 != null ? 1 : 0);
@@ -418,6 +487,7 @@ namespace UMA.TexturePaint
                 distance != null ? distance : Texture2D.blackTexture);
             shader.SetTexture(compositeLayerEffectKernel, "_EffectCurveTexture",
                 GetCurveTexture(effect.curve));
+            shader.SetTexture(compositeLayerEffectKernel, "_GroupOriginal", original);
             shader.SetTexture(compositeLayerEffectKernel, "_Composite", destination);
             Dispatch(compositeLayerEffectKernel, rect);
         }
@@ -642,7 +712,8 @@ namespace UMA.TexturePaint
                 hash = hash * 31 + noise.opacity.GetHashCode();
                 hash = hash * 31 + (int)noise.combine;
                 hash = hash * 31 + overlay.enabled.GetHashCode();
-                hash = hash * 31 + (overlay.texture != null ? overlay.texture.GetInstanceID() : 0);
+                hash = hash * 31 + (overlay.texture != null
+                    ? overlay.texture.GetEntityId().GetHashCode() : 0);
                 hash = hash * 31 + (int)overlay.sourceChannel;
                 hash = hash * 31 + overlay.tiling.GetHashCode();
                 hash = hash * 31 + overlay.offset.GetHashCode();

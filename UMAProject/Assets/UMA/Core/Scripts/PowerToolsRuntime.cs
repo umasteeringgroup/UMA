@@ -219,8 +219,8 @@ namespace UMA
 		public static void SaveCharacterPrefab(UMAData umaData, string prefabName)
 		{
 #if UNITY_EDITOR
-			EnsureProjectFolder("Assets/UMA/UMA_Generated/Complete");
-			var assetFolder = AssetDatabase.GenerateUniqueAssetPath("Assets/UMA/UMA_Generated/Complete/" + prefabName);
+			EnsureProjectFolder(UMAPathUtility.GeneratedCharactersRoot);
+			var assetFolder = AssetDatabase.GenerateUniqueAssetPath(UMAPathUtility.GeneratedCharactersRoot + "/" + prefabName);
 			SaveCharacterPrefab(assetFolder, prefabName, umaData);
 #else
 			throw new NotImplementedException("SaveCharacterPrefab Cannot save a prefab outside of the Unity environment. This method only works in the editor!");

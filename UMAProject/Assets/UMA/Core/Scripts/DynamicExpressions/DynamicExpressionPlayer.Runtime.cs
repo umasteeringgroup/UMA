@@ -1518,7 +1518,7 @@ public sealed partial class DynamicExpressionPlayer
     }
 
     private void SetEyeDirection(int sharedIndex, int leftIndex,
-        int rightIndex, float normalizedDirection)
+        int rightIndex, float normalizedDirection, bool invertRight)
     {
         if (sharedIndex >= 0)
         {
@@ -1527,7 +1527,9 @@ public sealed partial class DynamicExpressionPlayer
         }
         SetDirectionalRoleValue(leftIndex, normalizedDirection);
         if (rightIndex != leftIndex)
-            SetDirectionalRoleValue(rightIndex, normalizedDirection);
+            SetDirectionalRoleValue(rightIndex, invertRight
+                ? -normalizedDirection
+                : normalizedDirection);
     }
 
     private void SetDirectionalRoleValue(
@@ -1557,10 +1559,10 @@ public sealed partial class DynamicExpressionPlayer
         {
             SetEyeDirection(_eyeHorizontalIndex,
                 _eyeHorizontalLeftIndex, _eyeHorizontalRightIndex,
-                direction.x);
+                direction.x, true);
             SetEyeDirection(_eyeVerticalIndex,
                 _eyeVerticalLeftIndex, _eyeVerticalRightIndex,
-                direction.y);
+                direction.y, false);
         }
         finally
         {

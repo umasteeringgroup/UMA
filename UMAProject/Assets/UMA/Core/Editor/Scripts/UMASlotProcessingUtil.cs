@@ -1216,6 +1216,7 @@ namespace UMA.Editors
                 }
 #endif
                 GenerateSlotLodsIfEnabled(sbp, OldAsset);
+                OldAsset.PrepareForAssetPath(AssetDatabase.GetAssetPath(OldAsset), sbp.slotName);
                 createdSlots.Add(OldAsset);
                 // Replace working reference with existing for overlay mapping
                 UnityEngine.Object.DestroyImmediate(slot);
@@ -1223,6 +1224,7 @@ namespace UMA.Editors
             }
             else
             {
+                slot.PrepareForAssetPath(slotPath, sbp.slotName);
                 AssetDatabase.CreateAsset(slot, slotPath);
 #if UNITY_6000_2_OR_NEWER
                 // Carry LOD ranges from the source mesh
@@ -1335,6 +1337,8 @@ namespace UMA.Editors
 #endif
                     GenerateSlotLodsIfEnabled(sbp, existingAdditional);
                     ClearUdimMetadata(existingAdditional);
+                    existingAdditional.PrepareForAssetPath(
+                        AssetDatabase.GetAssetPath(existingAdditional), theSlotName);
                     EditorUtility.SetDirty(existingAdditional);
                     createdSlots.Add(existingAdditional);
                     nonUdimResult.AddSlotWrite(existingAdditional, additionalSlotWasReplaced);
@@ -1360,6 +1364,7 @@ namespace UMA.Editors
 
                 additionalSlot.sourceSubmeshIndex = sourceSubmeshIndex;
 
+                additionalSlot.PrepareForAssetPath(theSlotPath, theSlotName);
                 AssetDatabase.CreateAsset(additionalSlot, theSlotPath);
 #if UNITY_6000_2_OR_NEWER
                 if (sbp.generateSlotLods)
@@ -2091,7 +2096,6 @@ namespace UMA.Editors
                         {
                             // Update existing asset in place
                             sda = existing;
-                            sda.name = theSlotName;
                             sda.sourceSubmeshIndex = sub;
                             sda.UpdateMeshData(smr, sbp.rootBone, true, 0, sbp.clearNormals, sbp.clearTangents);
                             TransformMeshData(sda, sbp);
@@ -2109,6 +2113,7 @@ namespace UMA.Editors
                             {
                                 sda.meshData.RetrieveDataFromUnityCloth(cloth);
                             }
+                            sda.PrepareForAssetPath(AssetDatabase.GetAssetPath(sda), theSlotName);
                             EditorUtility.SetDirty(sda);
                         }
                         else
@@ -2135,6 +2140,7 @@ namespace UMA.Editors
                                 sda.meshData.RetrieveDataFromUnityCloth(cloth);
                             }
 
+                            sda.PrepareForAssetPath(theSlotPath, theSlotName);
                             AssetDatabase.CreateAsset(sda, theSlotPath);
                             if (sbp.addToGlobalLibrary)
                             {

@@ -55,6 +55,7 @@ int2 _TextureSize;
 int2 _TileOffset;
 int2 _DispatchSize;
 float _LayerOpacity;
+float _LayerValueScale;
 int _BlendMode;
 int _HasLayerMask;
 int _JumpStep;
@@ -64,6 +65,10 @@ float _EffectWidth;
 float _EffectSmoothness;
 float2 _EffectOffset;
 float _EffectLevel;
+float _EffectSaturation;
+float _EffectBrightness;
+float _EffectContrast;
+float _EffectHue;
 int _EffectBlendMode;
 int _HasEffectTexture1;
 int _HasEffectTexture2;
@@ -209,6 +214,17 @@ void CSApplyIsolatedLayer(uint3 dispatchID : SV_DispatchThreadID)
     if (any(pixel < 0) || any(pixel >= _TextureSize)) return;
     float4 original = _GroupOriginal.Load(int3(pixel, 0));
     float4 result = _GroupResult.Load(int3(pixel, 0));
+    // Normal Control height intensity is authored per layer. Against the ordinary neutral-backed
+    // composite, scale only this layer's net change. Authored-only export and isolated groups begin
+    // transparent, so recover their straight height, scale it around neutral gray, then associate
+    // it again. Alpha coverage remains unchanged in either case.
+    if (original.a <= 0.00001 && result.a > 0.00001)
+    {
+        float3 straightValue = result.rgb / result.a;
+        straightValue = 0.5 + (straightValue - 0.5) * _LayerValueScale;
+        result.rgb = straightValue * result.a;
+    }
+    else result.rgb = original.rgb + (result.rgb - original.rgb) * _LayerValueScale;
     _Composite[pixel] = lerp(original, result, saturate(_LayerOpacity));
 }
 
@@ -344,6 +360,43 @@ float2 TransformEffectUV(float2 uv, float2 tiling, float2 offset, float rotation
     return rotated * tiling + 0.5 + offset;
 }
 
+float3 EffectRGBToHSV(float3 color)
+{
+    float4 k = float4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+    float4 p = lerp(float4(color.bg, k.wz), float4(color.gb, k.xy), step(color.b, color.g));
+    float4 q = lerp(float4(p.xyw, color.r), float4(color.r, p.yzx), step(p.x, color.r));
+    float delta = q.x - min(q.w, q.y);
+    float epsilon = 1e-10;
+    return float3(abs(q.z + (q.w - q.y) / (6.0 * delta + epsilon)),
+        delta / (q.x + epsilon), q.x);
+}
+
+float3 EffectHSVToRGB(float3 hsv)
+{
+    float3 p = abs(frac(hsv.xxx + float3(0.0, 2.0 / 3.0, 1.0 / 3.0)) * 6.0 - 3.0);
+    return hsv.z * lerp(float3(1.0, 1.0, 1.0), saturate(p - 1.0), hsv.y);
+}
+
+float3 ApplyImageAdjustments(float3 color)
+{
+    float3 adjusted = color;
+    if (_GrayscaleChannel == 0)
+    {
+        float3 hsv = EffectRGBToHSV(saturate(adjusted));
+        hsv.x = frac(hsv.x + _EffectHue / 360.0);
+        adjusted = EffectHSVToRGB(hsv);
+        float luminance = dot(adjusted, float3(0.2126, 0.7152, 0.0722));
+        adjusted = lerp(luminance.xxx, adjusted, _EffectSaturation);
+    }
+    else
+    {
+        adjusted = dot(adjusted, float3(0.2126, 0.7152, 0.0722)).xxx;
+    }
+    adjusted += _EffectBrightness;
+    adjusted = (adjusted - 0.5) * (1.0 + _EffectContrast) + 0.5;
+    return saturate(adjusted);
+}
+
 [numthreads(16, 16, 1)]
 void CSCompositeLayerEffect(uint3 dispatchID : SV_DispatchThreadID)
 {
@@ -352,6 +405,22 @@ void CSCompositeLayerEffect(uint3 dispatchID : SV_DispatchThreadID)
     if (any(pixel < 0) || any(pixel >= _TextureSize)) return;
 
     float sourceAlpha = EffectAlphaAt(pixel);
+    if (_EffectType == 10)
+    {
+        float adjustmentAmount = saturate(_LayerOpacity * _EffectLevel);
+        if (sourceAlpha <= 0.00001 || adjustmentAmount <= 0.00001) return;
+        float4 destination = _Composite[pixel];
+        float3 original = _GroupOriginal.Load(int3(pixel, 0)).rgb;
+        // Recover the visible contribution represented by this layer from its already-composited
+        // result. Adjusting that contribution, then compositing it back over the untouched
+        // backdrop, prevents translucent pixels from applying the adjustment to lower layers.
+        float3 isolated = (destination.rgb - original * (1.0 - sourceAlpha)) / sourceAlpha;
+        float3 adjusted = ApplyImageAdjustments(isolated);
+        float3 adjustedDestination = lerp(original, adjusted, sourceAlpha);
+        _Composite[pixel] = float4(lerp(destination.rgb, adjustedDestination, adjustmentAmount),
+            destination.a);
+        return;
+    }
     if (_EffectType == 9)
     {
         float commonCoverage = saturate(sourceAlpha * _LayerOpacity * _EffectLevel);

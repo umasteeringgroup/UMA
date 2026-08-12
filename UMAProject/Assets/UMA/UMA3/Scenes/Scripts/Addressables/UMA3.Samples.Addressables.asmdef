@@ -1,0 +1,21 @@
+{
+    "name": "UMA3.Samples.Addressables",
+    "rootNamespace": "",
+    "references": [
+        "UMA_Core",
+        "UnityEngine.UI",
+        "Unity.Addressables",
+        "Unity.ResourceManager"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "UMA_ADDRESSABLES"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

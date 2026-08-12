@@ -48,7 +48,11 @@ MonoBehaviour:
   _buttMass: 0.9
   _buttDamping: 0.15
   _buttGravity: 0.75
+  _buttInertia: 0.65
+  _buttMaxJiggleDistance: 0.2
+  _buttTargetDistance: 0.35
+  _buttPositionWeight: 1
+  _buttRotationWeight: 0.15
   _buttSquashAndStretch: 1
   _buttFrontStretch: 0.2
   _buttSideStretch: 0.15
-  _jigglers: []

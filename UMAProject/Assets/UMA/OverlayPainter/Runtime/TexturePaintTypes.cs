@@ -83,7 +83,8 @@ namespace UMA.TexturePaint
     public enum TexturePaintTool { Paint, Erase, Blur, Smear, Clone, Dodge, Burn, NormalTouchup, Plugin }
     public enum TexturePaintBlendMode { Normal, Multiply, Add, Subtract, Screen, Overlay }
     internal enum TexturePaintGeometrySelectorKind { None, Slot, Polygon, UVIsland }
-    public enum TexturePaintTangentMode { Corner, Smooth, Broken, Custom }
+    // Keep new values at the end so serialized tangent modes retain their meaning.
+    public enum TexturePaintTangentMode { Corner, Smooth, Broken, Custom, Straight }
     public enum TexturePaintPathMode { Stamps, Continuous, Ribbon, Filled }
     public enum TexturePaintPathOrientation { FollowPath, FixedAxis }
     public enum TexturePaintPathCap { Round, Square, Butt }
@@ -101,8 +102,8 @@ namespace UMA.TexturePaint
     {
         private readonly struct CacheKey : IEquatable<CacheKey>
         {
-            private readonly int textureId;
-            private readonly int spriteId;
+            private readonly EntityId textureId;
+            private readonly EntityId spriteId;
             private readonly TexturePaintChannel channel;
             private readonly TexturePaintNormalConvention convention;
             private readonly bool unityNormalMap;
@@ -114,8 +115,8 @@ namespace UMA.TexturePaint
                 TexturePaintNormalConvention convention, bool unityNormalMap, bool invert,
                 int component)
             {
-                textureId = texture != null ? texture.GetInstanceID() : 0;
-                spriteId = sprite != null ? sprite.GetInstanceID() : 0;
+                textureId = texture != null ? texture.GetEntityId() : EntityId.None;
+                spriteId = sprite != null ? sprite.GetEntityId() : EntityId.None;
                 this.channel = channel;
                 this.convention = channel == TexturePaintChannel.Normal
                     ? convention
@@ -138,8 +139,8 @@ namespace UMA.TexturePaint
             {
                 unchecked
                 {
-                    int hash = textureId;
-                    hash = hash * 397 ^ spriteId;
+                    int hash = textureId.GetHashCode();
+                    hash = hash * 397 ^ spriteId.GetHashCode();
                     hash = hash * 397 ^ (int)channel;
                     hash = hash * 397 ^ (int)convention;
                     hash = hash * 397 ^ (unityNormalMap ? 1 : 0);
@@ -703,6 +704,9 @@ namespace UMA.TexturePaint
         {
             EnsureControlPoints();
             if ((uint)pointIndex >= (uint)PointCount) return;
+            if (tangentModes[pointIndex] == TexturePaintTangentMode.Straight ||
+                tangentModes[pointIndex] == TexturePaintTangentMode.Corner)
+                tangentModes[pointIndex] = TexturePaintTangentMode.Custom;
             bool linked = tangentModes[pointIndex] == TexturePaintTangentMode.Smooth;
             if (incoming)
             {
@@ -753,6 +757,46 @@ namespace UMA.TexturePaint
                 uvInControls[pointIndex] = uvPoints[pointIndex] - uvDirection * uvLength;
                 uvOutControls[pointIndex] = uvPoints[pointIndex] + uvDirection * uvLength;
             }
+            else if (mode == TexturePaintTangentMode.Straight)
+            {
+                SetStraightControls(pointIndex);
+            }
+        }
+
+        /// <summary>
+        /// Places this point's handles directly on the adjacent point vectors. Each handle is one
+        /// third of its segment length, producing the linear Bezier controls expected for a
+        /// straight path. Open endpoints collapse the handle on their missing side.
+        /// </summary>
+        public void SetStraightControls(int pointIndex)
+        {
+            EnsureControlPoints();
+            int count = PointCount;
+            if ((uint)pointIndex >= (uint)count) return;
+            tangentModes[pointIndex] = TexturePaintTangentMode.Straight;
+            int previous = pointIndex > 0 ? pointIndex - 1 : closed && count > 1 ? count - 1 : -1;
+            int next = pointIndex + 1 < count ? pointIndex + 1 : closed && count > 1 ? 0 : -1;
+
+            worldInControls[pointIndex] = previous >= 0
+                ? Vector3.Lerp(worldPoints[pointIndex], worldPoints[previous], 1f / 3f)
+                : worldPoints[pointIndex];
+            uvInControls[pointIndex] = previous >= 0
+                ? Vector2.Lerp(uvPoints[pointIndex], uvPoints[previous], 1f / 3f)
+                : uvPoints[pointIndex];
+            worldOutControls[pointIndex] = next >= 0
+                ? Vector3.Lerp(worldPoints[pointIndex], worldPoints[next], 1f / 3f)
+                : worldPoints[pointIndex];
+            uvOutControls[pointIndex] = next >= 0
+                ? Vector2.Lerp(uvPoints[pointIndex], uvPoints[next], 1f / 3f)
+                : uvPoints[pointIndex];
+        }
+
+        public void RefreshStraightTangents()
+        {
+            EnsureControlPoints();
+            for (int pointIndex = 0; pointIndex < PointCount; pointIndex++)
+                if (tangentModes[pointIndex] == TexturePaintTangentMode.Straight)
+                    SetStraightControls(pointIndex);
         }
 
         public int InsertPointAfter(int pointIndex)
@@ -807,6 +851,7 @@ namespace UMA.TexturePaint
             TexturePaintSurfaceAnchor anchor = t < 0.5f ? anchors[pointIndex] : anchors[next];
             anchor.normal = Vector3.Slerp(anchors[pointIndex].normal, anchors[next].normal, t).normalized;
             anchors.Insert(insertIndex, anchor);
+            RefreshStraightTangents();
             return insertIndex;
         }
 
@@ -821,6 +866,7 @@ namespace UMA.TexturePaint
             pressures.RemoveAt(pointIndex); widths.RemoveAt(pointIndex); flows.RemoveAt(pointIndex);
             rolls.RemoveAt(pointIndex); colors.RemoveAt(pointIndex);
             offsets.RemoveAt(pointIndex); tangentModes.RemoveAt(pointIndex); anchors.RemoveAt(pointIndex);
+            RefreshStraightTangents();
             return true;
         }
 
@@ -833,6 +879,7 @@ namespace UMA.TexturePaint
             worldInControls.Reverse(); worldOutControls.Reverse(); uvInControls.Reverse(); uvOutControls.Reverse();
             (worldInControls, worldOutControls) = (worldOutControls, worldInControls);
             (uvInControls, uvOutControls) = (uvOutControls, uvInControls);
+            RefreshStraightTangents();
         }
 
         public List<StrokeSample> Sample(float spacing, int surfaceIndex = 0)
@@ -843,7 +890,10 @@ namespace UMA.TexturePaint
             if (count == 0) return result;
             if (count == 1)
             {
-                result.Add(new StrokeSample(worldPoints[0], worldNormals[0], uvPoints[0], surfaceIndices[0], triangleIndices[0]));
+                result.Add(new StrokeSample(DomainPoint(worldPoints[0], uvPoints[0]),
+                    worldSpace ? worldNormals[0] : Vector3.forward, uvPoints[0],
+                    worldSpace ? surfaceIndices[0] : surfaceIndex,
+                    worldSpace ? triangleIndices[0] : -1));
                 return result;
             }
 
@@ -857,8 +907,10 @@ namespace UMA.TexturePaint
             {
                 int j = (i + 1) % count;
                 List<float> parameters = new List<float> { 0f };
-                EvaluateSegment(i, j, 0f, out Vector3 segmentStart, out _);
-                EvaluateSegment(i, j, 1f, out Vector3 segmentEnd, out _);
+                EvaluateSegment(i, j, 0f, out Vector3 segmentStartWorld, out Vector2 segmentStartUV);
+                EvaluateSegment(i, j, 1f, out Vector3 segmentEndWorld, out Vector2 segmentEndUV);
+                Vector3 segmentStart = DomainPoint(segmentStartWorld, segmentStartUV);
+                Vector3 segmentEnd = DomainPoint(segmentEndWorld, segmentEndUV);
                 TessellateAdaptive(i, j, 0f, segmentStart, 1f, segmentEnd,
                     Mathf.Max(0.00001f, spacing * 0.1f), 0, parameters);
                 int firstParameter = i == 0 ? 0 : 1;
@@ -866,10 +918,15 @@ namespace UMA.TexturePaint
                 {
                     float t = parameters[parameterIndex];
                     EvaluateSegment(i, j, t, out Vector3 wp, out Vector2 uv);
+                    wp = DomainPoint(wp, uv);
                     int anchor = t < 0.5f ? i : j;
-                    int sampleSurface = anchor < surfaceIndices.Count ? surfaceIndices[anchor] : surfaceIndex;
-                    int triangle = anchor < triangleIndices.Count ? triangleIndices[anchor] : -1;
-                    Vector3 normal = Vector3.Slerp(worldNormals[i], worldNormals[j], t).normalized;
+                    int sampleSurface = worldSpace && anchor < surfaceIndices.Count
+                        ? surfaceIndices[anchor] : surfaceIndex;
+                    int triangle = worldSpace && anchor < triangleIndices.Count
+                        ? triangleIndices[anchor] : -1;
+                    Vector3 normal = worldSpace
+                        ? Vector3.Slerp(worldNormals[i], worldNormals[j], t).normalized
+                        : Vector3.forward;
                     float normalOffset = Mathf.Lerp(offsets[i], offsets[j], t);
                     wp += normal * normalOffset;
                     StrokeSample pathSample = new StrokeSample(wp, normal, uv, sampleSurface, triangle)
@@ -888,6 +945,9 @@ namespace UMA.TexturePaint
             if (!closed) sampler.Flush(result);
             return result;
         }
+
+        private Vector3 DomainPoint(Vector3 world, Vector2 uv)
+            => worldSpace ? world : new Vector3(uv.x, uv.y, 0f);
 
         /// <summary>
         /// Samples one complete ribbon tile per fitted path interval. Tile centers sit at the
@@ -988,9 +1048,14 @@ namespace UMA.TexturePaint
             float tolerance, int depth, List<float> parameters)
         {
             float midpointT = (t0 + t1) * 0.5f;
-            EvaluateSegment(from, to, midpointT, out Vector3 midpoint, out _);
-            EvaluateSegment(from, to, Mathf.Lerp(t0, t1, 0.25f), out Vector3 quarter, out _);
-            EvaluateSegment(from, to, Mathf.Lerp(t0, t1, 0.75f), out Vector3 threeQuarter, out _);
+            EvaluateSegment(from, to, midpointT, out Vector3 midpointWorld, out Vector2 midpointUV);
+            EvaluateSegment(from, to, Mathf.Lerp(t0, t1, 0.25f), out Vector3 quarterWorld,
+                out Vector2 quarterUV);
+            EvaluateSegment(from, to, Mathf.Lerp(t0, t1, 0.75f), out Vector3 threeQuarterWorld,
+                out Vector2 threeQuarterUV);
+            Vector3 midpoint = DomainPoint(midpointWorld, midpointUV);
+            Vector3 quarter = DomainPoint(quarterWorld, quarterUV);
+            Vector3 threeQuarter = DomainPoint(threeQuarterWorld, threeQuarterUV);
             float deviation = Mathf.Max(Vector3.Distance(midpoint, Vector3.Lerp(p0, p1, 0.5f)),
                 Mathf.Max(Vector3.Distance(quarter, Vector3.Lerp(p0, p1, 0.25f)),
                     Vector3.Distance(threeQuarter, Vector3.Lerp(p0, p1, 0.75f))));

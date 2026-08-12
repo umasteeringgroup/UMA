@@ -22,7 +22,8 @@ namespace UMA.TexturePaint
         Paint,
         Fill,
         Spline,
-        Group
+        Group,
+        Plugin
     }
 
     public enum TexturePaintFillProjection
@@ -100,6 +101,7 @@ namespace UMA.TexturePaint
         public float brushRandomSizeGrow = 0.3f;
         public bool brushSplatter;
         [Range(0.01f, 2f)] public float brushSplatterDistance = 1f;
+        public bool brushRandomStrength;
         public bool brushFade;
         public bool brushTaper;
         [Min(0f)] public float brushFadeTaperLength;
@@ -158,6 +160,10 @@ namespace UMA.TexturePaint
         [Range(0f, 1f)] public float contribution = 1f;
         [Range(0f, 1f)] public float opacity = 1f;
         public TexturePaintBlendMode blendMode = TexturePaintBlendMode.Normal;
+        // Height strength belongs to each authored Normal Control channel. The explicit flag lets
+        // documents saved before this setting existed retain their texture-set conversion value.
+        public bool hasNormalControlStrength;
+        [Range(0f, 16f)] public float normalControlStrength = 2f;
         public TexturePaintChannelSourceSettings sourceSettings;
 
         public TexturePaintLayerChannelSettings Clone()
@@ -170,6 +176,8 @@ namespace UMA.TexturePaint
                 contribution = contribution,
                 opacity = opacity,
                 blendMode = blendMode,
+                hasNormalControlStrength = hasNormalControlStrength,
+                normalControlStrength = normalControlStrength,
                 sourceSettings = sourceSettings?.Clone()
             };
         }
@@ -186,7 +194,8 @@ namespace UMA.TexturePaint
         EdgeFade,
         BevelEdge,
         ProceduralStitch,
-        TextureOverlay
+        TextureOverlay,
+        ImageAdjustments
     }
 
     public enum TexturePaintLayerMaskTextureChannel
@@ -235,6 +244,10 @@ namespace UMA.TexturePaint
         [Range(0f, 1f)] public float textureOpacity1 = 1f;
         [Range(0f, 1f)] public float textureOpacity2 = 1f;
         public TexturePaintBlendMode secondaryBlendMode = TexturePaintBlendMode.Normal;
+        [Range(0f, 2f)] public float saturation = 1f;
+        [Range(-1f, 1f)] public float brightness;
+        [Range(-1f, 1f)] public float contrast;
+        [Range(-180f, 180f)] public float hue;
 
         public TexturePaintLayerEffectSettings Clone()
         {
@@ -273,7 +286,11 @@ namespace UMA.TexturePaint
                 textureRotation2 = textureRotation2,
                 textureOpacity1 = textureOpacity1,
                 textureOpacity2 = textureOpacity2,
-                secondaryBlendMode = secondaryBlendMode
+                secondaryBlendMode = secondaryBlendMode,
+                saturation = saturation,
+                brightness = brightness,
+                contrast = contrast,
+                hue = hue
             };
         }
 
@@ -297,6 +314,10 @@ namespace UMA.TexturePaint
             NormalizeTiling(ref textureTiling2);
             textureOpacity1 = Mathf.Clamp01(textureOpacity1);
             textureOpacity2 = Mathf.Clamp01(textureOpacity2);
+            saturation = Mathf.Clamp(saturation, 0f, 2f);
+            brightness = Mathf.Clamp(brightness, -1f, 1f);
+            contrast = Mathf.Clamp(contrast, -1f, 1f);
+            hue = Mathf.Clamp(hue, -180f, 180f);
             curve ??= DefaultCurve();
         }
 
@@ -348,6 +369,7 @@ namespace UMA.TexturePaint
         public TexturePaintLayerEffectSettings bevelEdge => GetOrCreate(TexturePaintLayerEffectKind.BevelEdge);
         public TexturePaintLayerEffectSettings proceduralStitch => GetOrCreate(TexturePaintLayerEffectKind.ProceduralStitch);
         public TexturePaintLayerEffectSettings textureOverlay => GetOrCreate(TexturePaintLayerEffectKind.TextureOverlay);
+        public TexturePaintLayerEffectSettings imageAdjustments => GetOrCreate(TexturePaintLayerEffectKind.ImageAdjustments);
 
         public bool HasEnabled
         {
@@ -445,6 +467,13 @@ namespace UMA.TexturePaint
                 kind == TexturePaintLayerEffectKind.OuterGlow;
         }
 
+        public static bool IsCompositeOnlyEffect(TexturePaintLayerEffectKind kind)
+        {
+            return kind == TexturePaintLayerEffectKind.ColorOverlay ||
+                kind == TexturePaintLayerEffectKind.TextureOverlay ||
+                kind == TexturePaintLayerEffectKind.ImageAdjustments;
+        }
+
         public static bool EnabledFor(TexturePaintLayerEffectSettings effect,
             TexturePaintChannel channel)
         {
@@ -478,6 +507,7 @@ namespace UMA.TexturePaint
                 Create(TexturePaintLayerEffectKind.InnerGlow, Color.white, 8f),
                 Create(TexturePaintLayerEffectKind.ColorOverlay, Color.white, 1f),
                 CreateTextureOverlay(),
+                CreateImageAdjustments(),
                 CreateEdgeFade(),
                 CreateBevelEdge(),
                 CreateProceduralStitch()
@@ -500,6 +530,7 @@ namespace UMA.TexturePaint
                 TexturePaintLayerEffectKind.BevelEdge => CreateBevelEdge(),
                 TexturePaintLayerEffectKind.ProceduralStitch => CreateProceduralStitch(),
                 TexturePaintLayerEffectKind.TextureOverlay => CreateTextureOverlay(),
+                TexturePaintLayerEffectKind.ImageAdjustments => CreateImageAdjustments(),
                 _ => Create(kind, Color.white, 1f)
             };
         }
@@ -558,6 +589,19 @@ namespace UMA.TexturePaint
                 textureTiling2 = Vector2.one,
                 textureOpacity1 = 1f,
                 textureOpacity2 = 1f,
+                level = 1f
+            };
+        }
+
+        private static TexturePaintLayerEffectSettings CreateImageAdjustments()
+        {
+            return new TexturePaintLayerEffectSettings
+            {
+                kind = TexturePaintLayerEffectKind.ImageAdjustments,
+                saturation = 1f,
+                brightness = 0f,
+                contrast = 0f,
+                hue = 0f,
                 level = 1f
             };
         }
@@ -687,6 +731,7 @@ namespace UMA.TexturePaint
         public float brushRandomSizeGrow = 0.3f;
         public bool brushSplatter;
         [Range(0.01f, 2f)] public float brushSplatterDistance = 1f;
+        public bool brushRandomStrength;
         public bool brushFade;
         public bool brushTaper;
         [Min(0f)] public float brushFadeTaperLength;
@@ -869,6 +914,9 @@ namespace UMA.TexturePaint
         public string pluginId;
         public string pluginVersion;
         public string pluginParametersJson;
+        public TexturePaintPluginParameterSet pluginParameters = new TexturePaintPluginParameterSet();
+        public bool pluginStale = true;
+        public string pluginLastError;
         public string proceduralGroupKey;
         public bool hasMask;
         [Range(0f, 1f)] public float maskBaseValue = 1f;
@@ -876,6 +924,12 @@ namespace UMA.TexturePaint
         public TexturePaintChannelSourceSettings maskSourceSettings =
             TexturePaintLayerMask.DefaultSourceSettings();
         public TexturePaintChannel maskSourceChannel = TexturePaintChannel.Albedo;
+        public string maskPluginId;
+        public string maskPluginVersion;
+        public string maskPluginParametersJson;
+        public TexturePaintPluginParameterSet maskPluginParameters = new TexturePaintPluginParameterSet();
+        public bool maskPluginStale = true;
+        public string maskPluginLastError;
         public TexturePaintPixelData maskPixels = new TexturePaintPixelData();
         public List<TexturePaintDocumentLayerChannel> channels = new List<TexturePaintDocumentLayerChannel>();
         public List<TexturePaintStrokeRecord> strokes = new List<TexturePaintStrokeRecord>();
@@ -908,7 +962,7 @@ namespace UMA.TexturePaint
     [CreateAssetMenu(menuName = "UMA/Overlay Painter/Document", fileName = "Overlay Painter Document")]
     public sealed class TexturePaintDocument : ScriptableObject
     {
-        public const int CurrentSchemaVersion = 20;
+        public const int CurrentSchemaVersion = 22;
 
         public int schemaVersion = CurrentSchemaVersion;
         public string documentId = Guid.NewGuid().ToString("N");
@@ -977,6 +1031,13 @@ namespace UMA.TexturePaint
                         layer.maskSourceSettings.color = new Color(paintValue, paintValue, paintValue, 1f);
                     }
                     layer.maskPixels ??= new TexturePaintPixelData();
+                    layer.pluginParameters ??= !string.IsNullOrEmpty(layer.pluginParametersJson)
+                        ? JsonUtility.FromJson<TexturePaintPluginParameterSet>(layer.pluginParametersJson)
+                        : new TexturePaintPluginParameterSet();
+                    layer.maskPluginParameters ??= !string.IsNullOrEmpty(layer.maskPluginParametersJson)
+                        ? JsonUtility.FromJson<TexturePaintPluginParameterSet>(
+                            layer.maskPluginParametersJson)
+                        : new TexturePaintPluginParameterSet();
                     if (loadedSchemaVersion < 15)
                     {
                         layer.hasMask = false;

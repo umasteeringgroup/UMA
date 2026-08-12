@@ -2,6 +2,8 @@
 
 This document explains UMA's UDIM and Texture2DArray workflow, how to build arrays, and how shaders consume them.
 
+For image adjustment, alpha repair, splitting, detail generation, and normal editing, see [Texture Utilities](TextureUtilities.md).
+
 ## UDIM Source Layout
 - UDIM tiles typically use a base name with a numeric suffix: `name.1001`, `name.1002`, etc.
 - UMA expects tile order to match ascending UDIM index (1001, 1002, ...). By default we assume 10 tiles per row when computing array slice indices in shaders.

@@ -37,10 +37,8 @@ namespace UMA.Editors.Tests
             string existingPath = testFolder + "/StoredSomewhereElse.asset";
 
             SlotDataAsset existing = ScriptableObject.CreateInstance<SlotDataAsset>();
-            existing.name = "DifferentUnityObjectName";
-            existing._oldSlotName = slotName + "_slot";
+            existing.PrepareForAssetPath(existingPath, slotName + "_slot");
             AssetDatabase.CreateAsset(existing, existingPath);
-            existing.name = "DifferentUnityObjectName";
             EditorUtility.SetDirty(existing);
             AssetDatabase.SaveAssets();
 
@@ -71,6 +69,30 @@ namespace UMA.Editors.Tests
 
             Assert.IsTrue(result.SlotWasReplaced[found]);
             Assert.AreEqual(existingPath, result.SlotWrittenPath[found]);
+        }
+
+        [Test]
+        public void PersistentSlotObjectNameMatchesFilenameWithoutChangingLogicalSlotName()
+        {
+            const string logicalName = "UMA30_Body_UDIM1004";
+            string path = testFolder + "/" + logicalName + "_slot.asset";
+            SlotDataAsset slot = ScriptableObject.CreateInstance<SlotDataAsset>();
+            slot.name = logicalName;
+
+            slot.PrepareForAssetPath(path, logicalName);
+            AssetDatabase.CreateAsset(slot, path);
+            AssetDatabase.SaveAssets();
+
+            SlotDataAsset reloaded = AssetDatabase.LoadAssetAtPath<SlotDataAsset>(path);
+            Assert.That(reloaded, Is.Not.Null);
+            Assert.That(reloaded.name, Is.EqualTo(logicalName + "_slot"));
+            Assert.That(reloaded.slotName, Is.EqualTo(logicalName));
+            Assert.That(reloaded.sourceSlot, Is.EqualTo(logicalName));
+
+            // Rebuilding the same slot must not undo Unity's main-object repair.
+            reloaded.PrepareForAssetPath(path, logicalName);
+            Assert.That(reloaded.name, Is.EqualTo(logicalName + "_slot"));
+            Assert.That(reloaded.slotName, Is.EqualTo(logicalName));
         }
     }
 

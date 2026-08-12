@@ -86,6 +86,24 @@ Open:
 
 Close the main Global Library window when the maintenance tool requests it.
 
+### Global Library Filters
+
+Open `UMA > Global Library Filters` to restrict project scans by UMA asset type.
+
+Choose an indexed type and add one or more project paths. When a type has filters, rebuild scans accept only asset paths containing at least one of that type's filter strings. Types with no configured filter continue using their normal project-wide search behavior.
+
+Filters are persisted on the asset index and affect later rebuilds. Adding a filter does not immediately remove existing entries; run a rebuild when the configured scope should become authoritative.
+
+Use `Browse` to choose a folder under the current project's `Assets` directory. `Remove` removes only that type/path rule. Be careful with broad substring filters and similarly named folders, because matching is path-string based.
+
+Recommended uses:
+
+- Restrict optional content types to package roots.
+- Exclude large source-art areas by indexing only production folders.
+- Keep UMA2 and UMA3 content discovery predictable in a development project.
+
+Before changing filters, back up the index and record the existing rules. After rebuilding, verify representative assets of every filtered type.
+
 ### Rebuild Library From Project
 
 This clears and recreates the index by scanning the configured project folders and types.
@@ -118,6 +136,28 @@ Use it when serialized entries appear correct but lookup behavior is stale.
 ### Clean Added Types
 
 This removes nonstandard indexed types and their items. Do not use it if the project intentionally registered custom asset types.
+
+### Clear Cached References
+
+Releases Unity object references held by the index without removing serialized index entries. Use it to reduce stale in-memory references or allow unused assets to unload. Runtime name and GUID entries remain in the index.
+
+### Refresh Cached References
+
+Reloads object references for non-addressable indexed items. Use it after project assets were reimported or references were cleared. Addressable loading state is managed separately.
+
+### Save Asset Index
+
+Forces the current serialized index state to disk. Most maintenance operations save automatically, but this is useful after controlled programmatic or inspector changes.
+
+### Backup and Restore
+
+`Backup Asset Index...` writes a `.bak` snapshot outside or inside the project at the location you choose. It backs up index data, not the referenced project assets.
+
+`Restore Asset Index...` replaces the current serialized index with the selected backup. Close the Global Library first and verify that the backed-up asset paths and GUIDs still exist in the current project revision.
+
+### Empty Asset Index
+
+The Danger Zone command removes every serialized index item but does not delete project assets. It cannot be undone through Unity Undo. Use a backup first, then rebuild from the project when the empty state is not intended to remain.
 
 ## Routine Artist Workflow
 

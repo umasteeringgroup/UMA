@@ -971,6 +971,16 @@ public class IconCreator : MonoBehaviour
         string normalizedFolder = folder.Replace('\\', '/').Trim();
         string normalizedAssetsPath = Application.dataPath.Replace('\\', '/');
 
+#if UNITY_EDITOR
+        if (UMAPathUtility.IsPackageInstallation &&
+            (normalizedFolder.Equals(UMAPathUtility.LegacyInstallRoot, StringComparison.OrdinalIgnoreCase) ||
+             normalizedFolder.StartsWith(UMAPathUtility.LegacyInstallRoot + "/", StringComparison.OrdinalIgnoreCase)))
+        {
+            normalizedFolder = UMAPathUtility.ProjectDataRoot +
+                normalizedFolder.Substring(UMAPathUtility.LegacyInstallRoot.Length);
+        }
+#endif
+
         if (normalizedFolder.StartsWith(normalizedAssetsPath, StringComparison.OrdinalIgnoreCase))
         {
             normalizedFolder = normalizedFolder.Substring(normalizedAssetsPath.Length);

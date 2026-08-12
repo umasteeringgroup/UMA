@@ -337,13 +337,13 @@ namespace UMA.Editors
                 if (PluginTypes.Count == 1 && UMAEditorUtilities.UseSharedGroupConfigured())
                 {
                     IUMAAddressablePlugin addrplug = (IUMAAddressablePlugin)Activator.CreateInstance(PluginTypes[0]);
-                    UMAAddressablesSupport.Instance.GenerateAddressables(addrplug);
+                    UMAAddressablesEditorBridge.GenerateAddressables(addrplug);
                     Resources.UnloadUnusedAssets();
                 }
                 else
                 {
-                    UMAAddressablesSupport.Instance.CleanupAddressables();
-                    UMAAddressablesSupport.Instance.GenerateAddressables();
+                    UMAAddressablesEditorBridge.CleanupAddressables();
+                    UMAAddressablesEditorBridge.GenerateAddressables();
                     Resources.UnloadUnusedAssets();
                 }
             }

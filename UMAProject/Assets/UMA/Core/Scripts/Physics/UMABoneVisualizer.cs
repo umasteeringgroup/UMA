@@ -57,7 +57,15 @@ namespace UMA
 
             if (BoneMesh == null)
             {
-                BoneMesh = Resources.Load<Mesh>("PlaceholderAssets/BoneMesh");
+#if UNITY_EDITOR
+                BoneMesh = UMAPathUtility.LoadInstallAsset<Mesh>(
+                    "InternalDataStore/InGame/Resources/PlaceholderAssets/bonemesh.fbx");
+#endif
+                if (BoneMesh == null)
+                {
+                    BoneMesh = Resources.Load<Mesh>(
+                        "PlaceholderAssets/BoneMesh");
+                }
             }
         }
 

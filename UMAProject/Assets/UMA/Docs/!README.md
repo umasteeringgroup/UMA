@@ -17,6 +17,7 @@ Artists creating new content should continue with:
 - [UMA Tools for Blender](UMAToolsForBlender.md) — Blender validation, rigging, weight, UDIM, import, and dependable UMA FBX export workflows.
 - [Creating a New Race](CreatingANewRace.md) — the complete race-authoring process from source model through runtime validation.
 - [Overlay Painter](OverlayPainter.md) — non-destructive 3D/2D texture painting, layers, material channels, paths, effects, and recipe-ready export.
+- [Overlay Painter Generators and Filters](OverlayPainterGeneratorsAndFilters.md) — artist workflows, material recipes, detailed controls, and troubleshooting for every included procedural plugin.
 
 You can open these guides inside Unity from `UMA > View Documentation`.
 
@@ -50,9 +51,14 @@ You can open these guides inside Unity from `UMA > View Documentation`.
 - [RaceData](RaceData.md)
 - [SlotDataAsset](SlotDataAsset.md)
 - [OverlayDataAsset](OverlayDataAsset.md)
+- [Examine Overlays](ExamineOverlays.md)
+- [Examine Slots](ExamineSlots.md)
 - [Overlay Painter](OverlayPainter.md)
+- [Overlay Painter Generators and Filters](OverlayPainterGeneratorsAndFilters.md)
+- [Texture Utilities](TextureUtilities.md)
 - [Weight Touchup](WeightTouchup.md)
 - [Wardrobe Recipe Editor](WardrobeRecipeEditor.md)
+- [Examine Wearables](ExamineWearables.md)
 - [UMA Materials](UMAMaterial.md)
 - [Renderer Assets and Cloth](RendererAssetsAndCloth.md)
 - [Textures, UDIMs, and Texture Arrays](Textures-UDIM-Arrays.md)
@@ -78,11 +84,24 @@ You can open these guides inside Unity from `UMA > View Documentation`.
 
 ### Editor workflow
 
+- [UMA Editor Utilities](UMAEditorUtilities.md)
+- [Examine Wearables](ExamineWearables.md)
+- [Examine Overlays](ExamineOverlays.md)
+- [Examine Slots](ExamineSlots.md)
+- [Project Asset Batch Utilities](AssetMenuBatchUtilities.md)
+- [Asset Consolidation and Repair](AssetConsolidationAndRepair.md)
+- [Asset Discovery Utilities](AssetDiscoveryUtilities.md)
+- [Race Utilities](RaceUtilities.md)
+- [Pose Tools](PoseTools.md)
+- [Animation Utilities](AnimationUtilities.md)
+- [Prefab and Scene-Building Tools](PrefabAndSceneBuildingTools.md)
+- [Testing and Release Utilities](TestingAndReleaseUtilities.md)
+- [Release Asset Validation](ReleaseAssetValidation.md)
 - [UMA Task List](UMATaskList.md)
 
 ### Engineering and implementation notes
 
-- [Incremental Mesh Combiner Baseline](IncrementalMeshCombinerBaseline.md)
+- [Incremental Mesh Combiner Baseline](Plans/IncrementalMeshCombinerBaseline.md)
 - [Dynamic Character Build Optimization Plan](Plans/DynamicCharacterBuildOptimizationPlan.md)
 - [Mesh Modifier Cloth Brush Plan](Plans/MeshModifierClothBrushPlan.md)
 - [Wardrobe Recipe Graph Production Readiness](Plans/UMAWardrobeRecipeGraphProductionReadiness.md)

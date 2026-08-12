@@ -20,7 +20,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: UMA_Mat_Diffuse
+  m_Name: UMA_Mat_Diffuse_ShaderGraph
   m_Shader: {fileID: -6465566751694194690, guid: aa1e9a9819aa50e419d23dd6d2c02679, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -137,7 +137,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: d03b3b0a9f509bc45aa0629f22ce32fc, type: 3}
+        m_Texture: {fileID: 2800000, guid: 6aa27555756f44fa9248d84bf64929e6, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:

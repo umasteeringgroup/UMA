@@ -4,6 +4,8 @@ A `RaceData` asset defines a UMA character family. It connects the base body, sk
 
 In UMA terminology, a race is a technical compatibility group. It does not need to represent a narrative species. Two characters belong to different UMA races when they require different base geometry, skeleton behavior, DNA, or wardrobe mapping.
 
+For race duplication, compatible-race batches, material migration, and smoke testing, see [Race Utilities](RaceUtilities.md).
+
 ## What a Race Provides
 
 A production race normally supplies:
@@ -241,6 +243,8 @@ Assign:
 - Optional wardrobe-region thumbnails
 
 Use consistent framing, lighting, and background across races so character-creator UI remains coherent.
+
+Use `Clear Race Thumbnails` below the thumbnail fields to remove the Full Thumb, Face Thumb, and every Wardrobe Slot Thumb at once. After confirmation, the inspector replaces the complete Race Thumbnails container with a new empty one and saves the RaceData asset. The operation supports Undo.
 
 ## Tags
 

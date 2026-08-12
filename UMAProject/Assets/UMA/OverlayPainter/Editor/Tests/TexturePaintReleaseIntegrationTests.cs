@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
@@ -10,7 +12,7 @@ namespace UMA.TexturePaint.Editor.Tests
 {
     public sealed class TexturePaintReleaseIntegrationTests
     {
-        private const string Folder = "Assets/UMA/OverlayPainter/GeneratedReleaseTests";
+        private const string Folder = "Assets/UMAProjectData/Tests/OverlayPainter/GeneratedReleaseTests";
         private readonly List<Object> ownedObjects = new List<Object>();
         private readonly List<TextureStore> ownedStores = new List<TextureStore>();
         private string indexerAssetPath;
@@ -88,6 +90,82 @@ namespace UMA.TexturePaint.Editor.Tests
             expected.a = alpha + 0.25f * (1f - alpha);
             Color actual = ReadCenter(channel.composite);
             AssertColor(actual, expected, 0.004f);
+            compositor.Dispose();
+        }
+
+        [Test]
+        public async Task PluginLayerReadsOnlyCompositeBelowItsStackPosition()
+        {
+            TexturePaintGpuTestFixture.RequireComputeShaders();
+            TextureSet set = CreateSet(TexturePaintChannel.Albedo, Color.black,
+                null, Own(CreateQuadMesh()));
+            TextureStore store = CreateStore(set);
+            TextureChannelTarget channel = set.GetChannel(TexturePaintChannel.Albedo);
+            channel.composite = CreateRenderTexture("Plugin Below Composite", 16,
+                RenderTextureFormat.ARGBHalf);
+            TextureLayerCompositor compositor = new TextureLayerCompositor(
+                TexturePaintGpuTestFixture.LoadShader("LayerComposite.compute"));
+            set.compositor = compositor;
+            TexturePaintLayer lower = set.AddFillLayer("Lower Red",
+                TexturePaintChannel.Albedo, Color.red);
+            TexturePaintLayer pluginLayer = set.AddPluginLayer("Echo Below");
+            TexturePaintLayer upper = set.AddFillLayer("Upper Blue",
+                TexturePaintChannel.Albedo, Color.blue);
+            set.RecomposeAll();
+            Assert.That(ReadCenter(channel.composite).b, Is.GreaterThan(0.9f));
+
+            using PluginHost host = new PluginHost();
+            var destinations = new Dictionary<TextureSet, TexturePaintLayer>
+                { { set, pluginLayer } };
+            await host.ExecutePluginLayerAsync(new BelowCompositeEchoPlugin(), store,
+                new TexturePaintPluginParameterSet(), destinations, null,
+                CancellationToken.None);
+
+            TexturePaintLayer generated = set.layers[set.layers.IndexOf(upper) - 1];
+            Color cached = ReadCenter(generated.channels[TexturePaintChannel.Albedo].Front);
+            Assert.That(cached.r, Is.GreaterThan(0.9f),
+                "The Plugin layer should receive the red layer below it.");
+            Assert.That(cached.b, Is.LessThan(0.1f),
+                "The blue layer above it must not feed back into the plugin input.");
+            Assert.That(ReadCenter(channel.composite).b, Is.GreaterThan(0.9f),
+                "The upper layer must continue compositing over generated output.");
+            Assert.That(lower.kind, Is.EqualTo(TexturePaintLayerKind.Fill));
+            compositor.Dispose();
+        }
+
+        [Test]
+        public void PluginLayerUsesOrdinaryGroupOpacityAndEditableMask()
+        {
+            TexturePaintGpuTestFixture.RequireComputeShaders();
+            TextureSet set = CreateSet(TexturePaintChannel.Albedo, Color.black,
+                null, Own(CreateQuadMesh()));
+            CreateStore(set);
+            TextureChannelTarget channel = set.GetChannel(TexturePaintChannel.Albedo);
+            channel.composite = CreateRenderTexture("Grouped Plugin Composite", 16,
+                RenderTextureFormat.ARGBHalf);
+            TextureLayerCompositor compositor = new TextureLayerCompositor(
+                TexturePaintGpuTestFixture.LoadShader("LayerComposite.compute"));
+            set.compositor = compositor;
+
+            TexturePaintLayer group = set.AddGroup("Weathering");
+            group.opacity = 0.5f;
+            TexturePaintLayer plugin = set.AddPluginLayer("Agify Cache");
+            Assert.That(plugin.parentId, Is.EqualTo(group.id));
+            plugin.channels[TexturePaintChannel.Albedo] = new EditableTextureTarget(
+                "Plugin Albedo", channel.Texture.width, channel.Texture.height,
+                channel.format, null, Color.red);
+            plugin.GetChannelSettings(TexturePaintChannel.Albedo);
+            TexturePaintLayerMask mask = set.AddLayerMask(plugin, 1f);
+            Assert.That(mask, Is.Not.Null);
+
+            set.RecomposeAll();
+            Color grouped = ReadCenter(channel.composite);
+            Assert.That(grouped.r, Is.EqualTo(0.5f).Within(0.03f));
+            Assert.That(grouped.g, Is.LessThan(0.03f));
+
+            mask.target.Reset(null, TextureSet.MaskColor(0f));
+            set.RecomposeAll();
+            AssertColor(ReadCenter(channel.composite), Color.black, 0.02f);
             compositor.Dispose();
         }
 
@@ -684,6 +762,79 @@ namespace UMA.TexturePaint.Editor.Tests
         }
 
         [Test]
+        public void ImageAdjustmentsApplyHueSaturationBrightnessAndContrastNonDestructively()
+        {
+            TexturePaintGpuTestFixture.RequireComputeShaders();
+            TextureSet set = CreateSet(TexturePaintChannel.Albedo, Color.black);
+            CreateStore(set);
+            TextureChannelTarget channel = set.GetChannel(TexturePaintChannel.Albedo);
+            channel.composite = CreateRenderTexture("Texture Paint Image Adjustments", 16,
+                RenderTextureFormat.ARGBHalf);
+            TextureLayerCompositor compositor = new TextureLayerCompositor(
+                TexturePaintGpuTestFixture.LoadShader("LayerComposite.compute"));
+            set.compositor = compositor;
+            TexturePaintLayer layer = set.AddFillLayer("Adjusted Image",
+                TexturePaintChannel.Albedo, Color.red);
+            TexturePaintLayerEffectSettings adjustment = layer.effects.imageAdjustments;
+            adjustment.enabled = true;
+            adjustment.channel = TexturePaintChannel.Albedo;
+
+            set.RecomposeAll();
+            AssertColor(ReadCenter(channel.composite), Color.red, 0.025f);
+
+            adjustment.hue = 120f;
+            set.RecomposeAll();
+            AssertColor(ReadCenter(channel.composite), Color.green, 0.025f);
+
+            adjustment.hue = 0f;
+            adjustment.saturation = 0f;
+            set.RecomposeAll();
+            AssertColor(ReadCenter(channel.composite),
+                new Color(0.2126f, 0.2126f, 0.2126f, 1f), 0.025f);
+
+            adjustment.saturation = 1f;
+            adjustment.brightness = 0.1f;
+            set.RecomposeAll();
+            AssertColor(ReadCenter(channel.composite), new Color(1f, 0.1f, 0.1f, 1f), 0.025f);
+
+            adjustment.brightness = 0f;
+            adjustment.contrast = -1f;
+            set.RecomposeAll();
+            AssertColor(ReadCenter(channel.composite), new Color(0.5f, 0.5f, 0.5f, 1f), 0.025f);
+
+            AssertColor(ReadCenter(layer.channels[TexturePaintChannel.Albedo].Front),
+                Color.red, 0.025f);
+            compositor.Dispose();
+        }
+
+        [Test]
+        public void ImageAdjustmentsDoNotModifyTheBackdropThroughTranslucentLayerPixels()
+        {
+            TexturePaintGpuTestFixture.RequireComputeShaders();
+            TextureSet set = CreateSet(TexturePaintChannel.Albedo, Color.blue);
+            CreateStore(set);
+            TextureChannelTarget channel = set.GetChannel(TexturePaintChannel.Albedo);
+            channel.composite = CreateRenderTexture("Texture Paint Translucent Image Adjustments", 16,
+                RenderTextureFormat.ARGBHalf);
+            TextureLayerCompositor compositor = new TextureLayerCompositor(
+                TexturePaintGpuTestFixture.LoadShader("LayerComposite.compute"));
+            set.compositor = compositor;
+            TexturePaintLayer layer = set.AddFillLayer("Translucent Adjusted Image",
+                TexturePaintChannel.Albedo, new Color(1f, 0f, 0f, 0.5f));
+            TexturePaintLayerEffectSettings adjustment = layer.effects.imageAdjustments;
+            adjustment.enabled = true;
+            adjustment.channel = TexturePaintChannel.Albedo;
+            adjustment.brightness = 0.2f;
+
+            set.RecomposeAll();
+
+            AssertColor(ReadCenter(channel.composite), new Color(0.5f, 0.1f, 0.6f, 1f), 0.025f);
+            AssertColor(ReadCenter(layer.channels[TexturePaintChannel.Albedo].Front),
+                new Color(1f, 0f, 0f, 0.5f), 0.025f);
+            compositor.Dispose();
+        }
+
+        [Test]
         public void StrokeUsesAuthoredBoundaryAndOuterShadowRetainsItsFade()
         {
             TexturePaintGpuTestFixture.RequireComputeShaders();
@@ -929,6 +1080,7 @@ namespace UMA.TexturePaint.Editor.Tests
             preset.randomSizeGrow = 0.3f;
             preset.splatter = true;
             preset.splatterDistance = 1.5f;
+            preset.randomStrength = true;
             preset.size = 0.2f;
             StrokeSample first = new StrokeSample
             {
@@ -936,7 +1088,8 @@ namespace UMA.TexturePaint.Editor.Tests
                 worldPosition = new Vector3(2f, 3f, 4f),
                 worldNormal = Vector3.forward,
                 direction = Vector3.right,
-                sizeMultiplier = 1f
+                sizeMultiplier = 1f,
+                flowMultiplier = 1f
             };
             StrokeSample repeated = first;
             StrokeSample next = first;
@@ -948,11 +1101,13 @@ namespace UMA.TexturePaint.Editor.Tests
 
             Assert.That(repeated.rotation, Is.EqualTo(first.rotation));
             Assert.That(repeated.sizeMultiplier, Is.EqualTo(first.sizeMultiplier));
+            Assert.That(repeated.flowMultiplier, Is.EqualTo(first.flowMultiplier));
             Assert.That(repeated.worldPosition, Is.EqualTo(first.worldPosition));
             Assert.That(first.rotation, Is.GreaterThanOrEqualTo(0f).And.LessThan(360f));
             Assert.That(first.footprintScale, Is.EqualTo(Vector2.one),
                 "Random size must not distort the brush footprint.");
             Assert.That(first.sizeMultiplier, Is.InRange(0.7f, 1.3f));
+            Assert.That(first.flowMultiplier, Is.InRange(0f, 1f));
             Assert.That(TexturePaintStageWindow.CalculateEffectiveWorldBrushSize(preset, first, false),
                 Is.EqualTo(0.2f * first.sizeMultiplier).Within(0.000001f));
             Vector3 splatterOffset = first.worldPosition - originalPosition;
@@ -962,14 +1117,22 @@ namespace UMA.TexturePaint.Editor.Tests
                 "Splatter must remain in the surface tangent plane.");
             Assert.That(next.rotation, Is.Not.EqualTo(first.rotation));
             Assert.That(next.sizeMultiplier, Is.Not.EqualTo(first.sizeMultiplier));
+            Assert.That(next.flowMultiplier, Is.Not.EqualTo(first.flowMultiplier));
             Assert.That(next.worldPosition, Is.Not.EqualTo(first.worldPosition));
 
             preset.alignToStroke = true;
-            StrokeSample follow = new StrokeSample { rotation = 23f, footprintScale = Vector2.one };
+            StrokeSample follow = new StrokeSample
+                { rotation = 23f, footprintScale = Vector2.one, flowMultiplier = 1f };
             TexturePaintStageWindow.ApplyPaintRandomVariation(ref follow, preset, 147, 10);
             Assert.That(follow.rotation, Is.EqualTo(23f),
                 "Follow Stroke owns stamp rotation and must suppress random rotation.");
             Assert.That(follow.sizeMultiplier, Is.InRange(0.7f, 1.3f));
+
+            preset.splatter = false;
+            StrokeSample ordinary = new StrokeSample { flowMultiplier = 0.67f };
+            TexturePaintStageWindow.ApplyPaintRandomVariation(ref ordinary, preset, 147, 11);
+            Assert.That(ordinary.flowMultiplier, Is.EqualTo(0.67f),
+                "Random Strength is a splatter-only option.");
         }
 
         [Test]
@@ -994,6 +1157,7 @@ namespace UMA.TexturePaint.Editor.Tests
             source.randomSizeGrow = 0.46f;
             source.splatter = true;
             source.splatterDistance = 1.84f;
+            source.randomStrength = true;
             source.fade = true;
             source.taper = true;
             source.fadeTaperLength = 0.72f;
@@ -1019,6 +1183,7 @@ namespace UMA.TexturePaint.Editor.Tests
             Assert.That(destination.randomSizeGrow, Is.EqualTo(source.randomSizeGrow));
             Assert.That(destination.splatter, Is.True);
             Assert.That(destination.splatterDistance, Is.EqualTo(source.splatterDistance));
+            Assert.That(destination.randomStrength, Is.True);
             Assert.That(destination.fade, Is.True);
             Assert.That(destination.taper, Is.True);
             Assert.That(destination.fadeTaperLength, Is.EqualTo(source.fadeTaperLength));
@@ -1072,6 +1237,7 @@ namespace UMA.TexturePaint.Editor.Tests
             current.randomRotation = true;
             current.splatter = true;
             current.splatterDistance = 1.61f;
+            current.randomStrength = true;
             current.fade = true;
             current.taper = true;
             current.fadeTaperLength = 0.83f;
@@ -1090,6 +1256,7 @@ namespace UMA.TexturePaint.Editor.Tests
             Assert.That(created.randomRotation, Is.True);
             Assert.That(created.splatter, Is.True);
             Assert.That(created.splatterDistance, Is.EqualTo(current.splatterDistance));
+            Assert.That(created.randomStrength, Is.True);
             Assert.That(created.fade, Is.True);
             Assert.That(created.taper, Is.True);
             Assert.That(created.fadeTaperLength, Is.EqualTo(current.fadeTaperLength));
@@ -1147,7 +1314,7 @@ namespace UMA.TexturePaint.Editor.Tests
         }
 
         [Test]
-        public void InvertedDirectTextureSourceCreatesAndCachesTemporaryTexture()
+        public void GrayscaleDirectTextureSourceCreatesAndCachesCanonicalTexture()
         {
             Color authored = new Color(0.18f, 0.37f, 0.76f, 0.42f);
             Texture2D source = Own(new Texture2D(4, 4, TextureFormat.RGBA32, false, true));
@@ -1161,14 +1328,21 @@ namespace UMA.TexturePaint.Editor.Tests
             Texture2D inverted = TexturePaintSpriteSource.Resolve(source, null,
                 TexturePaintChannel.Roughness, TexturePaintNormalConvention.OpenGL, true);
 
-            Assert.That(unchanged, Is.SameAs(source));
+            float grayscale = authored.r * 0.2126f + authored.g * 0.7152f + authored.b * 0.0722f;
+            Assert.That(unchanged, Is.Not.Null);
+            Assert.That(unchanged, Is.Not.SameAs(source),
+                "Scalar channels must canonicalize RGB sources to a grayscale paint texture.");
+            Assert.That(unchanged, Is.SameAs(TexturePaintSpriteSource.Resolve(source, null,
+                TexturePaintChannel.Roughness, TexturePaintNormalConvention.OpenGL, false)));
+            AssertColor(ReadTextureCenter(unchanged),
+                new Color(grayscale, grayscale, grayscale, authored.a), 0.012f);
             Assert.That(inverted, Is.Not.Null);
             Assert.That(inverted, Is.Not.SameAs(source),
                 "Inverting a direct texture must create the same temporary source used for sprite extraction.");
             Assert.That(inverted, Is.SameAs(TexturePaintSpriteSource.Resolve(source, null,
                 TexturePaintChannel.Roughness, TexturePaintNormalConvention.OpenGL, true)));
             AssertColor(ReadTextureCenter(inverted),
-                new Color(1f - authored.r, 1f - authored.g, 1f - authored.b, authored.a), 0.012f);
+                new Color(1f - grayscale, 1f - grayscale, 1f - grayscale, authored.a), 0.012f);
         }
 
         [Test]
@@ -1489,7 +1663,7 @@ namespace UMA.TexturePaint.Editor.Tests
         {
             using TexturePaintGpuTestFixture fixture = new TexturePaintGpuTestFixture(Color.clear);
             Shader shader = AssetDatabase.LoadAssetAtPath<Shader>(
-                "Assets/UMA/OverlayPainter/Shaders/FillLayer.shader");
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/FillLayer.shader"));
             Assert.That(shader, Is.Not.Null, "Missing production Fill generator shader.");
             using TexturePaintFillGenerator generator = new TexturePaintFillGenerator(shader);
             fixture.set.fillGenerator = generator;
@@ -1528,7 +1702,7 @@ namespace UMA.TexturePaint.Editor.Tests
         {
             using TexturePaintGpuTestFixture fixture = new TexturePaintGpuTestFixture(Color.clear);
             Shader shader = AssetDatabase.LoadAssetAtPath<Shader>(
-                "Assets/UMA/OverlayPainter/Shaders/FillLayer.shader");
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/FillLayer.shader"));
             Assert.That(shader, Is.Not.Null, "Missing production Fill generator shader.");
             using TexturePaintFillGenerator generator = new TexturePaintFillGenerator(shader);
             fixture.set.fillGenerator = generator;
@@ -1624,7 +1798,7 @@ namespace UMA.TexturePaint.Editor.Tests
         {
             using TexturePaintGpuTestFixture fixture = new TexturePaintGpuTestFixture(Color.clear);
             Shader shader = AssetDatabase.LoadAssetAtPath<Shader>(
-                "Assets/UMA/OverlayPainter/Shaders/FillLayer.shader");
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/FillLayer.shader"));
             Assert.That(shader, Is.Not.Null, "Missing production Fill generator shader.");
             using TexturePaintFillGenerator generator = new TexturePaintFillGenerator(shader);
             fixture.set.fillGenerator = generator;
@@ -1660,7 +1834,7 @@ namespace UMA.TexturePaint.Editor.Tests
                 new Vector2(0.75f, 0.75f), new Vector2(0.25f, 0.75f)
             };
             Shader shader = AssetDatabase.LoadAssetAtPath<Shader>(
-                "Assets/UMA/OverlayPainter/Shaders/FillLayer.shader");
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/FillLayer.shader"));
             Assert.That(shader, Is.Not.Null, "Missing production Fill generator shader.");
             using TexturePaintFillGenerator generator = new TexturePaintFillGenerator(shader);
             fixture.set.fillGenerator = generator;
@@ -1692,7 +1866,7 @@ namespace UMA.TexturePaint.Editor.Tests
         {
             using TexturePaintGpuTestFixture fixture = new TexturePaintGpuTestFixture(Color.clear);
             Shader shader = AssetDatabase.LoadAssetAtPath<Shader>(
-                "Assets/UMA/OverlayPainter/Shaders/FillLayer.shader");
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/FillLayer.shader"));
             Assert.That(shader, Is.Not.Null, "Missing production Fill generator shader.");
             using TexturePaintFillGenerator generator = new TexturePaintFillGenerator(shader);
             fixture.set.fillGenerator = generator;
@@ -1724,7 +1898,7 @@ namespace UMA.TexturePaint.Editor.Tests
         {
             using TexturePaintGpuTestFixture fixture = new TexturePaintGpuTestFixture(Color.clear);
             Shader shader = AssetDatabase.LoadAssetAtPath<Shader>(
-                "Assets/UMA/OverlayPainter/Shaders/FillLayer.shader");
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/FillLayer.shader"));
             Assert.That(shader, Is.Not.Null, "Missing production Fill generator shader.");
             using TexturePaintFillGenerator generator = new TexturePaintFillGenerator(shader);
             fixture.set.fillGenerator = generator;
@@ -1837,7 +2011,10 @@ namespace UMA.TexturePaint.Editor.Tests
                 normalAngleLimit = 54f,
                 paintBackfaces = true,
                 pressureAffectsFlow = false,
-                pressureAffectsSize = true
+                pressureAffectsSize = true,
+                brushSplatter = true,
+                brushSplatterDistance = 1.47f,
+                brushRandomStrength = true
             };
             TexturePaintDocument document = ScriptableObject.CreateInstance<TexturePaintDocument>();
             AssetDatabase.CreateAsset(document, Folder + "/Paint Settings Round Trip.asset");
@@ -1860,6 +2037,9 @@ namespace UMA.TexturePaint.Editor.Tests
             Assert.That(settings.paintBackfaces, Is.True);
             Assert.That(settings.pressureAffectsFlow, Is.False);
             Assert.That(settings.pressureAffectsSize, Is.True);
+            Assert.That(settings.brushSplatter, Is.True);
+            Assert.That(settings.brushSplatterDistance, Is.EqualTo(1.47f));
+            Assert.That(settings.brushRandomStrength, Is.True);
         }
 
         [Test]
@@ -1982,6 +2162,118 @@ namespace UMA.TexturePaint.Editor.Tests
             set.activeLayerIndex = set.layers.IndexOf(paint);
             Assert.That(TexturePaintStageWindow.IsActiveSplineAuthoringLayer(set, 0), Is.False);
             Assert.That(paint.IsSplineLayer, Is.False);
+        }
+
+        [Test]
+        public void RerasterizingExistingSplineLayerKeepsPointSelection()
+        {
+            TextureSet set = new TextureSet();
+            TexturePaintLayer path = set.AddSplineLayer("Selected Path");
+            for (int point = 0; point < 3; point++)
+                path.spline.AddPoint(new Vector3(point, 0f, 0f), new Vector2(point * 0.25f, 0.5f),
+                    0, -1, Vector3.forward);
+            set.activeLayerIndex = set.layers.IndexOf(path);
+            TexturePaintStageWindow stage = Own(ScriptableObject.CreateInstance<TexturePaintStageWindow>());
+            const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
+            FieldInfo selectedPoint = typeof(TexturePaintStageWindow).GetField("selectedSplinePoint", flags);
+            FieldInfo selectedPoints = typeof(TexturePaintStageWindow).GetField("selectedSplinePoints", flags);
+            FieldInfo activeSpline = typeof(TexturePaintStageWindow).GetField("spline", flags);
+            MethodInfo ensureLayer = typeof(TexturePaintStageWindow).GetMethod("EnsureSplineLayer", flags);
+            Assert.That(selectedPoint, Is.Not.Null);
+            Assert.That(selectedPoints, Is.Not.Null);
+            Assert.That(activeSpline, Is.Not.Null);
+            Assert.That(ensureLayer, Is.Not.Null);
+
+            selectedPoint.SetValue(stage, 2);
+            selectedPoints.SetValue(stage, new HashSet<int> { 2 });
+            activeSpline.SetValue(stage, path.spline);
+
+            ensureLayer.Invoke(stage, new object[] { set });
+
+            Assert.That(activeSpline.GetValue(stage), Is.SameAs(path.spline));
+            Assert.That(selectedPoint.GetValue(stage), Is.EqualTo(2),
+                "Rerasterizing a moved or adjusted path must keep its primary point selected.");
+            Assert.That((HashSet<int>)selectedPoints.GetValue(stage), Does.Contain(2),
+                "Rerasterizing must also preserve the multi-point selection used by the handles.");
+        }
+
+        [Test]
+        public void EnsuringSplineLayerRepairsSelectionAfterPointDeletion()
+        {
+            TextureSet set = new TextureSet();
+            TexturePaintLayer path = set.AddSplineLayer("Shortened Path");
+            for (int point = 0; point < 3; point++)
+                path.spline.AddPoint(new Vector3(point, 0f, 0f), new Vector2(point * 0.25f, 0.5f),
+                    0, -1, Vector3.forward);
+            set.activeLayerIndex = set.layers.IndexOf(path);
+            TexturePaintStageWindow stage = Own(ScriptableObject.CreateInstance<TexturePaintStageWindow>());
+            const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
+            FieldInfo selectedPoint = typeof(TexturePaintStageWindow).GetField("selectedSplinePoint", flags);
+            FieldInfo selectedPoints = typeof(TexturePaintStageWindow).GetField("selectedSplinePoints", flags);
+            MethodInfo ensureLayer = typeof(TexturePaintStageWindow).GetMethod("EnsureSplineLayer", flags);
+            Assert.That(selectedPoint, Is.Not.Null);
+            Assert.That(selectedPoints, Is.Not.Null);
+            Assert.That(ensureLayer, Is.Not.Null);
+            selectedPoint.SetValue(stage, 2);
+            selectedPoints.SetValue(stage, new HashSet<int> { 2 });
+
+            Assert.That(path.spline.RemovePoint(2), Is.True);
+            ensureLayer.Invoke(stage, new object[] { set });
+
+            Assert.That(selectedPoint.GetValue(stage), Is.EqualTo(1),
+                "Deleting the final selected point should select its surviving neighbor.");
+            Assert.That((HashSet<int>)selectedPoints.GetValue(stage), Is.EquivalentTo(new[] { 1 }));
+
+            path.spline.Clear();
+            ensureLayer.Invoke(stage, new object[] { set });
+
+            Assert.That(selectedPoint.GetValue(stage), Is.EqualTo(-1));
+            Assert.That((HashSet<int>)selectedPoints.GetValue(stage), Is.Empty,
+                "Deleting every point must clear the handle selection.");
+        }
+
+        [Test]
+        public void ScenePositioningOfTwoDimensionalPointKeepsSplineInTextureSpace()
+        {
+            TextureSet set = new TextureSet
+            {
+                persistentId = "scene-position-surface",
+                surface = new ReconstructedSurface { index = 7 }
+            };
+            TexturePaintLayer path = set.AddSplineLayer("2D Positioned Path");
+            path.spline.worldSpace = false;
+            path.spline.AddPoint(Vector3.zero, new Vector2(0.2f, 0.3f), 7, -1, Vector3.forward);
+            path.spline.AddPoint(Vector3.zero, new Vector2(0.4f, 0.5f), 7, -1, Vector3.forward);
+            path.spline.AddPoint(Vector3.zero, new Vector2(0.6f, 0.7f), 7, -1, Vector3.forward);
+            path.spline.EnsureControlPoints();
+            int point = 1;
+            Vector2 incomingOffset = path.spline.uvInControls[point] - path.spline.uvPoints[point];
+            Vector2 outgoingOffset = path.spline.uvOutControls[point] - path.spline.uvPoints[point];
+            path.spline.widths[point] = 1.75f;
+            Vector2 positionedUV = new Vector2(0.55f, 0.65f);
+
+            bool moved = TexturePaintStageWindow.MoveTwoDimensionalSplinePoint(set, path.spline,
+                point, positionedUV, Vector3.up, 12, new Vector3(0.2f, 0.3f, 0.5f));
+
+            Assert.That(moved, Is.True);
+            Assert.That(path.spline.worldSpace, Is.False,
+                "The Scene handle is a positioning aid and must not convert a 2D path to 3D.");
+            Assert.That(path.spline.uvPoints[point], Is.EqualTo(positionedUV));
+            Assert.That(Vector2.Distance(path.spline.uvInControls[point] - positionedUV,
+                incomingOffset), Is.LessThan(0.000001f));
+            Assert.That(Vector2.Distance(path.spline.uvOutControls[point] - positionedUV,
+                outgoingOffset), Is.LessThan(0.000001f));
+            Assert.That(path.spline.widths[point], Is.EqualTo(1.75f));
+            Assert.That(path.spline.triangleIndices[point], Is.EqualTo(12));
+            Assert.That(path.spline.anchors[point].surfaceId, Is.EqualTo(set.persistentId));
+
+            Vector2 nextOutgoing = new Vector2(0.72f, 0.81f);
+            Assert.That(TexturePaintStageWindow.SetTwoDimensionalSplineControl(
+                path.spline, point, false, nextOutgoing), Is.True);
+            Assert.That(path.spline.uvOutControls[point], Is.EqualTo(nextOutgoing));
+            Assert.That(path.spline.worldOutControls[point],
+                Is.EqualTo(new Vector3(nextOutgoing.x, nextOutgoing.y, 0f)));
+            Assert.That(path.spline.worldSpace, Is.False);
         }
 
         [Test]
@@ -2192,7 +2484,7 @@ namespace UMA.TexturePaint.Editor.Tests
                 BrushPreset.Shape.Square);
             brush.size = 0.2f;
             Shader ribbonShader = AssetDatabase.LoadAssetAtPath<Shader>(
-                "Assets/UMA/OverlayPainter/Shaders/RibbonProjection.shader");
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/RibbonProjection.shader"));
             Assert.That(ribbonShader, Is.Not.Null);
             Assert.That(ribbonShader.isSupported, Is.True);
             using PaintingEngine engine = new PaintingEngine(null, null, null, ribbonShader);
@@ -2237,7 +2529,7 @@ namespace UMA.TexturePaint.Editor.Tests
                 BrushPreset.Shape.Square);
             brush.size = 0.4f;
             Shader ribbonShader = AssetDatabase.LoadAssetAtPath<Shader>(
-                "Assets/UMA/OverlayPainter/Shaders/RibbonProjection.shader");
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/RibbonProjection.shader"));
             Assert.That(ribbonShader, Is.Not.Null);
             Assert.That(ribbonShader.isSupported, Is.True);
             using PaintingEngine engine = new PaintingEngine(null, null, null, ribbonShader);
@@ -2303,7 +2595,7 @@ namespace UMA.TexturePaint.Editor.Tests
                 BrushPreset.Shape.Square);
             brush.size = 0.3f;
             Shader ribbonShader = AssetDatabase.LoadAssetAtPath<Shader>(
-                "Assets/UMA/OverlayPainter/Shaders/RibbonProjection.shader");
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/RibbonProjection.shader"));
             using PaintingEngine engine = new PaintingEngine(null, null, null, ribbonShader);
             try
             {
@@ -2351,7 +2643,7 @@ namespace UMA.TexturePaint.Editor.Tests
                 BrushPreset.Shape.Square);
             brush.size = 0.25f;
             Shader ribbonShader = AssetDatabase.LoadAssetAtPath<Shader>(
-                "Assets/UMA/OverlayPainter/Shaders/RibbonProjection.shader");
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/RibbonProjection.shader"));
             using PaintingEngine engine = new PaintingEngine(null, null, null, ribbonShader);
             try
             {
@@ -2425,7 +2717,7 @@ namespace UMA.TexturePaint.Editor.Tests
                 BrushPreset.Shape.Square);
             brush.size = 0.25f;
             Shader ribbonShader = AssetDatabase.LoadAssetAtPath<Shader>(
-                "Assets/UMA/OverlayPainter/Shaders/RibbonProjection.shader");
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/RibbonProjection.shader"));
             using PaintingEngine engine = new PaintingEngine(null, null, null, ribbonShader);
             try
             {
@@ -2491,7 +2783,7 @@ namespace UMA.TexturePaint.Editor.Tests
                 BrushPreset.Shape.Square);
             brush.size = 0.08f;
             Shader ribbonShader = AssetDatabase.LoadAssetAtPath<Shader>(
-                "Assets/UMA/OverlayPainter/Shaders/RibbonProjection.shader");
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/RibbonProjection.shader"));
             using PaintingEngine engine = new PaintingEngine(null, null, null, ribbonShader);
             try
             {
@@ -2560,7 +2852,7 @@ namespace UMA.TexturePaint.Editor.Tests
                 BrushPreset.Shape.Square);
             brush.size = 0.12f;
             Shader ribbonShader = AssetDatabase.LoadAssetAtPath<Shader>(
-                "Assets/UMA/OverlayPainter/Shaders/RibbonProjection.shader");
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/RibbonProjection.shader"));
             using PaintingEngine engine = new PaintingEngine(null, null, null, ribbonShader);
             try
             {
@@ -2606,6 +2898,69 @@ namespace UMA.TexturePaint.Editor.Tests
         }
 
         [Test]
+        public void SmallerDirectUvSplineReapplyClearsPreviousCompositeBounds()
+        {
+            TexturePaintGpuTestFixture.RequireComputeShaders();
+            using TexturePaintGpuTestFixture fixture = new TexturePaintGpuTestFixture(Color.clear);
+            TexturePaintLayer layer = fixture.set.AddSplineLayer("2D Spline Replacement");
+            fixture.set.activeLayerIndex = fixture.set.layers.IndexOf(layer);
+            TextureChannelTarget channel = fixture.set.GetChannel(TexturePaintChannel.Albedo);
+            channel.composite = CreateRenderTexture("2D Spline Replacement Composite",
+                TexturePaintGpuTestFixture.Size, RenderTextureFormat.ARGBHalf);
+            TextureLayerCompositor compositor = new TextureLayerCompositor(
+                TexturePaintGpuTestFixture.LoadShader("LayerComposite.compute"));
+            fixture.set.compositor = compositor;
+            fixture.set.BindPreviewTextures();
+            BrushPreset brush = fixture.CreateBrush(1f, 1f);
+            using PaintingEngine engine = TexturePaintGpuTestFixture.CreateEngine();
+            try
+            {
+                StrokeContext context = fixture.CreateContext(brush, TexturePaintTool.Paint,
+                    Color.green, strength: 1f);
+                context.directUV = true;
+                context.historyGroupKey = "texture-paint-spline:" + layer.id;
+                context.replaceLayer = layer;
+                context.replaceHistoryGroup = true;
+                context.derivedLayerRaster = true;
+                StrokeSample left = new StrokeSample(new Vector3(0.35f, 0.5f, 0f),
+                    Vector3.forward, new Vector2(0.35f, 0.5f), 0, -1);
+                StrokeSample right = new StrokeSample(new Vector3(0.65f, 0.5f, 0f),
+                    Vector3.forward, new Vector2(0.65f, 0.5f), 0, -1);
+
+                var wide = new List<StrokeDispatchSample>
+                {
+                    new StrokeDispatchSample(left, 0.2f, default),
+                    new StrokeDispatchSample(right, 0.2f, default)
+                };
+                Assert.That(engine.BeginStroke(context, TexturePaintSourceMode.SourceOverlay), Is.True);
+                Assert.That(engine.ApplySamples(wide), Is.True);
+                engine.EndStroke(true);
+                Color[] first = TexturePaintGpuTestFixture.ReadPixels(channel.composite);
+                int outsideNewSpline = 41 * TexturePaintGpuTestFixture.Size + 41;
+                Assert.That(first[outsideNewSpline].a, Is.GreaterThan(0.9f),
+                    "The reference pixel must be covered by the initial wide spline.");
+
+                var narrow = new List<StrokeDispatchSample>
+                {
+                    new StrokeDispatchSample(left, 0.05f, default),
+                    new StrokeDispatchSample(right, 0.05f, default)
+                };
+                Assert.That(engine.BeginStroke(context, TexturePaintSourceMode.SourceOverlay), Is.True);
+                Assert.That(engine.ApplySamples(narrow), Is.True);
+                engine.EndStroke(true);
+                Color[] second = TexturePaintGpuTestFixture.ReadPixels(channel.composite);
+                Assert.That(second[outsideNewSpline].a, Is.LessThan(0.02f),
+                    "Shrinking a 2D spline must recompose and clear its previous wider footprint.");
+            }
+            finally
+            {
+                engine.EndStroke(false);
+                compositor.Dispose();
+                UnityEngine.Object.DestroyImmediate(brush);
+            }
+        }
+
+        [Test]
         public void RibbonBeginningAndEndTexturesReplaceOnlyEndpointTiles()
         {
             TexturePaintGpuTestFixture.RequireComputeShaders();
@@ -2617,7 +2972,7 @@ namespace UMA.TexturePaint.Editor.Tests
             // an untouched middle tile. A 0.2 half-width fits only two tiles on this unit path.
             brush.size = 0.16f;
             Shader ribbonShader = AssetDatabase.LoadAssetAtPath<Shader>(
-                "Assets/UMA/OverlayPainter/Shaders/RibbonProjection.shader");
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/RibbonProjection.shader"));
             using PaintingEngine engine = new PaintingEngine(null, null, null, ribbonShader);
             try
             {
@@ -2655,7 +3010,7 @@ namespace UMA.TexturePaint.Editor.Tests
                 BrushPreset.Shape.Square);
             brush.size = 0.35f;
             Shader ribbonShader = AssetDatabase.LoadAssetAtPath<Shader>(
-                "Assets/UMA/OverlayPainter/Shaders/RibbonProjection.shader");
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/RibbonProjection.shader"));
             using PaintingEngine engine = new PaintingEngine(null, null, null, ribbonShader);
             try
             {
@@ -2734,6 +3089,91 @@ namespace UMA.TexturePaint.Editor.Tests
         }
 
         [Test]
+        public void DirectUvRibbonRendersShadowsBevelsAndStitches()
+        {
+            TexturePaintGpuTestFixture.RequireComputeShaders();
+            using TexturePaintGpuTestFixture fixture = new TexturePaintGpuTestFixture(Color.clear);
+            TexturePaintLayer layer = fixture.set.AddSplineLayer("2D Ribbon Effects Result");
+            layer.spline.worldSpace = false;
+            layer.splineSettings.pathMode = TexturePaintPathMode.Ribbon;
+            fixture.set.activeLayerIndex = fixture.set.layers.IndexOf(layer);
+            BrushPreset brush = fixture.CreateBrush(1f, 1f, TexturePaintBlendMode.Normal,
+                BrushPreset.Shape.Square);
+            brush.size = 0.25f;
+            Shader ribbonShader = AssetDatabase.LoadAssetAtPath<Shader>(
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/RibbonProjection.shader"));
+            using PaintingEngine engine = new PaintingEngine(null, null, null, ribbonShader);
+            try
+            {
+                StrokeContext context = fixture.CreateContext(brush, TexturePaintTool.Paint,
+                    new Color(0.25f, 0.25f, 0.25f, 1f), strength: 1f);
+                context.directUV = true;
+                context.projectionDepth = 1f;
+                context.ribbonEffects = new TexturePaintLayerEffects();
+                TexturePaintLayerEffectSettings shadow = context.ribbonEffects.outerShadow;
+                shadow.enabled = true;
+                shadow.channel = TexturePaintChannel.Albedo;
+                shadow.ribbonSide = TexturePaintRibbonSide.Both;
+                shadow.color = Color.red;
+                shadow.width = 6f;
+                shadow.level = 1f;
+                shadow.curve = AnimationCurve.Linear(0f, 1f, 1f, 0f);
+                TexturePaintLayerEffectSettings bevel = context.ribbonEffects.bevelEdge;
+                bevel.enabled = true;
+                bevel.channel = TexturePaintChannel.Albedo;
+                bevel.ribbonSide = TexturePaintRibbonSide.Both;
+                bevel.ribbonLeftTone = TexturePaintRibbonBevelTone.Light;
+                bevel.ribbonRightTone = TexturePaintRibbonBevelTone.Dark;
+                bevel.color = Color.white;
+                bevel.secondaryColor = Color.black;
+                bevel.width = 4f;
+                bevel.level = 1f;
+                TexturePaintLayerEffectSettings stitch = context.ribbonEffects.proceduralStitch;
+                stitch.enabled = true;
+                stitch.channel = TexturePaintChannel.Albedo;
+                stitch.ribbonSide = TexturePaintRibbonSide.Both;
+                stitch.color = Color.yellow;
+                stitch.stitchThreadSize = 0.04f;
+                stitch.stitchLength = 0.1f;
+                stitch.stitchInset = 0.1f;
+                stitch.level = 1f;
+                Assert.That(engine.BeginStroke(context, TexturePaintSourceMode.SourceOverlay), Is.True);
+                List<StrokeSample> centerline = CreateVerticalRibbonSamples();
+                List<TexturePaintRibbonSegment> segments = TexturePaintStageWindow.BuildRibbonSegments(
+                    centerline, brush.size, brush.size * 2f);
+
+                Assert.That(engine.ApplyRibbon(segments, centerline, false, false, false, true), Is.True);
+                Color[] pixels = TexturePaintGpuTestFixture.ReadPixels(
+                    layer.channels[TexturePaintChannel.Albedo].Front);
+                int size = TexturePaintGpuTestFixture.Size;
+                Color lightEdge = pixels[(size / 2) * size + 17];
+                Color darkEdge = pixels[(size / 2) * size + 47];
+                Assert.That(lightEdge.r, Is.GreaterThan(darkEdge.r + 0.15f),
+                    "The 2D ribbon must evaluate its light and dark bevel edges.");
+                int shadowPixels = 0, stitchPixels = 0;
+                for (int y = 6; y < size - 6; y++)
+                for (int x = 8; x < size - 8; x++)
+                {
+                    Color pixel = pixels[y * size + x];
+                    bool outsideRibbon = x < 16 || x > 48;
+                    if (outsideRibbon && pixel.a > 0.05f && pixel.r > pixel.g + 0.2f)
+                        shadowPixels++;
+                    if (pixel.r > 0.7f && pixel.g > 0.7f && pixel.b < 0.35f)
+                        stitchPixels++;
+                }
+                Assert.That(shadowPixels, Is.GreaterThan(8),
+                    "The 2D ribbon must render fading outer-shadow pixels outside both long edges.");
+                Assert.That(stitchPixels, Is.GreaterThan(8),
+                    "The 2D ribbon must render procedural stitches from intrinsic path coordinates.");
+            }
+            finally
+            {
+                engine.EndStroke(false);
+                UnityEngine.Object.DestroyImmediate(brush);
+            }
+        }
+
+        [Test]
         public void RibbonProjectionPreservesContributionWithSharedMirroredUVs()
         {
             TexturePaintGpuTestFixture.RequireComputeShaders();
@@ -2775,7 +3215,7 @@ namespace UMA.TexturePaint.Editor.Tests
                 BrushPreset.Shape.Square);
             brush.size = 0.2f;
             Shader ribbonShader = AssetDatabase.LoadAssetAtPath<Shader>(
-                "Assets/UMA/OverlayPainter/Shaders/RibbonProjection.shader");
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/RibbonProjection.shader"));
             Assert.That(ribbonShader, Is.Not.Null);
             Assert.That(ribbonShader.isSupported, Is.True);
             using PaintingEngine engine = new PaintingEngine(null, null, null, ribbonShader);
@@ -2870,7 +3310,7 @@ namespace UMA.TexturePaint.Editor.Tests
                 BrushPreset.Shape.Square);
             brush.size = 0.2f;
             Shader ribbonShader = AssetDatabase.LoadAssetAtPath<Shader>(
-                "Assets/UMA/OverlayPainter/Shaders/RibbonProjection.shader");
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/RibbonProjection.shader"));
             Assert.That(ribbonShader, Is.Not.Null);
             Assert.That(ribbonShader.isSupported, Is.True);
             using PaintingEngine engine = new PaintingEngine(null, null, null, ribbonShader);
@@ -2937,7 +3377,7 @@ namespace UMA.TexturePaint.Editor.Tests
                 BrushPreset.Shape.Square);
             brush.size = 0.2f;
             Shader ribbonShader = AssetDatabase.LoadAssetAtPath<Shader>(
-                "Assets/UMA/OverlayPainter/Shaders/RibbonProjection.shader");
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/RibbonProjection.shader"));
             Assert.That(ribbonShader, Is.Not.Null);
             using PaintingEngine engine = new PaintingEngine(null, null, null, ribbonShader);
             try
@@ -3085,8 +3525,11 @@ namespace UMA.TexturePaint.Editor.Tests
             EditableTextureTarget normalControlPixels = originalSet.GetPaintTarget(
                 TexturePaintChannel.NormalControl, TexturePaintSourceMode.SourceOverlay);
             normalControlPixels.Reset(null, new Color(0.82f, 0.82f, 0.82f, 0.47f));
-            TexturePaintChannelSourceSettings normalControlSource = paint.GetChannelSettings(
-                TexturePaintChannel.NormalControl).sourceSettings;
+            TexturePaintLayerChannelSettings normalControlSettings = paint.GetChannelSettings(
+                TexturePaintChannel.NormalControl);
+            normalControlSettings.hasNormalControlStrength = true;
+            normalControlSettings.normalControlStrength = 9.5f;
+            TexturePaintChannelSourceSettings normalControlSource = normalControlSettings.sourceSettings;
             normalControlSource.source = TexturePaintBrushSource.Color;
             normalControlSource.color = new Color(0.21f, 0.21f, 0.21f, 0.73f);
             normalControlSource.tiling = new Vector2(2.5f, 4.5f);
@@ -3164,6 +3607,10 @@ namespace UMA.TexturePaint.Editor.Tests
                 new Color(0.82f, 0.82f, 0.82f, 0.47f), 0.004f);
             TexturePaintChannelSourceSettings restoredControlSource = restoredSet.layers[0]
                 .GetChannelSettings(TexturePaintChannel.NormalControl).sourceSettings;
+            TexturePaintLayerChannelSettings restoredControlSettings = restoredSet.layers[0]
+                .GetChannelSettings(TexturePaintChannel.NormalControl);
+            Assert.That(restoredControlSettings.hasNormalControlStrength, Is.True);
+            Assert.That(restoredControlSettings.normalControlStrength, Is.EqualTo(9.5f));
             Assert.That(restoredControlSource.source, Is.EqualTo(TexturePaintBrushSource.Color));
             AssertColor(restoredControlSource.color,
                 new Color(0.21f, 0.21f, 0.21f, 0.73f), 0.0001f);
@@ -3550,8 +3997,13 @@ namespace UMA.TexturePaint.Editor.Tests
                     sourceTextureName = "MainTex"
                 }
             };
+            // Match UMAGeneratorPro's fragment invariant. Native reconstruction also accepts a
+            // detached slot, but this test should exercise a structurally valid UMA fragment.
+            slot.altMaterial = umaMaterial;
+            overlayAsset.material = umaMaterial;
+            fragment.umaMaterial = umaMaterial;
             TextureMerge merge = AssetDatabase.LoadAssetAtPath<TextureMerge>(
-                "Assets/UMA/Core/StandardAssets/UMA/Atlas/TextureMerge.asset");
+                UMAPathUtility.ResolveInstallAssetPath("Core/StandardAssets/UMA/Atlas/TextureMerge.asset"));
             Assert.That(merge, Is.Not.Null);
             MethodInfo reconstruct = typeof(MeshReconstructor).GetMethod("BuildNativeOverlaySources",
                 BindingFlags.Static | BindingFlags.NonPublic);
@@ -3637,7 +4089,8 @@ namespace UMA.TexturePaint.Editor.Tests
                 keyCode = KeyCode.LeftAlt
             };
 
-            Assert.That(TexturePaintStageWindow.ShouldYieldToSceneNavigation(altDown), Is.True);
+            Assert.That(TexturePaintStageWindow.ShouldYieldToSceneNavigation(altDown), Is.True,
+                $"type={altDown.type}, rawType={altDown.rawType}, alt={altDown.alt}, modifiers={altDown.modifiers}");
             Assert.That(TexturePaintStageWindow.ShouldYieldToSceneNavigation(altDrag), Is.True);
             Assert.That(TexturePaintStageWindow.ShouldYieldToSceneNavigation(ordinaryDrag), Is.False);
             Assert.That(TexturePaintStageWindow.ShouldYieldToSceneNavigation(altKey), Is.False);
@@ -3978,6 +4431,33 @@ namespace UMA.TexturePaint.Editor.Tests
         private static float RgbDistance(Color a, Color b)
         {
             return Vector3.Distance(new Vector3(a.r, a.g, a.b), new Vector3(b.r, b.g, b.b));
+        }
+
+        private sealed class BelowCompositeEchoPlugin : ITexturePaintFilterV2
+        {
+            public TexturePaintPluginDescriptor Descriptor { get; } = new TexturePaintPluginDescriptor
+            {
+                id = "com.uma.tests.below-composite-echo",
+                displayName = "Below Composite Echo",
+                capabilities = TexturePaintPluginCapability.Filter,
+                declaredChannels = TexturePaintChannelMask.Albedo,
+                readChannels = TexturePaintChannelMask.Albedo
+            };
+
+            public Task ExecuteAsync(TexturePaintCommandContextV2 context)
+            {
+                for (int i = 0; i < context.source.surfaceIds.Count; i++)
+                {
+                    string surfaceId = context.source.surfaceIds[i];
+                    TexturePaintReadOnlyImage source = context.source.Get(surfaceId,
+                        TexturePaintChannel.Albedo);
+                    if (source == null) continue;
+                    context.WriteTile(surfaceId, TexturePaintChannel.Albedo,
+                        new RectInt(0, 0, source.width, source.height), source.CopyPixels(),
+                        TexturePaintPluginColorSpace.Linear, TexturePaintPluginBlend.Replace);
+                }
+                return Task.CompletedTask;
+            }
         }
 
         private T Own<T>(T value) where T : Object

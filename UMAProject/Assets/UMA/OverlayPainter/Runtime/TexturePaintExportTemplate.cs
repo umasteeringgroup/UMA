@@ -8,7 +8,7 @@ namespace UMA.TexturePaint
     {
         public const int CurrentVersion = 5;
         public int version = CurrentVersion;
-        public string outputFolder = "Assets/UMA/OverlayPainter/Generated";
+        public string outputFolder = UMAPathUtility.OverlayPainterGeneratedRoot;
         public string filenamePattern = "{avatar}_{material}_{channel}_{resolution}";
         public TexturePaintExportScope scope = TexturePaintExportScope.AllMaterials;
         [Tooltip("Flattened Composite includes the reconstructed character textures. Authored Overlay exports only visible painter layers and creates a runtime alpha mask.")]

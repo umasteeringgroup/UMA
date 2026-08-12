@@ -455,7 +455,7 @@ namespace UMA
         private readonly Dictionary<int, Vector3> touchupSkinningPositionOffsets =
             new Dictionary<int, Vector3>();
         private Vector3[] touchupSkinningSourceVertices;
-        private int touchupSkinningSourceMeshId;
+        private EntityId touchupSkinningSourceMeshId;
         private string touchupPaintStatusMessage = string.Empty;
         private MessageType touchupPaintStatusType = MessageType.Info;
         private int touchupWeightsRevision;
@@ -3377,7 +3377,7 @@ namespace UMA
                 return;
             }
 
-            int sourceMeshId = sourceMesh.GetInstanceID();
+            EntityId sourceMeshId = sourceMesh.GetEntityId();
             if (touchupSkinningSourceVertices == null ||
                 touchupSkinningSourceMeshId != sourceMeshId ||
                 touchupSkinningSourceVertices.Length != sourceMesh.vertexCount)
@@ -12006,6 +12006,7 @@ namespace UMA
             serializedSlot.ApplyModifiedPropertiesWithoutUndo();
 
             Undo.RegisterCreatedObjectUndo(newSlot, "Create Sculpted SlotDataAsset");
+            newSlot.PrepareForAssetPath(path, cleanName);
             AssetDatabase.CreateAsset(newSlot, path);
             EditorUtility.SetDirty(newSlot);
             AssetDatabase.SaveAssetIfDirty(newSlot);
@@ -13075,7 +13076,7 @@ namespace UMA
             vertexPaintColors = null;
             touchupBaseColors = null;
             touchupSkinningSourceVertices = null;
-            touchupSkinningSourceMeshId = 0;
+            touchupSkinningSourceMeshId = EntityId.None;
             touchupSkinningPositionOffsets.Clear();
             touchupSavedPositionVertexIndices.Clear();
             touchupLivePositionVertexIndices.Clear();

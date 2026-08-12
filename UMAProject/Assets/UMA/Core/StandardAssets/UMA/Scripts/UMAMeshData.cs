@@ -2136,17 +2136,9 @@ namespace UMA
 
 			ulong hash = UMAUtils.Hash64OffsetBasis;
 
-			unsafe
-			{
-				fixed (Vector3* vptr = vertices)
-				{
-					hash = UMAUtils.Hash64(
-						new ReadOnlySpan<byte>(
-							vptr,
-							vertices.Length * sizeof(Vector3)),
-						hash);
-				}
-			}
+			hash = UMAUtils.Hash64(
+				MemoryMarshal.AsBytes(vertices.AsSpan()),
+				hash);
 
 			for (int sm = 0; sm < submeshes.Length; sm++)
 			{
@@ -2161,17 +2153,9 @@ namespace UMA
 					continue;
 				}
 
-				unsafe
-				{
-					fixed (int* tptr = tris)
-					{
-						hash = UMAUtils.Hash64(
-							new ReadOnlySpan<byte>(
-								tptr,
-								tris.Length * sizeof(int)),
-							hash);
-					}
-				}
+				hash = UMAUtils.Hash64(
+					MemoryMarshal.AsBytes(tris.AsSpan()),
+					hash);
 			}
 
 			return hash;

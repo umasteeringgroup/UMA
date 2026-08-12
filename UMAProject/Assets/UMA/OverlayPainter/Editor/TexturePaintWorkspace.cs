@@ -13,7 +13,8 @@ namespace UMA.TexturePaint.Editor
         private const float WorkspaceToolRailWidth = 48f;
         private const float WorkspaceSplitterSize = 4f;
         private const string LayerDragKey = "UMA.TexturePaint.LayerIndex";
-        private const string ToolRailIconPath = "Assets/UMA/OverlayPainter/Editor/Icons/TexturePaintIcons.png";
+        private static string ToolRailIconPath =>
+            UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Editor/Icons/TexturePaintIcons.png");
         private const int ToolRailIconCount = 13;
         private const int DocumentPickerControlId = 0x5450444F;
         private const string DocumentAssetFolder = "Assets";
@@ -67,6 +68,9 @@ namespace UMA.TexturePaint.Editor
         [NonSerialized] private bool directUVStroke;
         [NonSerialized] private bool uvPanning;
         [NonSerialized] private int uvDraggingSplinePoint = -1;
+        [NonSerialized] private UVSplineHandleKind uvDraggingSplineHandle;
+        [NonSerialized] private bool uvDraggingSplineIncoming;
+        [NonSerialized] private bool uvSplineHandleUndoStarted;
         [NonSerialized] private Vector2 uvPanStartMouse;
         [NonSerialized] private Vector2 uvPanStart;
         [NonSerialized] private bool modifierBrushDrag;
@@ -93,6 +97,15 @@ namespace UMA.TexturePaint.Editor
         [NonSerialized] private bool workspaceBrushesDirty = true;
         [NonSerialized] private bool workspaceInitialized;
         [NonSerialized] private Vector3[] workspaceUVLineBuffer;
+
+        private enum UVSplineHandleKind
+        {
+            None,
+            Anchor,
+            Incoming,
+            Outgoing,
+            Width
+        }
         [NonSerialized] private readonly Vector3[] workspaceUVCircleCursor = new Vector3[49];
         [NonSerialized] private readonly Vector3[] workspaceUVSquareCursor = new Vector3[5];
 
@@ -212,12 +225,16 @@ namespace UMA.TexturePaint.Editor
             if (controller == null)
             {
                 uvDraggingSplinePoint = -1;
+                uvDraggingSplineHandle = UVSplineHandleKind.None;
+                uvSplineHandleUndoStarted = false;
                 uvStrokeActive = false;
                 return;
             }
-            if (uvDraggingSplinePoint >= 0)
+            if (uvDraggingSplineHandle != UVSplineHandleKind.None)
             {
                 uvDraggingSplinePoint = -1;
+                uvDraggingSplineHandle = UVSplineHandleKind.None;
+                uvSplineHandleUndoStarted = false;
                 ReapplyPendingSpline();
             }
             else if (splineReapplyPending) ReapplyPendingSpline();
@@ -413,12 +430,14 @@ namespace UMA.TexturePaint.Editor
                 menu.AddItem(new GUIContent("Layer/New Paint Layer"), false, () => AddPaintLayer(set));
                 menu.AddItem(new GUIContent("Layer/New Fill Layer"), false, () => AddFillLayer(set));
                 menu.AddItem(new GUIContent("Layer/New Path Layer"), false, () => CreateSplineLayerWithUndo(set));
+                menu.AddItem(new GUIContent("Layer/New Plugin Layer"), false, () => AddPluginLayer(set));
             }
             else
             {
                 menu.AddDisabledItem(new GUIContent("Layer/New Paint Layer"));
                 menu.AddDisabledItem(new GUIContent("Layer/New Fill Layer"));
                 menu.AddDisabledItem(new GUIContent("Layer/New Path Layer"));
+                menu.AddDisabledItem(new GUIContent("Layer/New Plugin Layer"));
             }
 
             menu.AddSeparator(string.Empty);
@@ -609,7 +628,7 @@ namespace UMA.TexturePaint.Editor
             pathMode = TexturePaintPathMode.Ribbon;
             pasted.splineSettings = CreateSplineSettings();
             spline = pasted.spline;
-            splineMode = true;
+            splineMode = pasted.spline?.worldSpace == true;
             selectedSplinePoint = -1;
             CompleteLayerCreationUndo(pasted);
             SyncActiveLayerSelection(set);
@@ -654,7 +673,8 @@ namespace UMA.TexturePaint.Editor
             {
                 if (set != null) CreateSplineLayerWithUndo(set);
             }
-            splineMode = TryGetActivePathLayer(ActiveTextureSet, out _);
+            splineMode = TryGetActivePathLayer(ActiveTextureSet, out TexturePaintLayer railPathLayer) &&
+                railPathLayer.spline?.worldSpace == true;
             GUILayout.FlexibleSpace();
             if (DrawToolRailIconButton(10, "Shortcut and workflow reference", 28f)) ShowShortcutHelp();
             GUILayout.Space(4f);
@@ -989,10 +1009,13 @@ namespace UMA.TexturePaint.Editor
                 ? $"SELECTED GROUP · {selectedChannel}"
                 : $"DESTINATION · {selectedChannel}", WorkspaceStyles.CanvasBadge);
             Rect help = new Rect(canvas.x + 8f, canvas.yMax - 24f, canvas.width - 16f, 18f);
+            bool activePath = TryGetActivePathLayer(set, out TexturePaintLayer helpPathLayer);
             string inputHelp = maskMode
                 ? "LAYER MASK · LMB paint grayscale · MMB/RMB pan · Wheel zoom · Erase restores mask background"
-                : TryGetActivePathLayer(set, out _)
-                ? "Shift+LMB add · Ctrl+LMB insert near path · LMB select/drag point · MMB/RMB pan · Wheel zoom"
+                : activePath && helpPathLayer.spline?.worldSpace == false
+                ? "Shift+LMB add · Ctrl+LMB insert · LMB drag point/green curve/blue width handles · MMB/RMB pan · Wheel zoom"
+                : activePath
+                ? "3D SPLINE - Edit points in the Scene view - MMB/RMB pan - Wheel zoom"
                 : CanStartFreehandPaint(set)
                     ? "LMB paint · MMB/RMB pan · Wheel zoom · Ctrl-click clone source · Shift+RMB size/hardness"
                     : "Select or create a Paint layer to use freehand tools · MMB/RMB pan · Wheel zoom";
@@ -1012,7 +1035,11 @@ namespace UMA.TexturePaint.Editor
         private void HandleUVCanvasInput(Rect canvas, Rect textureRect, TextureSet set)
         {
             Event current = Event.current;
-            bool authoringSplineLayer = !IsLayerMaskMode(set) && TryGetActivePathLayer(set, out _);
+            TexturePaintLayer uvSplineLayer = null;
+            bool activeSplineLayer = !IsLayerMaskMode(set) &&
+                TryGetActivePathLayer(set, out uvSplineLayer);
+            bool authoringSplineLayer = activeSplineLayer && uvSplineLayer.spline?.worldSpace == false;
+            if (authoringSplineLayer) spline = uvSplineLayer.spline;
             if (modifierBrushDrag && HandleBrushModifierDrag(current)) return;
             if (!canvas.Contains(current.mousePosition))
             {
@@ -1023,9 +1050,11 @@ namespace UMA.TexturePaint.Editor
                 }
                 if (current.rawType == EventType.MouseUp && current.button == 0)
                 {
-                    if (uvDraggingSplinePoint >= 0)
+                    if (uvDraggingSplineHandle != UVSplineHandleKind.None)
                     {
                         uvDraggingSplinePoint = -1;
+                        uvDraggingSplineHandle = UVSplineHandleKind.None;
+                        uvSplineHandleUndoStarted = false;
                         ReapplyPendingSpline();
                     }
                     else if (splineReapplyPending) ReapplyPendingSpline();
@@ -1045,6 +1074,17 @@ namespace UMA.TexturePaint.Editor
             }
             if (current.type == EventType.MouseDown && (current.button == 2 || current.button == 1))
             {
+                if (current.button == 1 && authoringSplineLayer)
+                {
+                    int contextPoint = FindSplinePointAt(textureRect, current.mousePosition);
+                    if (contextPoint >= 0)
+                    {
+                        SelectSingleSplinePoint(contextPoint);
+                        ShowSplinePointContextMenu(set, contextPoint);
+                        current.Use();
+                        return;
+                    }
+                }
                 uvPanning = true; uvPanStartMouse = current.mousePosition; uvPanStart = workspaceUVPan;
                 current.Use(); return;
             }
@@ -1059,9 +1099,11 @@ namespace UMA.TexturePaint.Editor
             }
             if (current.rawType == EventType.MouseUp && current.button == 0)
             {
-                if (uvDraggingSplinePoint >= 0)
+                if (uvDraggingSplineHandle != UVSplineHandleKind.None)
                 {
                     uvDraggingSplinePoint = -1;
+                    uvDraggingSplineHandle = UVSplineHandleKind.None;
+                    uvSplineHandleUndoStarted = false;
                     ReapplyPendingSpline();
                     current.Use();
                     return;
@@ -1081,23 +1123,68 @@ namespace UMA.TexturePaint.Editor
             }
             if (authoringSplineLayer && current.type == EventType.MouseDown && current.button == 0)
             {
+                UVSplineHandleKind selectedHandle = FindSelectedUVSplineHandleAt(
+                    uvSplineLayer.spline, textureRect, current.mousePosition);
+                if (selectedHandle != UVSplineHandleKind.None)
+                {
+                    uvDraggingSplinePoint = selectedSplinePoint;
+                    uvDraggingSplineHandle = selectedHandle;
+                    uvDraggingSplineIncoming = selectedHandle == UVSplineHandleKind.Incoming;
+                    uvSplineHandleUndoStarted = false;
+                    current.Use();
+                    return;
+                }
                 int point = FindSplinePointAt(textureRect, current.mousePosition);
                 if (point >= 0)
                 {
                     selectedSplinePoint = point;
                     selectedSplinePoints?.Clear();
                     selectedSplinePoints?.Add(point);
-                    BeginLightweightPathUndo(set, "Move UV Path Point");
                     uvDraggingSplinePoint = point;
+                    uvDraggingSplineHandle = UVSplineHandleKind.Anchor;
+                    uvSplineHandleUndoStarted = false;
                 }
                 else if (current.control || current.command)
                 {
                     TryInsertUVSplinePoint(set, textureRect, current.mousePosition);
                 }
-                else if (current.shift && TryCanvasUV(current.mousePosition, textureRect, out Vector2 addUV) &&
-                    TryMakeUVSample(set, addUV, out StrokeSample addSample))
+                else if (current.shift && TryCanvasUV(current.mousePosition, textureRect, out Vector2 addUV))
                 {
-                    AddUVSplinePoint(set, addSample);
+                    AddUVSplinePoint(set, MakeDirectUVSample(set, addUV));
+                }
+                current.Use();
+                return;
+            }
+            if (activeSplineLayer && !authoringSplineLayer && current.button == 0 &&
+                (current.type == EventType.MouseDown || current.type == EventType.MouseDrag))
+            {
+                if (current.type == EventType.MouseDown)
+                    ShowWorkspaceStatus("This is a 3D spline. Edit it in the Scene view.");
+                current.Use();
+                return;
+            }
+
+            if (current.type == EventType.MouseDrag && current.button == 0 && authoringSplineLayer &&
+                uvDraggingSplineHandle != UVSplineHandleKind.None && uvDraggingSplinePoint >= 0)
+            {
+                if (!uvSplineHandleUndoStarted)
+                {
+                    string label = uvDraggingSplineHandle == UVSplineHandleKind.Width
+                        ? "Adjust UV Path Point Width"
+                        : uvDraggingSplineHandle == UVSplineHandleKind.Anchor
+                            ? "Move UV Path Point" : "Adjust UV Path Curve";
+                    BeginLightweightPathUndo(set, label);
+                    uvSplineHandleUndoStarted = true;
+                }
+                if (uvDraggingSplineHandle == UVSplineHandleKind.Width)
+                    MoveUVSplineWidth(set, uvDraggingSplinePoint, textureRect, current.mousePosition);
+                else
+                {
+                    Vector2 dragUV = CanvasPointToUV(current.mousePosition, textureRect);
+                    if (uvDraggingSplineHandle == UVSplineHandleKind.Anchor)
+                        MoveUVSplinePoint(set, uvDraggingSplinePoint, dragUV);
+                    else
+                        MoveUVSplineControl(set, uvDraggingSplinePoint, uvDraggingSplineIncoming, dragUV);
                 }
                 current.Use();
                 return;
@@ -1133,11 +1220,6 @@ namespace UMA.TexturePaint.Editor
                 }
                 else ShowPaintLayerRequiredStatus(set);
                 current.Use();
-            }
-            else if (current.type == EventType.MouseDrag && current.button == 0 && authoringSplineLayer &&
-                uvDraggingSplinePoint >= 0 && spline != null && uvDraggingSplinePoint < spline.PointCount)
-            {
-                MoveUVSplinePoint(set, uvDraggingSplinePoint, uv); current.Use();
             }
             else if (current.type == EventType.MouseDrag && current.button == 0 && uvStrokeActive)
             {
@@ -1289,7 +1371,7 @@ namespace UMA.TexturePaint.Editor
             int layerIndex = set.activeLayerIndex;
             if (!IsActiveSplineAuthoringLayer(set, layerIndex)) return;
             TexturePaintSpline path = set.layers[layerIndex].spline;
-            if (path == null || path.PointCount == 0) return;
+            if (path == null || path.worldSpace || path.PointCount == 0) return;
             path.EnsureControlPoints();
             var strips = new List<List<Vector3>> { new List<Vector3>() };
             if (path.PointCount == 1)
@@ -1360,6 +1442,8 @@ namespace UMA.TexturePaint.Editor
             Handles.color = new Color(1f, 0.72f, 0.12f, 1f);
             for (int strip = 0; strip < strips.Count; strip++)
                 if (strips[strip].Count > 1) Handles.DrawAAPolyLine(3f, strips[strip].ToArray());
+            if (selectedSplinePoint >= 0 && selectedSplinePoint < path.PointCount)
+                DrawSelectedUVSplineHandles(path, textureRect, selectedSplinePoint);
             for (int pointIndex = 0; pointIndex < path.PointCount; pointIndex++)
             {
                 if (path.worldSpace && pointIndex < path.surfaceIndices.Count &&
@@ -1373,11 +1457,97 @@ namespace UMA.TexturePaint.Editor
             }
         }
 
+        private void DrawSelectedUVSplineHandles(TexturePaintSpline path, Rect textureRect,
+            int pointIndex)
+        {
+            path.EnsureControlPoints();
+            Vector2 anchor = UVToCanvasPoint(textureRect, path.uvPoints[pointIndex]);
+            if (path.useBezier && path.showControls)
+            {
+                Vector2 incoming = UVToCanvasPoint(textureRect, path.uvInControls[pointIndex]);
+                Vector2 outgoing = UVToCanvasPoint(textureRect, path.uvOutControls[pointIndex]);
+                Color green = new Color(0.2f, 1f, 0.32f, 1f);
+                Handles.color = new Color(green.r, green.g, green.b, 0.72f);
+                Handles.DrawLine(anchor, incoming, 2f);
+                Handles.DrawLine(anchor, outgoing, 2f);
+                Handles.color = green;
+                if (Vector2.Distance(anchor, incoming) > 2f)
+                    Handles.DrawSolidDisc(incoming, Vector3.forward, 4.5f);
+                if (Vector2.Distance(anchor, outgoing) > 2f)
+                    Handles.DrawSolidDisc(outgoing, Vector3.forward, 4.5f);
+            }
+
+            if (!TryGetUVSplineWidthHandle(path, textureRect, pointIndex,
+                    out Vector2 widthCenter, out _, out _, out Vector2 widthHandle)) return;
+            Color blue = new Color(0.12f, 0.55f, 1f, 1f);
+            Handles.color = new Color(blue.r, blue.g, blue.b, 0.75f);
+            Handles.DrawLine(widthCenter, widthHandle, 2.5f);
+            Handles.color = blue;
+            Handles.DrawSolidDisc(widthHandle, Vector3.forward, 5.5f);
+        }
+
+        private UVSplineHandleKind FindSelectedUVSplineHandleAt(TexturePaintSpline path,
+            Rect textureRect, Vector2 mouse)
+        {
+            if (path == null || path.worldSpace || selectedSplinePoint < 0 ||
+                selectedSplinePoint >= path.PointCount) return UVSplineHandleKind.None;
+            path.EnsureControlPoints();
+            if (TryGetUVSplineWidthHandle(path, textureRect, selectedSplinePoint,
+                    out _, out _, out _, out Vector2 widthHandle) &&
+                Vector2.Distance(mouse, widthHandle) <= 10f) return UVSplineHandleKind.Width;
+            if (!path.useBezier || !path.showControls) return UVSplineHandleKind.None;
+
+            Vector2 anchor = UVToCanvasPoint(textureRect, path.uvPoints[selectedSplinePoint]);
+            Vector2 incoming = UVToCanvasPoint(textureRect, path.uvInControls[selectedSplinePoint]);
+            Vector2 outgoing = UVToCanvasPoint(textureRect, path.uvOutControls[selectedSplinePoint]);
+            if (Vector2.Distance(anchor, incoming) > 2f && Vector2.Distance(mouse, incoming) <= 10f)
+                return UVSplineHandleKind.Incoming;
+            if (Vector2.Distance(anchor, outgoing) > 2f && Vector2.Distance(mouse, outgoing) <= 10f)
+                return UVSplineHandleKind.Outgoing;
+            return UVSplineHandleKind.None;
+        }
+
+        private bool TryGetUVSplineWidthHandle(TexturePaintSpline path, Rect textureRect,
+            int pointIndex, out Vector2 center, out Vector2 normal, out float displayScale,
+            out Vector2 handle)
+        {
+            center = normal = handle = default;
+            displayScale = 0f;
+            if (path == null || (uint)pointIndex >= (uint)path.PointCount) return false;
+            path.EnsureControlPoints();
+            center = UVToCanvasPoint(textureRect, path.uvPoints[pointIndex]);
+            Vector2 incoming = UVToCanvasPoint(textureRect, path.uvInControls[pointIndex]);
+            Vector2 outgoing = UVToCanvasPoint(textureRect, path.uvOutControls[pointIndex]);
+            Vector2 tangent = outgoing - incoming;
+            if (tangent.sqrMagnitude < 4f)
+            {
+                int previous = pointIndex > 0 ? pointIndex - 1 : path.closed && path.PointCount > 1
+                    ? path.PointCount - 1 : pointIndex;
+                int next = pointIndex + 1 < path.PointCount ? pointIndex + 1 :
+                    path.closed && path.PointCount > 1 ? 0 : pointIndex;
+                tangent = UVToCanvasPoint(textureRect, path.uvPoints[next]) -
+                    UVToCanvasPoint(textureRect, path.uvPoints[previous]);
+            }
+            if (tangent.sqrMagnitude < 0.0001f) tangent = Vector2.right;
+            tangent.Normalize();
+            normal = new Vector2(-tangent.y, tangent.x);
+
+            TexturePaintSplineSettings settings = null;
+            TextureSet set = ActiveTextureSet;
+            if (TryGetActivePathLayer(set, out TexturePaintLayer layer) && layer.spline == path)
+                settings = layer.splineSettings;
+            float baseRadius = Mathf.Max(0.0001f, settings?.brushSize ?? ActiveBrush.size) *
+                textureRect.width;
+            displayScale = Mathf.Clamp(baseRadius, 18f, Mathf.Max(18f, textureRect.width * 0.12f));
+            handle = center + normal * displayScale * Mathf.Clamp(path.widths[pointIndex], 0.05f, 4f);
+            return true;
+        }
+
         private int FindSplinePointAt(Rect textureRect, Vector2 mouse)
         {
             TextureSet set = ActiveTextureSet;
             if (spline == null || set == null || !IsActiveSplineAuthoringLayer(set, set.activeLayerIndex) ||
-                set.layers[set.activeLayerIndex].spline != spline) return -1;
+                set.layers[set.activeLayerIndex].spline != spline || spline.worldSpace) return -1;
             int best = -1; float bestDistance = 9f;
             for (int i = 0; i < spline.PointCount; i++)
             {
@@ -1397,16 +1567,17 @@ namespace UMA.TexturePaint.Editor
             TextureSet activeSet = ActivateSurfaceForSpline(set.surface);
             if (activeSet == null) return;
             EnsureSplineLayer(activeSet);
+            if (spline?.worldSpace != false)
+            {
+                ShowWorkspaceStatus("This is a 3D spline. Edit it in the Scene view or change Spline Space in Properties.");
+                return;
+            }
             BeginLightweightPathUndo(activeSet, "Add UV Path Point");
-            spline.worldSpace = false;
             spline.AddPoint(sample.worldPosition, sample.uv, sample.surfaceIndex, sample.triangleIndex, sample.worldNormal);
             selectedSplinePoint = spline.PointCount - 1;
-            TexturePaintSurfaceAnchor anchor = spline.anchors[selectedSplinePoint];
-            anchor.surfaceId = activeSet.persistentId; anchor.barycentric = sample.barycentric; anchor.normal = sample.worldNormal;
-            spline.anchors[selectedSplinePoint] = anchor;
-            ProjectSplineControlToSurface(activeSet, spline, selectedSplinePoint, true);
-            ProjectSplineControlToSurface(activeSet, spline, selectedSplinePoint, false);
-            if (selectedSplinePoint > 0) ProjectSplineControlToSurface(activeSet, spline, selectedSplinePoint - 1, false);
+            NormalizeTwoDimensionalSplinePoint(activeSet, spline, selectedSplinePoint);
+            if (selectedSplinePoint > 0)
+                NormalizeTwoDimensionalSplinePoint(activeSet, spline, selectedSplinePoint - 1);
             CompleteLightweightPathEdit(activeSet, true);
             SceneView.RepaintAll();
         }
@@ -1414,7 +1585,7 @@ namespace UMA.TexturePaint.Editor
         private bool TryInsertUVSplinePoint(TextureSet set, Rect textureRect, Vector2 mouse)
         {
             if (!TryGetActivePathLayer(set, out TexturePaintLayer layer) || layer.spline == null ||
-                layer.spline.SegmentCount == 0 ||
+                layer.spline.worldSpace || layer.spline.SegmentCount == 0 ||
                 !TryFindNearestUVSplineSegment(set, layer.spline, textureRect, mouse,
                     out int segment, out float segmentT)) return false;
 
@@ -1425,8 +1596,7 @@ namespace UMA.TexturePaint.Editor
             selectedSplinePoint = inserted;
             selectedSplinePoints?.Clear();
             selectedSplinePoints?.Add(inserted);
-            if (spline.worldSpace) UpdateInsertedWorldSplineAnchor(set, spline, inserted);
-            else UpdateSplineAnchorFromUV(set, spline, inserted);
+            NormalizeTwoDimensionalSplinePoint(set, spline, inserted);
             CompleteLightweightPathEdit(set, true);
             SceneView.RepaintAll();
             return true;
@@ -1437,6 +1607,7 @@ namespace UMA.TexturePaint.Editor
         {
             bestSegment = -1;
             bestT = 0f;
+            if (targetSpline?.worldSpace != false) return false;
             float bestDistanceSquared = SplineInsertTolerancePixels * SplineInsertTolerancePixels;
             targetSpline.EnsureControlPoints();
             if (!targetSpline.worldSpace)
@@ -1516,25 +1687,49 @@ namespace UMA.TexturePaint.Editor
                 textureRect.y + (1f - uv.y) * textureRect.height);
         }
 
+        private static Vector2 CanvasPointToUV(Vector2 point, Rect textureRect)
+        {
+            return new Vector2((point.x - textureRect.x) / Mathf.Max(1f, textureRect.width),
+                1f - (point.y - textureRect.y) / Mathf.Max(1f, textureRect.height));
+        }
+
         private void MoveUVSplinePoint(TextureSet set, int point, Vector2 uv)
         {
             if (spline == null || (uint)point >= (uint)spline.PointCount) return;
-            spline.worldSpace = false;
+            if (spline.worldSpace) return;
             Vector2 delta = uv - spline.uvPoints[point];
             spline.uvPoints[point] = uv;
             spline.EnsureControlPoints();
             spline.uvInControls[point] += delta; spline.uvOutControls[point] += delta;
-            UpdateSplineAnchorFromUV(set, spline, point);
-            ProjectSplineControlToSurface(set, spline, point, true);
-            ProjectSplineControlToSurface(set, spline, point, false);
+            NormalizeTwoDimensionalSplinePoint(set, spline, point);
+            spline.RefreshStraightTangents();
+            CompleteLightweightPathEdit(set, true);
+            SceneView.RepaintAll();
+        }
+
+        private void MoveUVSplineControl(TextureSet set, int point, bool incoming, Vector2 uv)
+        {
+            if (spline == null || spline.worldSpace || (uint)point >= (uint)spline.PointCount) return;
+            spline.SetWorldControl(point, incoming, new Vector3(uv.x, uv.y, 0f), uv);
+            NormalizeTwoDimensionalSplinePoint(set, spline, point);
+            CompleteLightweightPathEdit(set, true);
+            SceneView.RepaintAll();
+        }
+
+        private void MoveUVSplineWidth(TextureSet set, int point, Rect textureRect, Vector2 mouse)
+        {
+            if (spline == null || spline.worldSpace || (uint)point >= (uint)spline.PointCount ||
+                !TryGetUVSplineWidthHandle(spline, textureRect, point, out Vector2 center,
+                    out Vector2 normal, out float displayScale, out _)) return;
+            float width = Vector2.Dot(mouse - center, normal) / Mathf.Max(1f, displayScale);
+            spline.widths[point] = Mathf.Clamp(width, 0.05f, 4f);
             CompleteLightweightPathEdit(set, true);
             SceneView.RepaintAll();
         }
 
         private static bool TryCanvasUV(Vector2 point, Rect textureRect, out Vector2 uv)
         {
-            uv = new Vector2((point.x - textureRect.x) / Mathf.Max(1f, textureRect.width),
-                1f - (point.y - textureRect.y) / Mathf.Max(1f, textureRect.height));
+            uv = CanvasPointToUV(point, textureRect);
             return uv.x >= 0f && uv.x <= 1f && uv.y >= 0f && uv.y <= 1f;
         }
 
@@ -1587,6 +1782,9 @@ namespace UMA.TexturePaint.Editor
             if (GUILayout.Button(new GUIContent("+ Fill", "Add fill layer"), EditorStyles.toolbarButton)) AddFillLayer(set);
             if (GUILayout.Button(new GUIContent("+ Path", "Add spline/path layer"), EditorStyles.toolbarButton))
                 CreateSplineLayerWithUndo(set);
+            if (!pathsOnly && GUILayout.Button(new GUIContent("+ Plugin",
+                    "Add a procedural generator/filter layer"), EditorStyles.toolbarButton))
+                AddPluginLayer(set);
             if (!pathsOnly && GUILayout.Button(new GUIContent("+ Group", "Add layer folder/group"), EditorStyles.toolbarButton))
             {
                 BeginLayerCreationUndo("Add Layer Group");
@@ -2129,6 +2327,7 @@ namespace UMA.TexturePaint.Editor
                     TexturePaintLayerEffectKind.BevelEdge => "Bevel Edge",
                     TexturePaintLayerEffectKind.ProceduralStitch => "Procedural Stitch",
                     TexturePaintLayerEffectKind.TextureOverlay => "Texture Overlay",
+                    TexturePaintLayerEffectKind.ImageAdjustments => "Image Adjustments",
                     _ => kind.ToString()
                 };
             }
@@ -2219,6 +2418,29 @@ namespace UMA.TexturePaint.Editor
                                 "Textures repeat in destination UV space and are combined in Texture 1 then Texture 2 order. Their alpha, opacity, and color alpha all affect coverage.",
                                 EditorStyles.wordWrappedMiniLabel);
                         }
+                        else if (effect.kind == TexturePaintLayerEffectKind.ImageAdjustments)
+                        {
+                            bool grayscale = TexturePaintChannelUtility.IsGrayscale(effect.channel);
+                            using (new EditorGUI.DisabledScope(grayscale))
+                            {
+                                effect.saturation = EditorGUILayout.Slider(
+                                    new GUIContent("Saturation (%)", "Color saturation; 100% leaves the channel unchanged."),
+                                    effect.saturation * 100f, 0f, 200f) * 0.01f;
+                                effect.hue = EditorGUILayout.Slider(
+                                    new GUIContent("Hue (degrees)", "Rotates hue around the color wheel."),
+                                    effect.hue, -180f, 180f);
+                            }
+                            effect.brightness = EditorGUILayout.Slider(
+                                new GUIContent("Brightness (%)", "Adds or removes brightness from the selected channel."),
+                                effect.brightness * 100f, -100f, 100f) * 0.01f;
+                            effect.contrast = EditorGUILayout.Slider(
+                                new GUIContent("Contrast (%)", "Adjusts contrast around the channel midpoint."),
+                                effect.contrast * 100f, -100f, 100f) * 0.01f;
+                            if (grayscale)
+                                EditorGUILayout.LabelField(
+                                    "Hue and Saturation do not affect grayscale channels.",
+                                    EditorStyles.wordWrappedMiniLabel);
+                        }
                         else effect.color = EditorGUILayout.ColorField("Color", effect.color);
                         switch (effect.kind)
                         {
@@ -2259,8 +2481,12 @@ namespace UMA.TexturePaint.Editor
                                     "Blend", effect.blendMode);
                                 break;
                         }
+                        string levelLabel = effect.kind == TexturePaintLayerEffectKind.ImageAdjustments
+                            ? "Amount" : "Level";
                         effect.level = EditorGUILayout.Slider(
-                            new GUIContent("Level", "Effect strength, independent of the selected color's alpha."),
+                            new GUIContent(levelLabel, effect.kind == TexturePaintLayerEffectKind.ImageAdjustments
+                                ? "Blends between the unadjusted and adjusted image."
+                                : "Effect strength, independent of the selected color's alpha."),
                             effect.level, 0f, 1f);
                         effect.color = TexturePaintChannelUtility.ConstrainColor(effect.channel, effect.color);
                         effect.secondaryColor = TexturePaintChannelUtility.ConstrainColor(
@@ -2352,6 +2578,7 @@ namespace UMA.TexturePaint.Editor
             bool isFill = activeLayer?.kind == TexturePaintLayerKind.Fill;
             bool isPath = activeLayer?.IsSplineLayer == true;
             bool isGroup = activeLayer?.kind == TexturePaintLayerKind.Group;
+            bool isPlugin = activeLayer?.kind == TexturePaintLayerKind.Plugin;
             bool maskMode = IsLayerMaskMode(set);
             bool showPaintControls = maskMode || activeLayer == null || isPaint || isPath;
             if (maskMode)
@@ -2360,11 +2587,15 @@ namespace UMA.TexturePaint.Editor
                     MessageType.Info);
             else if (isPath)
                 EditorGUILayout.HelpBox(
-                    "Path layer active: Shift+Click adds a point. Ctrl+Click inserts only when the cursor is near the spline. Click or drag without modifiers selects or adjusts existing points. Freehand paint tools are disabled.",
+                    activeLayer.spline?.worldSpace == true
+                        ? "3D path active: edit it only in the Scene view. Shift+Click adds a point; Ctrl+Click inserts near the path."
+                        : "2D path active: edit it only in the 2D view. Shift+Click adds a point; Ctrl+Click inserts near the path. Model geometry is not consulted.",
                     MessageType.Info);
-            else if (isFill || isGroup)
+            else if (isFill || isGroup || isPlugin)
                 EditorGUILayout.HelpBox(
-                    "Freehand tools require an active Paint layer. Fill and Group layers cannot receive brush strokes.",
+                    isPlugin
+                        ? "Plugin layers generate cached, multi-channel content from the composite below them. Paint their mask to art-direct the result."
+                        : "Freehand tools require an active Paint layer. Fill and Group layers cannot receive brush strokes.",
                     MessageType.Info);
             if (showPaintControls) DrawPropertySection("DESTINATION", () =>
             {
@@ -2407,7 +2638,7 @@ namespace UMA.TexturePaint.Editor
                 DrawPropertySection("PATH", () => DrawPathProperties(set));
             if (showPaintControls)
                 DrawPropertySection("STROKE & PROJECTION", DrawStrokeProperties);
-            if (!isFill && !isGroup) DrawPropertySection("EXTENSIONS", () =>
+            if (!isFill && !isGroup && !isPlugin) DrawPropertySection("EXTENSIONS", () =>
             {
                 if (GUILayout.Button("Plugins…")) PluginManagerWindow.Open(controller);
             });
@@ -2592,16 +2823,13 @@ namespace UMA.TexturePaint.Editor
             {
                 EditorGUILayout.HelpBox("Neutral gray (0.5) leaves the normal unchanged. Darker values recess the surface; lighter values raise it. The generated normal is used for 3D preview and export.", MessageType.None);
                 EditorGUI.BeginChangeCheck();
-                float strength = EditorGUILayout.Slider(new GUIContent("Height Strength",
-                    "Slope intensity generated from the grayscale height field."),
-                    set.normalControlStrength, 0f, 16f);
                 int radius = EditorGUILayout.IntSlider(new GUIContent("Sample Radius (px)",
-                    "Neighbor distance used to calculate the height gradient."),
+                    "Shared neighbor distance used to calculate gradients for this target."),
                     set.normalControlRadius, 1, 16);
                 bool invertHeight = EditorGUILayout.Toggle(new GUIContent("Invert Height",
-                    "Reverse raised and recessed height interpretation."), set.normalControlInvert);
+                    "Shared raised/recessed interpretation for this target."), set.normalControlInvert);
                 if (EditorGUI.EndChangeCheck())
-                    ChangeNormalControlSettings(set, strength, radius, invertHeight);
+                    ChangeNormalControlSettings(set, set.normalControlStrength, radius, invertHeight);
             }
             bool nextSolo = EditorGUILayout.Toggle(new GUIContent("Solo in 3D", "Preview this logical channel without material shading"), channelSolo);
             if (nextSolo != channelSolo) { channelSolo = nextSolo; if (channelSolo) previewBefore = false; }
@@ -2689,9 +2917,15 @@ namespace UMA.TexturePaint.Editor
             }
             if (layer.kind == TexturePaintLayerKind.Fill && !IsLayerMaskMode(set))
                 DrawFillLayerProperties(set, layer);
+            if (layer.kind == TexturePaintLayerKind.Plugin && !IsLayerMaskMode(set))
+                DrawPluginLayerProperties(set, layer);
             if (IsLayerMaskMode(set) && layer.layerMask != null)
+            {
                 DrawLayerMaskSource(set, layer);
-            if (layer.kind != TexturePaintLayerKind.Group && !IsLayerMaskMode(set) &&
+                DrawLayerMaskPluginProperties(set, layer);
+            }
+            if (layer.kind != TexturePaintLayerKind.Group &&
+                layer.kind != TexturePaintLayerKind.Plugin && !IsLayerMaskMode(set) &&
                 EditorGUILayout.DropdownButton(new GUIContent("Add from Sprite Set",
                     "Assign one sprite-set material to this layer's supported channels."),
                     FocusType.Keyboard))
@@ -2701,10 +2935,162 @@ namespace UMA.TexturePaint.Editor
                     AddFromSpriteSet(set, targetLayer, spriteSet, spriteIndex, tiling));
             }
             EditorGUILayout.LabelField("Type", layer.kind.ToString());
-            if (!string.IsNullOrEmpty(layer.pluginId))
+            if (!string.IsNullOrEmpty(layer.pluginId) && layer.kind != TexturePaintLayerKind.Plugin)
                 EditorGUILayout.LabelField("Extension", layer.pluginId + " " + layer.pluginVersion);
             if (layer.kind != TexturePaintLayerKind.Group && !IsLayerMaskMode(set))
-                DrawLayerChannelProperties(set, layer, true);
+                DrawLayerChannelProperties(set, layer, layer.kind != TexturePaintLayerKind.Plugin);
+        }
+
+        private void DrawPluginLayerProperties(TextureSet set, TexturePaintLayer layer)
+        {
+            IReadOnlyList<ITexturePaintCommandExtensionV2> available = controller?.Plugins?.Commands;
+            available ??= Array.Empty<ITexturePaintCommandExtensionV2>();
+            ITexturePaintCommandExtensionV2 selectedPlugin = controller?.Plugins?.FindCommand(layer.pluginId);
+            bool missing = !string.IsNullOrEmpty(layer.pluginId) && selectedPlugin == null;
+            var labels = new List<string>();
+            var choices = new List<ITexturePaintCommandExtensionV2>();
+            if (missing)
+            {
+                labels.Add("Missing · " + layer.pluginId);
+                choices.Add(null);
+            }
+            labels.Add("None");
+            choices.Add(null);
+            int selectedIndex = missing ? 0 : 0;
+            for (int i = 0; i < available.Count; i++)
+            {
+                ITexturePaintCommandExtensionV2 plugin = available[i];
+                string kind = plugin is ITexturePaintGeneratorV2 ? "Generator" : "Filter";
+                labels.Add(plugin.Descriptor.displayName + "  (" + kind + ")");
+                choices.Add(plugin);
+                if (ReferenceEquals(plugin, selectedPlugin)) selectedIndex = labels.Count - 1;
+            }
+
+            string layerKey = !string.IsNullOrEmpty(layer.logicalLayerId) ? layer.logicalLayerId : layer.id;
+            bool running = pluginLayerCancellation != null;
+            using (new EditorGUI.DisabledScope(running))
+            {
+                int next = EditorGUILayout.Popup("Plugin", selectedIndex, labels.ToArray());
+                if (next != selectedIndex)
+                {
+                    ITexturePaintCommandExtensionV2 choice = choices[next];
+                    ChangePluginLayerDefinition(set, layer, choice);
+                    selectedPlugin = choice;
+                    missing = false;
+                }
+            }
+
+            if (missing)
+                EditorGUILayout.HelpBox(
+                    "The selected plugin is not installed or failed registration. The last cached output remains visible and can still be masked, blended, or exported.",
+                    MessageType.Warning);
+            if (selectedPlugin == null)
+            {
+                if (!missing)
+                    EditorGUILayout.HelpBox("Choose a generator or filter. Filters read the composite below this layer; generators may also use that input.",
+                        MessageType.Info);
+                return;
+            }
+
+            TexturePaintPluginDescriptor descriptor = selectedPlugin.Descriptor;
+            bool versionMismatch = !string.IsNullOrEmpty(layer.pluginVersion) &&
+                !string.Equals(layer.pluginVersion, descriptor.pluginVersion, StringComparison.Ordinal);
+            EditorGUILayout.LabelField(descriptor.description, EditorStyles.wordWrappedMiniLabel);
+            EditorGUILayout.LabelField("Version", descriptor.pluginVersion);
+            EditorGUILayout.LabelField("Reads", descriptor.ResolvedReadChannels.ToString());
+            EditorGUILayout.LabelField("Writes", descriptor.declaredChannels.ToString());
+            if (descriptor.ResolvedMeshMaps != TexturePaintMeshMapMask.None)
+                EditorGUILayout.LabelField("Mesh Maps", descriptor.ResolvedMeshMaps.ToString());
+
+            TexturePaintPluginParameterSet parameters =
+                controller.Plugins.GetLayerParameters(layer, selectedPlugin);
+            using (new EditorGUI.DisabledScope(running))
+            {
+                EditorGUI.BeginChangeCheck();
+                PluginManagerWindow.DrawParameters(descriptor, parameters);
+                if (EditorGUI.EndChangeCheck())
+                    ChangePluginLayerParameters(set, layer, selectedPlugin, parameters);
+            }
+
+            if (versionMismatch)
+                EditorGUILayout.HelpBox("Cached output was generated with plugin version " +
+                    layer.pluginVersion + "; installed version is " + descriptor.pluginVersion +
+                    ". Regenerate when ready.", MessageType.Warning);
+            if (!string.IsNullOrEmpty(layer.pluginLastError))
+                EditorGUILayout.HelpBox(layer.pluginLastError, MessageType.Error);
+            else if (layer.pluginStale)
+                EditorGUILayout.HelpBox(layer.channels.Count > 0
+                    ? "Parameters or lower layers changed. The previous cached result remains visible until regeneration succeeds."
+                    : "This Plugin layer has not been generated yet.", MessageType.Warning);
+            else EditorGUILayout.HelpBox("Cached output is current.", MessageType.None);
+
+            if (running && string.Equals(runningPluginLayerId, layerKey, StringComparison.Ordinal))
+            {
+                Rect progressRect = EditorGUILayout.GetControlRect(false, 18f);
+                EditorGUI.ProgressBar(progressRect, Mathf.Clamp01(pluginLayerProgress), "Regenerating");
+                if (GUILayout.Button("Cancel")) pluginLayerCancellation.Cancel();
+            }
+            else
+            {
+                using (new EditorGUI.DisabledScope(running))
+                    if (GUILayout.Button(layer.channels.Count > 0 ? "Regenerate" : "Generate"))
+                        RegeneratePluginLayer(set, layer, selectedPlugin);
+            }
+        }
+
+        private async void RegeneratePluginLayer(TextureSet set, TexturePaintLayer layer,
+            ITexturePaintCommandExtensionV2 plugin)
+        {
+            if (set == null || layer == null || plugin == null || pluginLayerCancellation != null)
+                return;
+            if (!TryResolveLogicalPeers(set, layer,
+                    out List<TexturePaintLogicalLayerMember> peers, out string error))
+            { ShowWorkspaceStatus(error); return; }
+            var destinations = new Dictionary<TextureSet, TexturePaintLayer>();
+            for (int i = 0; i < peers.Count; i++)
+            {
+                TexturePaintLogicalLayerMember peer = peers[i];
+                if (peer.layer.kind != TexturePaintLayerKind.Plugin)
+                { ShowWorkspaceStatus("The logical Plugin layer is inconsistent across target members."); return; }
+                destinations[peer.textureSet] = peer.layer;
+            }
+
+            pluginLayerCancellation = new System.Threading.CancellationTokenSource();
+            runningPluginLayerId = !string.IsNullOrEmpty(layer.logicalLayerId)
+                ? layer.logicalLayerId : layer.id;
+            pluginLayerProgress = 0f;
+            RepaintAll();
+            try
+            {
+                TexturePaintPluginParameterSet parameters =
+                    controller.Plugins.GetLayerParameters(layer, plugin);
+                await controller.Plugins.ExecutePluginLayerAsync(plugin, controller.Textures,
+                    parameters, destinations, new Progress<float>(value =>
+                    {
+                        pluginLayerProgress = value;
+                        TexturePaintDockWindow.RepaintOpenWindows();
+                    }), pluginLayerCancellation.Token);
+                SyncActiveLayerSelection(ActiveTextureSet);
+                ShowWorkspaceStatus(plugin.Descriptor.displayName + " generated successfully");
+            }
+            catch (OperationCanceledException)
+            {
+                ShowWorkspaceStatus("Plugin generation cancelled; cached output retained");
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception);
+                ShowWorkspaceStatus("Plugin generation failed; cached output retained");
+            }
+            finally
+            {
+                pluginLayerCancellation?.Dispose();
+                pluginLayerCancellation = null;
+                runningPluginLayerId = null;
+                pluginLayerProgress = 0f;
+                MarkDocumentDirty();
+                RepaintAll();
+            }
         }
 
         private void DrawLayerMaskSource(TextureSet set, TexturePaintLayer layer)
@@ -2727,6 +3113,130 @@ namespace UMA.TexturePaint.Editor
             paintSourceTexture = null;
             paintSourceSprite = null;
             paintSourceOverlay = null;
+        }
+
+        private void DrawLayerMaskPluginProperties(TextureSet set, TexturePaintLayer layer)
+        {
+            TexturePaintLayerMask mask = layer?.layerMask;
+            if (mask == null || !DrawPropertySubsectionFoldout(
+                    "properties.active-layer.mask-plugin", "Mask Filter / Generator")) return;
+            IReadOnlyList<ITexturePaintCommandExtensionV2> available =
+                controller?.Plugins?.Commands ?? Array.Empty<ITexturePaintCommandExtensionV2>();
+            ITexturePaintCommandExtensionV2 selected = controller?.Plugins?.FindCommand(mask.pluginId);
+            var choices = new List<ITexturePaintCommandExtensionV2> { null };
+            var labels = new List<string> { "None" };
+            int selectedIndex = 0;
+            for (int i = 0; i < available.Count; i++)
+            {
+                ITexturePaintCommandExtensionV2 candidate = available[i];
+                if ((candidate.Descriptor.supportedTargets & TexturePaintPluginTarget.LayerMask) == 0)
+                    continue;
+                choices.Add(candidate);
+                labels.Add(candidate.Descriptor.displayName + (candidate is ITexturePaintGeneratorV2
+                    ? "  (Generator)" : "  (Filter)"));
+                if (ReferenceEquals(candidate, selected)) selectedIndex = choices.Count - 1;
+            }
+            bool missing = !string.IsNullOrEmpty(mask.pluginId) && selected == null;
+            if (missing)
+            {
+                labels.Insert(0, "Missing · " + mask.pluginId);
+                choices.Insert(0, null);
+                selectedIndex = 0;
+            }
+            bool running = pluginLayerCancellation != null;
+            using (new EditorGUI.DisabledScope(running))
+            {
+                int next = EditorGUILayout.Popup("Plugin", selectedIndex, labels.ToArray());
+                if (next != selectedIndex)
+                {
+                    selected = choices[next];
+                    ChangeLayerMaskPluginDefinition(set, layer, selected);
+                    missing = false;
+                }
+            }
+            if (missing)
+            {
+                EditorGUILayout.HelpBox("The mask plugin is unavailable. The saved mask remains editable.",
+                    MessageType.Warning);
+                return;
+            }
+            if (selected == null)
+            {
+                EditorGUILayout.HelpBox(
+                    "Choose a compatible filter or generator. Its result is written directly to this grayscale mask and can then be painted by hand.",
+                    MessageType.Info);
+                return;
+            }
+            EditorGUILayout.LabelField(selected.Descriptor.description, EditorStyles.wordWrappedMiniLabel);
+            TexturePaintPluginParameterSet parameters =
+                string.Equals(mask.pluginId, selected.Descriptor.id, StringComparison.Ordinal) &&
+                mask.pluginParameters != null
+                    ? mask.pluginParameters.Clone()
+                    : controller.Plugins.CreateParameters(selected);
+            using (new EditorGUI.DisabledScope(running))
+            {
+                EditorGUI.BeginChangeCheck();
+                PluginManagerWindow.DrawParameters(selected.Descriptor, parameters,
+                    id => id == "sourceChannel" || id == "destinationChannel");
+                if (EditorGUI.EndChangeCheck())
+                    ChangeLayerMaskPluginParameters(set, layer, selected, parameters);
+            }
+            if (!string.IsNullOrEmpty(mask.pluginLastError))
+                EditorGUILayout.HelpBox(mask.pluginLastError, MessageType.Error);
+            else if (mask.pluginStale)
+                EditorGUILayout.HelpBox("Parameters changed. Generate to update the mask.",
+                    MessageType.Warning);
+            if (!running)
+            {
+                if (GUILayout.Button("Generate Mask"))
+                    RegenerateLayerMaskPlugin(set, layer, selected);
+            }
+            else if (GUILayout.Button("Cancel Mask Generation")) pluginLayerCancellation.Cancel();
+        }
+
+        private async void RegenerateLayerMaskPlugin(TextureSet set, TexturePaintLayer layer,
+            ITexturePaintCommandExtensionV2 plugin)
+        {
+            if (set == null || layer?.layerMask == null || plugin == null ||
+                pluginLayerCancellation != null) return;
+            if (!TryResolveLogicalPeers(set, layer,
+                    out List<TexturePaintLogicalLayerMember> peers, out string error))
+            { ShowWorkspaceStatus(error); return; }
+            var destinations = new Dictionary<TextureSet, TexturePaintLayer>();
+            for (int i = 0; i < peers.Count; i++)
+            {
+                if (peers[i].layer.layerMask == null)
+                { ShowWorkspaceStatus("Every logical layer member needs a mask."); return; }
+                destinations[peers[i].textureSet] = peers[i].layer;
+            }
+            pluginLayerCancellation = new System.Threading.CancellationTokenSource();
+            runningPluginLayerId = "mask:" + (!string.IsNullOrEmpty(layer.logicalLayerId)
+                ? layer.logicalLayerId : layer.id);
+            try
+            {
+                TexturePaintPluginParameterSet parameters = layer.layerMask.pluginParameters?.Clone() ??
+                    controller.Plugins.CreateParameters(plugin);
+                await controller.Plugins.ExecuteLayerMaskAsync(plugin, controller.Textures, parameters,
+                    destinations, new Progress<float>(value =>
+                    {
+                        pluginLayerProgress = value;
+                        TexturePaintDockWindow.RepaintOpenWindows();
+                    }), pluginLayerCancellation.Token);
+                ShowWorkspaceStatus(plugin.Descriptor.displayName + " generated the layer mask");
+            }
+            catch (OperationCanceledException)
+            { ShowWorkspaceStatus("Mask generation cancelled; previous mask retained"); }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception);
+                ShowWorkspaceStatus("Mask generation failed; previous mask retained");
+            }
+            finally
+            {
+                pluginLayerCancellation?.Dispose(); pluginLayerCancellation = null;
+                runningPluginLayerId = null; pluginLayerProgress = 0f;
+                MarkDocumentDirty(); RepaintAll();
+            }
         }
 
         private void DrawLayerChannelProperties(TextureSet set, TexturePaintLayer layer,
@@ -2779,6 +3289,7 @@ namespace UMA.TexturePaint.Editor
             TexturePaintChannel channel)
         {
             TexturePaintLayerChannelSettings settings = layer.GetChannelSettings(channel);
+            bool pluginOutput = layer.kind == TexturePaintLayerKind.Plugin;
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
             GUILayout.BeginHorizontal();
             EditorGUILayout.LabelField(TexturePaintChannelUtility.DisplayName(channel), EditorStyles.boldLabel);
@@ -2786,7 +3297,7 @@ namespace UMA.TexturePaint.Editor
             using (new EditorGUI.DisabledScope(isActive))
                 if (GUILayout.Button(isActive ? "Active" : "Edit", GUILayout.Width(54f)))
                     SelectLayerChannelForEditing(layer, channel);
-            if (GUILayout.Button(new GUIContent("Remove", "Remove this channel texture and its settings."),
+            if (!pluginOutput && GUILayout.Button(new GUIContent("Remove", "Remove this channel texture and its settings."),
                     GUILayout.Width(62f)) &&
                 EditorUtility.DisplayDialog("Remove Layer Channel",
                     $"Remove the {channel} channel from '{layer.name}'?\n\n" +
@@ -2807,13 +3318,23 @@ namespace UMA.TexturePaint.Editor
             }
             GUILayout.EndHorizontal();
 
-            DrawLayerChannelSource(set, layer, channel, settings);
+            if (!pluginOutput) DrawLayerChannelSource(set, layer, channel, settings);
+
+            if (channel == TexturePaintChannel.NormalControl)
+            {
+                EditorGUI.BeginChangeCheck();
+                float heightStrength = EditorGUILayout.Slider(new GUIContent("Height Strength",
+                    "Slope intensity generated only by this layer's grayscale height field."),
+                    set.ResolveNormalControlStrength(settings), 0f, 16f);
+                if (EditorGUI.EndChangeCheck())
+                    ChangeLayerNormalControlStrength(set, layer, heightStrength);
+            }
 
             EditorGUI.BeginChangeCheck();
             bool enabled = EditorGUILayout.Toggle("Enabled", settings.enabled);
-            bool locked = EditorGUILayout.Toggle("Lock Painting", settings.locked);
+            bool locked = pluginOutput ? true : EditorGUILayout.Toggle("Lock Painting", settings.locked);
             float contribution = settings.contribution;
-            if (layer.kind != TexturePaintLayerKind.Fill)
+            if (layer.kind != TexturePaintLayerKind.Fill && !pluginOutput)
                 contribution = EditorGUILayout.Slider("Channel Paint Strength", contribution, 0f, 1f);
             float opacity = EditorGUILayout.Slider("Channel Opacity", settings.opacity, 0f, 1f);
             TexturePaintBlendMode blend = (TexturePaintBlendMode)EditorGUILayout.EnumPopup(
@@ -3152,10 +3673,15 @@ namespace UMA.TexturePaint.Editor
                 if (GUILayout.Button("Create Path Layer")) CreateSplineLayerWithUndo(set);
                 return;
             }
-            splineMode = TryGetActivePathLayer(set, out _);
+            splineMode = TryGetActivePathLayer(set, out TexturePaintLayer propertiesPathLayer) &&
+                propertiesPathLayer.spline?.worldSpace == true;
             using (new EditorGUI.DisabledScope(true))
-                EditorGUILayout.Toggle("Surface Authoring", splineMode);
-            EditorGUILayout.LabelField("Path Domain", spline.worldSpace ? "3D Surface" : "2D UV");
+                EditorGUILayout.Toggle("Path Authoring", TryGetActivePathLayer(set, out _));
+            DrawSplineSpaceProperty(set);
+            EditorGUILayout.HelpBox(spline.worldSpace
+                ? "3D-only: edit points and controls in the Scene view."
+                : "2D-only: edit points in the 2D view; rasterization does not use model geometry.",
+                MessageType.None);
             EditorGUI.BeginChangeCheck();
             bool useBezier = EditorGUILayout.Toggle("Bezier Curves", spline.useBezier);
             bool closed = EditorGUILayout.Toggle("Closed Loop", spline.closed);
@@ -3218,25 +3744,25 @@ namespace UMA.TexturePaint.Editor
                     UpdateSplineAnchorFromCurrentDomain(set, spline, selectedSplinePoint);
                     CompleteLightweightPathEdit(set, false);
                 }
-                if (GUILayout.Button("Delete Point"))
-                {
-                    BeginLightweightPathUndo(set, "Delete Spline Point");
-                    spline.RemovePoint(selectedSplinePoint);
-                    selectedSplinePoint = Mathf.Clamp(selectedSplinePoint, -1, spline.PointCount - 1);
-                    CompleteLightweightPathEdit(set, false);
-                }
+                if (GUILayout.Button("Delete Point")) DeleteSelectedSplinePoints(set);
             }
             GUILayout.EndHorizontal();
             if (selectedSplinePoint >= 0 && selectedSplinePoint < spline.PointCount)
             {
                 spline.EnsureControlPoints();
+                if (GUILayout.Button(new GUIContent("Straight Handles", "Force the selected point handles onto straight, linear segments")))
+                    StraightenSelectedSplinePoints(set);
                 EditorGUI.BeginChangeCheck();
                 TexturePaintTangentMode tangent = (TexturePaintTangentMode)EditorGUILayout.EnumPopup("Point Tangent", spline.tangentModes[selectedSplinePoint]);
                 float pressure = EditorGUILayout.Slider("Point Pressure", spline.pressures[selectedSplinePoint], 0f, 1f);
-                float width = EditorGUILayout.Slider("Point Width", spline.widths[selectedSplinePoint], 0.05f, 4f);
+                float widthPercent = EditorGUILayout.Slider(new GUIContent("Point Width (%)", "Brush width at this point as a percentage of the path width"),
+                    spline.widths[selectedSplinePoint] * 100f, 5f, 400f);
+                float width = widthPercent * 0.01f;
                 float flow = EditorGUILayout.Slider("Point Flow", spline.flows[selectedSplinePoint], 0f, 2f);
                 float roll = EditorGUILayout.Slider("Point Roll", spline.rolls[selectedSplinePoint], -180f, 180f);
-                float offset = EditorGUILayout.Slider("Surface Offset", spline.offsets[selectedSplinePoint], -0.1f, 0.1f);
+                float offset = spline.offsets[selectedSplinePoint];
+                using (new EditorGUI.DisabledScope(!spline.worldSpace))
+                    offset = EditorGUILayout.Slider("Surface Offset", offset, -0.1f, 0.1f);
                 Color color = EditorGUILayout.ColorField("Point Color", spline.colors[selectedSplinePoint]);
                 if (EditorGUI.EndChangeCheck())
                 {
@@ -3629,10 +4155,25 @@ namespace UMA.TexturePaint.Editor
             SyncActiveLayerSelection(set);
         }
 
+        private void AddPluginLayer(TextureSet set)
+        {
+            if (set == null) return;
+            BeginLayerCreationUndo("Add Plugin Layer");
+            TexturePaintLayer created = set.AddPluginLayer(
+                "Plugin Layer " + (set.layers.Count + 1));
+            created.visible = true;
+            CompleteLayerCreationUndo(created);
+            SyncActiveLayerSelection(set);
+            ShowWorkspaceStatus(controller?.Plugins?.Commands.Count > 0
+                ? "Plugin layer created. Choose a generator or filter in its properties."
+                : "Plugin layer created, but no generator/filter plugins are currently installed.");
+        }
+
         private void AddFromSpriteSet(TextureSet set, TexturePaintLayer layer,
             OverlayPainterSpriteSet spriteSet, int spriteIndex, Vector2 tiling)
         {
             if (set == null || layer == null || layer.kind == TexturePaintLayerKind.Group ||
+                layer.kind == TexturePaintLayerKind.Plugin ||
                 !set.layers.Contains(layer))
             {
                 ShowWorkspaceStatus("The target Paint, Fill, or Path layer is no longer available.");
@@ -3862,7 +4403,8 @@ namespace UMA.TexturePaint.Editor
         private static string LayerDisplayName(TexturePaintLayer layer)
         {
             string display = layer.kind == TexturePaintLayerKind.Spline ? "Path · " + layer.name :
-                layer.kind == TexturePaintLayerKind.Fill ? "Fill · " + layer.name : layer.name;
+                layer.kind == TexturePaintLayerKind.Fill ? "Fill · " + layer.name :
+                layer.kind == TexturePaintLayerKind.Plugin ? "Plugin · " + layer.name : layer.name;
             string channels = LayerChannelSummary(layer);
             return string.IsNullOrEmpty(channels) ? display : display + ": " + channels;
         }
@@ -3879,6 +4421,13 @@ namespace UMA.TexturePaint.Editor
                 return visibility + $"{children} {(children == 1 ? "layer" : "layers")} · Drop layers on folder";
             }
             string prefix = parent != null ? parent.name + " · " : string.Empty;
+            if (layer.kind == TexturePaintLayerKind.Plugin)
+            {
+                string plugin = string.IsNullOrEmpty(layer.pluginId) ? "Choose plugin" : layer.pluginId;
+                string status = layer.pluginStale ? "STALE" : "CACHED";
+                if (!string.IsNullOrEmpty(layer.pluginLastError)) status = "ERROR";
+                return visibility + prefix + status + " · " + plugin;
+            }
             if (!string.IsNullOrEmpty(layer.pluginId))
                 return visibility + prefix + layer.pluginId + " · " + layer.pluginVersion;
             if (layer.IsSplineLayer)

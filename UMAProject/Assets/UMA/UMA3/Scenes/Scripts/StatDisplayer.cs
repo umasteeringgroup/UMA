@@ -1,4 +1,3 @@
-using JetBrains.Annotations;
 using UMA;
 using UMA.CharacterSystem;
 using UnityEngine;

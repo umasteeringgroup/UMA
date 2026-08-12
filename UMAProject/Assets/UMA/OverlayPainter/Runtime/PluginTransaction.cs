@@ -14,13 +14,32 @@ namespace UMA.TexturePaint
             public int index;
         }
 
+        internal sealed class LayerReplacement
+        {
+            public TextureSet set;
+            public TexturePaintLayer before;
+            public TexturePaintLayer after;
+            public int index;
+        }
+
         private readonly List<LayerBinding> layers;
+        private readonly List<LayerReplacement> replacements;
         private bool applied = true;
         public long dirtyPixels { get; }
         public int commandCount { get; }
+        public bool hasChanges => layers.Count > 0 || replacements.Count > 0;
 
         internal TexturePaintPluginCommit(List<LayerBinding> layers, long dirtyPixels, int commandCount)
-        { this.layers = layers; this.dirtyPixels = dirtyPixels; this.commandCount = commandCount; }
+            : this(layers, new List<LayerReplacement>(), dirtyPixels, commandCount) { }
+
+        internal TexturePaintPluginCommit(List<LayerBinding> layers,
+            List<LayerReplacement> replacements, long dirtyPixels, int commandCount)
+        {
+            this.layers = layers ?? new List<LayerBinding>();
+            this.replacements = replacements ?? new List<LayerReplacement>();
+            this.dirtyPixels = dirtyPixels;
+            this.commandCount = commandCount;
+        }
 
         public void Undo()
         {
@@ -33,6 +52,8 @@ namespace UMA.TexturePaint
                 binding.set.activeLayerIndex = Mathf.Clamp(binding.set.activeLayerIndex, -1, binding.set.layers.Count - 1);
                 binding.set.BindPreviewTextures();
             }
+            for (int i = replacements.Count - 1; i >= 0; i--)
+                Swap(replacements[i], replacements[i].after, replacements[i].before);
             applied = false;
         }
 
@@ -47,53 +68,240 @@ namespace UMA.TexturePaint
                 binding.set.activeLayerIndex = index;
                 binding.set.BindPreviewTextures();
             }
+            for (int i = 0; i < replacements.Count; i++)
+                Swap(replacements[i], replacements[i].before, replacements[i].after);
             applied = true;
         }
 
         public void Dispose()
         {
-            if (applied) return;
-            for (int i = 0; i < layers.Count; i++) layers[i].layer?.Dispose();
+            if (!applied)
+                for (int i = 0; i < layers.Count; i++) layers[i].layer?.Dispose();
             layers.Clear();
+            for (int i = 0; i < replacements.Count; i++)
+                (applied ? replacements[i].before : replacements[i].after)?.Dispose();
+            replacements.Clear();
+        }
+
+        private static void Swap(LayerReplacement replacement, TexturePaintLayer expected,
+            TexturePaintLayer value)
+        {
+            if (replacement?.set == null || value == null) return;
+            int index = replacement.set.layers.IndexOf(expected);
+            if (index < 0 && (uint)replacement.index < (uint)replacement.set.layers.Count)
+            {
+                TexturePaintLayer candidate = replacement.set.layers[replacement.index];
+                if (candidate != null && (candidate.id == expected?.id || candidate.id == value.id))
+                    index = replacement.index;
+            }
+            if ((uint)index >= (uint)replacement.set.layers.Count) return;
+            replacement.set.layers[index] = value;
+            replacement.set.activeLayerIndex = index;
+            replacement.set.RecomposeAll();
+            replacement.set.BindPreviewTextures();
         }
     }
 
     internal static class TexturePaintPluginTransactionExecutor
     {
         public static TexturePaintReadContextV2 Capture(TextureStore store, TexturePaintPluginDescriptor descriptor,
-            System.Threading.CancellationToken token, IProgress<float> progress, long memoryBudgetBytes)
+            TexturePaintPluginParameterSet parameters, System.Threading.CancellationToken token,
+            IProgress<float> progress, long memoryBudgetBytes,
+            IReadOnlyDictionary<TextureSet, TexturePaintLayer> inputBoundaries = null,
+            TexturePaintChannelMask? readChannelsOverride = null,
+            bool captureLayerMasks = false)
         {
             var images = new Dictionary<string, TexturePaintReadOnlyImage>(StringComparer.Ordinal);
+            var channelInfo = new Dictionary<string, TexturePaintReadOnlyChannelInfo>(StringComparer.Ordinal);
+            var meshMapImages = new Dictionary<string, TexturePaintReadOnlyMeshMap>(StringComparer.Ordinal);
+            var parameterTextures = new Dictionary<string, TexturePaintReadOnlyParameterTexture>(StringComparer.Ordinal);
+            var masks = new Dictionary<string, TexturePaintReadOnlyMask>(StringComparer.Ordinal);
             var surfaceIds = new List<string>();
-            if (store == null) return new TexturePaintReadContextV2(images, surfaceIds);
-            int total = Mathf.Max(1, store.Sets.Count * 7), completed = 0;
+            TexturePaintChannel[] channels = (TexturePaintChannel[])Enum.GetValues(typeof(TexturePaintChannel));
+            TexturePaintMeshMap[] meshMaps = (TexturePaintMeshMap[])Enum.GetValues(typeof(TexturePaintMeshMap));
+            int parameterTextureCount = CountParameterTextures(descriptor, parameters);
+            int meshMapCount = 0;
+            for (int i = 0; i < meshMaps.Length; i++) if (descriptor.Requires(meshMaps[i])) meshMapCount++;
+            var captureSets = new List<TextureSet>();
+            if (store != null)
+                for (int i = 0; i < store.Sets.Count; i++)
+                {
+                    TextureSet candidate = store.Sets[i];
+                    if (inputBoundaries == null || inputBoundaries.ContainsKey(candidate))
+                        captureSets.Add(candidate);
+                }
+            int setCount = captureSets.Count;
+            int total = Mathf.Max(1, setCount * (channels.Length + meshMapCount +
+                (captureLayerMasks ? 1 : 0)) + parameterTextureCount);
+            int completed = 0;
             long capturedBytes = 0L;
-            for (int setIndex = 0; setIndex < store.Sets.Count; setIndex++)
+            for (int setIndex = 0; setIndex < setCount; setIndex++)
             {
-                TextureSet set = store.Sets[setIndex];
+                TextureSet set = captureSets[setIndex];
                 string surfaceId = set.persistentId ?? set.surface?.index.ToString() ?? setIndex.ToString();
                 surfaceIds.Add(surfaceId);
-                for (int channelIndex = 0; channelIndex < 7; channelIndex++)
+                if (captureLayerMasks)
                 {
                     token.ThrowIfCancellationRequested();
-                    TexturePaintChannel channel = (TexturePaintChannel)channelIndex;
-                    if (descriptor.Declares(channel))
+                    if (inputBoundaries == null || !inputBoundaries.TryGetValue(set,
+                            out TexturePaintLayer maskLayer) || maskLayer?.layerMask?.target?.Front == null)
+                        throw new InvalidOperationException(
+                            "Layer-mask plugin execution requires a mask on every logical destination layer.");
+                    Color[] maskPixels = ReadScaled(maskLayer.layerMask.target.Front,
+                        descriptor.channelSnapshotMaximumResolution,
+                        out int maskWidth, out int maskHeight);
+                    AddCapturedBytes(ref capturedBytes, maskPixels, memoryBudgetBytes);
+                    masks[surfaceId] = new TexturePaintReadOnlyMask(surfaceId, maskWidth,
+                        maskHeight, maskPixels);
+                    completed++;
+                    progress?.Report(completed / (float)total * 0.25f);
+                }
+                for (int channelIndex = 0; channelIndex < channels.Length; channelIndex++)
+                {
+                    token.ThrowIfCancellationRequested();
+                    TexturePaintChannel channel = channels[channelIndex];
+                    TextureChannelTarget target = set.GetChannel(channel);
+                    RenderTexture nativeTexture = target?.Texture;
+                    if (target != null && nativeTexture != null)
                     {
-                        TextureChannelTarget target = set.GetChannel(channel);
+                        channelInfo[TexturePaintReadContextV2.Key(surfaceId, channel)] =
+                            new TexturePaintReadOnlyChannelInfo(surfaceId, channel, nativeTexture.width,
+                                nativeTexture.height, target.sRGB);
+                    }
+                    TexturePaintChannelMask reads = readChannelsOverride ??
+                        descriptor.ResolvedReadChannels;
+                    if ((reads & TexturePaintExportTemplate.ToMask(channel)) != 0)
+                    {
                         RenderTexture source = set.GetVisibleTexture(channel);
                         if (target != null && source != null)
                         {
-                            Color[] pixels = Read(source, new RectInt(0, 0, source.width, source.height));
-                            capturedBytes += pixels.LongLength * 16L;
-                            if (capturedBytes > memoryBudgetBytes) throw new InvalidOperationException("Plugin snapshot memory budget exceeded.");
-                            images[TexturePaintReadContextV2.Key(surfaceId, channel)] =
-                                new TexturePaintReadOnlyImage(surfaceId, channel, source.width, source.height, target.sRGB, pixels);
+                            RenderTexture belowLayer = null;
+                            try
+                            {
+                                if (inputBoundaries != null && inputBoundaries.TryGetValue(set,
+                                        out TexturePaintLayer boundary) && boundary != null)
+                                {
+                                    RenderTextureDescriptor temporaryDescriptor = source.descriptor;
+                                    temporaryDescriptor.depthBufferBits = 0;
+                                    temporaryDescriptor.msaaSamples = 1;
+                                    temporaryDescriptor.enableRandomWrite = true;
+                                    belowLayer = RenderTexture.GetTemporary(temporaryDescriptor);
+                                    if (!set.CompositeBelowLayer(channel, boundary, belowLayer))
+                                        Graphics.Blit(target.Texture, belowLayer);
+                                    source = belowLayer;
+                                }
+                                Color[] pixels = ReadScaled(source,
+                                    descriptor.channelSnapshotMaximumResolution,
+                                    out int snapshotWidth, out int snapshotHeight);
+                                AddCapturedBytes(ref capturedBytes, pixels, memoryBudgetBytes);
+                                images[TexturePaintReadContextV2.Key(surfaceId, channel)] =
+                                    new TexturePaintReadOnlyImage(surfaceId, channel, snapshotWidth,
+                                        snapshotHeight, target.sRGB, pixels);
+                            }
+                            finally
+                            {
+                                if (belowLayer != null) RenderTexture.ReleaseTemporary(belowLayer);
+                            }
                         }
                     }
-                    completed++; progress?.Report(completed / (float)total * 0.25f);
+                    completed++;
+                    progress?.Report(completed / (float)total * 0.25f);
+                }
+
+                if (meshMapCount > 0)
+                {
+                    token.ThrowIfCancellationRequested();
+                    ProceduralMeshMaps available = set.GetProceduralMeshMaps(1024,
+                        new TexturePaintOperationContext(token));
+                    for (int mapIndex = 0; mapIndex < meshMaps.Length; mapIndex++)
+                    {
+                        TexturePaintMeshMap map = meshMaps[mapIndex];
+                        if (!descriptor.Requires(map)) continue;
+                        token.ThrowIfCancellationRequested();
+                        Texture2D texture = ResolveMeshMap(available, map);
+                        if (texture != null)
+                        {
+                            Color[] pixels = texture.GetPixels();
+                            AddCapturedBytes(ref capturedBytes, pixels, memoryBudgetBytes);
+                            meshMapImages[TexturePaintReadContextV2.MeshKey(surfaceId, map)] =
+                                new TexturePaintReadOnlyMeshMap(surfaceId, map, texture.width, texture.height, pixels);
+                        }
+                        completed++;
+                        progress?.Report(completed / (float)total * 0.25f);
+                    }
                 }
             }
-            return new TexturePaintReadContextV2(images, surfaceIds);
+
+            if (descriptor?.parameters != null)
+            {
+                for (int i = 0; i < descriptor.parameters.Count; i++)
+                {
+                    TexturePaintPluginParameterDefinition definition = descriptor.parameters[i];
+                    if (definition == null || (definition.type != TexturePaintPluginParameterType.Texture &&
+                            definition.type != TexturePaintPluginParameterType.Sprite)) continue;
+                    Texture2D texture = definition.type == TexturePaintPluginParameterType.Sprite
+                        ? parameters?.Sprite(definition.id)?.texture
+                        : parameters?.Texture(definition.id);
+                    if (texture == null) continue;
+                    token.ThrowIfCancellationRequested();
+                    Color[] pixels;
+                    int parameterWidth, parameterHeight;
+                    if (definition.type == TexturePaintPluginParameterType.Sprite)
+                        pixels = ReadSprite(parameters.Sprite(definition.id), out parameterWidth,
+                            out parameterHeight);
+                    else
+                    {
+                        pixels = Read(texture); parameterWidth = texture.width;
+                        parameterHeight = texture.height;
+                    }
+                    AddCapturedBytes(ref capturedBytes, pixels, memoryBudgetBytes);
+                    parameterTextures[definition.id] = new TexturePaintReadOnlyParameterTexture(
+                        definition.id, parameterWidth, parameterHeight, false, pixels);
+                    completed++;
+                    progress?.Report(completed / (float)total * 0.25f);
+                }
+            }
+
+            return new TexturePaintReadContextV2(images, channelInfo, meshMapImages,
+                parameterTextures, surfaceIds, masks);
+        }
+
+        private static int CountParameterTextures(TexturePaintPluginDescriptor descriptor,
+            TexturePaintPluginParameterSet parameters)
+        {
+            if (descriptor?.parameters == null || parameters == null) return 0;
+            int count = 0;
+            for (int i = 0; i < descriptor.parameters.Count; i++)
+            {
+                TexturePaintPluginParameterDefinition definition = descriptor.parameters[i];
+                if (definition?.type == TexturePaintPluginParameterType.Texture &&
+                    parameters.Texture(definition.id) != null) count++;
+                else if (definition?.type == TexturePaintPluginParameterType.Sprite &&
+                    parameters.Sprite(definition.id) != null) count++;
+            }
+            return count;
+        }
+
+        private static void AddCapturedBytes(ref long capturedBytes, Color[] pixels, long memoryBudgetBytes)
+        {
+            capturedBytes += (pixels?.LongLength ?? 0L) * 16L;
+            if (capturedBytes > memoryBudgetBytes)
+                throw new InvalidOperationException("Plugin snapshot memory budget exceeded.");
+        }
+
+        private static Texture2D ResolveMeshMap(ProceduralMeshMaps maps, TexturePaintMeshMap map)
+        {
+            if (maps == null) return null;
+            return map switch
+            {
+                TexturePaintMeshMap.WorldPosition => maps.position,
+                TexturePaintMeshMap.WorldNormal => maps.worldNormal,
+                TexturePaintMeshMap.SignedCurvature => maps.curvature,
+                TexturePaintMeshMap.AmbientOcclusion => maps.ambientOcclusion,
+                TexturePaintMeshMap.Thickness => maps.thickness,
+                TexturePaintMeshMap.SurfaceId => maps.id,
+                _ => null
+            };
         }
 
         public static TexturePaintPluginCommit Commit(TextureStore store,
@@ -119,9 +327,12 @@ namespace UMA.TexturePaint
                     if (!layers.TryGetValue(set, out TexturePaintLayer layer))
                     {
                         layer = set.AddLayer("Plugin · " + descriptor.displayName);
+                        layer.kind = TexturePaintLayerKind.Plugin;
                         layer.pluginId = descriptor.id;
                         layer.pluginVersion = descriptor.pluginVersion;
-                        layer.pluginParametersJson = JsonUtility.ToJson(parameters ?? new TexturePaintPluginParameterSet());
+                        layer.pluginParameters = parameters?.Clone() ?? new TexturePaintPluginParameterSet();
+                        layer.pluginParametersJson = JsonUtility.ToJson(layer.pluginParameters);
+                        layer.pluginStale = false;
                         layers.Add(set, layer);
                         bindings.Add(new TexturePaintPluginCommit.LayerBinding { set = set, layer = layer, index = set.layers.IndexOf(layer) });
                     }
@@ -161,6 +372,222 @@ namespace UMA.TexturePaint
             {
                 foreach (Texture2D mask in geometryMasks.Values) Destroy(mask);
             }
+        }
+
+        public static TexturePaintPluginCommit CommitIntoPluginLayers(TextureStore store,
+            TexturePaintPluginDescriptor descriptor,
+            IReadOnlyList<TexturePaintPluginTileCommand> commands,
+            IReadOnlyDictionary<TextureSet, TexturePaintLayer> destinations,
+            System.Threading.CancellationToken token, IProgress<float> progress,
+            TexturePaintPluginParameterSet parameters)
+        {
+            if (destinations == null || destinations.Count == 0)
+                throw new InvalidOperationException("A Plugin layer regeneration requires at least one destination layer.");
+            commands ??= Array.Empty<TexturePaintPluginTileCommand>();
+            var replacements = new List<TexturePaintPluginCommit.LayerReplacement>();
+            var bySet = new Dictionary<TextureSet, TexturePaintPluginCommit.LayerReplacement>();
+            var geometryMasks = new Dictionary<string, Texture2D>(StringComparer.Ordinal);
+            long dirtyPixels = 0L;
+            int swapped = 0;
+            try
+            {
+                ValidateAll(store, descriptor, commands);
+                foreach (KeyValuePair<TextureSet, TexturePaintLayer> pair in destinations)
+                {
+                    TextureSet set = pair.Key;
+                    TexturePaintLayer before = pair.Value;
+                    int index = set?.layers.IndexOf(before) ?? -1;
+                    if (set == null || before == null || before.kind != TexturePaintLayerKind.Plugin || index < 0)
+                        throw new InvalidOperationException("Plugin layer destination is missing or invalid.");
+                    TexturePaintLayer after = set.CloneLayer(before, before.name, true);
+                    ClearChannels(after);
+                    after.kind = TexturePaintLayerKind.Plugin;
+                    after.pluginId = descriptor.id;
+                    after.pluginVersion = descriptor.pluginVersion;
+                    after.pluginParameters = parameters?.Clone() ?? new TexturePaintPluginParameterSet();
+                    after.pluginParametersJson = JsonUtility.ToJson(after.pluginParameters);
+                    after.pluginStale = false;
+                    after.pluginLastError = null;
+                    var replacement = new TexturePaintPluginCommit.LayerReplacement
+                    {
+                        set = set, before = before, after = after, index = index
+                    };
+                    replacements.Add(replacement);
+                    bySet.Add(set, replacement);
+                }
+
+                for (int commandIndex = 0; commandIndex < commands.Count; commandIndex++)
+                {
+                    token.ThrowIfCancellationRequested();
+                    TexturePaintPluginTileCommand command = commands[commandIndex];
+                    TextureSet set = FindSet(store, command.surfaceId);
+                    if (!bySet.TryGetValue(set, out TexturePaintPluginCommit.LayerReplacement replacement))
+                        throw new InvalidOperationException(
+                            "Plugin submitted output for a surface outside this Plugin layer's logical target.");
+                    TextureChannelTarget baseTarget = set.GetChannel(command.channel);
+                    TexturePaintLayer layer = replacement.after;
+                    if (!layer.channels.TryGetValue(command.channel, out EditableTextureTarget target))
+                    {
+                        target = new EditableTextureTarget(layer.name + " " + command.channel,
+                            baseTarget.Texture.width, baseTarget.Texture.height, baseTarget.format,
+                            null, Color.clear);
+                        layer.channels.Add(command.channel, target);
+                        layer.GetChannelSettings(command.channel);
+                    }
+                    string maskKey = set.persistentId + "|" + target.Width + "x" + target.Height;
+                    if (!geometryMasks.TryGetValue(maskKey, out Texture2D geometryMask))
+                    {
+                        geometryMask = TexturePaintGeometryMask.Build(set.surface, target.Width,
+                            target.Height, null, -1, null);
+                        geometryMasks.Add(maskKey, geometryMask);
+                    }
+                    Apply(target, baseTarget, command, geometryMask);
+                    dirtyPixels += (long)command.rect.width * command.rect.height;
+                    progress?.Report(0.25f + 0.7f * ((commandIndex + 1f) /
+                        Mathf.Max(1, commands.Count)));
+                }
+
+                for (int i = 0; i < replacements.Count; i++)
+                {
+                    TexturePaintPluginCommit.LayerReplacement replacement = replacements[i];
+                    replacement.set.layers[replacement.index] = replacement.after;
+                    swapped++;
+                    replacement.set.activeLayerIndex = replacement.index;
+                    replacement.set.RecomposeAll();
+                    replacement.set.BindPreviewTextures();
+                }
+                progress?.Report(1f);
+                return new TexturePaintPluginCommit(new List<TexturePaintPluginCommit.LayerBinding>(),
+                    replacements, dirtyPixels, commands.Count);
+            }
+            catch
+            {
+                for (int i = swapped - 1; i >= 0; i--)
+                {
+                    TexturePaintPluginCommit.LayerReplacement replacement = replacements[i];
+                    replacement.set.layers[replacement.index] = replacement.before;
+                    replacement.set.activeLayerIndex = replacement.index;
+                    try { replacement.set.RecomposeAll(); replacement.set.BindPreviewTextures(); }
+                    catch (Exception) { }
+                }
+                for (int i = 0; i < replacements.Count; i++) replacements[i].after?.Dispose();
+                throw;
+            }
+            finally
+            {
+                foreach (Texture2D mask in geometryMasks.Values) Destroy(mask);
+            }
+        }
+
+        public static TexturePaintPluginCommit CommitIntoLayerMasks(TextureStore store,
+            TexturePaintPluginDescriptor descriptor,
+            IReadOnlyList<TexturePaintPluginTileCommand> commands,
+            IReadOnlyDictionary<TextureSet, TexturePaintLayer> destinations,
+            System.Threading.CancellationToken token, IProgress<float> progress,
+            TexturePaintPluginParameterSet parameters)
+        {
+            if (destinations == null || destinations.Count == 0)
+                throw new InvalidOperationException(
+                    "Layer-mask plugin execution requires at least one destination layer.");
+            commands ??= Array.Empty<TexturePaintPluginTileCommand>();
+            var replacements = new List<TexturePaintPluginCommit.LayerReplacement>();
+            var bySet = new Dictionary<TextureSet, TexturePaintPluginCommit.LayerReplacement>();
+            var geometryMasks = new Dictionary<string, Texture2D>(StringComparer.Ordinal);
+            long dirtyPixels = 0L;
+            int swapped = 0;
+            try
+            {
+                foreach (KeyValuePair<TextureSet, TexturePaintLayer> pair in destinations)
+                {
+                    TextureSet set = pair.Key;
+                    TexturePaintLayer before = pair.Value;
+                    int index = set?.layers.IndexOf(before) ?? -1;
+                    if (set == null || before?.layerMask?.target?.Front == null || index < 0)
+                        throw new InvalidOperationException(
+                            "A logical destination layer is missing its editable mask.");
+                    TexturePaintLayer after = set.CloneLayer(before, before.name, true);
+                    after.layerMask.pluginId = descriptor.id;
+                    after.layerMask.pluginVersion = descriptor.pluginVersion;
+                    after.layerMask.pluginParameters = parameters?.Clone() ??
+                        new TexturePaintPluginParameterSet();
+                    after.layerMask.pluginParametersJson =
+                        JsonUtility.ToJson(after.layerMask.pluginParameters);
+                    after.layerMask.pluginStale = false;
+                    after.layerMask.pluginLastError = null;
+                    var replacement = new TexturePaintPluginCommit.LayerReplacement
+                    {
+                        set = set, before = before, after = after, index = index
+                    };
+                    replacements.Add(replacement);
+                    bySet.Add(set, replacement);
+                }
+
+                for (int commandIndex = 0; commandIndex < commands.Count; commandIndex++)
+                {
+                    token.ThrowIfCancellationRequested();
+                    TexturePaintPluginTileCommand command = commands[commandIndex];
+                    if (command.target != TexturePaintPluginTarget.LayerMask)
+                        throw new InvalidOperationException(
+                            "A layer-content command cannot be committed into a layer mask.");
+                    if (command.colorSpace != TexturePaintPluginColorSpace.Data)
+                        throw new InvalidOperationException("Layer-mask output must use Data color space.");
+                    TextureSet set = FindSet(store, command.surfaceId);
+                    if (!bySet.TryGetValue(set, out TexturePaintPluginCommit.LayerReplacement replacement))
+                        throw new InvalidOperationException(
+                            "Plugin submitted mask output outside the selected logical layer.");
+                    EditableTextureTarget target = replacement.after.layerMask.target;
+                    if (command.rect.xMin < 0 || command.rect.yMin < 0 ||
+                        command.rect.xMax > target.Width || command.rect.yMax > target.Height)
+                        throw new InvalidOperationException("Plugin mask tile lies outside the target mask.");
+                    string maskKey = set.persistentId + "|mask|" + target.Width + "x" + target.Height;
+                    if (!geometryMasks.TryGetValue(maskKey, out Texture2D geometryMask))
+                    {
+                        geometryMask = TexturePaintGeometryMask.Build(set.surface, target.Width,
+                            target.Height, null, -1, null);
+                        geometryMasks.Add(maskKey, geometryMask);
+                    }
+                    ApplyMask(target, command, geometryMask);
+                    dirtyPixels += (long)command.rect.width * command.rect.height;
+                    progress?.Report(0.25f + 0.7f * ((commandIndex + 1f) /
+                        Mathf.Max(1, commands.Count)));
+                }
+
+                for (int i = 0; i < replacements.Count; i++)
+                {
+                    TexturePaintPluginCommit.LayerReplacement replacement = replacements[i];
+                    replacement.set.layers[replacement.index] = replacement.after;
+                    swapped++;
+                    replacement.set.activeLayerIndex = replacement.index;
+                    replacement.set.RecomposeAll();
+                    replacement.set.BindPreviewTextures();
+                }
+                progress?.Report(1f);
+                return new TexturePaintPluginCommit(new List<TexturePaintPluginCommit.LayerBinding>(),
+                    replacements, dirtyPixels, commands.Count);
+            }
+            catch
+            {
+                for (int i = swapped - 1; i >= 0; i--)
+                {
+                    TexturePaintPluginCommit.LayerReplacement replacement = replacements[i];
+                    replacement.set.layers[replacement.index] = replacement.before;
+                    try { replacement.set.RecomposeAll(); replacement.set.BindPreviewTextures(); }
+                    catch (Exception) { }
+                }
+                for (int i = 0; i < replacements.Count; i++) replacements[i].after?.Dispose();
+                throw;
+            }
+            finally
+            {
+                foreach (Texture2D mask in geometryMasks.Values) Destroy(mask);
+            }
+        }
+
+        private static void ClearChannels(TexturePaintLayer layer)
+        {
+            if (layer == null) return;
+            foreach (EditableTextureTarget target in layer.channels.Values) target?.Dispose();
+            layer.channels.Clear();
         }
 
         private static void LinkPluginLayers(List<TexturePaintPluginCommit.LayerBinding> bindings,
@@ -232,7 +659,7 @@ namespace UMA.TexturePaint
             Color[] maskPixels = geometryMask.GetPixels(command.rect.x, command.rect.y, command.rect.width, command.rect.height);
             for (int i = 0; i < destination.Length; i++)
             {
-                Color source = Convert(command.pixels[i], command.colorSpace);
+                Color source = Convert(command.GetPixel(i), command.colorSpace);
                 source = TexturePaintChannelUtility.ConstrainColor(command.channel, source);
                 float coverage = Mathf.Clamp01(command.opacity * maskPixels[i].r);
                 if (command.channel == TexturePaintChannel.Normal)
@@ -273,6 +700,43 @@ namespace UMA.TexturePaint
             finally { Destroy(patch); }
         }
 
+        private static void ApplyMask(EditableTextureTarget target,
+            TexturePaintPluginTileCommand command, Texture2D geometryMask)
+        {
+            Color[] destination = Read(target.Front, command.rect);
+            Color[] geometry = geometryMask.GetPixels(command.rect.x, command.rect.y,
+                command.rect.width, command.rect.height);
+            for (int i = 0; i < destination.Length; i++)
+            {
+                float from = TexturePaintChannelUtility.ScalarValue(destination[i]);
+                float source = TexturePaintChannelUtility.ScalarValue(command.GetPixel(i));
+                float coverage = Mathf.Clamp01(command.opacity * geometry[i].r);
+                float result;
+                switch (command.blend)
+                {
+                    case TexturePaintPluginBlend.Add:
+                        result = from + source * coverage; break;
+                    case TexturePaintPluginBlend.Multiply:
+                        result = Mathf.Lerp(from, from * source, coverage); break;
+                    default:
+                        result = Mathf.Lerp(from, source, coverage); break;
+                }
+                result = Mathf.Clamp01(result);
+                destination[i] = new Color(result, result, result, 1f);
+            }
+            Texture2D patch = new Texture2D(command.rect.width, command.rect.height,
+                target.Front.graphicsFormat, TextureCreationFlags.None)
+            { hideFlags = HideFlags.HideAndDontSave, name = "Texture Paint Plugin Mask Tile" };
+            try
+            {
+                patch.SetPixels(destination); patch.Apply(false, false);
+                Graphics.CopyTexture(patch, 0, 0, 0, 0, command.rect.width,
+                    command.rect.height, target.Front, 0, 0, command.rect.x, command.rect.y);
+                target.CopyFrontToBack(command.rect);
+            }
+            finally { Destroy(patch); }
+        }
+
         private static Color Convert(Color color, TexturePaintPluginColorSpace source)
         {
             if (source == TexturePaintPluginColorSpace.Data) return color;
@@ -304,6 +768,68 @@ namespace UMA.TexturePaint
                 Destroy(readback);
                 RenderTexture.active = previous;
             }
+        }
+
+        private static Color[] ReadScaled(RenderTexture source, int maximumResolution,
+            out int width, out int height)
+        {
+            width = source.width;
+            height = source.height;
+            int largest = Mathf.Max(width, height);
+            if (maximumResolution <= 0 || largest <= maximumResolution)
+                return Read(source, new RectInt(0, 0, width, height));
+
+            float scale = maximumResolution / (float)largest;
+            width = Mathf.Max(1, Mathf.RoundToInt(width * scale));
+            height = Mathf.Max(1, Mathf.RoundToInt(height * scale));
+            RenderTexture temporary = null;
+            try
+            {
+                temporary = RenderTexture.GetTemporary(width, height, 0,
+                    RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear);
+                Graphics.Blit(source, temporary);
+                return Read(temporary, new RectInt(0, 0, width, height));
+            }
+            finally
+            {
+                if (temporary != null) RenderTexture.ReleaseTemporary(temporary);
+            }
+        }
+
+        private static Color[] Read(Texture2D source)
+        {
+            RenderTexture temporary = null;
+            try
+            {
+                temporary = RenderTexture.GetTemporary(source.width, source.height, 0,
+                    RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear);
+                Graphics.Blit(source, temporary);
+                return Read(temporary, new RectInt(0, 0, source.width, source.height));
+            }
+            finally
+            {
+                if (temporary != null) RenderTexture.ReleaseTemporary(temporary);
+            }
+        }
+
+        private static Color[] ReadSprite(Sprite sprite, out int width, out int height)
+        {
+            if (sprite?.texture == null)
+            { width = height = 0; return Array.Empty<Color>(); }
+            Color[] atlas = Read(sprite.texture);
+            Rect rect;
+            try { rect = sprite.textureRect; }
+            catch (InvalidOperationException)
+            { rect = new Rect(0f, 0f, sprite.texture.width, sprite.texture.height); }
+            int x0 = Mathf.Clamp(Mathf.RoundToInt(rect.x), 0, sprite.texture.width - 1);
+            int y0 = Mathf.Clamp(Mathf.RoundToInt(rect.y), 0, sprite.texture.height - 1);
+            width = Mathf.Clamp(Mathf.RoundToInt(rect.width), 1, sprite.texture.width - x0);
+            height = Mathf.Clamp(Mathf.RoundToInt(rect.height), 1, sprite.texture.height - y0);
+            var result = new Color[width * height];
+            for (int y = 0; y < height; y++)
+                Array.Copy(atlas, (y0 + y) * sprite.texture.width + x0,
+                    result, y * width, width);
+            return result;
         }
 
         private static TextureSet FindSet(TextureStore store, string surfaceId)

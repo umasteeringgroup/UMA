@@ -1,0 +1,21 @@
+{
+    "name": "UMA_FBX_Editor",
+    "rootNamespace": "",
+    "references": [
+        "UMA_Core_Editor",
+        "Unity.Formats.Fbx.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "UMA_FBX_EXPORT"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

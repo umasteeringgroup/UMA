@@ -801,7 +801,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0.5, y: 0.50000006, z: -0.5, w: -0.4999999}
   m_LocalPosition: {x: -0.33721057, y: 1.0000002, z: 1.2184876}
-  m_LocalScale: {x: 1.0803909, y: 1.0803909, z: 1.0803909}
+  m_LocalScale: {x: 1.0862732, y: 1.0862732, z: 1.0862732}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 635167408}
@@ -1214,7 +1214,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0.5, y: 0.50000006, z: -0.5, w: -0.4999999}
   m_LocalPosition: {x: -0.33721024, y: -0.99999976, z: 1.2184881}
-  m_LocalScale: {x: 1.0803909, y: 1.0803909, z: 1.0803909}
+  m_LocalScale: {x: 1.0862732, y: 1.0862732, z: 1.0862732}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 635167408}
@@ -2441,7 +2441,7 @@ Transform:
   m_GameObject: {fileID: 635167407}
   serializedVersion: 2
   m_LocalRotation: {x: 0.5, y: 0.5, z: -0.5, w: 0.5}
-  m_LocalPosition: {x: 0, y: 0, z: 0.02813767}
+  m_LocalPosition: {x: 0, y: 0, z: 0.030196523}
   m_LocalScale: {x: 0.99999976, y: 0.99999976, z: 0.99999976}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -4044,7 +4044,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0.5, y: 0.50000006, z: -0.5, w: -0.4999999}
   m_LocalPosition: {x: -0.37772033, y: 0.9999996, z: -1.6174796}
-  m_LocalScale: {x: 1.0803909, y: 1.0803909, z: 1.0803909}
+  m_LocalScale: {x: 1.0862732, y: 1.0862732, z: 1.0862732}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 635167408}
@@ -4167,6 +4167,7 @@ MonoBehaviour:
   _umaRecipe:
     raceData: {fileID: 11400000, guid: f7b4c7fd4e2e99844be54c0b6967a79e, type: 2}
     recipeName: 
+    texturePaintStageState: 
     dnaInstanceCollection:
       dnaInstances: []
     slotDataList:
@@ -4196,7 +4197,7 @@ MonoBehaviour:
       skinnedMeshRenderer: 0
       submeshIndex: 0
       vertexOffset: 0
-      uvAreaUpdateFrame: 1
+      uvAreaUpdateFrame: 1531
       UVArea:
         serializedVersion: 2
         x: 0
@@ -4237,13 +4238,13 @@ MonoBehaviour:
       skinnedMeshRenderer: 0
       submeshIndex: 1
       vertexOffset: 12304
-      uvAreaUpdateFrame: 1
+      uvAreaUpdateFrame: 1531
       UVArea:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 0.5
-        height: 0.25
+        width: 1
+        height: 0.5
       tempHidden: 0
       isDisabled: 0
       UVSet: 0
@@ -4276,15 +4277,15 @@ MonoBehaviour:
       isSwapSlot: 0
       swapTag: 
       skinnedMeshRenderer: 0
-      submeshIndex: 2
+      submeshIndex: 1
       vertexOffset: 43727
-      uvAreaUpdateFrame: 1
+      uvAreaUpdateFrame: 1531
       UVArea:
         serializedVersion: 2
         x: 0
-        y: 0
-        width: 0.5
-        height: 0.25
+        y: 0.5
+        width: 1
+        height: 0.5
       tempHidden: 0
       isDisabled: 0
       UVSet: 0
@@ -4317,15 +4318,15 @@ MonoBehaviour:
       isSwapSlot: 0
       swapTag: 
       skinnedMeshRenderer: 0
-      submeshIndex: 2
+      submeshIndex: 1
       vertexOffset: 46539
       uvAreaUpdateFrame: 0
       UVArea:
         serializedVersion: 2
         x: 0
-        y: 0
-        width: 0.5
-        height: 0.25
+        y: 0.5
+        width: 1
+        height: 0.5
       tempHidden: 0
       isDisabled: 0
       UVSet: 0
@@ -4360,7 +4361,7 @@ MonoBehaviour:
       skinnedMeshRenderer: 0
       submeshIndex: 0
       vertexOffset: 6580
-      uvAreaUpdateFrame: 1
+      uvAreaUpdateFrame: 1531
       UVArea:
         serializedVersion: 2
         x: 0
@@ -4497,6 +4498,12 @@ MonoBehaviour:
   UnpackPrefabOnBuild: 1
   KeepAnimatorController: 0
   RecreateAnimatorOnRaceChange: 1
+  initializeAnimatorWhenAdded: 0
+  applyRootMotion: 1
+  animatePhysics: 0
+  animatorUpdateMode: 0
+  animatorCullingMode: 2
+  animatorFireEvents: 1
   RecipeUpdated:
     m_PersistentCalls:
       m_Calls: []
@@ -4539,7 +4546,7 @@ MonoBehaviour:
     loadDefaultRecipes: 1
     recipes: []
   raceAnimationControllers:
-    defaultAnimationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
+    defaultAnimationController: {fileID: 9100000, guid: 7b2325c148834db0b13bb8f7dbce1542, type: 2}
     animators:
     - raceName: ToonFemale
       animatorControllerName: IdleTest-w-head
@@ -4687,13 +4694,13 @@ MonoBehaviour:
   loadFileOnStart: 1
   forceSlotMaterials: 0
   AtlasResolutionScale: 1
-  defaultLoadOptions: 31
+  defaultLoadOptions: -1
   savePathType: 0
   savePath: CharacterRecipes
   saveFilename: 
   makeUniqueFilename: 0
   ensureSharedColors: 0
-  defaultSaveOptions: 15
+  defaultSaveOptions: -1
   BoundsOffset: {x: 0, y: 0, z: 0}
   visualizeRendererBounds: 0
   editorTimeGeneration: 1
@@ -4869,7 +4876,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0.5, y: 0.50000006, z: -0.5, w: -0.4999999}
   m_LocalPosition: {x: -0.37772003, y: -1.0000005, z: -1.6174791}
-  m_LocalScale: {x: 1.0803909, y: 1.0803909, z: 1.0803909}
+  m_LocalScale: {x: 1.0862732, y: 1.0862732, z: 1.0862732}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 635167408}
@@ -9593,7 +9600,7 @@ Animator:
   m_GameObject: {fileID: 1013720373}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
+  m_Controller: {fileID: 9100000, guid: 7b2325c148834db0b13bb8f7dbce1542, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0

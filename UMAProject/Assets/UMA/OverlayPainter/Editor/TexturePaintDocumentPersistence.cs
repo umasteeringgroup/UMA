@@ -12,7 +12,7 @@ namespace UMA.TexturePaint.Editor
 {
     internal static class TexturePaintRecoveryStore
     {
-        private const string DefaultFolder = "Assets/UMA/Temp";
+        private const string DefaultFolder = UMAPathUtility.OverlayPainterRecoveryRoot;
         private const string AssetName = "painter_recovery.asset";
         private const string DataFolderName = "painter_recovery Data";
 

@@ -376,9 +376,14 @@ namespace UMA.TexturePaint.Editor
             preset.splatter = EditorGUILayout.Toggle(new GUIContent("Splatter",
                 "Randomly offsets each paint stamp around the stroke center."), preset.splatter);
             using (new EditorGUI.DisabledScope(!preset.splatter))
+            {
                 preset.splatterDistance = EditorGUILayout.Slider(new GUIContent("Splatter Distance (%)",
                         "Maximum random offset as a percentage of the stamp's effective world-space size."),
                     Mathf.Clamp(preset.splatterDistance, 0.01f, 2f) * 100f, 1f, 200f) * 0.01f;
+                preset.randomStrength = EditorGUILayout.Toggle(new GUIContent("Random Strength",
+                    "Randomly varies each splatter stamp from zero to the current paint strength."),
+                    preset.randomStrength);
+            }
         }
 
         public static void DrawStrokeEvolution(BrushPreset preset)

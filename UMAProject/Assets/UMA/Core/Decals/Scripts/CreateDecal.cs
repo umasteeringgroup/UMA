@@ -1673,7 +1673,7 @@ namespace UMA.Decals
                         try
                         {
                           clone.name = $"Stamp_{(string.IsNullOrEmpty(clone.overlayGroup) ? "OverlayGroup" : clone.overlayGroup)}";
-                            var folder = "Assets/UMA/GeneratedDecalStamps";
+                            var folder = UMAPathUtility.GeneratedDecalsRoot;
                             if (!System.IO.Directory.Exists(folder))
                             {
                                 System.IO.Directory.CreateDirectory(folder);

@@ -598,10 +598,15 @@ namespace UMA
 			textureMergeRect.tex = source.baseOverlay.textureList[textureChannel];
             textureMergeRect.advancedBlending = false;
 			TextureEventParms tep = new TextureEventParms(null, source.overlayData[0], source.slotData, umaData, textureChannel );
+			UMAMaterial sourceMaterial = source.umaMaterial != null ? source.umaMaterial : source.slotData?.material;
+			if (sourceMaterial?.channels == null || textureChannel >= sourceMaterial.channels.Length)
+			{
+				return;
+			}
 
             // JRRM debug
-            textureMergeRect.textureChannel = textureChannel;
-			textureMergeRect.channelType = source.slotData.material.channels[textureChannel].channelType;
+			textureMergeRect.textureChannel = textureChannel;
+			textureMergeRect.channelType = sourceMaterial.channels[textureChannel].channelType;
 			textureMergeRect.textureChannel = textureChannel;
             textureMergeRect.textureEventParms = tep;
 			ConfigureTransparentPrefill(
@@ -610,7 +615,7 @@ namespace UMA
 				0,
 				textureChannel);
 
-            switch (source.slotData.material.channels[textureChannel].channelType)
+            switch (sourceMaterial.channels[textureChannel].channelType)
 			{
 				case UMAMaterial.ChannelType.NormalMap:
 					textureMergeRect.mat.shader = normalShader;
@@ -868,9 +873,14 @@ namespace UMA
 			textureMergeRect.advancedBlending = false;
 			textureMergeRect.transparentPrefill = false;
 			textureMergeRect.transparentPrefillColor = Color.clear;
+			UMAMaterial sourceMaterial = source.umaMaterial != null ? source.umaMaterial : source.slotData?.material;
+			if (sourceMaterial?.channels == null || textureType >= sourceMaterial.channels.Length)
+			{
+				return;
+			}
             // JRRM debug
             textureMergeRect.textureChannel = textureType;
-            textureMergeRect.channelType = source.slotData.material.channels[textureType].channelType;
+            textureMergeRect.channelType = sourceMaterial.channels[textureType].channelType;
 			ConfigureTransparentPrefill(
 				ref textureMergeRect,
 				source,
@@ -882,7 +892,7 @@ namespace UMA
 			{
                 OverlayData od = source.overlayData[i2 + 1];
 
-                switch (source.slotData.material.channels[textureType].channelType)
+                switch (sourceMaterial.channels[textureType].channelType)
 				{
                     case UMAMaterial.ChannelType.NormalMap:
 						textureMergeRect.mat.shader = GetBlendModeShader(NormalBlendModeShaders,od, textureType, out textureMergeRect.advancedBlending);

@@ -29,17 +29,26 @@ namespace UMA.Examples
 		public float SideStretch;
 		public float FrontStretch;
 		public float AnatomyScaleFactor = 1f;
+		[System.NonSerialized]
 		public Vector3 Force = Vector3.zero;
+		[System.NonSerialized]
 		public Vector3 Velocity = Vector3.zero;
+		[System.NonSerialized]
 		public Vector3 Acceleration = Vector3.zero;
+		[System.NonSerialized]
 		public Vector3 DynamicPosition = Vector3.zero;
+		[System.NonSerialized]
 		public Vector3 RestLocalPosition = Vector3.zero;
+		[System.NonSerialized]
 		public Quaternion RestLocalRotation = Quaternion.identity;
+		[System.NonSerialized]
 		public Vector3 RestLocalScale = Vector3.one;
+		[System.NonSerialized]
 		public Vector3 PreviousTargetPosition = Vector3.zero;
+		[System.NonSerialized]
 		public bool DynamicPositionInitialized;
+		[System.NonSerialized]
 		public bool RestPoseInitialized;
 	}
 }
-
 

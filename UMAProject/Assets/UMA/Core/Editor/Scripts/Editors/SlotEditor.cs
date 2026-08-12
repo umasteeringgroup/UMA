@@ -276,7 +276,6 @@ namespace UMA.Editors
             bool changed = false;
 
             GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
-            try
             {
                 if (!InIndex(_slotData))
                 {
@@ -330,14 +329,12 @@ namespace UMA.Editors
                     if (_utilitiesFoldout[_slotData.slotName])
                     {
                         GUIHelper.BeginVerticalPadded(10, new Color(0.9f, 0.9f, 0.9f));
-                        try
                         {
                             // View copied data (moved here)
                             _slotData.slotAssetFoldout = EditorGUILayout.Foldout(_slotData.slotAssetFoldout, "View copied data", true);
                             if (_slotData.slotAssetFoldout)
                             {
                                 GUIHelper.BeginVerticalPadded(10, new Color(0.65f, 0.675f, 1f));
-                                try
                                 {
                                     EditorGUILayout.LabelField("Overlay Scale", _slotData.overlayScale.ToString("F4"));
                                     EditorGUILayout.LabelField("Matching Tags");
@@ -373,10 +370,7 @@ namespace UMA.Editors
                                         GUIUtility.ExitGUI();
                                     }
                                 }
-                                finally
-                                {
-                                    GUIHelper.EndVerticalPadded(10);
-                                }
+                                GUIHelper.EndVerticalPadded(10);
                             }
 
                             GUILayout.Space(4);
@@ -422,10 +416,7 @@ namespace UMA.Editors
                                 }
                             }
                         }
-                        finally
-                        {
-                            GUIHelper.EndVerticalPadded(10);
-                        }
+                        GUIHelper.EndVerticalPadded(10);
                     }
                 }
 
@@ -480,7 +471,6 @@ namespace UMA.Editors
                     }
 
                     GUIHelper.BeginVerticalPadded(10, new Color(0.65f, 0.675f, 1f));
-                    try
                     {
                         foreach (SlotData sda in BlendShapeSlots)
                         {
@@ -550,10 +540,7 @@ namespace UMA.Editors
                             }
                         }
                     }
-                    finally
-                    {
-                        GUIHelper.EndVerticalPadded(10);
-                    }
+                    GUIHelper.EndVerticalPadded(10);
                 }
                 } // end !isPlaceholderSlot blendshape guard
 
@@ -574,7 +561,6 @@ namespace UMA.Editors
                 if (_foldout[_slotData.slotName])
                 {
                     GUIHelper.BeginVerticalPadded(10, new Color(0.65f, 0.675f, 1f));
-                    try
                     {
                         if (_slotData.isPlaceholderSlot || (_slotData.asset != null && _slotData.asset.isWildCardSlot))
                         {
@@ -597,10 +583,7 @@ namespace UMA.Editors
                         }
                         TagsEditor.DoRaceGUI(ref changed, _slotData);
                     }
-                    finally
-                    {
-                        GUIHelper.EndVerticalPadded(10);
-                    }
+                    GUIHelper.EndVerticalPadded(10);
                 }
 
                 if (!_slotData.isPlaceholderSlot)
@@ -619,17 +602,13 @@ namespace UMA.Editors
 
                     EditorGUILayout.LabelField("Shared Overlays:");
                     GUIHelper.BeginVerticalPadded(10, new Color(0.85f, 0.85f, 0.85f));
-                    try
                     {
                         foreach (OverlayData ov in ovr)
                         {
                             EditorGUILayout.LabelField(ov.asset.overlayName);
                         }
                     }
-                    finally
-                    {
-                        GUIHelper.EndVerticalPadded(10);
-                    }
+                    GUIHelper.EndVerticalPadded(10);
                 }
                 else
                 {
@@ -773,10 +752,7 @@ namespace UMA.Editors
                 }
                 }
             }
-            finally
-            {
-                GUIHelper.EndVerticalPadded(10);
-            }
+            GUIHelper.EndVerticalPadded(10);
 
             return changed;
         }

@@ -159,7 +159,15 @@ namespace UMA.Editors.Tests
                     BindingFlags.Instance | BindingFlags.NonPublic);
                 MethodInfo recalculateMethod = typeof(UMADefaultBoneBakingMeshCombiner).GetMethod(
                     "RecalculateUV",
-                    BindingFlags.Instance | BindingFlags.NonPublic);
+                    BindingFlags.Instance | BindingFlags.NonPublic,
+                    null,
+                    new[]
+                    {
+                        typeof(MeshBuilder),
+                        typeof(List<UMAData.GeneratedMaterial>),
+                        typeof(bool)
+                    },
+                    null);
                 Assert.NotNull(atlasResolutionField);
                 Assert.NotNull(recalculateMethod);
                 atlasResolutionField.SetValue(combiner, 1000);

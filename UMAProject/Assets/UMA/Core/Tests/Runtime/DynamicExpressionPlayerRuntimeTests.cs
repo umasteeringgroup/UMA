@@ -12,6 +12,19 @@ namespace UMA.Tests
 {
     public sealed class DynamicExpressionPlayerRuntimeTests
     {
+        private struct SetLocalRotationJob : IAnimationJob
+        {
+            public TransformStreamHandle bone;
+            public Quaternion rotation;
+
+            public void ProcessAnimation(AnimationStream stream)
+            {
+                bone.SetLocalRotation(stream, rotation);
+            }
+
+            public void ProcessRootMotion(AnimationStream stream) { }
+        }
+
         [DefaultExecutionOrder(10000)]
         public sealed class LateFrameProbe : MonoBehaviour
         {
@@ -86,19 +99,20 @@ namespace UMA.Tests
             probe.data = data;
             probe.boneName = boneName;
 
-            AnimationClip clip = Track(new AnimationClip());
-            clip.wrapMode = WrapMode.Loop;
-            clip.SetCurve(boneName, typeof(Transform),
-                "localEulerAnglesRaw.z",
-                AnimationCurve.Constant(0f, 1f, 12f));
             PlayableGraph graph = PlayableGraph.Create(
                 "DynamicExpressionPlayerRuntimeTest");
             graph.SetTimeUpdateMode(DirectorUpdateMode.GameTime);
             AnimationPlayableOutput output =
                 AnimationPlayableOutput.Create(
                     graph, "Animation", animator);
-            AnimationClipPlayable playable =
-                AnimationClipPlayable.Create(graph, clip);
+            AnimationScriptPlayable playable =
+                AnimationScriptPlayable.Create(graph,
+                    new SetLocalRotationJob
+                    {
+                        bone = animator.BindStreamTransform(
+                            data.skeleton.GetBoneTransform(boneName)),
+                        rotation = Quaternion.Euler(0f, 0f, 12f)
+                    });
             output.SetSourcePlayable(playable);
             graph.Play();
 
@@ -174,6 +188,34 @@ namespace UMA.Tests
                 player.AnimatorLookAtEyesWeight, 0.0001f);
             Assert.AreEqual(target.transform.position,
                 player.AnimatorLookAtPosition);
+        }
+
+        [Test]
+        [Category("UMA")]
+        [Category("DynamicExpression")]
+        public void SidedHorizontalGazeTurnsBothEyesTogether()
+        {
+            UMAExpressionDefinition left =
+                Definition("left_eye_in_out", NewDNA("left_eye", 0.5f));
+            left.roles = ExpressionRole.EyeHorizontalLeft;
+            UMAExpressionDefinition right =
+                Definition("right_eye_in_out", NewDNA("right_eye", 0.5f));
+            right.roles = ExpressionRole.EyeHorizontalRight;
+            GameObject avatar = Track(new GameObject("SaccadeAvatar"));
+            DynamicExpressionPlayer player =
+                avatar.AddComponent<DynamicExpressionPlayer>();
+            player.expressionGroupOverride = NewGroup(left, right);
+            ConfigurePlayer(player);
+            player.Rebind();
+
+            player.SetProceduralGazeDirection(Vector2.right);
+
+            Assert.IsTrue(player.TryGetExpression(left.id,
+                out float leftValue));
+            Assert.IsTrue(player.TryGetExpression(right.id,
+                out float rightValue));
+            Assert.AreEqual(1f, leftValue, 0.0001f);
+            Assert.AreEqual(0f, rightValue, 0.0001f);
         }
 
         [UnityTest]

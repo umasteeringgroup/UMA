@@ -29,7 +29,7 @@ namespace UMA.Editors
 				{
 					if (saved.Add(avatar))
 					{
-						var path = EditorUtility.SaveFilePanelInProject("Save Avatar Prefab", avatar.name + ".prefab", "prefab", "Save Avatar Prefab", "Assets/UMA/UMA_Generated/Complete");
+						var path = EditorUtility.SaveFilePanelInProject("Save Avatar Prefab", avatar.name + ".prefab", "prefab", "Save Avatar Prefab", UMAPathUtility.GeneratedCharactersRoot);
 						if (FileExists(path))
 						{
 							Debug.LogWarning("Overwrite of prefabs not supported!");
@@ -57,8 +57,8 @@ namespace UMA.Editors
 
 		public static void SaveCharacterPrefab(UMAData umaData, string prefabName)
 		{
-			PowerToolsRuntime.EnsureProjectFolder("Assets/UMA/UMA_Generated/Complete");
-			var assetFolder = AssetDatabase.GenerateUniqueAssetPath("Assets/UMA/UMA_Generated/Complete/" + prefabName);
+			PowerToolsRuntime.EnsureProjectFolder(UMAPathUtility.GeneratedCharactersRoot);
+			var assetFolder = AssetDatabase.GenerateUniqueAssetPath(UMAPathUtility.GeneratedCharactersRoot + "/" + prefabName);
 			PowerToolsRuntime.SaveCharacterPrefab(assetFolder, prefabName, umaData, EditorPrefs.GetBool("UnLogickFactory_PowerTools_Prefab_TPose"));
 		}
 	}

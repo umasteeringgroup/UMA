@@ -1,0 +1,19 @@
+{
+    "name": "UMA3.Samples.Editor",
+    "rootNamespace": "",
+    "references": [
+        "UMA_Core",
+        "UMA3.Samples"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

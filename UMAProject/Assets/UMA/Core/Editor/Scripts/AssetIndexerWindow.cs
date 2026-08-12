@@ -347,7 +347,7 @@ namespace UMA.Controls
 
 					// Create a persisted clone so we don't mutate the in-memory instance in-place
 					var clone = UnityEngine.Object.Instantiate(slot);
-					clone.name = Path.GetFileNameWithoutExtension(targetPath);
+					clone.PrepareForAssetPath(targetPath, slot.slotName);
 					Undo.RegisterCreatedObjectUndo(clone, "Save baked slot");
 					AssetDatabase.CreateAsset(clone, targetPath);
 					EditorUtility.SetDirty(clone);
@@ -589,7 +589,8 @@ namespace UMA.Controls
             /* Setup the window menus */
             window.SetupMenus();
 
-            Texture icon = AssetDatabase.LoadAssetAtPath<Texture>("Assets/UMA/InternalDataStore/UMA32.png");
+            Texture icon = AssetDatabase.LoadAssetAtPath<Texture>(
+                UMAPathUtility.ResolveInstallAssetPath("InternalDataStore/InGame/Resources/Uma32.png"));
             window.titleContent = new GUIContent(UmaAboutWindow.umaVersion + " Global Library", icon);
             window.Focus();
             window.Repaint();
@@ -669,7 +670,7 @@ namespace UMA.Controls
                 {
                     if (UAI == null) return;
                     IUMAAddressablePlugin addrplug = o as IUMAAddressablePlugin;
-                    UMAAddressablesSupport.Instance.GenerateAddressables(addrplug);
+                    UMAAddressablesEditorBridge.GenerateAddressables(addrplug);
                     Resources.UnloadUnusedAssets();
                     m_Initialized = false;
                     Repaint();
@@ -684,8 +685,8 @@ namespace UMA.Controls
             AddMenuItemWithCallback(_AddressablesMenu, "Generators/Generate Groups (optimized)", () =>
             {
                 if (UAI == null) return;
-                UMAAddressablesSupport.Instance.CleanupAddressables();
-                UMAAddressablesSupport.Instance.GenerateAddressables();
+                UMAAddressablesEditorBridge.CleanupAddressables();
+                UMAAddressablesEditorBridge.GenerateAddressables();
                 Resources.UnloadUnusedAssets();
                 m_Initialized = false;
                 Repaint();
@@ -694,10 +695,10 @@ namespace UMA.Controls
             AddMenuItemWithCallback(_AddressablesMenu, "Generators/Generate Single Group (Final Build Only)", () =>
             {
                 if (UAI == null) return;
-                UMAAddressablesSupport.Instance.CleanupAddressables();
-                SingleGroupGenerator sgs = new SingleGroupGenerator();
-                sgs.ClearMaterials = true;
-                UMAAddressablesSupport.Instance.GenerateAddressables(sgs);
+                UMAAddressablesEditorBridge.CleanupAddressables();
+                IUMAAddressablePlugin generator =
+                    UMAAddressablesEditorBridge.CreateSingleGroupGenerator(true);
+                if (generator != null) UMAAddressablesEditorBridge.GenerateAddressables(generator);
                 Resources.UnloadUnusedAssets();
                 m_Initialized = false;
                 Repaint();
@@ -716,13 +717,12 @@ namespace UMA.Controls
 				UMASettings umaSettings = UMASettings.GetOrCreateSettings();
 				umaSettings.addrStripTextures = true; //this tells uma to replace the recipe materials with Hidden/InternalErrorShader shader and creates a tag on the real shader, which it reapplies at runtime load. Note that the shader variant must be in the project build (reference in Init scene "ForceIncludeShaders" prefab). And so obviously we don't want that in the normal editor settings as we'd lose the references.
 				umaSettings.addrStripUVAttachedShaders = true; //same as above, except for uv attach prefab materials
-				SingleGroupGenerator sg = new SingleGroupGenerator();
-				sg.ClearMaterials = true; // this tells UMA to remove materials from slots and overlays so they don't bloat the addressables
-				UMAAddressablesSupport.Instance.GenerateAddressables(sg);
+				IUMAAddressablePlugin sg = UMAAddressablesEditorBridge.CreateSingleGroupGenerator(true);
+				if (sg != null) UMAAddressablesEditorBridge.GenerateAddressables(sg);
 				UMAAssetIndexer.Instance.PrepareBuild();
 				Resources.UnloadUnusedAssets();
-				UMAAddressablesSupport.Instance.CleanupOrphans(typeof(SlotDataAsset), true, $"Orphan Cleanup of type {typeof(SlotDataAsset).Name} - Menu Option");
-				UMAAddressablesSupport.Instance.CleanupOrphans(typeof(OverlayDataAsset), true, $"Orphan Cleanup of type {typeof(OverlayDataAsset).Name} - Menu Option");
+				UMAAddressablesEditorBridge.CleanupOrphans(typeof(SlotDataAsset), true, $"Orphan Cleanup of type {typeof(SlotDataAsset).Name} - Menu Option");
+				UMAAddressablesEditorBridge.CleanupOrphans(typeof(OverlayDataAsset), true, $"Orphan Cleanup of type {typeof(OverlayDataAsset).Name} - Menu Option");
 			});
 
 
@@ -737,13 +737,13 @@ namespace UMA.Controls
             AddMenuItemWithCallback(_AddressablesMenu, "Remove Addressables", () =>
             {
                 if (UAI == null) return;
-                UMAAddressablesSupport.Instance.CleanupAddressables(false, true);
+                UMAAddressablesEditorBridge.CleanupAddressables(false, true);
                 m_Initialized = false;
                 Repaint();
             });
             AddMenuItemWithCallback(_AddressablesMenu, "Delete Empty Groups", () =>
             {
-                UMAAddressablesSupport.Instance.CleanupAddressables(true);
+                UMAAddressablesEditorBridge.CleanupAddressables(true);
             });
 
             /*
@@ -759,7 +759,7 @@ namespace UMA.Controls
             {
                 if (EditorUtility.DisplayDialog("Warning!", "You *must* build the addressable groups, and mark any slots you want to keep as 'keep' before running this!", "OK", "Cancel"))
                 {
-                    UMAAddressablesSupport.Instance.CleanupOrphans(typeof(SlotDataAsset));
+                    UMAAddressablesEditorBridge.CleanupOrphans(typeof(SlotDataAsset));
                     m_Initialized = false;
                     Repaint();
                 }
@@ -768,7 +768,7 @@ namespace UMA.Controls
             {
                 if (EditorUtility.DisplayDialog("Warning!", "You *must* build the addressable groups, and mark any slots you want to keep as 'keep' before running this.", "OK", "Cancel"))
                 {
-                    UMAAddressablesSupport.Instance.CleanupOrphans(typeof(OverlayDataAsset));
+                    UMAAddressablesEditorBridge.CleanupOrphans(typeof(OverlayDataAsset));
                     m_Initialized = false;
                     Repaint();
                 }
@@ -778,7 +778,7 @@ namespace UMA.Controls
             {
                 if (EditorUtility.DisplayDialog("Warning!", "You *must* build the addressable groups, and mark any slots you want to keep as 'keep' before running this!", "OK", "Cancel"))
                 {
-                    List<AssetItem> orphans = UMAAddressablesSupport.Instance.GetOrphans(typeof(SlotDataAsset));
+                    List<AssetItem> orphans = UMAAddressablesEditorBridge.GetOrphans(typeof(SlotDataAsset));
                     SelectByAssetItems(orphans);
                     Repaint();
                 }
@@ -788,7 +788,7 @@ namespace UMA.Controls
             {
                 if (EditorUtility.DisplayDialog("Warning!", "You *must* build the addressable groups, and mark any slots you want to keep as 'keep' before running this.", "OK", "Cancel"))
                 {
-                    List<AssetItem> orphans = UMAAddressablesSupport.Instance.GetOrphans(typeof(OverlayDataAsset));
+                    List<AssetItem> orphans = UMAAddressablesEditorBridge.GetOrphans(typeof(OverlayDataAsset));
                     SelectByAssetItems(orphans);
                     Repaint();
                 }
@@ -2881,7 +2881,9 @@ namespace UMA.Controls
                         //AnalyzeIndex.RebuildLibrary();
 #if UMA_ADDRESSABLES
 						Debug.Log($"ANALYZE: Before count = {AnalyzeIndex.SerializedItems.Count}");
-                        UMAAddressablesSupport.Instance.GenerateAddressables(new SingleGroupGenerator { ClearMaterials = true },AnalyzeIndex);
+                        IUMAAddressablePlugin generator = UMAAddressablesEditorBridge.CreateSingleGroupGenerator(true);
+                        if (generator != null)
+                            UMAAddressablesEditorBridge.GenerateAddressables(generator, AnalyzeIndex);
 						Debug.Log($"ANALYZE: After count = {AnalyzeIndex.SerializedItems.Count}");
 #endif
                         Debug.Log("ANALYZE: Running startup");
@@ -3352,7 +3354,7 @@ namespace UMA.Controls
             if (_conversionFoldout)
             {
                 GUILayout.Label("Scene base slot Conversion", EditorStyles.boldLabel);
-                EditorGUILayout.HelpBox($"This will convert all equipped slots on the 'From DCA' to the 'To DCA' using the BonePose specified below and will create new slots in the project folder 'Assets/UMA/ConvertedSlots'.", MessageType.Info);
+                EditorGUILayout.HelpBox($"This will convert all equipped slots on the 'From DCA' to the 'To DCA' using the BonePose specified below and will create new slots in '{UMAPathUtility.ConvertedSlotsRoot}'.", MessageType.Info);
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("BonePose:");
                 PoseConverter = EditorGUILayout.ObjectField("", PoseConverter, typeof(UMABonePose), false, GUILayout.Width(175)) as UMABonePose;
@@ -3917,17 +3919,18 @@ namespace UMA.Controls
                 return;
             }
 
-            // Preserve original slotName & asset name before copy
+            // Preserve the logical slot identity before copying the backup payload.
             string originalSlotName = slot.slotName;
-            string originalAssetName = slot.name; // Unity asset name (may differ)
 
             try
             {
                 // Use provided Assign() API to copy all relevant data
                 slot.Assign(backup);
 
-                // Restore identifying names to keep this asset as the active (non-backup) slot
-                slot.name = originalAssetName;
+                // Restore both Unity's file-facing object name and UMA's logical identifier.
+                // Assign copies the backup's names, which must not leak into the persistent target.
+                string originalPath = AssetDatabase.GetAssetPath(slot);
+                slot.PrepareForAssetPath(originalPath, originalSlotName);
 
                 // If legacy status should be restored to true (backup is legacy)
                 slot.isLegacySlot = backup.isLegacySlot;
@@ -4000,7 +4003,7 @@ namespace UMA.Controls
         }
 
 
-        const string backupFolder = "Assets/UMA/SlotBackup";
+        const string backupFolder = UMAPathUtility.SlotBackupRoot;
 
 
         private void ConvertSlotFromLegacy(SlotDataAsset donor, UMABonePose poseConverter, RaceData raceData, float x, float y, float z, bool postRotate)

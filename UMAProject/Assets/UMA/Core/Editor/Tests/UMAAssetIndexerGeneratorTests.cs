@@ -42,6 +42,47 @@ namespace UMA.Editors.Tests
 
         [Test]
         [Category("UMA")]
+        [Category("Package Readiness")]
+        public void DictionaryLoadPrefersPackagedAssetOverNullLegacyDuplicate()
+        {
+            UMAAssetIndexer indexer =
+                ScriptableObject.CreateInstance<UMAAssetIndexer>();
+            SlotDataAsset packagedSlot =
+                ScriptableObject.CreateInstance<SlotDataAsset>();
+
+            try
+            {
+                AssetItem packagedItem = new AssetItem(
+                    typeof(SlotDataAsset),
+                    "CapsuleCollider",
+                    UMAPathUtility.ResolveInstallAssetPath(
+                        "Core/Physics/CapsuleCollider/CapsuleColliderSlot.asset"),
+                    packagedSlot);
+                AssetItem missingLegacyItem = new AssetItem(
+                    typeof(SlotDataAsset),
+                    "CapsuleCollider",
+                    "Assets/UMA2/Wearables/Example/AdditionalSlots/" +
+                    "CapsuleCollider/U2CapsuleColliderSlot.asset",
+                    null);
+
+                indexer.SerializedItems.Add(packagedItem);
+                indexer.SerializedItems.Add(missingLegacyItem);
+                indexer.DoInitialDictionaryLoad();
+
+                AssetItem resolvedItem =
+                    indexer.GetAssetItem<SlotDataAsset>("CapsuleCollider");
+                Assert.That(resolvedItem, Is.SameAs(packagedItem));
+                Assert.That(resolvedItem.Item, Is.SameAs(packagedSlot));
+            }
+            finally
+            {
+                Object.DestroyImmediate(packagedSlot);
+                Object.DestroyImmediate(indexer);
+            }
+        }
+
+        [Test]
+        [Category("UMA")]
         [Category("GeneratorBootstrap")]
         public void GeneratorPropertyRejectsPrefabAssetComponent()
         {

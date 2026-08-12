@@ -17,10 +17,26 @@ internal class ExamineWearables : EditorWindow
 		private readonly List<UMAWardrobeRecipe> _recipes = new List<UMAWardrobeRecipe>();
 		private bool[] _recipeSelected = new bool[0];
 		private Vector2 _recipesScroll;
+		private readonly Dictionary<UMAWardrobeRecipe, RecipeSlotInspectionCache> _recipeSlotInspectionCache =
+			new Dictionary<UMAWardrobeRecipe, RecipeSlotInspectionCache>();
 
 		private readonly List<string> _slots = new List<string>();
 		private int _selectedSlotIndex = -1;
 		private Vector2 _slotsScroll;
+		private readonly List<string> _wardrobeRegions = new List<string>();
+		private string[] _wardrobeRegionOptions = { "All Regions" };
+		private int _selectedWardrobeRegionIndex;
+		private readonly List<string> _hideSlots = new List<string>();
+		private string[] _hideSlotOptions = new string[0];
+		private string[] _suppressRegionOptions = new string[0];
+		private int _selectedHideSlotIndex;
+		private int _selectedSuppressRegionIndex;
+		private enum HideOrSuppressTarget
+		{
+			HideSlot = 0,
+			SuppressRegion = 1
+		}
+		private HideOrSuppressTarget _hideOrSuppressTarget;
 		private enum WardrobeSlotFilter
 		{
 			All = 0,
@@ -48,6 +64,19 @@ internal class ExamineWearables : EditorWindow
 			EndsWith = 2,
 		}
 		private MatchMode _matchMode = MatchMode.Contains;
+		private sealed class RecipeSlotInspectionCache
+		{
+			public string RecipeString;
+			public RecipeSlotInspection Inspection;
+		}
+
+		private sealed class RecipeSlotInspection
+		{
+			public int SlotCount;
+			public readonly List<string> MissingSlotIds = new List<string>();
+			public string Error;
+		}
+
 		private static GUIContent _inspectContent;
 		private static GUIContent InspectContent
 		{
@@ -67,6 +96,7 @@ internal class ExamineWearables : EditorWindow
 			var window = GetWindow<ExamineWearables>(false, "Examine Wearables", true);
 			window.minSize = new Vector2(700f, 420f);
 			window._recipes.Clear();
+			window._recipeSlotInspectionCache.Clear();
 			if (recipes != null)
 			{
 				window._recipes.AddRange(recipes);
@@ -84,8 +114,39 @@ internal class ExamineWearables : EditorWindow
 
 		private void RebuildSlots()
 		{
+			string selectedWardrobeRegion = GetSelectedWardrobeRegion();
+			string selectedHideSlot = GetSelectedHideSlot();
+			string selectedSuppressRegion = GetSelectedSuppressRegion();
+			_wardrobeRegions.Clear();
+			var wardrobeRegionSet = new HashSet<string>(System.StringComparer.Ordinal);
+			for (int recipeIndex = 0; recipeIndex < _recipes.Count; recipeIndex++)
+			{
+				UMAWardrobeRecipe recipe = _recipes[recipeIndex];
+				if (WardrobeSlotAssigned(recipe)) wardrobeRegionSet.Add(recipe.wardrobeSlot);
+			}
+			_wardrobeRegions.AddRange(wardrobeRegionSet);
+			_wardrobeRegions.Sort(System.StringComparer.OrdinalIgnoreCase);
+			_wardrobeRegionOptions = new string[_wardrobeRegions.Count + 1];
+			_wardrobeRegionOptions[0] = "All Regions";
+			for (int regionIndex = 0; regionIndex < _wardrobeRegions.Count; regionIndex++)
+				_wardrobeRegionOptions[regionIndex + 1] = _wardrobeRegions[regionIndex];
+			_selectedWardrobeRegionIndex = 0;
+			if (!string.IsNullOrEmpty(selectedWardrobeRegion))
+			{
+				int restoredIndex = _wardrobeRegions.FindIndex(region =>
+					string.Equals(region, selectedWardrobeRegion, System.StringComparison.Ordinal));
+				if (restoredIndex >= 0) _selectedWardrobeRegionIndex = restoredIndex + 1;
+			}
+
 			_slots.Clear();
 			var slotSet = new HashSet<string>();
+			_hideSlots.Clear();
+			_hideSlotOptions = new string[0];
+			_suppressRegionOptions = new string[0];
+			_selectedHideSlotIndex = 0;
+			_selectedSuppressRegionIndex = 0;
+			var hideSlotSet = new HashSet<string>(System.StringComparer.Ordinal);
+			var processedRaceNames = new HashSet<string>(System.StringComparer.Ordinal);
 
 			var idx = UMAAssetIndexer.Instance;
 			if (idx == null)
@@ -109,6 +170,7 @@ internal class ExamineWearables : EditorWindow
 					{
 						continue;
 					}
+					if (!processedRaceNames.Add(raceName)) continue;
 
 					RaceData race = null;
 					try
@@ -120,10 +182,13 @@ internal class ExamineWearables : EditorWindow
 						race = null;
 					}
 
-					if (race == null || race.wardrobeSlots == null)
+					if (race == null)
 					{
 						continue;
 					}
+
+					AddBaseRaceSlots(race, hideSlotSet);
+					if (race.wardrobeSlots == null) continue;
 
 					for (int s = 0; s < race.wardrobeSlots.Count; s++)
 					{
@@ -138,10 +203,49 @@ internal class ExamineWearables : EditorWindow
 
 			_slots.AddRange(slotSet);
 			_slots.Sort(System.StringComparer.OrdinalIgnoreCase);
+			_hideSlots.AddRange(hideSlotSet);
+			_hideSlots.Sort(System.StringComparer.OrdinalIgnoreCase);
+			_hideSlotOptions = _hideSlots.ToArray();
+			_suppressRegionOptions = _slots.ToArray();
+			_selectedHideSlotIndex = RestoreSelectionIndex(_hideSlots, selectedHideSlot);
+			_selectedSuppressRegionIndex = RestoreSelectionIndex(_slots, selectedSuppressRegion);
 			if (_selectedSlotIndex >= _slots.Count)
 			{
 				_selectedSlotIndex = -1;
 			}
+		}
+
+		private static void AddBaseRaceSlots(RaceData race, HashSet<string> destination)
+		{
+			if (race?.baseRaceRecipe == null || destination == null) return;
+			try
+			{
+				UMAData.UMARecipe baseRecipe = race.baseRaceRecipe.GetCachedRecipe();
+				SlotData[] slots = baseRecipe?.GetAllSlots();
+				for (int slotIndex = 0; slots != null && slotIndex < slots.Length; slotIndex++)
+				{
+					SlotData slot = slots[slotIndex];
+					if (slot == null) continue;
+					string slotName = slot.isPlaceholderSlot
+						? slot.placeholderSlotName
+						: slot.asset != null && !string.IsNullOrEmpty(slot.asset.slotName)
+							? slot.asset.slotName
+							: slot.slotName;
+					if (!string.IsNullOrEmpty(slotName)) destination.Add(slotName);
+				}
+			}
+			catch
+			{
+				// A missing or invalid base recipe should not prevent the remaining races from being examined.
+			}
+		}
+
+		private static int RestoreSelectionIndex(List<string> options, string selectedValue)
+		{
+			if (options == null || options.Count == 0 || string.IsNullOrEmpty(selectedValue)) return 0;
+			int index = options.FindIndex(option =>
+				string.Equals(option, selectedValue, System.StringComparison.Ordinal));
+			return index >= 0 ? index : 0;
 		}
 
 		private void OnGUI()
@@ -151,6 +255,7 @@ internal class ExamineWearables : EditorWindow
 			GUILayout.FlexibleSpace();
 			if (GUILayout.Button("Refresh", EditorStyles.toolbarButton, GUILayout.Width(70)))
 			{
+				_recipeSlotInspectionCache.Clear();
 				RebuildSlots();
 			}
 			EditorGUILayout.EndHorizontal();
@@ -203,6 +308,9 @@ internal class ExamineWearables : EditorWindow
 				return;
 			}
 
+			DrawHideOrSuppressUpdater();
+			EditorGUILayout.Space(8);
+
 			EditorGUILayout.LabelField("Set UMAMaterial on slots and overlays based on overlay texture[0] name matching.", EditorStyles.wordWrappedLabel);
                 EditorGUILayout.BeginHorizontal();
 			_targetMaterial = (UMAMaterial)EditorGUILayout.ObjectField("UMAMaterial", _targetMaterial, typeof(UMAMaterial), false);
@@ -215,7 +323,7 @@ internal class ExamineWearables : EditorWindow
 
 			EditorGUILayout.BeginHorizontal();
 			GUILayout.FlexibleSpace();
-			using (new EditorGUI.DisabledScope(_targetMaterial == null || string.IsNullOrEmpty(_matchText) || !HasAnyRecipeChecked()))
+			using (new EditorGUI.DisabledScope(_targetMaterial == null || string.IsNullOrEmpty(_matchText) || !HasAnyVisibleRecipeChecked()))
 			{
 				if (GUILayout.Button("Process", GUILayout.Width(140), GUILayout.Height(24)))
 				{
@@ -236,7 +344,7 @@ internal class ExamineWearables : EditorWindow
 
 			EditorGUILayout.BeginHorizontal();
 			GUILayout.FlexibleSpace();
-			using (new EditorGUI.DisabledScope(_overlayToAdd == null || !HasAnyRecipeChecked() || (_useSharedColorForAddedOverlay && (string.IsNullOrEmpty(_sharedColorName) || _sharedColorChannelCount < 1))))
+			using (new EditorGUI.DisabledScope(_overlayToAdd == null || !HasAnyVisibleRecipeChecked() || (_useSharedColorForAddedOverlay && (string.IsNullOrEmpty(_sharedColorName) || _sharedColorChannelCount < 1))))
 			{
 				if (GUILayout.Button("Add overlay to first slot", GUILayout.Width(200), GUILayout.Height(24)))
 				{
@@ -247,6 +355,90 @@ internal class ExamineWearables : EditorWindow
 
 			EditorGUILayout.EndVertical();
 			EditorGUILayout.Space(6);
+		}
+
+		private void DrawHideOrSuppressUpdater()
+		{
+			EditorGUILayout.LabelField("Update Hides or Suppresses on Selected Items", EditorStyles.boldLabel);
+			EditorGUILayout.HelpBox(
+				"Adds a base slot to Hides or a wardrobe region to suppressWardrobeSlots on the selected visible recipes. Existing entries are preserved.",
+				MessageType.Info);
+			_hideOrSuppressTarget = (HideOrSuppressTarget)EditorGUILayout.EnumPopup("Update",
+				_hideOrSuppressTarget);
+
+			bool hasOptions;
+			if (_hideOrSuppressTarget == HideOrSuppressTarget.HideSlot)
+			{
+				hasOptions = _hideSlotOptions.Length > 0;
+				using (new EditorGUI.DisabledScope(!hasOptions))
+					_selectedHideSlotIndex = EditorGUILayout.Popup("Base Slot", _selectedHideSlotIndex,
+						_hideSlotOptions);
+				if (!hasOptions)
+					EditorGUILayout.HelpBox("No base slots were found on the selected recipes' compatible races.",
+						MessageType.Info);
+			}
+			else
+			{
+				hasOptions = _suppressRegionOptions.Length > 0;
+				using (new EditorGUI.DisabledScope(!hasOptions))
+					_selectedSuppressRegionIndex = EditorGUILayout.Popup("Wardrobe Region",
+						_selectedSuppressRegionIndex, _suppressRegionOptions);
+				if (!hasOptions)
+					EditorGUILayout.HelpBox("No wardrobe regions were found on the selected recipes' compatible races.",
+						MessageType.Info);
+			}
+
+			EditorGUILayout.BeginHorizontal();
+			GUILayout.FlexibleSpace();
+			using (new EditorGUI.DisabledScope(!hasOptions || !HasAnyVisibleRecipeChecked()))
+			{
+				if (GUILayout.Button("Add to Selected Recipes", GUILayout.Width(190), GUILayout.Height(24)))
+					UpdateHidesOrSuppresses();
+			}
+			EditorGUILayout.EndHorizontal();
+		}
+
+		private void UpdateHidesOrSuppresses()
+		{
+			bool hidesSlot = _hideOrSuppressTarget == HideOrSuppressTarget.HideSlot;
+			string value = hidesSlot ? GetSelectedHideSlot() : GetSelectedSuppressRegion();
+			if (string.IsNullOrEmpty(value))
+			{
+				EditorUtility.DisplayDialog("Update Hides or Suppresses",
+					hidesSlot ? "Select a base slot to hide." : "Select a wardrobe region to suppress.", "OK");
+				return;
+			}
+
+			int updated = 0;
+			int alreadyPresent = 0;
+			for (int recipeIndex = 0; recipeIndex < _recipes.Count; recipeIndex++)
+			{
+				if (recipeIndex >= _recipeSelected.Length || !_recipeSelected[recipeIndex]) continue;
+				UMAWardrobeRecipe recipe = _recipes[recipeIndex];
+				if (!IsRecipeVisible(recipe)) continue;
+				List<string> values = hidesSlot ? recipe.Hides : recipe.suppressWardrobeSlots;
+				if (values != null && values.Contains(value))
+				{
+					alreadyPresent++;
+					continue;
+				}
+
+				Undo.RecordObject(recipe, hidesSlot ? "Add Hidden Base Slot" : "Add Suppressed Wardrobe Region");
+				if (values == null)
+				{
+					values = new List<string>();
+					if (hidesSlot) recipe.Hides = values;
+					else recipe.suppressWardrobeSlots = values;
+				}
+				values.Add(value);
+				EditorUtility.SetDirty(recipe);
+				updated++;
+			}
+
+			if (updated > 0) AssetDatabase.SaveAssets();
+			EditorUtility.DisplayDialog("Update Hides or Suppresses",
+				$"Added '{value}' to {updated} recipe(s).\nAlready present: {alreadyPresent}.\nExisting entries were preserved.",
+				"OK");
 		}
 
 		private void DrawValidateAssetsPanel()
@@ -310,7 +502,7 @@ internal class ExamineWearables : EditorWindow
 			int skippedNoSlot = 0;
 			for (int i = 0; i < _recipes.Count; i++)
 			{
-				if (i >= _recipeSelected.Length || !_recipeSelected[i])
+				if (i >= _recipeSelected.Length || !_recipeSelected[i] || !IsRecipeVisible(_recipes[i]))
 				{
 					continue;
 				}
@@ -430,7 +622,7 @@ internal class ExamineWearables : EditorWindow
 			{
 				for (int i = 0; i < _recipes.Count; i++)
 				{
-					if (i >= _recipeSelected.Length || !_recipeSelected[i])
+					if (i >= _recipeSelected.Length || !_recipeSelected[i] || !IsRecipeVisible(_recipes[i]))
 					{
 						continue;
 					}
@@ -533,9 +725,9 @@ internal class ExamineWearables : EditorWindow
 		private int CountCheckedRecipes()
 		{
 			int count = 0;
-			for (int i = 0; i < _recipeSelected.Length; i++)
+			for (int i = 0; i < _recipeSelected.Length && i < _recipes.Count; i++)
 			{
-				if (_recipeSelected[i])
+				if (_recipeSelected[i] && IsRecipeVisible(_recipes[i]))
 				{
 					count++;
 				}
@@ -759,19 +951,40 @@ internal class ExamineWearables : EditorWindow
 				EditorGUILayout.BeginVertical(GUILayout.Width(position.width * 0.62f));
 				EditorGUILayout.LabelField("Wardrobe Recipes", EditorStyles.boldLabel);
 				EditorGUILayout.BeginHorizontal();
-           EditorGUILayout.LabelField("Wardrobe Slot", GUILayout.Width(90));
-			_wardrobeSlotFilter = (WardrobeSlotFilter)EditorGUILayout.EnumPopup(_wardrobeSlotFilter, GUILayout.Width(120));
+			EditorGUILayout.LabelField("Assignment", GUILayout.Width(110));
+			WardrobeSlotFilter nextSlotFilter = (WardrobeSlotFilter)EditorGUILayout.EnumPopup(
+				_wardrobeSlotFilter, GUILayout.Width(120));
+			if (nextSlotFilter != _wardrobeSlotFilter)
+			{
+				_wardrobeSlotFilter = nextSlotFilter;
+				if (_wardrobeSlotFilter == WardrobeSlotFilter.Unassigned)
+					_selectedWardrobeRegionIndex = 0;
+			}
 			GUILayout.FlexibleSpace();
+			EditorGUILayout.EndHorizontal();
+			EditorGUILayout.BeginHorizontal();
+			EditorGUILayout.LabelField("Wardrobe Region", GUILayout.Width(110));
+			int nextRegionIndex = EditorGUILayout.Popup(_selectedWardrobeRegionIndex,
+				_wardrobeRegionOptions, GUILayout.MinWidth(140));
+			if (nextRegionIndex != _selectedWardrobeRegionIndex)
+			{
+				_selectedWardrobeRegionIndex = nextRegionIndex;
+				if (_selectedWardrobeRegionIndex > 0 &&
+					_wardrobeSlotFilter == WardrobeSlotFilter.Unassigned)
+					_wardrobeSlotFilter = WardrobeSlotFilter.All;
+			}
 			EditorGUILayout.EndHorizontal();
 
 			EditorGUILayout.BeginHorizontal();
-				if (GUILayout.Button("All", GUILayout.Width(60)))
+				if (GUILayout.Button("All Visible", GUILayout.Width(80)))
 				{
-					for (int i = 0; i < _recipeSelected.Length; i++) _recipeSelected[i] = true;
+					for (int i = 0; i < _recipeSelected.Length && i < _recipes.Count; i++)
+						if (IsRecipeVisible(_recipes[i])) _recipeSelected[i] = true;
 				}
-				if (GUILayout.Button("None", GUILayout.Width(60)))
+				if (GUILayout.Button("None Visible", GUILayout.Width(90)))
 				{
-					for (int i = 0; i < _recipeSelected.Length; i++) _recipeSelected[i] = false;
+					for (int i = 0; i < _recipeSelected.Length && i < _recipes.Count; i++)
+						if (IsRecipeVisible(_recipes[i])) _recipeSelected[i] = false;
 				}
 				GUILayout.FlexibleSpace();
 				EditorGUILayout.EndHorizontal();
@@ -798,14 +1011,8 @@ internal class ExamineWearables : EditorWindow
 					EditorGUILayout.ObjectField(recipe, typeof(UMAWardrobeRecipe), false);
 					string slot = string.IsNullOrEmpty(recipe.wardrobeSlot) ? "<Unassigned>" : recipe.wardrobeSlot;
 					GUILayout.Label(slot, GUILayout.Width(160));
-					if (!RecipeHasAnySlots(recipe))
-					{
-						GUILayout.Label("Warning - no slots", EditorStyles.miniLabel, GUILayout.Width(120));
-					}
-					else
-					{
-						GUILayout.Label("Slots look OK", EditorStyles.miniLabel, GUILayout.Width(120));
-					}
+					RecipeSlotInspection slotInspection = GetRecipeSlotInspection(recipe);
+					GUILayout.Label(BuildRecipeSlotStatus(slotInspection), EditorStyles.miniLabel, GUILayout.Width(160));
                     if (GUILayout.Button("Repair Slots", GUILayout.Width(100), GUILayout.Height(18)))
 					{
 						WearablePackedSlotRepairWindow.Open(recipe);
@@ -817,33 +1024,132 @@ internal class ExamineWearables : EditorWindow
 				EditorGUILayout.EndVertical();
 			}
 
-		private static bool RecipeHasAnySlots(UMAWardrobeRecipe recipe)
+		private RecipeSlotInspection GetRecipeSlotInspection(UMAWardrobeRecipe recipe)
 		{
 			if (recipe == null)
 			{
-				return false;
+				return new RecipeSlotInspection { Error = "Recipe is missing." };
 			}
+
+			RecipeSlotInspectionCache cached;
+			if (_recipeSlotInspectionCache.TryGetValue(recipe, out cached) &&
+				cached != null && ReferenceEquals(cached.RecipeString, recipe.recipeString))
+			{
+				return cached.Inspection;
+			}
+
+			RecipeSlotInspection inspection = InspectPackedRecipeSlots(recipe);
+			_recipeSlotInspectionCache[recipe] = new RecipeSlotInspectionCache
+			{
+				RecipeString = recipe.recipeString,
+				Inspection = inspection
+			};
+			return inspection;
+		}
+
+		private static RecipeSlotInspection InspectPackedRecipeSlots(UMAWardrobeRecipe recipe)
+		{
+			var inspection = new RecipeSlotInspection();
 			try
 			{
-				var umaRecipe = new UMA.UMAData.UMARecipe();
-				recipe.Load(umaRecipe, true);
-				if (umaRecipe.slotDataList == null)
+				UMAPackedRecipeBase.UMAPackRecipe packedRecipe = recipe.PackedLoad();
+				if (packedRecipe == null)
 				{
-					return false;
+					inspection.Error = "Packed recipe is missing.";
+					return inspection;
 				}
-				for (int i = 0; i < umaRecipe.slotDataList.Length; i++)
+
+				switch (packedRecipe.version)
 				{
-					if (umaRecipe.slotDataList[i] != null)
-					{
-						return true;
-					}
+					case 3:
+						InspectVersion3Slots(packedRecipe.slotsV3, inspection);
+						break;
+					case 2:
+						InspectVersion2Slots(packedRecipe.slotsV2, inspection);
+						break;
+					default:
+						InspectVersion1Slots(packedRecipe.packedSlotDataList, inspection);
+						break;
 				}
-				return false;
 			}
-			catch
+			catch (System.Exception exception)
 			{
-				return false;
+				inspection.Error = exception.GetType().Name + ": " + exception.Message;
 			}
+			return inspection;
+		}
+
+		private static void InspectVersion3Slots(UMAPackedRecipeBase.PackedSlotDataV3[] slots,
+			RecipeSlotInspection inspection)
+		{
+			for (int i = 0; slots != null && i < slots.Length; i++)
+			{
+				UMAPackedRecipeBase.PackedSlotDataV3 slot = slots[i];
+				if (!UMAPackedRecipeBase.UMAPackRecipe.SlotIsValid(slot)) continue;
+				inspection.SlotCount++;
+				if (!slot.isPlaceholderSlot && !PackedSlotExists(slot.id))
+					AddMissingSlot(inspection, slot.id);
+			}
+		}
+
+		private static void InspectVersion2Slots(UMAPackedRecipeBase.PackedSlotDataV2[] slots,
+			RecipeSlotInspection inspection)
+		{
+			for (int i = 0; slots != null && i < slots.Length; i++)
+			{
+				UMAPackedRecipeBase.PackedSlotDataV2 slot = slots[i];
+				if (!UMAPackedRecipeBase.UMAPackRecipe.SlotIsValid(slot)) continue;
+				inspection.SlotCount++;
+				if (!PackedSlotExists(slot.id)) AddMissingSlot(inspection, slot.id);
+			}
+		}
+
+		private static void InspectVersion1Slots(UMAPackedRecipeBase.packedSlotData[] slots,
+			RecipeSlotInspection inspection)
+		{
+			for (int i = 0; slots != null && i < slots.Length; i++)
+			{
+				UMAPackedRecipeBase.packedSlotData slot = slots[i];
+				if (!UMAPackedRecipeBase.UMAPackRecipe.SlotIsValid(slot)) continue;
+				inspection.SlotCount++;
+				if (!PackedSlotExists(slot.slotID)) AddMissingSlot(inspection, slot.slotID);
+			}
+		}
+
+		private static bool PackedSlotExists(string slotId)
+		{
+			UMAAssetIndexer indexer = UMAAssetIndexer.Instance;
+			return indexer != null && indexer.HasAsset<SlotDataAsset>(slotId);
+		}
+
+		private static void AddMissingSlot(RecipeSlotInspection inspection, string slotId)
+		{
+			if (!inspection.MissingSlotIds.Contains(slotId)) inspection.MissingSlotIds.Add(slotId);
+		}
+
+		private static GUIContent BuildRecipeSlotStatus(RecipeSlotInspection inspection)
+		{
+			if (inspection == null || !string.IsNullOrEmpty(inspection.Error))
+			{
+				string error = inspection != null ? inspection.Error : "Inspection failed.";
+				return new GUIContent("Warning - invalid recipe", error);
+			}
+			if (inspection.SlotCount == 0)
+			{
+				return new GUIContent("Warning - no slots", "The packed recipe has no valid slot entries.");
+			}
+			if (inspection.MissingSlotIds.Count == 0)
+			{
+				return new GUIContent("Slots look OK", inspection.SlotCount + " packed slot(s) resolve in the UMA index.");
+			}
+
+			string firstMissing = inspection.MissingSlotIds[0];
+			string label = inspection.MissingSlotIds.Count == 1
+				? "Missing: " + firstMissing
+				: "Missing: " + firstMissing + " (+" + (inspection.MissingSlotIds.Count - 1) + ")";
+			string tooltip = "Missing SlotDataAsset IDs:\n" + string.Join("\n", inspection.MissingSlotIds.ToArray()) +
+				"\n\nOpen Repair Slots to remove or replace stale packed entries.";
+			return new GUIContent(label, tooltip);
 		}
 
 		private void DrawSlotsColumn()
@@ -871,15 +1177,6 @@ internal class ExamineWearables : EditorWindow
 			EditorGUILayout.EndVertical();
 		}
 
-		private bool HasAnyRecipeChecked()
-		{
-			for (int i = 0; i < _recipeSelected.Length; i++)
-			{
-				if (_recipeSelected[i]) return true;
-			}
-			return false;
-		}
-
 		private bool HasAnyVisibleRecipeChecked()
 		{
 			for (int i = 0; i < _recipes.Count; i++)
@@ -899,6 +1196,11 @@ internal class ExamineWearables : EditorWindow
 				return false;
 			}
 
+			string selectedWardrobeRegion = GetSelectedWardrobeRegion();
+			if (!string.IsNullOrEmpty(selectedWardrobeRegion) &&
+				!string.Equals(recipe.wardrobeSlot, selectedWardrobeRegion,
+					System.StringComparison.Ordinal)) return false;
+
 			bool isAssigned = WardrobeSlotAssigned(recipe);
 			if (_wardrobeSlotFilter == WardrobeSlotFilter.Assigned)
 			{
@@ -911,6 +1213,29 @@ internal class ExamineWearables : EditorWindow
 			}
 
 			return true;
+		}
+
+		private string GetSelectedWardrobeRegion()
+		{
+			return _selectedWardrobeRegionIndex > 0 &&
+			       _selectedWardrobeRegionIndex <= _wardrobeRegions.Count
+				? _wardrobeRegions[_selectedWardrobeRegionIndex - 1]
+				: null;
+		}
+
+		private string GetSelectedHideSlot()
+		{
+			return _selectedHideSlotIndex >= 0 && _selectedHideSlotIndex < _hideSlots.Count
+				? _hideSlots[_selectedHideSlotIndex]
+				: null;
+		}
+
+		private string GetSelectedSuppressRegion()
+		{
+			return _selectedSuppressRegionIndex >= 0 &&
+			       _selectedSuppressRegionIndex < _slots.Count
+				? _slots[_selectedSuppressRegionIndex]
+				: null;
 		}
 
 		private void AssignSelectedSlot()
@@ -931,7 +1256,7 @@ internal class ExamineWearables : EditorWindow
 			int updated = 0;
 			for (int i = 0; i < _recipes.Count; i++)
 			{
-				if (i >= _recipeSelected.Length || !_recipeSelected[i])
+				if (i >= _recipeSelected.Length || !_recipeSelected[i] || !IsRecipeVisible(_recipes[i]))
 				{
 					continue;
 				}

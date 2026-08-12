@@ -74,7 +74,7 @@ namespace UMA.TexturePaint
             for (int tileY = minTileY; tileY <= maxTileY; tileY++)
             for (int tileX = minTileX; tileX <= maxTileX; tileX++)
             {
-                string key = target.Front.GetInstanceID() + ":" + tileX + ":" + tileY;
+                string key = target.Front.GetEntityId() + ":" + tileX + ":" + tileY;
                 if (!pending.keys.Add(key)) continue;
                 RectInt tileRect = Clamp(new RectInt(tileX * tileSize, tileY * tileSize, tileSize, tileSize), target.Width, target.Height);
                 Capture before = BeginCapture(target.Front, tileRect);

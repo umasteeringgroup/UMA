@@ -76,6 +76,34 @@ namespace UMA
             }
         }
 
+#if UNITY_EDITOR
+        /// <summary>
+        /// Keeps Unity's main-object name equal to the asset filename without changing UMA's
+        /// logical slot identifier. Unity 6 reports (and may repair) mismatched main asset names;
+        /// slot builders traditionally appended "_slot" only to the filename, so rebuilding a
+        /// slot could repeatedly undo Unity's repair.
+        /// </summary>
+        public void PrepareForAssetPath(string assetPath, string logicalSlotName = null)
+        {
+            if (string.IsNullOrWhiteSpace(assetPath)) return;
+            string objectName = System.IO.Path.GetFileNameWithoutExtension(assetPath);
+            if (string.IsNullOrWhiteSpace(objectName)) return;
+
+            string logicalName = string.IsNullOrWhiteSpace(logicalSlotName)
+                ? slotName : logicalSlotName.Trim();
+            if (string.IsNullOrWhiteSpace(logicalName)) logicalName = objectName;
+
+            name = objectName;
+            _oldSlotName = string.Equals(logicalName, objectName, StringComparison.Ordinal)
+                ? string.Empty : logicalName;
+            // sourceSlot historically fell back to Object.name. Preserve that logical identity
+            // now that Object.name is required to describe the file rather than the UMA slot.
+            if (string.IsNullOrEmpty(_sourceSlotName)) _sourceSlotName = logicalName;
+            _nameHash = 0;
+            if (!UMAMeshData.IsNullOrEmptyMeshData(meshData)) meshData.SlotName = logicalName;
+        }
+#endif
+
         #region IUMAIndexOptions
         public bool forceKeep = false;
         public bool ForceKeep { get { return forceKeep; } set { forceKeep = value; } }
@@ -1466,11 +1494,11 @@ namespace UMA
 #if UNITY_EDITOR
             if (persistentAsset)
             {
-                if (string.IsNullOrWhiteSpace(assetPath)) assetPath = "Assets/UMA/Generated/Slots";
+                if (string.IsNullOrWhiteSpace(assetPath)) assetPath = UMAPathUtility.GeneratedSlotsRoot;
                 if (!System.IO.Directory.Exists(assetPath)) System.IO.Directory.CreateDirectory(assetPath);
                 string safeName = newAssetName.Replace(':', '_').Replace('/', '_').Replace('\\', '_');
                 string fullPath = AssetDatabase.GenerateUniqueAssetPath(System.IO.Path.Combine(assetPath, safeName + ".asset"));
-                clone.name = newAssetName;
+                clone.PrepareForAssetPath(fullPath, newSlotName);
                 Undo.RegisterCreatedObjectUndo(clone, "Clone SlotDataAsset");
                 AssetDatabase.CreateAsset(clone, fullPath);
                 EditorUtility.SetDirty(clone);

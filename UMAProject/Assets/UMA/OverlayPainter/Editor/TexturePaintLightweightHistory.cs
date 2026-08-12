@@ -75,6 +75,16 @@ namespace UMA.TexturePaint.Editor
             public Dictionary<TexturePaintChannel, TexturePaintBlendMode> channelBlends;
         }
 
+        private sealed class PluginLayerState
+        {
+            public string pluginId;
+            public string pluginVersion;
+            public TexturePaintPluginParameterSet parameters;
+            public string parametersJson;
+            public bool stale;
+            public string lastError;
+        }
+
         private sealed class MergedLayerState
         {
             public TextureSet set;
@@ -275,7 +285,7 @@ namespace UMA.TexturePaint.Editor
             PushLightweightCommand("Toggle Texture Layer",
                 () => { for (int i = 0; i < peers.Count; i++) { peers[i].layer.visible = previous[peers[i].layer]; peers[i].textureSet.BindPreviewTextures(); } },
                 () => { for (int i = 0; i < peers.Count; i++) { peers[i].layer.visible = visible; peers[i].textureSet.BindPreviewTextures(); } });
-            MarkDocumentDirty();
+            MarkDocumentDirty(peers);
         }
 
         private bool MoveLayerWithHistory(TextureSet set, int fromIndex, int toIndex)
@@ -293,12 +303,17 @@ namespace UMA.TexturePaint.Editor
                 int targetIndex = ConstrainLayerMoveTarget(peers[i].textureSet, peers[i].layer, toIndex);
                 MoveLayerReference(peers[i].textureSet, peers[i].layer,
                     targetIndex);
+                if (peers[i].layer.kind == TexturePaintLayerKind.Plugin)
+                {
+                    peers[i].layer.pluginStale = true;
+                    peers[i].layer.pluginLastError = null;
+                }
                 newIndexes[peers[i].layer] = peers[i].textureSet.layers.IndexOf(peers[i].layer);
             }
             PushLightweightCommand("Reorder Texture Layer",
                 () => { for (int i = 0; i < peers.Count; i++) MoveLayerReference(peers[i].textureSet, peers[i].layer, oldIndexes[peers[i].layer]); },
                 () => { for (int i = 0; i < peers.Count; i++) MoveLayerReference(peers[i].textureSet, peers[i].layer, newIndexes[peers[i].layer]); });
-            MarkDocumentDirty();
+            MarkDocumentDirtyAfterStructuralChange();
             return true;
         }
 
@@ -385,6 +400,9 @@ namespace UMA.TexturePaint.Editor
             if (!changed) return false;
 
             for (int i = 0; i < states.Count; i++) PlaceLayerInGroup(states[i]);
+            for (int i = 0; i < states.Count; i++)
+                if (states[i].layer.kind == TexturePaintLayerKind.Plugin)
+                { states[i].layer.pluginStale = true; states[i].layer.pluginLastError = null; }
             PushLightweightCommand("Move Layer Into Group",
                 () =>
                 {
@@ -394,7 +412,7 @@ namespace UMA.TexturePaint.Editor
                 {
                     for (int i = 0; i < states.Count; i++) PlaceLayerInGroup(states[i]);
                 });
-            MarkDocumentDirty();
+            MarkDocumentDirtyAfterStructuralChange();
             return true;
         }
 
@@ -428,6 +446,9 @@ namespace UMA.TexturePaint.Editor
                 });
             }
             for (int i = 0; i < states.Count; i++) PlaceLayerAboveGroup(states[i]);
+            for (int i = 0; i < states.Count; i++)
+                if (states[i].layer.kind == TexturePaintLayerKind.Plugin)
+                { states[i].layer.pluginStale = true; states[i].layer.pluginLastError = null; }
             PushLightweightCommand("Remove Layer From Group",
                 () =>
                 {
@@ -437,7 +458,7 @@ namespace UMA.TexturePaint.Editor
                 {
                     for (int i = 0; i < states.Count; i++) PlaceLayerAboveGroup(states[i]);
                 });
-            MarkDocumentDirty();
+            MarkDocumentDirtyAfterStructuralChange();
             return true;
         }
 
@@ -516,7 +537,7 @@ namespace UMA.TexturePaint.Editor
                 () => { for (int i = 0; i < peers.Count; i++) { LayerMetadataState state = previous[peers[i].layer]; ApplyLayerMetadata(peers[i].textureSet, peers[i].layer, state.name, state.opacity, state.blendMode, state.channelBlends); } },
                 () => { for (int i = 0; i < peers.Count; i++) ApplyLayerMetadata(peers[i].textureSet, peers[i].layer, nextName, opacity, blendMode, null); },
                 null, "layer-metadata:" + layer.id);
-            MarkDocumentDirty();
+            MarkDocumentDirty(peers);
         }
 
         private static void ApplyLayerMetadata(TextureSet set, TexturePaintLayer layer, string name, float opacity,
@@ -531,6 +552,183 @@ namespace UMA.TexturePaint.Editor
                     if (channelBlendOverrides.TryGetValue(pair.Key, out TexturePaintBlendMode old))
                         pair.Value.blendMode = old;
             set.BindPreviewTextures();
+        }
+
+        private void ChangePluginLayerDefinition(TextureSet set, TexturePaintLayer layer,
+            ITexturePaintCommandExtensionV2 plugin)
+        {
+            if (set == null || layer?.kind != TexturePaintLayerKind.Plugin) return;
+            if (!TryResolveLogicalPeers(set, layer,
+                    out List<TexturePaintLogicalLayerMember> peers, out string error))
+            { ShowWorkspaceStatus(error); return; }
+            var before = new Dictionary<TexturePaintLayer, PluginLayerState>();
+            for (int i = 0; i < peers.Count; i++) before[peers[i].layer] = CapturePluginLayerState(peers[i].layer);
+            TexturePaintPluginParameterSet parameters = plugin != null
+                ? controller.Plugins.CreateParameters(plugin) : new TexturePaintPluginParameterSet();
+            PluginLayerState after = new PluginLayerState
+            {
+                pluginId = plugin?.Descriptor.id,
+                pluginVersion = plugin?.Descriptor.pluginVersion,
+                parameters = parameters.Clone(),
+                parametersJson = JsonUtility.ToJson(parameters),
+                stale = true,
+                lastError = null
+            };
+            for (int i = 0; i < peers.Count; i++) ApplyPluginLayerState(peers[i].layer, after);
+            PushLightweightCommand("Select Layer Plugin",
+                () =>
+                {
+                    for (int i = 0; i < peers.Count; i++)
+                        ApplyPluginLayerState(peers[i].layer, before[peers[i].layer]);
+                },
+                () =>
+                {
+                    for (int i = 0; i < peers.Count; i++) ApplyPluginLayerState(peers[i].layer, after);
+                });
+            MarkDocumentDirty(peers);
+        }
+
+        private void ChangePluginLayerParameters(TextureSet set, TexturePaintLayer layer,
+            ITexturePaintCommandExtensionV2 plugin, TexturePaintPluginParameterSet parameters)
+        {
+            if (set == null || layer?.kind != TexturePaintLayerKind.Plugin || plugin == null ||
+                parameters == null) return;
+            if (!TryResolveLogicalPeers(set, layer,
+                    out List<TexturePaintLogicalLayerMember> peers, out string error))
+            { ShowWorkspaceStatus(error); return; }
+            var before = new Dictionary<TexturePaintLayer, PluginLayerState>();
+            for (int i = 0; i < peers.Count; i++) before[peers[i].layer] = CapturePluginLayerState(peers[i].layer);
+            PluginLayerState after = new PluginLayerState
+            {
+                pluginId = plugin.Descriptor.id,
+                pluginVersion = plugin.Descriptor.pluginVersion,
+                parameters = parameters.Clone(),
+                parametersJson = JsonUtility.ToJson(parameters),
+                stale = true,
+                lastError = null
+            };
+            for (int i = 0; i < peers.Count; i++) ApplyPluginLayerState(peers[i].layer, after);
+            string key = !string.IsNullOrEmpty(layer.logicalLayerId) ? layer.logicalLayerId : layer.id;
+            PushLightweightCommand("Edit Plugin Parameters",
+                () =>
+                {
+                    for (int i = 0; i < peers.Count; i++)
+                        ApplyPluginLayerState(peers[i].layer, before[peers[i].layer]);
+                },
+                () =>
+                {
+                    for (int i = 0; i < peers.Count; i++) ApplyPluginLayerState(peers[i].layer, after);
+                }, null, "plugin-parameters:" + key);
+            MarkDocumentDirty(peers);
+        }
+
+        private static PluginLayerState CapturePluginLayerState(TexturePaintLayer layer) =>
+            new PluginLayerState
+            {
+                pluginId = layer.pluginId,
+                pluginVersion = layer.pluginVersion,
+                parameters = layer.pluginParameters?.Clone() ?? new TexturePaintPluginParameterSet(),
+                parametersJson = layer.pluginParametersJson,
+                stale = layer.pluginStale,
+                lastError = layer.pluginLastError
+            };
+
+        private static void ApplyPluginLayerState(TexturePaintLayer layer, PluginLayerState state)
+        {
+            if (layer == null || state == null) return;
+            layer.pluginId = state.pluginId;
+            layer.pluginVersion = state.pluginVersion;
+            layer.pluginParameters = state.parameters?.Clone() ?? new TexturePaintPluginParameterSet();
+            layer.pluginParametersJson = state.parametersJson;
+            layer.pluginStale = state.stale;
+            layer.pluginLastError = state.lastError;
+        }
+
+        private void ChangeLayerMaskPluginDefinition(TextureSet set, TexturePaintLayer layer,
+            ITexturePaintCommandExtensionV2 plugin)
+        {
+            if (!TryResolveLogicalPeers(set, layer,
+                    out List<TexturePaintLogicalLayerMember> peers, out string error))
+            { ShowWorkspaceStatus(error); return; }
+            var before = new Dictionary<TexturePaintLayer, PluginLayerState>();
+            for (int i = 0; i < peers.Count; i++)
+                if (peers[i].layer.layerMask != null)
+                    before[peers[i].layer] = CaptureMaskPluginState(peers[i].layer.layerMask);
+            TexturePaintPluginParameterSet parameters = plugin != null
+                ? controller.Plugins.CreateParameters(plugin) : new TexturePaintPluginParameterSet();
+            var after = new PluginLayerState
+            {
+                pluginId = plugin?.Descriptor.id, pluginVersion = plugin?.Descriptor.pluginVersion,
+                parameters = parameters.Clone(), parametersJson = JsonUtility.ToJson(parameters),
+                stale = true
+            };
+            Action apply = () =>
+            {
+                for (int i = 0; i < peers.Count; i++)
+                    ApplyMaskPluginState(peers[i].layer.layerMask, after);
+            };
+            Action restore = () =>
+            {
+                for (int i = 0; i < peers.Count; i++)
+                    if (before.TryGetValue(peers[i].layer, out PluginLayerState state))
+                        ApplyMaskPluginState(peers[i].layer.layerMask, state);
+            };
+            apply();
+            PushLightweightCommand("Select Layer Mask Plugin", restore, apply);
+            MarkDocumentDirty(peers);
+        }
+
+        private void ChangeLayerMaskPluginParameters(TextureSet set, TexturePaintLayer layer,
+            ITexturePaintCommandExtensionV2 plugin, TexturePaintPluginParameterSet parameters)
+        {
+            if (plugin == null || parameters == null) return;
+            if (!TryResolveLogicalPeers(set, layer,
+                    out List<TexturePaintLogicalLayerMember> peers, out string error))
+            { ShowWorkspaceStatus(error); return; }
+            var before = new Dictionary<TexturePaintLayer, PluginLayerState>();
+            for (int i = 0; i < peers.Count; i++)
+                if (peers[i].layer.layerMask != null)
+                    before[peers[i].layer] = CaptureMaskPluginState(peers[i].layer.layerMask);
+            var after = new PluginLayerState
+            {
+                pluginId = plugin.Descriptor.id, pluginVersion = plugin.Descriptor.pluginVersion,
+                parameters = parameters.Clone(), parametersJson = JsonUtility.ToJson(parameters),
+                stale = true
+            };
+            Action apply = () =>
+            {
+                for (int i = 0; i < peers.Count; i++)
+                    ApplyMaskPluginState(peers[i].layer.layerMask, after);
+            };
+            Action restore = () =>
+            {
+                for (int i = 0; i < peers.Count; i++)
+                    if (before.TryGetValue(peers[i].layer, out PluginLayerState state))
+                        ApplyMaskPluginState(peers[i].layer.layerMask, state);
+            };
+            apply();
+            string key = !string.IsNullOrEmpty(layer.logicalLayerId) ? layer.logicalLayerId : layer.id;
+            PushLightweightCommand("Edit Layer Mask Plugin Parameters", restore, apply, null,
+                "mask-plugin-parameters:" + key);
+            MarkDocumentDirty(peers);
+        }
+
+        private static PluginLayerState CaptureMaskPluginState(TexturePaintLayerMask mask) =>
+            new PluginLayerState
+            {
+                pluginId = mask?.pluginId, pluginVersion = mask?.pluginVersion,
+                parameters = mask?.pluginParameters?.Clone() ?? new TexturePaintPluginParameterSet(),
+                parametersJson = mask?.pluginParametersJson, stale = mask?.pluginStale ?? true,
+                lastError = mask?.pluginLastError
+            };
+
+        private static void ApplyMaskPluginState(TexturePaintLayerMask mask, PluginLayerState state)
+        {
+            if (mask == null || state == null) return;
+            mask.pluginId = state.pluginId; mask.pluginVersion = state.pluginVersion;
+            mask.pluginParameters = state.parameters?.Clone() ?? new TexturePaintPluginParameterSet();
+            mask.pluginParametersJson = state.parametersJson; mask.pluginStale = state.stale;
+            mask.pluginLastError = state.lastError;
         }
 
         private void ChangeLayerEffects(TextureSet set, TexturePaintLayer layer,
@@ -571,7 +769,7 @@ namespace UMA.TexturePaint.Editor
                         ApplyLayerEffects(peers[i].textureSet, peers[i].layer, next);
                     if (rerenderRibbon) ReapplyLayerEffectsPath(set, layer);
                 }, null, "layer-effects:" + layer.id);
-            MarkDocumentDirty();
+            MarkDocumentDirty(peers);
         }
 
         private bool AddLayerMaskWithHistory(TextureSet set, TexturePaintLayer layer, float baseValue)
@@ -610,7 +808,7 @@ namespace UMA.TexturePaint.Editor
                     foreach (KeyValuePair<TexturePaintLayer, TexturePaintLayerMask> pair in masks)
                         if (!ReferenceEquals(pair.Key.layerMask, pair.Value)) pair.Value.Dispose();
                 });
-            MarkDocumentDirty();
+            MarkDocumentDirty(peers);
             return true;
         }
 
@@ -641,7 +839,7 @@ namespace UMA.TexturePaint.Editor
                 foreach (KeyValuePair<TexturePaintLayer, TexturePaintLayerMask> pair in masks)
                     if (!ReferenceEquals(pair.Key.layerMask, pair.Value)) pair.Value.Dispose();
             });
-            MarkDocumentDirty();
+            MarkDocumentDirty(peers);
             return true;
         }
 
@@ -679,7 +877,7 @@ namespace UMA.TexturePaint.Editor
             };
             PushLightweightCommand("Edit Layer Mask Effects", restore, apply, null,
                 "layer-mask-effects:" + layer.id);
-            MarkDocumentDirty();
+            MarkDocumentDirty(peers);
         }
 
         private void ChangeLayerMaskSource(TextureSet set, TexturePaintLayer layer,
@@ -728,7 +926,7 @@ namespace UMA.TexturePaint.Editor
             };
             PushLightweightCommand("Edit Layer Mask Paint Source", restore, apply, null,
                 "layer-mask-source:" + layer.id);
-            MarkDocumentDirty();
+            MarkDocumentDirty(peers);
         }
 
         private static bool RibbonProjectionEffectsChanged(TexturePaintLayerEffects before,
@@ -747,8 +945,7 @@ namespace UMA.TexturePaint.Editor
             for (int i = 0; i < effects.Stack.Count; i++)
             {
                 TexturePaintLayerEffectSettings effect = effects.Stack[i];
-                if (effect == null || effect.kind == TexturePaintLayerEffectKind.ColorOverlay ||
-                    effect.kind == TexturePaintLayerEffectKind.TextureOverlay) continue;
+                if (effect == null || TexturePaintLayerEffects.IsCompositeOnlyEffect(effect.kind)) continue;
                 signature.Append(JsonUtility.ToJson(effect));
             }
             return signature.ToString();
@@ -808,7 +1005,7 @@ namespace UMA.TexturePaint.Editor
                 () => { for (int i = 0; i < peers.Count; i++) if (before.TryGetValue(peers[i].layer, out TexturePaintLayerChannelSettings value)) ApplyChannelSettings(peers[i].textureSet, peers[i].layer, channel, value); },
                 () => { for (int i = 0; i < peers.Count; i++) if (after.TryGetValue(peers[i].layer, out TexturePaintLayerChannelSettings value)) ApplyChannelSettings(peers[i].textureSet, peers[i].layer, channel, value); },
                 null, "layer-channel:" + layer.id + ":" + channel);
-            MarkDocumentDirty();
+            MarkDocumentDirty(peers);
         }
 
         private static void ApplyChannelSettings(TextureSet set, TexturePaintLayer layer, TexturePaintChannel channel,
@@ -816,6 +1013,55 @@ namespace UMA.TexturePaint.Editor
         {
             layer.channelSettings[channel] = value.Clone();
             set.BindPreviewTextures();
+        }
+
+        private void ChangeLayerNormalControlStrength(TextureSet set, TexturePaintLayer layer,
+            float strength)
+        {
+            if (set == null || layer == null ||
+                !layer.channels.ContainsKey(TexturePaintChannel.NormalControl)) return;
+            if (!TryResolveLogicalPeers(set, layer, out List<TexturePaintLogicalLayerMember> peers,
+                    out string error))
+            {
+                ShowWorkspaceStatus(error);
+                return;
+            }
+            strength = Mathf.Clamp(strength, 0f, 16f);
+            var before = new Dictionary<TexturePaintLayer, TexturePaintLayerChannelSettings>();
+            var after = new Dictionary<TexturePaintLayer, TexturePaintLayerChannelSettings>();
+            for (int i = 0; i < peers.Count; i++)
+            {
+                TexturePaintLogicalLayerMember peer = peers[i];
+                if (!peer.layer.channels.ContainsKey(TexturePaintChannel.NormalControl))
+                {
+                    ShowWorkspaceStatus($"Target member '{peer.targetMember?.slotName}' has no Normal Control channel.");
+                    return;
+                }
+                TexturePaintLayerChannelSettings settings = peer.layer.GetChannelSettings(
+                    TexturePaintChannel.NormalControl);
+                before[peer.layer] = settings.Clone();
+                TexturePaintLayerChannelSettings updated = settings.Clone();
+                updated.hasNormalControlStrength = true;
+                updated.normalControlStrength = strength;
+                after[peer.layer] = updated;
+            }
+
+            void Apply(Dictionary<TexturePaintLayer, TexturePaintLayerChannelSettings> values)
+            {
+                for (int i = 0; i < peers.Count; i++)
+                {
+                    TexturePaintLogicalLayerMember peer = peers[i];
+                    if (!values.TryGetValue(peer.layer, out TexturePaintLayerChannelSettings value)) continue;
+                    peer.layer.channelSettings[TexturePaintChannel.NormalControl] = value.Clone();
+                    peer.textureSet.BindPreviewTextures();
+                }
+            }
+
+            Apply(after);
+            PushLightweightCommand("Change Normal Control Height Strength",
+                () => Apply(before), () => Apply(after), null,
+                "normal-control-layer-strength:" + layer.id);
+            MarkDocumentDirty(peers);
         }
 
         private void ChangeNormalControlSettings(TextureSet set, float strength, int radius, bool invert)
@@ -842,7 +1088,7 @@ namespace UMA.TexturePaint.Editor
                 () => Apply(beforeStrength, beforeRadius, beforeInvert),
                 () => Apply(strength, radius, invert), null,
                 "normal-control:" + set.persistentId);
-            MarkDocumentDirty();
+            MarkDocumentDirtyAfterStructuralChange();
         }
 
         private bool AddLayerChannelWithHistory(TextureSet set, TexturePaintLayer layer,
@@ -929,7 +1175,7 @@ namespace UMA.TexturePaint.Editor
                             location.target?.Dispose();
                     }
                 });
-            MarkDocumentDirty();
+            MarkDocumentDirty(peers);
             return true;
         }
 
@@ -978,7 +1224,7 @@ namespace UMA.TexturePaint.Editor
                         if (!removed[i].layer.channels.TryGetValue(channel, out EditableTextureTarget attached) ||
                             !ReferenceEquals(attached, removed[i].target)) removed[i].target?.Dispose();
                 });
-            MarkDocumentDirty();
+            MarkDocumentDirty(peers);
             return true;
         }
 
@@ -1082,7 +1328,7 @@ namespace UMA.TexturePaint.Editor
                 () => ApplyLayerChannelSources(states, true), null,
                 sources.Count == 1 ? "layer-channel-source:" + layer.id + ":" +
                     states[0].channel : null);
-            MarkDocumentDirty();
+            MarkDocumentDirty(peers);
             return true;
         }
 
@@ -1204,7 +1450,7 @@ namespace UMA.TexturePaint.Editor
                         DisposeLayerIfDetached(after[i].set, after[i].layer);
                     }
                 });
-            MarkDocumentDirty();
+            MarkDocumentDirty(peers);
         }
 
         private void RestoreFillSourceControls(TexturePaintLayer layer)
@@ -1268,7 +1514,7 @@ namespace UMA.TexturePaint.Editor
                 peer.textureSet.activeLayerIndex = peer.textureSet.layers.IndexOf(copy);
             }
             RegisterCreatedLayers(created, "Duplicate Texture Layer");
-            MarkDocumentDirty();
+            MarkDocumentDirtyAfterStructuralChange();
         }
 
         private bool MergeLayerWithHistory(TextureSet set, int upperIndex)
@@ -1318,7 +1564,7 @@ namespace UMA.TexturePaint.Editor
                         DisposeLayerIfDetached(states[i].set, states[i].merged);
                     }
                 });
-            MarkDocumentDirty();
+            MarkDocumentDirtyAfterStructuralChange();
             return true;
         }
 
@@ -1394,7 +1640,7 @@ namespace UMA.TexturePaint.Editor
                         DisposeLayerIfDetached(removed[i].set, removed[i].layer);
                 });
             if (primary.spline != null) splineDisplayCache?.Remove(primary.spline);
-            MarkDocumentDirty();
+            MarkDocumentDirtyAfterStructuralChange();
         }
 
         private static bool IsDescendantOfGroup(TextureSet set, TexturePaintLayer layer,

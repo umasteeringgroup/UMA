@@ -96,17 +96,17 @@ namespace UMA.Editors
             try
             {
                 string umaPath = UMAEditorUtilities.FindUMAFullPath();
-                docsDirectory = string.IsNullOrEmpty(umaPath) ? null : Path.Combine(umaPath, "Docs");
+                docsDirectory = string.IsNullOrEmpty(umaPath) ? null :
+                    UMAPathUtility.Normalize(umaPath + "/Docs");
 
-                if (!string.IsNullOrEmpty(docsDirectory) && Directory.Exists(docsDirectory))
+                if (!string.IsNullOrEmpty(docsDirectory) && AssetDatabase.IsValidFolder(docsDirectory))
                 {
-                    string[] files = Directory.GetFiles(docsDirectory, "*", SearchOption.TopDirectoryOnly);
-                    for (int fileIndex = 0; fileIndex < files.Length; fileIndex++)
+                    string[] documentGuids = AssetDatabase.FindAssets("t:TextAsset", new[] { docsDirectory });
+                    for (int fileIndex = 0; fileIndex < documentGuids.Length; fileIndex++)
                     {
-                        if (string.Equals(Path.GetExtension(files[fileIndex]), ".md", StringComparison.OrdinalIgnoreCase))
-                        {
-                            documentationPaths.Add(NormalizeAssetPath(files[fileIndex]));
-                        }
+                        string documentPath = AssetDatabase.GUIDToAssetPath(documentGuids[fileIndex]);
+                        if (string.Equals(Path.GetExtension(documentPath), ".md", StringComparison.OrdinalIgnoreCase))
+                            documentationPaths.Add(documentPath);
                     }
 
                     documentationPaths.Sort((left, right) =>
@@ -164,17 +164,5 @@ namespace UMA.Editors
             UMAMarkdownViewer.Open(documentationPath);
         }
 
-        private static string NormalizeAssetPath(string path)
-        {
-            string normalizedPath = path.Replace('\\', '/');
-            string projectRoot = Directory.GetCurrentDirectory().Replace('\\', '/').TrimEnd('/');
-            string fullPath = Path.GetFullPath(normalizedPath).Replace('\\', '/');
-            if (fullPath.StartsWith(projectRoot + "/", StringComparison.OrdinalIgnoreCase))
-            {
-                return fullPath.Substring(projectRoot.Length + 1);
-            }
-
-            return normalizedPath;
-        }
     }
 }

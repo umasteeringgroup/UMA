@@ -11,12 +11,92 @@ namespace UMA.Editors
 {
     public static class UMARaceSmokeTestRunner
     {
+        /// <summary>
+        /// Runs every RaceData entry exposed by the UMA index. The optional callback is invoked
+        /// before each race and returns false to cancel cleanly between races.
+        /// </summary>
+        public static UMATestReport RunAllIndexed(UMARaceSmokeTestOptions options = null,
+            Func<int, int, RaceData, bool> continueCallback = null)
+        {
+            UMATestReport combined = new UMATestReport("UMA Indexed Race Smoke Test");
+            UMAAssetIndexer indexer = UMAAssetIndexer.Instance;
+            if (indexer == null)
+            {
+                combined.AddError("Indexer", "UMAAssetIndexer.Instance is null.");
+                return combined;
+            }
+
+            RaceData[] indexedRaces = indexer.GetAllRaces();
+            if (indexedRaces == null || indexedRaces.Length == 0)
+            {
+                combined.AddError("Indexer", "UMAAssetIndexer.GetAllRaces returned no races.");
+                return combined;
+            }
+
+            // Do not reorder an array that may be owned or cached by the indexer.
+            RaceData[] sortedRaces = (RaceData[])indexedRaces.Clone();
+            Array.Sort(sortedRaces, CompareIndexedRaces);
+            int completed = 0;
+            for (int raceIndex = 0; raceIndex < sortedRaces.Length; raceIndex++)
+            {
+                RaceData race = sortedRaces[raceIndex];
+                if (continueCallback != null &&
+                    !continueCallback(raceIndex, sortedRaces.Length, race))
+                {
+                    combined.AddInfo("Summary", "Cancelled after " + completed + " of " +
+                        sortedRaces.Length + " indexed race(s).");
+                    return combined;
+                }
+
+                if (race == null)
+                {
+                    combined.AddError("Indexed Race " + raceIndex,
+                        "UMAAssetIndexer returned a null RaceData entry.");
+                    completed++;
+                    continue;
+                }
+
+                UMATestReport raceReport = Run(race, options);
+                string raceLabel = RaceLabel(race);
+                for (int messageIndex = 0; messageIndex < raceReport.Messages.Count;
+                     messageIndex++)
+                {
+                    UMATestMessage message = raceReport.Messages[messageIndex];
+                    combined.Add(message.Severity,
+                        "Race: " + raceLabel + (string.IsNullOrEmpty(message.Category)
+                            ? string.Empty : " / " + message.Category),
+                        message.Message, message.Context != null ? message.Context : race);
+                }
+                completed++;
+            }
+
+            if (!combined.HasErrors)
+            {
+                combined.AddPass("Summary", "Completed smoke tests for all " + completed +
+                    " indexed race(s).");
+            }
+            else
+            {
+                combined.AddInfo("Summary", "Completed smoke tests for all " + completed +
+                    " indexed race(s); review the race-prefixed errors above.");
+            }
+
+            return combined;
+        }
+
         public static UMATestReport Run(RaceData race, UMARaceSmokeTestOptions options = null)
         {
             UMARaceSmokeTestOptions resolvedOptions = options ?? UMARaceSmokeTestOptions.Default;
             UMATestReport report = new UMATestReport("UMA Race Smoke Test", race);
 
-            if (race.raceName.ToLower() == "racedataplaceholder")
+            if (race == null)
+            {
+                report.AddError("RaceData", "RaceData is null.");
+                return report;
+            }
+
+            if (string.Equals(race.raceName, "RaceDataPlaceholder",
+                StringComparison.OrdinalIgnoreCase))
             {
                 report.AddInfo("RaceData", "Skipping placeholder race", race);
                 return report;
@@ -53,6 +133,27 @@ namespace UMA.Editors
             }
 
             return report;
+        }
+
+        private static int CompareIndexedRaces(RaceData left, RaceData right)
+        {
+            if (ReferenceEquals(left, right)) return 0;
+            if (left == null) return 1;
+            if (right == null) return -1;
+            int byName = string.Compare(left.raceName, right.raceName,
+                StringComparison.OrdinalIgnoreCase);
+            if (byName != 0) return byName;
+            return string.Compare(AssetDatabase.GetAssetPath(left), AssetDatabase.GetAssetPath(right),
+                StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string RaceLabel(RaceData race)
+        {
+            if (race == null) return "(null)";
+            if (!string.IsNullOrWhiteSpace(race.raceName)) return race.raceName;
+            if (!string.IsNullOrWhiteSpace(race.name)) return race.name;
+            string path = AssetDatabase.GetAssetPath(race);
+            return string.IsNullOrEmpty(path) ? "(unnamed RaceData)" : path;
         }
 
         private static void ValidateIndexer(RaceData race, UMATestReport report)

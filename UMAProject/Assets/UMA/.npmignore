@@ -1,0 +1,9 @@
+Temp/
+Tasks/
+**/Generated*/
+**/painter_recovery*
+*.user
+*.suo
+*~
+**/.DS_Store
+**/.png

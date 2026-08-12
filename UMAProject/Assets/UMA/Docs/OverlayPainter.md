@@ -1,5 +1,7 @@
 # Overlay Painter
 
+Last reviewed: August 8, 2026.
+
 Overlay Painter is UMA's non-destructive surface-painting workspace for creating texture details directly on a reconstructed UMA slot or generated character. It combines a 3D paint view, a synchronized 2D UV canvas, material-aware channels, editable layers, surface paths, masks, and recipe-ready export.
 
 Use it for work such as:
@@ -202,14 +204,21 @@ The UV canvas shows the active logical channel and uses the same target, layer, 
 Use it to:
 
 - Inspect exact UV placement.
-- Paint in 2D while retaining surface-aware dispatch.
+- Paint directly in normalized texture space without raycasting back through the 3D mesh.
 - View the UV wireframe.
 - Pan and zoom.
 - Set a clone source.
 - Create and edit path points.
 - Check details around UV seams and island edges.
 
-The 2D view is synchronized, but a path authored in 2D intentionally uses the UV domain. A path authored on the model uses the 3D surface domain. This distinction matters around seams and repeated UVs.
+Ordinary 2D brush strokes resample and rasterize on the texture plane. They do not run 3D triangle
+projection or geometry clipping, so the cursor and painted footprint stay stable even on very small
+or thin geometry. Polygon Fill and UV Island Fill intentionally query mesh ownership because their
+purpose is to select geometry-defined regions.
+
+The 2D view is synchronized, but **Spline Space** remains authoritative: a 2D Texture path uses the
+UV domain, while a 3D Surface path uses the model surface. Input in the non-authoritative view is
+ignored. This distinction matters around seams and repeated UVs.
 
 ### Layer / Path region
 
@@ -289,8 +298,12 @@ shader property, an `UMAMaterial.MaterialChannel`, or a separate exported runtim
 - Values below `0.5` recess the surface; values above `0.5` raise it.
 - Height gradients bend the normal. A constant dark or light area has no slope in its interior, so
   only its transitions produce visible normal detail.
-- **Height Strength** scales the generated slope, **Sample Radius** controls the neighboring texel
-  distance used for the gradient, and **Invert Height** reverses raised and recessed interpretation.
+- **Height Strength** is stored on each authored layer's Normal Control channel and scales only that
+  layer's generated slope. Changing it on one Paint, Fill, or Path layer does not rescale any other
+  Normal Control layer.
+- **Sample Radius** controls the neighboring texel distance used for the gradient, and **Invert
+  Height** reverses raised and recessed interpretation. These two conversion settings remain shared
+  by the texture target so every Normal Control layer uses the same sampling convention.
 
 Normal Control is a full layer channel. It can be authored with Paint, Fill, Path, Polygon Fill, UV
 Island Fill, groups, layer masks, and layer effects. Color and texture input is constrained to
@@ -300,9 +313,12 @@ Select **Normal Control** to inspect or paint the height field; select **Normal*
 the effective normal after Normal Control has been combined with the ordinary normal stack. The 3D
 material preview always receives that effective normal.
 
-The document saves the Normal Control base, every layer-channel texture and source, and the
-strength/radius/invert settings. **Flattened Composite** export bakes the result into the physical
-normal output. **Runtime Overlay (Transparent)** converts authored Normal Control content into a
+The document saves the Normal Control base, every layer-channel texture and source, each channel's
+Height Strength, and the target's Sample Radius/Invert Height settings. Older documents that do not
+contain a per-channel Height Strength initially inherit their saved target strength; the value
+becomes independent as soon as that layer channel is edited. **Flattened Composite** export bakes
+the result into the physical normal output. **Runtime Overlay (Transparent)** converts authored
+Normal Control content into a
 flat-relative normal delta and adds its affected pixels to overlay coverage, so the exported UMA
 overlay changes the runtime normal without carrying an internal Normal Control texture. Overlay
 Painter calculates in its canonical OpenGL convention and performs any requested DirectX green
@@ -633,7 +649,7 @@ Fill generation adds a small gutter around covered UV islands for stable composi
 
 ### Path layers
 
-Path layers store editable surface-anchored curves and render them procedurally.
+Path layers store editable 2D texture-space or 3D surface-space curves and render them procedurally.
 
 Use them for:
 
@@ -717,6 +733,8 @@ Each authored channel can expose:
 - **Channel Paint Strength**: scales how strongly new brush input is deposited on Paint and Path layers. Fill layers do not use or show this control.
 - **Channel Opacity**: scales this channel during composition.
 - **Channel Blend**: chooses the blend behavior for this channel.
+- **Height Strength** on Normal Control: scales only this layer channel's contribution to the
+  effective normal. Sample Radius and Invert Height remain target-level conversion settings.
 - Source and source-specific settings.
 
 Use **New Channel** and **Add Channel** to add another channel supported by the active material. Channels already authored by the layer are omitted from the dropdown. The **Edit / Active** button selects the Paint / Preview Channel; all channel cards remain visible and independently editable.
@@ -870,6 +888,21 @@ Use it for:
 - Adding scratches inside a painted metal area.
 - Combining a broad material texture with a finer detail texture.
 
+### Image Adjustments
+
+Image Adjustments non-destructively changes one authored channel after the layer's pixels are
+generated and before layer/channel opacity is applied.
+
+- **Saturation** ranges from 0% to 200%; 100% is unchanged.
+- **Brightness** adds or removes up to 100% brightness.
+- **Contrast** adjusts values around the channel midpoint from -100% to 100%.
+- **Hue** rotates color by -180 to 180 degrees.
+- **Amount** blends between the unadjusted and adjusted channel.
+
+Hue and Saturation are disabled for grayscale channels such as Roughness, AO, Thickness, Detail
+Mask, and Normal Control. Brightness and Contrast remain available. Add separate Image Adjustments
+instances when different channels or correction stages need independent settings.
+
 ### Effects on normals and data channels
 
 An effect can target a material channel, but not every visual effect makes physical sense on every channel. Review Normal, Roughness, Metallic, and AO results in channel solo and in the shaded preview.
@@ -950,9 +983,13 @@ Use endpoint art for strap ends, zipper stops, seam caps, cable connectors, or o
 
 ### Size
 
-Brush size is evaluated in world space using the contacted triangle's UV-to-world metric. This keeps a stroke's physical size more consistent across seams, rotated islands, and different UV densities.
+In the 3D view, brush size is evaluated in world space using the contacted triangle's UV-to-world
+metric. This keeps a stroke's physical size more consistent across seams, rotated islands, and
+different UV densities. In the 2D view, the same control is evaluated directly on the normalized
+texture plane; no triangle metric or model projection changes the cursor footprint.
 
-Use the UV canvas to inspect resulting texel quality, but judge the brush's intended scale on the 3D surface.
+Use the UV canvas to inspect exact texture placement and texel quality. Use the 3D view when the
+intended physical scale on the model is authoritative.
 
 ### Hardness
 
@@ -981,11 +1018,17 @@ Use direction smoothing when a directional stamp turns too abruptly on small poi
 
 **Random Rotation** gives every sampled paint stamp an independent 0-360 degree rotation. It is unavailable while Follow Stroke is enabled because Follow Stroke owns the stamp orientation.
 
-**Random Size Variation** changes the complete effective world-space size of every sampled stamp. **Shrink (%)** and **Grow (%)** define the range below and above the authored brush size; both default to 30%. The generated variation is retained by mirrored and projected copies of that stamp so seams and symmetry remain coherent.
+**Random Size Variation** changes the complete effective size of every sampled stamp. **Shrink (%)** and **Grow (%)** define the range below and above the authored brush size; both default to 30%. This is world-space size for a 3D stroke and normalized texture-plane size for a direct 2D stroke. The generated variation is retained by mirrored and projected copies of that stamp so seams and symmetry remain coherent.
 
-**Splatter** randomly offsets each sampled paint stamp within a disk around the stroke. **Splatter Distance (%)** sets the disk radius from 1% to 200% of that stamp's effective world-space brush size, after pressure and random size variation. The offset is deterministic for the stamp, remains tangent to the painted surface, and is shared by projected and mirrored copies so seams and symmetry stay coherent.
+**Splatter** randomly offsets each sampled paint stamp within a disk around the stroke. **Splatter Distance (%)** sets the disk radius from 1% to 200% of that stamp's effective brush size in the active stroke domain, after pressure and random size variation. The offset is deterministic for the stamp, remains tangent to the painted surface or in the 2D texture plane, and is shared by projected and mirrored copies so seams and symmetry stay coherent.
 
-**Fade** lowers stamp alpha linearly as the current freehand stroke advances. **Taper** reduces the complete effective world-space stamp size over the same distance. **World Length** is measured along the sampled stroke in model world units; its untouched default tracks three times the current brush size. The first stamp is full strength and size, and the envelope reaches zero at the configured length. A new stroke restarts the envelope. When enabled, the existing Pressure Affects Flow and Pressure Affects Size controls multiply Fade and Taper respectively, so tablet pressure remains part of the result.
+**Random Strength** is available only while Splatter is enabled. It gives each scattered stamp an
+independent effective strength between zero and the current paint strength. The result multiplies
+Flow, Fade, pressure, and layer/channel paint strength rather than replacing them. Its deterministic
+per-stroke/per-stamp sequence makes repaint, undo/redo, save/reopen, mirrored copies, and projected
+copies reproduce the same variation.
+
+**Fade** lowers stamp alpha linearly as the current freehand stroke advances. **Taper** reduces the complete effective stamp size over the same distance. **World Length** is measured along a 3D stroke in model world units and along a direct 2D stroke in normalized texture-plane units; its untouched default tracks three times the current brush size. The first stamp is full strength and size, and the envelope reaches zero at the configured length. A new stroke restarts the envelope. When enabled, the existing Pressure Affects Flow and Pressure Affects Size controls multiply Fade and Taper respectively, so tablet pressure remains part of the result.
 
 ### Cap Per Stroke
 
@@ -1060,11 +1103,155 @@ Use it to reduce visible normal seams, soften an overly strong normal stamp, or 
 
 Plugin Brush exposes compatible Plugin API v2 brushes. Plugin parameters and declared channels are validated by the host. Committed plugin work remains subject to masks, channel rules, document persistence, and Undo.
 
+### Generator plugins
+
+For detailed artist workflows, recommended stacks, control-by-control guidance, and troubleshooting
+for every included generator and filter, see
+[Overlay Painter Generators and Filters](OverlayPainterGeneratorsAndFilters.md).
+
+Generators and filters are persistent **Plugin layers**, not commands applied to a Paint layer. Click
+**+ Plugin**, select a plugin in the layer properties, adjust its layer-specific parameters, and click
+**Generate**. The generated pixels are cached in that layer, so ordinary compositing, visibility,
+opacity, blend mode, layer masks, groups, effects, Save/reopen, and export continue to work even when
+the plugin is not installed. The layer is marked **Stale** when its parameters, position, or relevant
+content below it changes; click **Regenerate** to replace its cache atomically.
+
+The host snapshots only the plugin's declared channels from the composite below that Plugin layer,
+plus requested mesh maps and texture parameters. It exposes write-only channel dimensions without
+copying their pixels and commits all logical-target outputs as one Undo/Redo transaction. A canceled
+or failed run retains the last good cache. A missing plugin retains visible cached output and presents
+an actionable missing-plugin message in the layer properties. The Plugins window remains the manager
+for discovery diagnostics and non-layer plugin categories; generators and filters are selected on a
+Plugin layer.
+
+The included **Agify — Dirt & Edge Wear** generator is the reference mesh-map workflow. It provides:
+
+- Concave dirt derived from signed curvature and source/generated AO.
+- Convex edge wear derived from signed curvature.
+- Additional high-frequency signed curvature calculated from the composed tangent-space Normal map.
+- UV or seamless world-triplanar projection for optional Dirt Texture, Dirt Mask, Wear Texture, and
+  Wear Mask inputs.
+- Deterministic breakup, optional multi-level Fractal Edge boundary displacement, curvature contrast,
+  AO influence, and independent dirt/wear amounts. Existing Agify layers retain smooth boundaries
+  until Fractal Edge is raised from zero.
+- Coordinated Albedo, Roughness, Ambient Occlusion, Metallic, and Normal Control output wherever the
+  target material exposes those channels.
+- Bounded source snapshots and compact strip output so native 2K-4K texture targets stay within the
+  plugin transaction memory budgets.
+
+Agify's texture masks are baked into generated channel coverage. Add an ordinary editable layer mask
+to the Plugin layer when further hand-painted art direction is needed. The generated pixels, plugin
+ID/version, typed parameters (including texture references), cache state, masks, effects, and channel
+settings persist with the paint document.
+
+Two focused generators provide more direct art control than the combined Agify workflow:
+
+- **Dirtify — Gap Dirt** detects concave curvature and source/generated AO. **Gap Size** controls the
+  neighborhood radius, **Gap Detection Level** controls which cavities qualify, and **Dirt Spread**
+  controls how strongly nearby gaps expand into the surrounding surface. Fractal Breakup, Scale,
+  Levels, Level Strength, and Fractal Edge independently control breakup from broad islands down to
+  fine boundary damage.
+- **Edge Wear** detects convex signed curvature while excluding cavities. **Edge Size**, **Edge
+  Detection Level**, and **Wear Spread** control the width and reach of the worn region. It exposes
+  the same multi-level fractal controls plus worn color/texture/mask, roughness, metallic, and depth.
+
+Size is measured in pixels at the current output-channel resolution. Spread controls the strength of
+the neighboring feature over that radius; a zero spread leaves only the detected gap or edge itself.
+Both generators reject neighborhood and Normal-detail samples that cross UV-island IDs.
+
+#### Cloth Texture generator
+
+Add a Plugin layer, choose **Cloth Texture**, and click **Generate** after configuring the fabric. The
+generator is intended for shirts, sweaters, trousers, denim, canvas gear, and other UV-mapped cloth.
+It produces native-resolution material data without reading or baking the existing character atlas.
+
+1. Under **Output Channels**, enable any combination of **Albedo**, **Roughness**, and **Normal
+   Control**. All three are optional, but at least one must remain enabled.
+2. Under **Fabric Weave**, select Cotton/Plain, Knit, Twill, Corduroy, Herringbone, Denim, Canvas,
+   Linen, Satin, Basket, Houndstooth, Leno, Dobby, Pile, Crepe, or Jacquard. Set Threads/UV first,
+   then adjust aspect, fabric rotation, thread roundness, definition, and irregularity.
+3. Under **Surface Response**, tune the neutral-gray Normal Control height, base/weave roughness,
+   and fine fiber variation. Normal Control is combined with the Normal map for live display and
+   export; it is not a shader texture by itself.
+4. Under **Stripes / Plaid**, set the vertical and horizontal repeat-cell counts and add any number of
+   stripe entries. Each entry has direction, color, position, width, edge softness, opacity, reorder,
+   and delete controls. Entries later in the list blend over earlier entries. Use only vertical entries
+   for pinstripes, only horizontal entries for bands, or both for plaid.
+5. Optionally assign a **Pattern Sprite**. Choose Whole Fabric, Inside Stripes, or Outside Stripes;
+   align it to warp, weft, or either diagonal; then set tiling, aspect, rotation, and X/Y offset. Enable
+   Use Sprite Color for authored RGB motifs, or leave it disabled to tint a grayscale/alpha motif.
+   Pattern Height and Pattern Roughness coordinate the motif across material channels.
+6. Under **Thread-Aware Color Wear**, raise Color Fade and choose a faded color. Region scale, level,
+   breakup, and direction define broad wear. Follow Weave and Worn Fiber Contrast keep the fade tied
+   to thread structure; Worn Roughness Change and Worn Thread Flattening supply the physical response.
+
+The Sprite input is cropped to its Sprite rectangle even when it belongs to an atlas, and it does not
+require Read/Write import. Cloth settings, ordered stripe definitions, Sprite reference, cached output,
+and all optional-output choices persist with the Plugin layer and participate in Undo/Redo.
+
+#### Quilt, Embroidery, Perforation & Atlas Scatter generator
+
+This four-mode Plugin layer produces optional Albedo, Roughness, Metallic, Ambient Occlusion, and
+Normal Control, or grayscale coverage when run as a layer/group mask generator.
+
+- **Quilt** coordinates padded cells, recessed seams, broken stitches, AO, and thread color.
+- **Embroidery** fills an alpha/luminance Pattern Texture with directional thread ridges, breakup,
+  sheen, color, and raised Normal Control.
+- **Perforation** provides grid, staggered/hex, and organic punched-hole layouts with adjustable
+  radius, bevel, lip, recess, roughness, and AO. It shades holes but does not alter mesh topology.
+- **Atlas Scatter** samples deterministic cells from a regular rows/columns atlas and varies density,
+  position, size, rotation, tint, and material response. Pad cells to avoid bilinear bleed.
+
+#### Text generator
+
+Text has an optional Font asset, pixel Font Size, style, color, spacing, alignment, weight, outline,
+shadow, and placement. It can write Albedo, Normal Control, Roughness, and Metallic independently. In
+mask mode it writes only grayscale glyph coverage, which can reveal a coordinated Group material.
+
+Block mode positions text in UV space. **Follow Custom Ribbon** reads a white/gray ribbon from the
+composed Custom channel below the Plugin layer, extracts a smoothed centerline, and warps text along
+it. Create an editable Path/Ribbon below Text, make it write Custom, then edit the path and Regenerate.
+Guide Threshold, Ribbon Padding, and Fit To Ribbon Length control extraction. Avoid branched,
+self-overlapping, or sharply doubled-back guides.
+
+### Production filters
+
+Filters use the same persistent Plugin-layer workflow as generators. Place the Plugin layer directly
+above the content it should adjust, select the filter, choose **Source Channel** and **Output
+Channel**, then click **Generate**. Because the cached result is a normal layer, layer opacity is an
+additional non-destructive filter-strength control. Regenerate after changing the source composite.
+
+- **Levels & Curves** provides Input Black/White, Gamma, Output Black/White, a master curve and
+  Amount. Enable **Preserve Hue / Adjust Luminance** when grading Albedo or Emission without shifting
+  chroma. Disable it for independent RGB curve work or scalar maps.
+- **Normal & Height Toolkit** adjusts tangent-normal strength, reconstructs Z, flips the green/Y
+  convention, converts a grayscale Height or Normal Control source into a Normal channel, combines
+  a tiled/offset detail normal through Reoriented Normal Mapping (RNM), or scales Normal Control
+  around neutral gray. Height Sample Radius is measured in output pixels. Use a negative Height
+  Strength to reverse raised and recessed detail.
+- **Blur, Sharpen & Detail** includes Gaussian Blur, Directional Blur, edge-preserving Bilateral Blur,
+  Median cleanup, Unsharp Mask, and High Pass. Radius is in destination pixels; Direction uses
+  degrees. Bilateral Edge Preservation controls how strongly unlike neighboring values are rejected.
+- **Channel Operations** can Invert, Clamp/Remap, convert to Grayscale, shuffle RGBA/luminance/constant
+  components, apply a three-stop Gradient Map, replace a color with tolerance and softness, or add
+  deterministic fractal Color Variation. Choosing different source and output channels is useful for
+  deriving a Roughness, Detail Mask, or Normal Control foundation from existing artwork.
+- **Morphology & Distance** performs UV-island-safe Dilate, Erode, Feather, Choke, Outline, Signed
+  Distance, Edge Detect, and Bevel Height. Radius and Softness are pixel distances. The filter uses
+  the Surface ID mesh map, so an expansion cannot bleed from one UV island into a nearby island.
+- **Stylization, Kuwahara & Quantization** provides edge-preserving 4/8/12-sector Kuwahara abstraction
+  with tile-local summed-area acceleration, RGB or luminance banding, a 2-8 color palette, deterministic
+  ordered dithering, and toon bands with texture-space edge ink. It supports grayscale Mask mode.
+
+For repeatable results, keep source and output on separate Plugin layers when a filter feeds another
+filter. A filter reads the composite below its own stack position; it never reads its previous cache,
+so regeneration does not accumulate damage.
+
 --------------------------------------------------------------------------------
 
 ## Masks
 
-Each Paint, Fill, Path, or Group layer can own zero or one editable grayscale mask. White reveals the layer, black hides it, and gray produces partial contribution. There are no document-wide artist masks and no separate Masks properties panel.
+Each Paint, Fill, Path, Plugin, or Group layer can own zero or one editable grayscale mask. White reveals the layer, black hides it, and gray produces partial contribution. There are no document-wide artist masks and no separate Masks properties panel.
 
 ### Add, select, and remove a mask
 
@@ -1087,6 +1274,26 @@ Mask strokes use the same target projection, brush shape, stamp, pressure, stabi
 
 The active layer exposes only a scalar **Mask Value** from 0 (black) to 1 (white). Mask Mode has no material-channel selector and cannot use a Texture, Sprite, OverlayData source, or layer-channel overlay. Brush shape and stamp alpha still control the stroke footprint, but the deposited value is always grayscale. The Mask Value survives layer duplication, document save/reopen, and crash recovery.
 
+### Filter or generate a mask
+
+While the mask thumbnail is selected, expand **Active Layer > Mask Filter / Generator**. The list
+contains only plugins that explicitly support a grayscale Layer Mask target. Choose one, adjust its
+parameters, and click **Generate Mask**. Material source/output channel selectors are hidden because
+the input and output are the selected mask itself.
+
+The host snapshots the current mask, generates a replacement in private memory, clips it to the
+surface, forces it to opaque grayscale, and swaps the completed result into every logical target as
+one Undo step. Canceling or encountering an error leaves the previous mask untouched. The selected
+plugin, version, parameters and generated pixels survive Save/reopen and recovery. You can paint,
+fill polygons, or fill UV islands over the result afterward.
+
+The mask-compatible built-ins are **Levels & Curves**, **Blur, Sharpen & Detail**, **Channel
+Operations**, and **Morphology & Distance**. A typical smart-mask workflow is: create a black or
+white mask, use Morphology & Distance to establish or widen a boundary, use Blur/Sharpen/Detail to
+soften or clean it, use Levels & Curves to restore contrast, then hand-paint exceptions. Normal &
+Height Toolkit is intentionally unavailable because a tangent-space normal operation has no valid
+grayscale-mask interpretation.
+
 ### Fill a polygon or UV island
 
 **Fill Polygon** and **Fill UV Island** are paint operations under **Stroke & Projection**. Arm one, then click in the 2D or 3D view. The command writes the current material paint color to a regular Paint layer, or the current Mask Value while in Mask Mode. Press `Esc` to cancel the armed fill tool.
@@ -1106,7 +1313,11 @@ The editable base mask and its effects are document-owned data. They are capture
 
 ### Geometry clipping
 
-Overlay Painter also applies structural geometry clipping automatically. Each contacted slot and UV island receives a per-texel geometry mask so a rectangular texture update does not leak into unrelated polygons.
+For projected 3D painting, Overlay Painter applies structural geometry clipping automatically. Each
+contacted slot and UV island receives a per-texel geometry mask so a rectangular texture update does
+not leak into unrelated polygons. Polygon Fill and UV Island Fill use the same geometry ownership in
+both views. Ordinary 2D brush strokes paint directly in normalized UV space and do not use this
+projection mask.
 
 This automatic clipping is separate from artist-created masks.
 
@@ -1114,16 +1325,18 @@ This automatic clipping is separate from artist-created masks.
 
 ## Surface Paths
 
-Paths are editable curves anchored to the reconstructed surface.
+Paths are editable curves authored either directly on the texture plane or on the reconstructed
+surface.
 
 ### Create a Path layer
 
 1. Click **+ Path** or **Create Spline Layer**.
 2. Select the Path tool.
-3. `Shift+Click` the model or UV canvas to append points.
-4. Adjust points and controls.
-5. Choose the path mode, configure the source on each Layer Channel, then choose the Paint / Preview Channel, brush, and projection settings.
-6. Apply the path.
+3. In Properties, choose **Spline Space: 2D Texture** or **3D Surface**.
+4. `Shift+Click` the matching UV canvas or Scene view to append points.
+5. Adjust points and controls.
+6. Choose the path mode, configure the source on each Layer Channel, then choose the Paint / Preview Channel, brush, and projection settings.
+7. Apply the path.
 
 ### Insert and edit points
 
@@ -1135,14 +1348,36 @@ Clicking too far from the visible curve does not insert into it.
 
 ### 3D and 2D path domains
 
-A path authored in the Scene view follows the 3D surface and resolves UVs when rasterized. This allows continuity across UV seams and UDIM members.
+Set **Spline Space** in the selected Path layer's Properties to either **2D Texture** or **3D Surface**.
+A path has one authoritative editing and raster domain; adding or editing from the other view does
+not silently convert it. New paths default to 3D Surface.
 
-A path authored or moved in the UV canvas uses the 2D UV domain. The 2D preview splits world-space paths at UV discontinuities instead of drawing a misleading line across the texture.
+A 3D Surface path is authored in the Scene view, follows the reconstructed surface, and resolves UVs
+when rasterized. This allows continuity across UV seams and UDIM members. Its surface corridor
+prefers connected polygon strips, helping a long segment remain on a strap or belt instead of
+jumping to nearby disconnected geometry.
+
+A 2D Texture path is authored and rasterized directly in normalized UV space. This avoids model
+overlap ambiguity and keeps its pixels, curve, and effects entirely texture-domain. Selecting one of
+its points in the 2D canvas also exposes that point's complete adjustment setup in the Scene view as
+a positioning aid; Overlay Painter does not draw the complete 2D spline in 3D or convert it to a 3D
+path.
 
 Choose the authoring domain based on intent:
 
 - Use 3D for seams, straps, scars, and lines that should follow the object across UV boundaries.
 - Use 2D for artwork whose exact texture-space route is authoritative.
+
+For a selected point in either editing view:
+
+- The orange anchor handle moves the point.
+- Green incoming and outgoing handles edit the Bezier curve.
+- The blue perpendicular handle changes that point's width percentage.
+- Right-click the point for **Straight Handles**, **Delete Point**, and width presets.
+
+After moving an anchor or adjusting a green or blue handle, the point remains selected so several
+changes can be made without reselecting it. Deleting a selected point selects a surviving neighbor;
+deleting the final point clears the selection safely.
 
 ### Path modes
 
@@ -1169,7 +1404,9 @@ Path points can store:
 - Surface offset.
 - Tangent mode.
 
-Tangent modes include Corner, Smooth, Broken, and Custom. Paths also support insert, delete, multi-select, copy, paste, reverse, mirroring, and radial symmetry.
+Tangent modes include Corner, Smooth, Broken, Custom, and straight/linear handles. Paths also support
+insert, delete, multi-select, copy, paste, reverse, mirroring, and radial symmetry. The point width
+value and blue handle both edit the same percentage, from a narrow local section to a widened one.
 
 ### Paths across seams and UDIM tiles
 
@@ -1199,13 +1436,13 @@ A preset stores:
 - Follow Stroke.
 - Random Rotation.
 - Random Size Variation, including independent shrink and grow percentages.
-- Splatter and Splatter Distance.
+- Splatter, Splatter Distance, and Random Strength.
 - Fade, Taper, and their shared world-space length.
 - Search tags.
 
 Use clear names and comma-separated tags such as `skin, pores, subtle` or `cloth, stitch, trim`.
 
-Selecting a preset copies its paint settings into the current editable session brush. Adjusting brush controls therefore does not silently change the shared asset. Use **Update Brush Asset with Current Settings...** to write the current shape, stamp source, size, hardness, flow, spacing, rotation, blend, mirror, follow, randomization, splatter, fade, taper, and evolution length settings back to the selected preset. Overlay Painter shows a confirmation warning before the asset is changed; shelf tags remain unchanged.
+Selecting a preset copies its paint settings into the current editable session brush. Adjusting brush controls therefore does not silently change the shared asset. Use **Update Brush Asset with Current Settings...** to write the current shape, stamp source, size, hardness, flow, spacing, rotation, blend, mirror, follow, randomization, Splatter Distance, Random Strength, fade, taper, and evolution length settings back to the selected preset. Overlay Painter shows a confirmation warning before the asset is changed; shelf tags remain unchanged.
 
 Assign the active **Brush Library** and use **Save Current Settings to New Brush...** to name and create a new preset from the session settings. The new `.asset` is added to that library, saved in the same project folder as the library asset, selected in the Asset Shelf, and revealed in the Project window. Overlay Painter reports the complete saved path when creation finishes. The active library is retained with the document's editor state and is also passed into the full Brush Library editor.
 
@@ -1274,10 +1511,14 @@ The document stores:
 - Editable base pixels.
 - Layer pixels and metadata.
 - Per-channel source type, texture or `Sprite` reference, overlay reference, color, inversion, Normal convention, and Fill X/Y tiling, X/Y offset, rotation, and shared-transform state.
-- Per-channel Enabled, Lock Painting, Channel Paint Strength, Channel Opacity, and Channel Blend settings.
+- Per-channel Enabled, Lock Painting, Channel Paint Strength, Channel Opacity, Channel Blend, and
+  Normal Control Height Strength settings.
 - Editable mask pixels, black/white base value, grayscale Mask Value, and mask-only effects.
+- Ordered layer effects, target channels, amounts or levels, curves, textures, and transforms,
+  including channel-specific Image Adjustments.
 - Paths and point dynamics.
-- Brush and source settings.
+- Brush and source settings, including Splatter Distance and Random Strength for Paint and Path
+  snapshots.
 - Plugin provenance.
 - Workspace state.
 - Stable surface identities and source fingerprints.
@@ -1342,6 +1583,10 @@ Session defaults and optional templates provide:
 - Albedo padding.
 - Optional Addressables registration.
 
+**Mark Addressable** is compiled and shown only when `UMA_ADDRESSABLES` is defined and the optional
+Addressables integration is available. Overlay Painter's core assemblies contain no unconditional
+Addressables references, so projects without Addressables continue to compile and export normally.
+
 The `UMAMaterial` descriptor, not the template, controls physical channel order, component packing, PNG or EXR encoding, color space, normal convention, and importer settings.
 
 Use **Save Overrides as Template** only when output-folder and policy choices should be reused. A template is not required for ordinary export.
@@ -1354,6 +1599,19 @@ Use **Save Overrides as Template** only when output-folder and policy choices sh
   exports visible authored layers and groups as a recipe-ready alpha-bearing overlay. Normal Control
   is converted to a flat-relative normal contribution, and its gradient footprint participates in
   the generated coverage mask.
+
+For a generated-character session, the reconstructed source comes from the character's original
+slot and overlay texture inputs at their native working resolution. Export never reads the UMA
+generated atlas as source imagery; this avoids baking atlas resizing, compression, or runtime merge
+artifacts back into the new textures.
+
+`UseExistingTextures` UMA materials are the non-composited exception. Because they have no native
+overlay composite to reconstruct, Overlay Painter reads each declared channel from the material
+currently assigned to the generated character and identifies it as **UMAMaterial Source Textures
+(Read Only)**. A warning is shown when the session opens. These textures are used only as the base
+for preview and flattened export; painting does not modify the material's source texture assets.
+When the UMA material uses a second render pass, Overlay Painter imports only the first-pass slot
+geometry and reports that the duplicate second-pass submesh was skipped.
 
 Normal Control never appears as a standalone physical texture in either mode. Its only export result
 is the change it produces in a material-declared Normal output.
@@ -1378,6 +1636,10 @@ Examples include:
 - URP `_MetallicGlossMap` components.
 - Roughness converted back to Smoothness where required.
 - Output normal green convention.
+
+Normal export reconstructs ordinary tangent-space RGB from Overlay Painter's logical vector data,
+then applies the material descriptor's OpenGL or DirectX convention at the physical output boundary.
+It does not copy Unity's imported or platform-packed normal-map bytes into the exported image.
 
 Do not manually swap channels after export unless the material contract is also changed.
 

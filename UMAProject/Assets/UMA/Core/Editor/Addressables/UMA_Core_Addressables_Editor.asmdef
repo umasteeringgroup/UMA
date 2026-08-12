@@ -1,0 +1,26 @@
+{
+    "name": "UMA_Core_Addressables_Editor",
+    "rootNamespace": "",
+    "references": [
+        "UMA_Core",
+        "UMA_Core_Addressables",
+        "UMA_Core_Editor",
+        "Addressable_Editor",
+        "Unity.Addressables.Editor",
+        "Unity.Addressables",
+        "Unity.ResourceManager"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "UMA_ADDRESSABLES"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

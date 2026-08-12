@@ -33,7 +33,7 @@ namespace UMA.TexturePaint.Editor
 
     public sealed class TexturePaintReleaseGate : EditorWindow
     {
-        private const string Root = "Assets/UMA/OverlayPainter/";
+        private static string Root => UMAPathUtility.ResolveInstallAssetPath("OverlayPainter") + "/";
         private TexturePaintReleaseGateReport report;
         private Vector2 scroll;
 

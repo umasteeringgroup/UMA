@@ -30,6 +30,28 @@ namespace UMA.Editors
 				Debug.LogError("Failed to create RaceData asset.");
 			}
 		}
+
+		/// <summary>
+		/// Replaces all thumbnail data on a race with a new, empty container.
+		/// </summary>
+		public static bool ClearRaceThumbnails(RaceData raceData, bool recordUndo = true)
+		{
+			if (raceData == null)
+			{
+				return false;
+			}
+
+			if (recordUndo)
+			{
+				Undo.RecordObject(raceData, "Clear Race Thumbnails");
+			}
+
+			raceData.raceThumbnails = new RaceData.RaceThumbnails();
+			EditorUtility.SetDirty(raceData);
+			AssetDatabase.SaveAssetIfDirty(raceData);
+			return true;
+		}
+
 		public static bool showRaceGeneration = false;
 		public static bool showUtilities = false;
 		protected RaceData race;
@@ -1479,6 +1501,23 @@ namespace UMA.Editors
 			if (EditorGUI.EndChangeCheck())
 			{
 				serializedObject.ApplyModifiedProperties();
+			}
+
+			if (GUILayout.Button("Clear Race Thumbnails"))
+			{
+				bool confirmed = EditorUtility.DisplayDialog(
+					"Clear Race Thumbnails",
+					$"Clear the Full Thumb, Face Thumb, and every Wardrobe Slot Thumb from '{race.name}'?\n\n" +
+					"The Race Thumbnails data will be replaced with a new empty container. This action can be undone.",
+					"Clear Thumbnails",
+					"Cancel");
+
+				if (confirmed)
+				{
+					serializedObject.ApplyModifiedProperties();
+					ClearRaceThumbnails(race);
+					serializedObject.Update();
+				}
 			}
 			return false;
 		}

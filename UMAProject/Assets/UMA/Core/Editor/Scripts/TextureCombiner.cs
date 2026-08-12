@@ -34,7 +34,13 @@ namespace UMA
         public RenderTexture textureCombined => _textureCombined;
         public TextureCombiner(string shaderName)
         {
-            textureComputeShader = Resources.Load<ComputeShader>(shaderName);
+            textureComputeShader =
+                UMAPathUtility.LoadInstallAsset<ComputeShader>(
+                    "InternalDataStore/InGame/Resources/" + shaderName +
+                    ".compute");
+            if (textureComputeShader == null)
+                textureComputeShader =
+                    Resources.Load<ComputeShader>(shaderName);
             if (textureComputeShader == null)
             {
                 throw new System.Exception($"Compute shader '{shaderName}' not found");

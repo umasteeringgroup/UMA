@@ -335,38 +335,48 @@ namespace UMA.Editors
 
 			EditorGUILayout.BeginVertical(EditorStyles.helpBox);
 			RefreshSharedColorTableCacheIfNeeded(false);
+			string sharedColorName = property.FindPropertyRelative("name")?.stringValue ??
+				currentOverlayColorData?.name ?? string.Empty;
+			GetVisibleSharedColorTables(sharedColorName, dca != null,
+				out SharedColorTable[] visibleSharedColorTables,
+				out GUIContent[] visibleSharedColorTableOptions);
 
-			if (cachedSharedColorTables.Length == 0)
+			if (visibleSharedColorTables.Length == 0)
 			{
-				EditorGUILayout.HelpBox("No SharedColorTable assets were found in the project.", MessageType.Info);
+				string message = cachedSharedColorTables.Length == 0
+					? "No SharedColorTable assets were found in the project."
+					: $"No SharedColorTable assets match shared color '{sharedColorName}', and no generic tables were found.";
+				EditorGUILayout.HelpBox(message, MessageType.Info);
 				EditorGUILayout.EndVertical();
 				return false;
 			}
 
 			string propertyKey = GetPropertyStateKey(property);
 			selectedSharedColorTablesByProperty.TryGetValue(propertyKey, out SharedColorTable selectedTable);
-			int selectedTableIndex = GetSharedColorTableIndex(selectedTable);
+			int selectedTableIndex = GetSharedColorTableIndex(selectedTable, visibleSharedColorTables);
 			if (selectedTableIndex < 0)
 			{
 				selectedTableIndex = 0;
-				selectedSharedColorTablesByProperty[propertyKey] = cachedSharedColorTables[selectedTableIndex];
+				selectedSharedColorTablesByProperty[propertyKey] = visibleSharedColorTables[selectedTableIndex];
 			}
 
 			GUILayout.BeginHorizontal();
 			EditorGUI.BeginChangeCheck();
-			int newSelectedTableIndex = EditorGUILayout.Popup(new GUIContent("Shared Color Table"), selectedTableIndex, cachedSharedColorTableOptions);
+			int newSelectedTableIndex = EditorGUILayout.Popup(new GUIContent("Shared Color Table"),
+				selectedTableIndex, visibleSharedColorTableOptions);
 			if (EditorGUI.EndChangeCheck())
 			{
 				selectedTableIndex = newSelectedTableIndex;
-				selectedSharedColorTablesByProperty[propertyKey] = cachedSharedColorTables[selectedTableIndex];
+				selectedSharedColorTablesByProperty[propertyKey] = visibleSharedColorTables[selectedTableIndex];
 			}
 			if (GUILayout.Button("Inspect", EditorStyles.miniButton, GUILayout.Width(64)))
 			{
-				EditorApplication.delayCall += () => InspectorUtlity.InspectTarget(cachedSharedColorTables[selectedTableIndex]);
+				SharedColorTable tableToInspect = visibleSharedColorTables[selectedTableIndex];
+				EditorApplication.delayCall += () => InspectorUtlity.InspectTarget(tableToInspect);
 			}
 			GUILayout.EndHorizontal();
 
-			selectedTable = cachedSharedColorTables[selectedTableIndex];
+			selectedTable = visibleSharedColorTables[selectedTableIndex];
 			if (selectedTable == null || selectedTable.colors == null || selectedTable.colors.Length == 0)
 			{
 				EditorGUILayout.HelpBox("The selected SharedColorTable has no shared colors.", MessageType.Info);
@@ -480,6 +490,38 @@ namespace UMA.Editors
 			nextSharedColorTableRefreshTime = EditorApplication.timeSinceStartup + SharedColorTableCacheSeconds;
 		}
 
+		private static void GetVisibleSharedColorTables(string sharedColorName, bool filterBySharedColorName,
+			out SharedColorTable[] visibleTables, out GUIContent[] visibleOptions)
+		{
+			if (!filterBySharedColorName)
+			{
+				visibleTables = cachedSharedColorTables;
+				visibleOptions = cachedSharedColorTableOptions;
+				return;
+			}
+
+			var tables = new List<SharedColorTable>();
+			var options = new List<GUIContent>();
+			for (int tableIndex = 0; tableIndex < cachedSharedColorTables.Length; tableIndex++)
+			{
+				SharedColorTable table = cachedSharedColorTables[tableIndex];
+				if (!IsSharedColorTableCompatible(table, sharedColorName)) continue;
+				tables.Add(table);
+				options.Add(cachedSharedColorTableOptions[tableIndex]);
+			}
+			visibleTables = tables.ToArray();
+			visibleOptions = options.ToArray();
+		}
+
+		internal static bool IsSharedColorTableCompatible(SharedColorTable table, string sharedColorName)
+		{
+			if (table == null) return false;
+			string tableSharedColorName = table.sharedColorName;
+			if (string.IsNullOrWhiteSpace(tableSharedColorName)) return true;
+			return string.Equals(tableSharedColorName, sharedColorName ?? string.Empty,
+				StringComparison.Ordinal);
+		}
+
 		private static int CompareSharedColorTables(SharedColorTable leftTable, SharedColorTable rightTable)
 		{
 			int nameComparison = string.Compare(GetSharedColorTableMenuName(leftTable), GetSharedColorTableMenuName(rightTable), StringComparison.OrdinalIgnoreCase);
@@ -491,11 +533,12 @@ namespace UMA.Editors
 			return string.Compare(AssetDatabase.GetAssetPath(leftTable), AssetDatabase.GetAssetPath(rightTable), StringComparison.OrdinalIgnoreCase);
 		}
 
-		private static int GetSharedColorTableIndex(SharedColorTable sharedColorTable)
+		private static int GetSharedColorTableIndex(SharedColorTable sharedColorTable,
+			SharedColorTable[] sharedColorTables)
 		{
-			for (int tableIndex = 0; tableIndex < cachedSharedColorTables.Length; tableIndex++)
+			for (int tableIndex = 0; tableIndex < sharedColorTables.Length; tableIndex++)
 			{
-				if (cachedSharedColorTables[tableIndex] == sharedColorTable)
+				if (sharedColorTables[tableIndex] == sharedColorTable)
 				{
 					return tableIndex;
 				}

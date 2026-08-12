@@ -455,6 +455,7 @@ namespace UMA.Editors
                 throw new InvalidOperationException("Created SlotDataAsset failed validation: " + string.Join("; ", reasons));
             }
 
+            slot.PrepareForAssetPath(assetPath, safeSlotName);
             AssetDatabase.CreateAsset(slot, assetPath);
             EditorUtility.SetDirty(slot);
 

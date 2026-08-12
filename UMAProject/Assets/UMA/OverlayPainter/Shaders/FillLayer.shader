@@ -78,7 +78,9 @@ Shader "Hidden/UMA/TexturePaint/FillGenerator"
                 float2 centered = uv - center;
                 float2 rotated = float2(centered.x * cosine - centered.y * sine,
                     centered.x * sine + centered.y * cosine);
-                return rotated * _Tiling + center + _Offset;
+                // Rotation is centered, but tiling retains the conventional uv * tiling phase.
+                // Scaling the centered coordinate shifts every even tiling value by half a tile.
+                return (rotated + center) * _Tiling + _Offset;
             }
 
             float3 TriplanarWeights(float3 normal)

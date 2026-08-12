@@ -119,7 +119,7 @@ public sealed class UMATaskItem : ScriptableObject
 
 public static class UMATaskListStorage
 {
-    public const string TaskFolder = "Assets/UMA/Tasks";
+    public const string TaskFolder = UMA.UMAPathUtility.TaskRoot;
 
     public static event Action TasksChanged;
 

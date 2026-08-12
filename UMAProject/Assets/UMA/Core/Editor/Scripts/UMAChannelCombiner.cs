@@ -41,7 +41,12 @@ namespace UMA
         public UMAChannelCombiner()
         {
             // Get the compute shader
-            textureComputeShader = Resources.Load<ComputeShader>("Shader/Combiner");
+            textureComputeShader =
+                UMAPathUtility.LoadInstallAsset<ComputeShader>(
+                    "InternalDataStore/InGame/Resources/Shader/Combiner.compute");
+            if (textureComputeShader == null)
+                textureComputeShader =
+                    Resources.Load<ComputeShader>("Shader/Combiner");
             kernel = textureComputeShader.FindKernel("Combiner");
 
             if (textureR == null)

@@ -98,6 +98,64 @@ namespace UMA.TexturePaint.Editor.Tests
         }
 
         [Test]
+        public void PathHeightStrengthDoesNotRescaleOtherNormalControlLayers()
+        {
+            TextureLayerCompositor compositor = new TextureLayerCompositor(
+                TexturePaintGpuTestFixture.LoadShader("LayerComposite.compute"));
+            set.compositor = compositor;
+            TexturePaintLayer paint = set.AddLayer("Paint Height");
+            TexturePaintLayer path = set.AddSplineLayer("Path Height");
+            EditableTextureTarget paintTarget = new EditableTextureTarget("Paint Height Control",
+                Size, Size, RenderTextureFormat.ARGBHalf, null, Color.clear);
+            EditableTextureTarget pathTarget = new EditableTextureTarget("Path Height Control",
+                Size, Size, RenderTextureFormat.ARGBHalf, null, Color.clear);
+            paint.channels[TexturePaintChannel.NormalControl] = paintTarget;
+            path.channels[TexturePaintChannel.NormalControl] = pathTarget;
+            TexturePaintLayerChannelSettings paintSettings = paint.GetChannelSettings(
+                TexturePaintChannel.NormalControl);
+            paintSettings.hasNormalControlStrength = true;
+            paintSettings.normalControlStrength = 2f;
+            TexturePaintLayerChannelSettings pathSettings = path.GetChannelSettings(
+                TexturePaintChannel.NormalControl);
+            pathSettings.hasNormalControlStrength = true;
+            pathSettings.normalControlStrength = 8f;
+            Color[] paintPixels = Solid(Color.clear);
+            Color[] pathPixels = Solid(Color.clear);
+            for (int y = 0; y < Size; y++)
+            {
+                paintPixels[y * Size + 4] = new Color(0f, 0f, 0f, 1f);
+                pathPixels[y * Size + 12] = new Color(0f, 0f, 0f, 1f);
+            }
+            Write(paintTarget.Front, paintPixels);
+            Write(pathTarget.Front, pathPixels);
+
+            try
+            {
+                set.BindPreviewTextures();
+                RenderTexture normal = set.GetVisibleTexture(TexturePaintChannel.Normal);
+                float paintSlopeBefore = Read(normal, 3, Size / 2).r;
+                float pathSlopeBefore = Read(normal, 11, Size / 2).r;
+
+                pathSettings.normalControlStrength = 3f;
+                set.BindPreviewTextures();
+                normal = set.GetVisibleTexture(TexturePaintChannel.Normal);
+                float paintSlopeAfter = Read(normal, 3, Size / 2).r;
+                float pathSlopeAfter = Read(normal, 11, Size / 2).r;
+
+                Assert.That(paintSlopeAfter, Is.EqualTo(paintSlopeBefore).Within(0.003f),
+                    "Changing the path Height Strength must not alter a different layer's slope.");
+                Assert.That(Mathf.Abs(pathSlopeAfter - 0.5f),
+                    Is.LessThan(Mathf.Abs(pathSlopeBefore - 0.5f) - 0.01f),
+                    "The selected path's generated slope should respond to its own Height Strength.");
+            }
+            finally
+            {
+                compositor.Dispose();
+                set.compositor = null;
+            }
+        }
+
+        [Test]
         public void DirtyNormalControlUpdateRepacksGeneratedSlopeHalo()
         {
             TextureChannelTarget normalTarget = set.GetChannel(TexturePaintChannel.Normal);

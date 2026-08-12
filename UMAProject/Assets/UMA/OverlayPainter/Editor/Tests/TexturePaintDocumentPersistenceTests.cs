@@ -11,14 +11,14 @@ namespace UMA.TexturePaint.Editor.Tests
 {
     public sealed class TexturePaintDocumentPersistenceTests
     {
-        private const string Folder = "Assets/UMA/OverlayPainter/GeneratedPersistenceTests";
+        private const string Folder = "Assets/UMAProjectData/Tests/OverlayPainter/GeneratedPersistenceTests";
         private string recoveryKey;
 
         [SetUp]
         public void SetUp()
         {
             AssetDatabase.DeleteAsset(Folder);
-            AssetDatabase.CreateFolder("Assets/UMA/OverlayPainter", "GeneratedPersistenceTests");
+            UMAPathUtility.EnsureAssetFolder(Folder);
             TexturePaintRecoveryStore.RecoveryFolderOverride = Folder + "/Recovery";
             recoveryKey = "test-" + Guid.NewGuid().ToString("N");
         }
@@ -301,15 +301,13 @@ namespace UMA.TexturePaint.Editor.Tests
             TexturePaintDocument source = TexturePaintDocumentStorage.CreateTransient(null);
             try
             {
-                Texture2D endpointTexture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
-                endpointTexture.name = "Ribbon Endpoint Texture";
-                AssetDatabase.CreateAsset(endpointTexture, Folder + "/Ribbon Endpoint Texture.asset");
-                Sprite endpointSprite = Sprite.Create(endpointTexture, new Rect(0f, 0f, 2f, 2f),
-                    new Vector2(0.5f, 0.5f));
-                endpointSprite.name = "Ribbon Endpoint Sprite";
-                AssetDatabase.AddObjectToAsset(endpointSprite, endpointTexture);
-                AssetDatabase.ImportAsset(Folder + "/Ribbon Endpoint Texture.asset",
-                    ImportAssetOptions.ForceSynchronousImport);
+                Sprite endpointSprite =
+                    CreateSpriteAsset(Folder + "/Ribbon Endpoint Texture.png");
+                Assert.That(endpointSprite, Is.Not.Null);
+                Texture2D endpointTexture = endpointSprite.texture;
+                Assert.That(endpointTexture, Is.Not.Null);
+                Assert.That(AssetDatabase.GetAssetPath(endpointTexture),
+                    Is.EqualTo(Folder + "/Ribbon Endpoint Texture.png"));
                 Texture2D overlayTexture2 = new Texture2D(2, 2, TextureFormat.RGBA32, false)
                 {
                     name = "Layer Effect Texture 2"
@@ -355,6 +353,7 @@ namespace UMA.TexturePaint.Editor.Tests
                     brushRandomSizeGrow = 0.44f,
                     brushSplatter = true,
                     brushSplatterDistance = 0.73f,
+                    brushRandomStrength = true,
                     brushFade = true,
                     brushTaper = true,
                     brushFadeTaperLength = 0.91f,
@@ -394,6 +393,7 @@ namespace UMA.TexturePaint.Editor.Tests
                     brushRandomSizeGrow = 0.52f,
                     brushSplatter = true,
                     brushSplatterDistance = 1.42f,
+                    brushRandomStrength = true,
                     brushFade = true,
                     brushTaper = true,
                     brushFadeTaperLength = 1.37f,
@@ -481,6 +481,39 @@ namespace UMA.TexturePaint.Editor.Tests
                     pluginParametersJson = "{\"amount\":0.75}",
                     proceduralGroupKey = "saved-path"
                 });
+                var pluginParameters = new TexturePaintPluginParameterSet();
+                pluginParameters.Get("amount", true).number = 0.75f;
+                pluginParameters.Get("texture", true).texture = endpointTexture;
+                pluginParameters.Get("sprite", true).sprite = endpointSprite;
+                pluginParameters.Get("curve", true).curve = new AnimationCurve(
+                    new Keyframe(0f, 0f), new Keyframe(0.5f, 0.8f), new Keyframe(1f, 1f));
+                pluginParameters.Stripes("stripes").Add(new TexturePaintStripeDefinition
+                {
+                    direction = TexturePaintStripeDirection.Horizontal,
+                    position = .35f,
+                    width = .12f,
+                    softness = .025f,
+                    opacity = .8f,
+                    color = new Color(.2f, .4f, .8f, 1f)
+                });
+                TexturePaintDocumentLayer maskedLayer = surface.layers[1];
+                maskedLayer.hasMask = true;
+                maskedLayer.maskPluginId = "com.uma.texturepaint.filter.levels-curves";
+                maskedLayer.maskPluginVersion = "1.0.0";
+                maskedLayer.maskPluginParameters = pluginParameters.Clone();
+                maskedLayer.maskPluginParametersJson = JsonUtility.ToJson(
+                    maskedLayer.maskPluginParameters);
+                maskedLayer.maskPluginStale = false;
+                surface.layers.Add(new TexturePaintDocumentLayer
+                {
+                    name = "Agify",
+                    kind = TexturePaintLayerKind.Plugin,
+                    pluginId = "com.uma.texturepaint.agify",
+                    pluginVersion = "1.0.0",
+                    pluginParameters = pluginParameters,
+                    pluginParametersJson = JsonUtility.ToJson(pluginParameters),
+                    pluginStale = false
+                });
                 source.surfaces.Add(surface);
 
                 string pathName = Folder + "/All Settings.asset";
@@ -501,6 +534,28 @@ namespace UMA.TexturePaint.Editor.Tests
                     saved.surfaces[0].layers[1].channels[0].GetSourceSettings());
                 Assert.That(saved.surfaces[0].layers[2].pluginParametersJson,
                     Is.EqualTo("{\"amount\":0.75}"));
+                Assert.That(saved.surfaces[0].layers[3].kind,
+                    Is.EqualTo(TexturePaintLayerKind.Plugin));
+                Assert.That(saved.surfaces[0].layers[3].pluginParameters.Float("amount"),
+                    Is.EqualTo(0.75f));
+                Assert.That(saved.surfaces[0].layers[3].pluginParameters.Texture("texture"),
+                    Is.SameAs(endpointTexture));
+                Assert.That(saved.surfaces[0].layers[3].pluginParameters.Sprite("sprite"),
+                    Is.SameAs(endpointSprite));
+                Assert.That(saved.surfaces[0].layers[3].pluginParameters.Curve("curve").Evaluate(0.5f),
+                    Is.EqualTo(0.8f).Within(0.001f));
+                Assert.That(saved.surfaces[0].layers[3].pluginParameters.Stripes("stripes"),
+                    Has.Count.EqualTo(1));
+                Assert.That(saved.surfaces[0].layers[3].pluginParameters.Stripes("stripes")[0].direction,
+                    Is.EqualTo(TexturePaintStripeDirection.Horizontal));
+                Assert.That(saved.surfaces[0].layers[3].pluginParameters.Stripes("stripes")[0].width,
+                    Is.EqualTo(.12f).Within(.0001f));
+                Assert.That(saved.surfaces[0].layers[3].pluginStale, Is.False);
+                Assert.That(saved.surfaces[0].layers[1].maskPluginId,
+                    Is.EqualTo("com.uma.texturepaint.filter.levels-curves"));
+                Assert.That(saved.surfaces[0].layers[1].maskPluginParameters.Curve("curve").Evaluate(0.5f),
+                    Is.EqualTo(0.8f).Within(0.001f));
+                Assert.That(saved.surfaces[0].layers[1].maskPluginStale, Is.False);
             }
             finally
             {
@@ -524,6 +579,9 @@ namespace UMA.TexturePaint.Editor.Tests
                     brushBlendMode = TexturePaintBlendMode.Multiply,
                     brushMirrorStroke = true,
                     brushAlignToStroke = true,
+                    brushSplatter = true,
+                    brushSplatterDistance = 1.25f,
+                    brushRandomStrength = true,
                     symmetryAxis = Vector3.forward
                 };
                 TexturePaintLayer layer = set.AddSplineLayer("Restored Ribbon");
@@ -538,6 +596,9 @@ namespace UMA.TexturePaint.Editor.Tests
                 Assert.That(transient.blendMode, Is.EqualTo(TexturePaintBlendMode.Multiply));
                 Assert.That(transient.mirrorStroke, Is.True);
                 Assert.That(transient.alignToStroke, Is.True);
+                Assert.That(transient.splatter, Is.True);
+                Assert.That(transient.splatterDistance, Is.EqualTo(1.25f));
+                Assert.That(transient.randomStrength, Is.True);
                 Assert.That(Field("radialSymmetryAxis").GetValue(stage), Is.EqualTo(Vector3.forward));
             }
             finally
@@ -562,6 +623,14 @@ namespace UMA.TexturePaint.Editor.Tests
             Assert.That((bool)changed.Invoke(null, new object[] { before, after }), Is.False,
                 "UV-space texture overlays should update through compositing without rerendering a ribbon.");
 
+            after.imageAdjustments.enabled = true;
+            after.imageAdjustments.saturation = 1.4f;
+            after.imageAdjustments.brightness = -0.2f;
+            after.imageAdjustments.contrast = 0.35f;
+            after.imageAdjustments.hue = 72f;
+            Assert.That((bool)changed.Invoke(null, new object[] { before, after }), Is.False,
+                "Image adjustments should update through compositing without rerendering a ribbon.");
+
             after.innerGlow.enabled = true;
             Assert.That((bool)changed.Invoke(null, new object[] { before, after }), Is.True,
                 "Ribbon-local effects still require world-space path reprojection.");
@@ -574,7 +643,7 @@ namespace UMA.TexturePaint.Editor.Tests
             {
                 effects.stroke, effects.innerShadow, effects.outerShadow, effects.innerGlow,
                 effects.outerGlow, effects.colorOverlay, effects.edgeFade, effects.bevelEdge,
-                effects.proceduralStitch, effects.textureOverlay
+                effects.proceduralStitch, effects.textureOverlay, effects.imageAdjustments
             };
             for (int i = 0; i < values.Length; i++)
             {
@@ -615,6 +684,10 @@ namespace UMA.TexturePaint.Editor.Tests
                 effect.textureOpacity1 = 0.15f + i * 0.05f;
                 effect.textureOpacity2 = 0.2f + i * 0.04f;
                 effect.secondaryBlendMode = TexturePaintBlendMode.Subtract;
+                effect.saturation = 0.5f + i * 0.1f;
+                effect.brightness = -0.4f + i * 0.06f;
+                effect.contrast = -0.3f + i * 0.05f;
+                effect.hue = -90f + i * 17f;
             }
             return effects;
         }

@@ -11,6 +11,40 @@ namespace UMA
 	/// </summary>
 	public static class CustomAssetUtility
 	{
+        private const string CreatedAssetsRoot = UMAPathUtility.ProjectDataRoot + "/CreatedAssets";
+
+        private static string GetWritableSelectionFolder()
+        {
+            string path = AssetDatabase.GetAssetPath(Selection.activeObject);
+            if (string.IsNullOrEmpty(path)) return "Assets";
+            if (File.Exists(path)) path = Path.GetDirectoryName(path)?.Replace('\\', '/');
+            if (UMAPathUtility.IsWritableProjectAssetPath(path)) return path;
+
+            UMAPathUtility.EnsureAssetFolder(CreatedAssetsRoot);
+            Debug.LogWarning(
+                $"The selected asset is in read-only package content. Creating the new UMA asset in '{CreatedAssetsRoot}'.");
+            return CreatedAssetsRoot;
+        }
+
+        private static string GetWritableAssetPath(string path)
+        {
+            string normalized = UMAPathUtility.Normalize(path);
+            if (Path.IsPathRooted(normalized))
+            {
+                string projectRoot = Path.GetDirectoryName(Application.dataPath)?.Replace('\\', '/');
+                if (!string.IsNullOrEmpty(projectRoot) &&
+                    normalized.StartsWith(projectRoot + "/", System.StringComparison.OrdinalIgnoreCase))
+                    normalized = normalized.Substring(projectRoot.Length + 1);
+            }
+
+            if (UMAPathUtility.IsWritableProjectAssetPath(normalized)) return normalized;
+
+            UMAPathUtility.EnsureAssetFolder(CreatedAssetsRoot);
+            string fileName = Path.GetFileName(normalized);
+            return CreatedAssetsRoot + "/" +
+                (string.IsNullOrEmpty(fileName) ? "New UMA Asset.asset" : fileName);
+        }
+
         public static void CreatePrefab<T>()
         {
             CreatePrefab(typeof(T).Name, typeof(T));
@@ -18,15 +52,7 @@ namespace UMA
 
         public static void CreatePrefab(string name, params System.Type[] types)
         {
-            string path = AssetDatabase.GetAssetPath(Selection.activeObject);
-            if (path == "")
-            {
-                path = "Assets";
-            }
-            else if (File.Exists(path))    
-            {
-                path = path.Replace("/" + Path.GetFileName(AssetDatabase.GetAssetPath(Selection.activeObject)), "");
-            }
+            string path = GetWritableSelectionFolder();
 
             string assetPathAndName = AssetDatabase.GenerateUniqueAssetPath(path + "/New " + name + ".prefab");
 
@@ -47,14 +73,14 @@ namespace UMA
 		public static GameObject ClonePrefab(GameObject other, string newName = "")
 		{
 			var name = newName != "" ? newName : other.name + " Copy";
-			string path = AssetDatabase.GetAssetPath(other);
-			if (path == "")
+			string sourcePath = AssetDatabase.GetAssetPath(other);
+			string path = string.IsNullOrEmpty(sourcePath)
+				? GetWritableSelectionFolder()
+				: Path.GetDirectoryName(sourcePath)?.Replace('\\', '/');
+			if (!UMAPathUtility.IsWritableProjectAssetPath(path))
 			{
-				path = "Assets";
-			}
-			else if (File.Exists(path))
-			{
-				path = path.Replace("/" + Path.GetFileName(AssetDatabase.GetAssetPath(other)), "");
+				UMAPathUtility.EnsureAssetFolder(CreatedAssetsRoot);
+				path = CreatedAssetsRoot;
 			}
 
 			string assetPathAndName = AssetDatabase.GenerateUniqueAssetPath(path + "/" + name + ".prefab");
@@ -71,12 +97,7 @@ namespace UMA
 
 		public static string UnityFriendlyPath(string path)
         {
-			if (path.ToLower().StartsWith("assets") == false)
-			{
-				int assetloc = path.ToLower().IndexOf("assets/");
-				path = path.Substring(assetloc);
-			}
-			return path;
+			return GetWritableAssetPath(path);
 		}
 
 		/// <summary>
@@ -107,7 +128,7 @@ namespace UMA
 			string assetPathAndName = "";
 			if (newAssetPath != "")
 			{
-				assetPathAndName = AssetDatabase.GenerateUniqueAssetPath(newAssetPath);
+				assetPathAndName = AssetDatabase.GenerateUniqueAssetPath(GetWritableAssetPath(newAssetPath));
 				//make sure the user hasn't send a path that includes the desired filename
 				var dir = Path.GetDirectoryName(assetPathAndName);
 				//make sure the directory exists
@@ -142,15 +163,7 @@ namespace UMA
         public static string GetAssetPathAndName<T>(string baseName, bool AddTypeToName) where T : ScriptableObject
 		{
 			string assetPathAndName;
-			var path = AssetDatabase.GetAssetPath(Selection.activeObject);
-			if (path == "")
-			{
-				path = "Assets";
-			}
-			else if (File.Exists(path)) // modified this line, folders can have extensions.
-			{
-				path = path.Replace("/" + Path.GetFileName(AssetDatabase.GetAssetPath(Selection.activeObject)), "");
-			}
+			var path = GetWritableSelectionFolder();
 
 			string assetName = baseName;
 

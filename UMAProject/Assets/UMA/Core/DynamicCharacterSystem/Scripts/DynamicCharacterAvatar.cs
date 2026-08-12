@@ -20,8 +20,7 @@ using UnityEngine.SceneManagement;
 using System.Linq;
 
 #if UMA_ADDRESSABLES
-using UnityEngine.ResourceManagement.AsyncOperations;
-using AsyncOp = UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<System.Collections.Generic.IList<UnityEngine.Object>>;
+using AsyncOp = UMA.UMAAddressableOperation;
 using System.Threading.Tasks;
 #endif
 
@@ -5208,7 +5207,7 @@ namespace UMA.CharacterSystem
         {
             try
             {
-                if (Op.Status == AsyncOperationStatus.Failed)
+                if (Op.Status == UMAAddressableOperationStatus.Failed)
                 {
                     string errorMessage = Op.OperationException != null ? Op.OperationException.Message : "Unknown Addressables error.";
                     Debug.LogError("LoadWhenReady failed - Async OP could not load bundles!" + errorMessage);
@@ -5272,7 +5271,7 @@ namespace UMA.CharacterSystem
                 }
                 else
                 {
-                    UnityEngine.AddressableAssets.Addressables.Release(Op);
+                    UMAAddressablesRuntimeBridge.Release(Op);
                 }
             }
         }
@@ -6855,7 +6854,7 @@ namespace UMA.CharacterSystem
 
                 op.Completed += (AsyncOp) =>
                 {
-                    if (AsyncOp.Status == UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationStatus.Succeeded)
+                    if (AsyncOp.Status == UMAAddressableOperationStatus.Succeeded)
                     {
                         Dirty(dnaDirtyCapture, textureDirtyCapture, meshDirtyCapture);
                     }

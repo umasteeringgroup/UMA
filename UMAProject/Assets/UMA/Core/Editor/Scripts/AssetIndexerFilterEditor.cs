@@ -13,7 +13,8 @@ namespace UMA
         {
             var window = GetWindow<AssetIndexerFilterEditor>();
 
-            Texture icon = AssetDatabase.LoadAssetAtPath<Texture>("Assets/UMA/InternalDataStore/UMA32.png");
+            Texture icon = AssetDatabase.LoadAssetAtPath<Texture>(
+                UMAPathUtility.ResolveInstallAssetPath("InternalDataStore/InGame/Resources/Uma32.png"));
             window.titleContent = new GUIContent(UmaAboutWindow.umaVersion + " Global Library Filters", icon);
             window.minSize = new Vector2(800, 420);
             window.maxSize = new Vector2(800, 420);

@@ -18,7 +18,7 @@ namespace UMA.TexturePaint.Editor.Tests
             {
                 previewMaterial = material,
                 channelPackShader = AssetDatabase.LoadAssetAtPath<ComputeShader>(
-                    "Assets/UMA/OverlayPainter/Shaders/ChannelPack.compute")
+                    UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/ChannelPack.compute"))
             };
             TexturePhysicalChannelGroup group = new TexturePhysicalChannelGroup
             {

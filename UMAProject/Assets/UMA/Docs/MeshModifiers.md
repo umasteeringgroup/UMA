@@ -4,6 +4,8 @@ Mesh Modifiers store repeatable changes to slot vertices. They can correct cloth
 
 Use this guide for the complete Mesh Modifier workflow. For brush sculpting controls, masks, AutoSculpt, and saving sculpts, see [MeshModifierSculpting.md](MeshModifierSculpting.md).
 
+The `Assets > UMA > Create DNA for selected Modifiers` batch command is documented in [Project Asset Batch Utilities](AssetMenuBatchUtilities.md).
+
 ## When to Use a Mesh Modifier
 
 Mesh Modifiers are useful when:

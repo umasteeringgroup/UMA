@@ -11,6 +11,14 @@ namespace UMA
         // Start is called before the first frame update
         static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
         {
+            if (ContainsSettingsAsset(importedAssets) ||
+                ContainsSettingsAsset(deletedAssets) ||
+                ContainsSettingsAsset(movedAssets) ||
+                ContainsSettingsAsset(movedFromAssetPaths))
+            {
+                UMASettings.InvalidateSettingsCache();
+            }
+
             string UMAVER = "UMA " + UmaAboutWindow.umaVersion;
             if (BuildPipeline.isBuildingPlayer || UnityEditorInternal.InternalEditorUtility.inBatchMode || Application.isPlaying)
             {
@@ -85,6 +93,15 @@ namespace UMA
                         break;
                 } */
             }
+        }
+
+        private static bool ContainsSettingsAsset(string[] paths)
+        {
+            if (paths == null) return false;
+            for (int i = 0; i < paths.Length; i++)
+                if (UMASettings.IsSettingsAssetPath(paths[i]))
+                    return true;
+            return false;
         }
         public static NamedBuildTarget CurrentNamedBuildTarget
         {

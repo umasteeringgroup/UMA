@@ -10,6 +10,7 @@ Related docs:
 - [OverlayDataAsset.md](OverlayDataAsset.md) for overlay asset structure.
 - [MeshHideAssets.md](MeshHideAssets.md) for triangle-level mesh hiding.
 - [UMAAssetIndexer.md](UMAAssetIndexer.md) for indexing and asset lookup.
+- [Examine Wearables](ExamineWearables.md) for filtering, assigning, validating, and batch-editing wardrobe recipes.
 
 --------------------------------------------------------------------------------
 

@@ -218,6 +218,8 @@ namespace UMA.TexturePaint.Tests
             TexturePaintLayer path = set.AddSplineLayer("Path");
 
             Assert.That(path.splineSettings.pathMode, Is.EqualTo(TexturePaintPathMode.Ribbon));
+            Assert.That(path.spline.worldSpace, Is.True,
+                "New paths should start in the Scene-view authoring domain until the user selects 2D in Properties.");
         }
 
         [Test]
@@ -370,6 +372,42 @@ namespace UMA.TexturePaint.Tests
             Assert.That(copy.Remove(firstCopy.id), Is.True);
             Assert.That(copy.Stack.Exists(effect => effect.id == first.id), Is.False);
             Assert.That(source.Stack.Exists(effect => effect.id == first.id), Is.True);
+        }
+
+        [Test]
+        public void ImageAdjustmentsCloneAndNormalizeAllChannelSpecificSettings()
+        {
+            TexturePaintLayerEffects source = new TexturePaintLayerEffects();
+            TexturePaintLayerEffectSettings adjustment = source.imageAdjustments;
+            adjustment.enabled = true;
+            adjustment.channel = TexturePaintChannel.Albedo;
+            adjustment.saturation = 1.65f;
+            adjustment.brightness = -0.24f;
+            adjustment.contrast = 0.38f;
+            adjustment.hue = 127f;
+            adjustment.level = 0.72f;
+
+            TexturePaintLayerEffects copy = source.Clone();
+            TexturePaintLayerEffectSettings cloned = copy.imageAdjustments;
+
+            Assert.That(cloned, Is.Not.SameAs(adjustment));
+            Assert.That(cloned.kind, Is.EqualTo(TexturePaintLayerEffectKind.ImageAdjustments));
+            Assert.That(cloned.channel, Is.EqualTo(TexturePaintChannel.Albedo));
+            Assert.That(cloned.saturation, Is.EqualTo(1.65f));
+            Assert.That(cloned.brightness, Is.EqualTo(-0.24f));
+            Assert.That(cloned.contrast, Is.EqualTo(0.38f));
+            Assert.That(cloned.hue, Is.EqualTo(127f));
+            Assert.That(cloned.level, Is.EqualTo(0.72f));
+
+            cloned.saturation = 5f;
+            cloned.brightness = -3f;
+            cloned.contrast = 4f;
+            cloned.hue = 720f;
+            copy.Normalize();
+            Assert.That(cloned.saturation, Is.EqualTo(2f));
+            Assert.That(cloned.brightness, Is.EqualTo(-1f));
+            Assert.That(cloned.contrast, Is.EqualTo(1f));
+            Assert.That(cloned.hue, Is.EqualTo(180f));
         }
 
         [Test]

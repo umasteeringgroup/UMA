@@ -1,11 +1,6 @@
 #if UNITY_2021_3_OR_NEWER
 #define UMA_MESHAPI_2021
 #endif
-#if UNITY_WEBGL
-#undef UMA_UNSAFE
-#else
-#define UMA_UNSAFE
-#endif
 using System;
 using System.Buffers;
 using System.Collections;
@@ -13,7 +8,9 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+#if UMA_BURSTCOMPILE
 using Unity.Burst;
+#endif
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
@@ -294,7 +291,9 @@ namespace UMA
         private struct UV23 { public Vector2 uv2; public Vector2 uv3; }
 
 #if UMA_MESHAPI_2021
+#if UMA_BURSTCOMPILE
         [BurstCompile]
+#endif
         private struct ApplyUVTransformsJob : IJobParallelFor
         {
             public NativeArray<ColUV01> Vertices;
@@ -365,7 +364,9 @@ namespace UMA
             public int index2;
         }
 
+    #if UMA_BURSTCOMPILE
         [BurstCompile]
+    #endif
         private struct BuildVertexDeltaRecordsJob :
             IJobParallelFor
         {
@@ -384,7 +385,9 @@ namespace UMA
             }
         }
 
+    #if UMA_BURSTCOMPILE
         [BurstCompile]
+    #endif
         private struct CompactVertexDeltaRecordsJob : IJob
         {
             public NativeArray<VertexDeltaRecord> Records;
@@ -446,7 +449,9 @@ namespace UMA
             }
         }
 
+    #if UMA_BURSTCOMPILE
         [BurstCompile]
+    #endif
         private struct ApplyVertexDeltasJob :
             IJobParallelForDefer
         {
@@ -460,7 +465,9 @@ namespace UMA
             }
         }
 
+    #if UMA_BURSTCOMPILE
         [BurstCompile]
+    #endif
         private struct RecalculateModifiedSourcesJob :
             IJobParallelFor
         {
@@ -1816,7 +1823,7 @@ namespace UMA
                     }
                     sw.Stop(); Ticks_BuildBoneWeights += sw.ElapsedTicks;
                     sw.Restart();
-#if UMA_UNSAFE
+#if UMA_BURSTCOMPILE && !UNITY_WEBGL
                     float expand = (ci.slotData != null && ci.slotData.expandAlongNormal != 0) ? ci.slotData.expandAlongNormal / 1000000f : 0f;
                     FastCopyPositionsUnsafe(vPos, vertexOffset, src.vertices, src.normals, srcCount, expand);
 #else
@@ -1829,7 +1836,7 @@ namespace UMA
                     if (hasNormals || hasTangents)
                     {
                         sw.Restart();
-#if UMA_UNSAFE
+#if UMA_BURSTCOMPILE && !UNITY_WEBGL
                         PackNormTanUnsafe(vNT, vertexOffset, src.normals, src.tangents, srcCount, hasNormals, hasTangents);
 #else
                         for (int i = 0; i < srcCount; i++) { var nt = default(NormTan); nt.normal = (hasNormals && src.normals != null && src.normals.Length == srcCount) ? src.normals[i] : Vector3.zero; nt.tangent = (hasTangents && src.tangents != null && src.tangents.Length == srcCount) ? src.tangents[i] : BuildFallbackTangent(nt.normal, 1f); vNT[vertexOffset + i] = nt; }
@@ -1841,7 +1848,7 @@ namespace UMA
                     if (hasColors32 || hasUV || hasUV2)
                     {
                         sw.Restart();
-#if UMA_UNSAFE
+#if UMA_BURSTCOMPILE && !UNITY_WEBGL
                         PackColUV01Unsafe(vC01, vertexOffset, src.colors32, src.uv, src.uv2, srcCount, hasColors32, hasUV, hasUV2);
 #else
                         for (int i = 0; i < srcCount; i++) { var c01 = default(ColUV01); c01.color = (hasColors32 && src.colors32 != null && src.colors32.Length == srcCount) ? src.colors32[i] : (Color32)Color.white; c01.uv0 = (hasUV && src.uv != null && src.uv.Length >= srcCount) ? src.uv[i] : Vector2.zero; c01.uv1 = (hasUV2 && src.uv2 != null && src.uv2.Length >= srcCount) ? src.uv2[i] : Vector2.zero; vC01[vertexOffset + i] = c01; }
@@ -1852,7 +1859,7 @@ namespace UMA
                     if (hasUV3 || hasUV4)
                     {
                         sw.Restart();
-#if UMA_UNSAFE
+#if UMA_BURSTCOMPILE && !UNITY_WEBGL
                         PackUV23Unsafe(vUV23, vertexOffset, src.uv3, src.uv4, srcCount, hasUV3, hasUV4);
 #else
                         for (int i = 0; i < srcCount; i++) { var uv23 = default(UV23); uv23.uv2 = (hasUV3 && src.uv3 != null && src.uv3.Length >= srcCount) ? src.uv3[i] : Vector2.zero; uv23.uv3 = (hasUV4 && src.uv4 != null && src.uv4.Length >= srcCount) ? src.uv4[i] : Vector2.zero; vUV23[vertexOffset + i] = uv23; }
@@ -2466,7 +2473,7 @@ namespace UMA
                     Vector3[] dv = null;
                     Vector3[] dn = null;
                     Vector3[] dt = null;
-#if UMA_UNSAFE 
+#if UMA_BURSTCOMPILE && !UNITY_WEBGL
                     Vector3[] dnPooled = null;
                     Vector3[] dtPooled = null;
 #endif
@@ -2474,7 +2481,7 @@ namespace UMA
                     // Unity 6's span overload, where we can pass the exact vertex-count slice.
                     try
                     {
-#if UMA_UNSAFE 
+#if UMA_BURSTCOMPILE && !UNITY_WEBGL
                         dv = pool.Rent(vertexCount);
                         Array.Clear(dv, 0, vertexCount);
 
@@ -2556,7 +2563,7 @@ namespace UMA
                         // Unity requires (array == null) OR (array.Length == mesh.vertexCount).
                         if (!info.hasNormals) dn = null;
                         if (!info.hasTangents) dt = null;
-#if UMA_UNSAFE 
+#if UMA_BURSTCOMPILE && !UNITY_WEBGL
                         ReadOnlySpan<Vector3> verts = new ReadOnlySpan<Vector3>(dv, 0, vertexCount);
                         ReadOnlySpan<Vector3> norms = default;
                         ReadOnlySpan<Vector3> tangs = default;
@@ -2579,7 +2586,7 @@ namespace UMA
                     }
                     finally
                     {
-#if UMA_UNSAFE 
+#if UMA_BURSTCOMPILE && !UNITY_WEBGL
                         // Return only the pooled arrays (original references)
                         if (dv != null) pool.Return(dv, false);
                         if (dnPooled != null) pool.Return(dnPooled, false);
@@ -3364,7 +3371,7 @@ namespace UMA
         }
 
         #region Jobs / Helpers
-#if UMA_UNSAFE
+#if UMA_BURSTCOMPILE && !UNITY_WEBGL
         private static unsafe void FastCopyPositionsUnsafe(NativeArray<Vector3> dst, int dstStart, Vector3[] srcVertices, Vector3[] srcNormals, int count, float expandAlongNormal)
         {
             var dstPtr = (Vector3*)((byte*)NativeArrayUnsafeUtility.GetUnsafePtr(dst) + dstStart * UnsafeUtility.SizeOf<Vector3>());
@@ -3434,7 +3441,9 @@ namespace UMA
             return new Vector4(tangent.x, tangent.y, tangent.z, handedness);
         }
 
+    #if UMA_BURSTCOMPILE
         [BurstCompile]
+    #endif
         private struct CopyIndicesJobInt : IJobParallelFor
         {
             [ReadOnly] public NativeArray<int> Src;
@@ -3469,7 +3478,9 @@ namespace UMA
             }
         }
 
+    #if UMA_BURSTCOMPILE
         [BurstCompile]
+    #endif
         private struct CopyIndicesJobU16 : IJobParallelFor
         {
             [ReadOnly] public NativeArray<int> Src;
@@ -3505,7 +3516,9 @@ namespace UMA
             }
         }
 
+    #if UMA_BURSTCOMPILE
         [BurstCompile]
+    #endif
         private struct MaskedCopyIndicesJobInt : IJob
         {
             [ReadOnly] public NativeArray<int> Src;
@@ -3540,7 +3553,9 @@ namespace UMA
             }
         }
 
+    #if UMA_BURSTCOMPILE
         [BurstCompile]
+    #endif
         private struct MaskedCopyIndicesJobU16 : IJob
         {
             [ReadOnly] public NativeArray<int> Src;
@@ -4280,9 +4295,14 @@ namespace UMA
         {
             int boneHash = bonesHashes[index]; if (bonesCollection.TryGetValue(boneHash, out var entry)) { for (int i = 0; i < entry.Count; i++) { int res = entry[i]; if (CompareSkinningMatrices(bindPosesList[res], ref bindPoses[index])) return res; } int idx = bindPosesList.Count; entry.AddIndex(idx); bindPosesList.Add(bindPoses[index]); bonesList.Add(boneHash); return idx; } else { int idx = bindPosesList.Count; bonesCollection.Add(boneHash, new BoneIndexEntry { index = idx }); bindPosesList.Add(bindPoses[index]); bonesList.Add(boneHash); return idx; }
         }
-        [BurstCompile] private struct RemapAllBoneWeightsJob : IJobParallelFor { [NativeDisableParallelForRestriction] public NativeArray<BoneWeight1> Weights; [ReadOnly] public NativeArray<int> RemappedIndex; public void Execute(int i) { var bw = Weights[i]; bw.boneIndex = RemappedIndex[i]; Weights[i] = bw; } }
-        internal struct BoundsResult { public Vector3 Min; public Vector3 Max; public byte IsValid; }
+    #if UMA_BURSTCOMPILE
         [BurstCompile]
+    #endif
+        private struct RemapAllBoneWeightsJob : IJobParallelFor { [NativeDisableParallelForRestriction] public NativeArray<BoneWeight1> Weights; [ReadOnly] public NativeArray<int> RemappedIndex; public void Execute(int i) { var bw = Weights[i]; bw.boneIndex = RemappedIndex[i]; Weights[i] = bw; } }
+        internal struct BoundsResult { public Vector3 Min; public Vector3 Max; public byte IsValid; }
+    #if UMA_BURSTCOMPILE
+        [BurstCompile]
+    #endif
         private struct CalculateBoundsPartialsJob :
             IJobParallelFor
         {
@@ -4331,7 +4351,9 @@ namespace UMA
             }
         }
 
+    #if UMA_BURSTCOMPILE
         [BurstCompile]
+    #endif
         private struct ReduceBoundsJob : IJob
         {
             [ReadOnly] public NativeArray<BoundsResult> Partials;

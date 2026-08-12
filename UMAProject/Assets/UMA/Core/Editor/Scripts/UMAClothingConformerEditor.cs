@@ -9,7 +9,7 @@ namespace UMA
     [CustomEditor(typeof(UMAClothingConformer))]
     public class UMAClothingConformerEditor : Editor
     {
-        private const string DefaultFolder = "Assets/UMA/ClothingConformer";
+        private const string DefaultFolder = UMAPathUtility.ClothingConformerRoot;
         private string saveFolder = DefaultFolder;
         private string blendshapeName = "Conformed";
         private Vector2 slotsScroll;

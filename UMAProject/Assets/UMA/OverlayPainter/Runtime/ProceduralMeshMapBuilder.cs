@@ -51,7 +51,9 @@ namespace UMA.TexturePaint
             width = Mathf.Max(16, width);
             height = Mathf.Max(16, height);
             Transform transform = surface.gameObject != null ? surface.gameObject.transform : null;
-            float[] vertexCurvature = BuildVertexCurvature(normals, triangles);
+            Matrix4x4 localToWorld = transform != null ? transform.localToWorldMatrix : Matrix4x4.identity;
+            Matrix4x4 normalToWorld = localToWorld.inverse.transpose;
+            float[] vertexCurvature = BuildVertexSignedCurvature(vertices, normals, triangles);
             float[] vertexThickness = BuildVertexThickness(vertices, normals, mesh.bounds, transform);
             Color[] positions = new Color[width * height];
             Color[] worldNormals = Fill(width * height, new Color(0.5f, 0.5f, 1f, 0f));
@@ -75,15 +77,21 @@ namespace UMA.TexturePaint
                 {
                     Vector3 localPosition = vertices[ia] * barycentric.x + vertices[ib] * barycentric.y + vertices[ic] * barycentric.z;
                     Vector3 localNormal = (normals[ia] * barycentric.x + normals[ib] * barycentric.y + normals[ic] * barycentric.z).normalized;
-                    Vector3 worldPosition = transform != null ? transform.TransformPoint(localPosition) : localPosition;
-                    Vector3 normal = transform != null ? transform.TransformDirection(localNormal).normalized : localNormal;
-                    float curve = Mathf.Clamp01(vertexCurvature[ia] * barycentric.x + vertexCurvature[ib] * barycentric.y + vertexCurvature[ic] * barycentric.z);
+                    Vector3 worldPosition = localToWorld.MultiplyPoint3x4(localPosition);
+                    Vector3 normal = normalToWorld.MultiplyVector(localNormal).normalized;
+                    float curve = Mathf.Clamp(vertexCurvature[ia] * barycentric.x +
+                        vertexCurvature[ib] * barycentric.y + vertexCurvature[ic] * barycentric.z,
+                        -1f, 1f);
                     float thick = Mathf.Max(0f, vertexThickness[ia] * barycentric.x + vertexThickness[ib] * barycentric.y + vertexThickness[ic] * barycentric.z);
                     int index = y * width + x;
                     positions[index] = new Color(worldPosition.x, worldPosition.y, worldPosition.z, 1f);
                     worldNormals[index] = Encode(normal, 1f);
-                    curvatures[index] = new Color(curve, curve, curve, 1f);
-                    float accessibility = Mathf.Clamp01(1f - curve * 4f);
+                    float encodedCurvature = curve * 0.5f + 0.5f;
+                    curvatures[index] = new Color(encodedCurvature, encodedCurvature,
+                        encodedCurvature, 1f);
+                    // This inexpensive accessibility estimate deliberately responds only to
+                    // concavity. Convex edges are exposed and belong to the wear signal instead.
+                    float accessibility = 1f - Mathf.Clamp01(-curve);
                     ao[index] = new Color(accessibility, accessibility, accessibility, 1f);
                     thickness[index] = new Color(thick, thick, thick, 1f);
                     ids[index] = new Color(triangle, surface.index, island, 1f);
@@ -103,7 +111,8 @@ namespace UMA.TexturePaint
             };
         }
 
-        private static float[] BuildVertexCurvature(Vector3[] normals, int[] triangles)
+        internal static float[] BuildVertexSignedCurvature(Vector3[] vertices, Vector3[] normals,
+            int[] triangles)
         {
             var neighbors = new HashSet<int>[normals.Length];
             for (int i = 0; i < triangles.Length; i += 3)
@@ -118,8 +127,18 @@ namespace UMA.TexturePaint
                 HashSet<int> adjacent = neighbors[vertex];
                 if (adjacent == null || adjacent.Count == 0) continue;
                 float sum = 0f;
-                foreach (int other in adjacent) sum += 1f - Mathf.Clamp(Vector3.Dot(normals[vertex].normalized, normals[other].normalized), -1f, 1f);
-                result[vertex] = Mathf.Clamp01(sum / adjacent.Count * 2f);
+                Vector3 originNormal = normals[vertex].normalized;
+                foreach (int other in adjacent)
+                {
+                    Vector3 edge = vertices[other] - vertices[vertex];
+                    if (edge.sqrMagnitude <= 0.0000000001f) continue;
+                    Vector3 normalDelta = normals[other].normalized - originNormal;
+                    // dN/ds projected along the edge tangent is positive on a convex bend and
+                    // negative on a concave bend for outward-facing mesh normals. Using bend angle
+                    // instead of inverse edge length keeps the normalized map stable across scale.
+                    sum += Vector3.Dot(normalDelta, edge.normalized);
+                }
+                result[vertex] = Mathf.Clamp(sum / adjacent.Count * 4f, -1f, 1f);
             }
             return result;
         }

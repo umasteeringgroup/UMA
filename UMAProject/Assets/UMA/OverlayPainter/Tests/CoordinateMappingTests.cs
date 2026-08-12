@@ -538,6 +538,49 @@ namespace UMA.TexturePaint.Tests
         }
 
         [Test]
+        public void ConnectedSurfaceProjectionStaysOnAuthoredPolygonStrip()
+        {
+            Mesh mesh = new Mesh
+            {
+                vertices = new[]
+                {
+                    // Lower strip. Its second triangle duplicates the shared edge vertices to
+                    // model a UV or hard-normal seam.
+                    new Vector3(0f, 0f, 0f), new Vector3(1f, 0f, 0f), new Vector3(0f, 1f, 0f),
+                    new Vector3(1f, 0f, 0f), new Vector3(1f, 1f, 0f), new Vector3(0f, 1f, 0f),
+                    // Nearby but topologically separate upper strip.
+                    new Vector3(0f, 0f, 0.1f), new Vector3(1f, 0f, 0.1f), new Vector3(0f, 1f, 0.1f),
+                    new Vector3(1f, 0f, 0.1f), new Vector3(1f, 1f, 0.1f), new Vector3(0f, 1f, 0.1f)
+                },
+                triangles = new[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 }
+            };
+            mesh.uv = new Vector2[mesh.vertexCount];
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+            GameObject owner = new GameObject("Connected Polygon Strip Projection Test");
+            ReconstructedSurface surface = new ReconstructedSurface { gameObject = owner, mesh = mesh };
+            Vector3 query = new Vector3(0.75f, 0.75f, 0.09f);
+
+            Assert.That(surface.AreTrianglesTopologyConnected(0, 1), Is.True,
+                "Duplicated seam vertices with the same geometric edge must remain connected.");
+            Assert.That(surface.AreTrianglesTopologyConnected(0, 2), Is.False,
+                "Nearby overlapping layers must remain separate topology components.");
+            Assert.That(surface.TryClosestSurfacePoint(query, Vector3.forward, 0,
+                out Vector3 unconstrained, out _, out _, out int unconstrainedTriangle, out _), Is.True);
+            Assert.That(unconstrainedTriangle, Is.GreaterThanOrEqualTo(2));
+            Assert.That(unconstrained.z, Is.EqualTo(0.1f).Within(0.00001f));
+
+            Assert.That(surface.TryClosestConnectedSurfacePoint(query, Vector3.forward, 0, null,
+                out Vector3 connected, out _, out _, out int connectedTriangle, out _), Is.True);
+            Assert.That(connectedTriangle, Is.LessThan(2));
+            Assert.That(connected.z, Is.EqualTo(0f).Within(0.00001f),
+                "A spline anchored to the lower strip must not fall onto the closer upper layer.");
+
+            Object.DestroyImmediate(owner);
+            Object.DestroyImmediate(mesh);
+        }
+
+        [Test]
         public void SingularGlobalProjectionDoesNotFallBackToTriangleLocalStamp()
         {
             Mesh mesh = new Mesh

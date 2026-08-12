@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b342b90a4d7b48f29ef21e5459798c47, type: 3}
-  m_Name: Default Brush Library
+  m_Name: DefaultBrushLibrary
   m_EditorClassIdentifier: UMA.TexturePaint.Runtime::UMA.TexturePaint.BrushLibrary
   brushes:
   - {fileID: 11400000, guid: e47f6fe16e72447e8f40e8d7cf5c4957, type: 2}

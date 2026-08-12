@@ -3,6 +3,9 @@
 ## What's New Since the UMA 3.02 Release
 
 - Added Overlay Painter, with synchronized 2D and 3D painting, brushes, paths, masks, layer groups, channel-aware compositing, normal generation from height data, and texture/overlay export.
+- Added persistent production Generator/Filter layers, including cloth and organic/metal weathering,
+  Quilt/Embroidery/Perforation/Atlas Scatter, multi-channel or mask-only Text with editable ribbon
+  guides, and accelerated Kuwahara/quantization/toon Stylization.
 - Added the Dynamic Expression Player, providing race-specific expression groups, layered input sources, procedural eye and blink support, runtime bone, blendshape, and material effects, plus legacy migration and diagnostics.
 - Improved Icon Creator with deterministic thumbnail generation, supersampled camera captures, stable asset paths and GUIDs, safer overwrites, and optional Sprite Atlas V2 generation organized by race and wardrobe region.
 - Added posed-character skinning-weight touchup, including brush-based vertex selection, weight visualization, normalization, preview, and saving changes to the source SlotDataAsset.

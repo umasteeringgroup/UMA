@@ -8,13 +8,12 @@ namespace UMA.TexturePaint.Editor.Tests
 {
     public sealed class TexturePaintStandalonePhase3Tests
     {
-        private const string Folder = "Assets/UMA/Temp/TexturePaintPhase3Tests";
+        private const string Folder = "Assets/UMAProjectData/Tests/OverlayPainter/TexturePaintPhase3Tests";
 
         [SetUp]
         public void SetUp()
         {
-            if (!AssetDatabase.IsValidFolder("Assets/UMA/Temp")) AssetDatabase.CreateFolder("Assets/UMA", "Temp");
-            if (!AssetDatabase.IsValidFolder(Folder)) AssetDatabase.CreateFolder("Assets/UMA/Temp", "TexturePaintPhase3Tests");
+            UMAPathUtility.EnsureAssetFolder(Folder);
         }
 
         [TearDown]
@@ -189,7 +188,7 @@ namespace UMA.TexturePaint.Editor.Tests
             TexturePaintStageController controller = new TexturePaintStageController();
             try
             {
-                const string shaderRoot = "Assets/UMA/OverlayPainter/Shaders/";
+                string shaderRoot = UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders") + "/";
                 controller.InitializeStandalone(context,
                     AssetDatabase.LoadAssetAtPath<ComputeShader>(shaderRoot + "StrokeRasterize.compute"),
                     AssetDatabase.LoadAssetAtPath<ComputeShader>(shaderRoot + "Blur.compute"),
