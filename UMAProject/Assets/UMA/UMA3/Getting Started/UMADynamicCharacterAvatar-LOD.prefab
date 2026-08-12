@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 114399585086637844}
   - component: {fileID: 114169318936026688}
   - component: {fileID: 8908717652351854637}
+  - component: {fileID: -3069781322369873260}
   m_Layer: 0
   m_Name: UMADynamicCharacterAvatar-LOD
   m_TagString: Untagged
@@ -1218,6 +1219,47 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &-3069781322369873260
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 153068}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b82439bf03242a08160de6bbb8716b9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UMA3.Samples::UMA.Examples.RandomCharacterWalker
+  animationPlaybackSpeed: 0.75
+  maximumSpawnDistance: 2.5
+  turnSpeed: 150
+  returnAngleVariation: 20
+  headingChangeInterval: {x: 1.5, y: 4}
+  randomHeadingVariation: 35
+  headingNoise: 10
+  headingNoiseFrequency: 0.18
+  pauseInterval: {x: 4, y: 10}
+  pauseDuration: {x: 0.8, y: 2.4}
+  pauseLookVariation: 20
+  personalSpace: 0.55
+  lookAheadDistance: 1.25
+  avoidanceCheckInterval: 0.12
+  avoidanceTurn: {x: 70, y: 130}
+  avoidanceCommitDuration: 0.75
+  overlapSeparationSpeed: 0.8
+  bumpReactionCooldown: {x: 0.4, y: 0.8}
+  progressCheckInterval: 1
+  minimumProgressDistance: 0.025
+  stalledChecksBeforeRecovery: 2
+  speedParameter: Speed
+  directionParameter: Direction
+  walkingAnimationSpeed: 0.45
+  animationDamping: 0.12
+  pauseAnimationTriggers: []
+  bumpAnimationTriggers: []
+  bumpSounds: []
+  bumpVolume: 0.35
 --- !u!1 &26675358037490710
 GameObject:
   m_ObjectHideFlags: 0

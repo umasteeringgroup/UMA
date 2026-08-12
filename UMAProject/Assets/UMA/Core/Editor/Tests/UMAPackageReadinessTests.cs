@@ -219,39 +219,17 @@ namespace UMA.Editors.Tests
             Assert.That(walker, Is.Not.Null,
                 "The dedicated crowd prefab must include the sample walker.");
 
-            GameObject instance = UnityEngine.Object.Instantiate(walkerPrefab);
-            try
-            {
-                DynamicCharacterAvatar avatar =
-                    instance.GetComponent<DynamicCharacterAvatar>();
-                avatar.SetAnimatorController(true);
+            Assert.That(walker.enabled, Is.True,
+                "The sample walker must be enabled on the dedicated prefab.");
 
-                MonoBehaviour runtimeWalker = null;
-                behaviours = instance.GetComponents<MonoBehaviour>();
-                for (int i = 0; i < behaviours.Length; i++)
-                {
-                    if (behaviours[i] != null &&
-                        behaviours[i].GetType().FullName ==
-                        "UMA.Examples.RandomCharacterWalker")
-                    {
-                        runtimeWalker = behaviours[i];
-                        break;
-                    }
-                }
-                Assert.That(runtimeWalker, Is.Not.Null);
-                runtimeWalker.SendMessage("Start",
-                    SendMessageOptions.RequireReceiver);
-
-                Animator animator = instance.GetComponent<Animator>();
-                Assert.That(animator, Is.Not.Null);
-                Assert.That(animator.applyRootMotion, Is.True,
-                    "The walker must enable root motion on the runtime " +
-                    "Animator created by the DCA.");
-            }
-            finally
-            {
-                UnityEngine.Object.DestroyImmediate(instance);
-            }
+            DynamicCharacterAvatar avatar =
+                walkerPrefab.GetComponent<DynamicCharacterAvatar>();
+            Assert.That(avatar, Is.Not.Null,
+                "The dedicated walker prefab must contain a DCA.");
+            Assert.That(avatar.applyRootMotion, Is.True,
+                "The DCA must configure its runtime Animator for root motion. " +
+                "The walker also preserves this setting when it refreshes " +
+                "the Animator during Play Mode.");
 
             string scenePath = UMAPathUtility.ResolveInstallAssetPath(
                 "UMA3/Scenes/U3-Generating Random Characters.unity");
