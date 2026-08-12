@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.Animations;
@@ -637,6 +638,59 @@ namespace UMA.Editors.Tests
             string manifestPath = UMAPathUtility.ResolveInstallAssetPath("package.json");
             Assert.That(File.Exists(UMAPathUtility.ResolveAbsolutePath(manifestPath)), Is.True,
                 manifestPath);
+        }
+
+        [Test]
+        public void Uma2ManifestDependsOnlyOnMatchingBaseUmaVersionWhenInstalled()
+        {
+            string[] candidates =
+            {
+                "Assets/UMA2/package.json",
+                "Packages/com.umasteeringgroup.uma2/package.json"
+            };
+            string uma2ManifestPath = Array.Find(candidates, candidate =>
+                File.Exists(UMAPathUtility.ResolveAbsolutePath(candidate)));
+            if (string.IsNullOrEmpty(uma2ManifestPath))
+                Assert.Ignore("The optional UMA2 package is not installed.");
+
+            string baseManifestPath =
+                UMAPathUtility.ResolveInstallAssetPath("package.json");
+            string baseJson = File.ReadAllText(
+                UMAPathUtility.ResolveAbsolutePath(baseManifestPath));
+            string uma2Json = File.ReadAllText(
+                UMAPathUtility.ResolveAbsolutePath(uma2ManifestPath));
+
+            string baseVersion = ReadJsonString(baseJson, "version");
+            Assert.That(ReadJsonString(uma2Json, "name"),
+                Is.EqualTo("com.umasteeringgroup.uma2"));
+            Assert.That(ReadJsonString(uma2Json, "version"),
+                Is.EqualTo(baseVersion));
+
+            Match dependencies = Regex.Match(uma2Json,
+                "\\\"dependencies\\\"\\s*:\\s*\\{(?<body>[^}]*)\\}",
+                RegexOptions.Singleline);
+            Assert.That(dependencies.Success, Is.True,
+                uma2ManifestPath + " has no dependencies object.");
+            MatchCollection dependencyNames = Regex.Matches(
+                dependencies.Groups["body"].Value,
+                "\\\"(?<name>[^\\\"]+)\\\"\\s*:");
+            Assert.That(dependencyNames.Count, Is.EqualTo(1),
+                "UMA2 must depend only on the base UMA package.");
+            Assert.That(dependencyNames[0].Groups["name"].Value,
+                Is.EqualTo("com.umasteeringgroup.uma"));
+            Assert.That(ReadJsonString(dependencies.Groups["body"].Value,
+                    "com.umasteeringgroup.uma"),
+                Is.EqualTo(baseVersion));
+        }
+
+        private static string ReadJsonString(string json, string propertyName)
+        {
+            Match match = Regex.Match(json,
+                "\\\"" + Regex.Escape(propertyName) +
+                "\\\"\\s*:\\s*\\\"(?<value>[^\\\"]*)\\\"");
+            Assert.That(match.Success, Is.True,
+                "Missing JSON string property: " + propertyName);
+            return match.Groups["value"].Value;
         }
 
         [Test]
