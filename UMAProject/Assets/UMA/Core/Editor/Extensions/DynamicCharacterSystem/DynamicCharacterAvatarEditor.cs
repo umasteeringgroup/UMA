@@ -2182,14 +2182,11 @@ namespace UMA.CharacterSystem.Editors
                 EditorGUILayout.HelpBox("Load Filename: The recipe file name (optional).", MessageType.Info);
             }
             EditorGUILayout.PropertyField(loadFilename);
-            if (loadFilename.stringValue != "")
+            if (showHelp)
             {
-                if (showHelp)
-                {
-                    EditorGUILayout.HelpBox("Load On Start: Load the specified recipe at Start.", MessageType.Info);
-                }
-                EditorGUILayout.PropertyField(loadFileOnStart);
+                EditorGUILayout.HelpBox("Load On Start: Load the specified recipe at Start.", MessageType.Info);
             }
+            EditorGUILayout.PropertyField(loadFileOnStart);
             EditorGUI.indentLevel++;
             //LoadOptionsFlags
             defaultLoadOptions.isExpanded = EditorGUILayout.Foldout(defaultLoadOptions.isExpanded, new GUIContent("Load Options", "The default options for when a character is loaded from an UMATextRecipe asset or a recipe string. Can be overidden when calling 'LoadFromRecipe' or 'LoadFromString' directly."));

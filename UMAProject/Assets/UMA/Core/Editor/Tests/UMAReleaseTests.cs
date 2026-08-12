@@ -45,9 +45,17 @@ namespace UMA.Editors.Tests
                 uma3 = ValidateScope(new ValidationScope(
                     "UMA3", Uma3Folder, new[] { UmaFolder }), issues, issueKeys,
                     structuredReport, referenceKeys);
-                uma2 = ValidateScope(new ValidationScope(
-                    "UMA2", Uma2Folder, new[] { UmaFolder, Uma2Folder }), issues, issueKeys,
-                    structuredReport, referenceKeys);
+                if (AssetDatabase.IsValidFolder(Uma2Folder))
+                {
+                    uma2 = ValidateScope(new ValidationScope(
+                        "UMA2", Uma2Folder, new[] { UmaFolder, Uma2Folder }),
+                        issues, issueKeys, structuredReport, referenceKeys);
+                }
+                else
+                {
+                    TestContext.WriteLine(
+                        "Optional UMA2 content is not installed; skipping its release scope.");
+                }
             }
             catch (Exception exception)
             {

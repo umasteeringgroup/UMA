@@ -3350,7 +3350,7 @@ MonoBehaviour:
   characterMass: 50
   serializedRecipe: {fileID: 11400000, guid: b85b18c0c4d4b8b499978a4865dd0629, type: 2}
   umaAdditionalRecipes:
-  - {fileID: 11400000, guid: 1f292487d7383514f97c491cadfb0442, type: 2}
+  - {fileID: 11400000, guid: d31b5da474124004dbad05522f39fe7e, type: 2}
   DelayUnload: 2
   BundleCheck: 1
   StartGuard: 1
@@ -3521,7 +3521,7 @@ MonoBehaviour:
       - Human Male 3.0
       ForceLoad: 0
   raceAnimationControllers:
-    defaultAnimationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
+    defaultAnimationController: {fileID: 9100000, guid: 7b2325c148834db0b13bb8f7dbce1542, type: 2}
     animators:
     - raceName: ToonFemale
       animatorControllerName: IdleTest-w-head
@@ -18594,7 +18594,7 @@ Animator:
   m_GameObject: {fileID: 405377025}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
+  m_Controller: {fileID: 9100000, guid: 7b2325c148834db0b13bb8f7dbce1542, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0

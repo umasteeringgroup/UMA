@@ -2136,7 +2136,7 @@ MonoBehaviour:
   characterMass: 50
   serializedRecipe: {fileID: 11400000, guid: b85b18c0c4d4b8b499978a4865dd0629, type: 2}
   umaAdditionalRecipes:
-  - {fileID: 11400000, guid: 1f292487d7383514f97c491cadfb0442, type: 2}
+  - {fileID: 11400000, guid: d31b5da474124004dbad05522f39fe7e, type: 2}
   DelayUnload: 2
   BundleCheck: 1
   StartGuard: 1

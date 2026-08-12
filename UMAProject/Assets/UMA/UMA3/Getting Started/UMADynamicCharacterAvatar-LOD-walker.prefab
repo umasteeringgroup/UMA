@@ -1,0 +1,68 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1001 &615601329001234523
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 153068, guid: 165a16ac9ccf1a94080956c3b8c82000, type: 3}
+      propertyPath: m_Name
+      value: UMADynamicCharacterAvatar-LOD-walker
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 153068, guid: 165a16ac9ccf1a94080956c3b8c82000, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 615601329001234525}
+  m_SourcePrefab: {fileID: 100100000, guid: 165a16ac9ccf1a94080956c3b8c82000, type: 3}
+--- !u!1 &615601329001387447 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 153068, guid: 165a16ac9ccf1a94080956c3b8c82000, type: 3}
+  m_PrefabInstance: {fileID: 615601329001234523}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &615601329001234525
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 615601329001387447}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b82439bf03242a08160de6bbb8716b9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  animationPlaybackSpeed: 0.3
+  maximumSpawnDistance: 2.5
+  turnSpeed: 60
+  returnAngleVariation: 20
+  headingChangeInterval: {x: 1.5, y: 4}
+  randomHeadingVariation: 35
+  headingNoise: 10
+  headingNoiseFrequency: 0.18
+  pauseInterval: {x: 4, y: 10}
+  pauseDuration: {x: 0.8, y: 2.4}
+  pauseLookVariation: 20
+  personalSpace: 0.55
+  lookAheadDistance: 1.25
+  avoidanceCheckInterval: 0.12
+  avoidanceTurn: {x: 70, y: 130}
+  avoidanceCommitDuration: 0.75
+  overlapSeparationSpeed: 0.8
+  bumpReactionCooldown: {x: 0.4, y: 0.8}
+  progressCheckInterval: 1
+  minimumProgressDistance: 0.025
+  stalledChecksBeforeRecovery: 2
+  speedParameter: Speed
+  directionParameter: Direction
+  walkingAnimationSpeed: 0.25
+  animationDamping: 0.12
+  pauseAnimationTriggers: []
+  bumpAnimationTriggers: []
+  bumpSounds: []
+  bumpVolume: 0.35

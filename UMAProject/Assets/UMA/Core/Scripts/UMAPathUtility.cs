@@ -18,6 +18,7 @@ namespace UMA
     {
         public const string PackageName = "com.umasteeringgroup.uma";
         public const string LegacyInstallRoot = "Assets/UMA";
+        public const string ShaderPackagesRelativePath = "SRP/ShaderPackages";
         public const string ProjectDataRoot = "Assets/UMAProjectData";
         public const string ProjectResourcesRoot = ProjectDataRoot + "/Resources";
         public const string ProjectEditorResourcesRoot = ProjectDataRoot + "/Editor/Resources";

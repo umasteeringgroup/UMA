@@ -153,24 +153,41 @@ namespace UMA
 
 		public void GenerateRandomCharacter(Vector3 Pos, Quaternion Rot, string Name)
 		{
-			if (prefab)
+			if (prefab == null)
 			{
-				GameObject go = GameObject.Instantiate(prefab, Pos, Rot);
-				if (ParentObject != null)
-				{
-					go.transform.parent = ParentObject.transform;
-				}
-				generatedCharacters.Add(go);
-				RandomAvatar = go.GetComponent<DynamicCharacterAvatar>();
-				go.name = Name;
-				// Event for possible networking here
-				if (RandomAvatarGenerated != null)
-				{
-					RandomAvatarGenerated.Invoke(gameObject, go);
-				}
+				Debug.LogError("UMARandomAvatar requires a character prefab before it can generate avatars.", this);
+				return;
 			}
+
+			GameObject go = GameObject.Instantiate(prefab, Pos, Rot);
+			RandomAvatar = go.GetComponent<DynamicCharacterAvatar>();
+			if (RandomAvatar == null)
+			{
+				Debug.LogError("UMARandomAvatar prefab '" + prefab.name +
+					"' does not contain a DynamicCharacterAvatar component.", prefab);
+				Destroy(go);
+				return;
+			}
+
+			if (ParentObject != null)
+			{
+				go.transform.parent = ParentObject.transform;
+			}
+			generatedCharacters.Add(go);
+			go.name = Name;
+			// Event for possible networking here
+			if (RandomAvatarGenerated != null)
+			{
+				RandomAvatarGenerated.Invoke(gameObject, go);
+			}
+			// This generator owns the initial build, so batch all randomization
+			// changes and perform the same animator setup that the normal DCA
+			// startup path performs. Relying on LoadCharacter to do this only
+			// works for some restore-DNA and addressables paths, leaving newly
+			// generated avatars without an Animator/controller in the others.
+			RandomAvatar.BuildCharacterEnabled = false;
 			Randomize(RandomAvatar);
-			RandomAvatar.BuildCharacterEnabled = false; // don't go through automated startup, we are already setting and building the character here.
+			RandomAvatar.SetAnimatorController(true);
 			RandomAvatar.BuildCharacter(true);
 			// look at wardrobe here:
 			//DumpWardrobeToConsole(RandomAvatar);
@@ -260,6 +277,12 @@ namespace UMA
 
 		public void Randomize(DynamicCharacterAvatar Avatar)
 		{
+			if (Avatar == null)
+			{
+				Debug.LogError("UMARandomAvatar cannot randomize a null DynamicCharacterAvatar.", this);
+				return;
+			}
+
 			// Must clear that out!
 			Avatar.WardrobeRecipes.Clear();
 
@@ -280,9 +303,15 @@ namespace UMA
 					Randomizer = Randomizers[UnityEngine.Random.Range(0, Randomizers.Count)];
 				}
 			}
-			if (Avatar != null && Randomizer != null)
+			if (Randomizer != null)
 			{
 				RandomAvatar ra = Randomizer.GetRandomAvatar();
+				if (ra == null)
+				{
+					Debug.LogError("UMARandomizer '" + Randomizer.name +
+						"' does not contain a usable random avatar definition.", Randomizer);
+					return;
+				}
 				Avatar.ChangeRaceData(ra.RaceName);
 				//Avatar.BuildCharacterEnabled = true;
 				var RandomDNA = ra.GetRandomDNA();

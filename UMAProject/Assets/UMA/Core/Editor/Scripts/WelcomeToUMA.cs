@@ -13,6 +13,7 @@ namespace UMA
     [InitializeOnLoad]
     public class WelcomeToUMA : EditorWindow
     {
+        private const string WhatsNewDocumentPath = "Docs/!WhatsNewInUMA3.md";
 
         public static WelcomeToUMA Instance
         {
@@ -163,6 +164,7 @@ namespace UMA
         public bool initialized = false;
 
         public UMASettings initialSettings;
+        private string displayedSettingsVersion;
 
         private static bool IsHiddenInternalShader(string shaderName)
         {
@@ -232,6 +234,9 @@ namespace UMA
             try
             {
                 initialSettings = UMASettings.GetOrCreateSettings();
+                displayedSettingsVersion = initialSettings != null
+                    ? initialSettings.UMAVersion
+                    : null;
             }
             catch (Exception ex)
             {
@@ -262,6 +267,7 @@ namespace UMA
                 Repaint();
                 return;
             }
+            RefreshSettingsReference();
             HeaderRect = new Rect(0, 0, position.width, 50);
             NavigationRect = new Rect(0, 50, 200, position.height - 50);
             ContentRect = new Rect(200, 50, position.width - 200, position.height - 50);
@@ -269,6 +275,44 @@ namespace UMA
             DrawHeader();
             DrawNavigation();
             DrawContent(currentButton);
+        }
+
+        private void RefreshSettingsReference()
+        {
+            UMASettings current = null;
+            try
+            {
+                current = UMASettings.GetOrCreateSettings();
+            }
+            catch
+            {
+                return;
+            }
+            if (current == null) return;
+
+            string version = current.UMAVersion;
+            bool changed = current != initialSettings ||
+                !string.Equals(version, displayedSettingsVersion,
+                    StringComparison.Ordinal);
+            if (!changed) return;
+
+            initialSettings = current;
+            displayedSettingsVersion = version;
+            switch (currentButton)
+            {
+                case 0:
+                    DoWelcome();
+                    break;
+                case 1:
+                    DoGettingStarted();
+                    break;
+                case 2:
+                    DoWhatsNew();
+                    break;
+                case 5:
+                    DoLinksPage();
+                    break;
+            }
         }
 
 
@@ -307,9 +351,8 @@ namespace UMA
 
             if (GUILayout.Button("What's New", GUILayout.Height(40)))
             {
-                ClearLog();
-                currentButton = 2;
-                DoWhatsNew();
+                UMAMarkdownViewer.Open(
+                    UMAPathUtility.ResolveInstallAssetPath(WhatsNewDocumentPath));
             }
             if (GUILayout.Button("Documentation Browser", GUILayout.Height(40)))
             {
@@ -333,19 +376,19 @@ namespace UMA
                 currentButton = 7;
                 RebuildLibrary();
             }
-            if (GUILayout.Button("Recompile Shaders", GUILayout.Height(40)))
+            if (GUILayout.Button("Refresh UMA Shaders", GUILayout.Height(40)))
             {
                 ClearLog();
                 currentButton = 6;
-                ReimportShaderFolder();
+                RefreshShaderFolder();
             }
-            if (GUILayout.Button("Scan Scene", GUILayout.Height(40)))
+            if (GUILayout.Button("Scan UMA 3 Scene", GUILayout.Height(40)))
             {
                 ClearLog();
                 ScanScene();
                 currentButton = 3;
             }
-            if (GUILayout.Button("Scan Project", GUILayout.Height(40)))
+            if (GUILayout.Button("Scan UMA 3 Project", GUILayout.Height(40)))
             {
                 ClearLog();
                 ScanProject();
@@ -388,16 +431,13 @@ namespace UMA
 
         private string GetVersionName()
         {
-            if (initialSettings != null && !string.IsNullOrEmpty(initialSettings.UMAVersion))
-            {
-                return initialSettings.UMAVersion;
-            }
-
             try
             {
                 UMASettings settings = UMASettings.GetOrCreateSettings();
                 if (settings != null && !string.IsNullOrEmpty(settings.UMAVersion))
                 {
+                    initialSettings = settings;
+                    displayedSettingsVersion = settings.UMAVersion;
                     return settings.UMAVersion;
                 }
             }
@@ -405,6 +445,10 @@ namespace UMA
             {
                 // The rest of the welcome window remains useful without UMASettings.
             }
+
+            if (initialSettings != null &&
+                !string.IsNullOrEmpty(initialSettings.UMAVersion))
+                return initialSettings.UMAVersion;
 
             return "UMA";
         }
@@ -516,40 +560,45 @@ namespace UMA
             AddText("After importing an UMA update or moving content, use <b>UMA > Global Library Maintenance</b> to rebuild or repair the asset index. Open the Documentation Browser for detailed setup, migration, and authoring guides.");
         }
 
-        private void ReimportShaderFolder()
+        private void RefreshShaderFolder()
         {
             ClearLog();
 
-            string path = null;
+            string path;
             try
             {
-                path = UMAEditorUtilities.FindUMAFullPath();
+                UMASettings settings = UMASettings.GetOrCreateSettings();
+                string configuredPath = settings != null
+                    ? settings.ShaderFolder
+                    : null;
+                if (string.IsNullOrWhiteSpace(configuredPath))
+                    configuredPath = UMAPathUtility.ShaderPackagesRelativePath;
+
+                configuredPath = UMAPathUtility.Normalize(configuredPath);
+                bool isAssetPath = configuredPath.StartsWith(
+                    "Assets/", StringComparison.OrdinalIgnoreCase) ||
+                    configuredPath.StartsWith(
+                        "Packages/", StringComparison.OrdinalIgnoreCase);
+                path = isAssetPath
+                    ? UMAPathUtility.ResolveLegacyInstallAssetPath(configuredPath)
+                    : UMAPathUtility.ResolveInstallAssetPath(configuredPath);
             }
             catch (Exception ex)
             {
-                AddText($"Error locating UMA folder: {ex.Message}", LogType.Error);
+                AddText($"Error locating the UMA shader folder: {ex.Message}",
+                    LogType.Error);
                 return;
             }
 
             if (string.IsNullOrEmpty(path))
             {
-                AddText("UMA folder path is empty.", LogType.Error);
-                return;
-            }
-
-            try
-            {
-                path = UMAPathUtility.Normalize(path + "/Core/ShaderPackages");
-            }
-            catch (Exception ex)
-            {
-                AddText($"Error building shader path: {ex.Message}", LogType.Error);
+                AddText("UMA shader folder path is empty.", LogType.Error);
                 return;
             }
 
             if (AssetDatabase.IsValidFolder(path))
             {
-                AddText($"Reimporting shaders in {path}");
+                AddText($"Refreshing UMA shaders in {path}");
                 try
                 {
                     StartProcessing();
@@ -563,7 +612,7 @@ namespace UMA
                     return;
                 }
 
-                AddText(path + " reimported successfully!");
+                AddText(path + " refreshed successfully!");
 
                 // After shader reimport, fix up materials via all MaterialShaderRegistry assets
                 int registryCount = 0;
@@ -971,7 +1020,11 @@ namespace UMA
         #region Scene Scan Button
         private void ScanScene()
         {
-            AddText("Checking scene");
+            AddText("UMA 3 Scene Scan");
+            int errors = 0;
+            int warnings = 0;
+
+            CheckUMASettingsAndGenerator(ref errors, ref warnings);
 
             DynamicCharacterAvatar[] avatars;
             try
@@ -987,41 +1040,138 @@ namespace UMA
             int avatarCount = avatars != null ? avatars.Length : 0;
             if (avatarCount == 0)
             {
-                AddText("No Dynamic Character Avatars were found in the active scene.");
+                AddText("No Dynamic Character Avatars were found in the active scene.",
+                    LogType.Info);
             }
             else
             {
                 AddText($"Found {avatarCount} Dynamic Character Avatar{(avatarCount == 1 ? string.Empty : "s")}.");
             }
 
-            AddText("A scene-level UMA Generator is not required. UMA creates one automatically when a character needs it.");
-            AddText("Scene check complete");
+            UMAAssetIndexer indexer = null;
+            bool indexerFailureReported = false;
+            try { indexer = UMAAssetIndexer.Instance; }
+            catch (Exception ex)
+            {
+                AddText($"Unable to load the UMA Global Library: {ex.Message}",
+                    LogType.Error);
+                errors++;
+                indexerFailureReported = true;
+            }
+            if (indexer == null && !indexerFailureReported)
+            {
+                AddText("The UMA Global Library is unavailable. Scene race and recipe references cannot be resolved.",
+                    LogType.Error);
+                errors++;
+            }
+
+            for (int avatarIndex = 0; avatarIndex < avatarCount; avatarIndex++)
+            {
+                DynamicCharacterAvatar avatar = avatars[avatarIndex];
+                if (avatar == null) continue;
+
+                string avatarLabel = GetHierarchyPath(avatar.transform);
+                bool loadsStartingRecipe = avatar.loadFileOnStart &&
+                    (avatar.loadPathType == DynamicCharacterAvatar.loadPathTypes.String
+                        ? !string.IsNullOrWhiteSpace(avatar.loadString)
+                        : !string.IsNullOrWhiteSpace(avatar.loadFilename));
+                string raceName = avatar.activeRace != null
+                    ? avatar.activeRace.name
+                    : null;
+                RaceData race = null;
+
+                if (string.IsNullOrWhiteSpace(raceName) ||
+                    string.Equals(raceName, DynamicCharacterAvatar.NO_RACE,
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!loadsStartingRecipe)
+                    {
+                        AddText($"{avatarLabel}: no race or starting character recipe is configured.",
+                            LogType.Error);
+                        AddReviewObject(avatar, "Inspect avatar");
+                        errors++;
+                    }
+                }
+                else if (indexer != null)
+                {
+                    try { race = indexer.GetRace(raceName); }
+                    catch { /* reported as an unresolved race below */ }
+                    if (race == null)
+                    {
+                        AddText($"{avatarLabel}: race '{raceName}' is not available from the Global Library.",
+                            LogType.Error);
+                        AddReviewObject(avatar, "Inspect avatar");
+                        errors++;
+                    }
+                }
+
+                if (avatar.loadFileOnStart && !loadsStartingRecipe)
+                {
+                    AddText($"{avatarLabel}: Load File On Start is enabled, but its recipe source is empty.",
+                        LogType.Error);
+                    AddReviewObject(avatar, "Inspect avatar");
+                    errors++;
+                }
+
+                if (!avatar.BuildCharacterEnabled)
+                {
+                    AddText($"{avatarLabel}: character building is disabled. The avatar will not apply queued changes until it is enabled.",
+                        LogType.Warning);
+                    warnings++;
+                }
+
+                if (avatar.editorTimeGeneration && avatar.isActiveAndEnabled &&
+                    !DynamicCharacterAvatar.EditorGenerationPaused &&
+                    race != null && avatar.umaData == null)
+                {
+                    AddText($"{avatarLabel}: editor-time generation is enabled but no UMAData has been created.",
+                        LogType.Warning);
+                    AddReviewObject(avatar, "Inspect avatar");
+                    warnings++;
+                }
+
+                ValidateGeneratedAvatar(avatar, avatarLabel, ref errors,
+                    ref warnings);
+            }
+
+            AddText($"Scene scan complete: {errors} error(s), {warnings} warning(s).");
         }
         #endregion
 
         private void ScanProject()
         {
             projectScanHasRun = true;
-            AddText("Checking library");
+            AddText("UMA 3 Project Scan");
+            int settingsErrors = 0;
+            int settingsWarnings = 0;
+            CheckUMASettingsAndGenerator(ref settingsErrors,
+                ref settingsWarnings);
+            AddSeperator();
+
             UMAAssetIndexer indexer = null;
-            try { indexer = UMAAssetIndexer.Instance; } catch { /* ignore */ }
+            try { indexer = UMAAssetIndexer.Instance; }
+            catch (Exception ex)
+            {
+                AddText($"Cannot load the UMA Global Library: {ex.Message}",
+                    LogType.Error);
+            }
 
             if (indexer == null)
             {
-                AddText("Cannot load Global Library from resources! Please reimport or restore the file.");
-                AddText("The library is normaly at the following location:");
-                AddText(" " + AssetDatabase.GetAssetPath(UMAAssetIndexer.Instance));
+                AddText("The UMA Global Library could not be loaded. UMA cannot resolve races, slots, overlays, or recipes.",
+                    LogType.Error);
                 return;
             }
-            CheckQualitySettings();
-            AddSeperator();
+
             CheckLibrary();
             AddSeperator();
-            CheckMaterials();
+            CheckRaces();
             AddSeperator();
             CheckSlots();
             AddSeperator();
             CheckOverlays();
+            AddSeperator();
+            CheckMaterials();
             AddSeperator();
             CheckTextRecipes();
             AddSeperator();
@@ -1029,101 +1179,159 @@ namespace UMA
             AddSeperator();
             CheckWardrobeCollections();
             AddSeperator();
-            CheckRaces();
-            AddSeperator();
-            AddText("Project check completed. Please review any items that were flagged");
+            AddText("Project scan complete. This scan is diagnostic; it does not rewrite UMA content.");
         }
 
-        public static List<string> ValidateSkinWeights()
+        private void CheckUMASettingsAndGenerator(ref int errors,
+            ref int warnings)
         {
-            List<string> invalidLevels = new List<string>();
-            int original = QualitySettings.GetQualityLevel();
-            string[] names = QualitySettings.names;
-
-            for (int i = 0; i < names.Length; i++)
+            AddText("Checking UMA settings and generator");
+            UMASettings settings = null;
+            try { settings = UMASettings.GetOrCreateSettings(); }
+            catch (Exception ex)
             {
-                QualitySettings.SetQualityLevel(i, applyExpensiveChanges: false);
+                AddText($"UMASettings could not be loaded: {ex.Message}",
+                    LogType.Error);
+                errors++;
+                return;
+            }
 
-                SkinWeights sw = QualitySettings.skinWeights;
+            if (settings == null)
+            {
+                AddText("UMASettings could not be loaded.", LogType.Error);
+                errors++;
+                return;
+            }
 
-                bool ok =
-                    sw == SkinWeights.FourBones ||
-                    sw == SkinWeights.Unlimited;
+            if (settings.generatorPrefab == null)
+            {
+                AddText("UMASettings has no Generator Prefab. Characters cannot be generated.",
+                    LogType.Error);
+                AddReviewObject(settings, "Inspect UMA settings");
+                errors++;
+                return;
+            }
 
-                Debug.Log($"{names[i]}: SkinWeights = {sw}  => {(ok ? "OK" : "INVALID")}");
+            UMAGenerator generator =
+                settings.generatorPrefab.GetComponent<UMAGenerator>();
+            if (generator == null)
+            {
+                AddText($"Generator Prefab '{settings.generatorPrefab.name}' has no UMAGenerator component.",
+                    LogType.Error);
+                AddReviewObject(settings.generatorPrefab,
+                    "Inspect Generator Prefab");
+                errors++;
+                return;
+            }
 
-                if (!ok)
+            if (generator.meshCombiner == null)
+            {
+                AddText($"Generator Prefab '{settings.generatorPrefab.name}' has no mesh combiner.",
+                    LogType.Error);
+                AddReviewObject(settings.generatorPrefab,
+                    "Inspect Generator Prefab");
+                errors++;
+            }
+            if (generator.textureMerge == null)
+            {
+                AddText($"Generator Prefab '{settings.generatorPrefab.name}' has no TextureMerge configuration.",
+                    LogType.Error);
+                AddReviewObject(settings.generatorPrefab,
+                    "Inspect Generator Prefab");
+                errors++;
+            }
+            if (generator.defaultRendererAsset == null)
+            {
+                AddText($"Generator Prefab '{settings.generatorPrefab.name}' has no default Renderer Asset. Slots without an override will use Unity defaults.",
+                    LogType.Warning);
+                AddReviewObject(settings.generatorPrefab,
+                    "Inspect Generator Prefab");
+                warnings++;
+            }
+        }
+
+        private void ValidateGeneratedAvatar(DynamicCharacterAvatar avatar,
+            string avatarLabel, ref int errors, ref int warnings)
+        {
+            UMAData data = avatar.umaData;
+            if (data == null) return;
+
+            SkinnedMeshRenderer[] renderers = data.GetRenderers();
+            if (renderers == null || renderers.Length == 0) return;
+
+            for (int rendererIndex = 0; rendererIndex < renderers.Length;
+                 rendererIndex++)
+            {
+                SkinnedMeshRenderer renderer = renderers[rendererIndex];
+                if (renderer == null)
                 {
-                    string msg = $"Quality level '{names[i]}' uses {sw} skinWeights, expected FourBones or Unlimited.";
-                    Debug.LogWarning(msg);
-                    invalidLevels.Add(msg);
+                    AddText($"{avatarLabel}: generated renderer [{rendererIndex}] is missing.",
+                        LogType.Error);
+                    errors++;
+                    continue;
+                }
+                if (renderer.sharedMesh == null ||
+                    renderer.sharedMesh.vertexCount == 0)
+                {
+                    AddText($"{avatarLabel}: renderer '{renderer.name}' has no generated mesh.",
+                        LogType.Error);
+                    errors++;
+                }
+
+                Material[] materials = renderer.sharedMaterials;
+                for (int materialIndex = 0; materialIndex < materials.Length;
+                     materialIndex++)
+                {
+                    Material material = materials[materialIndex];
+                    if (material == null || material.shader == null ||
+                        IsErrorShader(material.shader))
+                    {
+                        AddText($"{avatarLabel}: renderer '{renderer.name}' has a missing or error shader at material [{materialIndex}].",
+                            LogType.Error);
+                        errors++;
+                    }
                 }
             }
 
-            // Restore original quality level
-            QualitySettings.SetQualityLevel(original, false);
-
-            return invalidLevels;
-        }
- 
-
-        private void CheckQualitySettings()
-        {
-            AddText("Checking Quality Settings");
-            List<string> invalidLevels = ValidateSkinWeights();
-            if (invalidLevels.Count == 0)
+            if (data.umaRecipe == null || data.umaRecipe.raceData == null)
             {
-                AddText("All quality levels are using valid skin weights settings.");
-            }
-            else
-            {
-                AddText("The following quality levels have invalid skin weights settings:", LogType.Error);
-                foreach (var msg in invalidLevels)
-                {
-                    AddText($" - {msg}", LogType.Error);
-                }
-                AddText("Please update the skin weights settings for these quality levels to FourBones or Unlimited.", LogType.Error);
-                LogLine l = AddText(text: "Open Quality Settings", LogType.Error);
-                LogLine l2 = AddText(text: "Fix them all automatically", LogType.Warning);
-                l.ButtonAction = (line) => DoOpenQualitySettings(line);
-                l2.ButtonAction = (line) => DoFixAllAutomatically(line);
+                AddText($"{avatarLabel}: generated UMAData has no resolved race recipe.",
+                    LogType.Warning);
+                warnings++;
             }
         }
 
-        private void DoFixAllAutomatically(LogLine line)
+        private static bool IsErrorShader(Shader shader)
         {
-            int original = QualitySettings.GetQualityLevel();
-            string[] names = QualitySettings.names;
+            return shader != null &&
+                (string.Equals(shader.name, "Hidden/InternalErrorShader",
+                    StringComparison.OrdinalIgnoreCase) ||
+                 IsHiddenInternalShader(shader.name));
+        }
 
-            for (int i = 0; i < names.Length; i++)
+        private static string GetHierarchyPath(Transform transform)
+        {
+            if (transform == null) return "(missing avatar)";
+            string path = transform.name;
+            Transform parent = transform.parent;
+            while (parent != null)
             {
-                QualitySettings.SetQualityLevel(i, applyExpensiveChanges: false);
-
-                SkinWeights sw = QualitySettings.skinWeights;
-
-                if (sw != SkinWeights.FourBones && sw != SkinWeights.Unlimited)
-                {
-                    QualitySettings.skinWeights = SkinWeights.Unlimited;
-                    Debug.Log($"Fixed quality level '{names[i]}' skin weights from {sw} to Unlimited.");
-                }
+                path = parent.name + "/" + path;
+                parent = parent.parent;
             }
-
-            // Restore original quality level
-            QualitySettings.SetQualityLevel(original, false);
-            AddText("All quality levels have been updated to use Unlimited skin weights.", LogType.Warning);
+            return path;
         }
 
-
-        private void DoOpenQualitySettings(LogLine line)
+        private void AddReviewObject(UnityEngine.Object target, string label)
         {
-#if UNITY_2023_1_OR_NEWER
-            SettingsService.OpenProjectSettings("Project/Quality");
-#else
-            EditorApplication.ExecuteMenuItem("Edit/Project Settings/Quality");
-#endif
+            if (target == null) return;
+            LogLine line = AddText(label);
+            line.ButtonAction = clickedLine =>
+            {
+                Selection.activeObject = target;
+                EditorGUIUtility.PingObject(target);
+            };
         }
-
-
 
         private void CheckLibrary()
         {
@@ -1150,282 +1358,232 @@ namespace UMA
                 }
             }
 
-            var filters = idx.TypeFolderSearch ?? new Dictionary<string, List<string>>();
-            List<string> types = new List<string>(filters.Keys);
-
-            bool foundAnimatorController = false;
-            for (int i = 0; i < types.Count; i++)
-            {
-                if (types[i].ToLower().IndexOf("animatorcontroller") > -1)
-                {
-                    foundAnimatorController = true;
-                    break;
-                }
-            }
-
-            if (!foundAnimatorController)
-            {
-                AddText("Warning: No filters are setup for animator controllers! You should setup filters to limit the objects stored in the Asset Index!", LogType.Warning);
-                AddText("Warning: Failure to do so could result in more objects stored in resources than needed!", LogType.Warning);
-                AddText("Filters are configured using the 'Global Library Filters' option on the UMA menu", LogType.Warning);
-            }
-            else if (filters.Count == 0)
-            {
-                AddText("Warning: No filters are setup. You should setup filters to limit the objects stored in the Asset Index!", LogType.Warning);
-                AddText("Warning: Failure to do so could result in more objects stored in resources than needed!", LogType.Warning);
-                AddText("Filters are configured using the 'Global Library Filters' option on the UMA menu", LogType.Warning);
-            }
-
             AddText("UMA Global Library check complete");
-        }
-
-        private static bool NormalizeTags(ref string[] tags)
-        {
-            if (tags == null || tags.Length == 0) return false;
-
-            List<string> result = new List<string>(tags.Length);
-            HashSet<string> seen = new HashSet<string>(StringComparer.Ordinal);
-            bool changed = false;
-
-            for (int i = 0; i < tags.Length; i++)
-            {
-                string t = tags[i] ?? "";
-                string trimmed = t.Trim();
-                if (trimmed.Length == 0)
-                {
-                    if (!string.IsNullOrEmpty(t)) changed = true;
-                    continue;
-                }
-                if (!seen.Contains(trimmed))
-                {
-                    seen.Add(trimmed);
-                    result.Add(trimmed);
-                }
-                else
-                {
-                    changed = true;
-                }
-            }
-
-            if (changed)
-            {
-                tags = result.ToArray();
-            }
-            return changed;
         }
 
         private void CheckSlots()
         {
-            AddText("Checking Slots");
+            AddText("Checking UMA 3 slots and mesh data");
             List<AssetItem> slots = null;
             try { slots = UMAAssetIndexer.Instance.GetAssetItems<SlotDataAsset>(); } catch { /* ignore */ }
 
             if (slots == null || slots.Count == 0)
             {
-                AddText("No SlotDataAssets found in library", LogType.Warning);
+                AddText("No SlotDataAssets were found in the Global Library.",
+                    LogType.Error);
+                return;
             }
-            else
+
+            var slotNames = new HashSet<string>(StringComparer.Ordinal);
+            bool offeredLibraryRepair = false;
+            foreach (AssetItem assetItem in slots)
             {
-                foreach (var AI in slots)
+                if (assetItem == null) continue;
+                SlotDataAsset slot = null;
+                try { slot = assetItem.GetItem<SlotDataAsset>(); }
+                catch { /* reported below */ }
+
+                if (slot == null)
                 {
-                    if (AI == null)
-                    {
+                    if (IsGeneratedBakedSlotReference(assetItem._Name))
                         continue;
-                    }
-                    if (AI.Item == null)
+
+                    AddText($"Indexed slot '{assetItem._Name}' cannot be loaded from '{assetItem._Path}'.",
+                        LogType.Error);
+                    if (!offeredLibraryRepair)
                     {
-                        if (IsGeneratedBakedSlotReference(AI._Name))
-                        {
-                            continue;
-                        }
-
-                        AddText($"Error: SlotDataAsset {AI._Name} is missing!", LogType.Error);
-                        LogLine l = AddText("Repair Library");
-                        l.ButtonAction = (line) => DoLibraryRepair(l);
+                        LogLine repairLine = AddText("Repair Global Library");
+                        repairLine.ButtonAction = line =>
+                            DoLibraryRepair(repairLine);
+                        offeredLibraryRepair = true;
                     }
-                    SlotDataAsset sd = null;
-                    try { sd = AI.GetItem<SlotDataAsset>(); } catch { /* ignore */ }
-
-                    if (sd != null)
-                    {
-                        if (string.IsNullOrEmpty(sd.slotName))
-                        {
-                            AddText($"Error: Error: SlotDataAsset {AI._Name} has no SlotName. Please fix, then rebuild library.");
-                            ReviewAssetItem(AI, "SlotDataAsset");
-                        }
-
-                        // Normalize and deduplicate tags if present
-                        if (sd.tags != null && sd.tags.Length > 0)
-                        {
-                            string[] oldTags = sd.tags;
-                            if (NormalizeTags(ref sd.tags))
-                            {
-                                EditorUtility.SetDirty(sd);
-                                AssetDatabase.SaveAssetIfDirty(sd);
-                                AddText($"Normalized tags for SlotDataAsset '{AI._Name}'.");
-                            }
-                        }
-
-                     if (!UMAMeshData.IsNullOrEmptyMeshData(sd.meshData) && sd.meshData.vertices != null && sd.meshData.vertexCount > 0)
-                        {
-                            // SlotDataAsset materials are now derived from overlays at the SlotData level.
-                        }
-                        else
-                        {
-                            if (sd.isSmooshable)
-                            {
-                                if (sd.tags == null || sd.tags.Length < 1)
-                                {
-                                    AddText($"Warning: SlotDataAsset {AI._Name} is marked 'smooshable' but does not have any tags!", LogType.Warning);
-                                    AddText("This slot cannot be found by the smoosher!");
-                                    LogLine l = AddText("Review slot");
-                                    l.ButtonAction = (line) => ReviewItem(l);
-                                    l.ReviewItem = AI;
-                                }
-                            }
-                            if (sd.isWildCardSlot && sd.slotName.ToLower() != "wildcard")
-                            {
-                                if (sd.tags == null || sd.tags.Length < 1)
-                                {
-                                    AddText($"Warning: SlotDataAsset {AI._Name} is marked 'WildCard' but does not have any tags!", LogType.Warning);
-                                    AddText("This slot will not find any matches!");
-                                    LogLine l = AddText("Review slot");
-                                    l.ButtonAction = (line) => ReviewItem(l);
-                                    l.ReviewItem = AI;
-                                }
-                            }
-                            if (sd.isClippingPlane && (UMAMeshData.IsNullOrEmptyMeshData(sd.meshData) || sd.meshData.vertexCount < 4))
-                            {
-                                AddText($"Warning: SlotDataAsset {AI._Name} is marked as a clipping plane, but has no geometry!", LogType.Warning);
-                                AddText("This slot will never clip anything!");
-                                LogLine l = AddText("Review slot");
-                                l.ButtonAction = (line) => ReviewItem(l);
-                                l.ReviewItem = AI;
-                            }
-                        }
-                    }
+                    continue;
                 }
+
+                bool invalid = false;
+                if (string.IsNullOrWhiteSpace(slot.slotName))
+                {
+                    AddText($"Slot asset '{slot.name}' has an empty slot name.",
+                        LogType.Error);
+                    invalid = true;
+                }
+                else if (!slotNames.Add(slot.slotName))
+                {
+                    AddText($"Slot name '{slot.slotName}' is indexed more than once. Recipe lookup will be ambiguous.",
+                        LogType.Error);
+                    invalid = true;
+                }
+
+                var meshReasons = new List<string>();
+                if (!slot.ValidateMeshData(meshReasons))
+                {
+                    for (int reasonIndex = 0; reasonIndex < meshReasons.Count;
+                         reasonIndex++)
+                    {
+                        AddText($"Slot '{slot.name}': {meshReasons[reasonIndex]}",
+                            LogType.Error);
+                    }
+                    invalid = true;
+                }
+
+                if ((slot.isSmooshable || slot.isWildCardSlot) &&
+                    !HasUsableTags(slot.tags))
+                {
+                    string feature = slot.isSmooshable
+                        ? "smooshing"
+                        : "wildcard matching";
+                    AddText($"Slot '{slot.slotName}' uses {feature} but has no usable tags.",
+                        LogType.Warning);
+                    invalid = true;
+                }
+
+                if (HasInvalidTags(slot.tags))
+                {
+                    AddText($"Slot '{slot.slotName}' contains empty or duplicate tags. Normalize them in the Slot inspector.",
+                        LogType.Warning);
+                    invalid = true;
+                }
+
+                if (slot.isClippingPlane &&
+                    (UMAMeshData.IsNullOrEmptyMeshData(slot.meshData) ||
+                     slot.meshData.vertexCount < 4))
+                {
+                    AddText($"Clipping-plane slot '{slot.slotName}' needs at least four vertices.",
+                        LogType.Error);
+                    invalid = true;
+                }
+
+                if (invalid) ReviewAssetItem(assetItem, "slot");
             }
             AddText("Slot check complete");
         }
 
+        private static bool HasUsableTags(string[] tags)
+        {
+            if (tags == null) return false;
+            for (int i = 0; i < tags.Length; i++)
+                if (!string.IsNullOrWhiteSpace(tags[i])) return true;
+            return false;
+        }
+
+        private static bool HasInvalidTags(string[] tags)
+        {
+            if (tags == null) return false;
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            for (int i = 0; i < tags.Length; i++)
+            {
+                string tag = tags[i]?.Trim();
+                if (string.IsNullOrEmpty(tag) || !seen.Add(tag)) return true;
+            }
+            return false;
+        }
+
         private void CheckOverlays()
         {
-            AddText("Checking Overlays");
+            AddText("Checking UMA 3 overlays and channel layouts");
             List<AssetItem> overlays = null;
             try { overlays = UMAAssetIndexer.Instance.GetAssetItems<OverlayDataAsset>(); } catch { /* ignore */ }
 
             if (overlays == null || overlays.Count == 0)
             {
-                AddText("No Overlays found in library", LogType.Warning);
+                AddText("No OverlayDataAssets were found in the Global Library.",
+                    LogType.Error);
                 return;
             }
-            else
+
+            var overlayNames = new HashSet<string>(StringComparer.Ordinal);
+            foreach (AssetItem assetItem in overlays)
             {
-                foreach (var AI in overlays)
+                if (assetItem == null) continue;
+                OverlayDataAsset overlay = null;
+                try { overlay = assetItem.GetItem<OverlayDataAsset>(); }
+                catch { /* reported below */ }
+
+                if (overlay == null)
                 {
-                    if (AI == null)
-                    {
-                        continue;
-                    }
-                    if (AI.Item == null)
-                    {
-                        AddText($"Error: OverlayDataAsset {AI._Name} is missing!", LogType.Error);
-                        LogLine l = AddText("Repair Library");
-                        l.ButtonAction = (line) => DoLibraryRepair(l);
-                        return;
-                    }
-                    OverlayDataAsset od = null;
-                    try { od = AI.GetItem<OverlayDataAsset>(); } catch { /* ignore */ }
+                    AddText($"Indexed overlay '{assetItem._Name}' cannot be loaded from '{assetItem._Path}'.",
+                        LogType.Error);
+                    continue;
+                }
 
-                    if (od == null)
-                    {
-                        AddText($"Error: OverlayDataAsset entry invalid: {AI._Name}", LogType.Error);
-                        continue;
-                    }
+                bool invalid = false;
+                if (string.IsNullOrWhiteSpace(overlay.overlayName))
+                {
+                    AddText($"Overlay asset '{overlay.name}' has an empty overlay name.",
+                        LogType.Error);
+                    invalid = true;
+                }
+                else if (!overlayNames.Add(overlay.overlayName))
+                {
+                    AddText($"Overlay name '{overlay.overlayName}' is indexed more than once. Recipe lookup will be ambiguous.",
+                        LogType.Error);
+                    invalid = true;
+                }
 
-                    if (string.IsNullOrEmpty(od.overlayName))
+                UMAMaterial material = overlay.material;
+                if (material == null && !string.IsNullOrWhiteSpace(
+                        overlay.materialName))
+                {
+                    try
                     {
-                        AddText("Error: Error: OverlayDataAsset {AI._Name} has no OverlayName. Please fix, then rebuild library.");
-                        ReviewAssetItem(AI, "OverlayDataAsset");
+                        material = UMAAssetIndexer.Instance.GetAsset<UMAMaterial>(
+                            overlay.materialName);
                     }
-
-                    // Auto-fix materialName if material assigned
-                    if (od.material != null)
+                    catch { /* reported below */ }
+                }
+                if (material == null)
+                {
+                    AddText($"Overlay '{overlay.overlayName}' has no resolvable UMAMaterial.",
+                        LogType.Error);
+                    invalid = true;
+                }
+                else
+                {
+                    int channelCount = material.channels != null
+                        ? material.channels.Length
+                        : 0;
+                    if (overlay.textureCount > channelCount)
                     {
-                        if (string.IsNullOrEmpty(od.materialName) || od.materialName != od.material.name)
-                        {
-                            od.materialName = od.material.name;
-                            EditorUtility.SetDirty(od);
-                            AssetDatabase.SaveAssetIfDirty(od);
-                            AddText($"Fixed OverlayDataAsset '{AI._Name}' materialName to '{od.materialName}'.");
-                        }
+                        AddText($"Overlay '{overlay.overlayName}' has {overlay.textureCount} textures but UMAMaterial '{material.name}' has only {channelCount} channels.",
+                            LogType.Error);
+                        invalid = true;
                     }
-
-                    if (od.material == null)
+                    if (overlay.textureList == null &&
+                        material.materialType !=
+                            UMAMaterial.MaterialType.UseExistingMaterial)
                     {
-                        UMAMaterial material = null;
-                        try { material = UMAAssetIndexer.Instance.GetAsset<UMAMaterial>(od.materialName); } catch { /* ignore */ }
-                        if (material != null)
-                        {
-                            od.material = material;
-                            AddText($"Warning: OverlayDataAsset {AI._Name} did not have material set. This has been fixed.", LogType.Warning);
-                            // also sync name
-                            if (string.IsNullOrEmpty(od.materialName) || od.materialName != material.name)
-                            {
-                                od.materialName = material.name;
-                            }
-                            EditorUtility.SetDirty(od);
-                            AssetDatabase.SaveAssetIfDirty(od);
-                        }
-                    }
-                    if (od.material == null) // still not fixed
-                    {
-                        AddText($"Warning: OverlayDataAsset {AI._Name} did not have material set, and material was not found for overlay material named {od.materialName}", LogType.Error);
-                        LogLine l = AddText("Review overlay");
-                        l.ButtonAction = (line) => ReviewItem(l);
-                        l.ReviewItem = AI;
-                    }
-                    else
-                    {
-                        if (od.textureList == null && od.material.materialType != UMAMaterial.MaterialType.UseExistingMaterial)
-                        {
-                            AddText($"Warning: OverlayDataAsset {AI._Name} does not have a texture list, and is not set to UseExistingMaterial", LogType.Warning);
-                            LogLine l = AddText("Review overlay");
-                            l.ButtonAction = (line) => ReviewItem(l);
-                            l.ReviewItem = AI;
-                        }
-                    }
-
-                    if (od.textureCount > 0)
-                    {
-                        if (od.material != null && od.textureCount > od.material.channels.Length)
-                        {
-                            AddText($"Texture Count on overlay {AI._Name} does not match material channel count ({od.textureCount} vs {od.material.channels.Length})!", LogType.Error);
-                            ReviewAssetItem(AI);
-                        }
-                        if (od.material != null && od.textureCount < od.material.channels.Length)
-                        {
-                            AddText($"Texture Count on overlay {AI._Name}  is less than material channel count ({od.textureCount} vs {od.material.channels.Length}). This will only work as an additional overlay on a stack", LogType.Info);
-                            ReviewAssetItem(AI);
-                        }
-                        bool texturesOK = true;
-
-                        for (int ii = 0; ii < od.textureCount; ii++)
-                        {
-                            if (od.textureList[ii] == null)
-                            {
-                                texturesOK = false;
-                            }
-                        }
-                        if (!texturesOK)
-                        {
-                            AddText("Some textures on overlay are missing.", LogType.Warning);
-                            AddText("This is OK for overlays that are not a base overlay. Please review to make sure this is what you expect.");
-                            ReviewAssetItem(AI);
-                        }
+                        AddText($"Overlay '{overlay.overlayName}' has no texture list for material type {material.materialType}.",
+                            LogType.Warning);
+                        invalid = true;
                     }
                 }
+
+                if (overlay.textureList != null)
+                {
+                    if (overlay.overlayBlend == null ||
+                        overlay.overlayBlend.Length != overlay.textureList.Length)
+                    {
+                        AddText($"Overlay '{overlay.overlayName}' blend-mode count does not match its texture count.",
+                            LogType.Error);
+                        invalid = true;
+                    }
+                    if (overlay.textureNames != null &&
+                        overlay.textureNames.Length != overlay.textureList.Length)
+                    {
+                        AddText($"Overlay '{overlay.overlayName}' texture-name count does not match its texture count.",
+                            LogType.Warning);
+                        invalid = true;
+                    }
+                }
+
+                if (HasInvalidTags(overlay.tags))
+                {
+                    AddText($"Overlay '{overlay.overlayName}' contains empty or duplicate tags.",
+                        LogType.Warning);
+                    invalid = true;
+                }
+
+                if (invalid) ReviewAssetItem(assetItem, "overlay");
             }
             AddText("Overlay check complete");
         }
@@ -1491,16 +1649,19 @@ namespace UMA
                 {
                     bool invalid = false;
 
-                    if (uwc.wardrobeSlot == null)
+                    if (string.IsNullOrWhiteSpace(uwc.wardrobeSlot) ||
+                        string.Equals(uwc.wardrobeSlot, "None",
+                            StringComparison.OrdinalIgnoreCase))
                     {
-                        AddText($"Wardrobe Collection {c._Name} does not have a wardrobe slot assigned", LogType.Error);
+                        AddText($"Wardrobe Collection '{c._Name}' does not have a collection region assigned.", LogType.Error);
                         invalid = true;
                     }
                     if (uwc.arbitraryRecipes != null && uwc.arbitraryRecipes.Count > 0)
                     {
                         foreach (var r in uwc.arbitraryRecipes)
                         {
-                            if (!lib.HasAsset<UMAWardrobeRecipe>(r))
+                            if (string.IsNullOrWhiteSpace(r) ||
+                                !lib.HasAsset<UMAWardrobeRecipe>(r))
                             {
                                 AddText($"Wardrobe Collection {c._Name} has an invalid recipe assigned ({r})", LogType.Error);
                                 invalid = true;
@@ -1516,6 +1677,18 @@ namespace UMA
                                 AddText($"Wardrobe Collection {c._Name} has an invalid race assigned ({r})", LogType.Error);
                                 invalid = true;
                             }
+                            else
+                            {
+                                RaceData race = lib.GetAsset<RaceData>(r);
+                                if (race != null && race.wardrobeSlots != null &&
+                                    !string.IsNullOrWhiteSpace(uwc.wardrobeSlot) &&
+                                    !race.wardrobeSlots.Contains(uwc.wardrobeSlot))
+                                {
+                                    AddText($"Wardrobe Collection '{c._Name}' uses region '{uwc.wardrobeSlot}', which is not defined by race '{r}'.",
+                                        LogType.Error);
+                                    invalid = true;
+                                }
+                            }
                             var raceRecipes = uwc.GetRacesRecipes(r);
                             var raceRecipeNames = uwc.GetRacesRecipeNames(r);
                             if (raceRecipes != null)
@@ -1524,7 +1697,11 @@ namespace UMA
                                 {
                                     if (raceRecipes[ii] == null)
                                     {
-                                        AddText($"Wardrobe Collection {c._Name} has an invalid recipe '{raceRecipeNames?[ii]}' assigned for race {r}", LogType.Error);
+                                        string recipeName = raceRecipeNames != null &&
+                                            ii < raceRecipeNames.Count
+                                            ? raceRecipeNames[ii]
+                                            : "(unknown)";
+                                        AddText($"Wardrobe Collection {c._Name} has an invalid recipe '{recipeName}' assigned for race {r}", LogType.Error);
                                         invalid = true;
                                     }
                                 }
@@ -1537,6 +1714,7 @@ namespace UMA
                     }
                 }
             }
+            AddText("Wardrobe Collection check complete");
         }
 
         private static bool IsGeneratedBakedSlotReference(string slotName)
@@ -1578,7 +1756,12 @@ namespace UMA
                 }
 
                 UMAPackedRecipeBase.UMAPackRecipe PackRecipe = null;
-                try { PackRecipe = uwr.PackedLoad(); } catch { /* ignore */ }
+                try { PackRecipe = uwr.PackedLoad(); }
+                catch (Exception ex)
+                {
+                    AddText($"Wardrobe Recipe '{uwr.name}' could not be parsed: {ex.Message}",
+                        LogType.Error);
+                }
 
                 bool invalid = false;
 
@@ -1605,6 +1788,16 @@ namespace UMA
                         else
                         {
                             validcount++;
+                            RaceData compatibleRace = lib.GetAsset<RaceData>(rn);
+                            if (compatibleRace != null &&
+                                compatibleRace.wardrobeSlots != null &&
+                                !compatibleRace.wardrobeSlots.Contains(
+                                    uwr.wardrobeSlot))
+                            {
+                                AddText($"Wardrobe Recipe '{uwr.name}' uses region '{uwr.wardrobeSlot}', which is not defined by compatible race '{rn}'.",
+                                    LogType.Error);
+                                invalid = true;
+                            }
                         }
                     }
                     if (validcount == 0)
@@ -1619,7 +1812,15 @@ namespace UMA
                     ReviewAssetItem(r);
                 }
 
-                var Slots = PackRecipe?.slotsV3;
+                if (PackRecipe == null)
+                {
+                    AddText($"Wardrobe Recipe '{uwr.name}' has no readable packed recipe data.",
+                        LogType.Error);
+                    ReviewAssetItem(r, "wardrobe recipe");
+                    continue;
+                }
+
+                var Slots = PackRecipe.slotsV3;
                 if (Slots == null)
                 {
                     AddText($"Wardrobe Recipe {uwr.name} has no slots assigned!", LogType.Error);
@@ -1635,9 +1836,21 @@ namespace UMA
                     }
                     if (string.IsNullOrEmpty(s.id))
                     {
+                        AddText($"Wardrobe Recipe '{uwr.name}' has a slot entry with no slot or placeholder name.",
+                            LogType.Error);
+                        invalid = true;
                         continue;
                     }
-                    if (s.isPlaceholderSlot == false)
+                    if (s.isPlaceholderSlot)
+                    {
+                        if (!HasUsableTags(s.Tags))
+                        {
+                            AddText($"Wardrobe Recipe '{uwr.name}' placeholder '{s.id}' has no matching tags.",
+                                LogType.Warning);
+                            invalid = true;
+                        }
+                    }
+                    else
                     {
                         bool slotExists = lib.HasAsset<SlotDataAsset>(s.id);
                         if (!slotExists && !IsGeneratedBakedSlotReference(s.id))
@@ -1667,6 +1880,7 @@ namespace UMA
                                         if (!lib.HasAsset<OverlayDataAsset>(ov.id))
                                         {
                                             AddText($"Wardrobe Recipe {uwr.name} slot '{s.id}' references missing Overlay '{ov.id}'!", LogType.Error);
+                                            invalid = true;
                                         }
                                     }
                                 }
@@ -1674,6 +1888,32 @@ namespace UMA
                         } 
                     }
                 }
+
+                if (uwr.MeshHideAssets != null)
+                {
+                    for (int hideIndex = 0;
+                         hideIndex < uwr.MeshHideAssets.Count; hideIndex++)
+                    {
+                        if (uwr.MeshHideAssets[hideIndex] != null) continue;
+                        AddText($"Wardrobe Recipe '{uwr.name}' has a missing MeshHideAsset at index {hideIndex}.",
+                            LogType.Error);
+                        invalid = true;
+                    }
+                }
+                if (uwr.MeshModifiers != null)
+                {
+                    for (int modifierIndex = 0;
+                         modifierIndex < uwr.MeshModifiers.Count;
+                         modifierIndex++)
+                    {
+                        if (uwr.MeshModifiers[modifierIndex] != null) continue;
+                        AddText($"Wardrobe Recipe '{uwr.name}' has a missing UMA 3 MeshModifier at index {modifierIndex}.",
+                            LogType.Error);
+                        invalid = true;
+                    }
+                }
+
+                if (invalid) ReviewAssetItem(r, "wardrobe recipe");
             }
             AddText("Wardrobe Recipe check complete");
         }
@@ -1688,7 +1928,7 @@ namespace UMA
                 return;
             }
 
-            AddText("Checking Text Recipes");
+            AddText("Checking full-character recipes");
             var recipes = lib.GetAssetItems<UMATextRecipe>();
             foreach (var r in recipes)
             {
@@ -1708,33 +1948,50 @@ namespace UMA
                     continue;
                 }
 
-                UMAPackedRecipeBase.UMAPackRecipe PackRecipe = null;
-                try { PackRecipe = utr.PackedLoad(); } catch { /* ignore */ }
+                if (string.Equals(utr.recipeType, "Wardrobe",
+                        StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(utr.recipeType, "WardrobeCollection",
+                        StringComparison.OrdinalIgnoreCase))
+                    continue;
 
                 bool invalid = false;
-
-                if (string.IsNullOrEmpty(PackRecipe?.race))
+                if (string.IsNullOrWhiteSpace(utr.recipeString))
                 {
-                    AddText($"Text Recipe {utr.name} does not have an assigned race!");
-                    invalid = true;
-                }
-                else
-                {
-                    if (!lib.HasAsset<RaceData>(PackRecipe.race))
-                    {
-                        AddText($"Text Recipe {utr.name} has an invalid race", LogType.Warning);
-                        invalid = true;
-                    }
-                }
-                if (PackRecipe == null || PackRecipe.umaDna == null || PackRecipe.umaDna.Count == 0)
-                {
-                    AddText($"Text Recipe {utr.name} does not have any DNA assigned!");
-                    invalid = true;
+                    AddText($"Character recipe '{utr.name}' has no serialized recipe data.",
+                        LogType.Error);
+                    ReviewAssetItem(r, "character recipe");
+                    continue;
                 }
 
-                if (invalid)
+                UMAPackedRecipeBase.UMAPackRecipe PackRecipe = null;
+                try { PackRecipe = utr.PackedLoad(); }
+                catch (Exception ex)
                 {
-                    ReviewAssetItem(r);
+                    AddText($"Character recipe '{utr.name}' could not be parsed: {ex.Message}",
+                        LogType.Error);
+                    ReviewAssetItem(r, "character recipe");
+                    continue;
+                }
+
+                if (PackRecipe == null)
+                {
+                    AddText($"Character recipe '{utr.name}' returned no packed recipe data.",
+                        LogType.Error);
+                    ReviewAssetItem(r, "character recipe");
+                    continue;
+                }
+
+                if (string.IsNullOrWhiteSpace(PackRecipe.race))
+                {
+                    AddText($"Character recipe '{utr.name}' has no race.",
+                        LogType.Error);
+                    invalid = true;
+                }
+                else if (!lib.HasAsset<RaceData>(PackRecipe.race))
+                {
+                    AddText($"Character recipe '{utr.name}' references missing race '{PackRecipe.race}'.",
+                        LogType.Error);
+                    invalid = true;
                 }
 
                 var Slots = PackRecipe?.slotsV3;
@@ -1742,271 +1999,380 @@ namespace UMA
 
                 if (Slots == null && Slot2 == null)
                 {
-                    AddText($"Text Recipe {utr.name} has no slots assigned!", LogType.Error);
-                    ReviewAssetItem(r);
+                    AddText($"Character recipe '{utr.name}' has no slot data.",
+                        LogType.Error);
+                    invalid = true;
                 }
-                else
+                else if (Slots != null)
                 {
-                    if (Slots != null)
+                    for (int i = 0; i < Slots.Length; i++)
                     {
-                        for (int i = 0; i < Slots.Length; i++)
-                        {
-                            UMAPackedRecipeBase.PackedSlotDataV3 s = Slots[i];
-                            if (s == null)
-                            {
-                                continue;
-                            }
-                            if (string.IsNullOrEmpty(s.id))
-                            {
-                                continue;
-                            }
-                            if (s.isPlaceholderSlot == false)
-                            {   
-                                bool slotExists = lib.HasAsset<SlotDataAsset>(s.id);
-                                if (!slotExists && !IsGeneratedBakedSlotReference(s.id))
-                                {
-                                    AddText($"Text Recipe {utr.name} has a slot '{s.id}' that does not exist in the library!", LogType.Error);
-                                    AddText("To fix this, restore the missing slot, add it to the library, and then validate the slot", LogType.Error);
-                                }
-                                else if (slotExists)
-                                {
-                                    SlotDataAsset sd = null;
-                                    try { sd = lib.GetAsset<SlotDataAsset>(s.id); } catch { /* ignore */ }
+                        UMAPackedRecipeBase.PackedSlotDataV3 slot = Slots[i];
+                        if (slot == null || string.IsNullOrEmpty(slot.id) ||
+                            slot.isPlaceholderSlot)
+                            continue;
 
-                                    if (sd != null && !(sd.isUtilitySlot || sd.isClippingPlane || sd.isWildCardSlot))
-                                    {
-                                        if (s.overlays == null || s.overlays.Length == 0)
-                                        {
-                                            AddText($"Text Recipe {utr.name} has a slot '{s.id}' does not have any overlays assigned!", LogType.Warning);
-                                            ReviewAssetItem(r);
-                                        }
-                                        else
-                                        {
-                                            // Validate overlay references exist in the library
-                                            for (int oi = 0; oi < s.overlays.Length; oi++)
-                                            {
-                                                var ov = s.overlays[oi];
-                                                if (ov == null || string.IsNullOrEmpty(ov.id)) continue;
-                                                if (!lib.HasAsset<OverlayDataAsset>(ov.id))
-                                                {
-                                                    AddText($"Text Recipe {utr.name} slot '{s.id}' references missing Overlay '{ov.id}'!", LogType.Error);
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
+                        if (!lib.HasAsset<SlotDataAsset>(slot.id) &&
+                            !IsGeneratedBakedSlotReference(slot.id))
+                        {
+                            AddText($"Character recipe '{utr.name}' references missing slot '{slot.id}'.",
+                                LogType.Error);
+                            invalid = true;
+                        }
+                        if (slot.overlays == null) continue;
+                        for (int overlayIndex = 0;
+                             overlayIndex < slot.overlays.Length;
+                             overlayIndex++)
+                        {
+                            var overlay = slot.overlays[overlayIndex];
+                            if (overlay != null &&
+                                !string.IsNullOrEmpty(overlay.id) &&
+                                !lib.HasAsset<OverlayDataAsset>(overlay.id))
+                            {
+                                AddText($"Character recipe '{utr.name}' slot '{slot.id}' references missing overlay '{overlay.id}'.",
+                                    LogType.Error);
+                                invalid = true;
                             }
                         }
                     }
                 }
+
+                // UMA 3 races supply DNA defaults from their DNA collection.
+                // A character recipe is therefore valid without packed legacy DNA.
+                if (invalid) ReviewAssetItem(r, "character recipe");
             }
-            AddText("Text Recipe check complete");
+            AddText("Character recipe check complete");
         }
 
         private void CheckRaces()
         {
-            AddText("Checking Races");
+            AddText("Checking UMA 3 races, DNA, expressions, and bounds");
             List<AssetItem> races = null;
             try { races = UMAAssetIndexer.Instance.GetAssetItems<RaceData>(); } catch { /* ignore */ }
 
-            if (races == null)
+            if (races == null || races.Count == 0)
             {
-                AddText("Unable to enumerate races.", LogType.Error);
+                AddText("No RaceData assets were found in the Global Library.",
+                    LogType.Error);
                 return;
             }
 
-            foreach (var r in races)
+            var raceNames = new HashSet<string>(StringComparer.Ordinal);
+            foreach (AssetItem assetItem in races)
             {
                 bool invalid = false;
-                if (r == null || r.Item == null)
+                if (assetItem == null || assetItem.Item == null)
                 {
-                    AddText($"RaceData {r?._Name ?? "(unknown)"} was not found. Please rebuild library and rerun", LogType.Error);
-                    if (r != null) RebuildFromAssetItem(r);
-                    return;
-                }
-                RaceData race = r.Item as RaceData;
-                if (race == null)
-                {
-                    AddText($"Invalid RaceData entry: {r._Name}", LogType.Error);
+                    AddText($"Indexed race '{assetItem?._Name ?? "(unknown)"}' cannot be loaded. Repair the Global Library.",
+                        LogType.Error);
+                    if (assetItem != null) RebuildFromAssetItem(assetItem);
                     continue;
                 }
-                if (!string.IsNullOrEmpty(race._oldRaceName))
+                RaceData race = assetItem.Item as RaceData;
+                if (race == null)
                 {
-                    AddText($"Race {race.name} is using the legacy 'raceName'", LogType.Warning);
+                    AddText($"Invalid RaceData entry: {assetItem._Name}",
+                        LogType.Error);
+                    continue;
                 }
+
+                if (string.IsNullOrWhiteSpace(race.raceName))
+                {
+                    AddText($"Race asset '{race.name}' has an empty race name.",
+                        LogType.Error);
+                    invalid = true;
+                }
+                else if (!raceNames.Add(race.raceName))
+                {
+                    AddText($"Race name '{race.raceName}' is indexed more than once. Avatar race resolution will be ambiguous.",
+                        LogType.Error);
+                    invalid = true;
+                }
+
+                UMATestReport report =
+                    UMARaceValidation.ValidateRaceData(race, false);
+                for (int messageIndex = 0;
+                     messageIndex < report.Messages.Count; messageIndex++)
+                {
+                    UMATestMessage message = report.Messages[messageIndex];
+                    if (message.Severity == UMATestSeverity.Info ||
+                        message.Severity == UMATestSeverity.Pass)
+                        continue;
+
+                    LogType logType = message.Severity == UMATestSeverity.Error
+                        ? LogType.Error
+                        : LogType.Warning;
+                    AddText($"Race '{race.raceName}' [{message.Category}]: {message.Message}",
+                        logType);
+                    invalid = true;
+                }
+
                 if (race.forceRebuildRaceSlots)
                 {
-                    AddText($"Race {race.name} is set to force rebuild race slots. This can cause performance issues if enabled in production. Please disable this setting after making any necessary slot changes.", LogType.Warning);
+                    AddText($"Race '{race.raceName}' has Force Rebuild Race Slots enabled. This is an authoring option and should normally be disabled for production.",
+                        LogType.Warning);
+                    invalid = true;
                 }
 
                 if (race.useNewDNA)
                 {
-                    if (race.DNACollection.DNAGroups.Count == 0)
-                    {
-                        AddText($"Race {race.name} is using new DNA system but has no DNAGroups defined!", LogType.Error);
-                        ReviewAssetItem(r);
-                    }
-                }
-                else 
-                {
-                    if (race.dnaConverterList == null || race.dnaConverterList.Length == 0)
-                    {
-                        AddText($"Race {race.name} uses old DNA and has no DNA Converters assigned!", LogType.Error);
-                        ReviewAssetItem(r);
-                    }                                   
-                    else
-                    {
-                        for (int i = 0; i < race.dnaConverterList.Length; i++)
-                        {
-                            if (race.dnaConverterList[i] == null)
-                            {
-                                AddText($"DynamicDNAConvertController {i} on Race {race.name} is invalid");
-                                invalid = true;
-                            }
-                            else
-                            {
-                                var cvt = race.dnaConverterList[i];
-                                var dnaasset = cvt.dnaAsset;
-                                if (dnaasset != null && !UMAAssetIndexer.Instance.HasAsset<DynamicUMADnaAsset>(dnaasset.name))
-                                {
-                                    AddText($"DynamicDNAConvertController {i} on Race {dnaasset.name} is not indexed! Adding...", LogType.Warning);
-                                    var ai = new AssetItem(typeof(DynamicUMADna), dnaasset);
-                                    UMAAssetIndexer.Instance.AddAssetItem(ai);
-                                    UMAAssetIndexer.Instance.ForceSave();
-                                }
-                            }
-                        }
-                    }
+                    ValidateNewDnaCollection(race, ref invalid);
                 }
 
-                // Validate base race recipe alignment with race name
-                if (race.baseRaceRecipe != null)
+                if (race.useManualRendererBounds &&
+                    (race.manualRendererBounds.x <= 0f ||
+                     race.manualRendererBounds.y <= 0f ||
+                     race.manualRendererBounds.z <= 0f))
                 {
-                    try
-                    {
-                        var packedBase = race.baseRaceRecipe as UMAPackedRecipeBase;
-                        if (packedBase != null)
-                        {
-                            var pack = packedBase.PackedLoad();
-                            if (pack != null && !string.IsNullOrEmpty(pack.race) && !string.Equals(pack.race, race.raceName, StringComparison.Ordinal))
-                            {
-                                AddText($"Warning: Base race recipe for '{race.raceName}' is set up for race '{pack.race}'. Verify this is intended.", LogType.Warning);
-                                ReviewAssetItem(r);
-                            }
-                        }
-                        else
-                        {
-                            // Base recipe is not a packed recipe type we can inspect
-                            AddText($"Warning: Base race recipe for '{race.raceName}' is not a packed recipe type (UMAPackedRecipeBase).", LogType.Warning);
-                        }
-                    }
-                    catch { /* ignore */ }
-                }
-                else
-                {
-                    AddText($"Warning: RaceData {race.raceName} has no base race recipe assigned!", LogType.Error);
+                    AddText($"Race '{race.raceName}' enables manual renderer bounds, but every extent must be greater than zero.",
+                        LogType.Error);
                     invalid = true;
                 }
 
-                // Validate cross compatible races exist
+                if (!race.UsesFbxRoute && race.baseRaceRecipe is UMAPackedRecipeBase packedBase)
+                {
+                    try
+                    {
+                        var pack = packedBase.PackedLoad();
+                        if (pack != null &&
+                            !string.IsNullOrEmpty(pack.race) &&
+                            !string.Equals(pack.race, race.raceName,
+                                StringComparison.Ordinal))
+                        {
+                            AddText($"Race '{race.raceName}' uses a base recipe saved for race '{pack.race}'.",
+                                LogType.Warning);
+                            invalid = true;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        AddText($"Race '{race.raceName}' base recipe could not be read: {ex.Message}",
+                            LogType.Error);
+                        invalid = true;
+                    }
+                }
+
                 try
                 {
                     var compat = race.GetCrossCompatibleRaces();
-                    if (compat != null && compat.Count > 0)
+                    var compatibleNames = new HashSet<string>(
+                        StringComparer.Ordinal);
+                    if (compat != null)
                     {
-                        foreach (var rn in compat)
+                        foreach (string compatibleRace in compat)
                         {
-                            if (!UMAAssetIndexer.Instance.HasAsset<RaceData>(rn))
+                            if (string.IsNullOrWhiteSpace(compatibleRace) ||
+                                !compatibleNames.Add(compatibleRace))
                             {
-                                AddText($"Warning: Race '{race.raceName}' lists cross-compatible race '{rn}' which is not in the library.", LogType.Warning);
+                                AddText($"Race '{race.raceName}' has an empty or duplicate cross-compatible race entry.",
+                                    LogType.Warning);
+                                invalid = true;
+                            }
+                            else if (!UMAAssetIndexer.Instance.HasAsset<RaceData>(
+                                         compatibleRace))
+                            {
+                                AddText($"Race '{race.raceName}' references missing cross-compatible race '{compatibleRace}'.",
+                                    LogType.Error);
+                                invalid = true;
                             }
                         }
                     }
                 }
-                catch { /* some races may not implement or may return null */ }
+                catch (Exception ex)
+                {
+                    AddText($"Race '{race.raceName}' compatibility data could not be checked: {ex.Message}",
+                        LogType.Error);
+                    invalid = true;
+                }
+
+                if (race.expressionGroup != null)
+                {
+                    var expressionMessages =
+                        new List<ExpressionValidationMessage>();
+                    race.expressionGroup.Validate(expressionMessages);
+                    for (int messageIndex = 0;
+                         messageIndex < expressionMessages.Count;
+                         messageIndex++)
+                    {
+                        ExpressionValidationMessage message =
+                            expressionMessages[messageIndex];
+                        LogType logType = message.severity ==
+                            ExpressionValidationSeverity.Error
+                            ? LogType.Error
+                            : message.severity ==
+                              ExpressionValidationSeverity.Warning
+                                ? LogType.Warning
+                                : LogType.Info;
+                        AddText($"Race '{race.raceName}' expression group: {message.message}",
+                            logType);
+                        if (logType != LogType.Info) invalid = true;
+                    }
+                }
 
                 if (invalid)
                 {
-                    ReviewAssetItem(r);
+                    ReviewAssetItem(assetItem, "race");
                 }
             }
             AddText("Race check complete");
         }
 
+        private void ValidateNewDnaCollection(RaceData race,
+            ref bool invalid)
+        {
+            if (race.DNACollection == null ||
+                race.DNACollection.DNAGroups == null)
+                return; // The central race validator reports this.
+
+            var dnaNames = new HashSet<string>(StringComparer.Ordinal);
+            for (int groupIndex = 0;
+                 groupIndex < race.DNACollection.DNAGroups.Count;
+                 groupIndex++)
+            {
+                DNAGroup group = race.DNACollection.DNAGroups[groupIndex];
+                if (group == null)
+                {
+                    AddText($"Race '{race.raceName}' has a null DNA group at index {groupIndex}.",
+                        LogType.Error);
+                    invalid = true;
+                    continue;
+                }
+                if (group.dnaList == null || group.dnaList.Count == 0)
+                {
+                    AddText($"Race '{race.raceName}' DNA group '{group.name}' contains no DNA items.",
+                        LogType.Warning);
+                    invalid = true;
+                    continue;
+                }
+
+                for (int dnaIndex = 0; dnaIndex < group.dnaList.Count;
+                     dnaIndex++)
+                {
+                    DNA dna = group.dnaList[dnaIndex];
+                    if (dna == null)
+                    {
+                        AddText($"Race '{race.raceName}' DNA group '{group.name}' has a null DNA item at index {dnaIndex}.",
+                            LogType.Error);
+                        invalid = true;
+                        continue;
+                    }
+                    if (string.IsNullOrWhiteSpace(dna.name) ||
+                        !dnaNames.Add(dna.name))
+                    {
+                        AddText($"Race '{race.raceName}' has an empty or duplicate UMA 3 DNA name '{dna.name}'.",
+                            LogType.Error);
+                        invalid = true;
+                    }
+                    if (dna.defaultValue < 0f || dna.defaultValue > 1f)
+                    {
+                        AddText($"Race '{race.raceName}' DNA '{dna.name}' has default value {dna.defaultValue}; UMA 3 DNA values must be between 0 and 1.",
+                            LogType.Error);
+                        invalid = true;
+                    }
+                    if (dna.effects == null)
+                    {
+                        AddText($"Race '{race.raceName}' DNA '{dna.name}' has a null effects list.",
+                            LogType.Error);
+                        invalid = true;
+                        continue;
+                    }
+                    for (int effectIndex = 0;
+                         effectIndex < dna.effects.Count; effectIndex++)
+                    {
+                        if (dna.effects[effectIndex] != null) continue;
+                        AddText($"Race '{race.raceName}' DNA '{dna.name}' has a null effect at index {effectIndex}.",
+                            LogType.Error);
+                        invalid = true;
+                    }
+                }
+            }
+        }
+
         private void CheckMaterials()
         {
-            AddText("Checking Materials");
-            var Mats = UMAAssetIndexer.Instance.GetAssetItems<UMAMaterial>();
-            int missingfiles = 0;
-            for (int i = 0; i < Mats.Count; i++)
+            AddText("Checking UMA 3 materials and shaders");
+            List<AssetItem> materials =
+                UMAAssetIndexer.Instance.GetAssetItems<UMAMaterial>();
+            if (materials == null || materials.Count == 0)
             {
-                var ai = Mats[i];
-                UMAMaterial mat = ai.Item as UMAMaterial;
-                if (mat == null)
+                AddText("No UMAMaterial assets were found in the Global Library.",
+                    LogType.Error);
+                return;
+            }
+
+            for (int materialIndex = 0;
+                 materialIndex < materials.Count; materialIndex++)
+            {
+                AssetItem assetItem = materials[materialIndex];
+                if (assetItem == null) continue;
+                UMAMaterial umaMaterial = assetItem.Item as UMAMaterial;
+                if (umaMaterial == null)
                 {
-                    AddText($"Unable to load UMAMaterial {ai._Name} at path {ai._Path} ");
-                    missingfiles++;
+                    AddText($"Indexed UMAMaterial '{assetItem._Name}' cannot be loaded from '{assetItem._Path}'.",
+                        LogType.Error);
+                    continue;
                 }
-                else
+
+                bool invalid = false;
+                if (umaMaterial.material == null)
                 {
-                    if (mat.material == null)
+                    AddText($"UMAMaterial '{umaMaterial.name}' has no Unity Material assigned.",
+                        LogType.Error);
+                    invalid = true;
+                }
+                else if (umaMaterial.material.shader == null ||
+                         IsErrorShader(umaMaterial.material.shader))
+                {
+                    AddText($"UMAMaterial '{umaMaterial.name}' uses a missing or error shader.",
+                        LogType.Error);
+                    invalid = true;
+                }
+
+                int channelCount = umaMaterial.channels != null
+                    ? umaMaterial.channels.Length
+                    : 0;
+                if (channelCount == 0 &&
+                    umaMaterial.materialType !=
+                        UMAMaterial.MaterialType.UseExistingMaterial)
+                {
+                    AddText($"UMAMaterial '{umaMaterial.name}' has no texture channels for material type {umaMaterial.materialType}.",
+                        LogType.Error);
+                    invalid = true;
+                }
+
+                var propertyNames = new HashSet<string>(StringComparer.Ordinal);
+                for (int channelIndex = 0; channelIndex < channelCount;
+                     channelIndex++)
+                {
+                    UMAMaterial.MaterialChannel channel =
+                        umaMaterial.channels[channelIndex];
+                    string propertyName = channel.materialPropertyName;
+                    if (channel.NonShaderTexture) continue;
+                    if (string.IsNullOrWhiteSpace(propertyName))
                     {
-                        AddText($"Error: UMAMaterial {mat.name} has no texture assigned!", LogType.Error);
-                        LogLine l = AddText("Inspect Material");
-                        l.ReviewItem = ai;
-                        l.ButtonAction = (line) => ReviewItem(l);
-                    }
-                    if (mat.channels.Length == 0 && mat.materialType != UMAMaterial.MaterialType.UseExistingMaterial)
-                    {
-                        AddText($"Warning: UMAMaterial {mat.name} has no texture channels. Is this expected?", LogType.Warning);
-                        LogLine l = AddText("Review Material");
-                        l.ReviewItem = ai;
-                        l.ButtonAction = (line) => ReviewItem(l);
-                    }
-                    if (mat.channels.Length > 0 && mat.materialType == UMAMaterial.MaterialType.UseExistingTextures)
-                    {
-                        bool bad = false;
-                        for (int ii = 0; ii < mat.channels.Length; ii++)
-                        {
-                            var chan = mat.channels[ii];
-                            if (chan.channelType != UMAMaterial.ChannelType.TintedTexture)
-                            {
-                                bad = true;
-                                chan.channelType = UMAMaterial.ChannelType.TintedTexture;
-                            }
-                        }
-                        if (bad)
-                        {
-                            EditorUtility.SetDirty(mat);
-                            AssetDatabase.SaveAssetIfDirty(mat);
-                            AddText($"Material {mat.name} with 'Use Existing textures' had invalid channel type. Fixed.");
-                        }
+                        AddText($"UMAMaterial '{umaMaterial.name}' channel [{channelIndex}] has no shader property name.",
+                            LogType.Error);
+                        invalid = true;
                     }
                     else
                     {
-                        bool bad = false;
-                        if (mat.material != null)
+                        if (!propertyNames.Add(propertyName))
                         {
-                            List<string> keywords = new List<string>(mat.material.GetTexturePropertyNames());
-                            // Check channel keywords vs shader.
-                            for (int ii = 0; ii < mat.channels.Length; ii++)
-                            {
-                                var chan = mat.channels[ii];
-                                if (!keywords.Contains(chan.materialPropertyName))
-                                {
-                                    AddText($"Error: Material {mat.name} channel {ii} has invalid property name");
-                                    bad = true;
-                                }
-                            }
-                            if (bad)
-                            {
-                                LogLine l = AddText("Review Material");
-                                l.ButtonAction = (line) => ReviewItem(l);
-                                l.ReviewItem = ai;
-                            }
+                            AddText($"UMAMaterial '{umaMaterial.name}' uses shader property '{propertyName}' on more than one channel.",
+                                LogType.Warning);
+                            invalid = true;
+                        }
+                        if (umaMaterial.material != null &&
+                            !umaMaterial.material.HasProperty(propertyName))
+                        {
+                            AddText($"UMAMaterial '{umaMaterial.name}' channel [{channelIndex}] references shader property '{propertyName}', which is not present on shader '{umaMaterial.material.shader?.name}'.",
+                                LogType.Error);
+                            invalid = true;
                         }
                     }
                 }
+
+                if (invalid) ReviewAssetItem(assetItem, "UMA material");
             }
             AddText("Material check complete");
         }
@@ -2177,18 +2543,22 @@ namespace UMA
             Rect textureRect = new Rect(gutter, gutter, sqrSide, sqrSide);
 
             var preview = scene.sceneTexture != null ? new GUIContent(scene.sceneTexture) : new GUIContent("Open");
-            bool canOpen = !string.IsNullOrEmpty(scene.scenePath);
+            string scenePath = UMAPathUtility.ResolveLegacyInstallAssetPath(
+                scene.scenePath);
+            bool canOpen = !string.IsNullOrEmpty(scenePath) &&
+                AssetDatabase.LoadAssetAtPath<SceneAsset>(scenePath) != null;
             using (new EditorGUI.DisabledScope(!canOpen))
             {
                 if (GUI.Button(textureRect, preview) && canOpen)
                 {
                     try
                     {
-                        EditorSceneManager.OpenScene(scene.scenePath);
+                        EditorSceneManager.OpenScene(scenePath);
                     }
                     catch (Exception ex)
                     {
-                        AddText($"Failed to open scene '{scene.sceneName}': {ex.Message}", LogType.Error);
+                        AddText($"Failed to open scene '{scene.sceneName}' " +
+                            $"at '{scenePath}': {ex.Message}", LogType.Error);
                     }
                 }
             }

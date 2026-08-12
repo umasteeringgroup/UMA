@@ -236,7 +236,8 @@ namespace UMA
             if (string.IsNullOrEmpty(relPath))
             {
                 relPath = !string.IsNullOrEmpty(emptyFallback) ? emptyFallback :
-                    label.Contains("UMA") ? UMAPathUtility.InstallAssetRoot : "Core/ShaderPackages";
+                    label.Contains("UMA") ? UMAPathUtility.InstallAssetRoot :
+                    UMAPathUtility.ShaderPackagesRelativePath;
             }
 
             bool isAssetPath = relPath.StartsWith("Assets/", StringComparison.OrdinalIgnoreCase) ||
@@ -309,6 +310,18 @@ namespace UMA
 
         public override void OnGUI(string searchContext)
         {
+            UMASettings currentSettings = UMASettings.GetOrCreateSettings();
+            if (currentSettings != null &&
+                (m_CustomSettings == null ||
+                 m_CustomSettings.targetObject != currentSettings))
+            {
+                m_CustomSettings = new SerializedObject(currentSettings);
+            }
+            else
+            {
+                m_CustomSettings?.UpdateIfRequiredOrScript();
+            }
+
             if (EditorApplication.isCompiling)
             {
                 dots += ".";
@@ -392,7 +405,8 @@ namespace UMA
             if (shaderFolderProp != null)
             {
                 DrawFolderSetting(shaderFolderProp, "Shader Folder",
-                    "UMA-relative folder where the legacy shader packages are located.", false, null);
+                    "UMA-relative folder containing the packages used to refresh UMA shaders.",
+                    false, null, false, UMAPathUtility.ShaderPackagesRelativePath);
             }
             if (texturePaintRecoveryFolderProp != null)
             {
@@ -452,7 +466,8 @@ namespace UMA
             DrawStringProperty("WikiURL", "Wiki URL", "The default wiki URL for UMA");
             DrawStringProperty("ForumURL", "Forum URL", "The default forum URL for UMA");
             DrawStringProperty("AssetStoreURL", "Asset Store URL", "The default asset store URL for UMA");
-            DrawStringProperty("ShaderFolder", "Shader Folder", "The folder where the UMA shaders are located, relative to the Assets folder. Usually UMA/Core/ShaderPackages");
+            DrawStringProperty("ShaderFolder", "Shader Folder",
+                "The UMA-relative shader package folder. Usually SRP/ShaderPackages");
 
             EndVerticalPadded(10);
 

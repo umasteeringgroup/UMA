@@ -26,6 +26,8 @@ namespace UMA
             "Core/Defaults/UMADynamicCharacterAvatar.prefab";
         private const string DefaultTextureMergeRelativePath =
             "Core/StandardAssets/UMA/Atlas/TextureMerge.asset";
+        private const string BuiltInFallbackVersion = "UMA 2.13.f3";
+        private static UMASettings transientSettings;
 #endif
 
         [SerializeField]
@@ -48,7 +50,7 @@ namespace UMA
         public bool Initialized = false;
 
         [SerializeField]
-        public string UMAVersion = "UMA 2.13.f3";
+        public string UMAVersion = BuiltInFallbackVersion;
         [SerializeField]
         public string KeepTag = "UMAKeepChain";
         public string[] tagLookupValues = new string[] { "Head", "Hair", "Torso", "Legs", "Feet", "Hands", "Smooshable", "Unsmooshable", "KeepChain", "Ignore" };
@@ -101,8 +103,8 @@ namespace UMA
         public string GithubURL;
         public string YoutubeURL;
         [Header("Shader Folder")]
-        [Tooltip("The UMA-relative folder where the legacy shader packages are located.")]
-        public string ShaderFolder;
+        [Tooltip("The UMA-relative folder containing the shader packages used to refresh UMA shaders.")]
+        public string ShaderFolder = UMAPathUtility.ShaderPackagesRelativePath;
         [Header("Default UMA Folder")]
         [Tooltip("Resolved UMA installation asset path. UMA may be below Assets or installed as a UPM package.")]
         public string UMAFolder = "Assets/UMA";
@@ -135,7 +137,7 @@ namespace UMA
             settings.WikiURL = "https://github.com/umasteeringgroup/UMA/wiki";
             settings.ForumURL = "https://discussions.unity.com/t/uma-unity-multipurpose-avatar-on-the-asset-store-part-2/1487160";
             settings.AssetStoreURL = "https://assetstore.unity.com/packages/3d/characters/uma-2-35611";
-            settings.ShaderFolder = "UMA/Core/ShaderPackages";
+            settings.ShaderFolder = UMAPathUtility.ShaderPackagesRelativePath;
             // Default to legacy combiner to avoid surprises
             settings.useMeshAPICombiner = false;
             UpdateAlwaysOverrides(settings); //VES added
@@ -152,10 +154,26 @@ namespace UMA
 #endif
 
 		public static UMASettings GetSettings() {
+			if (HasResolvedSettingsCache())
+				return instance;
+#if UNITY_EDITOR
+			return GetOrCreateSettings();
+#else
 			var settings = LoadPreferredSettings();
 			UpdateAlwaysOverrides(settings); //VES added
+			if (settings != null) instance = settings;
 			return settings;
+#endif
 		}
+
+        private static bool HasResolvedSettingsCache()
+        {
+#if UNITY_EDITOR
+            return instance != null && instance != transientSettings;
+#else
+            return instance != null;
+#endif
+        }
 
         private static UMASettings LoadPreferredSettings()
         {
@@ -171,9 +189,157 @@ namespace UMA
 #if UNITY_EDITOR
         private static UMASettings LoadInstallDefaultSettings()
         {
-            return AssetDatabase.LoadAssetAtPath<UMASettings>(
+            UMASettings settings = AssetDatabase.LoadAssetAtPath<UMASettings>(
                 UMAPathUtility.ResolveInstallAssetPath(
                     DefaultSettingsRelativePath));
+            if (settings != null) return settings;
+
+            // Package import callbacks can run before PackageInfo and the
+            // assembly-definition path have settled. Find the shipped asset by
+            // its installation-relative suffix instead of creating a permanent
+            // project asset from the C# field defaults.
+            string suffix = "/" + DefaultSettingsRelativePath;
+            string[] guids = AssetDatabase.FindAssets("t:UMASettings");
+            Array.Sort(guids, StringComparer.Ordinal);
+            for (int i = 0; i < guids.Length; i++)
+            {
+                string path = UMAPathUtility.Normalize(
+                    AssetDatabase.GUIDToAssetPath(guids[i]));
+                if (!path.EndsWith(suffix,
+                        StringComparison.OrdinalIgnoreCase))
+                    continue;
+                settings = AssetDatabase.LoadAssetAtPath<UMASettings>(path);
+                if (settings != null) return settings;
+            }
+            return null;
+        }
+
+        private static string GetInstallRoot(UMASettings installDefault)
+        {
+            string path = UMAPathUtility.Normalize(
+                AssetDatabase.GetAssetPath(installDefault));
+            string suffix = "/" + DefaultSettingsRelativePath;
+            return path.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)
+                ? path.Substring(0, path.Length - suffix.Length)
+                : UMAPathUtility.InstallAssetRoot;
+        }
+
+        private static bool IsBuiltInFallbackCopy(
+            UMASettings settings,
+            UMASettings installDefault)
+        {
+            return settings != null && installDefault != null &&
+                settings != installDefault &&
+                (string.IsNullOrWhiteSpace(settings.UMAVersion) ||
+                 string.Equals(settings.UMAVersion,
+                     BuiltInFallbackVersion,
+                     StringComparison.Ordinal)) &&
+                !string.Equals(installDefault.UMAVersion,
+                    BuiltInFallbackVersion,
+                    StringComparison.Ordinal);
+        }
+
+        private static bool SynchronizeInstallMetadata(
+            UMASettings settings,
+            UMASettings installDefault)
+        {
+            if (settings == null || installDefault == null ||
+                settings == installDefault)
+                return false;
+
+            bool changed = false;
+            changed |= CopyIfDifferent(ref settings.UMAVersion,
+                installDefault.UMAVersion);
+            changed |= CopyIfDifferent(ref settings.WarningMessage,
+                installDefault.WarningMessage);
+            changed |= CopyIfDifferent(ref settings.DiscordInvite,
+                installDefault.DiscordInvite);
+            changed |= CopyIfDifferent(ref settings.DiscordURL,
+                installDefault.DiscordURL);
+            changed |= CopyIfDifferent(ref settings.WikiURL,
+                installDefault.WikiURL);
+            changed |= CopyIfDifferent(ref settings.ForumURL,
+                installDefault.ForumURL);
+            changed |= CopyIfDifferent(ref settings.AssetStoreURL,
+                installDefault.AssetStoreURL);
+            changed |= CopyIfDifferent(ref settings.GithubURL,
+                installDefault.GithubURL);
+            changed |= CopyIfDifferent(ref settings.YoutubeURL,
+                installDefault.YoutubeURL);
+            if (settings.Overlays != installDefault.Overlays)
+            {
+                settings.Overlays = installDefault.Overlays;
+                changed = true;
+            }
+            if (settings.Slots != installDefault.Slots)
+            {
+                settings.Slots = installDefault.Slots;
+                changed = true;
+            }
+            return changed;
+        }
+
+        private static bool CopyIfDifferent(ref string target, string source)
+        {
+            if (string.Equals(target, source, StringComparison.Ordinal))
+                return false;
+            target = source;
+            return true;
+        }
+
+        private static bool UpgradeLegacyShaderFolder(UMASettings settings)
+        {
+            if (settings == null) return false;
+
+            string shaderFolder = UMAPathUtility.Normalize(
+                settings.ShaderFolder).Trim('/');
+            bool usesLegacyPath = string.IsNullOrEmpty(shaderFolder) ||
+                shaderFolder.Equals("Core/ShaderPackages",
+                    StringComparison.OrdinalIgnoreCase) ||
+                shaderFolder.Equals("UMA/Core/ShaderPackages",
+                    StringComparison.OrdinalIgnoreCase) ||
+                shaderFolder.Equals(
+                    UMAPathUtility.LegacyInstallRoot + "/Core/ShaderPackages",
+                    StringComparison.OrdinalIgnoreCase);
+            if (!usesLegacyPath) return false;
+
+            settings.ShaderFolder = UMAPathUtility.ShaderPackagesRelativePath;
+            return true;
+        }
+
+        private static UMASettings GetTransientSettings()
+        {
+            if (transientSettings == null)
+            {
+                transientSettings = CreateInstance<UMASettings>();
+                transientSettings.name = "UMASettings (Importing)";
+                transientSettings.hideFlags = HideFlags.HideAndDontSave;
+                transientSettings.useMeshAPICombiner = false;
+            }
+            instance = transientSettings;
+            return transientSettings;
+        }
+
+        public static void InvalidateSettingsCache()
+        {
+            instance = null;
+        }
+
+        public static bool IsSettingsAssetPath(string assetPath)
+        {
+            string path = UMAPathUtility.Normalize(assetPath);
+            return path.Equals(UMAPathUtility.ProjectSettingsPath,
+                       StringComparison.OrdinalIgnoreCase) ||
+                   path.EndsWith("/" + DefaultSettingsRelativePath,
+                       StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static void ReleaseTransientSettings()
+        {
+            if (transientSettings == null) return;
+            UMASettings transient = transientSettings;
+            transientSettings = null;
+            if (transient != null) DestroyImmediate(transient);
         }
 
         private static T LoadInstallDefaultAsset<T>(string relativePath)
@@ -307,21 +473,32 @@ namespace UMA
         public static UMASettings GetOrCreateSettings()
         {
 #if UNITY_EDITOR
+            if (HasResolvedSettingsCache())
+            {
+                UpdateAlwaysOverrides(instance);
+                return instance;
+            }
+
             UMASettings settings = AssetDatabase.LoadAssetAtPath<UMASettings>(
                 UMAPathUtility.ProjectSettingsPath);
             UMASettings installDefault = LoadInstallDefaultSettings();
-            if (settings == null && !UMAPathUtility.IsPackageInstallation)
+            string installRoot = installDefault != null
+                ? GetInstallRoot(installDefault)
+                : UMAPathUtility.InstallAssetRoot;
+            bool packageInstallation = installRoot.StartsWith(
+                "Packages/", StringComparison.OrdinalIgnoreCase);
+            if (settings == null && !packageInstallation)
                 settings = installDefault;
             if (settings == null)
             {
-                settings = installDefault != null
-                    ? Instantiate(installDefault)
-                    : ScriptableObject.CreateInstance<UMASettings>();
+                if (installDefault == null)
+                    return GetTransientSettings();
+
+                settings = Instantiate(installDefault);
                 settings.name = "UMAProjectSettings";
-                settings.UMAFolder = UMAPathUtility.InstallAssetRoot;
+                settings.UMAFolder = installRoot;
                 settings.texturePaintRecoveryFolder =
                     UMAPathUtility.OverlayPainterRecoveryRoot;
-                settings.useMeshAPICombiner = false;
                 UpdateAlwaysOverrides(settings); //VES added
                 UMAPathUtility.EnsureAssetFolder(
                     UMAPathUtility.ProjectResourcesRoot);
@@ -330,15 +507,24 @@ namespace UMA
                 AssetDatabase.SaveAssets();
             }
 
-            bool changed = RestoreMissingDefaultReferences(
+            bool changed = false;
+            if (IsBuiltInFallbackCopy(settings, installDefault))
+            {
+                EditorUtility.CopySerialized(installDefault, settings);
+                settings.name = "UMAProjectSettings";
+                changed = true;
+            }
+            changed |= SynchronizeInstallMetadata(settings, installDefault);
+            changed |= RestoreMissingDefaultReferences(
                 settings, installDefault);
-            if (UMAPathUtility.IsPackageInstallation)
+            changed |= UpgradeLegacyShaderFolder(settings);
+            if (packageInstallation)
             {
                 if (!string.Equals(settings.UMAFolder,
-                    UMAPathUtility.InstallAssetRoot,
+                    installRoot,
                     StringComparison.OrdinalIgnoreCase))
                 {
-                    settings.UMAFolder = UMAPathUtility.InstallAssetRoot;
+                    settings.UMAFolder = installRoot;
                     changed = true;
                 }
                 if (string.IsNullOrWhiteSpace(
@@ -367,6 +553,7 @@ namespace UMA
                 AssetDatabase.SaveAssetIfDirty(settings);
             }
             UpdateAlwaysOverrides(settings); //VES added
+            ReleaseTransientSettings();
             instance = settings;
             return settings;
 #else

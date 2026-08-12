@@ -31,12 +31,22 @@ namespace UMA
 
         private void OnEnable()
         {
+            if (!HasValidTargets())
+            {
+                return;
+            }
+
             RebuildFieldBindings();
             LoadFilterState();
         }
 
         public override void OnInspectorGUI()
         {
+            if (!HasValidTargets())
+            {
+                return;
+            }
+
             serializedObject.Update();
             RebuildFieldBindings();
 
@@ -56,6 +66,11 @@ namespace UMA
         {
             _scalarFields.Clear();
             _arrayFields.Clear();
+
+            if (!HasValidTargets())
+            {
+                return;
+            }
 
             FieldInfo[] fields = typeof(UMAAssetIndexer).GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly);
             Array.Sort(fields, (left, right) => left.MetadataToken.CompareTo(right.MetadataToken));
@@ -85,6 +100,25 @@ namespace UMA
                     _scalarFields.Add(binding);
                 }
             }
+        }
+
+        private bool HasValidTargets()
+        {
+            UnityEngine.Object[] editorTargets = targets;
+            if (editorTargets == null || editorTargets.Length == 0)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < editorTargets.Length; i++)
+            {
+                if (editorTargets[i] == null)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         private static bool IsArrayProperty(SerializedProperty property)

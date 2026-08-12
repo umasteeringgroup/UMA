@@ -353,7 +353,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   raceName: Human Female 3.0
-  raceController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
+  raceController: {fileID: 9100000, guid: 7b2325c148834db0b13bb8f7dbce1542, type: 2}
   wardrobeItems:
   - {fileID: 11400000, guid: 6bf1e7d4f0f7f014c97e78ceb7e21901, type: 2}
   - {fileID: 11400000, guid: f3ac0ca2b2909754fbdb795e47e96b80, type: 2}

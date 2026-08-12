@@ -6,8 +6,8 @@
   <Project Path="Assembly-CSharp.csproj" />
   <Project Path="UMA.TexturePaint.Editor.Tests.csproj" />
   <Project Path="UMA.TexturePaint.Tests.csproj" />
-  <Project Path="UMA.TexturePaint.Editor.csproj" />
   <Project Path="UMA3.Samples.csproj" />
+  <Project Path="UMA.TexturePaint.Editor.csproj" />
   <Project Path="UMA.TexturePaint.Runtime.csproj" />
   <Project Path="UMA_Editor.csproj" />
   <Project Path="UMA_Core_Editor_Tests.csproj" />

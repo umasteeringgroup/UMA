@@ -1339,7 +1339,18 @@ namespace UMA
                         AddType(item._Type);                    
                         TypeLookup[item._Type] = new Dictionary<string, AssetItem>();   
                     }
-                    TypeLookup[item._Type][item._Name] = item;
+
+                    Dictionary<string, AssetItem> lookup =
+                        TypeLookup[item._Type];
+                    if (lookup.TryGetValue(item._Name,
+                            out AssetItem existingItem) &&
+                        GetLookupPriority(existingItem) >
+                        GetLookupPriority(item))
+                    {
+                        continue;
+                    }
+
+                    lookup[item._Name] = item;
                 }
             }
             //if (added)
@@ -1347,6 +1358,58 @@ namespace UMA
                 BuildStringTypes();
            // }
         }
+
+        private static int GetLookupPriority(AssetItem item)
+        {
+            if (item == null)
+            {
+                return int.MinValue;
+            }
+
+            int priority = 0;
+            if (item._SerializedItem != null)
+            {
+                priority += 4;
+            }
+            if (item.IsAddressable)
+            {
+                priority += 2;
+            }
+            if (item.Ignore)
+            {
+                priority -= 1;
+            }
+
+#if UNITY_EDITOR
+            string resolvedPath = string.IsNullOrEmpty(item._Guid)
+                ? string.Empty
+                : AssetDatabase.GUIDToAssetPath(item._Guid);
+            string path = string.IsNullOrEmpty(resolvedPath)
+                ? item._Path
+                : resolvedPath;
+            string installRoot = UMAPathUtility.InstallAssetRoot;
+            if (IsPathInside(path, installRoot))
+            {
+                priority += 8;
+            }
+#endif
+
+            return priority;
+        }
+
+#if UNITY_EDITOR
+        private static bool IsPathInside(string path, string root)
+        {
+            string normalizedPath = (path ?? string.Empty)
+                .Replace('\\', '/').TrimEnd('/');
+            string normalizedRoot = (root ?? string.Empty)
+                .Replace('\\', '/').TrimEnd('/');
+            return string.Equals(normalizedPath, normalizedRoot,
+                       StringComparison.OrdinalIgnoreCase) ||
+                   normalizedPath.StartsWith(normalizedRoot + "/",
+                       StringComparison.OrdinalIgnoreCase);
+        }
+#endif
 
 
         private void CreateGenerator()

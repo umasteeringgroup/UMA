@@ -13,83 +13,74 @@ MonoBehaviour:
   m_Name: UMAWelcomeScenes
   m_EditorClassIdentifier: 
   umaScenes:
-  - sceneName: UMA DCS Demo - Simple Setup
-    shortName: Simple Setup
-    scenePath: Assets/UMA/Examples/DynamicCharacterSystem Examples/UMA DCS Demo -
-      Simple Setup.unity
+  - sceneName: U3 Character Creator
+    shortName: Character Creator
+    scenePath: Assets/UMA/UMA3/Scenes/U3-Character Creator.unity
     sceneTexture: {fileID: 2800000, guid: 0b712bfa22a0a3a4d8a000de89caa9e4, type: 3}
-    sceneDescription: This sample is a complete character editor. It shows how to
-      change the race, add wearable items to the character, and change shared colors.
-  - sceneName: UMA DCS Demo - Random Characters
+    sceneDescription: A complete UMA character editor showing races, wardrobe, DNA,
+      and shared colors.
+  - sceneName: U3 Generating Random Characters
     shortName: Random Characters
-    scenePath: Assets/UMA/Examples/DynamicCharacterSystem Examples/UMA DCS Demo -
-      Random Characters.unity
+    scenePath: Assets/UMA/UMA3/Scenes/U3-Generating Random Characters.unity
     sceneTexture: {fileID: 2800000, guid: 0461740b7685e2b48a85e91e005c2dc6, type: 3}
     sceneDescription: This sample shows how to use UMARandomAvatar to create random
       characters in the scene.
-  - sceneName: UMA DCS Demo - UMA Car
+  - sceneName: U3 Car Scene
     shortName: UMA Car
-    scenePath: Assets/UMA/Examples/DynamicCharacterSystem Examples/UMA DCS Demo -
-      UMA Car.unity
+    scenePath: Assets/UMA/UMA3/Scenes/U3-Car Scene.unity
     sceneTexture: {fileID: 2800000, guid: e325730323b430b45b28eb27534fc006, type: 3}
     sceneDescription: Shows how to use UMA to customize a non-humanoid avatars. In
       this case, a car.
-  - sceneName: Cloth Example
-    shortName: Cloth
-    scenePath: Assets/UMA/Examples/Physics Examples/Cloth Example.unity
-    sceneTexture: {fileID: 2800000, guid: 059306881dbd7ca4eabed94bc65dbaec, type: 3}
-    sceneDescription: This example shows how to setup cloth physics, and adjust the
-      wind.
-  - sceneName: Blendshape Example
-    shortName: Blendshapes
-    scenePath: Assets/UMA/Examples/Blendshape Examples/Blendshape Example.unity
-    sceneTexture: {fileID: 2800000, guid: b8c757a92d2c76d40b84a26660050d23, type: 3}
-    sceneDescription: This sample shows how to use Blendshape DNA, how to bake blendshapes
-      to get better build performance, and how to unbake them to allow customization
-      again.
-  - sceneName: RagdollExample
+  - sceneName: U3 Decals
+    shortName: Decals
+    scenePath: Assets/UMA/UMA3/Scenes/U3-Decals.unity
+    sceneTexture: {fileID: 0}
+    sceneDescription: Demonstrates UMA decal overlays and runtime decal workflows.
+  - sceneName: U3 Sandbox
+    shortName: Sandbox
+    scenePath: Assets/UMA/UMA3/Scenes/U3-Sandbox.unity
+    sceneTexture: {fileID: 0}
+    sceneDescription: A general-purpose scene for experimenting with UMA characters
+      and content.
+  - sceneName: U3 Ragdolls and Shooting Example
     shortName: Ragdoll Physics
-    scenePath: Assets/UMA/Examples/Physics Examples/RagdollExample.unity
+    scenePath: Assets/UMA/UMA3/Scenes/U3-Ragdolls and Shooting Example.unity
     sceneTexture: {fileID: 2800000, guid: cb2cf481ae6480f4f92c0c37a60ea01b, type: 3}
     sceneDescription: This sample shows how to enable ragdoll physics, how to determine
       hit area, and how to change the character to ragdoll and back to a standard
       UMA.
-  - sceneName: UMA Timeline Example
+  - sceneName: U3 Integrating with Timeline
     shortName: Integrating Timeline
-    scenePath: Assets/UMA/Examples/Timeline Example/UMA Timeline Example.unity
+    scenePath: Assets/UMA/UMA3/Scenes/U3-Integrating with Timeline.unity
     sceneTexture: {fileID: 2800000, guid: ea7e142b30e2bf840a95a29090bad4d2, type: 3}
     sceneDescription: This example shows how to integrate UMA into Timeline, for
       creating scripted scenes with UMA deformations.
-  - sceneName: MountingObjectsExampleScene
-    shortName: Mounting Objects
-    scenePath: Assets/UMA/Examples/MountingObjects Example/MountingObjectsExampleScene.unity
+  - sceneName: U3 How to Equip Items
+    shortName: Equip Items
+    scenePath: Assets/UMA/UMA3/Scenes/U3-How to equip items.unity
     sceneTexture: {fileID: 2800000, guid: e10b6bd4617793541a61856d200ce0e0, type: 3}
-    sceneDescription: 'This example shows several ways to attach game objects to
-      your UMA character. '
-  - sceneName: How to Construct a DCA from scratch
+    sceneDescription: Shows how to equip and attach items to an UMA character.
+  - sceneName: U3 How to Construct a DCA from Scratch
     shortName: How To Construct
-    scenePath: Assets/UMA/Examples/HowTo Examples/How to Construct a DCA from scratch.unity
+    scenePath: Assets/UMA/UMA3/Scenes/U3-How to Construct a DCA from scratch.unity
     sceneTexture: {fileID: 2800000, guid: 1726355a56d028f4ea74e009dcbf805a, type: 3}
     sceneDescription: How-To sample showing how to construct an UMA completely in
       code.
-  - sceneName: How to Construct and load a DCA from a prefab
+  - sceneName: U3 How to Construct and Load a DCA from a Prefab
     shortName: How To Prefab
-    scenePath: Assets/UMA/Examples/HowTo Examples/How to Construct and load a DCA
-      from a prefab.unity
+    scenePath: Assets/UMA/UMA3/Scenes/U3-How to Construct and load a DCA from a prefab.unity
     sceneTexture: {fileID: 2800000, guid: 1726355a56d028f4ea74e009dcbf805a, type: 3}
     sceneDescription: How-To sample shpwing how to create an UMA from a prefab that
       has already been configured.
-  - sceneName: How to Load and Save a DCA to a string
+  - sceneName: U3 How to Load and Save a DCA to a String
     shortName: How To Load/Save
-    scenePath: Assets/UMA/Examples/HowTo Examples/How to Load and Save a DCA to a
-      string.unity
+    scenePath: Assets/UMA/UMA3/Scenes/U3-How to Load and Save a DCA to a string.unity
     sceneTexture: {fileID: 2800000, guid: 1726355a56d028f4ea74e009dcbf805a, type: 3}
     sceneDescription: How-To sample that shows how to serialize an UMA to a string,
       and how to load that back in.
-  - sceneName: How to Use a Slider to control DNA
+  - sceneName: U3 How to Use a Slider to Control DNA
     shortName: How To Use a Slider
-    scenePath: Assets/UMA/Examples/HowTo Examples/How to Use a Slider to control
-      DNA.unity
+    scenePath: Assets/UMA/UMA3/Scenes/U3-How to Use a Slider to control DNA.unity
     sceneTexture: {fileID: 2800000, guid: 1726355a56d028f4ea74e009dcbf805a, type: 3}
     sceneDescription: How-To sample that shows how to use a slider to modify the
       DNA of an UMA.
