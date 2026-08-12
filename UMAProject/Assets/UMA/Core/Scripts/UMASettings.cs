@@ -26,7 +26,7 @@ namespace UMA
             "Core/Defaults/UMADynamicCharacterAvatar.prefab";
         private const string DefaultTextureMergeRelativePath =
             "Core/StandardAssets/UMA/Atlas/TextureMerge.asset";
-        private const string BuiltInFallbackVersion = "UMA 2.13.f3";
+        private const string BuiltInFallbackVersion = "UMA NextGen 3.0f4";
         private static UMASettings transientSettings;
 #endif
 

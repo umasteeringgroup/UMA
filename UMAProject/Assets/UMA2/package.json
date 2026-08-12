@@ -1,0 +1,25 @@
+{
+  "name": "com.umasteeringgroup.uma2",
+  "version": "3.0.4",
+  "displayName": "UMA 2 Legacy Content",
+  "description": "Optional UMA 2 races, wardrobe, animations, and legacy sample content for UMA 3 projects.",
+  "unity": "6000.3",
+  "type": "library",
+  "keywords": [
+    "UMA",
+    "avatar",
+    "legacy",
+    "content"
+  ],
+  "author": {
+    "name": "UMA Steering Group",
+    "url": "https://github.com/umasteeringgroup/UMA"
+  },
+  "license": "MIT",
+  "documentationUrl": "https://github.com/umasteeringgroup/UMA/wiki",
+  "changelogUrl": "https://github.com/umasteeringgroup/UMA/releases",
+  "licensesUrl": "https://github.com/umasteeringgroup/UMA/blob/master/LICENSE",
+  "dependencies": {
+    "com.umasteeringgroup.uma": "3.0.4"
+  }
+}

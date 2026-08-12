@@ -2,17 +2,60 @@
 
 ## What's New Since the UMA 3.02 Release
 
+UMA 3.04 is the cumulative release from UMA 3.02 forward. It includes everything previously prepared for the unreleased 3.03 together with the package, sample, reliability, and release-readiness work completed afterward; 3.03 is not a separate upgrade prerequisite.
+
+### New Authoring and Animation Tools
+
 - Added Overlay Painter, with synchronized 2D and 3D painting, brushes, paths, masks, layer groups, channel-aware compositing, normal generation from height data, and texture/overlay export.
-- Added persistent production Generator/Filter layers, including cloth and organic/metal weathering,
-  Quilt/Embroidery/Perforation/Atlas Scatter, multi-channel or mask-only Text with editable ribbon
-  guides, and accelerated Kuwahara/quantization/toon Stylization.
+- Expanded Overlay Painter with persistent production Generator and Filter layers, including cloth, organic and metal weathering, Quilt, Embroidery, Perforation, Atlas Scatter, multi-channel or mask-only Text with editable ribbon guides, and accelerated Kuwahara, quantization, and toon stylization.
+- Improved Overlay Painter persistence, recovery, history, plugin transactions, export validation, normal controls, and optional 2D Sprite grid integration. Package installations keep writable documents, exports, and recovery data in the project rather than modifying the installed package.
 - Added the Dynamic Expression Player, providing race-specific expression groups, layered input sources, procedural eye and blink support, runtime bone, blendshape, and material effects, plus legacy migration and diagnostics.
 - Improved Icon Creator with deterministic thumbnail generation, supersampled camera captures, stable asset paths and GUIDs, safer overwrites, and optional Sprite Atlas V2 generation organized by race and wardrobe region.
 - Added posed-character skinning-weight touchup, including brush-based vertex selection, weight visualization, normalization, preview, and saving changes to the source SlotDataAsset.
 - Expanded Slot Builder and UDIM workflows with in-place slot updates, preserved metadata, improved seam and weld handling, UDIM inspection, and direct Overlay Painter access for slots and UDIM groups.
 - Added the Pelvis Controller Animator and expanded secondary animation tooling and tests for pelvis, shoulder, torso, and leg correction.
+- Added and documented new asset-discovery, consolidation, animation, pose, race, prefab and scene, texture, slot, overlay, and wearable utilities.
+
+### Package Manager and Project Data
+
+- Added full Unity Package Manager support for installing UMA from `Packages/com.umasteeringgroup.uma`, while retaining the traditional `Assets/UMA` source-development layout.
+- Added `com.umasteeringgroup.uma2` as an optional legacy-content package. Its version tracks the base UMA package and its only package dependency is `com.umasteeringgroup.uma`.
+- Added package-location-independent asset resolution so settings, the Generator Prefab, Global Library, shaders, documentation, Welcome scenes, defaults, and other installed resources load correctly from either `Assets` or `Packages`.
+- Added cached UMA settings resolution. Project Settings, generation, the Welcome Window, and editor tools now share the correct active settings without repeatedly loading the asset during character generation.
+- Added project-owned writable data under `Assets/UMAProjectData` for package installs, including settings overrides, the Global Library, generated assets, Overlay Painter documents and recovery data, tasks, captures, and test artifacts. Installed package content remains read-only and update-safe.
+- Reorganized assembly definitions and corrected duplicate GUIDs introduced by moved bridge files. Addressables, FBX Exporter, 2D Sprite, and Test Framework integrations are isolated behind dependency-neutral bridges or constrained assemblies, preventing duplicate assemblies and missing-package compilation failures.
+- Removed HDRP as a forced consumer dependency. The UPM package installs the URP/core shader dependencies it uses, while HDRP support remains optional instead of being pulled into URP projects.
+- Added a Package Dependencies window for traditional `Assets/UMA` imports and clearer guidance for required and optional integrations.
+- Prevented generated Input System wrappers and editor scripts from creating duplicate types or leaking into consumer `Assembly-CSharp` assemblies.
+- Improved Global Library duplicate resolution so valid package assets win over stale, null, or legacy duplicates, including core assets such as the Capsule Collider slot.
+
+### Welcome Window and Editor Reliability
+
+- Updated the Welcome Window to display the active installed UMA version and settings, open sample scenes from either supported install location, and open this file in the Documentation Browser from **What's New**.
+- Restored **Recompile Shaders** with package-aware shader discovery and material repair.
+- Reworked **Scan Scene** to check current UMA 3 setup problems such as settings and Generator Prefab validity, unresolved avatar races or starting recipes, disabled generation, missing generated meshes, and broken materials or shaders.
+- Reworked **Scan Project** to validate the Global Library, races, slots, overlays, materials, text and wardrobe recipes, and wardrobe collections without rewriting content.
+- Improved editor resilience during imports and domain reloads, including null-target handling in the Global Library inspector, balanced custom inspector layout scopes, and stable object/session identifiers.
+- Disabled **Load File On Start** by default for newly configured Dynamic Character Avatars while retaining it for intentionally configured recipe-loading workflows.
+
+### Runtime, Rendering, and Sample Content
+
 - Improved WebGL and no-Burst support, added optional UMA Toolbar visibility, and expanded DNA cleanup, validation, and editor diagnostics.
+- Corrected Dynamic Expression Player saccades so both eyes glance together instead of mirroring into crossed or splayed poses, and corrected runtime animation-curve test setup for non-Legacy clips.
 - Improved texture and editor reliability, including transparent atlas prefill, overlay-level base-color multiplication, wardrobe-recipe cloning and conversion, project-item status display, and broader automated test coverage.
+- Corrected transient physics and jiggle-prefab serialization and reserialized affected assets to prevent inconsistent Prefab Importer results.
+- Updated UMA3 sample scenes and prefabs to use only UMA3 or shared Core assets. Legacy UMA2 references were removed, animations and controllers were repaired, and the samples now work when the optional UMA2 folder is not installed.
+- Fixed Random Avatar setup so generated characters receive a valid Animator Controller before building, and kept generated LOD meshes readable when runtime LOD processing needs to rewrite indices.
+- Added a root-motion Random Character Walker to the random-generation sample, with bounded wandering, pauses, speed-driven animation, character avoidance, crowd separation, and stall recovery. The Challenger locomotion controller now uses `Chal_Idle` and `Chal_Walk`.
+- Refreshed sample materials, renderer assets, races, recipes, T-poses, DNA poses, physics definitions, and pipeline-specific content for reliable clean-project imports.
+
+### Validation and Test Coverage
+
+- Added Release Asset Validation with structured reports and guided repair actions for missing references, stale serialized GUIDs, misplaced dependencies, and non-applicable material properties.
+- Added explicit boundary checks for UMA3 and optional UMA2 sample assets. Each sample set may reference only its own folder and permitted shared Core content, and all tests run when UMA2 is absent.
+- Added package-readiness, assembly-dependency, GUID-location, settings and Generator Prefab, Global Library, scene-reference, race smoke, renderer, thumbnail, and repair-utility tests.
+- Added clean-package checks that guard against duplicate assembly definitions, duplicate GUIDs, accidental package writes, forced optional integrations, legacy sample dependencies, and consumer-project type conflicts.
+- Standardized the supported editor baseline on Unity 6.3 and newer.
 
 ## What's New Since the UMA 3.01 Release
 
@@ -39,7 +82,7 @@
 UMA 3 is the next major branch of UMA. It is currently represented by the repository's `develop` branch and has not yet been merged into the default branch. This document is written for users who want to know what they can do differently in UMA 3, what to try first, and what to watch for when moving content from UMA 2.
 
 Scope of this document:
-- The original branch comparison was made on May 27, 2026. This document now also includes the changes committed from May 30 through July 16, 2026.
+- The original branch comparison was made on May 27, 2026. The historical long-form notes below cover the follow-up work through July 16, while the cumulative release summary above continues through the current package baseline.
 - `origin/master` is the repository's default branch in this checkout, so it is treated here as the current main-line baseline.
 - The merge base used by Git was `1ab11b099730cfa78259aba6f875cdec230ca766`.
 - The branch diff is very large and includes generated assets, imported assets, scene changes, and project cleanup. This document summarizes the user-facing code, tooling, workflow, documentation, content, and reliability changes.

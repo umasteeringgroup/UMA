@@ -1,6 +1,6 @@
 {
   "name": "com.umasteeringgroup.uma",
-  "version": "3.0.3",
+  "version": "3.0.4",
   "displayName": "UMA - Unity Multipurpose Avatar",
   "description": "UMA is an open-source character creation and customization system for Unity, including runtime character generation, authoring tools, sample content, and Overlay Painter.",
   "unity": "6000.3",

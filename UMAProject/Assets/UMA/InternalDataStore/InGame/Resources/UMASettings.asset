@@ -20,7 +20,7 @@ MonoBehaviour:
     Use the project settings instead.\n Modifying settings that need compiler\n directives
     set will NOT work if you\n edit them in the inspector!"
   Initialized: 1
-  UMAVersion: UMA NextGen 3.0f3
+  UMAVersion: UMA NextGen 3.0f4
   KeepTag: UMAKeepChain
   tagLookupValues:
   - Head
