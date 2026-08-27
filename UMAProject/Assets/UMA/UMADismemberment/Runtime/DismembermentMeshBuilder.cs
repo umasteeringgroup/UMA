@@ -25,12 +25,14 @@ namespace UMA.Dismemberment
         public readonly float seamWeldTolerance;
         public readonly DismembermentCapUvMode capUvMode;
         public readonly float centeredCapUvPadding;
+        public readonly int detachedFallbackBoneIndex;
 
         public DismembermentMeshBuildOptions(float threshold, int existingCapSubmesh,
             bool generateCaps, bool requireClosedCaps, float capUvMetersPerTile,
             float seamWeldTolerance = DefaultSeamWeldTolerance,
             DismembermentCapUvMode capUvMode = DismembermentCapUvMode.MeterScaledTiled,
-            float centeredCapUvPadding = UmaDismemberment.DefaultCenteredCapUvPadding)
+            float centeredCapUvPadding = UmaDismemberment.DefaultCenteredCapUvPadding,
+            int detachedFallbackBoneIndex = -1)
         {
             this.threshold = Mathf.Clamp01(threshold);
             this.existingCapSubmesh = existingCapSubmesh;
@@ -42,6 +44,7 @@ namespace UMA.Dismemberment
                 ? DismembermentCapUvMode.CenteredFit
                 : DismembermentCapUvMode.MeterScaledTiled;
             this.centeredCapUvPadding = Mathf.Clamp(centeredCapUvPadding, 0.001f, 0.25f);
+            this.detachedFallbackBoneIndex = detachedFallbackBoneIndex;
         }
 
         private const float GeometryEpsilon = 0.000001f;
@@ -335,9 +338,11 @@ namespace UMA.Dismemberment
             try
             {
                 outerMesh = BuildOutputMesh(source, source.name + " Dismembered Source",
-                    outerTriangles, outerCapVertices);
+                    outerTriangles, outerCapVertices, null, -1);
                 detachedMesh = BuildOutputMesh(source, source.name + " Detached",
-                    innerTriangles, innerCapVertices);
+                    innerTriangles, innerCapVertices, includedBones,
+                    ResolveFallbackBoneIndex(includedBones,
+                        options.detachedFallbackBoneIndex));
                 result = new DismembermentMeshBuildResult
                 {
                     outerMesh = outerMesh,
@@ -364,6 +369,15 @@ namespace UMA.Dismemberment
             return result;
         }
 
+        private static int ResolveFallbackBoneIndex(bool[] includedBones, int requested)
+        {
+            if ((uint)requested < (uint)includedBones.Length && includedBones[requested])
+                return requested;
+            for (int i = 0; i < includedBones.Length; i++)
+                if (includedBones[i]) return i;
+            return -1;
+        }
+
         private static void EnsureTriangleListCount(List<List<int>> lists, int count)
         {
             while (lists.Count < count) lists.Add(new List<int>());
@@ -374,48 +388,40 @@ namespace UMA.Dismemberment
         {
             includedWeights = new float[mesh.vertexCount];
             error = string.Empty;
-            NativeArray<byte> bonesPerVertex = default;
-            NativeArray<BoneWeight1> allWeights = default;
-            try
+            // Unity 6.3 returns non-owning views into the Mesh here. They must not be
+            // disposed by callers; doing so can deallocate the Mesh's native storage.
+            NativeArray<byte> bonesPerVertex = mesh.GetBonesPerVertex();
+            NativeArray<BoneWeight1> allWeights = mesh.GetAllBoneWeights();
+            if (bonesPerVertex.Length != mesh.vertexCount)
             {
-                bonesPerVertex = mesh.GetBonesPerVertex();
-                allWeights = mesh.GetAllBoneWeights();
-                if (bonesPerVertex.Length != mesh.vertexCount)
-                {
-                    error = $"Mesh '{mesh.name}' has inconsistent modern bone-weight data.";
-                    return false;
-                }
+                error = $"Mesh '{mesh.name}' has inconsistent modern bone-weight data.";
+                return false;
+            }
 
-                int offset = 0;
-                for (int vertex = 0; vertex < bonesPerVertex.Length; vertex++)
-                {
-                    int count = bonesPerVertex[vertex];
-                    float weight = 0f;
-                    for (int influence = 0; influence < count; influence++)
-                    {
-                        if ((uint)offset >= (uint)allWeights.Length)
-                        {
-                            error = $"Mesh '{mesh.name}' has a truncated bone-weight buffer.";
-                            return false;
-                        }
-                        BoneWeight1 boneWeight = allWeights[offset++];
-                        if ((uint)boneWeight.boneIndex < (uint)includedBones.Length &&
-                            includedBones[boneWeight.boneIndex]) weight += boneWeight.weight;
-                    }
-                    includedWeights[vertex] = Mathf.Clamp01(weight);
-                }
-                if (offset != allWeights.Length)
-                {
-                    error = $"Mesh '{mesh.name}' has unused entries in its bone-weight buffer.";
-                    return false;
-                }
-                return true;
-            }
-            finally
+            int offset = 0;
+            for (int vertex = 0; vertex < bonesPerVertex.Length; vertex++)
             {
-                if (bonesPerVertex.IsCreated) bonesPerVertex.Dispose();
-                if (allWeights.IsCreated) allWeights.Dispose();
+                int count = bonesPerVertex[vertex];
+                float weight = 0f;
+                for (int influence = 0; influence < count; influence++)
+                {
+                    if ((uint)offset >= (uint)allWeights.Length)
+                    {
+                        error = $"Mesh '{mesh.name}' has a truncated bone-weight buffer.";
+                        return false;
+                    }
+                    BoneWeight1 boneWeight = allWeights[offset++];
+                    if ((uint)boneWeight.boneIndex < (uint)includedBones.Length &&
+                        includedBones[boneWeight.boneIndex]) weight += boneWeight.weight;
+                }
+                includedWeights[vertex] = Mathf.Clamp01(weight);
             }
+            if (offset != allWeights.Length)
+            {
+                error = $"Mesh '{mesh.name}' has unused entries in its bone-weight buffer.";
+                return false;
+            }
+            return true;
         }
 
         private static int[] BuildCanonicalVertexMap(Vector3[] vertices, float tolerance)
@@ -890,7 +896,8 @@ namespace UMA.Dismemberment
         }
 
         private static Mesh BuildOutputMesh(Mesh source, string name,
-            List<List<int>> submeshTriangles, List<CapVertex> capVertices)
+            List<List<int>> submeshTriangles, List<CapVertex> capVertices,
+            bool[] retainedBones, int fallbackBoneIndex)
         {
             int sourceVertexCount = source.vertexCount;
             int outputVertexCount = sourceVertexCount + capVertices.Count;
@@ -912,7 +919,8 @@ namespace UMA.Dismemberment
             CopyColors(source, mesh, capVertices, outputVertexCount);
             CopyUVs(source, mesh, capVertices, outputVertexCount);
             mesh.bindposes = source.bindposes;
-            CopyBoneWeights(source, mesh, capVertices, outputVertexCount);
+            CopyBoneWeights(source, mesh, capVertices, outputVertexCount, retainedBones,
+                fallbackBoneIndex, submeshTriangles);
 
             mesh.subMeshCount = submeshTriangles.Count;
             for (int submesh = 0; submesh < submeshTriangles.Count; submesh++)
@@ -967,7 +975,13 @@ namespace UMA.Dismemberment
             {
                 var sourceValues = new List<Vector4>();
                 source.GetUVs(channel, sourceValues);
-                if (sourceValues.Count != source.vertexCount) continue;
+                if (sourceValues.Count != source.vertexCount)
+                {
+                    if (channel != 0) continue;
+                    sourceValues.Clear();
+                    for (int vertex = 0; vertex < source.vertexCount; vertex++)
+                        sourceValues.Add(Vector4.zero);
+                }
                 var output = new List<Vector4>(outputVertexCount);
                 output.AddRange(sourceValues);
                 for (int i = 0; i < caps.Count; i++)
@@ -981,7 +995,8 @@ namespace UMA.Dismemberment
         }
 
         private static void CopyBoneWeights(Mesh source, Mesh destination, List<CapVertex> caps,
-            int outputVertexCount)
+            int outputVertexCount, bool[] retainedBones, int fallbackBoneIndex,
+            List<List<int>> submeshTriangles)
         {
             NativeArray<byte> sourceCounts = default;
             NativeArray<BoneWeight1> sourceWeights = default;
@@ -1000,32 +1015,153 @@ namespace UMA.Dismemberment
                     total += sourceCounts[i];
                 }
                 offsets[source.vertexCount] = total;
-                int capWeightCount = 0;
-                for (int i = 0; i < caps.Count; i++) capWeightCount += sourceCounts[caps[i].sourceIndex];
+                if (total != sourceWeights.Length)
+                    throw new InvalidOperationException($"Mesh '{source.name}' has inconsistent " +
+                        "bone-weight counts.");
+
+                if (retainedBones == null)
+                {
+                    int capWeightCount = 0;
+                    for (int i = 0; i < caps.Count; i++)
+                        capWeightCount += sourceCounts[caps[i].sourceIndex];
+                    outputCounts = new NativeArray<byte>(outputVertexCount, Allocator.Temp,
+                        NativeArrayOptions.UninitializedMemory);
+                    outputWeights = new NativeArray<BoneWeight1>(total + capWeightCount,
+                        Allocator.Temp, NativeArrayOptions.UninitializedMemory);
+                    for (int i = 0; i < sourceCounts.Length; i++)
+                        outputCounts[i] = sourceCounts[i];
+                    NativeArray<BoneWeight1>.Copy(sourceWeights, outputWeights,
+                        sourceWeights.Length);
+                    int preservedWrite = sourceWeights.Length;
+                    for (int i = 0; i < caps.Count; i++)
+                    {
+                        int sourceIndex = caps[i].sourceIndex;
+                        byte count = sourceCounts[sourceIndex];
+                        outputCounts[source.vertexCount + i] = count;
+                        for (int weight = offsets[sourceIndex];
+                            weight < offsets[sourceIndex + 1]; weight++)
+                            outputWeights[preservedWrite++] = sourceWeights[weight];
+                    }
+                    destination.SetBoneWeights(outputCounts, outputWeights);
+                    return;
+                }
+
+                if ((uint)fallbackBoneIndex >= (uint)retainedBones.Length ||
+                    !retainedBones[fallbackBoneIndex])
+                    throw new InvalidOperationException("Detached weight sanitization has no " +
+                        "valid fallback bone.");
+
+                bool[] renderedSourceVertices = FindRenderedSourceVertices(source.vertexCount,
+                    submeshTriangles);
+                int sanitizedWeightCount = 0;
                 outputCounts = new NativeArray<byte>(outputVertexCount, Allocator.Temp,
                     NativeArrayOptions.UninitializedMemory);
-                outputWeights = new NativeArray<BoneWeight1>(total + capWeightCount, Allocator.Temp,
-                    NativeArrayOptions.UninitializedMemory);
-                for (int i = 0; i < sourceCounts.Length; i++) outputCounts[i] = sourceCounts[i];
-                NativeArray<BoneWeight1>.Copy(sourceWeights, outputWeights, sourceWeights.Length);
-                int write = sourceWeights.Length;
-                for (int i = 0; i < caps.Count; i++)
+                for (int vertex = 0; vertex < outputVertexCount; vertex++)
                 {
-                    int sourceIndex = caps[i].sourceIndex;
-                    byte count = sourceCounts[sourceIndex];
-                    outputCounts[source.vertexCount + i] = count;
-                    for (int weight = offsets[sourceIndex]; weight < offsets[sourceIndex + 1]; weight++)
-                        outputWeights[write++] = sourceWeights[weight];
+                    int sourceIndex = vertex < source.vertexCount
+                        ? vertex : caps[vertex - source.vertexCount].sourceIndex;
+                    bool rendered = vertex >= source.vertexCount ||
+                        renderedSourceVertices[sourceIndex];
+                    float retainedTotal = rendered ? SumRetainedWeights(sourceIndex, offsets,
+                        sourceWeights, retainedBones) : 0f;
+                    int retainedCount = retainedTotal > GeometryEpsilon
+                        ? CountRetainedWeights(sourceIndex, offsets, sourceWeights, retainedBones)
+                        : 0;
+                    if (retainedCount == 0) retainedCount = 1;
+                    outputCounts[vertex] = (byte)retainedCount;
+                    sanitizedWeightCount += retainedCount;
+                }
+
+                outputWeights = new NativeArray<BoneWeight1>(sanitizedWeightCount,
+                    Allocator.Temp, NativeArrayOptions.UninitializedMemory);
+                int write = 0;
+                for (int vertex = 0; vertex < outputVertexCount; vertex++)
+                {
+                    int sourceIndex = vertex < source.vertexCount
+                        ? vertex : caps[vertex - source.vertexCount].sourceIndex;
+                    bool rendered = vertex >= source.vertexCount ||
+                        renderedSourceVertices[sourceIndex];
+                    float retainedTotal = rendered ? SumRetainedWeights(sourceIndex, offsets,
+                        sourceWeights, retainedBones) : 0f;
+                    if (retainedTotal <= GeometryEpsilon)
+                    {
+                        outputWeights[write++] = new BoneWeight1
+                        {
+                            boneIndex = fallbackBoneIndex,
+                            weight = 1f
+                        };
+                        continue;
+                    }
+                    for (int weightIndex = offsets[sourceIndex];
+                        weightIndex < offsets[sourceIndex + 1]; weightIndex++)
+                    {
+                        BoneWeight1 weight = sourceWeights[weightIndex];
+                        ValidateWeightBoneIndex(weight.boneIndex, retainedBones.Length,
+                            source.name);
+                        if (!retainedBones[weight.boneIndex] || weight.weight <= 0f) continue;
+                        weight.weight /= retainedTotal;
+                        outputWeights[write++] = weight;
+                    }
                 }
                 destination.SetBoneWeights(outputCounts, outputWeights);
             }
             finally
             {
-                if (sourceCounts.IsCreated) sourceCounts.Dispose();
-                if (sourceWeights.IsCreated) sourceWeights.Dispose();
+                // sourceCounts/sourceWeights are non-owning Mesh views in Unity 6.3.
                 if (outputCounts.IsCreated) outputCounts.Dispose();
                 if (outputWeights.IsCreated) outputWeights.Dispose();
             }
+        }
+
+        private static bool[] FindRenderedSourceVertices(int sourceVertexCount,
+            List<List<int>> submeshTriangles)
+        {
+            var rendered = new bool[sourceVertexCount];
+            for (int submesh = 0; submesh < submeshTriangles.Count; submesh++)
+            {
+                List<int> triangles = submeshTriangles[submesh];
+                for (int i = 0; i < triangles.Count; i++)
+                {
+                    int vertex = triangles[i];
+                    if ((uint)vertex < (uint)sourceVertexCount) rendered[vertex] = true;
+                }
+            }
+            return rendered;
+        }
+
+        private static int CountRetainedWeights(int sourceIndex, int[] offsets,
+            NativeArray<BoneWeight1> weights, bool[] retainedBones)
+        {
+            int count = 0;
+            for (int i = offsets[sourceIndex]; i < offsets[sourceIndex + 1]; i++)
+            {
+                BoneWeight1 weight = weights[i];
+                ValidateWeightBoneIndex(weight.boneIndex, retainedBones.Length, "source mesh");
+                if (retainedBones[weight.boneIndex] && weight.weight > 0f) count++;
+            }
+            return count;
+        }
+
+        private static float SumRetainedWeights(int sourceIndex, int[] offsets,
+            NativeArray<BoneWeight1> weights, bool[] retainedBones)
+        {
+            float total = 0f;
+            for (int i = offsets[sourceIndex]; i < offsets[sourceIndex + 1]; i++)
+            {
+                BoneWeight1 weight = weights[i];
+                ValidateWeightBoneIndex(weight.boneIndex, retainedBones.Length, "source mesh");
+                if (retainedBones[weight.boneIndex] && weight.weight > 0f)
+                    total += weight.weight;
+            }
+            return total;
+        }
+
+        private static void ValidateWeightBoneIndex(int boneIndex, int boneCount,
+            string meshName)
+        {
+            if ((uint)boneIndex >= (uint)boneCount)
+                throw new InvalidOperationException($"Mesh '{meshName}' contains a weight for " +
+                    $"out-of-range bone {boneIndex}.");
         }
 
         private static void CopyBlendShapes(Mesh source, Mesh destination, List<CapVertex> caps,

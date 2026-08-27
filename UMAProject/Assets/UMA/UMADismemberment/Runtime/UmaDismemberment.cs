@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
 using UMA.CharacterSystem;
+using UMA.Dynamics;
+using Unity.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Rendering;
+using UnityEngine.Serialization;
 
 namespace UMA.Dismemberment
 {
@@ -40,6 +43,14 @@ namespace UMA.Dismemberment
         CenteredFit
     }
 
+    public enum DismemberedPhysicsMode
+    {
+        Automatic,
+        None,
+        Rigid,
+        ArticulatedRagdoll
+    }
+
     [Serializable]
     public struct DismembermentPipelineMaterial
     {
@@ -53,8 +64,11 @@ namespace UMA.Dismemberment
     {
         public Transform root;
         public Transform targetBone;
+        public Transform sourceTargetBone;
         public HumanBodyBones humanBone = HumanBodyBones.LastBone;
         public int boneHash;
+        public bool mainBodyRagdollRequested;
+        public bool mainBodyRagdollActivated;
         public SkinnedMeshRenderer[] detachedRenderers = Array.Empty<SkinnedMeshRenderer>();
         public SkinnedMeshRenderer[] sourceRenderers = Array.Empty<SkinnedMeshRenderer>();
     }
@@ -74,8 +88,11 @@ namespace UMA.Dismemberment
         {
             public Transform root;
             public Transform targetBone;
+            public Transform sourceTargetBone;
             public HumanBodyBones humanBone;
             public int boneHash;
+            public bool mainBodyRagdollRequested;
+            public bool mainBodyRagdollActivated;
             public SkinnedMeshRenderer[] detachedRenderers;
             public SkinnedMeshRenderer[] sourceRenderers;
         }
@@ -91,6 +108,21 @@ namespace UMA.Dismemberment
             [Range(0.001f, 0.25f), Tooltip("Inset from every UV0 edge when using Centered Fit. " +
                 "A value of 0.02 fits the cap inside 0.02 to 0.98.")]
             public float centeredCapUvPadding;
+            [Tooltip("UMA physics definitions to build on the piece detached by this cut. " +
+                "Include each severed-side bone that needs a collider or joint.")]
+            public List<UMAPhysicsElement> physicsDefinitions;
+            [Tooltip("Automatic makes a single-definition piece rigid and a multi-definition " +
+                "piece articulated. None suppresses detached physics for this cut.")]
+            public DismemberedPhysicsMode physicsMode;
+            [FormerlySerializedAs("trimDetachedBonePalette")]
+            [Tooltip("After cross-cut weights are sanitized, compact the renderer bone palette " +
+                "and remove cloned skeleton branches outside the cut subtree. The Global-to-cut " +
+                "transform path and the complete cut subtree are retained.")]
+            public bool trimDetachedRig;
+            [Tooltip("Ragdoll the surviving character after this cut succeeds. Use this for " +
+                "incapacitating cuts such as the head or upper leg. The character must have a " +
+                "configured UMAPhysicsAvatar.")]
+            public bool ragdollMainBody;
 
             public static BoneInfo CreateDefault(HumanBodyBones bone = HumanBodyBones.Head)
             {
@@ -99,7 +131,11 @@ namespace UMA.Dismemberment
                     humanBone = bone,
                     threshold = 0.5f,
                     capUvMode = DismembermentCapUvMode.MeterScaledTiled,
-                    centeredCapUvPadding = DefaultCenteredCapUvPadding
+                    centeredCapUvPadding = DefaultCenteredCapUvPadding,
+                    physicsDefinitions = new List<UMAPhysicsElement>(),
+                    physicsMode = DismemberedPhysicsMode.Automatic,
+                    trimDetachedRig = false,
+                    ragdollMainBody = false
                 };
             }
         }
@@ -179,6 +215,12 @@ namespace UMA.Dismemberment
             public Bounds previousRendererBounds;
         }
 
+        private sealed class SuspendedSourceCollider
+        {
+            public Collider collider;
+            public bool wasEnabled;
+        }
+
         private DynamicCharacterAvatar avatar;
         private UMAData currentData;
         private Animator animator;
@@ -188,6 +230,8 @@ namespace UMA.Dismemberment
         private readonly List<OwnedSourceRenderer> ownedSourceRenderers =
             new List<OwnedSourceRenderer>();
         private readonly List<GameObject> detachedPieces = new List<GameObject>();
+        private readonly List<SuspendedSourceCollider> suspendedSourceColliders =
+            new List<SuspendedSourceCollider>();
 
         private void OnEnable()
         {
@@ -224,8 +268,93 @@ namespace UMA.Dismemberment
                 info.threshold = Mathf.Clamp(info.threshold, 0.01f, 1f);
                 info.centeredCapUvPadding = NormalizeCenteredCapUvPadding(
                     info.centeredCapUvPadding);
+                info.physicsDefinitions ??= new List<UMAPhysicsElement>();
+                if (!Enum.IsDefined(typeof(DismemberedPhysicsMode), info.physicsMode))
+                    info.physicsMode = DismemberedPhysicsMode.Automatic;
                 sliceableHumanBones[i] = info;
             }
+        }
+
+        public bool TryGetBoneSettings(HumanBodyBones humanBone, out BoneInfo settings)
+        {
+            int index = ContainsBone(humanBone);
+            if (index >= 0)
+            {
+                settings = sliceableHumanBones[index];
+                return true;
+            }
+            settings = default;
+            return false;
+        }
+
+        /// <summary>
+        /// Disables UMAPhysicsAvatar-owned colliders on the source cut bone and its descendants.
+        /// Their original enabled states are restored by reset, undo, disable, destruction, or
+        /// the next UMA generation. Non-ragdoll gameplay colliders are not changed.
+        /// </summary>
+        public int SuspendSourceRagdollColliders(Transform sourceCutBone)
+        {
+            if (sourceCutBone == null) return 0;
+            UMAPhysicsAvatar physicsAvatar = FindMainBodyPhysicsAvatar(this);
+            if (physicsAvatar == null) return 0;
+
+            int suspendedCount = 0;
+            List<BoxCollider> boxColliders = physicsAvatar.BoxColliders;
+            if (boxColliders != null)
+            {
+                for (int i = 0; i < boxColliders.Count; i++)
+                    SuspendSourceCollider(boxColliders[i], sourceCutBone,
+                        ref suspendedCount);
+            }
+
+            List<ClothSphereColliderPair> sphereColliders = physicsAvatar.SphereColliders;
+            if (sphereColliders != null)
+            {
+                for (int i = 0; i < sphereColliders.Count; i++)
+                {
+                    ClothSphereColliderPair pair = sphereColliders[i];
+                    SuspendSourceCollider(pair.first, sourceCutBone, ref suspendedCount);
+                    SuspendSourceCollider(pair.second, sourceCutBone, ref suspendedCount);
+                }
+            }
+
+            List<CapsuleCollider> capsuleColliders = physicsAvatar.CapsuleColliders;
+            if (capsuleColliders != null)
+            {
+                for (int i = 0; i < capsuleColliders.Count; i++)
+                    SuspendSourceCollider(capsuleColliders[i], sourceCutBone,
+                        ref suspendedCount);
+            }
+            return suspendedCount;
+        }
+
+        private void SuspendSourceCollider(Collider collider, Transform sourceCutBone,
+            ref int suspendedCount)
+        {
+            if (collider == null || !collider.enabled) return;
+            Transform colliderTransform = collider.transform;
+            if (colliderTransform != sourceCutBone &&
+                !colliderTransform.IsChildOf(sourceCutBone)) return;
+            for (int i = 0; i < suspendedSourceColliders.Count; i++)
+                if (suspendedSourceColliders[i].collider == collider) return;
+
+            suspendedSourceColliders.Add(new SuspendedSourceCollider
+            {
+                collider = collider,
+                wasEnabled = collider.enabled
+            });
+            collider.enabled = false;
+            suspendedCount++;
+        }
+
+        private void RestoreSourceRagdollColliders()
+        {
+            for (int i = suspendedSourceColliders.Count - 1; i >= 0; i--)
+            {
+                SuspendedSourceCollider state = suspendedSourceColliders[i];
+                if (state.collider != null) state.collider.enabled = state.wasEnabled;
+            }
+            suspendedSourceColliders.Clear();
         }
 
         private void Subscribe()
@@ -260,6 +389,7 @@ namespace UMA.Dismemberment
 
         private void HandleCharacterBegun(UMAData data)
         {
+            RestoreSourceRagdollColliders();
             ReleaseOwnedSourceMeshes();
             splitBoneHashes.Clear();
             hasSplit.Clear();
@@ -273,8 +403,9 @@ namespace UMA.Dismemberment
             if (data == null) return;
             if (currentData != null && observedGenerationVersion != 0 &&
                 observedGenerationVersion != data.GenerationRequestVersion &&
-                ownedSourceRenderers.Count > 0)
+                (ownedSourceRenderers.Count > 0 || suspendedSourceColliders.Count > 0))
             {
+                RestoreSourceRagdollColliders();
                 ReleaseOwnedSourceMeshes();
                 splitBoneHashes.Clear();
                 hasSplit.Clear();
@@ -329,6 +460,8 @@ namespace UMA.Dismemberment
             float threshold = globalThreshold;
             DismembermentCapUvMode capUvMode = DismembermentCapUvMode.MeterScaledTiled;
             float centeredCapUvPadding = DefaultCenteredCapUvPadding;
+            bool trimDetachedRig = false;
+            bool ragdollMainBody = false;
             if (useSliceable)
             {
                 int index = ContainsBone(humanBone);
@@ -340,9 +473,12 @@ namespace UMA.Dismemberment
                 capUvMode = settings.capUvMode;
                 centeredCapUvPadding = NormalizeCenteredCapUvPadding(
                     settings.centeredCapUvPadding);
+                trimDetachedRig = settings.trimDetachedRig;
+                ragdollMainBody = settings.ragdollMainBody;
             }
             bool success = TrySliceInternal(bone, threshold, humanBone, preventRepeatedSlice,
-                capUvMode, centeredCapUvPadding, out info, out failure);
+                capUvMode, centeredCapUvPadding, trimDetachedRig, ragdollMainBody,
+                out info, out failure);
             return success;
         }
 
@@ -352,11 +488,12 @@ namespace UMA.Dismemberment
             return TrySliceInternal(bone, Mathf.Clamp(threshold, 0.01f, 1f),
                 HumanBodyBones.LastBone, preventRepeatedSlice,
                 DismembermentCapUvMode.MeterScaledTiled, DefaultCenteredCapUvPadding,
-                out info, out failure);
+                false, false, out info, out failure);
         }
 
         public void ResetDismemberment(bool destroyDetachedPieces = true)
         {
+            RestoreSourceRagdollColliders();
             ReleaseOwnedSourceMeshes();
             splitBoneHashes.Clear();
             hasSplit?.Clear();
@@ -364,9 +501,74 @@ namespace UMA.Dismemberment
             ClearFailure();
         }
 
+        /// <summary>
+        /// Restores the source renderers, destroys every tracked detached piece, exits the
+        /// character ragdoll, and optionally asks UMA to rebuild the current avatar recipe.
+        /// </summary>
+        public bool TryUndoDismemberment(out string failure, bool rebuildAvatar = true)
+        {
+            failure = string.Empty;
+            EnsureInitialized();
+            DynamicCharacterAvatar targetAvatar = avatar != null
+                ? avatar : GetComponent<DynamicCharacterAvatar>();
+
+            // Restore the owned source meshes before changing animation/physics state. This is
+            // immediate even though detached GameObjects use Unity's end-of-frame Destroy in play.
+            ResetDismemberment(true);
+
+            string ragdollFailure = string.Empty;
+            UMAPhysicsAvatar physicsAvatar = FindMainBodyPhysicsAvatar(this);
+            if (Application.isPlaying && physicsAvatar != null && physicsAvatar.ragdolled)
+            {
+                try
+                {
+                    physicsAvatar.ragdolled = false;
+                }
+                catch (Exception exception)
+                {
+                    ragdollFailure = "The main-body ragdoll could not be disabled: " +
+                        exception.Message;
+                }
+            }
+
+            if (!rebuildAvatar)
+            {
+                if (string.IsNullOrEmpty(ragdollFailure)) return true;
+                return Fail(DismembermentFailureReason.InternalError,
+                    "The dismembered meshes and limbs were reset, but " + ragdollFailure,
+                    out failure);
+            }
+            if (targetAvatar == null)
+                return Fail(DismembermentFailureReason.NotInitialized,
+                    "The dismemberment was reset, but no DynamicCharacterAvatar was found to " +
+                    "rebuild." + FormatUndoRagdollFailure(ragdollFailure), out failure);
+
+            try
+            {
+                targetAvatar.BuildCharacter(true, !targetAvatar.BundleCheck);
+            }
+            catch (Exception exception)
+            {
+                return Fail(DismembermentFailureReason.InternalError,
+                    $"The dismemberment was reset, but UMA could not rebuild the avatar: " +
+                    exception.Message + FormatUndoRagdollFailure(ragdollFailure), out failure);
+            }
+            if (string.IsNullOrEmpty(ragdollFailure)) return true;
+            return Fail(DismembermentFailureReason.InternalError,
+                "The dismemberment was reset and the UMA rebuild was requested, but " +
+                ragdollFailure, out failure);
+        }
+
+        private static string FormatUndoRagdollFailure(string ragdollFailure)
+        {
+            return string.IsNullOrEmpty(ragdollFailure)
+                ? string.Empty : " Additionally, " + ragdollFailure;
+        }
+
         private bool TrySliceInternal(Transform bone, float threshold, HumanBodyBones humanBone,
             bool preventRepeatedSlice, DismembermentCapUvMode capUvMode,
-            float centeredCapUvPadding, out DismemberedInfo info, out string failure)
+            float centeredCapUvPadding, bool trimDetachedRig, bool ragdollMainBody,
+            out DismemberedInfo info, out string failure)
         {
             info = default;
             failure = string.Empty;
@@ -403,6 +605,8 @@ namespace UMA.Dismemberment
                 bool[] includedBones = BuildRendererBoneMask(rendererBones, includedTransforms,
                     includedHashes, out bool rendererUsesTarget);
                 if (!rendererUsesTarget) continue;
+                int fallbackBoneIndex = FindDetachedFallbackBone(rendererBones, includedBones,
+                    bone, boneHash);
                 if (renderer.GetComponent<Cloth>() != null)
                 {
                     DestroyPending(pending);
@@ -419,7 +623,7 @@ namespace UMA.Dismemberment
                     : DismembermentMeshBuildOptions.DefaultSeamWeldTolerance;
                 var options = new DismembermentMeshBuildOptions(threshold, existingCap,
                     generateCaps, requireClosedCaps, capUvMetersPerTile, effectiveSeamTolerance,
-                    capUvMode, centeredCapUvPadding);
+                    capUvMode, centeredCapUvPadding, fallbackBoneIndex);
                 DismembermentMeshBuildStatus status = DismembermentMeshBuilder.Build(
                     renderer.sharedMesh, includedBones, options,
                     out DismembermentMeshBuildResult build, out string buildError);
@@ -450,6 +654,7 @@ namespace UMA.Dismemberment
             try
             {
                 if (!TryCreateDetachedHierarchy(currentData, bone, pending, capMaterial,
+                    trimDetachedRig,
                     out detachedRoot, out Transform detachedTargetBone, detachedRenderers,
                     detachedMeshes, out string cloneError))
                 {
@@ -492,12 +697,17 @@ namespace UMA.Dismemberment
             detachedPieces.Add(detachedRoot);
             splitBoneHashes.Add(boneHash);
             hasSplit.Add(bone);
+            bool mainBodyRagdollActivated = ragdollMainBody &&
+                TryActivateMainBodyRagdoll(humanBone, bone);
             info = new DismemberedInfo
             {
                 root = detachedRoot.transform,
                 targetBone = detachedRoot.GetComponent<DismemberedPiece>().TargetBone,
+                sourceTargetBone = bone,
                 humanBone = humanBone,
                 boneHash = boneHash,
+                mainBodyRagdollRequested = ragdollMainBody,
+                mainBodyRagdollActivated = mainBodyRagdollActivated,
                 detachedRenderers = detachedRenderers.ToArray(),
                 sourceRenderers = sourceRenderers
             };
@@ -505,13 +715,61 @@ namespace UMA.Dismemberment
             {
                 root = info.root,
                 targetBone = info.targetBone,
+                sourceTargetBone = bone,
                 humanBone = humanBone,
                 boneHash = boneHash,
+                mainBodyRagdollRequested = ragdollMainBody,
+                mainBodyRagdollActivated = mainBodyRagdollActivated,
                 detachedRenderers = info.detachedRenderers,
                 sourceRenderers = info.sourceRenderers
             };
             InvokeCompletionEvents(info, richResult);
             return true;
+        }
+
+        private bool TryActivateMainBodyRagdoll(HumanBodyBones humanBone, Transform cutBone)
+        {
+            UMAPhysicsAvatar physicsAvatar = FindMainBodyPhysicsAvatar(this);
+            string cutName = humanBone != HumanBodyBones.LastBone
+                ? humanBone.ToString()
+                : cutBone != null ? cutBone.name : "unknown cut";
+            if (physicsAvatar == null)
+            {
+                Debug.LogWarning($"UMA Dismemberment: '{cutName}' is configured to ragdoll the " +
+                    "main body, but no UMAPhysicsAvatar was found on the character. The cut " +
+                    "succeeded, but the main body was not ragdolled.", this);
+                return false;
+            }
+            if (!Application.isPlaying)
+            {
+                Debug.LogWarning($"UMA Dismemberment: '{cutName}' requested a main-body " +
+                    "ragdoll outside Play Mode. The cut succeeded, but ragdoll activation is " +
+                    "runtime-only.", this);
+                return false;
+            }
+
+            try
+            {
+                if (!physicsAvatar.ragdolled) physicsAvatar.ragdolled = true;
+                return physicsAvatar.ragdolled;
+            }
+            catch (Exception exception)
+            {
+                Debug.LogWarning($"UMA Dismemberment: The '{cutName}' cut succeeded, but the " +
+                    $"main body could not be ragdolled: {exception.Message}", this);
+                return false;
+            }
+        }
+
+        internal static UMAPhysicsAvatar FindMainBodyPhysicsAvatar(Component source)
+        {
+            if (source == null) return null;
+            UMAPhysicsAvatar physicsAvatar = source.GetComponent<UMAPhysicsAvatar>();
+            if (physicsAvatar == null)
+                physicsAvatar = source.GetComponentInParent<UMAPhysicsAvatar>(true);
+            if (physicsAvatar == null)
+                physicsAvatar = source.GetComponentInChildren<UMAPhysicsAvatar>(true);
+            return physicsAvatar;
         }
 
         private bool TryResolveHumanBone(HumanBodyBones humanBone, out Transform bone,
@@ -575,8 +833,25 @@ namespace UMA.Dismemberment
             return mask;
         }
 
+        private static int FindDetachedFallbackBone(Transform[] rendererBones,
+            bool[] includedBones, Transform targetBone, int targetBoneHash)
+        {
+            rendererBones ??= Array.Empty<Transform>();
+            includedBones ??= Array.Empty<bool>();
+            for (int i = 0; i < rendererBones.Length; i++)
+            {
+                Transform candidate = rendererBones[i];
+                if (candidate == targetBone || candidate != null &&
+                    UMAUtils.StringToHash(candidate.name) == targetBoneHash) return i;
+            }
+            for (int i = 0; i < includedBones.Length; i++)
+                if (includedBones[i]) return i;
+            return -1;
+        }
+
         private static bool TryCreateDetachedHierarchy(UMAData data, Transform sourceTargetBone,
-            List<PendingRenderer> pending, Material capMaterial, out GameObject detachedRoot,
+            List<PendingRenderer> pending, Material capMaterial, bool trimDetachedRig,
+            out GameObject detachedRoot,
             out Transform detachedTargetBone, List<SkinnedMeshRenderer> detachedRenderers,
             List<Mesh> detachedMeshes, out string error)
         {
@@ -657,6 +932,14 @@ namespace UMA.Dismemberment
                         return false;
                     }
                 }
+                if (trimDetachedRig && !TryCompactDetachedBonePalette(
+                    item.build.detachedMesh, mappedBones, out mappedBones,
+                    out string paletteError))
+                {
+                    error = $"Could not compact detached renderer '{item.source.name}': " +
+                        paletteError;
+                    return false;
+                }
                 renderer.bones = mappedBones;
                 renderer.rootBone = item.source.rootBone != null &&
                     boneMap.TryGetValue(item.source.rootBone, out Transform mappedRoot)
@@ -670,7 +953,48 @@ namespace UMA.Dismemberment
                 detachedMeshes.Add(item.build.detachedMesh);
                 item.build.detachedMesh = null;
             }
+            if (trimDetachedRig)
+                TrimDetachedHierarchy(boneMap[sourceSkeletonRoot], detachedTargetBone);
             return true;
+        }
+
+        internal static void TrimDetachedHierarchy(Transform detachedSkeletonRoot,
+            Transform detachedTargetBone)
+        {
+            var retained = new HashSet<Transform>();
+            var stack = new Stack<Transform>();
+            stack.Push(detachedTargetBone);
+            while (stack.Count > 0)
+            {
+                Transform current = stack.Pop();
+                if (current == null || !retained.Add(current)) continue;
+                for (int child = current.childCount - 1; child >= 0; child--)
+                    stack.Push(current.GetChild(child));
+            }
+            Transform ancestor = detachedTargetBone.parent;
+            while (ancestor != null)
+            {
+                retained.Add(ancestor);
+                if (ancestor == detachedSkeletonRoot) break;
+                ancestor = ancestor.parent;
+            }
+            PruneDetachedBranches(detachedSkeletonRoot, retained);
+        }
+
+        private static void PruneDetachedBranches(Transform parent,
+            HashSet<Transform> retained)
+        {
+            for (int childIndex = parent.childCount - 1; childIndex >= 0; childIndex--)
+            {
+                Transform child = parent.GetChild(childIndex);
+                if (retained.Contains(child))
+                {
+                    PruneDetachedBranches(child, retained);
+                    continue;
+                }
+                child.SetParent(null, true);
+                DestroyOwnedObject(child.gameObject);
+            }
         }
 
         private static bool AddRequiredPath(HashSet<Transform> required, Transform transform,
@@ -718,6 +1042,112 @@ namespace UMA.Dismemberment
         private static float SafeDivide(float value, float divisor)
         {
             return Mathf.Abs(divisor) > 0.000001f ? value / divisor : value;
+        }
+
+        internal static bool TryCompactDetachedBonePalette(Mesh mesh, Transform[] sourceBones,
+            out Transform[] compactBones, out string error)
+        {
+            compactBones = sourceBones;
+            error = string.Empty;
+            if (mesh == null || sourceBones == null || sourceBones.Length == 0) return true;
+
+            NativeArray<byte> sourceCounts = default;
+            NativeArray<BoneWeight1> sourceWeights = default;
+            NativeArray<byte> compactCounts = default;
+            NativeArray<BoneWeight1> compactWeights = default;
+            try
+            {
+                // Unity owns the arrays returned by these Mesh accessors. They are non-owning
+                // views: never Dispose them, and copy their data before modifying this Mesh.
+                sourceCounts = mesh.GetBonesPerVertex();
+                sourceWeights = mesh.GetAllBoneWeights();
+                if (sourceCounts.Length != mesh.vertexCount)
+                {
+                    error = $"the mesh has {sourceCounts.Length} bone-count entries for " +
+                        $"{mesh.vertexCount} vertices.";
+                    return false;
+                }
+
+                int expectedWeightCount = 0;
+                for (int i = 0; i < sourceCounts.Length; i++)
+                    expectedWeightCount += sourceCounts[i];
+                if (expectedWeightCount != sourceWeights.Length)
+                {
+                    error = $"the mesh bone counts reference {expectedWeightCount} weights, " +
+                        $"but the mesh contains {sourceWeights.Length}.";
+                    return false;
+                }
+
+                var used = new bool[sourceBones.Length];
+                for (int i = 0; i < sourceWeights.Length; i++)
+                {
+                    int boneIndex = sourceWeights[i].boneIndex;
+                    if ((uint)boneIndex >= (uint)sourceBones.Length)
+                    {
+                        error = $"weight {i} references bone index {boneIndex}, but the renderer " +
+                            $"has {sourceBones.Length} bones.";
+                        return false;
+                    }
+                    if (sourceWeights[i].weight > 0f) used[boneIndex] = true;
+                }
+
+                int usedCount = 0;
+                for (int i = 0; i < used.Length; i++) if (used[i]) usedCount++;
+                if (usedCount == sourceBones.Length) return true;
+                if (usedCount == 0)
+                {
+                    error = "the detached mesh contains no positive bone weights.";
+                    return false;
+                }
+
+                Matrix4x4[] sourceBindposes = mesh.bindposes;
+                if (sourceBindposes.Length != sourceBones.Length)
+                {
+                    error = $"the mesh has {sourceBindposes.Length} bind poses but the renderer " +
+                        $"has {sourceBones.Length} bones.";
+                    return false;
+                }
+
+                var remap = new int[sourceBones.Length];
+                Array.Fill(remap, -1);
+                compactBones = new Transform[usedCount];
+                var compactBindposes = new Matrix4x4[usedCount];
+                int write = 0;
+                for (int oldIndex = 0; oldIndex < sourceBones.Length; oldIndex++)
+                {
+                    if (!used[oldIndex]) continue;
+                    remap[oldIndex] = write;
+                    compactBones[write] = sourceBones[oldIndex];
+                    compactBindposes[write] = sourceBindposes[oldIndex];
+                    write++;
+                }
+                compactCounts = new NativeArray<byte>(sourceCounts.Length, Allocator.Temp,
+                    NativeArrayOptions.UninitializedMemory);
+                compactWeights = new NativeArray<BoneWeight1>(sourceWeights.Length, Allocator.Temp,
+                    NativeArrayOptions.UninitializedMemory);
+                NativeArray<byte>.Copy(sourceCounts, compactCounts);
+                for (int i = 0; i < sourceWeights.Length; i++)
+                {
+                    BoneWeight1 weight = sourceWeights[i];
+                    weight.boneIndex = remap[weight.boneIndex];
+                    compactWeights[i] = weight;
+                }
+
+                // Drop the non-owning views before SetBoneWeights changes the Mesh's native
+                // storage. Only the independent Temp arrays cross this boundary.
+                sourceCounts = default;
+                sourceWeights = default;
+
+                mesh.SetBoneWeights(compactCounts, compactWeights);
+                mesh.bindposes = compactBindposes;
+                return true;
+            }
+            finally
+            {
+                // sourceCounts/sourceWeights are non-owning Mesh views in Unity 6.3.
+                if (compactCounts.IsCreated) compactCounts.Dispose();
+                if (compactWeights.IsCreated) compactWeights.Dispose();
+            }
         }
 
         private static void CopyRendererState(SkinnedMeshRenderer source,

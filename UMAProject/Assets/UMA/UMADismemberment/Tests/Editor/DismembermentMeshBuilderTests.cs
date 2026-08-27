@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using UMA.CharacterSystem;
+using UMA.Dynamics;
 using Unity.Collections;
 using UnityEngine;
 
@@ -138,6 +139,332 @@ namespace UMA.Dismemberment.Tests
                 Is.EqualTo(DismembermentCapUvMode.MeterScaledTiled));
             Assert.That(settings.centeredCapUvPadding,
                 Is.EqualTo(UmaDismemberment.DefaultCenteredCapUvPadding));
+            Assert.That(settings.physicsDefinitions, Is.Not.Null.And.Empty);
+            Assert.That(settings.physicsMode, Is.EqualTo(DismemberedPhysicsMode.Automatic));
+            Assert.That(settings.trimDetachedRig, Is.False);
+            Assert.That(settings.ragdollMainBody, Is.False);
+        }
+
+        [Test]
+        public void DetachedMeshRemovesCrossCutWeightsAndUsesCutBoneFallback()
+        {
+            Mesh source = Own(CreateWeightedTetrahedron(true));
+            var options = new DismembermentMeshBuildOptions(0.15f, -1, true, true, 0.25f,
+                DismembermentMeshBuildOptions.DefaultSeamWeldTolerance,
+                DismembermentCapUvMode.MeterScaledTiled,
+                UmaDismemberment.DefaultCenteredCapUvPadding, 4);
+
+            DismembermentMeshBuildStatus status = DismembermentMeshBuilder.Build(source,
+                new[] { false, false, false, false, true }, options,
+                out DismembermentMeshBuildResult result, out string error);
+
+            Assert.That(status, Is.EqualTo(DismembermentMeshBuildStatus.Success), error);
+            AssertAllWeightsUseBone(result.detachedMesh, 4);
+            AssertVertexUsesBone(result.outerMesh, 0, 0);
+            result.DestroyMeshes();
+        }
+
+        [Test]
+        public void DetachedBonePaletteCanBeCompactedAfterWeightSanitization()
+        {
+            Mesh source = Own(CreateWeightedTetrahedron(true));
+            var options = new DismembermentMeshBuildOptions(0.15f, -1, true, true, 0.25f,
+                DismembermentMeshBuildOptions.DefaultSeamWeldTolerance,
+                DismembermentCapUvMode.MeterScaledTiled,
+                UmaDismemberment.DefaultCenteredCapUvPadding, 4);
+            DismembermentMeshBuilder.Build(source,
+                new[] { false, false, false, false, true }, options,
+                out DismembermentMeshBuildResult result, out string buildError);
+            Assert.That(result, Is.Not.Null, buildError);
+            Transform paletteRoot = Own(new GameObject("Palette Root")).transform;
+            Transform[] bones = CreateFiveBones(paletteRoot);
+
+            bool compacted = UmaDismemberment.TryCompactDetachedBonePalette(
+                result.detachedMesh, bones, out Transform[] compactBones, out string error);
+
+            Assert.That(compacted, Is.True, error);
+            Assert.That(compactBones, Has.Length.EqualTo(1));
+            Assert.That(compactBones[0], Is.SameAs(bones[4]));
+            Assert.That(result.detachedMesh.bindposes, Has.Length.EqualTo(1));
+            AssertAllWeightsUseBone(result.detachedMesh, 0);
+            AssertModernWeightsAreConsistent(result.detachedMesh);
+
+            bool compactedAgain = UmaDismemberment.TryCompactDetachedBonePalette(
+                result.detachedMesh, compactBones, out Transform[] secondPalette,
+                out string secondError);
+
+            Assert.That(compactedAgain, Is.True, secondError);
+            Assert.That(secondPalette, Is.SameAs(compactBones));
+            Assert.That(result.detachedMesh.bindposes, Has.Length.EqualTo(1));
+            AssertAllWeightsUseBone(result.detachedMesh, 0);
+            AssertModernWeightsAreConsistent(result.detachedMesh);
+            result.DestroyMeshes();
+        }
+
+        [Test]
+        public void DetachedRigTrimmingKeepsGlobalPathAndCompleteCutSubtree()
+        {
+            GameObject rig = Own(new GameObject("Detached Skeleton"));
+            Transform global = CreateChild(rig.transform, "Global");
+            Transform spine = CreateChild(global, "Spine");
+            Transform shoulder = CreateChild(spine, "Shoulder");
+            Transform arm = CreateChild(shoulder, "Arm");
+            Transform forearm = CreateChild(arm, "ForeArm");
+            Transform hand = CreateChild(forearm, "Hand");
+            Transform oppositeArm = CreateChild(spine, "Opposite Arm");
+            Transform leg = CreateChild(global, "Leg");
+
+            UmaDismemberment.TrimDetachedHierarchy(global, arm);
+
+            Assert.That(global, Is.Not.Null);
+            Assert.That(spine, Is.Not.Null);
+            Assert.That(shoulder, Is.Not.Null);
+            Assert.That(arm, Is.Not.Null);
+            Assert.That(forearm, Is.Not.Null);
+            Assert.That(hand, Is.Not.Null);
+            Assert.That(oppositeArm == null, Is.True);
+            Assert.That(leg == null, Is.True);
+        }
+
+        [Test]
+        public void ComponentReturnsPhysicsDefinitionsForTheRequestedCut()
+        {
+            GameObject avatarRoot = Own(new GameObject("Avatar"));
+            UmaDismemberment component = avatarRoot.AddComponent<UmaDismemberment>();
+            UMAPhysicsElement definition = Own(CreatePhysicsElement("Left Forearm",
+                "LeftForeArm", "LeftArm", 1f));
+            UmaDismemberment.BoneInfo configured = UmaDismemberment.BoneInfo.CreateDefault(
+                HumanBodyBones.LeftLowerArm);
+            configured.physicsDefinitions.Add(definition);
+            configured.ragdollMainBody = true;
+            component.sliceableHumanBones.Add(configured);
+
+            bool found = component.TryGetBoneSettings(HumanBodyBones.LeftLowerArm,
+                out UmaDismemberment.BoneInfo resolved);
+
+            Assert.That(found, Is.True);
+            Assert.That(resolved.physicsDefinitions, Has.Count.EqualTo(1));
+            Assert.That(resolved.physicsDefinitions[0], Is.SameAs(definition));
+            Assert.That(resolved.ragdollMainBody, Is.True);
+            Assert.That(component.TryGetBoneSettings(HumanBodyBones.RightLowerArm,
+                out _), Is.False);
+        }
+
+        [Test]
+        public void MainBodyRagdollResolverFindsPhysicsAvatarOnCharacterHierarchy()
+        {
+            GameObject character = Own(new GameObject("Character"));
+            UMAPhysicsAvatar physicsAvatar = character.AddComponent<UMAPhysicsAvatar>();
+            Transform dismembermentObject = CreateChild(character.transform, "UMA Avatar");
+            UmaDismemberment component = dismembermentObject.gameObject
+                .AddComponent<UmaDismemberment>();
+
+            UMAPhysicsAvatar resolved = UmaDismemberment.FindMainBodyPhysicsAvatar(component);
+
+            Assert.That(resolved, Is.SameAs(physicsAvatar));
+        }
+
+        [Test]
+        public void DetachedRagdollUsesUmaPhysicsDefinitionsForPartialRig()
+        {
+            GameObject rig = Own(new GameObject("Detached Rig"));
+            Transform upper = CreateChild(rig.transform, "Upper");
+            Transform lower = CreateChild(upper, "Lower");
+            UMAPhysicsElement upperDefinition = Own(CreatePhysicsElement("Upper Definition",
+                "Upper", "Body Bone Not In This Cut", 2f, new ColliderDefinition
+                {
+                    colliderType = ColliderDefinition.ColliderType.Sphere,
+                    colliderCentre = new Vector3(0.1f, 0.2f, 0.3f),
+                    sphereRadius = 0.25f
+                }));
+            UMAPhysicsElement lowerDefinition = Own(CreatePhysicsElement("Lower Definition",
+                "Lower", "Upper", 1f, new ColliderDefinition
+                {
+                    colliderType = ColliderDefinition.ColliderType.Capsule,
+                    colliderCentre = new Vector3(0f, 0.3f, 0f),
+                    capsuleRadius = 0.1f,
+                    capsuleHeight = 0.6f,
+                    capsuleAlignment = ColliderDefinition.Direction.Z
+                }));
+            lowerDefinition.axis = Vector3.right;
+            lowerDefinition.swingAxis = Vector3.forward;
+            lowerDefinition.lowTwistLimit = -30f;
+            lowerDefinition.highTwistLimit = 40f;
+            lowerDefinition.swing1Limit = 50f;
+            lowerDefinition.swing2Limit = 10f;
+            lowerDefinition.enablePreprocessing = false;
+
+            bool built = DismemberedRagdollBuilder.TryBuild(rig.transform,
+                new[] { upperDefinition, lowerDefinition }, 8,
+                out DismemberedRagdollBuildResult result, out string error);
+
+            Assert.That(built, Is.True, error);
+            Assert.That(result.rigidbodies, Has.Length.EqualTo(2));
+            Assert.That(result.rootRigidbodies, Has.Length.EqualTo(1));
+            Assert.That(result.rootRigidbodies[0].transform, Is.SameAs(upper));
+            Assert.That(result.colliders, Has.Length.EqualTo(2));
+            Assert.That(result.joints, Has.Length.EqualTo(1));
+            Assert.That(upper.gameObject.layer, Is.EqualTo(8));
+            Assert.That(lower.gameObject.layer, Is.EqualTo(8));
+            Assert.That(upper.GetComponent<Rigidbody>().mass, Is.EqualTo(2f));
+            Assert.That(lower.GetComponent<Rigidbody>().mass, Is.EqualTo(1f));
+            Assert.That(upper.GetComponent<Rigidbody>().isKinematic, Is.False);
+            Assert.That(lower.GetComponent<Rigidbody>().isKinematic, Is.False);
+            SphereCollider sphere = upper.GetComponent<SphereCollider>();
+            Assert.That(sphere.center, Is.EqualTo(new Vector3(0.1f, 0.2f, 0.3f)));
+            Assert.That(sphere.radius, Is.EqualTo(0.25f));
+            CapsuleCollider capsule = lower.GetComponent<CapsuleCollider>();
+            Assert.That(capsule.center, Is.EqualTo(new Vector3(0f, 0.3f, 0f)));
+            Assert.That(capsule.radius, Is.EqualTo(0.1f));
+            Assert.That(capsule.height, Is.EqualTo(0.6f));
+            Assert.That(capsule.direction, Is.EqualTo(2));
+            CharacterJoint joint = result.joints[0];
+            Assert.That(joint.connectedBody, Is.SameAs(upper.GetComponent<Rigidbody>()));
+            Assert.That(joint.axis, Is.EqualTo(Vector3.right));
+            Assert.That(joint.swingAxis, Is.EqualTo(Vector3.forward));
+            Assert.That(joint.lowTwistLimit.limit, Is.EqualTo(-30f));
+            Assert.That(joint.highTwistLimit.limit, Is.EqualTo(40f));
+            Assert.That(joint.swing1Limit.limit, Is.EqualTo(50f));
+            Assert.That(joint.swing2Limit.limit, Is.EqualTo(10f));
+            Assert.That(joint.enablePreprocessing, Is.False);
+        }
+
+        [Test]
+        public void AutomaticPhysicsUsesRigidForOneDefinitionAndArticulatedForAChain()
+        {
+            UMAPhysicsElement first = Own(CreatePhysicsElement("First", "First",
+                string.Empty, 1f));
+            UMAPhysicsElement second = Own(CreatePhysicsElement("Second", "Second",
+                "First", 1f));
+
+            Assert.That(DismemberedRagdollBuilder.ResolvePhysicsMode(
+                DismemberedPhysicsMode.Automatic, new[] { first, first, null }),
+                Is.EqualTo(DismemberedPhysicsMode.Rigid));
+            Assert.That(DismemberedRagdollBuilder.ResolvePhysicsMode(
+                DismemberedPhysicsMode.Automatic, new[] { first, null, second }),
+                Is.EqualTo(DismemberedPhysicsMode.ArticulatedRagdoll));
+            Assert.That(DismemberedRagdollBuilder.ResolvePhysicsMode(
+                DismemberedPhysicsMode.None, new[] { first, second }),
+                Is.EqualTo(DismemberedPhysicsMode.None));
+        }
+
+        [Test]
+        public void PhysicsDefinitionsAboveTheCutAreExcludedFromTheDetachedRig()
+        {
+            GameObject skeleton = Own(new GameObject("Skeleton"));
+            Transform shoulder = CreateChild(skeleton.transform, "Shoulder");
+            Transform arm = CreateChild(shoulder, "Arm");
+            CreateChild(arm, "ForeArm");
+            UMAPhysicsElement shoulderDefinition = Own(CreatePhysicsElement("Shoulder",
+                "Shoulder", string.Empty, 1f));
+            UMAPhysicsElement armDefinition = Own(CreatePhysicsElement("Arm", "Arm",
+                "Shoulder", 1f));
+            UMAPhysicsElement forearmDefinition = Own(CreatePhysicsElement("ForeArm",
+                "ForeArm", "Arm", 1f));
+
+            IReadOnlyList<UMAPhysicsElement> filtered =
+                DismemberedRagdollBuilder.FilterDefinitionsForCutSubtree(arm,
+                    new[] { shoulderDefinition, armDefinition, forearmDefinition });
+
+            Assert.That(filtered, Has.Count.EqualTo(2));
+            Assert.That(filtered[0], Is.SameAs(armDefinition));
+            Assert.That(filtered[1], Is.SameAs(forearmDefinition));
+        }
+
+        [Test]
+        public void RigidDetachedPhysicsCreatesACompoundColliderWithoutBoneBodies()
+        {
+            GameObject rig = Own(new GameObject("Rigid Detached Rig"));
+            Transform upper = CreateChild(rig.transform, "Upper");
+            Transform lower = CreateChild(upper, "Lower");
+            UMAPhysicsElement upperDefinition = Own(CreatePhysicsElement("Upper Definition",
+                "Upper", "Body Bone Not In This Cut", 2f, new ColliderDefinition
+                {
+                    colliderType = ColliderDefinition.ColliderType.Sphere,
+                    sphereRadius = 0.25f
+                }));
+            UMAPhysicsElement lowerDefinition = Own(CreatePhysicsElement("Lower Definition",
+                "Lower", "Upper", 1f, new ColliderDefinition
+                {
+                    colliderType = ColliderDefinition.ColliderType.Box,
+                    boxDimensions = new Vector3(0.2f, 0.5f, 0.2f)
+                }));
+
+            bool built = DismemberedRagdollBuilder.TryBuildRigid(rig.transform,
+                new[] { upperDefinition, upperDefinition, lowerDefinition }, 8,
+                out DismemberedRagdollBuildResult result, out string error);
+
+            Assert.That(built, Is.True, error);
+            Assert.That(result.rigidbodies, Has.Length.EqualTo(1));
+            Assert.That(result.rigidbodies[0], Is.SameAs(rig.GetComponent<Rigidbody>()));
+            Assert.That(result.rigidbodies[0].mass, Is.EqualTo(3f));
+            Assert.That(result.rootRigidbodies, Has.Length.EqualTo(1));
+            Assert.That(result.colliders, Has.Length.EqualTo(2));
+            Assert.That(result.joints, Is.Empty);
+            Assert.That(upper.GetComponent<Rigidbody>(), Is.Null);
+            Assert.That(lower.GetComponent<Rigidbody>(), Is.Null);
+            Assert.That(upper.GetComponent<SphereCollider>().attachedRigidbody,
+                Is.SameAs(result.rigidbodies[0]));
+            Assert.That(lower.GetComponent<BoxCollider>().attachedRigidbody,
+                Is.SameAs(result.rigidbodies[0]));
+            Assert.That(rig.layer, Is.EqualTo(8));
+            Assert.That(upper.gameObject.layer, Is.EqualTo(8));
+            Assert.That(lower.gameObject.layer, Is.EqualTo(8));
+        }
+
+        [Test]
+        public void DetachedRagdollRejectsMissingDefinitionBoneWithoutPartialPhysics()
+        {
+            GameObject rig = Own(new GameObject("Incomplete Detached Rig"));
+            UMAPhysicsElement missing = Own(CreatePhysicsElement("Missing Definition",
+                "Missing Bone", string.Empty, 1f, new ColliderDefinition
+                {
+                    colliderType = ColliderDefinition.ColliderType.Sphere,
+                    sphereRadius = 0.1f
+                }));
+
+            bool built = DismemberedRagdollBuilder.TryBuild(rig.transform,
+                new[] { missing }, 8, out DismemberedRagdollBuildResult result,
+                out string error);
+
+            Assert.That(built, Is.False);
+            Assert.That(result, Is.Null);
+            Assert.That(error, Does.Contain("Missing Bone"));
+            Assert.That(rig.GetComponentsInChildren<Rigidbody>(true), Is.Empty);
+            Assert.That(rig.GetComponentsInChildren<Collider>(true), Is.Empty);
+            Assert.That(rig.GetComponentsInChildren<CharacterJoint>(true), Is.Empty);
+        }
+
+        [Test]
+        public void DetachedRagdollRollsBackComponentsAndLayersWhenConstructionFails()
+        {
+            GameObject rig = Own(new GameObject("Detached Rig"));
+            Transform first = CreateChild(rig.transform, "First");
+            Transform occupied = CreateChild(rig.transform, "Occupied");
+            first.gameObject.layer = 3;
+            occupied.gameObject.layer = 4;
+            Rigidbody existingBody = occupied.gameObject.AddComponent<Rigidbody>();
+            UMAPhysicsElement firstDefinition = Own(CreatePhysicsElement("First Definition",
+                "First", string.Empty, 1f, new ColliderDefinition
+                {
+                    colliderType = ColliderDefinition.ColliderType.Box,
+                    boxDimensions = Vector3.one
+                }));
+            UMAPhysicsElement occupiedDefinition = Own(CreatePhysicsElement(
+                "Occupied Definition", "Occupied", string.Empty, 1f));
+
+            bool built = DismemberedRagdollBuilder.TryBuild(rig.transform,
+                new[] { firstDefinition, occupiedDefinition }, 8,
+                out DismemberedRagdollBuildResult result, out string error);
+
+            Assert.That(built, Is.False);
+            Assert.That(result, Is.Null);
+            StringAssert.Contains("already has a Rigidbody", error);
+            Assert.That(first.GetComponent<Rigidbody>(), Is.Null);
+            Assert.That(first.GetComponent<Collider>(), Is.Null);
+            Assert.That(first.gameObject.layer, Is.EqualTo(3));
+            Assert.That(occupied.GetComponent<Rigidbody>(), Is.SameAs(existingBody));
+            Assert.That(occupied.gameObject.layer, Is.EqualTo(4));
         }
 
         [Test]
@@ -288,6 +615,8 @@ namespace UMA.Dismemberment.Tests
             component.generateCaps = false;
             component.enabled = false;
             component.enabled = true;
+            DismembermentResult completion = null;
+            component.DismembermentCompleted.AddListener(result => completion = result);
 
             bool sliced = component.TrySlice(bones[4], 0.15f,
                 out UmaDismemberment.DismemberedInfo info, out string failure);
@@ -295,6 +624,9 @@ namespace UMA.Dismemberment.Tests
             Assert.That(sliced, Is.True, failure);
             Assert.That(info.sourceRenderers, Has.Length.EqualTo(2));
             Assert.That(info.detachedRenderers, Has.Length.EqualTo(2));
+            Assert.That(info.sourceTargetBone, Is.SameAs(bones[4]));
+            Assert.That(completion, Is.Not.Null);
+            Assert.That(completion.sourceTargetBone, Is.SameAs(bones[4]));
             Assert.That(first.sharedMesh, Is.Not.SameAs(originalFirst));
             Assert.That(second.sharedMesh, Is.Not.SameAs(originalSecond));
             Assert.That(originalFirst.subMeshCount, Is.EqualTo(1));
@@ -314,6 +646,85 @@ namespace UMA.Dismemberment.Tests
             Assert.That(first.localBounds, Is.EqualTo(firstBounds));
             Assert.That(info.root == null, Is.True,
                 "The default rebuild policy must destroy detached pieces.");
+        }
+
+        [Test]
+        public void ComponentUndoRestoresMeshesDestroysLimbsAndAllowsTheCutAgain()
+        {
+            GameObject avatarObject = Own(new GameObject("Undo Dismemberment Test Avatar"));
+            DynamicCharacterAvatar avatar = avatarObject.AddComponent<DynamicCharacterAvatar>();
+            Transform root = CreateChild(avatarObject.transform, "Root");
+            Transform global = CreateChild(root, "Global");
+            Transform[] bones = CreateFiveBones(global);
+            avatar.umaRoot = root.gameObject;
+            avatar.skeleton = new UMASkeleton(global);
+            Mesh original = Own(CreateWeightedTetrahedron(true));
+            SkinnedMeshRenderer renderer = CreateRenderer(avatarObject.transform, "Body", global,
+                bones, original);
+            avatar.SetRenderers(new[] { renderer });
+            UmaDismemberment component = avatarObject.AddComponent<UmaDismemberment>();
+            component.generateCaps = false;
+            component.enabled = false;
+            component.enabled = true;
+
+            bool sliced = component.TrySlice(bones[4], 0.15f,
+                out UmaDismemberment.DismemberedInfo firstCut, out string sliceFailure);
+            Assert.That(sliced, Is.True, sliceFailure);
+            Assert.That(renderer.sharedMesh, Is.Not.SameAs(original));
+            Assert.That(firstCut.root, Is.Not.Null);
+
+            bool undone = component.TryUndoDismemberment(out string undoFailure, false);
+
+            Assert.That(undone, Is.True, undoFailure);
+            Assert.That(renderer.sharedMesh, Is.SameAs(original));
+            Assert.That(firstCut.root == null, Is.True);
+            Assert.That(component.hasSplit, Is.Empty);
+
+            bool slicedAgain = component.TrySlice(bones[4], 0.15f,
+                out UmaDismemberment.DismemberedInfo secondCut, out string secondFailure);
+            Assert.That(slicedAgain, Is.True, secondFailure);
+            Assert.That(secondCut.root, Is.Not.Null);
+        }
+
+        [Test]
+        public void SourceRagdollCollidersAreSuspendedForTheCutSubtreeAndRestored()
+        {
+            GameObject avatarObject = Own(new GameObject("Source Collider Transfer Avatar"));
+            avatarObject.AddComponent<DynamicCharacterAvatar>();
+            UMAPhysicsAvatar physicsAvatar = avatarObject.AddComponent<UMAPhysicsAvatar>();
+            UmaDismemberment dismemberment = avatarObject.AddComponent<UmaDismemberment>();
+            Transform skeleton = CreateChild(avatarObject.transform, "Global");
+            Transform cutBone = CreateChild(skeleton, "LeftArm");
+            Transform cutChild = CreateChild(cutBone, "LeftForeArm");
+            Transform retainedBone = CreateChild(skeleton, "Spine");
+
+            BoxCollider cutCollider = cutBone.gameObject.AddComponent<BoxCollider>();
+            SphereCollider childCollider = cutChild.gameObject.AddComponent<SphereCollider>();
+            CapsuleCollider retainedCollider = retainedBone.gameObject
+                .AddComponent<CapsuleCollider>();
+            BoxCollider gameplayCollider = cutChild.gameObject.AddComponent<BoxCollider>();
+            physicsAvatar.BoxColliders.Add(cutCollider);
+            physicsAvatar.SphereColliders.Add(new ClothSphereColliderPair(childCollider));
+            physicsAvatar.CapsuleColliders.Add(retainedCollider);
+
+            int suspended = dismemberment.SuspendSourceRagdollColliders(cutBone);
+            int suspendedAgain = dismemberment.SuspendSourceRagdollColliders(cutBone);
+
+            Assert.That(suspended, Is.EqualTo(2));
+            Assert.That(suspendedAgain, Is.Zero,
+                "A collider must be tracked only once across overlapping requests.");
+            Assert.That(cutCollider.enabled, Is.False);
+            Assert.That(childCollider.enabled, Is.False);
+            Assert.That(retainedCollider.enabled, Is.True);
+            Assert.That(gameplayCollider.enabled, Is.True,
+                "Colliders not owned by UMAPhysicsAvatar must remain unchanged.");
+
+            dismemberment.ResetDismemberment(false);
+
+            Assert.That(cutCollider.enabled, Is.True);
+            Assert.That(childCollider.enabled, Is.True);
+            Assert.That(retainedCollider.enabled, Is.True);
+            Assert.That(gameplayCollider.enabled, Is.True);
         }
 
         [Test]
@@ -515,39 +926,44 @@ namespace UMA.Dismemberment.Tests
         {
             NativeArray<byte> counts = mesh.GetBonesPerVertex();
             NativeArray<BoneWeight1> weights = mesh.GetAllBoneWeights();
-            try
-            {
-                int total = 0;
-                for (int i = 0; i < counts.Length; i++) total += counts[i];
-                Assert.That(total, Is.EqualTo(weights.Length));
-            }
-            finally
-            {
-                if (counts.IsCreated) counts.Dispose();
-                if (weights.IsCreated) weights.Dispose();
-            }
+            int total = 0;
+            for (int i = 0; i < counts.Length; i++) total += counts[i];
+            Assert.That(total, Is.EqualTo(weights.Length));
         }
 
         private static void AssertVertexUsesBone(Mesh mesh, int vertexIndex, int expectedBone)
         {
             NativeArray<byte> counts = mesh.GetBonesPerVertex();
             NativeArray<BoneWeight1> weights = mesh.GetAllBoneWeights();
-            try
+            int offset = 0;
+            for (int vertex = 0; vertex < vertexIndex; vertex++) offset += counts[vertex];
+            Assert.That(counts[vertexIndex], Is.GreaterThan(0));
+            bool found = false;
+            for (int influence = 0; influence < counts[vertexIndex]; influence++)
+                if (weights[offset + influence].boneIndex == expectedBone) found = true;
+            Assert.That(found, Is.True,
+                $"Vertex {vertexIndex} should retain a weight from bone {expectedBone}.");
+        }
+
+        private static void AssertAllWeightsUseBone(Mesh mesh, int expectedBone)
+        {
+            NativeArray<byte> counts = mesh.GetBonesPerVertex();
+            NativeArray<BoneWeight1> weights = mesh.GetAllBoneWeights();
+            int offset = 0;
+            for (int vertex = 0; vertex < counts.Length; vertex++)
             {
-                int offset = 0;
-                for (int vertex = 0; vertex < vertexIndex; vertex++) offset += counts[vertex];
-                Assert.That(counts[vertexIndex], Is.GreaterThan(0));
-                bool found = false;
-                for (int influence = 0; influence < counts[vertexIndex]; influence++)
-                    if (weights[offset + influence].boneIndex == expectedBone) found = true;
-                Assert.That(found, Is.True,
-                    $"Vertex {vertexIndex} should retain a weight from bone {expectedBone}.");
+                Assert.That(counts[vertex], Is.GreaterThan(0));
+                float total = 0f;
+                for (int influence = 0; influence < counts[vertex]; influence++)
+                {
+                    BoneWeight1 weight = weights[offset++];
+                    Assert.That(weight.boneIndex, Is.EqualTo(expectedBone),
+                        $"Vertex {vertex} retained a cross-cut bone influence.");
+                    total += weight.weight;
+                }
+                Assert.That(total, Is.EqualTo(1f).Within(0.000001f));
             }
-            finally
-            {
-                if (counts.IsCreated) counts.Dispose();
-                if (weights.IsCreated) weights.Dispose();
-            }
+            Assert.That(offset, Is.EqualTo(weights.Length));
         }
 
         private static void AssertCenteredCapUvs(Mesh mesh, int firstCapVertex, float padding)
@@ -574,6 +990,18 @@ namespace UMA.Dismemberment.Tests
             var bindposes = new Matrix4x4[count];
             for (int i = 0; i < count; i++) bindposes[i] = Matrix4x4.identity;
             return bindposes;
+        }
+
+        private static UMAPhysicsElement CreatePhysicsElement(string name, string boneName,
+            string parentBone, float mass, params ColliderDefinition[] colliders)
+        {
+            UMAPhysicsElement definition = ScriptableObject.CreateInstance<UMAPhysicsElement>();
+            definition.name = name;
+            definition.boneName = boneName;
+            definition.parentBone = parentBone;
+            definition.mass = mass;
+            definition.colliders = colliders;
+            return definition;
         }
 
         private static Transform[] CreateFiveBones(Transform global)

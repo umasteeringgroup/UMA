@@ -46,10 +46,9 @@ namespace UMA.Dismemberment
                 true, true, true, true)
             {
                 drawHeaderCallback = rect => EditorGUI.LabelField(rect,
-                    "Sliceable Human Bones and Cap UV Mapping"),
+                    "Sliceable Human Bones, Cap UV and Physics"),
                 drawElementCallback = DrawBoneElement,
-                elementHeight = EditorGUIUtility.singleLineHeight * 3f +
-                    EditorGUIUtility.standardVerticalSpacing * 4f,
+                elementHeightCallback = GetBoneElementHeight,
                 onAddCallback = AddBone
             };
         }
@@ -103,7 +102,12 @@ namespace UMA.Dismemberment
                 if (!string.IsNullOrEmpty(component.LastFailure))
                     EditorGUILayout.HelpBox($"{component.LastFailureReason}: {component.LastFailure}",
                         MessageType.Warning);
-                if (GUILayout.Button("Reset Dismemberment")) component.ResetDismemberment(true);
+                if (GUILayout.Button("Undo Dismemberment"))
+                {
+                    if (!component.TryUndoDismemberment(out string failure))
+                        Debug.LogWarning($"Could not completely undo dismemberment: {failure}",
+                            component);
+                }
             }
         }
 
@@ -146,6 +150,12 @@ namespace UMA.Dismemberment
             SerializedProperty capUvMode = element.FindPropertyRelative("capUvMode");
             SerializedProperty centeredPadding = element.FindPropertyRelative(
                 "centeredCapUvPadding");
+            SerializedProperty physicsDefinitions = element.FindPropertyRelative(
+                "physicsDefinitions");
+            SerializedProperty physicsMode = element.FindPropertyRelative("physicsMode");
+            SerializedProperty trimRig = element.FindPropertyRelative("trimDetachedRig");
+            SerializedProperty ragdollMainBody = element.FindPropertyRelative(
+                "ragdollMainBody");
             rect.y += EditorGUIUtility.standardVerticalSpacing;
             float gap = 6f;
             float boneWidth = Mathf.Max(100f, rect.width * 0.58f);
@@ -167,6 +177,37 @@ namespace UMA.Dismemberment
                 EditorGUI.PropertyField(paddingRect, centeredPadding,
                     new GUIContent("Centered UV Padding"));
             }
+            rect.y += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
+            Rect physicsModeRect = new Rect(rect.x, rect.y, rect.width,
+                EditorGUIUtility.singleLineHeight);
+            EditorGUI.PropertyField(physicsModeRect, physicsMode,
+                new GUIContent("Detached Physics Mode"));
+            rect.y += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
+            Rect trimRect = new Rect(rect.x, rect.y, rect.width,
+                EditorGUIUtility.singleLineHeight);
+            EditorGUI.PropertyField(trimRect, trimRig,
+                new GUIContent("Trim Detached Rig"));
+            rect.y += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
+            Rect mainBodyRect = new Rect(rect.x, rect.y, rect.width,
+                EditorGUIUtility.singleLineHeight);
+            EditorGUI.PropertyField(mainBodyRect, ragdollMainBody,
+                new GUIContent("Ragdoll Main Body",
+                    "After a successful cut, activate the character's UMAPhysicsAvatar ragdoll."));
+            rect.y += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
+            Rect physicsRect = new Rect(rect.x, rect.y, rect.width,
+                EditorGUI.GetPropertyHeight(physicsDefinitions, true));
+            EditorGUI.PropertyField(physicsRect, physicsDefinitions,
+                new GUIContent("Detached Physics Definitions"), true);
+        }
+
+        private float GetBoneElementHeight(int index)
+        {
+            SerializedProperty element = sliceableHumanBones.GetArrayElementAtIndex(index);
+            SerializedProperty physicsDefinitions = element.FindPropertyRelative(
+                "physicsDefinitions");
+            return EditorGUIUtility.singleLineHeight * 6f +
+                EditorGUI.GetPropertyHeight(physicsDefinitions, true) +
+                EditorGUIUtility.standardVerticalSpacing * 8f;
         }
 
         private void AddBone(ReorderableList list)
@@ -180,6 +221,11 @@ namespace UMA.Dismemberment
                 (int)DismembermentCapUvMode.MeterScaledTiled;
             element.FindPropertyRelative("centeredCapUvPadding").floatValue =
                 UmaDismemberment.DefaultCenteredCapUvPadding;
+            element.FindPropertyRelative("physicsDefinitions").arraySize = 0;
+            element.FindPropertyRelative("physicsMode").enumValueIndex =
+                (int)DismemberedPhysicsMode.Automatic;
+            element.FindPropertyRelative("trimDetachedRig").boolValue = false;
+            element.FindPropertyRelative("ragdollMainBody").boolValue = false;
             list.index = index;
         }
 

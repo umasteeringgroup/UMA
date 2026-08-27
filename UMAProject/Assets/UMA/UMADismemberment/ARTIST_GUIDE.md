@@ -1,6 +1,20 @@
 # UMA Dismemberment: Artist Setup and Production Guide
 
-This guide explains how to prepare characters and materials for the UMA 3 dismemberment system in Unity 6.3 or newer. It is written primarily for character artists, technical artists, and scene builders. A small integration section is included for the programmer who connects weapon hits or gameplay events to the system.
+This guide explains how to prepare characters, materials, physics, and gameplay integration for the UMA 3 dismemberment system in Unity 6.3 or newer. It is written for character artists, technical artists, scene builders, and programmers who connect weapon hits or project-specific behavior to the system.
+
+For a shorter component checklist, start with the [package README](README.md). For a guided tour of the supplied buttons, avatar, callback, physics, and undo action, use the [sample scene walkthrough](Samples/README.md).
+
+## Quick navigation
+
+- [Five-minute setup](#five-minute-setup)
+- [Inspector reference](#understanding-the-inspector)
+- [Cap materials and shaders](#replacing-the-cap-material-or-shader)
+- [Mesh and wardrobe preparation](#preparing-meshes-for-clean-cuts)
+- [Detached physics, main-body ragdoll, blood, and gibs](#adding-physics-and-gore)
+- [Damage and UI calls](#connecting-damage-or-ui)
+- [Custom gameplay and system extensions](#integrating-custom-gameplay-and-system-extensions)
+- [Undo, rebuilds, and repeated cuts](#repeated-cuts-undo-and-rebuild-behavior)
+- [Troubleshooting](#troubleshooting)
 
 ## What the system does
 
@@ -15,14 +29,13 @@ The cut is calculated from the generated UMA character at runtime. Every affecte
 
 The system does **not** perform an arbitrary plane cut. It does not create new intersection points through triangles. A triangle is placed on either the character or the detached piece, and the cut follows existing triangle edges. The quality and location of the result therefore depend heavily on the authored topology and skin weights.
 
-It also does not automatically add:
+The core slicer also does not decide or author:
 
-- rigidbodies, colliders, joints, or a detached-piece ragdoll;
 - blood decals, particles, gore meshes, sounds, or damage logic;
 - weapon-hit detection, health, AI reactions, or networking;
 - permanent changes to the UMA recipe.
 
-Those are deliberately application-specific and should be added after a successful cut through the **Dismemberment Completed** event.
+Those are deliberately application-specific and should be added after a successful cut through the **Dismemberment Completed** event. The supplied callback shows how to construct detached rigid or articulated physics from UMA physics definitions, apply a separation impulse, and spawn blood or supplemental gore. A per-cut option can activate an already configured full-body `UMAPhysicsAvatar`, but the slicer does not create that source-character physics recipe.
 
 ## Where to find the feature
 
@@ -33,7 +46,10 @@ The main files are:
 - [`Samples/Materials/SliceFill.mat`](Samples/Materials/SliceFill.mat) — simple sample cap material;
 - [`Samples/Materials/DismembermentCap.shader`](Samples/Materials/DismembermentCap.shader) — dependency-free unlit cap shader;
 - [`Samples/Scripts/GUIDismemberment.cs`](Samples/Scripts/GUIDismemberment.cs) — UI button example;
-- [`Samples/Scripts/ExampleDismemberCallback.cs`](Samples/Scripts/ExampleDismemberCallback.cs) — event, physics, and supplemental-gore example.
+- [`Samples/Scripts/UndoDismemberments.cs`](Samples/Scripts/UndoDismemberments.cs) — complete undo/rebuild UI example;
+- [`Samples/Scripts/ExampleDismemberCallback.cs`](Samples/Scripts/ExampleDismemberCallback.cs) — event, physics, blood, impulse, and supplemental-gore example;
+- [`Runtime/DismemberedRagdollBuilder.cs`](Runtime/DismemberedRagdollBuilder.cs) — reusable detached rigid/articulated physics builder;
+- [`Tests/Editor/DismembermentMeshBuilderTests.cs`](Tests/Editor/DismembermentMeshBuilderTests.cs) — geometry, rig, physics, lifecycle, and undo examples expressed as tests.
 
 The sample cap is intentionally simple. It is useful for verifying geometry and UV scale, but most finished projects will replace it with a pipeline-native lit material.
 
@@ -69,6 +85,8 @@ In **Bone Selection**:
 3. Add a row to **Sliceable Human Bones**.
 4. Choose an obvious test bone, such as `LeftLowerArm`.
 5. Begin with a threshold of `0.5`.
+6. Leave **Cap UV Mapping** at **Meter Scaled Tiled** for the first geometry test.
+7. Leave **Detached Physics Mode** at **Automatic**, **Trim Detached Rig** off, and **Ragdoll Main Body** off until the visual cut is correct.
 
 Avoid duplicate bone entries. The Inspector warns about duplicates, and the first matching entry supplies the threshold.
 
@@ -172,7 +190,16 @@ The restriction applies to the humanoid-bone API. A programmer using the generic
 
 #### Sliceable Human Bones
 
-Each row contains a humanoid bone, its preferred threshold, and its cap UV mapping. The normal humanoid API uses these per-bone settings by default. Existing rows and newly added rows use **Meter Scaled Tiled** unless changed to **Centered Fit**.
+Each row is the complete policy for one humanoid cut. It contains:
+
+- the `HumanBodyBones` target and preferred weight threshold;
+- **Cap UV Mapping** and **Centered UV Padding**;
+- **Detached Physics Mode**;
+- **Trim Detached Rig**;
+- **Ragdoll Main Body**;
+- one or more **Detached Physics Definitions**.
+
+The normal humanoid API uses these per-bone settings by default. Existing rows and newly added rows use **Meter Scaled Tiled**, **Automatic** detached physics, no rig trimming, and no main-body ragdoll unless changed explicitly. Physics definitions are interpreted by a completion listener such as `ExampleDismemberCallback`; merely assigning them does not add physics unless that integration is enabled.
 
 Use the list as an approved art matrix. Only expose cuts that have been tested with:
 
@@ -216,12 +243,15 @@ Use this event for new work. It is invoked after every successful slice and prov
 
 - the detached root;
 - the corresponding cloned target bone;
+- the corresponding original source target bone;
 - the humanoid bone, when the humanoid API was used;
 - a stable bone-name hash;
 - every detached `SkinnedMeshRenderer`;
 - every modified source `SkinnedMeshRenderer`.
 
 The rich event is available regardless of the **Invoke Legacy Event** checkbox.
+
+The `DismembermentResult` also reports `mainBodyRagdollRequested` and `mainBodyRagdollActivated`. This lets gameplay distinguish a fatal-cut policy from a missing or failed `UMAPhysicsAvatar`. A successful mesh cut is still successful when the requested main-body ragdoll cannot activate.
 
 ## Replacing the cap material or shader
 
@@ -270,7 +300,7 @@ Custom shaders do **not** have to use `_MainTex` or `_Color`; those names only b
 
 Use a seamless or low-directionality texture. Each disconnected cut loop chooses a tangent from its own boundary, so texture rotation can vary between cuts or separate loops. Highly directional fibers or veins may need a custom triplanar/world-space shader to look consistent.
 
-Do not paint important details at a specific 0–1 UV location. Cap UVs are physical planar coordinates and are not normalized to fill the texture once.
+For **Meter Scaled Tiled**, do not paint an important feature at a specific `0..1` location: its cap UVs are physical planar coordinates and may repeat. **Centered Fit** is specifically intended for a localized cross-section image. Put the bone or central feature near texture UV `(0.5, 0.5)`, keep important pixels inside the configured padding, and use Clamp wrap mode so the opposite edge cannot repeat into the cap.
 
 For flesh, a convincing cap commonly combines:
 
@@ -348,16 +378,53 @@ Renderers with a Unity `Cloth` component are rejected. Changing topology invalid
 
 ## Adding physics and gore
 
-The detached piece initially contains renderers and a cloned skeleton but no physics. The sample callback demonstrates the simplest setup:
+The detached piece initially contains renderers and a cloned skeleton but no physics. `ExampleDismemberCallback` can build a detached ragdoll from the same `UMAPhysicsElement` assets used by the **U3-Ragdolls and Shooting Example** scene.
 
-1. listen to **Dismemberment Completed**;
-2. add a `Rigidbody` to the detached root;
-3. add one or more child colliders to form a compound collider;
-4. optionally instantiate supplemental gore renderers and remap their bones;
-5. apply force or torque from the hit;
-6. spawn blood effects at the cloned target bone or the original cut location.
+Enable **Ragdoll Dismembered Parts** on the callback. Then expand each entry under **Sliceable Human Bones, Cap UV and Physics** and assign that cut's **Detached Physics Definitions**. Humanoid cuts resolve this list automatically from `DismembermentResult.humanBone`; separate callback components are not required for the arms and legs.
 
-Collider sizes and centers are character-specific. The numeric values in `ExampleDismemberCallback` are sample values in meters, not universal defaults. Tune them per race, body part, and DNA range.
+Every detached mesh is reweighted as part of the cut. Influences above the cut, such as Spine, Shoulder, or Hips on a severed limb, are removed. Remaining cut-bone and descendant influences are normalized; a boundary vertex with no remaining influence is assigned entirely to the cut bone. This prevents a moving physics limb from stretching back toward stationary cloned ancestors. The source-side mesh keeps its original weights.
+
+Choose **Detached Physics Mode** per cut:
+
+- **Automatic** is recommended. One non-null definition creates a rigid piece; two or more create an articulated ragdoll.
+- **Rigid** creates one Rigidbody on the detached root. Every definition still contributes its authored collider, but the child colliders form one compound body and no joints are created. This is the most stable choice for armor and lower limbs.
+- **Articulated Ragdoll** creates a Rigidbody for every definition and connects included parent/child definitions with `CharacterJoint`s.
+- **None** suppresses detached physics for that cut, including the legacy simple-physics fallback.
+
+**Trim Detached Rig** optionally removes unreferenced entries and bind poses from each detached renderer, then removes cloned skeleton branches outside the cut. It keeps the Global-to-cut transform path and the complete subtree below the cut, so the configured physics definitions and supplemental gore still have the relevant transforms. Trimming is an optimization and is not required to prevent stretching.
+
+Enable **Ragdoll Main Body** when that specific cut should incapacitate the character. A hand or lower-arm cut can leave it disabled, while a head, upper-leg, or other fatal cut can enable it. The option activates the surviving character's existing `UMAPhysicsAvatar` only after the mesh cut has completed successfully. The normal UMA ragdoll events are used, so systems such as the sample `RandomCharacterWalker` receive the same ragdoll notification and stop controlling the character. This option does not construct a full-body ragdoll by itself: the character must already have a configured UMA physics recipe and `UMAPhysicsAvatar`. If it does not, the cut still succeeds and a warning explains why the main body could not be ragdolled.
+
+Use definitions for the severed side of the cut:
+
+- **Head:** `U3HeadStandard`, or `U3HeadHD` for the HD rig;
+- **Lower arm:** the matching ForeArm definition; HD can also include the matching Hand definition;
+- **Upper arm:** the matching Arm and ForeArm definitions; HD can also include Hand;
+- **Lower leg:** the matching Leg definition; HD can also include the matching Foot definition;
+- **Upper leg:** the matching UpLeg and Leg definitions; HD can also include Foot.
+
+Do not mix Standard and HD definitions in the same row. Their target names may overlap, but their collider dimensions and joint relationships are authored for different rigs.
+
+Definitions above the selected cut are ignored automatically. For example, a `LeftUpperArm` cut can use Arm, ForeArm, and Hand definitions, but a Shoulder definition is not added to the detached physics rig. Exact repeated references to the same asset are also collapsed; two different assets targeting the same retained bone remain an error because the intended collider and joint settings would be ambiguous.
+
+Articulated definition behavior is as follows:
+
+- for a head cut, assigning only `U3HeadStandard` creates the `Head` body and its configured collider;
+- for a limb, assign every definition that should articulate on the detached piece, in any list order;
+- if a definition's **Parent Bone** is not included, that body becomes a free ragdoll root instead of being joined back to the living character;
+- if the parent is included, the builder creates the same `CharacterJoint` axes and limits used by UMA's normal ragdoll builder.
+
+Each definition must target a unique bone that exists in the detached skeleton. If any assigned non-null definition is invalid or targets a missing bone, no partial ragdoll is left behind. This makes configuration mistakes visible without leaving half-created colliders or joints.
+
+Set **Ragdoll Layer** to the physics layer used by the project's UMA ragdolls. Verify that this layer collides with floors, platforms, props, and any gameplay layers the detached piece must hit. Collider dimensions and centers in `UMAPhysicsElement` are Unity meters; Unity's standard scale is one unit per meter.
+
+**Separation Impulse** is a small impulse in kilogram-meters per second. Its default is `0.5`. The callback applies it to each free root body along the view direction so the piece separates visibly from the source. Assign **View Camera** for deterministic gameplay cameras, or leave it empty to use `Camera.main`. Set the impulse to zero to disable it.
+
+Assign a particle-system prefab or another self-running effect prefab to **Blood Particle Emitter**. The callback instantiates it at the cut bone with the same behavior used by the ragdoll shooting sample. The supplied U3 `Blood` prefab has **Play On Awake** enabled and destroys its GameObject after it stops. Custom prefabs should likewise start themselves and clean themselves up, or include a separate lifetime component.
+
+If **Ragdoll Dismembered Parts** is disabled, **Add Physics** retains the older simple fallback: one Rigidbody on the detached root and one sample SphereCollider on the cut bone. If configured rigid or articulated construction fails and **Add Physics** is enabled, this simple setup is also used as a visible fallback. Prefer physics definitions for production because they keep collider sizes and joint limits in the same reusable assets as the full-character ragdoll scene.
+
+The callback's own **Fallback Physics Definitions** field remains as a compatibility fallback for an older scene or a generic `Transform` cut that has no humanoid sliceable-bone row. For a configured humanoid cut, the row's **Detached Physics Definitions** take precedence. **Bone Name** likewise remains the legacy filter when no per-cut definitions are assigned.
 
 The sample callback's four **Gib** fields are optional supplemental gore renderers:
 
@@ -368,7 +435,7 @@ The sample callback's four **Gib** fields are optional supplemental gore rendere
 
 The callback remaps the prefab's bones to each generated skeleton by bone-name hash. These objects do not perform the cut and do not replace the procedural cap unless their geometry visually covers it. A null renderer creates nothing, and a null material keeps the renderer prefab's existing material. All four references are unassigned in the supplied example scene, so they have no effect until configured.
 
-For a fully articulated detached ragdoll, create rigidbodies, colliders, and joints on the required cloned bones rather than only adding a Rigidbody to the root. Coordinate that with the project's existing ragdoll system to avoid duplicate bodies or joints.
+The detached rig deliberately does not add `UMAPhysicsAvatar`: that component expects a live `UMAData` avatar and manages a complete character ragdoll. The lightweight builder reuses its `UMAPhysicsElement` data and joint semantics without coupling a severed skeleton to the source avatar's lifecycle.
 
 If the character uses an `LODGroup`, note that the generated detached renderers are not automatically arranged into a new detached-piece LOD setup. Configure detached visibility or LOD behavior in the completion event.
 
@@ -412,7 +479,105 @@ Do not call the humanoid overload on a generic Animator. It requires a valid hum
 
 For a no-code scene demonstration, use the `GUIDismemberment` sample on a uGUI Button, assign the avatar or `UmaDismemberment` component, and choose **Bone To Slice**.
 
-## Repeated cuts and reset behavior
+If the project uses only the new Input System, place an `InputSystemUIInputModule` on the scene `EventSystem`. The sample cut and undo components receive uGUI `Button.onClick` callbacks and do not poll the legacy `Input` API.
+
+## Integrating custom gameplay and system extensions
+
+### Prefer a project-owned completion listener
+
+Keep hit detection, health, inventory drops, scoring, VFX, audio, AI, and networking outside `UmaDismemberment`. Add a project-owned component beside it and subscribe to `DismembermentCompleted`. This avoids editing a sample file and makes package updates much easier to merge.
+
+```csharp
+using UMA.Dismemberment;
+using UnityEngine;
+
+public sealed class CharacterDismembermentEffects : MonoBehaviour
+{
+    [SerializeField] private UmaDismemberment dismemberment;
+    [SerializeField] private GameObject cutEffectPrefab;
+
+    private void OnEnable()
+    {
+        if (dismemberment == null)
+            dismemberment = GetComponent<UmaDismemberment>();
+        if (dismemberment != null)
+            dismemberment.DismembermentCompleted.AddListener(OnDismembered);
+    }
+
+    private void OnDisable()
+    {
+        if (dismemberment != null)
+            dismemberment.DismembermentCompleted.RemoveListener(OnDismembered);
+    }
+
+    private void OnDismembered(DismembermentResult result)
+    {
+        if (result == null || result.root == null) return;
+
+        if (cutEffectPrefab != null)
+        {
+            Vector3 position = result.targetBone != null
+                ? result.targetBone.position : result.root.position;
+            Instantiate(cutEffectPrefab, position, Quaternion.identity, result.root);
+        }
+
+        if (result.mainBodyRagdollRequested &&
+            !result.mainBodyRagdollActivated)
+        {
+            Debug.LogWarning("The cut succeeded, but the main-body ragdoll did not activate.",
+                this);
+        }
+    }
+}
+```
+
+Parent detached-side custom objects to `result.root` when they should be removed with that piece and by full undo. Parent source-side additions to an appropriate source transform only when their lifecycle should follow the source avatar. An unparented particle, decal, audio object, or pooled effect remains the custom system's responsibility and is not automatically found by undo.
+
+Do not modify or destroy the meshes in `sourceRenderers` or `detachedRenderers` unless the project deliberately takes over their complete ownership. `UmaDismemberment` and `DismemberedPiece` track the generated meshes and release them during rebuild, undo, disable, or destruction.
+
+### Reusing or replacing detached physics
+
+`ExampleDismemberCallback` is an example, not a required runtime dependency. Copy its listener pattern into the project's namespace and remove features the project does not use. Custom integrations can call:
+
+- `DismemberedRagdollBuilder.FilterDefinitionsForCutSubtree` to discard definitions above the severed side;
+- `DismemberedRagdollBuilder.ResolvePhysicsMode` to apply Automatic/explicit selection;
+- `DismemberedRagdollBuilder.TryBuildRigid` for one stable compound body;
+- `DismemberedRagdollBuilder.TryBuild` for an articulated partial ragdoll.
+
+Both builders return a `DismemberedRagdollBuildResult` containing created rigidbodies, free root bodies, colliders, and joints. `ApplyImpulse` affects only the free root bodies. Check the returned error and avoid adding a second Rigidbody or collider fallback unless the builder has failed cleanly.
+
+When the sample callback successfully creates detached colliders, it calls `SuspendSourceRagdollColliders(result.sourceTargetBone)`. This disables only `UMAPhysicsAvatar`-owned colliders on the original cut bone and its descendants, so invisible colliders from the severed side no longer collide as part of the main-character ragdoll. Other gameplay colliders are not touched. The component remembers each collider's enabled state and restores it during full Undo, lower-level reset, component shutdown, or UMA regeneration.
+
+Use `TryGetBoneSettings(result.humanBone, out settings)` to retrieve the per-cut definitions, physics mode, rig-trimming policy, UV mode, and main-body policy used by a humanoid row. A generic `Transform` cut reports `HumanBodyBones.LastBone`, so the project must supply its own generic-rig settings.
+
+`result.targetBone` is the cloned bone inside the detached hierarchy. `result.sourceTargetBone` is the corresponding original bone on the surviving character. Use the detached transform for piece-local effects and physics; use the source transform for source-side effects or collider suspension.
+
+### Mapping hits to cuts
+
+A weapon system normally resolves the hit collider or Rigidbody back to an Animator bone, maps that transform to an approved `HumanBodyBones` entry, applies health/lethality rules, and then calls `TrySlice`. Do not call the slicer for every projectile contact: first decide that the hit actually severs the part.
+
+Keep explicit references to the hit character's `UmaDismemberment`. Scene-wide searches are acceptable in the one-avatar sample but are ambiguous and wasteful in a crowd. The sample undo action intentionally refuses to choose when it finds multiple candidates.
+
+### Saving, loading, and networking
+
+Dismemberment is not serialized into an UMA recipe. To persist it, save an ordered list of successful cuts and replay that list after the regenerated avatar reports that it is ready. Order matters because a parent cut can remove geometry needed by a later child cut. Save any game-specific fatal/nonfatal state separately rather than inferring it from a reconstructed mesh.
+
+For a networked game, make the authoritative side decide whether the cut succeeds and replicate the avatar recipe/version plus the ordered approved bone cuts. Rebuild the meshes locally from the same generated UMA content instead of attempting to serialize Unity `Mesh` instances or detached GameObjects over the network. Replicate physics state separately if exact detached-piece motion matters.
+
+### When changing the slicer itself is justified
+
+Most visual changes need only a cap material, supplemental renderer, particle, or completion listener. Most physics changes belong in a custom callback using the public builder. Change the core mesh builder only when the project needs different geometry ownership, triangle partitioning, cap construction, or vertex-stream output.
+
+When making such a change:
+
+1. Keep UMA-owned input meshes read-only and create owned outputs.
+2. Preserve all vertex streams, modern weights, bind poses, materials, renderer settings, and blend-shape values unless the new contract explicitly says otherwise.
+3. Calculate every affected renderer before committing any source change, so a failure cannot leave a half-cut character.
+4. Use stable UMA bone names or hashes for cross-skeleton matching; do not use Unity instance IDs.
+5. Add focused editor tests for body and armor, seam-split loops, concave loops, modern weights, repeated cuts, rebuild cleanup, and undo.
+6. Keep Unity `Mesh`, `GameObject`, renderer, and physics creation on the Unity main thread. Pure data preparation may be redesigned for jobs, but the current public operation is synchronous and main-thread only.
+
+## Repeated cuts, undo, and rebuild behavior
 
 By default, the same bone cannot be cut more than once during one UMA generation. Different bones can be requested, and later slices operate on the current already-modified source renderer meshes.
 
@@ -423,7 +588,20 @@ Practical consequences include:
 - parent/child cut order can change which geometry remains available;
 - every approved sequence should be tested, not only each cut in isolation.
 
-`ResetDismemberment(true)` restores the original UMA-owned source meshes, clears repeated-cut tracking, and destroys detached pieces. In Play Mode, the component Inspector exposes **Reset Dismemberment** for testing.
+Use `TryUndoDismemberment` for a complete gameplay or test reset:
+
+```csharp
+if (!dismemberment.TryUndoDismemberment(out string failure))
+    Debug.LogWarning(failure);
+```
+
+It immediately restores the source renderer meshes, destroys every tracked detached root and its child physics/gore objects, clears repeated-cut tracking, exits the source `UMAPhysicsAvatar` ragdoll, and requests a rebuild of the current UMA recipe. The Play Mode Inspector button is **Undo Dismemberment**. `UndoDismemberments` exposes the same workflow to uGUI and should receive an explicit avatar/component reference in a multi-character scene.
+
+Pass `rebuildAvatar: false` only when another system owns the regeneration sequence. Mesh restoration and detached-piece cleanup still occur, but no `DynamicCharacterAvatar.BuildCharacter` request is made.
+
+`ResetDismemberment(true)` is the lower-level lifecycle API. It restores owned source meshes, clears repeated-cut tracking, and destroys detached pieces, but it does not perform the complete main-body unragdoll and UMA rebuild sequence. It is useful inside a custom regeneration flow; it is not the normal player-facing Undo operation.
+
+Unity destroys GameObjects at the end of the frame in Play Mode, so detached roots can compare as pending-destroy immediately after Undo even though their generated meshes and tracked state have already been reset. Avoid reusing references to an old `DismembermentResult` after undo or avatar regeneration.
 
 ## Performance and memory expectations
 
@@ -524,6 +702,41 @@ Set mesh transforms to a sensible unit scale, tune **Cap UV Meters Per Tile**, t
 - Pieces remain forever: destroy them through gameplay cleanup or use **Destroy Detached Pieces**.
 - The character returns intact after a recipe/DNA rebuild: expected behavior; dismemberment is not stored in the UMA recipe.
 
+### The detached piece has no physics
+
+- Enable **Ragdoll Dismembered Parts** on the completion callback.
+- Assign at least one non-null per-cut **Detached Physics Definition** for the humanoid cut, or configure the callback's fallback list for a generic/legacy cut.
+- Confirm that every retained definition's **Bone Name** exists in the detached cut subtree.
+- Do not assign two different definitions targeting the same retained bone.
+- Use **Rigid** to diagnose an unstable articulated chain.
+- Read the builder warning. Failed construction rolls back its partial physics components before the legacy fallback is considered.
+
+### The detached arm or leg stretches toward the body
+
+Use the current slicer weight sanitation and avoid replacing detached weights in a custom callback. Influences above the cut subtree are removed automatically. Enable **Trim Detached Rig** to compact the bone palette and cloned hierarchy, and ensure supplemental Gib renderers are skinned to the retained cut subtree. A custom renderer that remains weighted to Shoulder, Spine, or Hips can still stretch even when the generated body/armor renderers are correct.
+
+### Detached physics falls through the floor or collides incorrectly
+
+- Verify **Ragdoll Layer** and the layer collision matrix in **Project Settings > Physics**.
+- Confirm that the floor has an enabled, non-trigger Collider with adequate thickness.
+- Check each `UMAPhysicsElement` collider size and center at one Unity unit per meter.
+- Look for a project callback that changes the detached hierarchy's layer after the sample builder runs.
+- Do not add overlapping fallback Rigidbody configurations after a successful definition-based build.
+
+### Ragdoll Main Body is enabled but the character stays animated
+
+The cut can succeed even when main-body ragdoll activation cannot. Confirm that the same character has a generated `UMAPhysicsAvatar` and valid full-body UMA physics recipe. Inspect the warning and the completion result's `mainBodyRagdollRequested` and `mainBodyRagdollActivated` values. The per-cut option activates existing physics; it does not build the source character's ragdoll definitions.
+
+### Undo does not completely restore the character
+
+Use `TryUndoDismemberment`, the Inspector's **Undo Dismemberment** button, or `UndoDismemberments.Undo`. Do not substitute `ResetDismemberment` for the full workflow. Keep **Rebuild Avatar** enabled unless another system rebuilds the current recipe. Objects parented under tracked detached roots are removed; unparented VFX, decals, or pooled objects must be cleaned up by their owning systems.
+
+If the scene contains several UMA characters, assign the exact `UmaDismemberment` reference to the undo action. The sample intentionally refuses to guess among multiple candidates.
+
+### A saved character loads intact
+
+Cuts are not UMA recipe data. Save the ordered successful bone cuts as game state, wait for the rebuilt avatar to become ready, and replay them in the same order. Also restore health, fatal state, source ragdoll, detached physics, and cosmetic effects according to the game's own save format.
+
 ## Production checklist
 
 Before approving a sliceable character set, verify:
@@ -532,16 +745,23 @@ Before approving a sliceable character set, verify:
 - The component reports **Ready: Yes** before gameplay can request a cut.
 - Every approved humanoid bone appears once in **Sliceable Human Bones**.
 - Per-bone thresholds have been tested on all supported races and DNA extremes.
+- Every row has the intended UV mode, detached physics mode, rig trimming, main-body fatality policy, and definitions.
 - **Include Child Bones** produces complete detached limbs.
 - Body and wardrobe meshes have readable triangle geometry.
 - Intended cut boundaries are closed, manifold, and sufficiently dense.
 - Cloth renderers have a defined alternative workflow.
 - Fallback and every possible pipeline override material are assigned and supported.
-- Cap UV density is correct at one Unity unit per meter.
+- Meter-scaled cap UV density is correct at one Unity unit per meter; centered cap textures use Clamp and keep features inside the configured padding.
 - Cap materials are tested in Built-in, URP, or HDRP as applicable.
-- Physics, colliders, VFX, audio, cleanup, and LOD behavior are handled by the completion event.
+- Detached physics definitions target unique bones in the retained subtree, use the correct Standard/HD rig, and collide on the intended layer.
+- Source `UMAPhysicsAvatar` colliders below a severed cut are suspended when detached colliders are created and restored by Undo.
+- Every **Ragdoll Main Body** cut has a working source `UMAPhysicsAvatar`, and nonfatal cuts leave it disabled.
+- Physics, VFX, audio, cleanup, LOD, damage, and AI behavior are handled by a project-owned completion listener.
 - Parent/child and repeated-cut sequences have been tested.
 - UMA regeneration behavior matches the chosen rebuild policy.
+- Full undo restores meshes, removes detached child objects, exits ragdoll, rebuilds the current recipe, and targets the correct character in a multi-avatar scene.
+- Saved/networked dismemberment state records and replays cut order rather than serializing generated meshes.
+- New Input System-only UI scenes use `InputSystemUIInputModule`.
 - Fully dressed characters meet CPU time and memory budgets on the target hardware.
 
 When a cut fails, use the component's **Last Failure Reason** and detailed message first. The operation is designed to fail without partially modifying source renderers, which makes those diagnostics safer to iterate on during content production.
