@@ -8,8 +8,8 @@ Open it from `UMA > Testing > Release Asset Validation...`.
 
 The validator applies these boundaries:
 
-- Assets under `Assets/UMA/UMA3` may reference assets under `Assets/UMA`.
-- Assets under `Assets/UMA2` may reference assets under `Assets/UMA` or `Assets/UMA2`.
+- Assets under `Assets/UMA/UMA3` may reference UMA Core and the selected SRP support, but never UMA2.
+- Assets under `Assets/UMA/UMA2` may reference UMA Core, UMA3, and other assets under `Assets/UMA/UMA2`.
 - Unity built-in resources and Package Manager assets are treated as external prerequisites rather than exportable project content.
 
 The release scan includes T-poses, races, slots, overlays, textures, expression sets and groups, bone poses, and UMA DNA-related assets. It checks Unity dependency closure, serialized GUIDs, meta-file references, and loaded serialized object references. Missing scripts and unresolved GUIDs are also reported when their folder context identifies them as release data.

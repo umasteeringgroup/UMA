@@ -8,6 +8,7 @@ using UnityEditor.Animations;
 using UnityEditor.Compilation;
 using UnityEngine;
 using UMA.CharacterSystem;
+using UMA.Editors.PackageSupport;
 
 namespace UMA.Editors.Tests
 {
@@ -62,10 +63,14 @@ namespace UMA.Editors.Tests
             Assert.That(generator.defaultRendererAsset, Is.Not.Null);
             Assert.That(settings.ShaderFolder,
                 Is.EqualTo(UMAPathUtility.ShaderPackagesRelativePath));
-            string shaderPackagesPath = UMAPathUtility.ResolveInstallAssetPath(
-                UMAPathUtility.ShaderPackagesRelativePath);
-            Assert.That(AssetDatabase.IsValidFolder(shaderPackagesPath), Is.True,
-                shaderPackagesPath);
+            string urpInstallerPath = UMAPathUtility.ResolveInstallAssetPath(
+                "SRP/UMAURP.unitypackage");
+            string hdrpInstallerPath = UMAPathUtility.ResolveInstallAssetPath(
+                "SRP/UMAHDRP.unitypackage");
+            Assert.That(File.Exists(UMAPathUtility.ResolveAbsolutePath(
+                urpInstallerPath)), Is.True, urpInstallerPath);
+            Assert.That(File.Exists(UMAPathUtility.ResolveAbsolutePath(
+                hdrpInstallerPath)), Is.True, hdrpInstallerPath);
             string whatsNewPath = UMAPathUtility.ResolveInstallAssetPath(
                 "Docs/!WhatsNewInUMA3.md");
             Assert.That(AssetDatabase.LoadAssetAtPath<TextAsset>(whatsNewPath),
@@ -110,8 +115,270 @@ namespace UMA.Editors.Tests
         }
 
         [Test]
-        public void ShippedWelcomeScenesResolveFromActiveInstallation()
+        public void EditableContentAlwaysResolvesBelowAssets()
         {
+            Assert.That(UMAPathUtility.ResolveUma3ContentPath("Races/Test.asset"),
+                Is.EqualTo("Assets/UMA/UMA3/Races/Test.asset"));
+            Assert.That(UMAPathUtility.ResolveUma2ContentPath("Races/Test.asset"),
+                Is.EqualTo("Assets/UMA/UMA2/Races/Test.asset"));
+            Assert.That(UMAPathUtility.ResolveLegacyInstallAssetPath(
+                    "Assets/UMA2/Races/Test.asset"),
+                Is.EqualTo("Assets/UMA/UMA2/Races/Test.asset"));
+            Assert.That(UMAPathUtility.ResolveLegacyInstallAssetPath(
+                    "Assets/UMA/UMA2/Races/Test.asset"),
+                Is.EqualTo("Assets/UMA/UMA2/Races/Test.asset"));
+            Assert.That(UMAPathUtility.IsProjectOwnedUmaAssetPath(
+                "Assets/UMA/UMA3/Wearables/Icons"), Is.True);
+            Assert.That(UMAPathUtility.IsProjectOwnedUmaAssetPath(
+                "Assets/UMA/UMA2/Races"), Is.True);
+            Assert.That(UMAPathUtility.IsProjectOwnedUmaAssetPath(
+                "Assets/UMA/SRP/ShaderGraphs"), Is.True);
+            Assert.That(UMAPathUtility.IsProjectOwnedUmaAssetPath(
+                "Assets/UMA/Core"), Is.False);
+            Assert.That(UMAPathUtility.IsWritableProjectAssetPath(
+                UMAPathUtility.Uma3ContentRoot), Is.True);
+            Assert.That(UMAPathUtility.IsWritableProjectAssetPath(
+                UMAPathUtility.Uma2ContentRoot), Is.True);
+        }
+
+        [Test]
+        public void LegacySrpPathsResolveThroughProjectOverride()
+        {
+            const string relativePath = "ShaderPackages";
+            Assert.That(UMAPathUtility.ResolveLegacyInstallAssetPath(
+                    "Assets/UMA/SRP/" + relativePath),
+                Is.EqualTo(UMAPathUtility.ResolveSrpAssetPath(relativePath)));
+        }
+
+        [Test]
+        public void SrpInstallerArchivesAreValidAndPipelineSplit()
+        {
+            string urpPath = UMAPathUtility.ResolveAbsolutePath(
+                UMAPathUtility.ResolveInstallAssetPath("SRP/UMAURP.unitypackage"));
+            string hdrpPath = UMAPathUtility.ResolveAbsolutePath(
+                UMAPathUtility.ResolveInstallAssetPath("SRP/UMAHDRP.unitypackage"));
+
+            Assert.That(UMASrpPackageArchiveValidator.TryValidatePair(urpPath, hdrpPath,
+                out string pairError), Is.True, pairError);
+            Assert.That(UMASrpPackageArchiveValidator.TryValidate(urpPath, "URP",
+                out UMASrpPackageArchiveInfo urp, out string urpError), Is.True, urpError);
+            Assert.That(UMASrpPackageArchiveValidator.TryValidate(hdrpPath, "HDRP",
+                out UMASrpPackageArchiveInfo hdrp, out string hdrpError), Is.True, hdrpError);
+            Assert.That(urp.GuidByPath.ContainsKey(UMASrpPackageArchiveValidator.SrpRoot),
+                Is.False, "URP must not redirect UPM imports into the package SRP folder.");
+            Assert.That(hdrp.GuidByPath.ContainsKey(UMASrpPackageArchiveValidator.SrpRoot),
+                Is.False, "HDRP must not redirect UPM imports into the package SRP folder.");
+
+            Assert.That(urp.SharedPaths.Count, Is.EqualTo(35),
+                "The SRP split must keep the audited common texture and shader-package records expanded.");
+            CollectionAssert.AreEquivalent(urp.SharedPaths, hdrp.SharedPaths,
+                "URP and HDRP must consume the same expanded shared SRP content.");
+            string[] representativeSharedPaths =
+            {
+                "Assets/UMA/SRP/Textures",
+                "Assets/UMA/SRP/Textures/Hair/HairAtlasDiffuse_New.png",
+                "Assets/UMA/SRP/Textures/ReallyWhite.png",
+                "Assets/UMA/SRP/ShaderPackages",
+                "Assets/UMA/SRP/ShaderPackages/AlbedoNormal_Compositer.mat",
+                "Assets/UMA/SRP/ShaderPackages/UMASRP_DiffuseNormalThickness.umaShaderPack"
+            };
+            foreach (string sharedPath in representativeSharedPaths)
+                Assert.That(urp.SharedPaths, Does.Contain(sharedPath), sharedPath);
+
+            foreach (string sharedPath in urp.SharedPaths)
+            {
+                Assert.That(urp.GuidByPath.ContainsKey(sharedPath), Is.False,
+                    "URP must not package expanded shared content: " + sharedPath);
+                Assert.That(hdrp.GuidByPath.ContainsKey(sharedPath), Is.False,
+                    "HDRP must not package expanded shared content: " + sharedPath);
+
+                string absolutePath = UMAPathUtility.ResolveAbsolutePath(sharedPath);
+                if (!File.Exists(absolutePath) && !Directory.Exists(absolutePath))
+                {
+                    string relativePath = sharedPath.Substring(
+                        (UMASrpPackageArchiveValidator.SrpRoot + "/").Length);
+                    absolutePath = UMAPathUtility.ResolveAbsolutePath(
+                        UMAPathUtility.ResolveInstallAssetPath("SRP/" + relativePath));
+                }
+                Assert.That(File.Exists(absolutePath) || Directory.Exists(absolutePath),
+                    Is.True, "Expanded shared SRP content is missing: " + sharedPath);
+                Assert.That(File.Exists(absolutePath + ".meta"), Is.True,
+                    "Expanded shared SRP metadata is missing: " + sharedPath + ".meta");
+            }
+
+            const string environmentPath =
+                "Assets/UMA/SRP/Environment/U3Environment.prefab";
+            const string environmentGuid =
+                "4d4ce01dbd7484b439df783927a00c65";
+            Assert.That(urp.GuidByPath.TryGetValue(environmentPath,
+                    out string urpEnvironmentGuid), Is.True,
+                "URP must overwrite the bootstrap U3Environment prefab.");
+            Assert.That(hdrp.GuidByPath.TryGetValue(environmentPath,
+                    out string hdrpEnvironmentGuid), Is.True,
+                "HDRP must overwrite the bootstrap U3Environment prefab.");
+            Assert.That(urpEnvironmentGuid, Is.EqualTo(environmentGuid).IgnoreCase);
+            Assert.That(hdrpEnvironmentGuid, Is.EqualTo(environmentGuid).IgnoreCase);
+
+            string[] expectedScenes =
+            {
+                "U3-Car Scene.unity",
+                "U3-Character Creator.unity",
+                "U3-Decals.unity",
+                "U3-Generating Random Characters.unity",
+                "U3-How to Construct a DCA from scratch.unity",
+                "U3-How to Construct and load a DCA from a prefab.unity",
+                "U3-How to equip items.unity",
+                "U3-How to Load and Save a DCA to a string.unity",
+                "U3-How to Use a Slider to control DNA.unity",
+                "U3-Integrating with Timeline.unity",
+                "U3-Ragdolls and Shooting Example.unity",
+                "U3-Sandbox.unity",
+                "U3-Tools-Photobooth.unity"
+            };
+            foreach (string sceneName in expectedScenes)
+            {
+                string scenePath = "Assets/UMA/SRP/Samples/Scenes/" + sceneName;
+                Assert.That(urp.GuidByPath.TryGetValue(scenePath,
+                        out string urpSceneGuid), Is.True,
+                    "URP is missing sample scene " + scenePath);
+                Assert.That(hdrp.GuidByPath.TryGetValue(scenePath,
+                        out string hdrpSceneGuid), Is.True,
+                    "HDRP is missing sample scene " + scenePath);
+                Assert.That(hdrpSceneGuid, Is.EqualTo(urpSceneGuid).IgnoreCase,
+                    "The two SRP packages must share the scene GUID for " + scenePath);
+            }
+
+            const string migratedSamplePath =
+                "Assets/UMA/SRP/Samples/Scenes/U3-Decals/DecalMaterial.mat";
+            const string legacyPackagedSampleGuid =
+                "03aac4b393dbb924ba3769e3b1cddf2a";
+            Assert.That(urp.GuidByPath.TryGetValue(migratedSamplePath,
+                    out string migratedUrpGuid), Is.True, migratedSamplePath);
+            Assert.That(hdrp.GuidByPath.TryGetValue(migratedSamplePath,
+                    out string migratedHdrpGuid), Is.True, migratedSamplePath);
+            Assert.That(migratedUrpGuid,
+                Is.Not.EqualTo(legacyPackagedSampleGuid).IgnoreCase,
+                "Moved samples need install-only GUIDs so stale UPM mappings " +
+                "cannot redirect them to their retired UMA3/Scenes paths.");
+            Assert.That(migratedHdrpGuid, Is.EqualTo(migratedUrpGuid).IgnoreCase);
+
+            const string diffuseUmaMaterialPath =
+                "Assets/UMA/SRP/ShaderGraphs/UMAMaterial/" +
+                "UMAMaterial_UMA_SRP_Diffuse.asset";
+            const string diffuseFallbackMaterialPath =
+                "Assets/UMA/SRP/ShaderGraphs/Graphs/TempMat/UMA_URP_Diffuse.mat";
+            Assert.That(hdrp.TextByPath.TryGetValue(diffuseUmaMaterialPath,
+                    out string diffuseUmaMaterial), Is.True,
+                "HDRP must include the diffuse UMA material used by UMA30_Eyes.");
+            Assert.That(hdrp.GuidByPath.TryGetValue(diffuseFallbackMaterialPath,
+                    out string diffuseFallbackGuid), Is.True,
+                "HDRP must include the default material used when the UMA " +
+                "material has no dedicated HDRP override.");
+            Assert.That(diffuseUmaMaterial, Does.Contain(
+                    "_material: {fileID: 2100000, guid: " + diffuseFallbackGuid),
+                "HDRP must preserve UMAMaterial's intentional fallback to " +
+                "_material when _HDRPMaterial is null.");
+
+            List<string> guidMismatches = new List<string>();
+            foreach (KeyValuePair<string, string> pair in urp.GuidByPath)
+            {
+                if (hdrp.GuidByPath.TryGetValue(pair.Key, out string hdrpGuid) &&
+                    !string.Equals(pair.Value, hdrpGuid, StringComparison.OrdinalIgnoreCase))
+                    guidMismatches.Add(pair.Key + " (URP=" + pair.Value +
+                        ", HDRP=" + hdrpGuid + ")");
+            }
+            Assert.That(guidMismatches, Is.Empty,
+                "Shared SRP paths must keep the same GUID in both packages:\n" +
+                string.Join("\n", guidMismatches));
+
+            AssertNoCrossPackageReferences(urp, hdrp, "URP");
+            AssertNoCrossPackageReferences(hdrp, urp, "HDRP");
+            AssertArchiveReferencesResolve(urp, "URP");
+            AssertArchiveReferencesResolve(hdrp, "HDRP");
+        }
+
+        private static void AssertNoCrossPackageReferences(
+            UMASrpPackageArchiveInfo package,
+            UMASrpPackageArchiveInfo otherPackage,
+            string pipeline)
+        {
+            HashSet<string> ownGuids = new HashSet<string>(package.GuidByPath.Values,
+                StringComparer.OrdinalIgnoreCase);
+            Dictionary<string, string> otherOnly = new Dictionary<string, string>(
+                StringComparer.OrdinalIgnoreCase);
+            foreach (KeyValuePair<string, string> pair in otherPackage.GuidByPath)
+            {
+                if (!ownGuids.Contains(pair.Value))
+                    otherOnly[pair.Value] = pair.Key;
+            }
+
+            List<string> failures = new List<string>();
+            foreach (KeyValuePair<string, IReadOnlyCollection<string>> pair in
+                     package.ReferencedGuidsByPath)
+            {
+                foreach (string guid in pair.Value)
+                {
+                    if (otherOnly.TryGetValue(guid, out string dependency))
+                        failures.Add(pair.Key + " -> " + dependency);
+                }
+            }
+            Assert.That(failures, Is.Empty,
+                pipeline + " references assets available only in the other SRP package:\n" +
+                string.Join("\n", failures));
+        }
+
+        private static void AssertArchiveReferencesResolve(
+            UMASrpPackageArchiveInfo package, string pipeline)
+        {
+            // SRP archives are installed before the editable content packages and
+            // intentionally contain references to those packages. A Core-only
+            // project can validate the archive structure and the URP/HDRP split,
+            // but it cannot resolve external GUIDs until the complete pipeline
+            // installation is present. The SRP packages include optional UMA2
+            // integration materials whose texture references resolve only when
+            // UMA2 is installed, so the complete-resolution check runs only for
+            // the full content layout.
+            string pipelinePackageRoot = string.Equals(pipeline, "HDRP",
+                StringComparison.OrdinalIgnoreCase)
+                ? "Packages/com.unity.render-pipelines.high-definition"
+                : "Packages/com.unity.render-pipelines.universal";
+            if (!AssetDatabase.IsValidFolder(UMAPathUtility.Uma3ContentRoot) ||
+                !AssetDatabase.IsValidFolder(UMAPathUtility.Uma2ContentRoot) ||
+                !AssetDatabase.IsValidFolder(pipelinePackageRoot))
+                return;
+
+            HashSet<string> packagedGuids = new HashSet<string>(package.GuidByPath.Values,
+                StringComparer.OrdinalIgnoreCase);
+            List<string> failures = new List<string>();
+            foreach (KeyValuePair<string, IReadOnlyCollection<string>> pair in
+                     package.ReferencedGuidsByPath)
+            {
+                foreach (string guid in pair.Value)
+                {
+                    if (packagedGuids.Contains(guid) ||
+                        guid.StartsWith("0000000000000000", StringComparison.OrdinalIgnoreCase) ||
+                        !string.IsNullOrEmpty(AssetDatabase.GUIDToAssetPath(guid)))
+                        continue;
+                    failures.Add(pair.Key + " -> " + guid);
+                }
+            }
+            Assert.That(failures, Is.Empty,
+                pipeline + " contains unresolved serialized GUID references:\n" +
+                string.Join("\n", failures));
+        }
+
+        [Test]
+        public void ShippedWelcomeScenesBelongToBothSrpArchives()
+        {
+            string urpPath = UMAPathUtility.ResolveAbsolutePath(
+                UMAPathUtility.ResolveInstallAssetPath("SRP/UMAURP.unitypackage"));
+            string hdrpPath = UMAPathUtility.ResolveAbsolutePath(
+                UMAPathUtility.ResolveInstallAssetPath("SRP/UMAHDRP.unitypackage"));
+            Assert.That(UMASrpPackageArchiveValidator.TryValidate(urpPath, "URP",
+                out UMASrpPackageArchiveInfo urp, out string urpError), Is.True, urpError);
+            Assert.That(UMASrpPackageArchiveValidator.TryValidate(hdrpPath, "HDRP",
+                out UMASrpPackageArchiveInfo hdrp, out string hdrpError), Is.True, hdrpError);
+
             UMAWelcomeScenes scenes =
                 UMAPathUtility.LoadInstallAsset<UMAWelcomeScenes>(
                     "InternalDataStore/Editor/Resources/UMAWelcomeScenes.asset");
@@ -120,18 +387,35 @@ namespace UMA.Editors.Tests
             for (int i = 0; i < scenes.umaScenes.Count; i++)
             {
                 UMAWelcomeScenes.UMAScene scene = scenes.umaScenes[i];
-                string path = UMAPathUtility.ResolveLegacyInstallAssetPath(
-                    scene.scenePath);
-                Assert.That(AssetDatabase.LoadAssetAtPath<SceneAsset>(path),
-                    Is.Not.Null, scene.sceneName + " -> " + path);
+                Assert.That(scene.scenePath, Does.StartWith(
+                    "Assets/UMA/SRP/Samples/Scenes/"), scene.sceneName);
+                Assert.That(urp.GuidByPath.ContainsKey(scene.scenePath), Is.True,
+                    "URP is missing Welcome scene " + scene.scenePath);
+                Assert.That(hdrp.GuidByPath.ContainsKey(scene.scenePath), Is.True,
+                    "HDRP is missing Welcome scene " + scene.scenePath);
             }
+
+            string oldSceneRoot = UMAPathUtility.ResolveUma3ContentPath("Scenes");
+            Assert.That(AssetDatabase.FindAssets("t:Scene", new[] { oldSceneRoot }),
+                Is.Empty, "Core UMA must not contain active sample scenes.");
+        }
+
+        [Test]
+        public void ShippedDefaultAssetIndexerLoads()
+        {
+            UMAAssetIndexer indexer =
+                UMAPathUtility.LoadInstallAsset<UMAAssetIndexer>(
+                    "InternalDataStore/InGame/Resources/AssetIndexer.asset");
+            Assert.That(indexer, Is.Not.Null,
+                "The shipped native-format AssetIndexer must remain a valid " +
+                "Unity asset; it must never be edited as text.");
         }
 
         [Test]
         public void InternalLodPrefabKeepsGeneratedMeshReadable()
         {
-            string prefabPath = UMAPathUtility.ResolveInstallAssetPath(
-                "UMA3/Getting Started/UMADynamicCharacterAvatar-LOD.prefab");
+            string prefabPath = UMAPathUtility.ResolveUma3ContentPath(
+                "Getting Started/UMADynamicCharacterAvatar-LOD.prefab");
             GameObject prefab =
                 AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
             Assert.That(prefab, Is.Not.Null, prefabPath);
@@ -151,8 +435,8 @@ namespace UMA.Editors.Tests
         [Test]
         public void SliderSampleRandomAvatarCreatesItsAnimatorController()
         {
-            string generatorPath = UMAPathUtility.ResolveInstallAssetPath(
-                "UMA3/Getting Started/UMARandomGeneratedCharacter.prefab");
+            string generatorPath = UMAPathUtility.ResolveUma3ContentPath(
+                "Getting Started/UMARandomGeneratedCharacter.prefab");
             GameObject generatorPrefab =
                 AssetDatabase.LoadAssetAtPath<GameObject>(generatorPath);
             Assert.That(generatorPrefab, Is.Not.Null, generatorPath);
@@ -196,8 +480,8 @@ namespace UMA.Editors.Tests
         [Test]
         public void RandomCharacterSampleUsesDedicatedWalkerPrefab()
         {
-            string walkerPath = UMAPathUtility.ResolveInstallAssetPath(
-                "UMA3/Getting Started/" +
+            string walkerPath = UMAPathUtility.ResolveUma3ContentPath(
+                "Getting Started/" +
                 "UMADynamicCharacterAvatar-LOD-walker.prefab");
             GameObject walkerPrefab =
                 AssetDatabase.LoadAssetAtPath<GameObject>(walkerPath);
@@ -231,15 +515,17 @@ namespace UMA.Editors.Tests
                 "The walker also preserves this setting when it refreshes " +
                 "the Animator during Play Mode.");
 
-            string scenePath = UMAPathUtility.ResolveInstallAssetPath(
-                "UMA3/Scenes/U3-Generating Random Characters.unity");
-            string[] dependencies = AssetDatabase.GetDependencies(
-                scenePath, true);
-            Assert.That(Array.Exists(dependencies, dependency =>
-                    string.Equals(NormalizeAssetPath(dependency),
-                        NormalizeAssetPath(walkerPath),
-                        StringComparison.OrdinalIgnoreCase)),
-                Is.True,
+            string archivePath = UMAPathUtility.ResolveAbsolutePath(
+                UMAPathUtility.ResolveInstallAssetPath("SRP/UMAURP.unitypackage"));
+            Assert.That(UMASrpPackageArchiveValidator.TryValidate(archivePath, "URP",
+                out UMASrpPackageArchiveInfo archive, out string archiveError),
+                Is.True, archiveError);
+            const string scenePath =
+                "Assets/UMA/SRP/Samples/Scenes/U3-Generating Random Characters.unity";
+            Assert.That(archive.ReferencedGuidsByPath.TryGetValue(scenePath,
+                    out IReadOnlyCollection<string> dependencies), Is.True, scenePath);
+            Assert.That(dependencies, Does.Contain(
+                    AssetDatabase.AssetPathToGUID(walkerPath)),
                 "The random-character scene must use the dedicated walker " +
                 "prefab without changing the shared stationary avatar.");
         }
@@ -247,8 +533,8 @@ namespace UMA.Editors.Tests
         [Test]
         public void ChallengerLocomotionUsesChallengerAnimations()
         {
-            string animationRoot = UMAPathUtility.ResolveInstallAssetPath(
-                "UMA3/Animation");
+            string animationRoot = UMAPathUtility.ResolveUma3ContentPath(
+                "Animation");
             AnimatorController controller =
                 AssetDatabase.LoadAssetAtPath<AnimatorController>(
                     animationRoot + "/Locomotion_Challenger.controller");
@@ -282,12 +568,15 @@ namespace UMA.Editors.Tests
         }
 
         [Test]
-        public void Uma3SampleScenesUseOnlyPackagedAssets()
+        public void InstalledUma3SampleScenesUseOnlyUmaOwnedAssets()
         {
             string installRoot = NormalizeAssetPath(
                 UMAPathUtility.InstallAssetRoot);
-            string sceneRoot = UMAPathUtility.ResolveInstallAssetPath(
-                "UMA3/Scenes");
+            string srpRoot = NormalizeAssetPath(
+                UMAPathUtility.ResolveSrpAssetPath());
+            string sceneRoot = srpRoot + "/Samples/Scenes";
+            if (!AssetDatabase.IsValidFolder(sceneRoot))
+                return;
             string[] sceneGuids = AssetDatabase.FindAssets(
                 "t:Scene", new[] { sceneRoot });
             Assert.That(sceneGuids, Is.Not.Empty, sceneRoot);
@@ -306,9 +595,14 @@ namespace UMA.Editors.Tests
                 {
                     string dependency = NormalizeAssetPath(
                         dependencies[dependencyIndex]);
-                    if (dependency.StartsWith("Assets/",
+                    bool usesUma2 = IsPathInside(dependency,
+                        UMAPathUtility.Uma2ContentRoot);
+                    if (usesUma2 || (dependency.StartsWith("Assets/",
                             StringComparison.OrdinalIgnoreCase) &&
-                        !IsPathInside(dependency, installRoot))
+                        !IsPathInside(dependency, installRoot) &&
+                        !IsPathInside(dependency, srpRoot) &&
+                        !IsPathInside(dependency,
+                            UMAPathUtility.Uma3ContentRoot)))
                     {
                         failures.Add(scenePath + " -> " + dependency);
                     }
@@ -316,20 +610,20 @@ namespace UMA.Editors.Tests
             }
 
             Assert.That(failures, Is.Empty,
-                "UMA 3 sample scenes must not depend on assets outside the " +
-                "active UMA installation:\n" + string.Join("\n", failures));
+                "UMA 3 sample scenes must not depend on assets outside core UMA " +
+                "and the selected SRP installation:\n" + string.Join("\n", failures));
         }
 
         [Test]
-        public void Uma2SampleScenesUseOnlyLegacyAndSharedUmaAssetsWhenInstalled()
+        public void Uma2SampleScenesUseOnlyLegacyUma3AndSharedUmaAssetsWhenInstalled()
         {
-            const string legacyRoot = "Assets/UMA2";
+            const string legacyRoot = UMAPathUtility.Uma2ContentRoot;
             if (!AssetDatabase.IsValidFolder(legacyRoot))
                 return;
 
             string installRoot = NormalizeAssetPath(
                 UMAPathUtility.InstallAssetRoot);
-            string uma3Root = installRoot + "/UMA3";
+            string uma3Root = UMAPathUtility.Uma3ContentRoot;
             string[] sceneGuids = AssetDatabase.FindAssets(
                 "t:Scene", new[] { legacyRoot });
             var failures = new List<string>();
@@ -347,21 +641,20 @@ namespace UMA.Editors.Tests
                 {
                     string dependency = NormalizeAssetPath(
                         dependencies[dependencyIndex]);
-                    bool usesUma3Content = IsPathInside(
-                        dependency, uma3Root);
                     bool usesUnownedProjectAsset =
                         dependency.StartsWith("Assets/",
                             StringComparison.OrdinalIgnoreCase) &&
                         !IsPathInside(dependency, legacyRoot) &&
+                        !IsPathInside(dependency, uma3Root) &&
                         !IsPathInside(dependency, installRoot);
-                    if (usesUma3Content || usesUnownedProjectAsset)
+                    if (usesUnownedProjectAsset)
                         failures.Add(scenePath + " -> " + dependency);
                 }
             }
 
             Assert.That(failures, Is.Empty,
-                "UMA 2 sample scenes may use Assets/UMA2 and shared UMA " +
-                "package assets, but not UMA 3 or consumer-project content:\n" +
+                "UMA 2 sample scenes may use editable UMA2/UMA3 content and shared " +
+                "UMA package assets, but not consumer-project content:\n" +
                 string.Join("\n", failures));
         }
 
@@ -388,8 +681,9 @@ namespace UMA.Editors.Tests
         [Test]
         public void EveryUmaScriptBelongsToAnExplicitAssembly()
         {
+            string[] roots = ContentAndInstallRoots();
             string[] asmdefGuids = AssetDatabase.FindAssets("t:AssemblyDefinitionAsset",
-                new[] { UMAPathUtility.InstallAssetRoot });
+                roots);
             var assemblyDirectories = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             for (int i = 0; i < asmdefGuids.Length; i++)
             {
@@ -398,7 +692,7 @@ namespace UMA.Editors.Tests
             }
 
             string[] scriptGuids = AssetDatabase.FindAssets("t:MonoScript",
-                new[] { UMAPathUtility.InstallAssetRoot });
+                roots);
             var failures = new List<string>();
             for (int i = 0; i < scriptGuids.Length; i++)
             {
@@ -421,7 +715,7 @@ namespace UMA.Editors.Tests
         {
             string[] asmdefGuids = AssetDatabase.FindAssets(
                 "t:AssemblyDefinitionAsset",
-                new[] { UMAPathUtility.InstallAssetRoot });
+                ContentAndInstallRoots());
             var pathsByName = new Dictionary<string, List<string>>(
                 StringComparer.OrdinalIgnoreCase);
             var pathsByDirectory = new Dictionary<string, List<string>>(
@@ -582,6 +876,20 @@ namespace UMA.Editors.Tests
             return (path ?? string.Empty).Replace('\\', '/').TrimEnd('/');
         }
 
+        private static string[] ContentAndInstallRoots()
+        {
+            var roots = new List<string> { UMAPathUtility.InstallAssetRoot };
+            if (AssetDatabase.IsValidFolder(UMAPathUtility.Uma3ContentRoot) &&
+                !roots.Exists(root => IsPathInside(
+                    UMAPathUtility.Uma3ContentRoot, root)))
+                roots.Add(UMAPathUtility.Uma3ContentRoot);
+            if (AssetDatabase.IsValidFolder(UMAPathUtility.Uma2ContentRoot) &&
+                !roots.Exists(root => IsPathInside(
+                    UMAPathUtility.Uma2ContentRoot, root)))
+                roots.Add(UMAPathUtility.Uma2ContentRoot);
+            return roots.ToArray();
+        }
+
         private static bool IsPathInside(string path, string root)
         {
             path = NormalizeAssetPath(path);
@@ -619,46 +927,22 @@ namespace UMA.Editors.Tests
         }
 
         [Test]
-        public void Uma2ManifestDependsOnlyOnMatchingBaseUmaVersionWhenInstalled()
+        public void Uma2ContentUsesAnExplicitAssemblyWhenInstalled()
         {
-            string[] candidates =
-            {
-                "Assets/UMA2/package.json",
-                "Packages/com.umasteeringgroup.uma2/package.json"
-            };
-            string uma2ManifestPath = Array.Find(candidates, candidate =>
-                File.Exists(UMAPathUtility.ResolveAbsolutePath(candidate)));
-            if (string.IsNullOrEmpty(uma2ManifestPath))
+            if (!UMAPathUtility.IsUma2ContentInstalled)
                 Assert.Ignore("The optional UMA2 package is not installed.");
 
-            string baseManifestPath =
-                UMAPathUtility.ResolveInstallAssetPath("package.json");
-            string baseJson = File.ReadAllText(
-                UMAPathUtility.ResolveAbsolutePath(baseManifestPath));
-            string uma2Json = File.ReadAllText(
-                UMAPathUtility.ResolveAbsolutePath(uma2ManifestPath));
-
-            string baseVersion = ReadJsonString(baseJson, "version");
-            Assert.That(ReadJsonString(uma2Json, "name"),
-                Is.EqualTo("com.umasteeringgroup.uma2"));
-            Assert.That(ReadJsonString(uma2Json, "version"),
-                Is.EqualTo(baseVersion));
-
-            Match dependencies = Regex.Match(uma2Json,
-                "\\\"dependencies\\\"\\s*:\\s*\\{(?<body>[^}]*)\\}",
-                RegexOptions.Singleline);
-            Assert.That(dependencies.Success, Is.True,
-                uma2ManifestPath + " has no dependencies object.");
-            MatchCollection dependencyNames = Regex.Matches(
-                dependencies.Groups["body"].Value,
-                "\\\"(?<name>[^\\\"]+)\\\"\\s*:");
-            Assert.That(dependencyNames.Count, Is.EqualTo(1),
-                "UMA2 must depend only on the base UMA package.");
-            Assert.That(dependencyNames[0].Groups["name"].Value,
-                Is.EqualTo("com.umasteeringgroup.uma"));
-            Assert.That(ReadJsonString(dependencies.Groups["body"].Value,
-                    "com.umasteeringgroup.uma"),
-                Is.EqualTo(baseVersion));
+            string asmdefPath = UMAPathUtility.ResolveUma2ContentPath(
+                "UMA2.Content.asmdef");
+            Assert.That(File.Exists(
+                UMAPathUtility.ResolveAbsolutePath(asmdefPath)), Is.True,
+                asmdefPath);
+            string json = File.ReadAllText(
+                UMAPathUtility.ResolveAbsolutePath(asmdefPath));
+            Assert.That(ReadJsonString(json, "name"),
+                Is.EqualTo("UMA2.Content"));
+            Assert.That(json, Does.Contain("\"UMA_Core\""));
+            Assert.That(json, Does.Contain("\"Unity.InputSystem\""));
         }
 
         private static string ReadJsonString(string json, string propertyName)
@@ -742,6 +1026,8 @@ namespace UMA.Editors.Tests
             Assert.That(json, Does.Not.Contain("com.unity.2d.sprite"));
             Assert.That(json, Does.Not.Contain(
                 "com.unity.render-pipelines.high-definition"));
+            Assert.That(json, Does.Not.Contain(
+                "com.unity.render-pipelines.universal"));
             Assert.That(json, Does.Not.Contain("com.unity.test-framework"));
         }
 

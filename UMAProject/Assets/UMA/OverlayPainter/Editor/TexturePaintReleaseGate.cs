@@ -168,7 +168,8 @@ namespace UMA.TexturePaint.Editor
             CheckCompute(report, "LayerComposite.compute", "CSCopyBase", "CSCompositeLayer",
                 "CSPrepareEffectSeeds", "CSJumpFloodEffectSeeds", "CSResolveEffectDistance",
                 "CSCompositeLayerEffect");
-            CheckCompute(report, "ChannelPack.compute", "CSExtract", "CSPackChannels");
+            CheckCompute(report, "ChannelPack.compute", "CSExtract", "CSPackChannels",
+                "CSApplyPluginTile");
             string[] documents =
             {
                 "RELEASE_READINESS_PLAN.md", "PLUGIN_API_V2.md", "MILESTONE_8_WORKSPACE.md",

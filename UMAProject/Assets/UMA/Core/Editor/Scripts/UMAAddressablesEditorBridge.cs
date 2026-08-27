@@ -20,6 +20,7 @@ namespace UMA
             public Func<Type, List<AssetItem>> getOrphans;
             public Func<UMATextRecipe, bool> addRecipeGroup;
             public Func<bool, IUMAAddressablePlugin> createSingleGroupGenerator;
+            public Func<string> buildPlayerContent;
         }
 
         public static Provider Current { private get; set; }
@@ -72,6 +73,28 @@ namespace UMA
                 return Current.createSingleGroupGenerator(clearMaterials);
             ReportUnavailable();
             return null;
+        }
+
+        public static bool TryBuildPlayerContent(out string error)
+        {
+            if (Current?.buildPlayerContent == null)
+            {
+                error = "UMA Addressables support is unavailable. Install Addressables " +
+                    "and enable UMA_ADDRESSABLES.";
+                ReportUnavailable();
+                return false;
+            }
+            try
+            {
+                error = Current.buildPlayerContent() ?? string.Empty;
+                return string.IsNullOrEmpty(error);
+            }
+            catch (Exception exception)
+            {
+                error = exception.Message;
+                Debug.LogException(exception);
+                return false;
+            }
         }
 
         private static void ReportUnavailable()

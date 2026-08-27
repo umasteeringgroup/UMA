@@ -23,7 +23,8 @@ namespace UMA.TexturePaint
         Importer = 1 << 4,
         Exporter = 1 << 5,
         ReadsMeshMaps = 1 << 6,
-        LongRunning = 1 << 7
+        LongRunning = 1 << 7,
+        GpuAccelerated = 1 << 8
     }
 
     public enum TexturePaintPluginParameterType
@@ -140,13 +141,78 @@ namespace UMA.TexturePaint
     public sealed class TexturePaintPluginParameterSet
     {
         public List<TexturePaintPluginParameterValue> values = new List<TexturePaintPluginParameterValue>();
+        [NonSerialized] private Dictionary<string, TexturePaintPluginParameterValue> valueLookup;
+        [NonSerialized] private int valueLookupCount = -1;
+
+        /// <summary>
+        /// Replaces every stored value with an independent copy of the descriptor defaults.
+        /// Asset parameters intentionally reset to null because parameter definitions do not
+        /// retain scene or project object references.
+        /// </summary>
+        public void ResetToDefaults(TexturePaintPluginDescriptor descriptor) =>
+            ResetToDefaults(descriptor?.parameters);
+
+        public void ResetToDefaults(
+            IReadOnlyList<TexturePaintPluginParameterDefinition> definitions)
+        {
+            values ??= new List<TexturePaintPluginParameterValue>();
+            values.Clear();
+            valueLookup = null;
+            valueLookupCount = -1;
+            if (definitions == null) return;
+
+            for (int i = 0; i < definitions.Count; i++)
+            {
+                TexturePaintPluginParameterDefinition definition = definitions[i];
+                if (definition == null || string.IsNullOrWhiteSpace(definition.id) ||
+                    definition.type == TexturePaintPluginParameterType.Header)
+                    continue;
+
+                values.Add(new TexturePaintPluginParameterValue
+                {
+                    id = definition.id,
+                    number = definition.defaultNumber,
+                    boolean = definition.defaultBoolean,
+                    color = definition.defaultColor,
+                    text = definition.defaultText,
+                    texture = null,
+                    sprite = null,
+                    font = null,
+                    curve = CloneCurve(definition.defaultCurve),
+                    stripes = CloneStripes(definition.defaultStripes)
+                });
+            }
+        }
 
         public TexturePaintPluginParameterValue Get(string id, bool create = false)
         {
-            for (int i = 0; i < values.Count; i++) if (values[i]?.id == id) return values[i];
+            values ??= new List<TexturePaintPluginParameterValue>();
+            EnsureValueLookup();
+            string key = id ?? string.Empty;
+            if (valueLookup.TryGetValue(key, out TexturePaintPluginParameterValue existing))
+                return existing;
             if (!create) return null;
             TexturePaintPluginParameterValue value = new TexturePaintPluginParameterValue { id = id };
-            values.Add(value); return value;
+            values.Add(value);
+            valueLookup[key] = value;
+            valueLookupCount = values.Count;
+            return value;
+        }
+
+        private void EnsureValueLookup()
+        {
+            if (valueLookup != null && valueLookupCount == values.Count) return;
+            valueLookup ??= new Dictionary<string, TexturePaintPluginParameterValue>(
+                StringComparer.Ordinal);
+            valueLookup.Clear();
+            for (int i = 0; i < values.Count; i++)
+            {
+                TexturePaintPluginParameterValue value = values[i];
+                if (value == null) continue;
+                string key = value.id ?? string.Empty;
+                if (!valueLookup.ContainsKey(key)) valueLookup.Add(key, value);
+            }
+            valueLookupCount = values.Count;
         }
 
         public float Float(string id, float fallback = 0f) => Get(id)?.number ?? fallback;
@@ -303,10 +369,30 @@ namespace UMA.TexturePaint
 
         public Color GetPixelBilinear(float u, float v)
         {
-            float x = Mathf.Clamp01(u) * Mathf.Max(0, width - 1), y = Mathf.Clamp01(v) * Mathf.Max(0, height - 1);
-            int x0 = Mathf.FloorToInt(x), y0 = Mathf.FloorToInt(y), x1 = Mathf.Min(width - 1, x0 + 1), y1 = Mathf.Min(height - 1, y0 + 1);
-            return Color.Lerp(Color.Lerp(GetPixel(x0, y0), GetPixel(x1, y0), x - x0),
-                Color.Lerp(GetPixel(x0, y1), GetPixel(x1, y1), x - x0), y - y0);
+            if (width <= 0 || height <= 0 || pixels.Length == 0) return Color.clear;
+
+            // Texture coordinates address texel centers at (pixel + 0.5) / size. The previous
+            // width - 1 mapping placed those coordinates between texels, so every same-resolution
+            // plugin sample performed four reads and unintentionally softened edges by half a
+            // pixel. This mapping matches GPU texture sampling and has a one-read fast path for
+            // the overwhelmingly common pixel-center case.
+            float x = Mathf.Clamp01(u) * width - 0.5f;
+            float y = Mathf.Clamp01(v) * height - 0.5f;
+            int rawX0 = Mathf.FloorToInt(x), rawY0 = Mathf.FloorToInt(y);
+            float tx = x - rawX0, ty = y - rawY0;
+            int x0 = Mathf.Clamp(rawX0, 0, width - 1);
+            int y0 = Mathf.Clamp(rawY0, 0, height - 1);
+            int x1 = Mathf.Clamp(rawX0 + 1, 0, width - 1);
+            int y1 = Mathf.Clamp(rawY0 + 1, 0, height - 1);
+            Color c00 = pixels[y0 * width + x0];
+            if ((tx <= 0.000001f || x0 == x1) && (ty <= 0.000001f || y0 == y1))
+                return c00;
+            Color c10 = pixels[y0 * width + x1];
+            Color lower = Color.LerpUnclamped(c00, c10, tx);
+            if (ty <= 0.000001f || y0 == y1) return lower;
+            Color c01 = pixels[y1 * width + x0];
+            Color c11 = pixels[y1 * width + x1];
+            return Color.LerpUnclamped(lower, Color.LerpUnclamped(c01, c11, tx), ty);
         }
 
         public Color[] CopyPixels() => (Color[])pixels.Clone();
@@ -554,6 +640,40 @@ namespace UMA.TexturePaint
             }
         }
 
+        /// <summary>
+        /// Queues a compact tile without cloning its storage. The caller relinquishes ownership
+        /// and must not read or modify the array after this call. Built-in generators use this
+        /// path to avoid copying every generated 2K/4K channel before the GPU upload.
+        /// </summary>
+        public void WriteTileCompactOwned(string surfaceId, TexturePaintChannel channel,
+            RectInt rect, Color32[] pixels, TexturePaintPluginColorSpace colorSpace,
+            TexturePaintPluginBlend blend = TexturePaintPluginBlend.Normal, float opacity = 1f)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            lock (commandLock)
+            {
+                if (sealedForCommit) throw new InvalidOperationException("Plugin command context is sealed.");
+                if (!descriptor.Declares(channel) && !(target == TexturePaintPluginTarget.LayerMask &&
+                        channel == TexturePaintChannel.Custom))
+                    throw new InvalidOperationException($"Plugin '{descriptor.id}' did not declare channel {channel}.");
+                if (rect.width <= 0 || rect.height <= 0) throw new ArgumentOutOfRangeException(nameof(rect));
+                int count = checked(rect.width * rect.height);
+                if (pixels == null || pixels.Length != count)
+                    throw new ArgumentException("Tile pixel count must equal rect width × height.", nameof(pixels));
+                if (commands.Count >= 4096) throw new InvalidOperationException("Plugin command count exceeded 4096.");
+                long bytes = count * 4L;
+                if (queuedBytes + bytes > commandMemoryBudgetBytes)
+                    throw new InvalidOperationException("Plugin command memory budget exceeded.");
+                if (!IsFinite(opacity)) throw new ArgumentOutOfRangeException(nameof(opacity), "Opacity must be finite.");
+                commands.Add(new TexturePaintPluginTileCommand
+                {
+                    surfaceId = surfaceId, channel = channel, rect = rect, compactPixels = pixels,
+                    colorSpace = colorSpace, blend = blend, opacity = Mathf.Clamp01(opacity), target = target
+                });
+                queuedBytes += bytes;
+            }
+        }
+
 
         public void WriteMaskTileCompact(string surfaceId, RectInt rect,
             IReadOnlyList<Color32> pixels, TexturePaintPluginBlend blend = TexturePaintPluginBlend.Replace,
@@ -562,6 +682,16 @@ namespace UMA.TexturePaint
             if (target != TexturePaintPluginTarget.LayerMask)
                 throw new InvalidOperationException("Mask output requires a Layer Mask execution context.");
             WriteTileCompact(surfaceId, TexturePaintChannel.Custom, rect, pixels,
+                TexturePaintPluginColorSpace.Data, blend, opacity);
+        }
+
+        public void WriteMaskTileCompactOwned(string surfaceId, RectInt rect,
+            Color32[] pixels, TexturePaintPluginBlend blend = TexturePaintPluginBlend.Replace,
+            float opacity = 1f)
+        {
+            if (target != TexturePaintPluginTarget.LayerMask)
+                throw new InvalidOperationException("Mask output requires a Layer Mask execution context.");
+            WriteTileCompactOwned(surfaceId, TexturePaintChannel.Custom, rect, pixels,
                 TexturePaintPluginColorSpace.Data, blend, opacity);
         }
 
@@ -595,6 +725,16 @@ namespace UMA.TexturePaint
     }
     public interface ITexturePaintFilterV2 : ITexturePaintCommandExtensionV2 { }
     public interface ITexturePaintGeneratorV2 : ITexturePaintCommandExtensionV2 { }
+
+    /// <summary>
+    /// Optional fast path for procedural generators whose kernel follows Overlay Painter's
+    /// standard mesh-map and parameter bindings. The host uses ExecuteAsync as a CPU fallback
+    /// when the configured compute shader or named kernel is unavailable.
+    /// </summary>
+    public interface ITexturePaintGpuGeneratorV2 : ITexturePaintCommandExtensionV2
+    {
+        string GpuKernelName { get; }
+    }
 
     /// <summary>
     /// Lets parameterized commands narrow immutable channel snapshots for one execution. The

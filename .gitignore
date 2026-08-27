@@ -13,6 +13,9 @@ UnityVS.meta
 *.sln
 *.suo
 *.suo
+UMAProject/Build
+UMAProject\tmp\*
+UMAProject/tmp/*
 UMAProject/ProjectSettings/ClusterInputManager.asset
 
 UMAProject/ProjectSettings/GraphicsSettings.asset
@@ -66,3 +69,11 @@ UMAProject/Assets/AddressableAssetsData
 UMAProject/Assets/FPL_ISBIT
 /.vs
 *.slnx
+UMAProject/Build/Content/
+UMAProject/Build/CorePackage/
+UMAProject/Build/CorePackage.backup-*/
+UMAProject/Build/CorePackage.failed-*/
+UMAProject/tmp/ContentPackageValidation*/
+UMAProject/tmp/CorePackageValidation*/
+UMAProject/tmp/UMAContentInstallValidation*/
+UMAProject/tmp/UMAContentMatrix-*/

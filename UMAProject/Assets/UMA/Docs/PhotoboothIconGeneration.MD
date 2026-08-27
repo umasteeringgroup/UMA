@@ -8,7 +8,7 @@ The tool can process one wardrobe region at a time, such as `Hair`, `Chest`, or 
 
 Open:
 
-`Assets/UMA/UMA3/Scenes/U3-Tools-Photobooth.unity`
+`Assets/UMA/SRP/Samples/Scenes/U3-Tools-Photobooth.unity`
 
 The important scene objects are:
 

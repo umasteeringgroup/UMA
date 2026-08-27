@@ -2288,8 +2288,37 @@ namespace UMA.Editors
 			return !string.IsNullOrEmpty(value) && value.IndexOf(part, System.StringComparison.OrdinalIgnoreCase) >= 0;
 		}
 
+		private static void DestroyUmaDataPreservingGeneratedRenderers(UMAData umaData)
+		{
+			if (umaData == null)
+			{
+				return;
+			}
+
+			SkinnedMeshRenderer[] renderers = umaData.GetComponentsInChildren<SkinnedMeshRenderer>(true);
+			bool[] rendererEnabledStates = new bool[renderers.Length];
+			for (int rendererIndex = 0; rendererIndex < renderers.Length; rendererIndex++)
+			{
+				rendererEnabledStates[rendererIndex] = renderers[rendererIndex].enabled;
+			}
+
+			// UMAData.OnDestroy normally cleans generated meshes and renderer components.
+			// Prefab conversion needs those generated objects after the UMA component is removed.
+			// DynamicCharacterAvatar also hides its renderers during teardown, so restore their state.
+			umaData.staticCharacter = true;
+			DestroyImmediate(umaData);
+
+			for (int rendererIndex = 0; rendererIndex < renderers.Length; rendererIndex++)
+			{
+				if (renderers[rendererIndex] != null)
+				{
+					renderers[rendererIndex].enabled = rendererEnabledStates[rendererIndex];
+				}
+			}
+		}
+
 				
-        public static void ConvertToNonUMA(GameObject baseObject, UMAAvatarBase avatar, string Folder, bool ConvertNormalMaps, string CharName, bool AddStandaloneDNA, bool replaceExisting, bool exportAsFbx = false, bool exportAsGltf = false, bool exportGltfAsSlots = false)
+        public static void ConvertToNonUMA(GameObject baseObject, UMAAvatarBase avatar, string Folder, bool ConvertNormalMaps, string CharName, bool AddStandaloneDNA, bool replaceExisting, bool exportAsFbx = false, bool exportAsGltf = false, bool exportGltfAsSlots = false, bool useBoneBakingCombiner = false)
         {
 			bool wasAsync = false;
 			bool wasConvertRenderTexture = false;
@@ -2305,6 +2334,7 @@ namespace UMA.Editors
 
 			wasConvertRenderTexture = generator.convertRenderTexture;
 			wasAsync = generator.useAsyncConversion;
+			useBoneBakingCombiner &= !AddStandaloneDNA;
 
 			try
 			{
@@ -2312,16 +2342,57 @@ namespace UMA.Editors
 				// This is necessary because the conversion and saving of textures needs to happen synchronously to ensure that all assets are correctly processed before we attempt to save them.
 				// If async conversion were enabled, there could be timing issues where textures are not fully converted before we try to save them, leading to incomplete or corrupted assets.
 
-				if (wasConvertRenderTexture == false)
+				bool rebuildCharacter = wasConvertRenderTexture == false || useBoneBakingCombiner;
+				if (rebuildCharacter)
 				{
 					generator.convertRenderTexture = true;
 					generator.useAsyncConversion = false;
 
-					if (avatar is DynamicCharacterAvatar)
+					if (avatar is DynamicCharacterAvatar dca)
 					{
-						Debug.Log("Building DynamicCharacterAvatar synchronously to ensure textures are generated and converted before saving.");
-                        DynamicCharacterAvatar dca = avatar as DynamicCharacterAvatar;
-						dca.BuildNow();
+						UMAMeshCombiner previousMeshCombiner = generator.meshCombiner;
+						UMADefaultBoneBakingMeshCombiner boneBakingCombiner = null;
+						GameObject temporaryBoneBakingCombinerObject = null;
+
+						try
+						{
+							if (useBoneBakingCombiner)
+							{
+								boneBakingCombiner = previousMeshCombiner as UMADefaultBoneBakingMeshCombiner;
+								if (boneBakingCombiner == null)
+								{
+									UMADefaultBoneBakingMeshCombiner[] candidates =
+										UMAObjectUtility.FindObjectsByType<UMADefaultBoneBakingMeshCombiner>(FindObjectsInactive.Include);
+									for (int candidateIndex = 0; candidateIndex < candidates.Length; candidateIndex++)
+									{
+										if (candidates[candidateIndex] != null &&
+											candidates[candidateIndex].GetType() == typeof(UMADefaultBoneBakingMeshCombiner))
+										{
+											boneBakingCombiner = candidates[candidateIndex];
+											break;
+										}
+									}
+								}
+								if (boneBakingCombiner == null)
+								{
+									temporaryBoneBakingCombinerObject = new GameObject("Temporary UMA Bone Baking Mesh Combiner");
+									temporaryBoneBakingCombinerObject.hideFlags = HideFlags.HideAndDontSave;
+									boneBakingCombiner = temporaryBoneBakingCombinerObject.AddComponent<UMADefaultBoneBakingMeshCombiner>();
+								}
+								generator.meshCombiner = boneBakingCombiner;
+							}
+
+							Debug.Log("Building DynamicCharacterAvatar synchronously to prepare it for prefab conversion.");
+							dca.BuildNow();
+						}
+						finally
+						{
+							generator.meshCombiner = previousMeshCombiner;
+							if (temporaryBoneBakingCombinerObject != null)
+							{
+								DestroyImmediate(temporaryBoneBakingCombinerObject);
+							}
+						}
 					}
 				}
 
@@ -2426,10 +2497,13 @@ namespace UMA.Editors
 					{
 						string meshName = Folder + "/" + CharName + "_Mesh_" + savedMeshIndex + ".asset";
 						savedMeshIndex++;
+						
+
 						CustomAssetUtility.SaveAsset<Mesh>(smr.sharedMesh, meshName);
 
 						meshName = CustomAssetUtility.UnityFriendlyPath(meshName);
 						Mesh savedMesh = AssetDatabase.LoadAssetAtPath<Mesh>(meshName);
+						
 						if (savedMesh != null)
 						{
 							SerializedObject so = new SerializedObject(savedMesh);
@@ -2620,7 +2694,7 @@ namespace UMA.Editors
 				{
 					if (replaceExisting)
 					{
-						DestroyImmediate(avatar);
+						DestroyUmaDataPreservingGeneratedRenderers(avatar);
 						var lod = baseObject.GetComponent<UMASimpleLOD>();
 						if (lod != null)
 						{
@@ -2682,7 +2756,7 @@ namespace UMA.Editors
 							var cloneDca = newAvatar.GetComponent<DynamicCharacterAvatar>();
 							if (cloneDca != null)
 							{
-								DestroyImmediate(cloneDca);
+								DestroyUmaDataPreservingGeneratedRenderers(cloneDca);
 							}
 
 							var cloneLod = newAvatar.GetComponent<UMASimpleLOD>();
@@ -2721,7 +2795,7 @@ namespace UMA.Editors
 								var ud = newAvatar.GetComponent<UMAData>();
 								if (ud != null)
 								{
-									DestroyImmediate(ud);
+									DestroyUmaDataPreservingGeneratedRenderers(ud);
 								}
 							}
 
@@ -2752,10 +2826,10 @@ namespace UMA.Editors
 			}
 			finally
 			{
+				generator.convertRenderTexture = wasConvertRenderTexture;
+				generator.useAsyncConversion = wasAsync;
 				if (wasConvertRenderTexture == false)
 				{
-					generator.convertRenderTexture = wasConvertRenderTexture;
-					generator.useAsyncConversion = wasAsync;
 					if (avatar is DynamicCharacterAvatar)
 					{
 						var dca = avatar as DynamicCharacterAvatar;

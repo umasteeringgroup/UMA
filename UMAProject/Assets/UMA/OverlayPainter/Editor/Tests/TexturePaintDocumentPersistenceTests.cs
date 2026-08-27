@@ -355,7 +355,9 @@ namespace UMA.TexturePaint.Editor.Tests
                     brushSplatterDistance = 0.73f,
                     brushRandomStrength = true,
                     brushFade = true,
+                    brushAutoFade = true,
                     brushTaper = true,
+                    brushAutoTaper = true,
                     brushFadeTaperLength = 0.91f,
                     color = new Color(0.8f, 0.2f, 0.6f, 0.4f),
                     normalConvention = TexturePaintNormalConvention.DirectX,
@@ -372,6 +374,9 @@ namespace UMA.TexturePaint.Editor.Tests
                 };
                 TexturePaintSplineSettings path = new TexturePaintSplineSettings
                 {
+                    editorSettingsVersion = TexturePaintSplineSettings.CurrentEditorSettingsVersion,
+                    editMode = TexturePaintPathEditMode.Adjust,
+                    autoUpdate = false,
                     tool = TexturePaintTool.Paint,
                     channel = TexturePaintChannel.Roughness,
                     source = TexturePaintBrushSource.Color,
@@ -395,7 +400,9 @@ namespace UMA.TexturePaint.Editor.Tests
                     brushSplatterDistance = 1.42f,
                     brushRandomStrength = true,
                     brushFade = true,
+                    brushAutoFade = true,
                     brushTaper = true,
+                    brushAutoTaper = true,
                     brushFadeTaperLength = 1.37f,
                     ribbonBeginningTexture = endpointTexture,
                     ribbonEndSprite = endpointSprite,
@@ -527,6 +534,9 @@ namespace UMA.TexturePaint.Editor.Tests
                 AssertJsonEqual(fill, saved.surfaces[0].layers[0].fillSettings);
                 AssertJsonEqual(paint, saved.surfaces[0].layers[1].paintSettings);
                 AssertJsonEqual(path, saved.surfaces[0].layers[2].splineSettings);
+                Assert.That(saved.surfaces[0].layers[2].splineSettings.editMode,
+                    Is.EqualTo(TexturePaintPathEditMode.Adjust));
+                Assert.That(saved.surfaces[0].layers[2].splineSettings.AutoUpdateEnabled, Is.False);
                 AssertJsonEqual(effects, saved.surfaces[0].layers[2].effects);
                 AssertJsonEqual(surface.layers[1].channels[0].settings,
                     saved.surfaces[0].layers[1].channels[0].settings);
@@ -582,6 +592,10 @@ namespace UMA.TexturePaint.Editor.Tests
                     brushSplatter = true,
                     brushSplatterDistance = 1.25f,
                     brushRandomStrength = true,
+                    brushFade = true,
+                    brushAutoFade = true,
+                    brushTaper = true,
+                    brushAutoTaper = true,
                     symmetryAxis = Vector3.forward
                 };
                 TexturePaintLayer layer = set.AddSplineLayer("Restored Ribbon");
@@ -599,6 +613,10 @@ namespace UMA.TexturePaint.Editor.Tests
                 Assert.That(transient.splatter, Is.True);
                 Assert.That(transient.splatterDistance, Is.EqualTo(1.25f));
                 Assert.That(transient.randomStrength, Is.True);
+                Assert.That(transient.fade, Is.True);
+                Assert.That(transient.autoFade, Is.True);
+                Assert.That(transient.taper, Is.True);
+                Assert.That(transient.autoTaper, Is.True);
                 Assert.That(Field("radialSymmetryAxis").GetValue(stage), Is.EqualTo(Vector3.forward));
             }
             finally

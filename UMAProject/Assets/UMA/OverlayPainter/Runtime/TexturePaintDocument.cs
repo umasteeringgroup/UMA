@@ -57,6 +57,7 @@ namespace UMA.TexturePaint
         public TexturePaintTriplanarBlend triplanarBlend = TexturePaintTriplanarBlend.CrossFade;
         [Range(0f, 0.49f)] public float blendOffset;
         [Range(0.5f, 32f)] public float blendSharpness = 4f;
+        public bool ignoreSourceAlpha;
 
         public TexturePaintFillSettings Clone()
         {
@@ -103,7 +104,9 @@ namespace UMA.TexturePaint
         [Range(0.01f, 2f)] public float brushSplatterDistance = 1f;
         public bool brushRandomStrength;
         public bool brushFade;
+        public bool brushAutoFade;
         public bool brushTaper;
+        public bool brushAutoTaper;
         [Min(0f)] public float brushFadeTaperLength;
         public Texture2D sourceTexture;
         public Sprite sourceSprite;
@@ -144,6 +147,7 @@ namespace UMA.TexturePaint
         public TexturePaintTriplanarBlend triplanarBlend = TexturePaintTriplanarBlend.CrossFade;
         public float blendOffset;
         public float blendSharpness = 4f;
+        public bool ignoreSourceAlpha;
 
         public TexturePaintChannelSourceSettings Clone()
         {
@@ -180,6 +184,67 @@ namespace UMA.TexturePaint
                 normalControlStrength = normalControlStrength,
                 sourceSettings = sourceSettings?.Clone()
             };
+        }
+    }
+
+    [Serializable]
+    public sealed class TexturePaintChannelAdjustments
+    {
+        [Range(-1f, 1f)] public float brightness;
+        [Range(-1f, 1f)] public float contrast;
+        [Range(-180f, 180f)] public float hue;
+        [Range(-1f, 1f)] public float vibrance;
+        [Range(0f, 2f)] public float saturation = 1f;
+        public Vector3 colorBalance;
+        public AnimationCurve grayscaleAdjustmentCurve = DefaultGrayscaleAdjustmentCurve();
+
+        public bool IsNeutral => Mathf.Abs(brightness) < 0.0001f &&
+            Mathf.Abs(contrast) < 0.0001f && Mathf.Abs(hue) < 0.0001f &&
+            Mathf.Abs(vibrance) < 0.0001f && Mathf.Abs(saturation - 1f) < 0.0001f &&
+            colorBalance.sqrMagnitude < 0.00000001f;
+
+        public TexturePaintChannelAdjustments Clone()
+        {
+            var clone = (TexturePaintChannelAdjustments)MemberwiseClone();
+            clone.grayscaleAdjustmentCurve = CloneCurve(grayscaleAdjustmentCurve);
+            return clone;
+        }
+
+        public static AnimationCurve DefaultGrayscaleAdjustmentCurve()
+            => AnimationCurve.Linear(0f, 0f, 1f, 1f);
+
+        private static AnimationCurve CloneCurve(AnimationCurve source)
+        {
+            source ??= DefaultGrayscaleAdjustmentCurve();
+            return new AnimationCurve(source.keys)
+            {
+                preWrapMode = source.preWrapMode,
+                postWrapMode = source.postWrapMode
+            };
+        }
+
+        public void Normalize()
+        {
+            brightness = Mathf.Clamp(brightness, -1f, 1f);
+            contrast = Mathf.Clamp(contrast, -1f, 1f);
+            hue = Mathf.Clamp(hue, -180f, 180f);
+            vibrance = Mathf.Clamp(vibrance, -1f, 1f);
+            saturation = Mathf.Clamp(saturation, 0f, 2f);
+            colorBalance.x = Mathf.Clamp(colorBalance.x, -1f, 1f);
+            colorBalance.y = Mathf.Clamp(colorBalance.y, -1f, 1f);
+            colorBalance.z = Mathf.Clamp(colorBalance.z, -1f, 1f);
+            grayscaleAdjustmentCurve ??= DefaultGrayscaleAdjustmentCurve();
+        }
+
+        public void Reset()
+        {
+            brightness = 0f;
+            contrast = 0f;
+            hue = 0f;
+            vibrance = 0f;
+            saturation = 1f;
+            colorBalance = Vector3.zero;
+            grayscaleAdjustmentCurve = DefaultGrayscaleAdjustmentCurve();
         }
     }
 
@@ -705,6 +770,10 @@ namespace UMA.TexturePaint
     [Serializable]
     public sealed class TexturePaintSplineSettings
     {
+        public const int CurrentEditorSettingsVersion = 1;
+        public int editorSettingsVersion = CurrentEditorSettingsVersion;
+        public TexturePaintPathEditMode editMode = TexturePaintPathEditMode.Standard;
+        public bool autoUpdate = true;
         public TexturePaintTool tool = TexturePaintTool.Paint;
         public TexturePaintChannel channel = TexturePaintChannel.Albedo;
         public TexturePaintBrushSource source = TexturePaintBrushSource.Color;
@@ -733,7 +802,9 @@ namespace UMA.TexturePaint
         [Range(0.01f, 2f)] public float brushSplatterDistance = 1f;
         public bool brushRandomStrength;
         public bool brushFade;
+        public bool brushAutoFade;
         public bool brushTaper;
+        public bool brushAutoTaper;
         [Min(0f)] public float brushFadeTaperLength;
         public Texture2D sourceTexture;
         public Sprite sourceSprite;
@@ -764,6 +835,20 @@ namespace UMA.TexturePaint
         public TexturePaintSplineSettings Clone()
         {
             return (TexturePaintSplineSettings)MemberwiseClone();
+        }
+
+        public bool AutoUpdateEnabled => editorSettingsVersion <= 0 || autoUpdate;
+
+        public void MigrateEditorSettings()
+        {
+            if (editorSettingsVersion <= 0)
+            {
+                editMode = TexturePaintPathEditMode.Standard;
+                autoUpdate = true;
+            }
+            if (!Enum.IsDefined(typeof(TexturePaintPathEditMode), editMode))
+                editMode = TexturePaintPathEditMode.Standard;
+            editorSettingsVersion = CurrentEditorSettingsVersion;
         }
     }
 
@@ -800,6 +885,7 @@ namespace UMA.TexturePaint
         public int umaChannelIndex = -1;
         public RenderTextureFormat renderTextureFormat = RenderTextureFormat.ARGB32;
         public bool sRGB;
+        public TexturePaintChannelAdjustments adjustments = new TexturePaintChannelAdjustments();
         public TexturePaintPixelData pixels = new TexturePaintPixelData();
     }
 
@@ -823,6 +909,7 @@ namespace UMA.TexturePaint
         public TexturePaintTriplanarBlend sourceTriplanarBlend = TexturePaintTriplanarBlend.CrossFade;
         public float sourceBlendOffset;
         public float sourceBlendSharpness = 4f;
+        public bool sourceIgnoreSourceAlpha;
         public TexturePaintPixelData pixels = new TexturePaintPixelData();
 
         public void SetSourceSettings(TexturePaintChannelSourceSettings value)
@@ -843,6 +930,7 @@ namespace UMA.TexturePaint
             sourceTriplanarBlend = value.triplanarBlend;
             sourceBlendOffset = value.blendOffset;
             sourceBlendSharpness = value.blendSharpness;
+            sourceIgnoreSourceAlpha = value.ignoreSourceAlpha;
         }
 
         public TexturePaintChannelSourceSettings GetSourceSettings()
@@ -867,7 +955,8 @@ namespace UMA.TexturePaint
                 projection = sourceProjection,
                 triplanarBlend = sourceTriplanarBlend,
                 blendOffset = sourceBlendOffset,
-                blendSharpness = sourceBlendSharpness
+                blendSharpness = sourceBlendSharpness,
+                ignoreSourceAlpha = sourceIgnoreSourceAlpha
             };
         }
 
@@ -918,6 +1007,9 @@ namespace UMA.TexturePaint
         public bool pluginStale = true;
         public string pluginLastError;
         public string proceduralGroupKey;
+        public string sourceMaterialPresetId;
+        public int sourceMaterialPresetRevision;
+        public string sourceMaterialPresetLayerId;
         public bool hasMask;
         [Range(0f, 1f)] public float maskBaseValue = 1f;
         public TexturePaintLayerMaskEffects maskEffects = new TexturePaintLayerMaskEffects();
@@ -962,7 +1054,7 @@ namespace UMA.TexturePaint
     [CreateAssetMenu(menuName = "UMA/Overlay Painter/Document", fileName = "Overlay Painter Document")]
     public sealed class TexturePaintDocument : ScriptableObject
     {
-        public const int CurrentSchemaVersion = 22;
+        public const int CurrentSchemaVersion = 26;
 
         public int schemaVersion = CurrentSchemaVersion;
         public string documentId = Guid.NewGuid().ToString("N");
@@ -1011,7 +1103,10 @@ namespace UMA.TexturePaint
                 for (int channelIndex = 0; channelIndex < surface.baseChannels.Count; channelIndex++)
                 {
                     TexturePaintDocumentChannel channel = surface.baseChannels[channelIndex];
-                    if (channel != null) channel.pixels ??= new TexturePaintPixelData();
+                    if (channel == null) continue;
+                    channel.pixels ??= new TexturePaintPixelData();
+                    channel.adjustments ??= new TexturePaintChannelAdjustments();
+                    channel.adjustments.Normalize();
                 }
                 for (int layerIndex = 0; layerIndex < surface.layers.Count; layerIndex++)
                 {
@@ -1038,6 +1133,7 @@ namespace UMA.TexturePaint
                         ? JsonUtility.FromJson<TexturePaintPluginParameterSet>(
                             layer.maskPluginParametersJson)
                         : new TexturePaintPluginParameterSet();
+                    layer.splineSettings?.MigrateEditorSettings();
                     if (loadedSchemaVersion < 15)
                     {
                         layer.hasMask = false;

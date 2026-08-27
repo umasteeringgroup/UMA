@@ -228,6 +228,7 @@ namespace UMA
         private List<OverlayData> overlayList = new List<OverlayData>();
 
         //For MeshHide system, this can get added at runtime and is the filtered HideMask that the combiner uses.
+        [NonSerialized]
         public BitArray[] meshHideMask;
 
         //Mutable version pulled off the immutable asset.  This is so we can modify it at runtime if needed.

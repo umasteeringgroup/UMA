@@ -654,9 +654,8 @@ namespace UMA.Editors
                 graphicsApi = SystemInfo.graphicsDeviceType.ToString(),
                 scenePath = SceneManager.GetActiveScene().path,
                 expectedAvatarCount = expectedAvatarCount,
-                observedAvatarCount = Object.FindObjectsByType<UMAData>(
-                    FindObjectsInactive.Include,
-                    FindObjectsSortMode.None).Length,
+                observedAvatarCount = UMAObjectUtility.FindObjectsByType<UMAData>(
+                    FindObjectsInactive.Include).Length,
                 blendshapeStressRace = BlendshapeStressRace,
                 dynamicCharacterAvatarCount = avatars.Length,
                 stressRaceAvatarCount = stressRaceAvatarCount,
@@ -772,7 +771,7 @@ namespace UMA.Editors
                 return;
             }
 
-            generator = Object.FindFirstObjectByType<UMAGeneratorBase>(
+            generator = Object.FindAnyObjectByType<UMAGeneratorBase>(
                 FindObjectsInactive.Include);
         }
 
@@ -802,9 +801,8 @@ namespace UMA.Editors
 
         private static DynamicCharacterAvatar[] FindDynamicCharacterAvatars()
         {
-            return Object.FindObjectsByType<DynamicCharacterAvatar>(
-                FindObjectsInactive.Include,
-                FindObjectsSortMode.None);
+            return UMAObjectUtility.FindObjectsByType<DynamicCharacterAvatar>(
+                FindObjectsInactive.Include);
         }
 
         private static bool IsStressRace(DynamicCharacterAvatar avatar)
@@ -823,9 +821,8 @@ namespace UMA.Editors
         {
             blendshapeCount = 0;
             blendshapeFrameCount = 0;
-            SkinnedMeshRenderer[] renderers = Object.FindObjectsByType<SkinnedMeshRenderer>(
-                FindObjectsInactive.Include,
-                FindObjectsSortMode.None);
+            SkinnedMeshRenderer[] renderers = UMAObjectUtility.FindObjectsByType<SkinnedMeshRenderer>(
+                FindObjectsInactive.Include);
             for (int rendererIndex = 0; rendererIndex < renderers.Length; rendererIndex++)
             {
                 Mesh mesh = renderers[rendererIndex].sharedMesh;

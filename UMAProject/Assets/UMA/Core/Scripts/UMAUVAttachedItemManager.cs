@@ -21,6 +21,7 @@ namespace UMA
 		}
         public List<UMAUVAttachedItem> pendingAttachedItemsList = new List<UMAUVAttachedItem>();
         private UMAData umaData;
+		[NonSerialized]
 		public Dictionary<string, UMAUVAttachedItem> attachedItemLookup = new Dictionary<string, UMAUVAttachedItem>();
 
 		// events
@@ -236,4 +237,3 @@ namespace UMA
 		}
     }
 }
-

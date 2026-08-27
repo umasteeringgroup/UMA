@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: UMAMaterial_UMA_URP_HAIR
   m_EditorClassIdentifier: UMA_Core::UMA.UMAMaterial
   _material: {fileID: 2100000, guid: 39055ade9321e8c40b31784cc9332f4e, type: 2}
-  _HDRPMaterial: {fileID: 2100000, guid: 0692937a95c255248833ad8542dd533a, type: 2}
+  _HDRPMaterial: {fileID: 0}
   _secondPass: {fileID: 2100000, guid: 6eebbc33ce23fd343a1c99344fe0f8ba, type: 2}
-  _HDRPSecondPass: {fileID: 2100000, guid: 1e33b3c581525674c8e5c2f97b2d04e1, type: 2}
+  _HDRPSecondPass: {fileID: 0}
   materialType: 8
   channels:
   - channelType: 3

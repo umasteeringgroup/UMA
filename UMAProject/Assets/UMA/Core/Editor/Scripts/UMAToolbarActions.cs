@@ -219,7 +219,7 @@ namespace UMA.Editors
         {
             // Do not initialize UMAAssetIndexer here. Opening or repainting the
             // toolbar must not create a hidden generator in a generator-less scene.
-            UMAGenerator generator = Object.FindFirstObjectByType<UMAGenerator>(
+            UMAGenerator generator = Object.FindAnyObjectByType<UMAGenerator>(
                 FindObjectsInactive.Exclude);
             if (generator != null)
             {
@@ -233,9 +233,8 @@ namespace UMA.Editors
         internal static UMAGeneratorOverride GetGeneratorParms()
         {
             UMAGeneratorOverride[] candidates =
-                Object.FindObjectsByType<UMAGeneratorOverride>(
-                    FindObjectsInactive.Exclude,
-                    FindObjectsSortMode.None);
+                UMAObjectUtility.FindObjectsByType<UMAGeneratorOverride>(
+                    FindObjectsInactive.Exclude);
 
             UMAGeneratorOverride fallback = null;
             for (int i = 0; i < candidates.Length; i++)
@@ -348,9 +347,8 @@ namespace UMA.Editors
             T meshCombiner = null;
             T[] candidates = generator == null
                 ? generatorParms.GetComponentsInChildren<T>(true)
-                : Object.FindObjectsByType<T>(
-                    FindObjectsInactive.Include,
-                    FindObjectsSortMode.None);
+                : UMAObjectUtility.FindObjectsByType<T>(
+                    FindObjectsInactive.Include);
             for (int i = 0; i < candidates.Length; i++)
             {
                 if (candidates[i] != null && candidates[i].GetType() == typeof(T))

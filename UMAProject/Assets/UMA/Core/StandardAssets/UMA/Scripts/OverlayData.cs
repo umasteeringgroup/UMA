@@ -51,6 +51,7 @@ namespace UMA
 		/// Color Component Adjusters are used by dna to adjust colors independently of shared colors, for things like temporary color effects and fading NormalMaps in and out
 		/// NOTE: this list is cleared at the start of an applyDNA cycle
 		/// </summary>
+		[NonSerialized]
 		public List<ColorComponentAdjuster> colorComponentAdjusters = new List<ColorComponentAdjuster>();
 
 		/// <summary>

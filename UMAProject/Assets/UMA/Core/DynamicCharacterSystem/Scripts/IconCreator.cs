@@ -973,6 +973,7 @@ public class IconCreator : MonoBehaviour
 
 #if UNITY_EDITOR
         if (UMAPathUtility.IsPackageInstallation &&
+            !UMAPathUtility.IsProjectOwnedUmaAssetPath(normalizedFolder) &&
             (normalizedFolder.Equals(UMAPathUtility.LegacyInstallRoot, StringComparison.OrdinalIgnoreCase) ||
              normalizedFolder.StartsWith(UMAPathUtility.LegacyInstallRoot + "/", StringComparison.OrdinalIgnoreCase)))
         {

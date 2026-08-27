@@ -113,6 +113,34 @@ namespace UMA.TexturePaint.Editor
         internal static void DrawParameters(TexturePaintPluginDescriptor descriptor,
             TexturePaintPluginParameterSet values, Func<string, bool> hideParameter = null)
         {
+            if (descriptor == null || values == null) return;
+            bool hasEditableParameters = false;
+            for (int i = 0; i < descriptor.parameters.Count; i++)
+            {
+                TexturePaintPluginParameterDefinition definition = descriptor.parameters[i];
+                if (definition != null && definition.type != TexturePaintPluginParameterType.Header &&
+                    hideParameter?.Invoke(definition.id) != true)
+                {
+                    hasEditableParameters = true;
+                    break;
+                }
+            }
+            if (hasEditableParameters)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.FlexibleSpace();
+                if (GUILayout.Button(new GUIContent("Reset to Defaults",
+                        "Restore every parameter in this plugin to its authored default."),
+                        EditorStyles.miniButton, GUILayout.Width(130f)))
+                {
+                    values.ResetToDefaults(descriptor);
+                    // Layer and mask inspectors edit cloned parameter sets. Explicitly mark the
+                    // IMGUI block changed so their existing undo/persistence path commits reset.
+                    GUI.changed = true;
+                }
+                GUILayout.EndHorizontal();
+            }
+
             bool sectionExpanded = true;
             for (int i = 0; i < descriptor.parameters.Count; i++)
             {

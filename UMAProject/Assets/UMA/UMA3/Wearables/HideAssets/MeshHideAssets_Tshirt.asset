@@ -12,6 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c109d32111f3e7b4c97c35f638c0f4b9, type: 3}
   m_Name: MeshHideAssets_Tshirt
   m_EditorClassIdentifier: UMA_Core::UMA.MeshHideAssetCollection
-  assets:
-  - {fileID: 11400000, guid: 273d9772565cbd34abcd7ea47a03b2b9, type: 2}
-  - {fileID: 11400000, guid: ad9c7eb0c081522408f0eefa2cce5185, type: 2}
+  assets: []

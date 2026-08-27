@@ -5,65 +5,86 @@ using UnityEngine;
 
 namespace UMA.TexturePaint.Examples
 {
-    public sealed class FabricFuzzGeneratorPlugin : ScriptableObject, ITexturePaintGeneratorV2
+    public sealed class FabricFuzzGeneratorPlugin : ScriptableObject, ITexturePaintGeneratorV2,
+        ITexturePaintDynamicChannelUsageV2
     {
         private static readonly TexturePaintPluginDescriptor descriptor =
             AAAOrganicGeneratorEngine.CreateDescriptor(AAAOrganicGeneratorMode.FabricFuzz);
         public TexturePaintPluginDescriptor Descriptor => descriptor;
+        public TexturePaintChannelMask ResolveReadChannels(TexturePaintPluginParameterSet parameters) =>
+            AAAOrganicGeneratorEngine.ReadChannels(AAAOrganicGeneratorMode.FabricFuzz);
         public Task ExecuteAsync(TexturePaintCommandContextV2 context) =>
             AAAOrganicGeneratorEngine.ExecuteAsync(context, AAAOrganicGeneratorMode.FabricFuzz);
     }
 
-    public sealed class RustCorrosionGeneratorPlugin : ScriptableObject, ITexturePaintGeneratorV2
+    public sealed class RustCorrosionGeneratorPlugin : ScriptableObject, ITexturePaintGeneratorV2,
+        ITexturePaintDynamicChannelUsageV2
     {
         private static readonly TexturePaintPluginDescriptor descriptor =
             AAAOrganicGeneratorEngine.CreateDescriptor(AAAOrganicGeneratorMode.RustCorrosion);
         public TexturePaintPluginDescriptor Descriptor => descriptor;
+        public TexturePaintChannelMask ResolveReadChannels(TexturePaintPluginParameterSet parameters) =>
+            AAAOrganicGeneratorEngine.ReadChannels(AAAOrganicGeneratorMode.RustCorrosion);
         public Task ExecuteAsync(TexturePaintCommandContextV2 context) =>
             AAAOrganicGeneratorEngine.ExecuteAsync(context, AAAOrganicGeneratorMode.RustCorrosion);
     }
 
-    public sealed class SurfaceMicroDetailGeneratorPlugin : ScriptableObject, ITexturePaintGeneratorV2
+    public sealed class SurfaceMicroDetailGeneratorPlugin : ScriptableObject, ITexturePaintGeneratorV2,
+        ITexturePaintDynamicChannelUsageV2
     {
         private static readonly TexturePaintPluginDescriptor descriptor =
             AAAOrganicGeneratorEngine.CreateDescriptor(AAAOrganicGeneratorMode.SurfaceMicroDetail);
         public TexturePaintPluginDescriptor Descriptor => descriptor;
+        public TexturePaintChannelMask ResolveReadChannels(TexturePaintPluginParameterSet parameters) =>
+            AAAOrganicGeneratorEngine.ReadChannels(AAAOrganicGeneratorMode.SurfaceMicroDetail);
         public Task ExecuteAsync(TexturePaintCommandContextV2 context) =>
             AAAOrganicGeneratorEngine.ExecuteAsync(context, AAAOrganicGeneratorMode.SurfaceMicroDetail);
     }
 
-    public sealed class VeinsSubdermalGeneratorPlugin : ScriptableObject, ITexturePaintGeneratorV2
+    public sealed class VeinsSubdermalGeneratorPlugin : ScriptableObject, ITexturePaintGeneratorV2,
+        ITexturePaintDynamicChannelUsageV2
     {
         private static readonly TexturePaintPluginDescriptor descriptor =
             AAAOrganicGeneratorEngine.CreateDescriptor(AAAOrganicGeneratorMode.VeinsSubdermal);
         public TexturePaintPluginDescriptor Descriptor => descriptor;
+        public TexturePaintChannelMask ResolveReadChannels(TexturePaintPluginParameterSet parameters) =>
+            AAAOrganicGeneratorEngine.ReadChannels(AAAOrganicGeneratorMode.VeinsSubdermal);
         public Task ExecuteAsync(TexturePaintCommandContextV2 context) =>
             AAAOrganicGeneratorEngine.ExecuteAsync(context, AAAOrganicGeneratorMode.VeinsSubdermal);
     }
 
-    public sealed class ScarWoundGeneratorPlugin : ScriptableObject, ITexturePaintGeneratorV2
+    public sealed class ScarWoundGeneratorPlugin : ScriptableObject, ITexturePaintGeneratorV2,
+        ITexturePaintDynamicChannelUsageV2
     {
         private static readonly TexturePaintPluginDescriptor descriptor =
             AAAOrganicGeneratorEngine.CreateDescriptor(AAAOrganicGeneratorMode.ScarWound);
         public TexturePaintPluginDescriptor Descriptor => descriptor;
+        public TexturePaintChannelMask ResolveReadChannels(TexturePaintPluginParameterSet parameters) =>
+            AAAOrganicGeneratorEngine.ReadChannels(AAAOrganicGeneratorMode.ScarWound);
         public Task ExecuteAsync(TexturePaintCommandContextV2 context) =>
             AAAOrganicGeneratorEngine.ExecuteAsync(context, AAAOrganicGeneratorMode.ScarWound);
     }
 
-    public sealed class CreatureSkinGeneratorPlugin : ScriptableObject, ITexturePaintGeneratorV2
+    public sealed class CreatureSkinGeneratorPlugin : ScriptableObject, ITexturePaintGeneratorV2,
+        ITexturePaintDynamicChannelUsageV2
     {
         private static readonly TexturePaintPluginDescriptor descriptor =
             AAAOrganicGeneratorEngine.CreateDescriptor(AAAOrganicGeneratorMode.CreatureSkin);
         public TexturePaintPluginDescriptor Descriptor => descriptor;
+        public TexturePaintChannelMask ResolveReadChannels(TexturePaintPluginParameterSet parameters) =>
+            AAAOrganicGeneratorEngine.ReadChannels(AAAOrganicGeneratorMode.CreatureSkin);
         public Task ExecuteAsync(TexturePaintCommandContextV2 context) =>
             AAAOrganicGeneratorEngine.ExecuteAsync(context, AAAOrganicGeneratorMode.CreatureSkin);
     }
 
-    public sealed class ScratchDentGeneratorPlugin : ScriptableObject, ITexturePaintGeneratorV2
+    public sealed class ScratchDentGeneratorPlugin : ScriptableObject, ITexturePaintGeneratorV2,
+        ITexturePaintDynamicChannelUsageV2
     {
         private static readonly TexturePaintPluginDescriptor descriptor =
             AAAOrganicGeneratorEngine.CreateDescriptor(AAAOrganicGeneratorMode.ScratchDent);
         public TexturePaintPluginDescriptor Descriptor => descriptor;
+        public TexturePaintChannelMask ResolveReadChannels(TexturePaintPluginParameterSet parameters) =>
+            AAAOrganicGeneratorEngine.ReadChannels(AAAOrganicGeneratorMode.ScratchDent);
         public Task ExecuteAsync(TexturePaintCommandContextV2 context) =>
             AAAOrganicGeneratorEngine.ExecuteAsync(context, AAAOrganicGeneratorMode.ScratchDent);
     }
@@ -90,11 +111,14 @@ namespace UMA.TexturePaint.Examples
         private const string ControlMask = "controlMask";
         private const string GuideTexture = "guideTexture";
 
+        public static TexturePaintChannelMask ReadChannels(AAAOrganicGeneratorMode mode) =>
+            mode == AAAOrganicGeneratorMode.ScarWound
+                ? TexturePaintChannelMask.Custom : TexturePaintChannelMask.None;
+
         public static TexturePaintPluginDescriptor CreateDescriptor(AAAOrganicGeneratorMode mode)
         {
             TexturePaintChannelMask writes = DeclaredChannels(mode);
-            TexturePaintChannelMask reads = mode == AAAOrganicGeneratorMode.ScarWound
-                ? TexturePaintChannelMask.Custom : TexturePaintChannelMask.None;
+            TexturePaintChannelMask reads = ReadChannels(mode);
 
             return new TexturePaintPluginDescriptor
             {
@@ -233,23 +257,18 @@ namespace UMA.TexturePaint.Examples
             TexturePaintCommandContextV2 context, int surfaceIndex, int surfaceCount)
         {
             var output = new OutputBuffers(width * rowCount, outputChannels);
-            for (int localY = 0; localY < rowCount; localY++)
+            Parallel.For(0, rowCount, new ParallelOptions
+                { CancellationToken = context.cancellationToken }, localY =>
             {
                 int y = yStart + localY;
-                if ((y & 31) == 0)
-                {
-                    context.cancellationToken.ThrowIfCancellationRequested();
-                    context.progress?.Report((surfaceIndex + y / (float)Mathf.Max(1, height)) /
-                                             surfaceCount);
-                }
                 float v = (y + 0.5f) / height;
                 for (int x = 0; x < width; x++)
                 {
                     float u = (x + 0.5f) / width;
                     if (!inputs.IsCovered(u, v)) continue;
+                    Color controlSample = control?.GetPixelBilinear(u, v) ?? Color.white;
                     float controlValue = control == null ? 1f :
-                        Mathf.Clamp01(Luminance(control.GetPixelBilinear(u, v)) *
-                                      control.GetPixelBilinear(u, v).a);
+                        Mathf.Clamp01(Luminance(controlSample) * controlSample.a);
                     if (controlValue <= 0.0001f) continue;
 
                     GeneratedPixel pixel = settings.mode switch
@@ -268,7 +287,7 @@ namespace UMA.TexturePaint.Examples
                     if (!pixel.Any) continue;
                     output.Set(localY * width + x, pixel);
                 }
-            }
+            });
             return output;
         }
 
@@ -803,7 +822,7 @@ namespace UMA.TexturePaint.Examples
             if (pixels == null) return;
             TexturePaintPluginColorSpace colorSpace = TexturePaintChannelUtility.IsColor(target.channel)
                 ? TexturePaintPluginColorSpace.Linear : TexturePaintPluginColorSpace.Data;
-            context.WriteTileCompact(surfaceId, target.channel,
+            context.WriteTileCompactOwned(surfaceId, target.channel,
                 new RectInt(0, yStart, target.width, rowCount), pixels, colorSpace,
                 TexturePaintPluginBlend.Normal, 1f);
         }
@@ -856,8 +875,8 @@ namespace UMA.TexturePaint.Examples
                     "Controls projection, deterministic variation, total strength, and an optional grayscale texture mask."),
                 Enum("projection", "Projection", new[] { "UV", "World Triplanar" }, 1,
                     "World projection keeps procedural features continuous across UV seams."),
-                Float("scale", "Pattern Scale", 0.05f, 512f, DefaultScale(mode),
-                    "Base procedural frequency in UV repeats or world units."),
+                Float("scale", "Pattern Frequency", 0.05f, 512f, DefaultScale(mode),
+                    "Base repetitions per UV tile, or per meter in World Triplanar mode (Unity 1 unit = 1 meter)."),
                 Integer("seed", "Seed", 0, 100000, 317 + (int)mode * 211,
                     "Deterministically changes the generated pattern."),
                 Float("globalAmount", "Overall Amount", 0f, 1f, 1f,

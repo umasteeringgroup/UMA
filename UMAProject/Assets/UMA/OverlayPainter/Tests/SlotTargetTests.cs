@@ -153,6 +153,47 @@ namespace UMA.TexturePaint.Tests
         }
 
         [Test]
+        public void LogicalPathCreationCopiesAuthoredChannelSourcesToEveryMember()
+        {
+            SlotDataAsset tile1001 = CreateSlot("Body_1001", "body", "Body", 1001);
+            SlotDataAsset tile1002 = CreateSlot("Body_1002", "body", "Body", 1002);
+            ReconstructedSurface surface1001 = CreateSurface(tile1001);
+            ReconstructedSurface surface1002 = CreateSurface(tile1002);
+            var set1001 = new TextureSet { surface = surface1001 };
+            var set1002 = new TextureSet { surface = surface1002 };
+            AddTestChannel(set1001, TexturePaintChannel.Albedo);
+            AddTestChannel(set1002, TexturePaintChannel.Albedo);
+            var catalog = new TexturePaintLogicalTargetCatalog();
+            catalog.Rebuild(new[] { surface1001, surface1002 });
+            catalog.BindTextureSets(new[] { set1001, set1002 });
+            var logicalLayers = new TexturePaintLogicalLayerController(catalog);
+            TexturePaintLayer primary = set1001.AddSplineLayer("Leather Path");
+            Assert.That(set1001.GetPaintTarget(TexturePaintChannel.Albedo,
+                TexturePaintSourceMode.SourceOverlay), Is.Not.Null);
+            primary.GetChannelSettings(TexturePaintChannel.Albedo).sourceSettings =
+                new TexturePaintChannelSourceSettings
+                {
+                    source = TexturePaintBrushSource.Color,
+                    color = Color.red
+                };
+
+            bool linked = logicalLayers.LinkAndRepair(catalog.FindById("udim:body"), set1001,
+                primary, null, out TexturePaintLogicalLayerBinding binding);
+
+            Assert.That(linked, Is.True);
+            TexturePaintLayer peer = binding.members[1].layer;
+            Assert.That(peer.IsSplineLayer, Is.True);
+            Assert.That(peer.channels.ContainsKey(TexturePaintChannel.Albedo), Is.True);
+            TexturePaintChannelSourceSettings peerSource =
+                peer.GetChannelSettings(TexturePaintChannel.Albedo, false)?.sourceSettings;
+            Assert.That(peerSource, Is.Not.Null);
+            Assert.That(peerSource.source, Is.EqualTo(TexturePaintBrushSource.Color));
+            Assert.That(peerSource.color, Is.EqualTo(Color.red));
+            set1001.Dispose();
+            set1002.Dispose();
+        }
+
+        [Test]
         public void MissingLogicalMemberIsReportedThenExplicitlyRepaired()
         {
             SlotDataAsset tile1001 = CreateSlot("Body_1001", "body", "Body", 1001);
@@ -335,6 +376,17 @@ namespace UMA.TexturePaint.Tests
         {
             createdObjects.Add(value);
             return value;
+        }
+
+        private static void AddTestChannel(TextureSet set, TexturePaintChannel channel)
+        {
+            set.channels[channel] = new TextureChannelTarget
+            {
+                channel = channel,
+                format = RenderTextureFormat.ARGB32,
+                editable = new EditableTextureTarget("Logical Path " + channel, 8, 8,
+                    RenderTextureFormat.ARGB32, null, TextureSet.DefaultColor(channel))
+            };
         }
 
         private static ReconstructedSurface CreateSurface(SlotDataAsset asset)

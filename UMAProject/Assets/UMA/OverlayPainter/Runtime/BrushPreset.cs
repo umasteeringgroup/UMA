@@ -31,7 +31,11 @@ namespace UMA.TexturePaint
         [Tooltip("Randomly varies each splatter stamp from zero to the current paint strength.")]
         public bool randomStrength;
         public bool fade;
+        [Tooltip("Draws at full flow while dragging, then fades across the complete stroke when released.")]
+        public bool autoFade;
         public bool taper;
+        [Tooltip("Draws at full size while dragging, then tapers across the complete stroke when released.")]
+        public bool autoTaper;
         [Tooltip("World-space distance over which Fade and Taper reach zero. Zero uses three times the brush size.")]
         [Min(0f)] public float fadeTaperLength;
         [Tooltip("Comma-separated search tags used by the Overlay Painter asset shelf.")]
@@ -69,7 +73,9 @@ namespace UMA.TexturePaint
             splatterDistance = source.splatterDistance;
             randomStrength = source.randomStrength;
             fade = source.fade;
+            autoFade = source.autoFade;
             taper = source.taper;
+            autoTaper = source.autoTaper;
             fadeTaperLength = source.fadeTaperLength;
         }
 

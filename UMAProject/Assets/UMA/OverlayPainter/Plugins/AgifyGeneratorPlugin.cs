@@ -42,8 +42,8 @@ namespace UMA.TexturePaint.Examples
             {
                 Enum("projection", "Projection", new[] { "UV", "World Triplanar" }, 1,
                     "Projects optional dirt, wear, and mask textures in UV or seamless world triplanar space."),
-                Float("textureScale", "Texture Scale", 0.05f, 100f, 4f,
-                    "UV repeats or world-space repeats per model unit for optional textures."),
+                Float("textureScale", "Texture Frequency", 0.05f, 100f, 4f,
+                    "Optional-texture repetitions per UV tile, or per meter in World Triplanar mode (Unity 1 unit = 1 meter)."),
                 Integer("seed", "Seed", 0, 100000, 173,
                     "Changes deterministic breakup without changing curvature or AO."),
                 Float("curvatureContrast", "Curvature Contrast", 0.1f, 8f, 2.5f,
@@ -54,8 +54,8 @@ namespace UMA.TexturePaint.Examples
                     "Adds source AO and generated cavity accessibility to dirt accumulation."),
                 Float("breakup", "Procedural Breakup", 0f, 1f, 0.55f,
                     "Breaks up otherwise uniform dirt and wear coverage."),
-                Float("breakupScale", "Breakup Scale", 0.25f, 256f, 28f,
-                    "Frequency of deterministic world-space or UV-space breakup."),
+                Float("breakupScale", "Breakup Frequency", 0.25f, 256f, 28f,
+                    "Noise repetitions per UV tile, or per meter in World Triplanar mode."),
                 Float("fractalEdge", "Fractal Edge", 0f, 1f, 0f,
                     "Displaces dirt and wear boundaries with multi-level fractal noise; zero preserves the original smooth edge."),
                 Integer("fractalLevels", "Fractal Levels", 1, 8, 4,
@@ -98,6 +98,12 @@ namespace UMA.TexturePaint.Examples
         public TexturePaintPluginDescriptor Descriptor => descriptor;
 
         public Task ExecuteAsync(TexturePaintCommandContextV2 context)
+        {
+            if (context == null) throw new ArgumentNullException(nameof(context));
+            return Task.Run(() => Execute(context), context.cancellationToken);
+        }
+
+        private static void Execute(TexturePaintCommandContextV2 context)
         {
             Settings settings = Settings.From(context.parameters);
             TexturePaintReadOnlyParameterTexture dirtTexture = context.GetTextureParameter(DirtTexture);
@@ -143,7 +149,6 @@ namespace UMA.TexturePaint.Examples
             }
 
             context.progress?.Report(1f);
-            return Task.CompletedTask;
         }
 
         public static float CalculateNormalCurvature(TexturePaintReadOnlyImage normal, float u, float v)
@@ -169,15 +174,10 @@ namespace UMA.TexturePaint.Examples
             TexturePaintCommandContextV2 context, int surfaceIndex, int surfaceCount)
         {
             var output = new OutputBuffers(width * rowCount);
-            for (int localY = 0; localY < rowCount; localY++)
+            Parallel.For(0, rowCount, new ParallelOptions
+                { CancellationToken = context.cancellationToken }, localY =>
             {
                 int y = yStart + localY;
-                if ((y & 31) == 0)
-                {
-                    context.cancellationToken.ThrowIfCancellationRequested();
-                    context.progress?.Report(0.25f + 0.7f *
-                        ((surfaceIndex + y / (float)Mathf.Max(1, height)) / Mathf.Max(1, surfaceCount)));
-                }
                 float v = (y + 0.5f) / height;
                 for (int x = 0; x < width; x++)
                 {
@@ -190,8 +190,10 @@ namespace UMA.TexturePaint.Examples
                         CalculateNormalCurvature(inputs.normal, inputs.meshId, u, v) *
                         settings.normalCurvature, -1f, 1f);
 
-                    float concave = Shape(Mathf.Max(0f, -signed), settings.curvatureContrast);
-                    float convex = Shape(Mathf.Max(0f, signed), settings.curvatureContrast);
+                    float concave = ShapeCurvature(Mathf.Max(0f, -signed),
+                        settings.curvatureContrast);
+                    float convex = ShapeCurvature(Mathf.Max(0f, signed),
+                        settings.curvatureContrast);
                     float sourceCavity = inputs.ambientOcclusion != null
                         ? 1f - Luminance(inputs.ambientOcclusion.GetPixelBilinear(u, v)) : 0f;
                     float meshCavity = inputs.meshAmbientOcclusion != null
@@ -236,7 +238,7 @@ namespace UMA.TexturePaint.Examples
                         0.5f - settings.wearDepth, wearCoverage, coverage);
                     output.normalControl[index] = ScalarColor(Mathf.Clamp01(normalControlHeight), coverage);
                 }
-            }
+            });
             return output;
         }
 
@@ -255,7 +257,7 @@ namespace UMA.TexturePaint.Examples
             if (pixels == null) return;
             TexturePaintPluginColorSpace colorSpace = target.channel == TexturePaintChannel.Albedo
                 ? TexturePaintPluginColorSpace.Linear : TexturePaintPluginColorSpace.Data;
-            context.WriteTileCompact(surfaceId, target.channel,
+            context.WriteTileCompactOwned(surfaceId, target.channel,
                 new RectInt(0, yStart, target.width, rowCount),
                 pixels, colorSpace, TexturePaintPluginBlend.Normal, 1f);
         }
@@ -304,10 +306,13 @@ namespace UMA.TexturePaint.Examples
             return Mathf.Lerp(1f, noise, settings.breakup);
         }
 
-        private static float Shape(float value, float contrast)
+        public static float ShapeCurvature(float value, float contrast)
         {
             value = Mathf.Clamp01(value);
-            return Mathf.Pow(value, 1f / Mathf.Max(0.1f, contrast));
+            // Contrast values above one are documented as narrowing the selection to stronger
+            // curvature. The inverse exponent did the opposite, turning weak curvature across
+            // broad surface areas into strong dirt/wear coverage.
+            return Mathf.Pow(value, Mathf.Max(0.1f, contrast));
         }
 
         private static Color ResolveColor(Color dirt, float dirtCoverage, Color wear,

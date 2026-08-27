@@ -69,6 +69,11 @@ dimensions remain available through `GetChannelInfo`; zero requests native resol
 logical channels are supported, including Skin Color Mask, Thickness, Detail Mask, and Normal Control.
 `WriteTile` preserves float/HDR values, while `WriteTileCompact` copies an RGBA8 payload and charges
 four bytes per pixel to the command budget. Large generators should submit compact output in strips.
+Built-in generators that create a fresh `Color32[]` for a command may instead use
+`WriteTileCompactOwned` (or `WriteMaskTileCompactOwned`) and relinquish that array to the context.
+The owned form avoids a second full-tile copy; the caller must never read or modify the array after
+submitting it. Third-party plugins should keep using the copying methods unless ownership transfer is
+explicitly safe.
 
 Parameterized filters that read only one selected channel should implement
 `ITexturePaintDynamicChannelUsageV2`. `ResolveReadChannels` may return a subset of the descriptor's
@@ -245,11 +250,27 @@ composed-Normal, AO, UV-island, and strip-output contract:
 
 Their stable IDs are `com.uma.texturepaint.dirtify` and `com.uma.texturepaint.edgewear`.
 
+### GPU generator contract
+
+A generator with a compute implementation can also implement `ITexturePaintGpuGeneratorV2`, return
+its kernel name through `GpuKernelName`, and declare `GpuAccelerated`. The host then keeps procedural
+mesh maps and composed source channels on the GPU, binds schema parameters by their stable IDs, and
+renders directly into the Plugin layer. If compute shaders or the kernel are unavailable, the normal
+`ExecuteAsync` implementation remains the CPU fallback.
+
+Standard compute bindings include `_MeshWorldPosition`, `_MeshWorldNormal`,
+`_MeshSignedCurvature`, `_MeshAmbientOcclusion`, `_MeshThickness`, `_MeshSurfaceId`,
+`_SourceNormal`, and `_SourceAO`. Schema parameters are bound as `_P_<parameterId>`; texture
+parameters also receive `_HasP_<parameterId>`. The kernel writes `_Output`, uses `_OutputSize`, and
+branches on `_OutputChannel`. Every GPU execution remains an atomic, undoable Plugin-layer
+transaction and is subject to the same declared-channel and target-channel restrictions.
+
 ## Production material generators
 
-The example assembly includes ten deterministic, tile-streamed material generators. All run their
+The example assembly includes eleven deterministic material generators. CPU fallbacks run their
 procedural synthesis away from the editor thread, report progress, honor cancellation between tile
-rows, and commit through one atomic plugin-layer transaction:
+rows, and commit through one atomic plugin-layer transaction. Dirtify, Edge Wear, and Dripping
+Corrosion use the direct GPU generator path when compute shaders are available:
 
 | Generator | Stable ID | Principal outputs |
 | --- | --- | --- |
@@ -258,6 +279,7 @@ rows, and commit through one atomic plugin-layer transaction:
 | Text | `com.uma.texturepaint.text-generator` | Albedo, Normal Control, Roughness, Metallic, or Layer Mask |
 | Fabric Fuzz & Fiber Fray | `com.uma.texturepaint.fabric-fuzz` | Albedo, Roughness, Normal Control, Detail Mask |
 | Rust, Oxidation & Corrosion | `com.uma.texturepaint.rust-corrosion` | Albedo, Roughness, Metallic, AO, Normal Control |
+| Dripping Corrosion | `com.uma.texturepaint.dripping-corrosion` | Albedo, Roughness, Metallic, AO, Normal Control |
 | Surface Noise & Micro Detail | `com.uma.texturepaint.surface-micro-detail` | Albedo, Roughness, Normal Control, Detail Mask |
 | Veins & Subdermal Skin | `com.uma.texturepaint.veins-subdermal` | Albedo, Skin Color Mask, Roughness, Thickness, Normal Control, Detail Mask |
 | Scar, Wound & Skin Damage | `com.uma.texturepaint.scar-wound` | Albedo, Skin Color Mask, Roughness, Thickness, Normal Control |

@@ -17,6 +17,7 @@ For the complete painting, layer, mask, spline, save, and export workflow, see
 - [Text](#text)
 - [Fabric Fuzz, Fiber, and Fray](#fabric--fuzz-fiber--fray)
 - [Rust, Oxidation, and Corrosion](#metal--rust-oxidation--corrosion)
+- [Dripping Corrosion](#dripping-corrosion)
 - [Pores, Scratches, and Micro Detail](#surface--pores-scratches--micro-detail)
 - [Veins, Bruising, and Subdermal Variation](#skin--veins-bruising--subdermal-variation)
 - [Scar, Wound, and Stretch Marks](#skin--scar-wound--stretch-marks)
@@ -508,6 +509,28 @@ Gotchas:
 - Excess Pit Depth and Flake Height create a rocky surface. Establish color and roughness first, then
   add enough Normal Control to catch grazing light.
 - World projection reduces UV seams, but runoff direction still needs to make sense for the prop.
+
+## Dripping Corrosion
+
+**Best for:** realistic water-driven oxidation beneath panel edges, seams, fasteners, recessed joins,
+and exposed damage.
+
+**Outputs:** Albedo, Roughness, Metallic, Ambient Occlusion, and Normal Control.
+
+This generator detects convex exposed edges and concave or occluded valleys, broadens those sources
+by **Corrosion Spread**, and traces eligible sources along the configured world-space gravity vector.
+The default `(0, -1, 0)` follows standard Unity gravity. **Drip Length**, **Drip Width**, corrosion
+spread, breakup size, and pit size are all meters under Unity's 1 unit = 1 meter convention.
+
+Start with the physical scale controls. A small prop usually needs millimeter-scale drip widths and
+pit sizes; architectural metal can use centimeter-scale breakup and longer trails. Then adjust Edge
+and Valley Amount independently. Multi-octave breakup controls the broad oxide boundary, while the
+separate pit field drives recessed Normal Control and AO. Crust Height raises dry flakes without
+turning every covered pixel into a bump.
+
+When compute shaders are available, Dripping Corrosion runs directly against GPU-resident mesh maps.
+Its parallel CPU implementation is retained as a fallback. Dirtify and Edge Wear use the same GPU
+path; other built-in CPU generators now parallelize independent rows and avoid redundant tile copies.
 
 ## Surface — Pores, Scratches & Micro Detail
 

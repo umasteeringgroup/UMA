@@ -16,9 +16,11 @@ namespace UMA
 		private int removeLeft = 0;
 		private Vector2 scrollPosition = new Vector2();
 		public List<AnimationClip> selectedClips = new List<AnimationClip>();
+		[System.NonSerialized]
 		public List<List<RemapperCurveData>> CurveDatasList = new List<List<RemapperCurveData>>();
 
 		public AnimationClip selectedClip;
+		[System.NonSerialized]
 		public List<RemapperCurveData> CurveDatas;
 		private bool initialized;
 

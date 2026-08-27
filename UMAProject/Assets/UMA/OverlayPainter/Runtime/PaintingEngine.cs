@@ -148,7 +148,7 @@ namespace UMA.TexturePaint
             if (activeTargets.Count == 0) { activeStampTexture = null; activeContext = null; return false; }
             captureActiveStrokeHistory = !context.derivedLayerRaster;
             if (context.replaceHistoryGroup && !string.IsNullOrEmpty(context.historyGroupKey))
-                PrepareProceduralReplacement(context);
+                PrepareProceduralReplacement(context, textureSets);
             CreateStrokeRecords(mode);
             if (captureActiveStrokeHistory) history.BeginGroup(context.historyGroupKey);
             if (context.brushPlugin != null)
@@ -905,13 +905,31 @@ namespace UMA.TexturePaint
         /// history captures. Used when the first provisional stamp must be replayed after its
         /// direction becomes known.
         /// </summary>
-        public bool RewindActiveStroke()
+        public bool RewindActiveStroke(bool restartBrushPlugin = false)
         {
             if (!strokeStarted) return false;
+            TexturePaintBrushContextV2 replacementBrushContext = null;
+            if (restartBrushPlugin && activeContext?.brushPlugin != null)
+            {
+                try
+                {
+                    replacementBrushContext = activeContext.pluginHost.BeginBrush(
+                        activeContext.brushPlugin, activeContext.textures.persistentId,
+                        activeContext.channel, activeContext.brushPluginParameters,
+                        activeContext.cancellationToken);
+                }
+                catch { return false; }
+            }
             history.RestorePendingBefore();
             ReleaseStrokeBuffers();
             foreach (TexturePaintStrokeRecord record in activeStrokeRecords.Values)
                 record?.samples.Clear();
+            if (replacementBrushContext != null)
+            {
+                activeContext.pluginHost.EndBrush(activeContext.brushPlugin,
+                    activeBrushContext, false);
+                activeBrushContext = replacementBrushContext;
+            }
             HashSet<TextureSet> changedSets = new HashSet<TextureSet>();
             for (int i = 0; i < activeTargets.Count; i++)
                 if (activeTargets[i].textures != null) changedSets.Add(activeTargets[i].textures);
@@ -1100,7 +1118,13 @@ namespace UMA.TexturePaint
                         });
                 }
             }
-            if (!ContainsTextureSet(textures))
+            // Explicit per-channel sources define the complete authored target set. If none of
+            // them can be resolved for this material, do not fall back to context.channel: that
+            // value may be stale (commonly Albedo on a Normal-Control-only Path) and would create
+            // an unintended layer channel. Normal Touchup remains a single-channel operation.
+            bool allowSingleChannelFallback = context.channelSources.Count == 0 ||
+                context.tool == TexturePaintTool.NormalTouchup;
+            if (allowSingleChannelFallback && !ContainsTextureSet(textures))
             {
                 EditableTextureTarget target = textures.GetPaintTarget(context.channel, mode);
                 Texture resolvedSource = TexturePaintSpriteSource.Resolve(context.sourceTexture,
@@ -1188,7 +1212,8 @@ namespace UMA.TexturePaint
             }
         }
 
-        private void PrepareProceduralReplacement(StrokeContext context)
+        private void PrepareProceduralReplacement(StrokeContext context,
+            IReadOnlyList<TextureSet> replacementSets)
         {
             previousProceduralBounds.Clear();
             currentProceduralBounds.Clear();
@@ -1207,31 +1232,47 @@ namespace UMA.TexturePaint
             bool reverted = history.RevertLatest(context.historyGroupKey);
             bool replacementChanged = reverted;
             HashSet<TextureSet> changedSets = new HashSet<TextureSet>();
+            if (replacementSets != null)
+                for (int setIndex = 0; setIndex < replacementSets.Count; setIndex++)
+                    if (replacementSets[setIndex] != null) changedSets.Add(replacementSets[setIndex]);
+            else if (context.textures != null) changedSets.Add(context.textures);
             for (int i = 0; i < activeTargets.Count; i++)
             {
                 ActiveTarget active = activeTargets[i];
                 if (active.textures != null) changedSets.Add(active.textures);
             }
 
-            if (reverted)
-            {
-                RemoveStrokeRecords(context.historyGroupKey, changedSets);
-            }
-            else if (context.replaceLayer != null)
+            RemoveStrokeRecords(context.historyGroupKey, changedSets);
+            if (context.replaceLayer != null)
             {
                 context.replaceLayer.strokes.Clear();
-                RemoveStrokeRecords(context.historyGroupKey, changedSets);
-                HashSet<EditableTextureTarget> clearedTargets = new HashSet<EditableTextureTarget>();
+                var activeReplacementTargets = new HashSet<EditableTextureTarget>();
                 for (int i = 0; i < activeTargets.Count; i++)
+                    activeReplacementTargets.Add(activeTargets[i].target);
+                foreach (TextureSet changedSet in changedSets)
                 {
-                    ActiveTarget active = activeTargets[i];
-                    TexturePaintLayer owner = FindTargetOwner(active.textures, active.target);
-                    if (!ReferenceEquals(owner, context.replaceLayer) &&
-                        !string.Equals(owner?.proceduralGroupKey, context.historyGroupKey, StringComparison.Ordinal))
-                        continue;
-                    if (!clearedTargets.Add(active.target)) continue;
-                    active.target.Reset(null, Color.clear);
-                    replacementChanged = true;
+                    bool clearedInactiveTarget = false;
+                    for (int layerIndex = 0; layerIndex < changedSet.layers.Count; layerIndex++)
+                    {
+                        TexturePaintLayer candidate = changedSet.layers[layerIndex];
+                        if (!IsProceduralReplacementLayer(candidate, context.replaceLayer,
+                            context.historyGroupKey)) continue;
+                        candidate.strokes.Clear();
+                        foreach (EditableTextureTarget target in candidate.channels.Values)
+                        {
+                            if (target == null) continue;
+                            target.Reset(null, Color.clear);
+                            proceduralRasterBounds.Remove(ProceduralBoundsKey(
+                                context.historyGroupKey, target));
+                            replacementChanged = true;
+                            if (!activeReplacementTargets.Contains(target)) clearedInactiveTarget = true;
+                        }
+                    }
+                    // A removed, disabled, or now-unsupported channel has no ActiveTarget and
+                    // therefore no incremental old-footprint refresh at EndStroke. Recompose that
+                    // uncommon case now so its packed/preview texture cannot retain the old path.
+                    if (context.derivedLayerRaster && clearedInactiveTarget)
+                        changedSet.BindPreviewTextures();
                 }
             }
 
@@ -1241,6 +1282,13 @@ namespace UMA.TexturePaint
                 TextureChanged?.Invoke(null, TexturePaintChannel.Custom);
             }
         }
+
+        internal static bool IsProceduralReplacementLayer(TexturePaintLayer candidate,
+            TexturePaintLayer primary, string historyGroupKey)
+            => candidate != null && (ReferenceEquals(candidate, primary) ||
+                !string.IsNullOrEmpty(historyGroupKey) &&
+                string.Equals(candidate.proceduralGroupKey, historyGroupKey,
+                    StringComparison.Ordinal));
 
         private static void RemoveStrokeRecords(string historyGroupKey, IEnumerable<TextureSet> sets)
         {

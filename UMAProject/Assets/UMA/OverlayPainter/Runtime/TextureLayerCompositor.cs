@@ -16,6 +16,7 @@ namespace UMA.TexturePaint
         private readonly int applyGroupMaskKernel = -1;
         private readonly int applyIsolatedLayerKernel = -1;
         private readonly int unassociateAlphaKernel = -1;
+        private readonly int applyChannelAdjustmentsKernel = -1;
         private readonly int clearKernel = -1;
         private readonly Dictionary<string, LayerMaskCacheEntry> maskCache =
             new Dictionary<string, LayerMaskCacheEntry>();
@@ -80,6 +81,8 @@ namespace UMA.TexturePaint
                 applyIsolatedLayerKernel = shader.FindKernel("CSApplyIsolatedLayer");
             if (shader.HasKernel("CSUnassociateAlpha"))
                 unassociateAlphaKernel = shader.FindKernel("CSUnassociateAlpha");
+            if (shader.HasKernel("CSApplyChannelAdjustments"))
+                applyChannelAdjustmentsKernel = shader.FindKernel("CSApplyChannelAdjustments");
             if (shader.HasKernel("CSClear")) clearKernel = shader.FindKernel("CSClear");
         }
 
@@ -112,6 +115,57 @@ namespace UMA.TexturePaint
             }
             PruneEffectDistanceCache();
             PruneLayerMaskCache();
+        }
+
+        public bool ApplyChannelAdjustments(TextureChannelTarget target, RectInt requestedRect)
+        {
+            return target != null && ApplyChannelAdjustments(target.channel, target.adjustments,
+                target.composite, requestedRect);
+        }
+
+        internal bool ApplyChannelAdjustments(TexturePaintChannel channel,
+            TexturePaintChannelAdjustments adjustments, RenderTexture destination,
+            RectInt requestedRect = default)
+        {
+            if (destination == null || adjustments == null || adjustments.IsNeutral ||
+                channel == TexturePaintChannel.Normal) return false;
+            if (!IsAvailable || applyChannelAdjustmentsKernel < 0 ||
+                !shader.IsSupported(applyChannelAdjustmentsKernel)) return false;
+
+            RectInt rect = ClampRect(requestedRect, destination.width, destination.height);
+            if (rect.width <= 0 || rect.height <= 0) return false;
+            RenderTextureDescriptor descriptor = destination.descriptor;
+            descriptor.enableRandomWrite = false;
+            descriptor.depthBufferBits = 0;
+            descriptor.msaaSamples = 1;
+            RenderTexture source = RenderTexture.GetTemporary(descriptor);
+            try
+            {
+                Graphics.Blit(destination, source);
+                shader.SetInts("_TextureSize", destination.width, destination.height);
+                shader.SetInts("_TileOffset", rect.x, rect.y);
+                shader.SetInts("_DispatchSize", rect.width, rect.height);
+                shader.SetInt("_GrayscaleChannel",
+                    TexturePaintChannelUtility.IsGrayscale(channel) ? 1 : 0);
+                shader.SetFloat("_EffectBrightness", adjustments.brightness);
+                shader.SetFloat("_EffectContrast", adjustments.contrast);
+                shader.SetFloat("_EffectHue", adjustments.hue);
+                shader.SetFloat("_EffectVibrance", adjustments.vibrance);
+                shader.SetFloat("_EffectSaturation", adjustments.saturation);
+                shader.SetVector("_EffectColorBalance", new Vector4(adjustments.colorBalance.x,
+                    adjustments.colorBalance.y, adjustments.colorBalance.z, 0f));
+                shader.SetTexture(applyChannelAdjustmentsKernel, "_Layer", source);
+                shader.SetTexture(applyChannelAdjustmentsKernel, "_AdjustmentCurveTexture",
+                    GetCurveTexture(adjustments.grayscaleAdjustmentCurve));
+                shader.SetTexture(applyChannelAdjustmentsKernel, "_Composite", destination);
+                shader.Dispatch(applyChannelAdjustmentsKernel, Mathf.CeilToInt(rect.width / 16f),
+                    Mathf.CeilToInt(rect.height / 16f), 1);
+                return true;
+            }
+            finally
+            {
+                RenderTexture.ReleaseTemporary(source);
+            }
         }
 
         internal bool ComposeAuthoredLayers(TextureSet set, TexturePaintChannel channel,
@@ -458,6 +512,8 @@ namespace UMA.TexturePaint
             shader.SetFloat("_EffectBrightness", effect.brightness);
             shader.SetFloat("_EffectContrast", effect.contrast);
             shader.SetFloat("_EffectHue", effect.hue);
+            shader.SetFloat("_EffectVibrance", 0f);
+            shader.SetVector("_EffectColorBalance", Vector4.zero);
             shader.SetInt("_EffectBlendMode", effect.kind == TexturePaintLayerEffectKind.ColorOverlay
                 ? (int)effect.blendMode : (int)TexturePaintBlendMode.Normal);
             shader.SetInt("_HasEffectTexture1", effect.texture1 != null ? 1 : 0);

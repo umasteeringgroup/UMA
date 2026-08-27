@@ -23,6 +23,41 @@ namespace UMA.TexturePaint.Tests
         }
 
         [Test]
+        public void ChannelAdjustmentsCloneNormalizeAndResetToNeutral()
+        {
+            var adjustments = new TexturePaintChannelAdjustments
+            {
+                brightness = 3f,
+                contrast = -2f,
+                hue = 400f,
+                vibrance = 2f,
+                saturation = -1f,
+                colorBalance = new Vector3(2f, -2f, 0.25f),
+                grayscaleAdjustmentCurve = new AnimationCurve(
+                    new Keyframe(0f, 0f), new Keyframe(0.5f, 0.2f), new Keyframe(1f, 1f))
+            };
+
+            adjustments.Normalize();
+            TexturePaintChannelAdjustments clone = adjustments.Clone();
+
+            Assert.That(clone.brightness, Is.EqualTo(1f));
+            Assert.That(clone.contrast, Is.EqualTo(-1f));
+            Assert.That(clone.hue, Is.EqualTo(180f));
+            Assert.That(clone.vibrance, Is.EqualTo(1f));
+            Assert.That(clone.saturation, Is.EqualTo(0f));
+            Assert.That(clone.colorBalance, Is.EqualTo(new Vector3(1f, -1f, 0.25f)));
+            clone.grayscaleAdjustmentCurve.MoveKey(1, new Keyframe(0.5f, 0.8f));
+            Assert.That(adjustments.grayscaleAdjustmentCurve.Evaluate(0.5f), Is.EqualTo(0.2f).Within(0.001f),
+                "Cloning adjustments must deep-copy the editable response curve.");
+            clone.Reset();
+            Assert.That(clone.IsNeutral, Is.True);
+            Assert.That(clone.grayscaleAdjustmentCurve.Evaluate(0f), Is.EqualTo(0f).Within(0.0001f));
+            Assert.That(clone.grayscaleAdjustmentCurve.Evaluate(1f), Is.EqualTo(1f).Within(0.0001f));
+            Assert.That(adjustments.IsNeutral, Is.False,
+                "The clone must be independent from the original settings.");
+        }
+
+        [Test]
         public void MigrationRepairsLayerMaskPaintSource()
         {
             TexturePaintDocument document = ScriptableObject.CreateInstance<TexturePaintDocument>();
@@ -89,6 +124,23 @@ namespace UMA.TexturePaint.Tests
             Assert.That(channel.GetSourceSettings().offset, Is.EqualTo(new Vector2(0.2f, -0.3f)));
             Assert.That(channel.GetSourceSettings().rotation, Is.EqualTo(52f));
             Object.DestroyImmediate(document);
+        }
+
+        [Test]
+        public void DocumentChannelRetainsSharedCoverageAlphaMode()
+        {
+            var channel = new TexturePaintDocumentLayerChannel();
+            channel.SetSourceSettings(new TexturePaintChannelSourceSettings
+            {
+                source = TexturePaintBrushSource.Overlay,
+                ignoreSourceAlpha = true
+            });
+
+            TexturePaintChannelSourceSettings restored = channel.GetSourceSettings();
+
+            Assert.That(restored, Is.Not.Null);
+            Assert.That(restored.source, Is.EqualTo(TexturePaintBrushSource.Overlay));
+            Assert.That(restored.ignoreSourceAlpha, Is.True);
         }
 
         [Test]
@@ -418,6 +470,9 @@ namespace UMA.TexturePaint.Tests
             Texture2D end = new Texture2D(1, 1);
             TexturePaintSplineSettings source = new TexturePaintSplineSettings
             {
+                editorSettingsVersion = TexturePaintSplineSettings.CurrentEditorSettingsVersion,
+                editMode = TexturePaintPathEditMode.Adjust,
+                autoUpdate = false,
                 brushShape = BrushPreset.Shape.Stamp,
                 brushSize = 0.125f,
                 brushHardness = 0.42f,
@@ -430,6 +485,9 @@ namespace UMA.TexturePaint.Tests
             TexturePaintSplineSettings copy = source.Clone();
 
             Assert.That(copy, Is.Not.SameAs(source));
+            Assert.That(copy.editorSettingsVersion, Is.EqualTo(TexturePaintSplineSettings.CurrentEditorSettingsVersion));
+            Assert.That(copy.editMode, Is.EqualTo(TexturePaintPathEditMode.Adjust));
+            Assert.That(copy.AutoUpdateEnabled, Is.False);
             Assert.That(copy.brushSize, Is.EqualTo(source.brushSize));
             Assert.That(copy.brushHardness, Is.EqualTo(source.brushHardness));
             Assert.That(copy.brushStamp, Is.SameAs(stamp));
@@ -439,6 +497,31 @@ namespace UMA.TexturePaint.Tests
             Object.DestroyImmediate(stamp);
             Object.DestroyImmediate(beginning);
             Object.DestroyImmediate(end);
+        }
+
+        [Test]
+        public void LegacySplineSettingsKeepAutoUpdateEnabled()
+        {
+            TexturePaintSplineSettings legacy = new TexturePaintSplineSettings
+            {
+                editorSettingsVersion = 0,
+                autoUpdate = false
+            };
+            TexturePaintSplineSettings current = new TexturePaintSplineSettings
+            {
+                editorSettingsVersion = TexturePaintSplineSettings.CurrentEditorSettingsVersion,
+                autoUpdate = false
+            };
+
+            Assert.That(legacy.AutoUpdateEnabled, Is.True,
+                "Paths saved before editor settings were versioned must retain the old live-update behavior.");
+            Assert.That(current.AutoUpdateEnabled, Is.False);
+
+            legacy.MigrateEditorSettings();
+            Assert.That(legacy.editorSettingsVersion,
+                Is.EqualTo(TexturePaintSplineSettings.CurrentEditorSettingsVersion));
+            Assert.That(legacy.editMode, Is.EqualTo(TexturePaintPathEditMode.Standard));
+            Assert.That(legacy.autoUpdate, Is.True);
         }
     }
 }

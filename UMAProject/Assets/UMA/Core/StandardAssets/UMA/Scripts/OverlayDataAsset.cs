@@ -54,6 +54,7 @@ namespace UMA
 		public bool tagsFoldout { get; set; } = false;
 		public bool occlusionFoldout { get; set; } = false;
 
+		[System.NonSerialized]
 		public ReorderableList tagsList;
 #endif
 		public enum OverlayType
@@ -183,6 +184,7 @@ namespace UMA
 			[System.Serializable]
 			public struct SubMeshOcclusion
 			{
+				[System.NonSerialized]
 				public System.Int32[][] occlusionLODs;
 			}
 

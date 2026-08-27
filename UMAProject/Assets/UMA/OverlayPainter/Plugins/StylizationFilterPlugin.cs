@@ -58,7 +58,7 @@ namespace UMA.TexturePaint.Examples
                         KuwaharaIntegral integral = s.operation == Operation.Kuwahara
                             ? new KuwaharaIntegral(source, width, height, y0, rows,
                                 Mathf.CeilToInt(s.radius)) : null;
-                        for (int ly = 0; ly < rows; ly++) for (int x = 0; x < width; x++)
+                        Parallel.For(0,rows,new ParallelOptions{CancellationToken=c.cancellationToken},ly => { for (int x = 0; x < width; x++)
                         {
                             float u=(x+.5f)/width,v=(y0+ly+.5f)/height;
                             Color original=source.GetPixelBilinear(u,v), filtered=Filter(source,u,v,x,y0+ly,width,height,s,integral);
@@ -66,10 +66,10 @@ namespace UMA.TexturePaint.Examples
                             if (c.target==TexturePaintPluginTarget.LayerMask) { float g=Luma(result); result=new Color(g,g,g,1); }
                             else result=TexturePaintChannelUtility.ConstrainColor(s.destination,result);
                             pixels[ly*width+x]=result;
-                        }
+                        }});
                         RectInt rect=new RectInt(0,y0,width,rows);
-                        if(c.target==TexturePaintPluginTarget.LayerMask)c.WriteMaskTileCompact(id,rect,pixels,TexturePaintPluginBlend.Replace);
-                        else c.WriteTileCompact(id,s.destination,rect,pixels,TexturePaintChannelUtility.IsColor(s.destination)?TexturePaintPluginColorSpace.Linear:TexturePaintPluginColorSpace.Data,TexturePaintPluginBlend.Replace);
+                        if(c.target==TexturePaintPluginTarget.LayerMask)c.WriteMaskTileCompactOwned(id,rect,pixels,TexturePaintPluginBlend.Replace);
+                        else c.WriteTileCompactOwned(id,s.destination,rect,pixels,TexturePaintChannelUtility.IsColor(s.destination)?TexturePaintPluginColorSpace.Linear:TexturePaintPluginColorSpace.Data,TexturePaintPluginBlend.Replace);
                         c.progress?.Report((si+(y0+rows)/(float)height)/count);
                     }
                 }

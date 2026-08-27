@@ -314,6 +314,13 @@ namespace UMA.CharacterSystem
 
 
         private HashSet<string> forceRemovedTags = new HashSet<string>();
+
+        // An avatar may have a Rigidbody serialized by an edit-time collider recipe while
+        // the generated collider itself is not serialized. Keep that incomplete physics
+        // body out of the simulation until the runtime recipe has rebuilt its collider.
+        private Rigidbody deferredRootRigidbody;
+        private bool deferredRootRigidbodyKinematicState;
+        private readonly List<Collider> rootColliderBuffer = new List<Collider>();
 #if UNITY_EDITOR
         private PreviewModel lastPreviewModel;
         private GameObject lastCustomModel;
@@ -484,6 +491,7 @@ namespace UMA.CharacterSystem
 
         public void Awake()
         {
+            DeferColliderlessRootRigidbody();
 #if UNITY_EDITOR
             // Cleanup from any edit-time uma generation
             if (Application.isPlaying)
@@ -550,7 +558,8 @@ namespace UMA.CharacterSystem
         {
             if (!EditorApplication.isPlayingOrWillChangePlaymode)
             {
-                DynamicCharacterAvatar[] dcas = GameObject.FindObjectsByType<DynamicCharacterAvatar>(FindObjectsSortMode.None);
+                DynamicCharacterAvatar[] dcas = UMAObjectUtility.FindObjectsByType<DynamicCharacterAvatar>(
+                    FindObjectsInactive.Exclude);
                 for (int i = 0; i < dcas.Length; i++)
                 {
                     DynamicCharacterAvatar dca = dcas[i];
@@ -1033,6 +1042,7 @@ namespace UMA.CharacterSystem
 
         void Update()
         {
+                RestoreRootRigidbodyWhenColliderIsReady();
 #if UNITY_EDITOR
                 if (!hide && editorTimeGeneration && Application.isPlaying == false)
                 {
@@ -1051,6 +1061,54 @@ namespace UMA.CharacterSystem
                 {
                     ToggleHide(hide);
                 }
+        }
+
+        private void DeferColliderlessRootRigidbody()
+        {
+            if (!Application.isPlaying)
+                return;
+
+            Rigidbody rootRigidbody = GetComponent<Rigidbody>();
+            if (rootRigidbody == null || rootRigidbody.isKinematic ||
+                HasUsableCollider(rootRigidbody))
+            {
+                return;
+            }
+
+            deferredRootRigidbody = rootRigidbody;
+            deferredRootRigidbodyKinematicState = rootRigidbody.isKinematic;
+            rootRigidbody.isKinematic = true;
+        }
+
+        private void RestoreRootRigidbodyWhenColliderIsReady()
+        {
+            if (deferredRootRigidbody == null ||
+                !HasUsableCollider(deferredRootRigidbody))
+            {
+                return;
+            }
+
+            deferredRootRigidbody.isKinematic =
+                deferredRootRigidbodyKinematicState;
+            deferredRootRigidbody = null;
+            rootColliderBuffer.Clear();
+        }
+
+        private bool HasUsableCollider(Rigidbody rootRigidbody)
+        {
+            rootColliderBuffer.Clear();
+            GetComponentsInChildren(true, rootColliderBuffer);
+            for (int i = 0; i < rootColliderBuffer.Count; i++)
+            {
+                Collider candidate = rootColliderBuffer[i];
+                if (candidate != null && candidate.enabled && !candidate.isTrigger &&
+                    candidate.attachedRigidbody == rootRigidbody)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         protected override void OnDestroy()

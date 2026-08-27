@@ -99,30 +99,38 @@ namespace UMA.TexturePaint.Examples
                 if (!mask) for (int i = 0; i < channels.Count; i++)
                     buffers[channels[i]] = new Color32[width * rows];
                 Color32[] maskPixels = mask ? new Color32[width * rows] : null;
-                for (int ly = 0; ly < rows; ly++)
-                for (int x = 0; x < width; x++)
+                Parallel.For(0, rows, new ParallelOptions
+                    { CancellationToken = c.cancellationToken }, ly =>
                 {
-                    Vector2 uv = Rotate(new Vector2((x + .5f) / width, (y0 + ly + .5f) / height), s.rotation);
-                    Sample sample = SampleMode(s, uv, pattern, atlas);
-                    int index = ly * width + x;
-                    if (mask) { byte m = B(sample.coverage); maskPixels[index] = new Color32(m, m, m, 255); }
-                    else for (int i = 0; i < channels.Count; i++)
+                    for (int x = 0; x < width; x++)
                     {
-                        TexturePaintChannel channel = channels[i];
-                        buffers[channel][index] = channel switch
+                        Vector2 uv = Rotate(new Vector2((x + .5f) / width,
+                            (y0 + ly + .5f) / height), s.rotation);
+                        Sample sample = SampleMode(s, uv, pattern, atlas);
+                        int index = ly * width + x;
+                        if (mask)
                         {
-                            TexturePaintChannel.Albedo => sample.color,
-                            TexturePaintChannel.Roughness => Gray(sample.roughness),
-                            TexturePaintChannel.Metallic => Gray(sample.metallic),
-                            TexturePaintChannel.AmbientOcclusion => Gray(sample.ao),
-                            _ => Gray(Mathf.Clamp01(.5f + sample.height))
-                        };
+                            byte m = B(sample.coverage);
+                            maskPixels[index] = new Color32(m, m, m, 255);
+                        }
+                        else for (int i = 0; i < channels.Count; i++)
+                        {
+                            TexturePaintChannel channel = channels[i];
+                            buffers[channel][index] = channel switch
+                            {
+                                TexturePaintChannel.Albedo => sample.color,
+                                TexturePaintChannel.Roughness => Gray(sample.roughness),
+                                TexturePaintChannel.Metallic => Gray(sample.metallic),
+                                TexturePaintChannel.AmbientOcclusion => Gray(sample.ao),
+                                _ => Gray(Mathf.Clamp01(.5f + sample.height))
+                            };
+                        }
                     }
-                }
+                });
                 RectInt rect = new RectInt(0, y0, width, rows);
-                if (mask) c.WriteMaskTileCompact(id, rect, maskPixels, TexturePaintPluginBlend.Replace);
+                if (mask) c.WriteMaskTileCompactOwned(id, rect, maskPixels, TexturePaintPluginBlend.Replace);
                 else foreach (KeyValuePair<TexturePaintChannel, Color32[]> pair in buffers)
-                    c.WriteTileCompact(id, pair.Key, rect, pair.Value,
+                    c.WriteTileCompactOwned(id, pair.Key, rect, pair.Value,
                         TexturePaintChannelUtility.IsColor(pair.Key) ? TexturePaintPluginColorSpace.Linear : TexturePaintPluginColorSpace.Data,
                         TexturePaintPluginBlend.Replace);
                 c.progress?.Report((si + (y0 + rows) / (float)height) / surfaces);

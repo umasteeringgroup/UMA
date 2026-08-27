@@ -250,7 +250,11 @@ namespace UMA
                 }
                 else
                 {
-                    relPath = UMAPathUtility.ResolveInstallAssetPath(relPath);
+                    relPath = relPath.StartsWith("SRP/",
+                        StringComparison.OrdinalIgnoreCase)
+                        ? UMAPathUtility.ResolveSrpAssetPath(
+                            relPath.Substring("SRP/".Length))
+                        : UMAPathUtility.ResolveInstallAssetPath(relPath);
                 }
             }
 
@@ -278,7 +282,11 @@ namespace UMA
                         !attempt.StartsWith("Packages/", StringComparison.OrdinalIgnoreCase))
                         attempt = mustStartWithAssets
                             ? Path.Combine("Assets", attempt).Replace('\\', '/')
-                            : UMAPathUtility.ResolveInstallAssetPath(attempt);
+                            : attempt.StartsWith("SRP/",
+                                StringComparison.OrdinalIgnoreCase)
+                                ? UMAPathUtility.ResolveSrpAssetPath(
+                                    attempt.Substring("SRP/".Length))
+                                : UMAPathUtility.ResolveInstallAssetPath(attempt);
                     string fullAttempt = UMAPathUtility.ResolveAbsolutePath(attempt);
                     if (Directory.Exists(fullAttempt)) startPath = fullAttempt;
                 }

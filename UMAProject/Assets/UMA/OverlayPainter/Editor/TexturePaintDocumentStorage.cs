@@ -248,6 +248,8 @@ namespace UMA.TexturePaint.Editor
                         umaChannelIndex = channel.umaChannelIndex,
                         renderTextureFormat = channel.format,
                         sRGB = channel.sRGB,
+                        adjustments = channel.adjustments?.Clone() ??
+                            new TexturePaintChannelAdjustments(),
                         // Documents persist the painter's linear working pixels. The channel's
                         // sRGB flag is output metadata and must not reinterpret those bytes.
                         pixels = Capture(channel.editable.Front, channel.editable.Front.sRGB)
@@ -284,6 +286,7 @@ namespace UMA.TexturePaint.Editor
                 set.normalControlStrength = Mathf.Clamp(saved.normalControlStrength, 0f, 16f);
                 set.normalControlRadius = Mathf.Clamp(saved.normalControlRadius, 1, 16);
                 set.normalControlInvert = saved.normalControlInvert;
+                RestoreChannelAdjustments(saved, set);
                 TexturePaintSurfaceFingerprint current = TexturePaintSurfaceFingerprintUtility.Compute(set.surface?.mesh);
                 bool uvChanged = !string.IsNullOrEmpty(saved.uvSignature) &&
                     !string.Equals(saved.uvSignature, current.uv, StringComparison.Ordinal);
@@ -463,6 +466,8 @@ namespace UMA.TexturePaint.Editor
                         umaChannelIndex = current.umaChannelIndex,
                         renderTextureFormat = current.format,
                         sRGB = current.sRGB,
+                        adjustments = current.adjustments?.Clone() ??
+                            new TexturePaintChannelAdjustments(),
                         pixels = pixels
                     });
                 }
@@ -574,6 +579,9 @@ namespace UMA.TexturePaint.Editor
                 pluginStale = layer.pluginStale,
                 pluginLastError = layer.pluginLastError,
                 proceduralGroupKey = layer.proceduralGroupKey,
+                sourceMaterialPresetId = layer.sourceMaterialPresetId,
+                sourceMaterialPresetRevision = layer.sourceMaterialPresetRevision,
+                sourceMaterialPresetLayerId = layer.sourceMaterialPresetLayerId,
                 hasMask = layer.layerMask?.target != null,
                 maskBaseValue = layer.layerMask?.baseValue ?? 1f,
                 maskEffects = layer.layerMask?.effects?.Clone() ?? new TexturePaintLayerMaskEffects(),
@@ -627,6 +635,8 @@ namespace UMA.TexturePaint.Editor
                         umaChannelIndex = channel.umaChannelIndex,
                         renderTextureFormat = channel.renderTextureFormat,
                         sRGB = channel.sRGB,
+                        adjustments = channel.adjustments?.Clone() ??
+                            new TexturePaintChannelAdjustments(),
                         pixels = ClonePixels(channel.pixels)
                     });
                 }
@@ -663,6 +673,9 @@ namespace UMA.TexturePaint.Editor
                 pluginStale = source.pluginStale,
                 pluginLastError = source.pluginLastError,
                 proceduralGroupKey = source.proceduralGroupKey,
+                sourceMaterialPresetId = source.sourceMaterialPresetId,
+                sourceMaterialPresetRevision = source.sourceMaterialPresetRevision,
+                sourceMaterialPresetLayerId = source.sourceMaterialPresetLayerId,
                 hasMask = source.hasMask,
                 maskBaseValue = source.maskBaseValue,
                 maskEffects = source.maskEffects?.Clone() ?? new TexturePaintLayerMaskEffects(),
@@ -796,6 +809,20 @@ namespace UMA.TexturePaint.Editor
             }
         }
 
+        private static void RestoreChannelAdjustments(TexturePaintDocumentSurface saved, TextureSet set)
+        {
+            if (saved?.baseChannels == null || set == null) return;
+            for (int i = 0; i < saved.baseChannels.Count; i++)
+            {
+                TexturePaintDocumentChannel channel = saved.baseChannels[i];
+                TextureChannelTarget target = channel != null ? set.GetChannel(channel.channel) : null;
+                if (target == null) continue;
+                target.adjustments = channel.adjustments?.Clone() ??
+                    new TexturePaintChannelAdjustments();
+                target.adjustments.Normalize();
+            }
+        }
+
         private static void RestoreLayer(TexturePaintDocumentLayer saved, TextureSet set)
         {
             TexturePaintLayer layer = set.AddLayer(saved.name);
@@ -824,6 +851,9 @@ namespace UMA.TexturePaint.Editor
             layer.pluginStale = saved.pluginStale;
             layer.pluginLastError = saved.pluginLastError;
             layer.proceduralGroupKey = saved.proceduralGroupKey;
+            layer.sourceMaterialPresetId = saved.sourceMaterialPresetId;
+            layer.sourceMaterialPresetRevision = saved.sourceMaterialPresetRevision;
+            layer.sourceMaterialPresetLayerId = saved.sourceMaterialPresetLayerId;
             layer.NormalizeKindPayload();
             layer.strokes.AddRange(CloneStrokes(saved.strokes));
             for (int i = 0; i < saved.channels.Count; i++)
@@ -923,6 +953,9 @@ namespace UMA.TexturePaint.Editor
                 layer.pluginLastError = source.kind == TexturePaintLayerKind.Plugin
                     ? null : source.pluginLastError;
                 layer.proceduralGroupKey = source.proceduralGroupKey;
+                layer.sourceMaterialPresetId = source.sourceMaterialPresetId;
+                layer.sourceMaterialPresetRevision = source.sourceMaterialPresetRevision;
+                layer.sourceMaterialPresetLayerId = source.sourceMaterialPresetLayerId;
                 layer.NormalizeKindPayload();
                 layer.strokes.AddRange(CloneStrokes(source.strokes));
                 if (source.hasMask)

@@ -5,23 +5,27 @@ using UnityEngine;
 
 namespace UMA.TexturePaint.Examples
 {
-    public sealed class DirtifyGeneratorPlugin : ScriptableObject, ITexturePaintGeneratorV2
+    public sealed class DirtifyGeneratorPlugin : ScriptableObject, ITexturePaintGeneratorV2,
+        ITexturePaintGpuGeneratorV2
     {
         private static readonly TexturePaintPluginDescriptor descriptor =
             WeatheringGeneratorEngine.CreateDescriptor(WeatheringMode.Dirt);
 
         public TexturePaintPluginDescriptor Descriptor => descriptor;
+        public string GpuKernelName => "CSDirtify";
 
         public Task ExecuteAsync(TexturePaintCommandContextV2 context) =>
             WeatheringGeneratorEngine.ExecuteAsync(context, WeatheringMode.Dirt);
     }
 
-    public sealed class EdgeWearGeneratorPlugin : ScriptableObject, ITexturePaintGeneratorV2
+    public sealed class EdgeWearGeneratorPlugin : ScriptableObject, ITexturePaintGeneratorV2,
+        ITexturePaintGpuGeneratorV2
     {
         private static readonly TexturePaintPluginDescriptor descriptor =
             WeatheringGeneratorEngine.CreateDescriptor(WeatheringMode.EdgeWear);
 
         public TexturePaintPluginDescriptor Descriptor => descriptor;
+        public string GpuKernelName => "CSEdgeWear";
 
         public Task ExecuteAsync(TexturePaintCommandContextV2 context) =>
             WeatheringGeneratorEngine.ExecuteAsync(context, WeatheringMode.EdgeWear);
@@ -115,7 +119,8 @@ namespace UMA.TexturePaint.Examples
                 pluginVersion = "1.0.0",
                 capabilities = TexturePaintPluginCapability.Generator |
                                TexturePaintPluginCapability.ReadsMeshMaps |
-                               TexturePaintPluginCapability.LongRunning,
+                               TexturePaintPluginCapability.LongRunning |
+                               TexturePaintPluginCapability.GpuAccelerated,
                 declaredChannels = dirt
                     ? TexturePaintChannelMask.Albedo | TexturePaintChannelMask.Roughness |
                       TexturePaintChannelMask.AmbientOcclusion |
@@ -135,6 +140,12 @@ namespace UMA.TexturePaint.Examples
         }
 
         public static Task ExecuteAsync(TexturePaintCommandContextV2 context, WeatheringMode mode)
+        {
+            if (context == null) throw new ArgumentNullException(nameof(context));
+            return Task.Run(() => Execute(context, mode), context.cancellationToken);
+        }
+
+        private static void Execute(TexturePaintCommandContextV2 context, WeatheringMode mode)
         {
             Settings settings = new Settings(context.parameters, mode);
             TexturePaintReadOnlyParameterTexture texture =
@@ -180,7 +191,6 @@ namespace UMA.TexturePaint.Examples
             }
 
             context.progress?.Report(1f);
-            return Task.CompletedTask;
         }
 
         private static OutputBuffers Generate(SurfaceInputs inputs, Settings settings,
@@ -192,17 +202,10 @@ namespace UMA.TexturePaint.Examples
             var output = new OutputBuffers(width * rowCount);
             float radiusU = settings.featureSize / Mathf.Max(1f, width);
             float radiusV = settings.featureSize / Mathf.Max(1f, height);
-            for (int localY = 0; localY < rowCount; localY++)
+            Parallel.For(0, rowCount, new ParallelOptions
+                { CancellationToken = context.cancellationToken }, localY =>
             {
                 int y = yStart + localY;
-                if ((y & 31) == 0)
-                {
-                    context.cancellationToken.ThrowIfCancellationRequested();
-                    context.progress?.Report(0.25f + 0.7f *
-                        ((surfaceIndex + y / (float)Mathf.Max(1, height)) /
-                         Mathf.Max(1, surfaceCount)));
-                }
-
                 float v = (y + 0.5f) / height;
                 for (int x = 0; x < width; x++)
                 {
@@ -252,7 +255,7 @@ namespace UMA.TexturePaint.Examples
                     else
                         output.metallic[index] = Scalar(settings.metallic, coverage);
                 }
-            }
+            });
             return output;
         }
 
@@ -298,7 +301,7 @@ namespace UMA.TexturePaint.Examples
             if (pixels == null) return;
             TexturePaintPluginColorSpace colorSpace = target.channel == TexturePaintChannel.Albedo
                 ? TexturePaintPluginColorSpace.Linear : TexturePaintPluginColorSpace.Data;
-            context.WriteTileCompact(surfaceId, target.channel,
+            context.WriteTileCompactOwned(surfaceId, target.channel,
                 new RectInt(0, yStart, target.width, rowCount), pixels, colorSpace,
                 TexturePaintPluginBlend.Normal, 1f);
         }
@@ -341,8 +344,8 @@ namespace UMA.TexturePaint.Examples
             {
                 Enum("projection", "Projection", new[] { "UV", "World Triplanar" }, 1,
                     "Projection used by optional textures, masks, and fractal breakup."),
-                Float("textureScale", "Texture Scale", 0.05f, 100f, 4f,
-                    "UV repeats or world-space repeats per model unit for optional textures."),
+                Float("textureScale", "Texture Frequency", 0.05f, 100f, 4f,
+                    "Optional-texture repetitions per UV tile, or per meter in World Triplanar mode (Unity 1 unit = 1 meter)."),
                 Integer("seed", "Seed", 0, 100000, dirt ? 317 : 719,
                     "Changes the deterministic fractal pattern."),
                 Float("normalCurvature", "Normal Detail Influence", 0f, 4f, 1f,
@@ -365,8 +368,8 @@ namespace UMA.TexturePaint.Examples
                          : "Prevents edge wear from spreading into occluded cavities."),
                 Float("breakup", "Fractal Breakup", 0f, 1f, dirt ? 0.62f : 0.52f,
                     "Breaks coverage into irregular islands using multi-level fractal noise."),
-                Float("breakupScale", "Fractal Scale", 0.25f, 256f, dirt ? 22f : 34f,
-                    "Base frequency of the fractal breakup."),
+                Float("breakupScale", "Fractal Frequency", 0.25f, 256f, dirt ? 22f : 34f,
+                    "Base noise repetitions per UV tile, or per meter in World Triplanar mode."),
                 Integer("fractalLevels", "Fractal Levels", 1, 8, 4,
                     "Number of noise octaves; more levels add progressively smaller breakup."),
                 Float("fractalPersistence", "Fractal Level Strength", 0.1f, 0.9f, 0.5f,

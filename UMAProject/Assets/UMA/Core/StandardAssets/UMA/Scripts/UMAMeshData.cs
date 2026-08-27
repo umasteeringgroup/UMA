@@ -60,6 +60,7 @@ namespace UMA
 
 	[SerializeField]
     private int[] triangles;
+    [NonSerialized]
     public NativeArray<int> nativeTriangles;
 
     public SubMeshTriangles()
@@ -586,6 +587,7 @@ namespace UMA
 	}
 
 
+	[Serializable]
 	public class MeshDetails
 	{
 		public Vector3[] vertices;
@@ -641,6 +643,7 @@ namespace UMA
 		public Matrix4x4[] bindPoses;
 		public UMABoneWeight[] boneWeights;
 		public UMABlendShape[] blendShapes;
+		[NonSerialized]
 		public ClothSkinningCoefficient[] clothSkinning;
 		public Vector2[] clothSkinningSerialized;
 		public SubMeshTriangles[] submeshes;

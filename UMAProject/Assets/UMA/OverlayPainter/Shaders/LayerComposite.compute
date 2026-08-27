@@ -8,6 +8,7 @@
 #pragma kernel CSApplyGroupMask
 #pragma kernel CSApplyIsolatedLayer
 #pragma kernel CSUnassociateAlpha
+#pragma kernel CSApplyChannelAdjustments
 #pragma kernel CSClear
 
 Texture2D<float4> _Base;
@@ -19,6 +20,7 @@ RWTexture2D<float2> _EffectSeedsWrite;
 Texture2D<float> _EffectDistanceRead;
 RWTexture2D<float> _EffectDistanceWrite;
 Texture2D<float4> _EffectCurveTexture;
+Texture2D<float4> _AdjustmentCurveTexture;
 Texture2D<float4> _EffectTexture1;
 Texture2D<float4> _EffectTexture2;
 SamplerState sampler_linear_repeat;
@@ -69,6 +71,8 @@ float _EffectSaturation;
 float _EffectBrightness;
 float _EffectContrast;
 float _EffectHue;
+float _EffectVibrance;
+float3 _EffectColorBalance;
 int _EffectBlendMode;
 int _HasEffectTexture1;
 int _HasEffectTexture2;
@@ -382,10 +386,17 @@ float3 ApplyImageAdjustments(float3 color)
     float3 adjusted = color;
     if (_GrayscaleChannel == 0)
     {
+        adjusted = saturate(adjusted + _EffectColorBalance);
         float3 hsv = EffectRGBToHSV(saturate(adjusted));
         hsv.x = frac(hsv.x + _EffectHue / 360.0);
         adjusted = EffectHSVToRGB(hsv);
         float luminance = dot(adjusted, float3(0.2126, 0.7152, 0.0722));
+        float maximum = max(adjusted.r, max(adjusted.g, adjusted.b));
+        float minimum = min(adjusted.r, min(adjusted.g, adjusted.b));
+        float chroma = maximum > 0.00001 ? (maximum - minimum) / maximum : 0.0;
+        float vibranceScale = 1.0 + (_EffectVibrance >= 0.0
+            ? _EffectVibrance * (1.0 - chroma) : _EffectVibrance);
+        adjusted = lerp(luminance.xxx, adjusted, vibranceScale);
         adjusted = lerp(luminance.xxx, adjusted, _EffectSaturation);
     }
     else
@@ -395,6 +406,28 @@ float3 ApplyImageAdjustments(float3 color)
     adjusted += _EffectBrightness;
     adjusted = (adjusted - 0.5) * (1.0 + _EffectContrast) + 0.5;
     return saturate(adjusted);
+}
+
+float SampleAdjustmentCurve(float grayscaleValue)
+{
+    int curvePixel = clamp((int)round(saturate(grayscaleValue) * 255.0), 0, 255);
+    return saturate(_AdjustmentCurveTexture.Load(int3(curvePixel, 0, 0)).r);
+}
+
+[numthreads(16, 16, 1)]
+void CSApplyChannelAdjustments(uint3 dispatchID : SV_DispatchThreadID)
+{
+    if (any(dispatchID.xy >= (uint2)_DispatchSize)) return;
+    int2 pixel = int2(dispatchID.xy) + _TileOffset;
+    if (any(pixel < 0) || any(pixel >= _TextureSize)) return;
+    float4 source = _Layer.Load(int3(pixel, 0));
+    float3 adjusted = ApplyImageAdjustments(source.rgb);
+    if (_GrayscaleChannel != 0)
+    {
+        float originalValue = dot(source.rgb, float3(0.2126, 0.7152, 0.0722));
+        adjusted = lerp(originalValue.xxx, adjusted, SampleAdjustmentCurve(originalValue));
+    }
+    _Composite[pixel] = float4(adjusted, source.a);
 }
 
 [numthreads(16, 16, 1)]

@@ -2,11 +2,15 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Security.Cryptography;
 using UMA.CharacterSystem;
 using UMA.Editors;
+using UMA.Editors.PackageSupport;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace UMA
 {
@@ -14,6 +18,62 @@ namespace UMA
     public class WelcomeToUMA : EditorWindow
     {
         private const string WhatsNewDocumentPath = "Docs/!WhatsNewInUMA3.md";
+        private const string UrpPackageName = "com.unity.render-pipelines.universal";
+        private const string HdrpPackageName = "com.unity.render-pipelines.high-definition";
+        private const string UmaUrpPackagePath = "SRP/UMAURP.unitypackage";
+        private const string UmaHdrpPackagePath = "SRP/UMAHDRP.unitypackage";
+        private const string LegacySrpRoot = UMAPathUtility.ProjectSrpRoot;
+        private const string UrpInstalledMarker = "UMAURPInstalled.json";
+        private const string HdrpInstalledMarker = "UMAHDRPInstalled.json";
+        private const string UrpContentManifest = "UMAURPManifest.json";
+        private const string HdrpContentManifest = "UMAHDRPManifest.json";
+        private const string PendingSrpImportKey = "UMA.PendingSrpImport";
+        private const double RequiredSrpCheckInterval = 2d;
+        private const double PendingImportRecoverySeconds = 300d;
+        private static double nextRequiredSrpCheck;
+        private static double nextPendingImportCheck;
+
+        private enum SrpSupport
+        {
+            None,
+            Urp,
+            Hdrp,
+            Both
+        }
+
+        [Serializable]
+        private sealed class SrpInstallMarker
+        {
+            public string pipeline;
+            public string sourceHash;
+            public string umaVersion;
+            public string installedUtc;
+        }
+
+        [Serializable]
+        private sealed class PendingSrpImport
+        {
+            public string pipeline;
+            public string sourceHash;
+            public string backupFolder;
+            public string archiveFileName;
+            public string expectedPackageName;
+            public string startedUtc;
+            public string[] sharedPaths;
+            public bool hadPreviousSrp;
+            public bool restoreInstallerArchives;
+        }
+
+        private sealed class ArchiveHashCache
+        {
+            public long length;
+            public long lastWriteUtcTicks;
+            public string hash;
+        }
+
+        private static readonly Dictionary<string, ArchiveHashCache>
+            ArchiveHashes = new Dictionary<string, ArchiveHashCache>(
+                StringComparer.OrdinalIgnoreCase);
 
         public static WelcomeToUMA Instance
         {
@@ -22,7 +82,20 @@ namespace UMA
 
         static WelcomeToUMA()
         {
+            AssetDatabase.importPackageCompleted += OnSrpPackageImportCompleted;
+            AssetDatabase.importPackageCancelled += OnSrpPackageImportCancelled;
+            AssetDatabase.importPackageFailed += OnSrpPackageImportFailed;
+            EditorApplication.delayCall += ResumePendingSrpImport;
             EditorApplication.delayCall += DelayedCall;
+            EditorApplication.update += EnforceRequiredSrpSelection;
+            EditorApplication.projectChanged += SrpProjectChanged;
+        }
+
+        private static void SrpProjectChanged()
+        {
+            nextRequiredSrpCheck = 0d;
+            EditorApplication.update -= EnforceRequiredSrpSelection;
+            EditorApplication.update += EnforceRequiredSrpSelection;
         }
 
         static void DelayedCall()
@@ -47,11 +120,37 @@ namespace UMA
                 EditorApplication.update -= Update;
                 return;
             }
-            if (settings.showWelcomeToUMA)
+            if (settings.showWelcomeToUMA ||
+                RequiresUma3ContentInstallation() ||
+                RequiresSrpSelection(GetInstalledSrpSupport()) ||
+                IsInstalledSrpUpdateAvailable())
             {
                 ShowWindow();
             }
             EditorApplication.update -= Update;
+        }
+
+        private static void EnforceRequiredSrpSelection()
+        {
+            if (Application.isBatchMode || EditorApplication.isCompiling ||
+                EditorApplication.isUpdating || EditorApplication.timeSinceStartup < nextRequiredSrpCheck)
+                return;
+
+            nextRequiredSrpCheck = EditorApplication.timeSinceStartup + RequiredSrpCheckInterval;
+            if (!RequiresSrpSelection(GetInstalledSrpSupport()))
+                return;
+            if (Instance != null)
+                return;
+
+            ShowWindow();
+            EditorApplication.delayCall += () =>
+            {
+                if (Instance != null && Instance.initialized)
+                {
+                    Instance.DoContentPackagesPage();
+                    Instance.Repaint();
+                }
+            };
         }
 
         [MenuItem("UMA/Welcome to UMA", false, 0)]
@@ -152,6 +251,7 @@ namespace UMA
         public GUIStyle Hyperlink;
         public GUIStyle DescriptionStyle;
         public GUIStyle SceneTitleStyle;
+        private GUIStyle informationButtonStyle;
 
         public Rect HeaderRect;
         public Rect NavigationRect;
@@ -160,6 +260,7 @@ namespace UMA
         public int currentButton;
         private Vector2 scrollPosition;
         private bool projectScanHasRun;
+        private bool pageInitialized;
         public bool processing = false;
         public bool initialized = false;
 
@@ -174,6 +275,7 @@ namespace UMA
         public void OnEnable()
         {
             Instance = this;
+            pageInitialized = false;
         }
 
         public void OnDisable()
@@ -190,49 +292,6 @@ namespace UMA
         {
             try
             {
-                ActiveLargeStyle = new GUIStyle(EditorStyles.largeLabel);
-                ActiveLargeStyle.richText = true;
-                ActiveLargeStyle.wordWrap = true;
-                ActiveLargeStyle.fontSize = 32;
-                ActiveLargeStyle.alignment = TextAnchor.MiddleCenter;
-
-                Hyperlink = new GUIStyle(EditorStyles.label);
-                Hyperlink.hover.textColor = Color.cyan;
-                Hyperlink.active.textColor = Color.white;
-                Hyperlink.richText = true;
-                Hyperlink.alignment = TextAnchor.MiddleLeft;
-
-                ErrorFound = new GUIStyle(EditorStyles.label);
-                ErrorFound.normal.textColor = new Color(0.3f, 0, 0, 1);
-                ErrorFound.richText = true;
-                ErrorFound.alignment = TextAnchor.MiddleLeft;
-
-                Warning = new GUIStyle(EditorStyles.label);
-                Warning.normal.textColor = Color.yellow;
-                Warning.richText = true;
-                Warning.alignment = TextAnchor.MiddleLeft;
-
-                InfoStyle = new GUIStyle(EditorStyles.label);
-                InfoStyle.alignment = TextAnchor.MiddleLeft;
-                InfoStyle.richText = true;
-
-                DescriptionStyle = new GUIStyle(EditorStyles.label);
-                DescriptionStyle.wordWrap = true;
-                DescriptionStyle.richText = true;
-                DescriptionStyle.alignment = TextAnchor.UpperLeft;
-
-                SceneTitleStyle = new GUIStyle(EditorStyles.label);
-                SceneTitleStyle.wordWrap = false;
-                SceneTitleStyle.richText = true;
-                SceneTitleStyle.alignment = TextAnchor.UpperLeft;
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"WelcomeToUMA: Failed to initialize styles. {ex.Message}");
-            }
-
-            try
-            {
                 initialSettings = UMASettings.GetOrCreateSettings();
                 displayedSettingsVersion = initialSettings != null
                     ? initialSettings.UMAVersion
@@ -245,8 +304,85 @@ namespace UMA
             }
 
             currentButton = 0;
-            DoWelcome();
+            pageInitialized = false;
             initialized = true;
+            Repaint();
+        }
+
+        private void EnsureStyles()
+        {
+            if (ActiveLargeStyle != null && ErrorFound != null && Warning != null &&
+                InfoStyle != null && Hyperlink != null && DescriptionStyle != null &&
+                SceneTitleStyle != null && informationButtonStyle != null)
+                return;
+
+            // EditorStyles is only reliable while Unity is inside an IMGUI event.
+            // Initializing these from EditorApplication.delayCall can leave every
+            // style null in a newly created project and make the window throw on
+            // each repaint.
+            GUIStyle labelStyle = EditorStyles.label ?? GUI.skin?.label ?? new GUIStyle();
+            GUIStyle largeLabelStyle = EditorStyles.largeLabel ?? labelStyle;
+
+            ActiveLargeStyle = new GUIStyle(largeLabelStyle)
+            {
+                richText = true,
+                wordWrap = true,
+                fontSize = 32,
+                alignment = TextAnchor.MiddleCenter
+            };
+
+            Hyperlink = new GUIStyle(labelStyle)
+            {
+                wordWrap = true,
+                richText = true,
+                alignment = TextAnchor.MiddleLeft
+            };
+            Hyperlink.hover.textColor = Color.cyan;
+            Hyperlink.active.textColor = Color.white;
+
+            ErrorFound = new GUIStyle(labelStyle)
+            {
+                wordWrap = true,
+                richText = true,
+                alignment = TextAnchor.MiddleLeft
+            };
+            ErrorFound.normal.textColor = new Color(0.3f, 0, 0, 1);
+
+            Warning = new GUIStyle(labelStyle)
+            {
+                wordWrap = true,
+                richText = true,
+                alignment = TextAnchor.MiddleLeft
+            };
+            Warning.normal.textColor = Color.yellow;
+
+            InfoStyle = new GUIStyle(labelStyle)
+            {
+                wordWrap = true,
+                richText = true,
+                alignment = TextAnchor.UpperLeft
+            };
+
+            DescriptionStyle = new GUIStyle(labelStyle)
+            {
+                wordWrap = true,
+                richText = true,
+                alignment = TextAnchor.UpperLeft
+            };
+
+            SceneTitleStyle = new GUIStyle(labelStyle)
+            {
+                wordWrap = false,
+                richText = true,
+                alignment = TextAnchor.UpperLeft
+            };
+
+            GUIStyle buttonStyle = GUI.skin?.button ?? new GUIStyle(labelStyle);
+            informationButtonStyle = new GUIStyle(buttonStyle)
+            {
+                wordWrap = true,
+                alignment = TextAnchor.MiddleCenter
+            };
         }
 
         private void StartProcessing()
@@ -266,6 +402,17 @@ namespace UMA
             {
                 Repaint();
                 return;
+            }
+            EnsureStyles();
+            if (!pageInitialized)
+            {
+                pageInitialized = true;
+                currentButton = 0;
+                if (RequiresSrpSelection(GetInstalledSrpSupport()) ||
+                    RequiresUma3ContentInstallation())
+                    DoContentPackagesPage();
+                else
+                    DoWelcome();
             }
             RefreshSettingsReference();
             HeaderRect = new Rect(0, 0, position.width, 50);
@@ -328,7 +475,9 @@ namespace UMA
 
             GUIHelper.BeginInsetArea(PanelColor, HeaderRect, 2, 0, 4);
             var version = settings != null && !string.IsNullOrEmpty(settings.UMAVersion) ? settings.UMAVersion : "UMA";
-            EditorGUILayout.LabelField($"Welcome to {version}", ActiveLargeStyle);
+            GUIStyle headerStyle = ActiveLargeStyle ?? EditorStyles.largeLabel ??
+                EditorStyles.label ?? GUI.skin?.label ?? new GUIStyle();
+            EditorGUILayout.LabelField($"Welcome to {version}", headerStyle);
             GUIHelper.EndInsetArea();
         }
 
@@ -342,6 +491,29 @@ namespace UMA
                 ClearLog();
                 DoWelcome();
                 currentButton = 0;
+            }
+            SrpSupport installedSrp = GetInstalledSrpSupport();
+            string srpButton = RequiresSrpSelection(installedSrp)
+                ? "Install Render Pipeline Support (Required)"
+                : IsInstalledSrpUpdateAvailable()
+                    ? "Update Render Pipeline Support"
+                    : "Render Pipeline Support";
+            if (GUILayout.Button(srpButton, GUILayout.Height(40)))
+            {
+                DoSrpSupportPage();
+            }
+            UMAContentInstallationState uma3InstallationState =
+                UMAContentPackageInstaller.GetState(UMAContentKind.Uma3);
+            bool uma3Ready = uma3InstallationState ==
+                             UMAContentInstallationState.Installed ||
+                             (!UMAPathUtility.IsPackageInstallation &&
+                              UMAPathUtility.IsUma3ContentInstalled);
+            string contentButton = uma3Ready
+                ? "Install / Update UMA Packages"
+                : "Install UMA Packages (Required)";
+            if (GUILayout.Button(contentButton, GUILayout.Height(40)))
+            {
+                DoContentPackagesPage();
             }
             if (GUILayout.Button("Getting Started", GUILayout.Height(40)))
             {
@@ -359,47 +531,52 @@ namespace UMA
                 UMADocumentationWindow.ShowWindow();
             }
 
-            if (GUILayout.Button("Create UMA Character", GUILayout.Height(40)))
+            using (new EditorGUI.DisabledScope(
+                       RequiresSrpSelection(installedSrp) || !uma3Ready))
             {
-                CreateUMACharacter();
-                currentButton = 10;
-            }
-            if (GUILayout.Button("Example Scenes", GUILayout.Height(40)))
-            {
-                ClearLog();
-                scrollPosition = Vector2.zero;
-                currentButton = 8;
-            }
-            if (GUILayout.Button("Rebuild Library", GUILayout.Height(40)))
-            {
-                ClearLog();
-                currentButton = 7;
-                RebuildLibrary();
-            }
-            if (GUILayout.Button("Refresh UMA Shaders", GUILayout.Height(40)))
-            {
-                ClearLog();
-                currentButton = 6;
-                RefreshShaderFolder();
-            }
-            if (GUILayout.Button("Scan UMA 3 Scene", GUILayout.Height(40)))
-            {
-                ClearLog();
-                ScanScene();
-                currentButton = 3;
-            }
-            if (GUILayout.Button("Scan UMA 3 Project", GUILayout.Height(40)))
-            {
-                ClearLog();
-                ScanProject();
-                currentButton = 4;
+                if (GUILayout.Button("Create UMA Character", GUILayout.Height(40)))
+                {
+                    CreateUMACharacter();
+                    currentButton = 10;
+                }
+                if (GUILayout.Button("Example Scenes", GUILayout.Height(40)))
+                {
+                    ClearLog();
+                    scrollPosition = Vector2.zero;
+                    currentButton = 8;
+                }
+                if (GUILayout.Button("Rebuild Library", GUILayout.Height(40)))
+                {
+                    ClearLog();
+                    currentButton = 7;
+                    RebuildLibrary();
+                }
+                if (GUILayout.Button("Refresh UMA Shaders", GUILayout.Height(40)))
+                {
+                    ClearLog();
+                    currentButton = 6;
+                    RefreshShaderFolder();
+                }
+                if (GUILayout.Button("Scan UMA 3 Scene", GUILayout.Height(40)))
+                {
+                    ClearLog();
+                    ScanScene();
+                    currentButton = 3;
+                }
+                if (GUILayout.Button("Scan UMA 3 Project", GUILayout.Height(40)))
+                {
+                    ClearLog();
+                    ScanProject();
+                    currentButton = 4;
+                }
             }
             if (GUILayout.Button("Links", GUILayout.Height(40)))
             {
                 ClearLog();
                 currentButton = 5;
             }
-            if (initialSettings != null && initialSettings.showWelcomeToUMA)
+            if (initialSettings != null && initialSettings.showWelcomeToUMA &&
+                !RequiresSrpSelection(GetInstalledSrpSupport()))
             {
                 if (GUILayout.Button("Don't Show at Startup", GUILayout.Height(30)))
                 {
@@ -581,7 +758,11 @@ namespace UMA
                         "Packages/", StringComparison.OrdinalIgnoreCase);
                 path = isAssetPath
                     ? UMAPathUtility.ResolveLegacyInstallAssetPath(configuredPath)
-                    : UMAPathUtility.ResolveInstallAssetPath(configuredPath);
+                    : configuredPath.StartsWith("SRP/",
+                        StringComparison.OrdinalIgnoreCase)
+                        ? UMAPathUtility.ResolveSrpAssetPath(
+                            configuredPath.Substring("SRP/".Length))
+                        : UMAPathUtility.ResolveInstallAssetPath(configuredPath);
             }
             catch (Exception ex)
             {
@@ -808,7 +989,9 @@ namespace UMA
                 {
                     DrawProjectScanControls();
                 }
-                scrollPosition = GUILayout.BeginScrollView(scrollPosition);
+                scrollPosition = GUILayout.BeginScrollView(scrollPosition,
+                    false, false, GUIStyle.none, GUI.skin.verticalScrollbar,
+                    GUILayout.ExpandWidth(true));
                 ShowLogItems();
                 GUILayout.EndScrollView();
             }
@@ -877,14 +1060,23 @@ namespace UMA
             {
                 if (item == null) continue;
 
+                float reservedWidth = item.logType == LogType.Error ||
+                                      item.logType == LogType.Warning
+                    ? 64f
+                    : 0f;
+                float rowWidth = GetInformationRowWidth(reservedWidth);
+
                 if (item.Image != null)
                 {
                     GUILayout.BeginHorizontal();
                     if (!string.IsNullOrEmpty(item.Message))
                     {
-                        GUILayout.Label(item.Message, InfoStyle);
+                        GUILayout.Label(item.Message, InfoStyle,
+                            GUILayout.ExpandWidth(true),
+                            GUILayout.MaxWidth(rowWidth));
                     }
-                    GUILayout.Label(item.Image, GUILayout.Width(600));
+                    float imageWidth = Mathf.Min(600f, rowWidth);
+                    GUILayout.Label(item.Image, GUILayout.Width(imageWidth));
                     GUILayout.EndHorizontal();
                     continue;
                 }
@@ -901,8 +1093,12 @@ namespace UMA
                 {
                     if (item.ReviewItem != null)
                     {
-                        GUILayout.BeginHorizontal();
-                        if (GUILayout.Button(item.Message ?? string.Empty))
+                        float buttonWidth = Mathf.Max(1f, rowWidth - 100f);
+                        if (GUILayout.Button(item.Message ?? string.Empty,
+                                informationButtonStyle,
+                                GUILayout.ExpandWidth(true),
+                                GUILayout.MaxWidth(buttonWidth),
+                                GUILayout.MinHeight(EditorGUIUtility.singleLineHeight + 6f)))
                         {
                             ButtonAction = item.ButtonAction;
                             ButtonActionLine = item;
@@ -911,11 +1107,14 @@ namespace UMA
                         {
                             PingLine = item;
                         }
-                        GUILayout.EndHorizontal();
                     }
                     else
                     {
-                        if (GUILayout.Button(item.Message ?? string.Empty))
+                        if (GUILayout.Button(item.Message ?? string.Empty,
+                                informationButtonStyle,
+                                GUILayout.ExpandWidth(true),
+                                GUILayout.MaxWidth(rowWidth),
+                                GUILayout.MinHeight(EditorGUIUtility.singleLineHeight + 6f)))
                         {
                             ButtonAction = item.ButtonAction;
                             ButtonActionLine = item;
@@ -924,7 +1123,9 @@ namespace UMA
                 }
                 else
                 {
-                    GUILayout.Label(item.Message ?? string.Empty, item.Style ?? InfoStyle);
+                    GUIStyle style = item.Style ?? InfoStyle;
+                    GUILayout.Label(item.Message ?? string.Empty, style,
+                        GUILayout.ExpandWidth(true), GUILayout.MaxWidth(rowWidth));
                 }
                 GUILayout.EndHorizontal();
             }
@@ -943,6 +1144,13 @@ namespace UMA
                     AddText($"Button action failed: {ex.Message}", LogType.Error);
                 }
             }
+        }
+
+        private float GetInformationRowWidth(float reservedWidth = 0f)
+        {
+            // Account for the inset-area borders, layout spacing, and vertical
+            // scrollbar so wrapped controls never enlarge the scroll view.
+            return Mathf.Max(1f, ContentRect.width - 32f - reservedWidth);
         }
 
         private void PingReviewItem(LogLine line)
@@ -1029,7 +1237,8 @@ namespace UMA
             DynamicCharacterAvatar[] avatars;
             try
             {
-                avatars = FindObjectsByType<DynamicCharacterAvatar>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+                avatars = UMAObjectUtility.FindObjectsByType<DynamicCharacterAvatar>(
+                    FindObjectsInactive.Include);
             }
             catch (Exception ex)
             {
@@ -2428,6 +2637,26 @@ namespace UMA
             AddText("This window links the most useful setup, authoring, maintenance, diagnostics, and documentation workflows in the current UMA editor.");
             AddSeperator();
 
+            SrpSupport installedSrp = GetInstalledSrpSupport();
+            if (RequiresSrpSelection(installedSrp))
+            {
+                AddText(installedSrp == SrpSupport.Both
+                    ? "<b>A single UMA render pipeline must be selected.</b> Replace the combined SRP content with either UMA URP or UMA HDRP support before continuing."
+                    : "<b>Render pipeline support is required.</b> Install either UMA URP or UMA HDRP support before continuing.",
+                    LogType.Warning);
+                LogLine installSrpLine = AddText("Choose UMA URP or HDRP Support");
+                installSrpLine.ButtonAction = line => DoContentPackagesPage();
+                AddSeperator();
+            }
+            else if (IsInstalledSrpUpdateAvailable())
+            {
+                AddText("<b>An updated UMA render-pipeline support package is available.</b>", LogType.Warning);
+                LogLine updateSrpLine = AddText(
+                    "Update UMA Render Pipeline Support");
+                updateSrpLine.ButtonAction = line => DoContentPackagesPage();
+                AddSeperator();
+            }
+
             AddText("<b>Quick start</b>");
             AddText("1. Click <b>Create UMA Character</b> to add and select a Dynamic Character Avatar.");
             AddText("2. Choose a race and enable editor-time generation in the avatar Inspector.");
@@ -2447,6 +2676,1166 @@ namespace UMA
             AddText("The <b>Links</b> page includes the UMA Discord, Wiki, forum, GitHub repository, Asset Store page, and video channel.");
         }
 
+        private static SrpSupport GetInstalledSrpSupport()
+        {
+            bool urpMarker = AssetPathExists(
+                LegacySrpRoot + "/" + UrpInstalledMarker);
+            bool hdrpMarker = AssetPathExists(
+                LegacySrpRoot + "/" + HdrpInstalledMarker);
+            bool urpManifest = AssetPathExists(
+                LegacySrpRoot + "/" + UrpContentManifest);
+            bool hdrpManifest = AssetPathExists(
+                LegacySrpRoot + "/" + HdrpContentManifest);
+            bool urpContent = IsSrpContentValid(SrpSupport.Urp);
+            bool hdrpContent = IsSrpContentValid(SrpSupport.Hdrp);
+
+            // Installer markers and packaged content manifests identify one
+            // authoritative pipeline even when shared assets contain fallback
+            // material references. Pre-manifest copied folders fall back to
+            // the legacy multi-file content checks.
+            bool hasAuthoritativeIdentity = urpMarker || hdrpMarker ||
+                                            urpManifest || hdrpManifest;
+            bool hasUrp = hasAuthoritativeIdentity
+                ? (urpMarker || urpManifest) && urpContent
+                : urpContent;
+            bool hasHdrp = hasAuthoritativeIdentity
+                ? (hdrpMarker || hdrpManifest) && hdrpContent
+                : hdrpContent;
+
+            if (hasUrp && hasHdrp) return SrpSupport.Both;
+            if (hasUrp) return SrpSupport.Urp;
+            return hasHdrp ? SrpSupport.Hdrp : SrpSupport.None;
+        }
+
+        private static bool RequiresSrpSelection(SrpSupport support)
+        {
+            if (support == SrpSupport.None || support == SrpSupport.Both)
+                return true;
+
+            SrpSupport active = GetActiveSrpSupport();
+            return (active == SrpSupport.Urp || active == SrpSupport.Hdrp) &&
+                   active != support;
+        }
+
+        private static bool RequiresUma3ContentInstallation()
+        {
+            if (!UMAPathUtility.IsPackageInstallation)
+                return !UMAPathUtility.IsUma3ContentInstalled;
+            return UMAContentPackageInstaller.GetState(UMAContentKind.Uma3) !=
+                   UMAContentInstallationState.Installed;
+        }
+
+        private static SrpSupport GetActiveSrpSupport()
+        {
+            RenderPipelineAsset pipeline = GraphicsSettings.currentRenderPipeline;
+            if (pipeline == null)
+                return SrpSupport.None;
+
+            Type type = pipeline.GetType();
+            string identity = (type.FullName ?? type.Name) + " " +
+                              (type.Assembly.GetName().Name ?? string.Empty);
+            if (identity.IndexOf("HighDefinition", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                identity.IndexOf("HDRenderPipeline", StringComparison.OrdinalIgnoreCase) >= 0)
+                return SrpSupport.Hdrp;
+            if (identity.IndexOf("Universal", StringComparison.OrdinalIgnoreCase) >= 0)
+                return SrpSupport.Urp;
+            return SrpSupport.None;
+        }
+
+        private static bool IsSrpContentValid(SrpSupport support)
+        {
+            string manifestName = support == SrpSupport.Urp
+                ? UrpContentManifest
+                : support == SrpSupport.Hdrp
+                    ? HdrpContentManifest
+                    : null;
+            if (string.IsNullOrEmpty(manifestName))
+                return false;
+
+            string manifestAssetPath = LegacySrpRoot + "/" + manifestName;
+            if (AssetPathExists(manifestAssetPath))
+            {
+                string expected = support == SrpSupport.Urp ? "URP" : "HDRP";
+                return UMASrpPackageArchiveValidator.TryValidateInstalledSupport(
+                    expected, out _);
+            }
+
+            // Backward-compatible validation for manually copied pre-manifest
+            // folders. Multiple independent paths prevent a partial copy from
+            // being accepted as installed support.
+            string[] required = support == SrpSupport.Urp
+                ? new[]
+                {
+                    "Textures/ReallyWhite.png",
+                    "ShaderGraphs/Graphs/UMA3_SkinShader_URP.shadergraph",
+                    "ShaderGraphs/Materials/UMA3_SkinShader_URP.asset"
+                }
+                : new[]
+                {
+                    "HDRPSetup/UMAHDRPSetup.cs",
+                    "HDRPSetup/UMAHDRPSetup.prefab",
+                    "DiffusionProfiles/UMAEye.asset",
+                    "ShaderGraphs/Graphs/UMA3_SkinShader_HDRP.shadergraph"
+                };
+            for (int i = 0; i < required.Length; i++)
+            {
+                if (!AssetPathExists(LegacySrpRoot + "/" + required[i]))
+                    return false;
+            }
+            return true;
+        }
+
+        private static bool AssetPathExists(string assetPath)
+        {
+            try
+            {
+                return File.Exists(UMAPathUtility.ResolveAbsolutePath(assetPath));
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private static bool IsInstalledSrpUpdateAvailable()
+        {
+            SrpSupport installed = GetInstalledSrpSupport();
+            if (installed != SrpSupport.Urp && installed != SrpSupport.Hdrp)
+                return false;
+            if (!TryReadSrpMarker(installed, out SrpInstallMarker marker) ||
+                string.IsNullOrEmpty(marker.sourceHash))
+                return false;
+
+            string archivePath = GetBundledArchiveAbsolutePath(installed);
+            string sourceHash = ComputeArchiveHash(archivePath);
+            return !string.IsNullOrEmpty(sourceHash) &&
+                !string.Equals(sourceHash, marker.sourceHash,
+                    StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool TryReadSrpMarker(SrpSupport support,
+            out SrpInstallMarker marker)
+        {
+            marker = null;
+            string markerName = support == SrpSupport.Urp
+                ? UrpInstalledMarker
+                : support == SrpSupport.Hdrp
+                    ? HdrpInstalledMarker
+                    : null;
+            if (string.IsNullOrEmpty(markerName)) return false;
+
+            try
+            {
+                string path = UMAPathUtility.ResolveAbsolutePath(
+                    LegacySrpRoot + "/" + markerName);
+                if (!File.Exists(path)) return false;
+                marker = JsonUtility.FromJson<SrpInstallMarker>(
+                    File.ReadAllText(path));
+                return marker != null;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private static string GetBundledArchiveAbsolutePath(
+            SrpSupport support)
+        {
+            string relativePath = support == SrpSupport.Urp
+                ? UmaUrpPackagePath
+                : support == SrpSupport.Hdrp
+                    ? UmaHdrpPackagePath
+                    : null;
+            if (string.IsNullOrEmpty(relativePath)) return string.Empty;
+            return UMAPathUtility.ResolveAbsolutePath(
+                UMAPathUtility.ResolveInstallAssetPath(relativePath));
+        }
+
+        private static string ComputeArchiveHash(string archivePath)
+        {
+            if (string.IsNullOrEmpty(archivePath) || !File.Exists(archivePath))
+                return string.Empty;
+
+            try
+            {
+                FileInfo info = new FileInfo(archivePath);
+                if (ArchiveHashes.TryGetValue(archivePath,
+                        out ArchiveHashCache cached) &&
+                    cached.length == info.Length &&
+                    cached.lastWriteUtcTicks == info.LastWriteTimeUtc.Ticks)
+                    return cached.hash;
+
+                string hash;
+                using (FileStream stream = File.OpenRead(archivePath))
+                using (SHA256 sha = SHA256.Create())
+                    hash = BitConverter.ToString(sha.ComputeHash(stream))
+                        .Replace("-", string.Empty).ToLowerInvariant();
+
+                ArchiveHashes[archivePath] = new ArchiveHashCache
+                {
+                    length = info.Length,
+                    lastWriteUtcTicks = info.LastWriteTimeUtc.Ticks,
+                    hash = hash
+                };
+                return hash;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning("[UMA] Could not hash SRP installer archive: " +
+                    ex.Message);
+                return string.Empty;
+            }
+        }
+
+        private void DoSrpSupportPage()
+        {
+            ClearLog();
+            scrollPosition = Vector2.zero;
+            currentButton = 0;
+            AddLargeText("UMA Render Pipeline Support");
+            AddSrpSupportControls();
+        }
+
+        private void AddSrpSupportControls()
+        {
+            SrpSupport installed = GetInstalledSrpSupport();
+            SrpSupport active = GetActiveSrpSupport();
+            AddText(active == SrpSupport.Urp || active == SrpSupport.Hdrp
+                ? "Active project pipeline: <b>" + GetSrpDisplayName(active) + "</b>."
+                : "No active URP or HDRP Render Pipeline Asset was detected.");
+            if (installed == SrpSupport.None)
+            {
+                AddText("<b>No UMA URP or HDRP support is installed.</b>", LogType.Warning);
+                AddText("Choose URP or HDRP below. UMA requires one render-pipeline support folder.");
+            }
+            else if (installed == SrpSupport.Both)
+            {
+                AddText("Both UMA URP and HDRP content were found. UMA requires one selected pipeline; install one package below to replace the combined SRP folder.", LogType.Warning);
+            }
+            else
+            {
+                AddText("Installed UMA support: <b>" +
+                    GetSrpDisplayName(installed) + "</b>.");
+                if ((active == SrpSupport.Urp || active == SrpSupport.Hdrp) &&
+                    active != installed)
+                    AddText("The installed UMA support does not match the active " +
+                        GetSrpDisplayName(active) + " pipeline. Install matching support before using UMA.",
+                        LogType.Error);
+                if (!TryReadSrpMarker(installed, out _))
+                    AddText("This support folder was copied or installed manually. " +
+                        "Use the matching action below once to enable automatic update detection.");
+                else if (IsInstalledSrpUpdateAvailable())
+                    AddText("A newer bundled UMA " +
+                        (installed == SrpSupport.Urp ? "URP" : "HDRP") +
+                        " package is available.", LogType.Warning);
+            }
+
+            AddSeperator();
+            LogLine urpLine = AddText(GetSrpActionLabel(
+                SrpSupport.Urp, installed, "URP"));
+            urpLine.ButtonAction = line => InstallSrpSupport(
+                SrpSupport.Urp, UrpPackageName, "URP");
+            LogLine hdrpLine = AddText(GetSrpActionLabel(
+                SrpSupport.Hdrp, installed, "HDRP"));
+            hdrpLine.ButtonAction = line => InstallSrpSupport(
+                SrpSupport.Hdrp, HdrpPackageName, "HDRP");
+        }
+
+        private void DoContentPackagesPage()
+        {
+            ClearLog();
+            scrollPosition = Vector2.zero;
+            currentButton = 0;
+            AddLargeText("UMA Editable Content Packages");
+            AddText("UMA character content is installed below <b>Assets/UMA</b> so " +
+                "materials, textures, recipes, races, and wardrobe assets remain editable. " +
+                "Core code and tools can remain in the read-only UPM package.");
+            AddSeperator();
+
+            AddText("<b>1. Render Pipeline Support</b>");
+            AddText("Choose exactly one pipeline. These buttons install the bundled UMA " +
+                "URP or HDRP package into the editable Assets/UMA/SRP folder.");
+            AddSrpSupportControls();
+            AddSeperator();
+
+            AddText("<b>2. UMA 3 Content</b>");
+            UMAContentInstallationState uma3State =
+                UMAContentPackageInstaller.GetState(UMAContentKind.Uma3);
+            string uma3Version = UMAContentPackageInstaller.GetInstalledVersion(
+                UMAContentKind.Uma3);
+            AddText(ContentStatusText(UMAContentKind.Uma3, uma3State, uma3Version),
+                uma3State != UMAContentInstallationState.Installed
+                    ? LogType.Warning
+                    : LogType.Info);
+            LogLine uma3Install = AddText(
+                uma3State == UMAContentInstallationState.Missing
+                    ? "Install UMA 3 Content..."
+                    : "Adopt, Update, or Reinstall UMA 3 Content...");
+            uma3Install.ButtonAction = line =>
+                UMAContentPackageInstaller.InstallFromFile(UMAContentKind.Uma3);
+
+            AddSeperator();
+            AddText("<b>3. Optional UMA 2 Legacy Content</b>");
+            UMAContentInstallationState uma2State =
+                UMAContentPackageInstaller.GetState(UMAContentKind.Uma2);
+            string uma2Version = UMAContentPackageInstaller.GetInstalledVersion(
+                UMAContentKind.Uma2);
+            AddText(ContentStatusText(UMAContentKind.Uma2, uma2State, uma2Version),
+                uma2State == UMAContentInstallationState.Installed
+                    ? LogType.Info
+                    : LogType.Warning);
+            LogLine uma2Install = AddText(
+                uma2State == UMAContentInstallationState.Missing
+                    ? "Install Optional UMA 2 Legacy Content..."
+                    : "Adopt, Update, or Reinstall UMA 2 Legacy Content...");
+            uma2Install.ButtonAction = line =>
+                UMAContentPackageInstaller.InstallFromFile(UMAContentKind.Uma2);
+            AddText("Content updates compare the installed manifest with project files. " +
+                "Locally edited files are never replaced without an explicit backup-and-replace decision.");
+        }
+
+        private static string ContentStatusText(UMAContentKind kind,
+            UMAContentInstallationState state, string version)
+        {
+            string name = UMAContentCatalog.DisplayName(kind);
+            switch (state)
+            {
+                case UMAContentInstallationState.Installed:
+                    return "<b>" + name + " " + version + " is installed</b> at " +
+                           UMAContentCatalog.Root(kind) + ".";
+                case UMAContentInstallationState.Unmanaged:
+                    return "<b>" + name + " is present but not currently validated</b> at " +
+                           UMAContentCatalog.Root(kind) +
+                           ". It may be unmanaged, incompatible with this Core version, or " +
+                           "missing a dependency. Select the matching archive to validate " +
+                           "and adopt or update it without silently replacing files.";
+                case UMAContentInstallationState.Installing:
+                    return "<b>" + name + " is currently being installed.</b>";
+                default:
+                    return "<b>" + name + " is not installed.</b> Expected destination: " +
+                           UMAContentCatalog.Root(kind) + ".";
+            }
+        }
+
+        private static string GetSrpDisplayName(SrpSupport support)
+        {
+            return support == SrpSupport.Urp ? "URP" :
+                support == SrpSupport.Hdrp ? "HDRP" : "Unknown";
+        }
+
+        private static string GetSrpActionLabel(SrpSupport target,
+            SrpSupport installed, string displayName)
+        {
+            if (installed == target)
+                return (IsInstalledSrpUpdateAvailable() ? "Update" : "Reinstall") +
+                    " UMA " + displayName + " Support";
+            return (installed == SrpSupport.None ? "Install" : "Switch to") +
+                " UMA " + displayName + " Support";
+        }
+
+        private void InstallSrpSupport(SrpSupport support,
+            string pipelinePackageName, string displayName)
+        {
+            SrpSupport active = GetActiveSrpSupport();
+            if ((active == SrpSupport.Urp || active == SrpSupport.Hdrp) &&
+                active != support)
+            {
+                AddText("UMA " + displayName + " support cannot be installed while the active " +
+                    "project pipeline is " + GetSrpDisplayName(active) + ". Change the Render " +
+                    "Pipeline Asset in Project Settings, then try again.", LogType.Error);
+                LogLine graphicsSettingsLine = AddText("Open Graphics Settings");
+                graphicsSettingsLine.ButtonAction = line =>
+                    SettingsService.OpenProjectSettings("Project/Graphics");
+                return;
+            }
+
+            UMAPackageDependencyStatus.Invalidate();
+            if (!UMAPackageDependencyStatus.IsInstalled(pipelinePackageName))
+            {
+                AddText("The Unity " + displayName + " package is not installed. Install it, then try again.", LogType.Warning);
+                LogLine packageManagerLine = AddText("Open UMA Package Dependencies");
+                packageManagerLine.ButtonAction = line =>
+                    UMAPackageDependencyWindow.OpenAndSelect(pipelinePackageName);
+                return;
+            }
+
+            string archiveAbsolutePath = GetBundledArchiveAbsolutePath(support);
+            if (!File.Exists(archiveAbsolutePath))
+            {
+                AddText("UMA could not find the bundled " + displayName +
+                    " package in its SRP folder.", LogType.Error);
+                return;
+            }
+
+            string urpArchive = GetBundledArchiveAbsolutePath(SrpSupport.Urp);
+            string hdrpArchive = GetBundledArchiveAbsolutePath(SrpSupport.Hdrp);
+            if (!UMASrpPackageArchiveValidator.TryValidatePair(urpArchive,
+                    hdrpArchive, out string validationError))
+            {
+                AddText("UMA's bundled render-pipeline installers are invalid: " +
+                    validationError, LogType.Error);
+                return;
+            }
+
+            string destinationDescription = UMAPathUtility.IsPackageInstallation
+                ? "This imports UMA's " + displayName +
+                    " support into the project-owned Assets/UMA/SRP override."
+                : "This replaces Assets/UMA/SRP with UMA's " + displayName +
+                    " content.";
+            if (!EditorUtility.DisplayDialog("Install UMA " + displayName + " Support?",
+                    destinationDescription +
+                    " Existing SRP content is backed up under Library/UMA before replacement. " +
+                    "Both bundled installer archives remain available so you can switch later.",
+                    "Install " + displayName, "Cancel"))
+                return;
+
+            BeginSrpPackageImport(support, archiveAbsolutePath);
+        }
+
+        private static void BeginSrpPackageImport(SrpSupport support,
+            string selectedArchivePath)
+        {
+            PendingSrpImport existing = LoadPendingSrpImport();
+            if (existing != null && !RollbackPendingSrpImport(existing,
+                    "Starting a new SRP support installation.", false))
+                return;
+            if (existing == null && File.Exists(GetPendingSrpImportPath()))
+            {
+                Debug.LogError("[UMA] The saved SRP transaction record is unreadable. " +
+                    "Its backup was left under Library/UMA/SrpInstaller; recover or " +
+                    "remove that transaction before starting another installation.");
+                return;
+            }
+
+            string backupFolder = GetCurrentSrpBackupFolder();
+            try
+            {
+                DeleteDirectoryIfPresent(backupFolder);
+                Directory.CreateDirectory(backupFolder);
+
+                string srpAbsolutePath = UMAPathUtility.ResolveAbsolutePath(
+                    LegacySrpRoot);
+                bool hadPreviousSrp = Directory.Exists(srpAbsolutePath);
+                ThrowIfReparsePoint(srpAbsolutePath,
+                    "UMA SRP destination");
+                if (hadPreviousSrp)
+                {
+                    if (!File.Exists(srpAbsolutePath + ".meta"))
+                        throw new InvalidDataException(
+                            "The existing SRP root has no recoverable folder metadata: " +
+                            srpAbsolutePath + ".meta");
+                    CopyDirectory(srpAbsolutePath,
+                        Path.Combine(backupFolder, "SRP"));
+                    File.Copy(srpAbsolutePath + ".meta",
+                        Path.Combine(backupFolder, "SRP.meta"), true);
+                }
+
+                string selectedArchiveName = Path.GetFileName(selectedArchivePath);
+                string selectedBackupPath = Path.Combine(backupFolder,
+                    selectedArchiveName);
+                File.Copy(selectedArchivePath, selectedBackupPath, true);
+                string pipeline = support == SrpSupport.Urp ? "URP" : "HDRP";
+                if (!UMASrpPackageArchiveValidator.TryValidate(selectedBackupPath,
+                        pipeline, out UMASrpPackageArchiveInfo selectedArchive,
+                        out string copiedArchiveError))
+                    throw new InvalidDataException(
+                        "The copied SRP installer failed validation: " + copiedArchiveError);
+
+                PendingSrpImport pending = new PendingSrpImport
+                {
+                    pipeline = pipeline,
+                    sourceHash = ComputeArchiveHash(selectedBackupPath),
+                    backupFolder = backupFolder,
+                    archiveFileName = selectedArchiveName,
+                    expectedPackageName = Path.GetFileNameWithoutExtension(
+                        selectedArchiveName),
+                    startedUtc = DateTime.UtcNow.ToString("O"),
+                    sharedPaths = selectedArchive.SharedPaths.ToArray(),
+                    hadPreviousSrp = hadPreviousSrp,
+                    restoreInstallerArchives = !UMAPathUtility.IsPackageInstallation
+                };
+                if (string.IsNullOrEmpty(pending.sourceHash))
+                    throw new InvalidDataException(
+                        "The copied SRP installer could not be hashed.");
+                SavePendingSrpImport(pending);
+                DeleteProjectSrpRoot();
+                RestorePendingSrpRootIdentity(pending);
+                RestorePendingSharedContent(pending);
+                AssetDatabase.ImportPackage(selectedBackupPath, false);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError("[UMA] Could not install SRP support: " + ex.Message);
+                PendingSrpImport pending = LoadPendingSrpImport();
+                if (pending != null)
+                    RollbackPendingSrpImport(pending, ex.Message, false);
+                else if (!File.Exists(GetPendingSrpImportPath()))
+                    DeleteDirectoryIfPresent(backupFolder);
+            }
+        }
+
+        private static void OnSrpPackageImportCompleted(string packageName)
+        {
+            PendingSrpImport pending = LoadPendingSrpImport();
+            if (IsPendingPackageEvent(pending, packageName))
+                EditorApplication.delayCall += CompletePendingSrpImport;
+        }
+
+        private static void OnSrpPackageImportCancelled(string packageName)
+        {
+            PendingSrpImport pending = LoadPendingSrpImport();
+            if (IsPendingPackageEvent(pending, packageName))
+                RollbackPendingSrpImport(pending,
+                    "The UMA SRP package import was cancelled.", true);
+        }
+
+        private static void OnSrpPackageImportFailed(string packageName,
+            string errorMessage)
+        {
+            PendingSrpImport pending = LoadPendingSrpImport();
+            if (IsPendingPackageEvent(pending, packageName))
+                RollbackPendingSrpImport(pending,
+                    "The UMA SRP package import failed: " + errorMessage, true);
+        }
+
+        private static void ResumePendingSrpImport()
+        {
+            if (EditorApplication.timeSinceStartup < nextPendingImportCheck)
+                return;
+            nextPendingImportCheck = EditorApplication.timeSinceStartup + 0.5d;
+
+            PendingSrpImport pending = LoadPendingSrpImport();
+            if (pending == null)
+            {
+                EditorApplication.update -= ResumePendingSrpImport;
+                return;
+            }
+            if (EditorApplication.isCompiling || EditorApplication.isUpdating)
+            {
+                EditorApplication.update -= ResumePendingSrpImport;
+                EditorApplication.update += ResumePendingSrpImport;
+                return;
+            }
+            if (PendingContentExists(pending))
+            {
+                EditorApplication.update -= ResumePendingSrpImport;
+                CompletePendingSrpImport();
+                return;
+            }
+
+            if (IsPendingImportWithinRecoveryWindow(pending))
+            {
+                EditorApplication.update -= ResumePendingSrpImport;
+                EditorApplication.update += ResumePendingSrpImport;
+                return;
+            }
+
+            EditorApplication.update -= ResumePendingSrpImport;
+            RollbackPendingSrpImport(pending,
+                "Recovered an interrupted UMA SRP import after the editor restarted.", true);
+        }
+
+        private static bool IsPendingImportWithinRecoveryWindow(
+            PendingSrpImport pending)
+        {
+            return DateTime.TryParse(pending.startedUtc, out DateTime startedUtc) &&
+                   (DateTime.UtcNow - startedUtc.ToUniversalTime()).TotalSeconds <
+                   PendingImportRecoverySeconds;
+        }
+
+        private static void CompletePendingSrpImport()
+        {
+            PendingSrpImport pending = LoadPendingSrpImport();
+            if (pending == null) return;
+            if (EditorApplication.isCompiling || EditorApplication.isUpdating)
+            {
+                EditorApplication.update -= ResumePendingSrpImport;
+                EditorApplication.update += ResumePendingSrpImport;
+                return;
+            }
+            if (!PendingContentExists(pending))
+            {
+                // The package-completed callback can run while Unity is still
+                // importing dependent assets or scheduling a script reload.
+                // Keep the transaction and retry instead of destroying the
+                // just-imported folder on a transient validation result.
+                EditorApplication.update -= ResumePendingSrpImport;
+                EditorApplication.update += ResumePendingSrpImport;
+                return;
+            }
+
+            try
+            {
+                string destinationFolder = UMAPathUtility.ResolveAbsolutePath(
+                    LegacySrpRoot);
+                if (pending.restoreInstallerArchives)
+                    RestoreInstallerArchives(pending.backupFolder,
+                        destinationFolder);
+
+                WriteInstalledSrpMarker(pending, destinationFolder);
+                AssetDatabase.Refresh();
+                PreservePreviousSrpBackup(pending);
+                ErasePendingSrpImport();
+                Debug.Log("[UMA] Installed UMA " + pending.pipeline +
+                    " render-pipeline support in " + LegacySrpRoot + ".");
+                EditorApplication.delayCall += () =>
+                {
+                    if (Instance != null)
+                    {
+                        Instance.DoSrpSupportPage();
+                        Instance.Repaint();
+                    }
+                };
+            }
+            catch (Exception ex)
+            {
+                RollbackPendingSrpImport(pending,
+                    "Could not finish the UMA SRP installation: " + ex.Message,
+                    true);
+            }
+        }
+
+        private static bool PendingContentExists(PendingSrpImport pending)
+        {
+            string archiveName = !string.IsNullOrEmpty(pending.archiveFileName)
+                ? pending.archiveFileName
+                : pending.expectedPackageName + ".unitypackage";
+            string archivePath = Path.Combine(pending.backupFolder, archiveName);
+            if (!File.Exists(archivePath) ||
+                !string.Equals(ComputeFileHashUncached(archivePath),
+                    pending.sourceHash, StringComparison.OrdinalIgnoreCase) ||
+                !UMASrpPackageArchiveValidator.TryValidate(archivePath,
+                    pending.pipeline, out UMASrpPackageArchiveInfo archive, out _) ||
+                !UMASrpPackageArchiveValidator.TryValidateInstalledFiles(
+                    pending.pipeline, archive, out _))
+                return false;
+            if (!pending.hadPreviousSrp)
+                return true;
+            string backupMeta = Path.Combine(pending.backupFolder, "SRP.meta");
+            string installedMeta = UMAPathUtility.ResolveAbsolutePath(LegacySrpRoot) +
+                                   ".meta";
+            return File.Exists(backupMeta) && File.Exists(installedMeta) &&
+                   File.ReadAllBytes(backupMeta).SequenceEqual(
+                       File.ReadAllBytes(installedMeta));
+        }
+
+        private static void RestorePendingSrpRootIdentity(PendingSrpImport pending)
+        {
+            if (!pending.hadPreviousSrp)
+                return;
+            string backupMeta = Path.Combine(pending.backupFolder, "SRP.meta");
+            if (!File.Exists(backupMeta))
+                throw new InvalidDataException(
+                    "The existing SRP root has no recoverable folder metadata.");
+            string destination = UMAPathUtility.ResolveAbsolutePath(LegacySrpRoot);
+            Directory.CreateDirectory(destination);
+            File.Copy(backupMeta, destination + ".meta", true);
+            AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+        }
+
+        private static void RestorePendingSharedContent(PendingSrpImport pending)
+        {
+            string[] sharedPaths = pending.sharedPaths ?? Array.Empty<string>();
+            if (sharedPaths.Length == 0)
+                return;
+
+            string sourceRoot = pending.hadPreviousSrp
+                ? Path.Combine(pending.backupFolder, "SRP")
+                : UMAPathUtility.ResolveAbsolutePath(
+                    UMAPathUtility.ResolveInstallAssetPath("SRP"));
+            if (!Directory.Exists(sourceRoot))
+                throw new DirectoryNotFoundException(
+                    "UMA's shared SRP source folder is missing: " + sourceRoot);
+
+            string destinationRoot = UMAPathUtility.ResolveAbsolutePath(
+                LegacySrpRoot);
+            Directory.CreateDirectory(destinationRoot);
+            foreach (string sharedPath in sharedPaths.OrderBy(path =>
+                         path.Count(character => character == '/')))
+            {
+                string relative = sharedPath.Substring(
+                    (LegacySrpRoot + "/").Length).Replace('/',
+                    Path.DirectorySeparatorChar);
+                string source = Path.GetFullPath(Path.Combine(sourceRoot, relative));
+                string destination = Path.GetFullPath(Path.Combine(
+                    destinationRoot, relative));
+                if (!IsAtOrBelow(source, sourceRoot) ||
+                    !IsAtOrBelow(destination, destinationRoot))
+                {
+                    throw new InvalidDataException(
+                        "Unsafe shared UMA SRP path: " + sharedPath);
+                }
+
+                if (Directory.Exists(source))
+                {
+                    Directory.CreateDirectory(destination);
+                }
+                else if (File.Exists(source))
+                {
+                    Directory.CreateDirectory(Path.GetDirectoryName(destination));
+                    File.Copy(source, destination, true);
+                }
+                else
+                {
+                    throw new FileNotFoundException(
+                        "Shared UMA SRP content is missing.", source);
+                }
+
+                if (!File.Exists(source + ".meta"))
+                    throw new FileNotFoundException(
+                        "Shared UMA SRP importer metadata is missing.",
+                        source + ".meta");
+                File.Copy(source + ".meta", destination + ".meta", true);
+            }
+            AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+        }
+
+        private static bool IsAtOrBelow(string candidate, string root)
+        {
+            string fullCandidate = Path.GetFullPath(candidate).TrimEnd(
+                Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            string fullRoot = Path.GetFullPath(root).TrimEnd(
+                Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            return string.Equals(fullCandidate, fullRoot,
+                       StringComparison.OrdinalIgnoreCase) ||
+                   fullCandidate.StartsWith(fullRoot + Path.DirectorySeparatorChar,
+                       StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool IsPendingPackageEvent(PendingSrpImport pending,
+            string packageName)
+        {
+            if (pending == null)
+                return false;
+            if (string.IsNullOrEmpty(pending.expectedPackageName))
+                return true;
+            string eventName = Path.GetFileNameWithoutExtension(
+                (packageName ?? string.Empty).Replace('\\', '/'));
+            return string.Equals(eventName, pending.expectedPackageName,
+                StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static void WriteInstalledSrpMarker(PendingSrpImport pending,
+            string destinationFolder)
+        {
+            string markerName = string.Equals(pending.pipeline, "URP",
+                StringComparison.OrdinalIgnoreCase)
+                ? UrpInstalledMarker
+                : HdrpInstalledMarker;
+            string otherMarkerName = markerName == UrpInstalledMarker
+                ? HdrpInstalledMarker
+                : UrpInstalledMarker;
+            string otherMarkerPath = Path.Combine(destinationFolder,
+                otherMarkerName);
+            if (File.Exists(otherMarkerPath)) File.Delete(otherMarkerPath);
+            if (File.Exists(otherMarkerPath + ".meta"))
+                File.Delete(otherMarkerPath + ".meta");
+
+            string umaVersion = string.Empty;
+            try
+            {
+                UMASettings settings = UMASettings.GetOrCreateSettings();
+                if (settings != null) umaVersion = settings.UMAVersion;
+            }
+            catch
+            {
+                // The archive hash remains sufficient for upgrade detection.
+            }
+
+            SrpInstallMarker marker = new SrpInstallMarker
+            {
+                pipeline = pending.pipeline,
+                sourceHash = pending.sourceHash,
+                umaVersion = umaVersion,
+                installedUtc = DateTime.UtcNow.ToString("O")
+            };
+            File.WriteAllText(Path.Combine(destinationFolder, markerName),
+                JsonUtility.ToJson(marker, true));
+        }
+
+        private static void RestoreInstallerArchives(string backupFolder,
+            string destinationFolder)
+        {
+            string backupSrp = Path.Combine(backupFolder, "SRP");
+            if (!Directory.Exists(backupSrp)) return;
+            foreach (string archive in Directory.GetFiles(backupSrp,
+                         "*.unitypackage", SearchOption.TopDirectoryOnly))
+            {
+                string destination = Path.Combine(destinationFolder,
+                    Path.GetFileName(archive));
+                File.Copy(archive, destination, true);
+                if (File.Exists(archive + ".meta"))
+                    File.Copy(archive + ".meta", destination + ".meta", true);
+            }
+        }
+
+        private static bool RollbackPendingSrpImport(PendingSrpImport pending,
+            string reason, bool logError)
+        {
+            if (!TryValidatePendingSrpImport(pending, out string pendingError))
+            {
+                Debug.LogError("[UMA] The SRP transaction is unsafe or incomplete. " +
+                    "Its backup was left untouched. " + pendingError);
+                return false;
+            }
+            bool restored = false;
+            try
+            {
+                string backupSrp = Path.Combine(pending.backupFolder, "SRP");
+                string backupMeta = Path.Combine(pending.backupFolder, "SRP.meta");
+                if (pending.hadPreviousSrp &&
+                    (!Directory.Exists(backupSrp) || !File.Exists(backupMeta)))
+                    throw new InvalidDataException(
+                        "The saved UMA SRP backup or its root metadata is missing.");
+                DeleteProjectSrpRoot();
+                if (pending.hadPreviousSrp)
+                {
+                    string destination = UMAPathUtility.ResolveAbsolutePath(
+                        LegacySrpRoot);
+                    CopyDirectory(backupSrp, destination);
+                    File.Copy(backupMeta, destination + ".meta", true);
+                }
+                restored = true;
+            }
+            catch (Exception ex)
+            {
+                reason += " Rollback also failed: " + ex.Message;
+            }
+            finally
+            {
+                if (restored)
+                {
+                    ErasePendingSrpImport();
+                    DeleteDirectoryIfPresent(pending.backupFolder);
+                }
+                AssetDatabase.Refresh();
+            }
+
+            if (logError) Debug.LogError("[UMA] " + reason);
+            else Debug.LogWarning("[UMA] " + reason);
+            return restored;
+        }
+
+        private static PendingSrpImport LoadPendingSrpImport()
+        {
+            string json = string.Empty;
+            string persistentPath = GetPendingSrpImportPath();
+            if (File.Exists(persistentPath))
+            {
+                try
+                {
+                    json = File.ReadAllText(persistentPath);
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+            if (string.IsNullOrEmpty(json))
+                json = SessionState.GetString(PendingSrpImportKey, string.Empty);
+            if (string.IsNullOrEmpty(json)) return null;
+            try
+            {
+                PendingSrpImport pending = JsonUtility.FromJson<PendingSrpImport>(json);
+                return TryValidatePendingSrpImport(pending, out _) ? pending : null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static void SavePendingSrpImport(PendingSrpImport pending)
+        {
+            if (!TryValidatePendingSrpImport(pending, out string error))
+                throw new InvalidDataException(error);
+            string json = JsonUtility.ToJson(pending, true);
+            string persistentPath = GetPendingSrpImportPath();
+            Directory.CreateDirectory(Path.GetDirectoryName(persistentPath));
+            if (File.Exists(persistentPath))
+                throw new IOException("An UMA SRP transaction record already exists.");
+            string temporary = persistentPath + ".new-" +
+                               Guid.NewGuid().ToString("N");
+            try
+            {
+                File.WriteAllText(temporary, json);
+                File.Move(temporary, persistentPath);
+            }
+            finally
+            {
+                if (File.Exists(temporary)) File.Delete(temporary);
+            }
+            SessionState.SetString(PendingSrpImportKey, json);
+        }
+
+        private static bool TryValidatePendingSrpImport(PendingSrpImport pending,
+            out string error)
+        {
+            error = string.Empty;
+            if (pending == null ||
+                (!string.Equals(pending.pipeline, "URP",
+                     StringComparison.OrdinalIgnoreCase) &&
+                 !string.Equals(pending.pipeline, "HDRP",
+                     StringComparison.OrdinalIgnoreCase)) ||
+                !SameFullPath(pending.backupFolder, GetCurrentSrpBackupFolder()) ||
+                string.IsNullOrWhiteSpace(pending.archiveFileName) ||
+                !string.Equals(Path.GetFileName(pending.archiveFileName),
+                    pending.archiveFileName, StringComparison.Ordinal) ||
+                !string.Equals(Path.GetExtension(pending.archiveFileName),
+                    ".unitypackage", StringComparison.OrdinalIgnoreCase) ||
+                !string.Equals(Path.GetFileNameWithoutExtension(
+                        pending.archiveFileName), pending.expectedPackageName,
+                    StringComparison.OrdinalIgnoreCase) ||
+                !IsHex(pending.sourceHash, 64) ||
+                !DateTime.TryParse(pending.startedUtc, out _))
+            {
+                error = "The SRP transaction contains unsafe paths or invalid " +
+                        "integrity metadata.";
+                return false;
+            }
+
+            var sharedPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (string sharedPath in pending.sharedPaths ?? Array.Empty<string>())
+            {
+                if (!IsSafeSharedSrpPath(sharedPath) ||
+                    !sharedPaths.Add(sharedPath))
+                {
+                    error = "The SRP transaction contains an unsafe or duplicate " +
+                            "shared path.";
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        private static bool IsSafeSharedSrpPath(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path) ||
+                !string.Equals(path, path.Trim(), StringComparison.Ordinal) ||
+                path.IndexOf('\\') >= 0 || path.IndexOf(':') >= 0 ||
+                path.Any(char.IsControl) ||
+                path.EndsWith(".unitypackage",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            string textureRoot = LegacySrpRoot + "/Textures";
+            string shaderRoot = LegacySrpRoot + "/ShaderPackages";
+            bool supportedRoot = path.Equals(textureRoot,
+                                     StringComparison.OrdinalIgnoreCase) ||
+                                 path.StartsWith(textureRoot + "/",
+                                     StringComparison.OrdinalIgnoreCase) ||
+                                 path.Equals(shaderRoot,
+                                     StringComparison.OrdinalIgnoreCase) ||
+                                 path.StartsWith(shaderRoot + "/",
+                                     StringComparison.OrdinalIgnoreCase);
+            return supportedRoot && path.Split('/').All(segment =>
+                !string.IsNullOrEmpty(segment) && segment != "." && segment != "..");
+        }
+
+        private static bool SameFullPath(string left, string right)
+        {
+            try
+            {
+                return string.Equals(Path.GetFullPath(left ?? string.Empty)
+                        .TrimEnd(Path.DirectorySeparatorChar,
+                            Path.AltDirectorySeparatorChar),
+                    Path.GetFullPath(right ?? string.Empty)
+                        .TrimEnd(Path.DirectorySeparatorChar,
+                            Path.AltDirectorySeparatorChar),
+                    StringComparison.OrdinalIgnoreCase);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private static bool IsHex(string value, int length)
+        {
+            return !string.IsNullOrEmpty(value) && value.Length == length &&
+                   value.All(Uri.IsHexDigit);
+        }
+
+        private static string ComputeFileHashUncached(string path)
+        {
+            using (FileStream stream = File.OpenRead(path))
+            using (SHA256 sha = SHA256.Create())
+                return BitConverter.ToString(sha.ComputeHash(stream))
+                    .Replace("-", string.Empty).ToLowerInvariant();
+        }
+
+        private static void ErasePendingSrpImport()
+        {
+            SessionState.EraseString(PendingSrpImportKey);
+            string persistentPath = GetPendingSrpImportPath();
+            if (File.Exists(persistentPath))
+                File.Delete(persistentPath);
+        }
+
+        private static string GetSrpInstallerStateRoot()
+        {
+            string projectRoot = Directory.GetParent(Application.dataPath)?.FullName;
+            if (string.IsNullOrEmpty(projectRoot))
+                throw new InvalidOperationException("Unable to resolve the Unity project root.");
+            return Path.Combine(projectRoot, "Library", "UMA", "SrpInstaller");
+        }
+
+        private static string GetPendingSrpImportPath()
+        {
+            return Path.Combine(GetSrpInstallerStateRoot(), "PendingImport.json");
+        }
+
+        private static string GetCurrentSrpBackupFolder()
+        {
+            return Path.Combine(GetSrpInstallerStateRoot(), "CurrentBackup");
+        }
+
+        private static string GetPreviousSrpBackupFolder()
+        {
+            return Path.Combine(GetSrpInstallerStateRoot(), "PreviousBackup");
+        }
+
+        private static void PreservePreviousSrpBackup(PendingSrpImport pending)
+        {
+            if (!pending.hadPreviousSrp || !Directory.Exists(pending.backupFolder))
+            {
+                try
+                {
+                    DeleteDirectoryIfPresent(pending.backupFolder);
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogWarning("[UMA] SRP support installed, but its temporary " +
+                        "transaction folder could not be removed: " + ex.Message);
+                }
+                return;
+            }
+
+            string backupSrp = Path.Combine(pending.backupFolder, "SRP");
+            string backupMeta = Path.Combine(pending.backupFolder, "SRP.meta");
+            if (!Directory.Exists(backupSrp) || !File.Exists(backupMeta))
+                throw new InvalidDataException(
+                    "The current SRP backup is incomplete; the transaction record " +
+                    "was retained.");
+
+            string previousFolder = GetPreviousSrpBackupFolder();
+            string retiredFolder = previousFolder + ".retired-" +
+                                   Guid.NewGuid().ToString("N");
+            bool retired = false;
+            bool promoted = false;
+            try
+            {
+                if (Directory.Exists(previousFolder))
+                {
+                    ThrowIfTreeContainsReparsePoint(previousFolder,
+                        "Previous UMA SRP backup");
+                    Directory.Move(previousFolder, retiredFolder);
+                    retired = true;
+                }
+                Directory.Move(pending.backupFolder, previousFolder);
+                promoted = true;
+                Debug.Log("[UMA] The previous SRP folder is recoverable from " +
+                    previousFolder + ".");
+            }
+            catch
+            {
+                if (promoted && Directory.Exists(previousFolder) &&
+                    !Directory.Exists(pending.backupFolder))
+                    Directory.Move(previousFolder, pending.backupFolder);
+                if (retired && Directory.Exists(retiredFolder) &&
+                    !Directory.Exists(previousFolder))
+                    Directory.Move(retiredFolder, previousFolder);
+                throw;
+            }
+
+            try
+            {
+                DeleteDirectoryIfPresent(retiredFolder);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning("[UMA] The new SRP backup was retained, but an older " +
+                    "retired backup could not be removed: " + ex.Message);
+            }
+        }
+
+        private static void DeleteProjectSrpRoot()
+        {
+            string absolutePath = UMAPathUtility.ResolveAbsolutePath(
+                LegacySrpRoot);
+            string projectRoot = Directory.GetParent(Application.dataPath)?.FullName ??
+                                 string.Empty;
+            string expectedPath = Path.GetFullPath(Path.Combine(projectRoot,
+                LegacySrpRoot));
+            if (!string.Equals(Path.GetFullPath(absolutePath), expectedPath,
+                    StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException(
+                    "Unsafe UMA SRP delete target: " + absolutePath);
+            ThrowIfReparsePoint(absolutePath, "UMA SRP delete target");
+            ThrowIfTreeContainsReparsePoint(absolutePath,
+                "UMA SRP delete target");
+            if (AssetDatabase.IsValidFolder(LegacySrpRoot))
+            {
+                if (!AssetDatabase.DeleteAsset(LegacySrpRoot))
+                    throw new InvalidOperationException(
+                        "Unable to remove " + LegacySrpRoot + ".");
+                return;
+            }
+
+            if (Directory.Exists(absolutePath))
+                Directory.Delete(absolutePath, true);
+            if (File.Exists(absolutePath + ".meta"))
+                File.Delete(absolutePath + ".meta");
+        }
+
+        private static void CopyDirectory(string source, string destination)
+        {
+            ThrowIfReparsePoint(source, "UMA SRP backup source");
+            Directory.CreateDirectory(destination);
+            foreach (string file in Directory.GetFiles(source))
+            {
+                ThrowIfReparsePoint(file, "UMA SRP backup source");
+                File.Copy(file, Path.Combine(destination,
+                    Path.GetFileName(file)), true);
+            }
+            foreach (string directory in Directory.GetDirectories(source))
+                CopyDirectory(directory, Path.Combine(destination,
+                    Path.GetFileName(directory)));
+        }
+
+        private static void ThrowIfReparsePoint(string path, string description)
+        {
+            if ((File.Exists(path) || Directory.Exists(path)) &&
+                (File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0)
+                throw new InvalidOperationException(description +
+                    " cannot be a symbolic link or junction: " + path);
+        }
+
+        private static void DeleteDirectoryIfPresent(string path)
+        {
+            if (string.IsNullOrEmpty(path) || !Directory.Exists(path)) return;
+            ThrowIfTreeContainsReparsePoint(path,
+                "UMA SRP installer working directory");
+            Directory.Delete(path, true);
+        }
+
+        private static void ThrowIfTreeContainsReparsePoint(string path,
+            string description)
+        {
+            if (!Directory.Exists(path)) return;
+            ThrowIfReparsePoint(path, description);
+            foreach (string file in Directory.GetFiles(path))
+                ThrowIfReparsePoint(file, description);
+            foreach (string directory in Directory.GetDirectories(path))
+            {
+                ThrowIfReparsePoint(directory, description);
+                ThrowIfTreeContainsReparsePoint(directory, description);
+            }
+        }
+
         #region LinksButton
         private void ShowLink(string label, string text, string URL)
         {
@@ -2454,7 +3843,8 @@ namespace UMA
             GUILayout.Label(label ?? "Link", EditorStyles.boldLabel, GUILayout.Width(96));
             if (!string.IsNullOrEmpty(URL))
             {
-                if (GUILayout.Button(text ?? "(open)", Hyperlink))
+                if (GUILayout.Button(text ?? "(open)", Hyperlink,
+                        GUILayout.ExpandWidth(true)))
                 {
                     Application.OpenURL(URL);
                 }

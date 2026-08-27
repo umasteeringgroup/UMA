@@ -225,6 +225,7 @@ namespace UMA.PoseTools
         private readonly List<UMABonePose> mergeBonePoseSources = new List<UMABonePose>();
         private UMABonePose mergeBonePoseAddCandidate = null;
         private string persistentStateKeyPrefix = string.Empty;
+        [System.NonSerialized]
         public UMABonePoseEditorContext context = null;
 
         const int BAD_INDEX = -1;
@@ -3024,7 +3025,7 @@ namespace UMA.PoseTools
                 GUILayout.Space(EditorGUIUtility.labelWidth);
                 if (GUILayout.Button("Find UMA in scene"))
                 {
-                    UMAData data = GameObject.FindFirstObjectByType<UMAData>();
+                    UMAData data = GameObject.FindAnyObjectByType<UMAData>();
                     if (data != null)
                     {
                         sourceUMA = data;

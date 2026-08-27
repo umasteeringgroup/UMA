@@ -32,6 +32,7 @@ Shader "Hidden/UMA/TexturePaint/FillGenerator"
             int _SourceKind;
             int _Projection;
             int _TriplanarBlend;
+            int _UseSourceAlpha;
 
             struct Attributes
             {
@@ -101,7 +102,11 @@ Shader "Hidden/UMA/TexturePaint/FillGenerator"
             {
                 if (_SourceKind != 0) return _FillColor;
                 if (_Projection == 0)
-                    return SampleTiled(TransformFillUV(input.uv, float2(0.5, 0.5)));
+                {
+                    float4 sample = SampleTiled(TransformFillUV(input.uv, float2(0.5, 0.5)));
+                    if (_UseSourceAlpha == 0) sample.a = 1.0;
+                    return sample;
+                }
 
                 float3 normal = normalize(input.worldNormal);
                 float3 weights = TriplanarWeights(normal);
@@ -111,9 +116,11 @@ Shader "Hidden/UMA/TexturePaint/FillGenerator"
                 uvX.x *= normal.x < 0.0 ? -1.0 : 1.0;
                 uvY.x *= normal.y < 0.0 ? -1.0 : 1.0;
                 uvZ.x *= normal.z >= 0.0 ? -1.0 : 1.0;
-                return SampleTiled(uvX) * weights.x +
+                float4 sample = SampleTiled(uvX) * weights.x +
                     SampleTiled(uvY) * weights.y +
                     SampleTiled(uvZ) * weights.z;
+                if (_UseSourceAlpha == 0) sample.a = 1.0;
+                return sample;
             }
             ENDCG
         }

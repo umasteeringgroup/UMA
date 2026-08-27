@@ -584,8 +584,11 @@ namespace UMA
 		public UmaTPose OverrideTpose = null;
 
 		// key: OverlayName, Channel
+		[NonSerialized]
 		public Dictionary<string, Dictionary<int, Texture>> TextureOverrides = new Dictionary<string, Dictionary<int, Texture>>();
+		[NonSerialized]
 		public Dictionary<string, Vector3[]> VertexOverrides = new Dictionary<string, Vector3[]>();
+		[NonSerialized]
 		public Dictionary<string, Vector2[]> UVOverrides = new Dictionary<string, Vector2[]>();
 
 		public void ClearOverrides()
@@ -750,6 +753,7 @@ namespace UMA
 
 		public Bounds originalMeshBounds { get; set; }
 
+        [NonSerialized]
         public BlendShapeSettings blendShapeSettings = new BlendShapeSettings();
 
 		public RuntimeAnimatorController animationController;
@@ -1439,6 +1443,7 @@ namespace UMA
 			public UMAMaterial umaMaterial;
 			public Material material;
 			public Material secondPassMaterial;
+			[NonSerialized]
 			public List<MaterialFragment> materialFragments = new List<MaterialFragment>();
 			public Texture[] resultingAtlasList;
 			public Vector2 cropResolution;
@@ -1458,7 +1463,9 @@ namespace UMA
 			public Rect[] rects;
 			public textureData[] AdditionalOverlays; // additional overlays to blend on top of the base overlay
             public Color32[] overlayColors;
+			[NonSerialized]
 			public Color[][] channelMask;
+			[NonSerialized]
 			public Color[][] channelAdditiveMask;
 			public SlotData slotData;
 			public OverlayData[] overlayData; 
@@ -1466,9 +1473,11 @@ namespace UMA
 			public bool isRectShared;
 			public bool isNoTextures;
 			public List<OverlayData> overlayList; // all overlays on slot (base overlay + additional overlays)
+            [NonSerialized]
             public MaterialFragment rectFragment;
 			public textureData baseOverlay;       // the base overlay for this fragment
             public int baseVertexInMesh;
+			[NonSerialized]
 			public List<Dictionary<int, Texture>> overrides = new List<Dictionary<int,Texture>>();
 
 			public Color GetMultiplier(int overlay, int textureType)

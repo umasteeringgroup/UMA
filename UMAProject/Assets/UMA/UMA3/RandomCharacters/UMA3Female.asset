@@ -319,25 +319,7 @@ MonoBehaviour:
       AddColorTable: 0
       PossibleColors:
       - Hair
-    - WardrobeSlot: {fileID: 11400000, guid: c4971a1106c64514b80466019f4e16c9, type: 2}
-      Chance: 1
-      Colors: []
-      _slotName: Hair
-      GuiFoldout: 1
-      Delete: 0
-      AddColorTable: 0
-      PossibleColors:
-      - Hair
     - WardrobeSlot: {fileID: 11400000, guid: 032c9c79cfa8da14ba017201748ff0ca, type: 2}
-      Chance: 1
-      Colors: []
-      _slotName: Hair
-      GuiFoldout: 1
-      Delete: 0
-      AddColorTable: 0
-      PossibleColors:
-      - Hair
-    - WardrobeSlot: {fileID: 11400000, guid: 6fcd15cf7c723fe44ae02c1828e26197, type: 2}
       Chance: 1
       Colors: []
       _slotName: Hair
@@ -383,15 +365,6 @@ MonoBehaviour:
       PossibleColors:
       - Hair
     - WardrobeSlot: {fileID: 11400000, guid: 2743f153868179a42afbb280ff3320bd, type: 2}
-      Chance: 1
-      Colors: []
-      _slotName: Hair
-      GuiFoldout: 1
-      Delete: 0
-      AddColorTable: 0
-      PossibleColors:
-      - Hair
-    - WardrobeSlot: {fileID: 11400000, guid: 5c14eb9d2d44a494ca770ade336ab7dc, type: 2}
       Chance: 1
       Colors: []
       _slotName: Hair

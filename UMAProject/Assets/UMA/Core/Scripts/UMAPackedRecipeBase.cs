@@ -115,7 +115,9 @@ namespace UMA
 		{
 			public string overlayID;
 			public int[] colorList;
+			[System.NonSerialized]
 			public int[][] channelMaskList;
+			[System.NonSerialized]
 			public int[][] channelAdditiveMaskList;
 
 			public int[] rectList;
@@ -143,7 +145,9 @@ namespace UMA
 		{
 			public string name;
 			public byte[] color;
+			[System.NonSerialized]
 			public byte[][] masks;
+			[System.NonSerialized]
 			public byte[][] addMasks;
 
 			public PackedOverlayColorDataV2()
@@ -517,6 +521,7 @@ namespace UMA
 			public PackedOverlayColorDataV3[] fColors;
 			public int sharedColorCount;
 			public string race;
+			[System.NonSerialized]
 			public Dictionary<Type, UMADna> umaDna = new Dictionary<Type, UMADna>();
 			public List<UMAPackedDna> packedDna = new List<UMAPackedDna>();
 			public int uvOverride = 0;

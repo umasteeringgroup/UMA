@@ -389,16 +389,26 @@ namespace UMA.TexturePaint.Editor
         public static void DrawStrokeEvolution(BrushPreset preset)
         {
             preset.fade = EditorGUILayout.Toggle(new GUIContent("Fade",
-                "Reduces stamp alpha from full strength to zero over the configured world-space length. Tablet pressure still multiplies flow when Pressure Affects Flow is enabled."),
+                "Reduces stamp alpha from full strength to zero over World Length, or over the complete stroke when Auto Fade is enabled. Tablet pressure still multiplies flow when Pressure Affects Flow is enabled."),
                 preset.fade);
+            using (new EditorGUI.DisabledScope(!preset.fade))
+                preset.autoFade = EditorGUILayout.Toggle(new GUIContent("Auto Fade",
+                    "Draws at full flow while the pointer is down, then redraws the completed stroke with flow fading from full strength at the start to zero at the end."),
+                    preset.autoFade);
             preset.taper = EditorGUILayout.Toggle(new GUIContent("Taper",
-                "Reduces stamp size from full size to zero over the configured world-space length. Tablet pressure still multiplies size when Pressure Affects Size is enabled."),
+                "Reduces stamp size from full size to zero over World Length, or over the complete stroke when Auto Taper is enabled. Tablet pressure still multiplies size when Pressure Affects Size is enabled."),
                 preset.taper);
-            using (new EditorGUI.DisabledScope(!preset.fade && !preset.taper))
+            using (new EditorGUI.DisabledScope(!preset.taper))
+                preset.autoTaper = EditorGUILayout.Toggle(new GUIContent("Auto Taper",
+                    "Draws at full size while the pointer is down, then redraws the completed stroke with size tapering from full size at the start to zero at the end."),
+                    preset.autoTaper);
+            bool usesManualLength = (preset.fade && !preset.autoFade) ||
+                (preset.taper && !preset.autoTaper);
+            using (new EditorGUI.DisabledScope(!usesManualLength))
             {
                 EditorGUI.BeginChangeCheck();
                 float length = EditorGUILayout.FloatField(new GUIContent("World Length",
-                    "World-space stroke length over which Fade and Taper reach zero. The untouched default tracks three times the brush size."),
+                    "World-space length used by non-auto Fade and Taper. Auto modes use the completed stroke length instead. The untouched default tracks three times the brush size."),
                     preset.ResolvedFadeTaperLength);
                 if (EditorGUI.EndChangeCheck()) preset.fadeTaperLength = Mathf.Max(0.0001f, length);
             }

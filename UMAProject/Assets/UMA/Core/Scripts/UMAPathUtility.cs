@@ -18,6 +18,9 @@ namespace UMA
     {
         public const string PackageName = "com.umasteeringgroup.uma";
         public const string LegacyInstallRoot = "Assets/UMA";
+        public const string Uma3ContentRoot = LegacyInstallRoot + "/UMA3";
+        public const string Uma2ContentRoot = LegacyInstallRoot + "/UMA2";
+        public const string ProjectSrpRoot = LegacyInstallRoot + "/SRP";
         public const string ShaderPackagesRelativePath = "SRP/ShaderPackages";
         public const string ProjectDataRoot = "Assets/UMAProjectData";
         public const string ProjectResourcesRoot = ProjectDataRoot + "/Resources";
@@ -68,9 +71,96 @@ namespace UMA
             return string.IsNullOrEmpty(relative) ? InstallAssetRoot : InstallAssetRoot + "/" + relative;
         }
 
+        /// <summary>
+        /// Resolves editable UMA 3 content. Content packages always install
+        /// below Assets, even when UMA Core is installed through UPM.
+        /// </summary>
+        public static string ResolveUma3ContentPath(string relativePath = "")
+        {
+            return ResolveContentAssetPath(Uma3ContentRoot, relativePath);
+        }
+
+        /// <summary>
+        /// Resolves optional editable UMA 2 legacy content.
+        /// </summary>
+        public static string ResolveUma2ContentPath(string relativePath = "")
+        {
+            return ResolveContentAssetPath(Uma2ContentRoot, relativePath);
+        }
+
+        public static bool IsUma3ContentInstalled =>
+            AssetDatabase.IsValidFolder(Uma3ContentRoot);
+
+        public static bool IsUma2ContentInstalled =>
+            AssetDatabase.IsValidFolder(Uma2ContentRoot);
+
+        /// <summary>
+        /// Returns true for the project-owned UMA trees that remain writable
+        /// when Core itself is installed as a read-only UPM package.
+        /// </summary>
+        public static bool IsProjectOwnedUmaAssetPath(string assetPath)
+        {
+            string normalized = Normalize(assetPath).TrimEnd('/');
+            return IsAtOrBelow(normalized, Uma3ContentRoot) ||
+                   IsAtOrBelow(normalized, Uma2ContentRoot) ||
+                   IsAtOrBelow(normalized, ProjectSrpRoot);
+        }
+
+        private static string ResolveContentAssetPath(string root,
+            string relativePath)
+        {
+            string relative = Normalize(relativePath).Trim('/');
+            return string.IsNullOrEmpty(relative) ? root : root + "/" + relative;
+        }
+
+        private static bool IsAtOrBelow(string assetPath, string root)
+        {
+            return assetPath.Equals(root, StringComparison.OrdinalIgnoreCase) ||
+                   assetPath.StartsWith(root + "/",
+                       StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// Resolves installed UMA render-pipeline content. UPM installations keep
+        /// the core package read-only and import the selected SRP support package
+        /// into Assets/UMA/SRP as a writable project override.
+        /// </summary>
+        public static string ResolveSrpAssetPath(string relativePath = "")
+        {
+            string root = AssetDatabase.IsValidFolder(ProjectSrpRoot)
+                ? ProjectSrpRoot
+                : ResolveInstallAssetPath("SRP");
+            string relative = Normalize(relativePath).Trim('/');
+            return string.IsNullOrEmpty(relative) ? root : root + "/" + relative;
+        }
+
         public static string ResolveLegacyInstallAssetPath(string assetPath)
         {
             string normalized = Normalize(assetPath);
+            const string oldUma2Root = "Assets/UMA2";
+            if (normalized.Equals(oldUma2Root, StringComparison.OrdinalIgnoreCase))
+                return Uma2ContentRoot;
+            if (normalized.StartsWith(oldUma2Root + "/",
+                    StringComparison.OrdinalIgnoreCase))
+                return Uma2ContentRoot + normalized.Substring(oldUma2Root.Length);
+            if (normalized.Equals(Uma3ContentRoot,
+                    StringComparison.OrdinalIgnoreCase) ||
+                normalized.StartsWith(Uma3ContentRoot + "/",
+                    StringComparison.OrdinalIgnoreCase))
+                return normalized;
+            if (normalized.Equals(Uma2ContentRoot,
+                    StringComparison.OrdinalIgnoreCase) ||
+                normalized.StartsWith(Uma2ContentRoot + "/",
+                    StringComparison.OrdinalIgnoreCase))
+                return normalized;
+            if (normalized.Equals(ProjectSrpRoot,
+                    StringComparison.OrdinalIgnoreCase))
+                return ResolveSrpAssetPath();
+            string srpPrefix = ProjectSrpRoot + "/";
+            if (normalized.StartsWith(srpPrefix,
+                    StringComparison.OrdinalIgnoreCase))
+                return ResolveSrpAssetPath(normalized.Substring(
+                    srpPrefix.Length));
             if (normalized.Equals(LegacyInstallRoot, StringComparison.OrdinalIgnoreCase))
                 return InstallAssetRoot;
             string prefix = LegacyInstallRoot + "/";

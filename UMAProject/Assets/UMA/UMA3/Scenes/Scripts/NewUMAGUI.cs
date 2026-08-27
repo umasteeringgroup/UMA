@@ -1018,9 +1018,8 @@ namespace UMA
 
             // Find or create the mesh combiner component
             UMAMeshCombiner existingCombiner = null;
-            var combinerCandidates = UnityEngine.Object.FindObjectsByType<UMAMeshCombiner>(
-                FindObjectsInactive.Include,
-                FindObjectsSortMode.None);
+            var combinerCandidates = UMAObjectUtility.FindObjectsByType<UMAMeshCombiner>(
+                FindObjectsInactive.Include);
             for (int i = 0; i < combinerCandidates.Length; i++)
             {
                 if (combinerCandidates[i].GetType() == combinerType)

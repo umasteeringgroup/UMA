@@ -18,8 +18,8 @@ namespace UMA.Editors.Tests
     public sealed class UMAReleaseTests
     {
         private static string UmaFolder => UMAPathUtility.InstallAssetRoot;
-        private static string Uma3Folder => UMAPathUtility.ResolveInstallAssetPath("UMA3");
-        private const string Uma2Folder = "Assets/UMA2";
+        private const string Uma3Folder = UMAPathUtility.Uma3ContentRoot;
+        private const string Uma2Folder = UMAPathUtility.Uma2ContentRoot;
         private static readonly Regex GuidReference = new Regex(
             @"\bguid:\s*([0-9a-fA-F]{32})\b", RegexOptions.Compiled);
 
@@ -42,13 +42,22 @@ namespace UMA.Editors.Tests
 
             try
             {
-                uma3 = ValidateScope(new ValidationScope(
-                    "UMA3", Uma3Folder, new[] { UmaFolder }), issues, issueKeys,
-                    structuredReport, referenceKeys);
+                if (AssetDatabase.IsValidFolder(Uma3Folder))
+                {
+                    uma3 = ValidateScope(new ValidationScope(
+                        "UMA3", Uma3Folder, new[] { Uma3Folder, UmaFolder }),
+                        issues, issueKeys, structuredReport, referenceKeys);
+                }
+                else
+                {
+                    TestContext.WriteLine(
+                        "UMA3 content is not installed; validating the Core-only layout.");
+                }
                 if (AssetDatabase.IsValidFolder(Uma2Folder))
                 {
                     uma2 = ValidateScope(new ValidationScope(
-                        "UMA2", Uma2Folder, new[] { UmaFolder, Uma2Folder }),
+                        "UMA2", Uma2Folder,
+                        new[] { Uma2Folder, Uma3Folder, UmaFolder }),
                         issues, issueKeys, structuredReport, referenceKeys);
                 }
                 else
@@ -77,7 +86,7 @@ namespace UMA.Editors.Tests
             report.AppendLine($"Asset Validation found {issues.Count} package-boundary " +
                 $"issue{(issues.Count == 1 ? string.Empty : "s")}.");
             report.AppendLine($"UMA3 assets may reference {UmaFolder} only. " +
-                $"UMA2 assets may reference {UmaFolder} or Assets/UMA2.");
+                $"UMA2 assets may reference {UmaFolder}, {Uma3Folder}, or {Uma2Folder}.");
             report.AppendLine("Package Manager and Unity built-in resources are external prerequisites " +
                 "and are not treated as exported project assets.");
             for (int i = 0; i < issues.Count; i++)
@@ -554,6 +563,9 @@ namespace UMA.Editors.Tests
         private static bool IsAllowed(ValidationScope scope, string path)
         {
             if (!path.StartsWith("Assets/", StringComparison.OrdinalIgnoreCase)) return true;
+            if (string.Equals(scope.name, "UMA3", StringComparison.OrdinalIgnoreCase) &&
+                IsInFolder(path, UMAPathUtility.Uma2ContentRoot))
+                return false;
             for (int i = 0; i < scope.allowedFolders.Length; i++)
                 if (IsInFolder(path, scope.allowedFolders[i])) return true;
             return false;

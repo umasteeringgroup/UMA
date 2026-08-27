@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: UMA3Hair_SinglePass
   m_EditorClassIdentifier: 
   _material: {fileID: 2100000, guid: d091d67d27b198148b1b1f5894b884d3, type: 2}
-  _HDRPMaterial: {fileID: 2100000, guid: ba536d3afe15c3843abb3346672691b1, type: 2}
+  _HDRPMaterial: {fileID: 0}
   _secondPass: {fileID: 0}
   _HDRPSecondPass: {fileID: 0}
   materialType: 8

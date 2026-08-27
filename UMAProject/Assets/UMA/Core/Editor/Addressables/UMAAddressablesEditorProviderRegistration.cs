@@ -1,5 +1,6 @@
 #if UMA_ADDRESSABLES
 using UnityEditor;
+using UnityEditor.AddressableAssets.Settings;
 
 namespace UMA
 {
@@ -24,7 +25,12 @@ namespace UMA
                 addRecipeGroup = recipe =>
                     UMAAddressablesSupport.Instance.AddRecipeGroup(recipe),
                 createSingleGroupGenerator = clearMaterials =>
-                    new SingleGroupGenerator { ClearMaterials = clearMaterials }
+                    new SingleGroupGenerator { ClearMaterials = clearMaterials },
+                buildPlayerContent = () =>
+                {
+                    AddressableAssetSettings.BuildPlayerContent(out var result);
+                    return result.Error;
+                }
             };
         }
     }

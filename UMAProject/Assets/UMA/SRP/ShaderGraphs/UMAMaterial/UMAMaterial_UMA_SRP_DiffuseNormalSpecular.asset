@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: UMAMaterial_UMA_SRP_DiffuseNormalSpecular
   m_EditorClassIdentifier: UMA_Core::UMA.UMAMaterial
   _material: {fileID: 2100000, guid: 157a073a02ea18542956a088584644e0, type: 2}
-  _HDRPMaterial: {fileID: -876546973899608171, guid: 53e5f1fe6377c5c438133f62347fa60f, type: 3}
+  _HDRPMaterial: {fileID: 0}
   _secondPass: {fileID: 0}
   _HDRPSecondPass: {fileID: 0}
   materialType: 1

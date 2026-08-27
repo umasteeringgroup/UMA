@@ -14,6 +14,7 @@ namespace UMA.TexturePaint.Editor
     {
         private static string ShaderRoot => UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders") + "/";
         private const float SplineInsertTolerancePixels = 8f;
+        private const double InteractiveSplineReapplyDelaySeconds = 0.25d;
         private static bool eventsHooked;
         private static readonly int[] RibbonRotationValues = { -180, -90, 0, 90, 180 };
         private static readonly string[] RibbonRotationLabels =
@@ -27,6 +28,21 @@ namespace UMA.TexturePaint.Editor
             "\u2022 Green handles: Adjust curve",
             "\u2022 Blue handle: Adjust point width"
         };
+        private static readonly string[] SplineMoveSceneHints =
+        {
+            "MOVE MODE",
+            "\u2022 Click: Select point",
+            "\u2022 Drag: Move point",
+            "\u2022 Curve and width handles are hidden"
+        };
+        private static readonly string[] SplineAdjustSceneHints =
+        {
+            "ADJUST MODE",
+            "\u2022 Click: Select point",
+            "\u2022 Green handles: Adjust curve",
+            "\u2022 Blue handle: Adjust point width",
+            "\u2022 Point positions are locked"
+        };
         private static readonly string[] Spline2DSceneHints =
         {
             "2D SPLINE POINT",
@@ -39,21 +55,37 @@ namespace UMA.TexturePaint.Editor
             "2D SPLINE",
             "\u2022 Select a point in the 2D view"
         };
+        private static readonly string[] Spline2DMoveSceneHints =
+        {
+            "2D MOVE MODE",
+            "\u2022 Orange handle: Move selected point",
+            "\u2022 Curve and width handles are hidden"
+        };
+        private static readonly string[] Spline2DAdjustSceneHints =
+        {
+            "2D ADJUST MODE",
+            "\u2022 Green handles: Adjust curve",
+            "\u2022 Blue handle: Adjust point width",
+            "\u2022 Point positions are locked"
+        };
         private static readonly string[] PaintSceneHints =
         {
             "\u2022 Click/Drag: Paint",
+            "\u2022 Shift-Drag: Constrain horizontal/vertical",
             "\u2022 Shift + Right-Drag: Size/hardness"
         };
         private static readonly string[] ClonePaintSceneHints =
         {
             "\u2022 Click/Drag: Paint",
             "\u2022 Ctrl-Click: Set clone source",
+            "\u2022 Shift-Drag: Constrain horizontal/vertical",
             "\u2022 Shift + Right-Drag: Size/hardness"
         };
         private static readonly string[] MaskSceneHints =
         {
             "LAYER MASK MODE",
             "\u2022 Click/Drag: Paint mask",
+            "\u2022 Shift-Drag: Constrain horizontal/vertical",
             "\u2022 Shift + Right-Drag: Size/hardness"
         };
         private static readonly string[] PolygonFillSceneHints =
@@ -104,6 +136,8 @@ namespace UMA.TexturePaint.Editor
         [SerializeField] private TexturePaintSpline spline;
         [SerializeField] private int selectedSplinePoint = -1;
         [SerializeField] private TexturePaintPathMode pathMode = TexturePaintPathMode.Ribbon;
+        [SerializeField] private TexturePaintPathEditMode pathEditMode = TexturePaintPathEditMode.Standard;
+        [SerializeField] private bool pathAutoUpdate = true;
         [SerializeField] private TexturePaintPathOrientation pathOrientation = TexturePaintPathOrientation.FollowPath;
         [SerializeField] private TexturePaintPathCap pathStartCap = TexturePaintPathCap.Round;
         [SerializeField] private TexturePaintPathCap pathEndCap = TexturePaintPathCap.Round;
@@ -133,6 +167,8 @@ namespace UMA.TexturePaint.Editor
         [NonSerialized] private int paintRandomStampIndex;
         [NonSerialized] private float paintStrokeWorldDistance;
         [NonSerialized] private bool hasPaintStrokeDistanceSample;
+        [NonSerialized] private StrokeViewAxis strokeViewAxis;
+        [NonSerialized] private Vector2 strokeViewAxisOrigin;
         private long paintHistoryVersionAtStrokeStart;
         private bool applyingSpline;
         [NonSerialized] private BrushPreset activeSplineBrush;
@@ -146,6 +182,7 @@ namespace UMA.TexturePaint.Editor
         [NonSerialized] private TexturePaintLayer pendingSplineLayer;
         private readonly WorldSpaceStrokeSampler strokeSampler = new WorldSpaceStrokeSampler();
         private readonly List<StrokeSample> sampledStrokePoints = new List<StrokeSample>();
+        private readonly List<StrokeSample> completedStrokePoints = new List<StrokeSample>();
         private readonly List<StrokeDispatchSample> splineDispatchSamples = new List<StrokeDispatchSample>();
         private readonly Dictionary<StrokeContactKey, StrokeSample> previousContactSamples =
             new Dictionary<StrokeContactKey, StrokeSample>();
@@ -170,6 +207,7 @@ namespace UMA.TexturePaint.Editor
         private string resourceCheckResult;
         [NonSerialized] private bool pathEditRecordedThisGUI;
         [NonSerialized] private bool splineReapplyDelayScheduled;
+        [NonSerialized] private double splineReapplyNotBefore;
         [NonSerialized] private int splineHandleHotControl;
         [NonSerialized] private TextureSet splineHandleEditSet;
         [NonSerialized] private string splineHandleEditLabel;
@@ -187,6 +225,14 @@ namespace UMA.TexturePaint.Editor
             Pressed,
             Dragged,
             ContextRequested
+        }
+
+        internal enum StrokeViewAxis
+        {
+            None,
+            Pending,
+            Horizontal,
+            Vertical
         }
 
         private enum SplineEditingSpace
@@ -312,6 +358,8 @@ namespace UMA.TexturePaint.Editor
                 ComputeShader normal = AssetDatabase.LoadAssetAtPath<ComputeShader>(ShaderRoot + "NormalTouchup.compute");
                 ComputeShader composite = AssetDatabase.LoadAssetAtPath<ComputeShader>(ShaderRoot + "LayerComposite.compute");
                 ComputeShader channelPack = AssetDatabase.LoadAssetAtPath<ComputeShader>(ShaderRoot + "ChannelPack.compute");
+                ComputeShader pluginGenerators = AssetDatabase.LoadAssetAtPath<ComputeShader>(
+                    ShaderRoot + "PluginGenerators.compute");
                 Shader fill = AssetDatabase.LoadAssetAtPath<Shader>(ShaderRoot + "FillLayer.shader");
                 Shader ribbon = AssetDatabase.LoadAssetAtPath<Shader>(ShaderRoot + "RibbonProjection.shader");
                 controller = new TexturePaintStageController();
@@ -319,6 +367,7 @@ namespace UMA.TexturePaint.Editor
                     controller.InitializeStandalone(launchContext, stroke, blur, normal, composite, channelPack,
                         launchContext.resolution, fill, ribbon);
                 else controller.Initialize(avatar, stroke, blur, normal, composite, channelPack, 2048, fill, ribbon);
+                controller.Plugins.GpuGeneratorShader = pluginGenerators;
                 ShowReconstructionWarnings(controller.Reconstruction);
                 SceneManager.MoveGameObjectToScene(controller.Reconstruction.root, scene);
                 lightObject = new GameObject("Overlay Painter Lighting");
@@ -353,7 +402,9 @@ namespace UMA.TexturePaint.Editor
                 Tools.hidden = true;
                 ActiveStage = this;
                 TexturePaintDockWindow.ShowDockable();
+                TexturePaintToolWindow.ShowDockable();
                 TexturePaintUVWindow.ShowDockable();
+                TexturePaintBrushWindow.ShowDockable();
                 return true;
             }
             catch (Exception exception)
@@ -399,7 +450,8 @@ namespace UMA.TexturePaint.Editor
             }
             TexturePaintSpriteSource.ClearCache();
             EditorApplication.update -= PersistenceUpdate;
-            EditorApplication.delayCall -= ReapplySplineAfterGUI;
+            EditorApplication.update -= ReapplySplineAfterGUI;
+            splineReapplyDelayScheduled = false;
             EditorApplication.delayCall -= RepaintTextureWindows;
             textureWindowRepaintPending = false;
             SceneView.duringSceneGui -= OnSceneGUI;
@@ -410,7 +462,9 @@ namespace UMA.TexturePaint.Editor
             if (ActiveStage == this) ActiveStage = null;
             documentRevision = null;
             TexturePaintDockWindow.RepaintOpenWindows();
+            TexturePaintToolWindow.RepaintOpenWindows();
             TexturePaintUVWindow.RepaintOpenWindows();
+            TexturePaintBrushWindow.RepaintOpenWindows();
             base.OnCloseStage();
         }
 
@@ -442,15 +496,20 @@ namespace UMA.TexturePaint.Editor
             Event current = Event.current;
             EventType inputEventType = current.type;
             ApplySceneViewDisplay(sceneView);
-            Ray ray = HandleUtility.GUIPointToWorldRay(current.mousePosition);
+            Vector2 paintInputPoint = strokeActive
+                ? ResolveStrokeViewPoint(current.mousePosition)
+                : current.mousePosition;
+            Ray ray = HandleUtility.GUIPointToWorldRay(paintInputPoint);
             hasHover = controller.Reconstruction.Raycast(ray, out hoverSurface, out hoverHit);
             if (hasHover) hoverTangent = CalculateTangent(hoverSurface, hoverHit.triangleIndex);
             bool targetHover = hasHover && IsSelectedSlotHit(hoverSurface, hoverHit.triangleIndex);
             TexturePaintLayer sceneSplineLayer = null;
             bool activeSplineLayer = !IsLayerMaskMode(ActiveTextureSet) &&
                 TryGetActivePathLayer(ActiveTextureSet, out sceneSplineLayer);
-            bool authoringSplineLayer = activeSplineLayer && sceneSplineLayer.spline?.worldSpace == true;
-            bool twoDimensionalSplineLayer = activeSplineLayer && sceneSplineLayer.spline?.worldSpace == false;
+            bool visibleSplineLayer = activeSplineLayer && IsActiveSplineAuthoringLayer(
+                ActiveTextureSet, ActiveTextureSet.activeLayerIndex);
+            bool authoringSplineLayer = visibleSplineLayer && sceneSplineLayer.spline?.worldSpace == true;
+            bool twoDimensionalSplineLayer = visibleSplineLayer && sceneSplineLayer.spline?.worldSpace == false;
             bool positioningTwoDimensionalPoint = twoDimensionalSplineLayer && selectedSplinePoint >= 0 &&
                 selectedSplinePoint < sceneSplineLayer.spline.PointCount;
             bool sceneSplineHandlesActive = authoringSplineLayer || positioningTwoDimensionalPoint;
@@ -487,9 +546,14 @@ namespace UMA.TexturePaint.Editor
             {
                 if (current.type == EventType.MouseDown && authoringSplineLayer)
                 {
-                    if (current.shift && targetHover) AddSplinePoint();
-                    else if (current.control || current.command)
-                        TryInsertSplinePointAt(current.mousePosition);
+                    if (PathEditModeAllowsTopology(pathEditMode))
+                    {
+                        if (current.shift && targetHover) AddSplinePoint();
+                        else if (current.control || current.command)
+                            TryInsertSplinePointAt(current.mousePosition);
+                    }
+                    else if (current.shift || current.control || current.command)
+                        ShowWorkspaceStatus(pathEditMode + " mode does not add or insert points");
                     current.Use();
                 }
                 else if (current.type == EventType.MouseDown && twoDimensionalSplineLayer)
@@ -531,7 +595,7 @@ namespace UMA.TexturePaint.Editor
                 else if (current.type == EventType.MouseUp && splineReapplyPending)
                 {
                     if (pendingPathEdit != null && pendingPathEdit.deferred) CommitPendingPathEdit();
-                    ReapplyPendingSpline();
+                    ScheduleSplineReapply(true);
                     current.Use();
                 }
                 else if (current.type == EventType.MouseUp && pendingPathEdit != null && pendingPathEdit.deferred)
@@ -565,9 +629,19 @@ namespace UMA.TexturePaint.Editor
             if (geometryFillMode == 1) hints = PolygonFillSceneHints;
             else if (geometryFillMode == 2) hints = UVIslandFillSceneHints;
             else if (maskMode) hints = MaskSceneHints;
-            else if (authoringSplineLayer) hints = SplineSceneHints;
+            else if (authoringSplineLayer) hints = pathEditMode == TexturePaintPathEditMode.Move
+                ? SplineMoveSceneHints
+                : pathEditMode == TexturePaintPathEditMode.Adjust
+                    ? SplineAdjustSceneHints
+                    : SplineSceneHints;
             else if (twoDimensionalSplineLayer)
-                hints = selectedSplinePoint >= 0 ? Spline2DSceneHints : Spline2DNoSelectionSceneHints;
+                hints = selectedSplinePoint < 0
+                    ? Spline2DNoSelectionSceneHints
+                    : pathEditMode == TexturePaintPathEditMode.Move
+                        ? Spline2DMoveSceneHints
+                        : pathEditMode == TexturePaintPathEditMode.Adjust
+                            ? Spline2DAdjustSceneHints
+                            : Spline2DSceneHints;
             else if (CanStartFreehandPaint(ActiveTextureSet))
                 hints = tool == TexturePaintTool.Clone ? ClonePaintSceneHints : PaintSceneHints;
             else return;
@@ -848,30 +922,15 @@ namespace UMA.TexturePaint.Editor
                 if (activeLayer.kind == TexturePaintLayerKind.Plugin)
                     DrawPluginLayerProperties(set, activeLayer);
 
-                if (activeLayer.kind != TexturePaintLayerKind.Group &&
-                    activeLayer.kind != TexturePaintLayerKind.Plugin &&
-                    EditorGUILayout.DropdownButton(new GUIContent("Add from Sprite Set",
-                        "Assign one sprite-set material to this layer's supported channels."),
-                        FocusType.Keyboard))
-                {
-                    TexturePaintLayer targetLayer = activeLayer;
-                    OverlayPainterSpriteSetPickerWindow.Show((spriteSet, spriteIndex, tiling) =>
-                        AddFromSpriteSet(set, targetLayer, spriteSet, spriteIndex, tiling));
-                }
-
                 DrawLayerChannelProperties(set, activeLayer,
                     activeLayer.kind != TexturePaintLayerKind.Plugin);
             }
 
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("+ Paint"))
-            {
-                AddPaintLayer(set);
-            }
-            if (GUILayout.Button("+ Fill"))
-            {
-                AddFillLayer(set);
-            }
+            DrawSplitLayerButton(new GUIContent("+ Paint", "Add an empty Paint layer"),
+                () => AddPaintLayer(set), () => ShowAddPaintLayerMenu(set), 72f);
+            DrawSplitLayerButton(new GUIContent("+ Fill", "Add a Fill layer using the current source"),
+                () => AddFillLayer(set), () => ShowAddFillLayerMenu(set), 66f);
             if (GUILayout.Button("+ Plugin")) AddPluginLayer(set);
             if (GUILayout.Button("+ Group"))
             {
@@ -951,7 +1010,6 @@ namespace UMA.TexturePaint.Editor
                     MessageType.None);
                 EditorGUI.BeginChangeCheck();
                 bool useBezier = EditorGUILayout.Toggle("Bezier Curves", spline.useBezier);
-                bool closed = EditorGUILayout.Toggle("Closed Loop", spline.closed);
                 bool showControls = EditorGUILayout.Toggle("Show Controls", spline.showControls);
                 EditorGUILayout.LabelField("Tangents", "Per-point Corner / Smooth / Broken / Custom / Straight");
                 TexturePaintPathMode nextPathMode = (TexturePaintPathMode)EditorGUILayout.EnumPopup("Path Mode", pathMode);
@@ -973,95 +1031,51 @@ namespace UMA.TexturePaint.Editor
                 if (EditorGUI.EndChangeCheck())
                 {
                     BeginLightweightPathUndo(set, "Edit Path Parameters");
-                    spline.useBezier = useBezier; spline.closed = closed; spline.showControls = showControls;
+                    spline.useBezier = useBezier; spline.showControls = showControls;
                     pathMode = nextPathMode; pathOrientation = nextOrientation;
                     pathStartCap = nextStartCap; pathEndCap = nextEndCap; radialSymmetry = nextRadialSymmetry;
                     CompleteLightweightPathEdit(set, false);
                 }
                 DrawPathStampSpacingControl();
-                GUILayout.BeginHorizontal();
-                if (GUILayout.Button("Apply Spline")) ApplySpline();
-                if (GUILayout.Button("Clear") && spline != null)
-                {
-                    BeginLightweightPathUndo(set, "Clear Spline");
-                    spline.Clear(); selectedSplinePoint = -1;
-                    CompleteLightweightPathEdit(set, false);
-                }
-                GUILayout.EndHorizontal();
-                GUILayout.BeginHorizontal();
-                using (new EditorGUI.DisabledScope(selectedSplinePoint < 0 || selectedSplinePoint >= spline.PointCount))
-                {
-                    if (GUILayout.Button("Insert Point"))
-                    {
-                        BeginLightweightPathUndo(set, "Insert Spline Point");
-                        selectedSplinePoint = spline.InsertPointAfter(selectedSplinePoint);
-                        UpdateSplineAnchorFromCurrentDomain(set, spline, selectedSplinePoint);
-                        CompleteLightweightPathEdit(set, false);
-                    }
-                    if (GUILayout.Button("Delete Point")) DeleteSelectedSplinePoints(set);
-                }
-                if (GUILayout.Button("Reverse"))
-                {
-                    BeginLightweightPathUndo(set, "Reverse Spline");
-                    spline.Reverse();
-                    if (selectedSplinePoint >= 0) selectedSplinePoint = spline.PointCount - 1 - selectedSplinePoint;
-                    CompleteLightweightPathEdit(set, false);
-                }
-                GUILayout.EndHorizontal();
-                GUILayout.BeginHorizontal();
-                if (GUILayout.Button("Select All Points"))
-                {
-                    selectedSplinePoints ??= new HashSet<int>();
-                    selectedSplinePoints.Clear();
-                    for (int point = 0; point < spline.PointCount; point++) selectedSplinePoints.Add(point);
-                    selectedSplinePoint = spline.PointCount > 0 ? 0 : -1;
-                }
-                if (GUILayout.Button("Copy Path")) splineClipboard = JsonUtility.ToJson(spline);
-                using (new EditorGUI.DisabledScope(string.IsNullOrEmpty(splineClipboard)))
-                    if (GUILayout.Button("Paste Path"))
-                    {
-                        BeginLayerCreationUndo("Paste Texture Path");
-                        TexturePaintLayer pasted = set.AddSplineLayer("Pasted Path");
-                        pasted.spline = JsonUtility.FromJson<TexturePaintSpline>(splineClipboard);
-                        pathMode = TexturePaintPathMode.Ribbon;
-                        pasted.splineSettings = CreateSplineSettings();
-                        spline = pasted.spline;
-                        selectedSplinePoint = -1;
-                        CompleteLayerCreationUndo(pasted);
-                    }
-                GUILayout.EndHorizontal();
+                EditorGUILayout.LabelField("Editor Mode", pathEditMode.ToString());
+                EditorGUILayout.LabelField("Auto Update", pathAutoUpdate ? "On" : "Off");
+                EditorGUILayout.HelpBox(pathAutoUpdate
+                    ? "Path editing modes and topology actions are in the Overlay Painter Path toolbar in the Scene view."
+                    : "The path preview is frozen. Use Update in the Overlay Painter Path toolbar when ready.",
+                    pathAutoUpdate ? MessageType.None : MessageType.Info);
                 if (selectedSplinePoint >= 0 && selectedSplinePoint < spline.PointCount)
                 {
                     spline.EnsureControlPoints();
                     EditorGUILayout.LabelField("Selected Point Dynamics", EditorStyles.boldLabel);
-                    if (GUILayout.Button(new GUIContent("Straight Handles", "Force the selected point handles onto straight, linear segments")))
-                        StraightenSelectedSplinePoints(set);
-                    EditorGUI.BeginChangeCheck();
-                    TexturePaintTangentMode tangentMode = (TexturePaintTangentMode)EditorGUILayout.EnumPopup("Tangent", spline.tangentModes[selectedSplinePoint]);
-                    float pointPressure = EditorGUILayout.Slider("Pressure", spline.pressures[selectedSplinePoint], 0f, 1f);
-                    float pointWidthPercent = EditorGUILayout.Slider(new GUIContent("Width (%)", "Brush width at this point as a percentage of the path width"),
-                        spline.widths[selectedSplinePoint] * 100f, 5f, 400f);
-                    float pointWidth = pointWidthPercent * 0.01f;
-                    float pointFlow = EditorGUILayout.Slider("Flow", spline.flows[selectedSplinePoint], 0f, 2f);
-                    float pointRoll = EditorGUILayout.Slider("Roll", spline.rolls[selectedSplinePoint], -180f, 180f);
-                    float pointOffset = spline.offsets[selectedSplinePoint];
-                    using (new EditorGUI.DisabledScope(!spline.worldSpace))
-                        pointOffset = EditorGUILayout.Slider("Surface Offset", pointOffset, -0.1f, 0.1f);
-                    Color pointColor = EditorGUILayout.ColorField("Color", spline.colors[selectedSplinePoint]);
-                    IReadOnlyCollection<int> selected = selectedSplinePoints != null && selectedSplinePoints.Count > 0
-                        ? selectedSplinePoints : new[] { selectedSplinePoint };
-                    if (EditorGUI.EndChangeCheck())
+                    using (new EditorGUI.DisabledScope(!PathEditModeAllowsAdjust(pathEditMode)))
                     {
-                        BeginLightweightPathUndo(set, "Edit Path Point Dynamics");
-                        foreach (int point in selected)
+                        EditorGUI.BeginChangeCheck();
+                        TexturePaintTangentMode tangentMode = (TexturePaintTangentMode)EditorGUILayout.EnumPopup("Tangent", spline.tangentModes[selectedSplinePoint]);
+                        float pointPressure = EditorGUILayout.Slider("Pressure", spline.pressures[selectedSplinePoint], 0f, 1f);
+                        float pointWidthPercent = EditorGUILayout.Slider(new GUIContent("Width (%)", "Brush width at this point as a percentage of the path width"),
+                            spline.widths[selectedSplinePoint] * 100f, 5f, 400f);
+                        float pointWidth = pointWidthPercent * 0.01f;
+                        float pointFlow = EditorGUILayout.Slider("Flow", spline.flows[selectedSplinePoint], 0f, 2f);
+                        float pointRoll = EditorGUILayout.Slider("Roll", spline.rolls[selectedSplinePoint], -180f, 180f);
+                        float pointOffset = spline.offsets[selectedSplinePoint];
+                        using (new EditorGUI.DisabledScope(!spline.worldSpace))
+                            pointOffset = EditorGUILayout.Slider("Surface Offset", pointOffset, -0.1f, 0.1f);
+                        Color pointColor = EditorGUILayout.ColorField("Color", spline.colors[selectedSplinePoint]);
+                        IReadOnlyCollection<int> selected = selectedSplinePoints != null && selectedSplinePoints.Count > 0
+                            ? selectedSplinePoints : new[] { selectedSplinePoint };
+                        if (EditorGUI.EndChangeCheck())
                         {
-                            if ((uint)point >= (uint)spline.PointCount) continue;
-                            spline.SetTangentMode(point, tangentMode);
-                            spline.pressures[point] = pointPressure; spline.widths[point] = pointWidth;
-                            spline.flows[point] = pointFlow; spline.rolls[point] = pointRoll;
-                            spline.offsets[point] = pointOffset; spline.colors[point] = pointColor;
+                            BeginLightweightPathUndo(set, "Edit Path Point Dynamics");
+                            foreach (int point in selected)
+                            {
+                                if ((uint)point >= (uint)spline.PointCount) continue;
+                                spline.SetTangentMode(point, tangentMode);
+                                spline.pressures[point] = pointPressure; spline.widths[point] = pointWidth;
+                                spline.flows[point] = pointFlow; spline.rolls[point] = pointRoll;
+                                spline.offsets[point] = pointOffset; spline.colors[point] = pointColor;
+                            }
+                            CompleteLightweightPathEdit(set, false);
                         }
-                        CompleteLightweightPathEdit(set, false);
                     }
                 }
             }
@@ -1371,7 +1385,9 @@ namespace UMA.TexturePaint.Editor
                 spline = (uint)set.activeLayerIndex < (uint)set.layers.Count ? set.layers[set.activeLayerIndex].spline : null;
                 selectedSplinePoint = -1;
                 TexturePaintDockWindow.RepaintOpenWindows();
+                TexturePaintToolWindow.RepaintOpenWindows();
                 TexturePaintUVWindow.RepaintOpenWindows();
+                TexturePaintBrushWindow.RepaintOpenWindows();
                 return;
             }
         }
@@ -1616,7 +1632,8 @@ namespace UMA.TexturePaint.Editor
                     if (activeLayer.kind == TexturePaintLayerKind.Paint || activeLayer.IsSplineLayer)
                         sourceMode = TexturePaintSourceMode.SourceOverlay;
                     spline = activeLayer.spline;
-                    splineMode = activeLayer.IsSplineLayer && activeLayer.spline?.worldSpace == true;
+                    splineMode = activeLayer.visible && activeLayer.IsSplineLayer &&
+                        activeLayer.spline?.worldSpace == true;
                     if (activeLayer.kind == TexturePaintLayerKind.Fill)
                     {
                         selectedChannel = activeLayer.fillChannel;
@@ -1654,14 +1671,17 @@ namespace UMA.TexturePaint.Editor
                 uvDraggingSplineHandle = UVSplineHandleKind.None;
                 uvSplineHandleUndoStarted = false;
                 SceneView.RepaintAll();
+                TexturePaintToolWindow.RepaintOpenWindows();
             }
             finally { syncingLogicalLayerSelection = false; }
         }
 
         internal static bool IsActiveSplineAuthoringLayer(TextureSet set, int layerIndex)
         {
-            return set != null && set.activeLayerIndex == layerIndex &&
-                (uint)layerIndex < (uint)set.layers.Count && set.layers[layerIndex].IsSplineLayer;
+            if (set == null || set.activeLayerIndex != layerIndex ||
+                (uint)layerIndex >= (uint)set.layers.Count) return false;
+            TexturePaintLayer layer = set.layers[layerIndex];
+            return layer != null && layer.visible && layer.IsSplineLayer;
         }
 
         private static bool IsActivePaintLayer(TextureSet set)
@@ -1716,12 +1736,15 @@ namespace UMA.TexturePaint.Editor
             if (!IsSelectedSlotHit(hoverSurface, hoverHit.triangleIndex)) return;
             TextureSet set = controller.Textures.FindSet(hoverSurface.index);
             if (set == null) return;
-            BeginPaintAt(set, MakeSample(hoverSurface, hoverHit, hoverHit.textureCoord));
+            Event current = Event.current;
+            BeginPaintAt(set, MakeSample(hoverSurface, hoverHit, hoverHit.textureCoord),
+                viewOrigin: current?.mousePosition, constrainToViewAxis: current?.shift == true);
         }
 
         private void BeginPaintAt(TextureSet set, StrokeSample initialSample, bool applyInitialStroke = true,
-            bool directUV = false)
+            bool directUV = false, Vector2? viewOrigin = null, bool constrainToViewAxis = false)
         {
+            ConfigureStrokeViewConstraint(viewOrigin, constrainToViewAxis);
             if (set == null || !IsSurfaceSelected(set.surface)) return;
             if (IsLayerMaskMode(set))
             {
@@ -1838,6 +1861,7 @@ namespace UMA.TexturePaint.Editor
             hasInitialFollowStamp = false;
             initialFollowStamp = default;
             sampledStrokePoints.Clear();
+            completedStrokePoints.Clear();
             if (applyInitialStroke)
             {
                 strokeSampler.Add(initialSample, sampledStrokePoints);
@@ -1934,6 +1958,7 @@ namespace UMA.TexturePaint.Editor
             hasInitialFollowStamp = false;
             initialFollowStamp = default;
             sampledStrokePoints.Clear();
+            completedStrokePoints.Clear();
             if (applyInitialStroke)
             {
                 strokeSampler.Add(initialSample, sampledStrokePoints);
@@ -2010,12 +2035,15 @@ namespace UMA.TexturePaint.Editor
             return true;
         }
 
-        private static void PopulateLayerChannelSources(StrokeContext context, TexturePaintLayer layer)
+        internal static void PopulateLayerChannelSources(StrokeContext context, TexturePaintLayer layer)
         {
             if (context == null || layer == null) return;
             foreach (KeyValuePair<TexturePaintChannel, TexturePaintLayerChannelSettings> pair in
                 layer.channelSettings)
             {
+                // Channel settings can outlive a removed channel in upgraded documents or during
+                // undo. They are metadata, not authorization to create a new raster destination.
+                if (!layer.channels.ContainsKey(pair.Key)) continue;
                 TexturePaintChannelSourceSettings source = pair.Value?.sourceSettings;
                 if (source == null ||
                     (source.source == TexturePaintBrushSource.Texture &&
@@ -2024,7 +2052,9 @@ namespace UMA.TexturePaint.Editor
                     continue;
                 context.channelSources[pair.Key] = source;
             }
-            if (!context.channelSources.ContainsKey(context.channel) &&
+            bool canCreateInitialChannel = layer.channels.Count == 0 ||
+                layer.channels.ContainsKey(context.channel);
+            if (canCreateInitialChannel && !context.channelSources.ContainsKey(context.channel) &&
                 (context.paintSource == TexturePaintBrushSource.Color ||
                     context.paintSource == TexturePaintBrushSource.Texture &&
                         (context.sourceTexture != null || context.sourceSprite != null) ||
@@ -2067,13 +2097,53 @@ namespace UMA.TexturePaint.Editor
             ApplySampledStrokePoints();
         }
 
-        private void ApplySampledStrokePoints()
+        private void ConfigureStrokeViewConstraint(Vector2? origin, bool enabled)
+        {
+            strokeViewAxisOrigin = origin ?? Vector2.zero;
+            strokeViewAxis = enabled && origin.HasValue
+                ? StrokeViewAxis.Pending
+                : StrokeViewAxis.None;
+        }
+
+        private void ResetStrokeViewConstraint()
+        {
+            strokeViewAxis = StrokeViewAxis.None;
+            strokeViewAxisOrigin = Vector2.zero;
+        }
+
+        private Vector2 ResolveStrokeViewPoint(Vector2 point)
+        {
+            return ConstrainStrokeViewPoint(strokeViewAxisOrigin, point, ref strokeViewAxis);
+        }
+
+        internal static Vector2 ConstrainStrokeViewPoint(Vector2 origin, Vector2 point,
+            ref StrokeViewAxis axis)
+        {
+            if (axis == StrokeViewAxis.None) return point;
+            Vector2 delta = point - origin;
+            if (axis == StrokeViewAxis.Pending)
+            {
+                // Ignore sub-pixel jitter so the first actual drag establishes the axis.
+                if (delta.sqrMagnitude < 1f) return origin;
+                axis = Mathf.Abs(delta.x) >= Mathf.Abs(delta.y)
+                    ? StrokeViewAxis.Horizontal
+                    : StrokeViewAxis.Vertical;
+            }
+            return axis == StrokeViewAxis.Horizontal
+                ? new Vector2(point.x, origin.y)
+                : new Vector2(origin.x, point.y);
+        }
+
+        private void ApplySampledStrokePoints(bool completedAutoEvolution = false,
+            float completedStrokeLength = 0f, bool rememberPoints = true)
         {
             RestampInitialFollowStampIfDirectionKnown();
             for (int i = 0; i < sampledStrokePoints.Count; i++)
             {
                 StrokeSample sample = sampledStrokePoints[i];
-                AccumulateAndApplyStrokeEvolution(ref sample);
+                if (rememberPoints) completedStrokePoints.Add(sample);
+                AccumulateAndApplyStrokeEvolution(ref sample, completedAutoEvolution,
+                    completedStrokeLength);
                 if ((ActiveBrush.fade && sample.flowMultiplier <= 0f) ||
                     (ActiveBrush.taper && sample.sizeMultiplier <= 0f))
                     continue;
@@ -2102,23 +2172,40 @@ namespace UMA.TexturePaint.Editor
             hasPaintStrokeDistanceSample = false;
         }
 
-        private void AccumulateAndApplyStrokeEvolution(ref StrokeSample sample)
+        private void AccumulateAndApplyStrokeEvolution(ref StrokeSample sample,
+            bool completedAutoEvolution, float completedStrokeLength)
         {
             if (hasPaintStrokeDistanceSample)
                 paintStrokeWorldDistance += Vector3.Distance(
                     sample.previousWorldPosition, sample.worldPosition);
             else hasPaintStrokeDistanceSample = true;
-            ApplyStrokeEvolution(ref sample, ActiveBrush, paintStrokeWorldDistance);
+            ApplyStrokeEvolution(ref sample, ActiveBrush, paintStrokeWorldDistance,
+                completedStrokeLength, completedAutoEvolution);
         }
 
         internal static void ApplyStrokeEvolution(ref StrokeSample sample, BrushPreset paintBrush,
-            float worldDistance)
+            float worldDistance, float completedStrokeLength = 0f,
+            bool completedAutoEvolution = false)
         {
             if (paintBrush == null || (!paintBrush.fade && !paintBrush.taper)) return;
-            float factor = 1f - Mathf.Clamp01(Mathf.Max(0f, worldDistance) /
-                paintBrush.ResolvedFadeTaperLength);
-            if (paintBrush.fade) sample.flowMultiplier *= factor;
-            if (paintBrush.taper) sample.sizeMultiplier *= factor;
+            if (paintBrush.fade && (!paintBrush.autoFade || completedAutoEvolution))
+            {
+                float length = paintBrush.autoFade
+                    ? completedStrokeLength : paintBrush.ResolvedFadeTaperLength;
+                sample.flowMultiplier *= StrokeEvolutionFactor(worldDistance, length);
+            }
+            if (paintBrush.taper && (!paintBrush.autoTaper || completedAutoEvolution))
+            {
+                float length = paintBrush.autoTaper
+                    ? completedStrokeLength : paintBrush.ResolvedFadeTaperLength;
+                sample.sizeMultiplier *= StrokeEvolutionFactor(worldDistance, length);
+            }
+        }
+
+        private static float StrokeEvolutionFactor(float worldDistance, float length)
+        {
+            if (length <= 0.000001f) return 1f;
+            return 1f - Mathf.Clamp01(Mathf.Max(0f, worldDistance) / length);
         }
 
         internal static void ApplyPaintRandomVariation(ref StrokeSample sample, BrushPreset paintBrush,
@@ -2425,6 +2512,7 @@ namespace UMA.TexturePaint.Editor
             sampledStrokePoints.Clear();
             strokeSampler.Flush(sampledStrokePoints);
             ApplySampledStrokePoints();
+            ReapplyCompletedAutoEvolution();
             controller.Painting.EndStroke(true);
             if (controller.Painting.History.CommitVersion != paintHistoryVersionAtStrokeStart)
             {
@@ -2462,8 +2550,51 @@ namespace UMA.TexturePaint.Editor
             strokeLogicalTarget = null;
             strokeTextureSets.Clear();
             previousContactSamples.Clear();
+            completedStrokePoints.Clear();
             initialFollowStampPending = false;
             hasInitialFollowStamp = false;
+            ResetStrokeViewConstraint();
+        }
+
+        private void ReapplyCompletedAutoEvolution()
+        {
+            BrushPreset active = ActiveBrush;
+            bool autoFade = active.fade && active.autoFade;
+            bool autoTaper = active.taper && active.autoTaper;
+            if ((!autoFade && !autoTaper) || completedStrokePoints.Count == 0) return;
+
+            float completedLength = paintStrokeWorldDistance;
+            if (!controller.Painting.RewindActiveStroke(true) &&
+                !controller.Painting.RewindActiveStroke()) return;
+
+            previousContactSamples.Clear();
+            paintRandomStampIndex = 0;
+            paintStrokeWorldDistance = 0f;
+            hasPaintStrokeDistanceSample = false;
+            initialFollowStampPending = false;
+            hasInitialFollowStamp = false;
+            sampledStrokePoints.Clear();
+            sampledStrokePoints.AddRange(completedStrokePoints);
+            PrepareFirstCompletedStrokePoint(active);
+            ApplySampledStrokePoints(true, completedLength, false);
+        }
+
+        private void PrepareFirstCompletedStrokePoint(BrushPreset active)
+        {
+            if (active == null || !active.alignToStroke || sampledStrokePoints.Count == 0 ||
+                sampledStrokePoints[0].direction.sqrMagnitude > 0.00000001f) return;
+            Vector3 direction = Vector3.zero;
+            for (int i = 1; i < sampledStrokePoints.Count; i++)
+            {
+                direction = sampledStrokePoints[i].direction;
+                if (direction.sqrMagnitude > 0.00000001f) break;
+            }
+            if (direction.sqrMagnitude <= 0.00000001f) return;
+            StrokeSample first = sampledStrokePoints[0];
+            first.direction = direction.normalized;
+            first.previousWorldPosition = first.worldPosition -
+                first.direction * active.StampSpacing;
+            sampledStrokePoints[0] = first;
         }
 
         internal static Vector2 ResolveFollowStrokeMotion(StrokeSample sample, BrushProjection projection)
@@ -2498,7 +2629,9 @@ namespace UMA.TexturePaint.Editor
         {
             textureWindowRepaintPending = false;
             TexturePaintDockWindow.RepaintOpenWindows();
+            TexturePaintToolWindow.RepaintOpenWindows();
             TexturePaintUVWindow.RepaintOpenWindows();
+            TexturePaintBrushWindow.RepaintOpenWindows();
         }
 
         private void OnPluginChanged()
@@ -2514,10 +2647,7 @@ namespace UMA.TexturePaint.Editor
                 for (int i = 0; i < controller.Textures.Sets.Count; i++) controller.Textures.Sets[i].BindPreviewTextures();
             TextureSet activeSet = ActiveTextureSet;
             if (TryGetActivePathLayer(activeSet, out _))
-            {
-                QueueSplineReapply(activeSet);
-                ScheduleSplineReapply();
-            }
+                RequestSplineReapply(activeSet, false);
             MarkDocumentDirty();
             SceneView.RepaintAll();
         }
@@ -2657,16 +2787,20 @@ namespace UMA.TexturePaint.Editor
 
         private void ResetTexturePaintRuntimeState()
         {
-            EditorApplication.delayCall -= ReapplySplineAfterGUI;
+            EditorApplication.update -= ReapplySplineAfterGUI;
             splineReapplyDelayScheduled = false;
+            splineReapplyNotBefore = 0d;
             splineReapplyPending = false;
             pendingSplineSet = null;
             pendingSplineLayer = null;
             if (controller.Painting.IsPainting) controller.Painting.EndStroke(false);
             strokeActive = false;
             paintGestureActive = false;
+            ResetStrokeViewConstraint();
             initialFollowStampPending = false;
             hasInitialFollowStamp = false;
+            sampledStrokePoints.Clear();
+            completedStrokePoints.Clear();
             applyingSpline = false;
             controller.Painting.History.Clear();
             controller.Plugins?.ClearHistory();
@@ -2750,9 +2884,33 @@ namespace UMA.TexturePaint.Editor
             if (!TryGetActivePathLayer(set, out TexturePaintLayer layer)) return;
             CaptureSplineSettings(layer);
             CompleteCustomPathEdit(set, deferUntilMouseUp);
-            QueueSplineReapply(set);
-            if (!deferUntilMouseUp) ScheduleSplineReapply();
+            RequestSplineReapply(set, deferUntilMouseUp);
             MarkDocumentDirty();
+        }
+
+        private void RequestSplineReapply(TextureSet set, bool coalesceInteractiveEdits)
+        {
+            if (!TryGetActivePathLayer(set, out TexturePaintLayer layer)) return;
+            if (!pathAutoUpdate)
+            {
+                if (ReferenceEquals(pendingSplineSet, set) && ReferenceEquals(pendingSplineLayer, layer))
+                    CancelScheduledSplineReapply();
+                ShowWorkspaceStatus("Path changed · press Update to rebuild");
+                RepaintAll();
+                return;
+            }
+            QueueSplineReapply(set);
+            ScheduleSplineReapply(coalesceInteractiveEdits);
+        }
+
+        private void CancelScheduledSplineReapply()
+        {
+            EditorApplication.update -= ReapplySplineAfterGUI;
+            splineReapplyDelayScheduled = false;
+            splineReapplyNotBefore = 0d;
+            splineReapplyPending = false;
+            pendingSplineSet = null;
+            pendingSplineLayer = null;
         }
 
         private void SelectSingleSplinePoint(int pointIndex)
@@ -2818,10 +2976,14 @@ namespace UMA.TexturePaint.Editor
             if (!TryGetActivePathLayer(set, out TexturePaintLayer layer) ||
                 (uint)pointIndex >= (uint)layer.spline.PointCount) return;
             GenericMenu menu = new GenericMenu();
-            menu.AddItem(new GUIContent("Straight Handles (Linear)"), false,
-                () => StraightenSelectedSplinePoints(set));
-            menu.AddItem(new GUIContent("Delete Point"), false,
-                () => DeleteSelectedSplinePoints(set));
+            if (PathEditModeAllowsAdjust(pathEditMode))
+                menu.AddItem(new GUIContent("Straight Handles (Linear)"), false,
+                    () => StraightenSelectedSplinePoints(set));
+            else menu.AddDisabledItem(new GUIContent("Straight Handles (Linear)"));
+            if (PathEditModeAllowsTopology(pathEditMode))
+                menu.AddItem(new GUIContent("Delete Point"), false,
+                    () => DeleteSelectedSplinePoints(set));
+            else menu.AddDisabledItem(new GUIContent("Delete Point"));
             menu.AddSeparator(string.Empty);
             int[] widthPercentages = { 25, 50, 75, 100, 125, 150, 200, 300, 400 };
             float currentWidth = layer.spline.widths[pointIndex];
@@ -2829,9 +2991,12 @@ namespace UMA.TexturePaint.Editor
             {
                 int percentage = widthPercentages[i];
                 float multiplier = percentage * 0.01f;
-                menu.AddItem(new GUIContent($"Width/{percentage}%"),
-                    Mathf.Approximately(currentWidth, multiplier),
-                    () => SetSplinePointWidth(set, pointIndex, multiplier));
+                if (PathEditModeAllowsAdjust(pathEditMode))
+                    menu.AddItem(new GUIContent($"Width/{percentage}%"),
+                        Mathf.Approximately(currentWidth, multiplier),
+                        () => SetSplinePointWidth(set, pointIndex, multiplier));
+                else menu.AddDisabledItem(new GUIContent($"Width/{percentage}%"),
+                    Mathf.Approximately(currentWidth, multiplier));
             }
             menu.ShowAsContext();
         }
@@ -2844,17 +3009,40 @@ namespace UMA.TexturePaint.Editor
             return layer != null && layer.IsSplineLayer && layer.spline != null;
         }
 
-        private void ScheduleSplineReapply()
+        internal static bool PathEditModeAllowsTopology(TexturePaintPathEditMode mode)
+            => mode == TexturePaintPathEditMode.Standard;
+
+        internal static bool PathEditModeAllowsMove(TexturePaintPathEditMode mode)
+            => mode != TexturePaintPathEditMode.Adjust;
+
+        internal static bool PathEditModeAllowsAdjust(TexturePaintPathEditMode mode)
+            => mode != TexturePaintPathEditMode.Move;
+
+        private void ScheduleSplineReapply(bool coalesceInteractiveEdits = false)
         {
-            if (!splineReapplyPending || splineReapplyDelayScheduled) return;
+            if (!splineReapplyPending) return;
+            splineReapplyNotBefore = coalesceInteractiveEdits
+                ? EditorApplication.timeSinceStartup + InteractiveSplineReapplyDelaySeconds
+                : EditorApplication.timeSinceStartup;
+            if (splineReapplyDelayScheduled) return;
             splineReapplyDelayScheduled = true;
-            EditorApplication.delayCall += ReapplySplineAfterGUI;
+            EditorApplication.update += ReapplySplineAfterGUI;
         }
 
         private void ReapplySplineAfterGUI()
         {
+            if (controller == null || !splineReapplyPending)
+            {
+                EditorApplication.update -= ReapplySplineAfterGUI;
+                splineReapplyDelayScheduled = false;
+                splineReapplyNotBefore = 0d;
+                return;
+            }
+            if (pendingPathEdit?.deferred == true ||
+                EditorApplication.timeSinceStartup < splineReapplyNotBefore) return;
+            EditorApplication.update -= ReapplySplineAfterGUI;
             splineReapplyDelayScheduled = false;
-            if (controller == null || !splineReapplyPending) return;
+            splineReapplyNotBefore = 0d;
             ReapplyPendingSpline();
             RepaintAll();
         }
@@ -3043,6 +3231,9 @@ namespace UMA.TexturePaint.Editor
 
         private void ApplySpline()
         {
+            EditorApplication.update -= ReapplySplineAfterGUI;
+            splineReapplyDelayScheduled = false;
+            splineReapplyNotBefore = 0d;
             splineReapplyPending = false;
             pendingSplineSet = null;
             pendingSplineLayer = null;
@@ -3914,7 +4105,9 @@ namespace UMA.TexturePaint.Editor
                 brushSplatterDistance = active.splatterDistance,
                 brushRandomStrength = active.randomStrength,
                 brushFade = active.fade,
+                brushAutoFade = active.autoFade,
                 brushTaper = active.taper,
+                brushAutoTaper = active.autoTaper,
                 brushFadeTaperLength = active.fadeTaperLength,
                 sourceTexture = paintSourceSprite == null ? paintSourceTexture : null,
                 sourceSprite = paintSourceSprite,
@@ -3984,7 +4177,9 @@ namespace UMA.TexturePaint.Editor
             target.splatterDistance = Mathf.Clamp(settings.brushSplatterDistance, 0.01f, 2f);
             target.randomStrength = settings.brushRandomStrength;
             target.fade = settings.brushFade;
+            target.autoFade = settings.brushAutoFade;
             target.taper = settings.brushTaper;
+            target.autoTaper = settings.brushAutoTaper;
             target.fadeTaperLength = Mathf.Max(0f, settings.brushFadeTaperLength);
         }
 
@@ -4036,7 +4231,8 @@ namespace UMA.TexturePaint.Editor
                 a.brushSplatter == b.brushSplatter &&
                 a.brushSplatterDistance == b.brushSplatterDistance &&
                 a.brushRandomStrength == b.brushRandomStrength &&
-                a.brushFade == b.brushFade && a.brushTaper == b.brushTaper &&
+                a.brushFade == b.brushFade && a.brushAutoFade == b.brushAutoFade &&
+                a.brushTaper == b.brushTaper && a.brushAutoTaper == b.brushAutoTaper &&
                 a.brushFadeTaperLength == b.brushFadeTaperLength &&
                 a.sourceTexture == b.sourceTexture && a.sourceSprite == b.sourceSprite &&
                 a.sourceOverlay == b.sourceOverlay && a.color == b.color &&
@@ -4078,8 +4274,13 @@ namespace UMA.TexturePaint.Editor
                 brushSplatterDistance = active.splatterDistance,
                 brushRandomStrength = active.randomStrength,
                 brushFade = active.fade,
+                brushAutoFade = active.autoFade,
                 brushTaper = active.taper,
+                brushAutoTaper = active.autoTaper,
                 brushFadeTaperLength = active.fadeTaperLength,
+                editorSettingsVersion = TexturePaintSplineSettings.CurrentEditorSettingsVersion,
+                editMode = pathEditMode,
+                autoUpdate = pathAutoUpdate,
                 sourceTexture = paintSourceSprite == null ? paintSourceTexture : null,
                 sourceSprite = paintSourceSprite,
                 ribbonBeginningTexture = ribbonBeginningSprite == null ? ribbonBeginningTexture : null,
@@ -4182,8 +4383,7 @@ namespace UMA.TexturePaint.Editor
                 RecordLightweightPathParameterUndo(previousSet, previousSettings, undoLabel);
             else
             {
-                QueueSplineReapply(previousSet);
-                ScheduleSplineReapply();
+                RequestSplineReapply(previousSet, false);
             }
         }
 
@@ -4219,7 +4419,9 @@ namespace UMA.TexturePaint.Editor
                 hash = hash * 31 + settings.brushSplatterDistance.GetHashCode();
                 hash = hash * 31 + (settings.brushRandomStrength ? 1 : 0);
                 hash = hash * 31 + (settings.brushFade ? 1 : 0);
+                hash = hash * 31 + (settings.brushAutoFade ? 1 : 0);
                 hash = hash * 31 + (settings.brushTaper ? 1 : 0);
+                hash = hash * 31 + (settings.brushAutoTaper ? 1 : 0);
                 hash = hash * 31 + settings.brushFadeTaperLength.GetHashCode();
                 hash = hash * 31 + ObjectIdentityHash(settings.sourceTexture);
                 hash = hash * 31 + ObjectIdentityHash(settings.sourceSprite);
@@ -4287,6 +4489,7 @@ namespace UMA.TexturePaint.Editor
 
         private void RestoreSplineSettings(TexturePaintSplineSettings settings)
         {
+            settings.MigrateEditorSettings();
             tool = settings.tool;
             selectedChannel = settings.channel;
             paintSource = settings.source;
@@ -4303,6 +4506,9 @@ namespace UMA.TexturePaint.Editor
             strength = settings.strength;
             limitStrokeCoverage = settings.limitStrokeCoverage;
             mirrorX = settings.mirrorX;
+            pathEditMode = Enum.IsDefined(typeof(TexturePaintPathEditMode), settings.editMode)
+                ? settings.editMode : TexturePaintPathEditMode.Standard;
+            pathAutoUpdate = settings.AutoUpdateEnabled;
             pathMode = settings.pathMode;
             pathOrientation = settings.orientation;
             pathStartCap = settings.startCap;
@@ -4343,7 +4549,9 @@ namespace UMA.TexturePaint.Editor
             target.splatterDistance = Mathf.Clamp(settings.brushSplatterDistance, 0.01f, 2f);
             target.randomStrength = settings.brushRandomStrength;
             target.fade = settings.brushFade;
+            target.autoFade = settings.brushAutoFade;
             target.taper = settings.brushTaper;
+            target.autoTaper = settings.brushAutoTaper;
             target.fadeTaperLength = Mathf.Max(0f, settings.brushFadeTaperLength);
         }
 
@@ -4407,7 +4615,8 @@ namespace UMA.TexturePaint.Editor
             // when the previously selected path used Stamps, Continuous, or Filled mode.
             SetSelectedChannelAndRefreshSource(TexturePaintChannel.Albedo);
             pathMode = TexturePaintPathMode.Ribbon;
-            TexturePaintLayer layer = set.AddSplineLayer();
+            ResetPathEditingDefaults();
+            TexturePaintLayer layer = set.AddSplineLayer("Path Layer " + (set.layers.Count + 1));
             layer.visible = true;
             layer.splineSettings = CreateSplineSettings();
             spline = layer.spline;
@@ -4415,6 +4624,12 @@ namespace UMA.TexturePaint.Editor
             selectedSplinePoint = -1;
             SceneView.RepaintAll();
             return layer;
+        }
+
+        private void ResetPathEditingDefaults()
+        {
+            pathEditMode = TexturePaintPathEditMode.Standard;
+            pathAutoUpdate = true;
         }
 
         private TexturePaintLayer CreateSplineLayerWithUndo(TextureSet set)
@@ -4489,13 +4704,14 @@ namespace UMA.TexturePaint.Editor
                     ? new Color(1f, 0.42f, 0.04f, 1f) : new Color(0.92f, 0.05f, 0.04f, 1f);
                 if (splineMode)
                 {
+                    bool canMovePoint = PathEditModeAllowsMove(pathEditMode);
                     int controlId = GUIUtility.GetControlID(SplineAnchorHandleHint + pointIndex, FocusType.Passive);
                     SplineSurfaceHandleEvent interaction = DoSurfaceProjectedHandle(controlId, point,
                         nodeSize, pointColor, Handles.SphereHandleCap,
                         out ReconstructedSurface hitSurface, out RaycastHit hit);
                     if (interaction == SplineSurfaceHandleEvent.Pressed)
                     {
-                        PrepareSplineHandleUndo(set, "Move Spline Point");
+                        if (canMovePoint) PrepareSplineHandleUndo(set, "Move Spline Point");
                         selectedSplinePoints ??= new HashSet<int>();
                         if (Event.current.control || Event.current.command)
                         {
@@ -4514,7 +4730,7 @@ namespace UMA.TexturePaint.Editor
                         SelectSingleSplinePoint(pointIndex);
                         ShowSplinePointContextMenu(set, pointIndex);
                     }
-                    else if (interaction == SplineSurfaceHandleEvent.Dragged)
+                    else if (interaction == SplineSurfaceHandleEvent.Dragged && canMovePoint)
                     {
                         BeginPreparedSplineHandleUndo();
                         TextureSet hitSet = controller.Textures.FindSet(hitSurface.index);
@@ -4531,9 +4747,11 @@ namespace UMA.TexturePaint.Editor
             if (splineMode && selectedSplinePoint >= 0 &&
                 selectedSplinePoint < layerSpline.PointCount)
             {
-                if (layerSpline.useBezier && layerSpline.showControls)
+                if (PathEditModeAllowsAdjust(pathEditMode) && layerSpline.useBezier &&
+                    layerSpline.showControls)
                     DrawSplineControlHandles(set, layerSpline, selectedSplinePoint);
-                DrawSplineWidthHandle(set, layerSpline, selectedSplinePoint);
+                if (PathEditModeAllowsAdjust(pathEditMode))
+                    DrawSplineWidthHandle(set, layerSpline, selectedSplinePoint);
             }
             Handles.color = previous;
         }
@@ -4561,10 +4779,14 @@ namespace UMA.TexturePaint.Editor
                 nodeSize, pointColor, Handles.SphereHandleCap,
                 out ReconstructedSurface hitSurface, out RaycastHit hit);
             if (interaction == SplineSurfaceHandleEvent.Pressed)
-                PrepareSplineHandleUndo(fallbackSet, "Position 2D Spline Point on Surface");
+            {
+                if (PathEditModeAllowsMove(pathEditMode))
+                    PrepareSplineHandleUndo(fallbackSet, "Position 2D Spline Point on Surface");
+            }
             else if (interaction == SplineSurfaceHandleEvent.ContextRequested)
                 ShowSplinePointContextMenu(fallbackSet, pointIndex);
-            else if (interaction == SplineSurfaceHandleEvent.Dragged)
+            else if (interaction == SplineSurfaceHandleEvent.Dragged &&
+                PathEditModeAllowsMove(pathEditMode))
             {
                 BeginPreparedSplineHandleUndo();
                 TextureSet hitSet = controller.Textures.FindSet(hitSurface.index);
@@ -4575,10 +4797,12 @@ namespace UMA.TexturePaint.Editor
 
             Vector3 tangent = CalculateTwoDimensionalSplineWorldTangent(projectionSet,
                 targetSpline, pointIndex, triangle, point, normal);
-            if (targetSpline.useBezier && targetSpline.showControls)
+            if (PathEditModeAllowsAdjust(pathEditMode) && targetSpline.useBezier &&
+                targetSpline.showControls)
                 DrawTwoDimensionalSplineControlHandles(fallbackSet, projectionSet, targetSpline,
                     pointIndex, point, surfaceOffset);
-            DrawSplineWidthHandle(fallbackSet, targetSpline, pointIndex, point, tangent, normal);
+            if (PathEditModeAllowsAdjust(pathEditMode))
+                DrawSplineWidthHandle(fallbackSet, targetSpline, pointIndex, point, tangent, normal);
             Handles.color = previous;
         }
 
@@ -4817,7 +5041,7 @@ namespace UMA.TexturePaint.Editor
                 case EventType.MouseUp:
                     if (splineHandleHotControl == controlId && current.button == 0)
                     {
-                        ReleaseSplineHandleCapture(true, true);
+                        ReleaseSplineHandleCapture(true, false);
                         current.Use();
                         SceneView.RepaintAll();
                     }
@@ -4918,7 +5142,7 @@ namespace UMA.TexturePaint.Editor
                 case EventType.MouseUp:
                     if (splineHandleHotControl == controlId && current.button == 0)
                     {
-                        ReleaseSplineHandleCapture(true, true);
+                        ReleaseSplineHandleCapture(true, false);
                         current.Use();
                         SceneView.RepaintAll();
                     }
@@ -4968,7 +5192,7 @@ namespace UMA.TexturePaint.Editor
             if (pendingPathEdit != null && pendingPathEdit.deferred) CommitPendingPathEdit();
             if (!splineReapplyPending) return;
             if (reapplyImmediately) ReapplyPendingSpline();
-            else ScheduleSplineReapply();
+            else ScheduleSplineReapply(true);
         }
 
         private void MoveSplinePointToSurfaceHit(TextureSet set, TexturePaintSpline targetSpline,
@@ -5246,9 +5470,12 @@ namespace UMA.TexturePaint.Editor
             state.workspaceShelfHeight = workspaceShelfHeight; state.workspaceShowToolRail = workspaceShowToolRail;
             state.workspaceShowTargets = workspaceShowTargets; state.workspaceShowLayers = workspaceShowLayers;
             state.workspaceShowProperties = workspaceShowProperties; state.workspaceShowAssetShelf = workspaceShowAssetShelf;
-            state.workspaceShowUV = workspaceShowUV; state.workspaceLeftTab = workspaceLeftTab; state.workspaceRightTab = workspaceRightTab;
+            state.workspaceShowUV = workspaceShowUV; state.workspacePanelTab = workspacePanelTab;
+            state.workspaceLeftTab = workspaceLeftTab; state.workspaceRightTab = workspaceRightTab;
             state.workspaceUVPan = workspaceUVPan; state.workspaceUVZoom = workspaceUVZoom;
-            state.channelSolo = channelSolo; state.previewBefore = previewBefore; state.uvPreviewBefore = uvPreviewBefore;
+            state.channelSolo = channelSolo; state.previewBefore = previewBefore;
+            state.scenePreviewMode = (int)SceneToolbarPreviewMode;
+            state.uvPreviewBefore = uvPreviewBefore;
             state.layerMaskMode = layerMaskMode; state.soloLayerMask = soloLayerMask;
             state.layerMaskPaintValue = layerMaskPaintValue;
             state.isolateSelectedSlots = isolateSelectedSlots; state.wireframe = wireframe;
@@ -5314,10 +5541,15 @@ namespace UMA.TexturePaint.Editor
                 workspaceShowToolRail = state.workspaceShowToolRail; workspaceShowTargets = state.workspaceShowTargets;
                 workspaceShowLayers = state.workspaceShowLayers; workspaceShowProperties = state.workspaceShowProperties;
                 workspaceShowAssetShelf = state.workspaceShowAssetShelf; workspaceShowUV = state.workspaceShowUV;
+                workspacePanelTab = state.version >= 17 ? Mathf.Clamp(state.workspacePanelTab, 0, 1) : 1;
                 workspaceLeftTab = Mathf.Clamp(state.workspaceLeftTab, 0, 1); workspaceRightTab = Mathf.Clamp(state.workspaceRightTab, 0, 1);
                 workspaceUVPan = state.workspaceUVPan; workspaceUVZoom = Mathf.Clamp(state.workspaceUVZoom, 0.2f, 8f);
                 channelSolo = state.channelSolo; previewBefore = state.previewBefore;
                 if (previewBefore) channelSolo = false;
+                scenePreviewMode = state.version >= 18 && Enum.IsDefined(typeof(TexturePaintScenePreviewMode),
+                    state.scenePreviewMode)
+                        ? (TexturePaintScenePreviewMode)state.scenePreviewMode
+                        : TexturePaintScenePreviewMode.Material;
                 uvPreviewBefore = state.version >= 11 && state.uvPreviewBefore;
                 layerMaskMode = state.version >= 14 && state.layerMaskMode;
                 soloLayerMask = state.version >= 14 && state.soloLayerMask;
@@ -5392,12 +5624,15 @@ namespace UMA.TexturePaint.Editor
         {
             SceneView.RepaintAll();
             TexturePaintDockWindow.RepaintOpenWindows();
+            TexturePaintToolWindow.RepaintOpenWindows();
             TexturePaintUVWindow.RepaintOpenWindows();
+            TexturePaintBrushWindow.RepaintOpenWindows();
         }
     }
 
     public sealed class TexturePaintDockWindow : EditorWindow
     {
+        internal const string WindowTitle = "Overlay Painter Layers";
         private static readonly HashSet<TexturePaintDockWindow> openWindows = new HashSet<TexturePaintDockWindow>();
         private static bool closeDecisionPending;
         private static bool editorQuitting;
@@ -5416,7 +5651,8 @@ namespace UMA.TexturePaint.Editor
         public static void ShowDockable()
         {
             TexturePaintDockWindow window = GetWindow<TexturePaintDockWindow>();
-            window.titleContent = new GUIContent("Overlay Painter", EditorGUIUtility.IconContent("Texture Icon").image);
+            window.titleContent = new GUIContent(WindowTitle,
+                EditorGUIUtility.IconContent("Texture Icon").image);
             window.minSize = new Vector2(500f, 360f);
             window.Show();
             window.Focus();
@@ -5431,7 +5667,8 @@ namespace UMA.TexturePaint.Editor
         private void OnEnable()
         {
             openWindows.Add(this);
-            titleContent = new GUIContent("Overlay Painter", EditorGUIUtility.IconContent("Texture Icon").image);
+            titleContent = new GUIContent(WindowTitle,
+                EditorGUIUtility.IconContent("Texture Icon").image);
             minSize = new Vector2(500f, 360f);
         }
 
@@ -5515,6 +5752,69 @@ namespace UMA.TexturePaint.Editor
     }
 
     /// <summary>
+    /// Dockable, responsive host for the stage-owned painting tools. Buttons wrap to the
+    /// available width so the palette can sit beside or below the Scene view.
+    /// </summary>
+    public sealed class TexturePaintToolWindow : EditorWindow
+    {
+        internal const string WindowTitle = "Overlay Painter Toolbar";
+        private static readonly HashSet<TexturePaintToolWindow> openWindows =
+            new HashSet<TexturePaintToolWindow>();
+
+        [MenuItem("Window/UMA/Overlay Painter Toolbar")]
+        public static void ShowDockable()
+        {
+            TexturePaintToolWindow window = GetWindow<TexturePaintToolWindow>();
+            window.Configure();
+            window.Show();
+            window.Focus();
+        }
+
+        internal static void RepaintOpenWindows()
+        {
+            foreach (TexturePaintToolWindow window in openWindows)
+                if (window != null) window.Repaint();
+        }
+
+        private void OnEnable()
+        {
+            openWindows.Add(this);
+            Configure();
+        }
+
+        private void OnDisable()
+        {
+            openWindows.Remove(this);
+        }
+
+        private void OnGUI()
+        {
+            TexturePaintStageWindow stage = ResolveStage();
+            if (stage == null || stage.Controller == null)
+            {
+                EditorGUILayout.HelpBox(
+                    "Open Overlay Painter from a SlotDataAssets Inspector, or a generated DynamicCharacterAvatar's Utilities section.",
+                    MessageType.Info);
+                return;
+            }
+            stage.DrawToolWorkspace(new Rect(0f, 0f, position.width, position.height));
+        }
+
+        private void Configure()
+        {
+            titleContent = new GUIContent(WindowTitle,
+                EditorGUIUtility.IconContent("Texture Icon").image);
+            minSize = new Vector2(64f, 64f);
+        }
+
+        private static TexturePaintStageWindow ResolveStage()
+        {
+            TexturePaintStageWindow stage = TexturePaintStageWindow.ActiveStage;
+            return stage ?? StageUtility.GetCurrentStage() as TexturePaintStageWindow;
+        }
+    }
+
+    /// <summary>
     /// Dockable host for the stage-owned 2D texture canvas. All selection, painting,
     /// history, and texture state remains on the active TexturePaintStageWindow.
     /// </summary>
@@ -5582,13 +5882,76 @@ namespace UMA.TexturePaint.Editor
         }
     }
 
+    /// <summary>
+    /// Dockable host for stage-owned brush and stroke projection controls. Keeping the state on
+    /// TexturePaintStageWindow lets this panel move independently without creating a second brush
+    /// model or a separate undo path.
+    /// </summary>
+    public sealed class TexturePaintBrushWindow : EditorWindow
+    {
+        private static readonly HashSet<TexturePaintBrushWindow> openWindows =
+            new HashSet<TexturePaintBrushWindow>();
+
+        [MenuItem("Window/UMA/Overlay Painter Brush Controls")]
+        public static void ShowDockable()
+        {
+            TexturePaintBrushWindow window = GetWindow<TexturePaintBrushWindow>();
+            window.Configure();
+            window.Show();
+            window.Focus();
+        }
+
+        internal static void RepaintOpenWindows()
+        {
+            foreach (TexturePaintBrushWindow window in openWindows)
+                if (window != null) window.Repaint();
+        }
+
+        private void OnEnable()
+        {
+            openWindows.Add(this);
+            Configure();
+        }
+
+        private void OnDisable()
+        {
+            openWindows.Remove(this);
+        }
+
+        private void OnGUI()
+        {
+            TexturePaintStageWindow stage = ResolveStage();
+            if (stage == null || stage.Controller == null)
+            {
+                EditorGUILayout.HelpBox(
+                    "Open Overlay Painter from a SlotDataAssets Inspector, or a generated DynamicCharacterAvatar's Utilities section.",
+                    MessageType.Info);
+                return;
+            }
+            stage.DrawBrushWorkspace(new Rect(0f, 0f, position.width, position.height));
+        }
+
+        private void Configure()
+        {
+            titleContent = new GUIContent("Overlay Painter Brush",
+                EditorGUIUtility.IconContent("Texture Icon").image);
+            minSize = new Vector2(300f, 320f);
+        }
+
+        private static TexturePaintStageWindow ResolveStage()
+        {
+            TexturePaintStageWindow stage = TexturePaintStageWindow.ActiveStage;
+            return stage ?? StageUtility.GetCurrentStage() as TexturePaintStageWindow;
+        }
+    }
+
     internal static class TexturePaintDocumentAssetOpen
     {
         [UnityEditor.Callbacks.OnOpenAsset(0)]
-        public static bool OpenDocument(int instanceId, int line)
+        public static bool OpenDocument(EntityId entityId, int line)
         {
             _ = line;
-            TexturePaintDocument document = EditorUtility.EntityIdToObject(instanceId) as TexturePaintDocument;
+            TexturePaintDocument document = EditorUtility.EntityIdToObject(entityId) as TexturePaintDocument;
             return document != null && TexturePaintStageWindow.OpenDocumentAsset(document);
         }
     }

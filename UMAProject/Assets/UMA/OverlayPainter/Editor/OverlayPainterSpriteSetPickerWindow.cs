@@ -93,9 +93,14 @@ namespace UMA.TexturePaint.Editor
         private readonly List<OverlayPainterSpriteSet> spriteSets = new List<OverlayPainterSpriteSet>();
         private readonly List<Sprite> previewSprites = new List<Sprite>();
         private Action<OverlayPainterSpriteSet, int, Vector2> onAdd;
+        private Action<OverlayPainterSpriteSet, int, Vector2, TexturePaintFillProjection> onAddFill;
+        private Action<OverlayPainterSpriteSet, int> onAddPath;
         private Vector2 setScroll;
         private Vector2 spriteScroll;
         private Vector2 initialTiling = Vector2.one;
+        private TexturePaintFillProjection initialProjection = TexturePaintFillProjection.Flat;
+        private bool configureFill;
+        private bool configurePath;
         private int selectedSetIndex;
         private int selectedSpriteIndex = -1;
 
@@ -105,6 +110,29 @@ namespace UMA.TexturePaint.Editor
             window.titleContent = new GUIContent("Add from Sprite Set");
             window.minSize = new Vector2(620f, 390f);
             window.onAdd = addCallback;
+            window.RefreshAssets();
+            window.ShowUtility();
+        }
+
+        public static void ShowForFill(
+            Action<OverlayPainterSpriteSet, int, Vector2, TexturePaintFillProjection> addCallback)
+        {
+            var window = CreateInstance<OverlayPainterSpriteSetPickerWindow>();
+            window.titleContent = new GUIContent("Add Fill from Sprite Set");
+            window.minSize = new Vector2(620f, 420f);
+            window.configureFill = true;
+            window.onAddFill = addCallback;
+            window.RefreshAssets();
+            window.ShowUtility();
+        }
+
+        public static void ShowForPath(Action<OverlayPainterSpriteSet, int> addCallback)
+        {
+            var window = CreateInstance<OverlayPainterSpriteSetPickerWindow>();
+            window.titleContent = new GUIContent("Add Path from Sprite Set");
+            window.minSize = new Vector2(620f, 390f);
+            window.configurePath = true;
+            window.onAddPath = addCallback;
             window.RefreshAssets();
             window.ShowUtility();
         }
@@ -146,11 +174,18 @@ namespace UMA.TexturePaint.Editor
         {
             const float padding = 6f;
             const float introductionHeight = 38f;
-            const float footerHeight = 30f;
+            float footerHeight = configureFill ? 56f : 30f;
             Rect introduction = new Rect(padding, padding,
                 Mathf.Max(0f, position.width - padding * 2f), introductionHeight);
-            GUI.Label(introduction, "Choose one material tile. Its configured channel sprites will be " +
-                "assigned to the selected Paint, Fill, or Path layer.", EditorStyles.wordWrappedLabel);
+            GUI.Label(introduction, configureFill
+                    ? "Choose one material tile. Every compatible channel sprite will be assigned " +
+                      "to a new Fill layer."
+                    : configurePath
+                        ? "Choose one material tile. Every compatible channel sprite will be assigned " +
+                          "to a new Ribbon Path layer."
+                        : "Choose one material tile. Its configured channel sprites will be assigned " +
+                          "to the selected Paint layer.",
+                EditorStyles.wordWrappedLabel);
 
             float columnsTop = introduction.yMax + padding;
             float footerTop = Mathf.Max(columnsTop, position.height - footerHeight - padding);
@@ -247,6 +282,16 @@ namespace UMA.TexturePaint.Editor
 
         private void DrawFooter(Rect rect)
         {
+            if (configureFill)
+            {
+                DrawFillFooter(rect);
+                return;
+            }
+            if (configurePath)
+            {
+                DrawPathFooter(rect);
+                return;
+            }
             const float buttonWidth = 88f;
             const float gap = 6f;
             Rect refresh = new Rect(rect.x, rect.y, buttonWidth, EditorGUIUtility.singleLineHeight + 4f);
@@ -274,6 +319,62 @@ namespace UMA.TexturePaint.Editor
             }
         }
 
+        private void DrawPathFooter(Rect rect)
+        {
+            const float buttonWidth = 88f;
+            const float gap = 6f;
+            Rect refresh = new Rect(rect.x, rect.y, buttonWidth,
+                EditorGUIUtility.singleLineHeight + 4f);
+            Rect add = new Rect(rect.xMax - buttonWidth, rect.y, buttonWidth,
+                EditorGUIUtility.singleLineHeight + 4f);
+            Rect cancel = new Rect(add.x - gap - buttonWidth, rect.y, buttonWidth,
+                EditorGUIUtility.singleLineHeight + 4f);
+            if (GUI.Button(refresh, "Refresh")) RefreshAssets();
+            if (GUI.Button(cancel, "Cancel")) Close();
+            using (new EditorGUI.DisabledScope(!CanAddSelectedSprite))
+            {
+                if (GUI.Button(add, "Add")) AddSelectedSprite();
+            }
+        }
+
+        private void DrawFillFooter(Rect rect)
+        {
+            const float buttonWidth = 88f;
+            const float gap = 6f;
+            float settingsWidth = Mathf.Max(0f, rect.width - gap * 2f);
+            float projectionWidth = Mathf.Min(210f, settingsWidth * 0.38f);
+            float tileWidth = Mathf.Max(0f, (settingsWidth - projectionWidth - gap * 2f) * 0.5f);
+            Rect projection = new Rect(rect.x, rect.y, projectionWidth,
+                EditorGUIUtility.singleLineHeight);
+            Rect initialX = new Rect(projection.xMax + gap, rect.y, tileWidth,
+                EditorGUIUtility.singleLineHeight);
+            Rect initialY = new Rect(initialX.xMax + gap, rect.y, tileWidth,
+                EditorGUIUtility.singleLineHeight);
+            initialProjection = (TexturePaintFillProjection)EditorGUI.EnumPopup(projection,
+                new GUIContent("Fill Type", "Flat uses UV coordinates; Triplanar projects through world space."),
+                initialProjection);
+            initialTiling.x = Mathf.Clamp(EditorGUI.FloatField(initialX,
+                new GUIContent("Tile X", "Initial horizontal fill tiling."), initialTiling.x),
+                0.01f, 1000f);
+            initialTiling.y = Mathf.Clamp(EditorGUI.FloatField(initialY,
+                new GUIContent("Tile Y", "Initial vertical fill tiling."), initialTiling.y),
+                0.01f, 1000f);
+
+            float buttonsY = rect.yMax - EditorGUIUtility.singleLineHeight - 4f;
+            Rect refresh = new Rect(rect.x, buttonsY, buttonWidth,
+                EditorGUIUtility.singleLineHeight + 4f);
+            Rect add = new Rect(rect.xMax - buttonWidth, buttonsY, buttonWidth,
+                EditorGUIUtility.singleLineHeight + 4f);
+            Rect cancel = new Rect(add.x - gap - buttonWidth, buttonsY, buttonWidth,
+                EditorGUIUtility.singleLineHeight + 4f);
+            if (GUI.Button(refresh, "Refresh")) RefreshAssets();
+            if (GUI.Button(cancel, "Cancel")) Close();
+            using (new EditorGUI.DisabledScope(!CanAddSelectedSprite))
+            {
+                if (GUI.Button(add, "Add")) AddSelectedSprite();
+            }
+        }
+
         private bool CanAddSelectedSprite => SelectedSet != null &&
             (uint)selectedSpriteIndex < (uint)previewSprites.Count;
 
@@ -284,8 +385,70 @@ namespace UMA.TexturePaint.Editor
             OverlayPainterSpriteSet spriteSet = SelectedSet;
             int spriteIndex = selectedSpriteIndex;
             Vector2 tiling = initialTiling;
+            TexturePaintFillProjection projection = initialProjection;
+            bool fillMode = configureFill;
+            bool pathMode = configurePath;
+            Action<OverlayPainterSpriteSet, int, Vector2, TexturePaintFillProjection> fillCallback =
+                onAddFill;
+            Action<OverlayPainterSpriteSet, int> pathCallback = onAddPath;
             Close();
-            callback?.Invoke(spriteSet, spriteIndex, tiling);
+            if (fillMode) fillCallback?.Invoke(spriteSet, spriteIndex, tiling, projection);
+            else if (pathMode) pathCallback?.Invoke(spriteSet, spriteIndex);
+            else callback?.Invoke(spriteSet, spriteIndex, tiling);
+        }
+    }
+
+    internal sealed class OverlayPainterOverlayPickerWindow : EditorWindow
+    {
+        private Action<OverlayDataAsset> onAdd;
+        private OverlayDataAsset overlay;
+
+        public static void Show(Action<OverlayDataAsset> addCallback)
+        {
+            var window = CreateInstance<OverlayPainterOverlayPickerWindow>();
+            window.titleContent = new GUIContent("Add from Overlay");
+            window.minSize = window.maxSize = new Vector2(430f, 118f);
+            window.onAdd = addCallback;
+            window.ShowUtility();
+        }
+
+        private void OnGUI()
+        {
+            EditorGUILayout.Space(6f);
+            EditorGUILayout.LabelField(
+                "Choose an OverlayDataAsset compatible with the active material.",
+                EditorStyles.wordWrappedLabel);
+            EditorGUILayout.Space(4f);
+            overlay = (OverlayDataAsset)EditorGUILayout.ObjectField("Overlay", overlay,
+                typeof(OverlayDataAsset), false);
+            GUILayout.FlexibleSpace();
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("Cancel", GUILayout.Width(88f))) Close();
+            using (new EditorGUI.DisabledScope(overlay == null))
+            {
+                if (GUILayout.Button("Add", GUILayout.Width(88f))) AddSelectedOverlay();
+            }
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.Space(6f);
+
+            Event current = Event.current;
+            if (current.type == EventType.KeyDown &&
+                (current.keyCode == KeyCode.Return || current.keyCode == KeyCode.KeypadEnter) &&
+                overlay != null)
+            {
+                AddSelectedOverlay();
+                current.Use();
+            }
+        }
+
+        private void AddSelectedOverlay()
+        {
+            if (overlay == null) return;
+            Action<OverlayDataAsset> callback = onAdd;
+            OverlayDataAsset selected = overlay;
+            Close();
+            callback?.Invoke(selected);
         }
     }
 }

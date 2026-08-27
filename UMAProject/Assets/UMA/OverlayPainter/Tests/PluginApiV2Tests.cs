@@ -133,6 +133,87 @@ namespace UMA.TexturePaint.Tests
         }
 
         [Test]
+        public void ResetToDefaultsRestoresEveryParameterKindWithoutSharingMutableDefaults()
+        {
+            var defaultCurve = new AnimationCurve(
+                new Keyframe(0f, 0.2f), new Keyframe(1f, 0.8f));
+            var defaultStripes = new List<TexturePaintStripeDefinition>
+            {
+                new TexturePaintStripeDefinition
+                {
+                    direction = TexturePaintStripeDirection.Horizontal,
+                    width = 0.17f,
+                    color = Color.cyan
+                }
+            };
+            var descriptor = new TexturePaintPluginDescriptor
+            {
+                parameters = new List<TexturePaintPluginParameterDefinition>
+                {
+                    new TexturePaintPluginParameterDefinition
+                    {
+                        id = "section", type = TexturePaintPluginParameterType.Header
+                    },
+                    new TexturePaintPluginParameterDefinition
+                    {
+                        id = "amount", type = TexturePaintPluginParameterType.Float,
+                        minimum = 0f, maximum = 1f, defaultNumber = 0.35f
+                    },
+                    new TexturePaintPluginParameterDefinition
+                    {
+                        id = "enabled", type = TexturePaintPluginParameterType.Boolean,
+                        defaultBoolean = true
+                    },
+                    new TexturePaintPluginParameterDefinition
+                    {
+                        id = "tint", type = TexturePaintPluginParameterType.Color,
+                        defaultColor = Color.magenta
+                    },
+                    new TexturePaintPluginParameterDefinition
+                    {
+                        id = "label", type = TexturePaintPluginParameterType.String,
+                        defaultText = "Default"
+                    },
+                    new TexturePaintPluginParameterDefinition
+                    {
+                        id = "curve", type = TexturePaintPluginParameterType.Curve,
+                        defaultCurve = defaultCurve
+                    },
+                    new TexturePaintPluginParameterDefinition
+                    {
+                        id = "stripes", type = TexturePaintPluginParameterType.StripeList,
+                        defaultStripes = defaultStripes
+                    },
+                    new TexturePaintPluginParameterDefinition
+                    {
+                        id = "texture", type = TexturePaintPluginParameterType.Texture
+                    }
+                }
+            };
+            var values = new TexturePaintPluginParameterSet();
+            values.ResetToDefaults(descriptor);
+            values.Get("amount").number = 0.9f;
+            values.Get("enabled").boolean = false;
+            values.Get("tint").color = Color.green;
+            values.Get("label").text = "Changed";
+            values.Get("curve").curve.MoveKey(0, new Keyframe(0f, 1f));
+            values.Get("stripes").stripes[0].width = 0.9f;
+
+            values.ResetToDefaults(descriptor);
+
+            Assert.That(values.values, Has.Count.EqualTo(7), "Headers are not parameter values.");
+            Assert.That(values.Float("amount"), Is.EqualTo(0.35f));
+            Assert.That(values.Boolean("enabled"), Is.True);
+            Assert.That(values.Color("tint", Color.clear), Is.EqualTo(Color.magenta));
+            Assert.That(values.String("label"), Is.EqualTo("Default"));
+            Assert.That(values.Curve("curve").Evaluate(0f), Is.EqualTo(0.2f).Within(0.001f));
+            Assert.That(values.Stripes("stripes")[0].width, Is.EqualTo(0.17f).Within(0.001f));
+            Assert.That(values.Texture("texture"), Is.Null);
+            Assert.That(values.Curve("curve"), Is.Not.SameAs(defaultCurve));
+            Assert.That(values.Stripes("stripes")[0], Is.Not.SameAs(defaultStripes[0]));
+        }
+
+        [Test]
         public void CommandMemoryBudgetRejectsPayloadBeforeCommit()
         {
             host.CommandMemoryBudgetBytes = 1;
@@ -262,6 +343,47 @@ namespace UMA.TexturePaint.Tests
 
             Assert.That(convexValues[0], Is.GreaterThan(0.05f));
             Assert.That(concaveValues[0], Is.LessThan(-0.05f));
+        }
+
+        [Test]
+        public void PluginPixelSamplingUsesTexelCentersWithoutSofteningEdges()
+        {
+            Color[] pixels =
+            {
+                Color.red, Color.green,
+                Color.blue, Color.white
+            };
+            var image = new TexturePaintReadOnlyImage("surface", TexturePaintChannel.Albedo,
+                2, 2, false, pixels);
+
+            Assert.That(image.GetPixelBilinear(0.25f, 0.25f), Is.EqualTo(Color.red));
+            Assert.That(image.GetPixelBilinear(0.75f, 0.25f), Is.EqualTo(Color.green));
+            Assert.That(image.GetPixelBilinear(0.25f, 0.75f), Is.EqualTo(Color.blue));
+            Assert.That(image.GetPixelBilinear(0.75f, 0.75f), Is.EqualTo(Color.white));
+        }
+
+        [Test]
+        public void PluginPixelSamplingInterpolatesBetweenTexelCenters()
+        {
+            var image = new TexturePaintReadOnlyImage("surface", TexturePaintChannel.Albedo,
+                2, 1, false, new[] { Color.black, Color.white });
+
+            Color center = image.GetPixelBilinear(0.5f, 0.5f);
+            Assert.That(center.r, Is.EqualTo(0.5f).Within(0.0001f));
+            Assert.That(center.g, Is.EqualTo(0.5f).Within(0.0001f));
+            Assert.That(center.b, Is.EqualTo(0.5f).Within(0.0001f));
+            Assert.That(center.a, Is.EqualTo(1f).Within(0.0001f));
+        }
+
+        [Test]
+        public void AgifyCurvatureContrastRestrictsWeakEdgeCoverage()
+        {
+            const float weakCurvature = 0.25f;
+            float sharpened = AgifyGeneratorPlugin.ShapeCurvature(weakCurvature, 2.5f);
+            float broadened = AgifyGeneratorPlugin.ShapeCurvature(weakCurvature, 0.5f);
+
+            Assert.That(sharpened, Is.LessThan(weakCurvature));
+            Assert.That(broadened, Is.GreaterThan(weakCurvature));
         }
 
         [Test]
@@ -735,6 +857,68 @@ namespace UMA.TexturePaint.Tests
             Assert.That(cached.pluginStale, Is.True);
             Assert.That(cached.pluginLastError, Does.Contain("Deliberate"));
             Assert.That(host.CanUndo, Is.False);
+        }
+
+        [Test]
+        public void DrippingCorrosionUsesGpuContractAndMeterScaledDefaults()
+        {
+            DrippingCorrosionGeneratorPlugin plugin =
+                ScriptableObject.CreateInstance<DrippingCorrosionGeneratorPlugin>();
+            try
+            {
+                Assert.That(plugin, Is.InstanceOf<ITexturePaintGpuGeneratorV2>());
+                Assert.That(((ITexturePaintGpuGeneratorV2)plugin).GpuKernelName,
+                    Is.EqualTo("CSDrippingCorrosion"));
+                var parameterIds = new HashSet<string>(StringComparer.Ordinal);
+                foreach (TexturePaintPluginParameterDefinition parameter in
+                         plugin.Descriptor.parameters)
+                {
+                    Assert.That(parameter.id, Is.Not.Null.And.Not.Empty);
+                    Assert.That(parameterIds.Add(parameter.id), Is.True,
+                        $"Duplicate Dripping Corrosion parameter id: {parameter.id}");
+                }
+                host.Discover();
+                Assert.That(host.FindCommand(plugin.Descriptor.id), Is.Not.Null,
+                    "Dripping Corrosion must pass normal PluginHost registration.");
+                Assert.That((plugin.Descriptor.requiredMeshMaps &
+                    TexturePaintMeshMapMask.WorldPosition) != 0, Is.True);
+                TexturePaintPluginParameterSet values = host.CreateParameters(plugin);
+                Assert.That(values.Float("dripLengthMeters"), Is.EqualTo(0.22f).Within(0.0001f));
+                Assert.That(values.Float("dripWidthMeters"), Is.EqualTo(0.006f).Within(0.0001f));
+                Assert.That(values.Float("corrosionSpreadMeters"),
+                    Is.EqualTo(0.012f).Within(0.0001f));
+                Assert.That(values.Float("gravityY"), Is.EqualTo(-1f));
+            }
+            finally { UnityEngine.Object.DestroyImmediate(plugin); }
+        }
+
+        [Test]
+        public void OrganicGeneratorsAvoidUnneededChannelSnapshots()
+        {
+            ScriptableObject[] generators =
+            {
+                ScriptableObject.CreateInstance<FabricFuzzGeneratorPlugin>(),
+                ScriptableObject.CreateInstance<RustCorrosionGeneratorPlugin>(),
+                ScriptableObject.CreateInstance<SurfaceMicroDetailGeneratorPlugin>(),
+                ScriptableObject.CreateInstance<VeinsSubdermalGeneratorPlugin>(),
+                ScriptableObject.CreateInstance<CreatureSkinGeneratorPlugin>(),
+                ScriptableObject.CreateInstance<ScratchDentGeneratorPlugin>()
+            };
+            try
+            {
+                for (int i = 0; i < generators.Length; i++)
+                {
+                    var usage = generators[i] as ITexturePaintDynamicChannelUsageV2;
+                    Assert.That(usage, Is.Not.Null);
+                    Assert.That(usage.ResolveReadChannels(new TexturePaintPluginParameterSet()),
+                        Is.EqualTo(TexturePaintChannelMask.None));
+                }
+            }
+            finally
+            {
+                for (int i = 0; i < generators.Length; i++)
+                    UnityEngine.Object.DestroyImmediate(generators[i]);
+            }
         }
 
         [Test]

@@ -17,6 +17,7 @@ public class UmaPrefabSaverWindow : EditorWindow
 		private const string PrefsKeyReplaceExisting = PrefsKeyPrefix + "ReplaceExisting";
 		private const string PrefsKeyUnswizzleNormalMaps = PrefsKeyPrefix + "UnswizzleNormalMaps";
 		private const string PrefsKeyAddStandaloneDNA = PrefsKeyPrefix + "AddStandaloneDNA";
+		private const string PrefsKeyUseBoneBakingCombiner = PrefsKeyPrefix + "UseBoneBakingCombiner";
 		private const string PrefsKeyExportMode = PrefsKeyPrefix + "ExportMode";
 		private const string PrefsKeyCharacterName = PrefsKeyPrefix + "CharacterName";
 		private const string PrefsKeyPrefabFolderPath = PrefsKeyPrefix + "PrefabFolderPath";
@@ -39,6 +40,8 @@ public class UmaPrefabSaverWindow : EditorWindow
 		public bool UnswizzleNormalMaps = true;
 		[Tooltip("If True, will keep the umaData, and add a Standalone DNA component allowing you to load/save/Deform skeletal DNA")]
 		public bool AddStandaloneDNA = true;
+		[Tooltip("Temporarily use the bone baking mesh combiner while rebuilding the character for export")]
+		public bool UseBoneBakingCombiner = false;
         [Tooltip("How meshes should be exported during conversion.")]
         public MeshExportMode ExportMode = MeshExportMode.UnityAssetMeshes;
         [Tooltip("When Mesh Export Mode is glTF, export each slot from SlotDataList instead of combined renderer meshes.")]
@@ -70,6 +73,7 @@ public class UmaPrefabSaverWindow : EditorWindow
 			replaceExisting = EditorPrefs.GetBool(PrefsKeyReplaceExisting, replaceExisting);
 			UnswizzleNormalMaps = EditorPrefs.GetBool(PrefsKeyUnswizzleNormalMaps, UnswizzleNormalMaps);
 			AddStandaloneDNA = EditorPrefs.GetBool(PrefsKeyAddStandaloneDNA, AddStandaloneDNA);
+			UseBoneBakingCombiner = EditorPrefs.GetBool(PrefsKeyUseBoneBakingCombiner, UseBoneBakingCombiner);
 
 			int exportModeValue = EditorPrefs.GetInt(PrefsKeyExportMode, (int)ExportMode);
 			if (System.Enum.IsDefined(typeof(MeshExportMode), exportModeValue))
@@ -96,6 +100,7 @@ public class UmaPrefabSaverWindow : EditorWindow
 			EditorPrefs.SetBool(PrefsKeyReplaceExisting, replaceExisting);
 			EditorPrefs.SetBool(PrefsKeyUnswizzleNormalMaps, UnswizzleNormalMaps);
 			EditorPrefs.SetBool(PrefsKeyAddStandaloneDNA, AddStandaloneDNA);
+			EditorPrefs.SetBool(PrefsKeyUseBoneBakingCombiner, UseBoneBakingCombiner);
 			EditorPrefs.SetInt(PrefsKeyExportMode, (int)ExportMode);
 			EditorPrefs.SetString(PrefsKeyCharacterName, CharacterName ?? string.Empty);
 			EditorPrefs.SetBool(PrefsKeyGltfExportSlots, ExportGltfAsSlots);
@@ -121,6 +126,10 @@ void OnGUI()
 
 	EditorGUILayout.HelpBox("Adding Standalone DNA will allow you to adjust most DNA of the character, without it being an UMA. However, it will require that you have the UMA system in the project.", MessageType.None);
 	AddStandaloneDNA = EditorGUILayout.Toggle("Add Standalone DNA", AddStandaloneDNA);
+	if (!AddStandaloneDNA)
+	{
+		UseBoneBakingCombiner = EditorGUILayout.Toggle("Use bone baking combiner", UseBoneBakingCombiner);
+	}
 
 	ExportMode = (MeshExportMode)EditorGUILayout.EnumPopup("Mesh Export Mode", ExportMode);
 	switch (ExportMode)
@@ -177,7 +186,8 @@ void OnGUI()
 				replaceExisting,
 				exportAsFbx,
               exportAsGltf,
-				ExportGltfAsSlots);
+				ExportGltfAsSlots,
+				!AddStandaloneDNA && UseBoneBakingCombiner);
 
 			EditorUtility.DisplayDialog("UMA Prefab Saver", "Conversion complete", "OK");
 		}

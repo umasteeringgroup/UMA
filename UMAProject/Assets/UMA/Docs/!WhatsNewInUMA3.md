@@ -207,23 +207,23 @@ After importing or updating UMA 3:
 
 1. Open the UMA Welcome window.
 2. Rebuild the UMA Library so the asset index reflects the new folder layout and content.
-3. Open one of the UMA 3 sample scenes in `Assets/UMA/UMA3/Scenes`.
+3. Install UMA's URP or HDRP support, then open a sample scene in `Assets/UMA/SRP/Samples/Scenes`.
 4. Try the Character Creator scene first if you want an end-user view of the new wardrobe, DNA, and color workflows.
 5. Try the Decals scene if you are evaluating the new decal system.
 6. Try the construction and save/load scenes if you are integrating UMA into runtime code.
 
 Useful entry scenes include:
-- `Assets/UMA/UMA3/Scenes/U3-Character Creator.unity`
-- `Assets/UMA/UMA3/Scenes/U3-How to equip items.unity`
-- `Assets/UMA/UMA3/Scenes/U3-How to Use a Slider to control DNA.unity`
-- `Assets/UMA/UMA3/Scenes/U3-How to Load and Save a DCA to a string.unity`
-- `Assets/UMA/UMA3/Scenes/U3-Generating Random Characters.unity`
-- `Assets/UMA/UMA3/Scenes/U3-Decals.unity`
-- `Assets/UMA/UMA3/Scenes/U3-Integrating with Timeline.unity`
-- `Assets/UMA/UMA3/Scenes/U3-Tools-Photobooth.unity`
-- `Assets/UMA/UMA3/Scenes/U3-Ragdolls and Shooting Example.unity`
-- `Assets/UMA/UMA3/Scenes/U3-How to Construct a DCA from scratch.unity`
-- `Assets/UMA/UMA3/Scenes/U3-How to Construct and load a DCA from a prefab.unity`
+- `Assets/UMA/SRP/Samples/Scenes/U3-Character Creator.unity`
+- `Assets/UMA/SRP/Samples/Scenes/U3-How to equip items.unity`
+- `Assets/UMA/SRP/Samples/Scenes/U3-How to Use a Slider to control DNA.unity`
+- `Assets/UMA/SRP/Samples/Scenes/U3-How to Load and Save a DCA to a string.unity`
+- `Assets/UMA/SRP/Samples/Scenes/U3-Generating Random Characters.unity`
+- `Assets/UMA/SRP/Samples/Scenes/U3-Decals.unity`
+- `Assets/UMA/SRP/Samples/Scenes/U3-Integrating with Timeline.unity`
+- `Assets/UMA/SRP/Samples/Scenes/U3-Tools-Photobooth.unity`
+- `Assets/UMA/SRP/Samples/Scenes/U3-Ragdolls and Shooting Example.unity`
+- `Assets/UMA/SRP/Samples/Scenes/U3-How to Construct a DCA from scratch.unity`
+- `Assets/UMA/SRP/Samples/Scenes/U3-How to Construct and load a DCA from a prefab.unity`
 
 ## New UMA 3 Content Library
 
@@ -384,7 +384,7 @@ User impact:
 For details, see:
 - `Docs/Decals.md`
 - `Assets/UMA/Core/Decals`
-- `Assets/UMA/UMA3/Scenes/U3-Decals.unity`
+- `Assets/UMA/SRP/Samples/Scenes/U3-Decals.unity`
 
 ## Textures, UDIMs, ShaderGraphs, And Materials
 

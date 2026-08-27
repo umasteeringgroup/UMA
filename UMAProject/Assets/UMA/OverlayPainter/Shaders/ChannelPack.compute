@@ -1,6 +1,7 @@
 #pragma kernel CSExtract
 #pragma kernel CSPackChannels
 #pragma kernel CSApplyNormalControl
+#pragma kernel CSApplyPluginTile
 
 Texture2D<float4> _Source;
 Texture2D<float4> _Red;
@@ -9,6 +10,9 @@ Texture2D<float4> _Blue;
 Texture2D<float4> _Alpha;
 Texture2D<float4> _NormalBase;
 Texture2D<float4> _NormalControl;
+Texture2D<float4> _PluginSource;
+Texture2D<float4> _PluginDestinationSource;
+Texture2D<float4> _GeometryMask;
 RWTexture2D<float4> _Destination;
 int2 _TextureSize;
 int2 _TileOffset;
@@ -31,6 +35,11 @@ float _NormalControlStrength;
 int _NormalControlRadius;
 int _NormalControlInvert;
 int _NormalControlAuthoredOnly;
+int _PluginColorSpace;
+int _PluginBlend;
+int _PluginChannel;
+int _PluginMaskMode;
+float _PluginOpacity;
 
 float ReadComponent(float4 value, int component)
 {
@@ -46,11 +55,12 @@ float ApplyPackedInvert(float value, int invert)
 void CSExtract(uint3 id : SV_DispatchThreadID)
 {
     if (any(id.xy >= (uint2)_DispatchSize)) return;
-    if (any(id.xy >= _TextureSize)) return;
-    float4 value = _Source.Load(int3(id.xy, 0));
+    int2 pixel = int2(id.xy);
+    if (any(pixel >= _TextureSize)) return;
+    float4 value = _Source.Load(int3(pixel, 0));
     float channel = ReadComponent(value, _Component);
     if (_Invert != 0) channel = 1.0 - channel;
-    _Destination[id.xy] = float4(channel, channel, channel, 1.0);
+    _Destination[pixel] = float4(channel, channel, channel, 1.0);
 }
 
 [numthreads(16,16,1)]
@@ -119,4 +129,77 @@ void CSApplyNormalControl(uint3 id : SV_DispatchThreadID)
         alpha = max(alpha, LoadNormalControl(pixel + int2(0, radius)).a);
     }
     _Destination[pixel] = float4(combined * 0.5 + 0.5, alpha);
+}
+
+float3 PluginSRGBToLinear(float3 value)
+{
+    float3 low = value / 12.92;
+    float3 high = pow(max((value + 0.055) / 1.055, 0.0), 2.4);
+    return lerp(low, high, step(0.04045, value));
+}
+
+float PluginLuminance(float3 value)
+{
+    return saturate(dot(value, float3(0.2126, 0.7152, 0.0722)));
+}
+
+bool PluginGrayscaleChannel()
+{
+    return _PluginChannel == 2 || _PluginChannel == 3 || _PluginChannel == 4 ||
+        _PluginChannel == 8 || _PluginChannel == 9 || _PluginChannel == 10;
+}
+
+[numthreads(16,16,1)]
+void CSApplyPluginTile(uint3 id : SV_DispatchThreadID)
+{
+    if (any(id.xy >= (uint2)_DispatchSize)) return;
+    int2 pixel = int2(id.xy) + _TileOffset;
+    if (any(pixel < 0) || any(pixel >= _TextureSize)) return;
+
+    float4 destination = _PluginDestinationSource.Load(int3(pixel, 0));
+    float4 source = _PluginSource.Load(int3(id.xy, 0));
+    if (_PluginColorSpace == 1) source.rgb = PluginSRGBToLinear(source.rgb);
+    float coverage = saturate(_PluginOpacity *
+        _GeometryMask.Load(int3(pixel, 0)).r);
+
+    if (_PluginMaskMode != 0)
+    {
+        float from = PluginLuminance(destination.rgb);
+        float value = PluginLuminance(source.rgb);
+        float result = _PluginBlend == 2 ? from + value * coverage :
+            _PluginBlend == 3 ? lerp(from, from * value, coverage) :
+            lerp(from, value, coverage);
+        result = saturate(result);
+        _Destination[pixel] = float4(result, result, result, 1.0);
+        return;
+    }
+
+    if (PluginGrayscaleChannel()) source.rgb = PluginLuminance(source.rgb).xxx;
+    if (_PluginChannel == 1)
+    {
+        float3 fromNormal = normalize(destination.rgb * 2.0 - 1.0);
+        float3 toNormal = normalize(source.rgb * 2.0 - 1.0);
+        float3 normal = normalize(lerp(fromNormal, toNormal, coverage));
+        destination = float4(normal * 0.5 + 0.5,
+            lerp(destination.a, source.a, coverage));
+    }
+    else if (_PluginBlend == 0)
+        destination = lerp(destination, source, coverage);
+    else if (_PluginBlend == 2)
+        destination += source * coverage;
+    else if (_PluginBlend == 3)
+        destination = lerp(destination, destination * source, coverage);
+    else
+    {
+        float alpha = saturate(source.a * coverage);
+        destination = float4(lerp(destination.rgb, source.rgb, alpha),
+            alpha + destination.a * (1.0 - alpha));
+    }
+
+    if (PluginGrayscaleChannel())
+    {
+        float value = PluginLuminance(destination.rgb);
+        destination.rgb = value.xxx;
+    }
+    _Destination[pixel] = destination;
 }
