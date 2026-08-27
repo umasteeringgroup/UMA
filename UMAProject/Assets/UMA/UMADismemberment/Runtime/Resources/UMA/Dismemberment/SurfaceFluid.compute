@@ -1,17 +1,21 @@
 #pragma kernel CSClear
+#pragma kernel CSClearScalar
 #pragma kernel CSInject
 #pragma kernel CSFlux
 #pragma kernel CSApply
 
 RWTexture2D<float4> _StateMutable;
+RWTexture2D<float> _ScalarMutable;
 Texture2D<float4> _StateRead;
 RWTexture2D<float4> _StateWrite;
+Texture2D<float> _SpeedRead;
+RWTexture2D<float> _SpeedWrite;
 // State injection uses the read/write ping-pong pair; GLES3 cannot read and write
 // the same typed UAV reliably.
 RWTexture2D<float4> _Flux;
 Texture2D<float4> _SurfaceFlow;
 Texture2D<float4> _SeamLinks;
-Texture2D<float> _Injection;
+Texture2D<float4> _Injection;
 
 int2 _Dimensions;
 float _DeltaTime;
@@ -76,21 +80,45 @@ void CSClear(uint3 id : SV_DispatchThreadID)
 }
 
 [numthreads(8, 8, 1)]
+void CSClearScalar(uint3 id : SV_DispatchThreadID)
+{
+    int2 p = int2(id.xy);
+    if (!IsInside(p)) return;
+    _ScalarMutable[p] = 0.0;
+}
+
+[numthreads(8, 8, 1)]
 void CSInject(uint3 id : SV_DispatchThreadID)
 {
     int2 p = int2(id.xy);
     if (!IsSurface(p))
     {
-        if (IsInside(p)) _StateWrite[p] = 0.0;
+        if (IsInside(p))
+        {
+            _StateWrite[p] = 0.0;
+            _SpeedWrite[p] = 0.0;
+        }
         return;
     }
 
     float4 state = _StateRead[p];
-    float source = saturate(_Injection[p]);
+    float4 injection = _Injection[p];
+    float source = saturate(injection.x);
+    float previousMobile = max(0.0, state.x);
+    float previousSpeed = _SpeedRead[p] > 0.0 ? _SpeedRead[p] : 1.0;
+    float speedMultiplier = source > 0.0
+        ? max(0.05, injection.y / max(0.000001, injection.x)) : previousSpeed;
     if (source > 0.0)
     {
-        state.x += source * _EmissionAmount;
+        float added = source * _EmissionAmount;
+        state.x = previousMobile + added;
+        _SpeedWrite[p] = (previousMobile * previousSpeed + added * speedMultiplier) /
+            max(0.000001, state.x);
         state.z = 0.0;
+    }
+    else
+    {
+        _SpeedWrite[p] = previousMobile > 0.0 ? previousSpeed : 0.0;
     }
     _StateWrite[p] = state;
 }
@@ -113,7 +141,8 @@ void CSFlux(uint3 id : SV_DispatchThreadID)
     }
 
     float2 pixelsPerMeter = _SurfaceFlow[p].xy;
-    float2 travel = pixelsPerMeter * _FallSpeed * _DeltaTime;
+    float speedMultiplier = max(0.05, _SpeedRead[p]);
+    float2 travel = pixelsPerMeter * _FallSpeed * speedMultiplier * _DeltaTime;
     float mobility = saturate(1.0 - _Viscosity) * saturate(1.0 - _Adhesion);
     float breakup = lerp(1.0 - _BreakupStrength, 1.0 + _BreakupStrength,
         FractalBreakup(p));
@@ -139,7 +168,11 @@ void CSApply(uint3 id : SV_DispatchThreadID)
     int2 p = int2(id.xy);
     if (!IsSurface(p))
     {
-        if (IsInside(p)) _StateWrite[p] = 0.0;
+        if (IsInside(p))
+        {
+            _StateWrite[p] = 0.0;
+            _SpeedWrite[p] = 0.0;
+        }
         return;
     }
 
@@ -147,28 +180,60 @@ void CSApply(uint3 id : SV_DispatchThreadID)
     float4 ownFlux = _Flux[p];
     float outgoing = dot(ownFlux, float4(1.0, 1.0, 1.0, 1.0));
     float incoming = 0.0;
-    if (IsSurface(p + int2(-1, 0))) incoming += _Flux[p + int2(-1, 0)].y;
-    if (IsSurface(p + int2(1, 0))) incoming += _Flux[p + int2(1, 0)].x;
-    if (IsSurface(p + int2(0, -1))) incoming += _Flux[p + int2(0, -1)].w;
-    if (IsSurface(p + int2(0, 1))) incoming += _Flux[p + int2(0, 1)].z;
+    float incomingSpeedMass = 0.0;
+    int2 neighbor = p + int2(-1, 0);
+    if (IsSurface(neighbor))
+    {
+        float amount = _Flux[neighbor].y;
+        incoming += amount;
+        incomingSpeedMass += amount * max(0.05, _SpeedRead[neighbor]);
+    }
+    neighbor = p + int2(1, 0);
+    if (IsSurface(neighbor))
+    {
+        float amount = _Flux[neighbor].x;
+        incoming += amount;
+        incomingSpeedMass += amount * max(0.05, _SpeedRead[neighbor]);
+    }
+    neighbor = p + int2(0, -1);
+    if (IsSurface(neighbor))
+    {
+        float amount = _Flux[neighbor].w;
+        incoming += amount;
+        incomingSpeedMass += amount * max(0.05, _SpeedRead[neighbor]);
+    }
+    neighbor = p + int2(0, 1);
+    if (IsSurface(neighbor))
+    {
+        float amount = _Flux[neighbor].z;
+        incoming += amount;
+        incomingSpeedMass += amount * max(0.05, _SpeedRead[neighbor]);
+    }
     float4 seam = _SeamLinks[p];
     if (seam.w > 0.5)
     {
         int2 linked = clamp((int2)round(saturate(seam.xy) * (float2)(_Dimensions - 1)),
             int2(0, 0), _Dimensions - 1);
         float4 linkedFlux = _Flux[linked];
-        if (!IsSurface(linked + int2(-1, 0))) incoming += linkedFlux.x;
-        if (!IsSurface(linked + int2(1, 0))) incoming += linkedFlux.y;
-        if (!IsSurface(linked + int2(0, -1))) incoming += linkedFlux.z;
-        if (!IsSurface(linked + int2(0, 1))) incoming += linkedFlux.w;
+        float linkedIncoming = 0.0;
+        if (!IsSurface(linked + int2(-1, 0))) linkedIncoming += linkedFlux.x;
+        if (!IsSurface(linked + int2(1, 0))) linkedIncoming += linkedFlux.y;
+        if (!IsSurface(linked + int2(0, -1))) linkedIncoming += linkedFlux.z;
+        if (!IsSurface(linked + int2(0, 1))) linkedIncoming += linkedFlux.w;
+        incoming += linkedIncoming;
+        incomingSpeedMass += linkedIncoming * max(0.05, _SpeedRead[linked]);
     }
 
-    float mobile = max(0.0, oldState.x - outgoing + incoming);
+    float ownRemaining = max(0.0, oldState.x - outgoing);
+    float mobile = ownRemaining + incoming;
+    float ownSpeed = max(0.05, _SpeedRead[p]);
+    float speedMultiplier = mobile > 0.00000001
+        ? (ownRemaining * ownSpeed + incomingSpeedMass) / mobile : 0.0;
     float deposited = max(0.0, oldState.y);
     float age = mobile > _MinimumThickness ? oldState.z + _DeltaTime : 0.0;
     float movementFraction = saturate(outgoing /
         max(_MinimumThickness, max(0.0, oldState.x)));
-    float stepDistance = _FallSpeed * _DeltaTime * movementFraction;
+    float stepDistance = _FallSpeed * speedMultiplier * _DeltaTime * movementFraction;
     float distance = oldState.w + stepDistance;
 
     // Leave a frame-rate-independent wet residue as mobile fluid travels. Expressing this
@@ -193,4 +258,5 @@ void CSApply(uint3 id : SV_DispatchThreadID)
     if (mobile < 1e-8) mobile = 0.0;
     if (deposited < 1e-8) deposited = 0.0;
     _StateWrite[p] = float4(mobile, deposited, age, distance);
+    _SpeedWrite[p] = mobile > 0.0 ? speedMultiplier : 0.0;
 }

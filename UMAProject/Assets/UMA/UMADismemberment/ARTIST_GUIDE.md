@@ -42,7 +42,7 @@ Those are deliberately application-specific and should be added after a successf
 The main files are:
 
 - [`Runtime/UmaDismemberment.cs`](Runtime/UmaDismemberment.cs) — component and public API;
-- [`Samples/Scene/Example.unity`](Samples/Scene/Example.unity) — working sample scene;
+- [`Samples/Scene/U3-GoreExample.unity`](Samples/Scene/U3-GoreExample.unity) — working sample scene;
 - [`Samples/Materials/SliceFill.mat`](Samples/Materials/SliceFill.mat) — simple sample cap material;
 - [`Samples/Materials/DismembermentCap.shader`](Samples/Materials/DismembermentCap.shader) — dependency-free unlit cap shader;
 - [`Samples/Scripts/GUIDismemberment.cs`](Samples/Scripts/GUIDismemberment.cs) — UI button example;
@@ -843,6 +843,30 @@ The overload that takes only a stamp is suitable when compute is guaranteed. Pas
 The two returned handles are independent: stopping, fading, or clearing blood does not erase the
 wound. The persistent wound rebinds after a full UMA rebuild. Fluid survives a rebuild only when
 **Persist Across Avatar Rebuild** is enabled on its profile.
+
+### Drawing a surface cut between two points
+
+Create **Assets > Create > UMA > Dismemberment > Surface Cut Profile**. Set its full width in meters,
+choose the dark center and pink side colors, and adjust the center, edge softness, and endpoint
+taper fractions. **Bleed Spacing Meters** sets the average physical distance between emitters, so a
+longer cut automatically bleeds from more locations. **Bleed Spacing Variation** randomly shortens
+or lengthens each interval by the selected fraction, while **Bleed Spacing Seed** controls the local
+random sequence without changing Unity's global random state. **Bleed Speed Variation** gives each
+stream its own multiplier around the fluid profile's fall speed; that multiplier travels with the
+mobile fluid and blends by fluid mass if streams meet. **Bleed Size Variation** changes each source's
+emission radius, so larger sources create broader, fuller drips. Set spacing to zero for a dry cut.
+**Bleed End Inset** keeps sources away from the tapered tips. Assign a Surface Fluid Profile to
+control their base color, speed, radius, trail deposition, holding time, and fade, or leave it empty
+for the runtime blood defaults. The system bounds unusually dense settings to 128 sources per cut.
+
+In the sample, normal left-click places a bleeding bullet wound. To make a cut, hold Shift and press
+the left mouse button on the character, drag over the surface, and release. A thin red Game-view
+line shows the pending cut from mouse-down to the current cursor. Right-click or Escape cancels the
+pending drag. Both endpoints must be on the same connected generated renderer and
+material. The system refreshes the stored triangle anchor against the current animated pose on
+release, projects the straight drag densely onto the visible posed surface, and rejects depth
+discontinuities, disconnected surfaces, or large atlas-seam jumps; it never routes the finished cut
+along coarse triangle edges or through unrelated body and armor UVs.
 
 ### Fadeable runtime decals
 

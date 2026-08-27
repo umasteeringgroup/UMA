@@ -135,6 +135,28 @@ after an UMA atlas rebuild. Its handle can clear the wound independently. The fl
 only the bleeding; use `StopFlow`, `FadeNow`, or `Clear` on that handle. The fluid profile's **Source
 Overlay** controls the blood appearance, while the bullet overlay controls the fixed wound.
 
+### Surface cuts between two points
+
+`UMASurfaceCutSystem` raycasts the current posed skinned meshes and routes a cut over connected mesh
+topology. The atlas cut has a dark center, pink side irritation, metric width, soft outside edges,
+and tapered endpoints. A `UMASurfaceCutProfile` also chooses how many fluid emitters are distributed
+along the route and which `UMASurfaceFluidProfile` they use.
+
+```csharp
+if (surfaceCuts.TryGetSurfacePoint(startRay, out SurfaceCutPoint start) &&
+    surfaceCuts.TryGetSurfacePoint(endRay, out SurfaceCutPoint end) &&
+    surfaceCuts.TryCreateCut(start, end, cutProfile,
+        out SurfaceCutResult cut, out string error))
+{
+    RuntimeDecalHandle wound = cut.CutHandle;
+    RuntimeDecalHandle bleeding = cut.BleedHandle;
+}
+```
+
+Both points must be on one generated renderer/material. Disconnected topology and large atlas-seam
+jumps fail with a diagnostic instead of drawing across unrelated UV islands. The visual cut and
+fluid use independent handles, so gameplay can clear the cut or stop/fade its bleeding separately.
+
 GPU simulation is one context per generated atlas/material, with a shared posed surface field and
 an independent lower-resolution state layer per handle. Independent layers make `Clear` predictable
 without erasing another cut. Unsupported compute platforms use a bounded world-space trail with a

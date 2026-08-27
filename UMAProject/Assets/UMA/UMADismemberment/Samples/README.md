@@ -1,6 +1,6 @@
-# Dismemberment sample scene
+# U3-GoreExample sample scene
 
-`Scene/Example.unity` is a compact integration example for the UMA 3 runtime dismemberment system. It demonstrates a generated UMA character, bone-specific uGUI cut actions, procedural caps, optional detached physics and blood, fatal versus nonfatal cuts, and restoration of the original avatar.
+`Scene/U3-GoreExample.unity` is a compact integration example for the UMA 3 runtime dismemberment system. It demonstrates a generated UMA character, bone-specific uGUI cut actions, procedural caps, optional detached physics and blood, fatal versus nonfatal cuts, and restoration of the original avatar.
 
 For mesh-authoring and production guidance, see the [Artist Setup and Production Guide](../ARTIST_GUIDE.md).
 
@@ -17,6 +17,11 @@ The example is organized around four pieces:
   retained as a persistent compositor layer while the meter-scaled fluid source seeps downward and
   deposits a trail. It does not require an overlay group; assign **Bullet Target Overlay Group** only
   if another caller also stores the stamp in a `DecalRTStampSlot` for normal atlas-event replay.
+- A Shift-drag surface-cut gesture. Hold Shift and press the left mouse button for the start, drag
+  over the same generated body or armor material, and release for the end. Normal left-click still
+  places the bleeding bullet decal. A thin red line previews the drag in Game view. The cut has a
+  tapered dark-red center, pink irritated edges, and several independent bleeds along its surface
+  route. Right-click or Escape cancels a drag.
 - An undo action using `UndoDismemberments`, which restores the avatar rather than merely hiding the detached pieces.
 
 The camera, lights, floor, and UI are ordinary scene presentation. The important reusable setup is on the avatar and Button actions.
@@ -29,9 +34,10 @@ The camera, lights, floor, and UI are ordinary scene presentation. The important
 4. If main-body ragdoll is enabled for a cut, verify that the avatar has a working `UMAPhysicsAvatar` and full-body UMA physics recipe before testing dismemberment.
 5. If detached physics is enabled, verify that **Ragdoll Layer** collides with the floor and props in **Project Settings > Physics**. Collider dimensions in `UMAPhysicsElement` assets assume one Unity unit is one meter.
 6. Enter Play Mode and wait until the `UmaDismemberment` Inspector reports **Ready: Yes**.
-7. Left-click directly on the character to place a bullet wound and start surface bleeding. Clicking
-   the dismemberment UI is ignored. Assign **Bullet Fluid Profile** to override the sample's narrow
-   puncture preset; **Surface Fluid Profile** remains dedicated to open dismemberment cuts.
+7. Left-click directly on the character to place a bullet wound and start surface bleeding. Hold
+   Shift, press the left mouse button on the character, drag, and release to create a surface cut.
+   Assign **Bullet Fluid Profile** to override the puncture preset and optionally assign
+   `Profiles/Realistic Surface Cut` to **Surface Cut Profile**. UI clicks are ignored.
 
 If the project is set to the new Input System only, the scene `EventSystem` should use `InputSystemUIInputModule`. The sample cut and undo scripts use `Button.onClick` and do not poll either legacy `Input` or `Keyboard` directly, so they also work with custom UI that invokes the same public methods.
 
@@ -117,6 +123,16 @@ already present in the immutable base atlas copied by the runtime compositor.
 is deliberately not assigned in the scene, so importing the addon does not change the sample's
 existing rendering or allocate runtime textures until an artist opts in.
 
+`Profiles/Realistic Surface Cut` supplies an 8 mm tapered cut and references the realistic blood
+profile. Emitters are spaced an average of 2.5 cm apart with 30% interval variation, so longer cuts
+automatically receive more bleed sources. Each emitter also varies by 25% in fall speed and 30% in
+radius, producing streams with distinct widths and travel rates. The reusable runtime API is
+`UMASurfaceCutSystem`: call
+`TryGetSurfacePoint` for both rays, then `TryCreateProjectedCut` for mouse input so the committed cut
+matches the straight preview while wrapping over the posed surface. Both points must resolve to the
+same generated renderer/material; a route that would jump through a disconnected mesh or across a
+large atlas seam is rejected instead of drawing through unrelated UV space.
+
 Do not edit the sample callback as the long-term project integration. Copy the pattern into the project's namespace so package updates do not overwrite gameplay-specific behavior. The completion result is designed to let that code add audio, decals, scoring, inventory drops, networking messages, timed cleanup, or custom physics without changing the slicer.
 
 ## Common sample issues
@@ -128,4 +144,7 @@ Do not edit the sample callback as the long-term project integration. Copy the p
 - **Detached pieces fall through the floor:** confirm the generated ragdoll layer collides with the floor layer and that the floor has a non-trigger Collider.
 - **Main body does not ragdoll:** add/configure `UMAPhysicsAvatar` and its UMA physics recipe before relying on the per-cut option.
 - **Undo targets the wrong character:** assign `UndoDismemberments.dismemberment` explicitly.
+- **Surface cut mouse-up fails:** begin and release the Shift-drag on the same connected body or
+  armor material. A cut intentionally does not bridge separate renderers, submeshes, or large
+  atlas seams.
 - **The intact character returns after a wardrobe or DNA change:** this is expected; cuts are runtime state and are not stored in the UMA recipe. Store and replay an ordered cut list if the game needs persistence.

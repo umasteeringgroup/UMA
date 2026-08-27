@@ -27,7 +27,8 @@ namespace UMA.Dismemberment
         SurfaceFlow,
         InjectionMask,
         SeamLinks,
-        MobileFluidState
+        MobileFluidState,
+        MobileSpeedState
     }
 
     [Flags]

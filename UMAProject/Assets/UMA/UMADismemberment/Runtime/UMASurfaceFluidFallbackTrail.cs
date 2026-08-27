@@ -18,12 +18,17 @@ namespace UMA.Dismemberment
         private float fadeStart = -1f;
         private Vector3 velocity;
         private Vector3 tip;
+        private float sourceRadius;
         private bool stopped;
 
         internal void Initialize(Vector3 origin, Vector3 normal, UMASurfaceFluidProfile settings,
-            Material defaultMaterial)
+            Material defaultMaterial, float speedMultiplier = 1f,
+            float sizeMultiplier = 1f)
         {
             profile = settings;
+            speedMultiplier = Mathf.Max(0.05f, speedMultiplier);
+            sizeMultiplier = Mathf.Max(0.05f, sizeMultiplier);
+            sourceRadius = settings.emissionRadiusMeters * sizeMultiplier;
             transform.position = Vector3.zero;
             line = gameObject.AddComponent<LineRenderer>();
             line.useWorldSpace = true;
@@ -32,17 +37,17 @@ namespace UMA.Dismemberment
             line.textureMode = LineTextureMode.Stretch;
             line.numCapVertices = 2;
             line.numCornerVertices = 2;
-            line.widthMultiplier = Mathf.Max(0.0005f, settings.emissionRadiusMeters * 2f);
+            line.widthMultiplier = Mathf.Max(0.0005f, sourceRadius * 2f);
             line.positionCount = 1;
-            line.SetPosition(0, origin + normal.normalized * settings.emissionRadiusMeters);
+            line.SetPosition(0, origin + normal.normalized * sourceRadius);
             line.sharedMaterial = settings.fallbackTrailMaterial != null
                 ? settings.fallbackTrailMaterial : defaultMaterial;
             properties = new MaterialPropertyBlock();
             points.Add(line.GetPosition(0));
             tip = points[0];
             velocity = Physics.gravity.sqrMagnitude > 0.000001f
-                ? Physics.gravity.normalized * settings.fallSpeedMetersPerSecond
-                : Vector3.down * settings.fallSpeedMetersPerSecond;
+                ? Physics.gravity.normalized * settings.fallSpeedMetersPerSecond * speedMultiplier
+                : Vector3.down * settings.fallSpeedMetersPerSecond * speedMultiplier;
             ApplyOpacity(1f);
         }
 
@@ -68,7 +73,7 @@ namespace UMA.Dismemberment
             if (canGrow)
             {
                 tip += velocity * delta;
-                float spacing = Mathf.Max(0.0005f, profile.emissionRadiusMeters * 2f);
+                float spacing = Mathf.Max(0.0005f, sourceRadius * 2f);
                 if (Vector3.Distance(points[points.Count - 1], tip) >= spacing)
                 {
                     points.Add(tip);

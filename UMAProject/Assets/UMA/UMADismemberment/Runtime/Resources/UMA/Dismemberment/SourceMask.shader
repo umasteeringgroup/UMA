@@ -14,6 +14,7 @@ Shader "Hidden/UMA/Dismemberment/SourceMask"
             sampler2D _MaskTex;
             float _UseMask;
             float _Intensity;
+            float _SpeedMultiplier;
             float _UseRadialLimit;
             float2 _RadialCenter;
             float _RadialRadius;
@@ -38,7 +39,7 @@ Shader "Hidden/UMA/Dismemberment/SourceMask"
                 #endif
                 return output;
             }
-            float Frag(Varyings input) : SV_Target
+            float4 Frag(Varyings input) : SV_Target
             {
                 float coverage = _UseMask > 0.5
                     ? tex2D(_MaskTex, saturate(input.uv)).a
@@ -51,7 +52,8 @@ Shader "Hidden/UMA/Dismemberment/SourceMask"
                         radius + feather, distance(input.uv, _RadialCenter));
                     coverage *= radialCoverage;
                 }
-                return coverage * _Intensity;
+                float amount = coverage * _Intensity;
+                return float4(amount, amount * max(0.05, _SpeedMultiplier), 0.0, 0.0);
             }
             ENDHLSL
         }

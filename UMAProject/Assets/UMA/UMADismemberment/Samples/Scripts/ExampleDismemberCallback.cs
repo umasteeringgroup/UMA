@@ -42,9 +42,9 @@ public sealed class ExampleDismemberCallback : MonoBehaviour
         "starts a fadeable flow from the actual cut UV boundary without rebuilding UMA.")]
     public UMASurfaceFluidProfile surfaceFluidProfile;
 
-    [Header("Click-to-Bleed Bullet Decal")]
-    [Tooltip("Adds the U3-Decals-style left-click wound demo to this sample avatar. The handler " +
-        "uses the cached decal UVs to start standalone surface bleeding.")]
+    [Header("Click Surface Effects")]
+    [Tooltip("Normal left-click places a bleeding bullet decal. Hold Shift, press the left " +
+        "button for the cut start, drag, and release for the cut end.")]
     public bool enableClickToBleedBulletDecals = true;
     [Tooltip("Optional override. When empty, the handler resolves the U3-Decals DecalOverlay " +
         "through the UMA asset index.")]
@@ -64,6 +64,17 @@ public sealed class ExampleDismemberCallback : MonoBehaviour
     [Range(0, 16)] public int bulletDilationPixels = 2;
     [Range(0f, 4f)] public float bulletUvExpansionPixels = 0.75f;
 
+    [Header("Click-to-Surface Cut")]
+    [Tooltip("Optional cut appearance and distributed-bleed settings. Logical runtime defaults " +
+        "are used when this is empty.")]
+    public UMASurfaceCutProfile surfaceCutProfile;
+    [Tooltip("Color of the temporary line shown while Shift-dragging a surface cut.")]
+    public Color surfaceCutPreviewColor = new Color(1f, 0f, 0f, 0.95f);
+    [Min(0.0005f), Tooltip("World-space width of the temporary cut line in meters.")]
+    public float surfaceCutPreviewWidthMeters = 0.0015f;
+    [Tooltip("Writes selection and creation diagnostics to the Console.")]
+    public bool logSurfaceCutPlacement = true;
+
     [Header("Legacy Simple Physics")]
     [Tooltip("Fallback single-body sample physics. It is used when detached ragdoll physics is " +
         "off, or when ragdoll construction fails.")]
@@ -73,6 +84,12 @@ public sealed class ExampleDismemberCallback : MonoBehaviour
     private UMARuntimeSurfaceDecalController surfaceDecals;
     private DynamicCharacterAvatar avatar;
     private UMASurfaceFluidProfile ownedDefaultBulletFluidProfile;
+    private UMASurfaceCutSystem surfaceCutSystem;
+    private SurfaceCutPoint pendingSurfaceCutStart;
+    private Vector2 pendingSurfaceCutStartScreen;
+    private bool hasPendingSurfaceCutStart;
+    private LineRenderer surfaceCutPreview;
+    private Material ownedSurfaceCutPreviewMaterial;
     private bool warnedMissingBulletOverlay;
 
     private void OnEnable()
@@ -83,31 +100,226 @@ public sealed class ExampleDismemberCallback : MonoBehaviour
         if ((surfaceFluidProfile != null || enableClickToBleedBulletDecals) &&
             surfaceDecals == null)
             surfaceDecals = gameObject.AddComponent<UMARuntimeSurfaceDecalController>();
+        surfaceCutSystem = GetComponent<UMASurfaceCutSystem>();
         if (dismemberment != null)
             dismemberment.DismembermentCompleted.AddListener(DismemberedCallback);
     }
 
     private void OnDisable()
     {
+        CancelPendingSurfaceCut();
         if (dismemberment != null)
             dismemberment.DismembermentCompleted.RemoveListener(DismemberedCallback);
     }
 
     private void OnDestroy()
     {
-        if (ownedDefaultBulletFluidProfile == null) return;
-        if (Application.isPlaying) Destroy(ownedDefaultBulletFluidProfile);
-        else DestroyImmediate(ownedDefaultBulletFluidProfile);
+        DestroyOwned(ownedDefaultBulletFluidProfile);
+        if (surfaceCutPreview != null)
+            DestroyOwned(surfaceCutPreview.gameObject);
+        DestroyOwned(ownedSurfaceCutPreviewMaterial);
         ownedDefaultBulletFluidProfile = null;
+        surfaceCutPreview = null;
+        ownedSurfaceCutPreviewMaterial = null;
     }
 
     private void Update()
     {
         if (!enableClickToBleedBulletDecals) return;
         Mouse mouse = Mouse.current;
-        if (mouse == null || !mouse.leftButton.wasPressedThisFrame) return;
-        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
-        TryPlaceBleedingBullet(mouse.position.ReadValue());
+        Keyboard keyboard = Keyboard.current;
+        if ((mouse != null && mouse.rightButton.wasPressedThisFrame) ||
+            (keyboard != null && keyboard.escapeKey.wasPressedThisFrame))
+        {
+            CancelPendingSurfaceCut();
+            return;
+        }
+        if (mouse == null) return;
+        bool pointerOverUi = EventSystem.current != null &&
+            EventSystem.current.IsPointerOverGameObject();
+        if (mouse.leftButton.wasPressedThisFrame)
+        {
+            if (pointerOverUi) return;
+            if (IsShiftPressed(keyboard))
+                BeginSurfaceCut(mouse.position.ReadValue());
+            else
+            {
+                CancelPendingSurfaceCut();
+                TryPlaceBleedingBullet(mouse.position.ReadValue());
+            }
+            return;
+        }
+        if (hasPendingSurfaceCutStart && mouse.leftButton.isPressed)
+            UpdateSurfaceCutPreview(mouse.position.ReadValue());
+        if (hasPendingSurfaceCutStart && mouse.leftButton.wasReleasedThisFrame)
+        {
+            if (pointerOverUi)
+                CancelPendingSurfaceCut();
+            else
+                CompleteSurfaceCut(mouse.position.ReadValue());
+        }
+    }
+
+    public bool BeginSurfaceCut(Vector2 screenPosition)
+    {
+        Camera camera = bulletDecalCamera != null ? bulletDecalCamera :
+            viewCamera != null ? viewCamera : Camera.main;
+        if (camera == null) return false;
+        if (surfaceCutSystem == null) surfaceCutSystem = GetComponent<UMASurfaceCutSystem>();
+        if (surfaceCutSystem == null)
+            surfaceCutSystem = gameObject.AddComponent<UMASurfaceCutSystem>();
+        if (!surfaceCutSystem.TryGetSurfacePoint(camera.ScreenPointToRay(screenPosition),
+            out SurfaceCutPoint point))
+        {
+            if (logSurfaceCutPlacement)
+                Debug.LogWarning("Surface Cut: mouse-down did not hit a facing UMA surface.", this);
+            return false;
+        }
+
+        pendingSurfaceCutStart = point;
+        pendingSurfaceCutStartScreen = screenPosition;
+        hasPendingSurfaceCutStart = true;
+        ShowSurfaceCutPreview(point.WorldPosition);
+        Debug.DrawRay(point.WorldPosition, point.WorldNormal * 0.025f,
+            new Color(1f, 0.35f, 0.35f), 10f, false);
+        if (logSurfaceCutPlacement)
+            Debug.Log("Surface Cut: drag across the same body or armor material and release " +
+                "the left mouse button; right-click or Escape cancels.", this);
+        return true;
+    }
+
+    public bool CompleteSurfaceCut(Vector2 screenPosition)
+    {
+        if (!hasPendingSurfaceCutStart) return false;
+        Camera camera = bulletDecalCamera != null ? bulletDecalCamera :
+            viewCamera != null ? viewCamera : Camera.main;
+        if (camera == null || surfaceCutSystem == null)
+        {
+            CancelPendingSurfaceCut();
+            return false;
+        }
+        if (!surfaceCutSystem.TryGetSurfacePoint(camera.ScreenPointToRay(screenPosition),
+            out SurfaceCutPoint point))
+        {
+            CancelPendingSurfaceCut();
+            if (logSurfaceCutPlacement)
+                Debug.LogWarning("Surface Cut: mouse-up did not hit a facing UMA surface.", this);
+            return false;
+        }
+
+        SurfaceCutPoint start = pendingSurfaceCutStart;
+        Vector2 startScreen = pendingSurfaceCutStartScreen;
+        hasPendingSurfaceCutStart = false;
+        pendingSurfaceCutStart = default;
+        pendingSurfaceCutStartScreen = default;
+        HideSurfaceCutPreview();
+        bool created = surfaceCutSystem.TryCreateProjectedCut(start, point, camera,
+            startScreen, screenPosition, surfaceCutProfile, out SurfaceCutResult result,
+            out string error);
+        if (!created)
+        {
+            if (logSurfaceCutPlacement)
+                Debug.LogWarning("Surface Cut: " + error, this);
+            return false;
+        }
+        Debug.DrawLine(start.WorldPosition, point.WorldPosition,
+            new Color(0.8f, 0.05f, 0.08f), 10f, false);
+        if (logSurfaceCutPlacement)
+            Debug.Log($"Surface Cut: created a {result.LengthMeters:F3} meter cut with " +
+                $"{result.BleedSourceCount} bleed source(s).", this);
+        return true;
+    }
+
+    private static bool IsShiftPressed(Keyboard keyboard)
+    {
+        return keyboard != null &&
+            (keyboard.leftShiftKey.isPressed || keyboard.rightShiftKey.isPressed);
+    }
+
+    public void CancelPendingSurfaceCut()
+    {
+        pendingSurfaceCutStart = default;
+        pendingSurfaceCutStartScreen = default;
+        hasPendingSurfaceCutStart = false;
+        HideSurfaceCutPreview();
+    }
+
+    private void ShowSurfaceCutPreview(Vector3 start)
+    {
+        EnsureSurfaceCutPreview();
+        if (surfaceCutPreview == null) return;
+        surfaceCutPreview.startColor = surfaceCutPreviewColor;
+        surfaceCutPreview.endColor = surfaceCutPreviewColor;
+        float width = Mathf.Max(0.0005f, surfaceCutPreviewWidthMeters);
+        surfaceCutPreview.startWidth = width;
+        surfaceCutPreview.endWidth = width;
+        surfaceCutPreview.SetPosition(0, start);
+        surfaceCutPreview.SetPosition(1, start);
+        surfaceCutPreview.enabled = true;
+    }
+
+    private void UpdateSurfaceCutPreview(Vector2 screenPosition)
+    {
+        if (surfaceCutPreview == null || !surfaceCutPreview.enabled) return;
+        Camera camera = bulletDecalCamera != null ? bulletDecalCamera :
+            viewCamera != null ? viewCamera : Camera.main;
+        if (camera == null) return;
+        Vector3 start = pendingSurfaceCutStart.WorldPosition;
+        Vector3 projected = camera.WorldToScreenPoint(start);
+        if (projected.z <= 0f) return;
+        Vector3 end = camera.ScreenToWorldPoint(
+            new Vector3(screenPosition.x, screenPosition.y, projected.z));
+        surfaceCutPreview.SetPosition(0, start);
+        surfaceCutPreview.SetPosition(1, end);
+    }
+
+    private void HideSurfaceCutPreview()
+    {
+        if (surfaceCutPreview != null) surfaceCutPreview.enabled = false;
+    }
+
+    private void EnsureSurfaceCutPreview()
+    {
+        if (surfaceCutPreview != null) return;
+        Shader shader = Resources.Load<Shader>(
+            "UMA/Dismemberment/SurfaceCutPreview");
+        if (shader == null) shader = Shader.Find("Sprites/Default");
+        if (shader == null)
+        {
+            if (logSurfaceCutPlacement)
+                Debug.LogWarning("Surface Cut: preview shader could not be loaded.", this);
+            return;
+        }
+        ownedSurfaceCutPreviewMaterial = new Material(shader)
+        {
+            name = "UMA Surface Cut Preview",
+            hideFlags = HideFlags.HideAndDontSave
+        };
+        if (ownedSurfaceCutPreviewMaterial.HasProperty("_Color"))
+            ownedSurfaceCutPreviewMaterial.SetColor("_Color", Color.white);
+        var previewObject = new GameObject("UMA Surface Cut Preview")
+        {
+            hideFlags = HideFlags.HideAndDontSave
+        };
+        previewObject.transform.SetParent(transform, false);
+        surfaceCutPreview = previewObject.AddComponent<LineRenderer>();
+        surfaceCutPreview.sharedMaterial = ownedSurfaceCutPreviewMaterial;
+        surfaceCutPreview.useWorldSpace = true;
+        surfaceCutPreview.positionCount = 2;
+        surfaceCutPreview.alignment = LineAlignment.View;
+        surfaceCutPreview.textureMode = LineTextureMode.Stretch;
+        surfaceCutPreview.numCapVertices = 2;
+        surfaceCutPreview.numCornerVertices = 2;
+        surfaceCutPreview.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        surfaceCutPreview.receiveShadows = false;
+        surfaceCutPreview.enabled = false;
+    }
+
+    private static void DestroyOwned(Object value)
+    {
+        if (value == null) return;
+        if (Application.isPlaying) Destroy(value);
+        else DestroyImmediate(value);
     }
 
     public bool TryPlaceBleedingBullet(Vector2 screenPosition)
