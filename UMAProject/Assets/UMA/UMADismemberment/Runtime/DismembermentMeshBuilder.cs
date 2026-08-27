@@ -15,21 +15,36 @@ namespace UMA.Dismemberment
 
     internal readonly struct DismembermentMeshBuildOptions
     {
+        public const float DefaultSeamWeldTolerance = 0.0001f;
+
         public readonly float threshold;
         public readonly int existingCapSubmesh;
         public readonly bool generateCaps;
         public readonly bool requireClosedCaps;
         public readonly float capUvMetersPerTile;
+        public readonly float seamWeldTolerance;
+        public readonly DismembermentCapUvMode capUvMode;
+        public readonly float centeredCapUvPadding;
 
         public DismembermentMeshBuildOptions(float threshold, int existingCapSubmesh,
-            bool generateCaps, bool requireClosedCaps, float capUvMetersPerTile)
+            bool generateCaps, bool requireClosedCaps, float capUvMetersPerTile,
+            float seamWeldTolerance = DefaultSeamWeldTolerance,
+            DismembermentCapUvMode capUvMode = DismembermentCapUvMode.MeterScaledTiled,
+            float centeredCapUvPadding = UmaDismemberment.DefaultCenteredCapUvPadding)
         {
             this.threshold = Mathf.Clamp01(threshold);
             this.existingCapSubmesh = existingCapSubmesh;
             this.generateCaps = generateCaps;
             this.requireClosedCaps = requireClosedCaps;
             this.capUvMetersPerTile = Mathf.Max(0.0001f, capUvMetersPerTile);
+            this.seamWeldTolerance = Mathf.Max(GeometryEpsilon, seamWeldTolerance);
+            this.capUvMode = capUvMode == DismembermentCapUvMode.CenteredFit
+                ? DismembermentCapUvMode.CenteredFit
+                : DismembermentCapUvMode.MeterScaledTiled;
+            this.centeredCapUvPadding = Mathf.Clamp(centeredCapUvPadding, 0.001f, 0.25f);
         }
+
+        private const float GeometryEpsilon = 0.000001f;
     }
 
     internal sealed class DismembermentMeshBuildResult
@@ -38,6 +53,7 @@ namespace UMA.Dismemberment
         public Mesh detachedMesh;
         public int capSubmeshIndex = -1;
         public int boundaryLoopCount;
+        public int capTriangleCount;
 
         public void DestroyMeshes()
         {
@@ -63,6 +79,32 @@ namespace UMA.Dismemberment
     {
         private const float GeometryEpsilon = 0.000001f;
 
+        private readonly struct SpatialCell : IEquatable<SpatialCell>
+        {
+            public readonly int x;
+            public readonly int y;
+            public readonly int z;
+
+            public SpatialCell(int x, int y, int z)
+            {
+                this.x = x;
+                this.y = y;
+                this.z = z;
+            }
+
+            public bool Equals(SpatialCell other) => x == other.x && y == other.y && z == other.z;
+            public override bool Equals(object obj) => obj is SpatialCell other && Equals(other);
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    int hash = x;
+                    hash = (hash * 397) ^ y;
+                    return (hash * 397) ^ z;
+                }
+            }
+        }
+
         private readonly struct EdgeKey : IEquatable<EdgeKey>
         {
             public readonly int first;
@@ -86,9 +128,28 @@ namespace UMA.Dismemberment
         {
             public int innerCount;
             public int outerCount;
-            public int innerFrom;
-            public int innerTo;
+            public int innerFromCanonical;
+            public int innerToCanonical;
+            public int innerFromSource;
+            public int innerToSource;
+            public int outerFromCanonical;
+            public int outerToCanonical;
+            public int outerFromSource;
+            public int outerToSource;
             public bool hasInnerDirection;
+            public bool hasOuterDirection;
+        }
+
+        private sealed class BoundaryLoop
+        {
+            public readonly List<int> innerSourceIndices;
+            public readonly List<int> outerSourceIndices;
+
+            public BoundaryLoop(int capacity)
+            {
+                innerSourceIndices = new List<int>(capacity);
+                outerSourceIndices = new List<int>(capacity);
+            }
         }
 
         private readonly struct DirectedEdge
@@ -161,6 +222,10 @@ namespace UMA.Dismemberment
             var innerTriangles = CreateTriangleLists(sourceSubmeshCount);
             var outerTriangles = CreateTriangleLists(sourceSubmeshCount);
             var edgeUses = new Dictionary<EdgeKey, EdgeUse>();
+            Vector3[] sourceVertices = source.vertices;
+            int[] canonicalVertices = options.generateCaps
+                ? BuildCanonicalVertexMap(sourceVertices, options.seamWeldTolerance)
+                : null;
             bool foundInner = false;
             bool foundOuter = false;
 
@@ -197,9 +262,12 @@ namespace UMA.Dismemberment
                     destination.Add(c);
                     foundInner |= isInner;
                     foundOuter |= !isInner;
-                    AddEdgeUse(edgeUses, a, b, isInner);
-                    AddEdgeUse(edgeUses, b, c, isInner);
-                    AddEdgeUse(edgeUses, c, a, isInner);
+                    if (canonicalVertices != null)
+                    {
+                        AddEdgeUse(edgeUses, canonicalVertices, a, b, isInner);
+                        AddEdgeUse(edgeUses, canonicalVertices, b, c, isInner);
+                        AddEdgeUse(edgeUses, canonicalVertices, c, a, isInner);
+                    }
                 }
             }
 
@@ -209,18 +277,18 @@ namespace UMA.Dismemberment
                 return DismembermentMeshBuildStatus.NoAffectedTriangles;
             }
 
-            List<List<int>> boundaryLoops = null;
+            List<BoundaryLoop> boundaryLoops = null;
             if (options.generateCaps && foundOuter)
             {
                 if (!TryBuildBoundaryLoops(edgeUses, out boundaryLoops, out error))
                 {
                     if (options.requireClosedCaps)
                         return DismembermentMeshBuildStatus.InvalidSource;
-                    boundaryLoops = new List<List<int>>();
+                    boundaryLoops = new List<BoundaryLoop>();
                     error = string.Empty;
                 }
             }
-            boundaryLoops ??= new List<List<int>>();
+            boundaryLoops ??= new List<BoundaryLoop>();
 
             int capSubmesh = options.existingCapSubmesh >= 0 &&
                 options.existingCapSubmesh < sourceSubmeshCount
@@ -235,13 +303,16 @@ namespace UMA.Dismemberment
             var outerCapVertices = new List<CapVertex>();
             var innerCapTriangles = new List<int>();
             var outerCapTriangles = new List<int>();
-            Vector3[] sourceVertices = source.vertices;
             for (int loopIndex = 0; loopIndex < boundaryLoops.Count; loopIndex++)
             {
-                List<int> loop = boundaryLoops[loopIndex];
-                if (!TryAppendCap(loop, sourceVertices, true, options.capUvMetersPerTile,
+                BoundaryLoop loop = boundaryLoops[loopIndex];
+                if (!TryAppendCap(loop.innerSourceIndices, sourceVertices, true,
+                    options.capUvMetersPerTile, options.capUvMode,
+                    options.centeredCapUvPadding,
                     innerCapVertices, innerCapTriangles, out string capError) ||
-                    !TryAppendCap(loop, sourceVertices, false, options.capUvMetersPerTile,
+                    !TryAppendCap(loop.outerSourceIndices, sourceVertices, false,
+                        options.capUvMetersPerTile, options.capUvMode,
+                        options.centeredCapUvPadding,
                         outerCapVertices, outerCapTriangles, out capError))
                 {
                     error = $"Could not triangulate cut loop {loopIndex}: {capError}";
@@ -272,7 +343,8 @@ namespace UMA.Dismemberment
                     outerMesh = outerMesh,
                     detachedMesh = detachedMesh,
                     capSubmeshIndex = capSubmesh,
-                    boundaryLoopCount = boundaryLoops.Count
+                    boundaryLoopCount = boundaryLoops.Count,
+                    capTriangleCount = innerCapTriangles.Count / 3
                 };
                 return DismembermentMeshBuildStatus.Success;
             }
@@ -346,10 +418,80 @@ namespace UMA.Dismemberment
             }
         }
 
-        private static void AddEdgeUse(Dictionary<EdgeKey, EdgeUse> uses, int from, int to,
-            bool inner)
+        private static int[] BuildCanonicalVertexMap(Vector3[] vertices, float tolerance)
         {
-            EdgeKey key = new EdgeKey(from, to);
+            // UMA combines independently-authored slots and preserves UV/normal splits, so a
+            // visually continuous body or armor seam can contain several vertex indices. Weld
+            // positions only for boundary topology; cap attributes and weights still come from
+            // the original vertex on each side of the cut.
+            tolerance = Mathf.Max(GeometryEpsilon, tolerance);
+            float toleranceSquared = tolerance * tolerance;
+            float distanceTieEpsilon = Mathf.Max(toleranceSquared * 0.0001f, 1e-20f);
+            var canonicalPositions = new List<Vector3>(vertices.Length);
+            var buckets = new Dictionary<SpatialCell, List<int>>();
+            var canonical = new int[vertices.Length];
+            for (int vertex = 0; vertex < vertices.Length; vertex++)
+            {
+                Vector3 position = vertices[vertex];
+                SpatialCell cell = GetSpatialCell(position, tolerance);
+                int best = -1;
+                float bestDistance = toleranceSquared;
+                for (int z = -1; z <= 1; z++)
+                {
+                    for (int y = -1; y <= 1; y++)
+                    {
+                        for (int x = -1; x <= 1; x++)
+                        {
+                            var neighbor = new SpatialCell(cell.x + x, cell.y + y, cell.z + z);
+                            if (!buckets.TryGetValue(neighbor, out List<int> candidates)) continue;
+                            for (int candidateIndex = 0; candidateIndex < candidates.Count;
+                                candidateIndex++)
+                            {
+                                int candidate = candidates[candidateIndex];
+                                float distance = (canonicalPositions[candidate] - position).sqrMagnitude;
+                                if (distance > toleranceSquared ||
+                                    distance > bestDistance + distanceTieEpsilon) continue;
+                                if (best >= 0 && Mathf.Abs(distance - bestDistance) <=
+                                    distanceTieEpsilon &&
+                                    candidate > best) continue;
+                                best = candidate;
+                                bestDistance = distance;
+                            }
+                        }
+                    }
+                }
+
+                if (best < 0)
+                {
+                    best = canonicalPositions.Count;
+                    canonicalPositions.Add(position);
+                    if (!buckets.TryGetValue(cell, out List<int> cellVertices))
+                    {
+                        cellVertices = new List<int>();
+                        buckets.Add(cell, cellVertices);
+                    }
+                    cellVertices.Add(best);
+                }
+                canonical[vertex] = best;
+            }
+            return canonical;
+        }
+
+        private static SpatialCell GetSpatialCell(Vector3 position, float cellSize)
+        {
+            return new SpatialCell(
+                Mathf.FloorToInt(position.x / cellSize),
+                Mathf.FloorToInt(position.y / cellSize),
+                Mathf.FloorToInt(position.z / cellSize));
+        }
+
+        private static void AddEdgeUse(Dictionary<EdgeKey, EdgeUse> uses,
+            int[] canonicalVertices, int fromSource, int toSource, bool inner)
+        {
+            int fromCanonical = canonicalVertices[fromSource];
+            int toCanonical = canonicalVertices[toSource];
+            if (fromCanonical == toCanonical) return;
+            EdgeKey key = new EdgeKey(fromCanonical, toCanonical);
             if (!uses.TryGetValue(key, out EdgeUse use))
             {
                 use = new EdgeUse();
@@ -360,32 +502,62 @@ namespace UMA.Dismemberment
                 use.innerCount++;
                 if (!use.hasInnerDirection)
                 {
-                    use.innerFrom = from;
-                    use.innerTo = to;
+                    use.innerFromCanonical = fromCanonical;
+                    use.innerToCanonical = toCanonical;
+                    use.innerFromSource = fromSource;
+                    use.innerToSource = toSource;
                     use.hasInnerDirection = true;
                 }
             }
-            else use.outerCount++;
+            else
+            {
+                use.outerCount++;
+                if (!use.hasOuterDirection)
+                {
+                    use.outerFromCanonical = fromCanonical;
+                    use.outerToCanonical = toCanonical;
+                    use.outerFromSource = fromSource;
+                    use.outerToSource = toSource;
+                    use.hasOuterDirection = true;
+                }
+            }
         }
 
         private static bool TryBuildBoundaryLoops(Dictionary<EdgeKey, EdgeUse> uses,
-            out List<List<int>> loops, out string error)
+            out List<BoundaryLoop> loops, out string error)
         {
-            loops = new List<List<int>>();
+            loops = new List<BoundaryLoop>();
             error = string.Empty;
             var boundary = new List<DirectedEdge>();
             var directed = new HashSet<long>();
             var adjacency = new Dictionary<int, List<int>>();
+            var innerSourceByCanonical = new Dictionary<int, int>();
+            var outerSourceByCanonical = new Dictionary<int, int>();
             foreach (KeyValuePair<EdgeKey, EdgeUse> pair in uses)
             {
                 EdgeUse use = pair.Value;
-                if (use.innerCount == 0 || use.outerCount == 0 || !use.hasInnerDirection) continue;
-                boundary.Add(new DirectedEdge(use.innerFrom, use.innerTo));
-                directed.Add(DirectedKey(use.innerFrom, use.innerTo));
+                if (use.innerCount == 0 || use.outerCount == 0 || !use.hasInnerDirection ||
+                    !use.hasOuterDirection) continue;
+                boundary.Add(new DirectedEdge(use.innerFromCanonical, use.innerToCanonical));
+                directed.Add(DirectedKey(use.innerFromCanonical, use.innerToCanonical));
                 AddNeighbor(adjacency, pair.Key.first, pair.Key.second);
                 AddNeighbor(adjacency, pair.Key.second, pair.Key.first);
+                AddRepresentative(innerSourceByCanonical, use.innerFromCanonical,
+                    use.innerFromSource);
+                AddRepresentative(innerSourceByCanonical, use.innerToCanonical,
+                    use.innerToSource);
+                AddRepresentative(outerSourceByCanonical, use.outerFromCanonical,
+                    use.outerFromSource);
+                AddRepresentative(outerSourceByCanonical, use.outerToCanonical,
+                    use.outerToSource);
             }
-            if (boundary.Count == 0) return true;
+            if (boundary.Count == 0)
+            {
+                error = "No geometric cut boundary was found between the detached and remaining " +
+                    "triangles. The surfaces may use unmatched slot borders or a seam weld " +
+                    "tolerance that is too small.";
+                return false;
+            }
 
             foreach (KeyValuePair<int, List<int>> vertex in adjacency)
             {
@@ -445,9 +617,30 @@ namespace UMA.Dismemberment
                     if (directed.Contains(DirectedKey(next, loop[i]))) reverse++;
                 }
                 if (reverse > forward) loop.Reverse();
-                loops.Add(loop);
+                var boundaryLoop = new BoundaryLoop(loop.Count);
+                for (int vertex = 0; vertex < loop.Count; vertex++)
+                {
+                    int canonical = loop[vertex];
+                    if (!innerSourceByCanonical.TryGetValue(canonical, out int innerSource) ||
+                        !outerSourceByCanonical.TryGetValue(canonical, out int outerSource))
+                    {
+                        error = $"Cut boundary vertex {canonical} is missing a source vertex on " +
+                            "one side of the cut.";
+                        return false;
+                    }
+                    boundaryLoop.innerSourceIndices.Add(innerSource);
+                    boundaryLoop.outerSourceIndices.Add(outerSource);
+                }
+                loops.Add(boundaryLoop);
             }
             return true;
+        }
+
+        private static void AddRepresentative(Dictionary<int, int> representatives,
+            int canonical, int source)
+        {
+            if (!representatives.TryGetValue(canonical, out int existing) || source < existing)
+                representatives[canonical] = source;
         }
 
         private static long DirectedKey(int from, int to) => ((long)(uint)from << 32) | (uint)to;
@@ -479,8 +672,8 @@ namespace UMA.Dismemberment
         }
 
         private static bool TryAppendCap(List<int> sourceLoop, Vector3[] vertices, bool detachedSide,
-            float metersPerTile, List<CapVertex> destinationVertices, List<int> destinationTriangles,
-            out string error)
+            float metersPerTile, DismembermentCapUvMode uvMode, float centeredPadding,
+            List<CapVertex> destinationVertices, List<int> destinationTriangles, out string error)
         {
             error = string.Empty;
             var ordered = new List<int>(sourceLoop);
@@ -514,15 +707,62 @@ namespace UMA.Dismemberment
                 return false;
             }
 
+            List<Vector2> centeredUvs = null;
+            if (uvMode == DismembermentCapUvMode.CenteredFit &&
+                !TryCreateCenteredCapUvs(polygon, centeredPadding, out centeredUvs))
+            {
+                error = "projected boundary cannot be centered in UV space";
+                return false;
+            }
+
             int capBase = destinationVertices.Count;
             for (int i = 0; i < ordered.Count; i++)
             {
-                Vector2 uv = polygon[i] / metersPerTile;
+                Vector2 uv = centeredUvs != null ? centeredUvs[i] : polygon[i] / metersPerTile;
                 destinationVertices.Add(new CapVertex(ordered[i], desiredNormal,
                     new Vector4(tangent.x, tangent.y, tangent.z, 1f), uv));
             }
             for (int i = 0; i < localTriangles.Count; i++)
                 destinationTriangles.Add(capBase + localTriangles[i]);
+            return true;
+        }
+
+        private static bool TryCreateCenteredCapUvs(IReadOnlyList<Vector2> polygon, float padding,
+            out List<Vector2> uvs)
+        {
+            uvs = null;
+            float twiceArea = 0f;
+            Vector2 weightedCenter = Vector2.zero;
+            for (int i = 0; i < polygon.Count; i++)
+            {
+                Vector2 current = polygon[i];
+                Vector2 next = polygon[(i + 1) % polygon.Count];
+                float cross = current.x * next.y - next.x * current.y;
+                twiceArea += cross;
+                weightedCenter += (current + next) * cross;
+            }
+            if (Mathf.Abs(twiceArea) <= GeometryEpsilon) return false;
+
+            Vector2 center = weightedCenter / (3f * twiceArea);
+            float maximumExtent = 0f;
+            for (int i = 0; i < polygon.Count; i++)
+            {
+                Vector2 offset = polygon[i] - center;
+                maximumExtent = Mathf.Max(maximumExtent,
+                    Mathf.Max(Mathf.Abs(offset.x), Mathf.Abs(offset.y)));
+            }
+            if (maximumExtent <= GeometryEpsilon) return false;
+
+            padding = Mathf.Clamp(padding, 0.001f, 0.25f);
+            float scale = (0.5f - padding) / maximumExtent;
+            uvs = new List<Vector2>(polygon.Count);
+            for (int i = 0; i < polygon.Count; i++)
+            {
+                Vector2 uv = Vector2.one * 0.5f + (polygon[i] - center) * scale;
+                uv.x = Mathf.Clamp(uv.x, padding, 1f - padding);
+                uv.y = Mathf.Clamp(uv.y, padding, 1f - padding);
+                uvs.Add(uv);
+            }
             return true;
         }
 

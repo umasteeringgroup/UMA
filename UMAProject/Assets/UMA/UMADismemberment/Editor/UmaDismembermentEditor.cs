@@ -17,6 +17,7 @@ namespace UMA.Dismemberment
         private SerializedProperty generateCaps;
         private SerializedProperty requireClosedCaps;
         private SerializedProperty capUvMetersPerTile;
+        private SerializedProperty seamWeldTolerance;
         private SerializedProperty globalThreshold;
         private SerializedProperty useSliceable;
         private SerializedProperty sliceableHumanBones;
@@ -34,6 +35,7 @@ namespace UMA.Dismemberment
             generateCaps = serializedObject.FindProperty("generateCaps");
             requireClosedCaps = serializedObject.FindProperty("requireClosedCaps");
             capUvMetersPerTile = serializedObject.FindProperty("capUvMetersPerTile");
+            seamWeldTolerance = serializedObject.FindProperty("seamWeldTolerance");
             globalThreshold = serializedObject.FindProperty("globalThreshold");
             useSliceable = serializedObject.FindProperty("useSliceable");
             sliceableHumanBones = serializedObject.FindProperty("sliceableHumanBones");
@@ -43,10 +45,11 @@ namespace UMA.Dismemberment
             sliceableList = new ReorderableList(serializedObject, sliceableHumanBones,
                 true, true, true, true)
             {
-                drawHeaderCallback = rect => EditorGUI.LabelField(rect, "Sliceable Human Bones"),
+                drawHeaderCallback = rect => EditorGUI.LabelField(rect,
+                    "Sliceable Human Bones and Cap UV Mapping"),
                 drawElementCallback = DrawBoneElement,
-                elementHeight = EditorGUIUtility.singleLineHeight +
-                    EditorGUIUtility.standardVerticalSpacing * 2f,
+                elementHeight = EditorGUIUtility.singleLineHeight * 3f +
+                    EditorGUIUtility.standardVerticalSpacing * 4f,
                 onAddCallback = AddBone
             };
         }
@@ -66,6 +69,7 @@ namespace UMA.Dismemberment
                 EditorGUILayout.PropertyField(pipelineOverrides, new GUIContent("Pipeline Overrides"), true);
                 EditorGUILayout.PropertyField(requireClosedCaps);
                 EditorGUILayout.PropertyField(capUvMetersPerTile);
+                EditorGUILayout.PropertyField(seamWeldTolerance);
             }
             DrawCapDiagnostics();
 
@@ -139,6 +143,9 @@ namespace UMA.Dismemberment
             SerializedProperty element = sliceableHumanBones.GetArrayElementAtIndex(index);
             SerializedProperty bone = element.FindPropertyRelative("humanBone");
             SerializedProperty threshold = element.FindPropertyRelative("threshold");
+            SerializedProperty capUvMode = element.FindPropertyRelative("capUvMode");
+            SerializedProperty centeredPadding = element.FindPropertyRelative(
+                "centeredCapUvPadding");
             rect.y += EditorGUIUtility.standardVerticalSpacing;
             float gap = 6f;
             float boneWidth = Mathf.Max(100f, rect.width * 0.58f);
@@ -147,6 +154,19 @@ namespace UMA.Dismemberment
                 Mathf.Max(40f, rect.width - boneWidth - gap), EditorGUIUtility.singleLineHeight);
             EditorGUI.PropertyField(boneRect, bone, GUIContent.none);
             EditorGUI.PropertyField(thresholdRect, threshold, GUIContent.none);
+            rect.y += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
+            Rect uvModeRect = new Rect(rect.x, rect.y, rect.width,
+                EditorGUIUtility.singleLineHeight);
+            EditorGUI.PropertyField(uvModeRect, capUvMode, new GUIContent("Cap UV Mapping"));
+            rect.y += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
+            Rect paddingRect = new Rect(rect.x, rect.y, rect.width,
+                EditorGUIUtility.singleLineHeight);
+            using (new EditorGUI.DisabledScope(capUvMode.enumValueIndex !=
+                (int)DismembermentCapUvMode.CenteredFit))
+            {
+                EditorGUI.PropertyField(paddingRect, centeredPadding,
+                    new GUIContent("Centered UV Padding"));
+            }
         }
 
         private void AddBone(ReorderableList list)
@@ -156,6 +176,10 @@ namespace UMA.Dismemberment
             SerializedProperty element = sliceableHumanBones.GetArrayElementAtIndex(index);
             element.FindPropertyRelative("humanBone").enumValueIndex = FindUnusedBone();
             element.FindPropertyRelative("threshold").floatValue = 0.5f;
+            element.FindPropertyRelative("capUvMode").enumValueIndex =
+                (int)DismembermentCapUvMode.MeterScaledTiled;
+            element.FindPropertyRelative("centeredCapUvPadding").floatValue =
+                UmaDismemberment.DefaultCenteredCapUvPadding;
             list.index = index;
         }
 

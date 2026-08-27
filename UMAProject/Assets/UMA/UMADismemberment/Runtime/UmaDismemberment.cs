@@ -34,6 +34,12 @@ namespace UMA.Dismemberment
         KeepDetachedPieces
     }
 
+    public enum DismembermentCapUvMode
+    {
+        MeterScaledTiled,
+        CenteredFit
+    }
+
     [Serializable]
     public struct DismembermentPipelineMaterial
     {
@@ -61,6 +67,8 @@ namespace UMA.Dismemberment
     [RequireComponent(typeof(DynamicCharacterAvatar))]
     public class UmaDismemberment : MonoBehaviour
     {
+        public const float DefaultCenteredCapUvPadding = 0.02f;
+
         [Serializable]
         public struct DismemberedInfo
         {
@@ -77,10 +85,22 @@ namespace UMA.Dismemberment
         {
             public HumanBodyBones humanBone;
             [Range(0.01f, 1f)] public float threshold;
+            [Tooltip("Meter Scaled Tiled preserves the legacy physical tiling. Centered Fit " +
+                "maps the cap center to UV 0.5,0.5 without tiling.")]
+            public DismembermentCapUvMode capUvMode;
+            [Range(0.001f, 0.25f), Tooltip("Inset from every UV0 edge when using Centered Fit. " +
+                "A value of 0.02 fits the cap inside 0.02 to 0.98.")]
+            public float centeredCapUvPadding;
 
             public static BoneInfo CreateDefault(HumanBodyBones bone = HumanBodyBones.Head)
             {
-                return new BoneInfo { humanBone = bone, threshold = 0.5f };
+                return new BoneInfo
+                {
+                    humanBone = bone,
+                    threshold = 0.5f,
+                    capUvMode = DismembermentCapUvMode.MeterScaledTiled,
+                    centeredCapUvPadding = DefaultCenteredCapUvPadding
+                };
             }
         }
 
@@ -104,6 +124,9 @@ namespace UMA.Dismemberment
         public bool requireClosedCaps = true;
         [Min(0.001f), Tooltip("Physical cap UV scale using Unity's standard 1 unit = 1 meter convention.")]
         public float capUvMetersPerTile = 0.25f;
+        [Min(0.000001f), Tooltip("Maximum distance in meters for treating duplicated seam " +
+            "vertices as the same cap-loop vertex. The default is 0.1 millimeters.")]
+        public float seamWeldTolerance = DismembermentMeshBuildOptions.DefaultSeamWeldTolerance;
 
         [Header("Bone Selection")]
         [Range(0.01f, 1f)]
@@ -168,12 +191,10 @@ namespace UMA.Dismemberment
 
         private void OnEnable()
         {
-            avatar = GetComponent<DynamicCharacterAvatar>();
             DismemberedEvent ??= new Dismembered();
             DismembermentCompleted ??= new DismembermentCompletedEvent();
             hasSplit ??= new HashSet<Transform>();
-            Subscribe();
-            if (avatar != null && avatar.umaData != null) HandleCharacterUpdated(avatar.umaData);
+            EnsureInitialized();
         }
 
         private void OnDisable()
@@ -192,12 +213,17 @@ namespace UMA.Dismemberment
         {
             globalThreshold = Mathf.Clamp(globalThreshold, 0.01f, 1f);
             capUvMetersPerTile = Mathf.Max(0.001f, capUvMetersPerTile);
+            seamWeldTolerance = seamWeldTolerance > 0f
+                ? Mathf.Max(0.000001f, seamWeldTolerance)
+                : DismembermentMeshBuildOptions.DefaultSeamWeldTolerance;
             if (sliceableHumanBones == null) sliceableHumanBones = new List<BoneInfo>();
             for (int i = 0; i < sliceableHumanBones.Count; i++)
             {
                 BoneInfo info = sliceableHumanBones[i];
                 if (info.threshold <= 0f) info.threshold = 0.5f;
                 info.threshold = Mathf.Clamp(info.threshold, 0.01f, 1f);
+                info.centeredCapUvPadding = NormalizeCenteredCapUvPadding(
+                    info.centeredCapUvPadding);
                 sliceableHumanBones[i] = info;
             }
         }
@@ -212,6 +238,15 @@ namespace UMA.Dismemberment
             avatar.CharacterCreated.AddListener(HandleCharacterUpdated);
             avatar.CharacterUpdated.AddListener(HandleCharacterUpdated);
             subscribed = true;
+        }
+
+        private void EnsureInitialized()
+        {
+            if (avatar == null) avatar = GetComponent<DynamicCharacterAvatar>();
+            if (avatar == null) return;
+            Subscribe();
+            if (currentData == null && avatar.umaData != null)
+                HandleCharacterUpdated(avatar.umaData);
         }
 
         private void Unsubscribe()
@@ -292,16 +327,22 @@ namespace UMA.Dismemberment
             info = default;
             if (!TryResolveHumanBone(humanBone, out Transform bone, out failure)) return false;
             float threshold = globalThreshold;
+            DismembermentCapUvMode capUvMode = DismembermentCapUvMode.MeterScaledTiled;
+            float centeredCapUvPadding = DefaultCenteredCapUvPadding;
             if (useSliceable)
             {
                 int index = ContainsBone(humanBone);
                 if (index < 0)
                     return Fail(DismembermentFailureReason.BoneNotSliceable,
                         $"{humanBone} is not in the Sliceable Human Bones list.", out failure);
-                if (!useGlobalThreshold) threshold = sliceableHumanBones[index].threshold;
+                BoneInfo settings = sliceableHumanBones[index];
+                if (!useGlobalThreshold) threshold = settings.threshold;
+                capUvMode = settings.capUvMode;
+                centeredCapUvPadding = NormalizeCenteredCapUvPadding(
+                    settings.centeredCapUvPadding);
             }
             bool success = TrySliceInternal(bone, threshold, humanBone, preventRepeatedSlice,
-                out info, out failure);
+                capUvMode, centeredCapUvPadding, out info, out failure);
             return success;
         }
 
@@ -309,7 +350,9 @@ namespace UMA.Dismemberment
             out string failure, bool preventRepeatedSlice = true)
         {
             return TrySliceInternal(bone, Mathf.Clamp(threshold, 0.01f, 1f),
-                HumanBodyBones.LastBone, preventRepeatedSlice, out info, out failure);
+                HumanBodyBones.LastBone, preventRepeatedSlice,
+                DismembermentCapUvMode.MeterScaledTiled, DefaultCenteredCapUvPadding,
+                out info, out failure);
         }
 
         public void ResetDismemberment(bool destroyDetachedPieces = true)
@@ -322,14 +365,15 @@ namespace UMA.Dismemberment
         }
 
         private bool TrySliceInternal(Transform bone, float threshold, HumanBodyBones humanBone,
-            bool preventRepeatedSlice, out DismemberedInfo info, out string failure)
+            bool preventRepeatedSlice, DismembermentCapUvMode capUvMode,
+            float centeredCapUvPadding, out DismemberedInfo info, out string failure)
         {
             info = default;
             failure = string.Empty;
             ClearFailure();
+            EnsureInitialized();
             if (bone == null)
                 return Fail(DismembermentFailureReason.InvalidBone, "The target bone is null.", out failure);
-            if (currentData == null && avatar != null) HandleCharacterUpdated(avatar.umaData);
             SkinnedMeshRenderer[] renderers = currentData?.GetRenderers();
             if (currentData == null || renderers == null || renderers.Length == 0)
                 return Fail(DismembermentFailureReason.NotInitialized,
@@ -370,8 +414,12 @@ namespace UMA.Dismemberment
 
                 OwnedSourceRenderer existingState = FindOwnedState(renderer);
                 int existingCap = existingState?.capSubmeshIndex ?? -1;
+                float effectiveSeamTolerance = seamWeldTolerance > 0f
+                    ? seamWeldTolerance
+                    : DismembermentMeshBuildOptions.DefaultSeamWeldTolerance;
                 var options = new DismembermentMeshBuildOptions(threshold, existingCap,
-                    generateCaps, requireClosedCaps, capUvMetersPerTile);
+                    generateCaps, requireClosedCaps, capUvMetersPerTile, effectiveSeamTolerance,
+                    capUvMode, centeredCapUvPadding);
                 DismembermentMeshBuildStatus status = DismembermentMeshBuilder.Build(
                     renderer.sharedMesh, includedBones, options,
                     out DismembermentMeshBuildResult build, out string buildError);
@@ -471,7 +519,7 @@ namespace UMA.Dismemberment
         {
             bone = null;
             failure = string.Empty;
-            if (currentData == null && avatar != null) HandleCharacterUpdated(avatar.umaData);
+            EnsureInitialized();
             animator = currentData?.animator != null ? currentData.animator : GetComponent<Animator>();
             if (animator == null)
                 return Fail(DismembermentFailureReason.NotInitialized,
@@ -883,6 +931,12 @@ namespace UMA.Dismemberment
         {
             LastFailureReason = DismembermentFailureReason.None;
             LastFailure = string.Empty;
+        }
+
+        private static float NormalizeCenteredCapUvPadding(float padding)
+        {
+            if (padding <= 0f) padding = DefaultCenteredCapUvPadding;
+            return Mathf.Clamp(padding, 0.001f, 0.25f);
         }
 
         private int ContainsBone(HumanBodyBones humanBone)
