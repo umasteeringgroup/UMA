@@ -7,6 +7,8 @@ Use these documents according to the task:
 - [Artist Setup and Production Guide](ARTIST_GUIDE.md) - complete setup, mesh authoring, cap materials, physics, gameplay integration, extension points, and troubleshooting.
 - [Sample Scene Walkthrough](Samples/README.md) - what the supplied scene demonstrates and how to copy it into another scene.
 - [Cap Material Notes](Samples/Materials/README.md) - the supplied cross-pipeline test material and replacement guidance.
+- [Surface Bleeding Design](BLEEDING_FLUID_SYSTEM_PLAN.md) - the preserved architecture,
+  performance contract, implementation phases, and acceptance criteria for runtime fluid decals.
 
 ## Quick setup
 
@@ -78,3 +80,67 @@ The default **Destroy Detached Pieces** rebuild policy removes detached pieces w
 The source mesh must be CPU-readable and use triangle topology. Cuts follow existing triangle edges; this is a topology partition, not an arbitrary plane intersection. Closed caps require a manifold cut boundary. Renderers with `Cloth` are rejected because changed topology would invalidate the cloth coefficients. The operation uses Unity mesh and GameObject APIs and must run on the Unity main thread.
 
 Editor tests cover modern weights, closed and concave cap reconstruction, centered UVs, seam-split and multi-renderer body/armor cases, strict boundary rejection, repeated cuts, rebuild cleanup, detached rig trimming, rigid/articulated physics construction, and full undo.
+
+## Runtime surface bleeding and fading decals
+
+Assign a `UMASurfaceFluidProfile` to **Surface Fluid Profile** on
+`ExampleDismemberCallback` to add flowing, settling, and fading blood to the particle effect.
+The callback adds `UMARuntimeSurfaceDecalController` when needed and passes the rich cut result to
+`StartBleed`. The result now includes `cutSurfaces`, containing ordered source UV loops rather than
+an approximation at the cut bone.
+
+The controller never changes `DecalRTStampSlot` or its permanent replay callbacks. It retains the
+generated atlas as an immutable base, draws active effects into an owned output, and restores the
+original material texture when no effect uses it. Normal simulation and fading do not call
+`BuildCharacter` or `ForceUpdate`.
+
+```csharp
+RuntimeDecalHandle blood = surfaceDecals.StartBleed(result, bloodProfile);
+surfaceDecals.StopFlow(blood); // stop injecting; existing fluid continues to settle
+surfaceDecals.FadeNow(blood);  // begin its fade immediately
+surfaceDecals.Clear(blood);    // remove only this independent effect layer
+```
+
+Use `AddFadeableStamp` for a `DecalRTStampAsset` that has not already been baked into the current
+base. `AddPreviouslyBakedFadeableStamp` is the explicit legacy migration path: it requests one clean
+UMA rebuild, registers the stamp dynamically after `CharacterUpdated`, and performs all subsequent
+fade/clear work without another rebuild.
+
+A successful regular RT decal can also seed fluid without any dismemberment event. Capture
+`LastStamp` immediately after `CreateDecalLayer`, because the next successful decal replaces that
+static cache. `StartBleedFromDecal` does not draw the bullet again; it uses the cached target-UV
+triangles and recorded projection radius to create a small central emitter whose physical width
+comes from **Emission Radius Meters**. It intentionally does not multiply this source by the bullet
+alpha because many wound textures have a transparent center. The hit data supplies the bounded
+fallback on platforms without compute support.
+
+```csharp
+DecalRenderTexture.DecalLayerResult? decal = DecalRenderTexture.CreateDecalLayer(
+    avatar, shotRay, bulletRadius, 0f, 0f, avatar.umaData, bulletOverlay, decalOptions);
+
+if (decal.HasValue && decal.Value.success)
+{
+    DecalRTStampAsset woundStamp = DecalRenderTexture.LastStamp;
+    UMARuntimeSurfaceDecalController fluid =
+        avatar.GetComponent<UMARuntimeSurfaceDecalController>() ??
+        avatar.gameObject.AddComponent<UMARuntimeSurfaceDecalController>();
+    RuntimeDecalHandle wound = fluid.AddPersistentStamp(woundStamp);
+    RuntimeDecalHandle bleeding =
+        fluid.StartBleedFromDecal(woundStamp, bloodProfile, decal.Value);
+}
+```
+
+`AddPersistentStamp` keeps the multi-channel wound visible in the owned compositor and rebinds it
+after an UMA atlas rebuild. Its handle can clear the wound independently. The fluid handle controls
+only the bleeding; use `StopFlow`, `FadeNow`, or `Clear` on that handle. The fluid profile's **Source
+Overlay** controls the blood appearance, while the bullet overlay controls the fixed wound.
+
+GPU simulation is one context per generated atlas/material, with a shared posed surface field and
+an independent lower-resolution state layer per handle. Independent layers make `Clear` predictable
+without erasing another cut. Unsupported compute platforms use a bounded world-space trail with a
+shared material and `MaterialPropertyBlock`; that fallback also never rebuilds UMA.
+
+`IndependentDetachedPiece` creates a separate GPU context by cloning only the detached renderer's
+affected generated material and restoring its clean base channel textures before binding owned
+outputs. `DismemberedPieceMaterialOwner` releases the clone with the detached root. Source and shared
+routes do not pay that cost.

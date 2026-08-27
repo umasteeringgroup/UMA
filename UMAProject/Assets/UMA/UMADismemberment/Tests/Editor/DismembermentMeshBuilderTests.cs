@@ -6,6 +6,7 @@ using UMA.CharacterSystem;
 using UMA.Dynamics;
 using Unity.Collections;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace UMA.Dismemberment.Tests
 {
@@ -56,6 +57,35 @@ namespace UMA.Dismemberment.Tests
         }
 
         [Test]
+        public void BuilderPreservesUmaMultistreamVertexLayoutAndSourceBytes()
+        {
+            Mesh source = Own(CreateUmaMultistreamTetrahedron());
+            VertexAttributeDescriptor[] sourceLayout = source.GetVertexAttributes();
+            int sourceVertexCount = source.vertexCount;
+            var sourceStreamBytes = new List<byte[]>();
+            int streamCount = GetStreamCount(sourceLayout);
+            using (Mesh.MeshDataArray sourceData = Mesh.AcquireReadOnlyMeshData(source))
+            {
+                for (int stream = 0; stream < streamCount; stream++)
+                    sourceStreamBytes.Add(sourceData[0].GetVertexData<byte>(stream).ToArray());
+            }
+
+            DismembermentMeshBuildStatus status = DismembermentMeshBuilder.Build(source,
+                new[] { false, true },
+                new DismembermentMeshBuildOptions(0.5f, -1, true, true, 0.25f),
+                out DismembermentMeshBuildResult result, out string error);
+
+            Assert.That(status, Is.EqualTo(DismembermentMeshBuildStatus.Success), error);
+            AssertPreservedVertexLayout(source, result.outerMesh, sourceLayout);
+            AssertPreservedVertexLayout(source, result.detachedMesh, sourceLayout);
+            AssertPreservedSourceStreamBytes(result.outerMesh, sourceStreamBytes,
+                sourceVertexCount, sourceLayout);
+            AssertPreservedSourceStreamBytes(result.detachedMesh, sourceStreamBytes,
+                sourceVertexCount, sourceLayout);
+            result.DestroyMeshes();
+        }
+
+        [Test]
         public void BuilderWeldsDuplicatedSeamVerticesAndCreatesClosedCaps()
         {
             Mesh source = Own(CreateDuplicatedSeamShells(1, 0.00005f));
@@ -81,6 +111,160 @@ namespace UMA.Dismemberment.Tests
             AssertModernWeightsAreConsistent(result.detachedMesh);
             AssertModernWeightsAreConsistent(result.outerMesh);
             result.DestroyMeshes();
+        }
+
+        [Test]
+        public void BuilderRetainsDurableOrderedBoundaryUvData()
+        {
+            Mesh source = Own(CreateDuplicatedSeamShells(1, 0f));
+            var options = new DismembermentMeshBuildOptions(0.5f, -1, true, true, 0.25f,
+                0.0001f);
+
+            DismembermentMeshBuildStatus status = DismembermentMeshBuilder.Build(source,
+                new[] { false, true }, options, out DismembermentMeshBuildResult result,
+                out string error);
+
+            Assert.That(status, Is.EqualTo(DismembermentMeshBuildStatus.Success), error);
+            Assert.That(result.boundaryLoops, Has.Length.EqualTo(1));
+            DismembermentBoundaryLoopData loop = result.boundaryLoops[0];
+            Assert.That(loop.sourceSubmeshIndex, Is.EqualTo(0));
+            Assert.That(loop.sourceVertexIndices, Has.Length.EqualTo(3));
+            Assert.That(loop.boundaryUV, Has.Length.EqualTo(3));
+            Assert.That(loop.boundaryLocalPositions, Has.Length.EqualTo(3));
+            for (int i = 0; i < loop.sourceVertexIndices.Length; i++)
+            {
+                int sourceIndex = loop.sourceVertexIndices[i];
+                Assert.That(loop.boundaryUV[i], Is.EqualTo(source.uv[sourceIndex]));
+                Assert.That(loop.boundaryLocalPositions[i],
+                    Is.EqualTo(source.vertices[sourceIndex]));
+            }
+
+            Vector2[] durableUv = loop.boundaryUV;
+            result.DestroyMeshes();
+            Assert.That(durableUv, Has.Length.EqualTo(3),
+                "Boundary data must not depend on the temporary output meshes.");
+        }
+
+        [Test]
+        public void BuilderRetainsCutBoundaryWhenProceduralCapsAreDisabled()
+        {
+            Mesh source = Own(CreateDuplicatedSeamShells(1, 0f));
+            var options = new DismembermentMeshBuildOptions(0.5f, -1, false, false, 0.25f,
+                0.0001f);
+
+            DismembermentMeshBuildStatus status = DismembermentMeshBuilder.Build(source,
+                new[] { false, true }, options, out DismembermentMeshBuildResult result,
+                out string error);
+
+            Assert.That(status, Is.EqualTo(DismembermentMeshBuildStatus.Success), error);
+            Assert.That(result.capSubmeshIndex, Is.EqualTo(-1));
+            Assert.That(result.capTriangleCount, Is.Zero);
+            Assert.That(result.boundaryLoops, Has.Length.EqualTo(1),
+                "Surface effects need the real cut loop even when visual caps are disabled.");
+            Assert.That(result.outerMesh.subMeshCount, Is.EqualTo(source.subMeshCount));
+            Assert.That(result.detachedMesh.subMeshCount, Is.EqualTo(source.subMeshCount));
+            result.DestroyMeshes();
+        }
+
+        [Test]
+        public void RuntimeDecalHandlesAreSessionScopedAndStable()
+        {
+            var first = new RuntimeDecalHandle(17, 1);
+            var same = new RuntimeDecalHandle(17, 1);
+            var next = new RuntimeDecalHandle(17, 2);
+            var otherSession = new RuntimeDecalHandle(18, 1);
+
+            Assert.That(first.IsValid, Is.True);
+            Assert.That(first, Is.EqualTo(same));
+            Assert.That(first, Is.Not.EqualTo(next));
+            Assert.That(first, Is.Not.EqualTo(otherSession));
+            Assert.That(default(RuntimeDecalHandle).IsValid, Is.False);
+        }
+
+        [Test]
+        public void SurfaceFluidDefaultsUseBoundedMetricValues()
+        {
+            UMASurfaceFluidProfile profile = Own(
+                ScriptableObject.CreateInstance<UMASurfaceFluidProfile>());
+
+            Assert.That(profile.emissionRadiusMeters, Is.GreaterThan(0f));
+            Assert.That(profile.maximumTravelMeters, Is.GreaterThan(0f));
+            Assert.That(profile.trailDepositionPerMeter, Is.GreaterThan(0f));
+            Assert.That(profile.breakupScaleMeters, Is.GreaterThan(0f));
+            Assert.That(profile.simulationResolutionCap, Is.InRange(64, 1024));
+            Assert.That(profile.channels, Is.EqualTo(SurfaceFluidChannels.Albedo));
+            Assert.That(profile.detachedRoute,
+                Is.EqualTo(SurfaceFluidDetachedRoute.SourceBody));
+        }
+
+        [Test]
+        public void SurfaceFluidGpuResourcesArePackagedAndLoadable()
+        {
+            Assert.That(Resources.Load<ComputeShader>(
+                "UMA/Dismemberment/SurfaceFluid"), Is.Not.Null);
+            Assert.That(Resources.Load<Shader>(
+                "UMA/Dismemberment/SurfaceField"), Is.Not.Null);
+            Assert.That(Resources.Load<Shader>(
+                "UMA/Dismemberment/RuntimeDecalComposite"), Is.Not.Null);
+            Assert.That(Resources.Load<Shader>(
+                "UMA/Dismemberment/SourceMask"), Is.Not.Null);
+            Assert.That(Resources.Load<Shader>(
+                "UMA/Dismemberment/FallbackTrail"), Is.Not.Null);
+        }
+
+        [Test]
+        public void EmptyRuntimeSurfaceControllerOwnsNoActiveEffects()
+        {
+            GameObject avatarObject = Own(new GameObject("Empty Surface Decal Avatar"));
+            avatarObject.AddComponent<DynamicCharacterAvatar>();
+            UMARuntimeSurfaceDecalController controller =
+                avatarObject.AddComponent<UMARuntimeSurfaceDecalController>();
+
+            Assert.That(controller.ActiveEffectCount, Is.Zero);
+            Assert.That(controller.GetDebugTexture(
+                RuntimeSurfaceDebugTexture.CompositedOutput), Is.Null);
+
+            controller.enabled = false;
+            Assert.That(controller.ActiveEffectCount, Is.Zero);
+        }
+
+        [Test]
+        public void StandaloneDecalBleedRejectsIncompleteRequestsWithoutAllocating()
+        {
+            GameObject avatarObject = Own(new GameObject("Standalone Decal Fluid Avatar"));
+            avatarObject.AddComponent<DynamicCharacterAvatar>();
+            UMARuntimeSurfaceDecalController controller =
+                avatarObject.AddComponent<UMARuntimeSurfaceDecalController>();
+            UMASurfaceFluidProfile profile = Own(
+                ScriptableObject.CreateInstance<UMASurfaceFluidProfile>());
+
+            RuntimeDecalHandle missingStamp = controller.StartBleedFromDecal(null, profile);
+            RuntimeDecalHandle failedHit = controller.StartBleedFromDecal(null, profile,
+                new DecalRenderTexture.DecalLayerResult { success = false });
+            RuntimeDecalHandle missingPersistentStamp = controller.AddPersistentStamp(null);
+
+            Assert.That(missingStamp.IsValid, Is.False);
+            Assert.That(failedHit.IsValid, Is.False);
+            Assert.That(missingPersistentStamp.IsValid, Is.False);
+            Assert.That(controller.ActiveEffectCount, Is.Zero,
+                "Rejected standalone emitters must not allocate an effect record.");
+        }
+
+        [Test]
+        public void DetachedPieceMaterialOwnerReleasesIndependentClones()
+        {
+            Shader shader = Shader.Find("Hidden/InternalErrorShader");
+            Assert.That(shader, Is.Not.Null);
+            GameObject piece = Own(new GameObject("Independent Detached Material Owner"));
+            DismemberedPieceMaterialOwner owner =
+                piece.AddComponent<DismemberedPieceMaterialOwner>();
+            Material clone = new Material(shader);
+            owner.Add(clone);
+
+            UnityEngine.Object.DestroyImmediate(piece);
+
+            Assert.That(clone == null, Is.True,
+                "The detached root must own and release every generated material clone.");
         }
 
         [Test]
@@ -625,8 +809,13 @@ namespace UMA.Dismemberment.Tests
             Assert.That(info.sourceRenderers, Has.Length.EqualTo(2));
             Assert.That(info.detachedRenderers, Has.Length.EqualTo(2));
             Assert.That(info.sourceTargetBone, Is.SameAs(bones[4]));
+            Assert.That(info.cutSurfaces, Has.Length.EqualTo(2));
+            Assert.That(info.cutSurfaces[0].IsValid, Is.True);
             Assert.That(completion, Is.Not.Null);
             Assert.That(completion.sourceTargetBone, Is.SameAs(bones[4]));
+            Assert.That(completion.cutSurfaces, Has.Length.EqualTo(2));
+            Assert.That(completion.cutSurfaces[0].sourceRenderer,
+                Is.SameAs(info.sourceRenderers[0]));
             Assert.That(first.sharedMesh, Is.Not.SameAs(originalFirst));
             Assert.That(second.sharedMesh, Is.Not.SameAs(originalSecond));
             Assert.That(originalFirst.subMeshCount, Is.EqualTo(1));
@@ -801,6 +990,130 @@ namespace UMA.Dismemberment.Tests
             return mesh;
         }
 
+        private struct TestNormalTangent
+        {
+            public Vector3 normal;
+            public Vector4 tangent;
+        }
+
+        private struct TestColorUv
+        {
+            public Color32 color;
+            public Vector2 uv0;
+            public Vector2 uv1;
+        }
+
+        private static Mesh CreateUmaMultistreamTetrahedron()
+        {
+            var mesh = new Mesh { name = "UMA Multistream Tetrahedron" };
+            mesh.SetVertexBufferParams(4,
+                new VertexAttributeDescriptor(VertexAttribute.Position,
+                    VertexAttributeFormat.Float32, 3, 0),
+                new VertexAttributeDescriptor(VertexAttribute.Normal,
+                    VertexAttributeFormat.Float32, 3, 1),
+                new VertexAttributeDescriptor(VertexAttribute.Tangent,
+                    VertexAttributeFormat.Float32, 4, 1),
+                new VertexAttributeDescriptor(VertexAttribute.Color,
+                    VertexAttributeFormat.UNorm8, 4, 2),
+                new VertexAttributeDescriptor(VertexAttribute.TexCoord0,
+                    VertexAttributeFormat.Float32, 2, 2),
+                new VertexAttributeDescriptor(VertexAttribute.TexCoord1,
+                    VertexAttributeFormat.Float32, 2, 2));
+            var positions = new NativeArray<Vector3>(new[]
+            {
+                new Vector3(0f, 1f, 0f),
+                new Vector3(-1f, 0f, -1f),
+                new Vector3(1f, 0f, -1f),
+                new Vector3(0f, 0f, 1f)
+            }, Allocator.Temp);
+            var normalTangents = new NativeArray<TestNormalTangent>(4, Allocator.Temp);
+            var colorUv = new NativeArray<TestColorUv>(4, Allocator.Temp);
+            try
+            {
+                for (int vertex = 0; vertex < 4; vertex++)
+                {
+                    normalTangents[vertex] = new TestNormalTangent
+                    {
+                        normal = vertex == 0 ? Vector3.up : Vector3.down,
+                        tangent = new Vector4(1f, 0f, 0f, 1f)
+                    };
+                    colorUv[vertex] = new TestColorUv
+                    {
+                        color = new Color32((byte)(50 + vertex), (byte)(100 + vertex),
+                            (byte)(150 + vertex), 255),
+                        uv0 = vertex == 0 ? new Vector2(0.5f, 1f) :
+                            vertex == 1 ? Vector2.zero :
+                            vertex == 2 ? Vector2.right : Vector2.one,
+                        uv1 = new Vector2(vertex * 0.1f, vertex * 0.2f)
+                    };
+                }
+                mesh.SetVertexBufferData(positions, 0, 0, positions.Length, 0);
+                mesh.SetVertexBufferData(normalTangents, 0, 0, normalTangents.Length, 1);
+                mesh.SetVertexBufferData(colorUv, 0, 0, colorUv.Length, 2);
+            }
+            finally
+            {
+                positions.Dispose();
+                normalTangents.Dispose();
+                colorUv.Dispose();
+            }
+            mesh.triangles = new[] { 0, 2, 1, 0, 3, 2, 0, 1, 3, 1, 2, 3 };
+            mesh.bindposes = CreateIdentityBindposes(2);
+            SetWeights(mesh, false);
+            mesh.RecalculateBounds();
+            return mesh;
+        }
+
+        private static int GetStreamCount(VertexAttributeDescriptor[] layout)
+        {
+            int count = 0;
+            for (int i = 0; i < layout.Length; i++) count = Mathf.Max(count, layout[i].stream + 1);
+            return count;
+        }
+
+        private static void AssertPreservedVertexLayout(Mesh source, Mesh output,
+            VertexAttributeDescriptor[] expected)
+        {
+            VertexAttributeDescriptor[] actual = output.GetVertexAttributes();
+            Assert.That(actual, Has.Length.EqualTo(expected.Length));
+            for (int i = 0; i < expected.Length; i++)
+            {
+                Assert.That(actual[i].attribute, Is.EqualTo(expected[i].attribute));
+                Assert.That(actual[i].format, Is.EqualTo(expected[i].format));
+                Assert.That(actual[i].dimension, Is.EqualTo(expected[i].dimension));
+                Assert.That(actual[i].stream, Is.EqualTo(expected[i].stream));
+            }
+            for (int stream = 0; stream < GetStreamCount(expected); stream++)
+                Assert.That(output.GetVertexBufferStride(stream),
+                    Is.EqualTo(source.GetVertexBufferStride(stream)));
+        }
+
+        private static void AssertPreservedSourceStreamBytes(Mesh output,
+            List<byte[]> sourceStreams, int sourceVertexCount,
+            VertexAttributeDescriptor[] layout)
+        {
+            using Mesh.MeshDataArray outputData = Mesh.AcquireReadOnlyMeshData(output);
+            for (int stream = 0; stream < sourceStreams.Count; stream++)
+            {
+                bool skinningStream = false;
+                for (int attribute = 0; attribute < layout.Length; attribute++)
+                    if (layout[attribute].stream == stream &&
+                        (layout[attribute].attribute == VertexAttribute.BlendWeight ||
+                         layout[attribute].attribute == VertexAttribute.BlendIndices))
+                    {
+                        skinningStream = true;
+                        break;
+                    }
+                if (skinningStream) continue;
+                NativeArray<byte> actual = outputData[0].GetVertexData<byte>(stream);
+                int byteCount = sourceVertexCount * output.GetVertexBufferStride(stream);
+                Assert.That(actual.Length, Is.GreaterThanOrEqualTo(byteCount));
+                for (int i = 0; i < byteCount; i++)
+                    Assert.That(actual[i], Is.EqualTo(sourceStreams[stream][i]),
+                        $"Stream {stream} differs at byte {i}.");
+            }
+        }
+
         private static Mesh CreateOpenQuad()
         {
             var mesh = new Mesh { name = "Open Quad" };
@@ -870,6 +1183,19 @@ namespace UMA.Dismemberment.Tests
 
             var mesh = new Mesh { name = $"Duplicated Seam Shells ({shellCount})" };
             mesh.vertices = vertices;
+            var uv = new Vector2[vertices.Length];
+            for (int shell = 0; shell < shellCount; shell++)
+            {
+                int vertex = shell * verticesPerShell;
+                uv[vertex] = new Vector2(0.5f, 0.9f);
+                uv[vertex + 1] = new Vector2(0.2f, 0.2f);
+                uv[vertex + 2] = new Vector2(0.8f, 0.2f);
+                uv[vertex + 3] = new Vector2(0.5f, 0.7f);
+                uv[vertex + 4] = uv[vertex + 1];
+                uv[vertex + 5] = uv[vertex + 2];
+                uv[vertex + 6] = uv[vertex + 3];
+            }
+            mesh.uv = uv;
             mesh.triangles = triangles;
             mesh.bindposes = CreateIdentityBindposes(2);
             mesh.SetBoneWeights(counts, weights);

@@ -56,6 +56,10 @@ namespace UMA
         public OverlayDataAsset sourceOverlay;
         [Tooltip("Indexer name used to restore the source overlay when a direct asset reference is unavailable (for example after JSON restore).")]
         public string sourceOverlayName;
+        [Min(0f), Tooltip("World-space projection radius used to create this stamp. One Unity " +
+            "unit is one meter. Runtime fluid emitters use it to convert their metric source " +
+            "radius into decal UV space.")]
+        public float projectionRadiusMeters;
         public int bleedPixels;               // default dilation at record time
         public bool forceLinearSampling;      // default sampling mode at record time
         public bool invertY;                  // if true, Y is inverted during stamping (normalized space)

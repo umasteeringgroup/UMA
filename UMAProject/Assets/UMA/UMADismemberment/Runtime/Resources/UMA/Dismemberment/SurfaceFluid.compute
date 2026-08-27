@@ -1,0 +1,196 @@
+#pragma kernel CSClear
+#pragma kernel CSInject
+#pragma kernel CSFlux
+#pragma kernel CSApply
+
+RWTexture2D<float4> _StateMutable;
+Texture2D<float4> _StateRead;
+RWTexture2D<float4> _StateWrite;
+// State injection uses the read/write ping-pong pair; GLES3 cannot read and write
+// the same typed UAV reliably.
+RWTexture2D<float4> _Flux;
+Texture2D<float4> _SurfaceFlow;
+Texture2D<float4> _SeamLinks;
+Texture2D<float> _Injection;
+
+int2 _Dimensions;
+float _DeltaTime;
+float _EmissionAmount;
+float _FallSpeed;
+float _Viscosity;
+float _Adhesion;
+float _Spread;
+float _Pooling;
+float _TrailDepositionPerMeter;
+float _Evaporation;
+float _MinimumThickness;
+float _MobileLifetime;
+float _MaximumTravel;
+float _BreakupStrength;
+float _BreakupScalePixels;
+int _BreakupOctaves;
+int _BreakupSeed;
+
+bool IsInside(int2 p)
+{
+    return all(p >= 0) && all(p < _Dimensions);
+}
+
+bool IsSurface(int2 p)
+{
+    return IsInside(p) && _SurfaceFlow[p].w > 0.5;
+}
+
+float HashNoise(int2 p, int seed)
+{
+    uint n = (uint)(p.x * 1973 + p.y * 9277 + seed * 26699) | 1u;
+    n = (n << 13u) ^ n;
+    return frac((float)(n * (n * n * 15731u + 789221u) + 1376312589u) /
+        4294967295.0);
+}
+
+float FractalBreakup(int2 p)
+{
+    float value = 0.0;
+    float weight = 0.5;
+    float weightSum = 0.0;
+    float scale = max(1.0, _BreakupScalePixels);
+    [loop]
+    for (int octave = 0; octave < min(_BreakupOctaves, 5); octave++)
+    {
+        int2 cell = (int2)floor((float2)p / scale);
+        value += HashNoise(cell, _BreakupSeed + octave * 101) * weight;
+        weightSum += weight;
+        weight *= 0.5;
+        scale = max(1.0, scale * 0.5);
+    }
+    return weightSum > 0.0 ? value / weightSum : 0.5;
+}
+
+[numthreads(8, 8, 1)]
+void CSClear(uint3 id : SV_DispatchThreadID)
+{
+    int2 p = int2(id.xy);
+    if (!IsInside(p)) return;
+    _StateMutable[p] = 0.0;
+}
+
+[numthreads(8, 8, 1)]
+void CSInject(uint3 id : SV_DispatchThreadID)
+{
+    int2 p = int2(id.xy);
+    if (!IsSurface(p))
+    {
+        if (IsInside(p)) _StateWrite[p] = 0.0;
+        return;
+    }
+
+    float4 state = _StateRead[p];
+    float source = saturate(_Injection[p]);
+    if (source > 0.0)
+    {
+        state.x += source * _EmissionAmount;
+        state.z = 0.0;
+    }
+    _StateWrite[p] = state;
+}
+
+[numthreads(8, 8, 1)]
+void CSFlux(uint3 id : SV_DispatchThreadID)
+{
+    int2 p = int2(id.xy);
+    if (!IsSurface(p))
+    {
+        if (IsInside(p)) _Flux[p] = 0.0;
+        return;
+    }
+
+    float thickness = max(0.0, _StateRead[p].x);
+    if (thickness <= _MinimumThickness)
+    {
+        _Flux[p] = 0.0;
+        return;
+    }
+
+    float2 pixelsPerMeter = _SurfaceFlow[p].xy;
+    float2 travel = pixelsPerMeter * _FallSpeed * _DeltaTime;
+    float mobility = saturate(1.0 - _Viscosity) * saturate(1.0 - _Adhesion);
+    float breakup = lerp(1.0 - _BreakupStrength, 1.0 + _BreakupStrength,
+        FractalBreakup(p));
+    travel *= mobility * breakup;
+
+    float4 outgoing = 0.0;
+    bool hasSeam = _SeamLinks[p].w > 0.5;
+    outgoing.x = (IsSurface(p + int2(-1, 0)) || hasSeam) ? max(0.0, -travel.x) : 0.0;
+    outgoing.y = (IsSurface(p + int2(1, 0)) || hasSeam) ? max(0.0, travel.x) : 0.0;
+    outgoing.z = (IsSurface(p + int2(0, -1)) || hasSeam) ? max(0.0, -travel.y) : 0.0;
+    outgoing.w = (IsSurface(p + int2(0, 1)) || hasSeam) ? max(0.0, travel.y) : 0.0;
+
+    float lateral = _Spread * _DeltaTime;
+    outgoing += float4(lateral, lateral, lateral, lateral);
+    float totalFraction = dot(outgoing, float4(1.0, 1.0, 1.0, 1.0));
+    if (totalFraction > 0.48) outgoing *= 0.48 / totalFraction;
+    _Flux[p] = outgoing * thickness;
+}
+
+[numthreads(8, 8, 1)]
+void CSApply(uint3 id : SV_DispatchThreadID)
+{
+    int2 p = int2(id.xy);
+    if (!IsSurface(p))
+    {
+        if (IsInside(p)) _StateWrite[p] = 0.0;
+        return;
+    }
+
+    float4 oldState = _StateRead[p];
+    float4 ownFlux = _Flux[p];
+    float outgoing = dot(ownFlux, float4(1.0, 1.0, 1.0, 1.0));
+    float incoming = 0.0;
+    if (IsSurface(p + int2(-1, 0))) incoming += _Flux[p + int2(-1, 0)].y;
+    if (IsSurface(p + int2(1, 0))) incoming += _Flux[p + int2(1, 0)].x;
+    if (IsSurface(p + int2(0, -1))) incoming += _Flux[p + int2(0, -1)].w;
+    if (IsSurface(p + int2(0, 1))) incoming += _Flux[p + int2(0, 1)].z;
+    float4 seam = _SeamLinks[p];
+    if (seam.w > 0.5)
+    {
+        int2 linked = clamp((int2)round(saturate(seam.xy) * (float2)(_Dimensions - 1)),
+            int2(0, 0), _Dimensions - 1);
+        float4 linkedFlux = _Flux[linked];
+        if (!IsSurface(linked + int2(-1, 0))) incoming += linkedFlux.x;
+        if (!IsSurface(linked + int2(1, 0))) incoming += linkedFlux.y;
+        if (!IsSurface(linked + int2(0, -1))) incoming += linkedFlux.z;
+        if (!IsSurface(linked + int2(0, 1))) incoming += linkedFlux.w;
+    }
+
+    float mobile = max(0.0, oldState.x - outgoing + incoming);
+    float deposited = max(0.0, oldState.y);
+    float age = mobile > _MinimumThickness ? oldState.z + _DeltaTime : 0.0;
+    float movementFraction = saturate(outgoing /
+        max(_MinimumThickness, max(0.0, oldState.x)));
+    float stepDistance = _FallSpeed * _DeltaTime * movementFraction;
+    float distance = oldState.w + stepDistance;
+
+    // Leave a frame-rate-independent wet residue as mobile fluid travels. Expressing this
+    // per meter keeps the parameter stable when the simulation rate or texture size changes.
+    float trailFraction = 1.0 - exp(-max(0.0, _TrailDepositionPerMeter) * stepDistance);
+    float movedToTrail = mobile * saturate(trailFraction);
+    mobile -= movedToTrail;
+    deposited += movedToTrail;
+
+    float settle = saturate(_Pooling * _DeltaTime *
+        (1.0 - saturate(length(_SurfaceFlow[p].xy) * 0.02)));
+    if (age >= _MobileLifetime || distance >= _MaximumTravel) settle = 1.0;
+    float movedToDeposit = mobile * settle;
+    mobile -= movedToDeposit;
+    deposited += movedToDeposit;
+
+    float evaporation = saturate(_Evaporation * _DeltaTime);
+    mobile *= 1.0 - evaporation;
+    deposited *= 1.0 - evaporation * 0.1;
+    // Do not erase sub-visible injection or trail residue: narrow emitters need several fixed
+    // steps to accumulate above the flow threshold. Only discard numerical denormals.
+    if (mobile < 1e-8) mobile = 0.0;
+    if (deposited < 1e-8) deposited = 0.0;
+    _StateWrite[p] = float4(mobile, deposited, age, distance);
+}

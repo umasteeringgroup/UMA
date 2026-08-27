@@ -11,6 +11,12 @@ The example is organized around four pieces:
 - A generated UMA avatar with `DynamicCharacterAvatar` and `UmaDismemberment` on the same GameObject.
 - uGUI Buttons using `GUIDismemberment`. The supplied layout demonstrates neck, left/right upper-arm, and left/right lower-leg requests; each Button targets one configured `HumanBodyBones` value and calls `TrySlice`.
 - `ExampleDismemberCallback`, which listens to `DismembermentCompleted` and can add detached physics, a separation impulse, blood particles, and optional supplemental gore renderers.
+- A U3-Decals-style click handler installed by `ExampleDismemberCallback`: left-clicking the
+  generated character stamps the sample bullet wound into its RenderTextures and immediately starts
+  standalone surface bleeding from the center of the same cached UV footprint. The wound decal is
+  retained as a persistent compositor layer while the meter-scaled fluid source seeps downward and
+  deposits a trail. It does not require an overlay group; assign **Bullet Target Overlay Group** only
+  if another caller also stores the stamp in a `DecalRTStampSlot` for normal atlas-event replay.
 - An undo action using `UndoDismemberments`, which restores the avatar rather than merely hiding the detached pieces.
 
 The camera, lights, floor, and UI are ordinary scene presentation. The important reusable setup is on the avatar and Button actions.
@@ -23,6 +29,9 @@ The camera, lights, floor, and UI are ordinary scene presentation. The important
 4. If main-body ragdoll is enabled for a cut, verify that the avatar has a working `UMAPhysicsAvatar` and full-body UMA physics recipe before testing dismemberment.
 5. If detached physics is enabled, verify that **Ragdoll Layer** collides with the floor and props in **Project Settings > Physics**. Collider dimensions in `UMAPhysicsElement` assets assume one Unity unit is one meter.
 6. Enter Play Mode and wait until the `UmaDismemberment` Inspector reports **Ready: Yes**.
+7. Left-click directly on the character to place a bullet wound and start surface bleeding. Clicking
+   the dismemberment UI is ignored. Assign **Bullet Fluid Profile** to override the sample's narrow
+   puncture preset; **Surface Fluid Profile** remains dedicated to open dismemberment cuts.
 
 If the project is set to the new Input System only, the scene `EventSystem` should use `InputSystemUIInputModule`. The sample cut and undo scripts use `Button.onClick` and do not poll either legacy `Input` or `Keyboard` directly, so they also work with custom UI that invokes the same public methods.
 
@@ -58,6 +67,8 @@ The callback fields have these roles:
 - **View Camera** supplies the separation direction. `Camera.main` is used when empty.
 - **Separation Impulse** defaults to `0.5` kilogram-meters per second and pushes each free detached root along the camera view through the character.
 - **Blood Particle Emitter** is instantiated at the cut bone. The prefab should play on awake and clean itself up.
+- **Surface Fluid Profile** starts non-destructive GPU blood at the actual UV cut boundary. It is
+  optional and complements the initial particle spray.
 - **Add Physics** is a legacy one-Rigidbody/one-SphereCollider fallback when definition-based construction is not used or fails.
 - **Gib Split** and **Gib Split Material** add an optional skinned gore renderer to the detached side.
 - **Gib Source** and **Gib Source Material** add an optional skinned gore renderer to the surviving side.
@@ -96,6 +107,15 @@ The rebuild is important because it restores a coherent skeleton, animation, and
 6. Connect gameplay or UI to `TrySlice`; keep an explicit component reference in multi-character scenes.
 7. Add an undo/revive action only if the game supports restoration. Prefer `TryUndoDismemberment` over the lower-level `ResetDismemberment` API.
 8. Test the final race, DNA extremes, wardrobe combinations, animation poses, and intended cut order.
+
+For surface blood, create a `UMASurfaceFluidProfile` and assign it to the callback. The sample adds
+`UMARuntimeSurfaceDecalController` automatically only when the profile is assigned. Existing
+`DecalRTStampSlot` components do not need to be removed or reconfigured: their permanent decals are
+already present in the immutable base atlas copied by the runtime compositor.
+
+`Profiles/Realistic Blood Surface Fluid` is a ready-to-tune, Albedo-only metric starting point. It
+is deliberately not assigned in the scene, so importing the addon does not change the sample's
+existing rendering or allocate runtime textures until an artist opts in.
 
 Do not edit the sample callback as the long-term project integration. Copy the pattern into the project's namespace so package updates do not overwrite gameplay-specific behavior. The completion result is designed to let that code add audio, decals, scoring, inventory drops, networking messages, timed cleanup, or custom physics without changing the slicer.
 

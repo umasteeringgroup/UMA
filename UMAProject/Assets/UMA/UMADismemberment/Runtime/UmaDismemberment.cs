@@ -71,6 +71,7 @@ namespace UMA.Dismemberment
         public bool mainBodyRagdollActivated;
         public SkinnedMeshRenderer[] detachedRenderers = Array.Empty<SkinnedMeshRenderer>();
         public SkinnedMeshRenderer[] sourceRenderers = Array.Empty<SkinnedMeshRenderer>();
+        public DismembermentCutSurface[] cutSurfaces = Array.Empty<DismembermentCutSurface>();
     }
 
     /// <summary>
@@ -95,6 +96,7 @@ namespace UMA.Dismemberment
             public bool mainBodyRagdollActivated;
             public SkinnedMeshRenderer[] detachedRenderers;
             public SkinnedMeshRenderer[] sourceRenderers;
+            public DismembermentCutSurface[] cutSurfaces;
         }
 
         [Serializable]
@@ -493,6 +495,7 @@ namespace UMA.Dismemberment
 
         public void ResetDismemberment(bool destroyDetachedPieces = true)
         {
+            GetComponent<UMARuntimeSurfaceDecalController>()?.ClearForDismembermentReset();
             RestoreSourceRagdollColliders();
             ReleaseOwnedSourceMeshes();
             splitBoneHashes.Clear();
@@ -694,6 +697,7 @@ namespace UMA.Dismemberment
 
             var sourceRenderers = new SkinnedMeshRenderer[pending.Count];
             for (int i = 0; i < pending.Count; i++) sourceRenderers[i] = pending[i].source;
+            DismembermentCutSurface[] cutSurfaces = CreateCutSurfaces(pending);
             detachedPieces.Add(detachedRoot);
             splitBoneHashes.Add(boneHash);
             hasSplit.Add(bone);
@@ -709,7 +713,8 @@ namespace UMA.Dismemberment
                 mainBodyRagdollRequested = ragdollMainBody,
                 mainBodyRagdollActivated = mainBodyRagdollActivated,
                 detachedRenderers = detachedRenderers.ToArray(),
-                sourceRenderers = sourceRenderers
+                sourceRenderers = sourceRenderers,
+                cutSurfaces = cutSurfaces
             };
             var richResult = new DismembermentResult
             {
@@ -721,10 +726,143 @@ namespace UMA.Dismemberment
                 mainBodyRagdollRequested = ragdollMainBody,
                 mainBodyRagdollActivated = mainBodyRagdollActivated,
                 detachedRenderers = info.detachedRenderers,
-                sourceRenderers = info.sourceRenderers
+                sourceRenderers = info.sourceRenderers,
+                cutSurfaces = cutSurfaces
             };
             InvokeCompletionEvents(info, richResult);
             return true;
+        }
+
+        private DismembermentCutSurface[] CreateCutSurfaces(List<PendingRenderer> pending)
+        {
+            var surfaces = new List<DismembermentCutSurface>();
+            for (int rendererIndex = 0; rendererIndex < pending.Count; rendererIndex++)
+            {
+                PendingRenderer item = pending[rendererIndex];
+                DismembermentBoundaryLoopData[] loops = item.build?.boundaryLoops;
+                if (item.source == null || loops == null) continue;
+                Material[] rendererMaterials = item.source.sharedMaterials;
+                for (int loopIndex = 0; loopIndex < loops.Length; loopIndex++)
+                {
+                    DismembermentBoundaryLoopData loop = loops[loopIndex];
+                    if (loop == null || loop.boundaryUV == null || loop.boundaryUV.Length < 3)
+                        continue;
+                    int submesh = loop.sourceSubmeshIndex;
+                    Material sourceMaterial = (uint)submesh < (uint)rendererMaterials.Length
+                        ? rendererMaterials[submesh] : null;
+                    SlotData slot = ResolveBoundarySlot(loop.sourceVertexIndices);
+                    OverlayDataAsset overlay = ResolveFirstOverlayAsset(slot);
+                    string[] overlayGroups = ResolveOverlayGroups(slot);
+                    CalculateBoundaryFrame(loop.boundaryLocalPositions,
+                        out Vector3 center, out Vector3 normal);
+                    surfaces.Add(new DismembermentCutSurface
+                    {
+                        sourceRenderer = item.source,
+                        sourceSubmeshIndex = submesh,
+                        sourceMaterial = sourceMaterial,
+                        sourceVertexIndices = (int[])loop.sourceVertexIndices.Clone(),
+                        boundaryUV = (Vector2[])loop.boundaryUV.Clone(),
+                        boundaryLocalPositions =
+                            (Vector3[])loop.boundaryLocalPositions.Clone(),
+                        loopStarts = new[] { 0 },
+                        loopCounts = new[] { loop.boundaryUV.Length },
+                        uvBounds = CalculateUVBounds(loop.boundaryUV),
+                        localCenter = center,
+                        localNormal = normal,
+                        slotName = slot?.slotName,
+                        slotGroup = slot?.asset != null ? slot.asset.slotGroup : null,
+                        overlayGroup = overlay != null ? overlay.overlayGroup : null,
+                        overlayGroups = overlayGroups,
+                        umaMaterialName = slot?.material != null ? slot.material.name : null
+                    });
+                }
+            }
+            return surfaces.ToArray();
+        }
+
+        private SlotData ResolveBoundarySlot(int[] sourceIndices)
+        {
+            if (currentData?.umaRecipe?.slotDataList == null || sourceIndices == null ||
+                sourceIndices.Length == 0) return null;
+            SlotData resolved = null;
+            for (int i = 0; i < sourceIndices.Length; i++)
+            {
+                SlotData candidate = FindSlotForVertexSafe(
+                    currentData.umaRecipe.slotDataList, sourceIndices[i]);
+                if (candidate == null) continue;
+                if (resolved == null) resolved = candidate;
+                else if (resolved != candidate) return null;
+            }
+            return resolved;
+        }
+
+        private static SlotData FindSlotForVertexSafe(SlotData[] slots, int vertex)
+        {
+            for (int i = 0; i < slots.Length; i++)
+            {
+                SlotData slot = slots[i];
+                if (slot?.asset?.meshData == null || vertex < slot.vertexOffset) continue;
+                int localVertex = vertex - slot.vertexOffset;
+                if (localVertex < slot.asset.meshData.vertexCount) return slot;
+            }
+            return null;
+        }
+
+        private static OverlayDataAsset ResolveFirstOverlayAsset(SlotData slot)
+        {
+            List<OverlayData> overlays = slot?.GetOverlayList();
+            if (overlays == null) return null;
+            for (int i = 0; i < overlays.Count; i++)
+                if (overlays[i]?.asset != null) return overlays[i].asset;
+            return null;
+        }
+
+        private static string[] ResolveOverlayGroups(SlotData slot)
+        {
+            List<OverlayData> overlays = slot?.GetOverlayList();
+            if (overlays == null || overlays.Count == 0) return Array.Empty<string>();
+            var groups = new List<string>();
+            for (int i = 0; i < overlays.Count; i++)
+            {
+                string group = overlays[i]?.asset != null
+                    ? overlays[i].asset.overlayGroup : null;
+                if (!string.IsNullOrEmpty(group) && !groups.Contains(group)) groups.Add(group);
+            }
+            return groups.ToArray();
+        }
+
+        private static Rect CalculateUVBounds(Vector2[] uv)
+        {
+            Vector2 minimum = uv[0];
+            Vector2 maximum = uv[0];
+            for (int i = 1; i < uv.Length; i++)
+            {
+                minimum = Vector2.Min(minimum, uv[i]);
+                maximum = Vector2.Max(maximum, uv[i]);
+            }
+            return Rect.MinMaxRect(minimum.x, minimum.y, maximum.x, maximum.y);
+        }
+
+        private static void CalculateBoundaryFrame(Vector3[] points,
+            out Vector3 center, out Vector3 normal)
+        {
+            center = Vector3.zero;
+            normal = Vector3.zero;
+            if (points == null || points.Length == 0)
+            {
+                normal = Vector3.forward;
+                return;
+            }
+            for (int i = 0; i < points.Length; i++) center += points[i];
+            center /= points.Length;
+            for (int i = 0; i < points.Length; i++)
+            {
+                Vector3 current = points[i] - center;
+                Vector3 next = points[(i + 1) % points.Length] - center;
+                normal += Vector3.Cross(current, next);
+            }
+            normal = normal.sqrMagnitude > 0.0000000001f
+                ? normal.normalized : Vector3.forward;
         }
 
         private bool TryActivateMainBodyRagdoll(HumanBodyBones humanBone, Transform cutBone)
@@ -1231,7 +1369,7 @@ namespace UMA.Dismemberment
             state.dismembermentOwnedMesh = pending.build.outerMesh;
             state.capSubmeshIndex = pending.build.capSubmeshIndex;
             pending.build.outerMesh = null;
-            pending.source.sharedMesh = state.dismembermentOwnedMesh;
+            RebindRendererMesh(pending.source, state.dismembermentOwnedMesh);
             pending.source.sharedMaterials = BuildMaterialArray(pending.materials,
                 state.dismembermentOwnedMesh.subMeshCount, state.capSubmeshIndex, capMaterial);
             pending.source.localBounds = snapshot.previousRendererBounds;
@@ -1246,7 +1384,7 @@ namespace UMA.Dismemberment
                 Mesh failedMesh = snapshot.state.dismembermentOwnedMesh;
                 if (snapshot.state.renderer != null)
                 {
-                    snapshot.state.renderer.sharedMesh = snapshot.previousRendererMesh;
+                    RebindRendererMesh(snapshot.state.renderer, snapshot.previousRendererMesh);
                     snapshot.state.renderer.sharedMaterials = snapshot.previousRendererMaterials;
                     snapshot.state.renderer.localBounds = snapshot.previousRendererBounds;
                 }
@@ -1288,7 +1426,7 @@ namespace UMA.Dismemberment
                 {
                     if (state.renderer.sharedMesh == state.dismembermentOwnedMesh)
                     {
-                        state.renderer.sharedMesh = state.umaOwnedMesh;
+                        RebindRendererMesh(state.renderer, state.umaOwnedMesh);
                         state.renderer.sharedMaterials = state.originalMaterials ??
                             Array.Empty<Material>();
                         state.renderer.localBounds = state.originalLocalBounds;
@@ -1298,6 +1436,16 @@ namespace UMA.Dismemberment
                 state.dismembermentOwnedMesh = null;
             }
             ownedSourceRenderers.Clear();
+        }
+
+        private static void RebindRendererMesh(SkinnedMeshRenderer renderer, Mesh mesh)
+        {
+            if (renderer == null) return;
+            bool wasEnabled = renderer.enabled;
+            renderer.enabled = false;
+            renderer.sharedMesh = null;
+            renderer.sharedMesh = mesh;
+            renderer.enabled = wasEnabled;
         }
 
         private void DestroyDetachedPieces()

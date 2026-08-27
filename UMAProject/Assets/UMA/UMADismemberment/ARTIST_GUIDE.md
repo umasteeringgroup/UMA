@@ -765,3 +765,121 @@ Before approving a sliceable character set, verify:
 - Fully dressed characters meet CPU time and memory budgets on the target hardware.
 
 When a cut fails, use the component's **Last Failure Reason** and detailed message first. The operation is designed to fail without partially modifying source renderers, which makes those diagnostics safer to iterate on during content production.
+
+## Flowing blood on a cut
+
+The flowing system is optional. Particles are still useful for the initial spray; the runtime
+surface fluid is the blood that remains attached to and travels over the character.
+
+### Artist setup
+
+1. Create **Assets > Create > UMA > Dismemberment > Surface Fluid Profile**.
+2. Assign the profile to **Surface Fluid Profile** on `ExampleDismemberCallback`, or pass it from
+   your own `DismembermentCompleted` listener.
+3. Keep **Channels** at **Albedo** for the lowest cost. Add **Normal** only when the character's
+   `UMAMaterial` has a compatible normal channel. Wetness also requires an exact dedicated
+   **Wetness Material Property Name**; packed mask maps are never guessed or overwritten.
+4. Tune physical dimensions in meters. A default cut source width of `0.003` is 3 mm; a breakup
+   scale of `0.025` is 2.5 cm. **Trail Deposition Per Meter** controls how much moving fluid remains
+   behind as a wet trail; `3` deposits about 45 percent over 20 cm. Do not compensate for an
+   incorrectly scaled character here.
+5. Choose routing. **Source Body** isolates detached material instances on the piece so only the
+   survivor receives the live atlas. **Shared Atlas** intentionally shows the same result on both
+   renderers. **Independent Detached Piece** clones only the affected detached generated material,
+   restores its immutable base channel bindings, and gives that renderer an independently owned GPU
+   compositor and simulation. Its material clone is released with `DismemberedPiece`.
+6. Test several poses, including upside down. Flow is projected from world gravity into the posed
+   skinned surface field; it is not a fixed downward direction in UV space.
+
+The optional **Source Overlay** can supply the corresponding UMA channel textures and a shared alpha
+mask. This is the supported material-like input for the RT compositor. Arbitrary materials are only
+appropriate for **Fallback Trail Material**, because an arbitrary shader does not define which pass
+or channel semantics an atlas compositor should use.
+
+### Timing and performance
+
+The defaults cap the simulation at 512 pixels, simulate near 24 Hz, refresh the posed field near
+8 Hz, and composite near 12 Hz. Holding effects stop simulation and do not recompose until they
+start fading. Off-screen effects reduce their rates. Several cuts on one atlas share its expensive
+surface field, injection target, seam map, command buffer, and final outputs; each handle retains an
+independent film state so clearing one cut cannot erase another.
+
+Keep Albedo-only profiles for crowds. Increase resolution only when a close-up visibly needs a
+narrower stream. Higher atlas resolution does not require equal simulation resolution: the film is
+upsampled during the final composite. Mips are generated once after an affected output batch.
+
+### Bleeding from a bullet or standalone RT decal
+
+The surface fluid does not require a cut. Any successful `DecalRenderTexture.CreateDecalLayer`
+operation can become an emitter:
+
+```csharp
+DecalRenderTexture.DecalLayerResult? result = DecalRenderTexture.CreateDecalLayer(
+    avatar, shotRay, bulletRadius, 0f, 0f, avatar.umaData, bulletOverlay, options);
+
+if (result.HasValue && result.Value.success)
+{
+    DecalRTStampAsset stamp = DecalRenderTexture.LastStamp;
+    UMARuntimeSurfaceDecalController controller =
+        avatar.GetComponent<UMARuntimeSurfaceDecalController>() ??
+        avatar.gameObject.AddComponent<UMARuntimeSurfaceDecalController>();
+    RuntimeDecalHandle wound = controller.AddPersistentStamp(stamp);
+    RuntimeDecalHandle blood =
+        controller.StartBleedFromDecal(stamp, bloodProfile, result.Value);
+}
+```
+
+Capture `LastStamp` before placing another decal. The static cache always describes only the most
+recent successful stamp. `AddPersistentStamp` registers the fixed multi-channel wound in the runtime
+compositor and rebinds it after atlas rebuilds. The separate fluid call reuses the bullet's cached
+target-UV geometry and projection radius, then injects a meter-sized center defined by **Emission
+Radius Meters**. The emitter does not use the wound texture's alpha because its center may be
+transparent. The `UMASurfaceFluidProfile` supplies the blood
+color/material, trail deposition, meter-based motion, lifetime, and fade. Its slot/overlay target
+filters are honored.
+
+The overload that takes only a stamp is suitable when compute is guaranteed. Pass the complete
+`DecalLayerResult` in normal gameplay so the non-compute fallback has the world hit point and normal.
+The two returned handles are independent: stopping, fading, or clearing blood does not erase the
+wound. The persistent wound rebinds after a full UMA rebuild. Fluid survives a rebuild only when
+**Persist Across Avatar Rebuild** is enabled on its profile.
+
+### Fadeable runtime decals
+
+`AddFadeableStamp` uses cached `DecalRTStampAsset` geometry and redraws it over the clean immutable
+base with changing opacity. Permanent `DecalRTStampSlot` decals remain part of that base, so fading
+a dynamic stamp or blood layer never removes them. Do not register a stamp dynamically after it was
+already baked or it will appear twice. Use `AddPreviouslyBakedFadeableStamp` for that situation; its
+single explicit rebuild obtains a clean base before dynamic registration.
+
+### Diagnostics and debugging
+
+`UMARuntimeSurfaceDecalController.Diagnostics` explains unmatched materials, missing loops, or GPU
+fallbacks. `GetDebugTexture` exposes the composited output, posed world-position field, projected
+surface flow, current injection mask, seam links, and mobile film state for scene/debug tooling.
+Seams are linked only between matching position, normal, bone-weight signatures inside the same
+generated material submesh. An unresolved edge deposits fluid instead of jumping to unrelated
+clothing or another UV island.
+
+The controller releases and restores its textures on component shutdown, destruction, UMA
+`CharacterBegun`, undo, and normal completion. Active blood clears on dismemberment reset unless its
+profile explicitly selects **Persist Across Avatar Rebuild**. Persistent effects resolve the new
+generated material by durable cut metadata and rebuild their GPU state after `CharacterUpdated`.
+Independent detached-piece effects never persist through a source-avatar rebuild because their
+owned renderer/material lifetime is the detached root, not the regenerated avatar.
+
+### Fluid troubleshooting
+
+- **Only particles appear:** inspect controller diagnostics. The cut may have no closed boundary,
+  the material may have no compatible texture channel, or compute may be unavailable.
+- **The line is magenta:** assign a supported **Fallback Trail Material** or ensure the packaged
+  hidden fallback shader is included.
+- **Blood appears on the detached piece unexpectedly:** use **Source Body**. Use **Shared Atlas**
+  only when sharing is intentional.
+- **A stream stops at a seam:** verify the duplicated vertices share position, normal, and weights.
+  Stopping is the safe fallback; cross-slot transfer is never guessed.
+- **Blood is too fast or too broad:** check character scale first, then tune meter-based speed,
+  source radius, viscosity, adhesion, and spread.
+- **A permanent decal disappeared:** this is not expected. The dynamic controller copies the final
+  generated atlas after permanent callbacks. Record the profile, material property, and rebuild
+  sequence and inspect whether another system replaced that material texture after composition.

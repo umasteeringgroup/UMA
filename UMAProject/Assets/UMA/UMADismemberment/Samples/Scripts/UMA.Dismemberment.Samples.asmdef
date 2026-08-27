@@ -4,7 +4,8 @@
     "references": [
         "UMA.Dismemberment.Runtime",
         "UMA_Core",
-        "UnityEngine.UI"
+        "UnityEngine.UI",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -83,6 +83,9 @@ namespace UMA {
 			public bool useHitNormalForProjection = false; // project using hit triangle normal instead of ray dir
 			public float uvExpandPixels = 0.75f; // expand stamped tris in UV space (pixels) to reduce seams
 			public string targetOverlayGroup; // replay target; falls back to the source overlay group for legacy callers
+			// One-shot callers may consume LastStamp immediately without registering it for atlas
+			// rebuild replay. Keep false for saved/replayable stamps so missing routing is diagnosed.
+			public bool allowTransientStampWithoutOverlayGroup;
 		}
 
 		private static int _dbgSequence;
@@ -416,10 +419,12 @@ namespace UMA {
 				stampAsset.sourceOverlayName = overlay != null
 					? (string.IsNullOrEmpty(overlay.overlayName) ? overlay.name : overlay.overlayName)
 					: null;
+				stampAsset.projectionRadiusMeters = radius;
 				stampAsset.overlayGroup = !string.IsNullOrWhiteSpace(options.targetOverlayGroup)
 					? options.targetOverlayGroup.Trim()
 					: (overlay != null ? overlay.overlayGroup : null);
-				if (string.IsNullOrEmpty(stampAsset.overlayGroup))
+				if (string.IsNullOrEmpty(stampAsset.overlayGroup) &&
+					!options.allowTransientStampWithoutOverlayGroup)
 				{
 					LogWarn("DecalRenderTexture: The target overlay group is empty. This stamp cannot be matched during atlas rebuilds. Set CreateDecal.TargetOverlayGroup or the source OverlayDataAsset.overlayGroup.");
 				}
