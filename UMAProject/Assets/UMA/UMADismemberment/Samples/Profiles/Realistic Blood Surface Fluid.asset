@@ -50,4 +50,7 @@ MonoBehaviour:
   detachedRoute: 0
   fallbackTrailMaterial: {fileID: 0}
   fallbackMaximumSegments: 24
+  fallbackHoldingDuration: 0.25
+  fallbackFadeDuration: 1.25
+  fallbackMaximumLifetime: 8
   persistAcrossAvatarRebuild: 0

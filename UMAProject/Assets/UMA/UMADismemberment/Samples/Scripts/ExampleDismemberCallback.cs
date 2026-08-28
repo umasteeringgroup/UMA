@@ -183,8 +183,8 @@ public sealed class ExampleDismemberCallback : MonoBehaviour
         Debug.DrawRay(point.WorldPosition, point.WorldNormal * 0.025f,
             new Color(1f, 0.35f, 0.35f), 10f, false);
         if (logSurfaceCutPlacement)
-            Debug.Log("Surface Cut: drag across the same body or armor material and release " +
-                "the left mouse button; right-click or Escape cancels.", this);
+            Debug.Log("Surface Cut: drag across adjacent UMA surfaces and release the left " +
+                "mouse button; right-click or Escape cancels.", this);
         return true;
     }
 
@@ -226,7 +226,8 @@ public sealed class ExampleDismemberCallback : MonoBehaviour
             new Color(0.8f, 0.05f, 0.08f), 10f, false);
         if (logSurfaceCutPlacement)
             Debug.Log($"Surface Cut: created a {result.LengthMeters:F3} meter cut with " +
-                $"{result.BleedSourceCount} bleed source(s).", this);
+                $"{result.BleedSourceCount} bleed source(s) across " +
+                $"{result.TargetCount} surface target(s).", this);
         return true;
     }
 

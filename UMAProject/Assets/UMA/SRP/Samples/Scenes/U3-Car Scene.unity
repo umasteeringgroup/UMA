@@ -227,6 +227,7 @@ GameObject:
   - component: {fileID: 19724371}
   - component: {fileID: 19724370}
   - component: {fileID: 19724376}
+  - component: {fileID: 19724377}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -360,6 +361,35 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
+--- !u!114 &19724377
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 19724369}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: acd130e191723a94f9a8c180c5be9101, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UMA3.Samples::UMA.Examples.UMAMouseOrbitImproved
+  mouseButtonToUse: 1
+  target: {fileID: 1013514279}
+  distance: 4.9
+  xSpeed: 120
+  ySpeed: 120
+  scrollrate: 3
+  yMinLimit: -20
+  yMaxLimit: 80
+  distanceMin: 0.5
+  distanceMax: 15
+  Offset: {x: 0, y: 0.5, z: 0}
+  AlwaysOn: 0
+  ZoomSensitivity: 1
+  singleTouchOrbiting: 1
+  pinchToZoom: 1
+  Clip: 0
+  TargetBone: 0
 --- !u!1 &82320974
 GameObject:
   m_ObjectHideFlags: 0
@@ -801,7 +831,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0.5, y: 0.50000006, z: -0.5, w: -0.4999999}
   m_LocalPosition: {x: -0.33721057, y: 1.0000002, z: 1.2184876}
-  m_LocalScale: {x: 1.0862732, y: 1.0862732, z: 1.0862732}
+  m_LocalScale: {x: 1.10392, y: 1.10392, z: 1.10392}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 635167408}
@@ -1214,7 +1244,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0.5, y: 0.50000006, z: -0.5, w: -0.4999999}
   m_LocalPosition: {x: -0.33721024, y: -0.99999976, z: 1.2184881}
-  m_LocalScale: {x: 1.0862732, y: 1.0862732, z: 1.0862732}
+  m_LocalScale: {x: 1.10392, y: 1.10392, z: 1.10392}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 635167408}
@@ -2441,7 +2471,7 @@ Transform:
   m_GameObject: {fileID: 635167407}
   serializedVersion: 2
   m_LocalRotation: {x: 0.5, y: 0.5, z: -0.5, w: 0.5}
-  m_LocalPosition: {x: 0, y: 0, z: 0.030196523}
+  m_LocalPosition: {x: 0, y: 0, z: 0.036373083}
   m_LocalScale: {x: 0.99999976, y: 0.99999976, z: 0.99999976}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -4044,7 +4074,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0.5, y: 0.50000006, z: -0.5, w: -0.4999999}
   m_LocalPosition: {x: -0.37772033, y: 0.9999996, z: -1.6174796}
-  m_LocalScale: {x: 1.0862732, y: 1.0862732, z: 1.0862732}
+  m_LocalScale: {x: 1.10392, y: 1.10392, z: 1.10392}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 635167408}
@@ -4197,7 +4227,7 @@ MonoBehaviour:
       skinnedMeshRenderer: 0
       submeshIndex: 0
       vertexOffset: 0
-      uvAreaUpdateFrame: 1531
+      uvAreaUpdateFrame: 1
       UVArea:
         serializedVersion: 2
         x: 0
@@ -4238,7 +4268,7 @@ MonoBehaviour:
       skinnedMeshRenderer: 0
       submeshIndex: 1
       vertexOffset: 12304
-      uvAreaUpdateFrame: 1531
+      uvAreaUpdateFrame: 1
       UVArea:
         serializedVersion: 2
         x: 0
@@ -4279,7 +4309,7 @@ MonoBehaviour:
       skinnedMeshRenderer: 0
       submeshIndex: 1
       vertexOffset: 43727
-      uvAreaUpdateFrame: 1531
+      uvAreaUpdateFrame: 1
       UVArea:
         serializedVersion: 2
         x: 0
@@ -4361,7 +4391,7 @@ MonoBehaviour:
       skinnedMeshRenderer: 0
       submeshIndex: 0
       vertexOffset: 6580
-      uvAreaUpdateFrame: 1531
+      uvAreaUpdateFrame: 1
       UVArea:
         serializedVersion: 2
         x: 0
@@ -4876,7 +4906,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0.5, y: 0.50000006, z: -0.5, w: -0.4999999}
   m_LocalPosition: {x: -0.37772003, y: -1.0000005, z: -1.6174791}
-  m_LocalScale: {x: 1.0862732, y: 1.0862732, z: 1.0862732}
+  m_LocalScale: {x: 1.10392, y: 1.10392, z: 1.10392}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 635167408}

@@ -183,10 +183,12 @@ The independent mode is advanced because detached renderers normally share the s
 Unsupported platforms use a bounded skinned surface ribbon/trail:
 
 - starts from the same cut origin;
-- grows in gravity using a small fixed segment pool;
+- grows in world gravity using a small fixed segment pool while remaining anchored to the affected
+  character or detached-piece transform;
 - uses a shared material plus `MaterialPropertyBlock` for color and fade;
 - performs no UMA rebuild;
-- has a strict segment/lifetime cap;
+- has short fallback-specific hold/fade settings and a strict segment/lifetime cap, independent of
+  the much longer texture-fluid lifetime;
 - may optionally settle into one dynamic RT stamp when RT drawing is supported.
 
 The fallback is intentionally less physically accurate, but remains deterministic, bounded, and removable.

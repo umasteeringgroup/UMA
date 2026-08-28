@@ -59,6 +59,78 @@ namespace UMA.Dismemberment.Tests
         }
 
         [Test]
+        public void SurfaceCutResultReportsAllProjectedAtlasTargets()
+        {
+            var result = new SurfaceCutResult(default, default, 7, 0.18f, 2);
+
+            Assert.That(result.TargetCount, Is.EqualTo(2));
+            Assert.That(result.BleedSourceCount, Is.EqualTo(7));
+            Assert.That(result.LengthMeters, Is.EqualTo(0.18f));
+        }
+
+        [Test]
+        public void NoAtlasFluidTargetUsesExactSubmeshInsteadOfFirstSharedUmaMaterial()
+        {
+            var host = Own(new GameObject("NoAtlas Renderer"));
+            SkinnedMeshRenderer renderer = host.AddComponent<SkinnedMeshRenderer>();
+            UMAMaterial sharedUmaMaterial = Own(
+                ScriptableObject.CreateInstance<UMAMaterial>());
+            sharedUmaMaterial.name = "Shared NoAtlas Skin";
+            sharedUmaMaterial.materialType = UMAMaterial.MaterialType.NoAtlas;
+            Shader shader = Shader.Find("Hidden/InternalErrorShader");
+            Assert.That(shader, Is.Not.Null);
+            Material headMaterial = Own(new Material(shader) { name = "Head Output" });
+            Material torsoMaterial = Own(new Material(shader) { name = "Torso Output" });
+            Material armMaterial = Own(new Material(shader) { name = "Arm Output" });
+            var head = GeneratedTarget(renderer, sharedUmaMaterial, headMaterial, 0, "Head");
+            var torso = GeneratedTarget(renderer, sharedUmaMaterial, torsoMaterial, 2, "Torso");
+            var arm = GeneratedTarget(renderer, sharedUmaMaterial, armMaterial, 4, "Arm");
+            var surface = new DismembermentCutSurface
+            {
+                sourceRenderer = renderer,
+                sourceSubmeshIndex = 2,
+                sourceMaterial = torsoMaterial,
+                slotName = "Torso",
+                umaMaterialName = sharedUmaMaterial.name
+            };
+
+            UMAData.GeneratedMaterial resolved =
+                UMARuntimeSurfaceDecalController.ResolveGeneratedMaterial(
+                    new[] { head, torso, arm }, surface);
+
+            Assert.That(resolved, Is.SameAs(torso));
+            Assert.That(resolved, Is.Not.SameAs(head));
+        }
+
+        [Test]
+        public void FluidTargetCanRecoverNoAtlasSlotIdentityAfterRendererRebuild()
+        {
+            UMAMaterial sharedUmaMaterial = Own(
+                ScriptableObject.CreateInstance<UMAMaterial>());
+            sharedUmaMaterial.name = "Rebuilt NoAtlas Skin";
+            sharedUmaMaterial.materialType = UMAMaterial.MaterialType.NoAtlas;
+            Shader shader = Shader.Find("Hidden/InternalErrorShader");
+            Assert.That(shader, Is.Not.Null);
+            Material headMaterial = Own(new Material(shader));
+            Material armMaterial = Own(new Material(shader));
+            var head = GeneratedTarget(null, sharedUmaMaterial, headMaterial, 0, "Head");
+            var arm = GeneratedTarget(null, sharedUmaMaterial, armMaterial, 4, "Arm");
+            var surface = new DismembermentCutSurface
+            {
+                // Renderer and material object references can change during a full UMA rebuild.
+                sourceSubmeshIndex = 2,
+                slotName = "Arm",
+                umaMaterialName = sharedUmaMaterial.name
+            };
+
+            UMAData.GeneratedMaterial resolved =
+                UMARuntimeSurfaceDecalController.ResolveGeneratedMaterial(
+                    new[] { head, arm }, surface);
+
+            Assert.That(resolved, Is.SameAs(arm));
+        }
+
+        [Test]
         public void BleedSourceCountScalesWithMetricCutLength()
         {
             float[] shortCut = UMASurfaceCutSystem.CalculateBleedDistances(
@@ -125,6 +197,90 @@ namespace UMA.Dismemberment.Tests
             }
         }
 
+        [Test]
+        public void DismembermentFluidRibbonSplitsAcrossAtlasSeams()
+        {
+            UMASurfaceFluidProfile profile = Own(
+                ScriptableObject.CreateInstance<UMASurfaceFluidProfile>());
+            profile.emissionRadiusMeters = 0.001f;
+            var surface = new DismembermentCutSurface
+            {
+                boundaryLocalPositions = new[]
+                {
+                    new Vector3(0f, 0f, 0f), new Vector3(0.01f, 0f, 0f),
+                    new Vector3(0.01f, 0.01f, 0f), new Vector3(0f, 0.01f, 0f)
+                },
+                // The world loop enters a second UV island between vertices 1/2 and returns
+                // between 3/0. Those two discontinuities must not become atlas-wide quads.
+                boundaryUV = new[]
+                {
+                    new Vector2(0.1f, 0.1f), new Vector2(0.11f, 0.1f),
+                    new Vector2(0.8f, 0.8f), new Vector2(0.79f, 0.8f)
+                }
+            };
+
+            Mesh ribbon = Own(UMARuntimeSurfaceDecalController.BuildSourceRibbon(
+                surface, profile, 512, 512));
+
+            Assert.That(ribbon, Is.Not.Null);
+            Assert.That(ribbon.vertexCount, Is.EqualTo(8));
+            Assert.That(ribbon.triangles.Length, Is.EqualTo(12));
+        }
+
+        [Test]
+        public void DismembermentFluidRibbonKeepsContinuousClosedLoop()
+        {
+            UMASurfaceFluidProfile profile = Own(
+                ScriptableObject.CreateInstance<UMASurfaceFluidProfile>());
+            profile.emissionRadiusMeters = 0.001f;
+            var surface = new DismembermentCutSurface
+            {
+                boundaryLocalPositions = new[]
+                {
+                    new Vector3(0f, 0f, 0f), new Vector3(0.01f, 0f, 0f),
+                    new Vector3(0.01f, 0.01f, 0f), new Vector3(0f, 0.01f, 0f)
+                },
+                boundaryUV = new[]
+                {
+                    new Vector2(0.1f, 0.1f), new Vector2(0.2f, 0.1f),
+                    new Vector2(0.2f, 0.2f), new Vector2(0.1f, 0.2f)
+                }
+            };
+
+            Mesh ribbon = Own(UMARuntimeSurfaceDecalController.BuildSourceRibbon(
+                surface, profile, 512, 512));
+
+            Assert.That(ribbon, Is.Not.Null);
+            Assert.That(ribbon.vertexCount, Is.EqualTo(16));
+            Assert.That(ribbon.triangles.Length, Is.EqualTo(24));
+        }
+
+        [Test]
+        public void DismembermentFluidOverlayGroupsDefaultToAllAndCanBeRestricted()
+        {
+            var host = Own(new GameObject("Overlay Group Surface"));
+            var surface = new DismembermentCutSurface
+            {
+                sourceRenderer = host.AddComponent<SkinnedMeshRenderer>(),
+                boundaryUV = new[] { Vector2.zero, Vector2.right, Vector2.up },
+                loopStarts = new[] { 0 },
+                loopCounts = new[] { 3 },
+                overlayGroup = "Jacket",
+                overlayGroups = new[] { "Jacket", "Weathering" }
+            };
+            UMASurfaceFluidProfile profile = Own(
+                ScriptableObject.CreateInstance<UMASurfaceFluidProfile>());
+
+            Assert.That(UMARuntimeSurfaceDecalController.SurfaceMatchesProfile(
+                surface, profile), Is.True, "Empty filters must include wardrobe cuts.");
+            profile.targetOverlayGroups = new[] { "Jacket" };
+            Assert.That(UMARuntimeSurfaceDecalController.SurfaceMatchesProfile(
+                surface, profile), Is.True);
+            profile.targetOverlayGroups = new[] { "Skin" };
+            Assert.That(UMARuntimeSurfaceDecalController.SurfaceMatchesProfile(
+                surface, profile), Is.False);
+        }
+
         private void CreateSurface(out UMASurfaceCutSystem system,
             out DynamicCharacterAvatar avatar, Vector3 position)
         {
@@ -176,6 +332,28 @@ namespace UMA.Dismemberment.Tests
             boneIndex0 = 0,
             weight0 = 1f
         };
+
+        private static UMAData.GeneratedMaterial GeneratedTarget(
+            SkinnedMeshRenderer renderer, UMAMaterial umaMaterial, Material material,
+            int materialIndex, string slotName)
+        {
+            var slot = new SlotData
+            {
+                isPlaceholderSlot = true,
+                placeholderSlotName = slotName
+            };
+            return new UMAData.GeneratedMaterial
+            {
+                umaMaterial = umaMaterial,
+                material = material,
+                skinnedMeshRenderer = renderer,
+                materialIndex = materialIndex,
+                materialFragments = new List<UMAData.MaterialFragment>
+                {
+                    new UMAData.MaterialFragment { slotData = slot }
+                }
+            };
+        }
 
         private T Own<T>(T value) where T : Object
         {

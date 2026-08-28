@@ -110,15 +110,19 @@ namespace UMA.Dismemberment
         public RuntimeDecalHandle BleedHandle { get; }
         public int BleedSourceCount { get; }
         public float LengthMeters { get; }
+        /// <summary>Number of generated renderer/material atlas targets crossed by the cut.</summary>
+        public int TargetCount { get; }
         public bool Success => CutHandle.IsValid;
 
         internal SurfaceCutResult(RuntimeDecalHandle cutHandle,
-            RuntimeDecalHandle bleedHandle, int bleedSourceCount, float lengthMeters)
+            RuntimeDecalHandle bleedHandle, int bleedSourceCount, float lengthMeters,
+            int targetCount = 1)
         {
             CutHandle = cutHandle;
             BleedHandle = bleedHandle;
             BleedSourceCount = bleedSourceCount;
             LengthMeters = lengthMeters;
+            TargetCount = Mathf.Max(0, targetCount);
         }
     }
 }

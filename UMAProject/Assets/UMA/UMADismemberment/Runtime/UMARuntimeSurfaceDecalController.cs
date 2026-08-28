@@ -50,6 +50,14 @@ namespace UMA.Dismemberment
             public float compositeAccumulator;
             public bool surfaceValid;
             public bool compositeDirty;
+            public Mesh observedRendererMesh;
+            public int resumeSurfaceRenderingFrame;
+        }
+
+        private sealed class RendererSurfaceResume
+        {
+            public SkinnedMeshRenderer renderer;
+            public int frame;
         }
 
         private sealed class FluidBinding
@@ -194,6 +202,10 @@ namespace UMA.Dismemberment
         private readonly List<EffectRecord> effects = new List<EffectRecord>();
         private readonly List<string> diagnostics = new List<string>();
         private readonly List<string> atlasMetadata = new List<string>();
+        // A mesh replacement can be followed by creation of a new AtlasContext in the cut
+        // callback. Keep the render pause at renderer scope so that context cannot bypass it.
+        private readonly List<RendererSurfaceResume> rendererSurfaceResumes =
+            new List<RendererSurfaceResume>();
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
@@ -215,6 +227,7 @@ namespace UMA.Dismemberment
         {
             UnsubscribeAvatar();
             ClearAll();
+            rendererSurfaceResumes.Clear();
             ReleaseMaterials();
         }
 
@@ -222,11 +235,13 @@ namespace UMA.Dismemberment
         {
             UnsubscribeAvatar();
             ClearAll();
+            rendererSurfaceResumes.Clear();
             ReleaseMaterials();
         }
 
         private void LateUpdate()
         {
+            RemoveExpiredRendererSurfaceResumes();
             if (effects.Count == 0 || umaData == null) return;
             float delta = Mathf.Min(Time.unscaledDeltaTime, 0.25f);
             if (delta <= 0f) return;
@@ -362,7 +377,8 @@ namespace UMA.Dismemberment
             {
                 if (hasFallbackOrigin)
                     StartFallback(record, record.fallbackWorldPosition,
-                        record.fallbackWorldNormal);
+                        record.fallbackWorldNormal, anchor: avatar != null
+                            ? avatar.transform : transform);
             }
             if (record.fluids.Count == 0 && record.fallbacks.Count == 0)
             {
@@ -449,38 +465,74 @@ namespace UMA.Dismemberment
         internal RuntimeDecalHandle AddSurfaceCut(SkinnedMeshRenderer renderer, int submesh,
             Mesh cutMesh, UMASurfaceCutProfile profile, float lengthMeters)
         {
-            if (renderer == null || cutMesh == null || profile == null ||
+            return AddSurfaceCut(new[]
+            {
+                new SurfaceCutAtlasTargetData
+                {
+                    renderer = renderer,
+                    submesh = submesh,
+                    cutMesh = cutMesh
+                }
+            }, profile, lengthMeters);
+        }
+
+        /// <summary>
+        /// Adds every atlas portion of one projected cut as a single persistent effect. The
+        /// controller takes ownership of all cut meshes whether binding succeeds or fails.
+        /// </summary>
+        internal RuntimeDecalHandle AddSurfaceCut(
+            IReadOnlyList<SurfaceCutAtlasTargetData> targets,
+            UMASurfaceCutProfile profile, float lengthMeters)
+        {
+            if (targets == null || targets.Count == 0 || profile == null ||
                 surfaceCutMaterial == null || umaData?.generatedMaterials?.materials == null)
             {
-                DestroyOwned(cutMesh);
-                AddDiagnostic("AddSurfaceCut requires a generated renderer, cut mesh, profile, " +
-                    "and the surface-cut compositor shader.");
+                DestroySurfaceCutMeshes(targets, true);
+                AddDiagnostic("AddSurfaceCut requires at least one generated target, cut mesh, " +
+                    "profile, and the surface-cut compositor shader.");
                 return default;
             }
-            UMAData.GeneratedMaterial generated = FindGeneratedMaterial(renderer, submesh);
-            if (generated == null)
+
+            var outputs = new List<OutputChannel>(targets.Count);
+            for (int targetIndex = 0; targetIndex < targets.Count; targetIndex++)
             {
-                DestroyOwned(cutMesh);
-                AddDiagnostic("The selected surface-cut renderer and material do not match a " +
-                    "generated UMA material.");
-                return default;
-            }
-            AtlasContext context = FindContext(generated);
-            if (context == null)
-            {
-                UMASurfaceFluidProfile budget = CreateBudgetProfile();
-                context = CreateContext(generated, budget, false);
-                DestroyOwned(budget);
-                if (context != null) contexts.Add(context);
-            }
-            int channel = FindFirstAlbedoChannel(generated.umaMaterial);
-            OutputChannel output = channel >= 0 && context != null
-                ? EnsureOutput(context, channel, 0) : null;
-            if (output == null)
-            {
-                DestroyOwned(cutMesh);
-                AddDiagnostic("The selected surface has no compatible albedo channel for a cut.");
-                return default;
+                SurfaceCutAtlasTargetData target = targets[targetIndex];
+                if (target?.renderer == null || target.cutMesh == null)
+                {
+                    DestroySurfaceCutMeshes(targets, true);
+                    RemoveUnusedContexts();
+                    AddDiagnostic("A projected surface cut contained an invalid atlas target.");
+                    return default;
+                }
+                UMAData.GeneratedMaterial generated =
+                    FindGeneratedMaterial(target.renderer, target.submesh);
+                if (generated == null)
+                {
+                    DestroySurfaceCutMeshes(targets, true);
+                    RemoveUnusedContexts();
+                    AddDiagnostic("A selected surface-cut renderer and material do not match a " +
+                        "generated UMA material.");
+                    return default;
+                }
+                AtlasContext context = FindContext(generated);
+                if (context == null)
+                {
+                    UMASurfaceFluidProfile budget = CreateBudgetProfile();
+                    context = CreateContext(generated, budget, false);
+                    DestroyOwned(budget);
+                    if (context != null) contexts.Add(context);
+                }
+                int channel = FindFirstAlbedoChannel(generated.umaMaterial);
+                OutputChannel output = channel >= 0 && context != null
+                    ? EnsureOutput(context, channel, 0) : null;
+                if (output == null)
+                {
+                    DestroySurfaceCutMeshes(targets, true);
+                    RemoveUnusedContexts();
+                    AddDiagnostic("A selected surface has no compatible albedo channel for a cut.");
+                    return default;
+                }
+                outputs.Add(output);
             }
 
             var record = new EffectRecord
@@ -489,18 +541,21 @@ namespace UMA.Dismemberment
                 kind = EffectKind.SurfaceCut,
                 state = RuntimeDecalState.Holding
             };
-            record.surfaceCuts.Add(new SurfaceCutBinding
+            for (int targetIndex = 0; targetIndex < targets.Count; targetIndex++)
             {
-                output = output,
-                mesh = cutMesh,
-                centerColor = profile.centerColor,
-                edgeColor = profile.edgeColor,
-                halfWidthMeters = profile.widthMeters * 0.5f,
-                lengthMeters = lengthMeters,
-                centerFraction = profile.centerFraction,
-                edgeSoftness = profile.edgeSoftness,
-                endTaperFraction = profile.endTaperFraction
-            });
+                record.surfaceCuts.Add(new SurfaceCutBinding
+                {
+                    output = outputs[targetIndex],
+                    mesh = targets[targetIndex].cutMesh,
+                    centerColor = profile.centerColor,
+                    edgeColor = profile.edgeColor,
+                    halfWidthMeters = profile.widthMeters * 0.5f,
+                    lengthMeters = lengthMeters,
+                    centerFraction = profile.centerFraction,
+                    edgeSoftness = profile.edgeSoftness,
+                    endTaperFraction = profile.endTaperFraction
+                });
+            }
             effects.Add(record);
             MarkContextsDirty(record);
             return record.handle;
@@ -515,14 +570,54 @@ namespace UMA.Dismemberment
             float[] sourceDistancesMeters, Vector3[] worldPositions, Vector3[] worldNormals,
             float[] speedMultipliers, float[] sizeMultipliers)
         {
-            if (renderer == null || sourceMesh == null || profile == null ||
-                sourceDistancesMeters == null || sourceDistancesMeters.Length == 0)
+            return StartBleedFromSurfaceCut(new[]
             {
-                DestroyOwned(sourceMesh);
-                AddDiagnostic("Surface-cut bleeding requires a renderer, source mesh, fluid " +
-                    "profile, and at least one source distance.");
+                new SurfaceCutAtlasTargetData
+                {
+                    renderer = renderer,
+                    submesh = submesh,
+                    bleedMesh = sourceMesh,
+                    bleedDistances = sourceDistancesMeters,
+                    bleedPositions = worldPositions,
+                    bleedNormals = worldNormals,
+                    speedMultipliers = speedMultipliers,
+                    sizeMultipliers = sizeMultipliers
+                }
+            }, profile);
+        }
+
+        /// <summary>
+        /// Starts one logical fluid effect whose emitters may reside in several UMA material
+        /// atlases. Every source mesh is either owned by its GPU binding or destroyed here.
+        /// </summary>
+        internal RuntimeDecalHandle StartBleedFromSurfaceCut(
+            IReadOnlyList<SurfaceCutAtlasTargetData> targets,
+            UMASurfaceFluidProfile profile)
+        {
+            if (profile == null || targets == null || targets.Count == 0)
+            {
+                DestroySurfaceCutMeshes(targets, false);
+                AddDiagnostic("Surface-cut bleeding requires a fluid profile and atlas targets.");
                 return default;
             }
+
+            bool hasSources = false;
+            for (int i = 0; i < targets.Count; i++)
+            {
+                SurfaceCutAtlasTargetData target = targets[i];
+                if (target?.bleedMesh != null && target.bleedDistances != null &&
+                    target.bleedDistances.Length > 0)
+                {
+                    hasSources = true;
+                    break;
+                }
+            }
+            if (!hasSources)
+            {
+                DestroySurfaceCutMeshes(targets, false);
+                return default;
+            }
+
             var record = new EffectRecord
             {
                 handle = CreateHandle(),
@@ -532,59 +627,81 @@ namespace UMA.Dismemberment
                 sourceSurfaces = Array.Empty<DismembermentCutSurface>()
             };
 
-            if (gpuReady)
+            for (int targetIndex = 0; targetIndex < targets.Count; targetIndex++)
             {
-                UMAData.GeneratedMaterial generated = FindGeneratedMaterial(renderer, submesh);
-                AtlasContext context = generated != null ? FindContext(generated) : null;
-                if (context == null && generated != null)
+                SurfaceCutAtlasTargetData target = targets[targetIndex];
+                if (target?.bleedMesh == null || target.bleedDistances == null ||
+                    target.bleedDistances.Length == 0)
                 {
-                    context = CreateContext(generated, profile, true);
-                    if (context != null) contexts.Add(context);
+                    DestroyOwned(target?.bleedMesh);
+                    continue;
                 }
-                if (context != null)
+
+                bool boundToGpu = false;
+                if (gpuReady && target.renderer != null)
                 {
-                    EnsureFluidOutputs(context, profile);
-                    FluidBinding binding = context.outputs.Count > 0
-                        ? CreateFluidBinding(context, profile) : null;
-                    if (binding != null)
+                    UMAData.GeneratedMaterial generated =
+                        FindGeneratedMaterial(target.renderer, target.submesh);
+                    AtlasContext context = generated != null ? FindContext(generated) : null;
+                    if (context == null && generated != null)
                     {
-                        float radius = Mathf.Max(0.0001f, profile.emissionRadiusMeters);
-                        for (int i = 0; i < sourceDistancesMeters.Length; i++)
+                        context = CreateContext(generated, profile, true);
+                        if (context != null) contexts.Add(context);
+                    }
+                    if (context != null)
+                    {
+                        EnsureFluidOutputs(context, profile);
+                        FluidBinding binding = context.outputs.Count > 0
+                            ? CreateFluidBinding(context, profile) : null;
+                        if (binding != null)
                         {
-                            float sourceSize = sizeMultipliers != null &&
-                                (uint)i < (uint)sizeMultipliers.Length
-                                ? Mathf.Max(0.05f, sizeMultipliers[i]) : 1f;
-                            float sourceRadius = radius * sourceSize;
-                            binding.sources.Add(new InjectionSource
+                            float radius = Mathf.Max(0.0001f,
+                                profile.emissionRadiusMeters);
+                            for (int i = 0; i < target.bleedDistances.Length; i++)
                             {
-                                mesh = sourceMesh,
-                                ownsMesh = i == 0,
-                                speedMultiplier = speedMultipliers != null &&
-                                    (uint)i < (uint)speedMultipliers.Length
-                                    ? Mathf.Max(0.05f, speedMultipliers[i]) : 1f,
-                                useRadialLimit = true,
-                                radialCenter = new Vector2(0f, sourceDistancesMeters[i]),
-                                radialRadius = sourceRadius,
-                                radialFeather = Mathf.Max(0.0001f, sourceRadius * 0.45f)
-                            });
+                                float sourceSize = target.sizeMultipliers != null &&
+                                    (uint)i < (uint)target.sizeMultipliers.Length
+                                    ? Mathf.Max(0.05f, target.sizeMultipliers[i]) : 1f;
+                                float sourceRadius = radius * sourceSize;
+                                binding.sources.Add(new InjectionSource
+                                {
+                                    mesh = target.bleedMesh,
+                                    ownsMesh = i == 0,
+                                    speedMultiplier = target.speedMultipliers != null &&
+                                        (uint)i < (uint)target.speedMultipliers.Length
+                                        ? Mathf.Max(0.05f, target.speedMultipliers[i]) : 1f,
+                                    useRadialLimit = true,
+                                    radialCenter = new Vector2(0f,
+                                        target.bleedDistances[i]),
+                                    radialRadius = sourceRadius,
+                                    radialFeather = Mathf.Max(0.0001f,
+                                        sourceRadius * 0.45f)
+                                });
+                            }
+                            record.fluids.Add(binding);
+                            boundToGpu = true;
                         }
-                        record.fluids.Add(binding);
                     }
                 }
-            }
 
-            if (record.fluids.Count == 0)
-            {
-                DestroyOwned(sourceMesh);
-                int count = worldPositions != null && worldNormals != null
-                    ? Mathf.Min(worldPositions.Length, worldNormals.Length) : 0;
-                for (int i = 0; i < count; i++)
+                if (!boundToGpu)
                 {
-                    float speed = speedMultipliers != null &&
-                        (uint)i < (uint)speedMultipliers.Length ? speedMultipliers[i] : 1f;
-                    float size = sizeMultipliers != null &&
-                        (uint)i < (uint)sizeMultipliers.Length ? sizeMultipliers[i] : 1f;
-                    StartFallback(record, worldPositions[i], worldNormals[i], speed, size);
+                    DestroyOwned(target.bleedMesh);
+                    int count = target.bleedPositions != null && target.bleedNormals != null
+                        ? Mathf.Min(target.bleedPositions.Length,
+                            target.bleedNormals.Length) : 0;
+                    for (int i = 0; i < count; i++)
+                    {
+                        float speed = target.speedMultipliers != null &&
+                            (uint)i < (uint)target.speedMultipliers.Length
+                            ? target.speedMultipliers[i] : 1f;
+                        float size = target.sizeMultipliers != null &&
+                            (uint)i < (uint)target.sizeMultipliers.Length
+                            ? target.sizeMultipliers[i] : 1f;
+                        StartFallback(record, target.bleedPositions[i],
+                            target.bleedNormals[i], speed, size,
+                            target.renderer != null ? target.renderer.transform : transform);
+                    }
                 }
             }
             if (record.fluids.Count == 0 && record.fallbacks.Count == 0)
@@ -595,6 +712,18 @@ namespace UMA.Dismemberment
             }
             effects.Add(record);
             return record.handle;
+        }
+
+        private static void DestroySurfaceCutMeshes(
+            IReadOnlyList<SurfaceCutAtlasTargetData> targets, bool cutMeshes)
+        {
+            if (targets == null) return;
+            for (int i = 0; i < targets.Count; i++)
+            {
+                SurfaceCutAtlasTargetData target = targets[i];
+                if (target == null) continue;
+                DestroyOwned(cutMeshes ? target.cutMesh : target.bleedMesh);
+            }
         }
 
         /// <summary>
@@ -722,6 +851,70 @@ namespace UMA.Dismemberment
                 effects.RemoveAt(i);
             }
             RemoveUnusedContexts();
+        }
+
+        /// <summary>
+        /// Invalidates hidden surface-field draws before a dismemberment mesh swap. Unity's main
+        /// renderer accepts the new mesh immediately, but BakeMesh/DrawRenderer work submitted in
+        /// that same frame can still reference the previous skinned vertex-buffer layout.
+        /// </summary>
+        internal void PrepareForRendererMeshChange(SkinnedMeshRenderer renderer)
+        {
+            if (renderer == null) return;
+            int resumeFrame = Time.frameCount + 1;
+            SetRendererSurfaceResume(renderer, resumeFrame);
+            for (int i = 0; i < contexts.Count; i++)
+            {
+                AtlasContext context = contexts[i];
+                if (context.renderer != renderer) continue;
+                context.surfaceCommand?.Clear();
+                context.surfaceValid = false;
+                context.observedRendererMesh = null;
+                context.resumeSurfaceRenderingFrame = Mathf.Max(
+                    context.resumeSurfaceRenderingFrame, resumeFrame);
+            }
+        }
+
+        private void SetRendererSurfaceResume(SkinnedMeshRenderer renderer, int resumeFrame)
+        {
+            for (int i = 0; i < rendererSurfaceResumes.Count; i++)
+            {
+                RendererSurfaceResume resume = rendererSurfaceResumes[i];
+                if (resume.renderer != renderer) continue;
+                resume.frame = Mathf.Max(resume.frame, resumeFrame);
+                return;
+            }
+            rendererSurfaceResumes.Add(new RendererSurfaceResume
+            {
+                renderer = renderer,
+                frame = resumeFrame
+            });
+        }
+
+        private int GetRendererSurfaceResumeFrame(SkinnedMeshRenderer renderer)
+        {
+            for (int i = 0; i < rendererSurfaceResumes.Count; i++)
+            {
+                RendererSurfaceResume resume = rendererSurfaceResumes[i];
+                if (resume.renderer == renderer) return resume.frame;
+            }
+            return 0;
+        }
+
+        internal bool IsRendererSurfaceRenderingDeferred(SkinnedMeshRenderer renderer)
+        {
+            return renderer != null &&
+                Time.frameCount < GetRendererSurfaceResumeFrame(renderer);
+        }
+
+        private void RemoveExpiredRendererSurfaceResumes()
+        {
+            for (int i = rendererSurfaceResumes.Count - 1; i >= 0; i--)
+            {
+                RendererSurfaceResume resume = rendererSurfaceResumes[i];
+                if (resume.renderer == null || Time.frameCount >= resume.frame)
+                    rendererSurfaceResumes.RemoveAt(i);
+            }
         }
 
         private void LoadResources()
@@ -888,7 +1081,13 @@ namespace UMA.Dismemberment
                 DismembermentCutSurface surface = record.sourceSurfaces[i];
                 if (!SurfaceMatchesProfile(surface, record.profile)) continue;
                 AtlasContext context = ResolveContext(surface, record.profile);
-                if (context == null) continue;
+                if (context == null)
+                {
+                    AddDiagnostic("Could not resolve the generated texture target for cut " +
+                        $"surface '{SurfaceDiagnosticName(surface)}' (submesh " +
+                        $"{surface.sourceSubmeshIndex}). The surface was skipped.");
+                    continue;
+                }
                 if (!bindingsByContext.TryGetValue(context, out FluidBinding binding))
                 {
                     binding = CreateFluidBinding(context, record.profile);
@@ -1023,29 +1222,85 @@ namespace UMA.Dismemberment
         {
             List<UMAData.GeneratedMaterial> generatedMaterials =
                 umaData?.generatedMaterials?.materials;
-            if (generatedMaterials == null) return null;
-            UMAData.GeneratedMaterial resolved = null;
+            return ResolveGeneratedMaterial(generatedMaterials, surface);
+        }
+
+        /// <summary>
+        /// Resolves one cut boundary to its exact generated texture. NoAtlas commonly creates
+        /// several generated materials from the same UMAMaterial, so UMAMaterial identity alone
+        /// must never select the first head/body/limb texture arbitrarily.
+        /// </summary>
+        internal static UMAData.GeneratedMaterial ResolveGeneratedMaterial(
+            IReadOnlyList<UMAData.GeneratedMaterial> generatedMaterials,
+            DismembermentCutSurface surface)
+        {
+            if (generatedMaterials == null || surface == null) return null;
+            UMAData.GeneratedMaterial best = null;
+            int bestScore = 0;
+            bool ambiguous = false;
             for (int i = 0; i < generatedMaterials.Count; i++)
             {
                 UMAData.GeneratedMaterial candidate = generatedMaterials[i];
-                if (candidate == null || candidate.material == null) continue;
-                bool rendererMatches = surface.sourceRenderer != null &&
-                    candidate.skinnedMeshRenderer == surface.sourceRenderer;
-                bool materialMatches = surface.sourceMaterial != null &&
-                    candidate.material == surface.sourceMaterial;
-                bool identityMatches = !string.IsNullOrEmpty(surface.umaMaterialName) &&
-                    candidate.umaMaterial != null &&
-                    string.Equals(candidate.umaMaterial.name, surface.umaMaterialName,
-                        StringComparison.Ordinal);
-                if ((rendererMatches && (surface.sourceSubmeshIndex < 0 ||
-                    candidate.materialIndex == surface.sourceSubmeshIndex)) || materialMatches ||
-                    identityMatches)
+                int score = ScoreGeneratedMaterial(candidate, surface);
+                if (score <= 0) continue;
+                if (score > bestScore)
                 {
-                    resolved = candidate;
-                    if (rendererMatches) break;
+                    best = candidate;
+                    bestScore = score;
+                    ambiguous = false;
+                }
+                else if (score == bestScore && candidate != best)
+                {
+                    ambiguous = true;
                 }
             }
-            return resolved;
+            return ambiguous ? null : best;
+        }
+
+        private static int ScoreGeneratedMaterial(UMAData.GeneratedMaterial candidate,
+            DismembermentCutSurface surface)
+        {
+            if (candidate == null || candidate.material == null) return 0;
+            bool rendererMatches = surface.sourceRenderer != null &&
+                candidate.skinnedMeshRenderer == surface.sourceRenderer;
+            bool hasSubmesh = surface.sourceSubmeshIndex >= 0;
+            bool submeshMatches = hasSubmesh &&
+                candidate.materialIndex == surface.sourceSubmeshIndex;
+            bool materialMatches = surface.sourceMaterial != null &&
+                candidate.material == surface.sourceMaterial;
+            bool slotMatches = GeneratedMaterialContainsSlot(candidate, surface.slotName);
+            bool umaMaterialMatches = !string.IsNullOrEmpty(surface.umaMaterialName) &&
+                candidate.umaMaterial != null &&
+                string.Equals(candidate.umaMaterial.name, surface.umaMaterialName,
+                    StringComparison.Ordinal);
+
+            // Renderer + submesh is the authoritative mapping used by UMA's mesh combiners.
+            if (rendererMatches && submeshMatches) return 1000;
+            if (rendererMatches && materialMatches) return 900;
+            if (rendererMatches && slotMatches && umaMaterialMatches) return 800;
+            if (materialMatches && slotMatches) return 700;
+            // Slot identity survives a full avatar rebuild even though renderer/material object
+            // references do not. Ties are rejected by ResolveGeneratedMaterial.
+            if (slotMatches && umaMaterialMatches) return 600;
+            if (materialMatches) return 500;
+            // An unknown/mixed submesh may use renderer identity only when UMA material identity
+            // also agrees. Multiple equally ranked candidates remain deliberately unresolved.
+            if (!hasSubmesh && rendererMatches && umaMaterialMatches) return 400;
+            return 0;
+        }
+
+        private static bool GeneratedMaterialContainsSlot(
+            UMAData.GeneratedMaterial candidate, string slotName)
+        {
+            if (string.IsNullOrEmpty(slotName) || candidate?.materialFragments == null)
+                return false;
+            for (int i = 0; i < candidate.materialFragments.Count; i++)
+            {
+                SlotData slot = candidate.materialFragments[i]?.slotData;
+                if (slot != null && string.Equals(slot.slotName, slotName,
+                    StringComparison.Ordinal)) return true;
+            }
+            return false;
         }
 
         private UMAData.GeneratedMaterial FindGeneratedMaterial(
@@ -1055,14 +1310,18 @@ namespace UMA.Dismemberment
                 umaData?.generatedMaterials?.materials;
             if (renderer == null || generatedMaterials == null) return null;
             UMAData.GeneratedMaterial rendererFallback = null;
+            bool rendererFallbackIsUnique = true;
             for (int i = 0; i < generatedMaterials.Count; i++)
             {
                 UMAData.GeneratedMaterial candidate = generatedMaterials[i];
                 if (candidate?.skinnedMeshRenderer != renderer) continue;
-                rendererFallback ??= candidate;
                 if (candidate.materialIndex == submesh) return candidate;
+                if (rendererFallback == null) rendererFallback = candidate;
+                else rendererFallbackIsUnique = false;
             }
-            return rendererFallback;
+            // A valid material/submesh index must not fall back to another NoAtlas target such
+            // as the head. Renderer-only fallback is safe solely when there is one candidate.
+            return submesh < 0 && rendererFallbackIsUnique ? rendererFallback : null;
         }
 
         private static int FindFirstAlbedoChannel(UMAMaterial material)
@@ -1099,6 +1358,7 @@ namespace UMA.Dismemberment
         {
             Texture reference = FirstUsableAtlas(generated);
             if (reference == null || generated.skinnedMeshRenderer == null) return null;
+            SkinnedMeshRenderer renderer = generated.skinnedMeshRenderer;
             int cap = Mathf.Clamp(profile.simulationResolutionCap, 64, 1024);
             float scale = Mathf.Min(1f, cap / (float)Mathf.Max(reference.width, reference.height));
             int width = Mathf.Max(32, Mathf.RoundToInt(reference.width * scale));
@@ -1106,7 +1366,9 @@ namespace UMA.Dismemberment
             var context = new AtlasContext
             {
                 generated = generated,
-                renderer = generated.skinnedMeshRenderer,
+                renderer = renderer,
+                observedRendererMesh = renderer.sharedMesh,
+                resumeSurfaceRenderingFrame = GetRendererSurfaceResumeFrame(renderer),
                 simulationWidth = width,
                 simulationHeight = height,
                 surfaceCommand = new CommandBuffer { name = "UMA Surface Fluid Field" }
@@ -1513,6 +1775,7 @@ namespace UMA.Dismemberment
                 steps < profile.maximumSubsteps)
             {
                 if (!binding.context.surfaceValid) RenderSurfaceField(binding.context);
+                if (!binding.context.surfaceValid) return;
                 if (effect.state == RuntimeDecalState.Emitting && !effect.stopRequested)
                 {
                     RenderInjection(binding, profile);
@@ -1529,7 +1792,7 @@ namespace UMA.Dismemberment
 
         private void RenderSurfaceField(AtlasContext context)
         {
-            if (context.renderer == null || context.renderer.sharedMesh == null) return;
+            if (!CanRenderSurfaceField(context)) return;
             CommandBuffer command = context.surfaceCommand;
             command.Clear();
             command.SetRenderTarget(context.fieldTargets,
@@ -1546,6 +1809,25 @@ namespace UMA.Dismemberment
                     command.DrawRenderer(context.renderer, surfaceFieldMaterial, i, 0);
             Graphics.ExecuteCommandBuffer(command);
             context.surfaceValid = true;
+        }
+
+        private bool CanRenderSurfaceField(AtlasContext context)
+        {
+            if (context?.renderer == null || context.renderer.sharedMesh == null) return false;
+            context.resumeSurfaceRenderingFrame = Mathf.Max(
+                context.resumeSurfaceRenderingFrame,
+                GetRendererSurfaceResumeFrame(context.renderer));
+            Mesh current = context.renderer.sharedMesh;
+            if (context.observedRendererMesh != current)
+            {
+                context.surfaceCommand?.Clear();
+                context.surfaceValid = false;
+                context.observedRendererMesh = current;
+                context.resumeSurfaceRenderingFrame = Mathf.Max(
+                    context.resumeSurfaceRenderingFrame, Time.frameCount + 1);
+                return false;
+            }
+            return Time.frameCount >= context.resumeSurfaceRenderingFrame;
         }
 
         private void RenderInjection(FluidBinding binding, UMASurfaceFluidProfile profile)
@@ -1830,6 +2112,15 @@ namespace UMA.Dismemberment
             }
             if (effect.kind == EffectKind.SurfaceCut) return;
 
+            for (int fallback = effect.fallbacks.Count - 1; fallback >= 0; fallback--)
+                if (effect.fallbacks[fallback] == null)
+                    effect.fallbacks.RemoveAt(fallback);
+            if (effect.fluids.Count == 0 && effect.fallbacks.Count == 0)
+            {
+                SetState(effect, RuntimeDecalState.Complete);
+                return;
+            }
+
             UMASurfaceFluidProfile profile = effect.profile;
             switch (effect.state)
             {
@@ -1884,49 +2175,72 @@ namespace UMA.Dismemberment
                 effect.surfaceCuts[i].output.context.compositeDirty = true;
         }
 
-        private Mesh BuildSourceRibbon(DismembermentCutSurface surface,
+        internal static Mesh BuildSourceRibbon(DismembermentCutSurface surface,
             UMASurfaceFluidProfile profile, int width, int height)
         {
             Vector2[] uv = surface.boundaryUV;
             Vector3[] positions = surface.boundaryLocalPositions;
-            if (uv == null || positions == null || uv.Length < 3 || positions.Length != uv.Length)
+            int minimumVertices = surface.boundaryClosed ? 3 : 2;
+            if (uv == null || positions == null || uv.Length < minimumVertices ||
+                positions.Length != uv.Length)
                 return null;
-            float meters = 0f, uvLength = 0f;
-            for (int i = 0; i < uv.Length; i++)
+
+            int segmentCount = surface.boundaryClosed ? uv.Length : uv.Length - 1;
+            var segmentMeters = new float[segmentCount];
+            var segmentUv = new float[segmentCount];
+            var scaleSamples = new List<float>(segmentCount);
+            for (int i = 0; i < segmentCount; i++)
             {
-                int next = (i + 1) % uv.Length;
-                meters += Vector3.Distance(positions[i], positions[next]);
-                uvLength += Vector2.Distance(uv[i], uv[next]);
+                int next = surface.boundaryClosed ? (i + 1) % uv.Length : i + 1;
+                segmentMeters[i] = Vector3.Distance(positions[i], positions[next]);
+                segmentUv[i] = Vector2.Distance(uv[i], uv[next]);
+                if (segmentMeters[i] > 0.000001f && segmentUv[i] > 0.000001f)
+                    scaleSamples.Add(segmentMeters[i] / segmentUv[i]);
             }
-            float metersPerUV = meters > 0.000001f && uvLength > 0.000001f
-                ? meters / uvLength : 1f;
+            if (scaleSamples.Count == 0) return null;
+            scaleSamples.Sort();
+            // UV-seam jumps have an anomalously small meters-per-UV ratio. The upper median is
+            // intentionally resistant to the two discontinuities produced when a closed world
+            // loop enters and leaves another UV island.
+            float metersPerUV = scaleSamples[(scaleSamples.Count * 2) / 3];
+            metersPerUV = Mathf.Max(0.000001f, metersPerUV);
             float radiusUV = Mathf.Clamp(profile.emissionRadiusMeters / metersPerUV,
                 1f / Mathf.Max(width, height), 0.05f);
-            int segmentCount = uv.Length;
-            var vertices = new Vector3[segmentCount * 4];
-            var triangles = new int[segmentCount * 6];
+            var vertices = new List<Vector3>(segmentCount * 4);
+            var triangles = new List<int>(segmentCount * 6);
             for (int segment = 0; segment < segmentCount; segment++)
             {
                 Vector2 a = uv[segment];
-                Vector2 b = uv[(segment + 1) % segmentCount];
-                Vector2 direction = (b - a).normalized;
-                if (direction.sqrMagnitude <= 0.000001f) direction = Vector2.right;
+                Vector2 b = uv[surface.boundaryClosed
+                    ? (segment + 1) % uv.Length : segment + 1];
+                if (!IsBoundaryUvSegmentContinuous(segmentMeters[segment], segmentUv[segment],
+                    metersPerUV, width, height)) continue;
+                Vector2 direction = (b - a) / segmentUv[segment];
                 Vector2 offset = new Vector2(-direction.y, direction.x) * radiusUV;
-                int vertex = segment * 4;
-                vertices[vertex] = UVToClip(a - offset);
-                vertices[vertex + 1] = UVToClip(a + offset);
-                vertices[vertex + 2] = UVToClip(b + offset);
-                vertices[vertex + 3] = UVToClip(b - offset);
-                int triangle = segment * 6;
-                triangles[triangle] = vertex; triangles[triangle + 1] = vertex + 1;
-                triangles[triangle + 2] = vertex + 2; triangles[triangle + 3] = vertex;
-                triangles[triangle + 4] = vertex + 2; triangles[triangle + 5] = vertex + 3;
+                int vertex = vertices.Count;
+                vertices.Add(UVToClip(a - offset));
+                vertices.Add(UVToClip(a + offset));
+                vertices.Add(UVToClip(b + offset));
+                vertices.Add(UVToClip(b - offset));
+                triangles.Add(vertex); triangles.Add(vertex + 1);
+                triangles.Add(vertex + 2); triangles.Add(vertex);
+                triangles.Add(vertex + 2); triangles.Add(vertex + 3);
             }
+            if (triangles.Count == 0) return null;
             var mesh = new Mesh { name = "UMA Fluid Cut Source" };
-            mesh.vertices = vertices;
-            mesh.triangles = triangles;
+            mesh.SetVertices(vertices);
+            mesh.SetTriangles(triangles, 0, true);
             mesh.UploadMeshData(true);
             return mesh;
+        }
+
+        internal static bool IsBoundaryUvSegmentContinuous(float meters, float uvDistance,
+            float metersPerUV, int width, int height)
+        {
+            if (meters <= 0.000001f || uvDistance <= 0.000001f) return false;
+            float expectedUvDistance = meters / Mathf.Max(0.000001f, metersPerUV);
+            float texelTolerance = 4f / Mathf.Max(1, Mathf.Max(width, height));
+            return uvDistance <= Mathf.Max(texelTolerance, expectedUvDistance * 3f);
         }
 
         private Mesh BuildStampMesh(DecalRTStampAsset stamp,
@@ -2150,11 +2464,17 @@ namespace UMA.Dismemberment
                 {
                     DismembermentCutSurface surface = surfaces[i];
                     if (surface?.sourceRenderer == null) continue;
-                    StartFallback(record, ResolvePosedCenter(surface), surface.WorldNormal);
+                    Transform anchor = cut.sourceTargetBone != null
+                        ? cut.sourceTargetBone : surface.sourceRenderer.transform;
+                    Vector3 origin = cut.sourceTargetBone != null
+                        ? cut.sourceTargetBone.position : ResolvePosedCenter(surface);
+                    StartFallback(record, origin, surface.WorldNormal,
+                        anchor: anchor);
                 }
             }
             if (record.fallbacks.Count == 0 && cut.sourceTargetBone != null)
-                StartFallback(record, cut.sourceTargetBone.position, cut.sourceTargetBone.forward);
+                StartFallback(record, cut.sourceTargetBone.position,
+                    cut.sourceTargetBone.forward, anchor: cut.sourceTargetBone);
         }
 
         private void StartIndependentFallbacks(EffectRecord record, DismembermentResult cut)
@@ -2173,7 +2493,12 @@ namespace UMA.Dismemberment
                     DismembermentCutSurface detached = CloneSurfaceForRenderer(source,
                         cut.detachedRenderers[rendererIndex]);
                     detachedSurfaces.Add(detached);
-                    StartFallback(record, ResolvePosedCenter(detached), detached.WorldNormal);
+                    Transform anchor = cut.targetBone != null
+                        ? cut.targetBone : detached.sourceRenderer.transform;
+                    Vector3 origin = cut.targetBone != null
+                        ? cut.targetBone.position : ResolvePosedCenter(detached);
+                    StartFallback(record, origin, detached.WorldNormal,
+                        anchor: anchor);
                 }
             }
             if (detachedSurfaces.Count > 0)
@@ -2182,7 +2507,8 @@ namespace UMA.Dismemberment
                 return;
             }
             if (cut.targetBone != null)
-                StartFallback(record, cut.targetBone.position, cut.targetBone.forward);
+                StartFallback(record, cut.targetBone.position, cut.targetBone.forward,
+                    anchor: cut.targetBone);
         }
 
         private void StartFallbacksFromStoredSurfaces(EffectRecord record)
@@ -2193,18 +2519,22 @@ namespace UMA.Dismemberment
                 {
                     DismembermentCutSurface surface = record.sourceSurfaces[i];
                     if (surface?.sourceRenderer == null) continue;
-                    StartFallback(record, ResolvePosedCenter(surface), surface.WorldNormal);
+                    StartFallback(record, ResolvePosedCenter(surface), surface.WorldNormal,
+                        anchor: surface.sourceRenderer.transform);
                 }
             }
             if (record.fallbacks.Count == 0 && record.hasFallbackOrigin)
-                StartFallback(record, record.fallbackWorldPosition, record.fallbackWorldNormal);
+                StartFallback(record, record.fallbackWorldPosition,
+                    record.fallbackWorldNormal, anchor: avatar != null
+                        ? avatar.transform : transform);
         }
 
         private void StartFallback(EffectRecord record, Vector3 origin, Vector3 normal,
-            float speedMultiplier = 1f, float sizeMultiplier = 1f)
+            float speedMultiplier = 1f, float sizeMultiplier = 1f,
+            Transform anchor = null)
         {
             var host = new GameObject("UMA Surface Fluid Fallback");
-            host.transform.SetParent(transform, true);
+            host.transform.SetParent(anchor != null ? anchor : transform, false);
             UMASurfaceFluidFallbackTrail trail =
                 host.AddComponent<UMASurfaceFluidFallbackTrail>();
             trail.Initialize(origin, normal, record.profile, fallbackTrailMaterial,
@@ -2524,7 +2854,7 @@ namespace UMA.Dismemberment
         private static Vector3 UVToClip(Vector2 uv) =>
             new Vector3(uv.x * 2f - 1f, uv.y * 2f - 1f, 0f);
 
-        private static bool SurfaceMatchesProfile(DismembermentCutSurface surface,
+        internal static bool SurfaceMatchesProfile(DismembermentCutSurface surface,
             UMASurfaceFluidProfile profile)
         {
             if (surface == null || !surface.IsValid) return false;
@@ -2552,6 +2882,14 @@ namespace UMA.Dismemberment
             for (int i = 0; i < values.Length; i++)
                 if (string.Equals(values[i], candidate, StringComparison.Ordinal)) return true;
             return false;
+        }
+
+        private static string SurfaceDiagnosticName(DismembermentCutSurface surface)
+        {
+            if (surface == null) return "unknown";
+            if (!string.IsNullOrEmpty(surface.slotName)) return surface.slotName;
+            if (!string.IsNullOrEmpty(surface.slotGroup)) return surface.slotGroup;
+            return surface.sourceRenderer != null ? surface.sourceRenderer.name : "unknown";
         }
 
         private static DismembermentCutSurface[] CloneSurfaceArray(
@@ -2589,6 +2927,7 @@ namespace UMA.Dismemberment
                 boundaryLocalPositions = source.boundaryLocalPositions,
                 loopStarts = source.loopStarts,
                 loopCounts = source.loopCounts,
+                boundaryClosed = source.boundaryClosed,
                 uvBounds = source.uvBounds,
                 localCenter = source.localCenter,
                 localNormal = source.localNormal,

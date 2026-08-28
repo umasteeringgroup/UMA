@@ -86,6 +86,32 @@ namespace UMA.Dismemberment.Tests
         }
 
         [Test]
+        public void BuilderPreservesUmaMultistreamVertexLayoutAcrossRepeatedCuts()
+        {
+            Mesh source = Own(CreateUmaMultistreamTetrahedron());
+            VertexAttributeDescriptor[] sourceLayout = source.GetVertexAttributes();
+            var firstOptions = new DismembermentMeshBuildOptions(0.5f, -1, true, true, 0.25f);
+            DismembermentMeshBuildStatus firstStatus = DismembermentMeshBuilder.Build(source,
+                new[] { false, true }, firstOptions, out DismembermentMeshBuildResult first,
+                out string firstError);
+            Assert.That(firstStatus, Is.EqualTo(DismembermentMeshBuildStatus.Success), firstError);
+            AssertPreservedVertexLayout(source, first.outerMesh, sourceLayout);
+
+            var secondOptions = new DismembermentMeshBuildOptions(0.5f,
+                first.capSubmeshIndex, true, true, 0.25f);
+            DismembermentMeshBuildStatus secondStatus = DismembermentMeshBuilder.Build(
+                first.outerMesh, new[] { true, false }, secondOptions,
+                out DismembermentMeshBuildResult second, out string secondError);
+
+            Assert.That(secondStatus, Is.EqualTo(DismembermentMeshBuildStatus.Success),
+                secondError);
+            AssertPreservedVertexLayout(first.outerMesh, second.outerMesh, sourceLayout);
+            AssertPreservedVertexLayout(first.outerMesh, second.detachedMesh, sourceLayout);
+            second.DestroyMeshes();
+            first.DestroyMeshes();
+        }
+
+        [Test]
         public void BuilderWeldsDuplicatedSeamVerticesAndCreatesClosedCaps()
         {
             Mesh source = Own(CreateDuplicatedSeamShells(1, 0.00005f));
@@ -195,6 +221,38 @@ namespace UMA.Dismemberment.Tests
             Assert.That(profile.channels, Is.EqualTo(SurfaceFluidChannels.Albedo));
             Assert.That(profile.detachedRoute,
                 Is.EqualTo(SurfaceFluidDetachedRoute.SourceBody));
+            Assert.That(profile.fallbackHoldingDuration, Is.GreaterThanOrEqualTo(0f));
+            Assert.That(profile.fallbackFadeDuration, Is.GreaterThan(0f));
+            Assert.That(profile.fallbackMaximumLifetime,
+                Is.GreaterThan(profile.fallbackFadeDuration));
+            Assert.That(profile.fallbackMaximumLifetime,
+                Is.LessThan(profile.holdingDuration + profile.fadeDuration),
+                "Temporary line geometry must not inherit the texture-fluid lifetime.");
+        }
+
+        [Test]
+        public void SurfaceFluidFallbackTrailFollowsItsAnchorInsteadOfFloatingInWorld()
+        {
+            UMASurfaceFluidProfile profile = Own(
+                ScriptableObject.CreateInstance<UMASurfaceFluidProfile>());
+            GameObject anchor = Own(new GameObject("Fallback Anchor"));
+            GameObject host = Own(new GameObject("Fallback Trail"));
+            host.transform.SetParent(anchor.transform, false);
+            UMASurfaceFluidFallbackTrail trail =
+                host.AddComponent<UMASurfaceFluidFallbackTrail>();
+            Vector3 origin = new Vector3(0.2f, 1.4f, -0.3f);
+
+            trail.Initialize(origin, Vector3.forward, profile, null);
+
+            LineRenderer line = host.GetComponent<LineRenderer>();
+            Assert.That(line, Is.Not.Null);
+            Assert.That(line.useWorldSpace, Is.False);
+            Vector3 before = host.transform.TransformPoint(line.GetPosition(0));
+            Vector3 movement = new Vector3(1.5f, -0.25f, 0.75f);
+            anchor.transform.position += movement;
+            Vector3 after = host.transform.TransformPoint(line.GetPosition(0));
+            Assert.That(Vector3.Distance(after, before + movement), Is.LessThan(0.00001f),
+                "The fallback must remain attached when its character or ragdoll moves.");
         }
 
         [Test]
@@ -226,6 +284,22 @@ namespace UMA.Dismemberment.Tests
 
             controller.enabled = false;
             Assert.That(controller.ActiveEffectCount, Is.Zero);
+        }
+
+        [Test]
+        public void MeshChangeDefersSurfaceRenderingBeforeAnyAtlasContextExists()
+        {
+            GameObject avatarObject = Own(new GameObject("Surface Mesh Change Avatar"));
+            avatarObject.AddComponent<DynamicCharacterAvatar>();
+            UMARuntimeSurfaceDecalController controller =
+                avatarObject.AddComponent<UMARuntimeSurfaceDecalController>();
+            SkinnedMeshRenderer renderer = avatarObject.AddComponent<SkinnedMeshRenderer>();
+
+            controller.PrepareForRendererMeshChange(renderer);
+
+            Assert.That(controller.IsRendererSurfaceRenderingDeferred(renderer), Is.True,
+                "The renderer-level guard must exist before a cut callback creates its first " +
+                "atlas context.");
         }
 
         [Test]
@@ -694,6 +768,128 @@ namespace UMA.Dismemberment.Tests
         }
 
         [Test]
+        public void ClothingBoundaryUsesTwoSidedBandWithoutAMeatCap()
+        {
+            Mesh source = Own(CreateDuplicatedSeamShells(1, 0f));
+            var options = new DismembermentMeshBuildOptions(0.5f, -1, true, true,
+                0.25f, 0.0001f, DismembermentCapUvMode.MeterScaledTiled,
+                UmaDismemberment.DefaultCenteredCapUvPadding, -1,
+                new[] { false }, new[] { true }, 10f, 0.5f);
+
+            DismembermentMeshBuildStatus status = DismembermentMeshBuilder.Build(source,
+                new[] { false, true }, options, out DismembermentMeshBuildResult result,
+                out string error);
+
+            Assert.That(status, Is.EqualTo(DismembermentMeshBuildStatus.Success), error);
+            Assert.That(result.boundaryLoopCount, Is.EqualTo(1));
+            Assert.That(result.capTriangleCount, Is.Zero);
+            Assert.That(result.capSubmeshIndex, Is.EqualTo(-1));
+            Assert.That(result.detachedMesh.subMeshCount, Is.EqualTo(1));
+            Assert.That(result.outerMesh.subMeshCount, Is.EqualTo(1));
+            Assert.That(result.detachedMesh.GetTriangles(0), Has.Length.EqualTo(18),
+                "The three detached garment triangles should each have an interior face.");
+            Assert.That(result.outerMesh.GetTriangles(0), Has.Length.EqualTo(6),
+                "The retained garment triangle should have an interior face.");
+            Assert.That(result.detachedMesh.vertexCount, Is.EqualTo(source.vertexCount));
+            Assert.That(result.outerMesh.vertexCount, Is.EqualTo(source.vertexCount));
+            AssertModernWeightsAreConsistent(result.detachedMesh);
+            AssertModernWeightsAreConsistent(result.outerMesh);
+            result.DestroyMeshes();
+        }
+
+        [Test]
+        public void SharedMaterialStillCapsBodyLoopButNotClothingLoop()
+        {
+            Mesh source = Own(CreateDuplicatedSeamShells(2, 0f));
+            var bodyVertices = new bool[source.vertexCount];
+            var clothingVertices = new bool[source.vertexCount];
+            for (int vertex = 0; vertex < source.vertexCount; vertex++)
+            {
+                bodyVertices[vertex] = vertex < 7;
+                clothingVertices[vertex] = vertex >= 7;
+            }
+            var options = new DismembermentMeshBuildOptions(0.5f, -1, true, true,
+                0.25f, 0.0001f, DismembermentCapUvMode.MeterScaledTiled,
+                UmaDismemberment.DefaultCenteredCapUvPadding, -1,
+                new[] { true }, new[] { false }, 10f, 0.5f,
+                bodyVertices, clothingVertices);
+
+            DismembermentMeshBuildStatus status = DismembermentMeshBuilder.Build(source,
+                new[] { false, true }, options, out DismembermentMeshBuildResult result,
+                out string error);
+
+            Assert.That(status, Is.EqualTo(DismembermentMeshBuildStatus.Success), error);
+            Assert.That(result.boundaryLoopCount, Is.EqualTo(2));
+            Assert.That(result.capTriangleCount, Is.EqualTo(1),
+                "Only the body boundary should receive an anatomical cap.");
+            Assert.That(result.capSubmeshIndex, Is.EqualTo(1));
+            Assert.That(result.detachedMesh.GetTriangles(0), Has.Length.EqualTo(27),
+                "Only the garment shell should receive reversed interior triangles.");
+            Assert.That(result.outerMesh.GetTriangles(0), Has.Length.EqualTo(9));
+            Assert.That(result.detachedMesh.GetTriangles(1), Has.Length.EqualTo(3));
+            Assert.That(result.outerMesh.GetTriangles(1), Has.Length.EqualTo(3));
+            AssertModernWeightsAreConsistent(result.detachedMesh);
+            AssertModernWeightsAreConsistent(result.outerMesh);
+            result.DestroyMeshes();
+        }
+
+        [Test]
+        public void StrictCapsIgnoreOpenClothingBoundaryButStillValidateBody()
+        {
+            Mesh source = Own(CreateDuplicatedSeamShells(2, 0f));
+            Vector3[] vertices = source.vertices;
+            vertices[11] += Vector3.right * 0.001f;
+            source.vertices = vertices;
+            source.RecalculateBounds();
+            var bodyVertices = new bool[source.vertexCount];
+            var clothingVertices = new bool[source.vertexCount];
+            for (int vertex = 0; vertex < source.vertexCount; vertex++)
+            {
+                bodyVertices[vertex] = vertex < 7;
+                clothingVertices[vertex] = vertex >= 7;
+            }
+            var options = new DismembermentMeshBuildOptions(0.5f, -1, true, true,
+                0.25f, 0.0001f, DismembermentCapUvMode.MeterScaledTiled,
+                UmaDismemberment.DefaultCenteredCapUvPadding, -1,
+                new[] { true }, new[] { false }, 10f, 0.5f,
+                bodyVertices, clothingVertices);
+
+            DismembermentMeshBuildStatus status = DismembermentMeshBuilder.Build(source,
+                new[] { false, true }, options, out DismembermentMeshBuildResult result,
+                out string error);
+
+            Assert.That(status, Is.EqualTo(DismembermentMeshBuildStatus.Success), error);
+            Assert.That(result.boundaryLoopCount, Is.EqualTo(1),
+                "The valid body loop should remain available while the open garment is tolerated.");
+            Assert.That(result.capTriangleCount, Is.EqualTo(1));
+            Assert.That(result.detachedMesh.GetTriangles(0), Has.Length.EqualTo(27));
+            Assert.That(result.outerMesh.GetTriangles(0), Has.Length.EqualTo(9));
+            AssertModernWeightsAreConsistent(result.detachedMesh);
+            AssertModernWeightsAreConsistent(result.outerMesh);
+            result.DestroyMeshes();
+        }
+
+        [Test]
+        public void ClothingMajorityClassificationRejectsSingleMisweightedTriangleSpike()
+        {
+            Mesh source = Own(CreateOpenQuad());
+            int[] originalTriangles = source.triangles;
+            var options = new DismembermentMeshBuildOptions(0.5f, -1, true, false,
+                0.25f, 0.0001f, DismembermentCapUvMode.MeterScaledTiled,
+                UmaDismemberment.DefaultCenteredCapUvPadding, -1,
+                new[] { false }, new[] { true }, 0.1f, 0.5f);
+
+            DismembermentMeshBuildStatus status = DismembermentMeshBuilder.Build(source,
+                new[] { false, true }, options, out DismembermentMeshBuildResult result,
+                out string error);
+
+            Assert.That(status, Is.EqualTo(DismembermentMeshBuildStatus.NoAffectedTriangles),
+                error);
+            Assert.That(result, Is.Null);
+            Assert.That(source.triangles, Is.EqualTo(originalTriangles));
+        }
+
+        [Test]
         public void StrictCapsRejectUnmatchedSeamsInsteadOfLeavingAHole()
         {
             Mesh source = Own(CreateDuplicatedSeamShells(1, 0.001f));
@@ -873,6 +1069,72 @@ namespace UMA.Dismemberment.Tests
                 out UmaDismemberment.DismemberedInfo secondCut, out string secondFailure);
             Assert.That(slicedAgain, Is.True, secondFailure);
             Assert.That(secondCut.root, Is.Not.Null);
+        }
+
+        [Test]
+        public void ComponentSupportsNeckThenRightLegCutsOnTheSameRenderer()
+        {
+            Shader capShader = Shader.Find("UMA/Dismemberment/Cap Unlit");
+            Assert.That(capShader, Is.Not.Null, "The sample cap shader must be importable.");
+            Material capMaterial = Own(new Material(capShader));
+            GameObject avatarObject = Own(new GameObject("Two Cut Dismemberment Test Avatar"));
+            DynamicCharacterAvatar avatar = avatarObject.AddComponent<DynamicCharacterAvatar>();
+            Transform root = CreateChild(avatarObject.transform, "Root");
+            Transform global = CreateChild(root, "Global");
+            Transform hips = CreateChild(global, "Hips");
+            Transform neck = CreateChild(global, "Neck");
+            Transform rightLeg = CreateChild(global, "RightUpperLeg");
+            Transform[] bones = { hips, neck, rightLeg };
+            avatar.umaRoot = root.gameObject;
+            avatar.skeleton = new UMASkeleton(global);
+            Mesh original = Own(CreateNeckAndRightLegCutMesh());
+            SkinnedMeshRenderer renderer = CreateRenderer(avatarObject.transform, "UMARenderer",
+                global, bones, original);
+            renderer.sharedMaterials = new[] { capMaterial, capMaterial };
+            avatar.SetRenderers(new[] { renderer });
+
+            UmaDismemberment component = avatarObject.AddComponent<UmaDismemberment>();
+            component.sliceFill = capMaterial;
+            component.generateCaps = true;
+            component.requireClosedCaps = true;
+            component.capOnlyBodyParts = false;
+            component.includeChildBones = false;
+            component.enabled = false;
+            component.enabled = true;
+
+            bool neckSliced = component.TrySlice(neck, 0.5f,
+                out UmaDismemberment.DismemberedInfo neckCut, out string neckFailure);
+
+            Assert.That(neckSliced, Is.True, neckFailure);
+            Assert.That(neckCut.detachedRenderers, Has.Length.EqualTo(1));
+            Assert.That(neckCut.sourceRenderers, Has.Length.EqualTo(1));
+            Assert.That(neckCut.cutSurfaces, Has.Length.GreaterThanOrEqualTo(1));
+            AssertCutSurfacesUseRealSubmeshes(neckCut.cutSurfaces);
+            Assert.That(renderer.sharedMesh.name,
+                Is.EqualTo("Neck And Right Leg Test Mesh Dismembered Source"));
+            AssertRendererMeshIsStructurallyValid(renderer);
+            Mesh afterNeck = renderer.sharedMesh;
+            AssertSameVertexLayout(original, afterNeck);
+            Own(neckCut.root.gameObject);
+
+            bool legSliced = component.TrySlice(rightLeg, 0.5f,
+                out UmaDismemberment.DismemberedInfo legCut, out string legFailure);
+
+            Assert.That(legSliced, Is.True, legFailure);
+            Assert.That(legCut.detachedRenderers, Has.Length.EqualTo(1));
+            Assert.That(legCut.sourceRenderers, Has.Length.EqualTo(1));
+            Assert.That(legCut.cutSurfaces, Has.Length.GreaterThanOrEqualTo(1));
+            AssertCutSurfacesUseRealSubmeshes(legCut.cutSurfaces);
+            Assert.That(renderer.sharedMesh, Is.Not.SameAs(afterNeck));
+            Assert.That(renderer.sharedMesh.name,
+                Is.EqualTo("Neck And Right Leg Test Mesh Dismembered Source"),
+                "Repeated cuts must not recursively rename the live source mesh.");
+            Assert.That(neckCut.root, Is.Not.Null,
+                "The neck piece must remain alive after the right-leg cut.");
+            Assert.That(legCut.root, Is.Not.Null);
+            AssertRendererMeshIsStructurallyValid(renderer);
+            AssertSameVertexLayout(afterNeck, renderer.sharedMesh);
+            Own(legCut.root.gameObject);
         }
 
         [Test]
@@ -1088,6 +1350,11 @@ namespace UMA.Dismemberment.Tests
                     Is.EqualTo(source.GetVertexBufferStride(stream)));
         }
 
+        private static void AssertSameVertexLayout(Mesh expected, Mesh actual)
+        {
+            AssertPreservedVertexLayout(expected, actual, expected.GetVertexAttributes());
+        }
+
         private static void AssertPreservedSourceStreamBytes(Mesh output,
             List<byte[]> sourceStreams, int sourceVertexCount,
             VertexAttributeDescriptor[] layout)
@@ -1206,6 +1473,95 @@ namespace UMA.Dismemberment.Tests
             return mesh;
         }
 
+        private static Mesh CreateNeckAndRightLegCutMesh()
+        {
+            const int shellCount = 2;
+            const int verticesPerShell = 8;
+            var vertices = new Vector3[shellCount * verticesPerShell];
+            var uv = new Vector2[vertices.Length];
+            var primaryTriangles = new List<int>(shellCount * 15);
+            var secondaryTriangles = new List<int>(shellCount * 3);
+            var counts = new NativeArray<byte>(new byte[vertices.Length], Allocator.Temp);
+            var weights = new NativeArray<BoneWeight1>(new BoneWeight1[vertices.Length],
+                Allocator.Temp);
+            try
+            {
+                for (int shell = 0; shell < shellCount; shell++)
+                {
+                    int vertex = shell * verticesPerShell;
+                    Vector3 offset = shell == 0
+                        ? new Vector3(0f, 1.5f, 0f)
+                        : new Vector3(1.5f, -1f, 0f);
+                    vertices[vertex] = offset + new Vector3(0f, 0.75f, 0f);
+                    vertices[vertex + 1] = offset + new Vector3(-0.5f, 0f, -0.5f);
+                    vertices[vertex + 2] = offset + new Vector3(0.5f, 0f, -0.5f);
+                    vertices[vertex + 3] = offset + new Vector3(0f, 0f, 0.5f);
+                    vertices[vertex + 4] = vertices[vertex + 1];
+                    vertices[vertex + 5] = vertices[vertex + 2];
+                    vertices[vertex + 6] = vertices[vertex + 3];
+                    vertices[vertex + 7] =
+                        (vertices[vertex + 4] + vertices[vertex + 5] +
+                         vertices[vertex + 6]) / 3f;
+                    uv[vertex] = new Vector2(0.5f, 0.9f);
+                    uv[vertex + 1] = new Vector2(0.2f, 0.2f);
+                    uv[vertex + 2] = new Vector2(0.8f, 0.2f);
+                    uv[vertex + 3] = new Vector2(0.5f, 0.7f);
+                    uv[vertex + 4] = uv[vertex + 1];
+                    uv[vertex + 5] = uv[vertex + 2];
+                    uv[vertex + 6] = uv[vertex + 3];
+                    uv[vertex + 7] =
+                        (uv[vertex + 4] + uv[vertex + 5] + uv[vertex + 6]) / 3f;
+                    primaryTriangles.Add(vertex);
+                    primaryTriangles.Add(vertex + 2);
+                    primaryTriangles.Add(vertex + 1);
+                    primaryTriangles.Add(vertex);
+                    primaryTriangles.Add(vertex + 3);
+                    primaryTriangles.Add(vertex + 2);
+                    primaryTriangles.Add(vertex);
+                    primaryTriangles.Add(vertex + 1);
+                    primaryTriangles.Add(vertex + 3);
+                    // Split the remaining side of the cut across two material submeshes. This
+                    // reproduces the mixed neck boundary that used to escape as submesh -1.
+                    primaryTriangles.Add(vertex + 7);
+                    primaryTriangles.Add(vertex + 4);
+                    primaryTriangles.Add(vertex + 5);
+                    primaryTriangles.Add(vertex + 7);
+                    primaryTriangles.Add(vertex + 6);
+                    primaryTriangles.Add(vertex + 4);
+                    secondaryTriangles.Add(vertex + 7);
+                    secondaryTriangles.Add(vertex + 5);
+                    secondaryTriangles.Add(vertex + 6);
+                    for (int localVertex = 0; localVertex < verticesPerShell; localVertex++)
+                    {
+                        counts[vertex + localVertex] = 1;
+                        weights[vertex + localVertex] = new BoneWeight1
+                        {
+                            boneIndex = localVertex <= 3 ? shell + 1 : 0,
+                            weight = 1f
+                        };
+                    }
+                }
+
+                var mesh = new Mesh { name = "Neck And Right Leg Test Mesh" };
+                mesh.vertices = vertices;
+                mesh.uv = uv;
+                mesh.subMeshCount = 2;
+                mesh.SetTriangles(primaryTriangles, 0);
+                mesh.SetTriangles(secondaryTriangles, 1);
+                mesh.bindposes = CreateIdentityBindposes(3);
+                mesh.SetBoneWeights(counts, weights);
+                mesh.RecalculateNormals();
+                mesh.RecalculateTangents();
+                mesh.RecalculateBounds();
+                return mesh;
+            }
+            finally
+            {
+                counts.Dispose();
+                weights.Dispose();
+            }
+        }
+
         private static Mesh CreateRigidlyWeightedTriangle(int boneIndex)
         {
             var mesh = new Mesh { name = "Rigidly Weighted Armor" };
@@ -1255,6 +1611,42 @@ namespace UMA.Dismemberment.Tests
             int total = 0;
             for (int i = 0; i < counts.Length; i++) total += counts[i];
             Assert.That(total, Is.EqualTo(weights.Length));
+        }
+
+        private static void AssertCutSurfacesUseRealSubmeshes(
+            DismembermentCutSurface[] surfaces)
+        {
+            for (int i = 0; i < surfaces.Length; i++)
+            {
+                Assert.That(surfaces[i].sourceSubmeshIndex, Is.GreaterThanOrEqualTo(0),
+                    "The internal mixed-submesh sentinel must not escape into runtime decals.");
+                Assert.That(surfaces[i].IsValid, Is.True);
+            }
+        }
+
+        private void AssertRendererMeshIsStructurallyValid(SkinnedMeshRenderer renderer)
+        {
+            Mesh mesh = renderer.sharedMesh;
+            Assert.That(mesh, Is.Not.Null);
+            AssertModernWeightsAreConsistent(mesh);
+            VertexAttributeDescriptor[] layout = mesh.GetVertexAttributes();
+            using (Mesh.MeshDataArray data = Mesh.AcquireReadOnlyMeshData(mesh))
+            {
+                int streamCount = GetStreamCount(layout);
+                for (int stream = 0; stream < streamCount; stream++)
+                {
+                    int stride = mesh.GetVertexBufferStride(stream);
+                    Assert.That(stride, Is.GreaterThan(0));
+                    Assert.That(data[0].GetVertexData<byte>(stream).Length,
+                        Is.EqualTo(mesh.vertexCount * stride),
+                        $"Vertex stream {stream} must match vertexCount * stride.");
+                }
+            }
+
+            Mesh baked = Own(new Mesh { name = mesh.name + " Test Bake" });
+            renderer.BakeMesh(baked);
+            Assert.That(baked.vertexCount, Is.EqualTo(mesh.vertexCount));
+            Assert.That(baked.vertices, Has.Length.EqualTo(mesh.vertexCount));
         }
 
         private static void AssertVertexUsesBone(Mesh mesh, int vertexIndex, int expectedBone)

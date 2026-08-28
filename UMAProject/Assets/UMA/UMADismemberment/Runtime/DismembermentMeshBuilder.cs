@@ -26,13 +26,22 @@ namespace UMA.Dismemberment
         public readonly DismembermentCapUvMode capUvMode;
         public readonly float centeredCapUvPadding;
         public readonly int detachedFallbackBoneIndex;
+        public readonly bool[] capEligibleSubmeshes;
+        public readonly bool[] doubleSidedSubmeshes;
+        public readonly bool[] capEligibleVertices;
+        public readonly bool[] doubleSidedVertices;
+        public readonly float doubleSidedDepthMeters;
+        public readonly float clothingCutSmoothing;
 
         public DismembermentMeshBuildOptions(float threshold, int existingCapSubmesh,
             bool generateCaps, bool requireClosedCaps, float capUvMetersPerTile,
             float seamWeldTolerance = DefaultSeamWeldTolerance,
             DismembermentCapUvMode capUvMode = DismembermentCapUvMode.MeterScaledTiled,
             float centeredCapUvPadding = UmaDismemberment.DefaultCenteredCapUvPadding,
-            int detachedFallbackBoneIndex = -1)
+            int detachedFallbackBoneIndex = -1, bool[] capEligibleSubmeshes = null,
+            bool[] doubleSidedSubmeshes = null, float doubleSidedDepthMeters = 0f,
+            float clothingCutSmoothing = 0f, bool[] capEligibleVertices = null,
+            bool[] doubleSidedVertices = null)
         {
             this.threshold = Mathf.Clamp01(threshold);
             this.existingCapSubmesh = existingCapSubmesh;
@@ -45,6 +54,12 @@ namespace UMA.Dismemberment
                 : DismembermentCapUvMode.MeterScaledTiled;
             this.centeredCapUvPadding = Mathf.Clamp(centeredCapUvPadding, 0.001f, 0.25f);
             this.detachedFallbackBoneIndex = detachedFallbackBoneIndex;
+            this.capEligibleSubmeshes = capEligibleSubmeshes;
+            this.doubleSidedSubmeshes = doubleSidedSubmeshes;
+            this.capEligibleVertices = capEligibleVertices;
+            this.doubleSidedVertices = doubleSidedVertices;
+            this.doubleSidedDepthMeters = Mathf.Max(0f, doubleSidedDepthMeters);
+            this.clothingCutSmoothing = Mathf.Clamp01(clothingCutSmoothing);
         }
 
         private const float GeometryEpsilon = 0.000001f;
@@ -80,6 +95,9 @@ namespace UMA.Dismemberment
     {
         public int sourceSubmeshIndex = -1;
         public int[] sourceVertexIndices = Array.Empty<int>();
+        public int[] edgeSubmeshIndices = Array.Empty<int>();
+        public int[] edgeFromSourceIndices = Array.Empty<int>();
+        public int[] edgeToSourceIndices = Array.Empty<int>();
         public Vector2[] boundaryUV = Array.Empty<Vector2>();
         public Vector3[] boundaryLocalPositions = Array.Empty<Vector3>();
     }
@@ -159,12 +177,18 @@ namespace UMA.Dismemberment
         {
             public readonly List<int> innerSourceIndices;
             public readonly List<int> outerSourceIndices;
+            public readonly List<int> edgeSubmeshIndices;
+            public readonly List<int> outerEdgeFromSourceIndices;
+            public readonly List<int> outerEdgeToSourceIndices;
             public int sourceSubmeshIndex = -1;
 
             public BoundaryLoop(int capacity)
             {
                 innerSourceIndices = new List<int>(capacity);
                 outerSourceIndices = new List<int>(capacity);
+                edgeSubmeshIndices = new List<int>(capacity);
+                outerEdgeFromSourceIndices = new List<int>(capacity);
+                outerEdgeToSourceIndices = new List<int>(capacity);
             }
         }
 
@@ -177,6 +201,38 @@ namespace UMA.Dismemberment
             {
                 this.from = from;
                 this.to = to;
+            }
+        }
+
+        private readonly struct OrientedTriangle : IEquatable<OrientedTriangle>
+        {
+            private readonly int a;
+            private readonly int b;
+            private readonly int c;
+
+            public OrientedTriangle(int first, int second, int third)
+            {
+                if (first <= second && first <= third)
+                {
+                    a = first; b = second; c = third;
+                }
+                else if (second <= first && second <= third)
+                {
+                    a = second; b = third; c = first;
+                }
+                else
+                {
+                    a = third; b = first; c = second;
+                }
+            }
+
+            public bool Equals(OrientedTriangle other) => a == other.a && b == other.b &&
+                c == other.c;
+            public override bool Equals(object obj) =>
+                obj is OrientedTriangle other && Equals(other);
+            public override int GetHashCode()
+            {
+                unchecked { return ((a * 397) ^ b) * 397 ^ c; }
             }
         }
 
@@ -245,6 +301,8 @@ namespace UMA.Dismemberment
                 options.seamWeldTolerance);
             bool foundInner = false;
             bool foundOuter = false;
+            bool foundBodyInner = false;
+            bool foundBodyOuter = false;
 
             for (int submesh = 0; submesh < sourceSubmeshCount; submesh++)
             {
@@ -255,6 +313,13 @@ namespace UMA.Dismemberment
                     error = $"Mesh '{source.name}' submesh {submesh} has an invalid triangle index count.";
                     return DismembermentMeshBuildStatus.InvalidSource;
                 }
+
+                bool submeshMayContainClothing = options.doubleSidedVertices != null ||
+                    IsSubmeshEnabled(options.doubleSidedSubmeshes, submesh, false);
+                float[] classificationWeights = submeshMayContainClothing
+                    ? SmoothWeightsAcrossTriangles(triangles, includedWeights,
+                        options.clothingCutSmoothing)
+                    : includedWeights;
 
                 for (int triangle = 0; triangle < triangles.Count; triangle += 3)
                 {
@@ -269,16 +334,28 @@ namespace UMA.Dismemberment
                         return DismembermentMeshBuildStatus.InvalidSource;
                     }
 
-                    // Preserve the legacy tool's inclusive behavior: a triangle follows the
-                    // detached side when any of its vertices exceeds the configured threshold.
-                    bool isInner = includedWeights[a] > options.threshold ||
-                        includedWeights[b] > options.threshold || includedWeights[c] > options.threshold;
+                    // Anatomical surfaces retain the inclusive legacy behavior. Garments use a
+                    // smoothed majority vote so one slightly misweighted vertex cannot pull an
+                    // otherwise attached triangle into a long spike at the cut boundary.
+                    bool clothingSurface = IsTriangleEnabled(options.doubleSidedVertices,
+                        a, b, c, submeshMayContainClothing);
+                    bool bodySurface = IsTriangleEnabled(options.capEligibleVertices,
+                        a, b, c, IsSubmeshEnabled(options.capEligibleSubmeshes,
+                            submesh, options.capEligibleSubmeshes == null));
+                    bool isInner = clothingSurface
+                        ? Median(classificationWeights[a], classificationWeights[b],
+                            classificationWeights[c]) > options.threshold
+                        : includedWeights[a] > options.threshold ||
+                          includedWeights[b] > options.threshold ||
+                          includedWeights[c] > options.threshold;
                     List<int> destination = isInner ? innerTriangles[submesh] : outerTriangles[submesh];
                     destination.Add(a);
                     destination.Add(b);
                     destination.Add(c);
                     foundInner |= isInner;
                     foundOuter |= !isInner;
+                    foundBodyInner |= bodySurface && isInner;
+                    foundBodyOuter |= bodySurface && !isInner;
                     AddEdgeUse(edgeUses, canonicalVertices, a, b, isInner, submesh);
                     AddEdgeUse(edgeUses, canonicalVertices, b, c, isInner, submesh);
                     AddEdgeUse(edgeUses, canonicalVertices, c, a, isInner, submesh);
@@ -291,23 +368,50 @@ namespace UMA.Dismemberment
                 return DismembermentMeshBuildStatus.NoAffectedTriangles;
             }
 
-            List<BoundaryLoop> boundaryLoops = null;
+            var boundaryLoops = new List<BoundaryLoop>();
             if (foundOuter)
             {
-                if (!TryBuildBoundaryLoops(edgeUses, out boundaryLoops, out error))
+                Dictionary<EdgeKey, EdgeUse> bodyBoundary = FilterBoundaryUses(edgeUses,
+                    options, true);
+                bool bodyNeedsBoundary = foundBodyInner && foundBodyOuter;
+                List<BoundaryLoop> bodyLoops = null;
+                if ((bodyNeedsBoundary || bodyBoundary.Count > 0) &&
+                    !TryBuildBoundaryLoops(bodyBoundary, out bodyLoops, out error))
                 {
                     if (options.generateCaps && options.requireClosedCaps)
                         return DismembermentMeshBuildStatus.InvalidSource;
-                    boundaryLoops = new List<BoundaryLoop>();
                     error = string.Empty;
                 }
-            }
-            boundaryLoops ??= new List<BoundaryLoop>();
+                else if (bodyLoops != null)
+                {
+                    boundaryLoops.AddRange(bodyLoops);
+                }
 
+                // Garments are intentionally allowed to terminate at authored borders. Keep any
+                // valid closed loops for cut-surface metadata, but an open or branched garment
+                // boundary must never abort an otherwise valid anatomical cut.
+                Dictionary<EdgeKey, EdgeUse> clothingBoundary = FilterBoundaryUses(edgeUses,
+                    options, false);
+                if (clothingBoundary.Count > 0)
+                {
+                    if (TryBuildBoundaryLoops(clothingBoundary,
+                        out List<BoundaryLoop> clothingLoops, out _))
+                        boundaryLoops.AddRange(clothingLoops);
+                }
+            }
+
+            bool hasEligibleCapLoop = false;
+            for (int loopIndex = 0; options.generateCaps &&
+                loopIndex < boundaryLoops.Count; loopIndex++)
+            {
+                if (!IsCapEligible(boundaryLoops[loopIndex], options)) continue;
+                hasEligibleCapLoop = true;
+                break;
+            }
             int capSubmesh = options.existingCapSubmesh >= 0 &&
                 options.existingCapSubmesh < sourceSubmeshCount
                 ? options.existingCapSubmesh
-                : options.generateCaps && boundaryLoops.Count > 0 ? sourceSubmeshCount : -1;
+                : hasEligibleCapLoop ? sourceSubmeshCount : -1;
             int outputSubmeshCount = capSubmesh == sourceSubmeshCount
                 ? sourceSubmeshCount + 1 : sourceSubmeshCount;
             EnsureTriangleListCount(innerTriangles, outputSubmeshCount);
@@ -321,6 +425,7 @@ namespace UMA.Dismemberment
                 loopIndex < boundaryLoops.Count; loopIndex++)
             {
                 BoundaryLoop loop = boundaryLoops[loopIndex];
+                if (!IsCapEligible(loop, options)) continue;
                 if (!TryAppendCap(loop.innerSourceIndices, sourceVertices, true,
                     options.capUvMetersPerTile, options.capUvMode,
                     options.centeredCapUvPadding,
@@ -345,13 +450,30 @@ namespace UMA.Dismemberment
                     outerTriangles[capSubmesh].Add(outerBase + outerCapTriangles[i]);
             }
 
+            if (options.doubleSidedDepthMeters > 0f)
+            {
+                for (int submesh = 0; submesh < sourceSubmeshCount; submesh++)
+                {
+                    if (options.doubleSidedVertices == null &&
+                        !IsSubmeshEnabled(options.doubleSidedSubmeshes, submesh, false))
+                        continue;
+                    AppendDoubleSidedBand(innerTriangles[submesh], edgeUses,
+                        sourceVertices, submesh, true, options.doubleSidedDepthMeters,
+                        options);
+                    AppendDoubleSidedBand(outerTriangles[submesh], edgeUses,
+                        sourceVertices, submesh, false, options.doubleSidedDepthMeters,
+                        options);
+                }
+            }
+
             Mesh outerMesh = null;
             Mesh detachedMesh = null;
             try
             {
-                outerMesh = BuildOutputMesh(source, source.name + " Dismembered Source",
-                    outerTriangles, outerCapVertices, null, -1);
-                detachedMesh = BuildOutputMesh(source, source.name + " Detached",
+                outerMesh = BuildOutputMesh(source, CreateOutputMeshName(source.name,
+                        "Dismembered Source"), outerTriangles, outerCapVertices, null, -1);
+                detachedMesh = BuildOutputMesh(source, CreateOutputMeshName(source.name,
+                        "Detached"),
                     innerTriangles, innerCapVertices, includedBones,
                     ResolveFallbackBoneIndex(includedBones,
                         options.detachedFallbackBoneIndex));
@@ -380,6 +502,205 @@ namespace UMA.Dismemberment
         {
             var result = new List<List<int>>(count);
             for (int i = 0; i < count; i++) result.Add(new List<int>());
+            return result;
+        }
+
+        private static bool IsSubmeshEnabled(bool[] values, int submesh,
+            bool defaultValue)
+        {
+            if (values == null) return defaultValue;
+            return (uint)submesh < (uint)values.Length && values[submesh];
+        }
+
+        private static Dictionary<EdgeKey, EdgeUse> FilterBoundaryUses(
+            Dictionary<EdgeKey, EdgeUse> uses, DismembermentMeshBuildOptions options,
+            bool capEligible)
+        {
+            var filtered = new Dictionary<EdgeKey, EdgeUse>();
+            foreach (KeyValuePair<EdgeKey, EdgeUse> pair in uses)
+            {
+                EdgeUse use = pair.Value;
+                if (use.innerCount == 0 || use.outerCount == 0 ||
+                    !use.hasInnerDirection || !use.hasOuterDirection) continue;
+                if (IsBoundaryUseEnabled(use, options, capEligible))
+                    filtered.Add(pair.Key, use);
+            }
+            return filtered;
+        }
+
+        private static bool IsBoundaryUseEnabled(EdgeUse use,
+            DismembermentMeshBuildOptions options, bool capEligible)
+        {
+            int submesh = use.innerSubmesh >= 0
+                ? use.innerSubmesh : use.outerSubmesh;
+            return capEligible
+                ? IsEdgeEnabled(options.capEligibleVertices, use.innerFromSource,
+                    use.innerToSource, IsSubmeshEnabled(options.capEligibleSubmeshes,
+                        submesh, options.capEligibleSubmeshes == null))
+                : IsEdgeEnabled(options.doubleSidedVertices, use.innerFromSource,
+                    use.innerToSource, IsSubmeshEnabled(options.doubleSidedSubmeshes,
+                        submesh, false));
+        }
+
+        private static bool IsEdgeEnabled(bool[] values, int a, int b,
+            bool defaultValue)
+        {
+            if (values == null) return defaultValue;
+            bool aValid = (uint)a < (uint)values.Length;
+            bool bValid = (uint)b < (uint)values.Length;
+            if (aValid && bValid) return values[a] && values[b];
+            if (aValid) return values[a];
+            if (bValid) return values[b];
+            return defaultValue;
+        }
+
+        private static bool IsCapEligible(BoundaryLoop loop,
+            DismembermentMeshBuildOptions options)
+        {
+            if (options.capEligibleVertices != null)
+                return loop != null && IsLoopEnabled(loop.innerSourceIndices,
+                    options.capEligibleVertices);
+            if (options.capEligibleSubmeshes == null) return true;
+            return loop != null && IsSubmeshEnabled(options.capEligibleSubmeshes,
+                loop.sourceSubmeshIndex, false);
+        }
+
+        private static bool IsTriangleEnabled(bool[] values, int a, int b, int c,
+            bool defaultValue)
+        {
+            if (values == null) return defaultValue;
+            int enabled = 0;
+            if ((uint)a < (uint)values.Length && values[a]) enabled++;
+            if ((uint)b < (uint)values.Length && values[b]) enabled++;
+            if ((uint)c < (uint)values.Length && values[c]) enabled++;
+            return enabled >= 2;
+        }
+
+        private static bool IsLoopEnabled(List<int> indices, bool[] values)
+        {
+            if (indices == null || indices.Count == 0 || values == null) return false;
+            int enabled = 0;
+            int valid = 0;
+            for (int i = 0; i < indices.Count; i++)
+            {
+                int index = indices[i];
+                if ((uint)index >= (uint)values.Length) continue;
+                valid++;
+                if (values[index]) enabled++;
+            }
+            return valid > 0 && enabled * 2 > valid;
+        }
+
+        private static float Median(float a, float b, float c)
+        {
+            return a + b + c - Mathf.Min(a, Mathf.Min(b, c)) -
+                Mathf.Max(a, Mathf.Max(b, c));
+        }
+
+        private static float[] SmoothWeightsAcrossTriangles(List<int> triangles,
+            float[] sourceWeights, float strength)
+        {
+            if (strength <= 0f || triangles == null || triangles.Count == 0)
+                return sourceWeights;
+            var sums = new float[sourceWeights.Length];
+            var counts = new int[sourceWeights.Length];
+            for (int triangle = 0; triangle + 2 < triangles.Count; triangle += 3)
+            {
+                int a = triangles[triangle];
+                int b = triangles[triangle + 1];
+                int c = triangles[triangle + 2];
+                AddWeightNeighbor(a, b, sourceWeights, sums, counts);
+                AddWeightNeighbor(b, a, sourceWeights, sums, counts);
+                AddWeightNeighbor(b, c, sourceWeights, sums, counts);
+                AddWeightNeighbor(c, b, sourceWeights, sums, counts);
+                AddWeightNeighbor(c, a, sourceWeights, sums, counts);
+                AddWeightNeighbor(a, c, sourceWeights, sums, counts);
+            }
+            var result = (float[])sourceWeights.Clone();
+            for (int vertex = 0; vertex < result.Length; vertex++)
+            {
+                if (counts[vertex] == 0) continue;
+                result[vertex] = Mathf.Lerp(sourceWeights[vertex],
+                    sums[vertex] / counts[vertex], strength);
+            }
+            return result;
+        }
+
+        private static void AddWeightNeighbor(int vertex, int neighbor,
+            float[] sourceWeights, float[] sums, int[] counts)
+        {
+            if ((uint)vertex >= (uint)sourceWeights.Length ||
+                (uint)neighbor >= (uint)sourceWeights.Length) return;
+            sums[vertex] += sourceWeights[neighbor];
+            counts[vertex]++;
+        }
+
+        private static void AppendDoubleSidedBand(List<int> triangles,
+            Dictionary<EdgeKey, EdgeUse> edgeUses, Vector3[] vertices, int submesh,
+            bool detachedSide,
+            float depthMeters, DismembermentMeshBuildOptions options)
+        {
+            if (triangles == null || triangles.Count == 0 || edgeUses == null ||
+                depthMeters <= 0f) return;
+            var boundary = new List<Vector3>();
+            foreach (KeyValuePair<EdgeKey, EdgeUse> pair in edgeUses)
+            {
+                EdgeUse use = pair.Value;
+                if (use.innerCount == 0 || use.outerCount == 0 ||
+                    !use.hasInnerDirection || !use.hasOuterDirection ||
+                    !IsBoundaryUseEnabled(use, options, false)) continue;
+                int sideSubmesh = detachedSide ? use.innerSubmesh : use.outerSubmesh;
+                if (sideSubmesh != submesh) continue;
+                int from = detachedSide ? use.innerFromSource : use.outerFromSource;
+                int to = detachedSide ? use.innerToSource : use.outerToSource;
+                if ((uint)from < (uint)vertices.Length) boundary.Add(vertices[from]);
+                if ((uint)to < (uint)vertices.Length) boundary.Add(vertices[to]);
+            }
+            if (boundary.Count == 0) return;
+
+            int originalIndexCount = triangles.Count;
+            var existing = new HashSet<OrientedTriangle>();
+            for (int triangle = 0; triangle + 2 < originalIndexCount; triangle += 3)
+                existing.Add(new OrientedTriangle(triangles[triangle],
+                    triangles[triangle + 1], triangles[triangle + 2]));
+            var nearBoundary = new Dictionary<int, bool>();
+            float depthSquared = depthMeters * depthMeters;
+            for (int triangle = 0; triangle + 2 < originalIndexCount; triangle += 3)
+            {
+                int a = triangles[triangle];
+                int b = triangles[triangle + 1];
+                int c = triangles[triangle + 2];
+                if (!IsTriangleEnabled(options.doubleSidedVertices, a, b, c,
+                    IsSubmeshEnabled(options.doubleSidedSubmeshes, submesh, false)))
+                    continue;
+                if (!IsVertexNearBoundary(a, vertices, boundary, depthSquared, nearBoundary) &&
+                    !IsVertexNearBoundary(b, vertices, boundary, depthSquared, nearBoundary) &&
+                    !IsVertexNearBoundary(c, vertices, boundary, depthSquared, nearBoundary))
+                    continue;
+                var reverse = new OrientedTriangle(a, c, b);
+                if (!existing.Add(reverse)) continue;
+                triangles.Add(a);
+                triangles.Add(c);
+                triangles.Add(b);
+            }
+        }
+
+        private static bool IsVertexNearBoundary(int vertex, Vector3[] vertices,
+            List<Vector3> boundary, float depthSquared, Dictionary<int, bool> cache)
+        {
+            if (cache.TryGetValue(vertex, out bool result)) return result;
+            result = false;
+            if ((uint)vertex < (uint)vertices.Length)
+            {
+                Vector3 position = vertices[vertex];
+                for (int i = 0; i < boundary.Count; i++)
+                {
+                    if ((position - boundary[i]).sqrMagnitude > depthSquared) continue;
+                    result = true;
+                    break;
+                }
+            }
+            cache.Add(vertex, result);
             return result;
         }
 
@@ -662,11 +983,25 @@ namespace UMA.Dismemberment
                     {
                         int candidate = edgeUse.outerSubmesh >= 0
                             ? edgeUse.outerSubmesh : edgeUse.innerSubmesh;
+                        boundaryLoop.edgeSubmeshIndices.Add(candidate);
+                        bool outerForward = edgeUse.outerFromCanonical == canonical &&
+                            edgeUse.outerToCanonical == nextCanonical;
+                        boundaryLoop.outerEdgeFromSourceIndices.Add(outerForward
+                            ? edgeUse.outerFromSource : edgeUse.outerToSource);
+                        boundaryLoop.outerEdgeToSourceIndices.Add(outerForward
+                            ? edgeUse.outerToSource : edgeUse.outerFromSource);
                         if (candidate >= 0)
                         {
                             if (resolvedSubmesh < 0) resolvedSubmesh = candidate;
                             else if (resolvedSubmesh != candidate) mixedSubmeshes = true;
                         }
+                        else mixedSubmeshes = true;
+                    }
+                    else
+                    {
+                        boundaryLoop.edgeSubmeshIndices.Add(-1);
+                        boundaryLoop.outerEdgeFromSourceIndices.Add(outerSource);
+                        boundaryLoop.outerEdgeToSourceIndices.Add(outerSource);
                     }
                 }
                 boundaryLoop.sourceSubmeshIndex = mixedSubmeshes ? -1 : resolvedSubmesh;
@@ -701,6 +1036,10 @@ namespace UMA.Dismemberment
                 {
                     sourceSubmeshIndex = loop.sourceSubmeshIndex,
                     sourceVertexIndices = indices,
+                    edgeSubmeshIndices = loop.edgeSubmeshIndices.ToArray(),
+                    edgeFromSourceIndices =
+                        loop.outerEdgeFromSourceIndices.ToArray(),
+                    edgeToSourceIndices = loop.outerEdgeToSourceIndices.ToArray(),
                     boundaryUV = copiedUV,
                     boundaryLocalPositions = copiedPositions
                 };
@@ -986,21 +1325,46 @@ namespace UMA.Dismemberment
                 mesh.SetTriangles(submeshTriangles[submesh], submesh, false);
             CopyBlendShapes(source, mesh, capVertices, outputVertexCount);
             mesh.bounds = CalculateUsedBounds(positions, submeshTriangles);
+            // ApplyAndDisposeWritableMeshData establishes the vertex streams before the
+            // remaining skinning, index, blend-shape, and bounds updates. Notify renderer-side
+            // caches only after the mesh is completely assembled.
             mesh.MarkModified();
             return mesh;
+        }
+
+        private static string CreateOutputMeshName(string sourceName, string suffix)
+        {
+            const string sourceSuffix = " Dismembered Source";
+            const string detachedSuffix = " Detached";
+            string baseName = string.IsNullOrWhiteSpace(sourceName) ? "UMA Mesh" : sourceName;
+            int sourceSuffixIndex = baseName.IndexOf(sourceSuffix,
+                StringComparison.Ordinal);
+            int detachedSuffixIndex = baseName.IndexOf(detachedSuffix,
+                StringComparison.Ordinal);
+            int suffixIndex = sourceSuffixIndex < 0 ? detachedSuffixIndex :
+                detachedSuffixIndex < 0 ? sourceSuffixIndex :
+                Mathf.Min(sourceSuffixIndex, detachedSuffixIndex);
+            if (suffixIndex >= 0) baseName = baseName.Substring(0, suffixIndex);
+            return baseName + " " + suffix;
         }
 
         private static void CopyVertexBuffers(Mesh source, Mesh destination,
             List<CapVertex> caps, int outputVertexCount)
         {
-            VertexAttributeDescriptor[] layout = source.GetVertexAttributes();
-            if (layout == null || layout.Length == 0 ||
+            VertexAttributeDescriptor[] sourceLayout = source.GetVertexAttributes();
+            if (sourceLayout == null || sourceLayout.Length == 0 ||
                 !source.HasVertexAttribute(VertexAttribute.Position))
                 throw new InvalidOperationException($"Mesh '{source.name}' has no vertex layout.");
 
-            int streamCount = 0;
-            for (int attribute = 0; attribute < layout.Length; attribute++)
-                streamCount = Mathf.Max(streamCount, layout[attribute].stream + 1);
+            // SetBoneWeights owns Unity's skinning stream. Copying BlendWeight/BlendIndices
+            // through writable MeshData and then calling SetBoneWeights over that stream can
+            // leave SkinnedMeshRenderer's private output buffers with a stale declaration.
+            // UMA's combiner follows the same two-stage contract: geometry streams first,
+            // SetBoneWeights second.
+            VertexAttributeDescriptor[] geometryLayout = BuildGeometryVertexLayout(sourceLayout,
+                out int[] destinationStreams);
+            if (geometryLayout.Length == 0)
+                throw new InvalidOperationException($"Mesh '{source.name}' has no geometry layout.");
 
             using Mesh.MeshDataArray sourceDataArray = Mesh.AcquireReadOnlyMeshData(source);
             Mesh.MeshDataArray writableDataArray = Mesh.AllocateWritableMeshData(1);
@@ -1009,34 +1373,63 @@ namespace UMA.Dismemberment
             {
                 Mesh.MeshData sourceData = sourceDataArray[0];
                 Mesh.MeshData destinationData = writableDataArray[0];
-                destinationData.SetVertexBufferParams(outputVertexCount, layout);
-                for (int stream = 0; stream < streamCount; stream++)
+                destinationData.SetVertexBufferParams(outputVertexCount, geometryLayout);
+                var destinationOffsets = new int[geometryLayout.Length];
+                var streamOffsets = new int[GetVertexStreamCount(geometryLayout)];
+                for (int attributeIndex = 0; attributeIndex < geometryLayout.Length;
+                    attributeIndex++)
                 {
-                    int stride = source.GetVertexBufferStride(stream);
-                    if (stride <= 0)
-                        throw new InvalidOperationException($"Mesh '{source.name}' has an invalid " +
-                            $"vertex stride for stream {stream}.");
-                    NativeArray<byte> sourceBytes = sourceData.GetVertexData<byte>(stream);
+                    VertexAttributeDescriptor descriptor = geometryLayout[attributeIndex];
+                    destinationOffsets[attributeIndex] = streamOffsets[descriptor.stream];
+                    streamOffsets[descriptor.stream] += GetVertexAttributeByteSize(descriptor);
+                }
+
+                int geometryIndex = 0;
+                for (int sourceAttributeIndex = 0; sourceAttributeIndex < sourceLayout.Length;
+                    sourceAttributeIndex++)
+                {
+                    VertexAttributeDescriptor sourceDescriptor =
+                        sourceLayout[sourceAttributeIndex];
+                    if (IsSkinningAttribute(sourceDescriptor.attribute)) continue;
+                    VertexAttributeDescriptor destinationDescriptor = geometryLayout[geometryIndex];
+                    int sourceStream = sourceDescriptor.stream;
+                    int destinationStream = destinationStreams[sourceAttributeIndex];
+                    int sourceStride = source.GetVertexBufferStride(sourceStream);
+                    NativeArray<byte> sourceBytes = sourceData.GetVertexData<byte>(sourceStream);
                     NativeArray<byte> destinationBytes =
-                        destinationData.GetVertexData<byte>(stream);
-                    int sourceByteCount = checked(source.vertexCount * stride);
-                    int outputByteCount = checked(outputVertexCount * stride);
-                    if (sourceBytes.Length < sourceByteCount ||
-                        destinationBytes.Length < outputByteCount)
-                        throw new InvalidOperationException($"Mesh '{source.name}' stream {stream} " +
+                        destinationData.GetVertexData<byte>(destinationStream);
+                    int destinationStride = outputVertexCount > 0
+                        ? destinationBytes.Length / outputVertexCount : 0;
+                    int sourceOffset = source.GetVertexAttributeOffset(
+                        sourceDescriptor.attribute);
+                    int destinationOffset = destinationOffsets[geometryIndex];
+                    int attributeByteCount = GetVertexAttributeByteSize(destinationDescriptor);
+                    if (sourceStride <= 0 || destinationStride <= 0 ||
+                        sourceBytes.Length < checked(source.vertexCount * sourceStride) ||
+                        destinationBytes.Length < checked(outputVertexCount * destinationStride) ||
+                        sourceOffset + attributeByteCount > sourceStride ||
+                        destinationOffset + attributeByteCount > destinationStride)
+                        throw new InvalidOperationException($"Mesh '{source.name}' stream " +
+                            $"{sourceStream} " +
                             "does not match its declared vertex count and stride.");
-                    NativeArray<byte>.Copy(sourceBytes, 0, destinationBytes, 0,
-                        sourceByteCount);
+
+                    for (int vertex = 0; vertex < source.vertexCount; vertex++)
+                        NativeArray<byte>.Copy(sourceBytes,
+                            vertex * sourceStride + sourceOffset, destinationBytes,
+                            vertex * destinationStride + destinationOffset, attributeByteCount);
                     for (int capIndex = 0; capIndex < caps.Count; capIndex++)
                     {
                         CapVertex cap = caps[capIndex];
-                        int sourceOffset = checked(cap.sourceIndex * stride);
-                        int destinationOffset = checked((source.vertexCount + capIndex) * stride);
-                        NativeArray<byte>.Copy(sourceBytes, sourceOffset, destinationBytes,
-                            destinationOffset, stride);
-                        WriteCapAttributes(source, layout, stream, destinationBytes,
-                            destinationOffset, cap);
+                        int capDestinationOffset = checked(
+                            (source.vertexCount + capIndex) * destinationStride +
+                            destinationOffset);
+                        NativeArray<byte>.Copy(sourceBytes,
+                            cap.sourceIndex * sourceStride + sourceOffset,
+                            destinationBytes, capDestinationOffset, attributeByteCount);
+                        WriteCapAttribute(destinationDescriptor, destinationBytes,
+                            capDestinationOffset, cap);
                     }
+                    geometryIndex++;
                 }
                 Mesh.ApplyAndDisposeWritableMeshData(writableDataArray, destination,
                     MeshUpdateFlags.DontRecalculateBounds);
@@ -1048,31 +1441,91 @@ namespace UMA.Dismemberment
             }
         }
 
-        private static void WriteCapAttributes(Mesh source,
-            VertexAttributeDescriptor[] layout, int stream, NativeArray<byte> bytes,
-            int vertexOffset, CapVertex cap)
+        private static VertexAttributeDescriptor[] BuildGeometryVertexLayout(
+            VertexAttributeDescriptor[] sourceLayout, out int[] destinationStreams)
         {
-            for (int attributeIndex = 0; attributeIndex < layout.Length; attributeIndex++)
+            destinationStreams = new int[sourceLayout.Length];
+            Array.Fill(destinationStreams, -1);
+            var streamMap = new Dictionary<int, int>();
+            var geometryLayout = new List<VertexAttributeDescriptor>(sourceLayout.Length);
+            for (int attributeIndex = 0; attributeIndex < sourceLayout.Length; attributeIndex++)
             {
-                VertexAttributeDescriptor descriptor = layout[attributeIndex];
-                if (descriptor.stream != stream ||
-                    descriptor.format != VertexAttributeFormat.Float32) continue;
-                int offset = vertexOffset + source.GetVertexAttributeOffset(descriptor.attribute);
-                switch (descriptor.attribute)
+                VertexAttributeDescriptor descriptor = sourceLayout[attributeIndex];
+                if (IsSkinningAttribute(descriptor.attribute)) continue;
+                if (!streamMap.TryGetValue(descriptor.stream, out int destinationStream))
                 {
-                    case VertexAttribute.Normal:
-                        WriteFloatComponents(bytes, offset, descriptor.dimension,
-                            cap.normal.x, cap.normal.y, cap.normal.z, 0f);
-                        break;
-                    case VertexAttribute.Tangent:
-                        WriteFloatComponents(bytes, offset, descriptor.dimension,
-                            cap.tangent.x, cap.tangent.y, cap.tangent.z, cap.tangent.w);
-                        break;
-                    case VertexAttribute.TexCoord0:
-                        WriteFloatComponents(bytes, offset,
-                            Mathf.Min(2, descriptor.dimension), cap.uv.x, cap.uv.y, 0f, 0f);
-                        break;
+                    destinationStream = streamMap.Count;
+                    streamMap.Add(descriptor.stream, destinationStream);
                 }
+                destinationStreams[attributeIndex] = destinationStream;
+                geometryLayout.Add(new VertexAttributeDescriptor(descriptor.attribute,
+                    descriptor.format, descriptor.dimension, destinationStream));
+            }
+            return geometryLayout.ToArray();
+        }
+
+        private static bool IsSkinningAttribute(VertexAttribute attribute)
+        {
+            return attribute == VertexAttribute.BlendWeight ||
+                attribute == VertexAttribute.BlendIndices;
+        }
+
+        private static int GetVertexStreamCount(VertexAttributeDescriptor[] layout)
+        {
+            int count = 0;
+            for (int i = 0; i < layout.Length; i++)
+                count = Mathf.Max(count, layout[i].stream + 1);
+            return count;
+        }
+
+        private static int GetVertexAttributeByteSize(VertexAttributeDescriptor descriptor)
+        {
+            int componentSize;
+            switch (descriptor.format)
+            {
+                case VertexAttributeFormat.UNorm8:
+                case VertexAttributeFormat.SNorm8:
+                case VertexAttributeFormat.UInt8:
+                case VertexAttributeFormat.SInt8:
+                    componentSize = 1;
+                    break;
+                case VertexAttributeFormat.Float16:
+                case VertexAttributeFormat.UNorm16:
+                case VertexAttributeFormat.SNorm16:
+                case VertexAttributeFormat.UInt16:
+                case VertexAttributeFormat.SInt16:
+                    componentSize = 2;
+                    break;
+                case VertexAttributeFormat.Float32:
+                case VertexAttributeFormat.UInt32:
+                case VertexAttributeFormat.SInt32:
+                    componentSize = 4;
+                    break;
+                default:
+                    throw new InvalidOperationException($"Unsupported vertex attribute format " +
+                        $"'{descriptor.format}'.");
+            }
+            return checked(componentSize * descriptor.dimension);
+        }
+
+        private static void WriteCapAttribute(VertexAttributeDescriptor descriptor,
+            NativeArray<byte> bytes, int offset, CapVertex cap)
+        {
+            if (descriptor.format != VertexAttributeFormat.Float32) return;
+            switch (descriptor.attribute)
+            {
+                case VertexAttribute.Normal:
+                    WriteFloatComponents(bytes, offset, descriptor.dimension,
+                        cap.normal.x, cap.normal.y, cap.normal.z, 0f);
+                    break;
+                case VertexAttribute.Tangent:
+                    WriteFloatComponents(bytes, offset, descriptor.dimension,
+                        cap.tangent.x, cap.tangent.y, cap.tangent.z, cap.tangent.w);
+                    break;
+                case VertexAttribute.TexCoord0:
+                    WriteFloatComponents(bytes, offset, Mathf.Min(2, descriptor.dimension),
+                        cap.uv.x, cap.uv.y, 0f, 0f);
+                    break;
             }
         }
 
@@ -1101,67 +1554,6 @@ namespace UMA.Dismemberment
                 bytes[offset + 1] = (byte)(bits >> 16);
                 bytes[offset + 2] = (byte)(bits >> 8);
                 bytes[offset + 3] = (byte)bits;
-            }
-        }
-
-        private static bool CopyNormals(Mesh source, Mesh destination, List<CapVertex> caps,
-            int outputVertexCount)
-        {
-            Vector3[] values = source.normals;
-            if (values.Length != source.vertexCount) return false;
-            var output = new List<Vector3>(outputVertexCount);
-            output.AddRange(values);
-            for (int i = 0; i < caps.Count; i++) output.Add(caps[i].normal);
-            destination.SetNormals(output);
-            return true;
-        }
-
-        private static bool CopyTangents(Mesh source, Mesh destination, List<CapVertex> caps,
-            int outputVertexCount)
-        {
-            Vector4[] values = source.tangents;
-            if (values.Length != source.vertexCount) return false;
-            var output = new List<Vector4>(outputVertexCount);
-            output.AddRange(values);
-            for (int i = 0; i < caps.Count; i++) output.Add(caps[i].tangent);
-            destination.SetTangents(output);
-            return true;
-        }
-
-        private static void CopyColors(Mesh source, Mesh destination, List<CapVertex> caps,
-            int outputVertexCount)
-        {
-            Color[] values = source.colors;
-            if (values.Length != source.vertexCount) return;
-            var output = new List<Color>(outputVertexCount);
-            output.AddRange(values);
-            for (int i = 0; i < caps.Count; i++) output.Add(values[caps[i].sourceIndex]);
-            destination.SetColors(output);
-        }
-
-        private static void CopyUVs(Mesh source, Mesh destination, List<CapVertex> caps,
-            int outputVertexCount)
-        {
-            for (int channel = 0; channel < 8; channel++)
-            {
-                var sourceValues = new List<Vector4>();
-                source.GetUVs(channel, sourceValues);
-                if (sourceValues.Count != source.vertexCount)
-                {
-                    if (channel != 0) continue;
-                    sourceValues.Clear();
-                    for (int vertex = 0; vertex < source.vertexCount; vertex++)
-                        sourceValues.Add(Vector4.zero);
-                }
-                var output = new List<Vector4>(outputVertexCount);
-                output.AddRange(sourceValues);
-                for (int i = 0; i < caps.Count; i++)
-                {
-                    if (channel == 0)
-                        output.Add(new Vector4(caps[i].uv.x, caps[i].uv.y, 0f, 0f));
-                    else output.Add(sourceValues[caps[i].sourceIndex]);
-                }
-                destination.SetUVs(channel, output);
             }
         }
 

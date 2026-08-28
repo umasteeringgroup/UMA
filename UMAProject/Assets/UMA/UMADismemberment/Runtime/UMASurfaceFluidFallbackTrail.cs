@@ -20,6 +20,7 @@ namespace UMA.Dismemberment
         private Vector3 tip;
         private float sourceRadius;
         private bool stopped;
+        private float stoppedAt = -1f;
 
         internal void Initialize(Vector3 origin, Vector3 normal, UMASurfaceFluidProfile settings,
             Material defaultMaterial, float speedMultiplier = 1f,
@@ -29,9 +30,11 @@ namespace UMA.Dismemberment
             speedMultiplier = Mathf.Max(0.05f, speedMultiplier);
             sizeMultiplier = Mathf.Max(0.05f, sizeMultiplier);
             sourceRadius = settings.emissionRadiusMeters * sizeMultiplier;
-            transform.position = Vector3.zero;
             line = gameObject.AddComponent<LineRenderer>();
-            line.useWorldSpace = true;
+            // Fallback geometry follows its cut/decal anchor. New growth is converted from
+            // world gravity each frame, so an animated or ragdolled character cannot leave a
+            // permanent blood line suspended at the original pose.
+            line.useWorldSpace = false;
             line.loop = false;
             line.alignment = LineAlignment.View;
             line.textureMode = LineTextureMode.Stretch;
@@ -39,7 +42,8 @@ namespace UMA.Dismemberment
             line.numCornerVertices = 2;
             line.widthMultiplier = Mathf.Max(0.0005f, sourceRadius * 2f);
             line.positionCount = 1;
-            line.SetPosition(0, origin + normal.normalized * sourceRadius);
+            line.SetPosition(0, transform.InverseTransformPoint(
+                origin + normal.normalized * sourceRadius));
             line.sharedMaterial = settings.fallbackTrailMaterial != null
                 ? settings.fallbackTrailMaterial : defaultMaterial;
             properties = new MaterialPropertyBlock();
@@ -53,12 +57,14 @@ namespace UMA.Dismemberment
 
         internal void StopFlow()
         {
+            if (stopped) return;
             stopped = true;
+            stoppedAt = elapsed;
         }
 
         internal void FadeNow()
         {
-            stopped = true;
+            StopFlow();
             if (fadeStart < 0f) fadeStart = elapsed;
         }
 
@@ -67,35 +73,69 @@ namespace UMA.Dismemberment
             if (profile == null || line == null) return;
             float delta = Mathf.Min(Time.deltaTime, 0.1f);
             elapsed += delta;
+            float fadeDuration = ResolveFallbackFadeDuration(profile);
+            float maximumLifetime = ResolveFallbackMaximumLifetime(profile, fadeDuration);
+            if (elapsed >= maximumLifetime)
+            {
+                Destroy(gameObject);
+                return;
+            }
             bool canGrow = !stopped && elapsed <= profile.emissionDuration &&
                 elapsed <= profile.mobileLifetime &&
                 points.Count < profile.fallbackMaximumSegments;
             if (canGrow)
             {
-                tip += velocity * delta;
+                tip += transform.InverseTransformVector(velocity) * delta;
                 float spacing = Mathf.Max(0.0005f, sourceRadius * 2f);
-                if (Vector3.Distance(points[points.Count - 1], tip) >= spacing)
+                if (Vector3.Distance(transform.TransformPoint(points[points.Count - 1]),
+                    transform.TransformPoint(tip)) >= spacing)
                 {
                     points.Add(tip);
                     line.positionCount = points.Count;
                     line.SetPosition(points.Count - 1, tip);
                 }
-                if (Vector3.Distance(points[0], tip) >= profile.maximumTravelMeters)
-                    stopped = true;
+                if (Vector3.Distance(transform.TransformPoint(points[0]),
+                    transform.TransformPoint(tip)) >= profile.maximumTravelMeters)
+                    StopFlow();
             }
-            else if (!stopped && elapsed > profile.emissionDuration)
+            else if (!stopped)
             {
-                stopped = true;
+                StopFlow();
             }
 
             if (stopped && fadeStart < 0f &&
-                elapsed >= profile.emissionDuration + profile.holdingDuration)
+                elapsed >= stoppedAt + ResolveFallbackHoldingDuration(profile))
                 fadeStart = elapsed;
+            float forcedFadeStart = maximumLifetime - fadeDuration;
+            if (fadeStart < 0f && elapsed >= forcedFadeStart)
+                fadeStart = forcedFadeStart;
             if (fadeStart < 0f) return;
             float opacity = 1f - Mathf.Clamp01((elapsed - fadeStart) /
-                Mathf.Max(0.01f, profile.fadeDuration));
+                fadeDuration);
             ApplyOpacity(opacity);
             if (opacity <= 0f) Destroy(gameObject);
+        }
+
+        private static float ResolveFallbackHoldingDuration(UMASurfaceFluidProfile settings)
+        {
+            float configured = settings.fallbackHoldingDuration >= 0f
+                ? settings.fallbackHoldingDuration : 0.25f;
+            return Mathf.Min(settings.holdingDuration, configured);
+        }
+
+        private static float ResolveFallbackFadeDuration(UMASurfaceFluidProfile settings)
+        {
+            float configured = settings.fallbackFadeDuration > 0f
+                ? settings.fallbackFadeDuration : 1.25f;
+            return Mathf.Max(0.01f, Mathf.Min(settings.fadeDuration, configured));
+        }
+
+        private static float ResolveFallbackMaximumLifetime(UMASurfaceFluidProfile settings,
+            float fadeDuration)
+        {
+            float configured = settings.fallbackMaximumLifetime > 0f
+                ? settings.fallbackMaximumLifetime : 8f;
+            return Mathf.Max(fadeDuration + 0.05f, configured);
         }
 
         private void ApplyOpacity(float opacity)

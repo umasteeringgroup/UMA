@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using UMA.CharacterSystem;
 using UMA.Dynamics;
 using Unity.Collections;
@@ -165,6 +166,18 @@ namespace UMA.Dismemberment
         [Min(0.000001f), Tooltip("Maximum distance in meters for treating duplicated seam " +
             "vertices as the same cap-loop vertex. The default is 0.1 millimeters.")]
         public float seamWeldTolerance = DismembermentMeshBuildOptions.DefaultSeamWeldTolerance;
+        [Tooltip("When enabled, the meat cap is generated only for surfaces containing one of " +
+            "the Body Overlay Groups. Other surfaces are treated as clothing.")]
+        public bool capOnlyBodyParts = true;
+        [Tooltip("Overlay groups that identify anatomical body surfaces eligible for a meat " +
+            "cap. UMA's standard base skin overlay group is Skin.")]
+        public string[] bodyOverlayGroups = { "Skin" };
+        [Min(0f), Tooltip("Length of the two-sided clothing band measured from the cut edge in " +
+            "meters. This reveals the garment interior without putting a meat cap on clothing.")]
+        public float clothingDoubleSidedDepthMeters = 0.1f;
+        [Range(0f, 1f), Tooltip("Smooths garment bone weights before triangle classification. " +
+            "This suppresses isolated, misweighted triangles that form spikes at a cut.")]
+        public float clothingCutSmoothing = 0.5f;
 
         [Header("Bone Selection")]
         [Range(0.01f, 1f)]
@@ -180,6 +193,13 @@ namespace UMA.Dismemberment
         [Tooltip("Detached-piece behavior when UMA starts rebuilding the avatar.")]
         public DetachedPieceRebuildPolicy rebuildPolicy =
             DetachedPieceRebuildPolicy.DestroyDetachedPieces;
+
+        [Header("Diagnostics")]
+        [Tooltip("Log uniquely named mesh lifecycle, vertex-stream, skinning, and render-phase " +
+            "snapshots around each cut. Disable after diagnosing runtime mesh replacement.")]
+        public bool logMeshLifecycle = true;
+        [Min(1), Tooltip("Number of frames after a cut to trace the live source renderer.")]
+        public int meshLifecycleTraceFrames = 4;
 
         // Kept public for source compatibility. Stable decisions use bone hashes instead.
         [NonSerialized] public HashSet<Transform> hasSplit = new HashSet<Transform>();
@@ -204,6 +224,8 @@ namespace UMA.Dismemberment
             public DismembermentMeshBuildResult build;
             public Material[] materials;
             public OwnedSourceRenderer existingState;
+            public int cutSequence;
+            public int rendererIndex;
         }
 
         private sealed class SourceCommitSnapshot
@@ -215,12 +237,23 @@ namespace UMA.Dismemberment
             public Mesh previousRendererMesh;
             public Material[] previousRendererMaterials;
             public Bounds previousRendererBounds;
+            public int cutSequence;
+            public int rendererIndex;
         }
 
         private sealed class SuspendedSourceCollider
         {
             public Collider collider;
             public bool wasEnabled;
+        }
+
+        private sealed class RendererDiagnosticWatch
+        {
+            public SkinnedMeshRenderer renderer;
+            public int cutSequence;
+            public int rendererIndex;
+            public int lastLateUpdateFrame = -1;
+            public int finalFrame;
         }
 
         private DynamicCharacterAvatar avatar;
@@ -234,6 +267,14 @@ namespace UMA.Dismemberment
         private readonly List<GameObject> detachedPieces = new List<GameObject>();
         private readonly List<SuspendedSourceCollider> suspendedSourceColliders =
             new List<SuspendedSourceCollider>();
+        private readonly Dictionary<Mesh, int> diagnosticMeshIds =
+            new Dictionary<Mesh, int>();
+        private readonly List<RendererDiagnosticWatch> rendererDiagnosticWatches =
+            new List<RendererDiagnosticWatch>();
+        private int nextDiagnosticMeshId = 1;
+        private int diagnosticCutSequence;
+        private bool diagnosticCallbacksSubscribed;
+        private bool handlingDiagnosticLogCallback;
 
         private void OnEnable()
         {
@@ -241,16 +282,19 @@ namespace UMA.Dismemberment
             DismembermentCompleted ??= new DismembermentCompletedEvent();
             hasSplit ??= new HashSet<Transform>();
             EnsureInitialized();
+            SubscribeDiagnosticCallbacks();
         }
 
         private void OnDisable()
         {
+            UnsubscribeDiagnosticCallbacks();
             Unsubscribe();
             ResetDismemberment(true);
         }
 
         private void OnDestroy()
         {
+            UnsubscribeDiagnosticCallbacks();
             Unsubscribe();
             ResetDismemberment(true);
         }
@@ -262,6 +306,11 @@ namespace UMA.Dismemberment
             seamWeldTolerance = seamWeldTolerance > 0f
                 ? Mathf.Max(0.000001f, seamWeldTolerance)
                 : DismembermentMeshBuildOptions.DefaultSeamWeldTolerance;
+            clothingDoubleSidedDepthMeters = Mathf.Max(0f,
+                clothingDoubleSidedDepthMeters);
+            clothingCutSmoothing = Mathf.Clamp01(clothingCutSmoothing);
+            meshLifecycleTraceFrames = Mathf.Max(1, meshLifecycleTraceFrames);
+            bodyOverlayGroups ??= new[] { "Skin" };
             if (sliceableHumanBones == null) sliceableHumanBones = new List<BoneInfo>();
             for (int i = 0; i < sliceableHumanBones.Count; i++)
             {
@@ -274,6 +323,106 @@ namespace UMA.Dismemberment
                 if (!Enum.IsDefined(typeof(DismemberedPhysicsMode), info.physicsMode))
                     info.physicsMode = DismemberedPhysicsMode.Automatic;
                 sliceableHumanBones[i] = info;
+            }
+        }
+
+        private void LateUpdate()
+        {
+            if (!logMeshLifecycle || rendererDiagnosticWatches.Count == 0) return;
+            for (int i = rendererDiagnosticWatches.Count - 1; i >= 0; i--)
+            {
+                RendererDiagnosticWatch watch = rendererDiagnosticWatches[i];
+                if (watch == null || watch.renderer == null ||
+                    Time.frameCount > watch.finalFrame)
+                {
+                    rendererDiagnosticWatches.RemoveAt(i);
+                    continue;
+                }
+                if (watch.lastLateUpdateFrame == Time.frameCount) continue;
+                watch.lastLateUpdateFrame = Time.frameCount;
+                LogRendererDiagnostic($"LATE_UPDATE C{watch.cutSequence} R{watch.rendererIndex}",
+                    watch.renderer);
+            }
+        }
+
+        private void SubscribeDiagnosticCallbacks()
+        {
+            if (diagnosticCallbacksSubscribed) return;
+            Application.logMessageReceived += HandleDiagnosticLogMessage;
+            Camera.onPreCull += HandleDiagnosticCameraPreCull;
+            RenderPipelineManager.beginCameraRendering += HandleDiagnosticBeginCameraRendering;
+            diagnosticCallbacksSubscribed = true;
+        }
+
+        private void UnsubscribeDiagnosticCallbacks()
+        {
+            if (!diagnosticCallbacksSubscribed) return;
+            Application.logMessageReceived -= HandleDiagnosticLogMessage;
+            Camera.onPreCull -= HandleDiagnosticCameraPreCull;
+            RenderPipelineManager.beginCameraRendering -= HandleDiagnosticBeginCameraRendering;
+            diagnosticCallbacksSubscribed = false;
+            rendererDiagnosticWatches.Clear();
+        }
+
+        private void HandleDiagnosticCameraPreCull(Camera camera)
+        {
+            LogDiagnosticWatches("BUILTIN_PRE_CULL", camera);
+        }
+
+        private void HandleDiagnosticBeginCameraRendering(ScriptableRenderContext context,
+            Camera camera)
+        {
+            LogDiagnosticWatches("SRP_BEGIN_CAMERA", camera);
+        }
+
+        private void LogDiagnosticWatches(string phase, Camera camera)
+        {
+            if (!logMeshLifecycle || rendererDiagnosticWatches.Count == 0) return;
+            string cameraName = camera != null ? camera.name : "<null camera>";
+            for (int i = 0; i < rendererDiagnosticWatches.Count; i++)
+            {
+                RendererDiagnosticWatch watch = rendererDiagnosticWatches[i];
+                if (watch == null || watch.renderer == null ||
+                    Time.frameCount > watch.finalFrame) continue;
+                LogRendererDiagnostic($"{phase} camera='{cameraName}' " +
+                    $"C{watch.cutSequence} R{watch.rendererIndex}", watch.renderer);
+            }
+        }
+
+        private void HandleDiagnosticLogMessage(string condition, string stackTrace,
+            LogType type)
+        {
+            if (!logMeshLifecycle || handlingDiagnosticLogCallback ||
+                string.IsNullOrEmpty(condition) ||
+                condition.IndexOf("does not match the expected mesh data size and vertex stride",
+                    StringComparison.Ordinal) < 0) return;
+            handlingDiagnosticLogCallback = true;
+            try
+            {
+                Debug.Log($"[UMA Dismemberment MeshDiag] NATIVE_WARNING frame={Time.frameCount} " +
+                    $"renderedFrame={Time.renderedFrameCount} type={type} message={condition}", this);
+                if (rendererDiagnosticWatches.Count > 0)
+                {
+                    for (int i = 0; i < rendererDiagnosticWatches.Count; i++)
+                    {
+                        RendererDiagnosticWatch watch = rendererDiagnosticWatches[i];
+                        if (watch?.renderer == null) continue;
+                        LogRendererDiagnostic($"NATIVE_WARNING C{watch.cutSequence} " +
+                            $"R{watch.rendererIndex}", watch.renderer);
+                    }
+                }
+                else
+                {
+                    SkinnedMeshRenderer[] renderers = currentData?.GetRenderers();
+                    if (renderers == null) return;
+                    for (int i = 0; i < renderers.Length; i++)
+                        if (renderers[i] != null)
+                            LogRendererDiagnostic($"NATIVE_WARNING UNWATCHED R{i}", renderers[i]);
+                }
+            }
+            finally
+            {
+                handlingDiagnosticLogCallback = false;
             }
         }
 
@@ -583,6 +732,11 @@ namespace UMA.Dismemberment
             if (currentData == null || renderers == null || renderers.Length == 0)
                 return Fail(DismembermentFailureReason.NotInitialized,
                     "UMA has not finished generating any renderers.", out failure);
+            int cutSequence = ++diagnosticCutSequence;
+            if (logMeshLifecycle)
+                Debug.Log($"[UMA Dismemberment MeshDiag] CUT_BEGIN C{cutSequence} " +
+                    $"frame={Time.frameCount} renderedFrame={Time.renderedFrameCount} " +
+                    $"bone='{bone.name}' renderers={renderers.Length}", this);
 
             int boneHash = UMAUtils.StringToHash(bone.name);
             if (preventRepeatedSlice && splitBoneHashes.Contains(boneHash))
@@ -604,6 +758,7 @@ namespace UMA.Dismemberment
             {
                 SkinnedMeshRenderer renderer = renderers[rendererIndex];
                 if (renderer == null || renderer.sharedMesh == null) continue;
+                LogRendererDiagnostic($"BUILD_INPUT C{cutSequence} R{rendererIndex}", renderer);
                 Transform[] rendererBones = renderer.bones;
                 bool[] includedBones = BuildRendererBoneMask(rendererBones, includedTransforms,
                     includedHashes, out bool rendererUsesTarget);
@@ -621,12 +776,19 @@ namespace UMA.Dismemberment
 
                 OwnedSourceRenderer existingState = FindOwnedState(renderer);
                 int existingCap = existingState?.capSubmeshIndex ?? -1;
+                BuildSurfacePolicies(renderer, renderer.sharedMesh.subMeshCount,
+                    renderer.sharedMesh.vertexCount, existingCap,
+                    out bool[] capEligibleSubmeshes, out bool[] doubleSidedSubmeshes,
+                    out bool[] capEligibleVertices, out bool[] doubleSidedVertices);
                 float effectiveSeamTolerance = seamWeldTolerance > 0f
                     ? seamWeldTolerance
                     : DismembermentMeshBuildOptions.DefaultSeamWeldTolerance;
                 var options = new DismembermentMeshBuildOptions(threshold, existingCap,
                     generateCaps, requireClosedCaps, capUvMetersPerTile, effectiveSeamTolerance,
-                    capUvMode, centeredCapUvPadding, fallbackBoneIndex);
+                    capUvMode, centeredCapUvPadding, fallbackBoneIndex,
+                    capEligibleSubmeshes, doubleSidedSubmeshes,
+                    clothingDoubleSidedDepthMeters, clothingCutSmoothing,
+                    capEligibleVertices, doubleSidedVertices);
                 DismembermentMeshBuildStatus status = DismembermentMeshBuilder.Build(
                     renderer.sharedMesh, includedBones, options,
                     out DismembermentMeshBuildResult build, out string buildError);
@@ -637,12 +799,22 @@ namespace UMA.Dismemberment
                     return Fail(DismembermentFailureReason.InvalidMesh,
                         $"Renderer '{renderer.name}' could not be sliced: {buildError}", out failure);
                 }
+                NameDiagnosticMesh(build.outerMesh, renderer.sharedMesh,
+                    cutSequence, rendererIndex, "OUTER_CANDIDATE");
+                NameDiagnosticMesh(build.detachedMesh, renderer.sharedMesh,
+                    cutSequence, rendererIndex, "DETACHED_CANDIDATE");
+                LogMeshDiagnostic($"BUILD_RESULT_OUTER C{cutSequence} R{rendererIndex}",
+                    build.outerMesh);
+                LogMeshDiagnostic($"BUILD_RESULT_DETACHED C{cutSequence} R{rendererIndex}",
+                    build.detachedMesh);
                 pending.Add(new PendingRenderer
                 {
                     source = renderer,
                     build = build,
                     materials = renderer.sharedMaterials,
-                    existingState = existingState
+                    existingState = existingState,
+                    cutSequence = cutSequence,
+                    rendererIndex = rendererIndex
                 });
             }
 
@@ -694,6 +866,9 @@ namespace UMA.Dismemberment
                     $"Could not commit the source renderers: {exception.Message}", out failure);
             }
             FinalizeSourceCommits(commits);
+            for (int i = 0; i < pending.Count; i++)
+                WatchRendererDiagnostics(pending[i].source, pending[i].cutSequence,
+                    pending[i].rendererIndex);
 
             var sourceRenderers = new SkinnedMeshRenderer[pending.Count];
             for (int i = 0; i < pending.Count; i++) sourceRenderers[i] = pending[i].source;
@@ -745,39 +920,165 @@ namespace UMA.Dismemberment
                 for (int loopIndex = 0; loopIndex < loops.Length; loopIndex++)
                 {
                     DismembermentBoundaryLoopData loop = loops[loopIndex];
-                    if (loop == null || loop.boundaryUV == null || loop.boundaryUV.Length < 3)
-                        continue;
-                    int submesh = loop.sourceSubmeshIndex;
-                    Material sourceMaterial = (uint)submesh < (uint)rendererMaterials.Length
-                        ? rendererMaterials[submesh] : null;
-                    SlotData slot = ResolveBoundarySlot(loop.sourceVertexIndices);
-                    OverlayDataAsset overlay = ResolveFirstOverlayAsset(slot);
-                    string[] overlayGroups = ResolveOverlayGroups(slot);
-                    CalculateBoundaryFrame(loop.boundaryLocalPositions,
-                        out Vector3 center, out Vector3 normal);
-                    surfaces.Add(new DismembermentCutSurface
+                    if (loop == null) continue;
+                    if (loop.sourceSubmeshIndex >= 0)
                     {
-                        sourceRenderer = item.source,
-                        sourceSubmeshIndex = submesh,
-                        sourceMaterial = sourceMaterial,
-                        sourceVertexIndices = (int[])loop.sourceVertexIndices.Clone(),
-                        boundaryUV = (Vector2[])loop.boundaryUV.Clone(),
-                        boundaryLocalPositions =
-                            (Vector3[])loop.boundaryLocalPositions.Clone(),
-                        loopStarts = new[] { 0 },
-                        loopCounts = new[] { loop.boundaryUV.Length },
-                        uvBounds = CalculateUVBounds(loop.boundaryUV),
-                        localCenter = center,
-                        localNormal = normal,
-                        slotName = slot?.slotName,
-                        slotGroup = slot?.asset != null ? slot.asset.slotGroup : null,
-                        overlayGroup = overlay != null ? overlay.overlayGroup : null,
-                        overlayGroups = overlayGroups,
-                        umaMaterialName = slot?.material != null ? slot.material.name : null
-                    });
+                        AddCutSurface(surfaces, item.source, rendererMaterials,
+                            loop.sourceSubmeshIndex, loop.sourceVertexIndices,
+                            loop.boundaryUV, loop.boundaryLocalPositions, true);
+                        continue;
+                    }
+                    AddMixedBoundaryCutSurfaces(surfaces, item.source,
+                        rendererMaterials, loop);
                 }
             }
             return surfaces.ToArray();
+        }
+
+        private void AddMixedBoundaryCutSurfaces(List<DismembermentCutSurface> surfaces,
+            SkinnedMeshRenderer renderer, Material[] rendererMaterials,
+            DismembermentBoundaryLoopData loop)
+        {
+            int edgeCount = loop.edgeSubmeshIndices?.Length ?? 0;
+            if (edgeCount == 0 || loop.edgeFromSourceIndices == null ||
+                loop.edgeToSourceIndices == null ||
+                loop.edgeFromSourceIndices.Length != edgeCount ||
+                loop.edgeToSourceIndices.Length != edgeCount || renderer.sharedMesh == null)
+                return;
+
+            int[] submeshes = new int[edgeCount];
+            for (int edge = 0; edge < edgeCount; edge++)
+            {
+                int candidate = loop.edgeSubmeshIndices[edge];
+                submeshes[edge] = candidate >= 0 ? candidate :
+                    ResolveBoundarySubmesh(renderer, loop.edgeFromSourceIndices[edge]);
+            }
+
+            int start = 0;
+            for (int edge = 0; edge < edgeCount; edge++)
+            {
+                int previous = (edge + edgeCount - 1) % edgeCount;
+                if (submeshes[edge] == submeshes[previous] &&
+                    loop.edgeFromSourceIndices[edge] ==
+                    loop.edgeToSourceIndices[previous]) continue;
+                start = edge;
+                break;
+            }
+
+            Vector3[] positions = renderer.sharedMesh.vertices;
+            Vector2[] uv = renderer.sharedMesh.uv;
+            int consumed = 0;
+            while (consumed < edgeCount)
+            {
+                int firstEdge = (start + consumed) % edgeCount;
+                int submesh = submeshes[firstEdge];
+                int run = 1;
+                while (consumed + run < edgeCount)
+                {
+                    int previous = (start + consumed + run - 1) % edgeCount;
+                    int next = (start + consumed + run) % edgeCount;
+                    if (submeshes[next] != submesh ||
+                        loop.edgeFromSourceIndices[next] !=
+                        loop.edgeToSourceIndices[previous]) break;
+                    run++;
+                }
+                if (submesh >= 0)
+                {
+                    var indices = new int[run + 1];
+                    indices[0] = loop.edgeFromSourceIndices[firstEdge];
+                    for (int edge = 0; edge < run; edge++)
+                    {
+                        int sourceEdge = (start + consumed + edge) % edgeCount;
+                        indices[edge + 1] = loop.edgeToSourceIndices[sourceEdge];
+                    }
+                    CopyBoundaryVertexData(indices, positions, uv,
+                        out Vector3[] segmentPositions, out Vector2[] segmentUv);
+                    AddCutSurface(surfaces, renderer, rendererMaterials, submesh,
+                        indices, segmentUv, segmentPositions, false);
+                }
+                consumed += run;
+            }
+        }
+
+        private int ResolveBoundarySubmesh(SkinnedMeshRenderer renderer, int sourceVertex)
+        {
+            SlotData slot = FindSlotForVertexSafe(currentData?.umaRecipe?.slotDataList,
+                sourceVertex);
+            List<UMAData.GeneratedMaterial> materials =
+                currentData?.generatedMaterials?.materials;
+            if (slot == null || materials == null) return -1;
+            int resolved = -1;
+            for (int materialIndex = 0; materialIndex < materials.Count; materialIndex++)
+            {
+                UMAData.GeneratedMaterial generated = materials[materialIndex];
+                if (generated?.skinnedMeshRenderer != renderer ||
+                    !GeneratedMaterialContainsSlot(generated, slot)) continue;
+                if (resolved >= 0 && resolved != generated.materialIndex) return -1;
+                resolved = generated.materialIndex;
+            }
+            return resolved;
+        }
+
+        private static bool GeneratedMaterialContainsSlot(
+            UMAData.GeneratedMaterial generated, SlotData slot)
+        {
+            if (generated?.materialFragments == null || slot == null) return false;
+            for (int fragment = 0; fragment < generated.materialFragments.Count; fragment++)
+                if (generated.materialFragments[fragment]?.slotData == slot) return true;
+            return false;
+        }
+
+        private static void CopyBoundaryVertexData(int[] indices, Vector3[] sourcePositions,
+            Vector2[] sourceUv, out Vector3[] positions, out Vector2[] uv)
+        {
+            positions = new Vector3[indices.Length];
+            uv = new Vector2[indices.Length];
+            bool hasUv = sourceUv != null && sourceUv.Length == sourcePositions.Length;
+            for (int i = 0; i < indices.Length; i++)
+            {
+                int index = indices[i];
+                if ((uint)index >= (uint)sourcePositions.Length) continue;
+                positions[i] = sourcePositions[index];
+                if (hasUv) uv[i] = sourceUv[index];
+            }
+        }
+
+        private void AddCutSurface(List<DismembermentCutSurface> surfaces,
+            SkinnedMeshRenderer renderer, Material[] rendererMaterials, int submesh,
+            int[] indices, Vector2[] uv, Vector3[] positions, bool closed)
+        {
+            int minimumVertices = closed ? 3 : 2;
+            if (renderer == null || renderer.sharedMesh == null || submesh < 0 ||
+                submesh >= renderer.sharedMesh.subMeshCount || indices == null || uv == null ||
+                positions == null || indices.Length < minimumVertices ||
+                uv.Length != indices.Length || positions.Length != indices.Length) return;
+            Material sourceMaterial = rendererMaterials != null &&
+                (uint)submesh < (uint)rendererMaterials.Length
+                ? rendererMaterials[submesh] : null;
+            SlotData slot = ResolveBoundarySlot(indices);
+            OverlayDataAsset overlay = ResolveFirstOverlayAsset(slot);
+            string[] overlayGroups = ResolveOverlayGroups(slot);
+            CalculateBoundaryFrame(positions, out Vector3 center, out Vector3 normal);
+            surfaces.Add(new DismembermentCutSurface
+            {
+                sourceRenderer = renderer,
+                sourceSubmeshIndex = submesh,
+                sourceMaterial = sourceMaterial,
+                sourceVertexIndices = (int[])indices.Clone(),
+                boundaryUV = (Vector2[])uv.Clone(),
+                boundaryLocalPositions = (Vector3[])positions.Clone(),
+                loopStarts = new[] { 0 },
+                loopCounts = new[] { uv.Length },
+                boundaryClosed = closed,
+                uvBounds = CalculateUVBounds(uv),
+                localCenter = center,
+                localNormal = normal,
+                slotName = slot?.slotName,
+                slotGroup = slot?.asset != null ? slot.asset.slotGroup : null,
+                overlayGroup = overlay != null ? overlay.overlayGroup : null,
+                overlayGroups = overlayGroups,
+                umaMaterialName = slot?.material != null ? slot.material.name : null
+            });
         }
 
         private SlotData ResolveBoundarySlot(int[] sourceIndices)
@@ -798,6 +1099,7 @@ namespace UMA.Dismemberment
 
         private static SlotData FindSlotForVertexSafe(SlotData[] slots, int vertex)
         {
+            if (slots == null || vertex < 0) return null;
             for (int i = 0; i < slots.Length; i++)
             {
                 SlotData slot = slots[i];
@@ -829,6 +1131,113 @@ namespace UMA.Dismemberment
                 if (!string.IsNullOrEmpty(group) && !groups.Contains(group)) groups.Add(group);
             }
             return groups.ToArray();
+        }
+
+        private void BuildSurfacePolicies(SkinnedMeshRenderer renderer, int submeshCount,
+            int vertexCount, int existingCapSubmesh, out bool[] capEligibleSubmeshes,
+            out bool[] doubleSidedSubmeshes, out bool[] capEligibleVertices,
+            out bool[] doubleSidedVertices)
+        {
+            if (!capOnlyBodyParts)
+            {
+                // Null preserves the mesh builder's legacy all-surfaces cap behavior.
+                capEligibleSubmeshes = null;
+                doubleSidedSubmeshes = null;
+                capEligibleVertices = null;
+                doubleSidedVertices = null;
+                return;
+            }
+
+            capEligibleSubmeshes = new bool[Mathf.Max(0, submeshCount)];
+            doubleSidedSubmeshes = new bool[Mathf.Max(0, submeshCount)];
+            for (int i = 0; i < doubleSidedSubmeshes.Length; i++)
+                doubleSidedSubmeshes[i] = i != existingCapSubmesh;
+
+            List<UMAData.GeneratedMaterial> materials =
+                currentData?.generatedMaterials?.materials;
+            if (materials != null)
+            {
+                for (int i = 0; i < materials.Count; i++)
+                {
+                    UMAData.GeneratedMaterial generated = materials[i];
+                    if (generated?.skinnedMeshRenderer != renderer ||
+                        (uint)generated.materialIndex >= (uint)submeshCount) continue;
+                    bool body = GeneratedMaterialUsesOverlayGroups(generated,
+                        bodyOverlayGroups);
+                    capEligibleSubmeshes[generated.materialIndex] = body;
+                    doubleSidedSubmeshes[generated.materialIndex] = !body;
+                }
+            }
+            if ((uint)existingCapSubmesh < (uint)doubleSidedSubmeshes.Length)
+                doubleSidedSubmeshes[existingCapSubmesh] = false;
+
+            // A generated material can contain both Skin and clothing slots in one atlas.
+            // Vertex ranges retain the originating slot, so use them as the precise policy and
+            // keep the submesh policy only as a fallback for non-standard generated meshes.
+            capEligibleVertices = new bool[Mathf.Max(0, vertexCount)];
+            doubleSidedVertices = new bool[Mathf.Max(0, vertexCount)];
+            bool mappedVertices = false;
+            SlotData[] slots = currentData?.umaRecipe?.slotDataList;
+            if (slots != null)
+            {
+                for (int slotIndex = 0; slotIndex < slots.Length; slotIndex++)
+                {
+                    SlotData slot = slots[slotIndex];
+                    if (slot?.asset?.meshData == null) continue;
+                    int start = slot.vertexOffset;
+                    if (start < 0 || start >= vertexCount) continue;
+                    int end = Mathf.Min(vertexCount,
+                        start + slot.asset.meshData.vertexCount);
+                    if (end <= start) continue;
+                    bool body = SlotUsesOverlayGroups(slot, bodyOverlayGroups);
+                    for (int vertex = start; vertex < end; vertex++)
+                    {
+                        capEligibleVertices[vertex] = body;
+                        doubleSidedVertices[vertex] = !body;
+                    }
+                    mappedVertices = true;
+                }
+            }
+            if (!mappedVertices)
+            {
+                capEligibleVertices = null;
+                doubleSidedVertices = null;
+            }
+        }
+
+        internal static bool GeneratedMaterialUsesOverlayGroups(
+            UMAData.GeneratedMaterial generated, string[] overlayGroups)
+        {
+            if (generated?.materialFragments == null) return false;
+            for (int fragmentIndex = 0;
+                fragmentIndex < generated.materialFragments.Count; fragmentIndex++)
+            {
+                SlotData slot = generated.materialFragments[fragmentIndex]?.slotData;
+                if (SlotUsesOverlayGroups(slot, overlayGroups)) return true;
+            }
+            return false;
+        }
+
+        private static bool SlotUsesOverlayGroups(SlotData slot, string[] overlayGroups)
+        {
+            List<OverlayData> overlays = slot?.GetOverlayList();
+            if (overlays == null) return false;
+            bool useDefaultSkinGroup = overlayGroups == null || overlayGroups.Length == 0;
+            for (int overlayIndex = 0; overlayIndex < overlays.Count; overlayIndex++)
+            {
+                string group = overlays[overlayIndex]?.asset != null
+                    ? overlays[overlayIndex].asset.overlayGroup : null;
+                if (string.IsNullOrEmpty(group)) continue;
+                if (useDefaultSkinGroup)
+                {
+                    if (string.Equals(group, "Skin", StringComparison.Ordinal)) return true;
+                    continue;
+                }
+                for (int groupIndex = 0; groupIndex < overlayGroups.Length; groupIndex++)
+                    if (string.Equals(group, overlayGroups[groupIndex],
+                        StringComparison.Ordinal)) return true;
+            }
+            return false;
         }
 
         private static Rect CalculateUVBounds(Vector2[] uv)
@@ -987,7 +1396,7 @@ namespace UMA.Dismemberment
             return -1;
         }
 
-        private static bool TryCreateDetachedHierarchy(UMAData data, Transform sourceTargetBone,
+        private bool TryCreateDetachedHierarchy(UMAData data, Transform sourceTargetBone,
             List<PendingRenderer> pending, Material capMaterial, bool trimDetachedRig,
             out GameObject detachedRoot,
             out Transform detachedTargetBone, List<SkinnedMeshRenderer> detachedRenderers,
@@ -1082,11 +1491,15 @@ namespace UMA.Dismemberment
                 renderer.rootBone = item.source.rootBone != null &&
                     boneMap.TryGetValue(item.source.rootBone, out Transform mappedRoot)
                     ? mappedRoot : boneMap[sourceSkeletonRoot];
+                SetDiagnosticMeshStage(item.build.detachedMesh, item.cutSequence,
+                    item.rendererIndex, "DETACHED_LIVE");
                 renderer.sharedMesh = item.build.detachedMesh;
                 Material[] materials = BuildMaterialArray(item.materials,
                     item.build.detachedMesh.subMeshCount, item.build.capSubmeshIndex, capMaterial);
                 CopyRendererState(item.source, renderer, materials);
                 CopyBlendShapeWeights(item.source, renderer);
+                LogRendererDiagnostic($"DETACHED_BOUND C{item.cutSequence} " +
+                    $"R{item.rendererIndex}", renderer);
                 detachedRenderers.Add(renderer);
                 detachedMeshes.Add(item.build.detachedMesh);
                 item.build.detachedMesh = null;
@@ -1364,15 +1777,23 @@ namespace UMA.Dismemberment
                 previousCapSubmesh = state.capSubmeshIndex,
                 previousRendererMesh = pending.source.sharedMesh,
                 previousRendererMaterials = pending.source.sharedMaterials,
-                previousRendererBounds = pending.source.localBounds
+                previousRendererBounds = pending.source.localBounds,
+                cutSequence = pending.cutSequence,
+                rendererIndex = pending.rendererIndex
             };
             state.dismembermentOwnedMesh = pending.build.outerMesh;
             state.capSubmeshIndex = pending.build.capSubmeshIndex;
             pending.build.outerMesh = null;
+            LogRendererDiagnostic($"COMMIT_BEFORE C{pending.cutSequence} " +
+                $"R{pending.rendererIndex}", pending.source);
+            SetDiagnosticMeshStage(state.dismembermentOwnedMesh, pending.cutSequence,
+                pending.rendererIndex, "SOURCE_LIVE");
             RebindRendererMesh(pending.source, state.dismembermentOwnedMesh);
             pending.source.sharedMaterials = BuildMaterialArray(pending.materials,
                 state.dismembermentOwnedMesh.subMeshCount, state.capSubmeshIndex, capMaterial);
             pending.source.localBounds = snapshot.previousRendererBounds;
+            LogRendererDiagnostic($"COMMIT_AFTER C{pending.cutSequence} " +
+                $"R{pending.rendererIndex}", pending.source);
             return snapshot;
         }
 
@@ -1395,9 +1816,19 @@ namespace UMA.Dismemberment
             }
         }
 
-        private static void FinalizeSourceCommits(List<SourceCommitSnapshot> commits)
+        private void FinalizeSourceCommits(List<SourceCommitSnapshot> commits)
         {
-            for (int i = 0; i < commits.Count; i++) DestroyOwnedObject(commits[i].previousOwnedMesh);
+            for (int i = 0; i < commits.Count; i++)
+            {
+                SourceCommitSnapshot snapshot = commits[i];
+                Mesh previous = snapshot.previousOwnedMesh;
+                if (previous == null) continue;
+                SetDiagnosticMeshStage(previous, snapshot.cutSequence,
+                    snapshot.rendererIndex, $"RETIRED_BY_C{snapshot.cutSequence}");
+                LogMeshDiagnostic($"CLEANUP_SCHEDULED C{snapshot.cutSequence} " +
+                    $"R{snapshot.rendererIndex}", previous);
+                DestroyOwnedObject(previous);
+            }
         }
 
         private static Material[] BuildMaterialArray(Material[] source, int submeshCount,
@@ -1438,14 +1869,189 @@ namespace UMA.Dismemberment
             ownedSourceRenderers.Clear();
         }
 
-        private static void RebindRendererMesh(SkinnedMeshRenderer renderer, Mesh mesh)
+        private void RebindRendererMesh(SkinnedMeshRenderer renderer, Mesh mesh)
         {
             if (renderer == null) return;
+            UMARuntimeSurfaceDecalController surfaceController =
+                GetComponent<UMARuntimeSurfaceDecalController>() ??
+                renderer.GetComponentInParent<UMARuntimeSurfaceDecalController>(true);
+            surfaceController?.PrepareForRendererMeshChange(renderer);
             bool wasEnabled = renderer.enabled;
+            Transform[] bones = renderer.bones;
+            Transform rootBone = renderer.rootBone;
+            LogRendererDiagnostic("REBIND_BEGIN", renderer);
             renderer.enabled = false;
+            LogRendererDiagnostic("REBIND_DISABLED", renderer);
             renderer.sharedMesh = null;
+            LogRendererDiagnostic("REBIND_NULL", renderer);
             renderer.sharedMesh = mesh;
+            LogRendererDiagnostic("REBIND_ASSIGNED", renderer);
+            // Reassigning the palette after sharedMesh mirrors UMA's own finalization order and
+            // forces Unity to rebuild the mesh-to-skeleton skinning binding for the new buffers.
+            renderer.bones = bones;
+            renderer.rootBone = rootBone;
             renderer.enabled = wasEnabled;
+            LogRendererDiagnostic("REBIND_COMPLETE", renderer);
+        }
+
+        private void WatchRendererDiagnostics(SkinnedMeshRenderer renderer, int cutSequence,
+            int rendererIndex)
+        {
+            if (!logMeshLifecycle || renderer == null) return;
+            int traceFrames = Mathf.Max(1, meshLifecycleTraceFrames);
+            for (int i = 0; i < rendererDiagnosticWatches.Count; i++)
+            {
+                RendererDiagnosticWatch existing = rendererDiagnosticWatches[i];
+                if (existing.renderer != renderer) continue;
+                existing.cutSequence = cutSequence;
+                existing.rendererIndex = rendererIndex;
+                existing.lastLateUpdateFrame = -1;
+                existing.finalFrame = Time.frameCount + traceFrames;
+                return;
+            }
+            rendererDiagnosticWatches.Add(new RendererDiagnosticWatch
+            {
+                renderer = renderer,
+                cutSequence = cutSequence,
+                rendererIndex = rendererIndex,
+                finalFrame = Time.frameCount + traceFrames
+            });
+        }
+
+        private void NameDiagnosticMesh(Mesh mesh, Mesh source, int cutSequence,
+            int rendererIndex, string stage)
+        {
+            if (!logMeshLifecycle || mesh == null) return;
+            string sourceName = source != null ? source.name : mesh.name;
+            mesh.name = BuildDiagnosticMeshName(sourceName, mesh, cutSequence,
+                rendererIndex, stage);
+        }
+
+        private void SetDiagnosticMeshStage(Mesh mesh, int cutSequence, int rendererIndex,
+            string stage)
+        {
+            if (!logMeshLifecycle || mesh == null) return;
+            mesh.name = BuildDiagnosticMeshName(mesh.name, mesh, cutSequence,
+                rendererIndex, stage);
+        }
+
+        private string BuildDiagnosticMeshName(string sourceName, Mesh mesh, int cutSequence,
+            int rendererIndex, string stage)
+        {
+            string baseName = string.IsNullOrWhiteSpace(sourceName) ? "UMAMesh" : sourceName;
+            int diagnosticIndex = baseName.IndexOf(" [UMA-DIAG ", StringComparison.Ordinal);
+            if (diagnosticIndex >= 0) baseName = baseName.Substring(0, diagnosticIndex);
+            const string sourceSuffix = " Dismembered Source";
+            const string detachedSuffix = " Detached";
+            int sourceSuffixIndex = baseName.IndexOf(sourceSuffix, StringComparison.Ordinal);
+            int detachedSuffixIndex = baseName.IndexOf(detachedSuffix, StringComparison.Ordinal);
+            int suffixIndex = sourceSuffixIndex < 0 ? detachedSuffixIndex :
+                detachedSuffixIndex < 0 ? sourceSuffixIndex :
+                Mathf.Min(sourceSuffixIndex, detachedSuffixIndex);
+            if (suffixIndex >= 0) baseName = baseName.Substring(0, suffixIndex);
+            return $"{baseName} [UMA-DIAG C{cutSequence:D3} R{rendererIndex:D2} " +
+                $"{stage} M{GetDiagnosticMeshId(mesh):D3}]";
+        }
+
+        private int GetDiagnosticMeshId(Mesh mesh)
+        {
+            if (mesh == null) return 0;
+            if (diagnosticMeshIds.TryGetValue(mesh, out int id)) return id;
+            id = nextDiagnosticMeshId++;
+            diagnosticMeshIds.Add(mesh, id);
+            return id;
+        }
+
+        private void LogRendererDiagnostic(string phase, SkinnedMeshRenderer renderer)
+        {
+            if (!logMeshLifecycle) return;
+            if (renderer == null)
+            {
+                Debug.Log($"[UMA Dismemberment MeshDiag] {phase} frame={Time.frameCount} " +
+                    "renderer=<null>", this);
+                return;
+            }
+            Transform[] bones = renderer.bones;
+            int nullBones = 0;
+            if (bones != null)
+                for (int i = 0; i < bones.Length; i++)
+                    if (bones[i] == null) nullBones++;
+            Mesh mesh = renderer.sharedMesh;
+            Debug.Log($"[UMA Dismemberment MeshDiag] {phase} frame={Time.frameCount} " +
+                $"renderedFrame={Time.renderedFrameCount} renderer='{renderer.name}' " +
+                $"enabled={renderer.enabled} active={renderer.gameObject.activeInHierarchy} " +
+                $"forceOff={renderer.forceRenderingOff} updateOffscreen={renderer.updateWhenOffscreen} " +
+                $"skinnedMotionVectors={renderer.skinnedMotionVectors} quality={renderer.quality} " +
+                $"vertexBufferTarget={renderer.vertexBufferTarget} bones={bones?.Length ?? 0} " +
+                $"nullBones={nullBones} rootBone='{(renderer.rootBone != null ? renderer.rootBone.name : "<null>")}' " +
+                $"materials={renderer.sharedMaterials.Length} mesh={DescribeMesh(mesh)}", this);
+        }
+
+        private void LogMeshDiagnostic(string phase, Mesh mesh)
+        {
+            if (!logMeshLifecycle) return;
+            Debug.Log($"[UMA Dismemberment MeshDiag] {phase} frame={Time.frameCount} " +
+                $"renderedFrame={Time.renderedFrameCount} mesh={DescribeMesh(mesh)}", this);
+        }
+
+        private string DescribeMesh(Mesh mesh)
+        {
+            if (mesh == null) return "<null>";
+            int diagnosticId = GetDiagnosticMeshId(mesh);
+            try
+            {
+                var builder = new StringBuilder(1024);
+                builder.Append("M").Append(diagnosticId).Append(" '").Append(mesh.name)
+                    .Append("' vertices=").Append(mesh.vertexCount)
+                    .Append(" submeshes=").Append(mesh.subMeshCount)
+                    .Append(" blendShapes=").Append(mesh.blendShapeCount)
+                    .Append(" bindposes=").Append(mesh.bindposes.Length)
+                    .Append(" readable=").Append(mesh.isReadable);
+
+                NativeArray<byte> bonesPerVertex = mesh.GetBonesPerVertex();
+                NativeArray<BoneWeight1> weights = mesh.GetAllBoneWeights();
+                int maximumBoneIndex = -1;
+                for (int i = 0; i < weights.Length; i++)
+                    maximumBoneIndex = Mathf.Max(maximumBoneIndex, weights[i].boneIndex);
+                builder.Append(" bonesPerVertex=").Append(bonesPerVertex.Length)
+                    .Append(" weights=").Append(weights.Length)
+                    .Append(" maxBoneIndex=").Append(maximumBoneIndex);
+
+                VertexAttributeDescriptor[] attributes = mesh.GetVertexAttributes();
+                builder.Append(" attributes=[");
+                for (int i = 0; i < attributes.Length; i++)
+                {
+                    if (i > 0) builder.Append("; ");
+                    VertexAttributeDescriptor attribute = attributes[i];
+                    builder.Append(attribute.attribute).Append(':').Append(attribute.format)
+                        .Append('x').Append(attribute.dimension)
+                        .Append(" s").Append(attribute.stream)
+                        .Append(" o").Append(mesh.GetVertexAttributeOffset(attribute.attribute));
+                }
+                builder.Append("] streams=[");
+                int streamCount = 0;
+                for (int i = 0; i < attributes.Length; i++)
+                    streamCount = Mathf.Max(streamCount, attributes[i].stream + 1);
+                using (Mesh.MeshDataArray data = Mesh.AcquireReadOnlyMeshData(mesh))
+                {
+                    for (int stream = 0; stream < streamCount; stream++)
+                    {
+                        if (stream > 0) builder.Append("; ");
+                        int stride = mesh.GetVertexBufferStride(stream);
+                        int bytes = data[0].GetVertexData<byte>(stream).Length;
+                        builder.Append('s').Append(stream).Append(" stride=").Append(stride)
+                            .Append(" bytes=").Append(bytes)
+                            .Append(" expected=").Append((long)mesh.vertexCount * stride);
+                    }
+                }
+                builder.Append(']');
+                return builder.ToString();
+            }
+            catch (Exception exception)
+            {
+                return $"M{diagnosticId} '{mesh.name}' describeFailed=" +
+                    $"{exception.GetType().Name}: {exception.Message}";
+            }
         }
 
         private void DestroyDetachedPieces()

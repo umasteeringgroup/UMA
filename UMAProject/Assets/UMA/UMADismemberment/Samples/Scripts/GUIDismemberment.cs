@@ -31,11 +31,6 @@ public sealed class GUIDismemberment : MonoBehaviour
             dismemberment = avatar.GetComponent<UmaDismemberment>();
     }
 
-    private void UnDo()
-    {
-        
-    }
-
     private void OnClick()
     {
         ResolveDismemberment();

@@ -129,9 +129,32 @@ The first exact match with a non-null material is used. If there is no match, th
 
 #### Require Closed Caps
 
-Keep this enabled for production while validating content. If a renderer has an open, branched, or non-manifold cut boundary, the complete dismemberment request is rejected before any source renderer is changed. This avoids partially sliced characters and obvious holes.
+Keep this enabled for production while validating content. If a cap-eligible body surface has an
+open, branched, or non-manifold cut boundary, the complete dismemberment request is rejected before
+any source renderer is changed. This avoids partially sliced characters and obvious anatomical
+holes. Clothing boundaries are not subject to this closed-cap requirement: authored garment hems,
+open shells, and imperfect clothing seams can still be cut and use the local two-sided interior band.
 
 Disable it only when an intentionally open result is acceptable or a separate gore mesh completely covers the cut. With it disabled, an invalid open/non-manifold boundary can continue without a generated cap for that renderer. A degenerate or self-intersecting closed boundary may still be impossible to triangulate and can still reject the cut.
+
+#### Body-only caps and clothing interiors
+
+Keep **Cap Only Body Parts** enabled for the normal character setup. A boundary receives the meat
+cap only when its originating slot contains an overlay whose group is listed in **Body Overlay
+Groups**. This remains a per-slot decision when UMA packs skin and clothing into the same material
+or atlas. The default is `Skin`, UMA's standard base-skin overlay group. Add project-specific skin,
+creature-body, or prosthetic groups when those surfaces should also expose the cap. Disable this
+option to restore the legacy behavior that caps every affected surface.
+
+All other generated surfaces are treated as clothing. They remain open at the cut and receive
+reversed interior-facing triangles only within **Clothing Double Sided Depth Meters** of the cut
+edge. The default `0.1` creates a 10 cm interior band without changing the garment material or
+making the complete garment double-sided. Set it to zero to leave clothing single-sided.
+
+**Clothing Cut Smoothing** averages nearby garment weights and then requires two of a triangle's
+three vertices to exceed the cut threshold. This removes isolated triangles caused by a single
+slightly misweighted vertex. The default `0.5` is a conservative correction; lower it to preserve
+more of the authored boundary or raise it when a garment has visibly noisy weights.
 
 #### Cap UV Meters Per Tile
 
@@ -155,7 +178,9 @@ Each **Sliceable Human Bones** row has its own **Cap UV Mapping** selection:
 
 **Centered UV Padding** defaults to `0.02`, producing UVs inside `0.02..0.98` rather than touching the texture border. Padding helps prevent sampling the opposite edge when the texture uses bilinear filtering or an atlas. Use a clamp texture wrap mode for centered cap textures.
 
-Body and armor shells can produce multiple independent cap loops. Centered mapping gives each loop its own complete centered UV fit, so each shell receives the full cross-section texture rather than sharing a single atlas region.
+Body shells can produce multiple independent cap loops. Centered mapping gives each eligible loop
+its own complete centered UV fit. Clothing loops do not use the cap while **Cap Only Body Parts** is
+enabled.
 
 #### Seam Weld Tolerance
 
@@ -169,14 +194,18 @@ The default is `0.0001` meters, or 0.1 mm under Unity's one-unit-per-meter conve
 
 The threshold determines how much accumulated influence from the selected bone group a vertex needs before it can pull a triangle onto the detached piece.
 
-The algorithm adds the weights from the selected bone and, when enabled, all included child bones. A triangle follows the detached side when **any one of its vertices** exceeds the threshold.
+The algorithm adds the weights from the selected bone and, when enabled, all included child bones.
+Anatomical/body triangles retain the inclusive rule: a triangle follows the detached side when any
+one vertex exceeds the threshold. Clothing uses the smoothed two-of-three rule described above.
 
 This has two important artistic consequences:
 
 - lowering the threshold generally selects more mixed-weight geometry and makes the detached region larger;
 - raising the threshold generally selects only strongly weighted geometry and makes the detached region smaller.
 
-Because whole triangles move together, a large triangle with only one qualifying vertex can extend the cut farther than expected. Clean deformation topology around the intended cut zone matters more than very fine numerical adjustment.
+Because whole triangles move together, coarse topology can still make a cut angular. Clothing
+smoothing removes isolated single-vertex spikes, but it cannot add geometry; clean deformation
+topology around the intended cut zone remains important.
 
 Start at `0.5`, then test values in steps of approximately `0.05`. Do not tune the threshold until the final body and wardrobe meshes are being generated; different topology or weighting can move the boundary.
 
@@ -784,15 +813,21 @@ surface fluid is the blood that remains attached to and travels over the charact
    behind as a wet trail; `3` deposits about 45 percent over 20 cm. Do not compensate for an
    incorrectly scaled character here.
 5. Choose routing. **Source Body** isolates detached material instances on the piece so only the
-   survivor receives the live atlas. **Shared Atlas** intentionally shows the same result on both
+   survivor receives the live generated texture. **Shared Atlas** intentionally shows the same result on both
    renderers. **Independent Detached Piece** clones only the affected detached generated material,
    restores its immutable base channel bindings, and gives that renderer an independently owned GPU
    compositor and simulation. Its material clone is released with `DismemberedPiece`.
 6. Test several poses, including upside down. Flow is projected from world gravity into the posed
    skinned surface field; it is not a fixed downward direction in UV space.
 
+Both `Atlas` and `NoAtlas` generated UMA materials are supported. A `NoAtlas` body may have separate
+generated textures for its head, torso, arms, and other slots even when they all share one
+`UMAMaterial` definition. The fluid controller resolves each cut boundary by its renderer and exact
+generated material/submesh index, so those textures remain independent. Slot identity is used only
+as a rebuild-safe fallback; an ambiguous shared `UMAMaterial` name is never guessed.
+
 The optional **Source Overlay** can supply the corresponding UMA channel textures and a shared alpha
-mask. This is the supported material-like input for the RT compositor. Arbitrary materials are only
+mask. This is the supported material-like input for the generated-texture compositor. Arbitrary materials are only
 appropriate for **Fallback Trail Material**, because an arbitrary shader does not define which pass
 or channel semantics an atlas compositor should use.
 
@@ -800,12 +835,12 @@ or channel semantics an atlas compositor should use.
 
 The defaults cap the simulation at 512 pixels, simulate near 24 Hz, refresh the posed field near
 8 Hz, and composite near 12 Hz. Holding effects stop simulation and do not recompose until they
-start fading. Off-screen effects reduce their rates. Several cuts on one atlas share its expensive
+start fading. Off-screen effects reduce their rates. Several cuts on one generated texture share its expensive
 surface field, injection target, seam map, command buffer, and final outputs; each handle retains an
 independent film state so clearing one cut cannot erase another.
 
 Keep Albedo-only profiles for crowds. Increase resolution only when a close-up visibly needs a
-narrower stream. Higher atlas resolution does not require equal simulation resolution: the film is
+narrower stream. Higher generated-texture resolution does not require equal simulation resolution: the film is
 upsampled during the final composite. Mips are generated once after an affected output batch.
 
 ### Bleeding from a bullet or standalone RT decal
@@ -858,15 +893,23 @@ emission radius, so larger sources create broader, fuller drips. Set spacing to 
 **Bleed End Inset** keeps sources away from the tapered tips. Assign a Surface Fluid Profile to
 control their base color, speed, radius, trail deposition, holding time, and fade, or leave it empty
 for the runtime blood defaults. The system bounds unusually dense settings to 128 sources per cut.
+Leave the fluid profile's **Target Overlay Groups** empty to bleed from every affected surface,
+including jackets or armor. Populate it with one or more overlay-group names to emit only from
+matching surfaces; matching follows the same empty-means-all convention as RenderTexture decals.
+Use `Skin` to restrict a profile to UMA's default base-skin overlay group.
 
 In the sample, normal left-click places a bleeding bullet wound. To make a cut, hold Shift and press
 the left mouse button on the character, drag over the surface, and release. A thin red Game-view
 line shows the pending cut from mouse-down to the current cursor. Right-click or Escape cancels the
-pending drag. Both endpoints must be on the same connected generated renderer and
-material. The system refreshes the stored triangle anchor against the current animated pose on
-release, projects the straight drag densely onto the visible posed surface, and rejects depth
-discontinuities, disconnected surfaces, or large atlas-seam jumps; it never routes the finished cut
-along coarse triangle edges or through unrelated body and armor UVs.
+pending drag. `TryCreateProjectedCut` supports adjacent UMA renderer, slot, and material boundaries,
+including face-to-head and skin-to-clothing cuts. The system refreshes the stored triangle anchors
+against the current animated pose on release, densely samples the straight drag over every visible
+generated UMA surface, and writes a separate atlas-safe cut portion for each material. Those portions
+share one cut handle and their bleed sources retain the material underneath each source. Up to four
+missing four-pixel samples may bridge a narrow slot-border gap. A larger screen gap or a world-space
+depth discontinuity is rejected so the cut cannot jump to unrelated geometry. The non-camera
+`TryCreateCut` topology API remains a one-renderer/material operation; use `TryCreateProjectedCut`
+for interactive cross-slot cuts.
 
 ### Fadeable runtime decals
 
@@ -898,10 +941,22 @@ owned renderer/material lifetime is the detached root, not the regenerated avata
   the material may have no compatible texture channel, or compute may be unavailable.
 - **The line is magenta:** assign a supported **Fallback Trail Material** or ensure the packaged
   hidden fallback shader is included.
+- **A temporary red line appears:** the generated texture target could not be used, so the bounded
+  geometry fallback is active. It follows the affected character or detached part and removes
+  itself using **Fallback Holding Duration**, **Fallback Fade Duration**, and **Fallback Maximum
+  Lifetime**. Check controller diagnostics to correct the underlying target when GPU bleeding was
+  expected.
+- **A repeated cut reports a vertex-stride mismatch while the character still renders:** make sure
+  the current runtime code is present. Dismemberment invalidates the controller's hidden
+  surface-field command before replacing a skinned mesh, waits one frame for Unity's deformation
+  buffers to adopt the new layout, and does not call `BakeMesh` in the replacement callback.
 - **Blood appears on the detached piece unexpectedly:** use **Source Body**. Use **Shared Atlas**
   only when sharing is intentional.
 - **A stream stops at a seam:** verify the duplicated vertices share position, normal, and weights.
   Stopping is the safe fallback; cross-slot transfer is never guessed.
+- **Blood appears on the head instead of a cut arm or torso:** confirm the cut surface reports the
+  intended submesh in controller diagnostics. `NoAtlas` outputs that share one `UMAMaterial` must be
+  resolved by generated material index or slot identity, never by the shared material name alone.
 - **Blood is too fast or too broad:** check character scale first, then tune meter-based speed,
   source radius, viscosity, adhesion, and spread.
 - **A permanent decal disappeared:** this is not expected. The dynamic controller copies the final

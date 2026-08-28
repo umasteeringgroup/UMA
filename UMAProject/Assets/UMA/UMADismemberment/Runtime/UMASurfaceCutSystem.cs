@@ -5,6 +5,19 @@ using UnityEngine;
 
 namespace UMA.Dismemberment
 {
+    internal sealed class SurfaceCutAtlasTargetData
+    {
+        public SkinnedMeshRenderer renderer;
+        public int submesh;
+        public Mesh cutMesh;
+        public Mesh bleedMesh;
+        public float[] bleedDistances = Array.Empty<float>();
+        public Vector3[] bleedPositions = Array.Empty<Vector3>();
+        public Vector3[] bleedNormals = Array.Empty<Vector3>();
+        public float[] speedMultipliers = Array.Empty<float>();
+        public float[] sizeMultipliers = Array.Empty<float>();
+    }
+
     /// <summary>
     /// Builds tapered, atlas-attached surface cuts between two points on a posed UMA renderer.
     /// Mouse routes project onto the visible surface; non-camera callers retain a topology
@@ -32,8 +45,38 @@ namespace UMA.Dismemberment
             public Vector3[] positions;
             public Vector3[] normals;
             public Vector2[] uv;
+            public SurfaceTarget[] targets;
             public float[] cumulativeDistance;
             public float length;
+        }
+
+        private readonly struct SurfaceTarget : IEquatable<SurfaceTarget>
+        {
+            public readonly SkinnedMeshRenderer renderer;
+            public readonly int submesh;
+
+            public SurfaceTarget(SkinnedMeshRenderer renderer, int submesh)
+            {
+                this.renderer = renderer;
+                this.submesh = submesh;
+            }
+
+            public bool IsValid => renderer != null && submesh >= 0;
+            public bool Equals(SurfaceTarget other) => renderer == other.renderer &&
+                submesh == other.submesh;
+            public override bool Equals(object obj) => obj is SurfaceTarget other && Equals(other);
+            public override int GetHashCode() => submesh;
+        }
+
+        private sealed class BakedSurface
+        {
+            public SkinnedMeshRenderer renderer;
+            public Mesh shared;
+            public Mesh baked;
+            public Vector3[] world;
+            public Vector3[] worldNormals;
+            public Vector2[] uv;
+            public int[][] submeshTriangles;
         }
 
         private readonly struct HeapEntry
@@ -184,7 +227,8 @@ namespace UMA.Dismemberment
         /// <summary>
         /// Creates a cut by projecting the straight screen-space drag onto the posed mesh.
         /// This is the preferred path for mouse input because it matches the drag preview and
-        /// does not expose the renderer's triangle-edge topology in the finished cut.
+        /// does not expose the renderer's triangle-edge topology in the finished cut. Adjacent
+        /// UMA renderers, slots, material atlases, and UV islands are emitted as one logical cut.
         /// </summary>
         public bool TryCreateProjectedCut(SurfaceCutPoint start, SurfaceCutPoint end,
             Camera camera, Vector2 screenStart, Vector2 screenEnd,
@@ -205,6 +249,9 @@ namespace UMA.Dismemberment
                 error = "Both surface-cut points must be valid mesh hits.";
                 return false;
             }
+            if (projectionCamera != null)
+                return TryCreateProjectedCutAcrossSurfaces(start, end, profile,
+                    projectionCamera, screenStart, screenEnd, out result, out error);
             if (start.Renderer != end.Renderer || start.SubmeshIndex != end.SubmeshIndex)
             {
                 error = "A surface cut must remain on one generated renderer and material. " +
@@ -278,6 +325,101 @@ namespace UMA.Dismemberment
             finally { DestroyOwned(baked); }
         }
 
+        private bool TryCreateProjectedCutAcrossSurfaces(SurfaceCutPoint start,
+            SurfaceCutPoint end, UMASurfaceCutProfile profile, Camera camera,
+            Vector2 screenStart, Vector2 screenEnd, out SurfaceCutResult result,
+            out string error)
+        {
+            result = default;
+            error = null;
+            profile = profile != null ? profile : ResolveDefaultCutProfile();
+            if (surfaceDecals == null)
+                surfaceDecals = GetComponent<UMARuntimeSurfaceDecalController>();
+            if (surfaceDecals == null)
+            {
+                error = "UMARuntimeSurfaceDecalController is unavailable.";
+                return false;
+            }
+
+            List<BakedSurface> surfaces = BakeProjectedSurfaces();
+            try
+            {
+                if (!TryBuildMultiSurfaceProjectedPath(start, end, camera, screenStart,
+                    screenEnd, surfaces, out PathData path, out error)) return false;
+                if (path.length < 0.002f)
+                {
+                    error = "Surface cuts must be at least two millimeters long.";
+                    return false;
+                }
+
+                List<SurfaceTarget> targets = CollectPathTargets(path);
+                if (targets.Count == 0)
+                {
+                    error = "The projected cut did not resolve any UMA surface targets.";
+                    return false;
+                }
+
+                uint bleedSeed = CreateBleedSeed(path, profile.bleedSpacingSeed,
+                    ++bleedPatternSequence);
+                BuildBleedSources(path, profile.bleedSpacingMeters,
+                    profile.bleedSpacingVariation, profile.bleedEndInset, bleedSeed,
+                    profile.bleedSpeedVariation, profile.bleedSizeVariation,
+                    out float[] distances, out Vector3[] positions, out Vector3[] normals,
+                    out float[] speedMultipliers, out float[] sizeMultipliers);
+
+                var targetData = new List<SurfaceCutAtlasTargetData>(targets.Count);
+                for (int targetIndex = 0; targetIndex < targets.Count; targetIndex++)
+                {
+                    SurfaceTarget target = targets[targetIndex];
+                    BakedSurface bakedSurface = FindBakedSurface(surfaces, target.renderer);
+                    if (bakedSurface == null) continue;
+                    Mesh cutMesh = BuildCutMesh(target.renderer, target.submesh,
+                        bakedSurface.shared, bakedSurface.baked, path,
+                        profile.widthMeters * 0.5f, target, true, out string meshError);
+                    if (cutMesh == null)
+                    {
+                        error = meshError;
+                        DestroyTargetData(targetData);
+                        return false;
+                    }
+
+                    var data = new SurfaceCutAtlasTargetData
+                    {
+                        renderer = target.renderer,
+                        submesh = target.submesh,
+                        cutMesh = cutMesh
+                    };
+                    SelectBleedSourcesForTarget(path, target, distances, positions, normals,
+                        speedMultipliers, sizeMultipliers, data);
+                    if (data.bleedDistances.Length > 0)
+                        data.bleedMesh = InstantiateMesh(cutMesh,
+                            "UMA Surface Cut Bleed Sources");
+                    targetData.Add(data);
+                }
+
+                RuntimeDecalHandle cutHandle = surfaceDecals.AddSurfaceCut(targetData,
+                    profile, path.length);
+                if (!cutHandle.IsValid)
+                {
+                    // AddSurfaceCut takes ownership of cut meshes. Bleed meshes remain ours.
+                    DestroyBleedMeshes(targetData);
+                    error = LastSurfaceDiagnostic("The cut could not be bound to the UMA atlases.");
+                    return false;
+                }
+
+                RuntimeDecalHandle bleedHandle = surfaceDecals.StartBleedFromSurfaceCut(
+                    targetData, ResolveBleedProfile(profile));
+                int bleedCount = bleedHandle.IsValid ? distances.Length : 0;
+                result = new SurfaceCutResult(cutHandle, bleedHandle, bleedCount, path.length,
+                    targetData.Count);
+                return true;
+            }
+            finally
+            {
+                DestroyBakedSurfaces(surfaces);
+            }
+        }
+
         private bool TryBuildProjectedPath(SurfaceCutPoint start, SurfaceCutPoint end,
             Mesh shared, Mesh baked, Camera camera, Vector2 screenStart, Vector2 screenEnd,
             out PathData path, out string error)
@@ -349,6 +491,211 @@ namespace UMA.Dismemberment
             return TryFinalizePath(positions, normals, routeUv, out path, out error);
         }
 
+        private List<BakedSurface> BakeProjectedSurfaces()
+        {
+            var result = new List<BakedSurface>();
+            if (avatar == null) avatar = GetComponent<DynamicCharacterAvatar>();
+            SkinnedMeshRenderer[] renderers = avatar?.umaData?.GetRenderers();
+            if (renderers == null) return result;
+            for (int rendererIndex = 0; rendererIndex < renderers.Length; rendererIndex++)
+            {
+                SkinnedMeshRenderer renderer = renderers[rendererIndex];
+                Mesh shared = renderer != null ? renderer.sharedMesh : null;
+                if (shared == null || !renderer.enabled ||
+                    (raycastLayers.value & (1 << renderer.gameObject.layer)) == 0) continue;
+                Mesh baked = new Mesh { name = "UMA Multi-Surface Cut Raycast" };
+                try
+                {
+                    renderer.BakeMesh(baked);
+                    Vector3[] local = baked.vertices;
+                    Vector3[] localNormals = baked.normals;
+                    Vector2[] uv = shared.uv;
+                    if (local == null || uv == null || local.Length != uv.Length)
+                    {
+                        DestroyOwned(baked);
+                        continue;
+                    }
+                    var world = new Vector3[local.Length];
+                    var worldNormals = new Vector3[local.Length];
+                    bool hasNormals = localNormals != null && localNormals.Length == local.Length;
+                    for (int i = 0; i < local.Length; i++)
+                    {
+                        world[i] = renderer.transform.TransformPoint(local[i]);
+                        worldNormals[i] = hasNormals
+                            ? renderer.transform.TransformDirection(localNormals[i]).normalized
+                            : Vector3.up;
+                    }
+                    var triangles = new int[shared.subMeshCount][];
+                    for (int submesh = 0; submesh < triangles.Length; submesh++)
+                        triangles[submesh] = shared.GetTriangles(submesh);
+                    result.Add(new BakedSurface
+                    {
+                        renderer = renderer,
+                        shared = shared,
+                        baked = baked,
+                        world = world,
+                        worldNormals = worldNormals,
+                        uv = uv,
+                        submeshTriangles = triangles
+                    });
+                }
+                catch
+                {
+                    DestroyOwned(baked);
+                    throw;
+                }
+            }
+            return result;
+        }
+
+        private bool TryBuildMultiSurfaceProjectedPath(SurfaceCutPoint start,
+            SurfaceCutPoint end, Camera camera, Vector2 screenStart, Vector2 screenEnd,
+            List<BakedSurface> surfaces, out PathData path, out string error)
+        {
+            path = null;
+            error = null;
+            BakedSurface startSurface = FindBakedSurface(surfaces, start.Renderer);
+            BakedSurface endSurface = FindBakedSurface(surfaces, end.Renderer);
+            if (startSurface == null || endSurface == null)
+            {
+                error = "One of the cut endpoint renderers is no longer available.";
+                return false;
+            }
+            start = RefreshSurfacePoint(start, startSurface.shared, startSurface.baked);
+            end = RefreshSurfacePoint(end, endSurface.shared, endSurface.baked);
+
+            int segmentCount = Mathf.Clamp(
+                Mathf.CeilToInt(Vector2.Distance(screenStart, screenEnd) / 4f), 1, 128);
+            var positions = new List<Vector3>(segmentCount + 1) { start.WorldPosition };
+            var normals = new List<Vector3>(segmentCount + 1) { start.WorldNormal };
+            var routeUv = new List<Vector2>(segmentCount + 1) { start.AtlasUV };
+            var targets = new List<SurfaceTarget>(segmentCount + 1)
+            {
+                new SurfaceTarget(start.Renderer, start.SubmeshIndex)
+            };
+            float continuityLimit = Mathf.Max(0.05f,
+                Vector3.Distance(start.WorldPosition, end.WorldPosition) * 6f / segmentCount);
+            int missedSamples = 0;
+
+            for (int sample = 1; sample < segmentCount; sample++)
+            {
+                float t = sample / (float)segmentCount;
+                Ray ray = camera.ScreenPointToRay(Vector2.Lerp(screenStart, screenEnd, t));
+                if (!TryRaycastBakedSurfaces(ray, surfaces, out SurfaceCutPoint point))
+                {
+                    missedSamples++;
+                    if (missedSamples <= 4) continue;
+                    error = $"The straight cut left all visible UMA surfaces near {t:P0}. " +
+                        "Keep gaps between slots below roughly sixteen screen pixels.";
+                    return false;
+                }
+                if (Vector3.Distance(positions[positions.Count - 1], point.WorldPosition) >
+                    continuityLimit)
+                {
+                    error = "The straight cut crossed a surface depth discontinuity larger " +
+                        "than five centimeters.";
+                    return false;
+                }
+                missedSamples = 0;
+                AddProjectedPathPoint(point, positions, normals, routeUv, targets);
+            }
+
+            if (Vector3.Distance(positions[positions.Count - 1], end.WorldPosition) >
+                continuityLimit)
+            {
+                error = "The straight cut endpoint is not continuous with the sampled surface.";
+                return false;
+            }
+            AddProjectedPathPoint(end, positions, normals, routeUv, targets);
+            return TryFinalizePath(positions, normals, routeUv, targets, false,
+                out path, out error);
+        }
+
+        private bool TryRaycastBakedSurfaces(Ray ray, List<BakedSurface> surfaces,
+            out SurfaceCutPoint point)
+        {
+            point = default;
+            float closest = float.PositiveInfinity;
+            Vector3 direction = ray.direction.normalized;
+            for (int surfaceIndex = 0; surfaceIndex < surfaces.Count; surfaceIndex++)
+            {
+                BakedSurface surface = surfaces[surfaceIndex];
+                for (int submesh = 0; submesh < surface.submeshTriangles.Length; submesh++)
+                {
+                    int[] triangles = surface.submeshTriangles[submesh];
+                    for (int triangle = 0; triangle + 2 < triangles.Length; triangle += 3)
+                    {
+                        int ia = triangles[triangle];
+                        int ib = triangles[triangle + 1];
+                        int ic = triangles[triangle + 2];
+                        if ((uint)ia >= (uint)surface.world.Length ||
+                            (uint)ib >= (uint)surface.world.Length ||
+                            (uint)ic >= (uint)surface.world.Length) continue;
+                        Vector3 a = surface.world[ia];
+                        Vector3 b = surface.world[ib];
+                        Vector3 c = surface.world[ic];
+                        Vector3 geometricNormal = Vector3.Cross(b - a, c - a).normalized;
+                        if (Vector3.Dot(geometricNormal, -direction) < facingThreshold) continue;
+                        if (!RayTriangle(ray.origin, direction, a, b, c,
+                            out float distance, out Vector3 barycentric) || distance >= closest)
+                            continue;
+                        closest = distance;
+                        Vector3 normal = (surface.worldNormals[ia] * barycentric.x +
+                            surface.worldNormals[ib] * barycentric.y +
+                            surface.worldNormals[ic] * barycentric.z).normalized;
+                        point = new SurfaceCutPoint(surface.renderer, submesh, ia, ib, ic,
+                            barycentric, ray.origin + direction * distance, normal,
+                            surface.uv[ia] * barycentric.x +
+                            surface.uv[ib] * barycentric.y +
+                            surface.uv[ic] * barycentric.z);
+                    }
+                }
+            }
+            return point.IsValid;
+        }
+
+        private static void AddProjectedPathPoint(SurfaceCutPoint point,
+            List<Vector3> positions, List<Vector3> normals, List<Vector2> routeUv,
+            List<SurfaceTarget> targets)
+        {
+            var target = new SurfaceTarget(point.Renderer, point.SubmeshIndex);
+            if (positions.Count > 0 && targets[targets.Count - 1].Equals(target) &&
+                Vector3.Distance(positions[positions.Count - 1], point.WorldPosition) < 0.0001f)
+                return;
+            positions.Add(point.WorldPosition);
+            normals.Add(point.WorldNormal);
+            routeUv.Add(point.AtlasUV);
+            targets.Add(target);
+        }
+
+        private static List<SurfaceTarget> CollectPathTargets(PathData path)
+        {
+            var result = new List<SurfaceTarget>();
+            if (path.targets == null) return result;
+            for (int i = 0; i < path.targets.Length; i++)
+            {
+                SurfaceTarget target = path.targets[i];
+                if (!target.IsValid || result.Contains(target)) continue;
+                result.Add(target);
+            }
+            return result;
+        }
+
+        private static BakedSurface FindBakedSurface(List<BakedSurface> surfaces,
+            SkinnedMeshRenderer renderer)
+        {
+            for (int i = 0; i < surfaces.Count; i++)
+                if (surfaces[i].renderer == renderer) return surfaces[i];
+            return null;
+        }
+
+        private static void DestroyBakedSurfaces(List<BakedSurface> surfaces)
+        {
+            if (surfaces == null) return;
+            for (int i = 0; i < surfaces.Count; i++) DestroyOwned(surfaces[i].baked);
+            surfaces.Clear();
+        }
+
         private bool TryRaycastBakedSubmesh(Ray ray, int[] triangles, Vector3[] world,
             Vector3[] worldNormals, Vector2[] uv, out Vector3 position, out Vector3 normal,
             out Vector2 atlasUv)
@@ -399,18 +746,30 @@ namespace UMA.Dismemberment
         private static bool TryFinalizePath(List<Vector3> positions, List<Vector3> normals,
             List<Vector2> routeUv, out PathData path, out string error)
         {
+            return TryFinalizePath(positions, normals, routeUv, null, true,
+                out path, out error);
+        }
+
+        private static bool TryFinalizePath(List<Vector3> positions, List<Vector3> normals,
+            List<Vector2> routeUv, List<SurfaceTarget> targets, bool rejectUvSeams,
+            out PathData path, out string error)
+        {
             path = null;
             error = null;
-            if (positions.Count < 2)
+            if (positions == null || normals == null || routeUv == null ||
+                positions.Count < 2 || normals.Count != positions.Count ||
+                routeUv.Count != positions.Count ||
+                (targets != null && targets.Count != positions.Count))
             {
-                error = "The selected points produced an empty surface route.";
+                error = "The selected points produced an incomplete surface route.";
                 return false;
             }
             var cumulative = new float[positions.Count];
             for (int i = 1; i < positions.Count; i++)
             {
                 float worldStep = Vector3.Distance(positions[i - 1], positions[i]);
-                if (worldStep < 0.05f && Vector2.Distance(routeUv[i - 1], routeUv[i]) > 0.5f)
+                if (rejectUvSeams && worldStep < 0.05f &&
+                    Vector2.Distance(routeUv[i - 1], routeUv[i]) > 0.5f)
                 {
                     error = "The cut crosses an atlas seam. Choose two points on the same " +
                         "visible UV island so the cut will not streak across the atlas.";
@@ -423,6 +782,7 @@ namespace UMA.Dismemberment
                 positions = positions.ToArray(),
                 normals = normals.ToArray(),
                 uv = routeUv.ToArray(),
+                targets = targets != null ? targets.ToArray() : null,
                 cumulativeDistance = cumulative,
                 length = cumulative[cumulative.Length - 1]
             };
@@ -644,6 +1004,14 @@ namespace UMA.Dismemberment
         private static Mesh BuildCutMesh(SkinnedMeshRenderer renderer, int submesh,
             Mesh shared, Mesh baked, PathData path, float halfWidth, out string error)
         {
+            return BuildCutMesh(renderer, submesh, shared, baked, path, halfWidth,
+                default, false, out error);
+        }
+
+        private static Mesh BuildCutMesh(SkinnedMeshRenderer renderer, int submesh,
+            Mesh shared, Mesh baked, PathData path, float halfWidth,
+            SurfaceTarget targetFilter, bool filterByTarget, out string error)
+        {
             error = null;
             Vector3[] localPositions = baked.vertices;
             Vector2[] uv = shared.uv;
@@ -662,11 +1030,15 @@ namespace UMA.Dismemberment
                 int ia = sourceTriangles[triangle];
                 int ib = sourceTriangles[triangle + 1];
                 int ic = sourceTriangles[triangle + 2];
-                EvaluatePath(path, world[ia], out float da, out _, out _);
-                EvaluatePath(path, world[ib], out float db, out _, out _);
-                EvaluatePath(path, world[ic], out float dc, out _, out _);
+                EvaluatePath(path, world[ia], targetFilter, filterByTarget,
+                    out float da, out _, out _);
+                EvaluatePath(path, world[ib], targetFilter, filterByTarget,
+                    out float db, out _, out _);
+                EvaluatePath(path, world[ic], targetFilter, filterByTarget,
+                    out float dc, out _, out _);
                 Vector3 center = (world[ia] + world[ib] + world[ic]) / 3f;
-                EvaluatePath(path, center, out float dm, out _, out _);
+                EvaluatePath(path, center, targetFilter, filterByTarget,
+                    out float dm, out _, out _);
                 float longestEdge = Mathf.Max(Vector3.Distance(world[ia], world[ib]),
                     Mathf.Max(Vector3.Distance(world[ib], world[ic]),
                         Vector3.Distance(world[ic], world[ia])));
@@ -675,9 +1047,12 @@ namespace UMA.Dismemberment
                     vertexDistance > selectionRadius + longestEdge) continue;
 
                 int baseVertex = vertices.Count;
-                AddCutVertex(path, world[ia], uv[ia], vertices, coordinates);
-                AddCutVertex(path, world[ib], uv[ib], vertices, coordinates);
-                AddCutVertex(path, world[ic], uv[ic], vertices, coordinates);
+                AddCutVertex(path, world[ia], uv[ia], targetFilter, filterByTarget,
+                    vertices, coordinates);
+                AddCutVertex(path, world[ib], uv[ib], targetFilter, filterByTarget,
+                    vertices, coordinates);
+                AddCutVertex(path, world[ic], uv[ic], targetFilter, filterByTarget,
+                    vertices, coordinates);
                 triangles.Add(baseVertex);
                 triangles.Add(baseVertex + 1);
                 triangles.Add(baseVertex + 2);
@@ -693,16 +1068,17 @@ namespace UMA.Dismemberment
             mesh.SetVertices(vertices);
             mesh.SetUVs(0, coordinates);
             mesh.SetUVs(1, coordinates);
-            mesh.SetTriangles(triangles, 0, false);
+            mesh.SetTriangles(triangles, 0, true);
             mesh.UploadMeshData(false);
             return mesh;
         }
 
         private static void AddCutVertex(PathData path, Vector3 worldPosition, Vector2 atlasUv,
-            List<Vector3> vertices, List<Vector2> coordinates)
+            SurfaceTarget targetFilter, bool filterByTarget, List<Vector3> vertices,
+            List<Vector2> coordinates)
         {
-            EvaluatePath(path, worldPosition, out _, out float signedDistance,
-                out float alongDistance);
+            EvaluatePath(path, worldPosition, targetFilter, filterByTarget,
+                out _, out float signedDistance, out float alongDistance);
             vertices.Add(new Vector3(atlasUv.x * 2f - 1f, atlasUv.y * 2f - 1f, 0f));
             coordinates.Add(new Vector2(signedDistance, alongDistance));
         }
@@ -710,11 +1086,22 @@ namespace UMA.Dismemberment
         private static void EvaluatePath(PathData path, Vector3 point, out float distance,
             out float signedDistance, out float alongDistance)
         {
+            EvaluatePath(path, point, default, false, out distance,
+                out signedDistance, out alongDistance);
+        }
+
+        private static void EvaluatePath(PathData path, Vector3 point,
+            SurfaceTarget targetFilter, bool filterByTarget, out float distance,
+            out float signedDistance, out float alongDistance)
+        {
             distance = float.PositiveInfinity;
             signedDistance = 0f;
             alongDistance = 0f;
             for (int segment = 0; segment + 1 < path.positions.Length; segment++)
             {
+                if (filterByTarget && (path.targets == null ||
+                    (!path.targets[segment].Equals(targetFilter) &&
+                    !path.targets[segment + 1].Equals(targetFilter)))) continue;
                 Vector3 a = path.positions[segment];
                 Vector3 b = path.positions[segment + 1];
                 Vector3 delta = b - a;
@@ -733,6 +1120,71 @@ namespace UMA.Dismemberment
                 signedDistance = Vector3.Dot(offset, side) < 0f ? -candidate : candidate;
                 alongDistance = path.cumulativeDistance[segment] + delta.magnitude * t;
             }
+        }
+
+        private static void SelectBleedSourcesForTarget(PathData path, SurfaceTarget target,
+            float[] distances, Vector3[] positions, Vector3[] normals,
+            float[] speedMultipliers, float[] sizeMultipliers,
+            SurfaceCutAtlasTargetData destination)
+        {
+            var selectedDistances = new List<float>();
+            var selectedPositions = new List<Vector3>();
+            var selectedNormals = new List<Vector3>();
+            var selectedSpeeds = new List<float>();
+            var selectedSizes = new List<float>();
+            for (int i = 0; i < distances.Length; i++)
+            {
+                if (!ResolveTargetAtDistance(path, distances[i]).Equals(target)) continue;
+                selectedDistances.Add(distances[i]);
+                selectedPositions.Add(positions[i]);
+                selectedNormals.Add(normals[i]);
+                selectedSpeeds.Add(speedMultipliers != null && i < speedMultipliers.Length
+                    ? speedMultipliers[i] : 1f);
+                selectedSizes.Add(sizeMultipliers != null && i < sizeMultipliers.Length
+                    ? sizeMultipliers[i] : 1f);
+            }
+            destination.bleedDistances = selectedDistances.ToArray();
+            destination.bleedPositions = selectedPositions.ToArray();
+            destination.bleedNormals = selectedNormals.ToArray();
+            destination.speedMultipliers = selectedSpeeds.ToArray();
+            destination.sizeMultipliers = selectedSizes.ToArray();
+        }
+
+        private static SurfaceTarget ResolveTargetAtDistance(PathData path, float distance)
+        {
+            if (path.targets == null || path.targets.Length == 0) return default;
+            distance = Mathf.Clamp(distance, 0f, path.length);
+            for (int segment = 0; segment + 1 < path.positions.Length; segment++)
+            {
+                float a = path.cumulativeDistance[segment];
+                float b = path.cumulativeDistance[segment + 1];
+                if (distance > b && segment + 2 < path.positions.Length) continue;
+                SurfaceTarget first = path.targets[segment];
+                SurfaceTarget second = path.targets[segment + 1];
+                if (first.Equals(second) || !second.IsValid) return first;
+                if (!first.IsValid) return second;
+                float t = b > a ? Mathf.InverseLerp(a, b, distance) : 0f;
+                return t < 0.5f ? first : second;
+            }
+            return path.targets[path.targets.Length - 1];
+        }
+
+        private static void DestroyTargetData(List<SurfaceCutAtlasTargetData> targets)
+        {
+            if (targets == null) return;
+            for (int i = 0; i < targets.Count; i++)
+            {
+                DestroyOwned(targets[i]?.cutMesh);
+                DestroyOwned(targets[i]?.bleedMesh);
+            }
+            targets.Clear();
+        }
+
+        private static void DestroyBleedMeshes(List<SurfaceCutAtlasTargetData> targets)
+        {
+            if (targets == null) return;
+            for (int i = 0; i < targets.Count; i++)
+                DestroyOwned(targets[i]?.bleedMesh);
         }
 
         private static void BuildBleedSources(PathData path, float spacingMeters,

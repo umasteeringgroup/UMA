@@ -159,8 +159,11 @@ fluid use independent handles, so gameplay can clear the cut or stop/fade its bl
 
 GPU simulation is one context per generated atlas/material, with a shared posed surface field and
 an independent lower-resolution state layer per handle. Independent layers make `Clear` predictable
-without erasing another cut. Unsupported compute platforms use a bounded world-space trail with a
-shared material and `MaterialPropertyBlock`; that fallback also never rebuilds UMA.
+without erasing another cut. Unsupported compute platforms use a short-lived trail anchored to the
+affected character transform, with a shared material and `MaterialPropertyBlock`. New segments still
+follow world gravity, but ragdoll motion cannot leave the complete trail suspended at an old pose.
+Fallback hold, fade, and hard-lifetime settings are independent from the longer texture-fluid
+lifetime, and the fallback never rebuilds UMA.
 
 `IndependentDetachedPiece` creates a separate GPU context by cloning only the detached renderer's
 affected generated material and restoring its clean base channel textures before binding owned

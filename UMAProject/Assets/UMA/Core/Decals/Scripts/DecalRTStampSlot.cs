@@ -199,7 +199,6 @@ namespace UMA
 		// Called from SlotDataAsset.CharacterBegun (UMADataEvent) in the slot that owns this script. 
 		public void OnCharacterBegun(UMAData umaData)
         {
-			Debug.Log("[DecalRTStampSlot] OnCharacterBegun called.");
 			if (umaData == null) return;
 
             _avatar = _avatar ?? GetComponentInParent<DynamicCharacterAvatar>();

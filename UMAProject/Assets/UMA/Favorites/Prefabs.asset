@@ -12,5 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a21b01507d5987b4689b5f16296f8eb8, type: 3}
   m_Name: Prefabs
   m_EditorClassIdentifier: 
-  Favorites: []
+  Favorites:
+  - path: Assets/UMA/UMA3/Getting Started/UMADynamicCharacterAvatar-LOD.prefab
+    GUID: 165a16ac9ccf1a94080956c3b8c82000
+    name: UMADynamicCharacterAvatar-LOD
+    asset: {fileID: 153068, guid: 165a16ac9ccf1a94080956c3b8c82000, type: 3}
+    favoriteList: {fileID: 11400000}
+  - path: Assets/UMA/UMA3/Getting Started/UMARandomGeneratedCharacter.prefab
+    GUID: 11b6342601a487e45a8ca8ed561a9b7a
+    name: UMARandomGeneratedCharacter
+    asset: {fileID: 2885161576785399288, guid: 11b6342601a487e45a8ca8ed561a9b7a, type: 3}
+    favoriteList: {fileID: 11400000}
   exPanded: 1

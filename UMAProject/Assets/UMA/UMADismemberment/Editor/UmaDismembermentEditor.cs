@@ -18,11 +18,17 @@ namespace UMA.Dismemberment
         private SerializedProperty requireClosedCaps;
         private SerializedProperty capUvMetersPerTile;
         private SerializedProperty seamWeldTolerance;
+        private SerializedProperty capOnlyBodyParts;
+        private SerializedProperty bodyOverlayGroups;
+        private SerializedProperty clothingDoubleSidedDepthMeters;
+        private SerializedProperty clothingCutSmoothing;
         private SerializedProperty globalThreshold;
         private SerializedProperty useSliceable;
         private SerializedProperty sliceableHumanBones;
         private SerializedProperty includeChildBones;
         private SerializedProperty rebuildPolicy;
+        private SerializedProperty logMeshLifecycle;
+        private SerializedProperty meshLifecycleTraceFrames;
         private ReorderableList sliceableList;
 
         private void OnEnable()
@@ -36,11 +42,19 @@ namespace UMA.Dismemberment
             requireClosedCaps = serializedObject.FindProperty("requireClosedCaps");
             capUvMetersPerTile = serializedObject.FindProperty("capUvMetersPerTile");
             seamWeldTolerance = serializedObject.FindProperty("seamWeldTolerance");
+            capOnlyBodyParts = serializedObject.FindProperty("capOnlyBodyParts");
+            bodyOverlayGroups = serializedObject.FindProperty("bodyOverlayGroups");
+            clothingDoubleSidedDepthMeters = serializedObject.FindProperty(
+                "clothingDoubleSidedDepthMeters");
+            clothingCutSmoothing = serializedObject.FindProperty("clothingCutSmoothing");
             globalThreshold = serializedObject.FindProperty("globalThreshold");
             useSliceable = serializedObject.FindProperty("useSliceable");
             sliceableHumanBones = serializedObject.FindProperty("sliceableHumanBones");
             includeChildBones = serializedObject.FindProperty("includeChildBones");
             rebuildPolicy = serializedObject.FindProperty("rebuildPolicy");
+            logMeshLifecycle = serializedObject.FindProperty("logMeshLifecycle");
+            meshLifecycleTraceFrames = serializedObject.FindProperty(
+                "meshLifecycleTraceFrames");
 
             sliceableList = new ReorderableList(serializedObject, sliceableHumanBones,
                 true, true, true, true)
@@ -70,6 +84,13 @@ namespace UMA.Dismemberment
                 EditorGUILayout.PropertyField(capUvMetersPerTile);
                 EditorGUILayout.PropertyField(seamWeldTolerance);
             }
+            EditorGUILayout.PropertyField(capOnlyBodyParts);
+            using (new EditorGUI.DisabledScope(!capOnlyBodyParts.boolValue))
+            {
+                EditorGUILayout.PropertyField(bodyOverlayGroups, true);
+                EditorGUILayout.PropertyField(clothingDoubleSidedDepthMeters);
+                EditorGUILayout.PropertyField(clothingCutSmoothing);
+            }
             DrawCapDiagnostics();
 
             EditorGUILayout.Space();
@@ -84,6 +105,20 @@ namespace UMA.Dismemberment
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Lifecycle", EditorStyles.boldLabel);
             EditorGUILayout.PropertyField(rebuildPolicy);
+
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Diagnostics", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(logMeshLifecycle,
+                new GUIContent("Log Mesh Lifecycle"));
+            using (new EditorGUI.DisabledScope(!logMeshLifecycle.boolValue))
+            {
+                EditorGUILayout.PropertyField(meshLifecycleTraceFrames,
+                    new GUIContent("Trace Frames After Cut"));
+                EditorGUILayout.HelpBox(
+                    "Mesh lifecycle diagnostics generate detailed Console and Editor.log output " +
+                    "and uniquely rename runtime meshes. Disable after completing the diagnosis.",
+                    MessageType.Warning);
+            }
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Events", EditorStyles.boldLabel);

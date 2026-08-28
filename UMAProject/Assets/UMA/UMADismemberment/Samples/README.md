@@ -18,8 +18,9 @@ The example is organized around four pieces:
   deposits a trail. It does not require an overlay group; assign **Bullet Target Overlay Group** only
   if another caller also stores the stamp in a `DecalRTStampSlot` for normal atlas-event replay.
 - A Shift-drag surface-cut gesture. Hold Shift and press the left mouse button for the start, drag
-  over the same generated body or armor material, and release for the end. Normal left-click still
-  places the bleeding bullet decal. A thin red line previews the drag in Game view. The cut has a
+  across adjacent generated body, face, head, clothing, or armor surfaces, and release for the end.
+  Normal left-click still places the bleeding bullet decal. A thin red line previews the drag in
+  Game view. The cut has a
   tapered dark-red center, pink irritated edges, and several independent bleeds along its surface
   route. Right-click or Escape cancels a drag.
 - An undo action using `UndoDismemberments`, which restores the avatar rather than merely hiding the detached pieces.
@@ -48,7 +49,8 @@ When a cut Button is pressed:
 1. `GUIDismemberment` resolves the intended `UmaDismemberment` and calls the humanoid `TrySlice` overload.
 2. The slicer validates readiness, the allowed-bone row, cap material, CPU-readable triangle data, and cut boundaries.
 3. It calculates all affected body and wardrobe renderers before committing any source change.
-4. It creates owned source meshes, a detached skeleton, detached renderers, opposing caps, and a `DismemberedPiece` owner.
+4. It creates owned source meshes, a detached skeleton, detached renderers, opposing caps for
+   `Skin` body surfaces, 10 cm two-sided interior bands for clothing, and a `DismemberedPiece` owner.
 5. Detached weights above the cut subtree are removed and normalized. If **Trim Detached Rig** is enabled, the detached bone palettes and cloned skeleton are then compacted.
 6. If **Ragdoll Main Body** is enabled, the source character's existing `UMAPhysicsAvatar` is activated after the cut commits.
 7. `DismembermentCompleted` is invoked. The sample callback can now construct detached physics, disable the matching source-ragdoll colliders, apply its view-directed impulse, spawn blood, and attach optional gore renderers.
@@ -129,9 +131,20 @@ automatically receive more bleed sources. Each emitter also varies by 25% in fal
 radius, producing streams with distinct widths and travel rates. The reusable runtime API is
 `UMASurfaceCutSystem`: call
 `TryGetSurfacePoint` for both rays, then `TryCreateProjectedCut` for mouse input so the committed cut
-matches the straight preview while wrapping over the posed surface. Both points must resolve to the
-same generated renderer/material; a route that would jump through a disconnected mesh or across a
-large atlas seam is rejected instead of drawing through unrelated UV space.
+matches the straight preview while wrapping over the posed surface. Projected cuts may cross adjacent
+UMA slots and generated materials (for example, face to head or skin to jacket). The system samples
+the visible surface and writes one cut portion per material atlas under a single result handle. Small
+slot-border gaps are bridged, but a route that leaves the visible character or jumps across a large
+world-space depth discontinuity is rejected instead of drawing through unrelated geometry. The
+non-camera `TryCreateCut` topology API remains intentionally limited to one renderer/material.
+
+The blood profile's **Target Overlay Groups** list is empty by default, so a multi-slot cut can
+bleed across both skin and cut clothing such as a jacket. Add `Skin` to that list when an effect
+should emit only from UMA's default base-skin overlay group.
+
+Generated `NoAtlas` skin textures are supported directly. When head, torso, and limb slots share
+the same `UMAMaterial` definition but have separate generated textures, the sample binds each cut
+surface by its exact renderer/submesh output. It does not use the shared material name as a shortcut.
 
 Do not edit the sample callback as the long-term project integration. Copy the pattern into the project's namespace so package updates do not overwrite gameplay-specific behavior. The completion result is designed to let that code add audio, decals, scoring, inventory drops, networking messages, timed cleanup, or custom physics without changing the slicer.
 

@@ -117,7 +117,12 @@ namespace UMA.Dismemberment
         [Tooltip("Required when Wetness is enabled. It must name a dedicated scalar wetness or " +
             "smoothness texture property; packed mask maps are not modified implicitly.")]
         public string wetnessMaterialPropertyName;
+        [Tooltip("Optional slot-group filter. Leave empty to allow every slot group.")]
         public string[] targetSlotGroups = Array.Empty<string>();
+        [Tooltip("Optional overlay-group filter, using the same matching convention as UMA " +
+            "RenderTexture decals. Leave empty to allow all overlay groups, including wardrobe " +
+            "and armor surfaces cut alongside the body. Use Skin to target the default base-skin " +
+            "overlay group only.")]
         public string[] targetOverlayGroups = Array.Empty<string>();
 
         [Header("Emission and Lifetime")]
@@ -162,6 +167,14 @@ namespace UMA.Dismemberment
         public SurfaceFluidDetachedRoute detachedRoute = SurfaceFluidDetachedRoute.SourceBody;
         public Material fallbackTrailMaterial;
         [Range(4, 64)] public int fallbackMaximumSegments = 24;
+        [Min(0f), Tooltip("Maximum time a geometry fallback remains fully visible after it " +
+            "stops growing. This is intentionally separate from the much longer texture-fluid " +
+            "holding duration because a LineRenderer must not remain suspended in the scene.")]
+        public float fallbackHoldingDuration = 0.25f;
+        [Min(0.01f), Tooltip("Fade duration for the temporary geometry fallback.")]
+        public float fallbackFadeDuration = 1.25f;
+        [Min(0.05f), Tooltip("Hard lifetime limit for a geometry fallback, including its fade.")]
+        public float fallbackMaximumLifetime = 8f;
         public bool persistAcrossAvatarRebuild;
 
         private void OnValidate()
@@ -188,6 +201,10 @@ namespace UMA.Dismemberment
             compositeRate = Mathf.Clamp(compositeRate, 1f, 30f);
             maximumSubsteps = Mathf.Clamp(maximumSubsteps, 1, 8);
             fallbackMaximumSegments = Mathf.Clamp(fallbackMaximumSegments, 4, 64);
+            fallbackHoldingDuration = Mathf.Max(0f, fallbackHoldingDuration);
+            fallbackFadeDuration = Mathf.Max(0.01f, fallbackFadeDuration);
+            fallbackMaximumLifetime = Mathf.Max(fallbackFadeDuration + 0.05f,
+                fallbackMaximumLifetime);
         }
     }
 }

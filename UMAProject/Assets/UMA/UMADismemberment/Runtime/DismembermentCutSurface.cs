@@ -18,6 +18,7 @@ namespace UMA.Dismemberment
         public Vector3[] boundaryLocalPositions = Array.Empty<Vector3>();
         public int[] loopStarts = Array.Empty<int>();
         public int[] loopCounts = Array.Empty<int>();
+        public bool boundaryClosed = true;
         public Rect uvBounds;
         public Vector3 localCenter;
         public Vector3 localNormal;
@@ -28,7 +29,8 @@ namespace UMA.Dismemberment
         public string umaMaterialName;
 
         public bool IsValid => sourceRenderer != null && boundaryUV != null &&
-            boundaryUV.Length >= 3 && loopStarts != null && loopStarts.Length > 0;
+            boundaryUV.Length >= (boundaryClosed ? 3 : 2) && loopStarts != null &&
+            loopStarts.Length > 0;
 
         public Vector3 WorldCenter => sourceRenderer != null
             ? sourceRenderer.transform.TransformPoint(localCenter) : localCenter;
