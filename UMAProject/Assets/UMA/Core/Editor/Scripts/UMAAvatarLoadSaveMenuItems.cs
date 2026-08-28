@@ -1400,6 +1400,25 @@ namespace UMA.Editors
 			return GetSelectedTextures().Count > 0;
 		}
 
+		[MenuItem("Assets/UMA/Move Unused Textures", false, 2005)]
+		private static void MoveUnusedTexturesMenu()
+		{
+			var textures = GetSelectedTextures();
+			if (textures.Count == 0)
+			{
+				EditorUtility.DisplayDialog("Move Unused Textures", "Select one or more Texture2D assets in the Project window.", "OK");
+				return;
+			}
+
+			UmaMoveUnusedTexturesWindow.Open(textures);
+		}
+
+		[MenuItem("Assets/UMA/Move Unused Textures", true)]
+		private static bool MoveUnusedTexturesMenu_Validate()
+		{
+			return GetSelectedTextures().Count > 0;
+		}
+
 		[MenuItem("Assets/UMA/Create overlay and recipe for base alternates", false, 2005)]
 		private static void CreateOverlaysForSelectedItemsMenu()
 		{
