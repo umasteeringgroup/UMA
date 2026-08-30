@@ -20,7 +20,7 @@ The example is organized around four pieces:
 - A Shift-drag surface-cut gesture. Hold Shift and press the left mouse button for the start, drag
   across adjacent generated body, face, head, clothing, or armor surfaces, and release for the end.
   Normal left-click still places the bleeding bullet decal. A thin red line previews the drag in
-  Game view. The cut has a
+  Game view using an always-visible unlit pass for Built-in, URP, and HDRP. The cut has a
   tapered dark-red center, pink irritated edges, and several independent bleeds along its surface
   route. Right-click or Escape cancels a drag.
 - An undo action using `UndoDismemberments`, which restores the avatar rather than merely hiding the detached pieces.

@@ -69,6 +69,20 @@ namespace UMA.Dismemberment.Tests
         }
 
         [Test]
+        public void SurfaceCutPreviewShaderSupportsTheActiveRenderPipeline()
+        {
+            Shader shader = Resources.Load<Shader>(
+                "UMA/Dismemberment/SurfaceCutPreview");
+
+            Assert.That(shader, Is.Not.Null);
+            Assert.That(shader.isSupported, Is.True,
+                "The drag helper must select a valid Built-in, URP, or HDRP SubShader.");
+            Material material = Own(new Material(shader));
+            Assert.That(material.renderQueue, Is.EqualTo(3050),
+                "HDRP does not reliably draw legacy Overlay-queue LineRenderers.");
+        }
+
+        [Test]
         public void NoAtlasFluidTargetUsesExactSubmeshInsteadOfFirstSharedUmaMaterial()
         {
             var host = Own(new GameObject("NoAtlas Renderer"));

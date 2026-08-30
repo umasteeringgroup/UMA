@@ -6646,7 +6646,8 @@ namespace UMA.TexturePaint.Editor
         }
     }
 
-    [Overlay(typeof(SceneView), TexturePaintSceneToolPaletteOverlay.Title, true)]
+    [Overlay(typeof(SceneView), TexturePaintSceneToolPaletteOverlay.Title,
+        TexturePaintSceneOverlayVisibility.DefaultDisplay)]
     public sealed class TexturePaintSceneToolPaletteOverlay : ToolbarOverlay
     {
         internal const string Title = "Overlay Painter Toolbar";
@@ -6730,7 +6731,8 @@ namespace UMA.TexturePaint.Editor
         private void UpdateContextVisibility()
         {
             bool active = IsContextActive();
-            if (active == contextWasActive) return;
+            if (!TexturePaintSceneOverlayVisibility.NeedsDisplayRefresh(
+                    active, contextWasActive, displayed)) return;
             contextWasActive = active;
             displayed = active;
         }
@@ -6931,7 +6933,8 @@ namespace UMA.TexturePaint.Editor
         }
     }
 
-    [Overlay(typeof(SceneView), "Overlay Painter Path", true)]
+    [Overlay(typeof(SceneView), "Overlay Painter Path",
+        TexturePaintSceneOverlayVisibility.DefaultDisplay)]
     public sealed class TexturePaintPathToolbarOverlay : ToolbarOverlay
     {
         private static readonly HashSet<TexturePaintPathToolbarOverlay> Instances =
@@ -6982,7 +6985,8 @@ namespace UMA.TexturePaint.Editor
         private void UpdateContextVisibility()
         {
             bool active = IsContextActive();
-            if (active == contextWasActive) return;
+            if (!TexturePaintSceneOverlayVisibility.NeedsDisplayRefresh(
+                    active, contextWasActive, displayed)) return;
             contextWasActive = active;
             displayed = active;
         }
@@ -7155,7 +7159,8 @@ namespace UMA.TexturePaint.Editor
         }
     }
 
-    [Overlay(typeof(SceneView), "Overlay Painter 3D", true)]
+    [Overlay(typeof(SceneView), "Overlay Painter 3D",
+        TexturePaintSceneOverlayVisibility.DefaultDisplay)]
     public sealed class TexturePaintSceneToolbarOverlay : ToolbarOverlay
     {
         private static readonly HashSet<TexturePaintSceneToolbarOverlay> Instances =
@@ -7212,7 +7217,8 @@ namespace UMA.TexturePaint.Editor
         private void UpdateContextVisibility()
         {
             bool active = IsContextActive();
-            if (active == contextWasActive) return;
+            if (!TexturePaintSceneOverlayVisibility.NeedsDisplayRefresh(
+                    active, contextWasActive, displayed)) return;
             contextWasActive = active;
             displayed = active;
         }
@@ -7547,6 +7553,14 @@ namespace UMA.TexturePaint.Editor
 
     internal static class TexturePaintSceneOverlayVisibility
     {
+        internal const bool DefaultDisplay = false;
+
+        internal static bool NeedsDisplayRefresh(bool active, bool contextWasActive,
+            bool displayed)
+        {
+            return active != contextWasActive || displayed != active;
+        }
+
         internal static bool ShouldDisplayOn(EditorWindow window)
         {
             return TexturePaintWorkspaceLayout.ShouldShowSceneOverlays(window);

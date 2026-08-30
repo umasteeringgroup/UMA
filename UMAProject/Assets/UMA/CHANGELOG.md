@@ -1,5 +1,18 @@
 # Changelog
 
+- Fixed the Markdown viewer rendering every inline link twice. Links now remain inline, underline
+  and highlight on hover, provide a short squash/pop click animation, and use Unity 6.3 rich-text
+  link events directly in headings, paragraphs, lists, and table cells.
+- Fixed the U3-GoreExample Shift-drag cut helper line being omitted by HDRP. Its always-on-top
+  preview shader now supplies explicit HDRP, URP, and Built-in unlit passes in a supported
+  transparent queue, with deterministic late renderer sorting.
+- Fixed the UMA Welcome window reopening every two seconds after being closed while required render
+  pipeline setup remained incomplete. Dismissal now lasts for the current setup state and editor
+  session; a meaningful pipeline/content state change can show the next required step, and the
+  **UMA > Welcome to UMA** command always opens it explicitly.
+- Fixed Overlay Painter's 3D, Path, and painting Scene overlays appearing in a newly installed
+  project before Overlay Painter had opened. They now register hidden by default and continuously
+  reconcile Unity's restored layout visibility with the active Overlay Painter stage.
 - Fixed an explicitly opened Overlay Painter document being replaced by an older compatible recovery
   snapshot. The requested document is now the default choice, with **Recover Instead** available
   explicitly; choosing the document discards the superseded recovery.

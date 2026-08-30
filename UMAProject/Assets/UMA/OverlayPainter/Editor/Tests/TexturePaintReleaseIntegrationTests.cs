@@ -4611,6 +4611,26 @@ namespace UMA.TexturePaint.Editor.Tests
                 "The Scene-view tool must render the sliced Overlay Painter icon, not the full sprite sheet.");
         }
 
+        [Test]
+        public void SceneOverlaysDefaultHiddenAndRepairRestoredVisibility()
+        {
+            Assert.That(TexturePaintSceneOverlayVisibility.DefaultDisplay, Is.False,
+                "A fresh Unity layout must not show Overlay Painter controls before the stage opens.");
+
+            Assert.That(TexturePaintSceneOverlayVisibility.NeedsDisplayRefresh(
+                false, false, true), Is.True,
+                "Unity can restore a serialized visible flag after OnCreated; the update must hide it.");
+            Assert.That(TexturePaintSceneOverlayVisibility.NeedsDisplayRefresh(
+                true, true, false), Is.True,
+                "An active Overlay Painter stage must repair a serialized hidden flag as well.");
+            Assert.That(TexturePaintSceneOverlayVisibility.NeedsDisplayRefresh(
+                false, false, false), Is.False);
+            Assert.That(TexturePaintSceneOverlayVisibility.NeedsDisplayRefresh(
+                true, true, true), Is.False);
+            Assert.That(TexturePaintSceneOverlayVisibility.NeedsDisplayRefresh(
+                true, false, false), Is.True);
+        }
+
         [TestCase(600f, 178f, true, 178f)]
         [TestCase(300f, 178f, true, 135f)]
         [TestCase(200f, 50f, true, 112f)]

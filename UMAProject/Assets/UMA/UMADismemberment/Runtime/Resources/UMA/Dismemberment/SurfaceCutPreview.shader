@@ -4,49 +4,110 @@ Shader "Hidden/UMA/Dismemberment/SurfaceCutPreview"
     {
         _Color("Color", Color) = (1,0,0,0.95)
     }
+
+    HLSLINCLUDE
+    #include "UnityCG.cginc"
+
+    float4 _Color;
+
+    struct Attributes
+    {
+        float4 vertex : POSITION;
+        float4 color : COLOR;
+    };
+
+    struct Varyings
+    {
+        float4 position : SV_POSITION;
+        float4 color : COLOR;
+    };
+
+    Varyings PreviewVertex(Attributes input)
+    {
+        Varyings output;
+        output.position = UnityObjectToClipPos(input.vertex);
+        output.color = input.color * _Color;
+        return output;
+    }
+
+    float4 PreviewFragment(Varyings input) : SV_Target
+    {
+        return input.color;
+    }
+    ENDHLSL
+
     SubShader
     {
-        Tags { "Queue"="Overlay" "RenderType"="Transparent" "IgnoreProjector"="True" }
+        Tags
+        {
+            "RenderPipeline"="HDRenderPipeline"
+            "Queue"="Transparent+50"
+            "RenderType"="Transparent"
+            "IgnoreProjector"="True"
+        }
         Pass
         {
+            Name "HighDefinitionPreview"
+            Tags { "LightMode"="SRPDefaultUnlit" }
             Blend SrcAlpha OneMinusSrcAlpha
             Cull Off
             ZWrite Off
             ZTest Always
             HLSLPROGRAM
-            #pragma target 2.0
-            #pragma vertex Vert
-            #pragma fragment Frag
-            #include "UnityCG.cginc"
-
-            fixed4 _Color;
-
-            struct Attributes
-            {
-                float4 vertex : POSITION;
-                fixed4 color : COLOR;
-            };
-
-            struct Varyings
-            {
-                float4 position : SV_POSITION;
-                fixed4 color : COLOR;
-            };
-
-            Varyings Vert(Attributes input)
-            {
-                Varyings output;
-                output.position = UnityObjectToClipPos(input.vertex);
-                output.color = input.color * _Color;
-                return output;
-            }
-
-            fixed4 Frag(Varyings input) : SV_Target
-            {
-                return input.color;
-            }
+            #pragma target 3.5
+            #pragma vertex PreviewVertex
+            #pragma fragment PreviewFragment
             ENDHLSL
         }
     }
+
+    SubShader
+    {
+        Tags
+        {
+            "RenderPipeline"="UniversalPipeline"
+            "Queue"="Transparent+50"
+            "RenderType"="Transparent"
+            "IgnoreProjector"="True"
+        }
+        Pass
+        {
+            Name "UniversalPreview"
+            Tags { "LightMode"="SRPDefaultUnlit" }
+            Blend SrcAlpha OneMinusSrcAlpha
+            Cull Off
+            ZWrite Off
+            ZTest Always
+            HLSLPROGRAM
+            #pragma target 3.5
+            #pragma vertex PreviewVertex
+            #pragma fragment PreviewFragment
+            ENDHLSL
+        }
+    }
+
+    SubShader
+    {
+        Tags
+        {
+            "Queue"="Transparent+50"
+            "RenderType"="Transparent"
+            "IgnoreProjector"="True"
+        }
+        Pass
+        {
+            Name "BuiltInPreview"
+            Blend SrcAlpha OneMinusSrcAlpha
+            Cull Off
+            ZWrite Off
+            ZTest Always
+            HLSLPROGRAM
+            #pragma target 3.5
+            #pragma vertex PreviewVertex
+            #pragma fragment PreviewFragment
+            ENDHLSL
+        }
+    }
+
     Fallback Off
 }

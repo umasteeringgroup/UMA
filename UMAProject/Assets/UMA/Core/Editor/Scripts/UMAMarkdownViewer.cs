@@ -7,6 +7,7 @@ using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
+using UnityEngine.UIElements.Experimental;
 
 namespace UMA.Editors
 {
@@ -943,7 +944,7 @@ namespace UMA.Editors
 
         private void RenderHeading(MarkdownBlock block, VisualElement parent)
         {
-            Label headingLabel = CreateRichTextLabel(ConvertInlineMarkdown(block.Text, null), GetHeadingFontSize(block.Level), FontStyle.Bold);
+            Label headingLabel = CreateMarkdownLabel(block.Text, GetHeadingFontSize(block.Level), FontStyle.Bold);
             headingLabel.tooltip = string.IsNullOrEmpty(block.Slug) ? block.PlainText : "#" + block.Slug;
             headingLabel.style.marginTop = 4f;
             headingLabel.style.marginBottom = 6f;
@@ -963,10 +964,7 @@ namespace UMA.Editors
             paragraphContainer.style.marginTop = topMargin;
             paragraphContainer.style.marginBottom = bottomMargin;
 
-            List<LinkTarget> links = new List<LinkTarget>();
-            Label paragraphLabel = CreateRichTextLabel(ConvertInlineMarkdown(markdown, links), GetParagraphFontSize(), FontStyle.Normal);
-            paragraphContainer.Add(paragraphLabel);
-            AddLinkButtons(paragraphContainer, links, 0f);
+            paragraphContainer.Add(CreateMarkdownLabel(markdown, GetParagraphFontSize(), FontStyle.Normal));
             parent.Add(paragraphContainer);
         }
 
@@ -1069,9 +1067,7 @@ namespace UMA.Editors
 
                 VisualElement itemContent = new VisualElement();
                 itemContent.style.flexGrow = 1f;
-                List<LinkTarget> links = new List<LinkTarget>();
-                itemContent.Add(CreateRichTextLabel(ConvertInlineMarkdown(item.Text, links), GetParagraphFontSize(), FontStyle.Normal));
-                AddLinkButtons(itemContent, links, 0f);
+                itemContent.Add(CreateMarkdownLabel(item.Text, GetParagraphFontSize(), FontStyle.Normal));
                 row.Add(itemContent);
                 listContainer.Add(row);
             }
@@ -1125,7 +1121,7 @@ namespace UMA.Editors
                 cell.style.borderRightColor = GetBorderColor();
                 cell.style.backgroundColor = isHeader ? GetPanelColor() : Color.clear;
 
-                Label label = CreateRichTextLabel(ConvertInlineMarkdown(cellText, null), GetParagraphFontSize(), isHeader ? FontStyle.Bold : FontStyle.Normal);
+                Label label = CreateMarkdownLabel(cellText, GetParagraphFontSize(), isHeader ? FontStyle.Bold : FontStyle.Normal);
                 label.style.unityTextAlign = GetTextAnchor(alignment);
                 cell.Add(label);
                 row.Add(cell);
@@ -1174,20 +1170,188 @@ namespace UMA.Editors
             parent.Add(imageContainer);
         }
 
-        private void AddLinkButtons(VisualElement parent, List<LinkTarget> links, float marginLeft)
+        private Label CreateMarkdownLabel(string markdown, float fontSize, FontStyle fontStyle)
         {
-            if (links == null || links.Count == 0)
+            List<LinkTarget> links = new List<LinkTarget>();
+            string baseRichText = ConvertInlineMarkdown(markdown, links);
+            Label label = CreateRichTextLabel(baseRichText, fontSize, fontStyle);
+            if (links.Count == 0)
             {
-                return;
+                return label;
             }
 
-            for (int linkIndex = 0; linkIndex < links.Count; linkIndex++)
+            int hoveredLinkIndex = -1;
+            int animatedLinkIndex = -1;
+            int animatedSizePercent = 100;
+            int animationVersion = 0;
+            Action updatePresentation = () =>
             {
-                LinkTarget link = links[linkIndex];
-                Button linkButton = CreateLinkLikeButton(link.Label, link.Url, () => OpenMarkdownLink(link.Url));
-                linkButton.style.marginLeft = marginLeft;
-                parent.Add(linkButton);
+                label.text = ApplyLinkPresentation(
+                    baseRichText,
+                    links.Count,
+                    hoveredLinkIndex,
+                    animatedLinkIndex,
+                    animatedSizePercent);
+            };
+
+            label.RegisterCallback<PointerDownLinkTagEvent>(evt =>
+            {
+                if (!TryResolveLinkTag(links, evt.linkID, out int linkIndex, out _))
+                {
+                    return;
+                }
+
+                int pressedVersion = ++animationVersion;
+                animatedLinkIndex = linkIndex;
+                animatedSizePercent = 96;
+                updatePresentation();
+                label.schedule.Execute(() =>
+                {
+                    if (pressedVersion != animationVersion)
+                    {
+                        return;
+                    }
+
+                    animatedLinkIndex = -1;
+                    animatedSizePercent = 100;
+                    updatePresentation();
+                }).StartingIn(120);
+            });
+            label.RegisterCallback<PointerUpLinkTagEvent>(evt =>
+            {
+                if (!TryResolveLinkTag(links, evt.linkID, out int linkIndex, out LinkTarget link))
+                {
+                    return;
+                }
+
+                int bounceVersion = ++animationVersion;
+                animatedLinkIndex = linkIndex;
+                animatedSizePercent = 114;
+                updatePresentation();
+                label.schedule.Execute(() =>
+                {
+                    if (bounceVersion != animationVersion)
+                    {
+                        return;
+                    }
+
+                    animatedSizePercent = 103;
+                    updatePresentation();
+                }).StartingIn(70);
+                label.schedule.Execute(() =>
+                {
+                    if (bounceVersion != animationVersion)
+                    {
+                        return;
+                    }
+
+                    animatedLinkIndex = -1;
+                    animatedSizePercent = 100;
+                    updatePresentation();
+                }).StartingIn(150);
+
+                label.schedule.Execute(() => OpenMarkdownLink(link.Url)).StartingIn(80);
+                evt.StopPropagation();
+            });
+            string nonLinkTooltip = string.Empty;
+            label.RegisterCallback<PointerOverLinkTagEvent>(evt =>
+            {
+                if (TryResolveLinkTag(links, evt.linkID, out int linkIndex, out LinkTarget link))
+                {
+                    nonLinkTooltip = label.tooltip;
+                    label.tooltip = link.Url;
+                    hoveredLinkIndex = linkIndex;
+                    updatePresentation();
+                }
+            });
+            label.RegisterCallback<PointerOutLinkTagEvent>(_ =>
+            {
+                label.tooltip = nonLinkTooltip;
+                hoveredLinkIndex = -1;
+                updatePresentation();
+            });
+            return label;
+        }
+
+        private static bool TryResolveLinkTag(List<LinkTarget> links, string linkId, out int linkIndex, out LinkTarget link)
+        {
+            linkIndex = -1;
+            link = null;
+            if (!int.TryParse(
+                    linkId,
+                    System.Globalization.NumberStyles.None,
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    out linkIndex)
+                || links == null
+                || linkIndex < 0
+                || linkIndex >= links.Count)
+            {
+                return false;
             }
+
+            link = links[linkIndex];
+            return true;
+        }
+
+        private static string ApplyLinkPresentation(
+            string richText,
+            int linkCount,
+            int hoveredLinkIndex,
+            int animatedLinkIndex,
+            int animatedSizePercent)
+        {
+            if (string.IsNullOrEmpty(richText)
+                || (hoveredLinkIndex < 0 && animatedLinkIndex < 0))
+            {
+                return richText ?? string.Empty;
+            }
+
+            string presentedText = richText;
+            for (int linkIndex = 0; linkIndex < linkCount; linkIndex++)
+            {
+                bool isHovered = linkIndex == hoveredLinkIndex;
+                bool isAnimated = linkIndex == animatedLinkIndex && animatedSizePercent != 100;
+                if (!isHovered && !isAnimated)
+                {
+                    continue;
+                }
+
+                string linkId = linkIndex.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                string linkOpeningTag = "<link=\"" + linkId + "\">";
+                int contentStartIndex = presentedText.IndexOf(linkOpeningTag, StringComparison.Ordinal);
+                if (contentStartIndex < 0)
+                {
+                    continue;
+                }
+
+                contentStartIndex += linkOpeningTag.Length;
+                int contentEndIndex = presentedText.IndexOf("</link>", contentStartIndex, StringComparison.Ordinal);
+                if (contentEndIndex < 0)
+                {
+                    continue;
+                }
+
+                StringBuilder openingDecoration = new StringBuilder();
+                StringBuilder closingDecoration = new StringBuilder();
+                if (isHovered)
+                {
+                    openingDecoration.Append("<u><mark=#2f75c038>");
+                    closingDecoration.Insert(0, "</mark></u>");
+                }
+
+                if (isAnimated)
+                {
+                    openingDecoration.Append("<size=");
+                    openingDecoration.Append(animatedSizePercent.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                    openingDecoration.Append("%>");
+                    closingDecoration.Insert(0, "</size>");
+                }
+
+                presentedText = presentedText.Insert(contentEndIndex, closingDecoration.ToString());
+                presentedText = presentedText.Insert(contentStartIndex, openingDecoration.ToString());
+            }
+
+            return presentedText;
         }
 
         private Label CreateRichTextLabel(string text, float fontSize, FontStyle fontStyle)
@@ -1683,7 +1847,6 @@ namespace UMA.Editors
             GUILayout.Label(richText, style);
             Rect labelRect = GUILayoutUtility.GetLastRect();
             EditorGUILayout.EndHorizontal();
-            DrawLinks(links, indent);
 
             if (bottomSpace > 0f)
             {
@@ -1752,7 +1915,6 @@ namespace UMA.Editors
                 GUILayout.Label(item.DisplayMarker, styles.listMarker, GUILayout.Width(ListMarkerWidth));
                 GUILayout.Label(richText, styles.paragraph);
                 EditorGUILayout.EndHorizontal();
-                DrawLinks(links, itemIndent + ListMarkerWidth);
             }
             GUILayout.Space(5f);
         }
@@ -1831,26 +1993,6 @@ namespace UMA.Editors
             EditorGUILayout.EndVertical();
             EditorGUILayout.EndHorizontal();
             GUILayout.Space(8f);
-        }
-
-        private void DrawLinks(List<LinkTarget> links, float indent)
-        {
-            if (links == null || links.Count == 0)
-            {
-                return;
-            }
-
-            for (int linkIndex = 0; linkIndex < links.Count; linkIndex++)
-            {
-                LinkTarget link = links[linkIndex];
-                EditorGUILayout.BeginHorizontal();
-                GUILayout.Space(indent);
-                if (GUILayout.Button(new GUIContent(link.Label, link.Url), styles.linkButton))
-                {
-                    OpenMarkdownLink(link.Url);
-                }
-                EditorGUILayout.EndHorizontal();
-            }
         }
 
         private GUIStyle GetTableStyle(GUIStyle baseStyle, TableAlignment alignment)
@@ -2911,10 +3053,7 @@ namespace UMA.Editors
                     string autoLink = text.Substring(characterIndex + 1, closingIndex - characterIndex - 1);
                     if (IsWebLink(autoLink))
                     {
-                        links?.Add(new LinkTarget(autoLink, autoLink));
-                        output.Append("<color=#2f75c0><b>");
-                        output.Append(EscapeRichText(autoLink));
-                        output.Append("</b></color>");
+                        AppendRichTextLink(output, links, autoLink, autoLink);
                         characterIndex = closingIndex + 1;
                         return true;
                     }
@@ -2940,12 +3079,30 @@ namespace UMA.Editors
 
             string label = text.Substring(characterIndex + 1, labelEnd - characterIndex - 1);
             string url = text.Substring(labelEnd + 2, urlEnd - labelEnd - 2).Trim();
-            links?.Add(new LinkTarget(label, url));
+            AppendRichTextLink(output, links, label, url);
+            characterIndex = urlEnd + 1;
+            return true;
+        }
+
+        private static void AppendRichTextLink(StringBuilder output, List<LinkTarget> links, string label, string url)
+        {
+            int linkIndex = -1;
+            if (links != null)
+            {
+                linkIndex = links.Count;
+                links.Add(new LinkTarget(label, url));
+                output.Append("<link=\"");
+                output.Append(linkIndex.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                output.Append("\">");
+            }
+
             output.Append("<color=#2f75c0><b>");
             output.Append(EscapeRichText(label));
             output.Append("</b></color>");
-            characterIndex = urlEnd + 1;
-            return true;
+            if (linkIndex >= 0)
+            {
+                output.Append("</link>");
+            }
         }
 
         private static bool TryConsumePairedMarker(string text, ref int characterIndex, string marker, string openingTag, string closingTag, StringBuilder output, List<LinkTarget> links)

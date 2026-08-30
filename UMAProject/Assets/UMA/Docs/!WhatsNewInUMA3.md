@@ -32,6 +32,7 @@ UMA 3.04 is the cumulative release from UMA 3.02 forward. It includes everything
 ### Welcome Window and Editor Reliability
 
 - Updated the Welcome Window to display the active installed UMA version and settings, open sample scenes from either supported install location, and open this file in the Documentation Browser from **What's New**.
+- Required package guidance now opens once per distinct setup state in an editor session. Closing the Welcome Window suppresses repeat prompts until the render-pipeline or content-installation state changes; **UMA > Welcome to UMA** always opens it manually.
 - Restored **Recompile Shaders** with package-aware shader discovery and material repair.
 - Reworked **Scan Scene** to check current UMA 3 setup problems such as settings and Generator Prefab validity, unresolved avatar races or starting recipes, disabled generation, missing generated meshes, and broken materials or shaders.
 - Reworked **Scan Project** to validate the Global Library, races, slots, overlays, materials, text and wardrobe recipes, and wardrobe collections without rewriting content.

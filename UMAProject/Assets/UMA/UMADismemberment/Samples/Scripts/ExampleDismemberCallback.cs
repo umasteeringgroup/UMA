@@ -313,6 +313,7 @@ public sealed class ExampleDismemberCallback : MonoBehaviour
         surfaceCutPreview.numCornerVertices = 2;
         surfaceCutPreview.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         surfaceCutPreview.receiveShadows = false;
+        surfaceCutPreview.sortingOrder = short.MaxValue;
         surfaceCutPreview.enabled = false;
     }
 

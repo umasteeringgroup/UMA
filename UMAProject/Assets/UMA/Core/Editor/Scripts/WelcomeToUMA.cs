@@ -29,10 +29,13 @@ namespace UMA
         private const string HdrpContentManifest = "UMAHDRPManifest.json";
         private const string PendingSrpImportKey = "UMA.PendingSrpImport";
         private const string StartupCheckCompleteKey = "UMA.WelcomeToUMA.StartupCheckComplete";
+        private const string DismissedAutomaticPromptKey =
+            "UMA.WelcomeToUMA.DismissedAutomaticPrompt";
         private const double RequiredSrpCheckInterval = 2d;
         private const double PendingImportRecoverySeconds = 300d;
         private static double nextRequiredSrpCheck;
         private static double nextPendingImportCheck;
+        private static bool isAssemblyReloadingOrQuitting;
 
         private enum SrpSupport
         {
@@ -90,6 +93,18 @@ namespace UMA
             EditorApplication.delayCall += DelayedCall;
             EditorApplication.update += EnforceRequiredSrpSelection;
             EditorApplication.projectChanged += SrpProjectChanged;
+            AssemblyReloadEvents.beforeAssemblyReload += OnBeforeAssemblyReload;
+            EditorApplication.quitting += OnEditorQuitting;
+        }
+
+        private static void OnBeforeAssemblyReload()
+        {
+            isAssemblyReloadingOrQuitting = true;
+        }
+
+        private static void OnEditorQuitting()
+        {
+            isAssemblyReloadingOrQuitting = true;
         }
 
         private static void SrpProjectChanged()
@@ -125,12 +140,20 @@ namespace UMA
                 EditorApplication.update -= Update;
                 return;
             }
-            if (ShouldShowAutomatically(settings.showWelcomeToUMA, isStartupCheck,
-                RequiresUma3ContentInstallation(),
-                RequiresSrpSelection(GetInstalledSrpSupport()),
-                IsInstalledSrpUpdateAvailable()))
+            SrpSupport installedSrp = GetInstalledSrpSupport();
+            SrpSupport activeSrp = GetActiveSrpSupport();
+            bool requiresUma3Content = RequiresUma3ContentInstallation();
+            bool requiresSrpSelection = RequiresSrpSelection(installedSrp);
+            bool hasInstalledSrpUpdate = IsInstalledSrpUpdateAvailable();
+            string promptSignature = CreateAutomaticPromptSignature(installedSrp,
+                activeSrp, requiresUma3Content, requiresSrpSelection,
+                hasInstalledSrpUpdate);
+            if (ShouldOpenAutomatically(settings.showWelcomeToUMA, isStartupCheck,
+                requiresUma3Content, requiresSrpSelection, hasInstalledSrpUpdate,
+                SessionState.GetString(DismissedAutomaticPromptKey, string.Empty),
+                promptSignature))
             {
-                ShowWindow();
+                OpenWindow();
             }
             EditorApplication.update -= Update;
         }
@@ -143,6 +166,46 @@ namespace UMA
                 requiresSrpSelection || hasInstalledSrpUpdate;
         }
 
+        private static bool ShouldOpenAutomatically(bool showAtStartup,
+            bool isStartupCheck, bool requiresUma3Content,
+            bool requiresSrpSelection, bool hasInstalledSrpUpdate,
+            string dismissedPromptSignature, string currentPromptSignature)
+        {
+            return ShouldShowAutomatically(showAtStartup, isStartupCheck,
+                       requiresUma3Content, requiresSrpSelection,
+                       hasInstalledSrpUpdate) &&
+                   !IsAutomaticPromptDismissed(dismissedPromptSignature,
+                       currentPromptSignature);
+        }
+
+        private static bool IsAutomaticPromptDismissed(string dismissedSignature,
+            string currentSignature)
+        {
+            return !string.IsNullOrEmpty(currentSignature) &&
+                   string.Equals(dismissedSignature, currentSignature,
+                       StringComparison.Ordinal);
+        }
+
+        private static string CreateAutomaticPromptSignature(SrpSupport installedSrp,
+            SrpSupport activeSrp, bool requiresUma3Content,
+            bool requiresSrpSelection, bool hasInstalledSrpUpdate)
+        {
+            return ((int)installedSrp).ToString() + ":" +
+                   ((int)activeSrp).ToString() + ":" +
+                   (requiresUma3Content ? "1" : "0") + ":" +
+                   (requiresSrpSelection ? "1" : "0") + ":" +
+                   (hasInstalledSrpUpdate ? "1" : "0");
+        }
+
+        private static string GetCurrentAutomaticPromptSignature()
+        {
+            SrpSupport installedSrp = GetInstalledSrpSupport();
+            return CreateAutomaticPromptSignature(installedSrp,
+                GetActiveSrpSupport(), RequiresUma3ContentInstallation(),
+                RequiresSrpSelection(installedSrp),
+                IsInstalledSrpUpdateAvailable());
+        }
+
         private static void EnforceRequiredSrpSelection()
         {
             if (Application.isBatchMode || EditorApplication.isCompiling ||
@@ -150,12 +213,20 @@ namespace UMA
                 return;
 
             nextRequiredSrpCheck = EditorApplication.timeSinceStartup + RequiredSrpCheckInterval;
-            if (!RequiresSrpSelection(GetInstalledSrpSupport()))
+            SrpSupport installedSrp = GetInstalledSrpSupport();
+            if (!RequiresSrpSelection(installedSrp))
                 return;
             if (Instance != null)
                 return;
+            string promptSignature = CreateAutomaticPromptSignature(installedSrp,
+                GetActiveSrpSupport(), RequiresUma3ContentInstallation(), true,
+                IsInstalledSrpUpdateAvailable());
+            if (IsAutomaticPromptDismissed(
+                    SessionState.GetString(DismissedAutomaticPromptKey, string.Empty),
+                    promptSignature))
+                return;
 
-            ShowWindow();
+            OpenWindow();
             EditorApplication.delayCall += () =>
             {
                 if (Instance != null && Instance.initialized)
@@ -168,6 +239,12 @@ namespace UMA
 
         [MenuItem("UMA/Welcome to UMA", false, 0)]
         public static void ShowWindow()
+        {
+            SessionState.SetString(DismissedAutomaticPromptKey, string.Empty);
+            OpenWindow();
+        }
+
+        private static void OpenWindow()
         {
             Texture umaTex = null;
             try
@@ -294,6 +371,18 @@ namespace UMA
         public void OnDisable()
         {
             Instance = null;
+            if (Application.isBatchMode || isAssemblyReloadingOrQuitting)
+                return;
+
+            try
+            {
+                SessionState.SetString(DismissedAutomaticPromptKey,
+                    GetCurrentAutomaticPromptSignature());
+            }
+            catch
+            {
+                // Closing the Welcome window must never be blocked by a setup probe.
+            }
         }
 
         public void Awake()
@@ -2969,6 +3058,7 @@ namespace UMA
             AddText("<b>1. Render Pipeline Support</b>");
             AddText("Choose exactly one pipeline. These buttons install the bundled UMA " +
                 "URP or HDRP package into the editable Assets/UMA/SRP folder.");
+#if UMA_PACKAGE_MANAGER
             AddSrpSupportControls();
             AddSeperator();
 
@@ -3006,6 +3096,12 @@ namespace UMA
                 UMAContentPackageInstaller.InstallFromFile(UMAContentKind.Uma2);
             AddText("Content updates compare the installed manifest with project files. " +
                 "Locally edited files are never replaced without an explicit backup-and-replace decision.");
+#else             
+        AddSeperator();
+        // Not using the Package Manager. Manual installation is required.
+        AddText("Manual installation of UMA content is required when not using the Package Manager.");
+        AddText("In the UMA/SRP folder, double-click the appropriate SRP package to install it.");  
+#endif
         }
 
         private static string ContentStatusText(UMAContentKind kind,

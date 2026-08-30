@@ -1,6 +1,6 @@
 # Overlay Painter
 
-Last reviewed: August 8, 2026.
+Last reviewed: August 30, 2026.
 
 Overlay Painter is UMA's non-destructive surface-painting workspace for creating texture details directly on a reconstructed UMA slot or generated character. It combines a 3D paint view, a synchronized 2D UV canvas, material-aware channels, editable layers, surface paths, masks, and recipe-ready export.
 
@@ -17,6 +17,8 @@ Overlay Painter does not paint into the selected source textures. It works in a 
 
 Related docs:
 
+- [Overlay Painter Material Presets](OverlayPainter%20-%20MaterialPresets.MD) for saving, applying,
+  versioning, and packaging reusable layer stacks.
 - [UMA Materials](UMAMaterial.md) for shader properties, channel layouts, packing, and output settings.
 - [OverlayDataAsset](OverlayDataAsset.md) for ordinary UMA overlay authoring and recipe use.
 - [SlotDataAsset](SlotDataAsset.md) for slots, source meshes, UVs, and UDIM metadata.
@@ -756,6 +758,10 @@ Merge Down is a flattening operation. It bakes the visible results of two adjace
 
 Layer structure changes participate in Undo and Redo.
 
+To reuse one layer, a complete group subtree, or the entire stack on other paint targets, save it as
+a Material Preset. See [Overlay Painter Material Presets](OverlayPainter%20-%20MaterialPresets.MD)
+for creation, compatibility, application, versioning, packaging, and production best practices.
+
 --------------------------------------------------------------------------------
 
 ## Layer and Channel Controls
@@ -1338,8 +1344,8 @@ plugin, version, parameters and generated pixels survive Save/reopen and recover
 fill polygons, or fill UV islands over the result afterward.
 
 The mask-compatible built-ins are **Levels & Curves**, **Blur, Sharpen & Detail**, **Channel
-Operations**, and **Morphology & Distance**. A typical smart-mask workflow is: create a black or
-white mask, use Morphology & Distance to establish or widen a boundary, use Blur/Sharpen/Detail to
+Operations**, and **Morphology & Distance**. A typical procedural mask workflow is: create a black
+or white mask, use Morphology & Distance to establish or widen a boundary, use Blur/Sharpen/Detail to
 soften or clean it, use Levels & Curves to restore contrast, then hand-paint exceptions. Normal &
 Height Toolkit is intentionally unavailable because a tangent-space normal operation has no valid
 grayscale-mask interpretation.
