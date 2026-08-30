@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace UMA.TexturePaint.Editor.Tests
 {
@@ -4514,6 +4515,69 @@ namespace UMA.TexturePaint.Editor.Tests
         }
 
         [Test]
+        public void StableSurfaceIdentityIgnoresUmaGeneratedMaterialNonce()
+        {
+            Material material = Own(new Material(Shader.Find("Standard"))
+                { name = "UMA3_SkinShader_URP_Genb_123456789_UMA30_Body_UDIM1001" });
+            TextureSet body = CreateSet(TexturePaintChannel.Albedo, Color.white, material,
+                Own(CreateQuadMesh()));
+            ConfigureSlot(body, "UMA30_Body_UDIM1001_slot_baked_Human Male 3.0", 0);
+            TextureStore store = CreateStore(body);
+
+            TexturePaintDocumentStorage.AssignStableSurfaceIds(store);
+            string firstIdentity = body.persistentId;
+            material.name = "UMA3_SkinShader_URP_Genb_987654321_UMA30_Body_UDIM1001";
+            TexturePaintDocumentStorage.AssignStableSurfaceIds(store);
+
+            Assert.That(body.persistentId, Is.EqualTo(firstIdentity),
+                "UMAGeneratorPro's random material nonce must not become document identity.");
+            Assert.That(TexturePaintDocumentStorage.StableMaterialName(material.name),
+                Is.EqualTo("UMA3_SkinShader_URP_Genb_UMA30_Body_UDIM1001"));
+        }
+
+        [Test]
+        public void LegacyGeneratedSurfaceRebindRestoresLayerAndBlackMaskWhenTopologyOrderChanges()
+        {
+            Material savedMaterial = Own(new Material(Shader.Find("Standard"))
+                { name = "UMA3_SkinShader_URP_Genb_123456789_UMA30_Body_UDIM1001" });
+            Mesh savedMesh = Own(CreateQuadMesh());
+            TextureSet savedSet = CreateSet(TexturePaintChannel.Albedo, Color.black, savedMaterial, savedMesh);
+            ConfigureSlot(savedSet, "UMA30_Body_UDIM1001_slot_baked_Human Male 3.0", 0);
+            TextureStore savedStore = CreateStore(savedSet);
+            TexturePaintLayer savedLayer = savedSet.AddLayer("Chin Stubble");
+            Assert.That(savedSet.AddLayerMask(savedLayer, 0f), Is.Not.Null);
+            TexturePaintDocument document = Own(ScriptableObject.CreateInstance<TexturePaintDocument>());
+
+            TexturePaintDocumentStorage.Save(document, savedStore);
+            Assert.That(document.surfaces, Has.Count.EqualTo(1));
+            Assert.That(document.surfaces[0].layers, Has.Count.EqualTo(1));
+            Assert.That(document.surfaces[0].layers[0].hasMask, Is.True);
+            Assert.That(document.surfaces[0].layers[0].maskBaseValue, Is.Zero);
+
+            Material regeneratedMaterial = Own(new Material(Shader.Find("Standard"))
+                { name = "UMA3_SkinShader_URP_Genb_987654321_UMA30_Body_UDIM1001" });
+            Mesh regeneratedMesh = Own(CreateQuadMesh());
+            regeneratedMesh.triangles = new[] { 0, 2, 3, 0, 1, 2 };
+            TextureSet restoredSet = CreateSet(TexturePaintChannel.Albedo, Color.black,
+                regeneratedMaterial, regeneratedMesh);
+            ConfigureSlot(restoredSet, "UMA30_Body_UDIM1001_slot_baked_Human Male 3.0", 0);
+            TextureStore restoredStore = CreateStore(restoredSet);
+
+            TexturePaintDocumentStorage.RestoreReport restore =
+                TexturePaintDocumentStorage.Restore(document, restoredStore);
+
+            Assert.That(restore.restoredSurfaces, Is.EqualTo(1));
+            Assert.That(restore.restoredLayers, Is.EqualTo(1));
+            Assert.That(restore.unboundLayers, Is.Zero);
+            Assert.That(restoredSet.layers, Has.Count.EqualTo(1));
+            Assert.That(restoredSet.layers[0].name, Is.EqualTo("Chin Stubble"));
+            Assert.That(restoredSet.layers[0].layerMask, Is.Not.Null);
+            Assert.That(restoredSet.layers[0].layerMask.baseValue, Is.Zero);
+            AssertColor(ReadCenter(restoredSet.layers[0].layerMask.target.Front),
+                TextureSet.MaskColor(0f), 0.01f);
+        }
+
+        [Test]
         public void ToolRailUsesTheFirstThirteenOrderedSpriteSheetSlices()
         {
             for (int index = 0; index < 13; index++)
@@ -4525,20 +4589,240 @@ namespace UMA.TexturePaint.Editor.Tests
             }
         }
 
-        [TestCase(44f, 1)]
-        [TestCase(86f, 2)]
-        [TestCase(125f, 3)]
-        public void DockableToolPaletteWrapsToItsAvailableWidth(float width, int expectedColumns)
+        [Test]
+        public void SceneViewPaintingToolbarOwnsAllThirteenToolControls()
         {
-            Assert.That(TexturePaintStageWindow.CalculateToolPaletteColumnCount(width),
-                Is.EqualTo(expectedColumns));
+            Assert.That(TexturePaintSceneToolPaletteOverlay.Title,
+                Is.EqualTo("Overlay Painter Toolbar"));
+            Assert.That(TexturePaintSceneToolPaletteOverlay.ElementIds, Has.Length.EqualTo(13));
+            Assert.That(TexturePaintSceneToolPaletteOverlay.ElementIds, Does.Contain(
+                TexturePaintScenePaintToolToggle.Id));
+            Assert.That(TexturePaintSceneToolPaletteOverlay.ElementIds, Does.Contain(
+                TexturePaintScenePolygonFillToggle.Id));
+            Assert.That(TexturePaintSceneToolPaletteOverlay.ElementIds, Does.Contain(
+                TexturePaintSceneIslandFillToggle.Id));
+            Assert.That(TexturePaintSceneToolPaletteOverlay.ElementIds, Does.Contain(
+                TexturePaintScenePathToolToggle.Id));
+            Assert.That(TexturePaintSceneToolPaletteOverlay.ElementIds, Does.Contain(
+                TexturePaintSceneToolHelpButton.Id));
+
+            var paint = new TexturePaintScenePaintToolToggle();
+            Assert.That(paint.Q<UnityEngine.UIElements.Image>(), Is.Not.Null,
+                "The Scene-view tool must render the sliced Overlay Painter icon, not the full sprite sheet.");
+        }
+
+        [TestCase(600f, 178f, true, 178f)]
+        [TestCase(300f, 178f, true, 135f)]
+        [TestCase(200f, 50f, true, 112f)]
+        [TestCase(1000f, 800f, true, 450f)]
+        [TestCase(600f, 178f, false, 0f)]
+        public void BrushWindowOwnsAClampedOptionalAssetShelf(float windowHeight,
+            float requestedHeight, bool visible, float expectedHeight)
+        {
+            Assert.That(TexturePaintStageWindow.CalculateBrushAssetShelfHeight(
+                windowHeight, requestedHeight, visible), Is.EqualTo(expectedHeight));
+        }
+
+        [TestCase(-0.1d, 0f)]
+        [TestCase(0d, 1f)]
+        [TestCase(7.5d, 1f)]
+        [TestCase(8.75d, 0.5f)]
+        [TestCase(9.9d, 0.04f)]
+        [TestCase(10d, 0f)]
+        [TestCase(12d, 0f)]
+        public void ImportWarningSceneNoticeLastsTenSecondsAndFadesAtTheEnd(double elapsed,
+            float expectedAlpha)
+        {
+            Assert.That(TexturePaintStageWindow.CalculateImportWarningNoticeAlpha(elapsed),
+                Is.EqualTo(expectedAlpha).Within(0.0001f));
         }
 
         [Test]
-        public void LayerAndToolWindowsHaveDistinctTitles()
+        public void ObjectPickerCompletionNeverConsumesLayoutOrRepaintEvents()
+        {
+            var layout = new Event
+                { type = EventType.Layout, commandName = "ObjectSelectorClosed" };
+            var repaint = new Event
+                { type = EventType.Repaint, commandName = "ObjectSelectorSelectionDone" };
+            var closed = new Event
+                { type = EventType.ExecuteCommand, commandName = "ObjectSelectorClosed" };
+            var selected = new Event
+                { type = EventType.ExecuteCommand, commandName = "ObjectSelectorSelectionDone" };
+            var unrelated = new Event
+                { type = EventType.ExecuteCommand, commandName = "UnrelatedCommand" };
+
+            Assert.That(TexturePaintStageWindow.IsObjectPickerCompletionEvent(layout), Is.False);
+            Assert.That(TexturePaintStageWindow.IsObjectPickerCompletionEvent(repaint), Is.False);
+            Assert.That(TexturePaintStageWindow.IsObjectPickerCompletionEvent(closed), Is.True);
+            Assert.That(TexturePaintStageWindow.IsObjectPickerCompletionEvent(selected), Is.True);
+            Assert.That(TexturePaintStageWindow.IsObjectPickerCompletionEvent(unrelated), Is.False);
+            Assert.That(TexturePaintStageWindow.IsObjectPickerCompletionEvent(null), Is.False);
+        }
+
+        [Test]
+        public void LayerWindowAndSceneToolOverlayHaveDistinctTitles()
         {
             Assert.That(TexturePaintDockWindow.WindowTitle, Is.EqualTo("Overlay Painter Layers"));
-            Assert.That(TexturePaintToolWindow.WindowTitle, Is.EqualTo("Overlay Painter Toolbar"));
+            Assert.That(TexturePaintSceneToolPaletteOverlay.Title,
+                Is.EqualTo("Overlay Painter Toolbar"));
+        }
+
+        [Test]
+        public void EscapeExitsLayerMaskModeBeforeUnityCanCloseTheStage()
+        {
+            var escape = new Event { type = EventType.KeyDown, keyCode = KeyCode.Escape };
+            var otherKey = new Event { type = EventType.KeyDown, keyCode = KeyCode.B };
+
+            Assert.That(TexturePaintStageWindow.ShouldExitLayerMaskMode(escape, true, 0), Is.True);
+            Assert.That(TexturePaintStageWindow.ShouldExitLayerMaskMode(escape, false, 0), Is.False);
+            Assert.That(TexturePaintStageWindow.ShouldExitLayerMaskMode(escape, true, 1), Is.False,
+                "An active Geometry Fill consumes the first Escape before Mask mode exits.");
+            Assert.That(TexturePaintStageWindow.ShouldExitLayerMaskMode(otherKey, true, 0), Is.False);
+
+            escape.control = true;
+            Assert.That(TexturePaintStageWindow.ShouldExitLayerMaskMode(escape, true, 0), Is.False);
+
+            TexturePaintStageWindow stage = Own(ScriptableObject.CreateInstance<TexturePaintStageWindow>());
+            const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
+            FieldInfo maskMode = typeof(TexturePaintStageWindow).GetField("layerMaskMode", flags);
+            FieldInfo soloMask = typeof(TexturePaintStageWindow).GetField("soloLayerMask", flags);
+            MethodInfo handleEscape = typeof(TexturePaintStageWindow).GetMethod(
+                "TryExitLayerMaskModeFromShortcut", flags);
+            Assert.That(maskMode, Is.Not.Null);
+            Assert.That(soloMask, Is.Not.Null);
+            Assert.That(handleEscape, Is.Not.Null);
+
+            maskMode.SetValue(stage, true);
+            soloMask.SetValue(stage, true);
+            escape.control = false;
+            Assert.That((bool)handleEscape.Invoke(stage, new object[] { escape }), Is.True);
+            Assert.That(escape.type, Is.EqualTo(EventType.Used),
+                "Overlay Painter must consume Escape before Unity's stage navigation sees it.");
+            Assert.That((bool)maskMode.GetValue(stage), Is.False);
+            Assert.That((bool)soloMask.GetValue(stage), Is.False);
+        }
+
+        [Test]
+        public void CompactWorkspaceDefinesRequestedTabsAndIsOptional()
+        {
+            string layout = TexturePaintWorkspaceLayout.CompactLayoutDefinition;
+            Assert.That(layout, Does.Contain("\"horizontal\": true"));
+            Assert.That(layout, Does.Contain("\"TexturePaintDockWindow\""));
+            Assert.That(layout, Does.Contain("\"TexturePaintBrushWindow\""));
+            Assert.That(layout, Does.Contain("\"SceneView\""));
+            Assert.That(layout, Does.Contain("\"TexturePaintUVWindow\""));
+            Assert.That(layout, Does.Contain("\"restore_layout_dimension\": true"));
+
+            SceneView compactScene = Own(ScriptableObject.CreateInstance<SceneView>());
+            SceneView otherScene = Own(ScriptableObject.CreateInstance<SceneView>());
+            Assert.That(TexturePaintWorkspaceLayout.IsExpectedOverlayHost(false, compactScene,
+                otherScene), Is.True, "The ordinary workspace retains its existing Scene-view behavior.");
+            Assert.That(TexturePaintWorkspaceLayout.IsExpectedOverlayHost(true, compactScene,
+                compactScene), Is.True);
+            Assert.That(TexturePaintWorkspaceLayout.IsExpectedOverlayHost(true, compactScene,
+                otherScene), Is.False,
+                "Compact View toolbars must be hidden from every Scene view except its docked Scene tab.");
+
+            UMASettings previousSettings = UMASettings.instance;
+            UMASettings settings = Own(ScriptableObject.CreateInstance<UMASettings>());
+            try
+            {
+                UMASettings.instance = settings;
+                Assert.That(settings.texturePaintCompactView, Is.True,
+                    "Compact View is the recommended default but must remain optional.");
+                Assert.That(UMASettings.TexturePaintCompactView, Is.True);
+                settings.texturePaintCompactView = false;
+                Assert.That(UMASettings.TexturePaintCompactView, Is.False);
+            }
+            finally
+            {
+                UMASettings.instance = previousSettings;
+            }
+        }
+
+        [Test]
+        public void SceneToolbarProvidesAnExplicitFullWidthShutdownButton()
+        {
+            var button = new TexturePaintSceneShutdownButton();
+
+            Assert.That(button.text, Is.EqualTo("Shutdown Overlay Painter"));
+            Assert.That(button.tooltip, Does.Contain("Save, discard, or cancel"));
+            Assert.That(button.style.minWidth.value.value, Is.GreaterThanOrEqualTo(170f));
+            Assert.That(button.style.flexShrink.value, Is.EqualTo(0f));
+        }
+
+        [Test]
+        public void FreshCharacterLaunchPrefersBodyAndDefaultsToIsolate()
+        {
+            var internallyNamedBody = new TexturePaintLogicalTarget
+            {
+                id = "udim:body-skin",
+                displayName = "Skin"
+            };
+            internallyNamedBody.members.Add(new TexturePaintLogicalTargetMember
+            {
+                slotName = "UMA30_Body_UDIM1001_slot"
+            });
+            var bodyHair = new TexturePaintLogicalTarget
+            {
+                id = "slot:Body_Hair",
+                displayName = "Body Hair"
+            };
+            var head = new TexturePaintLogicalTarget
+            {
+                id = "slot:Head",
+                displayName = "Head"
+            };
+            var body = new TexturePaintLogicalTarget
+            {
+                id = "udim:human-body",
+                displayName = "Human Body"
+            };
+            body.members.Add(new TexturePaintLogicalTargetMember
+            {
+                slotName = "UMA30_Body_UDIM1001_slot"
+            });
+
+            Assert.That(TexturePaintStageWindow.FindPreferredCharacterBodyTarget(
+                new[] { internallyNamedBody, bodyHair, head, body }), Is.SameAs(body),
+                "Only the visible target name may qualify a character Body default.");
+            Assert.That(TexturePaintStageWindow.FindPreferredCharacterBodyTarget(
+                new[] { internallyNamedBody, head }), Is.Null,
+                "An internal ID or member slot containing Body must not qualify a differently named target.");
+            Assert.That(TexturePaintStageWindow.ShouldDefaultCharacterIsolate(false, null), Is.True);
+            Assert.That(TexturePaintStageWindow.ShouldDefaultCharacterIsolate(true, null), Is.False,
+                "Standalone slot launches must retain their existing Isolate default.");
+        }
+
+        [Test]
+        public void CharacterBodyDefaultTakesPriorityOverRestoredSlotSelection()
+        {
+            var catalog = new TexturePaintLogicalTargetCatalog();
+            catalog.Rebuild(new[]
+            {
+                new ReconstructedSurface { slotNames = new List<string> { "Head" } },
+                new ReconstructedSurface { slotNames = new List<string> { "Human Body" } }
+            });
+
+            TexturePaintLogicalTarget target = TexturePaintStageWindow.ResolveInitialLogicalTarget(
+                catalog, new[] { "Head" }, "slot:Head", true);
+
+            Assert.That(target, Is.SameAs(catalog.FindBySlot("Human Body")));
+            Assert.That(target.displayName, Is.EqualTo("Human Body"));
+        }
+
+        [Test]
+        public void RestoredCharacterWorkspaceRetainsItsExplicitIsolateChoice()
+        {
+            var currentState = new TexturePaintStageState
+            {
+                version = TexturePaintStageState.CurrentVersion,
+                isolateSelectedSlots = false
+            };
+            var legacyState = new TexturePaintStageState { version = 9 };
+
+            Assert.That(TexturePaintStageWindow.ShouldDefaultCharacterIsolate(false, currentState), Is.False);
+            Assert.That(TexturePaintStageWindow.ShouldDefaultCharacterIsolate(false, legacyState), Is.True);
         }
 
         [Test]

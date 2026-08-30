@@ -28,6 +28,7 @@ namespace UMA
         private const string UrpContentManifest = "UMAURPManifest.json";
         private const string HdrpContentManifest = "UMAHDRPManifest.json";
         private const string PendingSrpImportKey = "UMA.PendingSrpImport";
+        private const string StartupCheckCompleteKey = "UMA.WelcomeToUMA.StartupCheckComplete";
         private const double RequiredSrpCheckInterval = 2d;
         private const double PendingImportRecoverySeconds = 300d;
         private static double nextRequiredSrpCheck;
@@ -105,6 +106,10 @@ namespace UMA
 
         public static void Update()
         {
+            bool isStartupCheck = !SessionState.GetBool(StartupCheckCompleteKey, false);
+            if (isStartupCheck)
+                SessionState.SetBool(StartupCheckCompleteKey, true);
+
             UMASettings settings = null;
             try
             {
@@ -120,14 +125,22 @@ namespace UMA
                 EditorApplication.update -= Update;
                 return;
             }
-            if (settings.showWelcomeToUMA ||
-                RequiresUma3ContentInstallation() ||
-                RequiresSrpSelection(GetInstalledSrpSupport()) ||
-                IsInstalledSrpUpdateAvailable())
+            if (ShouldShowAutomatically(settings.showWelcomeToUMA, isStartupCheck,
+                RequiresUma3ContentInstallation(),
+                RequiresSrpSelection(GetInstalledSrpSupport()),
+                IsInstalledSrpUpdateAvailable()))
             {
                 ShowWindow();
             }
             EditorApplication.update -= Update;
+        }
+
+        private static bool ShouldShowAutomatically(bool showAtStartup,
+            bool isStartupCheck, bool requiresUma3Content, bool requiresSrpSelection,
+            bool hasInstalledSrpUpdate)
+        {
+            return (showAtStartup && isStartupCheck) || requiresUma3Content ||
+                requiresSrpSelection || hasInstalledSrpUpdate;
         }
 
         private static void EnforceRequiredSrpSelection()
@@ -2971,7 +2984,7 @@ namespace UMA
             LogLine uma3Install = AddText(
                 uma3State == UMAContentInstallationState.Missing
                     ? "Install UMA 3 Content..."
-                    : "Adopt, Update, or Reinstall UMA 3 Content...");
+                    : "Update, or Reinstall UMA 3 Content...");
             uma3Install.ButtonAction = line =>
                 UMAContentPackageInstaller.InstallFromFile(UMAContentKind.Uma3);
 
@@ -2988,7 +3001,7 @@ namespace UMA
             LogLine uma2Install = AddText(
                 uma2State == UMAContentInstallationState.Missing
                     ? "Install Optional UMA 2 Legacy Content..."
-                    : "Adopt, Update, or Reinstall UMA 2 Legacy Content...");
+                    : "Update, or Reinstall UMA 2 Legacy Content...");
             uma2Install.ButtonAction = line =>
                 UMAContentPackageInstaller.InstallFromFile(UMAContentKind.Uma2);
             AddText("Content updates compare the installed manifest with project files. " +

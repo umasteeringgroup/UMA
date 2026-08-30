@@ -2257,7 +2257,7 @@ namespace UMA.Dismemberment
                 DecalRTStampAsset.SlotStamp slotStamp = stamp.slots[stampIndex];
                 if (slotStamp == null || slotStamp.debugDontUse || slotStamp.normBaseUV == null ||
                     slotStamp.overlayUV == null || slotStamp.triangles == null) continue;
-                SlotData slot = FindRuntimeSlot(slotStamp, generated.umaMaterial,
+                SlotData slot = FindGeneratedMaterialSlot(generated, slotStamp,
                     stamp.overlayGroup, requireOverlayGroup);
                 if (slot == null) continue;
                 if (targetProfile != null && !SlotMatchesProfile(slot, targetProfile)) continue;
@@ -2291,14 +2291,19 @@ namespace UMA.Dismemberment
             return mesh;
         }
 
-        private SlotData FindRuntimeSlot(DecalRTStampAsset.SlotStamp stamp,
-            UMAMaterial material, string overlayGroup, bool requireOverlayGroup)
+        internal static SlotData FindGeneratedMaterialSlot(
+            UMAData.GeneratedMaterial generated, DecalRTStampAsset.SlotStamp stamp,
+            string overlayGroup, bool requireOverlayGroup)
         {
-            SlotData[] slots = umaData.umaRecipe.slotDataList;
-            for (int i = 0; i < slots.Length; i++)
+            if (generated?.umaMaterial == null || generated.materialFragments == null ||
+                stamp == null) return null;
+            // NoAtlas and other split outputs may share one UMAMaterial. Search only this
+            // generated material's fragments; a recipe-wide search can replay a jacket stamp
+            // into an unrelated head output that happens to use the same UMAMaterial.
+            for (int i = 0; i < generated.materialFragments.Count; i++)
             {
-                SlotData slot = slots[i];
-                if (slot?.asset == null || slot.material != material) continue;
+                SlotData slot = generated.materialFragments[i]?.slotData;
+                if (slot?.asset == null || slot.material != generated.umaMaterial) continue;
                 bool identity = !string.IsNullOrEmpty(stamp.slotGroup)
                     ? string.Equals(stamp.slotGroup, slot.asset.slotGroup, StringComparison.Ordinal)
                     : string.Equals(stamp.slotName, slot.slotName, StringComparison.Ordinal);

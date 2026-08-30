@@ -230,7 +230,8 @@ namespace UMA.Dynamics
 #if UNITY_EDITOR					
 					if (Debug.isDebugBuild)
                     {
-                        Debug.LogWarning("PlayerCollider or PlayerRigidBody is null, try putting the collider recipe before the PhysicsRecipe, or turn off SimplePlayerCollider.");
+                        Debug.Log("Information: PlayerCollider or PlayerRigidBody is null, and SimplePlayerCollider is enabled. " +
+						 "Try putting the collider recipe before the PhysicsRecipe, or turn off SimplePlayerCollider. This message is editor-only.");
                     }
 #endif
                 }

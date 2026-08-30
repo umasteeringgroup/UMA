@@ -71,9 +71,13 @@ logical channels are supported, including Skin Color Mask, Thickness, Detail Mas
 four bytes per pixel to the command budget. Large generators should submit compact output in strips.
 Built-in generators that create a fresh `Color32[]` for a command may instead use
 `WriteTileCompactOwned` (or `WriteMaskTileCompactOwned`) and relinquish that array to the context.
-The owned form avoids a second full-tile copy; the caller must never read or modify the array after
-submitting it. Third-party plugins should keep using the copying methods unless ownership transfer is
-explicitly safe.
+The owned form avoids a second full-tile copy and transparently keeps compressible payloads compressed
+while an atomic multi-channel/multi-surface transaction is waiting to commit. The host materializes
+one tile for upload and releases it immediately afterward, so transparent 2K/4K UDIM outputs do not
+accumulate as a raw command backlog. The caller must never read or modify the array after submitting
+it. Third-party plugins should keep using the copying methods unless ownership transfer is explicitly
+safe. The command budget still rejects a single tile whose decoded size exceeds the limit and counts
+uncompressible owned tiles at their full RGBA8 size.
 
 Parameterized filters that read only one selected channel should implement
 `ITexturePaintDynamicChannelUsageV2`. `ResolveReadChannels` may return a subset of the descriptor's
@@ -267,7 +271,7 @@ transaction and is subject to the same declared-channel and target-channel restr
 
 ## Production material generators
 
-The example assembly includes eleven deterministic material generators. CPU fallbacks run their
+The example assembly includes twelve deterministic material generators. CPU fallbacks run their
 procedural synthesis away from the editor thread, report progress, honor cancellation between tile
 rows, and commit through one atomic plugin-layer transaction. Dirtify, Edge Wear, and Dripping
 Corrosion use the direct GPU generator path when compute shaders are available:
@@ -282,6 +286,7 @@ Corrosion use the direct GPU generator path when compute shaders are available:
 | Dripping Corrosion | `com.uma.texturepaint.dripping-corrosion` | Albedo, Roughness, Metallic, AO, Normal Control |
 | Surface Noise & Micro Detail | `com.uma.texturepaint.surface-micro-detail` | Albedo, Roughness, Normal Control, Detail Mask |
 | Veins & Subdermal Skin | `com.uma.texturepaint.veins-subdermal` | Albedo, Skin Color Mask, Roughness, Thickness, Normal Control, Detail Mask |
+| Stubble Maker | `com.uma.texturepaint.stubble-maker` | Albedo, Roughness, Normal Control, Skin Color Mask, Detail Mask |
 | Scar, Wound & Skin Damage | `com.uma.texturepaint.scar-wound` | Albedo, Skin Color Mask, Roughness, Thickness, Normal Control |
 | Creature Skin Variation | `com.uma.texturepaint.creature-skin` | Albedo, Skin Color Mask, Roughness, Thickness, Normal Control, Detail Mask |
 | Combat Scratches & Dents | `com.uma.texturepaint.scratch-dent` | Albedo, Roughness, Metallic, AO, Normal Control |
@@ -317,6 +322,14 @@ read-only input and produces synchronized skin color, microsurface, thickness, a
 An automatic procedural guide and a grayscale parameter texture are alternatives. Because the guide
 is a regular ribbon layer, the established spline point/width/tangent tools provide precise scar art
 direction without giving the plugin mutable access to path internals.
+
+Stubble Maker is a write-only transparent-overlay generator. It arranges deterministic tapered
+strands in texture space, with zero degrees defined as texture-space down, and provides separate
+Facial Hair and shorter/denser Shaved Head profiles. Placement shape, center, size, rotation, edge
+feather, optional Control Mask, length, width, density, direction, bend, root-position jitter, and
+per-strand variation are captured in the persistent parameter schema. Soft beard/scalp shadow,
+follicle redness, rash, pimples, and pigment spots share the placement boundary. Every generated
+channel carries feature coverage in alpha; no continuous skin base is written.
 
 The combat-damage generator is a feature-morphology reference: it synthesizes bounded impact bowls,
 crater rims, point pings, finite tapered cuts, side burrs, and parallel glancing tracks, then blends

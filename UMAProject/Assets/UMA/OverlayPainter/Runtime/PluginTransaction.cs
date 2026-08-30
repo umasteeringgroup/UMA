@@ -908,6 +908,15 @@ namespace UMA.TexturePaint
             TexturePaintPluginTileCommand command, Texture2D geometryMask,
             ComputeShader channelPackShader)
         {
+            bool materialized = command.MaterializeCompactPixels();
+            try { ApplyMaterialized(target, channel, command, geometryMask, channelPackShader); }
+            finally { if (materialized) command.ReleaseMaterializedCompactPixels(); }
+        }
+
+        private static void ApplyMaterialized(EditableTextureTarget target, TextureChannelTarget channel,
+            TexturePaintPluginTileCommand command, Texture2D geometryMask,
+            ComputeShader channelPackShader)
+        {
             if (TryApplyCompactGpu(target, command, geometryMask, channelPackShader, false)) return;
             Color[] destination = Read(target.Front, command.rect);
             Color[] maskPixels = geometryMask.GetPixels(command.rect.x, command.rect.y, command.rect.width, command.rect.height);
@@ -955,6 +964,15 @@ namespace UMA.TexturePaint
         }
 
         private static void ApplyMask(EditableTextureTarget target,
+            TexturePaintPluginTileCommand command, Texture2D geometryMask,
+            ComputeShader channelPackShader)
+        {
+            bool materialized = command.MaterializeCompactPixels();
+            try { ApplyMaterializedMask(target, command, geometryMask, channelPackShader); }
+            finally { if (materialized) command.ReleaseMaterializedCompactPixels(); }
+        }
+
+        private static void ApplyMaterializedMask(EditableTextureTarget target,
             TexturePaintPluginTileCommand command, Texture2D geometryMask,
             ComputeShader channelPackShader)
         {

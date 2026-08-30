@@ -156,6 +156,20 @@ namespace UMA.TexturePaint.Editor.Tests
             finally { UnityEngine.Object.DestroyImmediate(source); }
         }
 
+        [TestCase(true, 0, (int)TexturePaintStageWindow.RecoveryLaunchAction.OpenRequestedDocument)]
+        [TestCase(true, 1, (int)TexturePaintStageWindow.RecoveryLaunchAction.Cancel)]
+        [TestCase(true, 2, (int)TexturePaintStageWindow.RecoveryLaunchAction.Recover)]
+        [TestCase(false, 0, (int)TexturePaintStageWindow.RecoveryLaunchAction.Recover)]
+        [TestCase(false, 1, (int)TexturePaintStageWindow.RecoveryLaunchAction.Cancel)]
+        [TestCase(false, 2, (int)TexturePaintStageWindow.RecoveryLaunchAction.DiscardRecovery)]
+        [TestCase(true, -1, (int)TexturePaintStageWindow.RecoveryLaunchAction.Cancel)]
+        public void ExplicitDocumentOpenIsNotSilentlyReplacedByRecovery(bool hasRequestedDocument,
+            int dialogChoice, int expected)
+        {
+            Assert.That((int)TexturePaintStageWindow.ResolveRecoveryLaunchAction(hasRequestedDocument,
+                dialogChoice), Is.EqualTo(expected));
+        }
+
         [Test]
         public void ProjectSaveExternalizesPixelsAndSaveAsOwnsIndependentBlob()
         {
@@ -282,17 +296,74 @@ namespace UMA.TexturePaint.Editor.Tests
         public void ExternalOperationCompletionRestartsAutosaveDebounce()
         {
             TexturePaintStageWindow stage = ScriptableObject.CreateInstance<TexturePaintStageWindow>();
+            UMASettings previousSettings = UMASettings.instance;
+            UMASettings settings = ScriptableObject.CreateInstance<UMASettings>();
             try
             {
+                settings.texturePaintAutomaticRecovery = true;
+                settings.texturePaintRecoveryIdleDelaySeconds = 120f;
+                settings.texturePaintRecoveryMinimumIntervalSeconds = 300f;
+                UMASettings.instance = settings;
                 SetField(stage, "nextAutosaveTime", 0d);
                 double before = EditorApplication.timeSinceStartup;
 
                 stage.DeferAutosaveAfterExternalOperation();
 
                 double deadline = (double)Field("nextAutosaveTime").GetValue(stage);
-                Assert.That(deadline, Is.GreaterThanOrEqualTo(before + 29.9d));
+                Assert.That(deadline, Is.GreaterThanOrEqualTo(before + 119.9d));
             }
-            finally { UnityEngine.Object.DestroyImmediate(stage); }
+            finally
+            {
+                UMASettings.instance = previousSettings;
+                UnityEngine.Object.DestroyImmediate(settings);
+                UnityEngine.Object.DestroyImmediate(stage);
+            }
+        }
+
+        [Test]
+        public void AutomaticRecoveryUsesRecommendedDefaultsAndHonorsBothDeadlines()
+        {
+            UMASettings settings = ScriptableObject.CreateInstance<UMASettings>();
+            try
+            {
+                Assert.That(settings.texturePaintAutomaticRecovery, Is.True);
+                Assert.That(settings.texturePaintRecoveryIdleDelaySeconds, Is.EqualTo(120f));
+                Assert.That(settings.texturePaintRecoveryMinimumIntervalSeconds, Is.EqualTo(300f));
+
+                Assert.That(TexturePaintStageWindow.CalculateAutomaticSaveDeadline(
+                    1000d, double.NegativeInfinity, 120d, 300d), Is.EqualTo(1120d),
+                    "The first background save should use the idle delay.");
+                Assert.That(TexturePaintStageWindow.CalculateAutomaticSaveDeadline(
+                    1000d, 950d, 120d, 300d), Is.EqualTo(1250d),
+                    "A recent save should enforce the minimum interval.");
+                Assert.That(TexturePaintStageWindow.CalculateAutomaticSaveDeadline(
+                    1000d, 500d, 120d, 300d), Is.EqualTo(1120d),
+                    "An old save should leave the idle delay as the active deadline.");
+            }
+            finally { UnityEngine.Object.DestroyImmediate(settings); }
+        }
+
+        [Test]
+        public void AutomaticRecoverySettingsExposeDisableAndSafeTimingBounds()
+        {
+            UMASettings previousSettings = UMASettings.instance;
+            UMASettings settings = ScriptableObject.CreateInstance<UMASettings>();
+            try
+            {
+                settings.texturePaintAutomaticRecovery = false;
+                settings.texturePaintRecoveryIdleDelaySeconds = 1f;
+                settings.texturePaintRecoveryMinimumIntervalSeconds = -5f;
+                UMASettings.instance = settings;
+
+                Assert.That(UMASettings.TexturePaintAutomaticRecovery, Is.False);
+                Assert.That(UMASettings.TexturePaintRecoveryIdleDelaySeconds, Is.EqualTo(15d));
+                Assert.That(UMASettings.TexturePaintRecoveryMinimumIntervalSeconds, Is.Zero);
+            }
+            finally
+            {
+                UMASettings.instance = previousSettings;
+                UnityEngine.Object.DestroyImmediate(settings);
+            }
         }
 
         [Test]

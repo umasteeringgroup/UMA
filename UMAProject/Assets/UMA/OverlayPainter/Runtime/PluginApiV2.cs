@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -535,12 +537,46 @@ namespace UMA.TexturePaint
         public RectInt rect;
         public Color[] pixels;
         public Color32[] compactPixels;
+        public byte[] compressedCompactPixels;
+        public int compactPixelCount;
         public TexturePaintPluginColorSpace colorSpace;
         public TexturePaintPluginBlend blend;
         public float opacity;
         public TexturePaintPluginTarget target = TexturePaintPluginTarget.LayerContent;
 
-        public Color GetPixel(int index) => compactPixels != null ? compactPixels[index] : pixels[index];
+        public Color GetPixel(int index)
+        {
+            if (compactPixels != null) return compactPixels[index];
+            if (pixels != null) return pixels[index];
+            throw new InvalidOperationException("Plugin tile pixels were not materialized for commit.");
+        }
+
+        public bool MaterializeCompactPixels()
+        {
+            if (compactPixels != null || compressedCompactPixels == null) return false;
+            int expectedBytes = checked(compactPixelCount * 4);
+            byte[] raw;
+            using (var input = new MemoryStream(compressedCompactPixels, false))
+            using (var stream = new DeflateStream(input, CompressionMode.Decompress))
+            using (var output = new MemoryStream(expectedBytes))
+            {
+                stream.CopyTo(output);
+                raw = output.ToArray();
+            }
+            if (raw.Length != expectedBytes)
+                throw new InvalidDataException("Compressed plugin tile decoded to an unexpected size.");
+            var decoded = new Color32[compactPixelCount];
+            for (int i = 0, offset = 0; i < decoded.Length; i++, offset += 4)
+                decoded[i] = new Color32(raw[offset], raw[offset + 1], raw[offset + 2],
+                    raw[offset + 3]);
+            compactPixels = decoded;
+            return true;
+        }
+
+        public void ReleaseMaterializedCompactPixels()
+        {
+            if (compressedCompactPixels != null) compactPixels = null;
+        }
     }
 
     public sealed class TexturePaintCommandContextV2
@@ -642,8 +678,9 @@ namespace UMA.TexturePaint
 
         /// <summary>
         /// Queues a compact tile without cloning its storage. The caller relinquishes ownership
-        /// and must not read or modify the array after this call. Built-in generators use this
-        /// path to avoid copying every generated 2K/4K channel before the GPU upload.
+        /// and must not read or modify the array after this call. Compressible payloads remain
+        /// compressed until their individual commit, so multi-surface generators do not retain
+        /// every raw 2K/4K channel at once.
         /// </summary>
         public void WriteTileCompactOwned(string surfaceId, TexturePaintChannel channel,
             RectInt rect, Color32[] pixels, TexturePaintPluginColorSpace colorSpace,
@@ -661,16 +698,24 @@ namespace UMA.TexturePaint
                 if (pixels == null || pixels.Length != count)
                     throw new ArgumentException("Tile pixel count must equal rect width × height.", nameof(pixels));
                 if (commands.Count >= 4096) throw new InvalidOperationException("Plugin command count exceeded 4096.");
-                long bytes = count * 4L;
-                if (queuedBytes + bytes > commandMemoryBudgetBytes)
+                long decodedBytes = count * 4L;
+                if (decodedBytes > commandMemoryBudgetBytes)
+                    throw new InvalidOperationException("Plugin command memory budget exceeded.");
+                byte[] compressed = CompressCompactPixels(pixels);
+                bool keepCompressed = compressed.LongLength < decodedBytes;
+                long queuedPayloadBytes = keepCompressed ? compressed.LongLength : decodedBytes;
+                if (queuedBytes + queuedPayloadBytes > commandMemoryBudgetBytes)
                     throw new InvalidOperationException("Plugin command memory budget exceeded.");
                 if (!IsFinite(opacity)) throw new ArgumentOutOfRangeException(nameof(opacity), "Opacity must be finite.");
                 commands.Add(new TexturePaintPluginTileCommand
                 {
-                    surfaceId = surfaceId, channel = channel, rect = rect, compactPixels = pixels,
+                    surfaceId = surfaceId, channel = channel, rect = rect,
+                    compactPixels = keepCompressed ? null : pixels,
+                    compressedCompactPixels = keepCompressed ? compressed : null,
+                    compactPixelCount = count,
                     colorSpace = colorSpace, blend = blend, opacity = Mathf.Clamp01(opacity), target = target
                 });
-                queuedBytes += bytes;
+                queuedBytes += queuedPayloadBytes;
             }
         }
 
@@ -715,6 +760,24 @@ namespace UMA.TexturePaint
         }
 
         internal TexturePaintPluginDescriptor Descriptor => descriptor;
+
+        private static byte[] CompressCompactPixels(Color32[] pixels)
+        {
+            byte[] raw = new byte[checked(pixels.Length * 4)];
+            for (int i = 0, offset = 0; i < pixels.Length; i++, offset += 4)
+            {
+                Color32 pixel = pixels[i];
+                raw[offset] = pixel.r;
+                raw[offset + 1] = pixel.g;
+                raw[offset + 2] = pixel.b;
+                raw[offset + 3] = pixel.a;
+            }
+            using var output = new MemoryStream();
+            using (var stream = new DeflateStream(output,
+                       System.IO.Compression.CompressionLevel.Fastest, true))
+                stream.Write(raw, 0, raw.Length);
+            return output.ToArray();
+        }
 
         private static bool IsFinite(float value) => !float.IsNaN(value) && !float.IsInfinity(value);
     }

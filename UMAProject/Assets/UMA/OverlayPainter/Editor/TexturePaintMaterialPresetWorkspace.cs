@@ -127,9 +127,7 @@ namespace UMA.TexturePaint.Editor
         private void HandleMaterialPresetPickerEvent(Event current)
         {
             if (!materialPresetPickerOpen || current == null) return;
-            bool completed = current.commandName == "ObjectSelectorClosed" ||
-                current.commandName == "ObjectSelectorSelectionDone";
-            if (!completed) return;
+            if (!IsObjectPickerCompletionEvent(current)) return;
             materialPresetPickerOpen = false;
             TexturePaintMaterialPreset preset =
                 EditorGUIUtility.GetObjectPickerObject() as TexturePaintMaterialPreset;

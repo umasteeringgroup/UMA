@@ -131,6 +131,48 @@ namespace UMA.Dismemberment.Tests
         }
 
         [Test]
+        public void RuntimeStampOnlyTargetsGeneratedMaterialThatOwnsRecordedSlot()
+        {
+            UMAMaterial sharedUmaMaterial = Own(
+                ScriptableObject.CreateInstance<UMAMaterial>());
+            sharedUmaMaterial.name = "Shared Head And Jacket Material";
+            SlotData jacket = CreateSlot("Jacket", "TorsoGarment", sharedUmaMaterial);
+            SlotData head = CreateSlot("Head", "Head", sharedUmaMaterial);
+            var jacketTarget = new UMAData.GeneratedMaterial
+            {
+                umaMaterial = sharedUmaMaterial,
+                materialFragments = new List<UMAData.MaterialFragment>
+                {
+                    new UMAData.MaterialFragment { slotData = jacket }
+                }
+            };
+            var headTarget = new UMAData.GeneratedMaterial
+            {
+                umaMaterial = sharedUmaMaterial,
+                materialFragments = new List<UMAData.MaterialFragment>
+                {
+                    new UMAData.MaterialFragment { slotData = head }
+                }
+            };
+            var stamp = new DecalRTStampAsset.SlotStamp
+            {
+                slotName = jacket.slotName,
+                slotGroup = jacket.asset.slotGroup
+            };
+
+            SlotData resolvedJacket =
+                UMARuntimeSurfaceDecalController.FindGeneratedMaterialSlot(
+                    jacketTarget, stamp, null, false);
+            SlotData resolvedHead =
+                UMARuntimeSurfaceDecalController.FindGeneratedMaterialSlot(
+                    headTarget, stamp, null, false);
+
+            Assert.That(resolvedJacket, Is.SameAs(jacket));
+            Assert.That(resolvedHead, Is.Null,
+                "Sharing a UMAMaterial must not replay a jacket stamp into the head output.");
+        }
+
+        [Test]
         public void BleedSourceCountScalesWithMetricCutLength()
         {
             float[] shortCut = UMASurfaceCutSystem.CalculateBleedDistances(
@@ -353,6 +395,17 @@ namespace UMA.Dismemberment.Tests
                     new UMAData.MaterialFragment { slotData = slot }
                 }
             };
+        }
+
+        private SlotData CreateSlot(string slotName, string slotGroup,
+            UMAMaterial material)
+        {
+            SlotDataAsset asset = Own(ScriptableObject.CreateInstance<SlotDataAsset>());
+            asset.name = slotName;
+            asset.slotGroup = slotGroup;
+            var slot = new SlotData(asset);
+            slot.CacheDefaultOverlayMaterial(material);
+            return slot;
         }
 
         private T Own<T>(T value) where T : Object

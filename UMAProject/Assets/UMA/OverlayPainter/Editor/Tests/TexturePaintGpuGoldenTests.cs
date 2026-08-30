@@ -213,6 +213,94 @@ namespace UMA.TexturePaint.Editor.Tests
         }
 
         [Test]
+        public void TriangleRestrictedBatchPreservesSharedEdgeOwnership()
+        {
+            TexturePaintGpuTestFixture.RequireComputeShaders();
+            using TexturePaintGpuTestFixture fixture =
+                new TexturePaintGpuTestFixture(Color.clear);
+            using PaintingEngine engine = TexturePaintGpuTestFixture.CreateEngine();
+            BrushPreset brush = fixture.CreateBrush(1f, 0.25f,
+                TexturePaintBlendMode.Normal);
+            try
+            {
+                StrokeContext context = fixture.CreateContext(brush,
+                    TexturePaintTool.Paint, Color.green, strength: 1f);
+                Assert.That(engine.BeginStroke(context,
+                    TexturePaintSourceMode.SourceTexture), Is.True);
+                BrushProjection firstProjection = fixture.set.surface
+                    .CalculateBrushProjection(0, 10f, Vector3.right, Vector3.up, true);
+                BrushProjection secondProjection = fixture.set.surface
+                    .CalculateBrushProjection(1, 10f, Vector3.right, Vector3.up, true);
+                StrokeSample first = TexturePaintGpuTestFixture.CenterSample();
+                first.triangleIndex = 0;
+                StrokeSample second = TexturePaintGpuTestFixture.CenterSample();
+                second.triangleIndex = 1;
+                var samples = new List<StrokeDispatchSample>
+                {
+                    new StrokeDispatchSample(first, 10f, firstProjection),
+                    new StrokeDispatchSample(second, 10f, secondProjection)
+                };
+
+                Assert.That(engine.ApplySamples(samples), Is.True);
+                engine.EndStroke();
+
+                Assert.That(engine.Performance.computeDispatches, Is.EqualTo(1),
+                    "Both owned triangles fit in one destination tile and should share a batch.");
+                Color[] pixels = fixture.ReadPixels();
+                for (int i = 0; i < pixels.Length; i++)
+                {
+                    Assert.That(pixels[i].g, Is.EqualTo(1f).Within(0.003f));
+                    Assert.That(pixels[i].a, Is.EqualTo(0.25f).Within(0.003f),
+                        $"Pixel {i} received a different number of batched triangle contributions.");
+                }
+            }
+            finally { Object.DestroyImmediate(brush); }
+        }
+
+        [Test]
+        public void InputEventBatchCoalescesHistoryRasterAndNotifications()
+        {
+            TexturePaintGpuTestFixture.RequireComputeShaders();
+            using TexturePaintGpuTestFixture fixture =
+                new TexturePaintGpuTestFixture(Color.clear);
+            using PaintingEngine engine = TexturePaintGpuTestFixture.CreateEngine();
+            BrushPreset brush = fixture.CreateBrush(1f, 0.5f,
+                TexturePaintBlendMode.Normal);
+            int notifications = 0;
+            engine.TextureChanged += (_, __) => notifications++;
+            try
+            {
+                StrokeContext context = fixture.CreateContext(brush,
+                    TexturePaintTool.Paint, Color.green, strength: 1f);
+                Assert.That(engine.BeginStroke(context,
+                    TexturePaintSourceMode.SourceTexture), Is.True);
+                engine.BeginSampleBatch();
+                for (int i = 0; i < 20; i++)
+                {
+                    StrokeSample sample = TexturePaintGpuTestFixture.CenterSample();
+                    sample.uv.x = Mathf.Lerp(0.42f, 0.58f, i / 19f);
+                    Assert.That(engine.ApplySample(sample, 0.08f), Is.True);
+                }
+                Assert.That(notifications, Is.Zero,
+                    "Interactive refresh must wait until the input event is complete.");
+                Assert.That(engine.EndSampleBatch(), Is.True);
+
+                Assert.That(notifications, Is.EqualTo(1));
+                Assert.That(engine.History.PendingTileCount, Is.EqualTo(1));
+                Assert.That(engine.Performance.computeDispatches, Is.EqualTo(1));
+                engine.EndStroke();
+                Assert.That(engine.History.UndoTileCount, Is.EqualTo(1));
+                Assert.That(engine.Undo(), Is.True);
+                Assert.That(fixture.ReadPixels()[32 * TexturePaintGpuTestFixture.Size + 32].a,
+                    Is.LessThan(0.001f));
+                Assert.That(engine.Redo(), Is.True);
+                Assert.That(fixture.ReadPixels()[32 * TexturePaintGpuTestFixture.Size + 32].a,
+                    Is.GreaterThan(0.1f));
+            }
+            finally { Object.DestroyImmediate(brush); }
+        }
+
+        [Test]
         public void DirectUVPaintingOnDenseSmallGeometryProducesOneBoundedFootprint()
         {
             const int grid = 33;
@@ -467,8 +555,10 @@ namespace UMA.TexturePaint.Editor.Tests
                 StrokeSample legSample = TexturePaintGpuTestFixture.CenterSample();
                 legSample.surfaceIndex = 1;
                 legSample.slotName = "Legs";
+                engine.BeginSampleBatch();
                 Assert.That(engine.ApplySample(torsoSample, Radius), Is.True);
                 Assert.That(engine.ApplySample(legSample, Radius), Is.True);
+                Assert.That(engine.EndSampleBatch(), Is.True);
                 engine.EndStroke();
 
                 Color torsoCenter = torso.ReadPixels()[32 * TexturePaintGpuTestFixture.Size + 32];
@@ -476,6 +566,88 @@ namespace UMA.TexturePaint.Editor.Tests
                 Assert.That(ColorDistance(torsoCenter, legCenter), Is.LessThan(0.002f));
                 Assert.That(ColorDistance(torsoCenter, Base), Is.GreaterThan(0.1f));
                 Assert.That(engine.Performance.computeDispatches, Is.EqualTo(2));
+            }
+            finally { Object.DestroyImmediate(brush); }
+        }
+
+        [Test]
+        public void LinkedStrokeFallsBackFromNullMemberTextureSource()
+        {
+            using TexturePaintGpuTestFixture torso = new TexturePaintGpuTestFixture(Base);
+            using TexturePaintGpuTestFixture arms = new TexturePaintGpuTestFixture(Base);
+            arms.set.persistentId = "golden-arms";
+            arms.set.surface.index = 1;
+            arms.set.surface.slotName = "Arms";
+            arms.set.surface.slotNames[0] = "Arms";
+            arms.set.surface.triangleSlotNames = new[] { "Arms", "Arms" };
+            TexturePaintLayer torsoLayer = torso.set.AddLayer("Linked Paint");
+            TexturePaintLayer armsLayer = arms.set.AddLayer("Linked Paint");
+            var validSource = new TexturePaintChannelSourceSettings
+            {
+                source = TexturePaintBrushSource.Color,
+                color = Paint
+            };
+            torsoLayer.GetChannelSettings(TexturePaintChannel.Albedo).sourceSettings = validSource.Clone();
+            armsLayer.GetChannelSettings(TexturePaintChannel.Albedo).sourceSettings =
+                new TexturePaintChannelSourceSettings
+                {
+                    source = TexturePaintBrushSource.Texture,
+                    sourceTexture = null
+                };
+            using PaintingEngine engine = TexturePaintGpuTestFixture.CreateEngine();
+            BrushPreset brush = torso.CreateBrush(Hardness, Flow);
+            try
+            {
+                StrokeContext context = torso.CreateContext(brush, TexturePaintTool.Paint, Paint,
+                    strength: Strength);
+                context.channelSources[TexturePaintChannel.Albedo] = validSource;
+                Assert.That(engine.BeginStroke(context, TexturePaintSourceMode.SourceOverlay,
+                    new List<TextureSet> { torso.set, arms.set }), Is.True, engine.LastStrokeError);
+                StrokeSample torsoSample = TexturePaintGpuTestFixture.CenterSample();
+                StrokeSample armSample = TexturePaintGpuTestFixture.CenterSample();
+                armSample.surfaceIndex = 1;
+                armSample.slotName = "Arms";
+                Assert.That(engine.ApplySample(torsoSample, Radius), Is.True);
+                Assert.That(engine.ApplySample(armSample, Radius), Is.True);
+                engine.EndStroke();
+
+                Color torsoCenter = TexturePaintGpuTestFixture.ReadPixels(
+                    torsoLayer.channels[TexturePaintChannel.Albedo].Front)
+                    [32 * TexturePaintGpuTestFixture.Size + 32];
+                Color armCenter = TexturePaintGpuTestFixture.ReadPixels(
+                    armsLayer.channels[TexturePaintChannel.Albedo].Front)
+                    [32 * TexturePaintGpuTestFixture.Size + 32];
+                Assert.That(ColorDistance(torsoCenter, armCenter), Is.LessThan(0.002f));
+                Assert.That(ColorDistance(torsoCenter, Color.clear), Is.GreaterThan(0.1f));
+            }
+            finally { Object.DestroyImmediate(brush); }
+        }
+
+        [Test]
+        public void LinkedStrokeReportsMemberWithoutWritableRasterTarget()
+        {
+            using TexturePaintGpuTestFixture torso = new TexturePaintGpuTestFixture(Base);
+            using TexturePaintGpuTestFixture arms = new TexturePaintGpuTestFixture(Base);
+            arms.set.persistentId = "golden-arms";
+            torso.set.AddLayer("Linked Paint");
+            TexturePaintLayer armsLayer = arms.set.AddLayer("Linked Paint");
+            armsLayer.GetChannelSettings(TexturePaintChannel.Albedo).locked = true;
+            using PaintingEngine engine = TexturePaintGpuTestFixture.CreateEngine();
+            BrushPreset brush = torso.CreateBrush(Hardness, Flow);
+            try
+            {
+                StrokeContext context = torso.CreateContext(brush, TexturePaintTool.Paint, Paint,
+                    strength: Strength);
+                context.channelSources[TexturePaintChannel.Albedo] =
+                    new TexturePaintChannelSourceSettings
+                    {
+                        source = TexturePaintBrushSource.Color,
+                        color = Paint
+                    };
+
+                Assert.That(engine.BeginStroke(context, TexturePaintSourceMode.SourceOverlay,
+                    new List<TextureSet> { torso.set, arms.set }), Is.False);
+                Assert.That(engine.LastStrokeError, Does.Contain("golden-arms"));
             }
             finally { Object.DestroyImmediate(brush); }
         }

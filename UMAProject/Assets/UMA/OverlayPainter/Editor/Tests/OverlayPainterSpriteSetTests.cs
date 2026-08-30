@@ -1,4 +1,5 @@
 #if UNITY_INCLUDE_TESTS
+using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
@@ -183,6 +184,61 @@ namespace UMA.TexturePaint.Editor.Tests
                 Object.DestroyImmediate(sprite);
                 Object.DestroyImmediate(texture);
             }
+        }
+
+        [Test]
+        public void LinkedSourceSynchronizationRepairsEveryPhysicalMember()
+        {
+            using TextureSet torso = new TextureSet { persistentId = "torso" };
+            using TextureSet arms = new TextureSet { persistentId = "arms" };
+            torso.channels[TexturePaintChannel.Albedo] = new TextureChannelTarget
+            {
+                channel = TexturePaintChannel.Albedo,
+                editable = new EditableTextureTarget("Torso Albedo", 4, 4,
+                    RenderTextureFormat.ARGB32, null, Color.clear)
+            };
+            arms.channels[TexturePaintChannel.Albedo] = new TextureChannelTarget
+            {
+                channel = TexturePaintChannel.Albedo,
+                editable = new EditableTextureTarget("Arms Albedo", 4, 4,
+                    RenderTextureFormat.ARGB32, null, Color.clear)
+            };
+            TexturePaintLayer torsoLayer = torso.AddLayer("Paint Layer");
+            TexturePaintLayer armsLayer = arms.AddLayer("Paint Layer");
+            armsLayer.GetChannelSettings(TexturePaintChannel.Albedo).sourceSettings =
+                new TexturePaintChannelSourceSettings
+                {
+                    source = TexturePaintBrushSource.Texture,
+                    sourceTexture = null
+                };
+            var context = new StrokeContext
+            {
+                channel = TexturePaintChannel.Albedo,
+                paintSource = TexturePaintBrushSource.Color,
+                color = Color.red
+            };
+            TexturePaintStageWindow.PopulateLayerChannelSources(context, torsoLayer);
+            var target = new TexturePaintLogicalTarget { id = "udim:body" };
+            var binding = new TexturePaintLogicalLayerBinding { target = target, complete = true };
+            binding.members.Add(new TexturePaintLogicalLayerMember
+            {
+                textureSet = torso,
+                layer = torsoLayer
+            });
+            binding.members.Add(new TexturePaintLogicalLayerMember
+            {
+                textureSet = arms,
+                layer = armsLayer
+            });
+
+            bool synchronized = TexturePaintStageWindow.SynchronizeLogicalLayerChannelSources(
+                target, binding, torso, context.channelSources, out string error);
+
+            Assert.That(synchronized, Is.True, error);
+            TexturePaintChannelSourceSettings repaired = armsLayer
+                .GetChannelSettings(TexturePaintChannel.Albedo).sourceSettings;
+            Assert.That(repaired.source, Is.EqualTo(TexturePaintBrushSource.Color));
+            Assert.That(repaired.color, Is.EqualTo(Color.red));
         }
     }
 }

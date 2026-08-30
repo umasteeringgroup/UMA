@@ -162,7 +162,7 @@ namespace UMA.TexturePaint.Editor
 
         private static void CheckAssets(TexturePaintReleaseGateReport report)
         {
-            CheckCompute(report, "StrokeRasterize.compute", "CSMain", "CSInPlace", "CSBatchInPlace");
+            CheckCompute(report, "StrokeRasterize.compute", "CSMain", "CSStamp", "CSBatch");
             CheckCompute(report, "Blur.compute", "CSBlur");
             CheckCompute(report, "NormalTouchup.compute", "CSMain");
             CheckCompute(report, "LayerComposite.compute", "CSCopyBase", "CSCompositeLayer",

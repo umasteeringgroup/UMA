@@ -1594,6 +1594,12 @@ namespace UMA
         IUMAMeshCombineOperation,
         IUMAMeshCombineOperationDiagnostics
     {
+#if UNITY_EDITOR
+        private static readonly object ActiveOperationsLock = new object();
+        private static readonly HashSet<UMAIncrementalMeshCombineOperation>
+            ActiveOperations =
+                new HashSet<UMAIncrementalMeshCombineOperation>();
+#endif
         private static readonly ProfilerMarker BuildPlanMarker =
             new ProfilerMarker("UMA.IncrementalMesh.BuildPlan");
         private static readonly ProfilerMarker ScheduleRendererMarker =
@@ -1649,6 +1655,25 @@ namespace UMA
         private bool cancellationRequested;
         private bool disposed;
 
+#if UNITY_EDITOR
+        static UMAIncrementalMeshCombineOperation()
+        {
+            // On an Editor domain reload Unity can tear down the managed
+            // generator before its MonoBehaviour shutdown callbacks release a
+            // time-sliced operation. Persistent NativeArrays survive long
+            // enough for the leak detector to report them, so dispose the
+            // operation owners at the explicit pre-reload boundary.
+            UnityEditor.AssemblyReloadEvents.beforeAssemblyReload -=
+                DisposeActiveOperations;
+            UnityEditor.AssemblyReloadEvents.beforeAssemblyReload +=
+                DisposeActiveOperations;
+            UnityEditor.EditorApplication.quitting -=
+                DisposeActiveOperations;
+            UnityEditor.EditorApplication.quitting +=
+                DisposeActiveOperations;
+        }
+#endif
+
         internal UMAIncrementalMeshCombineOperation(
             UMAIncrementalMeshCombiner owner,
             bool updatedAtlas,
@@ -1659,7 +1684,45 @@ namespace UMA
             this.updatedAtlas = updatedAtlas;
             this.data = data;
             this.atlasResolution = atlasResolution;
+#if UNITY_EDITOR
+            lock (ActiveOperationsLock)
+            {
+                ActiveOperations.Add(this);
+            }
+#endif
         }
+
+#if UNITY_EDITOR
+        /// <summary>
+        /// Disposes every live incremental combine operation. The Editor uses
+        /// this immediately before an assembly reload so Persistent native
+        /// allocations cannot be orphaned with their managed owners.
+        /// </summary>
+        public static void DisposeActiveOperations()
+        {
+            UMAIncrementalMeshCombineOperation[] operations;
+            lock (ActiveOperationsLock)
+            {
+                operations = new UMAIncrementalMeshCombineOperation[
+                    ActiveOperations.Count];
+                ActiveOperations.CopyTo(operations);
+            }
+
+            for (int i = 0; i < operations.Length; i++)
+            {
+                try
+                {
+                    operations[i]?.Dispose();
+                }
+                catch (Exception exception)
+                {
+                    // One failed cleanup must not strand the remaining
+                    // operations during an assembly reload.
+                    Debug.LogException(exception);
+                }
+            }
+        }
+#endif
 
         public string StageName
         {
@@ -2725,8 +2788,20 @@ namespace UMA
                 return;
             }
             disposed = true;
-            plan?.Dispose();
-            plan = null;
+            try
+            {
+                plan?.Dispose();
+            }
+            finally
+            {
+                plan = null;
+#if UNITY_EDITOR
+                lock (ActiveOperationsLock)
+                {
+                    ActiveOperations.Remove(this);
+                }
+#endif
+            }
         }
     }
 }

@@ -291,10 +291,13 @@ namespace UMA.TexturePaint
         public void CollectBrushContacts(Vector3 worldCenter, float worldRadius, IList<string> allowedSlots,
             List<SurfaceBrushContact> results, Vector3 projectionNormal = default, float projectionDepth = 0f,
             float normalAngleLimit = 180f, bool paintBackfaces = true,
-            Vector3 sharedWorldTangent = default, Vector3 sharedWorldBitangent = default)
+            Vector3 sharedWorldTangent = default, Vector3 sharedWorldBitangent = default,
+            TexturePaintStrokeDiagnostics diagnostics = null)
         {
             if (mesh == null || gameObject == null || results == null || worldRadius <= 0f) return;
+            bool captureDiagnostics = diagnostics?.IsCapturing == true;
             EnsureMeshData();
+            bool builtSpatialGrid = captureDiagnostics && spatialTriangleGrid == null;
             EnsureSpatialTriangleGrid();
             Transform transform = gameObject.transform;
             Vector3 localCenter = transform.InverseTransformPoint(worldCenter);
@@ -302,17 +305,28 @@ namespace UMA.TexturePaint
             float minimumScale = Mathf.Max(0.00001f, Mathf.Min(Mathf.Abs(scale.x), Mathf.Min(Mathf.Abs(scale.y), Mathf.Abs(scale.z))));
             float localRadius = worldRadius / minimumScale;
             Bounds bounds = mesh.bounds;
-            if (bounds.SqrDistance(localCenter) > localRadius * localRadius) return;
+            if (bounds.SqrDistance(localCenter) > localRadius * localRadius)
+            {
+                if (captureDiagnostics)
+                    diagnostics.RecordSpatialQuery(builtSpatialGrid, 0, 0, 0, 0);
+                return;
+            }
 
             spatialCandidates.Clear();
             spatialSeen.Clear();
+            int visitedCells = 0;
+            int references = 0;
+            int resultBaseline = results.Count;
             Vector3Int min = SpatialCell(localCenter - Vector3.one * localRadius, bounds);
             Vector3Int max = SpatialCell(localCenter + Vector3.one * localRadius, bounds);
+            if (captureDiagnostics)
+                visitedCells = (max.x - min.x + 1) * (max.y - min.y + 1) * (max.z - min.z + 1);
             for (int z = min.z; z <= max.z; z++)
             for (int y = min.y; y <= max.y; y++)
             for (int x = min.x; x <= max.x; x++)
             {
                 if (!spatialTriangleGrid.TryGetValue(new Vector3Int(x, y, z), out List<int> bucket)) continue;
+                if (captureDiagnostics) references += bucket.Count;
                 for (int i = 0; i < bucket.Count; i++) if (spatialSeen.Add(bucket[i])) spatialCandidates.Add(bucket[i]);
             }
 
@@ -361,6 +375,9 @@ namespace UMA.TexturePaint
                     distance = Mathf.Sqrt(squareDistance)
                 });
             }
+            if (captureDiagnostics)
+                diagnostics.RecordSpatialQuery(builtSpatialGrid, visitedCells, references,
+                    spatialCandidates.Count, results.Count - resultBaseline);
         }
 
         private static bool ContainsSlot(IList<string> allowedSlots, string candidate)
@@ -1154,16 +1171,128 @@ namespace UMA.TexturePaint
         }
     }
 
+    public enum MeshReconstructionWarningSeverity
+    {
+        Information,
+        Warning
+    }
+
+    /// <summary>
+    /// A recoverable reconstruction condition that should remain visible after import without
+    /// interrupting the user. Slot, logical-target, and reconstructed-surface scopes let editor
+    /// clients put the diagnostic beside the affected paint target instead of repeatedly showing
+    /// a global modal dialog.
+    /// </summary>
+    public sealed class MeshReconstructionWarning
+    {
+        private readonly List<string> slotNames = new List<string>();
+        private readonly List<string> targetIds = new List<string>();
+        private readonly List<int> surfaceIndices = new List<int>();
+
+        public string Code { get; }
+        public MeshReconstructionWarningSeverity Severity { get; }
+        public string Message { get; }
+        public string MaterialName { get; }
+        public IReadOnlyList<string> SlotNames => slotNames;
+        public IReadOnlyList<string> TargetIds => targetIds;
+        public IReadOnlyList<int> SurfaceIndices => surfaceIndices;
+
+        internal MeshReconstructionWarning(string code, MeshReconstructionWarningSeverity severity,
+            string message, IReadOnlyList<string> affectedSlots, string materialName)
+        {
+            Code = string.IsNullOrWhiteSpace(code) ? "OP_IMPORT_UNSCOPED" : code;
+            Severity = severity;
+            Message = message ?? string.Empty;
+            MaterialName = materialName ?? string.Empty;
+            if (affectedSlots == null) return;
+            for (int i = 0; i < affectedSlots.Count; i++)
+            {
+                string slotName = affectedSlots[i];
+                if (!string.IsNullOrWhiteSpace(slotName) && !slotNames.Contains(slotName))
+                    slotNames.Add(slotName);
+            }
+        }
+
+        public bool MatchesSlot(string slotName)
+        {
+            if (string.IsNullOrEmpty(slotName)) return false;
+            for (int i = 0; i < slotNames.Count; i++)
+                if (string.Equals(slotNames[i], slotName, StringComparison.Ordinal)) return true;
+            return false;
+        }
+
+        public bool AppliesToTarget(TexturePaintLogicalTarget target)
+        {
+            if (target == null) return false;
+            for (int i = 0; i < targetIds.Count; i++)
+                if (string.Equals(targetIds[i], target.id, StringComparison.Ordinal)) return true;
+            for (int i = 0; i < target.members.Count; i++)
+                if (MatchesSlot(target.members[i].slotName)) return true;
+            return false;
+        }
+
+        public bool AppliesToSurface(ReconstructedSurface surface)
+        {
+            if (surface == null) return false;
+            for (int i = 0; i < surfaceIndices.Count; i++)
+                if (surfaceIndices[i] == surface.index) return true;
+            for (int i = 0; i < surface.slotNames.Count; i++)
+                if (MatchesSlot(surface.slotNames[i])) return true;
+            return false;
+        }
+
+        internal void ResolveScopes(TexturePaintLogicalTargetCatalog logicalTargets,
+            IReadOnlyList<ReconstructedSurface> surfaces)
+        {
+            targetIds.Clear();
+            surfaceIndices.Clear();
+            for (int slotIndex = 0; slotIndex < slotNames.Count; slotIndex++)
+            {
+                TexturePaintLogicalTarget target = logicalTargets?.FindBySlot(slotNames[slotIndex]);
+                if (target != null && !targetIds.Contains(target.id)) targetIds.Add(target.id);
+            }
+            if (surfaces == null) return;
+            for (int surfaceIndex = 0; surfaceIndex < surfaces.Count; surfaceIndex++)
+            {
+                ReconstructedSurface surface = surfaces[surfaceIndex];
+                if (surface == null) continue;
+                for (int slotIndex = 0; slotIndex < surface.slotNames.Count; slotIndex++)
+                {
+                    if (!MatchesSlot(surface.slotNames[slotIndex])) continue;
+                    if (!surfaceIndices.Contains(surface.index)) surfaceIndices.Add(surface.index);
+                    break;
+                }
+            }
+        }
+    }
+
     public sealed class MeshReconstructionResult : IDisposable
     {
         public GameObject root;
         public readonly List<ReconstructedSurface> surfaces = new List<ReconstructedSurface>();
         public readonly TexturePaintLogicalTargetCatalog logicalTargets = new TexturePaintLogicalTargetCatalog();
+        /// <summary>Structured, target-scoped import diagnostics for editor presentation.</summary>
+        public readonly List<MeshReconstructionWarning> importWarnings = new List<MeshReconstructionWarning>();
+        /// <summary>Legacy message-only view retained for integrations that already consume it.</summary>
         public readonly List<string> warnings = new List<string>();
 
         internal void AddWarning(string warning)
         {
-            if (!string.IsNullOrWhiteSpace(warning) && !warnings.Contains(warning)) warnings.Add(warning);
+            AddWarning("OP_IMPORT_UNSCOPED", MeshReconstructionWarningSeverity.Warning, warning, null, null);
+        }
+
+        internal void AddWarning(string code, MeshReconstructionWarningSeverity severity, string warning,
+            IReadOnlyList<string> slotNames, string materialName)
+        {
+            if (string.IsNullOrWhiteSpace(warning) || warnings.Contains(warning)) return;
+            warnings.Add(warning);
+            importWarnings.Add(new MeshReconstructionWarning(code, severity, warning, slotNames, materialName));
+        }
+
+        internal void ResolveWarningScopes()
+        {
+            for (int i = 0; i < importWarnings.Count; i++)
+                importWarnings[i].ResolveScopes(logicalTargets, surfaces);
         }
 
         public bool Raycast(Ray ray, out ReconstructedSurface surface, out RaycastHit hit)
@@ -1179,6 +1308,61 @@ namespace UMA.TexturePaint
                 surface = surfaces[i];
             }
             return surface != null;
+        }
+
+        public bool Raycast(Ray ray, IList<string> allowedSlots, bool includeBackfaces,
+            out ReconstructedSurface surface, out RaycastHit hit,
+            TexturePaintStrokeDiagnostics diagnostics = null)
+        {
+            surface = null;
+            hit = default;
+            float closest = float.MaxValue;
+            int colliderQueries = 0;
+            int raycastHits = 0;
+            bool captureDiagnostics = diagnostics?.IsCapturing == true;
+            bool previousBackfaceQueries = Physics.queriesHitBackfaces;
+            try
+            {
+                Physics.queriesHitBackfaces = includeBackfaces;
+                for (int i = 0; i < surfaces.Count; i++)
+                {
+                    ReconstructedSurface candidateSurface = surfaces[i];
+                    if (!ContainsAnySlot(candidateSurface, allowedSlots)) continue;
+                    if (captureDiagnostics) colliderQueries++;
+                    if (!candidateSurface.TryRaycast(ray, out RaycastHit candidate)) continue;
+                    if (captureDiagnostics) raycastHits++;
+                    if (candidate.distance >= closest) continue;
+                    string slot = candidateSurface.GetTriangleSlotName(candidate.triangleIndex);
+                    if (!string.IsNullOrEmpty(slot) && !ContainsSlot(allowedSlots, slot)) continue;
+                    closest = candidate.distance;
+                    hit = candidate;
+                    surface = candidateSurface;
+                }
+            }
+            finally
+            {
+                Physics.queriesHitBackfaces = previousBackfaceQueries;
+                if (captureDiagnostics)
+                    diagnostics.RecordRaycast(surfaces.Count, colliderQueries, raycastHits);
+            }
+            return surface != null;
+        }
+
+        private static bool ContainsAnySlot(ReconstructedSurface surface, IList<string> allowedSlots)
+        {
+            if (surface == null) return false;
+            if (allowedSlots == null || allowedSlots.Count == 0) return true;
+            for (int i = 0; i < allowedSlots.Count; i++)
+                if (surface.ContainsSlot(allowedSlots[i])) return true;
+            return false;
+        }
+
+        private static bool ContainsSlot(IList<string> allowedSlots, string slot)
+        {
+            if (allowedSlots == null || allowedSlots.Count == 0) return true;
+            for (int i = 0; i < allowedSlots.Count; i++)
+                if (string.Equals(allowedSlots[i], slot, StringComparison.Ordinal)) return true;
+            return false;
         }
 
         public bool RaycastMirroredGlobalX(RaycastHit original, ReconstructedSurface originalSurface,
@@ -1275,23 +1459,27 @@ namespace UMA.TexturePaint
                         FindGeneratedMaterial(avatar.umaData, sourceRenderer, sourceMaterial, submesh,
                             out UMAData.GeneratedMaterial generated, out UMAMaterial umaMaterial,
                             out bool isSecondPass);
+                        List<SlotData> slots = FindSlots(generated);
+                        List<string> slotNames = FindSlotNames(slots, submesh);
                         if (isSecondPass)
                         {
-                            result.AddWarning(
+                            result.AddWarning("OP_IMPORT_DUPLICATE_SECOND_PASS",
+                                MeshReconstructionWarningSeverity.Information,
                                 $"Overlay Painter skipped duplicate second-pass geometry for '{sourceMaterial.name}'. " +
-                                "The matching first-pass slot geometry remains paintable; the second pass is a render-only duplicate and is not imported.");
+                                "The matching first-pass slot geometry remains paintable; the second pass is a render-only duplicate and is not imported.",
+                                slotNames, sourceMaterial.name);
                             continue;
                         }
                         bool usesMaterialSources = UsesReadOnlyMaterialSources(umaMaterial);
-                        List<SlotData> slots = FindSlots(generated);
-                        List<string> slotNames = FindSlotNames(slots, submesh);
                         if (usesMaterialSources)
                         {
                             string materialName = umaMaterial?.name ?? sourceMaterial.name;
-                            result.AddWarning(
+                            result.AddWarning("OP_IMPORT_NON_ATLASED_SOURCE",
+                                MeshReconstructionWarningSeverity.Warning,
                                 $"Slot '{string.Join(", ", slotNames)}' was loaded from non-atlased UMA material '{materialName}'. " +
                                 $"Overlay Painter is using the textures currently assigned to '{sourceMaterial.name}' as its read-only base. " +
-                                "Painting and export will not update those source texture assets.");
+                                "Painting and export will not update those source texture assets.",
+                                slotNames, materialName);
                         }
                         string[] triangleSlotNames = FindTriangleSlotNames(baked, submesh, generated, slotNames);
                         List<SurfaceSlice> slices = BuildSurfaceSlices(baked.GetTriangles(submesh), triangleSlotNames,
@@ -1374,6 +1562,7 @@ namespace UMA.TexturePaint
                 if (result.surfaces.Count == 0) throw new InvalidOperationException("No paintable material submeshes were reconstructed.");
                 result.logicalTargets.Rebuild(result.surfaces);
                 ApplyCanonicalUdimMaterialProperties(result.logicalTargets);
+                result.ResolveWarningScopes();
                 return result;
             }
             catch
@@ -1461,6 +1650,7 @@ namespace UMA.TexturePaint
                 result.logicalTargets.Rebuild(result.surfaces);
                 if (result.logicalTargets.Targets.Count != 1)
                     throw new InvalidOperationException("The selected slot assets did not resolve to one logical paint target.");
+                result.ResolveWarningScopes();
                 return result;
             }
             catch

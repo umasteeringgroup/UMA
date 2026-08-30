@@ -402,8 +402,16 @@ namespace UMA
             // Folder settings (UMAFolder & ShaderFolder) directly after the help box as requested
             SerializedProperty umaFolderProp = m_CustomSettings.FindProperty("UMAFolder");
             SerializedProperty shaderFolderProp = m_CustomSettings.FindProperty("ShaderFolder");
+            SerializedProperty texturePaintCompactViewProp =
+                m_CustomSettings.FindProperty("texturePaintCompactView");
             SerializedProperty texturePaintRecoveryFolderProp =
                 m_CustomSettings.FindProperty("texturePaintRecoveryFolder");
+            SerializedProperty texturePaintAutomaticRecoveryProp =
+                m_CustomSettings.FindProperty("texturePaintAutomaticRecovery");
+            SerializedProperty texturePaintRecoveryIdleDelayProp =
+                m_CustomSettings.FindProperty("texturePaintRecoveryIdleDelaySeconds");
+            SerializedProperty texturePaintRecoveryMinimumIntervalProp =
+                m_CustomSettings.FindProperty("texturePaintRecoveryMinimumIntervalSeconds");
             if (umaFolderProp != null)
             {
                 DrawFolderSetting(umaFolderProp, "UMA Folder",
@@ -415,6 +423,19 @@ namespace UMA
                 DrawFolderSetting(shaderFolderProp, "Shader Folder",
                     "UMA-relative folder containing the packages used to refresh UMA shaders.",
                     false, null, false, UMAPathUtility.ShaderPackagesRelativePath);
+            }
+            if (texturePaintCompactViewProp != null)
+            {
+                texturePaintCompactViewProp.boolValue = EditorGUILayout.Toggle(
+                    new GUIContent("Overlay Painter Compact View",
+                        "Open Overlay Painter in one floating workspace. Layers and Brush share " +
+                        "the left tab group; Scene and Overlay Painter 2D share the right tab group. " +
+                        "Disable this to use separate dockable windows."),
+                    texturePaintCompactViewProp.boolValue);
+                EditorGUILayout.HelpBox(texturePaintCompactViewProp.boolValue
+                        ? "Overlay Painter opens in its dedicated floating workspace. Window size and position are remembered."
+                        : "Overlay Painter opens Layers, Brush, and 2D as separate dockable windows and uses the existing Scene view.",
+                    MessageType.None);
             }
             if (texturePaintRecoveryFolderProp != null)
             {
@@ -439,6 +460,31 @@ namespace UMA
                     EditorGUILayout.HelpBox("Recovery creates painter_recovery.asset and a sibling data folder here. " +
                         "Exclude this folder from source control if temporary recovery should remain local.",
                         MessageType.None);
+            }
+            if (texturePaintAutomaticRecoveryProp != null)
+            {
+                texturePaintAutomaticRecoveryProp.boolValue = EditorGUILayout.Toggle(
+                    new GUIContent("Enable Automatic Recovery",
+                        "Periodically saves temporary recovery data and modified permanent Overlay Painter documents. " +
+                        "Manual Save and close protection remain available when disabled."),
+                    texturePaintAutomaticRecoveryProp.boolValue);
+                using (new EditorGUI.DisabledScope(!texturePaintAutomaticRecoveryProp.boolValue))
+                {
+                    if (texturePaintRecoveryIdleDelayProp != null)
+                        texturePaintRecoveryIdleDelayProp.floatValue = Mathf.Max(15f,
+                            EditorGUILayout.FloatField(new GUIContent("Recovery Idle Delay (seconds)",
+                                "Wait after the most recent edit before beginning a background save. Recommended: 120 seconds."),
+                                texturePaintRecoveryIdleDelayProp.floatValue));
+                    if (texturePaintRecoveryMinimumIntervalProp != null)
+                        texturePaintRecoveryMinimumIntervalProp.floatValue = Mathf.Max(0f,
+                            EditorGUILayout.FloatField(new GUIContent("Minimum Save Interval (seconds)",
+                                "Minimum time between completed background saves. Recommended: 300 seconds."),
+                                texturePaintRecoveryMinimumIntervalProp.floatValue));
+                }
+                EditorGUILayout.HelpBox(texturePaintAutomaticRecoveryProp.boolValue
+                        ? "Recommended defaults: save after 120 seconds without edits, and no more than once every 300 seconds."
+                        : "Periodic recovery and document autosave are disabled. Save manually; close protection still prompts for unsaved work.",
+                    texturePaintAutomaticRecoveryProp.boolValue ? MessageType.None : MessageType.Warning);
             }
 
             DrawBoolProperty("cleanRegenOnSave", "Clean Regen On Save", "If true, UMA will destroy all UMAS when saving, then regenerate after save - Saving large amounts of memory in the scene file");
