@@ -559,6 +559,8 @@ namespace UMA.TexturePaint
                 ? sourceAo : Texture2D.whiteTexture);
             shader.SetInt("_HasP_surfaceTexture", 0);
             shader.SetInt("_HasP_surfaceMask", 0);
+            shader.SetTexture(kernel, "_P_surfaceTexture", Texture2D.whiteTexture);
+            shader.SetTexture(kernel, "_P_surfaceMask", Texture2D.whiteTexture);
 
             IReadOnlyList<TexturePaintPluginParameterDefinition> definitions = descriptor.parameters;
             for (int i = 0; definitions != null && i < definitions.Count; i++)

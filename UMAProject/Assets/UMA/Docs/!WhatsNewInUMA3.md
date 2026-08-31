@@ -1,5 +1,24 @@
 # What's New in UMA 3
 
+### What's new since the UMA 3.04 Release
+##
+##Overlay Painter 
+- UI overhaul, new Compact Mode
+- New toolbars
+- Stubble Maker generator
+- Scar generator
+- Normal control layer to modify normal maps with height maps. 
+- Corrosion generator
+- Various bug fixes
+- Massive paint speedup
+- Split brushes and brush settings into separate dockable windows
+- New - Material Preset system - save layer stacks, with masks, blending, generators, effects. 
+## Gore System
+- New fluid system for bleeding
+- Surface cuts, with adjustable fluid bleeding
+- Amputations (bone level) - cut off arms/legs, hands, etc.
+- Bleeding decals - bullet holes, etc.
+
 ## What's New Since the UMA 3.02 Release
 
 UMA 3.04 is the cumulative release from UMA 3.02 forward. It includes everything previously prepared for the unreleased 3.03 together with the package, sample, reliability, and release-readiness work completed afterward; 3.03 is not a separate upgrade prerequisite.

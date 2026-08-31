@@ -4,6 +4,7 @@ using UnityEngine;
 namespace UMA.Dismemberment
 {
     /// <summary>Owns material clones needed to isolate a detached piece from a live source atlas.</summary>
+    [ExecuteAlways]
     [DisallowMultipleComponent]
     [AddComponentMenu("")]
     public sealed class DismemberedPieceMaterialOwner : MonoBehaviour

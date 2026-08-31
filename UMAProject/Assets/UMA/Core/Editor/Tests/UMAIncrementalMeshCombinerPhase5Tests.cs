@@ -479,7 +479,10 @@ namespace UMA.Editors.Tests
             IUMAMeshCombineOperation operation = null;
             try
             {
-                root = new GameObject("Incremental reload cleanup root");
+                // Match the synthetic slot's root bone. A differently named skeleton root makes
+                // EnsureBoneHierarchy create an unrelated parentless bone before this lifetime
+                // test reaches the skinning allocation it is intended to exercise.
+                root = new GameObject("root");
                 asset = CreateSlotAsset(
                     "IncrementalReloadCleanupSlot");
                 var slot = new SlotData(asset);

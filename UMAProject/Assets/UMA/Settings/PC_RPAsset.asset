@@ -92,7 +92,7 @@ MonoBehaviour:
   m_MaxPixelLights: 0
   m_ShadowAtlasResolution: 256
   m_VolumeFrameworkUpdateMode: 0
-  m_VolumeProfile: {fileID: 11400000, guid: 10fc4df2da32a41aaa32d77bc913491c, type: 2}
+  m_VolumeProfile: {fileID: 0}
   apvScenesData:
     obsoleteSceneBounds:
       m_Keys: []
@@ -105,10 +105,10 @@ MonoBehaviour:
   m_PrefilteringModeAdditionalLightShadows: 2
   m_PrefilterXRKeywords: 1
   m_PrefilteringModeForwardPlus: 2
-  m_PrefilteringModeDeferredRendering: 0
+  m_PrefilteringModeDeferredRendering: 2
   m_PrefilteringModeScreenSpaceOcclusion: 0
   m_PrefilterDebugKeywords: 1
-  m_PrefilterWriteRenderingLayers: 1
+  m_PrefilterWriteRenderingLayers: 0
   m_PrefilterHDROutput: 1
   m_PrefilterAlphaOutput: 1
   m_PrefilterSSAODepthNormals: 0
@@ -129,7 +129,7 @@ MonoBehaviour:
   m_PrefilterSoftShadows: 0
   m_PrefilterScreenCoord: 1
   m_PrefilterScreenSpaceIrradiance: 1
-  m_PrefilterNativeRenderPass: 1
+  m_PrefilterNativeRenderPass: 0
   m_PrefilterUseLegacyLightmaps: 0
   m_PrefilterBicubicLightmapSampling: 1
   m_PrefilterReflectionProbeRotation: 1

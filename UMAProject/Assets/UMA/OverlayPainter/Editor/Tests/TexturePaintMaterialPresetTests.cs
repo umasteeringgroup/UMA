@@ -28,7 +28,10 @@ namespace UMA.TexturePaint.Editor.Tests
                     {
                         id = "order",
                         displayName = "Order",
-                        type = TexturePaintPluginParameterType.Integer
+                        type = TexturePaintPluginParameterType.Integer,
+                        minimum = 1f,
+                        maximum = 2f,
+                        defaultNumber = 1f
                     }
                 }
             };

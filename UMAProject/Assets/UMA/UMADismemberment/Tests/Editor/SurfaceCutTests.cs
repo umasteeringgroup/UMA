@@ -344,14 +344,16 @@ namespace UMA.Dismemberment.Tests
             root.SetActive(false);
             avatar = root.AddComponent<DynamicCharacterAvatar>();
             system = root.AddComponent<UMASurfaceCutSystem>();
+            root.SetActive(true);
+            // Generated UMA renderers appear after DynamicCharacterAvatar.Awake. In EditMode,
+            // Awake intentionally disables renderers that already exist beneath the avatar.
             SkinnedMeshRenderer renderer = CreateRenderer(root.transform, position);
             avatar.SetRenderers(new[] { renderer });
-            root.SetActive(true);
         }
 
         private SkinnedMeshRenderer CreateRenderer(Transform parent, Vector3 position)
         {
-            var host = Own(new GameObject("Surface"));
+            var host = new GameObject("Surface");
             host.transform.SetParent(parent, false);
             host.transform.localPosition = position;
             var renderer = host.AddComponent<SkinnedMeshRenderer>();

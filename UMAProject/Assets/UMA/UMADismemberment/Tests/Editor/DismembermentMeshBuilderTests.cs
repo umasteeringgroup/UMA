@@ -332,7 +332,7 @@ namespace UMA.Dismemberment.Tests
             GameObject piece = Own(new GameObject("Independent Detached Material Owner"));
             DismemberedPieceMaterialOwner owner =
                 piece.AddComponent<DismemberedPieceMaterialOwner>();
-            Material clone = new Material(shader);
+            Material clone = Own(new Material(shader));
             owner.Add(clone);
 
             UnityEngine.Object.DestroyImmediate(piece);
@@ -993,6 +993,7 @@ namespace UMA.Dismemberment.Tests
             Mesh originalSecond = second.sharedMesh;
             UmaDismemberment component = avatarObject.AddComponent<UmaDismemberment>();
             component.generateCaps = false;
+            component.capOnlyBodyParts = false;
             component.enabled = false;
             component.enabled = true;
             DismembermentResult completion = null;
@@ -1049,6 +1050,7 @@ namespace UMA.Dismemberment.Tests
             avatar.SetRenderers(new[] { renderer });
             UmaDismemberment component = avatarObject.AddComponent<UmaDismemberment>();
             component.generateCaps = false;
+            component.capOnlyBodyParts = false;
             component.enabled = false;
             component.enabled = true;
 
@@ -1115,6 +1117,9 @@ namespace UMA.Dismemberment.Tests
             AssertRendererMeshIsStructurallyValid(renderer);
             Mesh afterNeck = renderer.sharedMesh;
             AssertSameVertexLayout(original, afterNeck);
+            VertexAttributeDescriptor[] afterNeckLayout = afterNeck.GetVertexAttributes();
+            int[] afterNeckStrides = CaptureVertexBufferStrides(afterNeck,
+                afterNeckLayout);
             Own(neckCut.root.gameObject);
 
             bool legSliced = component.TrySlice(rightLeg, 0.5f,
@@ -1133,7 +1138,8 @@ namespace UMA.Dismemberment.Tests
                 "The neck piece must remain alive after the right-leg cut.");
             Assert.That(legCut.root, Is.Not.Null);
             AssertRendererMeshIsStructurallyValid(renderer);
-            AssertSameVertexLayout(afterNeck, renderer.sharedMesh);
+            AssertSameVertexLayout(afterNeckLayout, afterNeckStrides,
+                renderer.sharedMesh);
             Own(legCut.root.gameObject);
         }
 
@@ -1200,6 +1206,7 @@ namespace UMA.Dismemberment.Tests
             component.sliceFill = capMaterial;
             component.generateCaps = true;
             component.requireClosedCaps = true;
+            component.capOnlyBodyParts = false;
             component.seamWeldTolerance = 0.0001f;
             component.enabled = false;
             component.enabled = true;
@@ -1336,7 +1343,14 @@ namespace UMA.Dismemberment.Tests
         private static void AssertPreservedVertexLayout(Mesh source, Mesh output,
             VertexAttributeDescriptor[] expected)
         {
-            VertexAttributeDescriptor[] actual = output.GetVertexAttributes();
+            AssertSameVertexLayout(expected, CaptureVertexBufferStrides(source, expected),
+                output);
+        }
+
+        private static void AssertSameVertexLayout(VertexAttributeDescriptor[] expected,
+            int[] expectedStrides, Mesh actualMesh)
+        {
+            VertexAttributeDescriptor[] actual = actualMesh.GetVertexAttributes();
             Assert.That(actual, Has.Length.EqualTo(expected.Length));
             for (int i = 0; i < expected.Length; i++)
             {
@@ -1345,14 +1359,24 @@ namespace UMA.Dismemberment.Tests
                 Assert.That(actual[i].dimension, Is.EqualTo(expected[i].dimension));
                 Assert.That(actual[i].stream, Is.EqualTo(expected[i].stream));
             }
-            for (int stream = 0; stream < GetStreamCount(expected); stream++)
-                Assert.That(output.GetVertexBufferStride(stream),
-                    Is.EqualTo(source.GetVertexBufferStride(stream)));
+            Assert.That(expectedStrides, Has.Length.EqualTo(GetStreamCount(expected)));
+            for (int stream = 0; stream < expectedStrides.Length; stream++)
+                Assert.That(actualMesh.GetVertexBufferStride(stream),
+                    Is.EqualTo(expectedStrides[stream]));
         }
 
         private static void AssertSameVertexLayout(Mesh expected, Mesh actual)
         {
             AssertPreservedVertexLayout(expected, actual, expected.GetVertexAttributes());
+        }
+
+        private static int[] CaptureVertexBufferStrides(Mesh mesh,
+            VertexAttributeDescriptor[] layout)
+        {
+            var strides = new int[GetStreamCount(layout)];
+            for (int stream = 0; stream < strides.Length; stream++)
+                strides[stream] = mesh.GetVertexBufferStride(stream);
+            return strides;
         }
 
         private static void AssertPreservedSourceStreamBytes(Mesh output,

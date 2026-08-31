@@ -25,19 +25,15 @@ namespace UMA.Editors
         public static void RefreshFavoriteListCategories()
         {
             initialSearchCompleted = true;
-            var favoritelists = AssetDatabase.FindAssets("t:UMAFavoriteList");
-            foreach (var favoritelist in favoritelists)
+            string[] favoriteListGuids = AssetDatabase.FindAssets("t:UMAFavoriteList");
+            var refreshedLists = new List<UMAFavoriteList>(favoriteListGuids.Length);
+            foreach (string favoriteListGuid in favoriteListGuids)
             {
-                var path = AssetDatabase.GUIDToAssetPath(favoritelist);
+                string path = AssetDatabase.GUIDToAssetPath(favoriteListGuid);
                 var list = AssetDatabase.LoadAssetAtPath<UMAFavoriteList>(path);
-                if (list != null)
-                {
-                    if (!UMAFavoriteWindow.favoritelists.Contains(list))
-                    {
-                        UMAFavoriteWindow.favoritelists.Add(list);
-                    }
-                }
+                if (list != null && !refreshedLists.Contains(list)) refreshedLists.Add(list);
             }
+            favoritelists = refreshedLists;
         }
 
         public static void AddNewFavoriteType()
@@ -60,6 +56,7 @@ namespace UMA.Editors
         public static void AddFavorite(object oFavoriteList)
         {
             var favoriteList = oFavoriteList as UMAFavoriteList;
+            if (favoriteList == null) return;
             foreach (var o in Selection.objects)
             {
                 favoriteList.AddAsset(o);
@@ -81,8 +78,10 @@ namespace UMA.Editors
             }
             List<UMAGenericPopupChoice> choices = new List<UMAGenericPopupChoice>();
 
+            favoritelists.RemoveAll(fl => fl == null);
             foreach(var fl in favoritelists)
             {
+                if (fl == null) continue;
                 UMAGenericPopupChoice choice = new UMAGenericPopupChoice(new GUIContent(fl.name), () => { AddFavorite(fl); });
                 choices.Add(choice);
             }
@@ -101,11 +100,21 @@ namespace UMA.Editors
         {
             instance = this;
             EditorApplication.update += CheckInspectors;
+            EditorApplication.projectChanged += HandleProjectChanged;
+            RefreshFavoriteListCategories();
         }
 
         private void OnDisable()
         {
             EditorApplication.update -= CheckInspectors;
+            EditorApplication.projectChanged -= HandleProjectChanged;
+            if (instance == this) instance = null;
+        }
+
+        private void HandleProjectChanged()
+        {
+            RefreshFavoriteListCategories();
+            Repaint();
         }
 
         private List<UnityEngine.Object> InspectMe = new List<UnityEngine.Object>();
@@ -116,7 +125,7 @@ namespace UMA.Editors
             {
                 for (int i = 0; i < InspectMe.Count; i++)
                 {
-                    InspectorUtlity.InspectTarget(InspectMe[i]);
+                    if (InspectMe[i] != null) InspectorUtlity.InspectTarget(InspectMe[i]);
                 }
                 InspectMe.Clear();
             }
@@ -131,28 +140,30 @@ namespace UMA.Editors
             {
                 RefreshFavoriteListCategories();
             }
+            favoritelists.RemoveAll(fl => fl == null);
             // search bar, refresh button
-            scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
-            foreach (var fl in favoritelists)
+            using (var scrollView = new EditorGUILayout.ScrollViewScope(scrollPosition))
             {
-                if (DrawFavoriteList(fl))
+                scrollPosition = scrollView.scrollPosition;
+                foreach (UMAFavoriteList fl in favoritelists)
                 {
-                    deletedList = fl;
+                    if (fl != null && DrawFavoriteList(fl)) deletedList = fl;
                 }
             }
-            EditorGUILayout.EndScrollView();
 
             if (deletedList != null)
             {
+                string path = AssetDatabase.GetAssetPath(deletedList);
                 favoritelists.Remove(deletedList);
-                AssetDatabase.DeleteAsset(AssetDatabase.GetAssetPath(deletedList));
+                if (!string.IsNullOrEmpty(path)) AssetDatabase.DeleteAsset(path);
             }
         }
 
         private void RemoveFavorite(object oFavorite)
         {
             var favorite = oFavorite as UMAFavorite;
-            var favoriteList = favorite.favoriteList;
+            var favoriteList = favorite?.favoriteList;
+            if (favoriteList == null) return;
             favoriteList.RemoveAsset(favorite);
             EditorUtility.SetDirty(favoriteList);
             AssetDatabase.SaveAssetIfDirty(favoriteList);
@@ -163,12 +174,13 @@ namespace UMA.Editors
         private void OpenFavorite(object oFavorite)
         {
             var favorite = oFavorite as UMAFavorite;
-            AssetDatabase.OpenAsset(favorite.asset); 
+            if (favorite?.asset != null) AssetDatabase.OpenAsset(favorite.asset);
         }
 
         private void PingFavorite(object oFavorite)
         {
             var favorite = oFavorite as UMAFavorite;
+            if (favorite?.asset == null) return;
             Selection.activeObject = favorite.asset;
             EditorGUIUtility.PingObject(favorite.asset);
         }
@@ -176,13 +188,14 @@ namespace UMA.Editors
         private void InspectFavorite(object oFavorite)
         {
             var favorite = oFavorite as UMAFavorite;
-            InspectMe.Add(favorite.asset);
+            if (favorite?.asset != null) InspectMe.Add(favorite.asset);
             //InspectorUtlity.InspectTarget(favorite.asset); // this causes GUI errors in Unity 2022+ 
             // Selection.activeObject = favorite.asset;
         }
 
         private bool DrawFavoriteList(UMAFavoriteList fl)
         {
+            if (fl == null) return false;
             UMAFavorite deletedFavorite = null;
             bool pingPressed = false;
             bool deletePressed = false;
@@ -199,35 +212,47 @@ namespace UMA.Editors
             if (fl.exPanded)
             {
                 GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
-                foreach (var o in fl.Favorites)
+                try
                 {
-                    EditorGUILayout.BeginHorizontal();
-                    EditorGUILayout.LabelField(new GUIContent(AssetDatabase.GetCachedIcon(AssetDatabase.GetAssetPath(o.asset))), GUILayout.Width(20), GUILayout.Height(22));
-                    //Type t = o.asset.GetType();
-                    // EditorGUILayout.LabelField($"{o.name}", GUILayout.ExpandWidth(true), GUILayout.MinWidth(120), GUILayout.Height(22));
-                    if (GUILayout.Button($"{o.name}", GUILayout.ExpandWidth(true), GUILayout.MinWidth(120), GUILayout.Height(22)))
+                    if (fl.Favorites != null)
                     {
-                        OpenFavorite(o);
-                    }
+                        foreach (UMAFavorite favorite in fl.Favorites)
+                        {
+                            if (favorite == null) continue;
+                            using (new EditorGUILayout.HorizontalScope())
+                            {
+                                UnityEngine.Object asset = favorite.asset;
+                                string path = asset != null
+                                    ? AssetDatabase.GetAssetPath(asset) : null;
+                                EditorGUILayout.LabelField(
+                                    new GUIContent(!string.IsNullOrEmpty(path)
+                                        ? AssetDatabase.GetCachedIcon(path) : null),
+                                    GUILayout.Width(20), GUILayout.Height(22));
+                                using (new EditorGUI.DisabledScope(asset == null))
+                                {
+                                    if (GUILayout.Button($"{favorite.name}",
+                                        GUILayout.ExpandWidth(true), GUILayout.MinWidth(120),
+                                        GUILayout.Height(22)))
+                                        OpenFavorite(favorite);
 //                    if (GUILayout.Button(openButton,GUILayout.Width(22), GUILayout.Height(22)))
 //                    {
 //                        OpenFavorite(o);
 //                    }
-                    if (GUILayout.Button(pingButton, GUILayout.Width(22),GUILayout.Height(22)))
-                    {
-                        PingFavorite(o);
+                                    if (GUILayout.Button(pingButton, GUILayout.Width(22),
+                                        GUILayout.Height(22))) PingFavorite(favorite);
+                                    if (GUILayout.Button(inspectButton, GUILayout.Width(22),
+                                        GUILayout.Height(22))) InspectFavorite(favorite);
+                                }
+                                if (GUILayout.Button(deleteButton, GUILayout.Width(22),
+                                    GUILayout.Height(22))) deletedFavorite = favorite;
+                            }
+                        }
                     }
-                    if (GUILayout.Button(inspectButton, GUILayout.Width(22), GUILayout.Height(22)))
-                    {
-                        InspectFavorite(o);
-                    }
-                    if (GUILayout.Button(deleteButton, GUILayout.Width(22), GUILayout.Height(22)))
-                    {
-                        deletedFavorite = o;
-                    }
-                    EditorGUILayout.EndHorizontal();
                 }
-                GUIHelper.EndVerticalPadded(10);
+                finally
+                {
+                    GUIHelper.EndVerticalPadded(10);
+                }
                 if (deletedFavorite != null)
                 {
                     RemoveFavorite(deletedFavorite);

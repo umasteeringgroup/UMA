@@ -197,7 +197,7 @@ namespace UMA.Dismemberment
         [Header("Diagnostics")]
         [Tooltip("Log uniquely named mesh lifecycle, vertex-stream, skinning, and render-phase " +
             "snapshots around each cut. Disable after diagnosing runtime mesh replacement.")]
-        public bool logMeshLifecycle = true;
+        public bool logMeshLifecycle;
         [Min(1), Tooltip("Number of frames after a cut to trace the live source renderer.")]
         public int meshLifecycleTraceFrames = 4;
 

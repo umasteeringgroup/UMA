@@ -1,5 +1,8 @@
 # Changelog
 
+- Fixed Icon Creator camera capture allocating a depthless temporary output, which Unity 6.3 render
+  graph rejected and rendered with error-colored pixels. Supersampled camera targets now always have
+  a depth/stencil attachment, and the capture test is isolated from unrelated scene geometry.
 - Fixed the Markdown viewer rendering every inline link twice. Links now remain inline, underline
   and highlight on hover, provide a short squash/pop click animation, and use Unity 6.3 rich-text
   link events directly in headings, paragraphs, lists, and table cells.

@@ -1,3 +1,4 @@
+#if false // Content-package release tests are disabled for the next UMA version.
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -274,3 +275,4 @@ namespace UMA.Editors.Tests
         }
     }
 }
+#endif

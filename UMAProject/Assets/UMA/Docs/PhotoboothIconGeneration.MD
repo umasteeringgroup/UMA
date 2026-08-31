@@ -107,14 +107,18 @@ Custom races may use different region names. Add every custom region to an appro
 | Control | Purpose |
 | --- | --- |
 | `Avatar` | The Dynamic Character Avatar whose race, appearance, and available recipes are used. In the supplied scene this is `DynamicAvatar1`. |
-| `Icon Dimensions` | A setup field currently retained on the component. Camera-captured image dimensions come from the assigned camera's target Render Texture, not this field. |
+| `Icon Dimensions` | Final width and height of camera-generated icons. |
+| `Capture Supersampling` | Renders the camera into a larger temporary texture, then downsamples to Icon Dimensions. `2` is the recommended balance of edge quality and capture cost. |
+| `Resize Texture Derived Thumbnails` | Resamples texture-derived crops to Icon Dimensions. When disabled, those crops retain their native pixel dimensions. |
 | `Preview Size` | Width and height of each camera preview in the Game view. It does not change the saved image resolution. |
 | `Scroll Area Height` | Adds vertical space around the horizontally scrolling camera preview strip. |
 | `Current Camera Index` | A retained setup field that is not required by the current region-based workflow. |
 | `Brightness` | Brightens or darkens texture-generated thumbnails from -1 to 1. It does not affect camera captures. |
 | `Contrast` | Adjusts texture-generated thumbnail contrast from -1 to 1. It does not affect camera captures. |
 
-To change the resolution of camera-generated icons, change the target Render Texture used by the applicable region camera. Keep the target textures consistent across cameras if the UI expects a uniform icon size.
+Change **Icon Dimensions** to change the resolution of camera-generated icons. The assigned target
+Render Texture remains useful for camera preview and must use a supported non-None **Depth Stencil
+Format** in Unity 6.3; a 24-bit depth/stencil format is sufficient for thumbnail capture.
 
 ## Framing and Art Direction
 
@@ -172,8 +176,8 @@ For a normal camera-generated wardrobe recipe, the Photobooth:
 2. Equips the recipe on `DynamicAvatar1`.
 3. Builds the UMA character and waits for the result to be displayed.
 4. Finds the camera assigned to the recipe's region.
-5. Reads the camera's target Render Texture.
-6. encodes the captured pixels as a PNG in the region/race output folder.
+5. Renders the camera into a temporary supersampled Render Texture with a depth/stencil attachment.
+6. Downsamples to Icon Dimensions and encodes the captured pixels as a PNG in the region/race output folder.
 7. imports the PNG into Unity.
 8. sets the Texture Type to `Sprite (2D and UI)` with a single Sprite.
 9. disables mipmaps and enables alpha-as-transparency.
@@ -257,10 +261,12 @@ Before committing a generated icon set, check:
 - Assign the region to a camera.
 - Confirm that the camera GameObject is active.
 - Confirm that the camera has a target Render Texture.
+- Confirm that the target Render Texture's **Depth Stencil Format** is not **None**.
 
 ### The Icon Is Framed Incorrectly
 
-Adjust the camera assigned to that region, not the Main Camera. The saved PNG comes from the region camera's target Render Texture.
+Adjust the camera assigned to that region, not the Main Camera. Icon Creator renders that region
+camera at the configured Icon Dimensions and Capture Supersampling settings.
 
 ### The PNG Exists but the Recipe Has No Sprite
 

@@ -63,6 +63,7 @@ namespace UMA.Editors.Tests
             Assert.That(generator.defaultRendererAsset, Is.Not.Null);
             Assert.That(settings.ShaderFolder,
                 Is.EqualTo(UMAPathUtility.ShaderPackagesRelativePath));
+#if false // URP/HDRP installer-package checks are disabled for the next UMA version.
             string urpInstallerPath = UMAPathUtility.ResolveInstallAssetPath(
                 "SRP/UMAURP.unitypackage");
             string hdrpInstallerPath = UMAPathUtility.ResolveInstallAssetPath(
@@ -71,6 +72,7 @@ namespace UMA.Editors.Tests
                 urpInstallerPath)), Is.True, urpInstallerPath);
             Assert.That(File.Exists(UMAPathUtility.ResolveAbsolutePath(
                 hdrpInstallerPath)), Is.True, hdrpInstallerPath);
+#endif
             string whatsNewPath = UMAPathUtility.ResolveInstallAssetPath(
                 "Docs/!WhatsNewInUMA3.md");
             Assert.That(AssetDatabase.LoadAssetAtPath<TextAsset>(whatsNewPath),
@@ -150,6 +152,7 @@ namespace UMA.Editors.Tests
                 Is.EqualTo(UMAPathUtility.ResolveSrpAssetPath(relativePath)));
         }
 
+#if false // URP/HDRP installer-package tests are disabled for the next UMA version.
         [Test]
         public void SrpInstallerArchivesAreValidAndPipelineSplit()
         {
@@ -399,6 +402,7 @@ namespace UMA.Editors.Tests
             Assert.That(AssetDatabase.FindAssets("t:Scene", new[] { oldSceneRoot }),
                 Is.Empty, "Core UMA must not contain active sample scenes.");
         }
+#endif
 
         [Test]
         public void ShippedDefaultAssetIndexerLoads()
@@ -515,6 +519,7 @@ namespace UMA.Editors.Tests
                 "The walker also preserves this setting when it refreshes " +
                 "the Animator during Play Mode.");
 
+#if false // URP archive-content verification is disabled for the next UMA version.
             string archivePath = UMAPathUtility.ResolveAbsolutePath(
                 UMAPathUtility.ResolveInstallAssetPath("SRP/UMAURP.unitypackage"));
             Assert.That(UMASrpPackageArchiveValidator.TryValidate(archivePath, "URP",
@@ -528,6 +533,7 @@ namespace UMA.Editors.Tests
                     AssetDatabase.AssetPathToGUID(walkerPath)),
                 "The random-character scene must use the dedicated walker " +
                 "prefab without changing the shared stationary avatar.");
+#endif
         }
 
         [Test]

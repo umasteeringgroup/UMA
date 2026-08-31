@@ -133,6 +133,8 @@ namespace UMA.Editors.Tests
             Texture2D source = CreateTexture(_sourceFolder, "Collision.asset");
             Texture2D destination = CreateTexture(
                 _destinationFolder, "Collision.asset");
+            GlobalObjectId destinationObjectId =
+                GlobalObjectId.GetGlobalObjectIdSlow(destination);
             string destinationGuid = AssetDatabase.AssetPathToGUID(
                 _destinationFolder + "/Collision.asset");
 
@@ -145,9 +147,12 @@ namespace UMA.Editors.Tests
                 results[0].Status);
             Assert.IsNotNull(AssetDatabase.LoadAssetAtPath<Texture2D>(
                 _sourceFolder + "/Collision.asset"));
-            Assert.AreSame(destination,
+            Texture2D persistedDestination =
                 AssetDatabase.LoadAssetAtPath<Texture2D>(
-                    _destinationFolder + "/Collision.asset"));
+                    _destinationFolder + "/Collision.asset");
+            Assert.IsNotNull(persistedDestination);
+            Assert.AreEqual(destinationObjectId,
+                GlobalObjectId.GetGlobalObjectIdSlow(persistedDestination));
             Assert.AreEqual(destinationGuid, AssetDatabase.AssetPathToGUID(
                 _destinationFolder + "/Collision.asset"));
             Assert.That(results[0].Details,

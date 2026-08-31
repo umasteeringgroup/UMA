@@ -13,7 +13,8 @@ The Icon Creator and atlas builder are separate operations:
 Open a scene containing an `IconCreator` component and assign:
 
 - A `DynamicCharacterAvatar` with an active race.
-- One or more cameras with target Render Textures.
+- One or more cameras with target Render Textures. In Unity 6.3, each camera output texture must have
+  a Depth Stencil Format; a 24-bit depth/stencil buffer is sufficient for Icon Creator capture.
 - The wardrobe regions handled by each camera.
 - A Root Folder inside the project's `Assets` folder.
 - The desired Icon Dimensions.
@@ -109,6 +110,12 @@ The builder also warns when an eligible Sprite is already included by a Sprite A
 Generated atlases can be removed and rebuilt from the current recipe thumbnail references. Normally keep existing thumbnail PNGs and their `.meta` files: deleting a referenced thumbnail can cause Icon Creator to create a new deterministic filename and assign a new recipe reference. Review generated asset changes before committing them to source control.
 
 ## Troubleshooting
+
+### Render Graph reports that the output Render Texture needs a depth buffer
+
+Select every Render Texture assigned to an Icon Creator camera and set **Depth Stencil Format** to a
+supported non-None format. A 24-bit depth/stencil format is sufficient for thumbnail capture. Icon
+Creator also gives its temporary supersampled camera target a depth/stencil attachment automatically.
 
 ### Atlas generation reports that Sprite Atlas V2 is required
 
