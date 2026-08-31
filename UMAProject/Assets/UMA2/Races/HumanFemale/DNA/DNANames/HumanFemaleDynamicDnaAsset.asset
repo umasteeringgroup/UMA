@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: HumanFemaleDynamicDnaAsset
   m_EditorClassIdentifier: 
   dnaTypeHash: 1932961400
-  lastKnownAssetPath: Assets/UMA2/Races/HumanFemale/DNA/DNANames/HumanFemaleDynamicDnaAsset.asset
-  lastKnownDuplicateAssetPath: Assets/UMA2/Races/HumanFemale/DNA/DNANames/HumanFemaleDynamicDnaAsset
+  lastKnownAssetPath: Assets/UMA/UMA2/Races/HumanFemale/DNA/DNANames/HumanFemaleDynamicDnaAsset.asset
+  lastKnownDuplicateAssetPath: Assets/UMA/UMA2/Races/HumanFemale/DNA/DNANames/HumanFemaleDynamicDnaAsset
     1.asset
   lastKnownInstanceID:
     rawValue: 67182

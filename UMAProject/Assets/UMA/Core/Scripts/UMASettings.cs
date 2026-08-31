@@ -109,9 +109,20 @@ namespace UMA
         [Tooltip("Resolved UMA installation asset path. UMA may be below Assets or installed as a UPM package.")]
         public string UMAFolder = "Assets/UMA";
         [Header("Overlay Painter")]
+        [Tooltip("Open Overlay Painter in a dedicated floating workspace with Layers and Brush " +
+            "docked together beside the Scene and 2D views. Disable this to open the three " +
+            "Overlay Painter panels as ordinary independent dockable windows.")]
+        public bool texturePaintCompactView = true;
         [Tooltip("Project folder used for the temporary Overlay Painter recovery asset and its data files. " +
             "This folder must be below Assets and can be excluded from source control.")]
         public string texturePaintRecoveryFolder = UMAPathUtility.OverlayPainterRecoveryRoot;
+        [Tooltip("Periodically save recoverable Overlay Painter changes in the background. This also " +
+            "autosaves modified permanent TexturePaintDocuments. Manual Save and close protection remain available when disabled.")]
+        public bool texturePaintAutomaticRecovery = true;
+        [Tooltip("Seconds Overlay Painter waits after the most recent edit before starting a background save.")]
+        [Min(15f)] public float texturePaintRecoveryIdleDelaySeconds = 120f;
+        [Tooltip("Minimum seconds between completed Overlay Painter background saves.")]
+        [Min(0f)] public float texturePaintRecoveryMinimumIntervalSeconds = 300f;
 
         [Header("Welcome page textures")]
         public Texture2D Overlays;
@@ -678,6 +689,40 @@ namespace UMA
                     if (string.IsNullOrWhiteSpace(parts[i]) || parts[i] == "." || parts[i] == "..")
                         return UMAPathUtility.OverlayPainterRecoveryRoot;
                 return configured;
+            }
+        }
+        public static bool TexturePaintCompactView
+        {
+            get
+            {
+                var settings = GetOrCreateSettings();
+                return settings == null || settings.texturePaintCompactView;
+            }
+        }
+        public static bool TexturePaintAutomaticRecovery
+        {
+            get
+            {
+                var settings = GetOrCreateSettings();
+                return settings == null || settings.texturePaintAutomaticRecovery;
+            }
+        }
+        public static double TexturePaintRecoveryIdleDelaySeconds
+        {
+            get
+            {
+                var settings = GetOrCreateSettings();
+                return Math.Max(15d, settings != null
+                    ? settings.texturePaintRecoveryIdleDelaySeconds : 120d);
+            }
+        }
+        public static double TexturePaintRecoveryMinimumIntervalSeconds
+        {
+            get
+            {
+                var settings = GetOrCreateSettings();
+                return Math.Max(0d, settings != null
+                    ? settings.texturePaintRecoveryMinimumIntervalSeconds : 300d);
             }
         }
         public static bool AutoRepairIndex { get { var settings = GetOrCreateSettings(); return settings.autoRepairIndex; } }

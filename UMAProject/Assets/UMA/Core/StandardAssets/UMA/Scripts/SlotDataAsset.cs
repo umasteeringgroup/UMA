@@ -204,11 +204,17 @@ namespace UMA
             _slotBuilderParamsSnapshot = snapshot;
         }
 
+        [NonSerialized]
         public Dictionary<int, int> TheirVertexToOurVertex = new Dictionary<int, int>();
+        [NonSerialized]
         public Dictionary<int,int> OurVertextoTheirVertex = new Dictionary<int, int>();
+        [NonSerialized]
         public Dictionary<int,int> TheirBonesToOurBones = new Dictionary<int, int>();
+        [NonSerialized]
         public Dictionary<int, int> OurBonesToTheirBones = new Dictionary<int, int>();
+        [NonSerialized]
         public Dictionary<int, List<BoneWeight1>> TheirBoneWeights = new Dictionary<int, List<BoneWeight1>>();
+        [NonSerialized]
         public Dictionary<int, List<BoneWeight1>> OurBoneWeights = new Dictionary<int, List<BoneWeight1>>();
 
         public int FindOurBone(string boneName)
@@ -303,7 +309,9 @@ namespace UMA
         List<boneInfo> ourboneInfos = new List<boneInfo>();
         List<boneInfo> theirboneInfos = new List<boneInfo>();
 
+        [NonSerialized]
         public Dictionary<int,boneInfo> ourHashToName = new Dictionary<int, boneInfo>();
+        [NonSerialized]
         public Dictionary<int, boneInfo> theirHashToName = new Dictionary<int, boneInfo>();
 
 

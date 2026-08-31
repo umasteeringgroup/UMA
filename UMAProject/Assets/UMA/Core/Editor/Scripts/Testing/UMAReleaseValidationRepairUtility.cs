@@ -46,12 +46,10 @@ namespace UMA.Editors
 
     public static class UMAReleaseValidationRepairUtility
     {
-        private const string Uma2Root = "Assets/UMA2";
-        private static string Uma3Root => UMAPathUtility.ResolveInstallAssetPath("UMA3");
+        private const string Uma2Root = UMAPathUtility.Uma2ContentRoot;
+        private static string Uma3Root => UMAPathUtility.Uma3ContentRoot;
         private static string UniversalRoot => UMAPathUtility.ResolveInstallAssetPath("Universal");
-        private static string WritableUma3Root => UMAPathUtility.IsPackageInstallation
-            ? UMAPathUtility.ProjectDataRoot + "/UMA3"
-            : Uma3Root;
+        private static string WritableUma3Root => Uma3Root;
         private static string WritableUniversalRoot => UMAPathUtility.IsPackageInstallation
             ? UMAPathUtility.ProjectDataRoot + "/Universal"
             : UniversalRoot;

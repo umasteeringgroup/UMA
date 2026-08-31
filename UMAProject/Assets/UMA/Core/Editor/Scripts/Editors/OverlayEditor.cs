@@ -209,7 +209,8 @@ namespace UMA.Editors
                 return;
             }
 
-            DynamicCharacterAvatar[] avatars = UnityEngine.Object.FindObjectsByType<DynamicCharacterAvatar>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+            DynamicCharacterAvatar[] avatars = UMAObjectUtility.FindObjectsByType<DynamicCharacterAvatar>(
+                FindObjectsInactive.Exclude);
             for (int i = 0; i < avatars.Length; i++)
             {
                 DynamicCharacterAvatar avatar = avatars[i];
@@ -667,7 +668,8 @@ namespace UMA.Editors
                 List<string> labels = new List<string> { "<None>" };
                 _selectedSceneAvatarBaseChoice = 0;
 
-                DynamicCharacterAvatar[] avatars = UnityEngine.Object.FindObjectsByType<DynamicCharacterAvatar>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+                DynamicCharacterAvatar[] avatars = UMAObjectUtility.FindObjectsByType<DynamicCharacterAvatar>(
+                    FindObjectsInactive.Exclude);
                 if (avatars == null || avatars.Length == 0)
                 {
                     _sceneAvatarBaseChoiceNames = labels.ToArray();
@@ -1931,7 +1933,8 @@ namespace UMA.Editors
                     LogBaseTextureLookup("Selected avatar '" + selectedAvatar.name + "' did not provide a usable base texture for " + GetOverlayLookupContext() + ".");
                 }
 
-                DynamicCharacterAvatar[] avatars = UnityEngine.Object.FindObjectsByType<DynamicCharacterAvatar>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+                DynamicCharacterAvatar[] avatars = UMAObjectUtility.FindObjectsByType<DynamicCharacterAvatar>(
+                    FindObjectsInactive.Exclude);
                 if (avatars == null || avatars.Length == 0)
                 {
                     LogBaseTextureLookup("No scene DynamicCharacterAvatar instances were found while resolving a base texture for " + GetOverlayLookupContext() + ".");

@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: UMA_Mat_Cutout_Diffuse_Normal_Specular
-  m_Shader: {fileID: -6465566751694194690, guid: 877e0087dcad7a441a4b23b3ab3f8a48,
+  m_Shader: {fileID: -6465566751694194690, guid: 53e5f1fe6377c5c438133f62347fa60f,
     type: 3}
   m_ValidKeywords: []
   m_InvalidKeywords:
@@ -70,7 +70,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _SpecularMap:
-        m_Texture: {fileID: 2800000, guid: 44dfb63e0b2a5504b82f66838b2907de, type: 3}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []

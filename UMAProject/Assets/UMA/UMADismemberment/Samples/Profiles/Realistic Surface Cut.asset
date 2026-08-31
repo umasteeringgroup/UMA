@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d54d2f2c6bdc4af587e1e985b447c901, type: 3}
+  m_Name: Realistic Surface Cut
+  m_EditorClassIdentifier: UMA.Dismemberment.Runtime::UMA.Dismemberment.UMASurfaceCutProfile
+  centerColor: {r: 0.16, g: 0.002, b: 0.004, a: 1}
+  edgeColor: {r: 0.95, g: 0.22, b: 0.28, a: 0.82}
+  widthMeters: 0.008
+  centerFraction: 0.32
+  edgeSoftness: 0.14
+  endTaperFraction: 0.12
+  bleedSpacingMeters: 0.025
+  bleedSpacingVariation: 0.3
+  bleedSpacingSeed: 173
+  bleedSpeedVariation: 0.25
+  bleedSizeVariation: 0.3
+  bleedEndInset: 0.12
+  bleedProfile: {fileID: 11400000, guid: af87b51bff704c3188bc9000640b1476, type: 2}

@@ -546,8 +546,9 @@ public static class IconCreatorSpriteAtlasUtility
         string normalized = rootFolder.Replace('\\', '/').TrimEnd('/');
         string legacyRoot = UMA.UMAPathUtility.LegacyInstallRoot;
         string installRoot = UMA.UMAPathUtility.InstallAssetRoot;
-        if (normalized.Equals(legacyRoot, StringComparison.OrdinalIgnoreCase) ||
-            normalized.StartsWith(legacyRoot + "/", StringComparison.OrdinalIgnoreCase))
+        if (!UMA.UMAPathUtility.IsProjectOwnedUmaAssetPath(normalized) &&
+            (normalized.Equals(legacyRoot, StringComparison.OrdinalIgnoreCase) ||
+             normalized.StartsWith(legacyRoot + "/", StringComparison.OrdinalIgnoreCase)))
         {
             return UMA.UMAPathUtility.ProjectDataRoot + normalized.Substring(legacyRoot.Length);
         }

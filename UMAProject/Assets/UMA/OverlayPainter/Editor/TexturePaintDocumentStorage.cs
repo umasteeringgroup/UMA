@@ -13,6 +13,25 @@ namespace UMA.TexturePaint.Editor
 {
     internal static class TexturePaintDocumentStorage
     {
+        internal readonly struct RestoreReport
+        {
+            public readonly int restoredSurfaces;
+            public readonly int restoredLayers;
+            public readonly int unboundSurfaces;
+            public readonly int unboundLayers;
+
+            public bool HasUnboundLayers => unboundLayers > 0;
+
+            public RestoreReport(int restoredSurfaces, int restoredLayers,
+                int unboundSurfaces, int unboundLayers)
+            {
+                this.restoredSurfaces = restoredSurfaces;
+                this.restoredLayers = restoredLayers;
+                this.unboundSurfaces = unboundSurfaces;
+                this.unboundLayers = unboundLayers;
+            }
+        }
+
         internal sealed class CaptureOperation
         {
             private readonly List<PixelCaptureWork> work;
@@ -248,6 +267,8 @@ namespace UMA.TexturePaint.Editor
                         umaChannelIndex = channel.umaChannelIndex,
                         renderTextureFormat = channel.format,
                         sRGB = channel.sRGB,
+                        adjustments = channel.adjustments?.Clone() ??
+                            new TexturePaintChannelAdjustments(),
                         // Documents persist the painter's linear working pixels. The channel's
                         // sRGB flag is output metadata and must not reinterpret those bytes.
                         pixels = Capture(channel.editable.Front, channel.editable.Front.sRGB)
@@ -272,18 +293,25 @@ namespace UMA.TexturePaint.Editor
             AssetDatabase.SaveAssetIfDirty(document);
         }
 
-        public static void Restore(TexturePaintDocument document, TextureStore store)
+        public static RestoreReport Restore(TexturePaintDocument document, TextureStore store)
         {
-            if (document == null || store == null) return;
+            if (document == null || store == null) return default;
+            var matched = new HashSet<TexturePaintDocumentSurface>();
+            int restoredSurfaces = 0;
+            int restoredLayers = 0;
             AssignStableSurfaceIds(store);
             for (int setIndex = 0; setIndex < store.Sets.Count; setIndex++)
             {
                 TextureSet set = store.Sets[setIndex];
                 TexturePaintDocumentSurface saved = document.FindSurface(set.persistentId) ?? FindFallback(document, set);
                 if (saved == null) continue;
+                matched.Add(saved);
+                restoredSurfaces++;
+                restoredLayers += saved.layers?.Count ?? 0;
                 set.normalControlStrength = Mathf.Clamp(saved.normalControlStrength, 0f, 16f);
                 set.normalControlRadius = Mathf.Clamp(saved.normalControlRadius, 1, 16);
                 set.normalControlInvert = saved.normalControlInvert;
+                RestoreChannelAdjustments(saved, set);
                 TexturePaintSurfaceFingerprint current = TexturePaintSurfaceFingerprintUtility.Compute(set.surface?.mesh);
                 bool uvChanged = !string.IsNullOrEmpty(saved.uvSignature) &&
                     !string.Equals(saved.uvSignature, current.uv, StringComparison.Ordinal);
@@ -304,6 +332,22 @@ namespace UMA.TexturePaint.Editor
                 set.activeLayerIndex = Mathf.Clamp(saved.activeLayer, -1, set.layers.Count - 1);
                 set.BindPreviewTextures();
             }
+            int unboundSurfaces = 0;
+            int unboundLayers = 0;
+            for (int i = 0; i < document.surfaces.Count; i++)
+            {
+                TexturePaintDocumentSurface saved = document.surfaces[i];
+                if (saved == null || saved.orphaned || matched.Contains(saved) ||
+                    saved.layers == null || saved.layers.Count == 0) continue;
+                unboundSurfaces++;
+                unboundLayers += saved.layers.Count;
+            }
+            if (unboundLayers > 0)
+                Debug.LogWarning($"Overlay Painter restored {restoredLayers} saved layer member" +
+                    (restoredLayers == 1 ? string.Empty : "s") + $", but {unboundLayers} layer member" +
+                    (unboundLayers == 1 ? string.Empty : "s") + " could not be rebound to the current " +
+                    "character surfaces. The unmatched content remains in the document.", document);
+            return new RestoreReport(restoredSurfaces, restoredLayers, unboundSurfaces, unboundLayers);
         }
 
         public static List<TexturePaintBindingReport> AnalyzeBindings(TexturePaintDocument document, TextureStore store)
@@ -333,11 +377,10 @@ namespace UMA.TexturePaint.Editor
                         continue;
                     }
                     TexturePaintSurfaceFingerprint current = TexturePaintSurfaceFingerprintUtility.Compute(set.surface?.mesh);
-                    if (!string.IsNullOrEmpty(saved.topologySignature) && saved.topologySignature == current.topology &&
-                        !string.IsNullOrEmpty(saved.uvSignature) && saved.uvSignature != current.uv)
+                    if (!string.IsNullOrEmpty(saved.uvSignature) && saved.uvSignature != current.uv)
                     {
                         status = TexturePaintBindingStatus.Reprojectable;
-                        message = "Topology matches but UVs changed. Surface-anchored strokes and paths were rebound; layer-mask pixels reset to their base values and other raster pixels require rerasterization.";
+                        message = "The surface was rebound but its UVs changed. Surface-anchored strokes and paths were retained; layer-mask pixels reset to their base values and other raster pixels require rerasterization.";
                     }
                     else
                     {
@@ -386,7 +429,7 @@ namespace UMA.TexturePaint.Editor
                 {
                     umaGuid,
                     materialGuid,
-                    set.Name,
+                    StableMaterialName(set.Name),
                     string.Join(",", slots),
                     MeshSignature(set.surface?.mesh)
                 });
@@ -463,6 +506,8 @@ namespace UMA.TexturePaint.Editor
                         umaChannelIndex = current.umaChannelIndex,
                         renderTextureFormat = current.format,
                         sRGB = current.sRGB,
+                        adjustments = current.adjustments?.Clone() ??
+                            new TexturePaintChannelAdjustments(),
                         pixels = pixels
                     });
                 }
@@ -574,6 +619,9 @@ namespace UMA.TexturePaint.Editor
                 pluginStale = layer.pluginStale,
                 pluginLastError = layer.pluginLastError,
                 proceduralGroupKey = layer.proceduralGroupKey,
+                sourceMaterialPresetId = layer.sourceMaterialPresetId,
+                sourceMaterialPresetRevision = layer.sourceMaterialPresetRevision,
+                sourceMaterialPresetLayerId = layer.sourceMaterialPresetLayerId,
                 hasMask = layer.layerMask?.target != null,
                 maskBaseValue = layer.layerMask?.baseValue ?? 1f,
                 maskEffects = layer.layerMask?.effects?.Clone() ?? new TexturePaintLayerMaskEffects(),
@@ -627,6 +675,8 @@ namespace UMA.TexturePaint.Editor
                         umaChannelIndex = channel.umaChannelIndex,
                         renderTextureFormat = channel.renderTextureFormat,
                         sRGB = channel.sRGB,
+                        adjustments = channel.adjustments?.Clone() ??
+                            new TexturePaintChannelAdjustments(),
                         pixels = ClonePixels(channel.pixels)
                     });
                 }
@@ -663,6 +713,9 @@ namespace UMA.TexturePaint.Editor
                 pluginStale = source.pluginStale,
                 pluginLastError = source.pluginLastError,
                 proceduralGroupKey = source.proceduralGroupKey,
+                sourceMaterialPresetId = source.sourceMaterialPresetId,
+                sourceMaterialPresetRevision = source.sourceMaterialPresetRevision,
+                sourceMaterialPresetLayerId = source.sourceMaterialPresetLayerId,
                 hasMask = source.hasMask,
                 maskBaseValue = source.maskBaseValue,
                 maskEffects = source.maskEffects?.Clone() ?? new TexturePaintLayerMaskEffects(),
@@ -796,6 +849,20 @@ namespace UMA.TexturePaint.Editor
             }
         }
 
+        private static void RestoreChannelAdjustments(TexturePaintDocumentSurface saved, TextureSet set)
+        {
+            if (saved?.baseChannels == null || set == null) return;
+            for (int i = 0; i < saved.baseChannels.Count; i++)
+            {
+                TexturePaintDocumentChannel channel = saved.baseChannels[i];
+                TextureChannelTarget target = channel != null ? set.GetChannel(channel.channel) : null;
+                if (target == null) continue;
+                target.adjustments = channel.adjustments?.Clone() ??
+                    new TexturePaintChannelAdjustments();
+                target.adjustments.Normalize();
+            }
+        }
+
         private static void RestoreLayer(TexturePaintDocumentLayer saved, TextureSet set)
         {
             TexturePaintLayer layer = set.AddLayer(saved.name);
@@ -824,6 +891,9 @@ namespace UMA.TexturePaint.Editor
             layer.pluginStale = saved.pluginStale;
             layer.pluginLastError = saved.pluginLastError;
             layer.proceduralGroupKey = saved.proceduralGroupKey;
+            layer.sourceMaterialPresetId = saved.sourceMaterialPresetId;
+            layer.sourceMaterialPresetRevision = saved.sourceMaterialPresetRevision;
+            layer.sourceMaterialPresetLayerId = saved.sourceMaterialPresetLayerId;
             layer.NormalizeKindPayload();
             layer.strokes.AddRange(CloneStrokes(saved.strokes));
             for (int i = 0; i < saved.channels.Count; i++)
@@ -865,22 +935,67 @@ namespace UMA.TexturePaint.Editor
 
         private static TexturePaintDocumentSurface FindFallback(TexturePaintDocument document, TextureSet set)
         {
+            if (document?.surfaces == null || set == null) return null;
             TexturePaintSurfaceFingerprint current = TexturePaintSurfaceFingerprintUtility.Compute(set.surface?.mesh);
-            TexturePaintDocumentSurface topologyCandidate = null;
+            string currentMaterialSignature = MaterialSignature(set);
+            string currentUmaMaterialGuid = AssetDatabase.AssetPathToGUID(
+                AssetDatabase.GetAssetPath(set.umaMaterial));
+            string currentMaterialName = StableMaterialName(set.Name);
+            int currentRendererIndex = set.surface?.rendererIndex ?? -1;
+            int currentSubmeshIndex = set.surface?.sourceSubmeshIndex ?? -1;
+            TexturePaintDocumentSurface best = null;
+            int bestScore = int.MinValue;
             for (int i = 0; i < document.surfaces.Count; i++)
             {
                 TexturePaintDocumentSurface candidate = document.surfaces[i];
                 if (candidate == null || candidate.orphaned) continue;
                 if (!SlotsOverlap(candidate.slotNames, set.surface?.slotNames)) continue;
-                if (!string.IsNullOrEmpty(candidate.topologySignature) && candidate.topologySignature == current.topology)
+
+                bool topologyMatches = !string.IsNullOrEmpty(candidate.topologySignature) &&
+                    string.Equals(candidate.topologySignature, current.topology, StringComparison.Ordinal);
+                bool uvMatches = !string.IsNullOrEmpty(candidate.uvSignature) &&
+                    string.Equals(candidate.uvSignature, current.uv, StringComparison.Ordinal);
+                bool geometryMatches = !string.IsNullOrEmpty(candidate.meshSignature) &&
+                    string.Equals(candidate.meshSignature, current.geometry, StringComparison.Ordinal);
+                bool materialMatches = !string.IsNullOrEmpty(candidate.materialSignature) &&
+                    string.Equals(candidate.materialSignature, currentMaterialSignature, StringComparison.Ordinal);
+                bool umaMaterialMatches = !string.IsNullOrEmpty(candidate.umaMaterialGuid) &&
+                    !string.IsNullOrEmpty(currentUmaMaterialGuid) &&
+                    string.Equals(candidate.umaMaterialGuid, currentUmaMaterialGuid, StringComparison.Ordinal);
+                bool materialNameMatches = string.Equals(StableMaterialName(candidate.materialName),
+                    currentMaterialName, StringComparison.Ordinal);
+                bool locationMatches = candidate.fallbackRendererIndex >= 0 &&
+                    candidate.fallbackSubmeshIndex >= 0 && currentRendererIndex >= 0 &&
+                    currentSubmeshIndex >= 0 && candidate.fallbackRendererIndex == currentRendererIndex &&
+                    candidate.fallbackSubmeshIndex == currentSubmeshIndex;
+
+                // Raster pixels are safe when the UV sequence is unchanged, even if regenerated
+                // triangle ordering changed. A topology match remains eligible for the existing
+                // reprojectable-content path. Renderer/submesh is only accepted when material
+                // evidence also agrees, preventing an index shift from binding unrelated content.
+                bool eligible = topologyMatches || uvMatches ||
+                    (locationMatches && (materialMatches || umaMaterialMatches || materialNameMatches)) ||
+                    (string.IsNullOrEmpty(candidate.topologySignature) && materialNameMatches);
+                if (!eligible) continue;
+
+                int score = 0;
+                if (topologyMatches && uvMatches) score += 10000;
+                else
                 {
-                    if (candidate.uvSignature == current.uv) return candidate;
-                    topologyCandidate ??= candidate;
+                    if (uvMatches) score += 4000;
+                    if (topologyMatches) score += 3000;
                 }
-                else if (string.IsNullOrEmpty(candidate.topologySignature) &&
-                    string.Equals(candidate.materialName, set.Name, StringComparison.Ordinal)) return candidate;
+                if (locationMatches) score += 1000;
+                if (umaMaterialMatches) score += 500;
+                if (materialMatches) score += 250;
+                if (materialNameMatches) score += 125;
+                if (SlotSetsEqual(candidate.slotNames, set.surface?.slotNames)) score += 80;
+                if (geometryMatches) score += 40;
+                if (score <= bestScore) continue;
+                best = candidate;
+                bestScore = score;
             }
-            return topologyCandidate;
+            return best;
         }
 
         private static void RestoreReprojectableContent(TexturePaintDocumentSurface saved, TextureSet set)
@@ -923,6 +1038,9 @@ namespace UMA.TexturePaint.Editor
                 layer.pluginLastError = source.kind == TexturePaintLayerKind.Plugin
                     ? null : source.pluginLastError;
                 layer.proceduralGroupKey = source.proceduralGroupKey;
+                layer.sourceMaterialPresetId = source.sourceMaterialPresetId;
+                layer.sourceMaterialPresetRevision = source.sourceMaterialPresetRevision;
+                layer.sourceMaterialPresetLayerId = source.sourceMaterialPresetLayerId;
                 layer.NormalizeKindPayload();
                 layer.strokes.AddRange(CloneStrokes(source.strokes));
                 if (source.hasMask)
@@ -965,6 +1083,49 @@ namespace UMA.TexturePaint.Editor
                 for (int j = 0; j < b.Count; j++)
                     if (string.Equals(a[i], b[j], StringComparison.Ordinal)) return true;
             return false;
+        }
+
+        private static bool SlotSetsEqual(IReadOnlyList<string> a, IReadOnlyList<string> b)
+        {
+            if (a == null || b == null || a.Count != b.Count) return false;
+            for (int i = 0; i < a.Count; i++)
+            {
+                bool found = false;
+                for (int j = 0; j < b.Count; j++)
+                    if (string.Equals(a[i], b[j], StringComparison.Ordinal))
+                    {
+                        found = true;
+                        break;
+                    }
+                if (!found) return false;
+            }
+            return true;
+        }
+
+        internal static string StableMaterialName(string materialName)
+        {
+            if (string.IsNullOrEmpty(materialName)) return string.Empty;
+            const string marker = "_Genb_";
+            int searchIndex = 0;
+            while (searchIndex < materialName.Length)
+            {
+                int markerIndex = materialName.IndexOf(marker, searchIndex, StringComparison.Ordinal);
+                if (markerIndex < 0) break;
+                int digitsStart = markerIndex + marker.Length;
+                int digitsEnd = digitsStart;
+                while (digitsEnd < materialName.Length && char.IsDigit(materialName[digitsEnd])) digitsEnd++;
+                if (digitsEnd == digitsStart)
+                {
+                    searchIndex = digitsStart;
+                    continue;
+                }
+                // Keep the semantic "_Genb" marker but discard the random number and its
+                // separator. Any stable suffix appended by reconstruction remains part of the id.
+                materialName = materialName.Remove(markerIndex + "_Genb".Length,
+                    digitsEnd - (markerIndex + "_Genb".Length));
+                searchIndex = markerIndex + "_Genb".Length;
+            }
+            return materialName;
         }
 
         private static string MaterialSignature(TextureSet set)

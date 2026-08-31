@@ -22,7 +22,7 @@ MonoBehaviour:
   wardrobeRecipeThumbs:
   - race: HumanMale
     filename: 
-    thumb: {fileID: 21300000, guid: a2b3f41c230578a48894cb9be219a8d0, type: 3}
+    thumb: {fileID: 0}
   - race: Elf Male
     filename: 
     thumb: {fileID: 0}
@@ -34,8 +34,7 @@ MonoBehaviour:
   activeWardrobeSet: []
   MeshHideAssets: []
   MeshHideAssetCollections: []
-  MeshModifiers:
-  - {fileID: 11400000, guid: eaa41da245ae05c4bb3fdb7c3e0fe0e5, type: 2}
+  MeshModifiers: []
   OverrideDNA:
     PreloadValues:
     - Name: headWidth

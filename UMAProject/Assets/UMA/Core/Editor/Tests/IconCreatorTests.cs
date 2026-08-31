@@ -74,7 +74,8 @@ namespace UMA.Editors.Tests
                 Camera camera = gameObject.AddComponent<Camera>();
                 camera.clearFlags = CameraClearFlags.SolidColor;
                 camera.backgroundColor = new Color(0.1f, 0.7f, 0.2f, 1f);
-                renderTexture = new RenderTexture(32, 24, 0, RenderTextureFormat.ARGB32);
+                camera.cullingMask = 0;
+                renderTexture = new RenderTexture(32, 24, 24, RenderTextureFormat.ARGB32);
                 renderTexture.Create();
                 camera.targetTexture = renderTexture;
 
@@ -121,6 +122,34 @@ namespace UMA.Editors.Tests
                 if (File.Exists(outputPath))
                 {
                     File.Delete(outputPath);
+                }
+            }
+        }
+
+        [Test]
+        [Category("UMA")]
+        [Category("IconCreator")]
+        public void TemporaryCameraCaptureTargetHasDepthStencilBuffer()
+        {
+            RenderTexture captureTexture = null;
+            try
+            {
+                captureTexture = (RenderTexture)InvokePrivateStatic(
+                    typeof(IconCreator),
+                    "GetTemporaryCameraCaptureTexture",
+                    19,
+                    11);
+
+                Assert.IsNotNull(captureTexture);
+                Assert.AreEqual(19, captureTexture.width);
+                Assert.AreEqual(11, captureTexture.height);
+                Assert.Greater(captureTexture.depth, 0);
+            }
+            finally
+            {
+                if (captureTexture != null)
+                {
+                    RenderTexture.ReleaseTemporary(captureTexture);
                 }
             }
         }

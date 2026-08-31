@@ -973,6 +973,7 @@ public class IconCreator : MonoBehaviour
 
 #if UNITY_EDITOR
         if (UMAPathUtility.IsPackageInstallation &&
+            !UMAPathUtility.IsProjectOwnedUmaAssetPath(normalizedFolder) &&
             (normalizedFolder.Equals(UMAPathUtility.LegacyInstallRoot, StringComparison.OrdinalIgnoreCase) ||
              normalizedFolder.StartsWith(UMAPathUtility.LegacyInstallRoot + "/", StringComparison.OrdinalIgnoreCase)))
         {
@@ -1135,13 +1136,9 @@ public class IconCreator : MonoBehaviour
         Vector2Int captureDimensions = new Vector2Int(
             iconDimensions.x * supersampling,
             iconDimensions.y * supersampling);
-        RenderTexture captureTexture = RenderTexture.GetTemporary(
+        RenderTexture captureTexture = GetTemporaryCameraCaptureTexture(
             captureDimensions.x,
-            captureDimensions.y,
-            originalTarget.depth,
-            RenderTextureFormat.ARGB32,
-            RenderTextureReadWrite.sRGB);
-        captureTexture.filterMode = FilterMode.Bilinear;
+            captureDimensions.y);
         RenderTexture previousActive = RenderTexture.active;
         RenderTexture downsampledTexture = null;
         Texture2D capturedTexture = null;
@@ -1195,6 +1192,21 @@ public class IconCreator : MonoBehaviour
         }
 
         return true;
+    }
+
+    private static RenderTexture GetTemporaryCameraCaptureTexture(int width, int height)
+    {
+        // Unity 6.3 render-graph camera outputs require a depth-stencil attachment. Do not inherit
+        // a zero-depth legacy target here: the temporary texture is the camera output while Render
+        // runs, even though the serialized target is restored immediately afterward.
+        RenderTexture captureTexture = RenderTexture.GetTemporary(
+            width,
+            height,
+            24,
+            RenderTextureFormat.ARGB32,
+            RenderTextureReadWrite.sRGB);
+        captureTexture.filterMode = FilterMode.Bilinear;
+        return captureTexture;
     }
 
     private static void WriteThumbnailFile(string outputPath, byte[] pngBytes)

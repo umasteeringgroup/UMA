@@ -156,7 +156,7 @@ namespace UMA.TexturePaint
     [Serializable]
     public sealed class TexturePaintStageState
     {
-        public const int CurrentVersion = 16;
+        public const int CurrentVersion = 18;
         public int version = CurrentVersion;
         public string documentGuid;
         public int selectedSurface;
@@ -198,12 +198,14 @@ namespace UMA.TexturePaint
         public bool workspaceShowProperties = true;
         public bool workspaceShowAssetShelf = true;
         public bool workspaceShowUV = true;
+        public int workspacePanelTab = 1;
         public int workspaceLeftTab;
         public int workspaceRightTab;
         public Vector2 workspaceUVPan;
         public float workspaceUVZoom = 1f;
         public bool channelSolo;
         public bool previewBefore;
+        public int scenePreviewMode;
         public bool uvPreviewBefore;
         public bool layerMaskMode;
         public bool soloLayerMask;

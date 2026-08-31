@@ -135,6 +135,7 @@ namespace UMA.TexturePaint.Editor
                         set.Name + " " + pair.Key + " Authored Overlay",
                         target.editable.Width, target.editable.Height, target.format);
                     set.compositor.ComposeAuthoredLayers(set, pair.Key, composite);
+                    set.compositor.ApplyChannelAdjustments(pair.Key, target.adjustments, composite);
                     logical.Add(pair.Key, composite);
                 }
                 if (logical.TryGetValue(TexturePaintChannel.NormalControl,

@@ -1,5 +1,24 @@
 # What's New in UMA 3
 
+### What's new since the UMA 3.04 Release
+##
+##Overlay Painter 
+- UI overhaul, new Compact Mode
+- New toolbars
+- Stubble Maker generator
+- Scar generator
+- Normal control layer to modify normal maps with height maps. 
+- Corrosion generator
+- Various bug fixes
+- Massive paint speedup
+- Split brushes and brush settings into separate dockable windows
+- New - Material Preset system - save layer stacks, with masks, blending, generators, effects. 
+## Gore System
+- New fluid system for bleeding
+- Surface cuts, with adjustable fluid bleeding
+- Amputations (bone level) - cut off arms/legs, hands, etc.
+- Bleeding decals - bullet holes, etc.
+
 ## What's New Since the UMA 3.02 Release
 
 UMA 3.04 is the cumulative release from UMA 3.02 forward. It includes everything previously prepared for the unreleased 3.03 together with the package, sample, reliability, and release-readiness work completed afterward; 3.03 is not a separate upgrade prerequisite.
@@ -32,6 +51,7 @@ UMA 3.04 is the cumulative release from UMA 3.02 forward. It includes everything
 ### Welcome Window and Editor Reliability
 
 - Updated the Welcome Window to display the active installed UMA version and settings, open sample scenes from either supported install location, and open this file in the Documentation Browser from **What's New**.
+- Required package guidance now opens once per distinct setup state in an editor session. Closing the Welcome Window suppresses repeat prompts until the render-pipeline or content-installation state changes; **UMA > Welcome to UMA** always opens it manually.
 - Restored **Recompile Shaders** with package-aware shader discovery and material repair.
 - Reworked **Scan Scene** to check current UMA 3 setup problems such as settings and Generator Prefab validity, unresolved avatar races or starting recipes, disabled generation, missing generated meshes, and broken materials or shaders.
 - Reworked **Scan Project** to validate the Global Library, races, slots, overlays, materials, text and wardrobe recipes, and wardrobe collections without rewriting content.
@@ -207,23 +227,23 @@ After importing or updating UMA 3:
 
 1. Open the UMA Welcome window.
 2. Rebuild the UMA Library so the asset index reflects the new folder layout and content.
-3. Open one of the UMA 3 sample scenes in `Assets/UMA/UMA3/Scenes`.
+3. Install UMA's URP or HDRP support, then open a sample scene in `Assets/UMA/SRP/Samples/Scenes`.
 4. Try the Character Creator scene first if you want an end-user view of the new wardrobe, DNA, and color workflows.
 5. Try the Decals scene if you are evaluating the new decal system.
 6. Try the construction and save/load scenes if you are integrating UMA into runtime code.
 
 Useful entry scenes include:
-- `Assets/UMA/UMA3/Scenes/U3-Character Creator.unity`
-- `Assets/UMA/UMA3/Scenes/U3-How to equip items.unity`
-- `Assets/UMA/UMA3/Scenes/U3-How to Use a Slider to control DNA.unity`
-- `Assets/UMA/UMA3/Scenes/U3-How to Load and Save a DCA to a string.unity`
-- `Assets/UMA/UMA3/Scenes/U3-Generating Random Characters.unity`
-- `Assets/UMA/UMA3/Scenes/U3-Decals.unity`
-- `Assets/UMA/UMA3/Scenes/U3-Integrating with Timeline.unity`
-- `Assets/UMA/UMA3/Scenes/U3-Tools-Photobooth.unity`
-- `Assets/UMA/UMA3/Scenes/U3-Ragdolls and Shooting Example.unity`
-- `Assets/UMA/UMA3/Scenes/U3-How to Construct a DCA from scratch.unity`
-- `Assets/UMA/UMA3/Scenes/U3-How to Construct and load a DCA from a prefab.unity`
+- `Assets/UMA/SRP/Samples/Scenes/U3-Character Creator.unity`
+- `Assets/UMA/SRP/Samples/Scenes/U3-How to equip items.unity`
+- `Assets/UMA/SRP/Samples/Scenes/U3-How to Use a Slider to control DNA.unity`
+- `Assets/UMA/SRP/Samples/Scenes/U3-How to Load and Save a DCA to a string.unity`
+- `Assets/UMA/SRP/Samples/Scenes/U3-Generating Random Characters.unity`
+- `Assets/UMA/SRP/Samples/Scenes/U3-Decals.unity`
+- `Assets/UMA/SRP/Samples/Scenes/U3-Integrating with Timeline.unity`
+- `Assets/UMA/SRP/Samples/Scenes/U3-Tools-Photobooth.unity`
+- `Assets/UMA/SRP/Samples/Scenes/U3-Ragdolls and Shooting Example.unity`
+- `Assets/UMA/SRP/Samples/Scenes/U3-How to Construct a DCA from scratch.unity`
+- `Assets/UMA/SRP/Samples/Scenes/U3-How to Construct and load a DCA from a prefab.unity`
 
 ## New UMA 3 Content Library
 
@@ -384,7 +404,7 @@ User impact:
 For details, see:
 - `Docs/Decals.md`
 - `Assets/UMA/Core/Decals`
-- `Assets/UMA/UMA3/Scenes/U3-Decals.unity`
+- `Assets/UMA/SRP/Samples/Scenes/U3-Decals.unity`
 
 ## Textures, UDIMs, ShaderGraphs, And Materials
 

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: UMA3_SkinShader_URP
   m_EditorClassIdentifier: UMA_Core::UMA.UMAMaterial
   _material: {fileID: 2100000, guid: af9ee587fa376fc4ca268bbfccac9e82, type: 2}
-  _HDRPMaterial: {fileID: 2100000, guid: 96c2261d5021a32458020318a72e7ee7, type: 2}
+  _HDRPMaterial: {fileID: 0}
   _secondPass: {fileID: 0}
   _HDRPSecondPass: {fileID: 0}
   materialType: 2

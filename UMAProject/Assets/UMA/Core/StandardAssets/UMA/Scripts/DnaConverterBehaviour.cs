@@ -13,8 +13,7 @@ namespace UMA
 			Prepare();
 		}
 
-		[SerializeField]
-		[FormerlySerializedAs("DNAType")]
+		[System.NonSerialized]
 		protected System.Type _dnaType;
 
         [SerializeField]

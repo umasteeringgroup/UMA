@@ -17,8 +17,10 @@ For the complete painting, layer, mask, spline, save, and export workflow, see
 - [Text](#text)
 - [Fabric Fuzz, Fiber, and Fray](#fabric--fuzz-fiber--fray)
 - [Rust, Oxidation, and Corrosion](#metal--rust-oxidation--corrosion)
+- [Dripping Corrosion](#dripping-corrosion)
 - [Pores, Scratches, and Micro Detail](#surface--pores-scratches--micro-detail)
 - [Veins, Bruising, and Subdermal Variation](#skin--veins-bruising--subdermal-variation)
+- [Stubble Maker](#skin--stubble-maker)
 - [Scar, Wound, and Stretch Marks](#skin--scar-wound--stretch-marks)
 - [Creature Scales and Skin Variation](#creature--scales--skin-variation)
 - [Combat Scratches and Dents](#metal--combat-scratches--dents)
@@ -136,6 +138,7 @@ sample only their Sprite rectangle, even when stored in an atlas.
 | Corroded metal with pits, flakes, and runoff | Metal — Rust, Oxidation & Corrosion | Dirtify |
 | Pores, fine scratches, generic microsurface | Surface — Pores, Scratches & Micro Detail | Levels & Curves |
 | Realistic skin variation, vessels, bruises, freckles | Skin — Veins, Bruising & Subdermal Variation | Surface Micro Detail at low strength |
+| Beard shadow, facial stubble, or a freshly shaved head | Skin — Stubble Maker | A painted layer mask for hairline/cheek cleanup |
 | Directed or procedural scars and wounds | Skin — Scar, Wound & Stretch Marks | A Custom-channel Path guide |
 | Scales, amphibian skin, spots, age variation | Creature — Scales & Skin Variation | Surface Micro Detail |
 | Dents, pings, gouges, chipped armor | Metal — Combat Scratches & Dents | Edge Wear, Dirtify, or Rust |
@@ -509,6 +512,28 @@ Gotchas:
   add enough Normal Control to catch grazing light.
 - World projection reduces UV seams, but runoff direction still needs to make sense for the prop.
 
+## Dripping Corrosion
+
+**Best for:** realistic water-driven oxidation beneath panel edges, seams, fasteners, recessed joins,
+and exposed damage.
+
+**Outputs:** Albedo, Roughness, Metallic, Ambient Occlusion, and Normal Control.
+
+This generator detects convex exposed edges and concave or occluded valleys, broadens those sources
+by **Corrosion Spread**, and traces eligible sources along the configured world-space gravity vector.
+The default `(0, -1, 0)` follows standard Unity gravity. **Drip Length**, **Drip Width**, corrosion
+spread, breakup size, and pit size are all meters under Unity's 1 unit = 1 meter convention.
+
+Start with the physical scale controls. A small prop usually needs millimeter-scale drip widths and
+pit sizes; architectural metal can use centimeter-scale breakup and longer trails. Then adjust Edge
+and Valley Amount independently. Multi-octave breakup controls the broad oxide boundary, while the
+separate pit field drives recessed Normal Control and AO. Crust Height raises dry flakes without
+turning every covered pixel into a bump.
+
+When compute shaders are available, Dripping Corrosion runs directly against GPU-resident mesh maps.
+Its parallel CPU implementation is retained as a fallback. Dirtify and Edge Wear use the same GPU
+path; other built-in CPU generators now parallelize independent rows and avoid redundant tile copies.
+
 ## Surface — Pores, Scratches & Micro Detail
 
 **Best for:** subtle material breakup on skin, leather, plastic, stone, painted metal, wood finish, and
@@ -618,6 +643,82 @@ Gotchas:
   when the source skin should remain dominant.
 - Different body regions often need different masks or separate Plugin layers rather than one global
   setting.
+
+## Skin — Stubble Maker
+
+**Best for:** beard and moustache stubble, five-o'clock shadow, shaved scalps, close-clipped hair,
+follicle redness, razor irritation, pimples, and small pigment spots over an existing skin texture.
+
+**Outputs:** Albedo, Roughness, Normal Control, Skin Color Mask, and Detail Mask. Every output is
+feature-alpha-only: Stubble Maker never writes an opaque base skin. This is important when the result
+will become an UMA overlay rather than a replacement skin.
+
+### Facial hair and shaved-head profiles
+
+Choose **Facial Hair** for the measurements exactly as authored. Choose **Shaved Head** to derive a
+shorter, slightly finer, denser, and straighter result from the same controls. **Custom / Neutral**
+retains the authored measurements without the scalp bias and is useful when the placement is neither
+a face nor scalp.
+
+Zero **Direction from Down** points toward texture-space down. Increase or decrease it to follow the
+target UV layout. **Direction Variation** adds controlled angular differences; **Curvature** bends
+the middle of individual hairs. Keep both restrained for recently shaved areas. Longer facial
+stubble tolerates more variation.
+
+**Length (px)** and **Width (px)** are destination-pixel measurements, so review them at the intended
+export resolution. **Density** changes both population and spacing. **Tip Taper** controls the
+root-to-tip silhouette, while Hair Opacity and Hair Roughness separate dark coverage from material
+response. Hair Height writes a raised Normal Control value rather than an RGB normal.
+
+### Randomness and placement
+
+**Random Position X/Y** offsets each root by a bounded pixel amount. Length Variation, Width
+Variation, Color Variation, Direction Variation, and Curvature use the saved Seed, so regeneration is
+stable. Start with low values; maxing every random control produces fuzz rather than clipped stubble.
+
+Placement is a rectangle or ellipse with normalized Center X/Y and Width/Height, pixel edge feather,
+and rotation. It is deliberately UV-based because face and scalp hairlines are usually art-directed
+against a specific skin layout. Use the optional Control Mask for a prepared beard/scalp map, or add
+an editable layer mask afterward for cheeks, lips, nostrils, ears, eyebrows, and the final hairline.
+
+### Shadows, redness, rash, pimples, and spots
+
+**Stubble Shadow** places a soft color around and under each strand. A cool desaturated blue-gray can
+suggest beard shadow beneath lighter skin; darker skin usually needs a subtler, palette-matched
+value. Shadow Spread and Shadow Offset Down control softness and direction without baking scene
+lighting into the base skin.
+
+**Shaving Redness** is localized around deterministic follicle roots. Redness Radius and Redness
+Color can represent a fresh razor pass or inflamed follicles. The separate **Rash** controls create
+larger soft clusters. Pimples and pigment spots have independent amount, spacing, size, color, and
+height; pigment spots should normally keep Spot Height near neutral.
+
+These skin effects share the placement, edge feather, Control Mask, and Overall Amount. They can be
+set to zero independently, leaving a hair-only alpha overlay.
+
+### Saving as an UMA overlay
+
+1. Generate Stubble Maker on a Plugin layer above the existing skin.
+2. Inspect channel thumbnails and confirm empty areas remain transparent rather than skin-colored.
+3. Refine the beard or scalp boundary with the Plugin layer's mask if needed.
+4. Choose **Export Textures & UMA Assets...** and **Runtime Overlay (Transparent)**.
+5. Enter an Export Identifier and export. Overlay Painter excludes the reconstructed base, unions
+   authored channel alpha into the grayscale coverage texture, and assigns it to the new
+   `OverlayDataAsset.alphaMask`.
+
+Do not choose Flattened Composite for a reusable stubble overlay; that mode includes the underlying
+skin. Saving the paint document preserves editability, while exporting creates the runtime overlay.
+
+Gotchas:
+
+- Facial and scalp UV islands may point in different texture directions. Use separate Plugin layers,
+  placement regions, and masks when one direction cannot suit both.
+- A one-pixel hair at low resolution can alias or disappear after scaling. Author and judge at the
+  final overlay resolution.
+- Strong black Albedo plus strong shadow double-darkens the beard. Establish strand color first,
+  then add just enough shadow to join the follicles visually.
+- Normal Control, Skin Color Mask, and Detail Mask only affect shaders/materials that consume them;
+  alpha and Albedo still export normally.
 
 ## Skin — Scar, Wound & Stretch Marks
 

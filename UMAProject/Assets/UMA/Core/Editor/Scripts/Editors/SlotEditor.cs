@@ -246,8 +246,6 @@ namespace UMA.Editors
             string barLabel = _slotData.isPlaceholderSlot
                 ? _name + "      (Placeholder Wildcard)"
                 : _name + "      (" + _slotData.asset.name + ")" + GetLodSuffix(_slotData);
-            if (needsFixup)
-                barLabel += "  [Needs Fixup]";
 
             // Draw foldout bar with Asset, Lib, and X buttons
             DrawSlotFoldoutBar(ref _foldOut, barLabel, out select, out selectInLibrary, out delete,

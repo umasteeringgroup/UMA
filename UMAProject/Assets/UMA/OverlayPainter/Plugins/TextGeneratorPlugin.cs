@@ -122,14 +122,14 @@ namespace UMA.TexturePaint.Examples
             for(int y0=0;y0<height;y0+=Rows)
             {
                 c.cancellationToken.ThrowIfCancellationRequested();int rows=Math.Min(Rows,height-y0);Color32[] maskPixels=mask?new Color32[width*rows]:null;var buffers=new Dictionary<TexturePaintChannel,Color32[]>();if(!mask)for(int i=0;i<channels.Count;i++)buffers[channels[i]]=new Color32[width*rows];
-                for(int ly=0;ly<rows;ly++)for(int x=0;x<width;x++)
+                Parallel.For(0,rows,new ParallelOptions{CancellationToken=c.cancellationToken},ly => {for(int x=0;x<width;x++)
                 {
                     float coverage=ribbon!=null?ribbon.SampleText(x,y0+ly,bitmap,s):BlockText(x,y0+ly,width,height,bitmap,s);
                     if(s.shadowOpacity>0)coverage=Mathf.Max(coverage,Shadow(x,y0+ly,width,height,bitmap,s,ribbon)*s.shadowOpacity);
                     int index=ly*width+x;if(mask){byte b=B(coverage);maskPixels[index]=new Color32(b,b,b,255);continue;}
                     for(int i=0;i<channels.Count;i++){TexturePaintChannel ch=channels[i];buffers[ch][index]=Output(ch,s,coverage);}
-                }
-                RectInt rect=new RectInt(0,y0,width,rows);if(mask)c.WriteMaskTileCompact(id,rect,maskPixels,TexturePaintPluginBlend.Replace);else foreach(KeyValuePair<TexturePaintChannel,Color32[]> pair in buffers)c.WriteTileCompact(id,pair.Key,rect,pair.Value,pair.Key==TexturePaintChannel.Albedo?TexturePaintPluginColorSpace.Linear:TexturePaintPluginColorSpace.Data,TexturePaintPluginBlend.Replace);
+                }});
+                RectInt rect=new RectInt(0,y0,width,rows);if(mask)c.WriteMaskTileCompactOwned(id,rect,maskPixels,TexturePaintPluginBlend.Replace);else foreach(KeyValuePair<TexturePaintChannel,Color32[]> pair in buffers)c.WriteTileCompactOwned(id,pair.Key,rect,pair.Value,pair.Key==TexturePaintChannel.Albedo?TexturePaintPluginColorSpace.Linear:TexturePaintPluginColorSpace.Data,TexturePaintPluginBlend.Replace);
                 c.progress?.Report((si+(y0+rows)/(float)height)/surfaces);
             }
         }

@@ -6,6 +6,16 @@ using UnityEngine.InputSystem;
 
 namespace UMA.Dynamics.Examples
 {
+    /// <summary>
+    /// Optional per-character combat state used by <see cref="UMAShooter"/>. It lives in UMA
+    /// Core so sample movement components can implement it without creating an assembly cycle.
+    /// </summary>
+    public interface IUMAShooterTarget
+    {
+        /// <returns>True when this hit should ragdoll the character.</returns>
+        bool ApplyShot(Transform attacker, bool lethalHit);
+    }
+
     public class UMAShooter : MonoBehaviour
     {
         private UMAPlayerActions controls;
@@ -17,6 +27,9 @@ namespace UMA.Dynamics.Examples
 
         public Camera currentCamera;
         public LayerMask layers;
+        [Tooltip("Character that victims should pursue after a non-lethal hit. " +
+            "When empty, the root of this shooter object is used.")]
+        public Transform shooterCharacter;
         public AudioClip Bang;
         public float announcerDelay = 0.5f;
 
@@ -46,6 +59,11 @@ namespace UMA.Dynamics.Examples
             controls.Disable();
         }
 
+        private void OnDestroy()
+        {
+            controls?.Dispose();
+        }
+
         // -------------------------------
         // ACTION HANDLERS
         // -------------------------------
@@ -53,12 +71,15 @@ namespace UMA.Dynamics.Examples
         private void OnGlobalUndo()
         {
             // Escape key behavior
-            UMAPhysicsAvatar[] components = GameObject.FindObjectsByType<UMAPhysicsAvatar>(FindObjectsSortMode.None);
+            UMAPhysicsAvatar[] components = UMAObjectUtility.FindObjectsByType<UMAPhysicsAvatar>(
+                FindObjectsInactive.Exclude);
             for (int i = 0; i < components.Length; i++)
             {
                 UMAPhysicsAvatar player = components[i];
                 if (player.ragdolled)
+                {
                     player.ragdolled = false;
+                }
             }
         }
 
@@ -77,8 +98,7 @@ namespace UMA.Dynamics.Examples
             {
                 if (hit.rigidbody != null)
                 {
-                    Transform avatar = hit.rigidbody.transform.root;
-                    UMAPhysicsAvatar player = avatar.GetComponent<UMAPhysicsAvatar>();
+                    UMAPhysicsAvatar player = FindPhysicsAvatar(hit.rigidbody);
 
                     if (player)
                     {
@@ -87,18 +107,24 @@ namespace UMA.Dynamics.Examples
 
                         if (!player.ragdolled)
                         {
-                            hits++;
-                            if (hits == 5)
-                                StartCoroutine(PlayHit(KillingSpree));
-                            else
+                            IUMAShooterTarget target = FindShooterTarget(player);
+                            bool lethalHit = IsLethalHit(hit);
+                            bool shouldRagdoll = target == null ||
+                                target.ApplyShot(ResolveShooterCharacter(), lethalHit);
+                            if (shouldRagdoll)
+                            {
+                                hits++;
                                 AnnounceHit(hit);
+                                if (hits == 5)
+                                    StartCoroutine(PlayHit(KillingSpree));
+                                player.ragdolled = true;
+                            }
                         }
 
                         // Add decal
                         if (bulletDecal != null)
                             ApplyDecal(player, ray);
 
-                        player.ragdolled = true;
                     }
 
                     impactTarget = hit.rigidbody;
@@ -118,13 +144,12 @@ namespace UMA.Dynamics.Examples
             {
                 if (hit.rigidbody != null)
                 {
-                    Transform avatar = hit.rigidbody.transform.root;
-                    UMAPhysicsAvatar player = avatar.GetComponent<UMAPhysicsAvatar>();
-                    if (player == null)
-                        player = avatar.GetComponentInChildren<UMAPhysicsAvatar>();
+                    UMAPhysicsAvatar player = FindPhysicsAvatar(hit.rigidbody);
 
                     if (player)
+                    {
                         player.ragdolled = false;
+                    }
                 }
             }
         }
@@ -147,13 +172,76 @@ namespace UMA.Dynamics.Examples
         {
             if (hit.rigidbody != null)
             {
-                string name = hit.rigidbody.gameObject.name.ToLower();
-                if (name == "head")
+                string name = hit.rigidbody.gameObject.name;
+                if (IsHeadHit(name))
                     StartCoroutine(PlayHit(HeadShot));
-                if (name == "hips")
+                if (IsGroinHit(name))
                     StartCoroutine(PlayHit(HadToHurt));
             }
             return hit;
+        }
+
+        private static bool IsLethalHit(RaycastHit hit)
+        {
+            if (hit.rigidbody == null)
+                return false;
+
+            string name = hit.rigidbody.gameObject.name;
+            return IsHeadHit(name) || IsGroinHit(name);
+        }
+
+        private static bool IsHeadHit(string boneName)
+        {
+            return !string.IsNullOrEmpty(boneName) &&
+                boneName.IndexOf("head", System.StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        private static bool IsGroinHit(string boneName)
+        {
+            if (string.IsNullOrEmpty(boneName))
+                return false;
+
+            return boneName.IndexOf("hips", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                boneName.IndexOf("pelvis", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                boneName.IndexOf("groin", System.StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        private Transform ResolveShooterCharacter()
+        {
+            return shooterCharacter != null ? shooterCharacter : transform.root;
+        }
+
+        private static UMAPhysicsAvatar FindPhysicsAvatar(Rigidbody hitRigidbody)
+        {
+            if (hitRigidbody == null)
+                return null;
+
+            UMAPhysicsAvatar player =
+                hitRigidbody.GetComponentInParent<UMAPhysicsAvatar>();
+            return player != null
+                ? player
+                : hitRigidbody.transform.root.GetComponentInChildren<UMAPhysicsAvatar>(true);
+        }
+
+        private static IUMAShooterTarget FindShooterTarget(UMAPhysicsAvatar player)
+        {
+            if (player == null)
+                return null;
+
+            MonoBehaviour[] parents =
+                player.GetComponentsInParent<MonoBehaviour>(true);
+            for (int i = 0; i < parents.Length; i++)
+            {
+                if (parents[i] is IUMAShooterTarget target)
+                    return target;
+            }
+
+            MonoBehaviour[] children =
+                player.GetComponentsInChildren<MonoBehaviour>(true);
+            for (int i = 0; i < children.Length; i++)
+                if (children[i] is IUMAShooterTarget target)
+                    return target;
+            return null;
         }
 
         IEnumerator PlayHit(AudioClip clip)
@@ -166,8 +254,10 @@ namespace UMA.Dynamics.Examples
 
         IEnumerator TimedRagdoll(RaycastHit hit)
         {
-            Transform avatar = hit.rigidbody.transform.root;
-            UMAPhysicsAvatar player = avatar.GetComponent<UMAPhysicsAvatar>();
+            UMAPhysicsAvatar player = FindPhysicsAvatar(hit.rigidbody);
+            if (player == null)
+                yield break;
+
             player.ragdolled = true;
             yield return new WaitForSeconds(0.1f);
             player.ragdolled = false;

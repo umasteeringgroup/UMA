@@ -49,7 +49,8 @@ namespace UMA.Editors.Tests
                 atlasFolder));
             Assert.IsFalse((bool)InvokePrivateStatic(
                 "IsThumbnailSourcePath",
-                "Assets/UMA2/Wearables/Thumbs/Hair.png",
+                UMAPathUtility.ResolveUma2ContentPath(
+                    "Wearables/Thumbs/Hair.png"),
                 iconRoot,
                 atlasFolder));
             Assert.IsFalse((bool)InvokePrivateStatic(

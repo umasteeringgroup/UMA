@@ -21,7 +21,7 @@ MonoBehaviour:
   wardrobeRecipeThumbs:
   - race: HumanMale
     filename: 
-    thumb: {fileID: 21300000, guid: 896b1aeef5871c140a99c3d9c3b7abdc, type: 3}
+    thumb: {fileID: 0}
   thumbnailFromTexture: 0
   thumbnailRect:
     serializedVersion: 2
@@ -36,8 +36,7 @@ MonoBehaviour:
   - Torso
   suppressWardrobeSlots: []
   activeWardrobeSet: []
-  MeshHideAssets:
-  - {fileID: 11400000, guid: f1e5cb9113e36d44f8b6da360571f611, type: 2}
+  MeshHideAssets: []
   MeshHideAssetCollections: []
   MeshModifiers: []
   OverrideDNA:

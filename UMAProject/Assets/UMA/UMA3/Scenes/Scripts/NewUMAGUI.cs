@@ -893,14 +893,6 @@ namespace UMA
 
         private void OnGUI()
         {
-
-            if (GUI.Button(new Rect(150, 50, 150, 30), "Force BuildCharacter"))
-            {
-                if (avatar != null)
-                {
-                    avatar.BuildCharacter(true);
-                }
-            }
             if (!showTimingButtons || _timingInProgress) return;
 
             float buttonWidth = 220f;
@@ -1018,9 +1010,8 @@ namespace UMA
 
             // Find or create the mesh combiner component
             UMAMeshCombiner existingCombiner = null;
-            var combinerCandidates = UnityEngine.Object.FindObjectsByType<UMAMeshCombiner>(
-                FindObjectsInactive.Include,
-                FindObjectsSortMode.None);
+            var combinerCandidates = UMAObjectUtility.FindObjectsByType<UMAMeshCombiner>(
+                FindObjectsInactive.Include);
             for (int i = 0; i < combinerCandidates.Length; i++)
             {
                 if (combinerCandidates[i].GetType() == combinerType)

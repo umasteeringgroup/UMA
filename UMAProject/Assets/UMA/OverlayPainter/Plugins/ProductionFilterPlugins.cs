@@ -160,7 +160,8 @@ namespace UMA.TexturePaint.Examples
                 context.cancellationToken.ThrowIfCancellationRequested();
                 int rows = Math.Min(RowsPerTile, height - y0);
                 var output = new Color32[width * rows];
-                for (int localY = 0; localY < rows; localY++)
+                Parallel.For(0, rows, new ParallelOptions
+                    { CancellationToken = context.cancellationToken }, localY =>
                 {
                     int y = y0 + localY;
                     float v = (y + 0.5f) / height;
@@ -184,12 +185,12 @@ namespace UMA.TexturePaint.Examples
                             ? MaskColor(value) : Constrain(destinationChannel, value);
                         output[localY * width + x] = value;
                     }
-                }
+                });
                 if (context.target == TexturePaintPluginTarget.LayerMask)
-                    context.WriteMaskTileCompact(surfaceId, new RectInt(0, y0, width, rows),
+                    context.WriteMaskTileCompactOwned(surfaceId, new RectInt(0, y0, width, rows),
                         output, TexturePaintPluginBlend.Replace);
                 else
-                    context.WriteTileCompact(surfaceId, destinationChannel,
+                    context.WriteTileCompactOwned(surfaceId, destinationChannel,
                         new RectInt(0, y0, width, rows), output,
                         TexturePaintChannelUtility.IsColor(destinationChannel)
                             ? TexturePaintPluginColorSpace.Linear : TexturePaintPluginColorSpace.Data,
@@ -208,23 +209,30 @@ namespace UMA.TexturePaint.Examples
             float outBlack = p.Float("outputBlack", 0f), outWhite = p.Float("outputWhite", 1f);
             float amount = Mathf.Clamp01(p.Float("amount", 1f));
             bool luminance = p.Boolean("preserveHue", false);
-            Func<float, float> adjust = c =>
-            {
-                float n = Mathf.Clamp01((c - inBlack) / Math.Max(0.00001f, inWhite - inBlack));
-                n = Mathf.Pow(n, 1f / gamma);
-                n = SampleCurve(curve, n);
-                return Mathf.Lerp(outBlack, outWhite, n);
-            };
             Color result;
             if (luminance)
             {
                 float oldLuma = Math.Max(0.00001f, Luma(input));
-                float newLuma = adjust(oldLuma);
+                float newLuma = AdjustLevel(oldLuma, inBlack, inWhite, gamma,
+                    outBlack, outWhite, curve);
                 float scale = newLuma / oldLuma;
                 result = new Color(input.r * scale, input.g * scale, input.b * scale, input.a);
             }
-            else result = new Color(adjust(input.r), adjust(input.g), adjust(input.b), input.a);
+            else result = new Color(
+                AdjustLevel(input.r, inBlack, inWhite, gamma, outBlack, outWhite, curve),
+                AdjustLevel(input.g, inBlack, inWhite, gamma, outBlack, outWhite, curve),
+                AdjustLevel(input.b, inBlack, inWhite, gamma, outBlack, outWhite, curve),
+                input.a);
             return Color.Lerp(input, result, amount);
+        }
+
+        private static float AdjustLevel(float value, float inBlack, float inWhite,
+            float gamma, float outBlack, float outWhite, float[] curve)
+        {
+            float normalized = Mathf.Clamp01((value - inBlack) /
+                Math.Max(0.00001f, inWhite - inBlack));
+            normalized = Mathf.Pow(normalized, 1f / gamma);
+            return Mathf.Lerp(outBlack, outWhite, SampleCurve(curve, normalized));
         }
 
         private static Color NormalHeight(TexturePaintReadOnlyPixels source, float u, float v,
@@ -375,7 +383,9 @@ namespace UMA.TexturePaint.Examples
             float[] values = new float[count];
             int[] islands = new int[count];
             TexturePaintReadOnlyMeshMap surfaceMap = context.GetMeshMap(surfaceId, TexturePaintMeshMap.SurfaceId);
-            for (int y = 0; y < height; y++)
+            Parallel.For(0, height, new ParallelOptions
+                { CancellationToken = context.cancellationToken }, y =>
+            {
                 for (int x = 0; x < width; x++)
                 {
                     float u = (x + 0.5f) / width, v = (y + 0.5f) / height;
@@ -383,6 +393,7 @@ namespace UMA.TexturePaint.Examples
                     values[i] = Luma(source.GetPixelBilinear(u, v));
                     islands[i] = SurfaceLabel(surfaceMap, u, v);
                 }
+            });
             float[] toInside = Distance(values, islands, width, height, threshold, true,
                 context.cancellationToken);
             float[] toOutside = Distance(values, islands, width, height, threshold, false,
@@ -395,7 +406,9 @@ namespace UMA.TexturePaint.Examples
             {
                 int rows = Math.Min(RowsPerTile, height - y0);
                 var output = new Color32[width * rows];
-                for (int localY = 0; localY < rows; localY++)
+                Parallel.For(0, rows, new ParallelOptions
+                    { CancellationToken = context.cancellationToken }, localY =>
+                {
                     for (int x = 0; x < width; x++)
                     {
                         int i = (y0 + localY) * width + x;
@@ -421,11 +434,12 @@ namespace UMA.TexturePaint.Examples
                         byte b = (byte)Mathf.RoundToInt(Mathf.Clamp01(result) * 255f);
                         output[localY * width + x] = new Color32(b, b, b, 255);
                     }
+                });
                 if (context.target == TexturePaintPluginTarget.LayerMask)
-                    context.WriteMaskTileCompact(surfaceId, new RectInt(0, y0, width, rows),
+                    context.WriteMaskTileCompactOwned(surfaceId, new RectInt(0, y0, width, rows),
                         output, TexturePaintPluginBlend.Replace);
                 else
-                    context.WriteTileCompact(surfaceId, destination, new RectInt(0, y0, width, rows),
+                    context.WriteTileCompactOwned(surfaceId, destination, new RectInt(0, y0, width, rows),
                         output, TexturePaintChannelUtility.IsColor(destination)
                             ? TexturePaintPluginColorSpace.Linear : TexturePaintPluginColorSpace.Data,
                         TexturePaintPluginBlend.Replace);
@@ -578,7 +592,28 @@ namespace UMA.TexturePaint.Examples
         private static Vector3 BlendRnm(Vector3 basis, Vector3 detail) { Vector3 t = basis + Vector3.forward; Vector3 u = new Vector3(-detail.x, -detail.y, detail.z); Vector3 combined = t * Vector3.Dot(t, u) - u * t.z; return combined.sqrMagnitude < .000001f ? basis : combined.normalized; }
         private static Color EncodeNormal(Vector3 n) { n.Normalize(); return new Color(n.x * .5f + .5f, n.y * .5f + .5f, n.z * .5f + .5f, 1f); }
         private static float ColorDistance(Color a, Color b) { float dr = a.r - b.r, dg = a.g - b.g, db = a.b - b.b; return Mathf.Sqrt(dr * dr + dg * dg + db * db); }
-        private static Color Median(TexturePaintReadOnlyPixels source, float u, float v, float du, float dv) { var a = new Color[9]; int n = 0; for (int y = -1; y <= 1; y++) for (int x = -1; x <= 1; x++) a[n++] = source.GetPixelBilinear(u + x * du, v + y * dv); Array.Sort(a, (x, y) => Luma(x).CompareTo(Luma(y))); return a[4]; }
+        private static Color Median(TexturePaintReadOnlyPixels source, float u, float v,
+            float du, float dv)
+        {
+            Span<Color> samples = stackalloc Color[9];
+            int count = 0;
+            for (int y = -1; y <= 1; y++)
+                for (int x = -1; x <= 1; x++)
+                    samples[count++] = source.GetPixelBilinear(u + x * du, v + y * dv);
+            for (int i = 1; i < samples.Length; i++)
+            {
+                Color value = samples[i];
+                float luminance = Luma(value);
+                int insertion = i - 1;
+                while (insertion >= 0 && Luma(samples[insertion]) > luminance)
+                {
+                    samples[insertion + 1] = samples[insertion];
+                    insertion--;
+                }
+                samples[insertion + 1] = value;
+            }
+            return samples[4];
+        }
         private static Color MaskColor(Color source) { float value = Luma(source); return new Color(value, value, value, 1f); }
         private static Color Remap(Color c, float inMin, float inMax, float outMin, float outMax) { float d = Math.Max(.00001f, inMax - inMin); Func<float, float> f = x => Mathf.Lerp(outMin, outMax, Mathf.Clamp01((x - inMin) / d)); return new Color(f(c.r), f(c.g), f(c.b), c.a); }
         private static float Component(Color c, int component) { switch (component) { case 0: return c.r; case 1: return c.g; case 2: return c.b; case 3: return c.a; case 4: return Luma(c); case 6: return 1f; default: return 0f; } }

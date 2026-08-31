@@ -1,4 +1,5 @@
 #if UNITY_INCLUDE_TESTS
+using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
@@ -51,6 +52,193 @@ namespace UMA.TexturePaint.Editor.Tests
             Assert.That(spriteSet.spriteSheets[1].channel, Is.EqualTo(TexturePaintChannel.Roughness));
             Assert.That(spriteSet.spriteSheets[1].inverted, Is.True);
             Assert.That(spriteSet.spriteSheets[2].channel, Is.EqualTo(TexturePaintChannel.Normal));
+        }
+
+        [Test]
+        public void SpriteSetFillSettingsKeepProjectionTilingAndSpriteSource()
+        {
+            var texture = new Texture2D(2, 2);
+            Sprite sprite = Sprite.Create(texture, new Rect(0f, 0f, 2f, 2f),
+                new Vector2(0.5f, 0.5f));
+            try
+            {
+                TexturePaintFillSettings settings =
+                    TexturePaintStageWindow.CreateSpriteSetFillSettings(sprite, true,
+                        new Vector2(3f, 7f), TexturePaintFillProjection.Triplanar,
+                        TexturePaintNormalConvention.DirectX);
+
+                Assert.That(settings.source, Is.EqualTo(TexturePaintBrushSource.Texture));
+                Assert.That(settings.sourceSprite, Is.SameAs(sprite));
+                Assert.That(settings.sourceTexture, Is.Null);
+                Assert.That(settings.invert, Is.True);
+                Assert.That(settings.projection, Is.EqualTo(TexturePaintFillProjection.Triplanar));
+                Assert.That(settings.tiling, Is.EqualTo(new Vector2(3f, 7f)));
+                Assert.That(settings.normalConvention,
+                    Is.EqualTo(TexturePaintNormalConvention.DirectX));
+            }
+            finally
+            {
+                Object.DestroyImmediate(sprite);
+                Object.DestroyImmediate(texture);
+            }
+        }
+
+        [Test]
+        public void SpriteSetFillTilingIsClampedToSupportedRange()
+        {
+            TexturePaintFillSettings settings =
+                TexturePaintStageWindow.CreateSpriteSetFillSettings(null, false,
+                    new Vector2(0f, 2000f), TexturePaintFillProjection.Flat,
+                    TexturePaintNormalConvention.OpenGL);
+
+            Assert.That(settings.tiling, Is.EqualTo(new Vector2(0.01f, 1000f)));
+        }
+
+        [Test]
+        public void SpriteSetPathSettingsKeepSpriteChannelAndNormalConvention()
+        {
+            var texture = new Texture2D(2, 2);
+            Sprite sprite = Sprite.Create(texture, new Rect(0f, 0f, 2f, 2f),
+                new Vector2(0.5f, 0.5f));
+            try
+            {
+                TexturePaintChannelSourceSettings settings =
+                    TexturePaintStageWindow.CreateSpriteSetPathSourceSettings(sprite, true,
+                        TexturePaintNormalConvention.DirectX);
+
+                Assert.That(settings.source, Is.EqualTo(TexturePaintBrushSource.Texture));
+                Assert.That(settings.sourceSprite, Is.SameAs(sprite));
+                Assert.That(settings.sourceTexture, Is.Null);
+                Assert.That(settings.invert, Is.True);
+                Assert.That(settings.normalConvention,
+                    Is.EqualTo(TexturePaintNormalConvention.DirectX));
+            }
+            finally
+            {
+                Object.DestroyImmediate(sprite);
+                Object.DestroyImmediate(texture);
+            }
+        }
+
+        [Test]
+        public void OverlayPathSettingsKeepLiveOverlaySource()
+        {
+            OverlayDataAsset overlay = ScriptableObject.CreateInstance<OverlayDataAsset>();
+            try
+            {
+                TexturePaintChannelSourceSettings settings =
+                    TexturePaintStageWindow.CreateOverlayPathSourceSettings(overlay,
+                        TexturePaintNormalConvention.OpenGL);
+
+                Assert.That(settings.source, Is.EqualTo(TexturePaintBrushSource.Overlay));
+                Assert.That(settings.sourceOverlay, Is.SameAs(overlay));
+                Assert.That(settings.color, Is.EqualTo(Color.white));
+                Assert.That(settings.normalConvention,
+                    Is.EqualTo(TexturePaintNormalConvention.OpenGL));
+            }
+            finally
+            {
+                Object.DestroyImmediate(overlay);
+            }
+        }
+
+        [Test]
+        public void PathSourcePopulationIgnoresStaleUnauthoredAlbedoSettings()
+        {
+            var texture = new Texture2D(2, 2);
+            Sprite sprite = Sprite.Create(texture, new Rect(0f, 0f, 2f, 2f),
+                new Vector2(0.5f, 0.5f));
+            var layer = new TexturePaintLayer { kind = TexturePaintLayerKind.Spline };
+            try
+            {
+                // The null target is sufficient here: source population should use the authored
+                // channel keys and must not touch raster data.
+                layer.channels[TexturePaintChannel.NormalControl] = null;
+                var source = new TexturePaintChannelSourceSettings
+                {
+                    source = TexturePaintBrushSource.Texture,
+                    sourceSprite = sprite,
+                    color = Color.white
+                };
+                layer.GetChannelSettings(TexturePaintChannel.NormalControl).sourceSettings =
+                    source.Clone();
+                layer.GetChannelSettings(TexturePaintChannel.Albedo).sourceSettings = source.Clone();
+                var context = new StrokeContext
+                {
+                    channel = TexturePaintChannel.Albedo,
+                    paintSource = TexturePaintBrushSource.Texture,
+                    sourceSprite = sprite,
+                    color = Color.white
+                };
+
+                TexturePaintStageWindow.PopulateLayerChannelSources(context, layer);
+
+                Assert.That(context.channelSources.Keys,
+                    Is.EquivalentTo(new[] { TexturePaintChannel.NormalControl }));
+                Assert.That(layer.channels.ContainsKey(TexturePaintChannel.Albedo), Is.False);
+            }
+            finally
+            {
+                layer.channels.Clear();
+                layer.Dispose();
+                Object.DestroyImmediate(sprite);
+                Object.DestroyImmediate(texture);
+            }
+        }
+
+        [Test]
+        public void LinkedSourceSynchronizationRepairsEveryPhysicalMember()
+        {
+            using TextureSet torso = new TextureSet { persistentId = "torso" };
+            using TextureSet arms = new TextureSet { persistentId = "arms" };
+            torso.channels[TexturePaintChannel.Albedo] = new TextureChannelTarget
+            {
+                channel = TexturePaintChannel.Albedo,
+                editable = new EditableTextureTarget("Torso Albedo", 4, 4,
+                    RenderTextureFormat.ARGB32, null, Color.clear)
+            };
+            arms.channels[TexturePaintChannel.Albedo] = new TextureChannelTarget
+            {
+                channel = TexturePaintChannel.Albedo,
+                editable = new EditableTextureTarget("Arms Albedo", 4, 4,
+                    RenderTextureFormat.ARGB32, null, Color.clear)
+            };
+            TexturePaintLayer torsoLayer = torso.AddLayer("Paint Layer");
+            TexturePaintLayer armsLayer = arms.AddLayer("Paint Layer");
+            armsLayer.GetChannelSettings(TexturePaintChannel.Albedo).sourceSettings =
+                new TexturePaintChannelSourceSettings
+                {
+                    source = TexturePaintBrushSource.Texture,
+                    sourceTexture = null
+                };
+            var context = new StrokeContext
+            {
+                channel = TexturePaintChannel.Albedo,
+                paintSource = TexturePaintBrushSource.Color,
+                color = Color.red
+            };
+            TexturePaintStageWindow.PopulateLayerChannelSources(context, torsoLayer);
+            var target = new TexturePaintLogicalTarget { id = "udim:body" };
+            var binding = new TexturePaintLogicalLayerBinding { target = target, complete = true };
+            binding.members.Add(new TexturePaintLogicalLayerMember
+            {
+                textureSet = torso,
+                layer = torsoLayer
+            });
+            binding.members.Add(new TexturePaintLogicalLayerMember
+            {
+                textureSet = arms,
+                layer = armsLayer
+            });
+
+            bool synchronized = TexturePaintStageWindow.SynchronizeLogicalLayerChannelSources(
+                target, binding, torso, context.channelSources, out string error);
+
+            Assert.That(synchronized, Is.True, error);
+            TexturePaintChannelSourceSettings repaired = armsLayer
+                .GetChannelSettings(TexturePaintChannel.Albedo).sourceSettings;
+            Assert.That(repaired.source, Is.EqualTo(TexturePaintBrushSource.Color));
+            Assert.That(repaired.color, Is.EqualTo(Color.red));
         }
     }
 }

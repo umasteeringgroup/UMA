@@ -24,6 +24,7 @@ public static class DecalRTStampEditor
         clone.overlayGroup = last.overlayGroup;
         clone.sourceOverlay = last.sourceOverlay;
         clone.sourceOverlayName = last.sourceOverlayName;
+        clone.projectionRadiusMeters = last.projectionRadiusMeters;
         clone.forceLinearSampling = last.forceLinearSampling;
         clone.invertY = last.invertY;
         clone.slots = new System.Collections.Generic.List<DecalRTStampAsset.SlotStamp>(last.slots.Count);

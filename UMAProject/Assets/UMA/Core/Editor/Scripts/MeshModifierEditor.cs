@@ -50,6 +50,7 @@ namespace UMA
         }
 
         public DynamicCharacterAvatar thisDCA;
+        [System.NonSerialized]
         public Dictionary<string, MeshModifier> SlotNameToModifiers = new Dictionary<string, MeshModifier>();
         public bool ShowVisibleSlots = false;
         public bool ShowOptions = false;

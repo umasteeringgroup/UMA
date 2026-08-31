@@ -607,6 +607,102 @@ namespace UMA.TexturePaint.Tests
             Object.DestroyImmediate(mesh);
         }
 
+        [Test]
+        public void SelectedTargetRaycastIgnoresCloserUnselectedSurfaceAndSupportsBackfaces()
+        {
+            var reconstruction = new MeshReconstructionResult();
+            ReconstructedSurface selected = CreateRaycastSurface("Selected", 0f);
+            ReconstructedSurface obstruction = CreateRaycastSurface("Obstruction", 1f);
+            reconstruction.surfaces.Add(obstruction);
+            reconstruction.surfaces.Add(selected);
+            try
+            {
+                Physics.SyncTransforms();
+                bool hitSelected = reconstruction.Raycast(
+                    new Ray(new Vector3(0.25f, 0.25f, 2f), Vector3.back),
+                    new[] { "Selected" }, false, out ReconstructedSurface frontSurface, out _);
+                Assert.That(hitSelected, Is.True);
+                Assert.That(frontSurface, Is.SameAs(selected));
+
+                bool rejectedBackface = reconstruction.Raycast(
+                    new Ray(new Vector3(0.25f, 0.25f, -1f), Vector3.forward),
+                    new[] { "Selected" }, false, out _, out _);
+                bool acceptedBackface = reconstruction.Raycast(
+                    new Ray(new Vector3(0.25f, 0.25f, -1f), Vector3.forward),
+                    new[] { "Selected" }, true, out ReconstructedSurface backSurface, out _);
+                Assert.That(rejectedBackface, Is.False);
+                Assert.That(acceptedBackface, Is.True);
+                Assert.That(backSurface, Is.SameAs(selected));
+            }
+            finally
+            {
+                reconstruction.Dispose();
+            }
+        }
+
+        [Test]
+        public void ReconstructionWarningsResolveToLogicalTargetsAndSurfaces()
+        {
+            var reconstruction = new MeshReconstructionResult();
+            var torso = new ReconstructedSurface
+            {
+                index = 7,
+                slotName = "Torso",
+                slotNames = new List<string> { "Torso" }
+            };
+            var legs = new ReconstructedSurface
+            {
+                index = 9,
+                slotName = "Legs",
+                slotNames = new List<string> { "Legs" }
+            };
+            reconstruction.surfaces.Add(torso);
+            reconstruction.surfaces.Add(legs);
+            reconstruction.logicalTargets.Rebuild(reconstruction.surfaces);
+            reconstruction.AddWarning("OP_IMPORT_TEST", MeshReconstructionWarningSeverity.Warning,
+                "A recoverable material source condition was found.", new[] { "Torso" }, "Skin");
+
+            reconstruction.ResolveWarningScopes();
+
+            Assert.That(reconstruction.warnings, Has.Count.EqualTo(1),
+                "The message-only compatibility view should remain populated.");
+            Assert.That(reconstruction.importWarnings, Has.Count.EqualTo(1));
+            MeshReconstructionWarning warning = reconstruction.importWarnings[0];
+            Assert.That(warning.Code, Is.EqualTo("OP_IMPORT_TEST"));
+            Assert.That(warning.TargetIds, Is.EquivalentTo(new[] { "slot:Torso" }));
+            Assert.That(warning.SurfaceIndices, Is.EquivalentTo(new[] { 7 }));
+            Assert.That(warning.AppliesToTarget(reconstruction.logicalTargets.FindBySlot("Torso")), Is.True);
+            Assert.That(warning.AppliesToSurface(torso), Is.True);
+            Assert.That(warning.AppliesToSurface(legs), Is.False);
+
+            reconstruction.Dispose();
+        }
+
+        private static ReconstructedSurface CreateRaycastSurface(string slot, float z)
+        {
+            Mesh mesh = new Mesh
+            {
+                vertices = new[] { Vector3.zero, Vector3.right, Vector3.up },
+                uv = new[] { Vector2.zero, Vector2.right, Vector2.up },
+                triangles = new[] { 0, 1, 2 }
+            };
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+            GameObject owner = new GameObject(slot + " Raycast Surface");
+            owner.transform.position = new Vector3(0f, 0f, z);
+            MeshCollider collider = owner.AddComponent<MeshCollider>();
+            collider.sharedMesh = mesh;
+            return new ReconstructedSurface
+            {
+                gameObject = owner,
+                mesh = mesh,
+                collider = collider,
+                slotName = slot,
+                slotNames = new List<string> { slot },
+                triangleSlotNames = new[] { slot }
+            };
+        }
+
         private static Mesh CreateSharedEdgeQuad(bool duplicateSharedVertices)
         {
             Mesh mesh = new Mesh();

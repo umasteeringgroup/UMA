@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using UMA.Dynamics;
+using UMA.Dynamics.Examples;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.Serialization;
 
 namespace UMA.Examples
@@ -12,7 +15,7 @@ namespace UMA.Examples
     /// </summary>
     [DisallowMultipleComponent]
     [AddComponentMenu("UMA/Examples/Random Character Walker")]
-    public sealed class RandomCharacterWalker : MonoBehaviour
+    public sealed class RandomCharacterWalker : MonoBehaviour, IUMAShooterTarget
     {
         private enum Activity
         {
@@ -24,9 +27,16 @@ namespace UMA.Examples
 
         [Header("Movement")]
         [FormerlySerializedAs("moveSpeed")]
-        [Tooltip("Animator playback rate while walking. Because movement is " +
-            "root-motion driven, this changes animation and travel speed together.")]
+        [Tooltip("Animator playback rate while walking. This scales both extracted " +
+            "root motion and the in-place animation fallback speed.")]
         [Min(0.05f)] public float animationPlaybackSpeed = 0.75f;
+        [Tooltip("Travel speed in meters per second at normal Animator playback when " +
+            "the active locomotion clip contains no horizontal root motion.")]
+        [Min(0f)] public float inPlaceMovementSpeed = 1.4f;
+        [Tooltip("Minimum horizontal root-motion speed, in meters per second, that is " +
+            "treated as intentional locomotion. Slower motion is usually in-place " +
+            "animation drift and uses In Place Movement Speed instead.")]
+        [Min(0f)] public float minimumRootMotionSpeed = 0.25f;
         [Min(0.1f)] public float maximumSpawnDistance = 2.5f;
         [Min(1f)] public float turnSpeed = 150f;
         [Range(0f, 20f)] public float returnAngleVariation = 20f;
@@ -69,11 +79,29 @@ namespace UMA.Examples
         public AudioClip[] bumpSounds = Array.Empty<AudioClip>();
         [Range(0f, 1f)] public float bumpVolume = 0.35f;
 
+        [Header("Combat")]
+        [Tooltip("Number of ordinary body shots required to ragdoll this character. " +
+            "Head and groin shots remain immediately lethal.")]
+        [Min(1)] public int maximumHealth = 3;
+        [SerializeField, Min(0), Tooltip("Remaining ordinary hits at runtime.")]
+        private int currentHealth = 3;
+        [Min(0.1f), Tooltip("How long, in seconds, the walker pursues its attacker.")]
+        public float pursuitDuration = 15f;
+        [Min(0.1f), Tooltip("Distance in meters at which the walker stops advancing.")]
+        public float pursuitStoppingDistance = 1.25f;
+
+        public int CurrentHealth => currentHealth;
+        public Transform CurrentCombatTarget => combatTarget;
+        public bool IsPursuingCombatTarget => isPursuingCombatTarget;
+
         private Vector3 spawnPosition;
         private Vector3 desiredDirection;
         private System.Random random;
         private Animator animator;
         private RuntimeAnimatorController observedController;
+        private Rigidbody movementBody;
+        private Vector3 requestedPhysicsVelocity;
+        private bool hasPhysicsLocomotionRequest;
         private AudioSource audioSource;
         private Activity activity;
         private float activityUntil;
@@ -81,6 +109,7 @@ namespace UMA.Examples
         private float nextPause;
         private float nextAvoidanceCheck;
         private float nextAnimatorSearch;
+        private float nextMovementBodySearch;
         private float avoidanceCommitUntil;
         private float nextBumpReaction;
         private float nextProgressCheck;
@@ -93,11 +122,23 @@ namespace UMA.Examples
         private int speedParameterHash;
         private int directionParameterHash;
         private bool initialized;
+        private Transform combatTarget;
+        private float combatTargetUntil;
+        private bool isPursuingCombatTarget;
+        private bool shooterRagdolled;
+        private UMAPhysicsAvatar physicsAvatar;
+        private bool ragdollEventsSubscribed;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetWalkers()
         {
             Walkers.Clear();
+        }
+
+        private void Awake()
+        {
+            ResetShotHealth();
+            EnsureRagdollSubscription();
         }
 
         private void OnEnable()
@@ -111,10 +152,17 @@ namespace UMA.Examples
         private void OnDisable()
         {
             Walkers.Remove(this);
+            StopPhysicsLocomotion();
+        }
+
+        private void OnDestroy()
+        {
+            RemoveRagdollSubscription();
         }
 
         private void Start()
         {
+            EnsureRagdollSubscription();
             spawnPosition = transform.position;
             random = new System.Random(CreateStableSeed(gameObject.name, spawnPosition));
             noiseOffset = Range(0f, 1000f);
@@ -131,7 +179,98 @@ namespace UMA.Examples
             nextProgressCheck = now + progressCheckInterval;
             progressSamplePosition = transform.position;
             RefreshAnimator();
+            RefreshMovementBody();
             initialized = true;
+        }
+
+        public bool ApplyShot(Transform attacker, bool lethalHit)
+        {
+            EnsureRagdollSubscription();
+            if (attacker != null && attacker != transform)
+            {
+                combatTarget = attacker;
+                combatTargetUntil = Time.time + Mathf.Max(0.1f, pursuitDuration);
+                activity = Activity.Walking;
+                returningHome = false;
+                Vector3 towardAttacker = Flatten(attacker.position - transform.position);
+                if (towardAttacker.sqrMagnitude > 0.001f)
+                    desiredDirection = towardAttacker.normalized;
+            }
+
+            if (lethalHit)
+                currentHealth = 0;
+            else
+                currentHealth = Mathf.Max(0, currentHealth - 1);
+
+            return lethalHit || currentHealth == 0;
+        }
+
+        public void SetShooterRagdolled(bool ragdolled)
+        {
+            if (ragdolled)
+            {
+                if (shooterRagdolled)
+                    return;
+
+                shooterRagdolled = true;
+                isPursuingCombatTarget = false;
+                UpdateAnimation(0f);
+                enabled = false;
+                return;
+            }
+
+            if (!shooterRagdolled)
+                return;
+
+            shooterRagdolled = false;
+            ResetShotHealth();
+            activity = Activity.Walking;
+            enabled = true;
+        }
+
+        public void ResetShotHealth()
+        {
+            currentHealth = Mathf.Max(1, maximumHealth);
+        }
+
+        private void EnsureRagdollSubscription()
+        {
+            if (ragdollEventsSubscribed && physicsAvatar != null)
+                return;
+
+            RemoveRagdollSubscription();
+            physicsAvatar = GetComponentInParent<UMAPhysicsAvatar>();
+            if (physicsAvatar == null)
+                physicsAvatar = GetComponentInChildren<UMAPhysicsAvatar>(true);
+            if (physicsAvatar == null)
+                return;
+
+            physicsAvatar.onRagdollStarted ??= new UnityEvent();
+            physicsAvatar.onRagdollEnded ??= new UnityEvent();
+            physicsAvatar.onRagdollStarted.AddListener(HandleRagdollStarted);
+            physicsAvatar.onRagdollEnded.AddListener(HandleRagdollEnded);
+            ragdollEventsSubscribed = true;
+        }
+
+        private void RemoveRagdollSubscription()
+        {
+            if (ragdollEventsSubscribed && physicsAvatar != null)
+            {
+                physicsAvatar.onRagdollStarted?.RemoveListener(HandleRagdollStarted);
+                physicsAvatar.onRagdollEnded?.RemoveListener(HandleRagdollEnded);
+            }
+            ragdollEventsSubscribed = false;
+            physicsAvatar = null;
+        }
+
+        private void HandleRagdollStarted()
+        {
+            SetShooterRagdolled(true);
+        }
+
+        private void HandleRagdollEnded()
+        {
+            SetShooterRagdolled(false);
         }
 
         private void Update()
@@ -148,6 +287,9 @@ namespace UMA.Examples
             {
                 RefreshAnimator();
             }
+
+            if (UpdateCombatPursuit(now))
+                return;
 
             if (now >= nextAvoidanceCheck)
             {
@@ -231,17 +373,113 @@ namespace UMA.Examples
             CheckForStall(now);
         }
 
-        private void OnAnimatorMove()
+        private void FixedUpdate()
         {
-            if (!initialized || animator == null || activity != Activity.Walking)
+            if (!hasPhysicsLocomotionRequest || movementBody == null ||
+                movementBody.isKinematic)
             {
                 return;
             }
 
-            // Steering owns yaw, while the animation owns all travel distance.
-            // Applying deltaPosition here lets us enforce the spawn boundary
-            // without falling back to transform-based locomotion.
-            ApplyRootMotionWithinSpawnRadius(animator.deltaPosition);
+            // Apply locomotion on the physics clock. Only the horizontal axes
+            // belong to the walker; gravity and collision response retain full
+            // control of vertical velocity so elevated characters remain
+            // grounded on platforms and ragdolls can fall naturally.
+            Vector3 velocity = movementBody.linearVelocity;
+            velocity.x = requestedPhysicsVelocity.x;
+            velocity.z = requestedPhysicsVelocity.z;
+            movementBody.linearVelocity = velocity;
+        }
+
+        private bool UpdateCombatPursuit(float now)
+        {
+            if (combatTarget == null || now >= combatTargetUntil)
+            {
+                bool shouldReturnHome = isPursuingCombatTarget;
+                combatTarget = null;
+                isPursuingCombatTarget = false;
+                if (shouldReturnHome)
+                    ChooseReturnDirection();
+                return false;
+            }
+
+            isPursuingCombatTarget = true;
+            returningHome = false;
+            nextPause = combatTargetUntil + Range(pauseInterval);
+            Vector3 towardTarget = Flatten(combatTarget.position - transform.position);
+            float stoppingDistance = Mathf.Max(0.1f, pursuitStoppingDistance);
+            if (towardTarget.sqrMagnitude > stoppingDistance * stoppingDistance)
+            {
+                desiredDirection = towardTarget.normalized;
+                activity = Activity.Walking;
+                TurnToward(desiredDirection, turnSpeed);
+                UpdateAnimation(walkingAnimationSpeed);
+            }
+            else
+            {
+                if (towardTarget.sqrMagnitude > 0.001f)
+                    desiredDirection = towardTarget.normalized;
+                activity = Activity.Paused;
+                TurnToward(desiredDirection, turnSpeed * 1.25f);
+                UpdateAnimation(0f);
+            }
+            return true;
+        }
+
+        private void OnAnimatorMove()
+        {
+            if (!initialized || animator == null)
+            {
+                return;
+            }
+
+            if (movementBody == null && Time.time >= nextMovementBodySearch)
+                RefreshMovementBody();
+
+            if (activity != Activity.Walking)
+            {
+                StopPhysicsLocomotion();
+                return;
+            }
+
+            // Steering owns yaw. Prefer authored root translation, but keep
+            // in-place locomotion clips useful by supplying a physical walking
+            // speed when their evaluated horizontal delta is effectively zero.
+            Vector3 locomotionDelta = ResolveLocomotionDelta(
+                animator.deltaPosition, Time.deltaTime);
+            if (isPursuingCombatTarget)
+                ApplyPursuitRootMotion(locomotionDelta);
+            else
+                ApplyRootMotionWithinSpawnRadius(locomotionDelta);
+        }
+
+        private Vector3 ResolveLocomotionDelta(Vector3 animatorDelta,
+            float deltaTime)
+        {
+            Vector3 horizontalDelta = Flatten(animatorDelta);
+            if (deltaTime <= 0f || inPlaceMovementSpeed <= 0f)
+            {
+                return horizontalDelta;
+            }
+
+            // Unity units are meters. Some nominally in-place clips contain a
+            // tiny root translation from compression or import sampling. A
+            // nonzero test mistakes that drift for locomotion, causing the
+            // walker to move millimeters, trip stall recovery, and continually
+            // turn. Classify root motion by its real-world speed instead.
+            float rootMotionSpeed = horizontalDelta.magnitude / deltaTime;
+            if (rootMotionSpeed > Mathf.Max(0f, minimumRootMotionSpeed))
+                return horizontalDelta;
+
+            Vector3 forward = Flatten(transform.forward);
+            if (forward.sqrMagnitude <= 0.0001f)
+                forward = desiredDirection;
+            if (forward.sqrMagnitude <= 0.0001f)
+                return Vector3.zero;
+
+            float playbackRate = Mathf.Max(0.05f, animationPlaybackSpeed);
+            return forward.normalized *
+                (inPlaceMovementSpeed * playbackRate * deltaTime);
         }
 
         private RandomCharacterWalker FindNearestThreat(out bool touching)
@@ -327,9 +565,9 @@ namespace UMA.Examples
                 away /= distance;
             }
 
-            // This is depenetration, not locomotion. Normal travel remains
-            // entirely Animator root motion; the small correction prevents a
-            // crowd from forming an overlap that root motion cannot resolve.
+            // This is depenetration, not locomotion. The small correction
+            // prevents a crowd from forming an overlap that normal travel
+            // cannot resolve.
             float overlap = Mathf.Max(0f, personalSpace - distance);
             float correction = Mathf.Min(overlap * 0.5f,
                 overlapSeparationSpeed * avoidanceCheckInterval);
@@ -447,10 +685,53 @@ namespace UMA.Examples
         private void ApplyRootMotionWithinSpawnRadius(Vector3 deltaPosition)
         {
             deltaPosition.y = 0f;
-            ApplyPositionWithinSpawnRadius(transform.position + deltaPosition);
+            Vector3 currentPosition = GetMovementPosition();
+            Vector3 candidate = currentPosition + deltaPosition;
+            Vector3 currentOffset = Flatten(currentPosition - spawnPosition);
+            float radius = Mathf.Max(0.1f, maximumSpawnDistance);
+            if (currentOffset.sqrMagnitude > radius * radius)
+            {
+                // Pursuit can carry a walker beyond its normal wander radius. Once combat ends,
+                // accept only locomotion that brings it closer instead of snapping it home.
+                Vector3 candidateOffset = Flatten(candidate - spawnPosition);
+                if (candidateOffset.sqrMagnitude < currentOffset.sqrMagnitude)
+                {
+                    candidate.y = spawnPosition.y;
+                    ApplyLocomotionPosition(currentPosition, candidate);
+                }
+                else
+                    StopPhysicsLocomotion();
+                return;
+            }
+
+            ApplyLocomotionPosition(currentPosition,
+                ClampPositionWithinSpawnRadius(candidate));
+        }
+
+        private void ApplyPursuitRootMotion(Vector3 deltaPosition)
+        {
+            deltaPosition.y = 0f;
+            Vector3 currentPosition = GetMovementPosition();
+            Vector3 candidate = currentPosition + deltaPosition;
+            candidate.y = spawnPosition.y;
+            ApplyLocomotionPosition(currentPosition, candidate);
         }
 
         private void ApplyPositionWithinSpawnRadius(Vector3 candidate)
+        {
+            candidate = ClampPositionWithinSpawnRadius(candidate);
+            if (movementBody != null && !movementBody.isKinematic)
+            {
+                Vector3 bodyPosition = movementBody.position;
+                bodyPosition.x = candidate.x;
+                bodyPosition.z = candidate.z;
+                movementBody.position = bodyPosition;
+            }
+            else
+                transform.position = candidate;
+        }
+
+        private Vector3 ClampPositionWithinSpawnRadius(Vector3 candidate)
         {
             Vector3 fromSpawn = Flatten(candidate - spawnPosition);
             float radius = Mathf.Max(0.1f, maximumSpawnDistance);
@@ -461,7 +742,61 @@ namespace UMA.Examples
                 candidate.z = spawnPosition.z + fromSpawn.z;
             }
             candidate.y = spawnPosition.y;
-            transform.position = candidate;
+            return candidate;
+        }
+
+        private Vector3 GetMovementPosition()
+        {
+            return movementBody != null && !movementBody.isKinematic
+                ? movementBody.position
+                : transform.position;
+        }
+
+        private void ApplyLocomotionPosition(Vector3 currentPosition,
+            Vector3 targetPosition)
+        {
+            if (movementBody == null || movementBody.isKinematic)
+            {
+                transform.position = targetPosition;
+                return;
+            }
+
+            float deltaTime = Time.deltaTime;
+            if (deltaTime <= 0f)
+                return;
+
+            Vector3 velocity = (targetPosition - currentPosition) / deltaTime;
+            requestedPhysicsVelocity = new Vector3(
+                velocity.x, 0f, velocity.z);
+            hasPhysicsLocomotionRequest = true;
+        }
+
+        private void StopPhysicsLocomotion()
+        {
+            if (!Application.isPlaying || movementBody == null ||
+                movementBody.isKinematic)
+                return;
+
+            requestedPhysicsVelocity = Vector3.zero;
+            hasPhysicsLocomotionRequest = true;
+
+            // FixedUpdate is not invoked after the component is disabled. Clear
+            // the last walking velocity immediately at that transition while
+            // preserving gravity and any vertical fall already in progress.
+            if (!isActiveAndEnabled)
+            {
+                Vector3 velocity = movementBody.linearVelocity;
+                velocity.x = 0f;
+                velocity.z = 0f;
+                movementBody.linearVelocity = velocity;
+            }
+        }
+
+        private void RefreshMovementBody()
+        {
+            movementBody = GetComponent<Rigidbody>();
+            hasPhysicsLocomotionRequest = false;
+            nextMovementBodySearch = Time.time + 1f;
         }
 
         private void RefreshAnimator()
@@ -629,6 +964,8 @@ namespace UMA.Examples
         private void OnValidate()
         {
             animationPlaybackSpeed = Mathf.Max(0.05f, animationPlaybackSpeed);
+            inPlaceMovementSpeed = Mathf.Max(0f, inPlaceMovementSpeed);
+            minimumRootMotionSpeed = Mathf.Max(0f, minimumRootMotionSpeed);
             maximumSpawnDistance = Mathf.Max(0.1f, maximumSpawnDistance);
             turnSpeed = Mathf.Max(1f, turnSpeed);
             personalSpace = Mathf.Max(0.05f, personalSpace);
@@ -642,6 +979,11 @@ namespace UMA.Examples
             stalledChecksBeforeRecovery = Mathf.Max(1,
                 stalledChecksBeforeRecovery);
             headingNoiseFrequency = Mathf.Max(0.01f, headingNoiseFrequency);
+            maximumHealth = Mathf.Max(1, maximumHealth);
+            pursuitDuration = Mathf.Max(0.1f, pursuitDuration);
+            pursuitStoppingDistance = Mathf.Max(0.1f, pursuitStoppingDistance);
+            if (!Application.isPlaying)
+                currentHealth = maximumHealth;
         }
     }
 }

@@ -14,6 +14,7 @@ namespace UMA.Dynamics.Examples
 		[HideInInspector]
 		public bool drawFlag = true;
 		[HideInInspector]
+		[System.NonSerialized]
 		public Dictionary<Vector3, int> clothVerts = new Dictionary<Vector3, int>();
 
 		private Cloth m_Cloth;

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: UMAMaterial_UMA_SRP_DiffuseAlpha
   m_EditorClassIdentifier: UMA_Core::UMA.UMAMaterial
   _material: {fileID: 2100000, guid: b9487af9b9fd7e443b4976b55e96b681, type: 2}
-  _HDRPMaterial: {fileID: 2100000, guid: 115a74745e542e847ad0be04d670f82e, type: 2}
+  _HDRPMaterial: {fileID: 0}
   _secondPass: {fileID: 0}
   _HDRPSecondPass: {fileID: 0}
   materialType: 1

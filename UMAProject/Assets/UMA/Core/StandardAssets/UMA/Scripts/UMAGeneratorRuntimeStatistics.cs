@@ -283,7 +283,7 @@ namespace UMA
                 return;
             }
 
-            Generator = FindFirstObjectByType<UMAGenerator>(
+            Generator = FindAnyObjectByType<UMAGenerator>(
                 FindObjectsInactive.Exclude);
         }
 
@@ -321,7 +321,7 @@ namespace UMA
             {
                 return true;
             }
-            CrowdGenerator = FindFirstObjectByType<UMARandomAvatarV2>(
+            CrowdGenerator = FindAnyObjectByType<UMARandomAvatarV2>(
                 FindObjectsInactive.Include);
             if (CrowdGenerator != null &&
                 CrowdGenerator.mode == UMARandomAvatarV2.Mode.Generate)
@@ -333,7 +333,7 @@ namespace UMA
             if (LegacyCrowdGenerator == null)
             {
                 LegacyCrowdGenerator =
-                    FindFirstObjectByType<UMARandomAvatar>(
+                    FindAnyObjectByType<UMARandomAvatar>(
                         FindObjectsInactive.Include);
             }
             return LegacyCrowdGenerator != null;

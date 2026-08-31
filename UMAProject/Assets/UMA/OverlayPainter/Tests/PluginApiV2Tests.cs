@@ -133,6 +133,87 @@ namespace UMA.TexturePaint.Tests
         }
 
         [Test]
+        public void ResetToDefaultsRestoresEveryParameterKindWithoutSharingMutableDefaults()
+        {
+            var defaultCurve = new AnimationCurve(
+                new Keyframe(0f, 0.2f), new Keyframe(1f, 0.8f));
+            var defaultStripes = new List<TexturePaintStripeDefinition>
+            {
+                new TexturePaintStripeDefinition
+                {
+                    direction = TexturePaintStripeDirection.Horizontal,
+                    width = 0.17f,
+                    color = Color.cyan
+                }
+            };
+            var descriptor = new TexturePaintPluginDescriptor
+            {
+                parameters = new List<TexturePaintPluginParameterDefinition>
+                {
+                    new TexturePaintPluginParameterDefinition
+                    {
+                        id = "section", type = TexturePaintPluginParameterType.Header
+                    },
+                    new TexturePaintPluginParameterDefinition
+                    {
+                        id = "amount", type = TexturePaintPluginParameterType.Float,
+                        minimum = 0f, maximum = 1f, defaultNumber = 0.35f
+                    },
+                    new TexturePaintPluginParameterDefinition
+                    {
+                        id = "enabled", type = TexturePaintPluginParameterType.Boolean,
+                        defaultBoolean = true
+                    },
+                    new TexturePaintPluginParameterDefinition
+                    {
+                        id = "tint", type = TexturePaintPluginParameterType.Color,
+                        defaultColor = Color.magenta
+                    },
+                    new TexturePaintPluginParameterDefinition
+                    {
+                        id = "label", type = TexturePaintPluginParameterType.String,
+                        defaultText = "Default"
+                    },
+                    new TexturePaintPluginParameterDefinition
+                    {
+                        id = "curve", type = TexturePaintPluginParameterType.Curve,
+                        defaultCurve = defaultCurve
+                    },
+                    new TexturePaintPluginParameterDefinition
+                    {
+                        id = "stripes", type = TexturePaintPluginParameterType.StripeList,
+                        defaultStripes = defaultStripes
+                    },
+                    new TexturePaintPluginParameterDefinition
+                    {
+                        id = "texture", type = TexturePaintPluginParameterType.Texture
+                    }
+                }
+            };
+            var values = new TexturePaintPluginParameterSet();
+            values.ResetToDefaults(descriptor);
+            values.Get("amount").number = 0.9f;
+            values.Get("enabled").boolean = false;
+            values.Get("tint").color = Color.green;
+            values.Get("label").text = "Changed";
+            values.Get("curve").curve.MoveKey(0, new Keyframe(0f, 1f));
+            values.Get("stripes").stripes[0].width = 0.9f;
+
+            values.ResetToDefaults(descriptor);
+
+            Assert.That(values.values, Has.Count.EqualTo(7), "Headers are not parameter values.");
+            Assert.That(values.Float("amount"), Is.EqualTo(0.35f));
+            Assert.That(values.Boolean("enabled"), Is.True);
+            Assert.That(values.Color("tint", Color.clear), Is.EqualTo(Color.magenta));
+            Assert.That(values.String("label"), Is.EqualTo("Default"));
+            Assert.That(values.Curve("curve").Evaluate(0f), Is.EqualTo(0.2f).Within(0.001f));
+            Assert.That(values.Stripes("stripes")[0].width, Is.EqualTo(0.17f).Within(0.001f));
+            Assert.That(values.Texture("texture"), Is.Null);
+            Assert.That(values.Curve("curve"), Is.Not.SameAs(defaultCurve));
+            Assert.That(values.Stripes("stripes")[0], Is.Not.SameAs(defaultStripes[0]));
+        }
+
+        [Test]
         public void CommandMemoryBudgetRejectsPayloadBeforeCommit()
         {
             host.CommandMemoryBudgetBytes = 1;
@@ -141,6 +222,29 @@ namespace UMA.TexturePaint.Tests
                 new SolidPlugin(TexturePaintChannel.Albedo, TexturePaintPluginColorSpace.Linear, new RectInt(0, 0, 2, 2)),
                 store, null, null, CancellationToken.None));
             Assert.That(set.layers.Count, Is.Zero);
+        }
+
+        [Test]
+        public async Task OwnedCompactTilesStayCompressedUntilCommitAndRoundTripExactly()
+        {
+            // Each 8x4 tile decodes to 128 bytes, but both raw tiles together exceed this
+            // transaction budget. Repeated compact pixels should queue compressed, materialize
+            // one command at a time, and retain their exact RGBA values.
+            host.CommandMemoryBudgetBytes = 160;
+
+            await host.ExecuteCommandAsync(new CompressedCompactPlugin(), store, null, null,
+                CancellationToken.None);
+
+            Assert.That(set.layers, Has.Count.EqualTo(1));
+            RenderTexture output = set.layers[0].channels[TexturePaintChannel.Albedo].Front;
+            Color red = Read(output, 1, 1);
+            Color green = Read(output, 1, 5);
+            Assert.That(red.r, Is.GreaterThan(0.99f));
+            Assert.That(red.g, Is.LessThan(0.01f));
+            Assert.That(red.a, Is.GreaterThan(0.99f));
+            Assert.That(green.g, Is.GreaterThan(0.99f));
+            Assert.That(green.r, Is.LessThan(0.01f));
+            Assert.That(green.a, Is.GreaterThan(0.99f));
         }
 
         [Test]
@@ -262,6 +366,47 @@ namespace UMA.TexturePaint.Tests
 
             Assert.That(convexValues[0], Is.GreaterThan(0.05f));
             Assert.That(concaveValues[0], Is.LessThan(-0.05f));
+        }
+
+        [Test]
+        public void PluginPixelSamplingUsesTexelCentersWithoutSofteningEdges()
+        {
+            Color[] pixels =
+            {
+                Color.red, Color.green,
+                Color.blue, Color.white
+            };
+            var image = new TexturePaintReadOnlyImage("surface", TexturePaintChannel.Albedo,
+                2, 2, false, pixels);
+
+            Assert.That(image.GetPixelBilinear(0.25f, 0.25f), Is.EqualTo(Color.red));
+            Assert.That(image.GetPixelBilinear(0.75f, 0.25f), Is.EqualTo(Color.green));
+            Assert.That(image.GetPixelBilinear(0.25f, 0.75f), Is.EqualTo(Color.blue));
+            Assert.That(image.GetPixelBilinear(0.75f, 0.75f), Is.EqualTo(Color.white));
+        }
+
+        [Test]
+        public void PluginPixelSamplingInterpolatesBetweenTexelCenters()
+        {
+            var image = new TexturePaintReadOnlyImage("surface", TexturePaintChannel.Albedo,
+                2, 1, false, new[] { Color.black, Color.white });
+
+            Color center = image.GetPixelBilinear(0.5f, 0.5f);
+            Assert.That(center.r, Is.EqualTo(0.5f).Within(0.0001f));
+            Assert.That(center.g, Is.EqualTo(0.5f).Within(0.0001f));
+            Assert.That(center.b, Is.EqualTo(0.5f).Within(0.0001f));
+            Assert.That(center.a, Is.EqualTo(1f).Within(0.0001f));
+        }
+
+        [Test]
+        public void AgifyCurvatureContrastRestrictsWeakEdgeCoverage()
+        {
+            const float weakCurvature = 0.25f;
+            float sharpened = AgifyGeneratorPlugin.ShapeCurvature(weakCurvature, 2.5f);
+            float broadened = AgifyGeneratorPlugin.ShapeCurvature(weakCurvature, 0.5f);
+
+            Assert.That(sharpened, Is.LessThan(weakCurvature));
+            Assert.That(broadened, Is.GreaterThan(weakCurvature));
         }
 
         [Test]
@@ -515,6 +660,73 @@ namespace UMA.TexturePaint.Tests
         }
 
         [Test]
+        public async Task StubbleMakerProducesTransparentSkinOverlayWithFacialAndScalpControls()
+        {
+            StubbleMakerGeneratorPlugin plugin =
+                ScriptableObject.CreateInstance<StubbleMakerGeneratorPlugin>();
+            try
+            {
+                TexturePaintPluginDescriptor descriptor = plugin.Descriptor;
+                Assert.That(descriptor.id, Is.EqualTo("com.uma.texturepaint.stubble-maker"));
+                Assert.That(descriptor.declaredChannels, Is.EqualTo(
+                    TexturePaintChannelMask.Albedo | TexturePaintChannelMask.Roughness |
+                    TexturePaintChannelMask.NormalControl | TexturePaintChannelMask.SkinColorMask |
+                    TexturePaintChannelMask.DetailMask));
+                Assert.That(((ITexturePaintDynamicChannelUsageV2)plugin)
+                    .ResolveReadChannels(new TexturePaintPluginParameterSet()),
+                    Is.EqualTo(TexturePaintChannelMask.None));
+                string[] controls =
+                {
+                    "profile", "hairLength", "hairWidth", "hairColor", "directionDegrees",
+                    "directionVariation", "randomPositionX", "randomPositionY",
+                    "placementX", "placementY", "placementWidth", "placementHeight",
+                    "shadowAmount", "rednessAmount", "rashAmount", "pimpleAmount",
+                    "spotAmount", "controlMask"
+                };
+                for (int i = 0; i < controls.Length; i++)
+                    Assert.That(descriptor.parameters.Exists(p => p.id == controls[i]), Is.True,
+                        "Missing Stubble Maker control: " + controls[i]);
+                Assert.That(descriptor.parameters.Find(p => p.id == "profile").enumOptions,
+                    Is.EqualTo(new[] { "Facial Hair", "Shaved Head", "Custom / Neutral" }));
+
+                TexturePaintPluginParameterSet parameters = host.CreateParameters(plugin);
+                parameters.Get("placementShape").number = 0f;
+                parameters.Get("placementWidth").number = 0.75f;
+                parameters.Get("placementHeight").number = 0.75f;
+                parameters.Get("edgeFeather").number = 0f;
+                parameters.Get("density").number = 1f;
+                parameters.Get("hairLength").number = 8f;
+                parameters.Get("hairWidth").number = 2.5f;
+                parameters.Get("hairOpacity").number = 1f;
+                parameters.Get("directionVariation").number = 0f;
+                parameters.Get("randomPositionX").number = 0f;
+                parameters.Get("randomPositionY").number = 0f;
+                parameters.Get("rednessAmount").number = 0.5f;
+                parameters.Get("rashAmount").number = 0.5f;
+                parameters.Get("pimpleAmount").number = 1f;
+                parameters.Get("spotAmount").number = 1f;
+
+                // Five raw 8x8 Color32 outputs require 1280 bytes. This deliberately smaller
+                // aggregate budget proves owned compact tiles remain compressed while the atomic
+                // multi-channel transaction is waiting to commit.
+                host.CommandMemoryBudgetBytes = 1024;
+                await host.ExecuteCommandAsync(plugin, store, parameters, null,
+                    CancellationToken.None);
+                Assert.That(set.layers, Has.Count.EqualTo(1));
+                TexturePaintLayer generated = set.layers[0];
+                Assert.That(generated.pluginId, Is.EqualTo(descriptor.id));
+                Assert.That(generated.channels.Keys, Does.Contain(TexturePaintChannel.Albedo));
+                Assert.That(generated.channels.Keys, Does.Contain(TexturePaintChannel.Roughness));
+                Assert.That(generated.channels.Keys, Does.Contain(TexturePaintChannel.NormalControl));
+                Assert.That(HasVisibleOutput(generated), Is.True);
+                Assert.That(Read(generated.channels[TexturePaintChannel.Albedo].Front, 0, 0).a,
+                    Is.LessThan(0.01f), "Placement-excluded skin must remain transparent.");
+                Assert.That(host.Undo(), Is.True);
+            }
+            finally { UnityEngine.Object.DestroyImmediate(plugin); }
+        }
+
+        [Test]
         public void ScratchDentGeneratorExposesCombatMorphologyAndPbrChannels()
         {
             ScratchDentGeneratorPlugin plugin =
@@ -735,6 +947,68 @@ namespace UMA.TexturePaint.Tests
             Assert.That(cached.pluginStale, Is.True);
             Assert.That(cached.pluginLastError, Does.Contain("Deliberate"));
             Assert.That(host.CanUndo, Is.False);
+        }
+
+        [Test]
+        public void DrippingCorrosionUsesGpuContractAndMeterScaledDefaults()
+        {
+            DrippingCorrosionGeneratorPlugin plugin =
+                ScriptableObject.CreateInstance<DrippingCorrosionGeneratorPlugin>();
+            try
+            {
+                Assert.That(plugin, Is.InstanceOf<ITexturePaintGpuGeneratorV2>());
+                Assert.That(((ITexturePaintGpuGeneratorV2)plugin).GpuKernelName,
+                    Is.EqualTo("CSDrippingCorrosion"));
+                var parameterIds = new HashSet<string>(StringComparer.Ordinal);
+                foreach (TexturePaintPluginParameterDefinition parameter in
+                         plugin.Descriptor.parameters)
+                {
+                    Assert.That(parameter.id, Is.Not.Null.And.Not.Empty);
+                    Assert.That(parameterIds.Add(parameter.id), Is.True,
+                        $"Duplicate Dripping Corrosion parameter id: {parameter.id}");
+                }
+                host.Discover();
+                Assert.That(host.FindCommand(plugin.Descriptor.id), Is.Not.Null,
+                    "Dripping Corrosion must pass normal PluginHost registration.");
+                Assert.That((plugin.Descriptor.requiredMeshMaps &
+                    TexturePaintMeshMapMask.WorldPosition) != 0, Is.True);
+                TexturePaintPluginParameterSet values = host.CreateParameters(plugin);
+                Assert.That(values.Float("dripLengthMeters"), Is.EqualTo(0.22f).Within(0.0001f));
+                Assert.That(values.Float("dripWidthMeters"), Is.EqualTo(0.006f).Within(0.0001f));
+                Assert.That(values.Float("corrosionSpreadMeters"),
+                    Is.EqualTo(0.012f).Within(0.0001f));
+                Assert.That(values.Float("gravityY"), Is.EqualTo(-1f));
+            }
+            finally { UnityEngine.Object.DestroyImmediate(plugin); }
+        }
+
+        [Test]
+        public void OrganicGeneratorsAvoidUnneededChannelSnapshots()
+        {
+            ScriptableObject[] generators =
+            {
+                ScriptableObject.CreateInstance<FabricFuzzGeneratorPlugin>(),
+                ScriptableObject.CreateInstance<RustCorrosionGeneratorPlugin>(),
+                ScriptableObject.CreateInstance<SurfaceMicroDetailGeneratorPlugin>(),
+                ScriptableObject.CreateInstance<VeinsSubdermalGeneratorPlugin>(),
+                ScriptableObject.CreateInstance<CreatureSkinGeneratorPlugin>(),
+                ScriptableObject.CreateInstance<ScratchDentGeneratorPlugin>()
+            };
+            try
+            {
+                for (int i = 0; i < generators.Length; i++)
+                {
+                    var usage = generators[i] as ITexturePaintDynamicChannelUsageV2;
+                    Assert.That(usage, Is.Not.Null);
+                    Assert.That(usage.ResolveReadChannels(new TexturePaintPluginParameterSet()),
+                        Is.EqualTo(TexturePaintChannelMask.None));
+                }
+            }
+            finally
+            {
+                for (int i = 0; i < generators.Length; i++)
+                    UnityEngine.Object.DestroyImmediate(generators[i]);
+            }
         }
 
         [Test]
@@ -1099,6 +1373,35 @@ namespace UMA.TexturePaint.Tests
                     TexturePaintPluginColorSpace.Linear, TexturePaintPluginBlend.Replace);
                 started.Set();
                 await Task.Delay(Timeout.Infinite, context.cancellationToken);
+            }
+        }
+
+        private sealed class CompressedCompactPlugin : ITexturePaintGeneratorV2
+        {
+            public TexturePaintPluginDescriptor Descriptor { get; } = new TexturePaintPluginDescriptor
+            {
+                id = "com.uma.tests.compressed-compact",
+                displayName = "Compressed Compact",
+                capabilities = TexturePaintPluginCapability.Generator,
+                declaredChannels = TexturePaintChannelMask.Albedo
+            };
+
+            public Task ExecuteAsync(TexturePaintCommandContextV2 context)
+            {
+                var red = new Color32[32];
+                var green = new Color32[32];
+                for (int i = 0; i < 32; i++)
+                {
+                    red[i] = new Color32(255, 0, 0, 255);
+                    green[i] = new Color32(0, 255, 0, 255);
+                }
+                context.WriteTileCompactOwned("surface", TexturePaintChannel.Albedo,
+                    new RectInt(0, 0, 8, 4), red, TexturePaintPluginColorSpace.Linear,
+                    TexturePaintPluginBlend.Replace);
+                context.WriteTileCompactOwned("surface", TexturePaintChannel.Albedo,
+                    new RectInt(0, 4, 8, 4), green, TexturePaintPluginColorSpace.Linear,
+                    TexturePaintPluginBlend.Replace);
+                return Task.CompletedTask;
             }
         }
 

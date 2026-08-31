@@ -523,6 +523,7 @@ namespace UMA
     [Serializable]
     public class UMAComputeBufferProperty : UMAProperty
     {
+        [NonSerialized]
         public ComputeBuffer Value;
 
         public override void Apply(Material mpb, int overlayNumber = -1 )
@@ -555,6 +556,7 @@ namespace UMA
     [Serializable]
     public class UMAConstantComputeBufferProperty : UMAProperty
     {
+        [NonSerialized]
         public ComputeBuffer Value;
         public int offset; 
         public int size;

@@ -225,7 +225,7 @@ namespace UMA
                 return indexer.bareGenerator;
             }
 
-            UMAGenerator generator = FindFirstObjectByType<UMAGenerator>(FindObjectsInactive.Exclude);
+            UMAGenerator generator = FindAnyObjectByType<UMAGenerator>(FindObjectsInactive.Exclude);
             if (generator != null || !createIfMissing)
             {
                 return generator;

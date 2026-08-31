@@ -45,54 +45,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UMA_Core::UMA.DecalRTStampSlot
   useGroups: 1
-  overlayStamps:
-  - name: AutoRTDecals
-    overlays: []
-    Groups:
-    - Skin
-    stamps:
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 11400000, guid: 567f96a4edc09164284365d824981bc2, type: 2}
-    - {fileID: 11400000, guid: b667ea35f8f7ccd41a10eae7f33d0f61, type: 2}
-    - {fileID: 11400000, guid: f0137b275fed2534baaf2d4093410175, type: 2}
-    - {fileID: 11400000, guid: 5572c13dd1db5ce40902ca489925ec6e, type: 2}
-    - {fileID: 11400000, guid: 638f3f0162ccac9448531694b5ed00b3, type: 2}
-    - {fileID: 11400000, guid: a0c00aa5abe7cfb4596e8bfb59cffcca, type: 2}
-    - {fileID: 11400000, guid: 3684128fe1ac53d40942d2618389f411, type: 2}
-    - {fileID: 11400000, guid: 886694976e0075746be617ac63db2b3a, type: 2}
-    - {fileID: 11400000, guid: a8d445714f76552439d57d887e1e7a41, type: 2}
-    - {fileID: 11400000, guid: 711aa5cb94b258b4db974d532414a8dd, type: 2}
+  overlayStamps: []
   enableDebug: 0
   rgbOnlyDilation: 1

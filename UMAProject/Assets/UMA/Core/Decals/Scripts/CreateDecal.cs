@@ -1639,6 +1639,7 @@ namespace UMA.Decals
 						clone.overlayGroup = last.overlayGroup;
 						clone.sourceOverlay = last.sourceOverlay;
 						clone.sourceOverlayName = last.sourceOverlayName;
+						clone.projectionRadiusMeters = last.projectionRadiusMeters;
 						clone.bleedPixels = last.bleedPixels;
 						clone.forceLinearSampling = last.forceLinearSampling;
                        clone.invertY = last.invertY;

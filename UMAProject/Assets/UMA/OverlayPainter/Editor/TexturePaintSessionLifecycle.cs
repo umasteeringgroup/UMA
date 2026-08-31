@@ -16,6 +16,14 @@ namespace UMA.TexturePaint.Editor
             ProjectSave
         }
 
+        internal enum RecoveryLaunchAction
+        {
+            Recover,
+            Cancel,
+            DiscardRecovery,
+            OpenRequestedDocument
+        }
+
         [NonSerialized] private readonly Dictionary<EditableTextureTarget, long> persistedTextureRevisions =
             new Dictionary<EditableTextureTarget, long>();
         [NonSerialized] private TexturePaintDocumentStorage.CaptureOperation persistenceCapture;
@@ -52,35 +60,61 @@ namespace UMA.TexturePaint.Editor
             recoveryContextKey = launchContext != null && launchContext.IsStandalone
                 ? TexturePaintRecoveryStore.GetContextKey(launchContext)
                 : TexturePaintRecoveryStore.GetContextKey(avatar);
+            TexturePaintDocument requested = launchDocument;
+            launchDocument = null;
             TexturePaintDocument recovered = null;
+            bool deleteRecoveryAfterRequestedOpen = false;
             if (TexturePaintRecoveryStore.HasRecovery(recoveryContextKey))
             {
-                int choice = EditorUtility.DisplayDialogComplex("Recover Overlay Painter Session?",
-                    "A recoverable Overlay Painter session exists for this character. Recovering restores " +
-                    "the last complete recovery asset without changing the character, recipe, or source overlay.",
-                    "Recover", "Cancel Opening", "Discard Recovery");
-                if (choice == 1) return false;
-                if (choice == 2) TexturePaintRecoveryStore.Delete(recoveryContextKey);
+                int choice;
+                if (requested != null)
+                {
+                    choice = EditorUtility.DisplayDialogComplex("Open Overlay Painter Document?",
+                        $"A recoverable Overlay Painter session also exists for this character. You explicitly " +
+                        $"opened '{requested.name}'. Open that document and discard the older recovery, cancel, " +
+                        "or recover the previous session instead?",
+                        "Open " + requested.name, "Cancel Opening", "Recover Instead");
+                }
+                else
+                {
+                    choice = EditorUtility.DisplayDialogComplex("Recover Overlay Painter Session?",
+                        "A recoverable Overlay Painter session exists for this character. Recovering restores " +
+                        "the last complete recovery asset without changing the character, recipe, or source overlay.",
+                        "Recover", "Cancel Opening", "Discard Recovery");
+                }
+
+                RecoveryLaunchAction action = ResolveRecoveryLaunchAction(requested != null, choice);
+                if (action == RecoveryLaunchAction.Cancel) return false;
+                if (action == RecoveryLaunchAction.DiscardRecovery)
+                    TexturePaintRecoveryStore.Delete(recoveryContextKey);
+                else if (action == RecoveryLaunchAction.OpenRequestedDocument)
+                    deleteRecoveryAfterRequestedOpen = true;
                 else if (!TexturePaintRecoveryStore.TryLoad(recoveryContextKey, out recovered, out string error))
                 {
                     int corruptChoice = EditorUtility.DisplayDialogComplex("Recovery Could Not Be Loaded",
-                        error + "\n\nThe recovery asset can be discarded, or stage opening can be canceled so it can be inspected manually.",
-                        "Discard and Start Fresh", "Cancel Opening", "Keep Recovery and Start Fresh");
+                        error + "\n\nThe recovery asset can be discarded, or stage opening can be canceled so it " +
+                        "can be inspected manually.",
+                        requested != null ? "Discard and Open Document" : "Discard and Start Fresh",
+                        "Cancel Opening",
+                        requested != null ? "Keep Recovery and Open Document" : "Keep Recovery and Start Fresh");
                     if (corruptChoice == 1) return false;
                     if (corruptChoice == 0) TexturePaintRecoveryStore.Delete(recoveryContextKey);
                 }
             }
 
-            TexturePaintDocument requested = launchDocument;
-            launchDocument = null;
             document = recovered ?? requested ?? TexturePaintDocumentStorage.CreateTransient(avatar, launchContext);
             if ((recovered != null || requested != null) && !ValidateDocumentLaunchContext(document)) return false;
             controller.AttachDocument(document);
             bool restored = document.surfaces != null && document.surfaces.Count > 0;
+            TexturePaintDocumentStorage.RestoreReport restore = default;
             if (restored)
             {
-                TexturePaintDocumentStorage.Restore(document, controller.Textures);
+                restore = TexturePaintDocumentStorage.Restore(document, controller.Textures);
             }
+            // Do not retire the safety snapshot until the explicitly requested document has
+            // passed context validation and completed its restore successfully.
+            if (deleteRecoveryAfterRequestedOpen)
+                TexturePaintRecoveryStore.Delete(recoveryContextKey);
             TexturePaintDocumentStorage.RecordCurrentRevisions(controller.Textures, persistedTextureRevisions);
             documentRevision = document.revisionId;
             documentDirty = recovered != null;
@@ -89,7 +123,25 @@ namespace UMA.TexturePaint.Editor
             persistenceStatus = recovered != null ? "Recovered the last complete temporary session" :
                 requested != null ? "Loaded " + requested.name :
                 "Temporary session · use Save As to create a project document";
+            if (restore.HasUnboundLayers)
+                ShowWorkspaceStatus($"{restore.unboundLayers} saved layer member" +
+                    (restore.unboundLayers == 1 ? string.Empty : "s") +
+                    " could not be rebound · see Console");
             return true;
+        }
+
+        internal static RecoveryLaunchAction ResolveRecoveryLaunchAction(bool hasRequestedDocument,
+            int dialogChoice)
+        {
+            if (dialogChoice == 1) return RecoveryLaunchAction.Cancel;
+            if (dialogChoice < 0 || dialogChoice > 2) return RecoveryLaunchAction.Cancel;
+            if (hasRequestedDocument)
+                return dialogChoice == 0
+                    ? RecoveryLaunchAction.OpenRequestedDocument
+                    : RecoveryLaunchAction.Recover;
+            return dialogChoice == 0
+                ? RecoveryLaunchAction.Recover
+                : RecoveryLaunchAction.DiscardRecovery;
         }
 
         private bool ValidateDocumentLaunchContext(TexturePaintDocument candidate)
@@ -245,7 +297,8 @@ namespace UMA.TexturePaint.Editor
                 return;
             }
 
-            if (!recoveryDirty || controller == null || controller.Painting == null || controller.Painting.IsPainting ||
+            if (!UMASettings.TexturePaintAutomaticRecovery || !recoveryDirty ||
+                controller == null || controller.Painting == null || controller.Painting.IsPainting ||
                 EditorApplication.isCompiling || EditorApplication.isUpdating ||
                 EditorApplication.timeSinceStartup < nextAutosaveTime) return;
             PersistenceIntent autosaveIntent = IsDocumentTemporary ? PersistenceIntent.Recovery : PersistenceIntent.ProjectSave;
@@ -273,7 +326,7 @@ namespace UMA.TexturePaint.Editor
             if (snapshot != null && snapshot != document) DestroyImmediate(snapshot);
             if (previous != null && previous != document && string.IsNullOrEmpty(AssetDatabase.GetAssetPath(previous)))
                 DestroyImmediate(previous);
-            nextAutosaveTime = EditorApplication.timeSinceStartup + AutosaveIntervalSeconds;
+            RecordAutomaticSaveCompletion();
             ShowWorkspaceStatus(persistenceStatus);
             if (closeAfterSave)
             {
@@ -302,7 +355,7 @@ namespace UMA.TexturePaint.Editor
             DisposePersistenceOperations(true);
             if (previous != null && previous != document && string.IsNullOrEmpty(AssetDatabase.GetAssetPath(previous)))
                 DestroyImmediate(previous);
-            nextAutosaveTime = EditorApplication.timeSinceStartup + AutosaveIntervalSeconds;
+            RecordAutomaticSaveCompletion();
             ShowWorkspaceStatus(persistenceStatus);
             if (closeAfterSave)
             {
@@ -326,7 +379,7 @@ namespace UMA.TexturePaint.Editor
             DisposePersistenceOperations(false);
             if (snapshot != null && snapshot != document) DestroyImmediate(snapshot);
             closeAfterSave = false;
-            nextAutosaveTime = EditorApplication.timeSinceStartup + AutosaveIntervalSeconds;
+            ScheduleAutosaveAfterChange();
             Debug.LogError("Overlay Painter persistence: " + message);
             ShowWorkspaceStatus("Save failed · see Console");
             if (reopenAfterFailedClose)
@@ -435,7 +488,34 @@ namespace UMA.TexturePaint.Editor
             // starts a large document capture before the user can close the export or painter UI.
             if (!IsPersistenceActive)
                 nextAutosaveTime = Math.Max(nextAutosaveTime,
-                    EditorApplication.timeSinceStartup + AutosaveIntervalSeconds);
+                    CalculateAutomaticSaveDeadline(EditorApplication.timeSinceStartup,
+                        lastAutomaticSaveTime, UMASettings.TexturePaintRecoveryIdleDelaySeconds,
+                        UMASettings.TexturePaintRecoveryMinimumIntervalSeconds));
+        }
+
+        private void ScheduleAutosaveAfterChange()
+        {
+            nextAutosaveTime = CalculateAutomaticSaveDeadline(
+                EditorApplication.timeSinceStartup, lastAutomaticSaveTime,
+                UMASettings.TexturePaintRecoveryIdleDelaySeconds,
+                UMASettings.TexturePaintRecoveryMinimumIntervalSeconds);
+        }
+
+        private void RecordAutomaticSaveCompletion()
+        {
+            lastAutomaticSaveTime = EditorApplication.timeSinceStartup;
+            nextAutosaveTime = CalculateAutomaticSaveDeadline(lastAutomaticSaveTime,
+                lastAutomaticSaveTime, UMASettings.TexturePaintRecoveryIdleDelaySeconds,
+                UMASettings.TexturePaintRecoveryMinimumIntervalSeconds);
+        }
+
+        internal static double CalculateAutomaticSaveDeadline(double now,
+            double lastCompletedSave, double idleDelaySeconds, double minimumIntervalSeconds)
+        {
+            double idleDeadline = now + Math.Max(0d, idleDelaySeconds);
+            if (double.IsNegativeInfinity(lastCompletedSave)) return idleDeadline;
+            return Math.Max(idleDeadline,
+                lastCompletedSave + Math.Max(0d, minimumIntervalSeconds));
         }
 
         private void ScheduleAuthorizedStageClose()

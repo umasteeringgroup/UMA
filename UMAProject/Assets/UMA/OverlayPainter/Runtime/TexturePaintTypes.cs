@@ -86,6 +86,7 @@ namespace UMA.TexturePaint
     // Keep new values at the end so serialized tangent modes retain their meaning.
     public enum TexturePaintTangentMode { Corner, Smooth, Broken, Custom, Straight }
     public enum TexturePaintPathMode { Stamps, Continuous, Ribbon, Filled }
+    public enum TexturePaintPathEditMode { Standard, Move, Adjust }
     public enum TexturePaintPathOrientation { FollowPath, FixedAxis }
     public enum TexturePaintPathCap { Round, Square, Butt }
     public enum TexturePaintRibbonSide { Left, Right, Both }

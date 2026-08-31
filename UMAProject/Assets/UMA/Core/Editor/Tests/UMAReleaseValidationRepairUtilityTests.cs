@@ -40,22 +40,25 @@ namespace UMA.Editors.Tests
         public void AutoPlan_WithOnlyUma2Referrers_TargetsUma2Category()
         {
             UMAReleaseValidationReport report = CreateReport(
-                "Assets/UMA2/Races/HumanMale/RaceData/Test.asset");
+                UMAPathUtility.ResolveUma2ContentPath(
+                    "Races/HumanMale/RaceData/Test.asset"));
 
             var plans = UMAReleaseValidationRepairUtility.BuildAutoMovePlan(report);
 
             Assert.That(plans, Has.Count.EqualTo(1));
             Assert.That(plans[0].destinationScope,
                 Is.EqualTo(UMAReleaseDestinationScope.UMA2));
-            Assert.That(plans[0].destinationFolder, Is.EqualTo("Assets/UMA2/Textures"));
+            Assert.That(plans[0].destinationFolder,
+                Is.EqualTo(UMAPathUtility.ResolveUma2ContentPath("Textures")));
         }
 
         [Test]
         public void AutoPlan_WithUma2AndUma3Referrers_IsAmbiguous()
         {
             UMAReleaseValidationReport report = CreateReport(
-                "Assets/UMA2/Races/HumanMale/RaceData/Test.asset",
-                UMAPathUtility.ResolveInstallAssetPath("UMA3/Races/Test.asset"));
+                UMAPathUtility.ResolveUma2ContentPath(
+                    "Races/HumanMale/RaceData/Test.asset"),
+                UMAPathUtility.ResolveUma3ContentPath("Races/Test.asset"));
 
             var plans = UMAReleaseValidationRepairUtility.BuildAutoMovePlan(report);
 
@@ -190,7 +193,9 @@ namespace UMA.Editors.Tests
             for (int i = 0; i < referrers.Length; i++)
                 report.references.Add(new UMAReleaseValidationReferenceReport
                 {
-                    scope = referrers[i].StartsWith("Assets/UMA2") ? "UMA2" : "UMA3",
+                    scope = referrers[i].StartsWith(
+                        UMAPathUtility.Uma2ContentRoot,
+                        StringComparison.OrdinalIgnoreCase) ? "UMA2" : "UMA3",
                     sourceAssetPath = referrers[i],
                     referencedAssetPath = CandidatePath,
                     referencedAssetGuid = AssetDatabase.AssetPathToGUID(CandidatePath),

@@ -1,6 +1,6 @@
 # Overlay Painter
 
-Last reviewed: August 8, 2026.
+Last reviewed: August 30, 2026.
 
 Overlay Painter is UMA's non-destructive surface-painting workspace for creating texture details directly on a reconstructed UMA slot or generated character. It combines a 3D paint view, a synchronized 2D UV canvas, material-aware channels, editable layers, surface paths, masks, and recipe-ready export.
 
@@ -17,6 +17,8 @@ Overlay Painter does not paint into the selected source textures. It works in a 
 
 Related docs:
 
+- [Overlay Painter Material Presets](OverlayPainter%20-%20MaterialPresets.MD) for saving, applying,
+  versioning, and packaging reusable layer stacks.
 - [UMA Materials](UMAMaterial.md) for shader properties, channel layouts, packing, and output settings.
 - [OverlayDataAsset](OverlayDataAsset.md) for ordinary UMA overlay authoring and recipe use.
 - [SlotDataAsset](SlotDataAsset.md) for slots, source meshes, UVs, and UDIM metadata.
@@ -160,7 +162,18 @@ native-resolution texture inputs.
 
 ## The Workspace
 
-Overlay Painter opens a standard dockable **Overlay Painter** controls window around its custom stage. Dock it beside the Scene view for simultaneous 3D and 2D work.
+By default, Overlay Painter opens its custom stage in a dedicated floating compact workspace. The
+left side is a tab group containing **Overlay Painter Layers** and **Overlay Painter Brush**; the
+right side is a tab group containing a dedicated **Scene** view and **Overlay Painter 2D**. A
+resizable divider separates the two sides. Layers and Scene are selected initially, the active Body
+target is framed, and the floating window remembers its size and screen position.
+
+The project-wide **Overlay Painter Compact View** setting under **Project Settings > UMA > Editor
+Settings** controls this behavior. Disable it to retain the traditional workflow: Layers, Brush, and
+2D open as independent dockable windows and painting uses the existing Scene view. Painting tools
+appear as the **Overlay Painter Toolbar** overlay. In Compact View, Overlay Painter binds its 3D,
+Path, and painting toolbars exclusively to the dedicated docked Scene tab and hides those overlays
+from every other Scene window.
 
 ### Global and 2D toolbars
 
@@ -170,15 +183,31 @@ The global toolbar contains the most frequent document and preview actions, whil
 - Undo and Redo.
 - Save or Save As.
 - Export.
-- Open or focus the 2D UV window and show or hide the Asset Shelf.
+- Open or focus the 2D UV and Brush windows.
 - Solo the active channel.
 - Compare against the source-before state.
 - Isolate selected slots.
 - Show the UV wireframe in the 2D canvas.
 - Arm the 2D color sampler.
 - Open layout controls.
+- **Shutdown Overlay Painter** in the Scene-view toolbar. This full-width button uses the normal
+  close flow, including Save, Discard, and Cancel when the document has unsaved work.
 
 **Solo** is useful for inspecting raw channel values. **Before** is useful for comparing the complete shaded source with the edited result. They serve different preview purposes and are not a replacement for checking the exported material.
+
+Starting compilation, an assembly reload, or Play Mode while Overlay Painter is active closes its
+custom stage and synchronously hides all Overlay Painter Scene-view toolbars. This prevents a
+nonfunctional painting, 3D-control, or Path toolbar from remaining after the painting context has
+shut down.
+
+### Scene-view painting toolbar
+
+The **Overlay Painter Toolbar** is a native Scene-view toolbar overlay, not a separate dockable
+window. It contains direct icon controls for Paint, Erase, Blur, Smear, Clone, Dodge, Burn, Normal
+Touch-up, Plugin Brush, Polygon Fill, UV Island Fill, and Path authoring, plus shortcut help. Its
+buttons stay synchronized with keyboard shortcuts and the compact Tool dropdown in the 3D controls
+overlay. Unity can dock, reorient, collapse, or move the toolbar using the standard Scene-view
+overlay controls. It appears only while an active Overlay Painter stage can paint.
 
 ### Tool rail
 
@@ -196,6 +225,24 @@ The Target region contains:
 - Texture Set thumbnails.
 
 Select every slot that should be allowed to receive the brush footprint. Geometry belonging to unselected slots is excluded even when it is under the brush.
+
+Every character-launched session gives startup priority to a logical target whose visible name
+contains the standalone word **Body**, and enables **Isolate** by default for a fresh or legacy
+workspace. A saved target is used only when no visibly named Body target exists; an explicit current
+Isolate choice is still restored. Standalone slot sessions keep their existing target and visibility
+defaults.
+
+#### Import warning indicators
+
+Recoverable reconstruction conditions are retained as structured import warnings instead of being shown in a modal dialog every time the stage opens. Overlay Painter associates each record with its exact slot names, logical target IDs, and reconstructed texture surfaces.
+
+- A yellow warning icon appears beside every affected logical target.
+- Expanding a UDIM target shows the same indicator on each affected member row.
+- The **Texture Sets** tab shows the indicator beside each affected physical texture set.
+- A warning that cannot be associated with reconstructed geometry appears beside the target search controls as an unmapped import item.
+- Clicking an icon opens a scrollable detail window containing the stable warning code, severity, material, slots, and full explanation.
+
+The Scene view shows **Import completed with warnings. Click a warning icon beside a paint target for details.** along the bottom for about ten seconds. It remains fully visible for 7.5 seconds and fades over the final 2.5 seconds; it does not consume painting input. Recoverable warnings never need to be dismissed. A reconstruction or material-capability failure that would make painting unsafe is still blocking and prevents the stage from opening.
 
 ### UV canvas
 
@@ -238,18 +285,23 @@ Properties are contextual. The available sections can include:
 - Channels, including the **Paint / Preview Channel**, Solo, and Before controls.
 - Active Layer, including Fill or Path settings when applicable.
 - Layer Channels. Every authored channel has its own source, Enabled state, paint lock, paint strength, opacity, and blend mode.
-- Brush.
 - Path.
-- Stroke and Projection.
 - Plugins.
 - Document.
 - Performance and Memory.
 
+Brush and Stroke/Projection properties are in **Overlay Painter Brush**, above the Asset Shelf.
+
 ### Asset Shelf
 
-The Asset Shelf finds `BrushPreset` assets and supports thumbnails, search, folders, comma-separated tags, favorites, recents, custom ordering, rename, duplicate, and Project-window drag and drop.
+The Asset Shelf is part of the separate **Overlay Painter Brush** window, directly below the Brush and Stroke/Projection controls. Use the **Asset Shelf** toolbar button in that window or `Tab` to show or hide it, and drag the horizontal divider to resize it. The Layers window does not contain or reserve space for the shelf.
 
-Use **Layout > Reset Workspace** if panels have been hidden, moved to an unusable size, or need to return to their defaults.
+The shelf finds `BrushPreset` assets and supports thumbnails, search, folders, comma-separated tags, favorites, recents, custom ordering, rename, duplicate, and Project-window drag and drop. Its filters and selected brush remain synchronized with the rest of the Overlay Painter session.
+
+Use **Layout > Reset Workspace** to reset the internal panel visibility and dimensions. When Compact
+View is enabled, use **Layout > Reset Compact View** or **Window > UMA > Reset Overlay Painter
+Compact View** to restore the floating window's default size, position, 40/60 split, tab groups, and
+initial Layers/Scene selection.
 
 --------------------------------------------------------------------------------
 
@@ -705,6 +757,10 @@ Common operations include:
 Merge Down is a flattening operation. It bakes the visible results of two adjacent sibling layers, including their masks and effects, into merged pixels; the merged layer does not keep editable mask or effect state. It is available only when both layers and all authored channel overrides use **Normal** blend. Non-Normal blends depend on the backdrop and therefore cannot be flattened exactly into a reusable transparent layer. Duplicate the document or layers first when independent editability may still be needed.
 
 Layer structure changes participate in Undo and Redo.
+
+To reuse one layer, a complete group subtree, or the entire stack on other paint targets, save it as
+a Material Preset. See [Overlay Painter Material Presets](OverlayPainter%20-%20MaterialPresets.MD)
+for creation, compatibility, application, versioning, packaging, and production best practices.
 
 --------------------------------------------------------------------------------
 
@@ -1288,8 +1344,8 @@ plugin, version, parameters and generated pixels survive Save/reopen and recover
 fill polygons, or fill UV islands over the result afterward.
 
 The mask-compatible built-ins are **Levels & Curves**, **Blur, Sharpen & Detail**, **Channel
-Operations**, and **Morphology & Distance**. A typical smart-mask workflow is: create a black or
-white mask, use Morphology & Distance to establish or widen a boundary, use Blur/Sharpen/Detail to
+Operations**, and **Morphology & Distance**. A typical procedural mask workflow is: create a black
+or white mask, use Morphology & Distance to establish or widen a boundary, use Blur/Sharpen/Detail to
 soften or clean it, use Levels & Curves to restore contrast, then hand-paint exceptions. Normal &
 Height Toolkit is intentionally unavailable because a tangent-space normal operation has no valid
 grayscale-mask interpretation.
@@ -1483,6 +1539,27 @@ Recovery uses:
 
 The default location is `Assets/UMA/Temp`. Configure **Overlay Painter Recovery Folder** under **Project Settings > UMA**.
 
+The same settings panel controls the startup workspace and background-save timing:
+
+- **Overlay Painter Compact View** defaults on. It opens one floating workspace with Layers/Brush
+  tabs on the left and Scene/2D tabs on the right. Disable it to open the three Overlay Painter
+  panels independently and use the existing Scene view.
+
+- **Enable Automatic Recovery** defaults on. It controls periodic temporary-session recovery and
+  autosave of modified permanent `TexturePaintDocument` assets. Turning it off does not remove
+  manual Save, Save As, or the unsaved-changes prompt when closing.
+- **Recovery Idle Delay (seconds)** defaults to **120**. The countdown restarts after each edit, so
+  a save does not begin in the middle of a continuous painting session.
+- **Minimum Save Interval (seconds)** defaults to **300**. Even when the document repeatedly becomes
+  idle, no new background save begins until this interval has elapsed since the previous save.
+
+The later of the idle deadline and minimum-interval deadline wins. Capture uses asynchronous GPU
+readback and background compression, but Unity must synchronously import and commit changed recovery
+assets at the end; that final step can briefly pause the editor. Increase the idle delay or minimum
+interval if large, multi-channel documents make those commits disruptive. The workspace status line
+shows **Updating recovery asset**, **Writing recovery asset**, or the corresponding project-document
+message while persistence is active.
+
 For the default location, ignore both of these in source control:
 
 ```text
@@ -1501,6 +1578,12 @@ When compatible recovery exists, Overlay Painter offers:
 - **Recover**: open the last complete recovery snapshot.
 - **Discard**: delete recovery and start fresh.
 - **Cancel**: leave recovery untouched and stop opening.
+
+If you explicitly double-click or otherwise open a saved `TexturePaintDocument` while compatible
+recovery exists, the choices change to **Open `<document>`**, **Recover Instead**, and **Cancel
+Opening**. Opening the requested document is the default and discards the older recovery. Recovery
+is loaded only when **Recover Instead** is chosen, so an empty or older recovery snapshot cannot
+silently replace the saved document you asked to open.
 
 ### Save As
 
@@ -1524,6 +1607,13 @@ The document stores:
 - Stable surface identities and source fingerprints.
 
 Pixel data is stored in a sibling `<Document Name> Data` folder. Keep that folder with the document asset.
+
+UMA regenerates material instance names with a random `_Genb_<number>` component. Overlay Painter
+excludes that nonce from new surface identities. When opening an older document whose id included the
+nonce, it conservatively rebinds each surface using slot ownership, UV/topology fingerprints, UMA
+material identity, and its saved renderer/submesh location. An unchanged UV layout restores layer and
+mask pixels exactly even if reconstruction reordered triangle indices; a changed UV layout follows the
+document's rerasterization and mask-reset safeguards.
 
 Recovery uses the same layer-channel and mask serialization as a permanent document. Recovering a compatible session restores every material-channel source, including `Sprite` selections and Fill tiling/offset/rotation, plus the mask's grayscale Mask Value, effects, and rendered pixels.
 
@@ -1608,10 +1698,11 @@ artifacts back into the new textures.
 `UseExistingTextures` UMA materials are the non-composited exception. Because they have no native
 overlay composite to reconstruct, Overlay Painter reads each declared channel from the material
 currently assigned to the generated character and identifies it as **UMAMaterial Source Textures
-(Read Only)**. A warning is shown when the session opens. These textures are used only as the base
+(Read Only)**. The affected target and texture-set rows receive an import warning icon. These textures are used only as the base
 for preview and flattened export; painting does not modify the material's source texture assets.
 When the UMA material uses a second render pass, Overlay Painter imports only the first-pass slot
-geometry and reports that the duplicate second-pass submesh was skipped.
+geometry and attaches an informational import record to the affected target indicating that the
+duplicate second-pass submesh was skipped.
 
 Normal Control never appears as a standalone physical texture in either mode. Its only export result
 is the change it produces in a material-declared Normal output.
@@ -1934,6 +2025,22 @@ The exported overlay is indexed and recipe-ready, but it is not automatically in
 - Reduce very large effect widths.
 - Hide unneeded effects while painting.
 - Check the **Performance & Memory** panel for fallback counts and latency.
+
+### A long freehand stroke becomes progressively slower
+
+- Enable **Performance & Memory > Stroke Diagnostics**, choose **Capture Next Stroke**, and repeat
+  the stroke. Diagnostics are opt-in and add no per-stroke capture work while disabled.
+- Freehand contacts from one raw input event are rasterized in bounded destination-tile batches.
+  Normal and mirrored queries still test every selected slot/UDIM member; batching begins only after
+  the contacts and their exact triangle ownership have been accepted.
+- **History include calls** should remain close to **captured tiles**, not paint operations. Each
+  target tile keeps the pixels from immediately before its first write for the complete stroke.
+- Composite and preview-binding work should scale with dirty tiles per input event, not accepted
+  contacts. Triangle-restricted stamps in a destination tile share a compute dispatch while retaining
+  per-stamp UV triangle boundaries and original order.
+- Compare early/middle/late input p95, compute dispatches, composed pixels, and managed allocations.
+  Use the matching `OverlayPainter.Stroke.*` Unity Profiler markers and GPU Profiler when CPU
+  submission is low but an input event still waits on the graphics queue.
 
 ### Recovery is not offered
 

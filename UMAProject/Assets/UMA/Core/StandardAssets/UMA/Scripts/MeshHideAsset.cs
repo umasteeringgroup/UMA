@@ -299,6 +299,7 @@ namespace UMA
         public ulong AssetHash = 0;
         // A UV map of the vertices in the mesh. This is used to determine which vertices are hidden based on the triangle hiding.
         // This is only needed when the Hash changes, and we have to recreate the hide flags based on the UVs, so we can determine which vertices are hidden and then hide the triangles based on the vertex hiding.
+        [NonSerialized]
         public BitArray HiddenVertexesByUV = new BitArray(bitArraySize * bitArraySize); 
 
         // Serialized backing for HiddenVertexesByUV (BitArray is not Unity-serializable)

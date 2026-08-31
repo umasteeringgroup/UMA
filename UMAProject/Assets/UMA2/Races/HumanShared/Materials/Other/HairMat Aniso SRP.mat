@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: HairMat Aniso SRP
-  m_Shader: {fileID: -6465566751694194690, guid: 877e0087dcad7a441a4b23b3ab3f8a48,
+  m_Shader: {fileID: -6465566751694194690, guid: 53e5f1fe6377c5c438133f62347fa60f,
     type: 3}
   m_ValidKeywords: []
   m_InvalidKeywords:
@@ -83,7 +83,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _TanNoise:
-        m_Texture: {fileID: 2800000, guid: 277542933fc54bc489eed73f42225800, type: 3}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _TangentDir:

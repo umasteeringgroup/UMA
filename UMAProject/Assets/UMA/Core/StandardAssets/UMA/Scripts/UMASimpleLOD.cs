@@ -115,6 +115,7 @@ namespace UMA.Examples
         /// Per-slot LOD status accumulated across UpdateInternalLOD calls.
         /// Keyed by slot name. Entries are updated in-place; never cleared.
         /// </summary>
+        [System.NonSerialized]
         public Dictionary<string, SlotLodEntry> SlotLodStatuses = new Dictionary<string, SlotLodEntry>();
 
         /// <summary>

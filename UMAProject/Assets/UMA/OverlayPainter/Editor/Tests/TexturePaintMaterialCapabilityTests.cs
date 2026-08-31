@@ -8,6 +8,28 @@ namespace UMA.TexturePaint.Editor.Tests
     public sealed class TexturePaintMaterialCapabilityTests
     {
         [Test]
+        public void FallbackChannelDiscoveryRejectsShaderPropertiesThatDoNotExist()
+        {
+            Shader shader = Shader.Find("Universal Render Pipeline/Lit");
+            Assert.That(shader, Is.Not.Null);
+            Material material = new Material(shader);
+            try
+            {
+                string baseProperty = TextureStore.FindProperty(material,
+                    "_BaseMap", "_MainTex");
+                string absentProperty = TextureStore.FindProperty(material,
+                    "_OverlayPainterMissingChannel");
+
+                Assert.That(baseProperty, Is.Not.Empty);
+                Assert.That(material.HasProperty(baseProperty), Is.True);
+                Assert.That(absentProperty, Is.Empty,
+                    "A missing shader property must not manufacture a selectable paint channel.");
+                Assert.That(TextureStore.FindProperty(null, "_BaseMap"), Is.Empty);
+            }
+            finally { Object.DestroyImmediate(material); }
+        }
+
+        [Test]
         public void UrpLitCompilesDocumentedPhysicalLayoutsAndImporterSettings()
         {
             Shader shader = Shader.Find("Universal Render Pipeline/Lit");

@@ -38,6 +38,7 @@ namespace UMA.TexturePaint
         public long SnapshotMemoryBudgetBytes { get; set; } = 512L * 1024L * 1024L;
         public long ArtifactMemoryBudgetBytes { get; set; } = 512L * 1024L * 1024L;
         public int HistoryCapacity { get; set; } = 20;
+        public ComputeShader GpuGeneratorShader { get; set; }
         public event Action Changed;
 
         public void Discover()
@@ -73,26 +74,7 @@ namespace UMA.TexturePaint
         public TexturePaintPluginParameterSet CreateParameters(ITexturePaintExtensionV2 plugin)
         {
             TexturePaintPluginParameterSet set = new TexturePaintPluginParameterSet();
-            if (plugin?.Descriptor?.parameters == null) return set;
-            for (int i = 0; i < plugin.Descriptor.parameters.Count; i++)
-            {
-                TexturePaintPluginParameterDefinition definition = plugin.Descriptor.parameters[i];
-                if (definition == null || string.IsNullOrWhiteSpace(definition.id)) continue;
-                if (definition.type == TexturePaintPluginParameterType.Header) continue;
-                TexturePaintPluginParameterValue value = set.Get(definition.id, true);
-                value.number = definition.defaultNumber; value.boolean = definition.defaultBoolean;
-                value.color = definition.defaultColor; value.text = definition.defaultText;
-                if (definition.type == TexturePaintPluginParameterType.Curve)
-                    value.curve = definition.defaultCurve == null ? null :
-                        new AnimationCurve(definition.defaultCurve.keys)
-                        {
-                            preWrapMode = definition.defaultCurve.preWrapMode,
-                            postWrapMode = definition.defaultCurve.postWrapMode
-                        };
-                if (definition.type == TexturePaintPluginParameterType.StripeList)
-                    value.stripes = TexturePaintPluginParameterSet.CloneStripes(
-                        definition.defaultStripes);
-            }
+            set.ResetToDefaults(plugin?.Descriptor);
             return set;
         }
 
@@ -222,6 +204,20 @@ namespace UMA.TexturePaint
             try
             {
                 TexturePaintPluginParameterSet parameterSnapshot = CloneParameters(parameters);
+                if (TryGetGpuGenerator(plugin, out ITexturePaintGpuGeneratorV2 gpuGenerator))
+                {
+                    TexturePaintPluginCommit gpuCommit =
+                        TexturePaintPluginTransactionExecutor.CommitGpuGenerator(store,
+                            plugin.Descriptor, gpuGenerator.GpuKernelName, GpuGeneratorShader,
+                            token, progress, parameterSnapshot, LogicalLayers);
+                    if (gpuCommit.commandCount > 0) PushCommit(gpuCommit); else gpuCommit.Dispose();
+                    AddDiagnostic(plugin.Descriptor.id, TexturePaintPluginDiagnosticSeverity.Info,
+                        "GPU generator transaction committed.", null,
+                        stopwatch.Elapsed.TotalMilliseconds, gpuCommit.commandCount,
+                        gpuCommit.dirtyPixels);
+                    if (gpuCommit.commandCount > 0) Changed?.Invoke();
+                    return;
+                }
                 TexturePaintReadContextV2 read = TexturePaintPluginTransactionExecutor.Capture(store,
                     plugin.Descriptor, parameterSnapshot, token, progress, SnapshotMemoryBudgetBytes,
                     null, ResolveReadChannels(plugin, parameterSnapshot));
@@ -253,7 +249,7 @@ namespace UMA.TexturePaint
         public async Task ExecutePluginLayerAsync(ITexturePaintCommandExtensionV2 plugin,
             TextureStore store, TexturePaintPluginParameterSet parameters,
             IReadOnlyDictionary<TextureSet, TexturePaintLayer> destinationLayers,
-            IProgress<float> progress, CancellationToken token)
+            IProgress<float> progress, CancellationToken token, bool recordHistory = true)
         {
             if (plugin == null) throw new ArgumentNullException(nameof(plugin));
             ValidateDescriptor(plugin, plugin.GetType());
@@ -262,6 +258,22 @@ namespace UMA.TexturePaint
             try
             {
                 TexturePaintPluginParameterSet parameterSnapshot = CloneParameters(parameters);
+                if (TryGetGpuGenerator(plugin, out ITexturePaintGpuGeneratorV2 gpuGenerator))
+                {
+                    TexturePaintPluginCommit gpuCommit =
+                        TexturePaintPluginTransactionExecutor.CommitGpuGeneratorIntoPluginLayers(
+                            store, plugin.Descriptor, gpuGenerator.GpuKernelName,
+                            GpuGeneratorShader, destinationLayers, token, progress,
+                            parameterSnapshot);
+                    bool gpuChanged = gpuCommit.hasChanges;
+                    if (gpuChanged && recordHistory) PushCommit(gpuCommit); else gpuCommit.Dispose();
+                    AddDiagnostic(plugin.Descriptor.id, TexturePaintPluginDiagnosticSeverity.Info,
+                        "GPU Plugin layer regenerated.", null,
+                        stopwatch.Elapsed.TotalMilliseconds, gpuCommit.commandCount,
+                        gpuCommit.dirtyPixels);
+                    if (gpuChanged) Changed?.Invoke();
+                    return;
+                }
                 TexturePaintReadContextV2 read = TexturePaintPluginTransactionExecutor.Capture(store,
                     plugin.Descriptor, parameterSnapshot, token, progress, SnapshotMemoryBudgetBytes,
                     destinationLayers, ResolveReadChannels(plugin, parameterSnapshot));
@@ -274,11 +286,12 @@ namespace UMA.TexturePaint
                     TexturePaintPluginTransactionExecutor.CommitIntoPluginLayers(store,
                         context.Descriptor, queued, destinationLayers, token, progress,
                         parameterSnapshot);
-                if (commit.hasChanges) PushCommit(commit); else commit.Dispose();
+                bool changed = commit.hasChanges;
+                if (changed && recordHistory) PushCommit(commit); else commit.Dispose();
                 AddDiagnostic(plugin.Descriptor.id, TexturePaintPluginDiagnosticSeverity.Info,
                     "Plugin layer regenerated.", null, stopwatch.Elapsed.TotalMilliseconds,
                     commit.commandCount, commit.dirtyPixels);
-                if (commit.hasChanges) Changed?.Invoke();
+                if (changed) Changed?.Invoke();
             }
             catch (OperationCanceledException)
             {
@@ -301,7 +314,7 @@ namespace UMA.TexturePaint
         public async Task ExecuteLayerMaskAsync(ITexturePaintCommandExtensionV2 plugin,
             TextureStore store, TexturePaintPluginParameterSet parameters,
             IReadOnlyDictionary<TextureSet, TexturePaintLayer> destinationLayers,
-            IProgress<float> progress, CancellationToken token)
+            IProgress<float> progress, CancellationToken token, bool recordHistory = true)
         {
             if (plugin == null) throw new ArgumentNullException(nameof(plugin));
             ValidateDescriptor(plugin, plugin.GetType());
@@ -325,11 +338,12 @@ namespace UMA.TexturePaint
                 TexturePaintPluginCommit commit =
                     TexturePaintPluginTransactionExecutor.CommitIntoLayerMasks(store,
                         context.Descriptor, queued, destinationLayers, token, progress, snapshot);
-                if (commit.hasChanges) PushCommit(commit); else commit.Dispose();
+                bool changed = commit.hasChanges;
+                if (changed && recordHistory) PushCommit(commit); else commit.Dispose();
                 AddDiagnostic(plugin.Descriptor.id, TexturePaintPluginDiagnosticSeverity.Info,
                     "Layer-mask plugin transaction committed.", null,
                     stopwatch.Elapsed.TotalMilliseconds, commit.commandCount, commit.dirtyPixels);
-                if (commit.hasChanges) Changed?.Invoke();
+                if (changed) Changed?.Invoke();
             }
             catch (OperationCanceledException)
             {
@@ -485,6 +499,18 @@ namespace UMA.TexturePaint
             if (instance is ITexturePaintExporterV2 exporter) exporters.Add(exporter);
         }
 
+        private bool TryGetGpuGenerator(ITexturePaintCommandExtensionV2 plugin,
+            out ITexturePaintGpuGeneratorV2 generator)
+        {
+            generator = plugin as ITexturePaintGpuGeneratorV2;
+            return generator != null && GpuGeneratorShader != null &&
+                SystemInfo.supportsComputeShaders &&
+                !string.IsNullOrWhiteSpace(generator.GpuKernelName) &&
+                GpuGeneratorShader.HasKernel(generator.GpuKernelName) &&
+                GpuGeneratorShader.IsSupported(
+                    GpuGeneratorShader.FindKernel(generator.GpuKernelName));
+        }
+
         private static TexturePaintChannelMask? ResolveReadChannels(
             ITexturePaintExtensionV2 plugin, TexturePaintPluginParameterSet parameters)
         {
@@ -521,7 +547,8 @@ namespace UMA.TexturePaint
                 TexturePaintPluginCapability.Filter | TexturePaintPluginCapability.Generator |
                 TexturePaintPluginCapability.Baker | TexturePaintPluginCapability.Importer |
                 TexturePaintPluginCapability.Exporter | TexturePaintPluginCapability.ReadsMeshMaps |
-                TexturePaintPluginCapability.LongRunning;
+                TexturePaintPluginCapability.LongRunning |
+                TexturePaintPluginCapability.GpuAccelerated;
             if ((descriptor.capabilities & ~allCapabilities) != 0)
                 throw new InvalidOperationException("Descriptor contains unknown capability flags.");
             if ((descriptor.declaredChannels & ~TexturePaintChannelMask.All) != 0)
@@ -567,6 +594,8 @@ namespace UMA.TexturePaint
             if (plugin is ITexturePaintBakerV2) result |= TexturePaintPluginCapability.Baker;
             if (plugin is ITexturePaintImporterV2) result |= TexturePaintPluginCapability.Importer;
             if (plugin is ITexturePaintExporterV2) result |= TexturePaintPluginCapability.Exporter;
+            if (plugin is ITexturePaintGpuGeneratorV2)
+                result |= TexturePaintPluginCapability.GpuAccelerated;
             return result;
         }
 

@@ -510,7 +510,7 @@ namespace UMA.PoseTools
         {
             if (string.IsNullOrEmpty(boneName)) return;
             Transform found = null;
-            var allUmaData = Object.FindObjectsByType<UMAData>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            var allUmaData = UMAObjectUtility.FindObjectsByType<UMAData>(FindObjectsInactive.Include);
             foreach (var umaData in allUmaData)
             {
                 if (umaData?.skeleton != null)

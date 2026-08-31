@@ -81,6 +81,62 @@ namespace UMA.TexturePaint.Tests
             Assert.That(metrics.MaximumPreviewMilliseconds, Is.EqualTo(100d));
         }
 
+        [Test]
+        public void StrokeDiagnosticsAreDisabledByDefaultAndCanBeStoppedImmediately()
+        {
+            TexturePaintStrokeDiagnostics diagnostics =
+                new TexturePaintPerformanceMetrics().StrokeDiagnostics;
+
+            Assert.That(diagnostics.Enabled, Is.False);
+            Assert.That(diagnostics.IsCapturing, Is.False);
+            diagnostics.RequestNextStroke();
+            Assert.That(diagnostics.Enabled, Is.True);
+            Assert.That(diagnostics.CaptureRequested, Is.True);
+
+            diagnostics.Enabled = false;
+
+            Assert.That(diagnostics.CaptureRequested, Is.False);
+            Assert.That(diagnostics.IsCapturing, Is.False);
+        }
+
+        [Test]
+        public void CapturedStrokeReportIncludesGrowthGeometryAndRasterCounters()
+        {
+            TexturePaintPerformanceMetrics metrics = new TexturePaintPerformanceMetrics();
+            TexturePaintStrokeDiagnostics diagnostics = metrics.StrokeDiagnostics;
+            diagnostics.RequestNextStroke();
+            Assert.That(diagnostics.TryBegin(TexturePaintTool.Paint, TexturePaintChannel.Albedo,
+                true, false, 5, metrics), Is.True);
+            diagnostics.SetActiveTargets(5);
+            for (int i = 0; i < 6; i++)
+                using (diagnostics.MeasureInputEvent()) Thread.SpinWait(100 + i * 50);
+            diagnostics.RecordResampledCenter();
+            diagnostics.RecordFootprintQuery(false);
+            diagnostics.RecordFootprintQuery(true);
+            diagnostics.RecordRaycast(5, 4, 1);
+            diagnostics.RecordSpatialQuery(true, 8, 40, 12, 3);
+            diagnostics.RecordPaintOperation(3);
+            diagnostics.RecordRasterTargetVisit();
+            diagnostics.RecordHistoryInclude();
+            diagnostics.RecordWorkingSet(1, 3);
+            diagnostics.RecordEngineWorkingSet(3, 1, 2, 4096L);
+            metrics.computeDispatches += 3;
+            metrics.copiedPixels += 256;
+            metrics.composedPixels += 512;
+
+            diagnostics.Complete(true, metrics);
+
+            Assert.That(diagnostics.IsCapturing, Is.False);
+            StringAssert.Contains("Outcome: committed", diagnostics.LastReport);
+            StringAssert.Contains("Normal / mirrored footprint queries: 1 / 1", diagnostics.LastReport);
+            StringAssert.Contains("Triangle references / unique candidates / accepted contacts: 40 / 12 / 3",
+                diagnostics.LastReport);
+            StringAssert.Contains("Compute dispatches / CPU fallbacks / budget fallbacks: 3 / 0 / 0",
+                diagnostics.LastReport);
+            StringAssert.Contains("Input-event p95 early / middle / late", diagnostics.LastReport);
+            StringAssert.Contains("OverlayPainter.Stroke", diagnostics.LastReport);
+        }
+
         private static Mesh TriangleMesh()
         {
             Mesh mesh = new Mesh

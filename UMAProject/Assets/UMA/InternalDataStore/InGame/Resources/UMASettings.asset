@@ -20,7 +20,7 @@ MonoBehaviour:
     Use the project settings instead.\n Modifying settings that need compiler\n directives
     set will NOT work if you\n edit them in the inspector!"
   Initialized: 1
-  UMAVersion: UMA NextGen 3.0f4
+  UMAVersion: UMA NextGen 3.0f5
   KeepTag: UMAKeepChain
   tagLookupValues:
   - Head
@@ -69,7 +69,7 @@ MonoBehaviour:
   addrIncludeRecipes: 0
   addrIncludeOther: 0
   addrStripUVAttachedShaders: 0
-  showWelcomeToUMA: 0
+  showWelcomeToUMA: 1
   showToolbar: 1
   generatorPrefab: {fileID: 6782112333398131213, guid: a54fde34eec40964b94d71ee0aba9889, type: 3}
   characterPrefab: {fileID: 153068, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}

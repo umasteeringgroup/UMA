@@ -12,5 +12,76 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a21b01507d5987b4689b5f16296f8eb8, type: 3}
   m_Name: Samples
   m_EditorClassIdentifier: 
-  Favorites: []
+  Favorites:
+  - path: Assets/UMA/SRP/Samples/Scenes/U3-Car Scene.unity
+    GUID: 38d3e2951bfc3a41235e47fbe3148238
+    name: U3-Car Scene
+    asset: {fileID: 102900000, guid: 38d3e2951bfc3a41235e47fbe3148238, type: 3}
+    favoriteList: {fileID: 11400000}
+  - path: Assets/UMA/SRP/Samples/Scenes/U3-Character Creator.unity
+    GUID: 97e1065780eb40763c88aa642f7291af
+    name: U3-Character Creator
+    asset: {fileID: 102900000, guid: 97e1065780eb40763c88aa642f7291af, type: 3}
+    favoriteList: {fileID: 11400000}
+  - path: Assets/UMA/SRP/Samples/Scenes/U3-Decals.unity
+    GUID: 46de3b5c82af3b7ef07d228d866b4fce
+    name: U3-Decals
+    asset: {fileID: 102900000, guid: 46de3b5c82af3b7ef07d228d866b4fce, type: 3}
+    favoriteList: {fileID: 11400000}
+  - path: Assets/UMA/SRP/Samples/Scenes/U3-Generating Random Characters.unity
+    GUID: e16770e4b1321ea1815872bdfd0d81d2
+    name: U3-Generating Random Characters
+    asset: {fileID: 102900000, guid: e16770e4b1321ea1815872bdfd0d81d2, type: 3}
+    favoriteList: {fileID: 11400000}
+  - path: Assets/UMA/UMADismemberment/Samples/Scene/U3-GoreExample.unity
+    GUID: fb7b7bdfb5bc6c143970c8b80074dce9
+    name: U3-GoreExample
+    asset: {fileID: 102900000, guid: fb7b7bdfb5bc6c143970c8b80074dce9, type: 3}
+    favoriteList: {fileID: 11400000}
+  - path: Assets/UMA/SRP/Samples/Scenes/U3-How to Construct a DCA from scratch.unity
+    GUID: ce7e75af892c296902cdc43bb90ec33d
+    name: U3-How to Construct a DCA from scratch
+    asset: {fileID: 102900000, guid: ce7e75af892c296902cdc43bb90ec33d, type: 3}
+    favoriteList: {fileID: 11400000}
+  - path: Assets/UMA/SRP/Samples/Scenes/U3-How to Construct and load a DCA from a
+      prefab.unity
+    GUID: 5398f97561838b994a3b29810061dbfe
+    name: U3-How to Construct and load a DCA from a prefab
+    asset: {fileID: 102900000, guid: 5398f97561838b994a3b29810061dbfe, type: 3}
+    favoriteList: {fileID: 11400000}
+  - path: Assets/UMA/SRP/Samples/Scenes/U3-How to equip items.unity
+    GUID: c247fb9bc04971bd05a62ce06d7ed16a
+    name: U3-How to equip items
+    asset: {fileID: 102900000, guid: c247fb9bc04971bd05a62ce06d7ed16a, type: 3}
+    favoriteList: {fileID: 11400000}
+  - path: Assets/UMA/SRP/Samples/Scenes/U3-How to Load and Save a DCA to a string.unity
+    GUID: bb79d6fa6b3ee65903d27cf021396846
+    name: U3-How to Load and Save a DCA to a string
+    asset: {fileID: 102900000, guid: bb79d6fa6b3ee65903d27cf021396846, type: 3}
+    favoriteList: {fileID: 11400000}
+  - path: Assets/UMA/SRP/Samples/Scenes/U3-How to Use a Slider to control DNA.unity
+    GUID: 9a6b8657e68e80589c0831ffb75b9435
+    name: U3-How to Use a Slider to control DNA
+    asset: {fileID: 102900000, guid: 9a6b8657e68e80589c0831ffb75b9435, type: 3}
+    favoriteList: {fileID: 11400000}
+  - path: Assets/UMA/SRP/Samples/Scenes/U3-Integrating with Timeline.unity
+    GUID: 01250772854d0570d397bc176b791007
+    name: U3-Integrating with Timeline
+    asset: {fileID: 102900000, guid: 01250772854d0570d397bc176b791007, type: 3}
+    favoriteList: {fileID: 11400000}
+  - path: Assets/UMA/SRP/Samples/Scenes/U3-Ragdolls and Shooting Example.unity
+    GUID: f0c303c62a3312b46db672a4ca9b27f5
+    name: U3-Ragdolls and Shooting Example
+    asset: {fileID: 102900000, guid: f0c303c62a3312b46db672a4ca9b27f5, type: 3}
+    favoriteList: {fileID: 11400000}
+  - path: Assets/UMA/SRP/Samples/Scenes/U3-Sandbox.unity
+    GUID: b3ebb27d4a81735b5fbe55bea3e60202
+    name: U3-Sandbox
+    asset: {fileID: 102900000, guid: b3ebb27d4a81735b5fbe55bea3e60202, type: 3}
+    favoriteList: {fileID: 11400000}
+  - path: Assets/UMA/SRP/Samples/Scenes/U3-Tools-Photobooth.unity
+    GUID: 578a622b6d0972a04bf009c313acd54c
+    name: U3-Tools-Photobooth
+    asset: {fileID: 102900000, guid: 578a622b6d0972a04bf009c313acd54c, type: 3}
+    favoriteList: {fileID: 11400000}
   exPanded: 1

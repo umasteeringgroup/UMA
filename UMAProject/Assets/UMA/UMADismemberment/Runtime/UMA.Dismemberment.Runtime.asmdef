@@ -1,0 +1,17 @@
+{
+    "name": "UMA.Dismemberment.Runtime",
+    "rootNamespace": "UMA.Dismemberment",
+    "references": [
+        "UMA_Core",
+        "Unity.Collections"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

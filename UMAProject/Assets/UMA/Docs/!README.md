@@ -109,9 +109,9 @@ You can open these guides inside Unity from `UMA > View Documentation`.
 ## Project Layout
 
 - `Assets/UMA/Core` contains the shared runtime, editor tools, default generator, and default avatar prefab.
-- `Assets/UMA/SRP` contains shared render-pipeline shaders, materials, environment assets, and textures.
-- `Assets/UMA/UMA3` contains optional UMA 3 races, wearables, demonstrations, and sample content.
-- `Assets/UMA2` contains legacy races and compatible content.
+- `Assets/UMA/SRP` initially contains the URP and HDRP bootstrap installers. After the required Welcome-window selection, it contains the selected pipeline's shaders, materials, environment assets, textures, content manifest, and (for source-tree installs) both bootstrap installers.
+- `Assets/UMA/UMA3` contains editable UMA 3 races, wearables, demonstrations, and sample content installed by `UMA3Content.unitypackage`.
+- `Assets/UMA/UMA2` contains optional editable legacy races and compatible content installed by `UMA2Content.unitypackage`.
 - `Assets/UMA/Docs` contains the current documentation.
 
 Projects that do not need the supplied UMA 3 sample races or content can remove `Assets/UMA/UMA3`. Shared Core and SRP dependencies are kept outside that folder.

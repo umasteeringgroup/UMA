@@ -48,6 +48,7 @@ namespace UMA.TexturePaint
         public bool CanUndo => undo.Count > 0;
         public bool CanRedo => redo.Count > 0;
         public long CommitVersion => commitVersion;
+        internal int PendingTileCount => pending?.entries.Count ?? 0;
         public int UndoTileCount { get { int count = 0; for (int i = 0; i < undo.Count; i++) count += undo[i].entries.Count; return count; } }
 
         public void Begin(string name, EditableTextureTarget target, RectInt rect)

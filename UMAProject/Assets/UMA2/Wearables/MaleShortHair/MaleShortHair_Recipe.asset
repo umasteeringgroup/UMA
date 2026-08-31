@@ -21,7 +21,7 @@ MonoBehaviour:
   wardrobeRecipeThumbs:
   - race: HumanMale
     filename: 
-    thumb: {fileID: 21300000, guid: 7a3ea9eb047d3214cab1d44cf68cafbd, type: 3}
+    thumb: {fileID: 0}
   wardrobeSlot: Hair
   Appended: 0
   Hides: []

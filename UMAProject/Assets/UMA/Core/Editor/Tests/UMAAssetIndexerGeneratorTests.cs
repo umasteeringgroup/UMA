@@ -61,8 +61,9 @@ namespace UMA.Editors.Tests
                 AssetItem missingLegacyItem = new AssetItem(
                     typeof(SlotDataAsset),
                     "CapsuleCollider",
-                    "Assets/UMA2/Wearables/Example/AdditionalSlots/" +
-                    "CapsuleCollider/U2CapsuleColliderSlot.asset",
+                    UMAPathUtility.ResolveUma2ContentPath(
+                        "Wearables/Example/AdditionalSlots/" +
+                        "CapsuleCollider/U2CapsuleColliderSlot.asset"),
                     null);
 
                 indexer.SerializedItems.Add(packagedItem);
@@ -104,7 +105,7 @@ namespace UMA.Editors.Tests
                 Assert.IsFalse(prefabGenerator.gameObject.scene.IsValid());
 
                 existingGenerator =
-                    UnityEngine.Object.FindFirstObjectByType<UMAGenerator>(
+                    UnityEngine.Object.FindAnyObjectByType<UMAGenerator>(
                         FindObjectsInactive.Include);
                 indexer = ScriptableObject.CreateInstance<UMAAssetIndexer>();
                 indexer.generator = prefabGenerator;

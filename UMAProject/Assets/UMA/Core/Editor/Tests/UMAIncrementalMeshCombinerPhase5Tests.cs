@@ -469,6 +469,139 @@ namespace UMA.Editors.Tests
         [Category("UMA")]
         [Category("MeshCombiner")]
         [Category("IncrementalMeshCombiner")]
+        [Category("NativeResourceLifetime")]
+        public void AssemblyReloadCleanupDisposesOperationAtSkinningStage()
+        {
+            GameObject root = null;
+            SlotDataAsset asset = null;
+            UMAMaterial umaMaterial = null;
+            Material material = null;
+            IUMAMeshCombineOperation operation = null;
+            try
+            {
+                // Match the synthetic slot's root bone. A differently named skeleton root makes
+                // EnsureBoneHierarchy create an unrelated parentless bone before this lifetime
+                // test reaches the skinning allocation it is intended to exercise.
+                root = new GameObject("root");
+                asset = CreateSlotAsset(
+                    "IncrementalReloadCleanupSlot");
+                var slot = new SlotData(asset);
+                var recipe = new UMAData.UMARecipe
+                {
+                    slotDataList = new[] { slot }
+                };
+
+                var data = root.AddComponent<UMAData>();
+                data.umaRoot = root;
+                data.skeleton = new UMASkeleton(root.transform);
+                data.umaRecipe = recipe;
+                data.blendShapeSettings = new BlendShapeSettings
+                {
+                    ignoreBlendShapes = true
+                };
+                data.markNotReadable = false;
+                data.SetRenderers(
+                    Array.Empty<SkinnedMeshRenderer>());
+                data.SetRendererAssets(
+                    new UMARendererAsset[] { null });
+
+                Shader shader =
+                    Shader.Find("Hidden/InternalErrorShader");
+                Assert.NotNull(shader);
+                material = new Material(shader);
+                umaMaterial =
+                    ScriptableObject.CreateInstance<UMAMaterial>();
+                umaMaterial.materialType =
+                    UMAMaterial.MaterialType.Atlas;
+                umaMaterial.material = material;
+                var generatedMaterial =
+                    new UMAData.GeneratedMaterial
+                    {
+                        umaMaterial = umaMaterial,
+                        material = material,
+                        rendererAsset = null,
+                        cropResolution = new Vector2(512f, 512f),
+                        resolutionScale = Vector2.one
+                    };
+                generatedMaterial.materialFragments.Add(
+                    new UMAData.MaterialFragment
+                    {
+                        slotData = slot,
+                        atlasRegion =
+                            new Rect(0f, 0f, 512f, 512f),
+                        overlayList = new List<OverlayData>()
+                    });
+                data.generatedMaterials.materials.Add(
+                    generatedMaterial);
+                data.generatedMaterials.rendererAssets.Add(null);
+
+                var combiner =
+                    root.AddComponent<UMAIncrementalMeshCombiner>();
+                operation =
+                    combiner.BeginUpdateUMAMesh(true, data, 512);
+                var diagnostics =
+                    operation as IUMAMeshCombineOperationDiagnostics;
+                Assert.NotNull(diagnostics);
+
+                var observedSteps = new List<string>();
+                int attempts = 0;
+                while (diagnostics.AtomicStepName !=
+                       "Prepare Renderer: Source 0")
+                {
+                    Assert.Less(
+                        attempts++,
+                        100,
+                        "The operation did not reach the first source after allocating its skinning buffers.");
+                    observedSteps.Add(diagnostics.AtomicStepName);
+                    UMAMeshCombineStepResult result = operation.Step(
+                        UMAMeshCombineTimeSlice.Unlimited);
+                    Assert.AreNotEqual(
+                        UMAMeshCombineStatus.Failed,
+                        result.Status,
+                        result.Error?.ToString());
+                }
+
+                CollectionAssert.Contains(
+                    observedSteps,
+                    "Prepare Renderer: Allocate Skinning");
+
+                UMAIncrementalMeshCombineOperation
+                    .DisposeActiveOperations();
+
+                Assert.Throws<ObjectDisposedException>(
+                    () => operation.Step(
+                        UMAMeshCombineTimeSlice.Unlimited));
+                operation = null;
+            }
+            finally
+            {
+                operation?.Dispose();
+                UMAIncrementalMeshCombineOperation
+                    .DisposeActiveOperations();
+                DisposeSlotTriangles(asset);
+                if (material != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(material);
+                }
+                if (umaMaterial != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(umaMaterial);
+                }
+                if (asset != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(asset);
+                }
+                if (root != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(root);
+                }
+            }
+        }
+
+        [Test]
+        [Category("UMA")]
+        [Category("MeshCombiner")]
+        [Category("IncrementalMeshCombiner")]
         [Category("AtomicCommit")]
         public void CancellationRestoresMetadataAndKeepsPreviousRendererLive()
         {

@@ -67,5 +67,6 @@
     "explorer.fileNesting.patterns": {
         "*.sln": "*.csproj"
     },
-    "dotnet.defaultSolution": "UMAProject.slnx"
+    "dotnet.defaultSolution": "UMAProject.slnx",
+    "git.ignoreLimitWarning": true
 }

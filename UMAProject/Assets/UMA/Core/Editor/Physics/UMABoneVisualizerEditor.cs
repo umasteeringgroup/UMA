@@ -32,7 +32,8 @@ namespace UMA
                 return;
             }
 
-            UMABoneVisualizer[] visualizers = UnityEngine.Object.FindObjectsByType<UMABoneVisualizer>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+            UMABoneVisualizer[] visualizers = UMAObjectUtility.FindObjectsByType<UMABoneVisualizer>(
+                FindObjectsInactive.Exclude);
             if (visualizers == null || visualizers.Length == 0)
             {
                 return;

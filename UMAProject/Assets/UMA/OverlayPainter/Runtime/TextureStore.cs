@@ -129,6 +129,7 @@ namespace UMA.TexturePaint
         public string physicalProperty;
         public int packedComponent = -1;
         public bool packedInverted;
+        public TexturePaintChannelAdjustments adjustments = new TexturePaintChannelAdjustments();
 
         public RenderTexture Texture => editable?.Front;
         public RenderTexture PreviewTexture => composite != null ? composite : Texture;
@@ -267,6 +268,9 @@ namespace UMA.TexturePaint
         public bool pluginStale = true;
         public string pluginLastError;
         public string proceduralGroupKey;
+        public string sourceMaterialPresetId;
+        public int sourceMaterialPresetRevision;
+        public string sourceMaterialPresetLayerId;
         public readonly Dictionary<TexturePaintChannel, EditableTextureTarget> channels = new Dictionary<TexturePaintChannel, EditableTextureTarget>();
         public readonly Dictionary<TexturePaintChannel, TexturePaintLayerChannelSettings> channelSettings =
             new Dictionary<TexturePaintChannel, TexturePaintLayerChannelSettings>();
@@ -396,6 +400,7 @@ namespace UMA.TexturePaint
             properties.SetInt("_TriplanarBlend", (int)settings.triplanarBlend);
             properties.SetFloat("_BlendOffset", settings.blendOffset);
             properties.SetFloat("_BlendSharpness", settings.blendSharpness);
+            properties.SetInt("_UseSourceAlpha", settings.ignoreSourceAlpha ? 0 : 1);
 
             Matrix4x4 localToWorld = set.surface.gameObject != null
                 ? set.surface.gameObject.transform.localToWorldMatrix
@@ -790,7 +795,8 @@ namespace UMA.TexturePaint
                 projection = settings.projection,
                 triplanarBlend = settings.triplanarBlend,
                 blendOffset = settings.blendOffset,
-                blendSharpness = settings.blendSharpness
+                blendSharpness = settings.blendSharpness,
+                ignoreSourceAlpha = settings.ignoreSourceAlpha
             };
         }
 
@@ -812,7 +818,8 @@ namespace UMA.TexturePaint
                 projection = source.projection,
                 triplanarBlend = source.triplanarBlend,
                 blendOffset = source.blendOffset,
-                blendSharpness = source.blendSharpness
+                blendSharpness = source.blendSharpness,
+                ignoreSourceAlpha = source.ignoreSourceAlpha
             };
         }
 
@@ -831,7 +838,70 @@ namespace UMA.TexturePaint
                     return TexturePaintSpriteSource.ResolveTexture(texture, channel,
                         settings.normalConvention, settings.invert);
             }
-            return null;
+            return TryResolveOverlaySource(settings.sourceOverlay, channel, settings.normalConvention,
+                settings.invert, out Texture directSource, out _) ? directSource : null;
+        }
+
+        public bool TryResolveOverlaySource(OverlayDataAsset overlay, TexturePaintChannel channel,
+            TexturePaintNormalConvention normalConvention, bool invert, out Texture source,
+            out int overlayChannelIndex)
+        {
+            source = null;
+            overlayChannelIndex = -1;
+            if (overlay?.textureList == null || !channels.TryGetValue(channel,
+                    out TextureChannelTarget target)) return false;
+
+            int component = target.packedComponent;
+            bool componentInverted = target.packedInverted;
+            int index = target.umaChannelIndex;
+#if UNITY_EDITOR
+            if (overlay.material?.channels != null)
+            {
+                bool exactMaterialLayout = ReferenceEquals(overlay.material, umaMaterial);
+                if (!exactMaterialLayout || index < 0 || index >= overlay.material.channels.Length)
+                {
+                    index = -1;
+                    component = -1;
+                    componentInverted = false;
+                    Material material = overlay.material.material;
+                    for (int sourceIndex = 0; sourceIndex < overlay.material.channels.Length; sourceIndex++)
+                    {
+                        UMAMaterial.MaterialChannel materialChannel = overlay.material.channels[sourceIndex];
+                        UMAMaterial.TextureChannelLayout layout =
+                            UMAMaterial.GetTextureChannelLayout(materialChannel, material);
+                        for (int sourceComponent = 0; sourceComponent < 4; sourceComponent++)
+                        {
+                            if (!TexturePaintMaterialCapabilityService.TryResolveUsage(
+                                    layout.GetComponent(sourceComponent), out TexturePaintChannel semantic,
+                                    out bool usageInverted) || semantic != channel) continue;
+                            index = sourceIndex;
+                            component = sourceComponent;
+                            componentInverted = usageInverted;
+                            break;
+                        }
+                        if (index >= 0) break;
+                        if (TextureStore.ResolveChannel(materialChannel, material) == channel)
+                        {
+                            index = sourceIndex;
+                            component = -1;
+                            componentInverted = false;
+                            break;
+                        }
+                    }
+                }
+            }
+#endif
+            if ((uint)index >= (uint)overlay.textureList.Length || overlay.textureList[index] == null)
+                return false;
+
+            Texture raw = overlay.textureList[index];
+            if (component >= 0 && channel != TexturePaintChannel.Normal)
+                source = TexturePaintSpriteSource.ResolveTextureComponent(raw, channel,
+                    normalConvention, component, componentInverted ^ invert);
+            else
+                source = TexturePaintSpriteSource.ResolveTexture(raw, channel, normalConvention, invert);
+            overlayChannelIndex = index;
+            return source != null;
         }
 
         private bool CanGenerateFill(TexturePaintChannel channel, TexturePaintFillSettings settings)
@@ -1096,7 +1166,10 @@ namespace UMA.TexturePaint
                 pluginLastError = source.pluginLastError,
                 // A duplicate is independent. Sharing the procedural ownership key lets deleting
                 // either copy delete the other copy's generated peers.
-                proceduralGroupKey = preserveIdentity ? source.proceduralGroupKey : null
+                proceduralGroupKey = preserveIdentity ? source.proceduralGroupKey : null,
+                sourceMaterialPresetId = source.sourceMaterialPresetId,
+                sourceMaterialPresetRevision = source.sourceMaterialPresetRevision,
+                sourceMaterialPresetLayerId = source.sourceMaterialPresetLayerId
             };
             if (!preserveIdentity && copy.kind == TexturePaintLayerKind.Plugin)
             {
@@ -1551,6 +1624,9 @@ namespace UMA.TexturePaint
         {
             NormalizeLayerHierarchy();
             compositor?.Compose(this, channel, rect);
+            TextureChannelTarget target = GetChannel(channel);
+            if (target?.adjustments?.IsNeutral == false)
+                compositor?.ApplyChannelAdjustments(target, rect);
             if (channel == TexturePaintChannel.Normal || channel == TexturePaintChannel.NormalControl)
                 normalInputRevision++;
         }
@@ -1602,7 +1678,12 @@ namespace UMA.TexturePaint
             activeLayerIndex = -1;
             baseStrokes.Clear();
             foreach (TextureChannelTarget channel in channels.Values)
-                channel?.ResetToSource(channel.sourceTexture);
+                if (channel != null)
+                {
+                    channel.adjustments ??= new TexturePaintChannelAdjustments();
+                    channel.adjustments.Reset();
+                    channel.ResetToSource(channel.sourceTexture);
+                }
             BindPreviewTextures();
         }
 
@@ -1891,6 +1972,11 @@ namespace UMA.TexturePaint
             if (sourceOrdinal >= 0 && sourceOrdinal < destinationMember.sourceOverlays.Count)
                 return destinationMember.sourceOverlays[sourceOrdinal]?.asset;
 
+            // An OverlayDataAsset chosen explicitly in Overlay Painter is not part of the
+            // reconstructed source stack. Keep that external asset across logical members; each
+            // destination TextureSet validates and resolves its compatible material channels.
+            if (sourceOrdinal < 0) return sourceAsset;
+
             string sourceName = sourceAsset.overlayName;
             if (!string.IsNullOrEmpty(sourceName))
                 for (int i = 0; i < destinationMember.sourceOverlays.Count; i++)
@@ -1919,6 +2005,59 @@ namespace UMA.TexturePaint
                         if (fillSettings.sourceOverlay == null) return null;
                     }
                     layer = set.AddFillLayer(template.name, template.fillChannel, fillSettings);
+                    if (layer != null)
+                    {
+                        foreach (KeyValuePair<TexturePaintChannel, EditableTextureTarget> pair in
+                                 template.channels)
+                        {
+                            if (pair.Key == template.fillChannel || set.GetChannel(pair.Key) == null)
+                                continue;
+                            TexturePaintChannelSourceSettings sourceSettings =
+                                template.GetChannelSettings(pair.Key, false)?.sourceSettings;
+                            if (sourceSettings == null) continue;
+                            TexturePaintFillSettings channelFill = new TexturePaintFillSettings
+                            {
+                                source = sourceSettings.source,
+                                sourceTexture = sourceSettings.sourceTexture,
+                                sourceSprite = sourceSettings.sourceSprite,
+                                sourceOverlay = sourceSettings.sourceOverlay,
+                                color = sourceSettings.color,
+                                normalConvention = sourceSettings.normalConvention,
+                                invert = sourceSettings.invert,
+                                tiling = sourceSettings.tiling,
+                                offset = sourceSettings.offset,
+                                rotation = sourceSettings.rotation,
+                                projection = sourceSettings.projection,
+                                triplanarBlend = sourceSettings.triplanarBlend,
+                                blendOffset = sourceSettings.blendOffset,
+                                blendSharpness = sourceSettings.blendSharpness,
+                                ignoreSourceAlpha = sourceSettings.ignoreSourceAlpha
+                            };
+                            if (channelFill.source == TexturePaintBrushSource.Overlay)
+                            {
+                                channelFill.sourceOverlay = ResolveMemberOverlay(target, templateSet,
+                                    channelFill.sourceOverlay, set);
+                                if (channelFill.sourceOverlay == null)
+                                {
+                                    set.layers.Remove(layer);
+                                    layer.Dispose();
+                                    set.activeLayerIndex = Mathf.Clamp(set.activeLayerIndex, -1,
+                                        set.layers.Count - 1);
+                                    set.BindPreviewTextures();
+                                    return null;
+                                }
+                            }
+                            if (!set.UpdateFillLayer(layer, pair.Key, channelFill))
+                            {
+                                set.layers.Remove(layer);
+                                layer.Dispose();
+                                set.activeLayerIndex = Mathf.Clamp(set.activeLayerIndex, -1,
+                                    set.layers.Count - 1);
+                                set.BindPreviewTextures();
+                                return null;
+                            }
+                        }
+                    }
                     break;
                 case TexturePaintLayerKind.Group:
                     layer = set.AddGroup(template.name);
@@ -1957,8 +2096,25 @@ namespace UMA.TexturePaint
             layer.pluginStale = template.pluginStale;
             layer.pluginLastError = template.pluginLastError;
             layer.proceduralGroupKey = template.proceduralGroupKey;
+            layer.sourceMaterialPresetId = template.sourceMaterialPresetId;
+            layer.sourceMaterialPresetRevision = template.sourceMaterialPresetRevision;
+            layer.sourceMaterialPresetLayerId = template.sourceMaterialPresetLayerId;
             layer.NormalizeKindPayload();
             layer.parentId = ResolvePhysicalParentId(templateSet, set, template.parentId);
+            if (template.kind != TexturePaintLayerKind.Fill)
+            {
+                // Paint and Path layers are born empty, unlike Fill layers which allocate their
+                // authored targets while generating. Mirror the template's channel topology now
+                // so per-channel sources survive logical creation across every target member.
+                foreach (KeyValuePair<TexturePaintChannel, EditableTextureTarget> pair in template.channels)
+                {
+                    TextureChannelTarget baseChannel = set.GetChannel(pair.Key);
+                    if (baseChannel?.Texture == null || layer.channels.ContainsKey(pair.Key)) continue;
+                    layer.channels[pair.Key] = new EditableTextureTarget(layer.name + " " + pair.Key,
+                        baseChannel.Texture.width, baseChannel.Texture.height, baseChannel.format,
+                        null, Color.clear);
+                }
+            }
             if (template.IsSplineLayer)
             {
                 layer.spline = template.spline != null
@@ -1967,7 +2123,14 @@ namespace UMA.TexturePaint
             }
             layer.channelSettings.Clear();
             foreach (KeyValuePair<TexturePaintChannel, TexturePaintLayerChannelSettings> pair in template.channelSettings)
-                if (set.GetChannel(pair.Key) != null) layer.channelSettings[pair.Key] = pair.Value.Clone();
+                if (set.GetChannel(pair.Key) != null && layer.channels.ContainsKey(pair.Key))
+                {
+                    TexturePaintLayerChannelSettings channelSettings = pair.Value.Clone();
+                    if (channelSettings.sourceSettings?.source == TexturePaintBrushSource.Overlay)
+                        channelSettings.sourceSettings.sourceOverlay = ResolveMemberOverlay(target,
+                            templateSet, channelSettings.sourceSettings.sourceOverlay, set);
+                    layer.channelSettings[pair.Key] = channelSettings;
+                }
             if (template.layerMask?.target?.Front != null)
             {
                 TexturePaintLayerMask mask = set.AddLayerMask(layer, template.layerMask.baseValue);
@@ -1988,6 +2151,15 @@ namespace UMA.TexturePaint
                     mask.target.Reset(template.layerMask.target.Front,
                         TextureSet.MaskColor(template.layerMask.baseValue));
                 }
+            }
+            if (layer.kind == TexturePaintLayerKind.Fill && !set.RegenerateFillLayer(layer))
+            {
+                set.layers.Remove(layer);
+                layer.Dispose();
+                set.activeLayerIndex = Mathf.Clamp(set.activeLayerIndex, -1,
+                    set.layers.Count - 1);
+                set.BindPreviewTextures();
+                return null;
             }
             set.BindPreviewTextures();
             return layer;
@@ -2510,7 +2682,7 @@ namespace UMA.TexturePaint
 
         private void EnsureChannel(TextureSet set, TexturePaintChannel channel, string property)
         {
-            if (set.channels.ContainsKey(channel)) return;
+            if (set.channels.ContainsKey(channel) || string.IsNullOrEmpty(property)) return;
             AddChannel(set, channel, property, property, -1, GetMaterialTexture(set.previewMaterial, property), RenderTextureFormat.ARGB32);
         }
 
@@ -2657,11 +2829,11 @@ namespace UMA.TexturePaint
 #endif
 
         private static Texture GetMaterialTexture(Material material, string property) => material != null && !string.IsNullOrEmpty(property) && material.HasProperty(property) ? material.GetTexture(property) : null;
-        private static string FindProperty(Material material, params string[] candidates)
+        internal static string FindProperty(Material material, params string[] candidates)
         {
-            if (material == null) return candidates.Length > 0 ? candidates[0] : string.Empty;
+            if (material == null) return string.Empty;
             for (int i = 0; i < candidates.Length; i++) if (material.HasProperty(candidates[i])) return candidates[i];
-            return candidates.Length > 0 ? candidates[0] : string.Empty;
+            return string.Empty;
         }
     }
 }

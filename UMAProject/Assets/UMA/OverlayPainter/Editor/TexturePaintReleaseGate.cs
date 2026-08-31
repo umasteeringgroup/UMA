@@ -162,13 +162,14 @@ namespace UMA.TexturePaint.Editor
 
         private static void CheckAssets(TexturePaintReleaseGateReport report)
         {
-            CheckCompute(report, "StrokeRasterize.compute", "CSMain", "CSInPlace", "CSBatchInPlace");
+            CheckCompute(report, "StrokeRasterize.compute", "CSMain", "CSStamp", "CSBatch");
             CheckCompute(report, "Blur.compute", "CSBlur");
             CheckCompute(report, "NormalTouchup.compute", "CSMain");
             CheckCompute(report, "LayerComposite.compute", "CSCopyBase", "CSCompositeLayer",
                 "CSPrepareEffectSeeds", "CSJumpFloodEffectSeeds", "CSResolveEffectDistance",
                 "CSCompositeLayerEffect");
-            CheckCompute(report, "ChannelPack.compute", "CSExtract", "CSPackChannels");
+            CheckCompute(report, "ChannelPack.compute", "CSExtract", "CSPackChannels",
+                "CSApplyPluginTile");
             string[] documents =
             {
                 "RELEASE_READINESS_PLAN.md", "PLUGIN_API_V2.md", "MILESTONE_8_WORKSPACE.md",

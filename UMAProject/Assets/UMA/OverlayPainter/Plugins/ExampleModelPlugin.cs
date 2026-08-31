@@ -26,6 +26,11 @@ namespace UMA.TexturePaint.Examples
 
         public Task ExecuteAsync(TexturePaintCommandContextV2 context)
         {
+            return Task.Run(() => Execute(context), context.cancellationToken);
+        }
+
+        private static void Execute(TexturePaintCommandContextV2 context)
+        {
             float strength = context.parameters.Float("strength", 0.25f);
             float frequency = context.parameters.Float("frequency", 80f);
             for (int surfaceIndex = 0; surfaceIndex < context.source.surfaceIds.Count; surfaceIndex++)
@@ -34,26 +39,24 @@ namespace UMA.TexturePaint.Examples
                 string surfaceId = context.source.surfaceIds[surfaceIndex];
                 TexturePaintReadOnlyImage source = context.source.Get(surfaceId, TexturePaintChannel.AmbientOcclusion);
                 if (source == null) continue;
-                Color[] pixels = new Color[source.width * source.height];
-                for (int y = 0; y < source.height; y++)
+                Color32[] pixels = new Color32[source.width * source.height];
+                Parallel.For(0, source.height, new ParallelOptions
+                    { CancellationToken = context.cancellationToken }, y =>
                 {
-                    context.cancellationToken.ThrowIfCancellationRequested();
                     for (int x = 0; x < source.width; x++)
                     {
                         float noise = Mathf.PerlinNoise((x + 0.5f) / source.width * frequency,
                             (y + 0.5f) / source.height * frequency);
                         float value = Mathf.Lerp(1f, noise, strength);
-                        pixels[y * source.width + x] = new Color(value, value, value, 1f);
+                        byte compact = (byte)Mathf.RoundToInt(Mathf.Clamp01(value) * 255f);
+                        pixels[y * source.width + x] = new Color32(compact, compact, compact, 255);
                     }
-                    if ((y & 31) == 0) context.progress?.Report((surfaceIndex + y / (float)source.height) /
-                        Mathf.Max(1, context.source.surfaceIds.Count));
-                }
-                context.WriteTile(surfaceId, TexturePaintChannel.AmbientOcclusion,
+                });
+                context.WriteTileCompactOwned(surfaceId, TexturePaintChannel.AmbientOcclusion,
                     new RectInt(0, 0, source.width, source.height), pixels,
                     TexturePaintPluginColorSpace.Data, TexturePaintPluginBlend.Multiply, 1f);
             }
             context.progress?.Report(1f);
-            return Task.CompletedTask;
         }
     }
 }

@@ -51,6 +51,7 @@ namespace UMA
 
         public List<TypeFolders> typeFolders = new List<TypeFolders>();
 
+        [NonSerialized]
         public Dictionary<string, List<string>> TypeFolderSearch = new Dictionary<string, List<string>>();
 
         private void CreateTypeFolderMapping()
@@ -787,6 +788,7 @@ namespace UMA
         public static string SortOrder = "Name";
         public static string[] SortOrders = { "Name", "AssetName" };
         public static Dictionary<string, System.Type> TypeFromString = new Dictionary<string, System.Type>();
+        [NonSerialized]
         public Dictionary<string, AssetItem> GuidTypes = new Dictionary<string, AssetItem>();
         #endregion
         #region Fields

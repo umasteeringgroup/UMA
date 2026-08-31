@@ -12,5 +12,60 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a21b01507d5987b4689b5f16296f8eb8, type: 3}
   m_Name: Races
   m_EditorClassIdentifier: 
-  Favorites: []
+  Favorites:
+  - path: Assets/UMA/UMA3/Races/Anime Elf Female 3.0.asset
+    GUID: 3c51ab51cd6d2f94f9dff1c865f2c4cb
+    name: Anime Elf Female 3.0
+    asset: {fileID: 11400000, guid: 3c51ab51cd6d2f94f9dff1c865f2c4cb, type: 2}
+    favoriteList: {fileID: 11400000}
+  - path: Assets/UMA/UMA3/Races/ElfFemale30.asset
+    GUID: 383fc8c06b7691640b108446a5e2ce8e
+    name: ElfFemale30
+    asset: {fileID: 11400000, guid: 383fc8c06b7691640b108446a5e2ce8e, type: 2}
+    favoriteList: {fileID: 11400000}
+  - path: Assets/UMA/UMA3/Races/ElfMale30.asset
+    GUID: c7c40abd26a6c8041a7a9560f8d45ef4
+    name: ElfMale30
+    asset: {fileID: 11400000, guid: c7c40abd26a6c8041a7a9560f8d45ef4, type: 2}
+    favoriteList: {fileID: 11400000}
+  - path: Assets/UMA/UMA3/Races/HalfOrcFemale30.asset
+    GUID: fc5e81124eeee1740b12d28483b4ee21
+    name: HalfOrcFemale30
+    asset: {fileID: 11400000, guid: fc5e81124eeee1740b12d28483b4ee21, type: 2}
+    favoriteList: {fileID: 11400000}
+  - path: Assets/UMA/UMA3/Races/HalfOrcMale30.asset
+    GUID: 4cbb35af033af914494bfa5b8035f3a2
+    name: HalfOrcMale30
+    asset: {fileID: 11400000, guid: 4cbb35af033af914494bfa5b8035f3a2, type: 2}
+    favoriteList: {fileID: 11400000}
+  - path: Assets/UMA/UMA3/Races/HumanFemale30.asset
+    GUID: 51d130ee268a6114795dfc4590efb404
+    name: HumanFemale30
+    asset: {fileID: 11400000, guid: 51d130ee268a6114795dfc4590efb404, type: 2}
+    favoriteList: {fileID: 11400000}
+  - path: Assets/UMA/UMA3/Races/HumanMale30.asset
+    GUID: df173d6a708cd49499632fea0b0056d5
+    name: HumanMale30
+    asset: {fileID: 11400000, guid: df173d6a708cd49499632fea0b0056d5, type: 2}
+    favoriteList: {fileID: 11400000}
+  - path: Assets/UMA/UMA3/Races/SpriteFemale30.asset
+    GUID: 21be16e9c71751f4f8f6846b42f1b6de
+    name: SpriteFemale30
+    asset: {fileID: 11400000, guid: 21be16e9c71751f4f8f6846b42f1b6de, type: 2}
+    favoriteList: {fileID: 11400000}
+  - path: Assets/UMA/UMA3/Races/SpriteMale30.asset
+    GUID: 9224507b34c9b2b4b9a61db06ba50118
+    name: SpriteMale30
+    asset: {fileID: 11400000, guid: 9224507b34c9b2b4b9a61db06ba50118, type: 2}
+    favoriteList: {fileID: 11400000}
+  - path: Assets/UMA/UMA3/Races/SylvanFemale30.asset
+    GUID: 01e714671c48be64780021f2f77df378
+    name: SylvanFemale30
+    asset: {fileID: 11400000, guid: 01e714671c48be64780021f2f77df378, type: 2}
+    favoriteList: {fileID: 11400000}
+  - path: Assets/UMA/UMA3/Races/SylvanMale30.asset
+    GUID: d7e84acd51652d34e9308626d9a51d6e
+    name: SylvanMale30
+    asset: {fileID: 11400000, guid: d7e84acd51652d34e9308626d9a51d6e, type: 2}
+    favoriteList: {fileID: 11400000}
   exPanded: 1

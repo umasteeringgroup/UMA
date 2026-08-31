@@ -23,6 +23,7 @@ namespace UMA
         public int asciiStringSize;
         public int binarySize;
 
+        [System.NonSerialized]
         public Stack<string> avatarDefinitionQueue = new Stack<string>();
         public string lastAvatarDefinition;
 

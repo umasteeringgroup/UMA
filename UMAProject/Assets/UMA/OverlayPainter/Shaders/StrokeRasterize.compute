@@ -1,6 +1,6 @@
 #pragma kernel CSMain
-#pragma kernel CSInPlace
-#pragma kernel CSBatchInPlace
+#pragma kernel CSStamp
+#pragma kernel CSBatch
 #pragma kernel CSFillMasked
 
 Texture2D<float4> _Source;
@@ -54,6 +54,11 @@ struct BatchStamp
     float2 footprintScale;
     float2 sourceUVScale;
     float2 sourceUVOffset;
+    float2 triangleUV0;
+    float2 triangleUV1;
+    float2 triangleUV2;
+    int triangleBoundaryMask;
+    int restrictToTriangle;
 };
 StructuredBuffer<BatchStamp> _BatchStamps;
 int _BatchCount;
@@ -231,7 +236,7 @@ void CSMain(uint3 dispatchID : SV_DispatchThreadID)
 }
 
 [numthreads(16, 16, 1)]
-void CSInPlace(uint3 dispatchID : SV_DispatchThreadID)
+void CSStamp(uint3 dispatchID : SV_DispatchThreadID)
 {
     if (any(dispatchID.xy >= (uint2)_DispatchSize)) return;
     int2 pixel = int2(dispatchID.xy) + _TileOffset;
@@ -240,7 +245,7 @@ void CSInPlace(uint3 dispatchID : SV_DispatchThreadID)
     float coverageLimit = BrushCoverage(uv);
     float weight = saturate(coverageLimit * _Flow);
     if (weight <= 0.00001) return;
-    float4 current = _Destination[pixel];
+    float4 current = _Source.Load(int3(pixel, 0));
     float4 desired = _PaintColor;
     if (_Operation == 0 && _PaintSourceKind == 0)
         desired = _PaintSource.SampleLevel(sampler_linear_clamp, BrushLocalUV(uv), 0);
@@ -286,8 +291,24 @@ void CSInPlace(uint3 dispatchID : SV_DispatchThreadID)
             sourceWeight + current.a * (1.0 - sourceWeight)));
 }
 
+bool BatchInsideTriangle(float2 uv, BatchStamp stamp)
+{
+    if (stamp.restrictToTriangle == 0) return true;
+    float area = Cross2D(stamp.triangleUV1 - stamp.triangleUV0,
+        stamp.triangleUV2 - stamp.triangleUV0);
+    if (abs(area) < 1e-9) return false;
+    float orientation = area >= 0.0 ? 1.0 : -1.0;
+    return InsideOwnedEdge(stamp.triangleUV0, stamp.triangleUV1, uv,
+            orientation, (stamp.triangleBoundaryMask & 1) != 0) &&
+        InsideOwnedEdge(stamp.triangleUV1, stamp.triangleUV2, uv,
+            orientation, (stamp.triangleBoundaryMask & 2) != 0) &&
+        InsideOwnedEdge(stamp.triangleUV2, stamp.triangleUV0, uv,
+            orientation, (stamp.triangleBoundaryMask & 4) != 0);
+}
+
 float BatchCoverage(float2 uv, BatchStamp stamp)
 {
+    if (!BatchInsideTriangle(uv, stamp)) return 0.0;
     float2 deltaUV = uv - stamp.center;
     float2 delta = float2(dot(deltaUV, stamp.uvToBrush.xy), dot(deltaUV, stamp.uvToBrush.zw));
     float s, c; sincos(-stamp.rotation, s, c);
@@ -303,13 +324,16 @@ float BatchCoverage(float2 uv, BatchStamp stamp)
 }
 
 [numthreads(16, 16, 1)]
-void CSBatchInPlace(uint3 dispatchID : SV_DispatchThreadID)
+void CSBatch(uint3 dispatchID : SV_DispatchThreadID)
 {
     if (any(dispatchID.xy >= (uint2)_DispatchSize)) return;
     int2 pixel = int2(dispatchID.xy) + _TileOffset;
     if (any(pixel < 0) || any(pixel >= _TextureSize)) return;
     float2 uv = (float2(pixel) + 0.5) / float2(_TextureSize);
-    float4 current = _Destination[pixel];
+    // GLES3/HLSLcc cannot portably read and write the same image resource. Back starts
+    // synchronized with Front, so accumulate this pixel's ordered stamps from the sampled source
+    // and write the completed result to the separate destination UAV.
+    float4 current = _Source.Load(int3(pixel, 0));
     int2 coveragePixel = pixel - _CoverageOffset;
     float usedCoverage = _LimitStrokeCoverage != 0 ? saturate(_StrokeCoverage[coveragePixel]) : 0.0;
     float4 strokeBase = _LimitStrokeCoverage != 0 ? _StrokeBase.Load(int3(coveragePixel, 0)) : current;
@@ -380,7 +404,7 @@ void CSFillMasked(uint3 dispatchID : SV_DispatchThreadID)
     if (any(pixel >= _TextureSize)) return;
     float coverage = saturate(_GeometryMask.Load(int3(pixel, 0)).r * _Strength);
     if (coverage <= 0.00001) return;
-    float4 current = _Destination[pixel];
+    float4 current = _Source.Load(int3(pixel, 0));
     float2 uv = (float2(pixel) + 0.5) / float2(_TextureSize);
     float4 desired = _PaintColor;
     if (_PaintSourceKind != 2)

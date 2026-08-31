@@ -126,7 +126,7 @@ namespace UMA.TexturePaint.Examples
             var output = new OutputBuffers(width * rows, settings);
             float rotation = settings.rotation * Mathf.Deg2Rad;
             float stripeRotation = settings.stripeRotation * Mathf.Deg2Rad;
-            for (int localY = 0; localY < rows; localY++)
+            Parallel.For(0, rows, localY =>
             {
                 float v = (y0 + localY + 0.5f) / height;
                 for (int x = 0; x < width; x++)
@@ -166,7 +166,7 @@ namespace UMA.TexturePaint.Examples
                     int index = localY * width + x;
                     output.Set(index, albedo, roughness, normalControl);
                 }
-            }
+            });
             return output;
         }
 
@@ -462,7 +462,7 @@ namespace UMA.TexturePaint.Examples
         {
             Color32[] pixels = output.Get(target.channel);
             if (pixels == null) return;
-            context.WriteTileCompact(surfaceId, target.channel,
+            context.WriteTileCompactOwned(surfaceId, target.channel,
                 new RectInt(0, y0, target.width, rows), pixels,
                 target.channel == TexturePaintChannel.Albedo
                     ? TexturePaintPluginColorSpace.Linear : TexturePaintPluginColorSpace.Data,

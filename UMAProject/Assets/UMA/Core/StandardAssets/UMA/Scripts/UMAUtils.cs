@@ -554,4 +554,21 @@ namespace UMA
 		}
 #endif
 	}
+
+	/// <summary>
+	/// Object lookup APIs shared by supported Unity 6 releases.
+	/// Unity 6.5 deprecates the sort-mode overload, while Unity 6.3 does not
+	/// yet provide its replacement overload. Keep the compatibility boundary
+	/// here until UMA's minimum Unity version includes the replacement.
+	/// </summary>
+	public static class UMAObjectUtility
+	{
+		public static T[] FindObjectsByType<T>(FindObjectsInactive inactive)
+			where T : Object
+		{
+#pragma warning disable CS0618
+			return Object.FindObjectsByType<T>(inactive, FindObjectsSortMode.None);
+#pragma warning restore CS0618
+		}
+	}
 }

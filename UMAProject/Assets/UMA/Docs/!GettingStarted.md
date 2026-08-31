@@ -169,7 +169,7 @@ The older `GetCurrentRecipe()` and old recipe-string loading APIs remain only fo
 
 Current UMA 3 examples are under:
 
-`<UMA install>/UMA3/Scenes`
+`Assets/UMA/SRP/Samples/Scenes` (after installing UMA URP or HDRP support)
 
 Good starting points include:
 

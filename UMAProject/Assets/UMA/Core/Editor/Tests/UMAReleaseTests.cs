@@ -18,8 +18,8 @@ namespace UMA.Editors.Tests
     public sealed class UMAReleaseTests
     {
         private static string UmaFolder => UMAPathUtility.InstallAssetRoot;
-        private static string Uma3Folder => UMAPathUtility.ResolveInstallAssetPath("UMA3");
-        private const string Uma2Folder = "Assets/UMA2";
+        private const string Uma3Folder = UMAPathUtility.Uma3ContentRoot;
+        private const string Uma2Folder = UMAPathUtility.Uma2ContentRoot;
         private static readonly Regex GuidReference = new Regex(
             @"\bguid:\s*([0-9a-fA-F]{32})\b", RegexOptions.Compiled);
 
@@ -42,13 +42,22 @@ namespace UMA.Editors.Tests
 
             try
             {
-                uma3 = ValidateScope(new ValidationScope(
-                    "UMA3", Uma3Folder, new[] { UmaFolder }), issues, issueKeys,
-                    structuredReport, referenceKeys);
+                if (AssetDatabase.IsValidFolder(Uma3Folder))
+                {
+                    uma3 = ValidateScope(new ValidationScope(
+                        "UMA3", Uma3Folder, new[] { Uma3Folder, UmaFolder }),
+                        issues, issueKeys, structuredReport, referenceKeys);
+                }
+                else
+                {
+                    TestContext.WriteLine(
+                        "UMA3 content is not installed; validating the Core-only layout.");
+                }
                 if (AssetDatabase.IsValidFolder(Uma2Folder))
                 {
                     uma2 = ValidateScope(new ValidationScope(
-                        "UMA2", Uma2Folder, new[] { UmaFolder, Uma2Folder }),
+                        "UMA2", Uma2Folder,
+                        new[] { Uma2Folder, Uma3Folder, UmaFolder }),
                         issues, issueKeys, structuredReport, referenceKeys);
                 }
                 else
@@ -77,12 +86,256 @@ namespace UMA.Editors.Tests
             report.AppendLine($"Asset Validation found {issues.Count} package-boundary " +
                 $"issue{(issues.Count == 1 ? string.Empty : "s")}.");
             report.AppendLine($"UMA3 assets may reference {UmaFolder} only. " +
-                $"UMA2 assets may reference {UmaFolder} or Assets/UMA2.");
+                $"UMA2 assets may reference {UmaFolder}, {Uma3Folder}, or {Uma2Folder}.");
             report.AppendLine("Package Manager and Unity built-in resources are external prerequisites " +
                 "and are not treated as exported project assets.");
             for (int i = 0; i < issues.Count; i++)
                 report.AppendLine($"{i + 1}. {issues[i]}");
             Assert.Fail(report.ToString());
+        }
+
+        [TestCase(TestName = "Validate Recipes")]
+        [Category("Asset Validation")]
+        [Timeout(300000)]
+        public void ValidateRecipes()
+        {
+            UMAAssetIndexer indexer = UMAAssetIndexer.Instance;
+            Assert.That(indexer, Is.Not.Null,
+                "UMAAssetIndexer.Instance is unavailable; indexed recipes cannot be validated.");
+
+            List<IndexedRecipeEntry> recipes = GetIndexedRecipeEntries(indexer);
+            var failures = new List<RecipeIndexFailure>();
+            for (int i = 0; i < recipes.Count; i++)
+            {
+                IndexedRecipeEntry entry = recipes[i];
+                var failure = new RecipeIndexFailure(entry);
+                try
+                {
+                    UMAPackedRecipeBase recipe = entry.item?.GetItem<UMAPackedRecipeBase>();
+                    if (recipe == null)
+                    {
+                        failure.loadError = "The indexed recipe asset could not be loaded.";
+                    }
+                    else
+                    {
+                        failure.recipeName = recipe.name;
+                        UMAPackedRecipeBase.UMAPackRecipe packed = recipe.PackedLoad();
+                        if (packed == null)
+                            failure.loadError = "PackedLoad returned null.";
+                        else
+                            ValidatePackedRecipe(indexer, packed, failure);
+                    }
+                }
+                catch (Exception exception)
+                {
+                    failure.loadError = exception.GetType().Name + ": " + exception.Message;
+                }
+
+                if (failure.HasIssues) failures.Add(failure);
+            }
+
+            TestContext.WriteLine("Validate Recipes inspected " + recipes.Count +
+                " indexed recipe" + (recipes.Count == 1 ? "." : "s."));
+            if (failures.Count == 0) return;
+
+            var report = new StringBuilder();
+            report.AppendLine("Validate Recipes found " + failures.Count +
+                " invalid indexed recipe" + (failures.Count == 1 ? "." : "s."));
+            report.AppendLine();
+            for (int i = 0; i < failures.Count; i++)
+            {
+                RecipeIndexFailure failure = failures[i];
+                report.AppendLine((i + 1) + ". Recipe: " + failure.recipeName);
+                report.AppendLine("   Type: " + failure.recipeType);
+                report.AppendLine("   Path: " + failure.recipePath);
+                if (!string.IsNullOrEmpty(failure.loadError))
+                    report.AppendLine("   Validation error: " + failure.loadError);
+                AppendMissingItems(report, "slots", failure.missingSlots);
+                AppendMissingItems(report, "overlays", failure.missingOverlays);
+                report.AppendLine();
+            }
+
+            string output = report.ToString();
+            TestContext.WriteLine(output);
+            Assert.Fail(output);
+        }
+
+        private static List<IndexedRecipeEntry> GetIndexedRecipeEntries(
+            UMAAssetIndexer indexer)
+        {
+            var entries = new List<IndexedRecipeEntry>();
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            Type[] indexedTypes = indexer.GetTypes();
+            for (int typeIndex = 0; typeIndex < indexedTypes.Length; typeIndex++)
+            {
+                Type indexedType = indexedTypes[typeIndex];
+                if (indexedType == null ||
+                    !typeof(UMAPackedRecipeBase).IsAssignableFrom(indexedType)) continue;
+
+                List<AssetItem> items = indexer.GetAssetItems(indexedType);
+                for (int itemIndex = 0; itemIndex < items.Count; itemIndex++)
+                {
+                    AssetItem item = items[itemIndex];
+                    string key = RecipeEntryKey(indexedType, item, itemIndex);
+                    if (!seen.Add(key)) continue;
+                    entries.Add(new IndexedRecipeEntry(indexedType, item));
+                }
+            }
+
+            entries.Sort((left, right) =>
+            {
+                int path = string.Compare(left.Path, right.Path, StringComparison.Ordinal);
+                if (path != 0) return path;
+                int name = string.Compare(left.Name, right.Name, StringComparison.Ordinal);
+                return name != 0 ? name : string.Compare(left.TypeName, right.TypeName,
+                    StringComparison.Ordinal);
+            });
+            return entries;
+        }
+
+        private static string RecipeEntryKey(Type indexedType, AssetItem item, int itemIndex)
+        {
+            if (item == null)
+                return (indexedType.FullName ?? indexedType.Name) + "|<null>|" + itemIndex;
+            if (!string.IsNullOrEmpty(item._Guid)) return "guid:" + item._Guid;
+            return (indexedType.FullName ?? indexedType.Name) + "|" + item._Path + "|" +
+                item._Name;
+        }
+
+        private static void ValidatePackedRecipe(UMAAssetIndexer indexer,
+            UMAPackedRecipeBase.UMAPackRecipe packed, RecipeIndexFailure failure)
+        {
+            switch (packed.version)
+            {
+                case 3:
+                    ValidateVersion3Recipe(indexer, packed.slotsV3, failure);
+                    break;
+                case 2:
+                    ValidateVersion2Recipe(indexer, packed.slotsV2, failure);
+                    break;
+                default:
+                    ValidateVersion1Recipe(indexer, packed.packedSlotDataList, failure);
+                    break;
+            }
+        }
+
+        private static void ValidateVersion3Recipe(UMAAssetIndexer indexer,
+            UMAPackedRecipeBase.PackedSlotDataV3[] slots, RecipeIndexFailure failure)
+        {
+            if (slots == null) return;
+            for (int slotIndex = 0; slotIndex < slots.Length; slotIndex++)
+            {
+                UMAPackedRecipeBase.PackedSlotDataV3 slot = slots[slotIndex];
+                if (slot == null || string.IsNullOrEmpty(slot.id)) continue;
+                // Placeholder slots are wildcard declarations and intentionally have no asset.
+                if (!slot.isPlaceholderSlot &&
+                    indexer.GetAssetItem<SlotDataAsset>(slot.id) == null)
+                    failure.missingSlots.Add(slot.id);
+                if (slot.overlays == null) continue;
+                for (int overlayIndex = 0; overlayIndex < slot.overlays.Length; overlayIndex++)
+                {
+                    UMAPackedRecipeBase.PackedOverlayDataV3 overlay =
+                        slot.overlays[overlayIndex];
+                    ValidateOverlay(indexer, overlay?.id, failure);
+                }
+            }
+        }
+
+        private static void ValidateVersion2Recipe(UMAAssetIndexer indexer,
+            UMAPackedRecipeBase.PackedSlotDataV2[] slots, RecipeIndexFailure failure)
+        {
+            if (slots == null) return;
+            for (int slotIndex = 0; slotIndex < slots.Length; slotIndex++)
+            {
+                UMAPackedRecipeBase.PackedSlotDataV2 slot = slots[slotIndex];
+                if (slot == null || string.IsNullOrEmpty(slot.id)) continue;
+                if (indexer.GetAssetItem<SlotDataAsset>(slot.id) == null)
+                    failure.missingSlots.Add(slot.id);
+                if (slot.overlays == null) continue;
+                for (int overlayIndex = 0; overlayIndex < slot.overlays.Length; overlayIndex++)
+                {
+                    UMAPackedRecipeBase.PackedOverlayDataV2 overlay =
+                        slot.overlays[overlayIndex];
+                    ValidateOverlay(indexer, overlay?.id, failure);
+                }
+            }
+        }
+
+        private static void ValidateVersion1Recipe(UMAAssetIndexer indexer,
+            UMAPackedRecipeBase.packedSlotData[] slots, RecipeIndexFailure failure)
+        {
+            if (slots == null) return;
+            for (int slotIndex = 0; slotIndex < slots.Length; slotIndex++)
+            {
+                UMAPackedRecipeBase.packedSlotData slot = slots[slotIndex];
+                if (slot == null || string.IsNullOrEmpty(slot.slotID)) continue;
+                if (indexer.GetAssetItem<SlotDataAsset>(slot.slotID) == null)
+                    failure.missingSlots.Add(slot.slotID);
+                if (slot.OverlayDataList == null) continue;
+                for (int overlayIndex = 0; overlayIndex < slot.OverlayDataList.Length;
+                    overlayIndex++)
+                {
+                    UMAPackedRecipeBase.packedOverlayData overlay =
+                        slot.OverlayDataList[overlayIndex];
+                    ValidateOverlay(indexer, overlay?.overlayID, failure);
+                }
+            }
+        }
+
+        private static void ValidateOverlay(UMAAssetIndexer indexer, string overlayName,
+            RecipeIndexFailure failure)
+        {
+            if (string.IsNullOrEmpty(overlayName)) return;
+            if (indexer.GetAssetItem<OverlayDataAsset>(overlayName) == null)
+                failure.missingOverlays.Add(overlayName);
+        }
+
+        private static void AppendMissingItems(StringBuilder report, string label,
+            SortedSet<string> items)
+        {
+            if (items.Count == 0) return;
+            report.AppendLine("   Missing " + label + " (" + items.Count + "):");
+            foreach (string item in items) report.AppendLine("     - " + item);
+        }
+
+        private sealed class IndexedRecipeEntry
+        {
+            public readonly Type indexedType;
+            public readonly AssetItem item;
+
+            public string Name => item != null && !string.IsNullOrEmpty(item._Name)
+                ? item._Name : "<unloadable indexed recipe>";
+            public string Path => item != null && !string.IsNullOrEmpty(item._Path)
+                ? item._Path : "<no indexed path>";
+            public string TypeName => indexedType?.FullName ?? "<unknown recipe type>";
+
+            public IndexedRecipeEntry(Type indexedType, AssetItem item)
+            {
+                this.indexedType = indexedType;
+                this.item = item;
+            }
+        }
+
+        private sealed class RecipeIndexFailure
+        {
+            public string recipeName;
+            public readonly string recipeType;
+            public readonly string recipePath;
+            public string loadError;
+            public readonly SortedSet<string> missingSlots =
+                new SortedSet<string>(StringComparer.Ordinal);
+            public readonly SortedSet<string> missingOverlays =
+                new SortedSet<string>(StringComparer.Ordinal);
+
+            public bool HasIssues => !string.IsNullOrEmpty(loadError) ||
+                missingSlots.Count > 0 || missingOverlays.Count > 0;
+
+            public RecipeIndexFailure(IndexedRecipeEntry entry)
+            {
+                recipeName = entry.Name;
+                recipeType = entry.TypeName;
+                recipePath = entry.Path;
+            }
         }
 
         private static ValidationSummary ValidateScope(ValidationScope scope,
@@ -554,6 +807,9 @@ namespace UMA.Editors.Tests
         private static bool IsAllowed(ValidationScope scope, string path)
         {
             if (!path.StartsWith("Assets/", StringComparison.OrdinalIgnoreCase)) return true;
+            if (string.Equals(scope.name, "UMA3", StringComparison.OrdinalIgnoreCase) &&
+                IsInFolder(path, UMAPathUtility.Uma2ContentRoot))
+                return false;
             for (int i = 0; i < scope.allowedFolders.Length; i++)
                 if (IsInFolder(path, scope.allowedFolders[i])) return true;
             return false;

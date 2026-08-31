@@ -1899,7 +1899,6 @@ namespace UMA
 
                 if (data.isTextureDirty && data.needsMaterialClear)
                 {
-                    Debug.Log("Cleaning Textures and Generated Materials for UMAData");
                     data.CleanTextures();
                     data.generatedMaterials = new UMAData.GeneratedMaterials();
                     data.needsMaterialClear = false;

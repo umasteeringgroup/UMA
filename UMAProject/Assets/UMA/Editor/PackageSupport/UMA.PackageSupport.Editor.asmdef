@@ -1,7 +1,9 @@
 {
     "name": "UMA.PackageSupport.Editor",
     "rootNamespace": "UMA.Editors.PackageSupport",
-    "references": [],
+    "references": [
+        "UMA_Core"
+    ],
     "includePlatforms": [
         "Editor"
     ],

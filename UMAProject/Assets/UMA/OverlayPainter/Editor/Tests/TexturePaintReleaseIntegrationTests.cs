@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace UMA.TexturePaint.Editor.Tests
 {
@@ -94,6 +95,67 @@ namespace UMA.TexturePaint.Editor.Tests
         }
 
         [Test]
+        public void ChannelAdjustmentsAffectOnlyTheirSelectedChannelAndProtectNormals()
+        {
+            TexturePaintGpuTestFixture.RequireComputeShaders();
+            TextureSet set = CreateSet(TexturePaintChannel.Albedo,
+                new Color(0.2f, 0.4f, 0.6f, 0.75f));
+            CreateStore(set);
+            AddChannel(set, TexturePaintChannel.Roughness,
+                new Color(0.35f, 0.35f, 0.35f, 1f));
+            AddChannel(set, TexturePaintChannel.Normal,
+                new Color(0.5f, 0.5f, 1f, 1f));
+            foreach (TextureChannelTarget target in set.channels.Values)
+                target.composite = CreateRenderTexture("Channel Adjustments " + target.channel,
+                    16, RenderTextureFormat.ARGBHalf);
+            TextureLayerCompositor compositor = new TextureLayerCompositor(
+                TexturePaintGpuTestFixture.LoadShader("LayerComposite.compute"));
+            set.compositor = compositor;
+            Assert.That(compositor.IsAvailable, Is.True);
+
+            set.GetChannel(TexturePaintChannel.Albedo).adjustments =
+                new TexturePaintChannelAdjustments
+                {
+                    brightness = 0.05f,
+                    colorBalance = new Vector3(0.1f, -0.1f, 0f)
+                };
+            set.GetChannel(TexturePaintChannel.Normal).adjustments =
+                new TexturePaintChannelAdjustments { brightness = 1f, contrast = 1f };
+            set.RecomposeAll();
+
+            AssertColor(ReadCenter(set.GetChannel(TexturePaintChannel.Albedo).composite),
+                new Color(0.35f, 0.35f, 0.65f, 0.75f), 0.006f);
+            AssertColor(ReadCenter(set.GetChannel(TexturePaintChannel.Roughness).composite),
+                new Color(0.35f, 0.35f, 0.35f, 1f), 0.004f);
+            AssertColor(ReadCenter(set.GetChannel(TexturePaintChannel.Normal).composite),
+                new Color(0.5f, 0.5f, 1f, 1f), 0.004f);
+            compositor.Dispose();
+        }
+
+        [Test]
+        public void GrayscaleAdjustmentCurveProtectsBlackAndWeightsBrighterValues()
+        {
+            TexturePaintGpuTestFixture.RequireComputeShaders();
+            TextureSet set = CreateSet(TexturePaintChannel.Roughness, Color.black);
+            CreateStore(set);
+            TextureChannelTarget channel = set.GetChannel(TexturePaintChannel.Roughness);
+            channel.composite = CreateRenderTexture("Grayscale Adjustment Curve", 16,
+                RenderTextureFormat.ARGBHalf);
+            TextureLayerCompositor compositor = new TextureLayerCompositor(
+                TexturePaintGpuTestFixture.LoadShader("LayerComposite.compute"));
+            set.compositor = compositor;
+            channel.adjustments = new TexturePaintChannelAdjustments { brightness = 0.5f };
+
+            set.CompositeChannel(TexturePaintChannel.Roughness);
+            AssertColor(ReadCenter(channel.composite), Color.black, 0.004f);
+
+            channel.editable.Reset(null, new Color(0.8f, 0.8f, 0.8f, 1f));
+            set.CompositeChannel(TexturePaintChannel.Roughness);
+            AssertColor(ReadCenter(channel.composite), new Color(0.96f, 0.96f, 0.96f, 1f), 0.008f);
+            compositor.Dispose();
+        }
+
+        [Test]
         public async Task PluginLayerReadsOnlyCompositeBelowItsStackPosition()
         {
             TexturePaintGpuTestFixture.RequireComputeShaders();
@@ -131,6 +193,56 @@ namespace UMA.TexturePaint.Editor.Tests
                 "The upper layer must continue compositing over generated output.");
             Assert.That(lower.kind, Is.EqualTo(TexturePaintLayerKind.Fill));
             compositor.Dispose();
+        }
+
+        [Test]
+        public async Task CompactPluginTilesCommitThroughTheGpuKernel()
+        {
+            TexturePaintGpuTestFixture.RequireComputeShaders();
+            TextureSet set = CreateSet(TexturePaintChannel.Albedo, Color.clear,
+                null, Own(CreateQuadMesh()));
+            set.channelPackShader = TexturePaintGpuTestFixture.LoadShader("ChannelPack.compute");
+            TextureStore store = CreateStore(set);
+            using PluginHost host = new PluginHost();
+
+            await host.ExecuteCommandAsync(new CompactSolidPlugin(), store,
+                new TexturePaintPluginParameterSet(), null, CancellationToken.None);
+
+            Assert.That(set.layers.Count, Is.EqualTo(1));
+            Color result = ReadCenter(set.layers[0].channels[TexturePaintChannel.Albedo].Front);
+            Assert.That(result.r, Is.GreaterThan(0.95f));
+            Assert.That(result.g, Is.LessThan(0.05f));
+            Assert.That(result.b, Is.LessThan(0.05f));
+            Assert.That(result.a, Is.GreaterThan(0.95f));
+        }
+
+        [Test]
+        public async Task StandardGpuGeneratorPathAvoidsCpuTileFallback()
+        {
+            TexturePaintGpuTestFixture.RequireComputeShaders();
+            TextureSet set = CreateSet(TexturePaintChannel.Albedo, Color.black,
+                null, Own(CreateQuadMesh()));
+            AddChannel(set, TexturePaintChannel.AmbientOcclusion, Color.black);
+            TextureStore store = CreateStore(set);
+            using PluginHost host = new PluginHost
+            {
+                GpuGeneratorShader = TexturePaintGpuTestFixture.LoadShader(
+                    "PluginGenerators.compute")
+            };
+            var plugin = new GpuDirtProbePlugin();
+
+            await host.ExecuteCommandAsync(plugin, store, host.CreateParameters(plugin),
+                null, CancellationToken.None);
+
+            Assert.That(plugin.cpuFallbackInvoked, Is.False);
+            Assert.That(set.layers, Has.Count.EqualTo(1));
+            Color generated = ReadCenter(
+                set.layers[0].channels[TexturePaintChannel.Albedo].Front);
+            Assert.That(generated.r, Is.GreaterThan(0.9f));
+            Assert.That(generated.g, Is.LessThan(0.1f));
+            Assert.That(generated.a, Is.GreaterThan(0.9f));
+            Assert.That(host.Diagnostics[host.Diagnostics.Count - 1].message,
+                Does.Contain("GPU"));
         }
 
         [Test]
@@ -279,6 +391,57 @@ namespace UMA.TexturePaint.Editor.Tests
                 Is.EqualTo(TexturePaintBlendMode.Screen));
             Assert.That(layer.GetChannelSettings(TexturePaintChannel.Roughness).blendMode,
                 Is.EqualTo(TexturePaintBlendMode.Multiply));
+        }
+
+        [Test]
+        public void LayerBlendUpdatesChannelsThatStillInheritItsBlendMode()
+        {
+            TexturePaintGpuTestFixture.RequireComputeShaders();
+            Color baseColor = new Color(0.8f, 0.6f, 0.4f, 1f);
+            Color layerColor = new Color(0.5f, 0.25f, 0.75f, 1f);
+            TextureSet set = CreateSet(TexturePaintChannel.Albedo, baseColor);
+            AddChannel(set, TexturePaintChannel.Roughness, Color.white);
+            CreateStore(set);
+            TextureChannelTarget albedo = set.GetChannel(TexturePaintChannel.Albedo);
+            albedo.composite = CreateRenderTexture("Inherited Layer Blend", 16,
+                RenderTextureFormat.ARGBHalf);
+            TextureLayerCompositor compositor = new TextureLayerCompositor(
+                TexturePaintGpuTestFixture.LoadShader("LayerComposite.compute"));
+            set.compositor = compositor;
+            Assert.That(compositor.IsAvailable, Is.True, "Layer compositor GPU path is unavailable.");
+            TexturePaintLayer layer = set.AddFillLayer("Material Detail",
+                TexturePaintChannel.Albedo, layerColor);
+            set.GetPaintTarget(TexturePaintChannel.Roughness, TexturePaintSourceMode.SourceOverlay);
+            TexturePaintStageWindow stage = Own(ScriptableObject.CreateInstance<TexturePaintStageWindow>());
+            const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
+            MethodInfo change = typeof(TexturePaintStageWindow).GetMethod("ChangeLayerMetadata", flags);
+            MethodInfo undo = typeof(TexturePaintStageWindow).GetMethod("UndoLightweight", flags);
+            MethodInfo redo = typeof(TexturePaintStageWindow).GetMethod("RedoLightweight", flags);
+
+            Assert.That(change, Is.Not.Null);
+            set.RecomposeAll();
+            AssertColor(ReadCenter(albedo.composite), layerColor, 0.004f);
+            change.Invoke(stage, new object[]
+                { set, layer, layer.name, layer.opacity, TexturePaintBlendMode.Multiply });
+            set.RecomposeAll();
+
+            Assert.That(layer.blendMode, Is.EqualTo(TexturePaintBlendMode.Multiply));
+            Assert.That(layer.GetChannelSettings(TexturePaintChannel.Albedo).blendMode,
+                Is.EqualTo(TexturePaintBlendMode.Multiply));
+            Assert.That(layer.GetChannelSettings(TexturePaintChannel.Roughness).blendMode,
+                Is.EqualTo(TexturePaintBlendMode.Multiply));
+            AssertColor(ReadCenter(albedo.composite), new Color(
+                baseColor.r * layerColor.r,
+                baseColor.g * layerColor.g,
+                baseColor.b * layerColor.b,
+                1f), 0.004f);
+            Assert.That((bool)undo.Invoke(stage, null), Is.True);
+            Assert.That(layer.GetChannelSettings(TexturePaintChannel.Albedo).blendMode,
+                Is.EqualTo(TexturePaintBlendMode.Normal));
+            Assert.That((bool)redo.Invoke(stage, null), Is.True);
+            Assert.That(layer.GetChannelSettings(TexturePaintChannel.Albedo).blendMode,
+                Is.EqualTo(TexturePaintBlendMode.Multiply));
+            compositor.Dispose();
         }
 
         [Test]
@@ -499,6 +662,63 @@ namespace UMA.TexturePaint.Editor.Tests
             Assert.That(mask.sourceSettings.color,
                 Is.EqualTo(new Color(0.25f, 0.25f, 0.25f, 1f)));
             Assert.That(mask.sourceChannel, Is.EqualTo(TexturePaintChannel.Albedo));
+        }
+
+        [Test]
+        public void CopyAndPasteLayerMaskSnapshotsPixelsSettingsAndSupportsUndoRedo()
+        {
+            TextureSet set = CreateSet(TexturePaintChannel.Albedo, Color.black);
+            CreateStore(set);
+            TexturePaintLayer source = set.AddLayer("Source Mask");
+            TexturePaintLayerMask sourceMask = set.AddLayerMask(source, 0f);
+            sourceMask.target.Reset(null, TextureSet.MaskColor(0.25f));
+            sourceMask.effects.noise.enabled = true;
+            sourceMask.effects.noise.seed = 17;
+            sourceMask.sourceSettings = TexturePaintLayerMask.DefaultSourceSettings();
+            sourceMask.sourceSettings.color = new Color(0.35f, 0.35f, 0.35f, 1f);
+            sourceMask.pluginId = "mask-generator";
+            sourceMask.pluginVersion = "2";
+            sourceMask.pluginParameters.Get("amount", true).number = 0.45f;
+
+            TexturePaintLayer destination = set.AddLayer("Destination Mask");
+            TexturePaintLayerMask originalDestinationMask = set.AddLayerMask(destination, 1f);
+            originalDestinationMask.target.Reset(null, TextureSet.MaskColor(0.9f));
+            TexturePaintStageWindow stage = Own(ScriptableObject.CreateInstance<TexturePaintStageWindow>());
+            const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
+            MethodInfo copy = typeof(TexturePaintStageWindow).GetMethod(
+                "CopyLayerMaskToClipboard", flags);
+            MethodInfo paste = typeof(TexturePaintStageWindow).GetMethod(
+                "PasteLayerMaskFromClipboardWithHistory", flags);
+            MethodInfo undo = typeof(TexturePaintStageWindow).GetMethod("UndoLightweight", flags);
+            MethodInfo redo = typeof(TexturePaintStageWindow).GetMethod("RedoLightweight", flags);
+            MethodInfo clear = typeof(TexturePaintStageWindow).GetMethod("ClearLightweightHistory", flags);
+
+            Assert.That(copy, Is.Not.Null);
+            Assert.That(paste, Is.Not.Null);
+            Assert.That((bool)copy.Invoke(stage, new object[] { set, source }), Is.True);
+            sourceMask.target.Reset(null, TextureSet.MaskColor(0.75f));
+            sourceMask.effects.noise.seed = 99;
+            Assert.That((bool)paste.Invoke(stage, new object[] { set, destination }), Is.True);
+
+            TexturePaintLayerMask pasted = destination.layerMask;
+            Assert.That(pasted, Is.Not.Null);
+            Assert.That(pasted, Is.Not.SameAs(sourceMask));
+            Assert.That(pasted, Is.Not.SameAs(originalDestinationMask));
+            AssertColor(ReadCenter(pasted.target.Front), TextureSet.MaskColor(0.25f), 0.01f);
+            Assert.That(pasted.baseValue, Is.EqualTo(0f));
+            Assert.That(pasted.effects.noise.enabled, Is.True);
+            Assert.That(pasted.effects.noise.seed, Is.EqualTo(17));
+            Assert.That(pasted.sourceSettings.color.r, Is.EqualTo(0.35f).Within(0.001f));
+            Assert.That(pasted.pluginId, Is.EqualTo("mask-generator"));
+            Assert.That(pasted.pluginParameters.Float("amount"), Is.EqualTo(0.45f).Within(0.001f));
+
+            Assert.That((bool)undo.Invoke(stage, null), Is.True);
+            Assert.That(destination.layerMask, Is.SameAs(originalDestinationMask));
+            AssertColor(ReadCenter(destination.layerMask.target.Front), TextureSet.MaskColor(0.9f), 0.01f);
+            Assert.That((bool)redo.Invoke(stage, null), Is.True);
+            Assert.That(destination.layerMask, Is.SameAs(pasted));
+            AssertColor(ReadCenter(destination.layerMask.target.Front), TextureSet.MaskColor(0.25f), 0.01f);
+            clear.Invoke(stage, null);
         }
 
         [Test]
@@ -1159,7 +1379,9 @@ namespace UMA.TexturePaint.Editor.Tests
             source.splatterDistance = 1.84f;
             source.randomStrength = true;
             source.fade = true;
+            source.autoFade = true;
             source.taper = true;
+            source.autoTaper = true;
             source.fadeTaperLength = 0.72f;
             source.tags = "source tags";
             destination.tags = "keep these tags";
@@ -1185,7 +1407,9 @@ namespace UMA.TexturePaint.Editor.Tests
             Assert.That(destination.splatterDistance, Is.EqualTo(source.splatterDistance));
             Assert.That(destination.randomStrength, Is.True);
             Assert.That(destination.fade, Is.True);
+            Assert.That(destination.autoFade, Is.True);
             Assert.That(destination.taper, Is.True);
+            Assert.That(destination.autoTaper, Is.True);
             Assert.That(destination.fadeTaperLength, Is.EqualTo(source.fadeTaperLength));
             Assert.That(destination.tags, Is.EqualTo("keep these tags"));
         }
@@ -1226,6 +1450,45 @@ namespace UMA.TexturePaint.Editor.Tests
         }
 
         [Test]
+        public void AutoFadeAndTaperWaitForCompletionThenUseTheWholeStrokeLength()
+        {
+            BrushPreset preset = Own(ScriptableObject.CreateInstance<BrushPreset>());
+            preset.fade = true;
+            preset.autoFade = true;
+            preset.taper = true;
+            preset.autoTaper = true;
+            preset.fadeTaperLength = 0.1f;
+            StrokeSample live = new StrokeSample(Vector3.zero, Vector3.forward,
+                Vector2.zero, 0, 0)
+            {
+                flowMultiplier = 1f,
+                sizeMultiplier = 1f
+            };
+
+            TexturePaintStageWindow.ApplyStrokeEvolution(ref live, preset, 5f);
+
+            Assert.That(live.flowMultiplier, Is.EqualTo(1f),
+                "Auto Fade must not change the live stroke.");
+            Assert.That(live.sizeMultiplier, Is.EqualTo(1f),
+                "Auto Taper must not change the live stroke.");
+
+            StrokeSample halfway = live;
+            TexturePaintStageWindow.ApplyStrokeEvolution(ref halfway, preset, 5f, 10f, true);
+            Assert.That(halfway.flowMultiplier, Is.EqualTo(0.5f).Within(0.000001f));
+            Assert.That(halfway.sizeMultiplier, Is.EqualTo(0.5f).Within(0.000001f));
+
+            StrokeSample endpoint = live;
+            TexturePaintStageWindow.ApplyStrokeEvolution(ref endpoint, preset, 10f, 10f, true);
+            Assert.That(endpoint.flowMultiplier, Is.Zero);
+            Assert.That(endpoint.sizeMultiplier, Is.Zero);
+
+            StrokeSample click = live;
+            TexturePaintStageWindow.ApplyStrokeEvolution(ref click, preset, 0f, 0f, true);
+            Assert.That(click.flowMultiplier, Is.EqualTo(1f));
+            Assert.That(click.sizeMultiplier, Is.EqualTo(1f));
+        }
+
+        [Test]
         public void SaveCurrentBrushCreatesNamedAssetBesideLibraryAndAddsItToLibrary()
         {
             string libraryPath = Folder + "/Production Brushes.asset";
@@ -1239,7 +1502,9 @@ namespace UMA.TexturePaint.Editor.Tests
             current.splatterDistance = 1.61f;
             current.randomStrength = true;
             current.fade = true;
+            current.autoFade = true;
             current.taper = true;
+            current.autoTaper = true;
             current.fadeTaperLength = 0.83f;
 
             BrushPreset created = TexturePaintStageWindow.CreateBrushAssetFromCurrentSettings(
@@ -1258,7 +1523,9 @@ namespace UMA.TexturePaint.Editor.Tests
             Assert.That(created.splatterDistance, Is.EqualTo(current.splatterDistance));
             Assert.That(created.randomStrength, Is.True);
             Assert.That(created.fade, Is.True);
+            Assert.That(created.autoFade, Is.True);
             Assert.That(created.taper, Is.True);
+            Assert.That(created.autoTaper, Is.True);
             Assert.That(created.fadeTaperLength, Is.EqualTo(current.fadeTaperLength));
         }
 
@@ -1695,6 +1962,67 @@ namespace UMA.TexturePaint.Editor.Tests
             Color cached = TexturePaintGpuTestFixture.ReadPixels(
                 layer.channels[TexturePaintChannel.Albedo].Front)[y * TexturePaintGpuTestFixture.Size + 8];
             AssertColor(cached, Color.red, 0.02f);
+        }
+
+        [Test]
+        public void ArbitraryOverlayAssetResolvesEveryCompatibleMaterialChannel()
+        {
+            TextureSet set = CreateSet(TexturePaintChannel.Albedo, Color.clear);
+            AddChannel(set, TexturePaintChannel.Roughness, Color.white);
+            CreateStore(set);
+            set.GetChannel(TexturePaintChannel.Albedo).umaChannelIndex = 0;
+            set.GetChannel(TexturePaintChannel.Roughness).umaChannelIndex = 1;
+            Texture2D albedo = Own(new Texture2D(2, 2, TextureFormat.RGBA32, false, true));
+            Texture2D roughness = Own(new Texture2D(2, 2, TextureFormat.RGBA32, false, true));
+            OverlayDataAsset overlay = Own(ScriptableObject.CreateInstance<OverlayDataAsset>());
+            overlay.textureList = new Texture[] { albedo, roughness };
+
+            Assert.That(set.TryResolveOverlaySource(overlay, TexturePaintChannel.Albedo,
+                TexturePaintNormalConvention.OpenGL, false, out Texture resolvedAlbedo,
+                out int albedoIndex), Is.True);
+            Assert.That(set.TryResolveOverlaySource(overlay, TexturePaintChannel.Roughness,
+                TexturePaintNormalConvention.OpenGL, false, out Texture resolvedRoughness,
+                out int roughnessIndex), Is.True);
+            Assert.That(resolvedAlbedo, Is.SameAs(albedo));
+            Assert.That(resolvedRoughness, Is.Not.Null);
+            Assert.That(albedoIndex, Is.EqualTo(0));
+            Assert.That(roughnessIndex, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void FillCanLeaveCoverageToASharedLayerMaskWithoutSquaringSourceAlpha()
+        {
+            using TexturePaintGpuTestFixture fixture = new TexturePaintGpuTestFixture(Color.clear);
+            Shader shader = AssetDatabase.LoadAssetAtPath<Shader>(
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/FillLayer.shader"));
+            Assert.That(shader, Is.Not.Null, "Missing production Fill generator shader.");
+            using TexturePaintFillGenerator generator = new TexturePaintFillGenerator(shader);
+            fixture.set.fillGenerator = generator;
+            Texture2D source = Own(new Texture2D(2, 2, TextureFormat.RGBA32, false, true));
+            source.SetPixels(new[]
+            {
+                new Color(1f, 0f, 0f, 0.25f), new Color(1f, 0f, 0f, 0.25f),
+                new Color(1f, 0f, 0f, 0.25f), new Color(1f, 0f, 0f, 0.25f)
+            });
+            source.Apply(false, false);
+            TexturePaintFillSettings settings = new TexturePaintFillSettings
+            {
+                source = TexturePaintBrushSource.Texture,
+                sourceTexture = source,
+                projection = TexturePaintFillProjection.Flat,
+                ignoreSourceAlpha = true
+            };
+
+            TexturePaintLayer layer = fixture.set.AddFillLayer("Shared Coverage",
+                TexturePaintChannel.Albedo, settings);
+
+            Assert.That(layer, Is.Not.Null);
+            Color center = TexturePaintGpuTestFixture.ReadPixels(
+                layer.channels[TexturePaintChannel.Albedo].Front)
+                [(TexturePaintGpuTestFixture.Size / 2) * TexturePaintGpuTestFixture.Size +
+                 TexturePaintGpuTestFixture.Size / 2];
+            Assert.That(center.a, Is.EqualTo(1f).Within(0.02f));
+            AssertColor(new Color(center.r, center.g, center.b, 1f), Color.red, 0.02f);
         }
 
         [Test]
@@ -2141,7 +2469,7 @@ namespace UMA.TexturePaint.Editor.Tests
         }
 
         [Test]
-        public void SplineAuthoringOverlayOnlyBelongsToTheActivePathLayer()
+        public void SplineAuthoringOverlayRequiresAnActiveVisiblePathLayer()
         {
             TextureSet set = new TextureSet();
             TexturePaintLayer path = set.AddSplineLayer("Path");
@@ -2156,12 +2484,60 @@ namespace UMA.TexturePaint.Editor.Tests
             Assert.That(TexturePaintStageWindow.IsActiveSplineAuthoringLayer(set, 1), Is.False);
 
             set.activeLayerIndex = 0;
+            Assert.That(TexturePaintStageWindow.IsActiveSplineAuthoringLayer(set, 0), Is.False,
+                "A disabled path must not draw or expose spline authoring controls.");
+
+            path.visible = true;
             Assert.That(TexturePaintStageWindow.IsActiveSplineAuthoringLayer(set, 0), Is.True,
-                "The selected path remains authorable even when its raster-result visibility is off.");
+                "An enabled selected path must expose its spline authoring controls.");
 
             set.activeLayerIndex = set.layers.IndexOf(paint);
             Assert.That(TexturePaintStageWindow.IsActiveSplineAuthoringLayer(set, 0), Is.False);
             Assert.That(paint.IsSplineLayer, Is.False);
+        }
+
+        [Test]
+        public void ShiftStrokeConstraintChoosesAndRetainsTheInitialDominantViewAxis()
+        {
+            Vector2 origin = new Vector2(100f, 200f);
+            TexturePaintStageWindow.StrokeViewAxis horizontal =
+                TexturePaintStageWindow.StrokeViewAxis.Pending;
+
+            Vector2 firstHorizontal = TexturePaintStageWindow.ConstrainStrokeViewPoint(
+                origin, new Vector2(112f, 205f), ref horizontal);
+            Vector2 laterHorizontal = TexturePaintStageWindow.ConstrainStrokeViewPoint(
+                origin, new Vector2(102f, 240f), ref horizontal);
+
+            Assert.That(horizontal, Is.EqualTo(TexturePaintStageWindow.StrokeViewAxis.Horizontal));
+            Assert.That(firstHorizontal, Is.EqualTo(new Vector2(112f, 200f)));
+            Assert.That(laterHorizontal, Is.EqualTo(new Vector2(102f, 200f)),
+                "The axis must not flip when a later delta becomes vertically dominant.");
+
+            TexturePaintStageWindow.StrokeViewAxis vertical =
+                TexturePaintStageWindow.StrokeViewAxis.Pending;
+            Vector2 firstVertical = TexturePaintStageWindow.ConstrainStrokeViewPoint(
+                origin, new Vector2(103f, 215f), ref vertical);
+
+            Assert.That(vertical, Is.EqualTo(TexturePaintStageWindow.StrokeViewAxis.Vertical));
+            Assert.That(firstVertical, Is.EqualTo(new Vector2(100f, 215f)));
+
+            TexturePaintStageWindow.StrokeViewAxis pending =
+                TexturePaintStageWindow.StrokeViewAxis.Pending;
+            Vector2 jitter = TexturePaintStageWindow.ConstrainStrokeViewPoint(
+                origin, new Vector2(100.25f, 200.25f), ref pending);
+            Assert.That(pending, Is.EqualTo(TexturePaintStageWindow.StrokeViewAxis.Pending));
+            Assert.That(jitter, Is.EqualTo(origin));
+        }
+
+        [TestCase(TexturePaintPathEditMode.Standard, true, true, true)]
+        [TestCase(TexturePaintPathEditMode.Move, false, true, false)]
+        [TestCase(TexturePaintPathEditMode.Adjust, false, false, true)]
+        public void PathEditModesExposeOnlyTheirIntendedOperations(TexturePaintPathEditMode mode,
+            bool topology, bool move, bool adjust)
+        {
+            Assert.That(TexturePaintStageWindow.PathEditModeAllowsTopology(mode), Is.EqualTo(topology));
+            Assert.That(TexturePaintStageWindow.PathEditModeAllowsMove(mode), Is.EqualTo(move));
+            Assert.That(TexturePaintStageWindow.PathEditModeAllowsAdjust(mode), Is.EqualTo(adjust));
         }
 
         [Test]
@@ -2325,6 +2701,31 @@ namespace UMA.TexturePaint.Editor.Tests
         {
             Assert.That(TexturePaintStageWindow.ShouldShowLayerRowExtendedControls(width),
                 Is.EqualTo(expected));
+        }
+
+        [Test]
+        public void ChannelDetailsOnlyOffersMaterialChannelsCreatedOnTheLayer()
+        {
+            using TextureSet set = new TextureSet();
+            set.channels[TexturePaintChannel.Albedo] = new TextureChannelTarget
+                { channel = TexturePaintChannel.Albedo };
+            set.channels[TexturePaintChannel.Normal] = new TextureChannelTarget
+                { channel = TexturePaintChannel.Normal };
+            var layer = new TexturePaintLayer();
+            layer.channels[TexturePaintChannel.Albedo] = null;
+            layer.channels[TexturePaintChannel.Emission] = null;
+
+            List<TexturePaintChannel> materialChannels =
+                TexturePaintStageWindow.GetSelectableChannels(set);
+            List<TexturePaintChannel> layerChannels =
+                TexturePaintStageWindow.GetSelectableChannels(set, layer);
+
+            Assert.That(materialChannels,
+                Is.EqualTo(new[] { TexturePaintChannel.Albedo, TexturePaintChannel.Normal }));
+            Assert.That(layerChannels,
+                Is.EqualTo(new[] { TexturePaintChannel.Albedo }),
+                "Channel Details must exclude both uncreated material channels and authored channels unsupported by the material.");
+            layer.channels.Clear();
         }
 
         [Test]
@@ -2889,6 +3290,63 @@ namespace UMA.TexturePaint.Editor.Tests
                 Assert.That(engine.History.UndoTileCount, Is.Zero,
                     "A path-level undo model must not allocate redundant full-resolution pixel history.");
                 Assert.That(engine.History.EstimatedMemoryBytes, Is.Zero);
+            }
+            finally
+            {
+                engine.EndStroke(false);
+                Object.DestroyImmediate(brush);
+            }
+        }
+
+        [Test]
+        public void DerivedPathReapplyClearsPixelsOutsideLegacyHistoryCapture()
+        {
+            TexturePaintGpuTestFixture.RequireComputeShaders();
+            using TexturePaintGpuTestFixture fixture = new TexturePaintGpuTestFixture(Color.clear);
+            TexturePaintLayer layer = fixture.set.AddSplineLayer("Legacy Path Replacement");
+            fixture.set.activeLayerIndex = fixture.set.layers.IndexOf(layer);
+            EditableTextureTarget target = fixture.set.GetPaintTarget(TexturePaintChannel.Albedo,
+                TexturePaintSourceMode.SourceOverlay);
+            Assert.That(target, Is.Not.Null);
+            target.Reset(null, Color.red);
+            BrushPreset brush = fixture.CreateBrush(1f, 1f);
+            brush.size = 0.04f;
+            using PaintingEngine engine = TexturePaintGpuTestFixture.CreateEngine();
+            const string historyKey = "texture-paint-spline:legacy-replacement";
+            StrokeSample center = new StrokeSample(new Vector3(0.5f, 0.5f, 0f),
+                Vector3.forward, new Vector2(0.5f, 0.5f), 0, -1);
+            var sample = new List<StrokeDispatchSample>
+            {
+                new StrokeDispatchSample(center, brush.size, default)
+            };
+            try
+            {
+                // Older path builds used ordinary pixel history. Only the current footprint was
+                // captured, so unrelated stale/effect pixels can exist outside that capture.
+                StrokeContext legacy = fixture.CreateContext(brush, TexturePaintTool.Paint,
+                    Color.green, strength: 1f);
+                legacy.directUV = true;
+                legacy.historyGroupKey = historyKey;
+                Assert.That(engine.BeginStroke(legacy, TexturePaintSourceMode.SourceOverlay), Is.True);
+                Assert.That(engine.ApplySamples(sample), Is.True);
+                engine.EndStroke(true);
+                Assert.That(engine.History.UndoTileCount, Is.GreaterThan(0));
+
+                StrokeContext replacement = fixture.CreateContext(brush, TexturePaintTool.Paint,
+                    Color.blue, strength: 1f);
+                replacement.directUV = true;
+                replacement.historyGroupKey = historyKey;
+                replacement.replaceLayer = layer;
+                replacement.replaceHistoryGroup = true;
+                replacement.derivedLayerRaster = true;
+                Assert.That(engine.BeginStroke(replacement, TexturePaintSourceMode.SourceOverlay), Is.True);
+                Assert.That(engine.ApplySamples(sample), Is.True);
+                engine.EndStroke(true);
+
+                Color[] pixels = TexturePaintGpuTestFixture.ReadPixels(target.Front);
+                int farPixel = 2 * TexturePaintGpuTestFixture.Size + 2;
+                Assert.That(pixels[farPixel].a, Is.LessThan(0.02f),
+                    "A path rebuild must clear the complete owned raster even when it retires a legacy history entry.");
             }
             finally
             {
@@ -4057,6 +4515,69 @@ namespace UMA.TexturePaint.Editor.Tests
         }
 
         [Test]
+        public void StableSurfaceIdentityIgnoresUmaGeneratedMaterialNonce()
+        {
+            Material material = Own(new Material(Shader.Find("Standard"))
+                { name = "UMA3_SkinShader_URP_Genb_123456789_UMA30_Body_UDIM1001" });
+            TextureSet body = CreateSet(TexturePaintChannel.Albedo, Color.white, material,
+                Own(CreateQuadMesh()));
+            ConfigureSlot(body, "UMA30_Body_UDIM1001_slot_baked_Human Male 3.0", 0);
+            TextureStore store = CreateStore(body);
+
+            TexturePaintDocumentStorage.AssignStableSurfaceIds(store);
+            string firstIdentity = body.persistentId;
+            material.name = "UMA3_SkinShader_URP_Genb_987654321_UMA30_Body_UDIM1001";
+            TexturePaintDocumentStorage.AssignStableSurfaceIds(store);
+
+            Assert.That(body.persistentId, Is.EqualTo(firstIdentity),
+                "UMAGeneratorPro's random material nonce must not become document identity.");
+            Assert.That(TexturePaintDocumentStorage.StableMaterialName(material.name),
+                Is.EqualTo("UMA3_SkinShader_URP_Genb_UMA30_Body_UDIM1001"));
+        }
+
+        [Test]
+        public void LegacyGeneratedSurfaceRebindRestoresLayerAndBlackMaskWhenTopologyOrderChanges()
+        {
+            Material savedMaterial = Own(new Material(Shader.Find("Standard"))
+                { name = "UMA3_SkinShader_URP_Genb_123456789_UMA30_Body_UDIM1001" });
+            Mesh savedMesh = Own(CreateQuadMesh());
+            TextureSet savedSet = CreateSet(TexturePaintChannel.Albedo, Color.black, savedMaterial, savedMesh);
+            ConfigureSlot(savedSet, "UMA30_Body_UDIM1001_slot_baked_Human Male 3.0", 0);
+            TextureStore savedStore = CreateStore(savedSet);
+            TexturePaintLayer savedLayer = savedSet.AddLayer("Chin Stubble");
+            Assert.That(savedSet.AddLayerMask(savedLayer, 0f), Is.Not.Null);
+            TexturePaintDocument document = Own(ScriptableObject.CreateInstance<TexturePaintDocument>());
+
+            TexturePaintDocumentStorage.Save(document, savedStore);
+            Assert.That(document.surfaces, Has.Count.EqualTo(1));
+            Assert.That(document.surfaces[0].layers, Has.Count.EqualTo(1));
+            Assert.That(document.surfaces[0].layers[0].hasMask, Is.True);
+            Assert.That(document.surfaces[0].layers[0].maskBaseValue, Is.Zero);
+
+            Material regeneratedMaterial = Own(new Material(Shader.Find("Standard"))
+                { name = "UMA3_SkinShader_URP_Genb_987654321_UMA30_Body_UDIM1001" });
+            Mesh regeneratedMesh = Own(CreateQuadMesh());
+            regeneratedMesh.triangles = new[] { 0, 2, 3, 0, 1, 2 };
+            TextureSet restoredSet = CreateSet(TexturePaintChannel.Albedo, Color.black,
+                regeneratedMaterial, regeneratedMesh);
+            ConfigureSlot(restoredSet, "UMA30_Body_UDIM1001_slot_baked_Human Male 3.0", 0);
+            TextureStore restoredStore = CreateStore(restoredSet);
+
+            TexturePaintDocumentStorage.RestoreReport restore =
+                TexturePaintDocumentStorage.Restore(document, restoredStore);
+
+            Assert.That(restore.restoredSurfaces, Is.EqualTo(1));
+            Assert.That(restore.restoredLayers, Is.EqualTo(1));
+            Assert.That(restore.unboundLayers, Is.Zero);
+            Assert.That(restoredSet.layers, Has.Count.EqualTo(1));
+            Assert.That(restoredSet.layers[0].name, Is.EqualTo("Chin Stubble"));
+            Assert.That(restoredSet.layers[0].layerMask, Is.Not.Null);
+            Assert.That(restoredSet.layers[0].layerMask.baseValue, Is.Zero);
+            AssertColor(ReadCenter(restoredSet.layers[0].layerMask.target.Front),
+                TextureSet.MaskColor(0f), 0.01f);
+        }
+
+        [Test]
         public void ToolRailUsesTheFirstThirteenOrderedSpriteSheetSlices()
         {
             for (int index = 0; index < 13; index++)
@@ -4066,6 +4587,262 @@ namespace UMA.TexturePaint.Editor.Tests
                 Assert.That(sprite.name, Is.EqualTo("TexturePaintIcons_" + index));
                 Assert.That(sprite.texture, Is.Not.Null);
             }
+        }
+
+        [Test]
+        public void SceneViewPaintingToolbarOwnsAllThirteenToolControls()
+        {
+            Assert.That(TexturePaintSceneToolPaletteOverlay.Title,
+                Is.EqualTo("Overlay Painter Toolbar"));
+            Assert.That(TexturePaintSceneToolPaletteOverlay.ElementIds, Has.Length.EqualTo(13));
+            Assert.That(TexturePaintSceneToolPaletteOverlay.ElementIds, Does.Contain(
+                TexturePaintScenePaintToolToggle.Id));
+            Assert.That(TexturePaintSceneToolPaletteOverlay.ElementIds, Does.Contain(
+                TexturePaintScenePolygonFillToggle.Id));
+            Assert.That(TexturePaintSceneToolPaletteOverlay.ElementIds, Does.Contain(
+                TexturePaintSceneIslandFillToggle.Id));
+            Assert.That(TexturePaintSceneToolPaletteOverlay.ElementIds, Does.Contain(
+                TexturePaintScenePathToolToggle.Id));
+            Assert.That(TexturePaintSceneToolPaletteOverlay.ElementIds, Does.Contain(
+                TexturePaintSceneToolHelpButton.Id));
+
+            var paint = new TexturePaintScenePaintToolToggle();
+            Assert.That(paint.Q<UnityEngine.UIElements.Image>(), Is.Not.Null,
+                "The Scene-view tool must render the sliced Overlay Painter icon, not the full sprite sheet.");
+        }
+
+        [Test]
+        public void SceneOverlaysDefaultHiddenAndRepairRestoredVisibility()
+        {
+            Assert.That(TexturePaintSceneOverlayVisibility.DefaultDisplay, Is.False,
+                "A fresh Unity layout must not show Overlay Painter controls before the stage opens.");
+
+            Assert.That(TexturePaintSceneOverlayVisibility.NeedsDisplayRefresh(
+                false, false, true), Is.True,
+                "Unity can restore a serialized visible flag after OnCreated; the update must hide it.");
+            Assert.That(TexturePaintSceneOverlayVisibility.NeedsDisplayRefresh(
+                true, true, false), Is.True,
+                "An active Overlay Painter stage must repair a serialized hidden flag as well.");
+            Assert.That(TexturePaintSceneOverlayVisibility.NeedsDisplayRefresh(
+                false, false, false), Is.False);
+            Assert.That(TexturePaintSceneOverlayVisibility.NeedsDisplayRefresh(
+                true, true, true), Is.False);
+            Assert.That(TexturePaintSceneOverlayVisibility.NeedsDisplayRefresh(
+                true, false, false), Is.True);
+        }
+
+        [TestCase(600f, 178f, true, 178f)]
+        [TestCase(300f, 178f, true, 135f)]
+        [TestCase(200f, 50f, true, 112f)]
+        [TestCase(1000f, 800f, true, 450f)]
+        [TestCase(600f, 178f, false, 0f)]
+        public void BrushWindowOwnsAClampedOptionalAssetShelf(float windowHeight,
+            float requestedHeight, bool visible, float expectedHeight)
+        {
+            Assert.That(TexturePaintStageWindow.CalculateBrushAssetShelfHeight(
+                windowHeight, requestedHeight, visible), Is.EqualTo(expectedHeight));
+        }
+
+        [TestCase(-0.1d, 0f)]
+        [TestCase(0d, 1f)]
+        [TestCase(7.5d, 1f)]
+        [TestCase(8.75d, 0.5f)]
+        [TestCase(9.9d, 0.04f)]
+        [TestCase(10d, 0f)]
+        [TestCase(12d, 0f)]
+        public void ImportWarningSceneNoticeLastsTenSecondsAndFadesAtTheEnd(double elapsed,
+            float expectedAlpha)
+        {
+            Assert.That(TexturePaintStageWindow.CalculateImportWarningNoticeAlpha(elapsed),
+                Is.EqualTo(expectedAlpha).Within(0.0001f));
+        }
+
+        [Test]
+        public void ObjectPickerCompletionNeverConsumesLayoutOrRepaintEvents()
+        {
+            var layout = new Event
+                { type = EventType.Layout, commandName = "ObjectSelectorClosed" };
+            var repaint = new Event
+                { type = EventType.Repaint, commandName = "ObjectSelectorSelectionDone" };
+            var closed = new Event
+                { type = EventType.ExecuteCommand, commandName = "ObjectSelectorClosed" };
+            var selected = new Event
+                { type = EventType.ExecuteCommand, commandName = "ObjectSelectorSelectionDone" };
+            var unrelated = new Event
+                { type = EventType.ExecuteCommand, commandName = "UnrelatedCommand" };
+
+            Assert.That(TexturePaintStageWindow.IsObjectPickerCompletionEvent(layout), Is.False);
+            Assert.That(TexturePaintStageWindow.IsObjectPickerCompletionEvent(repaint), Is.False);
+            Assert.That(TexturePaintStageWindow.IsObjectPickerCompletionEvent(closed), Is.True);
+            Assert.That(TexturePaintStageWindow.IsObjectPickerCompletionEvent(selected), Is.True);
+            Assert.That(TexturePaintStageWindow.IsObjectPickerCompletionEvent(unrelated), Is.False);
+            Assert.That(TexturePaintStageWindow.IsObjectPickerCompletionEvent(null), Is.False);
+        }
+
+        [Test]
+        public void LayerWindowAndSceneToolOverlayHaveDistinctTitles()
+        {
+            Assert.That(TexturePaintDockWindow.WindowTitle, Is.EqualTo("Overlay Painter Layers"));
+            Assert.That(TexturePaintSceneToolPaletteOverlay.Title,
+                Is.EqualTo("Overlay Painter Toolbar"));
+        }
+
+        [Test]
+        public void EscapeExitsLayerMaskModeBeforeUnityCanCloseTheStage()
+        {
+            var escape = new Event { type = EventType.KeyDown, keyCode = KeyCode.Escape };
+            var otherKey = new Event { type = EventType.KeyDown, keyCode = KeyCode.B };
+
+            Assert.That(TexturePaintStageWindow.ShouldExitLayerMaskMode(escape, true, 0), Is.True);
+            Assert.That(TexturePaintStageWindow.ShouldExitLayerMaskMode(escape, false, 0), Is.False);
+            Assert.That(TexturePaintStageWindow.ShouldExitLayerMaskMode(escape, true, 1), Is.False,
+                "An active Geometry Fill consumes the first Escape before Mask mode exits.");
+            Assert.That(TexturePaintStageWindow.ShouldExitLayerMaskMode(otherKey, true, 0), Is.False);
+
+            escape.control = true;
+            Assert.That(TexturePaintStageWindow.ShouldExitLayerMaskMode(escape, true, 0), Is.False);
+
+            TexturePaintStageWindow stage = Own(ScriptableObject.CreateInstance<TexturePaintStageWindow>());
+            const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
+            FieldInfo maskMode = typeof(TexturePaintStageWindow).GetField("layerMaskMode", flags);
+            FieldInfo soloMask = typeof(TexturePaintStageWindow).GetField("soloLayerMask", flags);
+            MethodInfo handleEscape = typeof(TexturePaintStageWindow).GetMethod(
+                "TryExitLayerMaskModeFromShortcut", flags);
+            Assert.That(maskMode, Is.Not.Null);
+            Assert.That(soloMask, Is.Not.Null);
+            Assert.That(handleEscape, Is.Not.Null);
+
+            maskMode.SetValue(stage, true);
+            soloMask.SetValue(stage, true);
+            escape.control = false;
+            Assert.That((bool)handleEscape.Invoke(stage, new object[] { escape }), Is.True);
+            Assert.That(escape.type, Is.EqualTo(EventType.Used),
+                "Overlay Painter must consume Escape before Unity's stage navigation sees it.");
+            Assert.That((bool)maskMode.GetValue(stage), Is.False);
+            Assert.That((bool)soloMask.GetValue(stage), Is.False);
+        }
+
+        [Test]
+        public void CompactWorkspaceDefinesRequestedTabsAndIsOptional()
+        {
+            string layout = TexturePaintWorkspaceLayout.CompactLayoutDefinition;
+            Assert.That(layout, Does.Contain("\"horizontal\": true"));
+            Assert.That(layout, Does.Contain("\"TexturePaintDockWindow\""));
+            Assert.That(layout, Does.Contain("\"TexturePaintBrushWindow\""));
+            Assert.That(layout, Does.Contain("\"SceneView\""));
+            Assert.That(layout, Does.Contain("\"TexturePaintUVWindow\""));
+            Assert.That(layout, Does.Contain("\"restore_layout_dimension\": true"));
+
+            SceneView compactScene = Own(ScriptableObject.CreateInstance<SceneView>());
+            SceneView otherScene = Own(ScriptableObject.CreateInstance<SceneView>());
+            Assert.That(TexturePaintWorkspaceLayout.IsExpectedOverlayHost(false, compactScene,
+                otherScene), Is.True, "The ordinary workspace retains its existing Scene-view behavior.");
+            Assert.That(TexturePaintWorkspaceLayout.IsExpectedOverlayHost(true, compactScene,
+                compactScene), Is.True);
+            Assert.That(TexturePaintWorkspaceLayout.IsExpectedOverlayHost(true, compactScene,
+                otherScene), Is.False,
+                "Compact View toolbars must be hidden from every Scene view except its docked Scene tab.");
+
+            UMASettings previousSettings = UMASettings.instance;
+            UMASettings settings = Own(ScriptableObject.CreateInstance<UMASettings>());
+            try
+            {
+                UMASettings.instance = settings;
+                Assert.That(settings.texturePaintCompactView, Is.True,
+                    "Compact View is the recommended default but must remain optional.");
+                Assert.That(UMASettings.TexturePaintCompactView, Is.True);
+                settings.texturePaintCompactView = false;
+                Assert.That(UMASettings.TexturePaintCompactView, Is.False);
+            }
+            finally
+            {
+                UMASettings.instance = previousSettings;
+            }
+        }
+
+        [Test]
+        public void SceneToolbarProvidesAnExplicitFullWidthShutdownButton()
+        {
+            var button = new TexturePaintSceneShutdownButton();
+
+            Assert.That(button.text, Is.EqualTo("Shutdown Overlay Painter"));
+            Assert.That(button.tooltip, Does.Contain("Save, discard, or cancel"));
+            Assert.That(button.style.minWidth.value.value, Is.GreaterThanOrEqualTo(170f));
+            Assert.That(button.style.flexShrink.value, Is.EqualTo(0f));
+        }
+
+        [Test]
+        public void FreshCharacterLaunchPrefersBodyAndDefaultsToIsolate()
+        {
+            var internallyNamedBody = new TexturePaintLogicalTarget
+            {
+                id = "udim:body-skin",
+                displayName = "Skin"
+            };
+            internallyNamedBody.members.Add(new TexturePaintLogicalTargetMember
+            {
+                slotName = "UMA30_Body_UDIM1001_slot"
+            });
+            var bodyHair = new TexturePaintLogicalTarget
+            {
+                id = "slot:Body_Hair",
+                displayName = "Body Hair"
+            };
+            var head = new TexturePaintLogicalTarget
+            {
+                id = "slot:Head",
+                displayName = "Head"
+            };
+            var body = new TexturePaintLogicalTarget
+            {
+                id = "udim:human-body",
+                displayName = "Human Body"
+            };
+            body.members.Add(new TexturePaintLogicalTargetMember
+            {
+                slotName = "UMA30_Body_UDIM1001_slot"
+            });
+
+            Assert.That(TexturePaintStageWindow.FindPreferredCharacterBodyTarget(
+                new[] { internallyNamedBody, bodyHair, head, body }), Is.SameAs(body),
+                "Only the visible target name may qualify a character Body default.");
+            Assert.That(TexturePaintStageWindow.FindPreferredCharacterBodyTarget(
+                new[] { internallyNamedBody, head }), Is.Null,
+                "An internal ID or member slot containing Body must not qualify a differently named target.");
+            Assert.That(TexturePaintStageWindow.ShouldDefaultCharacterIsolate(false, null), Is.True);
+            Assert.That(TexturePaintStageWindow.ShouldDefaultCharacterIsolate(true, null), Is.False,
+                "Standalone slot launches must retain their existing Isolate default.");
+        }
+
+        [Test]
+        public void CharacterBodyDefaultTakesPriorityOverRestoredSlotSelection()
+        {
+            var catalog = new TexturePaintLogicalTargetCatalog();
+            catalog.Rebuild(new[]
+            {
+                new ReconstructedSurface { slotNames = new List<string> { "Head" } },
+                new ReconstructedSurface { slotNames = new List<string> { "Human Body" } }
+            });
+
+            TexturePaintLogicalTarget target = TexturePaintStageWindow.ResolveInitialLogicalTarget(
+                catalog, new[] { "Head" }, "slot:Head", true);
+
+            Assert.That(target, Is.SameAs(catalog.FindBySlot("Human Body")));
+            Assert.That(target.displayName, Is.EqualTo("Human Body"));
+        }
+
+        [Test]
+        public void RestoredCharacterWorkspaceRetainsItsExplicitIsolateChoice()
+        {
+            var currentState = new TexturePaintStageState
+            {
+                version = TexturePaintStageState.CurrentVersion,
+                isolateSelectedSlots = false
+            };
+            var legacyState = new TexturePaintStageState { version = 9 };
+
+            Assert.That(TexturePaintStageWindow.ShouldDefaultCharacterIsolate(false, currentState), Is.False);
+            Assert.That(TexturePaintStageWindow.ShouldDefaultCharacterIsolate(false, legacyState), Is.True);
         }
 
         [Test]
@@ -4458,6 +5235,93 @@ namespace UMA.TexturePaint.Editor.Tests
                 }
                 return Task.CompletedTask;
             }
+        }
+
+        private sealed class CompactSolidPlugin : ITexturePaintGeneratorV2
+        {
+            public TexturePaintPluginDescriptor Descriptor { get; } =
+                new TexturePaintPluginDescriptor
+                {
+                    id = "com.uma.tests.compact-gpu-commit",
+                    displayName = "Compact GPU Commit",
+                    capabilities = TexturePaintPluginCapability.Generator,
+                    declaredChannels = TexturePaintChannelMask.Albedo
+                };
+
+            public Task ExecuteAsync(TexturePaintCommandContextV2 context)
+            {
+                for (int i = 0; i < context.source.surfaceIds.Count; i++)
+                {
+                    string surfaceId = context.source.surfaceIds[i];
+                    TexturePaintReadOnlyChannelInfo info = context.source.GetChannelInfo(surfaceId,
+                        TexturePaintChannel.Albedo);
+                    if (info == null) continue;
+                    var pixels = new Color32[info.width * info.height];
+                    for (int pixel = 0; pixel < pixels.Length; pixel++)
+                        pixels[pixel] = new Color32(255, 0, 0, 255);
+                    context.WriteTileCompact(surfaceId, TexturePaintChannel.Albedo,
+                        new RectInt(0, 0, info.width, info.height), pixels,
+                        TexturePaintPluginColorSpace.Linear, TexturePaintPluginBlend.Replace);
+                }
+                return Task.CompletedTask;
+            }
+        }
+
+        private sealed class GpuDirtProbePlugin : ITexturePaintGeneratorV2,
+            ITexturePaintGpuGeneratorV2
+        {
+            public bool cpuFallbackInvoked;
+            public string GpuKernelName => "CSDirtify";
+            public TexturePaintPluginDescriptor Descriptor { get; } =
+                new TexturePaintPluginDescriptor
+                {
+                    id = "com.uma.tests.gpu-dirt-probe",
+                    displayName = "GPU Dirt Probe",
+                    capabilities = TexturePaintPluginCapability.Generator |
+                                   TexturePaintPluginCapability.ReadsMeshMaps |
+                                   TexturePaintPluginCapability.GpuAccelerated,
+                    declaredChannels = TexturePaintChannelMask.Albedo,
+                    readChannels = TexturePaintChannelMask.AmbientOcclusion,
+                    requiredMeshMaps = TexturePaintMeshMapMask.WorldPosition |
+                                       TexturePaintMeshMapMask.WorldNormal |
+                                       TexturePaintMeshMapMask.SignedCurvature |
+                                       TexturePaintMeshMapMask.AmbientOcclusion |
+                                       TexturePaintMeshMapMask.SurfaceId,
+                    parameters = new List<TexturePaintPluginParameterDefinition>
+                    {
+                        Number("projection", 1f, TexturePaintPluginParameterType.Integer),
+                        Number("textureScale", 1f), Number("seed", 1f,
+                            TexturePaintPluginParameterType.Integer),
+                        Number("normalCurvature", 0f), Number("featureSize", 0f),
+                        Number("detectionLevel", 0f), Number("spread", 0f),
+                        Number("amount", 1f), Number("cavityInfluence", 1f),
+                        Number("breakup", 0f), Number("breakupScale", 1f),
+                        Number("fractalLevels", 1f, TexturePaintPluginParameterType.Integer),
+                        Number("fractalPersistence", 0.5f), Number("fractalEdge", 0f),
+                        new TexturePaintPluginParameterDefinition
+                        {
+                            id = "surfaceColor", displayName = "Surface Color",
+                            type = TexturePaintPluginParameterType.Color,
+                            defaultColor = Color.red
+                        },
+                        Number("roughness", 0.8f), Number("ambientOcclusion", 0.4f),
+                        Number("normalAmount", 0.1f)
+                    }
+                };
+
+            public Task ExecuteAsync(TexturePaintCommandContextV2 context)
+            {
+                cpuFallbackInvoked = true;
+                return Task.CompletedTask;
+            }
+
+            private static TexturePaintPluginParameterDefinition Number(string id,
+                float value, TexturePaintPluginParameterType type =
+                    TexturePaintPluginParameterType.Float) => new()
+                {
+                    id = id, displayName = id, type = type, minimum = -100000f,
+                    maximum = 100000f, defaultNumber = value
+                };
         }
 
         private T Own<T>(T value) where T : Object

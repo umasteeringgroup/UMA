@@ -124,6 +124,34 @@ namespace UMA.TexturePaint.Editor
             public TexturePaintChannelSourceSettings after;
         }
 
+        private sealed class LayerMaskClipboardEntry
+        {
+            public int width;
+            public int height;
+            public Color32[] pixels;
+            public float baseValue;
+            public TexturePaintLayerMaskEffects effects;
+            public TexturePaintChannelSourceSettings sourceSettings;
+            public TexturePaintChannel sourceChannel;
+            public string pluginId;
+            public string pluginVersion;
+            public string pluginParametersJson;
+            public TexturePaintPluginParameterSet pluginParameters;
+            public bool pluginStale;
+            public string pluginLastError;
+        }
+
+        private sealed class LayerMaskClipboardData
+        {
+            public string sourceLayerName;
+            public LayerMaskClipboardEntry fallback;
+            public readonly Dictionary<string, LayerMaskClipboardEntry> entries =
+                new Dictionary<string, LayerMaskClipboardEntry>(StringComparer.Ordinal);
+        }
+
+        private static LayerMaskClipboardData layerMaskClipboard;
+        private static bool HasLayerMaskClipboard => layerMaskClipboard?.fallback != null;
+
         private bool CanUndoLightweight => lightweightUndo != null && lightweightUndo.Count > 0;
         private bool CanRedoLightweight => lightweightRedo != null && lightweightRedo.Count > 0;
         private string LightweightUndoLabel => CanUndoLightweight ? lightweightUndo[lightweightUndo.Count - 1].label : null;
@@ -544,13 +572,25 @@ namespace UMA.TexturePaint.Editor
             TexturePaintBlendMode blendMode,
             Dictionary<TexturePaintChannel, TexturePaintBlendMode> channelBlendOverrides)
         {
+            TexturePaintBlendMode previousBlendMode = layer.blendMode;
             layer.name = name;
             layer.opacity = opacity;
             layer.blendMode = blendMode;
-            if (channelBlendOverrides != null)
-                foreach (KeyValuePair<TexturePaintChannel, TexturePaintLayerChannelSettings> pair in layer.channelSettings)
+            foreach (KeyValuePair<TexturePaintChannel, TexturePaintLayerChannelSettings> pair in layer.channelSettings)
+            {
+                if (channelBlendOverrides != null)
+                {
                     if (channelBlendOverrides.TryGetValue(pair.Key, out TexturePaintBlendMode old))
                         pair.Value.blendMode = old;
+                }
+                // A channel starts with the layer blend mode and continues to inherit it until the
+                // user selects a different Channel Blend. Keep inherited channels synchronized while
+                // preserving intentional per-channel overrides.
+                else if (pair.Value.blendMode == previousBlendMode)
+                {
+                    pair.Value.blendMode = blendMode;
+                }
+            }
             set.BindPreviewTextures();
         }
 
@@ -843,6 +883,198 @@ namespace UMA.TexturePaint.Editor
             return true;
         }
 
+        private bool CopyLayerMaskToClipboard(TextureSet set, TexturePaintLayer layer)
+        {
+            if (!TryResolveLogicalPeers(set, layer, out List<TexturePaintLogicalLayerMember> peers,
+                out string error))
+            {
+                ShowWorkspaceStatus(error);
+                return false;
+            }
+            var clipboard = new LayerMaskClipboardData { sourceLayerName = layer.name };
+            for (int i = 0; i < peers.Count; i++)
+            {
+                TexturePaintLogicalLayerMember peer = peers[i];
+                TexturePaintLayerMask mask = peer.layer?.layerMask;
+                if (mask?.target?.Front == null) continue;
+                LayerMaskClipboardEntry entry = CaptureLayerMaskClipboardEntry(mask);
+                if (entry == null) continue;
+                string key = LayerMaskClipboardKey(peer);
+                if (!string.IsNullOrEmpty(key)) clipboard.entries[key] = entry;
+                if (ReferenceEquals(peer.textureSet, set) && ReferenceEquals(peer.layer, layer))
+                    clipboard.fallback = entry;
+                clipboard.fallback ??= entry;
+            }
+            if (clipboard.fallback == null)
+            {
+                ShowWorkspaceStatus("The selected layer has no mask to copy.");
+                return false;
+            }
+            layerMaskClipboard = clipboard;
+            ShowWorkspaceStatus($"Copied mask from '{layer.name}'.");
+            RepaintAll();
+            return true;
+        }
+
+        private bool PasteLayerMaskFromClipboardWithHistory(TextureSet set, TexturePaintLayer layer)
+        {
+            if (!HasLayerMaskClipboard)
+            {
+                ShowWorkspaceStatus("Copy a layer mask before pasting.");
+                return false;
+            }
+            if (!TryResolveLogicalPeers(set, layer, out List<TexturePaintLogicalLayerMember> peers,
+                out string error))
+            {
+                ShowWorkspaceStatus(error);
+                return false;
+            }
+            var before = new Dictionary<TexturePaintLayer, TexturePaintLayerMask>();
+            var after = new Dictionary<TexturePaintLayer, TexturePaintLayerMask>();
+            for (int i = 0; i < peers.Count; i++)
+            {
+                TexturePaintLogicalLayerMember peer = peers[i];
+                string key = LayerMaskClipboardKey(peer);
+                LayerMaskClipboardEntry entry = !string.IsNullOrEmpty(key) &&
+                    layerMaskClipboard.entries.TryGetValue(key, out LayerMaskClipboardEntry matching)
+                        ? matching : layerMaskClipboard.fallback;
+                TexturePaintLayerMask pasted = CreateLayerMaskFromClipboardEntry(
+                    peer.textureSet, peer.layer, entry);
+                if (pasted == null)
+                {
+                    foreach (TexturePaintLayerMask created in after.Values) created?.Dispose();
+                    ShowWorkspaceStatus("The destination layer has no valid mask resolution.");
+                    return false;
+                }
+                before[peer.layer] = peer.layer.layerMask;
+                after[peer.layer] = pasted;
+            }
+
+            Action restore = () => ApplyLayerMaskClipboardState(peers, before);
+            Action apply = () => ApplyLayerMaskClipboardState(peers, after);
+            apply();
+            PushLightweightCommand("Paste Layer Mask", restore, apply, () =>
+            {
+                for (int i = 0; i < peers.Count; i++)
+                {
+                    TexturePaintLayer peerLayer = peers[i].layer;
+                    if (before.TryGetValue(peerLayer, out TexturePaintLayerMask oldMask) &&
+                        oldMask != null && !ReferenceEquals(peerLayer.layerMask, oldMask))
+                        oldMask.Dispose();
+                    if (after.TryGetValue(peerLayer, out TexturePaintLayerMask pastedMask) &&
+                        pastedMask != null && !ReferenceEquals(peerLayer.layerMask, pastedMask))
+                        pastedMask.Dispose();
+                }
+            });
+            MarkDocumentDirty(peers);
+            ShowWorkspaceStatus($"Pasted mask from '{layerMaskClipboard.sourceLayerName}' onto '{layer.name}'.");
+            return true;
+        }
+
+        private static LayerMaskClipboardEntry CaptureLayerMaskClipboardEntry(TexturePaintLayerMask mask)
+        {
+            RenderTexture source = mask?.target?.Front;
+            if (source == null || source.width <= 0 || source.height <= 0) return null;
+            Texture2D snapshot = new Texture2D(source.width, source.height,
+                TextureFormat.RGBA32, false, true)
+            {
+                hideFlags = HideFlags.HideAndDontSave
+            };
+            RenderTexture previous = RenderTexture.active;
+            try
+            {
+                RenderTexture.active = source;
+                snapshot.ReadPixels(new Rect(0f, 0f, source.width, source.height), 0, 0, false);
+                snapshot.Apply(false, false);
+                return new LayerMaskClipboardEntry
+                {
+                    width = source.width,
+                    height = source.height,
+                    pixels = snapshot.GetPixels32(),
+                    baseValue = mask.baseValue,
+                    effects = mask.effects?.Clone() ?? new TexturePaintLayerMaskEffects(),
+                    sourceSettings = mask.sourceSettings?.Clone() ??
+                        TexturePaintLayerMask.DefaultSourceSettings(),
+                    sourceChannel = mask.sourceChannel,
+                    pluginId = mask.pluginId,
+                    pluginVersion = mask.pluginVersion,
+                    pluginParametersJson = mask.pluginParametersJson,
+                    pluginParameters = mask.pluginParameters?.Clone() ??
+                        new TexturePaintPluginParameterSet(),
+                    pluginStale = mask.pluginStale,
+                    pluginLastError = mask.pluginLastError
+                };
+            }
+            finally
+            {
+                RenderTexture.active = previous;
+                UnityEngine.Object.DestroyImmediate(snapshot);
+            }
+        }
+
+        private static TexturePaintLayerMask CreateLayerMaskFromClipboardEntry(TextureSet set,
+            TexturePaintLayer layer, LayerMaskClipboardEntry entry)
+        {
+            if (set == null || layer == null || entry?.pixels == null || entry.width <= 0 ||
+                entry.height <= 0 || entry.pixels.Length != entry.width * entry.height) return null;
+            set.GetMaskResolution(out int width, out int height);
+            if (width <= 0 || height <= 0) return null;
+            Texture2D snapshot = new Texture2D(entry.width, entry.height,
+                TextureFormat.RGBA32, false, true)
+            {
+                hideFlags = HideFlags.HideAndDontSave,
+                wrapMode = TextureWrapMode.Clamp,
+                filterMode = FilterMode.Bilinear
+            };
+            try
+            {
+                snapshot.SetPixels32(entry.pixels);
+                snapshot.Apply(false, false);
+                return new TexturePaintLayerMask
+                {
+                    baseValue = Mathf.Clamp01(entry.baseValue),
+                    effects = entry.effects?.Clone() ?? new TexturePaintLayerMaskEffects(),
+                    sourceSettings = entry.sourceSettings?.Clone() ??
+                        TexturePaintLayerMask.DefaultSourceSettings(),
+                    sourceChannel = entry.sourceChannel,
+                    pluginId = entry.pluginId,
+                    pluginVersion = entry.pluginVersion,
+                    pluginParametersJson = entry.pluginParametersJson,
+                    pluginParameters = entry.pluginParameters?.Clone() ??
+                        new TexturePaintPluginParameterSet(),
+                    pluginStale = entry.pluginStale,
+                    pluginLastError = entry.pluginLastError,
+                    target = new EditableTextureTarget(layer.name + " Layer Mask", width, height,
+                        RenderTextureFormat.ARGB32, snapshot, TextureSet.MaskColor(entry.baseValue))
+                };
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(snapshot);
+            }
+        }
+
+        private static void ApplyLayerMaskClipboardState(List<TexturePaintLogicalLayerMember> peers,
+            Dictionary<TexturePaintLayer, TexturePaintLayerMask> state)
+        {
+            for (int i = 0; i < peers.Count; i++)
+            {
+                TexturePaintLogicalLayerMember peer = peers[i];
+                state.TryGetValue(peer.layer, out TexturePaintLayerMask mask);
+                peer.layer.layerMask = mask;
+                peer.textureSet.BindPreviewTextures();
+            }
+        }
+
+        private static string LayerMaskClipboardKey(TexturePaintLogicalLayerMember peer)
+        {
+            if (!string.IsNullOrEmpty(peer?.textureSet?.persistentId))
+                return "set:" + peer.textureSet.persistentId;
+            if (peer?.targetMember == null) return null;
+            return "member:" + (peer.targetMember.slotName ?? string.Empty) + ":" +
+                peer.targetMember.udimTileNumber;
+        }
+
         private void ChangeLayerMaskEffects(TextureSet set, TexturePaintLayer layer,
             TexturePaintLayerMaskEffects effects)
         {
@@ -972,8 +1204,7 @@ namespace UMA.TexturePaint.Editor
             spline = layer.spline;
             splineMode = true;
             RestoreSplineSettings(layer.splineSettings);
-            QueueSplineReapply(set);
-            ScheduleSplineReapply();
+            RequestSplineReapply(set, false);
         }
 
         private void ChangeLayerChannel(TextureSet set, TexturePaintLayer layer, TexturePaintChannel channel,
@@ -1089,6 +1320,56 @@ namespace UMA.TexturePaint.Editor
                 () => Apply(strength, radius, invert), null,
                 "normal-control:" + set.persistentId);
             MarkDocumentDirtyAfterStructuralChange();
+        }
+
+        private void ChangeChannelAdjustments(TextureSet set, TexturePaintChannel channel,
+            TexturePaintChannelAdjustments requested)
+        {
+            TextureChannelTarget target = set?.GetChannel(channel);
+            if (target == null || requested == null || channel == TexturePaintChannel.Normal) return;
+            TexturePaintChannelAdjustments before = target.adjustments?.Clone() ??
+                new TexturePaintChannelAdjustments();
+            TexturePaintChannelAdjustments after = requested.Clone();
+            before.Normalize();
+            after.Normalize();
+            if (ChannelAdjustmentsEqual(before, after)) return;
+
+            void Apply(TexturePaintChannelAdjustments value)
+            {
+                target.adjustments = value.Clone();
+                set.CompositeChannel(channel);
+                set.BindPreviewTextures(false);
+            }
+
+            Apply(after);
+            PushLightweightCommand("Adjust " + TexturePaintChannelUtility.DisplayName(channel),
+                () => Apply(before), () => Apply(after), null,
+                "channel-adjustments:" + set.persistentId + ":" + channel);
+            MarkDocumentDirtyAfterStructuralChange();
+        }
+
+        private static bool ChannelAdjustmentsEqual(TexturePaintChannelAdjustments left,
+            TexturePaintChannelAdjustments right)
+        {
+            return Mathf.Approximately(left.brightness, right.brightness) &&
+                Mathf.Approximately(left.contrast, right.contrast) &&
+                Mathf.Approximately(left.hue, right.hue) &&
+                Mathf.Approximately(left.vibrance, right.vibrance) &&
+                Mathf.Approximately(left.saturation, right.saturation) &&
+                left.colorBalance == right.colorBalance &&
+                AnimationCurvesEqual(left.grayscaleAdjustmentCurve, right.grayscaleAdjustmentCurve);
+        }
+
+        private static bool AnimationCurvesEqual(AnimationCurve left, AnimationCurve right)
+        {
+            if (ReferenceEquals(left, right)) return true;
+            if (left == null || right == null || left.preWrapMode != right.preWrapMode ||
+                left.postWrapMode != right.postWrapMode || left.length != right.length) return false;
+            Keyframe[] leftKeys = left.keys;
+            Keyframe[] rightKeys = right.keys;
+            for (int i = 0; i < leftKeys.Length; i++)
+                if (!leftKeys[i].Equals(rightKeys[i])) return false;
+            return true;
         }
 
         private bool AddLayerChannelWithHistory(TextureSet set, TexturePaintLayer layer,
@@ -1451,6 +1732,93 @@ namespace UMA.TexturePaint.Editor
                     }
                 });
             MarkDocumentDirty(peers);
+        }
+
+        private bool RasterizeFillLayerWithHistory(TextureSet set, TexturePaintLayer layer)
+        {
+            if (set == null || layer?.kind != TexturePaintLayerKind.Fill) return false;
+            if (!TryResolveLogicalPeers(set, layer, out List<TexturePaintLogicalLayerMember> peers,
+                    out string error))
+            {
+                ShowWorkspaceStatus(error);
+                return false;
+            }
+
+            var before = new List<LayerLocation>(peers.Count);
+            var after = new List<LayerLocation>(peers.Count);
+            for (int i = 0; i < peers.Count; i++)
+            {
+                TexturePaintLogicalLayerMember peer = peers[i];
+                int index = peer.textureSet.layers.IndexOf(peer.layer);
+                Texture maskPixels = peer.textureSet.GetLayerMaskPreview(peer.layer);
+                TexturePaintLayer rasterized = peer.textureSet.CloneLayer(peer.layer,
+                    peer.layer.name, true);
+                if (rasterized == null)
+                {
+                    for (int dispose = 0; dispose < after.Count; dispose++)
+                        after[dispose].layer.Dispose();
+                    return false;
+                }
+
+                rasterized.kind = TexturePaintLayerKind.Paint;
+                rasterized.fillSettings = null;
+                rasterized.fillColor = Color.white;
+                TexturePaintChannel paintChannel = rasterized.TryGetFirstAuthoredChannel(
+                    out TexturePaintChannel firstChannel) ? firstChannel : TexturePaintChannel.Albedo;
+                rasterized.paintSettings = new TexturePaintLayerSettings
+                {
+                    channel = paintChannel,
+                    source = TexturePaintBrushSource.Color,
+                    destination = TexturePaintSourceMode.SourceOverlay,
+                    color = DefaultChannelSourceColor(paintChannel)
+                };
+                foreach (KeyValuePair<TexturePaintChannel, TexturePaintLayerChannelSettings> pair in
+                         rasterized.channelSettings)
+                {
+                    pair.Value.sourceSettings = new TexturePaintChannelSourceSettings
+                    {
+                        source = TexturePaintBrushSource.Color,
+                        color = DefaultChannelSourceColor(pair.Key),
+                        normalConvention = normalConvention
+                    };
+                }
+                if (rasterized.layerMask?.target != null && maskPixels != null)
+                {
+                    rasterized.layerMask.target.Reset(maskPixels, Color.white);
+                    rasterized.layerMask.baseValue = 1f;
+                    rasterized.layerMask.effects = new TexturePaintLayerMaskEffects();
+                }
+                rasterized.NormalizeKindPayload();
+                before.Add(new LayerLocation { set = peer.textureSet, layer = peer.layer, index = index });
+                after.Add(new LayerLocation { set = peer.textureSet, layer = rasterized, index = index });
+            }
+
+            for (int i = 0; i < before.Count; i++)
+                SwapLayerSnapshot(before[i].set, before[i].layer, after[i].layer, before[i].index);
+            PushLightweightCommand("Rasterize Fill Layer",
+                () =>
+                {
+                    for (int i = 0; i < before.Count; i++)
+                        SwapLayerSnapshot(before[i].set, after[i].layer, before[i].layer,
+                            before[i].index);
+                },
+                () =>
+                {
+                    for (int i = 0; i < before.Count; i++)
+                        SwapLayerSnapshot(before[i].set, before[i].layer, after[i].layer,
+                            after[i].index);
+                },
+                () =>
+                {
+                    for (int i = 0; i < before.Count; i++)
+                    {
+                        DisposeLayerIfDetached(before[i].set, before[i].layer);
+                        DisposeLayerIfDetached(after[i].set, after[i].layer);
+                    }
+                });
+            MarkDocumentDirtyAfterStructuralChange();
+            ShowWorkspaceStatus($"Rasterized '{layer.name}' to an editable Paint layer.");
+            return true;
         }
 
         private void RestoreFillSourceControls(TexturePaintLayer layer)
@@ -1894,8 +2262,7 @@ namespace UMA.TexturePaint.Editor
             selectedSplinePoint = Mathf.Clamp(state.selectedPoint, -1, spline?.PointCount - 1 ?? -1);
             selectedSplinePoints?.Clear();
             RestoreSplineSettings(layer.splineSettings);
-            QueueSplineReapply(set);
-            ReapplyPendingSpline();
+            RequestSplineReapply(set, false);
         }
 
         private static TexturePaintSpline CloneSpline(TexturePaintSpline source)
