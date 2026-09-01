@@ -28,7 +28,7 @@ Transform:
   m_GameObject: {fileID: 4334889755053565882}
   serializedVersion: 2
   m_LocalRotation: {x: 0.45621473, y: -0.6193938, z: -0.2127457, w: 0.6024606}
-  m_LocalPosition: {x: 0.298, y: 0.163, z: 0.011999997}
+  m_LocalPosition: {x: 0.304, y: 0.176, z: 0.046}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -364,15 +364,15 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6340473989258713278}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.30364576, y: -0.5367406, z: -0.31159884, w: 0.7229212}
-  m_LocalPosition: {x: 0.3062, y: 0.1111, z: -0.092}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1.0000001, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 6335993729535627788}
   - {fileID: 4334889755053734810}
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 6, y: -76.07, z: -51.33}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &6340473989258713276
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -389,7 +389,6 @@ MonoBehaviour:
   ID: RightHandMountPoint
   Position: {x: 0, y: 0, z: 0}
   Orientation: {x: 0, y: 0, z: 0, w: 0}
-  IgnoreTag: UMAIgnore
   setScale: 1
   MountOnStart: 1
 --- !u!1 &6340572747748894520

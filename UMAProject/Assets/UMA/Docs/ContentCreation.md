@@ -16,7 +16,7 @@ UMA assembles a character from a few reusable asset types:
 - A `UMAMaterial` tells UMA which shader and texture channels those overlays use.
 - A `UMAWardrobeRecipe` packages slots, overlays, hiding rules, and optional mesh modifications into an equippable item.
 
-![Separated UMA body and clothing parts](Images/ContentCreation/slot-and-clothing-parts.jpg)
+![Separated UMA body and clothing parts](Images/ContentCreation/slot-and-clothing-parts.png)
 
 An avatar is not one permanent mesh. During generation, UMA resolves the race and wardrobe recipes, combines compatible slots, composites or assigns overlay textures, applies DNA and mesh modifications, and publishes the resulting renderers.
 
@@ -51,7 +51,7 @@ Most wearable slots also need one or more overlays and a wardrobe recipe.
 
 Create a new race when the character needs a different base mesh, rig, rest pose, DNA behavior, expression setup, or wardrobe compatibility model. A race can still share wardrobe with another race through explicit cross-compatibility mappings.
 
-![UMA female and male base meshes](Images/ContentCreation/uma-base-meshes.jpg)
+![UMA female and male base meshes](Images/ContentCreation/uma-base-meshes.png)
 
 ## Prepare a Reliable Reference
 
@@ -78,7 +78,7 @@ Good UMA topology follows the same principles as any production skinned characte
 
 Different slots do not need identical topology. They do need to deform compatibly with the target body.
 
-![Different topology densities can both be valid](Images/ContentCreation/topology-density-comparison.jpg)
+![Different topology densities can both be valid](Images/ContentCreation/topology-density-comparison.png)
 
 ### Body seams
 
@@ -96,7 +96,7 @@ Keep a unified version of a new body whenever possible. The unified mesh can be 
 
 UMA can combine many slots and overlays into generated textures. Plan UVs for that workflow.
 
-![Example UMA UV layout with reusable regions](Images/ContentCreation/uma-uv-layout.jpg)
+![Example UMA UV layout with reusable regions](Images/ContentCreation/uma-uv-layout.png)
 
 ### UV rules
 
@@ -111,7 +111,7 @@ UMA can combine many slots and overlays into generated textures. Plan UVs for th
 
 An overlay does not have to occupy the full base texture. Cropping a small detail to its useful area can save source texture memory.
 
-![Cropped overlay positioned with an overlay rectangle](Images/ContentCreation/cropped-overlay-rect.jpg)
+![Cropped overlay positioned with an overlay rectangle](Images/ContentCreation/cropped-overlay-rect.png)
 
 Set the overlay `Rect` in normalized UV coordinates. The rect places the cropped texture into the correct part of the base UV layout regardless of the source image resolution.
 
@@ -139,7 +139,7 @@ For overlays layered above a base overlay, the first texture's alpha is normally
 
 UMA clothing must follow the same skeleton and deformations as the target race.
 
-![Example UMA rig hierarchy](Images/ContentCreation/uma-rig-hierarchy.jpg)
+![Example UMA rig hierarchy](Images/ContentCreation/uma-rig-hierarchy.png)
 
 Use the race's existing armature when creating a wearable. Retain the required root hierarchy and every bone used by the mesh. If the source race includes `Global` and `Position`, preserve them rather than reconstructing or renaming the hierarchy.
 
@@ -152,7 +152,7 @@ Use the race's existing armature when creating a wearable. Retain the required r
 5. Remove accidental influence from unrelated bones.
 6. Confirm that every weighted bone exists in the target race.
 
-![Weight transfer and influence preview](Images/ContentCreation/weight-transfer-example.jpg)
+![Weight transfer and influence preview](Images/ContentCreation/weight-transfer-example.png)
 
 ### Blender weight transfer
 

@@ -24,6 +24,40 @@ Select generated UMA avatars and choose `UMA > Content Creation > Prefabs > Save
 
 The command prompts for a prefab path and saves the generated character. It skips avatars already part of prefab instances. This is a faster, less configurable route than Prefab Maker.
 
+## Convert a Positioned Prefab to an Identity Root
+
+Select one or more regular Prefab Assets or Prefab Variants in the Project window and choose `Assets > UMA > Convert
+Positioned Prefab to Identity Root`. The same batch command is available at `UMA > Asset Management
+> Convert Positioned Prefabs to Identity Roots`.
+
+Use this for mounted-item Prefabs whose root stores the hand-fitting position, rotation, or scale.
+For each non-identity Prefab named `Item.prefab`, the converter:
+
+1. Copies the original asset to `Item_positioned.prefab`. This recovery copy receives a new GUID.
+2. Rewrites `Item.prefab` at its existing path, so its original GUID remains unchanged.
+3. Adds a new `Item` root with local position `(0,0,0)`, identity rotation, and scale `(1,1,1)`.
+4. Places the unpacked old hierarchy beneath it as `Item_positioned`, retaining the old local
+   transform and contents.
+
+When the source is a Prefab Variant, the converter materializes its inherited hierarchy and applied
+overrides before building the wrapper. `Item.prefab` therefore becomes a regular Prefab while
+keeping the Variant asset's GUID. The recovery copy remains a Variant with a new GUID, so the
+original base relationship is still available for reference or recovery.
+
+The wrapper does not depend on the `_positioned.prefab` copy. Existing scene, recipe, and asset
+references to the original Prefab GUID therefore continue to resolve to `Item.prefab`, while its
+visible contents retain their mounting offset beneath the new root.
+
+Before completing the conversion, the utility compares the Prefab-owned local identifiers for its
+GameObjects and Components. A mismatch triggers an automatic restoration attempt instead of
+silently breaking component overrides or serialized references. The utility also refuses to
+overwrite an existing `_positioned.prefab`, skips roots already at identity, and does not convert
+Model Prefabs or UI Prefabs with a `RectTransform` root.
+
+The conversion is not registered with Unity Undo. Commit or back up the project first, convert one
+representative mounted item, and verify its existing scene instances before processing a large
+selection.
+
 ## Scene Mesh Slot Builder
 
 Open `UMA > Content Creation > Slots > Scene Mesh Slot Builder`.
@@ -52,6 +86,7 @@ Do not run Bone Builder in Play Mode. It creates scene transforms, not a complet
 |---|---|
 | Freeze a generated avatar into a configurable reusable prefab | Prefab Maker |
 | Quickly save selected generated avatars | Save Character Prefabs |
+| Preserve a mounted Prefab offset beneath a Unity-compliant identity root | Convert Positioned Prefab to Identity Root |
 | Turn scene geometry into a weighted UMA slot and optional wardrobe recipe | Scene Mesh Slot Builder |
 | Create an UMA bone hierarchy on a scene object | Bone Builder |
 

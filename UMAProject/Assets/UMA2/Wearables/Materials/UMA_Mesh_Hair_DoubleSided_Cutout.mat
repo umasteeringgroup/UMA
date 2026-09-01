@@ -1,5 +1,31 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-5216809602760926794
+MonoBehaviour:
+  m_ObjectHideFlags: 11
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0353a89b1f911e48b9e16bdc9f2e058, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Editor::UnityEditor.Rendering.Universal.AssetVersion
+  version: 10
+--- !u!114 &-674527872296820438
+MonoBehaviour:
+  m_ObjectHideFlags: 11
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 639247ca83abc874e893eb93af2b5e44, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.ShaderGraph.Editor::UnityEditor.Rendering.BuiltIn.AssetVersion
+  version: 0
 --- !u!21 &2100000
 Material:
   serializedVersion: 8
@@ -11,19 +37,19 @@ Material:
   m_Shader: {fileID: -6465566751694194690, guid: e94df7dd60a9f3344a9c6acac535ab04, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
-  m_InvalidKeywords:
-  - _ALPHATEST_ON
-  - _NORMALMAP
+  m_ValidKeywords:
   - _RECEIVE_SHADOWS_OFF
+  m_InvalidKeywords:
+  - _NORMALMAP
   - _SPECULAR_COLOR
   - _USEHALFLAMBERT_ON
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 1
-  m_CustomRenderQueue: -1
+  m_CustomRenderQueue: 2001
   stringTagMap:
     Keep: Keep
+    RenderType: Opaque
   disabledShaderPasses:
   - MOTIONVECTORS
   m_LockedProperties: 
@@ -96,10 +122,23 @@ Material:
     - _AlphaClip: 0.306
     - _AlphaModulation: 1
     - _AlphaToMask: 1
+    - _Alpha_Clip: 0.5
+    - _BUILTIN_AlphaClip: 1
+    - _BUILTIN_Blend: 0
+    - _BUILTIN_CullMode: 2
+    - _BUILTIN_DstBlend: 0
+    - _BUILTIN_QueueControl: -1
+    - _BUILTIN_QueueOffset: 0
+    - _BUILTIN_SrcBlend: 1
+    - _BUILTIN_Surface: 0
+    - _BUILTIN_ZTest: 4
+    - _BUILTIN_ZWrite: 1
+    - _BUILTIN_ZWriteControl: 0
     - _Blend: 0
     - _BlendModePreserveSpecular: 0
     - _BumpScale: 0.35
     - _BumpStrength: 0.344
+    - _CastShadows: 1
     - _ClearCoatMask: 0
     - _ClearCoatSmoothness: 0
     - _ColorBlendModulation: 1
@@ -128,7 +167,7 @@ Material:
     - _NormalStrength: 0.6
     - _OcclusionStrength: 1
     - _Parallax: 0.02
-    - _QueueControl: -1
+    - _QueueControl: 0
     - _QueueOffset: 1
     - _ReceiveShadows: 0
     - _Richness: 0.721
@@ -151,7 +190,9 @@ Material:
     - _UseHalfLambert: 1
     - _WorkflowMode: 1
     - _XRMotionVectorsPass: 1
+    - _ZTest: 4
     - _ZWrite: 1
+    - _ZWriteControl: 0
     - __dirty: 1
     m_Colors:
     - _AltColor: {r: 1, g: 1, b: 1, a: 1}
@@ -161,5 +202,6 @@ Material:
     - _HairTint: {r: 1, g: 1, b: 1, a: 1}
     - _RimLightColor: {r: 1, g: 1, b: 1, a: 1}
     - _SpecColor: {r: 0.19999993, g: 0.19999993, b: 0.19999993, a: 0}
+    - _Specular: {r: 0, g: 0, b: 0, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

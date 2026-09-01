@@ -1,0 +1,17 @@
+{
+    "name": "UMA.HairCards.Runtime",
+    "rootNamespace": "UMA.HairCards.Runtime",
+    "references": [
+        "UMA.HairCards.Core",
+        "UMA_Core"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

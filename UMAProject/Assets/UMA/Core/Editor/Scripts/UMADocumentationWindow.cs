@@ -14,8 +14,12 @@ namespace UMA.Editors
     public class UMADocumentationWindow : EditorWindow
     {
         private const string WindowTitle = "UMA Documentation";
+        private const string PlansWindowTitle = "UMA Plans";
         private const float MinimumWidth = 260f;
         private const float MinimumHeight = 180f;
+
+        [SerializeField]
+        private bool showPlans;
 
         private readonly List<string> documentationPaths = new List<string>();
         private ScrollView documentList;
@@ -26,7 +30,20 @@ namespace UMA.Editors
 
         public static void ShowWindow()
         {
-            UMADocumentationWindow window = GetWindow<UMADocumentationWindow>(WindowTitle);
+            ShowWindow(false);
+        }
+
+        public static void ShowPlansWindow()
+        {
+            ShowWindow(true);
+        }
+
+        private static void ShowWindow(bool displayPlans)
+        {
+            string windowTitle = displayPlans ? PlansWindowTitle : WindowTitle;
+            UMADocumentationWindow window = GetWindow<UMADocumentationWindow>(windowTitle);
+            window.showPlans = displayPlans;
+            window.titleContent = new GUIContent(windowTitle, EditorGUIUtility.IconContent("TextAsset Icon").image);
             window.minSize = new Vector2(MinimumWidth, MinimumHeight);
             window.RefreshDocuments();
             window.Show();
@@ -35,7 +52,8 @@ namespace UMA.Editors
 
         private void OnEnable()
         {
-            titleContent = new GUIContent(WindowTitle, EditorGUIUtility.IconContent("TextAsset Icon").image);
+            string windowTitle = showPlans ? PlansWindowTitle : WindowTitle;
+            titleContent = new GUIContent(windowTitle, EditorGUIUtility.IconContent("TextAsset Icon").image);
         }
 
         private void OnProjectChange()
@@ -96,8 +114,9 @@ namespace UMA.Editors
             try
             {
                 string umaPath = UMAEditorUtilities.FindUMAFullPath();
+                string folderName = showPlans ? "Plans" : "Docs";
                 docsDirectory = string.IsNullOrEmpty(umaPath) ? null :
-                    UMAPathUtility.Normalize(umaPath + "/Docs");
+                    UMAPathUtility.Normalize(umaPath + "/" + folderName);
 
                 if (!string.IsNullOrEmpty(docsDirectory) && AssetDatabase.IsValidFolder(docsDirectory))
                 {
@@ -129,16 +148,17 @@ namespace UMA.Editors
                 return;
             }
 
-            locationLabel.text = string.IsNullOrEmpty(docsDirectory) ? "UMA Docs" : docsDirectory.Replace('\\', '/');
+            string folderName = showPlans ? "Plans" : "Docs";
+            locationLabel.text = string.IsNullOrEmpty(docsDirectory) ? "UMA " + folderName : docsDirectory.Replace('\\', '/');
             documentList.Clear();
 
             if (documentationPaths.Count == 0)
             {
                 messageLabel.text = !string.IsNullOrEmpty(scanError)
-                    ? "Unable to scan the UMA Docs folder: " + scanError
+                    ? "Unable to scan the UMA " + folderName + " folder: " + scanError
                     : string.IsNullOrEmpty(docsDirectory) || !Directory.Exists(docsDirectory)
-                    ? "The UMA Docs folder could not be found."
-                    : "No Markdown documents were found in the UMA Docs folder.";
+                    ? "The UMA " + folderName + " folder could not be found."
+                    : "No Markdown documents were found in the UMA " + folderName + " folder.";
                 return;
             }
 

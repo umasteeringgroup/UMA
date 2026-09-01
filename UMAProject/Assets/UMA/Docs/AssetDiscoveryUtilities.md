@@ -36,6 +36,22 @@ The window scans overlays, optionally beneath a selected folder, groups them by 
 
 This is useful before deleting or migrating a material and for determining whether a material change affects shared overlays.
 
+## Find Texture Usage in Materials
+
+Select one `Texture2D` asset in the Project window, then choose `Assets > Find Usage in Material`
+from the main menu or the asset's context menu.
+
+The results window scans project materials and material sub-assets for exact references to the
+selected texture. It includes resolved texture properties inherited by Material Variants and saved
+references belonging to shader properties that are currently hidden or no longer exposed. Every
+matching material appears on its own row with its asset path and two actions:
+
+- `Ping` highlights the material in the Project window without replacing the current selection.
+- `Inspect` opens a separate locked Inspector for the material.
+
+Use `Refresh` after changing a material assignment. Large searches show cancelable progress; a
+canceled search keeps and labels the partial results found so far.
+
 ## Tags Editor
 
 Open `UMA > Editors > Tags Editor`.
@@ -56,5 +72,6 @@ The main Global Library, Filters, Maintenance, and Project context add command a
 | Share curated project-asset lists | Favorites |
 | Find loaded instances of a MonoBehaviour type | Find Component Usages |
 | Find overlays using an UMAMaterial | Find UMAMaterial in Overlays |
+| Find materials using a Texture2D | Find Usage in Material |
 | Add or clear Unity labels for UMA asset types | Tags Editor |
 | Find indexed runtime UMA assets | Global Library |

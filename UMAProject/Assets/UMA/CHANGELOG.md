@@ -1,5 +1,14 @@
 # Changelog
 
+- Added a positioned-Prefab conversion utility under **Assets > UMA** and **UMA > Asset
+  Management**. It retains the original path and GUID on a new identity-root wrapper, keeps the old
+  hierarchy as an unpacked `_positioned` child at its authored transform, creates a separate
+  `_positioned.prefab` recovery copy, and validates prefab-owned local object ids before committing.
+  Prefab Variants are now materialized automatically while their positioned recovery copies retain
+  the original Variant relationship.
+- Added **Assets > Find Usage in Material** for a selected Texture2D. The results dialog finds
+  materials and material sub-assets using the texture, lists each match with its asset path, and
+  provides per-material **Ping** and popup **Inspect** actions.
 - Fixed Icon Creator camera capture allocating a depthless temporary output, which Unity 6.3 render
   graph rejected and rendered with error-colored pixels. Supersampled camera targets now always have
   a depth/stencil attachment, and the capture test is isolated from unrelated scene geometry.
