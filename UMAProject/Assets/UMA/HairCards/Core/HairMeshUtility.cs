@@ -106,6 +106,96 @@ namespace UMA.HairCards
             return new Vector3(1f - v - w, v, w);
         }
 
+        public static bool TryFindClosestSurface(Mesh mesh, string sourceMeshId, Vector3 localPoint,
+            out HairSurfaceAnchor anchor)
+        {
+            anchor = default;
+            if (mesh == null) return false;
+            Vector3[] vertices = mesh.vertices;
+            Vector3[] normals = mesh.normals;
+            float bestSquare = float.MaxValue;
+            int bestSubmesh = -1;
+            int bestTriangle = -1;
+            Vector3 bestPoint = localPoint;
+            Vector3 bestBarycentric = Vector3.right;
+            int bestA = 0, bestB = 0, bestC = 0;
+            for (int submesh = 0; submesh < mesh.subMeshCount; submesh++)
+            {
+                int[] indices = mesh.GetTriangles(submesh, true);
+                for (int offset = 0, triangle = 0; offset + 2 < indices.Length; offset += 3, triangle++)
+                {
+                    int a = indices[offset];
+                    int b = indices[offset + 1];
+                    int c = indices[offset + 2];
+                    Vector3 point = ClosestPointOnTriangle(localPoint, vertices[a], vertices[b], vertices[c]);
+                    float square = (point - localPoint).sqrMagnitude;
+                    if (square >= bestSquare) continue;
+                    bestSquare = square;
+                    bestSubmesh = submesh;
+                    bestTriangle = triangle;
+                    bestPoint = point;
+                    bestBarycentric = Barycentric(point, vertices[a], vertices[b], vertices[c]);
+                    bestA = a;
+                    bestB = b;
+                    bestC = c;
+                }
+            }
+            if (bestSubmesh < 0) return false;
+            Vector3 normal = normals != null && normals.Length == vertices.Length
+                ? (normals[bestA] * bestBarycentric.x + normals[bestB] * bestBarycentric.y +
+                   normals[bestC] * bestBarycentric.z).normalized
+                : Vector3.Cross(vertices[bestB] - vertices[bestA], vertices[bestC] - vertices[bestA]).normalized;
+            anchor = HairSurfaceAnchor.Create(sourceMeshId, bestSubmesh, bestTriangle, bestBarycentric,
+                0f, bestPoint, normal);
+            return true;
+        }
+
+        public static Vector3 ClosestPointOnTriangle(Vector3 point, Vector3 a, Vector3 b, Vector3 c)
+        {
+            Vector3 ab = b - a;
+            Vector3 ac = c - a;
+            Vector3 ap = point - a;
+            float d1 = Vector3.Dot(ab, ap);
+            float d2 = Vector3.Dot(ac, ap);
+            if (d1 <= 0f && d2 <= 0f) return a;
+
+            Vector3 bp = point - b;
+            float d3 = Vector3.Dot(ab, bp);
+            float d4 = Vector3.Dot(ac, bp);
+            if (d3 >= 0f && d4 <= d3) return b;
+
+            float vc = d1 * d4 - d3 * d2;
+            if (vc <= 0f && d1 >= 0f && d3 <= 0f)
+            {
+                float v = d1 / (d1 - d3);
+                return a + ab * v;
+            }
+
+            Vector3 cp = point - c;
+            float d5 = Vector3.Dot(ab, cp);
+            float d6 = Vector3.Dot(ac, cp);
+            if (d6 >= 0f && d5 <= d6) return c;
+
+            float vb = d5 * d2 - d1 * d6;
+            if (vb <= 0f && d2 >= 0f && d6 <= 0f)
+            {
+                float w = d2 / (d2 - d6);
+                return a + ac * w;
+            }
+
+            float va = d3 * d6 - d5 * d4;
+            if (va <= 0f && d4 - d3 >= 0f && d5 - d6 >= 0f)
+            {
+                float w = (d4 - d3) / ((d4 - d3) + (d5 - d6));
+                return b + (c - b) * w;
+            }
+
+            float denominator = 1f / (va + vb + vc);
+            float barycentricV = vb * denominator;
+            float barycentricW = vc * denominator;
+            return a + ab * barycentricV + ac * barycentricW;
+        }
+
         private static void Mix(ref ulong hash, int value)
         {
             unchecked

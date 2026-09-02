@@ -62,6 +62,8 @@ namespace UMA
 
         protected virtual void EnsureUMADataSetup(UMAData umaData)
         {
+            umaData.ReconcileGeneratedRendererObjects();
+
             if (umaData.umaRecipe != null)
             {
                 umaData.umaRecipe.UpdateMeshHideMasks(umaData.currentLODLevel);
@@ -109,6 +111,17 @@ namespace UMA
                 if ((umaData.RendererCount == umaData.generatedMaterials.rendererAssets.Count && umaData.AreRenderersEqual(umaData.generatedMaterials.rendererAssets)))
                 {
                     umaData.SetRendererAssets(umaData.generatedMaterials.rendererAssets.ToArray());
+                    for (int i = 0; i < renderers.Length; i++)
+                    {
+                        UMARendererAsset rendererAsset =
+                            umaData.generatedMaterials.rendererAssets[i] ??
+                            umaData.defaultRendererAsset;
+                        umaData.RegisterGeneratedRenderer(renderers[i]);
+                        UMARendererAsset.ApplySettingsAndName(
+                            renderers[i],
+                            rendererAsset,
+                            i);
+                    }
                 }
                 else
                 {
@@ -119,22 +132,20 @@ namespace UMA
 
                     for (int i = 0; i < umaData.generatedMaterials.rendererAssets.Count; i++)
                     {
-                        if (oldRenderers != null && oldRenderers.Length > i)
+                        if (oldRenderers != null &&
+                            oldRenderers.Length > i &&
+                            oldRenderers[i] != null)
                         {
                             renderers[i] = oldRenderers[i];
                             renderers[i].rootBone = globalTransform;
-                            if (umaData.generatedMaterials.rendererAssets[i] != null)
-                            {
-                                umaData.generatedMaterials.rendererAssets[i].ApplySettingsToRenderer(renderers[i]);
-                            }
-                            else
-                            {
-                                umaData.ResetRendererSettings(i);
-                                if (umaData.defaultRendererAsset != null)
-                                {
-                                    umaData.defaultRendererAsset.ApplySettingsToRenderer(renderers[i]);
-                                }
-                            }
+                            UMARendererAsset reusedRendererAsset =
+                                umaData.generatedMaterials.rendererAssets[i] ??
+                                umaData.defaultRendererAsset;
+                            umaData.RegisterGeneratedRenderer(renderers[i]);
+                            UMARendererAsset.ApplySettingsAndName(
+                                renderers[i],
+                                reusedRendererAsset,
+                                i);
 
                             continue;
                         }
@@ -191,7 +202,8 @@ namespace UMA
 
         private SkinnedMeshRenderer MakeRenderer(int i, UMAData umaData, Transform rootBone, UMARendererAsset rendererAsset = null)
         {
-            GameObject newSMRGO = new GameObject(i == 0 ? "UMARenderer" : ("UMARenderer " + i));
+            GameObject newSMRGO = new GameObject(
+                UMARendererAsset.GetRendererGameObjectName(rendererAsset, i));
             newSMRGO.transform.parent = umaData.transform;
             newSMRGO.transform.localPosition = Vector3.zero;
             newSMRGO.transform.localRotation = Quaternion.Euler(0, 0, 0f);
@@ -199,6 +211,7 @@ namespace UMA
             newSMRGO.gameObject.layer = umaData.gameObject.layer;
 
             var newRenderer = newSMRGO.AddComponent<SkinnedMeshRenderer>();
+            umaData.RegisterGeneratedRenderer(newRenderer);
             // newSMRGO.AddComponent<DestroyDebugger>();
             newRenderer.enabled = false;
             newRenderer.sharedMesh = new Mesh();
@@ -219,10 +232,10 @@ namespace UMA
             newRenderer.quality = SkinQuality.Auto;
             newRenderer.sharedMesh.name = i == 0 ? "UMAMesh" : ("UMAMesh " + i);
 
-            if (rendererAsset != null)
-            {
-                rendererAsset.ApplySettingsToRenderer(newRenderer);
-            }
+            UMARendererAsset.ApplySettingsAndName(
+                newRenderer,
+                rendererAsset,
+                i);
 
             return newRenderer;
         }

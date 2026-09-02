@@ -701,7 +701,7 @@ namespace UMA
             {
                 // force the two root transforms, reuse old bones entries to ensure any humanoid identifiers stay intact
                 var realRootBone = umaData.transform;
-                var newBone = bones[missingBoneCount - 2];
+                var newBone = missingBoneCount >= 2   ? bones[missingBoneCount - 2] : new SkeletonBone();
                 newBone.position = realRootBone.localPosition;
                 newBone.rotation = realRootBone.localRotation;
                 newBone.scale = realRootBone.localScale;

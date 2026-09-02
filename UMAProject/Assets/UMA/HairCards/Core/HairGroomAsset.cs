@@ -133,6 +133,11 @@ namespace UMA.HairCards
             sharedHelpers ??= new List<HairHelper>();
             lods ??= new List<HairLodSettings>();
             bakeSettings ??= new HairBakeSettings();
+            bakeSettings.triangleBudget = Mathf.Max(1, bakeSettings.triangleBudget);
+            bakeSettings.cardBudget = Mathf.Max(1, bakeSettings.cardBudget);
+            if (string.IsNullOrWhiteSpace(bakeSettings.outputFolder))
+                bakeSettings.outputFolder = "Assets/UMAProjectData/HairCards/Generated";
+            if (string.IsNullOrWhiteSpace(bakeSettings.assetName)) bakeSettings.assetName = "HairCards";
 
             if (groups.Count == 0)
             {
@@ -158,6 +163,12 @@ namespace UMA.HairCards
             return sourceMesh != null &&
                    string.Equals(sourceTopologySignature,
                        HairMeshUtility.ComputeTopologySignature(sourceMesh), StringComparison.Ordinal);
+        }
+
+        public void AcceptCurrentSourceTopology()
+        {
+            sourceTopologySignature = HairMeshUtility.ComputeTopologySignature(sourceMesh);
+            EnsureIntegrity();
         }
 
         private void OnEnable()

@@ -89,7 +89,7 @@ namespace UMA
 			this.boneHashData = new Dictionary<int, BoneData>();
 			BeginSkeletonUpdate();
 			AddBonesRecursive(rootBone);
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR || UNITY_ENABLE_CHECKS 
             ValidateHierarchy(rootBone, ignoreTag);
             ValidateBoneDictionary(rootBone);
 #endif
@@ -796,7 +796,7 @@ namespace UMA
 		{
 			var res = new Transform[boneNameHashes.Length];
 			Transform fallback = GetGlobalTransform() ?? GetRootTransform();
-#if UNITY_EDITOR || DEVELOPMENT_BUILD			
+#if UNITY_EDITOR || UNITY_ENABLE_CHECKS 			
 			bool reported = false;
 #endif
 			for (int i = 0; i < boneNameHashes.Length; i++)
@@ -804,7 +804,7 @@ namespace UMA
 				BoneData bd;
 				if (!boneHashData.TryGetValue(boneNameHashes[i], out bd) || bd == null || bd.boneTransform == null)
 				{
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR || UNITY_ENABLE_CHECKS 
 					if (!reported && Debug.isDebugBuild)
 					{
 						Debug.LogError($"[UMA] Missing bone hash {boneNameHashes[i]} in UMASkeleton. " +
@@ -827,7 +827,7 @@ namespace UMA
 		{
 			var res = new Transform[boneNameHashes.Count];
 			Transform fallback = GetGlobalTransform() ?? GetRootTransform();
-#if UNITY_EDITOR || DEVELOPMENT_BUILD			
+#if UNITY_EDITOR || UNITY_ENABLE_CHECKS 
 			bool reported = false;
 #endif
 			for (int i = 0; i < boneNameHashes.Count; i++)
@@ -835,7 +835,7 @@ namespace UMA
 				BoneData bd;
 				if (!boneHashData.TryGetValue(boneNameHashes[i], out bd) || bd == null || bd.boneTransform == null)
 				{
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR || UNITY_ENABLE_CHECKS 
 					if (!reported && Debug.isDebugBuild)
 					{
 						Debug.LogError($"[UMA] Missing bone hash {boneNameHashes[i]} in UMASkeleton. " +
@@ -917,7 +917,7 @@ namespace UMA
             }
         }
 
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR || UNITY_ENABLE_CHECKS 
 // Editor/dev-only: detect name collisions and ignored subtrees
 private void ValidateHierarchy(Transform root, string ignoreTag)
 {

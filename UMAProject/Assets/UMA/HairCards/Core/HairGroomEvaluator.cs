@@ -21,9 +21,10 @@ namespace UMA.HairCards
             for (int groupIndex = 0; groupIndex < groom.Groups.Count; groupIndex++)
             {
                 HairGroup group = groom.Groups[groupIndex];
-                if (group == null || !group.enabled || !group.visible) continue;
+                if (group == null || !group.enabled || (!options.includeHiddenGroups && !group.visible)) continue;
                 List<HairEvaluatedCurve> guides = BuildGuides(groom, group, options, result);
-                HairChildGenerator.Generate(group, guides, lod, options, result);
+                result.evaluatedGuides.AddRange(guides);
+                HairChildGenerator.Generate(groom, group, guides, lod, options, result);
             }
             return result;
         }
@@ -36,6 +37,7 @@ namespace UMA.HairCards
         {
             List<HairEvaluatedCurve> curves = new List<HairEvaluatedCurve>(group.guides?.Count ?? 0);
             if (group.guides == null) return curves;
+            string[] atlasRegionIds = group.atlasRegionIds?.ToArray() ?? Array.Empty<string>();
             for (int guideIndex = 0; guideIndex < group.guides.Count; guideIndex++)
             {
                 HairGuide guide = group.guides[guideIndex];
@@ -50,7 +52,9 @@ namespace UMA.HairCards
                     groupColor = group.color,
                     rootNormal = guide.root.CachedLocalNormal,
                     profile = group.profile,
-                    atlas = group.atlas
+                    atlas = group.atlas,
+                    atlasRegionSelection = group.atlasRegionSelection,
+                    atlasRegionIds = atlasRegionIds
                 };
                 for (int pointIndex = 0; pointIndex < guide.points.Count; pointIndex++)
                 {
@@ -58,7 +62,9 @@ namespace UMA.HairCards
                     curve.points.Add(new HairCurvePoint(point.position, point.width, point.roll));
                 }
 
-                if (groom.SourceMesh != null && HairMeshUtility.TryEvaluateAnchor(groom.SourceMesh, guide.root,
+                if (groom.SourceMesh != null &&
+                    string.Equals(guide.root.SourceMeshId, groom.SourceMeshId, StringComparison.Ordinal) &&
+                    HairMeshUtility.TryEvaluateAnchor(groom.SourceMesh, guide.root,
                         out Vector3 rootPosition, out Vector3 rootNormal))
                 {
                     Vector3 offset = rootPosition - curve.points[0].position;
@@ -126,7 +132,7 @@ namespace UMA.HairCards
             }
         }
 
-        private static void ApplyModifiers(
+        internal static void ApplyModifiers(
             HairGroup group,
             HairEvaluatedCurve curve,
             HairModifierDomain domain,
@@ -152,6 +158,14 @@ namespace UMA.HairCards
                         curve.points.AddRange(resampled);
                         break;
                     }
+                    case HairModifierType.Simplify:
+                    {
+                        int samples = Mathf.Clamp(Mathf.RoundToInt(modifier.amount), 2, curve.points.Count);
+                        List<HairCurvePoint> simplified = HairCurveUtility.Resample(curve.points, samples);
+                        curve.points.Clear();
+                        curve.points.AddRange(simplified);
+                        break;
+                    }
                     case HairModifierType.Length:
                         HairCurveUtility.ScaleLength(curve.points,
                             Mathf.Lerp(1f, Mathf.Max(0f, modifier.amount), modifier.weight));
@@ -168,8 +182,15 @@ namespace UMA.HairCards
                         break;
                     case HairModifierType.Lift:
                     case HairModifierType.Gravity:
+                    case HairModifierType.FlowAlign:
                         ApplyPositionVector(curve, modifier,
                             modifier.type == HairModifierType.Gravity ? Physics.gravity.normalized : modifier.vector.normalized);
+                        break;
+                    case HairModifierType.Clump:
+                        ApplyClump(curve, modifier);
+                        break;
+                    case HairModifierType.Part:
+                        ApplyPart(curve, modifier);
                         break;
                     case HairModifierType.Curl:
                     case HairModifierType.Wave:
@@ -190,10 +211,80 @@ namespace UMA.HairCards
                         break;
                     case HairModifierType.PushOut:
                     case HairModifierType.Collision:
+                    case HairModifierType.TrimByMesh:
                         ApplyHelperCollision(curve, modifier, groom);
+                        break;
+                    case HairModifierType.SurfaceProjection:
+                        ApplySurfaceProjection(curve, modifier, groom.SourceMesh);
+                        break;
+                    case HairModifierType.Mirror:
+                        ApplyMirror(curve, modifier, groom);
                         break;
                 }
             }
+        }
+
+        private static void ApplyClump(HairEvaluatedCurve curve, HairModifierSettings modifier)
+        {
+            if (curve.points.Count < 2) return;
+            Vector3 root = curve.points[0].position;
+            Vector3 tipAxis = (curve.points[curve.points.Count - 1].position - root).normalized;
+            float length = curve.Length;
+            ApplyPerPoint(curve, modifier, (point, t, weight) =>
+            {
+                Vector3 center = root + tipAxis * (length * t);
+                point.position = Vector3.Lerp(point.position, center, weight * Mathf.Clamp01(modifier.amount));
+                return point;
+            });
+        }
+
+        private static void ApplyPart(HairEvaluatedCurve curve, HairModifierSettings modifier)
+        {
+            Vector3 normal = modifier.vector.sqrMagnitude > 1e-8f ? modifier.vector.normalized : Vector3.right;
+            float side = Mathf.Sign(Vector3.Dot(curve.points[0].position, normal));
+            if (Mathf.Approximately(side, 0f)) side = 1f;
+            ApplyPositionVector(curve, modifier, normal * side);
+        }
+
+        private static void ApplySurfaceProjection(HairEvaluatedCurve curve, HairModifierSettings modifier, Mesh mesh)
+        {
+            if (mesh == null) return;
+            Vector3[] vertices = mesh.vertices;
+            Vector3[] normals = mesh.normals;
+            if (vertices.Length == 0) return;
+            for (int pointIndex = 1; pointIndex < curve.points.Count; pointIndex++)
+            {
+                HairCurvePoint point = curve.points[pointIndex];
+                int closest = 0;
+                float closestSquare = float.MaxValue;
+                for (int vertex = 0; vertex < vertices.Length; vertex++)
+                {
+                    float square = (vertices[vertex] - point.position).sqrMagnitude;
+                    if (square >= closestSquare) continue;
+                    closestSquare = square;
+                    closest = vertex;
+                }
+                Vector3 normal = normals != null && normals.Length == vertices.Length ? normals[closest] : curve.rootNormal;
+                Vector3 target = vertices[closest] + normal.normalized * modifier.amount;
+                float t = pointIndex / (curve.points.Count - 1f);
+                float ramp = modifier.rootToTip != null ? modifier.rootToTip.Evaluate(t) : 1f;
+                point.position = Vector3.Lerp(point.position, target, Mathf.Clamp01(ramp * modifier.weight));
+                curve.points[pointIndex] = point;
+            }
+        }
+
+        private static void ApplyMirror(HairEvaluatedCurve curve, HairModifierSettings modifier, HairGroomAsset groom)
+        {
+            Vector3 normal = groom.SymmetryPlaneNormal;
+            Vector3 planePoint = groom.SymmetryPlanePoint;
+            ApplyPerPoint(curve, modifier, (point, t, weight) =>
+            {
+                float distance = Vector3.Dot(point.position - planePoint, normal);
+                Vector3 mirrored = point.position - normal * (2f * distance);
+                point.position = Vector3.Lerp(point.position, mirrored, weight);
+                point.roll = Mathf.Lerp(point.roll, -point.roll, weight);
+                return point;
+            });
         }
 
         private static void ApplyConstraints(HairGroup group, HairEvaluatedCurve curve, HairGroomAsset groom)
@@ -307,9 +398,15 @@ namespace UMA.HairCards
             HairConstraintSettings constraint,
             HairHelper helper)
         {
-            if (helper.points == null || helper.points.Count == 0) return;
-            List<HairCurvePoint> helperCurve = new List<HairCurvePoint>(helper.points.Count);
-            for (int i = 0; i < helper.points.Count; i++) helperCurve.Add(new HairCurvePoint(helper.points[i], 0f, 0f));
+            List<HairCurvePoint> helperCurve = new List<HairCurvePoint>();
+            if (helper.points != null)
+                for (int i = 0; i < helper.points.Count; i++)
+                    helperCurve.Add(new HairCurvePoint(helper.points[i], 0f, 0f));
+            if (helperCurve.Count == 0)
+            {
+                helperCurve.Add(new HairCurvePoint(helper.position, 0f, 0f));
+                helperCurve.Add(new HairCurvePoint(helper.position, 0f, 0f));
+            }
             List<HairCurvePoint> samples = HairCurveUtility.Resample(helperCurve, curve.points.Count);
             for (int i = 0; i < curve.points.Count; i++)
             {
@@ -341,16 +438,58 @@ namespace UMA.HairCards
 
         private static Vector3 PushOutsideHelper(Vector3 point, HairHelper helper, float weight)
         {
-            if (helper.type != HairHelperType.Sphere && helper.type != HairHelperType.Repulsor &&
-                helper.type != HairHelperType.VolumeTarget)
+            float blend = Mathf.Clamp01(weight);
+            if (blend <= 0f) return point;
+            Matrix4x4 localToWorld = Matrix4x4.TRS(helper.position, helper.rotation, helper.scale);
+            Matrix4x4 worldToLocal = localToWorld.inverse;
+            Vector3 local = worldToLocal.MultiplyPoint3x4(point);
+            Vector3 projected;
+            switch (helper.type)
             {
-                return point;
+                case HairHelperType.Sphere:
+                case HairHelperType.Repulsor:
+                case HairHelperType.VolumeTarget:
+                {
+                    float distance = local.magnitude;
+                    if (distance >= helper.radius || helper.radius <= 0f) return point;
+                    Vector3 direction = distance > 1e-7f ? local / distance : Vector3.up;
+                    projected = direction * helper.radius;
+                    break;
+                }
+                case HairHelperType.Box:
+                case HairHelperType.SculptCage:
+                {
+                    Vector3 half = helper.size * 0.5f;
+                    if (Mathf.Abs(local.x) >= half.x || Mathf.Abs(local.y) >= half.y ||
+                        Mathf.Abs(local.z) >= half.z) return point;
+                    Vector3 faceDistance = new Vector3(half.x - Mathf.Abs(local.x),
+                        half.y - Mathf.Abs(local.y), half.z - Mathf.Abs(local.z));
+                    projected = local;
+                    if (faceDistance.x <= faceDistance.y && faceDistance.x <= faceDistance.z)
+                        projected.x = Mathf.Sign(Mathf.Approximately(local.x, 0f) ? 1f : local.x) * half.x;
+                    else if (faceDistance.y <= faceDistance.z)
+                        projected.y = Mathf.Sign(Mathf.Approximately(local.y, 0f) ? 1f : local.y) * half.y;
+                    else projected.z = Mathf.Sign(Mathf.Approximately(local.z, 0f) ? 1f : local.z) * half.z;
+                    break;
+                }
+                case HairHelperType.Capsule:
+                {
+                    float halfSegment = Mathf.Max(0f, helper.size.y * 0.5f - helper.radius);
+                    Vector3 axisPoint = new Vector3(0f, Mathf.Clamp(local.y, -halfSegment, halfSegment), 0f);
+                    Vector3 delta = local - axisPoint;
+                    float distance = delta.magnitude;
+                    if (distance >= helper.radius || helper.radius <= 0f) return point;
+                    projected = axisPoint + (distance > 1e-7f ? delta / distance : Vector3.right) * helper.radius;
+                    break;
+                }
+                case HairHelperType.Plane:
+                    if (local.y >= 0f) return point;
+                    projected = new Vector3(local.x, 0f, local.z);
+                    break;
+                default:
+                    return point;
             }
-            Vector3 delta = point - helper.position;
-            float distance = delta.magnitude;
-            if (distance >= helper.radius || helper.radius <= 0f) return point;
-            Vector3 direction = distance > 1e-7f ? delta / distance : Vector3.up;
-            return Vector3.Lerp(point, helper.position + direction * helper.radius, Mathf.Clamp01(weight));
+            return Vector3.Lerp(point, localToWorld.MultiplyPoint3x4(projected), blend);
         }
 
         private static HairLodSettings ResolveLod(HairGroomAsset groom, int level)

@@ -2806,7 +2806,15 @@ namespace UMA
 
             if (hasUrp && hasHdrp) return SrpSupport.Both;
             if (hasUrp) return SrpSupport.Urp;
-            return hasHdrp ? SrpSupport.Hdrp : SrpSupport.None;
+            if (hasHdrp) return SrpSupport.Hdrp;
+#if !UMA_PACKAGE_MANAGER
+            // Asset-based UMA distributions ship configured for URP. The
+            // bundled pipeline archives are optional switches, not evidence
+            // that render-pipeline support is missing.
+            return SrpSupport.Urp;
+#else
+            return SrpSupport.None;
+#endif
         }
 
         private static bool RequiresSrpSelection(SrpSupport support)
@@ -2996,8 +3004,38 @@ namespace UMA
             scrollPosition = Vector2.zero;
             currentButton = 0;
             AddLargeText("UMA Render Pipeline Support");
+#if UMA_PACKAGE_MANAGER
             AddSrpSupportControls();
+#else
+            AddText("UMA is configured for <b>URP support by default</b> in this installation.");
+            AddText("Use one of the bundled packages in <b>Assets/UMA/SRP</b> to import or switch the UMA render-pipeline assets.");
+            AddSeperator();
+
+            LogLine urpLine = AddText("Import UMA URP Package...");
+            urpLine.ButtonAction = line => ImportBundledSrpPackage(
+                SrpSupport.Urp, "URP");
+            LogLine hdrpLine = AddText("Import UMA HDRP Package...");
+            hdrpLine.ButtonAction = line => ImportBundledSrpPackage(
+                SrpSupport.Hdrp, "HDRP");
+#endif
         }
+
+#if !UMA_PACKAGE_MANAGER
+        private void ImportBundledSrpPackage(SrpSupport support,
+            string displayName)
+        {
+            string archiveAbsolutePath = GetBundledArchiveAbsolutePath(support);
+            if (string.IsNullOrEmpty(archiveAbsolutePath) ||
+                !File.Exists(archiveAbsolutePath))
+            {
+                AddText("UMA could not find the bundled " + displayName +
+                    " package in Assets/UMA/SRP.", LogType.Error);
+                return;
+            }
+
+            AssetDatabase.ImportPackage(archiveAbsolutePath, true);
+        }
+#endif
 
         private void AddSrpSupportControls()
         {

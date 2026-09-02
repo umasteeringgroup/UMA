@@ -64,6 +64,7 @@ namespace UMA
             int atlasResolution)
         {
             ValidateBuildPlanInputs(data);
+            data.ReconcileGeneratedRendererObjects();
             UpdateBuildPlanMeshHideMasks(data);
             EnsureBuildPlanSkeleton(data);
             BuildPlanActiveModifiers(data);
@@ -256,11 +257,14 @@ namespace UMA
             UMARendererAsset rendererAsset)
         {
             var rendererObject = new GameObject(
-                $"UMA Incremental Staging Renderer {rendererIndex}");
+                UMARendererAsset.GetRendererGameObjectName(
+                    rendererAsset ?? data.defaultRendererAsset,
+                    rendererIndex));
             rendererObject.transform.SetParent(transform, false);
             rendererObject.layer = data.gameObject.layer;
 
             var renderer = rendererObject.AddComponent<SkinnedMeshRenderer>();
+            data.RegisterGeneratedRenderer(renderer);
             renderer.enabled = false;
             renderer.rootBone = data.GetGlobalTransform();
             renderer.quality = SkinQuality.Auto;
@@ -280,14 +284,10 @@ namespace UMA
 
             UMARendererAsset settings =
                 rendererAsset != null ? rendererAsset : data.defaultRendererAsset;
-            if (settings != null)
-            {
-                settings.ApplySettingsToRenderer(renderer);
-            }
-            else
-            {
-                UMARendererAsset.ResetRenderer(renderer);
-            }
+            UMARendererAsset.ApplySettingsAndName(
+                renderer,
+                settings,
+                rendererIndex);
             return renderer;
         }
 
@@ -681,10 +681,14 @@ namespace UMA
             rendererTransform.localPosition = Vector3.zero;
             rendererTransform.localRotation = Quaternion.identity;
             rendererTransform.localScale = Vector3.one;
+            UMARendererAsset settings =
+                rendererPlan.RendererAsset != null
+                    ? rendererPlan.RendererAsset
+                    : data.defaultRendererAsset;
             renderer.gameObject.name =
-                rendererIndex == 0
-                    ? "UMARenderer"
-                    : $"UMARenderer {rendererIndex}";
+                UMARendererAsset.GetRendererGameObjectName(
+                    settings,
+                    rendererIndex);
         }
 
         private static void AssignRendererMaterials(

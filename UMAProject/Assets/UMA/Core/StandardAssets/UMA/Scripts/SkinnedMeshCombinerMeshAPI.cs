@@ -4887,8 +4887,12 @@ namespace UMA
         }
 
         private static bool IsFinite(float value) => !float.IsNaN(value) && !float.IsInfinity(value);
+        private static bool IsFinite(Vector2 value) => IsFinite(value.x) && IsFinite(value.y);
         private static bool IsFinite(Vector3 value) => IsFinite(value.x) && IsFinite(value.y) && IsFinite(value.z);
         private static bool IsFinite(Quaternion value) => IsFinite(value.x) && IsFinite(value.y) && IsFinite(value.z) && IsFinite(value.w);
+        private static bool IsFinite(Rect value) =>
+            IsFinite(value.x) && IsFinite(value.y) &&
+            IsFinite(value.width) && IsFinite(value.height);
         private static bool IsFinite(Matrix4x4 value)
         {
             for (int row = 0; row < 4; row++)
@@ -4956,17 +4960,47 @@ namespace UMA
                     // even for non-atlased materials so duplicate SlotData references remain
                     // aligned with their own fragment rather than sharing a mutable offset.
                     if (gm.umaMaterial == null || !gm.umaMaterial.IsGeneratedTextures) continue;
-                    // Declare atlas mapping variables first so cropping adjustments can modify them
+                    // Declare atlas mapping variables first so cropping adjustments can modify them.
                     var rect = fragment.atlasRegion;
                     float xMin = rect.xMin / atlasResolution; float xMax = rect.xMax / atlasResolution; float yMin = rect.yMin / atlasResolution; float yMax = rect.yMax / atlasResolution;
                     float xRange = xMax - xMin; float yRange = yMax - yMin;
+                    OverlayData foundRect = null;
                     if (fragment.isRectShared && slot.useAtlasOverlay)
                     {
-                        OverlayData foundRect = null; for (int i = 0; i < fragment.overlayList.Count; i++) { var ov = fragment.overlayList[i]; if (slot.slotName != null && ov.overlayName != null && ov.overlayName.Contains(slot.slotName)) { foundRect = ov; break; } }
+                        if (fragment.overlayList != null)
+                        {
+                            for (int i = 0; i < fragment.overlayList.Count; i++)
+                            {
+                                OverlayData overlay = fragment.overlayList[i];
+                                string overlayName = overlay?.asset?.overlayName;
+                                if (!string.IsNullOrEmpty(slot.slotName) &&
+                                    !string.IsNullOrEmpty(overlayName) &&
+                                    overlayName.Contains(slot.slotName))
+                                {
+                                    foundRect = overlay;
+                                    break;
+                                }
+                            }
+                        }
                         if (foundRect != null && foundRect.rect != Rect.zero)
                         {
-                            if (Mathf.Abs(gm.cropResolution.x) <= Mathf.Epsilon || Mathf.Abs(gm.cropResolution.y) <= Mathf.Epsilon)
-                                throw new InvalidOperationException($"Slot '{slot.slotName}' uses a shared atlas rect with an invalid crop resolution {gm.cropResolution}.");
+                            if (!IsFinite(gm.cropResolution) ||
+                                Mathf.Abs(gm.cropResolution.x) <= Mathf.Epsilon ||
+                                Mathf.Abs(gm.cropResolution.y) <= Mathf.Epsilon)
+                            {
+                                throw CreateAtlasUvTransformException(
+                                    "the shared atlas overlay requires a finite, non-zero crop resolution",
+                                    slot, gm, fragment, foundRect, atlasResolution,
+                                    xMin, yMin, xRange, yRange);
+                            }
+                            if (!IsFinite(gm.resolutionScale) ||
+                                !IsFinite(foundRect.rect))
+                            {
+                                throw CreateAtlasUvTransformException(
+                                    "the shared overlay rectangle or material resolution scale is non-finite",
+                                    slot, gm, fragment, foundRect, atlasResolution,
+                                    xMin, yMin, xRange, yRange);
+                            }
                             var size = foundRect.rect.size * gm.resolutionScale;
                             var offX = foundRect.rect.x * gm.resolutionScale.x;
                             var offY = foundRect.rect.y * gm.resolutionScale.y;
@@ -4977,7 +5011,14 @@ namespace UMA
                     if (range.start < 0 || range.count <= 0 || range.start > vC01.Length - range.count)
                         throw new InvalidOperationException($"Slot '{slot.slotName}' has an invalid source vertex range [{range.start}, {range.start + range.count}).");
                     if (!IsFinite(xMin) || !IsFinite(yMin) || !IsFinite(xRange) || !IsFinite(yRange))
-                        throw new InvalidOperationException($"Slot '{slot.slotName}' produced a non-finite atlas UV transform.");
+                    {
+                        throw CreateAtlasUvTransformException(
+                            !IsFinite(rect)
+                                ? "its generated atlasRegion is non-finite"
+                                : "the computed atlas UV offset or scale is non-finite",
+                            slot, gm, fragment, foundRect, atlasResolution,
+                            xMin, yMin, xRange, yRange);
+                    }
                     transforms.Add(new UVTransform { start = range.start, count = range.count, xMin = xMin, yMin = yMin, xScale = xRange, yScale = yRange });
                 }
             }
@@ -5002,6 +5043,68 @@ namespace UMA
                 result.Dispose();
                 throw;
             }
+        }
+
+        private static InvalidOperationException CreateAtlasUvTransformException(
+            string reason,
+            SlotData slot,
+            UMAData.GeneratedMaterial generatedMaterial,
+            UMAData.MaterialFragment fragment,
+            OverlayData sharedOverlay,
+            int atlasResolution,
+            float xMin,
+            float yMin,
+            float xScale,
+            float yScale)
+        {
+            string slotName = !string.IsNullOrEmpty(slot?.slotName)
+                ? slot.slotName
+                : slot?.asset?.name ?? "<unnamed slot>";
+            string slotAssetName = slot?.asset?.name ?? "<none>";
+            string umaMaterialName = generatedMaterial?.umaMaterial != null
+                ? generatedMaterial.umaMaterial.name
+                : "<null>";
+            string materialType = generatedMaterial?.umaMaterial != null
+                ? generatedMaterial.umaMaterial.materialType.ToString()
+                : "<unknown>";
+            string unityMaterialName = generatedMaterial?.material != null
+                ? generatedMaterial.material.name
+                : "<null>";
+            string sharedOverlayName = sharedOverlay?.asset?.overlayName ?? "<none>";
+            string sharedOverlayRect = sharedOverlay != null
+                ? sharedOverlay.rect.ToString()
+                : "<none>";
+            OverlayData baseOverlay = fragment?.overlayList != null &&
+                                      fragment.overlayList.Count > 0
+                ? fragment.overlayList[0]
+                : null;
+            string baseOverlayName = baseOverlay?.asset?.overlayName ?? "<none>";
+            string baseTextureStatus = "no base overlay texture";
+            if (baseOverlay?.asset?.textureList != null &&
+                baseOverlay.asset.textureList.Length > 0)
+            {
+                Texture texture = baseOverlay.asset.textureList[0];
+                baseTextureStatus = texture != null
+                    ? $"base texture='{texture.name}' ({texture.width}x{texture.height})"
+                    : "base texture channel 0 is null";
+            }
+
+            return new InvalidOperationException(
+                $"Slot '{slotName}' cannot build a finite atlas UV transform because {reason}. " +
+                $"slotAsset='{slotAssetName}', UMAMaterial='{umaMaterialName}', " +
+                $"materialType={materialType}, UnityMaterial='{unityMaterialName}', " +
+                $"atlasRegion={fragment?.atlasRegion.ToString() ?? "<null>"}, " +
+                $"atlasResolution={atlasResolution}, " +
+                $"cropResolution={generatedMaterial?.cropResolution.ToString() ?? "<null>"}, " +
+                $"resolutionScale={generatedMaterial?.resolutionScale.ToString() ?? "<null>"}, " +
+                $"slotOverlayScale={(slot != null ? slot.overlayScale.ToString() : "<null>")}, " +
+                $"isRectShared={fragment?.isRectShared.ToString() ?? "<null>"}, " +
+                $"useAtlasOverlay={(slot != null ? slot.useAtlasOverlay.ToString() : "<null>")}, " +
+                $"baseOverlay='{baseOverlayName}', {baseTextureStatus}, " +
+                $"matchedSharedOverlay='{sharedOverlayName}', sharedOverlayRect={sharedOverlayRect}, " +
+                $"computedTransform=(xMin={xMin}, yMin={yMin}, xScale={xScale}, yScale={yScale}). " +
+                "Check the slot's base OverlayDataAsset texture, SlotData.overlayScale, shared overlay rect, " +
+                "and whether its UMAMaterial should generate textures or use an existing material.");
         }
 
         private static void ApplyUVTransforms(NativeArray<ColUV01> vertices, NativeArray<UVTransform> transforms)

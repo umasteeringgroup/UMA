@@ -39,15 +39,20 @@ namespace UMA.HairCards
                 HairEvaluatedCurve curve = evaluation.curves[curveIndex];
                 if (curve == null || curve.points.Count < 2) continue;
                 HairCardProfileAsset profile = curve.profile;
-                int sampleCount = profile != null ? profile.SamplesPerCard : 12;
+                int sampleCount = curve.samplesPerCardOverride > 1
+                    ? curve.samplesPerCardOverride
+                    : profile != null ? profile.SamplesPerCard : 12;
                 List<HairCurvePoint> sampled = HairCurveUtility.Resample(curve.points, sampleCount);
-                HairAtlasRegion region = curve.atlas?.GetWeightedRegion(HashCurve(curve));
+                HairAtlasRegion region = curve.atlas?.GetWeightedRegion(HashCurve(curve),
+                    curve.atlasRegionSelection, curve.atlasRegionIds);
                 Material material = curve.atlas != null ? curve.atlas.material : null;
                 int bucketIndex = GetMaterialBucket(material, buckets, materialLookup);
                 int flips;
                 if (profile != null && profile.Shape == HairCardShape.TaperedTube)
                 {
-                    int sides = profile.TubeSides;
+                    int sides = curve.tubeSidesOverride > 2
+                        ? Mathf.Min(profile.TubeSides, curve.tubeSidesOverride)
+                        : profile.TubeSides;
                     AppendTube(curve, sampled, profile, region, sides, vertices, normals, tangents, uvs,
                         colors, buckets[bucketIndex].triangles, out flips, ref result.degenerateTriangleCount);
                 }
@@ -140,12 +145,17 @@ namespace UMA.HairCards
                 int b = a + 1;
                 int c = a + 2;
                 int d = a + 3;
-                AddTriangle(vertices, triangles, a, c, b, ref degenerateCount);
-                AddTriangle(vertices, triangles, b, c, d, ref degenerateCount);
-                if (doubleSided)
+                bool startCollapsed = (vertices[a] - vertices[b]).sqrMagnitude < 1e-14f;
+                bool endCollapsed = (vertices[c] - vertices[d]).sqrMagnitude < 1e-14f;
+                if (!startCollapsed)
                 {
-                    AddTriangle(vertices, triangles, b, c, a, ref degenerateCount);
-                    AddTriangle(vertices, triangles, d, c, b, ref degenerateCount);
+                    AddTriangle(vertices, triangles, a, c, b, ref degenerateCount);
+                    if (doubleSided) AddTriangle(vertices, triangles, b, c, a, ref degenerateCount);
+                }
+                if (!endCollapsed)
+                {
+                    AddTriangle(vertices, triangles, b, c, d, ref degenerateCount);
+                    if (doubleSided) AddTriangle(vertices, triangles, d, c, b, ref degenerateCount);
                 }
             }
         }
@@ -194,6 +204,10 @@ namespace UMA.HairCards
 
             for (int ring = 0; ring < points.Count - 1; ring++)
             {
+                bool startCollapsed = (vertices[start + ring * sidesCount] -
+                                       vertices[start + ring * sidesCount + 1]).sqrMagnitude < 1e-14f;
+                bool endCollapsed = (vertices[start + (ring + 1) * sidesCount] -
+                                     vertices[start + (ring + 1) * sidesCount + 1]).sqrMagnitude < 1e-14f;
                 for (int sideIndex = 0; sideIndex < sidesCount; sideIndex++)
                 {
                     int nextSide = (sideIndex + 1) % sidesCount;
@@ -201,8 +215,8 @@ namespace UMA.HairCards
                     int b = start + ring * sidesCount + nextSide;
                     int c = start + (ring + 1) * sidesCount + sideIndex;
                     int d = start + (ring + 1) * sidesCount + nextSide;
-                    AddTriangle(vertices, triangles, a, c, b, ref degenerateCount);
-                    AddTriangle(vertices, triangles, b, c, d, ref degenerateCount);
+                    if (!startCollapsed) AddTriangle(vertices, triangles, a, c, b, ref degenerateCount);
+                    if (!endCollapsed) AddTriangle(vertices, triangles, b, c, d, ref degenerateCount);
                 }
             }
         }

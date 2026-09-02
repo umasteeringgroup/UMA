@@ -9,13 +9,14 @@ namespace UMA.HairCards.Runtime
         [SerializeField] private HairGroomAsset groom;
         [SerializeField, Min(0)] private int lodLevel;
         [SerializeField] private bool generateOnEnable = true;
-        [SerializeField] private Material fallbackMaterial;
+        [SerializeField] private Material fallbackMaterial = null;
         [SerializeField] private bool includeChildren = true;
 
         private HairCardMeshBuildResult currentBuild;
         private HairEvaluationResult currentEvaluation;
 
         public HairGroomAsset Groom => groom;
+        public int LodLevel => lodLevel;
         public HairEvaluationResult CurrentEvaluation => currentEvaluation;
         public Mesh CurrentMesh => currentBuild?.mesh;
 
@@ -32,6 +33,12 @@ namespace UMA.HairCards.Runtime
         public void SetGroom(HairGroomAsset value, bool regenerate = true)
         {
             groom = value;
+            if (regenerate) Regenerate();
+        }
+
+        public void SetLodLevel(int value, bool regenerate = true)
+        {
+            lodLevel = Mathf.Max(0, value);
             if (regenerate) Regenerate();
         }
 

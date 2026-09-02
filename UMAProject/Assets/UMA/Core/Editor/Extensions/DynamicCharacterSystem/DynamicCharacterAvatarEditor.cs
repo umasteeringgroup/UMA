@@ -57,6 +57,7 @@ namespace UMA.CharacterSystem.Editors
 
         private MeshModifier MeshModifier = null;
         private MeshModifier _manualMeshModifierToAdd = null;
+        private const string HairCardStageMenuPath = "UMA/Hair Cards/Open Hair Card Stage";
 
         protected DynamicCharacterAvatar thisDCA;
         protected RaceSetterPropertyDrawer _racePropDrawer = new RaceSetterPropertyDrawer();
@@ -1820,7 +1821,7 @@ namespace UMA.CharacterSystem.Editors
             {
                 EditorUtility.DisplayDialog(
                     "UMA Mesh Editors Are Unavailable in Prefab Mode",
-                    "The Face Editor and Vertex Editor work from a generated DynamicCharacterAvatar in an open scene. They cannot edit a DynamicCharacterAvatar while its prefab is open in Prefab Mode.\n\nExit Prefab Mode, then select a DynamicCharacterAvatar in the Scene Hierarchy and open this tool again.",
+                    "UMA mesh authoring tools work from a generated DynamicCharacterAvatar in an open scene. They cannot edit a DynamicCharacterAvatar while its prefab is open in Prefab Mode.\n\nExit Prefab Mode, then select a DynamicCharacterAvatar in the Scene Hierarchy and open this tool again.",
                     "OK");
             }
 
@@ -1843,6 +1844,31 @@ namespace UMA.CharacterSystem.Editors
                 {
                     thisDCA.GenerateNow();
                     UMA.TexturePaint.Editor.TexturePaintStageWindow.ShowStage(thisDCA);
+                }
+            }
+
+            EditorGUILayout.Space(8f);
+
+            GUILayout.Label("Hair Cards", EditorStyles.boldLabel);
+            EditorGUILayout.HelpBox("Create and groom game-ready hair cards directly on this generated character. Paint growth regions, place and comb guides, generate child cards, author LODs, and bake the result as Unity and UMA assets.", MessageType.None);
+            if (GUILayout.Button("Open Hair Card System"))
+            {
+                if (CanOpenMeshEditor())
+                {
+                    DynamicCharacterAvatar avatarToOpen = thisDCA;
+                    EditorApplication.delayCall += () =>
+                    {
+                        if (avatarToOpen == null) return;
+                        avatarToOpen.GenerateNow();
+                        Selection.activeObject = avatarToOpen;
+                        if (!EditorApplication.ExecuteMenuItem(HairCardStageMenuPath))
+                        {
+                            EditorUtility.DisplayDialog(
+                                "Hair Card System Unavailable",
+                                "The UMA Hair Cards editor module could not be found. Confirm that the HairCards assets are installed and compile without errors.",
+                                "OK");
+                        }
+                    };
                 }
             }
 

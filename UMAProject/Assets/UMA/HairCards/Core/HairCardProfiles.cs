@@ -100,30 +100,59 @@ namespace UMA.HairCards
 
         public HairAtlasRegion GetWeightedRegion(uint randomValue)
         {
+            return GetWeightedRegion(randomValue, HairAtlasRegionSelectionMode.All, null);
+        }
+
+        public HairAtlasRegion GetWeightedRegion(
+            uint randomValue,
+            HairAtlasRegionSelectionMode selectionMode,
+            IReadOnlyList<string> selectedRegionIds)
+        {
             if (regions == null || regions.Count == 0)
             {
                 return null;
             }
 
             float total = 0f;
+            int eligibleCount = 0;
+            HairAtlasRegion lastEligible = null;
             for (int i = 0; i < regions.Count; i++)
             {
-                if (regions[i] != null) total += Mathf.Max(0f, regions[i].weight);
+                HairAtlasRegion region = regions[i];
+                if (!IsEligible(region, selectionMode, selectedRegionIds)) continue;
+                total += Mathf.Max(0f, region.weight);
+                eligibleCount++;
+                lastEligible = region;
             }
+            if (eligibleCount == 0) return null;
             if (total <= 1e-6f)
             {
-                return regions[(int)(randomValue % (uint)regions.Count)];
+                int selectedIndex = (int)(randomValue % (uint)eligibleCount);
+                for (int i = 0; i < regions.Count; i++)
+                {
+                    HairAtlasRegion region = regions[i];
+                    if (!IsEligible(region, selectionMode, selectedRegionIds)) continue;
+                    if (selectedIndex-- == 0) return region;
+                }
+                return lastEligible;
             }
 
             float target = (randomValue / (float)uint.MaxValue) * total;
             for (int i = 0; i < regions.Count; i++)
             {
                 HairAtlasRegion region = regions[i];
-                if (region == null) continue;
+                if (!IsEligible(region, selectionMode, selectedRegionIds)) continue;
                 target -= Mathf.Max(0f, region.weight);
                 if (target <= 0f) return region;
             }
-            return regions[regions.Count - 1];
+            return lastEligible;
+        }
+
+        public void EnsureIntegrity()
+        {
+            HairStableId.Ensure(ref atlasId);
+            regions ??= new List<HairAtlasRegion>();
+            for (int i = 0; i < regions.Count; i++) regions[i]?.EnsureIntegrity();
         }
 
         public HairAtlasRegion CreateRegion(string regionName, Rect rectangle, float selectionWeight = 1f)
@@ -143,9 +172,22 @@ namespace UMA.HairCards
 
         private void OnValidate()
         {
-            HairStableId.Ensure(ref atlasId);
-            regions ??= new List<HairAtlasRegion>();
-            for (int i = 0; i < regions.Count; i++) regions[i]?.EnsureIntegrity();
+            EnsureIntegrity();
+        }
+
+        private static bool IsEligible(
+            HairAtlasRegion region,
+            HairAtlasRegionSelectionMode selectionMode,
+            IReadOnlyList<string> selectedRegionIds)
+        {
+            if (region == null) return false;
+            if (selectionMode == HairAtlasRegionSelectionMode.All) return true;
+            if (selectedRegionIds == null) return false;
+            for (int i = 0; i < selectedRegionIds.Count; i++)
+            {
+                if (string.Equals(region.Id, selectedRegionIds[i], StringComparison.Ordinal)) return true;
+            }
+            return false;
         }
     }
 }

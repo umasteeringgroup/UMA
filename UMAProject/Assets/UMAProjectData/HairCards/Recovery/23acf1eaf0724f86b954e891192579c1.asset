@@ -1,0 +1,102 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 8
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 230c8f5c97805f24f8739d4a84890178, type: 3}
+  m_Name: 23acf1eaf0724f86b954e891192579c1
+  m_EditorClassIdentifier: UMA.HairCards.Core::UMA.HairCards.HairGroomAsset
+  schemaVersion: 1
+  groomId: 23acf1eaf0724f86b954e891192579c1
+  sourceMesh: {fileID: 0}
+  sourceMeshId: generated:f8694d62f84542cd98e9f3f991078ead
+  sourceRace: Human Male 3.0
+  sourceSlot: UMARenderer
+  sourceTopologySignature: 78eee6cdf611cb4f
+  symmetryEnabled: 1
+  symmetryPlaneNormal: {x: 1, y: 0, z: 0}
+  symmetryPlanePoint: {x: 0, y: 0, z: 0}
+  groups:
+  - id: e128c26633de42da822b997eb22c7745
+    name: Coverage
+    role: 0
+    color: {r: 0.22, g: 0.65, b: 1, a: 1}
+    visible: 1
+    locked: 0
+    enabled: 1
+    lodImportance: 1
+    children:
+      childrenPerGuide: 3
+      includeGuideCard: 1
+      rootSpread: 0.01
+      clump: 0.25
+      lengthVariation: 0.05
+      widthVariation: 0.05
+      rollVariation: 0.1
+      seed: 12345
+      interpolation: 1
+    maps:
+    - id: a6c1bb18bcdd46b1a1cf1f393c7a68a8
+      name: Growth Area
+      kind: 0
+      visible: 1
+      locked: 0
+      defaultValue: 0
+      valueRange: {x: 0, y: 1}
+      values: []
+    - id: 9ac9dac0a7364c12955f74d633077a52
+      name: Density
+      kind: 1
+      visible: 1
+      locked: 0
+      defaultValue: 1
+      valueRange: {x: 0, y: 1}
+      values: []
+    - id: d82e541cadde4f7abf26e746a73f9a0a
+      name: Length
+      kind: 4
+      visible: 1
+      locked: 0
+      defaultValue: 1
+      valueRange: {x: 0, y: 1}
+      values: []
+    guides: []
+    sculptLayers: []
+    modifiers: []
+    constraints: []
+    profile: {fileID: 11400000, guid: 11ad5be070d4c5e4cbce2746fca7acc1, type: 2}
+    atlas: {fileID: 0}
+  sharedHelpers: []
+  lods:
+  - id: 2f7fa466501a443687d63a181f0b1af3
+    name: LOD 0
+    level: 0
+    screenRelativeHeight: 0.6
+    cardFraction: 1
+    samplesPerCard: 12
+    maximumTubeSides: 8
+    reductionMode: 0
+    reduceBones: 0
+    locked: 0
+  bakeSettings:
+    outputFolder: Assets/UMAProjectData/HairCards/Generated
+    assetName: MaleHuman
+    createMesh: 1
+    createSlot: 1
+    createOverlay: 1
+    createWardrobeRecipe: 1
+    updateGlobalLibrary: 1
+    overwriteExisting: 1
+    umaMaterial: {fileID: 0}
+    overlayTemplate: {fileID: 0}
+    raceData: {fileID: 0}
+    wardrobeSlot: Hair
+    triangleBudget: 100000
+    cardBudget: 10000
+    requireAtlas: 0

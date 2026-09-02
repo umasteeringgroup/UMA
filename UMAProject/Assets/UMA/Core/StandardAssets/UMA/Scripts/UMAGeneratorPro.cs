@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System;
+using UnityEngine.Rendering;
 using static UMA.UMAData;
 
 namespace UMA
@@ -1135,11 +1136,15 @@ Material secondPass = gm.secondPassMaterial;
 					}
 				}
 
-				//Headless mode ends up with zero usedArea
+				// Headless generation and generated materials without a usable
+				// base texture can legitimately have no packed area. Preserve the
+				// zero crop sentinel for TextureProcessPRO, but continue optimizing
+				// the remaining materials. UpdateUV supplies a finite identity
+				// fallback for these empty materials.
 				if(Mathf.Approximately( usedArea.x, 0f ) || Mathf.Approximately( usedArea.y, 0f ))
 				{
 					material.cropResolution = Vector2.zero;
-					return;
+					continue;
 				}
 
 				Vector2 tempResolution = new Vector2(umaGenerator.atlasResolution, umaGenerator.atlasResolution);
@@ -1182,6 +1187,17 @@ Material secondPass = gm.secondPassMaterial;
 			for (int atlasIndex = 0; atlasIndex < umaAtlasList.materials.Count; atlasIndex++)
 			{
 				var material = umaAtlasList.materials[atlasIndex];
+				if (material == null)
+				{
+					throw new InvalidOperationException(
+						$"Generated material {atlasIndex} is null while updating atlas UVs.");
+				}
+				if (material.umaMaterial == null)
+				{
+					throw new InvalidOperationException(
+						$"Generated material {atlasIndex} has no UMAMaterial while updating atlas UVs. " +
+						DescribeAtlasMaterial(material));
+				}
 
 				// JRRM: Test
 				//if (material.umaMaterial.materialType != UMAMaterial.MaterialType.Atlas)
@@ -1201,16 +1217,64 @@ Material secondPass = gm.secondPassMaterial;
 					continue;
 				}
 
-				Vector2 finalAtlasAspect = new Vector2(umaGenerator.atlasResolution / material.cropResolution.x, umaGenerator.atlasResolution / material.cropResolution.y);
+				ValidateAtlasMaterialInputs(material, atlasIndex);
+				if (!HasUsableAtlasArea(material))
+				{
+					ApplyEmptyAtlasFallback(material, umaGenerator.atlasResolution);
+					if (SystemInfo.graphicsDeviceType != GraphicsDeviceType.Null)
+					{
+						Debug.LogWarning(
+							"UMA generated material has no usable atlas area. Texture generation was skipped " +
+							"and identity UVs were retained so mesh generation can continue. This usually " +
+							"means the base OverlayDataAsset has no texture, SlotData.overlayScale is zero, " +
+							"or the slot uses an Atlas/NoAtlas UMAMaterial when it should use an existing " +
+							"material. " + DescribeAtlasMaterial(material),
+							umaData);
+					}
+					continue;
+				}
+
+				if (!IsPositiveFinite(material.cropResolution.x) ||
+					!IsPositiveFinite(material.cropResolution.y))
+				{
+					throw new InvalidOperationException(
+						$"Generated material {atlasIndex} has invalid cropResolution " +
+						$"{material.cropResolution}; both components must be finite and greater than zero. " +
+						DescribeAtlasMaterial(material));
+				}
+
+				Vector2 finalAtlasAspect = new Vector2(
+					umaGenerator.atlasResolution / material.cropResolution.x,
+					umaGenerator.atlasResolution / material.cropResolution.y);
+				if (!IsFinite(finalAtlasAspect.x) || !IsFinite(finalAtlasAspect.y))
+				{
+					throw new InvalidOperationException(
+						$"Generated material {atlasIndex} produced invalid atlas aspect " +
+						$"{finalAtlasAspect} from atlasResolution={umaGenerator.atlasResolution} and " +
+						$"cropResolution={material.cropResolution}. " + DescribeAtlasMaterial(material));
+				}
 
 				for (int atlasElementIndex = 0; atlasElementIndex < material.materialFragments.Count; atlasElementIndex++)
 				{
                     var fragment = material.materialFragments[atlasElementIndex];
+					if (fragment == null)
+					{
+						throw new InvalidOperationException(
+							$"Generated material {atlasIndex} contains a null fragment at index " +
+							$"{atlasElementIndex}. " + DescribeAtlasMaterial(material));
+					}
 					Rect tempRect = fragment.atlasRegion;
 					tempRect.xMin = tempRect.xMin * finalAtlasAspect.x;
 					tempRect.xMax = tempRect.xMax * finalAtlasAspect.x;
 					tempRect.yMin = tempRect.yMin * finalAtlasAspect.y;
 					tempRect.yMax = tempRect.yMax * finalAtlasAspect.y;
+					if (!IsFinite(tempRect))
+					{
+						throw new InvalidOperationException(
+							$"Slot '{GetSlotName(fragment.slotData)}' produced an invalid atlas region " +
+							$"after crop scaling. sourceAtlasRegion={fragment.atlasRegion}, " +
+							$"atlasAspect={finalAtlasAspect}. " + DescribeAtlasMaterial(material));
+					}
 					material.materialFragments[atlasElementIndex].atlasRegion = tempRect;
 
                     SlotData sd = fragment.slotData;
@@ -1220,6 +1284,154 @@ Material secondPass = gm.secondPassMaterial;
                     sd.UVArea.Set(0, 0, 1.0f, 1.0f);
                 }
 			}
+		}
+
+		private static void ValidateAtlasMaterialInputs(
+			UMAData.GeneratedMaterial material, int materialIndex)
+		{
+			if (!IsFinite(material.resolutionScale.x) ||
+				!IsFinite(material.resolutionScale.y) ||
+				material.resolutionScale.x < 0f ||
+				material.resolutionScale.y < 0f)
+			{
+				throw new InvalidOperationException(
+					$"Generated material {materialIndex} has invalid resolutionScale " +
+					$"{material.resolutionScale}; components must be finite and non-negative. " +
+					DescribeAtlasMaterial(material));
+			}
+
+			if (material.materialFragments == null)
+			{
+				throw new InvalidOperationException(
+					$"Generated material {materialIndex} has a null materialFragments list. " +
+					DescribeAtlasMaterial(material));
+			}
+
+			for (int i = 0; i < material.materialFragments.Count; i++)
+			{
+				UMAData.MaterialFragment fragment = material.materialFragments[i];
+				if (fragment == null)
+				{
+					throw new InvalidOperationException(
+						$"Generated material {materialIndex} contains a null fragment at index {i}. " +
+						DescribeAtlasMaterial(material));
+				}
+				if (!IsFinite(fragment.atlasRegion))
+				{
+					throw new InvalidOperationException(
+						$"Slot '{GetSlotName(fragment.slotData)}' has a non-finite source atlasRegion " +
+						$"{fragment.atlasRegion}. " + DescribeAtlasMaterial(material));
+				}
+				if (fragment.slotData != null &&
+					(!IsFinite(fragment.slotData.overlayScale) ||
+					 fragment.slotData.overlayScale < 0f))
+				{
+					throw new InvalidOperationException(
+						$"Slot '{GetSlotName(fragment.slotData)}' has invalid overlayScale " +
+						$"{fragment.slotData.overlayScale}; it must be finite and non-negative. " +
+						DescribeAtlasMaterial(material));
+				}
+			}
+		}
+
+		private static bool HasUsableAtlasArea(UMAData.GeneratedMaterial material)
+		{
+			if (material.materialFragments == null)
+			{
+				return false;
+			}
+			for (int i = 0; i < material.materialFragments.Count; i++)
+			{
+				UMAData.MaterialFragment fragment = material.materialFragments[i];
+				if (fragment != null && fragment.atlasRegion.width > Mathf.Epsilon &&
+					fragment.atlasRegion.height > Mathf.Epsilon)
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
+		private static void ApplyEmptyAtlasFallback(
+			UMAData.GeneratedMaterial material, int atlasResolution)
+		{
+			float safeResolution = Mathf.Max(1, atlasResolution);
+			material.cropResolution = new Vector2(safeResolution, safeResolution);
+			material.resolutionScale = Vector2.one;
+			for (int i = 0; i < material.materialFragments.Count; i++)
+			{
+				UMAData.MaterialFragment fragment = material.materialFragments[i];
+				if (fragment == null)
+				{
+					continue;
+				}
+				fragment.atlasRegion = new Rect(0f, 0f, safeResolution, safeResolution);
+				if (fragment.slotData != null)
+				{
+					fragment.slotData.UVArea.Set(0f, 0f, 1f, 1f);
+				}
+			}
+		}
+
+		private static string DescribeAtlasMaterial(
+			UMAData.GeneratedMaterial material)
+		{
+			if (material == null)
+			{
+				return "generatedMaterial=<null>.";
+			}
+
+			var slots = new List<string>();
+			if (material.materialFragments != null)
+			{
+				for (int i = 0; i < material.materialFragments.Count; i++)
+				{
+					SlotData slot = material.materialFragments[i]?.slotData;
+					if (slot == null)
+					{
+						slots.Add("<null slot>");
+					}
+					else
+					{
+						slots.Add($"{GetSlotName(slot)}(asset='{slot.asset?.name ?? "<none>"}', " +
+							$"overlayScale={slot.overlayScale})");
+					}
+				}
+			}
+
+			string umaMaterialName = material.umaMaterial != null
+				? material.umaMaterial.name
+				: "<null>";
+			string materialType = material.umaMaterial != null
+				? material.umaMaterial.materialType.ToString()
+				: "<unknown>";
+			return $"UMAMaterial='{umaMaterialName}', materialType={materialType}, " +
+				$"UnityMaterial='{material.material?.name ?? "<null>"}', " +
+				$"cropResolution={material.cropResolution}, resolutionScale={material.resolutionScale}, " +
+				$"slots=[{string.Join(", ", slots)}].";
+		}
+
+		private static string GetSlotName(SlotData slot)
+		{
+			return string.IsNullOrEmpty(slot?.slotName)
+				? slot?.asset?.name ?? "<unnamed slot>"
+				: slot.slotName;
+		}
+
+		private static bool IsPositiveFinite(float value)
+		{
+			return IsFinite(value) && value > 0f;
+		}
+
+		private static bool IsFinite(float value)
+		{
+			return !float.IsNaN(value) && !float.IsInfinity(value);
+		}
+
+		private static bool IsFinite(Rect value)
+		{
+			return IsFinite(value.x) && IsFinite(value.y) &&
+				IsFinite(value.width) && IsFinite(value.height);
 		}
 	}
 }

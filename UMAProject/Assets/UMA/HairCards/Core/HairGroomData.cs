@@ -68,6 +68,12 @@ namespace UMA.HairCards
         TaperedTube
     }
 
+    public enum HairAtlasRegionSelectionMode
+    {
+        All,
+        Selected
+    }
+
     public enum HairModifierDomain
     {
         Guides,
@@ -344,7 +350,9 @@ namespace UMA.HairCards
 
             if (valueRange.x > valueRange.y)
             {
-                (valueRange.x, valueRange.y) = (valueRange.y, valueRange.x);
+                float minimum = valueRange.y;
+                valueRange.y = valueRange.x;
+                valueRange.x = minimum;
             }
         }
 
@@ -452,6 +460,7 @@ namespace UMA.HairCards
         public bool locked;
         public bool embedded = true;
         public string externalGlobalId;
+        public string externalHelperId;
         public Vector3 position;
         public Quaternion rotation = Quaternion.identity;
         public Vector3 scale = Vector3.one;
@@ -515,6 +524,8 @@ namespace UMA.HairCards
         public List<HairConstraintSettings> constraints = new List<HairConstraintSettings>();
         public HairCardProfileAsset profile;
         public HairAtlasProfileAsset atlas;
+        public HairAtlasRegionSelectionMode atlasRegionSelection = HairAtlasRegionSelectionMode.All;
+        public List<string> atlasRegionIds = new List<string>();
 
         public string Id => id;
 
@@ -527,6 +538,10 @@ namespace UMA.HairCards
             sculptLayers ??= new List<HairSculptLayer>();
             modifiers ??= new List<HairModifierSettings>();
             constraints ??= new List<HairConstraintSettings>();
+            atlasRegionIds ??= new List<string>();
+            HashSet<string> uniqueAtlasRegionIds = new HashSet<string>(StringComparer.Ordinal);
+            atlasRegionIds.RemoveAll(regionId => string.IsNullOrWhiteSpace(regionId) ||
+                                                  !uniqueAtlasRegionIds.Add(regionId));
             children.EnsureIntegrity();
             lodImportance = Mathf.Clamp01(lodImportance);
 
@@ -597,5 +612,15 @@ namespace UMA.HairCards
         public bool createWardrobeRecipe = true;
         public bool updateGlobalLibrary = true;
         public bool overwriteExisting = true;
+        [Tooltip("Optional UMA UMAMaterial used when creating an OverlayDataAsset.")]
+        public UnityEngine.Object umaMaterial;
+        [Tooltip("Optional existing OverlayDataAsset. When assigned it is reused by the generated wardrobe recipe.")]
+        public UnityEngine.Object overlayTemplate;
+        [Tooltip("Optional RaceData used by the generated wardrobe recipe.")]
+        public UnityEngine.Object raceData;
+        public string wardrobeSlot = "Hair";
+        [Min(1)] public int triangleBudget = 100000;
+        [Min(1)] public int cardBudget = 10000;
+        public bool requireAtlas;
     }
 }

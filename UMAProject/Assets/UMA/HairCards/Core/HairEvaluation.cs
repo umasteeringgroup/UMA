@@ -30,6 +30,10 @@ namespace UMA.HairCards
         public Vector3 rootNormal = Vector3.up;
         public HairCardProfileAsset profile;
         public HairAtlasProfileAsset atlas;
+        public HairAtlasRegionSelectionMode atlasRegionSelection;
+        public string[] atlasRegionIds = Array.Empty<string>();
+        public int samplesPerCardOverride;
+        public int tubeSidesOverride;
         public readonly List<HairCurvePoint> points = new List<HairCurvePoint>();
 
         public float Length => HairCurveUtility.CalculateLength(points);
@@ -46,7 +50,11 @@ namespace UMA.HairCards
                 groupColor = groupColor,
                 rootNormal = rootNormal,
                 profile = profile,
-                atlas = atlas
+                atlas = atlas,
+                atlasRegionSelection = atlasRegionSelection,
+                atlasRegionIds = atlasRegionIds != null ? (string[])atlasRegionIds.Clone() : Array.Empty<string>(),
+                samplesPerCardOverride = samplesPerCardOverride,
+                tubeSidesOverride = tubeSidesOverride
             };
             clone.points.AddRange(points);
             return clone;
@@ -61,11 +69,13 @@ namespace UMA.HairCards
         public bool applySculptLayers = true;
         public bool applyModifiers = true;
         public bool applyConstraints = true;
+        public bool includeHiddenGroups = true;
         public int interactiveSampleLimit;
     }
 
     public sealed class HairEvaluationResult
     {
+        public readonly List<HairEvaluatedCurve> evaluatedGuides = new List<HairEvaluatedCurve>();
         public readonly List<HairEvaluatedCurve> curves = new List<HairEvaluatedCurve>();
         public readonly List<string> warnings = new List<string>();
         public int guideCurveCount;

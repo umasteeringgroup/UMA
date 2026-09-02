@@ -467,6 +467,149 @@ namespace UMA
 			rendererAssets = assets;
 		}
 
+		/// <summary>
+		/// Marks a renderer object as UMA-generated output.
+		/// </summary>
+		internal void RegisterGeneratedRenderer(SkinnedMeshRenderer renderer)
+		{
+			if (renderer == null)
+			{
+				return;
+			}
+
+			UMAGeneratedRenderer marker =
+				renderer.GetComponent<UMAGeneratedRenderer>();
+			if (marker == null)
+			{
+				marker = renderer.gameObject.AddComponent<UMAGeneratedRenderer>();
+			}
+			marker.hideFlags = HideFlags.HideInInspector;
+		}
+
+		/// <summary>
+		/// Migrates tracked direct-child renderers to explicit ownership markers
+		/// and removes marked renderer objects no longer tracked by this avatar.
+		/// This is required when Unity preserves scene objects while restoring
+		/// serialized component state across play-mode transitions.
+		/// </summary>
+		internal void ReconcileGeneratedRendererObjects()
+		{
+			SkinnedMeshRenderer[] trackedRenderers = renderers;
+			if (trackedRenderers != null)
+			{
+				for (int i = 0; i < trackedRenderers.Length; i++)
+				{
+					SkinnedMeshRenderer tracked = trackedRenderers[i];
+					if (tracked != null && tracked.transform.parent == transform)
+					{
+						RegisterGeneratedRenderer(tracked);
+					}
+				}
+			}
+
+			// Adopt renderer objects produced before explicit ownership markers
+			// existed. The indexed UMA names are reserved for generated output.
+			// This also catches empty UMARenderer children left by older cleanup,
+			// which destroyed the component but not its GameObject.
+			for (int childIndex = transform.childCount - 1;
+				 childIndex >= 0;
+				 childIndex--)
+			{
+				Transform child = transform.GetChild(childIndex);
+				if (child.GetComponent<UMAGeneratedRenderer>() != null ||
+					!IsLegacyGeneratedRendererName(child.name))
+				{
+					continue;
+				}
+
+				SkinnedMeshRenderer legacyRenderer =
+					child.GetComponent<SkinnedMeshRenderer>();
+				if (legacyRenderer != null &&
+					legacyRenderer.sharedMesh != null &&
+					!IsLegacyGeneratedMeshName(legacyRenderer.sharedMesh.name))
+				{
+					continue;
+				}
+
+				UMAGeneratedRenderer legacyMarker =
+					child.gameObject.AddComponent<UMAGeneratedRenderer>();
+				legacyMarker.hideFlags = HideFlags.HideInInspector;
+			}
+
+			UMAGeneratedRenderer[] markers =
+				GetComponentsInChildren<UMAGeneratedRenderer>(true);
+			for (int markerIndex = 0;
+				 markerIndex < markers.Length;
+				 markerIndex++)
+			{
+				UMAGeneratedRenderer marker = markers[markerIndex];
+				if (marker == null || marker.transform.parent != transform)
+				{
+					continue;
+				}
+
+				SkinnedMeshRenderer candidate =
+					marker.GetComponent<SkinnedMeshRenderer>();
+				bool isTracked = false;
+				if (candidate != null && trackedRenderers != null)
+				{
+					for (int rendererIndex = 0;
+						 rendererIndex < trackedRenderers.Length;
+						 rendererIndex++)
+					{
+						if (trackedRenderers[rendererIndex] == candidate)
+						{
+							isTracked = true;
+							break;
+						}
+					}
+				}
+
+				if (isTracked)
+				{
+					continue;
+				}
+
+				if (candidate != null && candidate.sharedMesh != null)
+				{
+					Mesh orphanedMesh = candidate.sharedMesh;
+					candidate.sharedMesh = null;
+					UMAUtils.DestroySceneObject(orphanedMesh);
+				}
+				UMAUtils.DestroySceneObject(marker.gameObject);
+			}
+		}
+
+		private static bool IsLegacyGeneratedRendererName(string objectName)
+		{
+			return IsUmaIndexedName(objectName, "UMARenderer");
+		}
+
+		private static bool IsLegacyGeneratedMeshName(string meshName)
+		{
+			return IsUmaIndexedName(meshName, "UMAMesh");
+		}
+
+		private static bool IsUmaIndexedName(string value, string baseName)
+		{
+			if (string.Equals(value, baseName, StringComparison.Ordinal))
+			{
+				return true;
+			}
+
+			string prefix = baseName + " ";
+			if (string.IsNullOrEmpty(value) ||
+				!value.StartsWith(prefix, StringComparison.Ordinal))
+			{
+				return false;
+			}
+
+			return int.TryParse(
+				value.Substring(prefix.Length),
+				out int rendererIndex) &&
+				rendererIndex >= 0;
+		}
+
 		public bool AreRenderersEqual(List<UMARendererAsset> rendererList)
 		{
 			if (renderers == null || rendererList == null)
@@ -3375,37 +3518,66 @@ namespace UMA
 		/// <param name="destroyRenderer">If set to <c>true</c> destroy mesh renderer.</param>
 		public void CleanMesh(bool destroyRenderer)
 		{
-			for(int j = 0; j < RendererCount; j++)
+			SkinnedMeshRenderer[] renderersToClean = renderers;
+			int rendererCount = renderersToClean == null
+				? 0
+				: renderersToClean.Length;
+			for(int j = 0; j < rendererCount; j++)
 			{
-				var renderer = GetRenderer(j);
+				var renderer = renderersToClean[j];
 				if (renderer == null)
                 {
                     continue;
                 }
-				if (renderer.sharedMesh != null)
+				if (destroyRenderer)
 				{
-					if (destroyRenderer)
+					// Need to kill cloth first if it exists. Destroy the complete
+					// generated object rather than leaving an untracked child behind.
+					var rendererObject = renderer.gameObject;
+					var cloth = rendererObject.GetComponent<Cloth>();
+					if (cloth != null)
 					{
-						// need to kill cloth first if it exists.
-						var cloth = renderer.gameObject.GetComponent<Cloth>();
-						if (cloth != null)
-						{
-							UMAUtils.DestroySceneObject(cloth);
-						}
-						UMAUtils.DestroySceneObject(renderer.sharedMesh);
-						UMAUtils.DestroySceneObject(renderer);
+						UMAUtils.DestroySceneObject(cloth);
+					}
+
+					Mesh mesh = renderer.sharedMesh;
+					renderer.sharedMesh = null;
+					if (mesh != null)
+					{
+						UMAUtils.DestroySceneObject(mesh);
+					}
+
+					bool ownsRendererObject =
+						rendererObject != gameObject &&
+						(rendererObject.GetComponent<UMAGeneratedRenderer>() != null ||
+						 renderer.transform.parent == transform);
+					if (ownsRendererObject)
+					{
+						UMAUtils.DestroySceneObject(rendererObject);
 					}
 					else
 					{
-                        for (int i = 0; i < renderer.sharedMesh.blendShapeCount; i++)
-                        {
-                            if (renderer.GetBlendShapeWeight(i) != 0.0f)
-                            {
-                                renderer.SetBlendShapeWeight(i, 0.0f);
-                            }
-                        }
-                    }
+						UMAUtils.DestroySceneObject(renderer);
+					}
 				}
+				else if (renderer.sharedMesh != null)
+				{
+					for (int i = 0;
+						 i < renderer.sharedMesh.blendShapeCount;
+						 i++)
+					{
+						if (renderer.GetBlendShapeWeight(i) != 0.0f)
+						{
+							renderer.SetBlendShapeWeight(i, 0.0f);
+						}
+					}
+				}
+			}
+
+			if (destroyRenderer)
+			{
+				renderers = Array.Empty<SkinnedMeshRenderer>();
+				rendererAssets = Array.Empty<UMARendererAsset>();
 			}
 		}
 

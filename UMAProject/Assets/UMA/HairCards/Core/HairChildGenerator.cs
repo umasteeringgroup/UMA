@@ -9,6 +9,7 @@ namespace UMA.HairCards
         private const int MaximumNeighborCount = 4;
 
         public static void Generate(
+            HairGroomAsset groom,
             HairGroup group,
             IReadOnlyList<HairEvaluatedCurve> guides,
             HairLodSettings lod,
@@ -18,31 +19,55 @@ namespace UMA.HairCards
             if (group == null || guides == null || result == null) return;
             float cardFraction = lod != null ? lod.cardFraction : 1f;
             int sampleCount = lod != null ? lod.samplesPerCard : 12;
+            int tubeSides = lod != null ? lod.maximumTubeSides : 12;
             for (int guideIndex = 0; guideIndex < guides.Count; guideIndex++)
             {
+                if (options.interactiveSampleLimit > 0 && result.curves.Count >= options.interactiveSampleLimit)
+                {
+                    result.warnings.Add("Interactive preview card limit reached; the release bake remains complete.");
+                    return;
+                }
                 HairEvaluatedCurve guideCurve = guides[guideIndex];
                 HairGuide sourceGuide = group.guides.Find(guide => guide != null && guide.Id == guideCurve.parentGuideId);
                 if (sourceGuide == null) continue;
+                float lodImportance = sourceGuide.lodImportance *
+                                      SampleRootMap(groom, group, sourceGuide, HairMapKind.LodImportance, 1f);
+                float guideLodFraction = Mathf.Clamp01(cardFraction * Mathf.Lerp(0.25f, 1.5f,
+                    Mathf.Clamp01(lodImportance)));
 
                 bool includeGuide = options.includeGuideCards && sourceGuide.includeGuideCard &&
-                                    group.children.includeGuideCard && KeepForLod(sourceGuide.seed, cardFraction);
+                                    group.children.includeGuideCard && KeepForLod(sourceGuide.seed, guideLodFraction);
                 if (includeGuide)
                 {
                     HairEvaluatedCurve card = guideCurve.Clone($"{sourceGuide.Id}:guide");
                     card.isChild = false;
+                    card.samplesPerCardOverride = sampleCount;
+                    card.tubeSidesOverride = tubeSides;
                     result.curves.Add(card);
                     result.guideCurveCount++;
                 }
 
                 if (!options.includeChildren) continue;
                 int childCount = sourceGuide.overrideChildCount ? sourceGuide.childCount : group.children.childrenPerGuide;
-                childCount = Mathf.Max(0, childCount);
+                float childMultiplier = SampleRootMap(groom, group, sourceGuide, HairMapKind.ChildCount, 1f);
+                childCount = Mathf.Max(0, Mathf.RoundToInt(childCount * Mathf.Max(0f, childMultiplier)));
+                float paintedClump = Mathf.Clamp01(SampleRootMap(groom, group, sourceGuide,
+                    HairMapKind.Clump, group.children.clump));
                 for (int childIndex = 0; childIndex < childCount; childIndex++)
                 {
+                    if (options.interactiveSampleLimit > 0 && result.curves.Count >= options.interactiveSampleLimit)
+                    {
+                        result.warnings.Add("Interactive preview card limit reached; the release bake remains complete.");
+                        return;
+                    }
                     int childSeed = CombineSeed(group.children.seed, sourceGuide.seed, childIndex);
-                    if (!KeepForLod(childSeed, cardFraction)) continue;
+                    if (!KeepForLod(childSeed, guideLodFraction)) continue;
                     HairEvaluatedCurve child = CreateChild(group, guides, guideIndex, sourceGuide,
-                        childIndex, childSeed, sampleCount);
+                        childIndex, childSeed, sampleCount, paintedClump);
+                    child.samplesPerCardOverride = sampleCount;
+                    child.tubeSidesOverride = tubeSides;
+                    if (options.applyModifiers)
+                        HairGroomEvaluator.ApplyModifiers(group, child, HairModifierDomain.Children, groom);
                     if (child.points.Count < 2 || child.Length < 1e-6f)
                     {
                         result.rejectedCurveCount++;
@@ -61,7 +86,8 @@ namespace UMA.HairCards
             HairGuide sourceGuide,
             int childIndex,
             int seed,
-            int sampleCount)
+            int sampleCount,
+            float clump)
         {
             HairEvaluatedCurve parent = guides[parentIndex];
             HairDeterministicRandom random = new HairDeterministicRandom(seed);
@@ -73,7 +99,7 @@ namespace UMA.HairCards
             if (rootSide.sqrMagnitude < 1e-8f) rootSide = Vector3.right;
             Vector3 rootOffset = rootSide * disk.x + rootNormal * disk.y;
 
-            List<Neighbor> neighbors = FindNeighbors(guides, parentIndex);
+            List<Neighbor> neighbors = FindNeighbors(guides, parentIndex, group.children.interpolation);
             List<List<HairCurvePoint>> samples = new List<List<HairCurvePoint>>(neighbors.Count);
             for (int i = 0; i < neighbors.Count; i++)
             {
@@ -93,7 +119,9 @@ namespace UMA.HairCards
                 groupColor = group.color,
                 rootNormal = parent.rootNormal,
                 profile = group.profile,
-                atlas = group.atlas
+                atlas = group.atlas,
+                atlasRegionSelection = parent.atlasRegionSelection,
+                atlasRegionIds = parent.atlasRegionIds
             };
 
             Vector3 weightedRoot = Vector3.zero;
@@ -118,7 +146,7 @@ namespace UMA.HairCards
 
                 float t = pointIndex / (sampleCount - 1f);
                 Vector3 relative = (weightedPosition - weightedRoot) * lengthScale;
-                Vector3 lateral = rootOffset * (1f - group.children.clump * t);
+                Vector3 lateral = rootOffset * (1f - clump * t);
                 child.points.Add(new HairCurvePoint(
                     targetRoot + relative + lateral - rootOffset,
                     Mathf.Max(0f, weightedWidth * widthScale),
@@ -127,8 +155,31 @@ namespace UMA.HairCards
             return child;
         }
 
-        private static List<Neighbor> FindNeighbors(IReadOnlyList<HairEvaluatedCurve> guides, int parentIndex)
+        private static float SampleRootMap(HairGroomAsset groom, HairGroup group, HairGuide guide,
+            HairMapKind kind, float fallback)
         {
+            HairGrowthMap map = group.FindMap(kind);
+            HairSurfaceAnchor root = guide.root;
+            if (map == null || groom?.SourceMesh == null || !root.IsValid ||
+                root.SubmeshIndex < 0 || root.SubmeshIndex >= groom.SourceMesh.subMeshCount) return fallback;
+            int[] triangles = groom.SourceMesh.GetTriangles(root.SubmeshIndex, true);
+            int offset = root.TriangleIndex * 3;
+            if (offset < 0 || offset + 2 >= triangles.Length) return fallback;
+            Vector3 barycentric = root.Barycentric;
+            return map.SampleVertex(triangles[offset]) * barycentric.x +
+                   map.SampleVertex(triangles[offset + 1]) * barycentric.y +
+                   map.SampleVertex(triangles[offset + 2]) * barycentric.z;
+        }
+
+        private static List<Neighbor> FindNeighbors(IReadOnlyList<HairEvaluatedCurve> guides, int parentIndex,
+            HairGuideInterpolationMode mode)
+        {
+            if (mode == HairGuideInterpolationMode.Nearest ||
+                mode == HairGuideInterpolationMode.ExplicitParent ||
+                mode == HairGuideInterpolationMode.ClumpParent)
+            {
+                return new List<Neighbor> { new Neighbor { index = parentIndex, weight = 1f } };
+            }
             Vector3 parentRoot = guides[parentIndex].points[0].position;
             List<Neighbor> candidates = new List<Neighbor>(guides.Count);
             for (int i = 0; i < guides.Count; i++)

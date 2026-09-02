@@ -57,10 +57,11 @@ namespace UMA.Editors
 		protected RaceData race;
 		protected bool _needsUpdate;
 		protected string _errorMessage;
-		//we dont really want to use delayedFields because if the user does not change focus from the field in the inspector but instead selects another asset in their projects their changes dont save
-		//Instead what we really want to do is set a short delay on saving so that the asset doesn't save while the user is typing in a field
+		// Normal inspector changes commit immediately. Keep a short delayed fallback for custom controls
+		// that only report GUI.changed, and flush that fallback when the inspector closes.
 		private float lastActionTime = 0;
 		private bool doSave = false;
+		private bool isCommitting;
 		//pRaceInspector needs to get unpacked UMATextRecipes so we might need a virtual UMAContextBase
 		GameObject EditorUMAContextBase;
 		List<string> ValidationMessages = new List<string>();
@@ -97,24 +98,89 @@ namespace UMA.Editors
 
 		public void OnEnable() {
 			race = target as RaceData;
+			EditorApplication.update -= DoDelayedSave;
 			EditorApplication.update += DoDelayedSave;
 		}
 
-		void OnDestroy()
+		protected virtual void OnDisable()
 		{
-			EditorApplication.update -= DoDelayedSave;
+			DetachAndFlushPendingChanges();
+		}
+
+		protected virtual void OnDestroy()
+		{
+			DetachAndFlushPendingChanges();
 		}
 
 		void DoDelayedSave()
 		{
+			if (EditorApplication.isCompiling || EditorApplication.isUpdating || race == null || isCommitting)
+			{
+				return;
+			}
 			if (doSave && Time.realtimeSinceStartup > (lastActionTime + 0.5f))
 			{
-				doSave = false;
-				lastActionTime = Time.realtimeSinceStartup;
+				CommitRaceChanges(true);
+			}
+		}
+
+		private void DetachAndFlushPendingChanges()
+		{
+			EditorApplication.update -= DoDelayedSave;
+			if ((doSave || _needsUpdate) && race != null && !isCommitting)
+			{
+				CommitRaceChanges(false);
+			}
+		}
+
+		private bool CommitRaceChanges(bool refreshSceneAvatars)
+		{
+			if (race == null || isCommitting)
+			{
+				return false;
+			}
+
+			isCommitting = true;
+			try
+			{
+				if (serializedObject != null && serializedObject.targetObject != null)
+				{
+					try
+					{
+						serializedObject.ApplyModifiedProperties();
+					}
+					catch (Exception) when (!refreshSceneAvatars)
+					{
+						// During teardown Unity can dispose the SerializedObject first. Inspector
+						// controls already applied their values, so still persist the RaceData.
+					}
+				}
 				EditorUtility.SetDirty(race);
-				string path = AssetDatabase.GetAssetPath(race.GetEntityId());
-				AssetDatabase.ImportAsset(path);
-				UMAUpdateProcessor.UpdateRace(race);
+				AssetDatabase.SaveAssetIfDirty(race);
+
+				if (refreshSceneAvatars)
+				{
+					UMAUpdateProcessor.UpdateRace(race);
+				}
+				else
+				{
+					UMAAssetIndexer.Instance?.ReleaseReference(race);
+				}
+
+				doSave = false;
+				_needsUpdate = false;
+				lastActionTime = Time.realtimeSinceStartup;
+				return true;
+			}
+			catch (Exception exception)
+			{
+				doSave = true;
+				Debug.LogError($"[UMA] Could not save RaceData '{race.name}': {exception.Message}", race);
+				return false;
+			}
+			finally
+			{
+				isCommitting = false;
 			}
 		}
 
@@ -578,6 +644,14 @@ namespace UMA.Editors
 
 	public override void OnInspectorGUI()
 		{
+			if (race == null || target == null || serializedObject == null ||
+				serializedObject.targetObject == null)
+			{
+				EditorGUILayout.HelpBox("RaceData is unavailable while Unity reloads assets.", MessageType.Info);
+				return;
+			}
+			serializedObject.UpdateIfRequiredOrScript();
+			bool committedThisPass = false;
 			if (lastActionTime == 0)
 			{
 				lastActionTime = Time.realtimeSinceStartup;
@@ -787,6 +861,7 @@ namespace UMA.Editors
 				if (_needsUpdate == true) {
 					_needsUpdate = false;
 					DoUpdate();
+					committedThisPass = !doSave;
 				}
 			} catch (UMAResourceNotFoundException e) {
 				_errorMessage = e.Message;
@@ -794,8 +869,11 @@ namespace UMA.Editors
 
 			if (GUI.changed)
 			{
-				doSave = true;
-				lastActionTime = Time.realtimeSinceStartup;
+				if (!committedThisPass)
+				{
+					doSave = true;
+					lastActionTime = Time.realtimeSinceStartup;
+				}
 				UMAAssetIndexer.RebuildUMAS(SceneManager.GetActiveScene());
 			}
 		}
@@ -805,14 +883,7 @@ namespace UMA.Editors
 		/// </summary>
 		protected virtual void DoUpdate()
 		{
-			serializedObject.ApplyModifiedProperties();
-			EditorUtility.SetDirty(race);
-			AssetDatabase.SaveAssetIfDirty(race);
-			RaceData ra = UMAAssetIndexer.Instance.GetAsset<RaceData>(race.raceName);
-			if (ra != null)
-			{
-				UMAUpdateProcessor.UpdateRace(ra);
-			}
+			CommitRaceChanges(true);
 		}
 
 		private bool TryCreateBlendshapeModifier(SlotData sd, UMABlendShape foundShape, string blendName, string slotName, out UMA.MeshModifier.Modifier modifier)
@@ -1311,6 +1382,7 @@ namespace UMA.Editors
 				crossCompatibilitySettingsData.InsertArrayElementAtIndex(crossCompatibilitySettingsData.arraySize);
 				crossCompatibilitySettingsData.GetArrayElementAtIndex(crossCompatibilitySettingsData.arraySize - 1).FindPropertyRelative("ccRace").stringValue = raceDataAsset.raceName;
 				serializedObject.ApplyModifiedProperties();
+				_needsUpdate = true;
 			}
 			//if (!compatibleRaces.Contains(raceDataAsset.raceName))
 			//	compatibleRaces.Add(raceDataAsset.raceName);
@@ -1322,11 +1394,15 @@ namespace UMA.Editors
 		//partial void PreInspectorGUI(ref bool result);
 		protected virtual void PreInspectorGUI(ref bool result)
 		{
+			bool pendingChange = result;
+			EditorGUI.BeginChangeCheck();
 			if (!wardrobeSlotListInitialized)
 			{
 				InitWardrobeSlotList();
 			}
-			result = AddExtraStuff();
+			bool explicitlyChanged = AddExtraStuff();
+			bool sectionChanged = EditorGUI.EndChangeCheck();
+			result = pendingChange || explicitlyChanged || sectionChanged;
 		}
 
 		private void InitWardrobeSlotList()

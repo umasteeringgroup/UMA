@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading;
 using NUnit.Framework;
 using Unity.Collections;
@@ -26,6 +27,103 @@ namespace UMA.Editors.Tests
         public void TearDown()
         {
             UMAMeshData.CleanupGlobalBuffers();
+        }
+
+        [Test]
+        [Category("UMA")]
+        [Category("MeshCombiner")]
+        [Category("RendererLifecycle")]
+        public void GeneratedRendererReconciliationAndCleanupDoNotAccumulateChildren()
+        {
+            GameObject root = null;
+            GameObject userRendererObject = null;
+            try
+            {
+                root = new GameObject("Renderer lifecycle avatar");
+                var data = root.AddComponent<UMAData>();
+
+                userRendererObject = new GameObject("User-authored renderer");
+                userRendererObject.transform.SetParent(root.transform, false);
+                userRendererObject.AddComponent<SkinnedMeshRenderer>();
+
+                for (int cycle = 0; cycle < 3; cycle++)
+                {
+                    var trackedObject = new GameObject(
+                        $"Tracked renderer {cycle}");
+                    trackedObject.transform.SetParent(root.transform, false);
+                    var tracked =
+                        trackedObject.AddComponent<SkinnedMeshRenderer>();
+                    tracked.sharedMesh = new Mesh
+                    {
+                        name = $"Tracked mesh {cycle}"
+                    };
+                    trackedObject.AddComponent<UMAGeneratedRenderer>();
+                    data.SetRenderers(new[] { tracked });
+
+                    var orphanObject = new GameObject(
+                        $"Orphaned renderer {cycle}");
+                    orphanObject.transform.SetParent(root.transform, false);
+                    var orphan =
+                        orphanObject.AddComponent<SkinnedMeshRenderer>();
+                    orphan.sharedMesh = new Mesh
+                    {
+                        name = $"Orphaned mesh {cycle}"
+                    };
+                    orphanObject.AddComponent<UMAGeneratedRenderer>();
+
+                    var legacyOrphanObject = new GameObject(
+                        $"UMARenderer {cycle + 1}");
+                    legacyOrphanObject.transform.SetParent(
+                        root.transform,
+                        false);
+                    var legacyOrphan = legacyOrphanObject
+                        .AddComponent<SkinnedMeshRenderer>();
+                    legacyOrphan.sharedMesh = new Mesh
+                    {
+                        name = $"UMAMesh {cycle + 1}"
+                    };
+
+                    MethodInfo reconcile = typeof(UMAData).GetMethod(
+                        "ReconcileGeneratedRendererObjects",
+                        BindingFlags.Instance | BindingFlags.NonPublic);
+                    Assert.NotNull(reconcile);
+                    reconcile.Invoke(data, null);
+
+                    Assert.IsTrue(trackedObject != null);
+                    Assert.IsTrue(userRendererObject != null);
+                    Assert.IsTrue(
+                        orphanObject == null,
+                        "An untracked UMA renderer from a prior play-mode state must be removed.");
+                    Assert.IsTrue(
+                        legacyOrphanObject == null,
+                        "Legacy unmarked UMARenderer output must be adopted and removed.");
+                    Assert.AreEqual(
+                        1,
+                        root.GetComponentsInChildren<UMAGeneratedRenderer>(true)
+                            .Length);
+
+                    data.CleanMesh(true);
+
+                    Assert.IsTrue(
+                        trackedObject == null,
+                        "Cleaning generated mesh output must remove its child GameObject.");
+                    Assert.IsTrue(
+                        userRendererObject != null,
+                        "Cleanup must preserve unmarked user-authored renderers.");
+                    Assert.AreEqual(0, data.RendererCount);
+                    Assert.AreEqual(
+                        0,
+                        root.GetComponentsInChildren<UMAGeneratedRenderer>(true)
+                            .Length);
+                }
+            }
+            finally
+            {
+                if (root != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(root);
+                }
+            }
         }
 
         [Test]
@@ -130,6 +228,122 @@ namespace UMA.Editors.Tests
                 if (sentinelMesh != null)
                 {
                     UnityEngine.Object.DestroyImmediate(sentinelMesh);
+                }
+                if (asset != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(asset);
+                }
+                if (root != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(root);
+                }
+            }
+        }
+
+        [Test]
+        [Category("UMA")]
+        [Category("MeshCombiner")]
+        [Category("IncrementalMeshCombiner")]
+        [Category("AtlasDiagnostics")]
+        public void NonFiniteAtlasTransformReportsActionableSourceData()
+        {
+            GameObject root = null;
+            SlotDataAsset asset = null;
+            UMAMaterial umaMaterial = null;
+            Material material = null;
+            Mesh sentinelMesh = null;
+            SkinnedMeshCombinerMeshAPI.PendingCombine pending = null;
+            try
+            {
+                root = new GameObject("root");
+                asset = CreateSlotAsset("Male_HelmetDome");
+                var slot = new SlotData(asset)
+                {
+                    overlayScale = 0f
+                };
+                var recipe = new UMAData.UMARecipe
+                {
+                    slotDataList = new[] { slot }
+                };
+                var renderer = root.AddComponent<SkinnedMeshRenderer>();
+                renderer.rootBone = root.transform;
+                sentinelMesh = new Mesh { name = "Atlas diagnostic sentinel" };
+                renderer.sharedMesh = sentinelMesh;
+
+                var data = root.AddComponent<UMAData>();
+                data.umaRoot = root;
+                data.skeleton = new UMASkeleton(root.transform);
+                data.umaRecipe = recipe;
+                data.blendShapeSettings = new BlendShapeSettings
+                {
+                    ignoreBlendShapes = true
+                };
+                data.SetRenderers(new[] { renderer });
+                data.SetRendererAssets(new UMARendererAsset[] { null });
+
+                Shader shader = Shader.Find("Hidden/InternalErrorShader");
+                Assert.NotNull(shader);
+                material = new Material(shader)
+                {
+                    name = "Third Party Helmet Material"
+                };
+                umaMaterial = ScriptableObject.CreateInstance<UMAMaterial>();
+                umaMaterial.name = "Third Party Helmet UMA Material";
+                umaMaterial.materialType = UMAMaterial.MaterialType.Atlas;
+                umaMaterial.material = material;
+                UMAData.GeneratedMaterial generated = CreateGeneratedMaterial(
+                    slot,
+                    null,
+                    umaMaterial,
+                    material,
+                    new Rect(float.NaN, 0f, 512f, 512f));
+                generated.cropResolution = Vector2.zero;
+                data.generatedMaterials.materials.Add(generated);
+                data.generatedMaterials.rendererAssets.Add(null);
+
+                InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
+                    () => pending =
+                        SkinnedMeshCombinerMeshAPI.PrepareIncrementalCombine(
+                            new SkinnedMeshCombinerMeshAPI.RendererBatch
+                            {
+                                Renderer = renderer,
+                                Sources = new[]
+                                {
+                                    CreateSource(asset.meshData, slot)
+                                },
+                                CurrentRendererIndex = 0,
+                                AtlasResolution = 512,
+                                SkipSkeletonUpdate = false
+                            },
+                            data,
+                            new Dictionary<string, float>(),
+                            false,
+                            false,
+                            Quaternion.identity));
+
+                StringAssert.Contains("Male_HelmetDome", exception.Message);
+                StringAssert.Contains("atlasRegion=", exception.Message);
+                StringAssert.Contains("cropResolution=", exception.Message);
+                StringAssert.Contains("resolutionScale=", exception.Message);
+                StringAssert.Contains("slotOverlayScale=0", exception.Message);
+                StringAssert.Contains("baseOverlay=", exception.Message);
+                StringAssert.Contains("Check the slot's base OverlayDataAsset", exception.Message);
+            }
+            finally
+            {
+                pending?.Dispose();
+                DisposeSlotTriangles(asset);
+                if (sentinelMesh != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(sentinelMesh);
+                }
+                if (material != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(material);
+                }
+                if (umaMaterial != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(umaMaterial);
                 }
                 if (asset != null)
                 {
@@ -984,6 +1198,12 @@ namespace UMA.Editors.Tests
                     ScriptableObject.CreateInstance<UMARendererAsset>();
                 emptyRendererAsset =
                     ScriptableObject.CreateInstance<UMARendererAsset>();
+                var defaultRendererAssetObject =
+                    new UnityEditor.SerializedObject(firstRendererAsset);
+                defaultRendererAssetObject.FindProperty("_RendererName")
+                    .stringValue = "Configured Default UMA Renderer";
+                defaultRendererAssetObject
+                    .ApplyModifiedPropertiesWithoutUndo();
 
                 Shader shader = Shader.Find("Hidden/InternalErrorShader");
                 Assert.NotNull(shader);
@@ -1008,7 +1228,7 @@ namespace UMA.Editors.Tests
 
                 firstGenerated = CreateGeneratedMaterial(
                     firstSlot,
-                    firstRendererAsset,
+                    null,
                     firstUmaMaterial,
                     firstMaterial,
                     new Rect(128f, 64f, 256f, 128f));
@@ -1031,10 +1251,11 @@ namespace UMA.Editors.Tests
                     loadTangents = true
                 };
                 data.markNotReadable = false;
+                data.defaultRendererAsset = firstRendererAsset;
                 data.generatedMaterials.materials.Add(firstGenerated);
                 data.generatedMaterials.materials.Add(secondGenerated);
                 data.generatedMaterials.rendererAssets.Add(
-                    firstRendererAsset);
+                    null);
                 data.generatedMaterials.rendererAssets.Add(
                     secondRendererAsset);
                 data.generatedMaterials.rendererAssets.Add(
@@ -1054,6 +1275,14 @@ namespace UMA.Editors.Tests
                 Assert.NotNull(firstRenderer);
                 Assert.NotNull(secondRenderer);
                 Assert.NotNull(emptyRenderer);
+                Assert.AreEqual(
+                    "Configured Default UMA Renderer",
+                    firstRenderer.gameObject.name,
+                    "The incremental commit must preserve the default UMARendererAsset name.");
+                Assert.AreEqual(
+                    3,
+                    root.GetComponentsInChildren<UMAGeneratedRenderer>(true)
+                        .Length);
                 Assert.AreEqual(4, firstRenderer.sharedMesh.vertexCount);
                 Assert.AreEqual(4, secondRenderer.sharedMesh.vertexCount);
                 Assert.AreEqual(0, emptyRenderer.sharedMesh.vertexCount);

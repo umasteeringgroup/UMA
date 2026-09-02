@@ -21,6 +21,7 @@ namespace UMA.HairCards
         EmptyGroup,
         MissingProfile,
         MissingAtlas,
+        MissingAtlasRegion,
         InvalidRoot,
         InvalidPoint,
         ZeroLengthSegment,
@@ -146,7 +147,14 @@ namespace UMA.HairCards
                         $"Group '{group.name}' has no atlas profile; generated cards use full-range UVs and the fallback material.",
                         group.Id, fixId: "assign-atlas");
                 }
-                ValidateGuides(group, report);
+                else if (group.atlasRegionSelection == HairAtlasRegionSelectionMode.Selected &&
+                         !HasValidSelectedAtlasRegion(group))
+                {
+                    report.Add(HairValidationSeverity.Error, HairValidationCode.MissingAtlasRegion,
+                        $"Group '{group.name}' is set to Selected UV Areas, but none of its selected areas exist in atlas '{group.atlas.name}'.",
+                        group.Id, fixId: "assign-atlas-region");
+                }
+                ValidateGuides(group, groom, report);
                 ValidateConstraints(group, groom, report);
             }
 
@@ -192,7 +200,23 @@ namespace UMA.HairCards
             return report;
         }
 
-        private static void ValidateGuides(HairGroup group, HairValidationReport report)
+        private static bool HasValidSelectedAtlasRegion(HairGroup group)
+        {
+            if (group?.atlas?.regions == null || group.atlasRegionIds == null) return false;
+            for (int regionIndex = 0; regionIndex < group.atlas.regions.Count; regionIndex++)
+            {
+                HairAtlasRegion region = group.atlas.regions[regionIndex];
+                if (region == null) continue;
+                for (int selectedIndex = 0; selectedIndex < group.atlasRegionIds.Count; selectedIndex++)
+                {
+                    if (string.Equals(region.Id, group.atlasRegionIds[selectedIndex], StringComparison.Ordinal))
+                        return true;
+                }
+            }
+            return false;
+        }
+
+        private static void ValidateGuides(HairGroup group, HairGroomAsset groom, HairValidationReport report)
         {
             if (group.guides == null) return;
             for (int guideIndex = 0; guideIndex < group.guides.Count; guideIndex++)
@@ -200,7 +224,8 @@ namespace UMA.HairCards
                 HairGuide guide = group.guides[guideIndex];
                 if (guide == null) continue;
                 report.guideCount++;
-                if (!guide.root.IsValid)
+                if (!guide.root.IsValid || !string.Equals(guide.root.SourceMeshId, groom.SourceMeshId,
+                        StringComparison.Ordinal))
                 {
                     report.Add(HairValidationSeverity.Warning, HairValidationCode.InvalidRoot,
                         $"Guide '{guide.name}' uses only its cached root pose.", group.Id, guide.Id,
