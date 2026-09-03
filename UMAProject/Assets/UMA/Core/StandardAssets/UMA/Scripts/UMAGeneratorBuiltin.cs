@@ -5,6 +5,9 @@ using UnityEngine;
 using System.Collections.Generic;
 using Unity.Profiling;
 using static UMA.DNAInstanceCollection;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace UMA
 {
@@ -31,6 +34,27 @@ namespace UMA
 			}
 		}
 
+#if UNITY_EDITOR
+        public void Start()
+        {
+            Debug.Log(
+                $"Start called on Generator '{gameObject.name}' " +
+                $"[{gameObject.GetUmaObjectId()}]. DirtyList size is " +
+                $"{umaDirtyList.Count}",
+                gameObject);
+        }
+#endif
+        public void PlayModeExit()
+        {
+            Debug.Log($"PlayModeExit called on Generator. DirtyList size is {umaDirtyList.Count}");
+            ClearAllPending();
+        }
+
+        public void ExitingEditMode()
+        {
+            Debug.Log($"ExitingEditMode called on Generator. DirtyList size is {umaDirtyList.Count}");
+            ClearAllPending();
+        }
 
         private LinkedList<UMAData> cleanUmas = new LinkedList<UMAData>();
 		private LinkedList<UMAData> dirtyUmas = new LinkedList<UMAData>();
@@ -56,6 +80,22 @@ namespace UMA
                 MaximumOverrunMilliseconds = maximumOverrunMilliseconds;
             }
         }
+
+#if UNITY_EDITOR
+    private void OnPlayModeStateChanged(PlayModeStateChange state)
+    {
+        switch (state)
+        {
+            case PlayModeStateChange.ExitingEditMode:
+                ExitingEditMode();
+                break;
+            case PlayModeStateChange.ExitingPlayMode:
+                PlayModeExit();
+                break;
+        }
+    }
+#endif
+
 
         public readonly struct MultiStepAtomicStepStatistic
         {
@@ -2350,13 +2390,19 @@ namespace UMA
             RestoreMultiStepRenderTexture(state);
             FreezeTime = false;
 
-            if (umaDirtyList.Count > 0 && umaDirtyList[0] == state.Data)
+            List<UMAData> existingDirtyList =
+                UMAAssetIndexer.bareInstance != null
+                    ? UMAAssetIndexer.bareInstance.dirtyList
+                    : null;
+            if (existingDirtyList != null &&
+                existingDirtyList.Count > 0 &&
+                existingDirtyList[0] == state.Data)
             {
-                umaDirtyList.RemoveAt(0);
+                existingDirtyList.RemoveAt(0);
             }
-            else
+            else if (existingDirtyList != null)
             {
-                umaDirtyList.Remove(state.Data);
+                existingDirtyList.Remove(state.Data);
             }
 
             if (moveToCleanList && state.Data != null)
@@ -2613,9 +2659,14 @@ namespace UMA
         public void ClearAllPending()
         {
             CancelActiveDirtyUpdate(false);
-            umaDirtyList.Clear();
+            // Teardown must not access UMAAssetIndexer.Instance: doing so can
+            // create a replacement internal generator while an old one is
+            // being destroyed at a play-mode boundary.
+            UMAAssetIndexer.bareInstance?.dirtyList.Clear();
             cleanUmas.Clear();
             dirtyUmas.Clear();
+            umaData = null;
+            FreezeTime = false;
         }
 
 
@@ -2691,14 +2742,35 @@ namespace UMA
 			}
 		}
 
+        protected virtual void OnEnable()
+        {
+#if UNITY_EDITOR
+            // EditorApplication is process-wide and survives fast play-mode
+            // transitions. Always remove before adding so a retained generator
+            // owns exactly one callback.
+            EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+            EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+#endif
+            // Enter Play Mode without a domain/scene reload reuses this
+            // component. Begin every enabled lifetime with an empty scheduler
+            // so requests from the previous play session cannot run again.
+            ClearAllPending();
+        }
+
         protected virtual void OnDisable()
         {
-            CancelActiveDirtyUpdate(false);
+#if UNITY_EDITOR
+            EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+#endif
+            ClearAllPending();
         }
 
         protected virtual void OnDestroy()
         {
-            CancelActiveDirtyUpdate(false);
+            ClearAllPending();
+#if UNITY_EDITOR
+            EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+#endif
         }
 
 		public void Clear()

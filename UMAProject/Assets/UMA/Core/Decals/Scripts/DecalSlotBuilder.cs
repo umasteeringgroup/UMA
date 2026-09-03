@@ -46,6 +46,32 @@ namespace UMA
             public readonly Dictionary<int, int> OurToTheir = new Dictionary<int, int>();
         }
         private static ConditionalWeakTable<SlotDataAsset, VertexMap> _vertexMaps = new ConditionalWeakTable<SlotDataAsset, VertexMap>();
+
+        [RuntimeInitializeOnLoadMethod(
+            RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStaticState()
+        {
+            LastCreatedDecalSlot = null;
+            LastCreatedDecalOverlayAsset = null;
+            LastDecalOverlaySent = null;
+            _dbgSmr = null;
+            _dbgSmrTriangles = null;
+            _dbgTriToOrdinal = null;
+            _dbgSequence = 0;
+            _lastOutputTriangles = null;
+            _lastOutputTriOrdinals = null;
+            _lastHitPointWorld = default;
+            _lastProjectionDirWorld = default;
+            _lastAxisXWorld = default;
+            _lastAxisYWorld = default;
+            _lastRadius = 0f;
+            LastCylinderStart = default;
+            LastCylinderEnd = default;
+            LastCylinderRadius = 0f;
+            _vertexMaps =
+                new ConditionalWeakTable<SlotDataAsset, VertexMap>();
+        }
+
         private static VertexMap GetOrCreateVertexMap(SlotDataAsset slot)
         {
             if (slot == null) return null;
@@ -2132,4 +2158,4 @@ namespace UMA
             }
         }
     }
-} 
+}

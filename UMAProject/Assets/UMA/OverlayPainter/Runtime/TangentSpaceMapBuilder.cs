@@ -48,6 +48,28 @@ namespace UMA.TexturePaint
         private static readonly Dictionary<string, CacheEntry> cache = new Dictionary<string, CacheEntry>(StringComparer.Ordinal);
         public static int CachedMapCount => cache.Count;
 
+        [RuntimeInitializeOnLoadMethod(
+            RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStaticState()
+        {
+            ClearCache();
+        }
+
+        public static void ClearCache()
+        {
+            foreach (CacheEntry entry in cache.Values)
+            {
+                if (entry == null)
+                {
+                    continue;
+                }
+                Destroy(entry.normals);
+                Destroy(entry.tangents);
+                Destroy(entry.seams);
+            }
+            cache.Clear();
+        }
+
         public static TangentSpaceMaps Build(Mesh mesh, int width, int height, int seamWidth = 2,
             TexturePaintOperationContext operation = default)
         {

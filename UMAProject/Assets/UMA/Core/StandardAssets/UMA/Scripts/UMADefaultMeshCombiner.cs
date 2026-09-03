@@ -97,10 +97,7 @@ namespace UMA
                     {
                         for (int i = 0; i < renderers.Length; i++)
                         {
-                            if (renderers[i] != null)
-                            {
-                                DestroyImmediate(renderers[i].gameObject);
-                            }
+                            umaData.DestroyGeneratedRenderer(renderers[i]);
                         }
                     }
                     renderers = null;
@@ -162,7 +159,7 @@ namespace UMA
                     {
                         for (int i = umaData.generatedMaterials.rendererAssets.Count; i < oldRenderers.Length; i++)
                         {
-                            DestroyImmediate(oldRenderers[i].gameObject);
+                            umaData.DestroyGeneratedRenderer(oldRenderers[i]);
                             //For cloth, be aware of issue: 845868
                             //https://issuetracker.unity3d.com/issues/cloth-repeatedly-destroying-objects-with-cloth-components-causes-a-crash-in-unity-cloth-updatenormals
                         }
@@ -202,6 +199,8 @@ namespace UMA
 
         private SkinnedMeshRenderer MakeRenderer(int i, UMAData umaData, Transform rootBone, UMARendererAsset rendererAsset = null)
         {
+            Debug.Log("Creating Renderer in UMADefaultMeshCombiner");
+
             GameObject newSMRGO = new GameObject(
                 UMARendererAsset.GetRendererGameObjectName(rendererAsset, i));
             newSMRGO.transform.parent = umaData.transform;

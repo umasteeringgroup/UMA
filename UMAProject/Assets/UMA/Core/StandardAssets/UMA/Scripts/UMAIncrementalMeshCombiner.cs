@@ -107,6 +107,11 @@ namespace UMA
             }
         }
 
+        internal static void ReconcileBuildPlanRenderers(UMAData data)
+        {
+            data.ReconcileGeneratedRendererObjects();
+        }
+
         internal static void UpdateBuildPlanMeshHideMasks(UMAData data)
         {
             data.umaRecipe.UpdateMeshHideMasks(data.currentLODLevel);
@@ -256,6 +261,21 @@ namespace UMA
             int rendererIndex,
             UMARendererAsset rendererAsset)
         {
+            UMARendererAsset effectiveRendererAsset =
+                rendererAsset ?? data.defaultRendererAsset;
+            int dirtyCount = UMAAssetIndexer.bareInstance != null
+                ? UMAAssetIndexer.bareInstance.dirtyList.Count
+                : 0;
+            Debug.Log(
+                $"Creating staging renderer {rendererIndex + 1}/" +
+                $"{data.generatedMaterials.rendererAssets.Count} for avatar " +
+                $"'{data.name}' [{data.GetUmaObjectId()}] on generator " +
+                $"'{gameObject.name}' [{gameObject.GetUmaObjectId()}]. " +
+                $"Renderer asset: " +
+                $"'{(effectiveRendererAsset != null ? effectiveRendererAsset.name : "Default")}'. " +
+                $"DirtyList size is {dirtyCount}.",
+                data.gameObject);
+
             var rendererObject = new GameObject(
                 UMARendererAsset.GetRendererGameObjectName(
                     rendererAsset ?? data.defaultRendererAsset,
@@ -612,6 +632,7 @@ namespace UMA
 
             data.firstBake = false;
             DestroyPreviousRenderers(
+                data,
                 plan.PreviousRenderers,
                 committedRenderers);
             plan.FinalizeCommittedMetadata();
@@ -854,6 +875,7 @@ namespace UMA
         }
 
         private static void DestroyPreviousRenderers(
+            UMAData data,
             SkinnedMeshRenderer[] previous,
             SkinnedMeshRenderer[] replacements)
         {
@@ -870,12 +892,7 @@ namespace UMA
                     continue;
                 }
 
-                Mesh mesh = renderer.sharedMesh;
-                if (mesh != null)
-                {
-                    UMAUtils.DestroySceneObject(mesh);
-                }
-                UMAUtils.DestroySceneObject(renderer.gameObject);
+                data.DestroyGeneratedRenderer(renderer);
             }
         }
     }
@@ -1633,6 +1650,7 @@ namespace UMA
         private enum BuildPlanStage
         {
             ValidateInputs,
+            ReconcileExistingRenderers,
             UpdateMeshHideMasks,
             EnsureSkeleton,
             BuildActiveModifiers,
@@ -1675,6 +1693,27 @@ namespace UMA
                 DisposeActiveOperations;
             UnityEditor.EditorApplication.quitting +=
                 DisposeActiveOperations;
+            UnityEditor.EditorApplication.playModeStateChanged -=
+                OnPlayModeStateChanged;
+            UnityEditor.EditorApplication.playModeStateChanged +=
+                OnPlayModeStateChanged;
+        }
+
+        [RuntimeInitializeOnLoadMethod(
+            RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetActiveOperationsOnLoad()
+        {
+            DisposeActiveOperations();
+        }
+
+        private static void OnPlayModeStateChanged(
+            UnityEditor.PlayModeStateChange state)
+        {
+            if (state == UnityEditor.PlayModeStateChange.ExitingEditMode ||
+                state == UnityEditor.PlayModeStateChange.ExitingPlayMode)
+            {
+                DisposeActiveOperations();
+            }
         }
 #endif
 
@@ -1812,6 +1851,8 @@ namespace UMA
             {
                 case BuildPlanStage.ValidateInputs:
                     return "Build Plan: Validate Inputs";
+                case BuildPlanStage.ReconcileExistingRenderers:
+                    return "Build Plan: Reconcile Renderers";
                 case BuildPlanStage.UpdateMeshHideMasks:
                     return "Build Plan: Mesh Hide Masks";
                 case BuildPlanStage.EnsureSkeleton:
@@ -2179,6 +2220,13 @@ namespace UMA
                 case BuildPlanStage.ValidateInputs:
                     UMAIncrementalMeshCombiner
                         .ValidateBuildPlanInputs(data);
+                    buildPlanStage =
+                        BuildPlanStage.ReconcileExistingRenderers;
+                    return;
+
+                case BuildPlanStage.ReconcileExistingRenderers:
+                    UMAIncrementalMeshCombiner
+                        .ReconcileBuildPlanRenderers(data);
                     buildPlanStage =
                         BuildPlanStage.UpdateMeshHideMasks;
                     return;

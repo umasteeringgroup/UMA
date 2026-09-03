@@ -54,6 +54,7 @@ namespace UMA
 		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
 		public static void StaticInitializeOnLoad()
 		{
+			DisposeAllNativeTriangles();
 			smtNumber = 0;
 			nativeTrianglesAllocated = new List<SubMeshTriangles>();
 		}
@@ -687,6 +688,7 @@ namespace UMA
 		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
 		public static void StaticInitializeOnLoad()
 		{
+			CleanupGlobalBuffers();
 			SubmeshBuffers = new Dictionary<int, NativeArray<int>>();
 #if USE_UNSAFE_CODE
 			gBoneWeightsArray = new BoneWeight[MAX_VERTEX_COUNT];

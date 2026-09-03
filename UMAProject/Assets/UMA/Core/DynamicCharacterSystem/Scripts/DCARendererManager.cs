@@ -35,9 +35,39 @@ namespace UMA.CharacterSystem
 		// Use this for initialization
 		void Start()
 		{
-			avatar = GetComponent<DynamicCharacterAvatar>();
-			avatar.CharacterBegun.AddListener(CharacterBegun);
+			SubscribeToAvatar();
 			lastState = RenderersEnabled; // only cause it to rebuild if it actually changes
+		}
+
+		private void OnEnable()
+		{
+			if (Application.isPlaying)
+			{
+				SubscribeToAvatar();
+			}
+		}
+
+		private void OnDisable()
+		{
+			if (avatar != null)
+			{
+				avatar.CharacterBegun.RemoveListener(CharacterBegun);
+			}
+		}
+
+		private void SubscribeToAvatar()
+		{
+			avatar = GetComponent<DynamicCharacterAvatar>();
+			if (avatar == null)
+			{
+				return;
+			}
+
+			// OnEnable/Start can be emulated again by fast Enter Play Mode
+			// without recreating the managed UnityEvent. Remove first so one
+			// renderer-manager pass is run for each character build.
+			avatar.CharacterBegun.RemoveListener(CharacterBegun);
+			avatar.CharacterBegun.AddListener(CharacterBegun);
 		}
 
         private void Update()
@@ -131,9 +161,28 @@ namespace UMA.CharacterSystem
                 for (int i2 = 0; i2 < slots.Length; i2++)
 				{
                     SlotData slot = slots[i2];
+					if (slot == null)
+					{
+						continue;
+					}
                     // if (element.slotAssets.Contains(slot.asset) || wardrobeSlotAssets.Contains(slot.asset))
                     if (HasSlot(element.slotAssets,slot.slotName) || HasSlot(wardrobeSlotAssets,slot.slotName))
 					{
+						int configuredRendererIndex =
+							element.rendererAssets.IndexOf(slot.rendererAsset);
+						if (configuredRendererIndex > 0 &&
+							HasRendererSlot(
+								slots,
+								slot.slotName,
+								element.rendererAssets[0]))
+						{
+							// This is a renderer-specific copy made by a prior
+							// pass over the same compiled recipe, not a source slot.
+							// A lone slot assigned to a non-primary renderer is still
+							// a valid source and is normalized below.
+							continue;
+						}
+
 						//We check for at least one rendererAsset at the top level for loop.
 						//Set our existing slot to the first renderer in our renderer list.
 						slot.rendererAsset = element.rendererAssets[0];
@@ -142,6 +191,18 @@ namespace UMA.CharacterSystem
 						//Add the newly created slots to a running list to combine back with the entire slot list at the end.
 						for (int i = 1; i < element.rendererAssets.Count; i++)
 						{
+							if (HasRendererSlot(
+									slots,
+									slot.slotName,
+									element.rendererAssets[i]) ||
+								HasRendererSlot(
+									slotsToAdd,
+									slot.slotName,
+									element.rendererAssets[i]))
+							{
+								continue;
+							}
+
 							SlotData addSlot = slot.Copy();
 							addSlot.rendererAsset = element.rendererAssets[i];
 							slotsToAdd.Add(addSlot);
@@ -159,6 +220,29 @@ namespace UMA.CharacterSystem
 			}
 
 			wardrobeSlotAssets.Clear();
+		}
+
+		private static bool HasRendererSlot(
+			IList<SlotData> slots,
+			string slotName,
+			UMARendererAsset rendererAsset)
+		{
+			if (slots == null)
+			{
+				return false;
+			}
+
+			for (int i = 0; i < slots.Count; i++)
+			{
+				SlotData candidate = slots[i];
+				if (candidate != null &&
+					candidate.slotName == slotName &&
+					candidate.rendererAsset == rendererAsset)
+				{
+					return true;
+				}
+			}
+			return false;
 		}
 
 		private bool HasSlot(List<SlotDataAsset> slots, string slotName)

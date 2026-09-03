@@ -83,6 +83,18 @@ namespace UMA.Editors.Tests
                         name = $"UMAMesh {cycle + 1}"
                     };
 
+                    var customNamedOrphanObject = new GameObject(
+                        $"Custom Renderer Name {cycle}");
+                    customNamedOrphanObject.transform.SetParent(
+                        root.transform,
+                        false);
+                    var customNamedOrphan = customNamedOrphanObject
+                        .AddComponent<SkinnedMeshRenderer>();
+                    customNamedOrphan.sharedMesh = new Mesh
+                    {
+                        name = "UMAMesh"
+                    };
+
                     MethodInfo reconcile = typeof(UMAData).GetMethod(
                         "ReconcileGeneratedRendererObjects",
                         BindingFlags.Instance | BindingFlags.NonPublic);
@@ -97,6 +109,9 @@ namespace UMA.Editors.Tests
                     Assert.IsTrue(
                         legacyOrphanObject == null,
                         "Legacy unmarked UMARenderer output must be adopted and removed.");
+                    Assert.IsTrue(
+                        customNamedOrphanObject == null,
+                        "Generated meshes must be reconciled even when a renderer asset supplies a custom object name.");
                     Assert.AreEqual(
                         1,
                         root.GetComponentsInChildren<UMAGeneratedRenderer>(true)
@@ -857,6 +872,21 @@ namespace UMA.Editors.Tests
                 oldRenderer.sharedMesh = oldMesh;
                 oldRenderer.rootBone = root.transform;
 
+                // Simulate an untracked generated renderer restored by Unity
+                // from a prior play session. The asynchronous build-plan path
+                // must reconcile it before allocating replacement output.
+                var restoredOrphanObject =
+                    new GameObject("Custom Runtime Renderer");
+                restoredOrphanObject.transform.SetParent(
+                    root.transform,
+                    false);
+                var restoredOrphan = restoredOrphanObject
+                    .AddComponent<SkinnedMeshRenderer>();
+                restoredOrphan.sharedMesh = new Mesh
+                {
+                    name = "UMAMesh 1"
+                };
+
                 var data = root.AddComponent<UMAData>();
                 data.umaRoot = root;
                 data.skeleton = new UMASkeleton(root.transform);
@@ -937,6 +967,12 @@ namespace UMA.Editors.Tests
                 CollectionAssert.Contains(
                     observedPreparationSteps,
                     "Build Plan: Validate Inputs");
+                CollectionAssert.Contains(
+                    observedPreparationSteps,
+                    "Build Plan: Reconcile Renderers");
+                Assert.IsTrue(
+                    restoredOrphanObject == null,
+                    "The time-sliced build must remove restored, untracked generated renderers before creating replacement output.");
                 CollectionAssert.Contains(
                     observedPreparationSteps,
                     "Build Plan: Renderer 0");

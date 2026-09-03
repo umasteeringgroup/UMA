@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 
 using System.Reflection;
+using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
@@ -38,6 +39,76 @@ namespace UMA.Editors.Tests
             Assert.IsTrue(
                 generatorField.IsNotSerialized,
                 "The scene generator cache must never be persisted in the AssetIndexer asset.");
+        }
+
+        [Test]
+        [Category("UMA")]
+        [Category("GeneratorBootstrap")]
+        [Category("RendererLifecycle")]
+        public void InternalGeneratorCleanupRemovesEveryDuplicateImmediately()
+        {
+            GameObject keeperObject = null;
+            GameObject duplicateObject = null;
+            GameObject userGeneratorObject = null;
+            try
+            {
+                keeperObject = CreateGeneratorFixture("UMAGeneratorInternal");
+                duplicateObject = CreateGeneratorFixture("UMAGeneratorInternal");
+                userGeneratorObject = CreateGeneratorFixture("User Generator");
+
+                UMAGenerator keeper = keeperObject.GetComponent<UMAGenerator>();
+                UMAGenerator duplicate =
+                    duplicateObject.GetComponent<UMAGenerator>();
+                UMAGenerator userGenerator =
+                    userGeneratorObject.GetComponent<UMAGenerator>();
+
+                MethodInfo cleanup = typeof(UMAAssetIndexer).GetMethod(
+                    "DestroyInternalGeneratorCandidates",
+                    BindingFlags.Static | BindingFlags.NonPublic);
+                Assert.NotNull(cleanup);
+
+                cleanup.Invoke(
+                    null,
+                    new object[]
+                    {
+                        new[] { keeper, duplicate, userGenerator },
+                        keeper
+                    });
+
+                Assert.IsTrue(
+                    duplicateObject == null,
+                    "A retained internal generator must be destroyed before it can run another Update.");
+                Assert.IsFalse(
+                    keeperObject == null,
+                    "The selected internal generator must remain available.");
+                Assert.IsFalse(
+                    userGeneratorObject == null,
+                    "Explicitly named user generators must not be removed.");
+            }
+            finally
+            {
+                if (keeperObject != null)
+                {
+                    Object.DestroyImmediate(keeperObject);
+                }
+                if (duplicateObject != null)
+                {
+                    Object.DestroyImmediate(duplicateObject);
+                }
+                if (userGeneratorObject != null)
+                {
+                    Object.DestroyImmediate(userGeneratorObject);
+                }
+            }
+        }
+
+        private static GameObject CreateGeneratorFixture(string objectName)
+        {
+            var result = new GameObject(objectName);
+            result.SetActive(false);
+            result.hideFlags = HideFlags.DontSave;
+            result.AddComponent<UMAGenerator>();
+            return result;
         }
 
         [Test]
@@ -229,6 +300,173 @@ namespace UMA.Editors.Tests
                 if (overrideObject != null)
                 {
                     Object.DestroyImmediate(overrideObject);
+                }
+            }
+        }
+
+        [Test]
+        [Category("UMA")]
+        [Category("RendererLifecycle")]
+        public void DcaRendererManagerExpansionIsIdempotent()
+        {
+            GameObject avatarObject = null;
+            SlotDataAsset slotAsset = null;
+            UMARendererAsset primaryRenderer = null;
+            UMARendererAsset secondaryRenderer = null;
+            try
+            {
+                avatarObject = new GameObject(
+                    "DCA renderer manager idempotence fixture");
+                var avatar =
+                    avatarObject.AddComponent<
+                        UMA.CharacterSystem.DynamicCharacterAvatar>();
+                avatar.InitializeAvatar();
+                avatar.isMeshDirty = true;
+                var manager =
+                    avatarObject.AddComponent<
+                        UMA.CharacterSystem.DCARendererManager>();
+
+                slotAsset = ScriptableObject.CreateInstance<SlotDataAsset>();
+                slotAsset.name = "RendererManagerSlot";
+                primaryRenderer =
+                    ScriptableObject.CreateInstance<UMARendererAsset>();
+                secondaryRenderer =
+                    ScriptableObject.CreateInstance<UMARendererAsset>();
+
+                manager.RendererElements.Add(
+                    new UMA.CharacterSystem.DCARendererManager.RendererElement
+                    {
+                        rendererAssets = new List<UMARendererAsset>
+                        {
+                            primaryRenderer,
+                            secondaryRenderer
+                        },
+                        slotAssets = new List<SlotDataAsset> { slotAsset }
+                    });
+                var sourceSlot = new SlotData(slotAsset)
+                {
+                    // A source recipe may already select a non-primary
+                    // renderer. It must still expand once, then remain stable.
+                    rendererAsset = secondaryRenderer
+                };
+                avatar.umaRecipe.slotDataList = new[] { sourceSlot };
+
+                MethodInfo characterBegun =
+                    typeof(UMA.CharacterSystem.DCARendererManager).GetMethod(
+                        "CharacterBegun",
+                        BindingFlags.Instance | BindingFlags.NonPublic);
+                Assert.NotNull(characterBegun);
+
+                characterBegun.Invoke(manager, new object[] { avatar });
+                characterBegun.Invoke(manager, new object[] { avatar });
+
+                SlotData[] slots = avatar.umaRecipe.slotDataList;
+                Assert.AreEqual(
+                    2,
+                    slots.Length,
+                    "Repeated renderer-manager callbacks must not append another renderer-specific slot copy.");
+                Assert.AreEqual(
+                    1,
+                    System.Array.FindAll(
+                        slots,
+                        slot => slot.rendererAsset == primaryRenderer).Length);
+                Assert.AreEqual(
+                    1,
+                    System.Array.FindAll(
+                        slots,
+                        slot => slot.rendererAsset == secondaryRenderer).Length);
+            }
+            finally
+            {
+                if (avatarObject != null)
+                {
+                    Object.DestroyImmediate(avatarObject);
+                }
+                if (slotAsset != null)
+                {
+                    Object.DestroyImmediate(slotAsset);
+                }
+                if (primaryRenderer != null)
+                {
+                    Object.DestroyImmediate(primaryRenderer);
+                }
+                if (secondaryRenderer != null)
+                {
+                    Object.DestroyImmediate(secondaryRenderer);
+                }
+            }
+        }
+
+        [TestCase(typeof(UMADefaultMeshCombiner))]
+        [TestCase(typeof(UMAJobifiedMeshCombiner))]
+        [TestCase(typeof(UMADefaultBoneBakingMeshCombiner))]
+        [TestCase(typeof(UMABoneBakingMeshCombiner))]
+        [Category("UMA")]
+        [Category("RendererLifecycle")]
+        public void SynchronousCombinerPathsReconcileRestoredRenderers(
+            System.Type combinerType)
+        {
+            GameObject avatarObject = null;
+            Mesh orphanMesh = null;
+            try
+            {
+                avatarObject = new GameObject(
+                    $"{combinerType.Name} reconciliation fixture");
+                UMAData data = avatarObject.AddComponent<UMAData>();
+                GameObject globalObject = new GameObject("Global");
+                globalObject.transform.SetParent(
+                    avatarObject.transform,
+                    false);
+                data.umaRoot = avatarObject;
+                data.skeleton = new UMASkeleton(globalObject.transform);
+                data.umaRecipe = new UMAData.UMARecipe
+                {
+                    slotDataList = System.Array.Empty<SlotData>()
+                };
+                data.SetRenderers(
+                    System.Array.Empty<SkinnedMeshRenderer>());
+                data.SetRendererAssets(
+                    System.Array.Empty<UMARendererAsset>());
+
+                GameObject orphanObject =
+                    new GameObject("Custom Restored Renderer");
+                orphanObject.transform.SetParent(
+                    avatarObject.transform,
+                    false);
+                SkinnedMeshRenderer orphanRenderer = orphanObject
+                    .AddComponent<SkinnedMeshRenderer>();
+                orphanMesh = new Mesh { name = "UMAMesh" };
+                orphanRenderer.sharedMesh = orphanMesh;
+
+                Component combiner =
+                    avatarObject.AddComponent(combinerType);
+                System.Type declaringType =
+                    combiner is UMAJobifiedMeshCombiner
+                        ? typeof(UMAJobifiedMeshCombiner)
+                        : typeof(UMADefaultMeshCombiner);
+                MethodInfo ensureSetup = declaringType.GetMethod(
+                    "EnsureUMADataSetup",
+                    BindingFlags.Instance | BindingFlags.NonPublic);
+                Assert.NotNull(ensureSetup);
+
+                ensureSetup.Invoke(combiner, new object[] { data });
+
+                Assert.IsTrue(
+                    orphanObject == null,
+                    $"{combinerType.Name} must reconcile an untracked generated renderer before allocating or reusing output.");
+                Assert.IsTrue(
+                    orphanMesh == null,
+                    $"{combinerType.Name} must release the orphaned generated mesh as well as its renderer object.");
+            }
+            finally
+            {
+                if (orphanMesh != null)
+                {
+                    Object.DestroyImmediate(orphanMesh);
+                }
+                if (avatarObject != null)
+                {
+                    Object.DestroyImmediate(avatarObject);
                 }
             }
         }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -86,6 +87,13 @@ namespace UMA.Editors
             public long RootTransformId;
             public bool HasRootGameObjectId;
             public bool HasRootTransformId;
+        }
+
+        private sealed class ReferencingPrefabSnapshot
+        {
+            public string AssetPath;
+            public readonly List<TransformSnapshot> InstanceRootTransforms =
+                new List<TransformSnapshot>();
         }
 
         [MenuItem(AssetsMenuPath, false, 2012)]
@@ -223,10 +231,16 @@ namespace UMA.Editors
                     "Unity did not expose the persistent object ids needed to preserve existing references. No assets were changed.");
             }
 
+            List<ReferencingPrefabSnapshot> referencingPrefabs =
+                new List<ReferencingPrefabSnapshot>();
+
             bool backupCreated = false;
             bool originalModified = false;
             try
             {
+                referencingPrefabs =
+                    CaptureReferencingPrefabRootTransforms(normalizedPath);
+
                 if (!AssetDatabase.CopyAsset(normalizedPath, positionedPath))
                 {
                     throw new InvalidOperationException(
@@ -275,6 +289,11 @@ namespace UMA.Editors
                     positionedTransform);
                 ImportSynchronously(normalizedPath);
 
+                EnsureConvertedRootLocalIds(
+                    normalizedPath,
+                    originalGuid,
+                    sourceIdentities);
+
                 ValidateFirstPass(
                     normalizedPath,
                     originalGuid,
@@ -295,6 +314,11 @@ namespace UMA.Editors
                     positionedName,
                     positionedTransform);
                 ImportSynchronously(positionedPath);
+
+                MigrateReferencingPrefabRootTransforms(
+                    referencingPrefabs,
+                    normalizedPath,
+                    positionedTransform);
 
                 ValidateFinalAssets(
                     normalizedPath,
@@ -333,8 +357,20 @@ namespace UMA.Editors
                         out rollbackMessage);
                     if (restored)
                     {
-                        AssetDatabase.DeleteAsset(positionedPath);
-                        backupCreated = false;
+                        try
+                        {
+                            RestoreReferencingPrefabRootTransforms(
+                                referencingPrefabs,
+                                normalizedPath);
+                            AssetDatabase.DeleteAsset(positionedPath);
+                            backupCreated = false;
+                        }
+                        catch (Exception referenceRollbackException)
+                        {
+                            rollbackMessage +=
+                                " Referencing Prefab restoration failed: " +
+                                referenceRollbackException.Message;
+                        }
                     }
                 }
                 else if (backupCreated)
@@ -627,6 +663,340 @@ namespace UMA.Editors
                 sourceIdentities, wrapper, positionedRoot, originalGuid);
         }
 
+        private static void EnsureConvertedRootLocalIds(
+            string prefabPath,
+            string originalGuid,
+            PrefabIdentityMap sourceIdentities)
+        {
+            GameObject wrapper =
+                AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+            if (wrapper == null || wrapper.transform.childCount != 1)
+            {
+                throw new InvalidOperationException(
+                    "The converted Prefab could not be loaded for persistent id repair.");
+            }
+
+            GameObject positionedRoot = wrapper.transform.GetChild(0).gameObject;
+            if (!TryGetOwnedLocalId(
+                    wrapper, originalGuid, out long wrapperGameObjectId) ||
+                !TryGetOwnedLocalId(
+                    wrapper.transform, originalGuid, out long wrapperTransformId) ||
+                sourceIdentities == null)
+            {
+                throw new InvalidOperationException(
+                    "Unity did not expose the converted Prefab root ids needed to preserve references.");
+            }
+
+            PrefabIdentityMap actualContents =
+                CaptureOwnedIdentities(positionedRoot, originalGuid);
+            if (actualContents.LocalIds.Count != sourceIdentities.LocalIds.Count)
+            {
+                throw new InvalidOperationException(
+                    "The conversion changed the number of persistent objects in the positioned hierarchy.");
+            }
+
+            const string rootGameObjectKey = "GameObject|.";
+            string rootTransformKey = null;
+            foreach (KeyValuePair<string, long> pair in sourceIdentities.LocalIds)
+            {
+                if (pair.Value == sourceIdentities.RootTransformId)
+                {
+                    rootTransformKey = pair.Key;
+                    break;
+                }
+            }
+            if (string.IsNullOrEmpty(rootTransformKey) ||
+                !actualContents.LocalIds.TryGetValue(
+                    rootGameObjectKey, out long positionedGameObjectId) ||
+                !actualContents.LocalIds.TryGetValue(
+                    rootTransformKey, out long positionedTransformId))
+            {
+                throw new InvalidOperationException(
+                    "The conversion did not expose the positioned root GameObject and Transform ids.");
+            }
+
+            HashSet<long> reservedOriginalIds =
+                new HashSet<long>(sourceIdentities.LocalIds.Values);
+            HashSet<long> assignedIds = new HashSet<long>(reservedOriginalIds);
+            long positionedGameObjectTarget = ChooseContainerLocalId(
+                positionedGameObjectId,
+                wrapperGameObjectId,
+                assignedIds);
+            assignedIds.Add(positionedGameObjectTarget);
+            long positionedTransformTarget = ChooseContainerLocalId(
+                positionedTransformId,
+                wrapperTransformId,
+                assignedIds);
+            assignedIds.Add(positionedTransformTarget);
+
+            Dictionary<long, long> localIdRemap =
+                new Dictionary<long, long>();
+            AddLocalIdMapping(
+                localIdRemap,
+                wrapperGameObjectId,
+                sourceIdentities.RootGameObjectId);
+            AddLocalIdMapping(
+                localIdRemap,
+                wrapperTransformId,
+                sourceIdentities.RootTransformId);
+            AddLocalIdMapping(
+                localIdRemap,
+                positionedGameObjectId,
+                positionedGameObjectTarget);
+            AddLocalIdMapping(
+                localIdRemap,
+                positionedTransformId,
+                positionedTransformTarget);
+
+            foreach (KeyValuePair<string, long> expectedPair in
+                     sourceIdentities.LocalIds)
+            {
+                if (expectedPair.Key == rootGameObjectKey ||
+                    expectedPair.Key == rootTransformKey)
+                {
+                    continue;
+                }
+                if (!actualContents.LocalIds.TryGetValue(
+                        expectedPair.Key, out long actualId))
+                {
+                    throw new InvalidOperationException(
+                        "The converted positioned hierarchy is missing persistent object '" +
+                        expectedPair.Key + "'.");
+                }
+                AddLocalIdMapping(
+                    localIdRemap,
+                    actualId,
+                    expectedPair.Value);
+            }
+
+            RemapUnityYamlLocalIds(prefabPath, localIdRemap);
+            ImportSynchronously(prefabPath);
+        }
+
+        private static long ChooseContainerLocalId(
+            long currentId,
+            long vacatedWrapperId,
+            HashSet<long> assignedIds)
+        {
+            if (!assignedIds.Contains(currentId))
+            {
+                return currentId;
+            }
+            if (!assignedIds.Contains(vacatedWrapperId))
+            {
+                return vacatedWrapperId;
+            }
+
+            long candidate;
+            do
+            {
+                candidate = BitConverter.ToInt64(
+                    Guid.NewGuid().ToByteArray(), 0) & long.MaxValue;
+            }
+            while (candidate == 0 || assignedIds.Contains(candidate));
+            return candidate;
+        }
+
+        private static void AddLocalIdMapping(
+            Dictionary<long, long> remap,
+            long source,
+            long target)
+        {
+            if (source == target)
+            {
+                return;
+            }
+            if (remap.TryGetValue(source, out long existingTarget))
+            {
+                if (existingTarget != target)
+                {
+                    throw new InvalidOperationException(
+                        "The converted Prefab has an ambiguous local id map for " +
+                        source + ".");
+                }
+                return;
+            }
+
+            remap.Add(source, target);
+        }
+
+        private static void RemapUnityYamlLocalIds(
+            string assetPath,
+            Dictionary<long, long> remap)
+        {
+            if (remap == null || remap.Count == 0)
+            {
+                return;
+            }
+
+            byte[] sourceBytes = File.ReadAllBytes(GetAbsoluteAssetPath(assetPath));
+            int textOffset = ValidateUnityYamlHeader(sourceBytes, assetPath);
+            bool hasUtf8Bom = textOffset == 3;
+            var strictUtf8 = new UTF8Encoding(false, true);
+            string yaml = strictUtf8.GetString(
+                sourceBytes,
+                textOffset,
+                sourceBytes.Length - textOffset);
+
+            var anchorPattern = new Regex(
+                @"(?<prefix>^--- !u!\d+ &)(?<id>-?\d+)(?<suffix>[^\n]*)$",
+                RegexOptions.Multiline | RegexOptions.CultureInvariant);
+            Dictionary<long, int> anchorCounts =
+                new Dictionary<long, int>();
+            foreach (Match match in anchorPattern.Matches(yaml))
+            {
+                if (long.TryParse(match.Groups["id"].Value, out long localId) &&
+                    remap.ContainsKey(localId))
+                {
+                    anchorCounts.TryGetValue(localId, out int count);
+                    anchorCounts[localId] = count + 1;
+                }
+            }
+
+            foreach (long sourceId in remap.Keys)
+            {
+                if (!anchorCounts.TryGetValue(sourceId, out int count) ||
+                    count != 1)
+                {
+                    throw new InvalidOperationException(
+                        "The Unity YAML for '" + assetPath +
+                        "' did not contain exactly one document for local id " +
+                        sourceId + ". No text was changed.");
+                }
+            }
+
+            HashSet<long> remappedAnchorIds = new HashSet<long>();
+            foreach (Match match in anchorPattern.Matches(yaml))
+            {
+                if (!long.TryParse(
+                        match.Groups["id"].Value, out long localId))
+                {
+                    throw new InvalidOperationException(
+                        "The Unity YAML for '" + assetPath +
+                        "' contains an invalid document id. No text was changed.");
+                }
+                long remappedId = remap.TryGetValue(
+                    localId, out long replacement)
+                    ? replacement
+                    : localId;
+                if (!remappedAnchorIds.Add(remappedId))
+                {
+                    throw new InvalidOperationException(
+                        "The persistent id repair for '" + assetPath +
+                        "' would create duplicate Unity YAML document id " +
+                        remappedId + ". No text was changed.");
+                }
+            }
+
+            string remappedYaml = anchorPattern.Replace(
+                yaml,
+                match => ReplaceMappedLocalId(match, remap));
+            var localReferencePattern = new Regex(
+                @"(?<prefix>\{fileID:\s*)(?<id>-?\d+)(?<suffix>\s*\})",
+                RegexOptions.CultureInvariant);
+            remappedYaml = localReferencePattern.Replace(
+                remappedYaml,
+                match => ReplaceMappedLocalId(match, remap));
+
+            byte[] textBytes = new UTF8Encoding(false).GetBytes(remappedYaml);
+            if (!hasUtf8Bom)
+            {
+                File.WriteAllBytes(GetAbsoluteAssetPath(assetPath), textBytes);
+                return;
+            }
+
+            byte[] outputBytes = new byte[textBytes.Length + 3];
+            outputBytes[0] = 0xEF;
+            outputBytes[1] = 0xBB;
+            outputBytes[2] = 0xBF;
+            Buffer.BlockCopy(
+                textBytes, 0, outputBytes, 3, textBytes.Length);
+            File.WriteAllBytes(GetAbsoluteAssetPath(assetPath), outputBytes);
+        }
+
+        private static string ReplaceMappedLocalId(
+            Match match,
+            Dictionary<long, long> remap)
+        {
+            if (!long.TryParse(match.Groups["id"].Value, out long localId) ||
+                !remap.TryGetValue(localId, out long replacement))
+            {
+                return match.Value;
+            }
+
+            return match.Groups["prefix"].Value + replacement +
+                   match.Groups["suffix"].Value;
+        }
+
+        private static int ValidateUnityYamlHeader(
+            byte[] bytes,
+            string assetPath)
+        {
+            int offset = bytes != null && bytes.Length >= 3 &&
+                         bytes[0] == 0xEF && bytes[1] == 0xBB &&
+                         bytes[2] == 0xBF
+                ? 3
+                : 0;
+            byte[] yamlHeader = Encoding.ASCII.GetBytes("%YAML 1.1");
+            if (!HasBytePrefix(bytes, offset, yamlHeader))
+            {
+                throw new InvalidOperationException(
+                    "The Prefab '" + assetPath +
+                    "' is not a text-serialized Unity YAML asset with a valid %YAML header. " +
+                    "Its persistent ids cannot be repaired safely; use Force Text asset serialization and try again.");
+            }
+
+            int secondLineOffset = offset + yamlHeader.Length;
+            if (secondLineOffset < bytes.Length &&
+                bytes[secondLineOffset] == (byte)'\r')
+            {
+                secondLineOffset++;
+            }
+            if (secondLineOffset >= bytes.Length ||
+                bytes[secondLineOffset] != (byte)'\n')
+            {
+                throw new InvalidOperationException(
+                    "The Prefab '" + assetPath +
+                    "' has an invalid Unity YAML header. No text was changed.");
+            }
+            secondLineOffset++;
+
+            byte[] unityTag = Encoding.ASCII.GetBytes(
+                "%TAG !u! tag:unity3d.com,2011:");
+            if (!HasBytePrefix(bytes, secondLineOffset, unityTag))
+            {
+                throw new InvalidOperationException(
+                    "The Prefab '" + assetPath +
+                    "' does not contain the Unity YAML tag directive. No text was changed.");
+            }
+            return offset;
+        }
+
+        private static bool HasBytePrefix(
+            byte[] bytes,
+            int offset,
+            byte[] prefix)
+        {
+            if (bytes == null || prefix == null || offset < 0 ||
+                bytes.Length - offset < prefix.Length)
+            {
+                return false;
+            }
+            for (int index = 0; index < prefix.Length; index++)
+            {
+                if (bytes[offset + index] != prefix[index])
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        private static string GetAbsoluteAssetPath(string assetPath)
+        {
+            return Path.GetFullPath(assetPath);
+        }
+
         private static void FinalizeWrapperNames(
             string prefabPath,
             string wrapperName,
@@ -698,6 +1068,300 @@ namespace UMA.Editors
                     PrefabUtility.UnloadPrefabContents(contentsRoot);
                 }
             }
+        }
+
+        private static List<ReferencingPrefabSnapshot>
+            CaptureReferencingPrefabRootTransforms(string sourcePrefabPath)
+        {
+            List<ReferencingPrefabSnapshot> snapshots =
+                new List<ReferencingPrefabSnapshot>();
+            string[] assetPaths = AssetDatabase.GetAllAssetPaths();
+            for (int assetIndex = 0;
+                 assetIndex < assetPaths.Length;
+                 assetIndex++)
+            {
+                string candidatePath = NormalizeAssetPath(assetPaths[assetIndex]);
+                if (!candidatePath.StartsWith(
+                        "Assets/", StringComparison.Ordinal) ||
+                    !candidatePath.EndsWith(
+                        ".prefab", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(
+                        candidatePath,
+                        sourcePrefabPath,
+                        StringComparison.OrdinalIgnoreCase) ||
+                    !HasDirectDependency(
+                        candidatePath,
+                        sourcePrefabPath))
+                {
+                    continue;
+                }
+
+                GameObject contentsRoot = null;
+                try
+                {
+                    contentsRoot =
+                        PrefabUtility.LoadPrefabContents(candidatePath);
+                    if (contentsRoot == null)
+                    {
+                        throw new InvalidOperationException(
+                            "Unity could not load referencing Prefab '" +
+                            candidatePath + "'.");
+                    }
+
+                    List<Transform> instanceRoots =
+                        FindDirectPrefabInstanceRoots(
+                            contentsRoot,
+                            sourcePrefabPath);
+                    if (instanceRoots.Count == 0)
+                    {
+                        continue;
+                    }
+
+                    ReferencingPrefabSnapshot snapshot =
+                        new ReferencingPrefabSnapshot
+                        {
+                            AssetPath = candidatePath
+                        };
+                    for (int rootIndex = 0;
+                         rootIndex < instanceRoots.Count;
+                         rootIndex++)
+                    {
+                        snapshot.InstanceRootTransforms.Add(
+                            new TransformSnapshot(instanceRoots[rootIndex]));
+                    }
+                    snapshots.Add(snapshot);
+                }
+                finally
+                {
+                    if (contentsRoot != null)
+                    {
+                        PrefabUtility.UnloadPrefabContents(contentsRoot);
+                    }
+                }
+            }
+
+            return snapshots;
+        }
+
+        private static bool HasDirectDependency(
+            string assetPath,
+            string dependencyPath)
+        {
+            string[] dependencies =
+                AssetDatabase.GetDependencies(assetPath, false);
+            for (int dependencyIndex = 0;
+                 dependencyIndex < dependencies.Length;
+                 dependencyIndex++)
+            {
+                if (string.Equals(
+                        NormalizeAssetPath(dependencies[dependencyIndex]),
+                        dependencyPath,
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private static void MigrateReferencingPrefabRootTransforms(
+            List<ReferencingPrefabSnapshot> snapshots,
+            string convertedPrefabPath,
+            TransformSnapshot oldRootTransform)
+        {
+            for (int snapshotIndex = 0;
+                 snapshotIndex < snapshots.Count;
+                 snapshotIndex++)
+            {
+                ReferencingPrefabSnapshot snapshot = snapshots[snapshotIndex];
+                GameObject contentsRoot = null;
+                try
+                {
+                    contentsRoot =
+                        PrefabUtility.LoadPrefabContents(snapshot.AssetPath);
+                    if (contentsRoot == null)
+                    {
+                        throw new InvalidOperationException(
+                            "Unity could not load referencing Prefab '" +
+                            snapshot.AssetPath + "'.");
+                    }
+
+                    List<Transform> instanceRoots =
+                        FindDirectPrefabInstanceRoots(
+                            contentsRoot,
+                            convertedPrefabPath);
+                    ValidateInstanceRootCount(snapshot, instanceRoots);
+                    for (int rootIndex = 0;
+                         rootIndex < instanceRoots.Count;
+                         rootIndex++)
+                    {
+                        ApplyWrapperDelta(
+                            instanceRoots[rootIndex],
+                            snapshot.InstanceRootTransforms[rootIndex],
+                            oldRootTransform);
+                    }
+
+                    PrefabUtility.SaveAsPrefabAsset(
+                        contentsRoot,
+                        snapshot.AssetPath,
+                        out bool savedSuccessfully);
+                    if (!savedSuccessfully)
+                    {
+                        throw new InvalidOperationException(
+                            "Unity could not migrate root transform overrides in referencing Prefab '" +
+                            snapshot.AssetPath + "'.");
+                    }
+                }
+                finally
+                {
+                    if (contentsRoot != null)
+                    {
+                        PrefabUtility.UnloadPrefabContents(contentsRoot);
+                    }
+                }
+
+                ImportSynchronously(snapshot.AssetPath);
+            }
+        }
+
+        private static void RestoreReferencingPrefabRootTransforms(
+            List<ReferencingPrefabSnapshot> snapshots,
+            string restoredPrefabPath)
+        {
+            for (int snapshotIndex = 0;
+                 snapshotIndex < snapshots.Count;
+                 snapshotIndex++)
+            {
+                ReferencingPrefabSnapshot snapshot = snapshots[snapshotIndex];
+                GameObject contentsRoot = null;
+                try
+                {
+                    contentsRoot =
+                        PrefabUtility.LoadPrefabContents(snapshot.AssetPath);
+                    if (contentsRoot == null)
+                    {
+                        throw new InvalidOperationException(
+                            "Unity could not load referencing Prefab '" +
+                            snapshot.AssetPath + "'.");
+                    }
+
+                    List<Transform> instanceRoots =
+                        FindDirectPrefabInstanceRoots(
+                            contentsRoot,
+                            restoredPrefabPath);
+                    ValidateInstanceRootCount(snapshot, instanceRoots);
+                    for (int rootIndex = 0;
+                         rootIndex < instanceRoots.Count;
+                         rootIndex++)
+                    {
+                        snapshot.InstanceRootTransforms[rootIndex].Apply(
+                            instanceRoots[rootIndex]);
+                    }
+
+                    PrefabUtility.SaveAsPrefabAsset(
+                        contentsRoot,
+                        snapshot.AssetPath,
+                        out bool savedSuccessfully);
+                    if (!savedSuccessfully)
+                    {
+                        throw new InvalidOperationException(
+                            "Unity could not restore root transform overrides in referencing Prefab '" +
+                            snapshot.AssetPath + "'.");
+                    }
+                }
+                finally
+                {
+                    if (contentsRoot != null)
+                    {
+                        PrefabUtility.UnloadPrefabContents(contentsRoot);
+                    }
+                }
+
+                ImportSynchronously(snapshot.AssetPath);
+            }
+        }
+
+        private static List<Transform> FindDirectPrefabInstanceRoots(
+            GameObject contentsRoot,
+            string sourcePrefabPath)
+        {
+            List<Transform> instanceRoots = new List<Transform>();
+            Transform[] transforms =
+                contentsRoot.GetComponentsInChildren<Transform>(true);
+            for (int transformIndex = 0;
+                 transformIndex < transforms.Length;
+                 transformIndex++)
+            {
+                Transform candidate = transforms[transformIndex];
+                if (!PrefabUtility.IsAnyPrefabInstanceRoot(
+                        candidate.gameObject))
+                {
+                    continue;
+                }
+
+                GameObject sourceObject =
+                    PrefabUtility.GetCorrespondingObjectFromSource(
+                        candidate.gameObject);
+                if (sourceObject != null &&
+                    string.Equals(
+                        NormalizeAssetPath(
+                            AssetDatabase.GetAssetPath(sourceObject)),
+                        sourcePrefabPath,
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    instanceRoots.Add(candidate);
+                }
+            }
+
+            return instanceRoots;
+        }
+
+        private static void ValidateInstanceRootCount(
+            ReferencingPrefabSnapshot snapshot,
+            List<Transform> instanceRoots)
+        {
+            if (instanceRoots.Count ==
+                snapshot.InstanceRootTransforms.Count)
+            {
+                return;
+            }
+
+            throw new InvalidOperationException(
+                "Referencing Prefab '" + snapshot.AssetPath +
+                "' contained " + snapshot.InstanceRootTransforms.Count +
+                " direct instance(s) before conversion, but Unity exposed " +
+                instanceRoots.Count + " afterward. The conversion cannot " +
+                "migrate those transform overrides safely.");
+        }
+
+        private static void ApplyWrapperDelta(
+            Transform instanceRoot,
+            TransformSnapshot oldInstanceTransform,
+            TransformSnapshot oldRootTransform)
+        {
+            if (Mathf.Approximately(oldRootTransform.Scale.x, 0f) ||
+                Mathf.Approximately(oldRootTransform.Scale.y, 0f) ||
+                Mathf.Approximately(oldRootTransform.Scale.z, 0f))
+            {
+                throw new InvalidOperationException(
+                    "A positioned Prefab with a zero root scale cannot migrate existing instance transform overrides safely.");
+            }
+
+            Vector3 wrapperScale = new Vector3(
+                oldInstanceTransform.Scale.x / oldRootTransform.Scale.x,
+                oldInstanceTransform.Scale.y / oldRootTransform.Scale.y,
+                oldInstanceTransform.Scale.z / oldRootTransform.Scale.z);
+            Quaternion wrapperRotation =
+                oldInstanceTransform.Rotation *
+                Quaternion.Inverse(oldRootTransform.Rotation);
+            Vector3 positionedTranslation =
+                wrapperRotation *
+                Vector3.Scale(wrapperScale, oldRootTransform.Position);
+
+            instanceRoot.localPosition =
+                oldInstanceTransform.Position - positionedTranslation;
+            instanceRoot.localRotation = wrapperRotation;
+            instanceRoot.localScale = wrapperScale;
         }
 
         private static void ValidateFinalAssets(
@@ -826,6 +1490,13 @@ namespace UMA.Editors
                 }
                 if (!sourceWasVariant)
                 {
+                    EnsureIdentityMapLocalIds(
+                        prefabPath,
+                        originalGuid,
+                        sourceIdentities);
+                    ImportSynchronously(prefabPath);
+                    restored =
+                        AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
                     ValidateIdentityMap(
                         sourceIdentities,
                         CaptureOwnedIdentities(restored, originalGuid));
@@ -839,6 +1510,39 @@ namespace UMA.Editors
                 message = "Automatic restoration also failed: " + rollbackException.Message;
                 return false;
             }
+        }
+
+        private static void EnsureIdentityMapLocalIds(
+            string prefabPath,
+            string originalGuid,
+            PrefabIdentityMap expected)
+        {
+            GameObject restored =
+                AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+            PrefabIdentityMap actual =
+                CaptureOwnedIdentities(restored, originalGuid);
+            if (expected == null ||
+                actual.LocalIds.Count != expected.LocalIds.Count)
+            {
+                throw new InvalidOperationException(
+                    "The restored Prefab hierarchy does not match the original persistent object map.");
+            }
+
+            Dictionary<long, long> remap = new Dictionary<long, long>();
+            foreach (KeyValuePair<string, long> expectedPair in
+                     expected.LocalIds)
+            {
+                if (!actual.LocalIds.TryGetValue(
+                        expectedPair.Key, out long actualId))
+                {
+                    throw new InvalidOperationException(
+                        "The restored Prefab is missing persistent object '" +
+                        expectedPair.Key + "'.");
+                }
+                AddLocalIdMapping(remap, actualId, expectedPair.Value);
+            }
+
+            RemapUnityYamlLocalIds(prefabPath, remap);
         }
 
         private static void PrepareConvertedAssetForRollback(

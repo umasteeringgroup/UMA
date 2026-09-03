@@ -91,6 +91,17 @@ namespace UMA
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void RuntimeInitializeOnLoad()
         {
+			if (_dilateMat != null)
+			{
+				if (Application.isPlaying)
+				{
+					Destroy(_dilateMat);
+				}
+				else
+				{
+					DestroyImmediate(_dilateMat);
+				}
+			}
             _dilateMat = null;
         }
 

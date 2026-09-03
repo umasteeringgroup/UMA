@@ -166,10 +166,29 @@ namespace UMA.Examples
 
         public void OnEnable()
         {
+            // Fast Enter Play Mode can reuse this component and its UnityEvent
+            // instances. Remove any prior runtime subscriptions before the
+            // per-session references and LOD state are initialized again.
+            if (_avatar != null)
+            {
+                _avatar.CharacterBegun.RemoveListener(CharacterBegun);
+                _avatar.CharacterUpdated.RemoveListener(CharacterUpdated);
+            }
+            if (_umaData != null)
+            {
+                _umaData.CharacterCreated.RemoveListener(CharacterCreated);
+                _umaData.CharacterUpdated.RemoveListener(CharacterUpdated);
+            }
+
+            Reset();
+            initialized = false;
+            _initialFallbackApplied = false;
             _avatar = GetComponent<DynamicCharacterAvatar>();
             _umaData = GetComponent<UMAData>();
             if (_avatar != null)
             {
+                _avatar.CharacterBegun.RemoveListener(CharacterBegun);
+                _avatar.CharacterUpdated.RemoveListener(CharacterUpdated);
                 _avatar.CharacterBegun.AddListener(CharacterBegun);
                 _avatar.CharacterUpdated.AddListener(CharacterUpdated);
             }
@@ -177,6 +196,8 @@ namespace UMA.Examples
             {
                 if (_umaData != null)
                 {
+                    _umaData.CharacterCreated.RemoveListener(CharacterCreated);
+                    _umaData.CharacterUpdated.RemoveListener(CharacterUpdated);
                     _umaData.CharacterCreated.AddListener(CharacterCreated);
                     _umaData.CharacterUpdated.AddListener(CharacterUpdated);
                 }
@@ -968,8 +989,11 @@ namespace UMA.Examples
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         public static void StaticInitializeOnLoad()
         {
-            // Clear the LOD cache when we do a domain reload.
+            // SubsystemRegistration also runs when domain reload is disabled.
             LODSFound = new Dictionary<string, string[]>();
+#if UNITY_EDITOR && UMA_INTERNALLOD_DIAGNOSTICS
+            _lastLoggedFrame = -1;
+#endif
         }
 
         // Should this be in the library?

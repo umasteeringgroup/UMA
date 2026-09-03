@@ -502,14 +502,7 @@ namespace UMA.CharacterSystem
                     /// Have to clean up from edit time stuff.
                     if (editorTimeGeneration && Application.isPlaying)
                     {
-                        List<GameObject> Cleaners = GetRenderers(gameObject);
-                        HideAndCleanup(false);
-
-                        for (int i = 0; i < Cleaners.Count; i++)
-                        {
-                            GameObject go = Cleaners[i];
-                            DestroyImmediate(go);
-                        }
+                        CleanupEditorGeneratedDataForPlayMode();
                     }
             }
             else
@@ -574,29 +567,19 @@ namespace UMA.CharacterSystem
         // Use this for initialization
         public void Start()
         {
+#if UNITY_EDITOR
+            // Safeguard the ordinary scene-reload path as well. The no-scene-
+            // reload path is prepared by UMAAssetIndexer before play because
+            // Unity does not recreate the scene object there.
+            if (Application.isPlaying && editorTimeGeneration)
+            {
+                CleanupEditorGeneratedDataForPlayMode();
+            }
+#endif
             StartGuard = false;
             _isFirstSettingsBuild = true;
 
-#if UMA_NODOMAINRELOAD
-            blendShapes = new HashSet<string>();
-            previousRace = null;
-            _wardrobeRecipes = new Dictionary<string, UMATextRecipe>();
-            _additiveRecipes = new Dictionary<string, List<UMATextRecipe>>();
-            _wardrobeCollections = new Dictionary<string, UMAWardrobeCollection>();
-#if UMA_ADDRESSABLES
-            LoadedHandles = new Queue<AsyncOp>();
-            DelayedHandles = new HashSet<AsyncOp>();
-#endif
-            SuppressedRecipes.Clear();
-            HiddenSlots.Clear();
-            cacheStates.Clear();
-            wasCrossCompatibleBuild = false;
-            crossCompatibleRaces.Clear();
-            forceSuppressedWardrobeSlots.Clear();
-            forceRemovedBaseSlots.Clear();
-            forceSuppressSlotsContaining.Clear();
-            forceRemovedTags.Clear();
-#endif
+            ResetPlayModeRuntimeState();
             InitialStartup();
         }
 
@@ -704,6 +687,56 @@ namespace UMA.CharacterSystem
             return objs;
         }
 
+#if UNITY_EDITOR
+        internal void CleanupEditorGeneratedDataForPlayMode()
+        {
+            List<GameObject> cleaners = GetRenderers(gameObject);
+            HideAndCleanup(false);
+
+            for (int i = 0; i < cleaners.Count; i++)
+            {
+                GameObject rendererObject = cleaners[i];
+                if (rendererObject != null)
+                {
+                    DestroyImmediate(rendererObject);
+                }
+            }
+        }
+
+        internal void PrepareForPlayMode()
+        {
+            if (editorTimeGeneration)
+            {
+                CleanupEditorGeneratedDataForPlayMode();
+            }
+            ResetPlayModeRuntimeState();
+        }
+#endif
+
+        private void ResetPlayModeRuntimeState()
+        {
+            blendShapes = new HashSet<string>();
+            previousRace = null;
+            _wardrobeRecipes = new Dictionary<string, UMATextRecipe>();
+            _additiveRecipes =
+                new Dictionary<string, List<UMATextRecipe>>();
+            _wardrobeCollections =
+                new Dictionary<string, UMAWardrobeCollection>();
+#if UMA_ADDRESSABLES
+            LoadedHandles = new Queue<AsyncOp>();
+            DelayedHandles = new HashSet<AsyncOp>();
+#endif
+            SuppressedRecipes.Clear();
+            HiddenSlots.Clear();
+            cacheStates.Clear();
+            wasCrossCompatibleBuild = false;
+            crossCompatibleRaces.Clear();
+            forceSuppressedWardrobeSlots.Clear();
+            forceRemovedBaseSlots.Clear();
+            forceSuppressSlotsContaining.Clear();
+            forceRemovedTags.Clear();
+        }
+
         public bool IsFbxRouteRendererObject(GameObject rendererObject)
         {
             UMAFbxRouteRuntime routeRuntime = fbxRouteRuntime != null ? fbxRouteRuntime : GetComponent<UMAFbxRouteRuntime>();
@@ -780,6 +813,8 @@ namespace UMA.CharacterSystem
         public bool nextBuildSlotsOnly = false;
         private const string EditorGenerationPausedSessionKey = "UMA.Toolbar.EditorGenerationPaused";
         private int generateWait = 0;
+        private bool editorGenerationQueued;
+        private bool pendingEditorGenerationIgnoresPause;
         const int maxWait = 60;
 
         /// <summary>
@@ -820,15 +855,41 @@ namespace UMA.CharacterSystem
                 return;
             }
 
+            Debug.Log("GenerateSingleUMA called with slotsOnly=" + slotsOnly + " ignoreEditorPause=" + ignoreEditorPause);
             generateWait = 0;
             nextBuildSlotsOnly = slotsOnly;
-            EditorApplication.delayCall += () => InternalGenerateSingleUMA(ignoreEditorPause);
+            pendingEditorGenerationIgnoresPause |= ignoreEditorPause;
+            if (editorGenerationQueued)
+            {
+                return;
+            }
+
+            editorGenerationQueued = true;
+            EditorApplication.delayCall += InternalGenerateSingleUMA;
         }
 
-        private void InternalGenerateSingleUMA(bool ignoreEditorPause)
+        private void InternalGenerateSingleUMA()
         {
+            EditorApplication.delayCall -= InternalGenerateSingleUMA;
+            if (!editorGenerationQueued)
+            {
+                return;
+            }
+
+            // Delayed editor work must never cross an edit/play transition.
+            // With domain and scene reload disabled the target object survives,
+            // so a queued callback would otherwise build into the play scene.
+            if (Application.isPlaying ||
+                EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                ClearPendingEditorGeneration();
+                return;
+            }
+
+            bool ignoreEditorPause = pendingEditorGenerationIgnoresPause;
             if (EditorGenerationPaused && !ignoreEditorPause)
             {
+                ClearPendingEditorGeneration();
                 return;
             }
 
@@ -838,19 +899,28 @@ namespace UMA.CharacterSystem
                 if (generateWait >= maxWait)
                 {
                     // Don't try anymore.
+                    ClearPendingEditorGeneration();
                     return;
                 }
                 // Try again after compiling and updating finished.
-                EditorApplication.delayCall += () => InternalGenerateSingleUMA(ignoreEditorPause);
+                EditorApplication.delayCall += InternalGenerateSingleUMA;
                 return;
             }
 
             if (this == null || this.gameObject == null)
             {
+                ClearPendingEditorGeneration();
                 return;
             }
             bool slotsOnly = nextBuildSlotsOnly;
+            ClearPendingEditorGeneration();
             BuildNow();
+        }
+
+        private void ClearPendingEditorGeneration()
+        {
+            editorGenerationQueued = false;
+            pendingEditorGenerationIgnoresPause = false;
         }
 
         public void RegenerateNow(bool updateRig=true, bool updateTextures=false, bool updateMesh=false)
@@ -4323,7 +4393,12 @@ namespace UMA.CharacterSystem
         public void InitializeAvatar()
         {
             Initialize();
+            // Start runs once per play session even when domain reload is
+            // disabled, while UMAData and its delegates survive. Keep these
+            // subscriptions idempotent across sessions.
+            umaData.OnCharacterBegun -= this.SetAndSaveOverrideDNA;
             umaData.OnCharacterBegun += this.SetAndSaveOverrideDNA;
+            umaData.OnCharacterDnaUpdated -= this.RestoreOverrideDna;
             umaData.OnCharacterDnaUpdated += this.RestoreOverrideDna;
         }
 

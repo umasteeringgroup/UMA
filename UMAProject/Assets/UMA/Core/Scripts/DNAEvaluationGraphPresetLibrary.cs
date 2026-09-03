@@ -35,6 +35,14 @@ namespace UMA
 		private static List<DNAEvaluationGraph> _cachedGlobalList = new List<DNAEvaluationGraph>();
 
 		private static List<string> _cachedGlobalTooltips = new List<string>();
+
+		[RuntimeInitializeOnLoadMethod(
+			RuntimeInitializeLoadType.SubsystemRegistration)]
+		private static void ResetEditorCaches()
+		{
+			_cachedGlobalList = new List<DNAEvaluationGraph>();
+			_cachedGlobalTooltips = new List<string>();
+		}
 #endif
 
 		/// <summary>

@@ -38,6 +38,7 @@ namespace UMA
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         public static void StaticInitializeOnLoad()
         {
+            CleanupPendingCopies();
             renderTexturesToCPU = new Dictionary<UMAObjectId, RenderTexToCPU>();
             renderTexturesToFree = new Dictionary<UMAObjectId, RenderTexture>();
             QueuedCopies = new Queue<RenderTexToCPU>();
@@ -51,6 +52,62 @@ namespace UMA
             renderTexturesCleanedUMAData = 0;
             renderTexturesCleanedApplied = 0;
             renderTexturesCleanedMissed = 0;
+        }
+
+        /// <summary>
+        /// Cancels retained asynchronous atlas-copy state and releases every
+        /// temporary texture it still owns. This is safe to call repeatedly at
+        /// editor play-mode boundaries.
+        /// </summary>
+        public static void CleanupPendingCopies()
+        {
+            var pendingCopies = new HashSet<RenderTexToCPU>();
+            if (renderTexturesToCPU != null)
+            {
+                foreach (RenderTexToCPU copy in renderTexturesToCPU.Values)
+                {
+                    if (copy != null)
+                    {
+                        pendingCopies.Add(copy);
+                    }
+                }
+            }
+            if (QueuedCopies != null)
+            {
+                foreach (RenderTexToCPU copy in QueuedCopies)
+                {
+                    if (copy != null)
+                    {
+                        pendingCopies.Add(copy);
+                    }
+                }
+            }
+
+            foreach (RenderTexToCPU copy in pendingCopies)
+            {
+                copy.DestroyNewTexture();
+                copy.ReleaseSourceTexture();
+            }
+
+            // A texture can be retained for release after its copy object has
+            // already left the queue. Release any such remainder explicitly.
+            if (renderTexturesToFree != null)
+            {
+                var remainingTextures =
+                    new List<RenderTexture>(renderTexturesToFree.Values);
+                for (int i = 0; i < remainingTextures.Count; i++)
+                {
+                    RenderTexture texture = remainingTextures[i];
+                    if (texture != null)
+                    {
+                        UMARenderTextureTracker.ReleaseTemporary(texture);
+                    }
+                }
+            }
+
+            renderTexturesToCPU?.Clear();
+            renderTexturesToFree?.Clear();
+            QueuedCopies?.Clear();
         }
 
         public RenderTexToCPU(RenderTexture texture, GeneratedMaterial generatedMaterial, string textureName, int textureIndex, UMAGeneratorBase basegen)

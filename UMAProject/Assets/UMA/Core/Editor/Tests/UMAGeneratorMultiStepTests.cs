@@ -34,6 +34,63 @@ namespace UMA.Editors.Tests
         [Category("MeshCombiner")]
         [Category("MultiStepMeshCombiner")]
         [Category("GeneratorScheduler")]
+        public void GeneratorLifecycleCleanupDiscardsRetainedRequests()
+        {
+            GameObject generatorObject = null;
+            GameObject avatarObject = null;
+            RaceData race = null;
+            try
+            {
+                generatorObject =
+                    new GameObject("Generator lifecycle cleanup fixture");
+                var generator = generatorObject
+                    .AddComponent<SchedulerTestGenerator>();
+                var combiner = generatorObject
+                    .AddComponent<FakeMultiStepMeshCombiner>();
+                combiner.stepsToComplete = 10;
+                ConfigureGenerator(generator, combiner);
+
+                avatarObject =
+                    new GameObject("Retained generation request fixture");
+                UMAData data = CreateUmaData(avatarObject, out race);
+                generator.addDirtyUMA(data);
+                generator.Work();
+
+                Assert.IsFalse(generator.IsIdle());
+                Assert.NotNull(combiner.lastOperation);
+
+                generator.SimulateDisable();
+
+                Assert.IsTrue(
+                    generator.IsIdle(),
+                    "Disabling a retained generator must clear requests from the prior play session.");
+                Assert.AreEqual(0, generator.QueueSize());
+                Assert.IsTrue(
+                    combiner.lastOperation.disposed,
+                    "Generator lifecycle cleanup must dispose its active incremental operation.");
+            }
+            finally
+            {
+                if (avatarObject != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(avatarObject);
+                }
+                if (generatorObject != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(generatorObject);
+                }
+                if (race != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(race);
+                }
+            }
+        }
+
+        [Test]
+        [Category("UMA")]
+        [Category("MeshCombiner")]
+        [Category("MultiStepMeshCombiner")]
+        [Category("GeneratorScheduler")]
         public void MultiStepUmaRemainsQueuedUntilMeshOperationCompletes()
         {
             GameObject generatorObject = null;
@@ -1429,6 +1486,11 @@ namespace UMA.Editors.Tests
         public void AdvanceOneMillisecond()
         {
             timestamp++;
+        }
+
+        public void SimulateDisable()
+        {
+            base.OnDisable();
         }
 
         protected override long GetMultiStepTimestamp()

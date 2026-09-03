@@ -487,6 +487,46 @@ namespace UMA
 		}
 
 		/// <summary>
+		/// Releases the mesh and renderer object owned by one generated UMA
+		/// renderer. All combiner implementations use this method so renderer
+		/// replacement has identical ownership semantics.
+		/// </summary>
+		internal void DestroyGeneratedRenderer(SkinnedMeshRenderer renderer)
+		{
+			if (renderer == null)
+			{
+				return;
+			}
+
+			GameObject rendererObject = renderer.gameObject;
+			Cloth cloth = rendererObject.GetComponent<Cloth>();
+			if (cloth != null)
+			{
+				UMAUtils.DestroySceneObject(cloth);
+			}
+
+			Mesh mesh = renderer.sharedMesh;
+			renderer.sharedMesh = null;
+			if (mesh != null)
+			{
+				UMAUtils.DestroySceneObject(mesh);
+			}
+
+			bool ownsRendererObject =
+				rendererObject != gameObject &&
+				(rendererObject.GetComponent<UMAGeneratedRenderer>() != null ||
+				 renderer.transform.parent == transform);
+			if (ownsRendererObject)
+			{
+				UMAUtils.DestroySceneObject(rendererObject);
+			}
+			else
+			{
+				UMAUtils.DestroySceneObject(renderer);
+			}
+		}
+
+		/// <summary>
 		/// Migrates tracked direct-child renderers to explicit ownership markers
 		/// and removes marked renderer objects no longer tracked by this avatar.
 		/// This is required when Unity preserves scene objects while restoring
@@ -516,17 +556,26 @@ namespace UMA
 				 childIndex--)
 			{
 				Transform child = transform.GetChild(childIndex);
-				if (child.GetComponent<UMAGeneratedRenderer>() != null ||
-					!IsLegacyGeneratedRendererName(child.name))
+				if (child.GetComponent<UMAGeneratedRenderer>() != null)
 				{
 					continue;
 				}
 
 				SkinnedMeshRenderer legacyRenderer =
 					child.GetComponent<SkinnedMeshRenderer>();
+				bool hasLegacyObjectName =
+					IsLegacyGeneratedRendererName(child.name);
+				bool hasLegacyMeshName =
+					legacyRenderer != null &&
+					legacyRenderer.sharedMesh != null &&
+					IsLegacyGeneratedMeshName(legacyRenderer.sharedMesh.name);
+				if (!hasLegacyObjectName && !hasLegacyMeshName)
+				{
+					continue;
+				}
 				if (legacyRenderer != null &&
 					legacyRenderer.sharedMesh != null &&
-					!IsLegacyGeneratedMeshName(legacyRenderer.sharedMesh.name))
+					!hasLegacyMeshName)
 				{
 					continue;
 				}
@@ -3531,34 +3580,7 @@ namespace UMA
                 }
 				if (destroyRenderer)
 				{
-					// Need to kill cloth first if it exists. Destroy the complete
-					// generated object rather than leaving an untracked child behind.
-					var rendererObject = renderer.gameObject;
-					var cloth = rendererObject.GetComponent<Cloth>();
-					if (cloth != null)
-					{
-						UMAUtils.DestroySceneObject(cloth);
-					}
-
-					Mesh mesh = renderer.sharedMesh;
-					renderer.sharedMesh = null;
-					if (mesh != null)
-					{
-						UMAUtils.DestroySceneObject(mesh);
-					}
-
-					bool ownsRendererObject =
-						rendererObject != gameObject &&
-						(rendererObject.GetComponent<UMAGeneratedRenderer>() != null ||
-						 renderer.transform.parent == transform);
-					if (ownsRendererObject)
-					{
-						UMAUtils.DestroySceneObject(rendererObject);
-					}
-					else
-					{
-						UMAUtils.DestroySceneObject(renderer);
-					}
+					DestroyGeneratedRenderer(renderer);
 				}
 				else if (renderer.sharedMesh != null)
 				{

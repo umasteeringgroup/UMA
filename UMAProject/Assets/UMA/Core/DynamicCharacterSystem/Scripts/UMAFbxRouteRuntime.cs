@@ -18,6 +18,13 @@ namespace UMA.CharacterSystem
         private const string BaseInstanceNameSuffix = " (FBX Route)";
         private static readonly Dictionary<Mesh, int[][]> originalTrianglesByMesh = new Dictionary<Mesh, int[][]>();
 
+        [RuntimeInitializeOnLoadMethod(
+            RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStaticState()
+        {
+            originalTrianglesByMesh.Clear();
+        }
+
         private Mesh originalBaseMesh;
         private Mesh hiddenBaseMesh;
         private int[][] originalSubMeshTriangles;

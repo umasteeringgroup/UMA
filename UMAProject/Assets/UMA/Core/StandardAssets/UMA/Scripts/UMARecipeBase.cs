@@ -99,6 +99,7 @@ namespace UMA
         public static void StaticInitializeOnLoad()
         {
             recipeFormats = null;
+            Ticks_Load = 0;
         }
         /// <summary>
         /// Gets the list of all existing recipe formats.

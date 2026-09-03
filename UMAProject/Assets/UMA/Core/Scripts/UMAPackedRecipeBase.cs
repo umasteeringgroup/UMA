@@ -17,6 +17,13 @@ namespace UMA
 		static readonly Dictionary<string, SlotDataAsset> _slotAssetCache = new Dictionary<string, SlotDataAsset>(64);
 		static readonly Dictionary<string, OverlayDataAsset> _overlayAssetCache = new Dictionary<string, OverlayDataAsset>(256);
 
+		[RuntimeInitializeOnLoadMethod(
+			RuntimeInitializeLoadType.SubsystemRegistration)]
+		static void ResetUnpackCaches()
+		{
+			ClearUnpackCaches();
+		}
+
 		// Clears small caches (called each unpack to avoid stale growth)
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		static void ClearUnpackCaches()
