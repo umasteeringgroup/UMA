@@ -17,9 +17,12 @@ namespace UMA.HairCards
             HairEvaluationResult result)
         {
             if (group == null || guides == null || result == null) return;
+            if (!options.includeGuideCards && !options.includeChildren) return;
             float cardFraction = lod != null ? lod.cardFraction : 1f;
             int sampleCount = lod != null ? lod.samplesPerCard : 12;
             int tubeSides = lod != null ? lod.maximumTubeSides : 12;
+            Dictionary<string, HairGuide> sourceGuides = BuildGuideLookup(group);
+            Dictionary<int, int[]> sourceTriangles = new Dictionary<int, int[]>();
             for (int guideIndex = 0; guideIndex < guides.Count; guideIndex++)
             {
                 if (options.interactiveSampleLimit > 0 && result.curves.Count >= options.interactiveSampleLimit)
@@ -28,10 +31,10 @@ namespace UMA.HairCards
                     return;
                 }
                 HairEvaluatedCurve guideCurve = guides[guideIndex];
-                HairGuide sourceGuide = group.guides.Find(guide => guide != null && guide.Id == guideCurve.parentGuideId);
-                if (sourceGuide == null) continue;
+                if (!sourceGuides.TryGetValue(guideCurve.parentGuideId, out HairGuide sourceGuide)) continue;
                 float lodImportance = sourceGuide.lodImportance *
-                                      SampleRootMap(groom, group, sourceGuide, HairMapKind.LodImportance, 1f);
+                                      SampleRootMap(groom, group, sourceGuide, HairMapKind.LodImportance, 1f,
+                                          sourceTriangles);
                 float guideLodFraction = Mathf.Clamp01(cardFraction * Mathf.Lerp(0.25f, 1.5f,
                     Mathf.Clamp01(lodImportance)));
 
@@ -49,10 +52,11 @@ namespace UMA.HairCards
 
                 if (!options.includeChildren) continue;
                 int childCount = sourceGuide.overrideChildCount ? sourceGuide.childCount : group.children.childrenPerGuide;
-                float childMultiplier = SampleRootMap(groom, group, sourceGuide, HairMapKind.ChildCount, 1f);
+                float childMultiplier = SampleRootMap(groom, group, sourceGuide, HairMapKind.ChildCount, 1f,
+                    sourceTriangles);
                 childCount = Mathf.Max(0, Mathf.RoundToInt(childCount * Mathf.Max(0f, childMultiplier)));
                 float paintedClump = Mathf.Clamp01(SampleRootMap(groom, group, sourceGuide,
-                    HairMapKind.Clump, group.children.clump));
+                    HairMapKind.Clump, group.children.clump, sourceTriangles));
                 for (int childIndex = 0; childIndex < childCount; childIndex++)
                 {
                     if (options.interactiveSampleLimit > 0 && result.curves.Count >= options.interactiveSampleLimit)
@@ -155,14 +159,32 @@ namespace UMA.HairCards
             return child;
         }
 
+        private static Dictionary<string, HairGuide> BuildGuideLookup(HairGroup group)
+        {
+            Dictionary<string, HairGuide> guides = new Dictionary<string, HairGuide>(
+                group.guides?.Count ?? 0, StringComparer.Ordinal);
+            if (group.guides == null) return guides;
+            for (int index = 0; index < group.guides.Count; index++)
+            {
+                HairGuide guide = group.guides[index];
+                if (guide == null || string.IsNullOrEmpty(guide.Id) || guides.ContainsKey(guide.Id)) continue;
+                guides.Add(guide.Id, guide);
+            }
+            return guides;
+        }
+
         private static float SampleRootMap(HairGroomAsset groom, HairGroup group, HairGuide guide,
-            HairMapKind kind, float fallback)
+            HairMapKind kind, float fallback, Dictionary<int, int[]> triangleCache)
         {
             HairGrowthMap map = group.FindMap(kind);
             HairSurfaceAnchor root = guide.root;
             if (map == null || groom?.SourceMesh == null || !root.IsValid ||
                 root.SubmeshIndex < 0 || root.SubmeshIndex >= groom.SourceMesh.subMeshCount) return fallback;
-            int[] triangles = groom.SourceMesh.GetTriangles(root.SubmeshIndex, true);
+            if (!triangleCache.TryGetValue(root.SubmeshIndex, out int[] triangles))
+            {
+                triangles = groom.SourceMesh.GetTriangles(root.SubmeshIndex, true);
+                triangleCache.Add(root.SubmeshIndex, triangles);
+            }
             int offset = root.TriangleIndex * 3;
             if (offset < 0 || offset + 2 >= triangles.Length) return fallback;
             Vector3 barycentric = root.Barycentric;

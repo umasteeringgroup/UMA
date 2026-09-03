@@ -69,6 +69,7 @@ namespace UMA.HairCards
         public bool applySculptLayers = true;
         public bool applyModifiers = true;
         public bool applyConstraints = true;
+        public bool evaluateSurfaceAnchors = true;
         public bool includeHiddenGroups = true;
         public int interactiveSampleLimit;
     }

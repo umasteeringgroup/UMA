@@ -18,11 +18,13 @@ namespace UMA.HairCards
             groom.EnsureIntegrity();
             options ??= new HairEvaluationOptions();
             HairLodSettings lod = ResolveLod(groom, options.lodLevel);
+            SourceMeshReadCache sourceMesh = new SourceMeshReadCache(
+                options.evaluateSurfaceAnchors ? groom.SourceMesh : null);
             for (int groupIndex = 0; groupIndex < groom.Groups.Count; groupIndex++)
             {
                 HairGroup group = groom.Groups[groupIndex];
                 if (group == null || !group.enabled || (!options.includeHiddenGroups && !group.visible)) continue;
-                List<HairEvaluatedCurve> guides = BuildGuides(groom, group, options, result);
+                List<HairEvaluatedCurve> guides = BuildGuides(groom, group, options, result, sourceMesh);
                 result.evaluatedGuides.AddRange(guides);
                 HairChildGenerator.Generate(groom, group, guides, lod, options, result);
             }
@@ -33,11 +35,15 @@ namespace UMA.HairCards
             HairGroomAsset groom,
             HairGroup group,
             HairEvaluationOptions options,
-            HairEvaluationResult result)
+            HairEvaluationResult result,
+            SourceMeshReadCache sourceMesh)
         {
             List<HairEvaluatedCurve> curves = new List<HairEvaluatedCurve>(group.guides?.Count ?? 0);
             if (group.guides == null) return curves;
             string[] atlasRegionIds = group.atlasRegionIds?.ToArray() ?? Array.Empty<string>();
+            List<SculptLayerLookup> sculptLayers = options.applySculptLayers
+                ? BuildSculptLayerLookups(group)
+                : null;
             for (int guideIndex = 0; guideIndex < group.guides.Count; guideIndex++)
             {
                 HairGuide guide = group.guides[guideIndex];
@@ -62,9 +68,9 @@ namespace UMA.HairCards
                     curve.points.Add(new HairCurvePoint(point.position, point.width, point.roll));
                 }
 
-                if (groom.SourceMesh != null &&
+                if (sourceMesh.IsValid &&
                     string.Equals(guide.root.SourceMeshId, groom.SourceMeshId, StringComparison.Ordinal) &&
-                    HairMeshUtility.TryEvaluateAnchor(groom.SourceMesh, guide.root,
+                    sourceMesh.TryEvaluateAnchor(guide.root,
                         out Vector3 rootPosition, out Vector3 rootNormal))
                 {
                     Vector3 offset = rootPosition - curve.points[0].position;
@@ -77,7 +83,7 @@ namespace UMA.HairCards
                     curve.rootNormal = rootNormal;
                 }
 
-                if (options.applySculptLayers) ApplySculptLayers(group, guide, curve);
+                if (sculptLayers != null) ApplySculptLayers(sculptLayers, guide, curve);
                 if (options.applyModifiers) ApplyModifiers(group, curve, HairModifierDomain.Guides, groom);
                 if (options.applyConstraints) ApplyConstraints(group, curve, groom);
                 if (curve.Length < 1e-6f)
@@ -91,15 +97,38 @@ namespace UMA.HairCards
             return curves;
         }
 
-        private static void ApplySculptLayers(HairGroup group, HairGuide guide, HairEvaluatedCurve curve)
+        private static List<SculptLayerLookup> BuildSculptLayerLookups(HairGroup group)
         {
-            if (group.sculptLayers == null) return;
+            if (group.sculptLayers == null || group.sculptLayers.Count == 0) return null;
+            List<SculptLayerLookup> lookups = new List<SculptLayerLookup>(group.sculptLayers.Count);
             for (int layerIndex = 0; layerIndex < group.sculptLayers.Count; layerIndex++)
             {
                 HairSculptLayer layer = group.sculptLayers[layerIndex];
                 if (layer == null || !layer.visible || layer.opacity <= 0f || layer.deltas == null) continue;
-                HairGuideDelta delta = layer.deltas.Find(candidate => candidate != null && candidate.guideId == guide.Id);
-                if (delta == null) continue;
+                Dictionary<string, HairGuideDelta> deltas = new Dictionary<string, HairGuideDelta>(
+                    layer.deltas.Count, StringComparer.Ordinal);
+                for (int deltaIndex = 0; deltaIndex < layer.deltas.Count; deltaIndex++)
+                {
+                    HairGuideDelta delta = layer.deltas[deltaIndex];
+                    if (delta == null || string.IsNullOrEmpty(delta.guideId) || deltas.ContainsKey(delta.guideId))
+                        continue;
+                    deltas.Add(delta.guideId, delta);
+                }
+                lookups.Add(new SculptLayerLookup(layer, deltas));
+            }
+            return lookups.Count > 0 ? lookups : null;
+        }
+
+        private static void ApplySculptLayers(
+            IReadOnlyList<SculptLayerLookup> layers,
+            HairGuide guide,
+            HairEvaluatedCurve curve)
+        {
+            for (int layerIndex = 0; layerIndex < layers.Count; layerIndex++)
+            {
+                SculptLayerLookup lookup = layers[layerIndex];
+                HairSculptLayer layer = lookup.Layer;
+                if (!lookup.Deltas.TryGetValue(guide.Id, out HairGuideDelta delta)) continue;
                 for (int pointIndex = 0; pointIndex < curve.points.Count; pointIndex++)
                 {
                     HairCurvePoint point = curve.points[pointIndex];
@@ -129,6 +158,87 @@ namespace UMA.HairCards
                     }
                     curve.points[pointIndex] = point;
                 }
+            }
+        }
+
+        private readonly struct SculptLayerLookup
+        {
+            internal readonly HairSculptLayer Layer;
+            internal readonly Dictionary<string, HairGuideDelta> Deltas;
+
+            internal SculptLayerLookup(HairSculptLayer layer, Dictionary<string, HairGuideDelta> deltas)
+            {
+                Layer = layer;
+                Deltas = deltas;
+            }
+        }
+
+        /// <summary>
+        /// A single evaluator pass can touch hundreds or thousands of roots. Reading Mesh.vertices,
+        /// Mesh.normals, and submesh triangles for every root creates a native-to-managed copy each
+        /// time, which dominates interactive grooming. Keep one immutable snapshot for the pass.
+        /// </summary>
+        private sealed class SourceMeshReadCache
+        {
+            private readonly Vector3[] vertices = Array.Empty<Vector3>();
+            private readonly Vector3[] normals = Array.Empty<Vector3>();
+            private readonly int[][] triangles = Array.Empty<int[]>();
+
+            internal bool IsValid { get; }
+
+            internal SourceMeshReadCache(Mesh mesh)
+            {
+                if (mesh == null) return;
+                try
+                {
+                    vertices = mesh.vertices;
+                    normals = mesh.normals;
+                    triangles = new int[mesh.subMeshCount][];
+                    for (int submesh = 0; submesh < triangles.Length; submesh++)
+                        triangles[submesh] = mesh.GetTriangles(submesh, true);
+                    IsValid = true;
+                }
+                catch (Exception)
+                {
+                    IsValid = false;
+                }
+            }
+
+            internal bool TryEvaluateAnchor(HairSurfaceAnchor anchor, out Vector3 position,
+                out Vector3 normal)
+            {
+                position = anchor.CachedLocalPosition;
+                normal = anchor.CachedLocalNormal.sqrMagnitude > 1e-8f
+                    ? anchor.CachedLocalNormal.normalized
+                    : Vector3.up;
+                if (!IsValid || !anchor.IsValid || anchor.SubmeshIndex < 0 ||
+                    anchor.SubmeshIndex >= triangles.Length) return false;
+
+                int[] submeshTriangles = triangles[anchor.SubmeshIndex];
+                int triangleOffset = anchor.TriangleIndex * 3;
+                if (submeshTriangles == null || triangleOffset < 0 ||
+                    triangleOffset + 2 >= submeshTriangles.Length) return false;
+                int i0 = submeshTriangles[triangleOffset];
+                int i1 = submeshTriangles[triangleOffset + 1];
+                int i2 = submeshTriangles[triangleOffset + 2];
+                if ((uint)i0 >= (uint)vertices.Length || (uint)i1 >= (uint)vertices.Length ||
+                    (uint)i2 >= (uint)vertices.Length) return false;
+
+                Vector3 barycentric = anchor.Barycentric;
+                position = vertices[i0] * barycentric.x + vertices[i1] * barycentric.y +
+                           vertices[i2] * barycentric.z;
+                if (normals.Length == vertices.Length)
+                {
+                    normal = normals[i0] * barycentric.x + normals[i1] * barycentric.y +
+                             normals[i2] * barycentric.z;
+                }
+                else
+                {
+                    normal = Vector3.Cross(vertices[i1] - vertices[i0], vertices[i2] - vertices[i0]);
+                }
+                normal = normal.sqrMagnitude > 1e-8f ? normal.normalized : Vector3.up;
+                position += normal * anchor.NormalOffset;
+                return true;
             }
         }
 
