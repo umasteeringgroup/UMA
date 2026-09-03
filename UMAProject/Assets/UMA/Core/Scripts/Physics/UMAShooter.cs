@@ -19,6 +19,7 @@ namespace UMA.Dynamics.Examples
     public class UMAShooter : MonoBehaviour
     {
         private UMAPlayerActions controls;
+        private CursorLock cursorLock;
 
         float impactEndTime = 0;
         int hits = 0;
@@ -42,10 +43,11 @@ namespace UMA.Dynamics.Examples
         private void Awake()
         {
             controls = new UMAPlayerActions();
+            cursorLock = FindFirstObjectByType<CursorLock>(
+                FindObjectsInactive.Exclude);
 
             // Bind actions
             controls.Player.Shoot.performed += ctx => OnShoot();
-            controls.Player.GlobalUndo.performed += ctx => OnGlobalUndo();
             controls.Player.Undo.performed += ctx => OnUndo();
         }
 
@@ -68,23 +70,11 @@ namespace UMA.Dynamics.Examples
         // ACTION HANDLERS
         // -------------------------------
 
-        private void OnGlobalUndo()
-        {
-            // Escape key behavior
-            UMAPhysicsAvatar[] components = UMAObjectUtility.FindObjectsByType<UMAPhysicsAvatar>(
-                FindObjectsInactive.Exclude);
-            for (int i = 0; i < components.Length; i++)
-            {
-                UMAPhysicsAvatar player = components[i];
-                if (player.ragdolled)
-                {
-                    player.ragdolled = false;
-                }
-            }
-        }
-
         private void OnShoot()
         {
+			if (cursorLock != null && !cursorLock.IsMouseCaptured)
+				return;
+
 			//Debug.Log("Shoot action triggered");
             // Left mouse button behavior
             AudioSource src = gameObject.GetComponent<AudioSource>();
@@ -136,6 +126,9 @@ namespace UMA.Dynamics.Examples
 
         private void OnUndo()
         {
+			if (cursorLock != null && !cursorLock.IsMouseCaptured)
+				return;
+
             // Right mouse button behavior
             Ray ray = currentCamera.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0));
 
