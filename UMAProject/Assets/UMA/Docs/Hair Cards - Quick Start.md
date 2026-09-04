@@ -19,6 +19,8 @@ You can also select a readable Mesh, a `HairGroomAsset`, or a generated avatar a
 
 The Hair Groom workspace and the Scene view work together. Use the seven tabs across the workspace in order. The current tab now selects a suitable Scene tool automatically, so entering Guides or Groom does not leave the Growth paint tool active.
 
+The left-side **Guide Display** section can independently hide root handles, hide guide splines, show or hide selected control points, and scale the root handles for the current screen density. Enable **Use scene depth (Z-buffer)** to hide roots, splines, control points, and generated children behind the character; disable it for an X-ray view of the complete groom. These are stage-only display options and never change the groom or baked cards.
+
 ## 2. Isolate the scalp and paint Growth Area
 
 Open **Growth**.
@@ -66,17 +68,25 @@ Unlock the active group before generating, accepting, placing, or editing guides
 
 Open **Groom**. The Comb tool becomes active automatically. Solid colored curves are authored guides; faint dotted curves are generated children when **Show Children** is enabled.
 
-Select a brush, move over any part of a guide until the cyan brush circle appears, then left-drag:
+Select a brush, move over any part of a guide until the cyan brush circle appears, then left-drag. Brush influence is evaluated against complete displayed spline segments, so sparse control points and resampling modifiers do not create dead zones between points:
 
-- **Comb** changes flow in the drag direction.
-- **Grab** moves nearby guide points.
-- **Smooth** relaxes uneven curves.
+**Affect Through Depth** is enabled by default. It treats the camera-facing circle as a projected grooming cylinder, so overlapping guide layers under the cursor move together. Disable it when you need a depth-isolated 3D brush volume.
+
+- **Comb** changes flow in the screen-space drag direction without stretching guides.
+- **Grab** moves nearby guide points while preserving segment lengths.
+- **Smooth** relaxes uneven curves without shrinking them.
 - **Length** grows guides; Reverse / Erase shortens them.
-- **Cut** trims at the brushed point.
+- **Cut** is a slice gesture: drag a line across the Scene view. The camera and line define a finite cutting plane. Every crossed guide keeps its root side, gains an exact interpolated tip at the intersection, and discards everything beyond it. Enable **Mirror Slice Across X** (or press `M`) to apply the same cut across source-local `X = 0`.
 - **Width** widens guides; Reverse / Erase narrows them.
 - **Clump** pulls nearby guides together.
 - **Part** pushes guides away from the brush center.
 - **Freeze** protects points from other brushes; Reverse / Erase unfreezes them.
+
+Comb motion stays on a camera-facing plane for the duration of each stroke. This prevents a small mouse movement from turning into a large depth jump when the cursor crosses guides on the front, side, or back of the head. Comb, Grab, Smooth, Clump, and Part preserve every segment; use **Length** or **Cut** when the silhouette should actually become shorter or longer.
+
+If a groom was saved after an older brush stretched its guides, click **Repair Existing Stretch (New Layer)**. The repair keeps the current directions, restores the authored segment lengths, and writes the correction to a new layer. This also normalizes intentional Length-tool edits, so hide or remove the repair layer if those length changes should remain.
+
+Under **Gravity Settle**, set Strength and Card Separation, then press and hold **Hold to Apply Gravity**. Roots remain locked and every segment retains its length. Card Separation fans the falling guides along the scalp with stable per-guide variation so neighboring cards retain air instead of collapsing into one sheet. The entire hold is one undo operation and is written to the active sculpt layer.
 
 Brush edits are written to the active visible, unlocked Sculpt Layer. If none is usable, the system creates one automatically. Use **+ Sculpt Layer** for separate passes, such as Base Flow, Silhouette, and Flyaways. Layer visibility, lock, opacity, and blend mode are non-destructive controls.
 
@@ -99,6 +109,8 @@ Choose a Card Profile. New grooms receive a default ribbon profile; **Create Def
 - **Tapered Tube** creates a polygonal tapered strand. Set Tube Sides from 3 to 12.
 
 Under **Child Cards**, set Children per Guide, root spread, clump, length/width/roll variation, interpolation, and seed. The estimate explains the output:
+
+**Weighted Nearest** blends each child's shape and root orientation from up to four surrounding guides. Weights are calculated at the child's generated root—not at its nominal parent—so children between guides transition smoothly toward whichever guides are spatially closer. Use **Explicit Parent** when a child must follow only the guide that spawned it.
 
 `guides x (children per guide + optional guide card) = approximate card count`
 
@@ -184,7 +196,7 @@ The generation preview is temporary. Return to Guides and click **2. Accept N as
 **The Groom brush does nothing**
 
 - Confirm guides were accepted and the active group is visible, enabled, and unlocked.
-- Move over the displayed guide curve until the brush circle appears; the whole segment is pickable, not only its control points.
+- Move over the displayed guide curve until the brush circle appears. Every spline segment inside the radius contributes influence to its authored controls; a control point does not need to sit inside the circle.
 - Confirm the active Sculpt Layer is visible and unlocked.
 - Increase Radius enough to reach nearby guide points.
 - Drag the mouse; Comb and Grab need movement after the initial click.
@@ -200,7 +212,7 @@ The generation preview is temporary. Return to Guides and click **2. Accept N as
 
 - `Q`: Select
 - `P`: Paint Growth (also returns to Growth)
-- `M`: Toggle Growth painting X mirror
+- `M`: Toggle X mirroring for Growth paint or the active Cut slice
 - `C`: Comb (also enters Groom)
 - `G`: Grab (also enters Groom)
 - `S`: Smooth (also enters Groom)

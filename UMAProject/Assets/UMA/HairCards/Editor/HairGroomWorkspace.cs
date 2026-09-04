@@ -40,6 +40,16 @@ namespace UMA.HairCards.Editor
             for (int i = 0; i < windows.Length; i++) windows[i].Repaint();
         }
 
+        private void OnDisable()
+        {
+            HairCardStage.ActiveStage?.SetGravityHeld(false);
+        }
+
+        private void OnLostFocus()
+        {
+            HairCardStage.ActiveStage?.SetGravityHeld(false);
+        }
+
         private void OnGUI()
         {
             HairCardStage stage = HairCardStage.ActiveStage;
@@ -193,7 +203,31 @@ namespace UMA.HairCards.Editor
                 activeGroup.enabled = enabled;
                 HairGroomCommands.Commit(groom);
             }
+            DrawGuideDisplay(stage);
             DrawAvatarVisibility(stage);
+        }
+
+        private static void DrawGuideDisplay(HairCardStage stage)
+        {
+            EditorGUILayout.Space(10f);
+            EditorGUILayout.LabelField("Guide Display", EditorStyles.boldLabel);
+            stage.ShowGuideRoots = EditorGUILayout.ToggleLeft(new GUIContent("Show root handles",
+                "Shows the clickable handle at each guide root."), stage.ShowGuideRoots);
+            using (new EditorGUI.DisabledScope(!stage.ShowGuideRoots))
+            {
+                stage.RootHandleScale = EditorGUILayout.Slider(new GUIContent("Root Handle Size",
+                    "Scales the root selection handles without changing the groom or generated cards."),
+                    stage.RootHandleScale, 0.1f, 4f);
+            }
+            stage.ShowGuideSplines = EditorGUILayout.ToggleLeft(new GUIContent("Show guide splines",
+                "Shows the authored/evaluated guide curves in the Scene view."), stage.ShowGuideSplines);
+            stage.ShowControlPoints = EditorGUILayout.ToggleLeft(new GUIContent("Show selected control points",
+                "Shows editable points for the selected guide."), stage.ShowControlPoints);
+            stage.DepthTestGuides = EditorGUILayout.ToggleLeft(new GUIContent("Use scene depth (Z-buffer)",
+                "Occludes roots, splines, control points, and generated children behind visible geometry. " +
+                "Disable for an X-ray view of the complete groom."), stage.DepthTestGuides);
+            EditorGUILayout.LabelField("Display settings are stage-only and do not affect the baked hair.",
+                EditorStyles.wordWrappedMiniLabel);
         }
 
         private void DrawAvatarVisibility(HairCardStage stage)
@@ -334,7 +368,6 @@ namespace UMA.HairCards.Editor
                 stage.ShowAvatar = EditorGUILayout.Toggle("Show Character", stage.ShowAvatar);
             stage.ShowChildren = EditorGUILayout.Toggle("Show Children", stage.ShowChildren);
             stage.ShowHelpers = EditorGUILayout.Toggle("Show Helpers", stage.ShowHelpers);
-            stage.ShowControlPoints = EditorGUILayout.Toggle("Control Points", stage.ShowControlPoints);
             stage.PreviewMode = (HairPreviewMode)EditorGUILayout.EnumPopup("Preview Mode", stage.PreviewMode);
             if (GUILayout.Button("Continue to Growth", GUILayout.Height(28f))) stage.WorkflowStep = HairWorkflowStep.Growth;
         }
@@ -579,16 +612,67 @@ namespace UMA.HairCards.Editor
                     }
                 }
             }
-            stage.BrushRadius = EditorGUILayout.Slider("Radius", stage.BrushRadius,
-                HairBrushInteractionUtility.MinimumRadius, HairBrushInteractionUtility.MaximumRadius);
-            stage.BrushHardness = EditorGUILayout.Slider(new GUIContent("Hardness",
-                "Full-strength inner radius followed by a linear falloff to the outer brush ring."),
-                stage.BrushHardness, 0f, 1f);
-            stage.BrushStrength = EditorGUILayout.Slider("Strength", stage.BrushStrength, 0.01f, 1f);
-            stage.PaintErase = EditorGUILayout.Toggle("Reverse / Erase", stage.PaintErase);
+            if (stage.SceneTool == HairSceneTool.Cut)
+            {
+                stage.MirrorCutX = EditorGUILayout.ToggleLeft(new GUIContent("Mirror Slice Across X",
+                    "Applies the same slice to the opposite side across the source mesh local X = 0 plane."),
+                    stage.MirrorCutX);
+                EditorGUILayout.HelpBox(
+                    "Drag a line across the Scene view. The camera and drag line form a finite slice plane; " +
+                    "each intersected guide is cut at its first root-to-tip crossing and everything beyond it is removed. " +
+                    "Press M to toggle mirroring.", MessageType.Info);
+            }
+            else
+            {
+                stage.BrushRadius = EditorGUILayout.Slider("Radius", stage.BrushRadius,
+                    HairBrushInteractionUtility.MinimumRadius, HairBrushInteractionUtility.MaximumRadius);
+                stage.BrushHardness = EditorGUILayout.Slider(new GUIContent("Hardness",
+                    "Full-strength inner radius followed by a linear falloff to the outer brush ring."),
+                    stage.BrushHardness, 0f, 1f);
+                stage.BrushStrength = EditorGUILayout.Slider("Strength", stage.BrushStrength, 0.01f, 1f);
+                stage.AffectThroughDepth = EditorGUILayout.ToggleLeft(new GUIContent("Affect Through Depth",
+                    "When enabled, every displayed guide under the camera-facing brush circle is affected regardless of depth. Disable it for a local 3D brush volume."),
+                    stage.AffectThroughDepth);
+                stage.PaintErase = EditorGUILayout.Toggle("Reverse / Erase", stage.PaintErase);
+                EditorGUILayout.HelpBox(
+                    "Comb, Grab, Smooth, Clump, and Part preserve every guide segment. Only Length changes length. " +
+                    "Affect Through Depth prevents overlapping projected guides from being missed. " +
+                    "Shift + right-drag adjusts radius/hardness; [ and ] adjust radius; Shift + [ and ] adjust hardness.",
+                    MessageType.None);
+            }
+            if (GUILayout.Button(new GUIContent("Repair Existing Stretch (New Layer)",
+                    "Restores authored segment lengths while keeping current directions. Intentional Length-tool changes are also normalized. The correction is written to a new undoable layer."),
+                GUILayout.Height(26f)))
+                stage.RepairActiveGroupLengths();
+
+            EditorGUILayout.Space(8f);
+            EditorGUILayout.LabelField("Gravity Settle", EditorStyles.boldLabel);
+            stage.GravityStrength = EditorGUILayout.Slider(new GUIContent("Strength",
+                "How quickly guide segments rotate toward gravity while the button is held."),
+                stage.GravityStrength, 0.1f, 8f);
+            stage.GravitySeparation = EditorGUILayout.Slider(new GUIContent("Card Separation",
+                "Fans guides along their scalp normal with a small stable per-guide variation so cards do not collapse into one sheet."),
+                stage.GravitySeparation, 0f, 1f);
+            Color oldBackground = GUI.backgroundColor;
+            if (stage.GravitySimulationActive) GUI.backgroundColor = new Color(0.45f, 0.85f, 1f);
+            bool gravityHeld = GUILayout.RepeatButton(new GUIContent(
+                    stage.GravitySimulationActive ? "Settling… release to stop" : "Hold to Apply Gravity",
+                    "Press and hold to relax the active group's guides under gravity. Roots and guide lengths remain locked."),
+                GUILayout.Height(36f));
+            GUI.backgroundColor = oldBackground;
+            if (gravityHeld)
+            {
+                stage.SetGravityHeld(true);
+                Repaint();
+            }
+            Event current = Event.current;
+            if (stage.GravitySimulationActive && !gravityHeld && current != null &&
+                (current.rawType == EventType.MouseUp || current.type == EventType.MouseLeaveWindow ||
+                 (current.type == EventType.Repaint && GUIUtility.hotControl == 0)))
+                stage.SetGravityHeld(false);
             EditorGUILayout.HelpBox(
-                "Shift + right-drag: horizontal changes radius, vertical changes hardness. [ and ] adjust radius; Shift + [ and ] adjust hardness.",
-                MessageType.None);
+                "Gravity is non-destructive on the active sculpt layer. Hold briefly to relax tips; hold longer for a full settle. " +
+                "Undo restores the complete hold as one operation.", MessageType.Info);
 
             EditorGUILayout.Space(8f);
             EditorGUILayout.LabelField("Sculpt Layers", EditorStyles.boldLabel);

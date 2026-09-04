@@ -137,7 +137,8 @@ namespace UMA.HairCards.Editor
             }
             string cleanName = Sanitize(string.IsNullOrWhiteSpace(defaultName) ? mesh.name + "_HairGroom" : defaultName);
             string path = EditorUtility.SaveFilePanelInProject("Save Hair Groom", cleanName, "asset",
-                "Choose where to save the editable HairGroomAsset.");
+                "Choose where to save the editable HairGroomAsset.",
+                HairGroomCreationLocation.GetLastFolder());
             if (string.IsNullOrEmpty(path)) return null;
             HairGroomAsset groom = ScriptableObject.CreateInstance<HairGroomAsset>();
             groom.name = Path.GetFileNameWithoutExtension(path);
@@ -147,6 +148,7 @@ namespace UMA.HairCards.Editor
                 : "generated:" + HairStableId.Create();
             groom.SetSource(mesh, stableId, raceName, slotName);
             AssetDatabase.CreateAsset(groom, path);
+            HairGroomCreationLocation.RememberAssetPath(path);
             Undo.RegisterCreatedObjectUndo(groom, "Create Hair Groom");
             HairCardProfileAsset profile = CreateDefaultProfileNear(groom);
             groom.Groups[0].profile = profile;
@@ -210,6 +212,39 @@ namespace UMA.HairCards.Editor
         private static void SetTool(HairSceneTool tool)
         {
             if (HairCardStage.ActiveStage != null) HairCardStage.ActiveStage.SceneTool = tool;
+        }
+    }
+
+    internal static class HairGroomCreationLocation
+    {
+        internal const string LastFolderEditorPrefKey = "UMA.HairCards.LastGroomFolder";
+        internal const string DefaultFolder = "Assets";
+
+        internal static string GetLastFolder()
+        {
+            string folder = NormalizeFolder(EditorPrefs.GetString(LastFolderEditorPrefKey, DefaultFolder));
+            if (AssetDatabase.IsValidFolder(folder)) return folder;
+
+            // Folder assets can be renamed or deleted between sessions. Self-heal the preference so
+            // the save panel always receives a valid project-relative directory.
+            EditorPrefs.SetString(LastFolderEditorPrefKey, DefaultFolder);
+            return DefaultFolder;
+        }
+
+        internal static void RememberAssetPath(string assetPath)
+        {
+            if (string.IsNullOrWhiteSpace(assetPath)) return;
+
+            string normalizedPath = assetPath.Replace('\\', '/');
+            string folder = NormalizeFolder(Path.GetDirectoryName(normalizedPath));
+            if (AssetDatabase.IsValidFolder(folder))
+                EditorPrefs.SetString(LastFolderEditorPrefKey, folder);
+        }
+
+        private static string NormalizeFolder(string folder)
+        {
+            if (string.IsNullOrWhiteSpace(folder)) return DefaultFolder;
+            return folder.Replace('\\', '/').TrimEnd('/');
         }
     }
 

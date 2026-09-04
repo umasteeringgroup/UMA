@@ -49,6 +49,35 @@ namespace UMA.HairCards.Editor.Tests
         }
 
         [Test]
+        public void GroomCreationRemembersItsLastValidFolderAndRepairsMissingLocations()
+        {
+            bool hadExistingPreference = EditorPrefs.HasKey(HairGroomCreationLocation.LastFolderEditorPrefKey);
+            string existingPreference = EditorPrefs.GetString(HairGroomCreationLocation.LastFolderEditorPrefKey);
+            try
+            {
+                const string validFolder = "Assets/UMA/HairCards/Editor";
+                HairGroomCreationLocation.RememberAssetPath(validFolder + "/TestGroom.asset");
+
+                Assert.That(HairGroomCreationLocation.GetLastFolder(), Is.EqualTo(validFolder));
+
+                EditorPrefs.SetString(HairGroomCreationLocation.LastFolderEditorPrefKey,
+                    "Assets/UMA/HairCards/__FolderThatDoesNotExist__");
+
+                Assert.That(HairGroomCreationLocation.GetLastFolder(),
+                    Is.EqualTo(HairGroomCreationLocation.DefaultFolder));
+                Assert.That(EditorPrefs.GetString(HairGroomCreationLocation.LastFolderEditorPrefKey),
+                    Is.EqualTo(HairGroomCreationLocation.DefaultFolder));
+            }
+            finally
+            {
+                if (hadExistingPreference)
+                    EditorPrefs.SetString(HairGroomCreationLocation.LastFolderEditorPrefKey, existingPreference);
+                else
+                    EditorPrefs.DeleteKey(HairGroomCreationLocation.LastFolderEditorPrefKey);
+            }
+        }
+
+        [Test]
         public void GroomIntegrityCreatesStableSerializableIdentitiesAndDefaultData()
         {
             Assert.That(groom.GroomId, Is.Not.Null.And.Not.Empty);
@@ -137,6 +166,71 @@ namespace UMA.HairCards.Editor.Tests
                             .Using(Vector3ComparerWithEqualsOperator.Instance));
                 }
             }
+        }
+
+        [Test]
+        public void WeightedChildrenBlendTheGuidesClosestToEachGeneratedRoot()
+        {
+            HairGroup group = groom.Groups[0];
+            group.guides.Clear();
+            HairGuide straightGuide = CreateLinearGuide("Straight", 101, Vector3.zero,
+                Vector3.up * 2f);
+            HairGuide sweptGuide = CreateLinearGuide("Swept", 202, Vector3.right * 0.12f,
+                Vector3.up * 2f + Vector3.right * 0.6f);
+            group.guides.Add(straightGuide);
+            group.guides.Add(sweptGuide);
+            group.children.childrenPerGuide = 64;
+            group.children.includeGuideCard = false;
+            group.children.rootSpread = 0.2f;
+            group.children.clump = 0f;
+            group.children.lengthVariation = 0f;
+            group.children.widthVariation = 0f;
+            group.children.rollVariation = 0f;
+            groom.Lods[0].samplesPerCard = 3;
+            groom.EnsureIntegrity();
+            HairEvaluationOptions options = new HairEvaluationOptions
+            {
+                includeGuideCards = false,
+                evaluateSurfaceAnchors = false,
+                applySculptLayers = false,
+                applyModifiers = false,
+                applyConstraints = false
+            };
+
+            group.children.interpolation = HairGuideInterpolationMode.WeightedNearest;
+            HairEvaluationResult blended = HairGroomEvaluator.Evaluate(groom, options);
+            group.children.interpolation = HairGuideInterpolationMode.ExplicitParent;
+            HairEvaluationResult parentOnly = HairGroomEvaluator.Evaluate(groom, options);
+
+            HairEvaluatedCurve bestChild = null;
+            float bestNeighborAdvantage = float.NegativeInfinity;
+            foreach (HairEvaluatedCurve child in blended.curves)
+            {
+                if (!child.isChild || child.parentGuideId != straightGuide.Id) continue;
+                Vector3 root = child.points[0].position;
+                float advantage = Vector3.Distance(root, straightGuide.points[0].position) -
+                                  Vector3.Distance(root, sweptGuide.points[0].position);
+                if (advantage <= bestNeighborAdvantage) continue;
+                bestNeighborAdvantage = advantage;
+                bestChild = child;
+            }
+
+            Assert.That(bestChild, Is.Not.Null);
+            Assert.That(bestNeighborAdvantage, Is.GreaterThan(0.01f),
+                "The deterministic child population should include a root closer to the surrounding guide.");
+            HairEvaluatedCurve matchingParentOnly = parentOnly.curves.Find(
+                child => child.curveId == bestChild.curveId);
+            Assert.That(matchingParentOnly, Is.Not.Null);
+            Assert.That(bestChild.points[0].position,
+                Is.EqualTo(matchingParentOnly.points[0].position)
+                    .Using(Vector3ComparerWithEqualsOperator.Instance));
+
+            float blendedSweep = bestChild.points[^1].position.x - bestChild.points[0].position.x;
+            float parentSweep = matchingParentOnly.points[^1].position.x -
+                                matchingParentOnly.points[0].position.x;
+            Assert.That(parentSweep, Is.EqualTo(0f).Within(0.00001f));
+            Assert.That(blendedSweep, Is.GreaterThan(0.3f),
+                "A child closer to the swept guide should inherit more than half of its swept shape.");
         }
 
         [Test]
@@ -498,6 +592,62 @@ namespace UMA.HairCards.Editor.Tests
         }
 
         [Test]
+        public void GroomBrushConvertsAHitBetweenSparsePointsIntoControlInfluence()
+        {
+            Vector3[] sparseDisplayedGuide =
+            {
+                new Vector3(-1f, 0f, 0f),
+                new Vector3(1f, 0f, 0f)
+            };
+            float[] influences = new float[2];
+
+            bool affected = HairCurveBrushUtility.FillControlPointInfluences(
+                sparseDisplayedGuide, Vector3.zero, 0.1f, 0.75f, influences);
+
+            Assert.That(affected, Is.True);
+            Assert.That(influences[0], Is.EqualTo(1f));
+            Assert.That(influences[1], Is.EqualTo(1f));
+            Assert.That(HairCurveBrushUtility.FillControlPointInfluences(
+                sparseDisplayedGuide, Vector3.up, 0.1f, 0.75f, influences), Is.False);
+            Assert.That(influences, Is.All.EqualTo(0f));
+        }
+
+        [Test]
+        public void GroomBrushSamplesResampledDisplayCurveAtAuthoredControlParameters()
+        {
+            Vector3[] displayedGuide =
+            {
+                Vector3.zero,
+                Vector3.right,
+                Vector3.right * 2f,
+                Vector3.right * 3f,
+                Vector3.right * 4f
+            };
+
+            Vector3 sample = HairCurveBrushUtility.SamplePolyline(displayedGuide, 0.625f);
+
+            Assert.That(sample, Is.EqualTo(Vector3.right * 2.5f)
+                .Using(Vector3ComparerWithEqualsOperator.Instance));
+        }
+
+        [Test]
+        public void ProjectedGroomBrushCanAffectGuidesAtDifferentDepths()
+        {
+            Vector3[] deepGuide =
+            {
+                new Vector3(-1f, 0f, 5f),
+                new Vector3(1f, 0f, 5f)
+            };
+            float[] influences = new float[2];
+
+            Assert.That(HairCurveBrushUtility.FillControlPointInfluences(deepGuide,
+                Vector3.zero, 0.1f, 0.75f, influences), Is.False);
+            Assert.That(HairCurveBrushUtility.FillControlPointInfluences(deepGuide,
+                Vector3.zero, 0.1f, 0.75f, Vector3.forward, true, influences), Is.True);
+            Assert.That(influences[1], Is.EqualTo(1f));
+        }
+
+        [Test]
         public void BrushFalloffMatchesOverlayPainterHardnessModel()
         {
             const float radius = 2f;
@@ -544,6 +694,217 @@ namespace UMA.HairCards.Editor.Tests
                 Vector3.zero, Vector3.zero, 1f, 0.5f, true);
             Assert.That(centerline, Is.EqualTo(
                 HairBrushInteractionUtility.EvaluateFalloff(0f, 1f, 0.5f)));
+        }
+
+        [Test]
+        public void SlicePlaneContainsBothPerspectiveCameraRays()
+        {
+            Ray startRay = new Ray(Vector3.zero, new Vector3(-0.25f, -0.2f, 1f));
+            Ray endRay = new Ray(Vector3.zero, new Vector3(0.35f, 0.25f, 1f));
+
+            bool created = HairSliceUtility.TryCreateCameraPlane(startRay, endRay, out Plane plane);
+
+            Assert.That(created, Is.True);
+            Assert.That(Mathf.Abs(plane.GetDistanceToPoint(startRay.GetPoint(3f))), Is.LessThan(0.00001f));
+            Assert.That(Mathf.Abs(plane.GetDistanceToPoint(endRay.GetPoint(4f))), Is.LessThan(0.00001f));
+        }
+
+        [Test]
+        public void SlicePlaneSupportsOrthographicCameraRays()
+        {
+            Ray startRay = new Ray(new Vector3(-1f, 0.5f, 0f), Vector3.forward);
+            Ray endRay = new Ray(new Vector3(1f, 0.5f, 0f), Vector3.forward);
+
+            bool created = HairSliceUtility.TryCreateCameraPlane(startRay, endRay, out Plane plane);
+
+            Assert.That(created, Is.True);
+            Assert.That(Mathf.Abs(plane.GetDistanceToPoint(startRay.GetPoint(5f))), Is.LessThan(0.00001f));
+            Assert.That(Mathf.Abs(plane.GetDistanceToPoint(endRay.GetPoint(8f))), Is.LessThan(0.00001f));
+        }
+
+        [Test]
+        public void SliceChoosesFirstCrossingFromRootAndCanMirrorAcrossLocalX()
+        {
+            Vector3[] loopingGuide =
+            {
+                new Vector3(-1f, 0f, 0f),
+                new Vector3(1f, 1f, 0f),
+                new Vector3(-1f, 2f, 0f)
+            };
+            bool found = HairSliceUtility.TryFindRootFirstIntersection(loopingGuide,
+                new Plane(Vector3.right, Vector3.zero), false, out HairSliceIntersection first);
+
+            Assert.That(found, Is.True);
+            Assert.That(first.SegmentEndIndex, Is.EqualTo(1));
+            Assert.That(first.SegmentT, Is.EqualTo(0.5f).Within(0.00001f));
+            Assert.That(HairSliceUtility.TryFindRootFirstIntersection(loopingGuide,
+                new Plane(Vector3.right, Vector3.zero), false, point => point.y > 1f,
+                out HairSliceIntersection finiteCrossing), Is.True);
+            Assert.That(finiteCrossing.SegmentEndIndex, Is.EqualTo(2));
+            Assert.That(finiteCrossing.SegmentT, Is.EqualTo(0.5f).Within(0.00001f));
+
+            Vector3[] rightSideGuide =
+            {
+                new Vector3(0.2f, 0f, 0f),
+                new Vector3(0.8f, 1f, 0f),
+                new Vector3(0.9f, 2f, 0f)
+            };
+            Plane leftSlice = new Plane(Vector3.right, new Vector3(-0.5f, 0f, 0f));
+            Assert.That(HairSliceUtility.TryFindRootFirstIntersection(
+                rightSideGuide, leftSlice, false, out _), Is.False);
+            Assert.That(HairSliceUtility.TryFindRootFirstIntersection(
+                rightSideGuide, leftSlice, true, out HairSliceIntersection mirrored), Is.True);
+            Assert.That(mirrored.SegmentEndIndex, Is.EqualTo(1));
+            Assert.That(mirrored.SegmentT, Is.EqualTo(0.5f).Within(0.00001f));
+            Assert.That(mirrored.PlanePoint.x, Is.EqualTo(-0.5f).Within(0.00001f));
+        }
+
+        [Test]
+        public void SliceIntersectionMustLandOnFiniteDragGesture()
+        {
+            Vector2 start = new Vector2(10f, 20f);
+            Vector2 end = new Vector2(110f, 20f);
+
+            Assert.That(HairSliceUtility.IsOnFiniteGesture(start, end, new Vector2(50f, 29f)), Is.True);
+            Assert.That(HairSliceUtility.IsOnFiniteGesture(start, end, new Vector2(50f, 31f)), Is.False);
+            Assert.That(HairSliceUtility.IsOnFiniteGesture(start, end, new Vector2(120f, 20f)), Is.False);
+            Assert.That(HairSliceUtility.IsOnFiniteGesture(start, start + Vector2.right,
+                new Vector2(10.5f, 20f)), Is.False);
+        }
+
+        [Test]
+        public void SliceCutInterpolatesExactTipAndKeepsEverySculptLayerAligned()
+        {
+            HairGroup group = groom.Groups[0];
+            HairGuide guide = group.guides[0];
+            guide.points[1] = new HairGuidePoint
+            {
+                position = new Vector3(0f, 1f, 0f), width = 0.3f, roll = 10f,
+                stiffness = 0.2f, freeze = 0.4f, profileScale = 0.8f
+            };
+            guide.points[2] = new HairGuidePoint
+            {
+                position = new Vector3(2f, 1f, 0f), width = 0.1f, roll = 30f,
+                stiffness = 0.6f, freeze = 0.8f, profileScale = 1.2f
+            };
+            guide.points.Add(new HairGuidePoint { position = new Vector3(4f, 1f, 0f), width = 0f });
+            HairGuideDelta delta = new HairGuideDelta
+            {
+                guideId = guide.Id,
+                positionOffsets = new[] { Vector3.zero, Vector3.right, Vector3.right * 3f, Vector3.right * 6f },
+                widthOffsets = new[] { 0f, 0.2f, 0.6f, 1f },
+                rollOffsets = new[] { 0f, 2f, 6f, 10f }
+            };
+            HairSculptLayer layer = new HairSculptLayer();
+            layer.deltas.Add(delta);
+            group.sculptLayers.Add(layer);
+
+            bool changed = HairSliceUtility.TruncateGuide(group, guide, 0.5f);
+
+            Assert.That(changed, Is.True);
+            Assert.That(guide.points, Has.Count.EqualTo(3));
+            HairGuidePoint tip = guide.points[2];
+            Assert.That(tip.position, Is.EqualTo(new Vector3(1f, 1f, 0f))
+                .Using(Vector3ComparerWithEqualsOperator.Instance));
+            Assert.That(tip.width, Is.EqualTo(0.2f).Within(0.00001f));
+            Assert.That(tip.roll, Is.EqualTo(20f).Within(0.00001f));
+            Assert.That(tip.stiffness, Is.EqualTo(0.4f).Within(0.00001f));
+            Assert.That(tip.freeze, Is.EqualTo(0.6f).Within(0.00001f));
+            Assert.That(tip.profileScale, Is.EqualTo(1f).Within(0.00001f));
+            Assert.That(delta.positionOffsets, Has.Length.EqualTo(3));
+            Assert.That(delta.widthOffsets, Has.Length.EqualTo(3));
+            Assert.That(delta.rollOffsets, Has.Length.EqualTo(3));
+            Assert.That(delta.positionOffsets[2], Is.EqualTo(Vector3.right * 2f)
+                .Using(Vector3ComparerWithEqualsOperator.Instance));
+            Assert.That(delta.widthOffsets[2], Is.EqualTo(0.4f).Within(0.00001f));
+            Assert.That(delta.rollOffsets[2], Is.EqualTo(4f).Within(0.00001f));
+        }
+
+        [Test]
+        public void PositionalGroomConstraintPreservesRootAndEverySegmentLength()
+        {
+            Vector3[] original =
+            {
+                new Vector3(0.1f, 0.2f, -0.1f),
+                new Vector3(0.1f, 0.3f, -0.1f),
+                new Vector3(0.12f, 0.41f, -0.08f),
+                new Vector3(0.16f, 0.5f, -0.02f)
+            };
+            Vector3[] target =
+            {
+                original[0] + Vector3.one * 99f,
+                new Vector3(4f, -2f, 8f),
+                new Vector3(-5f, 3f, 2f),
+                new Vector3(7f, 9f, -3f)
+            };
+
+            HairGuideShapeUtility.PreserveSegmentLengths(original, target);
+
+            Assert.That(target[0], Is.EqualTo(original[0])
+                .Using(Vector3ComparerWithEqualsOperator.Instance));
+            for (int pointIndex = 1; pointIndex < original.Length; pointIndex++)
+            {
+                float expected = Vector3.Distance(original[pointIndex - 1], original[pointIndex]);
+                float actual = Vector3.Distance(target[pointIndex - 1], target[pointIndex]);
+                Assert.That(actual, Is.EqualTo(expected).Within(0.000001f));
+            }
+        }
+
+        [Test]
+        public void GroomStrokeClampRejectsProjectionDepthSpikes()
+        {
+            Vector3 delta = HairBrushInteractionUtility.ClampStrokeDelta(
+                new Vector3(20f, -8f, 12f), 0.1f);
+
+            Assert.That(delta.magnitude, Is.EqualTo(0.05f).Within(0.000001f));
+            Assert.That(HairBrushInteractionUtility.ClampStrokeDelta(
+                    new Vector3(0.01f, 0f, 0f), 0.1f).x,
+                Is.EqualTo(0.01f).Within(0.000001f));
+        }
+
+        [Test]
+        public void StretchRepairRestoresAuthoredLengthsAndKeepsCurrentDirections()
+        {
+            Vector3[] authored =
+            {
+                Vector3.zero,
+                Vector3.up * 0.1f,
+                Vector3.up * 0.3f
+            };
+            Vector3[] stretched =
+            {
+                new Vector3(2f, 1f, -1f),
+                new Vector3(3f, 1f, -1f),
+                new Vector3(3f, 1f, 4f)
+            };
+            Vector3[] repaired = new Vector3[authored.Length];
+
+            HairGuideShapeUtility.RestoreReferenceSegmentLengths(authored, stretched, repaired);
+
+            Assert.That(repaired[0], Is.EqualTo(stretched[0])
+                .Using(Vector3ComparerWithEqualsOperator.Instance));
+            Assert.That(repaired[1] - repaired[0], Is.EqualTo(Vector3.right * 0.1f)
+                .Using(Vector3ComparerWithEqualsOperator.Instance));
+            Assert.That(repaired[2] - repaired[1], Is.EqualTo(Vector3.forward * 0.2f)
+                .Using(Vector3ComparerWithEqualsOperator.Instance));
+        }
+
+        [Test]
+        public void GravitySeparationIsStableAndFansGuidesApart()
+        {
+            Vector3 first = HairGuideShapeUtility.StableGravityDirection(
+                Vector3.down, Vector3.right, 101, 0.6f);
+            Vector3 repeat = HairGuideShapeUtility.StableGravityDirection(
+                Vector3.down, Vector3.right, 101, 0.6f);
+            Vector3 oppositeScalp = HairGuideShapeUtility.StableGravityDirection(
+                Vector3.down, Vector3.left, 202, 0.6f);
+
+            Assert.That(first, Is.EqualTo(repeat)
+                .Using(Vector3ComparerWithEqualsOperator.Instance));
+            Assert.That(first.y, Is.LessThan(0f));
+            Assert.That(first.x, Is.GreaterThan(0f));
+            Assert.That(oppositeScalp.x, Is.LessThan(0f));
+            Assert.That(Vector3.Angle(first, oppositeScalp), Is.GreaterThan(10f));
         }
 
         [Test]
@@ -690,6 +1051,29 @@ namespace UMA.HairCards.Editor.Tests
             guide.points.Add(new HairGuidePoint { position = rootPosition, width = 0.04f });
             guide.points.Add(new HairGuidePoint { position = rootPosition + new Vector3(0.02f, 0.15f, 0f), width = 0.025f });
             guide.points.Add(new HairGuidePoint { position = rootPosition + new Vector3(0.05f, 0.3f, 0.02f), width = 0.005f });
+            return guide;
+        }
+
+        private static HairGuide CreateLinearGuide(
+            string name,
+            int seed,
+            Vector3 rootPosition,
+            Vector3 tipOffset)
+        {
+            HairGuide guide = new HairGuide
+            {
+                name = name,
+                seed = seed,
+                root = HairSurfaceAnchor.Create("mesh:test", 0, 0,
+                    new Vector3(0.25f, 0.25f, 0.5f), 0f, rootPosition, Vector3.forward)
+            };
+            guide.points.Add(new HairGuidePoint { position = rootPosition, width = 0.04f });
+            guide.points.Add(new HairGuidePoint
+            {
+                position = rootPosition + tipOffset * 0.5f,
+                width = 0.025f
+            });
+            guide.points.Add(new HairGuidePoint { position = rootPosition + tipOffset, width = 0.005f });
             return guide;
         }
     }

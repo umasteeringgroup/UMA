@@ -16,7 +16,14 @@ Run this matrix on Unity 6.3 or newer before a release.
 - Preview the same guide seed twice and confirm root positions match.
 - Confirm preview guides are dashed and temporary, then accept, replace generated-only, and cancel generation without deleting hand-authored guides.
 - Place a guide, move its control points, delete it, undo, and redo.
-- Acquire the brush at guide control points and between them, apply every essential brush on a visible sculpt layer, and verify locked layers/groups do not change.
+- Acquire the brush at guide control points and midway along deliberately sparse segments. Confirm the entire displayed segment contributes control influence, every nearby guide inside the radius responds, resampling modifiers do not create dead zones, and locked layers/groups do not change. With **Affect Through Depth** enabled, verify projected guide layers move together; disable it and verify the brush becomes a depth-isolated 3D volume.
+- Comb from front, side, and back views across overlapping guides. Confirm the stroke remains continuous through depth changes, roots stay fixed, and every segment retains its pre-stroke length for Comb, Grab, Smooth, Clump, and Part.
+- Perform at least ten consecutive Comb strokes, including strokes that begin near root handles and selected control points. Confirm every stroke acquires immediately, remains smooth through MouseDown/Drag/Up, and no alternating stroke is lost or delayed.
+- Select **Cut** and drag short, long, horizontal, vertical, and diagonal slice lines from perspective and orthographic views. Confirm only guides whose projected curve crosses the finite line are cut, the root side remains, the new tip is exactly interpolated, all sculpt-layer arrays stay aligned, and one undo restores the full slice.
+- Enable **Mirror Slice Across X** from the Groom panel and Scene toolbar, then toggle it with `M`. Confirm one gesture trims the matching source-local X side without double-cutting centerline guides.
+- In the left-side **Guide Display** section, hide/show root handles, guide splines, and selected control points independently. Sweep Root Handle Size from 0.1 to 4 and confirm it affects only handle display and selection—not guide geometry or baked output.
+- Deliberately stretch a guide through test data, run **Repair Existing Stretch**, and confirm its current directions are retained, authored segment lengths are restored on a new layer, and one undo removes the repair.
+- Hold **Apply Gravity** briefly and through a full settle. Confirm release stops immediately, one undo restores the whole hold, roots and segment lengths remain fixed, and Card Separation prevents neighboring cards from collapsing into a single sheet.
 - Create curve and collision helpers, move them, add constraints, break a helper reference, and verify validation reports it.
 - Preview ribbon and 3-, 6-, and 12-sided tapered tube profiles.
 - Create numbered UV areas, select a non-contiguous subset such as 2, 3, and 7 for one group, and confirm every generated card stays inside those rectangles.

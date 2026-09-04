@@ -41,11 +41,17 @@ namespace UMA.HairCards.Editor
 
         private sealed class CurveBrushEntry
         {
-            internal IReadOnlyList<HairCurvePoint> Points;
+            internal HairGuide Guide;
             internal Matrix4x4 GuideToPose;
             internal Matrix4x4 PoseToGuide;
             internal Bounds PosedBounds;
             internal float PoseRadiusScale;
+            internal Vector3[] SourcePoints = Array.Empty<Vector3>();
+            internal Vector3[] PosedPoints = Array.Empty<Vector3>();
+            internal Vector3[] ReferencePoints = Array.Empty<Vector3>();
+            internal Vector3[] OriginalPoints = Array.Empty<Vector3>();
+            internal Vector3[] TargetPoints = Array.Empty<Vector3>();
+            internal float[] PointInfluences = Array.Empty<float>();
         }
 
         [SerializeField] private HairGroomAsset groom;
@@ -66,14 +72,22 @@ namespace UMA.HairCards.Editor
         [SerializeField] private float brushRadius = 0.075f;
         [SerializeField] private float brushHardness = HairBrushInteractionUtility.DefaultHardness;
         [SerializeField] private float brushStrength = 0.5f;
+        [SerializeField] private bool affectThroughDepth = true;
+        [SerializeField] private float gravityStrength = 2.5f;
+        [SerializeField] private float gravitySeparation = 0.35f;
         [SerializeField] private float paintValue = 1f;
         [SerializeField] private bool paintErase;
         [SerializeField] private bool mirrorPaintX;
+        [SerializeField] private bool mirrorCutX;
         [SerializeField] private bool showScalp = true;
         [SerializeField] private bool showAvatar = true;
         [SerializeField] private bool showChildren = true;
         [SerializeField] private bool showHelpers = true;
         [SerializeField] private bool showControlPoints = true;
+        [SerializeField] private bool showGuideRoots = true;
+        [SerializeField] private bool showGuideSplines = true;
+        [SerializeField] private bool depthTestGuides = true;
+        [SerializeField] private float rootHandleScale = 1f;
         [SerializeField] private List<string> hiddenAvatarSlots = new List<string>();
         [SerializeField] private HairGuideGenerationSettings guideGeneration = new HairGuideGenerationSettings();
         [SerializeField] private List<int> selectedVertices = new List<int>();
@@ -106,6 +120,17 @@ namespace UMA.HairCards.Editor
         private double nextInteractiveGuideRefresh;
         private double nextAutosave;
         private bool strokeActive;
+        private int strokeUndoGroup = -1;
+        private bool gravitySimulationActive;
+        private double lastGravityUpdate;
+        private double nextGravityStep;
+        private Plane curveStrokePlane;
+        private Vector3 previousCurvePlanePoint;
+        private bool curveStrokePlaneValid;
+        private float curveStrokePoseRadiusScale = 1f;
+        private bool sliceCutActive;
+        private Vector2 sliceStartMouse;
+        private Vector2 sliceEndMouse;
         private bool modifierBrushDrag;
         private int modifierBrushHotControl;
         private Vector2 modifierBrushStartMouse;
@@ -163,6 +188,7 @@ namespace UMA.HairCards.Editor
                 HairWorkflowStep targetStep = HairWorkflowState.StepForTool(value, workflowStep);
                 if (sceneTool == value && targetStep == workflowStep &&
                     HairWorkflowState.IsToolAllowed(workflowStep, value)) return;
+                EndGravitySimulation();
                 ReleaseSceneInputCapture(true);
                 if (targetStep != workflowStep)
                 {
@@ -198,6 +224,30 @@ namespace UMA.HairCards.Editor
         }
         public float BrushHardness { get => brushHardness; set => brushHardness = Mathf.Clamp01(value); }
         public float BrushStrength { get => brushStrength; set => brushStrength = Mathf.Clamp01(value); }
+        public bool AffectThroughDepth
+        {
+            get => affectThroughDepth;
+            set
+            {
+                if (affectThroughDepth == value) return;
+                affectThroughDepth = value;
+                actionStatus = affectThroughDepth
+                    ? "Groom brushes affect every displayed guide under the camera-facing brush circle."
+                    : "Groom brushes use a local 3D volume for depth-isolated edits.";
+                RepaintAll();
+            }
+        }
+        public float GravityStrength
+        {
+            get => gravityStrength;
+            set => gravityStrength = Mathf.Clamp(value, 0.1f, 8f);
+        }
+        public float GravitySeparation
+        {
+            get => gravitySeparation;
+            set => gravitySeparation = Mathf.Clamp01(value);
+        }
+        public bool GravitySimulationActive => gravitySimulationActive;
         public float PaintValue { get => paintValue; set => paintValue = value; }
         public bool PaintErase { get => paintErase; set => paintErase = value; }
         public bool MirrorPaintX
@@ -213,11 +263,38 @@ namespace UMA.HairCards.Editor
                 RepaintAll();
             }
         }
+        public bool MirrorCutX
+        {
+            get => mirrorCutX;
+            set
+            {
+                if (mirrorCutX == value) return;
+                mirrorCutX = value;
+                actionStatus = mirrorCutX
+                    ? "Slice Cut X mirror enabled. The gesture trims both sides across source-local X = 0."
+                    : "Slice Cut X mirror disabled.";
+                RepaintAll();
+            }
+        }
         public bool ShowScalp { get => showScalp; set { if (showScalp == value) return; showScalp = value; ApplyVisibility(); } }
         public bool ShowAvatar { get => showAvatar; set { if (showAvatar == value) return; showAvatar = value; ApplyVisibility(); } }
         public bool ShowChildren { get => showChildren; set { if (showChildren == value) return; showChildren = value; QueueRebuild(); } }
         public bool ShowHelpers { get => showHelpers; set { if (showHelpers == value) return; showHelpers = value; RepaintAll(); } }
         public bool ShowControlPoints { get => showControlPoints; set { if (showControlPoints == value) return; showControlPoints = value; RepaintAll(); } }
+        public bool ShowGuideRoots { get => showGuideRoots; set { if (showGuideRoots == value) return; showGuideRoots = value; RepaintAll(); } }
+        public bool ShowGuideSplines { get => showGuideSplines; set { if (showGuideSplines == value) return; showGuideSplines = value; RepaintAll(); } }
+        public bool DepthTestGuides { get => depthTestGuides; set { if (depthTestGuides == value) return; depthTestGuides = value; RepaintAll(); } }
+        public float RootHandleScale
+        {
+            get => rootHandleScale;
+            set
+            {
+                float clamped = Mathf.Clamp(value, 0.1f, 4f);
+                if (Mathf.Approximately(rootHandleScale, clamped)) return;
+                rootHandleScale = clamped;
+                RepaintAll();
+            }
+        }
         public HairGuideGenerationSettings GuideGeneration => guideGeneration;
         public HairEvaluationResult Evaluation => evaluation;
         public HairCardMeshBuildResult MeshBuild => meshBuild;
@@ -301,6 +378,7 @@ namespace UMA.HairCards.Editor
             bool validCurrentState = workflowStep == step && HairWorkflowState.IsToolAllowed(step, sceneTool) &&
                                      IsPreviewUsefulForStep(step, previewMode);
             if (validCurrentState) return;
+            EndGravitySimulation();
             ReleaseSceneInputCapture(true);
             RememberToolForStep(workflowStep, sceneTool);
             workflowStep = step;
@@ -384,9 +462,10 @@ namespace UMA.HairCards.Editor
                 HairSceneTool.PlaceGuide => "Click the source surface to place a guide along its normal.",
                 HairSceneTool.DrawGuide => "Drag on the source surface to draw an anchored guide.",
                 HairSceneTool.Select => "Select guides/control points or source vertices for the current step.",
-                HairSceneTool.Comb => "Drag across guide curves in the desired flow direction.",
-                HairSceneTool.Grab => "Drag across guide curves to move nearby points.",
-                HairSceneTool.Smooth => "Drag across guide curves to relax their shape.",
+                HairSceneTool.Comb => "Drag in screen space to comb. Roots and every guide segment stay locked in length.",
+                HairSceneTool.Grab => "Drag nearby points while preserving guide segment lengths.",
+                HairSceneTool.Smooth => "Relax nearby curvature without shrinking the guides.",
+                HairSceneTool.Cut => "Drag a line across the view to slice intersecting guides and remove their tip side.",
                 _ => $"Drag across guide curves with {ObjectNames.NicifyVariableName(tool.ToString())}."
             };
         }
@@ -394,6 +473,7 @@ namespace UMA.HairCards.Editor
         protected override void OnCloseStage()
         {
             closing = true;
+            EndGravitySimulation();
             ReleaseSceneInputCapture(true);
             SaveNow(false);
             SceneView.duringSceneGui -= OnSceneGUI;
@@ -434,6 +514,7 @@ namespace UMA.HairCards.Editor
         {
             HairGroup group = groom?.FindGroup(groupId);
             if (group == null) return;
+            EndGravitySimulation();
             activeGroupId = group.Id;
             activeMapId = group.FindMap(HairMapKind.GrowthArea)?.Id;
             activeGuideId = string.Empty;
@@ -468,8 +549,123 @@ namespace UMA.HairCards.Editor
 
         public void SetActiveLayer(string layerId)
         {
+            EndGravitySimulation();
             activeLayerId = ActiveGroup?.sculptLayers?.Find(layer => layer != null && layer.Id == layerId)?.Id;
             RepaintAll();
+        }
+
+        public void SetGravityHeld(bool held)
+        {
+            if (held)
+            {
+                if (gravitySimulationActive) return;
+                HairGroup group = ActiveGroup;
+                if (workflowStep != HairWorkflowStep.Groom || group == null || group.locked ||
+                    group.guides == null || group.guides.Count == 0)
+                {
+                    actionStatus = group?.locked == true
+                        ? "Unlock the active group before applying gravity."
+                        : "Gravity is available in Groom when the active group has guides.";
+                    RepaintAll();
+                    return;
+                }
+                ReleaseSceneInputCapture(true);
+                gravitySimulationActive = true;
+                lastGravityUpdate = EditorApplication.timeSinceStartup;
+                nextGravityStep = lastGravityUpdate;
+                BeginStroke("Settle Hair with Gravity");
+                actionStatus = "Gravity settling: roots and segment lengths are locked; separation keeps cards fanned apart.";
+                RepaintAll();
+            }
+            else
+            {
+                EndGravitySimulation();
+            }
+        }
+
+        public void RepairActiveGroupLengths()
+        {
+            HairGroup group = ActiveGroup;
+            if (group == null || group.locked || group.guides == null || curveBrushEntries.Count == 0)
+            {
+                actionStatus = group?.locked == true
+                    ? "Unlock the active group before repairing stretched guides."
+                    : "There are no active guides to repair.";
+                RepaintAll();
+                return;
+            }
+
+            EndGravitySimulation();
+            ReleaseSceneInputCapture(true);
+            List<HairGuideDelta> repairs = new List<HairGuideDelta>();
+            for (int entryIndex = 0; entryIndex < curveBrushEntries.Count; entryIndex++)
+            {
+                CurveBrushEntry entry = curveBrushEntries[entryIndex];
+                HairGuide guide = entry.Guide;
+                if (guide?.points == null || guide.points.Count < 2 ||
+                    entry.SourcePoints.Length != guide.points.Count) continue;
+
+                EnsurePointBuffers(entry, guide.points.Count);
+                Array.Copy(entry.SourcePoints, entry.OriginalPoints, guide.points.Count);
+                for (int pointIndex = 0; pointIndex < guide.points.Count; pointIndex++)
+                    entry.ReferencePoints[pointIndex] = guide.points[pointIndex].position;
+                HairGuideShapeUtility.RestoreReferenceSegmentLengths(
+                    entry.ReferencePoints, entry.OriginalPoints, entry.TargetPoints);
+                bool changed = false;
+                for (int pointIndex = 1; pointIndex < guide.points.Count; pointIndex++)
+                {
+                    changed |= (entry.TargetPoints[pointIndex] -
+                                entry.OriginalPoints[pointIndex]).sqrMagnitude > 1e-12f;
+                }
+                if (!changed) continue;
+
+                HairGuideDelta repair = new HairGuideDelta
+                {
+                    guideId = guide.Id,
+                    positionOffsets = new Vector3[guide.points.Count],
+                    widthOffsets = new float[guide.points.Count],
+                    rollOffsets = new float[guide.points.Count]
+                };
+                for (int pointIndex = 1; pointIndex < guide.points.Count; pointIndex++)
+                    repair.positionOffsets[pointIndex] = entry.TargetPoints[pointIndex] -
+                                                         entry.OriginalPoints[pointIndex];
+                repairs.Add(repair);
+            }
+
+            if (repairs.Count == 0)
+            {
+                actionStatus = "All active guides already match their authored segment lengths.";
+                RepaintAll();
+                return;
+            }
+
+            Undo.IncrementCurrentGroup();
+            int undoGroup = Undo.GetCurrentGroup();
+            const string undoName = "Repair Stretched Hair Guides";
+            Undo.SetCurrentGroupName(undoName);
+            Undo.RegisterCompleteObjectUndo(groom, undoName);
+            HairSculptLayer repairLayer = new HairSculptLayer { name = "Length Repair" };
+            repairLayer.EnsureIntegrity();
+            repairLayer.deltas.AddRange(repairs);
+            group.sculptLayers.Add(repairLayer);
+            activeLayerId = repairLayer.Id;
+            groom.EnsureIntegrity();
+            EditorUtility.SetDirty(groom);
+            Undo.CollapseUndoOperations(undoGroup);
+            actionStatus = $"Repaired {repairs.Count:N0} stretched guides on a new Length Repair layer.";
+            QueueRebuild(true);
+        }
+
+        private void EndGravitySimulation()
+        {
+            if (!gravitySimulationActive) return;
+            gravitySimulationActive = false;
+            EndStroke();
+            if (!closing)
+            {
+                actionStatus = "Gravity settle complete. Hold the button again to continue relaxing the groom.";
+                RepaintAll();
+            }
         }
 
         public void SetActiveHelper(string helperId)
@@ -592,19 +788,36 @@ namespace UMA.HairCards.Editor
                 float poseScaleY = guideToPose.MultiplyVector(Vector3.up).magnitude;
                 float poseScaleZ = guideToPose.MultiplyVector(Vector3.forward).magnitude;
                 float poseRadiusScale = Mathf.Max(poseScaleX, Mathf.Max(poseScaleY, poseScaleZ));
-                Vector3 first = guideToPose.MultiplyPoint3x4(curve.points[0].position);
-                Bounds bounds = new Bounds(first, Vector3.zero);
-                for (int pointIndex = 1; pointIndex < curve.points.Count; pointIndex++)
-                    bounds.Encapsulate(guideToPose.MultiplyPoint3x4(curve.points[pointIndex].position));
-                curveBrushEntries.Add(new CurveBrushEntry
+                CurveBrushEntry entry = new CurveBrushEntry
                 {
-                    Points = curve.points,
+                    Guide = guide,
                     GuideToPose = guideToPose,
                     PoseToGuide = guideToPose.inverse,
-                    PosedBounds = bounds,
                     PoseRadiusScale = Mathf.Max(0.0001f, poseRadiusScale)
-                });
+                };
+                entry.SourcePoints = new Vector3[curve.points.Count];
+                for (int pointIndex = 0; pointIndex < curve.points.Count; pointIndex++)
+                    entry.SourcePoints[pointIndex] = curve.points[pointIndex].position;
+                RefreshCurveBrushEntry(entry);
+                curveBrushEntries.Add(entry);
             }
+        }
+
+        private static void RefreshCurveBrushEntry(CurveBrushEntry entry)
+        {
+            if (entry?.SourcePoints == null || entry.SourcePoints.Length == 0) return;
+            if (entry.PosedPoints.Length != entry.SourcePoints.Length)
+                entry.PosedPoints = new Vector3[entry.SourcePoints.Length];
+            Vector3 first = entry.GuideToPose.MultiplyPoint3x4(entry.SourcePoints[0]);
+            entry.PosedPoints[0] = first;
+            Bounds bounds = new Bounds(first, Vector3.zero);
+            for (int pointIndex = 1; pointIndex < entry.SourcePoints.Length; pointIndex++)
+            {
+                Vector3 posed = entry.GuideToPose.MultiplyPoint3x4(entry.SourcePoints[pointIndex]);
+                entry.PosedPoints[pointIndex] = posed;
+                bounds.Encapsulate(posed);
+            }
+            entry.PosedBounds = bounds;
         }
 
         public void GenerateGuidePreview()
@@ -1025,6 +1238,15 @@ namespace UMA.HairCards.Editor
         private void EditorUpdate()
         {
             double now = EditorApplication.timeSinceStartup;
+            if (gravitySimulationActive && now >= nextGravityStep)
+            {
+                float deltaTime = Mathf.Clamp((float)(now - lastGravityUpdate), 1f / 120f, 1f / 20f);
+                lastGravityUpdate = now;
+                nextGravityStep = now + 1d / 60d;
+                ApplyGravityStep(deltaTime);
+                EditorUtility.SetDirty(groom);
+                RepaintAll();
+            }
             if (strokeActive && interactiveGuideRefreshQueued && now >= nextInteractiveGuideRefresh)
                 RebuildInteractiveGuidePreview(now);
             if (!strokeActive && rebuildQueued && now >= rebuildNotBefore) RebuildNow();
@@ -1127,16 +1349,30 @@ namespace UMA.HairCards.Editor
         private void OnSceneGUI(SceneView sceneView)
         {
             if (sceneView == null || groom == null) return;
+            // Reserve these before any conditional handle drawing. Guide/root handles are hidden
+            // during a stroke; allocating afterward changes Unity's control-ID sequence between
+            // MouseDown and MouseDrag and causes the stage to lose ownership of every other stroke.
+            int sceneInputControlId = GUIUtility.GetControlID(SceneInputControlHint, FocusType.Passive);
+            int brushModifierControlId = GUIUtility.GetControlID(BrushModifierControlHint, FocusType.Passive);
             DrawSceneToolbar(sceneView);
             using (new Handles.DrawingScope(SourceToStageMatrix))
             {
-                DrawGuides();
-                DrawEvaluatedChildren();
+                CompareFunction previousZTest = Handles.zTest;
+                try
+                {
+                    Handles.zTest = depthTestGuides ? CompareFunction.LessEqual : CompareFunction.Always;
+                    DrawGuides();
+                    DrawEvaluatedChildren();
+                }
+                finally
+                {
+                    Handles.zTest = previousZTest;
+                }
                 if (showHelpers) DrawHelpers();
                 DrawGenerationPreview();
                 DrawVertexSelection();
             }
-            HandleSceneInput(sceneView);
+            HandleSceneInput(sceneView, sceneInputControlId, brushModifierControlId);
             if (needsFrame)
             {
                 needsFrame = false;
@@ -1193,15 +1429,6 @@ namespace UMA.HairCards.Editor
             }
         }
 
-        private float WorldBrushRadiusForPose(Matrix4x4 sourceToPose)
-        {
-            Matrix4x4 sourceToWorld = SourceToStageMatrix * sourceToPose;
-            float x = sourceToWorld.MultiplyVector(Vector3.right).magnitude;
-            float y = sourceToWorld.MultiplyVector(Vector3.up).magnitude;
-            float z = sourceToWorld.MultiplyVector(Vector3.forward).magnitude;
-            return brushRadius * Mathf.Max(x, y, z);
-        }
-
         private bool TryGetPreviewBounds(out Bounds bounds)
         {
             bounds = default;
@@ -1243,18 +1470,38 @@ namespace UMA.HairCards.Editor
             HairPreviewMode toolbarPreview = (HairPreviewMode)EditorGUILayout.EnumPopup(previewMode,
                 EditorStyles.toolbarPopup, GUILayout.Width(145f));
             if (toolbarPreview != previewMode) PreviewMode = toolbarPreview;
-            GUILayout.Label("Radius", GUILayout.Width(42f));
-            brushRadius = GUILayout.HorizontalSlider(brushRadius, HairBrushInteractionUtility.MinimumRadius,
-                HairBrushInteractionUtility.MaximumRadius, GUILayout.Width(82f));
-            GUILayout.Label("Hard", GUILayout.Width(31f));
-            brushHardness = GUILayout.HorizontalSlider(brushHardness, 0f, 1f, GUILayout.Width(70f));
-            GUILayout.Label("Strength", GUILayout.Width(52f));
-            brushStrength = GUILayout.HorizontalSlider(brushStrength, 0.01f, 1f, GUILayout.Width(80f));
+            if (SupportsBrushAdjustment())
+            {
+                GUILayout.Label("Radius", GUILayout.Width(42f));
+                brushRadius = GUILayout.HorizontalSlider(brushRadius, HairBrushInteractionUtility.MinimumRadius,
+                    HairBrushInteractionUtility.MaximumRadius, GUILayout.Width(82f));
+                GUILayout.Label("Hard", GUILayout.Width(31f));
+                brushHardness = GUILayout.HorizontalSlider(brushHardness, 0f, 1f, GUILayout.Width(70f));
+                GUILayout.Label("Strength", GUILayout.Width(52f));
+                brushStrength = GUILayout.HorizontalSlider(brushStrength, 0.01f, 1f, GUILayout.Width(80f));
+                if (IsGroomTool(sceneTool) && sceneTool != HairSceneTool.Cut)
+                {
+                    bool through = GUILayout.Toggle(affectThroughDepth, "Through",
+                        EditorStyles.toolbarButton, GUILayout.Width(58f));
+                    if (through != affectThroughDepth) AffectThroughDepth = through;
+                }
+            }
+            else if (sceneTool == HairSceneTool.Cut)
+            {
+                GUILayout.Label("Drag a slice line in the Scene view", EditorStyles.miniLabel,
+                    GUILayout.Width(190f));
+            }
             if (sceneTool == HairSceneTool.PaintGrowth)
             {
                 bool mirrored = GUILayout.Toggle(mirrorPaintX, "Mirror X", EditorStyles.toolbarButton,
                     GUILayout.Width(66f));
                 if (mirrored != mirrorPaintX) MirrorPaintX = mirrored;
+            }
+            else if (sceneTool == HairSceneTool.Cut)
+            {
+                bool mirrored = GUILayout.Toggle(mirrorCutX, "Mirror X", EditorStyles.toolbarButton,
+                    GUILayout.Width(66f));
+                if (mirrored != mirrorCutX) MirrorCutX = mirrored;
             }
             GUILayout.FlexibleSpace();
             int paintableTriangles = PaintableTriangleCount;
@@ -1288,12 +1535,13 @@ namespace UMA.HairCards.Editor
                         Handles.color = selected ? Color.yellow : group.color;
                         IReadOnlyList<HairCurvePoint> displayPoints = displayGuideCurves.TryGetValue(guide.Id,
                             out HairEvaluatedCurve displayCurve) ? displayCurve.points : null;
-                        if (displayGuidePolylines.TryGetValue(guide.Id, out Vector3[] polyline) &&
+                        if (showGuideSplines &&
+                            displayGuidePolylines.TryGetValue(guide.Id, out Vector3[] polyline) &&
                             polyline.Length > 1)
                         {
                             Handles.DrawAAPolyLine(selected ? 4f : 2f, polyline);
                         }
-                        else
+                        else if (showGuideSplines)
                         {
                             for (int pointIndex = 1; pointIndex < guide.points.Count; pointIndex++)
                                 Handles.DrawAAPolyLine(selected ? 4f : 2f,
@@ -1304,10 +1552,13 @@ namespace UMA.HairCards.Editor
                             Vector3 rootPosition = displayPoints != null && displayPoints.Count > 0
                                 ? displayPoints[0].position
                                 : guide.points[0].position;
-                            float rootSize = LocalHandleSize(rootPosition) * 0.035f;
-                            if (Handles.Button(rootPosition, Quaternion.identity, rootSize, rootSize,
-                                    Handles.DotHandleCap))
-                                SetActiveGuide(guide.Id, 0);
+                            if (showGuideRoots)
+                            {
+                                float rootSize = LocalHandleSize(rootPosition) * 0.035f * rootHandleScale;
+                                if (Handles.Button(rootPosition, Quaternion.identity, rootSize, rootSize,
+                                        Handles.DotHandleCap))
+                                    SetActiveGuide(guide.Id, 0);
+                            }
                             if (selected && showControlPoints)
                             {
                                 for (int pointIndex = 0; pointIndex < guide.points.Count; pointIndex++)
@@ -1486,13 +1737,10 @@ namespace UMA.HairCards.Editor
             }
         }
 
-        private void HandleSceneInput(SceneView sceneView)
+        private void HandleSceneInput(SceneView sceneView, int controlId, int brushModifierControlId)
         {
             Event current = Event.current;
             if (current == null) return;
-
-            int controlId = GUIUtility.GetControlID(SceneInputControlHint, FocusType.Passive);
-            int brushModifierControlId = GUIUtility.GetControlID(BrushModifierControlHint, FocusType.Passive);
             if (current.type == EventType.Layout)
             {
                 HandleUtility.AddDefaultControl(controlId);
@@ -1534,11 +1782,27 @@ namespace UMA.HairCards.Editor
             bool interactiveTool = sceneTool != HairSceneTool.Select && sceneTool != HairSceneTool.Helper;
             if (!interactiveTool) return;
             Ray ray = HandleUtility.GUIPointToWorldRay(current.mousePosition);
-            if (IsGroomTool(sceneTool) && TryGetCurveBrushCenter(ray, out Vector3 curveCenter,
-                    out Vector3 curveWorldCenter, out Matrix4x4 poseToSource))
+            if (sceneTool == HairSceneTool.Cut)
             {
-                HandleCurveBrushEvent(sceneView, current, curveCenter, curveWorldCenter,
-                    poseToSource, controlId);
+                HandleSliceCutEvent(sceneView, current, controlId);
+                return;
+            }
+            if (IsGroomTool(sceneTool))
+            {
+                if (strokeActive && OwnsSceneInput(controlId))
+                {
+                    HandleActiveCurveBrushEvent(sceneView, current, ray, controlId);
+                }
+                else if (TryGetCurveBrushCenter(ray, out Vector3 curveCenter,
+                             out Vector3 curveWorldCenter, out float poseRadiusScale))
+                {
+                    HandleCurveBrushEvent(sceneView, current, ray, curveCenter,
+                        curveWorldCenter, poseRadiusScale, controlId);
+                }
+                else
+                {
+                    ConsumeMissedSurfaceGesture(current, controlId);
+                }
                 return;
             }
             if (!TryRaycastSourceSurface(ray, out HairSurfaceHit hit))
@@ -1728,40 +1992,171 @@ namespace UMA.HairCards.Editor
             }
         }
 
-        private void HandleCurveBrushEvent(SceneView sceneView, Event current, Vector3 curveCenter,
-            Vector3 curveWorldCenter, Matrix4x4 poseToSource, int controlId)
+        private void HandleSliceCutEvent(SceneView sceneView, Event current, int controlId)
+        {
+            if (sliceCutActive && current.type == EventType.Repaint)
+                DrawSliceCutOverlay();
+
+            if (current.type == EventType.MouseDown)
+            {
+                if (GUIUtility.hotControl != 0 && GUIUtility.hotControl != controlId) return;
+                EndGravitySimulation();
+                CaptureSceneInput(controlId);
+                BeginStroke("Slice Cut Hair");
+                sliceCutActive = true;
+                sliceStartMouse = current.mousePosition;
+                sliceEndMouse = current.mousePosition;
+                actionStatus = mirrorCutX
+                    ? "Drag the slice line. Release to cut the active group and its X mirror."
+                    : "Drag the slice line. Release to cut the intersecting guide tips.";
+                current.Use();
+                sceneView.Repaint();
+            }
+            else if (current.type == EventType.MouseDrag && OwnsSceneInput(controlId) && sliceCutActive)
+            {
+                sliceEndMouse = current.mousePosition;
+                current.Use();
+                sceneView.Repaint();
+            }
+            else if (current.type == EventType.MouseUp && OwnsSceneInput(controlId))
+            {
+                sliceEndMouse = current.mousePosition;
+                int cutCount = sliceCutActive ? ApplySliceCut() : 0;
+                sliceCutActive = false;
+                actionStatus = cutCount > 0
+                    ? $"Slice cut {cutCount:N0} guides; the tip side was removed."
+                    : Vector2.Distance(sliceStartMouse, sliceEndMouse) < HairSliceUtility.MinimumGesturePixels
+                        ? "Slice cancelled: drag a longer line."
+                        : "The slice did not cross any active guide.";
+                ReleaseSceneInputCapture(true);
+                if (cutCount > 0) QueueRebuild(true);
+                current.Use();
+            }
+        }
+
+        private void DrawSliceCutOverlay()
+        {
+            Handles.BeginGUI();
+            Color oldColor = Handles.color;
+            Handles.color = new Color(1f, 0.32f, 0.12f, 0.98f);
+            Handles.DrawAAPolyLine(5f,
+                new Vector3(sliceStartMouse.x, sliceStartMouse.y),
+                new Vector3(sliceEndMouse.x, sliceEndMouse.y));
+            Handles.color = Color.white;
+            Handles.DrawAAPolyLine(1.5f,
+                new Vector3(sliceStartMouse.x, sliceStartMouse.y),
+                new Vector3(sliceEndMouse.x, sliceEndMouse.y));
+            Vector2 midpoint = (sliceStartMouse + sliceEndMouse) * 0.5f;
+            GUI.Label(new Rect(midpoint.x + 12f, midpoint.y + 10f, 190f, 22f),
+                mirrorCutX ? "Slice Cut  -  Mirror X" : "Slice Cut  -  release to trim",
+                EditorStyles.helpBox);
+            Handles.color = oldColor;
+            Handles.EndGUI();
+        }
+
+        private int ApplySliceCut()
+        {
+            if ((sliceEndMouse - sliceStartMouse).sqrMagnitude <
+                HairSliceUtility.MinimumGesturePixels * HairSliceUtility.MinimumGesturePixels)
+                return 0;
+            Ray startRay = WorldToPosedRay(HandleUtility.GUIPointToWorldRay(sliceStartMouse));
+            Ray endRay = WorldToPosedRay(HandleUtility.GUIPointToWorldRay(sliceEndMouse));
+            if (!HairSliceUtility.TryCreateCameraPlane(startRay, endRay, out Plane slicePlane))
+                return 0;
+
+            HairGroup group = ActiveGroup;
+            if (group == null || group.locked) return 0;
+            int cutCount = 0;
+            for (int entryIndex = 0; entryIndex < curveBrushEntries.Count; entryIndex++)
+            {
+                CurveBrushEntry entry = curveBrushEntries[entryIndex];
+                HairGuide guide = entry.Guide;
+                if (guide?.points == null || guide.points.Count < 2) continue;
+                float earliest = float.MaxValue;
+                if (TryGetSliceCurvePosition(entry, slicePlane, false, out float primary))
+                    earliest = primary;
+                if (mirrorCutX && TryGetSliceCurvePosition(entry, slicePlane, true, out float mirrored))
+                    earliest = Mathf.Min(earliest, mirrored);
+                if (earliest == float.MaxValue || !HairSliceUtility.TruncateGuide(group, guide, earliest)) continue;
+                cutCount++;
+                if (guide.Id == activeGuideId)
+                    activeGuidePoint = Mathf.Min(activeGuidePoint, guide.points.Count - 1);
+            }
+            return cutCount;
+        }
+
+        private bool TryGetSliceCurvePosition(CurveBrushEntry entry, Plane slicePlane,
+            bool mirrored, out float curvePosition)
+        {
+            curvePosition = 0f;
+            if (!HairSliceUtility.TryFindRootFirstIntersection(entry.PosedPoints, slicePlane,
+                    mirrored, planePoint => HairSliceUtility.IsOnFiniteGesture(
+                        sliceStartMouse, sliceEndMouse,
+                        HandleUtility.WorldToGUIPoint(SourceToStagePoint(planePoint))),
+                    out HairSliceIntersection intersection)) return false;
+            curvePosition = (intersection.SegmentEndIndex - 1f + intersection.SegmentT) /
+                            (entry.PosedPoints.Length - 1f);
+            return curvePosition < 0.99999f;
+        }
+
+        private void HandleCurveBrushEvent(SceneView sceneView, Event current, Ray worldRay,
+            Vector3 curveCenter, Vector3 curveWorldCenter, float poseRadiusScale, int controlId)
         {
             Vector3 worldViewNormal = sceneView.camera != null ? -sceneView.camera.transform.forward : Vector3.up;
-            Vector3 viewNormal = poseToSource.MultiplyVector(StageToSourceDirection(worldViewNormal)).normalized;
+            Vector3 viewNormal = StageToSourceDirection(worldViewNormal).normalized;
             Color brushColor = paintErase ? new Color(1f, 0.2f, 0.2f, 0.9f) :
                 new Color(0.2f, 0.9f, 1f, 0.9f);
             DrawBrushCursor(curveWorldCenter, worldViewNormal,
-                WorldBrushRadiusForPose(poseToSource.inverse), brushColor);
+                WorldBrushRadius * poseRadiusScale, brushColor);
             if (current.type == EventType.MouseDown)
             {
                 if (!CanCaptureSceneInput(controlId)) return;
+                EndGravitySimulation();
                 CaptureSceneInput(controlId);
                 BeginStroke();
+                curveStrokePlane = new Plane(viewNormal, curveCenter);
+                curveStrokePoseRadiusScale = poseRadiusScale;
+                Ray posedRay = WorldToPosedRay(worldRay);
+                curveStrokePlaneValid = curveStrokePlane.Raycast(posedRay, out float enter);
+                previousCurvePlanePoint = curveStrokePlaneValid ? posedRay.GetPoint(enter) : curveCenter;
                 SculptAt(curveCenter, viewNormal, Vector3.zero);
-                previousStrokePosition = curveCenter;
-                hasPreviousStrokePosition = true;
                 current.Use();
             }
-            else if (current.type == EventType.MouseDrag && OwnsSceneInput(controlId) && strokeActive)
+        }
+
+        private void HandleActiveCurveBrushEvent(SceneView sceneView, Event current, Ray worldRay,
+            int controlId)
+        {
+            Vector3 worldViewNormal = sceneView.camera != null ? -sceneView.camera.transform.forward : Vector3.up;
+            Vector3 posedViewNormal = StageToSourceDirection(worldViewNormal).normalized;
+            Ray posedRay = WorldToPosedRay(worldRay);
+            if (curveStrokePlaneValid && curveStrokePlane.Raycast(posedRay, out float enter))
             {
-                Vector3 delta = hasPreviousStrokePosition ? curveCenter - previousStrokePosition : Vector3.zero;
-                SculptAt(curveCenter, viewNormal, delta);
-                previousStrokePosition = curveCenter;
-                hasPreviousStrokePosition = true;
-                EditorUtility.SetDirty(groom);
-                QueueInteractiveGuideRefresh();
-                current.Use();
+                Vector3 center = posedRay.GetPoint(enter);
+                DrawBrushCursor(SourceToStagePoint(center), worldViewNormal,
+                    WorldBrushRadius * curveStrokePoseRadiusScale,
+                    paintErase ? new Color(1f, 0.2f, 0.2f, 0.9f) : new Color(0.2f, 0.9f, 1f, 0.9f));
+                if (current.type == EventType.MouseDrag)
+                {
+                    Vector3 delta = HairBrushInteractionUtility.ClampStrokeDelta(
+                        center - previousCurvePlanePoint, brushRadius * curveStrokePoseRadiusScale);
+                    SculptAt(center, posedViewNormal, delta);
+                    previousCurvePlanePoint = center;
+                    EditorUtility.SetDirty(groom);
+                    current.Use();
+                }
             }
-            else if (current.type == EventType.MouseUp && OwnsSceneInput(controlId))
+            if (current.type == EventType.MouseUp && OwnsSceneInput(controlId))
             {
                 ReleaseSceneInputCapture(true);
                 current.Use();
             }
+        }
+
+        private Ray WorldToPosedRay(Ray worldRay)
+        {
+            return new Ray(StageToSourcePoint(worldRay.origin),
+                StageToSourceDirection(worldRay.direction).normalized);
         }
 
         private bool CanCaptureSceneInput(int controlId)
@@ -1793,17 +2188,19 @@ namespace UMA.HairCards.Editor
         private bool HandleBrushShortcuts(Event current, SceneView sceneView)
         {
             if (current == null || current.type != EventType.KeyDown || EditorGUIUtility.editingTextField ||
-                !SupportsBrushAdjustment() || current.control || current.command || current.alt ||
-                Tools.viewToolActive)
+                current.control || current.command || current.alt || Tools.viewToolActive)
                 return false;
-            if (!current.shift && current.keyCode == KeyCode.M && sceneTool == HairSceneTool.PaintGrowth)
+            if (!current.shift && current.keyCode == KeyCode.M &&
+                (sceneTool == HairSceneTool.PaintGrowth || sceneTool == HairSceneTool.Cut))
             {
-                MirrorPaintX = !mirrorPaintX;
+                if (sceneTool == HairSceneTool.Cut) MirrorCutX = !mirrorCutX;
+                else MirrorPaintX = !mirrorPaintX;
                 current.Use();
                 sceneView.Repaint();
                 HairGroomWorkspace.RepaintOpenWindows();
                 return true;
             }
+            if (!SupportsBrushAdjustment()) return false;
             if (current.keyCode != KeyCode.LeftBracket && current.keyCode != KeyCode.RightBracket)
                 return false;
 
@@ -1895,7 +2292,8 @@ namespace UMA.HairCards.Editor
 
         private bool SupportsBrushAdjustment()
         {
-            return sceneTool == HairSceneTool.PaintGrowth || IsGroomTool(sceneTool);
+            return sceneTool == HairSceneTool.PaintGrowth ||
+                   (IsGroomTool(sceneTool) && sceneTool != HairSceneTool.Cut);
         }
 
         private void DrawBrushCursor(Vector3 center, Vector3 normal, float radius, Color color)
@@ -1940,51 +2338,55 @@ namespace UMA.HairCards.Editor
             unityToolStateCaptured = false;
         }
 
-        private void BeginStroke()
+        private void BeginStroke(string undoName = null)
         {
+            if (strokeActive) return;
             strokeActive = true;
+            curveStrokePlaneValid = false;
             hasPreviousStrokePosition = false;
             strokeSculptLayer = null;
             strokeLayerDeltas.Clear();
-            Undo.RegisterCompleteObjectUndo(groom, SceneToolUndoName());
+            Undo.IncrementCurrentGroup();
+            strokeUndoGroup = Undo.GetCurrentGroup();
+            string operationName = string.IsNullOrWhiteSpace(undoName) ? SceneToolUndoName() : undoName;
+            Undo.SetCurrentGroupName(operationName);
+            Undo.RegisterCompleteObjectUndo(groom, operationName);
         }
 
         private bool TryGetCurveBrushCenter(Ray ray, out Vector3 center, out Vector3 worldCenter,
-            out Matrix4x4 poseToSource)
+            out float poseRadiusScale)
         {
             center = Vector3.zero;
             worldCenter = Vector3.zero;
-            poseToSource = Matrix4x4.identity;
+            poseRadiusScale = 1f;
             if (curveBrushEntries.Count == 0) return false;
-            Ray posedRay = new Ray(StageToSourcePoint(ray.origin), StageToSourceDirection(ray.direction).normalized);
-            float bestSquare = float.MaxValue;
+            Ray posedRay = WorldToPosedRay(ray);
+            float bestNormalizedSquare = float.MaxValue;
             Vector3 bestPoint = Vector3.zero;
             CurveBrushEntry bestEntry = null;
-            float pickRadius = brushRadius * 1.5f;
             for (int entryIndex = 0; entryIndex < curveBrushEntries.Count; entryIndex++)
             {
                 CurveBrushEntry entry = curveBrushEntries[entryIndex];
+                float pickRadius = brushRadius * 1.5f * entry.PoseRadiusScale;
                 Bounds broadPhase = entry.PosedBounds;
-                broadPhase.Expand(pickRadius * entry.PoseRadiusScale * 2f);
+                broadPhase.Expand(pickRadius * 2f);
                 if (!broadPhase.IntersectRay(posedRay)) continue;
-                Ray guideRay = new Ray(entry.PoseToGuide.MultiplyPoint3x4(posedRay.origin),
-                    entry.PoseToGuide.MultiplyVector(posedRay.direction).normalized);
-                IReadOnlyList<HairCurvePoint> points = entry.Points;
-                for (int pointIndex = 1; pointIndex < points.Count; pointIndex++)
+                for (int pointIndex = 1; pointIndex < entry.PosedPoints.Length; pointIndex++)
                 {
-                    if (!HairCurveBrushUtility.TryClosestPoint(guideRay,
-                            points[pointIndex - 1].position, points[pointIndex].position,
+                    if (!HairCurveBrushUtility.TryClosestPoint(posedRay,
+                            entry.PosedPoints[pointIndex - 1], entry.PosedPoints[pointIndex],
                             out Vector3 point, out float square)) continue;
-                    if (square >= bestSquare) continue;
-                    bestSquare = square;
+                    float normalizedSquare = square / Mathf.Max(1e-12f, pickRadius * pickRadius);
+                    if (normalizedSquare >= bestNormalizedSquare) continue;
+                    bestNormalizedSquare = normalizedSquare;
                     bestPoint = point;
                     bestEntry = entry;
                 }
             }
-            if (bestEntry == null || bestSquare > pickRadius * pickRadius) return false;
+            if (bestEntry == null || bestNormalizedSquare > 1f) return false;
             center = bestPoint;
-            poseToSource = bestEntry.PoseToGuide;
-            worldCenter = SourceToStagePoint(bestEntry.GuideToPose.MultiplyPoint3x4(bestPoint));
+            worldCenter = SourceToStagePoint(bestPoint);
+            poseRadiusScale = bestEntry.PoseRadiusScale;
             return true;
         }
 
@@ -1995,15 +2397,19 @@ namespace UMA.HairCards.Editor
 
         private void EndStroke()
         {
+            sliceCutActive = false;
             if (!strokeActive) return;
             strokeActive = false;
+            curveStrokePlaneValid = false;
+            curveStrokePoseRadiusScale = 1f;
             hasPreviousStrokePosition = false;
             interactiveGuideRefreshQueued = false;
             strokeSculptLayer = null;
             strokeLayerDeltas.Clear();
             groom.EnsureIntegrity();
             EditorUtility.SetDirty(groom);
-            Undo.CollapseUndoOperations(Undo.GetCurrentGroup());
+            if (strokeUndoGroup >= 0) Undo.CollapseUndoOperations(strokeUndoGroup);
+            strokeUndoGroup = -1;
             QueueRebuild();
         }
 
@@ -2238,100 +2644,263 @@ namespace UMA.HairCards.Editor
             activeGuidePoint = guide.points.Count - 1;
         }
 
+        private void ApplyGravityStep(float deltaTime)
+        {
+            HairGroup group = ActiveGroup;
+            if (!gravitySimulationActive || group == null || group.locked ||
+                group.guides == null || curveBrushEntries.Count == 0) return;
+
+            HairSculptLayer layer = ResolveSculptLayer(group);
+            Vector3 gravity = Physics.gravity.sqrMagnitude > 1e-8f
+                ? StageToSourceDirection(Physics.gravity).normalized
+                : Vector3.down;
+            for (int entryIndex = 0; entryIndex < curveBrushEntries.Count; entryIndex++)
+            {
+                CurveBrushEntry entry = curveBrushEntries[entryIndex];
+                HairGuide guide = entry.Guide;
+                if (guide == null || !guide.enabled || guide.points == null || guide.points.Count < 2)
+                    continue;
+
+                HairGuideDelta delta = null;
+                if (strokeLayerDeltas.TryGetValue(guide.Id, out delta))
+                    ResizeDelta(delta, guide.points.Count);
+                EnsurePointBuffers(entry, guide.points.Count);
+                bool directDisplayMapping = entry.SourcePoints.Length == guide.points.Count;
+                for (int pointIndex = 0; pointIndex < guide.points.Count; pointIndex++)
+                {
+                    Vector3 sourcePoint = directDisplayMapping
+                        ? entry.SourcePoints[pointIndex]
+                        : guide.points[pointIndex].position +
+                          (delta != null ? delta.positionOffsets[pointIndex] : Vector3.zero);
+                    entry.OriginalPoints[pointIndex] = sourcePoint;
+                    entry.TargetPoints[pointIndex] = sourcePoint;
+                }
+
+                Vector3 posedRootNormal = entry.GuideToPose.MultiplyVector(guide.root.CachedLocalNormal);
+                Vector3 targetDirection = HairGuideShapeUtility.StableGravityDirection(
+                    gravity, posedRootNormal, guide.seed, gravitySeparation);
+                bool changed = false;
+                for (int pointIndex = 1; pointIndex < guide.points.Count; pointIndex++)
+                {
+                    HairGuidePoint point = guide.points[pointIndex];
+                    if (point.freeze >= 0.999f)
+                    {
+                        entry.TargetPoints[pointIndex] = entry.OriginalPoints[pointIndex];
+                        continue;
+                    }
+
+                    Vector3 sourceSegment = entry.OriginalPoints[pointIndex] -
+                                            entry.OriginalPoints[pointIndex - 1];
+                    float segmentLength = sourceSegment.magnitude;
+                    if (segmentLength <= 1e-8f) continue;
+                    Vector3 posedDirection = entry.GuideToPose.MultiplyVector(sourceSegment).normalized;
+                    float t = pointIndex / (guide.points.Count - 1f);
+                    float mobility = Mathf.Lerp(0.2f, 1f, t) *
+                                     (1f - Mathf.Clamp01(point.stiffness) * 0.85f) *
+                                     (1f - point.freeze);
+                    float settle = 1f - Mathf.Exp(-gravityStrength * deltaTime * mobility);
+                    Vector3 settledPosedDirection = Vector3.Slerp(posedDirection, targetDirection, settle);
+                    Vector3 settledSourceDirection = entry.PoseToGuide.MultiplyVector(settledPosedDirection);
+                    if (settledSourceDirection.sqrMagnitude <= 1e-12f) continue;
+                    entry.TargetPoints[pointIndex] = entry.TargetPoints[pointIndex - 1] +
+                        settledSourceDirection.normalized * segmentLength;
+                    changed |= settle > 1e-7f;
+                }
+
+                if (!changed) continue;
+                HairGuideShapeUtility.PreserveSegmentLengths(entry.OriginalPoints, entry.TargetPoints);
+                ApplyGuideTarget(entry, guide, layer, ref delta);
+            }
+        }
+
         private void SculptAt(Vector3 center, Vector3 surfaceNormal, Vector3 strokeDelta)
         {
             HairGroup group = ActiveGroup;
             if (group == null || group.locked || group.guides == null) return;
-            HairSculptLayer layer = ResolveSculptLayer(group);
-            float squareRadius = brushRadius * brushRadius;
-            Vector3 average = sceneTool == HairSceneTool.Clump
-                ? CalculateNearbyAverage(group, center, squareRadius)
+            HairSculptLayer layer = null;
+            Vector3 clumpAverage = sceneTool == HairSceneTool.Clump
+                ? CalculateNearbyAverage(center, surfaceNormal)
                 : center;
-            for (int guideIndex = 0; guideIndex < group.guides.Count; guideIndex++)
+
+            for (int entryIndex = 0; entryIndex < curveBrushEntries.Count; entryIndex++)
             {
-                HairGuide guide = group.guides[guideIndex];
-                if (guide == null || !guide.enabled || guide.points == null) continue;
+                CurveBrushEntry entry = curveBrushEntries[entryIndex];
+                HairGuide guide = entry.Guide;
+                if (guide == null || !guide.enabled || guide.points == null || guide.points.Count < 2)
+                    continue;
+
+                float posedRadius = brushRadius * entry.PoseRadiusScale;
+                if (!BrushBoundsOverlap(entry.PosedBounds, center, posedRadius, surfaceNormal)) continue;
+
+                EnsurePointBuffers(entry, guide.points.Count);
+                if (!HairCurveBrushUtility.FillControlPointInfluences(entry.PosedPoints, center,
+                        posedRadius, brushHardness, surfaceNormal, affectThroughDepth,
+                        entry.PointInfluences) ||
+                    !HasEditablePointInfluence(entry.PointInfluences)) continue;
+
+                if (sceneTool != HairSceneTool.Freeze)
+                    layer ??= ResolveSculptLayer(group);
                 HairGuideDelta delta = null;
                 if (layer != null && strokeLayerDeltas.TryGetValue(guide.Id, out delta))
                     ResizeDelta(delta, guide.points.Count);
+                for (int pointIndex = 0; pointIndex < guide.points.Count; pointIndex++)
+                {
+                    float normalizedPosition = pointIndex / (guide.points.Count - 1f);
+                    Vector3 sourcePoint = HairCurveBrushUtility.SamplePolyline(
+                        entry.SourcePoints, normalizedPosition);
+                    entry.OriginalPoints[pointIndex] = sourcePoint;
+                    entry.TargetPoints[pointIndex] = sourcePoint;
+                }
+
+                bool positionChanged = false;
+                bool intentionallyChangesLength = false;
                 for (int pointIndex = 1; pointIndex < guide.points.Count; pointIndex++)
                 {
                     HairGuidePoint point = guide.points[pointIndex];
-                    Vector3 actual = point.position + (delta != null ? delta.positionOffsets[pointIndex] : Vector3.zero);
-                    float squareDistance = (actual - center).sqrMagnitude;
-                    if (squareDistance > squareRadius || point.freeze >= 0.999f) continue;
-                    float falloff = HairBrushInteractionUtility.EvaluateFalloff(
-                        Mathf.Sqrt(squareDistance), brushRadius, brushHardness) *
-                        brushStrength * (1f - point.freeze);
-                    Vector3 displacement = Vector3.zero;
+                    Vector3 actual = entry.OriginalPoints[pointIndex];
+                    Vector3 posedActual = HairCurveBrushUtility.SamplePolyline(entry.PosedPoints,
+                        pointIndex / (guide.points.Count - 1f));
+                    if (point.freeze >= 0.999f) continue;
+                    float falloff = entry.PointInfluences[pointIndex] * brushStrength *
+                                    (1f - point.freeze);
+                    if (falloff <= 0f) continue;
+
+                    Vector3 sourceDisplacement = Vector3.zero;
                     switch (sceneTool)
                     {
                         case HairSceneTool.Comb:
-                            displacement = strokeDelta.sqrMagnitude > 1e-10f
-                                ? strokeDelta.normalized * (strokeDelta.magnitude + brushRadius * 0.025f) *
-                                  falloff * (pointIndex / (guide.points.Count - 1f))
-                                : Vector3.zero;
+                            sourceDisplacement = entry.PoseToGuide.MultiplyVector(strokeDelta *
+                                (falloff * (pointIndex / (guide.points.Count - 1f))));
                             break;
                         case HairSceneTool.Grab:
-                            displacement = strokeDelta * falloff;
+                            sourceDisplacement = entry.PoseToGuide.MultiplyVector(strokeDelta * falloff);
                             break;
                         case HairSceneTool.Smooth:
                         {
                             Vector3 neighborAverage = pointIndex < guide.points.Count - 1
-                                ? (guide.points[pointIndex - 1].position + guide.points[pointIndex + 1].position) * 0.5f
-                                : guide.points[pointIndex - 1].position +
-                                  (guide.points[pointIndex].position - guide.points[pointIndex - 1].position).normalized *
-                                  Vector3.Distance(guide.points[pointIndex].position, guide.points[pointIndex - 1].position);
-                            displacement = (neighborAverage - actual) * falloff;
+                                ? (entry.OriginalPoints[pointIndex - 1] +
+                                   entry.OriginalPoints[pointIndex + 1]) * 0.5f
+                                : entry.OriginalPoints[pointIndex - 1] +
+                                  (actual - entry.OriginalPoints[pointIndex - 1]).normalized *
+                                  Vector3.Distance(actual, entry.OriginalPoints[pointIndex - 1]);
+                            sourceDisplacement = (neighborAverage - actual) * falloff;
                             break;
                         }
                         case HairSceneTool.Clump:
-                            displacement = (average - actual) * falloff;
+                            sourceDisplacement = entry.PoseToGuide.MultiplyVector(
+                                (clumpAverage - posedActual) * falloff);
                             break;
                         case HairSceneTool.Part:
-                            displacement = Vector3.ProjectOnPlane(actual - center, surfaceNormal).normalized *
-                                           (brushRadius * 0.08f * falloff);
+                            sourceDisplacement = entry.PoseToGuide.MultiplyVector(
+                                Vector3.ProjectOnPlane(posedActual - center, surfaceNormal).normalized *
+                                (posedRadius * 0.08f * falloff));
                             break;
                         case HairSceneTool.Width:
-                            if (layer != null)
-                            {
-                                delta ??= ResolveDelta(layer, guide);
-                                delta.widthOffsets[pointIndex] +=
-                                    (paintErase ? -1f : 1f) * point.width * 0.15f * falloff;
-                            }
-                            else point.width = Mathf.Max(0f, point.width * (1f + (paintErase ? -0.15f : 0.15f) * falloff));
+                            delta ??= ResolveDelta(layer, guide);
+                            delta.widthOffsets[pointIndex] +=
+                                (paintErase ? -1f : 1f) * point.width * 0.15f * falloff /
+                                Mathf.Max(0.01f, layer.opacity);
                             continue;
                         case HairSceneTool.Freeze:
-                            point.freeze = Mathf.Clamp01(point.freeze + (paintErase ? -1f : 1f) * falloff);
+                            point.freeze = Mathf.Clamp01(point.freeze +
+                                (paintErase ? -1f : 1f) * falloff);
                             continue;
                         case HairSceneTool.Length:
-                            if (layer != null) delta ??= ResolveDelta(layer, guide);
-                            ScaleGuideLength(guide, delta, 1f + (paintErase ? -0.04f : 0.04f) * falloff);
+                        {
+                            float scale = 1f + (paintErase ? -0.04f : 0.04f) * falloff;
+                            Vector3 root = entry.OriginalPoints[0];
+                            for (int targetIndex = 1; targetIndex < guide.points.Count; targetIndex++)
+                                entry.TargetPoints[targetIndex] = root +
+                                    (entry.OriginalPoints[targetIndex] - root) * Mathf.Max(0.01f, scale);
+                            intentionallyChangesLength = true;
+                            positionChanged = true;
                             pointIndex = guide.points.Count;
                             continue;
-                        case HairSceneTool.Cut:
-                            if (pointIndex >= 2 && pointIndex < guide.points.Count - 1)
-                            {
-                                guide.points.RemoveRange(pointIndex + 1, guide.points.Count - pointIndex - 1);
-                                ResizeDelta(delta, guide.points.Count);
-                            }
-                            return;
+                        }
                     }
-                    if (displacement.sqrMagnitude <= 1e-16f) continue;
-                    if (layer != null)
-                    {
-                        delta ??= ResolveDelta(layer, guide);
-                        delta.positionOffsets[pointIndex] += displacement;
-                    }
-                    else point.position += displacement;
+                    if (sourceDisplacement.sqrMagnitude <= 1e-16f) continue;
+                    entry.TargetPoints[pointIndex] += sourceDisplacement;
+                    positionChanged = true;
+                }
+
+                if (!positionChanged) continue;
+                if (!intentionallyChangesLength)
+                    HairGuideShapeUtility.PreserveSegmentLengths(entry.OriginalPoints, entry.TargetPoints);
+                ApplyGuideTarget(entry, guide, layer, ref delta);
+            }
+        }
+
+        private static bool HasEditablePointInfluence(IReadOnlyList<float> influences)
+        {
+            if (influences == null) return false;
+            for (int pointIndex = 1; pointIndex < influences.Count; pointIndex++)
+                if (influences[pointIndex] > 0f) return true;
+            return false;
+        }
+
+        private bool BrushBoundsOverlap(Bounds bounds, Vector3 center, float radius,
+            Vector3 projectionNormal)
+        {
+            if (!affectThroughDepth || projectionNormal.sqrMagnitude <= 1e-12f)
+                return bounds.SqrDistance(center) <= radius * radius;
+            Vector3 projectedOffset = Vector3.ProjectOnPlane(
+                bounds.center - center, projectionNormal.normalized);
+            float conservativeProjectedRadius = bounds.extents.magnitude;
+            float maximumDistance = radius + conservativeProjectedRadius;
+            return projectedOffset.sqrMagnitude <= maximumDistance * maximumDistance;
+        }
+
+        private static void EnsurePointBuffers(CurveBrushEntry entry, int pointCount)
+        {
+            if (entry.ReferencePoints.Length != pointCount)
+                entry.ReferencePoints = new Vector3[pointCount];
+            if (entry.OriginalPoints.Length != pointCount)
+                entry.OriginalPoints = new Vector3[pointCount];
+            if (entry.TargetPoints.Length != pointCount)
+                entry.TargetPoints = new Vector3[pointCount];
+            if (entry.PointInfluences.Length != pointCount)
+                entry.PointInfluences = new float[pointCount];
+        }
+
+        private void ApplyGuideTarget(CurveBrushEntry entry, HairGuide guide, HairSculptLayer layer,
+            ref HairGuideDelta delta)
+        {
+            delta ??= ResolveDelta(layer, guide);
+            float layerGain = 1f / Mathf.Max(0.01f, layer.opacity);
+            for (int pointIndex = 1; pointIndex < guide.points.Count; pointIndex++)
+                delta.positionOffsets[pointIndex] +=
+                    (entry.TargetPoints[pointIndex] - entry.OriginalPoints[pointIndex]) * layerGain;
+
+            if (entry.SourcePoints.Length == guide.points.Count)
+            {
+                for (int pointIndex = 1; pointIndex < entry.SourcePoints.Length; pointIndex++)
+                    entry.SourcePoints[pointIndex] = entry.TargetPoints[pointIndex];
+            }
+            else
+            {
+                for (int sampleIndex = 1; sampleIndex < entry.SourcePoints.Length; sampleIndex++)
+                {
+                    float t = sampleIndex / (entry.SourcePoints.Length - 1f);
+                    float control = t * (guide.points.Count - 1f);
+                    int left = Mathf.Min(Mathf.FloorToInt(control), guide.points.Count - 1);
+                    int right = Mathf.Min(left + 1, guide.points.Count - 1);
+                    float blend = control - left;
+                    Vector3 leftShift = entry.TargetPoints[left] - entry.OriginalPoints[left];
+                    Vector3 rightShift = entry.TargetPoints[right] - entry.OriginalPoints[right];
+                    entry.SourcePoints[sampleIndex] += Vector3.LerpUnclamped(leftShift, rightShift, blend);
                 }
             }
+
+            if (displayGuidePolylines.TryGetValue(guide.Id, out Vector3[] polyline) &&
+                polyline.Length == entry.SourcePoints.Length)
+                Array.Copy(entry.SourcePoints, polyline, polyline.Length);
+            RefreshCurveBrushEntry(entry);
         }
 
         private HairSculptLayer ResolveSculptLayer(HairGroup group)
         {
             HairSculptLayer layer = group.sculptLayers.Find(candidate => candidate != null && candidate.Id == activeLayerId);
-            if (layer == null || layer.locked || !layer.visible)
+            if (layer == null || layer.locked || !layer.visible || layer.opacity <= 0.0001f)
             {
                 layer = new HairSculptLayer { name = $"Sculpt Layer {group.sculptLayers.Count + 1}" };
                 layer.EnsureIntegrity();
@@ -2382,39 +2951,30 @@ namespace UMA.HairCards.Editor
                 Array.Resize(ref delta.rollOffsets, count);
         }
 
-        private static void ScaleGuideLength(HairGuide guide, HairGuideDelta delta, float scale)
-        {
-            if (guide?.points == null || guide.points.Count < 2) return;
-            Vector3 root = guide.points[0].position +
-                           (delta != null && delta.positionOffsets.Length > 0 ? delta.positionOffsets[0] : Vector3.zero);
-            for (int i = 1; i < guide.points.Count; i++)
-            {
-                Vector3 basePosition = guide.points[i].position;
-                Vector3 actual = basePosition +
-                                 (delta != null && i < delta.positionOffsets.Length
-                                     ? delta.positionOffsets[i]
-                                     : Vector3.zero);
-                Vector3 target = root + (actual - root) * Mathf.Max(0.01f, scale);
-                if (delta != null) delta.positionOffsets[i] = target - basePosition;
-                else guide.points[i].position = target;
-            }
-        }
-
-        private static Vector3 CalculateNearbyAverage(HairGroup group, Vector3 center, float squareRadius)
+        private Vector3 CalculateNearbyAverage(Vector3 center, Vector3 projectionNormal)
         {
             Vector3 total = Vector3.zero;
             int count = 0;
-            for (int guideIndex = 0; guideIndex < group.guides.Count; guideIndex++)
+            for (int entryIndex = 0; entryIndex < curveBrushEntries.Count; entryIndex++)
             {
-                HairGuide guide = group.guides[guideIndex];
-                if (guide?.points == null) continue;
-                for (int pointIndex = 1; pointIndex < guide.points.Count; pointIndex++)
+                CurveBrushEntry entry = curveBrushEntries[entryIndex];
+                float radius = brushRadius * entry.PoseRadiusScale;
+                float squareRadius = radius * radius;
+                if (!BrushBoundsOverlap(entry.PosedBounds, center, radius, projectionNormal)) continue;
+                Vector3 nearest = Vector3.zero;
+                float nearestSquare = float.MaxValue;
+                for (int pointIndex = 1; pointIndex < entry.PosedPoints.Length; pointIndex++)
                 {
-                    Vector3 position = guide.points[pointIndex].position;
-                    if ((position - center).sqrMagnitude > squareRadius) continue;
-                    total += position;
-                    count++;
+                    Vector3 position = HairCurveBrushUtility.ClosestPointForBrush(center,
+                        entry.PosedPoints[pointIndex - 1], entry.PosedPoints[pointIndex],
+                        projectionNormal, affectThroughDepth, out _, out float squareDistance);
+                    if (squareDistance >= nearestSquare) continue;
+                    nearest = position;
+                    nearestSquare = squareDistance;
                 }
+                if (nearestSquare > squareRadius) continue;
+                total += nearest;
+                count++;
             }
             return count > 0 ? total / count : center;
         }

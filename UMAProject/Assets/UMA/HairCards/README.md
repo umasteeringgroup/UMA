@@ -8,7 +8,7 @@ UMA Hair Cards is a guide-driven, non-destructive hair-card authoring system for
 2. Choose **UMA > Hair Cards > Open Hair Card Stage**.
 3. In **Growth**, paint the Growth Area or select source vertices and apply the selection to a map.
 4. In **Guides**, preview deterministic guide generation and accept the result. Hand-place extra guides where the silhouette needs control.
-5. In **Groom**, use Comb, Grab, Smooth, Length, Cut, Width, Clump, Part, and Freeze. Position and width edits are stored on sculpt layers.
+5. In **Groom**, use Comb, Grab, Smooth, Length, Cut, Width, Clump, Part, and Freeze, or hold **Apply Gravity** to settle the active group. Cut uses a finite camera-facing slice gesture and supports X mirroring. Positional brushes and gravity preserve guide segment lengths; position and width edits are stored on sculpt layers.
 6. In **Cards**, assign a ribbon or tapered-tube profile, atlas, and children-per-guide settings.
 7. In **Optimize**, author LOD card fractions and sample counts.
 8. In **Validate & Bake**, run a dry run, resolve blocking errors, and bake Unity/UMA assets.
@@ -64,6 +64,7 @@ Shortcuts are registered with Unity's Shortcut Manager and can be remapped:
 
 - `Q`: Select
 - `P`: Paint Growth
+- `M`: Toggle X mirror for Growth paint or Cut
 - `C`: Comb
 - `G`: Grab
 - `S`: Smooth

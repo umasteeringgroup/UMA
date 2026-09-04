@@ -19,10 +19,13 @@ namespace UMA.HairCards
             if (group == null || guides == null || result == null) return;
             if (!options.includeGuideCards && !options.includeChildren) return;
             float cardFraction = lod != null ? lod.cardFraction : 1f;
-            int sampleCount = lod != null ? lod.samplesPerCard : 12;
+            int sampleCount = Mathf.Max(2, lod != null ? lod.samplesPerCard : 12);
             int tubeSides = lod != null ? lod.maximumTubeSides : 12;
             Dictionary<string, HairGuide> sourceGuides = BuildGuideLookup(group);
             Dictionary<int, int[]> sourceTriangles = new Dictionary<int, int[]>();
+            List<HairCurvePoint>[] resampledGuides = options.includeChildren
+                ? ResampleGuides(guides, sampleCount)
+                : null;
             for (int guideIndex = 0; guideIndex < guides.Count; guideIndex++)
             {
                 if (options.interactiveSampleLimit > 0 && result.curves.Count >= options.interactiveSampleLimit)
@@ -66,7 +69,7 @@ namespace UMA.HairCards
                     }
                     int childSeed = CombineSeed(group.children.seed, sourceGuide.seed, childIndex);
                     if (!KeepForLod(childSeed, guideLodFraction)) continue;
-                    HairEvaluatedCurve child = CreateChild(group, guides, guideIndex, sourceGuide,
+                    HairEvaluatedCurve child = CreateChild(group, guides, resampledGuides, guideIndex, sourceGuide,
                         childIndex, childSeed, sampleCount, paintedClump);
                     child.samplesPerCardOverride = sampleCount;
                     child.tubeSidesOverride = tubeSides;
@@ -86,6 +89,7 @@ namespace UMA.HairCards
         private static HairEvaluatedCurve CreateChild(
             HairGroup group,
             IReadOnlyList<HairEvaluatedCurve> guides,
+            IReadOnlyList<List<HairCurvePoint>> resampledGuides,
             int parentIndex,
             HairGuide sourceGuide,
             int childIndex,
@@ -102,13 +106,10 @@ namespace UMA.HairCards
             Vector3 rootSide = Vector3.Cross(rootTangent, rootNormal).normalized;
             if (rootSide.sqrMagnitude < 1e-8f) rootSide = Vector3.right;
             Vector3 rootOffset = rootSide * disk.x + rootNormal * disk.y;
+            Vector3 targetRoot = parent.points[0].position + rootOffset;
 
-            List<Neighbor> neighbors = FindNeighbors(guides, parentIndex, group.children.interpolation);
-            List<List<HairCurvePoint>> samples = new List<List<HairCurvePoint>>(neighbors.Count);
-            for (int i = 0; i < neighbors.Count; i++)
-            {
-                samples.Add(HairCurveUtility.Resample(guides[neighbors[i].index].points, sampleCount));
-            }
+            List<Neighbor> neighbors = FindNeighbors(guides, parentIndex, targetRoot,
+                group.children.interpolation);
 
             float lengthScale = 1f + random.NextSigned() * group.children.lengthVariation;
             float widthScale = 1f + random.NextSigned() * group.children.widthVariation;
@@ -121,7 +122,7 @@ namespace UMA.HairCards
                 isChild = true,
                 seed = seed,
                 groupColor = group.color,
-                rootNormal = parent.rootNormal,
+                rootNormal = BlendRootNormal(guides, neighbors, parent.rootNormal),
                 profile = group.profile,
                 atlas = group.atlas,
                 atlasRegionSelection = parent.atlasRegionSelection,
@@ -131,9 +132,9 @@ namespace UMA.HairCards
             Vector3 weightedRoot = Vector3.zero;
             for (int neighborIndex = 0; neighborIndex < neighbors.Count; neighborIndex++)
             {
-                weightedRoot += samples[neighborIndex][0].position * neighbors[neighborIndex].weight;
+                Neighbor neighbor = neighbors[neighborIndex];
+                weightedRoot += resampledGuides[neighbor.index][0].position * neighbor.weight;
             }
-            Vector3 targetRoot = parent.points[0].position + rootOffset;
             for (int pointIndex = 0; pointIndex < sampleCount; pointIndex++)
             {
                 Vector3 weightedPosition = Vector3.zero;
@@ -141,8 +142,9 @@ namespace UMA.HairCards
                 float weightedRoll = 0f;
                 for (int neighborIndex = 0; neighborIndex < neighbors.Count; neighborIndex++)
                 {
-                    HairCurvePoint sample = samples[neighborIndex][pointIndex];
-                    float weight = neighbors[neighborIndex].weight;
+                    Neighbor neighbor = neighbors[neighborIndex];
+                    HairCurvePoint sample = resampledGuides[neighbor.index][pointIndex];
+                    float weight = neighbor.weight;
                     weightedPosition += sample.position * weight;
                     weightedWidth += sample.width * weight;
                     weightedRoll += sample.roll * weight;
@@ -157,6 +159,35 @@ namespace UMA.HairCards
                     weightedRoll + rollOffset * t));
             }
             return child;
+        }
+
+        private static List<HairCurvePoint>[] ResampleGuides(
+            IReadOnlyList<HairEvaluatedCurve> guides,
+            int sampleCount)
+        {
+            List<HairCurvePoint>[] samples = new List<HairCurvePoint>[guides.Count];
+            for (int guideIndex = 0; guideIndex < guides.Count; guideIndex++)
+                samples[guideIndex] = HairCurveUtility.Resample(guides[guideIndex].points, sampleCount);
+            return samples;
+        }
+
+        private static Vector3 BlendRootNormal(
+            IReadOnlyList<HairEvaluatedCurve> guides,
+            IReadOnlyList<Neighbor> neighbors,
+            Vector3 fallback)
+        {
+            Vector3 reference = fallback.sqrMagnitude > 1e-8f ? fallback.normalized : Vector3.up;
+            Vector3 blended = Vector3.zero;
+            for (int neighborIndex = 0; neighborIndex < neighbors.Count; neighborIndex++)
+            {
+                Neighbor neighbor = neighbors[neighborIndex];
+                Vector3 normal = guides[neighbor.index].rootNormal;
+                if (normal.sqrMagnitude < 1e-8f) normal = reference;
+                else normal.Normalize();
+                if (Vector3.Dot(normal, reference) < 0f) normal = -normal;
+                blended += normal * neighbor.weight;
+            }
+            return blended.sqrMagnitude > 1e-8f ? blended.normalized : reference;
         }
 
         private static Dictionary<string, HairGuide> BuildGuideLookup(HairGroup group)
@@ -193,39 +224,56 @@ namespace UMA.HairCards
                    map.SampleVertex(triangles[offset + 2]) * barycentric.z;
         }
 
-        private static List<Neighbor> FindNeighbors(IReadOnlyList<HairEvaluatedCurve> guides, int parentIndex,
+        private static List<Neighbor> FindNeighbors(
+            IReadOnlyList<HairEvaluatedCurve> guides,
+            int parentIndex,
+            Vector3 childRoot,
             HairGuideInterpolationMode mode)
         {
-            if (mode == HairGuideInterpolationMode.Nearest ||
-                mode == HairGuideInterpolationMode.ExplicitParent ||
+            if (mode == HairGuideInterpolationMode.ExplicitParent ||
                 mode == HairGuideInterpolationMode.ClumpParent)
             {
                 return new List<Neighbor> { new Neighbor { index = parentIndex, weight = 1f } };
             }
-            Vector3 parentRoot = guides[parentIndex].points[0].position;
-            List<Neighbor> candidates = new List<Neighbor>(guides.Count);
+
+            // Keep only the nearest few roots. This avoids sorting and allocating a candidate for
+            // every guide for every child, which is important for dense production grooms.
+            List<Neighbor> candidates = new List<Neighbor>(Mathf.Min(MaximumNeighborCount, guides.Count));
             for (int i = 0; i < guides.Count; i++)
             {
                 if (guides[i].points.Count == 0) continue;
-                float distance = Vector3.Distance(parentRoot, guides[i].points[0].position);
-                candidates.Add(new Neighbor { index = i, distance = distance });
+                Neighbor candidate = new Neighbor
+                {
+                    index = i,
+                    distanceSquared = (childRoot - guides[i].points[0].position).sqrMagnitude
+                };
+                int insertionIndex = candidates.Count;
+                for (int candidateIndex = 0; candidateIndex < candidates.Count; candidateIndex++)
+                {
+                    Neighbor existing = candidates[candidateIndex];
+                    if (candidate.distanceSquared < existing.distanceSquared ||
+                        (Mathf.Approximately(candidate.distanceSquared, existing.distanceSquared) &&
+                         i < existing.index))
+                    {
+                        insertionIndex = candidateIndex;
+                        break;
+                    }
+                }
+                if (insertionIndex >= MaximumNeighborCount) continue;
+                candidates.Insert(insertionIndex, candidate);
+                if (candidates.Count > MaximumNeighborCount) candidates.RemoveAt(MaximumNeighborCount);
             }
-            candidates.Sort((left, right) =>
-            {
-                int distanceOrder = left.distance.CompareTo(right.distance);
-                return distanceOrder != 0 ? distanceOrder : left.index.CompareTo(right.index);
-            });
-            if (candidates.Count > MaximumNeighborCount)
-            {
-                candidates.RemoveRange(MaximumNeighborCount, candidates.Count - MaximumNeighborCount);
-            }
+
+            if (candidates.Count == 0)
+                return new List<Neighbor> { new Neighbor { index = parentIndex, weight = 1f } };
+            if (mode == HairGuideInterpolationMode.Nearest)
+                return new List<Neighbor> { new Neighbor { index = candidates[0].index, weight = 1f } };
 
             float total = 0f;
             for (int i = 0; i < candidates.Count; i++)
             {
                 Neighbor neighbor = candidates[i];
-                neighbor.weight = 1f / Mathf.Max(0.0001f, neighbor.distance);
-                if (neighbor.index == parentIndex) neighbor.weight *= 2f;
+                neighbor.weight = 1f / Mathf.Max(0.0001f, Mathf.Sqrt(neighbor.distanceSquared));
                 candidates[i] = neighbor;
                 total += neighbor.weight;
             }
@@ -267,7 +315,7 @@ namespace UMA.HairCards
         private struct Neighbor
         {
             public int index;
-            public float distance;
+            public float distanceSquared;
             public float weight;
         }
     }
