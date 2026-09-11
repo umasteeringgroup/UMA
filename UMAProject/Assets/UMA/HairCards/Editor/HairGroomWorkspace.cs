@@ -10,20 +10,38 @@ namespace UMA.HairCards.Editor
     public sealed class HairGroomWorkspace : EditorWindow
     {
         private const string QuickStartPath = "Assets/UMA/Docs/Hair Cards - Quick Start.md";
+        private const string MapClipboardKey = "UMA.HairCards.GrowthMapClipboard.v1";
+        private static HairGrowthMapClipboard mapClipboard;
+        private static string mapClipboardStatus;
 
         private static readonly string[] StepNames =
         {
             "Setup", "Growth", "Guides", "Groom", "Cards", "Optimize", "Validate & Bake"
         };
 
-        private Vector2 explorerScroll;
-        private Vector2 detailsScroll;
+        [SerializeField] private Vector2 explorerScroll;
+        [SerializeField] private Vector2 detailsScroll;
         private HairBakeOutcome lastBake;
         private GameObject sceneHelperCandidate;
-        private string visibilitySearch = string.Empty;
-        private bool recipeVisibilityExpanded = true;
-        private bool udimVisibilityExpanded = true;
-        private bool slotVisibilityExpanded = true;
+        [SerializeField] private string visibilitySearch = string.Empty;
+        [SerializeField] private bool recipeVisibilityExpanded = true;
+        [SerializeField] private bool udimVisibilityExpanded = true;
+        [SerializeField] private bool slotVisibilityExpanded = true;
+        [SerializeField] private HairAtlasEditorPanel atlasEditor = new HairAtlasEditorPanel();
+        [SerializeField] private bool cardGeometryExpanded;
+        [SerializeField] private bool childSettingsExpanded;
+        [SerializeField] private bool atlasMapsExpanded;
+        [SerializeField] private string guideSearch = string.Empty;
+        [SerializeField] private int guidePage;
+        [SerializeField] private bool guideLibraryExpanded;
+        [SerializeField] private List<string> collapsedLayerIds = new List<string>();
+        [SerializeField] private Vector2 layerStackScroll;
+        private bool confirmGuideDelete;
+        private bool resetOptionsExpanded;
+        private bool confirmSetupReset;
+        private double nextPreferencesSave;
+        private string preferenceContext;
+        private HairGroomAsset preferenceGroom;
 
         [MenuItem("UMA/Hair Cards/Hair Groom Workspace", priority = 210)]
         public static void OpenForActiveStage()
@@ -40,19 +58,80 @@ namespace UMA.HairCards.Editor
             for (int i = 0; i < windows.Length; i++) windows[i].Repaint();
         }
 
+        internal static void SaveOpenPreferences()
+        {
+            if (HairEditorPreferences.Suspended) return;
+            foreach (HairGroomWorkspace window in Resources.FindObjectsOfTypeAll<HairGroomWorkspace>())
+            {
+                HairEditorPreferences.instance.Remember(window, "workspace", window.preferenceContext);
+                window.atlasEditor?.SavePreferences();
+            }
+        }
+
+        internal static void SelectUvSet(HairAtlasProfileAsset atlas, string id)
+        {
+            foreach (HairGroomWorkspace window in Resources.FindObjectsOfTypeAll<HairGroomWorkspace>())
+            { window.atlasEditor?.SelectSet(atlas, id); window.Repaint(); }
+        }
+
+        private void OnEnable()
+        {
+            if (HairEditorPreferences.Suspended) return;
+            preferenceGroom = HairCardStage.ActiveStage?.Groom;
+            preferenceContext = HairEditorPreferences.Context(preferenceGroom);
+            HairEditorPreferences.instance.Restore(this, "workspace", preferenceContext);
+            EditorApplication.update += SaveIdlePreferences;
+            Undo.undoRedoPerformed += OnAtlasUndoRedo;
+        }
+
+        private void SaveIdlePreferences()
+        {
+            if (HairEditorPreferences.Suspended || HairCardStage.ActiveStage?.IsEditing == true ||
+                EditorApplication.timeSinceStartup < nextPreferencesSave) return;
+            nextPreferencesSave = EditorApplication.timeSinceStartup + 2d;
+            HairEditorPreferences.instance.Remember(this, "workspace", preferenceContext);
+        }
+
+        private void OnAtlasUndoRedo()
+        {
+            atlasEditor?.CancelInteraction();
+            Repaint();
+        }
+
         private void OnDisable()
         {
-            HairCardStage.ActiveStage?.SetGravityHeld(false);
+            EditorApplication.update -= SaveIdlePreferences;
+            if (!HairEditorPreferences.Suspended) HairEditorPreferences.instance.Remember(this, "workspace", preferenceContext);
+            Undo.undoRedoPerformed -= OnAtlasUndoRedo;
+            atlasEditor?.Dispose();
+            if (!HairEditorPreferences.Suspended)
+            {
+                HairCardStage.ActiveStage?.SetGravityHeld(false);
+                HairCardStage.ActiveStage?.SetWorkspaceInteraction(false);
+            }
         }
 
         private void OnLostFocus()
         {
+            atlasEditor?.CancelInteraction();
             HairCardStage.ActiveStage?.SetGravityHeld(false);
+            HairCardStage.ActiveStage?.SetWorkspaceInteraction(false);
         }
 
         private void OnGUI()
         {
             HairCardStage stage = HairCardStage.ActiveStage;
+            HairGroomAsset nextGroom = stage?.Groom;
+            if (nextGroom != preferenceGroom)
+            {
+                HairEditorPreferences.instance.Remember(this, "workspace", preferenceContext);
+                preferenceGroom = nextGroom;
+                preferenceContext = HairEditorPreferences.Context(nextGroom);
+                HairEditorPreferences.instance.Restore(this, "workspace", preferenceContext);
+                atlasEditor?.CancelInteraction();
+            }
+            if (stage == null || stage.WorkflowStep != HairWorkflowStep.Cards)
+                atlasEditor?.CancelInteraction();
             if (stage == null || stage.Groom == null)
             {
                 DrawNoStage();
@@ -60,8 +139,13 @@ namespace UMA.HairCards.Editor
             }
 
             DrawHeader(stage);
+            DrawResetOptions(stage);
             int selectedStep = GUILayout.Toolbar((int)stage.WorkflowStep, StepNames, GUILayout.Height(28f));
-            if (selectedStep != (int)stage.WorkflowStep) stage.WorkflowStep = (HairWorkflowStep)selectedStep;
+            if (selectedStep != (int)stage.WorkflowStep)
+            {
+                atlasEditor?.CancelInteraction();
+                stage.WorkflowStep = (HairWorkflowStep)selectedStep;
+            }
             EditorGUILayout.Space(3f);
             using (new EditorGUILayout.HorizontalScope())
             {
@@ -77,6 +161,10 @@ namespace UMA.HairCards.Editor
                 EditorGUILayout.EndScrollView();
             }
             DrawStatus(stage);
+            Event current = Event.current;
+            stage.SetWorkspaceInteraction(GUIUtility.hotControl != 0 || EditorGUIUtility.editingTextField ||
+                atlasEditor?.IsInteracting == true, current != null &&
+                (current.rawType == EventType.MouseDown || current.rawType == EventType.MouseDrag || current.rawType == EventType.KeyDown));
         }
 
         private static void DrawNoStage()
@@ -96,26 +184,79 @@ namespace UMA.HairCards.Editor
             GUILayout.FlexibleSpace();
         }
 
-        private static void DrawHeader(HairCardStage stage)
+        private void DrawResetOptions(HairCardStage stage)
+        {
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                EditorGUILayout.LabelField("Settings saved automatically", EditorStyles.miniLabel);
+                GUILayout.FlexibleSpace();
+                if (GUILayout.Button(new GUIContent("Reset to defaults", "Show separate reset controls for editor preferences and card setup."), GUILayout.Width(130f)))
+                    resetOptionsExpanded = !resetOptionsExpanded;
+            }
+            if (!resetOptionsExpanded) return;
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                EditorGUILayout.LabelField("Settings are remembered automatically. Existing grooms keep their own setup; new grooms inherit the last-used setup.", EditorStyles.wordWrappedMiniLabel);
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    if (GUILayout.Button("Reset editor options"))
+                    {
+                        stage.ResetEditorPreferences();
+                        foreach (HairGroomWorkspace window in Resources.FindObjectsOfTypeAll<HairGroomWorkspace>())
+                        { HairPreferenceCodec.Reset(window); window.atlasEditor?.ResetPreferences(); window.Repaint(); }
+                        HairAtlasRegionEditorWindow.ResetOpenPreferences();
+                        confirmSetupReset = false;
+                    }
+                    using (new EditorGUI.DisabledScope(stage.ActiveGroup == null || stage.ActiveGroup.locked || !EditorUtility.IsPersistent(stage.Groom)))
+                        if (GUILayout.Button("Reset card setup")) confirmSetupReset = !confirmSetupReset;
+                    if (GUILayout.Button("Forget new-groom defaults"))
+                    { stage.SaveNow(false); HairEditorPreferences.instance.ClearSetupDefaults(); }
+                }
+                EditorGUILayout.LabelField("Editor reset clears remembered visibility, brushes, generation, and workspace/UV display options. Guides and painted maps are never deleted.", EditorStyles.wordWrappedMiniLabel);
+                if (confirmSetupReset)
+                {
+                    EditorGUILayout.HelpBox("Reset the active group's profile, textures/material assignments, UV sets, children and root inset, plus this groom's LOD/bake/symmetry options? New private resources are created; old assets, other groups, painted maps, guides and sculpt layers are kept. Undo restores the old assignments.", MessageType.Warning);
+                    using (new EditorGUILayout.HorizontalScope())
+                    {
+                        if (GUILayout.Button("Confirm setup reset"))
+                        {
+                            atlasEditor?.CancelInteraction();
+                            HairEditorPreferences.instance.ResetCurrentSetup(stage.Groom, stage.ActiveGroup);
+                            confirmSetupReset = false;
+                            stage.SaveNow();
+                        }
+                        if (GUILayout.Button("Cancel")) confirmSetupReset = false;
+                    }
+                }
+            }
+        }
+
+        private void DrawHeader(HairCardStage stage)
         {
             using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
             {
                 GUILayout.Label(stage.Groom.name, EditorStyles.boldLabel);
+                GUILayout.Label(stage.SaveStatus, EditorStyles.miniLabel);
                 GUILayout.Label(stage.Groom.SourceRace, EditorStyles.miniLabel);
                 GUILayout.FlexibleSpace();
-                HairValidationReport validation = stage.Validation;
+                HairValidationReport validation = stage.ReleaseValidation;
                 if (validation != null)
                 {
-                    GUILayout.Label($"{validation.ErrorCount} errors  {validation.WarningCount} warnings",
+                    GUILayout.Label($"Release: {validation.ErrorCount} errors  {validation.WarningCount} warnings" +
+                        (stage.ReleaseValidationIsCurrent ? "" : " (outdated)"),
                         validation.ErrorCount > 0 ? EditorStyles.boldLabel : EditorStyles.miniLabel);
                 }
                 if (GUILayout.Button(new GUIContent("?", "Open Hair Cards - Quick Start"),
                         EditorStyles.toolbarButton, GUILayout.Width(24f)))
                     OpenQuickStart();
                 if (GUILayout.Button("Frame", EditorStyles.toolbarButton, GUILayout.Width(48f))) stage.FrameGroom();
-                if (GUILayout.Button("Validate", EditorStyles.toolbarButton, GUILayout.Width(58f))) stage.QueueRebuild(true);
+                if (GUILayout.Button("Validate", EditorStyles.toolbarButton, GUILayout.Width(58f)))
+                {
+                    stage.WorkflowStep = HairWorkflowStep.ValidateAndBake;
+                    stage.ValidateReleaseNow();
+                }
                 if (GUILayout.Button("Save", EditorStyles.toolbarButton, GUILayout.Width(45f))) stage.SaveNow();
-                using (new EditorGUI.DisabledScope(stage.Validation != null && !stage.Validation.CanBake))
+                using (new EditorGUI.DisabledScope(false))
                 {
                     if (GUILayout.Button("Bake", EditorStyles.toolbarButton, GUILayout.Width(48f)))
                     {
@@ -184,6 +325,7 @@ namespace UMA.HairCards.Editor
             HairGroup activeGroup = stage.ActiveGroup;
             if (activeGroup == null)
             {
+                DrawPreviewDisplay(stage);
                 DrawAvatarVisibility(stage);
                 return;
             }
@@ -203,14 +345,34 @@ namespace UMA.HairCards.Editor
                 activeGroup.enabled = enabled;
                 HairGroomCommands.Commit(groom);
             }
-            DrawGuideDisplay(stage);
+            DrawPreviewDisplay(stage);
+            if (stage.IsolateSelectedGuides || !string.IsNullOrEmpty(stage.SoloLayerId))
+                EditorGUILayout.HelpBox("Isolation / solo affects preview only. All enabled guides and visible layers are still included in release output.", MessageType.Info);
             DrawAvatarVisibility(stage);
         }
 
-        private static void DrawGuideDisplay(HairCardStage stage)
+        private static void DrawPreviewDisplay(HairCardStage stage)
         {
             EditorGUILayout.Space(10f);
-            EditorGUILayout.LabelField("Guide Display", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Preview & Display", EditorStyles.boldLabel);
+            // Stacked fields stay readable in the 205-pixel-wide explorer.
+            EditorGUILayout.LabelField("Preview mode", EditorStyles.miniLabel);
+            stage.PreviewMode = (HairPreviewMode)EditorGUILayout.EnumPopup(stage.PreviewMode);
+            EditorGUILayout.LabelField("Preview quality", EditorStyles.miniLabel);
+            stage.PreviewQuality = (HairPreviewQuality)EditorGUILayout.EnumPopup(stage.PreviewQuality);
+            stage.ShowChildren = EditorGUILayout.ToggleLeft(new GUIContent("Include children in preview",
+                "Evaluates generated children for child-spline and card previews. Turn off for a lighter, guide-only preview. " +
+                "Does not change baked output. Use Show child splines below to hide only their lines."), stage.ShowChildren);
+            EditorGUILayout.LabelField(stage.PreviewStatus, EditorStyles.wordWrappedMiniLabel);
+            if (GUILayout.Button("Rebuild Card Preview"))
+            {
+                stage.PreviewMode = HairPreviewMode.Cards;
+                stage.QueueRebuild(true);
+            }
+            EditorGUILayout.Space(5f);
+            stage.ShowCardWireframe = EditorGUILayout.ToggleLeft(new GUIContent("Show card wireframe",
+                "Shows yellow UV-set card outlines and Unity's selected-card outline. Hide for a clean material preview; card picking still works. Does not affect baking."), stage.ShowCardWireframe);
+            EditorGUILayout.LabelField("Guides & Splines", EditorStyles.miniBoldLabel);
             stage.ShowGuideRoots = EditorGUILayout.ToggleLeft(new GUIContent("Show root handles",
                 "Shows the clickable handle at each guide root."), stage.ShowGuideRoots);
             using (new EditorGUI.DisabledScope(!stage.ShowGuideRoots))
@@ -221,19 +383,59 @@ namespace UMA.HairCards.Editor
             }
             stage.ShowGuideSplines = EditorGUILayout.ToggleLeft(new GUIContent("Show guide splines",
                 "Shows the authored/evaluated guide curves in the Scene view."), stage.ShowGuideSplines);
+            stage.ShowChildSplines = EditorGUILayout.ToggleLeft(new GUIContent("Show child splines",
+                "Shows the faint dotted child curves in Guides And Children mode. Hiding these lines does not remove child cards or rebuild geometry."),
+                stage.ShowChildSplines);
+            if (stage.ShowChildSplines && (!stage.ShowChildren || stage.PreviewMode != HairPreviewMode.GuidesAndChildren))
+                EditorGUILayout.LabelField("Child lines require Guides And Children mode and Include children in preview.",
+                    EditorStyles.wordWrappedMiniLabel);
             stage.ShowControlPoints = EditorGUILayout.ToggleLeft(new GUIContent("Show selected control points",
                 "Shows editable points for the selected guide."), stage.ShowControlPoints);
+            stage.ShowFreezeMask = EditorGUILayout.ToggleLeft(new GUIContent("Show freeze mask",
+                "Cyan is editable; pink is frozen. Also shown automatically by the Freeze tool."), stage.ShowFreezeMask);
             stage.DepthTestGuides = EditorGUILayout.ToggleLeft(new GUIContent("Use scene depth (Z-buffer)",
                 "Occludes roots, splines, control points, and generated children behind visible geometry. " +
                 "Disable for an X-ray view of the complete groom."), stage.DepthTestGuides);
+            EditorGUILayout.Space(5f);
+            EditorGUILayout.LabelField("Scene Objects", EditorStyles.miniBoldLabel);
+            stage.ShowScalp = EditorGUILayout.ToggleLeft(new GUIContent("Show authoring surface",
+                "Shows the source scalp surface in the authoring stage."), stage.ShowScalp);
+            using (new EditorGUI.DisabledScope(!stage.HasAvatarVisibility))
+                stage.ShowAvatar = EditorGUILayout.ToggleLeft(new GUIContent("Show character preview",
+                    "Shows the avatar parts selected under Avatar Visibility below. Requires a generated character preview."), stage.ShowAvatar);
+            stage.ShowHelpers = EditorGUILayout.ToggleLeft(new GUIContent("Show helpers",
+                "Shows grooming helper objects in the Scene view."), stage.ShowHelpers);
             EditorGUILayout.LabelField("Display settings are stage-only and do not affect the baked hair.",
                 EditorStyles.wordWrappedMiniLabel);
+        }
+
+        private static void DrawBoneFocusButton(HairCardStage stage, HumanBodyBones bone, string label)
+        {
+            bool available = stage.CanFocusBone(bone);
+            using (new EditorGUI.DisabledScope(!available))
+                if (GUILayout.Button(new GUIContent(label, available
+                    ? $"Focus the {bone} area in the preview pose with the camera 0.45 meters from the orbit pivot, keeping the current viewing angle and projection."
+                    : $"No {bone} bone is available. Open the groom from a character with this bone.")))
+                    stage.FocusBone(bone);
         }
 
         private void DrawAvatarVisibility(HairCardStage stage)
         {
             EditorGUILayout.Space(10f);
             EditorGUILayout.LabelField("Avatar Visibility", EditorStyles.boldLabel);
+            using (new EditorGUI.DisabledScope(stage.ActiveGroup == null || stage.Groom?.SourceMesh == null))
+            {
+                if (GUILayout.Button(new GUIContent("Focus current area",
+                    "Frames the current group's painted Growth Area and its influencing bones in the authoring pose. " +
+                    "Keeps the orbit pivot on the character's vertical axis and expands symmetrically to fit one-sided paint. " +
+                    "Does not change visibility or the groom.")))
+                    stage.FocusCurrentArea();
+            }
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                DrawBoneFocusButton(stage, HumanBodyBones.Head, "Focus Head");
+                DrawBoneFocusButton(stage, HumanBodyBones.Neck, "Focus Neck");
+            }
             if (!stage.HasAvatarVisibility)
             {
                 EditorGUILayout.LabelField("Launch from a generated DynamicCharacterAvatar to hide its recipes, " +
@@ -241,7 +443,6 @@ namespace UMA.HairCards.Editor
                 return;
             }
 
-            stage.ShowAvatar = EditorGUILayout.ToggleLeft("Show character preview", stage.ShowAvatar);
             visibilitySearch = EditorGUILayout.TextField(visibilitySearch, EditorStyles.toolbarSearchField);
             using (new EditorGUILayout.HorizontalScope())
             {
@@ -353,22 +554,11 @@ namespace UMA.HairCards.Editor
 
             EditorGUILayout.Space(8f);
             EditorGUILayout.LabelField("Symmetry", EditorStyles.boldLabel);
-            bool symmetry = EditorGUILayout.Toggle("Enabled", groom.SymmetryEnabled);
-            if (symmetry != groom.SymmetryEnabled)
-            {
-                Undo.RecordObject(groom, "Change Hair Symmetry");
-                groom.SymmetryEnabled = symmetry;
-                HairGroomCommands.Commit(groom);
-            }
+            stage.MirrorPaintX = EditorGUILayout.Toggle("Mirror growth paint X", stage.MirrorPaintX);
+            stage.MirrorCutX = EditorGUILayout.Toggle("Mirror slice cut X", stage.MirrorCutX);
+            EditorGUILayout.HelpBox("These are the active, stage-only mirror controls across source-local X = 0. " +
+                "Comb/Grab do not have a global symmetry switch. Use a Mirror modifier for procedural guide mirroring.", MessageType.Info);
 
-            EditorGUILayout.Space(8f);
-            EditorGUILayout.LabelField("Preview", EditorStyles.boldLabel);
-            stage.ShowScalp = EditorGUILayout.Toggle("Show Authoring Surface", stage.ShowScalp);
-            if (stage.HasAvatarVisibility)
-                stage.ShowAvatar = EditorGUILayout.Toggle("Show Character", stage.ShowAvatar);
-            stage.ShowChildren = EditorGUILayout.Toggle("Show Children", stage.ShowChildren);
-            stage.ShowHelpers = EditorGUILayout.Toggle("Show Helpers", stage.ShowHelpers);
-            stage.PreviewMode = (HairPreviewMode)EditorGUILayout.EnumPopup("Preview Mode", stage.PreviewMode);
             if (GUILayout.Button("Continue to Growth", GUILayout.Height(28f))) stage.WorkflowStep = HairWorkflowStep.Growth;
         }
 
@@ -383,7 +573,9 @@ namespace UMA.HairCards.Editor
                         GUILayout.Height(30f))) stage.SceneTool = HairSceneTool.PaintGrowth;
                 if (GUILayout.Toggle(stage.SceneTool == HairSceneTool.Select, "Select Vertices", "Button",
                         GUILayout.Height(30f))) stage.SceneTool = HairSceneTool.Select;
-                stage.PaintErase = GUILayout.Toggle(stage.PaintErase, "Erase", "Button", GUILayout.Width(60f), GUILayout.Height(30f));
+                bool erase = GUILayout.Toggle(stage.EffectivePaintErase, new GUIContent("Erase",
+                    "Select Erase, or hold Shift in the Scene view to erase temporarily."), "Button", GUILayout.Width(60f), GUILayout.Height(30f));
+                if (erase != stage.EffectivePaintErase) stage.PaintErase = erase;
                 stage.MirrorPaintX = GUILayout.Toggle(stage.MirrorPaintX, "Mirror X", "Button",
                     GUILayout.Width(76f), GUILayout.Height(30f));
             }
@@ -396,6 +588,7 @@ namespace UMA.HairCards.Editor
             stage.PaintValue = EditorGUILayout.FloatField("Paint Value", stage.PaintValue);
             EditorGUILayout.HelpBox(
                 "Mirror X paints both sides across the source mesh local X = 0 plane (M toggles it). " +
+                "Hold Shift while painting to erase temporarily; release it to restore the selected mode. " +
                 "Shift + right-drag: horizontal changes radius, vertical changes hardness. [ and ] adjust radius; Shift + [ and ] adjust hardness.",
                 MessageType.None);
 
@@ -428,6 +621,7 @@ namespace UMA.HairCards.Editor
             {
                 EditorGUILayout.Space(7f);
                 EditorGUILayout.LabelField(activeMap.name + " Operations", EditorStyles.boldLabel);
+                DrawMapClipboard(stage, group, activeMap);
                 using (new EditorGUI.DisabledScope(activeMap.locked))
                 using (new EditorGUILayout.HorizontalScope())
                 {
@@ -480,7 +674,7 @@ namespace UMA.HairCards.Editor
             if (GUILayout.Button("Continue to Guides", GUILayout.Height(28f))) stage.WorkflowStep = HairWorkflowStep.Guides;
         }
 
-        private static void DrawGuides(HairCardStage stage)
+        private void DrawGuides(HairCardStage stage)
         {
             HairGroup group = stage.ActiveGroup;
             if (group == null) return;
@@ -521,13 +715,20 @@ namespace UMA.HairCards.Editor
                 "1. Preview distributes temporary dashed guides inside the Growth Area. 2. Accept converts that preview into editable authored guides.",
                 EditorStyles.wordWrappedLabel);
             HairGuideGenerationSettings settings = stage.GuideGeneration;
+            EditorGUI.BeginChangeCheck();
             settings.guideCount = EditorGUILayout.IntSlider("Guide Count", settings.guideCount, 1, 1000);
             settings.pointsPerGuide = EditorGUILayout.IntSlider("Points per Guide", settings.pointsPerGuide, 2, 24);
             settings.defaultLength = EditorGUILayout.Slider("Default Length", settings.defaultLength, 0.01f, 1f);
             settings.minimumRootSpacing = EditorGUILayout.Slider("Minimum Spacing", settings.minimumRootSpacing, 0f, 0.2f);
+            settings.rootUniformity = EditorGUILayout.Slider(new GUIContent("Root Uniformity",
+                "0: original random placement. 1: compare more candidates to fill gaps and spread roots evenly. " +
+                "Respects Growth Area, Density, and Minimum Spacing; higher values take longer to preview."), settings.rootUniformity, 0f, 1f);
             settings.surfaceFlow = EditorGUILayout.Slider("Follow Surface Flow", settings.surfaceFlow, 0f, 1f);
             settings.lift = EditorGUILayout.Slider("Lift", settings.lift, 0f, 1f);
             settings.seed = EditorGUILayout.IntField("Seed", settings.seed);
+            if (EditorGUI.EndChangeCheck() && stage.GenerationPreview != null) stage.CancelGuidePreview();
+            EditorGUILayout.LabelField("For even coverage, start with Root Uniformity 0.75–1 and low Minimum Spacing. " +
+                "Preview again after changing settings; accepted guides are not moved automatically.", EditorStyles.wordWrappedMiniLabel);
             using (new EditorGUI.DisabledScope(growthVertices == 0 || group.locked))
             {
                 if (GUILayout.Button($"1. Preview {settings.guideCount:N0} Generated Guides", GUILayout.Height(32f)))
@@ -556,22 +757,7 @@ namespace UMA.HairCards.Editor
             }
 
             EditorGUILayout.Space(8f);
-            EditorGUILayout.LabelField($"Authored Guides ({group.guides.Count})", EditorStyles.boldLabel);
-            int listLimit = Mathf.Min(group.guides.Count, 200);
-            for (int i = 0; i < listLimit; i++)
-            {
-                HairGuide guide = group.guides[i];
-                if (guide == null) continue;
-                using (new EditorGUILayout.HorizontalScope())
-                {
-                    bool active = guide.Id == stage.ActiveGuideId;
-                    bool selected = GUILayout.Toggle(active, guide.name, "Button");
-                    if (selected && !active) stage.SetActiveGuide(guide.Id);
-                    GUILayout.Label($"{guide.points.Count} pts", EditorStyles.miniLabel, GUILayout.Width(42f));
-                    if (GUILayout.Button("×", GUILayout.Width(22f))) HairGroomCommands.DeleteGuide(stage.Groom, guide.Id);
-                }
-            }
-            if (group.guides.Count > listLimit) EditorGUILayout.LabelField($"Showing first {listLimit} guides.", EditorStyles.miniLabel);
+            DrawGuideLibrary(stage);
             using (new EditorGUI.DisabledScope(group.guides.Count == 0))
             {
                 if (GUILayout.Button("Continue to Groom", GUILayout.Height(30f)))
@@ -579,11 +765,111 @@ namespace UMA.HairCards.Editor
             }
         }
 
+        private void DrawGuideLibrary(HairCardStage stage)
+        {
+            HairGroup group = stage.ActiveGroup;
+            if (group == null) return;
+            EditorGUILayout.LabelField($"Authored guides · {stage.SelectedGuideIds.Count:N0} selected", EditorStyles.boldLabel);
+            string search = EditorGUILayout.TextField("Search guides", guideSearch, EditorStyles.toolbarSearchField);
+            if (search != guideSearch) { guideSearch = search; guidePage = 0; }
+            List<HairGuide> matches = group.guides.FindAll(guide => guide != null &&
+                (string.IsNullOrWhiteSpace(guideSearch) || guide.name.IndexOf(guideSearch, StringComparison.OrdinalIgnoreCase) >= 0));
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                if (GUILayout.Button("Select matching")) stage.SetGuideSelection(matches.ConvertAll(guide => guide.Id));
+                if (GUILayout.Button("Clear selection")) { stage.SetGuideSelection(null); confirmGuideDelete = false; }
+                stage.IsolateSelectedGuides = GUILayout.Toggle(stage.IsolateSelectedGuides, "Isolate", "Button");
+            }
+            int pageCount = Mathf.Max(1, Mathf.CeilToInt(matches.Count / 48f));
+            guidePage = Mathf.Clamp(guidePage, 0, pageCount - 1);
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                using (new EditorGUI.DisabledScope(guidePage == 0)) if (GUILayout.Button("‹", GUILayout.Width(30f))) guidePage--;
+                GUILayout.Label($"{matches.Count:N0} matches · Page {guidePage + 1} / {pageCount}", EditorStyles.miniLabel);
+                using (new EditorGUI.DisabledScope(guidePage + 1 >= pageCount)) if (GUILayout.Button("›", GUILayout.Width(30f))) guidePage++;
+            }
+            for (int i = guidePage * 48; i < Mathf.Min(matches.Count, (guidePage + 1) * 48); i++)
+            {
+                HairGuide guide = matches[i];
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    bool selected = stage.IsGuideSelected(guide.Id);
+                    if (EditorGUILayout.Toggle(selected, GUILayout.Width(18f)) != selected) stage.ToggleGuideSelection(guide.Id);
+                    if (GUILayout.Button(guide.name + (guide.enabled ? "" : " (disabled)"),
+                        guide.Id == stage.ActiveGuideId ? EditorStyles.boldLabel : EditorStyles.label))
+                    {
+                        if (Event.current.shift || Event.current.control || Event.current.command) stage.ToggleGuideSelection(guide.Id);
+                        else stage.SetActiveGuide(guide.Id);
+                    }
+                    GUILayout.Label($"{guide.points.Count} pts", EditorStyles.miniLabel, GUILayout.Width(42f));
+                }
+            }
+            using (new EditorGUI.DisabledScope(group.locked || stage.SelectedGuideIds.Count == 0))
+            {
+                HairGuide active = group.guides.Find(guide => guide != null && guide.Id == stage.ActiveGuideId);
+                if (active != null)
+                {
+                    string name = EditorGUILayout.DelayedTextField("Active guide name", active.name);
+                    if (name != active.name) { Undo.RecordObject(stage.Groom, "Rename Hair Guide"); active.name = name; HairGroomCommands.Commit(stage.Groom, HairPreviewChange.Display); }
+                }
+                using (new EditorGUILayout.HorizontalScope())
+                    foreach (HairGuideBatchAction action in new[] { HairGuideBatchAction.Enable, HairGuideBatchAction.Disable, HairGuideBatchAction.Freeze, HairGuideBatchAction.Unfreeze })
+                        if (GUILayout.Button(action.ToString())) HairGroomCommands.ApplyGuideBatch(stage.Groom, group, stage.SelectedGuideIds, action);
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    if (GUILayout.Button("Duplicate selected")) stage.SetGuideSelection(HairGroomCommands.ApplyGuideBatch(stage.Groom, group, stage.SelectedGuideIds, HairGuideBatchAction.Duplicate));
+                    if (GUILayout.Button("Delete selected…")) confirmGuideDelete = true;
+                }
+                if (confirmGuideDelete)
+                {
+                    EditorGUILayout.HelpBox($"Delete {stage.SelectedGuideIds.Count:N0} selected guides and their sculpt deltas? Undo can restore them.", MessageType.Warning);
+                    using (new EditorGUILayout.HorizontalScope())
+                    {
+                        if (GUILayout.Button("Confirm delete"))
+                        { HairGroomCommands.ApplyGuideBatch(stage.Groom, group, stage.SelectedGuideIds, HairGuideBatchAction.Delete); stage.SetGuideSelection(null); confirmGuideDelete = false; }
+                        if (GUILayout.Button("Cancel")) confirmGuideDelete = false;
+                    }
+                }
+            }
+            if (stage.IsolateSelectedGuides && stage.SelectedGuideIds.Count == 0)
+                EditorGUILayout.HelpBox("Isolation is empty. Select matching guides or turn off Isolate to see the groom.", MessageType.Info);
+        }
+
+        private static void DrawMapClipboard(HairCardStage stage, HairGroup group, HairGrowthMap map)
+        {
+            mapClipboard ??= new HairGrowthMapClipboard(SessionState.GetString(MapClipboardKey, string.Empty));
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                bool canCopy = mapClipboard.CanCopy(stage.Groom, group, map, false, out string copyReason);
+                using (new EditorGUI.DisabledScope(!canCopy))
+                    if (GUILayout.Button(new GUIContent("Copy", copyReason ?? "Copy all vertex values from this map, including hidden slots.")))
+                        if (mapClipboard.TryCopy(stage.Groom, group, map, false, out mapClipboardStatus))
+                            SessionState.SetString(MapClipboardKey, mapClipboard.Serialize());
+                bool canCut = mapClipboard.CanCopy(stage.Groom, group, map, true, out string cutReason);
+                using (new EditorGUI.DisabledScope(!canCut))
+                    if (GUILayout.Button(new GUIContent("Cut", cutReason ?? "Copy all values, then reset this map to its default value. Undo restores the source.")))
+                        if (mapClipboard.TryCopy(stage.Groom, group, map, true, out mapClipboardStatus))
+                            SessionState.SetString(MapClipboardKey, mapClipboard.Serialize());
+                bool canPaste = mapClipboard.CanPaste(stage.Groom, group, map, out string pasteReason);
+                using (new EditorGUI.DisabledScope(!canPaste))
+                    if (GUILayout.Button(new GUIContent("Paste", pasteReason ?? "Replace this map's values with the clipboard, clamped to this map's range. Undo supported.")))
+                        mapClipboard.TryPaste(stage.Groom, group, map, out mapClipboardStatus);
+            }
+            EditorGUILayout.LabelField(mapClipboard.Description, EditorStyles.wordWrappedMiniLabel);
+            EditorGUILayout.LabelField("Copy/Cut/Paste affect the entire map, including hidden slots. Paste keeps the destination name and type.", EditorStyles.wordWrappedMiniLabel);
+            if (!string.IsNullOrEmpty(mapClipboardStatus))
+                EditorGUILayout.LabelField(mapClipboardStatus, EditorStyles.wordWrappedMiniLabel);
+        }
+
         private void DrawGroom(HairCardStage stage)
         {
             HairGroup group = stage.ActiveGroup;
             if (group == null) return;
             DrawStepTitle("4. Groom", "Sculpt authored guides on non-destructive layers, then refine with ordered modifiers and helpers.");
+            EditorGUILayout.LabelField(
+                "After generating cards, Groom shows the updated card preview after each stroke or Gravity hold. " +
+                "During a stroke, guides stay visible for editing. Use the Scene Preview menu for a guide-only view.",
+                EditorStyles.wordWrappedMiniLabel);
             if (group.guides.Count == 0)
             {
                 EditorGUILayout.HelpBox(
@@ -594,6 +880,13 @@ namespace UMA.HairCards.Editor
                 return;
             }
             EditorGUILayout.LabelField("Essential Brush Shelf", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField($"Editing: {group.name} / {group.sculptLayers.Find(layer => layer != null && layer.Id == stage.ActiveLayerId)?.name ?? "New sculpt layer"}", EditorStyles.wordWrappedLabel);
+            stage.BrushScope = (HairBrushScope)EditorGUILayout.EnumPopup("Edit scope", stage.BrushScope);
+            EditorGUILayout.LabelField($"{stage.AffectedGuideCount:N0} editable guides under brush · {stage.SelectedGuideIds.Count:N0} selected", EditorStyles.miniLabel);
+            if (stage.BrushScope == HairBrushScope.VisibleHair)
+                EditorGUILayout.LabelField("Visible hair excludes points behind the visible source surface; guide display depth is independent.", EditorStyles.wordWrappedMiniLabel);
+            guideLibraryExpanded = EditorGUILayout.Foldout(guideLibraryExpanded, "Guide selection & isolation", true);
+            if (guideLibraryExpanded) DrawGuideLibrary(stage);
             HairSceneTool[] tools =
             {
                 HairSceneTool.Comb, HairSceneTool.Grab, HairSceneTool.Smooth, HairSceneTool.Length,
@@ -630,16 +923,23 @@ namespace UMA.HairCards.Editor
                     "Full-strength inner radius followed by a linear falloff to the outer brush ring."),
                     stage.BrushHardness, 0f, 1f);
                 stage.BrushStrength = EditorGUILayout.Slider("Strength", stage.BrushStrength, 0.01f, 1f);
-                stage.AffectThroughDepth = EditorGUILayout.ToggleLeft(new GUIContent("Affect Through Depth",
-                    "When enabled, every displayed guide under the camera-facing brush circle is affected regardless of depth. Disable it for a local 3D brush volume."),
-                    stage.AffectThroughDepth);
-                stage.PaintErase = EditorGUILayout.Toggle("Reverse / Erase", stage.PaintErase);
+                stage.PaintErase = EditorGUILayout.Toggle(stage.SceneTool == HairSceneTool.Length ?
+                    "Shorten (instead of lengthen)" : stage.SceneTool == HairSceneTool.Freeze ? "Unfreeze" : "Reverse / Erase", stage.PaintErase);
+                if (stage.SceneTool == HairSceneTool.Length)
+                    EditorGUILayout.HelpBox("Length intentionally changes segment lengths. Roots and fully frozen points stay fixed; " +
+                        "turn on Shorten to reduce length. These edits are stored on the sculpt layer.", MessageType.Info);
+                if (stage.SceneTool == HairSceneTool.Freeze || stage.ShowFreezeMask)
+                    EditorGUILayout.LabelField("Freeze mask: cyan = editable, pink = frozen. Roots are always anchored.", EditorStyles.wordWrappedMiniLabel);
                 EditorGUILayout.HelpBox(
-                    "Comb, Grab, Smooth, Clump, and Part preserve every guide segment. Only Length changes length. " +
-                    "Affect Through Depth prevents overlapping projected guides from being missed. " +
+                    "Comb, Grab, Smooth, Clump, and Part preserve every guide segment. Length and Cut intentionally change length. " +
+                    "Through Depth reaches overlapping projected guides. Visible Hair and Selected Guides Only narrow the scope. " +
                     "Shift + right-drag adjusts radius/hardness; [ and ] adjust radius; Shift + [ and ] adjust hardness.",
                     MessageType.None);
             }
+            stage.BrushRootInfluence = EditorGUILayout.Slider(new GUIContent("Root Influence",
+                "Bending multiplier near the base for Comb, Grab, Smooth, Clump, Part and Gravity. 0 adds root protection; 1 keeps the tool's normal response. Fades to 1 at the tip. The attachment stays pinned. Length, Cut, Width and Freeze are unaffected."),
+                stage.BrushRootInfluence, 0f, 1f);
+            EditorGUILayout.LabelField("Root stays fixed. Lower values protect the base; 1 keeps the normal tool response. Tips are unaffected.", EditorStyles.wordWrappedMiniLabel);
             if (GUILayout.Button(new GUIContent("Repair Existing Stretch (New Layer)",
                     "Restores authored segment lengths while keeping current directions. Intentional Length-tool changes are also normalized. The correction is written to a new undoable layer."),
                 GUILayout.Height(26f)))
@@ -653,6 +953,12 @@ namespace UMA.HairCards.Editor
             stage.GravitySeparation = EditorGUILayout.Slider(new GUIContent("Card Separation",
                 "Fans guides along their scalp normal with a small stable per-guide variation so cards do not collapse into one sheet."),
                 stage.GravitySeparation, 0f, 1f);
+            stage.GravityCollision = EditorGUILayout.ToggleLeft("Collide with scalp / body", stage.GravityCollision);
+            if (stage.GravityCollision)
+            {
+                stage.GravityClearance = EditorGUILayout.Slider("Surface clearance", stage.GravityClearance, 0f, 0.05f);
+                EditorGUILayout.LabelField("Uses the full source body in its authoring pose, including hidden slots. Requires outward-facing surface normals. Roots and frozen anchors take priority over clearance.", EditorStyles.wordWrappedMiniLabel);
+            }
             Color oldBackground = GUI.backgroundColor;
             if (stage.GravitySimulationActive) GUI.backgroundColor = new Color(0.45f, 0.85f, 1f);
             bool gravityHeld = GUILayout.RepeatButton(new GUIContent(
@@ -675,52 +981,7 @@ namespace UMA.HairCards.Editor
                 "Undo restores the complete hold as one operation.", MessageType.Info);
 
             EditorGUILayout.Space(8f);
-            EditorGUILayout.LabelField("Sculpt Layers", EditorStyles.boldLabel);
-            for (int i = group.sculptLayers.Count - 1; i >= 0; i--)
-            {
-                HairSculptLayer layer = group.sculptLayers[i];
-                if (layer == null) continue;
-                using (new EditorGUILayout.HorizontalScope())
-                {
-                    bool active = layer.Id == stage.ActiveLayerId;
-                    bool selected = GUILayout.Toggle(active, layer.name, "Button");
-                    if (selected && !active) stage.SetActiveLayer(layer.Id);
-                    bool visible = GUILayout.Toggle(layer.visible, "V", "Button", GUILayout.Width(24f));
-                    bool locked = GUILayout.Toggle(layer.locked, "L", "Button", GUILayout.Width(24f));
-                    if (visible != layer.visible || locked != layer.locked)
-                    {
-                        Undo.RecordObject(stage.Groom, "Change Hair Sculpt Layer State");
-                        layer.visible = visible;
-                        layer.locked = locked;
-                        HairGroomCommands.Commit(stage.Groom);
-                    }
-                }
-            }
-            if (GUILayout.Button("+ Sculpt Layer"))
-            {
-                HairSculptLayer layer = HairGroomCommands.AddSculptLayer(stage.Groom, group);
-                stage.SetActiveLayer(layer.Id);
-            }
-            HairSculptLayer activeLayer = group.sculptLayers.Find(layer =>
-                layer != null && layer.Id == stage.ActiveLayerId);
-            if (activeLayer != null)
-            {
-                float opacity = EditorGUILayout.Slider("Active Layer Opacity", activeLayer.opacity, 0f, 1f);
-                HairSculptBlendMode blend = (HairSculptBlendMode)EditorGUILayout.EnumPopup(
-                    "Active Layer Blend", activeLayer.blendMode);
-                if (!Mathf.Approximately(opacity, activeLayer.opacity) || blend != activeLayer.blendMode)
-                {
-                    Undo.RecordObject(stage.Groom, "Edit Hair Sculpt Layer");
-                    activeLayer.opacity = opacity;
-                    activeLayer.blendMode = blend;
-                    HairGroomCommands.Commit(stage.Groom);
-                }
-            }
-
-            EditorGUILayout.Space(8f);
-            EditorGUILayout.LabelField("Modifier Stack", EditorStyles.boldLabel);
-            for (int i = 0; i < group.modifiers.Count; i++) DrawModifier(stage, group.modifiers[i], i);
-            if (GUILayout.Button("+ Modifier…")) ShowModifierMenu(stage);
+            DrawUnifiedLayerStack(stage);
 
             EditorGUILayout.Space(8f);
             EditorGUILayout.LabelField("Helpers & Constraints", EditorStyles.boldLabel);
@@ -812,24 +1073,31 @@ namespace UMA.HairCards.Editor
             if (GUILayout.Button("Continue to Cards", GUILayout.Height(28f))) stage.WorkflowStep = HairWorkflowStep.Cards;
         }
 
-        private static void DrawCards(HairCardStage stage)
+        private void DrawCards(HairCardStage stage)
         {
             HairGroup group = stage.ActiveGroup;
             if (group == null) return;
-            DrawStepTitle("5. Cards", "Choose the generated card profile, child population, atlas, UV regions, and preview material.");
+            DrawStepTitle("5. Cards", "Assign a texture and material, define UV sets directly below, then preview the generated cards.");
             if (group.guides.Count == 0)
             {
                 EditorGUILayout.HelpBox(
-                    "Cards require authored guides. Return to Guides, generate a preview, and accept it before configuring card output.",
-                    MessageType.Error);
+                    "You can configure card geometry, textures, and UV sets now. Add authored guides to see generated cards in the Scene view.",
+                    MessageType.Info);
                 if (GUILayout.Button("Go to Guides", GUILayout.Height(30f)))
                     stage.WorkflowStep = HairWorkflowStep.Guides;
-                return;
             }
             HairCardProfileAsset profile = (HairCardProfileAsset)EditorGUILayout.ObjectField("Card Profile", group.profile,
                 typeof(HairCardProfileAsset), false);
             HairAtlasProfileAsset atlas = (HairAtlasProfileAsset)EditorGUILayout.ObjectField("Atlas Profile", group.atlas,
                 typeof(HairAtlasProfileAsset), false);
+            using (new EditorGUI.DisabledScope(group.locked))
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                using (new EditorGUI.DisabledScope(group.profile == null))
+                    if (GUILayout.Button(new GUIContent("Make profile unique", "Save a private copy next to this groom; other groups retain the original profile."))) { HairGroomCommands.MakeResourcesUnique(stage.Groom, group, false); profile = group.profile; }
+                using (new EditorGUI.DisabledScope(group.atlas == null))
+                    if (GUILayout.Button(new GUIContent("Make atlas unique", "Copy UV sets and texture references for this group. Textures and material remain shared."))) { HairGroomCommands.MakeResourcesUnique(stage.Groom, group, true); atlas = group.atlas; }
+            }
             if (profile != group.profile || atlas != group.atlas)
             {
                 Undo.RecordObject(stage.Groom, "Assign Hair Card Resources");
@@ -851,14 +1119,78 @@ namespace UMA.HairCards.Editor
                     HairGroomCommands.Commit(stage.Groom);
                 }
             }
-            else
+            else if (cardGeometryExpanded = EditorGUILayout.Foldout(cardGeometryExpanded,
+                         "Card geometry", true))
             {
-                EditorGUILayout.Space(8f);
-                EditorGUILayout.LabelField("Profile & Meshing", EditorStyles.boldLabel);
                 HairCardShape shape = (HairCardShape)EditorGUILayout.EnumPopup("Card Shape", profile.Shape);
                 float rootWidth = Mathf.Max(0f, EditorGUILayout.FloatField("Root Width", profile.DefaultWidth));
                 float tipWidth = Mathf.Max(0f, EditorGUILayout.FloatField("Tip Width", profile.TipWidth));
-                int samples = EditorGUILayout.IntSlider("Samples per Card", profile.SamplesPerCard, 2, 64);
+                using (new EditorGUI.DisabledScope(group.locked))
+                {
+                    float embedMm = EditorGUILayout.Slider(new GUIContent("Root Embed (mm)",
+                        "Active group only. Tucks guide and child cards inward along their root surface normal, fading over the first 20% of card length. 0 disables; try 1–3 mm. Does not move guides or change their length. Included in preview and bake."),
+                        group.rootEmbedDepth * 1000f, 0f, 20f);
+                    if (!Mathf.Approximately(embedMm, group.rootEmbedDepth * 1000f))
+                    {
+                        Undo.RecordObject(stage.Groom, "Embed Hair Card Roots");
+                        group.rootEmbedDepth = embedMm * 0.001f;
+                        HairGroomCommands.Commit(stage.Groom);
+                    }
+                }
+                EditorGUILayout.LabelField("Width blends along the whole card. Equal root/tip widths make a ribbon; width sculpting and variation apply on top.",
+                    EditorStyles.wordWrappedMiniLabel);
+                HairLodSettings activeLod = stage.Groom.Lods.Find(item => item.level == stage.LodLevel) ?? stage.Groom.Lods[0];
+                bool profileSampling = EditorGUILayout.Toggle(new GUIContent("Use profile sampling",
+                    "For the current LOD, use each group's Card Profile sampling instead of a shared LOD override."), activeLod.useProfileSamples);
+                if (profileSampling != activeLod.useProfileSamples)
+                {
+                    Undo.RecordObject(stage.Groom, "Change Hair Sampling Source");
+                    activeLod.useProfileSamples = profileSampling;
+                    HairGroomCommands.Commit(stage.Groom);
+                }
+                int samples = profile.SamplesPerCard;
+                using (new EditorGUI.DisabledScope(!profileSampling))
+                    samples = EditorGUILayout.IntSlider("Profile samples", profile.SamplesPerCard, 2, 64);
+                if (!profileSampling)
+                {
+                    int lodSamples = EditorGUILayout.IntSlider($"LOD {activeLod.level} samples", activeLod.samplesPerCard, 2, 64);
+                    if (lodSamples != activeLod.samplesPerCard)
+                    {
+                        Undo.RecordObject(stage.Groom, "Edit Hair LOD Sampling");
+                        activeLod.samplesPerCard = lodSamples;
+                        HairGroomCommands.Commit(stage.Groom);
+                    }
+                }
+                EditorGUILayout.LabelField($"Effective sampling: {activeLod.ResolveSampleCount(profile)} points/card (LOD {activeLod.level}).",
+                    EditorStyles.wordWrappedMiniLabel);
+                EditorGUILayout.LabelField("Card Profile edits are shared by all groups using this profile; Save includes these edits.",
+                    EditorStyles.wordWrappedMiniLabel);
+                EditorGUI.BeginChangeCheck();
+                bool vertexGradient = EditorGUILayout.Toggle(new GUIContent("Root-to-tip vertex colors",
+                    "Writes RGB and alpha to the generated mesh's COLOR channel, including children and baked LODs. The material shader must read vertex colors."), profile.UseVertexColorGradient);
+                Color rootColor = profile.RootVertexColor, tipColor = profile.TipVertexColor;
+                int holdSegments = profile.RootColorSegments;
+                using (new EditorGUI.DisabledScope(!vertexGradient))
+                {
+                    rootColor = EditorGUILayout.ColorField(new GUIContent("Root Vertex Color (RGBA)"), rootColor, true, true, false);
+                    tipColor = EditorGUILayout.ColorField(new GUIContent("Tip Vertex Color (RGBA)"), tipColor, true, true, false);
+                    holdSegments = EditorGUILayout.IntSlider(new GUIContent("Solid Root Segments",
+                        "0 fades immediately. 2 holds rows 0, 1 and 2 at the root RGBA, then fades linearly to the tip. Lower-resolution LODs clamp this to leave at least one fade segment."), holdSegments, 0, 63);
+                }
+                if (EditorGUI.EndChangeCheck())
+                {
+                    Undo.RecordObject(profile, "Edit Hair Vertex Colors");
+                    profile.ConfigureVertexColors(vertexGradient, rootColor, tipColor, holdSegments);
+                    EditorUtility.SetDirty(profile); stage.TrackResourceEdit(profile);
+                    stage.QueuePreviewChange(HairPreviewChange.Geometry);
+                }
+                if (vertexGradient)
+                {
+                    int effectiveSamples = activeLod.ResolveSampleCount(profile);
+                    if (stage.PreviewQuality == HairPreviewQuality.Draft) effectiveSamples = Mathf.Min(effectiveSamples, 8);
+                    int effectiveHold = Mathf.Min(holdSegments, Mathf.Max(0, effectiveSamples - 2));
+                    EditorGUILayout.LabelField($"Current preview: {effectiveHold} solid root segments, then {effectiveSamples - 1 - effectiveHold} fade segments. Alpha is mesh data; shader behavior controls animation/transparency.", EditorStyles.wordWrappedMiniLabel);
+                }
                 int sides = profile.TubeSides;
                 if (shape == HairCardShape.TaperedTube)
                     sides = EditorGUILayout.IntSlider("Tube Sides", profile.TubeSides, 3, 12);
@@ -870,9 +1202,11 @@ namespace UMA.HairCards.Editor
                     sides != profile.TubeSides || doubleSided != profile.DoubleSided)
                 {
                     Undo.RecordObject(profile, "Edit Hair Card Profile");
+                    bool samplingChanged = samples != profile.SamplesPerCard;
                     profile.Configure(shape, rootWidth, tipWidth, samples, sides, doubleSided);
                     EditorUtility.SetDirty(profile);
-                    stage.QueueRebuild();
+                    stage.TrackResourceEdit(profile);
+                    stage.QueuePreviewChange(samplingChanged ? HairPreviewChange.Evaluation : HairPreviewChange.Geometry);
                 }
             }
 
@@ -880,36 +1214,39 @@ namespace UMA.HairCards.Editor
             DrawAtlasSettings(stage, group);
 
             EditorGUILayout.Space(8f);
-            EditorGUILayout.LabelField("Child Cards", EditorStyles.boldLabel);
             HairChildSettings children = group.children;
-            int childCount = EditorGUILayout.IntSlider("Children per Guide", children.childrenPerGuide, 0, 64);
-            bool guideCard = EditorGUILayout.Toggle("Include Guide Card", children.includeGuideCard);
-            float spread = EditorGUILayout.Slider("Root Spread", children.rootSpread, 0f, 0.2f);
-            float clump = EditorGUILayout.Slider("Clump", children.clump, 0f, 1f);
-            float lengthVariation = EditorGUILayout.Slider("Length Variation", children.lengthVariation, 0f, 1f);
-            float widthVariation = EditorGUILayout.Slider("Width Variation", children.widthVariation, 0f, 1f);
-            float rollVariation = EditorGUILayout.Slider("Roll Variation", children.rollVariation, 0f, 1f);
-            HairGuideInterpolationMode interpolation = (HairGuideInterpolationMode)EditorGUILayout.EnumPopup(
-                "Interpolation", children.interpolation);
-            int seed = EditorGUILayout.IntField("Seed", children.seed);
-            if (childCount != children.childrenPerGuide || guideCard != children.includeGuideCard ||
-                !Mathf.Approximately(spread, children.rootSpread) || !Mathf.Approximately(clump, children.clump) ||
-                !Mathf.Approximately(lengthVariation, children.lengthVariation) ||
-                !Mathf.Approximately(widthVariation, children.widthVariation) ||
-                !Mathf.Approximately(rollVariation, children.rollVariation) ||
-                interpolation != children.interpolation || seed != children.seed)
+            childSettingsExpanded = EditorGUILayout.Foldout(childSettingsExpanded, "Child population & variation", true);
+            if (childSettingsExpanded)
             {
-                Undo.RecordObject(stage.Groom, "Edit Child Hair Settings");
-                children.childrenPerGuide = childCount;
-                children.includeGuideCard = guideCard;
-                children.rootSpread = spread;
-                children.clump = clump;
-                children.lengthVariation = lengthVariation;
-                children.widthVariation = widthVariation;
-                children.rollVariation = rollVariation;
-                children.interpolation = interpolation;
-                children.seed = seed;
-                HairGroomCommands.Commit(stage.Groom);
+                int childCount = EditorGUILayout.IntSlider("Children per Guide", children.childrenPerGuide, 0, 64);
+                bool guideCard = EditorGUILayout.Toggle("Include Guide Card", children.includeGuideCard);
+                float spread = EditorGUILayout.Slider("Root Spread", children.rootSpread, 0f, 0.2f);
+                float clump = EditorGUILayout.Slider("Clump", children.clump, 0f, 1f);
+                float lengthVariation = EditorGUILayout.Slider("Length Variation", children.lengthVariation, 0f, 1f);
+                float widthVariation = EditorGUILayout.Slider("Width Variation", children.widthVariation, 0f, 1f);
+                float rollVariation = EditorGUILayout.Slider("Roll Variation", children.rollVariation, 0f, 1f);
+                HairGuideInterpolationMode interpolation = (HairGuideInterpolationMode)EditorGUILayout.EnumPopup(
+                    "Interpolation", children.interpolation);
+                int seed = EditorGUILayout.IntField("Seed", children.seed);
+                if (childCount != children.childrenPerGuide || guideCard != children.includeGuideCard ||
+                    !Mathf.Approximately(spread, children.rootSpread) || !Mathf.Approximately(clump, children.clump) ||
+                    !Mathf.Approximately(lengthVariation, children.lengthVariation) ||
+                    !Mathf.Approximately(widthVariation, children.widthVariation) ||
+                    !Mathf.Approximately(rollVariation, children.rollVariation) ||
+                    interpolation != children.interpolation || seed != children.seed)
+                {
+                    Undo.RecordObject(stage.Groom, "Edit Child Hair Settings");
+                    children.childrenPerGuide = childCount;
+                    children.includeGuideCard = guideCard;
+                    children.rootSpread = spread;
+                    children.clump = clump;
+                    children.lengthVariation = lengthVariation;
+                    children.widthVariation = widthVariation;
+                    children.rollVariation = rollVariation;
+                    children.interpolation = interpolation;
+                    children.seed = seed;
+                    HairGroomCommands.Commit(stage.Groom);
+                }
             }
             int estimate = group.guides.Count * (children.childrenPerGuide + (children.includeGuideCard ? 1 : 0));
             EditorGUILayout.HelpBox($"{group.guides.Count} guides × ({children.childrenPerGuide} children + {(children.includeGuideCard ? "1 guide card" : "no guide card")}) ≈ {estimate:N0} cards.", MessageType.Info);
@@ -918,21 +1255,18 @@ namespace UMA.HairCards.Editor
                                            $"({stage.Evaluation.guideCurveCount:N0} guide cards + " +
                                            $"{stage.Evaluation.childCurveCount:N0} children).",
                     EditorStyles.wordWrappedMiniLabel);
-            stage.PreviewMode = (HairPreviewMode)EditorGUILayout.EnumPopup("Preview", stage.PreviewMode);
-            if (GUILayout.Button("Rebuild Card Preview", GUILayout.Height(28f))) stage.QueueRebuild(true);
             if (GUILayout.Button("Continue to Optimize", GUILayout.Height(28f))) stage.WorkflowStep = HairWorkflowStep.Optimize;
         }
 
-        private static void DrawAtlasSettings(HairCardStage stage, HairGroup group)
+        private void DrawAtlasSettings(HairCardStage stage, HairGroup group)
         {
-            EditorGUILayout.LabelField("Atlas & UV Areas", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Texture & UV Setup", EditorStyles.boldLabel);
             HairAtlasProfileAsset atlas = group.atlas;
             if (atlas == null)
             {
-                EditorGUILayout.HelpBox(
-                    "Assign an Atlas Profile to place card UVs over named areas of a hair texture. Without one, every card uses the full 0-1 UV range.",
-                    MessageType.Warning);
-                if (GUILayout.Button("Create Atlas Profile"))
+                EditorGUILayout.HelpBox("Create an Atlas Profile to save named UV sets and their texture/material assignments.",
+                    MessageType.Info);
+                if (GUILayout.Button("Create Atlas Profile", GUILayout.Height(28f)))
                 {
                     Undo.RecordObject(stage.Groom, "Create and Assign Hair Atlas");
                     group.atlas = HairCardMenu.CreateDefaultAtlasNear(stage.Groom);
@@ -947,235 +1281,77 @@ namespace UMA.HairCards.Editor
             EditorGUI.BeginChangeCheck();
             Texture2D albedo = (Texture2D)EditorGUILayout.ObjectField("Albedo Atlas", atlas.albedo,
                 typeof(Texture2D), false);
-            Texture2D normal = (Texture2D)EditorGUILayout.ObjectField("Normal Atlas", atlas.normal,
-                typeof(Texture2D), false);
-            Texture2D mask = (Texture2D)EditorGUILayout.ObjectField("Mask Atlas", atlas.mask,
-                typeof(Texture2D), false);
-            Material material = (Material)EditorGUILayout.ObjectField("Card Material", atlas.material,
+            Material material = (Material)EditorGUILayout.ObjectField("First Pass Material", atlas.material,
                 typeof(Material), false);
-            if (EditorGUI.EndChangeCheck())
+            Material secondPassMaterial = (Material)EditorGUILayout.ObjectField(new GUIContent("Second Pass Material",
+                "Optional: draw the same hair geometry again using this material."), atlas.secondPassMaterial, typeof(Material), false);
+            EditorGUILayout.LabelField("Second pass is optional. Both passes share the atlas and vertex colors. Shader depth/blend settings and render queues control compositing; use a later queue for the second pass.", EditorStyles.wordWrappedMiniLabel);
+            if (material != null && secondPassMaterial != null && secondPassMaterial.renderQueue <= material.renderQueue)
+                EditorGUILayout.HelpBox("The second pass's render queue is not later than the first pass. Adjust the material queues to guarantee first-then-second ordering, as with UMAMaterial.", MessageType.Warning);
+            SharedColorTable table = (SharedColorTable)EditorGUILayout.ObjectField("Shared Color Table",
+                atlas.sharedColorTable as SharedColorTable, typeof(SharedColorTable), false);
+            int colorIndex = table != atlas.sharedColorTable ? -1 : atlas.sharedColorIndex;
+            if (table != null)
+            {
+                int count = table.colors?.Length ?? 0;
+                string[] choices = new string[count + 1]; choices[0] = "None (do not apply)";
+                for (int i = 0; i < count; i++)
+                    choices[i + 1] = table.colors[i] == null ? $"{i + 1}. (empty)" :
+                        $"{i + 1}. {(string.IsNullOrWhiteSpace(table.colors[i].name) ? "Unnamed color" : table.colors[i].name)}";
+                colorIndex = EditorGUILayout.Popup("Shared Color", Mathf.Clamp(colorIndex + 1, 0, count), choices) - 1;
+                if (colorIndex >= 0 && table.colors[colorIndex] != null)
+                    using (new EditorGUI.DisabledScope(true))
+                        EditorGUILayout.ColorField(new GUIContent("Color swatch"), table.colors[colorIndex].color, true, true, false);
+                if (count == 0) EditorGUILayout.HelpBox("This shared color table has no colors.", MessageType.Info);
+            }
+            else colorIndex = -1;
+            Texture2D normal = atlas.normal;
+            Texture2D mask = atlas.mask;
+            atlasMapsExpanded = EditorGUILayout.Foldout(atlasMapsExpanded, "Additional texture maps", true);
+            if (atlasMapsExpanded)
+            {
+                normal = (Texture2D)EditorGUILayout.ObjectField("Normal Atlas", normal, typeof(Texture2D), false);
+                mask = (Texture2D)EditorGUILayout.ObjectField("Mask Atlas", mask, typeof(Texture2D), false);
+            }
+            if (EditorGUI.EndChangeCheck() &&
+                (albedo != atlas.albedo || normal != atlas.normal || mask != atlas.mask || material != atlas.material ||
+                 secondPassMaterial != atlas.secondPassMaterial || table != atlas.sharedColorTable || colorIndex != atlas.sharedColorIndex))
             {
                 Undo.RecordObject(atlas, "Edit Hair Atlas Textures");
                 atlas.albedo = albedo;
                 atlas.normal = normal;
                 atlas.mask = mask;
+                bool materialChanged = atlas.material != material || atlas.secondPassMaterial != secondPassMaterial;
+                bool sharedColorChanged = table != atlas.sharedColorTable || colorIndex != atlas.sharedColorIndex;
                 atlas.material = material;
+                atlas.secondPassMaterial = secondPassMaterial;
+                atlas.sharedColorTable = table; atlas.sharedColorIndex = colorIndex;
                 EditorUtility.SetDirty(atlas);
-                stage.QueueRebuild();
+                stage.TrackResourceEdit(atlas);
+                stage.QueuePreviewChange(materialChanged ? HairPreviewChange.Geometry : HairPreviewChange.Materials | HairPreviewChange.Validation);
+                if (sharedColorChanged || materialChanged) HairSharedColorUtility.Apply(atlas, stage);
             }
-
-            DrawAtlasPreview(atlas, group);
-            if (GUILayout.Button("Open UV Area Editor...", GUILayout.Height(28f)))
-                HairAtlasRegionEditorWindow.Open(atlas);
-
-            EditorGUILayout.Space(4f);
-            EditorGUILayout.LabelField("Card Area Assignment", EditorStyles.boldLabel);
-            int selection = GUILayout.Toolbar((int)group.atlasRegionSelection,
-                new[] { "Use All UV Areas", "Use Selected UV Areas" });
-            HairAtlasRegionSelectionMode selectionMode = (HairAtlasRegionSelectionMode)selection;
-            if (selectionMode != group.atlasRegionSelection)
+            if (HairSharedColorUtility.SelectedColor(atlas) != null)
             {
-                Undo.RecordObject(stage.Groom, "Change Hair UV Area Assignment");
-                group.atlasRegionSelection = selectionMode;
-                HairGroomCommands.Commit(stage.Groom);
+                int parameters = HairSharedColorUtility.ParameterCount(atlas);
+                using (new EditorGUI.DisabledScope(parameters == 0))
+                    if (GUILayout.Button($"Apply Shared Color Shader Parameters ({parameters})")) HairSharedColorUtility.Apply(atlas, stage);
+                EditorGUILayout.HelpBox(parameters > 0
+                    ? "Selecting a color copies matching shader parameters to both assigned pass materials (Undo supported). Other users of those materials also change. Reapply after editing the table. Clearing the selection does not restore old material values."
+                    : "No matching shader parameters to apply. Assign a material and choose a color with shader properties supported by that shader. The swatch/channel tint alone is not a shader parameter.", MessageType.Info);
             }
-
-            int selectedCount = CountValidSelectedRegions(group, atlas);
-            if (group.atlasRegionSelection == HairAtlasRegionSelectionMode.Selected && selectedCount == 0)
-            {
-                EditorGUILayout.HelpBox(
-                    "Select at least one UV area below. Cards have no valid atlas area until a selection is made.",
-                    MessageType.Error);
-            }
-            else
-            {
-                string assignment = group.atlasRegionSelection == HairAtlasRegionSelectionMode.All
-                    ? $"Each card deterministically chooses among all {atlas.regions.Count} areas using the area weights."
-                    : $"Each card deterministically chooses among the {selectedCount} selected areas using their weights.";
-                EditorGUILayout.HelpBox(assignment + " Rebuilding with the same groom and seed keeps the assignments stable.",
+            if (atlas.albedo == null && HairAtlasRegionEditorWindow.ResolveDisplayTexture(atlas) != null)
+                EditorGUILayout.LabelField("Previewing the Card Material's base texture.", EditorStyles.wordWrappedMiniLabel);
+            else if (atlas.albedo != null && atlas.material != null)
+                EditorGUILayout.LabelField("Scene and card previews use this atlas with the material's alpha settings. The shared material is unchanged.",
+                    EditorStyles.wordWrappedMiniLabel);
+            if (atlas.material == null)
+                EditorGUILayout.HelpBox("Assign a Card Material for the Scene preview and baked cards. Canvas alpha settings only affect the UV preview.",
                     MessageType.Info);
-            }
 
-            EditorGUILayout.Space(4f);
-            EditorGUILayout.LabelField($"UV Areas ({atlas.regions.Count})", EditorStyles.boldLabel);
-            EditorGUILayout.LabelField(
-                "Rectangles use normalized atlas UV coordinates. Weight controls how often an eligible area is chosen.",
-                EditorStyles.wordWrappedMiniLabel);
-
-            for (int regionIndex = 0; regionIndex < atlas.regions.Count; regionIndex++)
-            {
-                HairAtlasRegion region = atlas.regions[regionIndex];
-                if (region == null) continue;
-                DrawAtlasRegion(stage, group, atlas, region, regionIndex);
-            }
-
-            using (new EditorGUILayout.HorizontalScope())
-            {
-                if (GUILayout.Button("+ UV Area"))
-                {
-                    Undo.RecordObject(atlas, "Add Hair UV Area");
-                    atlas.CreateRegion($"Area {atlas.regions.Count + 1}", new Rect(0f, 0f, 1f, 1f));
-                    EditorUtility.SetDirty(atlas);
-                    stage.QueueRebuild();
-                }
-                using (new EditorGUI.DisabledScope(atlas.regions.Count == 0))
-                {
-                    if (GUILayout.Button("Select All for This Group"))
-                    {
-                        Undo.RecordObject(stage.Groom, "Select All Hair UV Areas");
-                        group.atlasRegionSelection = HairAtlasRegionSelectionMode.Selected;
-                        group.atlasRegionIds.Clear();
-                        for (int i = 0; i < atlas.regions.Count; i++)
-                        {
-                            HairAtlasRegion region = atlas.regions[i];
-                            if (region != null) group.atlasRegionIds.Add(region.Id);
-                        }
-                        HairGroomCommands.Commit(stage.Groom);
-                    }
-                }
-            }
-        }
-
-        private static void DrawAtlasRegion(
-            HairCardStage stage,
-            HairGroup group,
-            HairAtlasProfileAsset atlas,
-            HairAtlasRegion region,
-            int regionIndex)
-        {
-            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
-            {
-                using (new EditorGUILayout.HorizontalScope())
-                {
-                    bool selected = group.atlasRegionIds.Contains(region.Id);
-                    using (new EditorGUI.DisabledScope(group.atlasRegionSelection == HairAtlasRegionSelectionMode.All))
-                    {
-                        bool nextSelected = EditorGUILayout.Toggle(selected, GUILayout.Width(18f));
-                        if (nextSelected != selected)
-                        {
-                            Undo.RecordObject(stage.Groom, "Assign Hair UV Area");
-                            if (nextSelected) group.atlasRegionIds.Add(region.Id);
-                            else group.atlasRegionIds.Remove(region.Id);
-                            HairGroomCommands.Commit(stage.Groom);
-                        }
-                    }
-                    EditorGUILayout.LabelField($"Area {regionIndex + 1}", EditorStyles.boldLabel,
-                        GUILayout.Width(55f));
-                    string regionName = EditorGUILayout.TextField(region.name);
-                    if (GUILayout.Button("Remove", GUILayout.Width(62f)))
-                    {
-                        Undo.RecordObjects(new UnityEngine.Object[] { atlas, stage.Groom }, "Remove Hair UV Area");
-                        atlas.regions.RemoveAt(regionIndex);
-                        for (int groupIndex = 0; groupIndex < stage.Groom.Groups.Count; groupIndex++)
-                            stage.Groom.Groups[groupIndex]?.atlasRegionIds?.Remove(region.Id);
-                        EditorUtility.SetDirty(atlas);
-                        HairGroomCommands.Commit(stage.Groom);
-                        return;
-                    }
-
-                    if (regionName != region.name)
-                    {
-                        Undo.RecordObject(atlas, "Rename Hair UV Area");
-                        region.name = string.IsNullOrWhiteSpace(regionName) ? $"Area {regionIndex + 1}" : regionName;
-                        EditorUtility.SetDirty(atlas);
-                    }
-                }
-
-                Rect uvRect = EditorGUILayout.RectField("UV Rectangle", region.uvRect);
-                float weight = Mathf.Max(0f, EditorGUILayout.FloatField("Selection Weight", region.weight));
-                using (new EditorGUILayout.HorizontalScope())
-                {
-                    bool flipU = EditorGUILayout.Toggle("Flip U", region.flipU);
-                    bool flipV = EditorGUILayout.Toggle("Flip V", region.flipV);
-                    if (uvRect != region.uvRect || !Mathf.Approximately(weight, region.weight) ||
-                        flipU != region.flipU || flipV != region.flipV)
-                    {
-                        Undo.RecordObject(atlas, "Edit Hair UV Area");
-                        region.uvRect = uvRect;
-                        region.weight = weight;
-                        region.flipU = flipU;
-                        region.flipV = flipV;
-                        region.EnsureIntegrity();
-                        EditorUtility.SetDirty(atlas);
-                        stage.QueueRebuild();
-                    }
-                }
-
-                string tags = string.Join(", ", region.tags ?? Array.Empty<string>());
-                string nextTags = EditorGUILayout.TextField("Tags", tags);
-                if (!string.Equals(tags, nextTags, StringComparison.Ordinal))
-                {
-                    Undo.RecordObject(atlas, "Edit Hair UV Area Tags");
-                    region.tags = ParseTags(nextTags);
-                    EditorUtility.SetDirty(atlas);
-                }
-            }
-        }
-
-        private static void DrawAtlasPreview(HairAtlasProfileAsset atlas, HairGroup group)
-        {
-            Texture displayTexture = HairAtlasRegionEditorWindow.ResolveDisplayTexture(atlas);
-            float aspect = displayTexture != null && displayTexture.height > 0
-                ? displayTexture.width / (float)displayTexture.height
-                : 1f;
-            Rect preview = GUILayoutUtility.GetAspectRect(aspect, GUILayout.MaxWidth(520f));
-            EditorGUI.DrawRect(preview, new Color(0.12f, 0.12f, 0.12f, 1f));
-            if (displayTexture != null) GUI.DrawTexture(preview, displayTexture, ScaleMode.StretchToFill, false);
-
-            GUIStyle labelStyle = new GUIStyle(EditorStyles.boldLabel)
-            {
-                alignment = TextAnchor.MiddleCenter,
-                normal = { textColor = Color.white }
-            };
-            for (int regionIndex = 0; regionIndex < atlas.regions.Count; regionIndex++)
-            {
-                HairAtlasRegion region = atlas.regions[regionIndex];
-                if (region == null) continue;
-                Rect uv = region.uvRect;
-                Rect outline = new Rect(
-                    preview.x + uv.x * preview.width,
-                    preview.y + (1f - uv.y - uv.height) * preview.height,
-                    uv.width * preview.width,
-                    uv.height * preview.height);
-                bool eligible = group.atlasRegionSelection == HairAtlasRegionSelectionMode.All ||
-                                group.atlasRegionIds.Contains(region.Id);
-                Color color = eligible ? new Color(0.1f, 0.9f, 1f, 1f) : new Color(0.45f, 0.45f, 0.45f, 1f);
-                DrawOutline(outline, color, 2f);
-                GUI.Label(outline, (regionIndex + 1).ToString(), labelStyle);
-            }
-        }
-
-        private static void DrawOutline(Rect rectangle, Color color, float thickness)
-        {
-            EditorGUI.DrawRect(new Rect(rectangle.x, rectangle.y, rectangle.width, thickness), color);
-            EditorGUI.DrawRect(new Rect(rectangle.x, rectangle.yMax - thickness, rectangle.width, thickness), color);
-            EditorGUI.DrawRect(new Rect(rectangle.x, rectangle.y, thickness, rectangle.height), color);
-            EditorGUI.DrawRect(new Rect(rectangle.xMax - thickness, rectangle.y, thickness, rectangle.height), color);
-        }
-
-        private static int CountValidSelectedRegions(HairGroup group, HairAtlasProfileAsset atlas)
-        {
-            if (group.atlasRegionIds == null || atlas.regions == null) return 0;
-            int count = 0;
-            for (int regionIndex = 0; regionIndex < atlas.regions.Count; regionIndex++)
-            {
-                HairAtlasRegion region = atlas.regions[regionIndex];
-                if (region != null && group.atlasRegionIds.Contains(region.Id)) count++;
-            }
-            return count;
-        }
-
-        private static string[] ParseTags(string tags)
-        {
-            if (string.IsNullOrWhiteSpace(tags)) return Array.Empty<string>();
-            string[] parts = tags.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-            List<string> parsed = new List<string>(parts.Length);
-            for (int i = 0; i < parts.Length; i++)
-            {
-                string tag = parts[i].Trim();
-                if (!string.IsNullOrEmpty(tag) && !parsed.Contains(tag)) parsed.Add(tag);
-            }
-            return parsed.ToArray();
+            atlasEditor ??= new HairAtlasEditorPanel();
+            float editorWidth = position.width - Mathf.Clamp(position.width * 0.27f, 205f, 300f) - 42f;
+            atlasEditor.Draw(atlas, stage.Groom, group, editorWidth, Repaint);
         }
 
         private static void DrawOptimize(HairCardStage stage)
@@ -1212,20 +1388,26 @@ namespace UMA.HairCards.Editor
                         GUILayout.Label($"{lod.cardFraction:P0} cards", EditorStyles.miniLabel);
                     }
                     float fraction = EditorGUILayout.Slider("Card Fraction", lod.cardFraction, 0f, 1f);
-                    int samples = EditorGUILayout.IntSlider("Samples per Card", lod.samplesPerCard, 2, 32);
+                    bool profileSamples = EditorGUILayout.Toggle("Use profile sampling", lod.useProfileSamples);
+                    int samples = lod.samplesPerCard;
+                    using (new EditorGUI.DisabledScope(profileSamples))
+                        samples = EditorGUILayout.IntSlider("LOD sample override", lod.samplesPerCard, 2, 64);
                     int tubeSides = EditorGUILayout.IntSlider("Maximum Tube Sides", lod.maximumTubeSides, 3, 12);
-                    float screen = EditorGUILayout.Slider("Screen Height", lod.screenRelativeHeight, 0f, 1f);
-                    HairLodReductionMode mode = (HairLodReductionMode)EditorGUILayout.EnumPopup("Reduction", lod.reductionMode);
+                    using (new EditorGUI.DisabledScope(true))
+                    {
+                        EditorGUILayout.Slider("Screen Height (inactive)", lod.screenRelativeHeight, 0f, 1f);
+                        EditorGUILayout.EnumPopup("Reduction (reserved)", lod.reductionMode);
+                    }
+                    EditorGUILayout.LabelField("Current reduction: deterministic importance thinning. Automatic screen-height switching, " +
+                        "group merging, and impostors are not implemented; the reserved settings above have no effect.", EditorStyles.wordWrappedMiniLabel);
                     if (!Mathf.Approximately(fraction, lod.cardFraction) || samples != lod.samplesPerCard ||
-                        tubeSides != lod.maximumTubeSides ||
-                        !Mathf.Approximately(screen, lod.screenRelativeHeight) || mode != lod.reductionMode)
+                        tubeSides != lod.maximumTubeSides || profileSamples != lod.useProfileSamples)
                     {
                         Undo.RecordObject(groom, "Edit Hair LOD");
                         lod.cardFraction = fraction;
                         lod.samplesPerCard = samples;
                         lod.maximumTubeSides = tubeSides;
-                        lod.screenRelativeHeight = screen;
-                        lod.reductionMode = mode;
+                        lod.useProfileSamples = profileSamples;
                         HairGroomCommands.Commit(groom);
                     }
                 }
@@ -1240,21 +1422,21 @@ namespace UMA.HairCards.Editor
         {
             HairGroomAsset groom = stage.Groom;
             DrawStepTitle("7. Validate & Bake", "Review release blockers and create Unity Mesh, UMA Slot, Overlay, recipe, and every configured LOD in one transaction.");
-            if (GUILayout.Button("Validate All", GUILayout.Height(28f))) stage.QueueRebuild(true);
-            HairValidationReport report = stage.Validation;
+            if (GUILayout.Button("Validate All Exported LODs", GUILayout.Height(28f))) stage.ValidateReleaseNow();
+            HairValidationReport report = stage.ReleaseValidation;
+            if (!stage.ReleaseValidationIsCurrent)
+                EditorGUILayout.HelpBox("Release validation is missing or outdated. Validate to refresh it. " +
+                    "Bake always revalidates the full output, regardless of preview visibility or LOD.", MessageType.Info);
             if (report != null)
             {
                 EditorGUILayout.HelpBox(report.CanBake
-                    ? $"Ready to bake: {report.cardCount:N0} cards, {report.vertexCount:N0} vertices, {report.triangleCount:N0} triangles."
+                    ? $"Last release check passed. LOD 0: {report.cardCount:N0} cards, {report.vertexCount:N0} vertices, {report.triangleCount:N0} triangles."
                     : $"Resolve {report.ErrorCount} blocking error(s) before baking.",
                     report.CanBake ? MessageType.Info : MessageType.Error);
-                for (int i = 0; i < report.issues.Count; i++)
-                {
-                    HairValidationIssue issue = report.issues[i];
-                    MessageType type = issue.severity == HairValidationSeverity.Error ? MessageType.Error :
-                        issue.severity == HairValidationSeverity.Warning ? MessageType.Warning : MessageType.Info;
-                    EditorGUILayout.HelpBox(issue.message, type);
-                }
+                foreach (HairLodValidationSummary lod in report.lods)
+                    EditorGUILayout.LabelField($"LOD {lod.level}: {lod.cardCount:N0} cards · {lod.vertexCount:N0} vertices · {lod.triangleCount:N0} triangles",
+                        EditorStyles.wordWrappedMiniLabel);
+                DrawValidationIssues(stage, report);
             }
 
             EditorGUILayout.Space(8f);
@@ -1302,18 +1484,31 @@ namespace UMA.HairCards.Editor
 
             using (new EditorGUILayout.HorizontalScope())
             {
-                if (GUILayout.Button("Dry Run", GUILayout.Height(30f))) lastBake = HairBakePipeline.DryRun(groom);
-                using (new EditorGUI.DisabledScope(report != null && !report.CanBake))
+                if (GUILayout.Button("Dry Run (all output)", GUILayout.Height(30f)))
+                {
+                    stage.ValidateReleaseNow();
+                    if (stage.ReleaseValidation != null)
+                    {
+                        HairValidationReport result = stage.ReleaseValidation;
+                        lastBake = new HairBakeOutcome { validation = result, isDryRun = true, succeeded = result.CanBake,
+                            cardCount = result.cardCount, vertexCount = result.vertexCount, triangleCount = result.triangleCount };
+                    }
+                }
+                using (new EditorGUI.DisabledScope(stage.ReleaseValidationIsCurrent && report != null && !report.CanBake))
                 {
                     if (GUILayout.Button("Bake", GUILayout.Height(30f)))
+                    {
                         lastBake = HairBakePipeline.Bake(groom, stage.SourceAvatar);
+                        stage.SetReleaseValidation(lastBake.validation);
+                    }
                 }
             }
             if (lastBake != null)
             {
                 EditorGUILayout.HelpBox(lastBake.succeeded
-                    ? $"Bake completed: {lastBake.assets.Count} asset(s), {lastBake.cardCount:N0} cards, {lastBake.triangleCount:N0} triangles."
-                    : "Bake did not commit output assets.", lastBake.succeeded ? MessageType.Info : MessageType.Warning);
+                    ? lastBake.isDryRun ? "Dry run passed for all exported LODs. No output assets were written." :
+                        $"Bake completed: {lastBake.assets.Count} asset(s), {lastBake.cardCount:N0} cards, {lastBake.triangleCount:N0} triangles."
+                    : "Validation/bake did not commit output assets. Review the release issues above.", lastBake.succeeded ? MessageType.Info : MessageType.Warning);
                 for (int i = 0; i < lastBake.warnings.Count; i++)
                     EditorGUILayout.HelpBox(lastBake.warnings[i], MessageType.Warning);
                 for (int i = 0; i < lastBake.assets.Count; i++)
@@ -1328,31 +1523,268 @@ namespace UMA.HairCards.Editor
             }
         }
 
-        private static void DrawModifier(HairCardStage stage, HairModifierSettings modifier, int index)
+        private static void DrawValidationIssues(HairCardStage stage, HairValidationReport report)
         {
-            if (modifier == null) return;
-            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            foreach (HairValidationIssue issue in report.issues)
             {
+                MessageType type = issue.severity == HairValidationSeverity.Error ? MessageType.Error :
+                    issue.severity == HairValidationSeverity.Warning ? MessageType.Warning : MessageType.Info;
+                EditorGUILayout.HelpBox(issue.message, type);
                 using (new EditorGUILayout.HorizontalScope())
                 {
-                    bool enabled = EditorGUILayout.Toggle(modifier.enabled, GUILayout.Width(18f));
-                    EditorGUILayout.LabelField($"{index + 1}. {modifier.name}", EditorStyles.boldLabel);
-                    if (enabled != modifier.enabled)
+                    if (!string.IsNullOrEmpty(issue.guideId) && GUILayout.Button("Select guide"))
                     {
-                        Undo.RecordObject(stage.Groom, "Toggle Hair Modifier");
-                        modifier.enabled = enabled;
-                        HairGroomCommands.Commit(stage.Groom);
+                        stage.NavigateToIssue(issue, true);
+                        GUIUtility.ExitGUI();
+                    }
+                    if (GUILayout.Button("Go to setting"))
+                    {
+                        stage.NavigateToIssue(issue);
+                        GUIUtility.ExitGUI();
+                    }
+                    HairGroup group = stage.Groom.FindGroup(issue.groupId);
+                    using (new EditorGUI.DisabledScope(group == null || group.locked))
+                    {
+                        string repair = issue.fixId == "assign-profile" ? "Create profile" :
+                            issue.fixId == "assign-atlas" ? "Create atlas" : null;
+                        if (repair != null && GUILayout.Button(repair))
+                        {
+                            stage.FixMissingResource(issue);
+                            GUIUtility.ExitGUI();
+                        }
                     }
                 }
-                float weight = EditorGUILayout.Slider("Weight", modifier.weight, 0f, 1f);
-                float amount = EditorGUILayout.FloatField("Amount", modifier.amount);
+            }
+        }
+
+        private void DrawUnifiedLayerStack(HairCardStage stage)
+        {
+            HairGroup group = stage.ActiveGroup;
+            collapsedLayerIds ??= new List<string>();
+            EditorGUILayout.LabelField("Layer Stack", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Layers evaluate bottom to top. Within each layer: sculpt, then modifiers top to bottom.", EditorStyles.wordWrappedMiniLabel);
+            if (group.modifiers.Count > 0)
+            {
+                EditorGUILayout.HelpBox("This groom has legacy group modifiers. Import them to edit them in the unified stack. The existing result is preserved.", MessageType.Info);
+                if (GUILayout.Button("Move legacy modifiers into a layer"))
+                    stage.SetActiveLayer(HairGroomCommands.ImportLegacyModifiers(stage.Groom, group)?.Id);
+            }
+            using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
+            {
+                using (new EditorGUI.DisabledScope(group.locked))
+                    if (GUILayout.Button("+ Sculpt Layer", EditorStyles.toolbarButton))
+                        stage.SetActiveLayer(HairGroomCommands.AddSculptLayer(stage.Groom, group)?.Id);
+                using (new EditorGUI.DisabledScope(group.locked || stage.ActiveLayer == null || stage.ActiveLayer.locked))
+                    if (GUILayout.Button(new GUIContent("+ Modifier", "Add to the selected sculpt layer"), EditorStyles.toolbarButton))
+                        ShowModifierMenu(stage);
+                GUILayout.FlexibleSpace();
+            }
+            int rows = group.sculptLayers.Count;
+            foreach (HairSculptLayer layer in group.sculptLayers)
+                if (layer != null && !collapsedLayerIds.Contains(layer.Id)) rows += layer.modifiers.Count;
+            using (var scroll = new EditorGUILayout.ScrollViewScope(layerStackScroll,
+                GUILayout.Height(Mathf.Clamp(rows * 24f + 12f, 80f, 270f))))
+            {
+                layerStackScroll = scroll.scrollPosition;
+                for (int i = group.sculptLayers.Count - 1; i >= 0; i--)
+                {
+                    HairSculptLayer layer = group.sculptLayers[i];
+                    if (layer == null) continue;
+                    bool expanded = !collapsedLayerIds.Contains(layer.Id);
+                    using (new EditorGUILayout.HorizontalScope())
+                    {
+                        Rect foldoutRect = GUILayoutUtility.GetRect(14f, EditorGUIUtility.singleLineHeight, GUILayout.Width(14f));
+                        bool next = EditorGUI.Foldout(foldoutRect, expanded, GUIContent.none, true);
+                        if (next != expanded)
+                        {
+                            if (next) collapsedLayerIds.Remove(layer.Id);
+                            else
+                            {
+                                collapsedLayerIds.Add(layer.Id);
+                                if (stage.ActiveLayerId == layer.Id && stage.ActiveModifier != null) stage.SetActiveLayer(layer.Id);
+                            }
+                            expanded = next;
+                        }
+                        bool selected = stage.ActiveLayerId == layer.Id && stage.ActiveModifier == null;
+                        if (GUILayout.Toggle(selected, new GUIContent($"{layer.name}  ({layer.modifiers.Count})", "Select layer properties; foldout shows its modifiers"), "Button") && !selected)
+                            stage.SetActiveLayer(layer.Id);
+                        bool solo = stage.SoloLayerId == layer.Id;
+                        if (GUILayout.Toggle(solo, new GUIContent("S", "Solo this layer and its modifiers"), "Button", GUILayout.Width(24f)) != solo) stage.SoloLayer(layer.Id);
+                        using (new EditorGUI.DisabledScope(group.locked))
+                        {
+                            bool visible = GUILayout.Toggle(layer.visible, new GUIContent("V", "Show this layer and its modifiers"), "Button", GUILayout.Width(24f));
+                            bool locked = GUILayout.Toggle(layer.locked, new GUIContent("L", "Lock layer sculpting and modifier edits"), "Button", GUILayout.Width(24f));
+                            if (visible != layer.visible || locked != layer.locked)
+                            {
+                                Undo.RecordObject(stage.Groom, "Change Hair Layer State");
+                                layer.visible = visible; layer.locked = locked;
+                                HairGroomCommands.Commit(stage.Groom);
+                            }
+                        }
+                    }
+                    if (!expanded) continue;
+                    for (int m = 0; m < layer.modifiers.Count; m++)
+                    {
+                        HairModifierSettings modifier = layer.modifiers[m];
+                        if (modifier == null) continue;
+                        using (new EditorGUILayout.HorizontalScope())
+                        {
+                            GUILayout.Space(28f);
+                            using (new EditorGUI.DisabledScope(group.locked || layer.locked))
+                            {
+                                bool enabled = EditorGUILayout.Toggle(new GUIContent("", "Enable this modifier"), modifier.enabled, GUILayout.Width(18f));
+                                if (enabled != modifier.enabled)
+                                {
+                                    Undo.RecordObject(stage.Groom, "Toggle Hair Modifier");
+                                    modifier.enabled = enabled;
+                                    HairGroomCommands.Commit(stage.Groom);
+                                }
+                            }
+                            bool selected = stage.ActiveModifierId == modifier.Id;
+                            if (GUILayout.Toggle(selected, new GUIContent($"{m + 1}. {modifier.name}", ObjectNames.NicifyVariableName(modifier.type.ToString())), "Button") && !selected)
+                                stage.SetActiveModifier(layer.Id, modifier.Id);
+                        }
+                    }
+                }
+                if (group.sculptLayers.Count == 0) EditorGUILayout.LabelField("Add a sculpt layer to start building the stack.", EditorStyles.wordWrappedMiniLabel);
+            }
+
+            HairSculptLayer activeLayer = stage.ActiveLayer;
+            HairModifierSettings activeModifier = stage.ActiveModifier;
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                EditorGUILayout.LabelField(activeModifier != null ? "Modifier Properties" : "Layer Properties", EditorStyles.boldLabel);
+                if (activeLayer == null)
+                {
+                    EditorGUILayout.LabelField("Select a layer or one of its modifiers.", EditorStyles.wordWrappedMiniLabel);
+                    return;
+                }
+                EditorGUILayout.LabelField(activeModifier == null ? activeLayer.name : $"{activeLayer.name} / {activeModifier.name}", EditorStyles.wordWrappedMiniLabel);
+                if (activeLayer.locked || group.locked) EditorGUILayout.HelpBox("This layer is locked. Unlock it to edit its sculpting or modifiers.", MessageType.Info);
+                using (new EditorGUI.DisabledScope(group.locked || activeLayer.locked))
+                {
+                    bool isLayer = activeModifier == null;
+                    string id = activeModifier?.Id ?? activeLayer.Id;
+                    int index = isLayer ? group.sculptLayers.IndexOf(activeLayer) : activeLayer.modifiers.IndexOf(activeModifier);
+                    int count = isLayer ? group.sculptLayers.Count : activeLayer.modifiers.Count;
+                    using (new EditorGUILayout.HorizontalScope())
+                    {
+                        using (new EditorGUI.DisabledScope(isLayer ? index == count - 1 : index == 0))
+                            if (GUILayout.Button("Move up")) HairGroomCommands.EditStack(stage.Groom, group, id, isLayer, isLayer ? 1 : -1);
+                        using (new EditorGUI.DisabledScope(isLayer ? index == 0 : index == count - 1))
+                            if (GUILayout.Button("Move down")) HairGroomCommands.EditStack(stage.Groom, group, id, isLayer, isLayer ? -1 : 1);
+                        if (GUILayout.Button("Duplicate"))
+                        {
+                            if (isLayer) stage.SetActiveLayer(HairGroomCommands.DuplicateLayer(stage.Groom, group, activeLayer)?.Id);
+                            else stage.SetActiveModifier(activeLayer.Id, HairGroomCommands.DuplicateModifier(stage.Groom, group, activeLayer, activeModifier)?.Id);
+                        }
+                        if (GUILayout.Button(new GUIContent("Remove", isLayer ? "Remove the layer and all its modifiers. Undo restores them." : "Remove this modifier. Undo restores it.")) &&
+                            HairGroomCommands.EditStack(stage.Groom, group, id, isLayer, 0, true))
+                        {
+                            stage.SetActiveLayer(isLayer ? group.sculptLayers.FindLast(layer => layer != null)?.Id : activeLayer.Id);
+                            return;
+                        }
+                    }
+                    // Resolve again after duplicate so only the newly selected item's properties render.
+                    activeLayer = stage.ActiveLayer;
+                    activeModifier = stage.ActiveModifier;
+                    if (activeModifier != null) DrawModifier(stage, activeModifier);
+                    else if (activeLayer != null)
+                    {
+                        string name = EditorGUILayout.DelayedTextField("Layer name", activeLayer.name);
+                        float opacity = EditorGUILayout.Slider("Opacity", activeLayer.opacity, 0f, 1f);
+                        HairSculptBlendMode blend = (HairSculptBlendMode)EditorGUILayout.EnumPopup("Sculpt blend", activeLayer.blendMode);
+                        if (name != activeLayer.name || opacity != activeLayer.opacity || blend != activeLayer.blendMode)
+                        {
+                            Undo.RecordObject(stage.Groom, "Edit Hair Sculpt Layer");
+                            activeLayer.name = name; activeLayer.opacity = opacity; activeLayer.blendMode = blend;
+                            HairGroomCommands.Commit(stage.Groom);
+                        }
+                        EditorGUILayout.LabelField("Opacity scales sculpting and modifier weights. Sculpt blend applies to painted offsets. Modifiers deform the accumulated hair at this point in the stack.", EditorStyles.wordWrappedMiniLabel);
+                    }
+                }
+            }
+        }
+
+        private static void DrawModifier(HairCardStage stage, HairModifierSettings modifier)
+        {
+            if (modifier == null) return;
+            using (new EditorGUI.DisabledScope(stage.ActiveGroup.locked))
+            {
+                string name = EditorGUILayout.DelayedTextField("Name", modifier.name);
+                float weight = EditorGUILayout.Slider("Blend weight", modifier.weight, 0f, 1f);
+                string amountLabel = modifier.type switch
+                {
+                    HairModifierType.Length or HairModifierType.Width => "Scale multiplier",
+                    HairModifierType.Curl or HairModifierType.Wave or HairModifierType.Noise => "Amplitude (units)",
+                    HairModifierType.Twist => "Roll (degrees)",
+                    HairModifierType.Resample or HairModifierType.Simplify => "Control point count",
+                    HairModifierType.Gravity => "Settle duration (seconds)",
+                    HairModifierType.HelperFollow => "Follow strength (0–1)",
+                    HairModifierType.TrimByMesh => "Cut offset (units)",
+                    HairModifierType.LodReduction => "Samples per card",
+                    HairModifierType.Smooth or HairModifierType.Clump => "Strength (0–1)",
+                    HairModifierType.SurfaceProjection or HairModifierType.Collision or HairModifierType.PushOut => "Surface offset",
+                    _ => "Distance / amount"
+                };
+                float amount = modifier.amount;
+                if (modifier.type == HairModifierType.FlowAlign)
+                    amount = EditorGUILayout.Slider(new GUIContent("Alignment (0–1)",
+                        "Rotates segment directions toward the source-local direction. 0 leaves the hair unchanged; 1 fully aligns it at full blend/influence. Roots and segment lengths stay fixed."), amount, 0f, 1f);
+                else if (modifier.type == HairModifierType.Gravity)
+                    amount = EditorGUILayout.Slider(amountLabel, amount, 0f, 5f);
+                else if (modifier.type != HairModifierType.Mirror)
+                    amount = EditorGUILayout.FloatField(amountLabel, amount);
+                bool usesRamp = modifier.type != HairModifierType.Length && modifier.type != HairModifierType.Resample && modifier.type != HairModifierType.Simplify && modifier.type != HairModifierType.LodReduction;
+                float rootInfluence = modifier.rootInfluence;
+                if (ModifierUsesRootInfluence(modifier.type))
+                    rootInfluence = EditorGUILayout.Slider(new GUIContent("Root Influence", "The root stays anchored. Lower values protect bending near the base; tips keep full influence."), rootInfluence, 0f, 1f);
+                float gravityStrength = modifier.gravityStrength, separation = modifier.gravitySeparation, clearance = modifier.gravityClearance;
+                bool collision = modifier.gravityCollision;
+                bool useWorldGravity = modifier.useWorldGravity;
+                Vector3 gravityDirection = modifier.gravityDirection;
+                if (modifier.type == HairModifierType.Gravity)
+                {
+                    gravityStrength = EditorGUILayout.Slider("Gravity strength", gravityStrength, 0f, 10f);
+                    separation = EditorGUILayout.Slider("Card separation", separation, 0f, 1f);
+                    useWorldGravity = EditorGUILayout.Toggle("Use world gravity", useWorldGravity);
+                    using (new EditorGUI.DisabledScope(useWorldGravity)) gravityDirection = EditorGUILayout.Vector3Field("Local gravity override", gravityDirection);
+                    collision = EditorGUILayout.Toggle("Collide with source mesh", collision);
+                    using (new EditorGUI.DisabledScope(!collision)) clearance = EditorGUILayout.Slider("Surface clearance", clearance, 0f, 0.05f);
+                    EditorGUILayout.HelpBox("Uses the hold button's settling, stiffness, freeze and length-constraint rules. World gravity accounts for object rotation/scale and the preview's per-guide pose. Disable it for an intentional local-direction override. Duration is simulated from the incoming shape on every rebuild; it never accumulates. New modifiers copy the hold-button settings.", MessageType.Info);
+                }
+                if (modifier.type == HairModifierType.TrimByMesh)
+                    EditorGUILayout.HelpBox("Cuts at the first intersection with the groom's source mesh, keeping the root-side curve. Blend weight softens the amount removed. Frozen tips are protected.", MessageType.Info);
+                if (modifier.type == HairModifierType.Clump)
+                    EditorGUILayout.LabelField("Bends strands toward the group's shared tip center, or the selected helper position. Roots and segment lengths stay fixed.", EditorStyles.wordWrappedMiniLabel);
+                if (modifier.type == HairModifierType.Curl || modifier.type == HairModifierType.Wave)
+                    EditorGUILayout.LabelField("For a smooth curl/wave, add Resample before this modifier and allow at least four control points per cycle.", EditorStyles.wordWrappedMiniLabel);
+                if (modifier.type == HairModifierType.SurfaceProjection)
+                    EditorGUILayout.LabelField("Projects non-frozen points onto the source's nearest-vertex surface approximation. Root is pinned; projection intentionally changes length.", EditorStyles.wordWrappedMiniLabel);
+                if (modifier.type == HairModifierType.Collision || modifier.type == HairModifierType.PushOut)
+                    EditorGUILayout.LabelField("Surface offset is clearance, not strength. Blend and root-to-tip influence control response. Anchors and segment lengths take priority when clearance conflicts.", EditorStyles.wordWrappedMiniLabel);
+                if (modifier.type == HairModifierType.Mirror)
+                    EditorGUILayout.LabelField("Reflects the entire strand, including its root and root normal, across the groom symmetry plane. Does not duplicate hair. Partial blending passes through the plane.", EditorStyles.wordWrappedMiniLabel);
+                if (modifier.type == HairModifierType.LodReduction)
+                    EditorGUILayout.LabelField("Legacy per-card sample reduction. Use Optimize for density and distance-based LODs.", EditorStyles.wordWrappedMiniLabel);
+                EditorGUI.BeginChangeCheck();
+                AnimationCurve ramp = usesRamp ? EditorGUILayout.CurveField("Root → tip influence", modifier.rootToTip) : modifier.rootToTip;
+                bool rampChanged = EditorGUI.EndChangeCheck();
                 HairModifierDomain domain = (HairModifierDomain)EditorGUILayout.EnumPopup("Domain", modifier.domain);
+                EditorGUILayout.LabelField("Guides And Children applies once to guides; children inherit the result. Children affects generated children only.", EditorStyles.wordWrappedMiniLabel);
                 Vector3 vector = modifier.vector;
-                if (ModifierUsesVector(modifier.type))
-                    vector = EditorGUILayout.Vector3Field("Direction / Parameters", modifier.vector);
+                if (modifier.type == HairModifierType.Curl || modifier.type == HairModifierType.Wave)
+                { vector.x = Mathf.Max(0.01f, EditorGUILayout.FloatField("Cycles along guide", vector.x)); vector.y = EditorGUILayout.FloatField("Phase (radians)", vector.y); }
+                else if (ModifierUsesVector(modifier.type) && modifier.type != HairModifierType.Gravity)
+                    vector = EditorGUILayout.Vector3Field("Source-local direction", modifier.vector);
+                if (modifier.type == HairModifierType.FlowAlign)
+                {
+                    EditorGUILayout.LabelField("Roots stay anchored; segment lengths are preserved. Guides And Children aligns the guides once; children inherit that flow. Children aligns only generated children. Direction is in the source mesh's local space.", EditorStyles.wordWrappedMiniLabel);
+                    if (!float.IsFinite(vector.sqrMagnitude) || vector.sqrMagnitude <= 1e-12f)
+                        EditorGUILayout.HelpBox("Enter a finite, non-zero direction to align the hair.", MessageType.Info);
+                }
                 int seed = modifier.seed;
-                if (modifier.type == HairModifierType.Noise || modifier.type == HairModifierType.Curl ||
-                    modifier.type == HairModifierType.Wave)
+                if (modifier.type == HairModifierType.Noise)
                     seed = EditorGUILayout.IntField("Seed", modifier.seed);
                 string helperId = modifier.helperId;
                 if (ModifierUsesHelper(modifier.type))
@@ -1366,21 +1798,40 @@ namespace UMA.HairCards.Editor
                         helperIds.Add(helper.Id);
                         helperNames.Add(helper.name);
                     }
+                    if (!string.IsNullOrEmpty(modifier.helperId) && !helperIds.Contains(modifier.helperId))
+                    { helperIds.Add(modifier.helperId); helperNames.Add("Missing helper (choose a replacement)"); }
                     int selectedHelper = Mathf.Max(0, helperIds.IndexOf(modifier.helperId));
                     selectedHelper = EditorGUILayout.Popup("Helper", selectedHelper, helperNames.ToArray());
                     helperId = helperIds[selectedHelper];
+                    HairHelper selected = stage.Groom.FindHelper(helperId);
+                    if (modifier.type == HairModifierType.HelperFollow && (selected?.points == null || selected.points.Count < 2))
+                        EditorGUILayout.HelpBox("Choose a curve helper with at least two points to enable following.", MessageType.Warning);
+                    if ((modifier.type == HairModifierType.Collision || modifier.type == HairModifierType.PushOut) &&
+                        (selected == null || (selected.type != HairHelperType.Sphere && selected.type != HairHelperType.Box &&
+                         selected.type != HairHelperType.Capsule && selected.type != HairHelperType.Plane && selected.type != HairHelperType.Repulsor &&
+                         selected.type != HairHelperType.VolumeTarget && selected.type != HairHelperType.SculptCage)))
+                        EditorGUILayout.HelpBox("Choose a sphere, box, capsule or plane collider helper. Curve helpers are not collision volumes.", MessageType.Warning);
                 }
-                if (!Mathf.Approximately(weight, modifier.weight) || !Mathf.Approximately(amount, modifier.amount) ||
+                if (name != modifier.name || rampChanged || !Mathf.Approximately(weight, modifier.weight) || !Mathf.Approximately(amount, modifier.amount) ||
                     domain != modifier.domain || vector != modifier.vector || seed != modifier.seed ||
-                    helperId != modifier.helperId)
+                    helperId != modifier.helperId || rootInfluence != modifier.rootInfluence ||
+                    gravityStrength != modifier.gravityStrength || separation != modifier.gravitySeparation ||
+                    collision != modifier.gravityCollision || clearance != modifier.gravityClearance || gravityDirection != modifier.gravityDirection || useWorldGravity != modifier.useWorldGravity)
                 {
                     Undo.RecordObject(stage.Groom, "Edit Hair Modifier");
+                    modifier.name = name;
+                    modifier.rootToTip = ramp;
                     modifier.weight = weight;
                     modifier.amount = amount;
                     modifier.domain = domain;
                     modifier.vector = vector;
                     modifier.seed = seed;
                     modifier.helperId = helperId;
+                    modifier.rootInfluence = rootInfluence;
+                    modifier.gravityStrength = gravityStrength; modifier.gravitySeparation = separation;
+                    modifier.gravityCollision = collision; modifier.gravityClearance = clearance;
+                    modifier.gravityDirection = gravityDirection;
+                    modifier.useWorldGravity = useWorldGravity;
                     HairGroomCommands.Commit(stage.Groom);
                 }
             }
@@ -1393,10 +1844,16 @@ namespace UMA.HairCards.Editor
                    type == HairModifierType.Wave || type == HairModifierType.Gravity;
         }
 
+        private static bool ModifierUsesRootInfluence(HairModifierType type) => type == HairModifierType.Gravity ||
+            type == HairModifierType.Smooth || type == HairModifierType.FlowAlign || type == HairModifierType.Lift ||
+            type == HairModifierType.Clump || type == HairModifierType.Part || type == HairModifierType.Curl ||
+            type == HairModifierType.Wave || type == HairModifierType.Noise || type == HairModifierType.HelperFollow ||
+            type == HairModifierType.Collision || type == HairModifierType.PushOut;
+
         private static bool ModifierUsesHelper(HairModifierType type)
         {
             return type == HairModifierType.HelperFollow || type == HairModifierType.Collision ||
-                   type == HairModifierType.PushOut || type == HairModifierType.TrimByMesh;
+                   type == HairModifierType.PushOut || type == HairModifierType.Clump;
         }
 
         private static void DrawStatus(HairCardStage stage)
@@ -1452,14 +1909,34 @@ namespace UMA.HairCards.Editor
             menu.ShowAsContext();
         }
 
-        private static void ShowModifierMenu(HairCardStage stage)
+        private void ShowModifierMenu(HairCardStage stage)
         {
+            HairGroup group = stage.ActiveGroup;
+            HairSculptLayer layer = stage.ActiveLayer;
+            if (layer == null || layer.locked || group.locked) return;
             GenericMenu menu = new GenericMenu();
             foreach (HairModifierType type in Enum.GetValues(typeof(HairModifierType)))
             {
+                if (type == HairModifierType.LodReduction) continue;
                 HairModifierType captured = type;
                 menu.AddItem(new GUIContent(ObjectNames.NicifyVariableName(type.ToString())), false,
-                    () => HairGroomCommands.AddModifier(stage.Groom, stage.ActiveGroup, captured));
+                    () =>
+                    {
+                        if (stage == null || stage.ActiveGroup != group) return;
+                        HairModifierSettings modifier = HairGroomCommands.AddModifier(stage.Groom, group, captured, layer);
+                        if (modifier == null) return;
+                        modifier.rootInfluence = stage.BrushRootInfluence;
+                        if (captured == HairModifierType.Gravity)
+                        {
+                            modifier.gravityStrength = stage.GravityStrength;
+                            modifier.gravitySeparation = stage.GravitySeparation;
+                            modifier.gravityCollision = stage.GravityCollision;
+                            modifier.gravityClearance = stage.GravityClearance;
+                        }
+                        HairGroomCommands.Commit(stage.Groom);
+                        collapsedLayerIds.Remove(layer.Id);
+                        stage.SetActiveModifier(layer.Id, modifier.Id);
+                    });
             }
             menu.ShowAsContext();
         }

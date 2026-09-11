@@ -14,6 +14,7 @@ namespace UMA.HairCards.Runtime
 
         private HairCardMeshBuildResult currentBuild;
         private HairEvaluationResult currentEvaluation;
+        private readonly HairRuntimeMaterialSet renderMaterials = new HairRuntimeMaterialSet();
 
         public HairGroomAsset Groom => groom;
         public int LodLevel => lodLevel;
@@ -48,6 +49,7 @@ namespace UMA.HairCards.Runtime
             if (groom == null) return false;
             currentEvaluation = HairGroomEvaluator.Evaluate(groom, new HairEvaluationOptions
             {
+                sourceToWorld = transform.localToWorldMatrix,
                 lodLevel = lodLevel,
                 includeChildren = includeChildren,
                 includeGuideCards = true,
@@ -59,13 +61,7 @@ namespace UMA.HairCards.Runtime
             MeshFilter filter = GetComponent<MeshFilter>();
             MeshRenderer renderer = GetComponent<MeshRenderer>();
             filter.sharedMesh = currentBuild.mesh;
-            Material[] materials = new Material[Mathf.Max(1, currentBuild.materials.Count)];
-            for (int i = 0; i < materials.Length; i++)
-            {
-                Material source = i < currentBuild.materials.Count ? currentBuild.materials[i] : null;
-                materials[i] = source != null ? source : fallbackMaterial;
-            }
-            renderer.sharedMaterials = materials;
+            renderer.sharedMaterials = renderMaterials.Update(currentBuild, fallbackMaterial);
             return currentBuild.mesh != null && currentBuild.cardCount > 0;
         }
 
@@ -82,6 +78,7 @@ namespace UMA.HairCards.Runtime
                 filter.sharedMesh = null;
             }
             currentBuild?.Dispose();
+            renderMaterials.Dispose();
             currentBuild = null;
             currentEvaluation = null;
         }

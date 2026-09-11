@@ -12,6 +12,7 @@ namespace UMA.HairCards.Editor
         public readonly List<UnityEngine.Object> assets = new List<UnityEngine.Object>();
         public readonly List<string> warnings = new List<string>();
         public bool succeeded;
+        public bool isDryRun;
         public int cardCount;
         public int vertexCount;
         public int triangleCount;
@@ -19,6 +20,91 @@ namespace UMA.HairCards.Editor
 
     public static class HairBakePipeline
     {
+        private static HairEvaluationOptions EvaluationOptions(HairGroomAsset groom, int lod)
+        {
+            var options = new HairEvaluationOptions { lodLevel = lod };
+            HairCardStage stage = HairCardStage.ActiveStage;
+            return stage != null && stage.Groom == groom ? stage.ConfigureGravityEvaluation(options) : options;
+        }
+        public static HairValidationReport ValidateRelease(HairGroomAsset groom)
+        {
+            HairValidationReport report = HairValidator.Validate(groom, options: groom != null ? ValidationOptions(groom) : null);
+            report.isReleaseReport = true;
+            if (groom == null) return report;
+            ValidateUmaMaterialPasses(groom, report);
+            HashSet<int> levels = new HashSet<int>();
+            foreach (HairLodSettings lod in groom.Lods)
+            {
+                if (lod == null || !levels.Add(lod.level))
+                    report.Add(HairValidationSeverity.Error, HairValidationCode.InvalidLod,
+                        "LOD levels must be unique and include LOD 0.", fixId: "edit-lods");
+            }
+            if (!levels.Contains(0))
+                report.Add(HairValidationSeverity.Error, HairValidationCode.InvalidLod,
+                    "A release bake requires LOD 0.", fixId: "edit-lods");
+            foreach (HairHelper helper in groom.SharedHelpers)
+                if (helper != null && !helper.embedded && !HairCardStage.IsExternalHelperAvailable(helper))
+                    report.Add(HairValidationSeverity.Error, HairValidationCode.MissingHelper,
+                        $"External helper '{helper.name}' is unavailable in the open scenes.",
+                        helperId: helper.Id, fixId: "repair-helper-reference");
+            // Malformed authored data must be reported before the evaluator can normalize or consume it.
+            if (!report.CanBake) return report;
+            // Evaluation runs integrity checks which sort the groom's LOD list.
+            foreach (HairLodSettings lod in groom.Lods.ToArray())
+            {
+                if (lod.level != 0 && !groom.BakeSettings.createMesh) continue;
+                HairEvaluationResult evaluation = HairGroomEvaluator.Evaluate(groom, EvaluationOptions(groom, lod.level));
+                using HairCardMeshBuildResult build = HairCardMeshGenerator.Build(evaluation, $"Release validation LOD {lod.level}");
+                HairValidationReport output = HairValidator.Validate(groom, evaluation, build, ValidationOptions(groom));
+                report.lods.Add(new HairLodValidationSummary
+                {
+                    level = lod.level, cardCount = build.cardCount,
+                    vertexCount = build.vertexCount, triangleCount = build.triangleCount
+                });
+                if (lod.level == 0)
+                {
+                    report.cardCount = build.cardCount;
+                    report.vertexCount = build.vertexCount;
+                    report.triangleCount = build.triangleCount;
+                }
+                foreach (HairValidationIssue issue in output.issues)
+                {
+                    if (issue.code != HairValidationCode.EmptyOutput && issue.code != HairValidationCode.DegenerateTriangle &&
+                        issue.code != HairValidationCode.FrameFlip && issue.code != HairValidationCode.CardBudget &&
+                        issue.code != HairValidationCode.TriangleBudget) continue;
+                    issue.lodLevel = lod.level;
+                    issue.message = $"LOD {lod.level}: {issue.message}";
+                    report.issues.Add(issue);
+                }
+            }
+            return report;
+        }
+
+        public static HairBakeOutcome DryRunRelease(HairGroomAsset groom)
+        {
+            HairValidationReport report = ValidateRelease(groom);
+            return new HairBakeOutcome
+            {
+                validation = report, isDryRun = true, succeeded = report.CanBake,
+                cardCount = report.cardCount, vertexCount = report.vertexCount, triangleCount = report.triangleCount
+            };
+        }
+
+        internal static void ValidateUmaMaterialPasses(HairGroomAsset groom, HairValidationReport report)
+        {
+            if (groom == null || !groom.BakeSettings.createOverlay) return;
+            UMAMaterial umaMaterial = groom.BakeSettings.overlayTemplate is OverlayDataAsset template
+                ? template.material : groom.BakeSettings.umaMaterial as UMAMaterial;
+            foreach (HairGroup group in groom.Groups)
+            {
+                HairAtlasProfileAsset atlas = group?.atlas;
+                if (group == null || !group.enabled || atlas == null || atlas.secondPassMaterial == null) continue;
+                if (umaMaterial == null || umaMaterial.secondPass != atlas.secondPassMaterial)
+                    report.Add(HairValidationSeverity.Warning, HairValidationCode.MaterialPassMismatch,
+                        $"Group '{group.name}' uses a second-pass card material. Set the bake UMA Material (or overlay template)'s Second Pass to the same material to reproduce it on the avatar. Shared UMA assets are not changed automatically.", group.Id);
+            }
+        }
+
         private sealed class BakeTransaction : IDisposable
         {
             private readonly Dictionary<UnityEngine.Object, UnityEngine.Object> backups =
@@ -77,14 +163,14 @@ namespace UMA.HairCards.Editor
 
         public static HairBakeOutcome DryRun(HairGroomAsset groom, int lodLevel = 0)
         {
-            HairBakeOutcome outcome = new HairBakeOutcome();
+            HairBakeOutcome outcome = new HairBakeOutcome { isDryRun = true };
             if (groom == null)
             {
                 outcome.validation = HairValidator.Validate(null);
                 return outcome;
             }
             HairEvaluationResult evaluation = HairGroomEvaluator.Evaluate(groom,
-                new HairEvaluationOptions { lodLevel = lodLevel });
+                EvaluationOptions(groom, lodLevel));
             using (HairCardMeshBuildResult build = HairCardMeshGenerator.Build(evaluation, groom.name + " Dry Run"))
             {
                 outcome.validation = HairValidator.Validate(groom, evaluation, build, ValidationOptions(groom));
@@ -104,6 +190,12 @@ namespace UMA.HairCards.Editor
                 outcome.validation = HairValidator.Validate(null);
                 return outcome;
             }
+            outcome.validation = ValidateRelease(groom);
+            if (!outcome.validation.CanBake)
+            {
+                outcome.warnings.Add("Bake stopped: release validation found blockers. No output assets were written.");
+                return outcome;
+            }
             groom.EnsureIntegrity();
             HairBakeSettings settings = groom.BakeSettings;
             string folder = NormalizeFolder(settings.outputFolder);
@@ -115,10 +207,9 @@ namespace UMA.HairCards.Editor
             EnsureFolder(folder);
 
             HairEvaluationResult evaluation = HairGroomEvaluator.Evaluate(groom,
-                new HairEvaluationOptions { lodLevel = 0 });
+                EvaluationOptions(groom, 0));
             using (HairCardMeshBuildResult build = HairCardMeshGenerator.Build(evaluation, settings.assetName))
             {
-                outcome.validation = HairValidator.Validate(groom, evaluation, build, ValidationOptions(groom));
                 outcome.cardCount = evaluation.CardCount;
                 outcome.vertexCount = build.vertexCount;
                 outcome.triangleCount = build.triangleCount;
@@ -212,7 +303,7 @@ namespace UMA.HairCards.Editor
             {
                 HairLodSettings lod = groom.Lods[lodIndex];
                 HairEvaluationResult evaluation = HairGroomEvaluator.Evaluate(groom,
-                    new HairEvaluationOptions { lodLevel = lod.level });
+                    EvaluationOptions(groom, lod.level));
                 using (HairCardMeshBuildResult build = HairCardMeshGenerator.Build(evaluation,
                            settings.assetName + "_LOD" + lod.level))
                 {

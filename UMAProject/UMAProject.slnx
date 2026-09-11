@@ -10,6 +10,7 @@
   <Project Path="UMA.TexturePaint.Tests.csproj" />
   <Project Path="UMA.HairCards.Core.csproj" />
   <Project Path="UMA3.Samples.csproj" />
+  <Project Path="UMA.HairCards.Editor.csproj" />
   <Project Path="UMA.TexturePaint.Editor.csproj" />
   <Project Path="UMA.TempTools.csproj" />
   <Project Path="UMA.TexturePaint.Runtime.csproj" />
@@ -17,7 +18,6 @@
   <Project Path="UMA.HairCards.Editor.Tests.csproj" />
   <Project Path="UMA.Dismemberment.Editor.csproj" />
   <Project Path="UMA.TexturePaint.Examples.csproj" />
-  <Project Path="UMA.HairCards.Editor.csproj" />
   <Project Path="UMA.HairCards.Runtime.csproj" />
   <Project Path="UMA_Utilities_Editor.csproj" />
   <Project Path="UMA.TestRunner.Editor.csproj" />

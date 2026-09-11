@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace UMA.CharacterSystem
 {
@@ -12,7 +13,8 @@ namespace UMA.CharacterSystem
 		{
 			public List<UMARendererAsset> rendererAssets = new List<UMARendererAsset>();
 			public List<SlotDataAsset> slotAssets = new List<SlotDataAsset>();
-			public List<string> wardrobeSlots = new List<string>();
+			[FormerlySerializedAs("wardrobeSlots")]
+			public List<string> Regions = new List<string>();
 		}
 		public List<RendererElement> RendererElements = new List<RendererElement>();
 
@@ -125,9 +127,9 @@ namespace UMA.CharacterSystem
                 wardrobeSlotAssets.Clear();
 
                 //First, lets collect a list of the slotDataAssets that are present in the wardrobe recipes of the wardrobe slots we've specified
-                for (int i2 = 0; i2 < element.wardrobeSlots.Count; i2++)
+                for (int i2 = 0; i2 < element.Regions.Count; i2++)
 				{
-                    string wardrobeSlot = element.wardrobeSlots[i2];
+                    string wardrobeSlot = element.Regions[i2];
                     UMATextRecipe recipe = avatar.GetWardrobeItem(wardrobeSlot);
 					if (recipe != null)
 					{

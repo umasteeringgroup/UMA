@@ -1,9 +1,144 @@
 using System;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
 namespace UMA.HairCards.Editor
 {
+    internal static class HairSharedColorUtility
+    {
+        internal static OverlayColorData SelectedColor(HairAtlasProfileAsset atlas)
+        {
+            SharedColorTable table = atlas?.sharedColorTable as SharedColorTable;
+            return table != null && table.colors != null && atlas.sharedColorIndex >= 0 &&
+                   atlas.sharedColorIndex < table.colors.Length ? table.colors[atlas.sharedColorIndex] : null;
+        }
+
+        internal static int ParameterCount(HairAtlasProfileAsset atlas)
+        {
+            if (atlas == null) return 0;
+            List<UMAProperty> properties = SelectedColor(atlas)?.PropertyBlock?.shaderProperties;
+            int count = 0;
+            if (properties != null)
+                foreach (UMAProperty property in properties)
+                {
+                    if (CanApply(atlas.material, property)) count++;
+                    if (atlas.secondPassMaterial != atlas.material && CanApply(atlas.secondPassMaterial, property)) count++;
+                }
+            return count;
+        }
+
+        private static bool CanApply(Material material, UMAProperty property) => material != null && property != null &&
+            !(property is UMAOverlayTransformProperty) && !string.IsNullOrEmpty(property.name) && material.HasProperty(property.name);
+
+        internal static int Apply(HairAtlasProfileAsset atlas, HairCardStage stage = null)
+        {
+            int count = ParameterCount(atlas);
+            if (count == 0) return 0;
+            ApplyToMaterial(atlas.material, atlas, stage);
+            if (atlas.secondPassMaterial != atlas.material) ApplyToMaterial(atlas.secondPassMaterial, atlas, stage);
+            stage?.QueuePreviewChange(HairPreviewChange.Materials);
+            return count;
+        }
+
+        private static void ApplyToMaterial(Material material, HairAtlasProfileAsset atlas, HairCardStage stage)
+        {
+            if (material == null) return;
+            Undo.RecordObject(material, "Apply Hair Shared Color Parameters");
+            foreach (UMAProperty property in SelectedColor(atlas).PropertyBlock.shaderProperties)
+                if (CanApply(material, property)) property.Apply(material, -1);
+            EditorUtility.SetDirty(material);
+            stage?.TrackResourceEdit(material);
+        }
+    }
+
+    /// <summary>Owned, reusable preview instances. Never changes a user's shared material or shader defaults.</summary>
+    internal sealed class HairPreviewMaterialSet : IDisposable
+    {
+        private Material[] materials = Array.Empty<Material>();
+        private SourceState[] sources = Array.Empty<SourceState>();
+
+        private struct SourceState
+        {
+            internal Material material;
+            internal HairAtlasProfileAsset atlas;
+            internal int materialRevision, atlasRevision;
+        }
+
+        private static SourceState ReadSource(HairCardMeshBuildResult build, int index, Material fallback)
+        {
+            HairAtlasProfileAsset atlas = index < build.atlases.Count ? build.atlases[index] : null;
+            bool secondPass = index < build.secondPasses.Count && build.secondPasses[index];
+            Material source = atlas != null ? (secondPass ? atlas.secondPassMaterial : atlas.material)
+                : index < build.materials.Count ? build.materials[index] : null;
+            if (source == null) source = fallback;
+            return new SourceState
+            {
+                atlas = atlas, material = source,
+                atlasRevision = atlas != null ? EditorUtility.GetDirtyCount(atlas) : 0,
+                materialRevision = source != null ? EditorUtility.GetDirtyCount(source) : 0
+            };
+        }
+
+        internal bool SourcesChanged(HairCardMeshBuildResult build, Material fallback = null)
+        {
+            int count = Mathf.Max(1, build.mesh != null ? build.mesh.subMeshCount : 1);
+            if (sources.Length != count) return true;
+            for (int i = 0; i < count; i++)
+            {
+                SourceState current = ReadSource(build, i, fallback), previous = sources[i];
+                if (current.material != previous.material || current.atlas != previous.atlas ||
+                    current.materialRevision != previous.materialRevision || current.atlasRevision != previous.atlasRevision)
+                    return true;
+            }
+            return false;
+        }
+
+        internal Material[] Update(HairCardMeshBuildResult build, Material fallback = null)
+        {
+            int count = Mathf.Max(1, build.mesh != null ? build.mesh.subMeshCount : 1);
+            if (materials.Length != count)
+            {
+                Dispose();
+                materials = new Material[count];
+                sources = new SourceState[count];
+            }
+            for (int i = 0; i < count; i++)
+            {
+                sources[i] = ReadSource(build, i, fallback);
+                HairAtlasProfileAsset atlas = sources[i].atlas;
+                Material source = sources[i].material;
+                if (source == null)
+                {
+                    if (materials[i] != null) UnityEngine.Object.DestroyImmediate(materials[i]);
+                    materials[i] = null;
+                    continue;
+                }
+                Material target = materials[i];
+                if (target == null)
+                    materials[i] = target = new Material(source) { hideFlags = HideFlags.HideAndDontSave };
+                else
+                {
+                    if (target.shader != source.shader) target.shader = source.shader;
+                    target.CopyPropertiesFromMaterial(source);
+                }
+                target.name = source.name + " (Hair Atlas Preview)";
+                if (atlas == null) continue;
+                // UVs already address the atlas. Inherited material tiling must not remap them again.
+                atlas.ApplyTexturesTo(target);
+            }
+            return materials;
+        }
+
+        public void Dispose()
+        {
+            foreach (Material material in materials)
+                if (material != null) UnityEngine.Object.DestroyImmediate(material);
+            materials = Array.Empty<Material>();
+            sources = Array.Empty<SourceState>();
+        }
+    }
+
     public enum HairWorkflowStep
     {
         Setup,
@@ -42,6 +177,11 @@ namespace UMA.HairCards.Editor
         CardGroups,
         Wireframe
     }
+
+    public enum HairBrushScope { ThroughDepth, VisibleHair, SelectedGuidesOnly, DepthVolume }
+    public enum HairPreviewQuality { Full, Draft }
+    [Flags]
+    public enum HairPreviewChange { None = 0, Evaluation = 1, Geometry = 2, Uvs = 4, Materials = 8, Validation = 16, Display = 32, All = 63 }
 
     internal static class HairWorkflowState
     {
@@ -357,11 +497,19 @@ namespace UMA.HairCards.Editor
             int endIndex = Mathf.Clamp(Mathf.CeilToInt(controlPosition), 1, oldCount - 1);
             float segmentT = Mathf.Clamp(controlPosition - (endIndex - 1f), 0.001f, 1f);
             if (endIndex == oldCount - 1 && segmentT >= 0.99999f) return false;
+            // Cutting must not delete or reposition a frozen anchor on the discarded tip side.
+            for (int i = endIndex; i < oldCount; i++)
+                if (guide.points[i] != null && guide.points[i].freeze >= 0.999f) return false;
 
             HairGuidePoint left = guide.points[endIndex - 1];
             HairGuidePoint right = guide.points[endIndex];
             if (left == null || right == null) return false;
+            // Preserve the original taper through a partial-segment slice, including legacy guides.
+            for (int i = 0; i < guide.points.Count; i++)
+                if (guide.points[i] != null && guide.points[i].widthBaseline < 0f)
+                    guide.points[i].widthBaseline = guide.GetWidthBaseline(i);
             right.position = Vector3.LerpUnclamped(left.position, right.position, segmentT);
+            right.widthBaseline = Mathf.LerpUnclamped(left.widthBaseline, right.widthBaseline, segmentT);
             right.width = Mathf.LerpUnclamped(left.width, right.width, segmentT);
             right.roll = Mathf.LerpAngle(left.roll, right.roll, segmentT);
             right.stiffness = Mathf.LerpUnclamped(left.stiffness, right.stiffness, segmentT);
@@ -494,94 +642,6 @@ namespace UMA.HairCards.Editor
     /// Shared shape constraints for interactive grooming. Positional brushes are deliberately
     /// inextensible; Length and Cut are the only tools allowed to change guide length.
     /// </summary>
-    internal static class HairGuideShapeUtility
-    {
-        internal static void PreserveSegmentLengths(
-            IReadOnlyList<Vector3> original,
-            IList<Vector3> target)
-        {
-            if (original == null || target == null || original.Count < 2 ||
-                target.Count != original.Count) return;
-
-            target[0] = original[0];
-            for (int pointIndex = 1; pointIndex < original.Count; pointIndex++)
-            {
-                Vector3 originalSegment = original[pointIndex] - original[pointIndex - 1];
-                float segmentLength = originalSegment.magnitude;
-                if (segmentLength <= 1e-8f)
-                {
-                    target[pointIndex] = target[pointIndex - 1];
-                    continue;
-                }
-
-                Vector3 targetSegment = target[pointIndex] - target[pointIndex - 1];
-                Vector3 direction = targetSegment.sqrMagnitude > 1e-12f
-                    ? targetSegment.normalized
-                    : originalSegment / segmentLength;
-                target[pointIndex] = target[pointIndex - 1] + direction * segmentLength;
-            }
-        }
-
-        internal static void RestoreReferenceSegmentLengths(
-            IReadOnlyList<Vector3> reference,
-            IReadOnlyList<Vector3> current,
-            IList<Vector3> target)
-        {
-            if (reference == null || current == null || target == null || reference.Count < 2 ||
-                current.Count != reference.Count || target.Count != reference.Count) return;
-
-            target[0] = current[0];
-            for (int pointIndex = 1; pointIndex < reference.Count; pointIndex++)
-            {
-                Vector3 referenceSegment = reference[pointIndex] - reference[pointIndex - 1];
-                float segmentLength = referenceSegment.magnitude;
-                Vector3 currentSegment = current[pointIndex] - current[pointIndex - 1];
-                Vector3 direction = currentSegment.sqrMagnitude > 1e-12f
-                    ? currentSegment.normalized
-                    : referenceSegment.sqrMagnitude > 1e-12f
-                        ? referenceSegment.normalized
-                        : Vector3.up;
-                target[pointIndex] = target[pointIndex - 1] + direction * segmentLength;
-            }
-        }
-
-        internal static Vector3 StableGravityDirection(
-            Vector3 gravity,
-            Vector3 rootNormal,
-            int seed,
-            float separation)
-        {
-            Vector3 down = gravity.sqrMagnitude > 1e-12f ? gravity.normalized : Vector3.down;
-            Vector3 outward = Vector3.ProjectOnPlane(rootNormal, down);
-            if (outward.sqrMagnitude > 1e-12f) outward.Normalize();
-
-            Vector3 reference = Mathf.Abs(Vector3.Dot(down, Vector3.up)) < 0.92f
-                ? Vector3.up
-                : Vector3.right;
-            Vector3 tangent = Vector3.Cross(down, reference).normalized;
-            Vector3 bitangent = Vector3.Cross(down, tangent).normalized;
-            float angle = StableUnit(seed) * Mathf.PI * 2f;
-            Vector3 jitter = tangent * Mathf.Cos(angle) + bitangent * Mathf.Sin(angle);
-            Vector3 fan = outward.sqrMagnitude > 1e-12f
-                ? (outward * 0.82f + jitter * 0.18f).normalized
-                : jitter;
-            return (down + fan * (Mathf.Clamp01(separation) * 0.45f)).normalized;
-        }
-
-        private static float StableUnit(int seed)
-        {
-            unchecked
-            {
-                uint value = (uint)seed;
-                value ^= value >> 16;
-                value *= 0x7feb352du;
-                value ^= value >> 15;
-                value *= 0x846ca68bu;
-                value ^= value >> 16;
-                return (value & 0x00ffffffu) / 16777216f;
-            }
-        }
-    }
 
     internal static class HairPoseUtility
     {

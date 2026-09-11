@@ -31,7 +31,10 @@ namespace UMA.HairCards
         FrameFlip,
         EmptyOutput,
         TriangleBudget,
-        CardBudget
+        CardBudget,
+        InvalidLod,
+        UnreadableSource,
+        MaterialPassMismatch
     }
 
     public sealed class HairValidationIssue
@@ -44,6 +47,15 @@ namespace UMA.HairCards
         public string helperId;
         public string fixId;
         public int count = 1;
+        public int lodLevel = -1;
+    }
+
+    public sealed class HairLodValidationSummary
+    {
+        public int level;
+        public int cardCount;
+        public int vertexCount;
+        public int triangleCount;
     }
 
     public sealed class HairValidationReport
@@ -53,6 +65,8 @@ namespace UMA.HairCards
         public int cardCount;
         public int vertexCount;
         public int triangleCount;
+        public bool isReleaseReport;
+        public readonly List<HairLodValidationSummary> lods = new List<HairLodValidationSummary>();
 
         public int ErrorCount => issues.FindAll(issue => issue.severity == HairValidationSeverity.Error).Count;
         public int WarningCount => issues.FindAll(issue => issue.severity == HairValidationSeverity.Warning).Count;
@@ -111,6 +125,11 @@ namespace UMA.HairCards
             {
                 report.Add(HairValidationSeverity.Warning, HairValidationCode.MissingSourceMesh,
                     "No source scalp mesh is assigned. Cached guide roots can preview, but surface rebinding and weight transfer are unavailable.");
+            }
+            else if (!groom.SourceMesh.isReadable)
+            {
+                report.Add(HairValidationSeverity.Error, HairValidationCode.UnreadableSource,
+                    "The source mesh is not readable. Enable Read/Write on its importer before validating or baking.", fixId: "rebind-source");
             }
             else if (!groom.SourceTopologyMatches())
             {
@@ -222,7 +241,7 @@ namespace UMA.HairCards
             for (int guideIndex = 0; guideIndex < group.guides.Count; guideIndex++)
             {
                 HairGuide guide = group.guides[guideIndex];
-                if (guide == null) continue;
+                if (guide == null || !guide.enabled) continue;
                 report.guideCount++;
                 if (!guide.root.IsValid || !string.Equals(guide.root.SourceMeshId, groom.SourceMeshId,
                         StringComparison.Ordinal))
@@ -250,7 +269,8 @@ namespace UMA.HairCards
                             fixId: "repair-guide");
                         continue;
                     }
-                    if (pointIndex == 0) continue;
+                    if (pointIndex == 0 || guide.points[pointIndex - 1] == null ||
+                        !IsFinite(guide.points[pointIndex - 1].position)) continue;
                     float segmentLength = Vector3.Distance(guide.points[pointIndex - 1].position, point.position);
                     length += segmentLength;
                     if (segmentLength < 1e-7f)

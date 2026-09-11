@@ -104,10 +104,10 @@ Material:
     - _ZWrite: 0
     - _ZWriteControl: 0
     m_Colors:
-    - _BaseColor: {r: 0.8196079, g: 0.8196079, b: 0.8196079, a: 1}
+    - _BaseColor: {r: 0.92941177, g: 0.5548883, b: 0.24536471, a: 1}
     - _Normal: {r: 0, g: 0, b: 0, a: 0}
-    - _RootColor: {r: 0.8196079, g: 0.8196079, b: 0.8196079, a: 1}
+    - _RootColor: {r: 0.38679242, g: 0.25750706, b: 0.16516033, a: 1}
     - _SpecularTint: {r: 0.654902, g: 0.24259722, b: 0.00759451, a: 1}
-    - _Tip_Color: {r: 0.8196079, g: 0.8196079, b: 0.8196079, a: 1}
+    - _Tip_Color: {r: 0.93710685, g: 0.58508897, b: 0.29174072, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

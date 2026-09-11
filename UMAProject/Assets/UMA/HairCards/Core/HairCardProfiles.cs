@@ -14,6 +14,10 @@ namespace UMA.HairCards
         [SerializeField, Min(0f)] private float tipWidth = 0f;
         [SerializeField, Range(2, 64)] private int samplesPerCard = 12;
         [SerializeField] private bool doubleSided = true;
+        [SerializeField] private bool useVertexColorGradient;
+        [SerializeField, ColorUsage(true)] private Color rootVertexColor = Color.white;
+        [SerializeField, ColorUsage(true)] private Color tipVertexColor = Color.white;
+        [SerializeField, Range(0, 63)] private int rootColorSegments;
         [SerializeField] private AnimationCurve widthAlongCard =
             AnimationCurve.Linear(0f, 1f, 1f, 0f);
 
@@ -24,7 +28,29 @@ namespace UMA.HairCards
         public float TipWidth => Mathf.Max(0f, tipWidth);
         public int SamplesPerCard => Mathf.Clamp(samplesPerCard, 2, 64);
         public bool DoubleSided => doubleSided;
+        public bool UseVertexColorGradient => useVertexColorGradient;
+        public Color RootVertexColor => rootVertexColor;
+        public Color TipVertexColor => tipVertexColor;
+        public int RootColorSegments => Mathf.Clamp(rootColorSegments, 0, 63);
         public AnimationCurve WidthAlongCard => widthAlongCard;
+
+        public void ConfigureVertexColors(bool enabled, Color root, Color tip, int solidRootSegments)
+        {
+            useVertexColorGradient = enabled;
+            rootVertexColor = root; tipVertexColor = tip;
+            rootColorSegments = Mathf.Clamp(solidRootSegments, 0, 63);
+        }
+
+        /// <summary>N solid segments include rows 0 through N. Reserve at least one segment
+        /// for the fade at reduced LOD resolutions so the final row always reaches the tip RGBA.</summary>
+        public Color EvaluateVertexColor(int row, int sampleCount, Color disabledColor)
+        {
+            if (!useVertexColorGradient) return disabledColor;
+            int segments = Mathf.Max(1, sampleCount - 1);
+            int hold = Mathf.Min(RootColorSegments, segments - 1);
+            float blend = Mathf.Clamp01((row - hold) / (float)(segments - hold));
+            return Color.LerpUnclamped(rootVertexColor, tipVertexColor, blend);
+        }
 
         public float EvaluateWidth(float normalizedLength)
         {
@@ -57,6 +83,7 @@ namespace UMA.HairCards
             defaultWidth = Mathf.Max(0f, defaultWidth);
             tipWidth = Mathf.Max(0f, tipWidth);
             samplesPerCard = Mathf.Clamp(samplesPerCard, 2, 64);
+            rootColorSegments = Mathf.Clamp(rootColorSegments, 0, 63);
             widthAlongCard ??= AnimationCurve.Linear(0f, 1f, 1f, 0f);
         }
     }
@@ -94,9 +121,31 @@ namespace UMA.HairCards
         public Texture2D normal;
         public Texture2D mask;
         public Material material;
+        [Tooltip("Optional second draw of the same cards. Use a later render queue than the first pass when ordering is required.")]
+        public Material secondPassMaterial;
+        // Typed as SharedColorTable by the editor, keeping the geometry core independent of UMA_Core.
+        public UnityEngine.Object sharedColorTable;
+        public int sharedColorIndex = -1;
         public List<HairAtlasRegion> regions = new List<HairAtlasRegion>();
 
         public string AtlasId => atlasId;
+
+        /// <summary>Bind atlas channels to an owned material instance; leave unset channels inherited.</summary>
+        public void ApplyTexturesTo(Material target)
+        {
+            if (target == null) return;
+            BindTexture(target, albedo, "_BaseMap"); BindTexture(target, albedo, "_BaseColorMap"); BindTexture(target, albedo, "_MainTex");
+            BindTexture(target, normal, "_BumpMap"); BindTexture(target, normal, "_NormalMap"); BindTexture(target, normal, "_Normal");
+            BindTexture(target, mask, "_MaskMap"); BindTexture(target, mask, "_Mask");
+        }
+
+        private static void BindTexture(Material target, Texture texture, string property)
+        {
+            if (texture == null || !target.HasTexture(property)) return;
+            target.SetTexture(property, texture);
+            target.SetTextureScale(property, Vector2.one);
+            target.SetTextureOffset(property, Vector2.zero);
+        }
 
         public HairAtlasRegion GetWeightedRegion(uint randomValue)
         {

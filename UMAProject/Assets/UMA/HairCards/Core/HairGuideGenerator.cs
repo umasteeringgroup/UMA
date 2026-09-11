@@ -11,6 +11,7 @@ namespace UMA.HairCards
         [Range(2, 32)] public int pointsPerGuide = 6;
         [Min(0.001f)] public float defaultLength = 0.18f;
         [Min(0f)] public float minimumRootSpacing = 0.015f;
+        [Range(0f, 1f)] public float rootUniformity = 0.75f;
         [Range(0f, 1f)] public float surfaceFlow = 0.35f;
         [Range(0f, 1f)] public float lift = 0.85f;
         public int seed = 1729;
@@ -22,6 +23,7 @@ namespace UMA.HairCards
             pointsPerGuide = Mathf.Clamp(pointsPerGuide, 2, 32);
             defaultLength = Mathf.Max(0.001f, defaultLength);
             minimumRootSpacing = Mathf.Max(0f, minimumRootSpacing);
+            rootUniformity = float.IsFinite(rootUniformity) ? Mathf.Clamp01(rootUniformity) : 0.75f;
             surfaceFlow = Mathf.Clamp01(surfaceFlow);
             lift = Mathf.Clamp01(lift);
             maximumAttemptsPerGuide = Mathf.Max(1, maximumAttemptsPerGuide);
@@ -103,32 +105,64 @@ namespace UMA.HairCards
 
             HairDeterministicRandom random = new HairDeterministicRandom(settings.seed);
             List<Vector3> acceptedRoots = new List<Vector3>(settings.guideCount);
-            int maximumAttempts = settings.guideCount * settings.maximumAttemptsPerGuide;
-            for (int attempt = 0; attempt < maximumAttempts && result.guides.Count < settings.guideCount; attempt++)
+            HairPointSpatialIndex rootIndex = new HairPointSpatialIndex();
+            int indexedRoots = 0;
+            int candidateCount = 1 + Mathf.RoundToInt(settings.rootUniformity * 31f);
+            long maximumAttempts = Math.Min(int.MaxValue,
+                (long)settings.guideCount * settings.maximumAttemptsPerGuide * candidateCount);
+            while (result.attemptedRoots < maximumAttempts && result.guides.Count < settings.guideCount)
             {
-                result.attemptedRoots++;
-                float target = random.Next01() * totalWeight;
-                int triangleIndex = FindWeightedTriangle(triangles, target);
-                TriangleSample triangle = triangles[triangleIndex];
-                Vector3 barycentric = RandomBarycentric(ref random);
-                Vector3 root = vertices[triangle.a] * barycentric.x + vertices[triangle.b] * barycentric.y +
-                               vertices[triangle.c] * barycentric.z;
-                if (!HasSpacing(root, acceptedRoots, settings.minimumRootSpacing))
+                // Refresh a spatial snapshot in batches and scan only its small, newly added tail.
+                // Every candidate still sees ALL accepted roots, without an all-guides scan.
+                if ((candidateCount > 1 || settings.minimumRootSpacing > 0f) && acceptedRoots.Count - indexedRoots >= 64)
                 {
-                    result.rejectedBySpacing++;
-                    continue;
+                    rootIndex.Rebuild(acceptedRoots);
+                    indexedRoots = acceptedRoots.Count;
                 }
-
-                float region = Mathf.Clamp01(Sample(regionMap, triangle, barycentric, 1f));
-                float density = Mathf.Max(0f, Sample(densityMap, triangle, barycentric, 1f));
-                float acceptance = triangle.maximumMaskDensity > 1e-8f
-                    ? Mathf.Clamp01(region * density / triangle.maximumMaskDensity)
-                    : 0f;
-                if (random.Next01() > acceptance)
+                TriangleSample triangle = default;
+                Vector3 root = default, barycentric = default;
+                bool found = false;
+                float bestScore = -1f;
+                int eligible = 0;
+                long roundAttempts = candidateCount == 1 ? 1L : (long)candidateCount * settings.maximumAttemptsPerGuide;
+                for (long attempt = 0; attempt < roundAttempts && eligible < candidateCount &&
+                    result.attemptedRoots < maximumAttempts; attempt++)
                 {
-                    result.rejectedByMask++;
-                    continue;
+                    result.attemptedRoots++;
+                    float target = random.Next01() * totalWeight;
+                    TriangleSample candidate = triangles[FindWeightedTriangle(triangles, target)];
+                    Vector3 coordinates = RandomBarycentric(ref random);
+                    Vector3 position = vertices[candidate.a] * coordinates.x + vertices[candidate.b] * coordinates.y +
+                                       vertices[candidate.c] * coordinates.z;
+                    float nearest = candidateCount > 1 || settings.minimumRootSpacing > 0f
+                        ? NearestRootSquared(position, acceptedRoots, rootIndex, indexedRoots) : 0f;
+                    if (nearest < settings.minimumRootSpacing * settings.minimumRootSpacing)
+                    {
+                        result.rejectedBySpacing++;
+                        continue;
+                    }
+                    float region = Mathf.Clamp01(Sample(regionMap, candidate, coordinates, 1f));
+                    float density = Mathf.Max(0f, Sample(densityMap, candidate, coordinates, 1f));
+                    float field = region * density;
+                    float acceptance = candidate.maximumMaskDensity > 1e-8f
+                        ? Mathf.Clamp01(field / candidate.maximumMaskDensity) : 0f;
+                    if (random.Next01() > acceptance || acceptance <= 0f)
+                    {
+                        result.rejectedByMask++;
+                        continue;
+                    }
+                    eligible++;
+                    // Surface spacing scales inversely with sqrt(density). Weight the squared
+                    // gap accordingly so uniformity doesn't flatten deliberately painted density.
+                    float score = nearest * field;
+                    if (found && score <= bestScore) continue;
+                    found = true;
+                    bestScore = score;
+                    triangle = candidate;
+                    root = position;
+                    barycentric = coordinates;
                 }
+                if (!found) continue;
 
                 Vector3 normal = SampleNormal(normals, vertices, triangle, barycentric);
                 BuildTangentFrame(vertices[triangle.a], vertices[triangle.b], vertices[triangle.c], normal,
@@ -167,6 +201,8 @@ namespace UMA.HairCards
                     {
                         position = position,
                         width = Mathf.Lerp(width, group.profile != null ? group.profile.TipWidth : 0f, t),
+                        widthBaseline = Mathf.Lerp(width, group.profile != null ? group.profile.TipWidth : 0f, t),
+                        profileScale = widthScale,
                         stiffness = 1f - t
                     });
                 }
@@ -287,15 +323,13 @@ namespace UMA.HairCards
             bitangent = Vector3.Cross(normal, tangent).normalized;
         }
 
-        private static bool HasSpacing(Vector3 candidate, IReadOnlyList<Vector3> accepted, float spacing)
+        private static float NearestRootSquared(Vector3 candidate, IReadOnlyList<Vector3> accepted,
+            HairPointSpatialIndex index, int indexedCount)
         {
-            if (spacing <= 0f) return true;
-            float square = spacing * spacing;
-            for (int i = 0; i < accepted.Count; i++)
-            {
-                if ((accepted[i] - candidate).sqrMagnitude < square) return false;
-            }
-            return true;
+            index.TryFindNearest(candidate, out _, out float distance);
+            for (int i = indexedCount; i < accepted.Count; i++)
+                distance = Mathf.Min(distance, (accepted[i] - candidate).sqrMagnitude);
+            return distance;
         }
     }
 }

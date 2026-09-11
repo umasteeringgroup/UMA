@@ -16,6 +16,9 @@ namespace UMA.HairCards
         [SerializeField] private string sourceRace;
         [SerializeField] private string sourceSlot;
         [SerializeField] private string sourceTopologySignature;
+        // Editor GlobalObjectId of the original mesh/character. The source snapshot itself
+        // remains usable at runtime and does not depend on an open scene or UMA rebuild.
+        [SerializeField, HideInInspector] private string sourceObjectId;
         [SerializeField] private bool symmetryEnabled = true;
         [SerializeField] private Vector3 symmetryPlaneNormal = Vector3.right;
         [SerializeField] private Vector3 symmetryPlanePoint;
@@ -31,6 +34,8 @@ namespace UMA.HairCards
         public string SourceRace => sourceRace;
         public string SourceSlot => sourceSlot;
         public string SourceTopologySignature => sourceTopologySignature;
+        public string SourceObjectId => sourceObjectId;
+        public void SetSourceObjectId(string value) => sourceObjectId = value ?? string.Empty;
         public bool SymmetryEnabled { get => symmetryEnabled; set => symmetryEnabled = value; }
         public Vector3 SymmetryPlaneNormal => symmetryPlaneNormal;
         public Vector3 SymmetryPlanePoint => symmetryPlanePoint;
@@ -67,7 +72,7 @@ namespace UMA.HairCards
                 role = role,
                 color = GetDefaultGroupColor(groups.Count)
             };
-            group.EnsureIntegrity(SourceVertexCount);
+            group.EnsureIntegrity(sourceMesh != null ? SourceVertexCount : -1);
             groups.Add(group);
             return group;
         }
@@ -143,7 +148,9 @@ namespace UMA.HairCards
             {
                 CreateGroup("Coverage", HairGroupRole.Coverage);
             }
-            for (int i = 0; i < groups.Count; i++) groups[i]?.EnsureIntegrity(SourceVertexCount);
+            // A missing reference is not a zero-vertex source. Preserve all painted data
+            // while the user restores the source (including older assets without snapshots).
+            for (int i = 0; i < groups.Count; i++) groups[i]?.EnsureIntegrity(sourceMesh != null ? SourceVertexCount : -1);
             for (int i = 0; i < sharedHelpers.Count; i++) sharedHelpers[i]?.EnsureIntegrity();
 
             if (lods.Count == 0)

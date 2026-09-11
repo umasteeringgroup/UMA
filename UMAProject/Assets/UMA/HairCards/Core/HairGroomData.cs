@@ -228,6 +228,8 @@ namespace UMA.HairCards
     {
         public Vector3 position;
         [Min(0f)] public float width = 0.01f;
+        // Original automatic guide taper; negative means infer it for a legacy guide.
+        public float widthBaseline = -1f;
         public float roll;
         [Range(0f, 1f)] public float stiffness;
         [Range(0f, 1f)] public float freeze;
@@ -239,6 +241,7 @@ namespace UMA.HairCards
             {
                 position = position,
                 width = width,
+                widthBaseline = widthBaseline,
                 roll = roll,
                 stiffness = stiffness,
                 freeze = freeze,
@@ -286,6 +289,16 @@ namespace UMA.HairCards
             lodImportance = Mathf.Clamp01(lodImportance);
         }
 
+        public float GetWidthBaseline(int pointIndex)
+        {
+            HairGuidePoint point = points[pointIndex];
+            if (point.widthBaseline >= 0f) return point.widthBaseline;
+            // Older guides baked a linear root-to-tip width into their control points.
+            // Keep departures from that line as authored width, without rewriting the asset.
+            return Mathf.Lerp(points[0].width, points[points.Count - 1].width,
+                pointIndex / Mathf.Max(1f, points.Count - 1f));
+        }
+
         public HairGuide Clone(bool createNewId = true)
         {
             HairGuide clone = new HairGuide
@@ -330,7 +343,8 @@ namespace UMA.HairCards
         public void EnsureIntegrity(int vertexCount)
         {
             HairStableId.Ensure(ref id);
-            int count = Mathf.Max(0, vertexCount);
+            // Negative means the source is temporarily unavailable, not an empty mesh.
+            int count = vertexCount < 0 ? values?.Length ?? 0 : vertexCount;
             if (values == null || values.Length != count)
             {
                 float[] resized = new float[count];
@@ -386,6 +400,7 @@ namespace UMA.HairCards
         public HairSculptBlendMode blendMode;
         public string maskMapId;
         public List<HairGuideDelta> deltas = new List<HairGuideDelta>();
+        public List<HairModifierSettings> modifiers = new List<HairModifierSettings>();
 
         public string Id => id;
 
@@ -393,6 +408,8 @@ namespace UMA.HairCards
         {
             HairStableId.Ensure(ref id);
             deltas ??= new List<HairGuideDelta>();
+            modifiers ??= new List<HairModifierSettings>();
+            foreach (HairModifierSettings modifier in modifiers) modifier?.EnsureIntegrity();
             opacity = Mathf.Clamp01(opacity);
         }
     }
@@ -415,11 +432,41 @@ namespace UMA.HairCards
 
         public string Id => id;
 
+        [Range(0f, 1f)] public float rootInfluence = 1f;
+        [Min(0f)] public float gravityStrength = 2.5f;
+        [Range(0f, 1f)] public float gravitySeparation = 0.1f;
+        public bool gravityCollision = true;
+        [Range(0f, 0.05f)] public float gravityClearance = 0.002f;
+        public Vector3 gravityDirection = Vector3.down;
+        public bool useWorldGravity = true;
+
+        // Evaluation copies share the read-only ramp; authoring duplicates own their keys and ID.
+        internal HairModifierSettings WithLayerOpacity(float opacity)
+        {
+            HairModifierSettings copy = (HairModifierSettings)MemberwiseClone();
+            copy.weight *= opacity;
+            return copy;
+        }
+
+        public HairModifierSettings Duplicate()
+        {
+            HairModifierSettings copy = (HairModifierSettings)MemberwiseClone();
+            copy.id = null;
+            copy.rootToTip = rootToTip == null ? null : new AnimationCurve(rootToTip.keys)
+            { preWrapMode = rootToTip.preWrapMode, postWrapMode = rootToTip.postWrapMode };
+            copy.EnsureIntegrity();
+            return copy;
+        }
+
         public void EnsureIntegrity()
         {
             HairStableId.Ensure(ref id);
             rootToTip ??= AnimationCurve.Linear(0f, 1f, 1f, 1f);
             weight = Mathf.Clamp01(weight);
+            rootInfluence = float.IsFinite(rootInfluence) ? Mathf.Clamp01(rootInfluence) : 0f;
+            gravityStrength = float.IsFinite(gravityStrength) ? Mathf.Max(0f, gravityStrength) : 0f;
+            gravitySeparation = float.IsFinite(gravitySeparation) ? Mathf.Clamp01(gravitySeparation) : 0f;
+            gravityClearance = float.IsFinite(gravityClearance) ? Mathf.Clamp(gravityClearance, 0f, 0.05f) : 0f;
         }
     }
 
@@ -517,6 +564,8 @@ namespace UMA.HairCards
         public bool enabled = true;
         [Range(0f, 1f)] public float lodImportance = 1f;
         public HairChildSettings children = new HairChildSettings();
+        [Tooltip("Card-only root inset along the inward surface normal, in meters. Fades over the first 20% of each card; guides remain unchanged.")]
+        [Range(0f, 0.02f)] public float rootEmbedDepth;
         public List<HairGrowthMap> maps = new List<HairGrowthMap>();
         public List<HairGuide> guides = new List<HairGuide>();
         public List<HairSculptLayer> sculptLayers = new List<HairSculptLayer>();
@@ -543,6 +592,7 @@ namespace UMA.HairCards
             atlasRegionIds.RemoveAll(regionId => string.IsNullOrWhiteSpace(regionId) ||
                                                   !uniqueAtlasRegionIds.Add(regionId));
             children.EnsureIntegrity();
+            rootEmbedDepth = float.IsFinite(rootEmbedDepth) ? Mathf.Clamp(rootEmbedDepth, 0f, 0.02f) : 0f;
             lodImportance = Mathf.Clamp01(lodImportance);
 
             EnsureDefaultMap(HairMapKind.GrowthArea, "Growth Area", 0f, sourceVertexCount);
@@ -559,7 +609,10 @@ namespace UMA.HairCards
 
         public HairGrowthMap FindMap(HairMapKind kind)
         {
-            return maps?.Find(map => map != null && map.kind == kind);
+            if (maps != null)
+                for (int i = 0; i < maps.Count; i++)
+                    if (maps[i] != null && maps[i].kind == kind) return maps[i];
+            return null;
         }
 
         private void EnsureDefaultMap(HairMapKind kind, string mapName, float defaultValue, int vertexCount)
@@ -583,6 +636,7 @@ namespace UMA.HairCards
         [Range(0f, 1f)] public float screenRelativeHeight = 0.6f;
         [Range(0f, 1f)] public float cardFraction = 1f;
         [Range(2, 64)] public int samplesPerCard = 12;
+        public bool useProfileSamples;
         [Range(3, 12)] public int maximumTubeSides = 8;
         public HairLodReductionMode reductionMode;
         public bool reduceBones;
@@ -599,6 +653,9 @@ namespace UMA.HairCards
             samplesPerCard = Mathf.Clamp(samplesPerCard, 2, 64);
             maximumTubeSides = Mathf.Clamp(maximumTubeSides, 3, 12);
         }
+
+        public int ResolveSampleCount(HairCardProfileAsset profile) => Mathf.Clamp(
+            useProfileSamples && profile != null ? profile.SamplesPerCard : samplesPerCard, 2, 64);
     }
 
     [Serializable]

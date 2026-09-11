@@ -5,11 +5,126 @@ using UMA.CharacterSystem;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
+using Unity.Profiling;
 
 [assembly: InternalsVisibleTo("UMA.HairCards.Editor.Tests")]
 
 namespace UMA.HairCards.Editor
 {
+    internal static class HairBoneFocus
+    {
+        internal static Vector3? Capture(DynamicCharacterAvatar avatar, HumanBodyBones bone)
+        {
+            if (avatar == null || (bone != HumanBodyBones.Head && bone != HumanBodyBones.Neck)) return null;
+            Animator animator = avatar.umaData != null ? avatar.umaData.animator : null;
+            if (animator == null) animator = avatar.GetComponentInChildren<Animator>(true);
+            Transform target = animator != null && animator.avatar != null && animator.avatar.isValid && animator.isHuman
+                ? animator.GetBoneTransform(bone) : null;
+            string boneName = bone.ToString();
+            if (target == null && avatar.umaData?.skeleton != null)
+                target = avatar.umaData.skeleton.GetBoneTransform(boneName);
+            if (target == null)
+            {
+                // Generic UMA rigs may not have a humanoid Avatar. Match exact names only;
+                // accessories such as Head_End and NeckTwist must never become the pivot.
+                foreach (Transform candidate in avatar.GetComponentsInChildren<Transform>(true))
+                    if (string.Equals(candidate.name, boneName, StringComparison.OrdinalIgnoreCase))
+                    { target = candidate; break; }
+            }
+            if (target == null) return null;
+            // The stage displays an avatar-local, static baked pose. Snapshot now, not on click.
+            Vector3 position = avatar.transform.InverseTransformPoint(target.position);
+            return float.IsFinite(position.x) && float.IsFinite(position.y) && float.IsFinite(position.z)
+                ? position : (Vector3?)null;
+        }
+    }
+
+    internal static class HairPaintedAreaBounds
+    {
+        // Capture with the baked authoring surface so later animation in the source scene cannot
+        // move the focus away from the static pose displayed in the grooming stage.
+        internal static Vector3?[] CaptureBones(SkinnedMeshRenderer renderer)
+        {
+            if (renderer == null) return null;
+            Transform[] bones = renderer.bones;
+            if (bones.Length == 0) return null;
+            Vector3?[] positions = new Vector3?[bones.Length];
+            Matrix4x4 worldToSource = renderer.transform.worldToLocalMatrix;
+            for (int i = 0; i < bones.Length; i++)
+                if (bones[i] != null) positions[i] = worldToSource.MultiplyPoint3x4(bones[i].position);
+            return positions;
+        }
+
+        internal static bool TryCalculate(Mesh source, float[] growth, HairAuthoringPose pose,
+            IReadOnlyList<Vector3?> bonePositions, Matrix4x4 sourceToStage, out Bounds bounds, out int boneCount)
+        {
+            bounds = default;
+            boneCount = 0;
+            if (source == null || !source.isReadable || growth == null || growth.Length != source.vertexCount)
+                return false;
+            Vector3[] vertices = pose == null ? source.vertices : null;
+            // Mesh-owned, read-only views (Allocator.None): do not dispose or retain them.
+            var counts = source.GetBonesPerVertex();
+            var weights = source.GetAllBoneWeights();
+            bool hasWeights = counts.Length == source.vertexCount;
+            HashSet<int> affectedBones = new HashSet<int>();
+            bool found = false;
+            int offset = 0;
+            for (int vertex = 0; vertex < source.vertexCount; vertex++)
+            {
+                int count = hasWeights ? counts[vertex] : 0;
+                float amount = growth[vertex];
+                if (amount > 0f && !float.IsInfinity(amount))
+                {
+                    Include(sourceToStage.MultiplyPoint3x4(pose != null ? pose.PosedVertex(vertex) : vertices[vertex]),
+                        ref bounds, ref found);
+                    for (int i = 0; i < count && offset + i < weights.Length; i++)
+                    {
+                        BoneWeight1 weight = weights[offset + i];
+                        if (weight.weight > 0f && !float.IsInfinity(weight.weight) && weight.boneIndex >= 0)
+                            affectedBones.Add(weight.boneIndex);
+                    }
+                }
+                offset += count;
+            }
+            if (!found) return false;
+            // A standalone groom may retain skin weights/bind poses without a live avatar.
+            Matrix4x4[] bindPoses = bonePositions == null ? source.bindposes : null;
+            foreach (int bone in affectedBones)
+            {
+                Vector3? position = bonePositions != null
+                    ? bone < bonePositions.Count ? bonePositions[bone] : null
+                    : bone < bindPoses.Length ? bindPoses[bone].inverse.MultiplyPoint3x4(Vector3.zero) : (Vector3?)null;
+                if (position.HasValue && Include(sourceToStage.MultiplyPoint3x4(position.Value), ref bounds, ref found))
+                    boneCount++;
+            }
+            // The stage displays the avatar in character-local coordinates (its root is at the
+            // stage origin). Center on that vertical axis, NOT the source renderer's origin or
+            // the painted patch's midpoint. Recompute extents before padding to retain every
+            // painted point/bone and its counterpart across the axis, including one-sided paint.
+            Vector3 min = bounds.min, max = bounds.max;
+            bounds = new Bounds(new Vector3(0f, bounds.center.y, 0f), new Vector3(
+                2f * Mathf.Max(Mathf.Abs(min.x), Mathf.Abs(max.x)), bounds.size.y,
+                2f * Mathf.Max(Mathf.Abs(min.z), Mathf.Abs(max.z))));
+            // Padding plus a scale-relative minimum prevents zero-size/single-vertex focus jumps.
+            float scale = Mathf.Max(sourceToStage.MultiplyVector(Vector3.right).magnitude,
+                sourceToStage.MultiplyVector(Vector3.up).magnitude, sourceToStage.MultiplyVector(Vector3.forward).magnitude);
+            float minimum = Mathf.Max(0.001f, source.bounds.size.magnitude * scale * 0.02f);
+            Vector3 size = bounds.size * 1.15f;
+            bounds.size = new Vector3(Mathf.Max(size.x, minimum), Mathf.Max(size.y, minimum), Mathf.Max(size.z, minimum));
+            return true;
+        }
+
+        private static bool Include(Vector3 point, ref Bounds bounds, ref bool found)
+        {
+            if (float.IsNaN(point.x) || float.IsNaN(point.y) || float.IsNaN(point.z) ||
+                float.IsInfinity(point.x) || float.IsInfinity(point.y) || float.IsInfinity(point.z)) return false;
+            if (!found) { bounds = new Bounds(point, Vector3.zero); found = true; }
+            else bounds.Encapsulate(point);
+            return true;
+        }
+    }
+
     internal enum HairVisibilityState
     {
         Hidden,
@@ -300,11 +415,104 @@ namespace UMA.HairCards.Editor
         }
     }
 
+    /// <summary>
+    /// Populate the active handle target's depth without touching its color. Some Scene view
+    /// rendering paths do not retain scene depth for duringSceneGui; a ZTest alone is insufficient.
+    /// Visible opaque/alpha-tested surfaces participate; transparent cards keep their holes.
+    /// </summary>
+    internal sealed class HairGuideDepthRenderer : IDisposable
+    {
+        private Material material;
+        private readonly List<Material> surfaceMaterials = new List<Material>();
+
+        internal Material DepthMaterial
+        {
+            get
+            {
+                if (material == null)
+                {
+                    Shader shader = Shader.Find("Hidden/UMA/HairCards/GuideOccluderDepth");
+                    if (shader != null) material = new Material(shader)
+                    {
+                        name = "Hair Guide Occluder Depth", hideFlags = HideFlags.HideAndDontSave
+                    };
+                }
+                return material;
+            }
+        }
+
+        internal static bool CanOccludeGuides(Material surface)
+        {
+            if (surface == null || surface.renderQueue > (int)RenderQueue.GeometryLast) return false;
+            string renderType = surface.GetTag("RenderType", false, "Opaque");
+            return (renderType == "Opaque" || renderType == "TransparentCutout") &&
+                   !surface.IsKeywordEnabled("_SURFACE_TYPE_TRANSPARENT");
+        }
+
+        private static void ConfigureCutout(Material depth, Material surface)
+        {
+            bool clipped = surface.renderQueue >= (int)RenderQueue.AlphaTest ||
+                surface.GetTag("RenderType", false) == "TransparentCutout" || surface.IsKeywordEnabled("_ALPHATEST_ON") ||
+                (surface.HasProperty("_AlphaClip") && surface.GetFloat("_AlphaClip") > 0f) ||
+                (surface.HasProperty("_AlphaCutoffEnable") && surface.GetFloat("_AlphaCutoffEnable") > 0f);
+            depth.SetFloat("_AlphaClip", clipped ? 1f : 0f);
+            if (!clipped) return;
+            // Standard, URP Lit and HDRP Lit texture conventions. Honor alpha holes rather than
+            // replacing an alpha-tested skin/hair surface with an opaque silhouette.
+            string textureProperty = surface.HasProperty("_BaseMap") ? "_BaseMap" :
+                surface.HasProperty("_BaseColorMap") ? "_BaseColorMap" : "_MainTex";
+            bool hasTexture = surface.HasProperty(textureProperty);
+            depth.SetTexture("_MainTex", hasTexture ? surface.GetTexture(textureProperty) : Texture2D.whiteTexture);
+            depth.SetTextureScale("_MainTex", hasTexture ? surface.GetTextureScale(textureProperty) : Vector2.one);
+            depth.SetTextureOffset("_MainTex", hasTexture ? surface.GetTextureOffset(textureProperty) : Vector2.zero);
+            depth.SetFloat("_Cutoff", surface.HasProperty("_Cutoff") ? surface.GetFloat("_Cutoff") :
+                surface.HasProperty("_AlphaCutoff") ? surface.GetFloat("_AlphaCutoff") : 0.5f);
+            depth.SetFloat("_BaseAlpha", surface.HasProperty("_BaseColor") ? surface.GetColor("_BaseColor").a :
+                surface.HasProperty("_Color") ? surface.GetColor("_Color").a : 1f);
+        }
+
+        internal void Draw(Renderer renderer, Mesh mesh)
+        {
+            if (renderer == null || mesh == null || !renderer.enabled || renderer.forceRenderingOff ||
+                !renderer.gameObject.activeInHierarchy) return;
+            Camera camera = Camera.current;
+            if (camera != null && (camera.cullingMask & (1 << renderer.gameObject.layer)) == 0) return;
+            renderer.GetSharedMaterials(surfaceMaterials);
+            try
+            {
+                for (int submesh = 0; submesh < mesh.subMeshCount; submesh++)
+                {
+                    Material surface = surfaceMaterials.Count > 0
+                        ? surfaceMaterials[Mathf.Min(submesh, surfaceMaterials.Count - 1)] : null;
+                    if (!CanOccludeGuides(surface)) continue;
+                    Material depth = DepthMaterial;
+                    if (depth == null) continue;
+                    ConfigureCutout(depth, surface);
+                    if (depth.SetPass(0))
+                        Graphics.DrawMeshNow(mesh, renderer.localToWorldMatrix, submesh);
+                }
+            }
+            finally
+            {
+                surfaceMaterials.Clear();
+                if (material != null) material.SetTexture("_MainTex", null);
+            }
+        }
+
+        public void Dispose()
+        {
+            if (material != null) UnityEngine.Object.DestroyImmediate(material);
+            material = null;
+            surfaceMaterials.Clear();
+        }
+    }
+
     internal sealed class HairAvatarPreview : IDisposable
     {
         private sealed class Surface
         {
             internal GameObject gameObject;
+            internal MeshRenderer renderer;
             internal readonly List<string> slotNames = new List<string>();
         }
 
@@ -397,6 +605,12 @@ namespace UMA.HairCards.Editor
             return found;
         }
 
+        internal void DrawGuideOccluderDepth(HairGuideDepthRenderer depth)
+        {
+            if (Root == null || !Root.activeInHierarchy) return;
+            for (int i = 0; i < surfaces.Count; i++) depth.Draw(surfaces[i].renderer, meshes[i]);
+        }
+
         public void Dispose()
         {
             if (Root != null) UnityEngine.Object.DestroyImmediate(Root);
@@ -482,7 +696,7 @@ namespace UMA.HairCards.Editor
                 materials.Add(previewMaterial);
                 renderer.sharedMaterial = previewMaterial;
             }
-            Surface surface = new Surface { gameObject = child };
+            Surface surface = new Surface { gameObject = child, renderer = renderer };
             if (slotNames != null)
                 foreach (string slotName in slotNames)
                     if (!string.IsNullOrEmpty(slotName) && !surface.slotNames.Contains(slotName))
@@ -583,10 +797,30 @@ namespace UMA.HairCards.Editor
             flattenedTriangles = flattened.ToArray();
         }
 
+        private static readonly ProfilerMarker PoseMarker = new ProfilerMarker("HairCards.PosePreview");
+        private readonly Dictionary<string, Matrix4x4> guideMatrices = new Dictionary<string, Matrix4x4>(StringComparer.Ordinal);
+        private HairGroomAsset matrixGroom;
+
+        // The posed source is an immutable snapshot. Refresh root bindings once per evaluation,
+        // not once per child/card/SceneView line (which previously scanned every guide).
+        internal void RefreshGuideMatrices(HairGroomAsset groom)
+        {
+            guideMatrices.Clear();
+            matrixGroom = groom;
+            if (!IsActive || groom == null) return;
+            foreach (HairGroup group in groom.Groups)
+                if (group?.guides != null)
+                    foreach (HairGuide guide in group.guides)
+                        if (guide != null && !string.IsNullOrEmpty(guide.Id) && !guideMatrices.ContainsKey(guide.Id))
+                            guideMatrices.Add(guide.Id, TryGetMatrix(guide.root, out Matrix4x4 matrix)
+                                ? matrix : Matrix4x4.identity);
+        }
+
         internal Matrix4x4 MatrixForGuide(HairGroomAsset groom, string guideId)
         {
-            HairGuide guide = groom?.FindGuide(guideId, out _);
-            return guide != null && TryGetMatrix(guide.root, out Matrix4x4 matrix)
+            if (!IsActive) return Matrix4x4.identity;
+            if (!ReferenceEquals(groom, matrixGroom)) RefreshGuideMatrices(groom);
+            return guideId != null && guideMatrices.TryGetValue(guideId, out Matrix4x4 matrix)
                 ? matrix : Matrix4x4.identity;
         }
 
@@ -668,29 +902,42 @@ namespace UMA.HairCards.Editor
             return sourceToPose.inverse.MultiplyPoint3x4(posedPoint);
         }
 
-        internal HairEvaluationResult TransformEvaluation(HairGroomAsset groom, HairEvaluationResult sourceResult)
+        internal HairEvaluationResult TransformEvaluation(HairGroomAsset groom, HairEvaluationResult sourceResult,
+            HairEvaluationResult reusableResult = null)
         {
             if (!IsActive || sourceResult == null) return sourceResult;
-            HairEvaluationResult transformed = new HairEvaluationResult
-            {
-                guideCurveCount = sourceResult.guideCurveCount,
-                childCurveCount = sourceResult.childCurveCount,
-                rejectedCurveCount = sourceResult.rejectedCurveCount,
-                revision = sourceResult.revision
-            };
+            if (ReferenceEquals(sourceResult, reusableResult)) throw new ArgumentException("Pose destination must not be the source evaluation.");
+            using var poseScope = PoseMarker.Auto();
+            RefreshGuideMatrices(groom);
+            HairEvaluationResult transformed = reusableResult ?? new HairEvaluationResult();
+            transformed.guideCurveCount = sourceResult.guideCurveCount;
+            transformed.childCurveCount = sourceResult.childCurveCount;
+            transformed.rejectedCurveCount = sourceResult.rejectedCurveCount;
+            transformed.revision = sourceResult.revision;
+            transformed.warnings.Clear();
             transformed.warnings.AddRange(sourceResult.warnings);
-            for (int i = 0; i < sourceResult.evaluatedGuides.Count; i++)
-                transformed.evaluatedGuides.Add(TransformCurve(groom, sourceResult.evaluatedGuides[i]));
-            for (int i = 0; i < sourceResult.curves.Count; i++)
-                transformed.curves.Add(TransformCurve(groom, sourceResult.curves[i]));
+            TransformCurves(groom, sourceResult.evaluatedGuides, transformed.evaluatedGuides);
+            TransformCurves(groom, sourceResult.curves, transformed.curves);
             return transformed;
         }
 
-        private HairEvaluatedCurve TransformCurve(HairGroomAsset groom, HairEvaluatedCurve sourceCurve)
+        private void TransformCurves(HairGroomAsset groom, List<HairEvaluatedCurve> sourceCurves, List<HairEvaluatedCurve> targets)
+        {
+            for (int i = 0; i < sourceCurves.Count; i++)
+            {
+                HairEvaluatedCurve transformed = TransformCurve(groom, sourceCurves[i], i < targets.Count ? targets[i] : null);
+                if (i < targets.Count) targets[i] = transformed;
+                else targets.Add(transformed);
+            }
+            if (targets.Count > sourceCurves.Count) targets.RemoveRange(sourceCurves.Count, targets.Count - sourceCurves.Count);
+        }
+
+        private HairEvaluatedCurve TransformCurve(HairGroomAsset groom, HairEvaluatedCurve sourceCurve, HairEvaluatedCurve transformed)
         {
             if (sourceCurve == null) return null;
             Matrix4x4 matrix = MatrixForGuide(groom, sourceCurve.parentGuideId);
-            HairEvaluatedCurve transformed = sourceCurve.Clone();
+            transformed ??= new HairEvaluatedCurve(sourceCurve.points.Count);
+            sourceCurve.CopyTo(transformed);
             transformed.rootNormal = HairPoseUtility.TransformNormal(matrix, sourceCurve.rootNormal);
             for (int pointIndex = 0; pointIndex < transformed.points.Count; pointIndex++)
             {
@@ -702,286 +949,6 @@ namespace UMA.HairCards.Editor
         }
     }
 
-    internal readonly struct HairMeshRaycastHit
-    {
-        internal readonly int TriangleIndex;
-        internal readonly Vector3 Point;
-        internal readonly Vector3 Normal;
-        internal readonly Vector3 Barycentric;
-        internal readonly float Distance;
-
-        internal HairMeshRaycastHit(int triangleIndex, Vector3 point, Vector3 normal,
-            Vector3 barycentric, float distance)
-        {
-            TriangleIndex = triangleIndex;
-            Point = point;
-            Normal = normal;
-            Barycentric = barycentric;
-            Distance = distance;
-        }
-    }
-
-    /// <summary>
-    /// Preview scenes do not consistently register colliders with a queryable physics scene. This
-    /// small BVH keeps hair-authoring hover and strokes independent of editor physics while avoiding
-    /// a full triangle scan for every mouse-move event.
-    /// </summary>
-    internal sealed class HairMeshRaycaster
-    {
-        private const int LeafTriangleCount = 8;
-        private const float IntersectionEpsilon = 0.0000001f;
-
-        private struct Node
-        {
-            internal Vector3 min;
-            internal Vector3 max;
-            internal int left;
-            internal int right;
-            internal int start;
-            internal int count;
-        }
-
-        private sealed class CentroidComparer : IComparer<int>
-        {
-            internal Vector3[] centroids;
-            internal int axis;
-
-            public int Compare(int left, int right)
-            {
-                float difference = centroids[left][axis] - centroids[right][axis];
-                if (difference < 0f) return -1;
-                if (difference > 0f) return 1;
-                return left.CompareTo(right);
-            }
-        }
-
-        private Vector3[] vertices = Array.Empty<Vector3>();
-        private int[] triangleVertices = Array.Empty<int>();
-        private Vector3[] triangleMinimums = Array.Empty<Vector3>();
-        private Vector3[] triangleMaximums = Array.Empty<Vector3>();
-        private Vector3[] triangleCentroids = Array.Empty<Vector3>();
-        private int[] triangleOrder = Array.Empty<int>();
-        private Node[] nodes = Array.Empty<Node>();
-        private int[] traversalStack = Array.Empty<int>();
-        private readonly CentroidComparer centroidComparer = new CentroidComparer();
-
-        internal int TriangleCount => triangleVertices.Length / 3;
-
-        internal HairMeshRaycaster(Mesh mesh)
-        {
-            Rebuild(mesh);
-        }
-
-        internal void Rebuild(Mesh mesh)
-        {
-            vertices = mesh != null ? mesh.vertices : Array.Empty<Vector3>();
-            List<int> flattened = new List<int>();
-            if (mesh != null)
-            {
-                for (int submesh = 0; submesh < mesh.subMeshCount; submesh++)
-                {
-                    int[] indices = mesh.GetTriangles(submesh, true);
-                    flattened.AddRange(indices);
-                }
-            }
-            triangleVertices = flattened.ToArray();
-            int triangleCount = TriangleCount;
-            triangleMinimums = new Vector3[triangleCount];
-            triangleMaximums = new Vector3[triangleCount];
-            triangleCentroids = new Vector3[triangleCount];
-            triangleOrder = new int[triangleCount];
-            for (int triangle = 0; triangle < triangleCount; triangle++)
-            {
-                int index = triangle * 3;
-                int a = triangleVertices[index];
-                int b = triangleVertices[index + 1];
-                int c = triangleVertices[index + 2];
-                if ((uint)a >= (uint)vertices.Length || (uint)b >= (uint)vertices.Length ||
-                    (uint)c >= (uint)vertices.Length)
-                {
-                    triangleMinimums[triangle] = Vector3.zero;
-                    triangleMaximums[triangle] = Vector3.zero;
-                    triangleCentroids[triangle] = Vector3.zero;
-                }
-                else
-                {
-                    Vector3 minimum = Vector3.Min(vertices[a], Vector3.Min(vertices[b], vertices[c]));
-                    Vector3 maximum = Vector3.Max(vertices[a], Vector3.Max(vertices[b], vertices[c]));
-                    triangleMinimums[triangle] = minimum;
-                    triangleMaximums[triangle] = maximum;
-                    triangleCentroids[triangle] = (minimum + maximum) * 0.5f;
-                }
-                triangleOrder[triangle] = triangle;
-            }
-
-            if (triangleCount == 0)
-            {
-                nodes = Array.Empty<Node>();
-                traversalStack = Array.Empty<int>();
-                return;
-            }
-
-            List<Node> buildNodes = new List<Node>(triangleCount * 2);
-            centroidComparer.centroids = triangleCentroids;
-            BuildNode(buildNodes, 0, triangleCount);
-            nodes = buildNodes.ToArray();
-            traversalStack = new int[nodes.Length];
-        }
-
-        internal bool Raycast(Ray ray, out HairMeshRaycastHit hit)
-        {
-            hit = default;
-            if (nodes.Length == 0 || ray.direction.sqrMagnitude < IntersectionEpsilon) return false;
-            ray.direction = ray.direction.normalized;
-            float closest = float.MaxValue;
-            int closestTriangle = -1;
-            Vector3 closestBarycentric = Vector3.zero;
-            int stackCount = 0;
-            traversalStack[stackCount++] = 0;
-            while (stackCount > 0)
-            {
-                Node node = nodes[traversalStack[--stackCount]];
-                if (!IntersectsBounds(ray, node.min, node.max, closest)) continue;
-                if (node.count > 0)
-                {
-                    for (int ordered = node.start; ordered < node.start + node.count; ordered++)
-                    {
-                        int triangle = triangleOrder[ordered];
-                        int index = triangle * 3;
-                        int a = triangleVertices[index];
-                        int b = triangleVertices[index + 1];
-                        int c = triangleVertices[index + 2];
-                        if ((uint)a >= (uint)vertices.Length || (uint)b >= (uint)vertices.Length ||
-                            (uint)c >= (uint)vertices.Length ||
-                            !IntersectsTriangle(ray, vertices[a], vertices[b], vertices[c],
-                                out float distance, out Vector3 barycentric) || distance >= closest) continue;
-                        closest = distance;
-                        closestTriangle = triangle;
-                        closestBarycentric = barycentric;
-                    }
-                    continue;
-                }
-                if (node.left >= 0) traversalStack[stackCount++] = node.left;
-                if (node.right >= 0) traversalStack[stackCount++] = node.right;
-            }
-
-            if (closestTriangle < 0) return false;
-            int triangleOffset = closestTriangle * 3;
-            Vector3 first = vertices[triangleVertices[triangleOffset]];
-            Vector3 second = vertices[triangleVertices[triangleOffset + 1]];
-            Vector3 third = vertices[triangleVertices[triangleOffset + 2]];
-            Vector3 normal = Vector3.Cross(second - first, third - first);
-            normal = normal.sqrMagnitude > IntersectionEpsilon ? normal.normalized : -ray.direction;
-            if (Vector3.Dot(normal, ray.direction) > 0f) normal = -normal;
-            hit = new HairMeshRaycastHit(closestTriangle, ray.GetPoint(closest), normal,
-                closestBarycentric, closest);
-            return true;
-        }
-
-        internal bool TryGetTriangleVertices(int triangleIndex, out int a, out int b, out int c)
-        {
-            int offset = triangleIndex * 3;
-            if (offset < 0 || offset + 2 >= triangleVertices.Length)
-            {
-                a = b = c = -1;
-                return false;
-            }
-            a = triangleVertices[offset];
-            b = triangleVertices[offset + 1];
-            c = triangleVertices[offset + 2];
-            return true;
-        }
-
-        private int BuildNode(List<Node> buildNodes, int start, int count)
-        {
-            Vector3 minimum = new Vector3(float.PositiveInfinity, float.PositiveInfinity,
-                float.PositiveInfinity);
-            Vector3 maximum = new Vector3(float.NegativeInfinity, float.NegativeInfinity,
-                float.NegativeInfinity);
-            Vector3 centroidMinimum = minimum;
-            Vector3 centroidMaximum = maximum;
-            for (int ordered = start; ordered < start + count; ordered++)
-            {
-                int triangle = triangleOrder[ordered];
-                minimum = Vector3.Min(minimum, triangleMinimums[triangle]);
-                maximum = Vector3.Max(maximum, triangleMaximums[triangle]);
-                centroidMinimum = Vector3.Min(centroidMinimum, triangleCentroids[triangle]);
-                centroidMaximum = Vector3.Max(centroidMaximum, triangleCentroids[triangle]);
-            }
-
-            int nodeIndex = buildNodes.Count;
-            buildNodes.Add(default);
-            Vector3 centroidSize = centroidMaximum - centroidMinimum;
-            if (count <= LeafTriangleCount || centroidSize.sqrMagnitude < IntersectionEpsilon)
-            {
-                buildNodes[nodeIndex] = new Node
-                {
-                    min = minimum, max = maximum, left = -1, right = -1, start = start, count = count
-                };
-                return nodeIndex;
-            }
-
-            centroidComparer.axis = centroidSize.x >= centroidSize.y && centroidSize.x >= centroidSize.z
-                ? 0 : centroidSize.y >= centroidSize.z ? 1 : 2;
-            Array.Sort(triangleOrder, start, count, centroidComparer);
-            int leftCount = count / 2;
-            int left = BuildNode(buildNodes, start, leftCount);
-            int right = BuildNode(buildNodes, start + leftCount, count - leftCount);
-            buildNodes[nodeIndex] = new Node
-            {
-                min = minimum, max = maximum, left = left, right = right, start = 0, count = 0
-            };
-            return nodeIndex;
-        }
-
-        private static bool IntersectsBounds(Ray ray, Vector3 minimum, Vector3 maximum,
-            float maximumDistance)
-        {
-            float near = 0f;
-            float far = maximumDistance;
-            for (int axis = 0; axis < 3; axis++)
-            {
-                float direction = ray.direction[axis];
-                float origin = ray.origin[axis];
-                if (Mathf.Abs(direction) < IntersectionEpsilon)
-                {
-                    if (origin < minimum[axis] || origin > maximum[axis]) return false;
-                    continue;
-                }
-                float inverse = 1f / direction;
-                float first = (minimum[axis] - origin) * inverse;
-                float second = (maximum[axis] - origin) * inverse;
-                if (first > second) (first, second) = (second, first);
-                near = Mathf.Max(near, first);
-                far = Mathf.Min(far, second);
-                if (near > far) return false;
-            }
-            return far >= 0f;
-        }
-
-        private static bool IntersectsTriangle(Ray ray, Vector3 first, Vector3 second, Vector3 third,
-            out float distance, out Vector3 barycentric)
-        {
-            distance = 0f;
-            barycentric = Vector3.zero;
-            Vector3 edgeOne = second - first;
-            Vector3 edgeTwo = third - first;
-            Vector3 cross = Vector3.Cross(ray.direction, edgeTwo);
-            float determinant = Vector3.Dot(edgeOne, cross);
-            if (Mathf.Abs(determinant) < IntersectionEpsilon) return false;
-            float inverse = 1f / determinant;
-            Vector3 fromFirst = ray.origin - first;
-            float secondWeight = Vector3.Dot(fromFirst, cross) * inverse;
-            if (secondWeight < 0f || secondWeight > 1f) return false;
-            Vector3 sideCross = Vector3.Cross(fromFirst, edgeOne);
-            float thirdWeight = Vector3.Dot(ray.direction, sideCross) * inverse;
-            if (thirdWeight < 0f || secondWeight + thirdWeight > 1f) return false;
-            distance = Vector3.Dot(edgeTwo, sideCross) * inverse;
-            if (distance <= IntersectionEpsilon) return false;
-            barycentric = new Vector3(1f - secondWeight - thirdWeight, secondWeight, thirdWeight);
-            return true;
-        }
-    }
 
     internal sealed class HairSourceVisibility : IDisposable
     {

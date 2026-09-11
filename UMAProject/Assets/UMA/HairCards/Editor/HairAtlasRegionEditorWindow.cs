@@ -5,41 +5,25 @@ using UnityEngine;
 
 namespace UMA.HairCards.Editor
 {
+    // Retained for callers that open an atlas on its own. Card setup embeds the same editor.
     public sealed class HairAtlasRegionEditorWindow : EditorWindow
     {
-        private const float SidebarWidth = 310f;
-        private const int CanvasControlHint = 0x48415641;
-        private const float DuplicateTolerance = 0.003f;
-
-        private enum DrawOperation
-        {
-            None,
-            NewArea,
-            RedrawSelected
-        }
-
         [SerializeField] private HairAtlasProfileAsset atlas;
-        [SerializeField] private int selectedRegionIndex = -1;
-        [SerializeField] private DrawOperation drawOperation;
-        [SerializeField] private Vector2 sidebarScroll;
-
-        private Vector2 dragStart;
-        private Vector2 dragCurrent;
-        private bool isDragging;
+        [SerializeField] private HairAtlasEditorPanel panel = new HairAtlasEditorPanel();
 
         public static void Open(HairAtlasProfileAsset profile)
         {
-            HairAtlasRegionEditorWindow window = GetWindow<HairAtlasRegionEditorWindow>(true,
-                "Hair Atlas UV Areas", true);
+            HairAtlasRegionEditorWindow window = GetWindow<HairAtlasRegionEditorWindow>();
+            window.titleContent = new GUIContent("Hair UV Sets");
             window.atlas = profile;
-            window.selectedRegionIndex = profile != null && profile.regions != null && profile.regions.Count > 0
-                ? 0
-                : -1;
-            window.drawOperation = DrawOperation.None;
-            window.isDragging = false;
-            window.minSize = new Vector2(760f, 520f);
+            window.minSize = new Vector2(540f, 540f);
             window.Show();
-            window.Focus();
+        }
+
+        internal static void ResetOpenPreferences()
+        {
+            foreach (HairAtlasRegionEditorWindow window in Resources.FindObjectsOfTypeAll<HairAtlasRegionEditorWindow>())
+            { window.panel?.ResetPreferences(); window.Repaint(); }
         }
 
         public static Texture ResolveDisplayTexture(HairAtlasProfileAsset profile)
@@ -48,610 +32,896 @@ namespace UMA.HairCards.Editor
             if (profile.albedo != null) return profile.albedo;
             Material material = profile.material;
             if (material == null) return null;
-            if (material.HasProperty("_BaseMap"))
-            {
-                Texture baseMap = material.GetTexture("_BaseMap");
-                if (baseMap != null) return baseMap;
-            }
-            if (material.HasProperty("_MainTex"))
-            {
-                Texture mainTexture = material.GetTexture("_MainTex");
-                if (mainTexture != null) return mainTexture;
-            }
+            if (material.HasProperty("_BaseMap") && material.GetTexture("_BaseMap") != null)
+                return material.GetTexture("_BaseMap");
+            if (material.HasProperty("_MainTex") && material.GetTexture("_MainTex") != null)
+                return material.GetTexture("_MainTex");
             return material.mainTexture;
         }
 
-        private void OnEnable()
-        {
-            Undo.undoRedoPerformed += OnUndoRedo;
-        }
-
+        private void OnEnable() => Undo.undoRedoPerformed += OnUndoRedo;
         private void OnDisable()
         {
             Undo.undoRedoPerformed -= OnUndoRedo;
+            panel?.Dispose();
+            if (atlas != null && EditorUtility.IsPersistent(atlas)) AssetDatabase.SaveAssetIfDirty(atlas);
         }
-
         private void OnUndoRedo()
         {
-            ClampSelection();
-            NotifyAtlasChanged();
-        }
-
-        private void OnGUI()
-        {
-            DrawHeader();
-            if (atlas == null)
-            {
-                EditorGUILayout.HelpBox("Assign a Hair Atlas Profile to define UV areas.", MessageType.Info);
-                return;
-            }
-
-            atlas.EnsureIntegrity();
-            ClampSelection();
-            using (new EditorGUILayout.HorizontalScope())
-            {
-                DrawCanvasPanel();
-                DrawSidebar();
-            }
-        }
-
-        private void DrawHeader()
-        {
-            using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
-            {
-                EditorGUI.BeginChangeCheck();
-                HairAtlasProfileAsset nextAtlas = (HairAtlasProfileAsset)EditorGUILayout.ObjectField(
-                    atlas, typeof(HairAtlasProfileAsset), false, GUILayout.MinWidth(180f));
-                if (EditorGUI.EndChangeCheck())
-                {
-                    atlas = nextAtlas;
-                    selectedRegionIndex = atlas != null && atlas.regions != null && atlas.regions.Count > 0 ? 0 : -1;
-                    drawOperation = DrawOperation.None;
-                    isDragging = false;
-                }
-                GUILayout.FlexibleSpace();
-                GUILayout.Label("Drag directly over the atlas to define normalized UV rectangles.",
-                    EditorStyles.miniLabel);
-            }
-        }
-
-        private void DrawCanvasPanel()
-        {
-            using (new EditorGUILayout.VerticalScope(GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true)))
-            {
-                Texture texture = ResolveDisplayTexture(atlas);
-                Rect container = GUILayoutUtility.GetRect(320f, 320f,
-                    GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
-                EditorGUI.DrawRect(container, new Color(0.075f, 0.075f, 0.075f, 1f));
-                float aspect = texture != null && texture.height > 0
-                    ? texture.width / (float)texture.height
-                    : 1f;
-                Rect canvas = FitAspect(container, aspect);
-                DrawCheckerboard(canvas);
-                if (texture != null)
-                    GUI.DrawTexture(canvas, texture, ScaleMode.StretchToFill, false);
-                else
-                    GUI.Label(canvas, "No Albedo Atlas or material base texture assigned", CenteredLabel());
-
-                DrawRegionOverlays(canvas);
-                DrawActiveDrag(canvas);
-                HandleCanvasInput(canvas);
-                DrawCanvasStatus(canvas);
-            }
-        }
-
-        private void DrawSidebar()
-        {
-            using (new EditorGUILayout.VerticalScope(GUILayout.Width(SidebarWidth)))
-            {
-                sidebarScroll = EditorGUILayout.BeginScrollView(sidebarScroll);
-                DrawAtlasResources();
-                EditorGUILayout.Space(6f);
-                DrawDrawingControls();
-                EditorGUILayout.Space(6f);
-                DrawDuplicateWarnings();
-                DrawAreaList();
-                DrawSelectedAreaProperties();
-                EditorGUILayout.EndScrollView();
-            }
-        }
-
-        private void DrawAtlasResources()
-        {
-            EditorGUILayout.LabelField("Atlas Preview", EditorStyles.boldLabel);
-            EditorGUI.BeginChangeCheck();
-            Texture2D albedo = (Texture2D)EditorGUILayout.ObjectField("Albedo Atlas", atlas.albedo,
-                typeof(Texture2D), false);
-            Material material = (Material)EditorGUILayout.ObjectField("Card Material", atlas.material,
-                typeof(Material), false);
-            if (EditorGUI.EndChangeCheck())
-            {
-                Undo.RecordObject(atlas, "Edit Hair Atlas Preview");
-                atlas.albedo = albedo;
-                atlas.material = material;
-                EditorUtility.SetDirty(atlas);
-                NotifyAtlasChanged();
-            }
-            if (atlas.albedo == null && ResolveDisplayTexture(atlas) != null)
-            {
-                EditorGUILayout.HelpBox(
-                    "The preview is using the base texture from the Card Material. Assign Albedo Atlas explicitly to make the atlas source unambiguous.",
-                    MessageType.Info);
-            }
-        }
-
-        private void DrawDrawingControls()
-        {
-            EditorGUILayout.LabelField("Draw UV Area", EditorStyles.boldLabel);
-            using (new EditorGUILayout.HorizontalScope())
-            {
-                bool drawingNew = drawOperation == DrawOperation.NewArea;
-                bool nextDrawingNew = GUILayout.Toggle(drawingNew, "Draw New Area", "Button");
-                if (nextDrawingNew != drawingNew)
-                    SetDrawOperation(nextDrawingNew ? DrawOperation.NewArea : DrawOperation.None);
-                using (new EditorGUI.DisabledScope(GetSelectedRegion() == null))
-                {
-                    bool redrawing = drawOperation == DrawOperation.RedrawSelected;
-                    bool nextRedrawing = GUILayout.Toggle(redrawing, "Redraw Selected", "Button");
-                    if (nextRedrawing != redrawing)
-                        SetDrawOperation(nextRedrawing ? DrawOperation.RedrawSelected : DrawOperation.None);
-                }
-            }
-            if (drawOperation != DrawOperation.None && GUILayout.Button("Cancel Drawing"))
-                SetDrawOperation(DrawOperation.None);
-
-            string instructions = drawOperation switch
-            {
-                DrawOperation.NewArea => "Drag a rectangle over the texture. Releasing creates and selects a new numbered area.",
-                DrawOperation.RedrawSelected => "Drag a replacement rectangle for the selected area. The old rectangle remains until you release.",
-                _ => "Click an existing rectangle or its list entry to select it. Use Draw New Area or Redraw Selected before dragging."
-            };
-            EditorGUILayout.HelpBox(instructions, MessageType.Info);
-        }
-
-        private void DrawDuplicateWarnings()
-        {
-            List<string> duplicates = FindExistingDuplicateDescriptions();
-            if (duplicates.Count == 0) return;
-            EditorGUILayout.HelpBox(
-                "Nearly identical UV areas already exist: " + string.Join(", ", duplicates) +
-                ". Select one and redraw or remove it.", MessageType.Warning);
-        }
-
-        private void DrawAreaList()
-        {
-            EditorGUILayout.LabelField($"Defined UV Areas ({atlas.regions.Count})", EditorStyles.boldLabel);
-            if (atlas.regions.Count == 0)
-            {
-                EditorGUILayout.HelpBox("No UV areas are defined. Click Draw New Area, then drag over the atlas.",
-                    MessageType.Warning);
-                return;
-            }
-
-            for (int regionIndex = 0; regionIndex < atlas.regions.Count; regionIndex++)
-            {
-                HairAtlasRegion region = atlas.regions[regionIndex];
-                if (region == null) continue;
-                bool selected = selectedRegionIndex == regionIndex;
-                using (new EditorGUILayout.HorizontalScope())
-                {
-                    Rect swatch = GUILayoutUtility.GetRect(13f, 13f, GUILayout.Width(13f), GUILayout.Height(13f));
-                    EditorGUI.DrawRect(swatch, RegionColor(regionIndex, selected));
-                    string name = string.IsNullOrWhiteSpace(region.name) ? "Unnamed" : region.name;
-                    if (GUILayout.Toggle(selected, $"{regionIndex + 1}. {name}", "Button"))
-                    {
-                        selectedRegionIndex = regionIndex;
-                        if (drawOperation == DrawOperation.RedrawSelected) isDragging = false;
-                        Repaint();
-                    }
-                }
-                EditorGUILayout.LabelField(
-                    $"    X {region.uvRect.x:F3}   Y {region.uvRect.y:F3}   W {region.uvRect.width:F3}   H {region.uvRect.height:F3}",
-                    EditorStyles.miniLabel);
-            }
-        }
-
-        private void DrawSelectedAreaProperties()
-        {
-            HairAtlasRegion region = GetSelectedRegion();
-            if (region == null) return;
-
-            EditorGUILayout.Space(8f);
-            EditorGUILayout.LabelField($"Selected: Area {selectedRegionIndex + 1}", EditorStyles.boldLabel);
-            EditorGUI.BeginChangeCheck();
-            string regionName = EditorGUILayout.TextField("Name", region.name);
-            Rect uvRect = EditorGUILayout.RectField("UV Rectangle", region.uvRect);
-            float weight = Mathf.Max(0f, EditorGUILayout.FloatField("Selection Weight", region.weight));
-            bool flipU = EditorGUILayout.Toggle("Flip U", region.flipU);
-            bool flipV = EditorGUILayout.Toggle("Flip V", region.flipV);
-            string tags = EditorGUILayout.TextField("Tags", string.Join(", ", region.tags ?? Array.Empty<string>()));
-            if (EditorGUI.EndChangeCheck())
-            {
-                Undo.RecordObject(atlas, "Edit Hair UV Area");
-                region.name = string.IsNullOrWhiteSpace(regionName)
-                    ? $"Area {selectedRegionIndex + 1}"
-                    : regionName;
-                region.uvRect = uvRect;
-                region.weight = weight;
-                region.flipU = flipU;
-                region.flipV = flipV;
-                region.tags = ParseTags(tags);
-                region.EnsureIntegrity();
-                EditorUtility.SetDirty(atlas);
-                NotifyAtlasChanged();
-            }
-
-            using (new EditorGUILayout.HorizontalScope())
-            {
-                if (GUILayout.Button("Redraw on Atlas")) SetDrawOperation(DrawOperation.RedrawSelected);
-                if (GUILayout.Button("Remove Area")) RemoveSelectedRegion();
-            }
-        }
-
-        private void DrawRegionOverlays(Rect canvas)
-        {
-            for (int regionIndex = 0; regionIndex < atlas.regions.Count; regionIndex++)
-            {
-                HairAtlasRegion region = atlas.regions[regionIndex];
-                if (region == null) continue;
-                Rect rectangle = UvToCanvas(region.uvRect, canvas);
-                bool selected = selectedRegionIndex == regionIndex;
-                Color color = RegionColor(regionIndex, selected);
-                Color fill = color;
-                fill.a = selected ? 0.2f : 0.08f;
-                EditorGUI.DrawRect(rectangle, fill);
-                DrawOutline(rectangle, color, selected ? 3f : 2f);
-
-                string name = string.IsNullOrWhiteSpace(region.name) ? "" : "  " + region.name;
-                GUIContent label = new GUIContent($"{regionIndex + 1}{name}");
-                Vector2 labelSize = EditorStyles.miniBoldLabel.CalcSize(label);
-                Rect labelRect = new Rect(rectangle.x + 3f, rectangle.y + 3f,
-                    Mathf.Min(labelSize.x + 8f, Mathf.Max(0f, rectangle.width - 6f)), labelSize.y + 3f);
-                if (labelRect.width > 8f)
-                {
-                    EditorGUI.DrawRect(labelRect, new Color(0f, 0f, 0f, 0.72f));
-                    GUI.Label(labelRect, label, WhiteMiniBoldLabel());
-                }
-            }
-        }
-
-        private void DrawActiveDrag(Rect canvas)
-        {
-            if (!isDragging || drawOperation == DrawOperation.None) return;
-            Rect rectangle = MakeRect(ClampToRect(dragStart, canvas), ClampToRect(dragCurrent, canvas));
-            EditorGUI.DrawRect(rectangle, new Color(0.05f, 0.9f, 1f, 0.16f));
-            DrawOutline(rectangle, new Color(0.05f, 0.95f, 1f, 1f), 3f);
-        }
-
-        private void DrawCanvasStatus(Rect canvas)
-        {
-            string status = drawOperation switch
-            {
-                DrawOperation.NewArea => "DRAW NEW AREA: left-drag on the atlas; Esc cancels",
-                DrawOperation.RedrawSelected => $"REDRAW AREA {selectedRegionIndex + 1}: left-drag on the atlas; Esc cancels",
-                _ => "Click an outlined area to select it"
-            };
-            Rect statusRect = new Rect(canvas.x + 6f, canvas.yMax - 27f,
-                Mathf.Max(0f, canvas.width - 12f), 21f);
-            EditorGUI.DrawRect(statusRect, new Color(0f, 0f, 0f, 0.72f));
-            GUI.Label(statusRect, status, WhiteMiniBoldLabel());
-        }
-
-        private void HandleCanvasInput(Rect canvas)
-        {
-            Event current = Event.current;
-            int controlId = GUIUtility.GetControlID(CanvasControlHint, FocusType.Passive);
-            if (current.type == EventType.KeyDown && current.keyCode == KeyCode.Escape &&
-                drawOperation != DrawOperation.None)
-            {
-                SetDrawOperation(DrawOperation.None);
-                current.Use();
-                return;
-            }
-
-            if (current.type == EventType.MouseDown && current.button == 0 && canvas.Contains(current.mousePosition))
-            {
-                if (drawOperation == DrawOperation.None)
-                {
-                    selectedRegionIndex = HitTestRegion(current.mousePosition, canvas);
-                    Repaint();
-                }
-                else
-                {
-                    GUIUtility.hotControl = controlId;
-                    dragStart = ClampToRect(current.mousePosition, canvas);
-                    dragCurrent = dragStart;
-                    isDragging = true;
-                }
-                current.Use();
-            }
-            else if (current.type == EventType.MouseDrag && current.button == 0 &&
-                     GUIUtility.hotControl == controlId && isDragging)
-            {
-                dragCurrent = ClampToRect(current.mousePosition, canvas);
-                Repaint();
-                current.Use();
-            }
-            else if (current.type == EventType.MouseUp && current.button == 0 &&
-                     GUIUtility.hotControl == controlId && isDragging)
-            {
-                dragCurrent = ClampToRect(current.mousePosition, canvas);
-                GUIUtility.hotControl = 0;
-                isDragging = false;
-                CompleteDraw(canvas);
-                current.Use();
-            }
-        }
-
-        private void CompleteDraw(Rect canvas)
-        {
-            Rect pixelRectangle = MakeRect(dragStart, dragCurrent);
-            if (pixelRectangle.width < 4f || pixelRectangle.height < 4f)
-            {
-                ShowNotification(new GUIContent("The UV area is too small. Drag a larger rectangle."));
-                Repaint();
-                return;
-            }
-
-            Rect uvRectangle = CanvasToUv(pixelRectangle, canvas);
-            int ignoredIndex = drawOperation == DrawOperation.RedrawSelected ? selectedRegionIndex : -1;
-            int duplicateIndex = FindDuplicate(uvRectangle, ignoredIndex);
-            if (duplicateIndex >= 0)
-            {
-                selectedRegionIndex = duplicateIndex;
-                drawOperation = DrawOperation.None;
-                ShowNotification(new GUIContent(
-                    $"That matches Area {duplicateIndex + 1}; the existing area was selected instead."), 3f);
-                Repaint();
-                return;
-            }
-
-            if (drawOperation == DrawOperation.NewArea)
-            {
-                Undo.RecordObject(atlas, "Draw Hair UV Area");
-                atlas.CreateRegion($"Area {atlas.regions.Count + 1}", uvRectangle);
-                selectedRegionIndex = atlas.regions.Count - 1;
-            }
-            else if (drawOperation == DrawOperation.RedrawSelected)
-            {
-                HairAtlasRegion region = GetSelectedRegion();
-                if (region == null) return;
-                Undo.RecordObject(atlas, "Redraw Hair UV Area");
-                region.uvRect = uvRectangle;
-                region.EnsureIntegrity();
-            }
-
-            drawOperation = DrawOperation.None;
-            EditorUtility.SetDirty(atlas);
-            NotifyAtlasChanged();
-        }
-
-        private void RemoveSelectedRegion()
-        {
-            HairAtlasRegion selectedRegion = GetSelectedRegion();
-            if (selectedRegion == null) return;
-            int removedNumber = selectedRegionIndex + 1;
-            HairGroomAsset activeGroom = HairCardStage.ActiveStage?.Groom;
-            if (activeGroom != null)
-                Undo.RecordObjects(new UnityEngine.Object[] { atlas, activeGroom }, "Remove Hair UV Area");
-            else
-                Undo.RecordObject(atlas, "Remove Hair UV Area");
-            atlas.regions.RemoveAt(selectedRegionIndex);
-            if (activeGroom != null)
-            {
-                for (int groupIndex = 0; groupIndex < activeGroom.Groups.Count; groupIndex++)
-                {
-                    HairGroup group = activeGroom.Groups[groupIndex];
-                    if (group != null && group.atlas == atlas)
-                        group.atlasRegionIds?.Remove(selectedRegion.Id);
-                }
-                HairGroomCommands.Commit(activeGroom);
-            }
-            selectedRegionIndex = Mathf.Clamp(selectedRegionIndex, 0, atlas.regions.Count - 1);
-            if (atlas.regions.Count == 0) selectedRegionIndex = -1;
-            drawOperation = DrawOperation.None;
-            EditorUtility.SetDirty(atlas);
-            ShowNotification(new GUIContent($"Removed Area {removedNumber}. Undo is available."));
-            NotifyAtlasChanged();
-        }
-
-        private void SetDrawOperation(DrawOperation operation)
-        {
-            if (operation == DrawOperation.RedrawSelected && GetSelectedRegion() == null) operation = DrawOperation.None;
-            drawOperation = operation;
-            isDragging = false;
+            panel?.CancelInteraction();
+            HairCardStage.ActiveStage?.QueueRebuild();
             Repaint();
         }
-
-        private int HitTestRegion(Vector2 mousePosition, Rect canvas)
+        private void OnLostFocus() => panel?.CancelInteraction();
+        private void OnGUI()
         {
-            int bestIndex = -1;
-            float smallestArea = float.MaxValue;
-            for (int regionIndex = 0; regionIndex < atlas.regions.Count; regionIndex++)
-            {
-                HairAtlasRegion region = atlas.regions[regionIndex];
-                if (region == null) continue;
-                Rect rectangle = UvToCanvas(region.uvRect, canvas);
-                float area = rectangle.width * rectangle.height;
-                if (rectangle.Contains(mousePosition) && area < smallestArea)
-                {
-                    bestIndex = regionIndex;
-                    smallestArea = area;
-                }
-            }
-            return bestIndex;
+            atlas = (HairAtlasProfileAsset)EditorGUILayout.ObjectField("Atlas Profile", atlas,
+                typeof(HairAtlasProfileAsset), false);
+            panel ??= new HairAtlasEditorPanel();
+            panel.Draw(atlas, null, null, position.width - 20f, Repaint);
+        }
+    }
+
+    [Serializable]
+    internal sealed class HairAtlasEditorPanel : IDisposable
+    {
+        private const int CanvasHint = 0x48415641;
+        private enum PreviewChannel { ColorAndAlpha, Color, Alpha }
+        private enum EditTool { Select, Draw, Redraw }
+        private enum Gesture { None, New, Redraw, Move, Resize, Pan }
+
+        [SerializeField] private HairAtlasProfileAsset atlas;
+        [SerializeField] private string selectedId;
+        [SerializeField] private PreviewChannel channel;
+        [SerializeField] private bool checkerboard = true;
+        [SerializeField] private Color checkerLight = new Color(0.75f, 0.75f, 0.75f, 1f);
+        [SerializeField] private Color checkerDark = new Color(0.55f, 0.55f, 0.55f, 1f);
+        [SerializeField] private Color solidBackground = new Color(0.22f, 0.22f, 0.22f, 1f);
+        [SerializeField] private float checkerSize = 12f;
+        [SerializeField] private bool backgroundExpanded;
+        [SerializeField] private bool snapToPixels = true;
+        [SerializeField] private bool showOutlines = true;
+        [SerializeField] private bool pixelUnits;
+        [SerializeField] private float zoom = 1f;
+        [SerializeField] private Vector2 pan;
+        [SerializeField] private Vector2 listScroll;
+
+        [SerializeField] private EditTool tool;
+        [NonSerialized] private Gesture gesture;
+        [NonSerialized] private HairGroomAsset groom;
+        [NonSerialized] private HairGroup group;
+        [NonSerialized] private Action repaint;
+        [NonSerialized] private Texture2D checkerTexture;
+        [NonSerialized] private GUIStyle badgeStyle;
+        [NonSerialized] private int ownedControl;
+        [NonSerialized] private Vector2 startUv;
+        [NonSerialized] private Vector2 startMouse;
+        [NonSerialized] private Vector2 startPan;
+        [NonSerialized] private Rect originalRect;
+        [NonSerialized] private Rect pendingRect;
+        [NonSerialized] private int corner;
+        [NonSerialized] private string status;
+        [NonSerialized] private Vector2 fittedCanvasSize;
+        [NonSerialized] private PreviewRenderUtility materialPreview;
+        [NonSerialized] private HairCardMeshBuildResult previewCard;
+        [NonSerialized] private HairPreviewMaterialSet previewMaterials;
+        [NonSerialized] private string previewSignature;
+        [NonSerialized] private HairCardProfileAsset previewProfile;
+        [NonSerialized] private HairAtlasProfileAsset previewAtlas;
+        [NonSerialized] internal Texture lastRenderedCard;
+        [SerializeField] private bool materialPreviewExpanded = true;
+        [SerializeField] private float previewYaw;
+        [NonSerialized] private bool preferencesLoaded;
+        [NonSerialized] private string preferenceContext;
+        [NonSerialized] private double nextPreferencesSave;
+
+        private void LoadPreferences(HairAtlasProfileAsset nextAtlas)
+        {
+            string context = HairEditorPreferences.Context(nextAtlas);
+            if (preferencesLoaded && context == preferenceContext) return;
+            if (preferencesLoaded) SavePreferences();
+            preferenceContext = context;
+            selectedId = null; zoom = 1f; pan = Vector2.zero;
+            HairEditorPreferences.instance.Restore(this, "atlas-panel", context);
+            preferencesLoaded = true;
+            ReleaseCheckerTexture();
         }
 
-        private int FindDuplicate(Rect rectangle, int ignoredIndex)
+        internal void SavePreferences()
         {
-            for (int regionIndex = 0; regionIndex < atlas.regions.Count; regionIndex++)
+            if (preferencesLoaded && !HairEditorPreferences.Suspended)
+                HairEditorPreferences.instance.Remember(this, "atlas-panel", preferenceContext);
+        }
+
+        internal void ResetPreferences()
+        {
+            CancelInteraction();
+            HairPreferenceCodec.Reset(this);
+            ReleaseCheckerTexture();
+            SavePreferences();
+        }
+
+        internal HairAtlasRegion Selected => atlas?.regions?.Find(region => region != null && region.Id == selectedId);
+        internal bool IsInteracting => gesture != Gesture.None;
+        internal void SelectSet(HairAtlasProfileAsset profile, string id)
+        {
+            CancelInteraction();
+            LoadPreferences(profile);
+            atlas = profile;
+            selectedId = id;
+        }
+
+        internal void Draw(HairAtlasProfileAsset nextAtlas, HairGroomAsset nextGroom,
+            HairGroup nextGroup, float availableWidth, Action repaintOwner)
+        {
+            // Allocate before the variable set list/properties: mouse capture must survive selection changes.
+            int control = GUIUtility.GetControlID(CanvasHint, FocusType.Keyboard);
+            if (atlas != nextAtlas || group != nextGroup)
             {
-                if (regionIndex == ignoredIndex) continue;
-                HairAtlasRegion region = atlas.regions[regionIndex];
-                if (region != null && NearlyEqual(region.uvRect, rectangle)) return regionIndex;
+                CancelInteraction();
+                if (atlas != nextAtlas)
+                {
+                    LoadPreferences(nextAtlas);
+                }
+                atlas = nextAtlas;
+                status = null;
             }
+            groom = nextGroom;
+            if (!preferencesLoaded) LoadPreferences(nextAtlas);
+            group = nextGroup;
+            repaint = repaintOwner;
+            if (atlas == null)
+            {
+                EditorGUILayout.HelpBox("Create or assign an Atlas Profile above to start defining UV sets.", MessageType.Info);
+                return;
+            }
+            atlas.EnsureIntegrity();
+            if (Selected == null)
+                selectedId = atlas.regions.Find(region => region != null)?.Id;
+            Texture texture = HairAtlasRegionEditorWindow.ResolveDisplayTexture(atlas);
+
+            EditorGUILayout.Space(6f);
+            EditorGUILayout.LabelField("UV Sets", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Each set is a named rectangle on this atlas. Draw a set, then drag it or its corners to refine it.",
+                EditorStyles.wordWrappedMiniLabel);
+            EditorGUILayout.LabelField("UV sets belong to the Atlas Profile; edits affect all groups using that profile.",
+                EditorStyles.wordWrappedMiniLabel);
+            DrawToolbar(texture);
+            DrawPreviewSettings();
+            bool wide = availableWidth >= 730f;
+            if (wide)
+            {
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    using (new EditorGUILayout.VerticalScope(GUILayout.ExpandWidth(true)))
+                        DrawCanvas(texture, control, Mathf.Clamp((availableWidth - 245f) * 0.75f, 300f, 460f));
+                    using (new EditorGUILayout.VerticalScope(GUILayout.Width(225f)))
+                        DrawSetList(control, 285f);
+                }
+            }
+            else
+            {
+                DrawCanvas(texture, control, Mathf.Clamp(availableWidth * 0.7f, 270f, 400f));
+                DrawSetList(control, Mathf.Clamp(atlas.regions.Count * 28f + 8f, 60f, 156f));
+            }
+            DrawSelectedProperties(texture);
+            DrawMaterialPreview();
+            if (groom != null) HairCardStage.ActiveStage?.HighlightUvSet(atlas, selectedId);
+            HairCardStage.ActiveStage?.SetWorkspaceInteraction(IsInteracting || GUIUtility.hotControl != 0 || EditorGUIUtility.editingTextField);
+            if (!string.IsNullOrEmpty(status))
+                EditorGUILayout.HelpBox(status, MessageType.None);
+            if (!IsInteracting && Event.current.type == EventType.Repaint && EditorApplication.timeSinceStartup >= nextPreferencesSave)
+            {
+                nextPreferencesSave = EditorApplication.timeSinceStartup + 2d;
+                SavePreferences();
+            }
+        }
+
+        private void DrawToolbar(Texture texture)
+        {
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                EditTool nextTool = (EditTool)GUILayout.Toolbar((int)tool,
+                    new[] { "Select / Move", "+ Draw Set", "Redraw" }, GUILayout.Height(25f));
+                if (nextTool != tool)
+                {
+                    CancelInteraction();
+                    tool = nextTool == EditTool.Redraw && Selected == null ? EditTool.Draw : nextTool;
+                    status = null;
+                }
+                if (GUILayout.Button("Fit", GUILayout.Width(38f), GUILayout.Height(25f)))
+                {
+                    zoom = 1f;
+                    pan = Vector2.zero;
+                }
+            }
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                channel = (PreviewChannel)GUILayout.Toolbar((int)channel,
+                    new[] { "Color + Alpha", "Color", "Alpha" });
+                GUILayout.Label(texture != null ? $"{texture.width} × {texture.height}" : "No texture",
+                    EditorStyles.miniLabel, GUILayout.Width(95f));
+            }
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                snapToPixels = GUILayout.Toggle(snapToPixels, "Snap to pixels");
+                showOutlines = GUILayout.Toggle(showOutlines, "UV outlines");
+                GUILayout.FlexibleSpace();
+                GUILayout.Label($"{zoom * 100f:0}%", EditorStyles.miniLabel);
+            }
+            if (texture == null)
+                EditorGUILayout.HelpBox("Assign Albedo Atlas or a material base texture. UV sets can still be drawn in the empty canvas.",
+                    MessageType.Info);
+        }
+
+        private void DrawPreviewSettings()
+        {
+            backgroundExpanded = EditorGUILayout.Foldout(backgroundExpanded, "Preview background", true);
+            if (!backgroundExpanded) return;
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                checkerboard = GUILayout.Toolbar(checkerboard ? 0 : 1, new[] { "Checkerboard", "Solid color" }) == 0;
+                EditorGUI.BeginChangeCheck();
+                if (checkerboard)
+                {
+                    checkerLight = EditorGUILayout.ColorField("Light squares", checkerLight);
+                    checkerDark = EditorGUILayout.ColorField("Dark squares", checkerDark);
+                    checkerSize = EditorGUILayout.Slider("Square size", checkerSize, 6f, 32f);
+                }
+                else solidBackground = EditorGUILayout.ColorField("Background color", solidBackground);
+                if (EditorGUI.EndChangeCheck()) ReleaseCheckerTexture();
+                if (GUILayout.Button("Reset background"))
+                {
+                    checkerboard = true;
+                    checkerLight = new Color(0.75f, 0.75f, 0.75f, 1f);
+                    checkerDark = new Color(0.55f, 0.55f, 0.55f, 1f);
+                    checkerSize = 12f;
+                    solidBackground = new Color(0.22f, 0.22f, 0.22f, 1f);
+                    ReleaseCheckerTexture();
+                }
+                EditorGUILayout.LabelField("Preview only. Alpha uses the atlas texture's alpha channel; the scene uses the Card Material.",
+                    EditorStyles.wordWrappedMiniLabel);
+            }
+        }
+
+        private void DrawCanvas(Texture texture, int control, float height)
+        {
+            Rect viewport = GUILayoutUtility.GetRect(100f, height, GUILayout.ExpandWidth(true));
+            GUI.BeginGroup(viewport);
+            try
+            {
+                Rect localViewport = new Rect(0f, 0f, viewport.width, viewport.height);
+                EditorGUI.DrawRect(localViewport, new Color(0.12f, 0.12f, 0.12f, 1f));
+                Rect fit = FitAspect(new Rect(8f, 8f, viewport.width - 16f, viewport.height - 16f),
+                    texture != null ? texture.width / (float)Mathf.Max(1, texture.height) : 1f);
+                fittedCanvasSize = fit.size;
+                Rect canvas = new Rect(localViewport.center + pan - fit.size * zoom * 0.5f, fit.size * zoom);
+                // Clip all texture and overlay drawing to the viewport; UVs stay normalized during zoom/pan.
+                DrawBackground(canvas);
+                if (texture != null) DrawTexture(canvas, texture);
+                if (showOutlines) DrawOverlays(canvas);
+                HandleInput(texture, localViewport, canvas, control);
+                if (Event.current.type == EventType.Repaint && (gesture == Gesture.New || gesture == Gesture.Redraw))
+                    DrawOutline(HairAtlasEditingUtility.UvToCanvas(pendingRect, canvas), Color.cyan, 2f);
+            }
+            finally { GUI.EndGroup(); }
+            string instruction = tool == EditTool.Draw ? "Drag to add a UV set. Esc cancels." :
+                tool == EditTool.Redraw ? "Drag to replace the selected rectangle. Esc cancels." :
+                "Drag a set to move; drag its corners to resize. Wheel zooms; middle-drag pans.";
+            EditorGUILayout.LabelField(instruction, EditorStyles.wordWrappedMiniLabel);
+        }
+
+        private void DrawBackground(Rect rect)
+        {
+            if (Event.current.type != EventType.Repaint) return;
+            if (!checkerboard)
+            {
+                Color color = solidBackground;
+                color.a = 1f;
+                EditorGUI.DrawRect(rect, color);
+                return;
+            }
+            if (checkerTexture == null)
+            {
+                checkerTexture = new Texture2D(2, 2, TextureFormat.RGBA32, false)
+                {
+                    name = "Hair UV Preview Checkerboard",
+                    hideFlags = HideFlags.HideAndDontSave,
+                    filterMode = FilterMode.Point,
+                    wrapMode = TextureWrapMode.Repeat
+                };
+                Color light = checkerLight; light.a = 1f;
+                Color dark = checkerDark; dark.a = 1f;
+                checkerTexture.SetPixels(new[] { light, dark, dark, light });
+                checkerTexture.Apply(false, true);
+            }
+            GUI.DrawTextureWithTexCoords(rect, checkerTexture,
+                new Rect(0f, 0f, rect.width / (checkerSize * 2f), rect.height / (checkerSize * 2f)), false);
+        }
+
+        private void DrawTexture(Rect rect, Texture texture)
+        {
+            if (Event.current.type != EventType.Repaint) return;
+            if (channel == PreviewChannel.Alpha)
+                EditorGUI.DrawTextureAlpha(rect, texture, ScaleMode.StretchToFill);
+            else
+                GUI.DrawTexture(rect, texture, ScaleMode.StretchToFill, channel == PreviewChannel.ColorAndAlpha);
+        }
+
+        private void DrawOverlays(Rect canvas)
+        {
+            for (int index = 0; index < atlas.regions.Count; index++)
+            {
+                HairAtlasRegion region = atlas.regions[index];
+                if (region == null || region.Id == selectedId) continue;
+                DrawRegion(region, index, canvas, false);
+            }
+            HairAtlasRegion selected = Selected;
+            if (selected != null)
+                DrawRegion(selected, atlas.regions.IndexOf(selected), canvas, true);
+        }
+
+        private void DrawRegion(HairAtlasRegion region, int index, Rect canvas, bool selected)
+        {
+            Rect uv = selected && (gesture == Gesture.Move || gesture == Gesture.Resize) ? pendingRect : region.uvRect;
+            Rect rect = HairAtlasEditingUtility.UvToCanvas(uv, canvas);
+            bool used = group == null || group.atlasRegionSelection == HairAtlasRegionSelectionMode.All ||
+                        group.atlasRegionIds.Contains(region.Id);
+            Color color = selected ? Color.cyan : used ? new Color(1f, 0.8f, 0.3f) : Color.gray;
+            DrawOutline(rect, Color.black, selected ? 4f : 3f);
+            DrawOutline(rect, color, selected ? 2f : 1f);
+            Rect badge = new Rect(rect.x + 4f, rect.y + 4f, Mathf.Min(170f, Mathf.Max(32f, rect.width - 8f)), 18f);
+            EditorGUI.DrawRect(badge, new Color(0f, 0f, 0f, 0.8f));
+            badgeStyle ??= new GUIStyle(EditorStyles.miniBoldLabel) { clipping = TextClipping.Clip };
+            badgeStyle.normal.textColor = color;
+            GUI.Label(badge, new GUIContent($" {index + 1}. {region.name}", region.name),
+                badgeStyle);
+            if (!selected) return;
+            for (int i = 0; i < 4; i++)
+            {
+                Vector2 point = Corner(rect, i);
+                EditorGUI.DrawRect(new Rect(point.x - 4f, point.y - 4f, 8f, 8f), Color.black);
+                EditorGUI.DrawRect(new Rect(point.x - 3f, point.y - 3f, 6f, 6f), Color.cyan);
+                EditorGUIUtility.AddCursorRect(new Rect(point.x - 6f, point.y - 6f, 12f, 12f),
+                    i == 0 || i == 3 ? MouseCursor.ResizeUpLeft : MouseCursor.ResizeUpRight);
+            }
+        }
+
+        private void DrawSetList(int control, float height)
+        {
+            EditorGUILayout.LabelField($"UV Sets ({atlas.regions.Count})", EditorStyles.boldLabel);
+            if (group != null)
+            {
+                int mode = GUILayout.Toolbar((int)group.atlasRegionSelection, new[] { "Use all", "Use checked" });
+                if (mode != (int)group.atlasRegionSelection)
+                {
+                    Undo.RecordObject(groom, "Change Hair UV Set Assignment");
+                    // Preserve the current effective selection when first switching from All.
+                    if (mode == (int)HairAtlasRegionSelectionMode.Selected && group.atlasRegionIds.Count == 0)
+                        foreach (HairAtlasRegion region in atlas.regions)
+                            if (region != null) group.atlasRegionIds.Add(region.Id);
+                    group.atlasRegionSelection = (HairAtlasRegionSelectionMode)mode;
+                    HairGroomCommands.Commit(groom, HairPreviewChange.Uvs);
+                }
+            }
+            listScroll = EditorGUILayout.BeginScrollView(listScroll, GUILayout.Height(height));
+            for (int i = 0; i < atlas.regions.Count; i++)
+            {
+                HairAtlasRegion region = atlas.regions[i];
+                if (region == null) continue;
+                using (new EditorGUILayout.HorizontalScope(GUILayout.Height(32f)))
+                {
+                    if (group != null)
+                    {
+                        bool used = group.atlasRegionSelection == HairAtlasRegionSelectionMode.All ||
+                                    group.atlasRegionIds.Contains(region.Id);
+                        using (new EditorGUI.DisabledScope(group.atlasRegionSelection == HairAtlasRegionSelectionMode.All))
+                        {
+                            bool next = EditorGUILayout.Toggle(used, GUILayout.Width(18f));
+                            if (next != used)
+                            {
+                                Undo.RecordObject(groom, "Assign Hair UV Set");
+                                if (next) group.atlasRegionIds.Add(region.Id);
+                                else group.atlasRegionIds.Remove(region.Id);
+                                HairGroomCommands.Commit(groom, HairPreviewChange.Uvs);
+                            }
+                        }
+                    }
+                    bool selected = region.Id == selectedId;
+                    Rect thumbnail = GUILayoutUtility.GetRect(26f, 30f, GUILayout.Width(26f));
+                    if (Event.current.type == EventType.Repaint)
+                    {
+                        DrawBackground(thumbnail);
+                        Texture texture = HairAtlasRegionEditorWindow.ResolveDisplayTexture(atlas);
+                        if (texture != null)
+                        {
+                            Rect uv = region.uvRect;
+                            if (region.flipU) { uv.x += uv.width; uv.width = -uv.width; }
+                            if (region.flipV) { uv.y += uv.height; uv.height = -uv.height; }
+                            GUI.DrawTextureWithTexCoords(thumbnail, texture, uv, true);
+                        }
+                    }
+                    if (GUILayout.Toggle(selected, new GUIContent($"{i + 1}. {region.name}",
+                            $"UV: {region.uvRect}\nWeight: {region.weight:0.##}"), "Button") && !selected)
+                    {
+                        CancelInteraction();
+                        selectedId = region.Id;
+                        GUIUtility.keyboardControl = control;
+                        repaint?.Invoke();
+                    }
+                }
+            }
+            if (atlas.regions.Count == 0)
+                EditorGUILayout.LabelField("No sets yet. Choose + Draw Set and drag on the atlas.",
+                    EditorStyles.wordWrappedMiniLabel);
+            EditorGUILayout.EndScrollView();
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                if (GUILayout.Button(new GUIContent("+ Add Set", "Draw a rectangle on the atlas to add a UV set.")))
+                {
+                    CancelInteraction();
+                    tool = EditTool.Draw;
+                    status = "Drag a rectangle on the atlas to create the new UV set.";
+                }
+                using (new EditorGUI.DisabledScope(Selected == null))
+                {
+                    if (GUILayout.Button("Duplicate")) DuplicateSelected();
+                    if (GUILayout.Button("Remove")) RemoveSelected();
+                }
+            }
+            using (new EditorGUI.DisabledScope(Selected == null))
+                if (GUILayout.Button("Frame selected (F)")) FrameSelected();
+            EditorGUILayout.LabelField("Focus canvas: arrows = 1 pixel · Shift = 10 · Ctrl/Cmd+D = duplicate", EditorStyles.wordWrappedMiniLabel);
+            if (group != null && group.atlasRegionSelection == HairAtlasRegionSelectionMode.Selected &&
+                !atlas.regions.Exists(region => region != null && group.atlasRegionIds.Contains(region.Id)))
+                EditorGUILayout.HelpBox("Check at least one set to assign atlas UVs to this group.", MessageType.Warning);
+        }
+
+        private void DrawSelectedProperties(Texture texture)
+        {
+            HairAtlasRegion selected = Selected;
+            if (selected == null) return;
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                EditorGUILayout.LabelField("Selected UV Set", EditorStyles.boldLabel);
+                pixelUnits = GUILayout.Toolbar(pixelUnits ? 1 : 0, new[] { "Normalized UV", "Pixels" }) == 1;
+                Vector2 size = texture != null ? new Vector2(texture.width, texture.height) : Vector2.one;
+                Rect display = pixelUnits ? HairAtlasEditingUtility.ScaleRect(selected.uvRect, size) : selected.uvRect;
+                EditorGUI.BeginChangeCheck();
+                string name = EditorGUILayout.DelayedTextField("Name", selected.name);
+                Rect rect = EditorGUILayout.RectField(new GUIContent(pixelUnits ? "Pixels (bottom-left)" : "UV Rectangle",
+                    "Origin is the bottom-left corner. Drag corners on the atlas to resize visually."), display);
+                float weight = Mathf.Max(0f, EditorGUILayout.FloatField(new GUIContent("Selection Weight",
+                    "Relative frequency when generated cards choose between eligible UV sets."), selected.weight));
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    bool flipU = EditorGUILayout.ToggleLeft("Flip U", selected.flipU);
+                    bool flipV = EditorGUILayout.ToggleLeft("Flip V", selected.flipV);
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        Undo.RecordObject(atlas, "Edit Hair UV Set");
+                        selected.name = string.IsNullOrWhiteSpace(name) ? "UV Set" : name;
+                        selected.uvRect = HairAtlasEditingUtility.ClampRect(pixelUnits
+                            ? HairAtlasEditingUtility.ScaleRect(rect, new Vector2(1f / size.x, 1f / size.y)) : rect);
+                        selected.weight = weight;
+                        selected.flipU = flipU;
+                        selected.flipV = flipV;
+                        selected.EnsureIntegrity();
+                        Changed();
+                    }
+                }
+                if (texture == null && pixelUnits)
+                    EditorGUILayout.LabelField("Assign a texture to use its pixel dimensions.", EditorStyles.wordWrappedMiniLabel);
+                string tags = string.Join(", ", selected.tags ?? Array.Empty<string>());
+                string editedTags = EditorGUILayout.DelayedTextField("Tags", tags);
+                if (editedTags != tags)
+                {
+                    Undo.RecordObject(atlas, "Edit Hair UV Set Tags");
+                    List<string> parsed = new List<string>();
+                    foreach (string part in editedTags.Split(','))
+                    {
+                        string tag = part.Trim();
+                        if (tag.Length > 0 && !parsed.Contains(tag)) parsed.Add(tag);
+                    }
+                    selected.tags = parsed.ToArray();
+                    Changed();
+                }
+            }
+        }
+
+        private void HandleInput(Texture texture, Rect viewport, Rect canvas, int control)
+        {
+            Event evt = Event.current;
+            if (evt.type == EventType.KeyDown && GUIUtility.keyboardControl == control &&
+                !EditorGUIUtility.editingTextField && gesture == Gesture.None && Selected != null)
+            {
+                if (evt.keyCode == KeyCode.F) { FrameSelected(); evt.Use(); return; }
+                if (evt.keyCode == KeyCode.D && (evt.control || evt.command)) { DuplicateSelected(); evt.Use(); return; }
+                Vector2 direction = evt.keyCode switch
+                { KeyCode.LeftArrow => Vector2.left, KeyCode.RightArrow => Vector2.right, KeyCode.UpArrow => Vector2.up, KeyCode.DownArrow => Vector2.down, _ => Vector2.zero };
+                if (direction != Vector2.zero)
+                {
+                    Vector2 step = texture != null ? new Vector2(1f / texture.width, 1f / texture.height) : Vector2.one * 0.001f;
+                    NudgeSelected(Vector2.Scale(direction, step) * (evt.shift ? 10f : 1f));
+                    evt.Use(); return;
+                }
+            }
+            if (evt.type == EventType.KeyDown && evt.keyCode == KeyCode.Escape &&
+                (gesture != Gesture.None || tool != EditTool.Select))
+            {
+                CancelInteraction();
+                evt.Use();
+                repaint?.Invoke();
+                return;
+            }
+            if (evt.type == EventType.KeyDown && evt.keyCode == KeyCode.Delete &&
+                GUIUtility.keyboardControl == control && !EditorGUIUtility.editingTextField)
+            {
+                RemoveSelected();
+                evt.Use();
+                return;
+            }
+            Vector2 mouse = evt.mousePosition;
+            Vector2 uv = new Vector2((mouse.x - canvas.x) / canvas.width, 1f - (mouse.y - canvas.y) / canvas.height);
+            if (evt.type == EventType.ScrollWheel && viewport.Contains(mouse) && gesture == Gesture.None)
+            {
+                float nextZoom = Mathf.Clamp(zoom * Mathf.Exp(-evt.delta.y * 0.08f), 1f, 8f);
+                pan = mouse - viewport.center - (mouse - viewport.center - pan) * (nextZoom / zoom);
+                zoom = nextZoom;
+                evt.Use();
+                repaint?.Invoke();
+            }
+            else if (evt.type == EventType.MouseDown && viewport.Contains(mouse) &&
+                     GUIUtility.hotControl == 0 && (evt.button == 0 || evt.button == 2))
+            {
+                if (evt.button == 2) gesture = Gesture.Pan;
+                else if (tool != EditTool.Select && canvas.Contains(mouse))
+                {
+                    gesture = tool == EditTool.Draw ? Gesture.New : Gesture.Redraw;
+                    pendingRect = new Rect(ClampUv(uv), Vector2.zero);
+                }
+                else if (tool == EditTool.Select && showOutlines)
+                {
+                    corner = HitCorner(mouse, canvas);
+                    HairAtlasRegion hit = corner >= 0 ? Selected : HitRegion(mouse, canvas);
+                    if (hit == null) return;
+                    selectedId = hit.Id;
+                    originalRect = hit.uvRect;
+                    pendingRect = originalRect;
+                    gesture = corner >= 0 ? Gesture.Resize : Gesture.Move;
+                }
+                else return;
+                GUIUtility.keyboardControl = control;
+                GUIUtility.hotControl = control;
+                ownedControl = control;
+                startUv = ClampUv(uv);
+                if (snapToPixels && texture != null && (gesture == Gesture.New || gesture == Gesture.Redraw))
+                    startUv = HairAtlasEditingUtility.SnapUv(startUv, texture.width, texture.height);
+                startMouse = mouse;
+                startPan = pan;
+                evt.Use();
+                repaint?.Invoke();
+            }
+            else if (evt.type == EventType.MouseDrag && GUIUtility.hotControl == control && gesture != Gesture.None)
+            {
+                UpdateGesture(texture, uv, mouse);
+                evt.Use();
+                repaint?.Invoke();
+            }
+            else if (evt.type == EventType.MouseUp && GUIUtility.hotControl == control && gesture != Gesture.None &&
+                     evt.button == (gesture == Gesture.Pan ? 2 : 0))
+            {
+                // Use the actual release position even when Unity coalesces the final drag event.
+                UpdateGesture(texture, uv, mouse);
+                Gesture completed = gesture;
+                Rect result = pendingRect;
+                CancelInteraction();
+                if (completed != Gesture.Pan)
+                {
+                    if ((completed == Gesture.New || completed == Gesture.Redraw) &&
+                        (result.width * canvas.width < 2f || result.height * canvas.height < 2f))
+                        status = "That set is too small. Drag a larger rectangle.";
+                    else if (completed == Gesture.New)
+                    {
+                        int previousCount = atlas.regions.Count;
+                        HairAtlasRegion added = HairAtlasEditingUtility.AddSet(atlas, groom, group, result);
+                        selectedId = added.Id;
+                        status = atlas.regions.Count == previousCount
+                            ? "That rectangle matches an existing UV set, which is now selected."
+                            : "UV set added. Drag its corners or enter exact coordinates below.";
+                        Changed();
+                    }
+                    else if (Selected != null && Selected.uvRect != result)
+                    {
+                        Undo.RecordObject(atlas, "Reshape Hair UV Set");
+                        Selected.uvRect = HairAtlasEditingUtility.ClampRect(result);
+                        Changed();
+                    }
+                }
+                evt.Use();
+                repaint?.Invoke();
+                // Adding the first set changes the properties/list layout. Resume with a fresh Layout event.
+                if (completed == Gesture.New) GUIUtility.ExitGUI();
+            }
+        }
+
+        private void UpdateGesture(Texture texture, Vector2 uv, Vector2 mouse)
+        {
+            if (gesture == Gesture.Pan)
+            {
+                pan = startPan + mouse - startMouse;
+                return;
+            }
+            Vector2 end = ClampUv(uv);
+            if (snapToPixels && texture != null)
+                end = HairAtlasEditingUtility.SnapUv(end, texture.width, texture.height);
+            if (gesture == Gesture.Move)
+            {
+                Vector2 delta = uv - startUv;
+                if (snapToPixels && texture != null)
+                    delta = HairAtlasEditingUtility.SnapUv(delta, texture.width, texture.height);
+                pendingRect = HairAtlasEditingUtility.MoveRect(originalRect, delta);
+            }
+            else if (gesture == Gesture.Resize)
+                pendingRect = HairAtlasEditingUtility.ResizeRect(originalRect, corner, end);
+            else pendingRect = Rect.MinMaxRect(Mathf.Min(startUv.x, end.x), Mathf.Min(startUv.y, end.y),
+                Mathf.Max(startUv.x, end.x), Mathf.Max(startUv.y, end.y));
+        }
+
+        internal void CancelInteraction()
+        {
+            if (ownedControl != 0 && GUIUtility.hotControl == ownedControl) GUIUtility.hotControl = 0;
+            ownedControl = 0;
+            gesture = Gesture.None;
+            tool = EditTool.Select;
+            HairCardStage.ActiveStage?.SetWorkspaceInteraction(false);
+        }
+
+        internal void NudgeSelected(Vector2 delta)
+        {
+            if (Selected == null) return;
+            Rect rect = HairAtlasEditingUtility.MoveRect(Selected.uvRect, delta);
+            if (rect == Selected.uvRect) return;
+            Undo.RecordObject(atlas, "Nudge Hair UV Set");
+            Selected.uvRect = rect;
+            Changed();
+        }
+
+        internal void DuplicateSelected()
+        {
+            HairAtlasRegion source = Selected;
+            if (source == null) return;
+            CancelInteraction();
+            Undo.RecordObject(atlas, "Duplicate Hair UV Set");
+            HairAtlasRegion copy = atlas.CreateRegion(source.name + " Copy", source.uvRect, source.weight);
+            copy.flipU = source.flipU; copy.flipV = source.flipV;
+            copy.tags = source.tags != null ? (string[])source.tags.Clone() : Array.Empty<string>();
+            if (group != null && group.atlasRegionSelection == HairAtlasRegionSelectionMode.Selected && group.atlasRegionIds.Contains(source.Id))
+            { Undo.RecordObject(groom, "Assign Duplicated UV Set"); group.atlasRegionIds.Add(copy.Id); HairGroomCommands.Commit(groom, HairPreviewChange.Uvs); }
+            selectedId = copy.Id;
+            status = "Set duplicated with independent coordinates and a new ID.";
+            Changed();
+        }
+
+        private void FrameSelected()
+        {
+            if (Selected == null || fittedCanvasSize.x <= 0f) return;
+            Rect uv = Selected.uvRect;
+            zoom = Mathf.Clamp(0.8f / Mathf.Max(uv.width, uv.height), 1f, 8f);
+            pan = -Vector2.Scale(new Vector2(uv.center.x - 0.5f, 0.5f - uv.center.y), fittedCanvasSize) * zoom;
+            repaint?.Invoke();
+        }
+
+        private void DrawMaterialPreview()
+        {
+            materialPreviewExpanded = EditorGUILayout.Foldout(materialPreviewExpanded, "Material-rendered card · selected UV set", true);
+            if (!materialPreviewExpanded) return;
+            if (atlas.material == null || Selected == null)
+            { EditorGUILayout.HelpBox("Assign a Card Material and select a UV set to inspect alpha, taper, and front/back rendering here.", MessageType.Info); return; }
+            previewYaw = EditorGUILayout.Slider("Turn card", previewYaw, -180f, 180f);
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                if (GUILayout.Button("Front")) previewYaw = 0f;
+                if (GUILayout.Button("Back")) previewYaw = 180f;
+            }
+            Rect viewport = GUILayoutUtility.GetRect(100f, 205f, GUILayout.ExpandWidth(true));
+            if (Event.current.type != EventType.Repaint) return;
+            string signature = selectedId + ":" + EditorUtility.GetDirtyCount(atlas) + ":" +
+                (group?.profile != null ? group.profile.ProfileId + ":" + EditorUtility.GetDirtyCount(group.profile) : "default");
+            if (previewCard == null || signature != previewSignature || previewProfile != group?.profile || previewAtlas != atlas)
+            {
+                previewCard?.Dispose();
+                HairEvaluationResult sample = new HairEvaluationResult();
+                HairEvaluatedCurve curve = new HairEvaluatedCurve
+                {
+                    curveId = "inline-card", groupId = group?.Id, profile = group?.profile,
+                    atlas = atlas, atlasRegionSelection = HairAtlasRegionSelectionMode.Selected,
+                    atlasRegionIds = new[] { selectedId }, rootNormal = Vector3.forward, groupColor = Color.white
+                };
+                curve.points.Add(new HairCurvePoint(new Vector3(0f, -0.5f, 0f), 0.35f, 0f));
+                curve.points.Add(new HairCurvePoint(new Vector3(0f, 0.5f, 0f), 0.35f, 0f));
+                sample.curves.Add(curve);
+                previewCard = HairCardMeshGenerator.Build(sample, "Inline Hair Card Preview");
+                previewSignature = signature;
+                previewProfile = group?.profile;
+                previewAtlas = atlas;
+            }
+            materialPreview ??= new PreviewRenderUtility();
+            materialPreview.BeginPreview(viewport, GUIStyle.none);
+            Camera camera = materialPreview.camera;
+            camera.clearFlags = CameraClearFlags.Color;
+            camera.backgroundColor = solidBackground;
+            camera.orthographic = true; camera.orthographicSize = 0.63f;
+            camera.nearClipPlane = 0.01f; camera.farClipPlane = 10f;
+            camera.transform.SetPositionAndRotation(new Vector3(0f, 0f, -2f), Quaternion.identity);
+            materialPreview.lights[0].intensity = 1.1f;
+            materialPreview.lights[0].transform.rotation = Quaternion.Euler(30f, 30f, 0f);
+            materialPreview.lights[1].intensity = 0.8f;
+            materialPreview.ambientColor = new Color(0.4f, 0.4f, 0.4f);
+            previewMaterials ??= new HairPreviewMaterialSet();
+            Material[] renderedMaterials = previewMaterials.Update(previewCard);
+            for (int pass = 0; pass < renderedMaterials.Length; pass++)
+                materialPreview.DrawMesh(previewCard.mesh, Matrix4x4.Rotate(Quaternion.Euler(0f, previewYaw, 0f)), renderedMaterials[pass], pass);
+            materialPreview.Render(true);
+            Texture rendered = materialPreview.EndPreview();
+            lastRenderedCard = rendered;
+            GUI.DrawTexture(viewport, rendered, ScaleMode.StretchToFill, false);
+            GUI.Label(new Rect(viewport.x + 6f, viewport.y + 4f, viewport.width - 12f, 20f), "TIP ↑", EditorStyles.whiteMiniLabel);
+            GUI.Label(new Rect(viewport.x + 6f, viewport.yMax - 22f, viewport.width - 12f, 20f), "ROOT · illustrative width · actual assigned material", EditorStyles.whiteMiniLabel);
+        }
+
+        private void RemoveSelected()
+        {
+            HairAtlasRegion selected = Selected;
+            if (selected == null) return;
+            CancelInteraction();
+            HairAtlasEditingUtility.RemoveSet(atlas, groom, selected.Id);
+            selectedId = atlas.regions.Find(region => region != null)?.Id;
+            status = "UV set removed. Undo restores the set and its group assignments.";
+            Changed();
+            GUIUtility.ExitGUI();
+        }
+
+        private void Changed()
+        {
+            EditorUtility.SetDirty(atlas);
+            HairCardStage.ActiveStage?.TrackResourceEdit(atlas);
+            HairCardStage.ActiveStage?.QueuePreviewChange(HairPreviewChange.Uvs);
+            repaint?.Invoke();
+        }
+
+        private HairAtlasRegion HitRegion(Vector2 mouse, Rect canvas)
+        {
+            // Smallest containing set wins, so a full-atlas default cannot trap smaller sets.
+            HairAtlasRegion best = null;
+            float area = float.MaxValue;
+            foreach (HairAtlasRegion region in atlas.regions)
+            {
+                if (region == null) continue;
+                Rect rect = HairAtlasEditingUtility.UvToCanvas(region.uvRect, canvas);
+                if (!rect.Contains(mouse) || rect.width * rect.height >= area) continue;
+                area = rect.width * rect.height;
+                best = region;
+            }
+            return best;
+        }
+
+        private int HitCorner(Vector2 mouse, Rect canvas)
+        {
+            if (Selected == null) return -1;
+            Rect rect = HairAtlasEditingUtility.UvToCanvas(Selected.uvRect, canvas);
+            for (int i = 0; i < 4; i++)
+                if ((Corner(rect, i) - mouse).sqrMagnitude <= 64f) return i;
             return -1;
         }
 
-        private List<string> FindExistingDuplicateDescriptions()
+        private static Vector2 Corner(Rect rect, int index) => new Vector2(
+            (index & 1) == 0 ? rect.xMin : rect.xMax, index < 2 ? rect.yMin : rect.yMax);
+        private static Vector2 ClampUv(Vector2 uv) => new Vector2(Mathf.Clamp01(uv.x), Mathf.Clamp01(uv.y));
+        private static Rect FitAspect(Rect rect, float aspect)
         {
-            List<string> duplicates = new List<string>();
-            for (int first = 0; first < atlas.regions.Count; first++)
+            rect.width = Mathf.Max(1f, rect.width);
+            rect.height = Mathf.Max(1f, rect.height);
+            Vector2 size = rect.width / rect.height > aspect
+                ? new Vector2(rect.height * aspect, rect.height) : new Vector2(rect.width, rect.width / aspect);
+            return new Rect(rect.center - size * 0.5f, size);
+        }
+        private static void DrawOutline(Rect rect, Color color, float width)
+        {
+            if (Event.current.type != EventType.Repaint) return;
+            EditorGUI.DrawRect(new Rect(rect.x, rect.y, rect.width, width), color);
+            EditorGUI.DrawRect(new Rect(rect.x, rect.yMax - width, rect.width, width), color);
+            EditorGUI.DrawRect(new Rect(rect.x, rect.y, width, rect.height), color);
+            EditorGUI.DrawRect(new Rect(rect.xMax - width, rect.y, width, rect.height), color);
+        }
+        private void ReleaseCheckerTexture()
+        {
+            if (checkerTexture != null) UnityEngine.Object.DestroyImmediate(checkerTexture);
+            checkerTexture = null;
+        }
+        public void Dispose()
+        {
+            CancelInteraction();
+            SavePreferences();
+            ReleaseCheckerTexture();
+            previewCard?.Dispose(); previewCard = null;
+            materialPreview?.Cleanup(); materialPreview = null;
+            previewMaterials?.Dispose(); previewMaterials = null;
+            lastRenderedCard = null;
+        }
+    }
+
+    internal static class HairAtlasEditingUtility
+    {
+        internal static Vector2 SnapUv(Vector2 uv, int width, int height) => new Vector2(
+            Mathf.Round(uv.x * Mathf.Max(1, width)) / Mathf.Max(1, width),
+            Mathf.Round(uv.y * Mathf.Max(1, height)) / Mathf.Max(1, height));
+        internal static Rect UvToCanvas(Rect uv, Rect canvas) => new Rect(
+            canvas.x + uv.x * canvas.width, canvas.y + (1f - uv.yMax) * canvas.height,
+            uv.width * canvas.width, uv.height * canvas.height);
+
+        internal static Rect ScaleRect(Rect rect, Vector2 scale) => new Rect(
+            rect.x * scale.x, rect.y * scale.y, rect.width * scale.x, rect.height * scale.y);
+
+        internal static Rect ClampRect(Rect rect)
+        {
+            const float minimumSize = 0.00001f;
+            float x = Mathf.Clamp(rect.x, 0f, 1f - minimumSize);
+            float y = Mathf.Clamp(rect.y, 0f, 1f - minimumSize);
+            return new Rect(x, y, Mathf.Clamp(rect.width, minimumSize, 1f - x),
+                Mathf.Clamp(rect.height, minimumSize, 1f - y));
+        }
+
+        internal static Rect MoveRect(Rect rect, Vector2 delta) => new Rect(
+            Mathf.Clamp(rect.x + delta.x, 0f, 1f - rect.width),
+            Mathf.Clamp(rect.y + delta.y, 0f, 1f - rect.height), rect.width, rect.height);
+
+        internal static Rect ResizeRect(Rect rect, int corner, Vector2 target)
+        {
+            const float minimumSize = 0.00001f;
+            if ((corner & 1) == 0) rect.xMin = Mathf.Clamp(target.x, 0f, rect.xMax - minimumSize);
+            else rect.xMax = Mathf.Clamp(target.x, rect.xMin + minimumSize, 1f);
+            if (corner < 2) rect.yMax = Mathf.Clamp(target.y, rect.yMin + minimumSize, 1f);
+            else rect.yMin = Mathf.Clamp(target.y, 0f, rect.yMax - minimumSize);
+            return rect;
+        }
+
+        internal static HairAtlasRegion AddSet(HairAtlasProfileAsset atlas, HairGroomAsset groom,
+            HairGroup group, Rect rect)
+        {
+            rect = ClampRect(rect);
+            HairAtlasRegion duplicate = atlas.regions.Find(region => region != null &&
+                Mathf.Abs(region.uvRect.x - rect.x) < 0.00001f &&
+                Mathf.Abs(region.uvRect.y - rect.y) < 0.00001f &&
+                Mathf.Abs(region.uvRect.width - rect.width) < 0.00001f &&
+                Mathf.Abs(region.uvRect.height - rect.height) < 0.00001f);
+            if (duplicate != null) return duplicate;
+            if (groom != null) Undo.RecordObjects(new UnityEngine.Object[] { atlas, groom }, "Add Hair UV Set");
+            else Undo.RecordObject(atlas, "Add Hair UV Set");
+            int number = atlas.regions.Count + 1;
+            while (atlas.regions.Exists(region => region != null && region.name == $"UV Set {number}")) number++;
+            HairAtlasRegion added = atlas.CreateRegion($"UV Set {number}", rect);
+            if (group != null && group.atlas == atlas && group.atlasRegionSelection == HairAtlasRegionSelectionMode.Selected)
+                group.atlasRegionIds.Add(added.Id);
+            EditorUtility.SetDirty(atlas);
+            if (groom != null) HairGroomCommands.Commit(groom, HairPreviewChange.Uvs);
+            return added;
+        }
+
+        internal static void RemoveSet(HairAtlasProfileAsset atlas, HairGroomAsset groom, string id)
+        {
+            HairAtlasRegion region = atlas.regions.Find(item => item != null && item.Id == id);
+            if (region == null) return;
+            if (groom != null) Undo.RecordObjects(new UnityEngine.Object[] { atlas, groom }, "Remove Hair UV Set");
+            else Undo.RecordObject(atlas, "Remove Hair UV Set");
+            atlas.regions.Remove(region);
+            if (groom != null)
             {
-                HairAtlasRegion firstRegion = atlas.regions[first];
-                if (firstRegion == null) continue;
-                for (int second = first + 1; second < atlas.regions.Count; second++)
-                {
-                    HairAtlasRegion secondRegion = atlas.regions[second];
-                    if (secondRegion != null && NearlyEqual(firstRegion.uvRect, secondRegion.uvRect))
-                        duplicates.Add($"{first + 1} and {second + 1}");
-                }
+                foreach (HairGroup group in groom.Groups)
+                    if (group?.atlas == atlas) group.atlasRegionIds.Remove(id);
+                HairGroomCommands.Commit(groom, HairPreviewChange.Uvs);
             }
-            return duplicates;
-        }
-
-        private HairAtlasRegion GetSelectedRegion()
-        {
-            if (atlas?.regions == null || selectedRegionIndex < 0 || selectedRegionIndex >= atlas.regions.Count)
-                return null;
-            return atlas.regions[selectedRegionIndex];
-        }
-
-        private void ClampSelection()
-        {
-            if (atlas?.regions == null || atlas.regions.Count == 0)
-            {
-                selectedRegionIndex = -1;
-                if (drawOperation == DrawOperation.RedrawSelected) drawOperation = DrawOperation.None;
-                return;
-            }
-            selectedRegionIndex = Mathf.Clamp(selectedRegionIndex, 0, atlas.regions.Count - 1);
-        }
-
-        private void NotifyAtlasChanged()
-        {
-            HairCardStage.ActiveStage?.QueueRebuild();
-            HairGroomWorkspace.RepaintOpenWindows();
-            Repaint();
-        }
-
-        private static Rect CanvasToUv(Rect pixelRectangle, Rect canvas)
-        {
-            float x = Mathf.Clamp01((pixelRectangle.xMin - canvas.xMin) / canvas.width);
-            float xMax = Mathf.Clamp01((pixelRectangle.xMax - canvas.xMin) / canvas.width);
-            float y = Mathf.Clamp01(1f - (pixelRectangle.yMax - canvas.yMin) / canvas.height);
-            float yMax = Mathf.Clamp01(1f - (pixelRectangle.yMin - canvas.yMin) / canvas.height);
-            return Rect.MinMaxRect(x, y, xMax, yMax);
-        }
-
-        private static Rect UvToCanvas(Rect uvRectangle, Rect canvas)
-        {
-            return new Rect(
-                canvas.x + uvRectangle.x * canvas.width,
-                canvas.y + (1f - uvRectangle.y - uvRectangle.height) * canvas.height,
-                uvRectangle.width * canvas.width,
-                uvRectangle.height * canvas.height);
-        }
-
-        private static Rect FitAspect(Rect container, float aspect)
-        {
-            if (container.width <= 0f || container.height <= 0f) return container;
-            aspect = Mathf.Max(0.01f, aspect);
-            float containerAspect = container.width / container.height;
-            if (containerAspect > aspect)
-            {
-                float width = container.height * aspect;
-                return new Rect(container.center.x - width * 0.5f, container.y, width, container.height);
-            }
-            float height = container.width / aspect;
-            return new Rect(container.x, container.center.y - height * 0.5f, container.width, height);
-        }
-
-        private static Rect MakeRect(Vector2 first, Vector2 second)
-        {
-            return Rect.MinMaxRect(Mathf.Min(first.x, second.x), Mathf.Min(first.y, second.y),
-                Mathf.Max(first.x, second.x), Mathf.Max(first.y, second.y));
-        }
-
-        private static Vector2 ClampToRect(Vector2 point, Rect rectangle)
-        {
-            return new Vector2(Mathf.Clamp(point.x, rectangle.xMin, rectangle.xMax),
-                Mathf.Clamp(point.y, rectangle.yMin, rectangle.yMax));
-        }
-
-        private static bool NearlyEqual(Rect first, Rect second)
-        {
-            return Mathf.Abs(first.x - second.x) <= DuplicateTolerance &&
-                   Mathf.Abs(first.y - second.y) <= DuplicateTolerance &&
-                   Mathf.Abs(first.width - second.width) <= DuplicateTolerance &&
-                   Mathf.Abs(first.height - second.height) <= DuplicateTolerance;
-        }
-
-        private static Color RegionColor(int index, bool selected)
-        {
-            if (selected) return new Color(0.05f, 0.95f, 1f, 1f);
-            Color color = Color.HSVToRGB(Mathf.Repeat(index * 0.61803398875f, 1f), 0.72f, 1f);
-            color.a = 1f;
-            return color;
-        }
-
-        private static void DrawOutline(Rect rectangle, Color color, float thickness)
-        {
-            EditorGUI.DrawRect(new Rect(rectangle.x, rectangle.y, rectangle.width, thickness), color);
-            EditorGUI.DrawRect(new Rect(rectangle.x, rectangle.yMax - thickness, rectangle.width, thickness), color);
-            EditorGUI.DrawRect(new Rect(rectangle.x, rectangle.y, thickness, rectangle.height), color);
-            EditorGUI.DrawRect(new Rect(rectangle.xMax - thickness, rectangle.y, thickness, rectangle.height), color);
-        }
-
-        private static void DrawCheckerboard(Rect rectangle)
-        {
-            const float size = 16f;
-            Color first = new Color(0.19f, 0.19f, 0.19f, 1f);
-            Color second = new Color(0.25f, 0.25f, 0.25f, 1f);
-            int columns = Mathf.CeilToInt(rectangle.width / size);
-            int rows = Mathf.CeilToInt(rectangle.height / size);
-            for (int row = 0; row < rows; row++)
-            {
-                for (int column = 0; column < columns; column++)
-                {
-                    Rect tile = new Rect(rectangle.x + column * size, rectangle.y + row * size,
-                        Mathf.Min(size, rectangle.xMax - (rectangle.x + column * size)),
-                        Mathf.Min(size, rectangle.yMax - (rectangle.y + row * size)));
-                    EditorGUI.DrawRect(tile, ((row + column) & 1) == 0 ? first : second);
-                }
-            }
-        }
-
-        private static GUIStyle CenteredLabel()
-        {
-            return new GUIStyle(EditorStyles.wordWrappedLabel)
-            {
-                alignment = TextAnchor.MiddleCenter,
-                normal = { textColor = new Color(0.78f, 0.78f, 0.78f, 1f) }
-            };
-        }
-
-        private static GUIStyle WhiteMiniBoldLabel()
-        {
-            return new GUIStyle(EditorStyles.miniBoldLabel)
-            {
-                alignment = TextAnchor.MiddleLeft,
-                padding = new RectOffset(4, 4, 0, 0),
-                normal = { textColor = Color.white }
-            };
-        }
-
-        private static string[] ParseTags(string tags)
-        {
-            if (string.IsNullOrWhiteSpace(tags)) return Array.Empty<string>();
-            string[] parts = tags.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-            List<string> parsed = new List<string>(parts.Length);
-            for (int index = 0; index < parts.Length; index++)
-            {
-                string tag = parts[index].Trim();
-                if (!string.IsNullOrEmpty(tag) && !parsed.Contains(tag)) parsed.Add(tag);
-            }
-            return parsed.ToArray();
+            EditorUtility.SetDirty(atlas);
         }
     }
 }

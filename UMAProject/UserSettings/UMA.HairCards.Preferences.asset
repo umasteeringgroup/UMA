@@ -1,0 +1,134 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &1
+MonoBehaviour:
+  m_ObjectHideFlags: 53
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c688c11d74ae40e79cdd45f730da25cb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UMA.HairCards.Editor::UMA.HairCards.Editor.HairEditorPreferences
+  entries:
+  - key: workspace
+    json: '{"fields":[{"name":"explorerScroll","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"detailsScroll","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"visibilitySearch","json":"{\"value\":\"\"}"},{"name":"recipeVisibilityExpanded","json":"{\"value\":true}"},{"name":"udimVisibilityExpanded","json":"{\"value\":true}"},{"name":"slotVisibilityExpanded","json":"{\"value\":true}"},{"name":"cardGeometryExpanded","json":"{\"value\":true}"},{"name":"childSettingsExpanded","json":"{\"value\":true}"},{"name":"atlasMapsExpanded","json":"{\"value\":false}"},{"name":"guideSearch","json":"{\"value\":\"\"}"},{"name":"guideLibraryExpanded","json":"{\"value\":false}"},{"name":"layerStackScroll","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"}]}'
+  - key: workspace:GlobalObjectId_V1-3-4508f9c2e8436d0429fd2991b3b88ed2-11400000-0
+    json: '{"fields":[{"name":"explorerScroll","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"detailsScroll","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"visibilitySearch","json":"{\"value\":\"\"}"},{"name":"recipeVisibilityExpanded","json":"{\"value\":true}"},{"name":"udimVisibilityExpanded","json":"{\"value\":true}"},{"name":"slotVisibilityExpanded","json":"{\"value\":true}"},{"name":"cardGeometryExpanded","json":"{\"value\":true}"},{"name":"childSettingsExpanded","json":"{\"value\":true}"},{"name":"atlasMapsExpanded","json":"{\"value\":false}"},{"name":"guideSearch","json":"{\"value\":\"\"}"},{"name":"guidePage","json":"{\"value\":0}"},{"name":"guideLibraryExpanded","json":"{\"value\":false}"},{"name":"collapsedLayerIds","json":"{\"value\":[]}"},{"name":"layerStackScroll","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"}]}'
+  - key: stage
+    json: '{"fields":[{"name":"workflowStep","json":"{\"value\":2}"},{"name":"sceneTool","json":"{\"value\":0}"},{"name":"previewMode","json":"{\"value\":1}"},{"name":"hasGeneratedCardPreview","json":"{\"value\":true}"},{"name":"lastGrowthTool","json":"{\"value\":1}"},{"name":"lastGuideTool","json":"{\"value\":0}"},{"name":"lastGroomTool","json":"{\"value\":6}"},{"name":"lodLevel","json":"{\"value\":0}"},{"name":"brushRadius","json":"{\"value\":0.03700000047683716}"},{"name":"brushHardness","json":"{\"value\":1.0}"},{"name":"brushStrength","json":"{\"value\":1.0}"},{"name":"brushRootInfluence","json":"{\"value\":0.28299999237060549}"},{"name":"affectThroughDepth","json":"{\"value\":true}"},{"name":"brushScope","json":"{\"value\":1}"},{"name":"previewQuality","json":"{\"value\":0}"},{"name":"gravityCollision","json":"{\"value\":true}"},{"name":"gravityClearance","json":"{\"value\":0.041019998490810397}"},{"name":"gravityStrength","json":"{\"value\":2.5}"},{"name":"gravitySeparation","json":"{\"value\":0.10100000351667404}"},{"name":"paintValue","json":"{\"value\":1.0}"},{"name":"mirrorPaintX","json":"{\"value\":true}"},{"name":"mirrorCutX","json":"{\"value\":false}"},{"name":"showScalp","json":"{\"value\":false}"},{"name":"showAvatar","json":"{\"value\":true}"},{"name":"showChildren","json":"{\"value\":true}"},{"name":"showChildSplines","json":"{\"value\":false}"},{"name":"showHelpers","json":"{\"value\":true}"},{"name":"showControlPoints","json":"{\"value\":false}"},{"name":"showGuideRoots","json":"{\"value\":false}"},{"name":"showGuideSplines","json":"{\"value\":true}"},{"name":"showCardWireframe","json":"{\"value\":false}"},{"name":"depthTestGuides","json":"{\"value\":true}"},{"name":"showFreezeMask","json":"{\"value\":false}"},{"name":"rootHandleScale","json":"{\"value\":1.0}"},{"name":"hiddenAvatarSlots","json":"{\"value\":[\"Beard_Gunslinger_slot\",\"male_shoes_tall_slot\",\"male_shorts_black_cotton_slot\",\"male_tshirt_white_slot\",\"UMA30_Eyelashes\",\"UMA30_Eyes\",\"UMA30_InnerMouth\"]}"},{"name":"guideGeneration","json":"{\"value\":{\"guideCount\":384,\"pointsPerGuide\":5,\"defaultLength\":0.03700000047683716,\"minimumRootSpacing\":0.002099999925121665,\"rootUniformity\":0.75,\"surfaceFlow\":0.5690000057220459,\"lift\":0.8500000238418579,\"seed\":1729,\"maximumAttemptsPerGuide\":32}}"}]}'
+  - key: stage:GlobalObjectId_V1-3-4508f9c2e8436d0429fd2991b3b88ed2-11400000-0
+    json: '{"fields":[{"name":"workflowStep","json":"{\"value\":2}"},{"name":"sceneTool","json":"{\"value\":0}"},{"name":"previewMode","json":"{\"value\":1}"},{"name":"hasGeneratedCardPreview","json":"{\"value\":true}"},{"name":"lastGrowthTool","json":"{\"value\":1}"},{"name":"lastGuideTool","json":"{\"value\":0}"},{"name":"lastGroomTool","json":"{\"value\":6}"},{"name":"activeGroupId","json":"{\"value\":\"923a1e1ede0445d08e699a4a3804e303\"}"},{"name":"activeMapId","json":"{\"value\":\"277f30b1b50e48c08f67698a580c29b2\"}"},{"name":"activeGuideId","json":"{\"value\":\"c470676dd6c84bf28d103466213196d9\"}"},{"name":"activeLayerId","json":"{\"value\":\"\"}"},{"name":"activeModifierId","json":"{\"value\":\"\"}"},{"name":"activeHelperId","json":"{\"value\":\"\"}"},{"name":"activeGuidePoint","json":"{\"value\":-1}"},{"name":"lodLevel","json":"{\"value\":0}"},{"name":"brushRadius","json":"{\"value\":0.03700000047683716}"},{"name":"brushHardness","json":"{\"value\":1.0}"},{"name":"brushStrength","json":"{\"value\":1.0}"},{"name":"brushRootInfluence","json":"{\"value\":0.28299999237060549}"},{"name":"affectThroughDepth","json":"{\"value\":true}"},{"name":"brushScope","json":"{\"value\":1}"},{"name":"previewQuality","json":"{\"value\":0}"},{"name":"selectedGuideIds","json":"{\"value\":[]}"},{"name":"isolateSelectedGuides","json":"{\"value\":false}"},{"name":"soloLayerId","json":"{\"value\":\"\"}"},{"name":"gravityCollision","json":"{\"value\":true}"},{"name":"gravityClearance","json":"{\"value\":0.041019998490810397}"},{"name":"gravityStrength","json":"{\"value\":2.5}"},{"name":"gravitySeparation","json":"{\"value\":0.10100000351667404}"},{"name":"paintValue","json":"{\"value\":1.0}"},{"name":"mirrorPaintX","json":"{\"value\":true}"},{"name":"mirrorCutX","json":"{\"value\":false}"},{"name":"showScalp","json":"{\"value\":false}"},{"name":"showAvatar","json":"{\"value\":true}"},{"name":"showChildren","json":"{\"value\":true}"},{"name":"showChildSplines","json":"{\"value\":false}"},{"name":"showHelpers","json":"{\"value\":true}"},{"name":"showControlPoints","json":"{\"value\":false}"},{"name":"showGuideRoots","json":"{\"value\":false}"},{"name":"showGuideSplines","json":"{\"value\":true}"},{"name":"showCardWireframe","json":"{\"value\":false}"},{"name":"depthTestGuides","json":"{\"value\":true}"},{"name":"showFreezeMask","json":"{\"value\":false}"},{"name":"rootHandleScale","json":"{\"value\":1.0}"},{"name":"hiddenAvatarSlots","json":"{\"value\":[\"Beard_Gunslinger_slot\",\"male_shoes_tall_slot\",\"male_shorts_black_cotton_slot\",\"male_tshirt_white_slot\",\"UMA30_Eyelashes\",\"UMA30_Eyes\",\"UMA30_InnerMouth\"]}"},{"name":"guideGeneration","json":"{\"value\":{\"guideCount\":384,\"pointsPerGuide\":5,\"defaultLength\":0.03700000047683716,\"minimumRootSpacing\":0.002099999925121665,\"rootUniformity\":0.75,\"surfaceFlow\":0.5690000057220459,\"lift\":0.8500000238418579,\"seed\":1729,\"maximumAttemptsPerGuide\":32}}"},{"name":"selectedVertices","json":"{\"value\":[]}"}]}'
+  - key: atlas-panel
+    json: '{"fields":[{"name":"channel","json":"{\"value\":0}"},{"name":"checkerboard","json":"{\"value\":true}"},{"name":"checkerLight","json":"{\"value\":{\"r\":0.75,\"g\":0.75,\"b\":0.75,\"a\":1.0}}"},{"name":"checkerDark","json":"{\"value\":{\"r\":0.550000011920929,\"g\":0.550000011920929,\"b\":0.550000011920929,\"a\":1.0}}"},{"name":"solidBackground","json":"{\"value\":{\"r\":0.2199999988079071,\"g\":0.2199999988079071,\"b\":0.2199999988079071,\"a\":1.0}}"},{"name":"checkerSize","json":"{\"value\":12.0}"},{"name":"backgroundExpanded","json":"{\"value\":false}"},{"name":"snapToPixels","json":"{\"value\":true}"},{"name":"showOutlines","json":"{\"value\":true}"},{"name":"pixelUnits","json":"{\"value\":false}"},{"name":"listScroll","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"tool","json":"{\"value\":0}"},{"name":"materialPreviewExpanded","json":"{\"value\":true}"},{"name":"previewYaw","json":"{\"value\":-3.0}"}]}'
+  - key: atlas-panel:GlobalObjectId_V1-3-c2e157ea820e9fc43b32035400128066-11400000-0
+    json: '{"fields":[{"name":"selectedId","json":"{\"value\":\"6fa8c4e919ee428db165a76d1f65dae3\"}"},{"name":"channel","json":"{\"value\":0}"},{"name":"checkerboard","json":"{\"value\":true}"},{"name":"checkerLight","json":"{\"value\":{\"r\":0.75,\"g\":0.75,\"b\":0.75,\"a\":1.0}}"},{"name":"checkerDark","json":"{\"value\":{\"r\":0.550000011920929,\"g\":0.550000011920929,\"b\":0.550000011920929,\"a\":1.0}}"},{"name":"solidBackground","json":"{\"value\":{\"r\":0.2199999988079071,\"g\":0.2199999988079071,\"b\":0.2199999988079071,\"a\":1.0}}"},{"name":"checkerSize","json":"{\"value\":12.0}"},{"name":"backgroundExpanded","json":"{\"value\":false}"},{"name":"snapToPixels","json":"{\"value\":true}"},{"name":"showOutlines","json":"{\"value\":true}"},{"name":"pixelUnits","json":"{\"value\":false}"},{"name":"zoom","json":"{\"value\":1.0}"},{"name":"pan","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"listScroll","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"tool","json":"{\"value\":0}"},{"name":"materialPreviewExpanded","json":"{\"value\":true}"},{"name":"previewYaw","json":"{\"value\":-3.0}"}]}'
+  - key: atlas-panel:GlobalObjectId_V1-3-389210e6f80eeab4ea737bc5017e799e-11400000-0
+    json: '{"fields":[{"name":"selectedId","json":"{\"value\":\"6fa8c4e919ee428db165a76d1f65dae3\"}"},{"name":"channel","json":"{\"value\":0}"},{"name":"checkerboard","json":"{\"value\":true}"},{"name":"checkerLight","json":"{\"value\":{\"r\":0.75,\"g\":0.75,\"b\":0.75,\"a\":1.0}}"},{"name":"checkerDark","json":"{\"value\":{\"r\":0.550000011920929,\"g\":0.550000011920929,\"b\":0.550000011920929,\"a\":1.0}}"},{"name":"solidBackground","json":"{\"value\":{\"r\":0.2199999988079071,\"g\":0.2199999988079071,\"b\":0.2199999988079071,\"a\":1.0}}"},{"name":"checkerSize","json":"{\"value\":12.0}"},{"name":"backgroundExpanded","json":"{\"value\":false}"},{"name":"snapToPixels","json":"{\"value\":true}"},{"name":"showOutlines","json":"{\"value\":true}"},{"name":"pixelUnits","json":"{\"value\":false}"},{"name":"zoom","json":"{\"value\":1.0}"},{"name":"pan","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"listScroll","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"tool","json":"{\"value\":0}"},{"name":"materialPreviewExpanded","json":"{\"value\":true}"},{"name":"previewYaw","json":"{\"value\":-3.0}"}]}'
+  - key: atlas-panel:GlobalObjectId_V1-3-66d13e08de9db654096767c84ab6ea93-11400000-0
+    json: '{"fields":[{"name":"selectedId","json":"{\"value\":\"6fa8c4e919ee428db165a76d1f65dae3\"}"},{"name":"channel","json":"{\"value\":0}"},{"name":"checkerboard","json":"{\"value\":true}"},{"name":"checkerLight","json":"{\"value\":{\"r\":0.75,\"g\":0.75,\"b\":0.75,\"a\":1.0}}"},{"name":"checkerDark","json":"{\"value\":{\"r\":0.550000011920929,\"g\":0.550000011920929,\"b\":0.550000011920929,\"a\":1.0}}"},{"name":"solidBackground","json":"{\"value\":{\"r\":0.2199999988079071,\"g\":0.2199999988079071,\"b\":0.2199999988079071,\"a\":1.0}}"},{"name":"checkerSize","json":"{\"value\":12.0}"},{"name":"backgroundExpanded","json":"{\"value\":false}"},{"name":"snapToPixels","json":"{\"value\":true}"},{"name":"showOutlines","json":"{\"value\":true}"},{"name":"pixelUnits","json":"{\"value\":false}"},{"name":"zoom","json":"{\"value\":8.0}"},{"name":"pan","json":"{\"value\":{\"x\":-2130.33349609375,\"y\":1265.8330078125}}"},{"name":"listScroll","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"tool","json":"{\"value\":0}"},{"name":"materialPreviewExpanded","json":"{\"value\":true}"},{"name":"previewYaw","json":"{\"value\":-3.0}"}]}'
+  - key: atlas-panel:GlobalObjectId_V1-3-b7618a004be61e940a3ab41da95d8206-11400000-0
+    json: '{"fields":[{"name":"selectedId","json":"{\"value\":\"6fa8c4e919ee428db165a76d1f65dae3\"}"},{"name":"channel","json":"{\"value\":0}"},{"name":"checkerboard","json":"{\"value\":true}"},{"name":"checkerLight","json":"{\"value\":{\"r\":0.75,\"g\":0.75,\"b\":0.75,\"a\":1.0}}"},{"name":"checkerDark","json":"{\"value\":{\"r\":0.550000011920929,\"g\":0.550000011920929,\"b\":0.550000011920929,\"a\":1.0}}"},{"name":"solidBackground","json":"{\"value\":{\"r\":0.2199999988079071,\"g\":0.2199999988079071,\"b\":0.2199999988079071,\"a\":1.0}}"},{"name":"checkerSize","json":"{\"value\":12.0}"},{"name":"backgroundExpanded","json":"{\"value\":false}"},{"name":"snapToPixels","json":"{\"value\":true}"},{"name":"showOutlines","json":"{\"value\":true}"},{"name":"pixelUnits","json":"{\"value\":false}"},{"name":"zoom","json":"{\"value\":1.0}"},{"name":"pan","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"listScroll","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"tool","json":"{\"value\":0}"},{"name":"materialPreviewExpanded","json":"{\"value\":true}"},{"name":"previewYaw","json":"{\"value\":-3.0}"}]}'
+  - key: atlas-panel:GlobalObjectId_V1-3-fb20aed04ca465544a6df4ea7e8c837c-11400000-0
+    json: '{"fields":[{"name":"selectedId","json":"{\"value\":\"6fa8c4e919ee428db165a76d1f65dae3\"}"},{"name":"channel","json":"{\"value\":0}"},{"name":"checkerboard","json":"{\"value\":true}"},{"name":"checkerLight","json":"{\"value\":{\"r\":0.75,\"g\":0.75,\"b\":0.75,\"a\":1.0}}"},{"name":"checkerDark","json":"{\"value\":{\"r\":0.550000011920929,\"g\":0.550000011920929,\"b\":0.550000011920929,\"a\":1.0}}"},{"name":"solidBackground","json":"{\"value\":{\"r\":0.2199999988079071,\"g\":0.2199999988079071,\"b\":0.2199999988079071,\"a\":1.0}}"},{"name":"checkerSize","json":"{\"value\":12.0}"},{"name":"backgroundExpanded","json":"{\"value\":false}"},{"name":"snapToPixels","json":"{\"value\":true}"},{"name":"showOutlines","json":"{\"value\":true}"},{"name":"pixelUnits","json":"{\"value\":false}"},{"name":"zoom","json":"{\"value\":1.0}"},{"name":"pan","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"listScroll","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"tool","json":"{\"value\":0}"},{"name":"materialPreviewExpanded","json":"{\"value\":true}"},{"name":"previewYaw","json":"{\"value\":-3.0}"}]}'
+  - key: atlas-panel:GlobalObjectId_V1-3-bae372d9169c0b14da9df758047b4deb-11400000-0
+    json: '{"fields":[{"name":"selectedId","json":"{\"value\":\"6fa8c4e919ee428db165a76d1f65dae3\"}"},{"name":"channel","json":"{\"value\":0}"},{"name":"checkerboard","json":"{\"value\":true}"},{"name":"checkerLight","json":"{\"value\":{\"r\":0.75,\"g\":0.75,\"b\":0.75,\"a\":1.0}}"},{"name":"checkerDark","json":"{\"value\":{\"r\":0.550000011920929,\"g\":0.550000011920929,\"b\":0.550000011920929,\"a\":1.0}}"},{"name":"solidBackground","json":"{\"value\":{\"r\":0.2199999988079071,\"g\":0.2199999988079071,\"b\":0.2199999988079071,\"a\":1.0}}"},{"name":"checkerSize","json":"{\"value\":12.0}"},{"name":"backgroundExpanded","json":"{\"value\":false}"},{"name":"snapToPixels","json":"{\"value\":true}"},{"name":"showOutlines","json":"{\"value\":true}"},{"name":"pixelUnits","json":"{\"value\":false}"},{"name":"zoom","json":"{\"value\":1.0}"},{"name":"pan","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"listScroll","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"tool","json":"{\"value\":0}"},{"name":"materialPreviewExpanded","json":"{\"value\":true}"},{"name":"previewYaw","json":"{\"value\":-3.0}"}]}'
+  lastSetup:
+    profile: {fileID: 11400000, guid: 21dc85fa5e0116244bc6b7546d5496e8, type: 2}
+    atlas: {fileID: 11400000, guid: bae372d9169c0b14da9df758047b4deb, type: 2}
+    resourceRevision: e5a9061838db88d963ff6fc3c3818c89:f0802f1886abd9965a15148c60b8f51d
+    children:
+      childrenPerGuide: 7
+      includeGuideCard: 1
+      rootSpread: 0.01
+      clump: 0.25
+      lengthVariation: 0.154
+      widthVariation: 0.177
+      rollVariation: 0.1
+      seed: 12345
+      interpolation: 1
+    rootEmbedDepth: 0.00209
+    lodImportance: 1
+    role: 0
+    visible: 1
+    enabled: 1
+    color: {r: 0.22, g: 0.65, b: 1, a: 1}
+    regionSelection: 0
+    regionIds: []
+    lods:
+    - id: f2818fd3ff9248eb8f6da1b96cdb29d2
+      name: LOD 0
+      level: 0
+      screenRelativeHeight: 0.6
+      cardFraction: 1
+      samplesPerCard: 12
+      useProfileSamples: 0
+      maximumTubeSides: 8
+      reductionMode: 0
+      reduceBones: 0
+      locked: 0
+    bake:
+      outputFolder: Assets/UMAProjectData/HairCards/Generated
+      assetName: MaleHuman
+      createMesh: 1
+      createSlot: 1
+      createOverlay: 1
+      createWardrobeRecipe: 1
+      updateGlobalLibrary: 1
+      overwriteExisting: 1
+      umaMaterial: {fileID: 0}
+      overlayTemplate: {fileID: 0}
+      raceData: {fileID: 0}
+      wardrobeSlot: Hair
+      triangleBudget: 100000
+      cardBudget: 10000
+      requireAtlas: 0
+    symmetryEnabled: 1
+    symmetryPoint: {x: 0, y: 0, z: 0}
+    symmetryNormal: {x: 1, y: 0, z: 0}
+  ignoredSetup:
+    profile: {fileID: 0}
+    atlas: {fileID: 0}
+    resourceRevision: 
+    children:
+      childrenPerGuide: 3
+      includeGuideCard: 1
+      rootSpread: 0.01
+      clump: 0.25
+      lengthVariation: 0.05
+      widthVariation: 0.05
+      rollVariation: 0.1
+      seed: 12345
+      interpolation: 1
+    rootEmbedDepth: 0
+    lodImportance: 0
+    role: 0
+    visible: 0
+    enabled: 0
+    color: {r: 0, g: 0, b: 0, a: 0}
+    regionSelection: 0
+    regionIds: []
+    lods: []
+    bake:
+      outputFolder: Assets/UMAProjectData/HairCards/Generated
+      assetName: HairCards
+      createMesh: 1
+      createSlot: 1
+      createOverlay: 1
+      createWardrobeRecipe: 1
+      updateGlobalLibrary: 1
+      overwriteExisting: 1
+      umaMaterial: {fileID: 0}
+      overlayTemplate: {fileID: 0}
+      raceData: {fileID: 0}
+      wardrobeSlot: Hair
+      triangleBudget: 100000
+      cardBudget: 10000
+      requireAtlas: 0
+    symmetryEnabled: 0
+    symmetryPoint: {x: 0, y: 0, z: 0}
+    symmetryNormal: {x: 0, y: 0, z: 0}
+  hasLastSetup: 1
+  hasIgnoredSetup: 0
