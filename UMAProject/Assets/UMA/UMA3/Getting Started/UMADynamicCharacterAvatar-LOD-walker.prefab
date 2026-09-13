@@ -37,7 +37,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7b82439bf03242a08160de6bbb8716b9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  animationPlaybackSpeed: 0.3
+  animationPlaybackSpeed: 1
   maximumSpawnDistance: 2.5
   turnSpeed: 60
   returnAngleVariation: 20

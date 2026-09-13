@@ -1,0 +1,12 @@
+{
+    "name": "UMA3.Samples.Editor.Tests",
+    "references": ["UMA3.Samples", "UMA_Core", "UnityEngine.TestRunner", "UnityEditor.TestRunner"],
+    "includePlatforms": ["Editor"],
+    "overrideReferences": true,
+    "precompiledReferences": ["nunit.framework.dll"],
+    "autoReferenced": false,
+    "defineConstraints": ["UNITY_INCLUDE_TESTS", "UMA_TEST_FRAMEWORK"],
+    "versionDefines": [
+        { "name": "com.unity.test-framework", "expression": "1.0.0", "define": "UMA_TEST_FRAMEWORK" }
+    ]
+}

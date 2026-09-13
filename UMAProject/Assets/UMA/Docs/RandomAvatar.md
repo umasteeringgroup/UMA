@@ -112,6 +112,48 @@ Before generating a large crowd:
 
 Random generation schedules DCA builds; it does not guarantee that every completed avatar becomes visible on a different frame. Completion cadence depends on the generator, combiner, and publication steps.
 
+## Walking Crowds: Speed and Idle
+
+`UMADynamicCharacterAvatar-LOD-walker.prefab` adds `RandomCharacterWalker` for bounded wandering,
+pauses, crowd avoidance, and shooter/ragdoll reactions. It is a sample movement controller,
+not a navigation or pathfinding system.
+
+The three speed controls have different jobs:
+
+- **Animation Playback Speed** controls the rate of the animation and its root translation.
+  `1` is normal speed. The sample prefab now uses `1` instead of the old `0.3` slow-motion setting.
+  Existing scene overrides and custom prefabs retain their chosen values; set them to `1` if needed.
+- **In Place Movement Speed** is travel in meters per second at normal playback, used for clips
+  without authored translation. It scales with playback speed and eases in with the animation's
+  damped Speed parameter.
+- **Walking Animation Speed** is the value sent to the Animator's **Speed** parameter to select
+  a state/blend. It does not set playback speed or meters per second. A controller with only
+  Idle and Run states will still select Run; provide a walking clip/state if walking is desired.
+
+**Locomotion Source** can be Auto, Root Motion, or In Place. Auto distinguishes root translation
+from tiny animation drift at **normal playback speed**, so slowing playback does not itself
+switch to fallback movement. Choose Root Motion for deliberately slow or variable root-motion
+clips; this mode never substitutes fallback travel. Choose In Place to always use the configured
+travel speed. Root Motion requires an appropriately imported clip and Animator setup.
+
+When a walker wants to move but is blocked, it measures requested versus achieved travel.
+Dynamic rigidbodies are sampled on the physics clock; transform-driven walkers measure accepted
+root translation. Crowd separation, vertical movement, and render interpolation do not count
+as forward walking progress. A legitimate slow walk is not forced into idle by a fixed speed cutoff.
+
+Under **Stall Recovery**, Progress Check Interval and Stalled Checks Before Recovery determine
+how long sustained blockage must last before idling (defaults: two 1-second checks after startup
+grace). Blocked/Resumed Progress Ratio provide separate thresholds to avoid flicker; Minimum
+Progress Distance caps the blocked threshold while preserving the gap to the resumed threshold.
+Blocked Retry Interval controls the idle wait before
+an explicit attempt to move again. Wanderers turn for that retry; pursuers keep facing their target.
+Movement Start Grace Time allows animation startup before progress is judged. An Animator Speed
+float and a transition to idle when it reaches zero are required to display the idle animation.
+
+Pausing, disabling/re-enabling, changing Animator controllers, and recovering from ragdoll reset
+old progress samples. Call `ResetMovementTracking()` after externally teleporting an enabled
+walker; it resets blockage/physics tracking but deliberately keeps the original wander origin.
+
 ## Reproducible Testing
 
 For performance comparisons:
