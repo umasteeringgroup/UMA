@@ -258,8 +258,8 @@ namespace UMA.HairCards
             if (source.Count == 1)
             {
                 result.Add(source[0]);
-                result.Add(new HairCurvePoint(source[0].position + Vector3.up * 0.01f,
-                    source[0].width, source[0].roll, source[0].widthBaseline, source[0].profileScale));
+                HairCurvePoint extended = source[0]; extended.position += Vector3.up * 0.01f;
+                result.Add(extended);
                 return;
             }
 
@@ -299,7 +299,12 @@ namespace UMA.HairCards
                         ? Mathf.LerpUnclamped(left.widthBaseline, right.widthBaseline, t) : -1f,
                     Mathf.LerpUnclamped(left.profileScale, right.profileScale, t),
                     Mathf.LerpUnclamped(left.stiffness, right.stiffness, t),
-                    Mathf.LerpUnclamped(left.freeze, right.freeze, t)));
+                    Mathf.LerpUnclamped(left.freeze, right.freeze, t))
+                {
+                    facingNormal = left.facingWeight > 0f || right.facingWeight > 0f
+                        ? Vector3.Lerp(left.facingNormal * left.facingWeight, right.facingNormal * right.facingWeight, t).normalized : Vector3.zero,
+                    facingWeight = Mathf.Lerp(left.facingWeight, right.facingWeight, t)
+                });
             }
         }
 
@@ -404,6 +409,16 @@ namespace UMA.HairCards
                         side = Vector3.Cross(tangent, normals[i - 1]).normalized;
                     }
                 }
+                Vector3 transportedSide = side;
+                Vector3 desiredNormal = points[i].facingWeight > 0f ? Vector3.ProjectOnPlane(points[i].facingNormal, tangent) : Vector3.zero;
+                bool hasFacing = points[i].facingWeight > 0f && float.IsFinite(desiredNormal.sqrMagnitude) && desiredNormal.sqrMagnitude > 1e-10f;
+                if (hasFacing)
+                {
+                    Vector3 baseNormal = Vector3.Cross(side, tangent).normalized;
+                    float angle = Vector3.SignedAngle(baseNormal, desiredNormal.normalized, tangent);
+                    side = Quaternion.AngleAxis(angle * Mathf.Clamp01(points[i].facingWeight), tangent) * side;
+                }
+                // Flow supplies the base frame; authored roll/Twist remains an explicit offset.
                 Quaternion roll = Quaternion.AngleAxis(points[i].roll, tangent);
                 Vector3 rolledSide = roll * side;
                 Vector3 normal = Vector3.Cross(rolledSide, tangent).normalized;
@@ -411,7 +426,8 @@ namespace UMA.HairCards
                 tangents[i] = tangent;
                 sides[i] = rolledSide;
                 normals[i] = normal;
-                side = rolledSide;
+                // Do not accumulate the facing blend (or roll) once per tessellation sample.
+                side = hasFacing ? transportedSide : rolledSide;
             }
         }
     }

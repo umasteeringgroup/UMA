@@ -46,6 +46,13 @@ namespace UMA.HairCards.Editor
         internal void Remember(object target, string section, string context = null)
         {
             if (Suspended) return;
+            // Preserve the moved visibility fields before a properties-only window saves its smaller snapshot.
+            if (section == "workspace")
+            {
+                if (Get("preview-visibility") == null) Put("preview-visibility", Get("workspace"));
+                if (!string.IsNullOrEmpty(context) && Get("preview-visibility:" + context) == null)
+                    Put("preview-visibility:" + context, Get("workspace:" + context));
+            }
             bool changed = Put(section, HairPreferenceCodec.Capture(target, true));
             if (!string.IsNullOrEmpty(context)) changed |= Put(section + ":" + context, HairPreferenceCodec.Capture(target, false));
             if (changed) Save(true);
@@ -56,6 +63,14 @@ namespace UMA.HairCards.Editor
             if (Suspended) return;
             HairPreferenceCodec.Restore(target, Get(section));
             if (!string.IsNullOrEmpty(context)) HairPreferenceCodec.Restore(target, Get(section + ":" + context));
+        }
+
+        internal void RestorePreviewVisibility(object target, string context)
+        {
+            if (Suspended) return;
+            HairPreferenceCodec.RestoreVisibilityFields(target, Get("preview-visibility") ?? Get("workspace"));
+            if (!string.IsNullOrEmpty(context))
+                HairPreferenceCodec.RestoreVisibilityFields(target, Get("preview-visibility:" + context) ?? Get("workspace:" + context));
         }
 
         private string Get(string key) => entries.Find(entry => entry.key == key)?.json;
@@ -192,7 +207,8 @@ namespace UMA.HairCards.Editor
         // interaction state are excluded entirely; all other serialized editor options are automatic.
         private static readonly HashSet<string> ContextFields = new HashSet<string>
         { "activeGroupId", "activeMapId", "activeGuideId", "activeLayerId", "activeModifierId", "collapsedLayerIds", "activeHelperId", "activeGuidePoint",
-          "selectedGuideIds", "selectedVertices", "soloLayerId", "isolateSelectedGuides", "selectedId", "guidePage", "zoom", "pan" };
+          "selectedGuideIds", "selectedVertices", "soloLayerId", "isolateSelectedGuides", "selectedId", "guidePage", "zoom", "pan",
+          "activeNodeKey", "collapsedNodeKeys", "expandedOptionalMapKeys", "nodeSearch", "nodeScroll", "previewScroll", "settingsScroll" };
 
         private static FieldInfo[] GetFields(Type type)
         {
@@ -216,13 +232,18 @@ namespace UMA.HairCards.Editor
                 if (global && ContextFields.Contains(field.Name)) continue;
                 Type boxType = typeof(Value<>).MakeGenericType(field.FieldType);
                 object box = Activator.CreateInstance(boxType);
-                boxType.GetField("value").SetValue(box, field.GetValue(target));
+                boxType.GetField("value").SetValue(box, SafeStartupTool(field.GetValue(target)));
                 snapshot.fields.Add(new FieldValue { name = field.Name, json = JsonUtility.ToJson(box) });
             }
             return JsonUtility.ToJson(snapshot);
         }
 
-        internal static void Restore(object target, string json)
+        private static readonly HashSet<string> VisibilityFields = new HashSet<string>
+        { "visibilitySearch", "recipeVisibilityExpanded", "udimVisibilityExpanded", "slotVisibilityExpanded" };
+
+        internal static void RestoreVisibilityFields(object target, string json) => Restore(target, json, VisibilityFields);
+
+        internal static void Restore(object target, string json, ISet<string> includedFields = null)
         {
             if (string.IsNullOrEmpty(json)) return;
             try
@@ -231,15 +252,19 @@ namespace UMA.HairCards.Editor
                 if (snapshot?.fields == null) return;
                 foreach (FieldValue saved in snapshot.fields)
                 {
+                    if (includedFields != null && !includedFields.Contains(saved.name)) continue;
                     FieldInfo field = Array.Find(GetFields(target.GetType()), item => item.Name == saved.name);
                     if (field == null) continue;
                     Type boxType = typeof(Value<>).MakeGenericType(field.FieldType);
                     object box = JsonUtility.FromJson(saved.json, boxType);
-                    if (box != null) field.SetValue(target, boxType.GetField("value").GetValue(box));
+                    if (box != null) field.SetValue(target, SafeStartupTool(boxType.GetField("value").GetValue(box)));
                 }
             }
             catch (ArgumentException) { Debug.LogWarning("Hair Cards: an invalid saved preference was ignored; use Reset to defaults to clear saved editor settings."); }
         }
+
+        // Like the paint erase toggle, a destructive brush must be explicitly armed each session.
+        private static object SafeStartupTool(object value) => value is HairSceneTool.Erase ? HairSceneTool.Comb : value;
 
         internal static void Reset(object target)
         {

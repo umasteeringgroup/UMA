@@ -103,8 +103,11 @@ namespace UMA.HairCards
         PushOut,
         Mirror,
         TrimByMesh,
-        LodReduction
+        LodReduction,
+        SplineFlow
     }
+
+    public enum HairLiftNormalMode { RootNormal, ClosestSurfaceNormal }
 
     public enum HairHelperType
     {
@@ -330,7 +333,7 @@ namespace UMA.HairCards
     public sealed class HairGrowthMap
     {
         [SerializeField] private string id;
-        public string name = "Growth Area";
+        public string name = "Growth / Density";
         public HairMapKind kind = HairMapKind.GrowthArea;
         public bool visible = true;
         public bool locked;
@@ -339,6 +342,8 @@ namespace UMA.HairCards
         public float[] values = Array.Empty<float>();
 
         public string Id => id;
+        public string DisplayName => kind == HairMapKind.GrowthArea ? "Growth / Density" :
+            kind == HairMapKind.Density ? "Density Multiplier (optional)" : name;
 
         public void EnsureIntegrity(int vertexCount)
         {
@@ -398,6 +403,9 @@ namespace UMA.HairCards
         public bool locked;
         [Range(0f, 1f)] public float opacity = 1f;
         public HairSculptBlendMode blendMode;
+        // Finishing passes evaluate after legacy group modifiers and helper constraints.
+        // Within each section the authored list order is retained.
+        public bool afterGroupOperations;
         public string maskMapId;
         public List<HairGuideDelta> deltas = new List<HairGuideDelta>();
         public List<HairModifierSettings> modifiers = new List<HairModifierSettings>();
@@ -433,12 +441,25 @@ namespace UMA.HairCards
         public string Id => id;
 
         [Range(0f, 1f)] public float rootInfluence = 1f;
+        public HairLiftNormalMode liftNormalMode = HairLiftNormalMode.RootNormal;
         [Min(0f)] public float gravityStrength = 2.5f;
         [Range(0f, 1f)] public float gravitySeparation = 0.1f;
         public bool gravityCollision = true;
         [Range(0f, 0.05f)] public float gravityClearance = 0.002f;
         public Vector3 gravityDirection = Vector3.down;
         public bool useWorldGravity = true;
+
+        // Surface paths belong to this modifier, not to the generated guides/cards.
+        public List<HairFlowSpline> flowSplines = new List<HairFlowSpline>();
+        [Min(0.001f)] public float flowRadius = 0.15f;
+        [Range(1, 4)] public int flowNeighbors = 4;
+        [Range(0f, 1f)] public float flowDirection = 1f;
+        [Range(0f, 1f)] public float flowFacing = 1f;
+        [Range(-180f, 180f)] public float flowBank;
+        [Range(0f, 80f)] public float flowLift = 10f;
+        [Range(0.001f, 0.05f)] public float flowPointSpacing = 0.008f;
+        public bool flowMirrorDrawing;
+        public bool flowShowPaths = true;
 
         // Evaluation copies share the read-only ramp; authoring duplicates own their keys and ID.
         internal HairModifierSettings WithLayerOpacity(float opacity)
@@ -454,6 +475,10 @@ namespace UMA.HairCards
             copy.id = null;
             copy.rootToTip = rootToTip == null ? null : new AnimationCurve(rootToTip.keys)
             { preWrapMode = rootToTip.preWrapMode, postWrapMode = rootToTip.postWrapMode };
+            copy.flowSplines = new List<HairFlowSpline>();
+            if (flowSplines != null)
+                foreach (HairFlowSpline spline in flowSplines)
+                    if (spline != null) copy.flowSplines.Add(spline.Duplicate());
             copy.EnsureIntegrity();
             return copy;
         }
@@ -467,6 +492,15 @@ namespace UMA.HairCards
             gravityStrength = float.IsFinite(gravityStrength) ? Mathf.Max(0f, gravityStrength) : 0f;
             gravitySeparation = float.IsFinite(gravitySeparation) ? Mathf.Clamp01(gravitySeparation) : 0f;
             gravityClearance = float.IsFinite(gravityClearance) ? Mathf.Clamp(gravityClearance, 0f, 0.05f) : 0f;
+            flowSplines ??= new List<HairFlowSpline>();
+            foreach (HairFlowSpline spline in flowSplines) spline?.EnsureIntegrity();
+            flowRadius = float.IsFinite(flowRadius) ? Mathf.Max(0.001f, flowRadius) : 0.15f;
+            flowNeighbors = Mathf.Clamp(flowNeighbors, 1, 4);
+            flowDirection = float.IsFinite(flowDirection) ? Mathf.Clamp01(flowDirection) : 0f;
+            flowFacing = float.IsFinite(flowFacing) ? Mathf.Clamp01(flowFacing) : 0f;
+            flowBank = float.IsFinite(flowBank) ? Mathf.Clamp(flowBank, -180f, 180f) : 0f;
+            flowLift = float.IsFinite(flowLift) ? Mathf.Clamp(flowLift, 0f, 80f) : 0f;
+            flowPointSpacing = float.IsFinite(flowPointSpacing) ? Mathf.Clamp(flowPointSpacing, 0.001f, 0.05f) : 0.008f;
         }
     }
 
@@ -514,6 +548,27 @@ namespace UMA.HairCards
         public float radius = 0.1f;
         public Vector3 size = Vector3.one;
         public List<Vector3> points = new List<Vector3>();
+
+        // External transforms can include reflection/shear from scaled parents or an authoring
+        // pose. A TRS decomposition cannot represent these exactly. Persist the source-local
+        // snapshot so editor, bake and runtime helper collisions use the same volume.
+        [SerializeField] private bool hasExternalSourceTransform;
+        [SerializeField] private Matrix4x4 externalSourceTransform = Matrix4x4.identity;
+        public bool HasExternalSourceTransform => !embedded && hasExternalSourceTransform;
+        public Matrix4x4 LocalToSource => HasExternalSourceTransform
+            ? externalSourceTransform : Matrix4x4.TRS(position, rotation, scale);
+
+        public bool SetExternalSourceTransform(Matrix4x4 localToSource)
+        {
+            if (!HairCoordinateUtility.IsInvertibleAffine(localToSource)) return false;
+            externalSourceTransform = localToSource;
+            hasExternalSourceTransform = true;
+            position = localToSource.MultiplyPoint3x4(Vector3.zero);
+            Vector3 forward = localToSource.MultiplyVector(Vector3.forward), up = localToSource.MultiplyVector(Vector3.up);
+            rotation = Quaternion.LookRotation(forward.normalized, up.normalized);
+            scale = new Vector3(localToSource.MultiplyVector(Vector3.right).magnitude, up.magnitude, forward.magnitude);
+            return true;
+        }
 
         public string Id => id;
 
@@ -595,8 +650,8 @@ namespace UMA.HairCards
             rootEmbedDepth = float.IsFinite(rootEmbedDepth) ? Mathf.Clamp(rootEmbedDepth, 0f, 0.02f) : 0f;
             lodImportance = Mathf.Clamp01(lodImportance);
 
-            EnsureDefaultMap(HairMapKind.GrowthArea, "Growth Area", 0f, sourceVertexCount);
-            EnsureDefaultMap(HairMapKind.Density, "Density", 1f, sourceVertexCount);
+            EnsureDefaultMap(HairMapKind.GrowthArea, "Growth / Density", 0f, sourceVertexCount);
+            EnsureDefaultMap(HairMapKind.Density, "Density Multiplier (optional)", 1f, sourceVertexCount);
             EnsureDefaultMap(HairMapKind.Length, "Length", 1f, sourceVertexCount);
 
             for (int i = 0; i < maps.Count; i++) maps[i]?.EnsureIntegrity(sourceVertexCount);

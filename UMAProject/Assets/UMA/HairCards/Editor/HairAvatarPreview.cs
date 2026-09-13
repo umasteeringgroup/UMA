@@ -938,11 +938,19 @@ namespace UMA.HairCards.Editor
             Matrix4x4 matrix = MatrixForGuide(groom, sourceCurve.parentGuideId);
             transformed ??= new HairEvaluatedCurve(sourceCurve.points.Count);
             sourceCurve.CopyTo(transformed);
-            transformed.rootNormal = HairPoseUtility.TransformNormal(matrix, sourceCurve.rootNormal);
+            // One inverse-transpose per strand, shared by root and spline-facing samples.
+            Matrix4x4 normalMatrix = matrix.inverse.transpose;
+            Vector3 rootNormal = normalMatrix.MultiplyVector(sourceCurve.rootNormal);
+            transformed.rootNormal = rootNormal.sqrMagnitude > 1e-12f ? rootNormal.normalized : Vector3.up;
             for (int pointIndex = 0; pointIndex < transformed.points.Count; pointIndex++)
             {
                 HairCurvePoint point = transformed.points[pointIndex];
                 point.position = matrix.MultiplyPoint3x4(point.position);
+                if (point.facingWeight > 0f)
+                {
+                    Vector3 normal = normalMatrix.MultiplyVector(point.facingNormal);
+                    point.facingNormal = normal.sqrMagnitude > 1e-12f ? normal.normalized : Vector3.up;
+                }
                 transformed.points[pointIndex] = point;
             }
             return transformed;

@@ -87,7 +87,7 @@ namespace UMA.HairCards
             options ??= new HairEvaluationOptions();
             if (!options.includeGuideCards && !options.includeChildren) return;
             IReadOnlyList<HairModifierSettings> childModifiers = options.applyModifiers && options.includeChildren
-                ? HairGroomEvaluator.ChildModifiers(group, options.soloLayerId) : null;
+                ? HairGroomEvaluator.ChildModifiers(group, options.soloLayerId, options.EditLayerFor(group)) : null;
             float cardFraction = lod != null ? lod.cardFraction : 1f;
             int sampleCount = lod != null ? lod.ResolveSampleCount(group.profile) :
                 Mathf.Max(2, group.profile != null ? group.profile.SamplesPerCard : 12);
@@ -213,6 +213,8 @@ namespace UMA.HairCards
                 float weightedBaseline = 0f, weightedProfileScale = 0f, weightedStiffness = 0f, weightedFreeze = 0f;
                 bool hasBaseline = true;
                 float weightedRoll = 0f;
+                Vector3 weightedFacing = Vector3.zero;
+                float weightedFacingWeight = 0f;
                 for (int neighborIndex = 0; neighborIndex < neighbors.Length; neighborIndex++)
                 {
                     Neighbor neighbor = neighbors[neighborIndex];
@@ -224,6 +226,11 @@ namespace UMA.HairCards
                     weightedProfileScale += sample.profileScale * weight;
                     weightedStiffness += sample.stiffness * weight;
                     weightedFreeze += sample.freeze * weight;
+                    if (sample.facingWeight > 0f)
+                    {
+                        weightedFacing += sample.facingNormal * (sample.facingWeight * weight);
+                        weightedFacingWeight += sample.facingWeight * weight;
+                    }
                     hasBaseline &= sample.widthBaseline >= 0f;
                     weightedRoll += sample.roll * weight;
                 }
@@ -236,7 +243,8 @@ namespace UMA.HairCards
                     hasBaseline ? weightedWidth * widthScale : Mathf.Max(0f, weightedWidth * widthScale),
                     weightedRoll + rollOffset * t,
                     hasBaseline ? weightedBaseline * widthScale : -1f,
-                    weightedProfileScale * widthScale, weightedStiffness, weightedFreeze));
+                    weightedProfileScale * widthScale, weightedStiffness, weightedFreeze)
+                { facingNormal = weightedFacingWeight > 0f ? weightedFacing.normalized : Vector3.zero, facingWeight = weightedFacingWeight });
             }
             return child;
         }

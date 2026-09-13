@@ -14,6 +14,9 @@ namespace UMA.HairCards
         public float profileScale;
         public float stiffness;
         public float freeze;
+        // Optional outward ribbon frame. Zero weight preserves the original transported frame.
+        public Vector3 facingNormal;
+        public float facingWeight;
 
         public HairCurvePoint(Vector3 position, float width, float roll, float widthBaseline = -1f, float profileScale = 1f, float stiffness = 0f, float freeze = 0f)
         {
@@ -24,6 +27,8 @@ namespace UMA.HairCards
             this.profileScale = profileScale;
             this.stiffness = stiffness;
             this.freeze = freeze;
+            facingNormal = Vector3.zero;
+            facingWeight = 0f;
         }
     }
 
@@ -88,6 +93,7 @@ namespace UMA.HairCards
         internal readonly HairGroomEvaluator.SourceMeshReadCache gravitySurface = new HairGroomEvaluator.SourceMeshReadCache();
         internal HairEvaluationOptions options;
         internal readonly HairChildGenerator.GenerationWorkspace children = new HairChildGenerator.GenerationWorkspace();
+        internal readonly HairSplineFlowWorkspace splineFlow = new HairSplineFlowWorkspace();
         internal readonly List<HairEvaluatedCurve> groupGuides = new List<HairEvaluatedCurve>();
         internal readonly List<HairCurvePoint> resampled = new List<HairCurvePoint>();
         internal float[] cumulative = Array.Empty<float>();
@@ -102,7 +108,7 @@ namespace UMA.HairCards
         public void Clear()
         {
             if (inUse) throw new InvalidOperationException("Cannot clear an active hair evaluation workspace.");
-            sourceMesh.Clear(); gravitySurface.Clear(); children.Clear(); groupGuides.Clear(); groupGuides.Capacity = 0;
+            sourceMesh.Clear(); gravitySurface.Clear(); children.Clear(); splineFlow.Clear(); groupGuides.Clear(); groupGuides.Capacity = 0;
             resampled.Clear(); resampled.Capacity = 0; cumulative = Array.Empty<float>(); smoothing = Array.Empty<HairCurvePoint>();
             modifierOriginal.Clear(); modifierOriginal.Capacity = 0; modifierTarget.Clear(); modifierTarget.Capacity = 0;
             modifierControls.Clear(); modifierControls.Capacity = 0; helperCurve.Clear(); helperCurve.Capacity = 0;
@@ -111,8 +117,10 @@ namespace UMA.HairCards
 
     public sealed class HairEvaluationOptions
     {
-        // Direction conversion only: output curves stay in source-local coordinates. A posed
-        // editor supplies the same per-root matrix used to display its guides/cards.
+        // Output curves and authored paths/helpers stay source-local. Gravity converts forces
+        // through this context; Lift converts normals by inverse transpose and displacements
+        // back by inverse. Other source-local modifiers do not acquire an accidental world axis.
+        // A posed editor supplies the same per-root matrix used to display its guides/cards.
         public Matrix4x4 sourceToWorld = Matrix4x4.identity;
         public Func<string, Matrix4x4> guideToSourcePose;
         public Mesh gravityCollisionMesh;
@@ -129,6 +137,15 @@ namespace UMA.HairCards
         public int previewSampleCount;
         public ISet<string> includedGuideIds;
         public string soloLayerId;
+        // Editor evaluation boundary only. Never serialize this into a groom or a bake.
+        // Evaluate preceding operations and this layer's sculpt, but not its modifiers or
+        // anything later in this group. Other groups remain fully evaluated.
+        public string editGroupId;
+        public string editLayerId;
+
+        internal string EditLayerFor(HairGroup group) => group != null && group.Id == editGroupId &&
+            !string.IsNullOrEmpty(editLayerId) && group.sculptLayers.Exists(layer => layer?.Id == editLayerId)
+                ? editLayerId : null;
     }
 
     public sealed class HairEvaluationResult

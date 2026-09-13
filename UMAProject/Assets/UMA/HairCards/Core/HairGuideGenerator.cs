@@ -34,6 +34,10 @@ namespace UMA.HairCards
     {
         public readonly List<HairGuide> guides = new List<HairGuide>();
         public readonly List<string> warnings = new List<string>();
+        public int fullDensityGuideCount;
+        public int densityAdjustedGuideCount;
+        public float averagePaintedDensity;
+        public double paintedSurfaceArea;
         public int attemptedRoots;
         public int rejectedByMask;
         public int rejectedBySpacing;
@@ -41,7 +45,9 @@ namespace UMA.HairCards
 
     /// <summary>
     /// Deterministically distributes authored guide candidates over the source mesh. It uses
-    /// triangle area, Growth Area, Density, Length, Lift and optional tangent-space Flow maps.
+    /// triangle area, Growth / Density, its optional multiplier, Length, Lift and Flow maps.
+    /// guideCount is the budget at density one over the current painted footprint. Its surface-
+    /// area-weighted average density sets the actual target, independently of spacing rejections.
     /// The returned guides are detached data; callers decide whether and how to commit them.
     /// </summary>
     public static class HairGuideGenerator
@@ -72,6 +78,7 @@ namespace UMA.HairCards
             settings ??= new HairGuideGenerationSettings();
             settings.EnsureIntegrity();
             groom.EnsureIntegrity();
+            result.fullDensityGuideCount = settings.guideCount;
 
             Mesh mesh = groom.SourceMesh;
             Vector3[] vertices;
@@ -96,21 +103,33 @@ namespace UMA.HairCards
             HairGrowthMap widthMap = group.FindMap(HairMapKind.Width);
 
             List<TriangleSample> triangles = BuildWeightedTriangles(mesh, vertices, regionMap, densityMap,
-                out float totalWeight);
+                out float totalWeight, out double paintedArea, out double weightedArea);
+            result.paintedSurfaceArea = paintedArea;
+            result.averagePaintedDensity = paintedArea > 0d ? Mathf.Clamp01((float)(weightedArea / paintedArea)) : 0f;
+            result.densityAdjustedGuideCount = Mathf.Clamp((int)Math.Round(
+                settings.guideCount * (double)result.averagePaintedDensity, MidpointRounding.AwayFromZero), 0, settings.guideCount);
             if (triangles.Count == 0 || totalWeight <= 1e-8f)
             {
-                result.warnings.Add("The active group has no non-zero Growth Area to receive guides.");
+                result.warnings.Add(paintedArea <= 0d
+                    ? "Paint a non-zero Growth / Density region before generating guides."
+                    : "The optional Density Multiplier suppresses all growth. Paint it above zero or reset it to 1 in Advanced maps.");
+                return result;
+            }
+            int targetGuideCount = result.densityAdjustedGuideCount;
+            if (targetGuideCount == 0)
+            {
+                result.warnings.Add("Paint reduces the target below one guide. Increase Guides at Full Density or paint a stronger density.");
                 return result;
             }
 
             HairDeterministicRandom random = new HairDeterministicRandom(settings.seed);
-            List<Vector3> acceptedRoots = new List<Vector3>(settings.guideCount);
+            List<Vector3> acceptedRoots = new List<Vector3>(targetGuideCount);
             HairPointSpatialIndex rootIndex = new HairPointSpatialIndex();
             int indexedRoots = 0;
             int candidateCount = 1 + Mathf.RoundToInt(settings.rootUniformity * 31f);
             long maximumAttempts = Math.Min(int.MaxValue,
-                (long)settings.guideCount * settings.maximumAttemptsPerGuide * candidateCount);
-            while (result.attemptedRoots < maximumAttempts && result.guides.Count < settings.guideCount)
+                (long)targetGuideCount * settings.maximumAttemptsPerGuide * candidateCount);
+            while (result.attemptedRoots < maximumAttempts && result.guides.Count < targetGuideCount)
             {
                 // Refresh a spatial snapshot in batches and scan only its small, newly added tail.
                 // Every candidate still sees ALL accepted roots, without an all-guides scan.
@@ -141,8 +160,8 @@ namespace UMA.HairCards
                         result.rejectedBySpacing++;
                         continue;
                     }
-                    float region = Mathf.Clamp01(Sample(regionMap, candidate, coordinates, 1f));
-                    float density = Mathf.Max(0f, Sample(densityMap, candidate, coordinates, 1f));
+                    float region = SampleDensity(regionMap, candidate, coordinates);
+                    float density = SampleDensity(densityMap, candidate, coordinates);
                     float field = region * density;
                     float acceptance = candidate.maximumMaskDensity > 1e-8f
                         ? Mathf.Clamp01(field / candidate.maximumMaskDensity) : 0f;
@@ -211,9 +230,9 @@ namespace UMA.HairCards
                 result.guides.Add(guide);
             }
 
-            if (result.guides.Count < settings.guideCount)
+            if (result.guides.Count < targetGuideCount)
             {
-                result.warnings.Add($"Placed {result.guides.Count} of {settings.guideCount} guides. Reduce minimum spacing or expand the Growth Area.");
+                result.warnings.Add($"Placed {result.guides.Count} of {targetGuideCount} density-adjusted guides. Reduce Minimum Spacing or expand the painted region.");
             }
             return result;
         }
@@ -223,10 +242,11 @@ namespace UMA.HairCards
             IReadOnlyList<Vector3> vertices,
             HairGrowthMap region,
             HairGrowthMap density,
-            out float totalWeight)
+            out float totalWeight, out double paintedArea, out double weightedArea)
         {
             List<TriangleSample> result = new List<TriangleSample>();
             totalWeight = 0f;
+            paintedArea = weightedArea = 0d;
             for (int submesh = 0; submesh < mesh.subMeshCount; submesh++)
             {
                 int[] indices = mesh.GetTriangles(submesh, true);
@@ -236,13 +256,22 @@ namespace UMA.HairCards
                     int b = indices[offset + 1];
                     int c = indices[offset + 2];
                     float area = Vector3.Cross(vertices[b] - vertices[a], vertices[c] - vertices[a]).magnitude * 0.5f;
-                    float fieldA = Mathf.Clamp01(Sample(region, a, 1f)) *
-                                   Mathf.Max(0f, Sample(density, a, 1f));
-                    float fieldB = Mathf.Clamp01(Sample(region, b, 1f)) *
-                                   Mathf.Max(0f, Sample(density, b, 1f));
-                    float fieldC = Mathf.Clamp01(Sample(region, c, 1f)) *
-                                   Mathf.Max(0f, Sample(density, c, 1f));
-                    float maximumField = Mathf.Max(fieldA, Mathf.Max(fieldB, fieldC));
+                    if (!float.IsFinite(area) || area <= 0f) continue;
+                    float rA = DensityVertex(region, a), rB = DensityVertex(region, b), rC = DensityVertex(region, c);
+                    float dA = DensityVertex(density, a), dB = DensityVertex(density, b), dC = DensityVertex(density, c);
+                    float maximumGrowth = Mathf.Max(rA, Mathf.Max(rB, rC));
+                    if (maximumGrowth <= 0f) continue;
+                    // Positive linear paint covers the triangle interior. Unpainted triangles
+                    // (including the rest of a combined body mesh) are not part of the budget.
+                    paintedArea += area;
+                    // Exact surface integral of the product of two barycentrically-linear maps:
+                    // E[lambda_i^2] = 1/6; E[lambda_i * lambda_j] = 1/12.
+                    double mean = ((double)(rA + rB + rC) * (dA + dB + dC) +
+                        (double)rA * dA + (double)rB * dB + (double)rC * dC) / 12d;
+                    weightedArea += area * mean;
+                    // A product can peak inside an edge/triangle even when all vertex products
+                    // are zero. Use a conservative envelope, not max(vertex products).
+                    float maximumField = maximumGrowth * Mathf.Max(dA, Mathf.Max(dB, dC));
                     float weight = area * maximumField;
                     if (weight <= 1e-10f) continue;
                     totalWeight += weight;
@@ -294,6 +323,16 @@ namespace UMA.HairCards
                    Sample(map, triangle.b, fallback) * barycentric.y +
                    Sample(map, triangle.c, fallback) * barycentric.z;
         }
+
+        private static float DensityVertex(HairGrowthMap map, int vertex)
+        {
+            float value = map != null ? map.SampleVertex(vertex) : 1f;
+            return float.IsFinite(value) ? Mathf.Clamp01(value) : 0f;
+        }
+
+        private static float SampleDensity(HairGrowthMap map, TriangleSample triangle, Vector3 barycentric)
+            => DensityVertex(map, triangle.a) * barycentric.x + DensityVertex(map, triangle.b) * barycentric.y +
+               DensityVertex(map, triangle.c) * barycentric.z;
 
         private static float Sample(HairGrowthMap map, int vertex, float fallback)
         {

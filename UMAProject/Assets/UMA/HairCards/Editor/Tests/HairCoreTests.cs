@@ -73,7 +73,7 @@ namespace UMA.HairCards.Editor.Tests
         }
     }
 
-    public sealed class HairCoreTests
+    public sealed partial class HairCoreTests
     {
         private Mesh sourceMesh;
         private HairGroomAsset groom;
@@ -1275,7 +1275,7 @@ namespace UMA.HairCards.Editor.Tests
         }
 
         [Test]
-        public void UniformLowGrowthStrengthIsNotAppliedTwiceDuringGuideDistribution()
+        public void UniformLowGrowthScalesCountOnceWithoutRepeatedMaskRejection()
         {
             HairGroup group = groom.Groups[0];
             HairGrowthMap growth = group.FindMap(HairMapKind.GrowthArea);
@@ -1291,7 +1291,8 @@ namespace UMA.HairCards.Editor.Tests
 
             HairGuideGenerationResult result = HairGuideGenerator.Generate(groom, group, settings);
 
-            Assert.That(result.guides, Has.Count.EqualTo(8));
+            Assert.That(result.guides, Has.Count.EqualTo(2), "Eight full-density guides at 0.2 paint round to two guides.");
+            Assert.That(result.densityAdjustedGuideCount, Is.EqualTo(2));
             Assert.That(result.rejectedByMask, Is.Zero,
                 "Uniform strength should scale triangle density, not be reused as a second rejection probability.");
         }
@@ -1384,7 +1385,7 @@ namespace UMA.HairCards.Editor.Tests
                 if (x < -1f) low++; else high++;
                 Assert.That(guide.root.IsValid, Is.True);
             }
-            Assert.That(low + high, Is.EqualTo(160));
+            Assert.That(low + high, Is.EqualTo(100), "Budget 160 × equal-area mean density (0.25 + 1) / 2.");
             Assert.That(low, Is.GreaterThan(0));
             Assert.That(high, Is.GreaterThan(low * 2), "Uniformity must not flatten the deliberately painted 4:1 density contrast.");
             Assert.That(EditorJsonUtility.ToJson(groom), Is.EqualTo(before), "Preview must not reposition accepted guides or alter paint.");
@@ -2259,6 +2260,8 @@ namespace UMA.HairCards.Editor.Tests
                 stage.RebuildNow();
                 stage.WorkflowStep = HairWorkflowStep.Groom;
                 Assert.That(stage.PreviewMode, Is.EqualTo(HairPreviewMode.Cards));
+                stage.SetActiveLayer(HairGroomCommands.AddSculptLayer(groom, groom.Groups[0]).Id);
+                Assert.That(stage.BeginLayerEditing(), Is.True);
                 stage.RebuildNow();
                 Assert.That(renderer.enabled, Is.True);
 
@@ -2339,7 +2342,7 @@ namespace UMA.HairCards.Editor.Tests
         [TestCase(true, true)]
         public void LengthBrushIntentionallyChangesLengthAndKeepsRootAndFrozenPoints(bool shorten, bool freezeMiddle)
         {
-            HairCardStage stage = CreateEditingStage();
+            HairCardStage stage = CreateEditingStage(true);
             try
             {
                 HairGuide guide = groom.Groups[0].guides[0];
@@ -2347,6 +2350,7 @@ namespace UMA.HairCards.Editor.Tests
                 Vector3 middle = stage.DisplayedControlPoint(guide, 1);
                 float original = stage.Evaluation.evaluatedGuides[0].Length;
                 if (freezeMiddle) guide.points[1].freeze = 1f;
+                stage.RebuildNow();
                 Vector3 baseTip = guide.points[^1].position;
                 SetStageField(stage, "sceneTool", HairSceneTool.Length);
                 stage.PaintErase = shorten;
@@ -2402,6 +2406,9 @@ namespace UMA.HairCards.Editor.Tests
                 Assert.That(stage.MoveGuidePoint(guide.Id, 0, Vector3.one), Is.False);
                 existing.locked = true;
                 Vector3 protectedDelta = existing.deltas[0].positionOffsets[2];
+                Assert.That(stage.MoveGuidePoint(guide.Id, 2, displayed + Vector3.forward * 0.1f), Is.False,
+                    "Locked passes must not silently redirect sculpting to a new layer.");
+                Assert.That(HairGroomNodeWindow.AddFinishingSculptLayer(stage, groom.Groups[0]), Is.Not.Null);
                 Assert.That(stage.MoveGuidePoint(guide.Id, 2, displayed + Vector3.forward * 0.1f), Is.True);
                 InvokeStageMethod(stage, "EndStroke");
                 stage.RebuildNow();
@@ -2448,6 +2455,7 @@ namespace UMA.HairCards.Editor.Tests
             try
             {
                 stage.SetActiveLayer(lower.Id);
+                Assert.That(stage.BeginLayerEditing(), Is.True);
                 Vector3 target = stage.DisplayedControlPoint(guide, 2) + Vector3.forward * 0.15f;
                 Assert.That(stage.MoveGuidePoint(guide.Id, 2, target), Is.True);
                 Vector3 preview = stage.DisplayedControlPoint(guide, 2);
@@ -2516,7 +2524,7 @@ namespace UMA.HairCards.Editor.Tests
             HairGroup group = groom.Groups[0];
             group.guides.Add(CreateGuide("Guide B", 22, new Vector3(0.1f, 0f, 0f)));
             groom.EnsureIntegrity();
-            HairCardStage stage = CreateEditingStage();
+            HairCardStage stage = CreateEditingStage(true);
             try
             {
                 stage.SetGuideSelection(new[] { group.guides[1].Id });
@@ -2913,7 +2921,7 @@ namespace UMA.HairCards.Editor.Tests
             for (int mode = 0; mode < 2; mode++)
             {
                 group.sculptLayers.Clear();
-                HairCardStage stage = CreateEditingStage();
+                HairCardStage stage = CreateEditingStage(true);
                 try
                 {
                     SetStageField(stage, "sceneTool", tool);
@@ -3051,6 +3059,24 @@ namespace UMA.HairCards.Editor.Tests
                 preferences.Flush();
                 DestroyEditingStage(first); DestroyEditingStage(second);
             }
+        }
+
+        [Test]
+        public void AuthoredGuidesDefaultsCollapsedAndRemembersFoldoutState()
+        {
+            HairGroomWorkspace first = ScriptableObject.CreateInstance<HairGroomWorkspace>();
+            HairGroomWorkspace second = ScriptableObject.CreateInstance<HairGroomWorkspace>();
+            FieldInfo expanded = typeof(HairGroomWorkspace).GetField("authoredGuidesExpanded", BindingFlags.Instance | BindingFlags.NonPublic);
+            try
+            {
+                Assert.That(expanded.GetValue(first), Is.False);
+                expanded.SetValue(first, true);
+                HairPreferenceCodec.Restore(second, HairPreferenceCodec.Capture(first));
+                Assert.That(expanded.GetValue(second), Is.True);
+                HairPreferenceCodec.Reset(second);
+                Assert.That(expanded.GetValue(second), Is.False);
+            }
+            finally { Object.DestroyImmediate(first); Object.DestroyImmediate(second); }
         }
 
         [Test]
@@ -3396,7 +3422,7 @@ namespace UMA.HairCards.Editor.Tests
             HairGroup group = groom.Groups[0];
             group.guides[0].points[1].position = Vector3.down * 0.1f;
             group.guides[0].points[2].position = Vector3.down * 0.2f;
-            HairCardStage stage = CreateEditingStage();
+            HairCardStage stage = CreateEditingStage(true);
             GameObject cameraObject = new GameObject("Brush scope camera");
             try
             {
@@ -3407,7 +3433,7 @@ namespace UMA.HairCards.Editor.Tests
                 SetStageField(stage, "surfaceRaycaster", new HairMeshRaycaster(sourceMesh));
                 stage.BrushScope = HairBrushScope.VisibleHair;
                 InvokeStageMethod(stage, "SculptAt", Vector3.zero, Vector3.up, Vector3.right * 0.05f);
-                Assert.That(group.sculptLayers, Is.Empty, "Back-side points must not create an edit layer in Visible scope.");
+                Assert.That(group.sculptLayers[0].deltas, Is.Empty, "Back-side points must not write edits in Visible scope.");
                 stage.BrushScope = HairBrushScope.ThroughDepth;
                 InvokeStageMethod(stage, "SculptAt", Vector3.zero, Vector3.up, Vector3.right * 0.05f);
                 Assert.That(group.sculptLayers[0].deltas.Count, Is.EqualTo(1));
@@ -3430,6 +3456,7 @@ namespace UMA.HairCards.Editor.Tests
                 stage.SetGuideSelection(new[] { groom.Groups[0].guides[0].Id });
                 Assert.That(fill.Invoke(stage, args), Is.True);
                 foreach (HairGuidePoint point in groom.Groups[0].guides[0].points) point.freeze = 1f;
+                stage.RebuildNow();
                 Assert.That(fill.Invoke(stage, args), Is.False);
                 stage.SceneTool = HairSceneTool.Freeze;
                 stage.PaintErase = true;
@@ -3464,6 +3491,152 @@ namespace UMA.HairCards.Editor.Tests
             Assert.That(group.guides.Count, Is.EqualTo(1));
             Assert.That(layer.deltas.Count, Is.EqualTo(1));
             Undo.ClearUndo(groom);
+        }
+
+        [Test]
+        public void GuideDeletionImmediatelyRemovesSelectionAndDeltasAndSupportsUndoRedo()
+        {
+            HairGroup group = groom.Groups[0];
+            group.guides.Add(CreateGuide("Disabled guide", 22, Vector3.right * 0.1f));
+            group.guides[1].enabled = false;
+            group.guides.Add(CreateGuide("Keep guide", 33, Vector3.left * 0.1f));
+            group.children.childrenPerGuide = 2;
+            HairSculptLayer layer = HairGroomCommands.AddSculptLayer(groom, group);
+            foreach (HairGuide guide in group.guides)
+                layer.deltas.Add(new HairGuideDelta { guideId = guide.Id, positionOffsets = new[] { Vector3.zero, Vector3.right * 0.01f, Vector3.right * 0.02f } });
+            layer.locked = true; // Removing a guide also removes its data on locked layers.
+            HairCardStage stage = CreateEditingStage();
+            try
+            {
+                string keepId = group.guides[2].Id;
+                string before = JsonUtility.ToJson(group);
+                stage.SetGuideSelection(new[] { group.guides[0].Id, group.guides[1].Id });
+                stage.IsolateSelectedGuides = true;
+                SetStageField(stage, "generationPreview", new HairGuideGenerationResult());
+                Undo.ClearUndo(groom);
+                Assert.That(stage.DeleteGuides(), Is.EqualTo(2));
+                Assert.That(group.guides.Count, Is.EqualTo(1));
+                Assert.That(group.guides[0].Id, Is.EqualTo(keepId));
+                Assert.That(layer.deltas.Count, Is.EqualTo(1));
+                Assert.That(layer.deltas[0].guideId, Is.EqualTo(keepId));
+                Assert.That(stage.SelectedGuideIds, Is.Empty);
+                Assert.That(stage.ActiveGuideId, Is.Null);
+                Assert.That(stage.IsolateSelectedGuides, Is.False);
+                Assert.That(stage.GenerationPreview, Is.Null);
+                Assert.That(stage.ActionStatus, Does.Contain("Deleted 2 guides"));
+                stage.RebuildNow();
+                Assert.That(stage.Evaluation.evaluatedGuides.Count, Is.EqualTo(1));
+                Assert.That(HairGroomEvaluator.Evaluate(groom).CardCount, Is.EqualTo(3), "Remaining guide and its two children only.");
+                Undo.FlushUndoRecordObjects(); Undo.PerformUndo();
+                Assert.That(JsonUtility.ToJson(groom.Groups[0]), Is.EqualTo(before));
+                Undo.PerformRedo();
+                Assert.That(groom.Groups[0].guides.Count, Is.EqualTo(1));
+                Assert.That(groom.Groups[0].sculptLayers[0].deltas.Count, Is.EqualTo(1));
+            }
+            finally { DestroyEditingStage(stage); }
+        }
+
+        [Test]
+        public void GuideDeletionRemoveAllPopupCancelsOrRemovesOnlyCurrentGroupWithUndo()
+        {
+            HairGroup group = groom.Groups[0];
+            for (int i = 1; i < 128; i++)
+            {
+                HairGuide guide = CreateGuide($"Guide {i}", i + 100, Vector3.right * (i * 0.001f));
+                guide.enabled = i % 2 == 0;
+                group.guides.Add(guide);
+            }
+            group.FindMap(HairMapKind.GrowthArea).values[0] = 0.5f;
+            HairSculptLayer layer = HairGroomCommands.AddSculptLayer(groom, group);
+            foreach (HairGuide guide in group.guides)
+                layer.deltas.Add(new HairGuideDelta { guideId = guide.Id, positionOffsets = new[] { Vector3.zero, Vector3.right * 0.01f, Vector3.zero } });
+            HairGroomCommands.AddModifier(groom, group, HairModifierType.Width, layer);
+            HairGroup other = HairGroomCommands.AddGroup(groom, HairGroupRole.Coverage, "Keep this group");
+            other.profile = profile;
+            other.guides.Add(CreateGuide("Other group guide", 700, Vector3.forward * 0.1f));
+            HairCardStage stage = CreateEditingStage();
+            try
+            {
+                stage.SetActiveGroup(group.Id);
+                stage.SetGuideSelection(null); stage.IsolateSelectedGuides = true;
+                string before = JsonUtility.ToJson(group), otherBefore = JsonUtility.ToJson(other);
+                Undo.ClearUndo(groom);
+                int dirty = EditorUtility.GetDirtyCount(groom);
+                Assert.That(HairGroomWorkspace.ConfirmRemoveAllGuides(stage, (title, message, accept, cancel) =>
+                {
+                    Assert.That(title, Is.EqualTo("Remove All Hair Guides"));
+                    Assert.That(message, Does.Contain("128 guides").And.Contain(group.name).And.Contain("Other groups"));
+                    Assert.That(accept, Is.EqualTo("Remove all guides"));
+                    Assert.That(cancel, Is.EqualTo("Cancel"));
+                    return false;
+                }), Is.Zero);
+                Assert.That(JsonUtility.ToJson(group), Is.EqualTo(before));
+                Assert.That(EditorUtility.GetDirtyCount(groom), Is.EqualTo(dirty), "Cancel must not dirty the groom.");
+                Assert.That(HairGroomWorkspace.ConfirmRemoveAllGuides(stage, (title, message, accept, cancel) => true), Is.EqualTo(128));
+                HairGroup expected = JsonUtility.FromJson<HairGroup>(before);
+                expected.guides.Clear(); expected.sculptLayers[0].deltas.Clear();
+                Assert.That(JsonUtility.ToJson(group), Is.EqualTo(JsonUtility.ToJson(expected)), "Only guides and their sculpt deltas are removed.");
+                Assert.That(JsonUtility.ToJson(other), Is.EqualTo(otherBefore));
+                stage.RebuildNow();
+                Assert.That(stage.Evaluation.evaluatedGuides.Count, Is.EqualTo(1), "Only the other group's guide remains in preview.");
+                Undo.FlushUndoRecordObjects(); Undo.PerformUndo();
+                Assert.That(JsonUtility.ToJson(groom.Groups[0]), Is.EqualTo(before));
+                Assert.That(JsonUtility.ToJson(groom.Groups[1]), Is.EqualTo(otherBefore));
+                Undo.PerformRedo();
+                Assert.That(groom.Groups[0].guides, Is.Empty);
+                Assert.That(groom.Groups[1].guides.Count, Is.EqualTo(1));
+            }
+            finally { DestroyEditingStage(stage); }
+        }
+
+        [Test]
+        public void GuideDeletionPopupCannotTargetADifferentGroupAfterConfirmation()
+        {
+            HairGroup group = groom.Groups[0];
+            HairGroup other = HairGroomCommands.AddGroup(groom, HairGroupRole.Coverage, "Other group");
+            other.profile = profile;
+            other.guides.Add(CreateGuide("Keep guide", 44, Vector3.right));
+            HairCardStage stage = CreateEditingStage();
+            try
+            {
+                stage.SetActiveGroup(group.Id);
+                Assert.That(HairGroomWorkspace.ConfirmRemoveAllGuides(stage, (title, message, accept, cancel) =>
+                {
+                    stage.SetActiveGroup(other.Id);
+                    return true;
+                }), Is.Zero);
+                Assert.That(group.guides.Count, Is.EqualTo(1));
+                Assert.That(other.guides.Count, Is.EqualTo(1));
+            }
+            finally { DestroyEditingStage(stage); }
+        }
+
+        [Test]
+        public void GuideDeletionRespectsLocksEmptySelectionAndGroupOwnership()
+        {
+            HairGroup group = groom.Groups[0];
+            HairCardStage stage = CreateEditingStage();
+            try
+            {
+                stage.SetGuideSelection(null);
+                int dirty = EditorUtility.GetDirtyCount(groom);
+                Assert.That(stage.DeleteGuides(), Is.Zero);
+                Assert.That(EditorUtility.GetDirtyCount(groom), Is.EqualTo(dirty));
+                stage.SetGuideSelection(new[] { group.guides[0].Id }); group.locked = true;
+                Assert.That(stage.DeleteGuides(), Is.Zero);
+                Assert.That(stage.DeleteGuides(true), Is.Zero);
+                Assert.That(HairGroomWorkspace.ConfirmRemoveAllGuides(stage, (title, message, accept, cancel) =>
+                { Assert.Fail("Locked groups must not show a removal popup."); return true; }), Is.Zero);
+                Assert.That(group.guides.Count, Is.EqualTo(1));
+                HairGroup detached = new HairGroup(); detached.guides.Add(group.guides[0]);
+                Assert.That(HairGroomCommands.RemoveAllGuides(groom, detached), Is.Empty);
+                Assert.That(detached.guides.Count, Is.EqualTo(1));
+                group.locked = false;
+                Assert.That(stage.DeleteGuides(true), Is.EqualTo(1));
+                Assert.That(HairGroomWorkspace.ConfirmRemoveAllGuides(stage, (title, message, accept, cancel) =>
+                { Assert.Fail("Empty groups must not show a removal popup."); return true; }), Is.Zero);
+            }
+            finally { DestroyEditingStage(stage); }
         }
 
         [Test]
@@ -3599,9 +3772,11 @@ namespace UMA.HairCards.Editor.Tests
                 Assert.That(stage.SlicePreviewCount, Is.EqualTo(1), "A guide hit by both planes is counted only once.");
                 Assert.That(guide.points[2].position, Is.EqualTo(original));
                 guide.points[2].freeze = 1f;
+                stage.RebuildNow();
                 InvokeStageMethod(stage, "CollectSlicePreview", plane, finite);
                 Assert.That(stage.SlicePreviewCount, Is.Zero);
                 guide.points[2].freeze = 0f;
+                stage.RebuildNow();
                 stage.BrushScope = HairBrushScope.SelectedGuidesOnly;
                 InvokeStageMethod(stage, "CollectSlicePreview", plane, finite);
                 Assert.That(stage.SlicePreviewCount, Is.Zero);
@@ -4361,7 +4536,7 @@ namespace UMA.HairCards.Editor.Tests
             guide.points[1].position = new Vector3(0.1f, 0.05f, 0f);
             guide.points[2].position = new Vector3(0.2f, 0.08f, 0.02f);
             guide.points[1].stiffness = 0.7f;
-            HairCardStage stage = CreateEditingStage();
+            HairCardStage stage = CreateEditingStage(true);
             HairEvaluatedCurve held;
             try
             {
@@ -4643,6 +4818,75 @@ namespace UMA.HairCards.Editor.Tests
             Assert.That(CurveFingerprint(HairGroomEvaluator.Evaluate(groom, options)), Is.EqualTo(baseline));
             modifier.enabled = true; options.applyModifiers = false;
             Assert.That(CurveFingerprint(HairGroomEvaluator.Evaluate(groom, options)), Is.EqualTo(baseline));
+        }
+
+        [TestCase(HairModifierDomain.Guides)]
+        [TestCase(HairModifierDomain.Children)]
+        [TestCase(HairModifierDomain.GuidesAndChildren)]
+        public void ModifierActiveToggleBypassesOnlyItsEffectAndSupportsUndo(HairModifierDomain domain)
+        {
+            HairGroup group = groom.Groups[0];
+            group.children.childrenPerGuide = 2;
+            HairSculptLayer layer = HairGroomCommands.AddSculptLayer(groom, group);
+            HairModifierSettings other = HairGroomCommands.AddModifier(groom, group, HairModifierType.Width, layer);
+            other.amount = 1.5f;
+            var options = new HairEvaluationOptions { evaluateSurfaceAnchors = false };
+            string baseline = CurveFingerprint(HairGroomEvaluator.Evaluate(groom, options));
+            HairModifierSettings modifier = HairGroomCommands.AddModifier(groom, group, HairModifierType.Length, layer);
+            modifier.domain = domain; modifier.amount = 2f;
+            string enabledResult = CurveFingerprint(HairGroomEvaluator.Evaluate(groom, options));
+            Assert.That(enabledResult, Is.Not.EqualTo(baseline));
+            string settings = JsonUtility.ToJson(modifier);
+            HairCardStage stage = CreateEditingStage();
+            FieldInfo activeStage = typeof(HairCardStage).GetField("<ActiveStage>k__BackingField", BindingFlags.Static | BindingFlags.NonPublic);
+            object previousStage = activeStage.GetValue(null);
+            try
+            {
+                activeStage.SetValue(null, stage);
+                stage.SetActiveModifier(layer.Id, other.Id);
+                stage.RebuildNow();
+                Undo.ClearUndo(groom); Undo.IncrementCurrentGroup();
+                Assert.That(HairGroomCommands.SetModifierEnabled(groom, group, layer, modifier, false), Is.True);
+                Assert.That(stage.ActiveModifierId, Is.EqualTo(other.Id), "Bypassing another modifier must not select it.");
+                Assert.That(stage.ActiveLayerId, Is.EqualTo(layer.Id));
+                Assert.That(typeof(HairCardStage).GetField("pendingPreviewChanges", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(stage),
+                    Is.EqualTo(HairPreviewChange.Evaluation), "Reevaluate cards without invalidating unrelated source/paint caches.");
+                Assert.That(CurveFingerprint(HairGroomEvaluator.Evaluate(groom, options)), Is.EqualTo(baseline));
+                HairSculptLayer restored = JsonUtility.FromJson<HairSculptLayer>(JsonUtility.ToJson(layer));
+                Assert.That(restored.modifiers[0].enabled, Is.True);
+                Assert.That(restored.modifiers[1].enabled, Is.False, "The toggle must serialize with its modifier.");
+                restored.modifiers[1].enabled = true;
+                Assert.That(JsonUtility.ToJson(restored.modifiers[1]), Is.EqualTo(settings), "Bypassing preserves the modifier's settings.");
+                Undo.FlushUndoRecordObjects(); Undo.PerformUndo();
+                Assert.That(CurveFingerprint(HairGroomEvaluator.Evaluate(groom, options)), Is.EqualTo(enabledResult));
+                Undo.PerformRedo();
+                Assert.That(CurveFingerprint(HairGroomEvaluator.Evaluate(groom, options)), Is.EqualTo(baseline));
+                group = groom.Groups[0]; layer = group.sculptLayers[^1]; modifier = layer.modifiers[1];
+                Assert.That(HairGroomCommands.SetModifierEnabled(groom, group, layer, modifier, true), Is.True);
+                Assert.That(CurveFingerprint(HairGroomEvaluator.Evaluate(groom, options)), Is.EqualTo(enabledResult));
+            }
+            finally { activeStage.SetValue(null, previousStage); DestroyEditingStage(stage); }
+        }
+
+        [Test]
+        public void ModifierActiveToggleRespectsLocksOwnershipAndUnchangedState()
+        {
+            HairGroup group = groom.Groups[0];
+            HairSculptLayer layer = HairGroomCommands.AddSculptLayer(groom, group);
+            HairSculptLayer otherLayer = HairGroomCommands.AddSculptLayer(groom, group);
+            HairModifierSettings modifier = HairGroomCommands.AddModifier(groom, group, HairModifierType.Curl, layer);
+            int dirtyCount = EditorUtility.GetDirtyCount(groom);
+            Assert.That(HairGroomCommands.SetModifierEnabled(groom, group, layer, modifier, true), Is.False);
+            Assert.That(EditorUtility.GetDirtyCount(groom), Is.EqualTo(dirtyCount));
+            layer.locked = true;
+            Assert.That(HairGroomCommands.SetModifierEnabled(groom, group, layer, modifier, false), Is.False);
+            layer.locked = false; group.locked = true;
+            Assert.That(HairGroomCommands.SetModifierEnabled(groom, group, layer, modifier, false), Is.False);
+            group.locked = false;
+            Assert.That(HairGroomCommands.SetModifierEnabled(groom, group, otherLayer, modifier, false), Is.False);
+            Assert.That(HairGroomCommands.SetModifierEnabled(groom, new HairGroup(), layer, modifier, false), Is.False);
+            Assert.That(modifier.enabled, Is.True);
+            Undo.ClearUndo(groom);
         }
 
         [TestCase(HairSculptBlendMode.Additive)]
@@ -5103,7 +5347,7 @@ namespace UMA.HairCards.Editor.Tests
         private static void HashFloat(ref ulong hash, float value)
         { unchecked { hash = (hash ^ (uint)System.BitConverter.SingleToInt32Bits(value)) * 1099511628211UL; } }
 
-        private HairCardStage CreateEditingStage()
+        private HairCardStage CreateEditingStage(bool beginSculpt = false)
         {
             HairCardStage stage = ScriptableObject.CreateInstance<HairCardStage>();
             SetStageField(stage, "groom", groom);
@@ -5111,6 +5355,14 @@ namespace UMA.HairCards.Editor.Tests
             stage.BrushRadius = 1f;
             stage.BrushHardness = 1f;
             stage.BrushStrength = 1f;
+            if (beginSculpt)
+            {
+                HairGroup group = groom.Groups[0];
+                if (group.sculptLayers.Count == 0) HairGroomCommands.AddSculptLayer(groom, group);
+                stage.SetActiveGroup(group.Id);
+                stage.SetActiveLayer(group.sculptLayers[^1].Id);
+                Assert.That(stage.BeginLayerEditing(), Is.True);
+            }
             stage.RebuildNow();
             return stage;
         }
@@ -5131,6 +5383,8 @@ namespace UMA.HairCards.Editor.Tests
                 HairGroomCommands.AddModifier(groom, groom.Groups[0], HairModifierType.Curl);
                 HairGroomCommands.AddModifier(groom, groom.Groups[0], HairModifierType.Gravity);
                 HairGroomCommands.AddModifier(groom, groom.Groups[0], HairModifierType.Length);
+                HairModifierSettings splineFlow = HairGroomCommands.AddModifier(groom, groom.Groups[0], HairModifierType.SplineFlow);
+                splineFlow.flowSplines.Add(TestFlowPath(Vector3.zero, Vector3.right * 0.2f));
                 HairSculptLayer imported = HairGroomCommands.ImportLegacyModifiers(groom, groom.Groups[0]);
                 stage.SetActiveGroup(groom.Groups[0].Id);
                 stage.SetActiveLayer(imported.Id);
@@ -5148,6 +5402,25 @@ namespace UMA.HairCards.Editor.Tests
                         yield return null;
                         yield return null;
                         LogAssert.NoUnexpectedReceived();
+                        if (step == HairWorkflowStep.Growth)
+                        {
+                            stage.SetActiveMap(groom.Groups[0].FindMap(HairMapKind.Density).Id);
+                            window.Repaint(); yield return null; yield return null;
+                            Assert.That(stage.SelectedNode.Map.kind, Is.EqualTo(HairMapKind.Density), "An optional map is edited directly in its own node.");
+                            LogAssert.NoUnexpectedReceived();
+                            stage.SetActiveMap(groom.Groups[0].FindMap(HairMapKind.GrowthArea).Id);
+                        }
+                        if (step == HairWorkflowStep.Guides)
+                        {
+                            FieldInfo authored = typeof(HairGroomWorkspace).GetField("authoredGuidesExpanded", BindingFlags.Instance | BindingFlags.NonPublic);
+                            Assert.That(authored.GetValue(window), Is.False, "Authored Guides starts collapsed.");
+                            authored.SetValue(window, true);
+                            window.Repaint(); yield return null; yield return null;
+                            LogAssert.NoUnexpectedReceived();
+                            authored.SetValue(window, false);
+                            window.Repaint(); yield return null; yield return null;
+                            LogAssert.NoUnexpectedReceived();
+                        }
                         if (step == HairWorkflowStep.Groom)
                         {
                             foreach (HairModifierSettings modifier in imported.modifiers)
@@ -5155,6 +5428,10 @@ namespace UMA.HairCards.Editor.Tests
                                 stage.SetActiveModifier(imported.Id, modifier.Id);
                                 window.Repaint(); yield return null; yield return null;
                                 LogAssert.NoUnexpectedReceived();
+                                HairGroomCommands.SetModifierEnabled(groom, groom.Groups[0], imported, modifier, false);
+                                window.Repaint(); yield return null; yield return null;
+                                LogAssert.NoUnexpectedReceived();
+                                HairGroomCommands.SetModifierEnabled(groom, groom.Groups[0], imported, modifier, true);
                             }
                             stage.SetActiveLayer(imported.Id);
                             imported.locked = true;

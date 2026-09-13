@@ -1,0 +1,551 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 534edf300d8929243a0d291e413e2f0b, type: 3}
+  m_Name: SimpleHair
+  m_EditorClassIdentifier: UMA_Core::UMA.SharedColorTable
+  channelCount: 1
+  sharedColorName: SimpleHair
+  colors:
+  - name: Brown
+    channelMask:
+    - {r: 1, g: 1, b: 1, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      alwaysUpdateParms: 0
+      serializedProperties:
+      - p12:
+          stringRepresentation: 
+          name: 
+          Translate: {x: 0, y: 0}
+          Rotate: 0
+          Scale: {x: 1, y: 1}
+        p11:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p10:
+          stringRepresentation: Color;#432C1DFF;_BaseColor
+          name: _BaseColor
+          Value: {r: 0.26415092, g: 0.17399162, b: 0.113800846, a: 1}
+        p9:
+          stringRepresentation: 
+          name: 
+          Value: {x: 0, y: 0, z: 0, w: 0}
+        p8:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p7:
+          stringRepresentation: 
+          name: 
+          Value: {fileID: 0}
+        p6:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p5:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p4:
+          stringRepresentation: 
+          name: 
+          Value:
+            e00: 0
+            e01: 0
+            e02: 0
+            e03: 0
+            e10: 0
+            e11: 0
+            e12: 0
+            e13: 0
+            e20: 0
+            e21: 0
+            e22: 0
+            e23: 0
+            e30: 0
+            e31: 0
+            e32: 0
+            e33: 0
+        p3:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p2:
+          stringRepresentation: 
+          name: 
+        p1:
+          stringRepresentation: 
+          name: 
+          offset: 0
+          size: 0
+        propertType: UMAColorProperty
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 0
+    deleteThis: 0
+    moveUpThis: 0
+    moveDownThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 1
+    showSelected: 1
+    isSelected: 0
+    showDisplayColor: 1
+    showSelectFromFoldout: 0
+    displayColor: {r: 0.2627451, g: 0.17254902, b: 0.1137255, a: 1}
+  - name: Black
+    channelMask:
+    - {r: 1, g: 1, b: 1, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      alwaysUpdateParms: 0
+      serializedProperties:
+      - p12:
+          stringRepresentation: 
+          name: 
+          Translate: {x: 0, y: 0}
+          Rotate: 0
+          Scale: {x: 1, y: 1}
+        p11:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p10:
+          stringRepresentation: Color;#131313FF;_BaseColor
+          name: _BaseColor
+          Value: {r: 0.0754717, g: 0.0754717, b: 0.0754717, a: 1}
+        p9:
+          stringRepresentation: 
+          name: 
+          Value: {x: 0, y: 0, z: 0, w: 0}
+        p8:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p7:
+          stringRepresentation: 
+          name: 
+          Value: {fileID: 0}
+        p6:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p5:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p4:
+          stringRepresentation: 
+          name: 
+          Value:
+            e00: 0
+            e01: 0
+            e02: 0
+            e03: 0
+            e10: 0
+            e11: 0
+            e12: 0
+            e13: 0
+            e20: 0
+            e21: 0
+            e22: 0
+            e23: 0
+            e30: 0
+            e31: 0
+            e32: 0
+            e33: 0
+        p3:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p2:
+          stringRepresentation: 
+          name: 
+        p1:
+          stringRepresentation: 
+          name: 
+          offset: 0
+          size: 0
+        propertType: UMAColorProperty
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 0
+    deleteThis: 0
+    moveUpThis: 0
+    moveDownThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 1
+    showSelected: 1
+    isSelected: 0
+    showDisplayColor: 1
+    showSelectFromFoldout: 1
+    displayColor: {r: 0.07450981, g: 0.07450981, b: 0.07450981, a: 1}
+  - name: Gray
+    channelMask:
+    - {r: 1, g: 1, b: 1, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      alwaysUpdateParms: 0
+      serializedProperties:
+      - p12:
+          stringRepresentation: 
+          name: 
+          Translate: {x: 0, y: 0}
+          Rotate: 0
+          Scale: {x: 1, y: 1}
+        p11:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p10:
+          stringRepresentation: Color;#DADADAFF;_BaseColor
+          name: _BaseColor
+          Value: {r: 0.8553459, g: 0.8553459, b: 0.8553459, a: 1}
+        p9:
+          stringRepresentation: 
+          name: 
+          Value: {x: 0, y: 0, z: 0, w: 0}
+        p8:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p7:
+          stringRepresentation: 
+          name: 
+          Value: {fileID: 0}
+        p6:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p5:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p4:
+          stringRepresentation: 
+          name: 
+          Value:
+            e00: 0
+            e01: 0
+            e02: 0
+            e03: 0
+            e10: 0
+            e11: 0
+            e12: 0
+            e13: 0
+            e20: 0
+            e21: 0
+            e22: 0
+            e23: 0
+            e30: 0
+            e31: 0
+            e32: 0
+            e33: 0
+        p3:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p2:
+          stringRepresentation: 
+          name: 
+        p1:
+          stringRepresentation: 
+          name: 
+          offset: 0
+          size: 0
+        propertType: UMAColorProperty
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 0
+    deleteThis: 0
+    moveUpThis: 0
+    moveDownThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 1
+    showSelected: 1
+    isSelected: 0
+    showDisplayColor: 1
+    showSelectFromFoldout: 1
+    displayColor: {r: 0.854902, g: 0.854902, b: 0.854902, a: 1}
+  - name: Blonde
+    channelMask:
+    - {r: 1, g: 1, b: 1, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      alwaysUpdateParms: 0
+      serializedProperties:
+      - p12:
+          stringRepresentation: 
+          name: 
+          Translate: {x: 0, y: 0}
+          Rotate: 0
+          Scale: {x: 1, y: 1}
+        p11:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p10:
+          stringRepresentation: Color;#E5D892FF;_BaseColor
+          name: _BaseColor
+          Value: {r: 0.899371, g: 0.8465951, b: 0.5741267, a: 1}
+        p9:
+          stringRepresentation: 
+          name: 
+          Value: {x: 0, y: 0, z: 0, w: 0}
+        p8:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p7:
+          stringRepresentation: 
+          name: 
+          Value: {fileID: 0}
+        p6:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p5:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p4:
+          stringRepresentation: 
+          name: 
+          Value:
+            e00: 0
+            e01: 0
+            e02: 0
+            e03: 0
+            e10: 0
+            e11: 0
+            e12: 0
+            e13: 0
+            e20: 0
+            e21: 0
+            e22: 0
+            e23: 0
+            e30: 0
+            e31: 0
+            e32: 0
+            e33: 0
+        p3:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p2:
+          stringRepresentation: 
+          name: 
+        p1:
+          stringRepresentation: 
+          name: 
+          offset: 0
+          size: 0
+        propertType: UMAColorProperty
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 0
+    deleteThis: 0
+    moveUpThis: 0
+    moveDownThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 1
+    showSelected: 1
+    isSelected: 0
+    showDisplayColor: 1
+    showSelectFromFoldout: 1
+    displayColor: {r: 0.8980393, g: 0.8470589, b: 0.57254905, a: 1}
+  - name: Red
+    channelMask:
+    - {r: 1, g: 1, b: 1, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      alwaysUpdateParms: 0
+      serializedProperties:
+      - p12:
+          stringRepresentation: 
+          name: 
+          Translate: {x: 0, y: 0}
+          Rotate: 0
+          Scale: {x: 1, y: 1}
+        p11:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p10:
+          stringRepresentation: Color;#FF631DFF;_BaseColor
+          name: _BaseColor
+          Value: {r: 1, g: 0.3882353, b: 0.11372549, a: 1}
+        p9:
+          stringRepresentation: 
+          name: 
+          Value: {x: 0, y: 0, z: 0, w: 0}
+        p8:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p7:
+          stringRepresentation: 
+          name: 
+          Value: {fileID: 0}
+        p6:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p5:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p4:
+          stringRepresentation: 
+          name: 
+          Value:
+            e00: 0
+            e01: 0
+            e02: 0
+            e03: 0
+            e10: 0
+            e11: 0
+            e12: 0
+            e13: 0
+            e20: 0
+            e21: 0
+            e22: 0
+            e23: 0
+            e30: 0
+            e31: 0
+            e32: 0
+            e33: 0
+        p3:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p2:
+          stringRepresentation: 
+          name: 
+        p1:
+          stringRepresentation: 
+          name: 
+          offset: 0
+          size: 0
+        propertType: UMAColorProperty
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 0
+    deleteThis: 0
+    moveUpThis: 0
+    moveDownThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 1
+    showSelected: 1
+    isSelected: 0
+    showDisplayColor: 1
+    showSelectFromFoldout: 1
+    displayColor: {r: 1, g: 0.38823533, b: 0.1137255, a: 1}
+  - name: Auburn
+    channelMask:
+    - {r: 1, g: 1, b: 1, a: 1}
+    channelAdditiveMask:
+    - {r: 0.37254903, g: 0.37254903, b: 0.37254903, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      alwaysUpdateParms: 0
+      serializedProperties:
+      - p12:
+          stringRepresentation: 
+          name: 
+          Translate: {x: 0, y: 0}
+          Rotate: 0
+          Scale: {x: 1, y: 1}
+        p11:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p10:
+          stringRepresentation: Color;#AE3713FF;_BaseColor
+          name: _BaseColor
+          Value: {r: 0.68235296, g: 0.21568628, b: 0.07450981, a: 1}
+        p9:
+          stringRepresentation: 
+          name: 
+          Value: {x: 0, y: 0, z: 0, w: 0}
+        p8:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p7:
+          stringRepresentation: 
+          name: 
+          Value: {fileID: 0}
+        p6:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p5:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p4:
+          stringRepresentation: 
+          name: 
+          Value:
+            e00: 0
+            e01: 0
+            e02: 0
+            e03: 0
+            e10: 0
+            e11: 0
+            e12: 0
+            e13: 0
+            e20: 0
+            e21: 0
+            e22: 0
+            e23: 0
+            e30: 0
+            e31: 0
+            e32: 0
+            e33: 0
+        p3:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p2:
+          stringRepresentation: 
+          name: 
+        p1:
+          stringRepresentation: 
+          name: 
+          offset: 0
+          size: 0
+        propertType: UMAColorProperty
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 0
+    deleteThis: 0
+    moveUpThis: 0
+    moveDownThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 1
+    showSelected: 1
+    isSelected: 0
+    showDisplayColor: 1
+    showSelectFromFoldout: 1
+    displayColor: {r: 0.5597484, g: 0.1881158, b: 0.075689144, a: 1}

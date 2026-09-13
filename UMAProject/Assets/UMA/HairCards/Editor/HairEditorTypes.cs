@@ -165,7 +165,10 @@ namespace UMA.HairCards.Editor
         Clump,
         Part,
         Freeze,
-        Helper
+        Helper,
+        DrawFlow,
+        EditFlow,
+        Erase
     }
 
     public enum HairPreviewMode
@@ -215,7 +218,7 @@ namespace UMA.HairCards.Editor
                 HairWorkflowStep.Guides => tool == HairSceneTool.Select || tool == HairSceneTool.PlaceGuide ||
                                            tool == HairSceneTool.DrawGuide,
                 HairWorkflowStep.Groom => tool == HairSceneTool.Select || IsGroomTool(tool) ||
-                                          tool == HairSceneTool.Helper,
+                                          tool == HairSceneTool.Helper || tool == HairSceneTool.DrawFlow || tool == HairSceneTool.EditFlow,
                 _ => tool == HairSceneTool.Select
             };
         }
@@ -225,13 +228,13 @@ namespace UMA.HairCards.Editor
             if (tool == HairSceneTool.PaintGrowth) return HairWorkflowStep.Growth;
             if (tool == HairSceneTool.PlaceGuide || tool == HairSceneTool.DrawGuide)
                 return HairWorkflowStep.Guides;
-            if (IsGroomTool(tool) || tool == HairSceneTool.Helper) return HairWorkflowStep.Groom;
+            if (IsGroomTool(tool) || tool == HairSceneTool.Helper || tool == HairSceneTool.DrawFlow || tool == HairSceneTool.EditFlow) return HairWorkflowStep.Groom;
             return current;
         }
 
         internal static bool IsGroomTool(HairSceneTool tool)
         {
-            return tool >= HairSceneTool.Comb && tool <= HairSceneTool.Freeze;
+            return (tool >= HairSceneTool.Comb && tool <= HairSceneTool.Freeze) || tool == HairSceneTool.Erase;
         }
     }
 

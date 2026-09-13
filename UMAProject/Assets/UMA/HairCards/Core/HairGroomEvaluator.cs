@@ -34,6 +34,7 @@ namespace UMA.HairCards
             workspace.inUse = true;
             options ??= new HairEvaluationOptions();
             workspace.options = options;
+            workspace.splineFlow.Begin();
             workspace.sourceMesh.Begin(groom != null ? groom.SourceMesh : null);
             workspace.gravitySurface.Begin(options.gravityCollisionMesh != null ? options.gravityCollisionMesh : groom?.SourceMesh);
             try
@@ -48,6 +49,7 @@ namespace UMA.HairCards
                 workspace.gravitySurface.End(); workspace.options = null;
                 workspace.groupGuides.Clear();
                 workspace.children.sourceGuides.Clear();
+                workspace.splineFlow.End();
                 workspace.inUse = false;
             }
         }
@@ -94,8 +96,9 @@ namespace UMA.HairCards
                 { workspace.groupClumpTip += sourceGuide.points[^1].position; clumpCount++; }
             if (clumpCount > 0) workspace.groupClumpTip /= clumpCount;
             string[] atlasRegionIds = group.atlasRegionIds?.ToArray() ?? Array.Empty<string>();
+            string editLayer = options.EditLayerFor(group);
             List<SculptLayerLookup> sculptLayers = options.applySculptLayers || options.applyModifiers
-                ? BuildSculptLayerLookups(group, options.soloLayerId)
+                ? BuildSculptLayerLookups(group, editLayer != null ? null : options.soloLayerId, editLayer)
                 : null;
             for (int guideIndex = 0; guideIndex < group.guides.Count; guideIndex++)
             {
@@ -131,14 +134,25 @@ namespace UMA.HairCards
                     curve.rootNormal = rootNormal;
                 }
 
+                bool groupOperationsApplied = false, stopped = false;
                 if (sculptLayers != null)
                     foreach (SculptLayerLookup layer in sculptLayers)
                     {
+                        if (layer.Layer.afterGroupOperations && !groupOperationsApplied)
+                        {
+                            if (options.applyModifiers) ApplyModifiers(group, curve, HairModifierDomain.Guides, groom, workspace);
+                            if (options.applyConstraints) ApplyConstraints(group, curve, groom);
+                            groupOperationsApplied = true;
+                        }
                         if (options.applySculptLayers) ApplySculptLayer(layer, guide, curve);
+                        if (layer.Layer.Id == editLayer) { stopped = true; break; }
                         if (options.applyModifiers) ApplyModifiers(layer.Modifiers, curve, HairModifierDomain.Guides, groom, workspace);
                     }
-                if (options.applyModifiers) ApplyModifiers(group, curve, HairModifierDomain.Guides, groom, workspace);
-                if (options.applyConstraints) ApplyConstraints(group, curve, groom);
+                if (!stopped && !groupOperationsApplied)
+                {
+                    if (options.applyModifiers) ApplyModifiers(group, curve, HairModifierDomain.Guides, groom, workspace);
+                    if (options.applyConstraints) ApplyConstraints(group, curve, groom);
+                }
                 if (curve.Length < 1e-6f)
                 {
                     result.rejectedCurveCount++;
@@ -150,17 +164,27 @@ namespace UMA.HairCards
             return curves;
         }
 
-        private static List<SculptLayerLookup> BuildSculptLayerLookups(HairGroup group, string soloLayerId = null)
+        private static List<SculptLayerLookup> BuildSculptLayerLookups(HairGroup group, string soloLayerId = null, string editLayerId = null)
         {
             if (group.sculptLayers == null || group.sculptLayers.Count == 0) return null;
             bool soloThisGroup = !string.IsNullOrEmpty(soloLayerId) &&
                 group.sculptLayers.Exists(layer => layer != null && layer.Id == soloLayerId);
             List<SculptLayerLookup> lookups = new List<SculptLayerLookup>(group.sculptLayers.Count);
+            for (int section = 0; section < 2; section++)
             for (int layerIndex = 0; layerIndex < group.sculptLayers.Count; layerIndex++)
             {
                 HairSculptLayer layer = group.sculptLayers[layerIndex];
+                if (layer == null || layer.afterGroupOperations != (section == 1)) continue;
                 if (soloThisGroup && layer?.Id != soloLayerId) continue;
-                if (layer == null || (!layer.visible && !soloThisGroup) || layer.opacity <= 0f || layer.deltas == null) continue;
+                if ((!layer.visible && !soloThisGroup) || layer.opacity <= 0f || layer.deltas == null)
+                {
+                    if (layer.Id == editLayerId)
+                    {
+                        lookups.Add(new SculptLayerLookup(layer, new Dictionary<string, HairGuideDelta>(), null));
+                        return lookups;
+                    }
+                    continue;
+                }
                 Dictionary<string, HairGuideDelta> deltas = new Dictionary<string, HairGuideDelta>(
                     layer.deltas.Count, StringComparer.Ordinal);
                 for (int deltaIndex = 0; deltaIndex < layer.deltas.Count; deltaIndex++)
@@ -171,6 +195,7 @@ namespace UMA.HairCards
                     deltas.Add(delta.guideId, delta);
                 }
                 lookups.Add(new SculptLayerLookup(layer, deltas, EffectiveModifiers(layer)));
+                if (layer.Id == editLayerId) return lookups;
             }
             return lookups.Count > 0 ? lookups : null;
         }
@@ -185,14 +210,17 @@ namespace UMA.HairCards
             for (int pointIndex = 0; pointIndex < curve.points.Count; pointIndex++)
             {
                 HairCurvePoint point = curve.points[pointIndex];
-                // Earlier layer modifiers may have resampled the curve. Map subsequent
-                // authored offsets back to the original guide's normalized point indices.
+                // Override's absolute base retains its authored-guide correspondence.
+                // Delta channels below have their own (possibly denser) control lattice.
                 float sample = pointIndex * (guide.points.Count - 1f) / (curve.points.Count - 1f);
                 int a = Mathf.FloorToInt(sample), b = Mathf.Min(a + 1, guide.points.Count - 1);
                 float fraction = sample - a;
-                Vector3 positionOffset = Vector3.Lerp(Offset(delta.positionOffsets, a), Offset(delta.positionOffsets, b), fraction);
-                float widthOffset = Mathf.Lerp(Offset(delta.widthOffsets, a), Offset(delta.widthOffsets, b), fraction);
-                float rollOffset = Mathf.Lerp(Offset(delta.rollOffsets, a), Offset(delta.rollOffsets, b), fraction);
+                // Deltas live on the control lattice at this layer, not necessarily the
+                // authored guide lattice (an earlier modifier may have resampled it).
+                float t = pointIndex / (curve.points.Count - 1f);
+                Vector3 positionOffset = SampleOffset(delta.positionOffsets, t);
+                float widthOffset = SampleOffset(delta.widthOffsets, t);
+                float rollOffset = SampleOffset(delta.rollOffsets, t);
                 if (layer.blendMode == HairSculptBlendMode.Override)
                 {
                     point.position = Vector3.Lerp(point.position, Vector3.Lerp(guide.points[a].position, guide.points[b].position, fraction) + positionOffset,
@@ -214,8 +242,21 @@ namespace UMA.HairCards
             }
         }
 
-        private static Vector3 Offset(Vector3[] values, int index) => values != null && index < values.Length ? values[index] : Vector3.zero;
-        private static float Offset(float[] values, int index) => values != null && index < values.Length ? values[index] : 0f;
+        public static Vector3 SampleOffset(Vector3[] values, float t)
+        {
+            if (values == null || values.Length == 0) return Vector3.zero;
+            float sample = Mathf.Clamp01(t) * (values.Length - 1);
+            int a = Mathf.FloorToInt(sample);
+            return Vector3.LerpUnclamped(values[a], values[Mathf.Min(a + 1, values.Length - 1)], sample - a);
+        }
+
+        public static float SampleOffset(float[] values, float t)
+        {
+            if (values == null || values.Length == 0) return 0f;
+            float sample = Mathf.Clamp01(t) * (values.Length - 1);
+            int a = Mathf.FloorToInt(sample);
+            return Mathf.LerpUnclamped(values[a], values[Mathf.Min(a + 1, values.Length - 1)], sample - a);
+        }
 
         private static IReadOnlyList<HairModifierSettings> EffectiveModifiers(HairSculptLayer layer)
         {
@@ -226,18 +267,22 @@ namespace UMA.HairCards
             return modifiers;
         }
 
-        internal static IReadOnlyList<HairModifierSettings> ChildModifiers(HairGroup group, string soloLayerId)
+        internal static IReadOnlyList<HairModifierSettings> ChildModifiers(HairGroup group, string soloLayerId, string editLayerId = null)
         {
             var modifiers = new List<HairModifierSettings>();
-            bool solo = !string.IsNullOrEmpty(soloLayerId) && group.sculptLayers.Exists(layer => layer != null && layer.Id == soloLayerId);
-            foreach (HairSculptLayer layer in group.sculptLayers)
+            bool solo = editLayerId == null && !string.IsNullOrEmpty(soloLayerId) && group.sculptLayers.Exists(layer => layer != null && layer.Id == soloLayerId);
+            for (int section = 0; section < 2; section++)
             {
-                if (layer == null || (solo ? layer.Id != soloLayerId : !layer.visible) || layer.opacity <= 0f) continue;
-                var effective = EffectiveModifiers(layer);
-                if (effective != null) modifiers.AddRange(effective);
+                if (section == 1 && group.modifiers != null) modifiers.AddRange(group.modifiers);
+                foreach (HairSculptLayer layer in group.sculptLayers)
+                {
+                    if (layer == null || layer.afterGroupOperations != (section == 1)) continue;
+                    if (layer.Id == editLayerId) return modifiers;
+                    if ((solo ? layer.Id != soloLayerId : !layer.visible) || layer.opacity <= 0f) continue;
+                    var effective = EffectiveModifiers(layer);
+                    if (effective != null) modifiers.AddRange(effective);
+                }
             }
-            // Keep legacy runtime/API data evaluable until the editor explicitly migrates it.
-            if (group.modifiers != null) modifiers.AddRange(group.modifiers);
             return modifiers;
         }
 
@@ -465,7 +510,7 @@ namespace UMA.HairCards
                         ApplySmooth(curve, modifier, workspace);
                         break;
                     case HairModifierType.Lift:
-                        ApplyPositionVector(curve, modifier, modifier.vector.normalized);
+                        ApplyLift(curve, modifier, workspace);
                         break;
                     case HairModifierType.Gravity:
                         ApplyGravity(curve, modifier, workspace);
@@ -475,6 +520,9 @@ namespace UMA.HairCards
                         // Applying a combined-domain align again would double their rotation.
                         if (domain != HairModifierDomain.Children || modifier.domain == HairModifierDomain.Children)
                             ApplyFlowAlign(curve, modifier);
+                        break;
+                    case HairModifierType.SplineFlow:
+                        workspace.splineFlow.Get(modifier, workspace.sourceMesh, groom.SourceMeshId).Apply(curve, modifier);
                         break;
                     case HairModifierType.Clump:
                         ApplyClump(curve, modifier, groom.FindHelper(modifier.helperId)?.position ?? workspace.groupClumpTip);
@@ -533,7 +581,7 @@ namespace UMA.HairCards
                 float.IsFinite(modifier.rootInfluence) ? modifier.rootInfluence : 0f);
 
         private static bool PreservesShapeLength(HairModifierType type) => type == HairModifierType.Smooth ||
-            type == HairModifierType.FlowAlign || type == HairModifierType.Lift || type == HairModifierType.Clump ||
+            type == HairModifierType.FlowAlign || type == HairModifierType.SplineFlow || type == HairModifierType.Lift || type == HairModifierType.Clump ||
             type == HairModifierType.Part || type == HairModifierType.Curl || type == HairModifierType.Wave ||
             type == HairModifierType.Noise || type == HairModifierType.HelperFollow ||
             type == HairModifierType.Collision || type == HairModifierType.PushOut;
@@ -592,7 +640,7 @@ namespace UMA.HairCards
             HairEvaluationOptions options = workspace.options;
             Matrix4x4 toSurface = options?.guideToSourcePose?.Invoke(curve.parentGuideId) ?? Matrix4x4.identity;
             Matrix4x4 toWorld = (options?.sourceToWorld ?? Matrix4x4.identity) * toSurface;
-            if (!float.IsFinite(toWorld.determinant) || Mathf.Abs(toWorld.determinant) < 1e-12f) return;
+            if (!HairCoordinateUtility.IsInvertibleAffine(toWorld)) return;
             Matrix4x4 fromWorld = toWorld.inverse;
             Vector3 gravity = modifier.useWorldGravity ? options?.worldGravity ?? Physics.gravity : toWorld.MultiplyVector(modifier.gravityDirection);
             if (!float.IsFinite(gravity.sqrMagnitude) || gravity.sqrMagnitude <= 1e-12f) return;
@@ -659,7 +707,11 @@ namespace UMA.HairCards
                             curve.points[cut] = new HairCurvePoint(Vector3.Lerp(a.position, b.position, t),
                                 Mathf.Lerp(a.width, b.width, t), Mathf.LerpAngle(a.roll, b.roll, t),
                                 Mathf.Lerp(a.widthBaseline, b.widthBaseline, t), Mathf.Lerp(a.profileScale, b.profileScale, t),
-                                Mathf.Lerp(a.stiffness, b.stiffness, t), Mathf.Lerp(a.freeze, b.freeze, t));
+                                Mathf.Lerp(a.stiffness, b.stiffness, t), Mathf.Lerp(a.freeze, b.freeze, t))
+                            {
+                                facingNormal = Vector3.Lerp(a.facingNormal * a.facingWeight, b.facingNormal * b.facingWeight, t).normalized,
+                                facingWeight = Mathf.Lerp(a.facingWeight, b.facingWeight, t)
+                            };
                             curve.points.RemoveRange(cut + 1, curve.points.Count - cut - 1);
                             return;
                         }
@@ -715,6 +767,8 @@ namespace UMA.HairCards
                 Vector3 mirrored = point.position - normal * (2f * distance);
                 point.position = Vector3.Lerp(point.position, mirrored, weight);
                 point.roll = Mathf.Lerp(point.roll, -point.roll, weight);
+                Vector3 reflectedFacing = point.facingNormal - normal * (2f * Vector3.Dot(point.facingNormal, normal));
+                point.facingNormal = Vector3.Lerp(point.facingNormal, reflectedFacing, weight).normalized;
                 return point;
             });
             float rootWeight = Influence(modifier, 0f);
@@ -790,6 +844,36 @@ namespace UMA.HairCards
                     segment = (rotation * direction).normalized * length;
                 }
                 point.position = curve.points[i - 1].position + segment;
+                curve.points[i] = point;
+            }
+        }
+
+        private static void ApplyLift(HairEvaluatedCurve curve, HairModifierSettings modifier, HairEvaluationWorkspace workspace)
+        {
+            if (curve.points.Count < 2 || modifier.amount == 0f) return;
+            Matrix4x4 toWorld = (workspace.options?.sourceToWorld ?? Matrix4x4.identity) *
+                (workspace.options?.guideToSourcePose?.Invoke(curve.parentGuideId) ?? Matrix4x4.identity);
+            if (!HairCoordinateUtility.IsInvertibleAffine(toWorld)) return;
+            Matrix4x4 fromWorld = toWorld.inverse;
+            Vector3 rootNormal = curve.rootNormal;
+            bool validRoot = float.IsFinite(rootNormal.sqrMagnitude) && rootNormal.sqrMagnitude > 1e-12f;
+            HairMeshRaycaster surface = modifier.liftNormalMode == HairLiftNormalMode.ClosestSurfaceNormal || !validRoot
+                ? workspace.sourceMesh.Surface() : null;
+            if (!validRoot && surface != null && surface.ClosestPoint(curve.points[0].position, out HairMeshRaycastHit rootHit))
+                rootNormal = rootHit.Normal;
+            Vector3 rootDirection = HairCoordinateUtility.NormalDisplacement(rootNormal, fromWorld);
+            for (int i = 1; i < curve.points.Count; i++)
+            {
+                HairCurvePoint point = curve.points[i];
+                float t = i / (curve.points.Count - 1f);
+                float weight = ShapeWeight(modifier, t, Influence(modifier, t));
+                if (weight <= 0f || point.freeze >= 0.999f) continue;
+                Vector3 direction = rootDirection;
+                if (modifier.liftNormalMode == HairLiftNormalMode.ClosestSurfaceNormal && surface != null &&
+                    surface.ClosestPoint(point.position, out HairMeshRaycastHit hit))
+                    direction = HairCoordinateUtility.NormalDisplacement(hit.Normal, fromWorld);
+                // FinishModifierShape pins the root/frozen points and restores every segment length.
+                point.position += direction * modifier.amount * weight * t;
                 curve.points[i] = point;
             }
         }
@@ -940,9 +1024,10 @@ namespace UMA.HairCards
         {
             float blend = Mathf.Clamp01(weight);
             if (blend <= 0f) return point;
-            Matrix4x4 localToWorld = Matrix4x4.TRS(helper.position, helper.rotation, helper.scale);
-            Matrix4x4 worldToLocal = localToWorld.inverse;
-            Vector3 local = worldToLocal.MultiplyPoint3x4(point);
+            Matrix4x4 helperToSource = helper.LocalToSource;
+            if (!HairCoordinateUtility.IsInvertibleAffine(helperToSource)) return point;
+            Matrix4x4 sourceToHelper = helperToSource.inverse;
+            Vector3 local = sourceToHelper.MultiplyPoint3x4(point);
             Vector3 projected;
             switch (helper.type)
             {
@@ -989,7 +1074,7 @@ namespace UMA.HairCards
                 default:
                     return point;
             }
-            Vector3 target = localToWorld.MultiplyPoint3x4(projected);
+            Vector3 target = helperToSource.MultiplyPoint3x4(projected);
             Vector3 pushDirection = (target - point).normalized;
             return Vector3.Lerp(point, target + pushDirection * Mathf.Max(0f, clearance), blend);
         }

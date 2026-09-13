@@ -2810,7 +2810,7 @@ namespace UMA
 
                 umaData.FireCharacterCompletedEvents(fireEvents);
 #if UNITY_EDITOR
-                if (umaData.skeleton.boneCount > 600)
+                if (umaData.skeleton != null && umaData.skeleton.boneCount > 600)
 				{
 					if (Debug.isDebugBuild)
                     {

@@ -70,7 +70,7 @@ namespace UMA.HairCards.Editor
             if (cut && !float.IsFinite(map.defaultValue))
             { message = "The map's default value must be finite before cutting."; return false; }
             Payload snapshot = new Payload { sourceMeshId = groom.SourceMeshId, topology = topology,
-                mapName = map.name, values = (float[])map.values.Clone() };
+                mapName = map.DisplayName, values = (float[])map.values.Clone() };
             if (cut)
             {
                 Undo.RecordObject(groom, $"Cut {map.name} Map Values");
@@ -79,7 +79,7 @@ namespace UMA.HairCards.Editor
                 HairGroomCommands.Commit(groom);
             }
             payload = snapshot;
-            message = cut ? $"Cut {map.name}; source values reset to the map default. Undo restores them." : $"Copied {map.name}.";
+            message = cut ? $"Cut {map.DisplayName}; source values reset to the map default. Undo restores them." : $"Copied {map.DisplayName}.";
             return true;
         }
 
@@ -105,7 +105,7 @@ namespace UMA.HairCards.Editor
             Undo.RecordObject(groom, $"Paste Into {map.name} Map");
             map.values = values;
             HairGroomCommands.Commit(groom);
-            message = $"Pasted {payload.mapName} into {map.name}. Values are clamped to the destination range; Undo restores the previous map.";
+            message = $"Pasted {payload.mapName} into {map.DisplayName}. Values are clamped to the destination range; Undo restores the previous map.";
             return true;
         }
     }
@@ -116,9 +116,25 @@ namespace UMA.HairCards.Editor
             IEnumerable<string> ids, HairGuideBatchAction action)
         {
             List<string> affected = new List<string>();
-            if (groom == null || group == null || group.locked) return affected;
+            if (groom == null || group == null || group.locked || !groom.Groups.Contains(group)) return affected;
             HashSet<string> selection = new HashSet<string>(ids ?? Array.Empty<string>());
+            if (!group.guides.Exists(guide => guide != null && selection.Contains(guide.Id))) return affected;
             Undo.RegisterCompleteObjectUndo(groom, action + " Hair Guides");
+            if (action == HairGuideBatchAction.Delete)
+            {
+                // One pass over the guides and each sculpt layer, including for dense Remove All operations.
+                group.guides.RemoveAll(guide =>
+                {
+                    if (guide == null || !selection.Contains(guide.Id)) return false;
+                    affected.Add(guide.Id);
+                    return true;
+                });
+                HashSet<string> removed = new HashSet<string>(affected);
+                foreach (HairSculptLayer layer in group.sculptLayers)
+                    layer?.deltas?.RemoveAll(delta => delta != null && removed.Contains(delta.guideId));
+                Commit(groom);
+                return affected;
+            }
             foreach (HairGuide guide in group.guides.ToArray())
             {
                 if (guide == null || !selection.Contains(guide.Id)) continue;
@@ -135,13 +151,7 @@ namespace UMA.HairCards.Editor
                     affected.Add(copy.Id);
                     continue;
                 }
-                if (action == HairGuideBatchAction.Delete)
-                {
-                    group.guides.Remove(guide);
-                    foreach (HairSculptLayer layer in group.sculptLayers)
-                        layer?.deltas?.RemoveAll(delta => delta != null && delta.guideId == guide.Id);
-                }
-                else if (action == HairGuideBatchAction.Enable || action == HairGuideBatchAction.Disable)
+                if (action == HairGuideBatchAction.Enable || action == HairGuideBatchAction.Disable)
                     guide.enabled = action == HairGuideBatchAction.Enable;
                 else foreach (HairGuidePoint point in guide.points)
                     if (point != null) point.freeze = action == HairGuideBatchAction.Freeze ? 1f : 0f;
@@ -149,6 +159,20 @@ namespace UMA.HairCards.Editor
             }
             Commit(groom);
             return affected;
+        }
+
+        internal static List<string> RemoveAllGuides(HairGroomAsset groom, HairGroup group)
+            => ApplyGuideBatch(groom, group, group?.guides.ConvertAll(guide => guide?.Id), HairGuideBatchAction.Delete);
+
+        // Caller owns the complete-object Undo record and schedules the preview once the stroke ends.
+        internal static int RemoveGuidesInRecordedOperation(HairGroup group, ISet<string> ids)
+        {
+            if (group == null || group.locked || ids == null || ids.Count == 0) return 0;
+            int removed = group.guides.RemoveAll(guide => guide != null && ids.Contains(guide.Id));
+            if (removed > 0)
+                foreach (HairSculptLayer layer in group.sculptLayers)
+                    layer?.deltas?.RemoveAll(delta => delta != null && ids.Contains(delta.guideId));
+            return removed;
         }
 
         private static HairGuideDelta CloneDelta(HairGuideDelta source, string guideId) => new HairGuideDelta
@@ -164,7 +188,8 @@ namespace UMA.HairCards.Editor
             if (groom == null || group == null || group.locked || source == null || !group.sculptLayers.Contains(source)) return null;
             Undo.RecordObject(groom, "Duplicate Hair Sculpt Layer");
             HairSculptLayer copy = new HairSculptLayer { name = source.name + " Copy", opacity = source.opacity,
-                blendMode = source.blendMode, visible = source.visible, maskMapId = source.maskMapId };
+                blendMode = source.blendMode, visible = source.visible, maskMapId = source.maskMapId,
+                afterGroupOperations = source.afterGroupOperations };
             copy.EnsureIntegrity();
             foreach (HairGuideDelta delta in source.deltas)
                 if (delta != null) copy.deltas.Add(CloneDelta(delta, delta.guideId));
@@ -186,6 +211,7 @@ namespace UMA.HairCards.Editor
             if (index < 0 || (layer && group.sculptLayers[index].locked)) return false;
             int next = Mathf.Clamp(index + direction, 0, count - 1);
             if (!remove && index == next) return false;
+            if (!remove && layer && group.sculptLayers[index].afterGroupOperations != group.sculptLayers[next].afterGroupOperations) return false;
             Undo.RecordObject(groom, remove ? "Remove Hair Stack Entry" : "Reorder Hair Stack");
             if (layer)
             {
@@ -281,7 +307,7 @@ namespace UMA.HairCards.Editor
             Undo.RecordObject(groom, "Add Growth Map");
             HairGrowthMap map = new HairGrowthMap
             {
-                name = Nicify(kind),
+                name = kind == HairMapKind.GrowthArea ? "Growth / Density" : kind == HairMapKind.Density ? "Density Multiplier (optional)" : Nicify(kind),
                 kind = kind,
                 defaultValue = DefaultValue(kind)
             };
@@ -390,13 +416,14 @@ namespace UMA.HairCards.Editor
             return true;
         }
 
-        public static HairSculptLayer AddSculptLayer(HairGroomAsset groom, HairGroup group, string layerName = null)
+        public static HairSculptLayer AddSculptLayer(HairGroomAsset groom, HairGroup group, string layerName = null, bool finishing = false)
         {
             if (groom == null || group == null || group.locked) return null;
             Undo.RecordObject(groom, "Add Hair Sculpt Layer");
             HairSculptLayer layer = new HairSculptLayer
             {
-                name = string.IsNullOrWhiteSpace(layerName) ? $"Sculpt Layer {group.sculptLayers.Count + 1}" : layerName
+                name = string.IsNullOrWhiteSpace(layerName) ? $"Sculpt Pass {group.sculptLayers.Count + 1}" : layerName,
+                afterGroupOperations = finishing || group.sculptLayers.Exists(pass => pass != null && pass.afterGroupOperations)
             };
             layer.EnsureIntegrity();
             group.sculptLayers.Add(layer);
@@ -425,6 +452,18 @@ namespace UMA.HairCards.Editor
             return modifier;
         }
 
+        internal static bool SetModifierEnabled(HairGroomAsset groom, HairGroup group,
+            HairSculptLayer layer, HairModifierSettings modifier, bool enabled)
+        {
+            if (groom == null || group == null || group.locked || !groom.Groups.Contains(group) ||
+                layer == null || layer.locked || !group.sculptLayers.Contains(layer) ||
+                modifier == null || !layer.modifiers.Contains(modifier) || modifier.enabled == enabled) return false;
+            Undo.RecordObject(groom, enabled ? "Activate Hair Modifier" : "Bypass Hair Modifier");
+            modifier.enabled = enabled;
+            Commit(groom, HairPreviewChange.Evaluation);
+            return true;
+        }
+
         internal static HairModifierSettings DuplicateModifier(HairGroomAsset groom, HairGroup group,
             HairSculptLayer layer, HairModifierSettings source)
         {
@@ -447,7 +486,8 @@ namespace UMA.HairCards.Editor
             layer.EnsureIntegrity();
             layer.modifiers.AddRange(group.modifiers);
             group.modifiers.Clear();
-            group.sculptLayers.Add(layer);
+            int finishingIndex = group.sculptLayers.FindIndex(pass => pass != null && pass.afterGroupOperations);
+            group.sculptLayers.Insert(finishingIndex < 0 ? group.sculptLayers.Count : finishingIndex, layer);
             Commit(groom);
             return layer;
         }
@@ -638,6 +678,7 @@ namespace UMA.HairCards.Editor
                 case HairModifierType.Simplify: return 6f;
                 case HairModifierType.Gravity: return 0.5f;
                 case HairModifierType.HelperFollow: return 1f;
+                case HairModifierType.SplineFlow: return 1f;
                 case HairModifierType.Clump: return 0.35f;
                 case HairModifierType.Collision:
                 case HairModifierType.PushOut: return 0.001f;
