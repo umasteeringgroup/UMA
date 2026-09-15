@@ -126,6 +126,7 @@ namespace UMA.HairCards
                 curve.profile = group.profile; curve.atlas = group.atlas;
                 curve.atlasRegionSelection = group.atlasRegionSelection; curve.atlasRegionIds = atlasRegionIds;
                 curve.samplesPerCardOverride = curve.tubeSidesOverride = 0;
+                curve.ribbonReduction = default;
                 for (int pointIndex = 0; pointIndex < guide.points.Count; pointIndex++)
                 {
                     HairGuidePoint point = guide.points[pointIndex];

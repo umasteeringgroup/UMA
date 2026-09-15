@@ -220,6 +220,7 @@ namespace UMA.HairCards
             child.rootNormal = BlendRootNormal(guides, neighbors, parent.rootNormal);
             child.rootEmbedDepth = group.rootEmbedDepth; child.profile = group.profile; child.atlas = group.atlas;
             child.atlasRegionSelection = parent.atlasRegionSelection; child.atlasRegionIds = parent.atlasRegionIds;
+            child.ribbonReduction = parent.ribbonReduction;
 
             Vector3 weightedRoot = Vector3.zero;
             for (int neighborIndex = 0; neighborIndex < neighbors.Length; neighborIndex++)

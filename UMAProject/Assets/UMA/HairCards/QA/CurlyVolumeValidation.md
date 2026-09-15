@@ -38,11 +38,29 @@ buffer refresh in the sample-building harness. Saved vertex positions are checke
 against regenerated output; Project-browser discovery and direct loading are both
 checked, not just file existence.
 
-Final full-detail geometry: **1,209 cards, 200,988 vertices, 198,570 triangles**.
-Zero degenerate triangles, zero detected card-frame flips, and no generation
-warnings/rejected guide influences. The 96-sample cap with adaptive 18-degree /
-9-mm segment targets is a close-up setting, not a mobile budget. LOD1 and LOD2
-reduce density to 65% / 35% and cap samples at 36 / 20.
+Updated Balanced geometry: **1,209 cards, 83,660 vertices, 81,242 triangles**.
+That is **59.1% fewer triangles** than the initial 198,570-triangle sample, with
+the same card population and procedural curl settings. The baked reference has
+76,360 triangles / 1,133 cards; the remaining difference is principally our 6.7%
+larger card population, not excessive rows per card.
+
+Zero degenerate triangles, zero detected card-frame flips, zero unmet sampling
+targets at Full, and no generation warnings/rejected guide influences. Balanced
+uses a 2-mm ribbon shape-error target, 18-degree shading-frame error and 63-segment
+per-card ceiling. The existing 96-point profile is an upper limit, not a count to
+fill. LOD1 and LOD2 reduce density to 65% / 35% and cap samples at 36 / 20; tighter
+LOD caps can intentionally produce sampling-limit advisories.
+
+The mesh reducer measures centerline, left/right edges, camber and shading-frame
+interpolation error. It selects nonuniform rows, retaining reference frames rather
+than recalculating them from coarse chords. Unstable reference bends are refined
+selectively. Arc-length UVs and width evaluation use the retained rows' actual
+positions along the curve. Vertex RGBA root holds remain segment-based, followed
+by a distance-based fade. Ordinary profiles and PointySwept do not use this path.
+
+Ringlets exposes Economy/Balanced/Close-up presets, error controls, segment caps,
+last-built polygon counts and cap warnings. The profile explains when Ringlets
+owns sampling. Advanced construction resolution is separated from mesh detail.
 
 The material has primary/secondary shine of 0.10 / 0.035, with roughness 0.60 /
 0.80. Colors remain independently editable. A two-sided single pass avoids
@@ -59,24 +77,36 @@ continuity, serialization/duplication, preset preservation, finish Undo, high-
 resolution vertex RGBA, shader coverage rendering, coordinate-system regression,
 and optional example discovery/resource/geometry consistency.
 
-Final release gate: **502 passed, 0 failed, 0 skipped**, including source import /
-compilation, packaged example discovery and regenerated-versus-saved Curly geometry.
-Main-project metadata preflight also passed (70 C# source files). The user's open
-Editor was not closed or used as the validation instance.
+Reduction regression run: **507 passed, 0 failed, 0 skipped**, including source
+import/compilation, shape invariance, value snapshots and pooled-curve reset,
+LOD caps and advisories, distance-based UV/vertex RGBA, twisting ribbon edges,
+serialized quality settings, packaged discovery and saved-versus-generated mesh
+consistency. The sample also asserts an 85,000-triangle ceiling and zero flips /
+unmet Full sampling targets. Main-project metadata preflight passed (72 C# files).
+The user's open Editor was not closed or used as the validation instance.
 
-Local result: `tmp/HairCardsSourceValidation/Logs/HairCardsReleaseGate/321747344be449d68371e55f6365d0a9/editmode.xml`.
-Visual build log: `tmp/HairCardsSourceValidation/Logs/curly-final-assets-803b773e713e478dad58d83fee354703/unity.log`.
-All **35 files** under PointySwept matched their pre-task SHA-256 hashes.
+Regression result: `tmp/HairCardsSourceValidation/Logs/curly-reduction-tests-2d90a03ce543445bb40a49c922f9ec2a/tests.xml`.
+Visual build log: `tmp/HairCardsSourceValidation/Logs/curly-reduction-final-ba8cedf2a55e4baab435251896579b2a/unity.log`.
+Final packaging release gate: **507 passed, 0 failed, 0 skipped**.
+Result: `tmp/HairCardsSourceValidation/Logs/HairCardsReleaseGate/67837cca452543849bb194993fc9d5d0/editmode.xml`.
+All 35 PointySwept resource/metadata files retain their pre-change SHA-256 hashes.
 
 ## Performance and limits
 
 On this development machine, six warmed full-detail evaluate + mesh updates took
-approximately **440–459 ms** in the isolated Editor. Evaluation was 193–205 ms;
-mesh construction was 245–263 ms. These are CPU editor rebuild measurements, not
-GPU frame times, and include a higher-detail hero mesh than the reference. The
-initial evaluation alone took about 632 ms. Reusable evaluation/mesh workspaces
-were used. Existing debounced end-of-stroke preview updates remain in effect.
-Use Draft/reduced LODs while shaping; this is not a 60-Hz full-groom simulation.
+approximately **527–536 ms** in the isolated Editor. Evaluation was 194–202 ms;
+mesh construction including reduction was 327–338 ms. Initial evaluation alone
+took about 645 ms. These are CPU Editor rebuild measurements, not GPU frame times.
+Reduction adds CPU fitting work compared with the original 440–459-ms uniform
+build; it reduces stored/rendered geometry, not every rebuild's CPU cost. An
+initial implementation took about 0.9 seconds; using the existing detailed curve,
+selective frame refinement and reused buffers reduced that overhead. The fitting
+marker is `HairCards.ReduceRibbon`.
+
+Reusable evaluation/mesh workspaces and existing debounced end-of-stroke updates
+remain in effect. Use Draft/reduced LODs while shaping; this is not a 60-Hz
+full-groom simulation. The saved card mesh fell from about 36.9 MB to 15.3 MB in
+the project's current Unity serialization format.
 
 This is an editable reconstruction of the reference's shape and curl vocabulary,
 not a pixel-identical shader/lighting match or a certification of “AAA” quality.

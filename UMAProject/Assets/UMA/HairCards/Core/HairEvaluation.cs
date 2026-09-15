@@ -55,6 +55,7 @@ namespace UMA.HairCards
         public string[] atlasRegionIds = Array.Empty<string>();
         public int samplesPerCardOverride;
         public int tubeSidesOverride;
+        public HairRibbonReductionSettings ribbonReduction;
         public readonly List<HairCurvePoint> points;
         public HairEvaluatedCurve() : this(0) { }
         public HairEvaluatedCurve(int pointCapacity) => points = new List<HairCurvePoint>(Mathf.Max(0, pointCapacity));
@@ -87,6 +88,7 @@ namespace UMA.HairCards
                 target.atlasRegionIds = regionCount == 0 ? Array.Empty<string>() : new string[regionCount];
             if (regionCount > 0) Array.Copy(atlasRegionIds, target.atlasRegionIds, regionCount);
             target.samplesPerCardOverride = samplesPerCardOverride; target.tubeSidesOverride = tubeSidesOverride;
+            target.ribbonReduction = ribbonReduction;
             target.points.Clear(); target.points.AddRange(points);
         }
     }
@@ -221,6 +223,7 @@ namespace UMA.HairCards
         public int submesh;
         public int triangleStart;
         public int triangleCount;
+        public bool samplingLimited;
     }
 
     public sealed class HairCardMeshBuildResult : IDisposable
@@ -237,6 +240,7 @@ namespace UMA.HairCards
         public int triangleCount;
         public int degenerateTriangleCount;
         public int frameFlipCount;
+        public int samplingLimitedCardCount;
         public readonly List<HairCardSpan> cards = new List<HairCardSpan>();
         public readonly List<Vector2> localUvs = new List<Vector2>();
 

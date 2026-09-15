@@ -193,6 +193,10 @@ MonoBehaviour:
             radialFacing: 1
             centerlineSmoothing: 1
             lengthMode: 0
+            optimizeCards: 1
+            cardShapeError: 0.002
+            cardFacingError: 18
+            cardMaxSamples: 64
           noiseFrequency: 18
           noiseParentCoherence: 0
           helperId: 
@@ -296,6 +300,10 @@ MonoBehaviour:
             radialFacing: 1
             centerlineSmoothing: 1
             lengthMode: 0
+            optimizeCards: 1
+            cardShapeError: 0.002
+            cardFacingError: 18
+            cardMaxSamples: 64
           noiseFrequency: 18
           noiseParentCoherence: 0.3
           helperId: 
@@ -399,6 +407,10 @@ MonoBehaviour:
             radialFacing: 1
             centerlineSmoothing: 1
             lengthMode: 0
+            optimizeCards: 1
+            cardShapeError: 0.002
+            cardFacingError: 18
+            cardMaxSamples: 64
           noiseFrequency: 18
           noiseParentCoherence: 0
           helperId: 
@@ -42744,7 +42756,7 @@ MonoBehaviour:
     cardFraction: 1
     samplesPerCard: 12
     useProfileSamples: 1
-    maximumTubeSides: 5
+    maximumTubeSides: 8
     reductionMode: 0
     reduceBones: 0
     locked: 0
@@ -42752,7 +42764,7 @@ MonoBehaviour:
     name: LOD 1
     level: 1
     screenRelativeHeight: 0.3
-    cardFraction: 0.65
+    cardFraction: 0.385
     samplesPerCard: 36
     useProfileSamples: 0
     maximumTubeSides: 8
@@ -42763,7 +42775,7 @@ MonoBehaviour:
     name: LOD 2
     level: 2
     screenRelativeHeight: 0.15
-    cardFraction: 0.35
+    cardFraction: 0.256
     samplesPerCard: 20
     useProfileSamples: 0
     maximumTubeSides: 8
@@ -42783,6 +42795,6 @@ MonoBehaviour:
     overlayTemplate: {fileID: 0}
     raceData: {fileID: 0}
     wardrobeSlot: Hair
-    triangleBudget: 230000
+    triangleBudget: 85000
     cardBudget: 10000
     requireAtlas: 0

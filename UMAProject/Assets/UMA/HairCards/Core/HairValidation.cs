@@ -38,7 +38,8 @@ namespace UMA.HairCards
         ScalpBindingMissing,
         MissingMap,
         InvalidBakeReference,
-        InvalidCharacterBinding
+        InvalidCharacterBinding,
+        SamplingLimit
     }
 
     public sealed class HairValidationIssue
@@ -214,6 +215,10 @@ namespace UMA.HairCards
                         $"{meshBuild.frameFlipCount:N0} possible card-frame flips were detected.",
                         count: meshBuild.frameFlipCount);
                 }
+                if (meshBuild.samplingLimitedCardCount > 0)
+                    report.Add(HairValidationSeverity.Optimization, HairValidationCode.SamplingLimit,
+                        $"{meshBuild.samplingLimitedCardCount:N0} curl cards reached their sampling cap before meeting the shape/facing error target. Adjust Curl mesh detail or the LOD/profile cap.",
+                        count: meshBuild.samplingLimitedCardCount);
                 if (meshBuild.triangleCount > options.triangleBudget)
                 {
                     report.Add(HairValidationSeverity.Optimization, HairValidationCode.TriangleBudget,

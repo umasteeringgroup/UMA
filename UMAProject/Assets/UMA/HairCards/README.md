@@ -11,6 +11,9 @@ and remaining production limitations.
 For an editable curly hairstyle, start with the [Curly Volume guide](CurlyVolumeGuide.md).
 It covers Ringlets, distance-based curl spacing, automatic shape resolution,
 three-strip UV setup and the inline Matte / Natural / Glossy finish controls.
+Ringlets also exposes **Curl mesh detail**: error-based ribbon reduction with
+Economy/Balanced/Close-up presets, shape/facing tolerances, segment caps and preview
+polygon counts. It reduces mesh density without editing the procedural curls.
 Open either installed example from **UMA > Hair Cards > Examples**. See the
 [Curly validation report](QA/CurlyVolumeValidation.md) for its checks and limits.
 

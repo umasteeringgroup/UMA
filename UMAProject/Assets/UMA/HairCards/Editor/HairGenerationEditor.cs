@@ -156,19 +156,54 @@ namespace UMA.HairCards.Editor
                 Field(ringlets, "phaseVariation", "Start-angle variation"); Field(ringlets, "reverseFraction", "Reverse curl fraction");
                 Field(ringlets, "clumpCoherence", "Keep clumps related");
                 Field(ringlets, "radialFacing", "Face around curl", "Orient ribbons outward around each ringlet instead of keeping a flat scalp-facing ribbon.");
-                Field(ringlets, "pointsPerTurn", "Shape points per turn", "Automatically subdivides the centerline; no Resample modifier needed. Original frozen points are retained. Maximum 256 shape points.");
-                float turns = modifier.ringlets.turns * (1f + modifier.ringlets.turnVariation);
-                int recommended = Mathf.Min(256, Mathf.CeilToInt(turns * modifier.ringlets.pointsPerTurn) + 1);
-                if (modifier.ringlets.spacingMode == HairRingletSpacingMode.DistanceBetweenTurns)
+                EditorGUILayout.Space();
+                EditorGUILayout.LabelField("Curl mesh detail", EditorStyles.boldLabel);
+                Field(ringlets, "optimizeCards", "Error-based ribbon sampling", "Keep the detailed curl shape, but spend mesh segments only where its silhouette, width or facing needs them. Does not change guides, curl radius, spacing or seeds.");
+                bool optimize = ringlets.FindPropertyRelative("optimizeCards").boolValue;
+                using (new EditorGUI.DisabledScope(!optimize))
                 {
-                    recommended = 2;
-                    if (stage.Evaluation != null) foreach (var curve in stage.Evaluation.curves)
-                        if (curve.groupId == node.Group.Id) recommended = Mathf.Max(recommended, curve.points.Count);
+                    using (new EditorGUILayout.HorizontalScope())
+                    {
+                        void Preset(string label, float error, float facing, int maximum)
+                        {
+                            if (!GUILayout.Button(label)) return;
+                            ringlets.FindPropertyRelative("cardShapeError").floatValue = error;
+                            ringlets.FindPropertyRelative("cardFacingError").floatValue = facing;
+                            ringlets.FindPropertyRelative("cardMaxSamples").intValue = maximum;
+                        }
+                        Preset("Economy", .0025f, 25f, 48); Preset("Balanced", .002f, 18f, 64); Preset("Close-up", .001f, 12f, 128);
+                    }
+                    var error = ringlets.FindPropertyRelative("cardShapeError");
+                    error.floatValue = EditorGUILayout.Slider(new GUIContent("Shape error (mm)", "Maximum sampled deviation of the centerline and ribbon edges from the detailed curve, in source-local millimeters. Higher = fewer triangles. A tight segment cap can prevent reaching this target."), error.floatValue * 1000f, .1f, 10f) * .001f;
+                    Field(ringlets, "cardFacingError", "Facing error (degrees)", "Allowed shading-frame interpolation error. Higher = fewer segments. Detailed-curve frames are retained to avoid coarse-sampling twists.");
+                    var cap = ringlets.FindPropertyRelative("cardMaxSamples");
+                    cap.intValue = 1 + EditorGUILayout.IntSlider(new GUIContent("Maximum segments / card", "A hard per-card limit, not a target to fill. The active LOD/profile may impose a lower cap."), cap.intValue - 1, 3, 255);
                 }
                 var lod = stage.Groom.Lods.Find(item => item.level == stage.LodLevel);
                 int samples = lod != null ? lod.ResolveSampleCount(node.Group.profile) : node.Group.profile?.SamplesPerCard ?? 12;
-                if (samples < recommended)
-                    EditorGUILayout.HelpBox($"This LOD allows {samples} card samples; about {recommended} are recommended for these curls. Select Hair Cards → Geometry & Vertex Colors to increase sampling. Draft preview intentionally reduces detail.", MessageType.Warning);
+                if (optimize)
+                {
+                    EditorGUILayout.LabelField($"LOD/profile cap: {samples - 1} segments/card. Error-based sampling replaces the profile's uniform/adaptive count estimate; its cap still applies.", EditorStyles.wordWrappedMiniLabel);
+                    if (node.Group.profile?.Shape == HairCardShape.TaperedTube)
+                        EditorGUILayout.HelpBox("Curl ribbon reduction applies to Ribbon profiles only. Tubes keep profile sampling.", MessageType.Info);
+                }
+                if (stage.MeshBuild != null)
+                {
+                    int cards = 0, triangles = 0, limited = 0;
+                    foreach (var card in stage.MeshBuild.cards)
+                        if (card.curve?.groupId == node.Group.Id)
+                        { cards++; triangles += card.triangleCount; if (card.samplingLimited) limited++; }
+                    EditorGUILayout.LabelField($"Current group preview: {cards:N0} cards · {triangles:N0} triangles", EditorStyles.boldLabel);
+                    if (limited > 0) EditorGUILayout.HelpBox($"{limited:N0} cards reached a sampling limit before meeting the error target. Raise Maximum segments / card or the LOD/profile cap, or relax the error targets. Draft intentionally limits detail.", MessageType.Warning);
+                    EditorGUILayout.LabelField("Counts reflect the last rebuilt preview, including other operations in this group. They update when the preview rebuilds.", EditorStyles.wordWrappedMiniLabel);
+                }
+                var shapeQuality = ringlets.FindPropertyRelative("pointsPerTurn");
+                shapeQuality.isExpanded = EditorGUILayout.Foldout(shapeQuality.isExpanded, "Advanced curve construction", true);
+                if (shapeQuality.isExpanded)
+                {
+                    Field(ringlets, "pointsPerTurn", "Shape points per turn", "Construction quality, not the output polygon budget. Normally leave at 12; changing it can alter the procedural shape. Original frozen points are retained. Maximum 256 shape points.");
+                    EditorGUILayout.LabelField("Use Curl mesh detail to reduce polygons without reshaping the curl. Construction quality is independent of render LOD.", EditorStyles.wordWrappedMiniLabel);
+                }
             }
             if (modifier.type == HairModifierType.Clump)
                 Field(property, "clumpRadius", "Clump size (m)", "Select local centerlines from the incoming population. Smaller values produce more, narrower clumps.");
@@ -196,6 +231,11 @@ namespace UMA.HairCards.Editor
 
         internal static void DrawRibbonProfile(HairCardStage stage, HairCardProfileAsset profile)
         {
+            int optimized = 0, ordinary = 0;
+            if (stage.Evaluation != null) foreach (var curve in stage.Evaluation.curves)
+                if (curve.profile == profile) { if (curve.ribbonReduction.enabled) optimized++; else ordinary++; }
+            if (optimized > 0 && profile.Shape == HairCardShape.Ribbon)
+                EditorGUILayout.HelpBox($"{optimized:N0} preview cards using this profile take their mesh detail from Ringlets. The profile sample cap still applies. The length/angle estimate below applies only to ordinary, non-optimized cards ({ordinary:N0} in this preview).", MessageType.Info);
             EditorGUI.BeginChangeCheck();
             int spans = EditorGUILayout.IntSlider("Cross-width spans", profile.RibbonSpans, 1, 4);
             float camber;

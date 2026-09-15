@@ -238,6 +238,7 @@ namespace UMA.HairCards
                 curve.groupColor = group.color; curve.maskValue = 0f; curve.hairlineDistance = borderDistance;
                 for (int i = 0; i < n; i++) curve.maskValue += parents[neighbors[i]].maskValue * weights[i];
                 curve.samplesPerCardOverride = final ? cardSamples : samples; curve.tubeSidesOverride = lod?.maximumTubeSides ?? 12;
+                curve.ribbonReduction = center.ribbonReduction;
                 Vector3 inward = fields.Inward(root);
                 Vector3 rootSeparation = root.CachedLocalPosition - centerSamples[0].position;
                 for (int p = 0; p < samples; p++)

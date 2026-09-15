@@ -105,20 +105,53 @@ choice, separate from the Matte finish.
 
 ## Sampling and performance
 
-Shape resolution and render resolution are separate. Ringlets automatically adds
-up to 256 shape points, retaining the original points and frozen anchors. The
-property panel warns when the selected LOD's render sampling is too low for the
-requested turns. A low-resolution profile cannot display a high-resolution curl.
+Select **Generate Hair → Curly Hair Cards → Ringlets → Curl mesh detail** to tune
+the output polygons. **Error-based ribbon sampling** preserves the detailed
+procedural curve, then removes unnecessary mesh rows. It checks the centerline,
+both ribbon edges, roundness and shading frames—not just the curve's length.
+Retained rows use frames from the detailed curve so coarse chords do not introduce
+new ribbon twists. Tight, unstable reference bends are refined locally.
 
-Start with 12 shape points per turn and a 64–96-sample card profile (the sample
-uses a 96-sample cap and adaptive segments). Use **Use profile
-sampling** for high-detail output; in distance mode long strands need more turns
-than short strands. Generation is capped at 20 turns per strand. Profiles support
-up to 256 samples for tighter coils. Adaptive sampling stays within this cap.
-High turn counts and large sample budgets increase vertices and processing cost.
-Draft intentionally reduces detail;
-judge tight curls in Full preview. At distance, reduce both card density and
-sampling; check that thinning does not expose the scalp.
+| Mesh preset | Shape error | Facing error | Maximum segments/card |
+|---|---:|---:|---:|
+| Economy | 2.5 mm | 25° | 47 |
+| Balanced | 2 mm | 18° | 63 |
+| Close-up | 1 mm | 12° | 127 |
+
+These buttons change mesh-quality settings only. Radius, curl spacing, variation,
+guides and seeds stay unchanged. The sample uses **Balanced**, approximately
+81,000 triangles instead of the original 198,570, without reducing card density.
+
+- **Shape error (mm):** higher values generally reduce polygons; lower values
+  follow the detailed ribbon edges more closely. Distances are source-local.
+- **Facing error:** limits deviation of the interpolated shading frame. Use tighter
+  values for strong highlights or obvious ribbon rotation.
+- **Maximum segments / card:** a ceiling, not a target to fill. The active LOD or
+  profile can impose a lower ceiling. The panel shows the last rebuilt group's
+  card/triangle counts and warns when a cap prevents meeting the error targets.
+
+The profile's old length/angle count estimate is bypassed for optimized ribbons;
+its sample cap still applies. For example, Close-up allows 127 segments but a
+96-point profile allows only 95. Increase **Profile samples** if you need the
+higher ceiling. Disabling error-based sampling restores the profile's usual
+uniform/adaptive-count mode. Tubes continue to use profile sampling.
+
+Root/tip endpoints, arc-length UVs, widths and facing are retained in the reduced
+mesh. Vertex RGB/alpha still holds the requested number of root segments, then
+fades by distance to the tip. Masks, roots and frozen points in the evaluated
+curves are not edited by mesh reduction.
+
+**Advanced curve construction → Shape points per turn** is different: it controls
+the procedural reference curve, not the output polygon budget. Normally leave it
+at 12. Ringlets retains original controls/frozen anchors while adding up to 256
+shape points, with at most 20 turns per strand. Changing construction quality can
+change fine shape; changing Curl mesh detail cannot.
+
+Judge the result in Cards / Full from several angles. Draft and lower LODs
+deliberately impose smaller budgets and may show a sampling-limit advisory. At
+distance, reduce density and sampling together, checking scalp coverage. Error
+targets are measured against the sampled reference, not a guarantee of invisible
+pixel error at every camera distance.
 
 The material is two-sided in one pass. Leave duplicate backface geometry and the
 second material pass off unless deliberately required. The sample's atlas copies

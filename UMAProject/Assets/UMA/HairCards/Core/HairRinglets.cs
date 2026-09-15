@@ -24,6 +24,10 @@ namespace UMA.HairCards
         [Range(0f, 1f)] public float radialFacing = 1f;
         [Range(0f, 1f)] public float centerlineSmoothing = 1f;
         public HairRingletLengthMode lengthMode;
+        public bool optimizeCards = true;
+        [Range(.0001f, .01f)] public float cardShapeError = .002f;
+        [Range(2f, 45f)] public float cardFacingError = 18f;
+        [Range(4, 256)] public int cardMaxSamples = 64;
 
         public void EnsureIntegrity()
         {
@@ -35,6 +39,8 @@ namespace UMA.HairCards
             tipRadius = Finite(tipRadius, 0f, 2f); reverseFraction = Finite(reverseFraction, 0f, 1f);
             radialFacing = Finite(radialFacing, 0f, 1f); pointsPerTurn = Mathf.Clamp(pointsPerTurn, 8, 20);
             centerlineSmoothing = Finite(centerlineSmoothing, 0f, 1f);
+            cardShapeError = Finite(cardShapeError, .0001f, .01f);
+            cardFacingError = Finite(cardFacingError, 2f, 45f); cardMaxSamples = Mathf.Clamp(cardMaxSamples, 4, 256);
             if (!Enum.IsDefined(typeof(HairRingletLengthMode), lengthMode)) lengthMode = HairRingletLengthMode.KeepEnvelope;
         }
         private static float Finite(float v, float min, float max) => float.IsFinite(v) ? Mathf.Clamp(v, min, max) : min;
@@ -66,6 +72,10 @@ namespace UMA.HairCards
             bool movable = false;
             for (int i = 1; i < curve.points.Count; i++) movable |= curve.points[i].freeze < .999f;
             if (!movable) return;
+            // A value snapshot travels with this curve; render LOD never changes its shape.
+            // The last applied Ringlets modifier owns the ribbon reduction settings.
+            curve.ribbonReduction = new HairRibbonReductionSettings { enabled = settings.optimizeCards,
+                shapeError = settings.cardShapeError, facingError = settings.cardFacingError, maximumSamples = settings.cardMaxSamples };
             var random = new HairDeterministicRandom(curve.seed ^ modifier.seed ^ 0x5a3c7d19);
             var parent = new HairDeterministicRandom(curve.clumpSeed ^ modifier.seed ^ 0x5a3c7d19);
             float Random() => Mathf.Lerp(random.NextSigned(), parent.NextSigned(), settings.clumpCoherence);

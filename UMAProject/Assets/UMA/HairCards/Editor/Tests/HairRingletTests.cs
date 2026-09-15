@@ -92,10 +92,15 @@ namespace UMA.HairCards.Editor.Tests
         public void RingletSettingsPersistAndDuplicateIndependently()
         {
             var modifier = SetUpRinglet(); modifier.ringlets.turns = 7; modifier.ringlets.tipRadius = .25f;
+            modifier.ringlets.cardShapeError = .0025f; modifier.ringlets.cardFacingError = 23; modifier.ringlets.cardMaxSamples = 42;
             var duplicate = modifier.Duplicate(); duplicate.ringlets.turns = 2;
             Assert.That(modifier.ringlets.turns, Is.EqualTo(7));
             var reload = JsonUtility.FromJson<HairModifierSettings>(JsonUtility.ToJson(modifier));
             Assert.That(reload.ringlets.tipRadius, Is.EqualTo(.25f));
+            Assert.That(reload.ringlets.optimizeCards, Is.True);
+            Assert.That(reload.ringlets.cardShapeError, Is.EqualTo(.0025f));
+            Assert.That(reload.ringlets.cardFacingError, Is.EqualTo(23));
+            Assert.That(reload.ringlets.cardMaxSamples, Is.EqualTo(42));
             reload.ringlets.turns = float.NaN; reload.ringlets.pointsPerTurn = int.MaxValue;
             reload.EnsureIntegrity(); Assert.That(float.IsFinite(reload.ringlets.turns), Is.True);
             Assert.That(reload.ringlets.pointsPerTurn, Is.EqualTo(20));
@@ -132,6 +137,7 @@ namespace UMA.HairCards.Editor.Tests
         public void RingletHighResolutionProducesFiniteNormalsAndRespectsHardCap()
         {
             var modifier = SetUpRinglet(); modifier.ringlets.turns = 12; modifier.ringlets.pointsPerTurn = 20;
+            modifier.ringlets.optimizeCards = false; // Explicit unreduced profile mode still supports 256 rows.
             modifier.ringlets.turnVariation = .75f;
             profile.Configure(HairCardShape.Ribbon, .002f, .001f, 256, generateBackfaces: false);
             groom.Lods[0].useProfileSamples = true;
@@ -223,6 +229,9 @@ namespace UMA.HairCards.Editor.Tests
             using var build = HairCardMeshGenerator.Build(evaluation);
             Assert.That(build.cardCount, Is.GreaterThan(1000));
             Assert.That(build.degenerateTriangleCount, Is.Zero);
+            Assert.That(build.triangleCount, Is.LessThanOrEqualTo(85000), "The balanced sample must not regress to blanket high tessellation.");
+            Assert.That(build.frameFlipCount, Is.Zero);
+            Assert.That(build.samplingLimitedCardCount, Is.Zero);
             Assert.That(saved.vertexCount, Is.EqualTo(build.vertexCount));
             var positions = saved.vertices; var expected = build.mesh.vertices;
             for (int i = 0; i < positions.Length; i++)

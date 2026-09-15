@@ -11,6 +11,9 @@ Choose **UMA > Hair Cards > Examples > Curly Volume**, or open
 
 1. **Generate Hair > Curly Hair Cards > Ringlets**: change loop radius, spacing,
    winding and variation. These are procedural; the original guides stay editable.
+   **Curl mesh detail** has Economy/Balanced/Close-up presets, shape/facing error
+   controls and a per-card segment ceiling. The updated Balanced sample is about
+   81,000 triangles; the original was 198,570. Card density is unchanged.
 2. **Guides / Grooming**: shape the broad silhouette upstream of the curls.
    Use **Edit This Layer** when prompted, then return to Final Preview.
 3. **Hair Cards > Materials & UVs**: edit root/tip colors and Surface finish.

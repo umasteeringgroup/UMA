@@ -19,6 +19,7 @@ namespace UMA.HairCards
         internal readonly Stack<HairCardMeshGenerator.MaterialBucket> spareBuckets = new Stack<HairCardMeshGenerator.MaterialBucket>();
         internal readonly Dictionary<HairAtlasProfileAsset, int> materialLookup = new Dictionary<HairAtlasProfileAsset, int>();
         internal readonly List<HairCurvePoint> sampled = new List<HairCurvePoint>();
+        internal readonly HairRibbonReductionWorkspace reduction = new HairRibbonReductionWorkspace();
         internal float[] cumulative = Array.Empty<float>();
         internal Vector3[] curveTangents = Array.Empty<Vector3>(), sides = Array.Empty<Vector3>(), frameNormals = Array.Empty<Vector3>();
         private readonly Dictionary<(HairCardProfileAsset, int), float[]> profileWidths = new Dictionary<(HairCardProfileAsset, int), float[]>();
@@ -96,6 +97,7 @@ namespace UMA.HairCards
             profileWidths.Clear(); profileWidths.TrimExcess(); spareWidths.Clear(); spareWidths.TrimExcess();
             cumulative = Array.Empty<float>();
             curveTangents = sides = frameNormals = Array.Empty<Vector3>();
+            reduction.Clear();
         }
     }
 
@@ -154,6 +156,7 @@ namespace UMA.HairCards
             else mesh.Clear();
             result.mesh = mesh;
             result.cardCount = result.vertexCount = result.triangleCount = result.degenerateTriangleCount = result.frameFlipCount = 0;
+            result.samplingLimitedCardCount = 0;
             result.materials.Clear(); result.atlases.Clear(); result.materialNames.Clear(); result.localUvs.Clear();
             result.secondPasses.Clear();
             if (evaluation == null || evaluation.curves.Count == 0)
@@ -179,11 +182,21 @@ namespace UMA.HairCards
                 int sampleCount = curve.samplesPerCardOverride > 1
                     ? curve.samplesPerCardOverride
                     : profile != null ? profile.SamplesPerCard : 12;
-                if (profile != null) sampleCount = profile.ResolveSampleCount(curve.points, sampleCount);
                 List<HairCurvePoint> sampled = workspace.sampled;
-                HairCurveUtility.ResampleInto(curve.points, sampleCount, sampled, ref workspace.cumulative);
-                EmbedCardRoot(curve, sampled);
-                workspace.EnsureFrames(sampled.Count);
+                workspace.reduction.active = false;
+                bool samplingLimited = false;
+                if (curve.ribbonReduction.enabled && profile != null && profile.Shape == HairCardShape.Ribbon)
+                {
+                    samplingLimited = workspace.reduction.Prepare(curve, sampleCount, workspace);
+                    if (samplingLimited) result.samplingLimitedCardCount++;
+                }
+                else
+                {
+                    if (profile != null) sampleCount = profile.ResolveSampleCount(curve.points, sampleCount);
+                    HairCurveUtility.ResampleInto(curve.points, sampleCount, sampled, ref workspace.cumulative);
+                    EmbedCardRoot(curve, sampled);
+                    workspace.EnsureFrames(sampled.Count);
+                }
                 HairAtlasRegion region = curve.atlas?.GetWeightedRegion(HashCurve(curve),
                     curve.atlasRegionSelection, curve.atlasRegionIds);
                 int bucketIndex = GetMaterialBucket(curve.atlas, workspace);
@@ -194,6 +207,7 @@ namespace UMA.HairCards
                     span = result.cardCount < result.cards.Count ? result.cards[result.cardCount] : new HairCardSpan();
                     if (result.cardCount >= result.cards.Count) result.cards.Add(span);
                     span.curve = curve; span.uvSetId = region?.Id; span.vertexStart = vertices.Count;
+                    span.samplingLimited = samplingLimited;
                     span.submesh = bucketIndex; span.triangleStart = buckets[bucketIndex].triangles.Count / 3;
                 }
                 int flips;
@@ -286,17 +300,17 @@ namespace UMA.HairCards
             return result;
         }
 
-        private static void EmbedCardRoot(HairEvaluatedCurve curve, List<HairCurvePoint> sampled)
+        internal static void EmbedCardRoot(HairEvaluatedCurve curve, List<HairCurvePoint> sampled, IReadOnlyList<float> parameters = null)
         {
             if (!float.IsFinite(curve.rootEmbedDepth) || curve.rootEmbedDepth <= 0f || sampled.Count < 2) return;
             Vector3 inward = -curve.rootNormal.normalized;
             if (!float.IsFinite(inward.x) || !float.IsFinite(inward.y) || !float.IsFinite(inward.z)) return;
             float depth = Mathf.Min(curve.rootEmbedDepth, 0.02f);
-            // Samples are evenly spaced by original arc length. Apply only to this build's
+            // Default samples are uniform; reduction supplies original arc parameters. Apply only to this build's
             // scratch buffer: editing, constraints, children and repeated builds never accumulate inset.
             for (int i = 0; i < sampled.Count; i++)
             {
-                float t = i / (sampled.Count - 1f);
+                float t = parameters != null ? parameters[i] : i / (sampled.Count - 1f);
                 if (t >= 0.2f) break;
                 HairCurvePoint point = sampled[i];
                 point.position += inward * (depth * (1f - Mathf.SmoothStep(0f, 1f, t / 0.2f)));
@@ -323,20 +337,30 @@ namespace UMA.HairCards
             Vector3[] curveTangents = workspace.curveTangents;
             Vector3[] sides = workspace.sides;
             Vector3[] frameNormals = workspace.frameNormals;
-            HairCurveUtility.BuildRotationMinimizingFrames(points, curve.rootNormal, curveTangents,
+            bool reduced = workspace.reduction.active;
+            flipCount = 0;
+            if (!reduced) HairCurveUtility.BuildRotationMinimizingFrames(points, curve.rootNormal, curveTangents,
                 sides, frameNormals, out flipCount);
+            else for (int i = 1; i < points.Count; i++)
+                if (Vector3.Dot(sides[i], sides[i - 1]) < -.25f) flipCount++;
             bool hasProfile = profile != null;
             int spans = hasProfile ? profile.RibbonSpans : 1;
             int columns = spans + 1;
             float camber = hasProfile && spans > 1 ? profile.RibbonCamber : 0f;
             float defaultWidth = hasProfile ? profile.DefaultWidth : 0f;
-            float[] widths = workspace.ProfileWidths(profile, points.Count);
+            float[] widths = reduced ? null : workspace.ProfileWidths(profile, points.Count);
             for (int i = 0; i < points.Count; i++)
             {
-                float t = i / (points.Count - 1f);
-                float width = ResolveCardWidth(points[i], hasProfile, defaultWidth, widths[i]);
+                float t = reduced ? workspace.reduction.parameters[i] : i / (points.Count - 1f);
+                float width = reduced ? workspace.reduction.selectedWidths[i] : ResolveCardWidth(points[i], hasProfile, defaultWidth, widths[i]);
                 Vector4 tangent = new Vector4(curveTangents[i].x, curveTangents[i].y, curveTangents[i].z, 1f);
                 Color vertexColor = hasProfile ? profile.EvaluateVertexColor(i, points.Count, curve.groupColor) : curve.groupColor;
+                if (reduced && hasProfile && profile.UseVertexColorGradient)
+                {
+                    int hold = Mathf.Min(profile.RootColorSegments, points.Count - 2);
+                    float holdT = workspace.reduction.parameters[hold];
+                    vertexColor = Color.Lerp(profile.RootVertexColor, profile.TipVertexColor, Mathf.Clamp01((t - holdT) / Mathf.Max(1e-8f, 1f - holdT)));
+                }
                 for (int column = 0; column < columns; column++)
                 {
                     float u = column / (float)spans, q = u * 2f - 1f;
@@ -445,7 +469,7 @@ namespace UMA.HairCards
             return ResolveCardWidth(point, profile != null, profile != null ? profile.DefaultWidth : 0f, profileWidth);
         }
 
-        private static float ResolveCardWidth(HairCurvePoint point, bool hasProfile, float defaultWidth, float profileWidth)
+        internal static float ResolveCardWidth(HairCurvePoint point, bool hasProfile, float defaultWidth, float profileWidth)
         {
             if (point.widthBaseline >= 0f && hasProfile)
                 return Mathf.Max(0f, profileWidth * point.profileScale + point.width - point.widthBaseline);

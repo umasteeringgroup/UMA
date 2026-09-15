@@ -77,7 +77,7 @@ namespace UMA.HairCards.Editor
                 {
                     if (issue.code != HairValidationCode.EmptyOutput && issue.code != HairValidationCode.DegenerateTriangle &&
                         issue.code != HairValidationCode.FrameFlip && issue.code != HairValidationCode.CardBudget &&
-                        issue.code != HairValidationCode.TriangleBudget) continue;
+                        issue.code != HairValidationCode.TriangleBudget && issue.code != HairValidationCode.SamplingLimit) continue;
                     issue.lodLevel = lod.level;
                     issue.message = $"LOD {lod.level}: {issue.message}";
                     report.issues.Add(issue);

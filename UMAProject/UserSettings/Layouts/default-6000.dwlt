@@ -34,6 +34,32 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 12006, guid: 0000000000000000e000000000000000, type: 0}
+  m_Name: HairGroomPreviewWindow
+  m_EditorClassIdentifier: UnityEditor.dll::UnityEditor.DockArea
+  m_Children: []
+  m_Position:
+    serializedVersion: 2
+    x: 1298
+    y: 0
+    width: 374
+    height: 857.3333
+  m_MinSize: {x: 362, y: 426}
+  m_MaxSize: {x: 4002, y: 4026}
+  m_ActualView: {fileID: 14}
+  m_Panes:
+  - {fileID: 14}
+  m_Selected: 0
+  m_LastSelected: 0
+--- !u!114 &3
+MonoBehaviour:
+  m_ObjectHideFlags: 52
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 12006, guid: 0000000000000000e000000000000000, type: 0}
   m_Name: HairGroomNodeWindow
   m_EditorClassIdentifier: UnityEditor.dll::UnityEditor.DockArea
   m_Children: []
@@ -48,32 +74,6 @@ MonoBehaviour:
   m_ActualView: {fileID: 15}
   m_Panes:
   - {fileID: 15}
-  m_Selected: 0
-  m_LastSelected: 0
---- !u!114 &3
-MonoBehaviour:
-  m_ObjectHideFlags: 52
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 12006, guid: 0000000000000000e000000000000000, type: 0}
-  m_Name: HairGroomPreviewWindow
-  m_EditorClassIdentifier: UnityEditor.dll::UnityEditor.DockArea
-  m_Children: []
-  m_Position:
-    serializedVersion: 2
-    x: 216.66667
-    y: 0
-    width: 334.66663
-    height: 857.3333
-  m_MinSize: {x: 362, y: 426}
-  m_MaxSize: {x: 4002, y: 4026}
-  m_ActualView: {fileID: 14}
-  m_Panes:
-  - {fileID: 14}
   m_Selected: 0
   m_LastSelected: 0
 --- !u!114 &4
@@ -100,7 +100,7 @@ MonoBehaviour:
   m_MinSize: {x: 500, y: 112}
   m_MaxSize: {x: 40480, y: 16192}
   vertical: 0
-  controlID: 52
+  controlID: 734
   draggingID: 0
 --- !u!114 &5
 MonoBehaviour:
@@ -146,7 +146,7 @@ MonoBehaviour:
     serializedVersion: 2
     x: 0
     y: 0
-    width: 216.66667
+    width: 384
     height: 857.3333
   m_MinSize: {x: 201, y: 226}
   m_MaxSize: {x: 4001, y: 4026}
@@ -277,7 +277,7 @@ MonoBehaviour:
   m_MinSize: {x: 400, y: 112}
   m_MaxSize: {x: 32384, y: 16192}
   vertical: 1
-  controlID: 53
+  controlID: 735
   draggingID: 0
 --- !u!114 &12
 MonoBehaviour:
@@ -293,9 +293,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Children:
   - {fileID: 6}
-  - {fileID: 3}
   - {fileID: 13}
   - {fileID: 2}
+  - {fileID: 3}
   m_Position:
     serializedVersion: 2
     x: 0
@@ -305,7 +305,7 @@ MonoBehaviour:
   m_MinSize: {x: 400, y: 56}
   m_MaxSize: {x: 32384, y: 8096}
   vertical: 0
-  controlID: 54
+  controlID: 736
   draggingID: 0
 --- !u!114 &13
 MonoBehaviour:
@@ -322,9 +322,9 @@ MonoBehaviour:
   m_Children: []
   m_Position:
     serializedVersion: 2
-    x: 551.3333
+    x: 384
     y: 0
-    width: 1120.6667
+    width: 914
     height: 857.3333
   m_MinSize: {x: 202, y: 226}
   m_MaxSize: {x: 4002, y: 4026}
@@ -355,9 +355,9 @@ MonoBehaviour:
     m_TextWithWhitespace: "Hair Preview & Settings\u200B"
   m_Pos:
     serializedVersion: 2
-    x: 217.66667
+    x: 1299
     y: 24
-    width: 332.66663
+    width: 372
     height: 831.3333
   m_SerializedDataModeController:
     m_DataMode: 0
@@ -465,8 +465,8 @@ MonoBehaviour:
   explorerScroll: {x: 0, y: 0}
   detailsScroll: {x: 0, y: 0}
   atlasEditor:
-    atlas: {fileID: 11400000, guid: 4483faf9ca6876a43a56cff7da547b45, type: 2}
-    selectedId: 1b77406bc5f44294a19295593a80e259
+    atlas: {fileID: 11400000, guid: f457070840b3462499147e4819ced6f0, type: 2}
+    selectedId: 4eba0d1dfd8f4cbab32be7e923a708e2
     channel: 0
     checkerboard: 1
     checkerLight: {r: 0.75, g: 0.75, b: 0.75, a: 1}
@@ -477,8 +477,8 @@ MonoBehaviour:
     snapToPixels: 1
     showOutlines: 1
     pixelUnits: 0
-    zoom: 2.6116967
-    pan: {x: 21.777946, y: 22.908958}
+    zoom: 1
+    pan: {x: 0, y: 0}
     listScroll: {x: 0, y: 0}
     tool: 0
     materialPreviewExpanded: 1
@@ -819,7 +819,7 @@ MonoBehaviour:
     m_SkipHidden: 0
     m_SearchArea: 1
     m_Folders:
-    - Assets/UMAProjectData/HairCards
+    - Assets/UMAProjectData/HairCards/Examples/CurlyVolume
     m_Globs: []
     m_ProductIds: 
     m_AnyWithAssetOrigin: 0
@@ -829,7 +829,7 @@ MonoBehaviour:
   m_ViewMode: 1
   m_StartGridSize: 16
   m_LastFolders:
-  - Assets/UMAProjectData/HairCards
+  - Assets/UMAProjectData/HairCards/Examples/CurlyVolume
   m_LastFoldersGridSize: -1
   m_LastProjectPath: C:\GitHub\UMA\UMAProject
   m_LockTracker:
@@ -838,47 +838,11 @@ MonoBehaviour:
   m_FolderTreeState:
     scrollPos: {x: 0, y: 1382.6667}
     m_SelectedIDs:
-    - m_Data: 68730
+    - m_Data: 71732
     m_LastClickedID:
-      m_Data: 68730
+      m_Data: 71732
     m_ExpandedIDs:
     - m_Data: 0
-    - m_Data: 68556
-    - m_Data: 68558
-    - m_Data: 68560
-    - m_Data: 68562
-    - m_Data: 68564
-    - m_Data: 68566
-    - m_Data: 68568
-    - m_Data: 68570
-    - m_Data: 68572
-    - m_Data: 68574
-    - m_Data: 68576
-    - m_Data: 68578
-    - m_Data: 68580
-    - m_Data: 68582
-    - m_Data: 68584
-    - m_Data: 68586
-    - m_Data: 68588
-    - m_Data: 68590
-    - m_Data: 68592
-    - m_Data: 68594
-    - m_Data: 68596
-    - m_Data: 68598
-    - m_Data: 68600
-    - m_Data: 68602
-    - m_Data: 68604
-    - m_Data: 68606
-    - m_Data: 68608
-    - m_Data: 68610
-    - m_Data: 68612
-    - m_Data: 68614
-    - m_Data: 68616
-    - m_Data: 68618
-    - m_Data: 68620
-    - m_Data: 68622
-    - m_Data: 68624
-    - m_Data: 68626
     - m_Data: 68628
     - m_Data: 68630
     - m_Data: 68632
@@ -944,6 +908,42 @@ MonoBehaviour:
     - m_Data: 68752
     - m_Data: 68754
     - m_Data: 68756
+    - m_Data: 68758
+    - m_Data: 68760
+    - m_Data: 68762
+    - m_Data: 68764
+    - m_Data: 68766
+    - m_Data: 68768
+    - m_Data: 68770
+    - m_Data: 68772
+    - m_Data: 68774
+    - m_Data: 68776
+    - m_Data: 68778
+    - m_Data: 68780
+    - m_Data: 68782
+    - m_Data: 68784
+    - m_Data: 68786
+    - m_Data: 68788
+    - m_Data: 68790
+    - m_Data: 68792
+    - m_Data: 68794
+    - m_Data: 68796
+    - m_Data: 68798
+    - m_Data: 68800
+    - m_Data: 68802
+    - m_Data: 68804
+    - m_Data: 68806
+    - m_Data: 68808
+    - m_Data: 68810
+    - m_Data: 68812
+    - m_Data: 68814
+    - m_Data: 68816
+    - m_Data: 68818
+    - m_Data: 68820
+    - m_Data: 68822
+    - m_Data: 68824
+    - m_Data: 68826
+    - m_Data: 68828
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -976,42 +976,6 @@ MonoBehaviour:
       m_Data: 0
     m_ExpandedIDs:
     - m_Data: 0
-    - m_Data: 68556
-    - m_Data: 68558
-    - m_Data: 68560
-    - m_Data: 68562
-    - m_Data: 68564
-    - m_Data: 68566
-    - m_Data: 68568
-    - m_Data: 68570
-    - m_Data: 68572
-    - m_Data: 68574
-    - m_Data: 68576
-    - m_Data: 68578
-    - m_Data: 68580
-    - m_Data: 68582
-    - m_Data: 68584
-    - m_Data: 68586
-    - m_Data: 68588
-    - m_Data: 68590
-    - m_Data: 68592
-    - m_Data: 68594
-    - m_Data: 68596
-    - m_Data: 68598
-    - m_Data: 68600
-    - m_Data: 68602
-    - m_Data: 68604
-    - m_Data: 68606
-    - m_Data: 68608
-    - m_Data: 68610
-    - m_Data: 68612
-    - m_Data: 68614
-    - m_Data: 68616
-    - m_Data: 68618
-    - m_Data: 68620
-    - m_Data: 68622
-    - m_Data: 68624
-    - m_Data: 68626
     - m_Data: 68628
     - m_Data: 68630
     - m_Data: 68632
@@ -1077,6 +1041,42 @@ MonoBehaviour:
     - m_Data: 68752
     - m_Data: 68754
     - m_Data: 68756
+    - m_Data: 68758
+    - m_Data: 68760
+    - m_Data: 68762
+    - m_Data: 68764
+    - m_Data: 68766
+    - m_Data: 68768
+    - m_Data: 68770
+    - m_Data: 68772
+    - m_Data: 68774
+    - m_Data: 68776
+    - m_Data: 68778
+    - m_Data: 68780
+    - m_Data: 68782
+    - m_Data: 68784
+    - m_Data: 68786
+    - m_Data: 68788
+    - m_Data: 68790
+    - m_Data: 68792
+    - m_Data: 68794
+    - m_Data: 68796
+    - m_Data: 68798
+    - m_Data: 68800
+    - m_Data: 68802
+    - m_Data: 68804
+    - m_Data: 68806
+    - m_Data: 68808
+    - m_Data: 68810
+    - m_Data: 68812
+    - m_Data: 68814
+    - m_Data: 68816
+    - m_Data: 68818
+    - m_Data: 68820
+    - m_Data: 68822
+    - m_Data: 68824
+    - m_Data: 68826
+    - m_Data: 68828
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -1103,8 +1103,9 @@ MonoBehaviour:
       m_Icon: {fileID: 0}
       m_ResourceFile: 
   m_ListAreaState:
-    m_SelectedInstanceIDs: []
-    m_LastClickedInstanceID: 0
+    m_SelectedInstanceIDs:
+    - m_Data: 71698
+    m_LastClickedInstanceID: 71698
     m_HadKeyboardFocusLastEvent: 1
     m_ExpandedInstanceIDs: []
     m_RenameOverlay:
@@ -1210,7 +1211,7 @@ MonoBehaviour:
     serializedVersion: 2
     x: 0
     y: 24
-    width: 215.66667
+    width: 383
     height: 831.3333
   m_SerializedDataModeController:
     m_DataMode: 0
@@ -1232,8 +1233,7 @@ MonoBehaviour:
       m_LastClickedID:
         m_Data: 0
       m_ExpandedIDs:
-      - m_Data: -38868
-      - m_Data: -1354
+      - m_Data: -1396
       m_RenameOverlay:
         m_UserAcceptedRename: 0
         m_Name: 
@@ -1280,9 +1280,9 @@ MonoBehaviour:
     m_TextWithWhitespace: "Scene\u200B"
   m_Pos:
     serializedVersion: 2
-    x: 552.3333
+    x: 385
     y: 24
-    width: 1118.6667
+    width: 912
     height: 831.3333
   m_SerializedDataModeController:
     m_DataMode: 0
@@ -1940,7 +1940,7 @@ MonoBehaviour:
   m_Position:
     m_Target: {x: -10.983212, y: 1.5482252, z: -16.049238}
     speed: 2
-    m_Value: {x: 0, y: 1.8991761, z: 0}
+    m_Value: {x: 0, y: 1.045452, z: 0.051765904}
   m_RenderMode: 0
   m_CameraMode:
     drawMode: 0
@@ -1988,11 +1988,11 @@ MonoBehaviour:
   m_Rotation:
     m_Target: {x: -0.0027083848, y: 0.9569641, z: -0.008999555, w: -0.29014894}
     speed: 2
-    m_Value: {x: -0.01669157, y: -0.19263864, z: 0.0032364524, w: -0.9813318}
+    m_Value: {x: -0.0019991572, y: 0.008745576, z: -0.00014037093, w: -1.0001786}
   m_Size:
     m_Target: 10
     speed: 2
-    m_Value: 0.21996216
+    m_Value: 1.3001727
   m_Ortho:
     m_Target: 0
     speed: 2
