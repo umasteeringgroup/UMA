@@ -134,6 +134,42 @@ namespace UMA.HairCards.Editor
             int index = node.Population != null ? node.Population.modifiers.IndexOf(modifier) : node.Layer.modifiers.IndexOf(modifier);
             if (index < 0) return;
             var property = list.GetArrayElementAtIndex(index);
+            if (modifier.type == HairModifierType.Ringlets)
+            {
+                var ringlets = property.FindPropertyRelative("ringlets");
+                EditorGUILayout.LabelField("Ringlet shape", EditorStyles.boldLabel);
+                Field(ringlets, "spacingMode", "Curl spacing mode");
+                if ((HairRingletSpacingMode)ringlets.FindPropertyRelative("spacingMode").enumValueIndex == HairRingletSpacingMode.TurnsPerStrand)
+                    Field(ringlets, "turns", "Turns per strand", "Complete turns along the incoming centerline, before seeded variation.");
+                else
+                {
+                    var spacing = ringlets.FindPropertyRelative("turnSpacing");
+                    spacing.floatValue = EditorGUILayout.Slider(new GUIContent("Distance per turn (mm)", "Constant curl pitch across short and long strands, measured on the incoming envelope. At most 20 turns per strand."), spacing.floatValue * 1000f, 3f, 150f) * .001f;
+                }
+                Field(ringlets, "rootRamp", "Straight root reach", "Fraction of the strand over which curl radius eases in. The root stays exactly anchored.");
+                Field(ringlets, "tipRadius", "Tip radius multiplier");
+                Field(ringlets, "lengthMode", "Length behavior");
+                using (new EditorGUI.DisabledScope(modifier.ringlets.lengthMode != HairRingletLengthMode.KeepEnvelope))
+                    Field(ringlets, "centerlineSmoothing", "Smooth centerline", "Envelope mode: rounds transitions between the input controls without moving them. Length-preserving mode retains the input polyline.");
+                EditorGUILayout.HelpBox("Keep Envelope wraps curls around the incoming silhouette and adds strand length. Preserve Strand Length contracts the silhouette instead. Neither edits authored guides. Comb the upstream Sculpt Pass; tune curls here.", MessageType.Info);
+                Field(ringlets, "radiusVariation", "Radius variation"); Field(ringlets, "turnVariation", "Turn variation");
+                Field(ringlets, "phaseVariation", "Start-angle variation"); Field(ringlets, "reverseFraction", "Reverse curl fraction");
+                Field(ringlets, "clumpCoherence", "Keep clumps related");
+                Field(ringlets, "radialFacing", "Face around curl", "Orient ribbons outward around each ringlet instead of keeping a flat scalp-facing ribbon.");
+                Field(ringlets, "pointsPerTurn", "Shape points per turn", "Automatically subdivides the centerline; no Resample modifier needed. Original frozen points are retained. Maximum 256 shape points.");
+                float turns = modifier.ringlets.turns * (1f + modifier.ringlets.turnVariation);
+                int recommended = Mathf.Min(256, Mathf.CeilToInt(turns * modifier.ringlets.pointsPerTurn) + 1);
+                if (modifier.ringlets.spacingMode == HairRingletSpacingMode.DistanceBetweenTurns)
+                {
+                    recommended = 2;
+                    if (stage.Evaluation != null) foreach (var curve in stage.Evaluation.curves)
+                        if (curve.groupId == node.Group.Id) recommended = Mathf.Max(recommended, curve.points.Count);
+                }
+                var lod = stage.Groom.Lods.Find(item => item.level == stage.LodLevel);
+                int samples = lod != null ? lod.ResolveSampleCount(node.Group.profile) : node.Group.profile?.SamplesPerCard ?? 12;
+                if (samples < recommended)
+                    EditorGUILayout.HelpBox($"This LOD allows {samples} card samples; about {recommended} are recommended for these curls. Select Hair Cards → Geometry & Vertex Colors to increase sampling. Draft preview intentionally reduces detail.", MessageType.Warning);
+            }
             if (modifier.type == HairModifierType.Clump)
                 Field(property, "clumpRadius", "Clump size (m)", "Select local centerlines from the incoming population. Smaller values produce more, narrower clumps.");
             if (modifier.type == HairModifierType.Noise)

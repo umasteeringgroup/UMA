@@ -104,7 +104,8 @@ namespace UMA.HairCards
         Mirror,
         TrimByMesh,
         LodReduction,
-        SplineFlow
+        SplineFlow,
+        Ringlets
     }
 
     public enum HairLiftNormalMode { RootNormal, ClosestSurfaceNormal }
@@ -431,6 +432,7 @@ namespace UMA.HairCards
         public string maskMapId;
         public AnimationCurve rootToTip = AnimationCurve.Linear(0f, 1f, 1f, 1f);
         public HairModifierMask mask = new HairModifierMask();
+        public HairRingletSettings ringlets = new HairRingletSettings();
         [Min(0.01f)] public float noiseFrequency = 18f;
         [Range(0f, 1f)] public float noiseParentCoherence;
         public string helperId;
@@ -471,6 +473,7 @@ namespace UMA.HairCards
         {
             HairModifierSettings copy = (HairModifierSettings)MemberwiseClone();
             copy.id = null;
+            copy.ringlets = ringlets?.Duplicate() ?? new HairRingletSettings();
             copy.rootToTip = rootToTip == null ? null : new AnimationCurve(rootToTip.keys)
             { preWrapMode = rootToTip.preWrapMode, postWrapMode = rootToTip.postWrapMode };
             copy.flowSplines = new List<HairFlowSpline>();
@@ -487,6 +490,8 @@ namespace UMA.HairCards
             HairStableId.Ensure(ref id);
             rootToTip ??= AnimationCurve.Linear(0f, 1f, 1f, 1f);
             mask ??= new HairModifierMask();
+            ringlets ??= new HairRingletSettings();
+            ringlets.EnsureIntegrity();
             mask.remap ??= AnimationCurve.Linear(0f, 0f, 1f, 1f);
             noiseFrequency = float.IsFinite(noiseFrequency) ? Mathf.Max(0.01f, noiseFrequency) : 18f;
             noiseParentCoherence = Mathf.Clamp01(noiseParentCoherence);
@@ -715,8 +720,8 @@ namespace UMA.HairCards
             maximumTubeSides = Mathf.Clamp(maximumTubeSides, 3, 12);
         }
 
-        public int ResolveSampleCount(HairCardProfileAsset profile) => Mathf.Clamp(
-            useProfileSamples && profile != null ? profile.SamplesPerCard : samplesPerCard, 2, 64);
+        public int ResolveSampleCount(HairCardProfileAsset profile) => useProfileSamples && profile != null
+            ? profile.SamplesPerCard : Mathf.Clamp(samplesPerCard, 2, 64);
     }
 
     [Serializable]

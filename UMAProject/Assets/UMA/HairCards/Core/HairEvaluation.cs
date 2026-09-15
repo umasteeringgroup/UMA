@@ -104,6 +104,7 @@ namespace UMA.HairCards
         internal readonly HairChildGenerator.GenerationWorkspace children = new HairChildGenerator.GenerationWorkspace();
         internal readonly HairSplineFlowWorkspace splineFlow = new HairSplineFlowWorkspace();
         internal readonly HairPopulationWorkspace populations = new HairPopulationWorkspace();
+        internal readonly HairRingletWorkspace ringlets = new HairRingletWorkspace();
         internal readonly Dictionary<HairModifierSettings, HairModifierSettings> maskedModifiers = new Dictionary<HairModifierSettings, HairModifierSettings>();
         internal HairGroup currentGroup;
         internal readonly List<HairEvaluatedCurve> groupGuides = new List<HairEvaluatedCurve>();
@@ -123,7 +124,7 @@ namespace UMA.HairCards
         {
             if (inUse) throw new InvalidOperationException("Cannot clear an active hair evaluation workspace.");
             sourceMesh.Clear(); gravitySurface.Clear(); children.Clear(); splineFlow.Clear(); groupGuides.Clear(); groupGuides.Capacity = 0;
-            populations.Clear(); clumps.Clear(); maskedModifiers.Clear(); currentGroup = null; options = null;
+            populations.Clear(); ringlets.Clear(); clumps.Clear(); maskedModifiers.Clear(); currentGroup = null; options = null;
             groupSourceGuides.Clear(); groupSourceGuides.Capacity = 0; singleModifier[0] = null;
             resampled.Clear(); resampled.Capacity = 0; cumulative = Array.Empty<float>(); smoothing = Array.Empty<HairCurvePoint>();
             modifierOriginal.Clear(); modifierOriginal.Capacity = 0; modifierTarget.Clear(); modifierTarget.Capacity = 0;

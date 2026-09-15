@@ -26,6 +26,7 @@ def main():
     parser.add_argument('--guides', required=True, help='Raw CURVES object with ordered root-to-tip points')
     parser.add_argument('--growth-mesh', help='Separate scalp mesh defining the growth footprint')
     parser.add_argument('--growth-group', help='Alternatively, a vertex group on the source mesh')
+    parser.add_argument('--evaluated-growth', action='store_true', help='Use the growth mesh after its surface-conforming modifiers; never evaluates guide generators')
     parser.add_argument('--output', required=True)
     args = parser.parse_args(sys.argv[sys.argv.index('--') + 1:])
     output = Path(args.output)
@@ -69,6 +70,8 @@ def main():
         scalp = bpy.data.objects.get(args.growth_mesh)
         if scalp is None or scalp.type != 'MESH':
             raise ValueError('Growth mesh was not found')
+        if args.evaluated_growth:
+            scalp = scalp.evaluated_get(bpy.context.evaluated_depsgraph_get())
         sv = [scalp.matrix_world @ v.co for v in scalp.data.vertices]
         polygons = [tuple(p.vertices) for p in scalp.data.polygons]
         tree = BVHTree.FromPolygons(sv, polygons)

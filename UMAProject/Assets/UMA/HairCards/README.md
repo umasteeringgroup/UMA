@@ -3,14 +3,20 @@
 UMA Hair Cards is a guide-driven, non-destructive hair-card authoring system for Unity 6.3 and newer. The editable `HairGroomAsset` is the source of truth; generated meshes and UMA assets are deterministic bake outputs.
 
 For the swept hairstyle, start with the [Swept Clumps guide](SweptClumpsGuide.md).
+It covers surface-rooted clump/card populations, local modifier masks, arched ribbons,
+the UMA atlas layout, the URP strand shader, and scalp vertex-color Mesh Modifiers.
+See the [swept validation report](QA/SweptClumpsValidation.md) for measured costs
+and remaining production limitations.
+
+For an editable curly hairstyle, start with the [Curly Volume guide](CurlyVolumeGuide.md).
+It covers Ringlets, distance-based curl spacing, automatic shape resolution,
+three-strip UV setup and the inline Matte / Natural / Glossy finish controls.
+Open either installed example from **UMA > Hair Cards > Examples**. See the
+[Curly validation report](QA/CurlyVolumeValidation.md) for its checks and limits.
 
 To attach an existing groom to real UMA body slots for skinning, use **Source & Setup →
 Bind Character / Race**. [The binding workflow](SweptClumpsGuide.md#attach-an-existing-hairstyle-to-a-uma-character)
 preserves authored hair and saves a separate weighted donor and skeleton.
-It covers surface-rooted clump/card populations, local modifier masks, arched ribbons,
-the existing UMA atlas layout, the URP strand shader, and scalp vertex-color Mesh Modifiers.
-See the [validation and performance report](QA/SweptClumpsValidation.md) for measured
-rebuild costs, review coverage and remaining artistic/production limitations.
 
 ## Node workspace
 

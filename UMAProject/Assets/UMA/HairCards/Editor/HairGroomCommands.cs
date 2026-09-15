@@ -691,6 +691,7 @@ namespace UMA.HairCards.Editor
                 case HairModifierType.Width: return 1f;
                 case HairModifierType.Smooth: return 0.35f;
                 case HairModifierType.Curl:
+                case HairModifierType.Ringlets:
                 case HairModifierType.Wave:
                 case HairModifierType.Noise: return 0.01f;
                 default: return 0.1f;

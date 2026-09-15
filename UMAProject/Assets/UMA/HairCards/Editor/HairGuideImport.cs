@@ -9,6 +9,7 @@ namespace UMA.HairCards.Editor
     /// <summary>Small, documented interchange for authored paths; imports data, never executable scripts.</summary>
     public static class HairGuideImport
     {
+        public enum GenerationStyle { SweptClumps, CurlyVolume }
         [Serializable] public sealed class Guide { public string name; public Vector3[] points; }
         // Do not expose Unity Rect's private serialization fields in an external file format.
         [Serializable] public sealed class Region
@@ -74,7 +75,7 @@ namespace UMA.HairCards.Editor
             return data;
         }
 
-        public static HairGroomAsset ImportNew(string file, string assetPath)
+        public static HairGroomAsset ImportNew(string file, string assetPath, GenerationStyle style = GenerationStyle.SweptClumps)
         {
             var data = Read(file);
             string parent = Path.GetDirectoryName(assetPath)?.Replace('\\', '/');
@@ -100,7 +101,8 @@ namespace UMA.HairCards.Editor
                 if (data.growth?.Length == growth.values.Length)
                     for (int i = 0; i < growth.values.Length; i++) growth.values[i] = float.IsFinite(data.growth[i]) ? Mathf.Clamp01(data.growth[i]) : 0f;
                 ImportGuides(groom, group, data.guides);
-                HairGenerationEditor.ApplySweptPreset(groom, group, folder);
+                if (style == GenerationStyle.CurlyVolume) HairGenerationEditor.ApplyCurlyPreset(groom, group, folder);
+                else HairGenerationEditor.ApplySweptPreset(groom, group, folder);
                 if (data.regions?.Length > 0)
                 {
                     group.atlas.regions.Clear();

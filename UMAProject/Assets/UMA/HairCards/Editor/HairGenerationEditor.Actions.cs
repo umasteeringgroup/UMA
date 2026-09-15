@@ -13,6 +13,9 @@ namespace UMA.HairCards.Editor
             if (node.Kind == HairGroomNodeKind.Children || node.Kind == HairGroomNodeKind.Group)
                 using (new EditorGUI.DisabledScope(node.Locked))
                 {
+                    if (GUILayout.Button(new GUIContent("Curly Volume Preset…", "Set up surface-rooted ringlets with automatic curl resolution. Preserves guides, sculpt passes, assigned textures and materials.")))
+                        if (EditorUtility.DisplayDialog("Apply Curly Volume Preset?", "Replace generation settings with editable ringlets and create a dedicated curl ribbon profile? Guides, sculpt passes and assigned textures/materials are preserved. Existing material shine is not changed; choose Matte in Materials & UVs if desired. Undo restores settings.", "Apply Preset", "Cancel"))
+                        { ApplyCurlyPreset(stage.Groom, node.Group); stage.SelectNode(HairGroomNodes.Key(HairGroomNodeKind.Children, node.Group.Id)); }
                     if (GUILayout.Button(new GUIContent("Swept Clumps Preset…", "Configure generated clumps, hairline, curved ribbons and LOD sampling. Existing guides/sculpting and assigned textures/materials are preserved.")))
                         if (EditorUtility.DisplayDialog("Apply Swept Clumps Preset?", "Replace generation settings with the swept-clump preset and create a dedicated ribbon profile? Your guides, sculpt passes, textures and assigned materials are preserved. Undo restores the settings.", "Apply Preset", "Cancel"))
                         { ApplySweptPreset(stage.Groom, node.Group); stage.SelectNode(HairGroomNodes.Key(HairGroomNodeKind.Children, node.Group.Id)); }
@@ -167,6 +170,50 @@ namespace UMA.HairCards.Editor
             if (groom.Lods.Count > 0) groom.Lods[0].useProfileSamples = true;
             HairGroomCommands.Commit(groom);
         }
+        internal static void ApplyCurlyPreset(HairGroomAsset groom, HairGroup group, string resourceFolder = null)
+        {
+            if (groom == null || group == null || group.locked || !groom.Groups.Contains(group)) return;
+            Undo.RecordObject(groom, "Apply Curly Volume Preset");
+            group.generation = new HairGenerationPipeline { enabled = true };
+            var cards = group.generation.cards;
+            cards.name = "Curly Hair Cards"; cards.count = 1300; cards.minimumSpacing = .0045f;
+            cards.neighbors = 3; cards.clump = .15f; cards.clumpSpread = .65f;
+            cards.shapeSamples = 16; cards.lengthVariation = .16f; cards.widthVariation = .2f;
+            cards.tiltVariation = 12f; cards.parentCoherence = .35f; cards.flyawayFraction = .025f;
+            cards.hairline.enabled = true; cards.hairline.distance = .016f;
+            cards.hairline.edgeLength = .65f; cards.hairline.edgeWidth = .5f;
+            cards.seed = 41;
+            cards.minimumNormalDot = -.1f; cards.influenceRadius = .25f;
+            cards.modifiers.Add(new HairModifierSettings { name = "Volume envelope", type = HairModifierType.Length,
+                domain = HairModifierDomain.Children, amount = 1.2f });
+            cards.modifiers.Add(new HairModifierSettings { name = "Loose centerline variation", type = HairModifierType.Noise,
+                domain = HairModifierDomain.Children, amount = .012f, noiseFrequency = 18f, noiseParentCoherence = .3f, rootInfluence = .2f, seed = 14 });
+            cards.modifiers.Add(new HairModifierSettings { name = "Ringlets — shape & variation", type = HairModifierType.Ringlets,
+                domain = HairModifierDomain.Children, amount = .0112f, rootInfluence = .6f, seed = 4,
+                ringlets = new HairRingletSettings { spacingMode = HairRingletSpacingMode.DistanceBetweenTurns, tipRadius = 1f, turnVariation = .3f, radiusVariation = .25f, clumpCoherence = .15f } });
+            group.generation.scalp.enabled = true;
+            group.generation.EnsureIntegrity();
+            var profile = ScriptableObject.CreateInstance<HairCardProfileAsset>();
+            profile.name = groom.name + " Curl Ribbon";
+            profile.Configure(HairCardShape.Ribbon, .0064f, .0035f, 96, generateBackfaces: false);
+            profile.ConfigureRibbon(1, 0f, true, .009f, 18f);
+            SaveResourceNear(groom, profile, resourceFolder); group.profile = profile;
+            if (group.atlas == null)
+            {
+                group.atlas = ScriptableObject.CreateInstance<HairAtlasProfileAsset>();
+                group.atlas.name = groom.name + " Curl Atlas"; group.atlas.EnsureIntegrity();
+                HairSweptAtlasSetup.ConfigureNew(group.atlas, true); SaveResourceNear(groom, group.atlas, resourceFolder);
+            }
+            if (group.atlas.material == null)
+            {
+                var material = HairSweptShaderGUI.CreateMaterial(groom, group.atlas, resourceFolder);
+                if (material != null) HairSweptShaderGUI.ApplyFinish(material, HairSweptShaderGUI.Finish.Matte);
+            }
+            group.rootEmbedDepth = .001f;
+            if (groom.Lods.Count > 0) groom.Lods[0].useProfileSamples = true;
+            HairGroomCommands.Commit(groom);
+        }
+
         internal static void SaveResourceNear(HairGroomAsset groom, UnityEngine.Object resource, string resourceFolder = null)
         {
             string path = AssetDatabase.GetAssetPath(groom);

@@ -33,6 +33,8 @@ Shader "UMA/Hair Cards/Swept Hair URP"
         _Cutoff("Alpha Cutoff", Range(0,1)) = 0.35
         _ShadowCutoff("Shadow Alpha Cutoff", Range(0,1)) = 0.45
         [Toggle] _AlphaToCoverage("MSAA Alpha to Coverage", Float) = 1
+        [Toggle] _DitheredOpacity("Soft Coverage (Dithered)", Float) = 0
+        _Coverage("Strand Opacity", Range(0,1)) = 1
         _VertexColorInfluence("Use Vertex RGB as Tint", Range(0,1)) = 0
         _VertexAlphaInfluence("Use Vertex Alpha as Opacity", Range(0,1)) = 0
         [Enum(Shaded,0,RootToTip,1,ClumpIDs,2,StrandIDs,3,Mask,4,Normals,5)] _DebugView("Diagnostic View", Float) = 0

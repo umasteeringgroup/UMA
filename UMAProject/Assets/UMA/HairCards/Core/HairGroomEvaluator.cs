@@ -574,6 +574,9 @@ namespace UMA.HairCards
                     case HairModifierType.Wave:
                         ApplyWave(curve, modifier, modifier.type == HairModifierType.Curl);
                         break;
+                    case HairModifierType.Ringlets:
+                        workspace.ringlets.Apply(curve, modifier);
+                        break;
                     case HairModifierType.Noise:
                         ApplyNoise(curve, modifier);
                         break;

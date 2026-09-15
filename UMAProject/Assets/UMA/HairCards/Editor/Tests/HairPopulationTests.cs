@@ -70,9 +70,11 @@ namespace UMA.HairCards.Editor.Tests
             }
         }
 
-        [TestCase(false)]
-        [TestCase(true)]
-        public void SweptShaderActuallyDrawsOpaqueTexelsAndClipsTransparentTexels(bool alphaToCoverage)
+        [TestCase(false, false)]
+        [TestCase(true, false)]
+        [TestCase(false, true)]
+        [TestCase(true, true)]
+        public void SweptShaderActuallyDrawsOpaqueTexelsAndClipsTransparentTexels(bool alphaToCoverage, bool softCoverage)
         {
             var shader = Shader.Find("UMA/Hair Cards/Swept Hair URP");
             Assert.That(shader, Is.Not.Null);
@@ -85,6 +87,7 @@ namespace UMA.HairCards.Editor.Tests
             {
                 texture.SetPixels(new[]{Color.white,Color.clear}); texture.Apply();
                 material.SetTexture("_BaseMap",texture); material.SetFloat("_AlphaToCoverage",alphaToCoverage ? 1 : 0); material.SetFloat("_DebugView",3);
+                material.SetFloat("_DitheredOpacity",softCoverage ? 1 : 0); material.SetFloat("_Coverage",.4f);
                 mesh.vertices=new[]{new Vector3(-.8f,-.8f,-1),new Vector3(.8f,-.8f,-1),new Vector3(-.8f,.8f,-1),new Vector3(.8f,.8f,-1)};
                 mesh.normals=Enumerable.Repeat(Vector3.back,4).ToArray(); mesh.tangents=Enumerable.Repeat(new Vector4(0,1,0,1),4).ToArray();
                 mesh.uv=new[]{Vector2.zero,Vector2.right,Vector2.up,Vector2.one}; mesh.uv2=mesh.uv;mesh.uv3=mesh.uv;
@@ -98,7 +101,7 @@ namespace UMA.HairCards.Editor.Tests
                 }
                 RenderTexture.active=target; pixels.ReadPixels(new Rect(0,0,64,64),0,0);pixels.Apply();
                 int drawn=pixels.GetPixels32().Count(c=>c.r>20 || c.g>20 || c.b>20);
-                Assert.That(drawn,Is.InRange(900,1800),"About half the quad should render. An empty result or solid card is a shader/alpha regression.");
+                Assert.That(drawn,softCoverage ? Is.InRange(300,850) : Is.InRange(900,1800),"Transparent texels must clip; soft coverage should retain about 40% of the opaque half, while cutout ignores strand opacity.");
             }
             finally
             {

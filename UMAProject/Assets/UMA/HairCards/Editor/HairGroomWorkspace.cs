@@ -783,7 +783,7 @@ namespace UMA.HairCards.Editor
                 }
                 int samples = profile.SamplesPerCard;
                 using (new EditorGUI.DisabledScope(!profileSampling))
-                    samples = EditorGUILayout.IntSlider("Profile samples", profile.SamplesPerCard, 2, 64);
+                    samples = EditorGUILayout.IntSlider("Profile samples", profile.SamplesPerCard, 2, 256);
                 if (!profileSampling)
                 {
                     int lodSamples = EditorGUILayout.IntSlider($"LOD {activeLod.level} samples", activeLod.samplesPerCard, 2, 64);
@@ -808,7 +808,7 @@ namespace UMA.HairCards.Editor
                     rootColor = EditorGUILayout.ColorField(new GUIContent("Root Vertex Color (RGBA)"), rootColor, true, true, false);
                     tipColor = EditorGUILayout.ColorField(new GUIContent("Tip Vertex Color (RGBA)"), tipColor, true, true, false);
                     holdSegments = EditorGUILayout.IntSlider(new GUIContent("Solid Root Segments",
-                        "0 fades immediately. 2 holds rows 0, 1 and 2 at the root RGBA, then fades linearly to the tip. Lower-resolution LODs clamp this to leave at least one fade segment."), holdSegments, 0, 63);
+                        "0 fades immediately. 2 holds rows 0, 1 and 2 at the root RGBA, then fades linearly to the tip. Lower-resolution LODs clamp this to leave at least one fade segment."), holdSegments, 0, 255);
                 }
                 if (EditorGUI.EndChangeCheck())
                 {
@@ -1212,6 +1212,7 @@ namespace UMA.HairCards.Editor
                 {
                     HairModifierType.Length or HairModifierType.Width => "Scale multiplier",
                     HairModifierType.Curl or HairModifierType.Wave or HairModifierType.Noise => "Amplitude (units)",
+                    HairModifierType.Ringlets => "Curl radius (m)",
                     HairModifierType.Twist => "Roll (degrees)",
                     HairModifierType.Resample or HairModifierType.Simplify => "Control point count",
                     HairModifierType.Gravity => "Settle duration (seconds)",
@@ -1229,6 +1230,8 @@ namespace UMA.HairCards.Editor
                         "Rotates segment directions toward the source-local direction. 0 leaves the hair unchanged; 1 fully aligns it at full blend/influence. Roots and segment lengths stay fixed."), amount, 0f, 1f);
                 else if (modifier.type == HairModifierType.Gravity)
                     amount = EditorGUILayout.Slider(amountLabel, amount, 0f, 5f);
+                else if (modifier.type == HairModifierType.Ringlets)
+                    amount = EditorGUILayout.Slider("Curl radius (mm)", amount * 1000f, 0f, 50f) * .001f;
                 else if (modifier.type != HairModifierType.Mirror && modifier.type != HairModifierType.SplineFlow)
                     amount = EditorGUILayout.FloatField(amountLabel, amount);
                 bool usesRamp = modifier.type != HairModifierType.Length && modifier.type != HairModifierType.Resample && modifier.type != HairModifierType.Simplify && modifier.type != HairModifierType.LodReduction;
@@ -1291,7 +1294,7 @@ namespace UMA.HairCards.Editor
                         EditorGUILayout.HelpBox("Enter a finite, non-zero direction to align the hair.", MessageType.Info);
                 }
                 int seed = modifier.seed;
-                if (modifier.type == HairModifierType.Noise)
+                if (modifier.type == HairModifierType.Noise || modifier.type == HairModifierType.Ringlets)
                     seed = EditorGUILayout.IntField("Seed", modifier.seed);
                 string helperId = modifier.helperId;
                 if (ModifierUsesHelper(modifier.type))
@@ -1358,7 +1361,7 @@ namespace UMA.HairCards.Editor
             type == HairModifierType.Smooth || type == HairModifierType.FlowAlign || type == HairModifierType.SplineFlow || type == HairModifierType.Lift ||
             type == HairModifierType.Clump || type == HairModifierType.Part || type == HairModifierType.Curl ||
             type == HairModifierType.Wave || type == HairModifierType.Noise || type == HairModifierType.HelperFollow ||
-            type == HairModifierType.Collision || type == HairModifierType.PushOut;
+            type == HairModifierType.Collision || type == HairModifierType.PushOut || type == HairModifierType.Ringlets;
 
         private static bool ModifierUsesHelper(HairModifierType type)
         {

@@ -9,13 +9,20 @@ namespace UMA.HairCards.Editor
         internal const string DiffusePath = "Assets/UMA/SRP/Textures/Hair/HairAtlasDiffuse_New.png";
         // The two long strip rectangles used by the PointySwept example and UMA atlas.
         internal static readonly Rect[] Strips = { new Rect(.46608f,.03607f,.15093f,.94754f), new Rect(.63557f,.03959f,.14935f,.94601f) };
-        internal static void ConfigureNew(HairAtlasProfileAsset atlas)
+        internal static readonly Rect[] CurlyStrips = { Strips[0], Strips[1], new Rect(.7983f,.0292f,.1918f,.9569f) };
+        internal static void ConfigureNew(HairAtlasProfileAsset atlas, bool curly = false)
         {
             atlas.albedo = AssetDatabase.LoadAssetAtPath<Texture2D>(DiffusePath);
             atlas.normal = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/UMA/SRP/Textures/Hair/HairAtlasNormal_New.png");
             atlas.mask = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/UMA/SRP/Textures/Hair/HairAtlasAO_New.png");
             atlas.regions.Clear();
-            AddStrips(atlas); EditorUtility.SetDirty(atlas);
+            if (curly) AddCurlyStrips(atlas); else AddStrips(atlas);
+            EditorUtility.SetDirty(atlas);
+        }
+        internal static void AddCurlyStrips(HairAtlasProfileAsset atlas)
+        {
+            for (int i = 0; i < CurlyStrips.Length; i++)
+                if (!atlas.regions.Any(r => r.uvRect == CurlyStrips[i])) atlas.CreateRegion("Curly long strip " + (i + 1), CurlyStrips[i]).flipV = true;
         }
         internal static void AddStrips(HairAtlasProfileAsset atlas)
         {
@@ -25,6 +32,15 @@ namespace UMA.HairCards.Editor
         internal static void DrawTreeAction(HairCardStage stage, HairGroomNode node)
         {
             if (node.Kind != HairGroomNodeKind.Atlas || node.Group?.atlas == null) return;
+            using (new EditorGUI.DisabledScope(node.Locked))
+            if (GUILayout.Button("Use UMA Curly Strips…") && EditorUtility.DisplayDialog("Select Curly Atlas Strips?",
+                "Add and select the three long strips used by CurlyVolume? Existing UV sets, materials and textures are preserved.", "Use Curly Strips", "Cancel"))
+            {
+                var atlas = node.Group.atlas; Undo.RecordObject(atlas, "Add Curly UV Strips"); Undo.RecordObject(stage.Groom, "Select Curly UV Strips");
+                AddCurlyStrips(atlas); node.Group.atlasRegionSelection = HairAtlasRegionSelectionMode.Selected;
+                node.Group.atlasRegionIds = atlas.regions.Where(r => CurlyStrips.Contains(r.uvRect)).Select(r => r.Id).ToList();
+                EditorUtility.SetDirty(atlas); stage.TrackResourceEdit(atlas); HairGroomCommands.Commit(stage.Groom, HairPreviewChange.Geometry);
+            }
             using (new EditorGUI.DisabledScope(node.Locked))
             if (GUILayout.Button("Use UMA Swept Strips…"))
             {

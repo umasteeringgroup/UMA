@@ -10,6 +10,7 @@ TEXTURE2D(_BumpMap); SAMPLER(sampler_BumpMap);
 TEXTURE2D(_OcclusionMap); SAMPLER(sampler_OcclusionMap);
 TEXTURE2D(_DepthMap); SAMPLER(sampler_DepthMap);
 CBUFFER_START(UnityPerMaterial)
+    half _DitheredOpacity, _Coverage;
     float4 _BaseMap_ST;
     half4 _BaseColor, _RootColor, _TipColor, _SpecularColor, _SecondaryColor, _TransmissionColor;
     half _RootFade, _ColorPower, _TextureColor, _DepthInfluence, _StrandVariation, _ClumpVariation;
@@ -66,9 +67,23 @@ half HairAlpha(HairVaryings input, half atlasAlpha)
 {
     return saturate(atlasAlpha * _BaseColor.a * lerp(1.0h, input.color.a, _VertexAlphaInfluence));
 }
-half HairClip(half alpha)
+void HairSoftCoverage(half alpha, HairVaryings input)
+{
+    // Strand-specific, stationary screen-door opacity: different overlapping cards
+    // do not share a single coverage mask. The same function is used by all passes.
+    if (_DitheredOpacity > 0.5h)
+    {
+        float2 offset = input.data.y * float2(137.23, 91.73);
+        clip(alpha * _Coverage - InterleavedGradientNoise(input.positionCS.xy + offset, 0) - 0.00001h);
+    }
+}
+half HairClip(half alpha, HairVaryings input)
 {
     #if defined(SHADER_STAGE_FRAGMENT)
+    if (_DitheredOpacity > 0.5h)
+    {
+        clip(alpha - _Cutoff); HairSoftCoverage(alpha, input); return 1;
+    }
     if (_AlphaToCoverage > 0.5h) return AlphaClip(alpha, _Cutoff);
     clip(alpha - _Cutoff);
     #endif
@@ -126,7 +141,7 @@ half4 HairFragment(HairVaryings input, FRONT_FACE_TYPE facing : FRONT_FACE_SEMAN
     UNITY_SETUP_INSTANCE_ID(input);
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
     half4 atlas = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv);
-    half alpha = HairClip(HairAlpha(input, atlas.a));
+    half alpha = HairClip(HairAlpha(input, atlas.a), input);
     half3 n = HairNormal(input, IS_FRONT_VFACE(facing, 1.0h, -1.0h));
     half3 t = SafeNormalize(input.strandWS - n * dot(n,input.strandWS));
     half3 v = GetWorldSpaceNormalizeViewDir(input.positionWS);
@@ -196,20 +211,21 @@ HairVaryings HairShadowVertex(HairAttributes input)
 half4 HairShadowFragment(HairVaryings input) : SV_Target
 {
     UNITY_SETUP_INSTANCE_ID(input);
-    clip(HairAlpha(input, SAMPLE_TEXTURE2D(_BaseMap,sampler_BaseMap,input.uv).a) - _ShadowCutoff);
+    half alpha = HairAlpha(input, SAMPLE_TEXTURE2D(_BaseMap,sampler_BaseMap,input.uv).a);
+    clip(alpha - _ShadowCutoff); HairSoftCoverage(alpha, input);
     return 0;
 }
 half4 HairDepthFragment(HairVaryings input) : SV_Target
 {
     UNITY_SETUP_INSTANCE_ID(input);
-    half alpha = HairClip(HairAlpha(input, SAMPLE_TEXTURE2D(_BaseMap,sampler_BaseMap,input.uv).a));
+    half alpha = HairClip(HairAlpha(input, SAMPLE_TEXTURE2D(_BaseMap,sampler_BaseMap,input.uv).a), input);
     return half4(input.positionCS.zzz, alpha);
 }
 half4 HairDepthNormalsFragment(HairVaryings input, FRONT_FACE_TYPE facing : FRONT_FACE_SEMANTIC) : SV_Target
 {
     UNITY_SETUP_INSTANCE_ID(input);
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
-    half alpha = HairClip(HairAlpha(input, SAMPLE_TEXTURE2D(_BaseMap,sampler_BaseMap,input.uv).a));
+    half alpha = HairClip(HairAlpha(input, SAMPLE_TEXTURE2D(_BaseMap,sampler_BaseMap,input.uv).a), input);
     float3 n = HairNormal(input, IS_FRONT_VFACE(facing,1.0h,-1.0h));
     #if defined(_GBUFFER_NORMALS_OCT)
         float2 oct = PackNormalOctQuadEncode(n) * 0.5 + 0.5;

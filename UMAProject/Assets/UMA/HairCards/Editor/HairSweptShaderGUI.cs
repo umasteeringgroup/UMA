@@ -13,7 +13,7 @@ namespace UMA.HairCards.Editor
             EditorGUILayout.HelpBox("Two-sided, alpha-clipped strand shading. UV1 carries root-to-tip / strand ID; UV2 carries clump ID / mask. Vertex RGBA is left available for animation by default.", MessageType.None);
             void Field(string name) { var p = FindProperty(name, properties, false); if (p != null) editor.ShaderProperty(p, p.displayName); }
             EditorGUILayout.LabelField("Atlas & color", EditorStyles.boldLabel);
-            foreach (string name in new[] { "_BaseMap", "_BaseColor", "_RootColor", "_TipColor", "_RootFade", "_ColorPower", "_StrandVariation", "_ClumpVariation", "_Cutoff" }) Field(name);
+            foreach (string name in new[] { "_BaseMap", "_BaseColor", "_RootColor", "_TipColor", "_RootFade", "_ColorPower", "_StrandVariation", "_ClumpVariation", "_Cutoff", "_DitheredOpacity", "_Coverage" }) Field(name);
             lighting = EditorGUILayout.Foldout(lighting, "Highlights & lighting", true);
             if (lighting) foreach (string name in new[] { "_SpecularColor", "_SpecularStrength", "_Smoothness", "_SpecularShift", "_SecondaryColor", "_SecondaryStrength", "_SecondarySmoothness", "_SecondaryShift", "_Transmission", "_TransmissionColor", "_DiffuseWrap", "_AmbientStrength" }) Field(name);
             advanced = EditorGUILayout.Foldout(advanced, "Texture channels & diagnostics", true);
@@ -23,6 +23,18 @@ namespace UMA.HairCards.Editor
                 EditorGUILayout.HelpBox("Depth shading reads atlas red, or the optional separate depth map using the same UVs. A nearly white diffuse atlas needs a separate depth map for fiber contrast. Set depth influence to 0 for ordinary color-only shading. Alpha to coverage smooths edges with MSAA. No duplicate backfaces or second pass are needed.", MessageType.Info);
                 editor.EnableInstancingField(); editor.RenderQueueField();
             }
+        }
+
+        internal enum Finish { Matte, Natural, Glossy }
+        internal static void ApplyFinish(Material material, Finish finish)
+        {
+            if (material == null || material.shader.name != ShaderName) return;
+            Undo.RecordObject(material, "Change Hair Finish");
+            material.SetFloat("_SpecularStrength", finish == Finish.Matte ? .10f : finish == Finish.Natural ? .28f : .6f);
+            material.SetFloat("_SecondaryStrength", finish == Finish.Matte ? .035f : finish == Finish.Natural ? .12f : .3f);
+            material.SetFloat("_Smoothness", finish == Finish.Matte ? .4f : finish == Finish.Natural ? .6f : .8f);
+            material.SetFloat("_SecondarySmoothness", finish == Finish.Matte ? .2f : finish == Finish.Natural ? .35f : .55f);
+            EditorUtility.SetDirty(material);
         }
 
         internal static Material CreateMaterial(HairGroomAsset groom, HairAtlasProfileAsset atlas, string resourceFolder = null)
@@ -65,7 +77,35 @@ namespace UMA.HairCards.Editor
                 material.SetFloat("_RootFade", reach); material.SetFloat("_StrandVariation", variation); material.SetFloat("_Cutoff", cutoff);
                 EditorUtility.SetDirty(material); stage.TrackResourceEdit(material); stage.QueuePreviewChange(HairPreviewChange.Materials);
             }
-            EditorGUILayout.LabelField("Edits affect this material wherever it is shared. Full lighting controls are in the material Inspector.", EditorStyles.wordWrappedMiniLabel);
+            EditorGUILayout.LabelField("Surface finish", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Edits affect every use of this shared material. Finish presets change only highlights, not your colors or textures.", EditorStyles.wordWrappedMiniLabel);
+            using (new EditorGUILayout.HorizontalScope())
+                foreach (Finish finish in System.Enum.GetValues(typeof(Finish)))
+                    if (GUILayout.Button(finish.ToString()))
+                    { ApplyFinish(material, finish); stage.TrackResourceEdit(material); stage.QueuePreviewChange(HairPreviewChange.Materials); }
+            EditorGUI.BeginChangeCheck();
+            float primary = EditorGUILayout.Slider("Primary shine", material.GetFloat("_SpecularStrength"), 0f, 2f);
+            float roughness = EditorGUILayout.Slider("Primary roughness", 1f - material.GetFloat("_Smoothness"), 0f, 1f);
+            float secondary = EditorGUILayout.Slider("Secondary shine", material.GetFloat("_SecondaryStrength"), 0f, 2f);
+            float secondaryRoughness = EditorGUILayout.Slider("Secondary roughness", 1f - material.GetFloat("_SecondarySmoothness"), 0f, 1f);
+            if (EditorGUI.EndChangeCheck())
+            {
+                Undo.RecordObject(material, "Edit Hair Finish");
+                material.SetFloat("_SpecularStrength", primary); material.SetFloat("_Smoothness", 1f - roughness);
+                material.SetFloat("_SecondaryStrength", secondary); material.SetFloat("_SecondarySmoothness", 1f - secondaryRoughness);
+                EditorUtility.SetDirty(material); stage.TrackResourceEdit(material); stage.QueuePreviewChange(HairPreviewChange.Materials);
+            }
+            EditorGUILayout.LabelField("Higher roughness broadens highlights. Reduce both shine strengths for a dry, matte finish; zero removes both highlights. Full lighting controls remain in the material Inspector.", EditorStyles.wordWrappedMiniLabel);
+            EditorGUI.BeginChangeCheck();
+            bool softCoverage = EditorGUILayout.Toggle("Soft coverage (dithered)", material.GetFloat("_DitheredOpacity") > .5f);
+            float coverage = material.GetFloat("_Coverage");
+            using (new EditorGUI.DisabledScope(!softCoverage)) coverage = EditorGUILayout.Slider("Strand opacity", coverage, 0f, 1f);
+            if (EditorGUI.EndChangeCheck())
+            {
+                Undo.RecordObject(material, "Edit Hair Coverage"); material.SetFloat("_DitheredOpacity", softCoverage ? 1 : 0); material.SetFloat("_Coverage", coverage);
+                EditorUtility.SetDirty(material); stage.TrackResourceEdit(material); stage.QueuePreviewChange(HairPreviewChange.Materials);
+            }
+            if (softCoverage) EditorGUILayout.HelpBox("Soft coverage keeps depth writing and breaks up solid-looking cards. It uses fine screen-door stippling, not sorted transparency. Review motion and distance with your project's antialiasing; disable for clean MSAA cutouts if stippling is visible.", MessageType.Info);
             if (atlas.albedo != null && AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(atlas.albedo)) is TextureImporter importer && !importer.mipmapEnabled)
             {
                 EditorGUILayout.HelpBox("This atlas has no mipmaps. Fine strands can sparkle at a distance. Alpha-preserving mipmaps improve stability.", MessageType.Warning);
