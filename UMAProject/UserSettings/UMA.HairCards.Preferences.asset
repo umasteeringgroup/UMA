@@ -14,11 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: UMA.HairCards.Editor::UMA.HairCards.Editor.HairEditorPreferences
   entries:
   - key: workspace
-    json: '{"fields":[{"name":"initialPlacementDone","json":"{\"value\":true}"},{"name":"explorerScroll","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"detailsScroll","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"cardGeometryExpanded","json":"{\"value\":true}"},{"name":"childSettingsExpanded","json":"{\"value\":true}"},{"name":"atlasMapsExpanded","json":"{\"value\":false}"},{"name":"guideSearch","json":"{\"value\":\"\"}"},{"name":"guideLibraryExpanded","json":"{\"value\":false}"},{"name":"authoredGuidesExpanded","json":"{\"value\":true}"}]}'
+    json: '{"fields":[{"name":"initialPlacementDone","json":"{\"value\":true}"},{"name":"explorerScroll","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"detailsScroll","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"cardGeometryExpanded","json":"{\"value\":true}"},{"name":"childSettingsExpanded","json":"{\"value\":true}"},{"name":"atlasMapsExpanded","json":"{\"value\":true}"},{"name":"guideSearch","json":"{\"value\":\"\"}"},{"name":"guideLibraryExpanded","json":"{\"value\":false}"},{"name":"authoredGuidesExpanded","json":"{\"value\":true}"}]}'
   - key: workspace:GlobalObjectId_V1-3-4508f9c2e8436d0429fd2991b3b88ed2-11400000-0
     json: '{"fields":[{"name":"initialPlacementDone","json":"{\"value\":true}"},{"name":"explorerScroll","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"detailsScroll","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"cardGeometryExpanded","json":"{\"value\":true}"},{"name":"childSettingsExpanded","json":"{\"value\":true}"},{"name":"atlasMapsExpanded","json":"{\"value\":false}"},{"name":"guideSearch","json":"{\"value\":\"\"}"},{"name":"guidePage","json":"{\"value\":0}"},{"name":"guideLibraryExpanded","json":"{\"value\":false}"},{"name":"authoredGuidesExpanded","json":"{\"value\":true}"}]}'
   - key: stage
-    json: '{"fields":[{"name":"selectedFlowSplineId","json":"{\"value\":\"d84552a82721420eb66ff2c7f92eb6ec\"}"},{"name":"selectedFlowPoint","json":"{\"value\":7}"},{"name":"workflowStep","json":"{\"value\":3}"},{"name":"sceneTool","json":"{\"value\":0}"},{"name":"previewMode","json":"{\"value\":2}"},{"name":"hasGeneratedCardPreview","json":"{\"value\":true}"},{"name":"lastGrowthTool","json":"{\"value\":1}"},{"name":"lastGuideTool","json":"{\"value\":0}"},{"name":"lastGroomTool","json":"{\"value\":4}"},{"name":"lodLevel","json":"{\"value\":0}"},{"name":"brushRadius","json":"{\"value\":0.029600000008940698}"},{"name":"brushHardness","json":"{\"value\":1.0}"},{"name":"brushStrength","json":"{\"value\":1.0}"},{"name":"brushRootInfluence","json":"{\"value\":0.28299999237060549}"},{"name":"affectThroughDepth","json":"{\"value\":true}"},{"name":"brushScope","json":"{\"value\":0}"},{"name":"previewQuality","json":"{\"value\":0}"},{"name":"gravityCollision","json":"{\"value\":true}"},{"name":"gravityClearance","json":"{\"value\":0.041019998490810397}"},{"name":"gravityStrength","json":"{\"value\":2.5}"},{"name":"gravitySeparation","json":"{\"value\":0.10100000351667404}"},{"name":"paintValue","json":"{\"value\":1.0}"},{"name":"mirrorPaintX","json":"{\"value\":true}"},{"name":"mirrorCutX","json":"{\"value\":false}"},{"name":"showScalp","json":"{\"value\":false}"},{"name":"showAvatar","json":"{\"value\":true}"},{"name":"showChildren","json":"{\"value\":true}"},{"name":"showChildSplines","json":"{\"value\":true}"},{"name":"showHelpers","json":"{\"value\":true}"},{"name":"showControlPoints","json":"{\"value\":true}"},{"name":"showGuideRoots","json":"{\"value\":false}"},{"name":"showGuideSplines","json":"{\"value\":true}"},{"name":"showCardWireframe","json":"{\"value\":true}"},{"name":"depthTestGuides","json":"{\"value\":true}"},{"name":"showFreezeMask","json":"{\"value\":false}"},{"name":"rootHandleScale","json":"{\"value\":1.0}"},{"name":"hiddenAvatarSlots","json":"{\"value\":[\"Beard_Gunslinger_slot\",\"male_shoes_tall_slot\",\"male_shorts_black_cotton_slot\",\"male_tshirt_white_slot\",\"UMA30_InnerMouth\"]}"},{"name":"guideGeneration","json":"{\"value\":{\"guideCount\":404,\"pointsPerGuide\":4,\"defaultLength\":0.05000000074505806,\"minimumRootSpacing\":0.0008999999845400453,\"rootUniformity\":0.8460000157356262,\"surfaceFlow\":0.5690000057220459,\"lift\":0.8500000238418579,\"seed\":1737,\"maximumAttemptsPerGuide\":32}}"}]}'
+    json: '{"fields":[{"name":"selectedFlowSplineId","json":"{\"value\":\"d84552a82721420eb66ff2c7f92eb6ec\"}"},{"name":"selectedFlowPoint","json":"{\"value\":7}"},{"name":"workflowStep","json":"{\"value\":4}"},{"name":"sceneTool","json":"{\"value\":0}"},{"name":"previewMode","json":"{\"value\":2}"},{"name":"hasGeneratedCardPreview","json":"{\"value\":true}"},{"name":"lastGrowthTool","json":"{\"value\":1}"},{"name":"lastGuideTool","json":"{\"value\":0}"},{"name":"lastGroomTool","json":"{\"value\":0}"},{"name":"lodLevel","json":"{\"value\":0}"},{"name":"brushRadius","json":"{\"value\":0.017000000923871995}"},{"name":"brushHardness","json":"{\"value\":1.0}"},{"name":"brushStrength","json":"{\"value\":1.0}"},{"name":"brushRootInfluence","json":"{\"value\":0.28299999237060549}"},{"name":"affectThroughDepth","json":"{\"value\":true}"},{"name":"brushScope","json":"{\"value\":0}"},{"name":"previewQuality","json":"{\"value\":0}"},{"name":"gravityCollision","json":"{\"value\":true}"},{"name":"gravityClearance","json":"{\"value\":0.041019998490810397}"},{"name":"gravityStrength","json":"{\"value\":1.3300000429153443}"},{"name":"gravitySeparation","json":"{\"value\":0.10100000351667404}"},{"name":"paintValue","json":"{\"value\":1.0}"},{"name":"mirrorPaintX","json":"{\"value\":true}"},{"name":"mirrorCutX","json":"{\"value\":false}"},{"name":"showScalp","json":"{\"value\":true}"},{"name":"showAvatar","json":"{\"value\":true}"},{"name":"showChildren","json":"{\"value\":true}"},{"name":"showChildSplines","json":"{\"value\":false}"},{"name":"showHelpers","json":"{\"value\":true}"},{"name":"showControlPoints","json":"{\"value\":true}"},{"name":"showGuideRoots","json":"{\"value\":false}"},{"name":"showGuideSplines","json":"{\"value\":false}"},{"name":"showCardWireframe","json":"{\"value\":false}"},{"name":"depthTestGuides","json":"{\"value\":true}"},{"name":"showFreezeMask","json":"{\"value\":false}"},{"name":"rootHandleScale","json":"{\"value\":1.0}"},{"name":"hiddenAvatarSlots","json":"{\"value\":[\"Beard_Gunslinger_slot\",\"male_shoes_tall_slot\",\"male_shorts_black_cotton_slot\",\"male_tshirt_white_slot\",\"UMA30_InnerMouth\"]}"},{"name":"guideGeneration","json":"{\"value\":{\"guideCount\":404,\"pointsPerGuide\":4,\"defaultLength\":0.05000000074505806,\"minimumRootSpacing\":0.0008999999845400453,\"rootUniformity\":0.8460000157356262,\"surfaceFlow\":0.5690000057220459,\"lift\":0.8500000238418579,\"seed\":1737,\"maximumAttemptsPerGuide\":32}}"}]}'
   - key: stage:GlobalObjectId_V1-3-4508f9c2e8436d0429fd2991b3b88ed2-11400000-0
     json: '{"fields":[{"name":"selectedFlowSplineId","json":"{\"value\":\"d84552a82721420eb66ff2c7f92eb6ec\"}"},{"name":"selectedFlowPoint","json":"{\"value\":7}"},{"name":"activeNodeKey","json":"{\"value\":\"Modifier:2639e0bb1379455e9ff54986872ea6eb\"}"},{"name":"workflowStep","json":"{\"value\":3}"},{"name":"sceneTool","json":"{\"value\":0}"},{"name":"previewMode","json":"{\"value\":2}"},{"name":"hasGeneratedCardPreview","json":"{\"value\":true}"},{"name":"lastGrowthTool","json":"{\"value\":1}"},{"name":"lastGuideTool","json":"{\"value\":0}"},{"name":"lastGroomTool","json":"{\"value\":4}"},{"name":"activeGroupId","json":"{\"value\":\"7e792c271d004b26944938bd5a7a47fa\"}"},{"name":"activeMapId","json":"{\"value\":\"c04e87a2167040cf8a6ce4af0ee78954\"}"},{"name":"activeGuideId","json":"{\"value\":\"\"}"},{"name":"activeLayerId","json":"{\"value\":\"6de97dd11b154e2c94dc0ac1150c6420\"}"},{"name":"activeModifierId","json":"{\"value\":\"2639e0bb1379455e9ff54986872ea6eb\"}"},{"name":"activeHelperId","json":"{\"value\":\"\"}"},{"name":"activeGuidePoint","json":"{\"value\":-1}"},{"name":"lodLevel","json":"{\"value\":0}"},{"name":"brushRadius","json":"{\"value\":0.029600000008940698}"},{"name":"brushHardness","json":"{\"value\":1.0}"},{"name":"brushStrength","json":"{\"value\":1.0}"},{"name":"brushRootInfluence","json":"{\"value\":0.28299999237060549}"},{"name":"affectThroughDepth","json":"{\"value\":true}"},{"name":"brushScope","json":"{\"value\":0}"},{"name":"previewQuality","json":"{\"value\":0}"},{"name":"selectedGuideIds","json":"{\"value\":[]}"},{"name":"isolateSelectedGuides","json":"{\"value\":false}"},{"name":"soloLayerId","json":"{\"value\":\"\"}"},{"name":"gravityCollision","json":"{\"value\":true}"},{"name":"gravityClearance","json":"{\"value\":0.041019998490810397}"},{"name":"gravityStrength","json":"{\"value\":2.5}"},{"name":"gravitySeparation","json":"{\"value\":0.10100000351667404}"},{"name":"paintValue","json":"{\"value\":1.0}"},{"name":"mirrorPaintX","json":"{\"value\":true}"},{"name":"mirrorCutX","json":"{\"value\":false}"},{"name":"showScalp","json":"{\"value\":false}"},{"name":"showAvatar","json":"{\"value\":true}"},{"name":"showChildren","json":"{\"value\":true}"},{"name":"showChildSplines","json":"{\"value\":true}"},{"name":"showHelpers","json":"{\"value\":true}"},{"name":"showControlPoints","json":"{\"value\":true}"},{"name":"showGuideRoots","json":"{\"value\":false}"},{"name":"showGuideSplines","json":"{\"value\":true}"},{"name":"showCardWireframe","json":"{\"value\":true}"},{"name":"depthTestGuides","json":"{\"value\":true}"},{"name":"showFreezeMask","json":"{\"value\":false}"},{"name":"rootHandleScale","json":"{\"value\":1.0}"},{"name":"hiddenAvatarSlots","json":"{\"value\":[\"Beard_Gunslinger_slot\",\"male_shoes_tall_slot\",\"male_shorts_black_cotton_slot\",\"male_tshirt_white_slot\",\"UMA30_InnerMouth\"]}"},{"name":"guideGeneration","json":"{\"value\":{\"guideCount\":404,\"pointsPerGuide\":4,\"defaultLength\":0.05000000074505806,\"minimumRootSpacing\":0.0008999999845400453,\"rootUniformity\":0.8460000157356262,\"surfaceFlow\":0.5690000057220459,\"lift\":0.8500000238418579,\"seed\":1737,\"maximumAttemptsPerGuide\":32}}"},{"name":"selectedVertices","json":"{\"value\":[]}"}]}'
   - key: atlas-panel
@@ -49,50 +49,381 @@ MonoBehaviour:
     json: '{"fields":[{"name":"previewPage","json":"{\"value\":0}"},{"name":"previewScroll","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"settingsScroll","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"visibilitySearch","json":"{\"value\":\"\"}"},{"name":"recipeVisibilityExpanded","json":"{\"value\":true}"},{"name":"udimVisibilityExpanded","json":"{\"value\":true}"},{"name":"slotVisibilityExpanded","json":"{\"value\":true}"},{"name":"initialPlacementDone","json":"{\"value\":true}"}]}'
   - key: preview-visibility:GlobalObjectId_V1-3-4508f9c2e8436d0429fd2991b3b88ed2-11400000-0
     json: '{"fields":[{"name":"inspectorPage","json":"{\"value\":2}"},{"name":"initialPlacementDone","json":"{\"value\":true}"},{"name":"explorerScroll","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"detailsScroll","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"visibilitySearch","json":"{\"value\":\"\"}"},{"name":"recipeVisibilityExpanded","json":"{\"value\":true}"},{"name":"udimVisibilityExpanded","json":"{\"value\":true}"},{"name":"slotVisibilityExpanded","json":"{\"value\":true}"},{"name":"cardGeometryExpanded","json":"{\"value\":true}"},{"name":"childSettingsExpanded","json":"{\"value\":true}"},{"name":"atlasMapsExpanded","json":"{\"value\":false}"},{"name":"guideSearch","json":"{\"value\":\"\"}"},{"name":"guidePage","json":"{\"value\":0}"},{"name":"guideLibraryExpanded","json":"{\"value\":false}"},{"name":"authoredGuidesExpanded","json":"{\"value\":true}"},{"name":"growthAdvancedExpanded","json":"{\"value\":false}"},{"name":"collapsedLayerIds","json":"{\"value\":[]}"},{"name":"layerStackScroll","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"}]}'
+  - key: stage:GlobalObjectId_V1-3-9402b82397e57a2418a343b826725781-11400000-0
+    json: '{"fields":[{"name":"selectedFlowSplineId","json":"{\"value\":\"d84552a82721420eb66ff2c7f92eb6ec\"}"},{"name":"selectedFlowPoint","json":"{\"value\":7}"},{"name":"activeNodeKey","json":"{\"value\":\"Population:3b908ce74f724d0a951c022272dd14a3\"}"},{"name":"workflowStep","json":"{\"value\":4}"},{"name":"sceneTool","json":"{\"value\":0}"},{"name":"previewMode","json":"{\"value\":2}"},{"name":"hasGeneratedCardPreview","json":"{\"value\":true}"},{"name":"lastGrowthTool","json":"{\"value\":1}"},{"name":"lastGuideTool","json":"{\"value\":0}"},{"name":"lastGroomTool","json":"{\"value\":0}"},{"name":"activeGroupId","json":"{\"value\":\"dc6c7673c62a4951b80e7fbd12271a3a\"}"},{"name":"activeMapId","json":"{\"value\":\"addbc47bfaaa4f49809771efbfcb6378\"}"},{"name":"activeGuideId","json":"{\"value\":\"\"}"},{"name":"activeLayerId","json":"{\"value\":\"4a816d98a4984f4ea412d9509c62474d\"}"},{"name":"activeModifierId","json":"{\"value\":\"\"}"},{"name":"activeHelperId","json":"{\"value\":\"\"}"},{"name":"activeGuidePoint","json":"{\"value\":-1}"},{"name":"lodLevel","json":"{\"value\":0}"},{"name":"brushRadius","json":"{\"value\":0.017000000923871995}"},{"name":"brushHardness","json":"{\"value\":1.0}"},{"name":"brushStrength","json":"{\"value\":1.0}"},{"name":"brushRootInfluence","json":"{\"value\":0.28299999237060549}"},{"name":"affectThroughDepth","json":"{\"value\":true}"},{"name":"brushScope","json":"{\"value\":0}"},{"name":"previewQuality","json":"{\"value\":0}"},{"name":"selectedGuideIds","json":"{\"value\":[]}"},{"name":"isolateSelectedGuides","json":"{\"value\":false}"},{"name":"soloLayerId","json":"{\"value\":\"\"}"},{"name":"gravityCollision","json":"{\"value\":true}"},{"name":"gravityClearance","json":"{\"value\":0.041019998490810397}"},{"name":"gravityStrength","json":"{\"value\":1.3300000429153443}"},{"name":"gravitySeparation","json":"{\"value\":0.10100000351667404}"},{"name":"paintValue","json":"{\"value\":1.0}"},{"name":"mirrorPaintX","json":"{\"value\":true}"},{"name":"mirrorCutX","json":"{\"value\":false}"},{"name":"showScalp","json":"{\"value\":true}"},{"name":"showAvatar","json":"{\"value\":true}"},{"name":"showChildren","json":"{\"value\":true}"},{"name":"showChildSplines","json":"{\"value\":false}"},{"name":"showHelpers","json":"{\"value\":true}"},{"name":"showControlPoints","json":"{\"value\":true}"},{"name":"showGuideRoots","json":"{\"value\":false}"},{"name":"showGuideSplines","json":"{\"value\":false}"},{"name":"showCardWireframe","json":"{\"value\":false}"},{"name":"depthTestGuides","json":"{\"value\":true}"},{"name":"showFreezeMask","json":"{\"value\":false}"},{"name":"rootHandleScale","json":"{\"value\":1.0}"},{"name":"hiddenAvatarSlots","json":"{\"value\":[\"Beard_Gunslinger_slot\",\"male_shoes_tall_slot\",\"male_shorts_black_cotton_slot\",\"male_tshirt_white_slot\",\"UMA30_InnerMouth\"]}"},{"name":"guideGeneration","json":"{\"value\":{\"guideCount\":404,\"pointsPerGuide\":4,\"defaultLength\":0.05000000074505806,\"minimumRootSpacing\":0.0008999999845400453,\"rootUniformity\":0.8460000157356262,\"surfaceFlow\":0.5690000057220459,\"lift\":0.8500000238418579,\"seed\":1737,\"maximumAttemptsPerGuide\":32}}"},{"name":"selectedVertices","json":"{\"value\":[]}"}]}'
+  - key: workspace:GlobalObjectId_V1-3-9402b82397e57a2418a343b826725781-11400000-0
+    json: '{"fields":[{"name":"initialPlacementDone","json":"{\"value\":true}"},{"name":"explorerScroll","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"detailsScroll","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"cardGeometryExpanded","json":"{\"value\":true}"},{"name":"childSettingsExpanded","json":"{\"value\":true}"},{"name":"atlasMapsExpanded","json":"{\"value\":true}"},{"name":"guideSearch","json":"{\"value\":\"\"}"},{"name":"guidePage","json":"{\"value\":0}"},{"name":"guideLibraryExpanded","json":"{\"value\":false}"},{"name":"authoredGuidesExpanded","json":"{\"value\":true}"}]}'
+  - key: nodes:GlobalObjectId_V1-3-9402b82397e57a2418a343b826725781-11400000-0
+    json: '{"fields":[{"name":"nodeScroll","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"nodeSearch","json":"{\"value\":\"\"}"},{"name":"collapsedNodeKeys","json":"{\"value\":[]}"},{"name":"expandedOptionalMapKeys","json":"{\"value\":[]}"},{"name":"initialPlacementDone","json":"{\"value\":true}"}]}'
+  - key: preview:GlobalObjectId_V1-3-9402b82397e57a2418a343b826725781-11400000-0
+    json: '{"fields":[{"name":"previewPage","json":"{\"value\":0}"},{"name":"previewScroll","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"settingsScroll","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"visibilitySearch","json":"{\"value\":\"\"}"},{"name":"recipeVisibilityExpanded","json":"{\"value\":true}"},{"name":"udimVisibilityExpanded","json":"{\"value\":true}"},{"name":"slotVisibilityExpanded","json":"{\"value\":true}"},{"name":"initialPlacementDone","json":"{\"value\":true}"}]}'
+  - key: preview-visibility:GlobalObjectId_V1-3-9402b82397e57a2418a343b826725781-11400000-0
+    json: '{"fields":[{"name":"initialPlacementDone","json":"{\"value\":true}"},{"name":"explorerScroll","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"detailsScroll","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"cardGeometryExpanded","json":"{\"value\":true}"},{"name":"childSettingsExpanded","json":"{\"value\":true}"},{"name":"atlasMapsExpanded","json":"{\"value\":false}"},{"name":"guideSearch","json":"{\"value\":\"\"}"},{"name":"guidePage","json":"{\"value\":0}"},{"name":"guideLibraryExpanded","json":"{\"value\":false}"},{"name":"authoredGuidesExpanded","json":"{\"value\":true}"}]}'
+  - key: atlas-panel:GlobalObjectId_V1-3-4483faf9ca6876a43a56cff7da547b45-11400000-0
+    json: '{"fields":[{"name":"selectedId","json":"{\"value\":\"1b77406bc5f44294a19295593a80e259\"}"},{"name":"channel","json":"{\"value\":0}"},{"name":"checkerboard","json":"{\"value\":true}"},{"name":"checkerLight","json":"{\"value\":{\"r\":0.75,\"g\":0.75,\"b\":0.75,\"a\":1.0}}"},{"name":"checkerDark","json":"{\"value\":{\"r\":0.550000011920929,\"g\":0.550000011920929,\"b\":0.550000011920929,\"a\":1.0}}"},{"name":"solidBackground","json":"{\"value\":{\"r\":0.2199999988079071,\"g\":0.2199999988079071,\"b\":0.2199999988079071,\"a\":1.0}}"},{"name":"checkerSize","json":"{\"value\":12.0}"},{"name":"backgroundExpanded","json":"{\"value\":false}"},{"name":"snapToPixels","json":"{\"value\":true}"},{"name":"showOutlines","json":"{\"value\":true}"},{"name":"pixelUnits","json":"{\"value\":false}"},{"name":"zoom","json":"{\"value\":2.611696720123291}"},{"name":"pan","json":"{\"value\":{\"x\":21.77794647216797,\"y\":22.908958435058595}}"},{"name":"listScroll","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"tool","json":"{\"value\":0}"},{"name":"materialPreviewExpanded","json":"{\"value\":true}"},{"name":"previewYaw","json":"{\"value\":-3.0}"}]}'
   lastSetup:
-    profile: {fileID: 11400000, guid: 11ad5be070d4c5e4cbce2746fca7acc1, type: 2}
-    atlas: {fileID: 11400000, guid: 71e238d2f46fca340ba7c803a2ce4be9, type: 2}
-    resourceRevision: c48796d8fb0088c6358c29750b64fedb:2061a420e226d7227411d62c6f556c88
+    profile: {fileID: 11400000, guid: 32bd861f1aa0fb440b89be0f083e77c0, type: 2}
+    atlas: {fileID: 11400000, guid: 4483faf9ca6876a43a56cff7da547b45, type: 2}
+    resourceRevision: 0072df84253b7ea564c9fb0504546254:03f254cb5b3706603d1ae1fc04f77173
     children:
-      childrenPerGuide: 5
+      childrenPerGuide: 3
       includeGuideCard: 1
       rootSpread: 0.01
       clump: 0.25
-      lengthVariation: 0.154
-      widthVariation: 0.177
+      lengthVariation: 0.05
+      widthVariation: 0.05
       rollVariation: 0.1
       seed: 12345
       interpolation: 1
-    rootEmbedDepth: 0.00209
+    generation:
+      enabled: 1
+      clumps:
+      - id: 3b908ce74f724d0a951c022272dd14a3
+        name: Primary Clumps
+        enabled: 1
+        count: 430
+        minimumSpacing: 0.003
+        uniformity: 0.35
+        neighbors: 6
+        minimumNormalDot: 0.2
+        influenceRadius: 0.2
+        partMapId: 
+        surfaceConform: 1
+        clump: 0.3
+        clumpAlongStrand:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.5
+            value: 0.45
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        rootInfluence: 0.3
+        clumpSpread: 0
+        splitTips: 0
+        lengthVariation: 0.08
+        widthVariation: 0.15
+        tiltVariation: 8
+        parentCoherence: 0.6
+        flyawayFraction: 0.03
+        flyawayAmplitude: 0.003
+        seed: 31
+        shapeSamples: 9
+        hairline:
+          enabled: 0
+          distance: 0.02
+          edgeLength: 0.6
+          edgeWidth: 0.4
+          edgeDensity: 0.65
+          alignFacing: 0.7
+          inwardLean: 0.15
+        modifiers:
+        - id: ed60d93676504232abede7fa371a47e9
+          name: Soft clump bend
+          type: 11
+          domain: 1
+          enabled: 1
+          weight: 1
+          amount: 0.0015
+          vector: {x: 0, y: 1, z: 0}
+          seed: 31
+          maskMapId: 
+          rootToTip:
+            serializedVersion: 2
+            m_Curve:
+            - serializedVersion: 3
+              time: 0
+              value: 1
+              inSlope: 0
+              outSlope: 0
+              tangentMode: 0
+              weightedMode: 0
+              inWeight: 0
+              outWeight: 0
+            - serializedVersion: 3
+              time: 1
+              value: 1
+              inSlope: 0
+              outSlope: 0
+              tangentMode: 0
+              weightedMode: 0
+              inWeight: 0
+              outWeight: 0
+            m_PreInfinity: 2
+            m_PostInfinity: 2
+            m_RotationOrder: 4
+          mask:
+            useLength: 0
+            lengthRange: {x: 0, y: 0.2}
+            useHairline: 0
+            hairlineRange: {x: 0, y: 0.03}
+            randomVariation: 0
+            parentCoherence: 0
+            invert: 0
+            remap:
+              serializedVersion: 2
+              m_Curve:
+              - serializedVersion: 3
+                time: 0
+                value: 0
+                inSlope: 0
+                outSlope: 1
+                tangentMode: 0
+                weightedMode: 0
+                inWeight: 0
+                outWeight: 0
+              - serializedVersion: 3
+                time: 1
+                value: 1
+                inSlope: 1
+                outSlope: 0
+                tangentMode: 0
+                weightedMode: 0
+                inWeight: 0
+                outWeight: 0
+              m_PreInfinity: 2
+              m_PostInfinity: 2
+              m_RotationOrder: 4
+          noiseFrequency: 20
+          noiseParentCoherence: 0
+          helperId: 
+          clumpRadius: 0.03
+          rootInfluence: 0.2
+          liftNormalMode: 0
+          gravityStrength: 2.5
+          gravitySeparation: 0.1
+          gravityCollision: 1
+          gravityClearance: 0.002
+          gravityDirection: {x: 0, y: -1, z: 0}
+          useWorldGravity: 1
+          flowSplines: []
+          flowRadius: 0.15
+          flowNeighbors: 4
+          flowDirection: 1
+          flowFacing: 1
+          flowBank: 0
+          flowLift: 10
+          flowPointSpacing: 0.008
+          flowMirrorDrawing: 0
+          flowShowPaths: 1
+      cards:
+        id: d496328a25c04cfe945ed1c6030bf8c6
+        name: Fine Hair Cards
+        enabled: 1
+        count: 4500
+        minimumSpacing: 0.001
+        uniformity: 0.35
+        neighbors: 3
+        minimumNormalDot: 0.2
+        influenceRadius: 0.2
+        partMapId: 
+        surfaceConform: 1
+        clump: 0.8
+        clumpAlongStrand:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.5
+            value: 0.45
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        rootInfluence: 0.3
+        clumpSpread: 0
+        splitTips: 0
+        lengthVariation: 0.08
+        widthVariation: 0.2
+        tiltVariation: 8
+        parentCoherence: 0.7
+        flyawayFraction: 0.03
+        flyawayAmplitude: 0.003
+        seed: 3
+        shapeSamples: 9
+        hairline:
+          enabled: 1
+          distance: 0.02
+          edgeLength: 0.6
+          edgeWidth: 0.4
+          edgeDensity: 0.65
+          alignFacing: 0.7
+          inwardLean: 0.15
+        modifiers:
+        - id: fd5d62f5144b4247a7f3ace49c0179ec
+          name: Fine strand variation
+          type: 11
+          domain: 1
+          enabled: 1
+          weight: 1
+          amount: 0.0008
+          vector: {x: 0, y: 1, z: 0}
+          seed: 3
+          maskMapId: 
+          rootToTip:
+            serializedVersion: 2
+            m_Curve:
+            - serializedVersion: 3
+              time: 0
+              value: 1
+              inSlope: 0
+              outSlope: 0
+              tangentMode: 0
+              weightedMode: 0
+              inWeight: 0
+              outWeight: 0
+            - serializedVersion: 3
+              time: 1
+              value: 1
+              inSlope: 0
+              outSlope: 0
+              tangentMode: 0
+              weightedMode: 0
+              inWeight: 0
+              outWeight: 0
+            m_PreInfinity: 2
+            m_PostInfinity: 2
+            m_RotationOrder: 4
+          mask:
+            useLength: 0
+            lengthRange: {x: 0, y: 0.2}
+            useHairline: 0
+            hairlineRange: {x: 0, y: 0.03}
+            randomVariation: 0
+            parentCoherence: 0
+            invert: 0
+            remap:
+              serializedVersion: 2
+              m_Curve:
+              - serializedVersion: 3
+                time: 0
+                value: 0
+                inSlope: 0
+                outSlope: 1
+                tangentMode: 0
+                weightedMode: 0
+                inWeight: 0
+                outWeight: 0
+              - serializedVersion: 3
+                time: 1
+                value: 1
+                inSlope: 1
+                outSlope: 0
+                tangentMode: 0
+                weightedMode: 0
+                inWeight: 0
+                outWeight: 0
+              m_PreInfinity: 2
+              m_PostInfinity: 2
+              m_RotationOrder: 4
+          noiseFrequency: 45
+          noiseParentCoherence: 0.25
+          helperId: 
+          clumpRadius: 0.03
+          rootInfluence: 0.2
+          liftNormalMode: 0
+          gravityStrength: 2.5
+          gravitySeparation: 0.1
+          gravityCollision: 1
+          gravityClearance: 0.002
+          gravityDirection: {x: 0, y: -1, z: 0}
+          useWorldGravity: 1
+          flowSplines: []
+          flowRadius: 0.15
+          flowNeighbors: 4
+          flowDirection: 1
+          flowFacing: 1
+          flowBank: 0
+          flowLift: 10
+          flowPointSpacing: 0.008
+          flowMirrorDrawing: 0
+          flowShowPaths: 1
+      scalp:
+        enabled: 1
+        color: {r: 0.08, g: 0.035, b: 0.012, a: 1}
+        strength: 0.9
+        edgeFade: 0.012
+        preserveAlpha: 1
+        meshModifier: {fileID: 11400000, guid: d3523caf066df8e4086c396fee37e795, type: 2}
+        bindingTopology: f4caa8dd98c0c86e
+        slots:
+        - slotName: PointyReviewBody
+          sourceVertexStart: 0
+          vertexCount: 12527
+    rootEmbedDepth: 0.001
     lodImportance: 1
     role: 0
     visible: 1
     enabled: 1
     color: {r: 0.22, g: 0.65, b: 1, a: 1}
-    regionSelection: 1
-    regionIds:
-    - 7c8dc5db8e6e48f3a12fafb9b29d5c2f
-    - ea2ad450fefa45a088690ce2f8d8b709
-    - 84623414d07b4bacb0a173d4e356b22d
+    regionSelection: 0
+    regionIds: []
     lods:
-    - id: f2818fd3ff9248eb8f6da1b96cdb29d2
+    - id: 7c9c737eecff4be3be3e4fb23129ade4
       name: LOD 0
       level: 0
       screenRelativeHeight: 0.6
       cardFraction: 1
       samplesPerCard: 12
-      useProfileSamples: 0
+      useProfileSamples: 1
       maximumTubeSides: 8
       reductionMode: 0
       reduceBones: 0
       locked: 0
     bake:
       outputFolder: Assets/UMAProjectData/HairCards/Generated
-      assetName: MaleHuman
+      assetName: HairCards
       createMesh: 1
-      createSlot: 1
-      createOverlay: 1
-      createWardrobeRecipe: 1
+      createSlot: 0
+      createOverlay: 0
+      createWardrobeRecipe: 0
       updateGlobalLibrary: 1
       overwriteExisting: 1
       umaMaterial: {fileID: 0}
@@ -119,6 +450,84 @@ MonoBehaviour:
       rollVariation: 0.1
       seed: 12345
       interpolation: 1
+    generation:
+      enabled: 0
+      clumps: []
+      cards:
+        id: 
+        name: Final cards
+        enabled: 1
+        count: 4500
+        minimumSpacing: 0.001
+        uniformity: 0.35
+        neighbors: 3
+        minimumNormalDot: 0.2
+        influenceRadius: 0.2
+        partMapId: 
+        surfaceConform: 1
+        clump: 0.75
+        clumpAlongStrand:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.5
+            value: 0.45
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        rootInfluence: 0.3
+        clumpSpread: 0
+        splitTips: 0
+        lengthVariation: 0.08
+        widthVariation: 0.15
+        tiltVariation: 8
+        parentCoherence: 0.6
+        flyawayFraction: 0.03
+        flyawayAmplitude: 0.003
+        seed: 1729
+        shapeSamples: 16
+        hairline:
+          enabled: 0
+          distance: 0.02
+          edgeLength: 0.6
+          edgeWidth: 0.4
+          edgeDensity: 0.65
+          alignFacing: 0.7
+          inwardLean: 0.15
+        modifiers: []
+      scalp:
+        enabled: 0
+        color: {r: 0.16, g: 0.09, b: 0.04, a: 1}
+        strength: 0.7
+        edgeFade: 0.012
+        preserveAlpha: 1
+        meshModifier: {fileID: 0}
+        bindingTopology: 
+        slots: []
     rootEmbedDepth: 0
     lodImportance: 0
     role: 0

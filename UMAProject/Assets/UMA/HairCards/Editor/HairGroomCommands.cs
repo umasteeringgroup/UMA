@@ -240,6 +240,7 @@ namespace UMA.HairCards.Editor
                 HairAtlasProfileAsset source = group.atlas;
                 HairAtlasProfileAsset copy = ScriptableObject.CreateInstance<HairAtlasProfileAsset>();
                 copy.albedo = source.albedo; copy.normal = source.normal; copy.mask = source.mask; copy.material = source.material;
+                copy.secondPassMaterial = source.secondPassMaterial; copy.sharedColorTable = source.sharedColorTable; copy.sharedColorIndex = source.sharedColorIndex;
                 List<string> selected = new List<string>();
                 foreach (HairAtlasRegion region in source.regions)
                 {
@@ -257,6 +258,8 @@ namespace UMA.HairCards.Editor
                 HairCardProfileAsset source = group.profile;
                 HairCardProfileAsset copy = ScriptableObject.CreateInstance<HairCardProfileAsset>();
                 copy.Configure(source.Shape, source.DefaultWidth, source.TipWidth, source.SamplesPerCard, source.TubeSides, source.DoubleSided);
+                copy.ConfigureRibbon(source.RibbonSpans, source.RibbonCamber, source.AdaptiveSampling, source.MaximumSegmentLength, source.MaximumSegmentAngle);
+                copy.ConfigureVertexColors(source.UseVertexColorGradient, source.RootVertexColor, source.TipVertexColor, source.RootColorSegments);
                 copy.WidthAlongCard.keys = source.WidthAlongCard.keys;
                 copy.WidthAlongCard.preWrapMode = source.WidthAlongCard.preWrapMode;
                 copy.WidthAlongCard.postWrapMode = source.WidthAlongCard.postWrapMode;
@@ -670,7 +673,7 @@ namespace UMA.HairCards.Editor
             }
         }
 
-        private static float DefaultModifierAmount(HairModifierType type)
+        internal static float DefaultModifierAmount(HairModifierType type)
         {
             switch (type)
             {

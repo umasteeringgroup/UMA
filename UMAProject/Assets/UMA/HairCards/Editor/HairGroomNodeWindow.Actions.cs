@@ -17,11 +17,12 @@ namespace UMA.HairCards.Editor
                 if (GUILayout.Button("+ Group", EditorStyles.toolbarButton)) ShowAddGroupMenu(stage);
                 using (new EditorGUI.DisabledScope(group == null || group.locked))
                     if (GUILayout.Button("+ Sculpt Pass", EditorStyles.toolbarButton)) AddSculptPass(stage, group);
-                using (new EditorGUI.DisabledScope(node?.Layer == null || node.Locked))
+                using (new EditorGUI.DisabledScope(node == null || (node.Layer == null && node.Population == null) || node.Locked))
                     if (GUILayout.Button("+ Modifier", EditorStyles.toolbarButton)) ShowModifierMenu(stage);
             }
             if (node == null) return;
-            if (node.Kind == HairGroomNodeKind.Layer || node.Kind == HairGroomNodeKind.Modifier || node.Kind == HairGroomNodeKind.Groom)
+            HairGenerationEditor.DrawTreeActions(stage, node);
+            if (node.Kind == HairGroomNodeKind.Layer || (node.Kind == HairGroomNodeKind.Modifier && node.Layer != null) || node.Kind == HairGroomNodeKind.Groom)
             {
                 EditorGUILayout.HelpBox(stage.SculptEditingStatus, MessageType.Info);
                 if (stage.IsLayerEditing)
@@ -71,7 +72,7 @@ namespace UMA.HairCards.Editor
                         var pass = HairGroomCommands.ImportLegacyModifiers(stage.Groom, group);
                         if (pass != null) stage.SelectNode(HairGroomNodes.Key(HairGroomNodeKind.Layer, pass.Id));
                     }
-            if (node.CanReorder || node.Kind == HairGroomNodeKind.Group || node.Kind == HairGroomNodeKind.Constraint)
+            if (node.Population == null && (node.CanReorder || node.Kind == HairGroomNodeKind.Group || node.Kind == HairGroomNodeKind.Constraint))
                 using (new EditorGUILayout.HorizontalScope())
                 {
                     if (node.CanReorder)
@@ -140,6 +141,7 @@ namespace UMA.HairCards.Editor
         internal static bool MoveSelected(HairCardStage stage, HairGroomNode node, int offset)
         {
             if (stage?.Groom == null || node == null || !node.CanReorder || node.Locked || stage.FindNode(node.Key) != node) return false;
+            if (node.Population != null) return HairGenerationEditor.Move(stage, node, offset);
             bool changed = HairGroomCommands.EditStack(stage.Groom, node.Group, node.Modifier?.Id ?? node.Layer.Id, node.Modifier == null, offset);
             if (changed) stage.SelectNode(node.Key);
             return changed;
@@ -148,6 +150,7 @@ namespace UMA.HairCards.Editor
         internal static bool DuplicateNode(HairCardStage stage, HairGroomNode node)
         {
             if (stage?.Groom == null || node == null || !node.CanReorder || node.Locked || stage.FindNode(node.Key) != node) return false;
+            if (node.Population != null) return HairGenerationEditor.Duplicate(stage, node);
             string id = node.Modifier == null ? HairGroomCommands.DuplicateLayer(stage.Groom, node.Group, node.Layer)?.Id :
                 HairGroomCommands.DuplicateModifier(stage.Groom, node.Group, node.Layer, node.Modifier)?.Id;
             if (id == null) return false;
@@ -164,6 +167,7 @@ namespace UMA.HairCards.Editor
             Func<string, string, string, string, bool> confirm = null)
         {
             if (!CanRemoveNode(stage, node)) return false;
+            if (node.Population != null) return HairGenerationEditor.Remove(stage, node, confirm);
             if (node.Kind == HairGroomNodeKind.Group)
             {
                 if (!HairGroomCommands.RemoveGroup(stage.Groom, node.Group.Id)) return false;
@@ -242,6 +246,7 @@ namespace UMA.HairCards.Editor
 
         internal static void ShowModifierMenu(HairCardStage stage)
         {
+            if (stage.SelectedNode?.Population != null) { HairGenerationEditor.ShowModifierMenu(stage); return; }
             HairGroup group = stage.ActiveGroup;
             HairSculptLayer layer = stage.ActiveLayer;
             if (layer == null || layer.locked || group.locked) return;

@@ -28,6 +28,7 @@ namespace UMA.HairCards.Editor
             public HairAtlasProfileAsset atlas;
             public string resourceRevision;
             public HairChildSettings children;
+            public HairGenerationPipeline generation;
             public float rootEmbedDepth, lodImportance;
             public HairGroupRole role;
             public bool visible, enabled;
@@ -116,7 +117,7 @@ namespace UMA.HairCards.Editor
                 profile = EditorUtility.IsPersistent(group.profile) ? group.profile : null,
                 atlas = EditorUtility.IsPersistent(group.atlas) ? group.atlas : null,
                 resourceRevision = ResourceRevision(group.profile) + ":" + ResourceRevision(group.atlas),
-                children = group.children, rootEmbedDepth = group.rootEmbedDepth, lodImportance = group.lodImportance,
+                children = group.children, generation = group.generation, rootEmbedDepth = group.rootEmbedDepth, lodImportance = group.lodImportance,
                 role = group.role, color = group.color, visible = group.visible, enabled = group.enabled,
                 regionSelection = group.atlasRegionSelection,
                 regionIds = group.atlasRegionIds, lods = groom.Lods, bake = groom.BakeSettings,
@@ -140,6 +141,7 @@ namespace UMA.HairCards.Editor
             SetupDefaults setup = JsonUtility.FromJson<SetupDefaults>(JsonUtility.ToJson(lastSetup));
             HairGroup group = groom.Groups[0];
             group.children = setup.children ?? new HairChildSettings();
+            group.generation = setup.generation?.DuplicateForNewGroom() ?? new HairGenerationPipeline();
             group.rootEmbedDepth = setup.rootEmbedDepth; group.lodImportance = setup.lodImportance;
             group.role = setup.role; group.color = setup.color;
             group.visible = setup.visible; group.enabled = setup.enabled;
@@ -181,6 +183,7 @@ namespace UMA.HairCards.Editor
             group.profile = HairCardMenu.CreateDefaultProfileNear(groom);
             group.atlas = HairCardMenu.CreateDefaultAtlasNear(groom);
             group.children = new HairChildSettings();
+            group.generation = new HairGenerationPipeline();
             group.rootEmbedDepth = 0f; group.lodImportance = 1f;
             group.role = HairGroupRole.Coverage; group.color = new HairGroup().color;
             group.visible = true; group.enabled = true;

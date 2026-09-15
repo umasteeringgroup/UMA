@@ -2,11 +2,21 @@
 
 UMA Hair Cards is a guide-driven, non-destructive hair-card authoring system for Unity 6.3 and newer. The editable `HairGroomAsset` is the source of truth; generated meshes and UMA assets are deterministic bake outputs.
 
+For the swept hairstyle, start with the [Swept Clumps guide](SweptClumpsGuide.md).
+
+To attach an existing groom to real UMA body slots for skinning, use **Source & Setup →
+Bind Character / Race**. [The binding workflow](SweptClumpsGuide.md#attach-an-existing-hairstyle-to-a-uma-character)
+preserves authored hair and saves a separate weighted donor and skeleton.
+It covers surface-rooted clump/card populations, local modifier masks, arched ribbons,
+the existing UMA atlas layout, the URP strand shader, and scalp vertex-color Mesh Modifiers.
+See the [validation and performance report](QA/SweptClumpsValidation.md) for measured
+rebuild costs, review coverage and remaining artistic/production limitations.
+
 ## Node workspace
 
 Opening a Hair Card Stage opens three independently dockable Unity editor windows: **Hair Nodes**, **Hair Properties**, and **Hair Preview & Settings**. Hair Nodes is the single workflow navigator: select a typed node to edit its parameters in Properties. Creation, duplication, ordering, removal, validation navigation and stage commands live in the tree window. Properties has no workflow shortcuts, next/back links or second node picker; it retains the selected item's settings and editing actions. The separate Preview & Settings window has **Preview & Visibility** and **Settings** tabs for display, avatar filters, camera focus and resets. Node selection never switches those tabs. Confirmations use popups.
 
-The node tree references existing groom data directly. It does not regenerate guides, replace assets, or change the evaluation algorithms when opened. Each group's branch contains Growth / Density, Optional Maps, Guides, Grooming (sculpt passes and their modifiers), Constraints, Children, and Hair Cards (Geometry & Vertex Colors; Materials & UVs). Shared Helpers, Optimize & LODs, and Validate & Bake have groom-level nodes.
+The node tree references existing groom data directly. It does not regenerate guides or replace assets when opened. Each group's branch contains Growth / Density, Optional Maps, Guides, Grooming (sculpt passes and their modifiers), Constraints, Generate Hair (optional clump populations and final cards), Hair Cards (Geometry & Vertex Colors; Materials & UVs), and Scalp Vertex Shading. Shared Helpers, Optimize & LODs, and Validate & Bake have groom-level nodes.
 
 Select a sculpt pass before grooming or adding a modifier. The Grooming branch is a collection, not an implicit sculpt target. Sculpt passes and their modifiers appear in **forward evaluation order, top to bottom**. Dragging or the Hair Nodes **↑ / ↓** buttons only reorder compatible siblings. Pass moves carry their modifiers. This reverses the old stack's visual presentation, not the saved data or the evaluated result. The **Active** toggle bypasses an applicable node independently of selection; disabled parents and zero opacity still suppress their operations.
 
@@ -30,7 +40,7 @@ Use the Nodes search to locate an operation; matches retain their parent context
 
 **Erase** is the full-width button below the sculpt brush grid. Left-drag its red circle to delete whole guides touched anywhere along their displayed curves. Radius and Edit scope determine which guides are removed; Hardness, Strength, Reverse and Root Influence do not apply. Frozen points (even partially frozen ones) protect the entire guide. Erase removes authored guides and their deltas from every sculpt pass in the active group; generated children/cards refresh after release. This is not a layer-local cut, so hiding the pass cannot restore deleted guides—use Undo, which restores the whole stroke. Erase can target the final modifier result without entering upstream editing. It requires a selected, active, unlocked sculpt pass and is not restored as the active brush when reopening a groom.
 6. Add modifiers beneath a pass; select one to edit its properties. **Spline Flow** draws directional surface paths for hair flow and card facing.
-7. Select **Children** for weighted guide interpolation and variation. Select **Hair Cards** for resources, then its Geometry and Materials & UVs child nodes for detailed setup.
+7. Select **Generate Hair**. Apply **Swept Clumps Preset…** in the tree for independently surface-rooted clumps/cards, or leave Surface generation off to retain children-per-guide. Select **Hair Cards** for resources, then Geometry and Materials & UVs for detailed setup.
 8. Select **Optimize & LODs**, then **Validate & Bake**. Resolve blockers, dry-run, and bake UMA assets.
 
 Full user guide: [Node Workflow & Reference](../Docs/Hair%20Cards%20-%20Quick%20Start.md).
@@ -45,7 +55,7 @@ QA checklist: [Hair Cards Manual QA](QA/HairCardsManualQA.md).
 - Sculpt layers store guide point position, width, and roll deltas.
 - Ordered guide/child modifiers include resample, length, width, smoothing, lift/gravity, flow, clump, parting, curl, wave, noise, twist, helper following, projection, collision, and mirroring.
 - Helpers and constraints are embedded, stable-ID data. Curve rails, attractors, repulsors, cages, collision shapes, part lines, braid rails, and other helper roles share one model.
-- Profiles generate flat double- or single-sided ribbons and tapered polygonal tubes with 3–12 sides.
+- Profiles generate flat or arched ribbons (1–4 cross-width spans), optional adaptive length/turning-based tessellation, and tapered polygonal tubes with 3–12 sides. Explicit second-pass materials remain supported.
 - Atlas profiles provide weighted UV regions, flips, textures, and preview materials.
 
 ## Modifier coordinates
@@ -81,12 +91,13 @@ Both density maps use values in `[0, 1]`. The optional multiplier only attenuate
 repainting a hairline, but it is not required. Map visibility controls the overlay, not the map's effect.
 **Focus current area** continues to frame the primary painted region, independently of the multiplier.
 
-Paint changes affect the next guide-generation preview. They do not move or delete authored guides
-or continuously thin existing cards. **Preview Density-Adjusted Guides**, then **Replace Generated
-Only**, refreshes generated guides; **Accept** adds another batch. Replacement removes those guides'
-previous grooming, so save before replacing a styled layout. Children inherit the accepted layout;
-**Children per Guide** and its map control additional card fill separately. Paint/source/full rebuild
-changes discard stale temporary previews. No legacy fixed-count generation mode is retained.
+Paint never moves or deletes authored guides. **Preview Density-Adjusted Guides**, then
+**Replace Generated Only**, refreshes generated guides; **Accept** adds another batch. Replacement
+removes those guides' previous grooming, so save before replacing a styled layout. With **Surface
+generation enabled**, paint also drives independent clump/card roots and refreshes their footprint
+after the stroke. With Surface generation off, children inherit the accepted guide layout;
+**Children per Guide** and its map control fill. Paint/source/full rebuild changes discard stale
+temporary previews. No legacy fixed-count guide-generation mode is retained.
 
 ## Spline-driven flow and card facing
 
@@ -167,6 +178,13 @@ For component-driven use, add `HairGroomRuntimeComponent` beside a `MeshFilter` 
 ## Bake outputs
 
 The bake pipeline evaluates and validates everything before it writes. Existing assets are updated in place so references remain stable.
+
+**UMA Material** in Validate & Bake requires an `UMAMaterial` configuration asset,
+not the Unity `Material` used to render the cards. Existing Overlay requires an
+`OverlayDataAsset`, and Compatible Race requires `RaceData`. An incompatible saved
+assignment is shown with a warning and is preserved until you replace or clear it.
+Validation blocks outputs that would use that invalid reference; unused UMA
+references do not block a mesh-only bake.
 
 - Unity Mesh assets for LOD 0 and every configured additional LOD.
 - Closest-scalp-vertex skin weights and source bind poses when the source exposes compatible weights.

@@ -13,6 +13,7 @@ namespace UMA.HairCards
         internal sealed class GenerationWorkspace
         {
             internal readonly Dictionary<string, HairGuide> sourceGuides = new Dictionary<string, HairGuide>(StringComparer.Ordinal);
+            internal readonly List<HairEvaluatedCurve> childCurves = new List<HairEvaluatedCurve>();
             private readonly List<Vector3> roots = new List<Vector3>();
             private readonly HairPointSpatialIndex rootIndex = new HairPointSpatialIndex();
             private readonly List<List<HairCurvePoint>> samples = new List<List<HairCurvePoint>>();
@@ -23,6 +24,7 @@ namespace UMA.HairCards
             internal void BeginGroup(HairGroup group, int guideCount)
             {
                 sourceGuides.Clear();
+                childCurves.Clear();
                 if (group.guides != null)
                     foreach (HairGuide guide in group.guides)
                         if (guide != null && !string.IsNullOrEmpty(guide.Id) && !sourceGuides.ContainsKey(guide.Id)) sourceGuides.Add(guide.Id, guide);
@@ -58,6 +60,7 @@ namespace UMA.HairCards
             internal void Clear()
             {
                 sourceGuides.Clear(); sourceGuides.TrimExcess(); roots.Clear(); roots.Capacity = 0; rootIndex.Clear();
+                childCurves.Clear(); childCurves.Capacity = 0;
                 samples.Clear(); samples.Capacity = 0; sampled = Array.Empty<bool>(); cumulative = Array.Empty<float>(); indexed = false;
             }
         }
@@ -74,7 +77,12 @@ namespace UMA.HairCards
             workspace.options = options ?? new HairEvaluationOptions();
             workspace.sourceMesh.Begin(groom?.SourceMesh);
             workspace.gravitySurface.Begin(workspace.options.gravityCollisionMesh != null ? workspace.options.gravityCollisionMesh : groom?.SourceMesh);
-            try { Generate(groom, group, guides, lod, options, result, workspace); }
+            try
+            {
+                workspace.currentGroup = group;
+                if (group != null) workspace.populations.Fields(group).Prepare(workspace.sourceMesh, group);
+                Generate(groom, group, guides, lod, options, result, workspace);
+            }
             finally { workspace.sourceMesh.End(); workspace.gravitySurface.End(); workspace.children.sourceGuides.Clear(); }
         }
 
@@ -95,13 +103,14 @@ namespace UMA.HairCards
             int tubeSides = lod != null ? lod.maximumTubeSides : 12;
             GenerationWorkspace generation = workspace.children;
             generation.BeginGroup(group, guides.Count);
+            int firstCurve = result.curves.Count;
             Dictionary<string, HairGuide> sourceGuides = generation.sourceGuides;
             for (int guideIndex = 0; guideIndex < guides.Count; guideIndex++)
             {
                 if (options.interactiveSampleLimit > 0 && result.curves.Count >= options.interactiveSampleLimit)
                 {
                     result.warnings.Add("Interactive preview card limit reached; the release bake remains complete.");
-                    return;
+                    break;
                 }
                 HairEvaluatedCurve guideCurve = guides[guideIndex];
                 if (!sourceGuides.TryGetValue(guideCurve.parentGuideId, out HairGuide sourceGuide)) continue;
@@ -138,7 +147,7 @@ namespace UMA.HairCards
                     if (options.interactiveSampleLimit > 0 && result.curves.Count >= options.interactiveSampleLimit)
                     {
                         result.warnings.Add("Interactive preview card limit reached; the release bake remains complete.");
-                        return;
+                        break;
                     }
                     int childSeed = CombineSeed(group.children.seed, sourceGuide.seed, childIndex);
                     if (!KeepForLod(childSeed, guideLodFraction)) continue;
@@ -146,17 +155,26 @@ namespace UMA.HairCards
                         childIndex, childSeed, sampleCount, paintedClump, result.RentCurve(sampleCount));
                     child.samplesPerCardOverride = sampleCount;
                     child.tubeSidesOverride = tubeSides;
-                    if (options.applyModifiers)
-                        HairGroomEvaluator.ApplyModifiers(childModifiers, child, HairModifierDomain.Children, groom, workspace);
                     if (child.points.Count < 2 || child.Length < 1e-6f)
                     {
                         result.rejectedCurveCount++;
                         continue;
                     }
                     result.curves.Add(child);
+                    generation.childCurves.Add(child);
                     result.childCurveCount++;
                 }
             }
+            // Population-dependent modifiers must snapshot all incoming children before moving
+            // any of them. Never reuse the guide clump field or a previous group's population.
+            HairGroomEvaluator.ApplyPopulationModifiers(childModifiers, generation.childCurves,
+                HairModifierDomain.Children, groom, workspace);
+            for (int i = result.curves.Count - 1; i >= firstCurve; i--)
+                if (result.curves[i].isChild && (result.curves[i].points.Count < 2 || result.curves[i].Length < 1e-6f))
+                {
+                    result.curves.RemoveAt(i); result.childCurveCount--; result.rejectedCurveCount++;
+                }
+            generation.childCurves.Clear();
         }
 
         private static HairEvaluatedCurve CreateChild(
@@ -196,6 +214,9 @@ namespace UMA.HairCards
             child.childOrdinal = childIndex;
             child.parentGuideId = sourceGuide.Id; child.groupId = group.Id; child.isChild = true;
             child.seed = seed; child.groupColor = group.color;
+            child.rootAnchor = sourceGuide.root; child.generationStageId = null;
+            child.clumpId = parent.curveId; child.clumpSeed = parent.seed;
+            child.hairlineDistance = parent.hairlineDistance; child.maskValue = parent.maskValue;
             child.rootNormal = BlendRootNormal(guides, neighbors, parent.rootNormal);
             child.rootEmbedDepth = group.rootEmbedDepth; child.profile = group.profile; child.atlas = group.atlas;
             child.atlasRegionSelection = parent.atlasRegionSelection; child.atlasRegionIds = parent.atlasRegionIds;

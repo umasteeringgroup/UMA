@@ -175,7 +175,7 @@ namespace UMA.HairCards.Editor
         internal IReadOnlyCollection<string> SlotNames => slotNames;
 
         internal static HairAvatarVisibilityCatalog Build(DynamicCharacterAvatar avatar,
-            IReadOnlyDictionary<string, SlotData> renderedSlots)
+            IReadOnlyDictionary<string, SlotData> renderedSlots, RaceData boundRace = null)
         {
             HairAvatarVisibilityCatalog catalog = new HairAvatarVisibilityCatalog();
             if (renderedSlots == null || renderedSlots.Count == 0) return catalog;
@@ -272,6 +272,8 @@ namespace UMA.HairCards.Editor
                 }
             }
 
+            if(avatar==null && boundRace!=null)
+                AddRecipeGroup(catalog,boundRace.baseRaceRecipe,"Base Race: "+boundRace.raceName,"base",renderedSlots,new HashSet<UMARecipeBase>(),boundRace);
             HashSet<string> assigned = new HashSet<string>(StringComparer.Ordinal);
             for (int i = 0; i < catalog.recipeGroups.Count; i++)
                 assigned.UnionWith(catalog.recipeGroups[i].SlotNames);
@@ -514,6 +516,9 @@ namespace UMA.HairCards.Editor
             internal GameObject gameObject;
             internal MeshRenderer renderer;
             internal readonly List<string> slotNames = new List<string>();
+            internal int rendererIndex;
+            internal int[] sourceVertexIndices;
+            internal Mesh mesh;
         }
 
         private readonly List<Surface> surfaces = new List<Surface>();
@@ -524,6 +529,23 @@ namespace UMA.HairCards.Editor
 
         internal GameObject Root { get; private set; }
         internal IReadOnlyDictionary<string, SlotData> RenderedSlots => renderedSlots;
+
+        internal static HairAvatarPreview Build(HairCharacterBindingAsset binding, Material fallback)
+        {
+            var preview = new HairAvatarPreview { Root = new GameObject("Bound Character Preview") };
+            try
+            {
+                for (int i = 0; i < binding.slots.Length; i++)
+                {
+                    var slot = binding.slots[i];
+                    preview.renderedSlots[slot.name] = slot.asset is SlotDataAsset asset ? new SlotData(asset) : null;
+                    preview.AddSurface(binding.donorMesh,new List<int>(binding.donorMesh.GetTriangles(i)),Matrix4x4.identity,
+                        fallback != null ? fallback : slot.material,slot.name,new[]{slot.name},0);
+                }
+                return preview;
+            }
+            catch { preview.Dispose();throw; }
+        }
 
         internal static HairAvatarPreview Build(DynamicCharacterAvatar avatar)
         {
@@ -663,7 +685,7 @@ namespace UMA.HairCards.Editor
             foreach (KeyValuePair<string, List<int>> pair in trianglesByOwner)
             {
                 AddSurface(baked, pair.Value, toAvatar, sourceMaterial,
-                    $"{rendererIndex:D2}_{submesh:D2}_{pair.Key}", new[] { pair.Key });
+                    $"{rendererIndex:D2}_{submesh:D2}_{pair.Key}", new[] { pair.Key }, rendererIndex);
                 sliceIndex++;
             }
             if (unresolved.Count > 0 || sliceIndex == 0)
@@ -672,15 +694,15 @@ namespace UMA.HairCards.Editor
                 for (int i = 0; i < slots.Count; i++)
                     if (slots[i] != null && !string.IsNullOrEmpty(slots[i].slotName)) memberNames.Add(slots[i].slotName);
                 AddSurface(baked, unresolved.Count > 0 ? unresolved : new List<int>(sourceTriangles), toAvatar,
-                    sourceMaterial, $"{rendererIndex:D2}_{submesh:D2}_Unresolved", memberNames);
+                    sourceMaterial, $"{rendererIndex:D2}_{submesh:D2}_Unresolved", memberNames, rendererIndex);
             }
         }
 
         private void AddSurface(Mesh source, List<int> triangles, Matrix4x4 transform, Material sourceMaterial,
-            string objectName, IEnumerable<string> slotNames)
+            string objectName, IEnumerable<string> slotNames, int rendererIndex)
         {
             if (triangles == null || triangles.Count == 0) return;
-            Mesh mesh = ExtractTriangles(source, triangles, transform, objectName);
+            Mesh mesh = ExtractTriangles(source, triangles, transform, objectName, out int[] sourceVertexIndices);
             meshes.Add(mesh);
             GameObject child = new GameObject(objectName);
             child.transform.SetParent(Root.transform, false);
@@ -696,7 +718,7 @@ namespace UMA.HairCards.Editor
                 materials.Add(previewMaterial);
                 renderer.sharedMaterial = previewMaterial;
             }
-            Surface surface = new Surface { gameObject = child, renderer = renderer };
+            Surface surface = new Surface { gameObject = child, renderer = renderer, mesh = mesh, rendererIndex = rendererIndex, sourceVertexIndices = sourceVertexIndices };
             if (slotNames != null)
                 foreach (string slotName in slotNames)
                     if (!string.IsNullOrEmpty(slotName) && !surface.slotNames.Contains(slotName))
@@ -705,7 +727,7 @@ namespace UMA.HairCards.Editor
         }
 
         private static Mesh ExtractTriangles(Mesh source, List<int> sourceTriangles, Matrix4x4 transform,
-            string meshName)
+            string meshName, out int[] sourceVertexIndices)
         {
             Vector3[] sourceVertices = source.vertices;
             Vector3[] sourceNormals = source.normals;
@@ -757,7 +779,21 @@ namespace UMA.HairCards.Editor
             if (normals.Count != vertices.Count) mesh.RecalculateNormals();
             if (tangents.Count != vertices.Count && uv.Count == vertices.Count) mesh.RecalculateTangents();
             mesh.RecalculateBounds();
+            sourceVertexIndices = new int[vertices.Count];
+            foreach (var pair in remap) sourceVertexIndices[pair.Value] = pair.Key;
             return mesh;
+        }
+
+        internal void ApplyVertexColors(int rendererIndex, IReadOnlyList<Color32> sourceColors)
+        {
+            foreach (var surface in surfaces)
+            {
+                if (surface.rendererIndex != rendererIndex || surface.mesh == null) continue;
+                var colors = new Color32[surface.sourceVertexIndices.Length];
+                for (int i = 0; i < colors.Length; i++)
+                { int source = surface.sourceVertexIndices[i]; colors[i] = (uint)source < sourceColors.Count ? sourceColors[source] : new Color32(255, 255, 255, 255); }
+                surface.mesh.colors32 = colors;
+            }
         }
     }
 
@@ -823,6 +859,10 @@ namespace UMA.HairCards.Editor
             return guideId != null && guideMatrices.TryGetValue(guideId, out Matrix4x4 matrix)
                 ? matrix : Matrix4x4.identity;
         }
+
+        internal Matrix4x4 MatrixForCurve(HairGroomAsset groom, HairEvaluatedCurve curve) =>
+            !string.IsNullOrEmpty(curve.generationStageId) && TryGetMatrix(curve.rootAnchor, out var matrix)
+                ? matrix : MatrixForGuide(groom, curve.parentGuideId);
 
         internal bool TryGetMatrix(HairSurfaceAnchor anchor, out Matrix4x4 sourceToPose)
         {
@@ -917,6 +957,8 @@ namespace UMA.HairCards.Editor
             transformed.warnings.Clear();
             transformed.warnings.AddRange(sourceResult.warnings);
             TransformCurves(groom, sourceResult.evaluatedGuides, transformed.evaluatedGuides);
+            TransformCurves(groom, sourceResult.generatedGuides, transformed.generatedGuides);
+            transformed.populations.Clear(); transformed.populations.AddRange(sourceResult.populations);
             TransformCurves(groom, sourceResult.curves, transformed.curves);
             return transformed;
         }
@@ -935,7 +977,7 @@ namespace UMA.HairCards.Editor
         private HairEvaluatedCurve TransformCurve(HairGroomAsset groom, HairEvaluatedCurve sourceCurve, HairEvaluatedCurve transformed)
         {
             if (sourceCurve == null) return null;
-            Matrix4x4 matrix = MatrixForGuide(groom, sourceCurve.parentGuideId);
+            Matrix4x4 matrix = MatrixForCurve(groom, sourceCurve);
             transformed ??= new HairEvaluatedCurve(sourceCurve.points.Count);
             sourceCurve.CopyTo(transformed);
             // One inverse-transpose per strand, shared by root and spline-facing samples.

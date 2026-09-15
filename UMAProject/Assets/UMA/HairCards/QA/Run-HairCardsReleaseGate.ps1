@@ -19,7 +19,18 @@ if (-not (Test-Path -LiteralPath $sourceRoot -PathType Container)) {
 # Meta sidecars are text; do not read or rewrite native Unity assets.
 $issues = [Collections.Generic.List[string]]::new()
 $hairGuids = @{}
-foreach ($meta in Get-ChildItem -LiteralPath $sourceRoot -Recurse -File -Filter '*.meta') {
+$metadata = @(Get-ChildItem -LiteralPath $sourceRoot -Recurse -File -Filter '*.meta')
+$exampleRoot = Join-Path $ProjectPath 'Assets/UMAProjectData/HairCards/Examples'
+if (Test-Path -LiteralPath $exampleRoot -PathType Container) {
+    $metadata += @(Get-ChildItem -LiteralPath $exampleRoot -Recurse -File -Filter '*.meta')
+    if (Test-Path -LiteralPath ($exampleRoot + '.meta')) { $metadata += Get-Item -LiteralPath ($exampleRoot + '.meta') }
+    foreach ($item in @(Get-Item -LiteralPath $exampleRoot) + @(Get-ChildItem -LiteralPath $exampleRoot -Recurse)) {
+        if ($item.Extension -ne '.meta' -and -not (Test-Path -LiteralPath ($item.FullName + '.meta') -PathType Leaf)) {
+            $issues.Add("Missing example metadata: $($item.FullName).meta")
+        }
+    }
+}
+foreach ($meta in $metadata) {
     $guidLines = @(Select-String -LiteralPath $meta.FullName -Pattern '^guid:\s*(\S+)\s*$')
     if ($guidLines.Count -ne 1 -or $guidLines[0].Matches[0].Groups[1].Value -cnotmatch '^[0-9a-f]{32}$') {
         $issues.Add("Invalid GUID (must be exactly 32 lowercase hex characters): $($meta.FullName)")

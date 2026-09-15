@@ -14,6 +14,7 @@ namespace UMA.HairCards
         internal readonly List<Vector4> tangents = new List<Vector4>();
         internal readonly List<Vector2> uvs = new List<Vector2>();
         internal readonly List<Color> colors = new List<Color>();
+        internal readonly List<Vector2> strandData = new List<Vector2>(), clumpData = new List<Vector2>();
         internal readonly List<HairCardMeshGenerator.MaterialBucket> buckets = new List<HairCardMeshGenerator.MaterialBucket>();
         internal readonly Stack<HairCardMeshGenerator.MaterialBucket> spareBuckets = new Stack<HairCardMeshGenerator.MaterialBucket>();
         internal readonly Dictionary<HairAtlasProfileAsset, int> materialLookup = new Dictionary<HairAtlasProfileAsset, int>();
@@ -29,6 +30,7 @@ namespace UMA.HairCards
             if (inUse) throw new InvalidOperationException("A mesh workspace cannot be shared by concurrent builds.");
             inUse = true;
             vertices.Clear(); normals.Clear(); tangents.Clear(); uvs.Clear(); colors.Clear();
+            strandData.Clear(); clumpData.Clear();
         }
 
         internal void End()
@@ -88,6 +90,7 @@ namespace UMA.HairCards
             vertices.Clear(); vertices.Capacity = 0; normals.Clear(); normals.Capacity = 0;
             tangents.Clear(); tangents.Capacity = 0; uvs.Clear(); uvs.Capacity = 0;
             colors.Clear(); colors.Capacity = 0; sampled.Clear(); sampled.Capacity = 0;
+            strandData.Clear(); strandData.Capacity = 0; clumpData.Clear(); clumpData.Capacity = 0;
             buckets.Clear(); buckets.Capacity = 0; spareBuckets.Clear(); spareBuckets.TrimExcess();
             materialLookup.Clear(); materialLookup.TrimExcess();
             profileWidths.Clear(); profileWidths.TrimExcess(); spareWidths.Clear(); spareWidths.TrimExcess();
@@ -176,6 +179,7 @@ namespace UMA.HairCards
                 int sampleCount = curve.samplesPerCardOverride > 1
                     ? curve.samplesPerCardOverride
                     : profile != null ? profile.SamplesPerCard : 12;
+                if (profile != null) sampleCount = profile.ResolveSampleCount(curve.points, sampleCount);
                 List<HairCurvePoint> sampled = workspace.sampled;
                 HairCurveUtility.ResampleInto(curve.points, sampleCount, sampled, ref workspace.cumulative);
                 EmbedCardRoot(curve, sampled);
@@ -213,8 +217,15 @@ namespace UMA.HairCards
                     span.vertexCount = vertices.Count - span.vertexStart;
                     span.triangleCount = buckets[bucketIndex].triangles.Count / 3 - span.triangleStart;
                 }
+                var strandRandom = new HairDeterministicRandom(curve.seed);
+                var clumpRandom = new HairDeterministicRandom(curve.clumpSeed);
+                float strandId = strandRandom.Next01(), clumpId = clumpRandom.Next01();
                 for (int vertex = firstVertex; vertex < vertices.Count; vertex++)
                 {
+                    // Unflipped normalized arc length and stable IDs are independent of atlas
+                    // rectangles. Separate Vector2 channels survive UMA slot serialization.
+                    workspace.strandData.Add(new Vector2(uvs[vertex].y, strandId));
+                    workspace.clumpData.Add(new Vector2(clumpId, curve.maskValue));
                     if (includeEditingMetadata) result.localUvs.Add(uvs[vertex]);
                     uvs[vertex] = MapUv(region, uvs[vertex].x, uvs[vertex].y);
                 }
@@ -227,6 +238,8 @@ namespace UMA.HairCards
             mesh.SetNormals(normals);
             mesh.SetTangents(tangents);
             mesh.SetUVs(0, uvs);
+            mesh.SetUVs(1, workspace.strandData);
+            mesh.SetUVs(2, workspace.clumpData);
             mesh.SetColors(colors);
             int secondPassCount = 0;
             foreach (MaterialBucket bucket in buckets)
@@ -313,45 +326,45 @@ namespace UMA.HairCards
             HairCurveUtility.BuildRotationMinimizingFrames(points, curve.rootNormal, curveTangents,
                 sides, frameNormals, out flipCount);
             bool hasProfile = profile != null;
+            int spans = hasProfile ? profile.RibbonSpans : 1;
+            int columns = spans + 1;
+            float camber = hasProfile && spans > 1 ? profile.RibbonCamber : 0f;
             float defaultWidth = hasProfile ? profile.DefaultWidth : 0f;
             float[] widths = workspace.ProfileWidths(profile, points.Count);
             for (int i = 0; i < points.Count; i++)
             {
                 float t = i / (points.Count - 1f);
                 float width = ResolveCardWidth(points[i], hasProfile, defaultWidth, widths[i]);
-                Vector3 half = sides[i] * (width * 0.5f);
-                vertices.Add(points[i].position - half);
-                vertices.Add(points[i].position + half);
-                normals.Add(frameNormals[i]);
-                normals.Add(frameNormals[i]);
                 Vector4 tangent = new Vector4(curveTangents[i].x, curveTangents[i].y, curveTangents[i].z, 1f);
-                tangents.Add(tangent);
-                tangents.Add(tangent);
-                uvs.Add(new Vector2(0f, t));
-                uvs.Add(new Vector2(1f, t));
                 Color vertexColor = hasProfile ? profile.EvaluateVertexColor(i, points.Count, curve.groupColor) : curve.groupColor;
-                colors.Add(vertexColor);
-                colors.Add(vertexColor);
+                for (int column = 0; column < columns; column++)
+                {
+                    float u = column / (float)spans, q = u * 2f - 1f;
+                    vertices.Add(points[i].position + sides[i] * (q * width * 0.5f) + frameNormals[i] * (camber * width * (1f - q * q)));
+                    normals.Add((frameNormals[i] + sides[i] * (4f * q * camber)).normalized);
+                    tangents.Add(tangent); uvs.Add(new Vector2(u, t)); colors.Add(vertexColor);
+                }
             }
 
             bool doubleSided = profile == null || profile.DoubleSided;
             for (int i = 0; i < points.Count - 1; i++)
+            for (int column = 0; column < spans; column++)
             {
-                int a = start + i * 2;
+                int a = start + i * columns + column;
                 int b = a + 1;
-                int c = a + 2;
-                int d = a + 3;
+                int c = a + columns;
+                int d = c + 1;
                 bool startCollapsed = (vertices[a] - vertices[b]).sqrMagnitude < 1e-14f;
                 bool endCollapsed = (vertices[c] - vertices[d]).sqrMagnitude < 1e-14f;
                 if (!startCollapsed)
                 {
-                    AddTriangle(vertices, triangles, a, c, b, ref degenerateCount);
-                    if (doubleSided) AddTriangle(vertices, triangles, b, c, a, ref degenerateCount);
+                    AddTriangle(vertices, triangles, a, b, c, ref degenerateCount);
+                    if (doubleSided) AddTriangle(vertices, triangles, c, b, a, ref degenerateCount);
                 }
                 if (!endCollapsed)
                 {
-                    AddTriangle(vertices, triangles, b, c, d, ref degenerateCount);
-                    if (doubleSided) AddTriangle(vertices, triangles, d, c, b, ref degenerateCount);
+                    AddTriangle(vertices, triangles, b, d, c, ref degenerateCount);
+                    if (doubleSided) AddTriangle(vertices, triangles, c, d, b, ref degenerateCount);
                 }
             }
         }

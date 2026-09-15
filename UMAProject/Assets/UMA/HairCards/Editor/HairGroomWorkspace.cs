@@ -9,6 +9,7 @@ namespace UMA.HairCards.Editor
 {
     public sealed partial class HairGroomWorkspace : EditorWindow
     {
+        private readonly HairCharacterBindingEditor characterBindingEditor = new HairCharacterBindingEditor();
         private const string QuickStartPath = "Assets/UMA/Docs/Hair Cards - Quick Start.md";
         private const string MapClipboardKey = "UMA.HairCards.GrowthMapClipboard.v1";
         private static HairGrowthMapClipboard mapClipboard;
@@ -124,6 +125,7 @@ namespace UMA.HairCards.Editor
 
         private void OnDisable()
         {
+            characterBindingEditor.Dispose();
             EditorApplication.update -= SaveIdlePreferences;
             if (!HairEditorPreferences.Suspended) HairEditorPreferences.instance.Remember(this, "workspace", preferenceContext);
             Undo.undoRedoPerformed -= OnAtlasUndoRedo;
@@ -156,6 +158,7 @@ namespace UMA.HairCards.Editor
             }
             if (stage == null || stage.WorkflowStep != HairWorkflowStep.Cards)
                 atlasEditor?.CancelInteraction();
+            if (stage == null || stage.WorkflowStep != HairWorkflowStep.Setup) characterBindingEditor.Dispose();
             if (stage == null || stage.Groom == null)
             {
                 DrawNoStage();
@@ -192,7 +195,7 @@ namespace UMA.HairCards.Editor
         }
 
 
-        private static void DrawSetup(HairCardStage stage)
+        private void DrawSetup(HairCardStage stage)
         {
             HairGroomAsset groom = stage.Groom;
             DrawStepTitle("1. Setup", "Bind the groom to a source scalp and establish preview behavior.");
@@ -219,6 +222,7 @@ namespace UMA.HairCards.Editor
             stage.MirrorCutX = EditorGUILayout.Toggle("Mirror slice cut X", stage.MirrorCutX);
             EditorGUILayout.HelpBox("These are the active, stage-only mirror controls across source-local X = 0. " +
                 "Comb/Grab do not have a global symmetry switch. Use a Mirror modifier for procedural guide mirroring.", MessageType.Info);
+            characterBindingEditor.Draw(stage);
 
         }
 
@@ -553,6 +557,8 @@ namespace UMA.HairCards.Editor
             if (group == null) return;
             DrawStepTitle("4. Groom", "Sculpt authored guides on non-destructive layers, then refine with ordered modifiers and helpers.");
             EditorGUILayout.LabelField(
+                group.generation.enabled ?
+                "Sculpt edits authored guides at this layer's edit point. Generated clumps and cards are temporarily bypassed. Return to Final Preview in Hair Nodes to see the complete result." :
                 "After generating cards, Groom shows the updated card preview after each stroke or Gravity hold. " +
                 "During a stroke, guides stay visible for editing. Use Hair Preview & Settings for a guide-only view.",
                 EditorStyles.wordWrappedMiniLabel);
@@ -824,6 +830,7 @@ namespace UMA.HairCards.Editor
                 bool doubleSided = profile.DoubleSided;
                 if (shape == HairCardShape.Ribbon)
                     doubleSided = EditorGUILayout.Toggle("Generate Backfaces", profile.DoubleSided);
+                if (shape == HairCardShape.Ribbon) HairGenerationEditor.DrawRibbonProfile(stage, profile);
                 if (shape != profile.Shape || !Mathf.Approximately(rootWidth, profile.DefaultWidth) ||
                     !Mathf.Approximately(tipWidth, profile.TipWidth) || samples != profile.SamplesPerCard ||
                     sides != profile.TubeSides || doubleSided != profile.DoubleSided)
@@ -958,6 +965,7 @@ namespace UMA.HairCards.Editor
                 stage.QueuePreviewChange(materialChanged ? HairPreviewChange.Geometry : HairPreviewChange.Materials | HairPreviewChange.Validation);
                 if (sharedColorChanged || materialChanged) HairSharedColorUtility.Apply(atlas, stage);
             }
+            HairSweptShaderGUI.DrawInline(stage, group);
             if (HairSharedColorUtility.SelectedColor(atlas) != null)
             {
                 int parameters = HairSharedColorUtility.ParameterCount(atlas);
@@ -1040,7 +1048,9 @@ namespace UMA.HairCards.Editor
                 }
             }
             if (GUILayout.Button("+ LOD")) HairGroomCommands.AddLod(groom);
-            EditorGUILayout.HelpBox("Bake transfers the closest available scalp bone weights to every generated card vertex. Inspect deformation on the equipped preview avatar before shipping.", MessageType.Info);
+            EditorGUILayout.HelpBox(stage.Groom.CharacterBinding != null
+                ? "Bake blends weights on the saved body surface at each card root, then exports all LODs in character coordinates. Long tips retain their root's influences. Inspect deformation on the equipped avatar before shipping."
+                : "Bake transfers available scalp bone weights. For an imported/unweighted groom, select Source & Setup → Bind Character / Race first.", MessageType.Info);
         }
 
         private void DrawValidateAndBake(HairCardStage stage)
@@ -1076,12 +1086,9 @@ namespace UMA.HairCards.Editor
             bool updateIndex = EditorGUILayout.Toggle("Update Global Library", settings.updateGlobalLibrary);
             bool overwrite = EditorGUILayout.Toggle("Update Existing Assets", settings.overwriteExisting);
             bool requireAtlas = EditorGUILayout.Toggle("Require Atlas", settings.requireAtlas);
-            UMAMaterial umaMaterial = (UMAMaterial)EditorGUILayout.ObjectField("UMA Material", settings.umaMaterial,
-                typeof(UMAMaterial), false);
-            OverlayDataAsset overlay = (OverlayDataAsset)EditorGUILayout.ObjectField("Existing Overlay",
-                settings.overlayTemplate, typeof(OverlayDataAsset), false);
-            RaceData race = (RaceData)EditorGUILayout.ObjectField("Compatible Race", settings.raceData,
-                typeof(RaceData), false);
+            UnityEngine.Object umaMaterial = DrawBakeReference<UMAMaterial>("UMA Material", settings.umaMaterial);
+            UnityEngine.Object overlay = DrawBakeReference<OverlayDataAsset>("Existing Overlay", settings.overlayTemplate);
+            UnityEngine.Object race = DrawBakeReference<RaceData>("Compatible Race", settings.raceData);
             string wardrobeSlot = EditorGUILayout.TextField("Wardrobe Slot", settings.wardrobeSlot);
             if (output != settings.outputFolder || assetName != settings.assetName || createMesh != settings.createMesh ||
                 createSlot != settings.createSlot || createOverlay != settings.createOverlay ||
@@ -1148,6 +1155,18 @@ namespace UMA.HairCards.Editor
             }
         }
 
+        private static UnityEngine.Object DrawBakeReference<T>(string label, UnityEngine.Object current)
+            where T : UnityEngine.Object
+        {
+            // These fields are Object references so Core does not depend on UMA.
+            // ObjectField's type filters new selections, not an incompatible saved
+            // value. Do not cast its return value or clear a reference on repaint.
+            UnityEngine.Object value = EditorGUILayout.ObjectField(label, current, typeof(T), false);
+            string warning = HairBakePipeline.GetReferenceTypeWarning<T>(label, value);
+            if (warning != null) EditorGUILayout.HelpBox(warning, MessageType.Warning);
+            return value;
+        }
+
         private static void DrawValidationIssues(HairCardStage stage, HairValidationReport report)
         {
             foreach (HairValidationIssue issue in report.issues)
@@ -1181,7 +1200,10 @@ namespace UMA.HairCards.Editor
                 bool enabled = EditorGUILayout.Toggle(new GUIContent("Active",
                     "Apply this modifier to preview and baked hair. Turning it off preserves all settings."), modifier.enabled);
                 if (enabled != modifier.enabled)
-                    HairGroomCommands.SetModifierEnabled(stage.Groom, stage.ActiveGroup, stage.ActiveLayer, modifier, enabled);
+                {
+                    if (stage.SelectedNode?.Population != null) HairGroomNodes.Toggle(stage, stage.SelectedNode, enabled);
+                    else HairGroomCommands.SetModifierEnabled(stage.Groom, stage.ActiveGroup, stage.ActiveLayer, modifier, enabled);
+                }
                 if (!modifier.enabled)
                     EditorGUILayout.LabelField("Bypassed. Settings are preserved; turn Active on to apply this modifier.", EditorStyles.wordWrappedMiniLabel);
                 string name = EditorGUILayout.DelayedTextField("Name", modifier.name);
@@ -1239,7 +1261,7 @@ namespace UMA.HairCards.Editor
                 if (modifier.type == HairModifierType.TrimByMesh)
                     EditorGUILayout.HelpBox("Cuts at the first intersection with the groom's source mesh, keeping the root-side curve. Blend weight softens the amount removed. Frozen tips are protected.", MessageType.Info);
                 if (modifier.type == HairModifierType.Clump)
-                    EditorGUILayout.LabelField("Bends strands toward the group's shared tip center, or the selected helper position. Roots and segment lengths stay fixed.", EditorStyles.wordWrappedMiniLabel);
+                    EditorGUILayout.LabelField("Follows local curved clump centerlines from the incoming population. A curve helper overrides the centerline. Roots and segment lengths stay fixed.", EditorStyles.wordWrappedMiniLabel);
                 if (modifier.type == HairModifierType.Curl || modifier.type == HairModifierType.Wave)
                     EditorGUILayout.LabelField("For a smooth curl/wave, add Resample before this modifier and allow at least four control points per cycle.", EditorStyles.wordWrappedMiniLabel);
                 if (modifier.type == HairModifierType.SurfaceProjection)
@@ -1253,8 +1275,10 @@ namespace UMA.HairCards.Editor
                 EditorGUI.BeginChangeCheck();
                 AnimationCurve ramp = usesRamp ? EditorGUILayout.CurveField("Root → tip influence", modifier.rootToTip) : modifier.rootToTip;
                 bool rampChanged = EditorGUI.EndChangeCheck();
-                HairModifierDomain domain = (HairModifierDomain)EditorGUILayout.EnumPopup("Domain", modifier.domain);
-                EditorGUILayout.LabelField("Guides And Children applies once to guides; children inherit the result. Children affects generated children only.", EditorStyles.wordWrappedMiniLabel);
+                bool populationModifier = stage.SelectedNode?.Population != null;
+                HairModifierDomain domain = populationModifier ? modifier.domain : (HairModifierDomain)EditorGUILayout.EnumPopup("Domain", modifier.domain);
+                EditorGUILayout.LabelField(populationModifier ? "Affects this population once; the next stage inherits it." :
+                    "Guides And Children applies once to guides; children inherit the result. Children affects generated children only.", EditorStyles.wordWrappedMiniLabel);
                 Vector3 vector = modifier.vector;
                 if (modifier.type == HairModifierType.Curl || modifier.type == HairModifierType.Wave)
                 { vector.x = Mathf.Max(0.01f, EditorGUILayout.FloatField("Cycles along guide", vector.x)); vector.y = EditorGUILayout.FloatField("Phase (radians)", vector.y); }
@@ -1319,6 +1343,7 @@ namespace UMA.HairCards.Editor
                     HairGroomCommands.Commit(stage.Groom);
                 }
                 if (modifier.type == HairModifierType.SplineFlow) HairSplineFlowInspector.Draw(stage, modifier);
+                HairGenerationEditor.DrawModifierFields(stage, modifier);
             }
         }
 

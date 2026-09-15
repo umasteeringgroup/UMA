@@ -57,6 +57,7 @@ namespace UMA.HairCards.Editor
             HairGroomNode node = FindNode(key);
             if (node == null) return;
             EndGravitySimulation(); ReleaseSceneInputCapture(true);
+            if (populationInspection && node.Population == null && node.Modifier == null) InspectPopulation(null);
             if (node.Kind != HairGroomNodeKind.Layer) ClearLayerEditing();
             if (node.Group != null && node.Group.Id != activeGroupId) SetActiveGroup(node.Group.Id);
             if (WorkflowStep != node.Step) WorkflowStep = node.Step;
@@ -67,8 +68,10 @@ namespace UMA.HairCards.Editor
                 SceneTool = HairSceneTool.Select;
             if (node.Kind == HairGroomNodeKind.Layer &&
                 (SceneTool == HairSceneTool.Select || SceneTool == HairSceneTool.Helper)) SceneTool = HairSceneTool.Comb;
-            if (node.Modifier != null) SetActiveModifier(node.Layer.Id, node.Modifier.Id);
+            if (node.Modifier != null && node.Layer != null) SetActiveModifier(node.Layer.Id, node.Modifier.Id);
             else if (node.Kind == HairGroomNodeKind.Layer) SetActiveLayer(node.Layer.Id);
+            if (node.Population != null || node.Kind == HairGroomNodeKind.ScalpShading)
+            { activeModifierId = node.Modifier?.Id; SceneTool = HairSceneTool.Select; }
             if (node.Helper != null) { SetActiveHelper(node.Helper.Id); SceneTool = HairSceneTool.Helper; }
             activeNodeKey = key;
             HairGroomWorkspace.RevealNodeProperties();

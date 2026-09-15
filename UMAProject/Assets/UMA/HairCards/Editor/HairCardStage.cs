@@ -529,7 +529,8 @@ namespace UMA.HairCards.Editor
         public string ActiveGuideId => activeGuideId;
         public string ActiveLayerId => activeLayerId;
         public HairSculptLayer ActiveLayer => ActiveGroup?.sculptLayers?.Find(layer => layer != null && layer.Id == activeLayerId);
-        public HairModifierSettings ActiveModifier => ActiveLayer?.modifiers?.Find(modifier => modifier != null && modifier.Id == activeModifierId);
+        public HairModifierSettings ActiveModifier => FindNode(activeNodeKey)?.Population != null
+            ? FindNode(activeNodeKey).Modifier : ActiveLayer?.modifiers?.Find(modifier => modifier != null && modifier.Id == activeModifierId);
         public string ActiveModifierId => ActiveModifier?.Id;
         public string ActiveHelperId => activeHelperId;
         public int SelectedVertexCount => selectedVertices?.Count ?? 0;
@@ -551,12 +552,13 @@ namespace UMA.HairCards.Editor
             if (asset == null) return null;
             if (avatar != null && string.IsNullOrEmpty(asset.SourceObjectId))
                 HairGroomSourcePersistence.RememberOrigin(asset, avatar);
-            if (avatar == null) avatar = HairGroomSourcePersistence.ResolveAvatar(asset);
+            if (asset.CharacterBinding != null) avatar = null;
+            else if (avatar == null) avatar = HairGroomSourcePersistence.ResolveAvatar(asset);
             HairCardStage stage = CreateInstance<HairCardStage>();
             stage.groom = asset;
             stage.sourceAvatar = avatar;
-            stage.showScalp = avatar == null;
-            stage.showAvatar = avatar != null;
+            stage.showScalp = avatar == null && !stage.HasBoundCharacter;
+            stage.showAvatar = avatar != null || stage.HasBoundCharacter;
             HairEditorPreferences.instance.Restore(stage, "stage", HairEditorPreferences.Context(asset));
             StageUtility.GoToStage(stage, true);
             return stage;
@@ -742,9 +744,11 @@ namespace UMA.HairCards.Editor
             gravityRaycaster = null;
             gravitySurface = null;
             raycastSurfaceMesh = null;
+            ReleasePopulationPreview();
             avatarPreview?.Dispose();
             avatarPreview = null;
             authoringPose = null;
+            DestroyPreviewObject(boundBodyMaterial);boundBodyMaterial=null;
             DestroyPreviewObject(growthOverlayMesh);
             growthOverlayMesh = null;
             DestroyPreviewObject(growthOverlayMaterial);
@@ -1045,6 +1049,7 @@ namespace UMA.HairCards.Editor
                     "rebind-source" => HairWorkflowStep.Setup,
                     "repair-helper-reference" => HairWorkflowStep.Groom,
                     "edit-lods" => HairWorkflowStep.Optimize,
+                    "edit-bake-settings" => HairWorkflowStep.ValidateAndBake,
                     "inspect-groups" => HairWorkflowStep.Cards,
                     _ => !string.IsNullOrEmpty(issue.guideId) ? HairWorkflowStep.Guides : HairWorkflowStep.Optimize
                 };
@@ -1114,7 +1119,7 @@ namespace UMA.HairCards.Editor
             if ((changes & (HairPreviewChange.Geometry | HairPreviewChange.Uvs)) != 0) RefreshEvaluationResources();
             if ((changes & HairPreviewChange.Geometry) != 0)
             {
-                if (IsCardPreviewMode(previewMode))
+                if (IsCardPreviewMode(EffectivePreviewMode))
                 {
                     HairEvaluationResult meshEvaluation = evaluation;
                     if (authoringPose?.IsActive == true)
@@ -1131,7 +1136,7 @@ namespace UMA.HairCards.Editor
             else if ((changes & HairPreviewChange.Uvs) != 0)
                 HairCardMeshGenerator.RefreshAtlasUvs(meshBuild, groom);
             if ((changes & (HairPreviewChange.Uvs | HairPreviewChange.Geometry)) != 0) RefreshCardHighlight();
-            if (IsCardPreviewMode(previewMode) && meshBuild?.cardCount > 0)
+            if (IsCardPreviewMode(EffectivePreviewMode) && meshBuild?.cardCount > 0)
                 hasGeneratedCardPreview = true;
             if ((changes & (HairPreviewChange.Validation | HairPreviewChange.Uvs | HairPreviewChange.Geometry)) != 0)
             using (PreviewValidationMarker.Auto())
@@ -1150,6 +1155,7 @@ namespace UMA.HairCards.Editor
                         helperId: helper.Id, fixId: "repair-helper-reference");
             }
             if ((changes & HairPreviewChange.Materials) != 0) ApplyHairMaterials();
+            if ((changes & HairPreviewChange.Evaluation) != 0) ApplyScalpPreview();
             if ((changes & HairPreviewChange.Display) != 0) UpdateGrowthOverlay(raycastSurfaceMesh, true);
             UpdateHairPreviewVisibility();
             RepaintAll();
@@ -1158,14 +1164,16 @@ namespace UMA.HairCards.Editor
         private HairEvaluationOptions PreviewOptions(bool guidesOnly = false) => ConfigureGravityEvaluation(new HairEvaluationOptions
         {
             lodLevel = lodLevel,
-            includeChildren = !guidesOnly && showChildren && (IsCardPreviewMode(previewMode) || previewMode == HairPreviewMode.GuidesAndChildren),
-            includeGuideCards = !guidesOnly && IsCardPreviewMode(previewMode),
+            includeChildren = !guidesOnly && EffectiveChildren && (IsCardPreviewMode(EffectivePreviewMode) || EffectivePreviewMode == HairPreviewMode.GuidesAndChildren),
+            includeGuideCards = !guidesOnly && IsCardPreviewMode(EffectivePreviewMode),
             applySculptLayers = true, applyModifiers = true, applyConstraints = true,
             includeHiddenGroups = false, evaluateSurfaceAnchors = true,
             includedGuideIds = isolateSelectedGuides ? selectedGuideSet : null,
             soloLayerId = soloLayerId,
             editGroupId = IsLayerEditing ? editingGroupId : null,
             editLayerId = IsLayerEditing ? editingLayerId : null,
+            previewGenerationStageId = IsLayerEditing ? null : populationPreviewId,
+            previewModifierId = maskPreviewId,
             interactiveSampleLimit = previewQuality == HairPreviewQuality.Draft ? 1500 : 0,
             previewSampleCount = previewQuality == HairPreviewQuality.Draft ? 8 : 0
         });
@@ -1175,12 +1183,15 @@ namespace UMA.HairCards.Editor
             authoringPose?.RefreshGuideMatrices(groom);
             options.sourceToWorld = SourceToStageMatrix;
             options.guideToSourcePose = GuideToGravityPose;
+            options.anchorToSourcePose = AnchorToGravityPose;
             options.gravityCollisionMesh = authoringSurfaceMesh != null ? authoringSurfaceMesh : groom?.SourceMesh;
             return options;
         }
 
         private Matrix4x4 GuideToGravityPose(string guideId) =>
             authoringPose?.MatrixForGuide(groom, guideId) ?? Matrix4x4.identity;
+        private Matrix4x4 AnchorToGravityPose(HairSurfaceAnchor anchor) =>
+            authoringPose != null && authoringPose.TryGetMatrix(anchor, out var matrix) ? matrix : Matrix4x4.identity;
 
         private void RefreshEvaluationResources()
         {
@@ -1426,8 +1437,8 @@ namespace UMA.HairCards.Editor
             HairEditorPreferences.instance.ClearEditorSettings();
             HairPreferenceCodec.Reset(this);
             paintErase = false;
-            showScalp = sourceAvatar == null;
-            showAvatar = sourceAvatar != null;
+            showScalp = sourceAvatar == null && !HasBoundCharacter;
+            showAvatar = sourceAvatar != null || HasBoundCharacter;
             activeGroupId = FirstGroup()?.Id;
             activeMapId = ActiveGroup?.FindMap(HairMapKind.GrowthArea)?.Id;
             selectedGuideSet.Clear();
@@ -1466,7 +1477,7 @@ namespace UMA.HairCards.Editor
 
         internal bool TryGetCurrentAreaBounds(out Bounds bounds, out int boneCount)
         {
-            return HairPaintedAreaBounds.TryCalculate(groom?.SourceMesh,
+            return HairPaintedAreaBounds.TryCalculate(HasBoundCharacter ? groom.CharacterBinding.weightedSource : groom?.SourceMesh,
                 ActiveGroup?.FindMap(HairMapKind.GrowthArea)?.values, authoringPose,
                 authoringBonePositions, SourceToStageMatrix, out bounds, out boneCount);
         }
@@ -1689,6 +1700,7 @@ namespace UMA.HairCards.Editor
 
             SceneManager.MoveGameObjectToScene(sourceSpaceObject, scene);
             SceneManager.MoveGameObjectToScene(lightingObject, scene);
+            if (HasBoundCharacter) RefreshBoundCharacter(false);
             ApplyVisibility();
         }
 
@@ -1788,7 +1800,7 @@ namespace UMA.HairCards.Editor
         {
             if (hairRenderer != null)
             {
-                hairRenderer.enabled = !strokeActive && !sculptPreviewPending && IsCardPreviewMode(previewMode) &&
+                hairRenderer.enabled = !strokeActive && !sculptPreviewPending && IsCardPreviewMode(EffectivePreviewMode) &&
                                        meshBuild?.mesh != null;
                 EditorUtility.SetSelectedRenderState(hairRenderer, showCardWireframe
                     ? EditorSelectedRenderState.Highlight | EditorSelectedRenderState.Wireframe
@@ -1800,7 +1812,7 @@ namespace UMA.HairCards.Editor
         {
             if (growthOverlayFilter == null || growthOverlayRenderer == null) return;
             HairGrowthMap map = ActiveMap;
-            bool shouldShow = previewMode == HairPreviewMode.GrowthMap && map != null && map.visible;
+            bool shouldShow = EffectivePreviewMode == HairPreviewMode.GrowthMap && map != null && map.visible;
             growthOverlayRenderer.enabled = shouldShow;
             if (!shouldShow || paintSurface == null) return;
 
@@ -1992,6 +2004,7 @@ namespace UMA.HairCards.Editor
 
         private SkinnedMeshRenderer ResolveSourceRenderer()
         {
+            if (groom?.CharacterBinding != null) return null;
             if (sourceAvatar?.umaData != null)
             {
                 SkinnedMeshRenderer renderer = sourceAvatar.umaData.GetRenderer(0);
@@ -2002,6 +2015,7 @@ namespace UMA.HairCards.Editor
 
         private void OnUndoRedo()
         {
+            if (displayedBinding != groom?.CharacterBinding && sourceSpaceObject != null) RefreshBoundCharacter();
             nodeCache = null;
             gravitySimulationActive = strokeActive = pointHandleStrokeActive = sliceCutActive = false;
             curveStrokePlaneValid = hasPreviousStrokePosition = false;
@@ -2058,7 +2072,7 @@ namespace UMA.HairCards.Editor
                     // Candidate guides are still guides: their dotted preview must use the same
                     // depth toggle as accepted guides and children, before restoring handle state.
                     DrawGenerationPreview();
-                    if (showCardWireframe && !strokeActive && IsCardPreviewMode(previewMode) && cardHighlightLines.Length > 0)
+                    if (showCardWireframe && !strokeActive && IsCardPreviewMode(EffectivePreviewMode) && cardHighlightLines.Length > 0)
                     { Handles.color = new Color(1f, 0.75f, 0.1f, 1f); Handles.DrawLines(cardHighlightLines); }
                 }
                 finally
@@ -2235,7 +2249,8 @@ namespace UMA.HairCards.Editor
                             Color.Lerp(new Color(0.2f, 1f, 0.8f), new Color(1f, 0.5f, 0.05f), influence) : selected ? Color.yellow : group.color;
                         IReadOnlyList<HairCurvePoint> displayPoints = displayGuideCurves.TryGetValue(guide.Id,
                             out HairEvaluatedCurve displayCurve) ? displayCurve.points : null;
-                        if (showGuideSplines &&
+                        if (!string.IsNullOrEmpty(maskPreviewId) && displayCurve != null) Handles.color = PopulationColor(displayCurve);
+                        if (EffectiveGuideSplines &&
                             displayGuidePolylines.TryGetValue(guide.Id, out Vector3[] polyline) &&
                             polyline.Length > 1)
                         {
@@ -2254,7 +2269,7 @@ namespace UMA.HairCards.Editor
                             }
                             else Handles.DrawAAPolyLine(selected ? 4f : 2f, polyline);
                         }
-                        else if (showGuideSplines)
+                        else if (EffectiveGuideSplines)
                         {
                             for (int pointIndex = 1; pointIndex < guide.points.Count; pointIndex++)
                                 Handles.DrawAAPolyLine(selected ? 4f : 2f,
@@ -2265,7 +2280,7 @@ namespace UMA.HairCards.Editor
                             Vector3 rootPosition = displayPoints != null && displayPoints.Count > 0
                                 ? displayPoints[0].position
                                 : guide.points[0].position;
-                            if (showGuideRoots)
+                            if (EffectiveGuideRoots)
                             {
                                 float rootSize = LocalHandleSize(rootPosition) * 0.035f * rootHandleScale;
                                 if (sceneTool == HairSceneTool.Erase)
@@ -2314,7 +2329,7 @@ namespace UMA.HairCards.Editor
         private void DrawEvaluatedChildren()
         {
             if (sculptPreviewPending) return;
-            if (strokeActive || !showChildren || !showChildSplines || previewMode != HairPreviewMode.GuidesAndChildren ||
+            if (strokeActive || !EffectiveChildren || !EffectiveChildSplines || EffectivePreviewMode != HairPreviewMode.GuidesAndChildren ||
                 evaluation?.curves == null)
                 return;
             int childCount = evaluation.childCurveCount;
@@ -2326,13 +2341,14 @@ namespace UMA.HairCards.Editor
                 if (curve == null || !curve.isChild || curve.points.Count < 2) continue;
                 if (encountered++ % stride != 0) continue;
                 Matrix4x4 oldMatrix = Handles.matrix;
-                Handles.matrix = oldMatrix * GuidePoseMatrix(curve.parentGuideId);
+                Handles.matrix = oldMatrix * (authoringPose?.MatrixForCurve(groom, curve) ?? Matrix4x4.identity);
                 Color color = curve.groupColor;
-                color.a = 0.38f;
+                if (populationInspection) color = PopulationColor(curve);
+                color.a = populationInspection ? 0.95f : 0.38f;
                 Handles.color = color;
                 for (int pointIndex = 1; pointIndex < curve.points.Count; pointIndex++)
-                    Handles.DrawDottedLine(curve.points[pointIndex - 1].position,
-                        curve.points[pointIndex].position, 3f);
+                    if (populationInspection) Handles.DrawLine(curve.points[pointIndex - 1].position, curve.points[pointIndex].position);
+                    else Handles.DrawDottedLine(curve.points[pointIndex - 1].position, curve.points[pointIndex].position, 3f);
                 Handles.matrix = oldMatrix;
             }
         }
@@ -2526,7 +2542,7 @@ namespace UMA.HairCards.Editor
             if (current.type == EventType.Used || current.button != 0) return;
             if (!HairWorkflowState.IsToolAllowed(workflowStep, sceneTool)) return;
 
-            if (sceneTool == HairSceneTool.Select && IsCardPreviewMode(previewMode) &&
+            if (sceneTool == HairSceneTool.Select && IsCardPreviewMode(EffectivePreviewMode) &&
                 current.type == EventType.MouseDown && CanCaptureSceneInput(controlId) &&
                 PickCard(HandleUtility.GUIPointToWorldRay(current.mousePosition)))
             { current.Use(); return; }

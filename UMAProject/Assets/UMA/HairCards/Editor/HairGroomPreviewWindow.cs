@@ -232,7 +232,7 @@ namespace UMA.HairCards.Editor
                 "Shows the source scalp surface in the authoring stage."), stage.ShowScalp);
             using (new EditorGUI.DisabledScope(!stage.HasAvatarVisibility))
                 stage.ShowAvatar = EditorGUILayout.ToggleLeft(new GUIContent("Show character preview",
-                    "Shows the avatar parts selected under Avatar Visibility below. Requires a generated character preview."), stage.ShowAvatar);
+                    "Shows the body slots selected under Avatar Visibility below. Requires a generated character or a saved character binding."), stage.ShowAvatar);
             stage.ShowHelpers = EditorGUILayout.ToggleLeft(new GUIContent("Show helpers",
                 "Shows grooming helper objects in the Scene view."), stage.ShowHelpers);
             EditorGUILayout.LabelField("Display settings are stage-only and do not affect the baked hair.",
@@ -268,8 +268,7 @@ namespace UMA.HairCards.Editor
             }
             if (!stage.HasAvatarVisibility)
             {
-                EditorGUILayout.LabelField("Launch from a generated DynamicCharacterAvatar to hide its recipes, " +
-                                           "UDIM groups, and slots.", EditorStyles.wordWrappedMiniLabel);
+                EditorGUILayout.LabelField("Select Source & Setup → Bind Character / Race to attach body slots to an existing groom, or launch from a generated character.", EditorStyles.wordWrappedMiniLabel);
                 return;
             }
 
@@ -287,8 +286,9 @@ namespace UMA.HairCards.Editor
                 stage.UdimVisibilityGroups);
             slotVisibilityExpanded = DrawVisibilitySection(stage, "By Slot", slotVisibilityExpanded,
                 stage.SlotVisibilityGroups);
-            EditorGUILayout.LabelField("Visibility is stage-only. Hidden parts are also removed from painting, " +
-                                       "selection, and guide-placement raycasts.", EditorStyles.wordWrappedMiniLabel);
+            EditorGUILayout.LabelField(stage.HasBoundCharacter
+                ? "Visibility is stage-only. Bound body slots are a separate preview; the original authoring surface and its paint remain unchanged."
+                : "Visibility is stage-only. Hidden parts are also removed from painting, selection, and guide-placement raycasts.", EditorStyles.wordWrappedMiniLabel);
         }
 
         private bool DrawVisibilitySection(HairCardStage stage, string title, bool expanded,

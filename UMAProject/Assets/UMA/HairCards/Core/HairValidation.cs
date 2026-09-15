@@ -34,7 +34,11 @@ namespace UMA.HairCards
         CardBudget,
         InvalidLod,
         UnreadableSource,
-        MaterialPassMismatch
+        MaterialPassMismatch,
+        ScalpBindingMissing,
+        MissingMap,
+        InvalidBakeReference,
+        InvalidCharacterBinding
     }
 
     public sealed class HairValidationIssue
@@ -175,6 +179,7 @@ namespace UMA.HairCards
                 }
                 ValidateGuides(group, groom, report);
                 ValidateConstraints(group, groom, report);
+                ValidateModifierMaps(group, report);
             }
 
             if (evaluation != null)
@@ -301,6 +306,31 @@ namespace UMA.HairCards
                     $"Constraint '{constraint.name}' in group '{group.name}' references a missing helper.",
                     group.Id, helperId: constraint.helperId, fixId: "repair-helper-reference");
             }
+        }
+
+        private static void ValidateModifierMaps(HairGroup group, HairValidationReport report)
+        {
+            void Check(IReadOnlyList<HairModifierSettings> modifiers)
+            {
+                if (modifiers == null) return;
+                foreach (var modifier in modifiers)
+                    if (modifier?.enabled == true && !string.IsNullOrEmpty(modifier.maskMapId) && !group.maps.Exists(m => m?.Id == modifier.maskMapId))
+                        report.Add(HairValidationSeverity.Warning, HairValidationCode.MissingMap,
+                            $"'{modifier.name}' references a missing painted mask and will have no effect. Select it and choose a map under Where this modifier applies.", group.Id);
+            }
+            Check(group.modifiers);
+            foreach (var layer in group.sculptLayers) if (layer?.visible == true) Check(layer.modifiers);
+            if (group.generation?.enabled != true) return;
+            void Population(HairGenerationStage stage)
+            {
+                if (stage?.enabled != true) return;
+                Check(stage.modifiers);
+                if (!string.IsNullOrEmpty(stage.partMapId) && !group.maps.Exists(m => m?.Id == stage.partMapId))
+                    report.Add(HairValidationSeverity.Error, HairValidationCode.MissingMap,
+                        $"'{stage.name}' references a missing Part Regions map. Choose a replacement under Root placement & guide influence.", group.Id);
+            }
+            foreach (var stage in group.generation.clumps) Population(stage);
+            Population(group.generation.cards);
         }
 
         private static bool IsFinite(Vector3 value)

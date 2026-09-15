@@ -655,7 +655,10 @@ namespace UMA.HairCards.Editor.Tests
                     capture.ReadPixels(new Rect(0, 0, render.width, render.height), 0, 0); capture.Apply();
                     System.IO.File.WriteAllBytes(System.IO.Path.Combine(Application.dataPath, "../inline-card-preview.png"), capture.EncodeToPNG());
                     Color[] renderedPixels = capture.GetPixels();
-                    bool hasStrandColor = System.Array.Exists(renderedPixels, pixel => pixel.r > pixel.g * 1.5f && pixel.r > 0.1f);
+                    // ReadPixels returns the project's render-target color space. In a Linear
+                    // project this deliberately dark, partly transparent swatch is below .1.
+                    // Hue plus a non-black threshold detects the card without a Gamma-only cutoff.
+                    bool hasStrandColor = System.Array.Exists(renderedPixels, pixel => pixel.r > pixel.g * 1.5f && pixel.r > 0.01f);
                     Assert.That(hasStrandColor, Is.True, "Preview should contain the reddish alpha-textured card, not just an empty background.");
                 }
                 finally { RenderTexture.active = previous; Object.DestroyImmediate(capture); }
@@ -1870,8 +1873,10 @@ namespace UMA.HairCards.Editor.Tests
                     {
                         Color pixel = pixels[y * 128 + x];
                         float distance = Vector2.Distance(new Vector2(x + 0.5f, y + 0.5f), new Vector2(64f, 64f));
-                        if (pixel.r > 0.45f && pixel.g > 0.45f && pixel.b > 0.45f) { inner += distance; innerCount++; }
-                        else if (pixel.r < 0.4f && pixel.g > 0.5f && pixel.b > 0.5f) { outer += distance; outerCount++; }
+                        // Identify white/cyan by chroma, not a Gamma-only red threshold:
+                        // cyan's .2 red can read back near .48 through an sRGB target.
+                        if (pixel.r > 0.25f && Mathf.Abs(pixel.g-pixel.r)<.15f && Mathf.Abs(pixel.b-pixel.r)<.15f) { inner += distance; innerCount++; }
+                        else if (pixel.g > pixel.r * 1.35f && pixel.b > pixel.r * 1.35f && pixel.g > .25f) { outer += distance; outerCount++; }
                     }
                     Assert.That(innerCount, Is.GreaterThan(8), "The falloff must be drawn as a visible inner circle.");
                     Assert.That(outerCount, Is.GreaterThan(8), "The actual brush radius must be drawn as an outer circle.");
@@ -3296,11 +3301,15 @@ namespace UMA.HairCards.Editor.Tests
                 Assert.That(stage.TryGetCurrentAreaBounds(out Bounds expected, out _), Is.True);
                 Assert.That(expected.center, Is.EqualTo(new Vector3(0f, sourceMesh.vertices[0].y, 0f)), "The orbit pivot stays on the character axis.");
                 Assert.That(expected.Contains(sourceMesh.vertices[0]), Is.True, "Focus the Growth Area even when another scalar map is selected.");
-                Assert.That(stage.FocusCurrentArea(), Is.True);
                 view.Show();
+                yield return null;
+                view.Focus();
                 Quaternion rotation = Quaternion.Euler(15f, 30f, 0f);
                 view.rotation = rotation;
                 view.pivot = new Vector3(8f, 10f, -4f);
+                // Show can repaint an already-open SceneView, consuming a pending focus.
+                // Queue only after this test's view is initialized, then apply synchronously.
+                Assert.That(stage.FocusCurrentArea(), Is.True);
                 InvokeStageMethod(stage, "ApplyPendingFocus", view);
                 double deadline = EditorApplication.timeSinceStartup + 1d;
                 while (EditorApplication.timeSinceStartup < deadline) { view.Repaint(); yield return null; }
@@ -4468,18 +4477,18 @@ namespace UMA.HairCards.Editor.Tests
                 Undo.IncrementCurrentGroup();
                 Assert.That(HairSharedColorUtility.Apply(atlas), Is.EqualTo(twoPasses ? 6 : 3));
                 Undo.FlushUndoRecordObjects();
-                Assert.That(material.color, Is.EqualTo(applied));
+                Assert.That(material.color, Is.EqualTo(applied).Using(new ColorEqualityComparer(0.00001f)));
                 Assert.That(material.GetFloat("_Glossiness"), Is.EqualTo(0.27f));
                 Assert.That(material.GetTexture("_MainTex"), Is.SameAs(texture));
                 if (twoPasses)
                 {
-                    Assert.That(secondPass.color, Is.EqualTo(applied));
+                    Assert.That(secondPass.color, Is.EqualTo(applied).Using(new ColorEqualityComparer(0.00001f)));
                     Assert.That(secondPass.GetFloat("_Glossiness"), Is.EqualTo(0.27f));
                     Assert.That(secondPass.GetTexture("_MainTex"), Is.SameAs(texture));
                 }
                 build.atlases.Add(atlas); build.materials.Add(material);
                 Material shown = preview.Update(build)[0];
-                Assert.That(shown.color, Is.EqualTo(applied));
+                Assert.That(shown.color, Is.EqualTo(applied).Using(new ColorEqualityComparer(0.00001f)));
                 Assert.That(shown.GetFloat("_Glossiness"), Is.EqualTo(0.27f));
                 Undo.PerformUndo();
                 Assert.That(material.color, Is.EqualTo(beforeColor));

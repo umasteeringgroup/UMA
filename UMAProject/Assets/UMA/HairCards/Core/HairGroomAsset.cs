@@ -19,6 +19,7 @@ namespace UMA.HairCards
         // Editor GlobalObjectId of the original mesh/character. The source snapshot itself
         // remains usable at runtime and does not depend on an open scene or UMA rebuild.
         [SerializeField, HideInInspector] private string sourceObjectId;
+        [SerializeField] private HairCharacterBindingAsset characterBinding;
         [SerializeField] private bool symmetryEnabled = true;
         [SerializeField] private Vector3 symmetryPlaneNormal = Vector3.right;
         [SerializeField] private Vector3 symmetryPlanePoint;
@@ -35,6 +36,7 @@ namespace UMA.HairCards
         public string SourceSlot => sourceSlot;
         public string SourceTopologySignature => sourceTopologySignature;
         public string SourceObjectId => sourceObjectId;
+        public HairCharacterBindingAsset CharacterBinding { get => characterBinding; set => characterBinding = value; }
         public void SetSourceObjectId(string value) => sourceObjectId = value ?? string.Empty;
         public bool SymmetryEnabled { get => symmetryEnabled; set => symmetryEnabled = value; }
         public Vector3 SymmetryPlaneNormal => symmetryPlaneNormal;

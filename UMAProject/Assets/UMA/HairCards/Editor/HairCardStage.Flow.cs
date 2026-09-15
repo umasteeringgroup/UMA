@@ -21,7 +21,7 @@ namespace UMA.HairCards.Editor
             ? ActiveModifier.flowSplines.Find(item => item != null && item.Id == selectedFlowSplineId) : null;
         private bool CanEditFlow => ActiveModifier?.type == HairModifierType.SplineFlow &&
             ActiveGroup != null && !ActiveGroup.locked && ActiveGroup.enabled && ActiveGroup.visible &&
-            ActiveLayer != null && !ActiveLayer.locked;
+            (SelectedNode?.Population != null || (ActiveLayer != null && !ActiveLayer.locked));
 
         internal void SelectFlowSpline(string id)
         {

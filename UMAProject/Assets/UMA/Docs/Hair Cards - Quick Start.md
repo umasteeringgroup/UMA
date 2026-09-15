@@ -4,7 +4,18 @@ UMA Hair Cards is a guide-driven system for authoring game-ready hair. The norma
 
 **Growth / Density -> Guide Preview -> Accept Guides -> Groom -> Cards -> Optimize -> Validate & Bake**
 
+For generated clumps, the swept hairstyle example, the new URP hair material and scalp
+vertex shading, follow [Swept Clumps: complete hairstyle guide](../HairCards/SweptClumpsGuide.md).
+The card-generation step now lives under **Generate Hair**: enable Surface generation to create
+independently scalp-anchored clump/card populations, or leave it off for children-per-guide.
+
 The editable `HairGroomAsset` is the source. Card meshes and UMA assets are generated outputs that can be rebuilt. The node tree is a typed view over that same data: opening it does not convert, regenerate, or discard a groom.
+
+For an existing unweighted groom, use **Source & Setup → Bind Character / Race**.
+Choose a generated character or RaceData, select body slots, **Preview Alignment**,
+then **Attach Validated Binding…**. This preserves the hairstyle and saves a separate
+weighted donor and skeleton for reopening, root-based card skinning, and real-slot
+scalp shading. See [Attach an existing hairstyle](../HairCards/SweptClumpsGuide.md#attach-an-existing-hairstyle-to-a-uma-character).
 
 ## Workspace: select a node, edit its properties
 
@@ -36,10 +47,13 @@ Coverage (group)
 │  │  └─ Gravity
 │  └─ Finishing Pass
 ├─ Constraints
-├─ 4 · Children
-└─ 5 · Hair Cards
-   ├─ Geometry & Vertex Colors
-   └─ Materials & UVs
+├─ 4 · Generate Hair
+│  ├─ Primary Clumps / modifiers (when enabled)
+│  └─ Fine Hair Cards / modifiers (when enabled)
+├─ 5 · Hair Cards
+│  ├─ Geometry & Vertex Colors
+│  └─ Materials & UVs
+└─ Scalp Vertex Shading
 Shared Helpers
 6 · Optimize & LODs
 7 · Validate & Bake
@@ -57,7 +71,7 @@ An **Active** toggle is independent of selection. Groups, sculpt passes, modifie
 2. Select the group's **Growth / Density** node and paint the region.
 3. Select **Guides**, preview generation, inspect it, then Accept or Replace Generated Only.
 4. Select **Grooming**, use **+ Sculpt Pass** in Hair Nodes, and comb with that pass selected. Select the pass before adding modifiers; select a modifier to edit its parameters.
-5. Select **Children** to control interpolated fill. Select **Hair Cards** to assign resources; use its Geometry and Materials & UVs child nodes for detailed setup.
+5. Select **Generate Hair** to control interpolated fill. Use **Swept Clumps Preset…** in the tree for the surface-generation workflow. Select **Hair Cards** to assign resources; use Geometry and Materials & UVs for detailed setup.
 6. Select **Optimize & LODs** to set release budgets.
 7. Select **Validate & Bake**, resolve blockers, inspect a dry run, then bake.
 

@@ -146,6 +146,7 @@ namespace UMA.HairCards
                     for (int i = start; i <= end; i++) target[i] = original[i];
                 start = end;
             }
+            if (start == 0) return; // No internal pins: the first forward sweep already solved this chain.
             for (int i = start + 1; i < original.Count; i++)
                 target[i] = AtLength(target[i - 1], target[i],
                     Vector3.Distance(original[i - 1], original[i]), original[i] - original[i - 1]);

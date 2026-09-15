@@ -1,0 +1,84 @@
+using UnityEditor;
+using UnityEngine;
+
+namespace UMA.HairCards.Editor
+{
+    /// <summary>The same material controls work in the Inspector and docked Hair Properties.</summary>
+    public sealed class HairSweptShaderGUI : ShaderGUI
+    {
+        internal const string ShaderName = "UMA/Hair Cards/Swept Hair URP";
+        private bool lighting, advanced;
+        public override void OnGUI(MaterialEditor editor, MaterialProperty[] properties)
+        {
+            EditorGUILayout.HelpBox("Two-sided, alpha-clipped strand shading. UV1 carries root-to-tip / strand ID; UV2 carries clump ID / mask. Vertex RGBA is left available for animation by default.", MessageType.None);
+            void Field(string name) { var p = FindProperty(name, properties, false); if (p != null) editor.ShaderProperty(p, p.displayName); }
+            EditorGUILayout.LabelField("Atlas & color", EditorStyles.boldLabel);
+            foreach (string name in new[] { "_BaseMap", "_BaseColor", "_RootColor", "_TipColor", "_RootFade", "_ColorPower", "_StrandVariation", "_ClumpVariation", "_Cutoff" }) Field(name);
+            lighting = EditorGUILayout.Foldout(lighting, "Highlights & lighting", true);
+            if (lighting) foreach (string name in new[] { "_SpecularColor", "_SpecularStrength", "_Smoothness", "_SpecularShift", "_SecondaryColor", "_SecondaryStrength", "_SecondarySmoothness", "_SecondaryShift", "_Transmission", "_TransmissionColor", "_DiffuseWrap", "_AmbientStrength" }) Field(name);
+            advanced = EditorGUILayout.Foldout(advanced, "Texture channels & diagnostics", true);
+            if (advanced)
+            {
+                foreach (string name in new[] { "_TextureColor", "_DepthInfluence", "_DepthMap", "_UseDepthMap", "_OcclusionMap", "_OcclusionStrength", "_BumpMap", "_BumpScale", "_ShadowCutoff", "_AlphaToCoverage", "_VertexColorInfluence", "_VertexAlphaInfluence", "_DebugView" }) Field(name);
+                EditorGUILayout.HelpBox("Depth shading reads atlas red, or the optional separate depth map using the same UVs. A nearly white diffuse atlas needs a separate depth map for fiber contrast. Set depth influence to 0 for ordinary color-only shading. Alpha to coverage smooths edges with MSAA. No duplicate backfaces or second pass are needed.", MessageType.Info);
+                editor.EnableInstancingField(); editor.RenderQueueField();
+            }
+        }
+
+        internal static Material CreateMaterial(HairGroomAsset groom, HairAtlasProfileAsset atlas, string resourceFolder = null)
+        {
+            var shader = Shader.Find(ShaderName);
+            if (shader == null) return null;
+            var material = new Material(shader) { name = groom.name + " Swept Hair", renderQueue = (int)UnityEngine.Rendering.RenderQueue.AlphaTest };
+            if (atlas?.albedo != null) material.SetTexture("_BaseMap", atlas.albedo);
+            if (atlas?.normal != null) material.SetTexture("_BumpMap", atlas.normal);
+            if (atlas?.mask != null) material.SetTexture("_OcclusionMap", atlas.mask);
+            HairGenerationEditor.SaveResourceNear(groom, material, resourceFolder);
+            if (atlas != null) { Undo.RecordObject(atlas, "Assign Swept Hair Material"); atlas.material = material; EditorUtility.SetDirty(atlas); }
+            return material;
+        }
+
+        internal static void DrawInline(HairCardStage stage, HairGroup group)
+        {
+            var atlas = group.atlas; if (atlas == null) return;
+            if (atlas.material == null || atlas.material.shader.name != ShaderName)
+            {
+                using (new EditorGUI.DisabledScope(Shader.Find(ShaderName) == null))
+                if (GUILayout.Button("Create Swept Hair URP Material", GUILayout.Height(26)))
+                {
+                    if (atlas.material == null || EditorUtility.DisplayDialog("Assign New Hair Material?", "Create and assign a new two-sided URP hair material? The previous material asset is preserved. Undo restores the assignment.", "Create & Assign", "Cancel"))
+                    { CreateMaterial(stage.Groom, atlas); stage.TrackResourceEdit(atlas); stage.QueuePreviewChange(HairPreviewChange.Materials); }
+                }
+                return;
+            }
+            var material = atlas.material;
+            EditorGUILayout.LabelField("Hair color", EditorStyles.boldLabel);
+            EditorGUI.BeginChangeCheck();
+            Color root = EditorGUILayout.ColorField("Roots", material.GetColor("_RootColor"));
+            Color tip = EditorGUILayout.ColorField("Tips", material.GetColor("_TipColor"));
+            float reach = EditorGUILayout.Slider("Root color reach", material.GetFloat("_RootFade"), 0.01f, 1f);
+            float variation = EditorGUILayout.Slider("Strand variation", material.GetFloat("_StrandVariation"), 0f, 1f);
+            float cutoff = EditorGUILayout.Slider("Alpha cutoff", material.GetFloat("_Cutoff"), 0f, 1f);
+            if (EditorGUI.EndChangeCheck())
+            {
+                Undo.RecordObject(material, "Edit Hair Color"); material.SetColor("_RootColor", root); material.SetColor("_TipColor", tip);
+                material.SetFloat("_RootFade", reach); material.SetFloat("_StrandVariation", variation); material.SetFloat("_Cutoff", cutoff);
+                EditorUtility.SetDirty(material); stage.TrackResourceEdit(material); stage.QueuePreviewChange(HairPreviewChange.Materials);
+            }
+            EditorGUILayout.LabelField("Edits affect this material wherever it is shared. Full lighting controls are in the material Inspector.", EditorStyles.wordWrappedMiniLabel);
+            if (atlas.albedo != null && AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(atlas.albedo)) is TextureImporter importer && !importer.mipmapEnabled)
+            {
+                EditorGUILayout.HelpBox("This atlas has no mipmaps. Fine strands can sparkle at a distance. Alpha-preserving mipmaps improve stability.", MessageType.Warning);
+                if (GUILayout.Button("Enable Alpha-Preserving Mipmaps…") && EditorUtility.DisplayDialog("Update Shared Atlas Import?",
+                    "Enable mipmaps, preserve alpha coverage at this cutoff, and use 8× anisotropic filtering? This changes the texture import wherever the atlas is used; its image pixels are not edited.", "Update Import", "Cancel"))
+                {
+                    Undo.RecordObject(importer,"Optimize Hair Atlas Import"); importer.mipmapEnabled=true;importer.mipMapsPreserveCoverage=true;
+                    importer.alphaTestReferenceValue=material.GetFloat("_Cutoff"); importer.anisoLevel=8;importer.SaveAndReimport();
+                    stage.QueuePreviewChange(HairPreviewChange.Materials);
+                }
+            }
+            if (group.profile?.DoubleSided == true || atlas.secondPassMaterial != null)
+                EditorGUILayout.HelpBox("This shader already shades both sides in one pass. Duplicate backface geometry / a second material pass increases cost; keep them only for a deliberate extra effect.", MessageType.Warning);
+        }
+    }
+}

@@ -31,7 +31,10 @@ namespace UMA.HairCards.Editor
             HairValidationReport report = HairValidator.Validate(groom, options: groom != null ? ValidationOptions(groom) : null);
             report.isReleaseReport = true;
             if (groom == null) return report;
+            ValidateBakeReferences(groom.BakeSettings, report);
+            ValidateCharacterBinding(groom,report);
             ValidateUmaMaterialPasses(groom, report);
+            HairScalpShadingEditor.ValidateBindings(groom, report);
             HashSet<int> levels = new HashSet<int>();
             foreach (HairLodSettings lod in groom.Lods)
             {
@@ -54,7 +57,10 @@ namespace UMA.HairCards.Editor
             {
                 if (lod.level != 0 && !groom.BakeSettings.createMesh) continue;
                 HairEvaluationResult evaluation = HairGroomEvaluator.Evaluate(groom, EvaluationOptions(groom, lod.level));
-                using HairCardMeshBuildResult build = HairCardMeshGenerator.Build(evaluation, $"Release validation LOD {lod.level}");
+                using HairCardMeshBuildResult build = HairCardMeshGenerator.Build(evaluation, $"Release validation LOD {lod.level}",includeEditingMetadata:groom.CharacterBinding!=null);
+                if(groom.CharacterBinding!=null)
+                    try { HairSurfaceSkinning.TransferCards(build,groom.CharacterBinding); }
+                    catch(Exception e) { report.Add(HairValidationSeverity.Error,HairValidationCode.InvalidCharacterBinding,e.Message,fixId:"rebind-source"); }
                 HairValidationReport output = HairValidator.Validate(groom, evaluation, build, ValidationOptions(groom));
                 report.lods.Add(new HairLodValidationSummary
                 {
@@ -88,6 +94,33 @@ namespace UMA.HairCards.Editor
                 validation = report, isDryRun = true, succeeded = report.CanBake,
                 cardCount = report.cardCount, vertexCount = report.vertexCount, triangleCount = report.triangleCount
             };
+        }
+
+        internal static string GetReferenceTypeWarning<T>(string label, UnityEngine.Object value)
+            where T : UnityEngine.Object
+        {
+            if (value == null || value is T) return null;
+            string explanation = typeof(T) == typeof(UMAMaterial)
+                ? " UMA Material is an UMA configuration asset, not a Unity rendering Material." : string.Empty;
+            return $"{label}: '{value.name}' is a {value.GetType().Name}, but this field requires {typeof(T).Name}." +
+                explanation + " Choose the correct asset or clear this field. The saved assignment is kept until you change it.";
+        }
+
+        internal static void ValidateBakeReferences(HairBakeSettings settings, HairValidationReport report)
+        {
+            ValidateBakeReference<UMAMaterial>("UMA Material", settings.umaMaterial,
+                settings.createOverlay && !(settings.overlayTemplate is OverlayDataAsset), report);
+            ValidateBakeReference<OverlayDataAsset>("Existing Overlay", settings.overlayTemplate, settings.createOverlay, report);
+            ValidateBakeReference<RaceData>("Compatible Race", settings.raceData, settings.createWardrobeRecipe, report);
+        }
+
+        private static void ValidateBakeReference<T>(string label, UnityEngine.Object value, bool used, HairValidationReport report)
+            where T : UnityEngine.Object
+        {
+            string warning = GetReferenceTypeWarning<T>(label, value);
+            if (warning != null)
+                report.Add(used ? HairValidationSeverity.Error : HairValidationSeverity.Warning,
+                    HairValidationCode.InvalidBakeReference, warning, fixId: "edit-bake-settings");
         }
 
         internal static void ValidateUmaMaterialPasses(HairGroomAsset groom, HairValidationReport report)
@@ -174,6 +207,8 @@ namespace UMA.HairCards.Editor
             using (HairCardMeshBuildResult build = HairCardMeshGenerator.Build(evaluation, groom.name + " Dry Run"))
             {
                 outcome.validation = HairValidator.Validate(groom, evaluation, build, ValidationOptions(groom));
+                ValidateBakeReferences(groom.BakeSettings, outcome.validation);
+                ValidateCharacterBinding(groom,outcome.validation);
                 outcome.cardCount = evaluation.CardCount;
                 outcome.vertexCount = build.vertexCount;
                 outcome.triangleCount = build.triangleCount;
@@ -208,7 +243,7 @@ namespace UMA.HairCards.Editor
 
             HairEvaluationResult evaluation = HairGroomEvaluator.Evaluate(groom,
                 EvaluationOptions(groom, 0));
-            using (HairCardMeshBuildResult build = HairCardMeshGenerator.Build(evaluation, settings.assetName))
+            using (HairCardMeshBuildResult build = HairCardMeshGenerator.Build(evaluation, settings.assetName,includeEditingMetadata:groom.CharacterBinding!=null))
             {
                 outcome.cardCount = evaluation.CardCount;
                 outcome.vertexCount = build.vertexCount;
@@ -220,7 +255,7 @@ namespace UMA.HairCards.Editor
                 }
 
                 Mesh sourceSkinMesh = ResolveSkinMesh(groom, avatar);
-                if (!HairSkinningUtility.TransferClosestVertexWeights(build.mesh, sourceSkinMesh,
+                if (groom.CharacterBinding == null && !HairSkinningUtility.TransferClosestVertexWeights(build.mesh, sourceSkinMesh,
                         out string skinningWarning))
                 {
                     outcome.warnings.Add(skinningWarning);
@@ -228,6 +263,7 @@ namespace UMA.HairCards.Editor
 
                 try
                 {
+                    if(groom.CharacterBinding!=null) HairCharacterBindingUtility.Skin(groom,build);
                     using BakeTransaction transaction = new BakeTransaction();
                     AssetDatabase.StartAssetEditing();
                     Mesh meshAsset = null;
@@ -305,9 +341,10 @@ namespace UMA.HairCards.Editor
                 HairEvaluationResult evaluation = HairGroomEvaluator.Evaluate(groom,
                     EvaluationOptions(groom, lod.level));
                 using (HairCardMeshBuildResult build = HairCardMeshGenerator.Build(evaluation,
-                           settings.assetName + "_LOD" + lod.level))
+                           settings.assetName + "_LOD" + lod.level,includeEditingMetadata:groom.CharacterBinding!=null))
                 {
-                    HairSkinningUtility.TransferClosestVertexWeights(build.mesh, ResolveSkinMesh(groom, null), out _);
+                    if(groom.CharacterBinding!=null) HairCharacterBindingUtility.Skin(groom,build);
+                    else HairSkinningUtility.TransferClosestVertexWeights(build.mesh, ResolveSkinMesh(groom, null), out _);
                     Mesh asset = WriteMesh(build.mesh, folder,
                         Sanitize(settings.assetName) + "_LOD" + lod.level + ".asset", settings.overwriteExisting,
                         transaction);
@@ -375,7 +412,8 @@ namespace UMA.HairCards.Editor
                 SkinnedMeshRenderer renderer = temporary.AddComponent<SkinnedMeshRenderer>();
                 renderer.sharedMesh = generated;
                 SkinnedMeshRenderer sourceRenderer = ResolveRenderer(avatar);
-                if (sourceRenderer != null)
+                if(groom.CharacterBinding!=null) HairCharacterBindingUtility.ConfigureRig(renderer,groom.CharacterBinding);
+                else if (sourceRenderer != null)
                 {
                     renderer.bones = sourceRenderer.bones;
                     renderer.rootBone = sourceRenderer.rootBone;
@@ -502,6 +540,7 @@ namespace UMA.HairCards.Editor
             recipe.wardrobeSlot = string.IsNullOrWhiteSpace(settings.wardrobeSlot) ? "Hair" : settings.wardrobeSlot;
             recipe.compatibleRaces = new List<string> { race.raceName };
             recipe.Save(recipeData);
+            HairScalpShadingEditor.SynchronizeRecipe(groom, recipe, transaction.Backup);
             if (created)
             {
                 AssetDatabase.CreateAsset(recipe, path);
@@ -524,6 +563,12 @@ namespace UMA.HairCards.Editor
                 else if (asset is UMAWardrobeRecipe) indexer.EvilAddAsset(typeof(UMAWardrobeRecipe), asset);
             }
             indexer.ForceSave();
+        }
+
+        private static void ValidateCharacterBinding(HairGroomAsset groom,HairValidationReport report)
+        {
+            string error=HairCharacterBindingUtility.Validate(groom);
+            if(error!=null) report.Add(HairValidationSeverity.Error,HairValidationCode.InvalidCharacterBinding,error,fixId:"rebind-source");
         }
 
         private static Mesh ResolveSkinMesh(HairGroomAsset groom, DynamicCharacterAvatar avatar)

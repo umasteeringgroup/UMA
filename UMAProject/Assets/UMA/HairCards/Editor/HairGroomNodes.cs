@@ -8,7 +8,8 @@ namespace UMA.HairCards.Editor
     internal enum HairGroomNodeKind
     {
         Source, Group, GrowthMap, OptionalMaps, Guides, Groom, Layer, Modifier,
-        Children, Cards, Geometry, Atlas, Helpers, Helper, Constraints, Constraint, Optimize, Output, LegacyModifiers
+        Children, Cards, Geometry, Atlas, Helpers, Helper, Constraints, Constraint, Optimize, Output, LegacyModifiers,
+        Population, ScalpShading
     }
 
     // A typed view over authored data, not a second copy of it. Keys survive rename, reorder and Undo.
@@ -23,18 +24,21 @@ namespace UMA.HairCards.Editor
         internal HairGrowthMap Map;
         internal HairHelper Helper;
         internal HairConstraintSettings Constraint;
+        internal HairGenerationStage Population;
         internal int Depth;
         internal bool HasChildren;
-        internal bool CanReorder => Kind == HairGroomNodeKind.Layer || Kind == HairGroomNodeKind.Modifier;
+        internal bool CanReorder => Kind == HairGroomNodeKind.Layer || Kind == HairGroomNodeKind.Modifier ||
+            (Kind == HairGroomNodeKind.Population && Population != Group.generation.cards);
         internal bool Locked => Group?.locked == true || Layer?.locked == true || Helper?.locked == true;
         internal bool CanToggle => Kind == HairGroomNodeKind.Group || Kind == HairGroomNodeKind.Layer ||
-            Kind == HairGroomNodeKind.Modifier || Kind == HairGroomNodeKind.Constraint;
+            Kind == HairGroomNodeKind.Modifier || Kind == HairGroomNodeKind.Constraint || Kind == HairGroomNodeKind.Population;
         internal bool Enabled => Kind switch
         {
             HairGroomNodeKind.Group => Group.enabled,
             HairGroomNodeKind.Layer => Layer.visible,
             HairGroomNodeKind.Modifier => Modifier.enabled,
             HairGroomNodeKind.Constraint => Constraint.enabled,
+            HairGroomNodeKind.Population => Population.enabled,
             _ => true
         };
     }
@@ -85,10 +89,29 @@ namespace UMA.HairCards.Editor
                 foreach (HairConstraintSettings constraint in group.constraints)
                     if (constraint != null) Add(HairGroomNodeKind.Constraint, constraint.name, "Helper constraint applied after grooming.", HairWorkflowStep.Groom, constraint.Id, constraints, group).Constraint = constraint;
                 foreach (HairSculptLayer layer in group.sculptLayers) if (layer != null && layer.afterGroupOperations) AddPass(layer);
-                Add(HairGroomNodeKind.Children, "4 · Children", "Fill between surrounding guides with weighted interpolation, spread and variation.", HairWorkflowStep.Cards, group.Id, root, group);
+                var generation = Add(HairGroomNodeKind.Children, "4 · Generate Hair", "Scalp-bound roots -> clump guides -> final cards. Inspect each population independently.", HairWorkflowStep.Cards, group.Id, root, group);
+                if (group.generation?.enabled == true)
+                {
+                    void AddPopulation(HairGenerationStage population, bool final)
+                    {
+                        if (population == null) return;
+                        var item = Add(HairGroomNodeKind.Population, population.name, final ? "Final scalp-bound cards, following the last enabled clump population." :
+                            "Intermediate clump guides: shape this population before generating finer hair from it.", HairWorkflowStep.Cards, population.Id, generation, group);
+                        item.Population = population;
+                        foreach (var modifier in population.modifiers)
+                        {
+                            if (modifier == null) continue;
+                            var operation = Add(HairGroomNodeKind.Modifier, modifier.name, "Shapes only this population, once. Later populations inherit the result.", HairWorkflowStep.Cards, modifier.Id, item, group);
+                            operation.Population = population; operation.Modifier = modifier;
+                        }
+                    }
+                    foreach (var population in group.generation.clumps) AddPopulation(population, false);
+                    AddPopulation(group.generation.cards, true);
+                }
                 var cards = Add(HairGroomNodeKind.Cards, "5 · Hair Cards", "Assign shared card/atlas resources and preview the result.", HairWorkflowStep.Cards, group.Id, root, group);
                 Add(HairGroomNodeKind.Geometry, "Geometry & Vertex Colors", "Ribbon shape, taper, sampling, root embedding and root-to-tip RGBA.", HairWorkflowStep.Cards, group.Id, cards, group);
                 Add(HairGroomNodeKind.Atlas, "Materials & UVs", "Two material passes, shared colors, textures and inline UV-set editing.", HairWorkflowStep.Cards, group.Id, cards, group);
+                Add(HairGroomNodeKind.ScalpShading, "Scalp Vertex Shading", "Painted growth drives a vertex-color Mesh Modifier on the existing scalp/body. No extra scalp cap.", HairWorkflowStep.Cards, group.Id, root, group);
             }
             var helpers = Add(HairGroomNodeKind.Helpers, "Shared Helpers", "Create or bind scene helpers. These resources can be referenced by multiple groups.", HairWorkflowStep.Groom);
             foreach (HairHelper helper in groom.SharedHelpers)
@@ -104,10 +127,12 @@ namespace UMA.HairCards.Editor
             if (!stage.Groom.Groups.Contains(node.Group) ||
                 (node.Layer != null && !node.Group.sculptLayers.Contains(node.Layer)) ||
                 (node.Constraint != null && !node.Group.constraints.Contains(node.Constraint))) return false;
-            if (node.Modifier != null) return HairGroomCommands.SetModifierEnabled(stage.Groom, node.Group, node.Layer, node.Modifier, enabled);
+            if (node.Modifier != null && node.Population == null) return HairGroomCommands.SetModifierEnabled(stage.Groom, node.Group, node.Layer, node.Modifier, enabled);
             Undo.RecordObject(stage.Groom, "Toggle Hair Node");
             if (node.Kind == HairGroomNodeKind.Group) node.Group.enabled = enabled;
             else if (node.Kind == HairGroomNodeKind.Layer) node.Layer.visible = enabled;
+            else if (node.Modifier != null) node.Modifier.enabled = enabled;
+            else if (node.Population != null) node.Population.enabled = enabled;
             else node.Constraint.enabled = enabled;
             HairGroomCommands.Commit(stage.Groom, HairPreviewChange.Evaluation); return true;
         }
@@ -118,6 +143,7 @@ namespace UMA.HairCards.Editor
                 target.Locked || source.Kind != target.Kind || source.ParentKey != target.ParentKey || source.Key == target.Key ||
                 source.Group != target.Group || !stage.Groom.Groups.Contains(source.Group)) return false;
             bool pass = source.Kind == HairGroomNodeKind.Layer;
+            if (source.Population != null) return HairGenerationEditor.MoveRelative(stage, source, target, after);
             int from = pass ? source.Group.sculptLayers.IndexOf(source.Layer) : source.Layer.modifiers.IndexOf(source.Modifier);
             int to = pass ? source.Group.sculptLayers.IndexOf(target.Layer) : source.Layer.modifiers.IndexOf(target.Modifier);
             if (from < 0 || to < 0) return false;

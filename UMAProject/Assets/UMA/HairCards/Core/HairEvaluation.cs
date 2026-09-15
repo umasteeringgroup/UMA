@@ -37,6 +37,12 @@ namespace UMA.HairCards
         public string curveId;
         public string parentGuideId;
         public string groupId;
+        public HairSurfaceAnchor rootAnchor;
+        public string generationStageId;
+        public string clumpId;
+        public int clumpSeed;
+        public float hairlineDistance;
+        public float maskValue = 1f;
         public bool isChild;
         public int seed;
         internal int childOrdinal;
@@ -69,6 +75,9 @@ namespace UMA.HairCards
             if (ReferenceEquals(this, target)) throw new ArgumentException("Copy destination must be a different curve.", nameof(target));
             target.curveId = newCurveId ?? curveId; target.parentGuideId = parentGuideId; target.groupId = groupId;
             target.isChild = isChild; target.seed = seed; target.groupColor = groupColor;
+            target.rootAnchor = rootAnchor; target.generationStageId = generationStageId;
+            target.clumpId = clumpId; target.clumpSeed = clumpSeed;
+            target.hairlineDistance = hairlineDistance; target.maskValue = maskValue;
             target.childOrdinal = childOrdinal;
             target.rootNormal = rootNormal; target.rootEmbedDepth = rootEmbedDepth;
             target.profile = profile; target.atlas = atlas; target.atlasRegionSelection = atlasRegionSelection;
@@ -94,7 +103,13 @@ namespace UMA.HairCards
         internal HairEvaluationOptions options;
         internal readonly HairChildGenerator.GenerationWorkspace children = new HairChildGenerator.GenerationWorkspace();
         internal readonly HairSplineFlowWorkspace splineFlow = new HairSplineFlowWorkspace();
+        internal readonly HairPopulationWorkspace populations = new HairPopulationWorkspace();
+        internal readonly Dictionary<HairModifierSettings, HairModifierSettings> maskedModifiers = new Dictionary<HairModifierSettings, HairModifierSettings>();
+        internal HairGroup currentGroup;
         internal readonly List<HairEvaluatedCurve> groupGuides = new List<HairEvaluatedCurve>();
+        internal readonly List<HairGuide> groupSourceGuides = new List<HairGuide>();
+        internal readonly HairClumpField clumps = new HairClumpField();
+        internal readonly HairModifierSettings[] singleModifier = new HairModifierSettings[1];
         internal readonly List<HairCurvePoint> resampled = new List<HairCurvePoint>();
         internal float[] cumulative = Array.Empty<float>();
         internal HairCurvePoint[] smoothing = Array.Empty<HairCurvePoint>();
@@ -102,13 +117,14 @@ namespace UMA.HairCards
         internal readonly List<Vector3> modifierTarget = new List<Vector3>();
         internal readonly List<HairGuidePoint> modifierControls = new List<HairGuidePoint>();
         internal readonly List<HairCurvePoint> helperCurve = new List<HairCurvePoint>();
-        internal Vector3 groupClumpTip;
         internal bool inUse;
 
         public void Clear()
         {
             if (inUse) throw new InvalidOperationException("Cannot clear an active hair evaluation workspace.");
             sourceMesh.Clear(); gravitySurface.Clear(); children.Clear(); splineFlow.Clear(); groupGuides.Clear(); groupGuides.Capacity = 0;
+            populations.Clear(); clumps.Clear(); maskedModifiers.Clear(); currentGroup = null; options = null;
+            groupSourceGuides.Clear(); groupSourceGuides.Capacity = 0; singleModifier[0] = null;
             resampled.Clear(); resampled.Capacity = 0; cumulative = Array.Empty<float>(); smoothing = Array.Empty<HairCurvePoint>();
             modifierOriginal.Clear(); modifierOriginal.Capacity = 0; modifierTarget.Clear(); modifierTarget.Capacity = 0;
             modifierControls.Clear(); modifierControls.Capacity = 0; helperCurve.Clear(); helperCurve.Capacity = 0;
@@ -123,6 +139,9 @@ namespace UMA.HairCards
         // A posed editor supplies the same per-root matrix used to display its guides/cards.
         public Matrix4x4 sourceToWorld = Matrix4x4.identity;
         public Func<string, Matrix4x4> guideToSourcePose;
+        public Func<HairSurfaceAnchor, Matrix4x4> anchorToSourcePose;
+        internal Matrix4x4 PoseFor(HairEvaluatedCurve curve) => !string.IsNullOrEmpty(curve.generationStageId) && curve.rootAnchor.IsValid && anchorToSourcePose != null
+            ? anchorToSourcePose(curve.rootAnchor) : guideToSourcePose?.Invoke(curve.parentGuideId) ?? Matrix4x4.identity;
         public Mesh gravityCollisionMesh;
         public Vector3? worldGravity;
         public int lodLevel;
@@ -142,6 +161,9 @@ namespace UMA.HairCards
         // anything later in this group. Other groups remain fully evaluated.
         public string editGroupId;
         public string editLayerId;
+        // Session-only inspection. Empty means final hair, otherwise show this population.
+        public string previewGenerationStageId;
+        public string previewModifierId;
 
         internal string EditLayerFor(HairGroup group) => group != null && group.Id == editGroupId &&
             !string.IsNullOrEmpty(editLayerId) && group.sculptLayers.Exists(layer => layer?.Id == editLayerId)
@@ -157,7 +179,7 @@ namespace UMA.HairCards
         {
             reusableCurves ??= new List<HairEvaluatedCurve>();
             nextCurve = 0;
-            curves.Clear(); evaluatedGuides.Clear(); warnings.Clear();
+            curves.Clear(); evaluatedGuides.Clear(); generatedGuides.Clear(); populations.Clear(); warnings.Clear();
             guideCurveCount = childCurveCount = rejectedCurveCount = revision = 0;
         }
 
@@ -177,6 +199,8 @@ namespace UMA.HairCards
                 reusableCurves.RemoveRange(nextCurve, reusableCurves.Count - nextCurve);
         }
         public readonly List<HairEvaluatedCurve> evaluatedGuides = new List<HairEvaluatedCurve>();
+        public readonly List<HairEvaluatedCurve> generatedGuides = new List<HairEvaluatedCurve>();
+        public readonly List<HairPopulationInfo> populations = new List<HairPopulationInfo>();
         public readonly List<HairEvaluatedCurve> curves = new List<HairEvaluatedCurve>();
         public readonly List<string> warnings = new List<string>();
         public int guideCurveCount;

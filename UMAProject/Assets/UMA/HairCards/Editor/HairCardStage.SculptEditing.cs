@@ -21,7 +21,9 @@ namespace UMA.HairCards.Editor
         internal string SculptEditingStatus => sceneTool == HairSceneTool.Erase && CanEraseGuides
             ? "Erase Guides — deletes whole authored guides across all sculpt layers. Frozen guides are protected. Undo restores the stroke."
             : IsLayerEditing
-            ? HasDownstreamSculptOperations
+            ? ActiveGroup?.generation?.enabled == true
+                ? $"Editing {ActiveLayer.name} — authored guides only. Generated clumps/cards are bypassed; Return to Final Preview shows the complete hair."
+            : HasDownstreamSculptOperations
                 ? $"Editing {ActiveLayer.name} — its modifiers and later operations are temporarily bypassed."
                 : $"Editing {ActiveLayer.name} — final sculpt edit point. Earlier modifiers remain applied."
             : "Final preview — use Edit This Layer for upstream changes, or add a finishing layer to sculpt this result.";
@@ -117,6 +119,7 @@ namespace UMA.HairCards.Editor
         internal bool IsNodeTemporarilyBypassed(HairGroomNode node)
         {
             if (!IsLayerEditing || node?.Group != ActiveGroup) return false;
+            if (ActiveGroup.generation.enabled && (node.Population != null || node.Kind == HairGroomNodeKind.Children)) return true;
             if (node.Kind == HairGroomNodeKind.Constraints || node.Kind == HairGroomNodeKind.Constraint ||
                 node.Kind == HairGroomNodeKind.LegacyModifiers) return !ActiveLayer.afterGroupOperations;
             if (node.Layer == null) return false;

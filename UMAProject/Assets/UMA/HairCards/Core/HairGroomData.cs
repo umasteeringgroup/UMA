@@ -353,16 +353,10 @@ namespace UMA.HairCards
             if (values == null || values.Length != count)
             {
                 float[] resized = new float[count];
+                Array.Fill(resized, defaultValue);
                 if (values != null)
                 {
                     Array.Copy(values, resized, Mathf.Min(values.Length, resized.Length));
-                }
-                if (values == null || values.Length == 0)
-                {
-                    for (int i = 0; i < resized.Length; i++)
-                    {
-                        resized[i] = defaultValue;
-                    }
                 }
                 values = resized;
             }
@@ -436,10 +430,14 @@ namespace UMA.HairCards
         public int seed;
         public string maskMapId;
         public AnimationCurve rootToTip = AnimationCurve.Linear(0f, 1f, 1f, 1f);
+        public HairModifierMask mask = new HairModifierMask();
+        [Min(0.01f)] public float noiseFrequency = 18f;
+        [Range(0f, 1f)] public float noiseParentCoherence;
         public string helperId;
 
         public string Id => id;
 
+        [Min(0.001f)] public float clumpRadius = 0.03f;
         [Range(0f, 1f)] public float rootInfluence = 1f;
         public HairLiftNormalMode liftNormalMode = HairLiftNormalMode.RootNormal;
         [Min(0f)] public float gravityStrength = 2.5f;
@@ -476,6 +474,7 @@ namespace UMA.HairCards
             copy.rootToTip = rootToTip == null ? null : new AnimationCurve(rootToTip.keys)
             { preWrapMode = rootToTip.preWrapMode, postWrapMode = rootToTip.postWrapMode };
             copy.flowSplines = new List<HairFlowSpline>();
+            copy.mask = mask == null ? new HairModifierMask() : JsonUtility.FromJson<HairModifierMask>(JsonUtility.ToJson(mask));
             if (flowSplines != null)
                 foreach (HairFlowSpline spline in flowSplines)
                     if (spline != null) copy.flowSplines.Add(spline.Duplicate());
@@ -487,6 +486,10 @@ namespace UMA.HairCards
         {
             HairStableId.Ensure(ref id);
             rootToTip ??= AnimationCurve.Linear(0f, 1f, 1f, 1f);
+            mask ??= new HairModifierMask();
+            mask.remap ??= AnimationCurve.Linear(0f, 0f, 1f, 1f);
+            noiseFrequency = float.IsFinite(noiseFrequency) ? Mathf.Max(0.01f, noiseFrequency) : 18f;
+            noiseParentCoherence = Mathf.Clamp01(noiseParentCoherence);
             weight = Mathf.Clamp01(weight);
             rootInfluence = float.IsFinite(rootInfluence) ? Mathf.Clamp01(rootInfluence) : 0f;
             gravityStrength = float.IsFinite(gravityStrength) ? Mathf.Max(0f, gravityStrength) : 0f;
@@ -619,6 +622,7 @@ namespace UMA.HairCards
         public bool enabled = true;
         [Range(0f, 1f)] public float lodImportance = 1f;
         public HairChildSettings children = new HairChildSettings();
+        public HairGenerationPipeline generation = new HairGenerationPipeline();
         [Tooltip("Card-only root inset along the inward surface normal, in meters. Fades over the first 20% of each card; guides remain unchanged.")]
         [Range(0f, 0.02f)] public float rootEmbedDepth;
         public List<HairGrowthMap> maps = new List<HairGrowthMap>();
@@ -637,6 +641,8 @@ namespace UMA.HairCards
         {
             HairStableId.Ensure(ref id);
             children ??= new HairChildSettings();
+            generation ??= new HairGenerationPipeline();
+            generation.EnsureIntegrity();
             maps ??= new List<HairGrowthMap>();
             guides ??= new List<HairGuide>();
             sculptLayers ??= new List<HairSculptLayer>();

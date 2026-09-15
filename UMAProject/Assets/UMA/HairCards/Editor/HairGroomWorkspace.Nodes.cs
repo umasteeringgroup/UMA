@@ -28,7 +28,7 @@ namespace UMA.HairCards.Editor
                 EditorGUILayout.LabelField(node.Label, EditorStyles.boldLabel);
                 EditorGUILayout.LabelField(node.Description, EditorStyles.wordWrappedLabel);
                 if (node.Modifier != null)
-                    EditorGUILayout.LabelField("Owner sculpt pass: " + node.Layer.name, EditorStyles.wordWrappedMiniLabel);
+                    EditorGUILayout.LabelField(node.Population != null ? "Population: " + node.Population.name : "Owner sculpt pass: " + node.Layer.name, EditorStyles.wordWrappedMiniLabel);
                 if (node.Locked) EditorGUILayout.HelpBox("This item is locked. Unlock its group or sculpt pass to edit it.", MessageType.Info);
                 if (node.Group != null && (!node.Group.enabled || !node.Group.visible))
                     EditorGUILayout.HelpBox("This group is disabled or hidden. Enable it and show it on the group node to see changes in the preview.", MessageType.Warning);
@@ -50,12 +50,21 @@ namespace UMA.HairCards.Editor
                         break;
                     case HairGroomNodeKind.Layer: DrawPassNode(stage, node); DrawGroom(stage); break;
                     case HairGroomNodeKind.Modifier:
-                        if (!node.Layer.visible || node.Layer.opacity <= 0f)
+                        if (node.Layer != null && (!node.Layer.visible || node.Layer.opacity <= 0f))
                             EditorGUILayout.HelpBox("The owning sculpt pass is hidden or has zero opacity. This modifier will not affect the normal output.", MessageType.Warning);
                         using (new EditorGUI.DisabledScope(node.Locked)) DrawModifier(stage, node.Modifier);
                         break;
                     case HairGroomNodeKind.Children:
-                        using (new EditorGUI.DisabledScope(node.Locked)) DrawChildren(stage); break;
+                        using (new EditorGUI.DisabledScope(node.Locked))
+                        {
+                            HairGenerationEditor.DrawOverview(stage, node.Group);
+                            if (!node.Group.generation.enabled) DrawChildren(stage);
+                        }
+                        break;
+                    case HairGroomNodeKind.Population:
+                        using (new EditorGUI.DisabledScope(node.Locked)) HairGenerationEditor.DrawPopulation(stage, node); break;
+                    case HairGroomNodeKind.ScalpShading:
+                        using (new EditorGUI.DisabledScope(node.Locked)) HairGenerationEditor.DrawScalp(stage, node.Group); break;
                     case HairGroomNodeKind.Cards:
                     case HairGroomNodeKind.Geometry:
                     case HairGroomNodeKind.Atlas:

@@ -194,9 +194,14 @@ namespace UMA.HairCards.Editor
             }
             if (selected != null)
             {
-                EditorGUILayout.LabelField(selected.Label, EditorStyles.boldLabel);
-                EditorGUILayout.LabelField(selected.Description, EditorStyles.wordWrappedMiniLabel);
-                if (selected.CanReorder) EditorGUILayout.LabelField("Drag above/below a sibling, or use the tree's ↑ / ↓ buttons. Cross-pass drops are not allowed.", EditorStyles.wordWrappedMiniLabel);
+                EditorGUILayout.LabelField(new GUIContent(selected.Label, selected.Description), EditorStyles.boldLabel);
+                // Keep room for the actual tree in compact docks. Properties and row tooltips
+                // already carry the selected node's explanation.
+                if (position.height >= 850f)
+                {
+                    EditorGUILayout.LabelField(selected.Description, EditorStyles.wordWrappedMiniLabel);
+                    if (selected.CanReorder) EditorGUILayout.LabelField("Drag above/below a sibling, or use Earlier / Later. Cross-pass drops are not allowed.", EditorStyles.wordWrappedMiniLabel);
+                }
             }
             HairGroomWorkspace.DrawStatus(stage);
             EditorGUILayout.LabelField(stage.SaveStatus + " · " + stage.PreviewStatus, EditorStyles.wordWrappedMiniLabel);
