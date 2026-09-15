@@ -42764,7 +42764,7 @@ MonoBehaviour:
     name: LOD 1
     level: 1
     screenRelativeHeight: 0.3
-    cardFraction: 0.385
+    cardFraction: 0.56
     samplesPerCard: 36
     useProfileSamples: 0
     maximumTubeSides: 8
@@ -42775,7 +42775,7 @@ MonoBehaviour:
     name: LOD 2
     level: 2
     screenRelativeHeight: 0.15
-    cardFraction: 0.256
+    cardFraction: 0.254
     samplesPerCard: 20
     useProfileSamples: 0
     maximumTubeSides: 8
