@@ -56,6 +56,17 @@ namespace UMA.HairCards.Editor
         {
             HairGroomNode node = FindNode(key);
             if (node == null) return;
+            // A linked growth node is an explicit shortcut to the real painted map, not a
+            // second editable map that silently has no effect on the generated population.
+            if (node.Map?.kind == HairMapKind.GrowthArea && node.Group?.generation?.enabled == true &&
+                node.Group.generation.cards.source == HairPopulationSource.PaintedScalp &&
+                !string.IsNullOrEmpty(node.Group.generation.cards.rootMapGroupId))
+            {
+                var owner = groom.Groups.Find(g => g.Id == node.Group.generation.cards.rootMapGroupId);
+                var map = owner?.FindMap(HairMapKind.GrowthArea);
+                if (map != null && owner != node.Group)
+                { key = HairGroomNodes.Key(HairGroomNodeKind.GrowthMap, map.Id); node = FindNode(key); if (node == null) return; }
+            }
             EndGravitySimulation(); ReleaseSceneInputCapture(true);
             if (populationInspection && node.Population == null && node.Modifier == null) InspectPopulation(null);
             if (node.Kind != HairGroomNodeKind.Layer) ClearLayerEditing();
@@ -72,7 +83,7 @@ namespace UMA.HairCards.Editor
             else if (node.Kind == HairGroomNodeKind.Layer) SetActiveLayer(node.Layer.Id);
             if (node.Population != null || node.Kind == HairGroomNodeKind.ScalpShading)
             { activeModifierId = node.Modifier?.Id; SceneTool = HairSceneTool.Select; }
-            if (node.Helper != null) { SetActiveHelper(node.Helper.Id); SceneTool = HairSceneTool.Helper; }
+            if (node.Helper != null) { SetActiveHelper(node.Helper.Id); SceneTool = HairSceneTool.Helper; if (node.Helper.type == HairHelperType.BraidRail) FormEditAll = true; }
             activeNodeKey = key;
             HairGroomWorkspace.RevealNodeProperties();
             HairGroomWorkspace.RepaintOpenWindows();

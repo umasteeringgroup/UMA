@@ -10,14 +10,14 @@ TEXTURE2D(_BumpMap); SAMPLER(sampler_BumpMap);
 TEXTURE2D(_OcclusionMap); SAMPLER(sampler_OcclusionMap);
 TEXTURE2D(_DepthMap); SAMPLER(sampler_DepthMap);
 CBUFFER_START(UnityPerMaterial)
-    half _DitheredOpacity, _Coverage;
+    half _DitheredOpacity, _Coverage, _AlphaDensity;
     float4 _BaseMap_ST;
     half4 _BaseColor, _RootColor, _TipColor, _SpecularColor, _SecondaryColor, _TransmissionColor;
     half _RootFade, _ColorPower, _TextureColor, _DepthInfluence, _StrandVariation, _ClumpVariation;
     half _SpecularStrength, _Smoothness, _SpecularShift, _SecondaryStrength, _SecondarySmoothness, _SecondaryShift;
     half _Transmission, _DiffuseWrap, _AmbientStrength, _BumpScale, _Cutoff, _ShadowCutoff;
     half _AlphaToCoverage, _VertexColorInfluence, _VertexAlphaInfluence, _DebugView;
-    half _OcclusionStrength, _UseDepthMap;
+    half _OcclusionStrength, _UseDepthMap, _RootOpacityFade, _HybridCore;
 CBUFFER_END
 
 struct HairAttributes
@@ -63,9 +63,23 @@ HairVaryings HairVertex(HairAttributes input)
     return output;
 }
 
+half HairRootTipBlend(HairVaryings input)
+{
+    return pow(saturate(input.data.x / max(_RootFade, 0.001h)), max(_ColorPower, 0.001h));
+}
+half HairStrandOpacity(HairVaryings input)
+{
+    // UV1 stores unflipped root-to-tip length, so rotating/flipping atlas UVs cannot
+    // move this fade to the tip. Zero preserves existing materials exactly.
+    half rootOpacity = _RootOpacityFade > 0 ? smoothstep(0.0h, _RootOpacityFade, (half)input.data.x) : 1.0h;
+    half tintOpacity = lerp(saturate(_RootColor.a), saturate(_TipColor.a), HairRootTipBlend(input));
+    return rootOpacity * tintOpacity * saturate(_BaseColor.a) *
+        saturate(lerp(1.0h, input.color.a, _VertexAlphaInfluence));
+}
 half HairAlpha(HairVaryings input, half atlasAlpha)
 {
-    return saturate(atlasAlpha * _BaseColor.a * lerp(1.0h, input.color.a, _VertexAlphaInfluence));
+    // Density boosts the atlas only, never the artist's root/tip opacity.
+    return HairStrandOpacity(input) * saturate(atlasAlpha * _AlphaDensity);
 }
 void HairSoftCoverage(half alpha, HairVaryings input)
 {
@@ -80,12 +94,27 @@ void HairSoftCoverage(half alpha, HairVaryings input)
 half HairClip(half alpha, HairVaryings input)
 {
     #if defined(SHADER_STAGE_FRAGMENT)
+    #if defined(UMA_HAIR_ALPHA_BLEND)
+        alpha *= _Coverage;
+        clip(alpha - 0.0001h);
+        return alpha;
+    #else
+    // A paired transparent pass owns fading roots/tips. Writing opaque color/depth
+    // here would replace a soft fade with a hard cutoff (especially at low cutoff).
+    // Keep standalone cutout behavior unchanged; this is enabled only for Hybrid.
+    if (_HybridCore > 0.5h) clip(HairStrandOpacity(input) * saturate(_Coverage) - 0.999h);
     if (_DitheredOpacity > 0.5h)
     {
-        clip(alpha - _Cutoff); HairSoftCoverage(alpha, input); return 1;
+        // One threshold, not hard clipping followed by another raw-alpha rejection.
+        half coverage = SharpenAlphaStrict(alpha, max(_Cutoff, 0.0001h));
+        HairSoftCoverage(coverage, input); return 1;
     }
-    if (_AlphaToCoverage > 0.5h) return AlphaClip(alpha, _Cutoff);
-    clip(alpha - _Cutoff);
+    if (_AlphaToCoverage > 0.5h && IsAlphaToMaskAvailable()) return AlphaClip(alpha, max(_Cutoff, 0.0001h));
+    clip(alpha - max(_Cutoff, 0.0001h));
+    // Surviving cutouts are opaque. Never feed raw texture alpha into an MSAA mask
+    // when rendering outside the pipeline's alpha-to-coverage-aware path.
+    return 1;
+    #endif
     #endif
     return alpha;
 }
@@ -145,7 +174,7 @@ half4 HairFragment(HairVaryings input, FRONT_FACE_TYPE facing : FRONT_FACE_SEMAN
     half3 n = HairNormal(input, IS_FRONT_VFACE(facing, 1.0h, -1.0h));
     half3 t = SafeNormalize(input.strandWS - n * dot(n,input.strandWS));
     half3 v = GetWorldSpaceNormalizeViewDir(input.positionWS);
-    half along = pow(saturate(input.data.x / max(_RootFade, 0.001h)), _ColorPower);
+    half along = HairRootTipBlend(input);
     half depth = atlas.r;
     if (_UseDepthMap > 0.5h) depth = SAMPLE_TEXTURE2D(_DepthMap, sampler_DepthMap, input.uv).r;
     half3 albedo = lerp(_RootColor.rgb, _TipColor.rgb, along) * _BaseColor.rgb;
@@ -212,7 +241,14 @@ half4 HairShadowFragment(HairVaryings input) : SV_Target
 {
     UNITY_SETUP_INSTANCE_ID(input);
     half alpha = HairAlpha(input, SAMPLE_TEXTURE2D(_BaseMap,sampler_BaseMap,input.uv).a);
-    clip(alpha - _ShadowCutoff); HairSoftCoverage(alpha, input);
+    #if defined(UMA_HAIR_ALPHA_BLEND)
+        alpha *= _Coverage;
+        clip(alpha - max(_ShadowCutoff, 0.0001h));
+    #else
+    if (_DitheredOpacity > 0.5h)
+        HairSoftCoverage(SharpenAlphaStrict(alpha, max(_ShadowCutoff, 0.0001h)), input);
+    else clip(alpha - max(_ShadowCutoff, 0.0001h));
+    #endif
     return 0;
 }
 half4 HairDepthFragment(HairVaryings input) : SV_Target

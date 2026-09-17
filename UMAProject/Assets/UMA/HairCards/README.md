@@ -1,6 +1,18 @@
 # UMA Hair Cards
 
-UMA Hair Cards is a guide-driven, non-destructive hair-card authoring system for Unity 6.3 and newer. The editable `HairGroomAsset` is the source of truth; generated meshes and UMA assets are deterministic bake outputs.
+UMA Hair Cards is a guide- and form-driven, non-destructive hair-card authoring system for Unity 6.3 and newer. The editable `HairGroomAsset` is the source of truth; generated meshes and UMA assets are deterministic bake outputs.
+
+For tied-up styles, see the [Gather and Braided Bun guide](BraidedBunGuide.md).
+**Gather** provides scalp-following paths, anchored roots, independent root/arrival bend
+curves for S-shaped transitions, packed tie rings, pass-through tails, side selection,
+mirrored helpers and outward card facing. Length preservation is the default; extending
+strands to reach a tie is an explicit option. A linked **Bun** helper drives wrapped
+volume and center tuck. The surrounding plait can be extracted to an independently
+editable **Braid spline** that follows the bun. Braid splines support direct line dragging,
+control-point editing, surface offsets and independent root/tip attachments to scalp or helpers.
+**Painted Scalp** generation creates roots directly from painting without authored guides;
+unlike filtering fixed grid roots, painting a larger area creates hair in the new region.
+The Braided Bun examples use this workflow and retain the saved texture hairline.
 
 For the swept hairstyle, start with the [Swept Clumps guide](SweptClumpsGuide.md).
 It covers surface-rooted clump/card populations, local modifier masks, arched ribbons,
@@ -14,14 +26,84 @@ three-strip UV setup and the inline Matte / Natural / Glossy finish controls.
 Ringlets also exposes **Curl mesh detail**: error-based ribbon reduction with
 Economy/Balanced/Close-up presets, shape/facing tolerances, segment caps and preview
 polygon counts. It reduces mesh density without editing the procedural curls.
-Open either installed example from **UMA > Hair Cards > Examples**. See the
+Open installed examples from **UMA > Hair Cards > Examples**. See the
 [Curly validation report](QA/CurlyVolumeValidation.md) for its checks and limits.
+
+For a short, side-parted style under 20,000 triangles at LOD0, see the
+[Short Hair Part guide](ShortHairPartGuide.md). Classic, Relaxed, Close Cut,
+Natural and Front Flip Natural
+include separate editable crown/side groups and three-LOD preview prefabs. The
+Short Hair Part preset, additive short-atlas setup and per-group polygon ceiling
+readout reuse the existing generation system without changing older grooms.
+
+**Noise → Strand-aligned 2D** follows each strand's transported frame, with
+separate sideways/outward amplitudes, physical wavelength, root fade and shared
+clump motion. It is opt-in; existing Noise modifiers retain their original behavior.
+**Surface Bend** adds a root-to-tip angle profile for lift-and-return shapes such
+as a forelock. Both keep roots and segment lengths fixed, respect freeze/stiffness,
+and accept painted masks. Use Length first when a shape needs additional reach;
+enable final card scalp clearance after deformation. See
+[Natural variation and front flips](ShortHairPartGuide.md#natural-variation-and-front-flips).
+
+**Materials & UVs > Strand rendering** offers **Cutout**, **Alpha Blended** and
+**Hybrid** for the UMA hair shaders. Hybrid adds a lit soft fringe to depth-writing
+strand cores; **Alpha density** retains faint atlas fibers without filling the
+transparent background. See [rendering modes and scalp clearance](ShortHairPartGuide.md#keep-fine-strands-choose-the-rendering-mode)
+for tuning, second-pass cost, sorting limits and card/scalp clearance.
+
+**Roots (RGBA)** and **Tips (RGBA)** now use their alpha channels for opacity,
+independently of vertex colors. **Root color reach** controls the color/opacity
+transition; **Root opacity fade** adds a fade from transparent at the very start.
+Use Alpha Blended or Hybrid for soft transparency; plain Cutout still has a hard
+threshold unless dithered. For older Hybrid materials, click **Sync fringe from
+first pass** once to save the corrected core/fringe setup for baked/exported hair.
+The stage already corrects its private preview materials without changing your
+shared assets. Sync preserves colors and textures but updates the shared pair's
+rendering settings. Alpha density boosts atlas fibers, not your chosen opacity.
+
+Select **your group → 5 · Hair Cards → Geometry & Vertex Colors** to edit
+**Width along card**, directly below Root Width and Tip Width. Horizontal time
+runs from root (0) to tip (1); curve value 1 selects Root Width and value 0 selects
+Tip Width. This is a blend between widths, not a width multiplier. The UI reports
+the resulting endpoint widths and warns about transitions shorter than a mesh
+segment. The Card Profile asset Inspector exposes the same curve with grouped,
+plain-language settings. Groom Inspector list entries show group/helper/LOD names
+instead of internal IDs; identifiers remain read-only.
+
+For short hair sinking into the scalp, select **Cards > Card geometry** and
+enable **Prevent scalp penetration** on each affected group. Start with
+**Card clearance = 0.5 mm** and **Root Embed = 0 mm**. The final mesh check covers
+ribbon width and sampled face interiors as well as centerlines, without adding
+triangles or modifying guides. It applies in preview and bake; rebake existing
+exports. It is opt-in for existing grooms and enabled by the Short Hair Part preset.
+See [clearance details and limitations](ShortHairPartGuide.md#cardscalp-clearance).
+
+For panel-shaped hair and rail-driven plaits, see the [Braided Bun guide](BraidedBunGuide.md).
+Classic, Loose and Compact Copper include a full wrapped bun, a separate surrounding
+three-bundle braid, gathered scalp coverage, narrow-strip flyaways, texture-backed
+hairline maps and three-LOD preview prefabs.
+Create a Grid Panel Group or Braid Group from Hair Nodes; edit its control points
+under Shared Helpers. Existing scalp-driven generation remains the default.
+Forms can opt into **Use painted root density** to mask roots with Growth / Density.
+Grid **Root start variation** staggers the hairline; material **Root opacity fade**
+softens card starts without consuming vertex alpha. These controls default off.
+Grid **Preserve coverage at LODs** avoids holes from random thinning by distributing
+survivors and modestly widening them. It is opt-in and leaves full-detail shape unchanged.
 
 To attach an existing groom to real UMA body slots for skinning, use **Source & Setup →
 Bind Character / Race**. [The binding workflow](SweptClumpsGuide.md#attach-an-existing-hairstyle-to-a-uma-character)
 preserves authored hair and saves a separate weighted donor and skeleton.
 
 ## Node workspace
+
+To leave grooming, click **Exit** immediately after **Save** on the floating
+Scene-view toolbar, or **Hair Nodes > Exit Stage**. Closing the stage finishes
+the current edit, saves the groom/resources and restores Unity's normal tools.
+It returns to the previous stage; it does not close your docked Hair windows.
+In narrow Scene views, secondary toolbar controls collapse to keep Save and Exit
+visible. The toolbar, status line and help text fit the camera viewport, leaving
+space for docked toolbars on both sides. Long status text is clipped within its
+row; hover to read the full text. The complete brush controls remain in Hair Properties.
 
 Opening a Hair Card Stage opens three independently dockable Unity editor windows: **Hair Nodes**, **Hair Properties**, and **Hair Preview & Settings**. Hair Nodes is the single workflow navigator: select a typed node to edit its parameters in Properties. Creation, duplication, ordering, removal, validation navigation and stage commands live in the tree window. Properties has no workflow shortcuts, next/back links or second node picker; it retains the selected item's settings and editing actions. The separate Preview & Settings window has **Preview & Visibility** and **Settings** tabs for display, avatar filters, camera focus and resets. Node selection never switches those tabs. Confirmations use popups.
 
@@ -59,7 +141,7 @@ QA checklist: [Hair Cards Manual QA](QA/HairCardsManualQA.md).
 
 - Groups separate coverage, volume, detail, flyaway, short, facial, brow, lash, and custom hair.
 - Surface anchors use source asset identity, submesh, triangle, and barycentric coordinates. A topology fingerprint prevents silent root movement after source changes.
-- Growth maps are per-source-vertex scalar fields. **Growth / Density** is the primary map. An optional Density Multiplier and Length, Flow, Lift, Width, Clump, child count, profile blend, and LOD importance maps are advanced controls.
+- Growth maps can use vertex fields or precise, texture-backed face tiles, without changing source topology or UVs. **Growth / Density** is the primary map. An optional Density Multiplier and Length, Flow, Lift, Width, Clump, child count, profile blend, and LOD importance maps are advanced controls.
 - Guides are authored splines. Child cards are deterministic interpolation results and are never hidden editable state.
 - Sculpt layers store guide point position, width, and roll deltas.
 - Ordered guide/child modifiers include resample, length, width, smoothing, lift/gravity, flow, clump, parting, curl, wave, noise, twist, helper following, projection, collision, and mirroring.
@@ -72,6 +154,40 @@ QA checklist: [Hair Cards Manual QA](QA/HairCardsManualQA.md).
 **Modifier coordinates:** curves, Flow Align directions, Part/Mirror planes, flow paths and helpers are authored in source-mesh local space, not camera space. Gravity explicitly converts world forces through the object and guide pose. Lift defaults to each root's outward normal, with a **Closest Surface Normal** option; it converts normals by inverse transpose before writing source-local displacement. Lift distance is in source units and does not override pinned roots, frozen points or segment lengths. Linked helpers retain an exact source-relative affine snapshot, including scaled/mirrored/sheared parents, for collision and baked/runtime evaluation. See [the complete modifier coordinate audit](QA/HairModifierCoordinateReview.md).
 
 ## Growth and density
+
+### Precise texture painting
+
+Select a map in Hair Nodes, then choose **Paint storage → Texture map (precise)** in Hair Properties.
+The conversion popup preserves current paint. **Texels per face edge** controls detail: 16 is a
+good starting point; 32 suits hairlines; 64 is for particularly large source polygons. Detail is
+per original triangle, not a global atlas size. Only edited faces allocate detailed texels, and
+the panel reports their memory use. Small brushes still need to cover at least one texel; raise
+detail if a very small brush misses on a large polygon. Higher settings cost more memory and
+increase the first generation rebuild after painting; subsequent grooming reuses cached fields.
+
+The paint coordinates are independent of the character's UVs, including mirrored/overlapping UVs.
+Painting evaluates brush distance on the surface, across face and UV boundaries. The Scene overlay,
+guide placement, surface-generated clumps/cards, styling masks, and hairline refinement all sample
+the same texture field. Original mesh triangles, skin weights, guide anchors and card tessellation
+are unchanged. This is texture resolution, **not** authoring-mesh subdivision.
+
+Brush hardness/strength, mirror, temporary Shift erase, visible fills, invert, smoothing, Undo,
+and map cut/copy/paste work in both modes. Selection → Map blends the selected original vertices'
+influence over texels; Map → Selection selects source faces containing qualifying texels, even
+when their original vertices are unpainted. Focus current area includes those faces' bones.
+Texels are saved inside the groom and included in duplication/recovery; no external texture file
+or readable character UV texture is required. New grooms inherit the saved storage/detail choices,
+but never the previous groom's paint. Resetting last-used setup defaults clears that inheritance.
+
+Conversion does not invent a new hairline: repaint or smooth an existing jagged vertex boundary.
+Reducing detail, or converting back to Vertex, shows a warning because it discards detail; Undo
+restores it. Atlas precision controls **where roots grow**, not where the entire ribbon lies.
+Use **Refine hairline** width/length/lean controls and groom inward where broad cards overhang the
+boundary. Scalp vertex-color shading remains limited to the output body mesh's own vertices.
+With texture maps it shades conservatively inside fully painted faces, so a coarse vertex-color
+triangle cannot extend a dark stain into the unpainted forehead or part.
+
+### Density and placement
 
 Use **Growth / Density** as the single everyday paint map. Leave **Density Multiplier (optional)**
 at its default `1`. Its controls, reset-to-1 button, and other styling maps are under
@@ -87,7 +203,7 @@ whole guide (half rounds up). For example, a budget of 100 generates a target of
 1, 50 at 0.5, and 25 at 0.5 with a 0.5 multiplier. Zero generates no guides. Minimum Spacing and attempt
 limits can reduce the actual placement below that target; the preview reports all three numbers.
 
-The footprint includes nondegenerate source triangles touched by nonzero primary paint. Completely
+The footprint includes nondegenerate source triangles (texture sampling cells in Texture mode) touched by nonzero primary paint. Completely
 unpainted body triangles are excluded, while multiplier-zero triangles remain in the footprint and
 contribute zero density. Soft edges reduce average density. The budget is recalibrated to the current
 footprint each preview: expanding or completely erasing parts of the region changes its reference

@@ -789,7 +789,7 @@ namespace UMA.HairCards.Editor.Tests
                 Assert.That(build.materials, Is.EqualTo(new[] { first, second }));
                 Assert.That(build.secondPasses, Is.EqualTo(new[] { false, true }));
                 Assert.That(build.mesh.GetTriangles(1), Is.EqualTo(build.mesh.GetTriangles(0)));
-                Assert.That(build.mesh.GetSubMesh(1).indexStart, Is.EqualTo(build.mesh.GetSubMesh(0).indexStart), "Reuse the index buffer as well as the vertices.");
+                Assert.That(build.mesh.GetSubMesh(1).indexStart, Is.GreaterThanOrEqualTo(build.mesh.GetSubMesh(0).indexStart + build.mesh.GetSubMesh(0).indexCount), "Unity 6.3 requires independent submesh index ranges; vertices remain shared.");
                 Assert.That(build.mesh.vertices, Is.EqualTo(vertices));
                 Assert.That(build.triangleCount, Is.EqualTo(triangles), "Geometry budgets must not count an extra draw as new geometry.");
                 Assert.That(build.cardCount, Is.EqualTo(cards));
@@ -3136,6 +3136,7 @@ namespace UMA.HairCards.Editor.Tests
                 HairAtlasRegion region = atlas.CreateRegion("Remember me", new Rect(0.2f, 0.1f, 0.3f, 0.7f));
                 HairGroup group = groom.Groups[0]; group.atlas = atlas;
                 group.rootEmbedDepth = 0.004f; group.children.childrenPerGuide = 7;
+                group.preventCardPenetration = true; group.cardSurfaceClearance = .0015f;
                 group.atlasRegionSelection = HairAtlasRegionSelectionMode.Selected; group.atlasRegionIds.Add(region.Id);
                 groom.Lods[0].samplesPerCard = 19; groom.BakeSettings.umaMaterial = material;
                 string original = EditorJsonUtility.ToJson(groom);
@@ -3162,6 +3163,8 @@ namespace UMA.HairCards.Editor.Tests
                 Assert.That(inherited.atlas.regions[0].uvRect, Is.EqualTo(region.uvRect));
                 Assert.That(inherited.atlasRegionIds, Is.EqualTo(group.atlasRegionIds));
                 Assert.That(inherited.children.childrenPerGuide, Is.EqualTo(7));
+                Assert.That(inherited.preventCardPenetration, Is.True);
+                Assert.That(inherited.cardSurfaceClearance, Is.EqualTo(.0015f));
                 Assert.That(next.Lods[0].samplesPerCard, Is.EqualTo(19));
                 Assert.That(next.BakeSettings.umaMaterial == material, Is.True);
                 Assert.That(inherited.guides, Is.Empty);
@@ -3183,12 +3186,16 @@ namespace UMA.HairCards.Editor.Tests
                 Assert.That(inherited.atlas.material, Is.Null);
                 Assert.That(inherited.atlas.secondPassMaterial, Is.Null);
                 Assert.That(inherited.rootEmbedDepth, Is.Zero);
+                Assert.That(inherited.preventCardPenetration, Is.False);
+                Assert.That(inherited.cardSurfaceClearance, Is.EqualTo(.0005f));
                 Assert.That(inherited.guides.Count, Is.EqualTo(1));
                 Assert.That(beforeAtlas.albedo == texture, Is.True);
                 Undo.PerformUndo();
                 Assert.That(next.Groups[0].profile == beforeProfile, Is.True, "Undo restores the old card profile assignment.");
                 Assert.That(next.Groups[0].atlas == beforeAtlas, Is.True, "Undo restores the old atlas assignment.");
                 Assert.That(next.Groups[0].rootEmbedDepth, Is.EqualTo(0.004f));
+                Assert.That(next.Groups[0].preventCardPenetration, Is.True);
+                Assert.That(next.Groups[0].cardSurfaceClearance, Is.EqualTo(.0015f));
             }
             finally
             {
@@ -5174,10 +5181,13 @@ namespace UMA.HairCards.Editor.Tests
             finally { reused?.Dispose(); Object.DestroyImmediate(atlas); }
         }
 
-        [Test]
-        public void PreviewPoolsAvoidPerCardAllocationsAfterWarmup()
+        [TestCase(false)]
+        [TestCase(true)]
+        public void PreviewPoolsAvoidPerCardAllocationsAfterWarmup(bool clearance)
         {
             PopulateDenseProfileGuides(100, 4, 12);
+            groom.Groups[0].preventCardPenetration = clearance;
+            if (clearance) sourceMesh.triangles = new[] { 0, 2, 1 };
             HairEvaluationWorkspace evaluationWorkspace = new HairEvaluationWorkspace();
             HairMeshBuildWorkspace meshWorkspace = new HairMeshBuildWorkspace();
             HairEvaluationOptions options = new HairEvaluationOptions { evaluateSurfaceAnchors = false };

@@ -176,6 +176,29 @@ namespace UMA.HairCards.Editor.Tests
             var reasons=new List<string>();Assert.That(output.ValidateMeshData(reasons),Is.True,string.Join("; ",reasons));
             Assert.That(source.bindposes,Is.Empty);
         }
+        [UnityTest] public IEnumerator ExitGroomingReturnsToPreviousStageAndSavesChanges()
+        {
+            folder="Assets/HairBindingTest-"+Guid.NewGuid().ToString("N");AssetDatabase.CreateFolder("Assets",folder.Substring(7));
+            AssetDatabase.CreateAsset(source,folder+"/Source.asset");AssetDatabase.CreateAsset(groom,folder+"/Groom.asset");
+            bool suspended=HairEditorPreferences.Suspended;HairEditorPreferences.Suspended=true;
+            var previousStage=StageUtility.GetCurrentStage();var previousTool=Tools.current;bool previousHidden=Tools.hidden;
+            try
+            {
+                var scene=SceneView.GetWindow<SceneView>();scene.Show();yield return null;
+                var stage=HairCardStage.ShowStage(groom);yield return null;
+                groom.Groups[0].name="Saved on exit";EditorUtility.SetDirty(groom);
+                Assert.That(EditorUtility.IsDirty(groom),Is.True);
+                stage.ExitGrooming();
+                Assert.That(StageUtility.GetCurrentStage(),Is.SameAs(previousStage));
+                Assert.That(HairCardStage.ActiveStage,Is.Null);
+                Assert.That(EditorUtility.IsDirty(groom),Is.False,"Exiting must persist the last edit.");
+                Assert.That(Tools.current,Is.EqualTo(previousTool));Assert.That(Tools.hidden,Is.EqualTo(previousHidden));
+                AssetDatabase.ImportAsset(folder+"/Groom.asset",ImportAssetOptions.ForceUpdate);
+                Assert.That(AssetDatabase.LoadAssetAtPath<HairGroomAsset>(folder+"/Groom.asset").Groups[0].name,Is.EqualTo("Saved on exit"));
+            }
+            finally { HairEditorPreferences.Suspended=suspended; }
+        }
+
         [UnityTest] public IEnumerator BoundStageHasSlotVisibilityAndHeadNeckFocus()
         {
             Build();groom.CharacterBinding=binding;

@@ -4,9 +4,11 @@ Shader "UMA/Hair Cards/Swept Hair URP"
     {
         [MainTexture] _BaseMap("Strand Atlas (RGB + Alpha)", 2D) = "white" {}
         [MainColor] _BaseColor("Overall Tint", Color) = (1,1,1,1)
-        _RootColor("Root Color", Color) = (0.035,0.022,0.01,1)
-        _TipColor("Tip Color", Color) = (0.42,0.28,0.10,1)
+        _RootColor("Root Color & Opacity (RGBA)", Color) = (0.035,0.022,0.01,1)
+        _TipColor("Tip Color & Opacity (RGBA)", Color) = (0.42,0.28,0.10,1)
+        [Toggle] _HybridCore("Hybrid Core (requires Soft Hair second pass)", Float) = 0
         _RootFade("Root Color Reach", Range(0.01,1)) = 0.7
+        _RootOpacityFade("Root Opacity Fade (strand fraction)", Range(0,0.2)) = 0
         _ColorPower("Root to Tip Curve", Range(0.2,4)) = 0.7
         _TextureColor("Use Atlas RGB as Color", Range(0,1)) = 0
         _DepthInfluence("Atlas R Depth Shading", Range(0,1)) = 0.3
@@ -31,6 +33,7 @@ Shader "UMA/Hair Cards/Swept Hair URP"
         [Normal] _BumpMap("Strand Normal Map", 2D) = "bump" {}
         _BumpScale("Normal Strength", Range(0,2)) = 0.5
         _Cutoff("Alpha Cutoff", Range(0,1)) = 0.35
+        _AlphaDensity("Strand Alpha Density", Range(0.25,4)) = 1
         _ShadowCutoff("Shadow Alpha Cutoff", Range(0,1)) = 0.45
         [Toggle] _AlphaToCoverage("MSAA Alpha to Coverage", Float) = 1
         [Toggle] _DitheredOpacity("Soft Coverage (Dithered)", Float) = 0

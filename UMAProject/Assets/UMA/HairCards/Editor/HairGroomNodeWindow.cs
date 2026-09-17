@@ -139,7 +139,7 @@ namespace UMA.HairCards.Editor
                         ShowIssuesMenu(stage);
                 if (GUILayout.Button("Help", EditorStyles.toolbarButton)) HairGroomWorkspace.OpenQuickStart();
                 if (GUILayout.Button("Exit Stage", EditorStyles.toolbarButton))
-                { UnityEditor.SceneManagement.StageUtility.GoBackToPreviousStage(); GUIUtility.ExitGUI(); }
+                { stage.ExitGrooming(); GUIUtility.ExitGUI(); }
             }
             DrawTreeActions(stage);
             using (new EditorGUILayout.HorizontalScope())

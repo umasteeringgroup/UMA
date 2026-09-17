@@ -36,6 +36,7 @@ namespace UMA.HairCards
             workspace.options = options;
             workspace.maskedModifiers.Clear();
             workspace.splineFlow.Begin();
+            workspace.gather.Begin();
             workspace.sourceMesh.Begin(groom != null ? groom.SourceMesh : null);
             workspace.gravitySurface.Begin(options.gravityCollisionMesh != null ? options.gravityCollisionMesh : groom?.SourceMesh);
             try
@@ -52,7 +53,8 @@ namespace UMA.HairCards
                 workspace.groupSourceGuides.Clear(); workspace.singleModifier[0] = null;
                 workspace.children.sourceGuides.Clear();
                 workspace.splineFlow.End();
-                workspace.maskedModifiers.Clear(); workspace.currentGroup = null;
+                workspace.gather.End();
+                workspace.maskedModifiers.Clear(); workspace.currentGroup = null; workspace.currentResult = null;
                 workspace.inUse = false;
             }
         }
@@ -61,6 +63,7 @@ namespace UMA.HairCards
             HairEvaluationWorkspace workspace, HairEvaluationResult reusableResult)
         {
             HairEvaluationResult result = reusableResult ?? new HairEvaluationResult();
+            workspace.currentResult = result;
             if (groom == null)
             {
                 result.warnings.Add("No HairGroomAsset was supplied.");
@@ -75,6 +78,9 @@ namespace UMA.HairCards
             {
                 HairGroup group = groom.Groups[groupIndex];
                 if (group == null || !group.enabled || (!options.includeHiddenGroups && !group.visible)) continue;
+                if (group.maps.Exists(map => map?.storage == HairMapStorage.Texture &&
+                    (map.texture == null || !map.texture.IsValid(groom.SourceTopologySignature, groom.SourceVertexCount))))
+                { result.warnings.Add($"'{group.name}' has an invalid texture map or mismatched source topology. Restore its map/source before evaluating."); continue; }
                 workspace.currentGroup = group;
                 workspace.populations.Fields(group).Prepare(workspace.sourceMesh, group);
                 List<HairEvaluatedCurve> guides = BuildGuides(groom, group, options, result, workspace);
@@ -90,6 +96,21 @@ namespace UMA.HairCards
                 if (group.generation.enabled)
                     HairPopulationGenerator.Generate(groom, group, guides, lod, options, result, workspace);
                 else HairChildGenerator.Generate(groom, group, guides, lod, options, result, workspace);
+            }
+            result.cardCollisionMesh = groom.SourceMesh;
+            // Assign after generation so pooled, inherited and generated curves all receive
+            // the current group settings, including a toggle switched off between builds.
+            HairGroup cardGroup = null;
+            foreach (var curve in result.curves)
+            {
+                if (cardGroup == null || cardGroup.Id != curve.groupId)
+                {
+                    cardGroup = null;
+                    for (int i = 0; i < groom.Groups.Count; i++)
+                        if (groom.Groups[i]?.Id == curve.groupId) { cardGroup = groom.Groups[i]; break; }
+                }
+                curve.preventCardPenetration = (cardGroup != null && cardGroup.preventCardPenetration) || curve.gatherClearance >= 0;
+                curve.cardSurfaceClearance = Mathf.Max(cardGroup != null ? cardGroup.cardSurfaceClearance : 0f, curve.gatherClearance);
             }
             return result;
         }
@@ -456,6 +477,25 @@ namespace UMA.HairCards
                 position += normal * anchor.NormalOffset;
                 return true;
             }
+
+            internal bool TryFindClosestSurface(string sourceId, Vector3 point, out HairSurfaceAnchor anchor)
+            {
+                anchor = default;
+                var query = Surface();
+                if (query == null || !query.ClosestPoint(point, out var hit)) return false;
+                int triangle = hit.TriangleIndex;
+                for (int submesh = 0; submesh < submeshCount; submesh++)
+                {
+                    int count = Triangles(submesh).Count / 3;
+                    if (triangle < count)
+                    {
+                        anchor = HairSurfaceAnchor.Create(sourceId, submesh, triangle, hit.Barycentric, 0, hit.Point, hit.Normal);
+                        return true;
+                    }
+                    triangle -= count;
+                }
+                return false;
+            }
         }
 
         internal static void ApplyPopulationModifiers(IReadOnlyList<HairModifierSettings> modifiers,
@@ -467,8 +507,10 @@ namespace UMA.HairCards
             {
                 if (modifier == null || !modifier.enabled) continue;
                 if (modifier.type == HairModifierType.Clump) workspace.clumps.Prepare(curves, modifier);
+                if (modifier.type == HairModifierType.Gather) workspace.gather.Prepare(modifier, curves, groom, workspace);
                 workspace.singleModifier[0] = modifier;
                 foreach (var curve in curves) ApplyModifiers(workspace.singleModifier, curve, domain, groom, workspace, generatedStage);
+                if (modifier.type == HairModifierType.Gather) workspace.gather.Report(modifier, workspace.currentResult);
             }
         }
 
@@ -538,14 +580,7 @@ namespace UMA.HairCards
                         }
                         break;
                     case HairModifierType.Width:
-                        ApplyPerPoint(curve, modifier, (point, t, weight) =>
-                        {
-                            float scale = Mathf.Max(0f, Mathf.Lerp(1f, modifier.amount, weight));
-                            point.width *= scale;
-                            if (point.widthBaseline >= 0f) point.widthBaseline *= scale;
-                            point.profileScale *= scale;
-                            return point;
-                        });
+                        ApplyWidthOrTwist(curve, modifier, false);
                         break;
                     case HairModifierType.Smooth:
                         ApplySmooth(curve, modifier, workspace);
@@ -565,6 +600,9 @@ namespace UMA.HairCards
                     case HairModifierType.SplineFlow:
                         workspace.splineFlow.Get(modifier, workspace.sourceMesh, groom.SourceMeshId).Apply(curve, modifier);
                         break;
+                    case HairModifierType.Gather:
+                        workspace.gather.Apply(curve, modifier, groom, workspace);
+                        break;
                     case HairModifierType.Clump:
                         ApplyClump(curve, modifier, groom.FindHelper(modifier.helperId), workspace);
                         break;
@@ -579,14 +617,14 @@ namespace UMA.HairCards
                         workspace.ringlets.Apply(curve, modifier);
                         break;
                     case HairModifierType.Noise:
-                        ApplyNoise(curve, modifier);
+                        if (modifier.strandAlignedNoise) workspace.strandDeformation.Noise(curve, modifier);
+                        else ApplyNoise(curve, modifier);
+                        break;
+                    case HairModifierType.SurfaceBend:
+                        workspace.strandDeformation.Bend(curve, modifier);
                         break;
                     case HairModifierType.Twist:
-                        ApplyPerPoint(curve, modifier, (point, t, weight) =>
-                        {
-                            point.roll += modifier.amount * weight;
-                            return point;
-                        });
+                        ApplyWidthOrTwist(curve, modifier, true);
                         break;
                     case HairModifierType.HelperFollow:
                         ApplyHelperFollow(curve, modifier, groom, workspace);
@@ -620,6 +658,27 @@ namespace UMA.HairCards
             return float.IsFinite(ramp) && float.IsFinite(modifier.weight) ? Mathf.Clamp01(ramp * modifier.weight) : 0f;
         }
 
+        // Keep capturing lambdas out of the modifier dispatch loop: their display class
+        // otherwise allocates for every curve/modifier, even when another case is selected.
+        private static void ApplyWidthOrTwist(HairEvaluatedCurve curve, HairModifierSettings modifier, bool twist)
+        {
+            for (int i = 0; i < curve.points.Count; i++)
+            {
+                float weight = Influence(modifier, curve.points.Count > 1 ? i / (curve.points.Count - 1f) : 0f);
+                if (weight <= 0f) continue;
+                var point = curve.points[i];
+                if (twist) point.roll += modifier.amount * weight;
+                else
+                {
+                    float scale = Mathf.Max(0f, Mathf.Lerp(1f, modifier.amount, weight));
+                    point.width *= scale;
+                    if (point.widthBaseline >= 0f) point.widthBaseline *= scale;
+                    point.profileScale *= scale;
+                }
+                curve.points[i] = point;
+            }
+        }
+
         private static float ShapeWeight(HairModifierSettings modifier, float t, float weight)
             => t <= 0f ? 0f : weight * HairGuideShapeUtility.RootInfluence(t,
                 float.IsFinite(modifier.rootInfluence) ? modifier.rootInfluence : 0f);
@@ -627,7 +686,7 @@ namespace UMA.HairCards
         private static bool PreservesShapeLength(HairModifierType type) => type == HairModifierType.Smooth ||
             type == HairModifierType.FlowAlign || type == HairModifierType.SplineFlow || type == HairModifierType.Lift || type == HairModifierType.Clump ||
             type == HairModifierType.Part || type == HairModifierType.Curl || type == HairModifierType.Wave ||
-            type == HairModifierType.Noise || type == HairModifierType.HelperFollow ||
+            type == HairModifierType.Noise || type == HairModifierType.SurfaceBend || type == HairModifierType.HelperFollow ||
             type == HairModifierType.Collision || type == HairModifierType.PushOut;
 
         internal static void CaptureModifierShape(HairEvaluatedCurve curve, HairEvaluationWorkspace workspace)

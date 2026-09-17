@@ -49,6 +49,10 @@ namespace UMA.HairCards
         public Color groupColor;
         public Vector3 rootNormal = Vector3.up;
         public float rootEmbedDepth;
+        public bool preventCardPenetration;
+        public float cardSurfaceClearance;
+        internal float gatherClearance = -1;
+        internal bool gatherFrameContinuity;
         public HairCardProfileAsset profile;
         public HairAtlasProfileAsset atlas;
         public HairAtlasRegionSelectionMode atlasRegionSelection;
@@ -81,6 +85,9 @@ namespace UMA.HairCards
             target.hairlineDistance = hairlineDistance; target.maskValue = maskValue;
             target.childOrdinal = childOrdinal;
             target.rootNormal = rootNormal; target.rootEmbedDepth = rootEmbedDepth;
+            target.preventCardPenetration = preventCardPenetration; target.cardSurfaceClearance = cardSurfaceClearance;
+            target.gatherClearance = gatherClearance;
+            target.gatherFrameContinuity = gatherFrameContinuity;
             target.profile = profile; target.atlas = atlas; target.atlasRegionSelection = atlasRegionSelection;
             int regionCount = atlasRegionIds?.Length ?? 0;
             if (target.atlasRegionIds == null || target.atlasRegionIds.Length != regionCount ||
@@ -106,7 +113,12 @@ namespace UMA.HairCards
         internal readonly HairChildGenerator.GenerationWorkspace children = new HairChildGenerator.GenerationWorkspace();
         internal readonly HairSplineFlowWorkspace splineFlow = new HairSplineFlowWorkspace();
         internal readonly HairPopulationWorkspace populations = new HairPopulationWorkspace();
+        internal readonly HairFormWorkspace forms = new HairFormWorkspace();
+        internal readonly HairBunWorkspace buns = new HairBunWorkspace();
+        internal readonly HairGatherWorkspace gather = new HairGatherWorkspace();
+        internal HairEvaluationResult currentResult;
         internal readonly HairRingletWorkspace ringlets = new HairRingletWorkspace();
+        internal readonly HairStrandDeformation strandDeformation = new HairStrandDeformation();
         internal readonly Dictionary<HairModifierSettings, HairModifierSettings> maskedModifiers = new Dictionary<HairModifierSettings, HairModifierSettings>();
         internal HairGroup currentGroup;
         internal readonly List<HairEvaluatedCurve> groupGuides = new List<HairEvaluatedCurve>();
@@ -126,7 +138,8 @@ namespace UMA.HairCards
         {
             if (inUse) throw new InvalidOperationException("Cannot clear an active hair evaluation workspace.");
             sourceMesh.Clear(); gravitySurface.Clear(); children.Clear(); splineFlow.Clear(); groupGuides.Clear(); groupGuides.Capacity = 0;
-            populations.Clear(); ringlets.Clear(); clumps.Clear(); maskedModifiers.Clear(); currentGroup = null; options = null;
+            populations.Clear(); forms.Clear(); ringlets.Clear(); strandDeformation.Clear(); clumps.Clear(); maskedModifiers.Clear(); currentGroup = null; options = null;
+            gather.Clear(); buns.Clear(); currentResult = null;
             groupSourceGuides.Clear(); groupSourceGuides.Capacity = 0; singleModifier[0] = null;
             resampled.Clear(); resampled.Capacity = 0; cumulative = Array.Empty<float>(); smoothing = Array.Empty<HairCurvePoint>();
             modifierOriginal.Clear(); modifierOriginal.Capacity = 0; modifierTarget.Clear(); modifierTarget.Capacity = 0;
@@ -184,6 +197,7 @@ namespace UMA.HairCards
             nextCurve = 0;
             curves.Clear(); evaluatedGuides.Clear(); generatedGuides.Clear(); populations.Clear(); warnings.Clear();
             guideCurveCount = childCurveCount = rejectedCurveCount = revision = 0;
+            cardCollisionMesh = null;
         }
 
         internal HairEvaluatedCurve RentCurve(int pointCapacity)
@@ -192,6 +206,8 @@ namespace UMA.HairCards
             if (nextCurve == reusableCurves.Count) reusableCurves.Add(new HairEvaluatedCurve(pointCapacity));
             HairEvaluatedCurve curve = reusableCurves[nextCurve++];
             curve.points.Clear();
+            curve.gatherClearance = -1;
+            curve.gatherFrameContinuity = false;
             return curve;
         }
 
@@ -210,6 +226,8 @@ namespace UMA.HairCards
         public int childCurveCount;
         public int rejectedCurveCount;
         public int revision;
+        // Source-local geometry, in the same coordinate system as the evaluated curves.
+        public Mesh cardCollisionMesh;
 
         public int CardCount => curves.Count;
     }

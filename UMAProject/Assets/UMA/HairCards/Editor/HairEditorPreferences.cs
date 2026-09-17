@@ -30,6 +30,8 @@ namespace UMA.HairCards.Editor
             public HairChildSettings children;
             public HairGenerationPipeline generation;
             public float rootEmbedDepth, lodImportance;
+            public bool preventCardPenetration;
+            public float cardSurfaceClearance = .0005f;
             public HairGroupRole role;
             public bool visible, enabled;
             public Color color;
@@ -39,7 +41,9 @@ namespace UMA.HairCards.Editor
             public HairBakeSettings bake;
             public bool symmetryEnabled;
             public Vector3 symmetryPoint, symmetryNormal;
+            public List<MapDefaults> maps;
         }
+        [Serializable] internal sealed class MapDefaults { public HairMapKind kind; public HairMapStorage storage; public int resolution; }
 
         internal static string Context(UnityEngine.Object asset) => asset != null && EditorUtility.IsPersistent(asset)
             ? GlobalObjectId.GetGlobalObjectIdSlow(asset).ToString() : null;
@@ -118,12 +122,16 @@ namespace UMA.HairCards.Editor
                 atlas = EditorUtility.IsPersistent(group.atlas) ? group.atlas : null,
                 resourceRevision = ResourceRevision(group.profile) + ":" + ResourceRevision(group.atlas),
                 children = group.children, generation = group.generation, rootEmbedDepth = group.rootEmbedDepth, lodImportance = group.lodImportance,
+                preventCardPenetration = group.preventCardPenetration, cardSurfaceClearance = group.cardSurfaceClearance,
                 role = group.role, color = group.color, visible = group.visible, enabled = group.enabled,
                 regionSelection = group.atlasRegionSelection,
                 regionIds = group.atlasRegionIds, lods = groom.Lods, bake = groom.BakeSettings,
                 symmetryEnabled = groom.SymmetryEnabled, symmetryPoint = groom.SymmetryPlanePoint,
                 symmetryNormal = groom.SymmetryPlaneNormal
             };
+            next.maps = new List<MapDefaults>();
+            foreach (var map in group.maps) if (map != null)
+                next.maps.Add(new MapDefaults { kind = map.kind, storage = map.storage, resolution = map.texture?.resolution ?? 16 });
             string json = JsonUtility.ToJson(next);
             if (hasIgnoredSetup && ignoredSetup != null && JsonUtility.ToJson(ignoredSetup) == json) return;
             if (hasLastSetup && lastSetup != null && JsonUtility.ToJson(lastSetup) == json) return;
@@ -140,9 +148,17 @@ namespace UMA.HairCards.Editor
             if (groom == null || !hasLastSetup || lastSetup == null) return;
             SetupDefaults setup = JsonUtility.FromJson<SetupDefaults>(JsonUtility.ToJson(lastSetup));
             HairGroup group = groom.Groups[0];
+            if (setup.maps != null) foreach (var defaults in setup.maps)
+            {
+                var map = group.FindMap(defaults.kind); if (map == null) continue;
+                map.storage = defaults.storage;
+                map.texture = map.storage == HairMapStorage.Texture ? new HairTextureMap
+                    { resolution = HairTextureMap.ClampResolution(defaults.resolution), topology = groom.SourceTopologySignature } : null;
+            }
             group.children = setup.children ?? new HairChildSettings();
             group.generation = setup.generation?.DuplicateForNewGroom() ?? new HairGenerationPipeline();
             group.rootEmbedDepth = setup.rootEmbedDepth; group.lodImportance = setup.lodImportance;
+            group.preventCardPenetration = setup.preventCardPenetration; group.cardSurfaceClearance = setup.cardSurfaceClearance;
             group.role = setup.role; group.color = setup.color;
             group.visible = setup.visible; group.enabled = setup.enabled;
             group.atlasRegionSelection = setup.regionSelection;
@@ -185,6 +201,7 @@ namespace UMA.HairCards.Editor
             group.children = new HairChildSettings();
             group.generation = new HairGenerationPipeline();
             group.rootEmbedDepth = 0f; group.lodImportance = 1f;
+            group.preventCardPenetration = false; group.cardSurfaceClearance = .0005f;
             group.role = HairGroupRole.Coverage; group.color = new HairGroup().color;
             group.visible = true; group.enabled = true;
             group.atlasRegionSelection = HairAtlasRegionSelectionMode.All;
@@ -211,7 +228,7 @@ namespace UMA.HairCards.Editor
         private static readonly HashSet<string> ContextFields = new HashSet<string>
         { "activeGroupId", "activeMapId", "activeGuideId", "activeLayerId", "activeModifierId", "collapsedLayerIds", "activeHelperId", "activeGuidePoint",
           "selectedGuideIds", "selectedVertices", "soloLayerId", "isolateSelectedGuides", "selectedId", "guidePage", "zoom", "pan",
-          "activeNodeKey", "collapsedNodeKeys", "expandedOptionalMapKeys", "nodeSearch", "nodeScroll", "previewScroll", "settingsScroll" };
+          "activeNodeKey", "collapsedNodeKeys", "expandedOptionalMapKeys", "nodeSearch", "nodeScroll", "previewScroll", "settingsScroll", "FormPointIndex" };
 
         private static FieldInfo[] GetFields(Type type)
         {

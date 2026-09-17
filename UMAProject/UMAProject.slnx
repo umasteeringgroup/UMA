@@ -4,6 +4,7 @@
   <Project Path="JBooth.BetterShaders.Editor.csproj" />
   <Project Path="UMA_Core.csproj" />
   <Project Path="UMA_Core_Editor_Tests.csproj" />
+  <Project Path="UMA.HairCards.Editor.Tests.csproj" />
   <Project Path="UMA.HairCards.Editor.csproj" />
   <Project Path="UMA2.Content.csproj" />
   <Project Path="UMA.TexturePaint.Editor.Tests.csproj" />
@@ -16,7 +17,6 @@
   <Project Path="UMA.TempTools.csproj" />
   <Project Path="UMA.TexturePaint.Runtime.csproj" />
   <Project Path="UMA_Editor.csproj" />
-  <Project Path="UMA.HairCards.Editor.Tests.csproj" />
   <Project Path="UMA.Dismemberment.Editor.csproj" />
   <Project Path="UMA.TexturePaint.Examples.csproj" />
   <Project Path="UMA.HairCards.Runtime.csproj" />

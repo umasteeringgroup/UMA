@@ -404,6 +404,7 @@ namespace UMA.HairCards.Editor
     {
         private UnityEngine.Object repairSource;
         private string repairStatus;
+        private bool sourceDetails, identifiers;
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
@@ -433,8 +434,25 @@ namespace UMA.HairCards.Editor
             }
             EditorGUILayout.Space(6f);
             serializedObject.Update();
-            DrawDefaultInspector();
-            serializedObject.ApplyModifiedProperties();
+            EditorGUILayout.LabelField("Groom contents", EditorStyles.boldLabel);
+            EditorGUILayout.HelpBox("Groups, helpers and LODs are labeled by their editable names. Use Hair Nodes for day-to-day grooming; this Inspector also exposes the saved settings.", MessageType.None);
+            foreach (string list in new[] { "groups", "sharedHelpers", "lods" })
+                EditorGUILayout.PropertyField(serializedObject.FindProperty(list), true);
+            sourceDetails = EditorGUILayout.Foldout(sourceDetails, "Source & symmetry", true);
+            if (sourceDetails)
+            {
+                EditorGUI.indentLevel++;
+                foreach (string field in new[] { "sourceMesh", "sourceRace", "sourceSlot", "characterBinding", "symmetryEnabled", "symmetryPlaneNormal", "symmetryPlanePoint" })
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty(field), true);
+                EditorGUI.indentLevel--;
+            }
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("bakeSettings"), new GUIContent("Bake & export settings"), true);
+            identifiers = EditorGUILayout.Foldout(identifiers, "Internal identifiers (read only)", true);
+            if (identifiers)
+                using (new EditorGUI.DisabledScope(true))
+                    foreach (string field in new[] { "schemaVersion", "groomId", "sourceMeshId", "sourceTopologySignature", "sourceObjectId" })
+                        EditorGUILayout.PropertyField(serializedObject.FindProperty(field));
+            if (serializedObject.ApplyModifiedProperties()) HairGroomCommands.Commit(groom);
         }
     }
 }

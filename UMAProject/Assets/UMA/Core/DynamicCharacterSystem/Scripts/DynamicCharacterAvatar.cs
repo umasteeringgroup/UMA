@@ -1679,6 +1679,12 @@ namespace UMA.CharacterSystem
             }
         }
 
+#if UNITY_EDITOR
+        // Session-only structural version. Each Inspector observes this independently,
+        // including locked Inspectors. Runtime loading never calls into IMGUI.
+        public uint EditorAvatarDefinitionRevision { get; private set; }
+#endif
+
         /// <summary>
         /// Load the avatar definition into the character
         /// </summary>
@@ -1689,6 +1695,23 @@ namespace UMA.CharacterSystem
         /// <param name="ResetColors">Reset colors</param>
         /// <param name="optimizeBlendShapes">Force only used Blendshapes to load</param>
         public void LoadAvatarDefinition(AvatarDefinition adf, bool loadDefaultWardrobe = false, bool ResetDNA = true, bool ResetWardrobe = true, bool ResetColors = true, bool optimizeBlendShapes = false)
+        {
+#if UNITY_EDITOR
+            try
+            {
+                ApplyAvatarDefinition(adf, loadDefaultWardrobe, ResetDNA, ResetWardrobe, ResetColors, optimizeBlendShapes);
+            }
+            finally
+            {
+                // A failed load may also have replaced some of the inspected data.
+                unchecked { EditorAvatarDefinitionRevision++; }
+            }
+#else
+            ApplyAvatarDefinition(adf, loadDefaultWardrobe, ResetDNA, ResetWardrobe, ResetColors, optimizeBlendShapes);
+#endif
+        }
+
+        private void ApplyAvatarDefinition(AvatarDefinition adf, bool loadDefaultWardrobe, bool ResetDNA, bool ResetWardrobe, bool ResetColors, bool optimizeBlendShapes)
         {
             if (adf.RaceName != null)
             {

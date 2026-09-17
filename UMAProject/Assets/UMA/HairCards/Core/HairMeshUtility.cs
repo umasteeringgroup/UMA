@@ -70,6 +70,7 @@ namespace UMA.HairCards
         private readonly CentroidComparer centroidComparer = new CentroidComparer();
 
         public int TriangleCount => triangleVertices.Length / 3;
+        internal int GeometryVersion { get; private set; }
 
         public bool MatchesGeometry(IReadOnlyList<Vector3> positions, IReadOnlyList<Vector3> normals, IReadOnlyList<int> indices)
         {
@@ -87,6 +88,7 @@ namespace UMA.HairCards
 
         public void Rebuild(Mesh mesh)
         {
+            unchecked { GeometryVersion++; }
             vertices = mesh != null ? mesh.vertices : Array.Empty<Vector3>();
             vertexNormals = mesh != null ? mesh.normals : Array.Empty<Vector3>();
             List<int> flattened = new List<int>();
@@ -263,12 +265,84 @@ namespace UMA.HairCards
                     Vector3 nearest = HairMeshUtility.ClosestPointOnTriangle(point, vertices[a], vertices[b], vertices[c]);
                     float square = (nearest - point).sqrMagnitude;
                     if (square > bestSquare) continue;
-                    bestSquare = square; bestTriangle = triangle; bestPoint = nearest; bestNormal = normal.normalized;
+                    bestSquare = square; bestTriangle = triangle; bestPoint = nearest;
+                    // Cross products are areas: Vector3.normalized's distance epsilon
+                    // zeroes valid millimeter-sized triangles (notably around the ears).
+                    bestNormal = normal / Mathf.Sqrt(normal.sqrMagnitude);
                 }
             }
             if (bestTriangle < 0) return false;
-            hit = new HairMeshRaycastHit(bestTriangle, bestPoint, bestNormal, Vector3.zero, Mathf.Sqrt(bestSquare));
+            int bestOffset = bestTriangle * 3;
+            Vector3 barycentric = HairMeshUtility.Barycentric(bestPoint, vertices[triangleVertices[bestOffset]],
+                vertices[triangleVertices[bestOffset + 1]], vertices[triangleVertices[bestOffset + 2]]);
+            hit = new HairMeshRaycastHit(bestTriangle, bestPoint, bestNormal, barycentric, Mathf.Sqrt(bestSquare));
             return true;
+        }
+
+        // Build once per card. Small nearby surface patches avoid repeating a full BVH
+        // traversal for each neighboring edge/face sample. Values are copied, never aliased.
+        internal readonly struct SurfaceTriangle
+        {
+            internal readonly Vector3 a, b, c, normal;
+            internal readonly int index;
+            internal SurfaceTriangle(Vector3 a, Vector3 b, Vector3 c, int index)
+            {
+                this.a=a;this.b=b;this.c=c;this.index=index;
+                Vector3 cross = Vector3.Cross(b-a,c-a); float square = cross.sqrMagnitude;
+                normal = square > 1e-16f ? cross / Mathf.Sqrt(square) : Vector3.zero;
+            }
+        }
+
+        internal void GetSurfacePatch(Vector3 center, float radius, List<int> candidates, List<SurfaceTriangle> patch)
+        {
+            QuerySphere(center, radius, candidates); patch.Clear();
+            // Large/long cards use the global tree instead of scanning a large patch.
+            if (candidates.Count > 64) return;
+            foreach (int triangle in candidates)
+                if (TryGetTriangleVertices(triangle,out int a,out int b,out int c))
+                    patch.Add(new SurfaceTriangle(vertices[a],vertices[b],vertices[c],triangle));
+        }
+
+        internal bool ClosestPointInPatch(Vector3 point, Vector3 center, float radius,
+            List<SurfaceTriangle> patch, out HairMeshRaycastHit hit)
+        {
+            float best=float.PositiveInfinity; SurfaceTriangle chosen=default;Vector3 nearest=default;
+            foreach(var triangle in patch)
+            {
+                if(triangle.normal.sqrMagnitude<.5f) continue;
+                var p=HairMeshUtility.ClosestPointOnTriangle(point,triangle.a,triangle.b,triangle.c);
+                float square=(p-point).sqrMagnitude;
+                if(square>best)continue;
+                best=square;chosen=triangle;nearest=p;
+            }
+            float distance=Mathf.Sqrt(best);
+            // This test proves no triangle excluded by the patch sphere can be closer.
+            // Escaping corrections and sparse/large patches fall back to the exact BVH.
+            if(distance+(point-center).magnitude>=radius) return ClosestPoint(point,out hit);
+            hit=new HairMeshRaycastHit(chosen.index,nearest,chosen.normal,Vector3.zero,distance);
+            return true;
+        }
+
+        /// <summary>All source triangles touched by a sphere, including face interiors
+        /// whose vertices are outside the brush. Reuses the BVH and caller's result buffer.</summary>
+        public void QuerySphere(Vector3 center, float radius, List<int> results)
+        {
+            results.Clear(); if (nodes.Length == 0 || radius <= 0f) return;
+            float square = radius * radius; int count = 0; traversalStack[count++] = 0;
+            while (count > 0)
+            {
+                var node = nodes[traversalStack[--count]];
+                if (BoundsDistanceSquared(center, node) > square) continue;
+                if (node.count == 0)
+                { if (node.left >= 0) traversalStack[count++] = node.left; if (node.right >= 0) traversalStack[count++] = node.right; continue; }
+                for (int i = node.start; i < node.start + node.count; i++)
+                {
+                    int triangle = triangleOrder[i];
+                    if (!TryGetTriangleVertices(triangle, out int a, out int b, out int c)) continue;
+                    if ((HairMeshUtility.ClosestPointOnTriangle(center, vertices[a], vertices[b], vertices[c]) - center).sqrMagnitude <= square)
+                        results.Add(triangle);
+                }
+            }
         }
 
         private static float BoundsDistanceSquared(Vector3 point, Node node) =>
@@ -455,15 +529,18 @@ namespace UMA.HairCards
             Vector3 v0 = b - a;
             Vector3 v1 = c - a;
             Vector3 v2 = point - a;
-            float d00 = Vector3.Dot(v0, v0);
-            float d01 = Vector3.Dot(v0, v1);
-            float d11 = Vector3.Dot(v1, v1);
-            float d20 = Vector3.Dot(v2, v0);
-            float d21 = Vector3.Dot(v2, v1);
-            float denominator = d00 * d11 - d01 * d01;
-            if (Mathf.Abs(denominator) < 1e-10f) return new Vector3(1f, 0f, 0f);
-            float v = (d11 * d20 - d01 * d21) / denominator;
-            float w = (d00 * d21 - d01 * d20) / denominator;
+            // The denominator has units of length^4. An absolute distance epsilon
+            // treated ordinary millimetre scalp triangles as degenerate and snapped
+            // every mask/anchor to their first vertex. Use double dot products and a
+            // scale-relative collinearity test instead.
+            static double Dot(Vector3 x, Vector3 y) => (double)x.x * y.x + (double)x.y * y.y + (double)x.z * y.z;
+            double d00 = Dot(v0, v0), d01 = Dot(v0, v1), d11 = Dot(v1, v1);
+            double d20 = Dot(v2, v0), d21 = Dot(v2, v1);
+            double scale = d00 * d11, denominator = scale - d01 * d01;
+            if (!double.IsFinite(denominator) || scale <= 0 || denominator <= scale * 1e-14)
+                return new Vector3(1f, 0f, 0f);
+            float v = (float)((d11 * d20 - d01 * d21) / denominator);
+            float w = (float)((d00 * d21 - d01 * d20) / denominator);
             return new Vector3(1f - v - w, v, w);
         }
 

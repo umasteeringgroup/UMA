@@ -105,7 +105,9 @@ namespace UMA.HairCards
         TrimByMesh,
         LodReduction,
         SplineFlow,
-        Ringlets
+        Ringlets,
+        SurfaceBend,
+        Gather
     }
 
     public enum HairLiftNormalMode { RootNormal, ClosestSurfaceNormal }
@@ -129,7 +131,9 @@ namespace UMA.HairCards
         BraidRail,
         BindingRing,
         Symmetry,
-        BoneChainPreview
+        BoneChainPreview,
+        Gather,
+        Bun
     }
 
     public enum HairConstraintType
@@ -341,6 +345,10 @@ namespace UMA.HairCards
         public float defaultValue;
         public Vector2 valueRange = new Vector2(0f, 1f);
         public float[] values = Array.Empty<float>();
+        public HairMapStorage storage;
+        public HairTextureMap texture;
+        public bool UsesTexture => storage == HairMapStorage.Texture && texture != null;
+        public int TextureRevision => UsesTexture ? texture.Revision : 0;
 
         public string Id => id;
         public string DisplayName => kind == HairMapKind.GrowthArea ? "Growth / Density" :
@@ -372,11 +380,28 @@ namespace UMA.HairCards
 
         public float SampleVertex(int index)
         {
+            if (UsesTexture && texture.TryCorner(index, out float value)) return value;
+            return BaseVertex(index);
+        }
+
+        public float BaseVertex(int index)
+        {
             if (values == null || (uint)index >= (uint)values.Length)
             {
                 return defaultValue;
             }
             return values[index];
+        }
+
+        public float SampleTriangle(int submesh, int triangle, int a, int b, int c, Vector3 barycentric)
+        {
+            if (UsesTexture)
+            {
+                var tile = texture.Find(submesh, triangle);
+                if (texture.Valid(tile) && tile.a == a && tile.b == b && tile.c == c)
+                    return texture.Sample(tile, barycentric);
+            }
+            return BaseVertex(a) * barycentric.x + BaseVertex(b) * barycentric.y + BaseVertex(c) * barycentric.z;
         }
     }
 
@@ -420,6 +445,7 @@ namespace UMA.HairCards
     [Serializable]
     public sealed class HairModifierSettings
     {
+        public HairGatherSettings gather = new HairGatherSettings();
         [SerializeField] private string id;
         public string name = "Modifier";
         public HairModifierType type;
@@ -435,6 +461,11 @@ namespace UMA.HairCards
         public HairRingletSettings ringlets = new HairRingletSettings();
         [Min(0.01f)] public float noiseFrequency = 18f;
         [Range(0f, 1f)] public float noiseParentCoherence;
+        // Opt-in: retain the original fixed-root, three-axis Noise for existing grooms.
+        public bool strandAlignedNoise;
+        [Min(0f)] public float noiseNormalAmplitude = 0.001f;
+        [Range(0f, 1f)] public float noiseRootFade = 0.2f;
+        public AnimationCurve bendProfile = AnimationCurve.Linear(0f, 1f, 1f, 0f);
         public string helperId;
 
         public string Id => id;
@@ -474,8 +505,11 @@ namespace UMA.HairCards
             HairModifierSettings copy = (HairModifierSettings)MemberwiseClone();
             copy.id = null;
             copy.ringlets = ringlets?.Duplicate() ?? new HairRingletSettings();
+            copy.gather = JsonUtility.FromJson<HairGatherSettings>(JsonUtility.ToJson(gather ?? new HairGatherSettings()));
             copy.rootToTip = rootToTip == null ? null : new AnimationCurve(rootToTip.keys)
             { preWrapMode = rootToTip.preWrapMode, postWrapMode = rootToTip.postWrapMode };
+            copy.bendProfile = bendProfile == null ? null : new AnimationCurve(bendProfile.keys)
+            { preWrapMode = bendProfile.preWrapMode, postWrapMode = bendProfile.postWrapMode };
             copy.flowSplines = new List<HairFlowSpline>();
             copy.mask = mask == null ? new HairModifierMask() : JsonUtility.FromJson<HairModifierMask>(JsonUtility.ToJson(mask));
             if (flowSplines != null)
@@ -489,12 +523,16 @@ namespace UMA.HairCards
         {
             HairStableId.Ensure(ref id);
             rootToTip ??= AnimationCurve.Linear(0f, 1f, 1f, 1f);
+            gather ??= new HairGatherSettings(); gather.EnsureIntegrity();
             mask ??= new HairModifierMask();
             ringlets ??= new HairRingletSettings();
             ringlets.EnsureIntegrity();
             mask.remap ??= AnimationCurve.Linear(0f, 0f, 1f, 1f);
             noiseFrequency = float.IsFinite(noiseFrequency) ? Mathf.Max(0.01f, noiseFrequency) : 18f;
             noiseParentCoherence = Mathf.Clamp01(noiseParentCoherence);
+            noiseNormalAmplitude = float.IsFinite(noiseNormalAmplitude) ? Mathf.Max(0f, noiseNormalAmplitude) : 0f;
+            noiseRootFade = float.IsFinite(noiseRootFade) ? Mathf.Clamp01(noiseRootFade) : 0.2f;
+            bendProfile ??= AnimationCurve.Linear(0f, 1f, 1f, 0f);
             weight = Mathf.Clamp01(weight);
             rootInfluence = float.IsFinite(rootInfluence) ? Mathf.Clamp01(rootInfluence) : 0f;
             gravityStrength = float.IsFinite(gravityStrength) ? Mathf.Max(0f, gravityStrength) : 0f;
@@ -542,6 +580,10 @@ namespace UMA.HairCards
     [Serializable]
     public sealed class HairHelper
     {
+        public HairGatherTarget gather = new HairGatherTarget();
+        public HairBunSettings bun = new HairBunSettings();
+        public HairRailSettings rail = new HairRailSettings();
+        internal static HairHelper Derived(string stableId) => new HairHelper { id = stableId };
         [SerializeField] private string id;
         public string name = "Helper";
         public HairHelperType type = HairHelperType.CurveRail;
@@ -556,6 +598,12 @@ namespace UMA.HairCards
         public float radius = 0.1f;
         public Vector3 size = Vector3.one;
         public List<Vector3> points = new List<Vector3>();
+        [Range(2, 16)] public int gridColumns = 3;
+        [Range(2, 32)] public int gridRows = 5;
+        [Range(.005f, .2f)] public float coilRadius = .05f;
+        [Range(.5f, 3f)] public float coilTurns = 1.5f;
+        [Range(-.1f, .1f)] public float coilRise = .035f;
+        [Range(.1f, 3f)] public float braidScale = 1f;
 
         // External transforms can include reflection/shear from scaled parents or an authoring
         // pose. A TRS decomposition cannot represent these exactly. Persist the source-local
@@ -584,6 +632,11 @@ namespace UMA.HairCards
         {
             HairStableId.Ensure(ref id);
             points ??= new List<Vector3>();
+            gridColumns = Mathf.Clamp(gridColumns, 2, 16); gridRows = Mathf.Clamp(gridRows, 2, 32);
+            gather ??= new HairGatherTarget(); gather.EnsureIntegrity();
+            bun ??= new HairBunSettings(); bun.EnsureIntegrity();
+            rail ??= new HairRailSettings(); rail.EnsureIntegrity();
+            braidScale = float.IsFinite(braidScale) ? Mathf.Clamp(braidScale, .1f, 3f) : 1f;
             radius = Mathf.Max(0f, radius);
             scale.x = Mathf.Max(1e-5f, Mathf.Abs(scale.x));
             scale.y = Mathf.Max(1e-5f, Mathf.Abs(scale.y));
@@ -630,6 +683,9 @@ namespace UMA.HairCards
         public HairGenerationPipeline generation = new HairGenerationPipeline();
         [Tooltip("Card-only root inset along the inward surface normal, in meters. Fades over the first 20% of each card; guides remain unchanged.")]
         [Range(0f, 0.02f)] public float rootEmbedDepth;
+        [Tooltip("Keep the finished card cross-sections and faces outside the authoring surface. Does not change guides or triangle counts.")]
+        public bool preventCardPenetration;
+        [Range(0f, 0.005f)] public float cardSurfaceClearance = 0.0005f;
         public List<HairGrowthMap> maps = new List<HairGrowthMap>();
         public List<HairGuide> guides = new List<HairGuide>();
         public List<HairSculptLayer> sculptLayers = new List<HairSculptLayer>();
@@ -659,6 +715,7 @@ namespace UMA.HairCards
                                                   !uniqueAtlasRegionIds.Add(regionId));
             children.EnsureIntegrity();
             rootEmbedDepth = float.IsFinite(rootEmbedDepth) ? Mathf.Clamp(rootEmbedDepth, 0f, 0.02f) : 0f;
+            cardSurfaceClearance = float.IsFinite(cardSurfaceClearance) ? Mathf.Clamp(cardSurfaceClearance, 0f, 0.005f) : 0.0005f;
             lodImportance = Mathf.Clamp01(lodImportance);
 
             EnsureDefaultMap(HairMapKind.GrowthArea, "Growth / Density", 0f, sourceVertexCount);

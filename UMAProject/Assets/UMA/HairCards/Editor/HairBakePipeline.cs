@@ -125,13 +125,17 @@ namespace UMA.HairCards.Editor
 
         internal static void ValidateUmaMaterialPasses(HairGroomAsset groom, HairValidationReport report)
         {
-            if (groom == null || !groom.BakeSettings.createOverlay) return;
+            if (groom == null) return;
             UMAMaterial umaMaterial = groom.BakeSettings.overlayTemplate is OverlayDataAsset template
                 ? template.material : groom.BakeSettings.umaMaterial as UMAMaterial;
             foreach (HairGroup group in groom.Groups)
             {
                 HairAtlasProfileAsset atlas = group?.atlas;
                 if (group == null || !group.enabled || atlas == null || atlas.secondPassMaterial == null) continue;
+                if (HairSweptShaderGUI.IsHybrid(atlas) && atlas.material.GetFloat("_HybridCore") < .5f)
+                    report.Add(HairValidationSeverity.Warning, HairValidationCode.MaterialPassMismatch,
+                        $"Group '{group.name}' uses an older Hybrid core. In Materials & UVs, click Sync fringe from first pass to persist soft root blending for exported hair. Preview uses a corrected private material; shared assets are not changed automatically.", group.Id);
+                if (!groom.BakeSettings.createOverlay) continue;
                 if (umaMaterial == null || umaMaterial.secondPass != atlas.secondPassMaterial)
                     report.Add(HairValidationSeverity.Warning, HairValidationCode.MaterialPassMismatch,
                         $"Group '{group.name}' uses a second-pass card material. Set the bake UMA Material (or overlay template)'s Second Pass to the same material to reproduce it on the avatar. Shared UMA assets are not changed automatically.", group.Id);

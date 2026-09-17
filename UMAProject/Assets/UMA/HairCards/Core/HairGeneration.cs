@@ -34,8 +34,10 @@ namespace UMA.HairCards
             void ClearBindings(HairGenerationStage stage)
             {
                 stage.partMapId = null;
+                stage.rootMapGroupId = null;
+                stage.form.helperIds.Clear();
                 foreach (var modifier in stage.modifiers)
-                { modifier.maskMapId = null; modifier.helperId = null; }
+                { modifier.maskMapId = null; modifier.helperId = null; if (modifier.gather != null) modifier.gather.continuationHelperId = null; }
             }
             foreach (var stage in copy.clumps) ClearBindings(stage);
             ClearBindings(copy.cards);
@@ -50,6 +52,10 @@ namespace UMA.HairCards
         public string Id => id;
         public string name = "Clump guides";
         public bool enabled = true;
+        public HairPopulationSource source;
+        public HairFormSettings form = new HairFormSettings();
+        public string rootMapGroupId;
+        [Min(.001f)] public float rootLength = .2f;
         [Range(1, 20000)] public int count = 400;
         [Min(0f)] public float minimumSpacing = 0.001f;
         [Range(0f, 1f)] public float uniformity = 0.35f;
@@ -78,6 +84,9 @@ namespace UMA.HairCards
         public void EnsureIntegrity()
         {
             HairStableId.Ensure(ref id);
+            if (!Enum.IsDefined(typeof(HairPopulationSource), source)) source = HairPopulationSource.Scalp;
+            form ??= new HairFormSettings(); form.EnsureIntegrity();
+            rootLength = Finite(rootLength, .001f, 10f);
             count = Mathf.Clamp(count, 1, 20000); neighbors = Mathf.Clamp(neighbors, 1, 8);
             minimumSpacing = Finite(minimumSpacing, 0f, 1f); uniformity = Finite(uniformity, 0f, 1f);
             minimumNormalDot = Finite(minimumNormalDot, -1f, 1f); influenceRadius = Finite(influenceRadius, 0.001f, 100f);

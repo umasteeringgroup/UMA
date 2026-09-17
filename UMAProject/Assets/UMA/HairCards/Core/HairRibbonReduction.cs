@@ -93,7 +93,8 @@ namespace UMA.HairCards
             float length = progress[count - 1];
             for (int i = 0; i < count; i++) progress[i] = length > 1e-8f ? progress[i] / length : i / (count - 1f);
             HairCardMeshGenerator.EmbedCardRoot(curve, dense, progress);
-            HairCurveUtility.BuildRotationMinimizingFrames(dense, curve.rootNormal, tangents, sides, normals, out int flips);
+            HairCurveUtility.BuildRotationMinimizingFrames(dense, curve.rootNormal, tangents, sides, normals, out int flips,
+                preserveFacingContinuity: curve.gatherFrameContinuity);
             return flips;
         }
 

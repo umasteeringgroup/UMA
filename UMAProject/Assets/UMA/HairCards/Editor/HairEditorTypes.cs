@@ -63,6 +63,7 @@ namespace UMA.HairCards.Editor
             internal Material material;
             internal HairAtlasProfileAsset atlas;
             internal int materialRevision, atlasRevision;
+            internal bool hybridCore;
         }
 
         private static SourceState ReadSource(HairCardMeshBuildResult build, int index, Material fallback)
@@ -74,7 +75,7 @@ namespace UMA.HairCards.Editor
             if (source == null) source = fallback;
             return new SourceState
             {
-                atlas = atlas, material = source,
+                atlas = atlas, material = source, hybridCore = !secondPass && HairSweptShaderGUI.IsHybrid(atlas),
                 atlasRevision = atlas != null ? EditorUtility.GetDirtyCount(atlas) : 0,
                 materialRevision = source != null ? EditorUtility.GetDirtyCount(source) : 0
             };
@@ -88,7 +89,7 @@ namespace UMA.HairCards.Editor
             {
                 SourceState current = ReadSource(build, i, fallback), previous = sources[i];
                 if (current.material != previous.material || current.atlas != previous.atlas ||
-                    current.materialRevision != previous.materialRevision || current.atlasRevision != previous.atlasRevision)
+                    current.materialRevision != previous.materialRevision || current.atlasRevision != previous.atlasRevision || current.hybridCore != previous.hybridCore)
                     return true;
             }
             return false;
@@ -123,6 +124,8 @@ namespace UMA.HairCards.Editor
                     target.CopyPropertiesFromMaterial(source);
                 }
                 target.name = source.name + " (Hair Atlas Preview)";
+                if (target.HasProperty("_HybridCore")) target.SetFloat("_HybridCore", sources[i].hybridCore ? 1 : 0);
+                if (sources[i].hybridCore) target.SetFloat("_AlphaToCoverage", 0);
                 if (atlas == null) continue;
                 // UVs already address the atlas. Inherited material tiling must not remap them again.
                 atlas.ApplyTexturesTo(target);

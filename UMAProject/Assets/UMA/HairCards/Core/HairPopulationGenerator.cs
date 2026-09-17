@@ -19,6 +19,7 @@ namespace UMA.HairCards
         internal sealed class StageCache
         {
             internal int fieldRevision = -1, count, seed;
+            internal string rootSourceId;
             internal float spacing, uniformity;
             internal HairGuideGenerationResult roots;
             internal readonly HairPointSpatialIndex index = new HairPointSpatialIndex();
@@ -103,7 +104,7 @@ namespace UMA.HairCards
         internal static void Generate(HairGroomAsset groom, HairGroup group, IReadOnlyList<HairEvaluatedCurve> guides,
             HairLodSettings lod, HairEvaluationOptions options, HairEvaluationResult result, HairEvaluationWorkspace workspace)
         {
-            if (!options.includeChildren || guides.Count == 0) return;
+            if (!options.includeChildren) return;
             IReadOnlyList<HairEvaluatedCurve> source = guides;
             HairSurfaceFields fields = workspace.populations.Fields(group);
             foreach (var stage in group.generation.clumps)
@@ -125,6 +126,73 @@ namespace UMA.HairCards
             }
         }
 
+        private static void GeneratePaintedScalp(HairGroomAsset groom, HairGroup group, HairGenerationStage settings,
+            HairLodSettings lod, bool final, HairEvaluationResult result, HairEvaluationWorkspace workspace,
+            HairPopulationWorkspace.StageCache cache, HairPopulationInfo info)
+        {
+            var owner = string.IsNullOrEmpty(settings.rootMapGroupId) ? group : groom.Groups.Find(g => g?.Id == settings.rootMapGroupId);
+            if (owner == null) { result.warnings.Add($"{settings.name}: missing Growth / Density source group. Choose a replacement."); return; }
+            var fields = workspace.populations.Fields(owner); fields.Prepare(workspace.sourceMesh, owner);
+            var styleFields = workspace.populations.Fields(group);
+            if (owner != group) styleFields.Prepare(workspace.sourceMesh, group);
+            bool reuse = cache.roots != null && cache.rootSourceId == owner.Id && cache.fieldRevision == fields.Revision &&
+                cache.count == settings.count && cache.seed == settings.seed && cache.spacing == settings.minimumSpacing && cache.uniformity == settings.uniformity;
+            if (!reuse)
+            {
+                cache.roots = HairGuideGenerator.Generate(groom, owner, new HairGuideGenerationSettings {
+                    guideCount = settings.count, pointsPerGuide = 2, defaultLength = .1f,
+                    minimumRootSpacing = settings.minimumSpacing, rootUniformity = settings.uniformity,
+                    seed = settings.seed, maximumAttemptsPerGuide = 24 });
+                cache.rootSourceId = owner.Id; cache.fieldRevision = fields.Revision; cache.count = settings.count;
+                cache.seed = settings.seed; cache.spacing = settings.minimumSpacing; cache.uniformity = settings.uniformity;
+            }
+            info.rootsReused = reuse; info.surfaceRoots = cache.roots.guides.Count;
+            if (info.surfaceRoots == 0) { result.warnings.Add($"{settings.name}: paint Growth / Density in '{owner.name}' to generate roots."); return; }
+            int samples = settings.shapeSamples;
+            string[] regions = group.atlasRegionIds?.ToArray() ?? Array.Empty<string>();
+            for (int ordinal = 0; ordinal < cache.roots.guides.Count; ordinal++)
+            {
+                var anchor = cache.roots.guides[ordinal].root;
+                int seed = unchecked(settings.seed * 486187739 + ordinal * 16777619);
+                var random = new HairDeterministicRandom(seed);
+                var curve = result.RentCurve(samples);
+                curve.curveId = settings.Id + ":" + ordinal; curve.childOrdinal = ordinal;
+                curve.generationStageId = settings.Id; curve.parentGuideId = curve.curveId;
+                curve.groupId = group.Id; curve.isChild = true; curve.seed = seed; curve.clumpSeed = seed; curve.clumpId = curve.curveId;
+                curve.rootAnchor = anchor; curve.rootNormal = anchor.CachedLocalNormal;
+                curve.rootEmbedDepth = group.rootEmbedDepth; curve.groupColor = group.color;
+                curve.profile = group.profile; curve.atlas = group.atlas; curve.atlasRegionSelection = group.atlasRegionSelection; curve.atlasRegionIds = regions;
+                curve.maskValue = fields.Sample(owner.FindMap(HairMapKind.GrowthArea), anchor);
+                curve.hairlineDistance = fields.Distance(anchor); curve.tubeSidesOverride = 0; curve.ribbonReduction = default;
+                curve.samplesPerCardOverride = lod != null ? lod.ResolveSampleCount(group.profile) : group.profile?.SamplesPerCard ?? 16;
+                if (workspace.options.previewSampleCount > 1) curve.samplesPerCardOverride = Mathf.Min(curve.samplesPerCardOverride, workspace.options.previewSampleCount);
+                float length = settings.rootLength * (1 + random.NextSigned() * settings.lengthVariation) * Mathf.Max(.01f, styleFields.Sample(group.FindMap(HairMapKind.Length), anchor, 1));
+                float width = (group.profile?.DefaultWidth ?? .01f) * (1 + random.NextSigned() * settings.widthVariation) * Mathf.Max(.01f, styleFields.Sample(group.FindMap(HairMapKind.Width), anchor, 1));
+                for (int i = 0; i < samples; i++)
+                    curve.points.Add(new HairCurvePoint(anchor.CachedLocalPosition + curve.rootNormal * (length * i / (samples - 1f)), width, 0, width));
+                cache.output.Add(curve);
+            }
+            // Prepare target packing and route shapes on the complete population. LOD density
+            // cannot change a surviving card's target, length or noise seed.
+            if (workspace.options.applyModifiers)
+                HairGroomEvaluator.ApplyPopulationModifiers(settings.modifiers, cache.output, HairModifierDomain.Children, groom, workspace, true);
+            if (final && lod != null)
+                cache.output.RemoveAll(curve => lod.cardFraction <= 0 || new HairDeterministicRandom(curve.seed ^ 0x167312).Next01() > lod.cardFraction);
+            if (final && lod != null && lod.cardFraction > 0 && lod.cardFraction < 1 && settings.form.preserveLodCoverage)
+            {
+                float coverage = Mathf.Min(2, 1 / lod.cardFraction);
+                foreach (var curve in cache.output) for (int p = 0; p < curve.points.Count; p++)
+                {
+                    var point = curve.points[p]; point.width *= coverage;
+                    if (point.widthBaseline >= 0) point.widthBaseline *= coverage;
+                    point.profileScale *= coverage; curve.points[p] = point;
+                }
+            }
+            int limit = workspace.options.interactiveSampleLimit;
+            if (final && limit > 0 && cache.output.Count > Mathf.Max(0, limit - result.curves.Count))
+                cache.output.RemoveRange(Mathf.Max(0, limit - result.curves.Count), cache.output.Count - Mathf.Max(0, limit - result.curves.Count));
+        }
+
         private static IReadOnlyList<HairEvaluatedCurve> GenerateStage(HairGroomAsset groom, HairGroup group, HairGenerationStage settings,
             IReadOnlyList<HairEvaluatedCurve> parents, HairSurfaceFields fields, HairEvaluationResult result,
             HairEvaluationWorkspace workspace, bool final, HairLodSettings lod)
@@ -134,6 +202,22 @@ namespace UMA.HairCards
             var cache = workspace.populations.Stage(settings); cache.output.Clear();
             var info = new HairPopulationInfo { stageId = settings.Id, name = settings.name, inputCount = parents.Count, requestedCount = settings.count };
             result.populations.Add(info);
+            if (settings.source == HairPopulationSource.PaintedScalp)
+            {
+                GeneratePaintedScalp(groom, group, settings, lod, final, result, workspace, cache, info);
+                info.outputCount = cache.output.Count;
+                info.milliseconds = (System.Diagnostics.Stopwatch.GetTimestamp() - start) * 1000.0 / System.Diagnostics.Stopwatch.Frequency;
+                return cache.output;
+            }
+            if (settings.source != HairPopulationSource.Scalp)
+            {
+                workspace.forms.Generate(groom, group, settings, lod, final, result, workspace, cache.output);
+                if (workspace.options.applyModifiers)
+                    HairGroomEvaluator.ApplyPopulationModifiers(settings.modifiers, cache.output, HairModifierDomain.Children, groom, workspace, true);
+                info.outputCount = cache.output.Count;
+                info.milliseconds = (System.Diagnostics.Stopwatch.GetTimestamp() - start) * 1000.0 / System.Diagnostics.Stopwatch.Frequency;
+                return cache.output;
+            }
             if (parents.Count == 0) return cache.output;
             bool reuse = cache.roots != null && cache.fieldRevision == fields.Revision && cache.count == settings.count &&
                 cache.seed == settings.seed && cache.spacing == settings.minimumSpacing && cache.uniformity == settings.uniformity;
@@ -239,6 +323,8 @@ namespace UMA.HairCards
                 for (int i = 0; i < n; i++) curve.maskValue += parents[neighbors[i]].maskValue * weights[i];
                 curve.samplesPerCardOverride = final ? cardSamples : samples; curve.tubeSidesOverride = lod?.maximumTubeSides ?? 12;
                 curve.ribbonReduction = center.ribbonReduction;
+                curve.gatherFrameContinuity = center.gatherFrameContinuity;
+                curve.gatherClearance = center.gatherClearance;
                 Vector3 inward = fields.Inward(root);
                 Vector3 rootSeparation = root.CachedLocalPosition - centerSamples[0].position;
                 for (int p = 0; p < samples; p++)

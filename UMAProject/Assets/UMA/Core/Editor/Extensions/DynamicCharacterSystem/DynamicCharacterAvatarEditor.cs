@@ -12,7 +12,7 @@ using UMA;
 namespace UMA.CharacterSystem.Editors
 {
     [CustomEditor(typeof(DynamicCharacterAvatar), true)]
-    public class DynamicCharacterAvatarEditor : Editor
+    public partial class DynamicCharacterAvatarEditor : Editor
     {
         public static bool showHelp = false;
         public static bool showWardrobe = false;
@@ -87,6 +87,7 @@ namespace UMA.CharacterSystem.Editors
 
         private void OnBeforeAssemblyReload()
         {
+            CancelPendingAvatarLoad();
             // Ensure events and temporary editors are cleaned up before reload
             try
             {
@@ -175,6 +176,8 @@ namespace UMA.CharacterSystem.Editors
 
         public void OnDisable()
         {
+            CancelPendingAvatarLoad();
+            _hasInspectorLayout = false;
             AssemblyReloadEvents.beforeAssemblyReload -= OnBeforeAssemblyReload;
             EditorApplication.update -= DoInspectors;
             SceneView.duringSceneGui -= DoSceneGUI;
@@ -215,6 +218,9 @@ namespace UMA.CharacterSystem.Editors
 
         private void DoInspectors()
         {
+            if (target is DynamicCharacterAvatar avatar &&
+                (!_hasInspectorLayout || avatar.EditorAvatarDefinitionRevision != _layoutDefinitionRevision))
+                Repaint();
             if (InspectMe.Count >0)
             {
                 for (int i =0; i < InspectMe.Count; i++)
@@ -267,6 +273,19 @@ namespace UMA.CharacterSystem.Editors
         }
 
         public override void OnInspectorGUI()
+        {
+            if (!PrepareInspectorFrame()) return;
+            int indent = EditorGUI.indentLevel;
+            bool enabled = GUI.enabled;
+            try { DrawInspectorContents(); }
+            finally
+            {
+                EditorGUI.indentLevel = indent;
+                GUI.enabled = enabled;
+            }
+        }
+
+        private void DrawInspectorContents()
         {
             if (IsEditorBusy())
             {
@@ -542,7 +561,8 @@ namespace UMA.CharacterSystem.Editors
         private bool ShowEditorCustomizationGUI()
         {
             bool wasChanged = false;
-            BeginVerticalPadded();
+            using var customizationLayout = new GUIHelper.PaddedVerticalScope(10,
+                EditorGUIUtility.isProSkin ? new Color(1.3f, 1.4f, 1.5f) : new Color(0.75f, 0.875f, 1f));
             EditorGUILayout.BeginHorizontal();
             _buildRig = GUILayout.Toggle(_buildRig, "Build Rig", "Button");
             _buildTexture = GUILayout.Toggle(_buildTexture, "Build Texture", "Button");
@@ -648,6 +668,7 @@ namespace UMA.CharacterSystem.Editors
                 }
                 if (GUILayout.Button("Load Avatar Definition"))
                 {
+                    bool queued = false;
                     string fileName = EditorUtility.OpenFilePanel("Load Avatar Definition", "", "adf");
                     if (!string.IsNullOrEmpty(fileName))
                     {
@@ -655,15 +676,18 @@ namespace UMA.CharacterSystem.Editors
                         {
                             string presetstring = System.IO.File.ReadAllText(fileName);
                             AvatarDefinition adf = AvatarDefinition.FromCompressedString(presetstring, '|');
-                            thisDCA.LoadAvatarDefinition(adf);
-                            thisDCA.BuildCharacter(false);
+                            QueueAvatarDefinitionLoad(adf);
+                            queued = true;
                         }
+                        catch (ExitGUIException) { throw; }
                         catch (Exception ex)
                         {
                             Debug.LogException(ex);
-                            EditorUtility.DisplayDialog("Error", "Error writing preset file: " + ex.Message, "OK");
+                            EditorUtility.DisplayDialog("Error", "Error loading avatar definition: " + ex.Message, "OK");
                         }
                     }
+                    // Outside the catch block: ExitGUIException is Unity control flow.
+                    if (queued) GUIUtility.ExitGUI();
                 }
                 EditorGUILayout.EndHorizontal();
             }
@@ -726,14 +750,13 @@ namespace UMA.CharacterSystem.Editors
             var n_newArraySize = n_origArraySize;
             if (newCharacterColors.isExpanded)
             {
-                GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
+                using var colorsLayout = new GUIHelper.PaddedVerticalScope(10, new Color(0.75f, 0.875f, 1f));
 
                 if (showHelp)
                 {
                     EditorGUILayout.HelpBox("Character Colors: This lets you set predefined colors to be used when building the Avatar. The colors will be assigned to the Shared Colors on the overlays as they are applied to the Avatar.", MessageType.Info);
                 }
                 n_newArraySize = DoColorsGUI(newCharacterColors, n_origArraySize);
-                GUIHelper.EndVerticalPadded(10);
             }
 
             //***********************************************************************************
@@ -753,7 +776,7 @@ namespace UMA.CharacterSystem.Editors
             }
             if (showPrefinedDNA)
             {
-                GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
+                using var dnaLayout = new GUIHelper.PaddedVerticalScope(10, new Color(0.75f, 0.875f, 1f));
 
                 if (race != null)
                 {
@@ -781,14 +804,11 @@ namespace UMA.CharacterSystem.Editors
                 {
                     EditorGUILayout.HelpBox("No active race found.", MessageType.Warning);
                 }
-                GUIHelper.EndVerticalPadded(10);
             }
             if (showHelp)
             {
                 EditorGUILayout.HelpBox("Predefined DNA is loaded onto the character in the initial character build. Select the DNA in the dropdown, and add it to the list of DNA to load, then edit the values as needed.", MessageType.Info);
             }
-            EndVerticalPadded();
-
             return wasChanged;
         }
 
@@ -1150,14 +1170,14 @@ namespace UMA.CharacterSystem.Editors
                     // Sort entries by name once before drawing
                     entries.Sort((x, y) => string.Compare(x.inst?.Name, y.inst?.Name, StringComparison.OrdinalIgnoreCase));
 
-                    EditorGUI.indentLevel++;
+                    using var groupIndent = new EditorGUI.IndentLevelScope();
                     for (int ei = 0; ei < entries.Count; ei++)
                     {
                         int idx = entries[ei].index;
                         var inst = entries[ei].inst;
                         if (inst == null) continue;
 
-                        EditorGUILayout.BeginHorizontal();
+                        using var dnaRow = new EditorGUILayout.HorizontalScope();
                         bool newEnabled = EditorGUILayout.ToggleLeft(inst.Name, inst.enabled, GUILayout.Width(140));
                         float oldValue = inst.Value;
                         EditorGUI.BeginChangeCheck();
@@ -1247,8 +1267,6 @@ namespace UMA.CharacterSystem.Editors
                             return true; // early exit after mutation to avoid index issues
                         }
 #endregion                        
-                        EditorGUILayout.EndHorizontal();
-
                         if (valueChanged)
                         {
                             // Get the DNA asset and its build type, then do a targeted build
@@ -1282,7 +1300,6 @@ namespace UMA.CharacterSystem.Editors
                             wasChanged = true;
                         }
                     }
-                    EditorGUI.indentLevel--;
                 }
 
                 // Unknown group (entries not mapped to any DNAGroup)
@@ -1292,14 +1309,14 @@ namespace UMA.CharacterSystem.Editors
                     if (_unknownAssignedGroupFoldout)
                     {
                         unknown.Sort((x, y) => string.Compare(x.inst?.Name, y.inst?.Name, StringComparison.OrdinalIgnoreCase));
-                        EditorGUI.indentLevel++;
+                        using var unknownIndent = new EditorGUI.IndentLevelScope();
                         for (int ui = 0; ui < unknown.Count; ui++)
                         {
                             int idx = unknown[ui].index;
                             var inst = unknown[ui].inst;
                             if (inst == null) continue;
 
-                            EditorGUILayout.BeginHorizontal();
+                            using var dnaRow = new EditorGUILayout.HorizontalScope();
                             bool newEnabled = EditorGUILayout.ToggleLeft(inst.Name, inst.enabled, GUILayout.Width(140));
                             float oldValue = inst.Value;
                             inst.Value = EditorGUILayout.Slider(inst.Value, 0f, 1f);
@@ -1343,8 +1360,6 @@ namespace UMA.CharacterSystem.Editors
                                 GenerateSingleUMA();
                                 return true; // early exit after mutation to avoid index issues
                             }
-                            EditorGUILayout.EndHorizontal();
-
                             if (!Mathf.Approximately(oldValue, inst.Value))
                             {
                                 //Undo.RecordObject(umaData, "Change DNA Value");
@@ -1361,7 +1376,6 @@ namespace UMA.CharacterSystem.Editors
                                 wasChanged = true;
                             }
                         }
-                        EditorGUI.indentLevel--;
                     }
                 }
 
@@ -1434,7 +1448,7 @@ namespace UMA.CharacterSystem.Editors
             if (_newDnaInGroupIndex < 0 || _newDnaInGroupIndex >= dnaNames.Count) _newDnaInGroupIndex = 0;
             _newDnaInGroupIndex = EditorGUILayout.Popup("DNA", _newDnaInGroupIndex, dnaNames.ToArray());
 
-            EditorGUILayout.BeginHorizontal();
+            using var addDnaRow = new EditorGUILayout.HorizontalScope();
             if (GUILayout.Button("Add DNA Instance"))
             {
                 if (umaData == null)
@@ -1543,8 +1557,6 @@ namespace UMA.CharacterSystem.Editors
                     wasChanged = true;
                 }
             }
-            EditorGUILayout.EndHorizontal();
-
             return wasChanged;
         }
 

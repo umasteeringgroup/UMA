@@ -15,14 +15,16 @@ namespace UMA.HairCards.Editor
         [Serializable]
         private sealed class Payload
         {
-            public int version = 1;
+            public int version = 2;
             public string sourceMeshId, topology, mapName;
             public float[] values;
+            public HairMapStorage storage;
+            public HairTextureMap texture;
         }
 
         private Payload payload;
         internal string Description => payload == null ? "Map clipboard is empty." :
-            $"Clipboard: {payload.mapName} ({payload.values.Length:N0} vertices).";
+            $"Clipboard: {payload.mapName} ({(payload.storage == HairMapStorage.Texture ? "texture + base field" : "vertex map")}).";
 
         internal HairGrowthMapClipboard(string serialized = null)
         {
@@ -30,9 +32,11 @@ namespace UMA.HairCards.Editor
             try
             {
                 Payload restored = JsonUtility.FromJson<Payload>(serialized);
-                if (restored == null || restored.version != 1 || string.IsNullOrEmpty(restored.sourceMeshId) ||
+                if (restored == null || (restored.version != 1 && restored.version != 2) || string.IsNullOrEmpty(restored.sourceMeshId) ||
                     string.IsNullOrEmpty(restored.topology) || restored.values == null || restored.values.Length == 0) return;
                 foreach (float value in restored.values) if (!float.IsFinite(value)) return;
+                if (restored.storage == HairMapStorage.Texture &&
+                    (restored.texture == null || !restored.texture.IsValid(restored.topology, restored.values.Length))) return;
                 payload = restored;
             }
             catch (ArgumentException) { /* An old/malformed clipboard is treated as empty. */ }
@@ -53,6 +57,9 @@ namespace UMA.HairCards.Editor
                 reason = "Map vertex data does not match the source mesh. Repair the source binding first.";
             else if (!float.IsFinite(map.valueRange.x) || !float.IsFinite(map.valueRange.y))
                 reason = "The map's value range must be finite.";
+            else if (map.storage == HairMapStorage.Texture &&
+                (map.texture == null || map.texture.topology != groom.SourceTopologySignature))
+                reason = "Texture map data does not match the source topology, or contains invalid texels.";
             return reason == null;
         }
 
@@ -65,17 +72,20 @@ namespace UMA.HairCards.Editor
             string topology = HairMeshUtility.ComputeTopologySignature(groom.SourceMesh);
             if (topology != groom.SourceTopologySignature)
             { message = "Source topology changed. Repair the source binding before copying map data."; return false; }
+            if (map.UsesTexture && !map.texture.IsValid(topology, groom.SourceVertexCount))
+            { message = "Map contains invalid texels; the clipboard and map were not changed."; return false; }
             foreach (float value in map.values)
                 if (!float.IsFinite(value)) { message = "Map contains invalid values; the clipboard and map were not changed."; return false; }
             if (cut && !float.IsFinite(map.defaultValue))
             { message = "The map's default value must be finite before cutting."; return false; }
             Payload snapshot = new Payload { sourceMeshId = groom.SourceMeshId, topology = topology,
-                mapName = map.DisplayName, values = (float[])map.values.Clone() };
+                mapName = map.DisplayName, values = (float[])map.values.Clone(), storage = map.storage, texture = map.texture?.Clone() };
             if (cut)
             {
                 Undo.RecordObject(groom, $"Cut {map.name} Map Values");
                 float reset = Mathf.Clamp(map.defaultValue, Mathf.Min(map.valueRange.x, map.valueRange.y), Mathf.Max(map.valueRange.x, map.valueRange.y));
                 for (int i = 0; i < map.values.Length; i++) map.values[i] = reset;
+                map.texture?.Clear();
                 HairGroomCommands.Commit(groom);
             }
             payload = snapshot;
@@ -104,6 +114,9 @@ namespace UMA.HairCards.Editor
             for (int i = 0; i < values.Length; i++) values[i] = Mathf.Clamp(payload.values[i], minimum, maximum);
             Undo.RecordObject(groom, $"Paste Into {map.name} Map");
             map.values = values;
+            map.storage = payload.storage; map.texture = payload.texture?.Clone();
+            if (map.UsesTexture) foreach (var tile in map.texture.tiles)
+                for (int i = 0; i < tile.pixels.Length; i++) tile.pixels[i] = Mathf.Clamp(tile.pixels[i], minimum, maximum);
             HairGroomCommands.Commit(groom);
             message = $"Pasted {payload.mapName} into {map.DisplayName}. Values are clamped to the destination range; Undo restores the previous map.";
             return true;
@@ -320,6 +333,24 @@ namespace UMA.HairCards.Editor
             return map;
         }
 
+        internal static void SetMapStorage(HairGroomAsset groom, HairGrowthMap map, HairMapStorage storage, int resolution = 16)
+        {
+            if (groom == null || map == null || map.locked || groom.SourceMesh == null) return;
+            Undo.RegisterCompleteObjectUndo(groom, "Change Hair Map Storage");
+            if (storage == HairMapStorage.Texture)
+            {
+                if (!map.UsesTexture) map.texture = new HairTextureMap { resolution = HairTextureMap.ClampResolution(resolution), topology = groom.SourceTopologySignature };
+                else map.texture.Resize(resolution);
+            }
+            else if (map.UsesTexture)
+            {
+                var values = new float[map.values.Length];
+                for (int i = 0; i < values.Length; i++) values[i] = map.SampleVertex(i);
+                map.values = values; map.texture = null;
+            }
+            map.storage = storage; Commit(groom);
+        }
+
         public static void FillMap(HairGroomAsset groom, HairGrowthMap map, float value)
         {
             if (groom == null || map == null || map.locked) return;
@@ -327,6 +358,7 @@ namespace UMA.HairCards.Editor
             map.EnsureIntegrity(groom.SourceVertexCount);
             float clamped = Mathf.Clamp(value, map.valueRange.x, map.valueRange.y);
             for (int i = 0; i < map.values.Length; i++) map.values[i] = clamped;
+            map.texture?.Clear();
             Commit(groom);
         }
 
@@ -340,6 +372,12 @@ namespace UMA.HairCards.Editor
             {
                 map.values[i] = maximum - (map.values[i] - minimum);
             }
+            if (map.UsesTexture)
+            {
+                foreach (var tile in map.texture.tiles)
+                    for (int i = 0; i < tile.pixels.Length; i++) tile.pixels[i] = maximum - (tile.pixels[i] - minimum);
+                map.texture.Touch();
+            }
             Commit(groom);
         }
 
@@ -347,6 +385,11 @@ namespace UMA.HairCards.Editor
         {
             if (groom == null || groom.SourceMesh == null || map == null || map.locked) return;
             Undo.RecordObject(groom, $"Smooth {map.name}");
+            if (map.UsesTexture)
+            {
+                new HairTexturePaintSurface(groom.SourceMesh).Smooth(map, iterations);
+                Commit(groom); return;
+            }
             List<int>[] neighbors = BuildVertexNeighbors(groom.SourceMesh);
             float[] buffer = new float[map.values.Length];
             for (int iteration = 0; iteration < Mathf.Max(1, iterations); iteration++)
@@ -514,6 +557,8 @@ namespace UMA.HairCards.Editor
                 helper.points.Add(position + Vector3.up * 0.2f);
             }
             helper.EnsureIntegrity();
+            if (type == HairHelperType.GuideGrid)
+                HairFormUtility.CreateGrid(helper, 3, 5, position, Vector3.right * .08f, Vector3.up * .2f);
             groom.SharedHelpers.Add(helper);
             Commit(groom);
             return helper;
@@ -690,6 +735,7 @@ namespace UMA.HairCards.Editor
                 case HairModifierType.Length:
                 case HairModifierType.Width: return 1f;
                 case HairModifierType.Smooth: return 0.35f;
+                case HairModifierType.SurfaceBend: return 35f;
                 case HairModifierType.Curl:
                 case HairModifierType.Ringlets:
                 case HairModifierType.Wave:

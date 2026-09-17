@@ -685,7 +685,7 @@ namespace UMA.CharacterSystem.Editors
             defaultOpen = EditorGUILayout.Foldout(defaultOpen, "Default Wardrobe Recipes");
             if (defaultOpen)
             {
-                UMA.Editors.GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
+                using var wardrobeLayout = new UMA.Editors.GUIHelper.PaddedVerticalScope(10, new Color(0.75f, 0.875f, 1f));
 
                 // Attempt to refresh live race recipes safely
                 try
@@ -1007,7 +1007,6 @@ namespace UMA.CharacterSystem.Editors
                 }
 
                 DropAreaGUI(dropArea, thisRecipesProp);
-                UMA.Editors.GUIHelper.EndVerticalPadded(10);
             }
 
             try

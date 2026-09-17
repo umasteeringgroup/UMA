@@ -20,6 +20,8 @@ namespace UMA.HairCards
         internal readonly Dictionary<HairAtlasProfileAsset, int> materialLookup = new Dictionary<HairAtlasProfileAsset, int>();
         internal readonly List<HairCurvePoint> sampled = new List<HairCurvePoint>();
         internal readonly HairRibbonReductionWorkspace reduction = new HairRibbonReductionWorkspace();
+        internal readonly HairGroomEvaluator.SourceMeshReadCache cardSurface = new HairGroomEvaluator.SourceMeshReadCache();
+        internal readonly HairCardSurfaceClearance clearance = new HairCardSurfaceClearance();
         internal float[] cumulative = Array.Empty<float>();
         internal Vector3[] curveTangents = Array.Empty<Vector3>(), sides = Array.Empty<Vector3>(), frameNormals = Array.Empty<Vector3>();
         private readonly Dictionary<(HairCardProfileAsset, int), float[]> profileWidths = new Dictionary<(HairCardProfileAsset, int), float[]>();
@@ -32,10 +34,13 @@ namespace UMA.HairCards
             inUse = true;
             vertices.Clear(); normals.Clear(); tangents.Clear(); uvs.Clear(); colors.Clear();
             strandData.Clear(); clumpData.Clear();
+            clearance.Begin();
         }
 
         internal void End()
         {
+            cardSurface.End();
+            clearance.End();
             foreach (float[] widths in profileWidths.Values) spareWidths.Push(widths);
             profileWidths.Clear();
             foreach (HairCardMeshGenerator.MaterialBucket bucket in buckets)
@@ -98,6 +103,7 @@ namespace UMA.HairCards
             cumulative = Array.Empty<float>();
             curveTangents = sides = frameNormals = Array.Empty<Vector3>();
             reduction.Clear();
+            cardSurface.Clear(); clearance.Clear();
         }
     }
 
@@ -173,6 +179,7 @@ namespace UMA.HairCards
             List<Vector2> uvs = workspace.uvs;
             List<Color> colors = workspace.colors;
             List<MaterialBucket> buckets = workspace.buckets;
+            workspace.cardSurface.Begin(evaluation.cardCollisionMesh);
 
             for (int curveIndex = 0; curveIndex < evaluation.curves.Count; curveIndex++)
             {
@@ -201,6 +208,7 @@ namespace UMA.HairCards
                     curve.atlasRegionSelection, curve.atlasRegionIds);
                 int bucketIndex = GetMaterialBucket(curve.atlas, workspace);
                 int firstVertex = vertices.Count;
+                int firstIndex = buckets[bucketIndex].triangles.Count;
                 HairCardSpan span = null;
                 if (includeEditingMetadata)
                 {
@@ -224,6 +232,9 @@ namespace UMA.HairCards
                     AppendRibbon(curve, sampled, profile, region, vertices, normals, tangents, uvs,
                         colors, buckets[bucketIndex].triangles, workspace, out flips, ref result.degenerateTriangleCount);
                 }
+                if (curve.preventCardPenetration)
+                    workspace.clearance.Apply(curve, workspace.cardSurface.Surface(), workspace,
+                        firstVertex, buckets[bucketIndex].triangles, firstIndex);
                 result.frameFlipCount += flips;
                 result.cardCount++;
                 if (span != null)
@@ -275,14 +286,15 @@ namespace UMA.HairCards
                         ? buckets[bucketIndex].material.name
                         : "Default Hair Material");
                 }
-                // Repeat only the draw descriptor, not vertices or index buffers. Keep primary
-                // submesh indices stable for card picking, highlights, and UMA slot export.
+                // Share vertices, but give each pass its own index range. Overlapping submesh
+                // index ranges have undefined behavior in Unity 6.3. Keep primary submesh
+                // indices stable for card picking, highlights, and UMA slot export.
                 int passIndex = buckets.Count;
                 for (int bucketIndex = 0; bucketIndex < buckets.Count; bucketIndex++)
                 {
                     HairAtlasProfileAsset atlas = buckets[bucketIndex].atlas;
                     if (atlas == null || atlas.secondPassMaterial == null) continue;
-                    mesh.SetSubMesh(passIndex++, mesh.GetSubMesh(bucketIndex), MeshUpdateFlags.DontRecalculateBounds);
+                    mesh.SetTriangles(buckets[bucketIndex].triangles, passIndex++, false);
                     result.materials.Add(atlas.secondPassMaterial);
                     result.atlases.Add(atlas);
                     result.secondPasses.Add(true);
@@ -340,7 +352,7 @@ namespace UMA.HairCards
             bool reduced = workspace.reduction.active;
             flipCount = 0;
             if (!reduced) HairCurveUtility.BuildRotationMinimizingFrames(points, curve.rootNormal, curveTangents,
-                sides, frameNormals, out flipCount);
+                sides, frameNormals, out flipCount, preserveFacingContinuity: curve.gatherFrameContinuity);
             else for (int i = 1; i < points.Count; i++)
                 if (Vector3.Dot(sides[i], sides[i - 1]) < -.25f) flipCount++;
             bool hasProfile = profile != null;
@@ -414,7 +426,7 @@ namespace UMA.HairCards
             Vector3[] sides = workspace.sides;
             Vector3[] frameNormals = workspace.frameNormals;
             HairCurveUtility.BuildRotationMinimizingFrames(points, curve.rootNormal, curveTangents,
-                sides, frameNormals, out flipCount);
+                sides, frameNormals, out flipCount, preserveFacingContinuity: curve.gatherFrameContinuity);
             int sidesCount = Mathf.Clamp(sidesPerRing, 3, 12);
             bool hasProfile = profile != null;
             float defaultWidth = hasProfile ? profile.DefaultWidth : 0f;

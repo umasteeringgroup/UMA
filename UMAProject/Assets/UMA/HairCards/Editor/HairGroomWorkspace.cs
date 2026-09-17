@@ -232,6 +232,7 @@ namespace UMA.HairCards.Editor
             if (group == null) return;
             DrawStepTitle("2. Growth", "Paint one Growth / Density map: 0 = no growth, 0.5 = half density, 1 = full density.");
             DrawGrowthMapRow(stage, stage.ActiveMap);
+            DrawMapStorage(stage);
             if (HasPaintedDensityMultiplier(group))
                 EditorGUILayout.HelpBox("The optional Density Multiplier also reduces growth. Select its node under Optional Maps to edit or reset it.", MessageType.Info);
             if (stage.ActiveMap?.kind == HairMapKind.Density)
@@ -328,7 +329,35 @@ namespace UMA.HairCards.Editor
             if (multiplier == null) return false;
             if (multiplier.values == null || multiplier.values.Length == 0) return multiplier.defaultValue != 1f;
             foreach (float value in multiplier.values) if (value != 1f) return true;
+            if (multiplier.UsesTexture) foreach (var tile in multiplier.texture.tiles)
+                foreach (float value in tile.pixels) if (value != 1f) return true;
             return false;
+        }
+
+        private static readonly string[] MapStorageLabels = { "Vertex map (mesh resolution)", "Texture map (precise)" };
+        private static readonly GUIContent[] MapDetailLabels = { new GUIContent("8 · Draft"), new GUIContent("16 · Fine"), new GUIContent("32 · Hairline"), new GUIContent("64 · Extra fine") };
+        private static readonly int[] MapDetailValues = { 8, 16, 32, 64 };
+        private static void DrawMapStorage(HairCardStage stage)
+        {
+            var map = stage.ActiveMap; if (map == null) return;
+            using (new EditorGUI.DisabledScope(map.locked || stage.ActiveGroup.locked || stage.IsEditing))
+            {
+                int storage = EditorGUILayout.Popup(new GUIContent("Paint storage", "Texture maps paint within faces without changing the source mesh, UVs or root anchors."), (int)map.storage, MapStorageLabels);
+                if (storage != (int)map.storage && EditorUtility.DisplayDialog("Change Paint Storage",
+                    storage == 1 ? "Convert this map to precise texture painting? Existing values are preserved. Repaint or smooth the boundary to improve an existing jagged hairline. Undo is supported." :
+                    "Convert back to vertex painting? Detail between source vertices will be lost. Undo is supported.", "Convert", "Cancel"))
+                    HairGroomCommands.SetMapStorage(stage.Groom, map, (HairMapStorage)storage);
+                if (map.UsesTexture)
+                {
+                    int resolution = EditorGUILayout.IntPopup(new GUIContent("Texels per face edge", "Dedicated non-overlapping face textures. Higher values refine the brush and hairline without adding scalp or hair-card polygons."), map.texture.resolution, MapDetailLabels, MapDetailValues);
+                    if (resolution != map.texture.resolution && (resolution > map.texture.resolution || EditorUtility.DisplayDialog("Reduce Map Detail",
+                        "Reducing texture resolution can remove fine painted details. Continue? Undo is supported.", "Reduce", "Cancel")))
+                        HairGroomCommands.SetMapStorage(stage.Groom, map, HairMapStorage.Texture, resolution);
+                    EditorGUILayout.LabelField($"{map.texture.tiles.Count:N0} detailed faces · {map.texture.PixelBytes / 1048576f:0.00} MiB of texels · saved inside groom", EditorStyles.wordWrappedMiniLabel);
+                    EditorGUILayout.HelpBox("Paint resolution is independent of the character UVs. Only edited faces allocate texels. The overlay, generated roots and modifier masks use the same field. Existing guides stay where authored; regenerate generated guides to move their roots.", MessageType.None);
+                }
+                else EditorGUILayout.HelpBox("A vertex map cannot draw an edge inside a polygon. Choose Texture map for precise hairlines and small patches.", MessageType.None);
+            }
         }
 
         private static void DrawGrowthMapRow(HairCardStage stage, HairGrowthMap map)
@@ -365,7 +394,9 @@ namespace UMA.HairCards.Editor
             {
                 float coverage = sourceVertices > 0 ? growthVertices / (float)sourceVertices : 0f;
                 EditorGUILayout.HelpBox(
-                    $"Painted region ready: {growthVertices:N0} source vertices ({coverage:P1}), maximum density {growthMaximum:0.###}.",
+                    stage.ActiveGroup.FindMap(HairMapKind.GrowthArea)?.UsesTexture == true
+                        ? $"Painted region ready (texture sampling), maximum density {growthMaximum:0.###}."
+                        : $"Painted region ready: {growthVertices:N0} source vertices ({coverage:P1}), maximum density {growthMaximum:0.###}.",
                     MessageType.Info);
             }
 
@@ -758,8 +789,31 @@ namespace UMA.HairCards.Editor
                 HairCardShape shape = (HairCardShape)EditorGUILayout.EnumPopup("Card Shape", profile.Shape);
                 float rootWidth = Mathf.Max(0f, EditorGUILayout.FloatField("Root Width", profile.DefaultWidth));
                 float tipWidth = Mathf.Max(0f, EditorGUILayout.FloatField("Tip Width", profile.TipWidth));
+                using (var widthSettings = new SerializedObject(profile))
+                {
+                    HairCardProfileEditor.DrawWidthCurve(widthSettings.FindProperty("widthAlongCard"), rootWidth, tipWidth,
+                        (stage.Groom.Lods.Find(item => item.level == stage.LodLevel) ?? stage.Groom.Lods[0]).ResolveSampleCount(profile));
+                    if (widthSettings.ApplyModifiedProperties())
+                    {
+                        stage.TrackResourceEdit(profile);
+                        stage.QueuePreviewChange(HairPreviewChange.Geometry);
+                    }
+                }
                 using (new EditorGUI.DisabledScope(group.locked))
                 {
+                    bool preventPenetration = EditorGUILayout.Toggle(new GUIContent("Prevent scalp penetration",
+                        "Checks the finished card cross-sections, edges and face interiors against the authoring surface, after width, roll and LOD sampling. Moves card geometry only; guides and triangle counts are unchanged. Requires an outward-facing source surface."), group.preventCardPenetration);
+                    float clearanceMm = group.cardSurfaceClearance * 1000f;
+                    using (new EditorGUI.DisabledScope(!preventPenetration))
+                        clearanceMm = EditorGUILayout.Slider(new GUIContent("Card clearance (mm)",
+                            "Minimum card/scalp spacing in source-mesh units (1 unit = 1 meter). Try 0.5 mm for close hair. Root Embed permits an intentional inset only near the root."), clearanceMm, 0f, 5f);
+                    if (preventPenetration != group.preventCardPenetration || !Mathf.Approximately(clearanceMm, group.cardSurfaceClearance * 1000f))
+                    {
+                        Undo.RecordObject(stage.Groom, "Change Hair Card Clearance");
+                        group.preventCardPenetration = preventPenetration;
+                        group.cardSurfaceClearance = clearanceMm * .001f;
+                        HairGroomCommands.Commit(stage.Groom);
+                    }
                     float embedMm = EditorGUILayout.Slider(new GUIContent("Root Embed (mm)",
                         "Active group only. Tucks guide and child cards inward along their root surface normal, fading over the first 20% of card length. 0 disables; try 1–3 mm. Does not move guides or change their length. Included in preview and bake."),
                         group.rootEmbedDepth * 1000f, 0f, 20f);
@@ -1232,7 +1286,11 @@ namespace UMA.HairCards.Editor
                     amount = EditorGUILayout.Slider(amountLabel, amount, 0f, 5f);
                 else if (modifier.type == HairModifierType.Ringlets)
                     amount = EditorGUILayout.Slider("Curl radius (mm)", amount * 1000f, 0f, 50f) * .001f;
-                else if (modifier.type != HairModifierType.Mirror && modifier.type != HairModifierType.SplineFlow)
+                else if (modifier.type == HairModifierType.SurfaceBend)
+                    amount = EditorGUILayout.Slider("Bend angle (degrees)", amount, -85f, 85f);
+                else if (modifier.type == HairModifierType.Noise && modifier.strandAlignedNoise)
+                    amount = Mathf.Max(0f, EditorGUILayout.FloatField("Sideways amplitude (mm)", amount * 1000f)) * .001f;
+                else if (modifier.type != HairModifierType.Mirror && modifier.type != HairModifierType.SplineFlow && modifier.type != HairModifierType.Gather)
                     amount = EditorGUILayout.FloatField(amountLabel, amount);
                 bool usesRamp = modifier.type != HairModifierType.Length && modifier.type != HairModifierType.Resample && modifier.type != HairModifierType.Simplify && modifier.type != HairModifierType.LodReduction;
                 float rootInfluence = modifier.rootInfluence;
@@ -1357,10 +1415,10 @@ namespace UMA.HairCards.Editor
                    type == HairModifierType.Wave || type == HairModifierType.Gravity;
         }
 
-        private static bool ModifierUsesRootInfluence(HairModifierType type) => type == HairModifierType.Gravity ||
+        private static bool ModifierUsesRootInfluence(HairModifierType type) => type == HairModifierType.Gather || type == HairModifierType.Gravity ||
             type == HairModifierType.Smooth || type == HairModifierType.FlowAlign || type == HairModifierType.SplineFlow || type == HairModifierType.Lift ||
             type == HairModifierType.Clump || type == HairModifierType.Part || type == HairModifierType.Curl ||
-            type == HairModifierType.Wave || type == HairModifierType.Noise || type == HairModifierType.HelperFollow ||
+            type == HairModifierType.Wave || type == HairModifierType.Noise || type == HairModifierType.SurfaceBend || type == HairModifierType.HelperFollow ||
             type == HairModifierType.Collision || type == HairModifierType.PushOut || type == HairModifierType.Ringlets;
 
         private static bool ModifierUsesHelper(HairModifierType type)

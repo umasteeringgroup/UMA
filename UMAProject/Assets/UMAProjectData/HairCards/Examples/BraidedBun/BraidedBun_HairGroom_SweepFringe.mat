@@ -1,0 +1,84 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: BraidedBun_HairGroom_SweepFringe
+  m_Shader: {fileID: 4800000, guid: c35c0b9b4f964e95ab0a0d423807adff, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords:
+  - _HYBRIDCORE_ON
+  - _USEDEPTHMAP_ON
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: 3000
+  stringTagMap: {}
+  disabledShaderPasses:
+  - SHADOWCASTER
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _BaseMap:
+        m_Texture: {fileID: 2800000, guid: f060cc168182fd042b3496de78796eea, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BumpMap:
+        m_Texture: {fileID: 2800000, guid: a5fbb2922e669994f83edd6c6328b61e, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DepthMap:
+        m_Texture: {fileID: 2800000, guid: f060cc168182fd042b3496de78796eea, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _OcclusionMap:
+        m_Texture: {fileID: 2800000, guid: 793d3486a6e75ba468ce50f451cb035f, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _AlphaDensity: 1.2
+    - _AlphaToCoverage: 0
+    - _AmbientStrength: 0.8
+    - _BumpScale: 0.35
+    - _ClumpVariation: 0.09
+    - _ColorPower: 0.8
+    - _Coverage: 1
+    - _Cutoff: 0.18
+    - _DebugView: 0
+    - _DepthInfluence: 0.18
+    - _DiffuseWrap: 0.35
+    - _DitheredOpacity: 0
+    - _HybridCore: 0
+    - _OcclusionStrength: 0.25
+    - _RootFade: 0.46
+    - _RootOpacityFade: 0
+    - _SecondaryShift: 0.2
+    - _SecondarySmoothness: 0.3
+    - _SecondaryStrength: 0.07
+    - _ShadowCutoff: 0.35
+    - _Smoothness: 0.5
+    - _SpecularShift: -0.1
+    - _SpecularStrength: 0.095
+    - _StrandVariation: 0
+    - _TextureColor: 0
+    - _Transmission: 0.2
+    - _UseDepthMap: 1
+    - _VertexAlphaInfluence: 0
+    - _VertexColorInfluence: 0
+    m_Colors:
+    - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
+    - _RootColor: {r: 0.080996476, g: 0.046796836, b: 0.022049999, a: 0.16470589}
+    - _SecondaryColor: {r: 0.65, g: 0.28, b: 0.06, a: 1}
+    - _SpecularColor: {r: 1, g: 0.87, b: 0.64, a: 1}
+    - _TipColor: {r: 0.48427665, g: 0.26385912, b: 0.0898479, a: 1}
+    - _TransmissionColor: {r: 1, g: 0.55, b: 0.15, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

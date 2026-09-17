@@ -954,6 +954,9 @@ namespace UMA.HairCards.Editor
             transformed.childCurveCount = sourceResult.childCurveCount;
             transformed.rejectedCurveCount = sourceResult.rejectedCurveCount;
             transformed.revision = sourceResult.revision;
+            // Curves are now in the baked avatar pose, so clearance must use the
+            // matching posed surface, not the bind-pose mesh (or no mesh at all).
+            transformed.cardCollisionMesh = posed;
             transformed.warnings.Clear();
             transformed.warnings.AddRange(sourceResult.warnings);
             TransformCurves(groom, sourceResult.evaluatedGuides, transformed.evaluatedGuides);

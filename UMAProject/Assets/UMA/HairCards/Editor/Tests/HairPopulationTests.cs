@@ -502,11 +502,12 @@ namespace UMA.HairCards.Editor.Tests
             finally { Object.DestroyImmediate(posed); }
         }
 
-        [Test]
-        public void SweptShaderCompilesColorShadowDepthAndClusterVariants()
+        [TestCase(false)]
+        [TestCase(true)]
+        public void SweptShaderCompilesColorShadowDepthAndClusterVariants(bool blended)
         {
             if (Shader.Find("Universal Render Pipeline/Lit") == null) Assert.Ignore("URP is not installed in this test project.");
-            var shader=Shader.Find(HairSweptShaderGUI.ShaderName); Assert.That(shader,Is.Not.Null);
+            var shader=Shader.Find(blended ? HairSweptShaderGUI.SoftShaderName : HairSweptShaderGUI.ShaderName); Assert.That(shader,Is.Not.Null);
             var variants=new ShaderVariantCollection(); var material=new Material(shader);
             try
             {
@@ -515,7 +516,8 @@ namespace UMA.HairCards.Editor.Tests
                     variants.Add(new ShaderVariantCollection.ShaderVariant(shader,UnityEngine.Rendering.PassType.ScriptableRenderPipeline,keywords));
                 variants.Add(new ShaderVariantCollection.ShaderVariant(shader,UnityEngine.Rendering.PassType.ShadowCaster));
                 variants.WarmUp();
-                Assert.That(material.passCount,Is.EqualTo(4));
+                Assert.That(ShaderUtil.GetShaderMessages(shader).Where(m=>m.severity.ToString()=="Error").Select(m=>m.message),Is.Empty);
+                Assert.That(material.passCount,Is.EqualTo(blended ? 2 : 4),"Blended hair has color/shadow passes only; it must not write a solid depth silhouette.");
                 for(int i=0;i<material.passCount;i++) Assert.That(material.SetPass(i),Is.True,"Shader pass "+i);
                 Assert.That(ShaderUtil.GetShaderMessages(shader).Where(m=>m.severity.ToString()=="Error").Select(m=>m.message),Is.Empty);
             }

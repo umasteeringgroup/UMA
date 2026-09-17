@@ -380,10 +380,15 @@ namespace UMA.HairCards
             Vector3[] tangents,
             Vector3[] sides,
             Vector3[] normals,
-            out int flipCount)
+            out int flipCount, bool includeCardOrientation = true, bool preserveFacingContinuity = false)
         {
             flipCount = 0;
             if (points == null || points.Count == 0) return;
+            if (!includeCardOrientation)
+            {
+                BuildStrandFrames(points, rootNormal, tangents, sides, normals);
+                return;
+            }
             Vector3 firstTangent = CalculateTangent(points, 0);
             Vector3 initialNormal = Vector3.ProjectOnPlane(rootNormal, firstTangent);
             if (initialNormal.sqrMagnitude < 1e-8f)
@@ -411,16 +416,25 @@ namespace UMA.HairCards
                     }
                 }
                 Vector3 transportedSide = side;
-                Vector3 desiredNormal = points[i].facingWeight > 0f ? Vector3.ProjectOnPlane(points[i].facingNormal, tangent) : Vector3.zero;
+                Vector3 desiredNormal = includeCardOrientation && points[i].facingWeight > 0f ? Vector3.ProjectOnPlane(points[i].facingNormal, tangent) : Vector3.zero;
                 bool hasFacing = points[i].facingWeight > 0f && float.IsFinite(desiredNormal.sqrMagnitude) && desiredNormal.sqrMagnitude > 1e-10f;
                 if (hasFacing)
                 {
+                    if (preserveFacingContinuity && i > 0)
+                    {
+                        // A projected normal has two equivalent ribbon sides near a
+                        // tangent/normal singularity. Resolve the sign at the actual mesh
+                        // sampling rate, not only on the higher-resolution authoring curve.
+                        Vector3 candidateSide = Vector3.Cross(tangent, desiredNormal).normalized;
+                        candidateSide = Quaternion.AngleAxis(points[i].roll, tangent) * candidateSide;
+                        if (Vector3.Dot(candidateSide, sides[i - 1]) < 0) desiredNormal = -desiredNormal;
+                    }
                     Vector3 baseNormal = Vector3.Cross(side, tangent).normalized;
                     float angle = Vector3.SignedAngle(baseNormal, desiredNormal.normalized, tangent);
                     side = Quaternion.AngleAxis(angle * Mathf.Clamp01(points[i].facingWeight), tangent) * side;
                 }
                 // Flow supplies the base frame; authored roll/Twist remains an explicit offset.
-                Quaternion roll = Quaternion.AngleAxis(points[i].roll, tangent);
+                Quaternion roll = Quaternion.AngleAxis(includeCardOrientation ? points[i].roll : 0f, tangent);
                 Vector3 rolledSide = roll * side;
                 Vector3 normal = Vector3.Cross(rolledSide, tangent).normalized;
                 if (i > 0 && Vector3.Dot(rolledSide, sides[i - 1]) < -0.25f) flipCount++;
@@ -429,6 +443,37 @@ namespace UMA.HairCards
                 normals[i] = normal;
                 // Do not accumulate the facing blend (or roll) once per tessellation sample.
                 side = hasFacing ? transportedSide : rolledSide;
+            }
+        }
+
+        // Minimal-rotation transport without native quaternion/roll calls per sample.
+        // Centerline modifiers do not need card-facing blend or roll. The ordinary mesh
+        // frame path above remains unchanged for existing profiles and grooms.
+        private static void BuildStrandFrames(IReadOnlyList<HairCurvePoint> points, Vector3 rootNormal,
+            Vector3[] tangents, Vector3[] sides, Vector3[] normals)
+        {
+            Vector3 previousTangent = CalculateTangent(points, 0);
+            Vector3 normal = Vector3.ProjectOnPlane(rootNormal, previousTangent);
+            if (normal.sqrMagnitude < 1e-8f)
+                normal = Vector3.ProjectOnPlane(Mathf.Abs(previousTangent.y) < .95f ? Vector3.up : Vector3.right, previousTangent);
+            Vector3 side = Vector3.Cross(previousTangent, normal).normalized;
+            for (int i = 0; i < points.Count; i++)
+            {
+                Vector3 tangent = i == 0 ? previousTangent : CalculateTangent(points, i);
+                if (i > 0)
+                {
+                    float cosine = Mathf.Clamp(Vector3.Dot(previousTangent, tangent), -1, 1);
+                    if (cosine > -.9999f)
+                    {
+                        Vector3 axis = Vector3.Cross(previousTangent, tangent);
+                        Vector3 cross = Vector3.Cross(axis, side);
+                        side += cross + Vector3.Cross(axis, cross) / (1 + cosine);
+                    }
+                    else side = Quaternion.FromToRotation(previousTangent, tangent) * side;
+                    side = Vector3.ProjectOnPlane(side, tangent).normalized;
+                }
+                tangents[i] = tangent; sides[i] = side; normals[i] = Vector3.Cross(side, tangent).normalized;
+                previousTangent = tangent;
             }
         }
     }

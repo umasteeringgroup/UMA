@@ -65,7 +65,10 @@ namespace UMA.HairCards.Editor
                 if (group == null) continue;
                 var root = Add(HairGroomNodeKind.Group, group.name, "Group identity, preview visibility, locking and inclusion in output.", HairWorkflowStep.Setup, group.Id, group: group);
                 HairGrowthMap primary = group.FindMap(HairMapKind.GrowthArea);
-                if (primary != null) Add(HairGroomNodeKind.GrowthMap, "1 · Growth / Density", "Paint 0 for no growth, 1 for full density. Painting does not overwrite authored guides.", HairWorkflowStep.Growth, primary.Id, root, group).Map = primary;
+                var rootOwner = group.generation.enabled && group.generation.cards.source == HairPopulationSource.PaintedScalp
+                    ? groom.Groups.Find(g => g.Id == group.generation.cards.rootMapGroupId) : null;
+                if (primary != null) Add(HairGroomNodeKind.GrowthMap, rootOwner != null ? "1 · Growth / Density → " + rootOwner.name : "1 · Growth / Density",
+                    rootOwner != null ? "Shared growth map: selecting this opens the source group's painting." : "Paint 0 for no growth, 1 for full density. Painting does not overwrite authored guides.", HairWorkflowStep.Growth, primary.Id, root, group).Map = primary;
                 var maps = Add(HairGroomNodeKind.OptionalMaps, "Optional Maps", "Optional density multiplier, length and styling masks. The multiplier defaults to 1.", HairWorkflowStep.Growth, group.Id, root, group);
                 foreach (HairGrowthMap map in group.maps)
                     if (map != null && map != primary) Add(HairGroomNodeKind.GrowthMap, map.DisplayName, "Paint this map; its values remain independent of the primary Growth / Density map.", HairWorkflowStep.Growth, map.Id, maps, group).Map = map;
@@ -95,7 +98,8 @@ namespace UMA.HairCards.Editor
                     void AddPopulation(HairGenerationStage population, bool final)
                     {
                         if (population == null) return;
-                        var item = Add(HairGroomNodeKind.Population, population.name, final ? "Final scalp-bound cards, following the last enabled clump population." :
+                        var item = Add(HairGroomNodeKind.Population, population.name, population.source != HairPopulationSource.Scalp ?
+                            "Form-driven hair: edit its grid/rail under Shared Helpers, tune this population, then add modifiers beneath it." : final ? "Final scalp-bound cards, following the last enabled clump population." :
                             "Intermediate clump guides: shape this population before generating finer hair from it.", HairWorkflowStep.Cards, population.Id, generation, group);
                         item.Population = population;
                         foreach (var modifier in population.modifiers)

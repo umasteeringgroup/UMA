@@ -61,6 +61,7 @@ namespace UMA.HairCards
             public int c;
             public float cumulativeWeight;
             public float maximumMaskDensity;
+            public Vector3 cornerA, cornerB, cornerC;
         }
 
         public static HairGuideGenerationResult Generate(
@@ -80,6 +81,9 @@ namespace UMA.HairCards
             groom.EnsureIntegrity();
             result.fullDensityGuideCount = settings.guideCount;
 
+            if (group.maps.Exists(map => map?.storage == HairMapStorage.Texture &&
+                (map.texture == null || !map.texture.IsValid(groom.SourceTopologySignature, groom.SourceVertexCount))))
+            { result.warnings.Add("Restore the texture map's source topology or valid saved data before generating guides."); return result; }
             Mesh mesh = groom.SourceMesh;
             Vector3[] vertices;
             Vector3[] normals;
@@ -151,6 +155,7 @@ namespace UMA.HairCards
                     float target = random.Next01() * totalWeight;
                     TriangleSample candidate = triangles[FindWeightedTriangle(triangles, target)];
                     Vector3 coordinates = RandomBarycentric(ref random);
+                    coordinates = candidate.cornerA * coordinates.x + candidate.cornerB * coordinates.y + candidate.cornerC * coordinates.z;
                     Vector3 position = vertices[candidate.a] * coordinates.x + vertices[candidate.b] * coordinates.y +
                                        vertices[candidate.c] * coordinates.z;
                     float nearest = candidateCount > 1 || settings.minimumRootSpacing > 0f
@@ -247,6 +252,9 @@ namespace UMA.HairCards
             List<TriangleSample> result = new List<TriangleSample>();
             totalWeight = 0f;
             paintedArea = weightedArea = 0d;
+            float cumulative = 0f;
+            double painted = 0d, weighted = 0d;
+            float[] regionGrid = Array.Empty<float>(), densityGrid = Array.Empty<float>();
             for (int submesh = 0; submesh < mesh.subMeshCount; submesh++)
             {
                 int[] indices = mesh.GetTriangles(submesh, true);
@@ -257,36 +265,68 @@ namespace UMA.HairCards
                     int c = indices[offset + 2];
                     float area = Vector3.Cross(vertices[b] - vertices[a], vertices[c] - vertices[a]).magnitude * 0.5f;
                     if (!float.IsFinite(area) || area <= 0f) continue;
-                    float rA = DensityVertex(region, a), rB = DensityVertex(region, b), rC = DensityVertex(region, c);
-                    float dA = DensityVertex(density, a), dB = DensityVertex(density, b), dC = DensityVertex(density, c);
-                    float maximumGrowth = Mathf.Max(rA, Mathf.Max(rB, rC));
-                    if (maximumGrowth <= 0f) continue;
-                    // Positive linear paint covers the triangle interior. Unpainted triangles
-                    // (including the rest of a combined body mesh) are not part of the budget.
-                    paintedArea += area;
-                    // Exact surface integral of the product of two barycentrically-linear maps:
-                    // E[lambda_i^2] = 1/6; E[lambda_i * lambda_j] = 1/12.
-                    double mean = ((double)(rA + rB + rC) * (dA + dB + dC) +
-                        (double)rA * dA + (double)rB * dB + (double)rC * dC) / 12d;
-                    weightedArea += area * mean;
-                    // A product can peak inside an edge/triangle even when all vertex products
-                    // are zero. Use a conservative envelope, not max(vertex products).
-                    float maximumField = maximumGrowth * Mathf.Max(dA, Mathf.Max(dB, dC));
-                    float weight = area * maximumField;
-                    if (weight <= 1e-10f) continue;
-                    totalWeight += weight;
-                    result.Add(new TriangleSample
+                    int detail = 1;
+                    if (region?.UsesTexture == true && region.texture.Find(submesh, triangleIndex) != null) detail = region.texture.resolution;
+                    if (density?.UsesTexture == true && density.texture.Find(submesh, triangleIndex) != null) detail = Mathf.Max(detail, density.texture.resolution);
+                    int stride = detail + 1, gridCount = stride * stride;
+                    if (regionGrid.Length < gridCount) { Array.Resize(ref regionGrid, gridCount); Array.Resize(ref densityGrid, gridCount); }
+                    // Each texel participates in several sampling cells. Read it once,
+                    // not six times through map lookup/filtering for every cell.
+                    float SampleField(HairGrowthMap map, Vector3 bc)
                     {
-                        submesh = submesh,
-                        triangle = triangleIndex,
-                        a = a,
-                        b = b,
-                        c = c,
-                        cumulativeWeight = totalWeight,
-                        maximumMaskDensity = maximumField
-                    });
+                        if (map?.UsesTexture != true) return DensityVertex(map, a) * bc.x + DensityVertex(map, b) * bc.y + DensityVertex(map, c) * bc.z;
+                        float value = map.SampleTriangle(submesh, triangleIndex, a, b, c, bc);
+                        return float.IsFinite(value) ? Mathf.Clamp01(value) : 0f;
+                    }
+                    for (int y = 0; y <= detail; y++) for (int x = 0; x <= detail - y; x++)
+                    {
+                        var bc = HairTextureMap.TexelBarycentric(x, y, detail); int pixel = y * stride + x;
+                        regionGrid[pixel] = SampleField(region, bc); densityGrid[pixel] = SampleField(density, bc);
+                    }
+                    for (int y = 0; y < detail; y++) for (int x = 0; x < detail - y; x++)
+                    {
+                        AddCell(HairTextureMap.TexelBarycentric(x, y, detail), HairTextureMap.TexelBarycentric(x + 1, y, detail), HairTextureMap.TexelBarycentric(x, y + 1, detail));
+                        if (x + y < detail - 1) AddCell(HairTextureMap.TexelBarycentric(x + 1, y + 1, detail), HairTextureMap.TexelBarycentric(x, y + 1, detail), HairTextureMap.TexelBarycentric(x + 1, y, detail));
+                    }
+                    void AddCell(Vector3 ca, Vector3 cb, Vector3 cc)
+                    {
+                        int ia = Mathf.RoundToInt(ca.z * detail) * stride + Mathf.RoundToInt(ca.y * detail);
+                        int ib = Mathf.RoundToInt(cb.z * detail) * stride + Mathf.RoundToInt(cb.y * detail);
+                        int ic = Mathf.RoundToInt(cc.z * detail) * stride + Mathf.RoundToInt(cc.y * detail);
+                        float rA = regionGrid[ia], rB = regionGrid[ib], rC = regionGrid[ic];
+                        float dA = densityGrid[ia], dB = densityGrid[ib], dC = densityGrid[ic];
+                        float maximumGrowth = Mathf.Max(rA, Mathf.Max(rB, rC));
+                        if (maximumGrowth <= 0f) return;
+                        // Positive linear paint covers the triangle interior. Unpainted triangles
+                        // (including the rest of a combined body mesh) are not part of the budget.
+                        double cellArea = area / ((double)detail * detail);
+                        painted += cellArea;
+                        // Exact surface integral of the product of two barycentrically-linear maps:
+                        // E[lambda_i^2] = 1/6; E[lambda_i * lambda_j] = 1/12.
+                        double mean = ((double)(rA + rB + rC) * (dA + dB + dC) +
+                            (double)rA * dA + (double)rB * dB + (double)rC * dC) / 12d;
+                        weighted += cellArea * mean;
+                        // A product can peak inside an edge/triangle even when all vertex products
+                        // are zero. Use a conservative envelope, not max(vertex products).
+                        float maximumField = maximumGrowth * Mathf.Max(dA, Mathf.Max(dB, dC));
+                        float weight = (float)cellArea * maximumField;
+                        if (weight <= 1e-10f) return;
+                        cumulative += weight;
+                        result.Add(new TriangleSample
+                        {
+                            submesh = submesh,
+                            triangle = triangleIndex,
+                            a = a,
+                            b = b,
+                            c = c,
+                            cumulativeWeight = cumulative,
+                            maximumMaskDensity = maximumField,
+                            cornerA = ca, cornerB = cb, cornerC = cc
+                        });
+                    }
                 }
             }
+            totalWeight = cumulative; paintedArea = painted; weightedArea = weighted;
             return result;
         }
 
@@ -319,9 +359,7 @@ namespace UMA.HairCards
             float fallback)
         {
             if (map == null) return fallback;
-            return Sample(map, triangle.a, fallback) * barycentric.x +
-                   Sample(map, triangle.b, fallback) * barycentric.y +
-                   Sample(map, triangle.c, fallback) * barycentric.z;
+            return map.SampleTriangle(triangle.submesh, triangle.triangle, triangle.a, triangle.b, triangle.c, barycentric);
         }
 
         private static float DensityVertex(HairGrowthMap map, int vertex)
@@ -331,8 +369,11 @@ namespace UMA.HairCards
         }
 
         private static float SampleDensity(HairGrowthMap map, TriangleSample triangle, Vector3 barycentric)
-            => DensityVertex(map, triangle.a) * barycentric.x + DensityVertex(map, triangle.b) * barycentric.y +
-               DensityVertex(map, triangle.c) * barycentric.z;
+        {
+            if (map?.UsesTexture != true) return DensityVertex(map, triangle.a) * barycentric.x + DensityVertex(map, triangle.b) * barycentric.y + DensityVertex(map, triangle.c) * barycentric.z;
+            float value = Sample(map, triangle, barycentric, 1f);
+            return float.IsFinite(value) ? Mathf.Clamp01(value) : 0f;
+        }
 
         private static float Sample(HairGrowthMap map, int vertex, float fallback)
         {

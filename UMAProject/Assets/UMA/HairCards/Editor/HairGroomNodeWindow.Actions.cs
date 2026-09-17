@@ -12,6 +12,8 @@ namespace UMA.HairCards.Editor
         {
             var node = stage.SelectedNode;
             var group = node?.Group;
+            if (node != null && (node.Layer != null || node.Population != null) && !node.Locked && node.Modifier == null)
+                if (GUILayout.Button("+ Gather Helper & Modifier")) HairGatherEditor.AddGather(stage, node);
             using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
             {
                 if (GUILayout.Button("+ Group", EditorStyles.toolbarButton)) ShowAddGroupMenu(stage);
@@ -44,10 +46,35 @@ namespace UMA.HairCards.Editor
                 using (new EditorGUILayout.HorizontalScope())
                 {
                     if (GUILayout.Button("+ Curve Rail")) AddHelper(stage, HairHelperType.CurveRail);
+                    if (GUILayout.Button("+ Braid Spline")) AddHelper(stage, HairHelperType.BraidRail);
                     if (GUILayout.Button("+ Collider")) AddHelper(stage, HairHelperType.Sphere);
                 }
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    if (GUILayout.Button("+ Gather Ring")) AddHelper(stage, HairHelperType.Gather);
+                    if (GUILayout.Button("+ Bun Helper")) AddHelper(stage, HairHelperType.Bun);
+                    if (GUILayout.Button("+ Attachment")) AddHelper(stage, HairHelperType.BindingRing);
+                }
+                if (node.Helper?.type == HairHelperType.Bun && !node.Locked && GUILayout.Button("Make Surrounding Braid Spline Editable"))
+                {
+                    var rail = HairBraidSplineEditor.ExtractBunBraid(stage.Groom, node.Helper);
+                    if (rail != null) stage.SelectNode(HairGroomNodes.Key(HairGroomNodeKind.Helper, rail.Id));
+                }
+                if (node.Helper != null && (node.Helper.type == HairHelperType.Gather || node.Helper.type == HairHelperType.Bun))
+                    using (new EditorGUI.DisabledScope(node.Helper.locked))
+                        if (GUILayout.Button("Duplicate Mirrored Helper"))
+                        {
+                            var copy = HairGatherEditor.Mirror(stage.Groom, node.Helper);
+                            stage.SelectNode(HairGroomNodes.Key(HairGroomNodeKind.Helper, copy.Id));
+                        }
                 sceneHelperCandidate = (GameObject)EditorGUILayout.ObjectField(new GUIContent("New helper source",
                     "Scene object to bind; if empty, uses the selected object in the Hierarchy."), sceneHelperCandidate, typeof(GameObject), true);
+                using (new EditorGUI.DisabledScope(sceneHelperCandidate == null && Selection.activeGameObject == null))
+                    if (GUILayout.Button("Bind Scene Object as Attachment"))
+                    {
+                        var attachment = HairGroomCommands.BindSceneHelper(stage.Groom, sceneHelperCandidate != null ? sceneHelperCandidate : Selection.activeGameObject, HairHelperType.BindingRing);
+                        if (attachment != null) stage.SelectNode(HairGroomNodes.Key(HairGroomNodeKind.Helper, attachment.Id));
+                    }
                 using (new EditorGUI.DisabledScope(sceneHelperCandidate == null && Selection.activeGameObject == null))
                     if (GUILayout.Button("Bind Scene Object as Curve Rail"))
                     {

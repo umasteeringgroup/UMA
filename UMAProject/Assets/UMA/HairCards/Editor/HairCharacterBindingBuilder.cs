@@ -217,7 +217,17 @@ namespace UMA.HairCards.Editor
             foreach(var group in groom.Groups)
             {
                 var map=group.FindMap(HairMapKind.GrowthArea);
-                if(map?.values?.Length==vertices.Length) for(int i=0;i<vertices.Length;i++) if(map.values[i]>0) points.Add(vertices[i]);
+                if(map?.values?.Length==vertices.Length) for(int i=0;i<vertices.Length;i++) if(map.SampleVertex(i)>0) points.Add(vertices[i]);
+                if (map?.UsesTexture == true) foreach (var tile in map.texture.tiles)
+                {
+                    int n = map.texture.resolution;
+                    for (int y = 0; y <= n; y++) for (int x = 0; x <= n - y; x++)
+                    {
+                        if (tile.pixels[y * (n + 1) + x] <= 0) continue;
+                        var bc = HairTextureMap.TexelBarycentric(x, y, n);
+                        points.Add(vertices[tile.a] * bc.x + vertices[tile.b] * bc.y + vertices[tile.c] * bc.z);
+                    }
+                }
                 foreach(var guide in group.guides) if(guide?.points?.Count>0) points.Add(guide.points[0].position);
             }
             int missed=0; float maximum=0;

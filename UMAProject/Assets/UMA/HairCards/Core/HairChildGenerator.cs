@@ -221,6 +221,8 @@ namespace UMA.HairCards
             child.rootEmbedDepth = group.rootEmbedDepth; child.profile = group.profile; child.atlas = group.atlas;
             child.atlasRegionSelection = parent.atlasRegionSelection; child.atlasRegionIds = parent.atlasRegionIds;
             child.ribbonReduction = parent.ribbonReduction;
+            child.gatherFrameContinuity = parent.gatherFrameContinuity;
+            child.gatherClearance = parent.gatherClearance;
 
             Vector3 weightedRoot = Vector3.zero;
             for (int neighborIndex = 0; neighborIndex < neighbors.Length; neighborIndex++)
@@ -301,9 +303,8 @@ namespace UMA.HairCards
             int offset = root.TriangleIndex * 3;
             if (triangles == null || offset < 0 || offset + 2 >= triangles.Count) return fallback;
             Vector3 barycentric = root.Barycentric;
-            return map.SampleVertex(triangles[offset]) * barycentric.x +
-                   map.SampleVertex(triangles[offset + 1]) * barycentric.y +
-                   map.SampleVertex(triangles[offset + 2]) * barycentric.z;
+            return map.SampleTriangle(root.SubmeshIndex, root.TriangleIndex, triangles[offset],
+                triangles[offset + 1], triangles[offset + 2], barycentric);
         }
 
         private static int FindNeighbors(

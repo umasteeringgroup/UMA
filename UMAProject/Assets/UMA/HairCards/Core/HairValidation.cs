@@ -39,7 +39,8 @@ namespace UMA.HairCards
         MissingMap,
         InvalidBakeReference,
         InvalidCharacterBinding,
-        SamplingLimit
+        SamplingLimit,
+        InvalidTextureMap
     }
 
     public sealed class HairValidationIssue
@@ -154,7 +155,9 @@ namespace UMA.HairCards
                 HairGroup group = groom.Groups[groupIndex];
                 if (group == null) continue;
                 if (!group.enabled) continue;
-                if (group.guides == null || group.guides.Count == 0)
+                bool hasFormSource = group.generation?.enabled == true &&
+                    (group.generation.cards.source != HairPopulationSource.Scalp || group.generation.clumps.Exists(p => p != null && p.enabled && p.source != HairPopulationSource.Scalp));
+                if (!hasFormSource && (group.guides == null || group.guides.Count == 0))
                 {
                     report.Add(HairValidationSeverity.Warning, HairValidationCode.EmptyGroup,
                         $"Group '{group.name}' has no guides.", group.Id, fixId: "generate-guides");
@@ -179,8 +182,31 @@ namespace UMA.HairCards
                         group.Id, fixId: "assign-atlas-region");
                 }
                 ValidateGuides(group, groom, report);
+                foreach (var map in group.maps)
+                    if (map?.storage == HairMapStorage.Texture &&
+                        (map.texture == null || !map.texture.IsValid(groom.SourceTopologySignature, groom.SourceVertexCount)))
+                        report.Add(HairValidationSeverity.Error, HairValidationCode.InvalidTextureMap,
+                            $"Map '{map.DisplayName}' has invalid texels or belongs to another source topology. Restore its source or restore a saved map; baking is blocked to protect the painted data.", group.Id);
                 ValidateConstraints(group, groom, report);
-                ValidateModifierMaps(group, report);
+                ValidateModifierMaps(group, groom, report);
+                if (group.generation?.enabled == true)
+                {
+                    void CheckForm(HairGenerationStage population)
+                    {
+                        if (population == null || !population.enabled || population.source == HairPopulationSource.Scalp || population.source == HairPopulationSource.PaintedScalp) return;
+                        if (population.form.helperIds.Count == 0)
+                            report.Add(HairValidationSeverity.Error, HairValidationCode.MissingHelper, $"'{population.name}' needs a form helper. Add a grid panel or braid rail from its tree actions.", group.Id);
+                        foreach (string id in population.form.helperIds)
+                        {
+                            var helper = groom.FindHelper(id);
+                            bool valid = population.source == HairPopulationSource.Bun ? helper?.type == HairHelperType.Bun : population.source == HairPopulationSource.GridPanels ? HairFormUtility.ValidGrid(helper) :
+                                helper != null && (helper.type == HairHelperType.BraidRail || helper.type == HairHelperType.CurveRail) && helper.points.Count > 1;
+                            if (!valid) report.Add(HairValidationSeverity.Error, HairValidationCode.MissingHelper, $"'{population.name}' has a missing or invalid form binding. Replace it in its properties.", group.Id, helperId: id);
+                        }
+                    }
+                    foreach (var population in group.generation.clumps) CheckForm(population);
+                    CheckForm(group.generation.cards);
+                }
             }
 
             if (evaluation != null)
@@ -313,15 +339,29 @@ namespace UMA.HairCards
             }
         }
 
-        private static void ValidateModifierMaps(HairGroup group, HairValidationReport report)
+        private static void ValidateModifierMaps(HairGroup group, HairGroomAsset groom, HairValidationReport report)
         {
             void Check(IReadOnlyList<HairModifierSettings> modifiers)
             {
                 if (modifiers == null) return;
                 foreach (var modifier in modifiers)
+                {
                     if (modifier?.enabled == true && !string.IsNullOrEmpty(modifier.maskMapId) && !group.maps.Exists(m => m?.Id == modifier.maskMapId))
                         report.Add(HairValidationSeverity.Warning, HairValidationCode.MissingMap,
                             $"'{modifier.name}' references a missing painted mask and will have no effect. Select it and choose a map under Where this modifier applies.", group.Id);
+                    if (modifier?.enabled == true && modifier.type == HairModifierType.Gather)
+                    {
+                        var helper = groom.FindHelper(modifier.helperId);
+                        if (helper?.type != HairHelperType.Gather || !HairCoordinateUtility.IsInvertibleAffine(helper.LocalToSource))
+                            report.Add(HairValidationSeverity.Error, HairValidationCode.MissingHelper, $"'{modifier.name}' needs a valid Gather ring with a nonzero scale.", group.Id, helperId: modifier.helperId);
+                        if (modifier.gather.mode == HairGatherMode.PassThrough && !string.IsNullOrEmpty(modifier.gather.continuationHelperId))
+                        {
+                            var tail = groom.FindHelper(modifier.gather.continuationHelperId);
+                            if (tail?.type != HairHelperType.CurveRail || tail.points.Count < 2)
+                                report.Add(HairValidationSeverity.Error, HairValidationCode.MissingHelper, $"'{modifier.name}' needs a valid continuation curve rail, or None for a straight tail.", group.Id);
+                        }
+                    }
+                }
             }
             Check(group.modifiers);
             foreach (var layer in group.sculptLayers) if (layer?.visible == true) Check(layer.modifiers);
@@ -330,6 +370,30 @@ namespace UMA.HairCards
             {
                 if (stage?.enabled != true) return;
                 Check(stage.modifiers);
+                if (stage.source == HairPopulationSource.PaintedScalp && !string.IsNullOrEmpty(stage.rootMapGroupId) && !groom.Groups.Exists(g => g?.Id == stage.rootMapGroupId))
+                    report.Add(HairValidationSeverity.Error, HairValidationCode.MissingMap, $"'{stage.name}' needs a valid Growth map group.", group.Id);
+                if (stage.source == HairPopulationSource.Bun) foreach (var id in stage.form.helperIds)
+                {
+                    var bun = groom.FindHelper(id);
+                    if (bun?.type == HairHelperType.Bun && !string.IsNullOrEmpty(bun.bun.gatherHelperId) && groom.FindHelper(bun.bun.gatherHelperId)?.type != HairHelperType.Gather)
+                        report.Add(HairValidationSeverity.Error, HairValidationCode.MissingHelper, $"Bun '{bun.name}' has a missing Gather parent. Reassign it or choose None.", group.Id, helperId: id);
+                }
+                if (stage.source == HairPopulationSource.Braid) foreach (var id in stage.form.helperIds)
+                {
+                    var rail = groom.FindHelper(id); if (!HairRailUtility.IsRail(rail)) continue;
+                    void Target(string target, string label)
+                    {
+                        if (!HairRailUtility.IsTarget(groom.FindHelper(target)))
+                            report.Add(HairValidationSeverity.Error, HairValidationCode.MissingHelper, $"Spline '{rail.name}' has a missing/invalid {label}. Choose a helper or switch to free placement.", group.Id, helperId: id);
+                    }
+                    if (!string.IsNullOrEmpty(rail.rail.parentHelperId)) Target(rail.rail.parentHelperId, "parent");
+                    if (rail.rail.root.attachment == HairRailAttachment.Helper) Target(rail.rail.root.helperId, "root attachment");
+                    if (rail.rail.tip.attachment == HairRailAttachment.Helper) Target(rail.rail.tip.helperId, "tip attachment");
+                    bool surface = rail.rail.followSurface || rail.rail.root.attachment == HairRailAttachment.Surface || rail.rail.tip.attachment == HairRailAttachment.Surface;
+                    var mesh = rail.rail.surfaceMesh != null ? rail.rail.surfaceMesh : groom.SourceMesh;
+                    if (surface && (mesh == null || !mesh.isReadable || !HairCoordinateUtility.IsInvertibleAffine(rail.rail.SurfaceMatrix)))
+                        report.Add(HairValidationSeverity.Error, HairValidationCode.MissingHelper, $"Spline '{rail.name}' needs a readable placement surface and a nonzero surface scale.", group.Id, helperId: id);
+                }
                 if (!string.IsNullOrEmpty(stage.partMapId) && !group.maps.Exists(m => m?.Id == stage.partMapId))
                     report.Add(HairValidationSeverity.Error, HairValidationCode.MissingMap,
                         $"'{stage.name}' references a missing Part Regions map. Choose a replacement under Root placement & guide influence.", group.Id);

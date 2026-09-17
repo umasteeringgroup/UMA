@@ -10,7 +10,10 @@ namespace UMA.HairCards
             float value = 1f;
             if (!string.IsNullOrEmpty(modifier.maskMapId))
             {
-                var map = group?.maps.Find(m => m != null && m.Id == modifier.maskMapId);
+                HairGrowthMap map = null;
+                if (group != null)
+                    foreach (var candidate in group.maps)
+                        if (candidate != null && candidate.Id == modifier.maskMapId) { map = candidate; break; }
                 // A missing explicitly assigned mask must not unexpectedly affect the whole groom.
                 if (map == null || fields == null) return 0f;
                 value *= Mathf.Clamp01(fields.Sample(map, curve.rootAnchor, 0f));

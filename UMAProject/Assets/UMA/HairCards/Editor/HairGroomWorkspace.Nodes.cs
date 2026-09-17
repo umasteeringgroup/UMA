@@ -24,6 +24,9 @@ namespace UMA.HairCards.Editor
                 detailsScroll = scroll.scrollPosition;
                 if (node == null) { EditorGUILayout.HelpBox("Select a node in Hair Nodes to edit it.", MessageType.Info); return; }
                 EditorGUILayout.Space(5f);
+                if (node.Group?.generation?.enabled == true && node.Group.generation.cards.source == HairPopulationSource.PaintedScalp &&
+                    (node.Kind == HairGroomNodeKind.Guides || node.Kind == HairGroomNodeKind.Groom || node.Kind == HairGroomNodeKind.Layer))
+                    EditorGUILayout.HelpBox("Painted Scalp creates procedural strands directly from the map. Edit the generated population's Gather/modifiers and its shared helpers. Guide-only sculpt passes do not drive this source; choose Scalp generation if you want to interpolate combed authored guides.", MessageType.Info);
                 EditorGUILayout.LabelField(node.Group == null ? stage.Groom.name : stage.Groom.name + " / " + node.Group.name, EditorStyles.wordWrappedMiniLabel);
                 EditorGUILayout.LabelField(node.Label, EditorStyles.boldLabel);
                 EditorGUILayout.LabelField(node.Description, EditorStyles.wordWrappedLabel);
@@ -33,6 +36,9 @@ namespace UMA.HairCards.Editor
                 if (node.Group != null && (!node.Group.enabled || !node.Group.visible))
                     EditorGUILayout.HelpBox("This group is disabled or hidden. Enable it and show it on the group node to see changes in the preview.", MessageType.Warning);
                 EditorGUILayout.Space(5f);
+                if (node.Group?.generation?.enabled == true && node.Group.generation.cards.source != HairPopulationSource.Scalp && node.Group.generation.cards.source != HairPopulationSource.PaintedScalp &&
+                    (node.Kind == HairGroomNodeKind.Guides || node.Kind == HairGroomNodeKind.Groom || node.Kind == HairGroomNodeKind.Layer || node.Kind == HairGroomNodeKind.GrowthMap))
+                    EditorGUILayout.HelpBox("This group generates hair from forms. Edit its Shared Helpers for shape and facing; add modifiers to its generated population. Optional painted root density only removes existing form roots. To create new roots when painting, use Painted Scalp generation.", MessageType.Info);
                 switch (node.Kind)
                 {
                     case HairGroomNodeKind.Source: DrawSetup(stage); break;
@@ -134,14 +140,19 @@ namespace UMA.HairCards.Editor
             if (locked != helper.locked) { Undo.RecordObject(stage.Groom, "Lock Hair Helper"); helper.locked = locked; HairGroomCommands.Commit(stage.Groom, HairPreviewChange.Display); }
             using (new EditorGUI.DisabledScope(helper.locked))
             {
+                if (helper.type == HairHelperType.Gather || helper.type == HairHelperType.Bun)
+                {
+                    HairGatherEditor.Helper(stage, helper); return;
+                }
                 EditorGUI.BeginChangeCheck();
                 string name = EditorGUILayout.DelayedTextField("Name", helper.name);
                 bool visible = EditorGUILayout.Toggle("Visible", helper.visible);
-                float radius = EditorGUILayout.FloatField("Radius", helper.radius);
-                Vector3 size = EditorGUILayout.Vector3Field("Size", helper.size);
+                float radius = HairFormEditor.IsForm(helper) ? helper.radius : EditorGUILayout.FloatField("Radius", helper.radius);
+                Vector3 size = HairFormEditor.IsForm(helper) ? helper.size : EditorGUILayout.Vector3Field("Size", helper.size);
                 if (EditorGUI.EndChangeCheck())
                 { Undo.RecordObject(stage.Groom, "Edit Hair Helper"); helper.name = name; helper.visible = visible; helper.radius = radius; helper.size = size; HairGroomCommands.Commit(stage.Groom); }
             }
+            HairFormEditor.DrawHelperProperties(stage, helper);
             EditorGUILayout.HelpBox(helper.embedded ? "Move this helper with its Scene gizmo. Embedded helpers are saved with the groom." :
                 "Move/rotate/scale the linked source scene object to edit this helper. Its source-relative transform is saved for bake/runtime, including scaled or mirrored parents. The stage gizmo is display-only for linked helpers.", MessageType.Info);
         }

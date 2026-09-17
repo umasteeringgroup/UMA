@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d79e0ce9bdf7dc9e09634a124ac29ec5, type: 3}
+  m_Name: ShortHairPart_HairGroom Short Atlas
+  m_EditorClassIdentifier: UMA.HairCards.Core::UMA.HairCards.HairAtlasProfileAsset
+  atlasId: 0c10b92a0add44cdb8dfbb67759d709e
+  albedo: {fileID: 2800000, guid: aa69c94769ffd014bb80d9280de95d36, type: 3}
+  normal: {fileID: 2800000, guid: 4197960baab9d124a87fe7e8ad41f257, type: 3}
+  mask: {fileID: 2800000, guid: 7f7a8207bc128d148a84b1d9b3b9ddb5, type: 3}
+  material: {fileID: 2100000, guid: f20a7b6b034d6e24aaf1ca1cf62e0f5d, type: 2}
+  secondPassMaterial: {fileID: 2100000, guid: 4b0bd007ab0be474980237ef784758f4, type: 2}
+  sharedColorTable: {fileID: 0}
+  sharedColorIndex: -1
+  regions:
+  - id: 54185648042e4265a422a7c704e200fd
+    name: Short strand 1
+    uvRect:
+      serializedVersion: 2
+      x: 0.01294
+      y: 0.13186
+      width: 0.09351
+      height: 0.18148
+    weight: 1
+    tags: []
+    flipU: 0
+    flipV: 1
+  - id: 58b9ecc8d5254614a21fa400bf07f15f
+    name: Short strand 2
+    uvRect:
+      serializedVersion: 2
+      x: 0.10969
+      y: 0.1283
+      width: 0.07596
+      height: 0.18246
+    weight: 1
+    tags: []
+    flipU: 0
+    flipV: 1
+  - id: 40ab817aff904e0e9c93e7b07febd067
+    name: Short strand 3
+    uvRect:
+      serializedVersion: 2
+      x: 0.20425
+      y: 0.12755
+      width: 0.08492
+      height: 0.18135
+    weight: 1
+    tags: []
+    flipU: 0
+    flipV: 1

@@ -26,12 +26,18 @@ namespace UMA.HairCards.Editor
         {
             using var serialized = new SerializedObject(stage.Groom);
             var generation = GroupProperty(serialized, stage, group).FindPropertyRelative("generation");
-            Field(generation, "enabled", "Surface generation", "Generate independently anchored roots over Growth / Density. Disable to use the existing children-per-guide workflow; neither set of settings is lost.");
+            Field(generation, "enabled", "Generation pipeline", "Use generated populations from scalp guides or editable forms. Disable to use children-per-guide; neither set of settings is lost.");
             Apply(serialized, stage);
             if (!group.generation.enabled)
             {
                 EditorGUILayout.HelpBox("Using children-per-guide. For the swept-clump hairstyle, choose Swept Clumps Preset in the tree. It preserves your authored guides and sculpt passes.", MessageType.Info);
                 return;
+            }
+            if (group.generation.cards.source != HairPopulationSource.Scalp)
+            {
+                EditorGUILayout.HelpBox("Form-driven hair: select the generated population below this node to adjust density, braid/panel settings, or add modifiers. Select its form under Shared Helpers to edit control points. Sculpt passes are not inputs; enable Use painted root density on the population to mask its roots with Growth / Density.", MessageType.Info);
+                foreach (var population in group.generation.clumps) if (population != null) DrawCount(stage, population);
+                DrawCount(stage, group.generation.cards); return;
             }
             EditorGUILayout.HelpBox("Shape a few guides, generate clump guides, then fill them with cards. Select a population in the tree to tune it. Use Inspect in the tree to see its output; Final Hair returns to the finished result.", MessageType.Info);
             EditorGUILayout.LabelField("Generation order", EditorStyles.boldLabel);
@@ -53,7 +59,7 @@ namespace UMA.HairCards.Editor
         internal static void DrawPopulation(HairCardStage stage, HairGroomNode node)
         {
             var population = node.Population; var info = Info(stage, population);
-            if (info != null)
+            if (info != null && population.source == HairPopulationSource.Scalp)
             {
                 EditorGUILayout.HelpBox($"{info.inputCount:N0} input guides → {info.outputCount:N0} {(population == node.Group.generation.cards ? "cards" : "clump guides")}\n" +
                     (info.rootsReused ? "Scalp roots cached" : "Scalp roots regenerated") + (info.neighborsReused ? " · neighbor weights cached" : "") + $" · {info.milliseconds:F1} ms for this stage", MessageType.None);
@@ -65,9 +71,36 @@ namespace UMA.HairCards.Editor
             using var serialized = new SerializedObject(stage.Groom);
             var property = PopulationProperty(GroupProperty(serialized, stage, node.Group), node.Group, population);
             Field(property, "enabled", "Active"); Field(property, "name", "Name");
+            Field(property, "source", "Generate from", "Scalp interpolates authored guides. Painted Scalp generates roots directly from painting for Gather. Grid Panels, Braid and Bun use shared form helpers.");
             var count = property.FindPropertyRelative("count");
             count.intValue = Mathf.Clamp(EditorGUILayout.DelayedIntField(new GUIContent("Count at full density",
-                "Independent of authored-guide count. Press Enter to regenerate; a softer Growth / Density map reduces the population."), count.intValue), 1, 20000);
+                population.source == HairPopulationSource.Scalp || population.source == HairPopulationSource.PaintedScalp
+                    ? "Independent of authored-guide count. Press Enter to regenerate; a softer Growth / Density map reduces the population."
+                    : "Total shared across assigned forms. Use painted root density optionally masks these roots; authored-guide count is independent. Press Enter to regenerate."), count.intValue), 1, 20000);
+            if ((HairPopulationSource)property.FindPropertyRelative("source").enumValueIndex == HairPopulationSource.PaintedScalp)
+            {
+                HairGatherEditor.PaintedPopulation(stage, property);
+                Apply(serialized, stage); return;
+            }
+            if ((HairPopulationSource)property.FindPropertyRelative("source").enumValueIndex != HairPopulationSource.Scalp)
+            {
+                Apply(serialized, stage);
+                HairFormEditor.DrawPopulation(stage, population, property);
+                Apply(serialized, stage); return;
+            }
+            if (population == node.Group.generation.cards && node.Group.profile != null)
+            {
+                var profile = node.Group.profile;
+                if (profile.Shape == HairCardShape.Ribbon)
+                {
+                    var activeLod = stage.Groom.Lods.Find(item => item.level == stage.LodLevel);
+                    int samples = activeLod?.ResolveSampleCount(profile) ?? profile.SamplesPerCard;
+                    int trianglesPerCard = (samples - 1) * profile.RibbonSpans * 2 * (profile.DoubleSided ? 2 : 1);
+                    EditorGUILayout.LabelField($"LOD {stage.LodLevel} sampling ceiling: {samples - 1} segments/card × {profile.RibbonSpans} width spans" +
+                        $" → up to {trianglesPerCard:N0} triangles/card; {(long)count.intValue * trianglesPerCard:N0} for this group.", EditorStyles.wordWrappedMiniLabel);
+                    EditorGUILayout.LabelField("Adjust length segments in Geometry & Vertex Colors → Profile samples, or the active LOD override (points = segments + 1). Growth, spacing, LOD density and simplification can reduce this ceiling.", EditorStyles.wordWrappedMiniLabel);
+                }
+            }
             Field(property, "clump", "Follow parent clump", "0 blends neighboring flow at the new scalp root. 1 pulls toward the closest compatible parent's curved centerline. Roots and segment lengths stay fixed.");
             Field(property, "clumpAlongStrand", "Root → tip clumping");
             Field(property, "clumpSpread", "Clump separation", "Retain a fraction of the roots' separation at the curved clump centerline. Avoids collapsing every strand onto one centerline.");
@@ -134,6 +167,7 @@ namespace UMA.HairCards.Editor
             int index = node.Population != null ? node.Population.modifiers.IndexOf(modifier) : node.Layer.modifiers.IndexOf(modifier);
             if (index < 0) return;
             var property = list.GetArrayElementAtIndex(index);
+            if (modifier.type == HairModifierType.Gather) HairGatherEditor.Modifier(stage, property);
             if (modifier.type == HairModifierType.Ringlets)
             {
                 var ringlets = property.FindPropertyRelative("ringlets");
@@ -209,9 +243,29 @@ namespace UMA.HairCards.Editor
                 Field(property, "clumpRadius", "Clump size (m)", "Select local centerlines from the incoming population. Smaller values produce more, narrower clumps.");
             if (modifier.type == HairModifierType.Noise)
             {
-                Field(property, "noiseFrequency", "Noise cycles / meter");
+                Field(property, "strandAlignedNoise", "Strand-aligned 2D", "Follows a transported frame along the strand. Separate sideways/outward motion, no axial noise. Off retains the original noise behavior.");
+                if (property.FindPropertyRelative("strandAlignedNoise").boolValue)
+                {
+                    var normal = property.FindPropertyRelative("noiseNormalAmplitude");
+                    EditorGUI.BeginChangeCheck();
+                    float normalMillimeters = EditorGUILayout.FloatField(new GUIContent("Outward amplitude (mm)", "Motion out of the local strand plane; may also dip inward. Enable Prevent scalp penetration in Card Geometry."), normal.floatValue * 1000);
+                    if (EditorGUI.EndChangeCheck()) normal.floatValue = Mathf.Max(0, normalMillimeters) * .001f;
+                    var frequency = property.FindPropertyRelative("noiseFrequency");
+                    float wavelength = 1000f / Mathf.Max(.01f, frequency.floatValue);
+                    EditorGUI.BeginChangeCheck();
+                    wavelength = EditorGUILayout.FloatField(new GUIContent("Wavelength (mm)", "Physical size of the waves in source-mesh units. Larger = broad waves, smaller = fine irregularity."), wavelength);
+                    if (EditorGUI.EndChangeCheck()) frequency.floatValue = 1000f / Mathf.Max(.1f, wavelength);
+                    Field(property, "noiseRootFade", "Root fade (strand fraction)", "Smoothly introduces noise over this fraction of the strand. Root Influence provides additional base protection.");
+                    EditorGUILayout.LabelField("Roots and segment lengths stay fixed. Use a broad shared wave, then a smaller independent Noise for fine variation. Shape control points resolve the waves; Card Geometry controls the rendered polygon budget.", EditorStyles.wordWrappedMiniLabel);
+                }
+                else Field(property, "noiseFrequency", "Noise cycles / meter");
                 Field(property, "noiseParentCoherence", "Shared clump noise");
                 EditorGUILayout.LabelField("Continuous strand-space noise. Preview tessellation does not reseed the hairstyle.", EditorStyles.wordWrappedMiniLabel);
+            }
+            if (modifier.type == HairModifierType.SurfaceBend)
+            {
+                Field(property, "bendProfile", "Root → tip bend profile", "Multiplies Bend angle along the strand. 1 = full angle, 0 = original direction, negative = reverse bend. Independent of the influence curve.");
+                EditorGUILayout.HelpBox("Bends each segment away from the scalp in the strand's transported local frame. Positive angles lift; negative angles turn back toward the scalp. Roots, freeze and segment lengths are preserved. Use a painted mask for the forelock, and Length before Bend for a taller flip. Enable Prevent scalp penetration on the finished cards.", MessageType.Info);
             }
             var mask = property.FindPropertyRelative("mask");
             mask.isExpanded = EditorGUILayout.Foldout(mask.isExpanded, "Where this modifier applies", true);

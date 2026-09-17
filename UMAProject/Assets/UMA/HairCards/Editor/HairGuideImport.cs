@@ -9,7 +9,7 @@ namespace UMA.HairCards.Editor
     /// <summary>Small, documented interchange for authored paths; imports data, never executable scripts.</summary>
     public static class HairGuideImport
     {
-        public enum GenerationStyle { SweptClumps, CurlyVolume }
+        public enum GenerationStyle { SweptClumps, CurlyVolume, RegularHaircut }
         [Serializable] public sealed class Guide { public string name; public Vector3[] points; }
         // Do not expose Unity Rect's private serialization fields in an external file format.
         [Serializable] public sealed class Region
@@ -102,6 +102,7 @@ namespace UMA.HairCards.Editor
                     for (int i = 0; i < growth.values.Length; i++) growth.values[i] = float.IsFinite(data.growth[i]) ? Mathf.Clamp01(data.growth[i]) : 0f;
                 ImportGuides(groom, group, data.guides);
                 if (style == GenerationStyle.CurlyVolume) HairGenerationEditor.ApplyCurlyPreset(groom, group, folder);
+                else if (style == GenerationStyle.RegularHaircut) HairGenerationEditor.ApplyRegularPreset(groom, group, folder);
                 else HairGenerationEditor.ApplySweptPreset(groom, group, folder);
                 if (data.regions?.Length > 0)
                 {

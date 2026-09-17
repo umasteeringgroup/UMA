@@ -8,11 +8,15 @@ namespace UMA.HairCards.Editor
     {
         internal static void DrawTreeActions(HairCardStage stage, HairGroomNode node)
         {
+            HairFormEditor.DrawActions(stage, node);
             if (node.Kind == HairGroomNodeKind.Source && GUILayout.Button("Import Authored Guide File…")) HairGuideImport.ImportDialog();
             HairSweptAtlasSetup.DrawTreeAction(stage, node);
             if (node.Kind == HairGroomNodeKind.Children || node.Kind == HairGroomNodeKind.Group)
                 using (new EditorGUI.DisabledScope(node.Locked))
                 {
+                    if (GUILayout.Button(new GUIContent("Short Hair Part Preset…", "Short, softly clumped ribbons: up to 2,500 cards and four segments per card. Preserve a part with separate groups or Part Regions.")))
+                        if (EditorUtility.DisplayDialog("Apply Short Hair Part Preset?", "Replace this group's generation settings and create a dedicated short-ribbon profile? Authored guides, maps, sculpt passes, textures and assigned materials are preserved.\n\nThe default ceiling is 20,000 triangles for this group, not the whole groom. Divide the card count between groups. Existing LOD density and sample overrides are preserved; review them after applying. Undo restores settings.", "Apply Preset", "Cancel"))
+                        { ApplyRegularPreset(stage.Groom, node.Group); stage.SelectNode(HairGroomNodes.Key(HairGroomNodeKind.Children, node.Group.Id)); }
                     if (GUILayout.Button(new GUIContent("Curly Volume Preset…", "Set up surface-rooted ringlets with automatic curl resolution. Preserves guides, sculpt passes, assigned textures and materials.")))
                         if (EditorUtility.DisplayDialog("Apply Curly Volume Preset?", "Replace generation settings with editable ringlets and create a dedicated curl ribbon profile? Guides, sculpt passes and assigned textures/materials are preserved. Existing material shine is not changed; choose Matte in Materials & UVs if desired. Undo restores settings.", "Apply Preset", "Cancel"))
                         { ApplyCurlyPreset(stage.Groom, node.Group); stage.SelectNode(HairGroomNodes.Key(HairGroomNodeKind.Children, node.Group.Id)); }
@@ -115,7 +119,7 @@ namespace UMA.HairCards.Editor
                 (population != group.generation.cards && !group.generation.clumps.Contains(population))) return null;
             Undo.RecordObject(groom, "Add Population Modifier");
             var modifier = new HairModifierSettings { name = ObjectNames.NicifyVariableName(type.ToString()), type = type,
-                domain = HairModifierDomain.Children, amount = HairGroomCommands.DefaultModifierAmount(type), rootInfluence = 0.3f };
+                domain = HairModifierDomain.Children, amount = HairGroomCommands.DefaultModifierAmount(type), rootInfluence = type == HairModifierType.Gather ? 1f : 0.3f };
             modifier.EnsureIntegrity(); population.modifiers.Add(modifier); HairGroomCommands.Commit(groom); return modifier;
         }
         internal static void ShowModifierMenu(HairCardStage stage)
