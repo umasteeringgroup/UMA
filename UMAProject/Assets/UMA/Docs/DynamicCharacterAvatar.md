@@ -220,6 +220,16 @@ Systems that spawn and despawn avatars rapidly should:
 
 ## Troubleshooting
 
+### Frame rate drops while the DCA Inspector is visible
+
+The Inspector caches wardrobe menus and DNA grouping instead of rebuilding them on each GUI event. Color rows commit together, and opening color foldouts or changing the color filter does not regenerate the character. The nested **UMA Data** editor is created only when expanded.
+
+Avatar-definition loads, Undo/Redo, project changes, and marked object edits refresh the Inspector at the next safe Layout event. Unmarked runtime writes to serialized avatar fields are polled at most four times per second while drawing; race/wardrobe discovery has a one-second fallback and DNA asset metadata a half-second fallback. Live DNA slider values are read directly, not throttled. Existing `LoadAvatarDefinition` Layout/Repaint safety checks remain in place.
+
+To investigate remaining overhead, target **Editor** in Unity's CPU Profiler and look for `UMA.DCAInspector.Draw`, `UMA.DCAInspector.RefreshSerializedState`, and `UMA.DCAInspector.RefreshWardrobeMenu`. Compare the same running character with the Inspector visible and hidden, then collapse Character Colors, Live DNA, and Default Wardrobe Recipes individually. Drawing large expanded lists still has a cost; Inspector timing is not player-build rendering performance.
+
+Editor regression tests in `AvatarDefinitionInspectorTests` cover idle refreshes, cache invalidation, missing races, color navigation, and definition loads between Layout/Repaint (including Play mode and independent Inspectors). `InspectorIdleDrawBenchmark` reports CPU time per GUI event for a synthetic avatar; it is not an FPS guarantee for a particular scene.
+
 ### The avatar does not generate in Play mode
 
 - Confirm a generator prefab is assigned in **UMA Settings**.

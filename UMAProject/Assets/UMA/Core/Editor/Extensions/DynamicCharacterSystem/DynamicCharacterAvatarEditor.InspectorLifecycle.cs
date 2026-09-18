@@ -4,12 +4,49 @@ using UnityEngine;
 
 namespace UMA.CharacterSystem.Editors
 {
+    // Drawers have no reliable OnDisable. One shared subscription avoids retaining drawer targets.
+    [InitializeOnLoad]
+    internal static class AvatarInspectorCacheEpoch
+    {
+        internal static uint Revision { get; private set; }
+        static AvatarInspectorCacheEpoch()
+        {
+            EditorApplication.projectChanged += Invalidate;
+            Undo.undoRedoPerformed += Invalidate;
+            EditorApplication.playModeStateChanged += _ => Invalidate();
+        }
+        internal static void Invalidate() { unchecked { Revision++; } }
+    }
+
+    internal sealed class AvatarInspectorRefreshGate
+    {
+        private uint revision;
+        private double nextRefresh = double.NegativeInfinity;
+        private readonly double interval;
+        internal AvatarInspectorRefreshGate(double interval) { this.interval = interval; }
+        internal void Invalidate() { nextRefresh = double.NegativeInfinity; }
+        internal bool ShouldRefresh(double now, bool force = false)
+        {
+            if (!force && revision == AvatarInspectorCacheEpoch.Revision && now < nextRefresh) return false;
+            revision = AvatarInspectorCacheEpoch.Revision;
+            nextRefresh = now + interval;
+            return true;
+        }
+    }
+
     public partial class DynamicCharacterAvatarEditor
     {
         private bool _hasInspectorLayout;
         private bool _layoutEditorBusy;
         private uint _layoutDefinitionRevision;
+        private uint _layoutCacheRevision;
         private Action _pendingAvatarLoad;
+        private readonly AvatarInspectorRefreshGate _serializedRefresh = new AvatarInspectorRefreshGate(0.25);
+        private int _serializedDirtyCount;
+        private int _serializedRefreshCount;
+        private bool _inspectorRepaintPending;
+        private static readonly Unity.Profiling.ProfilerMarker InspectorDrawMarker = new Unity.Profiling.ProfilerMarker("UMA.DCAInspector.Draw");
+        private static readonly Unity.Profiling.ProfilerMarker SerializedRefreshMarker = new Unity.Profiling.ProfilerMarker("UMA.DCAInspector.RefreshSerializedState");
 
         private bool PrepareInspectorFrame()
         {
@@ -17,6 +54,7 @@ namespace UMA.CharacterSystem.Editors
             bool busy = IsEditorBusy();
             if (Event.current.type == EventType.Layout)
             {
+                _inspectorRepaintPending = false;
                 if (!_hasInspectorLayout || _layoutDefinitionRevision != avatar.EditorAvatarDefinitionRevision)
                 {
                     cachedRace = string.Empty;
@@ -29,19 +67,40 @@ namespace UMA.CharacterSystem.Editors
                     _groupNamesCache = null;
                     animationController = null;
                 }
-                // Refresh external changes only when a new control tree can be laid out.
-                serializedObject.Update();
+                // UpdateIfRequiredOrScript still refreshes scripts. Do not serialize the entire
+                // generated recipe for every idle Layout. Direct runtime writes get a 4 Hz fallback.
+                // Refresh only at Layout, preserving the LoadAvatarDefinition control-tree fence.
+                int dirtyCount = EditorUtility.GetDirtyCount(avatar);
+                if (_serializedRefresh.ShouldRefresh(EditorApplication.timeSinceStartup,
+                    !_hasInspectorLayout || _layoutDefinitionRevision != avatar.EditorAvatarDefinitionRevision ||
+                    dirtyCount != _serializedDirtyCount))
+                {
+                    using var refreshMarker = SerializedRefreshMarker.Auto();
+                    serializedObject.Update();
+                    _serializedDirtyCount = dirtyCount;
+                    _serializedRefreshCount++;
+                }
                 _layoutDefinitionRevision = avatar.EditorAvatarDefinitionRevision;
+                _layoutCacheRevision = AvatarInspectorCacheEpoch.Revision;
                 _layoutEditorBusy = busy;
                 _hasInspectorLayout = true;
             }
             else if (!_hasInspectorLayout || _layoutDefinitionRevision != avatar.EditorAvatarDefinitionRevision ||
+                     _layoutCacheRevision != AvatarInspectorCacheEpoch.Revision ||
                      _layoutEditorBusy != busy)
             {
-                Repaint();
+                RequestInspectorRepaint();
                 GUIUtility.ExitGUI();
             }
             return true;
+        }
+
+        private void RequestInspectorRepaint()
+        {
+            // Hidden/locked Inspectors may not consume Layout until their tab is shown.
+            if (_inspectorRepaintPending) return;
+            _inspectorRepaintPending = true;
+            Repaint();
         }
 
         private void QueueAvatarDefinitionLoad(AvatarDefinition definition)
@@ -71,7 +130,7 @@ namespace UMA.CharacterSystem.Editors
             finally
             {
                 _hasInspectorLayout = false;
-                Repaint();
+                RequestInspectorRepaint();
             }
         }
 

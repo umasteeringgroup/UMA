@@ -21,12 +21,235 @@ namespace UMA.Tests
         private object originalIndexer;
         private UMASettings originalSettings;
         private Object originalSelection;
-        private bool originalCustomization, originalDna;
+        private bool originalCustomization, originalDna, originalUmaData;
         private int originalColorFilter;
         private bool originalPlayOptionsEnabled;
         private EnterPlayModeOptions originalPlayOptions;
         private DynamicCharacterAvatar avatar;
         private RaceData race;
+
+        [Test]
+        public void MissingRaceDoesNotGrowOnRepeatedDrawsOrSwitches()
+        {
+            var drawer = new RaceSetterPropertyDrawer();
+            var ensure = typeof(RaceSetterPropertyDrawer).GetMethod("EnsureRaceIndex", BindingFlags.Instance | BindingFlags.NonPublic);
+            drawer.SetRaceLists(new[] { race });
+            for (int i = 0; i < 1000; i++) ensure.Invoke(drawer, new object[] { "Unavailable" });
+            Assert.That(drawer.foundRaceNames.Count, Is.EqualTo(3));
+            ensure.Invoke(drawer, new object[] { "Another Missing Race" });
+            Assert.That(drawer.foundRaceNames.Count, Is.EqualTo(3));
+            ensure.Invoke(drawer, new object[] { race.raceName });
+            Assert.That(drawer.foundRaceNames.Count, Is.EqualTo(2));
+            // A same-size list replacement must not leave stale names/references behind.
+            var other = Create<RaceData>();
+            other.name = "Replacement Race";
+            drawer.SetRaceLists(new[] { other });
+            Assert.That(drawer.foundRaceNames[1], Is.EqualTo(other.raceName));
+            drawer.SetRaceLists(null);
+            Assert.That(drawer.foundRaceNames, Is.EqualTo(new[] { "None Set" }));
+        }
+
+        [Test]
+        public void IdleWardrobeReusesMenusAndExplicitRefreshSeesChangedSlots()
+        {
+            var drawer = new WardrobeRecipeListPropertyDrawer { thisDCA = avatar };
+            var ensure = drawer.GetType().GetMethod("EnsureDropdown", BindingFlags.Instance | BindingFlags.NonPublic);
+            var labels = drawer.GetType().GetField("recipeMenuLabels", BindingFlags.Instance | BindingFlags.NonPublic);
+            var count = drawer.GetType().GetField("dropdownRefreshCount", BindingFlags.Instance | BindingFlags.NonPublic);
+            ensure.Invoke(drawer, new object[] { race.raceName, race, false });
+            var original = labels.GetValue(drawer);
+            for (int i = 0; i < 100; i++) ensure.Invoke(drawer, new object[] { race.raceName, race, false });
+            Assert.That(count.GetValue(drawer), Is.EqualTo(1));
+            Assert.That(labels.GetValue(drawer), Is.SameAs(original));
+            race.wardrobeSlots.Add("NewSlot");
+            drawer.SetupDropdown(race.raceName, race);
+            var slots = (string[])drawer.GetType().GetField("wardrobeSlotLabels", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(drawer);
+            CollectionAssert.Contains(slots, "NewSlot");
+            Assert.That(count.GetValue(drawer), Is.EqualTo(2));
+        }
+
+        [Test]
+        public void DnaViewTracksSameCountReplacementAndKeepsValuesLive()
+        {
+            ConfigureNewDna(3);
+            var editor = NewInspector();
+            Invoke(editor, "EnsureDNACaches", race.DNACollection);
+            var instances = avatar.dnaInstanceCollection.dnaInstances;
+            Invoke(editor, "EnsureAssignedDNACache", instances);
+            var snapshot = (List<DNAInstance>)Field(editor, "_dnaInstanceSnapshot");
+            var first = snapshot[0];
+            instances[0].Value = 0.9f;
+            for (int i = 0; i < 100; i++) Invoke(editor, "EnsureAssignedDNACache", instances);
+            Assert.That(Field(editor, "_dnaViewRebuildCount"), Is.EqualTo(1));
+            Assert.That(first.Value, Is.EqualTo(0.9f));
+            instances[0] = new DNAInstance("Replacement", 0.3f, null);
+            Invoke(editor, "EnsureAssignedDNACache", instances);
+            Assert.That(Field(editor, "_dnaViewRebuildCount"), Is.EqualTo(2));
+            Assert.That(snapshot[0], Is.SameAs(instances[0]));
+            instances[1].Name = "Renamed";
+            Invoke(editor, "EnsureAssignedDNACache", instances);
+            Assert.That(Field(editor, "_dnaViewRebuildCount"), Is.EqualTo(3));
+            Assert.That(snapshot.Count, Is.EqualTo(3));
+        }
+
+        [Test]
+        public void DnaMetadataDetectsSameCountRenameAndReplacement()
+        {
+            ConfigureNewDna(2);
+            var editor = NewInspector();
+            Invoke(editor, "EnsureDNACaches", race.DNACollection);
+            var group = race.DNACollection.DNAGroups[0];
+            var replacement = Create<DNA>();
+            replacement.name = "New DNA";
+            group.dnaList[0] = replacement;
+            group.DNAArea = "Renamed Group";
+            InvalidateCaches();
+            Invoke(editor, "EnsureDNACaches", race.DNACollection);
+            var cache = (Dictionary<string, DNA>)Field(editor, "_nameToDnaCache");
+            Assert.That(cache["New DNA"], Is.SameAs(replacement));
+            Assert.That(cache.ContainsKey("TestDna0"), Is.False);
+            Assert.That(((string[])Field(editor, "_groupNamesCache"))[0], Is.EqualTo("Renamed Group"));
+        }
+
+        [UnityTest]
+        public IEnumerator IdleLayoutDoesNotRefreshUntilDirtyOrInvalidated()
+        {
+            var editor = NewInspector();
+            var window = NewWindow(editor);
+            yield return WaitFor(() => window.Repaints > 1, window);
+            FreezeRefresh(editor);
+            int refreshes = (int)Field(editor, "_serializedRefreshCount");
+            int repaints = window.Repaints;
+            yield return WaitFor(() => window.Repaints >= repaints + 10, window);
+            Assert.That(Field(editor, "_serializedRefreshCount"), Is.EqualTo(refreshes));
+            Assert.That(Field(editor, "innerEditor"), Is.Null, "Collapsed UMA Data must not create a second Inspector.");
+            avatar.userInformation = "External edit";
+            EditorUtility.SetDirty(avatar);
+            yield return WaitFor(() => (int)Field(editor, "_serializedRefreshCount") > refreshes, window);
+            Assert.That(editor.serializedObject.FindProperty("userInformation").stringValue, Is.EqualTo("External edit"));
+            FreezeRefresh(editor);
+            refreshes = (int)Field(editor, "_serializedRefreshCount");
+            avatar.userInformation = "Unmarked runtime edit";
+            InvalidateCaches();
+            yield return WaitFor(() => (int)Field(editor, "_serializedRefreshCount") > refreshes, window);
+            Assert.That(editor.serializedObject.FindProperty("userInformation").stringValue, Is.EqualTo("Unmarked runtime edit"));
+            LogAssert.NoUnexpectedReceived();
+        }
+
+        [UnityTest]
+        public IEnumerator UnmarkedExternalEditsAreEventuallyRefreshed()
+        {
+            var editor = NewInspector();
+            var window = NewWindow(editor);
+            yield return WaitFor(() => window.Repaints > 0, window);
+            avatar.userInformation = "Direct runtime write";
+            yield return WaitFor(() => editor.serializedObject.FindProperty("userInformation").stringValue == "Direct runtime write", window);
+            LogAssert.NoUnexpectedReceived();
+        }
+
+        [UnityTest]
+        public IEnumerator UndoRefreshesAFrozenInspector()
+        {
+            var editor = NewInspector();
+            var window = NewWindow(editor);
+            avatar.userInformation = "Before Undo";
+            yield return WaitFor(() => window.Repaints > 0, window);
+            Undo.RecordObject(avatar, "Inspector regression edit");
+            avatar.userInformation = "After edit";
+            Undo.FlushUndoRecordObjects();
+            EditorUtility.SetDirty(avatar);
+            yield return WaitFor(() => editor.serializedObject.FindProperty("userInformation").stringValue == "After edit", window);
+            FreezeRefresh(editor);
+            Undo.PerformUndo();
+            yield return WaitFor(() => editor.serializedObject.FindProperty("userInformation").stringValue == "Before Undo", window);
+            Undo.ClearUndo(avatar);
+            LogAssert.NoUnexpectedReceived();
+        }
+
+        [UnityTest]
+        public IEnumerator ColorFoldoutDoesNotSignalAMaterialEdit()
+        {
+            var window = NewWindow(null);
+            window.Unscrolled = true;
+            window.Focus();
+            var foldout = typeof(OverlayColorDataPropertyDrawer).GetMethod("ViewFoldout",
+                BindingFlags.Static | BindingFlags.NonPublic, null, new[] { typeof(bool), typeof(GUIContent) }, null);
+            bool open = false, materialChanged = false;
+            Rect rect = default;
+            string events = "";
+            window.DrawExtra = () =>
+            {
+                if (Event.current.isMouse) events += $" {Event.current.type}@{Event.current.mousePosition},enabled={GUI.enabled}";
+                EditorGUI.BeginChangeCheck();
+                open = (bool)foldout.Invoke(null, new object[] { open, new GUIContent("Color controls") });
+                if (Event.current.type == EventType.Repaint) rect = GUILayoutUtility.GetLastRect();
+                materialChanged |= EditorGUI.EndChangeCheck();
+            };
+            yield return WaitFor(() => window.Repaints > 0, window);
+            var mouse = rect.center; // toggleOnLabelClick: avoid platform-dependent arrow inset.
+            int repaints = window.Repaints;
+            // SendEvent is not dispatched to batch-mode EditorWindows on Windows. Feed the
+            // mouse events inside a real OnGUI context, retaining Unity's layout/control state.
+            window.InjectedEvent = new Event { type = EventType.MouseDown, button = 0, mousePosition = mouse };
+            yield return WaitFor(() => window.Repaints > repaints, window);
+            repaints = window.Repaints;
+            window.InjectedEvent = new Event { type = EventType.MouseUp, button = 0, mousePosition = mouse };
+            yield return WaitFor(() => window.Repaints > repaints, window);
+            Assert.That(open, Is.True, $"Foldout rect {rect}; events:{events}");
+            Assert.That(materialChanged, Is.False, "Opening color controls must not regenerate the avatar.");
+            LogAssert.NoUnexpectedReceived();
+        }
+
+        [UnityTest]
+        public IEnumerator InspectorIdleDrawBenchmark()
+        {
+            avatar.LoadAvatarDefinition(Definition(12));
+            ConfigureNewDna(120);
+            var window = NewWindow(NewInspector());
+            yield return WaitFor(() => window.Repaints >= 5, window);
+            window.GuiTicks = window.GuiEvents = 0;
+            int before = window.Repaints;
+            yield return WaitFor(() => window.Repaints >= before + 30, window);
+            string measurement = $"DCA_INSPECTOR_BENCHMARK events={window.GuiEvents} ms/event=" +
+                $"{window.GuiTicks * 1000.0 / System.Diagnostics.Stopwatch.Frequency / window.GuiEvents:F3}";
+            LogAssert.Expect(LogType.Log, measurement);
+            Debug.Log(measurement);
+            LogAssert.NoUnexpectedReceived();
+        }
+
+        private void ConfigureNewDna(int count)
+        {
+            race.useNewDNA = true;
+            race.DNACollection = new DNACollection();
+            avatar.umaRecipe = new UMAData.UMARecipe();
+            avatar.dnaInstanceCollection = new DNAInstanceCollection();
+            DNAGroup group = null;
+            for (int i = 0; i < count; i++)
+            {
+                if (i % 10 == 0)
+                {
+                    group = Create<DNAGroup>();
+                    group.DNAArea = "Group " + i;
+                    group.editorFoldout = true;
+                    race.DNACollection.DNAGroups.Add(group);
+                }
+                var dna = Create<DNA>();
+                dna.name = "TestDna" + i;
+                group.dnaList.Add(dna);
+                avatar.dnaInstanceCollection.dnaInstances.Add(new DNAInstance(dna.name, 0.5f, group));
+            }
+        }
+
+        private static void InvalidateCaches() => typeof(DynamicCharacterAvatarEditor).Assembly
+            .GetType("UMA.CharacterSystem.Editors.AvatarInspectorCacheEpoch")
+            .GetMethod("Invalidate", BindingFlags.Static | BindingFlags.NonPublic).Invoke(null, null);
+
+        private static void FreezeRefresh(object editor)
+        {
+            var gate = Field(editor, "_serializedRefresh");
+            gate.GetType().GetField("nextRefresh", BindingFlags.Instance | BindingFlags.NonPublic)
+                .SetValue(gate, double.PositiveInfinity);
+        }
 
         [SetUp]
         public void SetUp()
@@ -36,6 +259,7 @@ namespace UMA.Tests
             originalSelection = Selection.activeObject;
             originalCustomization = DynamicCharacterAvatarEditor.showEditorCustomization;
             originalDna = DynamicCharacterAvatarEditor.showPrefinedDNA;
+            originalUmaData = DynamicCharacterAvatarEditor.showUMAData;
             originalColorFilter = DynamicCharacterAvatarEditor.currentcolorfilter;
             originalPlayOptionsEnabled = EditorSettings.enterPlayModeOptionsEnabled;
             originalPlayOptions = EditorSettings.enterPlayModeOptions;
@@ -58,6 +282,7 @@ namespace UMA.Tests
             avatar.activeRace.data = race;
             DynamicCharacterAvatarEditor.showEditorCustomization = true;
             DynamicCharacterAvatarEditor.showPrefinedDNA = true;
+            DynamicCharacterAvatarEditor.showUMAData = false;
             DynamicCharacterAvatarEditor.currentcolorfilter = 1;
         }
 
@@ -75,6 +300,7 @@ namespace UMA.Tests
             Selection.activeObject = originalSelection;
             DynamicCharacterAvatarEditor.showEditorCustomization = originalCustomization;
             DynamicCharacterAvatarEditor.showPrefinedDNA = originalDna;
+            DynamicCharacterAvatarEditor.showUMAData = originalUmaData;
             DynamicCharacterAvatarEditor.currentcolorfilter = originalColorFilter;
             EditorSettings.enterPlayModeOptionsEnabled = originalPlayOptionsEnabled;
             EditorSettings.enterPlayModeOptions = originalPlayOptions;
@@ -312,11 +538,16 @@ namespace UMA.Tests
         internal DynamicCharacterAvatarEditor Inspector;
         internal Action BeforeRepaint, DrawExtra;
         internal int Repaints, AbortedEvents;
+        internal long GuiTicks, GuiEvents;
+        internal bool Unscrolled;
+        internal Event InjectedEvent;
         private Vector2 scroll;
 
         private void OnGUI()
         {
+            long start = System.Diagnostics.Stopwatch.GetTimestamp();
             bool repaint = Event.current.type == EventType.Repaint;
+            var originalEvent = Event.current;
             if (repaint && BeforeRepaint != null)
             {
                 var action = BeforeRepaint;
@@ -325,7 +556,17 @@ namespace UMA.Tests
             }
             try
             {
-                using (var scrollView = new EditorGUILayout.ScrollViewScope(scroll))
+                if (repaint && InjectedEvent != null)
+                {
+                    Event.current = InjectedEvent;
+                    InjectedEvent = null;
+                }
+                if (Unscrolled)
+                {
+                    if (Inspector != null) Inspector.OnInspectorGUI();
+                    DrawExtra?.Invoke();
+                }
+                else using (var scrollView = new EditorGUILayout.ScrollViewScope(scroll))
                 {
                     scroll = scrollView.scrollPosition;
                     if (Inspector != null) Inspector.OnInspectorGUI();
@@ -337,6 +578,12 @@ namespace UMA.Tests
             {
                 AbortedEvents++;
                 throw; // Never suppress Unity's GUI control flow, even in a test host.
+            }
+            finally
+            {
+                Event.current = originalEvent;
+                GuiTicks += System.Diagnostics.Stopwatch.GetTimestamp() - start;
+                GuiEvents++;
             }
         }
     }

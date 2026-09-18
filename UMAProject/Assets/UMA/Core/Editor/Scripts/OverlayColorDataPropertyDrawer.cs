@@ -9,6 +9,46 @@ namespace UMA.Editors
     [CustomPropertyDrawer(typeof(OverlayColorData),true)]
 	public class OverlayColorDataPropertyDrawer : PropertyDrawer
 	{
+        // The avatar Inspector owns the commit for its entire color list, not each row.
+        private static int deferredApplyDepth;
+        internal readonly struct DeferredApplyScope : IDisposable
+        {
+            internal DeferredApplyScope(bool defer) { deferredApplyDepth++; }
+            public void Dispose() { deferredApplyDepth--; }
+        }
+
+        private static bool ViewFoldout(bool value, GUIContent label)
+        {
+            bool changed = GUI.changed;
+            bool result = EditorGUILayout.Foldout(value, label, true);
+            GUI.changed = changed; // Navigation is not a material edit.
+            return result;
+        }
+
+        private static void ViewFoldout(SerializedProperty property, string label)
+        {
+            bool value = ViewFoldout(property.boolValue, new GUIContent(label));
+            if (property.boolValue != value) property.boolValue = value;
+        }
+
+        private static void ViewProperty(SerializedProperty property)
+        {
+            bool changed = GUI.changed;
+            EditorGUILayout.PropertyField(property);
+            GUI.changed = changed;
+        }
+
+        private OverlayColorData ResolveColor(SerializedProperty property, DynamicCharacterAvatar avatar)
+        {
+            // Avoid path splitting, regex and reflection for every avatar color row.
+            if (avatar != null && property.propertyPath.StartsWith("characterColors._colors.Array.data[", StringComparison.Ordinal))
+            {
+                int index = GetArrayIndex(property.propertyPath);
+                var colors = avatar.characterColors?._colors;
+                if (colors != null && index >= 0 && index < colors.Count) return colors[index];
+            }
+            return property.GetValue<OverlayColorData>();
+        }
 		private const string SharedColorTableFoldoutLabel = "select from Shared Color Table";
 		private const double SharedColorTableCacheSeconds = 2.0;
 		private static bool sharedColorTableFoldout = false;
@@ -75,44 +115,25 @@ namespace UMA.Editors
 		{			
 			var name = property.FindPropertyRelative("name");
 			var mask = property.FindPropertyRelative("channelMask");
-			var additive = property.FindPropertyRelative("channelAdditiveMask");
-			var propblock = property.FindPropertyRelative("propertyBlock");
-			var displayColor = property.FindPropertyRelative("displayColor");
-			var colorFoldout = property.FindPropertyRelative("colorsExpanded");
-			var propertiesFoldout = property.FindPropertyRelative("propertiesExpanded");
-			var selected = property.FindPropertyRelative("isSelected");
 			var showSelected = property.FindPropertyRelative("showSelected");
-			var moveUp = property.FindPropertyRelative("moveUpThis");
-			var moveDown = property.FindPropertyRelative("moveDownThis");
 
 
             OverlayColorData ocd = null;
 			DynamicCharacterAvatar dca = property.serializedObject.targetObject as DynamicCharacterAvatar;
 
-            ocd = property.GetValue<OverlayColorData>();
-			if (ocd == null && dca != null)
-			{
-				string Name = property.FindPropertyRelative("name").stringValue;
-				foreach( OverlayColorData o in dca.characterColors._colors)
-				{
-					if (o.name == Name)
-					{
-						ocd = o;
-					}
-				}
-			}
 
 			EditorGUI.BeginProperty(position, label, property);
 
 			EditorGUILayout.BeginHorizontal();
 			if (showSelected.boolValue == true)
 			{
+                var selected = property.FindPropertyRelative("isSelected");
 				selected.boolValue = EditorGUILayout.Toggle(selected.boolValue, GUILayout.Width(20), GUILayout.ExpandWidth(false));
 				EditorGUILayout.Space(10, false);
             }
 			
 		    label.text = name.stringValue;
-            name.isExpanded = EditorGUILayout.Foldout(name.isExpanded, label);
+            name.isExpanded = ViewFoldout(name.isExpanded, label);
 
            if (!name.isExpanded)
             {
@@ -127,7 +148,6 @@ namespace UMA.Editors
                     if (b != c)
                     {
                         displayColorProp.colorValue = b;
-                        displayColorProp.serializedObject.ApplyModifiedProperties();
                     }
                 }
 				else
@@ -141,7 +161,6 @@ namespace UMA.Editors
 						if (b != c)
 						{
 							colProp.colorValue = b;
-							colProp.serializedObject.ApplyModifiedProperties();
 						}
 					}
 					else
@@ -153,19 +172,22 @@ namespace UMA.Editors
 				{
 					if (GUILayout.Button(MoveUpIcon, EditorStyles.miniButton, GUILayout.Width(20), GUILayout.Height(18)))
 					{
-						moveUp.boolValue = true;
+                        GUI.changed = true;
+                        property.FindPropertyRelative("moveUpThis").boolValue = true;
 					}
 				}
 				using (new EditorGUI.DisabledScope(arrayIndex < 0 || arrayIndex >= arraySize - 1))
 				{
 					if (GUILayout.Button(MoveDownIcon, EditorStyles.miniButton, GUILayout.Width(20), GUILayout.Height(18)))
 					{
-						moveDown.boolValue = true;
+                        GUI.changed = true;
+                        property.FindPropertyRelative("moveDownThis").boolValue = true;
 					}
 				}
                 bool delete = GUILayout.Button("X", GUILayout.Width(20));
                 if (delete)
                 {
+                    GUI.changed = true;
                     property.FindPropertyRelative("deleteThis").boolValue = true;
                 }
             }
@@ -173,6 +195,11 @@ namespace UMA.Editors
             EditorGUILayout.EndHorizontal();
 			if (name.isExpanded)
 			{
+                var additive = property.FindPropertyRelative("channelAdditiveMask");
+                var displayColor = property.FindPropertyRelative("displayColor");
+                var colorFoldout = property.FindPropertyRelative("colorsExpanded");
+                var propertiesFoldout = property.FindPropertyRelative("propertiesExpanded");
+                ocd = ResolveColor(property, dca);
 				EditorGUILayout.BeginVertical(GetOpaqueBlackBoxStyle());
 				bool appliedSharedColor = DrawSharedColorTableSelector(property, ocd, dca);
 				if (appliedSharedColor)
@@ -187,11 +214,12 @@ namespace UMA.Editors
 				}
                 EditorGUILayout.LabelField("Overlay Color Data", EditorStyles.boldLabel);
                 EditorGUILayout.PropertyField(property.FindPropertyRelative("name"));
-				EditorGUILayout.PropertyField(property.FindPropertyRelative("isBaseColor"));
-				EditorGUILayout.PropertyField(property.FindPropertyRelative("showDisplayColor"));
+                ViewProperty(property.FindPropertyRelative("isBaseColor"));
+                ViewProperty(property.FindPropertyRelative("showDisplayColor"));
 				
-				ocd.showSelectFromFoldout = EditorGUILayout.Foldout(ocd.showSelectFromFoldout, "Display Color");
-				if (ocd.showSelectFromFoldout)	
+                var displayFoldout = property.FindPropertyRelative("showSelectFromFoldout");
+                ViewFoldout(displayFoldout, "Display Color");
+				if (displayFoldout.boolValue)
 				{
 					EditorGUILayout.HelpBox("This color is used for display purposes in user editors and does not affect the actual colors used in the character. It can be useful to set this to the approximate color that will be shown after combining onto the layers.", MessageType.Info);
                 	EditorGUILayout.PropertyField(displayColor);
@@ -201,7 +229,10 @@ namespace UMA.Editors
 					int ChannelCount = EditorGUILayout.IntSlider(Channels, ocd.channelCount, 0, 16);
 					if (ChannelCount != ocd.channelCount)
 					{
+                        property.serializedObject.ApplyModifiedProperties();
+                        Undo.RecordObject(property.serializedObject.targetObject, "Change Color Channels");
 						ocd.SetChannels(ChannelCount);
+                        property.serializedObject.Update();
 						if (dca != null)
 						{
 							EditorUtility.SetDirty(dca);
@@ -210,7 +241,7 @@ namespace UMA.Editors
 				}
 
 				SerializedProperty showAdvancedProperty = property.FindPropertyRelative("showAdvanced");
-				EditorGUILayout.PropertyField(showAdvancedProperty);
+                ViewProperty(showAdvancedProperty);
 				//showAdvanced = EditorGUILayout.Toggle("Show Extended Ranges", showAdvanced);
 
 				GUILayout.Space(5);
@@ -218,7 +249,7 @@ namespace UMA.Editors
 
 				GUILayout.BeginHorizontal();
                 GUILayout.Space(10);
-                colorFoldout.boolValue = EditorGUILayout.Foldout(colorFoldout.boolValue, "Colors");
+                ViewFoldout(colorFoldout, "Colors");
 				GUILayout.EndHorizontal();
 
                 if (colorFoldout.boolValue)
@@ -261,6 +292,7 @@ namespace UMA.Editors
 					}
 					if (GUILayout.Button("Reset all colors to defaults"))
 					{
+                        GUI.changed = true;
 						if (ocd != null)
 						{
 							for (int i = 0; i < mask.arraySize; i++)
@@ -284,7 +316,7 @@ namespace UMA.Editors
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Space(10);
-                propertiesFoldout.boolValue = EditorGUILayout.Foldout(propertiesFoldout.boolValue, "Color Parameters");
+                ViewFoldout(propertiesFoldout, "Color Parameters");
 				GUILayout.EndHorizontal();
 				if (propertiesFoldout.boolValue)
 				{
@@ -294,6 +326,7 @@ namespace UMA.Editors
 						{
 							if (UMAMaterialPropertyBlockDrawer.OnGUI(ocd.PropertyBlock))
 							{
+                                GUI.changed = true;
 								if (dca != null)
 								{
 									EditorUtility.SetDirty(dca);
@@ -305,6 +338,7 @@ namespace UMA.Editors
 						{
 							if (GUILayout.Button("Add Properties Block"))
 							{
+                                GUI.changed = true;
 								ocd.PropertyBlock = new UMAMaterialPropertyBlock();
 								EditorUtility.SetDirty(dca);
 								AssetDatabase.SaveAssets();
@@ -317,7 +351,8 @@ namespace UMA.Editors
             }
 			Rect separatorRect = GUILayoutUtility.GetRect(GUIContent.none, GUIStyle.none, GUILayout.ExpandWidth(true), GUILayout.Height(2));
 			EditorGUI.DrawRect(separatorRect, Color.black);
-            property.serializedObject.ApplyModifiedProperties();
+            if (deferredApplyDepth == 0 && property.serializedObject.hasModifiedProperties)
+                property.serializedObject.ApplyModifiedProperties();
             EditorGUI.EndProperty();
 		}
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
@@ -327,7 +362,7 @@ namespace UMA.Editors
 
 		private bool DrawSharedColorTableSelector(SerializedProperty property, OverlayColorData currentOverlayColorData, DynamicCharacterAvatar dca)
 		{
-			sharedColorTableFoldout = EditorGUILayout.Foldout(sharedColorTableFoldout, SharedColorTableFoldoutLabel, true);
+            sharedColorTableFoldout = ViewFoldout(sharedColorTableFoldout, new GUIContent(SharedColorTableFoldoutLabel));
 			if (!sharedColorTableFoldout)
 			{
 				return false;
@@ -361,6 +396,7 @@ namespace UMA.Editors
 			}
 
 			GUILayout.BeginHorizontal();
+			bool viewChanged = GUI.changed;
 			EditorGUI.BeginChangeCheck();
 			int newSelectedTableIndex = EditorGUILayout.Popup(new GUIContent("Shared Color Table"),
 				selectedTableIndex, visibleSharedColorTableOptions);
@@ -369,6 +405,7 @@ namespace UMA.Editors
 				selectedTableIndex = newSelectedTableIndex;
 				selectedSharedColorTablesByProperty[propertyKey] = visibleSharedColorTables[selectedTableIndex];
 			}
+            GUI.changed = viewChanged;
 			if (GUILayout.Button("Inspect", EditorStyles.miniButton, GUILayout.Width(64)))
 			{
 				SharedColorTable tableToInspect = visibleSharedColorTables[selectedTableIndex];
@@ -405,6 +442,7 @@ namespace UMA.Editors
 					if (GUILayout.Button("Select", EditorStyles.miniButton, GUILayout.Width(56)))
 					{
 						appliedSharedColor = ApplySharedColor(property, currentOverlayColorData, sharedColor, dca);
+                        if (appliedSharedColor) GUI.changed = true;
 						currentOverlayColorData = property.GetValue<OverlayColorData>();
 					}
 				}

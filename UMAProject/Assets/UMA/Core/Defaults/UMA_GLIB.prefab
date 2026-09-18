@@ -73,7 +73,7 @@ MonoBehaviour:
   editorInitialScaleFactor: 1
   IterationCount: 1
   InterFrameDelay: 0
-  MaxMultiStepWorkMilliseconds: 2
+  MaxMultiStepWorkMilliseconds: 40
   processAllPending: 1
   applyInline: 0
   showInHierarchy: 1

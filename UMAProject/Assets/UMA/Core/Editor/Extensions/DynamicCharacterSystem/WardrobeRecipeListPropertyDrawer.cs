@@ -16,6 +16,13 @@ namespace UMA.CharacterSystem.Editors
         public string LastRace = "";
         private string lastDropdownSignature = string.Empty;
         private bool dropdownInitialized;
+        private readonly AvatarInspectorRefreshGate dropdownRefresh = new AvatarInspectorRefreshGate(1.0);
+        private DynamicCharacterAvatar dropdownAvatar;
+        private RaceData dropdownRace;
+        private string[] recipeMenuLabels = Array.Empty<string>();
+        private string[] wardrobeSlotLabels = Array.Empty<string>();
+        private int dropdownRefreshCount;
+        private static readonly Unity.Profiling.ProfilerMarker MenuRefreshMarker = new Unity.Profiling.ProfilerMarker("UMA.DCAInspector.RefreshWardrobeMenu");
         public static int lastAdded = -1;
         public static int selectedSlotIndex = 0;
 
@@ -149,6 +156,19 @@ namespace UMA.CharacterSystem.Editors
 
         public void SetupDropdown(string race, RaceData raceData)
         {
+            // Public callers explicitly request a refresh (e.g. an index repair).
+            EnsureDropdown(race, raceData, true);
+        }
+
+        private void EnsureDropdown(string race, RaceData raceData, bool force = false)
+        {
+            if (!dropdownRefresh.ShouldRefresh(EditorApplication.timeSinceStartup,
+                force || !dropdownInitialized || dropdownAvatar != thisDCA || dropdownRace != raceData || LastRace != race))
+                return;
+            dropdownAvatar = thisDCA;
+            dropdownRace = raceData;
+            dropdownRefreshCount++;
+            using var menuMarker = MenuRefreshMarker.Auto();
             var availableRecipes = GetAvailableRecipesForCurrentRace(raceData);
             string currentSignature = BuildDropdownSignature(
                 race,
@@ -229,6 +249,8 @@ namespace UMA.CharacterSystem.Editors
                     }
                     catch { /* ignore during reload */ }
                 }
+                recipeMenuLabels = recipeMenu.ToArray();
+                wardrobeSlotLabels = raceData?.wardrobeSlots?.ToArray() ?? Array.Empty<string>();
             }
         }
 
@@ -687,16 +709,6 @@ namespace UMA.CharacterSystem.Editors
             {
                 using var wardrobeLayout = new UMA.Editors.GUIHelper.PaddedVerticalScope(10, new Color(0.75f, 0.875f, 1f));
 
-                // Attempt to refresh live race recipes safely
-                try
-                {
-                    if (thisDCA?.preloadWardrobeRecipes != null)
-                    {
-                        thisDCA.preloadWardrobeRecipes.GetRecipesForRace();
-                    }
-                }
-                catch { }
-
                 var thisRecipesProp = property.FindPropertyRelative("recipes");
                 if (thisRecipesProp == null)
                 {
@@ -785,6 +797,10 @@ namespace UMA.CharacterSystem.Editors
                 }
                 catch { }
                 bool hasRace = activeRaceData != null;
+                // Menu discovery (including compatibility refresh) is not drawing work.
+                // Keep Layout/Repaint on one snapshot; explicit edits invalidate the next Layout.
+                if (Event.current.type == EventType.Layout || !dropdownInitialized)
+                    EnsureDropdown(thisDCA?.activeRace?.name, activeRaceData);
 
                 if (!hasRace)
                 {
@@ -801,7 +817,7 @@ namespace UMA.CharacterSystem.Editors
                     GUILayout.Label("Wardrobe Region", GUILayout.Width(85));
                     selectedSlotIndex = EditorGUILayout.Popup(
                         selectedSlotIndex,
-                        activeRaceData.wardrobeSlots.ToArray(),
+                        wardrobeSlotLabels,
                         GUILayout.Width(120));
                     if (selectedSlotIndex >= 0 &&
                         selectedSlotIndex < activeRaceData.wardrobeSlots.Count)
@@ -812,7 +828,6 @@ namespace UMA.CharacterSystem.Editors
                     GUILayout.EndHorizontal();
 
                     GUILayout.BeginHorizontal();
-                    SetupDropdown(thisDCA.activeRace.name, activeRaceData);
 
                     ToggleAll = GUILayout.Toggle(ToggleAll, "Toggle", GUILayout.ExpandWidth(true));
 
@@ -823,7 +838,7 @@ namespace UMA.CharacterSystem.Editors
 
                     int added = -1;
                     EditorGUILayout.LabelField("Add Item", GUILayout.Width(60));
-                    added = EditorGUILayout.Popup(added, recipeMenu.ToArray(), GUILayout.Width(150));
+                    added = EditorGUILayout.Popup(added, recipeMenuLabels, GUILayout.Width(150));
                     if (added >= 0)
                     {
                         if (added < recipeMenuIsAddAll.Count && recipeMenuIsAddAll[added])
@@ -1008,6 +1023,8 @@ namespace UMA.CharacterSystem.Editors
 
                 DropAreaGUI(dropArea, thisRecipesProp);
             }
+
+            if (changed) dropdownRefresh.Invalidate();
 
             try
             {

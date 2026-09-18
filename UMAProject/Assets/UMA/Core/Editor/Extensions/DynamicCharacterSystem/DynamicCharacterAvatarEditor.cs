@@ -163,7 +163,6 @@ namespace UMA.CharacterSystem.Editors
                 return;
             }
 
-            innerEditor = (UMADataEditor)Editor.CreateEditor(thisDCA, typeof(UMADataEditor));
             _racePropDrawer.thisDCA = thisDCA;
             _wardrobePropDrawer.thisDCA = thisDCA;
             _animatorPropDrawer.thisDCA = thisDCA;
@@ -178,6 +177,7 @@ namespace UMA.CharacterSystem.Editors
         {
             CancelPendingAvatarLoad();
             _hasInspectorLayout = false;
+            _inspectorRepaintPending = false;
             AssemblyReloadEvents.beforeAssemblyReload -= OnBeforeAssemblyReload;
             EditorApplication.update -= DoInspectors;
             SceneView.duringSceneGui -= DoSceneGUI;
@@ -219,8 +219,9 @@ namespace UMA.CharacterSystem.Editors
         private void DoInspectors()
         {
             if (target is DynamicCharacterAvatar avatar &&
-                (!_hasInspectorLayout || avatar.EditorAvatarDefinitionRevision != _layoutDefinitionRevision))
-                Repaint();
+                (!_hasInspectorLayout || avatar.EditorAvatarDefinitionRevision != _layoutDefinitionRevision ||
+                 _layoutCacheRevision != AvatarInspectorCacheEpoch.Revision))
+                RequestInspectorRepaint();
             if (InspectMe.Count >0)
             {
                 for (int i =0; i < InspectMe.Count; i++)
@@ -274,6 +275,7 @@ namespace UMA.CharacterSystem.Editors
 
         public override void OnInspectorGUI()
         {
+            using var drawMarker = InspectorDrawMarker.Auto();
             if (!PrepareInspectorFrame()) return;
             int indent = EditorGUI.indentLevel;
             bool enabled = GUI.enabled;
@@ -483,6 +485,7 @@ namespace UMA.CharacterSystem.Editors
             showUMAData = GUIHelper.FoldoutBar(showUMAData, "UMA Data");
             if (showUMAData)
             {
+                if (innerEditor == null) innerEditor = Editor.CreateEditor(thisDCA, typeof(UMADataEditor));
                 if (innerEditor != null)
                 {
                     innerEditor.OnInspectorGUI();
@@ -507,7 +510,7 @@ namespace UMA.CharacterSystem.Editors
 
 
 
-            if (wasChanged)
+            if (serializedObject.hasModifiedProperties)
             {
                 serializedObject.ApplyModifiedProperties();
             }
@@ -815,50 +818,15 @@ namespace UMA.CharacterSystem.Editors
         // Rebuild caches if the collection or group contents changed
         private void EnsureDNACaches(DNACollection collection)
         {
-            if (collection == null)
-            {
-                _cachedDNACollectionRef = null;
-                _nameToGroupCache.Clear();
-                _nameToDnaCache.Clear();
-                _groupsSnapshot.Clear();
-                _groupDnaCounts.Clear();
-                _groupNamesCache = null;
-                return;
-            }
-
-            var groups = collection.DNAGroups;
-            if (_cachedDNACollectionRef != collection)
-            {
-                RebuildDNACaches(collection, groups);
-                return;
-            }
-
-            int count = groups != null ? groups.Count : 0;
-            if (_groupsSnapshot.Count != count)
-            {
-                RebuildDNACaches(collection, groups);
-                return;
-            }
-
-            for (int i = 0; i < count; i++)
-            {
-                var g = groups[i];
-                if (!ReferenceEquals(g, _groupsSnapshot[i]))
-                {
-                    RebuildDNACaches(collection, groups);
-                    return;
-                }
-                int dnaCount = (g != null && g.dnaList != null) ? g.dnaList.Count : 0;
-                if (_groupDnaCounts[i] != dnaCount)
-                {
-                    RebuildDNACaches(collection, groups);
-                    return;
-                }
-            }
+            bool newCollection = _cachedDNACollectionRef != collection;
+            if (!newCollection && Event.current != null && Event.current.type != EventType.Layout) return;
+            if (_dnaMetadataRefresh.ShouldRefresh(EditorApplication.timeSinceStartup, newCollection) &&
+                !DNAMetadataMatches(collection)) RebuildDNACaches(collection, collection?.DNAGroups);
         }
 
         private void RebuildDNACaches(DNACollection collection, List<DNAGroup> groups)
         {
+            CaptureDNAMetadata(groups);
             _cachedDNACollectionRef = collection;
             _nameToGroupCache.Clear();
             _nameToDnaCache.Clear();
@@ -924,36 +892,23 @@ namespace UMA.CharacterSystem.Editors
 
             // Keep caches in sync
             EnsureDNACaches(collection);
+            EnsureAssignedDNACache(umaData?.dnaInstanceCollection?.dnaInstances);
 
             // If a collection exists, let user tweak values live
             if (umaData != null && umaData.dnaInstanceCollection != null && umaData.dnaInstanceCollection.dnaInstances != null)
             {
                 // Ensure internal dictionary restored after domain reloads
-                umaData.dnaInstanceCollection.Initialize(collection);
+                if (_dnaDictionaryNeedsRefresh || umaData.dnaInstanceCollection.dnaCollection != collection)
+                {
+                    umaData.dnaInstanceCollection.Initialize(collection);
+                    _dnaDictionaryNeedsRefresh = false;
+                }
 
                 var instances = umaData.dnaInstanceCollection.dnaInstances;
 
                 // Group assigned instances using cached name->group
-                var grouped = new Dictionary<DNAGroup, List<(int index, DNAInstance inst)>>(1);
-                var unknown = new List<(int index, DNAInstance inst)>();
-                for (int i = 0; i < instances.Count; i++)
-                {
-                    var inst = instances[i];
-                    if (inst == null) continue;
-                    if (_nameToGroupCache.TryGetValue(inst.Name, out var grp))
-                    {
-                        if (!grouped.TryGetValue(grp, out var list))
-                        {
-                            list = new List<(int, DNAInstance)>(1);
-                            grouped[grp] = list;
-                        }
-                        list.Add((i, inst));
-                    }
-                    else
-                    {
-                        unknown.Add((i, inst));
-                    }
-                }
+                var grouped = _assignedDnaGroups;
+                var unknown = _unknownDna;
 
                 bool anyReset = false;
 #region DNA Header                
@@ -1141,8 +1096,7 @@ namespace UMA.CharacterSystem.Editors
                 }
 
                 // Sort groups alphabetically by DNAArea
-                var groupedList = new List<KeyValuePair<DNAGroup, List<(int index, DNAInstance inst)>>>(grouped);
-                groupedList.Sort((a, b) => string.Compare(a.Key?.DNAArea, b.Key?.DNAArea, StringComparison.OrdinalIgnoreCase));
+                var groupedList = _sortedDnaGroups;
 
                 // Draw groups
                 for (int gi = 0; gi < groupedList.Count; gi++)
@@ -1168,7 +1122,6 @@ namespace UMA.CharacterSystem.Editors
                     }
                     if (!grp.editorFoldout) continue;
                     // Sort entries by name once before drawing
-                    entries.Sort((x, y) => string.Compare(x.inst?.Name, y.inst?.Name, StringComparison.OrdinalIgnoreCase));
 
                     using var groupIndent = new EditorGUI.IndentLevelScope();
                     for (int ei = 0; ei < entries.Count; ei++)
@@ -1261,7 +1214,7 @@ namespace UMA.CharacterSystem.Editors
                         {
                             // Remove this DNAInstance
                             Undo.RecordObject(umaData, "Remove DNA Instance");
-                            umaData.dnaInstanceCollection.dnaInstances.RemoveAt(idx);
+                            umaData.dnaInstanceCollection.dnaInstances.Remove(inst);
                             EditorUtility.SetDirty(umaData);
                             GenerateSingleUMA();
                             return true; // early exit after mutation to avoid index issues
@@ -1308,7 +1261,6 @@ namespace UMA.CharacterSystem.Editors
                     _unknownAssignedGroupFoldout = EditorGUILayout.Foldout(_unknownAssignedGroupFoldout, "Unknown", true);
                     if (_unknownAssignedGroupFoldout)
                     {
-                        unknown.Sort((x, y) => string.Compare(x.inst?.Name, y.inst?.Name, StringComparison.OrdinalIgnoreCase));
                         using var unknownIndent = new EditorGUI.IndentLevelScope();
                         for (int ui = 0; ui < unknown.Count; ui++)
                         {
@@ -1355,7 +1307,7 @@ namespace UMA.CharacterSystem.Editors
                             {
                                 // Remove this DNAInstance
                                 Undo.RecordObject(umaData, "Remove DNA Instance");
-                                umaData.dnaInstanceCollection.dnaInstances.RemoveAt(idx);
+                                umaData.dnaInstanceCollection.dnaInstances.Remove(inst);
                                 EditorUtility.SetDirty(umaData);
                                 GenerateSingleUMA();
                                 return true; // early exit after mutation to avoid index issues
@@ -1413,40 +1365,16 @@ namespace UMA.CharacterSystem.Editors
             }
 
             // Build set of currently assigned DNA to filter dropdown
-            HashSet<string> assigned = new HashSet<string>();
-            if (umaData != null && umaData.dnaInstanceCollection != null && umaData.dnaInstanceCollection.dnaInstances != null)
-            {
-                var instances2 = umaData.dnaInstanceCollection.dnaInstances;
-                for (int i = 0; i < instances2.Count; i++)
-                {
-                    var inst = instances2[i];
-                    if (inst != null && !string.IsNullOrEmpty(inst.Name)) assigned.Add(inst.Name);
-                }
-            }
+            var assigned = _assignedDnaNames;
+            var dnaNames = GetAvailableDNANames(selGroup);
 
-            // Build popup of DNA within selected group excluding already assigned
-            List<string> dnaNames = new List<string>(dnaList.Count);
-            for (int i = 0; i < dnaList.Count; i++)
-            {
-                var d = dnaList[i];
-                if (d != null && !assigned.Contains(d.name))
-                {
-                    dnaNames.Add(d.name);
-                }
-            }
-            // Sort for stable ordering
-            if (dnaNames.Count > 1)
-            {
-                dnaNames.Sort(StringComparer.OrdinalIgnoreCase);
-            }
-
-            if (dnaNames.Count == 0)
+            if (dnaNames.Length == 0)
             {
                 EditorGUILayout.HelpBox("All DNA in this group are already assigned.", MessageType.Info);
                 return wasChanged;
             }
-            if (_newDnaInGroupIndex < 0 || _newDnaInGroupIndex >= dnaNames.Count) _newDnaInGroupIndex = 0;
-            _newDnaInGroupIndex = EditorGUILayout.Popup("DNA", _newDnaInGroupIndex, dnaNames.ToArray());
+            if (_newDnaInGroupIndex < 0 || _newDnaInGroupIndex >= dnaNames.Length) _newDnaInGroupIndex = 0;
+            _newDnaInGroupIndex = EditorGUILayout.Popup("DNA", _newDnaInGroupIndex, dnaNames);
 
             using var addDnaRow = new EditorGUILayout.HorizontalScope();
             if (GUILayout.Button("Add DNA Instance"))
@@ -2927,7 +2855,7 @@ namespace UMA.CharacterSystem.Editors
             {
                 return n_origArraySize;
             }
-            EditorGUI.BeginChangeCheck();
+            using var deferredColorApply = new OverlayColorDataPropertyDrawer.DeferredApplyScope(true);
             int n_newArraySize;
             var charcol = thisDCA.characterColors._colors;
             int baseColors =0;
@@ -2956,6 +2884,7 @@ namespace UMA.CharacterSystem.Editors
 
             currentcolorfilter = EditorGUILayout.Popup("Filter Colors", currentcolorfilter, colorfilters);
 
+            EditorGUI.BeginChangeCheck();
             n_newArraySize = EditorGUILayout.DelayedIntField(new GUIContent("Size"), n_origArraySize);
             EditorGUILayout.Space();
             EditorGUI.indentLevel++;
@@ -2989,7 +2918,7 @@ namespace UMA.CharacterSystem.Editors
                         continue;
                     }
 
-                    EditorGUILayout.PropertyField(newCharacterColors.GetArrayElementAtIndex(i));
+                    EditorGUILayout.PropertyField(currentColor);
                 }
             }
             EditorGUI.indentLevel--;

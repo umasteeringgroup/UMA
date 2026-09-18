@@ -17,6 +17,9 @@ namespace UMA.CharacterSystem.Editors
 		//When the app IS running it shows the reaces you CAN choose- i.e. the ones that are either in the build or have been downloaded.
 		public List<RaceData> foundRaces = new List<RaceData>();
 		public List<string> foundRaceNames = new List<string>();
+        private string[] raceLabels = System.Array.Empty<string>();
+        private string missingRaceName;
+        private readonly AvatarInspectorRefreshGate raceRefresh = new AvatarInspectorRefreshGate(1.0);
 
 		override public float GetPropertyHeight(SerializedProperty property, GUIContent label)
 		{
@@ -25,10 +28,8 @@ namespace UMA.CharacterSystem.Editors
 
 		public void SetRaceLists(RaceData[] raceDataArray = null)
 		{
-			if (foundRaces.Count == raceDataArray.Length)
-			{
-				return;
-			}
+            raceDataArray = raceDataArray ?? System.Array.Empty<RaceData>();
+            missingRaceName = null;
 			foundRaces.Clear();
 			foundRaceNames.Clear();
 			foundRaces.Add(null);
@@ -43,12 +44,36 @@ namespace UMA.CharacterSystem.Editors
 					foundRaceNames.Add(race.raceName);
 				}
 			}
+            raceLabels = foundRaceNames.ToArray();
 		}
+
+        internal int EnsureRaceIndex(string raceName)
+        {
+            if (missingRaceName != null && missingRaceName != raceName)
+            {
+                int old = foundRaceNames.IndexOf(missingRaceName + " (Not Available)");
+                if (old >= 0) { foundRaceNames.RemoveAt(old); foundRaces.RemoveAt(old); }
+                missingRaceName = null;
+                raceLabels = foundRaceNames.ToArray();
+            }
+            if (string.IsNullOrEmpty(raceName)) return 0;
+            int index = foundRaceNames.IndexOf(raceName);
+            if (index >= 0) return index;
+            string label = raceName + " (Not Available)";
+            index = foundRaceNames.IndexOf(label);
+            if (index >= 0) return index;
+            missingRaceName = raceName;
+            foundRaceNames.Add(label);
+            foundRaces.Add(null);
+            raceLabels = foundRaceNames.ToArray();
+            return foundRaces.Count - 1;
+        }
 
 
         private void CheckRaceDataLists()
 		{
-			if (foundRaces.Count == 0)
+            if ((Event.current == null || Event.current.type == EventType.Layout || foundRaces.Count == 0) &&
+                raceRefresh.ShouldRefresh(EditorApplication.timeSinceStartup, foundRaces.Count == 0))
 			{
 				var races = UMAAssetIndexer.Instance.GetAllRaces();
 				SetRaceLists(races);
@@ -71,23 +96,15 @@ namespace UMA.CharacterSystem.Editors
             var RaceName = property.FindPropertyRelative("name");
 			
 			string rn = RaceName.stringValue; 
-			int rIndex = 0;
+            int rIndex = EnsureRaceIndex(rn);
 			int newrIndex;
 			int converterCount = 0;
-			if (rn != "")
-			{
-				if (!foundRaceNames.Contains(rn))
-				{
-					foundRaceNames.Add(rn + " (Not Available)");
-					foundRaces.Add(null);
-				}
-				rIndex = foundRaceNames.IndexOf(rn) == -1 ? (foundRaceNames.IndexOf(rn + " (Not Available)") == -1 ? 0 : foundRaceNames.IndexOf(rn + " (Not Available)")) : foundRaceNames.IndexOf(rn);
-			}
 
 			if (GUILayout.Button("Refresh Race List"))
 			{
 				foundRaces.Clear();
 				CheckRaceDataLists();
+                rIndex = EnsureRaceIndex(rn);
 				HandleUtility.Repaint();
             }
            // EditorGUI.BeginProperty(position, label, property);
@@ -96,12 +113,13 @@ namespace UMA.CharacterSystem.Editors
            // Rect contentPosition = EditorGUI.PrefixLabel(position, new GUIContent("Active Race"));
 			//Rect contentPositionP = contentPosition;
 			EditorGUI.BeginChangeCheck();
-			newrIndex = EditorGUILayout.Popup(new GUIContent("Active Race"),rIndex, foundRaceNames.ToArray());
+			newrIndex = EditorGUILayout.Popup(new GUIContent("Active Race"),rIndex, raceLabels);
 			if (EditorGUI.EndChangeCheck())
 			{
 				if (rIndex != newrIndex)
 				{
-					RaceName.stringValue = foundRaceNames[newrIndex];
+                    RaceName.stringValue = newrIndex == 0 ? string.Empty : foundRaces[newrIndex] != null
+                        ? foundRaces[newrIndex].raceName : rn;
 					//somehow if the app is playing this already works- and doing it here makes it not work
 					if (!EditorApplication.isPlaying)
                     {
