@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 592b2fc0dd244bed981d8c1ff5a1fa78, type: 3}
-  m_Name: UMA 30 Expression Set_ExpressionGroup
+  m_Name: UMA 30 Expression Set_ExpressionGroup_Mild
   m_EditorClassIdentifier: UMA_Core::UMA.UMAExpressionGroup
   expressions:
   - id: neckUp_Down
@@ -474,7 +474,7 @@ MonoBehaviour:
     blinkClosedValue: 0
   - id: viseme_sil
     displayName: sil - Silence
-    dna: {fileID: 11400000, guid: 2f6de6d327329b84eae01e158d6e1441, type: 2}
+    dna: {fileID: 11400000, guid: 951bfc38f1a142c489eed619c9f0b803, type: 2}
     roles: 16
     affectedJoints: 36
     priority: 51
@@ -483,7 +483,7 @@ MonoBehaviour:
     blinkClosedValue: 0
   - id: viseme_PP
     displayName: PP - Lips closed (p/b/m)
-    dna: {fileID: 11400000, guid: 1e5e38f3e353a784585cf8f8bc500640, type: 2}
+    dna: {fileID: 11400000, guid: fcd4df3aa8da54e46a2d16fadb1ce8f3, type: 2}
     roles: 16
     affectedJoints: 36
     priority: 52
@@ -492,7 +492,7 @@ MonoBehaviour:
     blinkClosedValue: 0
   - id: viseme_FF
     displayName: FF - Lip to teeth (f/v)
-    dna: {fileID: 11400000, guid: d7bfcf237623b34428818ed60da87822, type: 2}
+    dna: {fileID: 11400000, guid: 7bae5345c87d9124f82cf5e8e1bf006a, type: 2}
     roles: 16
     affectedJoints: 36
     priority: 53
@@ -501,7 +501,7 @@ MonoBehaviour:
     blinkClosedValue: 0
   - id: viseme_TH
     displayName: TH - Tongue between teeth (th)
-    dna: {fileID: 11400000, guid: 22c8201906e084f4abe03debce9a7118, type: 2}
+    dna: {fileID: 11400000, guid: 7dd020acbc8a39d40b39d0138022eff2, type: 2}
     roles: 16
     affectedJoints: 36
     priority: 54
@@ -510,7 +510,7 @@ MonoBehaviour:
     blinkClosedValue: 0
   - id: viseme_DD
     displayName: DD - Tongue to ridge (t/d)
-    dna: {fileID: 11400000, guid: 9092ece1a92e1db45aeae0e55ccb9cd6, type: 2}
+    dna: {fileID: 11400000, guid: 541f6f9a186b65b4c818ea09912b8d3a, type: 2}
     roles: 16
     affectedJoints: 36
     priority: 55
@@ -519,7 +519,7 @@ MonoBehaviour:
     blinkClosedValue: 0
   - id: viseme_kk
     displayName: kk - Back tongue (k/g)
-    dna: {fileID: 11400000, guid: 472aa586bae3a9a4fb79d442922660a7, type: 2}
+    dna: {fileID: 11400000, guid: d6431b32c30d814459a95765fb813e93, type: 2}
     roles: 16
     affectedJoints: 36
     priority: 56
@@ -528,7 +528,7 @@ MonoBehaviour:
     blinkClosedValue: 0
   - id: viseme_CH
     displayName: CH - Rounded fricative (ch/sh/j)
-    dna: {fileID: 11400000, guid: 56c3e4d0b5b456446bf0d957525c0e72, type: 2}
+    dna: {fileID: 11400000, guid: 89f9112e0c7f9fb4181a983cb95b609c, type: 2}
     roles: 16
     affectedJoints: 36
     priority: 57
@@ -537,7 +537,7 @@ MonoBehaviour:
     blinkClosedValue: 0
   - id: viseme_SS
     displayName: SS - Teeth close (s/z)
-    dna: {fileID: 11400000, guid: ccc40be28a1b9ab438dd9186c627e4c1, type: 2}
+    dna: {fileID: 11400000, guid: 22b705cc2b391c843ab9f0706f17b4ff, type: 2}
     roles: 16
     affectedJoints: 36
     priority: 58
@@ -546,7 +546,7 @@ MonoBehaviour:
     blinkClosedValue: 0
   - id: viseme_nn
     displayName: nn - Tongue raised (n/l)
-    dna: {fileID: 11400000, guid: f8cdfffce91ac4448ba448570d9b6dea, type: 2}
+    dna: {fileID: 11400000, guid: 833be05ae41170e4eb6fad763c55b99f, type: 2}
     roles: 16
     affectedJoints: 36
     priority: 59
@@ -555,7 +555,7 @@ MonoBehaviour:
     blinkClosedValue: 0
   - id: viseme_RR
     displayName: RR - R sound
-    dna: {fileID: 11400000, guid: 7c32709c56512384fb95abd7fff7f6fb, type: 2}
+    dna: {fileID: 11400000, guid: c9ddf48feb93d5349b7e4bd4de712e98, type: 2}
     roles: 16
     affectedJoints: 36
     priority: 60
@@ -564,7 +564,7 @@ MonoBehaviour:
     blinkClosedValue: 0
   - id: viseme_aa
     displayName: aa - Open vowel
-    dna: {fileID: 11400000, guid: abf44b5c097a3714db84b9b6dba84e70, type: 2}
+    dna: {fileID: 11400000, guid: 338af7baac0bb5f4e824e5052e9d80a9, type: 2}
     roles: 16
     affectedJoints: 36
     priority: 61
@@ -573,7 +573,7 @@ MonoBehaviour:
     blinkClosedValue: 0
   - id: viseme_E
     displayName: E - Wide vowel (eh)
-    dna: {fileID: 11400000, guid: 9c489dbede93af94c879b50094d32682, type: 2}
+    dna: {fileID: 11400000, guid: 77b2255f76962c54eac044c86d3c533d, type: 2}
     roles: 16
     affectedJoints: 36
     priority: 62
@@ -582,7 +582,7 @@ MonoBehaviour:
     blinkClosedValue: 0
   - id: viseme_I
     displayName: I - Spread vowel (ih)
-    dna: {fileID: 11400000, guid: 31fd24d1098b7954c895ba10c0663c7e, type: 2}
+    dna: {fileID: 11400000, guid: 08f7f24bd2c5a5048a39019c4e42d11d, type: 2}
     roles: 16
     affectedJoints: 36
     priority: 63
@@ -591,7 +591,7 @@ MonoBehaviour:
     blinkClosedValue: 0
   - id: viseme_O
     displayName: O - Round vowel (oh)
-    dna: {fileID: 11400000, guid: 8f63680641178ab45bfdfc7e2199646a, type: 2}
+    dna: {fileID: 11400000, guid: 69073fb08da606240ac8054f9532071e, type: 2}
     roles: 16
     affectedJoints: 36
     priority: 64
@@ -600,7 +600,7 @@ MonoBehaviour:
     blinkClosedValue: 0
   - id: viseme_U
     displayName: U - Pursed vowel (oo)
-    dna: {fileID: 11400000, guid: 2e3417000e5447b4bae4623abfe20d56, type: 2}
+    dna: {fileID: 11400000, guid: 844e35a16d160b84b9c4d80384b61854, type: 2}
     roles: 16
     affectedJoints: 36
     priority: 65

@@ -778,6 +778,7 @@ public sealed partial class DynamicExpressionPlayer
         _controlledBones.Clear();
         _controlledBoneSet.Clear();
         _boneJoints.Clear();
+        CacheUmaFacialJoints();
         CacheHumanoidJoints();
         CacheGenericJoints();
         for (int i = 0; i < _runtimeExpressions.Count; i++)
@@ -976,6 +977,31 @@ public sealed partial class DynamicExpressionPlayer
                     textureValue);
             target.renderer.SetPropertyBlock(target.propertyBlock,
                 target.materialIndex);
+        }
+    }
+
+    private void CacheUmaFacialJoints()
+    {
+        // A compound pose's affectedJoints describes the expression, not every
+        // bone it contains. Older head poses can include lip/tongue transforms;
+        // letting the first such expression classify them as Head silently
+        // disables speech when Mecanim owns the head. Recognize UMA's facial
+        // rig before falling back to expression metadata. Explicit generic and
+        // humanoid mappings (cached next) still take precedence.
+        UMASkeleton skeleton = _umaData != null ? _umaData.skeleton : null;
+        if (skeleton == null || !skeleton.HasBone("Mandible") ||
+            !skeleton.HasBone("LipsSuperior")) return;
+        foreach (int hash in skeleton.BoneHashes)
+        {
+            Transform bone = skeleton.GetBoneTransform(hash);
+            if (bone == null) continue;
+            string name = bone.name;
+            if (name == "Mandible") _boneJoints[hash] = ExpressionJoint.Jaw;
+            else if (name == "Head") _boneJoints[hash] = ExpressionJoint.Head;
+            else if (name == "Neck") _boneJoints[hash] = ExpressionJoint.Neck;
+            else if (name.IndexOf("Lips", StringComparison.Ordinal) >= 0 ||
+                     name.StartsWith("Tongue", StringComparison.Ordinal))
+                _boneJoints[hash] = ExpressionJoint.Other;
         }
     }
 
