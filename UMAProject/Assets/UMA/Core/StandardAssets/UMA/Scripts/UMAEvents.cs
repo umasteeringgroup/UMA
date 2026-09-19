@@ -306,6 +306,39 @@ namespace UMA
     [Serializable]
     public class UMATextureEvent : UnityEvent<UMAData, TextureEventParms>
     {
+        private static readonly Func<UnityEventBase, int> getCallCount = CreateCallCountReader();
+
+        /// <summary>
+        /// Whether this event may invoke a callback. An allocated but empty event is not
+        /// a texture writer. Counts runtime registrations too, including subscriptions
+        /// made through the UnityEvent base type. Unknown engine layouts fail closed.
+        /// </summary>
+        public bool HasListeners => GetPersistentEventCount() != 0 ||
+            getCallCount == null || getCallCount(this) != 0;
+
+        private static Func<UnityEventBase, int> CreateCallCountReader()
+        {
+            // Unity exposes persistent listener counts only. Its internal count includes
+            // runtime AddListener/AddAction calls without invoking them. Resolve once;
+            // the hot path is an allocation-free delegate call, not reflection/serialization.
+            // link.xml preserves this method in stripped players. Do not replace this with
+            // shadowed AddListener methods: base-typed callers would bypass that tracking.
+            try
+            {
+                var method = typeof(UnityEventBase).GetMethod("GetCallsCount",
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic,
+                    null, Type.EmptyTypes, null);
+                return method == null ? null :
+                    (Func<UnityEventBase, int>)method.CreateDelegate(typeof(Func<UnityEventBase, int>));
+            }
+            catch (Exception)
+            {
+                // If a future Unity version/backend cannot expose the count, retain the
+                // conservative bypass instead of risking mutation of a shared atlas.
+                return null;
+            }
+        }
+
         public UMATextureEvent()
         {
         }

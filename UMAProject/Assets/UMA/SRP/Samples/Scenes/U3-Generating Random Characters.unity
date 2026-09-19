@@ -133,6 +133,7 @@ GameObject:
   - component: {fileID: 84395074}
   - component: {fileID: 84395078}
   - component: {fileID: 84395079}
+  - component: {fileID: 84395080}
   m_Layer: 0
   m_Name: GeneratorParms
   m_TagString: Untagged
@@ -301,6 +302,26 @@ MonoBehaviour:
     y: 10
     width: 520
     height: 235
+--- !u!114 &84395080
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 84395073}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d548bfb8e694b36a3db0c365ced916a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UMA_Core::UMA.UMAResourceUsageMonitor
+  Generator: {fileID: 0}
+  LegacyCrowdGenerator: {fileID: 0}
+  CrowdGenerator: {fileID: 0}
+  AvatarRoot: {fileID: 0}
+  InitialReuse: 1
+  MemorySampleInterval: 1
+  SampleMemoryDuringGeneration: 0
+  LogCompletedRuns: 1
 --- !u!1001 &102816001
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -344,6 +365,10 @@ PrefabInstance:
     - target: {fileID: 2885161576314354680, guid: 11b6342601a487e45a8ca8ed561a9b7a, type: 3}
       propertyPath: Randomizers.Array.size
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2885161576314354680, guid: 11b6342601a487e45a8ca8ed561a9b7a, type: 3}
+      propertyPath: MaximumUniqueCharacters
+      value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 2885161576314354680, guid: 11b6342601a487e45a8ca8ed561a9b7a, type: 3}
       propertyPath: 'Randomizers.Array.data[0]'

@@ -19,6 +19,9 @@ namespace UMA
 		public GameObject ParentObject;
 		public bool ShowPlaceholder;
 		public bool GenerateGrid;
+		[Min(0)]
+		[Tooltip("Maximum randomly generated character setups. After this many, new characters randomly reuse a setup (race, DNA, wardrobe and colors). 0 randomizes every character independently. Enable Cache and Reuse on the character to share generated resources.")]
+		public int MaximumUniqueCharacters = 0;
 		public int GridXSize = 5;
 		public int GridZSize = 4;
 		public float GridDistance = 1.5f;
@@ -29,8 +32,16 @@ namespace UMA
 
 		private DynamicCharacterAvatar RandomAvatar;
 		private readonly List<GameObject> generatedCharacters = new List<GameObject>();
+		private readonly List<CharacterSetup> characterSetups = new List<CharacterSetup>();
 		private bool initialRandomStateCaptured;
 		private Random.State initialRandomState;
+
+		/// <summary>Number of saved random setups, not live avatars or cached meshes.</summary>
+		public int UniqueCharacterSetupCount => characterSetups.Count;
+
+		/// <summary>Forget the setup pool without changing characters already generated.</summary>
+		[ContextMenu("Clear Character Setup Pool")]
+		public void ClearCharacterSetupPool() => characterSetups.Clear();
 
 		public int GeneratedCharacterCount
 		{
@@ -54,6 +65,8 @@ namespace UMA
 		/// </summary>
 		public void GenerateCharacters(bool repeatInitialRandomSequence)
 		{
+			// Recreate both the pool and its random selections for OFF/ON comparisons.
+			if (repeatInitialRandomSequence) ClearCharacterSetupPool();
 			if (ParentObject == null)
 			{
 				ParentObject = this.gameObject;
@@ -129,6 +142,7 @@ namespace UMA
 				}
 			}
 			generatedCharacters.Clear();
+			ClearCharacterSetupPool();
 			RandomAvatar = null;
 			return destroyed;
 		}
@@ -283,6 +297,21 @@ namespace UMA
 				return;
 			}
 
+			int limit = Mathf.Max(0, MaximumUniqueCharacters);
+			if (characterSetups.Count > limit)
+				characterSetups.RemoveRange(limit, characterSetups.Count - limit);
+			if (limit > 0 && characterSetups.Count == limit)
+			{
+				characterSetups[Random.Range(0, characterSetups.Count)].Apply(Avatar);
+				return;
+			}
+			if (RandomizeNewSetup(Avatar) && limit > 0)
+				characterSetups.Add(new CharacterSetup(Avatar));
+		}
+
+		private bool RandomizeNewSetup(DynamicCharacterAvatar Avatar)
+		{
+
 			// Must clear that out!
 			Avatar.WardrobeRecipes.Clear();
 
@@ -291,7 +320,7 @@ namespace UMA
 			{
 				if (Randomizers.Count == 0)
                 {
-                    return;
+                    return true;
                 }
 
                 if (Randomizers.Count == 1)
@@ -310,7 +339,7 @@ namespace UMA
 				{
 					Debug.LogError("UMARandomizer '" + Randomizer.name +
 						"' does not contain a usable random avatar definition.", Randomizer);
-					return;
+					return false;
 				}
 				Avatar.ChangeRaceData(ra.RaceName);
 				//Avatar.BuildCharacterEnabled = true;
@@ -342,6 +371,60 @@ namespace UMA
 						//Debug.LogWarning("RandomAvatar: No WardrobeSlot found for " + s + " in " + Randomizer.name);
                     }
                 }
+			}
+			return true;
+		}
+
+		// Immutable setup snapshots, not live avatars or generated resources. In particular,
+		// BuildCharacter consumes predefinedDNA, so never retain its mutable list directly.
+		private sealed class CharacterSetup
+		{
+			private readonly string race;
+			private readonly UMAPredefinedDNA dna;
+			private readonly Dictionary<string, UMATextRecipe> wardrobe;
+			private readonly Dictionary<string, List<UMATextRecipe>> additive;
+			private readonly Dictionary<string, UMAWardrobeCollection> collections;
+			private readonly DynamicCharacterAvatar.ColorValueList colors;
+
+			internal CharacterSetup(DynamicCharacterAvatar avatar)
+			{
+				race = avatar.RacePreset;
+				dna = avatar.predefinedDNA?.Clone();
+				wardrobe = new Dictionary<string, UMATextRecipe>(avatar.WardrobeRecipes);
+				additive = CopyAdditive(avatar.AdditiveRecipes);
+				collections = new Dictionary<string, UMAWardrobeCollection>(avatar.WardrobeCollections);
+				colors = CopyColors(avatar.characterColors);
+			}
+
+			internal void Apply(DynamicCharacterAvatar avatar)
+			{
+				avatar.ChangeRaceData(race);
+				avatar.predefinedDNA = dna?.Clone();
+				avatar.WardrobeRecipes.Clear();
+				foreach (var pair in wardrobe) avatar.WardrobeRecipes.Add(pair.Key, pair.Value);
+				avatar.AdditiveRecipes.Clear();
+				foreach (var pair in additive)
+					avatar.AdditiveRecipes.Add(pair.Key, pair.Value == null ? null : new List<UMATextRecipe>(pair.Value));
+				avatar.WardrobeCollections.Clear();
+				foreach (var pair in collections) avatar.WardrobeCollections.Add(pair.Key, pair.Value);
+				avatar.characterColors = CopyColors(colors);
+			}
+
+			private static Dictionary<string, List<UMATextRecipe>> CopyAdditive(Dictionary<string, List<UMATextRecipe>> source)
+			{
+				var result = new Dictionary<string, List<UMATextRecipe>>();
+				foreach (var pair in source)
+					result.Add(pair.Key, pair.Value == null ? null : new List<UMATextRecipe>(pair.Value));
+				return result;
+			}
+
+			private static DynamicCharacterAvatar.ColorValueList CopyColors(DynamicCharacterAvatar.ColorValueList source)
+			{
+				var result = new DynamicCharacterAvatar.ColorValueList();
+				if (source?.Colors != null)
+					foreach (var color in source.Colors)
+						result.Colors.Add(color == null ? null : new DynamicCharacterAvatar.ColorValue(color));
+				return result;
 			}
 		}
 	}

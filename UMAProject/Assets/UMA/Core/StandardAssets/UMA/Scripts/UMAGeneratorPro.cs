@@ -503,6 +503,7 @@ namespace UMA
 			scaleFactor = InitialScaleFactor;
 			textureProcesser = new TextureProcessPRO();
 
+			long atlasPreparationStart = System.Diagnostics.Stopwatch.GetTimestamp();
 			Start();
 
 			umaData.generatedMaterials.rendererAssets = uniqueRenderers;
@@ -510,11 +511,13 @@ namespace UMA
 
 			GenerateAtlasData();
 			OptimizeAtlas();
-
+            _umaGenerator.atlasPreparationTicks += System.Diagnostics.Stopwatch.GetTimestamp() - atlasPreparationStart;
 
             textureProcesser.ProcessTexture(_umaData,_umaGenerator);
 
+            atlasPreparationStart = System.Diagnostics.Stopwatch.GetTimestamp();
             UpdateUV();
+            _umaGenerator.atlasPreparationTicks += System.Diagnostics.Stopwatch.GetTimestamp() - atlasPreparationStart;
 
 			// Procedural textures were done here 
 			if (updateMaterialList)
@@ -548,7 +551,7 @@ namespace UMA
                         if (dstIndex < mats.Count && mats[dstIndex] != null)
                         {
                             var keepTag = mats[dstIndex].GetTag("Keep", false);
-                            if (string.IsNullOrEmpty(keepTag))
+                            if (string.IsNullOrEmpty(keepTag) && !UMAGeneratedResourceCache.IsManagedResource(mats[dstIndex]))
                             {
                                 UMAUtils.DestroySceneObject(mats[dstIndex]);
                             }
@@ -602,6 +605,7 @@ Material secondPass = gm.secondPassMaterial;
 
                     renderer.sharedMaterials = newMats.ToArray();
                 }
+                UMAResourceReuse.FinalizeSurfaces(umaData);
                 /*
 				List<Material> mats = new List<Material>(20);
 				List<Material> newMats = new List<Material>(20);

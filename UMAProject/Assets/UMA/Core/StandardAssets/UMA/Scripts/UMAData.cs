@@ -58,6 +58,13 @@ namespace UMA
 	/// </summary>
 	public class UMAData : MonoBehaviour
 	{
+        // Shared by UMAData and all avatars through UMAAvatarBase. Do not redeclare in derived classes:
+        // Unity serializes fields across the inheritance chain, including hidden base fields.
+        [Tooltip("Cache and reuse identical generated meshes. Shared meshes must be made unique before direct editing.")]
+        public bool reuseGeneratedMeshes;
+        [Tooltip("Cache and reuse identical generated atlases, and materials when their parameters match. Shared resources must be made unique before direct editing.")]
+        public bool reuseGeneratedTextures;
+        [NonSerialized] public string resourceReuseStatus;
 		const string HolderObjectName = "UMA_MI_Holder";
 		//TODO improve/cleanup the relationship between renderers and rendererAssets
 		[SerializeField]
@@ -506,8 +513,9 @@ namespace UMA
 			}
 
 			Mesh mesh = renderer.sharedMesh;
+            bool releasedSharedMesh = UMAResourceLeaseOwner.ReleaseMesh(renderer);
 			renderer.sharedMesh = null;
-			if (mesh != null)
+			if (mesh != null && !releasedSharedMesh)
 			{
 				UMAUtils.DestroySceneObject(mesh);
 			}
@@ -523,6 +531,7 @@ namespace UMA
 			else
 			{
 				UMAUtils.DestroySceneObject(renderer);
+				if (rendererObject.TryGetComponent<UMAResourceLeaseOwner>(out var owner)) UMAUtils.DestroySceneObject(owner);
 			}
 		}
 
@@ -622,8 +631,9 @@ namespace UMA
 				if (candidate != null && candidate.sharedMesh != null)
 				{
 					Mesh orphanedMesh = candidate.sharedMesh;
+                    bool releasedSharedMesh = UMAResourceLeaseOwner.ReleaseMesh(candidate);
 					candidate.sharedMesh = null;
-					UMAUtils.DestroySceneObject(orphanedMesh);
+                    if (!releasedSharedMesh) UMAUtils.DestroySceneObject(orphanedMesh);
 				}
 				UMAUtils.DestroySceneObject(marker.gameObject);
 			}
@@ -1632,6 +1642,9 @@ namespace UMA
 		[System.Serializable]
 		public class GeneratedMaterial
 		{
+            [NonSerialized] internal UMAAtlasBinding[] cachedAtlasBindings;
+            [NonSerialized] internal UMAGeneratedResourceCache.Lease<Material> cachedFirstPass;
+            [NonSerialized] internal UMAGeneratedResourceCache.Lease<Material> cachedSecondPass;
 			public UMAMaterial umaMaterial;
 			public Material material;
 			public Material secondPassMaterial;
@@ -3436,6 +3449,13 @@ namespace UMA
 		{
 			if (staticCharacter)
             {
+                // Renderer owners keep their own references after UMAData is stripped.
+                foreach (var material in generatedMaterials.materials)
+                {
+                    if (material?.skinnedMeshRenderer != null && material.skinnedMeshRenderer.TryGetComponent<UMAResourceLeaseOwner>(out var owner))
+                        owner.AdoptPrivateStaticResources(material);
+                    UMAResourceReuse.ReleaseSurfaceReferences(material);
+                }
                 return;
             }
 
@@ -3500,14 +3520,34 @@ namespace UMA
 		{
 			for (int atlasIndex = 0; atlasIndex < generatedMaterials.materials.Count; atlasIndex++)
 			{
+                var cachedMaterial = generatedMaterials.materials[atlasIndex];
+                bool sharedFirst = cachedMaterial?.cachedFirstPass != null || UMAGeneratedResourceCache.IsManagedResource(cachedMaterial?.material);
+                bool sharedSecond = cachedMaterial?.cachedSecondPass != null || UMAGeneratedResourceCache.IsManagedResource(cachedMaterial?.secondPassMaterial);
+                if (cachedMaterial?.cachedAtlasBindings != null)
+                {
+                    for (int c = 0; c < cachedMaterial.cachedAtlasBindings.Length; c++)
+                    {
+                        var binding = cachedMaterial.cachedAtlasBindings[c];
+                        if (binding == null) continue;
+                        if (cachedMaterial.resultingAtlasList != null && c < cachedMaterial.resultingAtlasList.Length)
+                            cachedMaterial.resultingAtlasList[c] = null;
+                        binding.Dispose();
+                    }
+                    cachedMaterial.cachedAtlasBindings = null;
+                }
+                if (cachedMaterial != null)
+                {
+                    cachedMaterial.cachedFirstPass?.Dispose(); cachedMaterial.cachedFirstPass = null;
+                    cachedMaterial.cachedSecondPass?.Dispose(); cachedMaterial.cachedSecondPass = null;
+                }
 				if (generatedMaterials.materials[atlasIndex] != null && generatedMaterials.materials[atlasIndex].resultingAtlasList != null)
 				{
 					if (generatedMaterials.materials[atlasIndex].secondPassMaterial != null)
 					{
-						UMAUtils.DestroySceneObject(generatedMaterials.materials[atlasIndex].secondPassMaterial);
+						if (!sharedSecond) UMAUtils.DestroySceneObject(generatedMaterials.materials[atlasIndex].secondPassMaterial);
 						generatedMaterials.materials[atlasIndex].secondPassMaterial = null;
 					}
-					if (generatedMaterials.materials[atlasIndex].umaMaterial.materialType != UMAMaterial.MaterialType.UseExistingMaterial)
+					if (!sharedFirst && generatedMaterials.materials[atlasIndex].umaMaterial.materialType != UMAMaterial.MaterialType.UseExistingMaterial)
                     {
 						UMAUtils.DestroySceneObject(generatedMaterials.materials[atlasIndex].material);
                     }
@@ -3517,6 +3557,7 @@ namespace UMA
 						{
 							Texture tempTexture = generatedMaterials.materials[atlasIndex].resultingAtlasList[textureIndex];
                             generatedMaterials.materials[atlasIndex].resultingAtlasList[textureIndex] = null;
+                            if (UMAGeneratedResourceCache.IsManagedResource(tempTexture)) continue;
 
                             if (tempTexture is RenderTexture)
 							{
@@ -3548,7 +3589,7 @@ namespace UMA
 					}
 					if (generatedMaterials.materials[atlasIndex].umaMaterial.materialType != UMAMaterial.MaterialType.UseExistingMaterial)
 					{
-						UMAUtils.DestroySceneObject(generatedMaterials.materials[atlasIndex].material);
+						if (!sharedFirst) UMAUtils.DestroySceneObject(generatedMaterials.materials[atlasIndex].material);
 						generatedMaterials.materials[atlasIndex] = null;
 					}
 					else

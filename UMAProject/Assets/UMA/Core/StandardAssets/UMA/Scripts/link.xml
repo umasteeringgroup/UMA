@@ -1,0 +1,8 @@
+<linker>
+  <assembly fullname="UnityEngine.CoreModule">
+    <type fullname="UnityEngine.Events.UnityEventBase" preserve="nothing">
+      <!-- Used by UMATextureEvent.HasListeners; includes runtime listener registrations. -->
+      <method name="GetCallsCount" />
+    </type>
+  </assembly>
+</linker>

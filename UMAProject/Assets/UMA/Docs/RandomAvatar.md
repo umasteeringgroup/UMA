@@ -47,12 +47,55 @@ Important controls include:
 - Parent object
 - Placeholder display
 - Grid generation and dimensions
+- Maximum Unique Characters (default `0`, unlimited)
 - Grid spacing and random offset
 - Random rotation
 - Generated-name prefix
 - Generated-character event
 
 Use it for straightforward random crowd generation and existing projects built around its API.
+
+### Limit the crowd's unique setups
+
+Set **Maximum Unique Characters** on `UMARandomAvatar` to, for example, `8` for an
+81-character crowd. The first eight characters are randomized normally. Each remaining
+character randomly chooses one of those saved setups: the same race, DNA, wardrobe,
+additive recipes and colors, but its own position, skeleton, Animator and live state.
+`0` (or a negative value supplied by code) preserves independent randomization for every
+character and stores no pool. Random choices can naturally coincide; the option caps
+the number of saved setups, not guarantees that all of them look different.
+
+The pool stores setup data, not avatars, generated meshes or textures. Enable **Cache and
+Reuse (NPCs)** on the character prefab, or use the resource monitor's **Restart crowd:
+reuse ON**, to enable actual resource sharing. The limit itself does not force reuse on
+or bypass safety checks such as per-avatar atlas callbacks. LOD, atlas layout and other
+build inputs must still match.
+
+Individual `GenerateRandomCharacter` calls use the same pool. Destroying the generated
+crowd clears it. `GenerateCharacters(true)` recreates it from the initial random sequence,
+so OFF/ON comparisons use the same setups and selections. After editing the randomizer
+at runtime, use **Clear Character Setup Pool** in the component's context menu (or call
+`ClearCharacterSetupPool()`) to roll new setups for future characters. Existing characters
+are unchanged. Reducing the maximum keeps only the first N pool entries for future
+selection; increasing it lets future spawns add entries up to the new maximum.
+
+### Different hair and skin tints on matching setups
+
+Shader-only color parameters can differ while meshes and atlas textures remain shared.
+UMA's material reuse already permits different material instances to reference the same
+atlas. Keep compositor colors, channel masks and texture inputs identical; vary only the
+surface shader's tint properties. Do not change a shared material directly: use a
+renderer property block, or `UMAResourceLeaseOwner.MakeMaterialsUnique(renderer)` before
+editing material properties. Use the shader's actual property names and update every
+relevant pass/material. Renderer property blocks need to be reapplied after a rebuild
+replaces the renderer. Unity's [MaterialPropertyBlock documentation](https://docs.unity3d.com/6000.3/Documentation/ScriptReference/MaterialPropertyBlock.html)
+notes that property blocks are incompatible with the SRP Batcher, so profile that approach
+against separate tint materials that share the same textures.
+
+An ordinary randomizer shared-color entry may contain **both** atlas tint/masks and shader
+parameters. Rerolling the whole entry is not automatically texture-safe. The current setup
+pool deliberately preserves all colors; independent shader-only color variation is a
+separate customization, not another unique base setup.
 
 ## UMARandomAvatarV2
 

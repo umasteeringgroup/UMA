@@ -1069,6 +1069,15 @@ namespace UMA
         }*/
 
 
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            // OnValidate may run on Unity's loading thread. Only signal here; the
+            // main-thread reuse lookup rebuilds fingerprints lazily after validation.
+            UMAResourceReuse.InvalidateMeshInputs();
+        }
+#endif
+
         public void OnEnable()
         {
             if (UMAMeshData.IsNullOrEmptyMeshData(meshData))
@@ -1415,6 +1424,8 @@ namespace UMA
 #endif
                 }
             }
+
+            UMAResourceReuse.RegisterBakedMesh(this, md, p);
 
             // Optional rename
             if (!string.IsNullOrEmpty(p.newSlotName))

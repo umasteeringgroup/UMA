@@ -197,6 +197,8 @@ See [UMA Asset Indexer and Global Library](UMAAssetIndexer.md).
 
 ## Performance Guidance
 
+For matching NPC appearances, enable **Advanced Options > Cache and Reuse (NPCs)**. Meshes and atlas channels are matched independently; different material parameters can keep separate material instances while still sharing textures. Options default to off. See [Generated Resource Reuse](GeneratedResourceReuse.md) for setup, lifetime rules, safe per-character edits and diagnostics.
+
 - Stagger large crowds instead of asking every avatar to build in one frame.
 - Configure the generator and mesh combiner for the target platform.
 - Avoid oversized atlases and unnecessary overlay channels.

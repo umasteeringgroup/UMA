@@ -64,6 +64,10 @@ namespace UMA.CharacterSystem.Editors
         protected WardrobeRecipeListPropertyDrawer _wardrobePropDrawer = new WardrobeRecipeListPropertyDrawer();
         protected RaceAnimatorListPropertyDrawer _animatorPropDrawer = new RaceAnimatorListPropertyDrawer();
         SerializedProperty animationController;
+        private SerializedProperty reuseGeneratedMeshes;
+        private SerializedProperty reuseGeneratedTextures;
+        private static readonly GUIContent ReuseMeshesLabel = new GUIContent("Share generated meshes", "Opt-in NPC reuse. Identical geometry is built once; each character retains its own bones, pose and animation.");
+        private static readonly GUIContent ReuseTexturesLabel = new GUIContent("Share atlases / matching materials", "Texture sharing is independent of surface material parameters. Different parameters keep separate material instances.");
         protected Editor innerEditor;
 
         // Track any deferred OnEnable callback so it can be removed on cleanup
@@ -164,6 +168,8 @@ namespace UMA.CharacterSystem.Editors
             }
 
             _racePropDrawer.thisDCA = thisDCA;
+            reuseGeneratedMeshes = serializedObject.FindProperty("reuseGeneratedMeshes");
+            reuseGeneratedTextures = serializedObject.FindProperty("reuseGeneratedTextures");
             _wardrobePropDrawer.thisDCA = thisDCA;
             _animatorPropDrawer.thisDCA = thisDCA;
 
@@ -2300,6 +2306,22 @@ namespace UMA.CharacterSystem.Editors
         {
             EditorGUI.BeginChangeCheck();
             BeginVerticalPadded();
+
+            EditorGUILayout.LabelField("Cache and Reuse (NPCs)", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(reuseGeneratedMeshes, ReuseMeshesLabel);
+            EditorGUILayout.PropertyField(reuseGeneratedTextures, ReuseTexturesLabel);
+            if (reuseGeneratedMeshes.boolValue || reuseGeneratedTextures.boolValue)
+            {
+                EditorGUILayout.HelpBox("Applies on the next build. Matching characters share immutable outputs, not skeletons or animation. Use MaterialPropertyBlock for per-character shading; make shared resources unique before direct editing. Disabling reuse does not detach existing outputs until rebuilt.", MessageType.Info);
+                if (thisDCA.umaData != null && !string.IsNullOrEmpty(thisDCA.umaData.resourceReuseStatus))
+                    EditorGUILayout.LabelField(thisDCA.umaData.resourceReuseStatus, EditorStyles.wordWrappedMiniLabel);
+                if (GUILayout.Button("Log Cache Diagnostics"))
+                {
+                    var cache = UMAGeneratedResourceCache.Shared;
+                    Debug.Log($"UMA reuse: {cache.EntryCount} entries, {cache.ReferenceCount} references, {cache.Hits} hits, {cache.Misses} misses, {cache.PendingJoins} pending joins, {cache.Publications} outputs built.\n{cache.DescribeEntries()}", thisDCA);
+                }
+            }
+            EditorGUILayout.Space();
 
             // Always Rebuild Skeleton
             if (showHelp)

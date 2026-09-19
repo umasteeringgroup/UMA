@@ -1994,7 +1994,7 @@ namespace UMA
 			//Debug.Log("Recalculating bounds");
 			mesh.RecalculateBounds();
 			renderer.bones = bones != null ? bones : skeleton.HashesToTransforms(boneNameHashes);
-			UMAUtils.DestroySceneObject(renderer.sharedMesh);
+            if (!UMAResourceLeaseOwner.ReleaseMesh(renderer)) UMAUtils.DestroySceneObject(renderer.sharedMesh);
 			//			GameObject.Destroy(renderer.sharedMesh);
 			renderer.sharedMesh = mesh;
 			renderer.rootBone = rootBone;

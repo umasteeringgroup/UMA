@@ -55,14 +55,14 @@ Material:
     - _Detail_Normal_Scale: 0.235
     - _DiffuseNormalStrength: 0.35
     - _DiffusionWrap: 0.12
-    - _OilLobeWeight: 0.25
+    - _OilLobeWeight: 0.09
     - _OilSmoothness: 0.72
     - _SSSBlend: 0.537
     - _ScatterRadiusMM: 2.5
     - _SkinDebug: 0
     - _SkinIOR: 1.43
     - _Skinmask_Amount: 1
-    - _SpecularAA: 0.4
+    - _SpecularAA: 0.525
     - _TransmissionPower: 4
     - _TransmissionStrength: 0.12
     m_Colors:

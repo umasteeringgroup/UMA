@@ -393,8 +393,8 @@ MonoBehaviour:
               m_PostInfinity: 2
               m_RotationOrder: 4
           ringlets:
-            turns: 3
-            spacingMode: 1
+            turns: 3.41
+            spacingMode: 0
             turnSpacing: 0.026666682
             radiusVariation: 0.25
             turnVariation: 0.3
@@ -408,9 +408,9 @@ MonoBehaviour:
             centerlineSmoothing: 1
             lengthMode: 0
             optimizeCards: 1
-            cardShapeError: 0.002
-            cardFacingError: 18
-            cardMaxSamples: 64
+            cardShapeError: 0.00984
+            cardFacingError: 26.5
+            cardMaxSamples: 9
           noiseFrequency: 18
           noiseParentCoherence: 0
           helperId: 
@@ -42753,7 +42753,7 @@ MonoBehaviour:
     name: LOD 0
     level: 0
     screenRelativeHeight: 0.6
-    cardFraction: 1
+    cardFraction: 0.914
     samplesPerCard: 12
     useProfileSamples: 1
     maximumTubeSides: 8
@@ -42764,7 +42764,7 @@ MonoBehaviour:
     name: LOD 1
     level: 1
     screenRelativeHeight: 0.3
-    cardFraction: 0.385
+    cardFraction: 0.56
     samplesPerCard: 36
     useProfileSamples: 0
     maximumTubeSides: 8
@@ -42775,7 +42775,7 @@ MonoBehaviour:
     name: LOD 2
     level: 2
     screenRelativeHeight: 0.15
-    cardFraction: 0.256
+    cardFraction: 0.254
     samplesPerCard: 20
     useProfileSamples: 0
     maximumTubeSides: 8

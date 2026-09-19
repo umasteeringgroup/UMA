@@ -95,6 +95,9 @@ namespace UMA
 
         public List<Modifier> GetScaledRuntimeModifiers(float value)
         {
+#if UNITY_EDITOR
+            UMAResourceReuse.CheckEditorSourceRevision(this);
+#endif
             List<Modifier> scaledModifiers = new List<Modifier>();
             if (runtimeModifiers == null || runtimeModifiers.Count == 0)
             {
@@ -115,6 +118,10 @@ namespace UMA
 
             return scaledModifiers;
         }
+
+#if UNITY_EDITOR
+        private void OnValidate() => UMAResourceReuse.InvalidateMeshInputs();
+#endif
 
         private static Modifier CloneRuntimeModifier(Modifier source)
         {
@@ -157,6 +164,7 @@ namespace UMA
                 clone.vertexAdjustments.Add(adjustment != null ? adjustment.ShallowCopy() : null);
             }
 
+            UMAResourceReuse.RegisterModifierClone(source, clone);
             return clone;
         }
 

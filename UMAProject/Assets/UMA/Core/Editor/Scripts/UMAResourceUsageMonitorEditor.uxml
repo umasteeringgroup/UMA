@@ -1,0 +1,28 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+  <ui:Style src="UMAResourceUsageMonitorEditor.uss" />
+  <ui:VisualElement name="resourceMonitor" class="uma-resource-monitor">
+    <ui:Label text="Crowd generation and resource usage" class="heading" />
+    <ui:Label name="status" class="description" />
+    <ui:Foldout name="settings" text="Setup and sampling" value="false" />
+    <ui:VisualElement name="restartButtons" class="buttons">
+      <ui:Button name="restartOff" text="Restart crowd: reuse OFF" />
+      <ui:Button name="restartOn" text="Restart crowd: reuse ON" />
+    </ui:VisualElement>
+    <ui:Label text="Restarts destroy only this controller's generated crowd and replay its initial random sequence. Prefab assets are not changed. Compare OFF, ON, then OFF again to check warm-up effects." class="description" />
+    <ui:Label text="Current run" class="heading" />
+    <ui:VisualElement name="currentMetrics" />
+    <ui:Label name="reuseNotes" class="description" />
+    <ui:VisualElement name="reportButtons" class="buttons">
+      <ui:Button name="refreshMemory" text="Sample memory" />
+      <ui:Button name="reset" text="Reset capture" />
+      <ui:Button name="log" text="Log report" />
+      <ui:Button name="copy" text="Copy JSON" />
+      <ui:Button name="save" text="Save JSON" />
+    </ui:VisualElement>
+    <ui:Label text="Last completed OFF / ON runs" class="heading" />
+    <ui:VisualElement name="comparison" />
+    <ui:Foldout text="What these measurements include" value="false">
+      <ui:Label name="notes" class="description" />
+    </ui:Foldout>
+  </ui:VisualElement>
+</ui:UXML>

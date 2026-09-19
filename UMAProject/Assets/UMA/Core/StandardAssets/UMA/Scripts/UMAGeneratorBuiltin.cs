@@ -37,16 +37,16 @@ namespace UMA
 #if UNITY_EDITOR
         public void Start()
         {
-            Debug.Log(
-                $"Start called on Generator '{gameObject.name}' " +
-                $"[{gameObject.GetUmaObjectId()}]. DirtyList size is " +
-                $"{umaDirtyList.Count}",
-                gameObject);
+            // Debug.Log(
+            //     $"Start called on Generator '{gameObject.name}' " +
+            //     $"[{gameObject.GetUmaObjectId()}]. DirtyList size is " +
+            //     $"{umaDirtyList.Count}",
+            //     gameObject);
         }
 #endif
         public void PlayModeExit()
         {
-            Debug.Log($"PlayModeExit called on Generator. DirtyList size is {umaDirtyList.Count}");
+           // Debug.Log($"PlayModeExit called on Generator. DirtyList size is {umaDirtyList.Count}");
             ClearAllPending();
         }
 
@@ -647,6 +647,7 @@ namespace UMA
             BegunEventsTicks = 0;
             preapplyTicks = 0;
             textureprocessingTicks = 0;
+            atlasPreparationTicks = atlasLookupTicks = atlasGenerationTicks = atlasEarlyHits = 0;
             meshUpdatesTicks = 0;
             skeletonUpdatesTicks = 0;
             raceblendshapesTicks = 0;
@@ -2496,9 +2497,10 @@ namespace UMA
                 if (renderer != null &&
                     renderer.sharedMesh == mesh)
                 {
+                    if (UMAResourceLeaseOwner.ReleaseMesh(renderer)) mesh = null;
                     renderer.sharedMesh = null;
                 }
-                if (mesh != null)
+                if (mesh != null && !UMAGeneratedResourceCache.IsManagedResource(mesh))
                 {
                     UMAUtils.DestroySceneObject(mesh);
                 }
@@ -2759,6 +2761,8 @@ namespace UMA
 
         protected virtual void OnDisable()
         {
+            // Completed readbacks must not be stranded when the upload pump stops.
+            RenderTexToCPU.ApplyQueuedCopies(0);
 #if UNITY_EDITOR
             EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
 #endif
@@ -2803,6 +2807,7 @@ namespace UMA
 			if (umaData)
 			{
 				umaData.Show();
+                UMAResourceReuse.FinalizeSurfaces(umaData);
                 if (fireEvents)
                 {
                     umaData.FireUpdatedEvent(false);

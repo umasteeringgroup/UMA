@@ -45,6 +45,7 @@ namespace UMA
 		public List<BlendModeShaders> NormalBlendModeShaders = new List<BlendModeShaders>();
 
 		private int textureMergeRectCount;
+        internal int CacheRectCount => textureMergeRectCount;
 		private TextureMergeRect[] textureMergeRects;
 
 		private void OnDisable()

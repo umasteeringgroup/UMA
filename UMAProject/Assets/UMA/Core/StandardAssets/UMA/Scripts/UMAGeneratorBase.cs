@@ -10,6 +10,10 @@ namespace UMA
     /// </summary>
     public abstract class UMAGeneratorBase : MonoBehaviour
     {
+        [NonSerialized] public long atlasPreparationTicks;
+        [NonSerialized] public long atlasLookupTicks;
+        [NonSerialized] public long atlasGenerationTicks;
+        [NonSerialized] public long atlasEarlyHits;
         public enum FitMethod { DecreaseResolution, BestFitSquare, MultipleHeuristics };
 
         public bool fitAtlas;
