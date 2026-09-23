@@ -8,7 +8,10 @@ namespace UMA.Editors
             string[] movedAssets, string[] movedFromAssetPaths)
         {
             if (importedAssets.Length + deletedAssets.Length + movedAssets.Length + movedFromAssetPaths.Length != 0)
+            {
+                UMAResourceReuse.InvalidateMeshInputs();
                 UMAResourceReuse.InvalidateTextureInputs();
+            }
         }
     }
 }

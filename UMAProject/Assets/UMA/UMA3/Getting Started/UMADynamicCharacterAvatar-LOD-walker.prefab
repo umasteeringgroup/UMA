@@ -12,6 +12,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: UMADynamicCharacterAvatar-LOD-walker
       objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 165a16ac9ccf1a94080956c3b8c82000, type: 3}
+      propertyPath: reuseGeneratedMeshes
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 165a16ac9ccf1a94080956c3b8c82000, type: 3}
+      propertyPath: reuseGeneratedTextures
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -32,12 +40,15 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 615601329001387447}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7b82439bf03242a08160de6bbb8716b9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  locomotionSource: 0
   animationPlaybackSpeed: 1
+  inPlaceMovementSpeed: 1.4
+  minimumRootMotionSpeed: 0.25
   maximumSpawnDistance: 2.5
   turnSpeed: 60
   returnAngleVariation: 20
@@ -58,6 +69,10 @@ MonoBehaviour:
   progressCheckInterval: 1
   minimumProgressDistance: 0.025
   stalledChecksBeforeRecovery: 2
+  movementStartGraceTime: 0.35
+  blockedRetryInterval: 1
+  blockedProgressRatio: 0.1
+  resumedProgressRatio: 0.25
   speedParameter: Speed
   directionParameter: Direction
   walkingAnimationSpeed: 0.25
@@ -66,3 +81,7 @@ MonoBehaviour:
   bumpAnimationTriggers: []
   bumpSounds: []
   bumpVolume: 0.35
+  maximumHealth: 3
+  currentHealth: 3
+  pursuitDuration: 15
+  pursuitStoppingDistance: 1.25

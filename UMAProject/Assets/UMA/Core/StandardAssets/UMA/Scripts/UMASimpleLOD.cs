@@ -386,6 +386,10 @@ namespace UMA.Examples
                 return false;
             }
 
+            // CharacterBegun can run after recipe replacement but before the new
+            // combined mesh/slot offsets have been published. Never edit that old mesh.
+            if (_umaData.dirty) return false;
+
             if (lodDistance <= 0f)
             {
                 return false;
@@ -577,6 +581,7 @@ namespace UMA.Examples
             {
                 return;
             }
+            if (_umaData.dirty) return;
 
             // Determine the new LOD level (account for lodOffset like slot LOD switching)
             int desiredLOD = _currentLOD - lodOffset;
@@ -851,7 +856,11 @@ namespace UMA.Examples
                 CopySecondPassSubmeshIndices(r, submeshIndices);
 
                 // Push new indices back to the Mesh. Only indices change; vertices, bones stay intact.
-                var mesh = smr.sharedMesh;
+                var mesh = UMAResourceLeaseOwner.MakeMeshUnique(smr);
+                // Generated second-pass submeshes may share index ranges. Clear the
+                // old descriptors before resizing individual ranges for this LOD.
+                mesh.subMeshCount = 0;
+                mesh.subMeshCount = subMeshCount;
                 for (int sm = 0; sm < subMeshCount; sm++)
                 {
                     //Debug.Log("Updating renderer " + r + " submesh " + sm + " with " + submeshIndices[sm].Count + " indices for LOD " + desiredLOD);    

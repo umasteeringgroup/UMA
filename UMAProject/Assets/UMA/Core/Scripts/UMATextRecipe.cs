@@ -25,6 +25,29 @@ namespace UMA
         public bool noAutoAdd = false;
         public bool NoAutoAdd { get { return noAutoAdd; } set { noAutoAdd = value; } }  
 
+        [System.NonSerialized] private string parsedRecipeText;
+        [System.NonSerialized] private UMAPackRecipe parsedRecipe;
+
+        protected override UMAPackRecipe PackedLoadForUnpack()
+        {
+            // Unknown derived formats retain their PackedLoad override and legacy behavior.
+            // Cache only version 3's read-only unpack path. This contains names/numbers,
+            // not loaded assets, so it cannot pin Addressables or generated resources.
+            var type = GetType();
+            if (type != typeof(UMATextRecipe) && type != typeof(UMA.CharacterSystem.UMAWardrobeRecipe))
+                return PackedLoad();
+            if (!ReferenceEquals(parsedRecipeText, recipeString) || parsedRecipe == null)
+            {
+                parsedRecipe = string.IsNullOrEmpty(recipeString) ? null : JsonUtility.FromJson<UMAPackRecipe>(recipeString);
+                parsedRecipeText = recipeString;
+            }
+            // Resolving a missing race can depend on the current index/compatibleRaces.
+            // Leave that uncommon path uncached rather than retain a stale resolution.
+            if (parsedRecipe == null || parsedRecipe.version != 3 || string.IsNullOrEmpty(parsedRecipe.race))
+                return PackedLoad();
+            return parsedRecipe.CopyHeaderForUnpack();
+        }
+
 
         /// <summary>
         /// Deserialize recipeString data into packed recipe.

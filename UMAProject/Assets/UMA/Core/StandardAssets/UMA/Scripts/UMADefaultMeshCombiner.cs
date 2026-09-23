@@ -604,7 +604,7 @@ namespace UMA
 						continue;
 
 					var sdTemp = fragment.slotData;
-					var tempAtlasRect = fragment.atlasRegion;
+					var tempAtlasRect = fragment.UncroppedAtlasRegion;
 					int vertexCount = sdTemp.asset.meshData.vertices.Length;
 
 					// Normalize rect by atlas resolution
@@ -692,7 +692,7 @@ namespace UMA
                 for (int materialDefinitionIndex = 0; materialDefinitionIndex < generatedMaterial.materialFragments.Count; materialDefinitionIndex++)
                 {
                     var fragment = generatedMaterial.materialFragments[materialDefinitionIndex];
-                    var tempAtlasRect = fragment.atlasRegion;
+                    var tempAtlasRect = fragment.UncroppedAtlasRegion;
                     int vertexCount = fragment.slotData.asset.meshData.vertices.Length;
                     float atlasXMin = tempAtlasRect.xMin / atlasResolution;
                     float atlasXMax = tempAtlasRect.xMax / atlasResolution;

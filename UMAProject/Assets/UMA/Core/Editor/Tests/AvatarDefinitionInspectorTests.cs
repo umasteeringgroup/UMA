@@ -5,6 +5,7 @@ using System.Reflection;
 using NUnit.Framework;
 using UMA.CharacterSystem;
 using UMA.CharacterSystem.Editors;
+using UMA.Dynamics;
 using UMA.Editors;
 using UnityEditor;
 using UnityEngine;
@@ -27,6 +28,7 @@ namespace UMA.Tests
         private EnterPlayModeOptions originalPlayOptions;
         private DynamicCharacterAvatar avatar;
         private RaceData race;
+        private bool hadViewPreference, originalAdvancedView;
 
         [Test]
         public void MissingRaceDoesNotGrowOnRepeatedDrawsOrSwitches()
@@ -254,6 +256,11 @@ namespace UMA.Tests
         [SetUp]
         public void SetUp()
         {
+            string viewKey = UMAInspectorView.PreferenceKey(typeof(DynamicCharacterAvatar));
+            hadViewPreference = EditorPrefs.HasKey(viewKey);
+            originalAdvancedView = EditorPrefs.GetBool(viewKey);
+            // Existing regression cases exercise legacy and diagnostic controls, too.
+            EditorPrefs.SetBool(viewKey, true);
             originalIndexer = IndexerField.GetValue(null);
             originalSettings = UMASettings.instance;
             originalSelection = Selection.activeObject;
@@ -304,6 +311,200 @@ namespace UMA.Tests
             DynamicCharacterAvatarEditor.currentcolorfilter = originalColorFilter;
             EditorSettings.enterPlayModeOptionsEnabled = originalPlayOptionsEnabled;
             EditorSettings.enterPlayModeOptions = originalPlayOptions;
+            string viewKey = UMAInspectorView.PreferenceKey(typeof(DynamicCharacterAvatar));
+            if (hadViewPreference) EditorPrefs.SetBool(viewKey, originalAdvancedView);
+            else EditorPrefs.DeleteKey(viewKey);
+        }
+
+        [UnityTest]
+        public IEnumerator StandardViewSurvivesDefinitionLoadsAndViewSwitches()
+        {
+            ConfigureNewDna(3);
+            var window = NewWindow(NewInspector());
+            foreach (bool advanced in new[] { false, true, false })
+            {
+                EditorPrefs.SetBool(UMAInspectorView.PreferenceKey(typeof(DynamicCharacterAvatar)), advanced);
+                int before = window.Repaints;
+                yield return WaitFor(() => window.Repaints >= before + 3, window);
+                int aborts = window.AbortedEvents;
+                before = window.Repaints;
+                window.BeforeRepaint = () => avatar.LoadAvatarDefinition(Definition(3));
+                yield return WaitFor(() => window.AbortedEvents > aborts && window.Repaints > before, window);
+                Assert.That(avatar.dnaInstanceCollection.dnaInstances[0].Value, Is.EqualTo(.7f).Within(.0001f));
+                LogAssert.NoUnexpectedReceived();
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator StandardAssetInspectorsDrawWithoutChangingTheirAssets()
+        {
+            var slot = Create<SlotDataAsset>();
+            slot.name = "Standard View Slot";
+            var overlay = Create<OverlayDataAsset>();
+            overlay.name = "Standard View Overlay";
+            foreach (Object asset in new Object[] { slot, overlay, race })
+            {
+                string key = UMAInspectorView.PreferenceKey(asset.GetType());
+                bool hadKey = EditorPrefs.HasKey(key), original = EditorPrefs.GetBool(key);
+                EditorPrefs.DeleteKey(key);
+                var inspector = UnityEditor.Editor.CreateEditor(asset);
+                objects.Add(inspector);
+                var window = NewWindow(null);
+                window.position = new Rect(50, 50, 350, 650);
+                window.DrawExtra = inspector.OnInspectorGUI;
+                string before = EditorJsonUtility.ToJson(asset);
+                try
+                {
+                    yield return WaitFor(() => window.Repaints >= 3, window);
+                    Assert.That(EditorJsonUtility.ToJson(asset), Is.EqualTo(before), asset.GetType().Name);
+                    Assert.That(EditorPrefs.HasKey(key), Is.False, "Merely viewing an asset must not persist a preference.");
+                    LogAssert.NoUnexpectedReceived();
+                }
+                finally
+                {
+                    window.Close();
+                    if (hadKey) EditorPrefs.SetBool(key, original); else EditorPrefs.DeleteKey(key);
+                }
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator UpdatedUMAInspectorsDrawStandardAndAdvancedViews()
+        {
+            var physicsElement = Create<UMAPhysicsElement>();
+            var expressionGroup = Create<UMAExpressionGroup>();
+            var dna = Create<DNA>();
+            var dnaGroup = Create<DNAGroup>();
+            var colors = Create<SharedColorTable>();
+            var collection = Create<UMAWardrobeCollection>();
+            var componentRoot = new GameObject("Updated Inspector Tests");
+            componentRoot.SetActive(false);
+            objects.Add(componentRoot);
+            var rendererManager =
+                componentRoot.AddComponent<DCARendererManager>();
+            var physicsAvatar =
+                componentRoot.AddComponent<UMAPhysicsAvatar>();
+            var physicsSlot =
+                componentRoot.AddComponent<UMAPhysicsSlotDefinition>();
+            var animator =
+                componentRoot.AddComponent<UMAMaterialAnimator>();
+            var generator = componentRoot.AddComponent<UMAGenerator>();
+            var generatorOverride =
+                componentRoot.AddComponent<UMAGeneratorOverride>();
+
+            Object[] inspected =
+            {
+                rendererManager, generator, colors, physicsAvatar,
+                physicsElement, physicsSlot, expressionGroup, dna, dnaGroup,
+                animator, collection, generatorOverride
+            };
+            Type[] preferenceTypes =
+            {
+                typeof(DCARendererManager), typeof(UMAGeneratorBuiltin),
+                typeof(SharedColorTable), typeof(UMAPhysicsAvatar),
+                typeof(UMAPhysicsElement), typeof(UMAPhysicsSlotDefinition),
+                typeof(UMAExpressionGroup), typeof(DNA), typeof(DNAGroup),
+                typeof(UMAMaterialAnimator), typeof(UMAWardrobeCollection),
+                typeof(UMAGeneratorOverride)
+            };
+
+            for (int i = 0; i < inspected.Length; i++)
+            {
+                string key = UMAInspectorView.PreferenceKey(
+                    preferenceTypes[i]);
+                bool hadKey = EditorPrefs.HasKey(key);
+                bool previous = EditorPrefs.GetBool(key);
+                var inspector = UnityEditor.Editor.CreateEditor(inspected[i]);
+                objects.Add(inspector);
+                var window = NewWindow(null);
+                window.position = new Rect(50, 50, 520, 780);
+                window.DrawExtra = inspector.OnInspectorGUI;
+                try
+                {
+                    foreach (bool advanced in new[] { false, true })
+                    {
+                        EditorPrefs.SetBool(key, advanced);
+                        int before = window.Repaints;
+                        yield return WaitFor(
+                            () => window.Repaints >= before + 2, window);
+                        LogAssert.NoUnexpectedReceived();
+                    }
+                }
+                finally
+                {
+                    window.Close();
+                    if (hadKey) EditorPrefs.SetBool(key, previous);
+                    else EditorPrefs.DeleteKey(key);
+                }
+            }
+        }
+
+        [Test]
+        public void StandardPropertiesSupportMultiObjectEditingAndUndo()
+        {
+            var first = Create<SlotDataAsset>();
+            var second = Create<SlotDataAsset>();
+            first.overlayScale = 1f;
+            second.overlayScale = .5f;
+            var view = new UMAInspectorView(typeof(SlotDataAsset));
+            using var serialized = new SerializedObject(new Object[] { first, second });
+            serialized.Update();
+            var property = view.Property(serialized, "overlayScale");
+            Assert.That(property.hasMultipleDifferentValues, Is.True);
+            Assert.That(view.Property(serialized, "overlayScale"), Is.SameAs(property));
+            Undo.IncrementCurrentGroup();
+            int group = Undo.GetCurrentGroup();
+            property.floatValue = .75f;
+            serialized.ApplyModifiedProperties();
+            Assert.That(first.overlayScale, Is.EqualTo(.75f));
+            Assert.That(second.overlayScale, Is.EqualTo(.75f));
+            Undo.RevertAllDownToGroup(group);
+            Assert.That(first.overlayScale, Is.EqualTo(1f));
+            Assert.That(second.overlayScale, Is.EqualTo(.5f));
+        }
+
+        [UnityTest]
+        public IEnumerator StandardSectionsReserveFoldoutAndListBorderGutters()
+        {
+            var slot = Create<SlotDataAsset>();
+            slot.tags = new[] { "Body", "Clothing" };
+            using var serialized = new SerializedObject(slot);
+            var view = new UMAInspectorView(typeof(SlotDataAsset));
+            var tags = view.Property(serialized, "tags");
+            var window = NewWindow(null);
+            Rect panel = default, foldout = default, list = default;
+            bool expanded = false;
+            window.DrawExtra = () =>
+            {
+                using (UMAInspectorView.Section("Border regression"))
+                {
+                    EditorGUILayout.Foldout(expanded, "Foldout", true);
+                    if (Event.current.type == EventType.Repaint) foldout = GUILayoutUtility.GetLastRect();
+                    view.Field(serialized, "tags", "Tags");
+                    if (Event.current.type == EventType.Repaint) list = GUILayoutUtility.GetLastRect();
+                }
+                if (Event.current.type == EventType.Repaint) panel = GUILayoutUtility.GetLastRect();
+            };
+            foreach (int width in new[] { 350, 900 })
+            {
+                window.position = new Rect(50, 50, width, 650);
+                foreach (bool open in new[] { false, true })
+                {
+                    expanded = tags.isExpanded = open;
+                    int before = window.Repaints;
+                    yield return WaitFor(() => window.Repaints >= before + 3, window);
+                    // Unity paints arrows/list chrome outside the allocated field rectangle.
+                    // Include that overhang, not just the field itself, in the border check.
+                    foreach (Rect field in new[] { foldout, list })
+                    {
+                        Assert.That(field.xMin - 18, Is.GreaterThanOrEqualTo(panel.xMin + 8),
+                            $"Left border overlapped at width {width}, expanded={open}: {field} in {panel}");
+                        Assert.That(field.xMax + 6, Is.LessThanOrEqualTo(panel.xMax - 8),
+                            $"Right border overlapped at width {width}, expanded={open}: {field} in {panel}");
+                    }
+                    LogAssert.NoUnexpectedReceived();
+                }
+            }
         }
 
         [UnityTearDown]

@@ -17,6 +17,8 @@ namespace UMA
 	[System.Serializable]
 	public partial class OverlayDataAsset : ScriptableObject, IUMAIndexOptions, INameProvider
     {
+        [Tooltip("Allow cropping of generated atlas regions using this overlay. Disable for custom UV sampling or effects that need the complete source domain.")]
+        public bool allowSourceUVCropping = true;
 
 		[FormerlySerializedAs("overlayName")]
 		public string _oldOverlayName;

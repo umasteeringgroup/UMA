@@ -12,7 +12,7 @@ using System.Text.RegularExpressions;
 namespace UMA.Editors
 {
 	[CustomEditor(typeof(RaceData))]
-	public class RaceInspector : Editor
+	public partial class RaceInspector : Editor
 	{
 		[MenuItem("Assets/Create/UMA/Core/RaceData")]
 		public static void CreateRaceMenuItem()
@@ -650,6 +650,11 @@ namespace UMA.Editors
 				EditorGUILayout.HelpBox("RaceData is unavailable while Unity reloads assets.", MessageType.Info);
 				return;
 			}
+			if (!inspectorView.DrawSelector())
+			{
+				DrawStandardInspector();
+				return;
+			}
 			serializedObject.UpdateIfRequiredOrScript();
 			bool committedThisPass = false;
 			if (lastActionTime == 0)
@@ -658,6 +663,8 @@ namespace UMA.Editors
 			}
 
 			EditorGUI.BeginChangeCheck();
+			EditorGUILayout.PropertyField(serializedObject.FindProperty("_friendlyName"),
+				new GUIContent("Friendly Name", "Player-facing display name. Leave empty to use the race asset name."));
 			if (!string.IsNullOrEmpty(race._oldRaceName))
 			{
 				EditorGUILayout.HelpBox("This race is using the old racename and should be cleared. The old racename is only used for backwards compatibility when loading old recipes that reference it", MessageType.Warning);

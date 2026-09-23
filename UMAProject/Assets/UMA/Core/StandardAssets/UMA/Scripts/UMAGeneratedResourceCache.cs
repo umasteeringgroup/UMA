@@ -106,8 +106,7 @@ namespace UMA
             if (descriptionLength != other.descriptionLength) return false;
             if ((meshInputs?.Length ?? 0) != (other.meshInputs?.Length ?? 0)) return false;
             if ((sourceKeys?.Length ?? 0) != (other.sourceKeys?.Length ?? 0)) return false;
-            for (int i = 0; i < descriptionLength; i++)
-                if (description[i] != other.description[i]) return false;
+            if (!description.AsSpan(0, descriptionLength).SequenceEqual(other.description.AsSpan(0, descriptionLength))) return false;
             if (meshInputs != null)
                 for (int i = 0; i < meshInputs.Length; i++)
                     if (!meshInputs[i].SameContents(other.meshInputs[i])) return false;

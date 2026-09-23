@@ -19,6 +19,16 @@ namespace UMA
         // each slot affected, will have a modifier.
         public class Modifier
         {
+            internal Modifier CopyForNPC()
+            {
+                if (GetType() != typeof(Modifier)) throw new NotSupportedException("Custom mesh modifiers require normal NPC generation.");
+                var copy = (Modifier)MemberwiseClone();
+                copy.adjustments = adjustments?.CopyForNPC();
+#if UNITY_EDITOR
+                copy.TemplateAdjustment = TemplateAdjustment?.CopyForNPC();
+#endif
+                return copy;
+            }
 #if UNITY_EDITOR
             public string ModifierName;
             public bool isTemporary = false;

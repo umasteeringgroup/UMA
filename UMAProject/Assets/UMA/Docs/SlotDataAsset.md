@@ -27,7 +27,7 @@ See [ContentCreation.md](ContentCreation.md).
 
 ## Update an Existing Slot
 
-Enable **Find and update existing slot** in Slot Builder when a rebuilt FBX should refresh an established `SlotDataAsset` without moving it or creating a duplicate in the destination folder.
+Enable **Update existing slot(s)** in Slot Builder when a rebuilt FBX should refresh an established `SlotDataAsset` without moving it or creating a duplicate in the destination folder.
 
 Slot Builder searches the project for the same UMA slot name. If an asset with that name also exists at the intended output path, that path is preferred. Otherwise, the matching asset can be updated wherever it currently resides. Duplicate UMA slot names are ambiguous; Slot Builder chooses deterministically, writes a warning to the Console, and reports the path it used. Rename duplicates before relying on this workflow.
 

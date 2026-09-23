@@ -278,7 +278,7 @@ namespace UMA
 
                     var slotData = generatedMaterial.materialFragments[0].slotData;
                     var channels = slotData.material.channels;
-                    bool materialUseMipMap = slotData.material.generateMipMaps;
+                    bool materialUseMipMap = umaGenerator.qualityTextures.Mips(slotData.material.generateMipMaps);
 
                     // Each generated material owns its atlas array. Sharing this array between
                     // materials loses references to earlier atlases when the next material is built.
@@ -305,6 +305,7 @@ namespace UMA
 
                                     RenderTextureFormat channelTextureFormat = UMAMaterial.GetCompatibleChannelTextureFormat(channels[textureChannelNumber].textureFormat);
                                     bool CopyRTtoTex = SupportsRTToTexture2D && (umaGenerator.convertRenderTexture || channels[textureChannelNumber].ConvertRenderTexture);
+                                    bool convertedMipMaps = umaGenerator.qualityTextures.Mips(umaGenerator.convertMipMaps);
                                     if (CopyRTtoTex)
                                     {
                                         TextureFormat ignoredTextureFormat;
@@ -331,6 +332,8 @@ namespace UMA
                                     {
                                         continue;
                                     }
+                                    umaGenerator.qualityTextures.LimitSize(ref ww, ref hh);
+                                    var compression = umaGenerator.qualityTextures.EffectiveCompression(CopyRTtoTex, channelTextureFormat, ww, hh);
 
                                     Color backgroundColor = default;
                                     UMAMaterial.ChannelType channelType = channels[textureChannelNumber].channelType;
@@ -413,13 +416,13 @@ namespace UMA
                                         // Temporary RT for drawing; will be released after copy
                                         destinationTexture = RenderTexture.GetTemporary(ww, hh, 0, channelTextureFormat, RenderTextureReadWrite.Linear);
                                         pendingTemporaryTexture = destinationTexture;
-                                        if (destinationTexture.useMipMap != umaGenerator.convertMipMaps)
+                                        if (destinationTexture.useMipMap != convertedMipMaps)
                                         {
                                             if (destinationTexture.IsCreated())
                                             {
                                                 destinationTexture.Release();
                                             }
-                                            destinationTexture.useMipMap = umaGenerator.convertMipMaps;
+                                            destinationTexture.useMipMap = convertedMipMaps;
                                             if (destinationTexture.IsCreated())
                                             {
                                                 destinationTexture.Create();
@@ -477,7 +480,7 @@ namespace UMA
                                         if (umaGenerator.useAsyncConversion)
                                         {
                                             // Let it have the RenderTexture now.
-                                            SetMaterialTexture(generatedMaterial, slotData, textureChannelNumber, destinationTexture);
+                                            SetMaterialTexture(generatedMaterial, slotData, textureChannelNumber, destinationTexture, umaGenerator);
                                             resultingTextures[textureChannelNumber] = destinationTexture;
                                             // Now asynchronously copy and reset it
                                             RenderTexToCPU rt2cpu;
@@ -518,7 +521,7 @@ namespace UMA
                                                 ? previousResults[textureChannelNumber] as Texture2D
                                                 : null;
 
-                                            bool requiresMipChain = umaGenerator.convertMipMaps && (ww > 1 || hh > 1);
+                                            bool requiresMipChain = convertedMipMaps && (ww > 1 || hh > 1);
 
                                             if (prevTex2D != null && !UMAGeneratedResourceCache.IsManagedResource(prevTex2D) &&
                                                 prevTex2D.width == ww && prevTex2D.height == hh &&
@@ -529,25 +532,26 @@ namespace UMA
                                             }
                                             else
                                             {
-                                                tempTexture = new Texture2D(destinationTexture.width, destinationTexture.height, texFmt, umaGenerator.convertMipMaps, true);
+                                                tempTexture = new Texture2D(destinationTexture.width, destinationTexture.height, texFmt, convertedMipMaps, true);
                                                 pendingTexture2D = tempTexture;
                                             }
 
                                             bool usedGpuCopy = false;
-                                            if (SupportsRTToTexture2D)
+                                            if (SupportsRTToTexture2D && compression == GeneratorRuntimeCompression.Disabled)
                                             {
                                                 try
                                                 {
                                                     // Atlas drawing and post processing update mip 0. Generate the
                                                     // completed RT mip chain before copying it; otherwise lower mips
                                                     // can contain uninitialized (usually black) data.
-                                                    if (umaGenerator.convertMipMaps && destinationTexture.useMipMap && destinationTexture.mipmapCount > 1)
+                                                    if (convertedMipMaps && destinationTexture.useMipMap && destinationTexture.mipmapCount > 1)
                                                     {
                                                         if (RenderTexture.active == destinationTexture)
                                                         {
                                                             RenderTexture.active = null;
                                                         }
-                                                        destinationTexture.GenerateMips();
+                                                        if (!destinationTexture.autoGenerateMips)
+                                                            destinationTexture.GenerateMips();
                                                     }
 
                                                     Graphics.CopyTexture(destinationTexture, tempTexture);
@@ -562,21 +566,22 @@ namespace UMA
                                                 var asyncAction = AsyncGPUReadback.Request(destinationTexture, 0);
                                                 asyncAction.WaitForCompletion();
                                                 tempTexture.SetPixelData(asyncAction.GetData<byte>(), 0);
-                                                tempTexture.Apply(umaGenerator.convertMipMaps);
+                                                tempTexture.Apply(convertedMipMaps);
                                             }
 
                                             UMARenderTextureTracker.ReleaseTemporary(destinationTexture);
                                             pendingTemporaryTexture = null;
 
                                             resultingTextures[textureChannelNumber] = tempTexture as Texture;
-                                            SetMaterialTexture(generatedMaterial, slotData, textureChannelNumber, tempTexture);
+                                            GeneratorTextureQuality.Compress(tempTexture, compression);
+                                            SetMaterialTexture(generatedMaterial, slotData, textureChannelNumber, tempTexture, umaGenerator);
                                             pendingTexture2D = null;
                                         }
                                         #endregion
                                     }
                                     else
                                     {
-                                        SetMaterialTexture(generatedMaterial, slotData, textureChannelNumber, destinationTexture);
+                                        SetMaterialTexture(generatedMaterial, slotData, textureChannelNumber, destinationTexture, umaGenerator);
                                         resultingTextures[textureChannelNumber] = destinationTexture;
                                         pendingPersistentTexture = null;
                                     }
@@ -896,13 +901,11 @@ namespace UMA
             }
         }
 
-        private static void SetMaterialTexture(UMAData.GeneratedMaterial generatedMaterial, SlotData slotData, int textureType, Texture tempTexture)
+        private static void SetMaterialTexture(UMAData.GeneratedMaterial generatedMaterial, SlotData slotData, int textureType, Texture tempTexture, UMAGeneratorBase generator)
         {
             // Debug.Log($"Set Material Texture {tempTexture.name} on Material {generatedMaterial.material.name} for slot {slotData.asset.name} textureType {textureType}");
             tempTexture.wrapMode = TextureWrapMode.Repeat;
-            tempTexture.anisoLevel = slotData.material.AnisoLevel;
-            tempTexture.mipMapBias = slotData.material.MipMapBias;
-            tempTexture.filterMode = slotData.material.MatFilterMode;
+            generator.qualityTextures.ApplySampling(tempTexture, slotData.material);
 
             if (!slotData.material.channels[textureType].NonShaderTexture)
             {

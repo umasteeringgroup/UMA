@@ -125,6 +125,8 @@ namespace UMA
 			public Material mat;
 			public Texture tex;
 			public Rect rect;
+            public bool sourceCropped;
+            public Rect sourceClipRect;
 			public bool transform;
 			public float rotation;
 			public Vector3 scale;
@@ -366,7 +368,12 @@ namespace UMA
 					tr.tex.mipMapBias = 0f;
 				}
 
-				Graphics.DrawTexture(drawRect, tr.tex, tr.mat);
+                if (tr.sourceCropped)
+                {
+                    if (UMASourceUVCropping.ClipDraw(drawRect, tr.sourceClipRect, out var clipped, out var sourceUV))
+                        Graphics.DrawTexture(clipped, tr.tex, sourceUV, 0, 0, 0, 0, tr.mat);
+                }
+                else Graphics.DrawTexture(drawRect, tr.tex, tr.mat);
 			}
 			finally {
 				GL.PopMatrix();
@@ -436,7 +443,12 @@ namespace UMA
 				}
 
 				fillMaterial.SetColor("_Color", tr.transparentPrefillColor);
-				Graphics.DrawTexture(drawRect, Texture2D.whiteTexture, fillMaterial);
+                if (tr.sourceCropped)
+                {
+                    if (UMASourceUVCropping.ClipDraw(drawRect, tr.sourceClipRect, out var clipped, out _))
+                        Graphics.DrawTexture(clipped, Texture2D.whiteTexture, fillMaterial);
+                }
+                else Graphics.DrawTexture(drawRect, Texture2D.whiteTexture, fillMaterial);
 			}
 			finally
 			{
@@ -662,7 +674,7 @@ namespace UMA
 			if (!source.isNoTextures)
 			{
 				textureMergeRects[textureMergeRectCount].transform = false;
-				textureMergeRects[textureMergeRectCount].rect = source.atlasRegion;
+				textureMergeRects[textureMergeRectCount].rect = source.UncroppedAtlasRegion;
 				textureMergeRects[textureMergeRectCount].rect.y = height - textureMergeRects[textureMergeRectCount].rect.y - textureMergeRects[textureMergeRectCount].rect.height;
 				atlasRect = textureMergeRects[textureMergeRectCount].rect;
 				SetupMaterialAndBaseOverlay(ref textureMergeRects[textureMergeRectCount], source, textureChannel, umaData);
@@ -701,8 +713,15 @@ namespace UMA
             height = Mathf.FloorToInt(atlas.cropResolution.y);
 
             // Here we setup the material and the base overlay TextureMergeRect.
+            int firstRect = textureMergeRectCount;
             SetupMaterialAndBaseOverlay(atlasElement, textureChannel, umaData);
 			resolutionScale = atlas.resolutionScale * atlasElement.slotData.overlayScale;
+            if (atlasElement.sourceUVRect != UMASourceUVCropping.FullRect && atlasElement.baseOverlay?.textureList?[0] != null)
+            {
+                var baseTexture = atlasElement.baseOverlay.textureList[0];
+                resolutionScale = new Vector2(atlasRect.width / baseTexture.width, atlasRect.height / baseTexture.height);
+            }
+            SetSourceClip(firstRect, atlasElement);
 
 			if (atlasElement.AdditionalOverlays == null)
             {
@@ -747,9 +766,19 @@ namespace UMA
 
 				//Debug.Log($"SetupOverlay [{i}] Slot [{atlasElement.slotData.slotName}], Overlay [{atlasElement.overlayList[i].overlayName}] texture [{texname}] Channel [{textureType}]");
 				//DebugCSV($"{atlasElement.slotData.slotName}, {i}, {atlasElement.overlayList[i].overlayName}, {texname}, {textureType}");
+                int overlayStart = textureMergeRectCount;
                 SetupOverlay(atlasElement, i, textureChannel, umaData);
+                if (textureMergeRectCount > overlayStart) SetSourceClip(overlayStart, atlasElement);
 			}
 		}
+
+        private void SetSourceClip(int index, UMAData.MaterialFragment source)
+        {
+            textureMergeRects[index].sourceCropped = source.sourceUVRect != UMASourceUVCropping.FullRect;
+            var clip = source.atlasRegion;
+            clip.y = height - clip.yMax;
+            textureMergeRects[index].sourceClipRect = clip;
+        }
 
 		private void DebugCSV(string msg)
 		{

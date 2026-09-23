@@ -684,11 +684,30 @@ namespace UMA
             var dtCur = cur.deltaTangents; var dtPrev = prev.deltaTangents;
 
             int len = sourceVertexCount;
-            bool bakeNormals  = hasNormals  && vNT.IsCreated && dnCur != null && dnCur.Length == len;
-            bool bakeTangents = hasTangents && vNT.IsCreated && dtCur != null && dtCur.Length == len;
+            bool bakeNormals = hasNormals && vNT.IsCreated && ((dnCur != null && dnCur.Length == len) || (lerp && dnPrev != null && dnPrev.Length == len));
+            bool bakeTangents = hasTangents && vNT.IsCreated && ((dtCur != null && dtCur.Length == len) || (lerp && dtPrev != null && dtPrev.Length == len));
 
-            for (int i = 0; i < len; i++)
+            // A multi-frame bake must include vertices affected only by the previous frame.
+            int[] currentIndices = null, previousIndices = null;
+            bool sparse = UMAMeshPreparation.TryGetShape(shape, sourceVertexCount, out var preparedFrames) &&
+                preparedFrames[frameIndex].Sparse && (!lerp || preparedFrames[prevIndex].Sparse);
+            if (sparse)
             {
+                currentIndices = preparedFrames[frameIndex].AffectedVertices;
+                previousIndices = lerp ? preparedFrames[prevIndex].AffectedVertices : Array.Empty<int>();
+            }
+            int currentCursor = 0, previousCursor = 0;
+            for (int denseIndex = 0; sparse ? currentCursor < currentIndices.Length || previousCursor < previousIndices.Length : denseIndex < len; denseIndex++)
+            {
+                int i = denseIndex;
+                if (sparse)
+                {
+                    int a = currentCursor < currentIndices.Length ? currentIndices[currentCursor] : int.MaxValue;
+                    int b = previousCursor < previousIndices.Length ? previousIndices[previousCursor] : int.MaxValue;
+                    i = Math.Min(a, b);
+                    if (a == i) currentCursor++;
+                    if (b == i) previousCursor++;
+                }
                 Vector3 add;
                 if (lerp && dvPrev != null && dvPrev.Length == len)
                 {
@@ -700,7 +719,7 @@ namespace UMA
                     add = dvCur[i] * curFactor;
                 }
 
-                if (add.sqrMagnitude > 0f)
+                if (add.x != 0f || add.y != 0f || add.z != 0f)
                 {
                     var p = vPos[vertexOffset + i];
                     p += add;
@@ -711,11 +730,11 @@ namespace UMA
                 {
                     Vector3 nAdd;
                     if (lerp && dnPrev != null && dnPrev.Length == len)
-                        nAdd = dnPrev[i] + (dnCur[i] - dnPrev[i]) * curFactor;
+                        nAdd = dnPrev[i] + ((dnCur != null && dnCur.Length == len ? dnCur[i] : Vector3.zero) - dnPrev[i]) * curFactor;
                     else
-                        nAdd = dnCur[i] * curFactor;
+                        nAdd = dnCur != null && dnCur.Length == len ? dnCur[i] * curFactor : Vector3.zero;
 
-                    if (nAdd.sqrMagnitude > 0f)
+                    if (nAdd.x != 0f || nAdd.y != 0f || nAdd.z != 0f)
                     {
                         var nt = vNT[vertexOffset + i];
                         nt.normal += nAdd;
@@ -727,11 +746,11 @@ namespace UMA
                 {
                     Vector3 tAdd;
                     if (lerp && dtPrev != null && dtPrev.Length == len)
-                        tAdd = dtPrev[i] + (dtCur[i] - dtPrev[i]) * curFactor;
+                        tAdd = dtPrev[i] + ((dtCur != null && dtCur.Length == len ? dtCur[i] : Vector3.zero) - dtPrev[i]) * curFactor;
                     else
-                        tAdd = dtCur[i] * curFactor;
+                        tAdd = dtCur != null && dtCur.Length == len ? dtCur[i] * curFactor : Vector3.zero;
 
-                    if (tAdd.sqrMagnitude > 0f)
+                    if (tAdd.x != 0f || tAdd.y != 0f || tAdd.z != 0f)
                     {
                         var nt = vNT[vertexOffset + i];
                         var t = nt.tangent;
@@ -3614,6 +3633,7 @@ namespace UMA
 
         private sealed class SourceValidationStamp
         {
+            private readonly int revision = UMAResourceReuse.MeshInputRevision;
             private readonly int vertexCount;
             private readonly int subMeshCount;
             private readonly Vector3[] vertices;
@@ -3660,7 +3680,7 @@ namespace UMA
 
             public bool Matches(UMAMeshData meshData)
             {
-                if (meshData == null ||
+                if (revision != UMAResourceReuse.MeshInputRevision || meshData == null ||
                     meshData.vertexCount != vertexCount ||
                     meshData.subMeshCount != subMeshCount ||
                     !ReferenceEquals(meshData.vertices, vertices) ||
@@ -3723,6 +3743,9 @@ namespace UMA
             {
                 var source = sources[sourceIndex];
                 var meshData = source.meshData;
+#if UNITY_EDITOR
+                UMAResourceReuse.CheckEditorSourceRevision(source.slotData?.asset);
+#endif
                 string sourceName = source.slotData?.slotName ?? $"source {sourceIndex}";
                 int vertexCount = meshData.vertexCount;
 
@@ -3734,7 +3757,12 @@ namespace UMA
                     throw new InvalidOperationException($"Combine source '{sourceName}' opted into jobified modifiers with an unsupported or mutable adjustment stack.");
                 if (source.applyMeshModifiersInJobs && source.slotData.asset.meshData.vertexCount != vertexCount)
                     throw new InvalidOperationException($"Combine source '{sourceName}' changed topology after its jobified mesh modifiers were authored.");
-                if (CanCacheSourceValidation(source))
+                bool prepared = UMAMeshPreparation.TryGet(source.slotData.asset.meshData, out _);
+                if (ReferenceEquals(meshData, source.slotData.asset.meshData) && prepared)
+                {
+                    Interlocked.Increment(ref sourceValidationCacheHits);
+                }
+                else if (CanCacheSourceValidation(source))
                 {
                     ValidateImmutableSourceMeshCached(
                         meshData,
@@ -4074,8 +4102,12 @@ namespace UMA
             if (blendShapeNames.Count > 0 || bakedCount > 0) meshComponents |= MeshComponents.has_blendShapes;
         }
 
-        private static void ValidateBlendShape(UMABlendShape shape, int vertexCount, string sourceName)
+        internal static void ValidateSourceForPreparation(UMAMeshData mesh) => ValidateSourceMeshData(mesh, "slot preparation");
+        internal static void ValidateShapeForPreparation(UMABlendShape shape, int count) => ValidateBlendShape(shape, count, "slot preparation", false);
+
+        private static void ValidateBlendShape(UMABlendShape shape, int vertexCount, string sourceName, bool usePreparation = true)
         {
+            if (usePreparation && UMAMeshPreparation.TryGetShape(shape, vertexCount, out _)) return;
             if (shape == null || string.IsNullOrEmpty(shape.shapeName))
                 throw new InvalidOperationException($"Combine source '{sourceName}' contains a null or unnamed blendshape.");
             if (shape.frames == null || shape.frames.Length == 0)
@@ -4961,7 +4993,7 @@ namespace UMA
                     // aligned with their own fragment rather than sharing a mutable offset.
                     if (gm.umaMaterial == null || !gm.umaMaterial.IsGeneratedTextures) continue;
                     // Declare atlas mapping variables first so cropping adjustments can modify them.
-                    var rect = fragment.atlasRegion;
+                    var rect = fragment.UncroppedAtlasRegion;
                     float xMin = rect.xMin / atlasResolution; float xMax = rect.xMax / atlasResolution; float yMin = rect.yMin / atlasResolution; float yMax = rect.yMax / atlasResolution;
                     float xRange = xMax - xMin; float yRange = yMax - yMin;
                     OverlayData foundRect = null;

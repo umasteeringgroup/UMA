@@ -42,7 +42,10 @@ namespace UMA
 		public bool isUpdating { get { return updating; } }
 
 		private Dictionary<int, BoneData> boneHashDataLookup;
-		private string ignoreTag;
+        private string ignoreTag;
+#if UNITY_EDITOR || UNITY_ENABLE_CHECKS
+        private bool hierarchyHasCollisions;
+#endif
 
 #if UNITY_EDITOR
 		// Dictionary backup to support code reload
@@ -89,9 +92,15 @@ namespace UMA
 			this.boneHashData = new Dictionary<int, BoneData>();
 			BeginSkeletonUpdate();
 			AddBonesRecursive(rootBone);
-#if UNITY_EDITOR || UNITY_ENABLE_CHECKS 
-            ValidateHierarchy(rootBone, ignoreTag);
-            ValidateBoneDictionary(rootBone);
+            // AddBonesRecursive already detects hash/name collisions while constructing
+            // the dictionary. Do not walk every valid crowd skeleton a second time or
+            // allocate a List for every bone just to repeat the same validation.
+#if UNITY_EDITOR || UNITY_ENABLE_CHECKS
+            if (hierarchyHasCollisions)
+            {
+                ValidateHierarchy(rootBone, ignoreTag);
+                ValidateBoneDictionary(rootBone);
+            }
 #endif
 			EndSkeletonUpdate();
 		}
@@ -99,6 +108,24 @@ namespace UMA
 		protected UMASkeleton()
 		{
 		}
+
+        // The hierarchy was already validated by the source build. Bind known bone
+        // indices without rediscovering names, hashes, tags and rest transforms.
+        internal static UMASkeleton FromNPCBones(int rootHash, BoneData[] definitions, int[] indices, Transform[] transforms)
+        {
+            var result = new UMASkeleton { rootBoneHash = rootHash };
+            var data = new Dictionary<int, BoneData>(definitions.Length);
+            for (int i = 0; i < definitions.Length; i++)
+            {
+                var source = definitions[i];
+                data.Add(source.boneNameHash, new BoneData { boneNameHash = source.boneNameHash,
+                    parentBoneNameHash = source.parentBoneNameHash, boneTransform = transforms[indices[i]],
+                    umaTransform = source.umaTransform.Duplicate(), position = source.position,
+                    rotation = source.rotation, scale = source.scale });
+            }
+            result.boneHashData = data;
+            return result;
+        }
 
 		/// <summary>
 		/// Marks the skeleton as being updated.
@@ -176,7 +203,10 @@ namespace UMA
 			else
 			{
 				if (Debug.isDebugBuild)
-					Debug.LogError("AddBonesRecursive: " + transform.name + " already exists in the dictionary! Consider renaming those bones. For example, `Items` under each hand bone can become `LeftItems` and `RightItems`.");
+                    Debug.LogError("AddBonesRecursive: " + transform.name + " already exists in the dictionary! Consider renaming those bones. For example, `Items` under each hand bone can become `LeftItems` and `RightItems`.");
+#if UNITY_EDITOR || UNITY_ENABLE_CHECKS
+                hierarchyHasCollisions = true;
+#endif
 			}
 
 			for (int i = 0; i < transform.childCount; i++)
@@ -898,6 +928,31 @@ namespace UMA
 			return boneHashData[nameHash].boneTransform.localRotation;
 		}
 
+        public virtual int GetParentBoneHash(int hash)
+        {
+            return boneHashData.TryGetValue(hash, out var bone) ? bone.parentBoneNameHash : 0;
+        }
+
+        internal virtual UMATransform GetBoneDefinition(int hash)
+        {
+            return boneHashData.TryGetValue(hash, out var bone) ? bone.umaTransform?.Duplicate() : null;
+        }
+
+        // Use virtual storage operations: the bone-baking skeleton has its own table.
+        internal virtual void AdoptBone(Transform bone)
+        {
+            int hash = UMAUtils.StringToHash(bone.name);
+            int parentHash = bone.parent != null ? UMAUtils.StringToHash(bone.parent.name) : 0;
+            if (!HasBone(hash)) AddBone(parentHash, hash, bone);
+            var data = GetBone(hash);
+            data.boneTransform = bone;
+            data.parentBoneNameHash = parentHash;
+            data.accessedFrame = frame;
+            data.position = bone.localPosition;
+            data.rotation = bone.localRotation;
+            data.scale = bone.localScale;
+        }
+
         internal void ReplaceBone(UMASavedItem usi)
         {
 			ReplaceBoneRecursively(usi.Object);
@@ -905,12 +960,7 @@ namespace UMA
 
 		internal void ReplaceBoneRecursively(Transform transform)
 		{
-            int nameHash = UMAUtils.StringToHash(transform.name);
-			BoneData bd = GetBone(nameHash);
-			if (bd != null)
-			{
-                bd.boneTransform = transform;
-            }
+            AdoptBone(transform);
             for (int i = 0; i < transform.childCount; i++)
             {
                 ReplaceBoneRecursively(transform.GetChild(i));

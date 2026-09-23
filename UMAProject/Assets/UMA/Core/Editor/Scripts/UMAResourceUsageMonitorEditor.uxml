@@ -12,13 +12,19 @@
     <ui:Label text="Current run" class="heading" />
     <ui:VisualElement name="currentMetrics" />
     <ui:Label name="reuseNotes" class="description" />
+    <ui:Foldout name="spawnTimings" text="Spawn and character setup" value="false" />
+    <ui:Foldout name="buildTimings" text="Build and cache-hit costs" value="false" />
+    <ui:Foldout name="stageTimings" text="Generator stage breakdown" value="false" />
+    <ui:Foldout name="schedulingTimings" text="Frame scheduling and latency" value="false" />
     <ui:VisualElement name="reportButtons" class="buttons">
       <ui:Button name="refreshMemory" text="Sample memory" />
       <ui:Button name="reset" text="Reset capture" />
       <ui:Button name="log" text="Log report" />
       <ui:Button name="copy" text="Copy JSON" />
-      <ui:Button name="save" text="Save JSON" />
+      <ui:Button name="save" text="Save JSON..." />
+      <ui:Button name="reveal" text="Show saved JSON" />
     </ui:VisualElement>
+    <ui:Label name="reportPath" class="description" />
     <ui:Label text="Last completed OFF / ON runs" class="heading" />
     <ui:VisualElement name="comparison" />
     <ui:Foldout text="What these measurements include" value="false">

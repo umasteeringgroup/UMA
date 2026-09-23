@@ -421,6 +421,7 @@ namespace UMA
 
         public string CopyBoneweightsFrom(SlotDataAsset sourceSlot)
         {
+            meshData?.InvalidateBuildData();
             int foundcount =0;
             int notfoundcount =0;
             EnsureBoneWeights();
@@ -495,11 +496,13 @@ namespace UMA
 
         public string CopyBlendshapesFrom(SlotDataAsset sourceSlot,BlendshapeCopyMode bs)
         {
+            meshData?.InvalidateBuildData();
             return CopyBlendShapes(sourceSlot, bs);
         }
 
         public string CopyNormalsFrom(SlotDataAsset sourceSlot, float weldDistance, NormalCopyMode nm)
         {
+            meshData?.InvalidateBuildData();
             int foundVerts =0;
             int unfoundVerts =0;
             int changedVertexes =0;
@@ -746,6 +749,8 @@ namespace UMA
         /// Default overlay scale for slots using the asset.
         /// </summary>
         public float overlayScale =1.0f;
+        [Tooltip("Automatic uses prepared source UV bounds when generator cropping is enabled. Disabled keeps the entire shared atlas region.")]
+        public UMASourceUVCropping.SlotMode sourceUVCropping;
         /// <summary>
         /// The animated bone names.
         /// </summary>
@@ -1046,6 +1051,7 @@ namespace UMA
             meshData.RootBoneName = rootBoneName;
             meshData.RetrieveDataFromUnityMesh(meshRenderer,submeshIndex,udimAdjustment, clearNormals, clearTangents);
 #if UNITY_EDITOR
+            UMAMeshPreparation.RegisterOwner(this);
             try
             {
                 int after = (!UMAMeshData.IsNullOrEmptyMeshData(meshData) && meshData.submeshes != null && meshData.submeshes.Length > 0 && meshData.submeshes[0] != null)
@@ -1080,6 +1086,9 @@ namespace UMA
 
         public void OnEnable()
         {
+#if UNITY_EDITOR
+            UMAMeshPreparation.RegisterOwner(this);
+#endif
             if (UMAMeshData.IsNullOrEmptyMeshData(meshData))
             {
                 return;
@@ -1476,6 +1485,7 @@ namespace UMA
             clone.maxLOD = maxLOD;
             clone.useAtlasOverlay = useAtlasOverlay;
             clone.overlayScale = overlayScale;
+            clone.sourceUVCropping = sourceUVCropping;
             clone.animatedBones = (animatedBones != null) ? (BaseUpdatedObject[])animatedBones.Clone() : new BaseUpdatedObject[0];
             clone.UnbakedAnimatedBones = (UnbakedAnimatedBones != null) ? (string[])UnbakedAnimatedBones.Clone() : new string[0];
             clone.isClippingPlane = isClippingPlane;
@@ -1540,6 +1550,7 @@ namespace UMA
             }
             name = (string)source.name.Clone();
             overlayScale = source.overlayScale;
+            sourceUVCropping = source.sourceUVCropping;
             animatedBones = source.animatedBones;
             UnbakedAnimatedBones = source.UnbakedAnimatedBones;
             meshData = source.meshData;

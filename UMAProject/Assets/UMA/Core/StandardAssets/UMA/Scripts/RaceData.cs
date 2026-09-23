@@ -21,6 +21,7 @@ namespace UMA
 	{
 		[FormerlySerializedAs("raceName")]
         public string _oldRaceName;
+		public string _friendlyName;
 
         public string raceName
         {
@@ -33,6 +34,19 @@ namespace UMA
                 return this.name;
             }
         }
+
+        public string friendlyName
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(_friendlyName))
+                {
+                    return _friendlyName;
+                }
+                return this.name;
+            }
+        }
+
 		public List<string> KeepBoneNames = new List<string>();
 		public List<string> tags = new List<string>();
 		public  List<SlotBurnOptions> PrebakedBlendshapes = new List<SlotBurnOptions>();

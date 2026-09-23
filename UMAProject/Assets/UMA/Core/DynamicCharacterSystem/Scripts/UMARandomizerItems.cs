@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UMA.CharacterSystem;
@@ -104,10 +104,10 @@ namespace UMA
 #endif
 		public RandomWardrobeSlot(UMAWardrobeRecipe slot, string slotName)
 		{
+            _slotName = slotName;
 #if UNITY_EDITOR
 			GuiFoldout = true;
 			Delete = false;
-			_slotName = slotName;
 			if (slot == null)
 			{
 				PossibleColors = new string[0];
@@ -167,9 +167,9 @@ namespace UMA
 		public UMAPredefinedDNA GetRandomDNA()
 		{
 			UMAPredefinedDNA theDNA = new UMAPredefinedDNA();
-			foreach (RandomDNA rd in this.RandomDna)
+			foreach (RandomDNA rd in this.RandomDna ?? new List<RandomDNA>())
 			{
-				theDNA.AddDNA(rd.DnaName, UnityEngine.Random.Range(rd.MinValue, rd.MaxValue));
+				if (rd != null) theDNA.AddDNA(rd.DnaName, UnityEngine.Random.Range(rd.MinValue, rd.MaxValue));
 			}
 			return theDNA;
 		}
@@ -177,9 +177,10 @@ namespace UMA
 		public Dictionary<string, List<RandomWardrobeSlot>> GetRandomSlots()
 		{
 			Dictionary<string, List<RandomWardrobeSlot>> RandomSlots = new Dictionary<string, List<RandomWardrobeSlot>>();
-			foreach (RandomWardrobeSlot rws in RandomWardrobeSlots)
+			foreach (RandomWardrobeSlot rws in RandomWardrobeSlots ?? new List<RandomWardrobeSlot>())
 			{
-				string wslot = rws.SlotName;//rws.WardrobeSlot.wardrobeSlot;
+				if (rws == null || string.IsNullOrEmpty(rws.SlotName)) continue;
+                string wslot = rws.SlotName;//rws.WardrobeSlot.wardrobeSlot;
 				if (!RandomSlots.ContainsKey(wslot))
 				{
 					RandomSlots.Add(wslot, new List<RandomWardrobeSlot>());

@@ -346,6 +346,25 @@ namespace UMA
 		{
 		}
 
+        internal OverlayData CopyForNPC(Dictionary<OverlayColorData, OverlayColorData> colors)
+        {
+            var copy = (OverlayData)MemberwiseClone();
+            copy.tags = tags == null ? null : (string[])tags.Clone();
+            copy.tiling = tiling == null ? null : (bool[])tiling.Clone();
+            copy.blendOverrides = blendOverrides == null ? null : (OverlayBlend[])blendOverrides.Clone();
+            copy.mergedFromSlot = null; // Never retain another character's mutable slot.
+            if (colorData != null)
+            {
+                if (!colors.TryGetValue(colorData, out var color)) colors.Add(colorData, color = colorData.Clone());
+                copy.colorData = color;
+            }
+            copy.colorComponentAdjusters = new List<ColorComponentAdjuster>();
+            foreach (var adjuster in colorComponentAdjusters)
+                copy.colorComponentAdjusters.Add(new ColorComponentAdjuster { channel = adjuster.channel,
+                    colorComponent = adjuster.colorComponent, adjustment = adjuster.adjustment, adjustmentType = adjuster.adjustmentType });
+            return copy;
+        }
+
 		/// <summary>
 		/// Constructor for overlay using the given asset.
 		/// </summary>

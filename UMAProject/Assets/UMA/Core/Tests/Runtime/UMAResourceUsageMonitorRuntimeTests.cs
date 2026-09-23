@@ -48,6 +48,13 @@ namespace UMA.Tests
                 Assert.That(monitor.Current.Completed, Is.True);
                 Assert.That(monitor.LastOn, Is.Not.Null);
                 Assert.That(monitor.LastOn.CompletedAvatars, Is.EqualTo(1));
+                var report = JsonUtility.FromJson<UMAResourceUsageMonitor.Report>(monitor.GetReport());
+                Assert.That(report.LastOn.CompletedAvatars, Is.EqualTo(1));
+                Assert.That(report.Current.GeneratorTimings, Is.Not.Null);
+                double frozenWall = monitor.Current.WallMilliseconds;
+                yield return null;
+                monitor.RefreshCounters();
+                Assert.That(monitor.Current.WallMilliseconds, Is.EqualTo(frozenWall));
                 monitor.enabled = false;
                 data.reuseGeneratedMeshes = data.reuseGeneratedTextures = false;
                 crowd.RandomAvatarGenerated.Invoke(crowdObject, avatarObject);

@@ -26,13 +26,16 @@ namespace UMA
             "Core/Defaults/UMADynamicCharacterAvatar.prefab";
         private const string DefaultTextureMergeRelativePath =
             "Core/StandardAssets/UMA/Atlas/TextureMerge.asset";
-        private const string BuiltInFallbackVersion = "UMA NextGen 3.0f5";
+        private const string BuiltInFallbackVersion = "UMA NextGen 3.1f0";
         private static UMASettings transientSettings;
 #endif
 
         [SerializeField]
         [Tooltip("UMA ignores objects with this tag when rebuilding the skeleton.")]
         public string IgnoreTag = DefaultIgnoreTag;
+
+        [SerializeField]
+        public string KeepTag = "UMAKeepChain";
 
         // Runtime toggle for MeshAPI combiner (Unity 2022.2+)
         [Tooltip("Enable the MeshData API based combiner on Unity 2022.2+. Falls back to legacy combiner when disabled or on older Unity.")]
@@ -51,8 +54,6 @@ namespace UMA
 
         [SerializeField]
         public string UMAVersion = BuiltInFallbackVersion;
-        [SerializeField]
-        public string KeepTag = "UMAKeepChain";
         public string[] tagLookupValues = new string[] { "Head", "Hair", "Torso", "Legs", "Feet", "Hands", "Smooshable", "Unsmooshable", "KeepChain", "Ignore" };
         public string[] groupNames = new string[] { "Head", "Body", "Arms", "Legs", "Feet", "Hands"};
         public bool cleanRegenOnSave = true;
@@ -418,6 +419,13 @@ namespace UMA
         /// settings asset is unavailable or contains a value that would ignore every
         /// untagged transform.
         /// </summary>
+        public static string GetKeepTag()
+        {
+            if (instance == null) instance = GetSettings();
+            string tag = instance != null ? instance.KeepTag : null;
+            return string.IsNullOrWhiteSpace(tag) || tag == "Untagged" ? "UMAKeepChain" : tag.Trim();
+        }
+
         public static string GetIgnoreTag()
         {
             if (instance == null)

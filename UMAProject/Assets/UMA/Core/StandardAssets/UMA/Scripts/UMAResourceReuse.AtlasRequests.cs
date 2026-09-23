@@ -23,9 +23,18 @@ namespace UMA
                 MemoryMarshal.Write(buffer.AsSpan(length, size), ref value);
                 length += size;
             }
-            internal UMAGeneratedResourceKey Key()
+            internal void Text(string value)
             {
-                probe.SetProbe("UMA.Atlas.inputs.v2", buffer, length);
+                if (value == null) { Add(-1); return; }
+                int count = System.Text.Encoding.UTF8.GetByteCount(value);
+                Add(count);
+                if (length + count > buffer.Length) Array.Resize(ref buffer, Math.Max(length + count, buffer.Length * 2));
+                System.Text.Encoding.UTF8.GetBytes(value, 0, value.Length, buffer, length);
+                length += count;
+            }
+            internal UMAGeneratedResourceKey Key(string kind = "UMA.Atlas.inputs.v2")
+            {
+                probe.SetProbe(kind, buffer, length);
                 return probe;
             }
             internal void Asset(UnityEngine.Object asset, bool input = false)
@@ -75,7 +84,7 @@ namespace UMA
         private static readonly int mainTextureId = Shader.PropertyToID("_MainTex");
         private static readonly int extraTextureId = Shader.PropertyToID("_ExtraTex");
 
-        private static bool IsStandardAtlasShader(Shader shader)
+        internal static bool IsStandardAtlasShader(Shader shader)
         {
             return shader != null && GetShaderLayout(shader).StandardAtlas;
         }
@@ -108,10 +117,11 @@ namespace UMA
             d.Reset();
             d.Add(textureInputEpoch);
             d.Add(width); d.Add(height); d.Add(outputWidth); d.Add(outputHeight); d.Add((int)format);
-            d.Add(convert); d.Add(convert ? generator.convertMipMaps : material.generateMipMaps);
+            d.Add(convert); d.Add(generator.qualityTextures.Mips(convert ? generator.convertMipMaps : material.generateMipMaps));
+            d.Add((int)generator.qualityTextures.EffectiveCompression(convert, format, outputWidth, outputHeight));
             d.Add(generator.useAsyncConversion); d.Add(generator.SharperFitTextures);
             d.Add((int)QualitySettings.activeColorSpace); d.Add((int)SystemInfo.graphicsDeviceType);
-            d.Add(material.AnisoLevel); d.Add(material.MipMapBias); d.Add((int)material.MatFilterMode);
+            d.Add(generator.qualityTextures.Anisotropy(material)); d.Add(generator.qualityTextures.MipBias(material)); d.Add((int)generator.qualityTextures.Filter(material));
             var channelType = material.channels[channel].channelType;
             d.Add((int)channelType); d.Add(material.MaskWithCurrentColor); d.Add(material.maskMultiplier);
             d.Add(generated.resolutionScale);
@@ -139,7 +149,7 @@ namespace UMA
                 }
                 if (!IsStandardAtlasShader(shader)) return false;
                 d.Asset(shader);
-                d.Add(fragment.atlasRegion); d.Add(fragment.slotData.overlayScale);
+                d.Add(fragment.atlasRegion); d.Add(fragment.sourceUVRect); d.Add(fragment.slotData.overlayScale);
                 int additional = fragment.AdditionalOverlays?.Length ?? 0;
                 d.Add(additional);
                 if (fragment.overlayData.Length < additional + 1) return false;

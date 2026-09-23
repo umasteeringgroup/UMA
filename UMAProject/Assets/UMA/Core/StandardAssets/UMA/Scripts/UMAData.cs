@@ -64,6 +64,11 @@ namespace UMA
         public bool reuseGeneratedMeshes;
         [Tooltip("Cache and reuse identical generated atlases, and materials when their parameters match. Shared resources must be made unique before direct editing.")]
         public bool reuseGeneratedTextures;
+        [Tooltip("Allow quality profiles to control character detail, LOD and renderer settings. Generator-wide atlas/build settings still apply when disabled; use a separate generator for a separate build policy.")]
+        public bool inheritGeneratorQuality = true;
+        [Tooltip("Let the generator quality profile choose mesh/atlas reuse. Off preserves the existing per-character reuse choices.")]
+        public bool inheritGeneratorReusePolicy;
+        [NonSerialized] internal bool qualityNeedsFullBuild;
         [NonSerialized] public string resourceReuseStatus;
 		const string HolderObjectName = "UMA_MI_Holder";
 		//TODO improve/cleanup the relationship between renderers and rendererAssets
@@ -258,6 +263,16 @@ namespace UMA
         // Replace SaveMountedItems with this non-alloc version
         public void SaveMountedItems()
         {
+            SaveMountedItems(umaGenerator);
+        }
+
+        public void SaveMountedItems(UMAGeneratorBase generator)
+        {
+            // A destructive rebuild must not lose a T-pose bone merely because the
+            // replacement wardrobe no longer supplies its source slot. Save rest
+            // definitions, not the current animated transforms.
+            if (generator != null && generator.CleanupUnusedBones)
+                savedBaseBoneDefinitions = UMABoneLifecycle.CaptureBaseBones(this);
             GameObject holder = null;
             string ignoreTag = UMASettings.GetValidatedIgnoreTag(gameObject);
 
@@ -289,7 +304,7 @@ namespace UMA
             // Use iterative traversal to avoid recursion + per-node allocations
             string kpTag = ValidateTagForTraversal(
                 umaRoot.transform,
-                umaGenerator != null ? umaGenerator.keepTag : null,
+                generator != null ? generator.EffectiveKeepTag : null,
                 "keep");
             SaveBonesIterative(umaRoot.transform, holder.transform, ignoreTag, kpTag);
         }
@@ -394,30 +409,56 @@ namespace UMA
 
 		public void RestoreSavedItems()
 		{
-			for (int i = 0; i < savedItems.Count; i++)
-			{
-				UMASavedItem usi = savedItems[i];
-				Transform parent = skeleton.GetBoneTransform(usi.ParentBoneNameHash);
-				if (usi.replaceExisting)
-				{
-					var newBone = skeleton.GetBoneTransform(usi.Object.name);
-					if (newBone.gameObject.GetUmaObjectId() != usi.Object.gameObject.GetUmaObjectId())
-					{
-                        skeleton.ReplaceBone(usi);
-						DestroyImmediate(newBone.gameObject);
-                    }
-				}
-				if (parent != null)
-				{
-					usi.Object.SetParent(parent, false);
-				}
-				else
-				{
-					usi.Object.SetParent(umaRoot.transform, false);
-				}
-			}
+
+            RestoreBaseBoneDefinitions();
+            if (savedItems.Count == 0 || skeleton == null || umaRoot == null) return;
+            UMABoneLifecycle.Restore(this, savedItems);
 			savedItems.Clear();
 		}
+
+        [NonSerialized] private List<UMATransform> savedBaseBoneDefinitions;
+
+        internal void RestoreBaseBoneDefinitions()
+        {
+            if (savedBaseBoneDefinitions == null || skeleton == null || umaRoot == null) return;
+            bool added = false;
+            foreach (var definition in savedBaseBoneDefinitions)
+            {
+                if (skeleton.HasBone(definition.hash)) continue;
+                skeleton.EnsureBone(definition);
+                skeleton.SetAnimatedBone(definition.hash);
+                added = true;
+            }
+            if (added) skeleton.EnsureBoneHierarchy();
+            savedBaseBoneDefinitions = null;
+        }
+
+        internal void AddRegisteredBoneDependencies(HashSet<int> required)
+        {
+            if (animatedBonesTable != null)
+                foreach (int hash in animatedBonesTable.Keys) required.Add(hash);
+        }
+
+        [NonSerialized] public int LastBoneCleanupRemoved;
+        [NonSerialized] public double LastBoneCleanupMilliseconds;
+        [NonSerialized] internal bool BoneCleanupPending;
+
+        /// <summary>Call only after a complete rig/mesh transaction, never between renderer builds.</summary>
+        public int CleanupUnusedBones(UMAGeneratorBase generator = null)
+        {
+            LastBoneCleanupRemoved = 0;
+            LastBoneCleanupMilliseconds = 0;
+            if (generator == null) generator = umaGenerator;
+            if (generator == null || !generator.CleanupUnusedBones || HasExternalSkeletonRoot ||
+                skeleton == null || umaRoot == null) return 0;
+            long start = generator.MeasureBoneCleanup ? System.Diagnostics.Stopwatch.GetTimestamp() : 0;
+            LastBoneCleanupRemoved = UMABoneLifecycle.Cleanup(this);
+            if (generator.MeasureBoneCleanup)
+                LastBoneCleanupMilliseconds = (System.Diagnostics.Stopwatch.GetTimestamp() - start) *
+                    1000.0 / System.Diagnostics.Stopwatch.Frequency;
+            generator.RecordBoneCleanup(LastBoneCleanupRemoved, LastBoneCleanupMilliseconds);
+            return LastBoneCleanupRemoved;
+        }
         #endregion
 
         #region RENDERER AND RENDERER ASSETS
@@ -1002,6 +1043,7 @@ namespace UMA
 
         [NonSerialized]
         private List<IRuntimeDNAProvider> _runtimeDNAProviders;
+        internal bool HasRuntimeDNAProviders => _runtimeDNAProviders != null && _runtimeDNAProviders.Count != 0;
 
         public void RegisterRuntimeDNAProvider(
             IRuntimeDNAProvider provider)
@@ -1295,6 +1337,7 @@ namespace UMA
 
 		public void RegisterAnimatedBone(int hash)
 		{
+            if (animatedBonesTable == null) ResetAnimatedBones();
 			if (!animatedBonesTable.ContainsKey(hash))
 			{
 				animatedBonesTable.Add(hash, animatedBonesTable.Count);
@@ -1328,10 +1371,13 @@ namespace UMA
 
 		public void RegisterAnimatedBoneHierarchy(int hash)
 		{
-			if (!animatedBonesTable.ContainsKey(hash))
-			{
-				animatedBonesTable.Add(hash, animatedBonesTable.Count);
-			}
+            RegisterAnimatedBone(hash);
+            var visited = new HashSet<int>();
+            while (skeleton != null && hash != 0 && visited.Add(hash))
+            {
+                RegisterAnimatedBone(hash);
+                hash = skeleton.GetParentBoneHash(hash);
+            }
 		}
 
 		public bool cancelled { get; private set; }
@@ -1662,6 +1708,9 @@ namespace UMA
 		[System.Serializable]
 		public class MaterialFragment
 		{
+            public Rect sourceUVRect = new Rect(0, 0, 1, 1);
+            // Maps original source UVs into the cropped atlas allocation without editing source meshes.
+            public Rect UncroppedAtlasRegion => UMASourceUVCropping.ExpandAtlasRegion(atlasRegion, sourceUVRect);
 			public int size;
 			public Color baseColor;
 			public UMAMaterial umaMaterial;
@@ -3821,7 +3870,7 @@ namespace UMA
         {
 			UmaTPose tpose = OverrideTpose;
 
-			if ((umaRecipe.raceData != null) && (umaRecipe.raceData.TPose != null) && (tpose == null))
+			if ((umaRecipe?.raceData != null) && (umaRecipe.raceData.TPose != null) && (tpose == null))
 			{
 				tpose = umaRecipe.raceData.TPose;
 			}

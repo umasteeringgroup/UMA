@@ -1,0 +1,22 @@
+.model-import { flex-grow: 1; flex-shrink: 1; flex-basis: 0; min-height: 0; padding: 14px; overflow: hidden; }
+.model-import > .title, .model-import > .description, .model-import > .steps, .model-import > .footer { flex-shrink: 0; }
+.title { font-size: 22px; -unity-font-style: bold; margin-bottom: 6px; }
+.description { white-space: normal; margin-bottom: 8px; flex-shrink: 1; }
+.steps { flex-direction: row; flex-wrap: wrap; margin-top: 6px; margin-bottom: 10px; }
+.steps Button { flex-grow: 1; min-height: 27px; margin-right: 3px; }
+.steps .current { background-color: rgb(47, 91, 123); color: white; }
+.model-import > .content { flex-grow: 1; flex-shrink: 1; flex-basis: 0; min-height: 0; overflow: hidden; }
+.section { margin-bottom: 12px; padding: 10px; border-width: 1px; border-color: rgba(128, 128, 128, 0.45); border-radius: 4px; }
+.section-title { -unity-font-style: bold; font-size: 14px; white-space: normal; margin-bottom: 6px; }
+.row { flex-direction: row; flex-wrap: wrap; align-items: center; }
+.row > * { margin-right: 6px; }
+.row .wide { flex-grow: 1; min-width: 180px; }
+.footer { flex-direction: row; flex-wrap: wrap; margin-top: 10px; }
+.footer Button { min-height: 28px; min-width: 75px; }
+.spacer { flex-grow: 1; }
+.status { margin-top: 6px; }
+.model-import .unity-base-field { margin-top: 4px; margin-bottom: 4px; }
+.model-import .unity-base-field__label { min-width: 180px; white-space: normal; }
+.compact .unity-base-field__label { min-width: 85px; }
+.model-import HelpBox { margin-top: 5px; margin-bottom: 8px; }
+.thumbnail { height: 150px; width: 150px; -unity-background-scale-mode: scale-to-fit; }

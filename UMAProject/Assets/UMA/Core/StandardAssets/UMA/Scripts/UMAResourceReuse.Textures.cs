@@ -28,7 +28,7 @@ namespace UMA
         private static readonly ConditionalWeakTable<UnityEngine.Object, Dependency> dependencies = new ConditionalWeakTable<UnityEngine.Object, Dependency>();
 
         /// <summary>Call after changing hidden atlas dependencies. Existing leases stay valid.</summary>
-        public static void InvalidateTextureInputs() { unchecked { textureInputEpoch++; } }
+        public static void InvalidateTextureInputs() { unchecked { textureInputEpoch++; } UMANPCBuildHandle.InvalidateAll(); }
 
 #if UNITY_EDITOR
         [UnityEditor.InitializeOnLoadMethod]
@@ -62,6 +62,8 @@ namespace UMA
             internal int[] Ids;
             internal string[] Names;
             internal ShaderPropertyType[] Types;
+            internal Dictionary<string, int> PropertyIds;
+            internal Dictionary<string, ShaderPropertyType> PropertyTypes;
             internal bool StandardAtlas, StandardPostprocess;
         }
         private static readonly ConditionalWeakTable<Shader, ShaderLayout> shaderLayouts = new ConditionalWeakTable<Shader, ShaderLayout>();
@@ -75,13 +77,17 @@ namespace UMA
                 name == "UMA/Atlas/AtlasShaderNew" || name == "UMA/Atlas/AtlasShaderNormal32" || name == "UMA/AtlasDetailShaderNormal";
             layout.StandardPostprocess = name.StartsWith("UMA/Atlas", StringComparison.Ordinal) || name == "UMA/NormalSwizzleShader";
             layout.Ids = new int[count]; layout.Names = new string[count]; layout.Types = new ShaderPropertyType[count];
+            layout.PropertyIds = new Dictionary<string, int>(count, StringComparer.Ordinal);
+            layout.PropertyTypes = new Dictionary<string, ShaderPropertyType>(count, StringComparer.Ordinal);
             for (int i = 0; i < count; i++)
             {
                 layout.Ids[i] = shader.GetPropertyNameId(i);
                 layout.Names[i] = shader.GetPropertyName(i);
+                layout.PropertyIds[layout.Names[i]] = layout.Ids[i];
                 if (layout.Names[i] != "_MainTex" && layout.Names[i] != "_ExtraTex" &&
                     layout.Names[i] != "_Color" && layout.Names[i] != "_AdditiveColor") layout.StandardAtlas = false;
                 layout.Types[i] = shader.GetPropertyType(i);
+                layout.PropertyTypes[layout.Names[i]] = layout.Types[i];
             }
             layout.Epoch = textureInputEpoch;
             return layout;
@@ -96,6 +102,7 @@ namespace UMA
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             var dependency = dependencies.GetOrCreateValue(source);
+            if (!dependency.Registered || dependency.Revision != revision) UMANPCBuildHandle.InvalidateAll();
             dependency.Revision = revision; dependency.Registered = true;
         }
 
@@ -219,10 +226,11 @@ namespace UMA
             using (var d = new Description())
             {
                 d.Value(width); d.Value(height); d.Value(outputWidth); d.Value(outputHeight); d.Value(format);
-                d.Value(convert); d.Value(convert ? generator.convertMipMaps : material.generateMipMaps);
+                d.Value(convert); d.Value(generator.qualityTextures.Mips(convert ? generator.convertMipMaps : material.generateMipMaps));
+                d.Value(generator.qualityTextures.EffectiveCompression(convert, format, outputWidth, outputHeight));
                 d.Value(generator.useAsyncConversion); d.Value(generator.SharperFitTextures); d.Value(background);
                 d.Value(QualitySettings.activeColorSpace); d.Value(SystemInfo.graphicsDeviceType);
-                d.Value(material.AnisoLevel); d.Value(material.MipMapBias); d.Value(material.MatFilterMode);
+                d.Value(generator.qualityTextures.Anisotropy(material)); d.Value(generator.qualityTextures.MipBias(material)); d.Value(generator.qualityTextures.Filter(material));
                 d.Value(material.channels[channel].channelType);
                 d.Value(merge.CacheRectCount);
                 var rects = merge.GetPreviewRects();
@@ -231,6 +239,7 @@ namespace UMA
                     var rect = rects[i];
                     d.Asset(rect.tex, true); d.Material(rect.mat, true, rect.advancedBlending);
                     d.Value(rect.rect); d.Value(rect.transform); d.Value(rect.rotation); d.Value(rect.scale); d.Value(rect.position);
+                    d.Value(rect.sourceCropped); if (rect.sourceCropped) d.Value(rect.sourceClipRect);
                     d.Value(rect.advancedBlending); d.Value(rect.transparentPrefill); d.Value(rect.transparentPrefillColor);
                     if (rect.transparentPrefill) d.Asset(merge.transparentPrefillShader, deterministicShader: true);
                 }

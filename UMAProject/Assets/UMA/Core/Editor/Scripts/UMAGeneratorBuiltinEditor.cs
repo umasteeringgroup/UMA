@@ -10,6 +10,8 @@ namespace UMA.Editors
 	[CustomEditor(typeof(UMAGeneratorBuiltin))]
 	public class UMAGeneratorBuiltinEditor : UMAGeneratorBaseEditor
 	{
+		private readonly UMAInspectorView inspectorView =
+			new UMAInspectorView(typeof(UMAGeneratorBuiltin));
 		SerializedProperty textureMerge;
 		SerializedProperty meshCombiner;
 		SerializedProperty InitialScaleFactor;
@@ -175,9 +177,21 @@ namespace UMA.Editors
 				return;
 			}
 
-			base.OnInspectorGUI();
+			if (!inspectorView.DrawSelector())
+			{
+				DrawStandardInspector();
+				return;
+			}
+
+			using (inspectorView.Section("Atlas and conversion",
+				"Advanced atlas packing and render-texture conversion controls. These are the complete legacy generator settings; Standard View presents the common subset grouped by workflow."))
+				base.OnInspectorGUI();
 
 			serializedObject.Update();
+            DrawBoneLifecycle();
+			using (inspectorView.Section("Advanced generation and diagnostics",
+				"Generation Settings control queue scheduling, Runtime Tuning manages automatic memory scaling, Edit Time Settings constrain editor previews, Advanced Settings expose renderer and combiner internals, and Statistics contains the complete runtime timing and queue report."))
+			{
 
 			showGenerationSettings = EditorGUILayout.Foldout(showGenerationSettings, "Generation Settings");
 			if (showGenerationSettings)
@@ -440,6 +454,121 @@ namespace UMA.Editors
 				if (GUILayout.Button("Rebuild all editor UMA"))
 				{
 					RebuildAllEditorUMA();
+				}
+			}
+			}
+			serializedObject.ApplyModifiedProperties();
+		}
+
+        private void DrawBoneLifecycle()
+        {
+            using (inspectorView.Section("Rig lifetime",
+                "Cleanup Unused Bones runs only after a successful build. It retains the effective T-pose, current slot/renderer dependencies and connecting ancestors. UMAIgnore protects a whole subtree. UMAKeepChain preserves identity but does not exempt unused bones. External skeletons are never pruned. Measure Cleanup records CPU time; counters are session-only."))
+            {
+                inspectorView.Field(serializedObject, "CleanupUnusedBones", "Cleanup Unused Bones");
+                inspectorView.Field(serializedObject, "MeasureBoneCleanup", "Measure Cleanup");
+                var generator = target as UMAGeneratorBuiltin;
+                if (generator != null)
+                {
+                    EditorGUILayout.LabelField("Cleanup runs / bones removed", $"{generator.BoneCleanupRuns} / {generator.BoneCleanupRemoved}");
+                    EditorGUILayout.LabelField("Cleanup last / total (ms)", $"{generator.BoneCleanupLastMilliseconds:F3} / {generator.BoneCleanupTotalMilliseconds:F3}");
+                    if (GUILayout.Button("Reset Cleanup Counters"))
+                    {
+                        generator.BoneCleanupRuns = generator.BoneCleanupRemoved = 0;
+                        generator.BoneCleanupLastMilliseconds = generator.BoneCleanupTotalMilliseconds = 0;
+                    }
+                }
+            }
+        }
+
+		private void DrawStandardInspector()
+		{
+			serializedObject.Update();
+            DrawBoneLifecycle();
+			using (inspectorView.Section("Atlas generation",
+				"Atlas Resolution is the maximum generated atlas size. Fit Atlas scales packed content when it exceeds that size. Source UV Cropping removes unused source-texture area when both the slot and overlay permit it. Overflow Fit Method, percentage steps and Sharper Fit control how quality is reduced when content does not fit."))
+			{
+				inspectorView.Field(serializedObject, "atlasResolution",
+					"Atlas Resolution");
+				inspectorView.Field(serializedObject, "fitAtlas", "Fit Atlas");
+				inspectorView.Field(serializedObject,
+					"enableSourceUVCropping", "Source UV Cropping");
+				SerializedProperty cropping = inspectorView.Property(
+					serializedObject, "enableSourceUVCropping");
+				if (cropping != null && cropping.boolValue)
+					inspectorView.Field(serializedObject,
+						"sourceUVCropPadding", "Crop Padding");
+				inspectorView.Field(serializedObject,
+					"AtlasOverflowFitMethod", "Overflow Fit Method");
+				inspectorView.Field(serializedObject,
+					"FitPercentageDecrease", "Fit Reduction Step");
+				inspectorView.Field(serializedObject,
+					"SharperFitTextures", "Prefer Sharper Fit");
+				inspectorView.Field(serializedObject, "convertMipMaps",
+					"Generate Mip Maps");
+			}
+			using (inspectorView.Section("Scheduling",
+				"Initial Scale Factor lowers texture work during generation. Iteration Count and Inter-Frame Delay control how work is distributed. Max Multi-Step Work is the desired per-frame CPU budget, while Max Queued Conversions limits outstanding texture readbacks. Process All Pending favors throughput over frame consistency."))
+			{
+				DrawIfPresent(InitialScaleFactor, "Initial Scale Factor");
+				DrawIfPresent(IterationCount, "Iterations Per Frame");
+				DrawIfPresent(InterFrameDelay, "Inter-Frame Delay");
+				DrawIfPresent(MaxMultiStepWorkMilliseconds,
+					"Multi-Step Budget (ms)");
+				DrawIfPresent(MaxQueuedConversionsPerFrame,
+					"Maximum Queued Conversions");
+				DrawIfPresent(processAllPending, "Process All Pending");
+				inspectorView.Field(serializedObject, "useAsyncConversion",
+					"Asynchronous Texture Conversion");
+			}
+			using (inspectorView.Section("Memory management",
+				"Automatic Scaling increases the atlas scale factor when reported GPU or system memory is below the configured cutoffs. Garbage Collection Rate schedules cleanup after a number of generated avatars; zero disables periodic cleanup. 32-bit buffers support meshes above the 16-bit index limit at a higher memory cost."))
+			{
+				DrawIfPresent(AutomaticScaling, "Automatic Scaling");
+				if (AutomaticScaling != null && AutomaticScaling.boolValue)
+				{
+					DrawIfPresent(ScaleGPUMemoryCutoffMB,
+						"GPU Memory Cutoff (MB)");
+					DrawIfPresent(ScaleSystemMemoryCutoffMB,
+						"System Memory Cutoff (MB)");
+				}
+				DrawIfPresent(collectGarbage, "Collect Garbage");
+				DrawIfPresent(garbageCollectionRate,
+					"Garbage Collection Rate");
+				DrawIfPresent(Use32BitBuffers, "Use 32-bit Mesh Buffers");
+			}
+			using (inspectorView.Section("Edit-time preview",
+				"Editor Atlas Resolution and Editor Initial Scale Factor keep scene previews responsive and scene files manageable. Rebuild All Editor UMA regenerates avatars that have editor-time generation enabled."))
+			{
+				DrawIfPresent(editorAtlasResolution,
+					"Editor Atlas Resolution");
+				DrawIfPresent(EditorInitialScaleFactor,
+					"Editor Initial Scale Factor");
+				DrawIfPresent(showInHierarchy,
+					"Show Generated Objects In Hierarchy");
+				if (!EditorApplication.isPlaying &&
+					GUILayout.Button("Rebuild All Editor UMA"))
+					RebuildAllEditorUMA();
+			}
+			using (inspectorView.Section("Diagnostics",
+				"These counters summarize current generator load and the slowest incremental step. Advanced View exposes the complete timing table, conversion counters, renderer defaults and low-level generator references."))
+			{
+				UMAGeneratorBuiltin generator = target as UMAGeneratorBuiltin;
+				if (generator != null)
+				{
+					EditorGUILayout.LabelField("Pending Avatars",
+						generator.pendingUmas.ToString());
+					EditorGUILayout.LabelField("Active Stage",
+						string.IsNullOrEmpty(generator.ActiveMultiStepStage)
+							? "Idle" : generator.ActiveMultiStepStage);
+					EditorGUILayout.LabelField("Longest Atomic Step",
+						FormatAtomicStep(
+							generator.maximumMultiStepAtomicStepName,
+							generator.maximumMultiStepAtomicStepMilliseconds));
+					EditorGUILayout.LabelField("Generator Work",
+						FormatStopwatchMilliseconds(generator.ElapsedTicks));
+					if (GUILayout.Button("Reset Statistics"))
+						generator.ResetStatistics();
 				}
 			}
 			serializedObject.ApplyModifiedProperties();

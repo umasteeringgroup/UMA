@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UMA.CharacterSystem;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -7,7 +7,9 @@ namespace UMA
 {
 	public class UMARandomAvatarV2 : MonoBehaviour
 	{
-		// ------------- API ---------------
+		// Kept so scenes and UnityEvents referencing V2 continue to load after migration.
+        [HideInInspector] public UMARandomAvatar UnifiedController;
+        // ------------- API ---------------
 		public void RandomizeButton() { RandomizeAll(randChar: true, randWardrobe: true); }
 		public void RandomizeCharacterButton() { RandomizeAll(randChar: true, randWardrobe: false); }
 		public void RandomizeWardrobeButton() { RandomizeAll(randChar: false, randWardrobe: true); }
@@ -21,7 +23,7 @@ namespace UMA
 		public bool KeepExistingRace = false;
 		public bool KeepExistingWardrobe = false;
 
-		public void ToggleKeepExistingWardrobe(bool val) { KeepExistingWardrobe = val; }
+		public void ToggleKeepExistingWardrobe(bool val) { KeepExistingWardrobe = val; if (UnifiedController != null) UnifiedController.ToggleKeepExistingWardrobe(val); }
 
 		public enum Mode { Generate, UseExisting }
 		public Mode mode;
@@ -31,6 +33,7 @@ namespace UMA
 		[System.Serializable]
 		public class CharacterGeneration
 		{
+			public UMAGenerationDiagnostics Timings { get; } = new UMAGenerationDiagnostics();
 			public GameObject Prefab;
 			public GameObject ParentObject;
 
@@ -57,8 +60,8 @@ namespace UMA
 
 				transform = componentGO.transform;
 
-				generatedDCAs.Clear();
-			}
+				// Retain ownership when GenerateCharacters is called more than once.
+            }
 
 			public void Start(System.Action<DynamicCharacterAvatar, bool, bool> Randomization)
 			{
@@ -117,10 +120,10 @@ namespace UMA
 			{
 				List<Vector3> GridPositions = new List<Vector3>();
 				// Hard limit
-				float card = GridXSize * GridZSize / GridDistance;
+				long card = (long)GridXSize * GridZSize;
 				if (card > 1000)
 				{
-					Debug.LogWarning($"Random Character Generation Aborted : Too much Characters {card}.\nReduce the Grid Size (X or Z) or increase the Grid Distance to recude the number of Characters to generate.");
+					Debug.LogWarning($"Random Character Generation Aborted : Too much Characters {card}.\nReduce the Grid Size (X or Z) to reduce the number of characters to generate.");
 					return GridPositions;
 				}
 
@@ -151,7 +154,10 @@ namespace UMA
 			{
 				if (Prefab == null) return null;
 
-				GameObject newDCA = GameObject.Instantiate(Prefab, Pos, Rot);
+				GameObject newDCA;
+				using (Timings.Measure(UMAGenerationDiagnostics.Stage.Instantiate))
+					newDCA = GameObject.Instantiate(Prefab, Pos, Rot);
+				using var setupTiming = Timings.Measure(UMAGenerationDiagnostics.Stage.SpawnCallbacksAndSetup);
 
 				// Parent Newly Instantiated GO
 				if (ParentObject != null) newDCA.transform.parent = ParentObject.transform;
@@ -159,7 +165,14 @@ namespace UMA
 				// Keep Generated DCA in memory
 				DynamicCharacterAvatar RandomAvatar = newDCA.GetComponent<DynamicCharacterAvatar>();
 				newDCA.name = Name;
-				generatedDCAs.Add(RandomAvatar);
+				if (RandomAvatar == null)
+                {
+                    Debug.LogError("The character prefab must contain a DynamicCharacterAvatar.", Prefab);
+                    if (Application.isPlaying) GameObject.Destroy(newDCA);
+                    else GameObject.DestroyImmediate(newDCA);
+                    return null;
+                }
+                generatedDCAs.Add(RandomAvatar);
 
 				// Event for possible networking here
 				RandomAvatarGenerated?.Invoke(transform.gameObject, newDCA);
@@ -185,6 +198,7 @@ namespace UMA
 		// Use this for initialization
 		void Start()
 		{
+            if (UnifiedController != null) return;
 			switch (mode)
 			{
 				case Mode.Generate:
@@ -193,8 +207,14 @@ namespace UMA
 					GenerateCharacters(false);
 					break;
 				case Mode.UseExisting:
-					foreach (DynamicCharacterAvatar DCA in ExistingDCAs)
-						DCA?.CharacterCreated.AddListener(RandomizeWhenLoaded);
+					foreach (DynamicCharacterAvatar DCA in new HashSet<DynamicCharacterAvatar>(ExistingDCAs ?? new List<DynamicCharacterAvatar>()))
+						if (DCA != null)
+                        {
+                            DCA.CharacterCreated.RemoveListener(RandomizeWhenLoaded);
+                            if (DCA.umaData != null && DCA.umaData.GetRenderers() != null && DCA.umaData.GetRenderers().Length > 0)
+                                Randomize(DCA);
+                            else DCA.CharacterCreated.AddListener(RandomizeWhenLoaded);
+                        }
 					break;
 
 				default:
@@ -209,6 +229,8 @@ namespace UMA
 		/// </summary>
 		public void GenerateCharacters(bool repeatInitialRandomSequence)
 		{
+            if (UnifiedController != null) { UnifiedController.GenerateCharacters(repeatInitialRandomSequence); return; }
+			using var batchTiming = Generation.Timings.Measure(UMAGenerationDiagnostics.Stage.SpawnBatch);
 			if (mode != Mode.Generate)
 				return;
 
@@ -235,6 +257,7 @@ namespace UMA
 
 		public int DestroyGeneratedCharacters()
 		{
+            if (UnifiedController != null) return UnifiedController.DestroyGeneratedCharacters();
 			return mode == Mode.Generate
 				? Generation.DestroyGeneratedCharacters()
 				: 0;
@@ -242,8 +265,8 @@ namespace UMA
 
 		private void OnDestroy()
 		{
-			foreach (DynamicCharacterAvatar DCA in ExistingDCAs)
-				DCA?.CharacterCreated.RemoveListener(RandomizeWhenLoaded);
+			foreach (DynamicCharacterAvatar DCA in new HashSet<DynamicCharacterAvatar>(ExistingDCAs ?? new List<DynamicCharacterAvatar>()))
+				if (DCA != null) DCA.CharacterCreated.RemoveListener(RandomizeWhenLoaded);
 		}
 
 		private void RandomizeWhenLoaded(UMAData uMAData)
@@ -251,11 +274,13 @@ namespace UMA
 			DynamicCharacterAvatar dynamicCharacterAvatar = uMAData.GetComponent<DynamicCharacterAvatar>();
 			if (dynamicCharacterAvatar == null) return;
 
-			Randomize(dynamicCharacterAvatar);
+			dynamicCharacterAvatar.CharacterCreated.RemoveListener(RandomizeWhenLoaded);
+            Randomize(dynamicCharacterAvatar);
 		}
 
 		public void RandomizeAll(bool randChar = true, bool randWardrobe = true)
 		{
+            if (UnifiedController != null) { UnifiedController.RandomizeAll(randChar, randWardrobe); return; }
 			switch (mode)
 			{
 				case Mode.Generate:
@@ -271,7 +296,7 @@ namespace UMA
 		{
 			if (ExistingDCAs == null || ExistingDCAs.Count == 0) return;
 
-			foreach (DynamicCharacterAvatar DCA in ExistingDCAs)
+			foreach (DynamicCharacterAvatar DCA in new HashSet<DynamicCharacterAvatar>(ExistingDCAs ?? new List<DynamicCharacterAvatar>()))
 				Randomize(DCA, randChar, randWardrobe);
 		}
 
@@ -279,16 +304,20 @@ namespace UMA
 
 		public void Randomize(DynamicCharacterAvatar Avatar, bool randChar = true, bool randWardrobe = true)
 		{
+            if (UnifiedController != null) { UnifiedController.RandomizeAndBuild(Avatar, randChar, randWardrobe); return; }
 			if (Avatar == null) return;
 
-			if (!KeepExistingWardrobe) Avatar.WardrobeRecipes.Clear();
-
-			if (randChar) RandomizeCharacter(Avatar);
-
-			if (randWardrobe) RandomizeWardrobe(Avatar);
-
-			Avatar.BuildCharacter(!Avatar.BundleCheck);
-		}
+            bool changed;
+            using (Generation.Timings.Measure(UMAGenerationDiagnostics.Stage.Randomization))
+                changed = UMARandomAvatar.RandomizeAvatarSetup(Avatar, CharacterRandomizers, WardrobeRandomizers,
+                    KeepExistingRace, KeepExistingWardrobe, randChar, randWardrobe);
+            if (changed)
+            {
+                Avatar.SetAnimatorController(true);
+                using (Generation.Timings.Measure(UMAGenerationDiagnostics.Stage.RecipeAndEnqueue))
+                    Avatar.BuildCharacter(!Avatar.BundleCheck);
+            }
+        }
 
 #if UNITY_EDITOR
 		void OnDrawGizmos()
@@ -300,155 +329,6 @@ namespace UMA
 		}
 #endif
 
-
-		private void RandomizeCharacter(DynamicCharacterAvatar Avatar)
-		{
-			UMARandomizer Randomizer = GetRandomizer(CharacterRandomizers);
-			if (Randomizer == null) return;
-
-			RandomAvatar ra = default;
-
-			// Handle Race Selection
-			if (KeepExistingRace)
-			{
-				ra = Randomizer.GetRandomAvatar(Avatar.activeRace.name);
-				if (RaiseNoRandomizerForRace(Avatar, Randomizer, ra)) return;
-			}
-			else
-			{
-				ra = Randomizer.GetRandomAvatar();
-				Avatar.ChangeRaceData(ra.RaceName);
-			}
-
-			var RandomDNA = ra.GetRandomDNA();
-			Avatar.predefinedDNA = RandomDNA;
-
-			// Global Colors
-			if (Randomizer.useGlobalColors)
-				RandomizeSharedColor(Avatar, Randomizer.Global.SharedColors);
-			// Colors defined per Random Avatars
-			RandomizeSharedColor(Avatar, ra.SharedColors);
-
-			// Randomize Slots for Hair, Faces, etc..
-			var RandomSlots = ra.GetRandomSlots();
-			AssigRandomSlots(Avatar, RandomSlots);
-		}
-
-		private void RandomizeWardrobe(DynamicCharacterAvatar Avatar)
-		{
-			UMARandomizer Randomizer = GetRandomizer(WardrobeRandomizers);
-
-			if (Randomizer == null) return;
-
-			RandomAvatar ra = Randomizer.GetRandomAvatar(Avatar.activeRace.name);
-
-			if (RaiseNoRandomizerForRace(Avatar, Randomizer, ra)) return;
-
-			var RandomSlots = ra.GetRandomSlots();
-
-			// Global Colors
-			RandomizeSharedColor(Avatar, Randomizer.Global.SharedColors);
-			// Colors defined per Random Avatars
-			RandomizeSharedColor(Avatar, ra.SharedColors);
-
-			AssigRandomSlots(Avatar, RandomSlots);
-		}
-
-		private RandomWardrobeSlot GetRandomWardrobe(List<RandomWardrobeSlot> wardrobeSlots)
-		{
-			int total = 0;
-
-			foreach (RandomWardrobeSlot rws in wardrobeSlots)
-				total += rws.Chance;
-
-			foreach (RandomWardrobeSlot rws in wardrobeSlots)
-			{
-				if (UnityEngine.Random.Range(0, total) < rws.Chance)
-				{
-					return rws;
-				}
-			}
-			return wardrobeSlots[wardrobeSlots.Count - 1];
-		}
-
-		private OverlayColorData GetRandomColor(RandomColors rc)
-		{
-			int inx = UnityEngine.Random.Range(0, rc.ColorTable.colors.Length);
-			return rc.ColorTable.colors[inx];
-		}
-
-		private void AssigRandomSlots(DynamicCharacterAvatar Avatar, Dictionary<string, List<RandomWardrobeSlot>> RandomSlots)
-		{
-			foreach (string s in RandomSlots.Keys)
-			{
-				List<RandomWardrobeSlot> RandomWardrobe = RandomSlots[s];
-				RandomWardrobeSlot uwr = GetRandomWardrobe(RandomWardrobe);
-				if (uwr.WardrobeSlot != null)
-				{
-					Avatar.SetSlot(uwr.WardrobeSlot);
-					RandomizeSharedColorFromSlot(Avatar, uwr);
-				}
-				else
-				{
-					Avatar.ClearSlot(uwr.SlotName);
-				}
-			}
-		}
-
-		private void RandomizeSharedColor(DynamicCharacterAvatar Avatar, List<RandomColors> randomColors)
-		{
-			if (randomColors != null && randomColors.Count > 0)
-			{
-				foreach (RandomColors rc in randomColors)
-				{
-					if (rc.ColorTable != null)
-					{
-						Avatar.SetColor(rc.ColorName, GetRandomColor(rc), false);
-					}
-				}
-			}
-		}
-
-		private void RandomizeSharedColorFromSlot(DynamicCharacterAvatar Avatar, RandomWardrobeSlot uwr)
-		{
-			if (uwr.Colors != null)
-			{
-				foreach (RandomColors rc in uwr.Colors)
-				{
-					if (rc.ColorTable != null)
-					{
-						OverlayColorData ocd = GetRandomColor(rc);
-						Avatar.SetColor(rc.ColorName, ocd, false);
-					}
-				}
-			}
-		}
-
-		private UMARandomizer GetRandomizer(List<UMARandomizer> Randomizers)
-		{
-			if (Randomizers == null) return null;
-
-			if (Randomizers.Count == 0)
-				return null;
-
-			if (Randomizers.Count == 1)
-				return Randomizers[0];
-			else
-			{
-				return Randomizers[UnityEngine.Random.Range(0, WardrobeRandomizers.Count)];
-			}
-
-		}
-
-		private static bool RaiseNoRandomizerForRace(DynamicCharacterAvatar Avatar, UMARandomizer Randomizer, RandomAvatar ra)
-		{
-			if (ra == null)
-			{
-				Debug.LogWarning($"No randomization settings for {Avatar.activeRace.name} in {Randomizer.name}. Add settings for selected Race or UnCheck \"Keep Race\"");
-				return true;
-			}
-			return false;
-		}
 
 	}
 }

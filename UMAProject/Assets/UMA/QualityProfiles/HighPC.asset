@@ -1,0 +1,211 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53c8edba128fd0c49bf05d3e020a5d63, type: 3}
+  m_Name: HighPC
+  m_EditorClassIdentifier: UMA_Core::UMA.GeneratorQualityProfile
+  fitAtlas:
+    overrideValue: 0
+    value: 1
+  SharperFitTextures:
+    overrideValue: 0
+    value: 1
+  AtlasOverflowFitMethod:
+    overrideValue: 0
+    value: 1
+  FitPercentageDecrease:
+    overrideValue: 0
+    value: 0.5
+  convertMipMaps:
+    overrideValue: 0
+    value: 1
+  atlasResolution:
+    overrideValue: 1
+    value: 2048
+  enableSourceUVCropping:
+    overrideValue: 1
+    value: 1
+  sourceUVCropPadding:
+    overrideValue: 0
+    value: 8
+  convertRenderTexture:
+    overrideValue: 0
+    value: 0
+  useAsyncConversion:
+    overrideValue: 0
+    value: 1
+  asyncMipRegen:
+    overrideValue: 0
+    value: 1
+  MaxQueuedConversionsPerFrame:
+    overrideValue: 0
+    value: 8
+  IterationCount:
+    overrideValue: 0
+    value: 1
+  InterFrameDelay:
+    overrideValue: 0
+    value: 0
+  MaxMultiStepWorkMilliseconds:
+    overrideValue: 1
+    value: 33
+  collectGarbage:
+    overrideValue: 0
+    value: 1
+  garbageCollectionRate:
+    overrideValue: 0
+    value: 0
+  processAllPending:
+    overrideValue: 0
+    value: 0
+  applyInline:
+    overrideValue: 0
+    value: 0
+  InitialScaleFactor:
+    overrideValue: 0
+    value: 1
+  AutomaticScaling:
+    overrideValue: 0
+    value: 0
+  ScaleGPUMemoryCutoffMB:
+    overrideValue: 1
+    value: 8192
+  ScaleSystemMemoryCutoffMB:
+    overrideValue: 1
+    value: 32000
+  editorAtlasResolution:
+    overrideValue: 1
+    value: 2048
+  editorInitialScaleFactor:
+    overrideValue: 1
+    value: 2
+  SaveAndRestoreIgnoredItems:
+    overrideValue: 1
+    value: 0
+  CleanupUnusedBones:
+    overrideValue: 0
+    value: 0
+  MeasureBoneCleanup:
+    overrideValue: 0
+    value: 0
+  showInHierarchy:
+    overrideValue: 0
+    value: 0
+  defaultRendererAsset:
+    overrideValue: 0
+    value: {fileID: 0}
+  defaultOverlayAsset:
+    overrideValue: 0
+    value: {fileID: 0}
+  alwaysRegenerateRenderers:
+    overrideValue: 0
+    value: 0
+  Use32BitBuffers:
+    overrideValue: 1
+    value: 1
+  textureMerge:
+    overrideValue: 0
+    value: {fileID: 0}
+  meshCombiner:
+    overrideValue: 0
+    value: {fileID: 0}
+  textures:
+    maximumDimension:
+      overrideValue: 1
+      value: 2048
+    mipMaps:
+      overrideValue: 1
+      value: 1
+    filterMode:
+      overrideValue: 1
+      value: 2
+    anisotropy:
+      overrideValue: 1
+      value: 4
+    mipBias:
+      overrideValue: 0
+      value: 0
+    compression:
+      overrideValue: 0
+      value: 0
+  characters:
+    reuseMeshes:
+      overrideValue: 1
+      value: 1
+    reuseTextures:
+      overrideValue: 1
+      value: 1
+    atlasScale:
+      overrideValue: 0
+      value: 1
+    lodDistance:
+      overrideValue: 0
+      value: 5
+    lodDistanceMultiplier:
+      overrideValue: 0
+      value: 2
+    lodOffset:
+      overrideValue: 0
+      value: 0
+    maxLOD:
+      overrideValue: 0
+      value: 5
+    slotDropping:
+      overrideValue: 0
+      value: 0
+    resizeLODTextures:
+      overrideValue: 0
+      value: 0
+    swapLODSlots:
+      overrideValue: 0
+      value: 0
+    internalMeshLOD:
+      overrideValue: 0
+      value: 0
+    disableBoneAnimatorsAtLOD:
+      overrideValue: 1
+      value: 2
+    disableExpressionsAtLOD:
+      overrideValue: 1
+      value: 2
+    disableDynamicExpressionsAtLOD:
+      overrideValue: 1
+      value: 2
+    markMeshNotReadable:
+      overrideValue: 1
+      value: 0
+    ignoreBlendShapes:
+      overrideValue: 0
+      value: 0
+    loadBlendShapeNormals:
+      overrideValue: 0
+      value: 1
+    loadBlendShapeTangents:
+      overrideValue: 0
+      value: 1
+    loadAllBlendShapeFrames:
+      overrideValue: 0
+      value: 0
+    castShadows:
+      overrideValue: 0
+      value: 1
+    receiveShadows:
+      overrideValue: 0
+      value: 1
+    skinnedMotionVectors:
+      overrideValue: 0
+      value: 0
+    skinWeights:
+      overrideValue: 0
+      value: 0
+    overrideExplicitRendererSettings:
+      overrideValue: 0
+      value: 0

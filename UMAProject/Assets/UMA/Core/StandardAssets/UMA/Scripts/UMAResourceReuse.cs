@@ -57,6 +57,7 @@ namespace UMA
         private static ConditionalWeakTable<UMAMeshData, BakedMeshOrigin> bakedMeshOrigins = new ConditionalWeakTable<UMAMeshData, BakedMeshOrigin>();
         private static int meshInputsInvalidated;
         private static int meshInputRevision;
+        internal static int MeshInputRevision => meshInputRevision;
 
         /// <summary>
         /// Call after modifying a source mesh's public arrays/fields in place, before
@@ -73,6 +74,8 @@ namespace UMA
         /// <summary>Invalidate cached mesh/modifier input fingerprints after source edits.</summary>
         public static void InvalidateMeshInputs()
         {
+            UMANPCBuildHandle.InvalidateAll();
+            UMAMeshPreparation.InvalidateAll();
             System.Threading.Interlocked.Increment(ref meshInputRevision);
             System.Threading.Interlocked.Exchange(ref meshInputsInvalidated, 1);
         }
@@ -415,6 +418,7 @@ namespace UMA
                 var fingerprint = meshFingerprints.GetOrCreateValue(mesh);
                 if (fingerprint.Key == null || !ReferenceEquals(fingerprint.BasisKey, basisKey))
                 {
+                    if (basis == null) UMAMeshPreparation.TryGet(mesh, out _);
                     using (var source = new Description(compactMeshInputs: true, immutableSource: true))
                     {
                         if (basis == null) source.Mesh(mesh, -1);
@@ -538,7 +542,7 @@ namespace UMA
                 d.Value(material.materialFragments.Count);
                 foreach (var fragment in material.materialFragments)
                 {
-                    d.Value(fragment.atlasRegion); d.Value(fragment.isRectShared);
+                    d.Value(fragment.atlasRegion); d.Value(fragment.sourceUVRect); d.Value(fragment.isRectShared);
                     d.Value(fragment.slotData?.useAtlasOverlay ?? false);
                     // Only shared-rect UV remapping reads overlay names/rects.
                     // Ordinary texture/color overlays do not change mesh identity.
@@ -575,6 +579,7 @@ namespace UMA
 
         internal static void BindMesh(UMAData data, SkinnedMeshRenderer renderer, UMAGeneratedResourceCache.Lease<Mesh> lease)
         {
+            using var diagnosticTiming = MeshTimings.Measure(UMAGenerationDiagnostics.Stage.MeshBinding);
             var binding = (MeshBinding)lease.Metadata;
             var old = renderer.sharedMesh;
             bool released = UMAResourceLeaseOwner.ReleaseMesh(renderer);

@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using NUnit.Framework;
 using UMA.Editors;
 using UnityEditor;
@@ -178,8 +179,101 @@ namespace UMA.Tests
             var root = editor.CreateInspectorGUI();
             Assert.That(root.Q<Button>("restartOff"), Is.Not.Null);
             Assert.That(root.Q<Button>("restartOn"), Is.Not.Null);
-            Assert.That(root.Q("comparison").childCount, Is.EqualTo(11));
+            Assert.That(root.Q<Button>("save"), Is.Not.Null);
+            Assert.That(root.Q<Button>("reveal"), Is.Not.Null);
+            Assert.That(root.Q<Foldout>("spawnTimings").childCount, Is.GreaterThan(0));
+            Assert.That(root.Q<Foldout>("schedulingTimings").childCount, Is.GreaterThan(0));
+            Assert.That(root.Q("comparison").childCount, Is.EqualTo(12));
             Assert.That(root.Q<Label>("notes").text, Does.Contain("not GPU time"));
+        }
+
+        [Test]
+        public void DiagnosticDeltasUseStopwatchUnitsAndReuseDestinationWithoutChangingBaseline()
+        {
+            var timings = new UMAGenerationDiagnostics();
+            var stage = UMAGenerationDiagnostics.Stage.Instantiate;
+            timings.Record(stage, Stopwatch.Frequency);
+            var baseline = timings.Baseline();
+            timings.Record(stage, Stopwatch.Frequency * 2);
+            timings.Record(stage, Stopwatch.Frequency * 4);
+            var result = timings.Since(baseline);
+            Assert.That(result[(int)stage].Samples, Is.EqualTo(2));
+            Assert.That(result[(int)stage].TotalMilliseconds, Is.EqualTo(6000).Within(.01));
+            Assert.That(result[(int)stage].AverageMilliseconds, Is.EqualTo(3000).Within(.01));
+            Assert.That(timings.Since(baseline, result), Is.SameAs(result));
+            Assert.That(baseline[(int)stage].Ticks, Is.EqualTo(Stopwatch.Frequency));
+        }
+
+        [Test]
+        public void SchedulerGapsAreOnlyRecordedWhilePendingAndUsePreviousYieldReason()
+        {
+            var timings = new UMAGenerationDiagnostics();
+            timings.BeginWork(10);
+            timings.EndWork(20, true, UMAGenerationDiagnostics.YieldReason.Async);
+            timings.BeginWork(20 + Stopwatch.Frequency);
+            timings.EndWork(30 + Stopwatch.Frequency, false, UMAGenerationDiagnostics.YieldReason.IterationLimit);
+            timings.BeginWork(30 + Stopwatch.Frequency * 4);
+            var result = timings.Since(null);
+            Assert.That(result[(int)UMAGenerationDiagnostics.Stage.BetweenUpdatesAsync].TotalMilliseconds, Is.EqualTo(1000).Within(.01));
+            Assert.That(result[(int)UMAGenerationDiagnostics.Stage.BetweenUpdatesIterationLimit].Samples, Is.Zero);
+        }
+
+        [Test]
+        public void BuildSlicesAccumulateAcrossAsyncYieldsWithoutDoubleCountingNestedCalls()
+        {
+            var timings = new UMAGenerationDiagnostics();
+            var key = new UMAGeneratedResourceKey("diagnostic build test", new byte[] { 93, 41, 17 });
+            var cache = UMAGeneratedResourceCache.Shared;
+            timings.BeginBuildSlice();
+            timings.BeginBuildSlice();
+            using (var miss = cache.Acquire<Mesh>(key))
+            {
+                miss.Publish(new Mesh());
+                timings.EndBuildSlice(true);
+                timings.EndBuildSlice(true);
+                Assert.That(timings.Since(null)[(int)UMAGenerationDiagnostics.Stage.BuildMeshMissOrMixed].Samples, Is.Zero);
+                timings.BeginBuildSlice();
+                using (var hit = cache.Acquire<Mesh>(key)) timings.EndBuildSlice(false);
+                var result = timings.Since(null);
+                Assert.That(result[(int)UMAGenerationDiagnostics.Stage.BuildMeshMissOrMixed].Samples, Is.EqualTo(1));
+                Assert.That(result[(int)UMAGenerationDiagnostics.Stage.BuildAllMeshHits].Samples, Is.Zero);
+                timings.BeginBuildSlice();
+                using (var hit = cache.Acquire<Mesh>(key)) timings.EndBuildSlice(false);
+                Assert.That(timings.Since(null)[(int)UMAGenerationDiagnostics.Stage.BuildAllMeshHits].Samples, Is.EqualTo(1));
+            }
+        }
+
+        [Test]
+        public void JsonExportIncludesSettingsBreakdownsAndCanBeSavedToChosenPath()
+        {
+            var go = Keep(new GameObject("Timing export"));
+            go.SetActive(false);
+            var generator = go.AddComponent<UMAGenerator>();
+            var monitor = go.AddComponent<UMAResourceUsageMonitor>();
+            monitor.Generator = generator;
+            generator.IterationCount = 8;
+            monitor.ResetCapture();
+            generator.GenerationTimings.Record(UMAGenerationDiagnostics.Stage.BuildAllMeshHits, Stopwatch.Frequency);
+            generator.validationTicks += Stopwatch.Frequency / 4;
+            monitor.RefreshCounters();
+            var report = JsonUtility.FromJson<UMAResourceUsageMonitor.Report>(monitor.GetReport());
+            Assert.That(report.SchemaVersion, Is.EqualTo(2));
+            Assert.That(report.UnityVersion, Is.EqualTo(Application.unityVersion));
+            Assert.That(report.Current.ConfigurationAtStart.IterationCount, Is.EqualTo(8));
+            Assert.That(report.Current.ValidationMilliseconds, Is.EqualTo(250).Within(.01));
+            Assert.That(report.Current.GeneratorTimings[(int)UMAGenerationDiagnostics.Stage.BuildAllMeshHits].TotalMilliseconds, Is.EqualTo(1000).Within(.01));
+            Assert.That(report.MeasurementNotes, Does.Contain("NOT idle CPU"));
+            string path = Path.Combine(Application.temporaryCachePath, "UMA-Timing-" + System.Guid.NewGuid().ToString("N") + ".json");
+            try
+            {
+                Assert.That(monitor.SaveReport(path), Is.EqualTo(path));
+                Assert.That(monitor.LastSavedReportPath, Is.EqualTo(path));
+                Assert.That(JsonUtility.FromJson<UMAResourceUsageMonitor.Report>(File.ReadAllText(path)).SchemaVersion, Is.EqualTo(2));
+            }
+            finally { if (File.Exists(path)) File.Delete(path); }
+            monitor.ResetCapture();
+            monitor.RefreshCounters();
+            Assert.That(monitor.Current.GeneratorTimings[(int)UMAGenerationDiagnostics.Stage.BuildAllMeshHits].Samples, Is.Zero);
         }
 
         [TestCase(false)]
@@ -193,6 +287,7 @@ namespace UMA.Tests
                 var atlasesBefore = cache.GetStatistics<UMACachedAtlas>();
                 var a = f.Avatar(reuse); a.reuseGeneratedMeshes = reuse;
                 var b = f.Avatar(reuse); b.reuseGeneratedMeshes = reuse;
+                var lookupBaseline = UMAResourceReuse.MeshTimings.Baseline();
                 f.Build(a); f.Meshes.Build(a);
                 f.Build(b); f.Meshes.Build(b);
                 var memory = UMAGeneratedResourceMemory.Capture(new[] { a, b });
@@ -205,6 +300,10 @@ namespace UMA.Tests
                 Assert.That(textureCounts.Hits, Is.EqualTo(reuse ? 1 : 0));
                 Assert.That(memory.SharedMeshUses, Is.EqualTo(reuse ? 1 : 0));
                 Assert.That(memory.SharedTextureUses, Is.EqualTo(reuse ? 1 : 0));
+                var timings = UMAResourceReuse.MeshTimings.Since(lookupBaseline);
+                Assert.That(timings[(int)UMAGenerationDiagnostics.Stage.MeshLookupHit].Samples, Is.EqualTo(reuse ? 1 : 0));
+                Assert.That(timings[(int)UMAGenerationDiagnostics.Stage.MeshLookupMiss].Samples, Is.EqualTo(reuse ? 1 : 0));
+                Assert.That(timings[(int)UMAGenerationDiagnostics.Stage.MeshBinding].Samples, Is.EqualTo(reuse ? 1 : 0));
             }
         }
     }

@@ -103,6 +103,7 @@ namespace UMA
 
 		public void SetLodRanges(List<UMALodRange> ranges)
 		{
+			UMAMeshPreparation.InvalidateIfTracked(this);
 			lodRanges = ranges;
         }
 
@@ -221,6 +222,7 @@ namespace UMA
 
 		public void SetTriangles(int[] tris)
 		{
+			UMAMeshPreparation.InvalidateIfTracked(this);
 #if DEBUG_UNITY_MESHDATA
             Debug.Log($"SMT {smtID} Setting triangles for submesh of size " + tris.Length);
 #endif
@@ -373,6 +375,7 @@ namespace UMA
 
 		public void Assign(UMATransform other)
 		{
+			UMAMeshPreparation.InvalidateIfTracked(this);
 			hash = other.hash;
 			name = other.name;
 			parent = other.parent;
@@ -466,22 +469,15 @@ namespace UMA
 				return true;
 			}
 
-			if (deltas.Length > 0)
-			{
-				return false;
-			}
-
-#if !ASSUME_EXPORTERS_KNOW_WHAT_THEY_ARE_DOING
-			return true;
-#else
 			for(int i =0; i < deltas.Length; i++)
 			{
-				if (deltas[i].sqrMagnitude >0.0001f)
+				// Exact component tests preserve tiny deltas and reject NaN/Infinity.
+				// Vector3 equality and squared magnitude both lose small changes.
+				if (deltas[i].x != 0f || deltas[i].y != 0f || deltas[i].z != 0f)
 					return false;
 			}
 
 			return true;
-#endif
 		}
 #if UNITY_EDITOR
 		public UMABlendFrame Duplicate()
@@ -635,7 +631,7 @@ namespace UMA
 	/// </summary>
 	[Serializable]
 	//[StructLayout(LayoutKind.Sequential, Pack =1)]
-	public class UMAMeshData : MeshDetails
+	public partial class UMAMeshData : MeshDetails
 	{
 #if UNITY_EDITOR
 		public string ID = "Base";
@@ -1292,6 +1288,7 @@ namespace UMA
 
 		public void MirrorU(int channel)
 		{
+			UMAMeshPreparation.InvalidateIfTracked(channel == 0 ? uv : channel == 1 ? uv2 : channel == 2 ? uv3 : uv4);
 			if (channel == 0)
 			{
 				for (int i = 0; i < uv.Length; i++)
@@ -1324,6 +1321,7 @@ namespace UMA
 
 		public void MirrorV(int channel)
 		{
+			UMAMeshPreparation.InvalidateIfTracked(channel == 0 ? uv : channel == 1 ? uv2 : channel == 2 ? uv3 : uv4);
 			if (channel == 0)
 			{
 				for (int i = 0; i < uv.Length; i++)
@@ -1356,6 +1354,7 @@ namespace UMA
 
 		public void MirrorUV(int Channel)
 		{
+			UMAMeshPreparation.InvalidateIfTracked(Channel == 0 ? uv : Channel == 1 ? uv2 : Channel == 2 ? uv3 : uv4);
 			// mirror both X and Y
 			if (Channel == 0)
 			{
@@ -1469,6 +1468,7 @@ namespace UMA
 		/// <param name="sharedMesh">Source mesh.</param>
 		public void RetrieveDataFromUnityMesh(Mesh sharedMesh, bool udimAdjustment = false, int subMeshInd = -1, bool clearNormals = false, bool clearTangents = false)
 		{
+			UMAMeshPreparation.InvalidateIfTracked(this);
 
 			if (subMeshInd >= sharedMesh.subMeshCount)
 			{
@@ -1638,6 +1638,7 @@ namespace UMA
 		/// <param name="sharedMesh">Source mesh.</param>
 		public void OldRetrieveDataFromUnityMesh(Mesh sharedMesh, bool udimAdjustment = false)
 		{
+			UMAMeshPreparation.InvalidateIfTracked(this);
 			bindPoses = sharedMesh.bindposes;
 #if USE_NATIVE_ARRAYS
 			unityBonesPerVertex = sharedMesh.GetBonesPerVertex();
@@ -1741,6 +1742,7 @@ namespace UMA
 		/// <param name="cloth"></param>
 		public void RetrieveDataFromUnityCloth(Cloth cloth)
 		{
+			UMAMeshPreparation.InvalidateIfTracked(this);
 			clothSkinning = cloth.coefficients;
 			clothSkinningSerialized = new Vector2[clothSkinning.Length];
 			for (int i = 0; i < clothSkinning.Length; i++)
@@ -1756,6 +1758,7 @@ namespace UMA
 		/// <param name="bones">Transforms.</param>
 		public void UpdateBones(Transform rootBone, Transform[] bones)
 		{
+			UMAMeshPreparation.InvalidateIfTracked(this);
 			Transform lastBone = null;
 			rootBone = FindRoot(rootBone, bones);
 
@@ -2256,6 +2259,7 @@ namespace UMA
 		/// </summary>
 		public void LoadBoneWeights()
 		{
+			UMAMeshPreparation.InvalidateIfTracked(this);
 			// it's at least this big
 			List<BoneWeight1> oldWeights = new List<BoneWeight1>(boneWeights.Length);
 			List<byte> oldBonesPerVertex = new List<byte>(boneWeights.Length);
@@ -2372,6 +2376,7 @@ namespace UMA
 
 		internal void ReSortUMABones()
 		{
+			UMAMeshPreparation.InvalidateIfTracked(this);
 			var newList = new List<UMATransform>(umaBones);
 			newList.Sort(UMATransform.TransformComparer);
 			umaBones = newList.ToArray();

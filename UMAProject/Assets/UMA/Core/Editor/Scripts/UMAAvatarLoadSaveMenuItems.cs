@@ -3369,43 +3369,17 @@ namespace UMA.Editors
         [UnityEditor.MenuItem("CONTEXT/DynamicCharacterAvatar/Save as UMA Preset")]
 		[UnityEditor.MenuItem("GameObject/UMA/Save as UMA Preset")]
 		[MenuItem("UMA/Avatar/Load and Save/Save Selected Avatar as UMA Preset", priority = 121)]
-		public static void SaveSelectedAvatarsPreset()
-		{
-			for (int i = 0; i < Selection.gameObjects.Length; i++)
-			{
-				var selectedTransform = Selection.gameObjects[i].transform;
-				var avatar = selectedTransform.GetComponent<DynamicCharacterAvatar>();
-				while (avatar == null && selectedTransform.parent != null)
-				{
-					selectedTransform = selectedTransform.parent;
-					avatar = selectedTransform.GetComponent<DynamicCharacterAvatar>();
-				}
-
-				if (avatar != null)
-				{
-					var path = EditorUtility.SaveFilePanel("Save avatar preset", "Assets", avatar.name + ".umapreset", "umapreset");
-					if (path.Length != 0)
-					{
-
-						UMAPreset prs = new UMAPreset();
-						prs.DefaultColors = avatar.characterColors;
-						var DNA = avatar.GetDNA();
-						prs.PredefinedDNA = new UMAPredefinedDNA();
-						foreach (DnaSetter d in DNA.Values)
-						{
-							prs.PredefinedDNA.AddDNA(d.Name, d.Value);
-						}
-						prs.DefaultWardrobe = new DynamicCharacterAvatar.WardrobeRecipeList();
-						foreach (UMATextRecipe utr in avatar.WardrobeRecipes.Values)
-						{
-							prs.DefaultWardrobe.recipes.Add(new DynamicCharacterAvatar.WardrobeRecipeListItem(utr));
-						}
-						string presetstring = JsonUtility.ToJson(prs);
-						System.IO.File.WriteAllText(path, presetstring);
-					}
-				}
-			}
-		}
+        public static void SaveSelectedAvatarsPreset()
+        {
+            foreach (var selected in Selection.gameObjects)
+            {
+                var avatar = selected.GetComponentInParent<DynamicCharacterAvatar>();
+                if (avatar == null) continue;
+                UMAPresetEditorWindow.Open(avatar);
+                return;
+            }
+            EditorUtility.DisplayDialog("UMA preset", "Select a DynamicCharacterAvatar first.", "OK");
+        }
 
 
 		[UnityEditor.MenuItem("CONTEXT/DynamicCharacterAvatar/Save as Character text file (runtime only)")]

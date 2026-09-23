@@ -456,6 +456,7 @@ namespace UMA.Editors
             }
 
             slot.PrepareForAssetPath(assetPath, safeSlotName);
+            UMASlotPreparationUtility.PrepareSlot(slot);
             AssetDatabase.CreateAsset(slot, assetPath);
             EditorUtility.SetDirty(slot);
 

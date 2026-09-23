@@ -33,6 +33,18 @@ namespace UMA
 
         public abstract VertexAdjustment ShallowCopy();
 
+        internal VertexAdjustment CopyForNPC()
+        {
+            var type = GetType();
+            if (type != typeof(VertexAdjustmentDummy) && type != typeof(VertexColorAdjustment) &&
+                type != typeof(VertexDeltaAdjustment) && type != typeof(VertexScaleAdjustment) &&
+                type != typeof(VertexNormalAdjustment) && type != typeof(VertexUVAdjustment) &&
+                type != typeof(VertexBlendshapeAdjustment) && type != typeof(VertexResetAdjustment))
+                throw new NotSupportedException("Custom vertex adjustments require normal NPC generation.");
+            // Built-in adjustments contain only values and immutable strings.
+            return (VertexAdjustment)MemberwiseClone();
+        }
+
         public abstract void Apply(MeshDetails mesh, MeshDetails src);
 
         public abstract void ApplyScaled(MeshDetails mesh, MeshDetails src, float scale);
@@ -1231,6 +1243,19 @@ namespace UMA
     [Serializable]
     public abstract class VertexAdjustmentCollection
     {
+        internal VertexAdjustmentCollection CopyForNPC()
+        {
+            var type = GetType();
+            if (type != typeof(VertexColorAdjustmentCollection) && type != typeof(VertexDeltaAdjustmentCollection) &&
+                type != typeof(VertexScaleAdjustmentCollection) && type != typeof(VertexNormalAdjustmentCollection) &&
+                type != typeof(VertexUVAdjustmentCollection) && type != typeof(VertexBlendshapeAdjustmentCollection) &&
+                type != typeof(VertexResetAdjustmentCollection))
+                throw new NotSupportedException("Custom adjustment collections require normal NPC generation.");
+            var copy = (VertexAdjustmentCollection)MemberwiseClone();
+            copy.vertexAdjustments = new List<VertexAdjustment>(vertexAdjustments.Count);
+            foreach (var adjustment in vertexAdjustments) copy.vertexAdjustments.Add(adjustment?.CopyForNPC());
+            return copy;
+        }
         public virtual bool SupportWeightedAdjustments
         {
             get { return false; }

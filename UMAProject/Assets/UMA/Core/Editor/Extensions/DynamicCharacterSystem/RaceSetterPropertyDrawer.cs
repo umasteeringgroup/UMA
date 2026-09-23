@@ -89,7 +89,7 @@ namespace UMA.CharacterSystem.Editors
 		}
 
 
-        public List<Object> DoGUI(Rect position, SerializedProperty property, GUIContent label)
+        public List<Object> DoGUI(Rect position, SerializedProperty property, GUIContent label, bool showAdvancedTools = true)
 		{
             CheckRaceDataLists();
 
@@ -158,7 +158,7 @@ namespace UMA.CharacterSystem.Editors
                     }
                 }
 			}
-			if (GUILayout.Button($"DNA Cvts ({converterCount})"))
+			if (showAdvancedTools && GUILayout.Button($"DNA Cvts ({converterCount})"))
 			{
                 if (theRace != null)
 				{
@@ -172,7 +172,7 @@ namespace UMA.CharacterSystem.Editors
                     }
                 }
             }
-			if (GUILayout.Button("BonePose"))
+			if (showAdvancedTools && GUILayout.Button("BonePose"))
 			{
 				//UMABonePose firstPose = null;
 

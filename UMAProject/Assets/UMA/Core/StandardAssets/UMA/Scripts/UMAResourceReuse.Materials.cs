@@ -12,7 +12,7 @@ namespace UMA
             {
                 if (gm?.cachedFirstPass == null) continue;
                 foreach (var fragment in gm.materialFragments)
-                    if (fragment.slotData?.asset?.SlotAtlassed != null)
+                    if (UMATextureEvent.HasAnyListeners(fragment.slotData?.asset?.SlotAtlassed))
                     {
                         PrepareMaterialEdits(gm);
                         break;
@@ -72,15 +72,11 @@ namespace UMA
             UMAGeneratedResourceKey key;
             try
             {
-                using (var description = new Description())
-                {
-                    // Template identity also separates hidden/custom shader state not exposed
-                    // as regular properties. Change its registered revision after such edits.
-                    description.Asset(second ? gm.umaMaterial.secondPass : gm.umaMaterial.material);
-                    description.Material(material, atlases: gm.cachedAtlasBindings);
-                    description.MaterialInputs(gm);
-                    key = description.Key("UMA.Material.final.v1");
-                }
+                materialSignature.Reset();
+                materialSignature.Asset(second ? gm.umaMaterial.secondPass : gm.umaMaterial.material);
+                DescribeMaterial(materialSignature, material, gm.cachedAtlasBindings);
+                DescribeMaterialInputs(materialSignature, gm);
+                key = materialSignature.Key("UMA.Material.final.v2");
             }
             catch (NotSupportedException) { return; } // Does not veto atlas sharing.
             var lease = UMAGeneratedResourceCache.Shared.Acquire<Material>(key);

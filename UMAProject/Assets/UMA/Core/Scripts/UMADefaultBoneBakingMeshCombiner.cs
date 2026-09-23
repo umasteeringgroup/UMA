@@ -110,6 +110,7 @@ namespace UMA
             }
 
             PreserveBone(bakingSkeleton.rootBoneHash);
+            UMABoneLifecycle.PreserveBaseBonesForBaking(umaData);
         }
 
         protected override void PrepareSkeletonForRenderer(List<SkinnedMeshCombiner.CombineInstance> combineInstances)
@@ -211,7 +212,7 @@ namespace UMA
 
         private void PreserveHumanoidBones()
         {
-            var tPose = umaData.umaRecipe.raceData?.TPose;
+            var tPose = umaData.GetTPose();
             if (tPose == null) return;
 
             tPose.DeSerialize();
@@ -484,7 +485,7 @@ namespace UMA
                     }
                     else
                     {
-                        Rect atlasRect = fragment.atlasRegion;
+                        Rect atlasRect = fragment.UncroppedAtlasRegion;
                         atlasXMin = atlasRect.xMin / atlasResolution;
                         atlasYMin = atlasRect.yMin / atlasResolution;
                         atlasXRange = atlasRect.width / atlasResolution;

@@ -125,6 +125,7 @@ namespace UMA
                 for (int i = 0; i < addlBlendShapes.Count; i++)
 				{
                     UMAMeshData md = addlBlendShapes[i];
+                    UMAMeshPreparation.TryGet(md, out _);
                     sourceShapes.AddRange(md.blendShapes);
 				}
 			}
@@ -763,62 +764,27 @@ namespace UMA
 			Vector3[] currentFrameVertices = currentShape.frames[frameIndex].deltaVertices;
 			Vector3[] previousFrameVertices = currentShape.frames[prevIndex].deltaVertices;
 
-			Vector3[] currentFrameNormals = null;
-			Vector3[] previousFrameNormals = null;
-
-			Vector3[] currentFrameTangents = null;
-			Vector3[] previousFrameTangents = null;
-
-			bool has_deltaNormals = (has_Normals && currentShape.frames[frameIndex].deltaNormals != null && currentShape.frames[frameIndex].deltaNormals.Length > 0);
-			if (has_deltaNormals)
-			{
-				currentFrameNormals = currentShape.frames[frameIndex].deltaNormals;
-				previousFrameNormals = currentShape.frames[prevIndex].deltaNormals;
-			}
-
-			bool has_deltaTangents = (has_Tangents && currentShape.frames[frameIndex].deltaTangents != null && currentShape.frames[frameIndex].deltaTangents.Length > 0);
-			if (has_deltaTangents)
-			{
-				currentFrameTangents = currentShape.frames[frameIndex].deltaTangents;
-				previousFrameTangents = currentShape.frames[prevIndex].deltaTangents;
-			}
+			Vector3[] currentFrameNormals = currentShape.frames[frameIndex].deltaNormals;
+			Vector3[] previousFrameNormals = currentShape.frames[prevIndex].deltaNormals;
+			Vector3[] currentFrameTangents = currentShape.frames[frameIndex].deltaTangents;
+			Vector3[] previousFrameTangents = currentShape.frames[prevIndex].deltaTangents;
 
 			int vertIndex = vertexIndex;
 			for (int bakeIndex = 0; bakeIndex < currentFrameVertices.Length; bakeIndex++, vertIndex++)
 			{
-				// Add the current frame's deltas
-				if (currentFrameVertices[bakeIndex].sqrMagnitude > 0.0000001f)
+				// Missing optional channels mean zero, including when interpolating
+				// away from a previous nonzero frame. Never threshold small deltas.
+				vertices[vertIndex] += currentFrameVertices[bakeIndex] * frameWeight;
+				if (doLerp) vertices[vertIndex] += previousFrameVertices[bakeIndex] * prevWeight;
+				if (has_Normals)
 				{
-					vertices[vertIndex] += currentFrameVertices[bakeIndex] * frameWeight;
-					// Add in the previous frame's deltas
-					if (doLerp)
-                    {
-                        vertices[vertIndex] += previousFrameVertices[bakeIndex] * prevWeight;
-                    }
-                }
-
-				if (has_deltaNormals)
-				{
-					if (currentFrameNormals[bakeIndex].sqrMagnitude > 0.0000001f)
-					{
-						normals[vertIndex] += currentFrameNormals[bakeIndex] * frameWeight;
-						if (doLerp)
-                        {
-                            normals[vertIndex] += previousFrameNormals[bakeIndex] * prevWeight;
-                        }
-                    }
+					if (currentFrameNormals != null && bakeIndex < currentFrameNormals.Length) normals[vertIndex] += currentFrameNormals[bakeIndex] * frameWeight;
+					if (doLerp && previousFrameNormals != null && bakeIndex < previousFrameNormals.Length) normals[vertIndex] += previousFrameNormals[bakeIndex] * prevWeight;
 				}
-
-				if (has_deltaTangents)
+				if (has_Tangents)
 				{
-					if (currentFrameTangents[bakeIndex].sqrMagnitude > 0.0000001f)
-					{
-						tangents[vertIndex] += (Vector4)currentFrameTangents[bakeIndex] * frameWeight;
-						if (doLerp)
-                        {
-                            tangents[vertIndex] += (Vector4)previousFrameTangents[bakeIndex] * prevWeight;
-                        }
-                    }
+					if (currentFrameTangents != null && bakeIndex < currentFrameTangents.Length) tangents[vertIndex] += (Vector4)currentFrameTangents[bakeIndex] * frameWeight;
+					if (doLerp && previousFrameTangents != null && bakeIndex < previousFrameTangents.Length) tangents[vertIndex] += (Vector4)previousFrameTangents[bakeIndex] * prevWeight;
 				}
 			}
 			return true;
@@ -1126,6 +1092,7 @@ namespace UMA
             for (int j = 0; j < sources.Length; j++)
 			{
                 CombineInstance source = sources[j];
+                UMAMeshPreparation.TryGet(source.slotData?.asset?.meshData, out _);
 #if USE_NATIVE_ARRAYS
 				boneweightcount += source.meshData.unityBoneWeights.Length;
 #else

@@ -44,11 +44,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 910d06e64183ac547ab816b9f03574ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Randomizers: []
+  Randomizers:
+  - {fileID: 11400000, guid: 40fb6afbcd019904ba2f07173c0bbc11, type: 2}
+  WardrobeRandomizers:
+  - {fileID: 11400000, guid: 40fb6afbcd019904ba2f07173c0bbc11, type: 2}
+  mode: 0
+  RandomizeOnStart: 1
+  KeepExistingRace: 0
+  KeepExistingWardrobe: 0
+  ExistingDCAs: []
   prefab: {fileID: 153068, guid: 165a16ac9ccf1a94080956c3b8c82000, type: 3}
   ParentObject: {fileID: 0}
   ShowPlaceholder: 1
   GenerateGrid: 1
+  MaximumUniqueCharacters: 0
+  UseNPCBuilds: 0
+  SpawnBudgetMilliseconds: 0
   GridXSize: 1
   GridZSize: 1
   GridDistance: 0

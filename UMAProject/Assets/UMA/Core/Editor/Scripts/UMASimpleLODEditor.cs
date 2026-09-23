@@ -12,6 +12,7 @@ namespace UMA.Editors
     {
 
         private const string PrefKeyPrefix = "UMA.UMASimpleLODEditor.InternalSlotLOD.";
+        private readonly UMAInspectorView inspectorView = new UMAInspectorView(typeof(UMASimpleLOD));
 
         private static bool _internalSlotLodFoldout;
         private static bool _optionsFoldout = true;
@@ -237,6 +238,7 @@ namespace UMA.Editors
                 if (slots == null || slots.Length == 0)
                 {
                     EditorGUILayout.HelpBox("No UMA slots found. Generate the character once so UMAData.umaRecipe.slotDataList is available.", MessageType.Info);
+                    GUIHelper.EndVerticalPadded();
                     return;
                 }
 
@@ -466,6 +468,129 @@ namespace UMA.Editors
             serializedObject.Update();
 
             var lod = (UMASimpleLOD)target;
+
+            if (!inspectorView.DrawSelector())
+            {
+                DrawStandardInspector(lod);
+                return;
+            }
+
+            DrawAdvancedInspector(lod);
+        }
+
+        private void DrawStandardInspector(UMASimpleLOD lod)
+        {
+            using (inspectorView.Section("Distance & levels",
+                "First LOD Distance is the camera distance where LOD 0 changes to LOD 1. Distance Multiplier expands each following threshold cumulatively. Maximum LOD Levels is the number of usable levels, starting at 0. LOD Offset shifts slot-variant lookup when a character should begin at a coarser or finer prepared level."))
+            {
+                inspectorView.Field(serializedObject, "lodDistance", "First LOD Distance");
+                inspectorView.Field(serializedObject, "distanceMultiplier", "Distance Multiplier");
+                inspectorView.Field(serializedObject, "maxLOD", "Maximum LOD Levels");
+                inspectorView.Field(serializedObject, "lodOffset", "LOD Offset");
+                EditorGUILayout.LabelField(
+                    "Thresholds grow cumulatively: first distance, then distance × multiplier for each following level.",
+                    EditorStyles.wordWrappedMiniLabel);
+            }
+
+            using (inspectorView.Section("Geometry & textures",
+                "Use Prepared Mesh LODs swaps precomputed triangle data without replacing slots. Swap LOD Slots looks for slot names ending in _LOD# instead. Drop Slots by Maximum LOD removes slots after their Last Visible LOD. Reduce Atlas Resolution lowers generated texture resolution at distant levels, while Maximum Atlas Reduction Divisor sets the smallest permitted scale. Normally choose either prepared mesh LODs or slot swapping as the geometry strategy."))
+            {
+                inspectorView.Field(serializedObject, "useInternalMeshLOD", "Use Prepared Mesh LODs");
+                inspectorView.Field(serializedObject, "swapSlots", "Swap LOD Slots");
+                inspectorView.Field(serializedObject, "useSlotDropping", "Drop Slots by Maximum LOD");
+                inspectorView.Field(serializedObject, "useTextureResize", "Reduce Atlas Resolution");
+                using (new EditorGUI.DisabledScope(!inspectorView.Property(serializedObject, "useTextureResize").boolValue))
+                    inspectorView.Field(serializedObject, "maxReduction", "Maximum Atlas Reduction Divisor");
+                if (inspectorView.Property(serializedObject, "useTextureResize").boolValue)
+                    EditorGUILayout.LabelField(
+                        "For example, 8 prevents the generated atlas from shrinking below one eighth of its original size.",
+                        EditorStyles.wordWrappedMiniLabel);
+
+                if (inspectorView.Property(serializedObject, "useInternalMeshLOD").boolValue &&
+                    inspectorView.Property(serializedObject, "swapSlots").boolValue)
+                    EditorGUILayout.HelpBox(
+                        "Prepared mesh LODs and slot swapping are both enabled. Swapping a slot can leave its prepared mesh LOD out of sync; normally choose one geometry strategy.",
+                        MessageType.Warning);
+            }
+
+            using (inspectorView.Section("Stability & update timing",
+                "Percentage Hysteresis uses a percentage of the threshold as a buffer; when disabled, World-Space Buffer uses a fixed distance. The buffer prevents rapid level switching near a boundary. Minimum Check Interval limits how often this component evaluates distance, and Random Check Stagger spreads many characters across frames. Disable Automatic Checks requires your code to request LOD checks manually."))
+            {
+                inspectorView.Field(serializedObject, "UsePercentageBuffer", "Percentage Hysteresis");
+                if (inspectorView.Property(serializedObject, "UsePercentageBuffer").boolValue)
+                    inspectorView.Field(serializedObject, "BufferPercent", "Threshold Buffer");
+                else
+                    inspectorView.Field(serializedObject, "BufferZone", "World-Space Buffer");
+                inspectorView.Field(serializedObject, "MinCheck", "Minimum Check Interval");
+                inspectorView.Field(serializedObject, "CheckRange", "Random Check Stagger");
+                inspectorView.Field(serializedObject, "disableAutomatedProcessing", "Disable Automatic Checks");
+            }
+
+            using (inspectorView.Section("Runtime feature reduction",
+                "The three Disable At LOD values stop bone animators, UMA expressions, or dynamic expressions at and beyond the selected level; -1 leaves that feature unmanaged. Additional LOD-Tuned Components receive level changes so other systems can reduce their own cost with the character."))
+            {
+                inspectorView.Field(serializedObject, "disableBoneAnimatorsAtLOD", "Disable Bone Animators at LOD");
+                inspectorView.Field(serializedObject, "disableUMAExpressionPlayerAtLOD", "Disable UMA Expressions at LOD");
+                inspectorView.Field(serializedObject, "disableDynamicExpressionPlayerAtLOD", "Disable Dynamic Expressions at LOD");
+                inspectorView.Field(serializedObject, "lodTunings", "Additional LOD-Tuned Components");
+                EditorGUILayout.LabelField("Use -1 to leave a feature unmanaged.", EditorStyles.wordWrappedMiniLabel);
+            }
+
+            if (!Application.isPlaying)
+                DrawStandardEditTimePreview(lod);
+            else
+                DrawStandardRuntimeStatus(lod);
+
+            serializedObject.ApplyModifiedProperties();
+            EditorGUILayout.LabelField(
+                "Slot LOD generation, equipped-slot details, and per-slot timing diagnostics are in Advanced View.",
+                EditorStyles.wordWrappedMiniLabel);
+        }
+
+        private void DrawStandardEditTimePreview(UMASimpleLOD lod)
+        {
+            using (inspectorView.Section("Edit-time preview",
+                "Override LOD in Editor enables a forced scene-view preview. Preview LOD Level rebuilds or swaps the character to that exact level so you can inspect silhouettes, slots, and triangle counts without entering Play Mode. Disable the override to return control to normal distance-based behavior."))
+            {
+                var overrideProperty = inspectorView.Property(serializedObject, "editorOverrideLOD");
+                EditorGUILayout.PropertyField(overrideProperty, UMAInspectorView.Label("Override LOD in Editor"));
+                using (new EditorGUI.DisabledScope(!overrideProperty.boolValue))
+                {
+                    int max = Mathf.Max(1, inspectorView.Property(serializedObject, "maxLOD").intValue);
+                    var forcedProperty = inspectorView.Property(serializedObject, "editorForcedLOD");
+                    int current = Mathf.Clamp(forcedProperty.intValue, 0, max - 1);
+                    EditorGUI.BeginChangeCheck();
+                    int desired = EditorGUILayout.IntSlider(UMAInspectorView.Label("Preview LOD Level"), current, 0, max - 1);
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        forcedProperty.intValue = desired;
+                        serializedObject.ApplyModifiedProperties();
+                        lod.DoManualLODCheck(desired);
+                        if (lod.useInternalMeshLOD) lod.UpdateInternalLOD();
+                        else ForceEditTimeRebuild(lod.gameObject);
+                        EditorUtility.SetDirty(lod);
+                        serializedObject.Update();
+                    }
+                    int triangleCount = GetCurrentTriangleCount(lod);
+                    if (triangleCount >= 0) EditorGUILayout.LabelField("Current Triangles", triangleCount.ToString("N0"));
+                }
+            }
+        }
+
+        private void DrawStandardRuntimeStatus(UMASimpleLOD lod)
+        {
+            using (inspectorView.Section("Current runtime status",
+                "Current LOD is the level selected at runtime. Current Triangles is the combined visible skinned-mesh triangle count when it can be measured. Accumulated LOD Update Time is the total time this component has spent applying LOD changes, useful for profiling rather than a per-frame cost."))
+            {
+                EditorGUILayout.LabelField("Current LOD", lod.CurrentLOD.ToString());
+                int triangleCount = GetCurrentTriangleCount(lod);
+                if (triangleCount >= 0) EditorGUILayout.LabelField("Current Triangles", triangleCount.ToString("N0"));
+                EditorGUILayout.LabelField("Accumulated LOD Update Time", lod.TotalLodUpdateMS.ToString("F1") + " ms");
+            }
+        }
+
+        private void DrawAdvancedInspector(UMASimpleLOD lod)
+        {
 
             DrawInternalSlotLodSection(lod);
             DrawSlotBasedLodSection(lod);

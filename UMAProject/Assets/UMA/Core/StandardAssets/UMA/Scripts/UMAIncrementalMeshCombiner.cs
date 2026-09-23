@@ -532,7 +532,7 @@ namespace UMA
                         continue;
                     }
 
-                    Rect rect = fragment.atlasRegion;
+                    Rect rect = fragment.UncroppedAtlasRegion;
                     float xMin = rect.xMin / atlasResolution;
                     float yMin = rect.yMin / atlasResolution;
                     float xRange = rect.width / atlasResolution;

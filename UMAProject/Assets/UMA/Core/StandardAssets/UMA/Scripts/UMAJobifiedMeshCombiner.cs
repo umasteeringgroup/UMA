@@ -39,6 +39,7 @@ namespace UMA
         public static long Ticks_SkeletonEnsure;
         public static long Ticks_ClearDNA;
         public static long Ticks_EnsureUMADataSetup;
+        public static long Ticks_RendererReconciliation, Ticks_MeshHidePreparation, Ticks_SkeletonSetup, Ticks_RendererSetup;
         public static long Ticks_BuildActiveModifiers;
 
         public static void ResetCombinerTimings()
@@ -50,6 +51,7 @@ namespace UMA
             Ticks_SkeletonEnsure = 0;
             Ticks_ClearDNA = 0;
             Ticks_EnsureUMADataSetup = 0;
+            Ticks_RendererReconciliation = Ticks_MeshHidePreparation = Ticks_SkeletonSetup = Ticks_RendererSetup = 0;
             Ticks_BuildActiveModifiers = 0;
         }
 #endif
@@ -62,13 +64,24 @@ namespace UMA
 
         protected void EnsureUMADataSetup(UMAData umaData)
         {
+#if UMA_COMBINER_TIMINGS
+            long setupTick = System.Diagnostics.Stopwatch.GetTimestamp();
+#endif
             umaData.ReconcileGeneratedRendererObjects();
+#if UMA_COMBINER_TIMINGS
+            Ticks_RendererReconciliation += System.Diagnostics.Stopwatch.GetTimestamp() - setupTick;
+            setupTick = System.Diagnostics.Stopwatch.GetTimestamp();
+#endif
 
             if (umaData.umaRecipe != null)
             {
                 umaData.umaRecipe.UpdateMeshHideMasks(umaData.currentLODLevel);
             }
 
+#if UMA_COMBINER_TIMINGS
+            Ticks_MeshHidePreparation += System.Diagnostics.Stopwatch.GetTimestamp() - setupTick;
+            setupTick = System.Diagnostics.Stopwatch.GetTimestamp();
+#endif
             #region SetupSkeleton
             // First, ensure that the skeleton is setup, and if not,
             // then generate the root, global and set it up.
@@ -81,6 +94,10 @@ namespace UMA
                 umaData.CheckSkeletonSetup();
             }
             #endregion
+#if UMA_COMBINER_TIMINGS
+            Ticks_SkeletonSetup += System.Diagnostics.Stopwatch.GetTimestamp() - setupTick;
+            setupTick = System.Diagnostics.Stopwatch.GetTimestamp();
+#endif
             if (umaData.umaRoot != null)
             {
                 // The MeshData combiner sets the destination index format on every rebuild.
@@ -166,6 +183,9 @@ namespace UMA
                     umaData.SetRenderers(renderers);
                     umaData.SetRendererAssets(umaData.generatedMaterials.rendererAssets.ToArray());
                 }
+#if UMA_COMBINER_TIMINGS
+                Ticks_RendererSetup += System.Diagnostics.Stopwatch.GetTimestamp() - setupTick;
+#endif
                 return;
             }
 
@@ -182,7 +202,6 @@ namespace UMA
 
         private SkinnedMeshRenderer MakeRenderer(int i, UMAData umaData, Transform rootBone, UMARendererAsset rendererAsset = null)
         {
-            Debug.Log("Creating Renderer in UMAJobifiedMeshCombiner");
             GameObject newSMRGO = new GameObject(
                 UMARendererAsset.GetRendererGameObjectName(rendererAsset, i));
             newSMRGO.transform.parent = umaData.transform;
@@ -552,7 +571,7 @@ namespace UMA
 						continue;
 
 					var sdTemp = fragment.slotData;
-					var tempAtlasRect = fragment.atlasRegion;
+					var tempAtlasRect = fragment.UncroppedAtlasRegion;
 					int vertexCount = sdTemp.asset.meshData.vertices.Length;
 
 					// Normalize rect by atlas resolution
@@ -640,7 +659,7 @@ namespace UMA
                 for (int materialDefinitionIndex = 0; materialDefinitionIndex < generatedMaterial.materialFragments.Count; materialDefinitionIndex++)
                 {
                     var fragment = generatedMaterial.materialFragments[materialDefinitionIndex];
-                    var tempAtlasRect = fragment.atlasRegion;
+                    var tempAtlasRect = fragment.UncroppedAtlasRegion;
                     int vertexCount = fragment.slotData.asset.meshData.vertices.Length;
                     float atlasXMin = tempAtlasRect.xMin / atlasResolution;
                     float atlasXMax = tempAtlasRect.xMax / atlasResolution;

@@ -30,6 +30,10 @@ namespace UMA
         private readonly UMAObjectId sourceId;
         private AsyncGPUReadbackRequest readback;
         private bool readbackRequested;
+        private readonly GeneratorRuntimeCompression qualityCompression;
+        private readonly FilterMode qualityFilter;
+        private readonly int qualityAnisotropy;
+        private readonly float qualityMipBias;
         public static int copiesEnqueued = 0;
         public static int copiesDequeued = 0;
         public static int unableToQueue = 0;
@@ -125,7 +129,11 @@ namespace UMA
             this.generatedMaterial = generatedMaterial;
             this.textureName = textureName;
             this.textureIndex = textureIndex;
-            this.recreateMips = basegen.convertMipMaps;
+            this.recreateMips = basegen.qualityTextures.Mips(basegen.convertMipMaps);
+            qualityCompression = basegen.qualityTextures.EffectiveCompression(true, texture.format, texture.width, texture.height);
+            qualityFilter = texture.filterMode;
+            qualityAnisotropy = texture.anisoLevel;
+            qualityMipBias = texture.mipMapBias;
             this.sharedCompletion = sharedCompletion;
             this.sharedFinished = sharedFinished;
             this.sourceId = texture.GetUmaObjectId();
@@ -191,6 +199,10 @@ namespace UMA
                     GraphicsFormat gf = GraphicsFormatUtility.GetGraphicsFormat(texture.format,false);
                     TextureFormat tf = GraphicsFormatUtility.GetTextureFormat(gf);
                     newTexture = new Texture2D(texture.width, texture.height, tf, recreateMips, true);
+                    newTexture.filterMode = qualityFilter;
+                    newTexture.anisoLevel = qualityAnisotropy;
+                    newTexture.mipMapBias = qualityMipBias;
+                    newTexture.wrapMode = TextureWrapMode.Repeat;
 
                     newTexture.SetPixelData(asyncAction.GetData<byte>(), 0);
 #if UNITY_EDITOR
@@ -273,6 +285,7 @@ namespace UMA
                 try
                 {
                     newTexture.Apply(recreateMips);
+                    GeneratorTextureQuality.Compress(newTexture, qualityCompression);
                     sharedCompletion(newTexture);
                     newTexture = null; // ownership transferred to the atlas cache
                     texturesUploaded++;
@@ -291,7 +304,8 @@ namespace UMA
                         throw new InvalidOperationException("Asynchronous atlas copy target is no longer valid.");
                     }
 
-                    newTexture.Apply(texture.mipmapCount > 0);  
+                    newTexture.Apply(recreateMips);
+                    GeneratorTextureQuality.Compress(newTexture, qualityCompression);
                     generatedMaterial.material.SetTexture(textureName, newTexture);
                     generatedMaterial.resultingAtlasList[textureIndex] = newTexture;
                     if (generatedMaterial.skinnedMeshRenderer != null &&

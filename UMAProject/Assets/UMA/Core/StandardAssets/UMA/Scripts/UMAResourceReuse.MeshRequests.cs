@@ -5,6 +5,7 @@ namespace UMA
 {
     public static partial class UMAResourceReuse
     {
+        public static UMAGenerationDiagnostics MeshTimings { get; } = new UMAGenerationDiagnostics();
         internal static long MeshDetailedKeyCount;
         internal static long MeshAdmissionCount;
         internal static long MeshFirstStageRejectCount;
@@ -78,13 +79,21 @@ namespace UMA
             int atlasResolution, Quaternion boundsRotation, out MeshRequest request, string backend = "MeshData")
         {
             // Includes signature creation AND the dictionary/full-comparison work.
-            using var measurement = new LookupMeasurement(System.Diagnostics.Stopwatch.GetTimestamp());
-            using var marker = MeshLookupMarker.Auto();
-            request = DescribeMeshRequest(data, sources, materials, atlasResolution, boundsRotation, backend);
-            var lease = UMAGeneratedResourceCache.Shared.Acquire<Mesh>(request.Key);
-            MeshAdmissionCount++;
-            if (lease.IsBuilder && !request.DetailedKeyCreated) MeshFirstStageRejectCount++;
-            return lease;
+            long diagnosticStart = System.Diagnostics.Stopwatch.GetTimestamp();
+            var outcome = UMAGenerationDiagnostics.Stage.MeshLookupFailed;
+            try
+            {
+                using var measurement = new LookupMeasurement(System.Diagnostics.Stopwatch.GetTimestamp());
+                using var marker = MeshLookupMarker.Auto();
+                request = DescribeMeshRequest(data, sources, materials, atlasResolution, boundsRotation, backend);
+                var lease = UMAGeneratedResourceCache.Shared.Acquire<Mesh>(request.Key);
+                MeshAdmissionCount++;
+                if (lease.IsBuilder && !request.DetailedKeyCreated) MeshFirstStageRejectCount++;
+                outcome = lease.IsBuilder ? UMAGenerationDiagnostics.Stage.MeshLookupMiss :
+                    lease.IsReady ? UMAGenerationDiagnostics.Stage.MeshLookupHit : UMAGenerationDiagnostics.Stage.MeshLookupPending;
+                return lease;
+            }
+            finally { MeshTimings.Record(outcome, System.Diagnostics.Stopwatch.GetTimestamp() - diagnosticStart); }
         }
 
         internal static bool MeshInputsUnchanged(MeshRequest original, UMAData data,

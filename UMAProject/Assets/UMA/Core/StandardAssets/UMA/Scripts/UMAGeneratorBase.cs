@@ -17,6 +17,11 @@ namespace UMA
         public enum FitMethod { DecreaseResolution, BestFitSquare, MultipleHeuristics };
 
         public bool fitAtlas;
+        [Tooltip("Crop shared atlas regions to the union of their slots' prepared UV bounds. Source assets remain unchanged. Unsupported sampling falls back to full textures.")]
+        public bool enableSourceUVCropping;
+        [Min(4), Tooltip("Source texels retained around UV bounds for filtering. Increase for distant/mipmapped content. Minimum 4.")]
+        public int sourceUVCropPadding = 8;
+        [NonSerialized] public GeneratorTextureQuality qualityTextures;
         [HideInInspector]
         public TextureMerge textureMerge;
         [Header("Convert Render Texture should not be used on mobile devices")]
@@ -59,6 +64,9 @@ namespace UMA
         [Tooltip("UMA will keep items with this tag when rebuilding the skeleton. Any new bone created during the build process will be replaced with the previous copy, keeping components and references intact.")]
         public string keepTag = "UMAKeepChain";
 
+        // Preserve explicit legacy generator overrides; the default follows project settings.
+        public string EffectiveKeepTag => keepTag == "UMAKeepChain" ? UMASettings.GetKeepTag() : keepTag;
+
         [Tooltip("Default Renderer Asset to use for the generated SkinnedMeshRenderer")]
         public UMARendererAsset defaultRendererAsset;
 
@@ -80,6 +88,23 @@ namespace UMA
         protected bool evaluateAnimatorPoseAfterAvatarUpdate = true;
 
         public bool SaveAndRestoreIgnoredItems;
+
+        [Tooltip("After a successful rig build, remove unused non-T-pose bones. Keeps current slot/renderer dependencies and UMAIgnore subtrees. External skeletons are never pruned. Off preserves legacy behavior.")]
+        public bool CleanupUnusedBones;
+        [Tooltip("Measure optional bone cleanup CPU time. Disable to avoid timestamp sampling.")]
+        public bool MeasureBoneCleanup;
+        [NonSerialized] public int BoneCleanupRuns;
+        [NonSerialized] public int BoneCleanupRemoved;
+        [NonSerialized] public double BoneCleanupTotalMilliseconds;
+        [NonSerialized] public double BoneCleanupLastMilliseconds;
+
+        internal void RecordBoneCleanup(int removed, double milliseconds)
+        {
+            BoneCleanupRuns++;
+            BoneCleanupRemoved += removed;
+            BoneCleanupLastMilliseconds = milliseconds;
+            BoneCleanupTotalMilliseconds += milliseconds;
+        }
 
         protected OverlayData _defaultOverlayData;
         public OverlayData defaultOverlaydata

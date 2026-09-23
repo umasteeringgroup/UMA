@@ -20,7 +20,7 @@ MonoBehaviour:
     Use the project settings instead.\n Modifying settings that need compiler\n directives
     set will NOT work if you\n edit them in the inspector!"
   Initialized: 1
-  UMAVersion: UMA NextGen 3.0f5
+  UMAVersion: UMA NextGen 3.1f0
   KeepTag: UMAKeepChain
   tagLookupValues:
   - Head
@@ -83,6 +83,10 @@ MonoBehaviour:
   YoutubeURL: https://www.youtube.com/@SecretAnorak/videos
   ShaderFolder: SRP/ShaderPackages
   UMAFolder: Assets/UMA
+  texturePaintCompactView: 1
   texturePaintRecoveryFolder: Assets/UMAProjectData/OverlayPainter/Recovery
+  texturePaintAutomaticRecovery: 1
+  texturePaintRecoveryIdleDelaySeconds: 120
+  texturePaintRecoveryMinimumIntervalSeconds: 300
   Overlays: {fileID: 2800000, guid: d422cb0fca0d49043a75d8e2f72a0834, type: 3}
   Slots: {fileID: 2800000, guid: 2baa5f36ef4c6fd47922ddd177e6a20e, type: 3}

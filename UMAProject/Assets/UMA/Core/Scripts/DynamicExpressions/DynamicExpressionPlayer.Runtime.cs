@@ -53,6 +53,7 @@ public sealed partial class DynamicExpressionPlayer
         public ExpressionSource lastSource;
         public ExpressionEffectPhase phases;
         public DNAInstanceCollection.DNABuildType buildType;
+        public float previousHeadMotionValue;
     }
 
     private struct BuildValue
@@ -121,6 +122,25 @@ public sealed partial class DynamicExpressionPlayer
     [Tooltip("Bone classifications for generic/non-humanoid rigs.")]
     public List<ExpressionBoneJoint> genericBoneJoints =
         new List<ExpressionBoneJoint>();
+
+    [Header("Natural Head Motion")]
+    [Tooltip("Adds subtle eased head motion while Override Mecanim Head is enabled. Visemes add speech-timed nods, while other active expressions add low-frequency expressive motion.")]
+    public bool EnableNaturalHeadMotion = true;
+    [Range(0f, 3f)]
+    [Tooltip("Maximum low-frequency movement, in degrees, while the face is neutral and silent.")]
+    public float HeadMotionIdleDegrees = 0.2f;
+    [Range(0f, 3f)]
+    [Tooltip("Additional speech-timed movement, in degrees, driven by active viseme channels and viseme transitions.")]
+    public float HeadMotionSpeechDegrees = 0.65f;
+    [Range(0f, 3f)]
+    [Tooltip("Additional low-frequency movement, in degrees, driven by active emotion and custom expression channels.")]
+    public float HeadMotionExpressionDegrees = 0.35f;
+    [Range(0.02f, 1f)]
+    [Tooltip("Cycles per second for the underlying idle and expressive movement.")]
+    public float HeadMotionFrequency = 0.18f;
+    [Min(0.01f)]
+    [Tooltip("Seconds used to ease into and out of the requested head offset.")]
+    public float HeadMotionEaseTime = 0.2f;
 
     [Header("Eye Movement")]
     public bool EnableSaccades = true;
@@ -232,6 +252,21 @@ public sealed partial class DynamicExpressionPlayer
     private float _ikEyesWeight;
     private bool _ikActive;
 
+    private Transform _naturalHeadTransform;
+    private int _naturalHeadHash;
+    private bool _naturalHeadSeeded;
+    private Vector3 _naturalHeadNoiseOffset;
+    private Vector3 _naturalHeadOffset;
+    private Vector3 _naturalHeadOffsetVelocity;
+    private float _naturalHeadSpeechEnergy;
+    private float _naturalHeadSpeechVelocity;
+    private float _naturalHeadExpressionEnergy;
+    private float _naturalHeadExpressionVelocity;
+    private float _naturalHeadSpeechPhase;
+    private Quaternion _naturalHeadAppliedDelta = Quaternion.identity;
+    private Quaternion _naturalHeadAppliedRotation = Quaternion.identity;
+    private bool _naturalHeadApplied;
+
     public UMAExpressionGroup ResolvedGroup => _resolvedGroup;
     public bool UsingTransientLegacyExpressionSet =>
         _resolvedLegacyExpressionSet != null;
@@ -242,6 +277,12 @@ public sealed partial class DynamicExpressionPlayer
     public bool AnimatorLookAtActive => _ikActive;
     public Vector3 AnimatorLookAtPosition => _ikLookPosition;
     public float AnimatorLookAtEyesWeight => _ikEyesWeight;
+    public Vector3 NaturalHeadMotionOffset => _naturalHeadOffset;
+    public float NaturalHeadMotionSpeechEnergy =>
+        _naturalHeadSpeechEnergy;
+    public float NaturalHeadMotionExpressionEnergy =>
+        _naturalHeadExpressionEnergy;
+    public bool NaturalHeadMotionActive => _naturalHeadApplied;
 
     public event Action<ExpressionChange> ExpressionChangedAction;
     public event Action<UMAExpressionGroup> GroupReboundAction;
@@ -258,9 +299,11 @@ public sealed partial class DynamicExpressionPlayer
 
     private void OnDisable()
     {
+        RemoveNaturalHeadMotion();
         RestoreControlledBones();
         Unsubscribe();
         ResetProceduralSources();
+        ResetNaturalHeadMotionState();
     }
 
     private void OnDestroy()
@@ -276,6 +319,13 @@ public sealed partial class DynamicExpressionPlayer
         BlinkIntervalMin = Mathf.Max(0.01f, BlinkIntervalMin);
         BlinkIntervalMax = Mathf.Max(BlinkIntervalMin, BlinkIntervalMax);
         BlinkDuration = Mathf.Max(0.01f, BlinkDuration);
+        HeadMotionIdleDegrees = Mathf.Clamp(HeadMotionIdleDegrees, 0f, 3f);
+        HeadMotionSpeechDegrees = Mathf.Clamp(HeadMotionSpeechDegrees, 0f,
+            3f);
+        HeadMotionExpressionDegrees = Mathf.Clamp(
+            HeadMotionExpressionDegrees, 0f, 3f);
+        HeadMotionFrequency = Mathf.Clamp(HeadMotionFrequency, 0.02f, 1f);
+        HeadMotionEaseTime = Mathf.Max(0.01f, HeadMotionEaseTime);
         buildDebounceSeconds = Mathf.Max(0f, buildDebounceSeconds);
         meshBuildMinimumInterval = Mathf.Max(0.01f,
             meshBuildMinimumInterval);
@@ -316,6 +366,7 @@ public sealed partial class DynamicExpressionPlayer
     /// </summary>
     public void Rebind()
     {
+        RemoveNaturalHeadMotion();
         DiscoverAvatarContext();
         Dictionary<string, SourceSnapshot> retained = CaptureSources();
         BindGroup(ResolveGroup());
@@ -338,6 +389,7 @@ public sealed partial class DynamicExpressionPlayer
         if (_umaData == data && _avatar == avatar) return;
 
         Unsubscribe();
+        RemoveNaturalHeadMotion();
         _avatar = avatar;
         _umaData = data;
         _initialized = false;
@@ -533,6 +585,8 @@ public sealed partial class DynamicExpressionPlayer
     {
         Initialize();
         bool shouldProcess = ShouldProcessFrameLane();
+        if (_wasProcessing)
+            RemoveNaturalHeadMotion();
         if (_wasProcessing && !shouldProcess) RestoreControlledBones();
         _wasProcessing = shouldProcess;
         if (shouldProcess)
@@ -550,6 +604,7 @@ public sealed partial class DynamicExpressionPlayer
                 EndExpressionBatch();
             }
             EvaluateValues(Time.deltaTime, false);
+            UpdateNaturalHeadMotion(Time.deltaTime, Time.time);
         }
         ProcessPendingBuild();
     }
@@ -558,6 +613,7 @@ public sealed partial class DynamicExpressionPlayer
     {
         if (!_wasProcessing || _isBuilding || _umaData == null) return;
         ApplyRigEffects();
+        ApplyNaturalHeadMotion();
         if (_immediateDirty) ApplyImmediateEffects();
     }
 
@@ -682,6 +738,7 @@ public sealed partial class DynamicExpressionPlayer
     {
         Initialize();
         RefreshBindings();
+        RemoveNaturalHeadMotion();
         RestoreControlledBones();
     }
 
@@ -694,6 +751,7 @@ public sealed partial class DynamicExpressionPlayer
         Initialize();
         RefreshBindings();
         ApplyRigEffects();
+        ApplyNaturalHeadMotion();
     }
 
     /// <summary>
@@ -728,6 +786,223 @@ public sealed partial class DynamicExpressionPlayer
                 }
             }
         }
+    }
+
+    private void UpdateNaturalHeadMotion(float deltaTime, float time)
+    {
+        float visemeActivity = 0f;
+        float visemeChange = 0f;
+        float expressionActivity = 0f;
+        float authoredHeadActivity = 0f;
+        const ExpressionRole eyeRoles = ExpressionRole.BlinkLeft |
+            ExpressionRole.BlinkRight | ExpressionRole.EyeHorizontal |
+            ExpressionRole.EyeVertical | ExpressionRole.EyeHorizontalLeft |
+            ExpressionRole.EyeHorizontalRight |
+            ExpressionRole.EyeVerticalLeft |
+            ExpressionRole.EyeVerticalRight;
+
+        for (int i = 0; i < _runtimeExpressions.Count; i++)
+        {
+            RuntimeExpression expression = _runtimeExpressions[i];
+            float activity = GetNormalizedExpressionActivity(expression);
+            float previous = expression.previousHeadMotionValue;
+            expression.previousHeadMotionValue = expression.effective;
+            if ((expression.definition.roles & ExpressionRole.Viseme) != 0)
+            {
+                visemeActivity = Mathf.Max(visemeActivity, activity);
+                float range = Mathf.Max(expression.definition.DefaultValue,
+                    1f - expression.definition.DefaultValue);
+                visemeChange = Mathf.Max(visemeChange,
+                    Mathf.Abs(expression.effective - previous) /
+                    Mathf.Max(0.001f, range));
+            }
+            else if ((expression.definition.roles & eyeRoles) == 0)
+            {
+                expressionActivity = Mathf.Max(expressionActivity,
+                    activity);
+            }
+
+            if ((expression.definition.affectedJoints &
+                 ExpressionJoint.Head) != 0)
+                authoredHeadActivity = Mathf.Max(authoredHeadActivity,
+                    activity);
+        }
+
+        bool enabled = EnableNaturalHeadMotion && overrideMecanimHead;
+        float speechTarget = enabled
+            ? Mathf.Clamp01(Mathf.Max(visemeActivity,
+                visemeActivity * 0.65f + visemeChange * 2.5f)) : 0f;
+        float expressionTarget = enabled ? expressionActivity : 0f;
+        if (deltaTime > 0f)
+        {
+            float speechEase = speechTarget > _naturalHeadSpeechEnergy
+                ? 0.055f : 0.22f;
+            float expressionEase =
+                expressionTarget > _naturalHeadExpressionEnergy
+                    ? 0.12f : 0.32f;
+            _naturalHeadSpeechEnergy = Mathf.SmoothDamp(
+                _naturalHeadSpeechEnergy, speechTarget,
+                ref _naturalHeadSpeechVelocity, speechEase,
+                Mathf.Infinity, deltaTime);
+            _naturalHeadExpressionEnergy = Mathf.SmoothDamp(
+                _naturalHeadExpressionEnergy, expressionTarget,
+                ref _naturalHeadExpressionVelocity, expressionEase,
+                Mathf.Infinity, deltaTime);
+        }
+
+        EnsureNaturalHeadSeed();
+        Vector3 target = Vector3.zero;
+        if (enabled)
+        {
+            float idleTime = time * HeadMotionFrequency;
+            float expressionTime = idleTime * 0.73f;
+            float speechRate = Mathf.Lerp(0.7f, 1.8f,
+                _naturalHeadSpeechEnergy);
+            _naturalHeadSpeechPhase = Mathf.Repeat(
+                _naturalHeadSpeechPhase + deltaTime * speechRate *
+                Mathf.PI * 2f, Mathf.PI * 2f);
+
+            float idle = HeadMotionIdleDegrees;
+            float expressive = HeadMotionExpressionDegrees *
+                _naturalHeadExpressionEnergy;
+            float speech = HeadMotionSpeechDegrees *
+                _naturalHeadSpeechEnergy;
+            target.x = Noise(idleTime, _naturalHeadNoiseOffset.x) *
+                idle * 0.7f +
+                Noise(expressionTime, _naturalHeadNoiseOffset.z + 19.7f) *
+                expressive * 0.8f -
+                Mathf.Sin(_naturalHeadSpeechPhase) * speech;
+            target.y = Noise(idleTime * 0.83f,
+                _naturalHeadNoiseOffset.y) * idle +
+                Noise(expressionTime * 0.89f,
+                    _naturalHeadNoiseOffset.x + 41.3f) * expressive +
+                Mathf.Sin(_naturalHeadSpeechPhase * 0.5f + 0.8f) *
+                speech * 0.18f;
+            target.z = Noise(idleTime * 0.67f,
+                _naturalHeadNoiseOffset.z) * idle * 0.55f +
+                Noise(expressionTime * 1.11f,
+                    _naturalHeadNoiseOffset.y + 67.1f) * expressive * 0.65f +
+                Mathf.Sin(_naturalHeadSpeechPhase * 0.5f + 2.1f) *
+                speech * 0.12f;
+
+            float lookAtAttenuation = _ikActive
+                ? 1f - Mathf.Clamp01(_ikHeadWeight) * 0.9f : 1f;
+            float expressionAttenuation = 1f -
+                Mathf.Clamp01(authoredHeadActivity) * 0.9f;
+            target *= lookAtAttenuation * expressionAttenuation;
+        }
+
+        if (deltaTime > 0f)
+            _naturalHeadOffset = Vector3.SmoothDamp(_naturalHeadOffset,
+                target, ref _naturalHeadOffsetVelocity,
+                HeadMotionEaseTime, Mathf.Infinity, deltaTime);
+        else if (!enabled)
+            _naturalHeadOffset = Vector3.zero;
+    }
+
+    private static float GetNormalizedExpressionActivity(
+        RuntimeExpression expression)
+    {
+        float defaultValue = expression.definition.DefaultValue;
+        float range = Mathf.Max(defaultValue, 1f - defaultValue);
+        return Mathf.Clamp01(Mathf.Abs(expression.effective - defaultValue) /
+            Mathf.Max(0.001f, range));
+    }
+
+    private static float Noise(float time, float seed) =>
+        Mathf.PerlinNoise(seed, time) * 2f - 1f;
+
+    private void EnsureNaturalHeadSeed()
+    {
+        if (_naturalHeadSeeded) return;
+        unchecked
+        {
+            int seed = UMAUtils.StringToHash(gameObject.name);
+            Vector3 position = transform.position;
+            seed = seed * 397 ^ Mathf.RoundToInt(position.x * 100f);
+            seed = seed * 397 ^ Mathf.RoundToInt(position.y * 100f);
+            seed = seed * 397 ^ Mathf.RoundToInt(position.z * 100f);
+            Transform current = transform;
+            while (current != null)
+            {
+                seed = seed * 397 ^ current.GetSiblingIndex();
+                current = current.parent;
+            }
+            uint value = (uint)seed;
+            _naturalHeadNoiseOffset.x = NextNoiseSeed(ref value);
+            _naturalHeadNoiseOffset.y = NextNoiseSeed(ref value);
+            _naturalHeadNoiseOffset.z = NextNoiseSeed(ref value);
+        }
+        _naturalHeadSpeechPhase = _naturalHeadNoiseOffset.x * 0.37f;
+        _naturalHeadSeeded = true;
+    }
+
+    private static float NextNoiseSeed(ref uint value)
+    {
+        value ^= value << 13;
+        value ^= value >> 17;
+        value ^= value << 5;
+        return (value & 0x00ffffffu) * (100f / 0x00ffffffu);
+    }
+
+    private void ApplyNaturalHeadMotion()
+    {
+        if (!EnableNaturalHeadMotion || !overrideMecanimHead ||
+            _naturalHeadTransform == null ||
+            _naturalHeadOffset.sqrMagnitude < 0.00000001f) return;
+        Quaternion baseRotation = GetNaturalHeadRotation();
+        _naturalHeadAppliedDelta = Quaternion.Euler(_naturalHeadOffset);
+        _naturalHeadAppliedRotation = baseRotation *
+            _naturalHeadAppliedDelta;
+        SetNaturalHeadRotation(_naturalHeadAppliedRotation);
+        _naturalHeadApplied = true;
+    }
+
+    private void RemoveNaturalHeadMotion()
+    {
+        if (!_naturalHeadApplied || _naturalHeadTransform == null)
+        {
+            _naturalHeadApplied = false;
+            return;
+        }
+        Quaternion current = GetNaturalHeadRotation();
+        if (Quaternion.Angle(current, _naturalHeadAppliedRotation) <= 0.1f)
+            SetNaturalHeadRotation(current *
+                Quaternion.Inverse(_naturalHeadAppliedDelta));
+        _naturalHeadApplied = false;
+        _naturalHeadAppliedDelta = Quaternion.identity;
+    }
+
+    private Quaternion GetNaturalHeadRotation()
+    {
+        UMASkeleton skeleton = _umaData != null ? _umaData.skeleton : null;
+        return skeleton != null && skeleton.HasBone(_naturalHeadHash)
+            ? skeleton.GetRotation(_naturalHeadHash)
+            : _naturalHeadTransform.localRotation;
+    }
+
+    private void SetNaturalHeadRotation(Quaternion rotation)
+    {
+        UMASkeleton skeleton = _umaData != null ? _umaData.skeleton : null;
+        if (skeleton != null && skeleton.HasBone(_naturalHeadHash))
+            skeleton.SetRotation(_naturalHeadHash, rotation);
+        else if (_naturalHeadTransform != null)
+            _naturalHeadTransform.localRotation = rotation;
+    }
+
+    private void ResetNaturalHeadMotionState()
+    {
+        _naturalHeadOffset = Vector3.zero;
+        _naturalHeadOffsetVelocity = Vector3.zero;
+        _naturalHeadSpeechEnergy = 0f;
+        _naturalHeadSpeechVelocity = 0f;
+        _naturalHeadExpressionEnergy = 0f;
+        _naturalHeadExpressionVelocity = 0f;
+        _naturalHeadApplied = false;
+        _naturalHeadAppliedDelta = Quaternion.identity;
+        for (int i = 0; i < _runtimeExpressions.Count; i++)
+            _runtimeExpressions[i].previousHeadMotionValue =
+                _runtimeExpressions[i].effective;
     }
 
     private void ApplyImmediateEffects()
@@ -781,6 +1056,7 @@ public sealed partial class DynamicExpressionPlayer
         CacheUmaFacialJoints();
         CacheHumanoidJoints();
         CacheGenericJoints();
+        ResolveNaturalHeadBone();
         for (int i = 0; i < _runtimeExpressions.Count; i++)
         {
             RuntimeExpression expression = _runtimeExpressions[i];
@@ -809,6 +1085,39 @@ public sealed partial class DynamicExpressionPlayer
         }
         RebuildImmediateBindings();
         _bindingsValid = true;
+    }
+
+    private void ResolveNaturalHeadBone()
+    {
+        _naturalHeadTransform = null;
+        _naturalHeadHash = 0;
+        if (_animator != null && _animator.isHuman)
+            _naturalHeadTransform =
+                _animator.GetBoneTransform(HumanBodyBones.Head);
+
+        UMASkeleton skeleton = _umaData != null ? _umaData.skeleton : null;
+        if (_naturalHeadTransform == null && skeleton != null)
+            _naturalHeadTransform = skeleton.GetBoneTransform(
+                UMAUtils.StringToHash("Head"));
+
+        if (_naturalHeadTransform == null && skeleton != null &&
+            genericBoneJoints != null)
+            for (int i = 0; i < genericBoneJoints.Count; i++)
+            {
+                ExpressionBoneJoint item = genericBoneJoints[i];
+                if (item == null ||
+                    (item.joint & ExpressionJoint.Head) == 0 ||
+                    string.IsNullOrWhiteSpace(item.boneName)) continue;
+                Transform candidate = skeleton.GetBoneTransform(
+                    UMAUtils.StringToHash(item.boneName));
+                if (candidate == null) continue;
+                _naturalHeadTransform = candidate;
+                break;
+            }
+
+        if (_naturalHeadTransform != null)
+            _naturalHeadHash = UMAUtils.StringToHash(
+                _naturalHeadTransform.name);
     }
 
     private void RebuildImmediateBindings()
@@ -1274,6 +1583,7 @@ public sealed partial class DynamicExpressionPlayer
             definition = definition,
             target = definition.DefaultValue,
             effective = definition.DefaultValue,
+            previousHeadMotionValue = definition.DefaultValue,
             lastSource = ExpressionSource.Manual
         };
         if (definition.dna.effects != null)
@@ -1739,6 +2049,7 @@ public sealed partial class DynamicExpressionPlayer
         _isBuilding = true;
         _buildChangedWhileBuilding = false;
         _bindingsValid = false;
+        RemoveNaturalHeadMotion();
         RestoreControlledBones();
         CaptureBuildSnapshot();
         _pendingBuildType = DNAInstanceCollection.DNABuildType.None;
@@ -1868,6 +2179,7 @@ public sealed partial class DynamicExpressionPlayer
             Array.Copy(snapshot.active, runtime.sourceActive, SourceCount);
             runtime.target = ResolveSources(runtime);
             runtime.effective = runtime.target;
+            runtime.previousHeadMotionValue = runtime.effective;
         }
     }
 

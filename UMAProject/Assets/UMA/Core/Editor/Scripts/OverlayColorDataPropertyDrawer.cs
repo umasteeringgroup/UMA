@@ -496,6 +496,24 @@ namespace UMA.Editors
 			return true;
 		}
 
+        internal static SharedColorTable FindStandardColorTable(string sharedColorName)
+        {
+            RefreshSharedColorTableCacheIfNeeded(false);
+            return FindStandardColorTable(sharedColorName, cachedSharedColorTables);
+        }
+
+        internal static SharedColorTable FindStandardColorTable(string sharedColorName, IEnumerable<SharedColorTable> tables)
+        {
+            SharedColorTable fallback = null;
+            foreach (var table in tables)
+            {
+                if (table == null) continue;
+                if (table.name == sharedColorName + "Colors") return table;
+                if (table.name == "DefaultColors" && fallback == null) fallback = table;
+            }
+            return fallback;
+        }
+
 		private static void RefreshSharedColorTableCacheIfNeeded(bool force)
 		{
 			if (!force && sharedColorTableCacheInitialized && EditorApplication.timeSinceStartup < nextSharedColorTableRefreshTime)

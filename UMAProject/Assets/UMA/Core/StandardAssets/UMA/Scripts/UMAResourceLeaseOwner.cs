@@ -40,6 +40,10 @@ namespace UMA
                 }
         }
 
+        internal void AdoptNPCReferences() => OnEnable();
+        // Unity does not dispatch OnDestroy to a never-active template renderer.
+        internal void ReleaseNPCReferences() => OnDestroy();
+
         private static Texture CopyTexture(Texture source)
         {
             if (source is RenderTexture rt)

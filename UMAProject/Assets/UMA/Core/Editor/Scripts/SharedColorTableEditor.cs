@@ -8,6 +8,8 @@ namespace UMA.Editors
 	[CustomEditor(typeof(SharedColorTable))]
 	public class SharedColorTableEditor : Editor 
 	{
+        private readonly UMAInspectorView inspectorView =
+            new UMAInspectorView(typeof(SharedColorTable));
         private class DonorMaterialPropertySelection
         {
             public string Name;
@@ -54,6 +56,93 @@ namespace UMA.Editors
 
         public override void OnInspectorGUI()
         {
+            if (inspectorView.DrawSelector())
+            {
+                DrawAdvancedInspector();
+                return;
+            }
+            DrawStandardInspector();
+        }
+
+        private void DrawStandardInspector()
+        {
+            SharedColorTable table = target as SharedColorTable;
+            if (table == null) return;
+            serializedObject.Update();
+            if (table.colors == null) table.colors = new OverlayColorData[0];
+            using (inspectorView.Section("Table and channels",
+                "Table Name identifies this reusable palette. Channel Count is the number of material color/property channels stored by every entry; it must match the materials and overlays that consume the table."))
+            {
+                inspectorView.Field(serializedObject, "sharedColorName",
+                    "Table Name");
+                inspectorView.Field(serializedObject, "channelCount",
+                    "Channel Count");
+            }
+            using (inspectorView.Section("Shared colors",
+                "Each color is a named value that overlays can share. Expand an entry to edit its tint and property channels. Base Color identifies the entry used as the principal tint. Names should be unique so recipes can resolve them predictably."))
+            {
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    if (GUILayout.Button("Add Color")) AddNewColor(table);
+                    using (new EditorGUI.DisabledScope(
+                        GetSelectedOverlayColorData(table) == null))
+                        if (GUILayout.Button("Duplicate Selected"))
+                            DuplicateSelectedColor(table);
+                }
+                EditorGUILayout.PropertyField(
+                    serializedObject.FindProperty("colors"), true);
+            }
+            using (inspectorView.Section("Utilities",
+                "Bulk base-color flags are safe palette utilities. Donor-material property discovery, renderer preview and applying values to selected materials are available in Advanced View."))
+            {
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    if (GUILayout.Button("Set All As Base Color"))
+                        SetAllBaseColorFlags(table, true);
+                    if (GUILayout.Button("Clear Base Color Flags"))
+                        SetAllBaseColorFlags(table, false);
+                }
+            }
+            serializedObject.ApplyModifiedProperties();
+            ProcessStandardColorCommands(table);
+        }
+
+        private void ProcessStandardColorCommands(SharedColorTable table)
+        {
+            if (table.colors == null) return;
+            int selected = -1;
+            for (int i = 0; i < table.colors.Length; i++)
+            {
+                OverlayColorData color = table.colors[i];
+                if (color == null) continue;
+                if (color.deleteThis)
+                {
+                    Undo.RecordObject(table, "Delete Shared Color");
+                    table.colors = RemoveColorAt(table.colors, i);
+                    EditorUtility.SetDirty(table);
+                    serializedObject.Update();
+                    return;
+                }
+                if (color.moveUpThis && i > 0)
+                {
+                    MoveColor(table, i, i - 1);
+                    serializedObject.Update();
+                    return;
+                }
+                if (color.moveDownThis && i < table.colors.Length - 1)
+                {
+                    MoveColor(table, i, i + 1);
+                    serializedObject.Update();
+                    return;
+                }
+                if (!color.isSelected) continue;
+                if (selected < 0) selected = i;
+                else color.isSelected = false;
+            }
+        }
+
+        private void DrawAdvancedInspector()
+        {
             SharedColorTable sct = target as SharedColorTable;
             if (sct == null)
             {
@@ -62,12 +151,19 @@ namespace UMA.Editors
 
             serializedObject.Update();
 
+            using (inspectorView.Section("Table and channels",
+                "Table Name identifies this reusable palette. Channel Count establishes the number of color/property channels stored by every entry and must match consuming materials."))
+            {
             if (sct.colors == null)
             {
                 sct.colors = new OverlayColorData[0];
             }
             EditorGUILayout.PropertyField(serializedObject.FindProperty("sharedColorName"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("channelCount"));
+            }
+            using (inspectorView.Section("Donor material and shader properties",
+                "The donor material discovers compatible color, float, integer and range shader properties and previews the selected palette entry. Donor selections are editor-only authoring state and are not serialized into the color table."))
+            {
             mainDonorFoldout = EditorGUILayout.Foldout(mainDonorFoldout, "Donor Material / Preview", true);
             if (mainDonorFoldout)
             {
@@ -75,7 +171,11 @@ namespace UMA.Editors
                 DrawDonorMaterialSection(sct);
                 GUIHelper.EndVerticalPadded();
             }
+            }
 
+            using (inspectorView.Section("Preview materials",
+                "Choose renderer materials that should receive the selected shared-color values for preview. This modifies preview material values; it does not add material references to the color table."))
+            {
             applyMaterialsFoldout = EditorGUILayout.Foldout(applyMaterialsFoldout, "Apply to these materials", true);
             if (applyMaterialsFoldout)
             {
@@ -90,7 +190,11 @@ namespace UMA.Editors
                 }
                 GUIHelper.EndVerticalPadded();
             }
+            }
 
+            using (inspectorView.Section("Colors and utilities",
+                "Author, select, duplicate, reorder and delete shared colors. Expand/Collapse changes only inspector presentation. Base Color flags identify principal tint entries and can be changed in bulk."))
+            {
             EditorGUILayout.LabelField("Shared Color Table", EditorStyles.boldLabel);
             EditorGUILayout.BeginHorizontal();
             if (GUILayout.Button("Expand All"))
@@ -217,6 +321,7 @@ namespace UMA.Editors
                 }
 
                 serializedObject.ApplyModifiedProperties();
+            }
             }
         }
 
@@ -841,4 +946,3 @@ namespace UMA.Editors
         }
     }
 }
-

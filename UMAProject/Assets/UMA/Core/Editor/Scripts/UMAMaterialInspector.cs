@@ -17,6 +17,7 @@ namespace UMA.Editors
         private GUIStyle _centeredStyle;
         private SerializedProperty _shaderParms;
         private SerializedProperty _shaderKeywords;
+        private SerializedProperty _supportsSourceUVCropping;
         private bool[] channelExpanded = new bool[3];
         private static bool showMaterialInspector = false;
         Editor innerEditor = null;
@@ -44,6 +45,7 @@ namespace UMA.Editors
         { 
             _shaderParms = serializedObject.FindProperty("shaderParms");
             _shaderKeywords = serializedObject.FindProperty("shaderKeywords");
+            _supportsSourceUVCropping = serializedObject.FindProperty("supportsSourceUVCropping");
             EditorApplication.update += DoInspectors;
         }
 
@@ -99,6 +101,7 @@ namespace UMA.Editors
             UMAMaterial.MaterialType MatType = (UMAMaterial.MaterialType)materialTypeProperty.intValue;
 
             showHelp = EditorGUILayout.Toggle("Show Help", showHelp);
+            EditorGUILayout.PropertyField(_supportsSourceUVCropping);
 
             GUILayout.BeginHorizontal();
             EditorGUILayout.PropertyField(serializedObject.FindProperty("_material"), new GUIContent( "Default Material", "The Unity Material to link to."),GUILayout.ExpandWidth(true));

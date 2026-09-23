@@ -13,6 +13,8 @@ namespace UMA
     /// </summary>
     public class UMAMaterial : ScriptableObject
     {
+        [Tooltip("Opt custom shaders into source-UV cropping. Enable only if all passes sample generated channels with unchanged UV0 (no tiling, displacement, parallax, or UV animation). Standard/Lit shaders are recognized automatically.")]
+        public bool supportsSourceUVCropping;
         [Serializable]
         public class ShaderParms
         {
@@ -43,13 +45,23 @@ namespace UMA
             EnsureSupportedChannelTextureFormats(channels);
         }
 
-        private bool checkedHDRPResult = false;
+        private static Type checkedPipelineType;
+        private static bool checkedHDRPResult;
 
         private bool isHDRP
         {
             get
             {
-                checkedHDRPResult = GraphicsSettings.currentRenderPipeline != null && GraphicsSettings.currentRenderPipeline.GetType().ToString().Contains("HDRenderPipelineAsset");
+                var pipeline = GraphicsSettings.currentRenderPipeline;
+                if (pipeline == null) return false;
+                var type = pipeline.GetType();
+                // Type classification is immutable; still observe the current pipeline
+                // every time so runtime quality/pipeline switches take effect immediately.
+                if (type != checkedPipelineType)
+                {
+                    checkedPipelineType = type;
+                    checkedHDRPResult = type.ToString().Contains("HDRenderPipelineAsset");
+                }
                 return checkedHDRPResult;
             }
         }

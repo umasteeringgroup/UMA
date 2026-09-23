@@ -309,6 +309,39 @@ namespace UMA.Tests
         }
 
         [Test]
+        public void UmaMaterialColorMappingsSeparateMaterialsButNotAtlasesOrMeshes()
+        {
+            int entries = UMAGeneratedResourceCache.Shared.EntryCount;
+            using (var f = new Fixture())
+            {
+                f.Meshes.Material.shaderParms = new[] { new UMAMaterial.ShaderParms {
+                    ParameterName = "_BaseColor", ColorName = "Surface tint" } };
+                UMAData Build(Color tint)
+                {
+                    var avatar = f.Avatar();
+                    avatar.umaRecipe.sharedColors = new[] { new OverlayColorData(1) { name = "Surface tint", color = tint } };
+                    f.Build(avatar); f.Meshes.Build(avatar);
+                    return avatar;
+                }
+                var a = Build(Color.red).GetRenderer(0);
+                var b = Build(Color.blue).GetRenderer(0);
+                var matching = Build(Color.blue).GetRenderer(0);
+                Assert.That(a.sharedMaterial.GetColor("_BaseColor"), Is.EqualTo(Color.red));
+                Assert.That(b.sharedMaterial.GetColor("_BaseColor"), Is.EqualTo(Color.blue));
+                Assert.AreNotSame(a.sharedMaterial, b.sharedMaterial);
+                Assert.AreSame(b.sharedMaterial, matching.sharedMaterial);
+                Assert.AreSame(a.sharedMaterial.GetTexture("_BaseMap"), b.sharedMaterial.GetTexture("_BaseMap"));
+                Assert.AreSame(a.sharedMesh, b.sharedMesh);
+                // A direct runtime edit of the UMAMaterial mapping must also take effect.
+                f.Meshes.Material.shaderParms[0].ColorName = "Absent";
+                var changed = Build(Color.blue).GetRenderer(0);
+                Assert.AreNotSame(b.sharedMaterial, changed.sharedMaterial);
+                Assert.AreSame(b.sharedMaterial.GetTexture("_BaseMap"), changed.sharedMaterial.GetTexture("_BaseMap"));
+            }
+            Assert.AreEqual(entries, UMAGeneratedResourceCache.Shared.EntryCount);
+        }
+
+        [Test]
         public void ColorAndSourceRevisionAndOutputSettingsMissButUnchangedRequestsHit()
         {
             int entries = UMAGeneratedResourceCache.Shared.EntryCount;
@@ -379,6 +412,23 @@ namespace UMA.Tests
                 Assert.IsTrue(renderer.sharedMaterial.GetTexture("_BaseMap") != null);
             }
             Assert.AreEqual(entries, UMAGeneratedResourceCache.Shared.EntryCount, UMAGeneratedResourceCache.Shared.DescribeEntries());
+        }
+
+        [TestCase(false)] [TestCase(true)]
+        public void OnlyRealSlotAtlasListenersDetachSharedCallbackMaterials(bool hasListener)
+        {
+            using (var f = new Fixture())
+            {
+                var avatar = f.Avatar(); f.Build(avatar); f.Meshes.Build(avatar);
+                var material = avatar.generatedMaterials.materials[0];
+                var shared = material.material;
+                var slot = avatar.umaRecipe.slotDataList[0].asset;
+                slot.SlotAtlassed = new UMADataSlotMaterialRectEvent();
+                if (hasListener) slot.SlotAtlassed.AddListener((data, slotData, output, rect) => { });
+                typeof(UMAResourceReuse).GetMethod("PrepareCallbackMaterials",
+                    System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic).Invoke(null, new object[] { avatar });
+                Assert.That(ReferenceEquals(material.material, shared), Is.EqualTo(!hasListener));
+            }
         }
 
         [Test]

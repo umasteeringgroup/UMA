@@ -22,10 +22,10 @@ namespace UMA
         private readonly byte[] bytes;
         internal readonly Hash128 Hash;
 
-        private UMAMeshInputSnapshot(ReadOnlySpan<byte> source)
+        private UMAMeshInputSnapshot(ReadOnlySpan<byte> source, Hash128? preparedHash)
         {
             bytes = source.ToArray();
-            Hash = Hash128.Compute(bytes);
+            Hash = preparedHash ?? Hash128.Compute(bytes);
         }
 
         internal static UMAMeshInputSnapshot Capture(object sourceIdentity, ReadOnlySpan<byte> source, bool immutableSource = false)
@@ -33,7 +33,8 @@ namespace UMA
             var entry = latest.GetOrCreateValue(sourceIdentity);
             if (entry.Snapshot != null && entry.Snapshot.TryGetTarget(out var current) && (immutableSource || current.Matches(source)))
                 return current;
-            var snapshot = new UMAMeshInputSnapshot(source);
+            Hash128? preparedHash = immutableSource && UMAMeshPreparation.TryGetBufferHash(sourceIdentity, out var hash) ? hash : null;
+            var snapshot = new UMAMeshInputSnapshot(source, preparedHash);
             if (entry.Snapshot == null) entry.Snapshot = new WeakReference<UMAMeshInputSnapshot>(snapshot);
             else entry.Snapshot.SetTarget(snapshot);
             return snapshot;

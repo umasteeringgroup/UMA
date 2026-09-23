@@ -88,9 +88,9 @@ Material:
     - _Root_Shift: 0.2
     - _Root_Tip_Intensity: 0.4
     - _ShadowClip: 0.3
-    - _Smoothness: 0.198
+    - _Smoothness: 0.037
     - _SpecularMix: 0.5
-    - _SpecularMultiplier: 0.199
+    - _SpecularMultiplier: 0.071
     - _SpecularPowerScale: 30
     - _SpecularShift: 0
     - _SrcBlend: 1

@@ -12,6 +12,14 @@ namespace UMA
     [DisallowMultipleComponent]
     public class UMAGeneratorOverride : MonoBehaviour
     {
+        [Tooltip("Optional quality profile. When assigned, its checked values replace the legacy fields below; unchecked values inherit the lower-priority profile or generator baseline.")]
+        public GeneratorQualityProfile qualityProfile;
+        [Tooltip("Higher priorities win. Equal priorities use activation order. Quality controllers default to 0; scene overrides default to 100.")]
+        public int qualityPriority = 100;
+        public GeneratorQualityRebuild qualityRebuild = GeneratorQualityRebuild.NewBuildsOnly;
+        public bool overrideSourceUVCropping;
+        public bool enableSourceUVCropping;
+        [Min(4)] public int sourceUVCropPadding = 8;
         // Atlas Settings
         public bool fitAtlas = true;
         public bool SharperFitTextures = true;
@@ -50,6 +58,8 @@ namespace UMA
         public int garbageCollectionRate;
         public bool processAllPending;
         public bool SaveAndRestoreIgnoredItems;
+        public bool CleanupUnusedBones;
+        public bool MeasureBoneCleanup;
         public bool showInHierarchy;
 
         // Runtime Tuning Settings
@@ -77,12 +87,10 @@ namespace UMA
 
         [NonSerialized]
         private UMAGenerator overriddenGenerator;
-        [NonSerialized]
-        private GeneratorState previousState;
 
         private void Awake()
         {
-            ApplyOverride();
+            if (isActiveAndEnabled) ApplyOverride();
         }
 
         private void OnEnable()
@@ -99,6 +107,13 @@ namespace UMA
         {
             RestoreGenerator();
         }
+
+        private void Update()
+        {
+            if (overriddenGenerator == null || !GeneratorQualityRuntime.HasOwner(overriddenGenerator, this)) ApplyOverride();
+        }
+
+        public void ApplySettings() { if (isActiveAndEnabled) ApplyOverride(); }
 
         private void Reset()
         {
@@ -135,86 +150,76 @@ namespace UMA
             ScaleSystemMemoryCutoffMB = Mathf.Max(0f, ScaleSystemMemoryCutoffMB);
             editorAtlasResolution = Mathf.Max(1, editorAtlasResolution);
             editorInitialScaleFactor = Mathf.Clamp(editorInitialScaleFactor, 1, 16);
+            sourceUVCropPadding = Mathf.Clamp(sourceUVCropPadding, 4, 256);
         }
 
         private void ApplyOverride()
         {
-            if (overriddenGenerator != null || previousState != null)
-            {
-                return;
-            }
-
-            overriddenGenerator = FindCurrentGenerator(true);
+            var next = FindCurrentGenerator(true);
+            if (overriddenGenerator != next) GeneratorQualityRuntime.Remove(overriddenGenerator, this);
+            overriddenGenerator = next;
             if (overriddenGenerator == null)
             {
                 return;
             }
 
-            previousState = GeneratorState.Capture(overriddenGenerator);
-            ApplyTo(overriddenGenerator);
+            if (qualityProfile != null)
+                GeneratorQualityRuntime.SetProfile(overriddenGenerator, this, qualityProfile, qualityPriority, qualityRebuild);
+            else
+                GeneratorQualityRuntime.Set(overriddenGenerator, this, OverlayLegacySettings, qualityPriority, qualityRebuild, 1);
         }
 
         private void RestoreGenerator()
         {
-            if (previousState != null && overriddenGenerator != null)
-            {
-                previousState.ApplyTo(overriddenGenerator);
-            }
-
-            previousState = null;
+            GeneratorQualityRuntime.Remove(overriddenGenerator, this);
             overriddenGenerator = null;
         }
 
+        private void OverlayLegacySettings(GeneratorQualityConfiguration state)
+        {
+            state.fitAtlas = fitAtlas;
+            state.SharperFitTextures = SharperFitTextures;
+            state.AtlasOverflowFitMethod = AtlasOverflowFitMethod;
+            state.FitPercentageDecrease = FitPercentageDecrease;
+            state.convertMipMaps = convertMipMaps;
+            state.atlasResolution = atlasResolution;
+            state.convertRenderTexture = convertRenderTexture;
+            state.useAsyncConversion = useAsyncConversion;
+            state.asyncMipRegen = asyncMipRegen;
+            state.MaxQueuedConversionsPerFrame = MaxQueuedConversionsPerFrame;
+            state.IterationCount = IterationCount;
+            state.InterFrameDelay = InterFrameDelay;
+            state.MaxMultiStepWorkMilliseconds = MaxMultiStepWorkMilliseconds;
+            state.collectGarbage = collectGarbage;
+            state.garbageCollectionRate = garbageCollectionRate;
+            state.processAllPending = processAllPending;
+            state.applyInline = applyInline;
+            state.InitialScaleFactor = InitialScaleFactor;
+            state.AutomaticScaling = AutomaticScaling;
+            state.ScaleGPUMemoryCutoffMB = ScaleGPUMemoryCutoffMB;
+            state.ScaleSystemMemoryCutoffMB = ScaleSystemMemoryCutoffMB;
+            state.editorAtlasResolution = editorAtlasResolution;
+            state.editorInitialScaleFactor = editorInitialScaleFactor;
+            state.SaveAndRestoreIgnoredItems = SaveAndRestoreIgnoredItems;
+            state.CleanupUnusedBones = CleanupUnusedBones;
+            state.MeasureBoneCleanup = MeasureBoneCleanup;
+            state.showInHierarchy = showInHierarchy;
+            if (defaultRendererAsset != null) state.defaultRendererAsset = defaultRendererAsset;
+            if (defaultOverlayAsset != null) state.defaultOverlayAsset = defaultOverlayAsset;
+            state.alwaysRegenerateRenderers = alwaysRegenerateRenderers;
+            state.Use32BitBuffers = Use32BitBuffers;
+            if (textureMerge != null) state.textureMerge = textureMerge;
+            if (meshCombiner != null) state.meshCombiner = meshCombiner;
+            if (overrideSourceUVCropping) { state.enableSourceUVCropping = enableSourceUVCropping; state.sourceUVCropPadding = sourceUVCropPadding; }
+        }
+
+        // Kept as a small adapter for existing editor integrations.
         private void ApplyTo(UMAGenerator generator)
         {
-            generator.fitAtlas = fitAtlas;
-            generator.SharperFitTextures = SharperFitTextures;
-            generator.AtlasOverflowFitMethod = AtlasOverflowFitMethod;
-            generator.FitPercentageDecrease = FitPercentageDecrease;
-            generator.convertMipMaps = convertMipMaps;
-            generator.atlasResolution = atlasResolution;
-
-            generator.convertRenderTexture = convertRenderTexture;
-            generator.useAsyncConversion = useAsyncConversion;
-            generator.asyncMipRegen = asyncMipRegen;
-
-            generator.MaxQueuedConversionsPerFrame = MaxQueuedConversionsPerFrame;
-            generator.InitialScaleFactor = InitialScaleFactor;
-            generator.IterationCount = IterationCount;
-            generator.InterFrameDelay = InterFrameDelay;
-            generator.MaxMultiStepWorkMilliseconds = MaxMultiStepWorkMilliseconds;
-            generator.collectGarbage = collectGarbage;
-            generator.garbageCollectionRate = garbageCollectionRate;
-            generator.processAllPending = processAllPending;
-            generator.SaveAndRestoreIgnoredItems = SaveAndRestoreIgnoredItems;
-            generator.showInHierarchy = showInHierarchy;
-
-            generator.AutomaticScaling = AutomaticScaling;
-            generator.ScaleGPUMemoryCutoffMB = ScaleGPUMemoryCutoffMB;
-            generator.ScaleSystemMemoryCutoffMB = ScaleSystemMemoryCutoffMB;
-
-            generator.editorAtlasResolution = editorAtlasResolution;
-            generator.editorInitialScaleFactor = editorInitialScaleFactor;
-
-            generator.applyInline = applyInline;
-            if (defaultRendererAsset != null)
-            {
-                generator.defaultRendererAsset = defaultRendererAsset;
-            }
-            if (defaultOverlayAsset != null)
-            {
-                generator.SetDefaultOverlayAsset(defaultOverlayAsset);
-            }
-            generator.alwaysRegenerateRenderers = alwaysRegenerateRenderers;
-            generator.Use32BitBuffers = Use32BitBuffers;
-            if (textureMerge != null)
-            {
-                generator.textureMerge = textureMerge;
-            }
-            if (meshCombiner != null)
-            {
-                generator.meshCombiner = meshCombiner;
-            }
+            var settings = GeneratorQualityConfiguration.Capture(generator);
+            if (qualityProfile != null) qualityProfile.Overlay(settings);
+            else OverlayLegacySettings(settings);
+            settings.ApplyTo(generator);
         }
 
         private static UMAGenerator FindCurrentGenerator(bool createIfMissing)
@@ -237,110 +242,10 @@ namespace UMA
 
         private sealed class GeneratorState
         {
-            private bool fitAtlas;
-            private bool sharperFitTextures;
-            private UMAGeneratorBase.FitMethod atlasOverflowFitMethod;
-            private float fitPercentageDecrease;
-            private bool convertMipMaps;
-            private int atlasResolution;
-            private bool convertRenderTexture;
-            private bool useAsyncConversion;
-            private bool asyncMipRegen;
-            private int maxQueuedConversionsPerFrame;
-            private int initialScaleFactor;
-            private int iterationCount;
-            private int interFrameDelay;
-            private float maxMultiStepWorkMilliseconds;
-            private bool collectGarbage;
-            private int garbageCollectionRate;
-            private bool processAllPending;
-            private bool saveAndRestoreIgnoredItems;
-            private bool showInHierarchy;
-            private bool automaticScaling;
-            private float scaleGPUMemoryCutoffMB;
-            private float scaleSystemMemoryCutoffMB;
-            private int editorAtlasResolution;
-            private int editorInitialScaleFactor;
-            private bool applyInline;
-            private UMARendererAsset defaultRendererAsset;
-            private OverlayDataAsset defaultOverlayAsset;
-            private bool alwaysRegenerateRenderers;
-            private bool use32BitBuffers;
-            private TextureMerge textureMerge;
-            private UMAMeshCombiner meshCombiner;
-
-            public static GeneratorState Capture(UMAGenerator generator)
-            {
-                return new GeneratorState
-                {
-                    fitAtlas = generator.fitAtlas,
-                    sharperFitTextures = generator.SharperFitTextures,
-                    atlasOverflowFitMethod = generator.AtlasOverflowFitMethod,
-                    fitPercentageDecrease = generator.FitPercentageDecrease,
-                    convertMipMaps = generator.convertMipMaps,
-                    atlasResolution = generator.atlasResolution,
-                    convertRenderTexture = generator.convertRenderTexture,
-                    useAsyncConversion = generator.useAsyncConversion,
-                    asyncMipRegen = generator.asyncMipRegen,
-                    maxQueuedConversionsPerFrame = generator.MaxQueuedConversionsPerFrame,
-                    initialScaleFactor = generator.InitialScaleFactor,
-                    iterationCount = generator.IterationCount,
-                    interFrameDelay = generator.InterFrameDelay,
-                    maxMultiStepWorkMilliseconds = generator.MaxMultiStepWorkMilliseconds,
-                    collectGarbage = generator.collectGarbage,
-                    garbageCollectionRate = generator.garbageCollectionRate,
-                    processAllPending = generator.processAllPending,
-                    saveAndRestoreIgnoredItems = generator.SaveAndRestoreIgnoredItems,
-                    showInHierarchy = generator.showInHierarchy,
-                    automaticScaling = generator.AutomaticScaling,
-                    scaleGPUMemoryCutoffMB = generator.ScaleGPUMemoryCutoffMB,
-                    scaleSystemMemoryCutoffMB = generator.ScaleSystemMemoryCutoffMB,
-                    editorAtlasResolution = generator.editorAtlasResolution,
-                    editorInitialScaleFactor = generator.editorInitialScaleFactor,
-                    applyInline = generator.applyInline,
-                    defaultRendererAsset = generator.defaultRendererAsset,
-                    defaultOverlayAsset = generator.defaultOverlayAsset,
-                    alwaysRegenerateRenderers = generator.alwaysRegenerateRenderers,
-                    use32BitBuffers = generator.Use32BitBuffers,
-                    textureMerge = generator.textureMerge,
-                    meshCombiner = generator.meshCombiner
-                };
-            }
-
-            public void ApplyTo(UMAGenerator generator)
-            {
-                generator.fitAtlas = fitAtlas;
-                generator.SharperFitTextures = sharperFitTextures;
-                generator.AtlasOverflowFitMethod = atlasOverflowFitMethod;
-                generator.FitPercentageDecrease = fitPercentageDecrease;
-                generator.convertMipMaps = convertMipMaps;
-                generator.atlasResolution = atlasResolution;
-                generator.convertRenderTexture = convertRenderTexture;
-                generator.useAsyncConversion = useAsyncConversion;
-                generator.asyncMipRegen = asyncMipRegen;
-                generator.MaxQueuedConversionsPerFrame = maxQueuedConversionsPerFrame;
-                generator.InitialScaleFactor = initialScaleFactor;
-                generator.IterationCount = iterationCount;
-                generator.InterFrameDelay = interFrameDelay;
-                generator.MaxMultiStepWorkMilliseconds = maxMultiStepWorkMilliseconds;
-                generator.collectGarbage = collectGarbage;
-                generator.garbageCollectionRate = garbageCollectionRate;
-                generator.processAllPending = processAllPending;
-                generator.SaveAndRestoreIgnoredItems = saveAndRestoreIgnoredItems;
-                generator.showInHierarchy = showInHierarchy;
-                generator.AutomaticScaling = automaticScaling;
-                generator.ScaleGPUMemoryCutoffMB = scaleGPUMemoryCutoffMB;
-                generator.ScaleSystemMemoryCutoffMB = scaleSystemMemoryCutoffMB;
-                generator.editorAtlasResolution = editorAtlasResolution;
-                generator.editorInitialScaleFactor = editorInitialScaleFactor;
-                generator.applyInline = applyInline;
-                generator.defaultRendererAsset = defaultRendererAsset;
-                generator.SetDefaultOverlayAsset(defaultOverlayAsset);
-                generator.alwaysRegenerateRenderers = alwaysRegenerateRenderers;
-                generator.Use32BitBuffers = use32BitBuffers;
-                generator.textureMerge = textureMerge;
-                generator.meshCombiner = meshCombiner;
-            }
+            private GeneratorQualityConfiguration settings;
+            public static GeneratorState Capture(UMAGenerator generator) =>
+                new GeneratorState { settings = GeneratorQualityConfiguration.Capture(generator) };
+            public void ApplyTo(UMAGenerator generator) => settings.ApplyTo(generator);
         }
     }
 }

@@ -12,11 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac718b8ce852d1445b8fbe5c323134ac, type: 3}
   m_Name: UMA3_SkinShader_URP_Realistic
   m_EditorClassIdentifier: UMA_Core::UMA.UMAMaterial
+  supportsSourceUVCropping: 0
   _material: {fileID: 2100000, guid: 790c9e6d9ae4a41418dc97770bede370, type: 2}
   _HDRPMaterial: {fileID: 0}
   _secondPass: {fileID: 0}
   _HDRPSecondPass: {fileID: 0}
-  materialType: 2
+  materialType: 1
   channels:
   - channelType: 0
     textureFormat: 0

@@ -60,6 +60,8 @@ namespace UMA
         public List<string> LegsDNA = new List<string>();
         public List<string> BodyDNA = new List<string>();
 
+        [Header("Presets")]
+        public List<UMAPreset> Presets = new List<UMAPreset>();
 
         [Header("Items")]
         public List<UMAWardrobeRecipe> FaceItems = new List<UMAWardrobeRecipe>();
@@ -566,7 +568,64 @@ namespace UMA
                 SafeInstantiatePrefab(InfoText, DNAContainer.transform);
             }
             ShowLog();
+            AddPresetItems(ItemsContainer);
             ActivateButton(BackButton);
+        }
+
+        public bool CanApplyPreset(UMAPreset preset)
+        {
+            if (preset == null || avatar == null) return false;
+            string raceName = preset.Definition.RaceName;
+            if (string.IsNullOrEmpty(raceName))
+                return avatar.activeRace != null && avatar.activeRace.data != null;
+            return UMAAssetIndexer.Instance.GetRace(raceName) != null;
+        }
+
+        public void OnPresetClick(UMAPreset preset)
+        {
+            if (!CanApplyPreset(preset)) return;
+            try { preset.ApplyTo(avatar); }
+            catch (Exception ex) { Debug.LogException(ex, this); }
+        }
+
+        private void AddPresetItems(GameObject container)
+        {
+            if (container == null || Presets == null) return;
+            var groups = new Dictionary<string, List<UMAPreset>>(StringComparer.Ordinal);
+            var groupOrder = new List<string>();
+            foreach (var preset in Presets)
+            {
+                if (!CanApplyPreset(preset)) continue;
+                string raceName = preset.Definition.RaceName;
+                if (string.IsNullOrEmpty(raceName)) raceName = avatar.activeRace.name;
+                if (!groups.TryGetValue(raceName, out var group))
+                {
+                    group = new List<UMAPreset>();
+                    groups.Add(raceName, group);
+                    groupOrder.Add(raceName);
+                }
+                group.Add(preset);
+            }
+            foreach (string raceName in groupOrder)
+            {
+                RaceData raceData = UMAAssetIndexer.Instance.GetRace(raceName);
+                var header = SafeInstantiatePrefab(ColorLabel, container.transform);
+                UnityEngine.UI.Text headerText = header != null ? header.GetComponent<UnityEngine.UI.Text>() : null;
+                if (headerText != null) headerText.text = raceData != null ? raceData.friendlyName : raceName;
+                GameObject grid = SafeInstantiatePrefab(ItemContainer, container.transform);
+                if (grid == null) continue;
+                foreach (var preset in groups[raceName])
+                {
+                    var tile = SafeInstantiatePrefab(Item, grid.transform);
+                    if (tile == null) continue;
+                    var effector = tile.GetComponent<ItemEffector>();
+                    if (effector == null) continue;
+                    effector.SetupPreset(preset, OnPresetClick);
+                    effector.SetCategoryHeader(headerText);
+                }
+            }
+            if (container.TryGetComponent<RectTransform>(out var layout))
+                UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(layout);
         }
 
         private IEnumerator DeferredShowInfo()

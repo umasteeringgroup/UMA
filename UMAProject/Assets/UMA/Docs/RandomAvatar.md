@@ -1,6 +1,6 @@
 # UMA Random Avatar Generation
 
-UMA provides random-avatar components for generating characters, crowds, and randomized wardrobe. The current UMA 3 starter content includes both the original `UMARandomAvatar` and the more flexible `UMARandomAvatarV2`.
+UMA provides random-avatar components for generating characters, crowds, and randomized wardrobe. Use `UMARandomAvatar` for new setups. It combines separate character and wardrobe randomization, existing-avatar targets, pooled appearances, completed NPC builds, and spawning budgets. `UMARandomAvatarV2` remains available for compatibility with existing scenes.
 
 ## Starter Prefabs
 
@@ -36,7 +36,7 @@ Create focused randomizers instead of one enormous list. For example:
 
 This makes art direction and probability tuning easier.
 
-## Original UMARandomAvatar
+## UMARandomAvatar
 
 `UMARandomAvatar` generates characters from one or more randomizers.
 
@@ -53,7 +53,22 @@ Important controls include:
 - Generated-name prefix
 - Generated-character event
 
-Use it for straightforward random crowd generation and existing projects built around its API.
+Choose **Targets**:
+
+- **Generate** instantiates the configured prefab, as a single character or a grid.
+- **Use Existing** targets the **Scene Avatars** list and never instantiates or owns those objects.
+
+**Run on Start** is enabled by default. Existing avatars that have already built are randomized immediately; others are randomized once when their first build finishes. Disable Run on Start for manual control.
+
+**Character Randomizers** retains the original serialized `Randomizers` field and its race, DNA, color, and slot settings. The optional **Wardrobe Randomizers** list applies a second, race-compatible clothing pass. Leave it empty to retain the original single-list setup. For a wardrobe-only reroll with no separate wardrobe list, a matching definition from Character Randomizers supplies slots and colors without changing race or DNA.
+
+In Play mode, use **Reroll Character**, **Reroll Wardrobe**, or **Reroll All**. Character rerolls still apply character slots such as hair; configure the character and wardrobe lists with the regions each should control. Partial rerolls replace only selected regions, preserving unrelated items. A full reroll clears existing regular items, additive items, and collections before applying the new setup unless **Keep Unselected Wardrobe** is enabled. A selected empty/None item explicitly removes that region.
+
+**Keep Existing Race** restricts selections to the current race. **Keep Unselected Wardrobe** preserves items outside selected regions; it does not prevent selected regions from changing. These preservation options bypass complete-setup pooling to avoid replacing one avatar's preserved state with another's. Existing-avatar and partial rerolls also bypass the pool.
+
+**Generate Characters** adds another generated batch; **Destroy Generated Characters** removes only objects owned by this controller. **Spawn Budget** spreads instantiation and setup across frames. Zero is synchronous. A full crowd reroll clears and repopulates its appearance pool; partial rerolls clear stale pooled appearances.
+
+For scripts, `Randomize(avatar)` retains its original data-only, pool-aware behavior. `Randomize(avatar, randChar, randWardrobe)` edits selected data without building or using the pool. `RandomizeAndBuild(...)` applies and builds, and `RandomizeAll(...)` rerolls the current target list. The three parameterless button methods are suitable for UnityEvents.
 
 ### Limit the crowd's unique setups
 
@@ -97,23 +112,13 @@ parameters. Rerolling the whole entry is not automatically texture-safe. The cur
 pool deliberately preserves all colors; independent shader-only color variation is a
 separate customization, not another unique base setup.
 
-## UMARandomAvatarV2
+## Migrating UMARandomAvatarV2
 
-V2 separates character randomization from wardrobe randomization.
+V2 uses the same randomization implementation and weighted selection fixes as the unified controller. Its component type and serialized fields remain intact so existing scenes and references continue to load.
 
-It provides:
+In Edit mode, select a V2 component and click **Copy to unified UMARandomAvatar and disable V2**. This undoable action copies randomizers, targets, preservation flags, prefab/grid settings, and the generated-character event. It leaves V2 disabled with a reference to the unified controller, so calls to its generation, destruction, reroll, and wardrobe-toggle methods forward to the replacement. Do not add another unified controller first: migration is disabled if one already exists on the object.
 
-- Character Randomizers
-- Wardrobe Randomizers
-- `Keep Existing Race`
-- `Keep Existing Wardrobe`
-- `Generate` or `Use Existing` mode
-- Grid and sequential-generation controls
-- Randomize all, character only, or wardrobe only
-
-Use `Use Existing` when the scene already contains DCAs and only their appearance should be randomized.
-
-Use `Generate` when the component should instantiate the character prefab.
+The old **Sequential** option only changed setup ordering and did not spread generation across frames. The unified controller sets up each spawned character in turn; use **Spawn Budget** for actual frame budgeting. Migration leaves the budget at zero and pooling disabled until configured. Deterministic results from the old biased weighting algorithm are not preserved.
 
 ## Build a Randomizer
 
@@ -125,13 +130,13 @@ Use `Generate` when the component should instantiate the character prefab.
 6. Adjust chance values.
 7. Save and test many results.
 
-An item with a higher chance value is selected more often relative to the total chance values in its choice group.
+Race definitions and wardrobe items use one cumulative weighted roll per selection. Only positive weights participate. Null entries and empty color tables are skipped; an unmatched race or an entirely zero-weight group leaves that part unchanged. Global colors apply only when enabled and are overridden by race-specific and then selected-slot colors.
 
 Do not assume random selection produces a good outfit. Use wardrobe regions, incompatible recipes, suppression, and curated choice sets to prevent combinations that conflict visually.
 
 ## Character and Wardrobe Randomization
 
-V2 can randomize:
+The unified controller can randomize:
 
 - Both character and wardrobe
 - Character properties while keeping wardrobe

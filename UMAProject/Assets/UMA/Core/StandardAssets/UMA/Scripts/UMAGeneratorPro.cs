@@ -84,6 +84,7 @@ namespace UMA
 
 		private UMAData.GeneratedMaterial FindOrCreateGeneratedMaterial(UMAMaterial umaMaterial, UMARendererAsset renderer = null)
 		{
+            long creationStart = System.Diagnostics.Stopwatch.GetTimestamp();
 			if (umaMaterial.materialType == UMAMaterial.MaterialType.Atlas)
 			{
                 for (int i = 0; i < atlassedMaterials.Count; i++)
@@ -135,11 +136,12 @@ namespace UMA
 #if UNITY_WEBGL
 			res.material.shader = Shader.Find(res.material.shader.name);
 #endif
-                res.material.shader = umaMaterial.material.shader;
-				res.material.CopyPropertiesFromMaterial(umaMaterial.material);
+                // Instantiate already copies the shader, keywords and all properties.
+                // Reapplying them repeats native material setup for every crowd member.
 			}
 			atlassedMaterials.Add(res);
 			generatedMaterials.Add(res);
+            Ticks_MaterialCreation += System.Diagnostics.Stopwatch.GetTimestamp() - creationStart;
 
 			return res;
 		}
@@ -185,6 +187,8 @@ namespace UMA
 			//backUpTexture = umaData.backUpTextures();
 			umaData.CleanTextures();
 			generatedMaterials = new List<UMAData.GeneratedMaterial>(20);
+            // Expose partial ownership immediately so interrupted preparation can release leases.
+            umaData.generatedMaterials.materials = generatedMaterials;
 			atlassedMaterials.Clear();
 			uniqueRenderers.Clear();
 			umaData.umaRecipe.BlendshapeSlots.Clear();
@@ -402,7 +406,7 @@ namespace UMA
 					}
                 }
 #endif
-                ApplyMaterialParameters(ugm,umaData,ugm.material);
+                ApplyMaterialParameters(ugm, umaData, ugm.material);
             }
             packTexture = new MaxRectsBinPack(umaGenerator.atlasResolution, umaGenerator.atlasResolution, false);
 		}
@@ -413,6 +417,12 @@ namespace UMA
         //****************************************************
         public static void ApplyMaterialParameters(GeneratedMaterial ugm, UMAData umaData, Material material)
         {
+            long parameterStart = System.Diagnostics.Stopwatch.GetTimestamp();
+            if (UMAResourceReuse.TryApplyScalarMaterialParameters(umaData, ugm, material))
+            {
+                Ticks_MaterialParameters += System.Diagnostics.Stopwatch.GetTimestamp() - parameterStart;
+                return;
+            }
             for (int j = 0; j < ugm.materialFragments.Count; j++)
             {
                 UMAData.MaterialFragment matfrag = ugm.materialFragments[j];
@@ -485,6 +495,7 @@ namespace UMA
                 }
 
             }
+            Ticks_MaterialParameters += System.Diagnostics.Stopwatch.GetTimestamp() - parameterStart;
         }
 
         public class MaterialDefinitionComparer : IComparer<UMAData.MaterialFragment>
@@ -495,8 +506,15 @@ namespace UMA
 			}
 		}
 
-		public void ProcessTexture(UMAGeneratorBase _umaGenerator, UMAData _umaData, bool updateMaterialList, int InitialScaleFactor)
+        public static long Ticks_MaterialPreparation, Ticks_AtlasPacking, Ticks_MaterialCreation, Ticks_MaterialParameters;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetPreparationTimings() => Ticks_MaterialPreparation = Ticks_AtlasPacking = Ticks_MaterialCreation = Ticks_MaterialParameters = 0;
+
+        public void ProcessTexture(UMAGeneratorBase _umaGenerator, UMAData _umaData, bool updateMaterialList, int InitialScaleFactor)
 		{
+            using var diagnosticTiming = new UMAGenerationDiagnostics.TextureScope(
+                (_umaGenerator as UMAGeneratorBuiltin)?.GenerationTimings);
 			umaGenerator = _umaGenerator;
 			umaData = _umaData;
 			this.updateMaterialList = updateMaterialList;
@@ -504,13 +522,16 @@ namespace UMA
 			textureProcesser = new TextureProcessPRO();
 
 			long atlasPreparationStart = System.Diagnostics.Stopwatch.GetTimestamp();
-			Start();
+            Start();
+            Ticks_MaterialPreparation += System.Diagnostics.Stopwatch.GetTimestamp() - atlasPreparationStart;
+            long packingStart = System.Diagnostics.Stopwatch.GetTimestamp();
 
 			umaData.generatedMaterials.rendererAssets = uniqueRenderers;
 			umaData.generatedMaterials.materials = generatedMaterials;
 
 			GenerateAtlasData();
-			OptimizeAtlas();
+            OptimizeAtlas();
+            Ticks_AtlasPacking += System.Diagnostics.Stopwatch.GetTimestamp() - packingStart;
             _umaGenerator.atlasPreparationTicks += System.Diagnostics.Stopwatch.GetTimestamp() - atlasPreparationStart;
 
             textureProcesser.ProcessTexture(_umaData,_umaGenerator);
@@ -710,6 +731,7 @@ Material secondPass = gm.secondPassMaterial;
 			for (int i = 0; i < atlassedMaterials.Count; i++)
 			{
 				var generatedMaterial = atlassedMaterials[i];
+				UMASourceUVCropping.Prepare(generatedMaterial, umaGenerator, umaData);
 				if (generatedMaterial.umaMaterial.channels == null || generatedMaterial.umaMaterial.channels.Length == 0)
                     continue;
 				
@@ -813,8 +835,8 @@ Material secondPass = gm.secondPassMaterial;
                     continue;
                 }
 
-                int width = Mathf.FloorToInt(tempMaterialDef.baseOverlay.textureList[0].width * material.resolutionScale.x * tempMaterialDef.slotData.overlayScale);
-                int height = Mathf.FloorToInt(tempMaterialDef.baseOverlay.textureList[0].height * material.resolutionScale.y * tempMaterialDef.slotData.overlayScale);
+                int width = Mathf.FloorToInt(tempMaterialDef.baseOverlay.textureList[0].width * material.resolutionScale.x * tempMaterialDef.slotData.overlayScale * tempMaterialDef.sourceUVRect.width);
+                int height = Mathf.FloorToInt(tempMaterialDef.baseOverlay.textureList[0].height * material.resolutionScale.y * tempMaterialDef.slotData.overlayScale * tempMaterialDef.sourceUVRect.height);
 
                 // Avoid zero-size inserts which can cause infinite loops
                 if (width == 0 || height == 0)
@@ -1022,8 +1044,8 @@ Material secondPass = gm.secondPassMaterial;
 				}
 
 
-				int width = Mathf.FloorToInt(tempMaterialDef.baseOverlay.textureList[0].width * material.resolutionScale.x * tempMaterialDef.slotData.overlayScale);
-				int height = Mathf.FloorToInt(tempMaterialDef.baseOverlay.textureList[0].height * material.resolutionScale.y * tempMaterialDef.slotData.overlayScale);
+				int width = Mathf.FloorToInt(tempMaterialDef.baseOverlay.textureList[0].width * material.resolutionScale.x * tempMaterialDef.slotData.overlayScale * tempMaterialDef.sourceUVRect.width);
+				int height = Mathf.FloorToInt(tempMaterialDef.baseOverlay.textureList[0].height * material.resolutionScale.y * tempMaterialDef.slotData.overlayScale * tempMaterialDef.sourceUVRect.height);
 
 				// If either width or height are 0 we will end up with nullRect and potentially loop forever
 				if (width == 0 || height == 0)
@@ -1085,8 +1107,8 @@ Material secondPass = gm.secondPassMaterial;
                     continue;
                 }
 
-                int width = Mathf.FloorToInt(tempMaterialDef.baseOverlay.textureList[0].width * material.resolutionScale.x * tempMaterialDef.slotData.overlayScale);
-				int height = Mathf.FloorToInt(tempMaterialDef.baseOverlay.textureList[0].height * material.resolutionScale.y * tempMaterialDef.slotData.overlayScale);
+                int width = Mathf.FloorToInt(tempMaterialDef.baseOverlay.textureList[0].width * material.resolutionScale.x * tempMaterialDef.slotData.overlayScale * tempMaterialDef.sourceUVRect.width);
+				int height = Mathf.FloorToInt(tempMaterialDef.baseOverlay.textureList[0].height * material.resolutionScale.y * tempMaterialDef.slotData.overlayScale * tempMaterialDef.sourceUVRect.height);
 				
 				// If either width or height are 0 we will end up with nullRect and potentially loop forever
 				if (width == 0 || height == 0) 

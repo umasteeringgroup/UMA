@@ -313,8 +313,11 @@ namespace UMA
         /// a texture writer. Counts runtime registrations too, including subscriptions
         /// made through the UnityEvent base type. Unknown engine layouts fail closed.
         /// </summary>
-        public bool HasListeners => GetPersistentEventCount() != 0 ||
-            getCallCount == null || getCallCount(this) != 0;
+        public bool HasListeners => HasAnyListeners(this);
+        internal static int ListenerCount(UnityEventBase evt) => evt == null ? 0 : getCallCount == null ? int.MaxValue : getCallCount(evt);
+
+        internal static bool HasAnyListeners(UnityEventBase evt) => evt != null &&
+            (evt.GetPersistentEventCount() != 0 || getCallCount == null || getCallCount(evt) != 0);
 
         private static Func<UnityEventBase, int> CreateCallCountReader()
         {

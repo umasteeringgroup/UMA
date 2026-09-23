@@ -39,13 +39,13 @@ namespace UMA
 		/// <param name="context">Context.</param>
 		public override void Load(UMA.UMAData.UMARecipe umaRecipe, bool loadSlots = true)
 		{
-			var packedRecipe = PackedLoad();
+            var packedRecipe = PackedLoadForUnpack();
 			UnpackRecipe(umaRecipe, packedRecipe, loadSlots);
 		}
 
 		public override void Load(UMAData.UMARecipe umaRecipe, RaceData raceData)
 		{
-			var packed = PackedLoad();
+            var packed = PackedLoadForUnpack();
 			UnpackRecipeWithRaceDefaults(umaRecipe, packed, raceData);
 		}
 
@@ -97,7 +97,11 @@ namespace UMA
 		/// </summary>
 		/// <returns>The UMAPackRecipe.</returns>
 		/// <param name="context">Context.</param>
-		public abstract UMAPackRecipe PackedLoad();
+        public abstract UMAPackRecipe PackedLoad();
+
+        // The public PackedLoad contract returns editable data. Internal loading may use
+        // privately retained serialized input, but must not share mutable unpacked state.
+        protected virtual UMAPackRecipe PackedLoadForUnpack() => PackedLoad();
 
 		/// <summary>
 		/// Serialize the packed recipe.
@@ -402,8 +406,32 @@ namespace UMA
 #endif
 
 		[System.Serializable]
-		public class PackedOverlayColorDataV3
-		{
+        public class PackedOverlayColorDataV3
+        {
+            [NonSerialized] private string[] parsedPropertyText;
+            [NonSerialized] private UMAProperty[] parsedProperties;
+
+            private UMAProperty UnpackProperty(int index)
+            {
+                if (parsedProperties == null || parsedProperties.Length != ShaderParms.Length)
+                {
+                    parsedProperties = new UMAProperty[ShaderParms.Length];
+                    parsedPropertyText = new string[ShaderParms.Length];
+                }
+                if (parsedProperties[index] == null || !ReferenceEquals(parsedPropertyText[index], ShaderParms[index]))
+                {
+                    parsedProperties[index] = UMAProperty.FromString(ShaderParms[index]);
+                    parsedPropertyText[index] = ShaderParms[index];
+                }
+                // Every avatar receives independent editable shader parameters.
+                var property = parsedProperties[index];
+                if (property is UMAFloatProperty || property is UMAIntProperty || property is UMAColorProperty ||
+                    property is UMAVectorProperty || property is UMAOverlayTransformProperty)
+                    return property.Clone();
+                // Runtime-only array/buffer property types may have uninitialized values
+                // that their Clone implementations cannot copy. Keep their original path.
+                return UMAProperty.FromString(ShaderParms[index]);
+            }
 			public string name;
 			// Put everything in one array
 			public short[] colors;
@@ -501,7 +529,7 @@ namespace UMA
 						overlayColorData.PropertyBlock.alwaysUpdateParms = alwaysUpdateParms;
 						for (int i = 0; i < ShaderParms.Length; i++)
 						{
-							overlayColorData.PropertyBlock.shaderProperties.Add(UMAProperty.FromString(ShaderParms[i]));
+                            overlayColorData.PropertyBlock.shaderProperties.Add(UnpackProperty(i));
 						}
 					}
 				}
@@ -515,11 +543,43 @@ namespace UMA
 			//DynamicUmaDna:: needs type hash
 			public int dnaTypeHash;
 			public string packedDna;
+            [NonSerialized] private string parsedText;
+            [NonSerialized] private DNAInstance[] parsedValues;
+
+            internal UMADnaBase Unpack(RaceData race)
+            {
+                if (dnaType != nameof(UMADnaInstance))
+                    return UMADna.LoadInstance(UMADna.GetType(dnaType), packedDna, race);
+                // Cache only value-only serialized DNA. Never hold race/group assets or
+                // initialized dictionaries in a shared recipe, and never share live values.
+                if (!ReferenceEquals(parsedText, packedDna) || parsedValues == null)
+                {
+                    var loaded = UMADnaInstance.LoadInstance(packedDna);
+                    var values = loaded.DNAInstances.dnaInstances;
+                    bool valuesOnly = values != null;
+                    if (values != null)
+                        foreach (var value in values)
+                            if (value != null && !ReferenceEquals(value.parentGroup, null)) { valuesOnly = false; break; }
+                    parsedValues = valuesOnly ? values.ToArray() : null;
+                    parsedText = packedDna;
+                    if (!valuesOnly)
+                    {
+                        if (race != null) loaded.DNAInstances.Initialize(race.DNACollection);
+                        return loaded;
+                    }
+                }
+                var collection = new DNAInstanceCollection();
+                collection.dnaInstances.Capacity = parsedValues.Length;
+                foreach (var value in parsedValues) collection.dnaInstances.Add(value?.Clone());
+                if (race != null) collection.Initialize(race.DNACollection);
+                return new UMADnaInstance(collection);
+            }
 		}
 
 		[System.Serializable]
-		public class UMAPackRecipe
-		{
+        public class UMAPackRecipe
+        {
+            internal UMAPackRecipe CopyHeaderForUnpack() => (UMAPackRecipe)MemberwiseClone();
 			public int version = 1;
 			public packedSlotData[] packedSlotDataList;
 			public PackedSlotDataV2[] slotsV2;
@@ -886,9 +946,7 @@ namespace UMA
 				{
 					continue;
 				}
-				Type dnaType = UMADna.GetType(packedDna.dnaType);
-				
-				UnpackedDNA.Add(UMADna.LoadInstance(dnaType, packedDna.packedDna, null));
+                UnpackedDNA.Add(packedDna.Unpack(null));
 			}
 			return UnpackedDNA;
 		}
@@ -905,9 +963,7 @@ namespace UMA
                 {
                     continue;
                 }
-                Type dnaType = UMADna.GetType(packedDna.dnaType);
-
-                UnpackedDNA.Add(UMADna.LoadInstance(dnaType, packedDna.packedDna, race));
+                UnpackedDNA.Add(packedDna.Unpack(race));
             }
             return UnpackedDNA;
         }
@@ -1105,7 +1161,7 @@ namespace UMA
 					slotData = SlotData.CreatePlaceholder(
 						packedSlot.id,
 						packedSlot.Tags != null ? (string[])packedSlot.Tags.Clone() : new string[0],
-						packedSlot.Races);
+                        packedSlot.Races != null ? (string[])packedSlot.Races.Clone() : Array.Empty<string>());
 					slotData.overlayScale = packedSlot.scale * 0.01f;
 					slotData.blendShapeTargetSlot = packedSlot.blendShapeTarget;
 					slotData.overSmoosh = packedSlot.overSmoosh;
@@ -1201,7 +1257,7 @@ namespace UMA
 					isDisabled = packedSlot.isDisabled,
 					expandAlongNormal = packedSlot.expandAlongNormal,
 					tags = packedSlot.Tags != null ? (string[])packedSlot.Tags.Clone() : new string[0],
-					Races = packedSlot.Races ?? Array.Empty<string>()
+                    Races = packedSlot.Races != null ? (string[])packedSlot.Races.Clone() : Array.Empty<string>()
 				};
 
 				//Debug.Log("Unpacking slot " + sAsset.slotName + ". isDisabled: " + slotData.isDisabled + " expandAlongNormal: " + slotData.expandAlongNormal);

@@ -484,6 +484,30 @@ namespace UMA
             return res;
         }
 
+        internal SlotData CopyForNPC(Dictionary<OverlayColorData, OverlayColorData> colors,
+            Dictionary<List<OverlayData>, List<OverlayData>> overlayLists)
+        {
+            var copy = (SlotData)MemberwiseClone();
+            copy.tags = tags == null ? null : (string[])tags.Clone();
+            copy.Races = Races == null ? null : (string[])Races.Clone();
+            copy.BlendshapeSlotNames = BlendshapeSlotNames == null ? null : new List<string>(BlendshapeSlotNames);
+            copy.meshModifiers = new List<MeshModifier.Modifier>();
+            foreach (var modifier in meshModifiers)
+                copy.meshModifiers.Add(modifier?.CopyForNPC());
+            if (meshHideMask != null)
+            {
+                copy.meshHideMask = new BitArray[meshHideMask.Length];
+                for (int i = 0; i < meshHideMask.Length; i++) copy.meshHideMask[i] = meshHideMask[i] == null ? null : new BitArray(meshHideMask[i]);
+            }
+            if (!overlayLists.TryGetValue(overlayList, out copy.overlayList))
+            {
+                copy.overlayList = new List<OverlayData>(overlayList.Count);
+                overlayLists.Add(overlayList, copy.overlayList);
+                foreach (var overlay in overlayList) copy.overlayList.Add(overlay?.CopyForNPC(colors));
+            }
+            return copy;
+        }
+
         public void RemoveOverlayTags(List<string> HideTags)
         {
             // if we have only one, or no overlays, then we can skip this
