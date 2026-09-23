@@ -908,7 +908,7 @@ namespace UMA.Editors
 
             findAndUpdateExistingSlot = EditorGUILayout.Toggle(
                 new GUIContent(
-                    "Find and update existing slot",
+                    "Update existing slot(s)",
                     "Search all project assets for a SlotDataAsset with the same name and update it in place, regardless of its folder."),
                 findAndUpdateExistingSlot);
             if (findAndUpdateExistingSlot)

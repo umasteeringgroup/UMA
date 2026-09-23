@@ -734,19 +734,23 @@ namespace UMA.CharacterSystem
             {
                 CleanupEditorGeneratedDataForPlayMode();
             }
-            ResetPlayModeRuntimeState();
+            ResetPlayModeRuntimeState(resetWardrobe: true);
         }
 #endif
 
-        private void ResetPlayModeRuntimeState()
+        private void ResetPlayModeRuntimeState(bool resetWardrobe = false)
         {
             blendShapes = new HashSet<string>();
             previousRace = null;
-            _wardrobeRecipes = new Dictionary<string, UMATextRecipe>();
-            _additiveRecipes =
-                new Dictionary<string, List<UMATextRecipe>>();
-            _wardrobeCollections =
-                new Dictionary<string, UMAWardrobeCollection>();
+            // Start can follow LoadAvatarDefinition or SetSlot on a newly instantiated
+            // prefab. Only the editor's play-mode preparation should discard wardrobe
+            // left over from a previous session; ordinary startup must preserve it.
+            if (resetWardrobe)
+            {
+                _wardrobeRecipes = new Dictionary<string, UMATextRecipe>();
+                _additiveRecipes = new Dictionary<string, List<UMATextRecipe>>();
+                _wardrobeCollections = new Dictionary<string, UMAWardrobeCollection>();
+            }
 #if UMA_ADDRESSABLES
             LoadedHandles = new Queue<AsyncOp>();
             DelayedHandles = new HashSet<AsyncOp>();

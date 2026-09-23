@@ -712,6 +712,55 @@ namespace UMA.Tests
             return value;
         }
 
+        [TestCase(false)]
+        [TestCase(true)]
+        public void StartupPreservesWardrobeLoadedFromAvatarDefinition(bool useStringOverload)
+        {
+            var shirt = Create<UMAWardrobeRecipe>();
+            shirt.name = "Startup Shirt";
+            shirt.wardrobeSlot = "Chest";
+            shirt.compatibleRaces.Add(race.raceName);
+            var accessory = Create<UMAWardrobeRecipe>();
+            accessory.name = "Startup Accessory";
+            accessory.wardrobeSlot = "Chest";
+            accessory.Appended = true;
+            accessory.compatibleRaces.Add(race.raceName);
+            var indexer = UMAAssetIndexer.Instance;
+            indexer.SerializedItems.Add(new AssetItem(typeof(UMAWardrobeRecipe), shirt.name, "", shirt));
+            indexer.SerializedItems.Add(new AssetItem(typeof(UMAWardrobeRecipe), accessory.name, "", accessory));
+            indexer.DoInitialDictionaryLoad();
+            var definition = Definition(0);
+            definition.Wardrobe = new[] { shirt.name, accessory.name };
+            avatar.BuildCharacterEnabled = false; // Exercise startup without scheduling mesh generation.
+            if (useStringOverload) avatar.LoadAvatarDefinition(JsonUtility.ToJson(definition));
+            else avatar.LoadAvatarDefinition(definition);
+            Assert.That(avatar.WardrobeRecipes["Chest"], Is.SameAs(shirt));
+            Assert.That(avatar.AdditiveRecipes["Chest"], Does.Contain(accessory));
+            var collection = Create<UMAWardrobeCollection>();
+            avatar.WardrobeCollections["Startup Collection"] = collection;
+
+            avatar.Start();
+
+            Assert.That(avatar.WardrobeRecipes["Chest"], Is.SameAs(shirt));
+            Assert.That(avatar.AdditiveRecipes["Chest"], Does.Contain(accessory));
+            Assert.That(avatar.WardrobeCollections["Startup Collection"], Is.SameAs(collection));
+        }
+
+        [Test]
+        public void PlayModePreparationStillClearsPreviousSessionWardrobe()
+        {
+            avatar.WardrobeRecipes["Chest"] = Create<UMAWardrobeRecipe>();
+            avatar.AdditiveRecipes["Chest"] = new List<UMATextRecipe> { Create<UMAWardrobeRecipe>() };
+            avatar.WardrobeCollections["Previous Session"] = Create<UMAWardrobeCollection>();
+
+            typeof(DynamicCharacterAvatar).GetMethod("PrepareForPlayMode",
+                BindingFlags.Instance | BindingFlags.NonPublic).Invoke(avatar, null);
+
+            Assert.That(avatar.WardrobeRecipes, Is.Empty);
+            Assert.That(avatar.AdditiveRecipes, Is.Empty);
+            Assert.That(avatar.WardrobeCollections, Is.Empty);
+        }
+
         private AvatarDefinition Definition(int count)
         {
             var definition = new AvatarDefinition { RaceName = race.raceName,
