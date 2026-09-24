@@ -45,6 +45,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UMA_Core::UMA.DecalRTStampSlot
   useGroups: 1
-  overlayStamps: []
+  overlayStamps:
+  - name: AutoRTDecals
+    overlays: []
+    Groups:
+    - Skin
+    stamps:
+    - {fileID: 11400000, guid: 8fef4ef6ee0a6b04a870bde6140bfff1, type: 2}
+    - {fileID: 11400000, guid: 606e494e6366de74eaf4b54758ef35bd, type: 2}
+    - {fileID: 11400000, guid: 4734a288d3f03a04db19143ea3c79fe0, type: 2}
   enableDebug: 0
   rgbOnlyDilation: 1

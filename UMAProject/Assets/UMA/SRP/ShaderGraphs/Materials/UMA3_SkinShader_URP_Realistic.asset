@@ -17,7 +17,7 @@ MonoBehaviour:
   _HDRPMaterial: {fileID: 0}
   _secondPass: {fileID: 0}
   _HDRPSecondPass: {fileID: 0}
-  materialType: 1
+  materialType: 2
   channels:
   - channelType: 0
     textureFormat: 0
@@ -47,7 +47,7 @@ MonoBehaviour:
       anisoLevel: 0
       maxTextureSize: 0
       platformOverrides: []
-  - channelType: 1
+  - channelType: 0
     textureFormat: 0
     materialPropertyName: _BumpMap
     sourceTextureName: _BumpMap
