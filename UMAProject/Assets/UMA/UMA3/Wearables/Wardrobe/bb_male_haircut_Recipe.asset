@@ -26,6 +26,13 @@ MonoBehaviour:
   - race: Human Female 3.0
     filename: Assets/UMA/UMA3/Wearables/Icons/Hair/Human Female 3.0/11_bb_male_haircut_Recipe.png
     thumb: {fileID: 21300000, guid: 717d45ee3ac890f4b9011b088d2da09d, type: 3}
+  thumbnailFromTexture: 0
+  thumbnailRect:
+    serializedVersion: 2
+    x: 0.25
+    y: 0.25
+    width: 0.5
+    height: 0.5
   wardrobeSlot: Hair
   Appended: 0
   Hides: []

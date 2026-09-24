@@ -59,8 +59,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
+        enabled: 1
         expanded: 0
         selected: 0
+        showHelp: 0
         EffectName: LeftOuterBreast
         BoneName: LeftOuterBreast
         ScaleFactor: {x: 0, y: 0.4, z: 0.2}
@@ -102,8 +104,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
+        enabled: 1
         expanded: 0
         selected: 0
+        showHelp: 0
         EffectName: RightOuterBreast
         BoneName: RightOuterBreast
         ScaleFactor: {x: 0, y: 0.4, z: 0.2}

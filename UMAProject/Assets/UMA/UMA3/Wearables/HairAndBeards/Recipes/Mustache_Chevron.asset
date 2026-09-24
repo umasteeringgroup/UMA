@@ -22,6 +22,13 @@ MonoBehaviour:
   - race: Human Male 3.0
     filename: Assets/UMA/UMA3/Wearables/Icons/Beard/Human Male 3.0/21_Mustache_Chevron.png
     thumb: {fileID: 21300000, guid: f79b7692d4d7f334ea36a9f993c21c50, type: 3}
+  thumbnailFromTexture: 0
+  thumbnailRect:
+    serializedVersion: 2
+    x: 0.25
+    y: 0.25
+    width: 0.5
+    height: 0.5
   wardrobeSlot: Beard
   Appended: 0
   Hides: []

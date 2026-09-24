@@ -34,7 +34,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
+        enabled: 1
         expanded: 1
+        selected: 0
+        showHelp: 0
         EffectName: LeftForeArmAdjust
         BoneName: LeftForeArmAdjust
         ScaleFactor: {x: 0.4, y: 0, z: 0.4}
@@ -49,7 +52,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
+        enabled: 1
         expanded: 1
+        selected: 0
+        showHelp: 0
         EffectName: RightForeArmAdjust
         BoneName: RightForeArmAdjust
         ScaleFactor: {x: 0.4, y: 0, z: 0.4}
@@ -64,7 +70,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
+        enabled: 1
         expanded: 1
+        selected: 0
+        showHelp: 0
         EffectName: LeftForeArmTwistAdjust
         BoneName: LeftForeArmTwistAdjust
         ScaleFactor: {x: 0.4, y: 0, z: 0.4}
@@ -79,7 +88,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
+        enabled: 1
         expanded: 1
+        selected: 0
+        showHelp: 0
         EffectName: RightForeArmTwistAdjust
         BoneName: RightForeArmTwistAdjust
         ScaleFactor: {x: 0.4, y: 0, z: 0.4}

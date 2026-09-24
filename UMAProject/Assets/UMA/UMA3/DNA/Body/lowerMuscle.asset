@@ -61,8 +61,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
+        enabled: 1
         expanded: 1
         selected: 0
+        showHelp: 0
         EffectName: LeftUpLegAdjust
         BoneName: LeftUpLegAdjust
         ScaleFactor: {x: 1, y: 0, z: 1}
@@ -104,8 +106,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
+        enabled: 1
         expanded: 1
         selected: 1
+        showHelp: 0
         EffectName: RightUpLegAdjust
         BoneName: RightUpLegAdjust
         ScaleFactor: {x: 1, y: 0, z: 1}
@@ -147,8 +151,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
+        enabled: 1
         expanded: 0
         selected: 1
+        showHelp: 0
         EffectName: LeftLegAdjust
         BoneName: LeftLegAdjust
         ScaleFactor: {x: 1, y: 0, z: 1}
@@ -190,8 +196,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
+        enabled: 1
         expanded: 0
         selected: 1
+        showHelp: 0
         EffectName: RightLegAdjust
         BoneName: RightLegAdjust
         ScaleFactor: {x: 1, y: 0, z: 1}

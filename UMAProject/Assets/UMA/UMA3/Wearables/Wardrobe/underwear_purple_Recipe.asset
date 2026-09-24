@@ -22,6 +22,13 @@ MonoBehaviour:
   - race: Human Female 3.0
     filename: Assets/UMA/UMA3/Wearables/Icons/BottomUnderlayer/Human Female 3.0/3_underwear_purple_Recipe.png
     thumb: {fileID: 21300000, guid: a2d2a0501a698d844b3356f101330464, type: 3}
+  thumbnailFromTexture: 0
+  thumbnailRect:
+    serializedVersion: 2
+    x: 0.25
+    y: 0.25
+    width: 0.5
+    height: 0.5
   wardrobeSlot: BottomUnderlayer
   Appended: 0
   Hides: []

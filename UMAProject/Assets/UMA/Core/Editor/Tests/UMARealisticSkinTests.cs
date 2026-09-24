@@ -56,7 +56,15 @@ namespace UMA.Editors.Tests
                 Assert.That(copy.shader.name,Is.EqualTo(UMARealisticSkinUtility.ShaderName));
                 foreach(string property in new[]{"_BaseMap","_BumpMap","_MaskMap","_Skinmask","_DetailNormalMap"})
                     Assert.That(copy.GetTexture(property),Is.EqualTo(source.GetTexture(property)),property);
-                Assert.That(copy.GetColor("_Base_Color"),Is.EqualTo(source.GetColor("_Base_Color")));
+                var expectedColor=source.GetColor("_Base_Color");
+                var actualColor=copy.GetColor("_Base_Color");
+                float colorError=Mathf.Max(
+                    Mathf.Abs(actualColor.r-expectedColor.r),
+                    Mathf.Abs(actualColor.g-expectedColor.g),
+                    Mathf.Abs(actualColor.b-expectedColor.b),
+                    Mathf.Abs(actualColor.a-expectedColor.a));
+                Assert.That(colorError,Is.LessThan(1e-6f),
+                    $"_Base_Color differs: source={expectedColor.ToString("F9")}, copy={actualColor.ToString("F9")}");
                 Assert.That(copy.GetVector("_Smoothness_Remap"),Is.EqualTo(source.GetVector("_Smoothness_Remap")));
                 Assert.That(copy.GetTextureScale("_BaseMap"),Is.EqualTo(source.GetTextureScale("_BaseMap")));
                 Assert.That(copy.GetTextureOffset("_BaseMap"),Is.EqualTo(source.GetTextureOffset("_BaseMap")));

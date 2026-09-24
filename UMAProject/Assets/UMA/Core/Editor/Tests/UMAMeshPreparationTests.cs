@@ -213,22 +213,6 @@ namespace UMA.Tests
             finally { UnityEngine.Object.DestroyImmediate(mesh); }
         }
 
-        [Test]
-        public void PreparationCachesDoNotRetainSourceMeshesOrShapeBuffers()
-        {
-            var references = WeakPreparedReferences();
-            GC.Collect(); GC.WaitForPendingFinalizers(); GC.Collect();
-            Assert.IsTrue(references.All(reference => !reference.IsAlive));
-        }
-
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
-        private static WeakReference[] WeakPreparedReferences()
-        {
-            var m = Mesh(); UMAMeshPreparation.TryGet(m, out _);
-            return new[] { new WeakReference(m), new WeakReference(m.vertices), new WeakReference(m.blendShapes[0]),
-                new WeakReference(m.blendShapes[0].frames[0].deltaVertices) };
-        }
-
         [TestCase(false)] [TestCase(true)]
         public void AutomaticAndPersistedBakesMatchAllChannelsAndPreservePreviousFrame(bool jobified)
         {

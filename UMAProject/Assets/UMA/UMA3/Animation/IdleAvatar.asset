@@ -2689,9 +2689,9 @@ Avatar:
     2335513695: Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightCheek/RightCheekAdjust/RightCheekAdjust_end
     3767753523: Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEye/LeftEyeAdjust
     2401030365: Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEye/RightLowerLid
-    2110447715: Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEye/RightEyeAdjust
-    1618683458: Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEye/RightUpperLid
+    521330879: Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEye
     297970923: Global/Position/Hips/LowerBack/Spine/Spine1/Neck/NeckAdjust/NeckAdjust_end
+    1618683458: Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEye/RightUpperLid
     2887377434: Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger02_01
     1960859624: Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftNose/LeftNoseAdjust/LeftNoseAdjust_end
     125023245: Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger04_01/RightHandFinger04_02/RightHandFinger04_03/RightHandFinger04_03_end
@@ -2705,7 +2705,7 @@ Avatar:
     2276294297: Global/Position/Hips/LowerBack/Spine/Spine1/RightOuterBreast/RightInnerBreast/RightInnerBreast_end
     2518069184: Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftForeArmTwist/LeftForeArmTwistAdjust/LeftForeArmTwistAdjust_end
     3427626358: Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightForeArmAdjust
-    521330879: Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEye
+    2110447715: Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEye/RightEyeAdjust
     3496869385: Global/Position/Hips/LowerBack/Spine/Spine1/LeftOuterBreast/LeftInnerBreast/LeftInnerBreast_end
     4267948868: Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/NoseMiddle/NoseMiddleAdjust
     4255145638: Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftArmAdjust

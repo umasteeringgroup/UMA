@@ -59,8 +59,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
+        enabled: 1
         expanded: 1
         selected: 0
+        showHelp: 0
         EffectName: LeftArm
         BoneName: LeftArm
         ScaleFactor: {x: 0.5, y: 0.5, z: 0.5}
@@ -102,8 +104,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
+        enabled: 1
         expanded: 1
         selected: 1
+        showHelp: 0
         EffectName: RightArm
         BoneName: RightArm
         ScaleFactor: {x: 0.5, y: 0.5, z: 0.5}

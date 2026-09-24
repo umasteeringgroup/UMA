@@ -48,7 +48,7 @@ namespace UMA
             }
             foreach (var avatar in targets)
             {
-                avatar.CharacterCreated.RemoveListener(RandomizeWhenLoaded);
+                avatar.CharacterCreated?.RemoveListener(RandomizeWhenLoaded);
                 waitingForAvatars.Remove(avatar);
                 initializedExistingAvatars.Add(avatar);
                 RandomizeAndBuild(avatar, randChar, randWardrobe);
@@ -84,7 +84,11 @@ namespace UMA
                 if (avatar == null || initializedExistingAvatars.Contains(avatar) || !waitingForAvatars.Add(avatar)) continue;
                 if (avatar.umaData != null && avatar.umaData.GetRenderers() != null && avatar.umaData.GetRenderers().Length > 0)
                     RandomizeWhenLoaded(avatar.umaData);
-                else avatar.CharacterCreated.AddListener(RandomizeWhenLoaded);
+                else
+                {
+                    avatar.CharacterCreated ??= new UMADataEvent();
+                    avatar.CharacterCreated.AddListener(RandomizeWhenLoaded);
+                }
             }
         }
 
@@ -94,14 +98,14 @@ namespace UMA
             if (avatar == null || !waitingForAvatars.Remove(avatar)) return;
             initializedExistingAvatars.Add(avatar);
             // Unsubscribe BEFORE rebuilding: CharacterCreated can fire again.
-            avatar.CharacterCreated.RemoveListener(RandomizeWhenLoaded);
+            avatar.CharacterCreated?.RemoveListener(RandomizeWhenLoaded);
             RandomizeAndBuild(avatar);
         }
 
         private void StopWaitingForAvatars()
         {
             foreach (var avatar in waitingForAvatars)
-                if (avatar != null) avatar.CharacterCreated.RemoveListener(RandomizeWhenLoaded);
+                if (avatar != null) avatar.CharacterCreated?.RemoveListener(RandomizeWhenLoaded);
             waitingForAvatars.Clear();
         }
 

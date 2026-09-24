@@ -16,6 +16,7 @@ MonoBehaviour:
   outputFolder: Assets/UMAProjectData/OverlayPainter/Generated
   filenamePattern: '{avatar}_{material}_{channel}_{resolution}'
   scope: 1
+  content: 0
   channels: 127
   overwritePolicy: 2
   resolution: 0

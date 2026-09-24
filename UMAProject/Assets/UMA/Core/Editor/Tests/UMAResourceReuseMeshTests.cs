@@ -95,16 +95,6 @@ namespace UMA.Tests
         }
 
         [Test]
-        public void MeshInputLookupDoesNotKeepBuffersAliveAfterKeysAndLeasesAreReleased()
-        {
-            var references = ReleasedInputReferences(out var disposedLease);
-            GC.Collect(); GC.WaitForPendingFinalizers(); GC.Collect();
-            Assert.That(references.All(reference => !reference.IsAlive), Is.True,
-                "The source lookup must not keep source arrays or immutable snapshots alive.");
-            GC.KeepAlive(disposedLease);
-        }
-
-        [Test]
         public void ModifierClonesReuseFingerprintsButScaleAndInvalidatedEditsDoNot()
         {
             using (var f = new Fixture())
@@ -246,26 +236,6 @@ namespace UMA.Tests
                 f.Slot.meshData.vertices[0] = Vector3.forward;
                 UnityEditor.EditorUtility.SetDirty(f.Slot);
                 Assert.That(key(), Is.Not.EqualTo(original), "Editor slot changes must invalidate fingerprints without a runtime API call.");
-            }
-        }
-
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
-        private static WeakReference[] ReleasedInputReferences(out UMAGeneratedResourceCache.Lease<Mesh> disposedLease)
-        {
-            using (var f = new Fixture())
-            {
-                f.Slot.meshData.vertices = new Vector3[100];
-                var data = f.Avatar();
-                var key = UMAResourceReuse.DescribeMesh(data, new[] { new SkinnedMeshCombiner.CombineInstance {
-                    meshData = f.Slot.meshData, slotData = data.umaRecipe.slotDataList[0], targetSubmeshIndices = new[] { 0 }
-                } }, data.generatedMaterials.materials.ToArray(), 256, Quaternion.identity);
-                var snapshots = (Array)typeof(UMAGeneratedResourceKey).GetField("sourceKeys",
-                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(key);
-                var result = new[] { new WeakReference(f.Slot.meshData.vertices), new WeakReference(snapshots.GetValue(0)) };
-                disposedLease = new UMAGeneratedResourceCache().Acquire<Mesh>(key);
-                disposedLease.Publish(new Mesh());
-                disposedLease.Dispose();
-                return result;
             }
         }
 

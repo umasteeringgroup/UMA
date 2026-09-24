@@ -382,11 +382,7 @@ namespace UMA
         {
             if (seperator == '\n')
             {
-                char detectedSeperator = compressed[0];
-                if (detectedSeperator == '|')
-                {
-                    seperator = detectedSeperator;
-                }
+                seperator = compressed[0];
             }
 
 

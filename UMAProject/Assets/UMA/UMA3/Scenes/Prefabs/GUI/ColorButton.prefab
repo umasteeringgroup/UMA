@@ -234,6 +234,12 @@ MonoBehaviour:
     showAdvanced: 0
     isBaseColor: 0
     deleteThis: 0
+    moveUpThis: 0
+    moveDownThis: 0
     colorsExpanded: 0
     propertiesExpanded: 0
+    showSelected: 0
+    isSelected: 0
+    showDisplayColor: 0
+    showSelectFromFoldout: 0
     displayColor: {r: 1, g: 1, b: 1, a: 1}

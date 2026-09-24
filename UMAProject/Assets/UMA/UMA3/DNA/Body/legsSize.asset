@@ -62,8 +62,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
+        enabled: 1
         expanded: 0
         selected: 0
+        showHelp: 0
         EffectName: RightLeg
         BoneName: RightLeg
         ScaleFactor: {x: 0.4, y: 1, z: 0.4}
@@ -105,8 +107,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
+        enabled: 1
         expanded: 0
         selected: 1
+        showHelp: 0
         EffectName: LeftLeg
         BoneName: LeftLeg
         ScaleFactor: {x: 0.4, y: 1, z: 0.4}
@@ -148,8 +152,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
+        enabled: 1
         expanded: 0
         selected: 1
+        showHelp: 0
         EffectName: LeftUpLeg
         BoneName: LeftUpLeg
         ScaleFactor: {x: 0.4, y: 1, z: 0.4}
@@ -191,8 +197,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
+        enabled: 1
         expanded: 0
         selected: 1
+        showHelp: 0
         EffectName: RightUpLeg
         BoneName: RightUpLeg
         ScaleFactor: {x: 0.4, y: 1, z: 0.4}
@@ -234,8 +242,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
+        enabled: 1
         expanded: 1
         selected: 0
+        showHelp: 0
         EffectName: 'UMA.Effect_BoneTranslate: Position'
         BoneName: Position
         Translation: {x: 0, y: 0.15, z: 0}

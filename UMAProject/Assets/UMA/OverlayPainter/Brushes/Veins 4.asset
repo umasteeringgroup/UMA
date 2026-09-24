@@ -24,7 +24,15 @@ MonoBehaviour:
   mirrorStroke: 0
   alignToStroke: 0
   randomRotation: 0
-  randomHeightVariation: 0
-  randomHeightShrink: 0.3
-  randomHeightGrow: 0.3
+  randomSizeVariation: 0
+  randomSizeShrink: 0.3
+  randomSizeGrow: 0.3
+  splatter: 0
+  splatterDistance: 1
+  randomStrength: 0
+  fade: 0
+  autoFade: 0
+  taper: 0
+  autoTaper: 0
+  fadeTaperLength: 0
   tags: 

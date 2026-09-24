@@ -90,6 +90,12 @@ MonoBehaviour:
   SaveAndRestoreIgnoredItems:
     overrideValue: 0
     value: 0
+  CleanupUnusedBones:
+    overrideValue: 0
+    value: 0
+  MeasureBoneCleanup:
+    overrideValue: 0
+    value: 0
   showInHierarchy:
     overrideValue: 0
     value: 0

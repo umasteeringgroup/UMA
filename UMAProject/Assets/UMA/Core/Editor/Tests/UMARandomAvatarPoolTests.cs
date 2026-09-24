@@ -23,7 +23,12 @@ namespace UMA.Tests
         {
             var go = Keep(new GameObject(name)); go.SetActive(false); return go;
         }
-        private DynamicCharacterAvatar Avatar() => InactiveObject("Pool test avatar").AddComponent<DynamicCharacterAvatar>();
+        private DynamicCharacterAvatar Avatar()
+        {
+            var avatar = InactiveObject("Pool test avatar").AddComponent<DynamicCharacterAvatar>();
+            avatar.predefinedDNA = new UMAPredefinedDNA();
+            return avatar;
+        }
         private UMATextRecipe EmptyRecipe()
         {
             var recipe = Keep(ScriptableObject.CreateInstance<UMATextRecipe>());

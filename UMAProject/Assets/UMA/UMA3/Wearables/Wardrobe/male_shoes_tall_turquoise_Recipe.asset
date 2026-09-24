@@ -22,6 +22,13 @@ MonoBehaviour:
   - race: Human Male 3.0
     filename: Assets/UMA/UMA3/Wearables/Icons/Feet/Human Male 3.0/7_male_shoes_tall_turquoise_Recipe.png
     thumb: {fileID: 21300000, guid: cb900e9c074540f4c9437739c96c4fae, type: 3}
+  thumbnailFromTexture: 0
+  thumbnailRect:
+    serializedVersion: 2
+    x: 0.25
+    y: 0.25
+    width: 0.5
+    height: 0.5
   wardrobeSlot: Feet
   Appended: 0
   Hides: []

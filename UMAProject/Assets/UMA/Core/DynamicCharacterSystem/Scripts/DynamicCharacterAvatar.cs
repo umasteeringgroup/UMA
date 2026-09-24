@@ -3283,7 +3283,7 @@ namespace UMA.CharacterSystem
             MetallicRGB.a = Gloss;
             ocd.channelMask[0] = AlbedoColor;
             ocd.channelAdditiveMask[2] = MetallicRGB;
-            SetColor(SharedColorName, ocd, UpdateTexture);
+            InternalSetColor(SharedColorName, ocd, UpdateTexture);
         }
 
         /// <summary>
@@ -3297,7 +3297,7 @@ namespace UMA.CharacterSystem
         {
             OverlayColorData ocd = new OverlayColorData(3);
             ocd.channelMask[0] = AlbedoColor;
-            SetColor(SharedColorName, ocd, false);
+            InternalSetColor(SharedColorName, ocd, false);
         }
 
         /// <summary>
@@ -3306,7 +3306,7 @@ namespace UMA.CharacterSystem
         /// <param name="Name"></param>
         /// <param name="colorData"></param>
         /// <param name="UpdateTexture"></param>
-        public void SetColor(string Name, OverlayColorData colorData, bool UpdateTexture = true)
+        private void InternalSetColor(string Name, OverlayColorData colorData, bool UpdateTexture = true)
         {
             characterColors.SetColor(Name, colorData);
             if (UpdateTexture)
@@ -3315,6 +3315,18 @@ namespace UMA.CharacterSystem
                 ForceUpdate(false, UpdateTexture, false);
             }
         }
+
+/// <summary>
+/// Compatiblity function for older code that used SetColor instead of SetRawColor
+/// </summary>
+/// <param name="Name"></param>
+/// <param name="colorData"></param>
+/// <param name="UpdateTexture"></param>
+        public void SetColor(string Name, OverlayColorData colorData, bool UpdateTexture = true)
+        {
+            SetRawColor(Name, colorData, UpdateTexture);
+        }
+
 
         public void SetRawColor(string Name, OverlayColorData colorData, bool UpdateTexture = true)
         {
@@ -3636,7 +3648,7 @@ namespace UMA.CharacterSystem
                         {
                             if (!GetColor(col.name) || fullRestore)
                             {
-                                SetColor(col.name, col, false);
+                                InternalSetColor(col.name, col, false);
                                 if (!newSharedColors.Contains(col))
                                 {
                                     newSharedColors.Add(col);
@@ -3654,7 +3666,7 @@ namespace UMA.CharacterSystem
                         {
                             if (!GetColor(col.name) || fullRestore)
                             {
-                                SetColor(col.name, col, false);
+                                InternalSetColor(col.name, col, false);
                                 if (!newSharedColors.Contains(col))
                                 {
                                     newSharedColors.Add(col);
@@ -7317,6 +7329,10 @@ namespace UMA.CharacterSystem
             public void SetRaceData()
             {
                 if (string.IsNullOrEmpty(name))
+                {
+                    return;
+                }
+                if (_theRaceData != null && _theRaceData.raceName == name)
                 {
                     return;
                 }

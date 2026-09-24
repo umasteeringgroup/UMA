@@ -34,6 +34,13 @@ MonoBehaviour:
   - race: HumanGirl
     filename: 
     thumb: {fileID: 0}
+  thumbnailFromTexture: 0
+  thumbnailRect:
+    serializedVersion: 2
+    x: 0.25
+    y: 0.25
+    width: 0.5
+    height: 0.5
   wardrobeSlot: Eyebrows
   Appended: 0
   Hides: []

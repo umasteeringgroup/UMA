@@ -19,95 +19,112 @@ MonoBehaviour:
     rotation: {x: 0, y: 0, z: 0, w: 1}
     scale: {x: 1.3, y: 1.2, z: 1.2}
     category: 
+    enabled: 1
   - bone: Spine1Adjust
     hash: 473121629
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 1}
     scale: {x: 1.1, y: 1, z: 1.1}
     category: 
+    enabled: 1
   - bone: SpineAdjust
     hash: 1842365421
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 1}
     scale: {x: 0.95, y: 1.2, z: 1.1}
     category: 
+    enabled: 1
   - bone: LeftLegAdjust
     hash: -861926788
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 1}
     scale: {x: 1, y: 1.2, z: 1.1}
     category: 
+    enabled: 1
   - bone: LeftUpLegAdjust
     hash: 898137571
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 1}
     scale: {x: 1, y: 1.2, z: 1.1}
     category: 
+    enabled: 1
   - bone: RightLegAdjust
     hash: -1005160586
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 1}
     scale: {x: 1, y: 1.2, z: 1.1}
     category: 
+    enabled: 1
   - bone: RightUpLegAdjust
     hash: -506228642
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 1}
     scale: {x: 1, y: 1.2, z: 1.1}
     category: 
+    enabled: 1
   - bone: NeckAdjust
     hash: 1605701185
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 1}
     scale: {x: 1.1, y: 1.1, z: 1.1}
     category: 
+    enabled: 1
   - bone: Head
     hash: 130111906
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 1}
     scale: {x: 1, y: 1, z: 1}
     category: 
+    enabled: 1
   - bone: HeadAdjust
     hash: -423229038
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 1}
     scale: {x: 1, y: 1, z: 1}
     category: 
+    enabled: 1
   - bone: RightArm
     hash: 1806956327
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 1}
     scale: {x: 1, y: 1.15, z: 1}
     category: 
+    enabled: 1
   - bone: LeftArm
     hash: -343733542
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 1}
     scale: {x: 1, y: 1.15, z: 1}
     category: 
+    enabled: 1
   - bone: RightForeArm
     hash: 1918345642
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 1}
     scale: {x: 1, y: 1, z: 1}
     category: 
+    enabled: 1
   - bone: LeftForeArm
     hash: -1984349568
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 1}
     scale: {x: 1, y: 1, z: 1}
     category: 
+    enabled: 1
   - bone: RightShoulderAdjust
     hash: 1960302077
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 1}
     scale: {x: 1.1, y: 1.2, z: 1}
     category: 
+    enabled: 1
   - bone: LeftShoulderAdjust
     hash: -1372013129
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 1}
     scale: {x: 1.1, y: 1.2, z: 1}
     category: 
+    enabled: 1
   tweenPoses: []
   tweenWeights: []
+  mixerPose: 0

@@ -3623,6 +3623,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bcffb0a198605474c8a4d1c67c1515fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  reuseGeneratedMeshes: 0
+  reuseGeneratedTextures: 0
+  inheritGeneratorQuality: 1
+  inheritGeneratorReusePolicy: 0
   renderers: []
   defaultRendererAsset: {fileID: 11400000, guid: 2ffdda70ea6184d4eab8ca0976e7f37c, type: 2}
   userInformation: 
@@ -3681,6 +3685,7 @@ MonoBehaviour:
   _umaRecipe:
     raceData: {fileID: 11400000, guid: 51d130ee268a6114795dfc4590efb404, type: 2}
     recipeName: 
+    texturePaintStageState: 
     dnaInstanceCollection:
       dnaInstances:
       - Name: armLength
@@ -4662,9 +4667,9 @@ MonoBehaviour:
   characterMass: 50
   serializedRecipe: {fileID: 11400000, guid: b85b18c0c4d4b8b499978a4865dd0629, type: 2}
   umaAdditionalRecipes: []
+  useNPCBuilds: 0
   DelayUnload: 2
   BundleCheck: 1
-  StartGuard: 1
   UnpackPrefabOnBuild: 1
   KeepAnimatorController: 0
   RecreateAnimatorOnRaceChange: 1
@@ -5681,6 +5686,17 @@ MonoBehaviour:
   previewColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   _buildCharacterEnabled: 1
   nextBuildSlotsOnly: 0
+  lastPresetScreenshot:
+    cameraPosition: {x: 0, y: 0, z: 0}
+    cameraRotation: {x: 0, y: 0, z: 0, w: 1}
+    orthographic: 0
+    sceneSize: 0
+    projectionCrop:
+      serializedVersion: 2
+      x: 0
+      y: 0
+      width: 0
+      height: 0
   debugVertexes: 1
   references:
     version: 2
@@ -6569,9 +6585,13 @@ MonoBehaviour:
     - Beard
     - Eyes
   IconDimensions: {x: 128, y: 128}
+  CaptureSupersampling: 2
+  ResizeTextureDerivedThumbnails: 0
   PreviewSize: 128
   scrollAreaHeight: 90
   currentCameraIndex: 0
+  brightness: 0
+  contrast: 0
 --- !u!4 &1080207506
 Transform:
   m_ObjectHideFlags: 0

@@ -341,7 +341,7 @@ PrefabInstance:
     - target: {fileID: 2885161576314354680, guid: 11b6342601a487e45a8ca8ed561a9b7a, type: 3}
       propertyPath: prefab
       value: 
-      objectReference: {fileID: 615601329001387447, guid: 2e0235d0666bee6478355699ac94d1ed, type: 3}
+      objectReference: {fileID: 615601329001387447, guid: 6cdb9135acef41898bf57b2f46587092, type: 3}
     - target: {fileID: 2885161576314354680, guid: 11b6342601a487e45a8ca8ed561a9b7a, type: 3}
       propertyPath: GridXSize
       value: 10

@@ -61,8 +61,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
+        enabled: 1
         expanded: 1
         selected: 0
+        showHelp: 0
         EffectName: NoseBaseAdjust
         BoneName: NoseBaseAdjust
         Translation: {x: 0, y: 0.01, z: 0}
@@ -104,8 +106,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
+        enabled: 1
         expanded: 1
         selected: 1
+        showHelp: 0
         EffectName: NoseMiddleAdjust
         BoneName: NoseMiddleAdjust
         Translation: {x: 0, y: 0.01, z: 0}
@@ -147,8 +151,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
+        enabled: 1
         expanded: 1
         selected: 1
+        showHelp: 0
         EffectName: LeftNoseAdjust
         BoneName: LeftNoseAdjust
         Translation: {x: 0, y: 0.01, z: 0}
@@ -190,8 +196,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
+        enabled: 1
         expanded: 1
         selected: 1
+        showHelp: 0
         EffectName: RightNoseAdjust
         BoneName: RightNoseAdjust
         Translation: {x: 0, y: 0.01, z: 0}

@@ -149,19 +149,30 @@ namespace UMA
             if (!Application.isPlaying) return;
             ResolveSources();
             activePolicy = InitialReuse;
-            if (LegacyCrowdGenerator != null)
-            {
-                LegacyCrowdGenerator.RandomAvatarGenerated ??= new UMARandomAvatarEvent();
-                legacyEvent = LegacyCrowdGenerator.RandomAvatarGenerated;
-                legacyEvent.AddListener(RegisterSpawnedAvatar);
-            }
-            if (CrowdGenerator != null && CrowdGenerator.mode == UMARandomAvatarV2.Mode.Generate)
-            {
-                CrowdGenerator.Generation.RandomAvatarGenerated ??= new UMARandomAvatarEvent();
-                crowdEvent = CrowdGenerator.Generation.RandomAvatarGenerated;
-                crowdEvent.AddListener(RegisterSpawnedAvatar);
-            }
+            BindSpawnEvents();
             ResetCapture();
+        }
+
+        private void BindSpawnEvents()
+        {
+            UMARandomAvatarEvent nextLegacy = null;
+            if (LegacyCrowdGenerator != null)
+                nextLegacy = LegacyCrowdGenerator.RandomAvatarGenerated ??= new UMARandomAvatarEvent();
+            UMARandomAvatarEvent nextCrowd = null;
+            if (CrowdGenerator != null && CrowdGenerator.mode == UMARandomAvatarV2.Mode.Generate)
+                nextCrowd = CrowdGenerator.Generation.RandomAvatarGenerated ??= new UMARandomAvatarEvent();
+            if (!ReferenceEquals(legacyEvent, nextLegacy))
+            {
+                legacyEvent?.RemoveListener(RegisterSpawnedAvatar);
+                legacyEvent = nextLegacy;
+                legacyEvent?.AddListener(RegisterSpawnedAvatar);
+            }
+            if (!ReferenceEquals(crowdEvent, nextCrowd))
+            {
+                crowdEvent?.RemoveListener(RegisterSpawnedAvatar);
+                crowdEvent = nextCrowd;
+                crowdEvent?.AddListener(RegisterSpawnedAvatar);
+            }
         }
 
         private void OnDisable()
@@ -243,6 +254,7 @@ namespace UMA
         public void ResetCapture()
         {
             ResolveSources();
+            BindSpawnEvents();
             cache = UMAGeneratedResourceCache.Shared;
             meshBaseline = cache.GetStatistics<Mesh>();
             textureBaseline = cache.GetStatistics<UMACachedAtlas>();

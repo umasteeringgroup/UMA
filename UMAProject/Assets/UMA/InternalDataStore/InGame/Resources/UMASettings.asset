@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: UMASettings
   m_EditorClassIdentifier: 
   IgnoreTag: UMAIgnore
+  KeepTag: UMAKeepChain
   useMeshAPICombiner: 0
   DebugMemoryUsage: 0
   DisableDecalCallbacks: 0
@@ -21,7 +22,6 @@ MonoBehaviour:
     set will NOT work if you\n edit them in the inspector!"
   Initialized: 1
   UMAVersion: UMA NextGen 3.1f0
-  KeepTag: UMAKeepChain
   tagLookupValues:
   - Head
   - Hair

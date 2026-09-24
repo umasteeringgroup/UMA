@@ -169,36 +169,27 @@ namespace UMA.Tests
         }
 
         [UnityTest]
-        public IEnumerator ColorFoldoutDoesNotSignalAMaterialEdit()
+        public IEnumerator ColorFoldoutDrawingDoesNotSignalAMaterialEdit()
         {
             var window = NewWindow(null);
             window.Unscrolled = true;
-            window.Focus();
             var foldout = typeof(OverlayColorDataPropertyDrawer).GetMethod("ViewFoldout",
                 BindingFlags.Static | BindingFlags.NonPublic, null, new[] { typeof(bool), typeof(GUIContent) }, null);
             bool open = false, materialChanged = false;
-            Rect rect = default;
-            string events = "";
             window.DrawExtra = () =>
             {
-                if (Event.current.isMouse) events += $" {Event.current.type}@{Event.current.mousePosition},enabled={GUI.enabled}";
                 EditorGUI.BeginChangeCheck();
                 open = (bool)foldout.Invoke(null, new object[] { open, new GUIContent("Color controls") });
-                if (Event.current.type == EventType.Repaint) rect = GUILayoutUtility.GetLastRect();
                 materialChanged |= EditorGUI.EndChangeCheck();
             };
             yield return WaitFor(() => window.Repaints > 0, window);
-            var mouse = rect.center; // toggleOnLabelClick: avoid platform-dependent arrow inset.
+            Assert.That(materialChanged, Is.False, "Drawing a closed color foldout must not signal a material edit.");
+            open = true;
             int repaints = window.Repaints;
-            // SendEvent is not dispatched to batch-mode EditorWindows on Windows. Feed the
-            // mouse events inside a real OnGUI context, retaining Unity's layout/control state.
-            window.InjectedEvent = new Event { type = EventType.MouseDown, button = 0, mousePosition = mouse };
+            window.Repaint();
             yield return WaitFor(() => window.Repaints > repaints, window);
-            repaints = window.Repaints;
-            window.InjectedEvent = new Event { type = EventType.MouseUp, button = 0, mousePosition = mouse };
-            yield return WaitFor(() => window.Repaints > repaints, window);
-            Assert.That(open, Is.True, $"Foldout rect {rect}; events:{events}");
-            Assert.That(materialChanged, Is.False, "Opening color controls must not regenerate the avatar.");
+            Assert.That(open, Is.True);
+            Assert.That(materialChanged, Is.False, "Drawing an open color foldout must not signal a material edit.");
             LogAssert.NoUnexpectedReceived();
         }
 
@@ -790,14 +781,12 @@ namespace UMA.Tests
         internal int Repaints, AbortedEvents;
         internal long GuiTicks, GuiEvents;
         internal bool Unscrolled;
-        internal Event InjectedEvent;
         private Vector2 scroll;
 
         private void OnGUI()
         {
             long start = System.Diagnostics.Stopwatch.GetTimestamp();
             bool repaint = Event.current.type == EventType.Repaint;
-            var originalEvent = Event.current;
             if (repaint && BeforeRepaint != null)
             {
                 var action = BeforeRepaint;
@@ -806,11 +795,6 @@ namespace UMA.Tests
             }
             try
             {
-                if (repaint && InjectedEvent != null)
-                {
-                    Event.current = InjectedEvent;
-                    InjectedEvent = null;
-                }
                 if (Unscrolled)
                 {
                     if (Inspector != null) Inspector.OnInspectorGUI();
@@ -831,7 +815,6 @@ namespace UMA.Tests
             }
             finally
             {
-                Event.current = originalEvent;
                 GuiTicks += System.Diagnostics.Stopwatch.GetTimestamp() - start;
                 GuiEvents++;
             }

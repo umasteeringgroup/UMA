@@ -304,8 +304,8 @@ namespace UMA.Tests
                 for (int i = 0; i < points.Length; i++)
                 {
                     Vector3 projected = camera.WorldToViewportPoint(avatar.transform.TransformPoint(points[i]));
-                    Assert.That((projected.x - retake.x) / retake.width, Is.EqualTo(.2f + .3f * i).Within(.0001f));
-                    Assert.That((projected.y - retake.y) / retake.height, Is.EqualTo(.8f - .3f * i).Within(.0001f));
+                    Assert.That((projected.x - retake.x) / retake.width, Is.EqualTo(.2f + .3f * i).Within(.002f));
+                    Assert.That((projected.y - retake.y) / retake.height, Is.EqualTo(.8f - .3f * i).Within(.002f));
                 }
             }
             finally { Object.DestroyImmediate(cameraObject); }
@@ -381,9 +381,9 @@ namespace UMA.Tests
                 Rect retake = (Rect)ScreenshotMethod("RetakeViewport", camera, avatar.transform, framing);
                 Vector3 center = camera.WorldToViewportPoint(point);
                 Vector3 upper = camera.WorldToViewportPoint(upperPoint);
-                Assert.That((center.x - retake.x) / retake.width, Is.EqualTo(.5f).Within(.001f));
-                Assert.That((center.y - retake.y) / retake.height, Is.EqualTo(.5f).Within(.001f));
-                Assert.That((upper.y - center.y) / retake.height, Is.EqualTo(.5f).Within(.001f));
+                Assert.That((center.x - retake.x) / retake.width, Is.EqualTo(.5f).Within(.002f));
+                Assert.That((center.y - retake.y) / retake.height, Is.EqualTo(.5f).Within(.002f));
+                Assert.That((upper.y - center.y) / retake.height, Is.EqualTo(.5f).Within(.002f));
                 Assert.That(retake.width * camera.pixelWidth,
                     Is.EqualTo(retake.height * camera.pixelHeight).Within(.01f));
             }

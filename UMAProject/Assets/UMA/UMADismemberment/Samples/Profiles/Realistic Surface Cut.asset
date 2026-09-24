@@ -23,5 +23,6 @@ MonoBehaviour:
   bleedSpacingSeed: 173
   bleedSpeedVariation: 0.25
   bleedSizeVariation: 0.3
+  legacyBleedSourceCount: -1
   bleedEndInset: 0.12
   bleedProfile: {fileID: 11400000, guid: af87b51bff704c3188bc9000640b1476, type: 2}

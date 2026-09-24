@@ -44,6 +44,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 142d74092b078ee4c8a91f6b2f9f2ce8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  UnifiedController: {fileID: 0}
   CharacterRandomizers: []
   WardrobeRandomizers: []
   KeepExistingRace: 0

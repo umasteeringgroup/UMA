@@ -22,6 +22,13 @@ MonoBehaviour:
   - race: HumanFemale
     filename: 
     thumb: {fileID: 0}
+  thumbnailFromTexture: 0
+  thumbnailRect:
+    serializedVersion: 2
+    x: 0.25
+    y: 0.25
+    width: 0.5
+    height: 0.5
   wardrobeSlot: Hands
   Appended: 0
   Hides:
@@ -30,12 +37,15 @@ MonoBehaviour:
   suppressWardrobeSlots: []
   activeWardrobeSet: []
   MeshHideAssets: []
+  MeshHideAssetCollections: []
+  MeshModifiers: []
   OverrideDNA:
     PreloadValues: []
   disabled: 0
   recipeString: '{"version":3,"packedSlotDataList":[],"slotsV2":[],"slotsV3":[{"id":"UMA_Human_Female_Hands_HQ","scale":100,"copyIdx":-1,"overlays":[{"id":"F_H_Bod","colorIdx":0,"rect":[0.0,0.0,0.0,0.0],"isTransformed":false,"scale":{"x":1.0,"y":1.0,"z":1.0},"rotation":0.0,"blendModes":[0,0,0,0,0],"Tags":[],"tiling":[false,false,false,false,false],"uvOverride":0}],"Tags":["Hands"],"Races":[],"blendShapeTarget":"","overSmoosh":0.009999999776482582,"smooshDistance":0.0010000000474974514,"smooshInvertX":false,"smooshInvertY":true,"smooshInvertZ":false,"smooshInvertDist":true,"smooshTargetTag":"","smooshableTag":"","isSwapSlot":false,"swapTag":"LongHair","uvOverride":0,"isDisabled":false,"expandAlongNormal":0}],"colors":[],"fColors":[{"name":"Skin","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0],"ShaderParms":[],"alwaysUpdate":false,"alwaysUpdateParms":false,"isBaseColor":false,"displayColor":-1}],"sharedColorCount":1,"race":"HumanFemale","packedDna":[],"uvOverride":0}'
   forceKeep: 0
   labelLocalFiles: 0
+  noAutoAdd: 0
   IncompatibleRecipes: []
   UserField: 
   replaces: Nothing

@@ -297,22 +297,26 @@ namespace UMA.Editors.Tests
         public void SystemTrashDeletionAlsoSavesCleanupOfANativeBinaryIndex()
         {
             var material = CreateUma(candidates + "/TrashFixture.asset");
-            UMAAssetIndexer registry;
+            string materialPath = AssetDatabase.GetAssetPath(material);
+            var entry = Entry(material, "Guid");
+            string registryPath;
             SerializationMode previousMode = EditorSettings.serializationMode;
             try
             {
                 EditorSettings.serializationMode = SerializationMode.ForceBinary;
-                registry = CreateRegistry(Entry(material, "Guid"));
+                var registry = CreateRegistry(entry);
+                registryPath = AssetDatabase.GetAssetPath(registry);
                 // Validate the binary fixture as bytes; never decode native assets as text.
-                using (var stream = File.OpenRead(AssetDatabase.GetAssetPath(registry)))
+                using (var stream = File.OpenRead(registryPath))
                     Assert.That(stream.ReadByte(), Is.Not.EqualTo((int)'%'));
             }
             finally { EditorSettings.serializationMode = previousMode; }
+            material = AssetDatabase.LoadAssetAtPath<UMAMaterial>(materialPath);
+            Assert.That(material, Is.Not.Null);
             var result = Find(Scan(), material);
             Assert.That(result.Path, Does.StartWith(root + "/"));
             Assert.That(UmaUnusedAssetUtility.TrashAndUnregister(result, out string reason), Is.True, reason);
             Assert.That(File.Exists(result.Path), Is.False);
-            string registryPath = AssetDatabase.GetAssetPath(registry);
             AssetDatabase.ImportAsset(registryPath, ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
             Assert.That(AssetDatabase.LoadAssetAtPath<UMAAssetIndexer>(registryPath).SerializedItems, Is.Empty);
         }

@@ -32,10 +32,14 @@ namespace UMA.Tests
             public string boneName;
             public float lastAngle;
             public int frameCount;
+            public DynamicExpressionPlayer player;
+            public bool headMotionActive;
 
             private void LateUpdate()
             {
                 lastAngle = BoneAngle(data, boneName);
+                headMotionActive = player != null &&
+                    player.NaturalHeadMotionActive;
                 frameCount++;
             }
         }
@@ -161,25 +165,31 @@ namespace UMA.Tests
             player.HeadMotionExpressionDegrees = 0f;
             player.HeadMotionEaseTime = 0.04f;
             player.Rebind();
+            LateFrameProbe probe =
+                avatar.AddComponent<LateFrameProbe>();
+            probe.data = data;
+            probe.boneName = "Head";
+            probe.player = player;
             player.SetExpression(viseme.id, 1f,
                 ExpressionSource.Animation);
 
             yield return null;
             float firstEnergy = player.NaturalHeadMotionSpeechEnergy;
-            for (int i = 0; i < 7; i++) yield return null;
+            yield return new WaitForSeconds(0.12f);
+            yield return null;
 
             Assert.Greater(player.NaturalHeadMotionSpeechEnergy,
                 firstEnergy);
             Assert.Greater(player.NaturalHeadMotionSpeechEnergy, 0.5f);
             Assert.Greater(player.NaturalHeadMotionOffset.magnitude, 0.01f);
-            Assert.IsTrue(player.NaturalHeadMotionActive);
-            Assert.Greater(BoneAngle(data, "Head"), 0.01f);
+            Assert.IsTrue(probe.headMotionActive);
+            Assert.Greater(probe.lastAngle, 0.01f);
 
             player.SetExpression(viseme.id, 0.5f,
                 ExpressionSource.Animation);
             player.SetExpression(emotion.id, 1f,
                 ExpressionSource.Animation);
-            for (int i = 0; i < 8; i++) yield return null;
+            yield return new WaitForSeconds(0.12f);
             Assert.Greater(player.NaturalHeadMotionExpressionEnergy, 0.1f);
 
             player.overrideMecanimHead = false;

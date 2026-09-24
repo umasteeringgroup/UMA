@@ -1098,7 +1098,6 @@ namespace UMA.CharacterSystem.Editors
                             {
                                 continue;
                             }
-                            Debug.Log($"Resetting DNA '{inst.Name}' from {inst.Value} to default value {defaultValue}");
                             if (!Mathf.Approximately(inst.Value, defaultValue))
                             {
                                 inst.Value = defaultValue;

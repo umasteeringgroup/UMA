@@ -50,6 +50,32 @@ MonoBehaviour:
         id: 03b3aa7acbaa4911bfdbce70b6999954
         name: Curly Hair Cards
         enabled: 1
+        source: 0
+        form:
+          bunPart: 0
+          helperIds: []
+          cardWidth: 0.012
+          jitter: 0.35
+          lengthVariation: 0
+          rootStartVariation: 0
+          thickness: 0.002
+          flyaways: 0.001
+          segments: 32
+          smooth: 1
+          adaptiveSamples: 1
+          shapeError: 0.0005
+          flipFacing: 0
+          usePaintedRootDensity: 0
+          preserveLodCoverage: 0
+          braidRadius: 0.025
+          braidDepth: 0.45
+          repeats: 5
+          bundleRadius: 0.3
+          tipScale: 0.3
+          phase: 0
+          reverseWeave: 0
+        rootMapGroupId: 
+        rootLength: 0.2
         count: 1300
         minimumSpacing: 0.0045
         uniformity: 0.35
@@ -112,7 +138,118 @@ MonoBehaviour:
           alignFacing: 0.7
           inwardLean: 0.15
         modifiers:
-        - id: 73bce5e242a6411895e05c961e0ee409
+        - gather:
+            mode: 0
+            length: 0
+            rootSide: 0
+            startInMeters: 0
+            bendStart: 0
+            flexibility: 0.8
+            tension: 0.85
+            followScalp: 1
+            outwardFacing: 1
+            surfaceOffset: 0.0015
+            offsetAlongStrand:
+              serializedVersion: 2
+              m_Curve:
+              - serializedVersion: 3
+                time: 0
+                value: 1
+                inSlope: 0
+                outSlope: 0
+                tangentMode: 0
+                weightedMode: 0
+                inWeight: 0
+                outWeight: 0
+              - serializedVersion: 3
+                time: 1
+                value: 1
+                inSlope: 0
+                outSlope: 0
+                tangentMode: 0
+                weightedMode: 0
+                inWeight: 0
+                outWeight: 0
+              m_PreInfinity: 2
+              m_PostInfinity: 2
+              m_RotationOrder: 4
+            liftOff: 0.8
+            rootLift: 0.002
+            rootBend:
+              serializedVersion: 2
+              m_Curve:
+              - serializedVersion: 3
+                time: 0
+                value: 0
+                inSlope: 0
+                outSlope: 0
+                tangentMode: 0
+                weightedMode: 0
+                inWeight: 0
+                outWeight: 0
+              - serializedVersion: 3
+                time: 0.3
+                value: 1
+                inSlope: 0
+                outSlope: 0
+                tangentMode: 0
+                weightedMode: 0
+                inWeight: 0
+                outWeight: 0
+              - serializedVersion: 3
+                time: 1
+                value: 0
+                inSlope: 0
+                outSlope: 0
+                tangentMode: 0
+                weightedMode: 0
+                inWeight: 0
+                outWeight: 0
+              m_PreInfinity: 2
+              m_PostInfinity: 2
+              m_RotationOrder: 4
+            arrivalBend:
+              serializedVersion: 2
+              m_Curve:
+              - serializedVersion: 3
+                time: 0
+                value: 0
+                inSlope: 0
+                outSlope: 0
+                tangentMode: 0
+                weightedMode: 0
+                inWeight: 0
+                outWeight: 0
+              - serializedVersion: 3
+                time: 0.6
+                value: 1
+                inSlope: 0
+                outSlope: 0
+                tangentMode: 0
+                weightedMode: 0
+                inWeight: 0
+                outWeight: 0
+              - serializedVersion: 3
+                time: 1
+                value: 0
+                inSlope: 0
+                outSlope: 0
+                tangentMode: 0
+                weightedMode: 0
+                inWeight: 0
+                outWeight: 0
+              m_PreInfinity: 2
+              m_PostInfinity: 2
+              m_RotationOrder: 4
+            arrivalLift: 0.005
+            approachLength: 0.025
+            passFraction: 0.65
+            continuationHelperId: 
+            twist: 0
+            variation: 0.1
+            fullCardClearance: 1
+            clearance: 0.0006
+          id: 73bce5e242a6411895e05c961e0ee409
           name: Volume envelope
           type: 2
           domain: 1
@@ -199,6 +336,33 @@ MonoBehaviour:
             cardMaxSamples: 64
           noiseFrequency: 18
           noiseParentCoherence: 0
+          strandAlignedNoise: 0
+          noiseNormalAmplitude: 0.001
+          noiseRootFade: 0.2
+          bendProfile:
+            serializedVersion: 2
+            m_Curve:
+            - serializedVersion: 3
+              time: 0
+              value: 1
+              inSlope: 0
+              outSlope: -1
+              tangentMode: 0
+              weightedMode: 0
+              inWeight: 0
+              outWeight: 0
+            - serializedVersion: 3
+              time: 1
+              value: 0
+              inSlope: -1
+              outSlope: 0
+              tangentMode: 0
+              weightedMode: 0
+              inWeight: 0
+              outWeight: 0
+            m_PreInfinity: 2
+            m_PostInfinity: 2
+            m_RotationOrder: 4
           helperId: 
           clumpRadius: 0.03
           rootInfluence: 1
@@ -219,7 +383,118 @@ MonoBehaviour:
           flowPointSpacing: 0.008
           flowMirrorDrawing: 0
           flowShowPaths: 1
-        - id: a0d5f34b523d45c7a0f6ce96a85d9bed
+        - gather:
+            mode: 0
+            length: 0
+            rootSide: 0
+            startInMeters: 0
+            bendStart: 0
+            flexibility: 0.8
+            tension: 0.85
+            followScalp: 1
+            outwardFacing: 1
+            surfaceOffset: 0.0015
+            offsetAlongStrand:
+              serializedVersion: 2
+              m_Curve:
+              - serializedVersion: 3
+                time: 0
+                value: 1
+                inSlope: 0
+                outSlope: 0
+                tangentMode: 0
+                weightedMode: 0
+                inWeight: 0
+                outWeight: 0
+              - serializedVersion: 3
+                time: 1
+                value: 1
+                inSlope: 0
+                outSlope: 0
+                tangentMode: 0
+                weightedMode: 0
+                inWeight: 0
+                outWeight: 0
+              m_PreInfinity: 2
+              m_PostInfinity: 2
+              m_RotationOrder: 4
+            liftOff: 0.8
+            rootLift: 0.002
+            rootBend:
+              serializedVersion: 2
+              m_Curve:
+              - serializedVersion: 3
+                time: 0
+                value: 0
+                inSlope: 0
+                outSlope: 0
+                tangentMode: 0
+                weightedMode: 0
+                inWeight: 0
+                outWeight: 0
+              - serializedVersion: 3
+                time: 0.3
+                value: 1
+                inSlope: 0
+                outSlope: 0
+                tangentMode: 0
+                weightedMode: 0
+                inWeight: 0
+                outWeight: 0
+              - serializedVersion: 3
+                time: 1
+                value: 0
+                inSlope: 0
+                outSlope: 0
+                tangentMode: 0
+                weightedMode: 0
+                inWeight: 0
+                outWeight: 0
+              m_PreInfinity: 2
+              m_PostInfinity: 2
+              m_RotationOrder: 4
+            arrivalBend:
+              serializedVersion: 2
+              m_Curve:
+              - serializedVersion: 3
+                time: 0
+                value: 0
+                inSlope: 0
+                outSlope: 0
+                tangentMode: 0
+                weightedMode: 0
+                inWeight: 0
+                outWeight: 0
+              - serializedVersion: 3
+                time: 0.6
+                value: 1
+                inSlope: 0
+                outSlope: 0
+                tangentMode: 0
+                weightedMode: 0
+                inWeight: 0
+                outWeight: 0
+              - serializedVersion: 3
+                time: 1
+                value: 0
+                inSlope: 0
+                outSlope: 0
+                tangentMode: 0
+                weightedMode: 0
+                inWeight: 0
+                outWeight: 0
+              m_PreInfinity: 2
+              m_PostInfinity: 2
+              m_RotationOrder: 4
+            arrivalLift: 0.005
+            approachLength: 0.025
+            passFraction: 0.65
+            continuationHelperId: 
+            twist: 0
+            variation: 0.1
+            fullCardClearance: 1
+            clearance: 0.0006
+          id: a0d5f34b523d45c7a0f6ce96a85d9bed
           name: Loose centerline variation
           type: 11
           domain: 1
@@ -306,6 +581,33 @@ MonoBehaviour:
             cardMaxSamples: 64
           noiseFrequency: 18
           noiseParentCoherence: 0.3
+          strandAlignedNoise: 0
+          noiseNormalAmplitude: 0.001
+          noiseRootFade: 0.2
+          bendProfile:
+            serializedVersion: 2
+            m_Curve:
+            - serializedVersion: 3
+              time: 0
+              value: 1
+              inSlope: 0
+              outSlope: -1
+              tangentMode: 0
+              weightedMode: 0
+              inWeight: 0
+              outWeight: 0
+            - serializedVersion: 3
+              time: 1
+              value: 0
+              inSlope: -1
+              outSlope: 0
+              tangentMode: 0
+              weightedMode: 0
+              inWeight: 0
+              outWeight: 0
+            m_PreInfinity: 2
+            m_PostInfinity: 2
+            m_RotationOrder: 4
           helperId: 
           clumpRadius: 0.03
           rootInfluence: 0.2
@@ -326,7 +628,118 @@ MonoBehaviour:
           flowPointSpacing: 0.008
           flowMirrorDrawing: 0
           flowShowPaths: 1
-        - id: bee92b02622b4e1ab8670f2f1516cdda
+        - gather:
+            mode: 0
+            length: 0
+            rootSide: 0
+            startInMeters: 0
+            bendStart: 0
+            flexibility: 0.8
+            tension: 0.85
+            followScalp: 1
+            outwardFacing: 1
+            surfaceOffset: 0.0015
+            offsetAlongStrand:
+              serializedVersion: 2
+              m_Curve:
+              - serializedVersion: 3
+                time: 0
+                value: 1
+                inSlope: 0
+                outSlope: 0
+                tangentMode: 0
+                weightedMode: 0
+                inWeight: 0
+                outWeight: 0
+              - serializedVersion: 3
+                time: 1
+                value: 1
+                inSlope: 0
+                outSlope: 0
+                tangentMode: 0
+                weightedMode: 0
+                inWeight: 0
+                outWeight: 0
+              m_PreInfinity: 2
+              m_PostInfinity: 2
+              m_RotationOrder: 4
+            liftOff: 0.8
+            rootLift: 0.002
+            rootBend:
+              serializedVersion: 2
+              m_Curve:
+              - serializedVersion: 3
+                time: 0
+                value: 0
+                inSlope: 0
+                outSlope: 0
+                tangentMode: 0
+                weightedMode: 0
+                inWeight: 0
+                outWeight: 0
+              - serializedVersion: 3
+                time: 0.3
+                value: 1
+                inSlope: 0
+                outSlope: 0
+                tangentMode: 0
+                weightedMode: 0
+                inWeight: 0
+                outWeight: 0
+              - serializedVersion: 3
+                time: 1
+                value: 0
+                inSlope: 0
+                outSlope: 0
+                tangentMode: 0
+                weightedMode: 0
+                inWeight: 0
+                outWeight: 0
+              m_PreInfinity: 2
+              m_PostInfinity: 2
+              m_RotationOrder: 4
+            arrivalBend:
+              serializedVersion: 2
+              m_Curve:
+              - serializedVersion: 3
+                time: 0
+                value: 0
+                inSlope: 0
+                outSlope: 0
+                tangentMode: 0
+                weightedMode: 0
+                inWeight: 0
+                outWeight: 0
+              - serializedVersion: 3
+                time: 0.6
+                value: 1
+                inSlope: 0
+                outSlope: 0
+                tangentMode: 0
+                weightedMode: 0
+                inWeight: 0
+                outWeight: 0
+              - serializedVersion: 3
+                time: 1
+                value: 0
+                inSlope: 0
+                outSlope: 0
+                tangentMode: 0
+                weightedMode: 0
+                inWeight: 0
+                outWeight: 0
+              m_PreInfinity: 2
+              m_PostInfinity: 2
+              m_RotationOrder: 4
+            arrivalLift: 0.005
+            approachLength: 0.025
+            passFraction: 0.65
+            continuationHelperId: 
+            twist: 0
+            variation: 0.1
+            fullCardClearance: 1
+            clearance: 0.0006
+          id: bee92b02622b4e1ab8670f2f1516cdda
           name: "Ringlets \u2014 shape & variation"
           type: 22
           domain: 1
@@ -394,7 +807,7 @@ MonoBehaviour:
               m_RotationOrder: 4
           ringlets:
             turns: 3.41
-            spacingMode: 0
+            spacingMode: 1
             turnSpacing: 0.026666682
             radiusVariation: 0.25
             turnVariation: 0.3
@@ -410,9 +823,36 @@ MonoBehaviour:
             optimizeCards: 1
             cardShapeError: 0.00984
             cardFacingError: 26.5
-            cardMaxSamples: 9
+            cardMaxSamples: 36
           noiseFrequency: 18
           noiseParentCoherence: 0
+          strandAlignedNoise: 0
+          noiseNormalAmplitude: 0.001
+          noiseRootFade: 0.2
+          bendProfile:
+            serializedVersion: 2
+            m_Curve:
+            - serializedVersion: 3
+              time: 0
+              value: 1
+              inSlope: 0
+              outSlope: -1
+              tangentMode: 0
+              weightedMode: 0
+              inWeight: 0
+              outWeight: 0
+            - serializedVersion: 3
+              time: 1
+              value: 0
+              inSlope: -1
+              outSlope: 0
+              tangentMode: 0
+              weightedMode: 0
+              inWeight: 0
+              outWeight: 0
+            m_PreInfinity: 2
+            m_PostInfinity: 2
+            m_RotationOrder: 4
           helperId: 
           clumpRadius: 0.03
           rootInfluence: 0.6
@@ -443,6 +883,8 @@ MonoBehaviour:
         bindingTopology: 
         slots: []
     rootEmbedDepth: 0.001
+    preventCardPenetration: 0
+    cardSurfaceClearance: 0.0005
     maps:
     - id: 78ef8fec4930411bbc48161ae8b262e3
       name: Growth / Density
@@ -12979,6 +13421,11 @@ MonoBehaviour:
       - 0
       - 0
       - 0
+      storage: 0
+      texture:
+        resolution: 16
+        topology: 
+        tiles: []
     - id: cf625308a8a84e689dea4683718bb6b5
       name: Density Multiplier (optional)
       kind: 1
@@ -25514,6 +25961,11 @@ MonoBehaviour:
       - 1
       - 1
       - 1
+      storage: 0
+      texture:
+        resolution: 16
+        topology: 
+        tiles: []
     - id: 8ede69e844c1431888d20cb3e84198d2
       name: Length
       kind: 4
@@ -38049,6 +38501,11 @@ MonoBehaviour:
       - 1
       - 1
       - 1
+      storage: 0
+      texture:
+        resolution: 16
+        topology: 
+        tiles: []
     guides:
     - id: eecc5789d2f14e93a0595b0708f2b3c1
       name: Imported guide 001
