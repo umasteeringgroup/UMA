@@ -4,7 +4,9 @@ using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using UMA;
+#if UNITY_EDITOR
 using UnityEditor.IMGUI.Controls;
+#endif
 using UnityEngine;
 
 namespace UMA

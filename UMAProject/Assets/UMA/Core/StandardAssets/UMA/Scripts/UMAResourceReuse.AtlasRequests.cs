@@ -61,12 +61,8 @@ namespace UMA
 #endif
                 if (asset is Texture texture)
                 {
-                    var contents = texture.imageContentsHash;
-                    if (input && !dependency.Registered && contents == default &&
-                        texture != Texture2D.whiteTexture && texture != Texture2D.blackTexture &&
-                        texture != Texture2D.grayTexture && texture != Texture2D.normalTexture)
-                        throw new NotSupportedException("Runtime input texture needs a dependency revision: " + texture.name);
-                    if (input && texture is RenderTexture && !dependency.Registered)
+                    var contents = TextureContentsHash(texture);
+                    if (input && NeedsTextureRevision(texture, dependency, contents))
                         throw new NotSupportedException("Runtime input texture needs a dependency revision: " + texture.name);
                     Add(texture.updateCount); Add(contents);
                     Add(texture.width); Add(texture.height); Add((int)texture.graphicsFormat);

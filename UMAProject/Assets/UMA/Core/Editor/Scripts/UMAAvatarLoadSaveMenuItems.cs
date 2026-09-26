@@ -1303,6 +1303,25 @@ namespace UMA.Editors
 			return GetSelectedOverlays().Count > 0;
 		}
 
+		[MenuItem("Assets/UMA/Examine UMAMaterials", false, 2004)]
+		private static void ExamineUMAMaterialsMenu()
+		{
+			var materials = GetSelectedUMAMaterials();
+			if (materials.Count == 0)
+			{
+				EditorUtility.DisplayDialog("Examine UMAMaterials", "Select one or more UMAMaterial assets in the Project window.", "OK");
+				return;
+			}
+
+			UmaExamineMaterialsWindow.Open(materials);
+		}
+
+		[MenuItem("Assets/UMA/Examine UMAMaterials", true)]
+		private static bool ExamineUMAMaterialsMenu_Validate()
+		{
+			return GetSelectedUMAMaterials().Count > 0;
+		}
+
 		[MenuItem("Assets/UMA/Examine Slots", false, 2005)]
 		private static void ExamineSlotsMenu()
 		{
@@ -2019,6 +2038,21 @@ namespace UMA.Editors
 				}
 			}
 			return slots;
+		}
+
+		private static List<UMA.UMAMaterial> GetSelectedUMAMaterials()
+		{
+			var selected = Selection.GetFiltered(typeof(UMA.UMAMaterial), SelectionMode.Assets);
+			var materials = new List<UMA.UMAMaterial>(selected.Length);
+			for (int i = 0; i < selected.Length; i++)
+			{
+				var m = selected[i] as UMA.UMAMaterial;
+				if (m != null)
+				{
+					materials.Add(m);
+				}
+			}
+			return materials;
 		}
 
 		private static List<Texture2D> GetSelectedTextures()

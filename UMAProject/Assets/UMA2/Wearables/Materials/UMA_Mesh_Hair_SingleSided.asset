@@ -84,5 +84,5 @@ MonoBehaviour:
   shaderKeywords: []
   MaskWithCurrentColor: 0
   maskMultiplier: {r: 1, g: 1, b: 1, a: 1}
-  MaterialName: 
-  ShaderName: 
+  MaterialName: UMA_Mesh_Hair_SingleSided_SRP
+  ShaderName: Lit/LitShaderAlpha

@@ -144,7 +144,7 @@ namespace UMA
 
 		public static Material GetDefaultDiffuseMaterial()
 		{
-			Shader shader = Shader.Find("UMA/UMA_SG_Diffuse");
+			Shader shader = Shader.Find("UMA/UMADiffuse");
 				//Shader shader = Shader.Find("UMA/Diffuse"); --- IGNORE ---
 			if (shader == null)
 			{

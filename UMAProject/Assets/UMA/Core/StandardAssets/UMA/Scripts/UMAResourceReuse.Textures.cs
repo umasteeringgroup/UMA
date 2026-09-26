@@ -56,6 +56,31 @@ namespace UMA
             return dependency;
         }
 
+        private static Hash128 TextureContentsHash(Texture texture)
+        {
+#if UNITY_EDITOR
+            return texture.imageContentsHash;
+#else
+            // Player builds track the same object through its dependency number,
+            // update count, and any caller-supplied revision.
+            return default;
+#endif
+        }
+
+        private static bool NeedsTextureRevision(Texture texture, Dependency dependency, Hash128 contents)
+        {
+            if (dependency.Registered || texture == Texture2D.whiteTexture ||
+                texture == Texture2D.blackTexture || texture == Texture2D.grayTexture ||
+                texture == Texture2D.normalTexture) return false;
+            // GPU writes do not necessarily increment updateCount automatically.
+            if (texture is RenderTexture) return true;
+#if UNITY_EDITOR
+            return contents == default;
+#else
+            return false;
+#endif
+        }
+
         private sealed class ShaderLayout
         {
             internal int Epoch = -1;
@@ -122,11 +147,10 @@ namespace UMA
 #endif
                 if (asset is Texture texture)
                 {
-                    if (inputTexture && !dependency.Registered &&
-                        texture != Texture2D.whiteTexture && texture != Texture2D.blackTexture && texture != Texture2D.grayTexture && texture != Texture2D.normalTexture &&
-                        (texture is RenderTexture || texture.imageContentsHash == default(Hash128)))
+                    var contents = TextureContentsHash(texture);
+                    if (inputTexture && NeedsTextureRevision(texture, dependency, contents))
                         throw new NotSupportedException("Runtime input texture needs a dependency revision: " + texture.name);
-                    Value(texture.updateCount); Value(texture.imageContentsHash.ToString());
+                    Value(texture.updateCount); Value(contents.ToString());
                     Value(texture.width); Value(texture.height); Value(texture.graphicsFormat);
                     Value(texture.wrapModeU); Value(texture.wrapModeV); Value(texture.wrapModeW);
                     Value(texture.filterMode); Value(texture.anisoLevel);

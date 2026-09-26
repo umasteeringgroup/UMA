@@ -161,8 +161,8 @@ namespace UMA.Editors
 
         private static Material BuildMaterialFromSlotOverlays(SlotData slot, string slotName)
         {
-            Shader opaqueShader = Shader.Find("UMA/Diffuse");
-            Shader alphaShader = Shader.Find("UMA/Diffuse_Alpha");
+            Shader opaqueShader = Shader.Find("UMA/UMADiffuse");
+            Shader alphaShader = Shader.Find("UMA/UMALitShaderAlpha");
             Shader fallbackShader = Shader.Find("Standard");
 
             bool hasAlpha = false;

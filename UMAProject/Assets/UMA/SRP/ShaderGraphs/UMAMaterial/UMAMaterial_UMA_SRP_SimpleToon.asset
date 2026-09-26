@@ -21,7 +21,7 @@ MonoBehaviour:
   channels:
   - channelType: 0
     textureFormat: 0
-    materialPropertyName: _BaseMap
+    materialPropertyName: _MainTex
     sourceTextureName: _BaseMap
     Compression: 0
     DownSample: 1
@@ -57,4 +57,4 @@ MonoBehaviour:
   MaskWithCurrentColor: 0
   maskMultiplier: {r: 1, g: 1, b: 1, a: 1}
   MaterialName: UMA_SRP_SimpleToon
-  ShaderName: UMA/SimpleToon
+  ShaderName: UMA/Toon/UMA3_Toon

@@ -86,5 +86,5 @@ MonoBehaviour:
   shaderKeywords: []
   MaskWithCurrentColor: 0
   maskMultiplier: {r: 0.3773585, g: 0.3773585, b: 0.3773585, a: 1}
-  MaterialName: 
-  ShaderName: 
+  MaterialName: UMA_Mesh_Hair_DoubleSided
+  ShaderName: UMA/UMALitShaderAlpha

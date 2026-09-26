@@ -27,6 +27,12 @@ namespace UMA
         private const string HdrpInstalledMarker = "UMAHDRPInstalled.json";
         private const string UrpContentManifest = "UMAURPManifest.json";
         private const string HdrpContentManifest = "UMAHDRPManifest.json";
+        private const string ExtraShadersArchiveRoot = "ShaderPackages/Archive";
+        private const string CompositingShadersZipName = "CompositingShaderPackages.zip";
+        private const string OldShadersZipName = "OldShaderPackages.zip";
+        private const string CompositingShaderMarker = "UMAMaterial_AlbedoNormal_Compositer.asset";
+        private const string CompositingShaderLegacyMarker = "AlbedoNormal_Compositer.mat";
+        private const string OldShaderMarker = "UMASRP_DiffuseNormalThickness.umaShaderPack";
         private const string PendingSrpImportKey = "UMA.PendingSrpImport";
         private const string StartupCheckCompleteKey = "UMA.WelcomeToUMA.StartupCheckComplete";
         private const string DismissedAutomaticPromptKey =
@@ -356,6 +362,7 @@ namespace UMA
 
         public UMASettings initialSettings;
         private string displayedSettingsVersion;
+        private List<string> lowSkinWeightLevels = new List<string>();
 
         private static bool IsHiddenInternalShader(string shaderName)
         {
@@ -366,6 +373,7 @@ namespace UMA
         {
             Instance = this;
             pageInitialized = false;
+            RefreshSkinningQualityLevels();
         }
 
         public void OnDisable()
@@ -653,11 +661,11 @@ namespace UMA
                     currentButton = 7;
                     RebuildLibrary();
                 }
-                if (GUILayout.Button("Refresh UMA Shaders", GUILayout.Height(40)))
+                if (GUILayout.Button("Install extra Shaders", GUILayout.Height(40)))
                 {
                     ClearLog();
                     currentButton = 6;
-                    RefreshShaderFolder();
+                    DoExtraShadersPage();
                 }
                 if (GUILayout.Button("Scan UMA 3 Scene", GUILayout.Height(40)))
                 {
@@ -837,6 +845,153 @@ namespace UMA
             AddSeperator();
 
             AddText("After importing an UMA update or moving content, use <b>UMA > Global Library Maintenance</b> to rebuild or repair the asset index. Open the Documentation Browser for detailed setup, migration, and authoring guides.");
+        }
+
+        private void DoExtraShadersPage()
+        {
+            ClearLog();
+            scrollPosition = Vector2.zero;
+            AddLargeText("Install extra Shaders");
+            AddText("Optional shader packages. Installing them can increase shader compile times.");
+            AddSeperator();
+
+            bool compositingInstalled = IsExtraShaderPackInstalled(CompositingShaderMarker, CompositingShaderLegacyMarker);
+            AddText("<b>Compositing Shaders</b>");
+            AddText(compositingInstalled
+                ? "Status: <b>Installed</b>. Installing again will reinstall the package."
+                : "Status: <b>Not installed</b>.", compositingInstalled ? LogType.Info : LogType.Warning);
+            LogLine compositingLine = AddText(compositingInstalled
+                ? "Install/Reinstall Compositing Shaders"
+                : "Install Compositing Shaders");
+            compositingLine.ButtonAction = line => InstallExtraShaderPack(CompositingShadersZipName, "Compositing Shaders");
+            AddSeperator();
+
+            bool oldInstalled = IsExtraShaderPackInstalled(OldShaderMarker, null);
+            AddText("<b>UMA 2.X Shader Packages</b>");
+            AddText(oldInstalled
+                ? "Status: <b>Installed</b>. Installing again will reinstall the package."
+                : "Status: <b>Not installed</b>.", oldInstalled ? LogType.Info : LogType.Warning);
+            LogLine oldLine = AddText(oldInstalled
+                ? "Install/Reinstall UMA 2.X ShaderPackages"
+                : "Install UMA 2.X ShaderPackages");
+            oldLine.ButtonAction = line => InstallExtraShaderPack(OldShadersZipName, "UMA 2.X Shader Packages");
+            AddSeperator();
+
+            AddText("These packages install into <b>Assets/UMA/ShaderPackages</b>.", LogType.Warning);
+        }
+
+        private static string GetExtraShaderPackDestination()
+        {
+            return UMAPathUtility.ResolveInstallAssetPath("ShaderPackages");
+        }
+
+        private static string GetExtraShaderPackArchive(string zipName)
+        {
+            return UMAPathUtility.ResolveInstallAssetPath(ExtraShadersArchiveRoot + "/" + zipName);
+        }
+
+        private static bool IsExtraShaderPackInstalled(params string[] markerFileNames)
+        {
+            string destination = GetExtraShaderPackDestination();
+            if (string.IsNullOrEmpty(destination))
+                return false;
+            if (markerFileNames == null)
+                return false;
+            for (int i = 0; i < markerFileNames.Length; i++)
+            {
+                string marker = markerFileNames[i];
+                if (string.IsNullOrEmpty(marker))
+                    continue;
+                try
+                {
+                    if (File.Exists(UMAPathUtility.ResolveAbsolutePath(destination + "/" + marker)))
+                        return true;
+                }
+                catch
+                {
+                    // Fall through and report not installed.
+                }
+            }
+            return false;
+        }
+
+        private void InstallExtraShaderPack(string zipName, string displayName)
+        {
+            string archiveAssetPath = GetExtraShaderPackArchive(zipName);
+            string archiveAbsolutePath;
+            try
+            {
+                archiveAbsolutePath = UMAPathUtility.ResolveAbsolutePath(archiveAssetPath);
+            }
+            catch (Exception ex)
+            {
+                AddText($"Could not locate the {displayName} archive: {ex.Message}", LogType.Error);
+                return;
+            }
+
+            if (!File.Exists(archiveAbsolutePath))
+            {
+                AddText($"Could not find the {displayName} archive at {archiveAssetPath}.", LogType.Error);
+                return;
+            }
+
+            string destinationAssetPath = GetExtraShaderPackDestination();
+            string destinationAbsolutePath;
+            try
+            {
+                destinationAbsolutePath = UMAPathUtility.ResolveAbsolutePath(destinationAssetPath);
+            }
+            catch (Exception ex)
+            {
+                AddText($"Could not locate the shader package folder: {ex.Message}", LogType.Error);
+                return;
+            }
+
+            try
+            {
+                Directory.CreateDirectory(destinationAbsolutePath);
+                StartProcessing();
+                ExtractExtraShaderPack(archiveAbsolutePath, destinationAbsolutePath);
+                StopProcessing();
+                AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+                AssetDatabase.ImportAsset(destinationAssetPath, ImportAssetOptions.ForceUpdate | ImportAssetOptions.ImportRecursive | ImportAssetOptions.ForceSynchronousImport);
+            }
+            catch (Exception ex)
+            {
+                StopProcessing();
+                AddText($"Error installing {displayName}: {ex.Message}", LogType.Error);
+                return;
+            }
+
+            DoExtraShadersPage();
+            AddText($"{displayName} installed successfully into {destinationAssetPath}.");
+            Repaint();
+        }
+
+        private static void ExtractExtraShaderPack(string archiveAbsolutePath, string destinationAbsolutePath)
+        {
+            string destinationRoot = Path.GetFullPath(destinationAbsolutePath);
+            using (FileStream stream = File.OpenRead(archiveAbsolutePath))
+            using (System.IO.Compression.ZipArchive zip = new System.IO.Compression.ZipArchive(stream, System.IO.Compression.ZipArchiveMode.Read))
+            {
+                foreach (System.IO.Compression.ZipArchiveEntry entry in zip.Entries)
+                {
+                    string entryName = (entry.FullName ?? string.Empty).Replace('/', Path.DirectorySeparatorChar);
+                    if (string.IsNullOrEmpty(entryName) || entryName.EndsWith(Path.DirectorySeparatorChar.ToString(), StringComparison.Ordinal))
+                        continue;
+
+                    string destination = Path.GetFullPath(Path.Combine(destinationRoot, entryName));
+                    if (!IsAtOrBelow(destination, destinationRoot))
+                        throw new InvalidDataException("Unsafe shader package entry: " + entry.FullName);
+
+                    Directory.CreateDirectory(Path.GetDirectoryName(destination));
+                    using (Stream entryStream = entry.Open())
+                    using (FileStream destinationStream = new FileStream(destination, FileMode.Create, FileAccess.Write, FileShare.None))
+                    {
+                        entryStream.CopyTo(destinationStream);
+                    }
+                }
+            }
         }
 
         private void RefreshShaderFolder()
@@ -2770,12 +2925,68 @@ namespace UMA
             AddText("Rebuild the Global Library so new and moved slots, overlays, races, recipes, and other indexed assets are available.");
             LogLine rebuildLine = AddText("Rebuild the Global Library now");
             rebuildLine.ButtonAction = line => DoLibraryRebuild(rebuildLine);
+            AddSkinningQualityWarning();
             AddSeperator();
 
             AddText("<b>Learn and troubleshoot</b>");
             AddText("Open the <b>Documentation Browser</b> to browse the Markdown guides included with this installation.");
             AddText("Use <b>Scan Scene</b> or <b>Scan Project</b> for common setup and asset problems, and the UMA diagnostics tools for character-build or RenderTexture investigation.");
             AddText("The <b>Links</b> page includes the UMA Discord, Wiki, forum, GitHub repository, Asset Store page, and video channel.");
+        }
+
+        private void RefreshSkinningQualityLevels()
+        {
+            using (var settings = new SerializedObject(QualitySettings.GetQualitySettings()))
+                lowSkinWeightLevels = ScanSkinningQualityLevels(settings, false);
+        }
+
+        private static List<string> ScanSkinningQualityLevels(SerializedObject settings, bool fix)
+        {
+            var affected = new List<string>();
+            var levels = settings.FindProperty("m_QualitySettings");
+            if (levels == null || !levels.isArray)
+                throw new InvalidOperationException("Unable to read the project's quality levels.");
+            for (int i = 0; i < levels.arraySize; i++)
+            {
+                var level = levels.GetArrayElementAtIndex(i);
+                var weights = level.FindPropertyRelative("skinWeights");
+                if (weights == null)
+                    throw new InvalidOperationException("Unable to read skin weights for quality level " + i + ".");
+                int bones = weights.intValue;
+                if (bones != (int)SkinWeights.OneBone && bones != (int)SkinWeights.TwoBones) continue;
+                string name = level.FindPropertyRelative("name")?.stringValue;
+                affected.Add((string.IsNullOrEmpty(name) ? "Quality level " + i : name) +
+                    " (" + bones + (bones == 1 ? " bone)" : " bones)"));
+                if (fix) weights.intValue = (int)SkinWeights.FourBones;
+            }
+            return affected;
+        }
+
+        private void AddSkinningQualityWarning()
+        {
+            RefreshSkinningQualityLevels();
+            if (lowSkinWeightLevels.Count == 0) return;
+            AddText("<b>Skinning quality needs attention.</b> These project quality levels limit skin weights to one or two bones per vertex, which will cause skinning and deformation issues with UMA characters: " +
+                string.Join(", ", lowSkinWeightLevels) +
+                ". We recommend setting these levels to at least four bones. Four-bone and unlimited levels will not be changed.", LogType.Warning);
+            var fixLine = AddText("Fix Skinning Quality (set affected levels to 4 bones)");
+            fixLine.ButtonAction = line =>
+            {
+                const string path = "ProjectSettings/QualitySettings.asset";
+                if (!AssetDatabase.MakeEditable(path))
+                    throw new InvalidOperationException("QualitySettings.asset must be writable before fixing skinning quality.");
+                using (var settings = new SerializedObject(QualitySettings.GetQualitySettings()))
+                {
+                    var affected = ScanSkinningQualityLevels(settings, true);
+                    if (affected.Count > 0)
+                    {
+                        Undo.SetCurrentGroupName("Fix UMA skinning quality");
+                        settings.ApplyModifiedProperties();
+                    }
+                }
+                DoWelcome();
+                Repaint();
+            };
         }
 
         private static SrpSupport GetInstalledSrpSupport()

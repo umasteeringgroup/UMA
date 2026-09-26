@@ -300,7 +300,7 @@ MonoBehaviour:
   Generator: {fileID: 0}
   CrowdGenerator: {fileID: 0}
   LegacyCrowdGenerator: {fileID: 0}
-  ShowRuntimeControls: 1
+  ShowRuntimeControls: 0
   AutoSaveWhenGeneratorBecomesIdle: 1
   AutoSaveIdleFrameDelay: 2
   FileNamePrefix: UMA-Crowd-Generator-Statistics
@@ -853,11 +853,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 997165924250026383, guid: 4d4ce01dbd7484b439df783927a00c65, type: 3}
       propertyPath: m_LocalScale.x
-      value: 20
+      value: 16
       objectReference: {fileID: 0}
     - target: {fileID: 997165924250026383, guid: 4d4ce01dbd7484b439df783927a00c65, type: 3}
       propertyPath: m_LocalScale.z
-      value: 20
+      value: 16
       objectReference: {fileID: 0}
     - target: {fileID: 997165924250026383, guid: 4d4ce01dbd7484b439df783927a00c65, type: 3}
       propertyPath: m_LocalPosition.x

@@ -140,5 +140,5 @@ MonoBehaviour:
   shaderKeywords: []
   MaskWithCurrentColor: 0
   maskMultiplier: {r: 1, g: 1, b: 1, a: 1}
-  MaterialName: 
-  ShaderName: 
+  MaterialName: UMA_Mat_Diffuse_Normal_Specular_Occlusion
+  ShaderName: Shader Graphs/UMA3_Lit(Specular)

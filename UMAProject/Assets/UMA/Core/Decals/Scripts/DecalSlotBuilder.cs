@@ -65,9 +65,11 @@ namespace UMA
             _lastAxisXWorld = default;
             _lastAxisYWorld = default;
             _lastRadius = 0f;
+#if UNITY_EDITOR            
             LastCylinderStart = default;
             LastCylinderEnd = default;
             LastCylinderRadius = 0f;
+#endif
             _vertexMaps =
                 new ConditionalWeakTable<SlotDataAsset, VertexMap>();
         }
