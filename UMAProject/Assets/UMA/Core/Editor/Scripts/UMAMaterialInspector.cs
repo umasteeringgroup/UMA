@@ -17,6 +17,7 @@ namespace UMA.Editors
         private GUIStyle _centeredStyle;
         private SerializedProperty _shaderParms;
         private SerializedProperty _shaderKeywords;
+        private SerializedProperty _supportsSourceUVCropping;
         private bool[] channelExpanded = new bool[3];
         private static bool showMaterialInspector = false;
         Editor innerEditor = null;
@@ -44,6 +45,7 @@ namespace UMA.Editors
         { 
             _shaderParms = serializedObject.FindProperty("shaderParms");
             _shaderKeywords = serializedObject.FindProperty("shaderKeywords");
+            _supportsSourceUVCropping = serializedObject.FindProperty("supportsSourceUVCropping");
             EditorApplication.update += DoInspectors;
         }
 
@@ -99,6 +101,7 @@ namespace UMA.Editors
             UMAMaterial.MaterialType MatType = (UMAMaterial.MaterialType)materialTypeProperty.intValue;
 
             showHelp = EditorGUILayout.Toggle("Show Help", showHelp);
+            EditorGUILayout.PropertyField(_supportsSourceUVCropping);
 
             GUILayout.BeginHorizontal();
             EditorGUILayout.PropertyField(serializedObject.FindProperty("_material"), new GUIContent( "Default Material", "The Unity Material to link to."),GUILayout.ExpandWidth(true));
@@ -1500,6 +1503,7 @@ namespace UMA.Editors
 
             Dictionary<UMAMaterial, MaterialUsageRow> usageByMaterial = new Dictionary<UMAMaterial, MaterialUsageRow>();
             Dictionary<string, UMAMaterial> materialByName = new Dictionary<string, UMAMaterial>();
+            HashSet<UMAMaterial> materialFilterSet = _materialFilter.Count > 0 ? new HashSet<UMAMaterial>(_materialFilter) : null;
 
             List<UMAMaterial> materials = _materialFilter.Count > 0 ? new List<UMAMaterial>(_materialFilter) : LoadAssets<UMAMaterial>();
             materials.Sort(CompareAssetsByName);
@@ -1535,6 +1539,11 @@ namespace UMA.Editors
                     continue;
                 }
 
+                if (materialFilterSet != null && !materialFilterSet.Contains(material))
+                {
+                    continue;
+                }
+
                 MaterialUsageRow usage = GetOrCreateUsage(material, usageByMaterial);
                 usage.Overlays.Add(overlay);
             }
@@ -1546,6 +1555,10 @@ namespace UMA.Editors
             _materials.Sort(CompareMaterialRowsByName);
 
             _selectedMaterialIndex = FindMaterialIndex(previouslySelected);
+            if (_selectedMaterialIndex < 0 && _materialFilter.Count > 0)
+            {
+                _selectedMaterialIndex = FindMaterialIndex(_materialFilter[0]);
+            }
             if (_selectedMaterialIndex < 0 && _materials.Count > 0)
             {
                 _selectedMaterialIndex = 0;

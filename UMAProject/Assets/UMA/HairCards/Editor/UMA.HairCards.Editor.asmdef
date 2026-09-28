@@ -1,0 +1,20 @@
+{
+    "name": "UMA.HairCards.Editor",
+    "rootNamespace": "UMA.HairCards.Editor",
+    "references": [
+        "UMA.HairCards.Core",
+        "UMA.HairCards.Runtime",
+        "UMA_Core"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

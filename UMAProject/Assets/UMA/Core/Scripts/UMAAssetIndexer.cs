@@ -383,25 +383,58 @@ namespace UMA
             }
 
             consolidatedGeneratorEntityId = entityId;
+            DestroyInternalGeneratorsExcept(generator);
+        }
+
+        private static bool IsInternalGenerator(UMAGenerator candidate)
+        {
+            return candidate != null &&
+                candidate.gameObject != null &&
+                string.Equals(
+                    candidate.gameObject.name,
+                    generatorName,
+                    StringComparison.Ordinal);
+        }
+
+        private static void DestroyInternalGeneratorsExcept(
+            UMAGenerator generatorToKeep)
+        {
             UMAGenerator[] candidates = Resources.FindObjectsOfTypeAll<UMAGenerator>();
+            DestroyInternalGeneratorCandidates(candidates, generatorToKeep);
+        }
+
+        private static void DestroyInternalGeneratorCandidates(
+            UMAGenerator[] candidates,
+            UMAGenerator generatorToKeep)
+        {
+            if (candidates == null)
+            {
+                return;
+            }
+
             for (int i = 0; i < candidates.Length; i++)
             {
                 UMAGenerator candidate = candidates[i];
-                if (candidate == generator || !IsUsableSceneGenerator(candidate) ||
-                    !string.Equals(candidate.gameObject.name, generatorName, StringComparison.Ordinal))
+                if (candidate == generatorToKeep ||
+                    !IsInternalGenerator(candidate))
                 {
                     continue;
                 }
 
 #if UNITY_EDITOR
-                if (!EditorApplication.isPlaying)
-                {
-                    GameObject.DestroyImmediate(candidate.gameObject);
-                    continue;
-                }
-#endif
+                // Internal generators are editor-created transient objects.
+                // Destroy immediately even during Play Mode so another Update
+                // cannot consume the shared dirty list in the current frame.
+                GameObject.DestroyImmediate(candidate.gameObject);
+#else
                 GameObject.Destroy(candidate.gameObject);
+#endif
             }
+        }
+
+        private static void DestroyAllInternalGenerators()
+        {
+            DestroyInternalGeneratorsExcept(null);
         }
 
         private static bool IsUsableSceneGenerator(UMAGenerator candidate)
@@ -926,7 +959,11 @@ namespace UMA
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         public static void RuntimeInitializeOnLoad()
         {
-
+            // Runtime-created DontDestroyOnLoad generators can survive a fast
+            // edit/play transition even though the ScriptableObject cache is
+            // reset below. Remove every owned survivor before avatars Awake or
+            // Start can queue work against more than one generator.
+            DestroyAllInternalGenerators();
             SortOrder = "Name";
             SortOrders = new string[] { "Name", "AssetName" };
             WasChecked = false;
@@ -934,6 +971,7 @@ namespace UMA
             if (theIndexer != null)
             {
                 theIndexer.generator = null;
+                theIndexer.consolidatedGeneratorEntityId = EntityId.None;
             }
             theIndexer = null;
 /*
@@ -1085,10 +1123,7 @@ namespace UMA
 					theIndexer.RebuildRaceRecipes();*/
 
 #if UNITY_EDITOR
-                    EditorSceneManager.sceneSaving += EditorSceneManager_sceneSaving;
-                    EditorSceneManager.sceneSaved += EditorSceneManager_sceneSaved;
-                    EditorApplication.playModeStateChanged += EditorApplication_playModeStateChanged;
-                    ;
+                    RegisterEditorCallbacks();
 #endif
                 }
                 else
@@ -1107,15 +1142,36 @@ namespace UMA
 
 #if UNITY_EDITOR
 
+        [InitializeOnLoadMethod]
+        private static void RegisterEditorCallbacks()
+        {
+            // RuntimeInitializeOnLoad clears the cached indexer every time play
+            // mode starts, including when domain reload is disabled. Instance
+            // is consequently initialized again in every play session. Keep
+            // these process-wide editor callbacks idempotent or each session
+            // adds another rebuild request for every edit/play transition.
+            EditorSceneManager.sceneSaving -= EditorSceneManager_sceneSaving;
+            EditorSceneManager.sceneSaving += EditorSceneManager_sceneSaving;
+            EditorSceneManager.sceneSaved -= EditorSceneManager_sceneSaved;
+            EditorSceneManager.sceneSaved += EditorSceneManager_sceneSaved;
+            EditorApplication.playModeStateChanged -=
+                EditorApplication_playModeStateChanged;
+            EditorApplication.playModeStateChanged +=
+                EditorApplication_playModeStateChanged;
+        }
+
         private static void EditorApplication_playModeStateChanged(PlayModeStateChange obj)
         {
-            if (!EditorApplication.isPlayingOrWillChangePlaymode &&
-                 !EditorApplication.isPlaying)
+            if (obj == PlayModeStateChange.ExitingEditMode ||
+                obj == PlayModeStateChange.ExitingPlayMode ||
+                obj == PlayModeStateChange.EnteredEditMode)
             {
-                RebuildUMAS(SceneManager.GetActiveScene());
+                CleanupTransientGenerationState();
             }
+
             if (obj == PlayModeStateChange.ExitingEditMode)
             {
+                PrepareUMASForPlayMode();
                 if (theIndexer != null)
                 {
                     // Debug.Log("playmde. creating generator");
@@ -1127,7 +1183,7 @@ namespace UMA
                     theIndexer.generator = null;
                 }
             }
-            if (obj == PlayModeStateChange.EnteredEditMode)
+            else if (obj == PlayModeStateChange.EnteredEditMode)
             {
                 if (theIndexer != null)
                 {
@@ -1138,11 +1194,33 @@ namespace UMA
                     }
                     theIndexer.generator = null;
                 }
-                //Debug.Log("playmde. exiting playmode");
-                //theIndexer.generator = null;
-                //theIndexer.CreateGenerator();
             }
+        }
+
+        private static void CleanupTransientGenerationState()
+        {
+            UMAGeneratorBuiltin[] generators =
+                UnityEngine.Object.FindObjectsByType<UMAGeneratorBuiltin>(
+                    FindObjectsInactive.Include,
+                    FindObjectsSortMode.None);
+            for (int generatorIndex = 0;
+                 generatorIndex < generators.Length;
+                 generatorIndex++)
+            {
+                generators[generatorIndex]?.ClearAllPending();
+            }
+
+            UMAIncrementalMeshCombineOperation.DisposeActiveOperations();
+            RenderTexToCPU.CleanupPendingCopies();
+            SubMeshTriangles.DisposeAllNativeTriangles();
             UMAMeshData.CleanupGlobalBuffers();
+            DestroyAllInternalGenerators();
+
+            if (theIndexer != null)
+            {
+                theIndexer.generator = null;
+                theIndexer.consolidatedGeneratorEntityId = EntityId.None;
+            }
         }
 
 
@@ -1167,10 +1245,20 @@ namespace UMA
             {
                 return;
             }
-            EditorApplication.delayCall += () =>
+
+            if (EditorApplication.isPlayingOrWillChangePlaymode ||
+                !scene.IsValid() ||
+                !scene.isLoaded)
             {
-                RebuildUMAS(scene);
-            };
+                return;
+            }
+
+            // sceneSaved runs after Unity has serialized the cleaned scene.
+            // GenerateSingleUMA queues the actual build for a later editor
+            // update, so no generated mesh can be written into this save.
+            // This is infrastructure restoration rather than an ordinary
+            // automatic edit, and must work while editor generation is paused.
+            RebuildUMAS(scene, true);
         }
 
         private static void EditorSceneManager_sceneSaving(UnityEngine.SceneManagement.Scene scene, string path)
@@ -1194,6 +1282,13 @@ namespace UMA
 
         public static void RebuildUMAS(Scene scene)
         {
+            RebuildUMAS(scene, false);
+        }
+
+        private static void RebuildUMAS(
+            Scene scene,
+            bool ignoreEditorGenerationPause)
+        {
             if (!scene.isLoaded || !scene.IsValid())
             {
                 return;
@@ -1202,15 +1297,20 @@ namespace UMA
             for (int i = 0; i < sceneObjs.Length; i++)
             {
                 GameObject go = sceneObjs[i];
-                DynamicCharacterAvatar[] dcas = go.GetComponentsInChildren<DynamicCharacterAvatar>(false);
-                if (dcas.Length > 0)
+                if (go.activeInHierarchy)
                 {
-                    for (int i1 = 0; i1 < dcas.Length; i1++)
+                    DynamicCharacterAvatar[] dcas = go.GetComponentsInChildren<DynamicCharacterAvatar>(false);
+                    if (dcas.Length > 0)
                     {
-                        DynamicCharacterAvatar dca = dcas[i1];
-                        if (dca.editorTimeGeneration)
+                        for (int i1 = 0; i1 < dcas.Length; i1++)
                         {
-                            dca.GenerateSingleUMA();
+                            DynamicCharacterAvatar dca = dcas[i1];
+                            if (dca.editorTimeGeneration)
+                            {
+                                dca.GenerateSingleUMA(
+                                    false,
+                                    ignoreEditorGenerationPause);
+                            }
                         }
                     }
                 }
@@ -1234,6 +1334,41 @@ namespace UMA
                         // it will be regenerated later.
                         dca.CleanupGeneratedData();
                     }
+                }
+            }
+        }
+
+        private static void PrepareUMASForPlayMode()
+        {
+            for (int sceneIndex = 0;
+                 sceneIndex < SceneManager.sceneCount;
+                 sceneIndex++)
+            {
+                PrepareUMASForPlayMode(SceneManager.GetSceneAt(sceneIndex));
+            }
+        }
+
+        private static void PrepareUMASForPlayMode(Scene scene)
+        {
+            if (!scene.IsValid() || !scene.isLoaded)
+            {
+                return;
+            }
+
+            GameObject[] sceneObjects = scene.GetRootGameObjects();
+            for (int rootIndex = 0;
+                 rootIndex < sceneObjects.Length;
+                 rootIndex++)
+            {
+                DynamicCharacterAvatar[] avatars =
+                    sceneObjects[rootIndex]
+                        .GetComponentsInChildren<DynamicCharacterAvatar>(false);
+                for (int avatarIndex = 0;
+                     avatarIndex < avatars.Length;
+                     avatarIndex++)
+                {
+                    DynamicCharacterAvatar avatar = avatars[avatarIndex];
+                    avatar.PrepareForPlayMode();
                 }
             }
         }

@@ -1,0 +1,16 @@
+.uma-document-open-button {
+    flex-grow: 1;
+    -unity-text-align: middle-left;
+    min-height: 22px;
+    margin-bottom: 2px;
+    font-size: 13px;
+}
+
+.uma-document-dragging {
+    opacity: 0.7;
+}
+
+.uma-document-drop-target {
+    border-top-width: 2px;
+    border-top-color: rgb(58, 121, 187);
+}

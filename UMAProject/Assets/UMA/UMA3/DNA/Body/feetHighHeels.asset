@@ -58,7 +58,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
+        enabled: 1
         expanded: 0
         selected: 0
+        showHelp: 0
         EffectName: 
         bonePose: {fileID: 11400000, guid: 3f35456c47e319e448bdfb84f42e3afc, type: 2}
+        isBasePose: 0

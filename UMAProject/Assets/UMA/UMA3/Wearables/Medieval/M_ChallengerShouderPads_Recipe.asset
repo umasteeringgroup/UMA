@@ -22,6 +22,13 @@ MonoBehaviour:
   - race: Human Male 3.0
     filename: Assets/UMA/UMA3/Wearables/Icons/Shoulders/Human Male 3.0/2_M_ChallengerShouderPads_Recipe.png
     thumb: {fileID: 21300000, guid: 55b47ee4f1ca17743a21054c6736a23e, type: 3}
+  thumbnailFromTexture: 0
+  thumbnailRect:
+    serializedVersion: 2
+    x: 0.25
+    y: 0.25
+    width: 0.5
+    height: 0.5
   wardrobeSlot: Shoulders
   Appended: 0
   Hides: []

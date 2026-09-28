@@ -19,7 +19,7 @@ MonoBehaviour:
   depositedTrailAlpha: 0.95
   sourceOverlay: {fileID: 0}
   channels: 1
-  wetnessMaterialPropertyName:
+  wetnessMaterialPropertyName: 
   targetSlotGroups: []
   targetOverlayGroups: []
   emissionDuration: 3.5

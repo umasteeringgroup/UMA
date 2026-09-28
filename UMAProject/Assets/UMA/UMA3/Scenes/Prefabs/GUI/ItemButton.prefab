@@ -232,6 +232,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   recipe: {fileID: 0}
+  category: 
+  clearImage: {fileID: 0}
 --- !u!114 &4544581736354341473
 MonoBehaviour:
   m_ObjectHideFlags: 0

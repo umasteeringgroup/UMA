@@ -13,10 +13,11 @@ using UMA.CharacterSystem.Editors;
 [CustomEditor(typeof(DNA))]
 public class DNAEditor : Editor
 {
+    private readonly UMAInspectorView inspectorView =
+        new UMAInspectorView(typeof(DNA));
     SerializedProperty nameProp;
     SerializedProperty descriptionProp;
     SerializedProperty defaultValueProp;
-    SerializedProperty effectsProp;
 
     // For adding new DNAEffect
     private int selectedEffectTypeIndex = 0;
@@ -61,6 +62,9 @@ public class DNAEditor : Editor
 
     private void OnEnable()
     {
+        nameProp = serializedObject.FindProperty("m_Name");
+        descriptionProp = serializedObject.FindProperty("description");
+        defaultValueProp = serializedObject.FindProperty("defaultValue");
         // Force re-initialization after domain reload — non-serialized fields
         // like effectTypes/effectNames are lost, and Initialize() running from
         // OnInspectorGUI may race with assembly loading.
@@ -127,8 +131,12 @@ public class DNAEditor : Editor
         DNA targetDNA = target as DNA;
 
         serializedObject.Update();
-
-        GUILayout.Label("DNA Editor", EditorStyles.boldLabel);
+        Undo.RecordObject(target, "Edit DNA");
+        bool advanced = inspectorView.DrawSelector();
+        if (advanced)
+        using (inspectorView.Section("Asset utilities",
+            "Ping locates this DNA asset in the Project window. Save Now flushes pending asset changes. Rebuild Characters regenerates every editor UMA and can be expensive in large scenes."))
+        {
         GUILayout.BeginHorizontal();
         if (GUILayout.Button("Ping DNA Asset", GUILayout.Width(150)))
         {
@@ -144,13 +152,31 @@ public class DNAEditor : Editor
             UMAAssetIndexer.RebuildAllUMAS();
         }
         GUILayout.EndHorizontal();
-        targetDNA.displayName = EditorGUILayout.DelayedTextField("Display Name", targetDNA.displayName);
-        targetDNA.description = EditorGUILayout.DelayedTextField("Description", targetDNA.description);
-        targetDNA.defaultValue = EditorGUILayout.Slider("Default Value", targetDNA.defaultValue, 0f, 1f);
-        EditorGUILayout.Space();
+        }
+
+        using (inspectorView.Section("DNA definition",
+            "Display Name and Description explain the control to artists. Default Value is the neutral normalized value used when no source drives this DNA. Asset Name is shown in Advanced View because renaming can affect external workflows."))
+        {
+            if (advanced && nameProp != null)
+                EditorGUILayout.PropertyField(nameProp,
+                    new GUIContent("Asset Name"));
+            EditorGUILayout.PropertyField(descriptionProp,
+                new GUIContent("Description"));
+            EditorGUILayout.PropertyField(defaultValueProp,
+                new GUIContent("Default Value"));
+            SerializedProperty display = serializedObject.FindProperty(
+                "displayName");
+            if (display != null)
+                EditorGUILayout.PropertyField(display,
+                    new GUIContent("Display Name"));
+        }
 
 
         // Foldout for Add New Effect with persistence
+        if (advanced)
+        using (inspectorView.Section("Add or copy effects",
+            "Choose an effect type and configure its mapping before adding it. Bone effects can select a transform from the current avatar context. The drop area copies effects from another DNA asset without linking the two assets."))
+        {
         bool prevExpanded = editorExpanded;
         editorExpanded = GUIHelper.FoldoutBar(editorExpanded, "Add New Effect Settings");
         if (editorExpanded != prevExpanded)
@@ -161,15 +187,20 @@ public class DNAEditor : Editor
         {
             ShowAddNew(targetDNA);
         }
+        }
 
         // Draw existing effects
-        EditorGUILayout.Space();
+        using (inspectorView.Section("Effects and joint ownership",
+            "Effects run from top to bottom. Enabled controls participation; the mapping curve converts this DNA's normalized value into the effect value. Bone effects declare the actual rig transforms they own. Build-requiring mesh or texture effects are suitable for occasional customization but should not be continuously animated."))
+        {
         GUILayout.BeginHorizontal();
         EditorGUILayout.LabelField("Existing Effects", EditorStyles.boldLabel);
         GUILayout.FlexibleSpace();
         showHelp = GUILayout.Toggle(showHelp, "Show Help", "Button", GUILayout.Width(100));
         GUILayout.EndHorizontal();
-        GUILayout.BeginHorizontal();
+        if (advanced) GUILayout.BeginHorizontal();
+        if (advanced)
+        {
         if (GUILayout.Button("Select All", GUILayout.Width(80)))
         {
             foreach (var effect in targetDNA.effects)
@@ -222,6 +253,7 @@ public class DNAEditor : Editor
             }
         }
         GUILayout.EndHorizontal();
+        }
         int deleteme = -1;
         for (int i = 0; i < targetDNA.effects.Count; i++)
         {
@@ -232,11 +264,48 @@ public class DNAEditor : Editor
             targetDNA.effects.RemoveAt(deleteme);
             serializedObject.Update();
         }
+        }
 
-        EditorGUILayout.Space();
+        using (inspectorView.Section("Performance and validation",
+            "Runtime-only effects can update every frame without rebuilding the avatar. Build effects request mesh, texture or shared-color generation and are debounced by Dynamic Expression Player. Null effects and unnamed bone or shader targets should be corrected before shipping."))
+            DrawDNAValidation(targetDNA);
 
 
         serializedObject.ApplyModifiedProperties();
+    }
+
+    private static void DrawDNAValidation(DNA dna)
+    {
+        int runtimeEffects = 0;
+        int buildEffects = 0;
+        int disabled = 0;
+        int missing = 0;
+        ExpressionEffectPhase phases = ExpressionEffectPhase.None;
+        if (dna.effects != null)
+            for (int i = 0; i < dna.effects.Count; i++)
+            {
+                DNAEffect effect = dna.effects[i];
+                if (effect == null) { missing++; continue; }
+                if (!effect.enabled) { disabled++; continue; }
+                phases |= effect.ExpressionPhases;
+                if (effect.RequiresExpressionBuild) buildEffects++;
+                else runtimeEffects++;
+            }
+        EditorGUILayout.LabelField("Runtime-only effects",
+            runtimeEffects.ToString());
+        EditorGUILayout.LabelField("Build-requesting effects",
+            buildEffects.ToString());
+        EditorGUILayout.LabelField("Active phases", phases.ToString());
+        if (disabled > 0)
+            EditorGUILayout.HelpBox(disabled + " effect(s) are disabled.",
+                MessageType.Info);
+        if (missing > 0)
+            EditorGUILayout.HelpBox(missing + " effect entries are missing.",
+                MessageType.Error);
+        if (buildEffects > 0)
+            EditorGUILayout.HelpBox(
+                "This DNA can request avatar builds. Avoid driving it every frame unless rebuild behavior is intentional.",
+                MessageType.Warning);
     }
 
     private int ShowEffect(DNA targetDNA, int deleteme, int i)
@@ -284,7 +353,6 @@ public class DNAEditor : Editor
             }
             if (GUILayout.Button("Remove", GUILayout.Width(60)))
             {
-                effectsProp?.DeleteArrayElementAtIndex(i);
                 deleteme = i; // Mark this index for deletion
             }
             EditorGUILayout.EndHorizontal();

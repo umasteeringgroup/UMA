@@ -741,6 +741,7 @@ namespace UMA.Editors
                 }
                 catch { }
 #endif
+                UMASlotPreparationUtility.PrepareSlot(slot);
                 AssetDatabase.SaveAssets();
             }
             finally
@@ -1392,6 +1393,7 @@ namespace UMA.Editors
                     slotToOverlay[additionalSlot] = oda;
                 }
             }
+            foreach (var preparedSlot in createdSlots) UMASlotPreparationUtility.PrepareSlot(preparedSlot);
             if (!sbp.batchMode)
             {
                 AssetDatabase.SaveAssets();
@@ -2232,6 +2234,7 @@ namespace UMA.Editors
             // Build result for UDIM; recipe creation happens in caller
             for (int i = 0; i < createdSlots.Count; i++)
             {
+                UMASlotPreparationUtility.PrepareSlot(createdSlots[i]);
                 udimResult.AddSourceMesh(createdSlots[i], sourceRenderer != null ? sourceRenderer.name : string.Empty);
             }
             return udimResult;

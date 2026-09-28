@@ -60,8 +60,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
+        enabled: 1
         expanded: 0
         selected: 0
+        showHelp: 0
         EffectName: LeftFoot
         BoneName: LeftFoot
         ScaleFactor: {x: 0.65, y: 0.65, z: 0.65}
@@ -103,8 +105,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
+        enabled: 1
         expanded: 0
         selected: 1
+        showHelp: 0
         EffectName: RightFoot
         BoneName: RightFoot
         ScaleFactor: {x: 0.65, y: 0.65, z: 0.65}
@@ -146,8 +150,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
+        enabled: 1
         expanded: 1
         selected: 0
+        showHelp: 0
         EffectName: 'UMA.Effect_BoneTranslate: Position'
         BoneName: Position
         Translation: {x: 0, y: 0.1, z: 0}

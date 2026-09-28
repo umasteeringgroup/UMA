@@ -25,7 +25,24 @@ namespace UMA.Decals
 		private static void RuntimeInitializeOnLoad()
 		{
 			MatrixLevel = 0;
+			DestroyCachedMaterial(_lineMat);
 			_lineMat = null;
+		}
+
+		private static void DestroyCachedMaterial(Material material)
+		{
+			if (material == null)
+			{
+				return;
+			}
+			if (Application.isPlaying)
+			{
+				Destroy(material);
+			}
+			else
+			{
+				DestroyImmediate(material);
+			}
 		}
 
 		public enum rebuildMethod

@@ -241,6 +241,20 @@ namespace UMA.Editors
 			GUILayout.Space(padding);
 		}
 
+        /// <summary>Balances a padded group on ordinary early returns; GUI.Scope also
+        /// respects Unity's ExitGUI unwinding, like the built-in layout scopes.</summary>
+        public sealed class PaddedVerticalScope : GUI.Scope
+        {
+            private readonly float padding;
+            public PaddedVerticalScope(float padding, Color backgroundColor)
+            {
+                this.padding = padding;
+                BeginVerticalPadded(padding, backgroundColor);
+            }
+
+            protected override void CloseScope() => EndVerticalPadded(padding);
+        }
+
 		public static void EndVerticalPadded(float padding)
 		{
 			GUILayout.Space(padding);

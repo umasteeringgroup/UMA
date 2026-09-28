@@ -35,6 +35,7 @@ namespace UMA.Dynamics.Examples
         // Input System
         private UMAPlayerActions controls;
         private Vector2 lookInput;
+        private CursorLock cursorLock;
 
         // State
         private float targetYaw;
@@ -51,6 +52,8 @@ namespace UMA.Dynamics.Examples
         private void Awake()
         {
             controls = new UMAPlayerActions();
+            cursorLock = FindFirstObjectByType<CursorLock>(
+                FindObjectsInactive.Exclude);
 
             controls.Player.Look.performed += ctx => lookInput = ctx.ReadValue<Vector2>();
             controls.Player.Look.canceled += ctx => lookInput = Vector2.zero;
@@ -91,6 +94,12 @@ namespace UMA.Dynamics.Examples
 
         private void Update()
         {
+            if (cursorLock != null && !cursorLock.IsMouseCaptured)
+            {
+                lookInput = Vector2.zero;
+                return;
+            }
+
             //Debug.Log($"Look input: {lookInput}");
 
             float dt = useDeltaTime ? Time.deltaTime : 1f;

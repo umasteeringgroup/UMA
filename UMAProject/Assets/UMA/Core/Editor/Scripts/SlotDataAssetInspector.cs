@@ -10,7 +10,7 @@ namespace UMA.Editors
 {
     [CustomEditor(typeof(SlotDataAsset))]
     [CanEditMultipleObjects]
-    public class SlotDataAssetInspector : Editor
+    public partial class SlotDataAssetInspector : Editor
     {
         enum SlotPreviewMode { ThisSlot, WeldSlot, BothSlots };
 
@@ -275,6 +275,12 @@ namespace UMA.Editors
                     EditorGUILayout.HelpBox("Slot asset is not available.", MessageType.Info);
                     return;
                 }
+            }
+
+            if (!inspectorView.DrawSelector())
+            {
+                DrawStandardInspector();
+                return;
             }
 
             bool forceUpdate = false;

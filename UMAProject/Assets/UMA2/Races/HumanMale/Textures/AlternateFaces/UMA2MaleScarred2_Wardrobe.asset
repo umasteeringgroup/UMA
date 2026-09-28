@@ -19,6 +19,13 @@ MonoBehaviour:
   compatibleRaces:
   - HumanMale
   wardrobeRecipeThumbs: []
+  thumbnailFromTexture: 0
+  thumbnailRect:
+    serializedVersion: 2
+    x: 0.25
+    y: 0.25
+    width: 0.5
+    height: 0.5
   wardrobeSlot: Face
   Appended: 0
   Hides: []

@@ -8,11 +8,12 @@ namespace UMA.Editors
 {
     [CustomEditor(typeof(OverlayDataAsset))]
     [CanEditMultipleObjects]
-    public class OverlayDataAssetInspector : Editor
+    public partial class OverlayDataAssetInspector : Editor
     {
         // Delayed save fields
         private SerializedProperty _overlayName;
         private SerializedProperty _overlayType;
+        private SerializedProperty _allowSourceUVCropping;
         private SerializedProperty _umaMaterial;
         private SerializedProperty _textureList;
         private SerializedProperty _textureNames;
@@ -50,6 +51,7 @@ namespace UMA.Editors
 
             _overlayName = serializedObject.FindProperty("_oldOverlayName");
             _overlayType = serializedObject.FindProperty("overlayType");
+            _allowSourceUVCropping = serializedObject.FindProperty("allowSourceUVCropping");
             _umaMaterial = serializedObject.FindProperty("material");
             _textureList = serializedObject.FindProperty("_textureList");
             _textureNames = serializedObject.FindProperty("textureNames");
@@ -145,6 +147,12 @@ namespace UMA.Editors
                 return;
             }
 
+            if (!inspectorView.DrawSelector())
+            {
+                DrawStandardInspector();
+                return;
+            }
+
             if (od.lastActionTime == 0) { od.lastActionTime = Time.realtimeSinceStartup; }
 
             // Validate blend list may resize arrays internally, guard it
@@ -171,6 +179,7 @@ namespace UMA.Editors
             GUILayout.EndHorizontal();
 
             if (_overlayType != null) { EditorGUILayout.PropertyField(_overlayType); }
+            if (_allowSourceUVCropping != null) EditorGUILayout.PropertyField(_allowSourceUVCropping);
             EditorGUILayout.LabelField("Note: It is recommended to use UV coordinates (0.0 -> 1.0) in 2.10+ for rect fields.", EditorStyles.helpBox);
             if (_rect != null) { EditorGUILayout.PropertyField(_rect); }
             if (_noAutoAdd != null) { EditorGUILayout.PropertyField(_noAutoAdd); }

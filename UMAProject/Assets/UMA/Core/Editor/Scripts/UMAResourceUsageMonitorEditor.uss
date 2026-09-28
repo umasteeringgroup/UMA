@@ -1,0 +1,8 @@
+.uma-resource-monitor { padding: 4px; }
+.heading { -unity-font-style: bold; margin-top: 10px; margin-bottom: 4px; white-space: normal; }
+.description { white-space: normal; margin-bottom: 6px; }
+.buttons { flex-direction: row; flex-wrap: wrap; margin-top: 4px; margin-bottom: 4px; }
+.buttons > Button { flex-grow: 1; margin-right: 4px; margin-bottom: 4px; }
+.metric { flex-direction: row; margin-bottom: 3px; }
+.metric > .metric-name { flex-grow: 1; flex-basis: 0; white-space: normal; margin-right: 8px; }
+.metric > .metric-value { flex-grow: 1; flex-basis: 0; white-space: normal; -unity-text-align: upper-right; }

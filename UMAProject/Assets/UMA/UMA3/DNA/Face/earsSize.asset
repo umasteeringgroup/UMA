@@ -32,7 +32,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
+        enabled: 1
         expanded: 1
+        selected: 0
+        showHelp: 0
         EffectName: LeftEarAdjust
         BoneName: LeftEarAdjust
         ScaleFactor: {x: 0.2, y: 0.2, z: 0.2}
@@ -47,7 +50,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
+        enabled: 1
         expanded: 1
+        selected: 0
+        showHelp: 0
         EffectName: RightEarAdjust
         BoneName: RightEarAdjust
         ScaleFactor: {x: 0.2, y: 0.2, z: 0.2}

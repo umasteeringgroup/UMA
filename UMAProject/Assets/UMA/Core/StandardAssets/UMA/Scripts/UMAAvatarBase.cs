@@ -102,6 +102,10 @@ namespace UMA
 			if (umaData != null)
 			{
 				umaData.CleanTextures();
+				// GeneratedMaterials is runtime-only. Retaining its renderer asset
+				// list across a domainless play-mode reset causes the next build to
+				// allocate another renderer for stale material state.
+				umaData.generatedMaterials = new UMAData.GeneratedMaterials();
 				umaData.CleanMesh(true);
 				umaData.CleanAvatar();
 				if (DestroyRoot)

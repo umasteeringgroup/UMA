@@ -123,6 +123,13 @@ namespace UMA
         public static Provider Current { private get; set; }
         public static bool IsAvailable => Current != null;
 
+        [RuntimeInitializeOnLoadMethod(
+            RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetProvider()
+        {
+            Current = null;
+        }
+
         public static UMAAddressableOperation LoadAssets(IReadOnlyList<string> keys)
         {
             return Current?.loadAssets?.Invoke(keys) ?? UMAAddressableOperation.Failed(

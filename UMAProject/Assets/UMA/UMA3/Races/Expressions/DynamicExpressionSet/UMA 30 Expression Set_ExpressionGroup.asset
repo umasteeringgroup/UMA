@@ -472,3 +472,138 @@ MonoBehaviour:
     blendMode: 0
     responseTime: 0
     blinkClosedValue: 0
+  - id: viseme_sil
+    displayName: sil - Silence
+    dna: {fileID: 11400000, guid: 2f6de6d327329b84eae01e158d6e1441, type: 2}
+    roles: 16
+    affectedJoints: 36
+    priority: 51
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: viseme_PP
+    displayName: PP - Lips closed (p/b/m)
+    dna: {fileID: 11400000, guid: 1e5e38f3e353a784585cf8f8bc500640, type: 2}
+    roles: 16
+    affectedJoints: 36
+    priority: 52
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: viseme_FF
+    displayName: FF - Lip to teeth (f/v)
+    dna: {fileID: 11400000, guid: d7bfcf237623b34428818ed60da87822, type: 2}
+    roles: 16
+    affectedJoints: 36
+    priority: 53
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: viseme_TH
+    displayName: TH - Tongue between teeth (th)
+    dna: {fileID: 11400000, guid: 22c8201906e084f4abe03debce9a7118, type: 2}
+    roles: 16
+    affectedJoints: 36
+    priority: 54
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: viseme_DD
+    displayName: DD - Tongue to ridge (t/d)
+    dna: {fileID: 11400000, guid: 9092ece1a92e1db45aeae0e55ccb9cd6, type: 2}
+    roles: 16
+    affectedJoints: 36
+    priority: 55
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: viseme_kk
+    displayName: kk - Back tongue (k/g)
+    dna: {fileID: 11400000, guid: 472aa586bae3a9a4fb79d442922660a7, type: 2}
+    roles: 16
+    affectedJoints: 36
+    priority: 56
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: viseme_CH
+    displayName: CH - Rounded fricative (ch/sh/j)
+    dna: {fileID: 11400000, guid: 56c3e4d0b5b456446bf0d957525c0e72, type: 2}
+    roles: 16
+    affectedJoints: 36
+    priority: 57
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: viseme_SS
+    displayName: SS - Teeth close (s/z)
+    dna: {fileID: 11400000, guid: ccc40be28a1b9ab438dd9186c627e4c1, type: 2}
+    roles: 16
+    affectedJoints: 36
+    priority: 58
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: viseme_nn
+    displayName: nn - Tongue raised (n/l)
+    dna: {fileID: 11400000, guid: f8cdfffce91ac4448ba448570d9b6dea, type: 2}
+    roles: 16
+    affectedJoints: 36
+    priority: 59
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: viseme_RR
+    displayName: RR - R sound
+    dna: {fileID: 11400000, guid: 7c32709c56512384fb95abd7fff7f6fb, type: 2}
+    roles: 16
+    affectedJoints: 36
+    priority: 60
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: viseme_aa
+    displayName: aa - Open vowel
+    dna: {fileID: 11400000, guid: abf44b5c097a3714db84b9b6dba84e70, type: 2}
+    roles: 16
+    affectedJoints: 36
+    priority: 61
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: viseme_E
+    displayName: E - Wide vowel (eh)
+    dna: {fileID: 11400000, guid: 9c489dbede93af94c879b50094d32682, type: 2}
+    roles: 16
+    affectedJoints: 36
+    priority: 62
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: viseme_I
+    displayName: I - Spread vowel (ih)
+    dna: {fileID: 11400000, guid: 31fd24d1098b7954c895ba10c0663c7e, type: 2}
+    roles: 16
+    affectedJoints: 36
+    priority: 63
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: viseme_O
+    displayName: O - Round vowel (oh)
+    dna: {fileID: 11400000, guid: 8f63680641178ab45bfdfc7e2199646a, type: 2}
+    roles: 16
+    affectedJoints: 36
+    priority: 64
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0
+  - id: viseme_U
+    displayName: U - Pursed vowel (oo)
+    dna: {fileID: 11400000, guid: 2e3417000e5447b4bae4623abfe20d56, type: 2}
+    roles: 16
+    affectedJoints: 36
+    priority: 65
+    blendMode: 0
+    responseTime: 0
+    blinkClosedValue: 0

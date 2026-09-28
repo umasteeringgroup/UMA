@@ -78,6 +78,37 @@ MonoBehaviour:
       umaChannelIndex: 0
       renderTextureFormat: 0
       sRGB: 1
+      adjustments:
+        brightness: 0
+        contrast: 0
+        hue: 0
+        vibrance: 0
+        saturation: 1
+        colorBalance: {x: 0, y: 0, z: 0}
+        grayscaleAdjustmentCurve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0
+            inSlope: 0
+            outSlope: 1
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 1
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
       pixels:
         width: 1024
         height: 1024
@@ -95,6 +126,37 @@ MonoBehaviour:
       umaChannelIndex: 1
       renderTextureFormat: 0
       sRGB: 0
+      adjustments:
+        brightness: 0
+        contrast: 0
+        hue: 0
+        vibrance: 0
+        saturation: 1
+        colorBalance: {x: 0, y: 0, z: 0}
+        grayscaleAdjustmentCurve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0
+            inSlope: 0
+            outSlope: 1
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 1
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
       pixels:
         width: 1024
         height: 1024
@@ -112,6 +174,37 @@ MonoBehaviour:
       umaChannelIndex: 2
       renderTextureFormat: 0
       sRGB: 0
+      adjustments:
+        brightness: 0
+        contrast: 0
+        hue: 0
+        vibrance: 0
+        saturation: 1
+        colorBalance: {x: 0, y: 0, z: 0}
+        grayscaleAdjustmentCurve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0
+            inSlope: 0
+            outSlope: 1
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 1
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
       pixels:
         width: 1024
         height: 1024
@@ -129,6 +222,37 @@ MonoBehaviour:
       umaChannelIndex: 2
       renderTextureFormat: 0
       sRGB: 0
+      adjustments:
+        brightness: 0
+        contrast: 0
+        hue: 0
+        vibrance: 0
+        saturation: 1
+        colorBalance: {x: 0, y: 0, z: 0}
+        grayscaleAdjustmentCurve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0
+            inSlope: 0
+            outSlope: 1
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 1
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
       pixels:
         width: 1024
         height: 1024
@@ -146,6 +270,37 @@ MonoBehaviour:
       umaChannelIndex: -1
       renderTextureFormat: 2
       sRGB: 0
+      adjustments:
+        brightness: 0
+        contrast: 0
+        hue: 0
+        vibrance: 0
+        saturation: 1
+        colorBalance: {x: 0, y: 0, z: 0}
+        grayscaleAdjustmentCurve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0
+            inSlope: 0
+            outSlope: 1
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 1
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
       pixels:
         width: 1024
         height: 1024
@@ -860,6 +1015,7 @@ MonoBehaviour:
         triplanarBlend: 1
         blendOffset: 0
         blendSharpness: 4
+        ignoreSourceAlpha: 0
       paintSettings:
         tool: 0
         channel: 0
@@ -884,8 +1040,11 @@ MonoBehaviour:
         brushRandomSizeGrow: 0.3
         brushSplatter: 0
         brushSplatterDistance: 1
+        brushRandomStrength: 0
         brushFade: 0
+        brushAutoFade: 0
         brushTaper: 0
+        brushAutoTaper: 0
         brushFadeTaperLength: 0
         sourceTexture: {fileID: 0}
         sourceSprite: {fileID: 0}
@@ -928,6 +1087,9 @@ MonoBehaviour:
         tangentModes: 
         anchors: []
       splineSettings:
+        editorSettingsVersion: 1
+        editMode: 0
+        autoUpdate: 1
         tool: 0
         channel: 0
         source: 2
@@ -951,8 +1113,11 @@ MonoBehaviour:
         brushRandomSizeGrow: 0.3
         brushSplatter: 0
         brushSplatterDistance: 1
+        brushRandomStrength: 0
         brushFade: 0
+        brushAutoFade: 0
         brushTaper: 0
+        brushAutoTaper: 0
         brushFadeTaperLength: 0
         sourceTexture: {fileID: 0}
         sourceSprite: {fileID: 0}
@@ -982,7 +1147,14 @@ MonoBehaviour:
       pluginId: 
       pluginVersion: 
       pluginParametersJson: 
+      pluginParameters:
+        values: []
+      pluginStale: 1
+      pluginLastError: 
       proceduralGroupKey: 
+      sourceMaterialPresetId: 
+      sourceMaterialPresetRevision: 0
+      sourceMaterialPresetLayerId: 
       hasMask: 0
       maskBaseValue: 1
       maskEffects:
@@ -1022,7 +1194,15 @@ MonoBehaviour:
         triplanarBlend: 1
         blendOffset: 0
         blendSharpness: 4
+        ignoreSourceAlpha: 0
       maskSourceChannel: 0
+      maskPluginId: 
+      maskPluginVersion: 
+      maskPluginParametersJson: 
+      maskPluginParameters:
+        values: []
+      maskPluginStale: 1
+      maskPluginLastError: 
       maskPixels:
         width: 0
         height: 0
@@ -1060,6 +1240,7 @@ MonoBehaviour:
             triplanarBlend: 1
             blendOffset: 0
             blendSharpness: 4
+            ignoreSourceAlpha: 0
         hasSourceSettings: 1
         source: 0
         sourceTexture: {fileID: 2800000, guid: c16db8c9b3a1cf641963becca902affd, type: 3}
@@ -1075,6 +1256,7 @@ MonoBehaviour:
         sourceTriplanarBlend: 1
         sourceBlendOffset: 0
         sourceBlendSharpness: 4
+        sourceIgnoreSourceAlpha: 0
         pixels:
           width: 1024
           height: 1024
@@ -1788,6 +1970,7 @@ MonoBehaviour:
         triplanarBlend: 1
         blendOffset: 0
         blendSharpness: 4
+        ignoreSourceAlpha: 0
       paintSettings:
         tool: 0
         channel: 0
@@ -1812,8 +1995,11 @@ MonoBehaviour:
         brushRandomSizeGrow: 0.3
         brushSplatter: 0
         brushSplatterDistance: 1
+        brushRandomStrength: 0
         brushFade: 0
+        brushAutoFade: 0
         brushTaper: 0
+        brushAutoTaper: 0
         brushFadeTaperLength: 0
         sourceTexture: {fileID: 0}
         sourceSprite: {fileID: 0}
@@ -1856,6 +2042,9 @@ MonoBehaviour:
         tangentModes: 
         anchors: []
       splineSettings:
+        editorSettingsVersion: 1
+        editMode: 0
+        autoUpdate: 1
         tool: 0
         channel: 0
         source: 2
@@ -1879,8 +2068,11 @@ MonoBehaviour:
         brushRandomSizeGrow: 0.3
         brushSplatter: 0
         brushSplatterDistance: 1
+        brushRandomStrength: 0
         brushFade: 0
+        brushAutoFade: 0
         brushTaper: 0
+        brushAutoTaper: 0
         brushFadeTaperLength: 0
         sourceTexture: {fileID: 0}
         sourceSprite: {fileID: 0}
@@ -1910,7 +2102,14 @@ MonoBehaviour:
       pluginId: 
       pluginVersion: 
       pluginParametersJson: 
+      pluginParameters:
+        values: []
+      pluginStale: 1
+      pluginLastError: 
       proceduralGroupKey: 
+      sourceMaterialPresetId: 
+      sourceMaterialPresetRevision: 0
+      sourceMaterialPresetLayerId: 
       hasMask: 0
       maskBaseValue: 1
       maskEffects:
@@ -1950,7 +2149,15 @@ MonoBehaviour:
         triplanarBlend: 1
         blendOffset: 0
         blendSharpness: 4
+        ignoreSourceAlpha: 0
       maskSourceChannel: 0
+      maskPluginId: 
+      maskPluginVersion: 
+      maskPluginParametersJson: 
+      maskPluginParameters:
+        values: []
+      maskPluginStale: 1
+      maskPluginLastError: 
       maskPixels:
         width: 0
         height: 0
@@ -1988,6 +2195,7 @@ MonoBehaviour:
             triplanarBlend: 1
             blendOffset: 0
             blendSharpness: 4
+            ignoreSourceAlpha: 0
         hasSourceSettings: 1
         source: 2
         sourceTexture: {fileID: 0}
@@ -2003,6 +2211,7 @@ MonoBehaviour:
         sourceTriplanarBlend: 1
         sourceBlendOffset: 0
         sourceBlendSharpness: 4
+        sourceIgnoreSourceAlpha: 0
         pixels:
           width: 1024
           height: 1024
@@ -2716,6 +2925,7 @@ MonoBehaviour:
         triplanarBlend: 1
         blendOffset: 0
         blendSharpness: 4
+        ignoreSourceAlpha: 0
       paintSettings:
         tool: 0
         channel: 0
@@ -2740,8 +2950,11 @@ MonoBehaviour:
         brushRandomSizeGrow: 0.3
         brushSplatter: 0
         brushSplatterDistance: 1
+        brushRandomStrength: 0
         brushFade: 0
+        brushAutoFade: 0
         brushTaper: 0
+        brushAutoTaper: 0
         brushFadeTaperLength: 0
         sourceTexture: {fileID: 0}
         sourceSprite: {fileID: 0}
@@ -3088,6 +3301,9 @@ MonoBehaviour:
           normal: {x: 0, y: 0, z: 1}
           normalOffset: 0
       splineSettings:
+        editorSettingsVersion: 1
+        editMode: 0
+        autoUpdate: 1
         tool: 0
         channel: 0
         source: 0
@@ -3111,8 +3327,11 @@ MonoBehaviour:
         brushRandomSizeGrow: 0.3
         brushSplatter: 0
         brushSplatterDistance: 1
+        brushRandomStrength: 0
         brushFade: 0
+        brushAutoFade: 0
         brushTaper: 0
+        brushAutoTaper: 0
         brushFadeTaperLength: 0
         sourceTexture: {fileID: 0}
         sourceSprite: {fileID: 1403575400, guid: 56620daab9d7d1b4e99f5743a72f3f96, type: 3}
@@ -3142,7 +3361,14 @@ MonoBehaviour:
       pluginId: 
       pluginVersion: 
       pluginParametersJson: 
+      pluginParameters:
+        values: []
+      pluginStale: 1
+      pluginLastError: 
       proceduralGroupKey: texture-paint-spline:c871b001b7f94c9fb3f0b3d69ee30d55
+      sourceMaterialPresetId: 
+      sourceMaterialPresetRevision: 0
+      sourceMaterialPresetLayerId: 
       hasMask: 0
       maskBaseValue: 1
       maskEffects:
@@ -3182,7 +3408,15 @@ MonoBehaviour:
         triplanarBlend: 1
         blendOffset: 0
         blendSharpness: 4
+        ignoreSourceAlpha: 0
       maskSourceChannel: 0
+      maskPluginId: 
+      maskPluginVersion: 
+      maskPluginParametersJson: 
+      maskPluginParameters:
+        values: []
+      maskPluginStale: 1
+      maskPluginLastError: 
       maskPixels:
         width: 0
         height: 0
@@ -3220,6 +3454,7 @@ MonoBehaviour:
             triplanarBlend: 1
             blendOffset: 0
             blendSharpness: 4
+            ignoreSourceAlpha: 0
         hasSourceSettings: 1
         source: 0
         sourceTexture: {fileID: 0}
@@ -3235,6 +3470,7 @@ MonoBehaviour:
         sourceTriplanarBlend: 1
         sourceBlendOffset: 0
         sourceBlendSharpness: 4
+        sourceIgnoreSourceAlpha: 0
         pixels:
           width: 1024
           height: 1024
@@ -3271,6 +3507,7 @@ MonoBehaviour:
             triplanarBlend: 1
             blendOffset: 0
             blendSharpness: 4
+            ignoreSourceAlpha: 0
         hasSourceSettings: 1
         source: 0
         sourceTexture: {fileID: 0}
@@ -3286,6 +3523,7 @@ MonoBehaviour:
         sourceTriplanarBlend: 1
         sourceBlendOffset: 0
         sourceBlendSharpness: 4
+        sourceIgnoreSourceAlpha: 0
         pixels:
           width: 1024
           height: 1024
@@ -3322,6 +3560,7 @@ MonoBehaviour:
             triplanarBlend: 1
             blendOffset: 0
             blendSharpness: 4
+            ignoreSourceAlpha: 0
         hasSourceSettings: 1
         source: 0
         sourceTexture: {fileID: 0}
@@ -3337,6 +3576,7 @@ MonoBehaviour:
         sourceTriplanarBlend: 1
         sourceBlendOffset: 0
         sourceBlendSharpness: 4
+        sourceIgnoreSourceAlpha: 0
         pixels:
           width: 1024
           height: 1024
@@ -11089,6 +11329,7 @@ MonoBehaviour:
         triplanarBlend: 1
         blendOffset: 0
         blendSharpness: 4
+        ignoreSourceAlpha: 0
       paintSettings:
         tool: 0
         channel: 0
@@ -11113,8 +11354,11 @@ MonoBehaviour:
         brushRandomSizeGrow: 0.3
         brushSplatter: 0
         brushSplatterDistance: 1
+        brushRandomStrength: 0
         brushFade: 0
+        brushAutoFade: 0
         brushTaper: 0
+        brushAutoTaper: 0
         brushFadeTaperLength: 0
         sourceTexture: {fileID: 0}
         sourceSprite: {fileID: 0}
@@ -11328,6 +11572,9 @@ MonoBehaviour:
           normal: {x: -0.48877767, y: 0.684988, z: 0.54026645}
           normalOffset: 0
       splineSettings:
+        editorSettingsVersion: 1
+        editMode: 0
+        autoUpdate: 1
         tool: 0
         channel: 10
         source: 0
@@ -11351,8 +11598,11 @@ MonoBehaviour:
         brushRandomSizeGrow: 0.3
         brushSplatter: 0
         brushSplatterDistance: 1
+        brushRandomStrength: 0
         brushFade: 0
+        brushAutoFade: 0
         brushTaper: 0
+        brushAutoTaper: 0
         brushFadeTaperLength: 0
         sourceTexture: {fileID: 0}
         sourceSprite: {fileID: -1483830720, guid: 2c5e171e389629544a0bd36b82c50a81, type: 3}
@@ -11382,7 +11632,14 @@ MonoBehaviour:
       pluginId: 
       pluginVersion: 
       pluginParametersJson: 
+      pluginParameters:
+        values: []
+      pluginStale: 1
+      pluginLastError: 
       proceduralGroupKey: texture-paint-spline:b0a837bd307343d0b7121b4eba871cdf
+      sourceMaterialPresetId: 
+      sourceMaterialPresetRevision: 0
+      sourceMaterialPresetLayerId: 
       hasMask: 0
       maskBaseValue: 1
       maskEffects:
@@ -11422,7 +11679,15 @@ MonoBehaviour:
         triplanarBlend: 1
         blendOffset: 0
         blendSharpness: 4
+        ignoreSourceAlpha: 0
       maskSourceChannel: 0
+      maskPluginId: 
+      maskPluginVersion: 
+      maskPluginParametersJson: 
+      maskPluginParameters:
+        values: []
+      maskPluginStale: 1
+      maskPluginLastError: 
       maskPixels:
         width: 0
         height: 0
@@ -11460,6 +11725,7 @@ MonoBehaviour:
             triplanarBlend: 1
             blendOffset: 0
             blendSharpness: 4
+            ignoreSourceAlpha: 0
         hasSourceSettings: 1
         source: 0
         sourceTexture: {fileID: 0}
@@ -11475,6 +11741,7 @@ MonoBehaviour:
         sourceTriplanarBlend: 1
         sourceBlendOffset: 0
         sourceBlendSharpness: 4
+        sourceIgnoreSourceAlpha: 0
         pixels:
           width: 1024
           height: 1024
@@ -11511,6 +11778,7 @@ MonoBehaviour:
             triplanarBlend: 1
             blendOffset: 0
             blendSharpness: 4
+            ignoreSourceAlpha: 0
         hasSourceSettings: 1
         source: 0
         sourceTexture: {fileID: 0}
@@ -11526,6 +11794,7 @@ MonoBehaviour:
         sourceTriplanarBlend: 1
         sourceBlendOffset: 0
         sourceBlendSharpness: 4
+        sourceIgnoreSourceAlpha: 0
         pixels:
           width: 1024
           height: 1024
@@ -16590,6 +16859,7 @@ MonoBehaviour:
         triplanarBlend: 1
         blendOffset: 0
         blendSharpness: 4
+        ignoreSourceAlpha: 0
       paintSettings:
         tool: 0
         channel: 10
@@ -16614,8 +16884,11 @@ MonoBehaviour:
         brushRandomSizeGrow: 0.3
         brushSplatter: 0
         brushSplatterDistance: 1
+        brushRandomStrength: 0
         brushFade: 0
+        brushAutoFade: 0
         brushTaper: 0
+        brushAutoTaper: 0
         brushFadeTaperLength: 0
         sourceTexture: {fileID: 0}
         sourceSprite: {fileID: -187155261, guid: 2c5e171e389629544a0bd36b82c50a81, type: 3}
@@ -16658,6 +16931,9 @@ MonoBehaviour:
         tangentModes: 
         anchors: []
       splineSettings:
+        editorSettingsVersion: 1
+        editMode: 0
+        autoUpdate: 1
         tool: 0
         channel: 0
         source: 2
@@ -16681,8 +16957,11 @@ MonoBehaviour:
         brushRandomSizeGrow: 0.3
         brushSplatter: 0
         brushSplatterDistance: 1
+        brushRandomStrength: 0
         brushFade: 0
+        brushAutoFade: 0
         brushTaper: 0
+        brushAutoTaper: 0
         brushFadeTaperLength: 0
         sourceTexture: {fileID: 0}
         sourceSprite: {fileID: 0}
@@ -16712,7 +16991,14 @@ MonoBehaviour:
       pluginId: 
       pluginVersion: 
       pluginParametersJson: 
+      pluginParameters:
+        values: []
+      pluginStale: 1
+      pluginLastError: 
       proceduralGroupKey: 
+      sourceMaterialPresetId: 
+      sourceMaterialPresetRevision: 0
+      sourceMaterialPresetLayerId: 
       hasMask: 0
       maskBaseValue: 1
       maskEffects:
@@ -16752,7 +17038,15 @@ MonoBehaviour:
         triplanarBlend: 1
         blendOffset: 0
         blendSharpness: 4
+        ignoreSourceAlpha: 0
       maskSourceChannel: 0
+      maskPluginId: 
+      maskPluginVersion: 
+      maskPluginParametersJson: 
+      maskPluginParameters:
+        values: []
+      maskPluginStale: 1
+      maskPluginLastError: 
       maskPixels:
         width: 0
         height: 0
@@ -16790,6 +17084,7 @@ MonoBehaviour:
             triplanarBlend: 1
             blendOffset: 0
             blendSharpness: 4
+            ignoreSourceAlpha: 0
         hasSourceSettings: 1
         source: 0
         sourceTexture: {fileID: 0}
@@ -16805,6 +17100,7 @@ MonoBehaviour:
         sourceTriplanarBlend: 1
         sourceBlendOffset: 0
         sourceBlendSharpness: 4
+        sourceIgnoreSourceAlpha: 0
         pixels:
           width: 1024
           height: 1024
@@ -22692,6 +22988,7 @@ MonoBehaviour:
         triplanarBlend: 1
         blendOffset: 0
         blendSharpness: 4
+        ignoreSourceAlpha: 0
       paintSettings:
         tool: 0
         channel: 0
@@ -22716,8 +23013,11 @@ MonoBehaviour:
         brushRandomSizeGrow: 0.3
         brushSplatter: 0
         brushSplatterDistance: 1
+        brushRandomStrength: 0
         brushFade: 0
+        brushAutoFade: 0
         brushTaper: 0
+        brushAutoTaper: 0
         brushFadeTaperLength: 0
         sourceTexture: {fileID: 0}
         sourceSprite: {fileID: 0}
@@ -22817,6 +23117,9 @@ MonoBehaviour:
           normal: {x: 0.17555992, y: 0.20877443, z: 0.9620769}
           normalOffset: 0
       splineSettings:
+        editorSettingsVersion: 1
+        editMode: 0
+        autoUpdate: 1
         tool: 0
         channel: 10
         source: 2
@@ -22840,8 +23143,11 @@ MonoBehaviour:
         brushRandomSizeGrow: 0.3
         brushSplatter: 0
         brushSplatterDistance: 1
+        brushRandomStrength: 0
         brushFade: 0
+        brushAutoFade: 0
         brushTaper: 0
+        brushAutoTaper: 0
         brushFadeTaperLength: 0
         sourceTexture: {fileID: 0}
         sourceSprite: {fileID: -187155261, guid: 2c5e171e389629544a0bd36b82c50a81, type: 3}
@@ -22871,7 +23177,14 @@ MonoBehaviour:
       pluginId: 
       pluginVersion: 
       pluginParametersJson: 
+      pluginParameters:
+        values: []
+      pluginStale: 1
+      pluginLastError: 
       proceduralGroupKey: texture-paint-spline:8deaaa9dd7fe4f69877a672c06972e15
+      sourceMaterialPresetId: 
+      sourceMaterialPresetRevision: 0
+      sourceMaterialPresetLayerId: 
       hasMask: 0
       maskBaseValue: 1
       maskEffects:
@@ -22911,7 +23224,15 @@ MonoBehaviour:
         triplanarBlend: 1
         blendOffset: 0
         blendSharpness: 4
+        ignoreSourceAlpha: 0
       maskSourceChannel: 0
+      maskPluginId: 
+      maskPluginVersion: 
+      maskPluginParametersJson: 
+      maskPluginParameters:
+        values: []
+      maskPluginStale: 1
+      maskPluginLastError: 
       maskPixels:
         width: 0
         height: 0
@@ -22949,6 +23270,7 @@ MonoBehaviour:
             triplanarBlend: 1
             blendOffset: 0
             blendSharpness: 4
+            ignoreSourceAlpha: 0
         hasSourceSettings: 1
         source: 2
         sourceTexture: {fileID: 0}
@@ -22964,6 +23286,7 @@ MonoBehaviour:
         sourceTriplanarBlend: 1
         sourceBlendOffset: 0
         sourceBlendSharpness: 4
+        sourceIgnoreSourceAlpha: 0
         pixels:
           width: 1024
           height: 1024
@@ -32996,6 +33319,7 @@ MonoBehaviour:
         triplanarBlend: 1
         blendOffset: 0
         blendSharpness: 4
+        ignoreSourceAlpha: 0
       paintSettings:
         tool: 0
         channel: 0
@@ -33020,8 +33344,11 @@ MonoBehaviour:
         brushRandomSizeGrow: 0.3
         brushSplatter: 0
         brushSplatterDistance: 1
+        brushRandomStrength: 0
         brushFade: 0
+        brushAutoFade: 0
         brushTaper: 0
+        brushAutoTaper: 0
         brushFadeTaperLength: 0
         sourceTexture: {fileID: 0}
         sourceSprite: {fileID: 0}
@@ -33140,6 +33467,9 @@ MonoBehaviour:
           normal: {x: -0.14122407, y: -0.011271649, z: 0.9899134}
           normalOffset: 0
       splineSettings:
+        editorSettingsVersion: 1
+        editMode: 0
+        autoUpdate: 1
         tool: 0
         channel: 10
         source: 2
@@ -33163,8 +33493,11 @@ MonoBehaviour:
         brushRandomSizeGrow: 0.3
         brushSplatter: 0
         brushSplatterDistance: 1
+        brushRandomStrength: 0
         brushFade: 0
+        brushAutoFade: 0
         brushTaper: 0
+        brushAutoTaper: 0
         brushFadeTaperLength: 0
         sourceTexture: {fileID: 0}
         sourceSprite: {fileID: -187155261, guid: 2c5e171e389629544a0bd36b82c50a81, type: 3}
@@ -33194,7 +33527,14 @@ MonoBehaviour:
       pluginId: 
       pluginVersion: 
       pluginParametersJson: 
+      pluginParameters:
+        values: []
+      pluginStale: 1
+      pluginLastError: 
       proceduralGroupKey: texture-paint-spline:d3d4f5524a0d4b349800124a07b4e8a5
+      sourceMaterialPresetId: 
+      sourceMaterialPresetRevision: 0
+      sourceMaterialPresetLayerId: 
       hasMask: 0
       maskBaseValue: 1
       maskEffects:
@@ -33234,7 +33574,15 @@ MonoBehaviour:
         triplanarBlend: 1
         blendOffset: 0
         blendSharpness: 4
+        ignoreSourceAlpha: 0
       maskSourceChannel: 0
+      maskPluginId: 
+      maskPluginVersion: 
+      maskPluginParametersJson: 
+      maskPluginParameters:
+        values: []
+      maskPluginStale: 1
+      maskPluginLastError: 
       maskPixels:
         width: 0
         height: 0
@@ -33272,6 +33620,7 @@ MonoBehaviour:
             triplanarBlend: 1
             blendOffset: 0
             blendSharpness: 4
+            ignoreSourceAlpha: 0
         hasSourceSettings: 1
         source: 2
         sourceTexture: {fileID: 0}
@@ -33287,6 +33636,7 @@ MonoBehaviour:
         sourceTriplanarBlend: 1
         sourceBlendOffset: 0
         sourceBlendSharpness: 4
+        sourceIgnoreSourceAlpha: 0
         pixels:
           width: 1024
           height: 1024
@@ -43295,6 +43645,7 @@ MonoBehaviour:
         triplanarBlend: 1
         blendOffset: 0
         blendSharpness: 4
+        ignoreSourceAlpha: 0
       paintSettings:
         tool: 0
         channel: 0
@@ -43319,8 +43670,11 @@ MonoBehaviour:
         brushRandomSizeGrow: 0.3
         brushSplatter: 0
         brushSplatterDistance: 1
+        brushRandomStrength: 0
         brushFade: 0
+        brushAutoFade: 0
         brushTaper: 0
+        brushAutoTaper: 0
         brushFadeTaperLength: 0
         sourceTexture: {fileID: 0}
         sourceSprite: {fileID: -187155261, guid: 2c5e171e389629544a0bd36b82c50a81, type: 3}
@@ -43363,6 +43717,9 @@ MonoBehaviour:
         tangentModes: 
         anchors: []
       splineSettings:
+        editorSettingsVersion: 1
+        editMode: 0
+        autoUpdate: 1
         tool: 0
         channel: 0
         source: 2
@@ -43386,8 +43743,11 @@ MonoBehaviour:
         brushRandomSizeGrow: 0.3
         brushSplatter: 0
         brushSplatterDistance: 1
+        brushRandomStrength: 0
         brushFade: 0
+        brushAutoFade: 0
         brushTaper: 0
+        brushAutoTaper: 0
         brushFadeTaperLength: 0
         sourceTexture: {fileID: 0}
         sourceSprite: {fileID: 0}
@@ -43417,7 +43777,14 @@ MonoBehaviour:
       pluginId: 
       pluginVersion: 
       pluginParametersJson: 
+      pluginParameters:
+        values: []
+      pluginStale: 1
+      pluginLastError: 
       proceduralGroupKey: 
+      sourceMaterialPresetId: 
+      sourceMaterialPresetRevision: 0
+      sourceMaterialPresetLayerId: 
       hasMask: 0
       maskBaseValue: 1
       maskEffects:
@@ -43457,7 +43824,15 @@ MonoBehaviour:
         triplanarBlend: 1
         blendOffset: 0
         blendSharpness: 4
+        ignoreSourceAlpha: 0
       maskSourceChannel: 0
+      maskPluginId: 
+      maskPluginVersion: 
+      maskPluginParametersJson: 
+      maskPluginParameters:
+        values: []
+      maskPluginStale: 1
+      maskPluginLastError: 
       maskPixels:
         width: 0
         height: 0
@@ -43495,6 +43870,7 @@ MonoBehaviour:
             triplanarBlend: 1
             blendOffset: 0
             blendSharpness: 4
+            ignoreSourceAlpha: 0
         hasSourceSettings: 1
         source: 2
         sourceTexture: {fileID: 0}
@@ -43510,6 +43886,7 @@ MonoBehaviour:
         sourceTriplanarBlend: 1
         sourceBlendOffset: 0
         sourceBlendSharpness: 4
+        sourceIgnoreSourceAlpha: 0
         pixels:
           width: 1024
           height: 1024

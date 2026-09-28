@@ -44,6 +44,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bcffb0a198605474c8a4d1c67c1515fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  reuseGeneratedMeshes: 0
+  reuseGeneratedTextures: 0
+  inheritGeneratorQuality: 1
+  inheritGeneratorReusePolicy: 0
   renderers: []
   defaultRendererAsset: {fileID: 0}
   userInformation: 
@@ -114,6 +118,7 @@ MonoBehaviour:
   _umaRecipe:
     raceData: {fileID: 0}
     recipeName: 
+    texturePaintStageState: 
     dnaInstanceCollection:
       dnaInstances: []
     slotDataList: []
@@ -126,12 +131,18 @@ MonoBehaviour:
   serializedRecipe: {fileID: 0}
   umaAdditionalRecipes:
   - {fileID: 11400000, guid: d31b5da474124004dbad05522f39fe7e, type: 2}
+  useNPCBuilds: 0
   DelayUnload: 2
   BundleCheck: 1
-  StartGuard: 0
   UnpackPrefabOnBuild: 1
   KeepAnimatorController: 0
   RecreateAnimatorOnRaceChange: 1
+  initializeAnimatorWhenAdded: 0
+  applyRootMotion: 1
+  animatePhysics: 0
+  animatorUpdateMode: 0
+  animatorCullingMode: 2
+  animatorFireEvents: 1
   RecipeUpdated:
     m_PersistentCalls:
       m_Calls: []
@@ -221,6 +232,7 @@ MonoBehaviour:
       showSelected: 0
       isSelected: 0
       showDisplayColor: 0
+      showSelectFromFoldout: 0
       displayColor: {r: 1, g: 1, b: 1, a: 1}
       _name: 
       _color: {r: 0.3529412, g: 0.21568629, b: 0.14117648, a: 1}
@@ -251,6 +263,7 @@ MonoBehaviour:
       showSelected: 0
       isSelected: 0
       showDisplayColor: 0
+      showSelectFromFoldout: 0
       displayColor: {r: 1, g: 1, b: 1, a: 1}
       _name: 
       _color: {r: 0.28627452, g: 0.40784317, b: 1, a: 1}
@@ -281,6 +294,7 @@ MonoBehaviour:
       showSelected: 0
       isSelected: 0
       showDisplayColor: 0
+      showSelectFromFoldout: 0
       displayColor: {r: 1, g: 1, b: 1, a: 1}
       _name: 
       _color: {r: 0.9632353, g: 0.82158303, b: 0.82158303, a: 1}
@@ -311,6 +325,7 @@ MonoBehaviour:
       showSelected: 0
       isSelected: 0
       showDisplayColor: 0
+      showSelectFromFoldout: 0
       displayColor: {r: 1, g: 1, b: 1, a: 1}
       _name: 
       _color: {r: 0.3529412, g: 0.4156863, b: 0.6392157, a: 1}
@@ -343,6 +358,17 @@ MonoBehaviour:
   previewColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   _buildCharacterEnabled: 1
   nextBuildSlotsOnly: 0
+  lastPresetScreenshot:
+    cameraPosition: {x: 0, y: 0, z: 0}
+    cameraRotation: {x: 0, y: 0, z: 0, w: 1}
+    orthographic: 0
+    sceneSize: 0
+    projectionCrop:
+      serializedVersion: 2
+      x: 0
+      y: 0
+      width: 0
+      height: 0
   debugVertexes: 1
   references:
     version: 2

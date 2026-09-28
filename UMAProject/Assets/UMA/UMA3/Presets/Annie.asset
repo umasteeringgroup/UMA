@@ -1,0 +1,534 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a961175c4cf79284bb490d510e7327bb, type: 3}
+  m_Name: Annie
+  m_EditorClassIdentifier: UMA_Core::UMA.CharacterSystem.UMAPreset
+  Definition:
+    RaceName: Human Female 3.0
+    Wardrobe:
+    - underwear_whiteLace_Recipe
+    - tanktop_whiteBlackStraps_Recipe
+    - Eyebrows_Unibrow_Average
+    - shoes_tall_white_Recipe
+    - Hair_LongSwept_Recipe
+    - colors_top_bottom_Recipe
+    - underwear_bra_yellow_Recipe
+    Colors:
+    - name: Hair
+      count: 3
+      channels:
+      - chan: 0
+        mCol: 4294967295
+        aCol: 0
+      - chan: 1
+        mCol: 4294967295
+        aCol: 0
+      - chan: 2
+        mCol: 4294967295
+        aCol: 0
+      shaderParms:
+      - Color;#3B281AFF;_BaseColor
+      - Color;#352418FF;_RootColor
+      - Color;#452E1DFF;_Tip_Color
+    - name: Eyes
+      count: 3
+      channels:
+      - chan: 0
+        mCol: 4289489472
+        aCol: 2631720
+      - chan: 1
+        mCol: 0
+        aCol: 0
+      - chan: 2
+        mCol: 4294967295
+        aCol: 0
+      shaderParms: []
+    - name: Tattoo
+      count: 5
+      channels:
+      - chan: 0
+        mCol: 3791914006
+        aCol: 0
+      - chan: 1
+        mCol: 0
+        aCol: 0
+      - chan: 2
+        mCol: 0
+        aCol: 0
+      - chan: 3
+        mCol: 4294967295
+        aCol: 0
+      - chan: 4
+        mCol: 4294967295
+        aCol: 0
+      shaderParms: []
+    - name: Pants
+      count: 3
+      channels:
+      - chan: 0
+        mCol: 4283717762
+        aCol: 0
+      - chan: 1
+        mCol: 4294967295
+        aCol: 0
+      - chan: 2
+        mCol: 4294967295
+        aCol: 331153408
+      shaderParms: []
+    - name: Shoes
+      count: 3
+      channels:
+      - chan: 0
+        mCol: 4294967295
+        aCol: 0
+      - chan: 1
+        mCol: 4294967295
+        aCol: 0
+      - chan: 2
+        mCol: 4294967295
+        aCol: 0
+      shaderParms: []
+    - name: Shirt
+      count: 3
+      channels:
+      - chan: 0
+        mCol: 4294966267
+        aCol: 0
+      - chan: 1
+        mCol: 4294967295
+        aCol: 0
+      - chan: 2
+        mCol: 4294967295
+        aCol: 0
+      shaderParms: []
+    - name: Lipstick
+      count: 3
+      channels:
+      - chan: 0
+        mCol: 4292818229
+        aCol: 0
+      - chan: 1
+        mCol: 4294967295
+        aCol: 0
+      - chan: 2
+        mCol: 4294967295
+        aCol: 0
+      shaderParms: []
+    - name: Shared Color 5
+      count: 5
+      channels:
+      - chan: 0
+        mCol: 4294967295
+        aCol: 0
+      - chan: 1
+        mCol: 4294967295
+        aCol: 0
+      - chan: 2
+        mCol: 4294967295
+        aCol: 0
+      - chan: 3
+        mCol: 4294967295
+        aCol: 0
+      - chan: 4
+        mCol: 4294967295
+        aCol: 0
+      shaderParms: []
+    - name: Lips
+      count: 5
+      channels:
+      - chan: 0
+        mCol: 4294904330
+        aCol: 0
+      - chan: 1
+        mCol: 4294967295
+        aCol: 0
+      - chan: 2
+        mCol: 4294967295
+        aCol: 0
+      - chan: 3
+        mCol: 4294967295
+        aCol: 0
+      - chan: 4
+        mCol: 4294967295
+        aCol: 0
+      shaderParms: []
+    - name: Hair Accessory
+      count: 3
+      channels:
+      - chan: 0
+        mCol: 4294967295
+        aCol: 0
+      - chan: 1
+        mCol: 4294967295
+        aCol: 0
+      - chan: 2
+        mCol: 4294967295
+        aCol: 0
+      shaderParms: []
+    - name: Hat
+      count: 3
+      channels:
+      - chan: 0
+        mCol: 4294967295
+        aCol: 0
+      - chan: 1
+        mCol: 4294967295
+        aCol: 0
+      - chan: 2
+        mCol: 4294967295
+        aCol: 0
+      shaderParms: []
+    - name: Pants Accent
+      count: 3
+      channels:
+      - chan: 0
+        mCol: 4294967295
+        aCol: 0
+      - chan: 1
+        mCol: 4294967295
+        aCol: 0
+      - chan: 2
+        mCol: 4294967295
+        aCol: 0
+      shaderParms: []
+    - name: Undies
+      count: 3
+      channels:
+      - chan: 0
+        mCol: 4294967295
+        aCol: 0
+      - chan: 1
+        mCol: 4294967295
+        aCol: 0
+      - chan: 2
+        mCol: 4294967295
+        aCol: 0
+      shaderParms: []
+    - name: Pants1
+      count: 3
+      channels:
+      - chan: 0
+        mCol: 4289013224
+        aCol: 0
+      - chan: 1
+        mCol: 4294967295
+        aCol: 0
+      - chan: 2
+        mCol: 4294967295
+        aCol: 0
+      shaderParms: []
+    - name: ShirtAccent
+      count: 3
+      channels:
+      - chan: 0
+        mCol: 4293396488
+        aCol: 0
+      - chan: 1
+        mCol: 4294967295
+        aCol: 0
+      - chan: 2
+        mCol: 4294967295
+        aCol: 0
+      shaderParms: []
+    - name: Shared Color 2
+      count: 1
+      channels:
+      - chan: 0
+        mCol: 4294967295
+        aCol: 0
+      shaderParms: []
+    - name: Sclera
+      count: 1
+      channels:
+      - chan: 0
+        mCol: 4289572269
+        aCol: 0
+      shaderParms: []
+    - name: HairAccent
+      count: 3
+      channels:
+      - chan: 0
+        mCol: 4294967295
+        aCol: 0
+      - chan: 1
+        mCol: 4294967295
+        aCol: 0
+      - chan: 2
+        mCol: 4294967295
+        aCol: 0
+      shaderParms: []
+    - name: Skin
+      count: 14
+      channels:
+      - chan: 0
+        mCol: 4294967295
+        aCol: 0
+      - chan: 1
+        mCol: 4294967295
+        aCol: 0
+      - chan: 2
+        mCol: 4294967295
+        aCol: 0
+      - chan: 3
+        mCol: 4294967295
+        aCol: 0
+      - chan: 4
+        mCol: 4294967295
+        aCol: 0
+      - chan: 5
+        mCol: 4294967295
+        aCol: 0
+      - chan: 6
+        mCol: 4294967295
+        aCol: 0
+      - chan: 7
+        mCol: 4294967295
+        aCol: 0
+      - chan: 8
+        mCol: 4294967295
+        aCol: 0
+      - chan: 9
+        mCol: 4294967295
+        aCol: 0
+      - chan: 10
+        mCol: 4294967295
+        aCol: 0
+      - chan: 11
+        mCol: 4294967295
+        aCol: 0
+      - chan: 12
+        mCol: 4294967295
+        aCol: 0
+      - chan: 13
+        mCol: 4294967295
+        aCol: 0
+      shaderParms:
+      - Color;#F2E8E8FF;_Base_Color
+      - Color;#FF847600;_SubsurfaceColor
+      - Float;0.5000;_SSSBlend
+      - Float;1.0000;_Skinmask_Amount
+    - name: Tires
+      count: 4
+      channels:
+      - chan: 0
+        mCol: 4294967295
+        aCol: 0
+      - chan: 1
+        mCol: 4294967295
+        aCol: 0
+      - chan: 2
+        mCol: 4294967295
+        aCol: 0
+      - chan: 3
+        mCol: 4294967295
+        aCol: 0
+      shaderParms: []
+    - name: HubCaps
+      count: 4
+      channels:
+      - chan: 0
+        mCol: 4294967295
+        aCol: 0
+      - chan: 1
+        mCol: 4294967295
+        aCol: 0
+      - chan: 2
+        mCol: 4294967295
+        aCol: 0
+      - chan: 3
+        mCol: 4294967295
+        aCol: 0
+      shaderParms: []
+    - name: Glass
+      count: 3
+      channels:
+      - chan: 0
+        mCol: 4294967295
+        aCol: 0
+      - chan: 1
+        mCol: 4294967295
+        aCol: 0
+      - chan: 2
+        mCol: 4294967295
+        aCol: 0
+      shaderParms: []
+    - name: Body
+      count: 3
+      channels:
+      - chan: 0
+        mCol: 4294967295
+        aCol: 0
+      - chan: 1
+        mCol: 4294967295
+        aCol: 0
+      - chan: 2
+        mCol: 4294967295
+        aCol: 0
+      shaderParms: []
+    - name: Brows
+      count: 3
+      channels:
+      - chan: 0
+        mCol: 4280816651
+        aCol: 4278190080
+      - chan: 1
+        mCol: 4294967295
+        aCol: 0
+      - chan: 2
+        mCol: 4294967295
+        aCol: 0
+      shaderParms: []
+    - name: WrappedPants
+      count: 3
+      channels:
+      - chan: 0
+        mCol: 4294967295
+        aCol: 0
+      - chan: 1
+        mCol: 4294967295
+        aCol: 0
+      - chan: 2
+        mCol: 4294967295
+        aCol: 0
+      shaderParms: []
+    Dna:
+    - Name: cheekPosition
+      val: 5585
+    - Name: cheekSize
+      val: 5461
+    - Name: chinPosition
+      val: 4335
+    - Name: chinPronounced
+      val: 4102
+    - Name: chinSize
+      val: 4197
+    - Name: earsPosition
+      val: 4311
+    - Name: earsRotation
+      val: 4858
+    - Name: earsSize
+      val: 5966
+    - Name: eyeSize
+      val: 4890
+    - Name: eyeSpacing
+      val: 4859
+    - Name: headSize
+      val: 5857
+    - Name: headWidth
+      val: 4712
+    - Name: jawsPosition
+      val: 5196
+    - Name: jawsSize
+      val: 5480
+    - Name: lipsSize
+      val: 4744
+    - Name: lowCheekPosition
+      val: 4131
+    - Name: lowCheekPronounced
+      val: 5364
+    - Name: mandibleSize
+      val: 4503
+    - Name: mouthSize
+      val: 4264
+    - Name: neckThickness
+      val: 5643
+    - Name: noseCurve
+      val: 4643
+    - Name: noseFlatten
+      val: 5126
+    - Name: noseInclination
+      val: 5278
+    - Name: nosePosition
+      val: 4067
+    - Name: nosePronounced
+      val: 5359
+    - Name: noseSize
+      val: 5372
+    - Name: noseWidth
+      val: 4938
+    - Name: cheekWidth
+      val: 4422
+    - Name: cheekPronounced
+      val: 4457
+    - Name: earsPitch
+      val: 4511
+    - Name: noseBroken
+      val: 4940
+    - Name: foreheadPosition
+      val: 4547
+    - Name: foreheadSize
+      val: 5315
+    - Name: earsYaw
+      val: 4974
+    - Name: eyeRotation
+      val: 4825
+    - Name: Happy_DNA
+      val: 5929
+    - Name: BrowPosition
+      val: 5000
+    - Name: ElfEars
+      val: 5000
+    - Name: EyePosition
+      val: 10000
+    - Name: armLength
+      val: 5850
+    - Name: armWidth
+      val: 5238
+    - Name: belly
+      val: 4612
+    - Name: feetSize
+      val: 5000
+    - Name: forearmLength
+      val: 5445
+    - Name: forearmWidth
+      val: 5486
+    - Name: gluteusSize
+      val: 4316
+    - Name: handsSize
+      val: 4710
+    - Name: height
+      val: 5000
+    - Name: legSeparation
+      val: 5720
+    - Name: legsSize
+      val: 5000
+    - Name: lowerMuscle
+      val: 4799
+    - Name: lowerWeight
+      val: 5107
+    - Name: upperMuscle
+      val: 4212
+    - Name: upperWeight
+      val: 4305
+    - Name: waist
+      val: 4113
+    - Name: breastCleavage
+      val: 4836
+    - Name: breastOrientation
+      val: 5956
+    - Name: breastPosition
+      val: 4625
+    - Name: breastSize
+      val: 5027
+    - Name: breastWidth
+      val: 5000
+    - Name: feetHighHeels
+      val: 5000
+  Icon: {fileID: 2800000, guid: e1add00ea45dc494ebd306883304fac4, type: 3}
+  WardrobeRecipes:
+  - {fileID: 11400000, guid: 71ed2c72109da884c964c254e7ba6c5b, type: 2}
+  - {fileID: 11400000, guid: 9230843a0a9f95e419b074b1d3c3b5bb, type: 2}
+  - {fileID: 11400000, guid: d909b37dd7a09d042ba41fd3a33112e9, type: 2}
+  - {fileID: 11400000, guid: 4b579de8cf2e7384e9d53efdfb680c3f, type: 2}
+  - {fileID: 11400000, guid: dcd1d9d8406b777488de52f7dc306c84, type: 2}
+  - {fileID: 11400000, guid: 6cd9a3d40755ca34d8a273ad9fa98d51, type: 2}
+  - {fileID: 11400000, guid: a728611e4a687624cb4f00f585c7c5bb, type: 2}

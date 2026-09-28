@@ -1,0 +1,75 @@
+using System.Linq;
+using UnityEditor;
+using UnityEngine;
+
+namespace UMA.HairCards.Editor
+{
+    internal static class HairSweptAtlasSetup
+    {
+        internal const string DiffusePath = "Assets/UMA/SRP/Textures/Hair/HairAtlasDiffuse_New.png";
+        // The two long strip rectangles used by the PointySwept example and UMA atlas.
+        internal static readonly Rect[] Strips = { new Rect(.46608f,.03607f,.15093f,.94754f), new Rect(.63557f,.03959f,.14935f,.94601f) };
+        internal static readonly Rect[] CurlyStrips = { Strips[0], Strips[1], new Rect(.7983f,.0292f,.1918f,.9569f) };
+        internal static readonly Rect[] RegularStrips =
+        {
+            new Rect(.01294f, .13186f, .09351f, .18148f),
+            new Rect(.10969f, .12830f, .07596f, .18246f),
+            new Rect(.20425f, .12755f, .08492f, .18135f)
+        };
+        internal static void AddRegularStrips(HairAtlasProfileAsset atlas)
+        {
+            for (int i = 0; i < RegularStrips.Length; i++)
+                if (!atlas.regions.Any(r => r.uvRect == RegularStrips[i])) atlas.CreateRegion("Short haircut strip " + (i + 1), RegularStrips[i]).flipV = true;
+        }
+        internal static void ConfigureNew(HairAtlasProfileAsset atlas, bool curly = false)
+        {
+            atlas.albedo = AssetDatabase.LoadAssetAtPath<Texture2D>(DiffusePath);
+            atlas.normal = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/UMA/SRP/Textures/Hair/HairAtlasNormal_New.png");
+            atlas.mask = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/UMA/SRP/Textures/Hair/HairAtlasAO_New.png");
+            atlas.regions.Clear();
+            if (curly) AddCurlyStrips(atlas); else AddStrips(atlas);
+            EditorUtility.SetDirty(atlas);
+        }
+        internal static void AddCurlyStrips(HairAtlasProfileAsset atlas)
+        {
+            for (int i = 0; i < CurlyStrips.Length; i++)
+                if (!atlas.regions.Any(r => r.uvRect == CurlyStrips[i])) atlas.CreateRegion("Curly long strip " + (i + 1), CurlyStrips[i]).flipV = true;
+        }
+        internal static void AddStrips(HairAtlasProfileAsset atlas)
+        {
+            for (int i = 0; i < Strips.Length; i++)
+                if (!atlas.regions.Any(r => r.uvRect == Strips[i])) atlas.CreateRegion("Swept long strip " + (i+1), Strips[i]).flipV = true;
+        }
+        internal static void DrawTreeAction(HairCardStage stage, HairGroomNode node)
+        {
+            if (node.Kind != HairGroomNodeKind.Atlas || node.Group?.atlas == null) return;
+            using (new EditorGUI.DisabledScope(node.Locked))
+            if (GUILayout.Button("Use UMA Short Hair Strips…") && EditorUtility.DisplayDialog("Select Short Hair Atlas Strips?",
+                "Add and select the three short strips used by ShortHairPart? Existing UV sets, materials and textures are preserved. Use with HairAtlasDiffuse_New or a matching atlas layout.", "Use Short Strips", "Cancel"))
+            {
+                var atlas = node.Group.atlas; Undo.RecordObject(atlas, "Add Short Hair UV Strips"); Undo.RecordObject(stage.Groom, "Select Short Hair UV Strips");
+                AddRegularStrips(atlas); node.Group.atlasRegionSelection = HairAtlasRegionSelectionMode.Selected;
+                node.Group.atlasRegionIds = atlas.regions.Where(r => RegularStrips.Contains(r.uvRect)).Select(r => r.Id).ToList();
+                EditorUtility.SetDirty(atlas); stage.TrackResourceEdit(atlas); HairGroomCommands.Commit(stage.Groom, HairPreviewChange.Geometry);
+            }
+            using (new EditorGUI.DisabledScope(node.Locked))
+            if (GUILayout.Button("Use UMA Curly Strips…") && EditorUtility.DisplayDialog("Select Curly Atlas Strips?",
+                "Add and select the three long strips used by CurlyVolume? Existing UV sets, materials and textures are preserved.", "Use Curly Strips", "Cancel"))
+            {
+                var atlas = node.Group.atlas; Undo.RecordObject(atlas, "Add Curly UV Strips"); Undo.RecordObject(stage.Groom, "Select Curly UV Strips");
+                AddCurlyStrips(atlas); node.Group.atlasRegionSelection = HairAtlasRegionSelectionMode.Selected;
+                node.Group.atlasRegionIds = atlas.regions.Where(r => CurlyStrips.Contains(r.uvRect)).Select(r => r.Id).ToList();
+                EditorUtility.SetDirty(atlas); stage.TrackResourceEdit(atlas); HairGroomCommands.Commit(stage.Groom, HairPreviewChange.Geometry);
+            }
+            using (new EditorGUI.DisabledScope(node.Locked))
+            if (GUILayout.Button("Use UMA Swept Strips…"))
+            {
+                if (!EditorUtility.DisplayDialog("Select Swept Atlas Strips?", "Add the two long UV strips used by the PointySwept example and select them for this group? Existing UV sets and textures are preserved. The layout is shared by HairAtlasDiffuse_New and its variants.", "Use Swept Strips", "Cancel")) return;
+                var atlas = node.Group.atlas; Undo.RecordObject(atlas,"Add Swept UV Strips"); Undo.RecordObject(stage.Groom,"Select Swept UV Strips");
+                AddStrips(atlas); node.Group.atlasRegionSelection=HairAtlasRegionSelectionMode.Selected;
+                node.Group.atlasRegionIds=atlas.regions.Where(r=>Strips.Contains(r.uvRect)).Select(r=>r.Id).ToList();
+                EditorUtility.SetDirty(atlas); stage.TrackResourceEdit(atlas); HairGroomCommands.Commit(stage.Groom,HairPreviewChange.Geometry);
+            }
+        }
+    }
+}

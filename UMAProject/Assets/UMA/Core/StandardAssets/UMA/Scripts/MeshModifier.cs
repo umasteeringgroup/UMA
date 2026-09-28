@@ -19,6 +19,16 @@ namespace UMA
         // each slot affected, will have a modifier.
         public class Modifier
         {
+            internal Modifier CopyForNPC()
+            {
+                if (GetType() != typeof(Modifier)) throw new NotSupportedException("Custom mesh modifiers require normal NPC generation.");
+                var copy = (Modifier)MemberwiseClone();
+                copy.adjustments = adjustments?.CopyForNPC();
+#if UNITY_EDITOR
+                copy.TemplateAdjustment = TemplateAdjustment?.CopyForNPC();
+#endif
+                return copy;
+            }
 #if UNITY_EDITOR
             public string ModifierName;
             public bool isTemporary = false;
@@ -95,6 +105,9 @@ namespace UMA
 
         public List<Modifier> GetScaledRuntimeModifiers(float value)
         {
+#if UNITY_EDITOR
+            UMAResourceReuse.CheckEditorSourceRevision(this);
+#endif
             List<Modifier> scaledModifiers = new List<Modifier>();
             if (runtimeModifiers == null || runtimeModifiers.Count == 0)
             {
@@ -115,6 +128,10 @@ namespace UMA
 
             return scaledModifiers;
         }
+
+#if UNITY_EDITOR
+        private void OnValidate() => UMAResourceReuse.InvalidateMeshInputs();
+#endif
 
         private static Modifier CloneRuntimeModifier(Modifier source)
         {
@@ -157,6 +174,7 @@ namespace UMA
                 clone.vertexAdjustments.Add(adjustment != null ? adjustment.ShallowCopy() : null);
             }
 
+            UMAResourceReuse.RegisterModifierClone(source, clone);
             return clone;
         }
 

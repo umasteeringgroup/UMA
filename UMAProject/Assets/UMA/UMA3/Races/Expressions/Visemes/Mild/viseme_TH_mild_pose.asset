@@ -1,0 +1,95 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: viseme_TH_mild_pose
+  m_EditorClassIdentifier: UMA_Core::UMA.PoseTools.UMABonePose
+  poses:
+  - bone: LeftLips
+    hash: 1620479899
+    position: {x: 0.0005940944, y: -0.0008066967, z: 0.0023346767}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+    category: Speech / mouth
+    enabled: 1
+  - bone: LeftLipsInferior
+    hash: -2082379262
+    position: {x: 0.00023906399, y: -0.00000009685755, z: 0.000000009313226}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+    category: Speech / mouth
+    enabled: 1
+  - bone: LeftLipsSuperiorMiddle
+    hash: -1900485368
+    position: {x: -0.00022759009, y: 0.0009998872, z: -0.00000016391277}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+    category: Speech / mouth
+    enabled: 1
+  - bone: LipsInferior
+    hash: -499586065
+    position: {x: 0.0000006885166, y: 0, z: 0.00000008009374}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+    category: Speech / mouth
+    enabled: 1
+  - bone: LipsSuperior
+    hash: -1089081410
+    position: {x: -0.0000015111582, y: 0.0009998502, z: 0.000000014901161}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+    category: Speech / mouth
+    enabled: 1
+  - bone: Mandible
+    hash: 1574626840
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.030538475, y: 0.000015594234, z: 0.000010292105, w: 0.99953365}
+    scale: {x: 1, y: 1, z: 1}
+    category: Speech / mouth
+    enabled: 1
+  - bone: RightLips
+    hash: -1558564409
+    position: {x: -0.0005933419, y: -0.0008054599, z: 0.0023341328}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+    category: Speech / mouth
+    enabled: 1
+  - bone: RightLipsInferior
+    hash: 921042654
+    position: {x: -0.00023942534, y: -0.000000007450581, z: 0.00000033713877}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+    category: Speech / mouth
+    enabled: 1
+  - bone: RightLipsSuperiorMiddle
+    hash: -2093673696
+    position: {x: 0.00022799056, y: 0.0010001287, z: 0.00000017881393}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+    category: Speech / mouth
+    enabled: 1
+  - bone: Tongue01
+    hash: 1278850178
+    position: {x: 0.000004810441, y: 0.005192321, z: 0.00640624}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+    category: Speech / mouth
+    enabled: 1
+  - bone: Tongue02
+    hash: -718215880
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.017452503, y: -0.000010663101, z: -0.00000045113603, w: 0.99984777}
+    scale: {x: 1, y: 1, z: 1}
+    category: Speech / mouth
+    enabled: 1
+  tweenPoses: []
+  tweenWeights: []
+  mixerPose: 0

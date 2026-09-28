@@ -37,7 +37,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
+        enabled: 1
         expanded: 1
+        selected: 0
+        showHelp: 0
         EffectName: NoseTopAdjust
         BoneName: NoseTopAdjust
         Translation: {x: 0, y: 0, z: 0.01}
@@ -52,7 +55,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
+        enabled: 1
         expanded: 1
+        selected: 0
+        showHelp: 0
         EffectName: LeftEyebrowLowAdjust
         BoneName: LeftEyebrowLowAdjust
         Translation: {x: 0, y: 0, z: 0.01}
@@ -67,7 +73,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
+        enabled: 1
         expanded: 1
+        selected: 0
+        showHelp: 0
         EffectName: LeftEyebrowMiddleAdjust
         BoneName: LeftEyebrowMiddleAdjust
         Translation: {x: 0, y: 0, z: 0.01}
@@ -82,7 +91,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
+        enabled: 1
         expanded: 1
+        selected: 0
+        showHelp: 0
         EffectName: LeftEyebrowUpAdjust
         BoneName: LeftEyebrowUpAdjust
         Translation: {x: 0, y: 0, z: 0.01}
@@ -97,7 +109,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
+        enabled: 1
         expanded: 1
+        selected: 0
+        showHelp: 0
         EffectName: RightEyebrowLowAdjust
         BoneName: RightEyebrowLowAdjust
         Translation: {x: 0, y: 0, z: 0.01}
@@ -112,7 +127,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
+        enabled: 1
         expanded: 1
+        selected: 0
+        showHelp: 0
         EffectName: RightEyebrowMiddleAdjust
         BoneName: RightEyebrowMiddleAdjust
         Translation: {x: 0, y: 0, z: 0.01}
@@ -127,7 +145,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
+        enabled: 1
         expanded: 1
+        selected: 0
+        showHelp: 0
         EffectName: RightEyebrowUpAdjust
         BoneName: RightEyebrowUpAdjust
         Translation: {x: 0, y: 0, z: 0.01}

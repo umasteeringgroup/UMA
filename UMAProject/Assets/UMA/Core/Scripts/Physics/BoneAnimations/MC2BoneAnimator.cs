@@ -1,5 +1,5 @@
-using UnityEngine;
 using UMA;
+using UnityEngine;
 using System.Collections.Generic;
 #if MAGICACLOTH2
 using MagicaCloth2;
@@ -25,7 +25,14 @@ namespace UMA
             UMA.CustomAssetUtility.CreateAsset<MC2BoneAnimator>();
         }
 #endif
+        private enum MC2BoneType {
+            BoneCloth,
+            BoneSpring
+        }
+
         [Header("General Settings")]
+        [SerializeField, Tooltip("The MagicaCloth2 Cloth Type field")]
+        private MC2BoneType boneType;
         [Tooltip("Add the root bone of each bone chain you want to animate. ")]
         public string[] AnimatedRootBoneNames;
         [SerializeField]
@@ -71,7 +78,8 @@ namespace UMA
                 var sdata2 = cloth.GetSerializeData2();
 
                 // Setup bone cloth
-                sdata.clothType = ClothProcess.ClothType.BoneCloth;
+                sdata.clothType = boneType == MC2BoneType.BoneCloth ? ClothProcess.ClothType.BoneCloth 
+                    : ClothProcess.ClothType.BoneSpring;
                 sdata.rootBones.Add(rootBone.transform);
                 if (presetFile != null)
                 {

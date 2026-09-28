@@ -26,6 +26,13 @@ MonoBehaviour:
   - race: Human Male 3.0
     filename: Assets/UMA/UMA3/Wearables/Icons/Eyebrows/Human Male 3.0/6_Eyebrows_Average_Average.png
     thumb: {fileID: 21300000, guid: 2236e8296123f1f43bae7452a449ceab, type: 3}
+  thumbnailFromTexture: 0
+  thumbnailRect:
+    serializedVersion: 2
+    x: 0.25
+    y: 0.25
+    width: 0.5
+    height: 0.5
   wardrobeSlot: Eyebrows
   Appended: 0
   Hides: []

@@ -58,6 +58,18 @@ namespace UMA
 	/// </summary>
 	public class UMAData : MonoBehaviour
 	{
+        // Shared by UMAData and all avatars through UMAAvatarBase. Do not redeclare in derived classes:
+        // Unity serializes fields across the inheritance chain, including hidden base fields.
+        [Tooltip("Cache and reuse identical generated meshes. Shared meshes must be made unique before direct editing.")]
+        public bool reuseGeneratedMeshes;
+        [Tooltip("Cache and reuse identical generated atlases, and materials when their parameters match. Shared resources must be made unique before direct editing.")]
+        public bool reuseGeneratedTextures;
+        [Tooltip("Allow quality profiles to control character detail, LOD and renderer settings. Generator-wide atlas/build settings still apply when disabled; use a separate generator for a separate build policy.")]
+        public bool inheritGeneratorQuality = true;
+        [Tooltip("Let the generator quality profile choose mesh/atlas reuse. Off preserves the existing per-character reuse choices.")]
+        public bool inheritGeneratorReusePolicy;
+        [NonSerialized] internal bool qualityNeedsFullBuild;
+        [NonSerialized] public string resourceReuseStatus;
 		const string HolderObjectName = "UMA_MI_Holder";
 		//TODO improve/cleanup the relationship between renderers and rendererAssets
 		[SerializeField]
@@ -251,6 +263,16 @@ namespace UMA
         // Replace SaveMountedItems with this non-alloc version
         public void SaveMountedItems()
         {
+            SaveMountedItems(umaGenerator);
+        }
+
+        public void SaveMountedItems(UMAGeneratorBase generator)
+        {
+            // A destructive rebuild must not lose a T-pose bone merely because the
+            // replacement wardrobe no longer supplies its source slot. Save rest
+            // definitions, not the current animated transforms.
+            if (generator != null && generator.CleanupUnusedBones)
+                savedBaseBoneDefinitions = UMABoneLifecycle.CaptureBaseBones(this);
             GameObject holder = null;
             string ignoreTag = UMASettings.GetValidatedIgnoreTag(gameObject);
 
@@ -282,7 +304,7 @@ namespace UMA
             // Use iterative traversal to avoid recursion + per-node allocations
             string kpTag = ValidateTagForTraversal(
                 umaRoot.transform,
-                umaGenerator != null ? umaGenerator.keepTag : null,
+                generator != null ? generator.EffectiveKeepTag : null,
                 "keep");
             SaveBonesIterative(umaRoot.transform, holder.transform, ignoreTag, kpTag);
         }
@@ -387,30 +409,56 @@ namespace UMA
 
 		public void RestoreSavedItems()
 		{
-			for (int i = 0; i < savedItems.Count; i++)
-			{
-				UMASavedItem usi = savedItems[i];
-				Transform parent = skeleton.GetBoneTransform(usi.ParentBoneNameHash);
-				if (usi.replaceExisting)
-				{
-					var newBone = skeleton.GetBoneTransform(usi.Object.name);
-					if (newBone.gameObject.GetUmaObjectId() != usi.Object.gameObject.GetUmaObjectId())
-					{
-                        skeleton.ReplaceBone(usi);
-						DestroyImmediate(newBone.gameObject);
-                    }
-				}
-				if (parent != null)
-				{
-					usi.Object.SetParent(parent, false);
-				}
-				else
-				{
-					usi.Object.SetParent(umaRoot.transform, false);
-				}
-			}
+
+            RestoreBaseBoneDefinitions();
+            if (savedItems.Count == 0 || skeleton == null || umaRoot == null) return;
+            UMABoneLifecycle.Restore(this, savedItems);
 			savedItems.Clear();
 		}
+
+        [NonSerialized] private List<UMATransform> savedBaseBoneDefinitions;
+
+        internal void RestoreBaseBoneDefinitions()
+        {
+            if (savedBaseBoneDefinitions == null || skeleton == null || umaRoot == null) return;
+            bool added = false;
+            foreach (var definition in savedBaseBoneDefinitions)
+            {
+                if (skeleton.HasBone(definition.hash)) continue;
+                skeleton.EnsureBone(definition);
+                skeleton.SetAnimatedBone(definition.hash);
+                added = true;
+            }
+            if (added) skeleton.EnsureBoneHierarchy();
+            savedBaseBoneDefinitions = null;
+        }
+
+        internal void AddRegisteredBoneDependencies(HashSet<int> required)
+        {
+            if (animatedBonesTable != null)
+                foreach (int hash in animatedBonesTable.Keys) required.Add(hash);
+        }
+
+        [NonSerialized] public int LastBoneCleanupRemoved;
+        [NonSerialized] public double LastBoneCleanupMilliseconds;
+        [NonSerialized] internal bool BoneCleanupPending;
+
+        /// <summary>Call only after a complete rig/mesh transaction, never between renderer builds.</summary>
+        public int CleanupUnusedBones(UMAGeneratorBase generator = null)
+        {
+            LastBoneCleanupRemoved = 0;
+            LastBoneCleanupMilliseconds = 0;
+            if (generator == null) generator = umaGenerator;
+            if (generator == null || !generator.CleanupUnusedBones || HasExternalSkeletonRoot ||
+                skeleton == null || umaRoot == null) return 0;
+            long start = generator.MeasureBoneCleanup ? System.Diagnostics.Stopwatch.GetTimestamp() : 0;
+            LastBoneCleanupRemoved = UMABoneLifecycle.Cleanup(this);
+            if (generator.MeasureBoneCleanup)
+                LastBoneCleanupMilliseconds = (System.Diagnostics.Stopwatch.GetTimestamp() - start) *
+                    1000.0 / System.Diagnostics.Stopwatch.Frequency;
+            generator.RecordBoneCleanup(LastBoneCleanupRemoved, LastBoneCleanupMilliseconds);
+            return LastBoneCleanupRemoved;
+        }
         #endregion
 
         #region RENDERER AND RENDERER ASSETS
@@ -465,6 +513,201 @@ namespace UMA
 		public void SetRendererAssets(UMARendererAsset[] assets)
 		{
 			rendererAssets = assets;
+		}
+
+		/// <summary>
+		/// Marks a renderer object as UMA-generated output.
+		/// </summary>
+		internal void RegisterGeneratedRenderer(SkinnedMeshRenderer renderer)
+		{
+			if (renderer == null)
+			{
+				return;
+			}
+
+			UMAGeneratedRenderer marker =
+				renderer.GetComponent<UMAGeneratedRenderer>();
+			if (marker == null)
+			{
+				marker = renderer.gameObject.AddComponent<UMAGeneratedRenderer>();
+			}
+			marker.hideFlags = HideFlags.HideInInspector;
+		}
+
+		/// <summary>
+		/// Releases the mesh and renderer object owned by one generated UMA
+		/// renderer. All combiner implementations use this method so renderer
+		/// replacement has identical ownership semantics.
+		/// </summary>
+		internal void DestroyGeneratedRenderer(SkinnedMeshRenderer renderer)
+		{
+			if (renderer == null)
+			{
+				return;
+			}
+
+			GameObject rendererObject = renderer.gameObject;
+			Cloth cloth = rendererObject.GetComponent<Cloth>();
+			if (cloth != null)
+			{
+				UMAUtils.DestroySceneObject(cloth);
+			}
+
+			Mesh mesh = renderer.sharedMesh;
+            bool releasedSharedMesh = UMAResourceLeaseOwner.ReleaseMesh(renderer);
+			renderer.sharedMesh = null;
+			if (mesh != null && !releasedSharedMesh)
+			{
+				UMAUtils.DestroySceneObject(mesh);
+			}
+
+			bool ownsRendererObject =
+				rendererObject != gameObject &&
+				(rendererObject.GetComponent<UMAGeneratedRenderer>() != null ||
+				 renderer.transform.parent == transform);
+			if (ownsRendererObject)
+			{
+				UMAUtils.DestroySceneObject(rendererObject);
+			}
+			else
+			{
+				UMAUtils.DestroySceneObject(renderer);
+				if (rendererObject.TryGetComponent<UMAResourceLeaseOwner>(out var owner)) UMAUtils.DestroySceneObject(owner);
+			}
+		}
+
+		/// <summary>
+		/// Migrates tracked direct-child renderers to explicit ownership markers
+		/// and removes marked renderer objects no longer tracked by this avatar.
+		/// This is required when Unity preserves scene objects while restoring
+		/// serialized component state across play-mode transitions.
+		/// </summary>
+		internal void ReconcileGeneratedRendererObjects()
+		{
+			SkinnedMeshRenderer[] trackedRenderers = renderers;
+			if (trackedRenderers != null)
+			{
+				for (int i = 0; i < trackedRenderers.Length; i++)
+				{
+					SkinnedMeshRenderer tracked = trackedRenderers[i];
+					if (tracked != null && tracked.transform.parent == transform)
+					{
+						RegisterGeneratedRenderer(tracked);
+					}
+				}
+			}
+
+			// Adopt renderer objects produced before explicit ownership markers
+			// existed. The indexed UMA names are reserved for generated output.
+			// This also catches empty UMARenderer children left by older cleanup,
+			// which destroyed the component but not its GameObject.
+			for (int childIndex = transform.childCount - 1;
+				 childIndex >= 0;
+				 childIndex--)
+			{
+				Transform child = transform.GetChild(childIndex);
+				if (child.GetComponent<UMAGeneratedRenderer>() != null)
+				{
+					continue;
+				}
+
+				SkinnedMeshRenderer legacyRenderer =
+					child.GetComponent<SkinnedMeshRenderer>();
+				bool hasLegacyObjectName =
+					IsLegacyGeneratedRendererName(child.name);
+				bool hasLegacyMeshName =
+					legacyRenderer != null &&
+					legacyRenderer.sharedMesh != null &&
+					IsLegacyGeneratedMeshName(legacyRenderer.sharedMesh.name);
+				if (!hasLegacyObjectName && !hasLegacyMeshName)
+				{
+					continue;
+				}
+				if (legacyRenderer != null &&
+					legacyRenderer.sharedMesh != null &&
+					!hasLegacyMeshName)
+				{
+					continue;
+				}
+
+				UMAGeneratedRenderer legacyMarker =
+					child.gameObject.AddComponent<UMAGeneratedRenderer>();
+				legacyMarker.hideFlags = HideFlags.HideInInspector;
+			}
+
+			UMAGeneratedRenderer[] markers =
+				GetComponentsInChildren<UMAGeneratedRenderer>(true);
+			for (int markerIndex = 0;
+				 markerIndex < markers.Length;
+				 markerIndex++)
+			{
+				UMAGeneratedRenderer marker = markers[markerIndex];
+				if (marker == null || marker.transform.parent != transform)
+				{
+					continue;
+				}
+
+				SkinnedMeshRenderer candidate =
+					marker.GetComponent<SkinnedMeshRenderer>();
+				bool isTracked = false;
+				if (candidate != null && trackedRenderers != null)
+				{
+					for (int rendererIndex = 0;
+						 rendererIndex < trackedRenderers.Length;
+						 rendererIndex++)
+					{
+						if (trackedRenderers[rendererIndex] == candidate)
+						{
+							isTracked = true;
+							break;
+						}
+					}
+				}
+
+				if (isTracked)
+				{
+					continue;
+				}
+
+				if (candidate != null && candidate.sharedMesh != null)
+				{
+					Mesh orphanedMesh = candidate.sharedMesh;
+                    bool releasedSharedMesh = UMAResourceLeaseOwner.ReleaseMesh(candidate);
+					candidate.sharedMesh = null;
+                    if (!releasedSharedMesh) UMAUtils.DestroySceneObject(orphanedMesh);
+				}
+				UMAUtils.DestroySceneObject(marker.gameObject);
+			}
+		}
+
+		private static bool IsLegacyGeneratedRendererName(string objectName)
+		{
+			return IsUmaIndexedName(objectName, "UMARenderer");
+		}
+
+		private static bool IsLegacyGeneratedMeshName(string meshName)
+		{
+			return IsUmaIndexedName(meshName, "UMAMesh");
+		}
+
+		private static bool IsUmaIndexedName(string value, string baseName)
+		{
+			if (string.Equals(value, baseName, StringComparison.Ordinal))
+			{
+				return true;
+			}
+
+			string prefix = baseName + " ";
+			if (string.IsNullOrEmpty(value) ||
+				!value.StartsWith(prefix, StringComparison.Ordinal))
+			{
+				return false;
+			}
+
+			return int.TryParse(
+				value.Substring(prefix.Length),
+				out int rendererIndex) &&
+				rendererIndex >= 0;
 		}
 
 		public bool AreRenderersEqual(List<UMARendererAsset> rendererList)
@@ -800,6 +1043,7 @@ namespace UMA
 
         [NonSerialized]
         private List<IRuntimeDNAProvider> _runtimeDNAProviders;
+        internal bool HasRuntimeDNAProviders => _runtimeDNAProviders != null && _runtimeDNAProviders.Count != 0;
 
         public void RegisterRuntimeDNAProvider(
             IRuntimeDNAProvider provider)
@@ -1093,6 +1337,7 @@ namespace UMA
 
 		public void RegisterAnimatedBone(int hash)
 		{
+            if (animatedBonesTable == null) ResetAnimatedBones();
 			if (!animatedBonesTable.ContainsKey(hash))
 			{
 				animatedBonesTable.Add(hash, animatedBonesTable.Count);
@@ -1126,10 +1371,13 @@ namespace UMA
 
 		public void RegisterAnimatedBoneHierarchy(int hash)
 		{
-			if (!animatedBonesTable.ContainsKey(hash))
-			{
-				animatedBonesTable.Add(hash, animatedBonesTable.Count);
-			}
+            RegisterAnimatedBone(hash);
+            var visited = new HashSet<int>();
+            while (skeleton != null && hash != 0 && visited.Add(hash))
+            {
+                RegisterAnimatedBone(hash);
+                hash = skeleton.GetParentBoneHash(hash);
+            }
 		}
 
 		public bool cancelled { get; private set; }
@@ -1440,6 +1688,9 @@ namespace UMA
 		[System.Serializable]
 		public class GeneratedMaterial
 		{
+            [NonSerialized] internal UMAAtlasBinding[] cachedAtlasBindings;
+            [NonSerialized] internal UMAGeneratedResourceCache.Lease<Material> cachedFirstPass;
+            [NonSerialized] internal UMAGeneratedResourceCache.Lease<Material> cachedSecondPass;
 			public UMAMaterial umaMaterial;
 			public Material material;
 			public Material secondPassMaterial;
@@ -1457,6 +1708,9 @@ namespace UMA
 		[System.Serializable]
 		public class MaterialFragment
 		{
+            public Rect sourceUVRect = new Rect(0, 0, 1, 1);
+            // Maps original source UVs into the cropped atlas allocation without editing source meshes.
+            public Rect UncroppedAtlasRegion => UMASourceUVCropping.ExpandAtlasRegion(atlasRegion, sourceUVRect);
 			public int size;
 			public Color baseColor;
 			public UMAMaterial umaMaterial;
@@ -3244,6 +3498,13 @@ namespace UMA
 		{
 			if (staticCharacter)
             {
+                // Renderer owners keep their own references after UMAData is stripped.
+                foreach (var material in generatedMaterials.materials)
+                {
+                    if (material?.skinnedMeshRenderer != null && material.skinnedMeshRenderer.TryGetComponent<UMAResourceLeaseOwner>(out var owner))
+                        owner.AdoptPrivateStaticResources(material);
+                    UMAResourceReuse.ReleaseSurfaceReferences(material);
+                }
                 return;
             }
 
@@ -3308,14 +3569,34 @@ namespace UMA
 		{
 			for (int atlasIndex = 0; atlasIndex < generatedMaterials.materials.Count; atlasIndex++)
 			{
+                var cachedMaterial = generatedMaterials.materials[atlasIndex];
+                bool sharedFirst = cachedMaterial?.cachedFirstPass != null || UMAGeneratedResourceCache.IsManagedResource(cachedMaterial?.material);
+                bool sharedSecond = cachedMaterial?.cachedSecondPass != null || UMAGeneratedResourceCache.IsManagedResource(cachedMaterial?.secondPassMaterial);
+                if (cachedMaterial?.cachedAtlasBindings != null)
+                {
+                    for (int c = 0; c < cachedMaterial.cachedAtlasBindings.Length; c++)
+                    {
+                        var binding = cachedMaterial.cachedAtlasBindings[c];
+                        if (binding == null) continue;
+                        if (cachedMaterial.resultingAtlasList != null && c < cachedMaterial.resultingAtlasList.Length)
+                            cachedMaterial.resultingAtlasList[c] = null;
+                        binding.Dispose();
+                    }
+                    cachedMaterial.cachedAtlasBindings = null;
+                }
+                if (cachedMaterial != null)
+                {
+                    cachedMaterial.cachedFirstPass?.Dispose(); cachedMaterial.cachedFirstPass = null;
+                    cachedMaterial.cachedSecondPass?.Dispose(); cachedMaterial.cachedSecondPass = null;
+                }
 				if (generatedMaterials.materials[atlasIndex] != null && generatedMaterials.materials[atlasIndex].resultingAtlasList != null)
 				{
 					if (generatedMaterials.materials[atlasIndex].secondPassMaterial != null)
 					{
-						UMAUtils.DestroySceneObject(generatedMaterials.materials[atlasIndex].secondPassMaterial);
+						if (!sharedSecond) UMAUtils.DestroySceneObject(generatedMaterials.materials[atlasIndex].secondPassMaterial);
 						generatedMaterials.materials[atlasIndex].secondPassMaterial = null;
 					}
-					if (generatedMaterials.materials[atlasIndex].umaMaterial.materialType != UMAMaterial.MaterialType.UseExistingMaterial)
+					if (!sharedFirst && generatedMaterials.materials[atlasIndex].umaMaterial.materialType != UMAMaterial.MaterialType.UseExistingMaterial)
                     {
 						UMAUtils.DestroySceneObject(generatedMaterials.materials[atlasIndex].material);
                     }
@@ -3325,6 +3606,7 @@ namespace UMA
 						{
 							Texture tempTexture = generatedMaterials.materials[atlasIndex].resultingAtlasList[textureIndex];
                             generatedMaterials.materials[atlasIndex].resultingAtlasList[textureIndex] = null;
+                            if (UMAGeneratedResourceCache.IsManagedResource(tempTexture)) continue;
 
                             if (tempTexture is RenderTexture)
 							{
@@ -3356,7 +3638,7 @@ namespace UMA
 					}
 					if (generatedMaterials.materials[atlasIndex].umaMaterial.materialType != UMAMaterial.MaterialType.UseExistingMaterial)
 					{
-						UMAUtils.DestroySceneObject(generatedMaterials.materials[atlasIndex].material);
+						if (!sharedFirst) UMAUtils.DestroySceneObject(generatedMaterials.materials[atlasIndex].material);
 						generatedMaterials.materials[atlasIndex] = null;
 					}
 					else
@@ -3375,37 +3657,39 @@ namespace UMA
 		/// <param name="destroyRenderer">If set to <c>true</c> destroy mesh renderer.</param>
 		public void CleanMesh(bool destroyRenderer)
 		{
-			for(int j = 0; j < RendererCount; j++)
+			SkinnedMeshRenderer[] renderersToClean = renderers;
+			int rendererCount = renderersToClean == null
+				? 0
+				: renderersToClean.Length;
+			for(int j = 0; j < rendererCount; j++)
 			{
-				var renderer = GetRenderer(j);
+				var renderer = renderersToClean[j];
 				if (renderer == null)
                 {
                     continue;
                 }
-				if (renderer.sharedMesh != null)
+				if (destroyRenderer)
 				{
-					if (destroyRenderer)
-					{
-						// need to kill cloth first if it exists.
-						var cloth = renderer.gameObject.GetComponent<Cloth>();
-						if (cloth != null)
-						{
-							UMAUtils.DestroySceneObject(cloth);
-						}
-						UMAUtils.DestroySceneObject(renderer.sharedMesh);
-						UMAUtils.DestroySceneObject(renderer);
-					}
-					else
-					{
-                        for (int i = 0; i < renderer.sharedMesh.blendShapeCount; i++)
-                        {
-                            if (renderer.GetBlendShapeWeight(i) != 0.0f)
-                            {
-                                renderer.SetBlendShapeWeight(i, 0.0f);
-                            }
-                        }
-                    }
+					DestroyGeneratedRenderer(renderer);
 				}
+				else if (renderer.sharedMesh != null)
+				{
+					for (int i = 0;
+						 i < renderer.sharedMesh.blendShapeCount;
+						 i++)
+					{
+						if (renderer.GetBlendShapeWeight(i) != 0.0f)
+						{
+							renderer.SetBlendShapeWeight(i, 0.0f);
+						}
+					}
+				}
+			}
+
+			if (destroyRenderer)
+			{
+				renderers = Array.Empty<SkinnedMeshRenderer>();
+				rendererAssets = Array.Empty<UMARendererAsset>();
 			}
 		}
 
@@ -3586,7 +3870,7 @@ namespace UMA
         {
 			UmaTPose tpose = OverrideTpose;
 
-			if ((umaRecipe.raceData != null) && (umaRecipe.raceData.TPose != null) && (tpose == null))
+			if ((umaRecipe?.raceData != null) && (umaRecipe.raceData.TPose != null) && (tpose == null))
 			{
 				tpose = umaRecipe.raceData.TPose;
 			}

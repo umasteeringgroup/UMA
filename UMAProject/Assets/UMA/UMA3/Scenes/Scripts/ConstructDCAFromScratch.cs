@@ -29,8 +29,10 @@ namespace UMA
 
             if (LoadFromAvatarDef)
             {
+                Debug.Log("Loading from Avatar Definition: " + AvatarDef);
                 DCA.raceAnimationControllers.defaultAnimationController = raceController;
                 DCA.LoadAvatarDefinition(AvatarDef);
+                Debug.Log("Avatar Definition Loaded");
             }
             else
             {

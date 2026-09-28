@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using UMA;
+using UMA.Editors;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
@@ -9,6 +10,8 @@ using UnityEngine;
 [CustomEditor(typeof(UMAExpressionGroup))]
 public sealed class UMAExpressionGroupInspector : Editor
 {
+    private readonly UMAInspectorView inspectorView =
+        new UMAInspectorView(typeof(UMAExpressionGroup));
     private ReorderableList _list;
     private readonly List<ExpressionValidationMessage> _validation =
         new List<ExpressionValidationMessage>();
@@ -31,10 +34,93 @@ public sealed class UMAExpressionGroupInspector : Editor
     public override void OnInspectorGUI()
     {
         serializedObject.Update();
-        DrawDropZone();
-        _list.DoLayoutList();
+        bool advanced = inspectorView.DrawSelector();
+        using (inspectorView.Section("Expression definitions",
+            "Each definition gives an expression a stable ID, artist-facing name and DNA asset. Roles coordinate automatic systems such as visemes, blinking, gaze and emotion. Affected Joints declares which rig families the expression owns so Mecanim override policy can be enforced."))
+        {
+            DrawDropZone();
+            if (advanced) _list.DoLayoutList();
+            else DrawStandardDefinitions();
+        }
+        using (inspectorView.Section("Effects and performance",
+            "The summary reports the number of DNA effects and their execution phases. Late Rig, blendshape and runtime-material effects are inexpensive frame lanes. Bold summaries contain effects that request an UMA build; use those sparingly for continuously animated expressions."))
+            DrawPerformanceSummary();
         serializedObject.ApplyModifiedProperties();
-        DrawValidation();
+        using (inspectorView.Section("Validation",
+            "Validation checks stable IDs, duplicate procedural roles, missing DNA, incompatible effect configuration and ownership metadata. Resolve errors before assigning the group to a race; warnings identify behavior that may be intentional but deserves review."))
+            DrawValidation();
+    }
+
+    private void DrawStandardDefinitions()
+    {
+        SerializedProperty list = _list.serializedProperty;
+        for (int i = 0; i < list.arraySize; i++)
+        {
+            SerializedProperty item = list.GetArrayElementAtIndex(i);
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    EditorGUILayout.LabelField("Expression " + (i + 1),
+                        EditorStyles.boldLabel);
+                    if (GUILayout.Button("Remove", GUILayout.Width(64f)))
+                    {
+                        list.DeleteArrayElementAtIndex(i);
+                        break;
+                    }
+                }
+                EditorGUILayout.PropertyField(item.FindPropertyRelative("id"),
+                    new GUIContent("Stable ID"));
+                EditorGUILayout.PropertyField(item.FindPropertyRelative(
+                    "displayName"), new GUIContent("Display Name"));
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    EditorGUILayout.PropertyField(item.FindPropertyRelative(
+                        "dna"), new GUIContent("DNA"));
+                    UnityEngine.Object dna = item.FindPropertyRelative("dna")
+                        .objectReferenceValue;
+                    using (new EditorGUI.DisabledScope(dna == null))
+                        if (GUILayout.Button("Inspect", GUILayout.Width(58f)))
+                            Selection.activeObject = dna;
+                }
+                EditorGUILayout.PropertyField(item.FindPropertyRelative(
+                    "roles"), new GUIContent("Behavior Roles"));
+                EditorGUILayout.PropertyField(item.FindPropertyRelative(
+                    "affectedJoints"), new GUIContent("Joint Ownership"));
+                EditorGUILayout.PropertyField(item.FindPropertyRelative(
+                    "responseTime"), new GUIContent("Response Time"));
+                DNA dnaAsset = item.FindPropertyRelative("dna")
+                    .objectReferenceValue as DNA;
+                EditorGUILayout.LabelField(GetEffectSummary(dnaAsset),
+                    GetCostStyle(dnaAsset));
+            }
+        }
+        if (GUILayout.Button("Add Expression")) AddElement(_list);
+    }
+
+    private void DrawPerformanceSummary()
+    {
+        SerializedProperty list = _list.serializedProperty;
+        int runtime = 0;
+        int rebuilding = 0;
+        int missing = 0;
+        for (int i = 0; i < list.arraySize; i++)
+        {
+            DNA dna = list.GetArrayElementAtIndex(i)
+                .FindPropertyRelative("dna").objectReferenceValue as DNA;
+            if (dna == null) { missing++; continue; }
+            bool builds = false;
+            if (dna.effects != null)
+                for (int e = 0; e < dna.effects.Count; e++)
+                    builds |= dna.effects[e] != null &&
+                        dna.effects[e].enabled &&
+                        dna.effects[e].RequiresExpressionBuild;
+            if (builds) rebuilding++; else runtime++;
+        }
+        EditorGUILayout.LabelField("Runtime-only definitions", runtime.ToString());
+        EditorGUILayout.LabelField("Build-requesting definitions",
+            rebuilding.ToString());
+        EditorGUILayout.LabelField("Missing DNA", missing.ToString());
     }
 
     private void DrawElement(Rect rect, int index, bool active, bool focused)

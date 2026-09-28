@@ -133,6 +133,7 @@ GameObject:
   - component: {fileID: 84395074}
   - component: {fileID: 84395078}
   - component: {fileID: 84395079}
+  - component: {fileID: 84395080}
   m_Layer: 0
   m_Name: GeneratorParms
   m_TagString: Untagged
@@ -245,6 +246,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7a4d6ca436f8402b9fe10d30b8fc2487, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UMA_Core::UMA.UMAGeneratorOverride
+  qualityProfile: {fileID: 0}
+  qualityPriority: 100
+  qualityRebuild: 0
+  overrideSourceUVCropping: 0
+  enableSourceUVCropping: 0
+  sourceUVCropPadding: 8
   fitAtlas: 1
   SharperFitTextures: 1
   AtlasOverflowFitMethod: 1
@@ -256,13 +263,15 @@ MonoBehaviour:
   asyncMipRegen: 0
   MaxQueuedConversionsPerFrame: 8
   InitialScaleFactor: 1
-  IterationCount: 1
+  IterationCount: 8
   InterFrameDelay: 0
-  MaxMultiStepWorkMilliseconds: 2
+  MaxMultiStepWorkMilliseconds: 100
   collectGarbage: 1
   garbageCollectionRate: 0
   processAllPending: 0
   SaveAndRestoreIgnoredItems: 0
+  CleanupUnusedBones: 0
+  MeasureBoneCleanup: 0
   showInHierarchy: 0
   AutomaticScaling: 0
   ScaleGPUMemoryCutoffMB: 1024
@@ -291,7 +300,7 @@ MonoBehaviour:
   Generator: {fileID: 0}
   CrowdGenerator: {fileID: 0}
   LegacyCrowdGenerator: {fileID: 0}
-  ShowRuntimeControls: 1
+  ShowRuntimeControls: 0
   AutoSaveWhenGeneratorBecomesIdle: 1
   AutoSaveIdleFrameDelay: 2
   FileNamePrefix: UMA-Crowd-Generator-Statistics
@@ -301,6 +310,26 @@ MonoBehaviour:
     y: 10
     width: 520
     height: 235
+--- !u!114 &84395080
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 84395073}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d548bfb8e694b36a3db0c365ced916a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UMA_Core::UMA.UMAResourceUsageMonitor
+  Generator: {fileID: 0}
+  LegacyCrowdGenerator: {fileID: 0}
+  CrowdGenerator: {fileID: 0}
+  AvatarRoot: {fileID: 0}
+  InitialReuse: 1
+  MemorySampleInterval: 1
+  SampleMemoryDuringGeneration: 0
+  LogCompletedRuns: 1
 --- !u!1001 &102816001
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -315,15 +344,15 @@ PrefabInstance:
       objectReference: {fileID: 615601329001387447, guid: 6cdb9135acef41898bf57b2f46587092, type: 3}
     - target: {fileID: 2885161576314354680, guid: 11b6342601a487e45a8ca8ed561a9b7a, type: 3}
       propertyPath: GridXSize
-      value: 9
+      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 2885161576314354680, guid: 11b6342601a487e45a8ca8ed561a9b7a, type: 3}
       propertyPath: GridZSize
-      value: 9
+      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 2885161576314354680, guid: 11b6342601a487e45a8ca8ed561a9b7a, type: 3}
       propertyPath: GridDistance
-      value: 3
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 2885161576314354680, guid: 11b6342601a487e45a8ca8ed561a9b7a, type: 3}
       propertyPath: ParentObject
@@ -331,7 +360,11 @@ PrefabInstance:
       objectReference: {fileID: 587163906}
     - target: {fileID: 2885161576314354680, guid: 11b6342601a487e45a8ca8ed561a9b7a, type: 3}
       propertyPath: RandomOffset
-      value: 2
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2885161576314354680, guid: 11b6342601a487e45a8ca8ed561a9b7a, type: 3}
+      propertyPath: UseNPCBuilds
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2885161576314354680, guid: 11b6342601a487e45a8ca8ed561a9b7a, type: 3}
       propertyPath: RandomRotation
@@ -344,6 +377,10 @@ PrefabInstance:
     - target: {fileID: 2885161576314354680, guid: 11b6342601a487e45a8ca8ed561a9b7a, type: 3}
       propertyPath: Randomizers.Array.size
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2885161576314354680, guid: 11b6342601a487e45a8ca8ed561a9b7a, type: 3}
+      propertyPath: MaximumUniqueCharacters
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 2885161576314354680, guid: 11b6342601a487e45a8ca8ed561a9b7a, type: 3}
       propertyPath: 'Randomizers.Array.data[0]'
@@ -814,6 +851,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 997165924250026383, guid: 4d4ce01dbd7484b439df783927a00c65, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 16
+      objectReference: {fileID: 0}
+    - target: {fileID: 997165924250026383, guid: 4d4ce01dbd7484b439df783927a00c65, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 16
+      objectReference: {fileID: 0}
     - target: {fileID: 997165924250026383, guid: 4d4ce01dbd7484b439df783927a00c65, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0.91123

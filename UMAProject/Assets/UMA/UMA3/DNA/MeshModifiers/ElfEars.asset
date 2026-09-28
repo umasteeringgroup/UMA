@@ -49,6 +49,7 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: 0
         maxMapping: 1
+        enabled: 1
         expanded: 0
         selected: 0
         showHelp: 0

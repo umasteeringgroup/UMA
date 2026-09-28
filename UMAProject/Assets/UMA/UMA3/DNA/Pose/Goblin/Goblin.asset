@@ -52,7 +52,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: 0
         maxMapping: 1
+        enabled: 1
         expanded: 0
+        selected: 0
+        showHelp: 0
         EffectName: SkinColor
         sharedColorName: Skin
         FromColor: {r: 0.9685534, g: 0.9685534, b: 0.9685534, a: 1}
@@ -71,7 +74,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: 0
         maxMapping: 0.587
+        enabled: 1
         expanded: 0
+        selected: 0
+        showHelp: 0
         EffectName: Goblin Ears
         BlendShapeName: GoblinEars
     - rid: 7828207334286164046
@@ -85,9 +91,13 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: 0
         maxMapping: 1
+        enabled: 1
         expanded: 0
+        selected: 0
+        showHelp: 0
         EffectName: BonePose
         bonePose: {fileID: 11400000, guid: 5fc123fa1ddd26d4880db059d4d0c544, type: 2}
+        isBasePose: 0
     - rid: 7828207334286164047
       type: {class: DNAEffect_SharedColor, ns: UMA, asm: UMA_Core}
       data:
@@ -99,7 +109,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: 0
         maxMapping: 1
+        enabled: 1
         expanded: 0
+        selected: 0
+        showHelp: 0
         EffectName: Hair
         sharedColorName: Hair
         FromColor: {r: 0.76729554, g: 0.32853502, b: 0, a: 1}

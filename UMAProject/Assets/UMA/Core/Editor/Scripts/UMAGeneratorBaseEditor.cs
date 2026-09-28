@@ -7,6 +7,8 @@ namespace UMA.Editors
     public class UMAGeneratorBaseEditor : Editor
     {
         SerializedProperty fitAtlas;
+        SerializedProperty enableSourceUVCropping;
+        SerializedProperty sourceUVCropPadding;
         SerializedProperty convertRenderTexture;
         SerializedProperty convertMipMaps;
         SerializedProperty atlasResolution;
@@ -27,6 +29,8 @@ namespace UMA.Editors
         public virtual void OnEnable()
         {
             fitAtlas = serializedObject.FindProperty("fitAtlas");
+            enableSourceUVCropping = serializedObject.FindProperty("enableSourceUVCropping");
+            sourceUVCropPadding = serializedObject.FindProperty("sourceUVCropPadding");
             convertRenderTexture = serializedObject.FindProperty("convertRenderTexture");
             convertMipMaps = serializedObject.FindProperty("convertMipMaps");
             atlasResolution = serializedObject.FindProperty("atlasResolution");
@@ -39,9 +43,12 @@ namespace UMA.Editors
 
         public override void OnInspectorGUI()
         {
-            centeredLabel = new GUIStyle(GUI.skin.label);
-            centeredLabel.fontStyle = FontStyle.Bold;
-            centeredLabel.alignment = TextAnchor.MiddleCenter;
+            if (centeredLabel == null)
+            {
+                centeredLabel = new GUIStyle(GUI.skin.label);
+                centeredLabel.fontStyle = FontStyle.Bold;
+                centeredLabel.alignment = TextAnchor.MiddleCenter;
+            }
 
             serializedObject.Update();
             showAtlasSettings = EditorGUILayout.Foldout(showAtlasSettings, "Atlas Settings");
@@ -51,6 +58,8 @@ namespace UMA.Editors
                 EditorGUILayout.LabelField("Basic Configuration", centeredLabel);
                 GUIHelper.BeginVerticalPadded();
                 EditorGUILayout.PropertyField(fitAtlas);
+                EditorGUILayout.PropertyField(enableSourceUVCropping);
+                if (enableSourceUVCropping.boolValue) EditorGUILayout.PropertyField(sourceUVCropPadding);
                 EditorGUILayout.PropertyField(SharperFitTextures);
                 EditorGUILayout.PropertyField(AtlasOverflowFitMethod);
                 EditorGUILayout.PropertyField(FitPercentageDecrease);

@@ -10,6 +10,8 @@ using UMA.Editors;
 [CustomEditor(typeof(DNAGroup))]
 public class DNAGroupEditor : Editor
 {
+    private readonly UMAInspectorView inspectorView =
+        new UMAInspectorView(typeof(DNAGroup));
     private SerializedProperty dnaAreaProp;
     private SerializedProperty dnaListProp;
     private SerializedProperty MaxTotalValueProp;
@@ -55,6 +57,91 @@ public class DNAGroupEditor : Editor
     private static bool[] _foldoutStates = new bool[0];
 
     public override void OnInspectorGUI()
+    {
+        if (inspectorView.DrawSelector())
+        {
+            using (inspectorView.Section("Advanced DNA group authoring",
+                "Advanced View provides drag-and-drop assignment, inline DNA/effect summaries, creation controls and the original group-management workflow."))
+                DrawAdvancedInspector();
+            return;
+        }
+        DrawStandardInspector();
+    }
+
+    private void DrawStandardInspector()
+    {
+        if (EditorApplication.isCompiling || EditorApplication.isUpdating)
+        {
+            EditorGUILayout.HelpBox(
+                "Editor is compiling or updating. Please wait.",
+                MessageType.Info);
+            return;
+        }
+        serializedObject.Update();
+        using (inspectorView.Section("Group definition",
+            "DNA Area groups related controls for authoring and UI presentation. Max Total limits the combined normalized value for the area; zero disables the limit."))
+        {
+            EditorGUILayout.PropertyField(dnaAreaProp,
+                new GUIContent("DNA Area"));
+            EditorGUILayout.PropertyField(MaxTotalValueProp,
+                new GUIContent("Maximum Combined Value"));
+        }
+        using (inspectorView.Section("DNA controls",
+            "The listed DNA assets become controls in this group. Their order is preserved. Inspect opens a DNA asset to edit its definition, effects, joint targets and performance behavior."))
+        {
+            for (int i = 0; i < dnaListProp.arraySize; i++)
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    SerializedProperty item =
+                        dnaListProp.GetArrayElementAtIndex(i);
+                    EditorGUILayout.PropertyField(item, GUIContent.none);
+                    using (new EditorGUI.DisabledScope(
+                        item.objectReferenceValue == null))
+                        if (GUILayout.Button("Inspect", GUILayout.Width(58f)))
+                            Selection.activeObject = item.objectReferenceValue;
+                    if (GUILayout.Button("-", GUILayout.Width(24f)))
+                    {
+                        item.objectReferenceValue = null;
+                        dnaListProp.DeleteArrayElementAtIndex(i);
+                        break;
+                    }
+                }
+            if (GUILayout.Button("Add DNA"))
+            {
+                int index = dnaListProp.arraySize++;
+                dnaListProp.GetArrayElementAtIndex(index)
+                    .objectReferenceValue = null;
+            }
+        }
+        using (inspectorView.Section("Validation",
+            "Missing DNA entries are ignored at runtime but should be removed. Build-requesting effects can regenerate meshes or textures, so groups intended for continuous animation should favor runtime-only effects."))
+        {
+            int missing = 0;
+            int buildDriven = 0;
+            for (int i = 0; i < dnaListProp.arraySize; i++)
+            {
+                DNA dna = dnaListProp.GetArrayElementAtIndex(i)
+                    .objectReferenceValue as DNA;
+                if (dna == null) { missing++; continue; }
+                if (dna.effects == null) continue;
+                for (int e = 0; e < dna.effects.Count; e++)
+                    if (dna.effects[e] != null && dna.effects[e].enabled &&
+                        dna.effects[e].RequiresExpressionBuild)
+                    { buildDriven++; break; }
+            }
+            EditorGUILayout.LabelField("DNA assets",
+                (dnaListProp.arraySize - missing).ToString());
+            EditorGUILayout.LabelField("Build-driven DNA",
+                buildDriven.ToString());
+            if (missing > 0)
+                EditorGUILayout.HelpBox(missing + " DNA entries are empty.",
+                    MessageType.Warning);
+        }
+        if (serializedObject.ApplyModifiedProperties())
+            MarkGroupDirtyAndQueueSave();
+    }
+
+    private void DrawAdvancedInspector()
     {
         if (EditorApplication.isCompiling || EditorApplication.isUpdating)
         {

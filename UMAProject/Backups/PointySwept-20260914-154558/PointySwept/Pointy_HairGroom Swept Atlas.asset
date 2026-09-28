@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d79e0ce9bdf7dc9e09634a124ac29ec5, type: 3}
+  m_Name: Pointy_HairGroom Swept Atlas
+  m_EditorClassIdentifier: UMA.HairCards.Core::UMA.HairCards.HairAtlasProfileAsset
+  atlasId: 9d3fcb59233d4ddda25afa445a57a882
+  albedo: {fileID: 2800000, guid: bc38a52b0881f5d478ada318191e6bea, type: 3}
+  normal: {fileID: 2800000, guid: 1e1b55cbbcc61dd4bbdcb318022edd7b, type: 3}
+  mask: {fileID: 2800000, guid: 3b5730ae8280ddc4c987dc4cfb524c44, type: 3}
+  material: {fileID: 2100000, guid: b2cb4cd9b25aba34ab022ccb914cf1f6, type: 2}
+  secondPassMaterial: {fileID: 0}
+  sharedColorTable: {fileID: 0}
+  sharedColorIndex: -1
+  regions:
+  - id: 1b77406bc5f44294a19295593a80e259
+    name: Swept strip
+    uvRect:
+      serializedVersion: 2
+      x: 0.46608
+      y: 0.03607
+      width: 0.15093
+      height: 0.94754
+    weight: 1
+    tags: []
+    flipU: 0
+    flipV: 1
+  - id: 660d33b54c904925adc07a5a9fea2a42
+    name: Swept strip
+    uvRect:
+      serializedVersion: 2
+      x: 0.63557
+      y: 0.03959
+      width: 0.14935
+      height: 0.94601
+    weight: 1
+    tags: []
+    flipU: 0
+    flipV: 1

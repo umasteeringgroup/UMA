@@ -88,9 +88,9 @@ Material:
     - _Root_Shift: 0.2
     - _Root_Tip_Intensity: 0.4
     - _ShadowClip: 0.3
-    - _Smoothness: 0.198
+    - _Smoothness: 0.037
     - _SpecularMix: 0.5
-    - _SpecularMultiplier: 0.199
+    - _SpecularMultiplier: 0.071
     - _SpecularPowerScale: 30
     - _SpecularShift: 0
     - _SrcBlend: 1
@@ -102,10 +102,10 @@ Material:
     - _ZWrite: 1
     - _ZWriteControl: 0
     m_Colors:
-    - _BaseColor: {r: 0.8196079, g: 0.8196079, b: 0.8196079, a: 1}
+    - _BaseColor: {r: 0.23270428, g: 0.15697706, b: 0.10171664, a: 1}
     - _Normal: {r: 0, g: 0, b: 0, a: 0}
-    - _RootColor: {r: 0.8196079, g: 0.8196079, b: 0.8196079, a: 1}
+    - _RootColor: {r: 0.20754719, g: 0.14253789, b: 0.09463628, a: 1}
     - _SpecularTint: {r: 0.654902, g: 0.2656241, b: 0, a: 1}
-    - _Tip_Color: {r: 0.8196079, g: 0.8196079, b: 0.8196079, a: 1}
+    - _Tip_Color: {r: 0.27044016, g: 0.18083462, b: 0.11480947, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

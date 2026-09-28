@@ -22,6 +22,13 @@ MonoBehaviour:
   - race: Human Female 3.0
     filename: Assets/UMA/UMA3/Wearables/Icons/Legs/Human Female 3.0/7_tights_gray_Recipe.png
     thumb: {fileID: 21300000, guid: 72d13ef740262184fb7ccde47d7aef1c, type: 3}
+  thumbnailFromTexture: 0
+  thumbnailRect:
+    serializedVersion: 2
+    x: 0.25
+    y: 0.25
+    width: 0.5
+    height: 0.5
   wardrobeSlot: Legs
   Appended: 0
   Hides: []

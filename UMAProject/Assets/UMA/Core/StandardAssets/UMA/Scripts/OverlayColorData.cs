@@ -122,12 +122,16 @@ namespace UMA
             }
         }
 
-        public Color Add
+        public Color add
         {
             get
             {
                 if (channelAdditiveMask.Length < 1) return EmptyAdditive;
                 return channelAdditiveMask[0];
+            }
+            set
+            {
+                if (channelAdditiveMask.Length > 0) channelAdditiveMask[0] = value;
             }
         }
 

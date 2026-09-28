@@ -22,6 +22,13 @@ MonoBehaviour:
   - race: Human Male 3.0
     filename: Assets/UMA/UMA3/Wearables/Icons/Beard/Human Male 3.0/1_Beard_Drifter.png
     thumb: {fileID: 21300000, guid: 4ca171ab9105f0141b6c4ccd0bc12a64, type: 3}
+  thumbnailFromTexture: 0
+  thumbnailRect:
+    serializedVersion: 2
+    x: 0.25
+    y: 0.25
+    width: 0.5
+    height: 0.5
   wardrobeSlot: Beard
   Appended: 0
   Hides: []

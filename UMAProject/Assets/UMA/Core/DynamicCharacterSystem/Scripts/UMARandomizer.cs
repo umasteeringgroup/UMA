@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UMA.CharacterSystem;
@@ -67,64 +67,27 @@ namespace UMA
 		/// Randomly Get a Random Avatar from Scriptable Object List of Random Avatars
 		/// </summary>
 		/// <returns> Random Avatar, null if not none</returns>
-		public RandomAvatar GetRandomAvatar()
-		{
-			if (RandomAvatars.Count == 1) return RandomAvatars[0];
-			if (RandomAvatars.Count == 0) return null;
-			int total = 0;
+        public RandomAvatar GetRandomAvatar() => GetRandomAvatar(null);
 
-			// find the total number of chances.
-			foreach(RandomAvatar ra in RandomAvatars )
-			{
-				total += ra.Chance;
-			}
-
-			foreach (RandomAvatar ra in RandomAvatars)
-			{
-				int rval = UnityEngine.Random.Range(0, total);
-
-				if (rval < ra.Chance)
-				{
-					return ra;
-				}
-			}
-			return RandomAvatars[RandomAvatars.Count - 1];
-		}
-
-		/// <summary>
-		/// Get Random Avatar for given Race from a List of Random Avatars
-		/// Returns null if there is no Random Avatar for selected Race
-		/// </summary>
-		/// <param name="raceName"> Race to select </param>
-		/// <returns> RandomAvatar selected, null if none </returns>
-		public RandomAvatar GetRandomAvatar(string raceName)
-		{
-			if (RandomAvatars.Count == 0) return null;
-
-			if (RandomAvatars.Count == 1)
-			{
-				if (RandomAvatars[0].RaceName != raceName) return null;
-				return RandomAvatars[0];
-			}
-
-			int total = 0;
-
-			// find the total number of chances.
-			foreach (RandomAvatar ra in RandomAvatars)
-			{
-				total += ra.RaceName == raceName ? ra.Chance : 0;
-			}
-
-			foreach (RandomAvatar ra in RandomAvatars)
-			{
-				int rval = UnityEngine.Random.Range(0, total);
-
-				if (rval < ra.Chance && ra.RaceName == raceName)
-				{
-					return ra;
-				}
-			}
-			return RandomAvatars[RandomAvatars.Count - 1].RaceName == raceName ? RandomAvatars[RandomAvatars.Count - 1] : null;
-		}
-	}
+        /// <summary>Select a positive-weight definition, optionally restricted to one race.</summary>
+        public RandomAvatar GetRandomAvatar(string raceName)
+        {
+            if (RandomAvatars == null) return null;
+            double total = 0;
+            foreach (var avatar in RandomAvatars)
+                if (avatar != null && avatar.Chance > 0 && (raceName == null || avatar.RaceName == raceName))
+                    total += avatar.Chance;
+            if (total <= 0) return null;
+            double roll = UnityEngine.Random.value * total;
+            RandomAvatar last = null;
+            foreach (var avatar in RandomAvatars)
+            {
+                if (avatar == null || avatar.Chance <= 0 || (raceName != null && avatar.RaceName != raceName)) continue;
+                last = avatar;
+                roll -= avatar.Chance;
+                if (roll < 0) return avatar;
+            }
+            return last;
+        }
+    }
 }

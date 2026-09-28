@@ -1,6 +1,6 @@
 # UMA — Unity Multipurpose Avatar
 
-UMA is an open-source character creation and customization system for Unity. It assembles optimized characters from reusable races, meshes, textures, materials, wardrobe recipes, DNA, and animation data.
+UMA 3.1f0 is an open-source character creation and customization system for Unity. It assembles optimized characters from reusable races, meshes, textures, materials, wardrobe recipes, DNA, and animation data.
 
 UMA can be used for player characters, crowds, character creators, modular NPCs, and runtime customization. Its authoring tools support artists and technical artists while its runtime systems handle mesh generation, texture compositing, wardrobe changes, DNA-driven shapes, LOD, and asset loading.
 

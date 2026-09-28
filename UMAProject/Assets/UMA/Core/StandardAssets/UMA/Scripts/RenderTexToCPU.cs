@@ -25,6 +25,15 @@ namespace UMA
         public Texture2D newTexture;
         public bool recreateMips;
         private bool sourceTextureReleased;
+        private readonly Action<Texture2D> sharedCompletion;
+        private Action sharedFinished;
+        private readonly UMAObjectId sourceId;
+        private AsyncGPUReadbackRequest readback;
+        private bool readbackRequested;
+        private readonly GeneratorRuntimeCompression qualityCompression;
+        private readonly FilterMode qualityFilter;
+        private readonly int qualityAnisotropy;
+        private readonly float qualityMipBias;
         public static int copiesEnqueued = 0;
         public static int copiesDequeued = 0;
         public static int unableToQueue = 0;
@@ -38,6 +47,7 @@ namespace UMA
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         public static void StaticInitializeOnLoad()
         {
+            CleanupPendingCopies();
             renderTexturesToCPU = new Dictionary<UMAObjectId, RenderTexToCPU>();
             renderTexturesToFree = new Dictionary<UMAObjectId, RenderTexture>();
             QueuedCopies = new Queue<RenderTexToCPU>();
@@ -53,13 +63,80 @@ namespace UMA
             renderTexturesCleanedMissed = 0;
         }
 
-        public RenderTexToCPU(RenderTexture texture, GeneratedMaterial generatedMaterial, string textureName, int textureIndex, UMAGeneratorBase basegen)
+        /// <summary>
+        /// Cancels retained asynchronous atlas-copy state and releases every
+        /// temporary texture it still owns. This is safe to call repeatedly at
+        /// editor play-mode boundaries.
+        /// </summary>
+        public static void CleanupPendingCopies()
+        {
+            var pendingCopies = new HashSet<RenderTexToCPU>();
+            if (renderTexturesToCPU != null)
+            {
+                foreach (RenderTexToCPU copy in renderTexturesToCPU.Values)
+                {
+                    if (copy != null)
+                    {
+                        pendingCopies.Add(copy);
+                    }
+                }
+            }
+            if (QueuedCopies != null)
+            {
+                foreach (RenderTexToCPU copy in QueuedCopies)
+                {
+                    if (copy != null)
+                    {
+                        pendingCopies.Add(copy);
+                    }
+                }
+            }
+
+            foreach (RenderTexToCPU copy in pendingCopies)
+            {
+                // Returning a temporary RT while the GPU still reads it permits
+                // its storage to be reused by an unrelated render operation.
+                if (copy.readbackRequested && !copy.readback.done) copy.readback.WaitForCompletion();
+                copy.DestroyNewTexture();
+                copy.ReleaseSourceTexture();
+            }
+
+            // A texture can be retained for release after its copy object has
+            // already left the queue. Release any such remainder explicitly.
+            if (renderTexturesToFree != null)
+            {
+                var remainingTextures =
+                    new List<RenderTexture>(renderTexturesToFree.Values);
+                for (int i = 0; i < remainingTextures.Count; i++)
+                {
+                    RenderTexture texture = remainingTextures[i];
+                    if (texture != null)
+                    {
+                        UMARenderTextureTracker.ReleaseTemporary(texture);
+                    }
+                }
+            }
+
+            renderTexturesToCPU?.Clear();
+            renderTexturesToFree?.Clear();
+            QueuedCopies?.Clear();
+        }
+
+        public RenderTexToCPU(RenderTexture texture, GeneratedMaterial generatedMaterial, string textureName, int textureIndex, UMAGeneratorBase basegen,
+            Action<Texture2D> sharedCompletion = null, Action sharedFinished = null)
         {
             this.texture = texture;
             this.generatedMaterial = generatedMaterial;
             this.textureName = textureName;
             this.textureIndex = textureIndex;
-            this.recreateMips = basegen.convertMipMaps;
+            this.recreateMips = basegen.qualityTextures.Mips(basegen.convertMipMaps);
+            qualityCompression = basegen.qualityTextures.EffectiveCompression(true, texture.format, texture.width, texture.height);
+            qualityFilter = texture.filterMode;
+            qualityAnisotropy = texture.anisoLevel;
+            qualityMipBias = texture.mipMapBias;
+            this.sharedCompletion = sharedCompletion;
+            this.sharedFinished = sharedFinished;
+            this.sourceId = texture.GetUmaObjectId();
             renderTexturesToCPU.Add(texture.GetUmaObjectId(), this);
         }
 
@@ -67,10 +144,11 @@ namespace UMA
         {
             try
             {
-                AsyncGPUReadback.Request(texture, 0, (AsyncGPUReadbackRequest asyncAction) =>
+                readback = AsyncGPUReadback.Request(texture, 0, (AsyncGPUReadbackRequest asyncAction) =>
                 {
                     QueueCopy(asyncAction);
                 });
+                readbackRequested = true;
             }
             catch
             {
@@ -92,7 +170,7 @@ namespace UMA
             renderTexturesToCPU.Remove(entityId);
 
             // if it's still valid, then create the texture and enqueue the apply method
-            if (generatedMaterial != null && generatedMaterial.material != null)
+            if (sharedCompletion != null || (generatedMaterial != null && generatedMaterial.material != null))
             {
                 try
                 {
@@ -120,7 +198,11 @@ namespace UMA
 
                     GraphicsFormat gf = GraphicsFormatUtility.GetGraphicsFormat(texture.format,false);
                     TextureFormat tf = GraphicsFormatUtility.GetTextureFormat(gf);
-                    newTexture = new Texture2D(texture.width, texture.height, tf, texture.mipmapCount > 0, true);
+                    newTexture = new Texture2D(texture.width, texture.height, tf, recreateMips, true);
+                    newTexture.filterMode = qualityFilter;
+                    newTexture.anisoLevel = qualityAnisotropy;
+                    newTexture.mipMapBias = qualityMipBias;
+                    newTexture.wrapMode = TextureWrapMode.Repeat;
 
                     newTexture.SetPixelData(asyncAction.GetData<byte>(), 0);
 #if UNITY_EDITOR
@@ -131,7 +213,8 @@ namespace UMA
                         return;
                     }
 #endif
-                    if (ApplyInline)
+                    var generator = UMAAssetIndexer.bareInstance != null ? UMAAssetIndexer.bareInstance.bareGenerator : null;
+                    if (ApplyInline || sharedCompletion != null && (generator == null || !generator.isActiveAndEnabled))
                     {
                         ApplyTexture();
                     }
@@ -197,6 +280,20 @@ namespace UMA
 
         private void ApplyTexture()
         {
+            if (sharedCompletion != null)
+            {
+                try
+                {
+                    newTexture.Apply(recreateMips);
+                    GeneratorTextureQuality.Compress(newTexture, qualityCompression);
+                    sharedCompletion(newTexture);
+                    newTexture = null; // ownership transferred to the atlas cache
+                    texturesUploaded++;
+                }
+                catch { errorUploads++; DestroyNewTexture(); }
+                finally { ReleaseSourceTexture(); }
+                return;
+            }
             if (generatedMaterial != null && generatedMaterial.material != null)
             {
                 try
@@ -207,9 +304,13 @@ namespace UMA
                         throw new InvalidOperationException("Asynchronous atlas copy target is no longer valid.");
                     }
 
-                    newTexture.Apply(texture.mipmapCount > 0);  
+                    newTexture.Apply(recreateMips);
+                    GeneratorTextureQuality.Compress(newTexture, qualityCompression);
                     generatedMaterial.material.SetTexture(textureName, newTexture);
                     generatedMaterial.resultingAtlasList[textureIndex] = newTexture;
+                    if (generatedMaterial.skinnedMeshRenderer != null &&
+                        generatedMaterial.skinnedMeshRenderer.TryGetComponent<UMAResourceLeaseOwner>(out var owner))
+                        owner.AdoptPrivateStaticResources(generatedMaterial);
                     renderTexturesCleanedApplied++;
                     texturesUploaded++;
                 }
@@ -250,6 +351,15 @@ namespace UMA
             }
 
             sourceTextureReleased = true;
+            if (sharedCompletion != null)
+            {
+                renderTexturesToCPU.Remove(sourceId);
+                renderTexturesToFree.Remove(sourceId);
+                texture = null; // the atlas owns the source, including failure fallback
+                var finished = sharedFinished; sharedFinished = null;
+                finished?.Invoke();
+                return;
+            }
             if (texture == null)
             {
                 return;

@@ -5,6 +5,9 @@ using UnityEngine;
 using System.Collections.Generic;
 using Unity.Profiling;
 using static UMA.DNAInstanceCollection;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace UMA
 {
@@ -21,7 +24,9 @@ namespace UMA
             new ProfilerMarker("UMA.Generator.MultiStep.CancelOrRestart");
 
 		[NonSerialized]
-		protected UMAData umaData;
+        protected UMAData umaData;
+        private int qualityBuildDepth;
+        public bool CanApplyQualitySettings => qualityBuildDepth == 0 && activeMultiStepGeneration == null;
 
         protected List<UMAData> umaDirtyList
 		{
@@ -31,6 +36,27 @@ namespace UMA
 			}
 		}
 
+#if UNITY_EDITOR
+        public void Start()
+        {
+            // Debug.Log(
+            //     $"Start called on Generator '{gameObject.name}' " +
+            //     $"[{gameObject.GetUmaObjectId()}]. DirtyList size is " +
+            //     $"{umaDirtyList.Count}",
+            //     gameObject);
+        }
+#endif
+        public void PlayModeExit()
+        {
+           // Debug.Log($"PlayModeExit called on Generator. DirtyList size is {umaDirtyList.Count}");
+            ClearAllPending();
+        }
+
+        public void ExitingEditMode()
+        {
+            Debug.Log($"ExitingEditMode called on Generator. DirtyList size is {umaDirtyList.Count}");
+            ClearAllPending();
+        }
 
         private LinkedList<UMAData> cleanUmas = new LinkedList<UMAData>();
 		private LinkedList<UMAData> dirtyUmas = new LinkedList<UMAData>();
@@ -56,6 +82,22 @@ namespace UMA
                 MaximumOverrunMilliseconds = maximumOverrunMilliseconds;
             }
         }
+
+#if UNITY_EDITOR
+    private void OnPlayModeStateChanged(PlayModeStateChange state)
+    {
+        switch (state)
+        {
+            case PlayModeStateChange.ExitingEditMode:
+                ExitingEditMode();
+                break;
+            case PlayModeStateChange.ExitingPlayMode:
+                PlayModeExit();
+                break;
+        }
+    }
+#endif
+
 
         public readonly struct MultiStepAtomicStepStatistic
         {
@@ -198,6 +240,9 @@ namespace UMA
 
 		[NonSerialized]
 		public long ElapsedTicks;
+
+        public UMAGenerationDiagnostics GenerationTimings { get; } = new UMAGenerationDiagnostics();
+        private UMAGenerationDiagnostics.YieldReason diagnosticYield;
 		[NonSerialized]
 		public long DnaChanged;
 		[NonSerialized]
@@ -473,6 +518,26 @@ namespace UMA
 
 		public override void Work()
 		{
+            long start = System.Diagnostics.Stopwatch.GetTimestamp();
+            GenerationTimings.BeginWork(start);
+            bool pending = !IsIdle() || activeMultiStepGeneration != null || RenderTexToCPU.PendingCopies() > 0;
+            diagnosticYield = UMAGenerationDiagnostics.YieldReason.Other;
+            try { WorkInternal(); }
+            finally
+            {
+                long end = System.Diagnostics.Stopwatch.GetTimestamp();
+                if (pending) GenerationTimings.Record(UMAGenerationDiagnostics.Stage.GeneratorWorkCall, end - start);
+                GenerationTimings.EndWork(end, !IsIdle() || activeMultiStepGeneration != null, diagnosticYield);
+            }
+        }
+
+        private void WorkInternal()
+		{
+            if (this is UMAGenerator qualityGenerator && !GeneratorQualityRuntime.ApplyPending(qualityGenerator) && activeMultiStepGeneration == null)
+            {
+                RenderTexToCPU.ApplyQueuedCopies(MaxQueuedConversionsPerFrame);
+                return;
+            }
 			RenderTexToCPU.ApplyInline = applyInline;
 
 			int configuredInterFrameDelay = Mathf.Max(0, InterFrameDelay);
@@ -485,6 +550,7 @@ namespace UMA
 			if (waitingForInterFrameDelay)
 			{
 				interFrameDelayRemaining--;
+				diagnosticYield = UMAGenerationDiagnostics.YieldReason.InterFrameDelay;
 			}
 
             // InterFrameDelay gates starting the next UMA. An active multi-step
@@ -510,6 +576,7 @@ namespace UMA
                 stopWatch.Reset();
 				stopWatch.Start();
 				int count = IterationCount;
+				diagnosticYield = UMAGenerationDiagnostics.YieldReason.IterationLimit;
 
 				// If processAllPending is set, process as many are in the queue right now.
 				// We get the count (and multiply by two for slow gen) in case bad events add more items to the queue.
@@ -534,6 +601,7 @@ namespace UMA
                             meshCombiner is IUMAMultiStepMeshCombiner &&
                             multiStepTimeSlice.IsExpired)
                         {
+                            diagnosticYield = UMAGenerationDiagnostics.YieldReason.Budget;
                             break;
                         }
 
@@ -547,6 +615,8 @@ namespace UMA
 
                         if (activeMultiStepGeneration != null)
                         {
+                            diagnosticYield = lastMultiStepStatus == UMAMeshCombineStatus.WaitingForAsync
+                                ? UMAGenerationDiagnostics.YieldReason.Async : UMAGenerationDiagnostics.YieldReason.Budget;
                             // WaitingForAsync always yields. InProgress yields
                             // only after the shared soft deadline is exhausted.
                             break;
@@ -554,10 +624,12 @@ namespace UMA
                         if (meshCombiner is IUMAMultiStepMeshCombiner &&
                             multiStepTimeSlice.IsExpired)
                         {
+                            diagnosticYield = UMAGenerationDiagnostics.YieldReason.Budget;
                             break;
                         }
 						if (configuredInterFrameDelay > 0)
 						{
+							diagnosticYield = UMAGenerationDiagnostics.YieldReason.InterFrameDelay;
 							interFrameDelayRemaining = configuredInterFrameDelay;
 							break;
 						}
@@ -597,6 +669,8 @@ namespace UMA
         /// </summary>
         public void ResetStatistics()
         {
+            BoneCleanupRuns = BoneCleanupRemoved = 0;
+            BoneCleanupLastMilliseconds = BoneCleanupTotalMilliseconds = 0;
             ElapsedTicks = 0;
             DnaChanged = 0;
             TextureChanged = 0;
@@ -607,6 +681,7 @@ namespace UMA
             BegunEventsTicks = 0;
             preapplyTicks = 0;
             textureprocessingTicks = 0;
+            atlasPreparationTicks = atlasLookupTicks = atlasGenerationTicks = atlasEarlyHits = 0;
             meshUpdatesTicks = 0;
             skeletonUpdatesTicks = 0;
             raceblendshapesTicks = 0;
@@ -659,11 +734,11 @@ namespace UMA
 
 		public void SaveMountedItems(UMAData umaData)
         {
-			if (!SaveAndRestoreIgnoredItems)
+			if (!SaveAndRestoreIgnoredItems && !CleanupUnusedBones)
             {
                 return;
             }
-			umaData.SaveMountedItems();
+			umaData.SaveMountedItems(this);
         }
 
          private void CacheDefaultOverlayMaterial(UMAData data)
@@ -690,6 +765,22 @@ namespace UMA
             }
 
         public bool GenerateTexturesOnly(UMAData data, bool fireEvents)
+        {
+            var generator = this as UMAGenerator;
+            GeneratorQualityRuntime.ApplyPending(generator);
+            qualityBuildDepth++;
+            try
+            {
+                GeneratorQualityRuntime.BeforeBuild(generator, data);
+                // An output-quality change can change atlas layout and mesh UVs together.
+                if (data != null && data.qualityNeedsFullBuild)
+                    return GenerateSingleUMAWithQuality(data, fireEvents);
+                return GenerateTexturesOnlyWithQuality(data, fireEvents);
+            }
+            finally { qualityBuildDepth--; }
+        }
+
+        private bool GenerateTexturesOnlyWithQuality(UMAData data, bool fireEvents)
         {
             Debug.Log("GenerateTexturesOnly");
             if (data == null)
@@ -729,6 +820,7 @@ namespace UMA
             }
             else
             {
+                CompleteBoneCleanup(umaData);
                 umaData.Show();
             }
             FreezeTime = false;
@@ -739,6 +831,20 @@ namespace UMA
 #endif
 
         public bool GenerateSingleUMA(UMAData data, bool fireEvents)
+
+        {
+            var generator = this as UMAGenerator;
+            GeneratorQualityRuntime.ApplyPending(generator);
+            qualityBuildDepth++;
+            try
+            {
+                GeneratorQualityRuntime.BeforeBuild(generator, data);
+                return GenerateSingleUMAWithQuality(data, fireEvents);
+            }
+            finally { qualityBuildDepth--; }
+        }
+
+        private bool GenerateSingleUMAWithQuality(UMAData data, bool fireEvents)
 		{
 #if UMA_DEBUG
             if (!umaDatasGenerated.Contains(data))
@@ -757,6 +863,7 @@ namespace UMA
 
 			FreezeTime = true;
 			umaData = data;
+            data.BoneCleanupPending = false;
             CacheDefaultOverlayMaterial(umaData);
 
 
@@ -908,6 +1015,7 @@ namespace UMA
 
             // Apply manual renderer bounds if configured on RaceData
             ApplyManualRendererBounds(umaData, renderers);
+            GeneratorQualityRuntime.AfterBuild(this as UMAGenerator, umaData);
 
             
             umaData.SetupEmbeddedPhysics();
@@ -925,6 +1033,7 @@ namespace UMA
             }
 			else
             {
+                CompleteBoneCleanup(umaData);
                 umaData.Show();
             }
 #if DEBUG_TIMING
@@ -1446,6 +1555,13 @@ namespace UMA
         /// </summary>
         private UMAMeshCombineStatus StartDirtyUpdate(UMAMeshCombineTimeSlice timeSlice)
         {
+            GenerationTimings.BeginBuildSlice();
+            try { return StartDirtyUpdateCore(timeSlice); }
+            finally { GenerationTimings.EndBuildSlice(activeMultiStepGeneration != null); }
+        }
+
+        private UMAMeshCombineStatus StartDirtyUpdateCore(UMAMeshCombineTimeSlice timeSlice)
+        {
             if (umaDirtyList.Count < 1)
             {
                 return UMAMeshCombineStatus.Completed;
@@ -1520,6 +1636,13 @@ namespace UMA
         /// post-mesh generation only after the operation completes.
         /// </summary>
         private UMAMeshCombineStatus ContinueDirtyUpdate(UMAMeshCombineTimeSlice timeSlice)
+        {
+            GenerationTimings.BeginBuildSlice();
+            try { return ContinueDirtyUpdateCore(timeSlice); }
+            finally { GenerationTimings.EndBuildSlice(activeMultiStepGeneration != null); }
+        }
+
+        private UMAMeshCombineStatus ContinueDirtyUpdateCore(UMAMeshCombineTimeSlice timeSlice)
         {
             MultiStepGenerationState state = activeMultiStepGeneration;
             if (state == null)
@@ -1799,6 +1922,7 @@ namespace UMA
             meshUpdatesTicks += state.MeshStepTicks;
             state.Data.isAtlasDirty = false;
             state.Data.isMeshDirty = false;
+            state.Data.BoneCleanupPending = true;
             SlotsChanged++;
             forceGarbageCollect++;
             state.MeshCompletionAccounted = true;
@@ -1854,6 +1978,8 @@ namespace UMA
 
             FreezeTime = true;
             umaData = data;
+            data.BoneCleanupPending = false;
+            GeneratorQualityRuntime.BeforeBuild(this as UMAGenerator, data);
             var stageStopwatch = System.Diagnostics.Stopwatch.StartNew();
             try
             {
@@ -2032,6 +2158,7 @@ namespace UMA
                 }
 
                 ApplyManualRendererBounds(data, renderers);
+                GeneratorQualityRuntime.AfterBuild(this as UMAGenerator, data);
                 data.SetupEmbeddedPhysics();
                 raceblendshapesTicks += stageStopwatch.ElapsedTicks;
                 stageStopwatch.Restart();
@@ -2045,6 +2172,7 @@ namespace UMA
                 }
                 else
                 {
+                    CompleteBoneCleanup(data);
                     data.Show();
                 }
                 endEventsTicks += stageStopwatch.ElapsedTicks;
@@ -2228,6 +2356,7 @@ namespace UMA
 
         private void RestartDirtyUpdate(MultiStepGenerationState state)
         {
+            if (state.Data != null) state.Data.BoneCleanupPending = false;
             multiStepRestartCount++;
             AccountForDiscardedMultiStepMesh(state);
             activeMultiStepGeneration = null;
@@ -2265,6 +2394,7 @@ namespace UMA
         private void FinishDiscardedDirtyUpdate(
             MultiStepGenerationState state)
         {
+            if (state.Data != null) state.Data.BoneCleanupPending = false;
             multiStepCancellationCount++;
             AccountForDiscardedMultiStepMesh(state);
             activeMultiStepGeneration = null;
@@ -2296,6 +2426,7 @@ namespace UMA
             MultiStepGenerationState state = activeMultiStepGeneration;
             AccountForDiscardedMultiStepMesh(state);
             UMAData failedData = state?.Data;
+            if (failedData != null) failedData.BoneCleanupPending = false;
             try
             {
                 state?.MeshOperation?.Cancel();
@@ -2331,6 +2462,7 @@ namespace UMA
             }
 
             multiStepCancellationCount++;
+            if (state.Data != null) state.Data.BoneCleanupPending = false;
             AccountForDiscardedMultiStepMesh(state);
             activeMultiStepGeneration = null;
             try
@@ -2350,13 +2482,19 @@ namespace UMA
             RestoreMultiStepRenderTexture(state);
             FreezeTime = false;
 
-            if (umaDirtyList.Count > 0 && umaDirtyList[0] == state.Data)
+            List<UMAData> existingDirtyList =
+                UMAAssetIndexer.bareInstance != null
+                    ? UMAAssetIndexer.bareInstance.dirtyList
+                    : null;
+            if (existingDirtyList != null &&
+                existingDirtyList.Count > 0 &&
+                existingDirtyList[0] == state.Data)
             {
-                umaDirtyList.RemoveAt(0);
+                existingDirtyList.RemoveAt(0);
             }
-            else
+            else if (existingDirtyList != null)
             {
-                umaDirtyList.Remove(state.Data);
+                existingDirtyList.Remove(state.Data);
             }
 
             if (moveToCleanList && state.Data != null)
@@ -2450,9 +2588,10 @@ namespace UMA
                 if (renderer != null &&
                     renderer.sharedMesh == mesh)
                 {
+                    if (UMAResourceLeaseOwner.ReleaseMesh(renderer)) mesh = null;
                     renderer.sharedMesh = null;
                 }
-                if (mesh != null)
+                if (mesh != null && !UMAGeneratedResourceCache.IsManagedResource(mesh))
                 {
                     UMAUtils.DestroySceneObject(mesh);
                 }
@@ -2574,6 +2713,7 @@ namespace UMA
 			if (meshCombiner != null)
 			{
 				meshCombiner.UpdateUMAMesh(updatedAtlas, umaData, atlasResolution);
+                umaData.BoneCleanupPending = true;
 			}
 			else
 			{
@@ -2613,9 +2753,15 @@ namespace UMA
         public void ClearAllPending()
         {
             CancelActiveDirtyUpdate(false);
-            umaDirtyList.Clear();
+            GenerationTimings.ClearPendingTracking();
+            // Teardown must not access UMAAssetIndexer.Instance: doing so can
+            // create a replacement internal generator while an old one is
+            // being destroyed at a play-mode boundary.
+            UMAAssetIndexer.bareInstance?.dirtyList.Clear();
             cleanUmas.Clear();
             dirtyUmas.Clear();
+            umaData = null;
+            FreezeTime = false;
         }
 
 
@@ -2691,14 +2837,38 @@ namespace UMA
 			}
 		}
 
+        protected virtual void OnEnable()
+        {
+#if UNITY_EDITOR
+            // EditorApplication is process-wide and survives fast play-mode
+            // transitions. Always remove before adding so a retained generator
+            // owns exactly one callback.
+            EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+            EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+#endif
+            // Enter Play Mode without a domain/scene reload reuses this
+            // component. Begin every enabled lifetime with an empty scheduler
+            // so requests from the previous play session cannot run again.
+            ClearAllPending();
+        }
+
         protected virtual void OnDisable()
         {
-            CancelActiveDirtyUpdate(false);
+            // Completed readbacks must not be stranded when the upload pump stops.
+            RenderTexToCPU.ApplyQueuedCopies(0);
+#if UNITY_EDITOR
+            EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+#endif
+            ClearAllPending();
         }
 
         protected virtual void OnDestroy()
         {
-            CancelActiveDirtyUpdate(false);
+            ClearAllPending();
+            GeneratorQualityRuntime.Forget(this as UMAGenerator);
+#if UNITY_EDITOR
+            EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+#endif
         }
 
 		public void Clear()
@@ -2726,11 +2896,23 @@ namespace UMA
 			return umaDirtyList.Count;
 		}
 
+        protected void CompleteBoneCleanup(UMAData data)
+        {
+            if (data == null || !data.BoneCleanupPending) return;
+            data.BoneCleanupPending = false;
+            if (CleanupUnusedBones && data.CleanupUnusedBones(this) > 0) UpdateAvatar(data);
+        }
+
 		public virtual void UMAReady(bool fireEvents = true)
 		{
 			if (umaData)
 			{
+				// All renderer work (including cache binding) has committed. No cleanup
+                // occurs on a cancelled/partial multi-step transaction.
+                CompleteBoneCleanup(umaData);
 				umaData.Show();
+                UMAResourceReuse.FinalizeSurfaces(umaData);
+                if (umaData is UMA.CharacterSystem.DynamicCharacterAvatar npc) npc.CaptureNPCBuild();
                 if (fireEvents)
                 {
                     umaData.FireUpdatedEvent(false);
@@ -2738,7 +2920,7 @@ namespace UMA
 
                 umaData.FireCharacterCompletedEvents(fireEvents);
 #if UNITY_EDITOR
-                if (umaData.skeleton.boneCount > 600)
+                if (umaData.skeleton != null && umaData.skeleton.boneCount > 600)
 				{
 					if (Debug.isDebugBuild)
                     {
@@ -2768,7 +2950,9 @@ namespace UMA
             }
 
             umaData.FirePreUpdateUMABody();
+            umaData.BoneCleanupPending = true;
 
+            umaData.RestoreBaseBoneDefinitions();
             umaData.ResetToTPoseAndApplyDNA();
 
             if (umaData.skeleton is UMAImprovedSkeleton)
@@ -2778,11 +2962,12 @@ namespace UMA
                 // rebuilds never enter this path and therefore leave the animated pose
                 // untouched.
                 umaData.RestoreRegisteredAnimatedBones();
+                UMABoneLifecycle.PreserveBaseBonesForBaking(umaData, this);
                 umaData.skeleton.EnsureBoneHierarchy();
             }
 
             // Only restore items if enabled, as this can be expensive
-            if (SaveAndRestoreIgnoredItems)
+            if (SaveAndRestoreIgnoredItems || CleanupUnusedBones)
             {
                 umaData.RestoreSavedItems();
             }

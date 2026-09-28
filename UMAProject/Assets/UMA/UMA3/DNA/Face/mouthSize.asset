@@ -36,7 +36,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
+        enabled: 1
         expanded: 1
+        selected: 0
+        showHelp: 0
         EffectName: LeftLipsAdjust
         BoneName: LeftLipsAdjust
         Translation: {x: 0.01, y: 0, z: 0}
@@ -51,7 +54,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
+        enabled: 1
         expanded: 1
+        selected: 0
+        showHelp: 0
         EffectName: RightLipsAdjust
         BoneName: RightLipsAdjust
         Translation: {x: -0.01, y: 0, z: 0}
@@ -66,7 +72,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
+        enabled: 1
         expanded: 1
+        selected: 0
+        showHelp: 0
         EffectName: LeftLipsSuperiorMiddleAdjust
         BoneName: LeftLipsSuperiorMiddleAdjust
         Translation: {x: 0.001, y: 0, z: 0}
@@ -81,7 +90,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
+        enabled: 1
         expanded: 1
+        selected: 0
+        showHelp: 0
         EffectName: RightLipsSuperiorMiddleAdjust
         BoneName: RightLipsSuperiorMiddleAdjust
         Translation: {x: -0.001, y: 0, z: 0}
@@ -96,7 +108,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
+        enabled: 1
         expanded: 1
+        selected: 0
+        showHelp: 0
         EffectName: LeftLipsInferiorAdjust
         BoneName: LeftLipsInferiorAdjust
         Translation: {x: 0.001, y: 0, z: 0}
@@ -111,7 +126,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
+        enabled: 1
         expanded: 1
+        selected: 0
+        showHelp: 0
         EffectName: RightLipsInferiorAdjust
         BoneName: RightLipsInferiorAdjust
         Translation: {x: -0.001, y: 0, z: 0}

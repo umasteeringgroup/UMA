@@ -130,6 +130,7 @@ namespace UMA
             {
                 RenderTexture texture = renderTextures[textureIndex];
                 if (texture == null || string.IsNullOrEmpty(texture.name) ||
+                    UMAGeneratedResourceCache.IsManagedResource(texture) ||
                     !texture.name.StartsWith(RenderTextureNamePrefix, StringComparison.Ordinal) ||
                     referencedTextureIds.Contains(texture.GetUmaObjectId()) ||
                     ReferenceEquals(RenderTexture.active, texture))

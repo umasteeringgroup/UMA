@@ -1,0 +1,81 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: ShortHairPart_CloseCut_HairGroom Soft Fringe
+  m_Shader: {fileID: 4800000, guid: c35c0b9b4f964e95ab0a0d423807adff, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords:
+  - _USEDEPTHMAP_ON
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: 3000
+  stringTagMap: {}
+  disabledShaderPasses:
+  - SHADOWCASTER
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _BaseMap:
+        m_Texture: {fileID: 2800000, guid: aa69c94769ffd014bb80d9280de95d36, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BumpMap:
+        m_Texture: {fileID: 2800000, guid: 4197960baab9d124a87fe7e8ad41f257, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DepthMap:
+        m_Texture: {fileID: 2800000, guid: aa69c94769ffd014bb80d9280de95d36, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _OcclusionMap:
+        m_Texture: {fileID: 2800000, guid: 7f7a8207bc128d148a84b1d9b3b9ddb5, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _AlphaDensity: 2.5
+    - _AlphaToCoverage: 0
+    - _AmbientStrength: 0.8
+    - _BumpScale: 0.3
+    - _ClumpVariation: 0.07
+    - _ColorPower: 0.9
+    - _Coverage: 1
+    - _Cutoff: 0.45
+    - _DebugView: 0
+    - _DepthInfluence: 0.4
+    - _DiffuseWrap: 0.35
+    - _DitheredOpacity: 0
+    - _OcclusionStrength: 0.4
+    - _RootFade: 0.45
+    - _SecondaryShift: 0.2
+    - _SecondarySmoothness: 0.2
+    - _SecondaryStrength: 0.04
+    - _ShadowCutoff: 0.4
+    - _Smoothness: 0.4
+    - _SpecularShift: -0.1
+    - _SpecularStrength: 0.12
+    - _StrandVariation: 0.15
+    - _TextureColor: 0
+    - _Transmission: 0.3
+    - _UseDepthMap: 1
+    - _VertexAlphaInfluence: 0
+    - _VertexColorInfluence: 0
+    m_Colors:
+    - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
+    - _RootColor: {r: 0.1, g: 0.046, b: 0.014, a: 1}
+    - _SecondaryColor: {r: 0.65, g: 0.28, b: 0.06, a: 1}
+    - _SpecularColor: {r: 1, g: 0.87, b: 0.64, a: 1}
+    - _TipColor: {r: 0.48, g: 0.25, b: 0.055, a: 1}
+    - _TransmissionColor: {r: 1, g: 0.55, b: 0.15, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

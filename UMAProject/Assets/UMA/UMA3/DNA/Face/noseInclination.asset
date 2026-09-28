@@ -31,7 +31,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
+        enabled: 1
         expanded: 1
+        selected: 0
+        showHelp: 0
         EffectName: NoseBaseAdjust
         BoneName: NoseBaseAdjust
         boneHash: 3609600096

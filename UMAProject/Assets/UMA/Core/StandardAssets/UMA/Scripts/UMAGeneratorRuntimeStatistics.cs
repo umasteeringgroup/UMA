@@ -316,27 +316,30 @@ namespace UMA
 
         private bool ResolveCrowdGenerator()
         {
-            if (CrowdGenerator != null &&
-                CrowdGenerator.mode == UMARandomAvatarV2.Mode.Generate)
+            if (CrowdGenerator != null && CrowdGenerator.UnifiedController != null)
             {
+                LegacyCrowdGenerator = CrowdGenerator.UnifiedController;
+                CrowdGenerator = null;
+            }
+            if (LegacyCrowdGenerator != null && LegacyCrowdGenerator.mode == UMARandomAvatar.Mode.Generate)
+            {
+                CrowdGenerator = null;
                 return true;
             }
-            CrowdGenerator = FindAnyObjectByType<UMARandomAvatarV2>(
-                FindObjectsInactive.Include);
-            if (CrowdGenerator != null &&
-                CrowdGenerator.mode == UMARandomAvatarV2.Mode.Generate)
-            {
-                return true;
-            }
-
+            LegacyCrowdGenerator = null;
+            foreach (var candidate in FindObjectsByType<UMARandomAvatar>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+                if (candidate.isActiveAndEnabled && candidate.mode == UMARandomAvatar.Mode.Generate && candidate.gameObject.scene == gameObject.scene)
+                {
+                    LegacyCrowdGenerator = candidate;
+                    CrowdGenerator = null;
+                    return true;
+                }
+            if (CrowdGenerator != null && CrowdGenerator.mode == UMARandomAvatarV2.Mode.Generate) return true;
             CrowdGenerator = null;
-            if (LegacyCrowdGenerator == null)
-            {
-                LegacyCrowdGenerator =
-                    FindAnyObjectByType<UMARandomAvatar>(
-                        FindObjectsInactive.Include);
-            }
-            return LegacyCrowdGenerator != null;
+            foreach (var candidate in FindObjectsByType<UMARandomAvatarV2>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+                if (candidate.isActiveAndEnabled && candidate.mode == UMARandomAvatarV2.Mode.Generate && candidate.gameObject.scene == gameObject.scene)
+                { CrowdGenerator = candidate; return true; }
+            return false;
         }
 
         private IEnumerator RestartCrowdGenerationRoutine()

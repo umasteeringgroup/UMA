@@ -351,6 +351,14 @@ namespace UMA.TexturePaint
             }
         }
 
+        [RuntimeInitializeOnLoadMethod(
+            RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStaticState()
+        {
+            extractionMaterial = null;
+            ClearCache();
+        }
+
         private static Material GetExtractionMaterial()
         {
             if (extractionMaterial != null) return extractionMaterial;

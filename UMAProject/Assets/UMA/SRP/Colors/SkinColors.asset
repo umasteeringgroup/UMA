@@ -39,9 +39,9 @@ MonoBehaviour:
           name: 
           Value: 0
         p10:
-          stringRepresentation: Color;#262626FF;_Base_Color
+          stringRepresentation: Color;#000000FF;_Base_Color
           name: _Base_Color
-          Value: {r: 0.1509434, g: 0.14995578, b: 0.1495194, a: 1}
+          Value: {r: 0, g: 0, b: 0, a: 1}
         p9:
           stringRepresentation: 
           name: 
@@ -106,9 +106,9 @@ MonoBehaviour:
           name: 
           Value: 0
         p10:
-          stringRepresentation: Color;#6A1C1400;_SubsurfaceColor
+          stringRepresentation: Color;#2F110E00;_SubsurfaceColor
           name: _SubsurfaceColor
-          Value: {r: 0.41509432, g: 0.110159434, b: 0.077014334, a: 0}
+          Value: {r: 0.18238991, g: 0.065072194, b: 0.05334042, a: 0}
         p9:
           stringRepresentation: 
           name: 
@@ -169,9 +169,9 @@ MonoBehaviour:
           Rotate: 0
           Scale: {x: 1, y: 1}
         p11:
-          stringRepresentation: Float;1.0000;_SSSBlend
+          stringRepresentation: Float;0.8500;_SSSBlend
           name: _SSSBlend
-          Value: 1
+          Value: 0.85
         p10:
           stringRepresentation: 
           name: 
@@ -302,8 +302,8 @@ MonoBehaviour:
     deleteThis: 0
     moveUpThis: 0
     moveDownThis: 0
-    colorsExpanded: 0
-    propertiesExpanded: 0
+    colorsExpanded: 1
+    propertiesExpanded: 1
     showSelected: 1
     isSelected: 0
     showDisplayColor: 1

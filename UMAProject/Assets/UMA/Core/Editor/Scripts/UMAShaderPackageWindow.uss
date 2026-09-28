@@ -1,0 +1,21 @@
+.shader-package-root { flex-grow: 1; }
+.package-browser { flex-grow: 1; }
+.package-search { flex-grow: 1; }
+.package-split { flex-grow: 1; }
+.package-list { min-width: 440px; }
+.package-table { flex-grow: 1; }
+.package-details { min-width: 260px; padding: 8px; }
+.package-status { padding: 6px; }
+.wrapped { white-space: normal; }
+.section-title { -unity-font-style: bold; font-size: 15px; margin-bottom: 6px; }
+.usage-check { align-self: center; }
+.usage-row, .asset-row, .dialog-actions { flex-direction: row; align-items: center; }
+.asset-row { flex-grow: 1; margin-top: 3px; margin-bottom: 3px; }
+.asset-row > .unity-object-field, .asset-row > .unity-text-field { flex-grow: 1; min-width: 80px; }
+.usage-row > .asset-row { min-width: 100px; }
+.slot-label { margin-left: 4px; margin-bottom: 8px; white-space: normal; }
+#usageTitle, #slotTitle, #mappingTitle { -unity-font-style: bold; margin-top: 12px; margin-bottom: 5px; }
+.replacement-body { flex-grow: 1; padding: 8px; }
+.mapping-row { margin-top: 5px; margin-bottom: 5px; padding: 5px; border-bottom-width: 1px; border-bottom-color: rgba(128, 128, 128, 0.4); }
+.dialog-actions { justify-content: flex-end; padding: 8px; }
+.dialog-actions > .unity-button { margin-left: 6px; }

@@ -3,8 +3,9 @@
 --- !u!1105 &110500000
 HumanTemplate:
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_Name: UMAFemaleTemplate
   m_BoneTemplate:
     Chest: Spine1

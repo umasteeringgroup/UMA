@@ -39,6 +39,7 @@ MonoBehaviour:
     showSelected: 1
     isSelected: 0
     showDisplayColor: 0
+    showSelectFromFoldout: 0
     displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Red Ink
     channelMask:
@@ -64,6 +65,7 @@ MonoBehaviour:
     showSelected: 1
     isSelected: 0
     showDisplayColor: 0
+    showSelectFromFoldout: 0
     displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Green Ink
     channelMask:
@@ -89,4 +91,5 @@ MonoBehaviour:
     showSelected: 1
     isSelected: 0
     showDisplayColor: 0
+    showSelectFromFoldout: 0
     displayColor: {r: 1, g: 1, b: 1, a: 1}

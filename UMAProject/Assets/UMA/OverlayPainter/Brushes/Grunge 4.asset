@@ -29,7 +29,10 @@ MonoBehaviour:
   randomSizeGrow: 1
   splatter: 0
   splatterDistance: 1
+  randomStrength: 0
   fade: 0
+  autoFade: 0
   taper: 0
+  autoTaper: 0
   fadeTaperLength: 0
   tags: 

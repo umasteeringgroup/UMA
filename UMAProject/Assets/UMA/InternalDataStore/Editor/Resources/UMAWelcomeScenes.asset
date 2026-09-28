@@ -68,7 +68,8 @@ MonoBehaviour:
       code.
   - sceneName: U3 How to Construct and Load a DCA from a Prefab
     shortName: How To Prefab
-    scenePath: Assets/UMA/SRP/Samples/Scenes/U3-How to Construct and load a DCA from a prefab.unity
+    scenePath: Assets/UMA/SRP/Samples/Scenes/U3-How to Construct and load a DCA from
+      a prefab.unity
     sceneTexture: {fileID: 2800000, guid: 1726355a56d028f4ea74e009dcbf805a, type: 3}
     sceneDescription: How-To sample shpwing how to create an UMA from a prefab that
       has already been configured.

@@ -5,8 +5,10 @@ namespace UMA
 {
 	public static class ListHelper<T>
 	{
+#pragma warning disable UDR0001 // Reflection cache holds no Unity objects; re-resolves lazily and is safe across domain reloads.
 		private static FieldInfo _listFieldInfo;
 		private static FieldInfo _sizeFieldInfo;
+#pragma warning restore UDR0001
 
 		private static FieldInfo ListFieldInfo
 		{

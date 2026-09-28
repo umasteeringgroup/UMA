@@ -200,7 +200,11 @@ namespace UMA
                 return;
             }
 
-            UMAAssetIndexer.Instance.ReleaseReference(race);
+            UMAAssetIndexer indexer = UMAAssetIndexer.Instance;
+            if (indexer != null)
+            {
+                indexer.ReleaseReference(race);
+            }
             List<DynamicCharacterAvatar> Avatars = GetSceneEditTimeAvatars();
 
             foreach (DynamicCharacterAvatar dca in Avatars)

@@ -16,6 +16,42 @@ namespace UMA
         // Hover header support
         private Text categoryHeaderText;
         private string categoryHeaderDefault;
+        private bool presetMode;
+        private UMAPreset preset;
+        private System.Action<UMAPreset> selectPreset;
+        private Sprite ownedPresetSprite;
+
+        public void SetupPreset(UMAPreset value, System.Action<UMAPreset> onSelected)
+        {
+            ReleasePresetSprite();
+            presetMode = true;
+            preset = value;
+            selectPreset = onSelected;
+            recipe = null;
+            itemSelector = null;
+            if (value != null && value.Icon != null)
+                ownedPresetSprite = Sprite.Create(value.Icon, new Rect(0, 0, value.Icon.width, value.Icon.height),
+                    new Vector2(.5f, .5f), 100, 0, SpriteMeshType.FullRect);
+            foreach (var image in GetComponentsInChildren<UnityEngine.UI.Image>(true))
+                if (image.name == "ItemImage")
+                {
+                    image.sprite = ownedPresetSprite;
+                    image.preserveAspect = true;
+                    image.enabled = true;
+                }
+            var label = GetComponentInChildren<UnityEngine.UI.Text>(true);
+            if (label != null) label.text = ownedPresetSprite != null || value == null ? "" : value.name;
+        }
+
+        private void ReleasePresetSprite()
+        {
+            if (ownedPresetSprite == null) return;
+            if (Application.isPlaying) Destroy(ownedPresetSprite);
+            else DestroyImmediate(ownedPresetSprite);
+            ownedPresetSprite = null;
+        }
+
+        private void OnDestroy() => ReleasePresetSprite();
 
 
         public void SetupClearbutton()
@@ -40,6 +76,10 @@ namespace UMA
 
         public void Setup(IItemSelector itemSelector, UMAWardrobeRecipe recipe, string category)
         {
+            ReleasePresetSprite();
+            presetMode = false;
+            preset = null;
+            selectPreset = null;
             bool imageSet = false;
   
             this.itemSelector = itemSelector;
@@ -88,6 +128,11 @@ namespace UMA
 
         public void ImageClicked()
         {
+            if (presetMode)
+            {
+                if (preset != null) selectPreset?.Invoke(preset);
+                return;
+            }
             if (recipe != null)
             {
                 itemSelector.SetItem(recipe);
@@ -112,6 +157,13 @@ namespace UMA
 
         public void OnPointerEnter(PointerEventData eventData)
         {
+            if (presetMode)
+            {
+                if (preset == null || categoryHeaderText == null) return;
+                categoryHeaderDefault = categoryHeaderText.text;
+                categoryHeaderText.text = preset.name;
+                return;
+            }
             if (recipe == null || categoryHeaderText == null)
                 return;
 

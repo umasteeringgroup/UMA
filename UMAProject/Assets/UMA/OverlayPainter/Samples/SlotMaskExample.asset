@@ -12,14 +12,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7d6b01ca862641f1ab1dccd0b963b24e, type: 3}
   m_Name: SlotMaskExample
   m_EditorClassIdentifier: UMA.TexturePaint.Runtime::UMA.TexturePaint.TexturePaintMaskPreset
-  masks:
-  - name: First Material Only
-    enabled: 1
-    kind: 1
-    operation: 0
-    grayscaleTexture: {fileID: 0}
-    surfaceIndex: 0
-    triangleIndices: []
-    uvIslandIndices: []
-    invert: 0
-    threshold: 0.001

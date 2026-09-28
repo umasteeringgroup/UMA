@@ -4,6 +4,9 @@ using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using UMA;
+#if UNITY_EDITOR
+using UnityEditor.IMGUI.Controls;
+#endif
 using UnityEngine;
 
 namespace UMA
@@ -379,6 +382,12 @@ namespace UMA
 
         public static AvatarDefinition FromCompressedStringV2(string compressed, char seperator = '\n')
         {
+            if (seperator == '\n')
+            {
+                seperator = compressed[0];
+            }
+
+
             char[] splitter = new char[1];
             AvatarDefinition adf = new AvatarDefinition();
             splitter[0] = seperator;

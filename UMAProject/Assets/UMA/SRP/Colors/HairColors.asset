@@ -2505,10 +2505,10 @@ MonoBehaviour:
     deleteThis: 0
     moveUpThis: 0
     moveDownThis: 0
-    colorsExpanded: 0
+    colorsExpanded: 1
     propertiesExpanded: 1
     showSelected: 1
     isSelected: 0
     showDisplayColor: 1
-    showSelectFromFoldout: 0
+    showSelectFromFoldout: 1
     displayColor: {r: 0.3584906, g: 0.10709622, b: 0.34810242, a: 1}

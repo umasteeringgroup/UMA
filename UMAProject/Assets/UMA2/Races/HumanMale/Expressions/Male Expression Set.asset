@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 225228a85d6ce40b8a39f95282f42f5d, type: 3}
   m_Name: Male Expression Set
   m_EditorClassIdentifier: 
+  UnmappedJawName: 
   posePairs:
   - primary: {fileID: 11400000, guid: 9d0473b9bf2038d44b277008edd1a468, type: 2}
     inverse: {fileID: 11400000, guid: 833e996074e737a47923ade9d040aed8, type: 2}

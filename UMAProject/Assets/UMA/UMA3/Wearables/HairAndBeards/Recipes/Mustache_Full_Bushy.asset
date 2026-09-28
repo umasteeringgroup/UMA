@@ -22,6 +22,13 @@ MonoBehaviour:
   - race: Human Male 3.0
     filename: Assets/UMA/UMA3/Wearables/Icons/Beard/Human Male 3.0/24_Mustache_Full_Bushy.png
     thumb: {fileID: 21300000, guid: 3c2e256a21761ed4092f8390fd4dd566, type: 3}
+  thumbnailFromTexture: 0
+  thumbnailRect:
+    serializedVersion: 2
+    x: 0.25
+    y: 0.25
+    width: 0.5
+    height: 0.5
   wardrobeSlot: Beard
   Appended: 0
   Hides: []

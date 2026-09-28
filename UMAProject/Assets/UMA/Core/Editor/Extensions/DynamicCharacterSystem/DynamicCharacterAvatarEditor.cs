@@ -12,7 +12,7 @@ using UMA;
 namespace UMA.CharacterSystem.Editors
 {
     [CustomEditor(typeof(DynamicCharacterAvatar), true)]
-    public class DynamicCharacterAvatarEditor : Editor
+    public partial class DynamicCharacterAvatarEditor : Editor
     {
         public static bool showHelp = false;
         public static bool showWardrobe = false;
@@ -57,12 +57,17 @@ namespace UMA.CharacterSystem.Editors
 
         private MeshModifier MeshModifier = null;
         private MeshModifier _manualMeshModifierToAdd = null;
+        private const string HairCardStageMenuPath = "UMA/Hair Cards/Open Hair Card Stage";
 
         protected DynamicCharacterAvatar thisDCA;
         protected RaceSetterPropertyDrawer _racePropDrawer = new RaceSetterPropertyDrawer();
         protected WardrobeRecipeListPropertyDrawer _wardrobePropDrawer = new WardrobeRecipeListPropertyDrawer();
         protected RaceAnimatorListPropertyDrawer _animatorPropDrawer = new RaceAnimatorListPropertyDrawer();
         SerializedProperty animationController;
+        private SerializedProperty reuseGeneratedMeshes;
+        private SerializedProperty reuseGeneratedTextures;
+        private static readonly GUIContent ReuseMeshesLabel = new GUIContent("Share generated meshes", "Opt-in NPC reuse. Identical geometry is built once; each character retains its own bones, pose and animation.");
+        private static readonly GUIContent ReuseTexturesLabel = new GUIContent("Share atlases / matching materials", "Texture sharing is independent of surface material parameters. Different parameters keep separate material instances.");
         protected Editor innerEditor;
 
         // Track any deferred OnEnable callback so it can be removed on cleanup
@@ -86,6 +91,8 @@ namespace UMA.CharacterSystem.Editors
 
         private void OnBeforeAssemblyReload()
         {
+            StopRandomizationPreviewCallbacks();
+            CancelPendingAvatarLoad();
             // Ensure events and temporary editors are cleaned up before reload
             try
             {
@@ -161,8 +168,9 @@ namespace UMA.CharacterSystem.Editors
                 return;
             }
 
-            innerEditor = (UMADataEditor)Editor.CreateEditor(thisDCA, typeof(UMADataEditor));
             _racePropDrawer.thisDCA = thisDCA;
+            reuseGeneratedMeshes = serializedObject.FindProperty("reuseGeneratedMeshes");
+            reuseGeneratedTextures = serializedObject.FindProperty("reuseGeneratedTextures");
             _wardrobePropDrawer.thisDCA = thisDCA;
             _animatorPropDrawer.thisDCA = thisDCA;
 
@@ -174,6 +182,10 @@ namespace UMA.CharacterSystem.Editors
 
         public void OnDisable()
         {
+            StopRandomizationPreviewCallbacks();
+            CancelPendingAvatarLoad();
+            _hasInspectorLayout = false;
+            _inspectorRepaintPending = false;
             AssemblyReloadEvents.beforeAssemblyReload -= OnBeforeAssemblyReload;
             EditorApplication.update -= DoInspectors;
             SceneView.duringSceneGui -= DoSceneGUI;
@@ -214,6 +226,10 @@ namespace UMA.CharacterSystem.Editors
 
         private void DoInspectors()
         {
+            if (target is DynamicCharacterAvatar avatar &&
+                (!_hasInspectorLayout || avatar.EditorAvatarDefinitionRevision != _layoutDefinitionRevision ||
+                 _layoutCacheRevision != AvatarInspectorCacheEpoch.Revision))
+                RequestInspectorRepaint();
             if (InspectMe.Count >0)
             {
                 for (int i =0; i < InspectMe.Count; i++)
@@ -267,6 +283,20 @@ namespace UMA.CharacterSystem.Editors
 
         public override void OnInspectorGUI()
         {
+            using var drawMarker = InspectorDrawMarker.Auto();
+            if (!PrepareInspectorFrame()) return;
+            int indent = EditorGUI.indentLevel;
+            bool enabled = GUI.enabled;
+            try { DrawInspectorContents(); }
+            finally
+            {
+                EditorGUI.indentLevel = indent;
+                GUI.enabled = enabled;
+            }
+        }
+
+        private void DrawInspectorContents()
+        {
             if (IsEditorBusy())
             {
                 EditorGUILayout.HelpBox("Compiling/Updating...", MessageType.Info);
@@ -283,21 +313,26 @@ namespace UMA.CharacterSystem.Editors
                 EditorGUILayout.HelpBox("DynamicCharacterAvatar is missing.", MessageType.Warning);
                 return;
             }
-            SerializedProperty userInfo = serializedObject.FindProperty("userInformation");
-            showHelp = EditorGUILayout.Toggle("Show Help", showHelp);
-            // Help BEFORE userInformation field
-            if (showHelp)
+            bool advancedView = inspectorView.DrawSelector();
+            if (advancedView)
             {
-                EditorGUILayout.HelpBox("User Information: This is a field for you to put any information you want to store with the character. It is not used by the system in any way.", MessageType.Info);
-            }
-            EditorGUI.BeginChangeCheck();
-            EditorGUILayout.PropertyField(userInfo);
-            if (EditorGUI.EndChangeCheck())
-            {
-                wasChanged = true;
+                SerializedProperty userInfo = serializedObject.FindProperty("userInformation");
+                showHelp = EditorGUILayout.Toggle("Show Help", showHelp);
+                // Help BEFORE userInformation field
+                if (showHelp)
+                {
+                    EditorGUILayout.HelpBox("User Information: This is a field for you to put any information you want to store with the character. It is not used by the system in any way.", MessageType.Info);
+                }
+                EditorGUI.BeginChangeCheck();
+                EditorGUILayout.PropertyField(userInfo);
+                if (EditorGUI.EndChangeCheck())
+                {
+                    wasChanged = true;
+                }
+
             }
 
-            if (Application.isPlaying)
+            if (Application.isPlaying && advancedView)
             {
                 BeginVerticalPadded();
                 EditorGUILayout.LabelField("Force Regenerate (Playtime)", EditorStyles.boldLabel);
@@ -331,48 +366,53 @@ namespace UMA.CharacterSystem.Editors
             // ************************************************************
             // Set the race
             // ************************************************************
-            SerializedProperty thisRaceSetter = serializedObject.FindProperty("activeRace");
-            Rect currentRect = EditorGUILayout.GetControlRect(false, _racePropDrawer.GetPropertyHeight(thisRaceSetter, GUIContent.none));
-            // Help BEFORE race drawer
-            if (showHelp)
+            using (inspectorView.Section("Character & race",
+                "Active Race chooses the character's base body, rig, DNA controls, compatible wardrobe, and default recipe. Race and Base Recipe inspect the source assets. DNA converters and BonePose tools are available in Advanced View. Changing the race can rebuild the avatar when Editor Time Generation is enabled.",
+                !advancedView))
             {
-                EditorGUILayout.HelpBox("Active Race: Sets the race of the character, which defines the base recipe to build the character, the available DNA, and the available wardrobe.", MessageType.Info);
-            }
-            EditorGUI.BeginChangeCheck();
-            InspectMe = _racePropDrawer.DoGUI(currentRect, thisRaceSetter, new GUIContent(thisRaceSetter.displayName));
-            if (EditorGUI.EndChangeCheck())
-            {
-                wasChanged = true;
-                bool okToProcess = true;
-                // check to see if we changed it while playing, and if so, don't do it again.
-                if (Application.isPlaying)
+                SerializedProperty thisRaceSetter = serializedObject.FindProperty("activeRace");
+                Rect currentRect = EditorGUILayout.GetControlRect(false, _racePropDrawer.GetPropertyHeight(thisRaceSetter, GUIContent.none));
+                // Help BEFORE race drawer
+                if (showHelp)
                 {
-                    if (thisDCA.activeRace.data != null)
+                    EditorGUILayout.HelpBox("Active Race: Sets the race of the character, which defines the base recipe to build the character, the available DNA, and the available wardrobe.", MessageType.Info);
+                }
+                EditorGUI.BeginChangeCheck();
+                InspectMe = _racePropDrawer.DoGUI(currentRect, thisRaceSetter, new GUIContent(thisRaceSetter.displayName), advancedView);
+                if (EditorGUI.EndChangeCheck())
+                {
+                    wasChanged = true;
+                    bool okToProcess = true;
+                    // check to see if we changed it while playing, and if so, don't do it again.
+                    if (Application.isPlaying)
                     {
-                        if (thisDCA.activeRace.data.raceName == (string)thisRaceSetter.FindPropertyRelative("name").stringValue)
+                        if (thisDCA.activeRace.data != null)
                         {
-                            okToProcess = false;
+                            if (thisDCA.activeRace.data.raceName == (string)thisRaceSetter.FindPropertyRelative("name").stringValue)
+                            {
+                                okToProcess = false;
+                            }
                         }
+                    }
+
+                    if (okToProcess && thisDCA.editorTimeGeneration)
+                    {
+                        thisDCA.ChangeRace((string)thisRaceSetter.FindPropertyRelative("name").stringValue, DynamicCharacterAvatar.ChangeRaceOptions.useDefaults, true);
+                        //Changing the race may cause umaRecipe, animationController to change so forcefully update these too
+                        //umaRecipe.objectReferenceValue = thisDCA.serializedRecipe;
+                        animationController.objectReferenceValue = thisDCA.animationController;
+                        serializedObject.ApplyModifiedProperties();
+                        GenerateSingleUMA(thisDCA.rebuildSkeleton);
                     }
                 }
 
-                if (okToProcess && thisDCA.editorTimeGeneration)
-                {
-                    thisDCA.ChangeRace((string)thisRaceSetter.FindPropertyRelative("name").stringValue, DynamicCharacterAvatar.ChangeRaceOptions.useDefaults, true);
-                    //Changing the race may cause umaRecipe, animationController to change so forcefully update these too
-                    //umaRecipe.objectReferenceValue = thisDCA.serializedRecipe;
-                    animationController.objectReferenceValue = thisDCA.animationController;
-                    serializedObject.ApplyModifiedProperties();
-                    GenerateSingleUMA(thisDCA.rebuildSkeleton);
-                }
+
             }
-
-
             //**************************************
             // Begin In-Editor customization
             //**************************************
-            showEditorCustomization = EditorGUILayout.Foldout(showEditorCustomization, new GUIContent("Customization", "Properties for customizing the look of the UMA"));
-            if (showEditorCustomization)
+            if (advancedView) showEditorCustomization = EditorGUILayout.Foldout(showEditorCustomization, new GUIContent("Customization", "Properties for customizing the look of the UMA"));
+            if (!advancedView || showEditorCustomization)
             {
                 if (ShowEditorCustomizationGUI())
                 {
@@ -385,6 +425,13 @@ namespace UMA.CharacterSystem.Editors
             // End In-Editor customization
             //********************************
 
+
+            if (!advancedView)
+            {
+                DrawStandardAvatarOptions();
+                if (serializedObject.hasModifiedProperties) serializedObject.ApplyModifiedProperties();
+                return;
+            }
 
             //the ChangeRaceOptions
             SerializedProperty defaultChangeRaceOptions = serializedObject.FindProperty("defaultChangeRaceOptions");
@@ -463,6 +510,7 @@ namespace UMA.CharacterSystem.Editors
             showUMAData = GUIHelper.FoldoutBar(showUMAData, "UMA Data");
             if (showUMAData)
             {
+                if (innerEditor == null) innerEditor = Editor.CreateEditor(thisDCA, typeof(UMADataEditor));
                 if (innerEditor != null)
                 {
                     innerEditor.OnInspectorGUI();
@@ -487,7 +535,7 @@ namespace UMA.CharacterSystem.Editors
 
 
 
-            if (wasChanged)
+            if (serializedObject.hasModifiedProperties)
             {
                 serializedObject.ApplyModifiedProperties();
             }
@@ -541,303 +589,285 @@ namespace UMA.CharacterSystem.Editors
         private bool ShowEditorCustomizationGUI()
         {
             bool wasChanged = false;
-            BeginVerticalPadded();
-            EditorGUILayout.BeginHorizontal();
-            _buildRig = GUILayout.Toggle(_buildRig, "Build Rig", "Button");
-            _buildTexture = GUILayout.Toggle(_buildTexture, "Build Texture", "Button");
-            _buildMesh = GUILayout.Toggle(_buildMesh, "Build Mesh", "Button");
-            if (GUILayout.Button("Generate UMA"))
+            bool standard = !inspectorView.Advanced;
+            using var customizationLayout = standard ? null : new GUIHelper.PaddedVerticalScope(10,
+                EditorGUIUtility.isProSkin ? new Color(1.3f, 1.4f, 1.5f) : new Color(0.75f, 0.875f, 1f));
+            using (inspectorView.Section("Generation & avatar definition",
+                "Save AvatarDef exports this avatar's current appearance definition. Regenerate Avatar rebuilds it from the current race, wardrobe, colors, and DNA. Editor Time Generation keeps the scene preview synchronized while editing; disable it when you want to make several changes before rebuilding manually.",
+                standard))
             {
-                UMAGenerator generator = UMAAssetIndexer.Instance.generator;
-                thisDCA.Dirty(_buildRig, _buildTexture, _buildMesh);
-                generator.GenerateSingleUMA(thisDCA, false, Application.isPlaying);
-            }
-            if (GUILayout.Button("Loop Build 10x"))
-            {
-                LoopBuild();
-            }
-            EditorGUILayout.EndHorizontal();
-            EditorGUILayout.BeginHorizontal();
-            if (GUILayout.Button("Save Preset"))
-            {
-                string fileName = EditorUtility.SaveFilePanel("Save Preset", "", "DCAPreset", "umapreset");
-                if (!string.IsNullOrEmpty(fileName))
+                if (!standard)
                 {
-                    try
+                    EditorGUILayout.BeginHorizontal();
+                    _buildRig = GUILayout.Toggle(_buildRig, "Build Rig", "Button");
+                    _buildTexture = GUILayout.Toggle(_buildTexture, "Build Texture", "Button");
+                    _buildMesh = GUILayout.Toggle(_buildMesh, "Build Mesh", "Button");
+                    if (GUILayout.Button("Generate UMA"))
                     {
-                        UMAPreset prs = new UMAPreset();
-                        prs.DefaultColors = thisDCA.characterColors;
-                        prs.PredefinedDNA = thisDCA.predefinedDNA;
-                        prs.DefaultWardrobe = thisDCA.preloadWardrobeRecipes;
-                        string presetstring = JsonUtility.ToJson(prs);
-                        System.IO.File.WriteAllText(fileName, presetstring);
+                        UMAGenerator generator = UMAAssetIndexer.Instance.generator;
+                        thisDCA.Dirty(_buildRig, _buildTexture, _buildMesh);
+                        generator.GenerateSingleUMA(thisDCA, false, Application.isPlaying);
                     }
-                    catch (Exception ex)
+                    if (GUILayout.Button("Loop Build 10x"))
                     {
-                        Debug.LogException(ex);
-                        EditorUtility.DisplayDialog("Error", "Error writing preset file: " + ex.Message, "OK");
+                        LoopBuild();
                     }
-                }
-            }
-            if (GUILayout.Button("Load Preset"))
-            {
-                string fileName = EditorUtility.OpenFilePanel("Load Preset", "", "umapreset");
-                if (!string.IsNullOrEmpty(fileName))
-                {
-                    try
+                    EditorGUILayout.EndHorizontal();
+                    EditorGUILayout.BeginHorizontal();
+                    if (GUILayout.Button("Save Preset"))
+                        UMA.Editors.UMAPresetEditorWindow.Open(thisDCA);
+                    if (GUILayout.Button("Load Preset"))
                     {
-                        string presetstring = System.IO.File.ReadAllText(fileName);
-                        thisDCA.InitializeFromPreset(presetstring);
-                        UpdateCharacter();
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.LogException(ex);
-                        EditorUtility.DisplayDialog("Error", "Error writing preset file: " + ex.Message, "OK");
-                    }
-                }
-            }
-            if (!EditorApplication.isPlayingOrWillChangePlaymode)
-            {
-                if (GUILayout.Button("Save AvatarDef"))
-                {
-                    string fileName = EditorUtility.SaveFilePanel("Save Avatar Definition File", "", "", "adf");
-                    if (!string.IsNullOrEmpty(fileName))
-                    {
-                        try
+                        string fileName = EditorUtility.OpenFilePanel("Load Preset", "", "umapreset");
+                        if (!string.IsNullOrEmpty(fileName))
                         {
-                            string charstr = thisDCA.GetAvatarDefinition(false, true).ToCompressedString("|");
-                            System.IO.File.WriteAllText(fileName, charstr);
-                        }
-                        catch (Exception ex)
-                        {
-                            Debug.LogException(ex);
-                            EditorUtility.DisplayDialog("Error", "Error writing avatar definition file: " + ex.Message, "OK");
+                            try
+                            {
+                                string presetstring = System.IO.File.ReadAllText(fileName);
+                                thisDCA.InitializeFromPreset(presetstring);
+                                UpdateCharacter();
+                            }
+                            catch (Exception ex)
+                            {
+                                Debug.LogException(ex);
+                                EditorUtility.DisplayDialog("Error", "Error writing preset file: " + ex.Message, "OK");
+                            }
                         }
                     }
                 }
-            }
-            EditorGUILayout.EndHorizontal();
-            if (GUILayout.Button("Regenerate Avatar"))
-            {
-                UpdateCharacter();
-            }
-
-
-            if (EditorApplication.isPlayingOrWillChangePlaymode)
-            {
-                EditorGUILayout.BeginHorizontal();
-                if (GUILayout.Button("Save Avatar Definition"))
+                if (standard) EditorGUILayout.BeginHorizontal();
+                if (!EditorApplication.isPlayingOrWillChangePlaymode)
                 {
-                    string fileName = EditorUtility.SaveFilePanel("Save Avatar Definition", "", "", "adf");
-                    if (!string.IsNullOrEmpty(fileName))
+                    if (GUILayout.Button("Save AvatarDef"))
                     {
-                        try
+                        string fileName = EditorUtility.SaveFilePanel("Save Avatar Definition File", "", "", "adf");
+                        if (!string.IsNullOrEmpty(fileName))
                         {
-                            AvatarDefinition adf = thisDCA.GetAvatarDefinition(false, true);
-                            string charstr = adf.ToCompressedString("|");
-                            System.IO.File.WriteAllText(fileName, charstr);
-                        }
-                        catch (Exception ex)
-                        {
-                            Debug.LogException(ex);
-                            EditorUtility.DisplayDialog("Error", "Error writing avatar definition file: " + ex.Message, "OK");
-                        }
-                    }
-                }
-                if (GUILayout.Button("Load Avatar Definition"))
-                {
-                    string fileName = EditorUtility.OpenFilePanel("Load Avatar Definition", "", "adf");
-                    if (!string.IsNullOrEmpty(fileName))
-                    {
-                        try
-                        {
-                            string presetstring = System.IO.File.ReadAllText(fileName);
-                            AvatarDefinition adf = AvatarDefinition.FromCompressedString(presetstring, '|');
-                            thisDCA.LoadAvatarDefinition(adf);
-                            thisDCA.BuildCharacter(false);
-                        }
-                        catch (Exception ex)
-                        {
-                            Debug.LogException(ex);
-                            EditorUtility.DisplayDialog("Error", "Error writing preset file: " + ex.Message, "OK");
+                            try
+                            {
+                                string charstr = thisDCA.GetAvatarDefinition(false, true).ToCompressedString("|");
+                                System.IO.File.WriteAllText(fileName, charstr);
+                            }
+                            catch (Exception ex)
+                            {
+                                Debug.LogException(ex);
+                                EditorUtility.DisplayDialog("Error", "Error writing avatar definition file: " + ex.Message, "OK");
+                            }
                         }
                     }
                 }
                 EditorGUILayout.EndHorizontal();
-            }
-            EditorGUI.BeginChangeCheck();
-            bool wasEnabled = GUI.enabled; //VES added
-            if (wasEnabled && thisDCA != null && PrefabStageUtility.GetPrefabStage(thisDCA.gameObject) != null)
-            { //VES added, checks if in prefab
-                GUI.enabled = false; //VES added (we don't want anyone generating the character in the patient prefabs as it breaks inheritance, and we setup patients via code)
-            }
-            if (showHelp)
-            {
-                EditorGUILayout.HelpBox("Editor Time Generation: When enabled, UMA builds are performed in the editor as you edit the avatar.", MessageType.Info);
-            }
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("editorTimeGeneration"));
-            GUI.enabled = wasEnabled; //VES added
-            if (EditorGUI.EndChangeCheck())
-            {
-                wasChanged = true;
-                serializedObject.ApplyModifiedProperties();
-                UpdateCharacter();
-            }
+                if (GUILayout.Button("Regenerate Avatar"))
+                {
+                    UpdateCharacter();
+                }
 
 
+                if (EditorApplication.isPlayingOrWillChangePlaymode)
+                {
+                    EditorGUILayout.BeginHorizontal();
+                    if (GUILayout.Button("Save Avatar Definition"))
+                    {
+                        string fileName = EditorUtility.SaveFilePanel("Save Avatar Definition", "", "", "adf");
+                        if (!string.IsNullOrEmpty(fileName))
+                        {
+                            try
+                            {
+                                AvatarDefinition adf = thisDCA.GetAvatarDefinition(false, true);
+                                string charstr = adf.ToCompressedString("|");
+                                System.IO.File.WriteAllText(fileName, charstr);
+                            }
+                            catch (Exception ex)
+                            {
+                                Debug.LogException(ex);
+                                EditorUtility.DisplayDialog("Error", "Error writing avatar definition file: " + ex.Message, "OK");
+                            }
+                        }
+                    }
+                    if (GUILayout.Button("Load Avatar Definition"))
+                    {
+                        bool queued = false;
+                        string fileName = EditorUtility.OpenFilePanel("Load Avatar Definition", "", "adf");
+                        if (!string.IsNullOrEmpty(fileName))
+                        {
+                            try
+                            {
+                                string presetstring = System.IO.File.ReadAllText(fileName);
+                                AvatarDefinition adf = AvatarDefinition.FromCompressedString(presetstring, '|');
+                                QueueAvatarDefinitionLoad(adf);
+                                queued = true;
+                            }
+                            catch (ExitGUIException) { throw; }
+                            catch (Exception ex)
+                            {
+                                Debug.LogException(ex);
+                                EditorUtility.DisplayDialog("Error", "Error loading avatar definition: " + ex.Message, "OK");
+                            }
+                        }
+                        // Outside the catch block: ExitGUIException is Unity control flow.
+                        if (queued) GUIUtility.ExitGUI();
+                    }
+                    EditorGUILayout.EndHorizontal();
+                }
+                EditorGUI.BeginChangeCheck();
+                bool wasEnabled = GUI.enabled; //VES added
+                if (wasEnabled && thisDCA != null && PrefabStageUtility.GetPrefabStage(thisDCA.gameObject) != null)
+                { //VES added, checks if in prefab
+                    GUI.enabled = false; //VES added (we don't want anyone generating the character in the patient prefabs as it breaks inheritance, and we setup patients via code)
+                }
+                if (showHelp)
+                {
+                    EditorGUILayout.HelpBox("Editor Time Generation: When enabled, UMA builds are performed in the editor as you edit the avatar.", MessageType.Info);
+                }
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("editorTimeGeneration"));
+                GUI.enabled = wasEnabled; //VES added
+                if (EditorGUI.EndChangeCheck())
+                {
+                    wasChanged = true;
+                    serializedObject.ApplyModifiedProperties();
+                    UpdateCharacter();
+                }
+
+
+            }
             //******************************************************************
             // Preload wardrobe
             //Other DCA propertyDrawers
             //in order for the "preloadWardrobeRecipes" prop to properly check if it can load the recipies it gets assigned to it
             //it needs to know that its part of this DCA
-            SerializedProperty thisPreloadWardrobeRecipes = serializedObject.FindProperty("preloadWardrobeRecipes");
-            Rect pwrCurrentRect = EditorGUILayout.GetControlRect(false, _wardrobePropDrawer.GetPropertyHeight(thisPreloadWardrobeRecipes, GUIContent.none));
-            if (showHelp)
+            if (!standard)
+            using (inspectorView.Section("Wardrobe",
+                "Default Wardrobe Recipes are equipped when the avatar is first built or when its defaults are restored. Each recipe occupies or appends to a race wardrobe region and may hide or suppress other content. Runtime wardrobe changes belong to the generated avatar instance and do not alter the recipe assets.",
+                standard))
             {
-                EditorGUILayout.HelpBox("Preload Wardrobe: Sets the default wardrobe recipes to use on the Avatar. This is useful when creating specific Avatar prefabs.", MessageType.Info);
-            }
-            _wardrobePropDrawer.OnGUI(pwrCurrentRect, thisPreloadWardrobeRecipes, new GUIContent(thisPreloadWardrobeRecipes.displayName));
-            if (_wardrobePropDrawer.changed)
-            {
-                serializedObject.ApplyModifiedProperties();
-                if (Application.isPlaying)
+                SerializedProperty thisPreloadWardrobeRecipes = serializedObject.FindProperty("preloadWardrobeRecipes");
+                Rect pwrCurrentRect = EditorGUILayout.GetControlRect(false, _wardrobePropDrawer.GetPropertyHeight(thisPreloadWardrobeRecipes, GUIContent.none));
+                if (showHelp)
                 {
-                    thisDCA.ClearSlots();
-                    thisDCA.LoadDefaultWardrobe();
-                    thisDCA.BuildCharacter(false);
+                    EditorGUILayout.HelpBox("Preload Wardrobe: Sets the default wardrobe recipes to use on the Avatar. This is useful when creating specific Avatar prefabs.", MessageType.Info);
                 }
-                else
+                _wardrobePropDrawer.OnGUI(pwrCurrentRect, thisPreloadWardrobeRecipes, new GUIContent(thisPreloadWardrobeRecipes.displayName));
+                if (_wardrobePropDrawer.changed)
                 {
-                    GenerateSingleUMA();
+                    serializedObject.ApplyModifiedProperties();
+                    if (Application.isPlaying)
+                    {
+                        thisDCA.ClearSlots();
+                        thisDCA.LoadDefaultWardrobe();
+                        thisDCA.BuildCharacter(false);
+                    }
+                    else
+                    {
+                        GenerateSingleUMA();
+                    }
                 }
             }
             // *********************************************************************************
             // 
             //NewCharacterColors
-            SerializedProperty characterColors = serializedObject.FindProperty("characterColors");
-            SerializedProperty newCharacterColors = characterColors.FindPropertyRelative("_colors");
-            GUILayout.BeginHorizontal();
-            //for ColorValues as OverlayColorDatas we need to outout something that looks like a list but actully uses a method to add/remove colors because we need the new OverlayColorData to have3 channels 
-            newCharacterColors.isExpanded = EditorGUILayout.Foldout(newCharacterColors.isExpanded, new GUIContent("Character Colors"));
-            GUILayout.EndHorizontal();
-            var n_origArraySize = newCharacterColors.arraySize;
-            var n_newArraySize = n_origArraySize;
-            if (newCharacterColors.isExpanded)
+            using (inspectorView.Section("Colors",
+                "Choose shared colors from the matching NameColors table, or DefaultColors when no matching table exists. Edit opens the full channel and shader-property editor. Advanced View also supports adding and removing shared colors.",
+                standard))
             {
-                GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
-
-                if (showHelp)
+                if (standard) DrawStandardColors();
+                else
                 {
-                    EditorGUILayout.HelpBox("Character Colors: This lets you set predefined colors to be used when building the Avatar. The colors will be assigned to the Shared Colors on the overlays as they are applied to the Avatar.", MessageType.Info);
-                }
-                n_newArraySize = DoColorsGUI(newCharacterColors, n_origArraySize);
-                GUIHelper.EndVerticalPadded(10);
-            }
+                    SerializedProperty characterColors = serializedObject.FindProperty("characterColors");
+                    SerializedProperty newCharacterColors = characterColors.FindPropertyRelative("_colors");
+                    GUILayout.BeginHorizontal();
+                    // Color entries use UMA's channel-aware add/remove workflow.
+                    newCharacterColors.isExpanded = EditorGUILayout.Foldout(newCharacterColors.isExpanded, new GUIContent("Character Colors"));
+                    GUILayout.EndHorizontal();
+                    var n_origArraySize = newCharacterColors.arraySize;
+                    var n_newArraySize = n_origArraySize;
+                    if (newCharacterColors.isExpanded)
+                    {
+                        using var colorsLayout = standard ? null : new GUIHelper.PaddedVerticalScope(10, new Color(0.75f, 0.875f, 1f));
 
+                        if (showHelp)
+                        {
+                            EditorGUILayout.HelpBox("Character Colors: This lets you set predefined colors to be used when building the Avatar. The colors will be assigned to the Shared Colors on the overlays as they are applied to the Avatar.", MessageType.Info);
+                        }
+                        n_newArraySize = DoColorsGUI(newCharacterColors, n_origArraySize);
+                    }
+
+                }
+            }
             //***********************************************************************************
             // Predefined DNA
             //***********************************************************************************/
 
             // Dropdown of the current DNA.
             // button to "add" it.
-            RaceData race = (thisDCA.activeRace != null) ? thisDCA.activeRace.data : null;
-            if (race != null && race.useNewDNA)
+            using (inspectorView.Section("Body shape & DNA",
+                "Live DNA exposes the active race's UMA 3 body and face controls and updates the generated character as values change. Predefined DNA is the legacy initial-value list used by older races. Values are stored on this avatar; the race's converters determine how each control changes bones, poses, or blendshapes.",
+                standard))
             {
-                showPrefinedDNA = EditorGUILayout.Foldout(showPrefinedDNA, "Live DNA");
-            }
-            else
-            {
-                showPrefinedDNA = EditorGUILayout.Foldout(showPrefinedDNA, "Predefined DNA");
-            }
-            if (showPrefinedDNA)
-            {
-                GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
-
-                if (race != null)
+                RaceData race = (thisDCA.activeRace != null) ? thisDCA.activeRace.data : null;
+                if (standard && race != null && !race.useNewDNA)
                 {
-                    if (race.useNewDNA)
-                    {
-                        // Warn if old predefined DNA is still present under the New DNA system
-                        if (thisDCA.predefinedDNA != null && thisDCA.predefinedDNA.Count > 0)
-                        {
-                            EditorGUILayout.HelpBox("Warning: Old predefined DNA found! This can cause errors!", MessageType.Warning);
-                            if (GUILayout.Button("Clear old Predefined DNA"))
-                            {
-                                thisDCA.predefinedDNA.Clear();
-                                serializedObject.Update();
-                                wasChanged = true;
-                            }
-                        }
-                        wasChanged = DoNewDNA(wasChanged);
-                    }
-                    else
-                    {
-                        wasChanged = ShowDNA(wasChanged);
-                    }
+                    EditorGUILayout.HelpBox("This character uses legacy DNA. Its controls remain available in Advanced View.", MessageType.Info);
+                    return wasChanged;
+                }
+                if (race != null && race.useNewDNA)
+                {
+                    showPrefinedDNA = EditorGUILayout.Foldout(showPrefinedDNA, "Live DNA");
                 }
                 else
                 {
-                    EditorGUILayout.HelpBox("No active race found.", MessageType.Warning);
+                    showPrefinedDNA = EditorGUILayout.Foldout(showPrefinedDNA, "Predefined DNA");
                 }
-                GUIHelper.EndVerticalPadded(10);
-            }
-            if (showHelp)
-            {
-                EditorGUILayout.HelpBox("Predefined DNA is loaded onto the character in the initial character build. Select the DNA in the dropdown, and add it to the list of DNA to load, then edit the values as needed.", MessageType.Info);
-            }
-            EndVerticalPadded();
+                if (showPrefinedDNA)
+                {
+                    using var dnaLayout = standard ? null : new GUIHelper.PaddedVerticalScope(10, new Color(0.75f, 0.875f, 1f));
 
+                    if (race != null)
+                    {
+                        if (race.useNewDNA)
+                        {
+                            // Warn if old predefined DNA is still present under the New DNA system
+                            if (thisDCA.predefinedDNA != null && thisDCA.predefinedDNA.Count > 0)
+                            {
+                                EditorGUILayout.HelpBox("Warning: Old predefined DNA found! This can cause errors!", MessageType.Warning);
+                                if (GUILayout.Button("Clear old Predefined DNA"))
+                                {
+                                    thisDCA.predefinedDNA.Clear();
+                                    serializedObject.Update();
+                                    wasChanged = true;
+                                }
+                            }
+                            wasChanged = DoNewDNA(wasChanged);
+                        }
+                        else
+                        {
+                            wasChanged = ShowDNA(wasChanged);
+                        }
+                    }
+                    else
+                    {
+                        EditorGUILayout.HelpBox("No active race found.", MessageType.Warning);
+                    }
+                }
+                if (showHelp)
+                {
+                    EditorGUILayout.HelpBox("Predefined DNA is loaded onto the character in the initial character build. Select the DNA in the dropdown, and add it to the list of DNA to load, then edit the values as needed.", MessageType.Info);
+                }
+            }
             return wasChanged;
         }
 
         // Rebuild caches if the collection or group contents changed
         private void EnsureDNACaches(DNACollection collection)
         {
-            if (collection == null)
-            {
-                _cachedDNACollectionRef = null;
-                _nameToGroupCache.Clear();
-                _nameToDnaCache.Clear();
-                _groupsSnapshot.Clear();
-                _groupDnaCounts.Clear();
-                _groupNamesCache = null;
-                return;
-            }
-
-            var groups = collection.DNAGroups;
-            if (_cachedDNACollectionRef != collection)
-            {
-                RebuildDNACaches(collection, groups);
-                return;
-            }
-
-            int count = groups != null ? groups.Count : 0;
-            if (_groupsSnapshot.Count != count)
-            {
-                RebuildDNACaches(collection, groups);
-                return;
-            }
-
-            for (int i = 0; i < count; i++)
-            {
-                var g = groups[i];
-                if (!ReferenceEquals(g, _groupsSnapshot[i]))
-                {
-                    RebuildDNACaches(collection, groups);
-                    return;
-                }
-                int dnaCount = (g != null && g.dnaList != null) ? g.dnaList.Count : 0;
-                if (_groupDnaCounts[i] != dnaCount)
-                {
-                    RebuildDNACaches(collection, groups);
-                    return;
-                }
-            }
+            bool newCollection = _cachedDNACollectionRef != collection;
+            if (!newCollection && Event.current != null && Event.current.type != EventType.Layout) return;
+            if (_dnaMetadataRefresh.ShouldRefresh(EditorApplication.timeSinceStartup, newCollection) &&
+                !DNAMetadataMatches(collection)) RebuildDNACaches(collection, collection?.DNAGroups);
         }
 
         private void RebuildDNACaches(DNACollection collection, List<DNAGroup> groups)
         {
+            CaptureDNAMetadata(groups);
             _cachedDNACollectionRef = collection;
             _nameToGroupCache.Clear();
             _nameToDnaCache.Clear();
@@ -889,7 +919,7 @@ namespace UMA.CharacterSystem.Editors
                 return wasChanged;
             }
 
-            fullRebuild = EditorGUILayout.Toggle("Force Full Rebuild", fullRebuild);
+            if (inspectorView.Advanced) fullRebuild = EditorGUILayout.Toggle("Force Full Rebuild", fullRebuild);
 
             // Initialize DNACollection if needed
             if (raceData.DNACollection == null)
@@ -903,36 +933,23 @@ namespace UMA.CharacterSystem.Editors
 
             // Keep caches in sync
             EnsureDNACaches(collection);
+            EnsureAssignedDNACache(umaData?.dnaInstanceCollection?.dnaInstances);
 
             // If a collection exists, let user tweak values live
             if (umaData != null && umaData.dnaInstanceCollection != null && umaData.dnaInstanceCollection.dnaInstances != null)
             {
                 // Ensure internal dictionary restored after domain reloads
-                umaData.dnaInstanceCollection.Initialize(collection);
+                if (_dnaDictionaryNeedsRefresh || umaData.dnaInstanceCollection.dnaCollection != collection)
+                {
+                    umaData.dnaInstanceCollection.Initialize(collection);
+                    _dnaDictionaryNeedsRefresh = false;
+                }
 
                 var instances = umaData.dnaInstanceCollection.dnaInstances;
 
                 // Group assigned instances using cached name->group
-                var grouped = new Dictionary<DNAGroup, List<(int index, DNAInstance inst)>>(1);
-                var unknown = new List<(int index, DNAInstance inst)>();
-                for (int i = 0; i < instances.Count; i++)
-                {
-                    var inst = instances[i];
-                    if (inst == null) continue;
-                    if (_nameToGroupCache.TryGetValue(inst.Name, out var grp))
-                    {
-                        if (!grouped.TryGetValue(grp, out var list))
-                        {
-                            list = new List<(int, DNAInstance)>(1);
-                            grouped[grp] = list;
-                        }
-                        list.Add((i, inst));
-                    }
-                    else
-                    {
-                        unknown.Add((i, inst));
-                    }
-                }
+                var grouped = _assignedDnaGroups;
+                var unknown = _unknownDna;
 
                 bool anyReset = false;
 #region DNA Header                
@@ -1081,7 +1098,6 @@ namespace UMA.CharacterSystem.Editors
                             {
                                 continue;
                             }
-                            Debug.Log($"Resetting DNA '{inst.Name}' from {inst.Value} to default value {defaultValue}");
                             if (!Mathf.Approximately(inst.Value, defaultValue))
                             {
                                 inst.Value = defaultValue;
@@ -1120,8 +1136,7 @@ namespace UMA.CharacterSystem.Editors
                 }
 
                 // Sort groups alphabetically by DNAArea
-                var groupedList = new List<KeyValuePair<DNAGroup, List<(int index, DNAInstance inst)>>>(grouped);
-                groupedList.Sort((a, b) => string.Compare(a.Key?.DNAArea, b.Key?.DNAArea, StringComparison.OrdinalIgnoreCase));
+                var groupedList = _sortedDnaGroups;
 
                 // Draw groups
                 for (int gi = 0; gi < groupedList.Count; gi++)
@@ -1147,16 +1162,15 @@ namespace UMA.CharacterSystem.Editors
                     }
                     if (!grp.editorFoldout) continue;
                     // Sort entries by name once before drawing
-                    entries.Sort((x, y) => string.Compare(x.inst?.Name, y.inst?.Name, StringComparison.OrdinalIgnoreCase));
 
-                    EditorGUI.indentLevel++;
+                    using var groupIndent = new EditorGUI.IndentLevelScope();
                     for (int ei = 0; ei < entries.Count; ei++)
                     {
                         int idx = entries[ei].index;
                         var inst = entries[ei].inst;
                         if (inst == null) continue;
 
-                        EditorGUILayout.BeginHorizontal();
+                        using var dnaRow = new EditorGUILayout.HorizontalScope();
                         bool newEnabled = EditorGUILayout.ToggleLeft(inst.Name, inst.enabled, GUILayout.Width(140));
                         float oldValue = inst.Value;
                         EditorGUI.BeginChangeCheck();
@@ -1240,14 +1254,12 @@ namespace UMA.CharacterSystem.Editors
                         {
                             // Remove this DNAInstance
                             Undo.RecordObject(umaData, "Remove DNA Instance");
-                            umaData.dnaInstanceCollection.dnaInstances.RemoveAt(idx);
+                            umaData.dnaInstanceCollection.dnaInstances.Remove(inst);
                             EditorUtility.SetDirty(umaData);
                             GenerateSingleUMA();
                             return true; // early exit after mutation to avoid index issues
                         }
 #endregion                        
-                        EditorGUILayout.EndHorizontal();
-
                         if (valueChanged)
                         {
                             // Get the DNA asset and its build type, then do a targeted build
@@ -1281,7 +1293,6 @@ namespace UMA.CharacterSystem.Editors
                             wasChanged = true;
                         }
                     }
-                    EditorGUI.indentLevel--;
                 }
 
                 // Unknown group (entries not mapped to any DNAGroup)
@@ -1290,15 +1301,14 @@ namespace UMA.CharacterSystem.Editors
                     _unknownAssignedGroupFoldout = EditorGUILayout.Foldout(_unknownAssignedGroupFoldout, "Unknown", true);
                     if (_unknownAssignedGroupFoldout)
                     {
-                        unknown.Sort((x, y) => string.Compare(x.inst?.Name, y.inst?.Name, StringComparison.OrdinalIgnoreCase));
-                        EditorGUI.indentLevel++;
+                        using var unknownIndent = new EditorGUI.IndentLevelScope();
                         for (int ui = 0; ui < unknown.Count; ui++)
                         {
                             int idx = unknown[ui].index;
                             var inst = unknown[ui].inst;
                             if (inst == null) continue;
 
-                            EditorGUILayout.BeginHorizontal();
+                            using var dnaRow = new EditorGUILayout.HorizontalScope();
                             bool newEnabled = EditorGUILayout.ToggleLeft(inst.Name, inst.enabled, GUILayout.Width(140));
                             float oldValue = inst.Value;
                             inst.Value = EditorGUILayout.Slider(inst.Value, 0f, 1f);
@@ -1337,13 +1347,11 @@ namespace UMA.CharacterSystem.Editors
                             {
                                 // Remove this DNAInstance
                                 Undo.RecordObject(umaData, "Remove DNA Instance");
-                                umaData.dnaInstanceCollection.dnaInstances.RemoveAt(idx);
+                                umaData.dnaInstanceCollection.dnaInstances.Remove(inst);
                                 EditorUtility.SetDirty(umaData);
                                 GenerateSingleUMA();
                                 return true; // early exit after mutation to avoid index issues
                             }
-                            EditorGUILayout.EndHorizontal();
-
                             if (!Mathf.Approximately(oldValue, inst.Value))
                             {
                                 //Undo.RecordObject(umaData, "Change DNA Value");
@@ -1360,7 +1368,6 @@ namespace UMA.CharacterSystem.Editors
                                 wasChanged = true;
                             }
                         }
-                        EditorGUI.indentLevel--;
                     }
                 }
 
@@ -1398,42 +1405,18 @@ namespace UMA.CharacterSystem.Editors
             }
 
             // Build set of currently assigned DNA to filter dropdown
-            HashSet<string> assigned = new HashSet<string>();
-            if (umaData != null && umaData.dnaInstanceCollection != null && umaData.dnaInstanceCollection.dnaInstances != null)
-            {
-                var instances2 = umaData.dnaInstanceCollection.dnaInstances;
-                for (int i = 0; i < instances2.Count; i++)
-                {
-                    var inst = instances2[i];
-                    if (inst != null && !string.IsNullOrEmpty(inst.Name)) assigned.Add(inst.Name);
-                }
-            }
+            var assigned = _assignedDnaNames;
+            var dnaNames = GetAvailableDNANames(selGroup);
 
-            // Build popup of DNA within selected group excluding already assigned
-            List<string> dnaNames = new List<string>(dnaList.Count);
-            for (int i = 0; i < dnaList.Count; i++)
-            {
-                var d = dnaList[i];
-                if (d != null && !assigned.Contains(d.name))
-                {
-                    dnaNames.Add(d.name);
-                }
-            }
-            // Sort for stable ordering
-            if (dnaNames.Count > 1)
-            {
-                dnaNames.Sort(StringComparer.OrdinalIgnoreCase);
-            }
-
-            if (dnaNames.Count == 0)
+            if (dnaNames.Length == 0)
             {
                 EditorGUILayout.HelpBox("All DNA in this group are already assigned.", MessageType.Info);
                 return wasChanged;
             }
-            if (_newDnaInGroupIndex < 0 || _newDnaInGroupIndex >= dnaNames.Count) _newDnaInGroupIndex = 0;
-            _newDnaInGroupIndex = EditorGUILayout.Popup("DNA", _newDnaInGroupIndex, dnaNames.ToArray());
+            if (_newDnaInGroupIndex < 0 || _newDnaInGroupIndex >= dnaNames.Length) _newDnaInGroupIndex = 0;
+            _newDnaInGroupIndex = EditorGUILayout.Popup("DNA", _newDnaInGroupIndex, dnaNames);
 
-            EditorGUILayout.BeginHorizontal();
+            using var addDnaRow = new EditorGUILayout.HorizontalScope();
             if (GUILayout.Button("Add DNA Instance"))
             {
                 if (umaData == null)
@@ -1542,8 +1525,6 @@ namespace UMA.CharacterSystem.Editors
                     wasChanged = true;
                 }
             }
-            EditorGUILayout.EndHorizontal();
-
             return wasChanged;
         }
 
@@ -1820,7 +1801,7 @@ namespace UMA.CharacterSystem.Editors
             {
                 EditorUtility.DisplayDialog(
                     "UMA Mesh Editors Are Unavailable in Prefab Mode",
-                    "The Face Editor and Vertex Editor work from a generated DynamicCharacterAvatar in an open scene. They cannot edit a DynamicCharacterAvatar while its prefab is open in Prefab Mode.\n\nExit Prefab Mode, then select a DynamicCharacterAvatar in the Scene Hierarchy and open this tool again.",
+                    "UMA mesh authoring tools work from a generated DynamicCharacterAvatar in an open scene. They cannot edit a DynamicCharacterAvatar while its prefab is open in Prefab Mode.\n\nExit Prefab Mode, then select a DynamicCharacterAvatar in the Scene Hierarchy and open this tool again.",
                     "OK");
             }
 
@@ -1843,6 +1824,31 @@ namespace UMA.CharacterSystem.Editors
                 {
                     thisDCA.GenerateNow();
                     UMA.TexturePaint.Editor.TexturePaintStageWindow.ShowStage(thisDCA);
+                }
+            }
+
+            EditorGUILayout.Space(8f);
+
+            GUILayout.Label("Hair Cards", EditorStyles.boldLabel);
+            EditorGUILayout.HelpBox("Create and groom game-ready hair cards directly on this generated character. Paint growth regions, place and comb guides, generate child cards, author LODs, and bake the result as Unity and UMA assets.", MessageType.None);
+            if (GUILayout.Button("Open Hair Card System"))
+            {
+                if (CanOpenMeshEditor())
+                {
+                    DynamicCharacterAvatar avatarToOpen = thisDCA;
+                    EditorApplication.delayCall += () =>
+                    {
+                        if (avatarToOpen == null) return;
+                        avatarToOpen.GenerateNow();
+                        Selection.activeObject = avatarToOpen;
+                        if (!EditorApplication.ExecuteMenuItem(HairCardStageMenuPath))
+                        {
+                            EditorUtility.DisplayDialog(
+                                "Hair Card System Unavailable",
+                                "The UMA Hair Cards editor module could not be found. Confirm that the HairCards assets are installed and compile without errors.",
+                                "OK");
+                        }
+                    };
                 }
             }
 
@@ -2334,6 +2340,25 @@ namespace UMA.CharacterSystem.Editors
         {
             EditorGUI.BeginChangeCheck();
             BeginVerticalPadded();
+
+            EditorGUILayout.LabelField("Cache and Reuse (NPCs)", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("inheritGeneratorQuality"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("inheritGeneratorReusePolicy"));
+            EditorGUILayout.PropertyField(reuseGeneratedMeshes, ReuseMeshesLabel);
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("useNPCBuilds"), new GUIContent("Use Completed NPC Builds"));
+            EditorGUILayout.PropertyField(reuseGeneratedTextures, ReuseTexturesLabel);
+            if (reuseGeneratedMeshes.boolValue || reuseGeneratedTextures.boolValue)
+            {
+                EditorGUILayout.HelpBox("Applies on the next build. Matching characters share immutable outputs, not skeletons or animation. Use MaterialPropertyBlock for per-character shading; make shared resources unique before direct editing. Disabling reuse does not detach existing outputs until rebuilt.", MessageType.Info);
+                if (thisDCA.umaData != null && !string.IsNullOrEmpty(thisDCA.umaData.resourceReuseStatus))
+                    EditorGUILayout.LabelField(thisDCA.umaData.resourceReuseStatus, EditorStyles.wordWrappedMiniLabel);
+                if (GUILayout.Button("Log Cache Diagnostics"))
+                {
+                    var cache = UMAGeneratedResourceCache.Shared;
+                    Debug.Log($"UMA reuse: {cache.EntryCount} entries, {cache.ReferenceCount} references, {cache.Hits} hits, {cache.Misses} misses, {cache.PendingJoins} pending joins, {cache.Publications} outputs built.\n{cache.DescribeEntries()}", thisDCA);
+                }
+            }
+            EditorGUILayout.Space();
 
             // Always Rebuild Skeleton
             if (showHelp)
@@ -2889,7 +2914,7 @@ namespace UMA.CharacterSystem.Editors
             {
                 return n_origArraySize;
             }
-            EditorGUI.BeginChangeCheck();
+            using var deferredColorApply = new OverlayColorDataPropertyDrawer.DeferredApplyScope(true);
             int n_newArraySize;
             var charcol = thisDCA.characterColors._colors;
             int baseColors =0;
@@ -2918,6 +2943,7 @@ namespace UMA.CharacterSystem.Editors
 
             currentcolorfilter = EditorGUILayout.Popup("Filter Colors", currentcolorfilter, colorfilters);
 
+            EditorGUI.BeginChangeCheck();
             n_newArraySize = EditorGUILayout.DelayedIntField(new GUIContent("Size"), n_origArraySize);
             EditorGUILayout.Space();
             EditorGUI.indentLevel++;
@@ -2951,7 +2977,7 @@ namespace UMA.CharacterSystem.Editors
                         continue;
                     }
 
-                    EditorGUILayout.PropertyField(newCharacterColors.GetArrayElementAtIndex(i));
+                    EditorGUILayout.PropertyField(currentColor);
                 }
             }
             EditorGUI.indentLevel--;

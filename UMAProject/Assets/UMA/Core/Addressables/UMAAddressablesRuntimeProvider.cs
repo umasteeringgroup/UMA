@@ -8,7 +8,9 @@ namespace UMA
 {
     public static class UMAAddressablesRuntimeProvider
     {
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        // The bridge clears its retained provider during SubsystemRegistration.
+        // Register afterward so callback order is deterministic.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         public static void Register()
         {
             UMAAddressablesRuntimeBridge.Current = new UMAAddressablesRuntimeBridge.Provider

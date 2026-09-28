@@ -168,6 +168,7 @@ namespace UMA
             {
                 return;
             }
+            if (UMAGeneratedResourceCache.IsManagedResource(tempTexture)) return;
 
             RenderTexture tempRenderTexture = tempTexture as RenderTexture;
             if (tempRenderTexture != null)
@@ -230,6 +231,10 @@ namespace UMA
             }
 
             var textureMerge = umaGenerator.textureMerge;
+            long lookupStart = System.Diagnostics.Stopwatch.GetTimestamp();
+            bool reuseTextures = UMAResourceReuse.TexturesEnabled(umaData);
+            bool earlyLookup = reuseTextures && UMAResourceReuse.CanUseEarlyAtlasLookup(textureMerge);
+            umaGenerator.atlasLookupTicks += System.Diagnostics.Stopwatch.GetTimestamp() - lookupStart;
             textureMerge.RefreshMaterials();
             if (textureMerge == null)
             {
@@ -242,15 +247,20 @@ namespace UMA
             RenderTexture pendingTemporaryTexture = null;
             RenderTexture pendingPersistentTexture = null;
             Texture2D pendingTexture2D = null;
+            UMAGeneratedResourceCache.Lease<UMACachedAtlas> pendingAtlasLease = null;
+            UMAAtlasBinding[] previousBindingsToRelease = null;
             try
             {
                 for (int atlasIndex = umaData.generatedMaterials.materials.Count - 1; atlasIndex >= 0; atlasIndex--)
                 {
                     var generatedMaterial = umaData.generatedMaterials.materials[atlasIndex];
                     if (generatedMaterial == null) { continue; }
+                    UMAResourceReuse.PrepareMaterialEdits(generatedMaterial);
 
                     // Prior result (for reuse)
                     var previousResults = generatedMaterial.resultingAtlasList;
+                    var previousBindings = generatedMaterial.cachedAtlasBindings;
+                    previousBindingsToRelease = previousBindings;
 
                     //Rendering Atlas
                     int moduleCount = 0;
@@ -264,15 +274,17 @@ namespace UMA
                             moduleCount = moduleCount + generatedMaterial.materialFragments[i].AdditionalOverlays.Length;
                         }
                     }
-                    textureMerge.EnsureCapacity(moduleCount);
+                    // Drawing materials are only needed on a cache miss.
 
                     var slotData = generatedMaterial.materialFragments[0].slotData;
                     var channels = slotData.material.channels;
-                    bool materialUseMipMap = slotData.material.generateMipMaps;
+                    bool materialUseMipMap = umaGenerator.qualityTextures.Mips(slotData.material.generateMipMaps);
 
                     // Each generated material owns its atlas array. Sharing this array between
                     // materials loses references to earlier atlases when the next material is built.
                     Texture[] resultingTextures = new Texture[channels.Length];
+                    generatedMaterial.resultingAtlasList = resultingTextures;
+                    generatedMaterial.cachedAtlasBindings = new UMAAtlasBinding[channels.Length];
 
                     for (int textureChannelNumber = channels.Length - 1; textureChannelNumber >= 0; textureChannelNumber--)
                     {
@@ -293,6 +305,7 @@ namespace UMA
 
                                     RenderTextureFormat channelTextureFormat = UMAMaterial.GetCompatibleChannelTextureFormat(channels[textureChannelNumber].textureFormat);
                                     bool CopyRTtoTex = SupportsRTToTexture2D && (umaGenerator.convertRenderTexture || channels[textureChannelNumber].ConvertRenderTexture);
+                                    bool convertedMipMaps = umaGenerator.qualityTextures.Mips(umaGenerator.convertMipMaps);
                                     if (CopyRTtoTex)
                                     {
                                         TextureFormat ignoredTextureFormat;
@@ -301,15 +314,6 @@ namespace UMA
                                             CopyRTtoTex = false;
                                         }
                                     }
-
-                                    textureMerge.Reset();
-                                    for (int i = 0; i < generatedMaterial.materialFragments.Count; i++)
-                                    {
-                                        textureMerge.SetupSlotAndOverlayStack(generatedMaterial, i, textureChannelNumber, umaData);
-                                    }
-
-                                    //last element for this textureType
-                                    moduleCount = 0;
 
                                     int width = Mathf.FloorToInt(generatedMaterial.cropResolution.x);
                                     int height = Mathf.FloorToInt(generatedMaterial.cropResolution.y);
@@ -328,19 +332,97 @@ namespace UMA
                                     {
                                         continue;
                                     }
+                                    umaGenerator.qualityTextures.LimitSize(ref ww, ref hh);
+                                    var compression = umaGenerator.qualityTextures.EffectiveCompression(CopyRTtoTex, channelTextureFormat, ww, hh);
 
+                                    Color backgroundColor = default;
+                                    UMAMaterial.ChannelType channelType = channels[textureChannelNumber].channelType;
+                                    bool attemptedLookup = false;
+                                    if (earlyLookup)
+                                    {
+                                        lookupStart = System.Diagnostics.Stopwatch.GetTimestamp();
+                                        try
+                                        {
+                                            if (UMAResourceReuse.TryDescribeAtlasInputs(umaData, textureMerge, generatedMaterial,
+                                                slotData.material, textureChannelNumber, umaGenerator, width, height, ww, hh,
+                                                channelTextureFormat, CopyRTtoTex, out var key))
+                                            {
+                                                attemptedLookup = true;
+                                                pendingAtlasLease = AcquireAtlas(key);
+                                                if (pendingAtlasLease.IsReady) umaGenerator.atlasEarlyHits++;
+                                            }
+                                        }
+                                        catch (NotSupportedException exception)
+                                        {
+                                            attemptedLookup = true;
+                                            umaData.resourceReuseStatus = "Atlas cache bypass: " + exception.Message;
+                                            UMAGeneratedResourceCache.Shared.RecordBypass<UMACachedAtlas>(exception.Message);
+                                        }
+                                        finally { umaGenerator.atlasLookupTicks += System.Diagnostics.Stopwatch.GetTimestamp() - lookupStart; }
+                                    }
+
+                                    if (pendingAtlasLease == null || !pendingAtlasLease.IsReady)
+                                    {
+                                        long preparationStart = System.Diagnostics.Stopwatch.GetTimestamp();
+                                        textureMerge.EnsureCapacity(moduleCount);
+                                        textureMerge.Reset();
+                                        for (int i = 0; i < generatedMaterial.materialFragments.Count; i++)
+                                            textureMerge.SetupSlotAndOverlayStack(generatedMaterial, i, textureChannelNumber, umaData);
+                                        backgroundColor = slotData.material.MaskWithCurrentColor &&
+                                            (channelType == UMAMaterial.ChannelType.DiffuseTexture || channelType == UMAMaterial.ChannelType.Texture)
+                                            ? slotData.material.maskMultiplier * textureMerge.camBackgroundColor : UMAMaterial.GetBackgroundColor(channelType);
+                                        umaGenerator.atlasPreparationTicks += System.Diagnostics.Stopwatch.GetTimestamp() - preparationStart;
+                                        if (reuseTextures && !attemptedLookup)
+                                        {
+                                            lookupStart = System.Diagnostics.Stopwatch.GetTimestamp();
+                                            try
+                                            {
+                                                var key = UMAResourceReuse.DescribeAtlas(umaData, textureMerge, slotData.material,
+                                                    textureChannelNumber, umaGenerator, width, height, ww, hh, channelTextureFormat, CopyRTtoTex, backgroundColor);
+                                                pendingAtlasLease = AcquireAtlas(key);
+                                            }
+                                            catch (NotSupportedException exception)
+                                            {
+                                                umaData.resourceReuseStatus = "Atlas cache bypass: " + exception.Message;
+                                                UMAGeneratedResourceCache.Shared.RecordBypass<UMACachedAtlas>(exception.Message);
+                                            }
+                                            finally { umaGenerator.atlasLookupTicks += System.Diagnostics.Stopwatch.GetTimestamp() - lookupStart; }
+                                        }
+                                    }
+
+                                    if (pendingAtlasLease != null && pendingAtlasLease.IsReady)
+                                    {
+                                        lookupStart = System.Diagnostics.Stopwatch.GetTimestamp();
+                                        Texture shared = pendingAtlasLease.Resource.Texture;
+                                        resultingTextures[textureChannelNumber] = shared;
+                                        // Sampling state is already part of the key and was set by
+                                        // the producer. Do not rewrite a shared texture on every hit.
+                                        if (!channels[textureChannelNumber].NonShaderTexture)
+                                            generatedMaterial.material.SetTexture(channels[textureChannelNumber].materialPropertyName, shared);
+                                        generatedMaterial.cachedAtlasBindings[textureChannelNumber] = new UMAAtlasBinding(pendingAtlasLease, generatedMaterial,
+                                            textureChannelNumber, channels[textureChannelNumber].NonShaderTexture ? null : channels[textureChannelNumber].materialPropertyName);
+                                        pendingAtlasLease = null;
+                                        ReleaseReplacedGeneratedTexture(previousResults, textureChannelNumber, shared);
+                                        umaData.resourceReuseStatus = "Reusing generated atlas";
+                                        umaGenerator.atlasLookupTicks += System.Diagnostics.Stopwatch.GetTimestamp() - lookupStart;
+                                        continue;
+                                    }
+
+                                    long generationStart = System.Diagnostics.Stopwatch.GetTimestamp();
+                                    try
+                                    {
                                     if (CopyRTtoTex)
                                     {
                                         // Temporary RT for drawing; will be released after copy
                                         destinationTexture = RenderTexture.GetTemporary(ww, hh, 0, channelTextureFormat, RenderTextureReadWrite.Linear);
                                         pendingTemporaryTexture = destinationTexture;
-                                        if (destinationTexture.useMipMap != umaGenerator.convertMipMaps)
+                                        if (destinationTexture.useMipMap != convertedMipMaps)
                                         {
                                             if (destinationTexture.IsCreated())
                                             {
                                                 destinationTexture.Release();
                                             }
-                                            destinationTexture.useMipMap = umaGenerator.convertMipMaps;
+                                            destinationTexture.useMipMap = convertedMipMaps;
                                             if (destinationTexture.IsCreated())
                                             {
                                                 destinationTexture.Create();
@@ -354,7 +436,7 @@ namespace UMA
                                             ? previousResults[textureChannelNumber] as RenderTexture
                                             : null;
 
-                                        if (prevTex != null &&
+                                        if (prevTex != null && !UMAGeneratedResourceCache.IsManagedResource(prevTex) &&
                                             prevTex.width == ww && prevTex.height == hh &&
                                             prevTex.format == channelTextureFormat &&
                                             prevTex.useMipMap == materialUseMipMap)
@@ -382,18 +464,6 @@ namespace UMA
                                     destinationTexture.filterMode = FilterMode.Point;
 
                                     //This draws all the rects
-                                    Color backgroundColor;
-                                    UMAMaterial.ChannelType channelType = channels[textureChannelNumber].channelType;
-
-                                    if (slotData.material.MaskWithCurrentColor && (channelType == UMAMaterial.ChannelType.DiffuseTexture || channelType == UMAMaterial.ChannelType.Texture))
-                                    {
-                                        backgroundColor = slotData.material.maskMultiplier * textureMerge.camBackgroundColor;
-                                    }
-                                    else
-                                    {
-                                        backgroundColor = UMAMaterial.GetBackgroundColor(channels[textureChannelNumber].channelType);
-                                    }
-
                                     RenderTexture.active = destinationTexture;
                                     textureMerge.DrawAllRects(destinationTexture, width, height, backgroundColor, umaGenerator.SharperFitTextures);
 
@@ -410,10 +480,30 @@ namespace UMA
                                         if (umaGenerator.useAsyncConversion)
                                         {
                                             // Let it have the RenderTexture now.
-                                            SetMaterialTexture(generatedMaterial, slotData, textureChannelNumber, destinationTexture);
+                                            SetMaterialTexture(generatedMaterial, slotData, textureChannelNumber, destinationTexture, umaGenerator);
                                             resultingTextures[textureChannelNumber] = destinationTexture;
                                             // Now asynchronously copy and reset it
-                                            RenderTexToCPU rt2cpu = new RenderTexToCPU(destinationTexture, generatedMaterial, channels[textureChannelNumber].materialPropertyName, textureChannelNumber, umaGenerator);
+                                            RenderTexToCPU rt2cpu;
+                                            if (pendingAtlasLease != null)
+                                            {
+                                                var atlas = ScriptableObject.CreateInstance<UMACachedAtlas>();
+                                                atlas.Initialize(destinationTexture, true);
+                                                atlas.ConversionPending = true;
+                                                pendingAtlasLease.Publish(atlas, destroy: UMACachedAtlas.DestroyAtlas);
+                                                pendingTemporaryTexture = null; // ownership transferred, including failure paths
+                                                var readbackHold = pendingAtlasLease.Retain();
+                                                generatedMaterial.cachedAtlasBindings[textureChannelNumber] = new UMAAtlasBinding(pendingAtlasLease,
+                                                    generatedMaterial, textureChannelNumber, channels[textureChannelNumber].NonShaderTexture ? null : channels[textureChannelNumber].materialPropertyName);
+                                                pendingAtlasLease = null;
+                                                try
+                                                {
+                                                    rt2cpu = new RenderTexToCPU(destinationTexture, generatedMaterial, channels[textureChannelNumber].materialPropertyName,
+                                                        textureChannelNumber, umaGenerator, atlas.CompleteConversion,
+                                                        () => { atlas.ConversionPending = false; readbackHold.Dispose(); });
+                                                }
+                                                catch { readbackHold.Dispose(); throw; }
+                                            }
+                                            else rt2cpu = new RenderTexToCPU(destinationTexture, generatedMaterial, channels[textureChannelNumber].materialPropertyName, textureChannelNumber, umaGenerator);
                                             pendingTemporaryTexture = null;
                                             rt2cpu.DoAsyncCopy();
                                         }
@@ -431,9 +521,9 @@ namespace UMA
                                                 ? previousResults[textureChannelNumber] as Texture2D
                                                 : null;
 
-                                            bool requiresMipChain = umaGenerator.convertMipMaps && (ww > 1 || hh > 1);
+                                            bool requiresMipChain = convertedMipMaps && (ww > 1 || hh > 1);
 
-                                            if (prevTex2D != null &&
+                                            if (prevTex2D != null && !UMAGeneratedResourceCache.IsManagedResource(prevTex2D) &&
                                                 prevTex2D.width == ww && prevTex2D.height == hh &&
                                                 prevTex2D.format == texFmt &&
                                                 (prevTex2D.mipmapCount > 1) == requiresMipChain)
@@ -442,25 +532,26 @@ namespace UMA
                                             }
                                             else
                                             {
-                                                tempTexture = new Texture2D(destinationTexture.width, destinationTexture.height, texFmt, umaGenerator.convertMipMaps, true);
+                                                tempTexture = new Texture2D(destinationTexture.width, destinationTexture.height, texFmt, convertedMipMaps, true);
                                                 pendingTexture2D = tempTexture;
                                             }
 
                                             bool usedGpuCopy = false;
-                                            if (SupportsRTToTexture2D)
+                                            if (SupportsRTToTexture2D && compression == GeneratorRuntimeCompression.Disabled)
                                             {
                                                 try
                                                 {
                                                     // Atlas drawing and post processing update mip 0. Generate the
                                                     // completed RT mip chain before copying it; otherwise lower mips
                                                     // can contain uninitialized (usually black) data.
-                                                    if (umaGenerator.convertMipMaps && destinationTexture.useMipMap && destinationTexture.mipmapCount > 1)
+                                                    if (convertedMipMaps && destinationTexture.useMipMap && destinationTexture.mipmapCount > 1)
                                                     {
                                                         if (RenderTexture.active == destinationTexture)
                                                         {
                                                             RenderTexture.active = null;
                                                         }
-                                                        destinationTexture.GenerateMips();
+                                                        if (!destinationTexture.autoGenerateMips)
+                                                            destinationTexture.GenerateMips();
                                                     }
 
                                                     Graphics.CopyTexture(destinationTexture, tempTexture);
@@ -475,25 +566,37 @@ namespace UMA
                                                 var asyncAction = AsyncGPUReadback.Request(destinationTexture, 0);
                                                 asyncAction.WaitForCompletion();
                                                 tempTexture.SetPixelData(asyncAction.GetData<byte>(), 0);
-                                                tempTexture.Apply(umaGenerator.convertMipMaps);
+                                                tempTexture.Apply(convertedMipMaps);
                                             }
 
                                             UMARenderTextureTracker.ReleaseTemporary(destinationTexture);
                                             pendingTemporaryTexture = null;
 
                                             resultingTextures[textureChannelNumber] = tempTexture as Texture;
-                                            SetMaterialTexture(generatedMaterial, slotData, textureChannelNumber, tempTexture);
+                                            GeneratorTextureQuality.Compress(tempTexture, compression);
+                                            SetMaterialTexture(generatedMaterial, slotData, textureChannelNumber, tempTexture, umaGenerator);
                                             pendingTexture2D = null;
                                         }
                                         #endregion
                                     }
                                     else
                                     {
-                                        SetMaterialTexture(generatedMaterial, slotData, textureChannelNumber, destinationTexture);
+                                        SetMaterialTexture(generatedMaterial, slotData, textureChannelNumber, destinationTexture, umaGenerator);
                                         resultingTextures[textureChannelNumber] = destinationTexture;
                                         pendingPersistentTexture = null;
                                     }
 
+                                    if (pendingAtlasLease != null)
+                                    {
+                                        var atlas = ScriptableObject.CreateInstance<UMACachedAtlas>();
+                                        atlas.Initialize(resultingTextures[textureChannelNumber], false);
+                                        pendingAtlasLease.Publish(atlas, destroy: UMACachedAtlas.DestroyAtlas);
+                                        generatedMaterial.cachedAtlasBindings[textureChannelNumber] = new UMAAtlasBinding(pendingAtlasLease, generatedMaterial,
+                                            textureChannelNumber, channels[textureChannelNumber].NonShaderTexture ? null : channels[textureChannelNumber].materialPropertyName);
+                                        pendingAtlasLease = null;
+                                    }
+                                    }
+                                    finally { umaGenerator.atlasGenerationTicks += System.Diagnostics.Stopwatch.GetTimestamp() - generationStart; }
                                     break;
                                 }
                             case UMAMaterial.ChannelType.MaterialColor:
@@ -588,10 +691,14 @@ namespace UMA
                         }
                     }
                     generatedMaterial.resultingAtlasList = resultingTextures;
+                    if (previousBindings != null) foreach (var binding in previousBindings) binding?.Dispose();
+                    previousBindingsToRelease = null;
                 }
             }
             finally
             {
+                pendingAtlasLease?.Dispose();
+                if (previousBindingsToRelease != null) foreach (var binding in previousBindingsToRelease) binding?.Dispose();
                 if (pendingTemporaryTexture != null)
                 {
                     UMARenderTextureTracker.ReleaseTemporary(pendingTemporaryTexture);
@@ -794,18 +901,30 @@ namespace UMA
             }
         }
 
-        private static void SetMaterialTexture(UMAData.GeneratedMaterial generatedMaterial, SlotData slotData, int textureType, Texture tempTexture)
+        private static void SetMaterialTexture(UMAData.GeneratedMaterial generatedMaterial, SlotData slotData, int textureType, Texture tempTexture, UMAGeneratorBase generator)
         {
             // Debug.Log($"Set Material Texture {tempTexture.name} on Material {generatedMaterial.material.name} for slot {slotData.asset.name} textureType {textureType}");
             tempTexture.wrapMode = TextureWrapMode.Repeat;
-            tempTexture.anisoLevel = slotData.material.AnisoLevel;
-            tempTexture.mipMapBias = slotData.material.MipMapBias;
-            tempTexture.filterMode = slotData.material.MatFilterMode;
+            generator.qualityTextures.ApplySampling(tempTexture, slotData.material);
 
             if (!slotData.material.channels[textureType].NonShaderTexture)
             {
                 generatedMaterial.material.SetTexture(slotData.material.channels[textureType].materialPropertyName, tempTexture);
             }
+        }
+
+        private static UMAGeneratedResourceCache.Lease<UMACachedAtlas> AcquireAtlas(UMAGeneratedResourceKey key)
+        {
+            var cache = UMAGeneratedResourceCache.Shared;
+            var lease = cache.Acquire<UMACachedAtlas>(key);
+            if (lease.IsReady && (lease.Resource.Texture == null ||
+                lease.Resource.Texture is RenderTexture rt && !rt.IsCreated()))
+            {
+                cache.Invalidate(key);
+                lease.Dispose();
+                lease = cache.Acquire<UMACachedAtlas>(key);
+            }
+            return lease;
         }
 
         private bool IsOpenGL()

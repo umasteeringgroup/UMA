@@ -17,25 +17,35 @@ namespace UMA.Examples
     [AddComponentMenu("UMA/Examples/Random Character Walker")]
     public sealed class RandomCharacterWalker : MonoBehaviour, IUMAShooterTarget
     {
+        public enum LocomotionSource
+        {
+            Auto,
+            RootMotion,
+            InPlace
+        }
+
         private enum Activity
         {
             Walking,
-            Paused
+            Paused,
+            Turning
         }
 
         private static readonly List<RandomCharacterWalker> Walkers = new();
 
         [Header("Movement")]
+        [Tooltip("Auto uses authored root translation when present. Choose Root Motion " +
+            "for slow/variable root-motion clips, or In Place for clips without travel.")]
+        public LocomotionSource locomotionSource = LocomotionSource.Auto;
         [FormerlySerializedAs("moveSpeed")]
         [Tooltip("Animator playback rate while walking. This scales both extracted " +
             "root motion and the in-place animation fallback speed.")]
-        [Min(0.05f)] public float animationPlaybackSpeed = 0.75f;
+        [Min(0.05f)] public float animationPlaybackSpeed = 1f;
         [Tooltip("Travel speed in meters per second at normal Animator playback when " +
             "the active locomotion clip contains no horizontal root motion.")]
         [Min(0f)] public float inPlaceMovementSpeed = 1.4f;
-        [Tooltip("Minimum horizontal root-motion speed, in meters per second, that is " +
-            "treated as intentional locomotion. Slower motion is usually in-place " +
-            "animation drift and uses In Place Movement Speed instead.")]
+        [Tooltip("Auto mode's minimum horizontal root-motion speed at NORMAL playback, " +
+            "in meters per second. Changing playback speed does not change this classification.")]
         [Min(0f)] public float minimumRootMotionSpeed = 0.25f;
         [Min(0.1f)] public float maximumSpawnDistance = 2.5f;
         [Min(1f)] public float turnSpeed = 150f;
@@ -47,8 +57,9 @@ namespace UMA.Examples
         [Range(0f, 30f)] public float headingNoise = 10f;
         [Min(0.01f)] public float headingNoiseFrequency = 0.18f;
         public Vector2 pauseInterval = new(4f, 10f);
-        public Vector2 pauseDuration = new(0.8f, 2.4f);
-        [Range(0f, 45f)] public float pauseLookVariation = 20f;
+        public Vector2 pauseDuration = new(0.5f, 3f);
+        // Retained for serialized sample compatibility; turning now happens after idle.
+        [HideInInspector] public float pauseLookVariation = 20f;
 
         [Header("Crowd Avoidance")]
         [Min(0.05f)] public float personalSpace = 0.55f;
@@ -61,13 +72,28 @@ namespace UMA.Examples
         public Vector2 bumpReactionCooldown = new(0.4f, 0.8f);
 
         [Header("Stall Recovery")]
+        [Tooltip("Seconds of walking progress to examine per blockage check.")]
         [Min(0.25f)] public float progressCheckInterval = 1f;
+        [Tooltip("Maximum distance considered stalled per check. The threshold is also " +
+            "limited by the requested travel, so intentionally slow walkers remain walking.")]
         [Min(0.001f)] public float minimumProgressDistance = 0.025f;
+        [Tooltip("Consecutive low-progress checks before idling and retrying locomotion.")]
         [Min(1)] public int stalledChecksBeforeRecovery = 2;
+        [Tooltip("Grace period when starting/restarting walking, before blockage is measured.")]
+        [Min(0f)] public float movementStartGraceTime = 0.35f;
+        [Tooltip("Seconds to remain idle when blocked during combat pursuit. Ordinary wandering uses Pause Duration.")]
+        [Min(0.1f)] public float blockedRetryInterval = 1f;
+        [Tooltip("Below this fraction of requested travel, a check counts as blocked.")]
+        [Range(0.01f, 0.9f)] public float blockedProgressRatio = 0.1f;
+        [Tooltip("Above this fraction, previous blocked checks are cleared. Keep above " +
+            "Blocked Progress Ratio to avoid idle/walk flicker.")]
+        [Range(0.02f, 1f)] public float resumedProgressRatio = 0.25f;
 
         [Header("Animation")]
         public string speedParameter = "Speed";
         public string directionParameter = "Direction";
+        [Tooltip("Value sent to the controller's Speed parameter while walking. This selects " +
+            "a state/blend; it is NOT meters per second or the animation playback rate.")]
         [Min(0f)] public float walkingAnimationSpeed = 0.45f;
         [Min(0f)] public float animationDamping = 0.12f;
         [Tooltip("Optional Animator trigger parameters used at random when pausing.")]
@@ -93,14 +119,22 @@ namespace UMA.Examples
         public int CurrentHealth => currentHealth;
         public Transform CurrentCombatTarget => combatTarget;
         public bool IsPursuingCombatTarget => isPursuingCombatTarget;
+        public bool IsMovementBlocked => movementBlocked;
 
         private Vector3 spawnPosition;
         private Vector3 desiredDirection;
+        private Vector3 resumeDirection;
+        private Vector3 obstacleNormal;
+        private float nextContactPause;
         private System.Random random;
         private Animator animator;
         private RuntimeAnimatorController observedController;
         private Rigidbody movementBody;
         private Vector3 requestedPhysicsVelocity;
+        private Vector3 progressRequestVelocity;
+        private Vector3 physicsSamplePosition;
+        private Vector3 physicsSampleVelocity;
+        private bool physicsSamplePending;
         private bool hasPhysicsLocomotionRequest;
         private AudioSource audioSource;
         private Activity activity;
@@ -114,7 +148,14 @@ namespace UMA.Examples
         private float nextBumpReaction;
         private float nextProgressCheck;
         private float noiseOffset;
-        private Vector3 progressSamplePosition;
+        private float returnStartFraction;
+        private Vector3 boundedLocomotionRequest;
+        private float requestedProgressDistance;
+        private float actualProgressDistance;
+        private float movementGraceUntil;
+        private float blockedRetryAt;
+        private bool walkingRequested;
+        private bool movementBlocked;
         private int stalledCheckCount;
         private bool returningHome;
         private bool hasSpeedParameter;
@@ -147,11 +188,19 @@ namespace UMA.Examples
             {
                 Walkers.Add(this);
             }
+            if (initialized)
+            {
+                RefreshMovementBody();
+                walkingRequested = false;
+                ResetMovementProgress(Time.time);
+            }
         }
 
         private void OnDisable()
         {
             Walkers.Remove(this);
+            walkingRequested = false;
+            ResetMovementProgress(Time.time);
             StopPhysicsLocomotion();
         }
 
@@ -164,8 +213,10 @@ namespace UMA.Examples
         {
             EnsureRagdollSubscription();
             spawnPosition = transform.position;
-            random = new System.Random(CreateStableSeed(gameObject.name, spawnPosition));
+            // Clones can share both name and spawn position. Each needs its own sequence.
+            random = new System.Random(Guid.NewGuid().GetHashCode());
             noiseOffset = Range(0f, 1000f);
+            returnStartFraction = Range(0.7f, 0.9f);
 
             Vector3 initialForward = Flatten(transform.forward);
             desiredDirection = initialForward.sqrMagnitude > 0.001f
@@ -176,10 +227,9 @@ namespace UMA.Examples
             nextHeadingChange = now + Range(headingChangeInterval);
             nextPause = now + Range(pauseInterval);
             nextAvoidanceCheck = now + Range(0f, avoidanceCheckInterval);
-            nextProgressCheck = now + progressCheckInterval;
-            progressSamplePosition = transform.position;
             RefreshAnimator();
             RefreshMovementBody();
+            ResetMovementProgress(now);
             initialized = true;
         }
 
@@ -288,6 +338,8 @@ namespace UMA.Examples
                 RefreshAnimator();
             }
 
+            // Combat uses the same progress/idle/retry handling as ordinary wandering.
+            CheckForStall(now);
             if (UpdateCombatPursuit(now))
                 return;
 
@@ -302,9 +354,9 @@ namespace UMA.Examples
                     if (touching)
                     {
                         ResolveOverlap(threat);
-                        PlayBumpReaction(now);
+                        HandleObstacleContact(Flatten(transform.position - threat.transform.position), now);
                     }
-                    if (activity == Activity.Walking &&
+                    if (activity == Activity.Walking && !movementBlocked &&
                         now >= avoidanceCommitUntil)
                     {
                         Avoid(threat);
@@ -312,29 +364,40 @@ namespace UMA.Examples
                 }
             }
 
+            if (movementBlocked)
+            {
+                // Keep the request alive for the retry timer, but animate and move at zero speed.
+                UpdateAnimation(walkingAnimationSpeed);
+                return;
+            }
+
             if (activity == Activity.Paused)
             {
-                TurnToward(desiredDirection, turnSpeed * 1.25f);
                 UpdateAnimation(0f);
                 if (now < activityUntil)
-                {
                     return;
-                }
+                desiredDirection = resumeDirection;
+                activity = Activity.Turning;
+            }
 
+            if (activity == Activity.Turning)
+            {
+                TurnToward(desiredDirection, turnSpeed);
+                UpdateAnimation(0f);
+                if (Vector3.Angle(Flatten(transform.forward), desiredDirection) > 5f)
+                    return;
                 activity = Activity.Walking;
-                if (DistanceFromSpawnSquared() >= ReturnReleaseDistanceSquared())
-                {
-                    ChooseReturnDirection();
-                }
-                else
-                {
-                    ChooseWanderDirection(randomHeadingVariation);
-                }
+                nextPause = now + Range(pauseInterval);
+                nextHeadingChange = now + Range(headingChangeInterval);
+                // Allow a short departure window while the previous contact separates.
+                nextContactPause = now + 0.35f;
+                avoidanceCommitUntil = now + avoidanceCommitDuration;
             }
 
             float distanceSquared = DistanceFromSpawnSquared();
             float maximumDistance = Mathf.Max(0.1f, maximumSpawnDistance);
-            if (!returningHome && distanceSquared >= maximumDistance * maximumDistance)
+            float returnDistance = maximumDistance * returnStartFraction;
+            if (!returningHome && distanceSquared >= returnDistance * returnDistance)
             {
                 ChooseReturnDirection();
             }
@@ -370,16 +433,27 @@ namespace UMA.Examples
 
             TurnToward(steeringDirection, turnSpeed);
             UpdateAnimation(walkingAnimationSpeed);
-            CheckForStall(now);
         }
 
         private void FixedUpdate()
         {
-            if (!hasPhysicsLocomotionRequest || movementBody == null ||
-                movementBody.isKinematic)
+            if (movementBody == null || movementBody.isKinematic)
             {
+                physicsSamplePending = false;
                 return;
             }
+
+            // Sample the RESULT of the previous physics step, not render-frame Transform
+            // interpolation or the velocity we are about to request from the solver.
+            if (physicsSamplePending)
+                RecordMovementProgress(physicsSampleVelocity * Time.fixedDeltaTime,
+                    movementBody.position - physicsSamplePosition, Time.time);
+            physicsSamplePending = false;
+            if (!hasPhysicsLocomotionRequest)
+                return;
+            if (!walkingRequested || movementBlocked || animator == null ||
+                !animator.isActiveAndEnabled)
+                StopPhysicsLocomotion();
 
             // Apply locomotion on the physics clock. Only the horizontal axes
             // belong to the walker; gravity and collision response retain full
@@ -389,6 +463,9 @@ namespace UMA.Examples
             velocity.x = requestedPhysicsVelocity.x;
             velocity.z = requestedPhysicsVelocity.z;
             movementBody.linearVelocity = velocity;
+            physicsSamplePosition = movementBody.position;
+            physicsSampleVelocity = progressRequestVelocity;
+            physicsSamplePending = walkingRequested && !movementBlocked;
         }
 
         private bool UpdateCombatPursuit(float now)
@@ -436,7 +513,7 @@ namespace UMA.Examples
             if (movementBody == null && Time.time >= nextMovementBodySearch)
                 RefreshMovementBody();
 
-            if (activity != Activity.Walking)
+            if (activity != Activity.Walking || !walkingRequested || movementBlocked)
             {
                 StopPhysicsLocomotion();
                 return;
@@ -447,29 +524,46 @@ namespace UMA.Examples
             // speed when their evaluated horizontal delta is effectively zero.
             Vector3 locomotionDelta = ResolveLocomotionDelta(
                 animator.deltaPosition, Time.deltaTime);
+            Vector3 before = GetMovementPosition();
+            bool usesPhysics = movementBody != null && !movementBody.isKinematic;
+            boundedLocomotionRequest = Vector3.zero;
             if (isPursuingCombatTarget)
                 ApplyPursuitRootMotion(locomotionDelta);
             else
                 ApplyRootMotionWithinSpawnRadius(locomotionDelta);
+            if (usesPhysics)
+            {
+                // The artificial wander boundary is steering, not an obstacle.
+                // Only travel actually requested from physics can count as blocked.
+                progressRequestVelocity = Time.deltaTime > 0f
+                    ? boundedLocomotionRequest / Time.deltaTime : Vector3.zero;
+            }
+            else
+            {
+                physicsSamplePending = false;
+                RecordMovementProgress(boundedLocomotionRequest, GetMovementPosition() - before, Time.time);
+            }
         }
 
         private Vector3 ResolveLocomotionDelta(Vector3 animatorDelta,
             float deltaTime)
         {
             Vector3 horizontalDelta = Flatten(animatorDelta);
-            if (deltaTime <= 0f || inPlaceMovementSpeed <= 0f)
-            {
+            if (deltaTime <= 0f)
+                return Vector3.zero;
+            if (locomotionSource == LocomotionSource.RootMotion)
                 return horizontalDelta;
-            }
 
-            // Unity units are meters. Some nominally in-place clips contain a
-            // tiny root translation from compression or import sampling. A
-            // nonzero test mistakes that drift for locomotion, causing the
-            // walker to move millimeters, trip stall recovery, and continually
-            // turn. Classify root motion by its real-world speed instead.
-            float rootMotionSpeed = horizontalDelta.magnitude / deltaTime;
-            if (rootMotionSpeed > Mathf.Max(0f, minimumRootMotionSpeed))
-                return horizontalDelta;
+            float playbackRate = Mathf.Max(0.05f, animationPlaybackSpeed);
+            if (locomotionSource == LocomotionSource.Auto)
+            {
+                // Classify at normal playback. Otherwise a slowed root-motion clip can
+                // drop below the drift cutoff and suddenly use the faster fallback.
+                float authoredSpeed = horizontalDelta.magnitude / (deltaTime * playbackRate);
+                if (authoredSpeed > Mathf.Max(0f, minimumRootMotionSpeed) ||
+                    inPlaceMovementSpeed <= 0f)
+                    return horizontalDelta;
+            }
 
             Vector3 forward = Flatten(transform.forward);
             if (forward.sqrMagnitude <= 0.0001f)
@@ -477,9 +571,12 @@ namespace UMA.Examples
             if (forward.sqrMagnitude <= 0.0001f)
                 return Vector3.zero;
 
-            float playbackRate = Mathf.Max(0.05f, animationPlaybackSpeed);
+            // Ease the in-place translation in with the damped animation parameter,
+            // rather than sliding at full speed while the controller still shows idle.
+            float blend = animator != null && hasSpeedParameter && walkingAnimationSpeed > 0f
+                ? Mathf.Clamp01(animator.GetFloat(speedParameterHash) / walkingAnimationSpeed) : 1f;
             return forward.normalized *
-                (inPlaceMovementSpeed * playbackRate * deltaTime);
+                (Mathf.Max(0f, inPlaceMovementSpeed) * playbackRate * blend * deltaTime);
         }
 
         private RandomCharacterWalker FindNearestThreat(out bool touching)
@@ -589,36 +686,97 @@ namespace UMA.Examples
 
         private void CheckForStall(float now)
         {
+            if (!walkingRequested)
+                return;
+            if (movementBlocked)
+            {
+                if (now >= blockedRetryAt)
+                {
+                    // Explicit retry starts the animation even though actual speed is zero.
+                    // Pursuit continues to face its target; wanderers pick an escape heading.
+                    if (!isPursuingCombatTarget)
+                        RecoverFromStall(now);
+                    ResetMovementProgress(now);
+                }
+                return;
+            }
             if (now < nextProgressCheck)
             {
                 return;
             }
 
-            float progress = Flatten(
-                transform.position - progressSamplePosition).magnitude;
-            progressSamplePosition = transform.position;
-            nextProgressCheck = now + progressCheckInterval;
-            if (progress >= minimumProgressDistance)
+            float stopRatio = Mathf.Clamp(blockedProgressRatio, 0.01f, 0.9f);
+            float resumeRatio = Mathf.Clamp(resumedProgressRatio, stopRatio + 0.01f, 1f);
+            float stopDistance = Mathf.Min(minimumProgressDistance, requestedProgressDistance * stopRatio);
+            // Preserve the hysteresis band even when the absolute distance cap is active.
+            float resumeDistance = stopDistance * (resumeRatio / stopRatio);
+            bool hasRequest = requestedProgressDistance > 0.0000001f;
+            float progress = actualProgressDistance;
+            requestedProgressDistance = 0f;
+            actualProgressDistance = 0f;
+            nextProgressCheck = now + Mathf.Max(0.25f, progressCheckInterval);
+            if (!hasRequest || progress >= resumeDistance)
             {
                 stalledCheckCount = 0;
                 return;
             }
-
-            stalledCheckCount++;
+            if (progress < stopDistance)
+                stalledCheckCount++;
             if (stalledCheckCount < stalledChecksBeforeRecovery)
             {
                 return;
             }
 
+            PauseForObstacle(now, Vector3.zero);
+        }
+
+        private void RecordMovementProgress(Vector3 requested, Vector3 actual, float now)
+        {
+            if (!walkingRequested || movementBlocked || now < movementGraceUntil)
+                return;
+            requested = Flatten(requested);
+            actual = Flatten(actual);
+            float distance = requested.magnitude;
+            if (actual.magnitude > Mathf.Max(0.5f, distance * 4f))
+            {
+                // A teleport/large external correction is not walking progress or a stall.
+                ResetMovementProgress(now);
+                return;
+            }
+            if (distance <= 0.0000001f)
+                return;
+            requestedProgressDistance += distance;
+            actualProgressDistance += Mathf.Clamp(Vector3.Dot(actual, requested / distance), 0f, distance);
+        }
+
+        /// <summary>Call after externally repositioning an enabled walker. Its wander origin is unchanged.</summary>
+        public void ResetMovementTracking()
+        {
+            ResetMovementProgress(Time.time);
+            StopPhysicsLocomotion();
+        }
+
+        private void ResetMovementProgress(float now)
+        {
+            movementBlocked = false;
             stalledCheckCount = 0;
-            RecoverFromStall(now);
+            requestedProgressDistance = 0f;
+            actualProgressDistance = 0f;
+            physicsSamplePending = false;
+            movementGraceUntil = now + Mathf.Max(movementStartGraceTime, animationDamping * 3f);
+            nextProgressCheck = movementGraceUntil + Mathf.Max(0.25f, progressCheckInterval);
         }
 
         private void RecoverFromStall(float now)
         {
             Vector3 fromSpawn = Flatten(transform.position - spawnPosition);
             float radius = Mathf.Max(0.1f, maximumSpawnDistance);
-            if (fromSpawn.sqrMagnitude > radius * radius * 0.64f)
+            if (obstacleNormal.sqrMagnitude > 0.001f)
+            {
+                desiredDirection = Quaternion.AngleAxis(Range(-40f, 40f), Vector3.up) * obstacleNormal;
+                returningHome = false;
+            }
+            else if (fromSpawn.sqrMagnitude > radius * radius * 0.64f)
             {
                 ChooseReturnDirection();
             }
@@ -630,6 +788,8 @@ namespace UMA.Examples
                 returningHome = false;
             }
 
+            obstacleNormal = Vector3.zero;
+            activity = Activity.Turning;
             avoidanceCommitUntil = now + avoidanceCommitDuration * 1.5f;
             nextPause = avoidanceCommitUntil + Range(pauseInterval);
         }
@@ -637,10 +797,10 @@ namespace UMA.Examples
         private void BeginPause()
         {
             activity = Activity.Paused;
-            activityUntil = Time.time + Range(pauseDuration);
+            activityUntil = Time.time + RandomIdleDuration();
             nextPause = activityUntil + Range(pauseInterval);
-            desiredDirection = Quaternion.AngleAxis(
-                Range(-pauseLookVariation, pauseLookVariation), Vector3.up) *
+            float turn = Range(70f, 160f) * (random.Next(2) == 0 ? -1f : 1f);
+            resumeDirection = Quaternion.AngleAxis(turn, Vector3.up) *
                 Flatten(transform.forward).normalized;
             PlayRandomTrigger(pauseAnimationTriggers);
         }
@@ -722,10 +882,14 @@ namespace UMA.Examples
             candidate = ClampPositionWithinSpawnRadius(candidate);
             if (movementBody != null && !movementBody.isKinematic)
             {
+                Vector3 before = movementBody.position;
                 Vector3 bodyPosition = movementBody.position;
                 bodyPosition.x = candidate.x;
                 bodyPosition.z = candidate.z;
                 movementBody.position = bodyPosition;
+                // Crowd depenetration must not look like successful locomotion.
+                if (physicsSamplePending)
+                    physicsSamplePosition += bodyPosition - before;
             }
             else
                 transform.position = candidate;
@@ -755,6 +919,7 @@ namespace UMA.Examples
         private void ApplyLocomotionPosition(Vector3 currentPosition,
             Vector3 targetPosition)
         {
+            boundedLocomotionRequest = Flatten(targetPosition - currentPosition);
             if (movementBody == null || movementBody.isKinematic)
             {
                 transform.position = targetPosition;
@@ -773,11 +938,12 @@ namespace UMA.Examples
 
         private void StopPhysicsLocomotion()
         {
+            requestedPhysicsVelocity = Vector3.zero;
+            progressRequestVelocity = Vector3.zero;
             if (!Application.isPlaying || movementBody == null ||
                 movementBody.isKinematic)
                 return;
 
-            requestedPhysicsVelocity = Vector3.zero;
             hasPhysicsLocomotionRequest = true;
 
             // FixedUpdate is not invoked after the component is disabled. Clear
@@ -796,11 +962,13 @@ namespace UMA.Examples
         {
             movementBody = GetComponent<Rigidbody>();
             hasPhysicsLocomotionRequest = false;
+            physicsSamplePending = false;
             nextMovementBodySearch = Time.time + 1f;
         }
 
         private void RefreshAnimator()
         {
+            ResetMovementProgress(Time.time);
             animator = GetComponent<Animator>();
             nextAnimatorSearch = Time.time + 1f;
             observedController = animator != null
@@ -836,19 +1004,28 @@ namespace UMA.Examples
 
         private void UpdateAnimation(float speed)
         {
+            bool wantsToWalk = speed > 0f && activity == Activity.Walking && !shooterRagdolled;
+            if (wantsToWalk != walkingRequested)
+            {
+                walkingRequested = wantsToWalk;
+                ResetMovementProgress(Time.time);
+            }
+            float targetSpeed = walkingRequested && !movementBlocked ? speed : 0f;
+            if (targetSpeed <= 0f)
+                StopPhysicsLocomotion();
             if (animator == null)
             {
                 return;
             }
 
             animator.applyRootMotion = true;
-            animator.speed = speed > 0f
+            animator.speed = targetSpeed > 0f
                 ? Mathf.Max(0.05f, animationPlaybackSpeed)
                 : 1f;
 
             if (hasSpeedParameter)
             {
-                animator.SetFloat(speedParameterHash, speed,
+                animator.SetFloat(speedParameterHash, targetSpeed,
                     animationDamping, Time.deltaTime);
             }
             if (hasDirectionParameter)
@@ -856,7 +1033,7 @@ namespace UMA.Examples
                 float direction = Vector3.SignedAngle(transform.forward,
                     desiredDirection, Vector3.up) / 90f;
                 animator.SetFloat(directionParameterHash,
-                    Mathf.Clamp(direction, -1f, 1f),
+                    targetSpeed > 0f ? Mathf.Clamp(direction, -1f, 1f) : 0f,
                     animationDamping, Time.deltaTime);
             }
         }
@@ -944,21 +1121,53 @@ namespace UMA.Examples
             return value;
         }
 
-        private static int CreateStableSeed(string objectName, Vector3 position)
+        private float RandomIdleDuration()
         {
-            unchecked
+            return Range(Mathf.Clamp(pauseDuration.x, 0.5f, 3f),
+                Mathf.Clamp(pauseDuration.y, 0.5f, 3f));
+        }
+
+        private void OnCollisionEnter(Collision collision) => HandleCollision(collision);
+        private void OnCollisionStay(Collision collision) => HandleCollision(collision);
+
+        private void HandleCollision(Collision collision)
+        {
+            if (!initialized || !isActiveAndEnabled || shooterRagdolled)
+                return;
+            for (int i = 0; i < collision.contactCount; i++)
             {
-                uint hash = 2166136261u;
-                string seedText = objectName + "|" +
-                    Mathf.RoundToInt(position.x * 100f) + "|" +
-                    Mathf.RoundToInt(position.z * 100f);
-                for (int i = 0; i < seedText.Length; i++)
-                {
-                    hash ^= seedText[i];
-                    hash *= 16777619u;
-                }
-                return (int)hash;
+                ContactPoint contact = collision.GetContact(i);
+                if (contact.otherCollider != null &&
+                    contact.otherCollider.transform.IsChildOf(transform))
+                    continue;
+                HandleObstacleContact(contact.normal, Time.time);
             }
+        }
+
+        private void HandleObstacleContact(Vector3 normal, float now)
+        {
+            if (!initialized || !walkingRequested || movementBlocked ||
+                activity != Activity.Walking || now < nextContactPause)
+                return;
+            // Floors and walkable slopes must not interrupt locomotion.
+            if (Mathf.Abs(normal.y) > 0.5f)
+                return;
+            normal = Flatten(normal).normalized;
+            if (normal.sqrMagnitude < 0.001f ||
+                Vector3.Dot(Flatten(transform.forward).normalized, normal) >= -0.1f)
+                return;
+            PauseForObstacle(now, normal);
+            PlayBumpReaction(now);
+        }
+
+        private void PauseForObstacle(float now, Vector3 normal)
+        {
+            obstacleNormal = normal;
+            movementBlocked = true;
+            blockedRetryAt = now + (isPursuingCombatTarget
+                ? Mathf.Max(0.1f, blockedRetryInterval) : RandomIdleDuration());
+            nextPause = blockedRetryAt + Range(pauseInterval);
+            StopPhysicsLocomotion();
         }
 
         private void OnValidate()
@@ -978,6 +1187,10 @@ namespace UMA.Examples
                 minimumProgressDistance);
             stalledChecksBeforeRecovery = Mathf.Max(1,
                 stalledChecksBeforeRecovery);
+            movementStartGraceTime = Mathf.Max(0f, movementStartGraceTime);
+            blockedRetryInterval = Mathf.Max(0.1f, blockedRetryInterval);
+            blockedProgressRatio = Mathf.Clamp(blockedProgressRatio, 0.01f, 0.9f);
+            resumedProgressRatio = Mathf.Clamp(resumedProgressRatio, blockedProgressRatio + 0.01f, 1f);
             headingNoiseFrequency = Mathf.Max(0.01f, headingNoiseFrequency);
             maximumHealth = Mathf.Max(1, maximumHealth);
             pursuitDuration = Mathf.Max(0.1f, pursuitDuration);

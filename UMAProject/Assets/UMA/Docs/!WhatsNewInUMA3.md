@@ -1,5 +1,143 @@
 # What's New in UMA 3
 
+## UMA 3.1f0 — Changes Since v3.05
+
+UMA 3.1f0 includes the features, fixes, and slot-preparation improvements made after the `v3.05` release tag. The supported baseline is Unity 6.3 or newer.
+
+Includes 61 documentation files for a total of 316 pages of documentation - including quick starts, artist-friendly guides, and deep dives!
+
+### NPC Build Mode, and texture and mesh pooling
+- Texture Atlas and Mesh reuse / pooling. Added "Reuse Identical Meshes" and "Reuse Identical Atlases" to the DynamicCharacterAvatar. With these enabled, duplicate meshes or duplicate atlas textures will be reused and reference counted. In this mode it's automatic and happens during the Generation process. This is not quite as fast as BuildNPC, but is a general case solution where it reuses everything it can.
+- Added an opt-in `DynamicCharacterAvatar.BuildNPC()` completed-appearance path. Explicit retained template handles share pending builds, then instantiate independent rigs/Animators and private recipe/DNA state while retaining shared meshes, materials and atlases. Ordinary `BuildCharacter()` and its general-purpose caches remain available. Building from a template is the fastest way to build something. 
+- UMARandomAvatar can use completed NPC builds for its maximum-unique-character pool. Unsupported customization falls back to normal generation. Runtime monitoring and JSON export distinguish shortcut instances and instantiation work from generator/cache work.
+- Internal mesh LOD now makes shared meshes private before changing indices, clears overlapping second-pass submesh ranges before replacement, and avoids editing an old mesh while a replacement recipe is being built.
+
+See [Completed NPC builds](NPCBuilds.md) for opt-in setup, ownership and limitations.
+
+### Random Crowd changes
+- Added the maximum number of unique characters to generate. When generating more than the maximum unique characters, the definitions will be reused. Set to 0 to have no maximum - everything will be unique. 
+- Further reduced repeated crowd work: material sharing uses reusable, typed exact-input signatures instead of reflection-heavy descriptions, and built-in scalar shader parameters skip absent properties and redundant writes while preserving the final result. Custom setters and array properties retain their ordered application path. Cache equality still verifies full input contents, not just hashes.
+- Value-only UMA 3 DNA records reuse parsed data and create independent live DNA values for each character. Recipe text changes invalidate preparation automatically; serialized group references and other DNA formats retain their existing loading behavior.
+- Reduced repeated crowd setup work: version-3 text recipes retain private parsed input, automatically refreshed when recipe text changes, while every avatar still receives independent slots, colors and DNA. Serialized shader parameters reuse parsed values and clone them for editing. Custom recipe formats and legacy versions retain their existing loading paths.
+- Removed redundant material initialization, per-renderer construction logging, and a second full skeleton-validation traversal. Bone collisions are still detected during dictionary construction. Empty slot-atlas events no longer force shared materials to become private.
+- Added optional **Spawn Budget (ms/frame)** to UMARandomAvatar, with inspector help and runtime spawning status. Zero retains synchronous behavior; positive budgets spread instantiation and recipe setup across frames, isolate the crowd random sequence, and cancel pending spawns on disable/destruction. The resource monitor waits for spawning to finish and exports the configured budget.
+- Crowd resource monitoring now breaks down prefab instantiation, setup/randomization, recipe enqueue, build work by cache outcome, mesh lookup/binding, generator stages, and elapsed gaps by scheduling yield reason. Runtime diagnostics include frame intervals, completion latency, GC counts and effective generator settings. Save JSON exports the current capture and both OFF/ON comparisons in one review-ready file; Copy JSON and Show saved JSON are also available.
+
+### Generator Quality Profiles
+
+- Added reusable Generator Quality Profiles and platform/Unity-quality-name mappings, with per-setting inheritance and a runtime controller.
+- UMAGeneratorOverride supports profiles as scene-specific overrides while retaining its legacy controls. Layered overrides restore the current underlying settings safely.
+- Quality changes wait for active builds and GPU readbacks, with new-build-only, gradual and immediate rebuild policies. Optional character LOD, renderer, reuse and blendshape policies preserve explicit per-character choices.
+- Generated texture resolution, mipmaps, filtering and optional runtime compression participate in reuse identity; source assets remain unchanged and old shared outputs keep their normal reference-counted lifetime.
+
+See [Generator quality profiles](GeneratorQuality.md) for setup, precedence, runtime switching and compression caveats.
+
+### Standard and Advanced Inspectors
+
+- Avatar presets are now runtime ScriptableObject assets containing a selective AvatarDefinition, recipe references and a face icon. The DynamicCharacterAvatar Standard View includes preset creation, editing and application. The authoring popup selects individual DNA, colors (including shader parameters) and wardrobe recipes, and saves a PNG from a rectangle drawn around the face in Scene View. Applying a preset preserves omitted values; legacy preset JSON remains importable. See [Avatar presets](AvatarPresets.md).
+
+- SlotDataAsset, OverlayDataAsset, RaceData, and DynamicCharacterAvatar now offer Standard View and Advanced View at the top of their inspectors.
+- Wardrobe recipes also offer an artist-focused Standard View: compatible races, wardrobe regions, thumbnails, shared colors, hides/tags, suppression, mesh modifications, and slots/overlays. Slot enablement, tags, race filters, overlay ordering and color choices are available without exposing low-level material or UV controls. Inspect buttons open source assets; read-only base-map previews use texture 0 or an existing material's main texture. Advanced settings are preserved, and recipe edits support Undo/Redo.
+- Standard View groups common UMA 3 controls into gray sections with rounded blue borders. Legacy DNA, expressions, names, low-level mesh data, and specialized diagnostics remain available in Advanced View.
+- The selected view is remembered per inspector type, without changing assets or converting legacy content. Existing avatar race, wardrobe, color, and DNA editing workflows are retained.
+- Extended the consistent grouped blue/gray presentation across the commonly used authoring and runtime component inspectors, with contextual per-section Help and Standard/Advanced views where useful. Advanced data remains editable without cluttering the common artist workflow.
+
+### Optional Rig Cleanup and Chain Preservation
+
+- Added opt-in **Cleanup Unused Bones** to the generator, generator overrides and quality profiles. Completed rig/mesh builds remove obsolete slot bones instead of allowing wardrobe changes to accumulate unused transforms. Disabled cleanup and texture-only updates skip the dependency scan.
+- Retains the effective T-pose (including a character's override), current slot skeleton declarations, renderer bindings, registered animation dependencies and their connecting ancestors. External, caller-owned skeletons are not pruned. `UMAIgnore` preserves its entire subtree, reattaching it safely if its former mount disappears.
+- Repaired `UMAKeepChain` restoration for missing replacement bones, changed child chains and bone-baking skeleton storage. Saved chain identity/components are retained, generated extensions are preserved, and renderer bone/root bindings are remapped before duplicate transforms are destroyed. Keep-chain tagging does not exempt otherwise unused bones from cleanup.
+- Added optional cleanup timing and session counters for runs and removed bone entries. Bone-baking retains effective T-pose transforms when cleanup is enabled. The project Keep Tag setting is now available at runtime, while explicit legacy generator tag overrides remain supported.
+
+See [Rig lifetime and bone cleanup](BoneLifecycle.md) for retention rules, custom dependencies and profiling.
+
+### Optional Source-UV Atlas Cropping
+
+- Added generator-controlled source-UV cropping with per-slot and per-overlay opt-outs. Shared atlas regions use the union of every participating slot's UV bounds, preserving shared overlays with different UV layouts.
+- Source assets remain unchanged; generated UVs and overlay composition use padded crop regions, and mesh/texture reuse keys include the effective crop.
+- Slot preparation now stores compact per-submesh UV bounds with automatic upgrade and stale-data fallback. Custom rendering shaders require an explicit safe-sampling opt-in on UMAMaterial.
+
+See [Source-UV cropping](SourceUVCropping.md) for setup, compatibility fallbacks, and padding guidance.
+
+### Guided Model-to-Race and Clothing Creation
+
+- Added **UMA → Model to Race & Clothing…**, a four-step UI Toolkit workflow built on the existing UMA Slot Builder.
+- Creates a new race, TPose, base recipe, slots, overlays, copied material wrappers, DNA groups, and an optional configured avatar prefab. Clothing-only imports target an existing race without replacing its body.
+- Assigns individual material submeshes to Body, Clothing, or Skip. Groups clothing pieces into wardrobe recipes and assigns supported wardrobe regions.
+- Generates editable local-axis bone-scale DNA and selected blendshape DNA. All blendshapes start selected; included shapes retain their frames and source weight ranges.
+- Validates skinning, bone names and clothing rest poses. Imports use new output folders and roll back on failure; source models and materials remain unchanged.
+
+See the [Model to UMA guide](ModelToRace.md) for setup, supported inputs, and follow-up material/mesh-hide authoring.
+
+### Hair Card Authoring and Samples
+
+- Added a non-destructive Hair Card authoring system with editable groom assets, a dedicated Hair Card Stage, dockable node/property/preview windows, guide sculpting, groups, modifiers, and shared helpers. Generated meshes remain rebuildable outputs rather than the authoring source.
+- Added growth, density, and optional grooming maps, with both vertex-based and precise texture-backed authoring. Existing vertex painting can be converted to texture maps without changing the source mesh topology or UVs. Painted Scalp generators can create roots throughout the painted area, including newly extended hairlines.
+- Added clump and child-guide generation, ringlets with adjustable curl spacing and geometric detail, strand-aligned 2D noise, and surface-bend controls for natural waves and front flips. Adaptive card sampling, cross-width spans, and segment limits provide explicit control over triangle cost.
+- Added scalp-following Gather helpers for ponytails, pigtails, and buns, with surface offsets, outward-facing cards, gather spacing, and independent root/arrival bend curves. Bun helpers create wrapped volume and center tucks. Braids can follow separate editable splines, with freeform positioning, surface snapping, and endpoint attachments to scalp or helper surfaces.
+- Added form/cage editing, atlas-region editing and weighted strip selection, root-to-tip vertex colors, scalp vertex-color shading, and final-card scalp-clearance controls. Existing grooms can be rebound to a race or generated character for skin-weight copying.
+- Added LOD and triangle-budget controls, validation, and baking to meshes, slots, overlays, wardrobe recipes, and preview prefabs.
+- Added PointySwept, Curly, ShortHairPart, and BraidedBun examples and variations. ShortHairPart replaces the RegularHaircut example name and includes natural and front-flip variants, with a 20,000-triangle top-LOD goal. BraidedBun examples use gathered scalp hair, a fuller bun, a surrounding braid spline, and fine flyaways.
+- Added lit URP hair shaders with Cutout, Alpha Blended, and Hybrid opaque-core/soft-fringe rendering. Root/tip colors, opacity, shine, roughness, and Matte/Natural/Glossy finish controls make shading adjustable without replacing the atlas.
+
+Hair workflow fixes and usability improvements:
+
+- Exposed the width-along-card curve and improved profile labels. Groom groups, helpers, and LOD entries display meaningful names instead of internal identifiers.
+- Corrected root/tip tint alpha handling and separated density adjustment from user opacity. Hybrid rendering keeps faded regions out of the opaque core so the fringe can blend them. Preview material copies avoid changing shared source materials inadvertently.
+- Improved card clearance around the scalp, including short hair behind the ears, and reduced unnecessary ringlet geometry through configurable sampling and simplification.
+- Fixed texture-map previews disappearing after painting when temporary GPU references were lost, without discarding the saved painting or consuming an Undo step.
+- Added an Exit Stage button and improved floating-toolbar layout around docked panels and narrow views. Improved sample importing, validation UI, saving, and recovery behavior.
+
+See the [Hair Cards guide](../HairCards/README.md), [ShortHairPart guide](../HairCards/ShortHairPartGuide.md), and [BraidedBun guide](../HairCards/BraidedBunGuide.md).
+
+### Generated Resource Reuse and Crowd Profiling
+
+- Added per-character **Cache and Reuse (NPCs)** options for generated meshes and atlases/matching materials. Both default to off, leaving existing build behavior unchanged until enabled. Matching characters share generated outputs while retaining their own skeletons, animation, pose, and live blendshape weights.
+- Mesh matching accounts for source geometry, modifiers, masks, skinning, LODs, atlas UV layout, and baked/included blendshapes. Atlas channels are matched independently of surface material parameters, so different material instances can still share textures.
+- Added sharing of matching in-progress incremental mesh builds and pending atlas readbacks. Reference-counted ownership, cancellation handling, and copy-on-write helpers protect shared resources when avatars rebuild, are destroyed, or need private edits. Unsupported/custom paths retain a private-build fallback.
+- Reduced lookup overhead with cheap first-stage signature rejection, cached source fingerprints, and early atlas hits before drawing-material preparation. Hashes narrow the search; exact input comparisons still decide whether sharing is safe. Empty `AtlasUpdated` events no longer force a texture-sharing bypass; callbacks that may modify an atlas remain conservative.
+- Added **Maximum Unique Characters** to `UMARandomAvatar`. The default of zero preserves unlimited random generation; a positive limit creates a pool of randomized appearances for subsequent characters to reuse.
+- Added a runtime Resource Usage Monitor to **U3-Generating Random Characters**, with repeatable reuse OFF/ON runs, generation timings, cache hits and pending joins, bypass reasons, unique mesh/texture memory, and report/JSON export. Atlas preparation, lookup/binding, and generation are reported separately.
+- Fixed duplicate serialization of reuse option fields and improved shared-output cleanup, renderer ownership, cloning, and reload handling.
+
+Reuse avoids repeated generation and output allocations for matching inputs; it does not remove per-avatar animation, skinning, or draw calls. See [Generated Resource Reuse](GeneratedResourceReuse.md) for matching rules, lifecycle requirements, and measurement details.
+
+### Automatic Slot Preparation and Blendshape Correctness
+
+- Existing SlotDataAssets automatically prepare missing, outdated, or damaged metadata on first use, with no migration dialog or required manual upgrade. In edit mode, editable persistent slots are marked dirty so the next normal save stores the prepared format. Player and read-only/package assets can prepare in memory without writing source files.
+- Added versioned source fingerprints, validated counts/bounds, blendshape channel flags, and sparse affected-vertex metadata. Saved preparation is verified and reused rather than repeatedly reconstructed, reducing repeated source-validation and blendshape-processing work.
+- Fixed exact zero-delta detection and multi-frame blendshape baking, including normal-only, tangent-only, and previous-frame-only changes. Tiny nonzero deltas are preserved. Preparation/saving can remove exactly-zero optional normal/tangent arrays; dense frames avoid redundant full affected-vertex lists.
+- Added invalidation across supported slot editing/building paths, editor changes, Undo/Redo, and imports, plus safe rebuilding/fallback for stale preparation. Custom runtime code editing source arrays directly must call `InvalidateBuildData()` after its edit batch.
+- Added optional **UMA > Slot Preparation** maintenance commands and storage/performance benchmarks. Duplicate prepacked vertex streams and topology buffers were evaluated but are **not** stored in the production format; their extra storage was not justified by the measured stage costs.
+
+Preparation metadata has a storage cost; savings from stripping empty channels depend on the slot. This is not a blanket reduction in every slot's size. See [Automatic Slot Preparation](SlotPreparation.md) for migration, invalidation, and benchmark details.
+
+### Realistic URP Skin and Facial Visemes
+
+- Added a separate, opt-in realistic URP skin shader using the existing UMA skin texture inputs, with optional shading-control textures. It combines two specular lobes, curvature-aware color diffusion, thin-area backlighting, adjustable pore detail, and highlight filtering. It approximates skin scattering without requiring HDRP screen-space subsurface scattering.
+- Added Natural, Matte, and Dewy example skin materials/UMAMaterials and a **Create Realistic URP Copy** command that preserves existing texture assignments and material settings. Existing skin shaders and materials are not replaced automatically.
+- Added all 15 Meta-style visemes as DNA BonePoses, with emphasized and mild versions, to **UMA 30 Expression Set_ExpressionGroup** and **UMA 30 Expression Set_ExpressionGroup_Mild**. Poses use the UMA 3 Mandible, lip, and tongue bones and were checked on the standard male and female avatars.
+- Corrected vowel mouth opening and lip pursing, added the slightly open authored silence pose, and improved facial-bone classification so expression overrides address the appropriate jaw, lip, and tongue controls.
+- Added adjustable natural head micro-movement while DynamicExpressionPlayer overrides the head: eased idle motion, speech-timed movement coordinated with visemes, and restrained expression-driven motion, without accumulating rotation offsets.
+
+See [Realistic URP Skin](../SRP/Shaders/Skin/README.md) and [UMA 3 Visemes](UMA3Visemes.md).
+
+### Editor Tools and Runtime Fixes
+
+- Added an unused-asset scanner for UMAMaterials, Materials, and Shaders, with a selectable results grid and deletion workflow. Global Library registration alone does not count as usage; deleting a registered but otherwise unreferenced asset also removes its index entry.
+- Improved texture/material usage inspection and item-grid presentation, and added a slot blendshape-name renaming utility with preview and validation.
+- Reduced DynamicCharacterAvatar Inspector overhead by caching DNA/group metadata and avoiding repeated reconstruction on every GUI event. Stabilized Inspector layout during avatar changes, including `LoadAvatarDefinition` while the avatar is selected, to prevent mismatched layout-group errors.
+- Improved Race Inspector save/refresh lifecycle handling so edits survive selection and Inspector changes reliably.
+- Fixed legacy UMA 2 Dynamic DNA loading in UMA 3 to avoid invalid embedded object references and recurring `bDnaAsset` type-mismatch warnings.
+- Fixed RandomCharacterWalker movement/animation synchronization, including slow-motion behavior and running animations continuing while a character is stationary.
+- Fixed duplicate generators/renderers and related lifecycle issues when domain/scene reload is disabled. Improved ragdoll renderer bounds and the shooter sample's mouse-capture behavior.
+- Added optional MagicaCloth2 Bone Spring support alongside Bone Cloth integration, and repaired affected shader-graph/import formatting.
+- Improved bone-baking integration with the default mesh pipeline, preserved atlas UVs and animated poses during mesh-only rebuilds, and corrected child reparenting when baked parent transforms are removed.
+
+### Regression Coverage
+
+- Added and expanded tests for generated-resource equality and lifetimes, pending-build cancellation, automatic slot conversion/save/reload, sparse blendshapes, source invalidation, editor lifecycle/performance, legacy DNA serialization, walker behavior, and hair generation/painting/shading workflows. Slot packing benchmarks remain available for future platform-specific decisions.
+
 ### What's new since the UMA 3.04 Release
 ##
 ##Overlay Painter 

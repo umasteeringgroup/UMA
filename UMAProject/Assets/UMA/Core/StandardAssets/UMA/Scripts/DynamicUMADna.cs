@@ -236,21 +236,36 @@ namespace UMA
         }
 
 		/// <summary>
-		/// Method for finding a DynamicUMADnaAsset by name using DynamicAssetLoader. This can happen when a recipe tries to load load an asset based on an instance ID that may have changed or if the Asset is in an AssetBundle and was not available when the dna was loaded
+		/// Resolves a recipe's saved DNA asset name through UMA's runtime asset index.
+		/// Also used when an asset bundle becomes available after the DNA was loaded.
 		/// </summary>
 		/// <param name="dnaAssetName"></param>
 		public override void FindMissingDnaAsset(string dnaAssetName)
 		{
-			InitializeDynamicDNADictionary();
-			if (DynamicDNADictionary.TryGetValue(dnaAssetName, out _dnaAsset))
+			if (string.IsNullOrEmpty(dnaAssetName))
             {
                 return;
             }
+			InitializeDynamicDNADictionary();
+			if (!DynamicDNADictionary.TryGetValue(dnaAssetName, out var resolvedAsset) ||
+                resolvedAsset == null || resolvedAsset.name != dnaAssetName)
+            {
+                resolvedAsset = UMAAssetIndexer.Instance.GetDNA(dnaAssetName);
+                if (resolvedAsset != null)
+                {
+                    DynamicDNADictionary[dnaAssetName] = resolvedAsset;
+                }
+            }
 
-            _dnaAsset = UMAAssetIndexer.Instance.GetDNA(dnaAssetName);
-
-			if (!_dnaAsset)
+            if (resolvedAsset != null)
+            {
+                // Match saved values by name and initialize newly added DNA to its default.
+                dnaAsset = resolvedAsset;
+            }
+            else
 			{
+				// Do not clear dnaAssetName or the saved values while the asset is unavailable.
+				_dnaAsset = null;
 				if (Debug.isDebugBuild)
                 {
                     Debug.LogWarning("DynamicUMADna could not find DNAAsset " + dnaAssetName + "!");
@@ -290,6 +305,10 @@ namespace UMA
     [System.Serializable]
     public class DynamicUMADna_Byte
     {
+        // In-memory convenience only. JsonUtility stores Unity object references as session IDs:
+        // an old recipe's ID can resolve to an unrelated object before ToDna can repair it.
+        // NonSerialized also makes the reader ignore bDnaAsset in existing recipe JSON.
+        [System.NonSerialized]
         public DynamicUMADnaAsset bDnaAsset;
         public string bDnaAssetName;
         public DNASettings[] bDnaSettings;
@@ -309,9 +328,10 @@ namespace UMA
                 res._values[ii] = bDnaSettings[ii].value * (1f / 255f);
             }
             res.dnaAssetName = bDnaAssetName;
-			//Then set the asset using dnaAsset.set so that everything is validated and any new dna gets added with default values
-			//Usually we need to find the asset because the instance id in the recipe will not be the same in different sessions of Unity
-			if ((bDnaAsset == null && bDnaAssetName != "") || (bDnaAssetName != "" && (bDnaAsset != null && bDnaAsset.name != bDnaAssetName)))
+			// JSON uses only the persistent name. Direct FromDna/ToDna callers may still
+			// supply an in-memory asset, which must agree with the saved name when present.
+			if (!string.IsNullOrEmpty(bDnaAssetName) &&
+                (bDnaAsset == null || bDnaAsset.name != bDnaAssetName))
 			{
                 res.FindMissingDnaAsset(bDnaAssetName);
             }
@@ -339,10 +359,8 @@ namespace UMA
         {
             var res = new DynamicUMADna_Byte();
             res.bDnaAsset = dna.dnaAsset;
-            if(dna.dnaAsset != null)
-            {
-                res.bDnaAssetName = dna.dnaAsset.name;
-            }
+            // Retain identity when loading/saving before the asset has become available.
+            res.bDnaAssetName = dna.dnaAsset != null ? dna.dnaAsset.name : dna.dnaAssetName;
 
             res.bDnaSettings = new DNASettings[dna._values.Length];
             for (int i = 0; i < dna._values.Length; i++)

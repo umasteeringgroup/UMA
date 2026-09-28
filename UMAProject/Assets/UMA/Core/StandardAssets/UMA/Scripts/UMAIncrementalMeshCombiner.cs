@@ -64,6 +64,7 @@ namespace UMA
             int atlasResolution)
         {
             ValidateBuildPlanInputs(data);
+            data.ReconcileGeneratedRendererObjects();
             UpdateBuildPlanMeshHideMasks(data);
             EnsureBuildPlanSkeleton(data);
             BuildPlanActiveModifiers(data);
@@ -104,6 +105,12 @@ namespace UMA
                 throw new InvalidOperationException(
                     "Incremental mesh generation requires generated renderer materials.");
             }
+            UMAResourceReuse.PrepareCallbackMaterials(data);
+        }
+
+        internal static void ReconcileBuildPlanRenderers(UMAData data)
+        {
+            data.ReconcileGeneratedRendererObjects();
         }
 
         internal static void UpdateBuildPlanMeshHideMasks(UMAData data)
@@ -255,12 +262,21 @@ namespace UMA
             int rendererIndex,
             UMARendererAsset rendererAsset)
         {
+            UMARendererAsset effectiveRendererAsset =
+                rendererAsset ?? data.defaultRendererAsset;
+            int dirtyCount = UMAAssetIndexer.bareInstance != null
+                ? UMAAssetIndexer.bareInstance.dirtyList.Count
+                : 0;
+                
             var rendererObject = new GameObject(
-                $"UMA Incremental Staging Renderer {rendererIndex}");
+                UMARendererAsset.GetRendererGameObjectName(
+                    rendererAsset ?? data.defaultRendererAsset,
+                    rendererIndex));
             rendererObject.transform.SetParent(transform, false);
             rendererObject.layer = data.gameObject.layer;
 
             var renderer = rendererObject.AddComponent<SkinnedMeshRenderer>();
+            data.RegisterGeneratedRenderer(renderer);
             renderer.enabled = false;
             renderer.rootBone = data.GetGlobalTransform();
             renderer.quality = SkinQuality.Auto;
@@ -280,14 +296,10 @@ namespace UMA
 
             UMARendererAsset settings =
                 rendererAsset != null ? rendererAsset : data.defaultRendererAsset;
-            if (settings != null)
-            {
-                settings.ApplySettingsToRenderer(renderer);
-            }
-            else
-            {
-                UMARendererAsset.ResetRenderer(renderer);
-            }
+            UMARendererAsset.ApplySettingsAndName(
+                renderer,
+                settings,
+                rendererIndex);
             return renderer;
         }
 
@@ -520,7 +532,7 @@ namespace UMA
                         continue;
                     }
 
-                    Rect rect = fragment.atlasRegion;
+                    Rect rect = fragment.UncroppedAtlasRegion;
                     float xMin = rect.xMin / atlasResolution;
                     float yMin = rect.yMin / atlasResolution;
                     float xRange = rect.width / atlasResolution;
@@ -612,9 +624,11 @@ namespace UMA
 
             data.firstBake = false;
             DestroyPreviousRenderers(
+                data,
                 plan.PreviousRenderers,
                 committedRenderers);
             plan.FinalizeCommittedMetadata();
+            UMAResourceReuse.FinalizeSurfaces(data);
         }
 
         internal void ConfigureStagingRendererMaterials(
@@ -681,10 +695,14 @@ namespace UMA
             rendererTransform.localPosition = Vector3.zero;
             rendererTransform.localRotation = Quaternion.identity;
             rendererTransform.localScale = Vector3.one;
+            UMARendererAsset settings =
+                rendererPlan.RendererAsset != null
+                    ? rendererPlan.RendererAsset
+                    : data.defaultRendererAsset;
             renderer.gameObject.name =
-                rendererIndex == 0
-                    ? "UMARenderer"
-                    : $"UMARenderer {rendererIndex}";
+                UMARendererAsset.GetRendererGameObjectName(
+                    settings,
+                    rendererIndex);
         }
 
         private static void AssignRendererMaterials(
@@ -697,6 +715,7 @@ namespace UMA
             var submeshBuffer =
                 new List<SubMeshDescriptor>(materials.Length * 2);
             Mesh mesh = renderer.sharedMesh;
+            bool cachedMesh = UMAResourceLeaseOwner.IsSharedMesh(renderer);
 
             for (int i = 0; i < materials.Length; i++)
             {
@@ -713,7 +732,7 @@ namespace UMA
                     continue;
                 }
 
-                SubMeshDescriptor descriptor = mesh.GetSubMesh(i);
+                SubMeshDescriptor descriptor = mesh.GetSubMesh(cachedMesh ? submeshBuffer.Count : i);
                 int firstPassSubmesh = submeshBuffer.Count;
                 materialBuffer.Add(firstPass);
                 submeshBuffer.Add(descriptor);
@@ -793,11 +812,11 @@ namespace UMA
 #else
             renderer.sharedMaterials = materialBuffer.ToArray();
 #endif
-            mesh.SetSubMeshes(
+            if (!cachedMesh) mesh.SetSubMeshes(
                 submeshBuffer,
                 MeshUpdateFlags.DontRecalculateBounds |
                 MeshUpdateFlags.DontValidateIndices);
-            mesh.UploadMeshData(data.markNotReadable);
+            if (!cachedMesh) mesh.UploadMeshData(data.markNotReadable);
         }
 
         private static void SetupCloth(
@@ -850,6 +869,7 @@ namespace UMA
         }
 
         private static void DestroyPreviousRenderers(
+            UMAData data,
             SkinnedMeshRenderer[] previous,
             SkinnedMeshRenderer[] replacements)
         {
@@ -866,12 +886,7 @@ namespace UMA
                     continue;
                 }
 
-                Mesh mesh = renderer.sharedMesh;
-                if (mesh != null)
-                {
-                    UMAUtils.DestroySceneObject(mesh);
-                }
-                UMAUtils.DestroySceneObject(renderer.gameObject);
+                data.DestroyGeneratedRenderer(renderer);
             }
         }
     }
@@ -1440,6 +1455,8 @@ namespace UMA
         public UMAIncrementalMaterialMetadataState(
             UMAData.GeneratedMaterial material)
         {
+            UMAResourceReuse.PrepareMaterialEdits(material,
+                material.umaMaterial.materialType == UMAMaterial.MaterialType.UseExistingTextures);
             Material = material;
             OriginalMaterialIndex = material.materialIndex;
             OriginalRenderer = material.skinnedMeshRenderer;
@@ -1472,6 +1489,9 @@ namespace UMA
         internal UMAIncrementalBaseMeshApplicationStage
             BaseMeshApplicationStage { get; set; }
         public bool RendererFinalized { get; set; }
+        internal bool CacheChecked;
+        internal UMAResourceReuse.MeshRequest CacheRequest;
+        internal UMAGeneratedResourceCache.Lease<Mesh> CacheLease;
         internal UMAIncrementalRendererFinalizationStage
             FinalizationStage { get; set; }
         internal UMAIncrementalRendererSchedulingStage
@@ -1549,13 +1569,17 @@ namespace UMA
 
         public void DestroyStagingRenderer()
         {
+            CacheLease?.Dispose();
+            CacheLease = null;
+            CacheRequest = null;
             if (StagingRenderer == null)
             {
                 return;
             }
             Mesh mesh = StagingRenderer.sharedMesh;
+            bool releasedSharedMesh = UMAResourceLeaseOwner.ReleaseMesh(StagingRenderer);
             StagingRenderer.sharedMesh = null;
-            if (mesh != null)
+            if (mesh != null && !releasedSharedMesh)
             {
                 UMAUtils.DestroySceneObject(mesh);
             }
@@ -1629,6 +1653,7 @@ namespace UMA
         private enum BuildPlanStage
         {
             ValidateInputs,
+            ReconcileExistingRenderers,
             UpdateMeshHideMasks,
             EnsureSkeleton,
             BuildActiveModifiers,
@@ -1654,6 +1679,7 @@ namespace UMA
         private int rendererCursor;
         private bool cancellationRequested;
         private bool disposed;
+        private bool runSynchronously;
 
 #if UNITY_EDITOR
         static UMAIncrementalMeshCombineOperation()
@@ -1671,6 +1697,27 @@ namespace UMA
                 DisposeActiveOperations;
             UnityEditor.EditorApplication.quitting +=
                 DisposeActiveOperations;
+            UnityEditor.EditorApplication.playModeStateChanged -=
+                OnPlayModeStateChanged;
+            UnityEditor.EditorApplication.playModeStateChanged +=
+                OnPlayModeStateChanged;
+        }
+
+        [RuntimeInitializeOnLoadMethod(
+            RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetActiveOperationsOnLoad()
+        {
+            DisposeActiveOperations();
+        }
+
+        private static void OnPlayModeStateChanged(
+            UnityEditor.PlayModeStateChange state)
+        {
+            if (state == UnityEditor.PlayModeStateChange.ExitingEditMode ||
+                state == UnityEditor.PlayModeStateChange.ExitingPlayMode)
+            {
+                DisposeActiveOperations();
+            }
         }
 #endif
 
@@ -1808,6 +1855,8 @@ namespace UMA
             {
                 case BuildPlanStage.ValidateInputs:
                     return "Build Plan: Validate Inputs";
+                case BuildPlanStage.ReconcileExistingRenderers:
+                    return "Build Plan: Reconcile Renderers";
                 case BuildPlanStage.UpdateMeshHideMasks:
                     return "Build Plan: Mesh Hide Masks";
                 case BuildPlanStage.EnsureSkeleton:
@@ -2176,6 +2225,13 @@ namespace UMA
                     UMAIncrementalMeshCombiner
                         .ValidateBuildPlanInputs(data);
                     buildPlanStage =
+                        BuildPlanStage.ReconcileExistingRenderers;
+                    return;
+
+                case BuildPlanStage.ReconcileExistingRenderers:
+                    UMAIncrementalMeshCombiner
+                        .ReconcileBuildPlanRenderers(data);
+                    buildPlanStage =
                         BuildPlanStage.UpdateMeshHideMasks;
                     return;
 
@@ -2294,6 +2350,18 @@ namespace UMA
                     if (rendererPlan.BaseMeshApplied)
                     {
                         continue;
+                    }
+                    if (rendererPlan.CacheLease != null && rendererPlan.Pending == null)
+                    {
+                        if (runSynchronously && !rendererPlan.CacheLease.IsBuilder && !rendererPlan.CacheLease.IsReady)
+                            rendererPlan.CacheLease.CompletePendingBuild();
+                        if (TryBindCachedRenderer(rendererPlan))
+                            return UMAMeshCombineStepResult.InProgress();
+                        if (rendererPlan.CacheLease != null && !rendererPlan.CacheLease.IsBuilder) continue;
+                        // A cancelled producer promotes a waiting request. Schedule through
+                        // the same backend; no native work survives the old reservation.
+                        if (!AdvanceRendererScheduling(rendererPlan) || rendererPlan.Pending == null)
+                            return UMAMeshCombineStepResult.InProgress();
                     }
                     if (!rendererPlan.IsEmpty &&
                         rendererPlan.Pending == null)
@@ -2434,6 +2502,7 @@ namespace UMA
 
         internal void RunSynchronously()
         {
+            runSynchronously = true;
             while (true)
             {
                 if (stage == OperationStage.ProcessRenderers)
@@ -2461,6 +2530,32 @@ namespace UMA
         private bool AdvanceRendererScheduling(
             UMAIncrementalRendererPlan rendererPlan)
         {
+            if (!rendererPlan.CacheChecked && !rendererPlan.IsEmpty)
+            {
+                rendererPlan.CacheChecked = true;
+                if (UMAResourceReuse.MeshesEnabled(data))
+                {
+                    try
+                    {
+                        rendererPlan.CacheLease = UMAResourceReuse.AcquireMesh(data, rendererPlan.Sources, rendererPlan.Materials,
+                            plan.AtlasResolution, plan.BoundsRotation, out rendererPlan.CacheRequest);
+                    }
+                    catch (NotSupportedException exception)
+                    {
+                        data.resourceReuseStatus = "Mesh cache bypass: " + exception.Message;
+                        UMAGeneratedResourceCache.Shared.RecordBypass<Mesh>(exception.Message);
+                    }
+                }
+            }
+            if (rendererPlan.CacheLease != null)
+            {
+                if (TryBindCachedRenderer(rendererPlan)) return true;
+                if (rendererPlan.CacheLease != null)
+                {
+                    if (!rendererPlan.CacheLease.IsBuilder) return true;
+                    rendererPlan.CacheLease.SetBuildCompletion(() => { if (!runSynchronously) RunSynchronously(); });
+                }
+            }
             switch (rendererPlan.SchedulingStage)
             {
                 case UMAIncrementalRendererSchedulingStage.PrepareMesh:
@@ -2548,6 +2643,37 @@ namespace UMA
                     throw new InvalidOperationException(
                         $"Unsupported renderer scheduling stage {rendererPlan.SchedulingStage}.");
             }
+        }
+
+        private bool TryBindCachedRenderer(UMAIncrementalRendererPlan rendererPlan)
+        {
+            var lease = rendererPlan.CacheLease;
+            if (lease == null || !lease.IsReady) return false;
+            if (!RendererCacheInputsUnchanged(rendererPlan))
+            {
+                lease.Dispose(); rendererPlan.CacheLease = null;
+                return false;
+            }
+            var metadata = (UMAResourceReuse.MeshBinding)lease.Metadata;
+            UMAResourceReuse.BindMesh(data, rendererPlan.StagingRenderer, lease);
+            rendererPlan.CacheLease = null; // transferred to the renderer's lifetime
+            rendererPlan.PreparedCloth = metadata.Cloth;
+            plan.CaptureScheduledSlotMetadata(rendererPlan, metadata.VertexOffsets);
+            rendererPlan.BaseMeshApplied = true;
+            rendererPlan.FinalizationStage = UMAIncrementalRendererFinalizationStage.Materials;
+            rendererPlan.SchedulingStage = UMAIncrementalRendererSchedulingStage.Completed;
+            data.resourceReuseStatus = "Reusing generated mesh";
+            return true;
+        }
+
+        private bool RendererCacheInputsUnchanged(UMAIncrementalRendererPlan rendererPlan)
+        {
+            try
+            {
+                return UMAResourceReuse.MeshInputsUnchanged(rendererPlan.CacheRequest, data, rendererPlan.Sources,
+                    rendererPlan.Materials, plan.AtlasResolution, plan.BoundsRotation);
+            }
+            catch (NotSupportedException) { return false; }
         }
 
         private void EnqueueRendererPreparationTimings(
@@ -2739,6 +2865,19 @@ namespace UMA
                         .ConfigureStagingRendererClothAndHierarchy(
                             plan,
                             rendererPlan);
+                    if (rendererPlan.CacheLease != null)
+                    {
+                        var lease = rendererPlan.CacheLease;
+                        if (RendererCacheInputsUnchanged(rendererPlan))
+                        {
+                            lease.Publish(rendererPlan.StagingRenderer.sharedMesh,
+                                UMAResourceReuse.CaptureMeshBinding(rendererPlan.StagingRenderer, rendererPlan.Sources, rendererPlan.PreparedCloth));
+                            UMAResourceLeaseOwner.Get(rendererPlan.StagingRenderer).SetMesh(lease);
+                            data.resourceReuseStatus = "Generated and cached mesh";
+                        }
+                        else { lease.Dispose(); data.resourceReuseStatus = "Mesh cache bypass: inputs changed during generation"; }
+                        rendererPlan.CacheLease = null;
+                    }
                     rendererPlan.FinalizationStage =
                         UMAIncrementalRendererFinalizationStage
                             .Completed;

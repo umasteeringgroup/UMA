@@ -15,6 +15,7 @@ namespace UMA.Editors
     {
         private const string MenuPath = "Assets/UMA/View Markdown file";
         private const string DocumentationMenuPath = "UMA/View Documentation";
+        private const string PlansMenuPath = "UMA/View Plans";
         private const string WindowTitle = "UMA Markdown Viewer";
         private const string WindowPositionPrefsPrefix = "UMA.MarkdownViewer.WindowPosition.";
         private const float ContentPadding = 12f;
@@ -99,6 +100,12 @@ namespace UMA.Editors
         public static void ViewDocumentation()
         {
             UMADocumentationWindow.ShowWindow();
+        }
+
+        [MenuItem(PlansMenuPath, priority = 2)]
+        public static void ViewPlans()
+        {
+            UMADocumentationWindow.ShowPlansWindow();
         }
 
         [MenuItem(MenuPath, false, 2000)]

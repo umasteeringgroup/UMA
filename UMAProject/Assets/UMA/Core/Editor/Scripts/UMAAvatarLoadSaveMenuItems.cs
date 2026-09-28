@@ -1303,6 +1303,25 @@ namespace UMA.Editors
 			return GetSelectedOverlays().Count > 0;
 		}
 
+		[MenuItem("Assets/UMA/Examine UMAMaterials", false, 2004)]
+		private static void ExamineUMAMaterialsMenu()
+		{
+			var materials = GetSelectedUMAMaterials();
+			if (materials.Count == 0)
+			{
+				EditorUtility.DisplayDialog("Examine UMAMaterials", "Select one or more UMAMaterial assets in the Project window.", "OK");
+				return;
+			}
+
+			UmaExamineMaterialsWindow.Open(materials);
+		}
+
+		[MenuItem("Assets/UMA/Examine UMAMaterials", true)]
+		private static bool ExamineUMAMaterialsMenu_Validate()
+		{
+			return GetSelectedUMAMaterials().Count > 0;
+		}
+
 		[MenuItem("Assets/UMA/Examine Slots", false, 2005)]
 		private static void ExamineSlotsMenu()
 		{
@@ -2019,6 +2038,21 @@ namespace UMA.Editors
 				}
 			}
 			return slots;
+		}
+
+		private static List<UMA.UMAMaterial> GetSelectedUMAMaterials()
+		{
+			var selected = Selection.GetFiltered(typeof(UMA.UMAMaterial), SelectionMode.Assets);
+			var materials = new List<UMA.UMAMaterial>(selected.Length);
+			for (int i = 0; i < selected.Length; i++)
+			{
+				var m = selected[i] as UMA.UMAMaterial;
+				if (m != null)
+				{
+					materials.Add(m);
+				}
+			}
+			return materials;
 		}
 
 		private static List<Texture2D> GetSelectedTextures()
@@ -3369,43 +3403,17 @@ namespace UMA.Editors
         [UnityEditor.MenuItem("CONTEXT/DynamicCharacterAvatar/Save as UMA Preset")]
 		[UnityEditor.MenuItem("GameObject/UMA/Save as UMA Preset")]
 		[MenuItem("UMA/Avatar/Load and Save/Save Selected Avatar as UMA Preset", priority = 121)]
-		public static void SaveSelectedAvatarsPreset()
-		{
-			for (int i = 0; i < Selection.gameObjects.Length; i++)
-			{
-				var selectedTransform = Selection.gameObjects[i].transform;
-				var avatar = selectedTransform.GetComponent<DynamicCharacterAvatar>();
-				while (avatar == null && selectedTransform.parent != null)
-				{
-					selectedTransform = selectedTransform.parent;
-					avatar = selectedTransform.GetComponent<DynamicCharacterAvatar>();
-				}
-
-				if (avatar != null)
-				{
-					var path = EditorUtility.SaveFilePanel("Save avatar preset", "Assets", avatar.name + ".umapreset", "umapreset");
-					if (path.Length != 0)
-					{
-
-						UMAPreset prs = new UMAPreset();
-						prs.DefaultColors = avatar.characterColors;
-						var DNA = avatar.GetDNA();
-						prs.PredefinedDNA = new UMAPredefinedDNA();
-						foreach (DnaSetter d in DNA.Values)
-						{
-							prs.PredefinedDNA.AddDNA(d.Name, d.Value);
-						}
-						prs.DefaultWardrobe = new DynamicCharacterAvatar.WardrobeRecipeList();
-						foreach (UMATextRecipe utr in avatar.WardrobeRecipes.Values)
-						{
-							prs.DefaultWardrobe.recipes.Add(new DynamicCharacterAvatar.WardrobeRecipeListItem(utr));
-						}
-						string presetstring = JsonUtility.ToJson(prs);
-						System.IO.File.WriteAllText(path, presetstring);
-					}
-				}
-			}
-		}
+        public static void SaveSelectedAvatarsPreset()
+        {
+            foreach (var selected in Selection.gameObjects)
+            {
+                var avatar = selected.GetComponentInParent<DynamicCharacterAvatar>();
+                if (avatar == null) continue;
+                UMAPresetEditorWindow.Open(avatar);
+                return;
+            }
+            EditorUtility.DisplayDialog("UMA preset", "Select a DynamicCharacterAvatar first.", "OK");
+        }
 
 
 		[UnityEditor.MenuItem("CONTEXT/DynamicCharacterAvatar/Save as Character text file (runtime only)")]

@@ -29,6 +29,8 @@ namespace UMA.Dynamics
 
 		[Tooltip("Set this to snap the Avatar to the position of it's hip after ragdoll is finished")]
 		public bool UpdateTransformAfterRagdoll = true;
+		[Tooltip("Move each skinned renderer's existing bounds with the ragdoll root bone. Keep this enabled when ragdoll bones can move away from the avatar root.")]
+		public bool UpdateRendererBoundsWhileRagdolled = true;
 		[Tooltip("Check this to set the player layer to the current layer, and read the 'ragdoll' layer from the settings")]
 		public bool AutoSetLayers = false;
 		[Tooltip("Layer to set the ragdoll colliders on. See layer based collision")]
@@ -46,7 +48,17 @@ namespace UMA.Dynamics
 		private UMAData _umaData;
 		private GameObject _rootBone;
 		private List<Rigidbody> _rigidbodies = new List<Rigidbody> ();
-		private bool[] SaveRagdollStates = new bool[0];
+
+		private sealed class RagdollRendererState
+		{
+			public SkinnedMeshRenderer renderer;
+			public bool updateWhenOffscreen;
+			public Bounds localBounds;
+			public Bounds ragdollBounds;
+		}
+
+		private readonly List<RagdollRendererState> _ragdollRendererStates =
+			new List<RagdollRendererState>();
 
 
 		public List<BoxCollider> BoxColliders { get { return _BoxColliders; } }
@@ -141,6 +153,8 @@ namespace UMA.Dynamics
 					_umaData.CharacterUpdated.RemoveListener(OnCharacterUpdatedCallback);
 				}
 			}
+
+			_ragdollRendererStates.Clear();
 		}
 
 		void FixedUpdate()
@@ -156,6 +170,14 @@ namespace UMA.Dynamics
 						rigidbody.transform.rotation = Quaternion.Slerp (rigidbody.transform.rotation, Quaternion.identity, ragdollBlendAmount);
 					}
 				}
+			}
+		}
+
+		void LateUpdate()
+		{
+			if (_ragdolled && UpdateRendererBoundsWhileRagdolled)
+			{
+				UpdateRagdollRendererBounds();
 			}
 		}
 
@@ -256,6 +278,11 @@ namespace UMA.Dynamics
 
 						continue; //if we don't find the bone then go to the next iteration
                     }
+
+					if (element.isRoot)
+					{
+						_rootBone = bone;
+					}
                 
                     if (!bone.GetComponent<Rigidbody>())
                     {
@@ -335,7 +362,6 @@ namespace UMA.Dynamics
                     // Add Character Joint
                     if (!element.isRoot) {
 						CharacterJoint joint = bone.AddComponent<CharacterJoint> ();
-						_rootBone = bone;
 						joint.connectedBody = _umaData.GetBoneGameObject(element.parentBone).GetComponent<Rigidbody> (); // possible error if parent not yet created.
 						joint.axis = element.axis;
 						joint.swingAxis = element.swingAxis;	
@@ -392,6 +418,14 @@ namespace UMA.Dynamics
                 return;
             }
             
+			// Capture the generated/manual renderer settings immediately before
+			// entering ragdoll. UMA assigns localBounds during generation, which
+			// makes them a custom override until ResetLocalBounds is called.
+			if (ragdollState && !_ragdolled)
+			{
+				SetRendereroffscreenStates();
+			}
+
 			//Player Collider stuff
 			//Call Player Collider enable/disable event here
 			if (ragdollState) 
@@ -444,10 +478,9 @@ namespace UMA.Dynamics
                 expressionPlayer.enabled = !ragdollState;
             }
 
-            // Prevent Mismatched Culling
-            // Skinned mesh renderers cull based on their origonal position before ragdolling.
-            // We use this property to prevent ragdolled meshes from popping in and out unexpectedly.
-            SetUpdateWhenOffscreen( ragdollState );
+			// Keep a conservative custom bound centered on the physics root while
+			// ragdolled, then restore UMA's exact generated/manual renderer state.
+			SetRagdollRendererState(ragdollState);
 
 			if (_ragdolled && !ragdollState) 
 			{
@@ -502,51 +535,235 @@ namespace UMA.Dynamics
 
 		private void SetRendereroffscreenStates()
 		{
-			if (_umaData != null)
+			if (_umaData == null)
 			{
-				SkinnedMeshRenderer[] renderers = _umaData.GetRenderers();
-				if (renderers != null)
-				{
-					if (SaveRagdollStates.Length != renderers.Length)
-					{
-						SaveRagdollStates = new bool[renderers.Length];
-					}
+				return;
+			}
 
-					for(int i = 0; i < renderers.Length; i++)
+			SkinnedMeshRenderer[] renderers = _umaData.GetRenderers();
+			if (renderers == null)
+			{
+				return;
+			}
+
+			// UMA can replace its renderers when a character is regenerated. Remove
+			// stale entries by object reference so renderer order and count changes
+			// cannot restore one renderer's settings onto another renderer.
+			for (int i = _ragdollRendererStates.Count - 1; i >= 0; i--)
+			{
+				RagdollRendererState state = _ragdollRendererStates[i];
+				if (state.renderer == null || !ContainsRenderer(renderers, state.renderer))
+				{
+					_ragdollRendererStates.RemoveAt(i);
+				}
+			}
+
+			for (int i = 0; i < renderers.Length; i++)
+			{
+				SkinnedMeshRenderer renderer = renderers[i];
+				if (renderer == null)
+				{
+					continue;
+				}
+
+				RagdollRendererState state = FindRendererState(renderer);
+				bool created = state == null;
+				if (state == null)
+				{
+					state = new RagdollRendererState
 					{
-						SkinnedMeshRenderer smr = renderers[i];
-						SaveRagdollStates[i] = smr.updateWhenOffscreen;
-					}
+						renderer = renderer
+					};
+					_ragdollRendererStates.Add(state);
+				}
+
+				// Do not replace the pre-ragdoll values if regeneration reports a
+				// renderer that was already being tracked during the ragdoll.
+				if (!_ragdolled || created)
+				{
+					state.updateWhenOffscreen = renderer.updateWhenOffscreen;
+					state.localBounds = renderer.localBounds;
+					state.ragdollBounds = CubifyBounds(state.localBounds);
 				}
 			}
 		}
 
-		private void SetUpdateWhenOffscreen(bool flag)
+		private void SetRagdollRendererState(bool active)
 		{
-			if (_umaData != null) 
+			if (_umaData == null)
 			{
-				SkinnedMeshRenderer[] renderers = _umaData.GetRenderers ();
-				if (renderers != null) 
+				return;
+			}
+
+			SkinnedMeshRenderer[] renderers = _umaData.GetRenderers ();
+			if (renderers == null)
+			{
+				return;
+			}
+
+			for (int i = 0; i < renderers.Length; i++)
+			{
+				SkinnedMeshRenderer renderer = renderers[i];
+				if (renderer == null)
 				{
-					// if we've saved the states, we can't just turn it off. might be on by default.
-					if (SaveRagdollStates.Length == renderers.Length && !flag)
+					continue;
+				}
+
+				RagdollRendererState state = FindRendererState(renderer);
+				if (active)
+				{
+					if (UpdateRendererBoundsWhileRagdolled)
 					{
-						for (int i = 0; i < renderers.Length; i++)
-						{
-							SkinnedMeshRenderer smr = renderers[i];
-							smr.updateWhenOffscreen = SaveRagdollStates[i];
-						}
+						// updateWhenOffscreen lets Unity replace a custom localBounds with
+						// its internally calculated mesh bounds. The hip-centered bound is
+						// maintained explicitly, so forced offscreen skinning is unnecessary.
+						renderer.updateWhenOffscreen = false;
 					}
 					else
 					{
-                        for (int i = 0; i < renderers.Length; i++)
-                        {
-                            SkinnedMeshRenderer renderer = renderers[i];
-                            renderer.updateWhenOffscreen = flag;
-                        }
-                    }
+						// Preserve the legacy behavior when explicit ragdoll bounds have
+						// been disabled by the user.
+						renderer.ResetLocalBounds();
+						renderer.updateWhenOffscreen = true;
+					}
+				}
+				else if (state != null)
+				{
+					renderer.updateWhenOffscreen = state.updateWhenOffscreen;
+					// Changing updateWhenOffscreen can reset localBounds, so restore
+					// the flag first and UMA's exact authored bounds last.
+					renderer.localBounds = state.localBounds;
+				}
+				else
+				{
+					// A renderer created after state capture has no authored state to
+					// restore. Return it to Unity's automatic bounds behavior.
+					renderer.ResetLocalBounds();
+					renderer.updateWhenOffscreen = false;
 				}
 			}
+
+			if (active && UpdateRendererBoundsWhileRagdolled)
+			{
+				UpdateRagdollRendererBounds();
+			}
 		}
+
+		private void UpdateRagdollRendererBounds()
+		{
+			if (_umaData == null)
+			{
+				return;
+			}
+
+			SkinnedMeshRenderer[] renderers = _umaData.GetRenderers();
+			if (renderers == null)
+			{
+				return;
+			}
+
+			for (int i = 0; i < renderers.Length; i++)
+			{
+				SkinnedMeshRenderer renderer = renderers[i];
+				if (renderer == null)
+				{
+					continue;
+				}
+
+				RagdollRendererState state = FindRendererState(renderer);
+				if (state == null)
+				{
+					// A regeneration can replace renderers while physics remains active.
+					// Capture the new renderer so it participates immediately and can be
+					// returned to its current generated settings on ragdoll exit.
+					state = new RagdollRendererState
+					{
+						renderer = renderer,
+						updateWhenOffscreen = renderer.updateWhenOffscreen,
+						localBounds = renderer.localBounds,
+						ragdollBounds = CubifyBounds(renderer.localBounds)
+					};
+					_ragdollRendererStates.Add(state);
+				}
+
+				Transform referenceBone = GetBoundsReferenceBone(renderer);
+				if (referenceBone == null)
+				{
+					continue;
+				}
+
+				Bounds movedBounds = state.ragdollBounds;
+				movedBounds.center = renderer.transform.InverseTransformPoint(
+					referenceBone.position);
+				if (!IsFinite(movedBounds))
+				{
+					continue;
+				}
+				renderer.localBounds = movedBounds;
+			}
+		}
+
+		private Transform GetBoundsReferenceBone(
+			SkinnedMeshRenderer renderer)
+		{
+			if (_rootBone != null)
+			{
+				return _rootBone.transform;
+			}
+			return renderer.rootBone;
+		}
+
+		private static Bounds CubifyBounds(Bounds source)
+		{
+			float cubeSize = Mathf.Max(
+				source.size.x,
+				Mathf.Max(source.size.y, source.size.z));
+			Bounds cube = source;
+			cube.size = Vector3.one * cubeSize;
+			return cube;
+		}
+
+		private RagdollRendererState FindRendererState(
+			SkinnedMeshRenderer renderer)
+		{
+			for (int i = 0; i < _ragdollRendererStates.Count; i++)
+			{
+				if (_ragdollRendererStates[i].renderer == renderer)
+				{
+					return _ragdollRendererStates[i];
+				}
+			}
+			return null;
+		}
+
+		private static bool ContainsRenderer(
+			SkinnedMeshRenderer[] renderers,
+			SkinnedMeshRenderer renderer)
+		{
+			for (int i = 0; i < renderers.Length; i++)
+			{
+				if (renderers[i] == renderer)
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
+		private static bool IsFinite(Bounds bounds)
+		{
+			return IsFinite(bounds.center.x) &&
+				IsFinite(bounds.center.y) &&
+				IsFinite(bounds.center.z) &&
+				IsFinite(bounds.size.x) &&
+				IsFinite(bounds.size.y) &&
+				IsFinite(bounds.size.z);
+		}
+
+		private static bool IsFinite(float value)
+		{
+			return !float.IsNaN(value) && !float.IsInfinity(value);
+		}
+
 	}
 }

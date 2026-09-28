@@ -31,6 +31,8 @@ MonoBehaviour:
   splatterDistance: 1
   randomStrength: 0
   fade: 0
+  autoFade: 0
   taper: 0
+  autoTaper: 0
   fadeTaperLength: 0
   tags: 

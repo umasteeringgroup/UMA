@@ -1,0 +1,5 @@
+.uma-preset-root { padding-left: 8px; padding-right: 8px; padding-top: 8px; padding-bottom: 8px; }
+.uma-preset-options { flex-grow: 1; min-height: 120px; }
+.uma-preset-icon { height: 96px; flex-shrink: 0; }
+.uma-preset-commands { flex-direction: row; }
+.uma-preset-status { white-space: normal; margin-top: 4px; margin-bottom: 4px; }

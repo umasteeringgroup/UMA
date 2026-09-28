@@ -12,22 +12,3 @@ MonoBehaviour:
   m_Script: {fileID: 0}
   m_Name: Texture Paint Export Template
   m_EditorClassIdentifier: UMA.TexturePaint.Runtime:UMA.TexturePaint:TexturePaintExportTemplate
-  version: 2
-  outputFolder: Assets/UMA/TexturePaintStage/Generated
-  filenamePattern: '{avatar}_{material}_{channel}_{resolution}'
-  scope: 1
-  channels: 127
-  overwritePolicy: 2
-  resolution: 0
-  bitDepth: 0
-  padding: 8
-  invertedChannels: 0
-  normalConvention: 0
-  exportLogicalChannels: 0
-  exportMaterialPacking: 1
-  customPacking: []
-  createOrUpdateOverlay: 1
-  overwriteSourceOverlay: 0
-  createMaterialOverride: 0
-  updateRecipeReferences: 0
-  markAddressable: 0

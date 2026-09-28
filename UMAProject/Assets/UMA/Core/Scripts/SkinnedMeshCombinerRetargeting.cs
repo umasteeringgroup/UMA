@@ -23,6 +23,14 @@ namespace UMA
 		/// </summary>
 		public static int JobifiedSkinningVertexThreshold = 256;
 
+		[RuntimeInitializeOnLoadMethod(
+			RuntimeInitializeLoadType.SubsystemRegistration)]
+		private static void ResetStaticState()
+		{
+			UseJobifiedSkinning = true;
+			JobifiedSkinningVertexThreshold = 256;
+		}
+
 		/// <summary>
 		/// Container for source mesh data.
 		/// </summary>

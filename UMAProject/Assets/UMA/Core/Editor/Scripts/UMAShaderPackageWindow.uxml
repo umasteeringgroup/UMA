@@ -1,0 +1,13 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
+    <ui:VisualElement class="package-browser">
+        <uie:Toolbar>
+            <uie:ToolbarButton name="refresh" text="Refresh" />
+            <uie:ToolbarSearchField name="search" class="package-search" />
+        </uie:Toolbar>
+        <ui:TwoPaneSplitView fixed-pane-index="0" fixed-pane-initial-dimension="750" orientation="Horizontal" class="package-split">
+            <ui:VisualElement name="packages" class="package-list" />
+            <ui:ScrollView name="details" class="package-details" />
+        </ui:TwoPaneSplitView>
+        <ui:Label name="status" text="Scanning shader package usage..." class="package-status wrapped" />
+    </ui:VisualElement>
+</ui:UXML>

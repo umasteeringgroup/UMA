@@ -24,7 +24,7 @@ namespace UMA
 			public Vector3 scale;
 			public int accessedFrame;
 
-			public int matrixFrame;
+			public int matrixFrame = -1;
 			public Quaternion grotation;
 			public Vector3 gposition;
 			public Vector3 gscale;
@@ -34,6 +34,7 @@ namespace UMA
 
 			internal void ReadUMATransform()
 			{
+				matrixFrame = -1;
 				rotation = umaTransform.rotation;
 				position = umaTransform.position;
 				scale = umaTransform.scale;
@@ -50,6 +51,33 @@ namespace UMA
 		public override int boneCount { get { return boneHashData.Count; } }
 
 		new Dictionary<int, BoneDataBoneBaking> boneHashData;
+        private string ignoreTag;
+
+        public override int GetParentBoneHash(int hash)
+        {
+            return boneHashData.TryGetValue(hash, out var bone) ? bone.parentBoneNameHash : 0;
+        }
+
+        internal override UMATransform GetBoneDefinition(int hash)
+        {
+            return boneHashData.TryGetValue(hash, out var bone) ? bone.umaTransform?.Duplicate() : null;
+        }
+
+        internal override void AdoptBone(Transform bone)
+        {
+            int hash = UMAUtils.StringToHash(bone.name);
+            int parentHash = bone.parent != null ? UMAUtils.StringToHash(bone.parent.name) : 0;
+            if (!boneHashData.ContainsKey(hash)) AddBone(parentHash, hash, bone);
+            var data = boneHashData[hash];
+            data.boneTransform = bone;
+            data.parentBoneNameHash = parentHash;
+            data.accessedFrame = frame;
+            data.position = bone.localPosition;
+            data.rotation = bone.localRotation;
+            data.scale = bone.localScale;
+            data.preserved = true;
+            data.matrixFrame = -1;
+        }
 		public override void BeginSkeletonUpdate()
 		{
 			updating = true;
@@ -105,12 +133,14 @@ namespace UMA
 		public UMAImprovedSkeleton(Transform rootBone)
 		{
 			rootBoneHash = UMAUtils.StringToHash(rootBone.name);
+            ignoreTag = UMASettings.GetValidatedIgnoreTag(rootBone.gameObject);
 			this.boneHashData = new Dictionary<int, BoneDataBoneBaking>(300);
 			AddBonesRecursive(rootBone);
 		}
 
 		private void AddBonesRecursive(Transform transform)
 		{
+            if (!string.IsNullOrEmpty(ignoreTag) && transform.CompareTag(ignoreTag)) return;
 			var hash = UMAUtils.StringToHash(transform.name);
 			var parentHash = transform.parent != null ? UMAUtils.StringToHash(transform.parent.name) : 0;
 			AddBone(parentHash, hash, transform);

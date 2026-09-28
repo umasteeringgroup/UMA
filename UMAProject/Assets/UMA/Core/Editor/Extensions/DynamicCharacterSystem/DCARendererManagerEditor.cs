@@ -8,6 +8,8 @@ namespace UMA.Editors
     [CustomEditor(typeof(DCARendererManager))]
     public class DCARendererManagerEditor : Editor
     {
+        readonly UMAInspectorView inspectorView =
+            new UMAInspectorView(typeof(DCARendererManager));
         SerializedProperty RendererElements;
         SerializedProperty showHelp;
         SerializedProperty State;
@@ -35,16 +37,6 @@ namespace UMA.Editors
         {
             serializedObject.Update();
 
-            GUILayout.Space(10);
-            State.boolValue = EditorGUILayout.Toggle("Renderers Enabled", State.boolValue);
-            showHelp.boolValue = EditorGUILayout.Toggle("Show Help", showHelp.boolValue);
-            if (showHelp.boolValue)
-            {
-                EditorGUILayout.HelpBox("This manager will create skinned mesh renderers for each Renderer Asset in each Renderer Element Set." +
-                    "\n\n For each slot Asset listed that is found in the generating UMA, it will be separated onto each RendererAsset listed (so there could be duplicates created for various effects)." +
-                    "\n\n This manager will also look for any slots assigned to any list Wardrobe slots and perform the same separation.", MessageType.Info);
-            }
-
             if (avatar != null && avatar.activeRace != null && avatar.activeRace.data != null)
             {
                 if (currentRaceData != avatar.activeRace.data)
@@ -53,7 +45,38 @@ namespace UMA.Editors
                 }
             }
 
-            GUILayout.Space(10);
+            bool advanced = inspectorView.DrawSelector();
+            using (inspectorView.Section("Renderer routing",
+                "Renderers Enabled activates renderer separation for this avatar. Each element sends matching source slots or wardrobe regions to every Renderer Asset in that element. A source may deliberately appear in multiple elements for effects that need duplicate renderers."))
+            {
+                EditorGUILayout.PropertyField(State,
+                    new GUIContent("Renderers Enabled"));
+                if (advanced)
+                    EditorGUILayout.PropertyField(showHelp,
+                        new GUIContent("Legacy Help Flag"));
+            }
+
+            if (advanced)
+            {
+                using (inspectorView.Section("Renderer element data",
+                    "Advanced View exposes the serialized renderer-element list directly. Renderer Assets are output configurations, Slot Assets are explicit base-slot matches, and Regions match the active race's wardrobe-region names."))
+                    EditorGUILayout.PropertyField(RendererElements, true);
+                DrawValidation();
+                serializedObject.ApplyModifiedProperties();
+                return;
+            }
+
+            using (inspectorView.Section("Slot and region selection",
+                "Add an element for each distinct renderer route. Assign at least one Renderer Asset, then choose base slots and wardrobe regions. The pickers are populated from the avatar's active race; the lists below retain the exact serialized selections."))
+                DrawRendererElements();
+
+            DrawValidation();
+            serializedObject.ApplyModifiedProperties();
+        }
+
+        private void DrawRendererElements()
+        {
+
             if(GUILayout.Button("Add New Renderer Element Set"))
             {
                 RendererElements.arraySize++;
@@ -134,8 +157,39 @@ namespace UMA.Editors
                 EditorGUILayout.EndVertical();
                 GUILayout.Space(10);
             }
+        }
 
-            serializedObject.ApplyModifiedProperties();
+        private void DrawValidation()
+        {
+            using (inspectorView.Section("Validation and refresh",
+                "Validation reports missing renderer outputs and unavailable race context. Refresh Choices reloads base slots and wardrobe regions after changing the avatar's race or base recipe."))
+            {
+                if (avatar == null)
+                    EditorGUILayout.HelpBox(
+                        "This component must be on the same GameObject as a Dynamic Character Avatar.",
+                        MessageType.Error);
+                else if (avatar.activeRace == null ||
+                    avatar.activeRace.data == null)
+                    EditorGUILayout.HelpBox(
+                        "Choose an active race to populate slot and wardrobe-region choices.",
+                        MessageType.Warning);
+                int missing = 0;
+                for (int i = 0; i < RendererElements.arraySize; i++)
+                {
+                    SerializedProperty renderers = RendererElements
+                        .GetArrayElementAtIndex(i)
+                        .FindPropertyRelative("rendererAssets");
+                    if (renderers.arraySize == 0) missing++;
+                    for (int r = 0; r < renderers.arraySize; r++)
+                        if (renderers.GetArrayElementAtIndex(r)
+                            .objectReferenceValue == null) missing++;
+                }
+                if (missing > 0)
+                    EditorGUILayout.HelpBox(
+                        missing + " renderer route assignment(s) are empty.",
+                        MessageType.Warning);
+                if (GUILayout.Button("Refresh Choices")) UpdateOptions();
+            }
         }
 
         private bool ArrayContains(SerializedProperty array, string item)
@@ -173,6 +227,7 @@ namespace UMA.Editors
         {
             wardrobeOptions.Clear();
             slotOptions.Clear();
+            wardrobeOptions.Add("Add Wardrobe Region");
 
             if (avatar != null && avatar.activeRace != null && avatar.activeRace.data != null)
             {
@@ -182,7 +237,6 @@ namespace UMA.Editors
 #endif
                 currentRaceData = avatar.activeRace.data;
                 wardrobeOptions.AddRange(avatar.activeRace.data.wardrobeSlots);
-                wardrobeOptions.Insert(0, "Add Wardrobe Slot");
 
                 avatar.activeRace.data.baseRaceRecipe.Load(umaRecipe);
                 for (int i = 0; i < umaRecipe.slotDataList.Length; i++)

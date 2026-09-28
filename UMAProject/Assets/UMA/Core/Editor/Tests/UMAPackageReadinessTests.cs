@@ -440,7 +440,7 @@ namespace UMA.Editors.Tests
         public void SliderSampleRandomAvatarCreatesItsAnimatorController()
         {
             string generatorPath = UMAPathUtility.ResolveUma3ContentPath(
-                "Getting Started/UMARandomGeneratedCharacter.prefab");
+                "RandomCharacters/UMARandomGeneratedCharacter.prefab");
             GameObject generatorPrefab =
                 AssetDatabase.LoadAssetAtPath<GameObject>(generatorPath);
             Assert.That(generatorPrefab, Is.Not.Null, generatorPath);

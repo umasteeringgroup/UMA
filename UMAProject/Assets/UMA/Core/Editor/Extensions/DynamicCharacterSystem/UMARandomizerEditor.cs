@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using UMA.CharacterSystem;
@@ -8,12 +8,13 @@ namespace UMA.Editors
 	[CustomEditor(typeof(UMARandomizer))]
 	public class UMARandomizerEditor : Editor
 	{
+		private readonly UMAInspectorView inspectorView =
+			new UMAInspectorView(typeof(UMARandomizer));
 		UMARandomizer currentTarget = null;               // Randomizer Inspector target
 		private List<RandomColors> colorsToDelete = default;    // SharedColorTables temp var
 		private SerializedProperty definitionProperty = default;// Randomizer Definition is drawn using a custom Property drawer
 		private EditorApplication.CallbackFunction delayedEnableHandler = default;   // Defer init until editor/domain reload settles
 
-		private bool displayHelp = false;                   // Not used ATM
 		private int copyFromRace = 0, copyToRace = 0;       // For Randomizer Copy From / To Race Utility
 		private bool autoSave = false;                      // Does Randomizer requires saving ?
 		private double autoSavePeriod = 3f, nextSave = 0f;  // Handle SaveAssets Delay
@@ -186,33 +187,49 @@ namespace UMA.Editors
 				return;
 			}
 
-			if (currentTarget.useDefinition)
-				EditorGUILayout.PropertyField(definitionProperty);
-
-			// -- Global Shared Colors --
-			if (currentTarget.useGlobalColors)
-				SharedColorsGUI(ref currentTarget.Global.ColorsFoldout, currentTarget.Global.SharedColors, "Global Colors", Tooltips.GlobalColors);
-
-			UtilitiesGUI(ref currentTarget.Global.UtilityFoldout, "Utilities", Tooltips.Utilities);
-
-			try
+			using (inspectorView.Section("Identity and global colors",
+				"Use Definition enables the artist-facing icon, name, and notes for this randomizer. Use Global Colors enables color tables shared by every race setup in this asset. Each global color entry names an UMA shared color and selects a Color Table from which one value is chosen during randomization."))
 			{
-				DragAndDropGUI("Per Race Randomizers");
-			}
-			catch (System.Exception ex)
-			{
-				EditorGUILayout.HelpBox("Failed to draw per-race randomizer UI. See Console for details.", MessageType.Error);
-				Debug.LogException(ex);
-				return;
-			}
-
-			if (currentTarget.RandomAvatars != null)
-			{
-				foreach (RandomAvatar ra in currentTarget.RandomAvatars)
+				EditorGUI.BeginChangeCheck();
+				bool useDefinition = EditorGUILayout.Toggle("Use Definition", currentTarget.useDefinition);
+				bool useGlobalColors = EditorGUILayout.Toggle("Use Global Colors", currentTarget.useGlobalColors);
+				if (EditorGUI.EndChangeCheck())
 				{
-					if (ra != null)
+					Undo.RecordObject(currentTarget, "Change randomizer options");
+					ContextMenu.UseDefinition = useDefinition;
+					ContextMenu.UseGlobalColors = useGlobalColors;
+					autoSave = true;
+				}
+
+				if (currentTarget.useDefinition)
+					EditorGUILayout.PropertyField(definitionProperty);
+				if (currentTarget.useGlobalColors)
+					SharedColorsGUI(ref currentTarget.Global.ColorsFoldout, currentTarget.Global.SharedColors, "Global Colors", Tooltips.GlobalColors);
+			}
+
+			using (inspectorView.Section("Race utilities",
+				"Copy Race From to To duplicates one race's complete randomization setup into another race entry, replacing the destination setup. Update DNA List resynchronizes every race entry with the DNA controls currently exposed by its RaceData while retaining compatible configured ranges."))
+				UtilitiesGUI();
+
+			using (inspectorView.Section("Per-race randomization",
+				"Select a race and Add Race to create or reveal its setup. Drag wardrobe recipes, wardrobe collections, or folders into the drop area to add compatible content. Each race's Weighted Chance controls selection relative to other race entries. Inside a race, Colors choose color tables, DNA defines random value ranges, and Wardrobe assigns weighted recipes or explicit null choices by wardrobe region."))
+			{
+				try
+				{
+					DragAndDropGUI("Per Race Randomizers");
+				}
+				catch (System.Exception ex)
+				{
+					EditorGUILayout.HelpBox("Failed to draw per-race randomizer UI. See Console for details.", MessageType.Error);
+					Debug.LogException(ex);
+					return;
+				}
+
+				if (currentTarget.RandomAvatars != null)
+				{
+					foreach (RandomAvatar ra in currentTarget.RandomAvatars)
 					{
-						RandomAvatarGUI(ra);
+						if (ra != null) RandomAvatarGUI(ra);
 					}
 				}
 			}
@@ -230,18 +247,13 @@ namespace UMA.Editors
 		}
 
 		#region ------ GUI Methods ------
-		bool _helpexpanded;
 		/// <summary>
 		/// Editor Utilities for Randomizer :
 		/// <br>> Copy from a Race Randomizer to another Race </br>
 		/// <br>> Update DNA List</br>
 		/// </summary>
-		private void UtilitiesGUI(ref bool foldout, string label, GUIContent tooltip)
+		private void UtilitiesGUI()
 		{
-			foldout = GUIHelper.FoldoutBar(foldout, label, tooltip);
-
-			if (!foldout) return;
-
 			GUIHelper.BeginVerticalPadded();
 
 			Rect lineRect = GUILayoutUtility.GetRect(0.0f, EditorGUIUtility.singleLineHeight * 2, GUILayout.ExpandWidth(true));
@@ -392,6 +404,8 @@ namespace UMA.Editors
 		/// Handle RandomAvatar List of Wardrobe slots
 		/// </summary>
 		/// <param name="ra"></param>
+        private readonly Dictionary<RandomAvatar, int> wardrobeSourceRaces = new Dictionary<RandomAvatar, int>();
+
 		private void WardrobeGUI(RandomAvatar ra)
 		{
 			if (ra == null || ra.raceData == null || ra.raceData.wardrobeSlots == null || ra.raceData.wardrobeSlots.Count == 0)
@@ -417,6 +431,21 @@ namespace UMA.Editors
 				ra.RandomWardrobeSlots.Add(new RandomWardrobeSlot(null, ra.raceData.wardrobeSlots[ra.currentWardrobeSlot]));
 				ra.RandomWardrobeSlots.Sort((x, y) => x.SortName.CompareTo(y.SortName));
 			}
+            bool hasRaces = currentTarget.races != null && currentTarget.raceDatas != null &&
+                currentTarget.races.Length > 0 && currentTarget.raceDatas.Count > 0;
+            if (!wardrobeSourceRaces.TryGetValue(ra, out int sourceRace))
+                sourceRace = hasRaces ? Mathf.Max(0, currentTarget.raceDatas.IndexOf(ra.raceData)) : 0;
+            using (new EditorGUI.DisabledScope(!hasRaces))
+            {
+                if (hasRaces)
+                    sourceRace = Mathf.Clamp(sourceRace, 0, Mathf.Min(currentTarget.races.Length, currentTarget.raceDatas.Count) - 1);
+                bool changed = GUI.changed;
+                sourceRace = EditorGUILayout.Popup(sourceRace, currentTarget.races ?? System.Array.Empty<string>(), GUILayout.MinWidth(90));
+                GUI.changed = changed;
+                wardrobeSourceRaces[ra] = sourceRace;
+                if (GUILayout.Button(new GUIContent("Add All", "Add all indexed wardrobe items for the selected race and region, skipping existing items."), GUILayout.ExpandWidth(false)))
+                    AddAllWardrobeInRegion(ra, currentTarget.raceDatas[sourceRace], ra.raceData.wardrobeSlots[ra.currentWardrobeSlot]);
+            }
 			GUILayout.EndHorizontal();
 			GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.75f, 0.75f));
 
@@ -433,6 +462,29 @@ namespace UMA.Editors
 			}
 			GUIHelper.EndVerticalPadded(10);
 		}
+
+        private void AddAllWardrobeInRegion(RandomAvatar avatar, RaceData sourceRace, string region)
+        {
+            var indexer = UMAAssetIndexer.Instance;
+            if (sourceRace == null || indexer == null) return;
+            var recipes = indexer.GetRecipes(sourceRace.raceName);
+            if (!recipes.TryGetValue(region, out var choices) || choices == null) return;
+            var existing = new HashSet<UMAWardrobeRecipe>();
+            if (avatar.RandomWardrobeSlots != null)
+                foreach (var slot in avatar.RandomWardrobeSlots)
+                    if (slot?.WardrobeSlot != null) existing.Add(slot.WardrobeSlot);
+            var additions = new List<RandomWardrobeSlot>();
+            foreach (var recipe in choices)
+                if (recipe is UMAWardrobeRecipe wardrobe && wardrobe.wardrobeSlot == region && existing.Add(wardrobe))
+                    additions.Add(new RandomWardrobeSlot(wardrobe, region));
+            if (additions.Count == 0) return;
+            Undo.RecordObject(currentTarget, "Add all wardrobe items in region");
+            avatar.RandomWardrobeSlots ??= new List<RandomWardrobeSlot>();
+            avatar.RandomWardrobeSlots.AddRange(additions);
+            avatar.RandomWardrobeSlots.Sort((left, right) => string.Compare(left?.SortName, right?.SortName, System.StringComparison.Ordinal));
+            EditorUtility.SetDirty(currentTarget);
+            AssetDatabase.SaveAssetIfDirty(currentTarget);
+        }
 
 		/// <summary>
 		/// Handle a Single Wardrobe slot
@@ -484,45 +536,65 @@ namespace UMA.Editors
 
 		}
 
-		private static int rangeIndex = 0;
+        private static int rangeIndex = 4; // Preserve the previous 50% default.
+        private static readonly string[] DnaRanges = { "10%", "20%", "30%", "40%", "50%", "60%", "70%", "80%", "90%", "100%" };
+
         private void DNAGUI(RandomAvatar ra)
-		{
-			string[] ranges = { "50%", "60%", "70%", "80%", "90%", "100%" };
+        {
             GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.75f, 0.75f));
-			// (popup with DNA names) and "Add" button.
-			EditorGUILayout.BeginHorizontal();
-			EditorGUILayout.LabelField("Select DNA", GUILayout.Width(100));
-            ra.SelectedDNA = EditorGUILayout.Popup(ra.SelectedDNA, ra.PossibleDNA, GUILayout.ExpandWidth(true));
-			rangeIndex = EditorGUILayout.Popup(rangeIndex, ranges, GUILayout.Width(60));
-            bool addDNA = GUILayout.Button("Add DNA", EditorStyles.miniButton, GUILayout.Width(80));// GUIStyles.Popup?
-			bool addAllDNA = GUILayout.Button("Add All", EditorStyles.miniButton, GUILayout.Width(80));// GUIStyles.Popup?
+            bool hasPossibleDNA = ra.PossibleDNA != null && ra.PossibleDNA.Length > 0;
+            ra.RandomDna ??= new List<RandomDNA>();
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Select DNA", GUILayout.Width(100));
+            using (new EditorGUI.DisabledScope(!hasPossibleDNA))
+            {
+                if (hasPossibleDNA) ra.SelectedDNA = Mathf.Clamp(ra.SelectedDNA, 0, ra.PossibleDNA.Length - 1);
+                ra.SelectedDNA = EditorGUILayout.Popup(ra.SelectedDNA, ra.PossibleDNA ?? System.Array.Empty<string>(), GUILayout.ExpandWidth(true));
+            }
+            rangeIndex = EditorGUILayout.Popup(rangeIndex, DnaRanges, GUILayout.Width(60));
             EditorGUILayout.EndHorizontal();
 
-			if (addDNA)
-				ra.DNAAdd = ra.PossibleDNA[ra.SelectedDNA];
+            EditorGUILayout.BeginHorizontal();
+            bool addDNA, addAllDNA, removeAllDNA, updateAllDNA;
+            using (new EditorGUI.DisabledScope(!hasPossibleDNA))
+            {
+                addDNA = GUILayout.Button("Add DNA", EditorStyles.miniButton);
+                addAllDNA = GUILayout.Button("Add All", EditorStyles.miniButton);
+            }
+            using (new EditorGUI.DisabledScope(ra.RandomDna.Count == 0))
+            {
+                removeAllDNA = GUILayout.Button("Remove all", EditorStyles.miniButton);
+                updateAllDNA = GUILayout.Button("Update all", EditorStyles.miniButton);
+            }
+            EditorGUILayout.EndHorizontal();
 
-			if (addAllDNA)
-			{
-				
-				foreach (string dnaName in ra.PossibleDNA)
-				{
-					bool alreadyExists = false;
-					foreach (RandomDNA rd in ra.RandomDna)
-					{
-						if (rd.DnaName == dnaName)
-						{
-							alreadyExists = true;
-							break;
-						}
-					}
-					if (!alreadyExists)
-					{
-						RandomDNA r = new RandomDNA(dnaName);
-						SetMinMax(r, rangeIndex);
-                        ra.RandomDna.Add(r);
-						ra.DnaChanged = true;
-					}
-				}
+            if (addDNA || addAllDNA || removeAllDNA || updateAllDNA)
+            {
+                Undo.RecordObject(currentTarget, removeAllDNA ? "Remove all random DNA" : updateAllDNA ? "Update all random DNA ranges" : "Add random DNA");
+                if (removeAllDNA)
+                {
+                    ra.RandomDna.Clear();
+                    ra.DNAAdd = string.Empty;
+                }
+                else if (updateAllDNA)
+                {
+                    foreach (var entry in ra.RandomDna)
+                        if (entry != null) SetMinMax(entry, rangeIndex);
+                }
+                else
+                {
+                    var names = addAllDNA ? ra.PossibleDNA : new[] { ra.PossibleDNA[ra.SelectedDNA] };
+                    foreach (string name in names)
+                    {
+                        if (string.IsNullOrEmpty(name) || ra.RandomDna.Exists(entry => entry != null && entry.DnaName == name)) continue;
+                        var entry = new RandomDNA(name);
+                        SetMinMax(entry, rangeIndex);
+                        ra.RandomDna.Add(entry);
+                    }
+                }
+                ra.DnaChanged = true;
+                EditorUtility.SetDirty(currentTarget);
+                AssetDatabase.SaveAssetIfDirty(currentTarget);
             }
 
             if (ra.RandomDna.Count == 0)
@@ -550,43 +622,18 @@ namespace UMA.Editors
 			GUIHelper.EndVerticalPadded(10);
 		}
 
-		private void SetMinMax(RandomDNA rd, int randomAmount)
-		{
-			switch (randomAmount)
-			{
-				case 0:
-					rd.MinValue = 0.25f;
-					rd.MaxValue = 0.75f;
-					break;
-				case 1:
-					rd.MinValue = 0.20f;
-					rd.MaxValue = 0.80f;
-					break;
-				case 2:
-					rd.MinValue = 0.15f;
-					rd.MaxValue = 0.75f;
-					break;
-				case 3:
-					rd.MinValue = 0.10f;
-					rd.MaxValue = 0.80f;
-					break;
-				case 4:
-					rd.MinValue = 0.05f;
-					rd.MaxValue = 0.95f;
-					break;
-				case 5:
-					rd.MinValue = 0.0f;
-					rd.MaxValue = 1.0f;
-					break;
-			}
+        private void SetMinMax(RandomDNA rd, int randomAmount)
+        {
+            float halfRange = (Mathf.Clamp(randomAmount, 0, DnaRanges.Length - 1) + 1) * 0.05f;
+            rd.MinValue = 0.5f - halfRange;
+            rd.MaxValue = 0.5f + halfRange;
         }
+
         private void SharedColorsGUI(ref bool foldout, List<RandomColors> SharedColors, string label, GUIContent tooltip = default)
 		{
 			foldout = GUIHelper.FoldoutBar(foldout, label, tooltip);
 
 			if (!foldout) return;
-
-			if (displayHelp) GUILayout.Label("Shared Color names with Empty Color Table are discarded");
 
 			if (SharedColors != null && SharedColors.Count > 0)
 			{
@@ -886,7 +933,9 @@ namespace UMA.Editors
 				if (!string.IsNullOrEmpty(ra.DNAAdd))
 				{
 					ra.DnaChanged = true;
-					ra.RandomDna.Add(new RandomDNA(ra.DNAAdd));
+					var addedDNA = new RandomDNA(ra.DNAAdd);
+                    SetMinMax(addedDNA, rangeIndex);
+                    ra.RandomDna.Add(addedDNA);
 					ra.DNAAdd = "";
 					ChangeCount++;
 				}

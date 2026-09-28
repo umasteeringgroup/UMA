@@ -22,3 +22,4 @@ MonoBehaviour:
     enabled: 1
   tweenPoses: []
   tweenWeights: []
+  mixerPose: 0

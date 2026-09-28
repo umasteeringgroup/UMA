@@ -1,6 +1,6 @@
 # UMA - Unity Multipurpose Avatar
 
-UMA is an open-source runtime character generation, customization, authoring, and texture-painting system for Unity 6.3 and newer.
+UMA 3.1f0 is an open-source runtime character generation, customization, authoring, and texture-painting system for Unity 6.3 and newer.
 
 ## Installation
 

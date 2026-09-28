@@ -31,7 +31,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
+        enabled: 1
         expanded: 0
+        selected: 0
+        showHelp: 0
         EffectName: NoseMiddleAdjust
         BoneName: NoseMiddleAdjust
         ScaleFactor: {x: 1, y: 1, z: 1}

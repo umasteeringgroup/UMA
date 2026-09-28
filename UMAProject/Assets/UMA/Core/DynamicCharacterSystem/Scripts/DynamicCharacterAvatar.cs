@@ -28,7 +28,7 @@ namespace UMA.CharacterSystem
 {
     [SelectionBase]
     [ExecuteInEditMode]
-    public class DynamicCharacterAvatar : UMAAvatarBase
+    public partial class DynamicCharacterAvatar : UMAAvatarBase
     {
         public const string NO_RACE = "None Set";
         public static long Ticks_LoadCharacter = 0;
@@ -48,7 +48,8 @@ namespace UMA.CharacterSystem
 
         public float DelayUnload = 2.0f;
         public bool BundleCheck = true;
-        public bool StartGuard = false;
+        // Initialization state belongs to this instance/session, never to a saved scene or prefab.
+        [NonSerialized] public bool StartGuard = false;
         [Tooltip("If true, when building from a prefab, the prefab will be unpacked to allow for Rig and SMR regeneration.")]
         public bool UnpackPrefabOnBuild = true;
         public bool KeepAnimatorController = false;
@@ -71,11 +72,27 @@ namespace UMA.CharacterSystem
         [UnityEditor.MenuItem("GameObject/UMA/Create New Dynamic Character Avatar", false, 10)]
         public static void CreateDynamicCharacterAvatarMenuItem()
         {
+            OverlayColorData eyeColor = new OverlayColorData(1);
+            eyeColor.name = "Default";
+            eyeColor.color = Color.aliceBlue;
+            eyeColor.add = Color.black;
+
+            OverlayColorData hairColor = new OverlayColorData(1);
+            hairColor.name = "Default";
+            hairColor.color = Color.white;
+            hairColor.add = Color.black;
+
+            OverlayColorData skinColor = new OverlayColorData(1);
+            skinColor.name = "Default";
+            skinColor.color = new Color(1f, 0.9f, 0.9f);
+            skinColor.add = Color.black;
+
             var res = new GameObject("New Dynamic Character Avatar");
             var da = res.AddComponent<DynamicCharacterAvatar>();
             da.ChangeRace("Human Male 3.0");
-            da.SetColor("Eyes", Color.aliceBlue);
-            da.SetColor("Hair", new Color(0.7f, 0.5f, 0.3f));
+            // Set default colors using the new SetRawColor method
+            da.SetRawColor("Eyes", eyeColor);
+            da.SetRawColor("Hair", hairColor);
             UnityEditor.Selection.activeGameObject = res;
         }
 
@@ -502,14 +519,7 @@ namespace UMA.CharacterSystem
                     /// Have to clean up from edit time stuff.
                     if (editorTimeGeneration && Application.isPlaying)
                     {
-                        List<GameObject> Cleaners = GetRenderers(gameObject);
-                        HideAndCleanup(false);
-
-                        for (int i = 0; i < Cleaners.Count; i++)
-                        {
-                            GameObject go = Cleaners[i];
-                            DestroyImmediate(go);
-                        }
+                        CleanupEditorGeneratedDataForPlayMode();
                     }
             }
             else
@@ -574,29 +584,23 @@ namespace UMA.CharacterSystem
         // Use this for initialization
         public void Start()
         {
+            // A spawner may initialize/build us before Unity dispatches Start.
+            // Do not erase its runtime wardrobe or initialize callbacks a second time.
+            // Edit-mode Start must still reach preview generation when a scene is opened.
+            if (Application.isPlaying && (npcStartupHandled || StartGuard)) return;
+#if UNITY_EDITOR
+            // Safeguard the ordinary scene-reload path as well. The no-scene-
+            // reload path is prepared by UMAAssetIndexer before play because
+            // Unity does not recreate the scene object there.
+            if (Application.isPlaying && editorTimeGeneration)
+            {
+                CleanupEditorGeneratedDataForPlayMode();
+            }
+#endif
             StartGuard = false;
             _isFirstSettingsBuild = true;
 
-#if UMA_NODOMAINRELOAD
-            blendShapes = new HashSet<string>();
-            previousRace = null;
-            _wardrobeRecipes = new Dictionary<string, UMATextRecipe>();
-            _additiveRecipes = new Dictionary<string, List<UMATextRecipe>>();
-            _wardrobeCollections = new Dictionary<string, UMAWardrobeCollection>();
-#if UMA_ADDRESSABLES
-            LoadedHandles = new Queue<AsyncOp>();
-            DelayedHandles = new HashSet<AsyncOp>();
-#endif
-            SuppressedRecipes.Clear();
-            HiddenSlots.Clear();
-            cacheStates.Clear();
-            wasCrossCompatibleBuild = false;
-            crossCompatibleRaces.Clear();
-            forceSuppressedWardrobeSlots.Clear();
-            forceRemovedBaseSlots.Clear();
-            forceSuppressSlotsContaining.Clear();
-            forceRemovedTags.Clear();
-#endif
+            ResetPlayModeRuntimeState();
             InitialStartup();
         }
 
@@ -704,6 +708,64 @@ namespace UMA.CharacterSystem
             return objs;
         }
 
+#if UNITY_EDITOR
+        internal void CleanupEditorGeneratedDataForPlayMode()
+        {
+            List<GameObject> cleaners = GetRenderers(gameObject);
+            HideAndCleanup(false);
+
+            for (int i = 0; i < cleaners.Count; i++)
+            {
+                GameObject rendererObject = cleaners[i];
+                if (rendererObject != null)
+                {
+                    DestroyImmediate(rendererObject);
+                }
+            }
+        }
+
+        internal void PrepareForPlayMode()
+        {
+            CancelNPCBuild();
+            npcStartupHandled = false;
+            StartGuard = false;
+            _isFirstSettingsBuild = true;
+            if (editorTimeGeneration)
+            {
+                CleanupEditorGeneratedDataForPlayMode();
+            }
+            ResetPlayModeRuntimeState(resetWardrobe: true);
+        }
+#endif
+
+        private void ResetPlayModeRuntimeState(bool resetWardrobe = false)
+        {
+            blendShapes = new HashSet<string>();
+            previousRace = null;
+            // Start can follow LoadAvatarDefinition or SetSlot on a newly instantiated
+            // prefab. Only the editor's play-mode preparation should discard wardrobe
+            // left over from a previous session; ordinary startup must preserve it.
+            if (resetWardrobe)
+            {
+                _wardrobeRecipes = new Dictionary<string, UMATextRecipe>();
+                _additiveRecipes = new Dictionary<string, List<UMATextRecipe>>();
+                _wardrobeCollections = new Dictionary<string, UMAWardrobeCollection>();
+            }
+#if UMA_ADDRESSABLES
+            LoadedHandles = new Queue<AsyncOp>();
+            DelayedHandles = new HashSet<AsyncOp>();
+#endif
+            SuppressedRecipes.Clear();
+            HiddenSlots.Clear();
+            cacheStates.Clear();
+            wasCrossCompatibleBuild = false;
+            crossCompatibleRaces.Clear();
+            forceSuppressedWardrobeSlots.Clear();
+            forceRemovedBaseSlots.Clear();
+            forceSuppressSlotsContaining.Clear();
+            forceRemovedTags.Clear();
+        }
+
         public bool IsFbxRouteRendererObject(GameObject rendererObject)
         {
             UMAFbxRouteRuntime routeRuntime = fbxRouteRuntime != null ? fbxRouteRuntime : GetComponent<UMAFbxRouteRuntime>();
@@ -740,15 +802,77 @@ namespace UMA.CharacterSystem
 
         public void InitializeFromPreset(UMAPreset preset)
         {
-            preloadWardrobeRecipes = preset.DefaultWardrobe;
-            predefinedDNA = preset.PredefinedDNA;
-            characterColors = preset.DefaultColors;
+            ApplyPreset(preset, false);
+        }
+
+        /// <summary>Switch to the preset race when needed, replace the wardrobe, merge the selected DNA and colors, then optionally rebuild once.</summary>
+        public void ApplyPreset(UMAPreset preset, bool rebuild = true)
+        {
+            if (preset == null) throw new ArgumentNullException(nameof(preset));
+            var definition = preset.Definition;
+            RaceData targetRace = null;
+            bool changeRace = !string.IsNullOrEmpty(definition.RaceName) &&
+                (activeRace == null || activeRace.data == null ||
+                 !string.Equals(definition.RaceName, activeRace.name, StringComparison.Ordinal));
+            if (changeRace)
+            {
+                targetRace = UMAAssetIndexer.Instance.GetRace(definition.RaceName);
+                if (targetRace == null)
+                    throw new InvalidOperationException("Preset race is missing: " + definition.RaceName);
+            }
+            else if (activeRace == null || activeRace.data == null)
+                throw new InvalidOperationException("Initialize the avatar's race before applying a preset without a race.");
+
+            // Resolve every recipe before changing the avatar. Missing content must not silently disappear.
+            var recipes = new List<UMATextRecipe>();
+            foreach (string recipeName in definition.Wardrobe ?? Array.Empty<string>())
+            {
+                UMATextRecipe recipe = null;
+                foreach (var reference in preset.WardrobeRecipes ?? Array.Empty<UMATextRecipe>())
+                    if (reference != null && reference.name == recipeName) { recipe = reference; break; }
+                if (recipe == null) recipe = UMAAssetIndexer.Instance.GetRecipe(recipeName, false);
+                if (recipe == null) throw new InvalidOperationException("Preset recipe is missing: " + recipeName);
+                recipes.Add(recipe);
+            }
+            bool buildWasEnabled = BuildCharacterEnabled;
+            if (changeRace) _buildCharacterEnabled = false;
+            try
+            {
+                if (changeRace) ChangeRace(targetRace, ChangeRaceOptions.none, true);
+                UnloadAllWardrobeCollections();
+                ClearSlots();
+                if (preloadWardrobeRecipes == null) preloadWardrobeRecipes = new WardrobeRecipeList();
+                preloadWardrobeRecipes.loadDefaultRecipes = true;
+                preloadWardrobeRecipes.recipes.Clear();
+                foreach (var recipe in recipes)
+                {
+                    SetSlot(recipe);
+                    preloadWardrobeRecipes.recipes.Add(new WardrobeRecipeListItem(recipe));
+                }
+                LoadColors(definition, false);
+                if (definition.Dna != null && definition.Dna.Length > 0)
+                {
+                    if (predefinedDNA == null) predefinedDNA = new UMAPredefinedDNA();
+                    PreloadDNA(definition, false, false);
+                }
+#if UNITY_EDITOR
+                unchecked { EditorAvatarDefinitionRevision++; }
+#endif
+            }
+            finally
+            {
+                if (changeRace) _buildCharacterEnabled = buildWasEnabled;
+            }
+            if (rebuild && buildWasEnabled) BuildCharacter(true);
         }
 
         public void InitializeFromPreset(string presetstring)
         {
-            UMAPreset prs = JsonUtility.FromJson<UMAPreset>(presetstring);
-            InitializeFromPreset(prs);
+            var legacy = JsonUtility.FromJson<LegacyUMAPreset>(presetstring);
+            if (legacy == null) throw new ArgumentException("Invalid legacy preset JSON.", nameof(presetstring));
+            if (legacy.DefaultWardrobe != null) preloadWardrobeRecipes = legacy.DefaultWardrobe;
+            if (legacy.PredefinedDNA != null) predefinedDNA = legacy.PredefinedDNA;
+            if (legacy.DefaultColors != null) characterColors = legacy.DefaultColors;
         }
 
 
@@ -780,6 +904,8 @@ namespace UMA.CharacterSystem
         public bool nextBuildSlotsOnly = false;
         private const string EditorGenerationPausedSessionKey = "UMA.Toolbar.EditorGenerationPaused";
         private int generateWait = 0;
+        private bool editorGenerationQueued;
+        private bool pendingEditorGenerationIgnoresPause;
         const int maxWait = 60;
 
         /// <summary>
@@ -820,15 +946,41 @@ namespace UMA.CharacterSystem
                 return;
             }
 
+            //Debug.Log("GenerateSingleUMA called with slotsOnly=" + slotsOnly + " ignoreEditorPause=" + ignoreEditorPause);
             generateWait = 0;
             nextBuildSlotsOnly = slotsOnly;
-            EditorApplication.delayCall += () => InternalGenerateSingleUMA(ignoreEditorPause);
+            pendingEditorGenerationIgnoresPause |= ignoreEditorPause;
+            if (editorGenerationQueued)
+            {
+                return;
+            }
+
+            editorGenerationQueued = true;
+            EditorApplication.delayCall += InternalGenerateSingleUMA;
         }
 
-        private void InternalGenerateSingleUMA(bool ignoreEditorPause)
+        private void InternalGenerateSingleUMA()
         {
+            EditorApplication.delayCall -= InternalGenerateSingleUMA;
+            if (!editorGenerationQueued)
+            {
+                return;
+            }
+
+            // Delayed editor work must never cross an edit/play transition.
+            // With domain and scene reload disabled the target object survives,
+            // so a queued callback would otherwise build into the play scene.
+            if (Application.isPlaying ||
+                EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                ClearPendingEditorGeneration();
+                return;
+            }
+
+            bool ignoreEditorPause = pendingEditorGenerationIgnoresPause;
             if (EditorGenerationPaused && !ignoreEditorPause)
             {
+                ClearPendingEditorGeneration();
                 return;
             }
 
@@ -838,19 +990,28 @@ namespace UMA.CharacterSystem
                 if (generateWait >= maxWait)
                 {
                     // Don't try anymore.
+                    ClearPendingEditorGeneration();
                     return;
                 }
                 // Try again after compiling and updating finished.
-                EditorApplication.delayCall += () => InternalGenerateSingleUMA(ignoreEditorPause);
+                EditorApplication.delayCall += InternalGenerateSingleUMA;
                 return;
             }
 
             if (this == null || this.gameObject == null)
             {
+                ClearPendingEditorGeneration();
                 return;
             }
             bool slotsOnly = nextBuildSlotsOnly;
+            ClearPendingEditorGeneration();
             BuildNow();
+        }
+
+        private void ClearPendingEditorGeneration()
+        {
+            editorGenerationQueued = false;
+            pendingEditorGenerationIgnoresPause = false;
         }
 
         public void RegenerateNow(bool updateRig=true, bool updateTextures=false, bool updateMesh=false)
@@ -1113,6 +1274,7 @@ namespace UMA.CharacterSystem
 
         protected override void OnDestroy()
         {
+            CancelNPCBuild();
             Cleanup();
             // Unity does not automatically invoke UMAData's teardown when this derived message exists.
             base.OnDestroy();
@@ -1609,6 +1771,31 @@ namespace UMA.CharacterSystem
             }
         }
 
+#if UNITY_EDITOR
+        [Serializable]
+        public sealed class PresetScreenshotFraming
+        {
+            public Vector3 cameraPosition;
+            public Quaternion cameraRotation = Quaternion.identity;
+            public bool orthographic;
+            public float sceneSize;
+            // Perspective slopes at unit depth, or avatar-scaled orthographic distances.
+            public Rect projectionCrop;
+
+            public bool IsValid => sceneSize > 0f && float.IsFinite(sceneSize) &&
+                projectionCrop.width > 0f && projectionCrop.height > 0f &&
+                float.IsFinite(projectionCrop.x) && float.IsFinite(projectionCrop.y) &&
+                float.IsFinite(projectionCrop.width) && float.IsFinite(projectionCrop.height);
+        }
+
+        [SerializeField, HideInInspector]
+        public PresetScreenshotFraming lastPresetScreenshot;
+
+        // Session-only structural version. Each Inspector observes this independently,
+        // including locked Inspectors. Runtime loading never calls into IMGUI.
+        public uint EditorAvatarDefinitionRevision { get; private set; }
+#endif
+
         /// <summary>
         /// Load the avatar definition into the character
         /// </summary>
@@ -1619,6 +1806,23 @@ namespace UMA.CharacterSystem
         /// <param name="ResetColors">Reset colors</param>
         /// <param name="optimizeBlendShapes">Force only used Blendshapes to load</param>
         public void LoadAvatarDefinition(AvatarDefinition adf, bool loadDefaultWardrobe = false, bool ResetDNA = true, bool ResetWardrobe = true, bool ResetColors = true, bool optimizeBlendShapes = false)
+        {
+#if UNITY_EDITOR
+            try
+            {
+                ApplyAvatarDefinition(adf, loadDefaultWardrobe, ResetDNA, ResetWardrobe, ResetColors, optimizeBlendShapes);
+            }
+            finally
+            {
+                // A failed load may also have replaced some of the inspected data.
+                unchecked { EditorAvatarDefinitionRevision++; }
+            }
+#else
+            ApplyAvatarDefinition(adf, loadDefaultWardrobe, ResetDNA, ResetWardrobe, ResetColors, optimizeBlendShapes);
+#endif
+        }
+
+        private void ApplyAvatarDefinition(AvatarDefinition adf, bool loadDefaultWardrobe, bool ResetDNA, bool ResetWardrobe, bool ResetColors, bool optimizeBlendShapes)
         {
             if (adf.RaceName != null)
             {
@@ -3072,13 +3276,14 @@ namespace UMA.CharacterSystem
         /// <param name="MetallicRGB"></param>
         /// <param name="Gloss"></param>
         /// <param name="UpdateTexture"></param>
+        [Obsolete("Use SetRawColor instead. SetColor will be removed in future versions.")]
         public void SetColor(string SharedColorName, Color AlbedoColor, Color MetallicRGB = new Color(), float Gloss = 0.0f, bool UpdateTexture = false)
         {
             OverlayColorData ocd = new OverlayColorData(3);
             MetallicRGB.a = Gloss;
             ocd.channelMask[0] = AlbedoColor;
             ocd.channelAdditiveMask[2] = MetallicRGB;
-            SetColor(SharedColorName, ocd, UpdateTexture);
+            InternalSetColor(SharedColorName, ocd, UpdateTexture);
         }
 
         /// <summary>
@@ -3087,11 +3292,12 @@ namespace UMA.CharacterSystem
         /// <param name="SharedColorName"></param>
         /// <param name="AlbedoColor"></param>
         /// <param name="UpdateTexture"></param>
+        [Obsolete("Use SetRawColor instead. SetColorValue will be removed in future versions.")]
         public void SetColorValue(string SharedColorName, Color AlbedoColor)
         {
             OverlayColorData ocd = new OverlayColorData(3);
             ocd.channelMask[0] = AlbedoColor;
-            SetColor(SharedColorName, ocd, false);
+            InternalSetColor(SharedColorName, ocd, false);
         }
 
         /// <summary>
@@ -3100,7 +3306,7 @@ namespace UMA.CharacterSystem
         /// <param name="Name"></param>
         /// <param name="colorData"></param>
         /// <param name="UpdateTexture"></param>
-        public void SetColor(string Name, OverlayColorData colorData, bool UpdateTexture = true)
+        private void InternalSetColor(string Name, OverlayColorData colorData, bool UpdateTexture = true)
         {
             characterColors.SetColor(Name, colorData);
             if (UpdateTexture)
@@ -3109,6 +3315,18 @@ namespace UMA.CharacterSystem
                 ForceUpdate(false, UpdateTexture, false);
             }
         }
+
+/// <summary>
+/// Compatiblity function for older code that used SetColor instead of SetRawColor
+/// </summary>
+/// <param name="Name"></param>
+/// <param name="colorData"></param>
+/// <param name="UpdateTexture"></param>
+        public void SetColor(string Name, OverlayColorData colorData, bool UpdateTexture = true)
+        {
+            SetRawColor(Name, colorData, UpdateTexture);
+        }
+
 
         public void SetRawColor(string Name, OverlayColorData colorData, bool UpdateTexture = true)
         {
@@ -3430,7 +3648,7 @@ namespace UMA.CharacterSystem
                         {
                             if (!GetColor(col.name) || fullRestore)
                             {
-                                SetColor(col.name, col, false);
+                                InternalSetColor(col.name, col, false);
                                 if (!newSharedColors.Contains(col))
                                 {
                                     newSharedColors.Add(col);
@@ -3448,7 +3666,7 @@ namespace UMA.CharacterSystem
                         {
                             if (!GetColor(col.name) || fullRestore)
                             {
-                                SetColor(col.name, col, false);
+                                InternalSetColor(col.name, col, false);
                                 if (!newSharedColors.Contains(col))
                                 {
                                     newSharedColors.Add(col);
@@ -4323,7 +4541,12 @@ namespace UMA.CharacterSystem
         public void InitializeAvatar()
         {
             Initialize();
+            // Start runs once per play session even when domain reload is
+            // disabled, while UMAData and its delegates survive. Keep these
+            // subscriptions idempotent across sessions.
+            umaData.OnCharacterBegun -= this.SetAndSaveOverrideDNA;
             umaData.OnCharacterBegun += this.SetAndSaveOverrideDNA;
+            umaData.OnCharacterDnaUpdated -= this.RestoreOverrideDna;
             umaData.OnCharacterDnaUpdated += this.RestoreOverrideDna;
         }
 
@@ -4810,6 +5033,7 @@ namespace UMA.CharacterSystem
         // Find: public void BuildCharacter(bool RestoreDNA = true, bool skipBundleCheck = false, bool useBundleParameter = true)
         public void BuildCharacter(bool RestoreDNA = true, bool skipBundleCheck = false, bool useBundleParameter = true, bool forceBuild=false)
         {
+            if (!npcNormalBuild) CancelNPCBuild();
 #if UMA_DCA_TIMING
             Stopwatch sw = new Stopwatch();
             sw.Start();
@@ -7105,6 +7329,10 @@ namespace UMA.CharacterSystem
             public void SetRaceData()
             {
                 if (string.IsNullOrEmpty(name))
+                {
+                    return;
+                }
+                if (_theRaceData != null && _theRaceData.raceName == name)
                 {
                     return;
                 }

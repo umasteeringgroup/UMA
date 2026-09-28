@@ -100,6 +100,52 @@ namespace UMA
 #endif
         }
 
+        /// <summary>
+        /// Returns the hierarchy name for a generated renderer. A configured
+        /// Renderer Name takes precedence over UMA's indexed fallback name.
+        /// </summary>
+        public static string GetRendererGameObjectName(
+            UMARendererAsset rendererAsset,
+            int rendererIndex)
+        {
+            if (rendererAsset != null &&
+                !string.IsNullOrWhiteSpace(rendererAsset.RendererName))
+            {
+                return rendererAsset.RendererName;
+            }
+
+            return rendererIndex == 0
+                ? "UMARenderer"
+                : $"UMARenderer {rendererIndex}";
+        }
+
+        /// <summary>
+        /// Applies renderer settings and the configured hierarchy name in one
+        /// operation so every mesh-combiner path follows the same rules.
+        /// </summary>
+        public static void ApplySettingsAndName(
+            SkinnedMeshRenderer renderer,
+            UMARendererAsset rendererAsset,
+            int rendererIndex)
+        {
+            if (renderer == null)
+            {
+                return;
+            }
+
+            if (rendererAsset != null)
+            {
+                rendererAsset.ApplySettingsToRenderer(renderer);
+            }
+            else
+            {
+                ResetRenderer(renderer);
+            }
+
+            renderer.gameObject.name =
+                GetRendererGameObjectName(rendererAsset, rendererIndex);
+        }
+
 #if UMA_BURSTCOMPILE
         private void Recalculate(SkinnedMeshRenderer smr)
         {

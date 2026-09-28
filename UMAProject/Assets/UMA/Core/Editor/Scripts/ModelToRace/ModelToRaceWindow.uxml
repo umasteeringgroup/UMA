@@ -1,0 +1,16 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="ModelToRaceWindow.uss" />
+    <ui:VisualElement class="model-import">
+        <ui:Label text="Model to UMA" class="title" />
+        <ui:Label text="Create a race or wardrobe from your own skinned model. Source files stay unchanged." class="description" />
+        <ui:VisualElement name="steps" class="steps" />
+        <ui:ScrollView name="content" class="content" />
+        <ui:Label name="status" class="description status" />
+        <ui:VisualElement class="footer">
+            <ui:Button name="help" text="Guide" />
+            <ui:VisualElement class="spacer" />
+            <ui:Button name="back" text="Back" />
+            <ui:Button name="next" text="Next" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

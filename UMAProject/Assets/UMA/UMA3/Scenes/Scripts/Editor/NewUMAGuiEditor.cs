@@ -20,6 +20,7 @@ namespace UMA.EditorTools
         private static bool _colorTablesFoldout;
         private static bool _dnaFoldout;
         private static bool _itemsFoldout;
+        private static bool _presetsFoldout;
         private static bool _containersFoldout;
         private static bool _buttonsFoldout;
         private static bool _miscFoldout;
@@ -35,6 +36,7 @@ namespace UMA.EditorTools
             _colorTablesFoldout = false;
             _dnaFoldout = false;
             _itemsFoldout = false;
+            _presetsFoldout = false;
             _containersFoldout = false;
             _buttonsFoldout = false;
             _miscFoldout = false;
@@ -47,6 +49,7 @@ namespace UMA.EditorTools
         // ---- Serialized properties ----
         // UMA
         private SerializedProperty _avatarProp;
+        private SerializedProperty _randomizerProp;
         private SerializedProperty _showConsoleProp;
         // GUI Prefabs
         private SerializedProperty _colorSelectorProp;
@@ -81,6 +84,7 @@ namespace UMA.EditorTools
         private SerializedProperty _bodyDNAProp;
         // Items
         private SerializedProperty _faceItemsProp;
+        private SerializedProperty _presetsProp;
         private SerializedProperty _hairItemsProp;
         private SerializedProperty _legsItemsProp;
         private SerializedProperty _bodyItemsProp;
@@ -108,6 +112,7 @@ namespace UMA.EditorTools
             // UMA
             _avatarProp = serializedObject.FindProperty("avatar");
             _showConsoleProp = serializedObject.FindProperty("showConsole");
+            _randomizerProp = serializedObject.FindProperty("Randomizer");
             // GUI Prefabs
             _colorSelectorProp = serializedObject.FindProperty("ColorSelector");
             _dnaAdjusterProp = serializedObject.FindProperty("DNAAdjuster");
@@ -141,6 +146,7 @@ namespace UMA.EditorTools
             _bodyDNAProp = serializedObject.FindProperty("BodyDNA");
             // Items
             _faceItemsProp = serializedObject.FindProperty("FaceItems");
+            _presetsProp = serializedObject.FindProperty("Presets");
             _hairItemsProp = serializedObject.FindProperty("HairItems");
             _legsItemsProp = serializedObject.FindProperty("LegsItems");
             _bodyItemsProp = serializedObject.FindProperty("BodyItems");
@@ -180,6 +186,7 @@ namespace UMA.EditorTools
                 EditorGUI.indentLevel++;
                 EditorGUILayout.PropertyField(_avatarProp);
                 EditorGUILayout.PropertyField(_showConsoleProp);
+                EditorGUILayout.PropertyField(_randomizerProp);
                 EditorGUI.indentLevel--;
             }
 
@@ -258,6 +265,15 @@ namespace UMA.EditorTools
                         RefreshDnaProperties);
                 }
                 EditorGUILayout.EndHorizontal();
+                EditorGUI.indentLevel--;
+            }
+
+            // --- Presets ---
+            if (DrawFoldoutHeader("Presets", ref _presetsFoldout))
+            {
+                EditorGUI.indentLevel++;
+                EditorGUILayout.HelpBox("Shown as clickable icon tiles on the information tab, grouped in list order under each RaceData Friendly Name. Clicking changes to the preset race and applies its included values.", MessageType.Info);
+                DrawListWithButtons(_presetsProp, "Presets", typeof(UMAPreset));
                 EditorGUI.indentLevel--;
             }
 

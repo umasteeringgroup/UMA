@@ -12,6 +12,22 @@ PrefabInstance:
       propertyPath: m_Name
       value: UMADynamicCharacterAvatar-LOD-walker
       objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 165a16ac9ccf1a94080956c3b8c82000, type: 3}
+      propertyPath: reuseGeneratedMeshes
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 165a16ac9ccf1a94080956c3b8c82000, type: 3}
+      propertyPath: reuseGeneratedTextures
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 165a16ac9ccf1a94080956c3b8c82000, type: 3}
+      propertyPath: umaAdditionalRecipes.Array.size
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1769943395695156163, guid: 165a16ac9ccf1a94080956c3b8c82000, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -37,7 +53,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7b82439bf03242a08160de6bbb8716b9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  animationPlaybackSpeed: 0.3
+  locomotionSource: 0
+  animationPlaybackSpeed: 1
+  inPlaceMovementSpeed: 1.4
+  minimumRootMotionSpeed: 0.25
   maximumSpawnDistance: 2.5
   turnSpeed: 60
   returnAngleVariation: 20
@@ -46,7 +65,7 @@ MonoBehaviour:
   headingNoise: 10
   headingNoiseFrequency: 0.18
   pauseInterval: {x: 4, y: 10}
-  pauseDuration: {x: 0.8, y: 2.4}
+  pauseDuration: {x: 0.5, y: 3}
   pauseLookVariation: 20
   personalSpace: 0.55
   lookAheadDistance: 1.25
@@ -58,6 +77,10 @@ MonoBehaviour:
   progressCheckInterval: 1
   minimumProgressDistance: 0.025
   stalledChecksBeforeRecovery: 2
+  movementStartGraceTime: 0.35
+  blockedRetryInterval: 1
+  blockedProgressRatio: 0.1
+  resumedProgressRatio: 0.25
   speedParameter: Speed
   directionParameter: Direction
   walkingAnimationSpeed: 0.25
@@ -66,3 +89,7 @@ MonoBehaviour:
   bumpAnimationTriggers: []
   bumpSounds: []
   bumpVolume: 0.35
+  maximumHealth: 3
+  currentHealth: 3
+  pursuitDuration: 15
+  pursuitStoppingDistance: 1.25

@@ -166,10 +166,29 @@ namespace UMA.Examples
 
         public void OnEnable()
         {
+            // Fast Enter Play Mode can reuse this component and its UnityEvent
+            // instances. Remove any prior runtime subscriptions before the
+            // per-session references and LOD state are initialized again.
+            if (_avatar != null)
+            {
+                _avatar.CharacterBegun.RemoveListener(CharacterBegun);
+                _avatar.CharacterUpdated.RemoveListener(CharacterUpdated);
+            }
+            if (_umaData != null)
+            {
+                _umaData.CharacterCreated.RemoveListener(CharacterCreated);
+                _umaData.CharacterUpdated.RemoveListener(CharacterUpdated);
+            }
+
+            Reset();
+            initialized = false;
+            _initialFallbackApplied = false;
             _avatar = GetComponent<DynamicCharacterAvatar>();
             _umaData = GetComponent<UMAData>();
             if (_avatar != null)
             {
+                _avatar.CharacterBegun.RemoveListener(CharacterBegun);
+                _avatar.CharacterUpdated.RemoveListener(CharacterUpdated);
                 _avatar.CharacterBegun.AddListener(CharacterBegun);
                 _avatar.CharacterUpdated.AddListener(CharacterUpdated);
             }
@@ -177,6 +196,8 @@ namespace UMA.Examples
             {
                 if (_umaData != null)
                 {
+                    _umaData.CharacterCreated.RemoveListener(CharacterCreated);
+                    _umaData.CharacterUpdated.RemoveListener(CharacterUpdated);
                     _umaData.CharacterCreated.AddListener(CharacterCreated);
                     _umaData.CharacterUpdated.AddListener(CharacterUpdated);
                 }
@@ -364,6 +385,10 @@ namespace UMA.Examples
             {
                 return false;
             }
+
+            // CharacterBegun can run after recipe replacement but before the new
+            // combined mesh/slot offsets have been published. Never edit that old mesh.
+            if (_umaData.dirty) return false;
 
             if (lodDistance <= 0f)
             {
@@ -556,6 +581,7 @@ namespace UMA.Examples
             {
                 return;
             }
+            if (_umaData.dirty) return;
 
             // Determine the new LOD level (account for lodOffset like slot LOD switching)
             int desiredLOD = _currentLOD - lodOffset;
@@ -830,7 +856,11 @@ namespace UMA.Examples
                 CopySecondPassSubmeshIndices(r, submeshIndices);
 
                 // Push new indices back to the Mesh. Only indices change; vertices, bones stay intact.
-                var mesh = smr.sharedMesh;
+                var mesh = UMAResourceLeaseOwner.MakeMeshUnique(smr);
+                // Generated second-pass submeshes may share index ranges. Clear the
+                // old descriptors before resizing individual ranges for this LOD.
+                mesh.subMeshCount = 0;
+                mesh.subMeshCount = subMeshCount;
                 for (int sm = 0; sm < subMeshCount; sm++)
                 {
                     //Debug.Log("Updating renderer " + r + " submesh " + sm + " with " + submeshIndices[sm].Count + " indices for LOD " + desiredLOD);    
@@ -968,8 +998,11 @@ namespace UMA.Examples
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         public static void StaticInitializeOnLoad()
         {
-            // Clear the LOD cache when we do a domain reload.
+            // SubsystemRegistration also runs when domain reload is disabled.
             LODSFound = new Dictionary<string, string[]>();
+#if UNITY_EDITOR && UMA_INTERNALLOD_DIAGNOSTICS
+            _lastLoggedFrame = -1;
+#endif
         }
 
         // Should this be in the library?
