@@ -1708,8 +1708,8 @@ MonoBehaviour:
       MinValue: 0.25
       MaxValue: 0.75
     - DnaName: height
-      MinValue: 0.25
-      MaxValue: 0.75
+      MinValue: 0.3698699
+      MaxValue: 0.6256257
     - DnaName: legSeparation
       MinValue: 0.25
       MaxValue: 0.75
@@ -1738,7 +1738,7 @@ MonoBehaviour:
     DnaFoldout: 1
     Delete: 0
     AddColorTable: 0
-    DnaChanged: 0
+    DnaChanged: 1
     PossibleColors: []
     PossibleDNA:
     - armLength
@@ -1794,7 +1794,7 @@ MonoBehaviour:
     - nosePronounced
     - noseSize
     - noseWidth
-    SelectedDNA: 0
+    SelectedDNA: 9
     DNAAdd: 
     DNADel: 0
     currentWardrobeSlot: 11

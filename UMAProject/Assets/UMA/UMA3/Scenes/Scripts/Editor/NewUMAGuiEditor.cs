@@ -49,6 +49,7 @@ namespace UMA.EditorTools
         // ---- Serialized properties ----
         // UMA
         private SerializedProperty _avatarProp;
+        private SerializedProperty _randomizerProp;
         private SerializedProperty _showConsoleProp;
         // GUI Prefabs
         private SerializedProperty _colorSelectorProp;
@@ -111,6 +112,7 @@ namespace UMA.EditorTools
             // UMA
             _avatarProp = serializedObject.FindProperty("avatar");
             _showConsoleProp = serializedObject.FindProperty("showConsole");
+            _randomizerProp = serializedObject.FindProperty("Randomizer");
             // GUI Prefabs
             _colorSelectorProp = serializedObject.FindProperty("ColorSelector");
             _dnaAdjusterProp = serializedObject.FindProperty("DNAAdjuster");
@@ -184,6 +186,7 @@ namespace UMA.EditorTools
                 EditorGUI.indentLevel++;
                 EditorGUILayout.PropertyField(_avatarProp);
                 EditorGUILayout.PropertyField(_showConsoleProp);
+                EditorGUILayout.PropertyField(_randomizerProp);
                 EditorGUI.indentLevel--;
             }
 

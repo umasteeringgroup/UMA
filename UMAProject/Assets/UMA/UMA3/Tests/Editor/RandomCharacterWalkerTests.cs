@@ -212,12 +212,14 @@ namespace UMA.Examples.Tests
             Assert.That(Walker.IsMovementBlocked, Is.False);
             fixture.Window(2f, 0.1f, 0f);
             Assert.That(Walker.IsMovementBlocked, Is.True);
-            fixture.Call("CheckForStall", 2.5f);
+            float retryAt = fixture.Get<float>("blockedRetryAt");
+            Assert.That(retryAt - 2f, Is.InRange(0.5f, 3f));
+            fixture.Call("CheckForStall", retryAt - 0.01f);
             Assert.That(Walker.IsMovementBlocked, Is.True);
-            fixture.Call("CheckForStall", 3f);
+            fixture.Call("CheckForStall", retryAt);
             Assert.That(Walker.IsMovementBlocked, Is.False);
             Assert.That(fixture.Get<bool>("walkingRequested"), Is.True);
-            fixture.Window(4f, 0.1f, 0.1f);
+            fixture.Window(retryAt + 1f, 0.1f, 0.1f);
             Assert.That(Walker.IsMovementBlocked, Is.False);
         }
 
@@ -349,6 +351,78 @@ namespace UMA.Examples.Tests
         }
 
         [Test]
+        public void WanderBoundaryDoesNotCountClampedTravelAsBlockedMovement()
+        {
+            Walker.maximumSpawnDistance = 1f;
+            fixture.root.transform.position = Vector3.forward;
+            for (int i = 1; i <= 3; i++)
+            {
+                Vector3 before = fixture.root.transform.position;
+                fixture.Call("ApplyRootMotionWithinSpawnRadius", Vector3.forward * 0.1f);
+                fixture.Call("RecordMovementProgress", fixture.Get<Vector3>("boundedLocomotionRequest"),
+                    fixture.root.transform.position - before, (float)i);
+                fixture.Call("CheckForStall", (float)i);
+            }
+            Assert.That(fixture.root.transform.position, Is.EqualTo(Vector3.forward));
+            Assert.That(Walker.IsMovementBlocked, Is.False);
+        }
+
+        [Test]
+        public void IdenticalClonesHaveIndependentPauseSchedules()
+        {
+            using (var other = new WalkerFixture())
+            {
+                Walker.pauseInterval = other.walker.pauseInterval = new Vector2(4f, 10f);
+                fixture.Call("Start");
+                other.InitializeForUnitTest();
+                Assert.That(other.Get<float>("nextPause"),
+                    Is.Not.EqualTo(fixture.Get<float>("nextPause")));
+                fixture.Window(1f, 1f, 0f);
+                fixture.Window(2f, 1f, 0f);
+                other.Window(1f, 1f, 0f);
+                other.Window(2f, 1f, 0f);
+                Assert.That(other.Get<float>("blockedRetryAt"),
+                    Is.Not.EqualTo(fixture.Get<float>("blockedRetryAt")));
+            }
+        }
+
+        [Test]
+        public void FloorAndDepartingContactsDoNotPauseButWallContactDoes()
+        {
+            fixture.Call("HandleObstacleContact", Vector3.up, 10f);
+            fixture.Call("HandleObstacleContact", Vector3.forward, 10f);
+            Assert.That(Walker.IsMovementBlocked, Is.False);
+            fixture.Call("HandleObstacleContact", Vector3.back, 10f);
+            Assert.That(Walker.IsMovementBlocked, Is.True);
+            float retryAt = fixture.Get<float>("blockedRetryAt");
+            Assert.That(retryAt - 10f, Is.InRange(0.5f, 3f));
+            fixture.Call("HandleObstacleContact", Vector3.back, 10.2f);
+            Assert.That(fixture.Get<float>("blockedRetryAt"), Is.EqualTo(retryAt),
+                "Staying in contact must not keep restarting the idle timer.");
+            fixture.Call("CheckForStall", retryAt);
+            Assert.That(fixture.Get<object>("activity").ToString(), Is.EqualTo("Turning"));
+            Assert.That(Vector3.Dot(fixture.Get<Vector3>("desiredDirection"), Vector3.back),
+                Is.GreaterThan(0.7f), "The next heading must lead away from the wall.");
+        }
+
+        [Test]
+        public void SpontaneousPauseWaitsThenTurnsBeforeRequestingLocomotion()
+        {
+            fixture.Call("BeginPause");
+            fixture.Call("Update");
+            Assert.That(fixture.Get<bool>("walkingRequested"), Is.False);
+            Assert.That(fixture.Get<object>("activity").ToString(), Is.EqualTo("Paused"));
+            fixture.Set("activityUntil", Time.time - 1f);
+            fixture.Call("Update");
+            Assert.That(fixture.Get<object>("activity").ToString(), Is.EqualTo("Turning"));
+            Assert.That(fixture.Get<bool>("walkingRequested"), Is.False);
+            fixture.root.transform.rotation = Quaternion.LookRotation(fixture.Get<Vector3>("desiredDirection"));
+            fixture.Call("Update");
+            Assert.That(fixture.Get<bool>("walkingRequested"), Is.True);
+            Assert.That(fixture.Get<float>("nextPause"), Is.GreaterThan(Time.time));
+        }
+
+        [Test]
         public void IdleZerosDirectionAndWalkingCanStartWithZeroObservedProgress()
         {
             fixture.root.SetActive(false);
@@ -431,6 +505,49 @@ namespace UMA.Examples.Tests
                     if (wall != null) Object.DestroyImmediate(wall);
                     Object.DestroyImmediate(target);
                 }
+            }
+            yield return new ExitPlayMode();
+        }
+
+        [UnityTest]
+        public IEnumerator WanderingWalkerPausesAtWallThenTurnsAndDeparts()
+        {
+            yield return new EnterPlayMode();
+            using (var fixture = new WalkerFixture())
+            {
+                var wall = new GameObject("Wander contact wall");
+                try
+                {
+                    wall.AddComponent<BoxCollider>().size = new Vector3(10f, 3f, 0.2f);
+                    wall.transform.position = new Vector3(0f, 0f, 1f);
+                    fixture.root.AddComponent<CapsuleCollider>().radius = 0.25f;
+                    var body = fixture.root.AddComponent<Rigidbody>();
+                    body.useGravity = false;
+                    body.constraints = RigidbodyConstraints.FreezeRotation;
+                    fixture.AddAnimator();
+                    fixture.walker.progressCheckInterval = 100f; // Contact, not stall polling, must stop it.
+                    fixture.root.SetActive(true);
+                    float deadline = Time.time + 3f;
+                    while (!fixture.walker.IsMovementBlocked && Time.time < deadline)
+                        yield return new WaitForFixedUpdate();
+                    Assert.That(fixture.walker.IsMovementBlocked, Is.True);
+                    float stoppedAt = Time.time;
+                    float stoppedZ = body.position.z;
+                    float retryAt = fixture.Get<float>("blockedRetryAt");
+                    Assert.That(retryAt - stoppedAt, Is.InRange(0.4f, 3f));
+                    while (Time.time < retryAt - 0.05f)
+                    {
+                        yield return null;
+                        Assert.That(fixture.animator.GetFloat("Speed"), Is.Zero);
+                        Assert.That(body.position.z, Is.EqualTo(stoppedZ).Within(0.05f));
+                    }
+                    deadline = retryAt + 4f;
+                    while (body.position.z > stoppedZ - 0.25f && Time.time < deadline)
+                        yield return null;
+                    Assert.That(body.position.z, Is.LessThan(stoppedZ - 0.25f));
+                    Assert.That(fixture.walker.IsMovementBlocked, Is.False);
+                }
+                finally { Object.DestroyImmediate(wall); }
             }
             yield return new ExitPlayMode();
         }

@@ -75,6 +75,7 @@ namespace UMA
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void Reset()
         {
+            Epoch = 0;
             UMANPCBuildHandle.Shutdown();
             if (instance != null) Destroy(instance.gameObject);
             instance = null;

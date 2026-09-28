@@ -1763,7 +1763,7 @@ MonoBehaviour:
   headingNoise: 10
   headingNoiseFrequency: 0.18
   pauseInterval: {x: 4, y: 10}
-  pauseDuration: {x: 0.8, y: 2.4}
+  pauseDuration: {x: 0.5, y: 3}
   pauseLookVariation: 20
   personalSpace: 0.55
   lookAheadDistance: 1.25

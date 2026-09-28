@@ -121,7 +121,7 @@ Material:
     - _AddPrecomputedVelocity: 0
     - _AlphaClip: 0.306
     - _AlphaModulation: 1
-    - _AlphaToMask: 1
+    - _AlphaToMask: 0
     - _Alpha_Clip: 0.5
     - _BUILTIN_AlphaClip: 1
     - _BUILTIN_Blend: 0

@@ -9,7 +9,7 @@ EditorBuildSettings:
     path: Assets/UMA/SRP/Samples/Scenes/U3-Generating Random Characters.unity
     guid: e16770e4b1321ea1815872bdfd0d81d2
   m_configObjects:
-    com.unity.addressableassets: {fileID: 11400000, guid: e8c3b7ff4064e884395807073f06a4b8, type: 2}
+    com.unity.addressableassets: {fileID: 11400000, guid: fd9030ccc7e5e5c498517c24b6f337ab, type: 2}
     com.unity.dt.app-ui: {fileID: 11400000, guid: 1b1c20d82303e4b5781c3ef50ac1449f, type: 2}
     com.unity.input.settings: {fileID: 11400000, guid: 6cca730068c643e478f447dcc8dc6b6f, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}

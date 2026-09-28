@@ -355,6 +355,7 @@ namespace UMA.TexturePaint
             RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStaticState()
         {
+            extractionMaterial = null;
             ClearCache();
         }
 

@@ -604,7 +604,7 @@ namespace UMA
             }
             SrpSupport installedSrp = GetInstalledSrpSupport();
             string srpButton = RequiresSrpSelection(installedSrp)
-                ? "Install Render Pipeline Support (Required)"
+                ? "Install SRP Package"
                 : IsInstalledSrpUpdateAvailable()
                     ? "Update Render Pipeline Support"
                     : "Render Pipeline Support";
@@ -621,10 +621,10 @@ namespace UMA
             string contentButton = uma3Ready
                 ? "Install / Update UMA Packages"
                 : "Install UMA Packages (Required)";
-            if (GUILayout.Button(contentButton, GUILayout.Height(40)))
+            /*if (GUILayout.Button(contentButton, GUILayout.Height(40)))
             {
                 DoContentPackagesPage();
-            }
+            }*/
             if (GUILayout.Button("Getting Started", GUILayout.Height(40)))
             {
                 DoGettingStarted();
@@ -641,9 +641,9 @@ namespace UMA
                 UMADocumentationWindow.ShowWindow();
             }
 
-            using (new EditorGUI.DisabledScope(
-                       RequiresSrpSelection(installedSrp) || !uma3Ready))
-            {
+          //  using (new EditorGUI.DisabledScope(
+            //           RequiresSrpSelection(installedSrp) || !uma3Ready))
+           //{
                 if (GUILayout.Button("Create UMA Character", GUILayout.Height(40)))
                 {
                     CreateUMACharacter();
@@ -679,7 +679,7 @@ namespace UMA
                     ScanProject();
                     currentButton = 4;
                 }
-            }
+           //}
             if (GUILayout.Button("Links", GUILayout.Height(40)))
             {
                 ClearLog();

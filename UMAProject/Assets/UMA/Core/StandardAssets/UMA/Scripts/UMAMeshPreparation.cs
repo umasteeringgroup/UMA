@@ -101,7 +101,15 @@ namespace UMA
         private static readonly ConditionalWeakTable<object, BufferHash> bufferHashes = new();
         private sealed class TrackedSource { }
         private static readonly ConditionalWeakTable<object, TrackedSource> trackedSources = new();
-        private static int epoch;
+        private static int epoch = 0;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetPreparationSession()
+        {
+            // Bump rather than zero: persisted verification entries store the previous
+            // epoch, so a fresh epoch guarantees stale cached data is revalidated.
+            epoch++;
+        }
 #if UNITY_EDITOR
         private sealed class Owner { internal WeakReference<SlotDataAsset> Asset; }
         private static readonly ConditionalWeakTable<UMAMeshData, Owner> owners = new();

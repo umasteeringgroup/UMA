@@ -10,6 +10,12 @@ namespace UMA
         internal static long MeshAdmissionCount;
         internal static long MeshFirstStageRejectCount;
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetMeshRequestDiagnostics()
+        {
+            MeshDetailedKeyCount = MeshAdmissionCount = MeshFirstStageRejectCount = 0;
+        }
+
         // Geometry references only: never retain an avatar, renderer, recipe, material
         // or build operation in a lazy cache entry. Input edits must invalidate sources.
         internal sealed class MeshRequestSource

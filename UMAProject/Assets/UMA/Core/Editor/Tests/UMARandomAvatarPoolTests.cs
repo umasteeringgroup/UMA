@@ -52,11 +52,13 @@ namespace UMA.Tests
             controller.Randomizers = new List<UMARandomizer> { randomizer };
             shirt = Keep(ScriptableObject.CreateInstance<UMAWardrobeRecipe>());
             shirt.name = "Pool shirt"; shirt.wardrobeSlot = "Chest";
+            shirt.compatibleRaces.Add(race.name);
             // RandomWardrobeSlot's editor constructor reads the serialized color list.
             shirt.recipeString = ((UMATextRecipe)race.baseRaceRecipe).recipeString;
             accessory = Keep(ScriptableObject.CreateInstance<UMAWardrobeRecipe>());
             accessory.name = "Pool accessory"; accessory.wardrobeSlot = "Accessories";
             accessory.Appended = true; accessory.recipeString = shirt.recipeString;
+            accessory.compatibleRaces.Add(race.name);
             definition.RandomWardrobeSlots.Add(new RandomWardrobeSlot(shirt, "Chest"));
             definition.RandomWardrobeSlots.Add(new RandomWardrobeSlot(accessory, "Accessories"));
             var table = Keep(ScriptableObject.CreateInstance<SharedColorTable>());
@@ -268,6 +270,35 @@ namespace UMA.Tests
         }
 
         [Test]
+        public void WardrobeRerollRejectsRecipesForAnotherRace()
+        {
+            var avatar = Avatar();
+            controller.Randomize(avatar);
+            var wrongRace = Keep(ScriptableObject.CreateInstance<UMAWardrobeRecipe>());
+            wrongRace.wardrobeSlot = "Chest";
+            wrongRace.recipeString = shirt.recipeString;
+            wrongRace.compatibleRaces.Add("Different race");
+            definition.RandomWardrobeSlots.Add(new RandomWardrobeSlot(wrongRace, "Chest") { Chance = 100 });
+
+            for (int i = 0; i < 100; i++)
+            {
+                controller.Randomize(avatar, false, true);
+                Assert.That(avatar.WardrobeRecipes["Chest"], Is.SameAs(shirt));
+            }
+
+            definition.RandomWardrobeSlots.RemoveAll(slot => slot?.WardrobeSlot == shirt);
+            controller.Randomize(avatar, false, true);
+            Assert.That(avatar.WardrobeRecipes["Chest"], Is.SameAs(shirt),
+                "A slot with no compatible candidates must retain its current recipe.");
+
+            avatar.WardrobeRecipes["Chest"] = wrongRace;
+            avatar.AdditiveRecipes["Other"] = new List<UMATextRecipe> { wrongRace };
+            controller.Randomize(avatar, false, true);
+            Assert.That(avatar.WardrobeRecipes.ContainsKey("Chest"), Is.False);
+            Assert.That(avatar.AdditiveRecipes.ContainsKey("Other"), Is.False);
+        }
+
+        [Test]
         public void FullRerollClearsOldCollectionsAndAdditiveRecipes()
         {
             var avatar = Avatar();
@@ -375,6 +406,41 @@ namespace UMA.Tests
             Assert.That(avatar.GetDNA()["height"].Value, Is.InRange(.1f, .9f));
             Assert.That(avatar.predefinedDNA == null || avatar.predefinedDNA.Count == 0, Is.True,
                 "UMA 3 randomization must not retain a second copy in legacy predefined DNA.");
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void CharacterRerollUpdatesLiveDnaForNewDnaRace(bool hasExistingInstances)
+        {
+            var avatar = Avatar();
+            var race = definition.raceData;
+            var group = Keep(ScriptableObject.CreateInstance<DNAGroup>());
+            var height = Keep(ScriptableObject.CreateInstance<DNA>());
+            height.name = "height";
+            group.dnaList.Add(height);
+            race.useNewDNA = true;
+            race.DNACollection = new DNACollection();
+            race.DNACollection.DNAGroups.Add(group);
+            avatar.activeRace.name = race.raceName;
+            avatar.activeRace.data = race;
+            avatar.umaRecipe = new UMAData.UMARecipe { raceData = race };
+            if (hasExistingInstances)
+            {
+                avatar.dnaInstanceCollection = new DNAInstanceCollection();
+                avatar.dnaInstanceCollection.Initialize(race.DNACollection);
+                avatar.dnaInstanceCollection.dnaInstances.Add(new DNAInstance("height", .99f, group));
+            }
+            avatar.predefinedDNA.AddDNA("height", .99f);
+            controller.KeepExistingRace = true;
+
+            controller.Randomize(avatar, true, false);
+            float first = avatar.GetDNA()["height"].Value;
+            Assert.That(first, Is.InRange(.1f, .9f));
+            Assert.That(avatar.predefinedDNA.Count, Is.Zero);
+
+            controller.Randomize(avatar, true, false);
+            Assert.That(avatar.GetDNA()["height"].Value, Is.InRange(.1f, .9f));
+            Assert.That(avatar.GetDNA()["height"].Value, Is.Not.EqualTo(first));
         }
 
         [Test]

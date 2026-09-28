@@ -25,6 +25,17 @@ namespace UMA
         }
         private static long nextDependencyNumber;
         private static int textureInputEpoch;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetTextureDependencySession()
+        {
+            // Force dependency hashes and shader layouts to be recomputed for the new session.
+            textureInputEpoch++;
+            // Dependency numbers must stay unique against the persisted table, so advance
+            // the counter instead of resetting it.
+            nextDependencyNumber++;
+        }
+
         private static readonly ConditionalWeakTable<UnityEngine.Object, Dependency> dependencies = new ConditionalWeakTable<UnityEngine.Object, Dependency>();
 
         /// <summary>Call after changing hidden atlas dependencies. Existing leases stay valid.</summary>

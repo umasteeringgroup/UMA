@@ -326,6 +326,8 @@ namespace UMA
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         public static void StaticInitializeOnLoad()
         {
+            checkedPipelineType = null;
+            checkedHDRPResult = false;
             ChannelBackground = new Color[]
             {
                 new Color(0,0,0,0), // Texture

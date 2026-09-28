@@ -402,22 +402,61 @@ namespace UMA
 
         public RandomWardrobeSlot GetRandomWardrobe(List<RandomWardrobeSlot> wardrobeSlots) => SelectWardrobe(wardrobeSlots);
 
-        internal static RandomWardrobeSlot SelectWardrobe(List<RandomWardrobeSlot> slots)
+        internal static RandomWardrobeSlot SelectWardrobe(List<RandomWardrobeSlot> slots,
+            string raceName = null)
         {
             if (slots == null) return null;
             double total = 0;
-            foreach (var slot in slots) if (slot != null) total += Mathf.Max(0, slot.Chance);
+            foreach (var slot in slots)
+                if (IsEligibleWardrobe(slot, raceName)) total += Mathf.Max(0, slot.Chance);
             if (total <= 0) return null;
             double roll = Random.value * total;
             RandomWardrobeSlot last = null;
             foreach (var slot in slots)
             {
-                if (slot == null || slot.Chance <= 0) continue;
+                if (!IsEligibleWardrobe(slot, raceName) || slot.Chance <= 0) continue;
                 last = slot;
                 roll -= slot.Chance;
                 if (roll < 0) return slot;
             }
             return last;
+        }
+
+        private static bool IsEligibleWardrobe(RandomWardrobeSlot slot, string raceName)
+        {
+            if (slot == null) return false;
+            if (raceName == null || slot.WardrobeSlot == null) return true;
+            return IsRecipeForRace(slot.WardrobeSlot, raceName);
+        }
+
+        private static bool IsRecipeForRace(UMATextRecipe recipe, string raceName)
+        {
+            return recipe != null && (recipe.compatibleRaces == null ||
+                recipe.compatibleRaces.Count == 0 || recipe.compatibleRaces.Contains(raceName));
+        }
+
+        private static void RemoveIncompatibleWardrobe(DynamicCharacterAvatar avatar)
+        {
+            string raceName = avatar.activeRace?.name;
+            if (string.IsNullOrEmpty(raceName)) return;
+
+            var removedSlots = new List<string>();
+            foreach (var pair in avatar.WardrobeRecipes)
+                if (!IsRecipeForRace(pair.Value, raceName)) removedSlots.Add(pair.Key);
+            foreach (string slot in removedSlots) avatar.WardrobeRecipes.Remove(slot);
+
+            var emptyAdditiveSlots = new List<string>();
+            foreach (var pair in avatar.AdditiveRecipes)
+            {
+                pair.Value?.RemoveAll(recipe => !IsRecipeForRace(recipe, raceName));
+                if (pair.Value == null || pair.Value.Count == 0) emptyAdditiveSlots.Add(pair.Key);
+            }
+            foreach (string slot in emptyAdditiveSlots) avatar.AdditiveRecipes.Remove(slot);
+
+            var removedCollections = new List<string>();
+            foreach (var pair in avatar.WardrobeCollections)
+                if (!IsRecipeForRace(pair.Value, raceName)) removedCollections.Add(pair.Key);
+            foreach (string slot in removedCollections) avatar.WardrobeCollections.Remove(slot);
         }
 
 #if UNITY_EDITOR
@@ -531,6 +570,7 @@ namespace UMA
                     ApplyEquippedSlotColors(avatar, character);
                     ApplyEquippedSlotColors(avatar, wardrobe);
                 }
+                RemoveIncompatibleWardrobe(avatar);
                 return true;
             }
             finally { avatar.BuildCharacterEnabled = buildEnabled; }
@@ -559,6 +599,7 @@ namespace UMA
         {
             if (avatar == null || (!randChar && !randWardrobe)) return false;
             string race = avatar.activeRace?.name ?? string.Empty;
+            string originalRace = race;
             UMARandomizer characterSource = null, wardrobeSource = null;
             RandomAvatar character = null, clothing = null;
             if (randChar)
@@ -583,7 +624,24 @@ namespace UMA
                 if (character != null)
                 {
                     if (!keepRace) avatar.ChangeRaceData(character.RaceName);
-                    avatar.predefinedDNA = character.GetRandomDNA();
+                    var randomizedDNA = character.GetRandomDNA();
+                    if (avatar.activeRace.data != null && avatar.activeRace.data.useNewDNA)
+                    {
+                        // UMA 3 builds skip predefinedDNA. Set the live DNA instances instead.
+                        avatar.umaRecipe ??= new UMAData.UMARecipe();
+                        avatar.umaRecipe.raceData = avatar.activeRace.data;
+                        bool changedRace = originalRace != avatar.activeRace.name;
+                        if (changedRace || avatar.dnaInstanceCollection == null ||
+                            avatar.dnaInstanceCollection.dnaInstances == null ||
+                            avatar.dnaInstanceCollection.dnaInstances.Count == 0)
+                            avatar.umaRecipe.InitializeDNA();
+                        else avatar.umaRecipe.AddMissingDNAForRace();
+                        var setters = avatar.GetDNA();
+                        foreach (var value in randomizedDNA.PreloadValues)
+                            if (setters.TryGetValue(value.Name, out var setter)) setter.Set(value.Value);
+                        avatar.predefinedDNA?.Clear();
+                    }
+                    else avatar.predefinedDNA = randomizedDNA;
                     ApplyRandomColors(avatar, characterSource, character);
                     ApplyRandomSlots(avatar, character);
                 }
@@ -592,6 +650,7 @@ namespace UMA
                     ApplyRandomColors(avatar, wardrobeSource, clothing);
                     ApplyRandomSlots(avatar, clothing);
                 }
+                RemoveIncompatibleWardrobe(avatar);
                 return true;
             }
             finally { avatar.BuildCharacterEnabled = buildEnabled; }
@@ -618,8 +677,8 @@ namespace UMA
         {
             foreach (var pair in definition.GetRandomSlots())
             {
-                var slot = SelectWardrobe(pair.Value);
-                if (slot == null) continue;
+                var slot = SelectWardrobe(pair.Value, avatar.activeRace?.name ?? string.Empty);
+                if (slot == null || !IsEligibleWardrobe(slot, avatar.activeRace?.name ?? string.Empty)) continue;
                 // Replace additive items in selected regions too, rather than accumulating duplicates.
                 avatar.ClearSlot(pair.Key);
                 if (slot.WardrobeSlot == null) continue;

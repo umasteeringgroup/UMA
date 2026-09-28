@@ -14,6 +14,15 @@ namespace UMA
             private int length;
             private long token;
             private static long nextToken;
+
+            [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+            private static void ResetSignatureTokens()
+            {
+                // Tokens are compared against persisted per-asset state; advance instead
+                // of zeroing so new signatures can't match stale entries.
+                nextToken++;
+            }
+
             private readonly UMAGeneratedResourceKey probe = new UMAGeneratedResourceKey();
             internal void Reset() { length = 0; token = ++nextToken; }
             internal unsafe void Add<T>(T value) where T : unmanaged

@@ -83,6 +83,8 @@ namespace UMA
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetMeshFingerprintSession()
         {
+            meshInputsInvalidated = 0;
+            meshInputRevision = 0;
             MeshLookupTicks = MeshLookupCount = 0;
             MeshDetailedKeyCount = MeshAdmissionCount = MeshFirstStageRejectCount = 0;
             modifierOrigins = new ConditionalWeakTable<VertexAdjustmentCollection, ModifierOrigin>();

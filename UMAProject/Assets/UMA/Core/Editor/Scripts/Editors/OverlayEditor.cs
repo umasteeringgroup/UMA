@@ -521,7 +521,7 @@ namespace UMA.Editors
 
             GUILayout.EndVertical();
 
-            GUIHelper.EndVerticalPadded(10);
+            GUIHelper.EndHorizontalPadded(10);
 
 
             changed |= popupchanged;

@@ -85,6 +85,7 @@ namespace UMA
 
         [Header("Misc")]
         public List<RuntimeAnimatorController> Animators = new List<RuntimeAnimatorController>();
+        public UMARandomAvatar Randomizer;
 
         [Header("Timing Buttons")]
         public bool showTimingButtons = false;
@@ -172,6 +173,15 @@ namespace UMA
         }
 
         #region EventHandlers
+
+        public void RandomizeAvatar()
+        {
+            if (Randomizer != null)
+            {
+                Randomizer.RandomizeAll(true,false);
+            }
+        }
+
         public void SetColor(string ColorName, OverlayColorData color)
         {
             OverlayColorData newColor = color.Clone();

@@ -558,28 +558,28 @@ MonoBehaviour:
     RandomDna:
     - DnaName: cheekPosition
       MinValue: 0.4
-      MaxValue: 0.6
+      MaxValue: 0.65005004
     - DnaName: cheekPronounced
-      MinValue: 0.4
+      MinValue: 0.31791788
       MaxValue: 0.6
     - DnaName: cheekSize
-      MinValue: 0.4
-      MaxValue: 0.6
+      MinValue: 0.31991994
+      MaxValue: 0.6940942
     - DnaName: cheekWidth
-      MinValue: 0.4
-      MaxValue: 0.6
+      MinValue: 0.24584582
+      MaxValue: 0.8782784
     - DnaName: chinPosition
-      MinValue: 0.4
-      MaxValue: 0.6
+      MinValue: 0.15775783
+      MaxValue: 0.7161161
     - DnaName: chinPronounced
-      MinValue: 0.4
-      MaxValue: 0.6
+      MinValue: 0.24384385
+      MaxValue: 0.7941942
     - DnaName: chinSize
-      MinValue: 0.4
-      MaxValue: 0.6
+      MinValue: 0.22742744
+      MaxValue: 0.7897898
     - DnaName: earsPitch
-      MinValue: 0.4
-      MaxValue: 0.6
+      MinValue: 0.33993995
+      MaxValue: 0.68608606
     - DnaName: earsPosition
       MinValue: 0.4
       MaxValue: 0.6
@@ -587,86 +587,83 @@ MonoBehaviour:
       MinValue: 0.4
       MaxValue: 0.6
     - DnaName: earsSize
-      MinValue: 0.4
-      MaxValue: 0.6
+      MinValue: 0.33993995
+      MaxValue: 0.7561562
     - DnaName: earsYaw
-      MinValue: 0.4
-      MaxValue: 0.6
+      MinValue: 0.42362356
+      MaxValue: 0.6236236
     - DnaName: eyeRotation
       MinValue: 0.4
       MaxValue: 0.6
     - DnaName: eyeSize
-      MinValue: 0.4
-      MaxValue: 0.6
+      MinValue: 0.31991994
+      MaxValue: 0.6840841
     - DnaName: eyeSpacing
-      MinValue: 0.4
-      MaxValue: 0.6
+      MinValue: 0.24984986
+      MaxValue: 0.8742744
     - DnaName: foreheadPosition
       MinValue: 0.4
-      MaxValue: 0.6
+      MaxValue: 0.7081081
     - DnaName: foreheadSize
       MinValue: 0.4
-      MaxValue: 0.6
-    - DnaName: Happy_DNA
-      MinValue: 0.4
-      MaxValue: 0.6
+      MaxValue: 0.6960961
     - DnaName: headSize
-      MinValue: 0.4
-      MaxValue: 0.6
+      MinValue: 0.3039039
+      MaxValue: 0.65605605
     - DnaName: headWidth
       MinValue: 0.4
-      MaxValue: 0.6
+      MaxValue: 0.87827826
     - DnaName: jawsPosition
-      MinValue: 0.4
-      MaxValue: 0.6
+      MinValue: 0.26386386
+      MaxValue: 0.7161162
     - DnaName: jawsSize
-      MinValue: 0.4
-      MaxValue: 0.6
+      MinValue: 0.26186186
+      MaxValue: 0.81221217
     - DnaName: lipsSize
-      MinValue: 0.4
-      MaxValue: 0.6
+      MinValue: 0.12812811
+      MaxValue: 0.87067056
     - DnaName: lowCheekPosition
-      MinValue: 0.4
-      MaxValue: 0.6
+      MinValue: 0.10570577
+      MaxValue: 0.88228226
     - DnaName: lowCheekPronounced
-      MinValue: 0.4
-      MaxValue: 0.6
+      MinValue: 0.13573578
+      MaxValue: 0.8742744
     - DnaName: mandibleSize
-      MinValue: 0.4
-      MaxValue: 0.6
+      MinValue: 0.23183183
+      MaxValue: 0.7321322
     - DnaName: mouthSize
-      MinValue: 0.4
-      MaxValue: 0.6
+      MinValue: 0.19979984
+      MaxValue: 0.9023023
     - DnaName: neckThickness
-      MinValue: 0.4
-      MaxValue: 0.6
+      MinValue: 0.34194192
+      MaxValue: 1
     - DnaName: noseBroken
-      MinValue: 0.4
-      MaxValue: 0.6
+      MinValue: 0.08568573
+      MaxValue: 0.9663665
     - DnaName: noseCurve
-      MinValue: 0.4
-      MaxValue: 0.6
+      MinValue: 0.18778783
+      MaxValue: 0.8502503
     - DnaName: noseFlatten
       MinValue: 0.4
-      MaxValue: 0.6
+      MaxValue: 0.8002002
     - DnaName: noseInclination
-      MinValue: 0.4
-      MaxValue: 0.6
+      MinValue: 0.1857858
+      MaxValue: 0.7601601
     - DnaName: nosePosition
       MinValue: 0.4
-      MaxValue: 0.6
+      MaxValue: 0.7461462
     - DnaName: nosePronounced
-      MinValue: 0.4
-      MaxValue: 0.6
+      MinValue: 0.32032037
+      MaxValue: 0.7225227
     - DnaName: noseSize
       MinValue: 0.4
-      MaxValue: 0.6
+      MaxValue: 0.8142142
     - DnaName: noseWidth
       MinValue: 0.4
-      MaxValue: 0.6
+      MaxValue: 0.9723724
     - DnaName: armLength
-      MinValue: 0.4
-      MaxValue: 0.6
+      MinValue: 0.434034
+      MaxValue: 0.54995
     - DnaName: armWidth
       MinValue: 0.4
       MaxValue: 0.6
@@ -677,14 +674,14 @@ MonoBehaviour:
       MinValue: 0.4
       MaxValue: 0.6
     - DnaName: breastOrientation
-      MinValue: 0.4
-      MaxValue: 0.6
+      MinValue: 0.2338338
+      MaxValue: 0.7201202
     - DnaName: breastPosition
-      MinValue: 0.4
-      MaxValue: 0.6
+      MinValue: 0.25185183
+      MaxValue: 0.7141141
     - DnaName: breastSize
-      MinValue: 0.4
-      MaxValue: 0.6
+      MinValue: 0.1257258
+      MaxValue: 0.8802804
     - DnaName: forearmLength
       MinValue: 0.4
       MaxValue: 0.6
@@ -693,28 +690,31 @@ MonoBehaviour:
       MaxValue: 0.6
     - DnaName: gluteusSize
       MinValue: 0.4
-      MaxValue: 0.6
+      MaxValue: 0.6840841
     - DnaName: handsSize
       MinValue: 0.4
       MaxValue: 0.6
     - DnaName: legSeparation
       MinValue: 0.4
-      MaxValue: 0.6
+      MaxValue: 0.7421422
     - DnaName: lowerMuscle
-      MinValue: 0.4
-      MaxValue: 0.6
+      MinValue: 0.335936
+      MaxValue: 0.7881882
     - DnaName: lowerWeight
       MinValue: 0.4
-      MaxValue: 0.6
+      MaxValue: 0.7161161
     - DnaName: upperMuscle
       MinValue: 0.4
-      MaxValue: 0.6
+      MaxValue: 0.7141141
     - DnaName: upperWeight
       MinValue: 0.4
-      MaxValue: 0.6
+      MaxValue: 0.8082082
     - DnaName: waist
-      MinValue: 0.4
-      MaxValue: 0.6
+      MinValue: 0.37357354
+      MaxValue: 0.7497497
+    - DnaName: height
+      MinValue: 0.45
+      MaxValue: 0.55
     raceData: {fileID: 11400000, guid: 51d130ee268a6114795dfc4590efb404, type: 2}
     GuiFoldout: 1
     ColorsFoldout: 1
@@ -781,7 +781,7 @@ MonoBehaviour:
     - upperMuscle
     - upperWeight
     - waist
-    SelectedDNA: 0
+    SelectedDNA: 48
     DNAAdd: 
     DNADel: 0
     currentWardrobeSlot: 11

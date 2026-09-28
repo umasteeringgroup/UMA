@@ -49,13 +49,13 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _BumpScale: 0.706
-    - _DetailNormalMapScale: 0.024
+    - _BumpScale: 0.61
+    - _DetailNormalMapScale: 0.2
     - _Detail_Gloss_Scale: 0.15
-    - _Detail_Normal_Scale: 0.235
+    - _Detail_Normal_Scale: 0.3
     - _DiffuseNormalStrength: 0.35
     - _DiffusionWrap: 0.12
-    - _OilLobeWeight: 0.25
+    - _OilLobeWeight: 0.133
     - _OilSmoothness: 0.72
     - _SSSBlend: 0.537
     - _ScatterRadiusMM: 2.5
@@ -64,7 +64,7 @@ Material:
     - _Skinmask_Amount: 1
     - _SpecularAA: 0.4
     - _TransmissionPower: 4
-    - _TransmissionStrength: 0.12
+    - _TransmissionStrength: 0.304
     m_Colors:
     - _Ambient_Occlusion_Remap: {r: 0, g: 1, b: 0, a: 0}
     - _Base_Color: {r: 1, g: 1, b: 1, a: 1}

@@ -33,6 +33,14 @@ namespace UMA.HairCards
         [NonSerialized] private string validatedTopology;
         [NonSerialized] private bool validData;
         private static int nextRevision;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetRevisionCounter()
+        {
+            // Revision values only need to be unique within a session; start over on load.
+            nextRevision = 0;
+        }
+
         public int Revision { get { if (revision == 0) Touch(); return revision; } }
         public long PixelBytes => (long)tiles.Count * (resolution + 1) * (resolution + 1) * sizeof(float);
         public static long FaceKey(int submesh, int triangle) => ((long)submesh << 32) | (uint)triangle;
