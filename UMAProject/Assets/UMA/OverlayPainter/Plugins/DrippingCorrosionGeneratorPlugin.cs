@@ -32,7 +32,7 @@ namespace UMA.TexturePaint.Examples
             description = "Realistic corrosion seeded by exposed edges, concave valleys, and " +
                           "occlusion, with gravity-driven drips, pits, crust, and fractal breakup. " +
                           "Physical sizes use Unity's 1 unit = 1 meter convention.",
-            pluginVersion = "1.0.0",
+            pluginVersion = "1.0.1",
             capabilities = TexturePaintPluginCapability.Generator |
                            TexturePaintPluginCapability.ReadsMeshMaps |
                            TexturePaintPluginCapability.LongRunning |
@@ -394,9 +394,9 @@ namespace UMA.TexturePaint.Examples
                 breakup = Mathf.Clamp01(p.Float("breakup", 0.72f));
                 pitSizeMeters = Mathf.Max(0.0005f, p.Float("pitSizeMeters", 0.004f));
                 pitDepth = Pos(p, "pitDepth", 0.09f); crustHeight = Pos(p, "crustHeight", 0.055f);
-                freshColor = p.Color("freshColor", new Color(0.34f, 0.075f, 0.018f, 1f));
-                dryColor = p.Color("dryColor", new Color(0.72f, 0.23f, 0.045f, 1f));
-                streakColor = p.Color("streakColor", new Color(0.24f, 0.055f, 0.018f, 1f));
+                freshColor = p.LinearColor("freshColor", new Color(0.34f, 0.075f, 0.018f, 1f));
+                dryColor = p.LinearColor("dryColor", new Color(0.72f, 0.23f, 0.045f, 1f));
+                streakColor = p.LinearColor("streakColor", new Color(0.24f, 0.055f, 0.018f, 1f));
                 roughness = Mathf.Clamp01(p.Float("roughness", 0.88f));
                 metallic = Mathf.Clamp01(p.Float("metallic", 0.04f));
                 ambientOcclusion = Mathf.Clamp01(p.Float("ambientOcclusion", 0.32f));

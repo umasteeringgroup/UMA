@@ -66,6 +66,11 @@ namespace UMA.TexturePaint
             return channel == TexturePaintChannel.NormalControl;
         }
 
+        /// <summary>Convert an authored picker color into the channel's working representation.
+        /// RGB color channels are linear; scalar values, encoded normals and alpha stay numeric.</summary>
+        public static Color WorkingColor(TexturePaintChannel channel, Color color) =>
+            ConstrainColor(channel, IsColor(channel) ? color.linear : color);
+
         public static Color ConstrainColor(TexturePaintChannel channel, Color color)
         {
             if (!IsGrayscale(channel)) return color;
@@ -86,6 +91,42 @@ namespace UMA.TexturePaint
     // Keep new values at the end so serialized tangent modes retain their meaning.
     public enum TexturePaintTangentMode { Corner, Smooth, Broken, Custom, Straight }
     public enum TexturePaintPathMode { Stamps, Continuous, Ribbon, Filled }
+    public enum TexturePaintPathFlipMode { Off, EveryTile, Alternate, Random }
+
+    public static class TexturePaintPathMirroring
+    {
+        // Keep the integer hash identical to PathTextureFlip in RibbonProjection.shader.
+        // Index is the source tile/stamp along the path, never a channel, triangle, or UDIM.
+        public static bool ShouldFlip(TexturePaintPathFlipMode mode, int index, int seed, bool yAxis)
+        {
+            if (mode == TexturePaintPathFlipMode.EveryTile) return true;
+            if (mode == TexturePaintPathFlipMode.Alternate) return (index & 1) != 0;
+            if (mode != TexturePaintPathFlipMode.Random) return false;
+            unchecked
+            {
+                uint hash = (uint)index ^ (uint)seed ^ (yAxis ? 0x68bc21ebu : 0x02e5be93u);
+                hash ^= hash >> 16; hash *= 0x7feb352du;
+                hash ^= hash >> 15; hash *= 0x846ca68bu; hash ^= hash >> 16;
+                return (hash & 1u) != 0;
+            }
+        }
+
+        public static StrokeSample Apply(StrokeSample sample, int index,
+            TexturePaintPathFlipMode x, TexturePaintPathFlipMode y, int seed)
+        {
+            if (ShouldFlip(x, index, seed, false))
+            {
+                sample.sourceUVScale.x = -(Mathf.Abs(sample.sourceUVScale.x) <= .000001f ? 1f : sample.sourceUVScale.x);
+                sample.sourceUVOffset.x = 1f - sample.sourceUVOffset.x;
+            }
+            if (ShouldFlip(y, index, seed, true))
+            {
+                sample.sourceUVScale.y = -(Mathf.Abs(sample.sourceUVScale.y) <= .000001f ? 1f : sample.sourceUVScale.y);
+                sample.sourceUVOffset.y = 1f - sample.sourceUVOffset.y;
+            }
+            return sample;
+        }
+    }
     public enum TexturePaintPathEditMode { Standard, Move, Adjust }
     public enum TexturePaintPathOrientation { FollowPath, FixedAxis }
     public enum TexturePaintPathCap { Round, Square, Butt }
@@ -514,6 +555,9 @@ namespace UMA.TexturePaint
 
     public sealed class StrokeContext
     {
+        public TexturePaintHemSeamSettings hemSeam;
+        public TexturePaintGarmentSettings garment;
+        public TexturePaintStencil stencil;
         public TextureSet textures;
         internal TexturePaintGeometrySelection geometrySelection;
         /// <summary>Paint directly in normalized texture UVs without mesh projection or clipping.</summary>
@@ -549,6 +593,18 @@ namespace UMA.TexturePaint
         public bool ribbonEdgeFadeEnabled;
         public float ribbonEdgeFadeStart = 0.75f;
         public float ribbonEdgeFadeSize = 1f;
+        public TexturePaintPathFlipMode textureFlipX;
+        public TexturePaintPathFlipMode textureFlipY;
+        public int textureFlipSeed;
+        public bool ribbonCrossfadeJoins;
+        [Range(0f, 1f)] public float ribbonJoinOverlap = .2f;
+
+        public float ribbonStartFade;
+        public float ribbonEndFade;
+        public float ribbonSideFadeExtra;
+        public AnimationCurve ribbonSideFadeCurve;
+        public AnimationCurve ribbonStartFadeCurve;
+        public AnimationCurve ribbonEndFadeCurve;
         public Texture2D ribbonBeginningTexture;
         public Texture2D ribbonEndTexture;
         public TexturePaintLayerEffects ribbonEffects;

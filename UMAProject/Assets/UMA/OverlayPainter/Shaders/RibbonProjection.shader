@@ -6,6 +6,7 @@ Shader "Hidden/UMA/TexturePaint/RibbonProjection"
         _PaintSource ("Paint Source", 2D) = "white" {}
         _GeometryMask ("Geometry Mask", 2D) = "white" {}
         _PaintColor ("Paint Color", Color) = (1,1,1,1)
+        [HideInInspector] _MainTex ("UV Gutter Source", 2D) = "black" {}
         [HideInInspector] _StrokeEnabled ("Stroke Enabled", Int) = 0
         [HideInInspector] _StrokeColor ("Stroke Color", Color) = (0,0,0,1)
         [HideInInspector] _StrokeParameters ("Stroke Width Offset Smoothness Level", Vector) = (2,0,0.25,1)
@@ -25,6 +26,8 @@ Shader "Hidden/UMA/TexturePaint/RibbonProjection"
             #pragma vertex Vert
             #pragma fragment Frag
             #include "UnityCG.cginc"
+            #include "HemSeam.hlsl"
+            #include "Garment.hlsl"
 
             struct RibbonSegment
             {
@@ -42,9 +45,13 @@ Shader "Hidden/UMA/TexturePaint/RibbonProjection"
             int _RibbonSegmentCount;
             sampler2D _DestinationTexture;
             sampler2D _PaintSource;
+            sampler2D _RibbonCoverage;
+            float _RibbonCoverageAlpha;
+            int _UseRibbonCoverage;
             sampler2D _BeginningSource;
             sampler2D _EndSource;
             sampler2D _GeometryMask;
+            sampler2D _RegionMask;
             float4 _PaintColor;
             float _Strength;
             float _BrushFlow;
@@ -55,6 +62,8 @@ Shader "Hidden/UMA/TexturePaint/RibbonProjection"
             int _PaintSourceKind;
             int _BlendMode;
             int _VectorNormal;
+            int _TextureFlipX, _TextureFlipY, _TextureFlipSeed;
+            float _JoinOverlap;
             int _SourceAlongY;
             int _ReverseSourceAxis;
             int _RibbonClosed;
@@ -62,6 +71,11 @@ Shader "Hidden/UMA/TexturePaint/RibbonProjection"
             int _RibbonPaintEnabled;
             float _EdgeFadeStart;
             float _EdgeFadeSize;
+            float _StartFade, _EndFade;
+            // Generated curves all use bilinear/clamp sampling. Sharing their sampler keeps
+            // the ribbon (including garment inputs and albedo coverage) within the GPU limit.
+            Texture2D _EdgeFadeCurve, _StartFadeCurve, _EndFadeCurve;
+            SamplerState sampler_EdgeFadeCurve;
             int _HasBeginningSource;
             int _HasEndSource;
             float _RibbonMinimumAlong;
@@ -126,6 +140,7 @@ Shader "Hidden/UMA/TexturePaint/RibbonProjection"
             {
                 float4 vertex : POSITION;
                 float3 normal : NORMAL;
+                float4 tangent : TANGENT;
                 float2 uv : TEXCOORD0;
             };
 
@@ -135,6 +150,7 @@ Shader "Hidden/UMA/TexturePaint/RibbonProjection"
                 float2 uv : TEXCOORD0;
                 float3 worldPosition : TEXCOORD1;
                 float3 worldNormal : TEXCOORD2;
+                float4 worldTangent : TEXCOORD3;
             };
 
             Varyings Vert(Attributes input)
@@ -148,6 +164,7 @@ Shader "Hidden/UMA/TexturePaint/RibbonProjection"
                 output.uv = input.uv;
                 output.worldPosition = mul(unity_ObjectToWorld, input.vertex).xyz;
                 output.worldNormal = UnityObjectToWorldNormal(input.normal);
+                output.worldTangent = float4(mul((float3x3)unity_ObjectToWorld, input.tangent.xyz), input.tangent.w * unity_WorldTransformParams.w);
                 return output;
             }
 
@@ -265,13 +282,19 @@ Shader "Hidden/UMA/TexturePaint/RibbonProjection"
                 // edges and 0.5 is its centerline. It is intentionally unrelated to either the
                 // source texture orientation or the destination mesh UV orientation.
                 float centerDistance = abs(saturate(across) * 2.0 - 1.0);
-                float fadeStart = saturate(_EdgeFadeStart);
-                if (centerDistance < fadeStart) return 1.0;
-                float fadeSize = saturate(_EdgeFadeSize);
-                if (fadeSize <= 0.00001) return 0.0;
-                float fadeEnd = lerp(fadeStart, 1.0, fadeSize);
-                if (fadeEnd <= fadeStart + 0.00001) return 0.0;
-                return 1.0 - smoothstep(fadeStart, fadeEnd, centerDistance);
+                // Negative starts extend the falloff past the centerline, allowing its opacity
+                // to decrease too. Existing 0..100% distances retain their original coverage.
+                float fadeStart = clamp(_EdgeFadeStart, -1.0, 1.0);
+                float fadeEnd = lerp(fadeStart, 1.0, saturate(_EdgeFadeSize));
+                float position;
+                if (fadeEnd <= fadeStart + 0.00001)
+                {
+                    if (centerDistance >= fadeStart) return 0.0;
+                    position = 0.0;
+                }
+                else position = saturate((centerDistance - fadeStart) / (fadeEnd - fadeStart));
+                return saturate(_EdgeFadeCurve.SampleLevel(sampler_EdgeFadeCurve,
+                    float2((position * 255.0 + 0.5) / 256.0, 0.5), 0).r);
             }
 
             bool IncludesLeft(int side)
@@ -366,10 +389,98 @@ Shader "Hidden/UMA/TexturePaint/RibbonProjection"
                     halfWidth + antialias, abs(across - center));
             }
 
+            // Matches TexturePaintPathMirroring.ShouldFlip; no frame/global random state.
+            bool PathTextureFlip(int mode, uint index, uint salt)
+            {
+                if (mode == 1) return true;
+                if (mode == 2) return (index & 1u) != 0;
+                if (mode != 3) return false;
+                uint hash = index ^ (uint)_TextureFlipSeed ^ salt;
+                hash ^= hash >> 16; hash *= 0x7feb352du;
+                hash ^= hash >> 15; hash *= 0x846ca68bu; hash ^= hash >> 16;
+                return (hash & 1u) != 0;
+            }
+
+            float4 SampleOverlappingRibbonTile(float along, int tile, int tileCount, float span,
+                float halfOverlap, float across, float4 color, float2 sourceDx, float2 sourceDy)
+            {
+                // Virtual neighbors at -1/tileCount allow the last and first images to overlap
+                // across a loop's closing join while keeping their original seed indices.
+                int index = _RibbonClosed != 0 ? (tile % tileCount + tileCount) % tileCount : tile;
+                float before = _RibbonClosed != 0 || index > 0 ? halfOverlap : 0.0;
+                float after = _RibbonClosed != 0 || index + 1 < tileCount ? halfOverlap : 0.0;
+                float start = tile - before;
+                float end = (_RibbonClosed != 0 ? tile + 1.0 : min(tile + 1.0, span)) + after;
+                float inverseLength = rcp(max(end - start, 0.00001));
+                float longitudinal = saturate((along - start) * inverseLength);
+                if (_ReverseSourceAxis != 0) longitudinal = 1.0 - longitudinal;
+                float2 uv = _SourceAlongY != 0 ? float2(across, longitudinal) : float2(longitudinal, across);
+                // Gradients come from the continuous, unflipped coordinate, never from the
+                // changing tile identity or the overlap selection branch.
+                float2 stretch = _SourceAlongY != 0 ? float2(1, inverseLength) : float2(inverseLength, 1);
+                float2 flip = float2(PathTextureFlip(_TextureFlipX, (uint)index, 0x02e5be93u) ? 1.0 : 0.0,
+                    PathTextureFlip(_TextureFlipY, (uint)index, 0x68bc21ebu) ? 1.0 : 0.0);
+                float2 flipSign = 1.0 - 2.0 * flip;
+                uv = uv * flipSign + flip;
+                sourceDx *= stretch * flipSign; sourceDy *= stretch * flipSign;
+                bool beginning = _HasBeginningSource != 0 && index == 0;
+                bool ending = _HasEndSource != 0 && index + 1 == tileCount;
+                float4 value;
+                if (ending) value = tex2Dgrad(_EndSource, uv, sourceDx, sourceDy);
+                else if (beginning) value = tex2Dgrad(_BeginningSource, uv, sourceDx, sourceDy);
+                else if (_PaintSourceKind == 2) value = color;
+                else value = tex2Dgrad(_PaintSource, uv, sourceDx, sourceDy);
+                // Replace channel alpha before premultiplied tile blending so transparent
+                // albedo pixels cannot contribute hidden RGB from normal or control maps.
+                if (_UseRibbonCoverage != 0 && !beginning && !ending)
+                    value.a = tex2Dgrad(_RibbonCoverage, uv, sourceDx, sourceDy).a * _RibbonCoverageAlpha;
+                if (_VectorNormal != 0 && (_PaintSourceKind != 2 || beginning || ending))
+                    value.xy = (value.xy * 2.0 - 1.0) * flipSign * 0.5 + 0.5;
+                return value;
+            }
+
+            float4 CrossfadeRibbonTiles(float along, float span, float across, float4 color,
+                float2 sourceDx, float2 sourceDy)
+            {
+                // The spline fits an integer number of tiles. A division roundoff at the
+                // final segment must not invent a tiny extra tile and move the End source.
+                int count = max(1, (int)floor(span + 0.5));
+                float fittedScale = count / span;
+                along *= fittedScale;
+                float2 gradientScale = _SourceAlongY != 0 ? float2(1, fittedScale) : float2(fittedScale, 1);
+                sourceDx *= gradientScale; sourceDy *= gradientScale;
+                span = count;
+                if (_RibbonClosed != 0) along -= floor(along / span) * span;
+                int tile = (int)clamp(floor(along), 0.0, count - 1.0);
+                float phase = along - tile;
+                float halfOverlap = _JoinOverlap * 0.5;
+                int left = tile, right = tile;
+                float join = tile;
+                if (phase < halfOverlap && (_RibbonClosed != 0 || tile > 0)) left = tile - 1;
+                else if (phase > 1.0 - halfOverlap && (_RibbonClosed != 0 || tile + 1 < count))
+                { right = tile + 1; join = tile + 1.0; }
+                float4 a = SampleOverlappingRibbonTile(along, left, count, span, halfOverlap, across, color, sourceDx, sourceDy);
+                if (left == right) return a;
+                float4 b = SampleOverlappingRibbonTile(along, right, count, span, halfOverlap, across, color, sourceDx, sourceDy);
+                float incoming = smoothstep(join - halfOverlap, join + halfOverlap, along);
+                // Complementary premultiplied weights prevent an opacity dip for opaque tiles
+                // and exclude hidden RGB in transparent pixels from the color/normal blend.
+                float aWeight = saturate(a.a) * (1.0 - incoming), bWeight = saturate(b.a) * incoming;
+                float alpha = aWeight + bWeight;
+                float3 rgb = alpha > 0.000001 ? (a.rgb * aWeight + b.rgb * bWeight) / alpha : float3(0,0,0);
+                if (_VectorNormal != 0 && alpha > 0.000001)
+                {
+                    float3 normal = rgb * 2.0 - 1.0;
+                    normal = dot(normal, normal) > 0.000001 ? normalize(normal) : float3(0,0,1);
+                    rgb = normal * 0.5 + 0.5;
+                }
+                return float4(rgb, alpha);
+            }
+
             float4 Frag(Varyings input) : SV_Target
             {
                 float4 current = tex2D(_DestinationTexture, input.uv);
-                float mask = tex2D(_GeometryMask, input.uv).r;
+                float mask = (tex2D(_GeometryMask, input.uv).r * tex2D(_RegionMask, input.uv).r);
                 // Back already contains an exact copy of DestinationTexture. Do not write an
                 // unchanged value here: multiple world-space triangles may intentionally share
                 // the same (often mirrored) UVs, and a non-contributing triangle drawn later
@@ -405,10 +516,14 @@ Shader "Hidden/UMA/TexturePaint/RibbonProjection"
                     // bilinear closest-point solve so neither solver clamping nor an overlapping
                     // UV owner can turn the first/last source row into a rounded smear.
                     float3 segmentDirection = (left1 + right1) - (left0 + right0);
-                    if (_RibbonClosed == 0 && segmentIndex == 0 &&
+                    // Symmetry copies can be interleaved or concatenated. Their intrinsic along
+                    // coordinates retain each path's own endpoints; global buffer indices do not.
+                    bool atStart = segment.leftStartAlong.w <= _RibbonMinimumAlong + 0.00001;
+                    bool atEnd = segment.leftEndAlong.w >= _RibbonMaximumAlong - 0.00001;
+                    if (_RibbonClosed == 0 && atStart &&
                         dot(input.worldPosition - (left0 + right0) * 0.5, segmentDirection) < 0.0)
                         continue;
-                    if (_RibbonClosed == 0 && segmentIndex + 1 == _RibbonSegmentCount &&
+                    if (_RibbonClosed == 0 && atEnd &&
                         dot(input.worldPosition - (left1 + right1) * 0.5, segmentDirection) > 0.0)
                         continue;
                     float across;
@@ -419,8 +534,8 @@ Shader "Hidden/UMA/TexturePaint/RibbonProjection"
                     float pressure;
                     float4 color;
                     float3 ribbonNormal;
-                    bool allowBeforeStart = _RibbonClosed != 0 || segmentIndex > 0;
-                    bool allowAfterEnd = _RibbonClosed != 0 || segmentIndex + 1 < _RibbonSegmentCount;
+                    bool allowBeforeStart = _RibbonClosed != 0 || !atStart;
+                    bool allowAfterEnd = _RibbonClosed != 0 || !atEnd;
                     if (!RibbonCoordinates(input.worldPosition, left0, right0, left1, right1,
                         across, longitudinal, surfaceDistance, allowBeforeStart, allowAfterEnd)) continue;
                     if (surfaceDistance > _ProjectionDepth || surfaceDistance >= bestDistance) continue;
@@ -458,20 +573,72 @@ Shader "Hidden/UMA/TexturePaint/RibbonProjection"
                 float4 desired;
                 float localAlong = bestAlong - _RibbonMinimumAlong;
                 float alongSpan = max(0.0001, _RibbonMaximumAlong - _RibbonMinimumAlong);
-                bool useBeginning = _HasBeginningSource != 0 && localAlong < 1.0 - 0.0001;
-                bool useEnd = _HasEndSource != 0 && localAlong >= alongSpan - 1.0 - 0.0001;
-                if (useEnd)
-                    desired = tex2Dgrad(_EndSource, sourceUV,
+                if (_GarmentEnabled != 0)
+                {
+                    float width=max(length(bestAcrossVector),.0001);
+                    float pixelWidth=max(length(float2(dot(ddx(input.worldPosition),bestAcrossVector),
+                        dot(ddy(input.worldPosition),bestAcrossVector)))/(width*width),.0001);
+                    desired=ShadeGarment(float2(bestAcross,localAlong/alongSpan),input.uv,pixelWidth,
+                        _RibbonClosed!=0,input.worldPosition,input.worldNormal,input.worldTangent);
+                }
+                else if (_HemEnabled != 0)
+                {
+                    float width=max(length(bestAcrossVector),.0001);
+                    float perPixel=max(length(float2(dot(ddx(input.worldPosition),bestAcrossVector),
+                        dot(ddy(input.worldPosition),bestAcrossVector)))/(width*width),.0001);
+                    desired=ShadeHem(bestAcross,localAlong,alongSpan,_RibbonClosed!=0,perPixel,
+                        input.worldPosition,input.worldNormal,input.worldTangent,input.uv,width);
+                }
+                else if (_JoinOverlap > 0.00001)
+                    desired = CrossfadeRibbonTiles(localAlong, alongSpan, sourceAcross, bestColor,
                         ddx(unwrappedSourceUV), ddy(unwrappedSourceUV));
-                else if (useBeginning)
-                    desired = tex2Dgrad(_BeginningSource, sourceUV,
-                        ddx(unwrappedSourceUV), ddy(unwrappedSourceUV));
-                else if (_PaintSourceKind == 2) desired = bestColor;
-                else desired = tex2Dgrad(_PaintSource, sourceUV,
-                    ddx(unwrappedSourceUV), ddy(unwrappedSourceUV));
+                else
+                {
+                    // Decide from the complete image tile, not from tessellated ribbon segments.
+                    uint tileIndex = (uint)clamp(floor(localAlong), 0.0, max(0.0, ceil(alongSpan) - 1.0));
+                    float2 flip = float2(PathTextureFlip(_TextureFlipX, tileIndex, 0x02e5be93u) ? 1.0 : 0.0,
+                        PathTextureFlip(_TextureFlipY, tileIndex, 0x68bc21ebu) ? 1.0 : 0.0);
+                    float2 flipSign = 1.0 - 2.0 * flip;
+                    // Differentiate before mirroring: a flip can change abruptly at a tile join.
+                    float2 sourceDx = ddx(unwrappedSourceUV) * flipSign;
+                    float2 sourceDy = ddy(unwrappedSourceUV) * flipSign;
+                    sourceUV = sourceUV * flipSign + flip;
+                    bool useBeginning = _HasBeginningSource != 0 && localAlong < 1.0 - 0.0001;
+                    bool useEnd = _HasEndSource != 0 && localAlong >= alongSpan - 1.0 - 0.0001;
+                    if (useEnd)
+                        desired = tex2Dgrad(_EndSource, sourceUV,
+                            sourceDx, sourceDy);
+                    else if (useBeginning)
+                        desired = tex2Dgrad(_BeginningSource, sourceUV,
+                            sourceDx, sourceDy);
+                    else if (_PaintSourceKind == 2) desired = bestColor;
+                    else desired = tex2Dgrad(_PaintSource, sourceUV,
+                        sourceDx, sourceDy);
+                    if (_UseRibbonCoverage != 0 && !useBeginning && !useEnd)
+                        desired.a = tex2Dgrad(_RibbonCoverage, sourceUV, sourceDx, sourceDy).a * _RibbonCoverageAlpha;
+
+                    if (_VectorNormal != 0 && (_PaintSourceKind != 2 || useBeginning || useEnd))
+                        desired.xy = (desired.xy * 2.0 - 1.0) * flipSign * 0.5 + 0.5;
+                }
 
                 float pressure = _PressureAffectsFlow != 0 ? saturate(bestPressure) : 1.0;
                 float commonWeight = saturate(_Strength * _BrushFlow * max(0.0, bestFlow) * pressure * mask);
+                if (_RibbonClosed == 0)
+                {
+                    float alongFraction = saturate(localAlong / alongSpan);
+                    if (_StartFade > 0)
+                    {
+                        float position = 1.0 - saturate(alongFraction / _StartFade);
+                        commonWeight *= saturate(_StartFadeCurve.SampleLevel(sampler_EdgeFadeCurve,
+                            float2((position * 255.0 + 0.5) / 256.0, 0.5), 0).r);
+                    }
+                    if (_EndFade > 0)
+                    {
+                        float position = 1.0 - saturate((1.0 - alongFraction) / _EndFade);
+                        commonWeight *= saturate(_EndFadeCurve.SampleLevel(sampler_EdgeFadeCurve,
+                            float2((position * 255.0 + 0.5) / 256.0, 0.5), 0).r);
+                    }
+                }
                 float shapeAlpha = saturate(desired.a);
                 // Derivatives of bestAcross are undefined at the boundary where two ribbon
                 // segments (or overlapping UV owners) exchange closest ownership. The resulting
@@ -519,7 +686,10 @@ Shader "Hidden/UMA/TexturePaint/RibbonProjection"
                         {
                             float3 a = normalize(result.rgb * 2.0 - 1.0);
                             float3 b = normalize(desired.rgb * 2.0 - 1.0);
-                            result.rgb = normalize(lerp(a, b, sourceWeight)) * 0.5 + 0.5;
+                            // Generated partial-coverage normals are straight, not blended with
+                            // the invalid RGB of a transparent raster before layer compositing.
+                            result.rgb = normalize(b * sourceWeight +
+                                a * result.a * (1.0 - sourceWeight)) * 0.5 + 0.5;
                             result.a = sourceWeight + result.a * (1.0 - sourceWeight);
                         }
                         else
@@ -630,6 +800,64 @@ Shader "Hidden/UMA/TexturePaint/RibbonProjection"
                 if (!contributed) discard;
                 return result;
             }
+            ENDCG
+        }
+        // Copy the nearest UV owner's complete value into a two-texel exterior gutter. Using
+        // geometry instead of alpha for ownership preserves transparent source holes and partial
+        // opacity, and cannot expand the path into unpainted pixels inside a UV island.
+        Pass
+        {
+            Cull Off ZWrite Off ZTest Always Blend One Zero
+            CGPROGRAM
+            #pragma target 4.5
+            #pragma vertex vert_img
+            #pragma fragment PadUVGutter
+            #include "UnityCG.cginc"
+            sampler2D _MainTex;
+            sampler2D _RibbonGeometryCoverage;
+            float4 _MainTex_TexelSize;
+
+            float4 PadUVGutter(v2f_img input) : SV_Target
+            {
+                float4 center = tex2D(_MainTex, input.uv);
+                if (center.a > 0.00001 || tex2D(_RibbonGeometryCoverage, input.uv).r > 0.5)
+                    return center;
+                float nearestDistance = 1e20;
+                float2 nearestUV = input.uv;
+                [unroll] for (int y = -2; y <= 2; y++)
+                [unroll] for (int x = -2; x <= 2; x++)
+                {
+                    float distance = x * x + y * y;
+                    float2 uv = input.uv + float2(x, y) * _MainTex_TexelSize.xy;
+                    if (distance < nearestDistance && all(uv >= 0) && all(uv <= 1) &&
+                        tex2D(_RibbonGeometryCoverage, uv).r > 0.5)
+                    {
+                        nearestDistance = distance;
+                        nearestUV = uv;
+                    }
+                }
+                return tex2D(_MainTex, nearestUV);
+            }
+            ENDCG
+        }
+        Pass
+        {
+            Cull Off ZWrite Off ZTest Always Blend One Zero
+            CGPROGRAM
+            #pragma target 4.5
+            #pragma vertex GeometryVert
+            #pragma fragment GeometryFrag
+            #include "UnityCG.cginc"
+            struct GeometryAttributes { float4 vertex : POSITION; float2 uv : TEXCOORD0; };
+            float4 GeometryVert(GeometryAttributes input) : SV_POSITION
+            {
+                float2 clipPosition = input.uv * 2.0 - 1.0;
+                #if UNITY_UV_STARTS_AT_TOP
+                    clipPosition.y = -clipPosition.y;
+                #endif
+                return float4(clipPosition, 0.0, 1.0);
+            }
+            float4 GeometryFrag() : SV_Target { return 1; }
             ENDCG
         }
     }

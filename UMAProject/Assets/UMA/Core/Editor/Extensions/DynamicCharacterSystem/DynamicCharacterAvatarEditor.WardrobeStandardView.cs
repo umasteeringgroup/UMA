@@ -12,8 +12,9 @@ namespace UMA.CharacterSystem.Editors
         private static GUIStyle wardrobeRegionStyle;
         private static GUIStyle wardrobeItemStyle;
         private bool standardWardrobeExpanded = true;
-        private int standardWardrobeFilter;
         private static readonly string[] StandardWardrobeFilters = { "All", "Assigned only" };
+        private static string StandardWardrobeFilterKey => "UMA.DynamicCharacterAvatar.StandardWardrobeFilter." + Application.dataPath;
+        private int standardWardrobeFilter;
 
         private static GUIStyle WardrobeRegionStyle => wardrobeRegionStyle ??= new GUIStyle(EditorStyles.boldLabel)
         {
@@ -37,7 +38,12 @@ namespace UMA.CharacterSystem.Editors
                 if (!standardWardrobeExpanded) return;
 
                 bool changed = GUI.changed;
-                standardWardrobeFilter = EditorGUILayout.Popup("Show regions", standardWardrobeFilter, StandardWardrobeFilters);
+                int selectedFilter = EditorGUILayout.Popup("Show regions", standardWardrobeFilter, StandardWardrobeFilters);
+                if (selectedFilter != standardWardrobeFilter)
+                {
+                    standardWardrobeFilter = selectedFilter;
+                    EditorPrefs.SetInt(StandardWardrobeFilterKey, selectedFilter);
+                }
                 GUI.changed = changed; // Filtering changes the view, not the avatar.
 
                 RaceData race = thisDCA != null && thisDCA.activeRace != null

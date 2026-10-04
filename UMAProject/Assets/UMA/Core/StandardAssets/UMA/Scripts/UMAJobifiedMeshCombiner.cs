@@ -398,8 +398,7 @@ namespace UMA
                     }
                     if (leases[i] == null || leases[i].IsBuilder)
                     {
-                        // The native backend writes its destination mesh. Never pass it a shared output.
-                        UMAResourceLeaseOwner.MakeMeshUnique(batch.Renderer);
+                        // The native backend replaces shared/unreadable outputs without copying them.
                         batchesToBuild.Add(batch);
                         buildIndices.Add(i);
                     }

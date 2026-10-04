@@ -4,6 +4,7 @@ Texture2D<float4> _Source;
 Texture2D<float4> _Stamp;
 Texture2D<float4> _PaintMask;
 Texture2D<float4> _GeometryMask;
+Texture2D<float4> _RegionMask;
 Texture2D<float4> _StrokeBase;
 RWTexture2D<float4> _Destination;
 RWTexture2D<float> _StrokeCoverage;
@@ -68,13 +69,13 @@ float BrushCoverage(float2 uv)
     float2 delta = float2(dot(uvDelta, _UVToBrush.xy), dot(uvDelta, _UVToBrush.zw));
     float s, c; sincos(-_Rotation, s, c);
     delta = float2(delta.x * c - delta.y * s, delta.x * s + delta.y * c);
-    delta /= max(abs(_FootprintScale), 1e-5);
+    delta /= (max(abs(_FootprintScale), 1e-5) * sign(_FootprintScale));
     float d = _Shape == 1 ? max(abs(delta.x), abs(delta.y)) : length(delta);
     if (d >= 1.0) return 0.0;
     float w = d <= _Hardness ? 1.0 : 1.0 - saturate((d - _Hardness) / max(1.0 - _Hardness, 1e-5));
     if (_Shape == 2) w *= _Stamp.SampleLevel(sampler_linear_clamp, delta * 0.5 + 0.5, 0).a;
     return saturate(w * _Strength * _PaintMask.SampleLevel(sampler_linear_clamp, uv, 0).r *
-        _GeometryMask.SampleLevel(sampler_linear_clamp, uv, 0).r);
+        (_GeometryMask.SampleLevel(sampler_linear_clamp, uv, 0).r * _RegionMask.SampleLevel(sampler_linear_clamp, uv, 0).r));
 }
 
 [numthreads(16, 16, 1)]

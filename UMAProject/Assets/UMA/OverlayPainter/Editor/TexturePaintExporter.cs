@@ -393,6 +393,7 @@ namespace UMA.TexturePaint.Editor
             string identifier, TexturePaintLogicalTargetCatalog targets, bool overwriteConfirmed,
             TexturePaintOperationContext operation = default, Action<string, float> detailedProgress = null)
         {
+            store?.RefreshLayerLinks();
             _ = state; // Export history intentionally does not live in the paint document/editor state.
             string contextName = avatar != null ? avatar.name : current?.surface?.slotName ?? "TexturePaint";
             TexturePaintExportPlan plan = BuildPlan(store, current, contextName, template, identifier, targets);
@@ -864,7 +865,7 @@ namespace UMA.TexturePaint.Editor
                         bool invertNormalGreen = IsNormalChannel(entry.materialChannel) &&
                             entry.materialChannel.output.normalConvention ==
                             UMAMaterial.TextureChannelNormalConvention.DirectX;
-                        bool linear = entry.materialChannel.output.colorSpace !=
+                        bool linear = bitDepth == TexturePaintExportBitDepth.HalfFloat || entry.materialChannel.output.colorSpace !=
                             UMAMaterial.TextureChannelColorSpace.SRGB;
                         ApplyDeclaredOutputTransform(texture, entry.materialChannel, invertNormalGreen, linear,
                             operation, template.content == TexturePaintExportContent.AuthoredOverlay);
@@ -1229,7 +1230,8 @@ namespace UMA.TexturePaint.Editor
             UMAMaterial.TextureChannelOutputSettings output = entry.materialChannel.output;
             importer.textureType = output.importerType == UMAMaterial.TextureChannelImporterType.NormalMap
                 ? TextureImporterType.NormalMap : TextureImporterType.Default;
-            importer.sRGBTexture = output.colorSpace == UMAMaterial.TextureChannelColorSpace.SRGB;
+            importer.sRGBTexture = output.encoding != UMAMaterial.TextureChannelOutputEncoding.ExrHalf &&
+                output.colorSpace == UMAMaterial.TextureChannelColorSpace.SRGB;
             importer.mipmapEnabled = output.generateMipMaps;
             importer.textureCompression = ToImporterCompression(output.compression);
             importer.alphaSource = output.alphaSource == UMAMaterial.TextureChannelAlphaSource.FromInput

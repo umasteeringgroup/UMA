@@ -1,3 +1,7 @@
+#pragma kernel CSMaskStack
+#pragma kernel CSMaskSpatial
+#pragma kernel CSMaskSeeds
+#pragma kernel CSMaskJump
 #pragma kernel CSCopyBase
 #pragma kernel CSCompositeLayer
 #pragma kernel CSPrepareEffectSeeds
@@ -31,6 +35,8 @@ RWTexture2D<float4> _MaskResult;
 Texture2D<float4> _GroupOriginal;
 Texture2D<float4> _GroupResult;
 int2 _MaskBaseSize;
+int _MaskStartFromPaint;
+float _MaskInitialValue;
 int _MaskNoiseEnabled;
 int _MaskNoiseSeed;
 float2 _MaskNoiseTiling;
@@ -158,7 +164,7 @@ void CSEvaluateLayerMask(uint3 dispatchID : SV_DispatchThreadID)
     if (any(pixel >= _TextureSize)) return;
     float2 uv = (float2(pixel) + 0.5) / float2(_TextureSize);
     int2 basePixel = clamp(int2(uv * _MaskBaseSize), int2(0, 0), _MaskBaseSize - 1);
-    float value = saturate(_MaskBase.Load(int3(basePixel, 0)).r);
+    float value = _MaskStartFromPaint != 0 ? saturate(_MaskBase.Load(int3(basePixel, 0)).r) : _MaskInitialValue;
 
     if (_MaskNoiseEnabled != 0)
     {
@@ -537,3 +543,5 @@ void CSCompositeLayerEffect(uint3 dispatchID : SV_DispatchThreadID)
     _Composite[pixel] = float4(lerp(destination.rgb, blended, alpha), clippedEffect
         ? destination.a : alpha + destination.a * (1.0 - alpha));
 }
+
+#include "MaskEffects.hlsl"

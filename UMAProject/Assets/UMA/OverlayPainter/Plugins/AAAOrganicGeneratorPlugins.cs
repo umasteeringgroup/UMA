@@ -125,7 +125,8 @@ namespace UMA.TexturePaint.Examples
                 id = Id(mode),
                 displayName = DisplayName(mode),
                 description = Description(mode),
-                pluginVersion = "1.0.0",
+                pluginVersion = mode == AAAOrganicGeneratorMode.FabricFuzz || mode == AAAOrganicGeneratorMode.RustCorrosion
+                    ? "1.1.1" : "1.0.1",
                 capabilities = TexturePaintPluginCapability.Generator |
                                TexturePaintPluginCapability.ReadsMeshMaps |
                                TexturePaintPluginCapability.LongRunning,
@@ -165,7 +166,7 @@ namespace UMA.TexturePaint.Examples
             {
                 AAAOrganicGeneratorMode.FabricFuzz => TexturePaintChannelMask.Albedo |
                     TexturePaintChannelMask.Roughness | TexturePaintChannelMask.NormalControl |
-                    TexturePaintChannelMask.DetailMask,
+                    TexturePaintChannelMask.DetailMask | TexturePaintChannelMask.AmbientOcclusion,
                 AAAOrganicGeneratorMode.RustCorrosion => TexturePaintChannelMask.Albedo |
                     TexturePaintChannelMask.Roughness | TexturePaintChannelMask.Metallic |
                     TexturePaintChannelMask.AmbientOcclusion | TexturePaintChannelMask.NormalControl,
@@ -242,7 +243,8 @@ namespace UMA.TexturePaint.Examples
                             groupChannels, control, guide, context, surfaceIndex, surfaceCount);
                         if (!output.any) continue;
                         for (int targetIndex = 0; targetIndex < group.Count; targetIndex++)
-                            Write(context, surfaceId, group[targetIndex], y, rows, output);
+                            Write(context, surfaceId, group[targetIndex], y, rows, output,
+                                mode == AAAOrganicGeneratorMode.FabricFuzz);
                     }
                 }
             }
@@ -302,38 +304,62 @@ namespace UMA.TexturePaint.Examples
             float along = p.x * ca + p.y * sa;
             float across = -p.x * sa + p.y * ca;
             float warp = Noise.Fbm(p * 0.37f, s.seed + 19, 3, 0.55f) - 0.5f;
-            float fibers = Mathf.Pow(1f - Mathf.Abs(Mathf.Sin((across + warp * s.directionVariation) *
-                Mathf.PI * Mathf.Max(1f, s.fiberFrequency))), 10f);
-            fibers *= Mathf.Lerp(0.45f, 1f, Noise.Fbm(new Vector3(along * 2f, across, p.z),
-                s.seed + 31, 3, 0.55f));
             float effectiveDensity = Mathf.Clamp01(s.density * presetDensity);
-            float fiberCoverage = SmoothStep(1f - effectiveDensity, 1f, fibers);
+            float fiberDistance = Mathf.Abs(Mathf.Sin((across + warp * s.directionVariation) *
+                Mathf.PI * Mathf.Max(1f, s.fiberFrequency))) / 0.16f;
+            float fiberBody = 1f - SmoothStep(0.8f, 1.1f, fiberDistance);
+            float fiberRound = Mathf.Sqrt(Mathf.Clamp01(1f - fiberDistance * fiberDistance));
+            float fiberPresence = effectiveDensity * SmoothStep(0.28f, 0.65f,
+                Noise.Fbm(new Vector3(along * 2f, across, p.z), s.seed + 31, 3, 0.55f));
+            float fiberCoverage = fiberBody * fiberPresence;
+            // Rounded cross-sections taper to the fabric. Their small contact shadows sit at
+            // the feet of the fibers instead of painting a dark stripe over the crown.
+            float fiberContact = Mathf.Exp(-2f * (fiberDistance - 0.8f) * (fiberDistance - 0.8f)) *
+                (1f - fiberRound * 0.8f) * fiberPresence;
 
             float cell = Noise.Worley(p * s.pillScale, s.seed + 101, out float cellRandom);
-            float pill = 1f - SmoothStep(0.08f, 0.42f, cell);
             float effectivePilling = Mathf.Clamp01(s.pilling * presetPilling);
-            pill *= SmoothStep(1f - effectivePilling, 1f, cellRandom);
+            float pillPresence = effectivePilling * SmoothStep(1f - effectivePilling, 1f, cellRandom);
+            float pill = (1f - SmoothStep(0.27f, 0.39f, cell)) * pillPresence;
+            float pillRound = Mathf.Sqrt(Mathf.Clamp01(1f - cell * cell / (0.38f * 0.38f)));
+            float pillContact = Mathf.Exp(-(cell - 0.34f) * (cell - 0.34f) / 0.0144f) *
+                (1f - pillRound * 0.8f) * pillPresence;
             float curvature = Mathf.Abs(input.Curvature(u, v));
             float edgeFray = SmoothStep(0.08f, 0.65f, curvature) * s.edgeAmount;
             edgeFray *= Mathf.Lerp(0.35f, 1f, Noise.Ridged(p * (s.scale * 0.35f + 2f),
                 s.seed + 73, 4));
-            float coverage = Mathf.Clamp01(fiberCoverage * effectiveDensity +
-                                           pill * effectivePilling + edgeFray);
+            edgeFray = Mathf.Clamp01(edgeFray * Mathf.Lerp(0.3f, 1f, fiberBody));
+            float bodyCoverage = 1f - (1f - fiberCoverage) * (1f - pill) * (1f - edgeFray);
+            float contact = Mathf.Clamp01(fiberContact * 0.65f + pillContact +
+                edgeFray * (1f - fiberRound) * 0.25f);
+            // Keep coverage independent of both response controls. Turning relief or its
+            // shading off must not change the placement, footprint or material channels.
+            float coverage = Mathf.Max(bodyCoverage, contact * 0.6f);
+            float roundedRelief = Mathf.Max(fiberRound * fiberPresence,
+                pillRound * pillPresence) + edgeFray * fiberRound * 0.25f;
             Color color = Color.Lerp(s.primaryColor, s.secondaryColor,
                 Mathf.Clamp01(pill + Noise.Fbm(p * 2.1f, s.seed + 7, 3, 0.5f) * 0.25f));
+            float occlusion = Mathf.Exp(-s.shadingStrength * contact * 0.65f);
+            float crown = Mathf.Max(fiberRound * fiberCoverage, pillRound * pill);
+            color *= Mathf.Exp(-s.shadingStrength * contact * 0.45f) *
+                (1f + crown * s.shadingStrength * 0.08f);
+            // A smooth shoulder retains variation even at maximum depth, unlike saturating
+            // height at one and flattening the tops of fibers and pills.
+            float relief = s.height * presetHeight * roundedRelief * s.depthStrength;
+            float height = 0.5f + 0.49f * (1f - Mathf.Exp(-relief / 0.49f));
             return new GeneratedPixel
             {
                 albedo = WithAlpha(color, coverage * s.colorStrength),
                 roughness = Scalar(s.roughness, coverage),
-                normalControl = Scalar(Mathf.Clamp01(0.5f + s.height * presetHeight *
-                    Mathf.Lerp(0.35f, 1f, Mathf.Max(fibers, pill))), coverage),
-                detailMask = Scalar(Mathf.Clamp01(fibers + pill), coverage)
+                ambientOcclusion = Scalar(occlusion, coverage),
+                normalControl = Scalar(height, coverage),
+                detailMask = Scalar(Mathf.Clamp01(fiberCoverage + pill), coverage)
             };
         }
 
         private static GeneratedPixel Rust(SurfaceInputs input, Settings s, float u, float v)
         {
-            Vector3 p = input.Coordinates(u, v, true) * s.scale;
+            Vector3 p = input.Coordinates(u, v, s.worldProjection) * s.scale;
             float n = Noise.Fbm(p, s.seed, 5, 0.53f);
             float islands = SmoothStep(1f - s.spread, 0.98f, n);
             float cavity = Mathf.Max(input.Cavity(u, v), Mathf.Max(0f, -input.Curvature(u, v)));
@@ -610,7 +636,7 @@ namespace UMA.TexturePaint.Examples
             float bruises = s.bruisesEnabled
                 ? (1f - SmoothStep(s.bruiseSize * 0.4f, s.bruiseSize, bruiseCell)) *
                   SmoothStep(1f - s.bruiseAmount, 1f, bruiseRandom) : 0f;
-            Color bruiseColor = BruiseColor(s.bruiseAge);
+            Color bruiseColor = BruiseColor(s.bruiseAge).linear;
 
             float spotCell = Noise.Worley(p * s.spotScale, s.seed + 173, out float spotRandom);
             float spots = (1f - SmoothStep(0.03f, s.spotSize, spotCell)) *
@@ -816,7 +842,7 @@ namespace UMA.TexturePaint.Examples
         }
 
         private static void Write(TexturePaintCommandContextV2 context, string surfaceId,
-            OutputTarget target, int yStart, int rowCount, OutputBuffers output)
+            OutputTarget target, int yStart, int rowCount, OutputBuffers output, bool straightAlpha)
         {
             Color32[] pixels = output.For(target.channel);
             if (pixels == null) return;
@@ -824,7 +850,9 @@ namespace UMA.TexturePaint.Examples
                 ? TexturePaintPluginColorSpace.Linear : TexturePaintPluginColorSpace.Data;
             context.WriteTileCompactOwned(surfaceId, target.channel,
                 new RectInt(0, yStart, target.width, rowCount), pixels, colorSpace,
-                TexturePaintPluginBlend.Normal, 1f);
+                // Fabric's response values are straight-alpha: multiplying a neutral height
+                // or AO by coverage here would turn translucent fiber edges into recesses.
+                straightAlpha ? TexturePaintPluginBlend.Replace : TexturePaintPluginBlend.Normal, 1f);
         }
 
         private static string Id(AAAOrganicGeneratorMode mode) => mode switch
@@ -909,12 +937,16 @@ namespace UMA.TexturePaint.Examples
             p.Add(Header("pillingSection", "Pilling & Clumps", "Randomized fiber balls and clustered wear."));
             p.Add(Float("pilling", "Pilling Clusters", 0f, 1f, 0.35f, "Frequency of random pill clusters."));
             p.Add(Float("pillScale", "Pill Size", 0.25f, 64f, 8f, "Cell frequency controlling pill size."));
-            p.Add(Header("fabricMaterial", "Material Response", "Color, roughness, micro-height and detail-mask output."));
+            p.Add(Header("fabricMaterial", "Material Response", "Color, contact occlusion, roughness, micro-height and detail-mask output."));
             p.Add(ColorParameter("primaryColor", "Fiber Color", new Color(0.62f, 0.62f, 0.6f, 1f), "Primary fiber tint."));
             p.Add(ColorParameter("secondaryColor", "Pill / Fray Color", new Color(0.78f, 0.76f, 0.71f, 1f), "Loose and worn fiber tint."));
             p.Add(Float("colorStrength", "Color Strength", 0f, 1f, 0.22f, "Albedo contribution while retaining base fabric."));
             p.Add(Float("roughness", "Fiber Roughness", 0f, 1f, 0.88f, "Roughness within generated fibers."));
             p.Add(Float("height", "Fiber Height", 0f, 0.35f, 0.035f, "Raised Normal Control response."));
+            p.Add(Float("depthStrength", "3D Depth", 0f, 4f, 1f,
+                "Scales rounded fiber and pill relief in Normal Control. Zero gives a flat height; color and shading stay unchanged."));
+            p.Add(Float("shadingStrength", "Relief Shading", 0f, 3f, 1f,
+                "Contact darkening and crown highlights in Albedo and Ambient Occlusion, independently of 3D Depth."));
         }
 
         private static void AddRustParameters(List<TexturePaintPluginParameterDefinition> p)
@@ -1363,7 +1395,7 @@ namespace UMA.TexturePaint.Examples
                 guideSource, woundType, patternType, armorFinish, scrapeCount;
             public readonly float scale, globalAmount, density, fiberFrequency, direction,
                 directionVariation, edgeAmount, pilling, pillScale, colorStrength, roughness,
-                height, spread, cavityAmount, pitting, pitScale, depth, flaking, flakeScale,
+                height, depthStrength, shadingStrength, spread, cavityAmount, pitting, pitScale, depth, flaking, flakeScale,
                 streaking, streakLength, streakFrequency, metallic, aoValue, persistence,
                 noiseAmount, poreAmount, poreDensity, poreScale, poreSize, poreDepth,
                 scratchAmount, scratchDensity, scratchFrequency, scratchLength, scratchWidth,
@@ -1411,6 +1443,10 @@ namespace UMA.TexturePaint.Examples
                 pilling = Clamp01(v, "pilling", 0.35f); pillScale = Pos(v, "pillScale", 8f);
                 colorStrength = Clamp01(v, "colorStrength", mode == AAAOrganicGeneratorMode.SurfaceMicroDetail ? 0.04f : 0.72f);
                 roughness = Clamp01(v, "roughness", 0.58f); height = Pos(v, "height", 0.08f);
+                depthStrength = mode == AAAOrganicGeneratorMode.FabricFuzz
+                    ? Mathf.Clamp(v.Float("depthStrength", 1f), 0f, 4f) : 1f;
+                shadingStrength = mode == AAAOrganicGeneratorMode.FabricFuzz
+                    ? Mathf.Clamp(v.Float("shadingStrength", 1f), 0f, 3f) : 1f;
                 spread = Clamp01(v, "spread", 0.62f); cavityAmount = Pos(v, "cavityAmount", 0.9f);
                 pitting = Clamp01(v, "pitting", 0.52f); pitScale = Pos(v, "pitScale", 18f);
                 depth = Pos(v, "depth", 0.12f); flaking = Clamp01(v, "flaking", 0.48f);
@@ -1482,19 +1518,19 @@ namespace UMA.TexturePaint.Examples
                 exposedRoughness = Clamp01(v, "exposedRoughness", 0.3f);
                 recessRoughness = Clamp01(v, "recessRoughness", 0.72f);
                 burrRoughness = Clamp01(v, "burrRoughness", 0.2f);
-                primaryColor = v.Color("primaryColor", Color.gray); secondaryColor = v.Color("secondaryColor", Color.gray);
-                tertiaryColor = v.Color("tertiaryColor", new Color(0.72f, 0.19f, 0.16f, 1f));
-                spotColor = v.Color("spotColor", new Color(0.24f, 0.095f, 0.055f, 1f));
-                spotSecondaryColor = v.Color("spotSecondaryColor",
+                primaryColor = v.LinearColor("primaryColor", Color.gray); secondaryColor = v.LinearColor("secondaryColor", Color.gray);
+                tertiaryColor = v.LinearColor("tertiaryColor", new Color(0.72f, 0.19f, 0.16f, 1f));
+                spotColor = v.LinearColor("spotColor", new Color(0.24f, 0.095f, 0.055f, 1f));
+                spotSecondaryColor = v.LinearColor("spotSecondaryColor",
                     new Color(0.42f, 0.17f, 0.09f, 1f));
-                veinColor = v.Color("veinColor", new Color(0.12f, 0.23f, 0.34f, 1f));
-                freshColor = v.Color("freshColor", new Color(0.34f, 0.025f, 0.02f, 1f));
-                insideColor = v.Color("insideColor", new Color(0.58f, 0.28f, 0.26f, 1f));
-                sideColor = v.Color("sideColor", new Color(0.68f, 0.39f, 0.35f, 1f));
-                inflammationColor = v.Color("inflammationColor", new Color(0.72f, 0.08f, 0.055f, 1f));
-                exposedColor = v.Color("exposedColor", new Color(0.42f, 0.45f, 0.48f, 1f));
-                recessColor = v.Color("recessColor", new Color(0.075f, 0.065f, 0.055f, 1f));
-                burrColor = v.Color("burrColor", new Color(0.68f, 0.7f, 0.72f, 1f));
+                veinColor = v.LinearColor("veinColor", new Color(0.12f, 0.23f, 0.34f, 1f));
+                freshColor = v.LinearColor("freshColor", new Color(0.34f, 0.025f, 0.02f, 1f));
+                insideColor = v.LinearColor("insideColor", new Color(0.58f, 0.28f, 0.26f, 1f));
+                sideColor = v.LinearColor("sideColor", new Color(0.68f, 0.39f, 0.35f, 1f));
+                inflammationColor = v.LinearColor("inflammationColor", new Color(0.72f, 0.08f, 0.055f, 1f));
+                exposedColor = v.LinearColor("exposedColor", new Color(0.42f, 0.45f, 0.48f, 1f));
+                recessColor = v.LinearColor("recessColor", new Color(0.075f, 0.065f, 0.055f, 1f));
+                burrColor = v.LinearColor("burrColor", new Color(0.68f, 0.7f, 0.72f, 1f));
             }
             private static float Clamp01(TexturePaintPluginParameterSet v, string id, float fallback) =>
                 Mathf.Clamp01(v.Float(id, fallback));

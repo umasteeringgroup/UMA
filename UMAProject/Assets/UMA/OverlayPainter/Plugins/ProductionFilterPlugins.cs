@@ -86,7 +86,7 @@ namespace UMA.TexturePaint.Examples
             var descriptor = new TexturePaintPluginDescriptor
             {
                 id = Id(kind), displayName = Name(kind), description = Description(kind),
-                pluginVersion = "1.0.0", capabilities = TexturePaintPluginCapability.Filter |
+                pluginVersion = "1.0.1", capabilities = TexturePaintPluginCapability.Filter |
                     TexturePaintPluginCapability.LongRunning,
                 declaredChannels = TexturePaintChannelMask.All,
                 readChannels = TexturePaintChannelMask.All,
@@ -179,7 +179,9 @@ namespace UMA.TexturePaint.Examples
                             case ProductionFilterKind.BlurSharpenDetail:
                                 value = BlurDetail(source, u, v, width, height, sourceChannel, p); break;
                             default:
-                                value = ChannelOperation(source.GetPixelBilinear(u, v), u, v, p); break;
+                                value = ChannelOperation(source.GetPixelBilinear(u, v), u, v, p,
+                                    context.target != TexturePaintPluginTarget.LayerMask && TexturePaintChannelUtility.IsColor(sourceChannel),
+                                    context.target != TexturePaintPluginTarget.LayerMask && TexturePaintChannelUtility.IsColor(destinationChannel)); break;
                         }
                         value = context.target == TexturePaintPluginTarget.LayerMask
                             ? MaskColor(value) : Constrain(destinationChannel, value);
@@ -336,7 +338,7 @@ namespace UMA.TexturePaint.Examples
         }
 
         private static Color ChannelOperation(Color input, float u, float v,
-            TexturePaintPluginParameterSet p)
+            TexturePaintPluginParameterSet p, bool sourceColor, bool destinationColor)
         {
             int operation = p.Integer("operation", 0);
             float amount = Mathf.Clamp01(p.Float("amount", 1f));
@@ -354,14 +356,15 @@ namespace UMA.TexturePaint.Examples
                         Component(input, p.Integer("greenSource", 1)),
                         Component(input, p.Integer("blueSource", 2)),
                         Component(input, p.Integer("alphaSource", 3))); break;
-                case 4: result = Gradient(Luma(input), p); result.a = input.a; break;
+                case 4: result = Gradient(Luma(input), p, destinationColor); result.a = input.a; break;
                 case 5:
-                    Color find = p.Color("findColor", Color.white);
+                    Color find = sourceColor ? p.LinearColor("findColor", Color.white) : p.Color("findColor", Color.white);
                     float distance = ColorDistance(input, find);
                     float tolerance = Math.Max(0.0001f, p.Float("tolerance", 0.1f));
                     float softness = Math.Max(0.0001f, p.Float("softness", 0.05f));
                     float match = 1f - SmoothStep(tolerance, tolerance + softness, distance);
-                    result = Color.Lerp(input, p.Color("replaceColor", Color.black), match); result.a = input.a;
+                    Color replace = destinationColor ? p.LinearColor("replaceColor", Color.black) : p.Color("replaceColor", Color.black);
+                    result = Color.Lerp(input, replace, match); result.a = input.a;
                     break;
                 case 6:
                     float noise = Fractal(u, v, p.Float("variationScale", 16f), p.Integer("seed", 1337));
@@ -617,7 +620,12 @@ namespace UMA.TexturePaint.Examples
         private static Color MaskColor(Color source) { float value = Luma(source); return new Color(value, value, value, 1f); }
         private static Color Remap(Color c, float inMin, float inMax, float outMin, float outMax) { float d = Math.Max(.00001f, inMax - inMin); Func<float, float> f = x => Mathf.Lerp(outMin, outMax, Mathf.Clamp01((x - inMin) / d)); return new Color(f(c.r), f(c.g), f(c.b), c.a); }
         private static float Component(Color c, int component) { switch (component) { case 0: return c.r; case 1: return c.g; case 2: return c.b; case 3: return c.a; case 4: return Luma(c); case 6: return 1f; default: return 0f; } }
-        private static Color Gradient(float t, TexturePaintPluginParameterSet p) { Color low = p.Color("gradientLow", Color.black), mid = p.Color("gradientMid", Color.gray), high = p.Color("gradientHigh", Color.white); return t < .5f ? Color.Lerp(low, mid, t * 2f) : Color.Lerp(mid, high, (t - .5f) * 2f); }
+        private static Color Gradient(float t, TexturePaintPluginParameterSet p, bool color)
+        {
+            Color low = p.Color("gradientLow", Color.black), mid = p.Color("gradientMid", Color.gray), high = p.Color("gradientHigh", Color.white);
+            if (color) { low = low.linear; mid = mid.linear; high = high.linear; }
+            return t < .5f ? Color.Lerp(low, mid, t * 2f) : Color.Lerp(mid, high, (t - .5f) * 2f);
+        }
         private static float Fractal(float u, float v, float scale, int seed) { float sum = 0, weight = 0, amp = 1; for (int i = 0; i < 4; i++) { float o = seed * .00137f * (i + 1); sum += Mathf.PerlinNoise(u * scale + o, v * scale - o) * amp; weight += amp; amp *= .5f; scale *= 2f; } return sum / weight; }
         private static float SmoothStep(float a, float b, float x) { float t = Mathf.Clamp01((x - a) / Math.Max(.00001f, b - a)); return t * t * (3f - 2f * t); }
         private static float Repeat(float value) => value - Mathf.Floor(value);

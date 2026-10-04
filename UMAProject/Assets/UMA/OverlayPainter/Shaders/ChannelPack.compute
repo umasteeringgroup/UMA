@@ -192,8 +192,9 @@ void CSApplyPluginTile(uint3 id : SV_DispatchThreadID)
     else
     {
         float alpha = saturate(source.a * coverage);
-        destination = float4(lerp(destination.rgb, source.rgb, alpha),
-            alpha + destination.a * (1.0 - alpha));
+        float outputAlpha = alpha + destination.a * (1.0 - alpha);
+        float3 associated = source.rgb * alpha + destination.rgb * destination.a * (1.0 - alpha);
+        destination = outputAlpha > 1e-7 ? float4(associated / outputAlpha, outputAlpha) : 0;
     }
 
     if (PluginGrayscaleChannel())

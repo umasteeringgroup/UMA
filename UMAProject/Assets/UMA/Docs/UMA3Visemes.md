@@ -32,6 +32,12 @@ The existing full group's asset identity and non-viseme entries are retained. Bo
 
 Mild is separately authored: articulation such as PP's seal is retained while excursions and jaw openings are reduced. It is not a uniform 50% version of the full set.
 
+## Full viseme reference sheet
+
+The full viseme set shown on HumanMale30:
+
+![HumanMale30 full viseme reference sheet](VisemeReview/HumanMale30_full_sheet.png)
+
 ## Preview on your character
 
 1. Generate a standard UMA 3 character and select its **Dynamic Expression Player** component.

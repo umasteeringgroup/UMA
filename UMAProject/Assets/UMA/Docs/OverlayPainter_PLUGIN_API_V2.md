@@ -61,6 +61,8 @@ The host validates every command before the first mutation, copies submitted buf
 
 Albedo, Emission, and Skin Color Mask accept Linear or SRGB payloads and are canonicalized to linear working values. Normal, Metallic, Roughness, AO, Thickness, Detail Mask, Normal Control, and Custom data require `Data`. Normal commands require `Replace` and are vector-normalized by the host. Normal Control and the other scalar channels are constrained to grayscale after every plugin blend. Plugins cannot write directly to packed physical textures, and Normal Control is never exposed as an independent material texture or export output.
 
+Color-picker parameters and stripe colors are stored as authored sRGB values. CPU plugins should use `parameters.LinearColor(id, fallback)` when rendering RGB into a `Linear` payload, or use the raw `Color` getter with an `SRGB` payload. Do not decode sampled color textures again: texture snapshots already contain linear RGB. Numeric data colors, encoded normals, masks, and alpha do not receive an RGB transfer. `TexturePaintChannelUtility.WorkingColor` provides channel-aware conversion for authored colors. GPU generator `_P_<colorParameterId>` uniforms are decoded to linear RGB by the host, with alpha unchanged. Generated shading and RGB interpolation operate in linear space; previews and sRGB PNG exports encode once for display. Floating-point EXR exports retain linear RGB, including for a color channel whose PNG output would be sRGB.
+
 `declaredChannels` grants write permission. `readChannels` selects immutable input snapshots, so a
 multi-channel generator does not copy every output before it starts. Leaving `readChannels` empty
 retains the original behavior and snapshots all declared channels. Set
@@ -130,6 +132,12 @@ Add `TexturePaintPluginCapability.ReadsMeshMaps` and specify `requiredMeshMaps` 
 If an older plugin declares `ReadsMeshMaps` without a request mask, the host supplies all maps.
 Requested maps are generated lazily, cached by the texture set, copied into the transaction snapshot,
 and counted against the snapshot memory budget.
+
+Plugins whose map needs depend on their parameters can implement
+`ITexturePaintDynamicMeshMapUsageV2.ResolveMeshMaps`. Return a subset of the descriptor's resolved
+mesh-map contract for that execution. The host rejects undeclared requests and only captures the
+selected maps. For example, Cloth requests no mesh maps in Flat mode and requests World Position
+and World Normal in Triplanar mode.
 
 ```csharp
 private static readonly TexturePaintPluginDescriptor descriptor = new TexturePaintPluginDescriptor

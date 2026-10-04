@@ -7,6 +7,7 @@ Texture2D<float4> _Source;
 Texture2D<float4> _Stamp;
 Texture2D<float4> _PaintMask;
 Texture2D<float4> _GeometryMask;
+Texture2D<float4> _RegionMask;
 Texture2D<float4> _PaintSource;
 Texture2D<float4> _StrokeBase;
 RWTexture2D<float4> _Destination;
@@ -102,7 +103,7 @@ float2 BrushLocalUV(float2 uv)
     float s, c;
     sincos(-_Rotation, s, c);
     delta = float2(delta.x * c - delta.y * s, delta.x * s + delta.y * c);
-    delta /= max(abs(_FootprintScale), 1e-5);
+    delta /= (max(abs(_FootprintScale), 1e-5) * sign(_FootprintScale));
     return (delta * 0.5 + 0.5) * _SourceUVScale + _SourceUVOffset;
 }
 
@@ -114,14 +115,14 @@ float BrushCoverage(float2 uv)
     float s, c;
     sincos(-_Rotation, s, c);
     delta = float2(delta.x * c - delta.y * s, delta.x * s + delta.y * c);
-    delta /= max(abs(_FootprintScale), 1e-5);
+    delta /= (max(abs(_FootprintScale), 1e-5) * sign(_FootprintScale));
     float distanceToCenter = _Shape == 1 ? max(abs(delta.x), abs(delta.y)) : length(delta);
     if (distanceToCenter >= 1.0) return 0.0;
     float weight = distanceToCenter <= _Hardness ? 1.0 : 1.0 - saturate((distanceToCenter - _Hardness) / max(1.0 - _Hardness, 1e-5));
     if (_Shape == 2)
         weight *= _Stamp.SampleLevel(sampler_linear_clamp, delta * 0.5 + 0.5, 0).a;
     weight *= _PaintMask.SampleLevel(sampler_linear_clamp, uv, 0).r;
-    weight *= _GeometryMask.SampleLevel(sampler_linear_clamp, uv, 0).r;
+    weight *= (_GeometryMask.SampleLevel(sampler_linear_clamp, uv, 0).r * _RegionMask.SampleLevel(sampler_linear_clamp, uv, 0).r);
     return saturate(weight * _Strength);
 }
 
@@ -179,7 +180,11 @@ void CSMain(uint3 dispatchID : SV_DispatchThreadID)
     float4 current = _Source.Load(int3(pixel, 0));
     float4 desired = _PaintColor;
     if (_Operation == 0 && _PaintSourceKind == 0)
+    {
         desired = _PaintSource.SampleLevel(sampler_linear_clamp, BrushLocalUV(uv), 0);
+        if (_VectorNormal != 0)
+            desired.xy = (desired.xy * 2.0 - 1.0) * sign(_SourceUVScale) * 0.5 + 0.5;
+    }
     else if (_Operation == 0 && _PaintSourceKind == 1)
         desired = _PaintSource.SampleLevel(sampler_linear_clamp, uv, 0);
     if (_Operation == 1) desired = _MaskMode != 0
@@ -248,7 +253,11 @@ void CSStamp(uint3 dispatchID : SV_DispatchThreadID)
     float4 current = _Source.Load(int3(pixel, 0));
     float4 desired = _PaintColor;
     if (_Operation == 0 && _PaintSourceKind == 0)
+    {
         desired = _PaintSource.SampleLevel(sampler_linear_clamp, BrushLocalUV(uv), 0);
+        if (_VectorNormal != 0)
+            desired.xy = (desired.xy * 2.0 - 1.0) * sign(_SourceUVScale) * 0.5 + 0.5;
+    }
     else if (_Operation == 0 && _PaintSourceKind == 1)
         desired = _PaintSource.SampleLevel(sampler_linear_clamp, uv, 0);
     if (_Operation == 1) desired = _MaskMode != 0
@@ -313,13 +322,14 @@ float BatchCoverage(float2 uv, BatchStamp stamp)
     float2 delta = float2(dot(deltaUV, stamp.uvToBrush.xy), dot(deltaUV, stamp.uvToBrush.zw));
     float s, c; sincos(-stamp.rotation, s, c);
     delta = float2(delta.x * c - delta.y * s, delta.x * s + delta.y * c);
-    delta /= max(abs(stamp.footprintScale), 1e-5);
+    delta /= (max(abs(stamp.footprintScale), 1e-5) * sign(stamp.footprintScale));
     float distanceToCenter = _Shape == 1 ? max(abs(delta.x), abs(delta.y)) : length(delta);
     if (distanceToCenter >= 1.0) return 0.0;
     float value = distanceToCenter <= _Hardness ? 1.0 :
         1.0 - saturate((distanceToCenter - _Hardness) / max(1.0 - _Hardness, 1e-5));
     if (_Shape == 2) value *= _Stamp.SampleLevel(sampler_linear_clamp, delta * 0.5 + 0.5, 0).a;
-    value *= _GeometryMask.SampleLevel(sampler_linear_clamp, uv, 0).r;
+    value *= _PaintMask.SampleLevel(sampler_linear_clamp, uv, 0).r;
+    value *= (_GeometryMask.SampleLevel(sampler_linear_clamp, uv, 0).r * _RegionMask.SampleLevel(sampler_linear_clamp, uv, 0).r);
     return saturate(value * _Strength);
 }
 
@@ -350,9 +360,11 @@ void CSBatch(uint3 dispatchID : SV_DispatchThreadID)
             float2 delta = float2(dot(deltaUV, stamp.uvToBrush.xy), dot(deltaUV, stamp.uvToBrush.zw));
             float s, c; sincos(-stamp.rotation, s, c);
             delta = float2(delta.x * c - delta.y * s, delta.x * s + delta.y * c);
-            delta /= max(abs(stamp.footprintScale), 1e-5);
+            delta /= (max(abs(stamp.footprintScale), 1e-5) * sign(stamp.footprintScale));
             float2 sourceUV = (delta * 0.5 + 0.5) * stamp.sourceUVScale + stamp.sourceUVOffset;
             desired = _PaintSource.SampleLevel(sampler_linear_clamp, sourceUV, 0);
+            if (_VectorNormal != 0)
+                desired.xy = (desired.xy * 2.0 - 1.0) * sign(stamp.sourceUVScale) * 0.5 + 0.5;
         }
         else if (_Operation == 0 && _PaintSourceKind == 1)
             desired = _PaintSource.SampleLevel(sampler_linear_clamp, uv, 0);
@@ -402,7 +414,7 @@ void CSFillMasked(uint3 dispatchID : SV_DispatchThreadID)
 {
     int2 pixel = int2(dispatchID.xy);
     if (any(pixel >= _TextureSize)) return;
-    float coverage = saturate(_GeometryMask.Load(int3(pixel, 0)).r * _Strength);
+    float coverage = saturate(_PaintMask.SampleLevel(sampler_linear_clamp, (float2(pixel) + 0.5) / float2(_TextureSize), 0).r * (_GeometryMask.Load(int3(pixel, 0)).r * _RegionMask.SampleLevel(sampler_linear_clamp, (float2(pixel) + 0.5) / float2(_TextureSize), 0).r) * _Strength);
     if (coverage <= 0.00001) return;
     float4 current = _Source.Load(int3(pixel, 0));
     float2 uv = (float2(pixel) + 0.5) / float2(_TextureSize);

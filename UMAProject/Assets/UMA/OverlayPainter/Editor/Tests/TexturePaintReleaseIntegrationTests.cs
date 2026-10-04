@@ -81,13 +81,13 @@ namespace UMA.TexturePaint.Editor.Tests
             TexturePaintLayer hidden = set.AddFillLayer("Hidden", TexturePaintChannel.Albedo, Color.green);
             hidden.visible = false;
             AssertColor(ReadCenter(lower.channels[TexturePaintChannel.Albedo].Front),
-                new Color(0.9f, 0.1f, 0.2f, 0.5f), 0.004f);
+                new Color(0.9f, 0.1f, 0.2f, 0.5f).linear, 0.004f);
             Assert.That(lower.GetChannelSettings(TexturePaintChannel.Albedo).enabled, Is.True);
             set.RecomposeAll();
 
             float alpha = 0.5f * 0.5f * 0.5f;
             Color expected = Color.Lerp(new Color(0.1f, 0.2f, 0.3f, 0.25f),
-                new Color(0.9f, 0.1f, 0.2f, 0.5f), alpha);
+                new Color(0.9f, 0.1f, 0.2f, 0.5f).linear, alpha);
             expected.a = alpha + 0.25f * (1f - alpha);
             Color actual = ReadCenter(channel.composite);
             AssertColor(actual, expected, 0.004f);
@@ -420,7 +420,7 @@ namespace UMA.TexturePaint.Editor.Tests
 
             Assert.That(change, Is.Not.Null);
             set.RecomposeAll();
-            AssertColor(ReadCenter(albedo.composite), layerColor, 0.004f);
+            AssertColor(ReadCenter(albedo.composite), layerColor.linear, 0.004f);
             change.Invoke(stage, new object[]
                 { set, layer, layer.name, layer.opacity, TexturePaintBlendMode.Multiply });
             set.RecomposeAll();
@@ -431,9 +431,9 @@ namespace UMA.TexturePaint.Editor.Tests
             Assert.That(layer.GetChannelSettings(TexturePaintChannel.Roughness).blendMode,
                 Is.EqualTo(TexturePaintBlendMode.Multiply));
             AssertColor(ReadCenter(albedo.composite), new Color(
-                baseColor.r * layerColor.r,
-                baseColor.g * layerColor.g,
-                baseColor.b * layerColor.b,
+                baseColor.r * layerColor.linear.r,
+                baseColor.g * layerColor.linear.g,
+                baseColor.b * layerColor.linear.b,
                 1f), 0.004f);
             Assert.That((bool)undo.Invoke(stage, null), Is.True);
             Assert.That(layer.GetChannelSettings(TexturePaintChannel.Albedo).blendMode,
@@ -442,6 +442,189 @@ namespace UMA.TexturePaint.Editor.Tests
             Assert.That(layer.GetChannelSettings(TexturePaintChannel.Albedo).blendMode,
                 Is.EqualTo(TexturePaintBlendMode.Multiply));
             compositor.Dispose();
+        }
+
+        [Test]
+        public void UdimFillTileOverridesStayLocalThroughSharedEditsHistoryAndDuplication()
+        {
+            TextureSet first = CreateSet(TexturePaintChannel.Albedo, Color.black, mesh: Own(CreateQuadMesh()));
+            TextureSet second = CreateSet(TexturePaintChannel.Albedo, Color.black, mesh: Own(CreateQuadMesh()));
+            ConfigureSlot(second, "Legs", 1);
+            second.persistentId = "second-tile";
+            TextureStore store = CreateStore(first);
+            AddSet(store, second);
+            using var generator = new TexturePaintFillGenerator(AssetDatabase.LoadAssetAtPath<Shader>(
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/FillLayer.shader")));
+            first.fillGenerator = second.fillGenerator = generator;
+            var reconstruction = new MeshReconstructionResult();
+            reconstruction.logicalTargets.Rebuild(new[] { first.surface });
+            TexturePaintLogicalTarget target = reconstruction.logicalTargets.Targets[0];
+            target.isUdim = true;
+            target.members[0].udimTileNumber = 1001;
+            target.members[0].textureSets.Add(first);
+            var secondMember = new TexturePaintLogicalTargetMember { slotName = "Legs", udimTileNumber = 1002 };
+            secondMember.textureSets.Add(second);
+            target.members.Add(secondMember);
+            var logical = new TexturePaintLogicalLayerController(reconstruction.logicalTargets);
+            TexturePaintLayer original = first.AddFillLayer("Tile Fill", TexturePaintChannel.Albedo, Color.white);
+            Assert.That(logical.LinkAndRepair(target, first, original, null, out _), Is.True);
+            var controller = new TexturePaintStageController();
+            typeof(TexturePaintStageController).GetProperty("Reconstruction").SetValue(controller, reconstruction);
+            typeof(TexturePaintStageController).GetProperty("LogicalLayers").SetValue(controller, logical);
+            TexturePaintStageWindow stage = Own(ScriptableObject.CreateInstance<TexturePaintStageWindow>());
+            const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
+            FieldInfo controllerField = typeof(TexturePaintStageWindow).GetField("controller", flags);
+            controllerField.SetValue(stage, controller);
+            Texture2D red = CreateTileFillTexture(Color.red);
+            var sources = new TexturePaintFillTileSources { mode = TexturePaintFillTileMode.Override };
+            sources.SetTexture(TexturePaintChannel.Albedo, red);
+            try
+            {
+                Assert.That(InvokeTileFillEdit(stage, first, first.layers[0], secondMember, sources), Is.True);
+                AssertColor(ReadCenter(first.layers[0].channels[TexturePaintChannel.Albedo].Front), Color.white, 0.02f);
+                AssertColor(ReadCenter(second.layers[0].channels[TexturePaintChannel.Albedo].Front), Color.red, 0.02f);
+                typeof(TexturePaintStageWindow).GetMethod("ChangeFillLayer", flags).Invoke(stage, new object[]
+                {
+                    first, first.layers[0], TexturePaintChannel.Albedo,
+                    new TexturePaintFillSettings { source = TexturePaintBrushSource.Color, color = Color.green }
+                });
+                AssertColor(ReadCenter(first.layers[0].channels[TexturePaintChannel.Albedo].Front), Color.green, 0.02f);
+                AssertColor(ReadCenter(second.layers[0].channels[TexturePaintChannel.Albedo].Front), Color.red, 0.02f);
+                sources.mode = TexturePaintFillTileMode.NoContribution;
+                Assert.That(InvokeTileFillEdit(stage, first, first.layers[0], secondMember, sources), Is.True);
+                AssertColor(ReadCenter(second.layers[0].channels[TexturePaintChannel.Albedo].Front), Color.clear, 0.02f);
+                Assert.That((bool)typeof(TexturePaintStageWindow).GetMethod("UndoLightweight", flags).Invoke(stage, null), Is.True);
+                AssertColor(ReadCenter(second.layers[0].channels[TexturePaintChannel.Albedo].Front), Color.red, 0.02f);
+                Assert.That((bool)typeof(TexturePaintStageWindow).GetMethod("RedoLightweight", flags).Invoke(stage, null), Is.True);
+                AssertColor(ReadCenter(second.layers[0].channels[TexturePaintChannel.Albedo].Front), Color.clear, 0.02f);
+                sources.mode = TexturePaintFillTileMode.Shared;
+                Assert.That(InvokeTileFillEdit(stage, first, first.layers[0], secondMember, sources), Is.True);
+                AssertColor(ReadCenter(second.layers[0].channels[TexturePaintChannel.Albedo].Front), Color.green, 0.02f);
+                sources.mode = TexturePaintFillTileMode.Override;
+                Assert.That(InvokeTileFillEdit(stage, first, first.layers[0], secondMember, sources), Is.True);
+                typeof(TexturePaintStageWindow).GetMethod("DuplicateLayerWithHistory", flags).Invoke(stage,
+                    new object[] { first, 0 });
+                Assert.That(first.layers, Has.Count.EqualTo(2));
+                Assert.That(second.layers, Has.Count.EqualTo(2));
+                AssertColor(ReadCenter(second.layers[1].channels[TexturePaintChannel.Albedo].Front), Color.red, 0.02f);
+                Assert.That(second.layers[1].fillTileSources, Is.Not.SameAs(second.layers[0].fillTileSources));
+                second.layers[1].fillTileSources.SetTexture(TexturePaintChannel.Albedo, null);
+                Assert.That(second.layers[0].fillTileSources.GetTexture(TexturePaintChannel.Albedo), Is.SameAs(red));
+                Assert.That((bool)typeof(TexturePaintStageWindow).GetMethod("RasterizeFillLayerWithHistory", flags)
+                    .Invoke(stage, new object[] { first, first.layers[0] }), Is.True);
+                Assert.That(first.layers[0].kind, Is.EqualTo(TexturePaintLayerKind.Paint));
+                Assert.That(second.layers[0].kind, Is.EqualTo(TexturePaintLayerKind.Paint));
+                Assert.That(second.layers[0].fillTileSources, Is.Null);
+                AssertColor(ReadCenter(second.layers[0].channels[TexturePaintChannel.Albedo].Front), Color.red, 0.02f);
+                Assert.That((bool)typeof(TexturePaintStageWindow).GetMethod("UndoLightweight", flags).Invoke(stage, null), Is.True);
+                Assert.That(second.layers[0].kind, Is.EqualTo(TexturePaintLayerKind.Fill));
+                Assert.That(second.layers[0].fillTileSources.GetTexture(TexturePaintChannel.Albedo), Is.SameAs(red));
+            }
+            finally
+            {
+                typeof(TexturePaintStageWindow).GetMethod("ClearLightweightHistory", flags).Invoke(stage, null);
+                controllerField.SetValue(stage, null);
+            }
+        }
+
+        [Test]
+        public void UdimFillOverlayUsesTileCoverageAndAddsCompatibleChannels()
+        {
+            TextureSet set = CreateSet(TexturePaintChannel.Albedo, Color.black, mesh: Own(CreateQuadMesh()));
+            AddChannel(set, TexturePaintChannel.Roughness, Color.white);
+            set.GetChannel(TexturePaintChannel.Albedo).umaChannelIndex = 0;
+            set.GetChannel(TexturePaintChannel.Roughness).umaChannelIndex = 1;
+            CreateStore(set);
+            using var generator = new TexturePaintFillGenerator(AssetDatabase.LoadAssetAtPath<Shader>(
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/FillLayer.shader")));
+            set.fillGenerator = generator;
+            OverlayDataAsset shared = Own(ScriptableObject.CreateInstance<OverlayDataAsset>());
+            shared.textureList = new Texture[] { CreateTileFillTexture(new Color(0, 0, 1, 0.2f)) };
+            TexturePaintLayer fill = set.AddFillLayer("Overlay", TexturePaintChannel.Albedo,
+                new TexturePaintFillSettings { source = TexturePaintBrushSource.Overlay,
+                    sourceOverlay = shared, ignoreSourceAlpha = true });
+            TexturePaintLayerMask mask = set.AddLayerMask(fill, 1f);
+            mask.effects.textureOverlay.enabled = true;
+            mask.effects.textureOverlay.texture = (Texture2D)shared.textureList[0];
+            mask.effects.textureOverlay.sourceChannel = TexturePaintLayerMaskTextureChannel.Alpha;
+            OverlayDataAsset replacement = Own(ScriptableObject.CreateInstance<OverlayDataAsset>());
+            replacement.textureList = new Texture[]
+                { CreateTileFillTexture(new Color(1, 0, 0, 0.1f)), CreateTileFillTexture(Color.gray) };
+            replacement.alphaMask = CreateTileFillTexture(new Color(1, 1, 1, 0.6f));
+            TexturePaintStageWindow stage = Own(ScriptableObject.CreateInstance<TexturePaintStageWindow>());
+            Assert.That(InvokeTileFillEdit(stage, set, fill, null, new TexturePaintFillTileSources
+                { mode = TexturePaintFillTileMode.Override, overlay = replacement }), Is.True);
+            fill = set.layers[0];
+            OverlayDataAsset invalid = Own(ScriptableObject.CreateInstance<OverlayDataAsset>());
+            Assert.That(InvokeTileFillEdit(stage, set, fill, null, new TexturePaintFillTileSources
+                { mode = TexturePaintFillTileMode.Override, overlay = invalid }), Is.False);
+            Assert.That(set.layers[0], Is.SameAs(fill), "An incompatible assignment must not change the live layer.");
+            Assert.That(fill.channels.ContainsKey(TexturePaintChannel.Roughness), Is.True);
+            Assert.That(fill.layerMask.effects.textureOverlay.enabled, Is.False);
+            AssertColor(ReadCenter(fill.channels[TexturePaintChannel.Albedo].Front), new Color(1, 0, 0, 0.6f), 0.02f);
+            Assert.That(ReadCenter(fill.channels[TexturePaintChannel.Roughness].Front).a, Is.EqualTo(0.6f).Within(0.02f));
+            var sources = fill.fillTileSources.Clone();
+            sources.SetTexture(TexturePaintChannel.Albedo, CreateTileFillTexture(new Color(0, 1, 0, 0.8f)));
+            Assert.That(InvokeTileFillEdit(stage, set, fill, null, sources), Is.True);
+            AssertColor(ReadCenter(set.layers[0].channels[TexturePaintChannel.Albedo].Front), new Color(0, 1, 0, 0.8f), 0.02f);
+            Assert.That(ReadCenter(set.layers[0].channels[TexturePaintChannel.Roughness].Front).a, Is.EqualTo(0.6f).Within(0.02f));
+            sources.mode = TexturePaintFillTileMode.Shared;
+            Assert.That(InvokeTileFillEdit(stage, set, set.layers[0], null, sources), Is.True);
+            Assert.That(ReadCenter(set.layers[0].channels[TexturePaintChannel.Albedo].Front).a, Is.EqualTo(0.2f).Within(0.02f));
+            Assert.That(ReadCenter(set.layers[0].channels[TexturePaintChannel.Roughness].Front).a, Is.EqualTo(0f).Within(0.02f));
+        }
+
+        [Test]
+        public void UdimFillSourcesSurviveAssetRoundTripAndRegeneration()
+        {
+            TextureSet set = CreateSet(TexturePaintChannel.Albedo, Color.black, mesh: Own(CreateQuadMesh()));
+            TextureStore store = CreateStore(set);
+            using var generator = new TexturePaintFillGenerator(AssetDatabase.LoadAssetAtPath<Shader>(
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/FillLayer.shader")));
+            set.fillGenerator = generator;
+            Texture2D red = CreateTileFillTexture(Color.red);
+            AssetDatabase.CreateAsset(red, Folder + "/Tile Source.asset");
+            ownedObjects.Remove(red);
+            var fill = set.AddFillLayer("Tile Fill", TexturePaintChannel.Albedo, Color.white);
+            fill.fillTileSources = new TexturePaintFillTileSources
+                { mode = TexturePaintFillTileMode.Override, bakeOverlayCoverage = true };
+            fill.fillTileSources.SetTexture(TexturePaintChannel.Albedo, red);
+            Assert.That(set.RegenerateFillLayer(fill), Is.True);
+            TexturePaintDocument document = ScriptableObject.CreateInstance<TexturePaintDocument>();
+            string path = Folder + "/Tile Sources.asset";
+            AssetDatabase.CreateAsset(document, path);
+            TexturePaintDocumentStorage.Save(document, store);
+            AssetDatabase.SaveAssets();
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+            document = AssetDatabase.LoadAssetAtPath<TexturePaintDocument>(path);
+            TextureSet restored = CreateSet(TexturePaintChannel.Albedo, Color.black,
+                set.surface.sourceMaterial, set.surface.mesh);
+            restored.fillGenerator = generator;
+            TextureStore restoredStore = CreateStore(restored);
+            TexturePaintDocumentStorage.Restore(document, restoredStore);
+            Assert.That(restored.layers[0].fillTileSources.GetTexture(TexturePaintChannel.Albedo), Is.SameAs(red));
+            Assert.That(restored.RegenerateFillLayer(restored.layers[0]), Is.True);
+            AssertColor(ReadCenter(restored.layers[0].channels[TexturePaintChannel.Albedo].Front), Color.red, 0.02f);
+            AssertColor(restored.layers[0].fillSettings.color, Color.white, 0.02f);
+            typeof(TexturePaintDocumentStorage).GetMethod("RestoreReprojectableContent",
+                BindingFlags.Static | BindingFlags.NonPublic).Invoke(null,
+                new object[] { document.surfaces[0], restored });
+            AssertColor(ReadCenter(restored.layers[0].channels[TexturePaintChannel.Albedo].Front), Color.red, 0.02f);
+        }
+
+        private Texture2D CreateTileFillTexture(Color color)
+        {
+            Texture2D texture = Own(new Texture2D(2, 2, TextureFormat.RGBA32, false, true));
+            texture.SetPixels(new[] { color, color, color, color });
+            texture.Apply();
+            return texture;
+        }
+
+        private static bool InvokeTileFillEdit(TexturePaintStageWindow stage, TextureSet set,
+            TexturePaintLayer layer, TexturePaintLogicalTargetMember member, TexturePaintFillTileSources sources)
+        {
+            return (bool)typeof(TexturePaintStageWindow).GetMethod("ChangeFillTileSources",
+                BindingFlags.Instance | BindingFlags.NonPublic).Invoke(stage, new object[] { set, layer, member, sources });
         }
 
         [Test]
@@ -1175,8 +1358,9 @@ namespace UMA.TexturePaint.Editor.Tests
 
             set.RecomposeAll();
 
-            AssertColor(ReadPixel(channel.composite, 8, 8),
-                new Color(0.512f, 0.374f, 0.34f, 1f), 0.015f);
+            Color expected = Color.Lerp(new Color(.4f,.4f,.4f,1), effect.color.linear, .4f);
+            expected = Color.Lerp(expected, expected * effect.secondaryColor.linear, .25f); expected.a = 1;
+            AssertColor(ReadPixel(channel.composite, 8, 8), expected, 0.015f);
             AssertColor(ReadPixel(layerTarget.Front, 8, 8),
                 new Color(0.4f, 0.4f, 0.4f, 1f), 0.004f);
             AssertColor(ReadPixel(channel.composite, 1, 1), Color.clear, 0.004f);
@@ -2121,6 +2305,344 @@ namespace UMA.TexturePaint.Editor.Tests
             Assert.That(layer.fillSettings.useFirstChannelTransform, Is.True);
         }
 
+        [TestCase(TexturePaintFillProjection.Flat, false)]
+        [TestCase(TexturePaintFillProjection.Flat, true)]
+        [TestCase(TexturePaintFillProjection.Triplanar, false)]
+        [TestCase(TexturePaintFillProjection.Triplanar, true)]
+        public void SpriteSetFillMapsShareProjectedAlbedoHolesAndPartialAlpha(
+            TexturePaintFillProjection projection, bool opaqueSecondaryMaps)
+        {
+            using TexturePaintGpuTestFixture fixture = new TexturePaintGpuTestFixture(Color.clear);
+            using var generator = new TexturePaintFillGenerator(AssetDatabase.LoadAssetAtPath<Shader>(
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/FillLayer.shader")));
+            fixture.set.fillGenerator = generator;
+            var expectedColors = new Dictionary<TexturePaintChannel, Color>();
+            TexturePaintLayer layer = null;
+            foreach (TexturePaintChannel channel in System.Enum.GetValues(typeof(TexturePaintChannel)))
+            {
+                if (channel != TexturePaintChannel.Albedo)
+                    AddChannel(fixture.set, channel, Color.clear, TexturePaintGpuTestFixture.Size);
+                Color color = channel == TexturePaintChannel.Normal
+                    ? new Color(.65f, .7f, Mathf.Sqrt(.75f) * .5f + .5f, opaqueSecondaryMaps ? 1 : 0)
+                    : new Color(.2f + (int)channel * .03f, .3f + (int)channel * .025f,
+                        .8f - (int)channel * .04f, opaqueSecondaryMaps ? 1 : 0);
+                expectedColors[channel] = TexturePaintChannelUtility.ConstrainColor(channel, color);
+                var image = Own(new Texture2D(16, 16, TextureFormat.RGBA32, false, true)
+                    { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp });
+                var pixels = new Color[256]; System.Array.Fill(pixels, Color.green);
+                int startX = (int)channel % 2 * 8;
+                for (int y = 0; y < 8; y++) for (int x = 0; x < 8; x++)
+                {
+                    Color sample = color;
+                    if (channel == TexturePaintChannel.Albedo)
+                        sample.a = x >= 2 && x < 6 && y >= 2 && y < 6 ? 0 : x < 4 ? 1 : .45f;
+                    pixels[(y + 4) * 16 + startX + x] = sample;
+                }
+                image.SetPixels(pixels); image.Apply(false, false);
+                Sprite sprite = Own(Sprite.Create(image, new Rect(startX, 4, 8, 8), Vector2.one * .5f));
+                TexturePaintFillSettings settings = TexturePaintStageWindow.CreateSpriteSetFillSettings(
+                    sprite, false, Vector2.one, projection, TexturePaintNormalConvention.OpenGL);
+                settings.useFirstChannelTransform = true;
+                if (layer == null)
+                    layer = fixture.set.AddFillLayer("Sprite Set Coverage", channel, settings);
+                else
+                    Assert.That(fixture.set.UpdateFillLayer(layer, channel, settings), Is.True);
+                Assert.That(layer, Is.Not.Null);
+            }
+            AssertFillChannelsShareCoverage(layer, expectedColors, true);
+
+            TexturePaintChannelSourceSettings albedo = layer.GetChannelSettings(TexturePaintChannel.Albedo).sourceSettings;
+            albedo.tiling = new Vector2(1.5f, 1.25f);
+            albedo.offset = new Vector2(.17f, -.11f);
+            albedo.rotation = 37f;
+            Assert.That(fixture.set.RegenerateFillLayer(layer), Is.True);
+            AssertFillChannelsShareCoverage(layer, expectedColors, true);
+
+            // A scalar color source must also receive the sprite set's projected coverage.
+            expectedColors[TexturePaintChannel.DetailMask] = new Color(.3f, .3f, .3f, 0);
+            Assert.That(fixture.set.UpdateFillLayer(layer, TexturePaintChannel.DetailMask,
+                new TexturePaintFillSettings { source = TexturePaintBrushSource.Color,
+                    color = expectedColors[TexturePaintChannel.DetailMask], projection = projection,
+                    useFirstChannelTransform = true }), Is.True);
+            AssertFillChannelsShareCoverage(layer, expectedColors, true);
+
+            layer.fillSettings.useFirstChannelTransform = false;
+            TexturePaintChannelSourceSettings scalar = layer.GetChannelSettings(TexturePaintChannel.DetailMask).sourceSettings;
+            scalar.tiling = new Vector2(.3f, .7f); scalar.offset = new Vector2(.41f, .23f); scalar.rotation = -73f;
+            scalar.projection = projection == TexturePaintFillProjection.Flat
+                ? TexturePaintFillProjection.Triplanar : TexturePaintFillProjection.Flat;
+            Assert.That(fixture.set.RegenerateFillLayer(layer), Is.True);
+            AssertFillChannelsShareCoverage(layer, expectedColors, true);
+        }
+
+        [TestCase(false)] [TestCase(true)]
+        public void OverlayFillPickerBakesSharedCoverageOnceAndHonorsExplicitAlphaMask(bool explicitMask)
+        {
+            TextureSet set = CreateSet(TexturePaintChannel.Albedo, Color.clear, mesh: Own(CreateQuadMesh()));
+            TextureStore store = CreateStore(set);
+            using var generator = new TexturePaintFillGenerator(AssetDatabase.LoadAssetAtPath<Shader>(
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/FillLayer.shader")));
+            set.fillGenerator = generator;
+            var expectedColors = new Dictionary<TexturePaintChannel, Color>();
+            var images = new List<Texture>();
+            foreach (TexturePaintChannel channel in System.Enum.GetValues(typeof(TexturePaintChannel)))
+            {
+                if (TexturePaintChannelUtility.IsAuxiliary(channel)) continue;
+                if (channel != TexturePaintChannel.Albedo) AddChannel(set, channel, Color.clear);
+                set.GetChannel(channel).umaChannelIndex = images.Count;
+                Color color = channel == TexturePaintChannel.Normal ? new Color(.5f, .5f, 1, 0)
+                    : new Color(.2f + (int)channel * .03f, .3f + (int)channel * .025f,
+                        .8f - (int)channel * .04f, channel == TexturePaintChannel.Albedo ? .45f : (int)channel % 2);
+                expectedColors[channel] = TexturePaintChannelUtility.ConstrainColor(channel, color);
+                images.Add(CreateTileFillTexture(color));
+            }
+            OverlayDataAsset overlay = Own(ScriptableObject.CreateInstance<OverlayDataAsset>());
+            overlay.name = "Shared Coverage Overlay"; overlay.textureList = images.ToArray();
+            if (explicitMask) overlay.alphaMask = CreateTileFillTexture(new Color(1, 1, 1, .2f));
+            var controller = new TexturePaintStageController();
+            typeof(TexturePaintStageController).GetProperty("Textures").SetValue(controller, store);
+            TexturePaintStageWindow stage = Own(ScriptableObject.CreateInstance<TexturePaintStageWindow>());
+            const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
+            FieldInfo controllerField = typeof(TexturePaintStageWindow).GetField("controller", flags);
+            controllerField.SetValue(stage, controller);
+            typeof(TexturePaintStageWindow).GetField("transientBrush", flags).SetValue(stage,
+                Own(ScriptableObject.CreateInstance<BrushPreset>()));
+            try
+            {
+                typeof(TexturePaintStageWindow).GetMethod("AddOverlayFillLayer", flags)
+                    .Invoke(stage, new object[] { set, overlay });
+                Assert.That(set.layers, Has.Count.EqualTo(1));
+                TexturePaintLayer layer = set.layers[0];
+                Assert.That(layer.layerMask, Is.Null, "Projected coverage must not create another layer alpha multiplier.");
+                Assert.That(layer.fillTileSources?.bakeOverlayCoverage, Is.True);
+                AssertFillChannelsShareCoverage(layer, expectedColors, false);
+                float expectedAlpha = explicitMask ? .2f : .45f;
+                foreach (TexturePaintChannel channel in layer.channels.Keys)
+                    Assert.That(ReadCenter(layer.channels[channel].Front).a,
+                        Is.EqualTo(expectedAlpha).Within(.015f), channel + " coverage must be applied once");
+
+                TexturePaintChannelSourceSettings albedo = layer.GetChannelSettings(TexturePaintChannel.Albedo).sourceSettings;
+                albedo.tiling = new Vector2(1.7f, 2.2f); albedo.offset = new Vector2(.31f, -.27f); albedo.rotation = 53f;
+                Assert.That(set.RegenerateFillLayer(layer), Is.True);
+                AssertFillChannelsShareCoverage(layer, expectedColors, false);
+                Assert.That(ReadCenter(layer.channels[TexturePaintChannel.Albedo].Front).a,
+                    Is.EqualTo(expectedAlpha).Within(.015f));
+
+                var pattern = Own(new Texture2D(16, 16, TextureFormat.RGBA32, false, true)
+                    { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Repeat });
+                var pixels = new Color[256];
+                for (int y = 0; y < 16; y++) for (int x = 0; x < 16; x++)
+                {
+                    Color sample = expectedColors[TexturePaintChannel.Albedo];
+                    sample.a = x >= 4 && x < 12 && y >= 4 && y < 12 ? 0 : x < 8 ? 1 : expectedAlpha;
+                    pixels[y * 16 + x] = sample;
+                }
+                pattern.SetPixels(pixels); pattern.Apply(false, false);
+                if (explicitMask) overlay.alphaMask = pattern;
+                else overlay.textureList[0] = pattern;
+                layer.fillSettings.useFirstChannelTransform = false;
+                albedo.projection = TexturePaintFillProjection.Triplanar;
+                albedo.tiling = Vector2.one; albedo.offset = new Vector2(.11f, .07f); albedo.rotation = 0;
+                foreach (TexturePaintChannel channel in layer.channels.Keys)
+                {
+                    if (channel == TexturePaintChannel.Albedo) continue;
+                    TexturePaintChannelSourceSettings secondary = layer.GetChannelSettings(channel).sourceSettings;
+                    secondary.projection = TexturePaintFillProjection.Flat;
+                    secondary.tiling = new Vector2(.7f, 1.3f);
+                    secondary.offset = new Vector2(.22f, .27f); secondary.rotation = -53f;
+                }
+                Assert.That(set.RegenerateFillLayer(layer), Is.True);
+                AssertFillChannelsShareCoverage(layer, expectedColors, true, expectedAlpha);
+            }
+            finally
+            {
+                typeof(TexturePaintStageWindow).GetMethod("ClearLightweightHistory", flags).Invoke(stage, null);
+                controllerField.SetValue(stage, null);
+            }
+        }
+
+        [TestCase(false, false)] [TestCase(true, false)] [TestCase(false, true)]
+        public void LegacyOverlayFillCoverageMigrationPreservesPaintAndOtherMaskEffects(
+            bool customizedCoverageEffect, bool postCoverageInvert)
+        {
+            TextureSet set = CreateSet(TexturePaintChannel.Albedo, Color.clear, mesh: Own(CreateQuadMesh()));
+            AddChannel(set, TexturePaintChannel.Roughness, Color.clear);
+            set.GetChannel(TexturePaintChannel.Albedo).umaChannelIndex = 0;
+            set.GetChannel(TexturePaintChannel.Roughness).umaChannelIndex = 1;
+            CreateStore(set);
+            using var generator = new TexturePaintFillGenerator(AssetDatabase.LoadAssetAtPath<Shader>(
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/FillLayer.shader")));
+            set.fillGenerator = generator;
+            OverlayDataAsset overlay = Own(ScriptableObject.CreateInstance<OverlayDataAsset>());
+            overlay.textureList = new Texture[] { CreateTileFillTexture(new Color(1, 0, 0, .45f)),
+                CreateTileFillTexture(new Color(.3f, .3f, .3f, 0)) };
+            var settings = new TexturePaintFillSettings { source = TexturePaintBrushSource.Overlay,
+                sourceOverlay = overlay, ignoreSourceAlpha = true, useFirstChannelTransform = true };
+            TexturePaintLayer layer = set.AddFillLayer("Legacy Overlay", TexturePaintChannel.Albedo, settings);
+            Assert.That(layer, Is.Not.Null);
+            Assert.That(set.UpdateFillLayer(layer, TexturePaintChannel.Roughness, settings), Is.True);
+            TexturePaintLayerMask mask = set.AddLayerMask(layer, 1);
+            mask.target.Reset(null, new Color(.8f, .8f, .8f, 1));
+            mask.effects.noise.enabled = true; mask.effects.noise.opacity = .37f;
+            mask.effects.textureOverlay.enabled = true;
+            mask.effects.textureOverlay.texture = (Texture2D)overlay.textureList[0];
+            mask.effects.textureOverlay.sourceChannel = TexturePaintLayerMaskTextureChannel.Alpha;
+            mask.effects.textureOverlay.combine = TexturePaintBlendMode.Multiply;
+            mask.effects.textureOverlay.opacity = 1;
+            if (customizedCoverageEffect) mask.effects.textureOverlay.offset = new Vector2(.17f, 0);
+            if (postCoverageInvert)
+                mask.effects.stack.Add(TexturePaintMaskEffect.Create(TexturePaintMaskEffectKind.Invert));
+            Color[] paintBefore = TexturePaintGpuTestFixture.ReadPixels(mask.target.Front);
+
+            Assert.That(set.RegenerateFillLayer(layer), Is.True);
+            Assert.That(layer.layerMask, Is.SameAs(mask));
+            CollectionAssert.AreEqual(paintBefore, TexturePaintGpuTestFixture.ReadPixels(mask.target.Front),
+                "Migration must preserve painted mask pixels.");
+            Assert.That(mask.effects.noise.enabled, Is.True);
+            Assert.That(mask.effects.noise.opacity, Is.EqualTo(.37f));
+            bool keepMaskCoverage = customizedCoverageEffect || postCoverageInvert;
+            Assert.That(mask.effects.textureOverlay.enabled, Is.EqualTo(keepMaskCoverage),
+                "Only the old picker-generated coverage effect may be disabled.");
+            Assert.That(layer.fillTileSources?.bakeOverlayCoverage == true, Is.EqualTo(!keepMaskCoverage));
+            if (postCoverageInvert)
+            {
+                Assert.That(mask.effects.stack, Has.Count.EqualTo(1));
+                Assert.That(mask.effects.stack[0].kind, Is.EqualTo(TexturePaintMaskEffectKind.Invert));
+                Assert.That(mask.effects.stack[0].enabled, Is.True);
+            }
+            foreach (EditableTextureTarget target in layer.channels.Values)
+                Assert.That(ReadCenter(target.Front).a,
+                    Is.EqualTo(keepMaskCoverage ? 1 : .45f).Within(.015f));
+        }
+
+        [TestCase(false)] [TestCase(true)]
+        public void SpriteAndMigratedOverlayFillKeepSmallAlbedoHolesInsideUvIsland(bool legacyOverlay)
+        {
+            using TexturePaintGpuTestFixture fixture = new TexturePaintGpuTestFixture(Color.clear);
+            AddChannel(fixture.set, TexturePaintChannel.Roughness, Color.clear, TexturePaintGpuTestFixture.Size);
+            fixture.set.GetChannel(TexturePaintChannel.Albedo).umaChannelIndex = 0;
+            fixture.set.GetChannel(TexturePaintChannel.Roughness).umaChannelIndex = 1;
+            using var generator = new TexturePaintFillGenerator(AssetDatabase.LoadAssetAtPath<Shader>(
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/FillLayer.shader")));
+            fixture.set.fillGenerator = generator;
+            int sourceSize = legacyOverlay ? 16 : 24, inset = legacyOverlay ? 0 : 4;
+            var image = Own(new Texture2D(sourceSize, sourceSize, TextureFormat.RGBA32, false, true)
+                { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp });
+            var pixels = new Color[sourceSize * sourceSize]; System.Array.Fill(pixels, Color.red);
+            pixels[(8 + inset) * sourceSize + 8 + inset] = new Color(1, 0, 0, 0);
+            image.SetPixels(pixels); image.Apply(false, false);
+            var roughness = CreateTileFillTexture(new Color(.3f, .3f, .3f, 0));
+            TexturePaintFillSettings albedoSettings, roughnessSettings;
+            if (legacyOverlay)
+            {
+                var overlay = Own(ScriptableObject.CreateInstance<OverlayDataAsset>());
+                overlay.textureList = new Texture[] { image, roughness };
+                albedoSettings = new TexturePaintFillSettings { source = TexturePaintBrushSource.Overlay,
+                    sourceOverlay = overlay, ignoreSourceAlpha = true, useFirstChannelTransform = true };
+                roughnessSettings = albedoSettings.Clone();
+            }
+            else
+            {
+                Sprite sprite = Own(Sprite.Create(image, new Rect(inset, inset, 16, 16), Vector2.one * .5f));
+                albedoSettings = TexturePaintStageWindow.CreateSpriteSetFillSettings(sprite, false, Vector2.one,
+                    TexturePaintFillProjection.Flat, TexturePaintNormalConvention.OpenGL);
+                albedoSettings.useFirstChannelTransform = true;
+                roughnessSettings = new TexturePaintFillSettings { source = TexturePaintBrushSource.Texture,
+                    sourceTexture = roughness, useFirstChannelTransform = true };
+            }
+            TexturePaintLayer layer = fixture.set.AddFillLayer("Small Albedo Hole", TexturePaintChannel.Albedo, albedoSettings);
+            Assert.That(layer, Is.Not.Null);
+            Assert.That(fixture.set.UpdateFillLayer(layer, TexturePaintChannel.Roughness, roughnessSettings), Is.True);
+            if (legacyOverlay)
+            {
+                TexturePaintLayerMask mask = fixture.set.AddLayerMask(layer, 1);
+                mask.effects.textureOverlay.enabled = true;
+                mask.effects.textureOverlay.texture = image;
+                mask.effects.textureOverlay.sourceChannel = TexturePaintLayerMaskTextureChannel.Alpha;
+            }
+            Assert.That(fixture.set.RegenerateFillLayer(layer), Is.True);
+            if (legacyOverlay) Assert.That(layer.layerMask.effects.textureOverlay.enabled, Is.False);
+            foreach (var channel in layer.channels)
+            {
+                Color[] result = TexturePaintGpuTestFixture.ReadPixels(channel.Value.Front);
+                // One source texel covers four target texels; two unconditional dilation passes
+                // would erase this entire hole even though it lies inside the UV island.
+                for (int y = 32; y < 36; y++) for (int x = 32; x < 36; x++)
+                    Assert.That(result[y * TexturePaintGpuTestFixture.Size + x].a,
+                        Is.LessThan(.001f), channel.Key + " hole at " + x + ", " + y);
+                Assert.That(result[33 * TexturePaintGpuTestFixture.Size + 29].a, Is.GreaterThan(.99f));
+            }
+        }
+
+        [Test]
+        public void SpriteFillTileOnlyChannelBecomesTransparentWhenReturningToSharedSources()
+        {
+            using TexturePaintGpuTestFixture fixture = new TexturePaintGpuTestFixture(Color.clear);
+            AddChannel(fixture.set, TexturePaintChannel.Roughness, Color.clear, TexturePaintGpuTestFixture.Size);
+            AddChannel(fixture.set, TexturePaintChannel.Metallic, Color.clear, TexturePaintGpuTestFixture.Size);
+            using var generator = new TexturePaintFillGenerator(AssetDatabase.LoadAssetAtPath<Shader>(
+                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/FillLayer.shader")));
+            fixture.set.fillGenerator = generator;
+            Texture2D image = CreateTileFillTexture(new Color(1, 0, 0, .45f));
+            Sprite sprite = Own(Sprite.Create(image, new Rect(0, 0, 2, 2), Vector2.one * .5f));
+            var settings = TexturePaintStageWindow.CreateSpriteSetFillSettings(sprite, false, Vector2.one,
+                TexturePaintFillProjection.Flat, TexturePaintNormalConvention.OpenGL);
+            settings.useFirstChannelTransform = true;
+            TexturePaintLayer layer = fixture.set.AddFillLayer("Shared Sprite Fill", TexturePaintChannel.Albedo, settings);
+            Assert.That(layer, Is.Not.Null);
+            Assert.That(fixture.set.UpdateFillLayer(layer, TexturePaintChannel.Roughness,
+                new TexturePaintFillSettings { source = TexturePaintBrushSource.Color, color = Color.gray,
+                    useFirstChannelTransform = true }), Is.True);
+            layer.fillTileSources = new TexturePaintFillTileSources { mode = TexturePaintFillTileMode.Override };
+            layer.fillTileSources.SetTexture(TexturePaintChannel.Metallic, CreateTileFillTexture(Color.gray));
+            Assert.That(fixture.set.RegenerateFillLayer(layer), Is.True);
+            Assert.That(layer.channels.ContainsKey(TexturePaintChannel.Metallic), Is.True);
+            Assert.That(ReadCenter(layer.channels[TexturePaintChannel.Metallic].Front).a, Is.GreaterThan(.99f));
+            Assert.That(layer.GetChannelSettings(TexturePaintChannel.Metallic).sourceSettings.color, Is.EqualTo(Color.clear));
+
+            layer.fillTileSources.mode = TexturePaintFillTileMode.Shared;
+            Assert.That(fixture.set.RegenerateFillLayer(layer), Is.True);
+            foreach (Color pixel in TexturePaintGpuTestFixture.ReadPixels(layer.channels[TexturePaintChannel.Metallic].Front))
+                Assert.That(pixel.a, Is.LessThan(.001f), "The dormant tile-only channel must contribute no shared pixels.");
+            Assert.That(ReadCenter(layer.channels[TexturePaintChannel.Roughness].Front).a,
+                Is.EqualTo(.45f).Within(.015f), "Authored channels must keep shared albedo coverage.");
+        }
+
+        private static void AssertFillChannelsShareCoverage(TexturePaintLayer layer,
+            Dictionary<TexturePaintChannel, Color> expectedColors, bool patternedAlbedo, float partialAlpha = .45f)
+        {
+            Assert.That(layer.channels.Count, Is.EqualTo(expectedColors.Count));
+            Color[] coverage = TexturePaintGpuTestFixture.ReadPixels(layer.channels[TexturePaintChannel.Albedo].Front);
+            if (patternedAlbedo)
+            {
+                int holes = 0, partial = 0, opaque = 0;
+                foreach (Color pixel in coverage)
+                {
+                    if (pixel.a < .001f) holes++;
+                    if (Mathf.Abs(pixel.a - partialAlpha) < .015f) partial++;
+                    if (pixel.a > .99f) opaque++;
+                }
+                Assert.That(holes, Is.GreaterThan(8), "Transparent albedo holes must survive projection and padding.");
+                Assert.That(partial, Is.GreaterThan(8), "Partial albedo coverage must remain unsquared.");
+                Assert.That(opaque, Is.GreaterThan(8), "Opaque albedo must paint even when other maps have zero alpha.");
+            }
+            foreach (var expected in expectedColors)
+            {
+                Color[] actual = TexturePaintGpuTestFixture.ReadPixels(layer.channels[expected.Key].Front);
+                float alphaError = 0, rgbError = 0;
+                for (int i = 0; i < actual.Length; i++)
+                {
+                    alphaError = Mathf.Max(alphaError, Mathf.Abs(actual[i].a - coverage[i].a));
+                    if (coverage[i].a <= .05f) continue;
+                    rgbError = Mathf.Max(rgbError, Mathf.Abs(actual[i].r - expected.Value.r));
+                    rgbError = Mathf.Max(rgbError, Mathf.Abs(actual[i].g - expected.Value.g));
+                    rgbError = Mathf.Max(rgbError, Mathf.Abs(actual[i].b - expected.Value.b));
+                }
+                Assert.That(alphaError, Is.LessThan(.002f), expected.Key + " must share the projected albedo silhouette");
+                Assert.That(rgbError, Is.LessThan(.025f), expected.Key + " must preserve its values in visible pixels");
+            }
+        }
+
         [Test]
         public void ChangingFillSourceInvertRegeneratesLayerPixels()
         {
@@ -2313,7 +2835,7 @@ namespace UMA.TexturePaint.Editor.Tests
             Assert.That(fill.fillSettings.triplanarBlend, Is.EqualTo(TexturePaintTriplanarBlend.CrossFade));
             Assert.That(fill.fillSettings.blendOffset, Is.EqualTo(0.17f).Within(0.0001f));
             Assert.That(fill.fillSettings.blendSharpness, Is.EqualTo(7f).Within(0.0001f));
-            AssertColor(ReadCenter(fill.channels[TexturePaintChannel.Albedo].Front), settings.color, 0.004f);
+            AssertColor(ReadCenter(fill.channels[TexturePaintChannel.Albedo].Front), settings.color.linear, 0.004f);
         }
 
         [Test]
@@ -3231,8 +3753,8 @@ namespace UMA.TexturePaint.Editor.Tests
                 }
                 Assert.That(distantPixels, Is.Zero,
                     "Outer ribbon effects must not expose the conservative segment ownership boundary.");
-                Assert.That(engine.Performance.copiedPixels, Is.EqualTo((long)size * size * 2L),
-                    "One ribbon effect must share the paint pass instead of doubling projection work.");
+                Assert.That(engine.Performance.copiedPixels, Is.EqualTo((long)size * size * 3L),
+                    "One ribbon effect shares the paint pass, followed by UV gutter padding and synchronization.");
                 Assert.That(engine.Performance.geometryMaskBuilds, Is.Zero,
                     "Mesh-rasterized ribbons must not rebuild an equivalent full-resolution CPU mask.");
             }
@@ -4127,6 +4649,31 @@ namespace UMA.TexturePaint.Editor.Tests
             AssertColor(ReadTextureCenter(imported), new Color(source.r, 0f, 0f, 0f), tolerance);
         }
 
+        [TestCase(TexturePaintExportBitDepth.Eight)]
+        [TestCase(TexturePaintExportBitDepth.Sixteen)]
+        [TestCase(TexturePaintExportBitDepth.HalfFloat)]
+        public void ColorExportRoundTripPreservesLinearWorkingRgb(TexturePaintExportBitDepth bitDepth)
+        {
+            Color working = new Color(.21404114f, .07323896f, .01002283f, .65f);
+            TextureSet set = CreateSet(TexturePaintChannel.Albedo, working);
+            TextureStore store = CreateStore(set);
+            TexturePaintExportTemplate template = CreateTemplate(bitDepth);
+            template.padding = 2;
+            ConfigureExportDescriptor(set, bitDepth, new UMAMaterial.TextureChannelLayout
+            {
+                mode = UMAMaterial.TextureChannelLayoutMode.Custom,
+                red = UMAMaterial.TextureChannelUsage.Albedo,
+                green = UMAMaterial.TextureChannelUsage.Albedo,
+                blue = UMAMaterial.TextureChannelUsage.Albedo,
+                alpha = UMAMaterial.TextureChannelUsage.Unused
+            }, UMAMaterial.TextureChannelColorSpace.SRGB);
+            TexturePaintExportResult result = TexturePaintExporter.Export(store, set, null, template, null);
+            Texture2D imported = AssetDatabase.LoadAssetAtPath<Texture2D>(result.texturePaths[0]);
+            Assert.That(imported, Is.Not.Null);
+            working.a = 0;
+            AssertColor(ReadTextureCenter(imported), working, .005f);
+        }
+
         [Test]
         public void CustomPackedMapRoundTripPreservesSemanticComponents()
         {
@@ -4892,7 +5439,8 @@ namespace UMA.TexturePaint.Editor.Tests
         }
 
         private void ConfigureExportDescriptor(TextureSet set, TexturePaintExportBitDepth bitDepth,
-            UMAMaterial.TextureChannelLayout layout)
+            UMAMaterial.TextureChannelLayout layout,
+            UMAMaterial.TextureChannelColorSpace colorSpace = UMAMaterial.TextureChannelColorSpace.Linear)
         {
             Shader shader = Shader.Find("Universal Render Pipeline/Lit");
             Assert.That(shader, Is.Not.Null);
@@ -4921,7 +5469,7 @@ namespace UMA.TexturePaint.Editor.Tests
                                 ? UMAMaterial.TextureChannelOutputEncoding.Png16
                                 : UMAMaterial.TextureChannelOutputEncoding.Png8,
                         importerType = UMAMaterial.TextureChannelImporterType.Default,
-                        colorSpace = UMAMaterial.TextureChannelColorSpace.Linear,
+                        colorSpace = colorSpace,
                         alphaSource = UMAMaterial.TextureChannelAlphaSource.FromInput,
                         compression = UMAMaterial.TextureChannelImportCompression.Uncompressed,
                         normalConvention = UMAMaterial.TextureChannelNormalConvention.OpenGL,
@@ -5029,10 +5577,10 @@ namespace UMA.TexturePaint.Editor.Tests
             return set;
         }
 
-        private static void AddChannel(TextureSet set, TexturePaintChannel channel, Color clear)
+        private static void AddChannel(TextureSet set, TexturePaintChannel channel, Color clear, int size = 16)
         {
             EditableTextureTarget editable = new EditableTextureTarget("Texture Paint Release " + channel,
-                16, 16, RenderTextureFormat.ARGBHalf, null, clear);
+                size, size, RenderTextureFormat.ARGBHalf, null, clear);
             set.channels.Add(channel, new TextureChannelTarget
             {
                 channel = channel,

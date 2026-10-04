@@ -11,7 +11,7 @@ using UnityEngine.TestTools;
 
 namespace UMA.TexturePaint.Tests
 {
-    public sealed class PluginApiV2Tests
+    public sealed partial class PluginApiV2Tests
     {
         private TextureStore store;
         private TextureSet set;

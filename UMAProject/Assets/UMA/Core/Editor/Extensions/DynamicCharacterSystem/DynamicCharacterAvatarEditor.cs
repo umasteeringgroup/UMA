@@ -157,6 +157,8 @@ namespace UMA.CharacterSystem.Editors
                 return;
             }
 
+            standardWardrobeFilter = Mathf.Clamp(EditorPrefs.GetInt(StandardWardrobeFilterKey, 0), 0, StandardWardrobeFilters.Length - 1);
+
             AssemblyReloadEvents.beforeAssemblyReload += OnBeforeAssemblyReload;
 
             baseColorNames.Clear();

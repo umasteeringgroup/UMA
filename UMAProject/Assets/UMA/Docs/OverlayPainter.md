@@ -1,8 +1,8 @@
 # Overlay Painter
 
-Last reviewed: August 30, 2026.
+Last reviewed: October 2, 2026. Updated against the current Overlay Painter implementation.
 
-Overlay Painter is UMA's non-destructive surface-painting workspace for creating texture details directly on a reconstructed UMA slot or generated character. It combines a 3D paint view, a synchronized 2D UV canvas, material-aware channels, editable layers, surface paths, masks, and recipe-ready export.
+Overlay Painter is UMA's non-destructive surface-painting workspace for creating texture details directly on a reconstructed UMA slot or generated character. It combines a 3D paint view, a synchronized 2D UV canvas, material-aware channels, editable layers, surface paths, world-space projections, composable masks, and recipe-ready export.
 
 Use it for work such as:
 
@@ -19,11 +19,27 @@ Related docs:
 
 - [Overlay Painter Material Presets](OverlayPainter%20-%20MaterialPresets.MD) for saving, applying,
   versioning, and packaging reusable layer stacks.
+- [Overlay Painter Generators and Filters](OverlayPainterGeneratorsAndFilters.md) for the included procedural plugins and their controls.
 - [UMA Materials](UMAMaterial.md) for shader properties, channel layouts, packing, and output settings.
 - [OverlayDataAsset](OverlayDataAsset.md) for ordinary UMA overlay authoring and recipe use.
 - [SlotDataAsset](SlotDataAsset.md) for slots, source meshes, UVs, and UDIM metadata.
 - [Wardrobe Recipe Editor](WardrobeRecipeEditor.md) for adding an exported overlay to wearable content.
 - [Textures, UDIMs, and Texture Arrays](Textures-UDIM-Arrays.md) for the wider UMA UDIM workflow.
+
+### Recent authoring workflows
+
+The changes from the past few days are covered in the following sections:
+
+- [Replacing individual UDIM tiles](#replacing-individual-udim-tiles): shared Fill sources, per-tile overrides, and transparent tiles.
+- [Projection Layers](#projection-layers): per-channel sources, click placement, independent axis sizing, circular rotation, depth, surface wrapping, pinned warp grids, and cylindrical wrapping.
+- [Clothing detail generators](#clothing-detail-generators): one construction selector with 48 path presets or 32 projection presets for folds, wear, pockets, hardware, damage, labels, hems, and seams.
+- [Hem / Seam generator](#hem--seam-generator): garment construction, roping, thread rows, and protected seam masks.
+- [Path fading and curves](#path-fading-and-curves): side and endpoint fades up to 200%, with independent opacity curves.
+- [Composable mask effects](#composable-mask-effects): 44 inputs, adjustments, filters, and generators, plus reusable [smart-mask recipes](#smart-mask-recipes).
+- [Camera-Space Painting Stencil](#camera-space-painting-stencil): position an image in the 3D view and paint through its coverage.
+- [Live References and Linked Instances](#live-references-and-linked-instances), [Selections and Reusable Regions](#selections-and-reusable-regions), and [Layer Symmetry](#layer-symmetry).
+
+For remaining workflow gaps and implementation scope, see the [core workflow roadmap](OverlayPainterCoreWorkflowRoadmap.md). The roadmap is not a claim of complete feature parity with other painting applications.
 
 --------------------------------------------------------------------------------
 
@@ -70,7 +86,7 @@ Overlay Painter uses four related concepts. Keeping them separate prevents most 
 
 - **Target**: the slot, group of slots, or logical UDIM group that receives a stroke.
 - **Channel**: the material meaning being edited, such as Albedo, Normal, Metallic, Roughness, Ambient Occlusion, Emission, Skin Color Mask, Thickness, or Detail Mask.
-- **Source**: the texture, sprite, UMA overlay, or solid color stored on one authored layer channel and supplied to a paint, fill, or path operation.
+- **Source**: the texture, sprite, UMA overlay, or solid color stored on one authored layer channel and supplied to a paint, fill, path, or projection operation.
 - **Destination**: the editable base or non-destructive layer that receives the result.
 
 For example, a brush can use a tattoo `Sprite` as its **Source**, paint the **Albedo** channel on the torso **Target**, and write into a new Paint layer as its **Destination**.
@@ -86,7 +102,7 @@ A channel's source does not determine the destination, and selecting the Paint /
 This is the recommended path when creating a new reusable overlay.
 
 1. Select one `SlotDataAsset` in the Project window.
-2. Near the top of its Inspector, find **Open in Overlay Painter** directly below the **Validate**, **View MeshData**, and **Clear Errors** row. It is not inside a utility foldout.
+2. In Standard View, open **Validation & painting** and find **Open in Overlay Painter**. In Advanced View, it is directly below the **Validate**, **View MeshData**, and **Clear Errors** row.
 3. Click **Open in Overlay Painter**. The button is enabled only when exactly one slot with valid mesh data is selected.
 4. Choose either an `UMAMaterial` or an `OverlayDataAsset` as the starting source.
 5. Review the material capability summary and working resolution.
@@ -176,6 +192,8 @@ Path, and painting toolbars exclusively to the dedicated docked Scene tab and hi
 from every other Scene window.
 
 ### Global and 2D toolbars
+
+The floating **Layer Preview** panel stays visible while you scroll through Properties. It appears in the 3D Scene view and the **Overlay Painter 2D** window and follows the active layer, mask generator, garment construction, or plugin brush. Drag its title bar to reposition it. Use the Scene view overlay controls to collapse or hide it; in the 2D window, use the title-bar collapse button. The 128 × 128 draft refreshes as parameters change, including when their section is collapsed. **Channel**, **Lit Surface**, and supported filter comparison views remain in the preview panel. For plugin layers and mask plugins, **Regenerate Layer** sits below **Refresh Preview** and applies the current settings at full resolution, using the same action as the plugin configuration's Regenerate button. It is disabled while generation or a document save is running.
 
 The global toolbar contains the most frequent document and preview actions, while the 2D canvas has its own compact view toolbar:
 
@@ -269,7 +287,7 @@ ignored. This distinction matters around seams and repeated UVs.
 
 ### Layer / Path region
 
-This region contains the ordered Paint, Fill, Path, Group, and plugin-created layers. It provides thumbnails, visibility, drag reordering, grouping, renaming, duplication, merging, effects, and deletion.
+This region contains the ordered Paint, Fill, Path, Projection, Reference, Group, and plugin-created layers. It provides thumbnails, visibility, drag reordering, grouping, renaming, duplication, merging, effects, and deletion.
 
 The **Layers / Paths** toggle is a list filter:
 
@@ -461,7 +479,7 @@ Use base edits for intentional corrections that truly belong to the new baseline
 
 ## Choose a Source
 
-Sources are stored per authored layer channel. In the docked workspace, open **Active Layer > Layer Channels**, find the required channel card, then choose **Texture**, **Overlay**, or **Color** under **Source > Type**. The source controls are directly editable on every channel card. **Edit** only makes that card the active Paint / Preview Channel.
+Sources are stored per authored layer channel. In Properties, open the active layer's **Layer Channels & Settings**, expand the required channel, then choose **Texture**, **Overlay**, or **Color** under **Source > Type**. Expand a channel foldout to select it as the Paint / Preview Channel and edit its source controls. Each channel retains its own settings when another foldout is selected.
 
 Sources are sampled into brush stamps or generated layer content. They are not modified in place. A multi-channel layer can use a different source type and asset for every channel.
 
@@ -471,7 +489,7 @@ Texture source mode accepts either a complete `Texture2D` or one `Sprite` from a
 
 #### Complete Texture2D
 
-Assign **Texture** when the entire image is one brush, fill, or path source.
+Assign **Texture** when the entire image is one brush, fill, path, or projection source.
 
 Typical uses:
 
@@ -511,7 +529,7 @@ Overlay source mode samples an `OverlayDataAsset` through one authored channel c
 1. Select **Overlay** in Source.
 2. Assign the source `OverlayDataAsset` in **Overlay**.
 3. Repeat on other authored channel cards when the layer should sample several logical channels from the same or different overlays.
-4. Paint, fill, or apply the path.
+4. Paint, fill, apply the path, or place the projection.
 
 Overlay textures are routed to Albedo, Normal, Metallic, Roughness, Ambient Occlusion, Emission,
 Skin Color Mask, Thickness, Detail Mask, or Custom according to the overlay's `UMAMaterial`
@@ -625,6 +643,8 @@ Overlay Painter adds or updates one layer channel for each valid sheet, preservi
 
 On Paint and Path layers, the next operation applies the coordinated sources together to every unlocked channel with nonzero Channel Paint Strength. On Fill layers, each assigned channel uses the initial X and Y tiling from the picker; both values default to `1`.
 
+On ribbons and Flat/Triplanar Fill projections, the Albedo sprite's transparency supplies coverage for every channel, including transparent holes and soft edges. Coverage follows the Albedo crop and projection transforms, and ribbon tile flips and crossfades. Overlay sources use their explicit alpha mask when present, otherwise albedo alpha. Other maps can retain their own data alpha; partial coverage preserves their visible values and normal directions.
+
 The operation reports sheets that could not be assigned, including:
 
 - A missing sheet texture.
@@ -673,6 +693,20 @@ Fill sources can be:
 
 Every Fill channel has independent X/Y tiling, X/Y offset, and rotation. Enable **Use Transform For All Channels** on the first authored channel to make it the transform master; the other channels update to match and their transform controls remain locked until sharing is disabled.
 
+#### Replacing individual UDIM tiles
+
+A UDIM group keeps one shared layer stack. Select a Fill layer and use **UDIM Sources** in its properties to assign sources per tile:
+
+- **Use shared source** follows the ordinary Fill source controls.
+- **Override** accepts a **Tile Overlay** for all compatible material channels. Use **Texture Channel** and the channel's **Texture** field to replace individual channels; a channel texture takes priority over the tile overlay. With neither assigned, the channel inherits the shared source. Channels absent from an assigned overlay contribute nothing.
+- **No contribution** makes this Fill transparent on that tile, revealing the layers below.
+
+For a head-only replacement, assign the new head texture to tile 1001 and set the other tiles to **No contribution**. Use Flat projection, tiling `(1, 1)`, zero offset/rotation, full opacity, and Normal blend for an ordinary opaque replacement. Source alpha still controls coverage.
+
+Tile overlays use their own alpha mask, or the first texture's alpha when no explicit mask exists. Channel texture overrides use their own alpha. Existing editable layer masks still apply. Automatic coverage from an Overlay-backed Fill is moved into generated channel alpha when editing tile sources so the original overlay's coverage is not applied again.
+
+Shared source and projection edits preserve tile assignments. Layer order, visibility, and opacity remain shared. Tile assignments survive undo/redo, duplication, saving/reopening, and per-tile export; switching to **Use shared source** keeps the override assignments available for later reuse. Rasterizing a Fill bakes each tile's effective result into its Paint layer.
+
 #### Flat projection
 
 **Flat** uses the mesh UVs. X and Y tiling repeat in destination UV space.
@@ -713,9 +747,17 @@ Use them for:
 
 Path layers are described in detail under [Surface Paths](#surface-paths).
 
+### Projection layer basics
+
+Use a Projection layer for one editable placement of a tattoo, fingernail, patch, or other detail. Every channel has its own source while placement, shape, depth, and fade stay aligned. Planar, Wrapped, and Cylindrical modes cover flat decals, fitted surface patches, and limb wraps. See [Projection Layers](#projection-layers) for the complete workflow.
+
+### Reference layers
+
+Use a Reference layer to reuse another layer's evaluated output or mask without copying its pixels. Named anchors and linked instances let related material details update together. See [Live References and Linked Instances](#live-references-and-linked-instances).
+
 ### Group layers
 
-Groups organize Paint, Fill, Path, and nested Group layers.
+Groups organize Paint, Fill, Path, Projection, Reference, Plugin, and nested Group layers.
 
 - Drag a layer by its handle and drop it directly on a group's folder icon.
 - Click the folder icon to collapse or expand the children.
@@ -728,7 +770,7 @@ Groups organize Paint, Fill, Path, and nested Group layers.
 - Group opacity and blend mode apply once to the isolated child composite, not separately to each child.
 - Selecting a group shows the composite of its children in the 2D UV canvas. The 3D view continues to show the complete visible layer stack regardless of which layer or group is selected.
 - Groups do not contain material paint channels. A group can own an editable layer mask, and that mask gates the combined result of all children as one unit.
-- Groups do not use ordinary material-channel layer effects. Their masks can use Layer Mask Noise and Layer Mask Texture Overlay.
+- Groups do not use ordinary material-channel layer effects. Their masks can use the complete composable mask-effect stack, smart-mask recipes, and legacy noise/texture effects.
 - Deleting a group deletes all of its descendants. The confirmation names the group, reports the child count, and explains that Undo can restore them.
 - Duplicating a group deep-copies its complete subtree, including masks and channel pixels, with independent hierarchy and procedural ownership identities.
 
@@ -751,10 +793,18 @@ Common operations include:
 - **Rename** or `F2`.
 - **Duplicate** or `Ctrl/Cmd+D`.
 - **Merge Down**.
+- **Merge Group to Paint Layer** on a group.
+- **Merge Selected** for marked layers or groups.
 - **Remove from Group**.
 - **Delete** or `Delete`.
 
-Merge Down is a flattening operation. It bakes the visible results of two adjacent sibling layers, including their masks and effects, into merged pixels; the merged layer does not keep editable mask or effect state. It is available only when both layers and all authored channel overrides use **Normal** blend. Non-Normal blends depend on the backdrop and therefore cannot be flattened exactly into a reusable transparent layer. Duplicate the document or layers first when independent editability may still be needed.
+**Merge Down** bakes two adjacent sibling layers into one Paint layer, including cached Plugin output, masks, and supported effects across every authored channel. Both layers and their channel overrides must use **Normal** blend. Plugin generators and filters are not rerun during the merge.
+
+**Merge Group to Paint Layer** bakes all descendants, including nested groups, into one Paint layer. The replacement retains the group's name, visibility, opacity, blend, and an independent editable mask. The group's local mask effects remain editable; masks derived from layer references are baked. Child masks and effects become pixels. Combinations that cannot retain their appearance are rejected with a reason.
+
+To combine several groups or layers, **Ctrl-click** (Windows) or **Cmd-click** (macOS) each desired row. Blue outlines mark the merge selection; the active painting layer and Properties panel stay unchanged. Choose **Merge Selected** in the selection bar, the **Merge** menu, or a row menu. Mark adjacent siblings under the same parent; each selected group includes its complete subtree. Selected roots must use Normal blend, though their children may use other blends. An ordinary row click, **Clear**, or **Escape** in the Layers panel clears the marks. A successful merge selects the resulting Paint layer.
+
+Merges preserve all authored channels and apply atomically across linked UDIM tiles. Undo restores the original layers, groups, and active layer; Redo restores the merged result. Finish running Plugin generation or saving before merging. Changes that would break references from other layers are refused. Some backdrop-dependent effects and normal-strength combinations must be merged inside a containing group. Keep a duplicate if the original procedural settings will be needed after closing the editing session.
 
 Layer structure changes participate in Undo and Redo.
 
@@ -786,20 +836,56 @@ Each authored channel can expose:
 
 - **Enabled**: includes or excludes the channel from composition.
 - **Lock Painting**: prevents brush operations from writing to that channel.
-- **Channel Paint Strength**: scales how strongly new brush input is deposited on Paint and Path layers. Fill layers do not use or show this control.
+- **Channel Paint Strength**: scales how strongly new brush input is deposited on Paint and Path layers. Fill and Projection layers do not use this brush control.
 - **Channel Opacity**: scales this channel during composition.
 - **Channel Blend**: chooses the blend behavior for this channel.
 - **Height Strength** on Normal Control: scales only this layer channel's contribution to the
   effective normal. Sample Radius and Invert Height remain target-level conversion settings.
 - Source and source-specific settings.
 
-Use **New Channel** and **Add Channel** to add another channel supported by the active material. Channels already authored by the layer are omitted from the dropdown. The **Edit / Active** button selects the Paint / Preview Channel; all channel cards remain visible and independently editable.
+Use **New Channel** and **Add Channel** to add another channel supported by the active material. Channels already authored by the layer are omitted from the dropdown. Expanding a channel foldout selects it as the Paint / Preview Channel. The current channel is marked **Active Preview Channel**; each foldout exposes its own source and composition settings.
 
-Use **Remove** on a channel card to delete that channel's texture and settings. Overlay Painter asks for confirmation and keeps the operation undoable. Effects targeting the removed channel are retargeted to the layer's first remaining channel, or disabled when no channel remains, so the effect stack never contains an enabled invisible target.
+Use **Remove Channel** inside a channel foldout to delete that channel's texture and settings. Overlay Painter asks for confirmation and keeps the operation undoable. Effects targeting the removed channel are retargeted to the layer's first remaining channel, or disabled when no channel remains, so the effect stack never contains an enabled invisible target.
 
 Use channel controls for a coordinated material layer whose Albedo should remain strong while its Normal or Roughness contribution is reduced.
 
 **Lock Painting** is per channel, not a complete layer lock. Check every authored channel before assuming a layer is protected.
+
+--------------------------------------------------------------------------------
+
+## Live References and Linked Instances
+
+### Name and reference a layer
+
+1. Select the source layer and expand **Properties > Active Layer > References and Instances**.
+2. Give it an **Anchor Name** that describes the output, such as `Stitch Coverage` or `Worn Edges`.
+3. Click **Reference This Layer** to create a live Reference layer.
+4. Choose **Content Source**, **Read**, **Source Channel**, and **Output Channel** as needed. Color reads use the source color; alpha, luminance, RGB components, and mask reads provide coverage for **Tint**.
+5. Adjust the reference's **UV Scale**, **UV Offset**, and **UV Rotation** independently.
+
+The source picker identifies the material, slot or tile, stack position, and anchor name. Source effects, channel opacity, visibility, and masks are evaluated before the reference. Referencing a group reads its isolated child composite, excluding the base texture.
+
+Every layer also exposes **Live Mask Source**. It multiplies the layer's painted/procedural mask by the chosen source. To combine several sources with independent blend modes and ordering, use **Layer Reference** entries in the [mask-effect stack](#composable-mask-effects).
+
+### Create a linked instance
+
+**Create Instance** shares source content while retaining local placement and masking:
+
+| Source type | What remains local to the instance |
+|---|---|
+| Fill | UV scale, offset, rotation, layer opacity, and painted mask |
+| Projection | World placement, size, depth, flips, wrapped control points/pins or cylinder settings, layer opacity, and painted mask |
+| Paint, Path, Plugin, Group | Reference-layer UV transforms, opacity, and painted mask; content follows the source's evaluated UV output |
+
+Edit the source to change shared imagery and material settings. Use **Make Independent** to remove the dependency while preserving the current result. A duplicated layer is an independent copy; a linked instance continues to follow its source.
+
+### Dependencies, UDIMs, and persistence
+
+References update in dependency order. A missing source or circular dependency shows a diagnostic and retains the last cached result. Repair the source reference to resume live updates. Documents and recovery retain cached reference pixels and masks, including mask-stack inputs.
+
+Within a logical UDIM target, a reference resolves to the corresponding local tile member. A cross-target reference uses the explicitly selected source surface. Duplicating a group or applying a material preset remaps references between the copied layers. A reference to a layer outside the saved preset still needs that source to be available.
+
+Downstream Plugin layers and procedural masks refresh when linked inputs change. These derived updates preserve the artist's Undo history. Save and export wait for active gestures and pending linked updates before capturing their result.
 
 --------------------------------------------------------------------------------
 
@@ -845,7 +931,7 @@ Click the row's **fx** button to open non-destructive effects. A blue **fx** ind
 
 Effects are calculated during composition. They do not permanently paint their result into the source layer, so their settings remain editable.
 
-The popup is an ordered effect stack. Use the arrow buttons to reorder entries, **Add** to create another instance of any supported effect, and **×** to remove an entry. Multiple instances are supported. An effect can target only a channel actually authored by that layer; add the channel first if it is not listed. Paint and effects are evaluated as one isolated layer result, then the layer and channel opacity are applied once. This prevents a mask or partial opacity from being multiplied again for every effect pass.
+The popup is an ordered effect stack. Use the arrow buttons to reorder entries, **Add** to create another instance of any supported effect, and **Ã—** to remove an entry. Multiple instances are supported. An effect can target only a channel actually authored by that layer; add the channel first if it is not listed. Paint and effects are evaluated as one isolated layer result, then the layer and channel opacity are applied once. This prevents a mask or partial opacity from being multiplied again for every effect pass.
 
 Layer effects require compute shaders and support for RGFloat and RFloat render textures. The effects popup reports a warning when the current graphics environment cannot evaluate them.
 
@@ -862,12 +948,12 @@ Conventional effects provide controls appropriate to their type, including:
 
 Effect widths are measured in destination pixels. The same numeric width looks physically smaller on a higher-resolution texture and larger on a lower-resolution texture.
 
-When a layer or group has a mask, the same **fx** popup also contains two mask-only effects. They never modify material channels directly:
+When a layer or group has a mask, the same **fx** popup includes its composable mask-effect stack. It also retains the two legacy mask-only effects, which never modify material channels directly:
 
 - **Layer Mask Noise** generates deterministic grayscale noise with Seed, X/Y Tiling, X/Y Offset, Detail, Balance, Contrast, Invert, Combine, and Opacity controls.
 - **Layer Mask Texture Overlay** combines a texture's Luminance, Red, Green, Blue, or Alpha component with the mask. It provides independent X/Y Tiling, X/Y Offset, Rotation, Invert, Combine, and Opacity controls.
 
-Mask effects are evaluated non-destructively in a fixed order: editable base mask, Layer Mask Noise, then Layer Mask Texture Overlay. The mask thumbnail and both previews show this effective result.
+The mask starts from its painted raster or Starting Value, applies any enabled legacy Noise and Texture Overlay, then evaluates the new stack from top to bottom. The mask thumbnail, previews, and export share this effective result. Use **Convert Legacy Effects to Stack** to make the old effects reorderable; see [Composable mask effects](#composable-mask-effects).
 
 ### Stroke
 
@@ -977,16 +1063,15 @@ Left and Right are defined relative to travel from the first path point to the l
 
 ### Edge Fade
 
-Edge Fade reduces ribbon opacity toward its long edges.
+Edge Fade reduces ribbon opacity toward its long edges. Its current controls are **Side Fade (%)**, **Fade Ramp (%)**, and **Side Curve**. The selected Path's **Fading** section edits the same enabled Edge Fade effect, regardless of the displayed material channel.
 
-- **Fade Begins** is measured from the centerline across the normalized half-width.
-- **Fade Size** controls how much of the remaining center-to-edge distance is used to reach transparency.
-- A Fade Size of zero cuts out immediately at the Fade Begins position.
-- A Fade Size of 100 reaches transparency at the side edge.
+- **Side Fade (%)** ranges from 0 to 200. At 100, the fade extends from each side edge to the centerline; at 200, it spans the full width and also fades the center.
+- **Fade Ramp (%)** controls how much of that fade distance is used for the transition. Zero produces an immediate cutout; 100 uses the full distance.
+- **Side Curve** controls opacity through the transition. The horizontal axis runs from interior on the left to edge on the right; height is opacity, from 0 to 1.
 
-The fade follows the world-space ribbon cross-section. Source texture rotation, mesh UV orientation, seams, and UDIM tiles do not rotate the fade.
+The fade follows the ribbon cross-section. Source texture rotation, mesh UV orientation, seams, and UDIM tiles do not rotate it. Source alpha is preserved when the path regenerates after moving a control point.
 
-Use it for paint stripes, soft scars, makeup lines, worn edges, and cloth trim that should feather at the sides.
+Start and end fades are separate path controls. See [Path fading and curves](#path-fading-and-curves) for their ranges, curve direction, and a zipper example.
 
 ### Bevel Edge
 
@@ -1026,6 +1111,123 @@ Use a coordinated Albedo, Normal, Roughness, and AO Sprite Set on the ribbon whe
 Ribbon paths can replace the first and last complete repeated tiles with separate **Beginning** and **End** textures or sprites. Closed ribbons ignore endpoint sources.
 
 Use endpoint art for strap ends, zipper stops, seam caps, cable connectors, or ornamental line endings.
+
+--------------------------------------------------------------------------------
+
+## Projection Layers
+
+A Projection layer holds **one projection**, fixed in world space while it remains editable. Use separate layers or linked instances for separate placements. It does not attach its authoring handles to later character pose or shape changes. Exported results are ordinary textures mapped to the model's UVs.
+
+### Create a projection with Albedo and Normal
+
+1. Select the logical paint target and click **+ Projection**, or use **Layer > New Projection Layer**.
+2. The new projection is placed on an available target surface and aligned to its normal. If no surface is available, click the model to place it.
+3. In **Layer Channels & Settings**, add or expand **Albedo**, choose **Texture**, and assign the image or Sprite.
+4. Use **New Channel > Normal > Add Channel**, expand Normal, and assign its matching normal texture or Sprite. Set its source **Convention** correctly.
+5. Click the desired location on the model. The projection moves there and aligns to the new surface normal.
+6. Use the axis handles to size it, trace the ring to rotate it, and adjust depth to include the intended surface.
+
+Each channel has its own Texture/Sprite, Overlay, or Color source, enabled state, inversion, opacity, and blend settings. The same placement, wrapping, and fade apply to all channels. Albedo alpha supplies their common silhouette; without Albedo, the first assigned map supplies it. Normal maps are reoriented into the receiving surface's tangent space.
+
+Old single-source and overlay-wide projections retain their maps when opened and can be edited through these per-channel controls. Selecting the Paint / Preview Channel changes what you inspect; it does not replace the other assigned maps.
+
+### Mirror a pocket or other asymmetric image
+
+In Projection properties, use **Texture Mirroring (All Channels)**:
+
+- **Flip X (Left/Right)** mirrors the source images horizontally. Use this to turn a right-hand pocket image into a left-hand pocket.
+- **Flip Y (Up/Down)** mirrors the source images vertically. Both flips can be enabled together.
+
+These are the projection's local image axes, so they follow its rotation. The same flip applies to every authored channel, including Albedo, Normal, Roughness, Metallic, AO, Emission, Normal Control, and custom channels. Source alpha and Alpha Outline fade mirror with the imagery. Normal-map vector directions are corrected as well as their pixel positions, keeping raised and recessed detail consistent.
+
+For matching pockets, duplicate the Projection layer or use **Create Instance**, place the second projection on the other side, and enable Flip X on that layer. Linked instances keep their own flip settings while sharing the source images. Projection size, placement, and wrapped control points remain unchanged. Existing painted layer masks remain in destination UV space.
+
+Flips work with Texture, Sprite, and Overlay sources in Planar, Wrapped, and Cylindrical modes. They are undoable and persist with the projection; source texture assets are not modified. **Invert** on a channel changes its values and is separate from image mirroring.
+
+### Position, size, rotate, and set depth
+
+**Gizmo Size (%)** in Projection properties scales the axis handles, center Move handle, rotation-ring thickness and spacing, and warp points with their hit areas. It defaults to **200%** (twice the original size) and adjusts from **25% to 500%**. **Reset** restores 200%. The choice is remembered for your editor across sessions and applies to all projections; changing it does not resize or regenerate the projection or add an Undo step.
+
+With **Edit Warp** off, use these Scene-view controls:
+
+| Control | Behavior |
+|---|---|
+| Click the model | Move the projection to that point and align it to the face normal; preserve size and transport its existing spin to the new normal |
+| Center Move handle | Drag across the model to update position and surface-normal alignment continuously; preserve size and spin |
+| X handle | Resize only along the projection plane's X axis |
+| Y handle | Resize only along the projection plane's Y axis |
+| Z Depth handle | Set maximum projection distance on either side of the placement surface |
+| Rotation ring | Follow the cursor around the circle to rotate about the surface normal; complete turns and reversals are supported |
+| Escape during a drag | Cancel that drag and restore its starting result |
+
+Moving toward or away from the ring's center does not spin the image. **Lock Numeric Aspect** affects only the **Width (X)** and **Height (Y)** fields; X and Y gizmos always resize independently. **Match Source Aspect** restores the source image's proportions. Numeric dimensions are world units.
+
+The cyan footprint and front/back outlines show the whole projection volume. Depth includes nearby raised and recessed polygons, with pixels outside the volume clipped. Older saved projectors retain their original centered volume until repositioned.
+
+Drag the white **Move** handle at the center to slide the projection along the target surface. It follows the same rules as click placement, including refitting Wrapped patches and resetting their pins. A missed surface keeps the last valid position; moving back onto the model continues the drag. Click-to-place remains available away from the handles.
+
+Each placement click or completed handle drag is one Undo step. Projection edits replace the previous output on every affected member of the logical target, including UDIM boundaries. Geometry and channel textures are reused during manipulation; supported GPUs calculate first-surface visibility without a CPU visibility rebuild. The drag uses the full configured texture and visibility resolution, with the same quality on release. Devices without floating-point blending use the CPU visibility fallback.
+
+### Planar projection and visibility
+
+**Planar** projects straight through the footprint onto the model. It gathers intersecting polygons, rejects back-facing polygons when requested, and clips the remaining fragments to the footprint and depth volume. Rejected fragments do not erase valid projection pixels from other polygons sharing a UV edge.
+
+- **Front Faces Only** excludes polygons facing away from the projector.
+- **Connected Surface Only** restricts coverage to the placed surface's connected region.
+- First-surface visibility is enabled by default. **Project Through** includes hidden surfaces within the depth volume. Disable Connected Surface Only too when deliberately reaching disconnected mesh pieces.
+- **Visibility Quality** sets the visibility sampling resolution. **Surface Tolerance** is a world-space allowance for that comparison.
+- **Regenerate Projection** explicitly rebuilds the current definition.
+
+Use the smallest depth that covers the intended surface. Overlapping UVs still share texture pixels: projection cannot store different final colors for two faces using exactly the same UV texel.
+
+### Wrapped projection and Edit Warp
+
+Use **Wrapped** for a detail that needs to follow a curved elbow, nail, or other surface. It uses a smooth interpolated patch shared by all channels.
+
+1. Click **Edit Warp** on a placed Planar projection to switch to Wrapped and fit an initial patch, or choose Wrapped and use **Fit to Surface / Refit**.
+2. Enable **Edit Warp** to expose the control grid. It starts with **3 x 3** points.
+3. Drag an individual point along the model surface.
+4. **Shift-click** a point to pin or unpin it. Pinned points appear orange and stay fixed during Refit or Reset.
+5. Use **Control Grid** to choose **3 x 3**, **5 x 5**, or **9 x 9** when more local control is needed.
+6. Turn Edit Warp off to return to whole-projection click placement, Move dragging, sizing, and rotation.
+
+Subdivision preserves the patch's shape and matching pins. Reducing the grid removes intermediate controls and their pins; Undo restores them. **Unpin All** releases the pins. **Reset Unpinned Points** restores the unpinned controls to the default grid; use **Fit to Surface / Refit** to fit them onto the model again.
+
+Refit searches within the depth volume and reports how many points were fitted or retained. Increase depth when the intended surface cannot be reached. Resizing or rotating transforms the existing patch; refit explicitly when the new footprint needs to conform again. Clicking a new location resets the pins and fits the patch at that location. Pins preserve the fitted authoring shape; they do not attach the patch to an animated character.
+
+Warp edits support Undo/Redo, saving/recovery, material presets, and linked projection instances. Albedo, Normal, and all other channels use the same deformation.
+
+### Cylindrical wrapping
+
+Choose **Cylindrical** for a sleeve band, tattoo, or other wrap around a limb or tube. The cylinder axis follows the projection's Y direction, and the front of the cylinder touches the clicked surface.
+
+- Width becomes **Arc Length (X)**. For a complete wrap it is the circumference: radius = arc length / (2 * pi).
+- **Cylinder Arc** ranges from 10 to 360 degrees. Use less than 360 for a partial wrap.
+- **Height (Y)** and **Depth (Z)** remain world-unit dimensions.
+- All channels share the same cylinder and angle.
+
+At 360 degrees, Rectangle edge fade affects the top and bottom without creating a faded vertical seam. The source image must itself tile horizontally for its image seam to disappear. Ellipse and Alpha Outline retain their source-shaped fades. Edit Warp is available for Wrapped mode, not Cylindrical mode.
+
+### Projection fading
+
+| Edge Fade | Use |
+|---|---|
+| None | Keep the source alpha without an extra footprint fade |
+| Ellipse | Round or oval fade; circular when width equals height |
+| Rectangle | Fade inward from the footprint border |
+| Alpha Outline | Fade from the source silhouette, including holes; the silhouette boundary is measured at 50% alpha |
+
+**Fade Width** and **Fade Curve** shape the edge transition. **Depth Fade** softens both depth boundaries. **Angle Fade Starts** and **Angle Fade Ends** soften the facing-angle limit independently. Source alpha is applied once, so a partially transparent source does not become darker from duplicate coverage multiplication.
+
+For additional local correction, add a layer mask and use the regular mask painting or composable mask effects. These act after the generated projection coverage.
+
+### Saving, reuse, and rasterizing
+
+Projection layers support layer/channel opacity and blend, effects, painted masks, duplication, references, Undo/Redo, documents, and recovery. Material presets retain the world-space definition and cached output. If the original surface region is unavailable on another target, the cached output remains until you place the projection again.
+
+**Rasterize to Paint Layer** in the layer row menu bakes the generated channels and effective mask into editable pixels and removes the editable projector. Export also uses the generated texture result, but does not require rasterizing the authoring layer. Exported textures follow the model normally through its UVs.
+
+Use [Create Symmetry Instances](#layer-symmetry) for mirrored or radial copies while keeping one editable projection per layer.
 
 --------------------------------------------------------------------------------
 
@@ -1119,6 +1321,29 @@ It is useful for paired details on symmetrically positioned geometry. It is not 
 
 --------------------------------------------------------------------------------
 
+## Camera-Space Painting Stencil
+
+A painting stencil is an image fixed to the current 3D view that limits brush coverage. Brush and layer-channel sources still supply the painted color and material values. Use a Projection layer when you want the image itself to remain an editable placed layer.
+
+1. Open **Overlay Painter Brush > PAINTING STENCIL**.
+2. Assign **Image**, choose **Mask Channel** (luminance, R, G, B, or alpha), and enable **Enable Stencil**. Use **Invert** to reverse its coverage.
+3. Click **Center and Match Image Aspect** for a centered guide with the image's proportions.
+4. Enable **Edit Stencil in 3D View** to position it.
+5. Turn editing off and paint through the stencil onto the model.
+
+| Gesture while editing the stencil | Result |
+|---|---|
+| Drag | Move the guide |
+| Shift-drag around its center | Rotate the guide |
+| Ctrl/Cmd-drag vertically | Scale the guide |
+| Escape | Cancel the current drag, or exit editing when no drag is active |
+
+**Viewport Center** and **Viewport Size** use viewport fractions; **Rotation** is also editable numerically. **Preview Opacity** changes the guide's visibility only, not paint coverage. Stencil edits are undoable.
+
+The stencil constrains interactive 3D brush tools across all painted channels and layer masks, including erase, blur, and normal touch-up where that tool is applicable. It does not affect the 2D canvas, procedural paths, or existing Fill/Projection content. Coverage is projected once per surface/resolution per stroke and reused across channels. Stroke records capture the stencil and camera transform; the completed painted pixels save and reopen normally.
+
+--------------------------------------------------------------------------------
+
 ## Painting Tools
 
 ### Paint
@@ -1172,6 +1397,13 @@ opacity, blend mode, layer masks, groups, effects, Save/reopen, and export conti
 the plugin is not installed. The layer is marked **Stale** when its parameters, position, or relevant
 content below it changes; click **Regenerate** to replace its cache atomically.
 
+**Generate/Regenerate** and the pending-change notice appear above the parameters, with another
+apply button below long forms. Plugins that support spatial mapping expose **Fill Type** at the top:
+**Flat (UV)** follows the mesh UVs; **Triplanar (World)** uses world coordinates. This changes the
+plugin's own mapping. UV-only image filters and generators do not inherit a Fill layer's projection.
+Opening a parameter section does not change the layer. Newly introduced controls receive their
+plugin defaults when older documents load, while saved values, including intentional zeros, remain intact.
+
 The host snapshots only the plugin's declared channels from the composite below that Plugin layer,
 plus requested mesh maps and texture parameters. It exposes write-only channel dimensions without
 copying their pixels and commits all logical-target outputs as one Undo/Redo transaction. A canceled
@@ -1180,7 +1412,7 @@ an actionable missing-plugin message in the layer properties. The Plugins window
 for discovery diagnostics and non-layer plugin categories; generators and filters are selected on a
 Plugin layer.
 
-The included **Agify — Dirt & Edge Wear** generator is the reference mesh-map workflow. It provides:
+The included **Agify â€” Dirt & Edge Wear** generator is the reference mesh-map workflow. It provides:
 
 - Concave dirt derived from signed curvature and source/generated AO.
 - Convex edge wear derived from signed curvature.
@@ -1202,7 +1434,7 @@ settings persist with the paint document.
 
 Two focused generators provide more direct art control than the combined Agify workflow:
 
-- **Dirtify — Gap Dirt** detects concave curvature and source/generated AO. **Gap Size** controls the
+- **Dirtify â€” Gap Dirt** detects concave curvature and source/generated AO. **Gap Size** controls the
   neighborhood radius, **Gap Detection Level** controls which cavities qualify, and **Dirt Spread**
   controls how strongly nearby gaps expand into the surrounding surface. Fractal Breakup, Scale,
   Levels, Level Strength, and Fractal Edge independently control breakup from broad islands down to
@@ -1218,17 +1450,23 @@ Both generators reject neighborhood and Normal-detail samples that cross UV-isla
 #### Cloth Texture generator
 
 Add a Plugin layer, choose **Cloth Texture**, and click **Generate** after configuring the fabric. The
-generator is intended for shirts, sweaters, trousers, denim, canvas gear, and other UV-mapped cloth.
+generator is intended for shirts, sweaters, trousers, denim, canvas gear, and other cloth surfaces.
 It produces native-resolution material data without reading or baking the existing character atlas.
+
+Choose **Fill Type** before setting the weave scale. Flat uses UV coordinates; Triplanar blends
+world-space projections across the surface. Fabric, thread, pattern-tint, and worn colors and their
+contribution controls are grouped under **Colors**. Stripe colors stay beside each stripe's placement
+controls. Click **Regenerate** after editing these settings to update the visible result.
 
 1. Under **Output Channels**, enable any combination of **Albedo**, **Roughness**, and **Normal
    Control**. All three are optional, but at least one must remain enabled.
 2. Under **Fabric Weave**, select Cotton/Plain, Knit, Twill, Corduroy, Herringbone, Denim, Canvas,
-   Linen, Satin, Basket, Houndstooth, Leno, Dobby, Pile, Crepe, or Jacquard. Set Threads/UV first,
+   Linen, Satin, Basket, Houndstooth, Leno, Dobby, Pile, Crepe, or Jacquard. Set Thread Repeats first,
    then adjust aspect, fabric rotation, thread roundness, definition, and irregularity.
 3. Under **Surface Response**, tune the neutral-gray Normal Control height, base/weave roughness,
    and fine fiber variation. Normal Control is combined with the Normal map for live display and
-   export; it is not a shader texture by itself.
+   export; it is not a shader texture by itself. **3D Depth** scales weave and motif relief;
+   **Relief Shading** independently controls contact darkening between yarns in Albedo.
 4. Under **Stripes / Plaid**, set the vertical and horizontal repeat-cell counts and add any number of
    stripe entries. Each entry has direction, color, position, width, edge softness, opacity, reorder,
    and delete controls. Entries later in the list blend over earlier entries. Use only vertical entries
@@ -1307,15 +1545,15 @@ so regeneration does not accumulate damage.
 
 ## Masks
 
-Each Paint, Fill, Path, Plugin, or Group layer can own zero or one editable grayscale mask. White reveals the layer, black hides it, and gray produces partial contribution. There are no document-wide artist masks and no separate Masks properties panel.
+Each Paint, Fill, Path, Projection, Reference, Plugin, or Group layer can own zero or one editable grayscale mask. White reveals the layer, black hides it, and gray produces partial contribution. Its painted raster, ordered mask effects, and optional live inputs combine into one effective mask used by preview and export. Reusable selections are separate painting constraints; see [Selections and Reusable Regions](#selections-and-reusable-regions).
 
 ### Add, select, and remove a mask
 
-1. Open the layer row's `⋮` menu.
+1. Open the layer row's `â‹®` menu.
 2. Choose **Mask > Add Black Mask** or **Mask > Add White Mask**.
 3. Click the new grayscale thumbnail beside the layer thumbnail to enter **LAYER MASK MODE**.
 4. Paint in either the 2D UV canvas or 3D Scene view.
-5. Click the main layer thumbnail or row to leave Mask Mode.
+5. Click the main layer thumbnail or row, or press **Escape**, to leave Mask Mode. Escape finishes an active mask stroke first; if a geometry fill is armed, the first Escape cancels that tool and the next exits Mask Mode.
 6. Use **Mask > Remove Mask** when the layer should return to unmasked contribution.
 
 A black mask starts with a white Mask Value so the first stroke reveals content. A white mask starts with a black Mask Value so the first stroke hides content. **Erase** restores the mask's original black or white creation value.
@@ -1330,7 +1568,78 @@ Mask strokes use the same target projection, brush shape, stamp, pressure, stabi
 
 The active layer exposes only a scalar **Mask Value** from 0 (black) to 1 (white). Mask Mode has no material-channel selector and cannot use a Texture, Sprite, OverlayData source, or layer-channel overlay. Brush shape and stamp alpha still control the stroke footprint, but the deposited value is always grayscale. The Mask Value survives layer duplication, document save/reopen, and crash recovery.
 
+### Composable mask effects
+
+Select the mask and expand **Mask Effects & Smart Masks** in Properties, or open the layer's **fx** popup. Unlike material-channel effects such as a colored glow, these effects operate on the grayscale mask and therefore gate every channel of the layer or the group's complete composite.
+
+1. Leave **Start From Painted Mask** enabled to begin with the editable mask pixels. Disable it to begin with **Starting Value** instead.
+2. Choose **New Effect** and click **Add**.
+3. Expand the entry and set its name, **Blend**, **Opacity**, and effect-specific controls. **Invert Result** reverses that entry's output.
+4. Use **Up** and **Down** to change evaluation order, **+** to duplicate, or **X** to remove. Each entry can be disabled independently.
+5. Inspect the effective result with **Solo Mask**.
+
+Effects evaluate **top to bottom**, starting with the chosen initial mask. Source entries generate a value; filters process the accumulated result. An entry's blend combines its result with that accumulation, and its opacity controls the contribution. At full opacity, **Replace** substitutes the entry's result; **Multiply** restricts it to the existing coverage. The complete blend list is Replace, Multiply, Add, Subtract, Screen, Overlay, Min, Max, Difference, Soft Light, and Divide.
+
+Ordering matters: Noise followed by Levels then Blur differs from Noise followed by Blur then Levels. A later Replace source can overwrite an earlier effect. Collapsing a foldout changes only the UI and does not create an Undo step.
+
+#### Available effects
+
+The stack provides 44 effect kinds:
+
+| Family | Effects and purpose |
+|---|---|
+| Basic inputs | **Fill** supplies a constant; **Texture** reads luminance/R/G/B/alpha; **Painted Mask** reads the original editable raster; **Layer Reference** reads another layer, channel component, or mask |
+| Noise and cells | **Noise**, **Turbulence**, **Voronoi**, **Cells** generate seeded variation and cell patterns |
+| Geometric patterns | **Gradient**, **Radial Gradient**, **Stripes**, **Checker**, **Dots** generate controllable UV patterns |
+| Tonal adjustments | **Invert**, **Levels**, **Curves**, **Brightness Contrast**, **Gamma** remap the accumulated grayscale values |
+| Range and segmentation | **Threshold** with softness, **Posterize**, **Clamp**, **Remap**, **Smoothstep** control bands, limits, and transitions |
+| Smoothing and detail | **Blur** (Gaussian), **Directional Blur**, **Sharpen**, **High Pass** soften or isolate detail |
+| Shape and edges | **Dilate** grows white regions; **Erode** shrinks them; **Outline** extracts an exterior border; **Edge Detect** identifies changes in the mask |
+| Boundary distance | **Distance** creates a normalized signed-distance mask around **Boundary Threshold**; **Feather** softens that boundary |
+| Distortion | **Transform** moves/scales/rotates the accumulated mask in UV space; **Warp** displaces it with noise |
+| Mesh inputs | **Curvature**, **Ambient Occlusion**, **Thickness**, **World Normal**, **World Position**, **Mesh ID** derive coverage from the reconstructed mesh or an assigned map |
+| Material-wear generators | **Edge Wear**, **Cavity Dirt**, **Dust** combine mesh information with grunge variation |
+
+Filter **Radius (pixels)** is measured at the working texture resolution and ranges up to 128 pixels. Spatial operations use half-float GPU intermediates and update the affected surrounding region, so moving or painting an input also updates its blur, growth, transform, or feather. These are texture-space filters; they do not promise a continuous kernel across disconnected UV borders or separate UDIM textures.
+
+**Curves** maps input grayscale on the horizontal axis to output grayscale on the vertical axis. This differs from a path's fade curve, whose horizontal axis represents distance toward an edge or endpoint.
+
+Mesh effects accept **Map Override (optional)** for imported maps. Built-in Ambient Occlusion uses a quick concavity/accessibility estimate, and Thickness uses an estimate from mesh bounds. These are not production ray-traced or high-to-low mesh bakes. Curvature uses 0.5 for flat, darker values for concavity, and lighter values for convexity. **Mesh ID** uses **ID Value** with Red for triangle ID, Green for surface ID, or Blue for UV-island ID. World-direction effects expose **World Direction**; World Position also exposes input-range controls.
+
+#### Keep painted corrections independent
+
+To generate dirt that you can erase locally without repainting its procedural source:
+
+1. Add a **white** layer mask.
+2. Disable **Start From Painted Mask**.
+3. Add a generator such as **Cavity Dirt** with Replace, then add Levels or Curves to tune it.
+4. Add **Painted Mask** last with **Multiply**.
+5. Paint black on the layer's mask thumbnail to exclude dirt, or white to restore the generator's coverage.
+
+Painting always edits the original raster input. The stack does not flatten back into those pixels. If a later Replace source seems to ignore your painting, move a Painted Mask entry after it and use Multiply. For several independent painted inputs, create separate Paint layers and read them through Layer Reference entries; one mask does not contain multiple independent paint rasters.
+
+#### Live inputs and older masks
+
+**Layer Reference** entries can read regular layers, Plugin output, named anchors, channel components, or another layer's mask. Their dependencies are checked for cycles. Missing or circular sources show a diagnostic and retain cached input where available, including after document reload. Logical UDIM references resolve to the local tile member; duplicated groups and material presets remap internal links.
+
+Older **Layer Mask Noise** and **Layer Mask Texture Overlay** settings keep their appearance and evaluate before the new stack. Use **Convert Legacy Effects to Stack** to turn them into ordinary reorderable entries while preserving their values.
+
+### Smart-mask recipes
+
+Under **Mask Effects & Smart Masks > Smart Masks**, choose an **Example** and click **Use Example Recipe**. Included recipes cover cavity dirt, edge wear, dust, position gradient, grunge, soft border, spots, and scratches. Tune their ordinary stack entries after applying them. Examples end with a Multiply Painted Mask entry: start with a white mask for full procedural coverage, or paint white into an existing black mask to reveal it.
+
+**Save Recipe...** creates a reusable `TexturePaintMaskPreset` Smart Mask asset and embeds its texture inputs. Select a **Recipe Asset** and choose:
+
+- **Replace Effects** to replace the current recipe and its starting settings.
+- **Append Effects** to add the recipe's entries after the existing stack, preserving the destination's starting settings.
+
+Neither operation replaces the destination's painted corrections. Appended effects retain their stored blend modes: a Replace entry still replaces the accumulated result at that point. Recipes are ordered effect lists, not isolated nested subgraphs.
+
+A recipe with layer references still needs those source layers. Use a Material Preset to carry the mask and its related source layers together. Stack settings survive mask copy/paste, layer duplication, Undo/Redo, saving, and recovery.
+
 ### Filter or generate a mask
+
+For an editable sequence that you can reorder later, use the mask-effect stack above. The existing **Mask Filter / Generator** workflow instead generates replacement mask pixels in a single operation.
 
 While the mask thumbnail is selected, expand **Active Layer > Mask Filter / Generator**. The list
 contains only plugins that explicitly support a grayscale Layer Mask target. Choose one, adjust its
@@ -1379,6 +1688,39 @@ This automatic clipping is separate from artist-created masks.
 
 --------------------------------------------------------------------------------
 
+## Selections and Reusable Regions
+
+Open **Properties > Selection** to constrain where new painting is allowed without changing existing pixels.
+
+1. Choose **Rectangle** or **Lasso** and draw in the UV canvas or Scene view. Choose **Material** or **UV Island** to pick the corresponding geometry under the cursor.
+2. Choose **Combine**: Replace, Add, Subtract, or Intersect.
+3. In the Scene view, leave **Select Through** off for visible surfaces only; enable it when the region should reach hidden geometry too.
+4. Click **Return to Painting**, press Escape in the viewport, or select a brush tool. The selection remains active until cleared.
+
+A Scene-view reminder identifies active selection constraints. **Clear All Selections** clears every tile, including when the currently displayed tile is unrestricted. A click without a drag leaves an existing rectangle/lasso selection intact. With no previous selection, Subtract cuts from unrestricted coverage; Add and Intersect start with the new region.
+
+Selections constrain brush tools, geometry fills, and path/ribbon painting, including mask painting. They do not continuously clip existing Fill or Projection layers. Use **Selection to Layer Mask** to turn the selected region into coverage for existing layer content. This replaces the selected layer's mask pixels and resets its procedural mask effects on the current material/tile; Undo restores the previous mask.
+
+**Grow / Shrink (px)** ranges from -64 to 64 and **Feather (px)** from 0 to 64. Click **Apply Grow / Feather** to apply them. Invert and clear controls are also available. **Save Region** stores a named region for the current material/tile; click its name to restore it. Active and saved regions persist in documents and recovery. A multi-tile Scene selection is one Undo step.
+
+Scene rectangle/lasso shapes use a 512-pixel screen-space raster and 1024-pixel visibility sampling before projection to each target's native UV resolution. Inspect fine edges in the UV view when precise texel boundaries matter. Material selection identifies the reconstructed material surface or UDIM member. Changed UV layouts invalidate UV-space regions. If stored selection data is damaged, painting is blocked with a diagnostic until that selection is cleared or replaced.
+
+--------------------------------------------------------------------------------
+
+## Layer Symmetry
+
+Each layer owns its symmetry settings. Select a layer and use **Properties > Symmetry** to choose X/Y/Z mirror planes and radial copies. Move or rotate its frame numerically, or enable **Edit Origin in Scene**. A new layer starts with symmetry off; changing one layer does not change another layer's settings.
+
+The Scene view X mirror button directly controls the selected layer's **Mirror X** option. Turning it on also enables that layer's symmetry. These settings support Undo/Redo and save with the layer. On paths, Auto Update rebuilds the result after changes; otherwise use Apply. Older documents retain their effective symmetry when migrated, and hidden brush settings cannot re-enable an axis you turned off.
+
+UV symmetry uses the texture center plus the frame's XY offset, its Z rotation, and radial rotation around the UV plane normal. Reflections preserve image orientation. On paint layers, symmetry affects new strokes; changing it does not rewrite existing painted pixels.
+
+For a placed Projection layer, **Create Symmetry Instances** creates separate linked layers at the symmetric placements in one Undo step. The operation leaves the stack unchanged if any placement cannot be generated. Each copy remains one editable world-space projection, including its wrapped control points and pins.
+
+Later edits to the symmetry frame affect new placements. Existing projection instances retain their own transforms. Change the source projection to update shared imagery and material settings, or use **Make Independent** to break that link.
+
+--------------------------------------------------------------------------------
+
 ## Surface Paths
 
 Paths are editable curves authored either directly on the texture plane or on the reconstructed
@@ -1392,7 +1734,7 @@ surface.
 4. `Shift+Click` the matching UV canvas or Scene view to append points.
 5. Adjust points and controls.
 6. Choose the path mode, configure the source on each Layer Channel, then choose the Paint / Preview Channel, brush, and projection settings.
-7. Apply the path.
+7. Leave **Auto Update** on for live regeneration, or use **Update** on the Path toolbar when ready.
 
 ### Insert and edit points
 
@@ -1401,6 +1743,12 @@ surface.
 - Click or drag without those modifiers: select, move, or adjust an existing point or control.
 
 Clicking too far from the visible curve does not insert into it.
+
+### Editing modes and regeneration
+
+The Scene view shows the **Overlay Painter Path** toolbar while an enabled Path layer is active. **Standard** permits anchor movement, curve handles, and width handles. **Move** exposes only anchor selection/movement; **Adjust** locks the anchors and exposes curve/width controls. These modes constrain viewport gestures, not toolbar actions such as Closed Path, Reverse, or point commands.
+
+**Auto Update** is enabled for new and legacy paths. Turn it off to edit several points without rerasterizing, then click **Update** to rebuild every affected channel and path effect. The edit mode and Auto Update choice are stored per layer. Hiding a Path layer hides its raster output and authoring overlays; re-enable it to edit.
 
 ### 3D and 2D path domains
 
@@ -1441,6 +1789,285 @@ deleting the final point clears the selection safely.
 - **Continuous**: creates a gap-free brush stroke.
 - **Ribbon**: fits complete source-image tiles edge-to-edge along a variable-width strip.
 - **Filled**: fills the path-defined shape.
+
+### Clothing detail generators
+
+Open the arrow beside **+ Projection** or **+ Path**, then choose **Garment > family > preset**.
+Projection is useful for a pocket, knee folds, a patch, or an individual fastener. Path is useful for
+a zipper, waistband, row of fasteners, or a curved strip of wear. Existing Path and Projection layers
+can enable **Garment Generator > Generate Garment Detail** in Properties, then choose a grouped
+**Construction Preset**. Paths offer 48 presets: the 32 constructions below plus the 16
+**Hems & Seams** constructions. Projections offer the 32 constructions below. Only the selected
+construction's controls are shown. These are native procedural sources on those layers; they do
+not require a Plugin layer or an input image.
+
+| Family | Presets | Main controls |
+|---|---|---|
+| Wrinkles & Tension Folds | Tension Folds, Compression Folds, Elbow Knee Folds, Cuff Gather, Pleats | Tension origin, fan spread, taper, spacing, relief, rotation, irregularity, seed |
+| Denim Wash & Garment Wear | Thigh Fade, Hip Whiskers, Knee Honeycombs, Pocket Wear, Dirty Cuffs | Raised wear, recess darkening, dirt, area fade, optional live fold/protection inputs |
+| Pockets & Garment Panels | Patch Pocket, Welt Pocket, Pocket Flap, Waistband, Reinforcement Panel | Opening, raised profile, edge wear, stitching, optional replacement cloth color |
+| Zippers, Closures & Hardware | Metal Zipper, Coil Zipper, Buttonhole, Sewn Button, Snap, Rivet, Eyelet | Tooth pitch, tape/metal color, slider position, separation, fastener count, thread and roughness |
+| Distressing & Repairs | Abrasion, Exposed Threads, Frayed Tear, Darned Repair, Repair Patch | Damage, exposed yarn spacing, fraying, repair colors, stitches and relief |
+| Labels, Patches & Prints | Woven Label, Leather Patch, Printed Logo, Rubber Badge, Embroidered Patch | Logo texture/sprite, size, ink colors, cracking, raised/recessed detail, edge stitching |
+
+All generated channels share placement, deformation, coverage, and seed. Projection details use the
+existing click/Move placement, independent X/Y scaling, rotation ring, depth, wrapping, warp grids,
+and all-channel X/Y flips. Path details use a continuous Ribbon source with the existing control points,
+width handles, side/end fade curves, Auto Update, geometry clipping, and UV/UDIM destinations. The
+image tile-mirroring and image join-crossfade controls do not apply to procedural garment sources.
+Selecting a construction activates that generator and disables the other path generator. Existing
+hem/seam documents open with their construction selected. Switching preserves path placement,
+width, fades, and assigned image sources, and supports Undo/Redo.
+
+**Ribbon Width** defines a path's working strip, with a slider and an exact numeric field for every
+construction, including hems and seams; projection Width/Height define the generated rectangle.
+Feature Spacing, Relief Height, Thread Width, and Stitch Spacing use world units on a 3D surface and
+UV units on a 2D path. On a meter-scale model, 0.0035 is 3.5 mm. Stitch inset, opening, fade, tension
+origin, and logo size are relative to the generated area. Adjust the placement to fit the garment
+before tuning small details. **Amount = 0** clears the contribution. **Seed** is repeatable.
+
+**Wear & Material Response** adjusts grayscale darkening/lightening and material finish. Keep the
+layer blend mode **Normal** to preserve the underlying fabric through grayscale shading. For pockets,
+**Replace Cloth Color = 0** retains the fabric under the panel; increasing it adds the chosen color.
+Color details such as thread, hardware, and label backing use their own colors. **Stitching** supports
+up to three inset rows on applicable constructions; the **Hems & Seams** family provides the
+more extensive eight-row stitch and seam system.
+
+**3D Depth** (0–4) scales physical relief: 0 is flat, 1 is the normal setting, and higher values
+increase depth without changing the construction's width or spacing. **Relief Shading** (0–3)
+independently scales relief shading in the generated material; 0 removes that shading and 1 is
+the normal setting. These controls are independent for hems, seams, and non-zipper constructions.
+Zippers retain their combined depth-and-tone response to **3D Depth**, with **Relief Shading** as
+an additional shading multiplier. Wear-only presets and Printed Logo show shading without a depth control.
+Feature-specific Contact Shading, Recess Darkening, and relief controls remain available for finer
+adjustments. Cloth Texture, Quilt/Embroidery/Perforation/Atlas Scatter, and Fabric Fuzz Plugin layers
+also provide independent **3D Depth** and **Relief Shading** controls.
+
+Stitches have rounded thread relief, seated ends, and localized contact shading in Albedo and AO.
+**Recess Darkening** also shades opaque generated tape, thread, and hardware. Zipper teeth interlock
+below the slider and separate above it according to Opening / Separation; zero separation keeps
+the chain closed. Slider and pull dimensions follow the strip width, so extending a path or
+projection does not stretch the hardware. Pulls include an attachment bridge and an open cutout.
+Buttons, snaps, rivets, and eyelets use distinct raised and recessed profiles. Fine yarn and surface
+grain fade as they become too small to resolve; inspect details at the intended output resolution.
+
+**Generated Channels** selects Albedo, Normal, Ambient Occlusion, Roughness, Metallic,
+Height (Normal Control), and Masks (Custom RGB). Only channels supported by the target are generated;
+unavailable outputs are listed in Properties. Relief presets default to **Height (Normal Control)**
+on and **Normal (Direct)** off. Height is neutral at 0.5; the final normal pass merges its derived
+relief with the existing fabric normal using reoriented normal mapping (RNM). Wear-only presets
+leave both relief outputs off. Tune the height output with **Layer Channels & Settings > Normal
+Control > Height Strength**; **Normal Strength** applies only to optional direct Normal output.
+Direct Normal output currently uses ordinary layer blending, so it can replace existing normal
+detail. Enabling both outputs applies the relief twice. Height and direct-normal strength settings
+use different scales; switching an existing layer to height may require retuning Height Strength.
+Choosing a built-in Construction Preset applies these recommended relief outputs. Existing saved
+layers and custom preset assets retain their explicit output choices when loaded. Evaluated fold
+references also include the source's Height Strength; keep it nonzero when using that height to drive wear. Custom RGB stores **R = wear, G = protection, B = recess/AO**, suitable for
+composable mask references and the wear generator below. Output channels still have the ordinary
+layer enabled/opacity/blend controls. Turning an output off removes its old generated contribution.
+
+#### Wear that follows folds and seams
+
+On a **Projection** wear generator, open **Live Fold & Seam Inputs**:
+
+1. Enable **Height (Normal Control)** on the wrinkle source layer. Select that layer as **Fold Height**,
+   choose its Normal Control channel and **Read Red**. The wear generator interprets 0.5 as neutral,
+   higher values as raised cloth, and lower values as recessed cloth.
+2. Enable **Masks (Custom RGB)** on a Hem/Seam or garment source. Select it as **Seam Protection**,
+   choose Custom and **Read Green**. A painted or procedural mask can also provide protection.
+3. Tune Raised / Edge Wear and Seam Protection. Raised folds receive more wear; protected seams and
+   valleys retain more of the underlying color. Recess Darkening and Dirt add darker variation.
+
+Source edits regenerate the wear automatically. Source channel effects, masks, visibility and opacity
+are evaluated before a channel input is read; **Read Mask** reads the source mask itself. Group sources
+use the isolated group output. Logical UDIM links resolve to the matching local member; an explicit
+cross-target source uses that source's UV image. Missing channels, missing layers, and circular inputs
+report an error and retain cached output. Internal links follow group duplication and material presets.
+Live input controls are currently provided on Projection wear layers. Path wear uses its own procedural
+pattern; use a Projection wear layer over a path seam when it needs those live inputs.
+
+#### Logos and reusable garment presets
+
+For Labels, assign **Logo / Motif** or **Logo Sprite**. The sprite takes precedence and retains its
+cropping and alpha. Use Image Colors preserves the artwork's colors; otherwise Ink Color supplies
+the color. With no image, a diamond emblem previews the material. Prepared lettering can come from
+the existing Text generator. Embroidered Patch adds directional thread ridges; the existing
+**Quilt, Embroidery, Perforation & Atlas Scatter** Plugin remains available for whole-surface textiles.
+
+For the 32 constructions shared by paths and projections, **Save Preset...** creates a Garment
+Generator Preset asset; **Saved Preset > Load Preset** reuses it on another path or projection.
+These presets retain construction settings and logo asset references;
+document-specific fold/seam links are deliberately omitted. Use a Material Preset containing the
+source layers as well when the live dependency graph should travel together. Documents and recovery
+retain the complete generated definition and cached channels. Edits support Undo/Redo, duplication,
+layer masks and effects, ordinary exports, and **Rasterize to Paint Layer**.
+
+These generators create texture shading, relief, and silhouettes within their placement. They do not
+change garment geometry, make a physical pocket, cut a mesh hole, simulate draping, or add loose-thread
+meshes. Use geometry for changes to the outer silhouette. Fine thread and tooth spacing also needs
+enough texture pixels to resolve it.
+
+### Hem / Seam generator
+
+Use **+ Path > Garment > Hems & Seams** and choose a construction preset. For an existing Path layer,
+open **Path Properties > Garment Generator**, select a **Hems & Seams** entry in
+**Construction Preset**, and turn on **Generate Garment Detail**.
+Place and edit the path using the usual 3D surface or 2D texture path controls. The generator
+uses Ribbon mode and follows variable point widths, curves, surface projection, geometry
+selection, symmetry, and UV/UDIM destinations. It requires no source image.
+
+New preset paths start at a full width of 0.025 world units (2.5 cm on a meter-scale garment), with full opacity and no inherited endpoint fades. Existing paths retain their dimensions and fades when generation is enabled.
+
+**Ribbon Width**, available as a slider and an exact numeric field, is the complete ribbon width,
+including its shading margin: world units for
+a 3D path, normalized UV units for a 2D path. Fold widths, stitch positions, thread thickness,
+and stitch spacing are percentages of this width. Point Width remains a multiplier on the
+ribbon width. **Construction Offset** moves the folds and rows together inside the ribbon;
+**Mirror Across Path** reverses the whole construction, including the normal slope.
+
+| Preset | Starting construction |
+|---|---|
+| Denim Chainstitch Hem | Folded hem, diagonal roping, faded raised cloth, protected recesses, one exterior needle row |
+| Double Turn Hem | Folded band and an offset lockstitch row, with lighter wear and bunching |
+| Flat Felled | Raised folded band with two parallel topstitch rows |
+| Mock Felled | Shallower lapped fold with two offset rows |
+| Lapped | Overlapping fold and one topstitch row |
+| Plain Pressed Open | Central seam recess with the allowances suggested on either side |
+| French Seam | Narrow enclosed ridge, without exposed topstitching |
+| Bound Edge | Folded edge band with two edge rows |
+| Piping | Rounded raised cord profile |
+| Overlocked Edge | Lapped edge with repeating edge loops and a needle line |
+| Coverstitch Hem | Folded hem with two parallel exterior needle rows |
+| Rolled Hem | Narrow rounded fold with a fine stitch row |
+| Blind Hem | Folded hem with small visible stitch catches |
+| Raw Frayed Hem | Raw edge with irregular pale fiber detail |
+| Topstitch | A stitch row without a broad cloth fold |
+| Bar Tack | Dense crosswise stitches; use a short path for pocket/corner reinforcement |
+
+Presets are editable starting points, not an exhaustive sewing-standard catalog or a cloth
+simulation. Changing the preset replaces the construction controls and rows, while retaining
+which output channels are selected. A construction can have up to eight independently
+colored stitch rows. Set **Cloth Profile** to None for thread-only work; remove all rows for
+cloth-only folds or seams. Add a row on each side of the center for double/triple topstitching,
+with separate colors or phases if desired.
+
+**Roping & Cloth Bunching** controls the amplitude, ridges per width, diagonal slant,
+irregularity, and deterministic cloth seed. **Stitch Puckering** adds smaller bunching at
+needle intervals. **Edge Fraying** adds pale irregular fibers inside the strip. Closed paths
+fit whole roping and stitch cycles around the loop; variation does not restart at a UV tile
+or at a channel boundary.
+
+**Wear, Recesses & Finish** separates grayscale cloth aging from colored thread:
+
+- **Recess Darkening** darkens fold recesses, individual stitch contacts, and needle holes. Folded
+  and lapped profiles shade the exposed cloth beneath the overlap; Mirror Across Path reverses
+  that side together with the construction. Piping retains contact shading on both sides.
+- **Raised Cloth Wear** lightens exposed ridges and fold edges.
+- **Protected Seam / Newness** suppresses this wear near stitches and in recesses, retaining
+  a darker, less worn appearance. It does not restore fabric detail already removed from
+  the material underneath.
+- **Ambient Occlusion** controls the separate AO output.
+- **Cloth Roughness / Thread Roughness** specify the finish of those regions.
+- **Relief / Width** supplies the height field. The default height output uses **Layer Channels & Settings > Normal Control > Height Strength**. **Normal Strength** is shown only for optional direct Normal output.
+- **3D Depth** scales the cloth and thread height together; **Relief Shading** independently scales fold and stitch contact shading. Both default to 1, and neither changes ribbon width or stitch spacing.
+
+Each stitch row has an enabled toggle, **Thread Color** (including alpha), position, thread
+width, stitch spacing, length, phase, and relief. Patterns are **Lockstitch**, **Chainstitch**,
+**Zigzag**, **Overlock**, **Cover Looper**, **Blind**, and **Bar Tack**. Loop/crosswise patterns
+also expose a span. Later rows cross over earlier rows. For coverstitch undersides, add a
+Cover Looper row below the exterior needle rows. A chainstitched jean hem normally shows a
+straight needle line on its outside; select Chainstitch to depict its looped underside.
+
+**Generated Channels** selects the outputs:
+
+| Output | Meaning |
+|---|---|
+| Albedo | Grayscale darkening/wear over the underlying fabric, plus colored thread |
+| Normal (Direct) | Optional normal-map output in the destination tangent frame; ordinary layer blending can replace existing normal detail |
+| Ambient Occlusion | Darkening concentrated in recesses and stitch holes |
+| Roughness | Cloth and thread roughness inside the generated coverage |
+| Height (Normal Control) | Default relief output around neutral 0.5; merges folds, roping, thread and needle holes with the fabric normal through RNM |
+| Masks (Custom RGB) | R: wear; G: protected seam/newness; B: recess mask, for channel references in mask stacks |
+
+Only channels supported by the target receive output; the inspector lists unavailable ones.
+Albedo, Height (Normal Control), AO, and Roughness are selected initially. Normal (Direct) is
+off. Choosing a built-in seam preset restores these relief-output defaults; loading existing
+saved layers retains their choices. Keep only one relief output enabled to avoid doubling bump shading. The channel section retains enable, opacity,
+blend, and preview controls; generator outputs are chosen in Path properties instead of
+assigning source images. Deselecting all outputs clears the generated path.
+
+Use **Normal** layer/channel blending for the intended cloth shading. Albedo is encoded as
+transparent grayscale adjustments and colored thread, so a blue denim weave remains blue
+denim beneath the seam. Neutral areas stay transparent; no snapshot of the underlying
+material is baked into the layer. The separate roughness output sets the local finish rather
+than preserving every underlying roughness texel; turn it off when that detail should win.
+
+Existing Side/Start/End fades and curves still apply. Image mirroring, endpoint images, and
+image-tile crossfades are hidden while generation is enabled because this is a continuous
+procedural construction; use Mirror Across Path for its orientation. Assigned image sources
+remain saved for when generation is disabled. All settings and stitch rows participate in
+Auto Update, manual Update, Undo/Redo, duplication, document save/load, and linked path
+synchronization. Legacy paths keep their image rendering until generation is explicitly enabled.
+
+The effect changes textures and normals. It does not displace the garment silhouette, cut a
+raw edge into geometry, simulate sewing tension, or grow fibers outside the mesh. Fine
+thread needs enough texture resolution; inspect it at the final export resolution.
+
+Reference construction and appearance were reviewed against [Coats' seam classification](https://cdn.coats.com/wp-content/uploads/Seam-Types.pdf),
+[the Sewing & Craft Alliance flat-fell guide](https://www.sewing.org/files/guidelines/11_330_flat_fell_seams.pdf),
+and [Raleigh Denim's roping reference](https://raleighdenim.com/pages/union-special).
+The distinction between seam construction, exterior needle lines, underside loops, and
+raised/recessed denim wear guides the independent controls above.
+
+### Path fading and curves
+
+Select the Path layer and open **Path Properties > Fading**:
+
+| Control | Range and meaning |
+|---|---|
+| Side Fade (%) in Ribbon mode | 0-200; 0 gives hard sides, 100 reaches the centerline from each edge, 200 spans the full width and fades the center too |
+| Start Fade (%) | 0-200% of the complete path length, measured inward from the start |
+| End Fade (%) | 0-200% of the complete path length, measured inward from the end |
+| Side Curve | Opacity profile across the ribbon's side fade |
+| Start Curve / End Curve | Independent opacity profiles for the two ends |
+
+Zero disables the corresponding fade. Start/end fade lengths apply to the whole path, never each repeated image tile. Values above 100 fade across the entire path and affect the opposite end too. Closed paths disable endpoint fades.
+
+For each fade curve, the left end is the interior and the right end is the side edge or path endpoint. Height is opacity: 0 transparent, 1 opaque. Lower the curve to remove more backing or reduce opacity across the fade. **Reset** restores the default smooth profile. This lets the side fade reach all the way through a ribbon rather than leaving an unavoidable opaque center strip.
+
+If the layer has an enabled **Edge Fade** effect, Path properties edit that effect's **Side Fade**, **Fade Ramp**, and **Side Curve**. Otherwise, saved brush hardness supplies the first 100% of side fade and additional ribbon fade extends it to 200%; legacy paths retain their saved appearance. Non-ribbon paths keep Side Fade as 0-100% brush softness and also support the start/end curves.
+
+For a zipper ribbon, raise Side Fade to 100 to feather the fabric backing toward the center. Increase it toward 200 or lower Side Curve if backing is still too visible. Tune Start and End independently to keep the zipper teeth while blending the endpoints. Source alpha and these fade controls are retained after moving points, manual Update, Undo/Redo, and save/reopen.
+
+Ribbon mode builds a continuous strip and repeats complete source images without internal stamp edges. Brush Size sets the nominal tile width and length; point width and curve shape deform the strip. Optional Beginning and End sources replace the first and last complete tiles with the same source orientation. Use endpoint fades when those complete tiles also need a soft transition.
+
+### Alternating and seeded texture mirroring
+
+Under Path properties, **Texture Mirroring (All Channels)** provides independent **Flip X (Left/Right)** and **Flip Y (Up/Down)** choices:
+
+| Choice | Result |
+|---|---|
+| Off | Keep the original orientation |
+| Every Tile | Mirror every ribbon tile or path stamp |
+| Alternate | Keep the first unchanged, flip the second, and repeat |
+| Random | Choose whether to mirror each tile/stamp with a 50% chance |
+
+When either axis is Random, **Flip Seed** controls the repeatable pattern. X and Y use independent choices; combine Alternate X with Random Y if desired. The same seed and tile/stamp index produce the same result after regeneration, reload, and Undo/Redo. Changing path length or brush size/spacing can change the number and positions of repeats. The pattern follows path order and continues across triangles and UDIMs; it does not restart for each channel or texture tile.
+
+X/Y refer to the source image's axes, so they follow its orientation along the path. All texture channels use the same flip decisions, with normal-map vector directions corrected. Source alpha flips with its image. Fades, ribbon geometry, and masks stay in their existing coordinates. Source assets remain unchanged.
+
+Ribbon mode flips complete image tiles, including optional Beginning and End tiles, in both 2D and 3D. Stamps and Continuous modes flip each Texture/Sprite stamp. In these stamped modes, Overlay sources retain their destination UV mapping. Filled mode applies the sequence to its boundary stamps; the interior has no path sequence. Closed ribbons repeat from the first tile; an odd tile count may produce a matching pair at the closing seam when Alternate is selected.
+
+### Crossfading ribbon joins
+
+For Ribbon paths, open **Path Properties > Ribbon Tile Joins** and enable **Crossfade Joins**. **Join Overlap (%)** sets the transition width from 0 to 100% of the fitted tile spacing. It starts at 20% when enabled; 0 gives the original hard join. For example, 20% places half the blend zone on each side of the join.
+
+The outgoing image fades out while the incoming image fades in with the inverse smooth fade. Their weights add up to one: opaque images stay opaque through the join. Transparent source pixels blend without leaking their hidden colors, and normal vectors are blended and normalized. The same transition applies to every channel, including alternating or seeded flips; each image keeps its own flip orientation through the overlap.
+
+Images extend into their neighbors to create the overlap. Tile count, repeat spacing, ribbon geometry, and the ends of the path stay in place. Beginning and End images crossfade with their neighbors on open paths; a single open tile has no join. Closed ribbons also blend the last tile into the first, including a one-tile loop. Side Fade and the whole-path Start/End Fade controls still apply separately.
+
+Crossfade Joins defaults off to preserve existing artwork. The toggle and overlap amount save with the Path layer, support Undo/Redo, and follow Auto Update. This option is available in Ribbon mode in both 2D and 3D; ordinary stamp overlap still uses brush spacing and softness.
 
 ### Path orientation and caps
 
@@ -1596,10 +2223,15 @@ The document stores:
 - Per-channel source type, texture or `Sprite` reference, overlay reference, color, inversion, Normal convention, and Fill X/Y tiling, X/Y offset, rotation, and shared-transform state.
 - Per-channel Enabled, Lock Painting, Channel Paint Strength, Channel Opacity, Channel Blend, and
   Normal Control Height Strength settings.
-- Editable mask pixels, black/white base value, grayscale Mask Value, and mask-only effects.
+- Editable mask pixels, black/white base value, grayscale Mask Value, ordered mask effects, smart-mask settings, and cached layer-reference inputs.
 - Ordered layer effects, target channels, amounts or levels, curves, textures, and transforms,
   including channel-specific Image Adjustments.
-- Paths and point dynamics.
+- Paths, point dynamics, side/start/end fade distances and curves, and path editor/Auto Update settings.
+- Per-tile Fill source overrides and No contribution choices.
+- Projection per-channel sources, placement, size, depth, fades, mode, wrapped grid/pins, and cylindrical settings.
+- Named anchors, live content/mask references, linked instances, and their cached output.
+- Active selections, named regions, and each layer's symmetry settings.
+- Stroke records, including stencil and camera snapshots for stencil-painted strokes.
 - Brush and source settings, including Splatter Distance and Random Strength for Paint and Path
   snapshots.
 - Plugin provenance.
@@ -1812,11 +2444,11 @@ Use Overlay sources or Sprite Sets when one motif needs matching Albedo, Normal,
 
 ### 6. Build reusable paths
 
-Use Path layers for long seams, trim, piping, stitches, and repeated details. Keep them editable until the final look is approved.
+Use Path layers for long seams, trim, piping, stitches, and repeated details. Tune their side and endpoint fade curves at the intended working resolution. Use Projection layers for individual details, Wrapped/Edit Warp for local surface fitting, and Cylindrical for limb wraps. Keep these layers editable until the final look is approved.
 
 ### 7. Mask instead of erasing repeatedly
 
-A layer mask preserves the original material pixels and makes edge revision easier. Add a black or white mask from the layer menu, click its thumbnail, and paint it in Mask Mode. Use **Fill Polygon** or **Fill UV Island** when geometry provides the desired boundary, and use Layer Mask Texture Overlay when an existing grayscale texture should modulate the result.
+A layer mask preserves the original material pixels and makes edge revision easier. Combine generator, texture, adjustment, and filter entries in **Mask Effects & Smart Masks**; keep hand-painted corrections as a final Painted Mask input. Use **Fill Polygon**, **Fill UV Island**, or **Selection to Layer Mask** when geometry defines the boundary. Save useful effect stacks as Smart Mask recipes and related layer groups as Material Presets.
 
 ### 8. Review in several modes
 
@@ -2003,6 +2635,43 @@ The exported overlay is indexed and recipe-ready, but it is not automatically in
 - Remember that a Roughness-, Metallic-, AO-, or Normal-only layer changes material response rather than Albedo color.
 - The 3D view composites all visible layers. Selecting a group shows its children as a 2D composite; selecting a child shows the applicable channel without removing other layers from the 3D composite.
 
+### A projection is invisible or has missing polygons
+
+- Expand **Layer Channels & Settings** and verify the intended channel has a source, is Enabled, and has nonzero Channel Opacity. Inspect Albedo alpha because it supplies common coverage.
+- Turn off **Edit Warp** and click the target surface to place and align the projection. Check the cyan footprint and both depth limits.
+- Increase **Depth (Z)** if the surface protrudes beyond the volume. For Wrapped mode, use **Fit to Surface / Refit** and inspect the fitted/retained point count.
+- Check Angle Fade, layer/group masks, and any live mask inputs that could remove coverage.
+- For thin gaps on an otherwise visible surface, inspect normals and try a higher Visibility Quality or suitable Surface Tolerance. Enable Project Through only when hidden polygons should also receive the image; disable Connected Surface Only if those polygons are a separate mesh piece.
+- Use **Regenerate Projection** to rebuild the current definition. Overlapping UVs still share pixels and cannot hold independent projected images.
+
+### Projection placement or sizing is not responding
+
+- Turn **Edit Warp** off to restore whole-projector controls; while it is on, drag the patch's surface points instead.
+- Turn **Edit Stencil in 3D View** off if stencil editing is capturing the drag.
+- Drag X or Y for independent plane-axis sizing. **Lock Numeric Aspect** applies only to numeric size fields.
+- Trace around the rotation ring; a radial drag toward its center does not change the angle.
+
+### Ribbon backing remains visible or fades seem unchanged
+
+- Open **Path Properties > Fading**. Side Fade can exceed 100; try up to 200 and shape **Side Curve** to reduce the remaining backing.
+- If an enabled Edge Fade effect exists, those controls edit that effect. Check **Fade Ramp (%)** as well as distance.
+- Start/End Fade spans the full path length. Closed paths intentionally have no endpoint fades.
+- With **Auto Update** off, click **Update** in the Path toolbar after editing.
+- Fade curves store opacity: high values retain coverage, low values remove it. Source alpha still participates.
+
+### Painting does not change a procedural mask
+
+- Painting edits the original mask raster. A later Replace source may replace that input in the effective result.
+- Add **Painted Mask** with Multiply after the procedural entries, and use a white original mask for hand-painted black exclusions.
+- Use **Solo Mask** and disable effects one at a time to find the entry controlling coverage.
+- Check Live Mask Source and Layer Reference diagnostics if the mask depends on another layer.
+
+### Painting is unexpectedly restricted
+
+- Look for the active-selection reminder. **Return to Painting** leaves the selection active; use **Properties > Selection > Clear All Selections** to remove all tile constraints.
+- Check whether **Enable Stencil** is on. Preview Opacity only hides the guide; disabling the stencil removes its coverage restriction.
+- If the stencil appears but no paint is deposited, exit **Edit Stencil in 3D View** before painting.
+
 ### Paint appears on the wrong surface
 
 - Deselect unrelated slots.
@@ -2021,10 +2690,12 @@ The exported overlay is indexed and recipe-ready, but it is not automatically in
 
 ### Layer effects update slowly
 
-- Reduce working resolution during look development.
-- Reduce very large effect widths.
+- Start look development at an appropriate working resolution; doubling both dimensions quadruples the texel count.
+- Reduce very large effect widths or mask-filter radii.
 - Hide unneeded effects while painting.
 - Check the **Performance & Memory** panel for fallback counts and latency.
+
+Projection manipulation reuses geometry and channel targets and uses GPU visibility where supported. If it is still slow, inspect the working resolution, active channel count, Visibility Quality, and downstream effects/references. A large spatial mask stack may need broader recomposition than the directly edited pixels. Performance depends on the target and hardware; it is not a fixed frame-rate guarantee.
 
 ### A long freehand stroke becomes progressively slower
 
@@ -2101,6 +2772,11 @@ The exported overlay is indexed and recipe-ready, but it is not automatically in
 | Paste Path as a new layer | `Ctrl/Cmd+V` |
 | Rename layer | `F2` |
 | Delete layer | `Delete` or `Backspace` |
+| Append a Path point in its editing domain | `Shift+Click` |
+| Insert into a Path segment within 8 screen pixels | `Ctrl/Cmd+Click` |
+| Pin/unpin a Wrapped projection control in Edit Warp | `Shift+Click` on the point |
+| Move / rotate / scale an editable 3D stencil | Drag / `Shift+Drag` around center / `Ctrl/Cmd+Drag` vertically |
+| Leave Layer Mask mode or selection editing; cancel projection/stencil drag | `Esc`, according to the active editing mode |
 | Cancel an armed Polygon/UV Island fill, 2D sampler, or UV stroke | `Esc` |
 
 --------------------------------------------------------------------------------
@@ -2115,7 +2791,10 @@ Before approving an exported overlay:
 - Normal sources and export use the intended conventions.
 - Roughness/Smoothness conversion has been checked.
 - Sprite Set channels align and use the same conceptual indices.
-- Layer names, groups, masks, and paths are understandable to another artist.
+- Layer names, groups, masks, paths, projections, and anchor names are understandable to another artist.
+- Projection channels align, wrapped/cylindrical seams have been inspected, and fade curves produce the intended coverage.
+- Mask-effect order and painted corrections have been reviewed with Solo Mask.
+- References resolve without missing-source or cycle diagnostics; pending linked updates have completed.
 - No important work exists only in temporary recovery.
 - The permanent document and its data folder are saved together.
 - The result has been checked in the 3D view and UV canvas.

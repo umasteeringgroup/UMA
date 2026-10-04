@@ -7,7 +7,7 @@ Milestone 9 provides a repeatable release gate for Overlay Painter. It runs envi
 From the Unity project root:
 
 ```bat
-Assets\UMA\TexturePaintStage\QA\Run-TexturePaintReleaseGate.cmd
+Assets\UMA\OverlayPainter\QA\Run-TexturePaintReleaseGate.cmd
 ```
 
 The wrapper works when Windows' default PowerShell execution policy blocks direct `.ps1` invocation. The underlying script reads the editor version from `ProjectSettings/ProjectVersion.txt`. Pass `-UnityPath` to select another Unity 6.3+ executable and `-OutputDirectory` to redirect artifacts. It returns a non-zero exit code if preflight fails, either suite has a failure or skip, a suite runs zero tests, or Unity exits abnormally.

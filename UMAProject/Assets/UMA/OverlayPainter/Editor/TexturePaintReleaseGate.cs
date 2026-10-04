@@ -172,9 +172,8 @@ namespace UMA.TexturePaint.Editor
                 "CSApplyPluginTile");
             string[] documents =
             {
-                "RELEASE_READINESS_PLAN.md", "PLUGIN_API_V2.md", "MILESTONE_8_WORKSPACE.md",
-                "MILESTONE_9_RELEASE_GATE.md", "QA/RELEASE_GATE.md", "QA/Run-TexturePaintReleaseGate.ps1",
-                "QA/Run-TexturePaintReleaseGate.cmd"
+                "README.md", "../Docs/OverlayPainter.md", "../Docs/OverlayPainter_PLUGIN_API_V2.md",
+                "QA/RELEASE_GATE.md", "QA/Run-TexturePaintReleaseGate.ps1", "QA/Run-TexturePaintReleaseGate.cmd"
             };
             for (int i = 0; i < documents.Length; i++)
                 Add(report, "Release assets", documents[i], File.Exists(Path.GetFullPath(Root + documents[i])),

@@ -12,6 +12,7 @@ For the complete painting, layer, mask, spline, save, and export workflow, see
 
 - [The essential mental model](#the-essential-mental-model)
 - [Generator selection at a glance](#generator-selection-at-a-glance)
+- [Placed clothing details and seams](#placed-clothing-details-and-seams)
 - [Cloth Texture](#cloth-texture)
 - [Quilt, Embroidery, Perforation, and Atlas Scatter](#quilt-embroidery-perforation--atlas-scatter)
 - [Text](#text)
@@ -32,7 +33,8 @@ For the complete painting, layer, mask, spline, save, and export workflow, see
 
 ## The essential mental model
 
-Generators and filters live on **Plugin layers**. Click **+ Plugin**, choose the plugin in the layer
+The plugins described in this guide live on **Plugin layers**. Native garment and hem/seam generators
+use Path or Projection layers; see [Placed clothing details and seams](#placed-clothing-details-and-seams). Click **+ Plugin**, choose the plugin in the layer
 properties, set its controls, and click **Generate**. The completed result is cached as ordinary layer
 content. It remains visible, saves with the project, exports normally, and can use layer opacity,
 per-channel blending, a layer mask, groups, and layer effects.
@@ -58,6 +60,11 @@ process.
 When a source layer below a Plugin layer changes, or when plugin parameters change, the Plugin layer
 becomes **Stale**. Its last successful cache remains visible until **Regenerate** succeeds. Canceling
 or failing a generation also keeps the previous cache intact.
+
+**Generate/Regenerate** is available above the parameters as well as below them. The top notice
+states when changes are waiting to be applied. Supported plugins show **Fill Type** beside these
+primary controls; choose Flat (UV) or Triplanar (World), then regenerate. Filters without a spatial
+mapping parameter continue to process their source images in UV space.
 
 ### A dependable working method
 
@@ -96,6 +103,17 @@ very steep, often implausible surface changes.
 
 ### Projection, scale, and seams
 
+Mapping belongs to each generator; a Plugin layer does not use a Fill layer's projection settings.
+
+| Plugin family | Supported mapping |
+| --- | --- |
+| Cloth Texture | Flat (UV) or blended world triplanar |
+| Agify, Dirtify, Edge Wear | UV or world projection |
+| Fabric Fuzz, Rust, Surface Micro Detail, Veins, Scar/Wound, Creature Skin, Combat Damage | UV or world procedural coordinates |
+| Dripping Corrosion | Fixed world/surface coordinates with gravity |
+| Noise, Textile Surface, Text, Stubble Maker, AO Variation | Fixed UV coordinates |
+| Image and channel filters | Source texture pixels; no spatial fill selector |
+
 Use **World Triplanar** projection for dirt, rust, pores, scratches, and organic breakup that should
 cross UV seams and retain a consistent physical scale. It blends projections using the model's world
 normal. Use **UV** projection for authored layouts, aligned fabric, decals, or a texture that was made
@@ -124,6 +142,67 @@ These are related but different:
 Texture and Sprite parameters are GPU-snapshotted and do not require Read/Write import. Sprite inputs
 sample only their Sprite rectangle, even when stored in an atlas.
 
+## Placed clothing details and seams
+
+Use **+ Projection > Garment** for individual garment features or **+ Path > Garment** for details
+following a curve. The six families cover wrinkles/tension folds, denim wash and wear, pockets/panels,
+zippers/fasteners, distressing/repairs, and labels/prints/embroidered patches, with 32 construction
+presets. Paths add 16 **Hems & Seams** presets, for 48 path constructions; projections offer 32.
+Use the single **Garment Generator** toggle and grouped **Construction Preset** selector in
+Properties. Only the selected construction's controls appear. These generate matching material
+channels directly through the native placement system.
+Relief presets use Height (Normal Control) by default so RNM combines their bump with the existing
+fabric normal; direct Normal output is optional. Wear-only presets add no bump by default.
+**+ Path > Garment > Hems & Seams** adds constructions with roping and up to eight customizable
+stitch rows. Existing hem/seam layers are recognized in the same selector. Switching construction
+keeps the path's placement, width, fades, and assigned sources, and supports Undo/Redo.
+
+Start with Cloth Texture for the base weave, place folds and construction details, then add wear.
+A Projection wear layer can read a wrinkle layer's Normal Control height and the green component
+of a seam's Custom protection mask. It updates as those sources change. Masks and channel effects
+on the sources are respected. Use fabric fuzz sparingly above this stack for the final fiber detail.
+
+Use a path for a zipper, waistband, or row of eyelets; use a wrapped projection for a pocket, label,
+knee fold area, or isolated tear. Keep grayscale cloth shading on Normal blend to retain the fabric
+beneath it. Hardware outputs can include Metallic and separate cloth/metal roughness. Labels accept
+custom textures and sprites; prepared Text generator output can supply lettering.
+
+In garment path properties, **Ribbon Width** has a slider and an exact numeric field (world units
+for 3D paths, UV units for 2D paths), including for hems and seams. Individual **Point Width (%)**
+values multiply that width.
+For zippers, **Zipper Width (%)** independently scales the teeth, slider, pull and stops inside the
+backing ribbon; tooth spacing and thread width stay unchanged. Both width controls support numeric
+entry. **Wear & Material Response > Contact Shading** controls albedo shadows around the hardware
+and stitching, including on materials without an ambient-occlusion texture channel. Zipper teeth
+and pull cutouts also generate localized AO and beveled height for lighting.
+**3D Depth** (0–4) scales physical relief, and **Relief Shading** (0–3) scales material shading.
+Both default to 1. They work independently for hems, seams, and non-zipper constructions, so depth
+can be flat while contact shading remains visible, or shading can be removed while relief remains.
+Wear-only presets and Printed Logo expose shading without a depth control. Feature-specific contact/recess and
+relief controls remain available.
+
+Zippers retain a combined response: **3D Depth** controls their relief and depth shading together,
+including stitches; **Relief Shading** adds a separate shading multiplier. A depth of 0 flattens
+the detail, 1 gives normal depth, and larger values strengthen it without changing its width or
+tooth spacing. **Relief Height** sets the underlying height. High values preserve the
+bevel profiles instead of clipping them into a flat height-map plateau.
+Zipper stops sit flush with the ends, beneath the slider and pull. The pull's cutout reveals
+hardware below it, while its solid rim covers the stop.
+
+Waistbands and other supported strips provide independent **Finish at Start** and **Finish at End**
+controls. Clear either checkbox to continue through that end without a closing edge or cross
+stitching; clear both for a waistband that wraps around the body. These controls follow the path's
+beginning and end even when Pattern Rotation changes. Closed paths omit the finishes automatically.
+On zippers, the controls remove the corresponding end stops while retaining the slider and pull.
+The path's separate Start/End Fade controls still apply if you enable them.
+
+World-space ribbons pad their texture-island edges so filtering does not reveal the underlying
+layer at a UV seam. Existing saved path pixels need **Update** once to regenerate with this fix.
+
+The [main guide's clothing section](OverlayPainter.md#clothing-detail-generators) lists every preset,
+controls, live-input setup, output channel meanings, and saved-preset behavior. These are texture
+features: they cannot change the garment's mesh silhouette or physically cut a hole.
+
 ## Generator selection at a glance
 
 | Goal | Start with | Common companion |
@@ -149,7 +228,7 @@ sample only their Sprite rectangle, even when stored in an atlas.
 Fabric Fuzz, Rust/Corrosion, Surface Micro Detail, Veins/Subdermal, Scar/Wound, Creature Skin, and
 Combat Scratches/Dents share a **Coverage & Placement** section.
 
-- **Projection** selects UV or World Triplanar. This controls the procedural feature coordinates; the
+- **Fill Type** selects Flat (UV) or Triplanar (World) above the parameter sections. This controls the procedural feature coordinates; the
   optional Control Mask itself is sampled in target UV space.
 - **Pattern Scale** controls base feature frequency. Higher values generally create more, smaller
   features. Its physical appearance depends on UV density in UV mode and model scale in world mode.
@@ -176,6 +255,17 @@ Cloth Texture builds the actual weave and material response. It is different fro
 adds loose fibers, pilling, and frayed edges over an existing cloth surface. A strong fabric stack
 usually places Cloth Texture first and a restrained Fabric Fuzz layer above it.
 
+Choose **Fill Type** at the top of the layer properties. Flat follows mesh UVs; Triplanar blends the
+complete fabric, stripes, motifs, and material response in world space. The **Colors** section groups
+the fabric, cross-thread, motif-tint, and worn colors with their contribution controls. Each stripe
+retains its own color beside its placement settings. Changing mapping or colors requires **Regenerate**.
+
+Under **Surface Response**, **3D Depth** scales weave and motif height around neutral gray, while
+**Relief Shading** independently controls Albedo contact darkening between yarns. Both default to
+1. Set depth to 0 for flat height without removing the color pattern or its shading; set shading
+to 0 to remove contact darkening while retaining relief. High relief uses a smooth limit to
+preserve crown variation instead of clipping into a flat plateau.
+
 ### Choosing a weave
 
 | Weave | Use it for | Artistic character |
@@ -199,7 +289,7 @@ usually places Cloth Texture first and a restrained Fabric Fuzz layer above it.
 
 ### Building the base fabric
 
-Choose the weave, then set **Threads / UV** while looking at the garment in 3D. This is the most
+Choose the weave, then set **Thread Repeats** while looking at the garment in 3D. This is the most
 important scale control. Do not judge it only in the 2D texture: a weave that looks attractive at
 100% zoom may be the size of rope on the character.
 
@@ -288,6 +378,10 @@ Mask mode it writes the generated feature coverage as grayscale instead of mater
 This is a four-mode production generator. Switching **Mode** does not discard the controls of the
 other modes, which makes comparison safe. Establish **Pattern Scale**, **Aspect**, and **Rotation**
 first. The pattern is UV based: inspect seams and texel density in 2D before polishing micro-detail.
+
+**3D Depth** scales the active mode's raised and recessed height. **Relief Shading** independently
+scales its Albedo contact shading and Ambient Occlusion. Both default to 1; 0 removes their
+respective contribution. These controls leave pattern placement and mask coverage unchanged.
 
 ### Quilt
 
@@ -439,7 +533,7 @@ Gotchas:
 **Best for:** cloth finishing, wool, fleece, velvet, worn denim, lint, pilling, and broken garment
 edges.
 
-**Outputs:** Albedo, Roughness, Normal Control, and Detail Mask where those channels exist.
+**Outputs:** Albedo, Roughness, Normal Control, Ambient Occlusion, and Detail Mask where those channels exist.
 
 This generator does not replace a cloth weave. Place it above Cloth Texture or a painted/fill fabric
 base. Begin with **Fabric Family** because Cotton, Wool, Denim, Velvet, and Synthetic bias the response,
@@ -462,6 +556,11 @@ as procedural noise, so combine it with a hand-painted mask.
 for raised, abraded fibers or darker for damp/matted wear. Keep **Color Strength** restrained so the
 base fabric remains recognizable. **Fiber Roughness** and **Fiber Height** establish the physical
 response; if height creates sparkling outlines or lumpy cloth, reduce it before reducing density.
+
+**3D Depth** scales rounded fiber and pill height without changing their coverage. **Relief Shading**
+independently adjusts their Albedo contact darkening and crown highlights, plus Ambient Occlusion
+where available. Both default to 1. Depth 0 produces neutral height while retaining color and
+shading; shading 0 removes those depth cues while retaining the height profile.
 
 Gotchas:
 

@@ -48,7 +48,7 @@ namespace UMA.TexturePaint.Examples
                 description = "Maps multi-octave procedural noise through a 2-4 color gradient. " +
                               "Independent X/Y axis scales plus a direction angle stretch and " +
                               "orient the noise field across the texture.",
-                pluginVersion = "1.0.0",
+                pluginVersion = "1.0.1",
                 capabilities = TexturePaintPluginCapability.Generator |
                                TexturePaintPluginCapability.LongRunning,
                 declaredChannels = TexturePaintChannelMask.Albedo |
@@ -554,10 +554,10 @@ namespace UMA.TexturePaint.Examples
                 opacity = Mathf.Clamp01(values.Float("opacity", 1f));
                 alphaFromNoise = values.Boolean("alphaFromNoise", false);
                 colorCount = Mathf.Clamp(values.Integer("colorCount", 1), 0, 2);
-                colorA = values.Color("colorA", new Color(0.09f, 0.11f, 0.14f, 1f));
-                colorB = values.Color("colorB", new Color(0.42f, 0.48f, 0.55f, 1f));
-                colorC = values.Color("colorC", new Color(0.85f, 0.70f, 0.42f, 1f));
-                colorD = values.Color("colorD", new Color(0.95f, 0.93f, 0.88f, 1f));
+                colorA = values.LinearColor("colorA", new Color(0.09f, 0.11f, 0.14f, 1f));
+                colorB = values.LinearColor("colorB", new Color(0.42f, 0.48f, 0.55f, 1f));
+                colorC = values.LinearColor("colorC", new Color(0.85f, 0.70f, 0.42f, 1f));
+                colorD = values.LinearColor("colorD", new Color(0.95f, 0.93f, 0.88f, 1f));
                 colorBlend = Mathf.Clamp01(values.Float("colorBlend", 1f));
                 posterizeSteps = Mathf.Clamp(values.Integer("posterizeSteps", 0), 0, 16);
                 colorVariation = Mathf.Clamp(values.Float("colorVariation", 0.04f), 0f, 0.5f);

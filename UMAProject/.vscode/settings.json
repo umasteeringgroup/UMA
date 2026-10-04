@@ -68,5 +68,6 @@
         "*.sln": "*.csproj"
     },
     "dotnet.defaultSolution": "UMAProject.slnx",
-    "git.ignoreLimitWarning": true
+    "git.ignoreLimitWarning": true,
+    "dotnet.preferCSharpExtension": true
 }

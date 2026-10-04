@@ -43,7 +43,7 @@ namespace UMA.TexturePaint.Examples
                               "downward, with controllable length, width, color, placement and " +
                               "deterministic position/direction variation. Optional rash, pimples " +
                               "and pigment spots add coordinated skin shading and relief.",
-                pluginVersion = "1.0.0",
+                pluginVersion = "1.0.1",
                 capabilities = TexturePaintPluginCapability.Generator |
                                TexturePaintPluginCapability.LongRunning,
                 declaredChannels = OutputChannels,
@@ -438,7 +438,7 @@ namespace UMA.TexturePaint.Examples
                 edgeFeather = Pos(values.Float("edgeFeather", 24f));
                 seed = values.Integer("seed", 941);
                 overallAmount = Clamp01(values.Float("overallAmount", 1f));
-                hairColor = values.Color("hairColor", new Color(0.055f, 0.035f, 0.025f, 1f));
+                hairColor = values.LinearColor("hairColor", new Color(0.055f, 0.035f, 0.025f, 1f));
                 hairColorVariation = Clamp01(values.Float("hairColorVariation", 0.055f));
                 hairLength = Mathf.Clamp(values.Float("hairLength", 9f), 0.5f, 128f);
                 hairWidth = Mathf.Clamp(values.Float("hairWidth", 1.35f), 0.2f, 16f);
@@ -455,27 +455,27 @@ namespace UMA.TexturePaint.Examples
                 hairRoughness = Clamp01(values.Float("hairRoughness", 0.46f));
                 hairHeight = Mathf.Clamp(values.Float("hairHeight", 0.12f), 0f, 0.49f);
                 shadowAmount = Clamp01(values.Float("shadowAmount", 0.3f));
-                shadowColor = values.Color("shadowColor", new Color(0.055f, 0.075f, 0.095f, 1f));
+                shadowColor = values.LinearColor("shadowColor", new Color(0.055f, 0.075f, 0.095f, 1f));
                 shadowSpread = Pos(values.Float("shadowSpread", 1.8f));
                 shadowOffset = values.Float("shadowOffset", 0.65f);
                 rednessAmount = Clamp01(values.Float("rednessAmount", 0.08f));
                 rednessRadius = Mathf.Max(0.25f, values.Float("rednessRadius", 2.4f));
-                rednessColor = values.Color("rednessColor", new Color(0.68f, 0.105f, 0.085f, 1f));
+                rednessColor = values.LinearColor("rednessColor", new Color(0.68f, 0.105f, 0.085f, 1f));
                 rashAmount = Clamp01(values.Float("rashAmount", 0f));
                 rashScale = Mathf.Max(2f, values.Float("rashScale", 72f));
                 rashOpacity = Clamp01(values.Float("rashOpacity", 0.34f));
-                rashColor = values.Color("rashColor", new Color(0.72f, 0.12f, 0.105f, 1f));
+                rashColor = values.LinearColor("rashColor", new Color(0.72f, 0.12f, 0.105f, 1f));
                 rashRoughness = Clamp01(values.Float("rashRoughness", 0.68f));
                 pimpleAmount = Clamp01(values.Float("pimpleAmount", 0f));
                 pimpleSpacing = Mathf.Max(2f, values.Float("pimpleSpacing", 46f));
                 pimpleSize = Mathf.Max(0.5f, values.Float("pimpleSize", 4f));
                 pimpleHeight = Mathf.Clamp(values.Float("pimpleHeight", 0.11f), 0f, 0.49f);
-                pimpleColor = values.Color("pimpleColor", new Color(0.68f, 0.11f, 0.09f, 1f));
+                pimpleColor = values.LinearColor("pimpleColor", new Color(0.68f, 0.11f, 0.09f, 1f));
                 spotAmount = Clamp01(values.Float("spotAmount", 0f));
                 spotSpacing = Mathf.Max(2f, values.Float("spotSpacing", 28f));
                 spotSize = Mathf.Max(0.5f, values.Float("spotSize", 2.5f));
                 spotHeight = Mathf.Clamp(values.Float("spotHeight", 0.015f), 0f, 0.49f);
-                spotColor = values.Color("spotColor", new Color(0.24f, 0.075f, 0.035f, 1f));
+                spotColor = values.LinearColor("spotColor", new Color(0.24f, 0.075f, 0.035f, 1f));
                 skinRoughness = Clamp01(values.Float("skinRoughness", 0.58f));
                 skinMaskStrength = Clamp01(values.Float("skinMaskStrength", 0.65f));
             }

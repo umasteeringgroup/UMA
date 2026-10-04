@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace UMA.TexturePaint
 {
-    public sealed class TextureLayerCompositor
+    public sealed partial class TextureLayerCompositor
     {
         private readonly ComputeShader shader;
         private readonly int copyKernel = -1;
@@ -32,6 +32,8 @@ namespace UMA.TexturePaint
         private int interactiveEditDepth;
 
         public bool IsAvailable => shader != null && copyKernel >= 0 && compositeKernel >= 0 && SystemInfo.supportsComputeShaders;
+        internal bool MergeAvailable => IsAvailable && clearKernel >= 0 &&
+            applyGroupMaskKernel >= 0 && applyIsolatedLayerKernel >= 0 && unassociateAlphaKernel >= 0;
         public bool EffectsAvailable => IsAvailable && prepareEffectSeedsKernel >= 0 &&
             jumpFloodEffectSeedsKernel >= 0 && resolveEffectDistanceKernel >= 0 &&
             compositeLayerEffectKernel >= 0 &&
@@ -90,7 +92,7 @@ namespace UMA.TexturePaint
         {
             TextureChannelTarget baseChannel = set?.GetChannel(channel);
             if (baseChannel?.editable?.Front == null || baseChannel.composite == null) return;
-            RectInt rect = ClampRect(requestedRect, baseChannel.composite.width, baseChannel.composite.height);
+            RectInt rect = ClampRect(HasSpatialMasks(set) ? default : requestedRect, baseChannel.composite.width, baseChannel.composite.height);
             int effectReach = EffectsAvailable ? MaximumEffectReach(set, channel) : 0;
             if (effectReach > 0)
                 rect = ExpandRect(rect, effectReach, baseChannel.composite.width, baseChannel.composite.height);
@@ -248,6 +250,106 @@ namespace UMA.TexturePaint
                 CompositeGroupChildren(destination, set, group, channel, rect, 0);
         }
 
+        internal void ComposeIsolatedGroup(TextureSet set,TexturePaintLayer group,TexturePaintChannel channel,RenderTexture destination)
+        {
+            if(!IsAvailable || destination==null)return;
+            var rect=new RectInt(0,0,destination.width,destination.height);
+            ClearInto(destination,rect);CompositeGroupChildren(destination,set,group,channel,rect,0);
+        }
+
+        /// <summary>
+        /// Renders a selected sibling block against transparency. A single group's outer state is
+        /// retained on the replacement layer, so only its children are baked in that case.
+        /// </summary>
+        internal bool ComposeLayersForMerge(TextureSet set, IReadOnlyList<TexturePaintLayer> roots,
+            TexturePaintChannel channel, RenderTexture destination, bool groupContentsOnly)
+        {
+            if (!MergeAvailable || set == null || roots == null || destination == null) return false;
+            var rect = new RectInt(0, 0, destination.width, destination.height);
+            RenderTextureFormat format = set.GetChannel(channel)?.composite?.format ??
+                set.GetChannel(channel)?.format ?? destination.format;
+            RenderTexture scratch = null;
+            RenderTexture contribution = destination;
+            try
+            {
+                if (format != destination.format)
+                {
+                    scratch = RenderTexture.GetTemporary(new RenderTextureDescriptor(destination.width,
+                        destination.height, format, 0) { enableRandomWrite = true, sRGB = false });
+                    contribution = scratch;
+                }
+                ClearInto(contribution, rect);
+                if (groupContentsOnly)
+                {
+                    if (roots.Count != 1 || roots[0]?.kind != TexturePaintLayerKind.Group) return false;
+                    CompositeGroupChildrenUnmasked(contribution, set, roots[0], channel, rect, 0);
+                }
+                else
+                {
+                    for (int i = 0; i < roots.Count; i++)
+                    {
+                        TexturePaintLayer root = roots[i];
+                        if (root.kind == TexturePaintLayerKind.Group)
+                            CompositeGroupChildren(contribution, set, root, channel, rect, 0);
+                        else CompositeAuthoredLayer(contribution, set, root, channel, rect, 0);
+                    }
+                }
+                // Keep the live compositor's rounding, but recover straight RGB in floating
+                // storage. Clipped effects can legitimately make associated RGB exceed alpha.
+                if (scratch != null) CopyInto(contribution, destination, rect);
+                return UnassociateAlpha(destination);
+            }
+            finally { if (scratch != null) RenderTexture.ReleaseTemporary(scratch); }
+        }
+
+        // Paint and Group use different first-layer blend rules over completely transparent
+        // pixels. Retaining a group's outer blend is exact on an opaque/material backdrop; check
+        // the exceptional pixels only while building a merge, never while drawing its menu.
+        internal bool CanMergeGroupOverBackdrop(TextureSet set, TexturePaintLayer group,
+            TexturePaintLayer firstSource, TexturePaintChannel channel, RenderTexture template)
+        {
+            if (group.blendMode == TexturePaintBlendMode.Normal || !group.visible || group.opacity <= 0f)
+                return true;
+            RenderTextureFormat format = set.GetChannel(channel)?.composite?.format ??
+                set.GetChannel(channel)?.format ?? template.format;
+            var descriptor = new RenderTextureDescriptor(template.width, template.height,
+                format, 0) { enableRandomWrite = true, sRGB = false };
+            RenderTexture probe = RenderTexture.GetTemporary(descriptor);
+            Texture2D readback = null;
+            RenderTexture previous = RenderTexture.active;
+            try
+            {
+                if (!ComposeBelowLayer(set, channel, firstSource, probe)) return false;
+                readback = new Texture2D(template.width, template.height, TextureFormat.RGBAFloat, false, true)
+                    { hideFlags = HideFlags.HideAndDontSave };
+                RenderTexture.active = probe;
+                readback.ReadPixels(new Rect(0, 0, template.width, template.height), 0, 0, false);
+                var backdrop = readback.GetPixelData<Color>(0);
+                bool[] transparent = new bool[backdrop.Length];
+                bool anyTransparent = false;
+                for (int i = 0; i < backdrop.Length; i++)
+                {
+                    transparent[i] = backdrop[i].a < 0.0001f;
+                    anyTransparent |= transparent[i];
+                }
+                if (!anyTransparent) return true;
+
+                ComposeIsolatedGroup(set, group, channel, probe);
+                RenderTexture.active = probe;
+                readback.ReadPixels(new Rect(0, 0, template.width, template.height), 0, 0, false);
+                var contribution = readback.GetPixelData<Color>(0);
+                for (int i = 0; i < contribution.Length; i++)
+                    if (transparent[i] && contribution[i].a > 0.00001f) return false;
+                return true;
+            }
+            finally
+            {
+                RenderTexture.active = previous;
+                if (readback != null) Object.DestroyImmediate(readback);
+                RenderTexture.ReleaseTemporary(probe);
+            }
+        }
+
         private void CopyInto(Texture source, RenderTexture destination, RectInt rect)
         {
             shader.SetInts("_TextureSize", destination.width, destination.height);
@@ -273,8 +375,8 @@ namespace UMA.TexturePaint
             ClearInto(scratch.result, rect);
             CompositeGroupChildrenUnmasked(scratch.result, set, group, channel, rect, depth + 1,
                 maximumLayerIndexExclusive);
-            Texture mask = group.layerMask != null && evaluateLayerMaskKernel >= 0
-                ? GetEffectiveLayerMask(group, destination.width, destination.height) : null;
+            Texture mask = (group.layerMask != null || group.linkedMask != null) && evaluateLayerMaskKernel >= 0
+                ? GetEffectiveLayerMask(group, destination.width, destination.height, set) : null;
             shader.SetInts("_TextureSize", destination.width, destination.height);
             shader.SetInts("_TileOffset", rect.x, rect.y);
             shader.SetInt("_HasGroupMask", mask != null ? 1 : 0);
@@ -407,7 +509,7 @@ namespace UMA.TexturePaint
             if (!IsAvailable || destination == null || set == null || layer == null ||
                 layerTarget?.Front == null) return false;
             RectInt rect = ClampRect(requestedRect, destination.width, destination.height);
-            Texture layerMask = GetEffectiveLayerMask(layer, destination.width, destination.height);
+            Texture layerMask = GetEffectiveLayerMask(layer, destination.width, destination.height, set);
             TexturePaintLayerEffects effects = layer.effects ??= new TexturePaintLayerEffects();
             effects.Normalize();
             bool ribbonLocal = layer.IsSplineLayer &&
@@ -503,7 +605,7 @@ namespace UMA.TexturePaint
             shader.SetInt("_HasLayerMask", layerMask != null ? 1 : 0);
             shader.SetInt("_EffectType", (int)effect.kind);
             shader.SetInt("_GrayscaleChannel", TexturePaintChannelUtility.IsGrayscale(channel) ? 1 : 0);
-            shader.SetVector("_EffectColor", TexturePaintChannelUtility.ConstrainColor(channel, effect.color));
+            shader.SetVector("_EffectColor", TexturePaintChannelUtility.WorkingColor(channel, effect.color));
             shader.SetFloat("_EffectWidth", effect.width);
             shader.SetFloat("_EffectSmoothness", effect.smoothness);
             shader.SetVector("_EffectOffset", new Vector4(effect.offset.x, effect.offset.y, 0f, 0f));
@@ -532,8 +634,8 @@ namespace UMA.TexturePaint
             shader.SetFloat("_EffectTextureRotation2", effect.textureRotation2);
             shader.SetFloat("_EffectTextureOpacity1", effect.textureOpacity1);
             shader.SetFloat("_EffectTextureOpacity2", effect.textureOpacity2);
-            shader.SetVector("_EffectTextureColor1", TexturePaintChannelUtility.ConstrainColor(channel, effect.color));
-            shader.SetVector("_EffectTextureColor2", TexturePaintChannelUtility.ConstrainColor(channel, effect.secondaryColor));
+            shader.SetVector("_EffectTextureColor1", TexturePaintChannelUtility.WorkingColor(channel, effect.color));
+            shader.SetVector("_EffectTextureColor2", TexturePaintChannelUtility.WorkingColor(channel, effect.secondaryColor));
             shader.SetInt("_EffectTextureBlendMode1", (int)effect.blendMode);
             shader.SetInt("_EffectTextureBlendMode2", (int)effect.secondaryBlendMode);
             shader.SetTexture(compositeLayerEffectKernel, "_Layer", layerTexture);
@@ -683,22 +785,25 @@ namespace UMA.TexturePaint
 
         private static int LayerMaskSignature(TexturePaintLayer layer)
         {
-            if (layer?.layerMask?.target == null) return 0;
+            if (layer?.layerMask?.target == null) return layer?.linkRevision.GetHashCode() ?? 0;
             unchecked
             {
-                return layer.layerMask.target.Revision.GetHashCode() * 397 ^
-                    MaskEffectSignature(layer.layerMask.effects);
+                return layer.linkRevision.GetHashCode() ^ layer.layerMask.target.Revision.GetHashCode() * 397 ^
+                    MaskEffectSignature(layer.layerMask.effects) ^ layer.layerMask.referenceRevision.GetHashCode();
             }
         }
 
-        internal Texture GetEffectiveLayerMask(TexturePaintLayer layer, int width, int height)
+        internal Texture GetEffectiveLayerMask(TexturePaintLayer layer, int width, int height, TextureSet set = null)
+            => layer?.linkedMask != null ? layer.linkedMask : GetPaintedLayerMask(layer, width, height, set);
+
+        internal Texture GetPaintedLayerMask(TexturePaintLayer layer, int width, int height, TextureSet set = null)
         {
             TexturePaintLayerMask mask = layer?.layerMask;
             if (mask?.target?.Front == null || evaluateLayerMaskKernel < 0 || width <= 0 || height <= 0)
                 return null;
             mask.effects ??= new TexturePaintLayerMaskEffects();
             mask.effects.Normalize();
-            int signature = MaskEffectSignature(mask.effects);
+            int signature = MaskEffectSignature(mask.effects) ^ mask.referenceRevision.GetHashCode();
             string key = mask.target.GetHashCode() + "|" + width + "|" + height;
             if (!maskCache.TryGetValue(key, out LayerMaskCacheEntry entry))
             {
@@ -709,7 +814,7 @@ namespace UMA.TexturePaint
             {
                 Destroy(entry.texture);
                 entry.texture = CreateEffectTexture("Overlay Painter Effective Layer Mask", width, height,
-                    RenderTextureFormat.ARGB32, FilterMode.Bilinear);
+                    RenderTextureFormat.ARGBHalf, FilterMode.Bilinear);
                 entry.revision = -1;
             }
             if (entry.revision == mask.target.Revision && entry.effectSignature == signature)
@@ -719,6 +824,8 @@ namespace UMA.TexturePaint
             TexturePaintLayerMaskTextureOverlaySettings overlay = mask.effects.textureOverlay;
             shader.SetInts("_TextureSize", width, height);
             shader.SetInts("_MaskBaseSize", mask.target.Width, mask.target.Height);
+            shader.SetInt("_MaskStartFromPaint", mask.effects.startFromPaint ? 1 : 0);
+            shader.SetFloat("_MaskInitialValue", mask.effects.initialValue);
             shader.SetInt("_MaskNoiseEnabled", noise.enabled ? 1 : 0);
             shader.SetInt("_MaskNoiseSeed", noise.seed);
             shader.SetVector("_MaskNoiseTiling", noise.tiling);
@@ -743,6 +850,7 @@ namespace UMA.TexturePaint
                 hasOverlay ? overlay.texture : Texture2D.whiteTexture);
             shader.SetTexture(evaluateLayerMaskKernel, "_MaskResult", entry.texture);
             DispatchFull(evaluateLayerMaskKernel, width, height);
+            EvaluateMaskStack(set, mask, entry.texture);
             entry.revision = mask.target.Revision;
             entry.effectSignature = signature;
             return entry.texture;
@@ -777,6 +885,10 @@ namespace UMA.TexturePaint
                 hash = hash * 31 + overlay.invert.GetHashCode();
                 hash = hash * 31 + overlay.opacity.GetHashCode();
                 hash = hash * 31 + (int)overlay.combine;
+                hash = hash * 31 + JsonUtility.ToJson(effects).GetHashCode();
+                if (overlay.texture != null) hash = hash * 31 + overlay.texture.updateCount.GetHashCode();
+                foreach (var effect in effects.stack)
+                    if (effect.texture != null) hash = hash * 31 + effect.texture.updateCount.GetHashCode();
                 return hash;
             }
         }

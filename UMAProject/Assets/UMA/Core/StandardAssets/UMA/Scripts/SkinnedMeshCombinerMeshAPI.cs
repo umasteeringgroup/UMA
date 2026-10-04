@@ -1286,8 +1286,14 @@ namespace UMA
 
             public ClothSkinningCoefficient[] ApplyPreparedMesh(Mesh mesh)
             {
-                bool createdMesh = mesh == null;
-                if (createdMesh) mesh = new Mesh();
+                var previousMesh = mesh;
+                bool replacingRendererMesh = mesh != null && Batch.Renderer.sharedMesh == mesh;
+                bool sharedMesh = replacingRendererMesh && UMAResourceLeaseOwner.IsSharedMesh(Batch.Renderer);
+                // UploadMeshData(true) is irreversible. A complete rebuild needs a writable
+                // destination, not a copy of the previous output. Keep readable private meshes
+                // in place, and never copy or mutate an output still leased by another avatar.
+                bool createdMesh = mesh == null || !mesh.isReadable || sharedMesh;
+                if (createdMesh) mesh = new Mesh { name = previousMesh != null ? previousMesh.name : "UMAMesh" };
                 try
                 {
                     if (MarkDynamic) mesh.MarkDynamic();
@@ -1303,7 +1309,14 @@ namespace UMA
                         meshDataApplied = true;
                     }
                     stopwatch.Stop(); Ticks_ApplyMeshData += stopwatch.ElapsedTicks;
-                    return FinalizeAppliedMesh(mesh);
+                    var cloth = FinalizeAppliedMesh(mesh);
+                    if (createdMesh && replacingRendererMesh)
+                    {
+                        // Retire the old output only after the replacement has been bound.
+                        if (sharedMesh) UMAResourceLeaseOwner.ReleaseMesh(Batch.Renderer);
+                        else UMAUtils.DestroySceneObject(previousMesh);
+                    }
+                    return cloth;
                 }
                 catch
                 {

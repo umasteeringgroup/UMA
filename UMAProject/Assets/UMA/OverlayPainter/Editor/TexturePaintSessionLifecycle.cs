@@ -203,6 +203,7 @@ namespace UMA.TexturePaint.Editor
                 closeAfterSave = false;
                 return;
             }
+            if(WaitForLinkedOutput(()=>BeginPersistence(intent,documentPath,closeWhenComplete)))return;
             // Commit the active controls before taking the persistence snapshot. For a logical
             // UDIM path this also copies the path settings to every physical member.
             CaptureActivePaintLayerSettings();
@@ -231,6 +232,9 @@ namespace UMA.TexturePaint.Editor
 
         private void PersistenceUpdate()
         {
+            if (pendingProjectionEdit != null && GUIUtility.hotControl == 0) FinishProjectionEdit();
+            UpdateLinkedPlugins();
+            ResumeAfterLinkedUpdates();
             // A completed capture remains available until commit finishes because its snapshot and
             // revision map are the commit payload. Only tick/transition it while no commit operation
             // exists; otherwise this branch would recreate the recovery/project writer every frame.
@@ -297,7 +301,7 @@ namespace UMA.TexturePaint.Editor
                 return;
             }
 
-            if (!UMASettings.TexturePaintAutomaticRecovery || !recoveryDirty ||
+            if (afterLinkedUpdates.Count > 0 || !UMASettings.TexturePaintAutomaticRecovery || !recoveryDirty ||
                 controller == null || controller.Painting == null || controller.Painting.IsPainting ||
                 EditorApplication.isCompiling || EditorApplication.isUpdating ||
                 EditorApplication.timeSinceStartup < nextAutosaveTime) return;

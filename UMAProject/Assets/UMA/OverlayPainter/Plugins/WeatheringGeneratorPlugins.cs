@@ -116,7 +116,7 @@ namespace UMA.TexturePaint.Examples
                 description = dirt
                     ? "Accumulates controllable, fractally broken dirt in concave gaps and occluded cavities, with explicit gap size and outward spread."
                     : "Creates controllable, fractally broken wear on convex edges, with explicit edge size and outward spread.",
-                pluginVersion = "1.0.0",
+                pluginVersion = "1.0.1",
                 capabilities = TexturePaintPluginCapability.Generator |
                                TexturePaintPluginCapability.ReadsMeshMaps |
                                TexturePaintPluginCapability.LongRunning |
@@ -635,7 +635,7 @@ namespace UMA.TexturePaint.Examples
                 fractalPersistence = Mathf.Clamp(values.Float("fractalPersistence", 0.5f),
                     0.1f, 0.9f);
                 fractalEdge = Mathf.Clamp01(values.Float("fractalEdge", 0.65f));
-                color = values.Color("surfaceColor", mode == WeatheringMode.Dirt
+                color = values.LinearColor("surfaceColor", mode == WeatheringMode.Dirt
                     ? new Color(0.16f, 0.105f, 0.055f, 1f)
                     : new Color(0.58f, 0.54f, 0.46f, 1f));
                 roughness = Mathf.Clamp01(values.Float("roughness",

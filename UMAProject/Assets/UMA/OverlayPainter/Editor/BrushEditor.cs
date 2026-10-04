@@ -433,7 +433,6 @@ namespace UMA.TexturePaint.Editor
             preset.rotation = EditorGUILayout.Slider("Rotation", preset.rotation, -180f, 180f);
             preset.blendMode = (TexturePaintBlendMode)EditorGUILayout.EnumPopup(
                 "Blend Mode", preset.blendMode);
-            preset.mirrorStroke = EditorGUILayout.Toggle("Mirror Stroke", preset.mirrorStroke);
             preset.alignToStroke = EditorGUILayout.Toggle("Follow Stroke", preset.alignToStroke);
             BrushPresetInspectorUtility.DrawRandomization(preset);
             BrushPresetInspectorUtility.DrawStrokeEvolution(preset);

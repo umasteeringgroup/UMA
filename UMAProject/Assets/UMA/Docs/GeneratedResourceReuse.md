@@ -1,5 +1,7 @@
 # Generated resource reuse for NPCs
 
+For a step-by-step introduction, including Standard View setup, read [Atlas and mesh reuse](AtlasAndMeshReuse.md).
+
 Enable **Dynamic Character Avatar > Advanced Options > Cache and Reuse (NPCs)** before building a crowd:
 
 - **Share generated meshes**: reuse matching generated geometry. Each character still has its own skeleton, renderer, Animator, pose, cloth component and live blendshape weights.

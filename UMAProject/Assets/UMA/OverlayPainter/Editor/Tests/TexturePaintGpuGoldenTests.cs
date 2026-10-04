@@ -108,7 +108,7 @@ namespace UMA.TexturePaint.Editor.Tests
                 engine.EndStroke();
                 Assert.That(engine.Performance.computeDispatches, Is.GreaterThan(0), "Golden test used the CPU fallback.");
 
-                Color[] expected = ReferencePaint(Base, Paint, blendMode);
+                Color[] expected = ReferencePaint(Base, Paint.linear, blendMode);
                 TexturePaintGpuTestFixture.AssertImage("paint-" + blendMode, expected, fixture.ReadPixels());
             }
             finally { Object.DestroyImmediate(brush); }
@@ -427,7 +427,7 @@ namespace UMA.TexturePaint.Editor.Tests
                 engine.EndStroke();
 
                 TexturePaintGpuTestFixture.AssertImage("follow-stroke-first-restamp",
-                    ReferencePaint(Base, correctedColor, TexturePaintBlendMode.Normal), fixture.ReadPixels());
+                    ReferencePaint(Base, correctedColor.linear, TexturePaintBlendMode.Normal), fixture.ReadPixels());
                 Assert.That(engine.Undo(), Is.True);
                 Color[] restored = fixture.ReadPixels();
                 for (int i = 0; i < restored.Length; i++)

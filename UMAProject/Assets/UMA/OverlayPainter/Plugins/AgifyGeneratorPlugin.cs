@@ -21,7 +21,7 @@ namespace UMA.TexturePaint.Examples
             id = "com.uma.texturepaint.agify",
             displayName = "Agify — Dirt & Edge Wear",
             description = "Builds cavity dirt and convex edge wear across the complete paint target using signed mesh curvature, composed normal detail, AO, world-space projection, and optional texture masks.",
-            pluginVersion = "1.1.0",
+            pluginVersion = "1.1.1",
             capabilities = TexturePaintPluginCapability.Generator |
                            TexturePaintPluginCapability.ReadsMeshMaps |
                            TexturePaintPluginCapability.LongRunning,
@@ -511,12 +511,12 @@ namespace UMA.TexturePaint.Examples
                 fractalPersistence = Mathf.Clamp(values.Float("fractalPersistence", 0.5f),
                     0.1f, 0.9f);
                 dirtAmount = Mathf.Clamp01(values.Float("dirtAmount", 0.7f));
-                dirtColor = values.Color("dirtColor", new Color(0.16f, 0.105f, 0.055f, 1f));
+                dirtColor = values.LinearColor("dirtColor", new Color(0.16f, 0.105f, 0.055f, 1f));
                 dirtRoughness = Mathf.Clamp01(values.Float("dirtRoughness", 0.88f));
                 dirtAO = Mathf.Clamp01(values.Float("dirtAO", 0.45f));
                 dirtHeight = Mathf.Clamp(values.Float("dirtHeight", 0.045f), 0f, 0.5f);
                 wearAmount = Mathf.Clamp01(values.Float("wearAmount", 0.55f));
-                wearColor = values.Color("wearColor", new Color(0.58f, 0.54f, 0.46f, 1f));
+                wearColor = values.LinearColor("wearColor", new Color(0.58f, 0.54f, 0.46f, 1f));
                 wearRoughness = Mathf.Clamp01(values.Float("wearRoughness", 0.38f));
                 exposedMetallic = Mathf.Clamp01(values.Float("exposedMetallic", 0f));
                 wearDepth = Mathf.Clamp(values.Float("wearDepth", 0.065f), 0f, 0.5f);

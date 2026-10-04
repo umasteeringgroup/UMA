@@ -15,10 +15,14 @@ namespace UMA.TexturePaint.Editor
         private string running;
         private Vector2 scroll;
         private bool diagnosticsExpanded = true;
+        private readonly HashSet<string> previewExpanded = new HashSet<string>();
+        private readonly Dictionary<string, TexturePaintPluginPreview> commandPreviews = new Dictionary<string, TexturePaintPluginPreview>();
+        private readonly Dictionary<string, TexturePaintSamplePreview> brushPreviews = new Dictionary<string, TexturePaintSamplePreview>();
 
         public static void Open(TexturePaintStageController controller)
         {
             PluginManagerWindow window = GetWindow<PluginManagerWindow>("Overlay Painter Plugins");
+            if (!ReferenceEquals(window.controller, controller)) window.DisposePreviews();
             window.controller = controller; window.minSize = new Vector2(520f, 420f); window.Show();
         }
 
@@ -26,6 +30,7 @@ namespace UMA.TexturePaint.Editor
         {
             if (controller?.Plugins == null)
             {
+                DisposePreviews();
                 EditorGUILayout.HelpBox("Open this window from an active Overlay Painter stage.", MessageType.Info); return;
             }
             EditorGUILayout.HelpBox($"Plugin API v{TexturePaintPluginApi.CurrentVersion}. Plugins receive immutable snapshots and submit validated commands; live textures and the TextureStore are never exposed.", MessageType.Info);
@@ -51,6 +56,7 @@ namespace UMA.TexturePaint.Editor
 
             scroll = EditorGUILayout.BeginScrollView(scroll);
             DrawCategory("Brushes", controller.Plugins.Brushes);
+            DrawCommandPreviews();
             DrawCategory("Bakers", controller.Plugins.Bakers);
             DrawCategory("Importers", controller.Plugins.Importers);
             DrawCategory("Exporters", controller.Plugins.Exporters);
@@ -68,7 +74,46 @@ namespace UMA.TexturePaint.Editor
                 Repaint();
             }
             using (new EditorGUI.DisabledScope(cancellation != null))
-                if (GUILayout.Button("Refresh Plugins")) controller.Plugins.Discover();
+                if (GUILayout.Button("Refresh Plugins")) { DisposePreviews(); controller.Plugins.Discover(); }
+        }
+
+        private void DrawCommandPreviews()
+        {
+            if (controller.Plugins.Commands.Count == 0) return;
+            EditorGUILayout.LabelField("Generators & Filters", EditorStyles.boldLabel);
+            var stage = TexturePaintStageWindow.ActiveStage;
+            bool ownsStage = stage?.UsesPluginPreviewController(controller) == true;
+            TextureSet set = ownsStage ? stage.PluginPreviewSet :
+                controller.Textures?.Sets.Count > 0 ? controller.Textures.Sets[0] : null;
+            long version = ownsStage ? stage.PluginPreviewVersion : 0;
+            foreach (var plugin in controller.Plugins.Commands)
+            {
+                if (!TexturePaintPluginPreview.Supports(plugin)) continue;
+                string id = plugin.Descriptor.id;
+                bool expanded = previewExpanded.Contains(id);
+                bool next = EditorGUILayout.Foldout(expanded, plugin.Descriptor.displayName, true);
+                if (!next)
+                {
+                    previewExpanded.Remove(id);
+                    if (commandPreviews.Remove(id, out var previous)) previous.Dispose();
+                    continue;
+                }
+                previewExpanded.Add(id);
+                using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+                {
+                    var values = GetParameters(plugin);
+                    EditorGUILayout.LabelField(plugin.Descriptor.description, EditorStyles.wordWrappedMiniLabel);
+                    if (set != null)
+                    {
+                        if (!commandPreviews.TryGetValue(id, out var preview))
+                            commandPreviews.Add(id, preview = new TexturePaintPluginPreview(Repaint));
+                        preview.Request(controller.Textures, set, null, plugin, values, false, version);
+                        preview.Draw();
+                    }
+                    DrawParameters(plugin.Descriptor, values);
+                    EditorGUILayout.LabelField("Preview uses the selected target. Add a Plugin layer to apply a generator or filter.", EditorStyles.wordWrappedMiniLabel);
+                }
+            }
         }
 
         private void DrawCategory<T>(string title, IReadOnlyList<T> plugins) where T : ITexturePaintExtensionV2
@@ -94,6 +139,18 @@ namespace UMA.TexturePaint.Editor
             if (descriptor.ResolvedMeshMaps != TexturePaintMeshMapMask.None)
                 EditorGUILayout.LabelField("Mesh Maps", descriptor.ResolvedMeshMaps.ToString());
             TexturePaintPluginParameterSet values = GetParameters(plugin);
+            if (plugin is ITexturePaintBrushV2 brush)
+            {
+                if (!brushPreviews.TryGetValue(descriptor.id, out var preview))
+                    brushPreviews.Add(descriptor.id, preview = new TexturePaintSamplePreview(Repaint));
+                var stage = TexturePaintStageWindow.ActiveStage;
+                BrushPreset preset = stage?.UsesPluginPreviewController(controller) == true ? stage.PluginPreviewBrush : null;
+                var parameters = values.Clone();
+                preview.Request(descriptor.id + JsonUtility.ToJson(parameters) + (preset == null ? "" : JsonUtility.ToJson(preset)),
+                    () => TexturePaintBrushPreview.Generate(brush, parameters, preset, TexturePaintChannel.Albedo, Color.white),
+                    "Isolated sample stroke with the current brush's spacing and coverage.");
+                preview.Draw();
+            }
             DrawParameters(descriptor, values);
             using (new EditorGUI.DisabledScope(cancellation != null))
             {
@@ -114,6 +171,7 @@ namespace UMA.TexturePaint.Editor
             TexturePaintPluginParameterSet values, Func<string, bool> hideParameter = null)
         {
             if (descriptor == null || values == null) return;
+            values.EnsureDefaults(descriptor);
             bool hasEditableParameters = false;
             for (int i = 0; i < descriptor.parameters.Count; i++)
             {
@@ -145,14 +203,31 @@ namespace UMA.TexturePaint.Editor
             for (int i = 0; i < descriptor.parameters.Count; i++)
             {
                 TexturePaintPluginParameterDefinition definition = descriptor.parameters[i];
-                if (hideParameter?.Invoke(definition.id) == true) continue;
+                if (definition == null) continue;
                 if (definition.type == TexturePaintPluginParameterType.Header)
                 {
+                    // Promoted controls (for example Fill Type) may leave an empty section.
+                    // A hidden header still ends the previous section's collapsed state.
+                    sectionExpanded = true;
+                    if (hideParameter?.Invoke(definition.id) == true) continue;
+                    bool hasVisibleChild = false;
+                    for (int child = i + 1; child < descriptor.parameters.Count; child++)
+                    {
+                        TexturePaintPluginParameterDefinition candidate = descriptor.parameters[child];
+                        if (candidate == null) continue;
+                        if (candidate.type == TexturePaintPluginParameterType.Header) break;
+                        if (hideParameter?.Invoke(candidate.id) != true)
+                        { hasVisibleChild = true; break; }
+                    }
+                    if (!hasVisibleChild) continue;
                     string key = "UMA.OverlayPainter.PluginSection." + descriptor.id + "." + definition.id;
                     bool previous = EditorPrefs.GetBool(key, true);
+                    bool parametersChanged = GUI.changed;
                     bool next = EditorGUILayout.Foldout(previous,
                         string.IsNullOrEmpty(definition.displayName) ? definition.id : definition.displayName,
                         true, EditorStyles.foldoutHeader);
+                    // Expansion is editor view state, not an edit to the cloned plugin payload.
+                    GUI.changed = parametersChanged;
                     if (next != previous) EditorPrefs.SetBool(key, next);
                     sectionExpanded = next;
                     if (next && !string.IsNullOrWhiteSpace(definition.description))
@@ -160,6 +235,7 @@ namespace UMA.TexturePaint.Editor
                             EditorStyles.wordWrappedMiniLabel);
                     continue;
                 }
+                if (hideParameter?.Invoke(definition.id) == true) continue;
                 if (!sectionExpanded) continue;
                 TexturePaintPluginParameterValue value = values.Get(definition.id, true);
                 GUIContent label = new GUIContent(string.IsNullOrEmpty(definition.displayName) ? definition.id : definition.displayName, definition.description);
@@ -218,17 +294,20 @@ namespace UMA.TexturePaint.Editor
                     if (GUILayout.Button("▲", GUILayout.Width(26f)))
                     {
                         value.stripes.RemoveAt(i); value.stripes.Insert(i - 1, stripe);
+                        GUI.changed = true;
                         GUILayout.EndHorizontal(); EditorGUILayout.EndVertical(); return;
                     }
                 using (new EditorGUI.DisabledScope(i == value.stripes.Count - 1))
                     if (GUILayout.Button("▼", GUILayout.Width(26f)))
                     {
                         value.stripes.RemoveAt(i); value.stripes.Insert(i + 1, stripe);
+                        GUI.changed = true;
                         GUILayout.EndHorizontal(); EditorGUILayout.EndVertical(); return;
                     }
                 if (GUILayout.Button("×", GUILayout.Width(26f)))
                 {
                     value.stripes.RemoveAt(i);
+                    GUI.changed = true;
                     GUILayout.EndHorizontal(); EditorGUILayout.EndVertical(); return;
                 }
                 GUILayout.EndHorizontal();
@@ -249,17 +328,23 @@ namespace UMA.TexturePaint.Editor
             }
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("+ Vertical Stripe"))
+            {
                 value.stripes.Add(new TexturePaintStripeDefinition
                 {
                     direction = TexturePaintStripeDirection.Vertical,
                     position = 0.5f, width = 0.12f, color = Color.white
                 });
+                GUI.changed = true;
+            }
             if (GUILayout.Button("+ Horizontal Stripe"))
+            {
                 value.stripes.Add(new TexturePaintStripeDefinition
                 {
                     direction = TexturePaintStripeDirection.Horizontal,
                     position = 0.5f, width = 0.12f, color = Color.white
                 });
+                GUI.changed = true;
+            }
             GUILayout.EndHorizontal();
         }
 
@@ -361,6 +446,11 @@ namespace UMA.TexturePaint.Editor
             if (!string.IsNullOrEmpty(path)) File.WriteAllBytes(path, artifact.bytes);
         }
 
-        private void OnDisable() { cancellation?.Cancel(); cancellation?.Dispose(); cancellation = null; }
+        private void DisposePreviews()
+        {
+            foreach (var preview in commandPreviews.Values) preview.Dispose(); commandPreviews.Clear();
+            foreach (var preview in brushPreviews.Values) preview.Dispose(); brushPreviews.Clear();
+        }
+        private void OnDisable() { DisposePreviews(); cancellation?.Cancel(); cancellation?.Dispose(); cancellation = null; }
     }
 }

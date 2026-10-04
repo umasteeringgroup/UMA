@@ -161,16 +161,31 @@ namespace UMA.TexturePaint
             values.Clear();
             valueLookup = null;
             valueLookupCount = -1;
-            if (definitions == null) return;
+            EnsureDefaults(definitions);
+        }
+
+        /// <summary>Adds parameters introduced by a newer schema without replacing authored
+        /// values. In particular, zero, false, transparent colors and empty lists are values,
+        /// not evidence that a parameter is missing.</summary>
+        public bool EnsureDefaults(TexturePaintPluginDescriptor descriptor) =>
+            EnsureDefaults(descriptor?.parameters);
+
+        public bool EnsureDefaults(IReadOnlyList<TexturePaintPluginParameterDefinition> definitions)
+        {
+            if (definitions == null) return false;
+            values ??= new List<TexturePaintPluginParameterValue>();
+            EnsureValueLookup();
+            bool added = false;
 
             for (int i = 0; i < definitions.Count; i++)
             {
                 TexturePaintPluginParameterDefinition definition = definitions[i];
                 if (definition == null || string.IsNullOrWhiteSpace(definition.id) ||
-                    definition.type == TexturePaintPluginParameterType.Header)
+                    definition.type == TexturePaintPluginParameterType.Header ||
+                    valueLookup.ContainsKey(definition.id))
                     continue;
 
-                values.Add(new TexturePaintPluginParameterValue
+                var value = new TexturePaintPluginParameterValue
                 {
                     id = definition.id,
                     number = definition.defaultNumber,
@@ -182,8 +197,13 @@ namespace UMA.TexturePaint
                     font = null,
                     curve = CloneCurve(definition.defaultCurve),
                     stripes = CloneStripes(definition.defaultStripes)
-                });
+                };
+                values.Add(value);
+                valueLookup.Add(definition.id, value);
+                added = true;
             }
+            valueLookupCount = values.Count;
+            return added;
         }
 
         public TexturePaintPluginParameterValue Get(string id, bool create = false)
@@ -221,6 +241,9 @@ namespace UMA.TexturePaint
         public int Integer(string id, int fallback = 0) => Mathf.RoundToInt(Get(id)?.number ?? fallback);
         public bool Boolean(string id, bool fallback = false) => Get(id)?.boolean ?? fallback;
         public Color Color(string id, Color fallback) => Get(id)?.color ?? fallback;
+        /// <summary>Decode an authored sRGB picker color for linear RGB rendering. Alpha is unchanged.
+        /// Use Color instead for numeric data channels; sampled color textures are already linear.</summary>
+        public Color LinearColor(string id, Color fallback) => Color(id, fallback).linear;
         public string String(string id, string fallback = "") => Get(id)?.text ?? fallback;
         public Texture2D Texture(string id) => Get(id)?.texture;
         public Sprite Sprite(string id) => Get(id)?.sprite;
@@ -806,6 +829,16 @@ namespace UMA.TexturePaint
     public interface ITexturePaintDynamicChannelUsageV2
     {
         TexturePaintChannelMask ResolveReadChannels(TexturePaintPluginParameterSet parameters);
+    }
+
+    /// <summary>
+    /// Lets parameterized commands narrow mesh-map inputs for one execution. The returned
+    /// mask must be a subset of the descriptor's resolved mesh-map contract. Returning None
+    /// avoids mesh-map generation and snapshots when a mode only needs UV coordinates.
+    /// </summary>
+    public interface ITexturePaintDynamicMeshMapUsageV2
+    {
+        TexturePaintMeshMapMask ResolveMeshMaps(TexturePaintPluginParameterSet parameters);
     }
 
     public sealed class TexturePaintPluginArtifact

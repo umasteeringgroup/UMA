@@ -32,4 +32,18 @@
   <Project Path="Samples.csproj" />
   <Project Path="UMA.PackageSupport.Editor.csproj" />
   <Project Path="JBooth.BetterShaders.Samples.csproj" />
+  <Project Path="UMA_Core.Player.csproj" />
+  <Project Path="UMA2.Content.Player.csproj" />
+  <Project Path="UMA.Dismemberment.Runtime.Player.csproj" />
+  <Project Path="UMA.TexturePaint.Tests.Player.csproj" />
+  <Project Path="UMA.HairCards.Core.Player.csproj" />
+  <Project Path="UMA3.Samples.Player.csproj" />
+  <Project Path="UMA.TempTools.Player.csproj" />
+  <Project Path="UMA.TexturePaint.Examples.Player.csproj" />
+  <Project Path="UMA.TexturePaint.Runtime.Player.csproj" />
+  <Project Path="UMA_Core_Runtime_Tests.Player.csproj" />
+  <Project Path="UMA.HairCards.Runtime.Player.csproj" />
+  <Project Path="UMA.SRP.SkyCar.Samples.Player.csproj" />
+  <Project Path="UMA.Dismemberment.Samples.Player.csproj" />
+  <Project Path="JBooth.BetterShaders.Samples.Player.csproj" />
 </Solution>

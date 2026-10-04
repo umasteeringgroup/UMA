@@ -983,7 +983,7 @@ namespace UMA
         /// Can the mesh be read after creation?
         /// </summary>
         [Tooltip("When this is true, the meshcombiner will upload the data and the mesh will no longer be readable. Set this to false if you use a 3rd party asset that needs to read the mesh data.")]
-        public bool markNotReadable = true;
+        public bool markNotReadable = false;
         /// <summary>
         /// Should the mesh use dynamic buffers?
         /// </summary>

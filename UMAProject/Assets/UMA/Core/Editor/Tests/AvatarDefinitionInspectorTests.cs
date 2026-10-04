@@ -308,6 +308,47 @@ namespace UMA.Tests
         }
 
         [UnityTest]
+        public IEnumerator SharedColorEditorSurvivesRendererSelectionAndSourceInspectorDisposal()
+        {
+            avatar.characterColors.SetRawColor("Skin", new OverlayColorData(1) { name = "Skin", color = Color.red });
+            var color = avatar.characterColors._colors[0];
+            var sourceInspector = NewInspector();
+            Selection.activeGameObject = avatar.gameObject;
+            var windowType = typeof(DynamicCharacterAvatarEditor).GetNestedType("SharedColorEditorWindow", BindingFlags.NonPublic);
+            var colorWindow = (EditorWindow)windowType.GetMethod("Open", BindingFlags.Static | BindingFlags.NonPublic)
+                .Invoke(null, new object[] { avatar, color });
+            objects.Add(colorWindow);
+            yield return null;
+
+            var rendererObject = new GameObject("Color template renderer");
+            objects.Add(rendererObject);
+            rendererObject.AddComponent<SkinnedMeshRenderer>();
+            Selection.activeGameObject = rendererObject;
+            Object.DestroyImmediate(sourceInspector);
+            var otherWindow = NewWindow(null);
+            otherWindow.Focus();
+            yield return WaitFor(() => otherWindow.Repaints >= 3, otherWindow);
+
+            Assert.That(colorWindow != null, Is.True, "The color editor must stay open when selecting a drag source.");
+            Assert.That(EditorWindow.focusedWindow, Is.Not.SameAs(colorWindow));
+            var pinnedEditor = (DynamicCharacterAvatarEditor)windowType.GetField("owner", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(colorWindow);
+            Assert.That(pinnedEditor != null, Is.True);
+            Assert.That(pinnedEditor.target, Is.SameAs(avatar));
+            colorWindow.Repaint();
+            yield return null;
+            pinnedEditor.serializedObject.Update();
+            var property = pinnedEditor.serializedObject.FindProperty("characterColors._colors").GetArrayElementAtIndex(0);
+            property.FindPropertyRelative("displayColor").colorValue = Color.green;
+            pinnedEditor.serializedObject.ApplyModifiedProperties();
+            Invoke(pinnedEditor, "CommitStandardColorEdit");
+            Assert.That(avatar.characterColors._colors[0].displayColor, Is.EqualTo(Color.green));
+            LogAssert.NoUnexpectedReceived();
+            colorWindow.Close();
+            objects.Remove(colorWindow);
+            Assert.That(pinnedEditor == null, Is.True, "Closing the window must release its dedicated editor.");
+        }
+
+        [UnityTest]
         public IEnumerator StandardViewSurvivesDefinitionLoadsAndViewSwitches()
         {
             ConfigureNewDna(3);

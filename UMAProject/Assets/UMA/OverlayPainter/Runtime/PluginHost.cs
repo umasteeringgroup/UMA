@@ -84,6 +84,7 @@ namespace UMA.TexturePaint
             profileDescriptors[plugin.Descriptor.id] = plugin.Descriptor;
             if (!parameterProfiles.TryGetValue(plugin.Descriptor.id, out TexturePaintPluginParameterSet parameters))
                 parameterProfiles.Add(plugin.Descriptor.id, parameters = CreateParameters(plugin));
+            parameters.EnsureDefaults(plugin.Descriptor);
             return parameters;
         }
 
@@ -103,7 +104,9 @@ namespace UMA.TexturePaint
             if (!string.Equals(layer.pluginId, plugin.Descriptor.id, StringComparison.Ordinal) ||
                 layer.pluginParameters == null)
                 return CreateParameters(plugin);
-            return layer.pluginParameters.Clone();
+            TexturePaintPluginParameterSet parameters = layer.pluginParameters.Clone();
+            parameters.EnsureDefaults(plugin.Descriptor);
+            return parameters;
         }
 
         public List<TexturePaintPluginProfile> CaptureProfiles()
@@ -132,8 +135,7 @@ namespace UMA.TexturePaint
                 if (descriptor == null) continue;
                 try
                 {
-                    TexturePaintPluginParameterSet copy = CloneParameters(profile.parameters);
-                    ValidateParameters(descriptor, copy);
+                    TexturePaintPluginParameterSet copy = PrepareParameters(descriptor, profile.parameters);
                     parameterProfiles[profile.pluginId] = copy;
                 }
                 catch (Exception exception)
@@ -149,7 +151,7 @@ namespace UMA.TexturePaint
         {
             if (plugin == null) return null;
             ValidateDescriptor(plugin, plugin.GetType());
-            ValidateParameters(plugin.Descriptor, parameters);
+            parameters = PrepareParameters(plugin.Descriptor, parameters);
             if (!plugin.Descriptor.Declares(channel)) throw new InvalidOperationException($"Plugin '{plugin.Descriptor.id}' did not declare {channel}.");
             var context = new TexturePaintBrushContextV2
             {
@@ -199,17 +201,18 @@ namespace UMA.TexturePaint
         {
             if (plugin == null) throw new ArgumentNullException(nameof(plugin));
             ValidateDescriptor(plugin, plugin.GetType());
-            ValidateParameters(plugin.Descriptor, parameters);
+            parameters = PrepareParameters(plugin.Descriptor, parameters);
             Stopwatch stopwatch = Stopwatch.StartNew();
             try
             {
                 TexturePaintPluginParameterSet parameterSnapshot = CloneParameters(parameters);
+                TexturePaintMeshMapMask? meshMaps = ResolveMeshMaps(plugin, parameterSnapshot);
                 if (TryGetGpuGenerator(plugin, out ITexturePaintGpuGeneratorV2 gpuGenerator))
                 {
                     TexturePaintPluginCommit gpuCommit =
                         TexturePaintPluginTransactionExecutor.CommitGpuGenerator(store,
                             plugin.Descriptor, gpuGenerator.GpuKernelName, GpuGeneratorShader,
-                            token, progress, parameterSnapshot, LogicalLayers);
+                            token, progress, parameterSnapshot, LogicalLayers, meshMaps);
                     if (gpuCommit.commandCount > 0) PushCommit(gpuCommit); else gpuCommit.Dispose();
                     AddDiagnostic(plugin.Descriptor.id, TexturePaintPluginDiagnosticSeverity.Info,
                         "GPU generator transaction committed.", null,
@@ -220,7 +223,7 @@ namespace UMA.TexturePaint
                 }
                 TexturePaintReadContextV2 read = TexturePaintPluginTransactionExecutor.Capture(store,
                     plugin.Descriptor, parameterSnapshot, token, progress, SnapshotMemoryBudgetBytes,
-                    null, ResolveReadChannels(plugin, parameterSnapshot));
+                    null, ResolveReadChannels(plugin, parameterSnapshot), meshMapsOverride: meshMaps);
                 var context = new TexturePaintCommandContextV2(plugin.Descriptor, read, CloneParameters(parameterSnapshot), token, progress, CommandMemoryBudgetBytes);
                 await plugin.ExecuteAsync(context);
                 token.ThrowIfCancellationRequested();
@@ -246,6 +249,25 @@ namespace UMA.TexturePaint
             }
         }
 
+        private sealed class AutomaticSelectionScope : IDisposable
+        {
+            private readonly Dictionary<TextureSet,string> selected=new Dictionary<TextureSet,string>();
+            public AutomaticSelectionScope(IReadOnlyDictionary<TextureSet,TexturePaintLayer> destinations)
+            {
+                foreach(var pair in destinations)
+                {
+                    var set=pair.Key;
+                    selected[set]=(uint)set.activeLayerIndex<(uint)set.layers.Count ? set.layers[set.activeLayerIndex].id : null;
+                }
+            }
+            public void Dispose()
+            {
+                foreach(var pair in selected)
+                    pair.Key.activeLayerIndex=pair.Value==null ? -1 : pair.Key.layers.FindIndex(layer=>layer.id==pair.Value);
+                selected.Clear();
+            }
+        }
+
         public async Task ExecutePluginLayerAsync(ITexturePaintCommandExtensionV2 plugin,
             TextureStore store, TexturePaintPluginParameterSet parameters,
             IReadOnlyDictionary<TextureSet, TexturePaintLayer> destinationLayers,
@@ -253,20 +275,24 @@ namespace UMA.TexturePaint
         {
             if (plugin == null) throw new ArgumentNullException(nameof(plugin));
             ValidateDescriptor(plugin, plugin.GetType());
-            ValidateParameters(plugin.Descriptor, parameters);
+            parameters = PrepareParameters(plugin.Descriptor, parameters);
             Stopwatch stopwatch = Stopwatch.StartNew();
             try
             {
                 TexturePaintPluginParameterSet parameterSnapshot = CloneParameters(parameters);
+                TexturePaintMeshMapMask? meshMaps = ResolveMeshMaps(plugin, parameterSnapshot);
                 if (TryGetGpuGenerator(plugin, out ITexturePaintGpuGeneratorV2 gpuGenerator))
                 {
+                    using var gpuSelection=recordHistory ? null : new AutomaticSelectionScope(destinationLayers);
                     TexturePaintPluginCommit gpuCommit =
                         TexturePaintPluginTransactionExecutor.CommitGpuGeneratorIntoPluginLayers(
                             store, plugin.Descriptor, gpuGenerator.GpuKernelName,
                             GpuGeneratorShader, destinationLayers, token, progress,
-                            parameterSnapshot);
+                            parameterSnapshot, meshMaps);
                     bool gpuChanged = gpuCommit.hasChanges;
-                    if (gpuChanged && recordHistory) PushCommit(gpuCommit); else gpuCommit.Dispose();
+                    if (gpuChanged && recordHistory) PushCommit(gpuCommit);
+                    else {if(gpuChanged)gpuCommit.PreserveLayerIdentity(false);gpuCommit.Dispose();}
+                    gpuSelection?.Dispose();
                     AddDiagnostic(plugin.Descriptor.id, TexturePaintPluginDiagnosticSeverity.Info,
                         "GPU Plugin layer regenerated.", null,
                         stopwatch.Elapsed.TotalMilliseconds, gpuCommit.commandCount,
@@ -276,18 +302,21 @@ namespace UMA.TexturePaint
                 }
                 TexturePaintReadContextV2 read = TexturePaintPluginTransactionExecutor.Capture(store,
                     plugin.Descriptor, parameterSnapshot, token, progress, SnapshotMemoryBudgetBytes,
-                    destinationLayers, ResolveReadChannels(plugin, parameterSnapshot));
+                    destinationLayers, ResolveReadChannels(plugin, parameterSnapshot), meshMapsOverride: meshMaps);
                 var context = new TexturePaintCommandContextV2(plugin.Descriptor, read,
                     CloneParameters(parameterSnapshot), token, progress, CommandMemoryBudgetBytes);
                 await plugin.ExecuteAsync(context);
                 token.ThrowIfCancellationRequested();
                 IReadOnlyList<TexturePaintPluginTileCommand> queued = context.SealAndSnapshot();
+                using var selection=recordHistory ? null : new AutomaticSelectionScope(destinationLayers);
                 TexturePaintPluginCommit commit =
                     TexturePaintPluginTransactionExecutor.CommitIntoPluginLayers(store,
                         context.Descriptor, queued, destinationLayers, token, progress,
                         parameterSnapshot);
                 bool changed = commit.hasChanges;
-                if (changed && recordHistory) PushCommit(commit); else commit.Dispose();
+                if (changed && recordHistory) PushCommit(commit);
+                else {if(changed)commit.PreserveLayerIdentity(false);commit.Dispose();}
+                selection?.Dispose();
                 AddDiagnostic(plugin.Descriptor.id, TexturePaintPluginDiagnosticSeverity.Info,
                     "Plugin layer regenerated.", null, stopwatch.Elapsed.TotalMilliseconds,
                     commit.commandCount, commit.dirtyPixels);
@@ -321,25 +350,28 @@ namespace UMA.TexturePaint
             if ((plugin.Descriptor.supportedTargets & TexturePaintPluginTarget.LayerMask) == 0)
                 throw new InvalidOperationException(
                     $"Plugin '{plugin.Descriptor.displayName}' does not support Layer Mask output.");
-            ValidateParameters(plugin.Descriptor, parameters);
+            parameters = PrepareParameters(plugin.Descriptor, parameters);
             Stopwatch stopwatch = Stopwatch.StartNew();
             try
             {
                 TexturePaintPluginParameterSet snapshot = CloneParameters(parameters);
                 TexturePaintReadContextV2 read = TexturePaintPluginTransactionExecutor.Capture(store,
                     plugin.Descriptor, snapshot, token, progress, SnapshotMemoryBudgetBytes,
-                    destinationLayers, TexturePaintChannelMask.None, true);
+                    destinationLayers, TexturePaintChannelMask.None, true, ResolveMeshMaps(plugin, snapshot));
                 var context = new TexturePaintCommandContextV2(plugin.Descriptor, read,
                     CloneParameters(snapshot), token, progress, CommandMemoryBudgetBytes,
                     TexturePaintPluginTarget.LayerMask);
                 await plugin.ExecuteAsync(context);
                 token.ThrowIfCancellationRequested();
                 IReadOnlyList<TexturePaintPluginTileCommand> queued = context.SealAndSnapshot();
+                using var selection=recordHistory ? null : new AutomaticSelectionScope(destinationLayers);
                 TexturePaintPluginCommit commit =
                     TexturePaintPluginTransactionExecutor.CommitIntoLayerMasks(store,
                         context.Descriptor, queued, destinationLayers, token, progress, snapshot);
                 bool changed = commit.hasChanges;
-                if (changed && recordHistory) PushCommit(commit); else commit.Dispose();
+                if (changed && recordHistory) PushCommit(commit);
+                else {if(changed)commit.PreserveLayerIdentity(true);commit.Dispose();}
+                selection?.Dispose();
                 AddDiagnostic(plugin.Descriptor.id, TexturePaintPluginDiagnosticSeverity.Info,
                     "Layer-mask plugin transaction committed.", null,
                     stopwatch.Elapsed.TotalMilliseconds, commit.commandCount, commit.dirtyPixels);
@@ -398,7 +430,7 @@ namespace UMA.TexturePaint
         {
             if (plugin == null) throw new ArgumentNullException(nameof(plugin));
             ValidateDescriptor(plugin, plugin.GetType());
-            ValidateParameters(plugin.Descriptor, parameters);
+            parameters = PrepareParameters(plugin.Descriptor, parameters);
             Stopwatch stopwatch = Stopwatch.StartNew();
             try
             {
@@ -407,7 +439,7 @@ namespace UMA.TexturePaint
                     throw new InvalidOperationException("Import artifact is empty or exceeds the plugin artifact memory budget.");
                 TexturePaintReadContextV2 read = TexturePaintPluginTransactionExecutor.Capture(store,
                     plugin.Descriptor, parameterSnapshot, token, progress, SnapshotMemoryBudgetBytes,
-                    null, ResolveReadChannels(plugin, parameterSnapshot));
+                    null, ResolveReadChannels(plugin, parameterSnapshot), meshMapsOverride: ResolveMeshMaps(plugin, parameterSnapshot));
                 var context = new TexturePaintCommandContextV2(plugin.Descriptor, read, CloneParameters(parameterSnapshot), token, progress, CommandMemoryBudgetBytes);
                 await plugin.ImportAsync(artifact, context);
                 token.ThrowIfCancellationRequested();
@@ -463,13 +495,13 @@ namespace UMA.TexturePaint
             CancellationToken token, bool baker)
         {
             ValidateDescriptor(plugin, plugin.GetType());
-            ValidateParameters(plugin.Descriptor, parameters); Stopwatch stopwatch = Stopwatch.StartNew();
+            parameters = PrepareParameters(plugin.Descriptor, parameters); Stopwatch stopwatch = Stopwatch.StartNew();
             try
             {
                 TexturePaintPluginParameterSet parameterSnapshot = CloneParameters(parameters);
                 TexturePaintReadContextV2 read = TexturePaintPluginTransactionExecutor.Capture(store,
                     plugin.Descriptor, parameterSnapshot, token, progress, SnapshotMemoryBudgetBytes,
-                    null, ResolveReadChannels(plugin, parameterSnapshot));
+                    null, ResolveReadChannels(plugin, parameterSnapshot), meshMapsOverride: ResolveMeshMaps(plugin, parameterSnapshot));
                 TexturePaintPluginArtifact artifact = baker
                     ? await ((ITexturePaintBakerV2)plugin).BakeAsync(read, parameterSnapshot, progress, token)
                     : await ((ITexturePaintExporterV2)plugin).ExportAsync(read, parameterSnapshot, progress, token);
@@ -520,6 +552,17 @@ namespace UMA.TexturePaint
             if ((resolved & ~allowed) != 0)
                 throw new InvalidOperationException(
                     $"Plugin '{plugin.Descriptor.id}' requested channels outside its declared read contract.");
+            return resolved;
+        }
+
+        private static TexturePaintMeshMapMask? ResolveMeshMaps(
+            ITexturePaintExtensionV2 plugin, TexturePaintPluginParameterSet parameters)
+        {
+            if (!(plugin is ITexturePaintDynamicMeshMapUsageV2 dynamicUsage)) return null;
+            TexturePaintMeshMapMask resolved = dynamicUsage.ResolveMeshMaps(parameters);
+            if ((resolved & ~plugin.Descriptor.ResolvedMeshMaps) != 0)
+                throw new InvalidOperationException(
+                    $"Plugin '{plugin.Descriptor.id}' requested mesh maps outside its declared mesh-map contract.");
             return resolved;
         }
 
@@ -675,6 +718,15 @@ namespace UMA.TexturePaint
 
         private static TexturePaintPluginParameterSet CloneParameters(TexturePaintPluginParameterSet parameters)
             => parameters?.Clone() ?? new TexturePaintPluginParameterSet();
+
+        private static TexturePaintPluginParameterSet PrepareParameters(
+            TexturePaintPluginDescriptor descriptor, TexturePaintPluginParameterSet parameters)
+        {
+            TexturePaintPluginParameterSet snapshot = CloneParameters(parameters);
+            snapshot.EnsureDefaults(descriptor);
+            ValidateParameters(descriptor, snapshot);
+            return snapshot;
+        }
 
         private static bool IsFinite(float value) => !float.IsNaN(value) && !float.IsInfinity(value);
 

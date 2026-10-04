@@ -59,6 +59,14 @@ namespace UMA.TexturePaint.Editor
 
     internal static class TexturePaintMaterialPresetStorage
     {
+        private static IEnumerable<TexturePaintLayerReference> PresetReferences(TexturePaintLayerLinks links, TexturePaintLayerMaskEffects masks, TexturePaintGarmentSettings garment)
+        {
+            if (garment != null) { yield return garment.foldInput; yield return garment.protectionInput; }
+            if (links != null) { yield return links.content; yield return links.mask; yield return links.instance; }
+            if (masks?.stack != null) foreach (var effect in masks.stack)
+                if (effect.kind == TexturePaintMaskEffectKind.LayerReference) yield return effect.reference;
+        }
+
         public static void Capture(TexturePaintMaterialPreset preset, TextureSet source,
             IReadOnlyList<TexturePaintLayer> sourceLayers, bool wholeStack,
             PluginHost plugins, bool includeCachedPluginOutput = true)
@@ -110,6 +118,9 @@ namespace UMA.TexturePaint.Editor
                 if (layer == null) continue;
                 TexturePaintDocumentLayer saved = CaptureLayer(layer, includeCachedPluginOutput);
                 saved.id = templateIds[layer.id];
+                foreach(var reference in PresetReferences(saved.links, saved.maskEffects, saved.projectionSettings?.garment))
+                    if(reference!=null && reference.layerId!=null && templateIds.TryGetValue(reference.layerId,out string templateId))
+                    {reference.layerId=templateId;reference.logicalLayerId=null;reference.paintTargetId=null;reference.surfaceId=null;}
                 saved.logicalLayerId = null;
                 saved.paintTargetId = null;
                 saved.parentId = !string.IsNullOrEmpty(layer.parentId) &&
@@ -290,6 +301,9 @@ namespace UMA.TexturePaint.Editor
                         TexturePaintDocumentLayer saved = preset.layers[layerIndex];
                         if (saved == null || !createdByTemplate.TryGetValue(saved.id, out var peers) ||
                             !peers.TryGetValue(set, out TexturePaintLayer layer)) continue;
+                        foreach(var reference in PresetReferences(layer.links, layer.layerMask?.effects, layer.projectionSettings?.garment))
+                            if(reference!=null && reference.layerId!=null && physicalIds.TryGetValue(reference.layerId,out string physicalId))
+                            {string templateId=reference.layerId;reference.layerId=physicalId;reference.logicalLayerId=logicalIds[templateId];reference.paintTargetId=layer.paintTargetId;reference.surfaceId=set.persistentId;}
                         layer.parentId = !string.IsNullOrEmpty(saved.parentId) &&
                             physicalIds.TryGetValue(saved.parentId, out string parentId)
                                 ? parentId : wrapperId;
@@ -320,6 +334,26 @@ namespace UMA.TexturePaint.Editor
                     TexturePaintDocumentLayer saved = preset.layers[layerIndex];
                     if (saved == null || !createdByTemplate.TryGetValue(saved.id,
                             out Dictionary<TextureSet, TexturePaintLayer> peers)) continue;
+                    if (saved.kind == TexturePaintLayerKind.Projection)
+                    {
+                        var projectionSets = peers.Keys.ToList();
+                        var copies = projectionSets.Select(set => set.CloneLayer(peers[set], peers[set].name, true, false)).ToList();
+                        using var renderer = new TexturePaintProjectionRenderer();
+                        if (renderer.Generate(store.Sets, projectionSets, copies, copies[0].projectionSettings, out string error))
+                        {
+                            for (int i = 0; i < projectionSets.Count; i++)
+                            {
+                                TextureSet set = projectionSets[i]; TexturePaintLayer original = peers[set];
+                                set.layers[set.layers.IndexOf(original)] = copies[i]; original.Dispose();
+                            }
+                            RefreshReplacedDestinations(peers, result.created);
+                        }
+                        else
+                        {
+                            foreach (TexturePaintLayer copy in copies) copy.Dispose();
+                            result.warnings.Add($"Projection '{saved.name}' kept its cached output: {error}");
+                        }
+                    }
                     if (!string.IsNullOrEmpty(saved.pluginId))
                     {
                         ITexturePaintCommandExtensionV2 plugin = plugins?.FindCommand(saved.pluginId);
@@ -360,6 +394,7 @@ namespace UMA.TexturePaint.Editor
                         completedProcedural++;
                     foreach (TextureSet set in peers.Keys) set.BindPreviewTextures();
                 }
+                store?.RefreshLayerLinks();
                 progress?.Report(1f);
                 return result;
             }
@@ -381,7 +416,13 @@ namespace UMA.TexturePaint.Editor
             layer.fillChannel = saved.fillChannel;
             layer.fillColor = saved.fillColor;
             layer.fillSettings = saved.fillSettings?.Clone();
+            layer.fillTileSources = saved.fillTileSources?.Clone();
+            layer.projectionSettings = saved.projectionSettings?.Clone();
+            layer.links = saved.links?.Clone();
+            TexturePaintDocumentStorage.RestoreCachedLinkedMask(layer,saved.cachedLinkedMask);
             layer.paintSettings = saved.paintSettings?.Clone();
+            layer.layerSymmetry = saved.layerSymmetry?.Clone();
+            layer.layerSymmetryVersion = saved.layerSymmetryVersion;
             layer.spline = saved.kind == TexturePaintLayerKind.Spline && saved.spline != null
                 ? JsonUtility.FromJson<TexturePaintSpline>(JsonUtility.ToJson(saved.spline)) : null;
             layer.splineSettings = saved.kind == TexturePaintLayerKind.Spline
@@ -434,6 +475,7 @@ namespace UMA.TexturePaint.Editor
                 if (mask != null)
                 {
                     mask.effects = saved.maskEffects?.Clone() ?? new TexturePaintLayerMaskEffects();
+                    mask.RestoreReferenceOutputs(saved.maskReferenceCaches);
                     mask.sourceSettings = saved.maskSourceSettings?.Clone() ??
                         TexturePaintLayerMask.DefaultSourceSettings();
                     mask.sourceChannel = saved.maskSourceChannel;
@@ -483,7 +525,13 @@ namespace UMA.TexturePaint.Editor
                 fillChannel = layer.fillChannel,
                 fillColor = layer.fillColor,
                 fillSettings = layer.fillSettings?.Clone(),
+                fillTileSources = layer.fillTileSources?.Clone(),
+                projectionSettings = layer.projectionSettings?.Clone(),
+                links = layer.links?.Clone(),
+                cachedLinkedMask = layer.linkedMask != null ? TexturePaintRegionRenderer.Read(layer.linkedMask) : null,
                 paintSettings = layer.paintSettings?.Clone(),
+                layerSymmetry = layer.layerSymmetry?.Clone(),
+                layerSymmetryVersion = layer.layerSymmetryVersion,
                 spline = layer.IsSplineLayer && layer.spline != null
                     ? JsonUtility.FromJson<TexturePaintSpline>(JsonUtility.ToJson(layer.spline)) : null,
                 splineSettings = layer.IsSplineLayer ? layer.splineSettings?.Clone() : null,
@@ -496,6 +544,7 @@ namespace UMA.TexturePaint.Editor
                 hasMask = layer.layerMask?.target?.Front != null,
                 maskBaseValue = layer.layerMask?.baseValue ?? 1f,
                 maskEffects = layer.layerMask?.effects?.Clone() ?? new TexturePaintLayerMaskEffects(),
+                maskReferenceCaches = layer.layerMask?.CaptureReferenceOutputs() ?? new List<TexturePaintMaskReferenceCache>(),
                 maskSourceSettings = layer.layerMask?.sourceSettings?.Clone() ??
                     TexturePaintLayerMask.DefaultSourceSettings(),
                 maskSourceChannel = layer.layerMask?.sourceChannel ?? TexturePaintChannel.Albedo,
@@ -592,6 +641,8 @@ namespace UMA.TexturePaint.Editor
             if (layer.kind == TexturePaintLayerKind.Paint || layer.kind == TexturePaintLayerKind.Spline ||
                 layer.layerMask?.target?.Front != null)
                 result |= TexturePaintPresetPortability.UVDependent;
+            if (layer.kind == TexturePaintLayerKind.Projection)
+                result |= TexturePaintPresetPortability.MeshDependent;
             if (!string.IsNullOrEmpty(layer.pluginId) || !string.IsNullOrEmpty(layer.layerMask?.pluginId))
                 result |= TexturePaintPresetPortability.RequiresPlugin;
             return result;

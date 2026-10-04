@@ -27,7 +27,7 @@ namespace UMA.TexturePaint.Examples
             id = "com.uma.texturepaint.filter.stylization",
             displayName = "Stylization, Kuwahara & Quantization",
             description = "Edge-preserving painterly Kuwahara, posterization, palette reduction, dithering and toon-band filtering.",
-            pluginVersion = "1.0.0",
+            pluginVersion = "1.0.1",
             capabilities = TexturePaintPluginCapability.Filter | TexturePaintPluginCapability.LongRunning,
             declaredChannels = TexturePaintChannelMask.All, readChannels = TexturePaintChannelMask.All,
             supportedTargets = TexturePaintPluginTarget.All, channelSnapshotMaximumResolution = 4096,
@@ -37,7 +37,7 @@ namespace UMA.TexturePaint.Examples
         public static Task Execute(TexturePaintCommandContextV2 c)
         {
             if (c == null) throw new ArgumentNullException(nameof(c));
-            var s = new Settings(c.parameters);
+            var s = new Settings(c.parameters, c.target == TexturePaintPluginTarget.LayerMask);
             return Task.Run(() =>
             {
                 int count = Math.Max(1, c.source.surfaceIds.Count);
@@ -160,8 +160,8 @@ namespace UMA.TexturePaint.Examples
         {
             Color[] palette={s.palette1,s.palette2,s.palette3,s.palette4,s.palette5,s.palette6,s.palette7,s.palette8};
             float best=float.MaxValue;Color result=palette[0];Vector3 lab=ToPerceptual(c);
-            for(int i=0;i<s.paletteCount;i++){Vector3 p=ToPerceptual(palette[i]);float d=(lab-p).sqrMagnitude;if(d<best){best=d;result=palette[i];}}
-            result.a=c.a;return result;
+            for(int i=0;i<s.paletteCount;i++){Vector3 p=ToPerceptual(s.sourceColor ? palette[i].linear : palette[i]);float d=(lab-p).sqrMagnitude;if(d<best){best=d;result=palette[i];}}
+            if(s.destinationColor)result=result.linear;result.a=c.a;return result;
         }
         private static Vector3 ToPerceptual(Color c){float l=Luma(c);return new Vector3(l,(c.r-c.g)*.5f,(c.b-c.g)*.5f);}
         private static float Bayer(int x,int y){int[,]b={{0,8,2,10},{12,4,14,6},{3,11,1,9},{15,7,13,5}};return(b[y&3,x&3]+.5f)/16f;}
@@ -170,8 +170,8 @@ namespace UMA.TexturePaint.Examples
 
         private sealed class Settings
         {
-            public readonly TexturePaintChannel source,destination;public readonly Operation operation;public readonly float amount,radius,detailPreservation,edgeSensitivity,gamma,edgeBias,ditherStrength,edgeWidth,edgeThreshold,edgeSoftness,edgeOpacity;public readonly int levels,quality,paletteCount;public readonly bool preserveAlpha,preserveHue;public readonly Color palette1,palette2,palette3,palette4,palette5,palette6,palette7,palette8,edgeColor;
-            public Settings(TexturePaintPluginParameterSet p){source=(TexturePaintChannel)Mathf.Clamp(p.Integer("sourceChannel"),0,10);destination=(TexturePaintChannel)Mathf.Clamp(p.Integer("destinationChannel"),0,10);operation=(Operation)Mathf.Clamp(p.Integer("operation"),0,5);amount=p.Float("amount",1);radius=p.Float("radius",5);quality=p.Integer("quality",1);detailPreservation=p.Float("detailPreservation",.08f);edgeSensitivity=p.Float("edgeSensitivity",1);levels=p.Integer("levels",6);gamma=p.Float("gamma",1);edgeBias=p.Float("edgeBias",.5f);preserveHue=p.Boolean("preserveHue",true);preserveAlpha=p.Boolean("preserveAlpha",true);ditherStrength=p.Float("ditherStrength",.65f);paletteCount=p.Integer("paletteCount",4);palette1=p.Color("palette1",Color.black);palette2=p.Color("palette2",new Color(.25f,.2f,.18f,1));palette3=p.Color("palette3",new Color(.72f,.6f,.45f,1));palette4=p.Color("palette4",Color.white);palette5=p.Color("palette5",Color.red);palette6=p.Color("palette6",Color.green);palette7=p.Color("palette7",Color.blue);palette8=p.Color("palette8",Color.gray);edgeWidth=p.Float("edgeWidth",1);edgeThreshold=p.Float("edgeThreshold",.08f);edgeSoftness=p.Float("edgeSoftness",.08f);edgeOpacity=p.Float("edgeOpacity",.75f);edgeColor=p.Color("edgeColor",Color.black);}
+            public readonly TexturePaintChannel source,destination;public readonly Operation operation;public readonly float amount,radius,detailPreservation,edgeSensitivity,gamma,edgeBias,ditherStrength,edgeWidth,edgeThreshold,edgeSoftness,edgeOpacity;public readonly int levels,quality,paletteCount;public readonly bool preserveAlpha,preserveHue,sourceColor,destinationColor;public readonly Color palette1,palette2,palette3,palette4,palette5,palette6,palette7,palette8,edgeColor;
+            public Settings(TexturePaintPluginParameterSet p, bool mask){source=(TexturePaintChannel)Mathf.Clamp(p.Integer("sourceChannel"),0,10);destination=(TexturePaintChannel)Mathf.Clamp(p.Integer("destinationChannel"),0,10);operation=(Operation)Mathf.Clamp(p.Integer("operation"),0,5);amount=p.Float("amount",1);radius=p.Float("radius",5);quality=p.Integer("quality",1);detailPreservation=p.Float("detailPreservation",.08f);edgeSensitivity=p.Float("edgeSensitivity",1);levels=p.Integer("levels",6);gamma=p.Float("gamma",1);edgeBias=p.Float("edgeBias",.5f);preserveHue=p.Boolean("preserveHue",true);preserveAlpha=p.Boolean("preserveAlpha",true);ditherStrength=p.Float("ditherStrength",.65f);paletteCount=p.Integer("paletteCount",4);palette1=p.Color("palette1",Color.black);palette2=p.Color("palette2",new Color(.25f,.2f,.18f,1));palette3=p.Color("palette3",new Color(.72f,.6f,.45f,1));palette4=p.Color("palette4",Color.white);palette5=p.Color("palette5",Color.red);palette6=p.Color("palette6",Color.green);palette7=p.Color("palette7",Color.blue);palette8=p.Color("palette8",Color.gray);edgeWidth=p.Float("edgeWidth",1);edgeThreshold=p.Float("edgeThreshold",.08f);edgeSoftness=p.Float("edgeSoftness",.08f);edgeOpacity=p.Float("edgeOpacity",.75f);edgeColor=p.Color("edgeColor",Color.black);sourceColor=!mask&&TexturePaintChannelUtility.IsColor(source);destinationColor=!mask&&TexturePaintChannelUtility.IsColor(destination);if(destinationColor)edgeColor=edgeColor.linear;}
         }
 
         private static List<TexturePaintPluginParameterDefinition> Parameters()=>new List<TexturePaintPluginParameterDefinition>{

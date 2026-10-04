@@ -170,6 +170,7 @@ namespace UMA.TexturePaint
         public string sourceOverlayGuid;
         public Color sourceColor = Color.white;
         public bool mirrorX;
+        public TexturePaintSymmetry symmetry;
         public bool limitStrokeCoverage;
         public TexturePaintNormalConvention normalConvention = TexturePaintNormalConvention.OpenGL;
         public float strokeStabilization;
