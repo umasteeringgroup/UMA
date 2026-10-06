@@ -109,7 +109,7 @@ namespace UMA.TexturePaint.Editor
         private sealed class AuthoredOverlayBakeContext : IDisposable
         {
             private static string ShaderPath =>
-                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/ExportOverlayPack.shader");
+                TexturePaintAssets.ResolveInstallAssetPath("OverlayPainter/Shaders/ExportOverlayPack.shader");
             private readonly TextureSet set;
             private readonly Material material;
             private readonly Dictionary<TexturePaintChannel, RenderTexture> logical =
@@ -1521,7 +1521,7 @@ namespace UMA.TexturePaint.Editor
 
         private static Shader LoadExportShader()
         {
-            Shader shader = AssetDatabase.LoadAssetAtPath<Shader>(UMAPathUtility.ResolveInstallAssetPath(
+            Shader shader = AssetDatabase.LoadAssetAtPath<Shader>(TexturePaintAssets.ResolveInstallAssetPath(
                 "OverlayPainter/Shaders/ExportDilate.shader"));
             if (shader == null || !shader.isSupported)
                 throw new InvalidOperationException(
@@ -1556,7 +1556,7 @@ namespace UMA.TexturePaint.Editor
         {
             folder = (folder ?? string.Empty).Replace('\\', '/').TrimEnd('/');
             return folder.StartsWith("Assets/", StringComparison.Ordinal)
-                ? folder : UMAPathUtility.OverlayPainterGeneratedRoot;
+                ? folder : TexturePaintPaths.GeneratedRoot;
         }
 
         private static void EnsureFolder(string folder)

@@ -48,8 +48,8 @@ namespace UMA.Editors
                     UMAUpdateProcessor.UpdateSlot(edited, false);
                 }
             }
-            using (inspectorView.Section("Validation & painting",
-                "Validate Slot checks references and prepared mesh metadata without changing the source model. View Mesh Data opens the extracted UMA mesh information. Open in Overlay Painter uses this slot's UVs for texture or mask painting. UDIM information identifies prepared tile placement when the slot uses tiled UVs."))
+            using (inspectorView.Section("Validation",
+                "Validate Slot checks references and prepared mesh metadata without changing the source model. View Mesh Data opens the extracted UMA mesh information. UDIM information identifies prepared tile placement when the slot uses tiled UVs."))
             {
                 if (GUILayout.Button("Validate Slot"))
                     foreach (Object item in targets) ((SlotDataAsset)item).ValidateMeshData();
@@ -57,8 +57,6 @@ namespace UMA.Editors
                 using (new EditorGUI.DisabledScope(targets.Length != 1 || UMAMeshData.IsNullOrEmptyMeshData(slot.meshData)))
                 {
                     if (GUILayout.Button("View Mesh Data")) MeshDataViewerWindow.Open(slot);
-                    if (GUILayout.Button("Open in Overlay Painter"))
-                        UMA.TexturePaint.Editor.TexturePaintStandaloneSetupWindow.ShowForSlot(slot);
                 }
                 if (slot.IsUdimMember)
                     EditorGUILayout.LabelField("UDIM", slot.udimGroupName + " / " + slot.udimTileNumber);

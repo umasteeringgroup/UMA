@@ -28,6 +28,7 @@ Shader "Hidden/UMA/TexturePaint/RibbonProjection"
             #include "UnityCG.cginc"
             #include "HemSeam.hlsl"
             #include "Garment.hlsl"
+            #include "PathGenerator.hlsl"
 
             struct RibbonSegment
             {
@@ -573,7 +574,15 @@ Shader "Hidden/UMA/TexturePaint/RibbonProjection"
                 float4 desired;
                 float localAlong = bestAlong - _RibbonMinimumAlong;
                 float alongSpan = max(0.0001, _RibbonMaximumAlong - _RibbonMinimumAlong);
-                if (_GarmentEnabled != 0)
+                if (_PathGeneratorEnabled != 0)
+                {
+                    float width=max(length(bestAcrossVector),.0001);
+                    float pixelWidth=max(length(float2(dot(ddx(input.worldPosition),bestAcrossVector),
+                        dot(ddy(input.worldPosition),bestAcrossVector)))/(width*width),.0001);
+                    desired=ShadePathGenerator(bestAcross,localAlong,alongSpan,_RibbonClosed!=0,pixelWidth,
+                        input.worldPosition,input.worldNormal,input.worldTangent,input.uv,width);
+                }
+                else if (_GarmentEnabled != 0)
                 {
                     float width=max(length(bestAcrossVector),.0001);
                     float pixelWidth=max(length(float2(dot(ddx(input.worldPosition),bestAcrossVector),

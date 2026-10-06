@@ -10,7 +10,11 @@ namespace UMA.Editors.PackageSupport
     public enum UMAContentKind
     {
         Uma3,
-        Uma2
+        Uma2,
+        OverlayPainter,
+        OverlayPainterExamples,
+        OverlayPainterTests,
+        HairCards
     }
 
     public static class UMAContentCatalog
@@ -18,24 +22,97 @@ namespace UMA.Editors.PackageSupport
         public const string ManifestFileName = "UMAContentManifest.json";
         public const int CurrentManifestFormatVersion = 2;
 
-        public static string Id(UMAContentKind kind) =>
-            kind == UMAContentKind.Uma3 ? "uma3" : "uma2";
+        public static string Id(UMAContentKind kind) => kind switch
+        {
+            UMAContentKind.Uma3 => "uma3",
+            UMAContentKind.Uma2 => "uma2",
+            UMAContentKind.OverlayPainter => "overlay-painter",
+            UMAContentKind.OverlayPainterExamples => "overlay-painter-examples",
+            UMAContentKind.OverlayPainterTests => "overlay-painter-tests",
+            UMAContentKind.HairCards => "hair-cards",
+            _ => throw new ArgumentOutOfRangeException(nameof(kind))
+        };
 
-        public static string DisplayName(UMAContentKind kind) =>
-            kind == UMAContentKind.Uma3 ? "UMA 3 Content" : "UMA 2 Legacy Content";
+        public static string DisplayName(UMAContentKind kind) => kind switch
+        {
+            UMAContentKind.Uma3 => "UMA 3 Content",
+            UMAContentKind.Uma2 => "UMA 2 Legacy Content",
+            UMAContentKind.OverlayPainter => "Overlay Painter",
+            UMAContentKind.OverlayPainterExamples => "Overlay Painter Examples",
+            UMAContentKind.OverlayPainterTests => "Overlay Painter Tests",
+            UMAContentKind.HairCards => "Hair Card Editor",
+            _ => throw new ArgumentOutOfRangeException(nameof(kind))
+        };
 
-        public static string Root(UMAContentKind kind) =>
-            kind == UMAContentKind.Uma3
-                ? UMAPathUtility.Uma3ContentRoot
-                : UMAPathUtility.Uma2ContentRoot;
+        public static string Root(UMAContentKind kind) => kind switch
+        {
+            UMAContentKind.Uma3 => UMAPathUtility.Uma3ContentRoot,
+            UMAContentKind.Uma2 => UMAPathUtility.Uma2ContentRoot,
+            UMAContentKind.OverlayPainter => "Assets/UMA/OverlayPainter",
+            UMAContentKind.OverlayPainterExamples => "Assets/UMA/OverlayPainterExamples",
+            UMAContentKind.OverlayPainterTests => "Assets/UMA/OverlayPainterTests",
+            UMAContentKind.HairCards => "Assets/UMA/HairCards",
+            _ => throw new ArgumentOutOfRangeException(nameof(kind))
+        };
 
         public static string ManifestPath(UMAContentKind kind) =>
             Root(kind) + "/" + ManifestFileName;
 
-        public static string[] Dependencies(UMAContentKind kind) =>
-            kind == UMAContentKind.Uma3
-                ? new[] { "core", "srp" }
-                : new[] { "core", "srp", "uma3" };
+        public static string[] Dependencies(UMAContentKind kind) => kind switch
+        {
+            UMAContentKind.Uma3 => new[] { "core", "srp" },
+            UMAContentKind.Uma2 => new[] { "core", "srp", "uma3" },
+            UMAContentKind.OverlayPainter => new[] { "core" },
+            UMAContentKind.OverlayPainterExamples => new[] { "core", "overlay-painter", "uma3", "srp" },
+            UMAContentKind.OverlayPainterTests => new[] { "core", "overlay-painter", "test-framework" },
+            UMAContentKind.HairCards => new[] { "core" },
+            _ => throw new ArgumentOutOfRangeException(nameof(kind))
+        };
+
+        public static bool IsPlugin(UMAContentKind kind) => kind >= UMAContentKind.OverlayPainter;
+
+        public static IEnumerable<UMAContentKind> Plugins =>
+            Enum.GetValues(typeof(UMAContentKind)).Cast<UMAContentKind>().Where(IsPlugin);
+
+        public static string Description(UMAContentKind kind) => kind switch
+        {
+            UMAContentKind.OverlayPainter => "Paint and author layered textures directly on UMA characters or in the 2D texture view. Includes material channels, masks, layer effects, editable paths, and procedural generators for clothing, skin, and other surfaces.",
+            UMAContentKind.OverlayPainterExamples => "Example assets and presets for learning Overlay Painter workflows. Requires Overlay Painter, UMA 3 Content, and render pipeline support.",
+            UMAContentKind.OverlayPainterTests => "Automated tests for developers extending or validating Overlay Painter. Requires Overlay Painter and the Unity Test Framework; it is optional for normal painting workflows.",
+            UMAContentKind.HairCards => "Create and groom hair cards on meshes and UMA characters. Paint growth regions, sculpt guides, build procedural hairstyles, author LODs, and bake meshes, slots, overlays, and wardrobe recipes. Includes runtime groom support. UMA's render pipeline support supplies the optional hair shaders and atlas textures. User grooms, exports, recovery, and preferences remain outside the plugin folder.",
+            _ => string.Empty
+        };
+
+        public static string PackageStem(UMAContentKind kind) => kind switch
+        {
+            UMAContentKind.OverlayPainter => "OverlayPainter",
+            UMAContentKind.OverlayPainterExamples => "OverlayPainterExamples",
+            UMAContentKind.OverlayPainterTests => "OverlayPainterTests",
+            UMAContentKind.HairCards => "HairCards",
+            _ => throw new ArgumentOutOfRangeException(nameof(kind))
+        };
+
+        public static string ManifestGuid(UMAContentKind kind) => kind switch
+        {
+            UMAContentKind.OverlayPainter => "baf87f8fd4ef4ae49c08b67233d50f71",
+            UMAContentKind.OverlayPainterExamples => "f3d05e75b8aa4d3bb6d02fbb6e6f34b8",
+            UMAContentKind.OverlayPainterTests => "5f78f34f3fa748d0b47ad8ba7609428f",
+            UMAContentKind.HairCards => "6adee602b17a4f099ff31323a6c8dc4c",
+            _ => throw new ArgumentOutOfRangeException(nameof(kind))
+        };
+
+        public static string[] PluginRequiredPaths(UMAContentKind kind)
+        {
+            string[] paths = kind switch
+            {
+                UMAContentKind.OverlayPainter => new[] { "Runtime/UMA.TexturePaint.Runtime.asmdef", "Editor/UMA.TexturePaint.Editor.asmdef", "Editor/TexturePaintPluginActions.cs", "Shaders/StrokeRasterize.compute" },
+                UMAContentKind.OverlayPainterExamples => new[] { "Samples/Overlay Painter Document.asset" },
+                UMAContentKind.OverlayPainterTests => new[] { "UMA.TexturePaint.Editor.Tests.asmdef" },
+                UMAContentKind.HairCards => new[] { "Core/UMA.HairCards.Core.asmdef", "Runtime/UMA.HairCards.Runtime.asmdef", "Editor/UMA.HairCards.Editor.asmdef", "Editor/HairCardsPluginActions.cs", "UMAPluginDocumentation.json" },
+                _ => throw new ArgumentOutOfRangeException(nameof(kind))
+            };
+            return paths.Select(path => Root(kind) + "/" + path).ToArray();
+        }
     }
 
     [Serializable]
@@ -53,6 +130,7 @@ namespace UMA.Editors.PackageSupport
     public sealed class UMAContentManifest
     {
         public int formatVersion;
+        public int requiredPluginApiVersion;
         public string contentId;
         public string contentVersion;
         public string requiredCoreVersion;

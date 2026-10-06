@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using UnityEngine;
@@ -24,6 +25,8 @@ namespace UMA.TexturePaint
         private readonly MaterialPropertyBlock ribbonProperties = new MaterialPropertyBlock();
         private readonly StrokeHistory history = new StrokeHistory();
         private StrokeContext activeContext;
+        private ITexturePaintPathGenerator activePathGenerator;
+        private IDisposable pathGeneratorResources;
         private TexturePaintStencilRenderer stencilRenderer;
         private readonly Dictionary<Texture, Texture2D> stencilReadbacks = new Dictionary<Texture, Texture2D>();
         private Texture StrokeStencil(ActiveTarget active)
@@ -326,6 +329,8 @@ namespace UMA.TexturePaint
                     // replacement set so stale outputs are cleared, even when no output maps here.
                     if (context.hemSeam?.enabled == true && !context.hemSeam.SupportsAnyOutput(required)) continue;
                     if (context.garment?.enabled == true && !context.garment.SupportsAnyOutput(required)) continue;
+                    if (context.pathGenerator?.enabled == true &&
+                        !context.channelSources.Keys.Any(channel => required.GetChannel(channel) != null)) continue;
                     string targetName = !string.IsNullOrEmpty(required.Name)
                         ? required.Name
                         : !string.IsNullOrEmpty(required.persistentId)
@@ -337,6 +342,19 @@ namespace UMA.TexturePaint
                     return FailStrokeStart($"Paint target '{targetName}' has no writable raster target. " +
                         "Its selected channel may be missing, locked, set to zero contribution, or use an invalid source.");
                 }
+            }
+            if (context.pathGenerator?.enabled == true)
+            {
+                activePathGenerator = TexturePaintPathGenerators.Find(context.pathGenerator.generatorId);
+                if (activePathGenerator == null) return FailStrokeStart("The path generator is not installed.");
+                try
+                {
+                    context.pathGenerator = context.pathGenerator.Clone();
+                    context.pathGenerator.Normalize();
+                    pathGeneratorResources = activePathGenerator.Prepare(context.pathGenerator);
+                }
+                catch (Exception exception)
+                { return FailStrokeStart("Path generator: " + exception.Message); }
             }
             captureActiveStrokeHistory = !context.derivedLayerRaster;
             if (context.replaceHistoryGroup && !string.IsNullOrEmpty(context.historyGroupKey))
@@ -698,6 +716,8 @@ namespace UMA.TexturePaint
                 minimumAlong = Mathf.Min(minimumAlong, data[i].leftStartAlong.w, data[i].leftEndAlong.w);
                 maximumAlong = Mathf.Max(maximumAlong, data[i].leftStartAlong.w, data[i].leftEndAlong.w);
             }
+            var generatorSettings = activeContext.pathGenerator?.enabled == true ? activeContext.pathGenerator : null;
+            var generator = activePathGenerator;
             using ComputeBuffer segmentBuffer = new ComputeBuffer(data.Length,
                 Marshal.SizeOf<TexturePaintRibbonSegment>(), ComputeBufferType.Structured);
 
@@ -719,7 +739,7 @@ namespace UMA.TexturePaint
             // Edge Fade changes coverage for the entire ribbon, regardless of the preview
             // channel. Legacy paths without that effect retain their saved brush softness.
             TexturePaintLayerEffectSettings sideFade = null;
-            if (activeContext.ribbonEffects != null)
+            if (generatorSettings == null && activeContext.ribbonEffects != null)
                 foreach (TexturePaintLayerEffectSettings effect in activeContext.ribbonEffects.Stack)
                     if (effect?.enabled == true && effect.kind == TexturePaintLayerEffectKind.EdgeFade)
                     { sideFade = effect; break; }
@@ -760,11 +780,14 @@ namespace UMA.TexturePaint
                 Texture2D geometryMask = !directUV && HasGeometryRestrictions(activeContext.geometrySelection)
                     ? GetGeometryMask(active, unrestricted) : null;
                 ribbonProperties.Clear();
+                ribbonProperties.SetInt("_PathGeneratorEnabled", 0);
                 ribbonProperties.SetInt("_GarmentEnabled", 0);
                 if (activeContext.garment?.enabled == true) activeContext.garment.Bind(ribbonProperties, active.channel,
                     new Vector2(activeContext.brush.size * 2, (maximumAlong-minimumAlong)*activeContext.brush.size*2));
                 ribbonProperties.SetInt("_HemEnabled", 0);
                 activeContext.hemSeam?.Bind(ribbonProperties, active.channel);
+                generator?.Bind(ribbonProperties, generatorSettings, pathGeneratorResources, active.channel, active.color,
+                    new Vector2(activeContext.brush.size * 2, (maximumAlong-minimumAlong)*activeContext.brush.size*2));
                 ribbonProperties.SetBuffer("_RibbonSegments", segmentBuffer);
                 ribbonProperties.SetInt("_RibbonSegmentCount", data.Length);
                 ribbonProperties.SetTexture("_DestinationTexture", active.target.Front);
@@ -830,6 +853,7 @@ namespace UMA.TexturePaint
                         TexturePaintLayerEffectSettings effect = ribbonEffects.Stack[effectIndex];
                         if (!TexturePaintLayerEffects.EnabledFor(effect, active.channel) ||
                             effect.kind == TexturePaintLayerEffectKind.EdgeFade ||
+                            (generatorSettings != null && TexturePaintLayerEffects.IsDistanceEffect(effect.kind)) ||
                             TexturePaintLayerEffects.IsCompositeOnlyEffect(effect.kind)) continue;
                         effectPasses.Add(effect);
                     }
@@ -1335,6 +1359,7 @@ namespace UMA.TexturePaint
 
         public void EndStroke(bool commit = true)
         {
+            pathGeneratorResources?.Dispose(); pathGeneratorResources = null; activePathGenerator = null;
             if (!strokeStarted)
             {
                 EndInteractiveCompositing();
@@ -1666,7 +1691,7 @@ namespace UMA.TexturePaint
             source = selected;
             bool usable = coverageOnly ? TryResolveRibbonCoverageSource(textures, source, out paintTexture) :
                 TryResolveChannelPaintSource(textures, channel, source, out paintTexture);
-            if (context.hemSeam?.enabled != true && context.garment?.enabled != true &&
+            if (context.pathGenerator?.enabled != true && context.hemSeam?.enabled != true && context.garment?.enabled != true &&
                 mode != TexturePaintSourceMode.SourceTexture && textures != null &&
                 (uint)textures.activeLayerIndex < (uint)textures.layers.Count)
             {
@@ -1688,7 +1713,7 @@ namespace UMA.TexturePaint
 
         private void ConfigureRibbonCoverage(StrokeContext context, TextureSet textures, TexturePaintSourceMode mode)
         {
-            if (context.editLayerMask || context.hemSeam?.enabled == true || context.garment?.enabled == true) return;
+            if (context.editLayerMask || context.pathGenerator?.enabled == true || context.hemSeam?.enabled == true || context.garment?.enabled == true) return;
             Texture coverage = null;
             float alpha = 1f;
             if (context.channelSources.Count > 0)
@@ -1734,6 +1759,7 @@ namespace UMA.TexturePaint
 
         private bool FailStrokeStart(string error)
         {
+            pathGeneratorResources?.Dispose(); pathGeneratorResources = null; activePathGenerator = null;
             LastStrokeError = error;
             activeTargets.Clear();
             activeStampTexture = null;

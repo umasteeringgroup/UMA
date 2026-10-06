@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 
 namespace UMA.TexturePaint
@@ -54,26 +55,28 @@ namespace UMA.TexturePaint
             Matrix4x4 localToWorld = transform != null ? transform.localToWorldMatrix : Matrix4x4.identity;
             Matrix4x4 normalToWorld = localToWorld.inverse.transpose;
             float[] vertexCurvature = BuildVertexSignedCurvature(vertices, normals, triangles);
-            float[] vertexThickness = BuildVertexThickness(vertices, normals, mesh.bounds, transform);
+            var geometry = new TexturePaintGeometryQueries(vertices, triangles, localToWorld);
             Color[] positions = new Color[width * height];
             Color[] worldNormals = Fill(width * height, new Color(0.5f, 0.5f, 1f, 0f));
             Color[] curvatures = new Color[width * height];
             Color[] ao = new Color[width * height];
             Color[] thickness = new Color[width * height];
             Color[] ids = new Color[width * height];
+            float[] distances = new float[width * height];
+            Array.Fill(distances, float.PositiveInfinity);
 
             for (int triangle = 0; triangle < triangles.Length / 3; triangle++)
             {
                 if ((triangle & 63) == 0)
                 {
                     operation.ThrowIfCancellationRequested();
-                    operation.Report(triangle / (float)Mathf.Max(1, triangles.Length / 3));
+                    operation.Report(.2f * triangle / Mathf.Max(1, triangles.Length / 3));
                 }
                 int offset = triangle * 3;
                 int ia = triangles[offset], ib = triangles[offset + 1], ic = triangles[offset + 2];
                 int island = surface.triangleIslands != null && triangle < surface.triangleIslands.Length
                     ? surface.triangleIslands[triangle] : -1;
-                RasterizeTriangle(uv[ia], uv[ib], uv[ic], width, height, (x, y, barycentric) =>
+                RasterizeTriangle(uv[ia], uv[ib], uv[ic], width, height, distances, (x, y, barycentric) =>
                 {
                     Vector3 localPosition = vertices[ia] * barycentric.x + vertices[ib] * barycentric.y + vertices[ic] * barycentric.z;
                     Vector3 localNormal = (normals[ia] * barycentric.x + normals[ib] * barycentric.y + normals[ic] * barycentric.z).normalized;
@@ -82,23 +85,40 @@ namespace UMA.TexturePaint
                     float curve = Mathf.Clamp(vertexCurvature[ia] * barycentric.x +
                         vertexCurvature[ib] * barycentric.y + vertexCurvature[ic] * barycentric.z,
                         -1f, 1f);
-                    float thick = Mathf.Max(0f, vertexThickness[ia] * barycentric.x + vertexThickness[ib] * barycentric.y + vertexThickness[ic] * barycentric.z);
                     int index = y * width + x;
                     positions[index] = new Color(worldPosition.x, worldPosition.y, worldPosition.z, 1f);
                     worldNormals[index] = Encode(normal, 1f);
                     float encodedCurvature = curve * 0.5f + 0.5f;
                     curvatures[index] = new Color(encodedCurvature, encodedCurvature,
                         encodedCurvature, 1f);
-                    // This inexpensive accessibility estimate deliberately responds only to
-                    // concavity. Convex edges are exposed and belong to the wear signal instead.
-                    float accessibility = 1f - Mathf.Clamp01(-curve);
-                    ao[index] = new Color(accessibility, accessibility, accessibility, 1f);
-                    thickness[index] = new Color(thick, thick, thick, 1f);
                     ids[index] = new Color(triangle, surface.index, island, 1f);
                 });
             }
 
-            operation.Report(1f);
+            float extent = Mathf.Max(.0001f, geometry.Bounds.size.magnitude);
+            float bias = Mathf.Max(1e-7f, extent * .00001f);
+            // Bake at covered texels, not vertices: a large flat polygon can still sit under
+            // an overhang. Chunking bounds cancellation latency and reports ordered progress.
+            for (int start = 0; start < height; start += 8)
+            {
+                int end = Math.Min(height, start + 8);
+                Parallel.For(start, end, new ParallelOptions { CancellationToken = operation.cancellationToken }, y =>
+                {
+                    for (int x = 0; x < width; x++)
+                    {
+                        int i = y * width + x;
+                        if (ids[i].a < .5f) continue;
+                        Color p = positions[i], n = worldNormals[i];
+                        Vector3 position = new Vector3(p.r, p.g, p.b);
+                        Vector3 normal = new Vector3(n.r * 2 - 1, n.g * 2 - 1, n.b * 2 - 1);
+                        float accessibility = geometry.Occlusion(position, normal, 32, extent * .25f, bias);
+                        float thick = geometry.Thickness(position, normal, extent, bias);
+                        ao[i] = new Color(accessibility, accessibility, accessibility, 1);
+                        thickness[i] = new Color(thick, thick, thick, 1);
+                    }
+                });
+                operation.Report(.2f + .8f * end / height);
+            }
 
             return new ProceduralMeshMaps
             {
@@ -149,37 +169,22 @@ namespace UMA.TexturePaint
             (neighbors[b] ??= new HashSet<int>()).Add(a);
         }
 
-        private static float[] BuildVertexThickness(Vector3[] vertices, Vector3[] normals, Bounds bounds, Transform transform)
+        private static void RasterizeTriangle(Vector2 a, Vector2 b, Vector2 c, int width, int height,
+            float[] distances, Action<int, int, Vector3> write)
         {
-            float[] result = new float[vertices.Length];
-            float scale = transform != null ? (Mathf.Abs(transform.lossyScale.x) + Mathf.Abs(transform.lossyScale.y) + Mathf.Abs(transform.lossyScale.z)) / 3f : 1f;
-            for (int i = 0; i < vertices.Length; i++) result[i] = RayBoxExit(vertices[i], -normals[i].normalized, bounds) * scale;
-            return result;
-        }
-
-        private static float RayBoxExit(Vector3 origin, Vector3 direction, Bounds bounds)
-        {
-            float exit = float.PositiveInfinity;
-            for (int axis = 0; axis < 3; axis++)
-            {
-                float d = direction[axis];
-                if (Mathf.Abs(d) < 0.000001f) continue;
-                float boundary = d > 0f ? bounds.max[axis] : bounds.min[axis];
-                float distance = (boundary - origin[axis]) / d;
-                if (distance >= 0f) exit = Mathf.Min(exit, distance);
-            }
-            return float.IsInfinity(exit) ? 0f : Mathf.Max(0f, exit);
-        }
-
-        private static void RasterizeTriangle(Vector2 a, Vector2 b, Vector2 c, int width, int height, Action<int, int, Vector3> write)
-        {
-            Vector2 pa = Vector2.Scale(a, new Vector2(width - 1, height - 1));
-            Vector2 pb = Vector2.Scale(b, new Vector2(width - 1, height - 1));
-            Vector2 pc = Vector2.Scale(c, new Vector2(width - 1, height - 1));
-            int minX = Mathf.Clamp(Mathf.FloorToInt(Mathf.Min(pa.x, Mathf.Min(pb.x, pc.x))), 0, width - 1);
-            int maxX = Mathf.Clamp(Mathf.CeilToInt(Mathf.Max(pa.x, Mathf.Max(pb.x, pc.x))), 0, width - 1);
-            int minY = Mathf.Clamp(Mathf.FloorToInt(Mathf.Min(pa.y, Mathf.Min(pb.y, pc.y))), 0, height - 1);
-            int maxY = Mathf.Clamp(Mathf.CeilToInt(Mathf.Max(pa.y, Mathf.Max(pb.y, pc.y))), 0, height - 1);
+            // UVs describe texel edges; samples below are at texel centers. Using width - 1
+            // shrinks the mesh map and leaves valid geometry uncovered along island seams.
+            Vector2 size = new Vector2(width, height);
+            Vector2 pa = Vector2.Scale(a, size);
+            Vector2 pb = Vector2.Scale(b, size);
+            Vector2 pc = Vector2.Scale(c, size);
+            // Supply a small guard band for bilinear filtering and higher-resolution output.
+            // The destination geometry mask remains responsible for clipping the final layer.
+            const float padding = 3f;
+            int minX = Mathf.Clamp(Mathf.FloorToInt(Mathf.Min(pa.x, Mathf.Min(pb.x, pc.x)) - padding), 0, width - 1);
+            int maxX = Mathf.Clamp(Mathf.CeilToInt(Mathf.Max(pa.x, Mathf.Max(pb.x, pc.x)) + padding), 0, width - 1);
+            int minY = Mathf.Clamp(Mathf.FloorToInt(Mathf.Min(pa.y, Mathf.Min(pb.y, pc.y)) - padding), 0, height - 1);
+            int maxY = Mathf.Clamp(Mathf.CeilToInt(Mathf.Max(pa.y, Mathf.Max(pb.y, pc.y)) + padding), 0, height - 1);
             float denominator = (pb.y - pc.y) * (pa.x - pc.x) + (pc.x - pb.x) * (pa.y - pc.y);
             if (Mathf.Abs(denominator) < 0.0000001f) return;
             for (int y = minY; y <= maxY; y++)
@@ -189,8 +194,35 @@ namespace UMA.TexturePaint
                 float wa = ((pb.y - pc.y) * (p.x - pc.x) + (pc.x - pb.x) * (p.y - pc.y)) / denominator;
                 float wb = ((pc.y - pa.y) * (p.x - pc.x) + (pa.x - pc.x) * (p.y - pc.y)) / denominator;
                 float wc = 1f - wa - wb;
-                if (wa >= -0.0001f && wb >= -0.0001f && wc >= -0.0001f) write(x, y, new Vector3(wa, wb, wc));
+                Vector3 barycentric = new Vector3(wa, wb, wc);
+                float distance = 0f;
+                if (wa < 0f || wb < 0f || wc < 0f)
+                {
+                    // Sample the nearest point on the triangle, never empty map pixels or
+                    // extrapolated positions. Tiny and mirrored triangles work the same way.
+                    distance = float.PositiveInfinity;
+                    ClosestEdge(p, pa, pb, Vector3.right, Vector3.up, ref distance, ref barycentric);
+                    ClosestEdge(p, pb, pc, Vector3.up, Vector3.forward, ref distance, ref barycentric);
+                    ClosestEdge(p, pc, pa, Vector3.forward, Vector3.right, ref distance, ref barycentric);
+                }
+                int index = y * width + x;
+                if (distance > padding * padding || distance > distances[index]) continue;
+                // Padding must never overwrite a real sample from another triangle/island.
+                distances[index] = distance;
+                write(x, y, barycentric);
             }
+        }
+
+        private static void ClosestEdge(Vector2 point, Vector2 a, Vector2 b,
+            Vector3 weightsA, Vector3 weightsB, ref float distance, ref Vector3 barycentric)
+        {
+            Vector2 edge = b - a;
+            float t = edge.sqrMagnitude > 0f
+                ? Mathf.Clamp01(Vector2.Dot(point - a, edge) / edge.sqrMagnitude) : 0f;
+            float candidate = (point - (a + edge * t)).sqrMagnitude;
+            if (candidate >= distance) return;
+            distance = candidate;
+            barycentric = Vector3.LerpUnclamped(weightsA, weightsB, t);
         }
 
         private static Color Encode(Vector3 value, float alpha) => new Color(value.x * 0.5f + 0.5f, value.y * 0.5f + 0.5f, value.z * 0.5f + 0.5f, alpha);

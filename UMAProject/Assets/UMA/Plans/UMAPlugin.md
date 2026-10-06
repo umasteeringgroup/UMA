@@ -1,11 +1,11 @@
 # UMAPlugin implementation plan
 
-Status: Proposed; implementation has not started.
+Status: API version 1 implemented. See [implementation and usage](../Docs/UMAPlugins.md).
 Date: 2026-09-24.
 Fitness review: 2026-10-04; revised for the [Plugin Migration Plan](Plugin%20Migration.MD).
 Reviewed checkout: `C:\GitHub\UMA\UMAProject`, UMA NextGen 3.1f1, Unity 6000.3.18f1.
 Supported baseline: Unity 6.3 and newer.
-Review method: source and assembly inspection plus Unity 6.3 API documentation. No implementation of this API was found in the checkout. The revisions below are design changes; runtime/editor acceptance checks remain future work.
+Original review method: source and assembly inspection plus Unity 6.3 API documentation. Implementation followed the revised contract on 2026-10-04. The specification below records the design; current validation results are recorded in the migration plan.
 
 ## Goal
 
@@ -64,7 +64,7 @@ private static void OpenSlotTool(UnityEditor.Editor editor)
 }
 ```
 
-The example is a proposed API sketch; `MySlotToolWindow` represents a plugin-owned implementation.
+`MySlotToolWindow` represents a plugin-owned implementation.
 
 Attribute options:
 
@@ -106,7 +106,7 @@ public interface IUMAPluginHost
 }
 ```
 
-This is a contract sketch, not compilable implementation source. The synchronization interface is optional for ordinary inspectors using only their SerializedObject, and required for shipped UMA hosts with detached or deferred edits. A window can implement it itself or provide an adapter through RegisterExplicitHost; it need not replace its cached Editor's type. Plugins still receive the original Editor; they do not call the host interface or depend on a specific core inspector class.
+This is the implemented public contract, shown without method bodies. The synchronization interface is optional for ordinary inspectors using only their SerializedObject, and required for shipped UMA hosts with detached or deferred edits. A window can implement it itself or provide an adapter through RegisterExplicitHost; it need not replace its cached Editor's type. Plugins still receive the original Editor; they do not call the host interface or depend on a specific core inspector class.
 
 No new `OnGUI`, `Update`, `OnEnable`, `OnDisable`, `OnDestroy`, event bus, scheduler, window manager, Undo wrapper, access facade, runtime plugin loader, or dependency injection API is needed. Plugins open normal windows and subscribe/unsubscribe to Unity events themselves.
 

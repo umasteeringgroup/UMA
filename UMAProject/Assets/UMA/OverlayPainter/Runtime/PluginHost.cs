@@ -704,7 +704,7 @@ namespace UMA.TexturePaint
             for (int i = 0; i < stripes.Count; i++)
             {
                 TexturePaintStripeDefinition stripe = stripes[i];
-                if (stripe == null || !IsFinite(stripe.position) || !IsFinite(stripe.width) ||
+                if (stripe == null || !IsFinite(stripe.Rotation) || !IsFinite(stripe.position) || !IsFinite(stripe.width) ||
                     !IsFinite(stripe.softness) || !IsFinite(stripe.opacity) ||
                     !IsFinite(stripe.color.r) || !IsFinite(stripe.color.g) ||
                     !IsFinite(stripe.color.b) || !IsFinite(stripe.color.a) ||

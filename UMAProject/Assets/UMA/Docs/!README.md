@@ -16,8 +16,8 @@ Artists creating new content should continue with:
 - [Content Creation](ContentCreation.md) — practical Blender and Maya workflows for preparing meshes, textures, slots, overlays, and wardrobe.
 - [UMA Tools for Blender](UMAToolsForBlender.md) — Blender validation, rigging, weight, UDIM, import, and dependable UMA FBX export workflows.
 - [Creating a New Race](CreatingANewRace.md) — the complete race-authoring process from source model through runtime validation.
-- [Overlay Painter](OverlayPainter.md) — non-destructive 3D/2D painting, per-channel projections and surface warping, UDIM fills, path fade curves, composable masks, stencils, linked layers, selections, symmetry, and recipe-ready export.
-- [Overlay Painter Generators and Filters](OverlayPainterGeneratorsAndFilters.md) — artist workflows, material recipes, detailed controls, and troubleshooting for every included procedural plugin.
+- [Overlay Painter](../OverlayPainter/Documentation/OverlayPainter.md) — non-destructive 3D/2D painting, per-channel projections and surface warping, UDIM fills, path fade curves, composable masks, stencils, linked layers, selections, symmetry, and recipe-ready export.
+- [Overlay Painter Generators and Filters](../OverlayPainter/Documentation/OverlayPainterGeneratorsAndFilters.md) — artist workflows, material recipes, detailed controls, and troubleshooting for every included procedural plugin.
 
 You can open these guides inside Unity from `UMA > View Documentation`.
 
@@ -53,8 +53,8 @@ You can open these guides inside Unity from `UMA > View Documentation`.
 - [OverlayDataAsset](OverlayDataAsset.md)
 - [Examine Overlays](ExamineOverlays.md)
 - [Examine Slots](ExamineSlots.md)
-- [Overlay Painter](OverlayPainter.md)
-- [Overlay Painter Generators and Filters](OverlayPainterGeneratorsAndFilters.md)
+- [Overlay Painter](../OverlayPainter/Documentation/OverlayPainter.md)
+- [Overlay Painter Generators and Filters](../OverlayPainter/Documentation/OverlayPainterGeneratorsAndFilters.md)
 - [Texture Utilities](TextureUtilities.md)
 - [Weight Touchup](WeightTouchup.md)
 - [Wardrobe Recipe Editor](WardrobeRecipeEditor.md)
@@ -65,6 +65,7 @@ You can open these guides inside Unity from `UMA > View Documentation`.
 
 ### Shape, fitting, and visibility
 
+- [Optimizing Blendshapes](OptimizingBlendshapes.MD) — selective shape loading, MeshModifiers, baking, race generation, and performance.
 - [DNA Creation Guide](DNACreationGuide.md)
 - [New DNA System](NewDNASystem.md)
 - [Mesh Modifiers](MeshModifiers.md)

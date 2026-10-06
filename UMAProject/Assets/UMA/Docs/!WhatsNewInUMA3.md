@@ -88,7 +88,7 @@ Hair workflow fixes and usability improvements:
 - Fixed texture-map previews disappearing after painting when temporary GPU references were lost, without discarding the saved painting or consuming an Undo step.
 - Added an Exit Stage button and improved floating-toolbar layout around docked panels and narrow views. Improved sample importing, validation UI, saving, and recovery behavior.
 
-See the [Hair Cards guide](../HairCards/README.md), [ShortHairPart guide](../HairCards/ShortHairPartGuide.md), and [BraidedBun guide](../HairCards/BraidedBunGuide.md).
+See the [Hair Cards guide](../HairCards/Documentation/README.md), [ShortHairPart guide](../HairCards/Documentation/ShortHairPartGuide.md), and [BraidedBun guide](../HairCards/Documentation/BraidedBunGuide.md).
 
 ### Generated Resource Reuse and Crowd Profiling
 

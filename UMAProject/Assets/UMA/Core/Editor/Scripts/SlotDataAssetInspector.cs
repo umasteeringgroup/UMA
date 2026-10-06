@@ -359,19 +359,6 @@ namespace UMA.Editors
             }
             GUILayout.EndHorizontal();
 
-            using (new EditorGUI.DisabledScope(targets.Length != 1 || slot == null ||
-                UMAMeshData.IsNullOrEmptyMeshData(slot.meshData)))
-            {
-                if (GUILayout.Button(new GUIContent("Open in Overlay Painter",
-                    "Open this slot, or its complete UDIM group, without generating an avatar."),
-                    GUILayout.Height(28f)))
-                {
-                    UMA.TexturePaint.Editor.TexturePaintStandaloneSetupWindow.ShowForSlot(slot);
-                }
-            }
-            if (targets.Length != 1)
-                EditorGUILayout.HelpBox("Select one SlotDataAsset to open Overlay Painter.", MessageType.Info);
-
             if (targetAsset != null && !string.IsNullOrEmpty(targetAsset.Errors))
             {
                 EditorGUILayout.HelpBox($"Errors: {targetAsset.Errors}", MessageType.Error);

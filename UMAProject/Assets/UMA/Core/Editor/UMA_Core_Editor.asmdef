@@ -3,8 +3,6 @@
     "rootNamespace": "",
     "references": [
         "UMA_Core",
-        "UMA.TexturePaint.Editor",
-        "UMA.TexturePaint.Runtime",
         "UMA_Editor",
         "GUID:270a2b1433f4413fbe3998444ae4eedb",
         "Unity.Mathematics",

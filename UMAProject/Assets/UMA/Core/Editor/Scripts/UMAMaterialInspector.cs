@@ -572,15 +572,15 @@ namespace UMA.Editors
 
             EditorGUILayout.Space(4f);
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            EditorGUILayout.LabelField(new GUIContent("Overlay Painter Channel Layout",
-                "Describes what the shader reads from each component so Overlay Painter can unpack and repack the physical texture automatically."), EditorStyles.boldLabel);
+            EditorGUILayout.LabelField(new GUIContent("Channel Layout",
+                "Describes what the shader reads from each component so texture tools can unpack and repack the physical texture automatically."), EditorStyles.boldLabel);
 
             EditorGUI.BeginChangeCheck();
             UMAMaterial.TextureChannelLayoutMode newMode = (UMAMaterial.TextureChannelLayoutMode)EditorGUILayout.EnumPopup(
                 new GUIContent("Layout", "Automatic follows known Unity/UMA shader conventions. Custom stores the editable RGBA meanings on this UMA Material."), currentMode);
             if (EditorGUI.EndChangeCheck())
             {
-                Undo.RecordObject(target, "Change Overlay Painter Channel Layout");
+                Undo.RecordObject(target, "Change Channel Layout");
                 modeProperty.intValue = (int)newMode;
                 if (newMode == UMAMaterial.TextureChannelLayoutMode.Custom)
                 {
@@ -602,7 +602,7 @@ namespace UMA.Editors
                 if (GUILayout.Button(new GUIContent("Customize Detected Layout",
                     "Copies the detected values into an editable custom layout.")))
                 {
-                    Undo.RecordObject(target, "Customize Overlay Painter Channel Layout");
+                    Undo.RecordObject(target, "Customize Channel Layout");
                     WriteTextureChannelLayout(layout, detected);
                     modeProperty.intValue = (int)UMAMaterial.TextureChannelLayoutMode.Custom;
                 }
@@ -617,13 +617,13 @@ namespace UMA.Editors
                 EditorGUILayout.BeginHorizontal();
                 if (GUILayout.Button(new GUIContent("Detect Again", "Replace the custom values with the currently detected shader convention while remaining in Custom mode.")))
                 {
-                    Undo.RecordObject(target, "Detect Overlay Painter Channel Layout");
+                    Undo.RecordObject(target, "Detect Channel Layout");
                     WriteTextureChannelLayout(layout, detected);
                     modeProperty.intValue = (int)UMAMaterial.TextureChannelLayoutMode.Custom;
                 }
                 if (GUILayout.Button(new GUIContent("Use Automatic", "Return to automatic detection. Stored custom values are retained but ignored.")))
                 {
-                    Undo.RecordObject(target, "Use Automatic Overlay Painter Channel Layout");
+                    Undo.RecordObject(target, "Use Automatic Channel Layout");
                     modeProperty.intValue = (int)UMAMaterial.TextureChannelLayoutMode.Automatic;
                 }
                 EditorGUILayout.EndHorizontal();
@@ -634,7 +634,7 @@ namespace UMA.Editors
 
             if (showHelp)
             {
-                EditorGUILayout.HelpBox("Smoothness is exposed as editable Roughness by Overlay Painter and is inverted when unpacking and repacking. Unsupported meanings are preserved in the physical texture until the painter gains a matching logical channel. A component may have multiple meanings, such as Opacity and Smoothness.", MessageType.Info);
+                EditorGUILayout.HelpBox("Tools may expose Smoothness as editable Roughness by inverting it when unpacking and repacking. Preserve unsupported meanings in the physical texture. A component may have multiple meanings, such as Opacity and Smoothness.", MessageType.Info);
             }
             EditorGUILayout.EndVertical();
         }
@@ -649,7 +649,7 @@ namespace UMA.Editors
                 if (!material.HasProperty(channel.materialPropertyName))
                 {
                     EditorGUILayout.HelpBox($"Shader '{material.shader.name}' does not contain " +
-                        $"'{channel.materialPropertyName}'. Overlay Painter will reject this material channel.",
+                        $"'{channel.materialPropertyName}'. This material channel cannot be unpacked with this layout.",
                         MessageType.Error);
                 }
                 else
@@ -658,7 +658,7 @@ namespace UMA.Editors
                     if (propertyIndex >= 0 &&
                         material.shader.GetPropertyType(propertyIndex) != ShaderPropertyType.Texture)
                         EditorGUILayout.HelpBox($"'{channel.materialPropertyName}' is not a texture property. " +
-                            "Overlay Painter will reject this material channel.", MessageType.Error);
+                            "This material channel cannot be unpacked with this layout.", MessageType.Error);
                 }
             }
 
@@ -729,14 +729,14 @@ namespace UMA.Editors
 
             EditorGUILayout.Space(5f);
             EditorGUILayout.LabelField(new GUIContent("Physical Output / Import",
-                "Controls how Overlay Painter encodes and imports the physical texture for this material channel."),
+                "Controls how texture tools encode and import the physical texture for this material channel."),
                 EditorStyles.boldLabel);
             EditorGUI.BeginChangeCheck();
             UMAMaterial.TextureChannelOutputMode selected =
                 (UMAMaterial.TextureChannelOutputMode)EditorGUILayout.EnumPopup("Output", currentMode);
             if (EditorGUI.EndChangeCheck())
             {
-                Undo.RecordObject(target, "Change Overlay Painter Output Settings");
+                Undo.RecordObject(target, "Change Texture Output Settings");
                 mode.intValue = (int)selected;
                 if (selected == UMAMaterial.TextureChannelOutputMode.Custom)
                     WriteTextureChannelOutput(output, detected);
@@ -751,7 +751,7 @@ namespace UMA.Editors
                 if (GUILayout.Button(new GUIContent("Customize Detected Output",
                     "Copies the inferred output and importer values into editable Custom settings.")))
                 {
-                    Undo.RecordObject(target, "Customize Overlay Painter Output");
+                    Undo.RecordObject(target, "Customize Texture Output");
                     WriteTextureChannelOutput(output, detected);
                     mode.intValue = (int)UMAMaterial.TextureChannelOutputMode.Custom;
                 }
@@ -773,13 +773,13 @@ namespace UMA.Editors
                 EditorGUILayout.BeginHorizontal();
                 if (GUILayout.Button("Detect Again"))
                 {
-                    Undo.RecordObject(target, "Detect Overlay Painter Output");
+                    Undo.RecordObject(target, "Detect Texture Output");
                     WriteTextureChannelOutput(output, detected);
                     mode.intValue = (int)UMAMaterial.TextureChannelOutputMode.Custom;
                 }
                 if (GUILayout.Button("Use Automatic"))
                 {
-                    Undo.RecordObject(target, "Use Automatic Overlay Painter Output");
+                    Undo.RecordObject(target, "Use Automatic Texture Output");
                     mode.intValue = (int)UMAMaterial.TextureChannelOutputMode.Automatic;
                 }
                 EditorGUILayout.EndHorizontal();

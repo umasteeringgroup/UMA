@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace UMA.TexturePaint
 {
-    public sealed partial class TextureLayerCompositor
+    public sealed partial class TextureLayerCompositor : System.IDisposable
     {
         private readonly ComputeShader shader;
         private readonly int copyKernel = -1;
@@ -513,10 +513,12 @@ namespace UMA.TexturePaint
             TexturePaintLayerEffects effects = layer.effects ??= new TexturePaintLayerEffects();
             effects.Normalize();
             bool ribbonLocal = layer.IsSplineLayer &&
-                layer.splineSettings?.pathMode == TexturePaintPathMode.Ribbon;
+                layer.splineSettings?.pathMode == TexturePaintPathMode.Ribbon &&
+                layer.splineSettings.pathGenerator?.enabled != true;
             // Ribbon strokes are evaluated during ribbon projection from its intrinsic long-edge
             // coordinates. Building a distance field from the rasterized layer would instead use
             // the expanded alpha of any outer shadow/glow as the stroke boundary.
+            // Generators retain an unstyled raster: use its glyph/motif contour instead of the ribbon edges.
             bool requiresDistance = !ribbonLocal && effects.RequiresDistanceField(channel);
             RenderTexture distance = requiresDistance
                 ? GetEffectDistance(layerTarget, layerMask, LayerMaskSignature(layer)) : null;
@@ -606,10 +608,15 @@ namespace UMA.TexturePaint
             shader.SetInt("_EffectType", (int)effect.kind);
             shader.SetInt("_GrayscaleChannel", TexturePaintChannelUtility.IsGrayscale(channel) ? 1 : 0);
             shader.SetVector("_EffectColor", TexturePaintChannelUtility.WorkingColor(channel, effect.color));
+            shader.SetVector("_EffectSecondaryColor", TexturePaintChannelUtility.WorkingColor(channel, effect.secondaryColor));
+            float lightAngle = effect.bevelLightAngle * Mathf.Deg2Rad;
+            shader.SetVector("_EffectBevelLight", new Vector4(Mathf.Cos(lightAngle), Mathf.Sin(lightAngle), 0, 0));
             shader.SetFloat("_EffectWidth", effect.width);
             shader.SetFloat("_EffectSmoothness", effect.smoothness);
             shader.SetVector("_EffectOffset", new Vector4(effect.offset.x, effect.offset.y, 0f, 0f));
             shader.SetFloat("_EffectLevel", effect.level);
+            shader.SetVector("_EffectContourStitch", new Vector4(effect.contourThreadWidth,
+                effect.contourStitchLength, effect.contourStitchInset, (int)effect.stitchRows + 1));
             shader.SetFloat("_EffectSaturation", effect.saturation);
             shader.SetFloat("_EffectBrightness", effect.brightness);
             shader.SetFloat("_EffectContrast", effect.contrast);

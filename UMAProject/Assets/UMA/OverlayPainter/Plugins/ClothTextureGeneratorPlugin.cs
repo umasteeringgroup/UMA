@@ -62,7 +62,7 @@ namespace UMA.TexturePaint.Examples
                 displayName = "Cloth Texture",
                 description = "Generates production fabric weaves, ordered plaid/stripe layouts, " +
                               "optional sprite motifs and thread-aware color wear.",
-                pluginVersion = "1.2.1",
+                pluginVersion = "1.5.1",
                 capabilities = TexturePaintPluginCapability.Generator |
                                TexturePaintPluginCapability.ReadsMeshMaps |
                                TexturePaintPluginCapability.LongRunning,
@@ -142,11 +142,12 @@ namespace UMA.TexturePaint.Examples
         {
             var output = new OutputBuffers(width * rows, settings);
             float rotation = settings.rotation * Mathf.Deg2Rad;
+            float samplingRotation = rotation + settings.clothRotation * Mathf.Deg2Rad;
             float stripeRotation = settings.stripeRotation * Mathf.Deg2Rad;
             // Suppress unresolved yarn detail instead of letting dense weaves alias.
-            float c=Mathf.Abs(Mathf.Cos(rotation)),s=Mathf.Abs(Mathf.Sin(rotation));
+            float c=Mathf.Abs(Mathf.Cos(samplingRotation)),s=Mathf.Abs(Mathf.Sin(samplingRotation));
             float footprint=Mathf.Max(settings.weaveScale*settings.weaveAspect*(c/width+s/height),
-                settings.weaveScale*(s/width+c/height));
+                settings.weaveScale*(s/width+c/height)) / settings.previewZoom;
             float resolved=1f-SmoothStep(.35f,.75f,footprint);
             Parallel.For(0, rows, localY =>
             {
@@ -156,33 +157,35 @@ namespace UMA.TexturePaint.Examples
                     float u = (x + 0.5f) / width;
                     if (positions == null)
                     {
-                        MaterialSample sample = SampleMaterial(settings, pattern, new Vector2(u, v),
+                        Vector2 sampleUv = (new Vector2(u, v) - Vector2.one * .5f) / settings.previewZoom + Vector2.one * .5f;
+                        MaterialSample sample = SampleMaterial(settings, pattern, sampleUv,
                             rotation, stripeRotation, resolved);
                         output.Set(localY * width + x, sample.albedo, sample.roughness, sample.height);
                         continue;
                     }
-                    Vector3 position = ReadPosition(positions, u, v);
-                    Vector3 dx = ReadPosition(positions, Mathf.Min(u + 1f / width, 1f), v) - position;
-                    Vector3 dy = ReadPosition(positions, u, Mathf.Min(v + 1f / height, 1f)) - position;
+                    Vector3 worldPosition = ReadPosition(positions, u, v);
+                    Vector3 position = settings.worldToMapping * (worldPosition - settings.mappingOrigin) / settings.mappingSize;
+                    Vector3 dx = settings.worldToMapping *
+                        (ReadPosition(positions, Mathf.Min(u + 1f / width, 1f), v) - worldPosition) / settings.mappingSize;
+                    Vector3 dy = settings.worldToMapping *
+                        (ReadPosition(positions, u, Mathf.Min(v + 1f / height, 1f)) - worldPosition) / settings.mappingSize;
                     Color encoded = normals.GetPixelBilinear(u, v);
-                    Vector3 weight = new Vector3(Mathf.Pow(Mathf.Abs(encoded.r * 2f - 1f), 4f),
-                        Mathf.Pow(Mathf.Abs(encoded.g * 2f - 1f), 4f),
-                        Mathf.Pow(Mathf.Abs(encoded.b * 2f - 1f), 4f));
-                    float sum = weight.x + weight.y + weight.z;
-                    weight = sum > .000001f ? weight / sum : Vector3.forward;
+                    Vector3 normal = settings.worldToMapping *
+                        new Vector3(encoded.r * 2f - 1f, encoded.g * 2f - 1f, encoded.b * 2f - 1f);
+                    Vector3 weight = ProjectionWeights(settings, normal);
                     MaterialSample combined = default;
                     if (weight.x > .000001f)
                         combined.Add(SampleMaterial(settings, pattern, new Vector2(position.z, position.y),
                             rotation, stripeRotation, ResolvedDetail(settings,
-                                new Vector2(dx.z, dx.y), new Vector2(dy.z, dy.y), rotation)), weight.x);
+                                new Vector2(dx.z, dx.y), new Vector2(dy.z, dy.y), samplingRotation)), weight.x);
                     if (weight.y > .000001f)
                         combined.Add(SampleMaterial(settings, pattern, new Vector2(position.x, position.z),
                             rotation, stripeRotation, ResolvedDetail(settings,
-                                new Vector2(dx.x, dx.z), new Vector2(dy.x, dy.z), rotation)), weight.y);
+                                new Vector2(dx.x, dx.z), new Vector2(dy.x, dy.z), samplingRotation)), weight.y);
                     if (weight.z > .000001f)
                         combined.Add(SampleMaterial(settings, pattern, new Vector2(position.x, position.y),
                             rotation, stripeRotation, ResolvedDetail(settings,
-                                new Vector2(dx.x, dx.y), new Vector2(dy.x, dy.y), rotation)), weight.z);
+                                new Vector2(dx.x, dx.y), new Vector2(dy.x, dy.y), samplingRotation)), weight.z);
                     output.Set(localY * width + x, combined.albedo, combined.roughness, combined.height);
                 }
             });
@@ -193,6 +196,24 @@ namespace UMA.TexturePaint.Examples
         {
             Color sample = positions.GetPixelBilinear(u, v);
             return new Vector3(sample.r, sample.g, sample.b);
+        }
+
+        private static Vector3 ProjectionWeights(Settings settings, Vector3 normal)
+        {
+            if (normal.sqrMagnitude < .000001f) return Vector3.forward;
+            normal.Normalize();
+            Vector3 axes = new Vector3(Mathf.Abs(normal.x), Mathf.Abs(normal.y), Mathf.Abs(normal.z));
+            // A deterministic winner avoids translucent copies of stripes from other planes.
+            if (settings.crispProjection)
+                return axes.x >= axes.y && axes.x >= axes.z ? Vector3.right :
+                    axes.y >= axes.z ? Vector3.up : Vector3.forward;
+            axes = new Vector3(Mathf.Max(0f, axes.x - settings.blendOffset),
+                Mathf.Max(0f, axes.y - settings.blendOffset), Mathf.Max(0f, axes.z - settings.blendOffset));
+            // Scale before exponentiation: high sharpness must not underflow at diagonal normals.
+            axes /= Mathf.Max(axes.x, Mathf.Max(axes.y, axes.z));
+            Vector3 weight = new Vector3(Mathf.Pow(axes.x, settings.blendSharpness),
+                Mathf.Pow(axes.y, settings.blendSharpness), Mathf.Pow(axes.z, settings.blendSharpness));
+            return weight / (weight.x + weight.y + weight.z);
         }
 
         private static float ResolvedDetail(Settings settings, Vector2 dx, Vector2 dy, float rotation)
@@ -209,12 +230,15 @@ namespace UMA.TexturePaint.Examples
             TexturePaintReadOnlyParameterTexture pattern, Vector2 uv, float rotation,
             float stripeRotation, float resolved)
         {
+            uv = RotateCentered(uv, settings.clothRotation * Mathf.Deg2Rad);
             Vector2 fabricUv = RotateCentered(uv, rotation);
             WeaveSample weave = SampleWeave(settings, fabricUv);
             Color albedo = Color.Lerp(settings.baseColor, settings.threadColor,
                 Mathf.Clamp01(Mathf.Lerp(.5f,weave.threadMix,resolved) * settings.threadColorAmount));
             float microTint = (weave.fiber - 0.5f) * settings.fiberColorVariation * resolved;
-            albedo = AddRgb(albedo, microTint);
+            // Fiber brightness varies the dyed yarn, rather than adding gray to every RGB
+            // component (which desaturated dark and saturated fabrics).
+            albedo = ModulateRgb(albedo, microTint);
 
             Vector2 stripeUv = RotateCentered(uv, stripeRotation);
             float stripeCoverage = ApplyStripes(settings, stripeUv, ref albedo);
@@ -223,7 +247,7 @@ namespace UMA.TexturePaint.Examples
             float wear = SampleWear(settings, fabricUv, weave);
             albedo = Color.Lerp(albedo, settings.wearColor, Mathf.Clamp01(wear * settings.wearAmount));
             // Expose individual worn fibers so the fade follows rather than obscures weave.
-            albedo = AddRgb(albedo, wear * settings.wearAmount * (weave.fiber - 0.5f) *
+            albedo = ModulateRgb(albedo, wear * settings.wearAmount * (weave.fiber - 0.5f) *
                 settings.wearThreadContrast * resolved);
             float cavity=Mathf.Clamp01((.12f-weave.height)/Mathf.Max(.5f,settings.weaveContrast))*resolved;
             albedo*=Mathf.Pow(1f-cavity*.32f,settings.shadingStrength);
@@ -472,8 +496,9 @@ namespace UMA.TexturePaint.Examples
             {
                 TexturePaintStripeDefinition stripe = settings.stripes[i];
                 if (stripe == null || !stripe.enabled || stripe.opacity <= 0f) continue;
-                float coordinate = stripe.direction == TexturePaintStripeDirection.Vertical
-                    ? uv.x * settings.stripeRepeatX : uv.y * settings.stripeRepeatY;
+                Vector2 axis = settings.stripeAxes[i];
+                float coordinate = (uv.x * settings.stripeRepeatX - .5f) * axis.x +
+                    (uv.y * settings.stripeRepeatY - .5f) * axis.y + .5f;
                 float center = Repeat(stripe.position);
                 float distance = CircularDistance(Repeat(coordinate), center);
                 float halfWidth = stripe.width * 0.5f;
@@ -550,7 +575,7 @@ namespace UMA.TexturePaint.Examples
             context.WriteTileCompactOwned(surfaceId, target.channel,
                 new RectInt(0, y0, target.width, rows), pixels,
                 target.channel == TexturePaintChannel.Albedo
-                    ? TexturePaintPluginColorSpace.Linear : TexturePaintPluginColorSpace.Data,
+                    ? TexturePaintPluginColorSpace.SRGB : TexturePaintPluginColorSpace.Data,
                 TexturePaintPluginBlend.Replace);
         }
 
@@ -558,32 +583,45 @@ namespace UMA.TexturePaint.Examples
         {
             var p = new List<TexturePaintPluginParameterDefinition>
             {
+                Float("clothRotation", "Rotation", -180f, 180f, 0f,
+                    "Rotates the complete fabric around its center: weave, stripes, motifs, wear and all output channels. Use this to align fabric with tilted UVs."),
                 Header("outputs", "Output Channels", "Every generated material channel is optional."),
                 Boolean("outputAlbedo", "Albedo", true, "Generate fabric, stripe, motif and faded colors."),
                 Boolean("outputRoughness", "Roughness", true, "Generate weave-scale roughness breakup."),
                 Boolean("outputNormalControl", "Normal Control", true, "Generate grayscale raised/recessed weave height."),
 
-                Header("mapping", "Mapping", "Place the complete fabric, stripes and motif in UV or seamless world space."),
+                Header("mapping", "Mapping", "Place fabric, stripes and motifs together. Cross Fade can ghost stripes; Crisp keeps one projection, with visible joins between planes. Flat / UV follows the garment's UV layout."),
                 EnumParameter("projection", "Fill Type", new[] { "Flat / UV", "World Triplanar" }, 0,
                     "Flat uses the garment UVs. Triplanar blends three world-space planes using surface normals; repeats are per meter."),
+                EnumParameter("triplanarBlend", "Projection Blend", new[] { "Cross Fade", "Crisp / Dominant Axis" }, 0,
+                    "Crisp removes overlapping stripe copies by choosing one plane. Cross Fade softens joins but can ghost contrasting patterns."),
+                Float("triplanarBlendOffset", "Blend Offset", 0f, .49f, 0f,
+                    "Suppress weaker projection directions before blending to reduce stripe bleed."),
+                Float("triplanarBlendSharpness", "Blend Sharpness", .5f, 32f, 4f,
+                    "Higher values narrow the transition between planes. Use Crisp to eliminate cross-fading."),
+                Float("triplanarSize", "Mapping Size", .01f, 100f, 1f,
+                    "World-space size multiplier for the entire fabric. Larger values enlarge weave, stripes, motifs and wear together. At 1, repeats are per world unit (normally a meter)."),
+                Float("triplanarOffsetX", "Mapping Position X", -10f, 10f, 0f, "Projection origin in world units."),
+                Float("triplanarOffsetY", "Mapping Position Y", -10f, 10f, 0f, "Projection origin in world units."),
+                Float("triplanarOffsetZ", "Mapping Position Z", -10f, 10f, 0f, "Projection origin in world units."),
+                Float("triplanarRotationX", "Mapping Rotation X", -180f, 180f, 0f, "Rotate the projection frame in degrees, including its blend directions."),
+                Float("triplanarRotationY", "Mapping Rotation Y", -180f, 180f, 0f, "Rotate the projection frame in degrees, including its blend directions."),
+                Float("triplanarRotationZ", "Mapping Rotation Z", -180f, 180f, 0f, "Rotate the projection frame in degrees, including its blend directions."),
 
-                Header("colors", "Colors", "Fabric, cross-thread, motif and worn colors, with their contribution controls. Stripe colors remain in each stripe definition."),
-                ColorParameter("baseColor", "Base Color", new Color(0.52f, 0.5f, 0.46f, 1f), "Primary garment color."),
+                Header("colors", "Colors", "Fabric, cross-thread and worn colors. Pattern colors and opacity are beside Pattern Sprite; stripe colors remain in each stripe definition."),
+                ColorParameter("baseColor", "Base Color", new Color(0.52f, 0.5f, 0.46f, 1f), "Primary yarn color. Cross-thread color, stripes, motifs and fading can change the final fabric color."),
                 ColorParameter("threadColor", "Cross-Thread Color", new Color(0.64f, 0.62f, 0.58f, 1f), "Secondary warp/weft color."),
                 Float("threadColorAmount", "Cross-Thread Amount", 0f, 1f, 0.45f, "How strongly the second thread direction changes Albedo."),
-                Float("fiberColorVariation", "Fiber Color Variation", 0f, 0.5f, 0.035f, "Fine thread-aligned Albedo breakup."),
+                Float("fiberColorVariation", "Fiber Color Variation", 0f, 0.5f, 0.035f, "Relative brightness variation in the dyed fibers; preserves their hue."),
                 ColorParameter("wearColor", "Faded Color", new Color(0.72f, 0.7f, 0.66f, 1f), "Color exposed by fading."),
                 Float("wearAmount", "Color Fade", 0f, 1f, 0f, "Overall worn/faded contribution."),
                 Float("wearThreadContrast", "Worn Fiber Contrast", 0f, 0.5f, 0.08f, "Reveals individual fibers inside faded regions."),
-                Boolean("usePatternColor", "Use Sprite Color", false, "Use sprite RGB and alpha instead of colorizing luminance."),
-                ColorParameter("patternColor", "Pattern Color", Color.white, "Color used for a grayscale/alpha motif."),
-                Float("patternOpacity", "Pattern Opacity", 0f, 1f, 0f, "Motif contribution."),
 
                 Header("fabric", "Fabric Weave", "Choose the construction and physical thread response."),
                 EnumParameter("weave", "Weave", new[] { "Cotton / Plain", "Knit", "Twill", "Corduroy", "Herringbone", "Denim", "Canvas", "Linen", "Satin", "Basket", "Houndstooth", "Leno", "Dobby", "Pile", "Crepe", "Jacquard" }, 0, "Fabric construction."),
                 Float("weaveScale", "Thread Repeats", 2f, 512f, 96f, "Threads per UV tile in Flat mode, or per meter in Triplanar mode."),
                 Float("weaveAspect", "Thread Aspect", 0.1f, 10f, 1f, "Horizontal versus vertical thread density."),
-                Float("rotation", "Fabric Rotation", -180f, 180f, 0f, "Rotates the physical weave."),
+                Float("rotation", "Weave Rotation", -180f, 180f, 0f, "Rotates only the physical weave, in addition to the overall Rotation."),
                 Float("weaveContrast", "Weave Definition", 0f, 2f, 0.85f, "Over-under height separation."),
                 Float("threadRoundness", "Thread Roundness", 0.5f, 8f, 2.4f, "Thread crown shape."),
                 Float("irregularity", "Thread Irregularity", 0f, 2f, 0.22f, "Natural spacing and tension variation."),
@@ -601,11 +639,14 @@ namespace UMA.TexturePaint.Examples
                 Header("stripes", "Stripes / Plaid", "Add, order, and combine any number of vertical and horizontal stripes."),
                 Float("stripeRepeatX", "Vertical Repeats", 0.1f, 128f, 4f, "Plaid cells across the texture."),
                 Float("stripeRepeatY", "Horizontal Repeats", 0.1f, 128f, 4f, "Plaid cells down the texture."),
-                Float("stripeRotation", "Stripe Rotation", -180f, 180f, 0f, "Rotates the complete stripe/plaid layout independently of the weave."),
+                Float("stripeRotation", "Stripe Layout Rotation", -180f, 180f, 0f, "Rotates all stripes together, in addition to the overall Rotation and each stripe's angle."),
                 StripeList("stripeList", "Stripe Definitions", "Position and Width are fractions of one repeat cell. Later stripes blend over earlier stripes."),
 
                 Header("pattern", "Pattern Sprite", "Optional repeated motif over the fabric or stripe regions."),
                 SpriteParameter(PatternSprite, "Pattern Sprite", "A rectangular sprite captured without requiring Read/Write import."),
+                Float("patternOpacity", "Pattern Opacity", 0f, 1f, 1f, "Strength of the sprite's color, height and roughness contribution. Zero disables the pattern entirely."),
+                Boolean("usePatternColor", "Use Sprite Color", true, "Use the sprite's original RGB and alpha. Turn off to tint its luminance with Pattern Color."),
+                ColorParameter("patternColor", "Pattern Color", Color.white, "Tint used when Use Sprite Color is off."),
                 EnumParameter("patternMode", "Apply Pattern", new[] { "Whole Fabric", "Inside Stripes", "Outside Stripes" }, 0, "Limits the motif using combined stripe coverage."),
                 EnumParameter("patternDirection", "Direction", new[] { "Warp", "Weft", "Diagonal Right", "Diagonal Left" }, 0, "Principal motif direction."),
                 Float("patternTiling", "Pattern Repeats", 0.1f, 128f, 4f, "Motif repetitions per UV tile or per meter, according to Fill Type."),
@@ -633,7 +674,7 @@ namespace UMA.TexturePaint.Examples
             public readonly bool outputAlbedo, outputRoughness, outputNormalControl, triplanar;
             public readonly Weave weave;
             public readonly Color baseColor, threadColor, wearColor, patternColor;
-            public readonly float threadColorAmount, weaveScale, weaveAspect, rotation,
+            public readonly float threadColorAmount, weaveScale, weaveAspect, rotation, clothRotation,
                 weaveContrast, threadRoundness, irregularity, heightStrength, depthStrength, shadingStrength, roughness,
                 roughnessVariation, fiberColorVariation, fiberHeight, fiberRoughness,
                 stripeRepeatX, stripeRepeatY, stripeRotation, patternTiling, patternAspect,
@@ -643,7 +684,13 @@ namespace UMA.TexturePaint.Examples
                 wearFlattening;
             public readonly int seed, patternMode, patternDirection, wearDirection;
             public readonly bool usePatternColor;
+            public readonly bool crispProjection;
+            public readonly float blendOffset, blendSharpness, mappingSize;
+            public readonly Vector3 mappingOrigin;
+            public readonly Quaternion worldToMapping;
+            public readonly float previewZoom;
             public readonly List<TexturePaintStripeDefinition> stripes;
+            public readonly Vector2[] stripeAxes;
 
             public Settings(TexturePaintPluginParameterSet p)
             {
@@ -651,6 +698,16 @@ namespace UMA.TexturePaint.Examples
                 outputRoughness = p.Boolean("outputRoughness", true);
                 outputNormalControl = p.Boolean("outputNormalControl", true);
                 triplanar = p.Integer("projection", 0) == 1;
+                crispProjection = p.Integer("triplanarBlend", 0) == 1;
+                blendOffset = Mathf.Clamp(p.Float("triplanarBlendOffset", 0f), 0f, .49f);
+                blendSharpness = Mathf.Clamp(p.Float("triplanarBlendSharpness", 4f), .5f, 32f);
+                mappingSize = Mathf.Clamp(p.Float("triplanarSize", 1f), .01f, 100f);
+                mappingOrigin = new Vector3(p.Float("triplanarOffsetX"), p.Float("triplanarOffsetY"), p.Float("triplanarOffsetZ"));
+                worldToMapping = Quaternion.Inverse(Quaternion.Euler(p.Float("triplanarRotationX"),
+                    p.Float("triplanarRotationY"), p.Float("triplanarRotationZ")));
+                // Transient draft-only sampling window. The editor injects this into a clone;
+                // it is never stored as an authored cloth parameter or used by regeneration.
+                previewZoom = triplanar ? 1f : Mathf.Clamp(p.Float("__clothPreviewZoom", 1f), 1f, 16f);
                 weave = (Weave)Mathf.Clamp(p.Integer("weave", 0), 0, (int)Weave.Jacquard);
                 baseColor = p.LinearColor("baseColor", Color.gray);
                 threadColor = p.LinearColor("threadColor", Color.white);
@@ -660,6 +717,7 @@ namespace UMA.TexturePaint.Examples
                 weaveScale = p.Float("weaveScale", 96f);
                 weaveAspect = p.Float("weaveAspect", 1f);
                 rotation = p.Float("rotation", 0f);
+                clothRotation = p.Float("clothRotation", 0f);
                 weaveContrast = p.Float("weaveContrast", .85f);
                 threadRoundness = p.Float("threadRoundness", 2.4f);
                 irregularity = p.Float("irregularity", .22f);
@@ -681,8 +739,8 @@ namespace UMA.TexturePaint.Examples
                 patternRotation = p.Float("patternRotation", 0f);
                 patternOffsetX = p.Float("patternOffsetX", 0f);
                 patternOffsetY = p.Float("patternOffsetY", 0f);
-                usePatternColor = p.Boolean("usePatternColor", false);
-                patternOpacity = p.Float("patternOpacity", 0f);
+                usePatternColor = p.Boolean("usePatternColor", true);
+                patternOpacity = p.Float("patternOpacity", 1f);
                 patternEmboss = p.Float("patternEmboss", 0f);
                 patternRoughness = p.Float("patternRoughness", 0f);
                 wearAmount = p.Float("wearAmount", 0f);
@@ -697,7 +755,14 @@ namespace UMA.TexturePaint.Examples
                 seed = p.Integer("seed", 1731);
                 stripes = TexturePaintPluginParameterSet.CloneStripes(
                     p.Stripes("stripeList"));
-                foreach (var stripe in stripes) stripe.color = stripe.color.linear;
+                stripeAxes = new Vector2[stripes.Count];
+                for (int i = 0; i < stripes.Count; i++)
+                {
+                    var stripe = stripes[i];
+                    stripe.color = stripe.color.linear;
+                    float angle = stripe.Rotation * Mathf.Deg2Rad;
+                    stripeAxes[i] = new Vector2(Mathf.Sin(angle), Mathf.Cos(angle));
+                }
             }
         }
 
@@ -744,7 +809,9 @@ namespace UMA.TexturePaint.Examples
             }
             public void Set(int index, Color color, float rough, float height)
             {
-                if (albedo != null) albedo[index] = color;
+                // Compact sRGB retains dark dyed-fabric precision; the host decodes it once
+                // into the linear working space. Scalar outputs remain unencoded data.
+                if (albedo != null) albedo[index] = color.gamma;
                 if (roughness != null)
                 { byte b = ToByte(rough); roughness[index] = new Color32(b, b, b, 255); }
                 if (normalControl != null)
@@ -774,9 +841,9 @@ namespace UMA.TexturePaint.Examples
         private static float CircularDistance(float a, float b)
         { float d = Math.Abs(a - b); return Math.Min(d, 1f - d); }
         private static float Luma(Color c) => Mathf.Clamp01(c.r * .2126f + c.g * .7152f + c.b * .0722f);
-        private static Color AddRgb(Color c, float value) =>
-            new Color(Mathf.Clamp01(c.r + value), Mathf.Clamp01(c.g + value),
-                Mathf.Clamp01(c.b + value), c.a);
+        private static Color ModulateRgb(Color c, float value) =>
+            new Color(Mathf.Clamp01(c.r * (1f + value)), Mathf.Clamp01(c.g * (1f + value)),
+                Mathf.Clamp01(c.b * (1f + value)), c.a);
         private static float SmoothStep(float minimum, float maximum, float value)
         { float t = Mathf.Clamp01((value - minimum) / Math.Max(.00001f, maximum - minimum)); return t * t * (3f - 2f * t); }
         private static float Fractal(float x, float y, float scale, int seed)

@@ -109,5 +109,5 @@ The complete original folder and its metadata are recoverable at:
 SHA-256 checks confirmed all 179 files in PointySwept, CurlyVolume and BraidedBun
 were unchanged from the start of this task, including pre-existing user edits.
 
-See the [Short Hair Part guide](../ShortHairPartGuide.md) and
-[precise texture painting workflow](../README.md#precise-texture-painting).
+See the [Short Hair Part guide](../Documentation/ShortHairPartGuide.md) and
+[precise texture painting workflow](../Documentation/README.md#precise-texture-painting).

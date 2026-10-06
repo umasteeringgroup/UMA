@@ -163,6 +163,7 @@ namespace UMA.TexturePaint
             var channelInfo = new Dictionary<string, TexturePaintReadOnlyChannelInfo>(StringComparer.Ordinal);
             var meshMapImages = new Dictionary<string, TexturePaintReadOnlyMeshMap>(StringComparer.Ordinal);
             var parameterTextures = new Dictionary<string, TexturePaintReadOnlyParameterTexture>(StringComparer.Ordinal);
+            var parameterSpriteSets = new Dictionary<string, TexturePaintReadOnlySpriteSet>(StringComparer.Ordinal);
             var masks = new Dictionary<string, TexturePaintReadOnlyMask>(StringComparer.Ordinal);
             var surfaceIds = new List<string>();
             TexturePaintChannel[] channels = (TexturePaintChannel[])Enum.GetValues(typeof(TexturePaintChannel));
@@ -292,6 +293,40 @@ namespace UMA.TexturePaint
                 for (int i = 0; i < descriptor.parameters.Count; i++)
                 {
                     TexturePaintPluginParameterDefinition definition = descriptor.parameters[i];
+                    if (definition?.type == TexturePaintPluginParameterType.SpriteSet)
+                    {
+                        var value = parameters?.Get(definition.id);
+                        if (value?.spriteSet == null) continue;
+                        var layout = TexturePaintSpriteSetSource.Resolve(value.spriteSet);
+                        int count = layout[TexturePaintChannel.Albedo].Count;
+                        int[] enabled = TexturePaintSpriteSetSource.ResolveEnabled(value, count);
+                        var tiles = new Dictionary<TexturePaintChannel, Dictionary<int, TexturePaintReadOnlyParameterTexture>>();
+                        int tilePreview = previewResolution > 0
+                            ? Mathf.Max(8, previewResolution / Mathf.CeilToInt(Mathf.Sqrt(enabled.Length))) : 0;
+                        foreach (var sheet in value.spriteSet.spriteSheets)
+                        {
+                            var channelTiles = new Dictionary<int, TexturePaintReadOnlyParameterTexture>();
+                            tiles.Add(sheet.channel, channelTiles);
+                            foreach (int index in enabled)
+                            {
+                                token.ThrowIfCancellationRequested();
+                                var tileSprite = layout[sheet.channel][index];
+                                var decoded = TexturePaintSpriteSource.Resolve(sheet.spriteSheet, tileSprite, sheet.channel,
+                                    TexturePaintNormalConvention.OpenGL, sheet.inverted);
+                                if (decoded == null) throw new InvalidOperationException("Unable to decode Sprite Set tile " + (index + 1) + " / " + sheet.channel);
+                                int width = decoded.width, height = decoded.height;
+                                Color[] tilePixels = tilePreview > 0
+                                    ? ReadPreviewTexture(decoded, new Rect(0, 0, width, height), tilePreview, out width, out height)
+                                    : Read(decoded);
+                                AddCapturedBytes(ref capturedBytes, tilePixels, memoryBudgetBytes);
+                                channelTiles.Add(index, new TexturePaintReadOnlyParameterTexture(definition.id, width, height, false, tilePixels));
+                            }
+                        }
+                        parameterSpriteSets.Add(definition.id, new TexturePaintReadOnlySpriteSet(count, enabled, tiles));
+                        completed++;
+                        progress?.Report(completed / (float)total * 0.25f);
+                        continue;
+                    }
                     if (definition == null || (definition.type != TexturePaintPluginParameterType.Texture &&
                             definition.type != TexturePaintPluginParameterType.Sprite)) continue;
                     Sprite sprite = definition.type == TexturePaintPluginParameterType.Sprite
@@ -325,7 +360,7 @@ namespace UMA.TexturePaint
             }
 
             return new TexturePaintReadContextV2(images, channelInfo, meshMapImages,
-                parameterTextures, surfaceIds, masks);
+                parameterTextures, surfaceIds, masks, parameterSpriteSets);
         }
 
         private static int CountParameterTextures(TexturePaintPluginDescriptor descriptor,
@@ -340,6 +375,8 @@ namespace UMA.TexturePaint
                     parameters.Texture(definition.id) != null) count++;
                 else if (definition?.type == TexturePaintPluginParameterType.Sprite &&
                     parameters.Sprite(definition.id) != null) count++;
+                else if (definition?.type == TexturePaintPluginParameterType.SpriteSet &&
+                    parameters.Get(definition.id)?.spriteSet != null) count++;
             }
             return count;
         }
@@ -390,6 +427,7 @@ namespace UMA.TexturePaint
                     {
                         layer = set.AddLayer("Plugin · " + descriptor.displayName);
                         layer.kind = TexturePaintLayerKind.Plugin;
+                        ConfigureGeneratorRelief(layer, descriptor);
                         layer.pluginId = descriptor.id;
                         layer.pluginVersion = descriptor.pluginVersion;
                         layer.pluginParameters = parameters?.Clone() ?? new TexturePaintPluginParameterSet();
@@ -544,7 +582,7 @@ namespace UMA.TexturePaint
                     List<TexturePaintChannel> channels = FindGpuOutputChannels(replacement.set,
                         descriptor);
                     DispatchGpuGenerator(replacement.set, replacement.after, channels, descriptor,
-                        kernel, shader, parameters, token, ref dirtyPixels, ref dispatchCount, meshMapsOverride);
+                        kernel, shader, parameters, token, ref dirtyPixels, ref dispatchCount, meshMapsOverride, replacement.before);
                     replacement.set.layers[replacement.index] = replacement.after;
                     swapped++;
                     replacement.set.activeLayerIndex = replacement.index;
@@ -576,37 +614,71 @@ namespace UMA.TexturePaint
             IReadOnlyList<TexturePaintChannel> channels, TexturePaintPluginDescriptor descriptor,
             int kernel, ComputeShader shader, TexturePaintPluginParameterSet parameters,
             System.Threading.CancellationToken token, ref long dirtyPixels, ref int dispatchCount,
-            TexturePaintMeshMapMask? meshMapsOverride = null)
+            TexturePaintMeshMapMask? meshMapsOverride = null, TexturePaintLayer inputBoundary = null)
         {
             if (set == null || layer == null || channels == null || channels.Count == 0) return;
             ProceduralMeshMaps maps = meshMapsOverride == TexturePaintMeshMapMask.None ? null :
                 set.GetProceduralMeshMaps(1024, new TexturePaintOperationContext(token));
-            BindGpuGeneratorInputs(set, maps, descriptor, kernel, shader, parameters, meshMapsOverride);
-            for (int i = 0; i < channels.Count; i++)
+            RenderTexture normalInput = null, aoInput = null;
+            try
             {
-                token.ThrowIfCancellationRequested();
-                TexturePaintChannel channel = channels[i];
-                TextureChannelTarget baseTarget = set.GetChannel(channel);
-                if (baseTarget?.Texture == null) continue;
-                var target = new EditableTextureTarget(layer.name + " " + channel,
-                    baseTarget.Texture.width, baseTarget.Texture.height, baseTarget.format,
-                    null, Color.clear);
-                layer.channels.Add(channel, target);
-                layer.GetChannelSettings(channel);
-                shader.SetInts("_OutputSize", target.Width, target.Height);
-                shader.SetInt("_OutputChannel", (int)channel);
-                shader.SetTexture(kernel, "_Output", target.Front);
-                shader.Dispatch(kernel, Mathf.CeilToInt(target.Width / 16f),
-                    Mathf.CeilToInt(target.Height / 16f), 1);
-                target.CopyFrontToBack(new RectInt(0, 0, target.Width, target.Height));
-                dirtyPixels += (long)target.Width * target.Height;
-                dispatchCount++;
+                normalInput = CaptureGpuInput(TexturePaintChannel.Normal);
+                aoInput = CaptureGpuInput(TexturePaintChannel.AmbientOcclusion);
+                BindGpuGeneratorInputs(set, maps, descriptor, kernel, shader, parameters, normalInput, aoInput, meshMapsOverride);
+                for (int i = 0; i < channels.Count; i++)
+                {
+                    token.ThrowIfCancellationRequested();
+                    TexturePaintChannel channel = channels[i];
+                    TextureChannelTarget baseTarget = set.GetChannel(channel);
+                    if (baseTarget?.Texture == null) continue;
+                    var target = new EditableTextureTarget(layer.name + " " + channel,
+                        baseTarget.Texture.width, baseTarget.Texture.height, baseTarget.format,
+                        null, Color.clear);
+                    layer.channels.Add(channel, target);
+                    layer.GetChannelSettings(channel);
+                    shader.SetInts("_OutputSize", target.Width, target.Height);
+                    shader.SetInt("_OutputChannel", (int)channel);
+                    shader.SetTexture(kernel, "_Output", target.Front);
+                    shader.Dispatch(kernel, Mathf.CeilToInt(target.Width / 16f),
+                        Mathf.CeilToInt(target.Height / 16f), 1);
+                    target.CopyFrontToBack(new RectInt(0, 0, target.Width, target.Height));
+                    dirtyPixels += (long)target.Width * target.Height;
+                    dispatchCount++;
+                }
+            }
+            finally
+            {
+                if (inputBoundary != null)
+                {
+                    if (normalInput != null) RenderTexture.ReleaseTemporary(normalInput);
+                    if (aoInput != null) RenderTexture.ReleaseTemporary(aoInput);
+                }
+            }
+
+            RenderTexture CaptureGpuInput(TexturePaintChannel channel)
+            {
+                if (!descriptor.Reads(channel)) return null;
+                RenderTexture source = set.GetVisibleTexture(channel);
+                if (source == null || inputBoundary == null) return source;
+                var inputDescriptor = source.descriptor;
+                inputDescriptor.depthBufferBits = 0;
+                inputDescriptor.msaaSamples = 1;
+                inputDescriptor.enableRandomWrite = true;
+                var snapshot = RenderTexture.GetTemporary(inputDescriptor);
+                try
+                {
+                    if (!set.CompositeBelowLayer(channel, inputBoundary, snapshot))
+                        Graphics.Blit(set.GetChannel(channel).Texture, snapshot);
+                    return snapshot;
+                }
+                catch { RenderTexture.ReleaseTemporary(snapshot); throw; }
             }
         }
 
         private static void BindGpuGeneratorInputs(TextureSet set, ProceduralMeshMaps maps,
             TexturePaintPluginDescriptor descriptor, int kernel, ComputeShader shader,
-            TexturePaintPluginParameterSet parameters, TexturePaintMeshMapMask? meshMapsOverride = null)
+            TexturePaintPluginParameterSet parameters, RenderTexture sourceNormal, RenderTexture sourceAo,
+            TexturePaintMeshMapMask? meshMapsOverride = null)
         {
             Bind("_MeshWorldPosition", TexturePaintMeshMap.WorldPosition, maps?.position, Texture2D.blackTexture);
             Bind("_MeshWorldNormal", TexturePaintMeshMap.WorldNormal, maps?.worldNormal, Texture2D.grayTexture);
@@ -614,8 +686,6 @@ namespace UMA.TexturePaint
             Bind("_MeshAmbientOcclusion", TexturePaintMeshMap.AmbientOcclusion, maps?.ambientOcclusion, Texture2D.whiteTexture);
             Bind("_MeshThickness", TexturePaintMeshMap.Thickness, maps?.thickness, Texture2D.blackTexture);
             Bind("_MeshSurfaceId", TexturePaintMeshMap.SurfaceId, maps?.id, Texture2D.blackTexture);
-            RenderTexture sourceNormal = set.GetVisibleTexture(TexturePaintChannel.Normal);
-            RenderTexture sourceAo = set.GetVisibleTexture(TexturePaintChannel.AmbientOcclusion);
             shader.SetInt("_HasSourceNormal", sourceNormal != null ? 1 : 0);
             shader.SetInt("_HasSourceAO", sourceAo != null ? 1 : 0);
             shader.SetTexture(kernel, "_SourceNormal", sourceNormal != null
@@ -688,12 +758,23 @@ namespace UMA.TexturePaint
         private static void ConfigurePluginLayer(TexturePaintLayer layer,
             TexturePaintPluginDescriptor descriptor, TexturePaintPluginParameterSet parameters)
         {
+            ConfigureGeneratorRelief(layer, descriptor);
             layer.pluginId = descriptor.id;
             layer.pluginVersion = descriptor.pluginVersion;
             layer.pluginParameters = parameters?.Clone() ?? new TexturePaintPluginParameterSet();
             layer.pluginParametersJson = JsonUtility.ToJson(layer.pluginParameters);
             layer.pluginStale = false;
             layer.pluginLastError = null;
+        }
+
+        private static void ConfigureGeneratorRelief(TexturePaintLayer layer, TexturePaintPluginDescriptor descriptor)
+        {
+            // A newly introduced height channel adds detail around neutral gray. Existing
+            // authored settings (including deliberate Replace/Normal) always remain intact.
+            if ((descriptor.capabilities & TexturePaintPluginCapability.Generator) != 0 &&
+                descriptor.Declares(TexturePaintChannel.NormalControl) &&
+                !layer.channelSettings.ContainsKey(TexturePaintChannel.NormalControl))
+                layer.GetChannelSettings(TexturePaintChannel.NormalControl).blendMode = TexturePaintBlendMode.Overlay;
         }
 
         public static TexturePaintPluginCommit CommitIntoPluginLayers(TextureStore store,
@@ -725,6 +806,7 @@ namespace UMA.TexturePaint
                     ClearChannels(after);
                     after.kind = TexturePaintLayerKind.Plugin;
                     after.pluginId = descriptor.id;
+                    ConfigureGeneratorRelief(after, descriptor);
                     after.pluginVersion = descriptor.pluginVersion;
                     after.pluginParameters = parameters?.Clone() ?? new TexturePaintPluginParameterSet();
                     after.pluginParametersJson = JsonUtility.ToJson(after.pluginParameters);
@@ -987,7 +1069,7 @@ namespace UMA.TexturePaint
             TexturePaintPluginTileCommand command, Texture2D geometryMask,
             ComputeShader channelPackShader)
         {
-            if (TryApplyCompactGpu(target, command, geometryMask, channelPackShader, false)) return;
+            if (TryApplyTileGpu(target, command, geometryMask, channelPackShader, false)) return;
             Color[] destination = Read(target.Front, command.rect);
             Color[] maskPixels = geometryMask.GetPixels(command.rect.x, command.rect.y, command.rect.width, command.rect.height);
             for (int i = 0; i < destination.Length; i++)
@@ -1044,7 +1126,7 @@ namespace UMA.TexturePaint
             TexturePaintPluginTileCommand command, Texture2D geometryMask,
             ComputeShader channelPackShader)
         {
-            if (TryApplyCompactGpu(target, command, geometryMask, channelPackShader, true)) return;
+            if (TryApplyTileGpu(target, command, geometryMask, channelPackShader, true)) return;
             Color[] destination = Read(target.Front, command.rect);
             Color[] geometry = geometryMask.GetPixels(command.rect.x, command.rect.y,
                 command.rect.width, command.rect.height);
@@ -1079,11 +1161,14 @@ namespace UMA.TexturePaint
             finally { Destroy(patch); }
         }
 
-        private static bool TryApplyCompactGpu(EditableTextureTarget target,
+        private static bool TryApplyTileGpu(EditableTextureTarget target,
             TexturePaintPluginTileCommand command, Texture2D geometryMask,
             ComputeShader shader, bool maskMode)
         {
-            if (target?.Front == null || target.Back == null || command?.compactPixels == null ||
+            bool preciseHeight = !maskMode && command?.channel == TexturePaintChannel.NormalControl &&
+                command.pixels != null && SystemInfo.SupportsTextureFormat(TextureFormat.RGBAFloat);
+            if (target?.Front == null || target.Back == null || command == null ||
+                (command.compactPixels == null && !preciseHeight) ||
                 geometryMask == null ||
                 shader == null || !SystemInfo.supportsComputeShaders ||
                 !shader.HasKernel("CSApplyPluginTile")) return false;
@@ -1091,7 +1176,7 @@ namespace UMA.TexturePaint
             if (!shader.IsSupported(kernel)) return false;
 
             Texture2D source = new Texture2D(command.rect.width, command.rect.height,
-                TextureFormat.RGBA32, false, true)
+                preciseHeight ? TextureFormat.RGBAFloat : TextureFormat.RGBA32, false, true)
             {
                 hideFlags = HideFlags.HideAndDontSave,
                 name = "Texture Paint Plugin GPU Tile",
@@ -1100,7 +1185,10 @@ namespace UMA.TexturePaint
             };
             try
             {
-                source.SetPixels32(command.compactPixels);
+                // Fine skin height must not be quantized to bytes or force synchronous
+                // destination readback for every tile in a production-resolution layer.
+                if (preciseHeight) source.SetPixels(command.pixels);
+                else source.SetPixels32(command.compactPixels);
                 source.Apply(false, false);
                 shader.SetInts("_TextureSize", target.Width, target.Height);
                 shader.SetInts("_TileOffset", command.rect.x, command.rect.y);

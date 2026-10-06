@@ -20,6 +20,8 @@ namespace UMA.Editors
 
         public override void OnInspectorGUI()
         {
+            using var pluginScope = BeginPluginInspector();
+            if (!PluginRecipeConflictResolved) return;
             if (wardrobeView.DrawSelector())
             {
                 standardNeedsLoad = true;
@@ -129,6 +131,23 @@ namespace UMA.Editors
                 UMAUpdateProcessor.UpdateRecipe(wardrobe);
             }
             standardEdits.Clear();
+        }
+
+        protected override bool HasPendingPluginEdits => base.HasPendingPluginEdits || standardEdits.Count != 0;
+
+        public override bool TryPreparePluginAction()
+        {
+            if (!CanRunPluginActions || !SynchronizePluginRecipe()) return false;
+            if (standardEdits.Count != 0) CommitStandardEdits();
+            return base.TryPreparePluginAction();
+        }
+
+        protected override void OnPluginRecipeReloaded()
+        {
+            standardNeedsLoad = true;
+            standardEdits.Clear();
+            standardSlotFoldouts.Clear();
+            standardOverlayUses.Clear();
         }
 
         private void ReloadStandardRecipe(UMAWardrobeRecipe wardrobe)

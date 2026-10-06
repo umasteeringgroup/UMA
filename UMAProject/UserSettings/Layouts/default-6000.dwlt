@@ -1541,6 +1541,20 @@ MonoBehaviour:
       layout: 4
       size: {x: 0, y: 0}
       sizeOverridden: 0
+    - dockPosition: 0
+      containerId: Floating
+      displayed: 0
+      id: Layer Preview
+      index: 3
+      contents: '{"m_Layout":4,"m_Collapsed":false,"m_Folded":false,"m_Floating":true,"m_FloatingSnapOffset":{"x":0.0,"y":0.0},"m_SnapOffsetDelta":{"x":0.0,"y":0.0},"m_FloatingSnapCorner":0,"m_Size":{"x":0.0,"y":0.0},"m_SizeOverridden":false}'
+      floating: 1
+      collapsed: 0
+      snapOffset: {x: 0, y: 0}
+      snapOffsetDelta: {x: 0, y: 0}
+      snapCorner: 0
+      layout: 4
+      size: {x: 0, y: 0}
+      sizeOverridden: 0
     m_ContainerData:
     - containerId: overlay-toolbar__top
       scrollOffset: 0
@@ -1939,46 +1953,7 @@ MonoBehaviour:
       m_Data: 90672
     m_ExpandedIDs:
     - m_Data: 0
-    - m_Data: 80774
-    - m_Data: 90330
-    - m_Data: 90332
-    - m_Data: 90334
-    - m_Data: 90336
-    - m_Data: 90338
-    - m_Data: 90340
-    - m_Data: 90342
-    - m_Data: 90344
-    - m_Data: 90346
-    - m_Data: 90348
-    - m_Data: 90350
-    - m_Data: 90352
-    - m_Data: 90354
-    - m_Data: 90356
-    - m_Data: 90358
-    - m_Data: 90360
-    - m_Data: 90362
-    - m_Data: 90364
-    - m_Data: 90366
-    - m_Data: 90368
-    - m_Data: 90370
-    - m_Data: 90372
-    - m_Data: 90374
-    - m_Data: 90376
-    - m_Data: 90378
-    - m_Data: 90380
-    - m_Data: 90382
-    - m_Data: 90384
-    - m_Data: 90386
-    - m_Data: 90388
-    - m_Data: 90390
-    - m_Data: 90392
-    - m_Data: 90394
-    - m_Data: 90396
-    - m_Data: 90398
-    - m_Data: 90400
-    - m_Data: 90402
-    - m_Data: 90404
-    - m_Data: 90406
+    - m_Data: 80906
     - m_Data: 90408
     - m_Data: 90410
     - m_Data: 90412
@@ -2044,6 +2019,45 @@ MonoBehaviour:
     - m_Data: 90532
     - m_Data: 90534
     - m_Data: 90536
+    - m_Data: 90538
+    - m_Data: 90540
+    - m_Data: 90542
+    - m_Data: 90544
+    - m_Data: 90546
+    - m_Data: 90548
+    - m_Data: 90550
+    - m_Data: 90552
+    - m_Data: 90554
+    - m_Data: 90556
+    - m_Data: 90558
+    - m_Data: 90560
+    - m_Data: 90562
+    - m_Data: 90564
+    - m_Data: 90566
+    - m_Data: 90568
+    - m_Data: 90570
+    - m_Data: 90572
+    - m_Data: 90574
+    - m_Data: 90576
+    - m_Data: 90578
+    - m_Data: 90580
+    - m_Data: 90582
+    - m_Data: 90584
+    - m_Data: 90586
+    - m_Data: 90588
+    - m_Data: 90590
+    - m_Data: 90592
+    - m_Data: 90594
+    - m_Data: 90596
+    - m_Data: 90598
+    - m_Data: 90600
+    - m_Data: 90602
+    - m_Data: 90604
+    - m_Data: 90606
+    - m_Data: 90608
+    - m_Data: 90610
+    - m_Data: 90612
+    - m_Data: 90614
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -2076,46 +2090,7 @@ MonoBehaviour:
       m_Data: 0
     m_ExpandedIDs:
     - m_Data: 0
-    - m_Data: 80774
-    - m_Data: 90330
-    - m_Data: 90332
-    - m_Data: 90334
-    - m_Data: 90336
-    - m_Data: 90338
-    - m_Data: 90340
-    - m_Data: 90342
-    - m_Data: 90344
-    - m_Data: 90346
-    - m_Data: 90348
-    - m_Data: 90350
-    - m_Data: 90352
-    - m_Data: 90354
-    - m_Data: 90356
-    - m_Data: 90358
-    - m_Data: 90360
-    - m_Data: 90362
-    - m_Data: 90364
-    - m_Data: 90366
-    - m_Data: 90368
-    - m_Data: 90370
-    - m_Data: 90372
-    - m_Data: 90374
-    - m_Data: 90376
-    - m_Data: 90378
-    - m_Data: 90380
-    - m_Data: 90382
-    - m_Data: 90384
-    - m_Data: 90386
-    - m_Data: 90388
-    - m_Data: 90390
-    - m_Data: 90392
-    - m_Data: 90394
-    - m_Data: 90396
-    - m_Data: 90398
-    - m_Data: 90400
-    - m_Data: 90402
-    - m_Data: 90404
-    - m_Data: 90406
+    - m_Data: 80906
     - m_Data: 90408
     - m_Data: 90410
     - m_Data: 90412
@@ -2181,6 +2156,45 @@ MonoBehaviour:
     - m_Data: 90532
     - m_Data: 90534
     - m_Data: 90536
+    - m_Data: 90538
+    - m_Data: 90540
+    - m_Data: 90542
+    - m_Data: 90544
+    - m_Data: 90546
+    - m_Data: 90548
+    - m_Data: 90550
+    - m_Data: 90552
+    - m_Data: 90554
+    - m_Data: 90556
+    - m_Data: 90558
+    - m_Data: 90560
+    - m_Data: 90562
+    - m_Data: 90564
+    - m_Data: 90566
+    - m_Data: 90568
+    - m_Data: 90570
+    - m_Data: 90572
+    - m_Data: 90574
+    - m_Data: 90576
+    - m_Data: 90578
+    - m_Data: 90580
+    - m_Data: 90582
+    - m_Data: 90584
+    - m_Data: 90586
+    - m_Data: 90588
+    - m_Data: 90590
+    - m_Data: 90592
+    - m_Data: 90594
+    - m_Data: 90596
+    - m_Data: 90598
+    - m_Data: 90600
+    - m_Data: 90602
+    - m_Data: 90604
+    - m_Data: 90606
+    - m_Data: 90608
+    - m_Data: 90610
+    - m_Data: 90612
+    - m_Data: 90614
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 

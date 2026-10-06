@@ -340,6 +340,7 @@ namespace UMA.TexturePaint
         [Range(0f, 1f)] public float edgeFadeSize = 1f;
         public TexturePaintRibbonSide ribbonSide = TexturePaintRibbonSide.Both;
         public Color secondaryColor = Color.black;
+        public float bevelLightAngle = 135f;
         public TexturePaintRibbonBevelTone ribbonLeftTone = TexturePaintRibbonBevelTone.Light;
         public TexturePaintRibbonBevelTone ribbonRightTone = TexturePaintRibbonBevelTone.Dark;
         [Range(-256f, 256f)] public float ribbonLeftOffset;
@@ -348,6 +349,9 @@ namespace UMA.TexturePaint
         [Range(0.001f, 0.25f)] public float stitchThreadSize = 0.012f;
         [Range(0.01f, 1f)] public float stitchLength = 0.08f;
         [Range(0f, 0.45f)] public float stitchInset = 0.06f;
+        public float contourThreadWidth = 1.5f;
+        public float contourStitchLength = 5f;
+        public float contourStitchInset = 2f;
         public Texture2D texture1;
         public Texture2D texture2;
         public Vector2 textureTiling1 = Vector2.one;
@@ -383,6 +387,7 @@ namespace UMA.TexturePaint
                 edgeFadeSize = edgeFadeSize,
                 ribbonSide = ribbonSide,
                 secondaryColor = secondaryColor,
+                bevelLightAngle = bevelLightAngle,
                 ribbonLeftTone = ribbonLeftTone,
                 ribbonRightTone = ribbonRightTone,
                 ribbonLeftOffset = ribbonLeftOffset,
@@ -391,6 +396,9 @@ namespace UMA.TexturePaint
                 stitchThreadSize = stitchThreadSize,
                 stitchLength = stitchLength,
                 stitchInset = stitchInset,
+                contourThreadWidth = contourThreadWidth,
+                contourStitchLength = contourStitchLength,
+                contourStitchInset = contourStitchInset,
                 texture1 = texture1,
                 texture2 = texture2,
                 textureTiling1 = textureTiling1,
@@ -425,6 +433,10 @@ namespace UMA.TexturePaint
             stitchThreadSize = Mathf.Clamp(stitchThreadSize, 0.001f, 0.25f);
             stitchLength = Mathf.Clamp(stitchLength, 0.01f, 1f);
             stitchInset = Mathf.Clamp(stitchInset, 0f, 0.45f);
+            contourThreadWidth = float.IsFinite(contourThreadWidth) ? Mathf.Clamp(contourThreadWidth,.5f,32f) : 1.5f;
+            bevelLightAngle = float.IsFinite(bevelLightAngle) ? Mathf.Repeat(bevelLightAngle,360f) : 135f;
+            contourStitchLength = float.IsFinite(contourStitchLength) ? Mathf.Clamp(contourStitchLength,1f,128f) : 5f;
+            contourStitchInset = float.IsFinite(contourStitchInset) ? Mathf.Clamp(contourStitchInset,0f,128f) : 2f;
             NormalizeTiling(ref textureTiling1);
             NormalizeTiling(ref textureTiling2);
             textureOpacity1 = Mathf.Clamp01(textureOpacity1);
@@ -579,7 +591,10 @@ namespace UMA.TexturePaint
                 kind == TexturePaintLayerEffectKind.InnerShadow ||
                 kind == TexturePaintLayerEffectKind.OuterShadow ||
                 kind == TexturePaintLayerEffectKind.InnerGlow ||
-                kind == TexturePaintLayerEffectKind.OuterGlow;
+                kind == TexturePaintLayerEffectKind.OuterGlow ||
+                kind == TexturePaintLayerEffectKind.ProceduralStitch ||
+                kind == TexturePaintLayerEffectKind.BevelEdge ||
+                kind == TexturePaintLayerEffectKind.EdgeFade;
         }
 
         public static bool IsCompositeOnlyEffect(TexturePaintLayerEffectKind kind)
@@ -893,6 +908,7 @@ namespace UMA.TexturePaint
         public TexturePaintPathFlipMode textureFlipX;
         public TexturePaintPathFlipMode textureFlipY;
         public int textureFlipSeed;
+        public TexturePaintPathGeneratorSettings pathGenerator;
         public TexturePaintHemSeamSettings hemSeam;
         public TexturePaintGarmentSettings garment;
         // An enabled local frame supersedes legacy mirror/radial flags when shared symmetry is off.
@@ -922,6 +938,7 @@ namespace UMA.TexturePaint
         public TexturePaintSplineSettings Clone()
         {
             var copy = (TexturePaintSplineSettings)MemberwiseClone();
+            copy.pathGenerator = pathGenerator?.Clone();
             copy.hemSeam = hemSeam?.Clone();
             copy.garment = garment?.Clone();
             copy.symmetry = symmetry?.Clone();

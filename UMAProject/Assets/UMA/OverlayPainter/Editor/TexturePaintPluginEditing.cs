@@ -13,6 +13,60 @@ namespace UMA.TexturePaint.Editor
         internal BrushPreset PluginPreviewBrush => ActiveBrush;
         internal bool UsesPluginPreviewController(TexturePaintStageController value) => ReferenceEquals(controller, value);
 
+        private void ShowPluginLayerMenu(TextureSet set)
+        {
+            if (set == null) return;
+            var menu = new GenericMenu();
+            var plugins = controller?.Plugins;
+            var cloth = plugins?.FindCommand("com.uma.texturepaint.cloth-texture");
+            if (cloth != null)
+            {
+                menu.AddItem(new GUIContent("Fabric/Surface Detail (Keep Color)"), false,
+                    () => AddPluginLayer(set, cloth, true));
+                menu.AddItem(new GUIContent("Fabric/Cloth Texture (Color and Weave)"), false,
+                    () => AddPluginLayer(set, cloth));
+            }
+            var textile = plugins?.FindCommand("com.uma.texturepaint.textile-surface");
+            if (textile != null)
+            {
+                var modes = textile.Descriptor.parameters.Find(p => p.id == "mode").enumOptions;
+                for (int i = 0; i < modes.Length; i++)
+                {
+                    int mode = i;
+                    menu.AddItem(new GUIContent("Fabric/" + modes[i]), false,
+                        () => AddPluginLayer(set, textile, textileMode: mode));
+                }
+            }
+            if (plugins != null)
+                foreach (var plugin in plugins.Commands)
+                {
+                    // Keep the legacy implementation available for saved layers, but create new scars as paths.
+                    if (plugin.Descriptor.id == "com.uma.texturepaint.scar-wound") continue;
+                    if ((plugin.Descriptor.supportedTargets & TexturePaintPluginTarget.LayerContent) == 0) continue;
+                    var selected = plugin;
+                    string category = plugin is ITexturePaintGeneratorV2 ? "Generators/" : "Filters/";
+                    menu.AddItem(new GUIContent(category + plugin.Descriptor.displayName), false,
+                        () => AddPluginLayer(set, selected));
+                }
+            menu.AddSeparator(string.Empty);
+            menu.AddItem(new GUIContent("Empty Plugin Layer"), false, () => AddPluginLayer(set));
+            menu.ShowAsContext();
+        }
+
+        internal static void ConfigureFabricSurfaceDetail(TexturePaintLayer layer,
+            TexturePaintPluginParameterSet parameters)
+        {
+            parameters.Get("outputAlbedo", true).boolean = false;
+            parameters.Get("outputRoughness", true).boolean = true;
+            parameters.Get("outputNormalControl", true).boolean = true;
+            parameters.Get("roughness", true).number = .82f;
+            parameters.Get("heightStrength", true).number = .035f;
+            parameters.Get("fiberHeight", true).number = .012f;
+            // Neutral gray leaves existing quilt/fold height intact; small weave variations
+            // add relief around it instead of replacing the whole height field.
+            layer.GetChannelSettings(TexturePaintChannel.NormalControl).blendMode = TexturePaintBlendMode.Overlay;
+        }
+
         private void RequestBrushPluginPreview(ITexturePaintBrushV2 plugin)
         {
             brushPluginPreview ??= new TexturePaintSamplePreview(RepaintAll);
@@ -26,16 +80,19 @@ namespace UMA.TexturePaint.Editor
         }
 
         private void RequestGarmentSectionPreview(TextureSet set, TexturePaintLayer layer,
-            TexturePaintGarmentSettings garment, TexturePaintHemSeamSettings hem, Vector2 size, bool closed)
+            TexturePaintGarmentSettings garment, TexturePaintHemSeamSettings hem, Vector2 size, bool closed,
+            TexturePaintPathGeneratorSettings pathGenerator = null)
         {
             if (controller?.Textures == null) return;
             garmentPreview ??= new TexturePaintSamplePreview(RepaintAll, TexturePaintPreviewView.LitSurface);
             var garmentSnapshot = garment?.Clone(); var hemSnapshot = hem?.Clone();
+            var pathSnapshot=pathGenerator?.Clone();
             string key = set.persistentId + layer.id + documentChangeVersion +
                 (garmentSnapshot == null ? "" : JsonUtility.ToJson(garmentSnapshot)) +
-                (hemSnapshot == null ? "" : JsonUtility.ToJson(hemSnapshot)) + size.ToString("R") + closed;
+                (hemSnapshot == null ? "" : JsonUtility.ToJson(hemSnapshot)) +
+                (pathSnapshot == null ? "" : JsonUtility.ToJson(pathSnapshot)) + size.ToString("R") + closed + JsonUtility.ToJson(layer.effects);
             garmentPreview.Request(key, () => TexturePaintGarmentPreview.Generate(garmentSnapshot, hemSnapshot, size,
-                closed, set, controller.Textures.Sets, layer),
+                closed, set, controller.Textures.Sets, layer, pathSnapshot),
                 "Straight sample section. Scene view shows the path's curvature and placement.");
         }
 

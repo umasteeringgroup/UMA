@@ -80,6 +80,18 @@ namespace UMA.Editors.PackageSupport
         public static void InstallUma2FromFile() =>
             InstallFromFile(UMAContentKind.Uma2);
 
+        [MenuItem("UMA/Plugins/Install Overlay Painter...")]
+        public static void InstallOverlayPainterFromFile() => InstallFromFile(UMAContentKind.OverlayPainter);
+
+        [MenuItem("UMA/Plugins/Install Overlay Painter Examples...")]
+        public static void InstallOverlayPainterExamplesFromFile() => InstallFromFile(UMAContentKind.OverlayPainterExamples);
+
+        [MenuItem("UMA/Plugins/Install Overlay Painter Tests...")]
+        public static void InstallOverlayPainterTestsFromFile() => InstallFromFile(UMAContentKind.OverlayPainterTests);
+
+        [MenuItem("UMA/Plugins/Install Hair Card Editor...")]
+        public static void InstallHairCardsFromFile() => InstallFromFile(UMAContentKind.HairCards);
+
         public static UMAContentInstallationState GetState(UMAContentKind kind)
         {
             PendingImport pending = LoadPending();
@@ -108,7 +120,7 @@ namespace UMA.Editors.PackageSupport
 
         public static void InstallFromFile(UMAContentKind kind)
         {
-            if (LoadPending() != null || File.Exists(PendingPath))
+            if (LoadPending() != null || File.Exists(PendingPath) || File.Exists("Library/UMA/PluginRemoval/pending.json"))
             {
                 EditorUtility.DisplayDialog("UMA Content Installation",
                     "Another UMA content installation is still in progress, or its " +
@@ -116,9 +128,12 @@ namespace UMA.Editors.PackageSupport
                     "Library/UMA/ContentInstaller was left untouched for recovery.", "OK");
                 return;
             }
-            string archivePath = EditorUtility.OpenFilePanel(
-                "Select " + UMAContentCatalog.DisplayName(kind) + " Package",
-                string.Empty, "unitypackage");
+            string archivePath = UMAContentCatalog.IsPlugin(kind)
+                ? UMAPluginPackageFiles.FindPackage(kind) : null;
+            if (string.IsNullOrEmpty(archivePath))
+                archivePath = EditorUtility.OpenFilePanel(
+                    "Locate " + UMAContentCatalog.DisplayName(kind) + " Package",
+                    UMAPluginPackageFiles.DefaultDirectory, "unitypackage");
             if (string.IsNullOrEmpty(archivePath))
                 return;
 
@@ -138,6 +153,7 @@ namespace UMA.Editors.PackageSupport
                 EditorUtility.DisplayDialog("UMA Content Dependency Required", error, "OK");
                 return;
             }
+            if (UMAContentCatalog.IsPlugin(kind)) UMAPluginPackageFiles.Remember(kind, archivePath);
             if (kind == UMAContentKind.Uma2 &&
                 !MoveLegacyUma2TreeIfNeeded(true, out _))
                 return;
@@ -196,7 +212,7 @@ namespace UMA.Editors.PackageSupport
             out string error)
         {
             error = string.Empty;
-            if (LoadPending() != null || File.Exists(PendingPath))
+            if (LoadPending() != null || File.Exists(PendingPath) || File.Exists("Library/UMA/PluginRemoval/pending.json"))
             {
                 error = "Another UMA content installation is still in progress, or " +
                         "its saved transaction record is unreadable. No files were changed.";
@@ -299,10 +315,16 @@ namespace UMA.Editors.PackageSupport
             return true;
         }
 
-        private static bool IsCoreVersionCompatible(UMAContentManifest manifest,
+        internal static bool IsCoreVersionCompatible(UMAContentManifest manifest,
             out string error)
         {
             error = string.Empty;
+            if (manifest.requiredPluginApiVersion < 0 || manifest.requiredPluginApiVersion > UMAPluginApi.Version)
+            {
+                error = "This package requires UMA plugin API " + manifest.requiredPluginApiVersion +
+                    "; the installed API is " + UMAPluginApi.Version + ".";
+                return false;
+            }
             string installedVersion = GetInstalledCoreVersion();
             if (string.IsNullOrEmpty(installedVersion))
             {
@@ -375,6 +397,26 @@ namespace UMA.Editors.PackageSupport
         private static bool AreContentDependenciesSatisfied(UMAContentKind kind,
             UMAContentManifest incoming, out string error)
         {
+            error = string.Empty;
+            if (UMAContentCatalog.IsPlugin(kind))
+            {
+                if (incoming.requiredPluginApiVersion != UMAPluginApi.Version)
+                {
+                    error = "The plugin manifest must declare the supported UMA plugin API version.";
+                    return false;
+                }
+                if (kind == UMAContentKind.OverlayPainter || kind == UMAContentKind.HairCards) return true;
+                if (!TryValidateInstalledRequiredPaths(UMAContentKind.OverlayPainter, out var painter, out error) ||
+                    !IsCoreVersionCompatible(painter, out error)) return false;
+                if (kind == UMAContentKind.OverlayPainterTests)
+                {
+                    bool installed = PackageManagerInfo.GetAllRegisteredPackages().Any(p => p.name == "com.unity.test-framework");
+                    if (!installed) error = "Install Unity Test Framework before the Overlay Painter tests.";
+                    return installed;
+                }
+                return TryValidateInstalledRequiredPaths(UMAContentKind.Uma3, out var content, out error) &&
+                    IsCoreVersionCompatible(content, out error) && TryGetInstalledSrpSupport(out _, out error);
+            }
             if (kind == UMAContentKind.Uma3)
             {
                 if (TryGetInstalledSrpSupport(out _, out error))
@@ -700,8 +742,11 @@ namespace UMA.Editors.PackageSupport
                     hadPreviousContent = hadPrevious
                 };
                 SavePending(pending);
+                UMAContentPackageArchiveValidator.TryReadInstalledManifest(kind, out var previousManifest, out _);
                 DeleteContentRoot(kind);
                 RestoreRootIdentity(pending);
+                if (UMAContentCatalog.IsPlugin(kind) && hadPrevious)
+                    RestoreUnownedPluginFiles(kind, previousManifest, archive.Manifest, backupRoot, destinationRoot);
                 AssetDatabase.ImportPackage(archiveCopy, false);
                 SchedulePendingCompletion();
                 return true;
@@ -719,6 +764,26 @@ namespace UMA.Editors.PackageSupport
                         exception.Message);
                 }
                 return false;
+            }
+        }
+
+        private static void RestoreUnownedPluginFiles(UMAContentKind kind, UMAContentManifest previous,
+            UMAContentManifest incoming, string backup, string destination)
+        {
+            var owned = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (string path in (previous?.ownedPaths ?? Array.Empty<string>()).Concat(incoming.ownedPaths))
+            {
+                owned.Add(path);
+                owned.Add(path + ".meta");
+            }
+            string root = UMAContentCatalog.Root(kind);
+            foreach (string source in Directory.GetFiles(backup, "*", SearchOption.AllDirectories))
+            {
+                string relative = source.Substring(backup.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                if (owned.Contains(root + "/" + relative.Replace('\\', '/'))) continue;
+                string target = Path.Combine(destination, relative);
+                Directory.CreateDirectory(Path.GetDirectoryName(target));
+                File.Copy(source, target, false);
             }
         }
 
@@ -784,6 +849,12 @@ namespace UMA.Editors.PackageSupport
 
             EditorApplication.update -= CompletePendingImport;
             WriteInstalledRecord(kind, manifest, pending.archiveSha256);
+            string documentation = manifest.installRoot + "/" + UMAPluginDocumentationRegistry.DescriptorFileName;
+            if (File.Exists(documentation))
+            {
+                try { UMAPluginDocumentationRegistry.RegisterDescriptor(documentation); }
+                catch (Exception exception) { Debug.LogWarning("[UMA Documentation] " + exception.Message); }
+            }
             ClearLastError(kind);
             PreservePreviousBackup(kind, pending);
             DeletePending();
@@ -993,13 +1064,12 @@ namespace UMA.Editors.PackageSupport
                 StringComparison.OrdinalIgnoreCase);
         }
 
-        private static UMAContentKind ParseKind(string id) =>
-            string.Equals(id, "uma2", StringComparison.OrdinalIgnoreCase)
-                ? UMAContentKind.Uma2
-                : string.Equals(id, "uma3", StringComparison.OrdinalIgnoreCase)
-                    ? UMAContentKind.Uma3
-                    : throw new InvalidDataException(
-                        "Unknown UMA content transaction identity: " + id);
+        private static UMAContentKind ParseKind(string id)
+        {
+            foreach (UMAContentKind kind in Enum.GetValues(typeof(UMAContentKind)))
+                if (string.Equals(id, UMAContentCatalog.Id(kind), StringComparison.OrdinalIgnoreCase)) return kind;
+            throw new InvalidDataException("Unknown UMA content transaction identity: " + id);
+        }
 
         private static string ProjectRoot =>
             Directory.GetParent(Application.dataPath)?.FullName ?? string.Empty;
@@ -1069,11 +1139,8 @@ namespace UMA.Editors.PackageSupport
             out string error)
         {
             error = string.Empty;
-            if (pending == null ||
-                (!string.Equals(pending.contentId, "uma3",
-                     StringComparison.OrdinalIgnoreCase) &&
-                 !string.Equals(pending.contentId, "uma2",
-                     StringComparison.OrdinalIgnoreCase)))
+            if (pending == null || !Enum.GetValues(typeof(UMAContentKind)).Cast<UMAContentKind>()
+                .Any(kind => string.Equals(pending.contentId, UMAContentCatalog.Id(kind), StringComparison.OrdinalIgnoreCase)))
             {
                 error = "The UMA content transaction has an invalid identity.";
                 return false;

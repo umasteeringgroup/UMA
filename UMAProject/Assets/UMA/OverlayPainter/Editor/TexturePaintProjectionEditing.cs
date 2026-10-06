@@ -17,7 +17,14 @@ namespace UMA.TexturePaint.Editor
         };
         private const string ProjectionGizmoScalePreference = "UMA.OverlayPainter.ProjectionGizmoScale";
         private const float DefaultProjectionGizmoScale = 2f;
-        private static float projectionGizmoScale = LoadProjectionGizmoScale();
+        // Unity can initialize EditorWindow types while deserializing on a loading thread.
+        // Read EditorPrefs only when the UI or scene handles first request this value.
+        private static float? cachedProjectionGizmoScale;
+        private static float projectionGizmoScale
+        {
+            get => cachedProjectionGizmoScale ??= LoadProjectionGizmoScale();
+            set => cachedProjectionGizmoScale = value;
+        }
         private int projectionHandleControl;
 
         private static float LoadProjectionGizmoScale()

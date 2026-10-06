@@ -51,7 +51,9 @@ namespace UMA.TexturePaint
         /// <summary>Unity font asset used by text-producing plugins.</summary>
         Font,
         /// <summary>Multi-line string rendered as an expanding text area by the shared editor.</summary>
-        MultilineString
+        MultilineString,
+        /// <summary>Channel-coordinated sprite set with a per-parameter tile selection.</summary>
+        SpriteSet
     }
     public enum TexturePaintPluginColorSpace { Linear, SRGB, Data }
     public enum TexturePaintPluginBlend { Replace, Normal, Add, Multiply }
@@ -62,6 +64,21 @@ namespace UMA.TexturePaint
     {
         public bool enabled = true;
         public TexturePaintStripeDirection direction;
+        [SerializeField] private float rotation;
+        [SerializeField] private bool hasRotation;
+        // Old payloads contain only direction. Resolve them without changing their appearance
+        // or dirtying the document simply because an inspector draws the angle control.
+        public float Rotation
+        {
+            get => hasRotation ? rotation : direction == TexturePaintStripeDirection.Vertical ? 90f : 0f;
+            set { rotation = value; hasRotation = true; }
+        }
+
+        public void SetDirection(TexturePaintStripeDirection value)
+        {
+            direction = value;
+            Rotation = value == TexturePaintStripeDirection.Vertical ? 90f : 0f;
+        }
         [Range(0f, 1f)] public float position = 0.5f;
         [Range(0.001f, 1f)] public float width = 0.1f;
         [Range(0f, 0.5f)] public float softness = 0.01f;
@@ -134,6 +151,9 @@ namespace UMA.TexturePaint
         public Texture2D texture;
         public Sprite sprite;
         public Font font;
+        public OverlayPainterSpriteSet spriteSet;
+        public bool spriteSetSelectionExplicit;
+        public List<int> enabledSpriteIndices = new List<int>();
         public AnimationCurve curve = AnimationCurve.Linear(0f, 0f, 1f, 1f);
         public List<TexturePaintStripeDefinition> stripes =
             new List<TexturePaintStripeDefinition>();
@@ -270,6 +290,8 @@ namespace UMA.TexturePaint
                     id = source.id, number = source.number, boolean = source.boolean,
                     color = source.color, text = source.text, texture = source.texture,
                     sprite = source.sprite, font = source.font, curve = CloneCurve(source.curve),
+                    spriteSet = source.spriteSet, spriteSetSelectionExplicit = source.spriteSetSelectionExplicit,
+                    enabledSpriteIndices = source.enabledSpriteIndices != null ? new List<int>(source.enabledSpriteIndices) : new List<int>(),
                     stripes = CloneStripes(source.stripes)
                 });
             }
@@ -498,13 +520,15 @@ namespace UMA.TexturePaint
         private readonly Dictionary<string, TexturePaintReadOnlyMeshMap> meshMaps;
         private readonly Dictionary<string, TexturePaintReadOnlyParameterTexture> parameterTextures;
         private readonly Dictionary<string, TexturePaintReadOnlyMask> masks;
+        private readonly Dictionary<string, TexturePaintReadOnlySpriteSet> spriteSets;
         public IReadOnlyList<string> surfaceIds { get; }
 
         internal TexturePaintReadContextV2(Dictionary<string, TexturePaintReadOnlyImage> images,
             Dictionary<string, TexturePaintReadOnlyChannelInfo> channelInfo,
             Dictionary<string, TexturePaintReadOnlyMeshMap> meshMaps,
             Dictionary<string, TexturePaintReadOnlyParameterTexture> parameterTextures,
-            List<string> surfaceIds, Dictionary<string, TexturePaintReadOnlyMask> masks = null)
+            List<string> surfaceIds, Dictionary<string, TexturePaintReadOnlyMask> masks = null,
+            Dictionary<string, TexturePaintReadOnlySpriteSet> spriteSets = null)
         {
             this.images = images ?? new Dictionary<string, TexturePaintReadOnlyImage>(StringComparer.Ordinal);
             this.channelInfo = channelInfo ??
@@ -513,6 +537,7 @@ namespace UMA.TexturePaint
             this.parameterTextures = parameterTextures ??
                 new Dictionary<string, TexturePaintReadOnlyParameterTexture>(StringComparer.Ordinal);
             this.masks = masks ?? new Dictionary<string, TexturePaintReadOnlyMask>(StringComparer.Ordinal);
+            this.spriteSets = spriteSets ?? new Dictionary<string, TexturePaintReadOnlySpriteSet>(StringComparer.Ordinal);
             this.surfaceIds = surfaceIds != null
                 ? (IReadOnlyList<string>)surfaceIds
                 : Array.Empty<string>();
@@ -540,6 +565,12 @@ namespace UMA.TexturePaint
             parameterTextures.TryGetValue(parameterId ?? string.Empty,
                 out TexturePaintReadOnlyParameterTexture image);
             return image;
+        }
+
+        public TexturePaintReadOnlySpriteSet GetParameterSpriteSet(string parameterId)
+        {
+            spriteSets.TryGetValue(parameterId ?? string.Empty, out var source);
+            return source;
         }
 
         public TexturePaintReadOnlyMask GetMask(string surfaceId)

@@ -11,8 +11,10 @@ namespace UMA.TexturePaint.Editor
         [SerializeField] private bool pathHemSeamSelected;
         private static readonly TexturePaintGarmentPreset[] garmentConstructions=(TexturePaintGarmentPreset[])Enum.GetValues(typeof(TexturePaintGarmentPreset));
         private static readonly TexturePaintSeamPreset[] hemConstructions=(TexturePaintSeamPreset[])Enum.GetValues(typeof(TexturePaintSeamPreset));
-        private static readonly string[] projectionConstructionNames=BuildGarmentConstructionNames(false);
-        private static readonly string[] pathConstructionNames=BuildGarmentConstructionNames(true);
+        private static string[] projectionConstructionNames => projectionNames ??= BuildGarmentConstructionNames(false);
+        private static string[] projectionNames;
+        private static string[] pathConstructionNames => pathNames ??= BuildGarmentConstructionNames(true);
+        private static string[] pathNames;
         private static bool HasGarment(TexturePaintLayer layer)=>layer?.projectionSettings?.garment?.enabled==true ||
             layer?.splineSettings?.garment?.enabled==true || layer?.splineSettings?.hemSeam?.enabled==true;
 
@@ -95,16 +97,12 @@ namespace UMA.TexturePaint.Editor
         {
             foreach(TexturePaintGarmentPreset preset in Enum.GetValues(typeof(TexturePaintGarmentPreset)))
             {
+                if(path && TexturePaintPathGenerators.IsLinearGarment(preset))continue;
                 var selected=preset;
-                menu.AddItem(new GUIContent("Garment/"+TexturePaintGarmentSettings.FamilyName(TexturePaintGarmentSettings.Kind(preset))+"/"+ObjectNames.NicifyVariableName(preset.ToString())),false,
+                menu.AddItem(new GUIContent("Garments/"+TexturePaintGarmentSettings.FamilyName(TexturePaintGarmentSettings.Kind(preset))+"/"+ObjectNames.NicifyVariableName(preset.ToString())),false,
                     ()=> { if(path)CreateGarmentPath(set,selected);else AddProjectionLayerCore(set,TexturePaintGarmentSettings.Create(selected)); });
             }
-            if(path)foreach(var preset in hemConstructions)
-            {
-                var selected=preset;
-                menu.AddItem(new GUIContent("Garment/Hems & Seams/"+ObjectNames.NicifyVariableName(preset.ToString())),false,
-                    ()=>CreateHemSeamLayer(set,selected));
-            }
+
         }
         private void ShowProjectionCreationMenu(TextureSet set)
         {
@@ -161,6 +159,7 @@ namespace UMA.TexturePaint.Editor
             }
             BeginLightweightPathUndo(set,"Edit Garment Generator");
             pathGarment=garment?.Clone();pathHemSeam=hem?.Clone();
+            if(pathGarment?.enabled==true || pathHemSeam?.enabled==true)pathGenerator=null;
             pathGarment?.Normalize();pathHemSeam?.Normalize();
             if(pathGarment?.enabled==true && pathHemSeam!=null)pathHemSeam.enabled=false;
             if(pathGarment?.enabled==true || pathHemSeam?.enabled==true){pathMode=TexturePaintPathMode.Ribbon;tool=TexturePaintTool.Paint;}

@@ -15,7 +15,7 @@ using UnityEngine.Rendering;
 namespace UMA
 {
     [InitializeOnLoad]
-    public class WelcomeToUMA : EditorWindow
+    public partial class WelcomeToUMA : EditorWindow
     {
         private const string WhatsNewDocumentPath = "Docs/!WhatsNewInUMA3.md";
         private const string UrpPackageName = "com.unity.render-pipelines.universal";
@@ -595,12 +595,18 @@ namespace UMA
         public void DrawNavigation()
         {
             GUIHelper.BeginInsetArea(PanelColor, NavigationRect, 4, 10);
+            navigationScroll = GUILayout.BeginScrollView(navigationScroll, false, false,
+                GUIStyle.none, GUI.skin.verticalScrollbar);
             GUILayout.BeginVertical();
             if (GUILayout.Button("Welcome", GUILayout.Height(40)))
             {
                 ClearLog();
                 DoWelcome();
                 currentButton = 0;
+            }
+            if (GUILayout.Button("Plugins", GUILayout.Height(40)))
+            {
+                ShowPluginsPage();
             }
             SrpSupport installedSrp = GetInstalledSrpSupport();
             string srpButton = RequiresSrpSelection(installedSrp)
@@ -713,6 +719,7 @@ namespace UMA
                 }
             }
             GUILayout.EndVertical();
+            GUILayout.EndScrollView();
             GUIHelper.EndInsetArea();
         }
 
@@ -1230,6 +1237,10 @@ namespace UMA
             GUIHelper.BeginInsetArea(PanelColor, ContentRect, 4, 10);
             switch (currentButton)
             {
+                case PluginsPage:
+                    DrawPluginsPage();
+                    showLog = false;
+                    break;
                 case 5:
                     DoLinksPage();
                     showLog = false;

@@ -31,7 +31,8 @@ namespace UMA.TexturePaint.Editor
 
         internal void SelectView(TexturePaintPreviewView value) { view = value; Rebuild(); }
 
-        internal bool Draw(string status, string help, Action regenerateLayer = null, bool canRegenerate = true)
+        internal bool Draw(string status, string help, Action regenerateLayer = null, bool canRegenerate = true,
+            float? regenerationProgress = null)
         {
             bool changed = GUI.changed;
             bool refresh = false;
@@ -76,9 +77,14 @@ namespace UMA.TexturePaint.Editor
                         EditorGUILayout.LabelField(help, EditorStyles.wordWrappedMiniLabel);
                         refresh = GUILayout.Button("Refresh Preview", EditorStyles.miniButton);
                         if (regenerateLayer != null)
+                        {
                             using (new EditorGUI.DisabledScope(!canRegenerate))
                                 if (GUILayout.Button("Regenerate Layer", EditorStyles.miniButton))
                                     regenerateLayer();
+                            if (regenerationProgress.HasValue)
+                                EditorGUI.ProgressBar(EditorGUILayout.GetControlRect(false, 18f),
+                                    Mathf.Clamp01(regenerationProgress.Value), "Regenerating");
+                        }
                     }
                 }
             }

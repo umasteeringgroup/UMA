@@ -41,7 +41,8 @@ namespace UMA.TexturePaint.Editor
             finally { render = null; repaint?.Invoke(); }
         }
 
-        internal void Draw() { if (display.Draw(status, help)) key = null; }
+        internal void Draw(Action regenerateLayer = null, bool canRegenerate = true)
+        { if (display.Draw(status, help, regenerateLayer, canRegenerate)) key = null; }
 
         public void Dispose()
         {

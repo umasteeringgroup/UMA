@@ -26,11 +26,9 @@ namespace UMA.TexturePaint.Examples
             id = "com.uma.texturepaint.textile-surface",
             displayName = "Quilt, Embroidery, Perforation & Atlas Scatter",
             description = "Builds coordinated stitched, padded, punched, embroidered, or atlas-scattered material detail.",
-            pluginVersion = "1.1.3",
+            pluginVersion = "1.3.0",
             capabilities = TexturePaintPluginCapability.Generator | TexturePaintPluginCapability.LongRunning,
-            declaredChannels = TexturePaintChannelMask.Albedo | TexturePaintChannelMask.Roughness |
-                               TexturePaintChannelMask.Metallic | TexturePaintChannelMask.AmbientOcclusion |
-                               TexturePaintChannelMask.NormalControl,
+            declaredChannels = TexturePaintChannelMask.All,
             readChannels = TexturePaintChannelMask.All,
             supportedTargets = TexturePaintPluginTarget.All,
             channelSnapshotMaximumResolution = 4096,
@@ -41,10 +39,16 @@ namespace UMA.TexturePaint.Examples
         {
             if (context == null) throw new ArgumentNullException(nameof(context));
             var s = new Settings(context.parameters);
-            if (context.target == TexturePaintPluginTarget.LayerContent && !s.AnyOutput)
+            var spriteSet = s.mode == Mode.Quilt ? context.source.GetParameterSpriteSet("quiltSpriteSet") : null;
+            if (context.target == TexturePaintPluginTarget.LayerContent && !s.AnyOutput &&
+                (spriteSet == null || !s.spriteChannels))
                 throw new InvalidOperationException("Enable at least one output channel.");
             TexturePaintReadOnlyParameterTexture pattern = context.GetTextureParameter("pattern");
             TexturePaintReadOnlyParameterTexture atlas = context.GetTextureParameter("atlas");
+            if (s.mode == Mode.AtlasScatter && atlas == null)
+                throw new InvalidOperationException("Atlas Scatter requires an Atlas Texture. " +
+                    "Assign a regular grid atlas in the Atlas Fabric section and set Atlas Columns and Atlas Rows " +
+                    "to match it (use 1 by 1 for a single image). Alpha defines the stamp shape.");
             return Task.Run(() => Generate(context, s, pattern, atlas), context.cancellationToken);
         }
 
@@ -67,6 +71,12 @@ namespace UMA.TexturePaint.Examples
                 Add(TexturePaintChannel.Albedo, s.albedo); Add(TexturePaintChannel.Roughness, s.roughness);
                 Add(TexturePaintChannel.Metallic, s.metallic); Add(TexturePaintChannel.AmbientOcclusion, s.ao);
                 Add(TexturePaintChannel.NormalControl, s.normalControl);
+                var spriteSet = s.mode == Mode.Quilt ? c.source.GetParameterSpriteSet("quiltSpriteSet") : null;
+                if (spriteSet != null && s.spriteChannels)
+                    foreach (var channel in spriteSet.channels)
+                        if (channel != TexturePaintChannel.Albedo && channel != TexturePaintChannel.Roughness &&
+                            channel != TexturePaintChannel.Metallic && channel != TexturePaintChannel.AmbientOcclusion &&
+                            channel != TexturePaintChannel.NormalControl) Add(channel, true);
                 foreach (KeyValuePair<long, List<TexturePaintChannel>> pair in groups)
                 {
                     int width = (int)(pair.Key >> 32), height = (int)pair.Key;
@@ -91,6 +101,7 @@ namespace UMA.TexturePaint.Examples
             string id, int width, int height, int si, int surfaces, bool mask,
             List<TexturePaintChannel> channels = null)
         {
+            var spriteSet = s.mode == Mode.Quilt ? c.source.GetParameterSpriteSet("quiltSpriteSet") : null;
             for (int y0 = 0; y0 < height; y0 += Rows)
             {
                 c.cancellationToken.ThrowIfCancellationRequested();
@@ -106,7 +117,7 @@ namespace UMA.TexturePaint.Examples
                     {
                         Vector2 uv = Rotate(new Vector2((x + .5f) / width,
                             (y0 + ly + .5f) / height), s.rotation);
-                        Sample sample = SampleMode(s, uv, pattern, atlas, new Vector2(1f / width, 1f / height));
+                        Sample sample = SampleMode(s, uv, pattern, spriteSet == null ? atlas : null, new Vector2(1f / width, 1f / height));
                         float occlusion = s.shadingStrength > 0f
                             ? Mathf.Pow(Mathf.Max(.025f, sample.ao), s.shadingStrength) : 1f;
                         Color shaded = sample.color;
@@ -122,14 +133,19 @@ namespace UMA.TexturePaint.Examples
                         else for (int i = 0; i < channels.Count; i++)
                         {
                             TexturePaintChannel channel = channels[i];
-                            buffers[channel][index] = channel switch
+                            Color result = channel switch
                             {
                                 TexturePaintChannel.Albedo => (Color32)shaded,
                                 TexturePaintChannel.Roughness => Gray(sample.roughness),
                                 TexturePaintChannel.Metallic => Gray(sample.metallic),
                                 TexturePaintChannel.AmbientOcclusion => Gray(occlusion),
-                                _ => Gray(.5f + .45f * relief / (.45f + Mathf.Abs(relief)))
+                                TexturePaintChannel.NormalControl => Gray(.5f + .45f * relief / (.45f + Mathf.Abs(relief))),
+                                TexturePaintChannel.Normal => new Color(.5f, .5f, 1f, 1f),
+                                _ => new Color(0f, 0f, 0f, 1f)
                             };
+                            if (spriteSet != null)
+                                result = SpriteSetPanel(s, spriteSet, uv, channel, result, sample.fabricWeight, contactShade);
+                            buffers[channel][index] = (Color32)result;
                         }
                     }
                 });
@@ -171,10 +187,12 @@ namespace UMA.TexturePaint.Examples
                         ? CushionAxis(Mathf.Cos((fx + fy) * Mathf.PI), s.puffExponent)
                         : CushionAxis(fx * 2f, s.puffExponent) * CushionAxis(fy * 2f, s.puffExponent);
                     float cover = Mathf.Clamp01(Mathf.Max(puff * .35f, stitch));
-                    Color color = Color.Lerp(s.baseColor, s.accentColor, stitch * s.colorAmount);
+                    Color fabric = QuiltPanelFabric(s, q, atlas);
+                    Color color = Color.Lerp(fabric, s.accentColor, stitch * s.colorAmount);
                     return new Sample(color, Mathf.Clamp01(s.baseRoughness + stitch * .12f - puff * .08f),
                         s.baseMetallic, 1f - s.aoStrength * Mathf.Clamp01(channel * .65f + (channel - stitch) * .2f),
-                        (puff * s.puffHeight - channel * s.stitchDepth + stitch * s.stitchDepth * .65f) * (.85f + noise * .15f), cover);
+                        (puff * s.puffHeight - channel * s.stitchDepth + stitch * s.stitchDepth * .65f) * (.85f + noise * .15f), cover,
+                        1f - Mathf.Clamp01(stitch * s.colorAmount));
                 }
                 case Mode.Embroidery:
                 {
@@ -258,6 +276,84 @@ namespace UMA.TexturePaint.Examples
                 cover * s.scatterHeight, cover);
         }
 
+        private static Color QuiltPanelFabric(Settings s, Vector2 lattice, TexturePaintReadOnlyParameterTexture atlas)
+        {
+            if (atlas == null || s.quiltAtlasAmount <= 0f) return s.baseColor;
+            // The same lattice defines padding, seams, and fabric. One cell chooses one tile;
+            // scatter density, size and placement must never create extra stamps inside a panel.
+            if (s.quiltPattern == 2)
+                lattice = new Vector2(lattice.x + lattice.y, (lattice.y - lattice.x) * .5f);
+            int count = s.atlasColumns * s.atlasRows;
+            int cell = s.quiltAtlasRandom
+                ? Mathf.Min(count - 1, Mathf.FloorToInt(Hash(Mathf.FloorToInt(lattice.x),
+                    Mathf.FloorToInt(lattice.y), s.seed + 313) * count))
+                : Mathf.Clamp(s.quiltAtlasCell - 1, 0, count - 1);
+            int column = cell % s.atlasColumns, row = cell / s.atlasColumns;
+            // Clamp to this tile's texel centers, so a neighboring atlas tile cannot bleed
+            // into the panel even when an image reaches all the way to its stitched edge.
+            float insetX = Mathf.Min(.5f / atlas.width, .5f / s.atlasColumns);
+            float insetY = Mathf.Min(.5f / atlas.height, .5f / s.atlasRows);
+            float u = Mathf.Lerp(column / (float)s.atlasColumns + insetX,
+                (column + 1f) / s.atlasColumns - insetX, Frac(lattice.x));
+            float v = Mathf.Lerp(row / (float)s.atlasRows + insetY,
+                (row + 1f) / s.atlasRows - insetY, Frac(lattice.y));
+            Color image = atlas.GetPixelBilinear(u, v);
+            Color fabric = Color.Lerp(s.baseColor, image, Mathf.Clamp01(image.a * s.quiltAtlasAmount));
+            fabric.a = s.baseColor.a;
+            return fabric;
+        }
+
+        private static Color SpriteSetPanel(Settings s, TexturePaintReadOnlySpriteSet source, Vector2 uv,
+            TexturePaintChannel channel, Color background, float fabricWeight, float contactShade)
+        {
+            if (s.quiltAtlasAmount <= 0f) return background;
+            Vector2 q = uv * new Vector2(s.scale * s.aspect, s.scale);
+            if (s.quiltPattern == 1) q = new Vector2(q.x + q.y, q.y - q.x) * .70710678f;
+            if (s.quiltPattern == 2) q = new Vector2(q.x + q.y, (q.y - q.x) * .5f);
+            int choice = s.quiltAtlasRandom
+                ? Mathf.Min(source.enabledIndices.Count - 1, Mathf.FloorToInt(Hash(Mathf.FloorToInt(q.x),
+                    Mathf.FloorToInt(q.y), s.seed + 313) * source.enabledIndices.Count)) : 0;
+            int tile = source.enabledIndices[choice];
+            // A disabled fixed tile falls back to the first enabled tile, never to a disabled image.
+            if (!s.quiltAtlasRandom)
+                for (int i = 0; i < source.enabledIndices.Count; i++)
+                    if (source.enabledIndices[i] == s.quiltAtlasCell - 1) { tile = s.quiltAtlasCell - 1; break; }
+            var image = source.GetTile(tile, channel);
+            if (image == null) return background;
+            Color Read(TexturePaintReadOnlyParameterTexture texture) => texture.GetPixelBilinear(
+                Mathf.Lerp(.5f / texture.width, 1f - .5f / texture.width, Frac(q.x)),
+                Mathf.Lerp(.5f / texture.height, 1f - .5f / texture.height, Frac(q.y)));
+            Color pixel = Read(image);
+            float coverage = Mathf.Clamp01(Read(source.GetTile(tile, TexturePaintChannel.Albedo)).a * s.quiltAtlasAmount) * fabricWeight;
+            if (channel == TexturePaintChannel.Albedo)
+            {
+                pixel.r *= contactShade; pixel.g *= contactShade; pixel.b *= contactShade;
+                pixel.a = background.a;
+            }
+            else
+            {
+                coverage *= pixel.a;
+                if (channel == TexturePaintChannel.Normal)
+                {
+                    Vector3 normal = new Vector3(pixel.r * 2f - 1f, pixel.g * 2f - 1f, pixel.b * 2f - 1f);
+                    // Transform the tile's tangent frame back into the garment UV frame.
+                    float angle = (s.rotation - (s.quiltPattern == 0 ? 0f : 45f)) * Mathf.Deg2Rad;
+                    float x = normal.x * Mathf.Cos(angle) + normal.y * Mathf.Sin(angle);
+                    float y = -normal.x * Mathf.Sin(angle) + normal.y * Mathf.Cos(angle);
+                    normal = Vector3.Lerp(Vector3.forward, new Vector3(x, y, normal.z), coverage).normalized;
+                    return new Color(normal.x * .5f + .5f, normal.y * .5f + .5f, normal.z * .5f + .5f, 1f);
+                }
+                if (channel == TexturePaintChannel.NormalControl)
+                    return Gray(background.r + (pixel.r - .5f) * coverage);
+                if (channel == TexturePaintChannel.AmbientOcclusion)
+                    return Gray(background.r * Mathf.Lerp(1f, pixel.r, coverage));
+                if (TexturePaintChannelUtility.IsGrayscale(channel))
+                    pixel = new Color(pixel.r, pixel.r, pixel.r, 1f);
+                else pixel.a = 1f;
+            }
+            return Color.Lerp(background, pixel, coverage);
+        }
+
         private static float Pattern(TexturePaintReadOnlyParameterTexture texture, Vector2 uv, float threshold)
         {
             if (texture == null) return 0f;
@@ -276,9 +372,9 @@ namespace UMA.TexturePaint.Examples
 
         private readonly struct Sample
         {
-            public readonly Color color; public readonly float roughness, metallic, ao, height, coverage;
-            public Sample(Color color, float roughness, float metallic, float ao, float height, float coverage)
-            { this.color = color; this.roughness = roughness; this.metallic = metallic; this.ao = ao; this.height = height; this.coverage = coverage; }
+            public readonly Color color; public readonly float roughness, metallic, ao, height, coverage, fabricWeight;
+            public Sample(Color color, float roughness, float metallic, float ao, float height, float coverage, float fabricWeight = 1f)
+            { this.color = color; this.roughness = roughness; this.metallic = metallic; this.ao = ao; this.height = height; this.coverage = coverage; this.fabricWeight = fabricWeight; }
         }
 
         private sealed class Settings
@@ -291,7 +387,10 @@ namespace UMA.TexturePaint.Examples
                 holeDepth, holeRoughness, jitter, density, scatterSize, sizeVariation, rotationVariation,
                 luminanceMask, tintVariation, scatterRoughness, scatterMetallic, scatterHeight, depthStrength, shadingStrength;
             public readonly int seed, quiltPattern, perforationPattern, atlasColumns, atlasRows, scatterGridX, scatterGridY;
-            public readonly bool useAtlasColor; public readonly Vector2 offset;
+            public readonly bool useAtlasColor, quiltAtlasRandom; public readonly Vector2 offset;
+            public readonly int quiltAtlasCell;
+            public readonly float quiltAtlasAmount;
+            public readonly bool spriteChannels;
             public bool AnyOutput => albedo || roughness || metallic || ao || normalControl;
             public Settings(TexturePaintPluginParameterSet p)
             {
@@ -315,13 +414,17 @@ namespace UMA.TexturePaint.Examples
                 scatterGridX=Mathf.Max(1,p.Integer("scatterGridX",8)); scatterGridY=Mathf.Max(1,p.Integer("scatterGridY",8)); density=p.Float("density",.6f);
                 scatterSize=p.Float("scatterSize",.75f); sizeVariation=p.Float("sizeVariation",.3f); rotationVariation=p.Float("rotationVariation",180);
                 luminanceMask=p.Float("luminanceMask",0); useAtlasColor=p.Boolean("useAtlasColor",true); tintVariation=p.Float("tintVariation",.12f);
+                quiltAtlasRandom=p.Integer("quiltAtlasSelection",1)==1;
+                quiltAtlasCell=p.Integer("quiltAtlasCell",1);
+                quiltAtlasAmount=Mathf.Clamp01(p.Float("quiltAtlasAmount",1));
+                spriteChannels=p.Boolean("outputSpriteChannels",true);
                 scatterRoughness=p.Float("scatterRoughness",-.1f); scatterMetallic=p.Float("scatterMetallic",0); scatterHeight=p.Float("scatterHeight",.12f);
                 depthStrength=Mathf.Clamp(p.Float("depthStrength",1),0,4);
                 shadingStrength=Mathf.Clamp(p.Float("shadingStrength",1),0,3);
             }
         }
 
-        private static List<TexturePaintPluginParameterDefinition> Parameters() => new List<TexturePaintPluginParameterDefinition>
+        private static List<TexturePaintPluginParameterDefinition> Parameters() => WithPanelAtlas(new List<TexturePaintPluginParameterDefinition>
         {
             F("depthStrength","3D Depth",0,4,1,"Scales raised and recessed relief without clipping. Zero produces a flat height map."),
             F("shadingStrength","Relief Shading",0,3,1,"Contact shading in albedo and ambient occlusion, independent of height."),
@@ -332,7 +435,37 @@ namespace UMA.TexturePaint.Examples
             H("embroidery","Embroidery","Sprite-defined motifs filled with directional thread."), T("pattern","Pattern Texture","Alpha/luminance defines embroidered coverage."), F("patternTiling","Pattern Repeats",.1f,64,3,"Motif repetitions."), F("patternThreshold","Pattern Threshold",0,1,.4f,"Coverage cutoff."), F("offsetX","Offset X",-16,16,0,"Motif offset."), F("offsetY","Offset Y",-16,16,0,"Motif offset."), F("fiberDirection","Thread Direction",-180,180,45,"Satin stitch direction."), F("threadDensity","Thread Density",4,1024,180,"Visible thread ridges."), F("breakup","Thread Breakup",0,1,.18f,"Natural incomplete fibers."), F("sheen","Thread Sheen",0,1,.22f,"Roughness reduction on thread crowns."), F("embroideryHeight","Embroidery Height",0,.5f,.18f,"Raised thread height."),
             H("perforation","Perforation","Punched holes with bevel, depth and controllable spread. This shades holes; it does not alter mesh topology."), E("perforationPattern","Hole Layout",new[]{"Grid","Hex / Staggered","Organic Jitter"},1,"Hole distribution."), C("holeColor","Recess Color",new Color(.025f,.02f,.015f,1),"Interior/recess color."), F("holeRadius","Hole Radius",.01f,.48f,.24f,"Hole size within each repeat."), F("edgeSoftness","Edge Softness",.001f,.2f,.018f,"Antialias/edge wear."), F("bevelWidth","Bevel Width",.005f,.3f,.09f,"Rolled edge spread."), F("bevelHeight","Bevel Height",0,.5f,.1f,"Raised lip."), F("holeDepth","Hole Depth",0,.5f,.28f,"Normal Control recess."), F("holeRoughness","Interior Roughness",0,1,.86f,"Roughness inside holes."), F("jitter","Position Jitter",0,.8f,.18f,"Organic displacement."),
             H("atlasHeader","Atlas Scatter","Random cells from a regular texture atlas, with deterministic transform variation."), T("atlas","Atlas Texture","A regular grid atlas; alpha defines each stamp."), I("atlasColumns","Atlas Columns",1,64,4,"Cells across."), I("atlasRows","Atlas Rows",1,64,4,"Cells down."), I("scatterGridX","Scatter Columns",1,256,8,"Candidate stamps across UV."), I("scatterGridY","Scatter Rows",1,256,8,"Candidate stamps down UV."), F("density","Density",0,1,.6f,"Occupied candidates."), F("scatterSize","Stamp Size",.02f,2,.75f,"Size relative to candidate cell."), F("sizeVariation","Size Variation",0,1,.3f,"Random shrink/grow."), F("rotationVariation","Rotation Variation",0,360,180,"Random angle range."), F("luminanceMask","Use Luminance as Mask",0,1,0,"Blends alpha-only and alpha-times-luminance coverage."), B("useAtlasColor","Use Atlas Color",true,"Uses atlas RGB rather than Accent Color."), F("tintVariation","Tint Variation",0,1,.12f,"Per-stamp brightness variation."), F("scatterRoughness","Roughness Change",-1,1,-.1f,"Stamp roughness delta."), F("scatterMetallic","Metallic Change",-1,1,0,"Stamp metallic delta."), F("scatterHeight","Stamp Height",-.5f,.5f,.12f,"Normal Control height."),
-        };
+        });
+
+        private static List<TexturePaintPluginParameterDefinition> WithPanelAtlas(List<TexturePaintPluginParameterDefinition> parameters)
+        {
+            var source = new List<TexturePaintPluginParameterDefinition>
+            {
+                H("atlasSource", "Atlas Fabric", "Quilt fits one fabric tile to each panel and retains its stitches and relief. Use a Sprite Set for all material channels, or a texture atlas for color. Atlas Scatter uses the texture for separate stamps.")
+            };
+            // Reuse the saved atlas reference/grid for both modes, without duplicate IDs.
+            foreach (string id in new[] { "atlas", "atlasColumns", "atlasRows" })
+            {
+                var parameter = parameters.Find(p => p.id == id);
+                parameters.Remove(parameter);
+                if (id == "atlas") parameter.description = "A regular grid atlas. Quilt fits one tile to each panel; " +
+                    "Atlas Scatter places stamps. Transparent areas reveal Base Color in Quilt.";
+                source.Add(parameter);
+            }
+            source.Add(E("quiltAtlasSelection", "Panel Tile Selection", new[] { "Selected Cell", "Random per Panel" }, 1,
+                "Each quilt panel contains exactly one image. Random selection is stable for its panel and Seed."));
+            source.Add(I("quiltAtlasCell", "Selected Cell", 1, 4096, 1,
+                "Sprite Set: use the number in Select Tiles; a disabled cell falls back to the first enabled tile. Texture: count from 1, left to right, starting at the bottom row."));
+            source.Add(F("quiltAtlasAmount", "Fabric Amount", 0, 1, 1,
+                "Blend fabric channels into each panel. Zero keeps the plain quilt. Albedo alpha reveals the underlying quilt."));
+            source.Insert(1, new TexturePaintPluginParameterDefinition { id = "quiltSpriteSet", displayName = "Sprite Set",
+                description = "Optional multi-channel fabric. Takes priority over Atlas Texture in Quilt. Choose enabled tiles below.",
+                type = TexturePaintPluginParameterType.SpriteSet });
+            source.Add(B("outputSpriteChannels", "Additional Sprite Channels", true,
+                "Include Normal, Emission, Custom and mask channels supplied by the Sprite Set. The output toggles above control its other channels."));
+            parameters.InsertRange(parameters.FindIndex(p => p.id == "quilt"), source);
+            return parameters;
+        }
 
         private static TexturePaintPluginParameterDefinition H(string id,string n,string d)=>new TexturePaintPluginParameterDefinition{id=id,displayName=n,description=d,type=TexturePaintPluginParameterType.Header};
         private static TexturePaintPluginParameterDefinition F(string id,string n,float min,float max,float v,string d)=>new TexturePaintPluginParameterDefinition{id=id,displayName=n,description=d,type=TexturePaintPluginParameterType.Float,minimum=min,maximum=max,defaultNumber=v};

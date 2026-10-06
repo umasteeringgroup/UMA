@@ -12,6 +12,8 @@ namespace UMA.Editors
 
         public override void OnInspectorGUI()
         {
+            using var pluginScope = BeginPluginInspector();
+            if (!PluginRecipeConflictResolved) return;
             if (collectionView.DrawSelector())
             {
                 base.OnInspectorGUI();

@@ -803,7 +803,9 @@ namespace UMA.TexturePaint.Editor
             bool rerenderRibbon = layer.IsSplineLayer &&
                 layer.splineSettings?.pathMode == TexturePaintPathMode.Ribbon &&
                 previous.TryGetValue(layer, out TexturePaintLayerEffects priorEffects) &&
-                RibbonProjectionEffectsChanged(priorEffects, next);
+                (layer.splineSettings.pathGenerator?.enabled == true
+                    ? RibbonEffectSignature(priorEffects,true) != RibbonEffectSignature(next,true)
+                    : RibbonProjectionEffectsChanged(priorEffects, next));
             if (rerenderRibbon) ReapplyLayerEffectsPath(set, layer);
             PushLightweightCommand("Edit Layer Effects",
                 () =>
@@ -1184,13 +1186,14 @@ namespace UMA.TexturePaint.Editor
             return RibbonEffectSignature(before) != RibbonEffectSignature(after);
         }
 
-        private static string RibbonEffectSignature(TexturePaintLayerEffects effects)
+        private static string RibbonEffectSignature(TexturePaintLayerEffects effects, bool generatedPath = false)
         {
             var signature = new System.Text.StringBuilder();
             for (int i = 0; i < effects.Stack.Count; i++)
             {
                 TexturePaintLayerEffectSettings effect = effects.Stack[i];
                 if (effect == null || TexturePaintLayerEffects.IsCompositeOnlyEffect(effect.kind)) continue;
+                if (generatedPath && TexturePaintLayerEffects.IsDistanceEffect(effect.kind)) continue;
                 signature.Append(JsonUtility.ToJson(effect));
             }
             return signature.ToString();

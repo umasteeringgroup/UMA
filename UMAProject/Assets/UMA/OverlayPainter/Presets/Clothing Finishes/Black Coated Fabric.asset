@@ -1,0 +1,2387 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 64cb21cb67364e6b88ee17f47f46ab63, type: 3}
+  m_Name: Black Coated Fabric
+  m_EditorClassIdentifier: UMA.TexturePaint.Runtime::UMA.TexturePaint.TexturePaintMaterialPreset
+  schemaVersion: 3
+  presetId: d495b27ecdb845e99b0ed1f5e83f6d81
+  revision: 1
+  displayName: Black Coated Fabric
+  description: Editable leather or coating with coordinated color, roughness and
+    grain relief.
+  category: Clothing Finishes
+  tags:
+  - clothing
+  - leather
+  - procedural
+  thumbnail: {fileID: 2800000, guid: fc3cc2102729fe0439d500f53c8af8c9, type: 3}
+  author: UMA
+  createdUtc: 
+  modifiedUtc: 
+  sourceMaterialName: 
+  sourceMeshSignature: 
+  sourceTopologySignature: 
+  sourceUVSignature: 
+  sourceSlotNames: []
+  portability: 4
+  includesWholeStack: 0
+  includesCachedPluginOutput: 0
+  packaged: 0
+  packagedFromPresetId: 
+  packagedUtc: 
+  packagedDependencies: []
+  packagedExternalDependencies: []
+  channels:
+  - channel: 0
+    required: 1
+    portability: 0
+  - channel: 3
+    required: 1
+    portability: 0
+  - channel: 10
+    required: 1
+    portability: 0
+  plugins:
+  - pluginId: com.uma.texturepaint.leather-coated-fabric
+    pluginVersion: 1.0.0
+    apiVersion: 2
+    declaredChannels: 1037
+    readChannels: 11
+    requiredMeshMaps: 45
+    targets: 1
+  layers:
+  - id: a6fc7f784ca246429a9d1ff08eb7e341
+    logicalLayerId: 
+    paintTargetId: 
+    parentId: 
+    name: Black Coated Fabric
+    kind: 4
+    visible: 1
+    opacity: 1
+    blendMode: 0
+    effects:
+      stack:
+      - id: 26d727d8b9f9448585bde49ab5c78aec
+        kind: 2
+        enabled: 0
+        channel: 0
+        color: {r: 0, g: 0, b: 0, a: 0.75}
+        width: 8
+        smoothness: 0.25
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        offset: {x: 0, y: 0}
+        blendMode: 0
+        level: 1
+        edgeFadeStart: 0.75
+        edgeFadeSize: 1
+        ribbonSide: 2
+        secondaryColor: {r: 0, g: 0, b: 0, a: 1}
+        bevelLightAngle: 135
+        ribbonLeftTone: 0
+        ribbonRightTone: 1
+        ribbonLeftOffset: 0
+        ribbonRightOffset: 0
+        stitchRows: 0
+        stitchThreadSize: 0.012
+        stitchLength: 0.08
+        stitchInset: 0.06
+        contourThreadWidth: 1.5
+        contourStitchLength: 5
+        contourStitchInset: 2
+        texture1: {fileID: 0}
+        texture2: {fileID: 0}
+        textureTiling1: {x: 1, y: 1}
+        textureTiling2: {x: 1, y: 1}
+        textureOffset1: {x: 0, y: 0}
+        textureOffset2: {x: 0, y: 0}
+        textureRotation1: 0
+        textureRotation2: 0
+        textureOpacity1: 1
+        textureOpacity2: 1
+        secondaryBlendMode: 0
+        saturation: 1
+        brightness: 0
+        contrast: 0
+        hue: 0
+      - id: 010e0b636e424cb4b512b88f9ddd58aa
+        kind: 4
+        enabled: 0
+        channel: 0
+        color: {r: 1, g: 1, b: 1, a: 1}
+        width: 8
+        smoothness: 0.25
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        offset: {x: 0, y: 0}
+        blendMode: 0
+        level: 1
+        edgeFadeStart: 0.75
+        edgeFadeSize: 1
+        ribbonSide: 2
+        secondaryColor: {r: 0, g: 0, b: 0, a: 1}
+        bevelLightAngle: 135
+        ribbonLeftTone: 0
+        ribbonRightTone: 1
+        ribbonLeftOffset: 0
+        ribbonRightOffset: 0
+        stitchRows: 0
+        stitchThreadSize: 0.012
+        stitchLength: 0.08
+        stitchInset: 0.06
+        contourThreadWidth: 1.5
+        contourStitchLength: 5
+        contourStitchInset: 2
+        texture1: {fileID: 0}
+        texture2: {fileID: 0}
+        textureTiling1: {x: 1, y: 1}
+        textureTiling2: {x: 1, y: 1}
+        textureOffset1: {x: 0, y: 0}
+        textureOffset2: {x: 0, y: 0}
+        textureRotation1: 0
+        textureRotation2: 0
+        textureOpacity1: 1
+        textureOpacity2: 1
+        secondaryBlendMode: 0
+        saturation: 1
+        brightness: 0
+        contrast: 0
+        hue: 0
+      - id: b18966bbb9144612bf4d6332e92e18f2
+        kind: 0
+        enabled: 0
+        channel: 0
+        color: {r: 0, g: 0, b: 0, a: 1}
+        width: 2
+        smoothness: 0.25
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        offset: {x: 0, y: 0}
+        blendMode: 0
+        level: 1
+        edgeFadeStart: 0.75
+        edgeFadeSize: 1
+        ribbonSide: 2
+        secondaryColor: {r: 0, g: 0, b: 0, a: 1}
+        bevelLightAngle: 135
+        ribbonLeftTone: 0
+        ribbonRightTone: 1
+        ribbonLeftOffset: 0
+        ribbonRightOffset: 0
+        stitchRows: 0
+        stitchThreadSize: 0.012
+        stitchLength: 0.08
+        stitchInset: 0.06
+        contourThreadWidth: 1.5
+        contourStitchLength: 5
+        contourStitchInset: 2
+        texture1: {fileID: 0}
+        texture2: {fileID: 0}
+        textureTiling1: {x: 1, y: 1}
+        textureTiling2: {x: 1, y: 1}
+        textureOffset1: {x: 0, y: 0}
+        textureOffset2: {x: 0, y: 0}
+        textureRotation1: 0
+        textureRotation2: 0
+        textureOpacity1: 1
+        textureOpacity2: 1
+        secondaryBlendMode: 0
+        saturation: 1
+        brightness: 0
+        contrast: 0
+        hue: 0
+      - id: 42c86a6d465844fa962f2d69c1b1a08e
+        kind: 1
+        enabled: 0
+        channel: 0
+        color: {r: 0, g: 0, b: 0, a: 0.75}
+        width: 8
+        smoothness: 0.25
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        offset: {x: 0, y: 0}
+        blendMode: 0
+        level: 1
+        edgeFadeStart: 0.75
+        edgeFadeSize: 1
+        ribbonSide: 2
+        secondaryColor: {r: 0, g: 0, b: 0, a: 1}
+        bevelLightAngle: 135
+        ribbonLeftTone: 0
+        ribbonRightTone: 1
+        ribbonLeftOffset: 0
+        ribbonRightOffset: 0
+        stitchRows: 0
+        stitchThreadSize: 0.012
+        stitchLength: 0.08
+        stitchInset: 0.06
+        contourThreadWidth: 1.5
+        contourStitchLength: 5
+        contourStitchInset: 2
+        texture1: {fileID: 0}
+        texture2: {fileID: 0}
+        textureTiling1: {x: 1, y: 1}
+        textureTiling2: {x: 1, y: 1}
+        textureOffset1: {x: 0, y: 0}
+        textureOffset2: {x: 0, y: 0}
+        textureRotation1: 0
+        textureRotation2: 0
+        textureOpacity1: 1
+        textureOpacity2: 1
+        secondaryBlendMode: 0
+        saturation: 1
+        brightness: 0
+        contrast: 0
+        hue: 0
+      - id: d5523a34723b42699fddd2d930572a50
+        kind: 3
+        enabled: 0
+        channel: 0
+        color: {r: 1, g: 1, b: 1, a: 1}
+        width: 8
+        smoothness: 0.25
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        offset: {x: 0, y: 0}
+        blendMode: 0
+        level: 1
+        edgeFadeStart: 0.75
+        edgeFadeSize: 1
+        ribbonSide: 2
+        secondaryColor: {r: 0, g: 0, b: 0, a: 1}
+        bevelLightAngle: 135
+        ribbonLeftTone: 0
+        ribbonRightTone: 1
+        ribbonLeftOffset: 0
+        ribbonRightOffset: 0
+        stitchRows: 0
+        stitchThreadSize: 0.012
+        stitchLength: 0.08
+        stitchInset: 0.06
+        contourThreadWidth: 1.5
+        contourStitchLength: 5
+        contourStitchInset: 2
+        texture1: {fileID: 0}
+        texture2: {fileID: 0}
+        textureTiling1: {x: 1, y: 1}
+        textureTiling2: {x: 1, y: 1}
+        textureOffset1: {x: 0, y: 0}
+        textureOffset2: {x: 0, y: 0}
+        textureRotation1: 0
+        textureRotation2: 0
+        textureOpacity1: 1
+        textureOpacity2: 1
+        secondaryBlendMode: 0
+        saturation: 1
+        brightness: 0
+        contrast: 0
+        hue: 0
+      - id: 5f32fd7851f44209bdca60d2000b8b10
+        kind: 5
+        enabled: 0
+        channel: 0
+        color: {r: 1, g: 1, b: 1, a: 1}
+        width: 1
+        smoothness: 0.25
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        offset: {x: 0, y: 0}
+        blendMode: 0
+        level: 1
+        edgeFadeStart: 0.75
+        edgeFadeSize: 1
+        ribbonSide: 2
+        secondaryColor: {r: 0, g: 0, b: 0, a: 1}
+        bevelLightAngle: 135
+        ribbonLeftTone: 0
+        ribbonRightTone: 1
+        ribbonLeftOffset: 0
+        ribbonRightOffset: 0
+        stitchRows: 0
+        stitchThreadSize: 0.012
+        stitchLength: 0.08
+        stitchInset: 0.06
+        contourThreadWidth: 1.5
+        contourStitchLength: 5
+        contourStitchInset: 2
+        texture1: {fileID: 0}
+        texture2: {fileID: 0}
+        textureTiling1: {x: 1, y: 1}
+        textureTiling2: {x: 1, y: 1}
+        textureOffset1: {x: 0, y: 0}
+        textureOffset2: {x: 0, y: 0}
+        textureRotation1: 0
+        textureRotation2: 0
+        textureOpacity1: 1
+        textureOpacity2: 1
+        secondaryBlendMode: 0
+        saturation: 1
+        brightness: 0
+        contrast: 0
+        hue: 0
+      - id: a4bffea6d6c44ae5ac4cc43c4d35b450
+        kind: 9
+        enabled: 0
+        channel: 0
+        color: {r: 1, g: 1, b: 1, a: 1}
+        width: 8
+        smoothness: 0.25
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        offset: {x: 0, y: 0}
+        blendMode: 0
+        level: 1
+        edgeFadeStart: 0.75
+        edgeFadeSize: 1
+        ribbonSide: 2
+        secondaryColor: {r: 1, g: 1, b: 1, a: 1}
+        bevelLightAngle: 135
+        ribbonLeftTone: 0
+        ribbonRightTone: 1
+        ribbonLeftOffset: 0
+        ribbonRightOffset: 0
+        stitchRows: 0
+        stitchThreadSize: 0.012
+        stitchLength: 0.08
+        stitchInset: 0.06
+        contourThreadWidth: 1.5
+        contourStitchLength: 5
+        contourStitchInset: 2
+        texture1: {fileID: 0}
+        texture2: {fileID: 0}
+        textureTiling1: {x: 1, y: 1}
+        textureTiling2: {x: 1, y: 1}
+        textureOffset1: {x: 0, y: 0}
+        textureOffset2: {x: 0, y: 0}
+        textureRotation1: 0
+        textureRotation2: 0
+        textureOpacity1: 1
+        textureOpacity2: 1
+        secondaryBlendMode: 0
+        saturation: 1
+        brightness: 0
+        contrast: 0
+        hue: 0
+      - id: 0d285125ac92481ab255527ffab160bd
+        kind: 10
+        enabled: 0
+        channel: 0
+        color: {r: 0, g: 0, b: 0, a: 1}
+        width: 8
+        smoothness: 0.25
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        offset: {x: 0, y: 0}
+        blendMode: 0
+        level: 1
+        edgeFadeStart: 0.75
+        edgeFadeSize: 1
+        ribbonSide: 2
+        secondaryColor: {r: 0, g: 0, b: 0, a: 1}
+        bevelLightAngle: 135
+        ribbonLeftTone: 0
+        ribbonRightTone: 1
+        ribbonLeftOffset: 0
+        ribbonRightOffset: 0
+        stitchRows: 0
+        stitchThreadSize: 0.012
+        stitchLength: 0.08
+        stitchInset: 0.06
+        contourThreadWidth: 1.5
+        contourStitchLength: 5
+        contourStitchInset: 2
+        texture1: {fileID: 0}
+        texture2: {fileID: 0}
+        textureTiling1: {x: 1, y: 1}
+        textureTiling2: {x: 1, y: 1}
+        textureOffset1: {x: 0, y: 0}
+        textureOffset2: {x: 0, y: 0}
+        textureRotation1: 0
+        textureRotation2: 0
+        textureOpacity1: 1
+        textureOpacity2: 1
+        secondaryBlendMode: 0
+        saturation: 1
+        brightness: 0
+        contrast: 0
+        hue: 0
+      - id: 6029d7e5ab69430588acecd887f5c52f
+        kind: 6
+        enabled: 0
+        channel: 0
+        color: {r: 0, g: 0, b: 0, a: 1}
+        width: 8
+        smoothness: 0.25
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        offset: {x: 0, y: 0}
+        blendMode: 0
+        level: 1
+        edgeFadeStart: 0.75
+        edgeFadeSize: 1
+        ribbonSide: 2
+        secondaryColor: {r: 0, g: 0, b: 0, a: 1}
+        bevelLightAngle: 135
+        ribbonLeftTone: 0
+        ribbonRightTone: 1
+        ribbonLeftOffset: 0
+        ribbonRightOffset: 0
+        stitchRows: 0
+        stitchThreadSize: 0.012
+        stitchLength: 0.08
+        stitchInset: 0.06
+        contourThreadWidth: 1.5
+        contourStitchLength: 5
+        contourStitchInset: 2
+        texture1: {fileID: 0}
+        texture2: {fileID: 0}
+        textureTiling1: {x: 1, y: 1}
+        textureTiling2: {x: 1, y: 1}
+        textureOffset1: {x: 0, y: 0}
+        textureOffset2: {x: 0, y: 0}
+        textureRotation1: 0
+        textureRotation2: 0
+        textureOpacity1: 1
+        textureOpacity2: 1
+        secondaryBlendMode: 0
+        saturation: 1
+        brightness: 0
+        contrast: 0
+        hue: 0
+      - id: 288d16cff0a245268946ae2fa83e2463
+        kind: 7
+        enabled: 0
+        channel: 0
+        color: {r: 1, g: 1, b: 1, a: 1}
+        width: 4
+        smoothness: 0.35
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        offset: {x: 0, y: 0}
+        blendMode: 0
+        level: 0.6
+        edgeFadeStart: 0.75
+        edgeFadeSize: 1
+        ribbonSide: 2
+        secondaryColor: {r: 0, g: 0, b: 0, a: 1}
+        bevelLightAngle: 135
+        ribbonLeftTone: 0
+        ribbonRightTone: 1
+        ribbonLeftOffset: 0
+        ribbonRightOffset: 0
+        stitchRows: 0
+        stitchThreadSize: 0.012
+        stitchLength: 0.08
+        stitchInset: 0.06
+        contourThreadWidth: 1.5
+        contourStitchLength: 5
+        contourStitchInset: 2
+        texture1: {fileID: 0}
+        texture2: {fileID: 0}
+        textureTiling1: {x: 1, y: 1}
+        textureTiling2: {x: 1, y: 1}
+        textureOffset1: {x: 0, y: 0}
+        textureOffset2: {x: 0, y: 0}
+        textureRotation1: 0
+        textureRotation2: 0
+        textureOpacity1: 1
+        textureOpacity2: 1
+        secondaryBlendMode: 0
+        saturation: 1
+        brightness: 0
+        contrast: 0
+        hue: 0
+      - id: aea185c308764d5dab0daa3996513760
+        kind: 8
+        enabled: 0
+        channel: 0
+        color: {r: 1, g: 1, b: 1, a: 1}
+        width: 8
+        smoothness: 0.25
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        offset: {x: 0, y: 0}
+        blendMode: 0
+        level: 1
+        edgeFadeStart: 0.75
+        edgeFadeSize: 1
+        ribbonSide: 2
+        secondaryColor: {r: 0, g: 0, b: 0, a: 1}
+        bevelLightAngle: 135
+        ribbonLeftTone: 0
+        ribbonRightTone: 1
+        ribbonLeftOffset: 0
+        ribbonRightOffset: 0
+        stitchRows: 0
+        stitchThreadSize: 0.012
+        stitchLength: 0.08
+        stitchInset: 0.06
+        contourThreadWidth: 1.5
+        contourStitchLength: 5
+        contourStitchInset: 2
+        texture1: {fileID: 0}
+        texture2: {fileID: 0}
+        textureTiling1: {x: 1, y: 1}
+        textureTiling2: {x: 1, y: 1}
+        textureOffset1: {x: 0, y: 0}
+        textureOffset2: {x: 0, y: 0}
+        textureRotation1: 0
+        textureRotation2: 0
+        textureOpacity1: 1
+        textureOpacity2: 1
+        secondaryBlendMode: 0
+        saturation: 1
+        brightness: 0
+        contrast: 0
+        hue: 0
+    fillChannel: 0
+    fillColor: {r: 1, g: 1, b: 1, a: 1}
+    fillSettings:
+      generatorRevision: 0
+      source: 2
+      sourceTexture: {fileID: 0}
+      sourceSprite: {fileID: 0}
+      sourceOverlay: {fileID: 0}
+      invert: 0
+      color: {r: 1, g: 1, b: 1, a: 1}
+      normalConvention: 0
+      projection: 0
+      tiling: {x: 1, y: 1}
+      offset: {x: 0, y: 0}
+      rotation: 0
+      useFirstChannelTransform: 0
+      triplanarBlend: 1
+      blendOffset: 0
+      blendSharpness: 4
+      ignoreSourceAlpha: 0
+    fillTileSources:
+      mode: 0
+      overlay: {fileID: 0}
+      textures: []
+      bakeOverlayCoverage: 0
+    projectionSettings:
+      garment:
+        enabled: 0
+        preset: 0
+        kind: 0
+        variant: 0
+        seed: 17
+        detailSize: 0.014
+        relief: 0.0015
+        normalStrength: 1
+        amount: 1
+        angle: 0
+        irregularity: 0.35
+        falloff: 0.15
+        taper: 0.4
+        focus: {x: 0.5, y: 0.05}
+        spread: 0.65
+        wear: 0.3
+        recess: 0.3
+        dirt: 0.2
+        protection: 0.85
+        edgeWidth: 0.035
+        openStart: 0
+        openEnd: 0
+        stitchSize: 0.00035
+        stitchSpacing: 0.0035
+        stitchRows: 2
+        threadColor: {r: 0.7, g: 0.38, b: 0.1, a: 1}
+        surfaceColor: {r: 0.13, g: 0.22, b: 0.3, a: 1}
+        accentColor: {r: 0.55, g: 0.31, b: 0.13, a: 1}
+        colorAmount: 0
+        roughness: 0.8
+        metalRoughness: 0.32
+        opening: 0.08
+        slider: 0.82
+        zipperWidth: 1
+        zipperDepth: 1
+        zipperDepthVersion: 1
+        shadingStrength: 1
+        shadingStrengthVersion: 1
+        repeat: 1
+        damage: 0.45
+        fray: 0.55
+        motif: {fileID: 0}
+        motifSprite: {fileID: 0}
+        motifScale: 0.75
+        motifColor: 1
+        albedo: 1
+        normal: 0
+        ao: 1
+        roughnessOutput: 1
+        metallic: 1
+        height: 1
+        masks: 0
+        foldInput:
+          surfaceId: 
+          layerId: 
+          logicalLayerId: 
+          paintTargetId: 
+          channel: 0
+          component: 1
+          invert: 0
+        protectionInput:
+          surfaceId: 
+          layerId: 
+          logicalLayerId: 
+          paintTargetId: 
+          channel: 0
+          component: 1
+          invert: 0
+      source: 0
+      texture: {fileID: 0}
+      sprite: {fileID: 0}
+      overlay: {fileID: 0}
+      channel: 0
+      normalConvention: 0
+      channelSourcesVersion: 0
+      channelSources: []
+      placed: 0
+      position: {x: 0, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0, w: 1}
+      width: 0.1
+      height: 0.1
+      depth: 0.04
+      lockAspect: 1
+      depthFromSurface: 0
+      flipX: 0
+      flipY: 0
+      mode: 0
+      points:
+      - {x: -0.5, y: -0.5, z: 0}
+      - {x: 0, y: -0.5, z: 0}
+      - {x: 0.5, y: -0.5, z: 0}
+      - {x: -0.5, y: 0, z: 0}
+      - {x: 0, y: 0, z: 0}
+      - {x: 0.5, y: 0, z: 0}
+      - {x: -0.5, y: 0.5, z: 0}
+      - {x: 0, y: 0.5, z: 0}
+      - {x: 0.5, y: 0.5, z: 0}
+      gridSize: 3
+      pinned: 000000000000000000
+      cylinderAngle: 360
+      fade: 2
+      edgeWidth: 0.1
+      falloff:
+        serializedVersion: 2
+        m_Curve:
+        - serializedVersion: 3
+          time: 0
+          value: 0
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        - serializedVersion: 3
+          time: 1
+          value: 1
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+      depthFade: 0.15
+      frontFacesOnly: 1
+      angleStart: 60
+      angleEnd: 85
+      firstSurfaceOnly: 1
+      visibilityTolerance: 0.0002
+      visibilityResolution: 256
+      connectedSurfaceOnly: 1
+      regionSurfaceId: 
+      regionTriangle: -1
+    links:
+      anchorName: 
+      content:
+        surfaceId: 
+        layerId: 
+        logicalLayerId: 
+        paintTargetId: 
+        channel: 0
+        component: 1
+        invert: 0
+      mask:
+        surfaceId: 
+        layerId: 
+        logicalLayerId: 
+        paintTargetId: 
+        channel: 0
+        component: 1
+        invert: 0
+      instance:
+        surfaceId: 
+        layerId: 
+        logicalLayerId: 
+        paintTargetId: 
+        channel: 0
+        component: 1
+        invert: 0
+      outputChannel: 0
+      tint: {r: 1, g: 1, b: 1, a: 1}
+      tiling: {x: 1, y: 1}
+      offset: {x: 0, y: 0}
+      rotation: 0
+    cachedLinkedMask:
+      id: 02b067287ea84874956968ac002ed1d7
+      name: Selection
+      width: 0
+      height: 0
+      compressed: 
+    paintSettings:
+      tool: 0
+      channel: 0
+      source: 2
+      destination: 1
+      brush: {fileID: 0}
+      brushShape: 0
+      brushSize: 0.05
+      brushHardness: 0.7
+      brushFlow: 1
+      brushSpacing: 0.2
+      brushRotation: 0
+      brushBlendMode: 0
+      brushMirrorStroke: 0
+      brushAlignToStroke: 0
+      brushStamp: {fileID: 0}
+      brushStampSprite: {fileID: 0}
+      brushRandomizationVersion: 1
+      brushRandomRotation: 0
+      brushRandomSizeVariation: 0
+      brushRandomSizeShrink: 0.3
+      brushRandomSizeGrow: 0.3
+      brushSplatter: 0
+      brushSplatterDistance: 1
+      brushRandomStrength: 0
+      brushFade: 0
+      brushAutoFade: 0
+      brushTaper: 0
+      brushAutoTaper: 0
+      brushFadeTaperLength: 0
+      sourceTexture: {fileID: 0}
+      sourceSprite: {fileID: 0}
+      sourceOverlay: {fileID: 0}
+      color: {r: 1, g: 1, b: 1, a: 1}
+      normalConvention: 0
+      strength: 1
+      limitStrokeCoverage: 0
+      mirrorX: 0
+      symmetry:
+        enabled: 0
+        mirrorX: 1
+        mirrorY: 0
+        mirrorZ: 0
+        origin: {x: 0, y: 0, z: 0}
+        euler: {x: 0, y: 0, z: 0}
+        radialCopies: 1
+        radialAxis: {x: 0, y: 1, z: 0}
+        legacyWorldMirrorOrder: 0
+      stabilization: 0
+      directionSmoothing: 0.35
+      projectionDepth: 0.5
+      normalAngleLimit: 90
+      paintBackfaces: 0
+      pressureAffectsFlow: 1
+      pressureAffectsSize: 0
+    layerSymmetry:
+      enabled: 0
+      mirrorX: 1
+      mirrorY: 0
+      mirrorZ: 0
+      origin: {x: 0, y: 0, z: 0}
+      euler: {x: 0, y: 0, z: 0}
+      radialCopies: 1
+      radialAxis: {x: 0, y: 1, z: 0}
+      legacyWorldMirrorOrder: 0
+    layerSymmetryVersion: 0
+    spline:
+      name: Spline
+      worldSpace: 1
+      worldCurveVersion: 0
+      closed: 0
+      useBezier: 1
+      showControls: 1
+      smoothHandles: 1
+      worldPoints: []
+      uvPoints: []
+      worldInControls: []
+      worldOutControls: []
+      uvInControls: []
+      uvOutControls: []
+      surfaceIndices: 
+      triangleIndices: 
+      worldNormals: []
+      pressures: []
+      widths: []
+      flows: []
+      rolls: []
+      colors: []
+      offsets: []
+      tangentModes: 
+      anchors: []
+    splineSettings:
+      editorSettingsVersion: 1
+      editMode: 0
+      autoUpdate: 1
+      tool: 0
+      channel: 0
+      source: 2
+      destination: 1
+      brush: {fileID: 0}
+      brushShape: 0
+      brushSize: 0.05
+      brushHardness: 0.7
+      brushFlow: 1
+      brushSpacing: 0.2
+      brushRotation: 0
+      brushBlendMode: 0
+      brushMirrorStroke: 0
+      brushAlignToStroke: 0
+      brushStamp: {fileID: 0}
+      brushStampSprite: {fileID: 0}
+      brushRandomizationVersion: 1
+      brushRandomRotation: 0
+      brushRandomSizeVariation: 0
+      brushRandomSizeShrink: 0.3
+      brushRandomSizeGrow: 0.3
+      brushSplatter: 0
+      brushSplatterDistance: 1
+      brushRandomStrength: 0
+      brushFade: 0
+      brushAutoFade: 0
+      brushTaper: 0
+      brushAutoTaper: 0
+      brushFadeTaperLength: 0
+      sourceTexture: {fileID: 0}
+      sourceSprite: {fileID: 0}
+      ribbonBeginningTexture: {fileID: 0}
+      ribbonBeginningSprite: {fileID: 0}
+      ribbonEndTexture: {fileID: 0}
+      ribbonEndSprite: {fileID: 0}
+      sourceOverlay: {fileID: 0}
+      color: {r: 1, g: 1, b: 1, a: 1}
+      normalConvention: 0
+      strength: 1
+      limitStrokeCoverage: 0
+      mirrorX: 0
+      symmetry:
+        enabled: 0
+        mirrorX: 1
+        mirrorY: 0
+        mirrorZ: 0
+        origin: {x: 0, y: 0, z: 0}
+        euler: {x: 0, y: 0, z: 0}
+        radialCopies: 1
+        radialAxis: {x: 0, y: 1, z: 0}
+        legacyWorldMirrorOrder: 0
+      stabilization: 0
+      directionSmoothing: 0.35
+      projectionDepth: 0.5
+      normalAngleLimit: 90
+      paintBackfaces: 0
+      pressureAffectsFlow: 1
+      pressureAffectsSize: 0
+      textureFlipX: 0
+      textureFlipY: 0
+      textureFlipSeed: 0
+      pathGenerator:
+        enabled: 0
+        generatorId: 
+        extensionJson: '{}'
+        text: Tattoo
+        font: {fileID: 0}
+        fontStyle: 0
+        preserveTextAspect: 1
+        textFlipX: 0
+        textFlipY: 0
+        textRepeats: 1
+        textInset: 0.05
+        tattooDesign: 0
+        tattooAspect: 2.5
+        lineWidth: 0.28
+        lineBend: 0.25
+        taperStart: 1
+        taperEnd: 1
+        curlStart: 0
+        curlEnd: 0
+        tattooMirror: 0
+        taperStartLength: 0.4
+        taperEndLength: 0.4
+        taperPower: 1.4
+        curlRadius: 0.17
+        curlTurns: 0.9
+        curlStartSide: 1
+        curlEndSide: -1
+        negativeSpace: 0.065
+        tattooRepeats: 1
+        proceduralTribal: 0
+        tribalArmCount: 4
+        tribalBranchStart: 0.18
+        tribalBranchEnd: 0.82
+        tribalArmLength: 0.7
+        tribalArmAngle: 55
+        tribalArmSweep: 0.45
+        tribalVariation: 0.15
+        tribalSymmetry: 0
+        tribalCurlDirection: 0
+        color: {r: 0.035, g: 0.025, b: 0.045, a: 1}
+        healedColor: {r: 0.62, g: 0.36, b: 0.32, a: 1}
+        rimColor: {r: 0.72, g: 0.19, b: 0.16, a: 1}
+        threadColor: {r: 0.065, g: 0.055, b: 0.045, a: 1}
+        healing: 0.25
+        opening: 0.35
+        taper: 0.65
+        irregularity: 0.2
+        woundType: 1
+        depth: 0.12
+        edgeLift: 0.07
+        inflammation: 0.25
+        roughness: 0.5
+        relief: 0.015
+        normalStrength: 1
+        stitches: 0
+        removedStitches: 0
+        stitchCount: 13
+        seed: 17
+        stitchThickness: 0.012
+        stitchSpan: 0.65
+        stitchAngle: 12
+        puckering: 0.25
+        seam:
+          enabled: 0
+          preset: 0
+          profile: 1
+          bandWidth: 0.62
+          offset: 0
+          relief: 0.025
+          depthStrength: 1
+          shadingStrength: 1
+          materialResponseVersion: 1
+          mirror: 0
+          roping: 0.55
+          ropingFrequency: 4.5
+          ropingSlant: 1.8
+          irregularity: 0.35
+          seed: 1
+          puckering: 0.25
+          fraying: 0
+          recessDarkening: 0.35
+          wear: 0.3
+          seamProtection: 0.7
+          ambientOcclusion: 0.55
+          fabricRoughness: 0.82
+          threadRoughness: 0.6
+          normalStrength: 1
+          albedo: 1
+          normal: 0
+          ao: 1
+          roughness: 1
+          height: 1
+          masks: 0
+          rows:
+          - enabled: 1
+            pattern: 0
+            color: {r: 0.58, g: 0.48, b: 0.34, a: 1}
+            offset: 0.2
+            thickness: 0.012
+            spacing: 0.18
+            length: 0.78
+            span: 0.13
+            phase: 0
+            relief: 0.4
+        garment:
+          enabled: 0
+          preset: 0
+          kind: 0
+          variant: 0
+          seed: 17
+          detailSize: 0.014
+          relief: 0.0015
+          normalStrength: 1
+          amount: 1
+          angle: 0
+          irregularity: 0.35
+          falloff: 0.15
+          taper: 0.4
+          focus: {x: 0.5, y: 0.05}
+          spread: 0.65
+          wear: 0.3
+          recess: 0.3
+          dirt: 0.2
+          protection: 0.85
+          edgeWidth: 0.035
+          openStart: 0
+          openEnd: 0
+          stitchSize: 0.00035
+          stitchSpacing: 0.0035
+          stitchRows: 2
+          threadColor: {r: 0.7, g: 0.38, b: 0.1, a: 1}
+          surfaceColor: {r: 0.13, g: 0.22, b: 0.3, a: 1}
+          accentColor: {r: 0.55, g: 0.31, b: 0.13, a: 1}
+          colorAmount: 0
+          roughness: 0.8
+          metalRoughness: 0.32
+          opening: 0.08
+          slider: 0.82
+          zipperWidth: 1
+          zipperDepth: 1
+          zipperDepthVersion: 1
+          shadingStrength: 1
+          shadingStrengthVersion: 1
+          repeat: 1
+          damage: 0.45
+          fray: 0.55
+          motif: {fileID: 0}
+          motifSprite: {fileID: 0}
+          motifScale: 0.75
+          motifColor: 1
+          albedo: 1
+          normal: 0
+          ao: 1
+          roughnessOutput: 1
+          metallic: 1
+          height: 1
+          masks: 0
+          foldInput:
+            surfaceId: 
+            layerId: 
+            logicalLayerId: 
+            paintTargetId: 
+            channel: 0
+            component: 1
+            invert: 0
+          protectionInput:
+            surfaceId: 
+            layerId: 
+            logicalLayerId: 
+            paintTargetId: 
+            channel: 0
+            component: 1
+            invert: 0
+      hemSeam:
+        enabled: 0
+        preset: 0
+        profile: 1
+        bandWidth: 0.62
+        offset: 0
+        relief: 0.025
+        depthStrength: 1
+        shadingStrength: 1
+        materialResponseVersion: 1
+        mirror: 0
+        roping: 0.55
+        ropingFrequency: 4.5
+        ropingSlant: 1.8
+        irregularity: 0.35
+        seed: 1
+        puckering: 0.25
+        fraying: 0
+        recessDarkening: 0.35
+        wear: 0.3
+        seamProtection: 0.7
+        ambientOcclusion: 0.55
+        fabricRoughness: 0.82
+        threadRoughness: 0.6
+        normalStrength: 1
+        albedo: 1
+        normal: 0
+        ao: 1
+        roughness: 1
+        height: 1
+        masks: 0
+        rows:
+        - enabled: 1
+          pattern: 0
+          color: {r: 0.58, g: 0.48, b: 0.34, a: 1}
+          offset: 0.2
+          thickness: 0.012
+          spacing: 0.18
+          length: 0.78
+          span: 0.13
+          phase: 0
+          relief: 0.4
+      garment:
+        enabled: 0
+        preset: 0
+        kind: 0
+        variant: 0
+        seed: 17
+        detailSize: 0.014
+        relief: 0.0015
+        normalStrength: 1
+        amount: 1
+        angle: 0
+        irregularity: 0.35
+        falloff: 0.15
+        taper: 0.4
+        focus: {x: 0.5, y: 0.05}
+        spread: 0.65
+        wear: 0.3
+        recess: 0.3
+        dirt: 0.2
+        protection: 0.85
+        edgeWidth: 0.035
+        openStart: 0
+        openEnd: 0
+        stitchSize: 0.00035
+        stitchSpacing: 0.0035
+        stitchRows: 2
+        threadColor: {r: 0.7, g: 0.38, b: 0.1, a: 1}
+        surfaceColor: {r: 0.13, g: 0.22, b: 0.3, a: 1}
+        accentColor: {r: 0.55, g: 0.31, b: 0.13, a: 1}
+        colorAmount: 0
+        roughness: 0.8
+        metalRoughness: 0.32
+        opening: 0.08
+        slider: 0.82
+        zipperWidth: 1
+        zipperDepth: 1
+        zipperDepthVersion: 1
+        shadingStrength: 1
+        shadingStrengthVersion: 1
+        repeat: 1
+        damage: 0.45
+        fray: 0.55
+        motif: {fileID: 0}
+        motifSprite: {fileID: 0}
+        motifScale: 0.75
+        motifColor: 1
+        albedo: 1
+        normal: 0
+        ao: 1
+        roughnessOutput: 1
+        metallic: 1
+        height: 1
+        masks: 0
+        foldInput:
+          surfaceId: 
+          layerId: 
+          logicalLayerId: 
+          paintTargetId: 
+          channel: 0
+          component: 1
+          invert: 0
+        protectionInput:
+          surfaceId: 
+          layerId: 
+          logicalLayerId: 
+          paintTargetId: 
+          channel: 0
+          component: 1
+          invert: 0
+      localSymmetry:
+        enabled: 0
+        mirrorX: 1
+        mirrorY: 0
+        mirrorZ: 0
+        origin: {x: 0, y: 0, z: 0}
+        euler: {x: 0, y: 0, z: 0}
+        radialCopies: 1
+        radialAxis: {x: 0, y: 1, z: 0}
+        legacyWorldMirrorOrder: 0
+      hemSeamSelected: 0
+      ribbonCrossfadeJoins: 0
+      ribbonJoinOverlap: 0.2
+      pathMode: 2
+      orientation: 0
+      startCap: 0
+      endCap: 0
+      startFade: 0
+      endFade: 0
+      sideFadeExtra: 0
+      sideFadeCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+      startFadeCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+      endFadeCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+      radialSymmetry: 1
+      symmetryAxis: {x: 0, y: 1, z: 0}
+    pluginId: com.uma.texturepaint.leather-coated-fabric
+    pluginVersion: 1.0.0
+    pluginParametersJson: '{"values":[{"id":"profile","number":3.0,"boolean":false,"color":{"r":1.0,"g":1.0,"b":1.0,"a":1.0},"text":"","texture":{"instanceID":0},"sprite":{"instanceID":0},"font":{"instanceID":0},"spriteSet":{"instanceID":0},"spriteSetSelectionExplicit":false,"enabledSpriteIndices":[],"curve":{"serializedVersion":"2","m_Curve":[{"serializedVersion":"3","time":0.0,"value":0.0,"inSlope":0.0,"outSlope":1.0,"tangentMode":0,"weightedMode":0,"inWeight":0.0,"outWeight":0.0},{"serializedVersion":"3","time":1.0,"value":1.0,"inSlope":1.0,"outSlope":0.0,"tangentMode":0,"weightedMode":0,"inWeight":0.0,"outWeight":0.0}],"m_PreInfinity":2,"m_PostInfinity":2,"m_RotationOrder":4},"stripes":[]},{"id":"amount","number":1.0,"boolean":false,"color":{"r":1.0,"g":1.0,"b":1.0,"a":1.0},"text":"","texture":{"instanceID":0},"sprite":{"instanceID":0},"font":{"instanceID":0},"spriteSet":{"instanceID":0},"spriteSetSelectionExplicit":false,"enabledSpriteIndices":[],"curve":{"serializedVersion":"2","m_Curve":[{"serializedVersion":"3","time":0.0,"value":0.0,"inSlope":0.0,"outSlope":1.0,"tangentMode":0,"weightedMode":0,"inWeight":0.0,"outWeight":0.0},{"serializedVersion":"3","time":1.0,"value":1.0,"inSlope":1.0,"outSlope":0.0,"tangentMode":0,"weightedMode":0,"inWeight":0.0,"outWeight":0.0}],"m_PreInfinity":2,"m_PostInfinity":2,"m_RotationOrder":4},"stripes":[]},{"id":"scale","number":12.0,"boolean":false,"color":{"r":1.0,"g":1.0,"b":1.0,"a":1.0},"text":"","texture":{"instanceID":0},"sprite":{"instanceID":0},"font":{"instanceID":0},"spriteSet":{"instanceID":0},"spriteSetSelectionExplicit":false,"enabledSpriteIndices":[],"curve":{"serializedVersion":"2","m_Curve":[{"serializedVersion":"3","time":0.0,"value":0.0,"inSlope":0.0,"outSlope":1.0,"tangentMode":0,"weightedMode":0,"inWeight":0.0,"outWeight":0.0},{"serializedVersion":"3","time":1.0,"value":1.0,"inSlope":1.0,"outSlope":0.0,"tangentMode":0,"weightedMode":0,"inWeight":0.0,"outWeight":0.0}],"m_PreInfinity":2,"m_PostInfinity":2,"m_RotationOrder":4},"stripes":[]},{"id":"rotation","number":0.0,"boolean":false,"color":{"r":1.0,"g":1.0,"b":1.0,"a":1.0},"text":"","texture":{"instanceID":0},"sprite":{"instanceID":0},"font":{"instanceID":0},"spriteSet":{"instanceID":0},"spriteSetSelectionExplicit":false,"enabledSpriteIndices":[],"curve":{"serializedVersion":"2","m_Curve":[{"serializedVersion":"3","time":0.0,"value":0.0,"inSlope":0.0,"outSlope":1.0,"tangentMode":0,"weightedMode":0,"inWeight":0.0,"outWeight":0.0},{"serializedVersion":"3","time":1.0,"value":1.0,"inSlope":1.0,"outSlope":0.0,"tangentMode":0,"weightedMode":0,"inWeight":0.0,"outWeight":0.0}],"m_PreInfinity":2,"m_PostInfinity":2,"m_RotationOrder":4},"stripes":[]},{"id":"seed","number":1731.0,"boolean":false,"color":{"r":1.0,"g":1.0,"b":1.0,"a":1.0},"text":"","texture":{"instanceID":0},"sprite":{"instanceID":0},"font":{"instanceID":0},"spriteSet":{"instanceID":0},"spriteSetSelectionExplicit":false,"enabledSpriteIndices":[],"curve":{"serializedVersion":"2","m_Curve":[{"serializedVersion":"3","time":0.0,"value":0.0,"inSlope":0.0,"outSlope":1.0,"tangentMode":0,"weightedMode":0,"inWeight":0.0,"outWeight":0.0},{"serializedVersion":"3","time":1.0,"value":1.0,"inSlope":1.0,"outSlope":0.0,"tangentMode":0,"weightedMode":0,"inWeight":0.0,"outWeight":0.0}],"m_PreInfinity":2,"m_PostInfinity":2,"m_RotationOrder":4},"stripes":[]},{"id":"projection","number":0.0,"boolean":false,"color":{"r":1.0,"g":1.0,"b":1.0,"a":1.0},"text":"","texture":{"instanceID":0},"sprite":{"instanceID":0},"font":{"instanceID":0},"spriteSet":{"instanceID":0},"spriteSetSelectionExplicit":false,"enabledSpriteIndices":[],"curve":{"serializedVersion":"2","m_Curve":[{"serializedVersion":"3","time":0.0,"value":0.0,"inSlope":0.0,"outSlope":1.0,"tangentMode":0,"weightedMode":0,"inWeight":0.0,"outWeight":0.0},{"serializedVersion":"3","time":1.0,"value":1.0,"inSlope":1.0,"outSlope":0.0,"tangentMode":0,"weightedMode":0,"inWeight":0.0,"outWeight":0.0}],"m_PreInfinity":2,"m_PostInfinity":2,"m_RotationOrder":4},"stripes":[]},{"id":"controlMask","number":0.0,"boolean":false,"color":{"r":1.0,"g":1.0,"b":1.0,"a":1.0},"text":"","texture":{"instanceID":0},"sprite":{"instanceID":0},"font":{"instanceID":0},"spriteSet":{"instanceID":0},"spriteSetSelectionExplicit":false,"enabledSpriteIndices":[],"curve":{"serializedVersion":"2","m_Curve":[{"serializedVersion":"3","time":0.0,"value":0.0,"inSlope":0.0,"outSlope":1.0,"tangentMode":0,"weightedMode":0,"inWeight":0.0,"outWeight":0.0},{"serializedVersion":"3","time":1.0,"value":1.0,"inSlope":1.0,"outSlope":0.0,"tangentMode":0,"weightedMode":0,"inWeight":0.0,"outWeight":0.0}],"m_PreInfinity":2,"m_PostInfinity":2,"m_RotationOrder":4},"stripes":[]},{"id":"color","number":0.0,"boolean":false,"color":{"r":0.06499999761581421,"g":0.06499999761581421,"b":0.07500000298023224,"a":1.0},"text":"","texture":{"instanceID":0},"sprite":{"instanceID":0},"font":{"instanceID":0},"spriteSet":{"instanceID":0},"spriteSetSelectionExplicit":false,"enabledSpriteIndices":[],"curve":{"serializedVersion":"2","m_Curve":[{"serializedVersion":"3","time":0.0,"value":0.0,"inSlope":0.0,"outSlope":1.0,"tangentMode":0,"weightedMode":0,"inWeight":0.0,"outWeight":0.0},{"serializedVersion":"3","time":1.0,"value":1.0,"inSlope":1.0,"outSlope":0.0,"tangentMode":0,"weightedMode":0,"inWeight":0.0,"outWeight":0.0}],"m_PreInfinity":2,"m_PostInfinity":2,"m_RotationOrder":4},"stripes":[]},{"id":"roughness","number":0.30000001192092898,"boolean":false,"color":{"r":1.0,"g":1.0,"b":1.0,"a":1.0},"text":"","texture":{"instanceID":0},"sprite":{"instanceID":0},"font":{"instanceID":0},"spriteSet":{"instanceID":0},"spriteSetSelectionExplicit":false,"enabledSpriteIndices":[],"curve":{"serializedVersion":"2","m_Curve":[{"serializedVersion":"3","time":0.0,"value":0.0,"inSlope":0.0,"outSlope":1.0,"tangentMode":0,"weightedMode":0,"inWeight":0.0,"outWeight":0.0},{"serializedVersion":"3","time":1.0,"value":1.0,"inSlope":1.0,"outSlope":0.0,"tangentMode":0,"weightedMode":0,"inWeight":0.0,"outWeight":0.0}],"m_PreInfinity":2,"m_PostInfinity":2,"m_RotationOrder":4},"stripes":[]},{"id":"relief","number":0.06499999761581421,"boolean":false,"color":{"r":1.0,"g":1.0,"b":1.0,"a":1.0},"text":"","texture":{"instanceID":0},"sprite":{"instanceID":0},"font":{"instanceID":0},"spriteSet":{"instanceID":0},"spriteSetSelectionExplicit":false,"enabledSpriteIndices":[],"curve":{"serializedVersion":"2","m_Curve":[{"serializedVersion":"3","time":0.0,"value":0.0,"inSlope":0.0,"outSlope":1.0,"tangentMode":0,"weightedMode":0,"inWeight":0.0,"outWeight":0.0},{"serializedVersion":"3","time":1.0,"value":1.0,"inSlope":1.0,"outSlope":0.0,"tangentMode":0,"weightedMode":0,"inWeight":0.0,"outWeight":0.0}],"m_PreInfinity":2,"m_PostInfinity":2,"m_RotationOrder":4},"stripes":[]},{"id":"cavity","number":0.44999998807907107,"boolean":false,"color":{"r":1.0,"g":1.0,"b":1.0,"a":1.0},"text":"","texture":{"instanceID":0},"sprite":{"instanceID":0},"font":{"instanceID":0},"spriteSet":{"instanceID":0},"spriteSetSelectionExplicit":false,"enabledSpriteIndices":[],"curve":{"serializedVersion":"2","m_Curve":[{"serializedVersion":"3","time":0.0,"value":0.0,"inSlope":0.0,"outSlope":1.0,"tangentMode":0,"weightedMode":0,"inWeight":0.0,"outWeight":0.0},{"serializedVersion":"3","time":1.0,"value":1.0,"inSlope":1.0,"outSlope":0.0,"tangentMode":0,"weightedMode":0,"inWeight":0.0,"outWeight":0.0}],"m_PreInfinity":2,"m_PostInfinity":2,"m_RotationOrder":4},"stripes":[]},{"id":"edge","number":0.44999998807907107,"boolean":false,"color":{"r":1.0,"g":1.0,"b":1.0,"a":1.0},"text":"","texture":{"instanceID":0},"sprite":{"instanceID":0},"font":{"instanceID":0},"spriteSet":{"instanceID":0},"spriteSetSelectionExplicit":false,"enabledSpriteIndices":[],"curve":{"serializedVersion":"2","m_Curve":[{"serializedVersion":"3","time":0.0,"value":0.0,"inSlope":0.0,"outSlope":1.0,"tangentMode":0,"weightedMode":0,"inWeight":0.0,"outWeight":0.0},{"serializedVersion":"3","time":1.0,"value":1.0,"inSlope":1.0,"outSlope":0.0,"tangentMode":0,"weightedMode":0,"inWeight":0.0,"outWeight":0.0}],"m_PreInfinity":2,"m_PostInfinity":2,"m_RotationOrder":4},"stripes":[]},{"id":"grain","number":90.0,"boolean":false,"color":{"r":1.0,"g":1.0,"b":1.0,"a":1.0},"text":"","texture":{"instanceID":0},"sprite":{"instanceID":0},"font":{"instanceID":0},"spriteSet":{"instanceID":0},"spriteSetSelectionExplicit":false,"enabledSpriteIndices":[],"curve":{"serializedVersion":"2","m_Curve":[{"serializedVersion":"3","time":0.0,"value":0.0,"inSlope":0.0,"outSlope":1.0,"tangentMode":0,"weightedMode":0,"inWeight":0.0,"outWeight":0.0},{"serializedVersion":"3","time":1.0,"value":1.0,"inSlope":1.0,"outSlope":0.0,"tangentMode":0,"weightedMode":0,"inWeight":0.0,"outWeight":0.0}],"m_PreInfinity":2,"m_PostInfinity":2,"m_RotationOrder":4},"stripes":[]},{"id":"crease","number":0.2199999988079071,"boolean":false,"color":{"r":1.0,"g":1.0,"b":1.0,"a":1.0},"text":"","texture":{"instanceID":0},"sprite":{"instanceID":0},"font":{"instanceID":0},"spriteSet":{"instanceID":0},"spriteSetSelectionExplicit":false,"enabledSpriteIndices":[],"curve":{"serializedVersion":"2","m_Curve":[{"serializedVersion":"3","time":0.0,"value":0.0,"inSlope":0.0,"outSlope":1.0,"tangentMode":0,"weightedMode":0,"inWeight":0.0,"outWeight":0.0},{"serializedVersion":"3","time":1.0,"value":1.0,"inSlope":1.0,"outSlope":0.0,"tangentMode":0,"weightedMode":0,"inWeight":0.0,"outWeight":0.0}],"m_PreInfinity":2,"m_PostInfinity":2,"m_RotationOrder":4},"stripes":[]},{"id":"wear","number":0.11999999731779099,"boolean":false,"color":{"r":1.0,"g":1.0,"b":1.0,"a":1.0},"text":"","texture":{"instanceID":0},"sprite":{"instanceID":0},"font":{"instanceID":0},"spriteSet":{"instanceID":0},"spriteSetSelectionExplicit":false,"enabledSpriteIndices":[],"curve":{"serializedVersion":"2","m_Curve":[{"serializedVersion":"3","time":0.0,"value":0.0,"inSlope":0.0,"outSlope":1.0,"tangentMode":0,"weightedMode":0,"inWeight":0.0,"outWeight":0.0},{"serializedVersion":"3","time":1.0,"value":1.0,"inSlope":1.0,"outSlope":0.0,"tangentMode":0,"weightedMode":0,"inWeight":0.0,"outWeight":0.0}],"m_PreInfinity":2,"m_PostInfinity":2,"m_RotationOrder":4},"stripes":[]},{"id":"outputAlbedo","number":0.0,"boolean":true,"color":{"r":1.0,"g":1.0,"b":1.0,"a":1.0},"text":"","texture":{"instanceID":0},"sprite":{"instanceID":0},"font":{"instanceID":0},"spriteSet":{"instanceID":0},"spriteSetSelectionExplicit":false,"enabledSpriteIndices":[],"curve":{"serializedVersion":"2","m_Curve":[{"serializedVersion":"3","time":0.0,"value":0.0,"inSlope":0.0,"outSlope":1.0,"tangentMode":0,"weightedMode":0,"inWeight":0.0,"outWeight":0.0},{"serializedVersion":"3","time":1.0,"value":1.0,"inSlope":1.0,"outSlope":0.0,"tangentMode":0,"weightedMode":0,"inWeight":0.0,"outWeight":0.0}],"m_PreInfinity":2,"m_PostInfinity":2,"m_RotationOrder":4},"stripes":[]},{"id":"outputRoughness","number":0.0,"boolean":true,"color":{"r":1.0,"g":1.0,"b":1.0,"a":1.0},"text":"","texture":{"instanceID":0},"sprite":{"instanceID":0},"font":{"instanceID":0},"spriteSet":{"instanceID":0},"spriteSetSelectionExplicit":false,"enabledSpriteIndices":[],"curve":{"serializedVersion":"2","m_Curve":[{"serializedVersion":"3","time":0.0,"value":0.0,"inSlope":0.0,"outSlope":1.0,"tangentMode":0,"weightedMode":0,"inWeight":0.0,"outWeight":0.0},{"serializedVersion":"3","time":1.0,"value":1.0,"inSlope":1.0,"outSlope":0.0,"tangentMode":0,"weightedMode":0,"inWeight":0.0,"outWeight":0.0}],"m_PreInfinity":2,"m_PostInfinity":2,"m_RotationOrder":4},"stripes":[]},{"id":"outputMetallic","number":0.0,"boolean":false,"color":{"r":1.0,"g":1.0,"b":1.0,"a":1.0},"text":"","texture":{"instanceID":0},"sprite":{"instanceID":0},"font":{"instanceID":0},"spriteSet":{"instanceID":0},"spriteSetSelectionExplicit":false,"enabledSpriteIndices":[],"curve":{"serializedVersion":"2","m_Curve":[{"serializedVersion":"3","time":0.0,"value":0.0,"inSlope":0.0,"outSlope":1.0,"tangentMode":0,"weightedMode":0,"inWeight":0.0,"outWeight":0.0},{"serializedVersion":"3","time":1.0,"value":1.0,"inSlope":1.0,"outSlope":0.0,"tangentMode":0,"weightedMode":0,"inWeight":0.0,"outWeight":0.0}],"m_PreInfinity":2,"m_PostInfinity":2,"m_RotationOrder":4},"stripes":[]},{"id":"outputNormalControl","number":0.0,"boolean":true,"color":{"r":1.0,"g":1.0,"b":1.0,"a":1.0},"text":"","texture":{"instanceID":0},"sprite":{"instanceID":0},"font":{"instanceID":0},"spriteSet":{"instanceID":0},"spriteSetSelectionExplicit":false,"enabledSpriteIndices":[],"curve":{"serializedVersion":"2","m_Curve":[{"serializedVersion":"3","time":0.0,"value":0.0,"inSlope":0.0,"outSlope":1.0,"tangentMode":0,"weightedMode":0,"inWeight":0.0,"outWeight":0.0},{"serializedVersion":"3","time":1.0,"value":1.0,"inSlope":1.0,"outSlope":0.0,"tangentMode":0,"weightedMode":0,"inWeight":0.0,"outWeight":0.0}],"m_PreInfinity":2,"m_PostInfinity":2,"m_RotationOrder":4},"stripes":[]}]}'
+    pluginParameters:
+      values:
+      - id: profile
+        number: 3
+        boolean: 0
+        color: {r: 1, g: 1, b: 1, a: 1}
+        text: 
+        texture: {fileID: 0}
+        sprite: {fileID: 0}
+        font: {fileID: 0}
+        spriteSet: {fileID: 0}
+        spriteSetSelectionExplicit: 0
+        enabledSpriteIndices: 
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0
+            inSlope: 0
+            outSlope: 1
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 1
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        stripes: []
+      - id: amount
+        number: 1
+        boolean: 0
+        color: {r: 1, g: 1, b: 1, a: 1}
+        text: 
+        texture: {fileID: 0}
+        sprite: {fileID: 0}
+        font: {fileID: 0}
+        spriteSet: {fileID: 0}
+        spriteSetSelectionExplicit: 0
+        enabledSpriteIndices: 
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0
+            inSlope: 0
+            outSlope: 1
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 1
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        stripes: []
+      - id: scale
+        number: 12
+        boolean: 0
+        color: {r: 1, g: 1, b: 1, a: 1}
+        text: 
+        texture: {fileID: 0}
+        sprite: {fileID: 0}
+        font: {fileID: 0}
+        spriteSet: {fileID: 0}
+        spriteSetSelectionExplicit: 0
+        enabledSpriteIndices: 
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0
+            inSlope: 0
+            outSlope: 1
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 1
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        stripes: []
+      - id: rotation
+        number: 0
+        boolean: 0
+        color: {r: 1, g: 1, b: 1, a: 1}
+        text: 
+        texture: {fileID: 0}
+        sprite: {fileID: 0}
+        font: {fileID: 0}
+        spriteSet: {fileID: 0}
+        spriteSetSelectionExplicit: 0
+        enabledSpriteIndices: 
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0
+            inSlope: 0
+            outSlope: 1
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 1
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        stripes: []
+      - id: seed
+        number: 1731
+        boolean: 0
+        color: {r: 1, g: 1, b: 1, a: 1}
+        text: 
+        texture: {fileID: 0}
+        sprite: {fileID: 0}
+        font: {fileID: 0}
+        spriteSet: {fileID: 0}
+        spriteSetSelectionExplicit: 0
+        enabledSpriteIndices: 
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0
+            inSlope: 0
+            outSlope: 1
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 1
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        stripes: []
+      - id: projection
+        number: 0
+        boolean: 0
+        color: {r: 1, g: 1, b: 1, a: 1}
+        text: 
+        texture: {fileID: 0}
+        sprite: {fileID: 0}
+        font: {fileID: 0}
+        spriteSet: {fileID: 0}
+        spriteSetSelectionExplicit: 0
+        enabledSpriteIndices: 
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0
+            inSlope: 0
+            outSlope: 1
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 1
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        stripes: []
+      - id: controlMask
+        number: 0
+        boolean: 0
+        color: {r: 1, g: 1, b: 1, a: 1}
+        text: 
+        texture: {fileID: 0}
+        sprite: {fileID: 0}
+        font: {fileID: 0}
+        spriteSet: {fileID: 0}
+        spriteSetSelectionExplicit: 0
+        enabledSpriteIndices: 
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0
+            inSlope: 0
+            outSlope: 1
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 1
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        stripes: []
+      - id: color
+        number: 0
+        boolean: 0
+        color: {r: 0.065, g: 0.065, b: 0.075, a: 1}
+        text: 
+        texture: {fileID: 0}
+        sprite: {fileID: 0}
+        font: {fileID: 0}
+        spriteSet: {fileID: 0}
+        spriteSetSelectionExplicit: 0
+        enabledSpriteIndices: 
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0
+            inSlope: 0
+            outSlope: 1
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 1
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        stripes: []
+      - id: roughness
+        number: 0.3
+        boolean: 0
+        color: {r: 1, g: 1, b: 1, a: 1}
+        text: 
+        texture: {fileID: 0}
+        sprite: {fileID: 0}
+        font: {fileID: 0}
+        spriteSet: {fileID: 0}
+        spriteSetSelectionExplicit: 0
+        enabledSpriteIndices: 
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0
+            inSlope: 0
+            outSlope: 1
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 1
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        stripes: []
+      - id: relief
+        number: 0.065
+        boolean: 0
+        color: {r: 1, g: 1, b: 1, a: 1}
+        text: 
+        texture: {fileID: 0}
+        sprite: {fileID: 0}
+        font: {fileID: 0}
+        spriteSet: {fileID: 0}
+        spriteSetSelectionExplicit: 0
+        enabledSpriteIndices: 
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0
+            inSlope: 0
+            outSlope: 1
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 1
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        stripes: []
+      - id: cavity
+        number: 0.45
+        boolean: 0
+        color: {r: 1, g: 1, b: 1, a: 1}
+        text: 
+        texture: {fileID: 0}
+        sprite: {fileID: 0}
+        font: {fileID: 0}
+        spriteSet: {fileID: 0}
+        spriteSetSelectionExplicit: 0
+        enabledSpriteIndices: 
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0
+            inSlope: 0
+            outSlope: 1
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 1
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        stripes: []
+      - id: edge
+        number: 0.45
+        boolean: 0
+        color: {r: 1, g: 1, b: 1, a: 1}
+        text: 
+        texture: {fileID: 0}
+        sprite: {fileID: 0}
+        font: {fileID: 0}
+        spriteSet: {fileID: 0}
+        spriteSetSelectionExplicit: 0
+        enabledSpriteIndices: 
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0
+            inSlope: 0
+            outSlope: 1
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 1
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        stripes: []
+      - id: grain
+        number: 90
+        boolean: 0
+        color: {r: 1, g: 1, b: 1, a: 1}
+        text: 
+        texture: {fileID: 0}
+        sprite: {fileID: 0}
+        font: {fileID: 0}
+        spriteSet: {fileID: 0}
+        spriteSetSelectionExplicit: 0
+        enabledSpriteIndices: 
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0
+            inSlope: 0
+            outSlope: 1
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 1
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        stripes: []
+      - id: crease
+        number: 0.22
+        boolean: 0
+        color: {r: 1, g: 1, b: 1, a: 1}
+        text: 
+        texture: {fileID: 0}
+        sprite: {fileID: 0}
+        font: {fileID: 0}
+        spriteSet: {fileID: 0}
+        spriteSetSelectionExplicit: 0
+        enabledSpriteIndices: 
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0
+            inSlope: 0
+            outSlope: 1
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 1
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        stripes: []
+      - id: wear
+        number: 0.12
+        boolean: 0
+        color: {r: 1, g: 1, b: 1, a: 1}
+        text: 
+        texture: {fileID: 0}
+        sprite: {fileID: 0}
+        font: {fileID: 0}
+        spriteSet: {fileID: 0}
+        spriteSetSelectionExplicit: 0
+        enabledSpriteIndices: 
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0
+            inSlope: 0
+            outSlope: 1
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 1
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        stripes: []
+      - id: outputAlbedo
+        number: 0
+        boolean: 1
+        color: {r: 1, g: 1, b: 1, a: 1}
+        text: 
+        texture: {fileID: 0}
+        sprite: {fileID: 0}
+        font: {fileID: 0}
+        spriteSet: {fileID: 0}
+        spriteSetSelectionExplicit: 0
+        enabledSpriteIndices: 
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0
+            inSlope: 0
+            outSlope: 1
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 1
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        stripes: []
+      - id: outputRoughness
+        number: 0
+        boolean: 1
+        color: {r: 1, g: 1, b: 1, a: 1}
+        text: 
+        texture: {fileID: 0}
+        sprite: {fileID: 0}
+        font: {fileID: 0}
+        spriteSet: {fileID: 0}
+        spriteSetSelectionExplicit: 0
+        enabledSpriteIndices: 
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0
+            inSlope: 0
+            outSlope: 1
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 1
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        stripes: []
+      - id: outputMetallic
+        number: 0
+        boolean: 0
+        color: {r: 1, g: 1, b: 1, a: 1}
+        text: 
+        texture: {fileID: 0}
+        sprite: {fileID: 0}
+        font: {fileID: 0}
+        spriteSet: {fileID: 0}
+        spriteSetSelectionExplicit: 0
+        enabledSpriteIndices: 
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0
+            inSlope: 0
+            outSlope: 1
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 1
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        stripes: []
+      - id: outputNormalControl
+        number: 0
+        boolean: 1
+        color: {r: 1, g: 1, b: 1, a: 1}
+        text: 
+        texture: {fileID: 0}
+        sprite: {fileID: 0}
+        font: {fileID: 0}
+        spriteSet: {fileID: 0}
+        spriteSetSelectionExplicit: 0
+        enabledSpriteIndices: 
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0
+            inSlope: 0
+            outSlope: 1
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 1
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        stripes: []
+    pluginStale: 1
+    pluginLastError: 
+    proceduralGroupKey: 
+    sourceMaterialPresetId: 
+    sourceMaterialPresetRevision: 0
+    sourceMaterialPresetLayerId: 
+    hasMask: 0
+    maskBaseValue: 1
+    maskEffects:
+      noise:
+        enabled: 0
+        seed: 0
+        tiling: {x: 4, y: 4}
+        offset: {x: 0, y: 0}
+        octaves: 4
+        balance: 0.5
+        contrast: 1
+        invert: 0
+        opacity: 1
+        combine: 1
+      textureOverlay:
+        enabled: 0
+        texture: {fileID: 0}
+        sourceChannel: 0
+        tiling: {x: 1, y: 1}
+        offset: {x: 0, y: 0}
+        rotation: 0
+        invert: 0
+        opacity: 1
+        combine: 1
+      stack: []
+      startFromPaint: 1
+      initialValue: 1
+    maskReferenceCaches: []
+    maskSourceSettings:
+      source: 2
+      sourceTexture: {fileID: 0}
+      sourceSprite: {fileID: 0}
+      sourceOverlay: {fileID: 0}
+      color: {r: 1, g: 1, b: 1, a: 1}
+      normalConvention: 0
+      invert: 0
+      tiling: {x: 1, y: 1}
+      offset: {x: 0, y: 0}
+      rotation: 0
+      projection: 0
+      triplanarBlend: 1
+      blendOffset: 0
+      blendSharpness: 4
+      ignoreSourceAlpha: 0
+    maskSourceChannel: 0
+    maskPluginId: 
+    maskPluginVersion: 
+    maskPluginParametersJson: 
+    maskPluginParameters:
+      values: []
+    maskPluginStale: 1
+    maskPluginLastError: 
+    maskPixels:
+      width: 0
+      height: 0
+      textureFormat: 4
+      linear: 1
+      uncompressedByteCount: 0
+      storageKey: 
+      checksum: 
+      recoveryBlobKey: 
+      dataAsset: {fileID: 0}
+      compressedBytes: 
+    channels:
+    - channel: 0
+      settings:
+        channel: 0
+        enabled: 1
+        locked: 0
+        contribution: 1
+        opacity: 1
+        blendMode: 0
+        hasNormalControlStrength: 0
+        normalControlStrength: 2
+        sourceSettings:
+          source: 0
+          sourceTexture: {fileID: 0}
+          sourceSprite: {fileID: 0}
+          sourceOverlay: {fileID: 0}
+          color: {r: 1, g: 1, b: 1, a: 1}
+          normalConvention: 0
+          invert: 0
+          tiling: {x: 1, y: 1}
+          offset: {x: 0, y: 0}
+          rotation: 0
+          projection: 0
+          triplanarBlend: 1
+          blendOffset: 0
+          blendSharpness: 4
+          ignoreSourceAlpha: 0
+      hasSourceSettings: 0
+      source: 2
+      sourceTexture: {fileID: 0}
+      sourceSprite: {fileID: 0}
+      sourceOverlay: {fileID: 0}
+      sourceColor: {r: 1, g: 1, b: 1, a: 1}
+      sourceNormalConvention: 0
+      sourceInvert: 0
+      sourceTiling: {x: 1, y: 1}
+      sourceOffset: {x: 0, y: 0}
+      sourceRotation: 0
+      sourceProjection: 0
+      sourceTriplanarBlend: 1
+      sourceBlendOffset: 0
+      sourceBlendSharpness: 4
+      sourceIgnoreSourceAlpha: 0
+      pixels:
+        width: 0
+        height: 0
+        textureFormat: 4
+        linear: 1
+        uncompressedByteCount: 0
+        storageKey: 
+        checksum: 
+        recoveryBlobKey: 
+        dataAsset: {fileID: 0}
+        compressedBytes: 
+    - channel: 3
+      settings:
+        channel: 3
+        enabled: 1
+        locked: 0
+        contribution: 1
+        opacity: 1
+        blendMode: 0
+        hasNormalControlStrength: 0
+        normalControlStrength: 2
+        sourceSettings:
+          source: 0
+          sourceTexture: {fileID: 0}
+          sourceSprite: {fileID: 0}
+          sourceOverlay: {fileID: 0}
+          color: {r: 1, g: 1, b: 1, a: 1}
+          normalConvention: 0
+          invert: 0
+          tiling: {x: 1, y: 1}
+          offset: {x: 0, y: 0}
+          rotation: 0
+          projection: 0
+          triplanarBlend: 1
+          blendOffset: 0
+          blendSharpness: 4
+          ignoreSourceAlpha: 0
+      hasSourceSettings: 0
+      source: 2
+      sourceTexture: {fileID: 0}
+      sourceSprite: {fileID: 0}
+      sourceOverlay: {fileID: 0}
+      sourceColor: {r: 1, g: 1, b: 1, a: 1}
+      sourceNormalConvention: 0
+      sourceInvert: 0
+      sourceTiling: {x: 1, y: 1}
+      sourceOffset: {x: 0, y: 0}
+      sourceRotation: 0
+      sourceProjection: 0
+      sourceTriplanarBlend: 1
+      sourceBlendOffset: 0
+      sourceBlendSharpness: 4
+      sourceIgnoreSourceAlpha: 0
+      pixels:
+        width: 0
+        height: 0
+        textureFormat: 4
+        linear: 1
+        uncompressedByteCount: 0
+        storageKey: 
+        checksum: 
+        recoveryBlobKey: 
+        dataAsset: {fileID: 0}
+        compressedBytes: 
+    - channel: 10
+      settings:
+        channel: 10
+        enabled: 1
+        locked: 0
+        contribution: 1
+        opacity: 1
+        blendMode: 5
+        hasNormalControlStrength: 0
+        normalControlStrength: 2
+        sourceSettings:
+          source: 0
+          sourceTexture: {fileID: 0}
+          sourceSprite: {fileID: 0}
+          sourceOverlay: {fileID: 0}
+          color: {r: 1, g: 1, b: 1, a: 1}
+          normalConvention: 0
+          invert: 0
+          tiling: {x: 1, y: 1}
+          offset: {x: 0, y: 0}
+          rotation: 0
+          projection: 0
+          triplanarBlend: 1
+          blendOffset: 0
+          blendSharpness: 4
+          ignoreSourceAlpha: 0
+      hasSourceSettings: 0
+      source: 2
+      sourceTexture: {fileID: 0}
+      sourceSprite: {fileID: 0}
+      sourceOverlay: {fileID: 0}
+      sourceColor: {r: 1, g: 1, b: 1, a: 1}
+      sourceNormalConvention: 0
+      sourceInvert: 0
+      sourceTiling: {x: 1, y: 1}
+      sourceOffset: {x: 0, y: 0}
+      sourceRotation: 0
+      sourceProjection: 0
+      sourceTriplanarBlend: 1
+      sourceBlendOffset: 0
+      sourceBlendSharpness: 4
+      sourceIgnoreSourceAlpha: 0
+      pixels:
+        width: 0
+        height: 0
+        textureFormat: 4
+        linear: 1
+        uncompressedByteCount: 0
+        storageKey: 
+        checksum: 
+        recoveryBlobKey: 
+        dataAsset: {fileID: 0}
+        compressedBytes: 
+    strokes: []

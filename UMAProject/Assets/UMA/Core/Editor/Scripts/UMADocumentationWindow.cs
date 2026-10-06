@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -23,6 +24,10 @@ namespace UMA.Editors
 
         [SerializeField]
         private bool showPlans;
+
+        private string selectedPluginId;
+        private PopupField<string> documentationSelector;
+        private readonly List<string> sourceIds = new();
 
         private readonly List<string> documentationPaths = new List<string>();
         private ScrollView documentList;
@@ -61,11 +66,14 @@ namespace UMA.Editors
             configuration = LoadOrCreateConfiguration();
             Undo.undoRedoPerformed -= OnUndoRedo;
             Undo.undoRedoPerformed += OnUndoRedo;
+            UMAPluginDocumentationRegistry.Changed -= RefreshDocuments;
+            UMAPluginDocumentationRegistry.Changed += RefreshDocuments;
         }
 
         private void OnDisable()
         {
             Undo.undoRedoPerformed -= OnUndoRedo;
+            UMAPluginDocumentationRegistry.Changed -= RefreshDocuments;
         }
 
         private void OnUndoRedo()
@@ -94,6 +102,17 @@ namespace UMA.Editors
 
             Toolbar toolbar = new Toolbar();
             rootVisualElement.Add(toolbar);
+
+            documentationSelector = new PopupField<string>(new List<string> { "UMA" }, 0);
+            documentationSelector.name = "documentation-source";
+            documentationSelector.style.minWidth = 115f;
+            documentationSelector.RegisterValueChangedCallback(evt =>
+            {
+                int index = documentationSelector.choices.IndexOf(evt.newValue);
+                selectedPluginId = index >= 0 && index < sourceIds.Count ? sourceIds[index] : null;
+                RefreshDocuments();
+            });
+            toolbar.Add(documentationSelector);
 
             locationLabel = new Label();
             locationLabel.style.flexGrow = 1f;
@@ -132,10 +151,28 @@ namespace UMA.Editors
 
             try
             {
+                var registrations = UMAPluginDocumentationRegistry.Registrations;
+                if (!registrations.Any(r => r.pluginId == selectedPluginId)) selectedPluginId = null;
+                sourceIds.Clear(); sourceIds.Add(null);
+                var sourceNames = new List<string> { "UMA" };
+                foreach (var registration in registrations)
+                {
+                    sourceIds.Add(registration.pluginId);
+                    sourceNames.Add(registration.displayName == "UMA" || registrations.Count(r => r.displayName == registration.displayName) > 1
+                        ? registration.displayName + " (" + registration.pluginId + ")" : registration.displayName);
+                }
+                if (documentationSelector != null)
+                {
+                    documentationSelector.style.display = showPlans ? DisplayStyle.None : DisplayStyle.Flex;
+                    documentationSelector.choices = sourceNames;
+                    documentationSelector.SetValueWithoutNotify(sourceNames[sourceIds.IndexOf(selectedPluginId)]);
+                }
                 string umaPath = UMAEditorUtilities.FindUMAFullPath();
                 string folderName = showPlans ? "Plans" : "Docs";
                 docsDirectory = string.IsNullOrEmpty(umaPath) ? null :
                     UMAPathUtility.Normalize(umaPath + "/" + folderName);
+                if (!showPlans && selectedPluginId != null)
+                    docsDirectory = registrations.First(r => r.pluginId == selectedPluginId).DocumentationPath;
 
                 if (!string.IsNullOrEmpty(docsDirectory) && AssetDatabase.IsValidFolder(docsDirectory))
                 {
@@ -143,7 +180,8 @@ namespace UMA.Editors
                     for (int fileIndex = 0; fileIndex < documentGuids.Length; fileIndex++)
                     {
                         string documentPath = AssetDatabase.GUIDToAssetPath(documentGuids[fileIndex]);
-                        if (string.Equals(Path.GetExtension(documentPath), ".md", StringComparison.OrdinalIgnoreCase))
+                        if (string.Equals(Path.GetExtension(documentPath), ".md", StringComparison.OrdinalIgnoreCase) &&
+                            (showPlans || selectedPluginId != null || !UMAPluginDocumentationRegistry.IsPluginDocument(documentPath)))
                             documentationPaths.Add(documentPath);
                     }
 
@@ -171,16 +209,17 @@ namespace UMA.Editors
             }
 
             string folderName = showPlans ? "Plans" : "Docs";
+            string sourceName = showPlans || selectedPluginId == null ? "UMA" : documentationSelector?.value ?? "Plugin";
             locationLabel.text = string.IsNullOrEmpty(docsDirectory) ? "UMA " + folderName : docsDirectory.Replace('\\', '/');
             documentList.Clear();
 
             if (documentationPaths.Count == 0)
             {
                 messageLabel.text = !string.IsNullOrEmpty(scanError)
-                    ? "Unable to scan the UMA " + folderName + " folder: " + scanError
+                    ? "Unable to scan the " + sourceName + " " + folderName + " folder: " + scanError
                     : string.IsNullOrEmpty(docsDirectory) || !Directory.Exists(docsDirectory)
-                    ? "The UMA " + folderName + " folder could not be found."
-                    : "No Markdown documents were found in the UMA " + folderName + " folder.";
+                    ? "The " + sourceName + " " + folderName + " folder could not be found."
+                    : "No Markdown documents were found in the " + sourceName + " " + folderName + " folder.";
                 return;
             }
 

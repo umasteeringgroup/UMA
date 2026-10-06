@@ -73,7 +73,7 @@ namespace UMA.Editors.PackageSupport
 
             new UMAPackageDependency("com.unity.2d.sprite", "2D Sprite",
                 UMAPackageDependencyKind.OptionalFeature,
-                "Sprite-sheet slicing and legacy Unity sprite-rectangle import in Overlay Painter."),
+                "Optional sprite-sheet slicing and sprite-rectangle import for editor tools."),
             new UMAPackageDependency("com.unity.render-pipelines.universal", "Universal Render Pipeline",
                 UMAPackageDependencyKind.OptionalFeature,
                 "UMA's supplied URP shaders, materials, and sample content."),

@@ -13,6 +13,7 @@ Shader "Hidden/UMA/TexturePaint/GarmentPreview"
             #include "UnityCG.cginc"
             #include "Garment.hlsl"
             #include "HemSeam.hlsl"
+            #include "PathGenerator.hlsl"
             float4 _PreviewSize;
             float4 _PreviewFrame;
             int _PreviewHem, _PreviewClosed;
@@ -28,7 +29,11 @@ Shader "Hidden/UMA/TexturePaint/GarmentPreview"
                 float2 uv = (input.uv - .5) / _PreviewFrame.xy + .5;
                 float3 position = float3(uv * _PreviewSize.xy, 0);
                 float4 value;
-                if (_PreviewHem != 0)
+                if (_PathGeneratorEnabled != 0)
+                    value = ShadePathGenerator(uv.x,uv.y*_PreviewSize.y/_PreviewSize.x,
+                        _PreviewSize.y/_PreviewSize.x,_PreviewClosed!=0,1.0/(128*_PreviewFrame.x),
+                        position,float3(0,0,1),float4(1,0,0,1),uv,_PreviewSize.x);
+                else if (_PreviewHem != 0)
                     value = ShadeHem(uv.x, uv.y * _PreviewSize.y / _PreviewSize.x,
                         _PreviewSize.y / _PreviewSize.x, _PreviewClosed != 0,
                         1.0 / (128 * _PreviewFrame.x), position, float3(0,0,1), float4(1,0,0,1), uv, _PreviewSize.x);

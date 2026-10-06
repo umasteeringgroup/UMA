@@ -63,7 +63,7 @@ Groom edits update the authoring stage's live preview. Rebuild/bake to update sa
 prefab meshes. For production UMA hair, bind the correct character/race slots,
 copy weights, bake the scalp Mesh Modifier as needed and test animation.
 
-Read the [Short Hair Part guide](../../../../UMA/HairCards/ShortHairPartGuide.md)
+Read the [Short Hair Part guide](../../../../UMA/HairCards/Documentation/ShortHairPartGuide.md)
 for the workflow, variations, atlas setup and polygon-budget controls.
 
 ![Classic preview](Preview.png)

@@ -20,3 +20,11 @@ SRP/*
 *~
 **/.DS_Store
 **/.png
+HairCards/
+HairCards.meta
+OverlayPainter/
+OverlayPainter.meta
+OverlayPainterExamples/
+OverlayPainterExamples.meta
+OverlayPainterTests/
+OverlayPainterTests.meta

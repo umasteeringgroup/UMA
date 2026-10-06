@@ -28,6 +28,8 @@ Texture2D<float4> _AdjustmentCurveTexture;
 Texture2D<float4> _EffectTexture1;
 Texture2D<float4> _EffectTexture2;
 SamplerState sampler_linear_repeat;
+SamplerState contour_linear_clamp_sampler;
+float4 _EffectContourStitch; // Full thread width, dash length, inset (pixels), rows.
 
 Texture2D<float4> _MaskBase;
 Texture2D<float4> _MaskOverlay;
@@ -69,6 +71,8 @@ int _HasLayerMask;
 int _JumpStep;
 int _EffectType;
 float4 _EffectColor;
+float4 _EffectSecondaryColor;
+float2 _EffectBevelLight;
 float _EffectWidth;
 float _EffectSmoothness;
 float2 _EffectOffset;
@@ -436,6 +440,64 @@ void CSApplyChannelAdjustments(uint3 dispatchID : SV_DispatchThreadID)
     _Composite[pixel] = float4(adjusted, source.a);
 }
 
+float ContourDistance(float2 pixel)
+{
+    if(any(pixel < 0) || any(pixel >= _TextureSize)) return -length(float2(_TextureSize));
+    return _EffectDistanceRead.SampleLevel(contour_linear_clamp_sampler,(pixel+.5)/_TextureSize,0);
+}
+
+float2 ContourGradient(float2 pixel)
+{
+    return .5*float2(ContourDistance(pixel+float2(1,0))-ContourDistance(pixel-float2(1,0)),
+        ContourDistance(pixel+float2(0,1))-ContourDistance(pixel-float2(0,1)));
+}
+
+float2 BevelContourGradient(float2 pixel, float width)
+{
+    // Smooth the distance-field normal over neighboring texels. A single central
+    // difference follows the stair steps of rasterized glyph edges and sparkles.
+    float radius = clamp(width * .5, 1, 2);
+    float2 x = float2(radius, 0), y = float2(0, radius);
+    float a = ContourDistance(pixel - x - y), b = ContourDistance(pixel - y);
+    float c = ContourDistance(pixel + x - y), d = ContourDistance(pixel - x);
+    float f = ContourDistance(pixel + x), g = ContourDistance(pixel - x + y);
+    float h = ContourDistance(pixel + y), i = ContourDistance(pixel + x + y);
+    return float2(c + 2*f + i - a - 2*d - g, g + 2*h + i - a - 2*b - c);
+}
+
+float ContourStitches(float2 pixel,float distance)
+{
+    float thread=max(.5,_EffectContourStitch.x),dashLength=max(1,_EffectContourStitch.y);
+    float spacing=max(thread*3,dashLength*2),coverage=0;
+    int2 cell=(int2)floor(pixel/spacing);
+    for(int row=0;row<(int)_EffectContourStitch.w;row++)
+    {
+        float inset=_EffectContourStitch.z+row*thread*2.5;
+        if(abs(distance-inset)>thread*.5+1) continue;
+        // Project dash centers onto the inset contour, then orient each dash along its tangent.
+        // This avoids UV-axis stripes that disappear along diagonal edges.
+        for(int cy=-1;cy<=1;cy++)for(int cx=-1;cx<=1;cx++)
+        {
+            int2 candidate=cell+int2(cx,cy);
+            float2 center=(float2(candidate)+.5)*spacing;
+            if(abs(ContourDistance(center)-inset)>spacing*.8)continue;
+            for(int stepIndex=0;stepIndex<3;stepIndex++)
+            {
+                float2 gradient=ContourGradient(center);
+                center-=gradient*(ContourDistance(center)-inset)/max(dot(gradient,gradient),.1);
+            }
+            if(any((int2)floor(center/spacing)!=candidate)||abs(ContourDistance(center)-inset)>1.25)continue;
+            float2 g=ContourGradient(center);float gl=length(g);
+            if(gl<.05)continue;
+            float2 n=g/gl,t=float2(-n.y,n.x),delta=pixel-center;
+            float along=dot(delta,t),across=dot(delta,n);
+            float end=max(0,abs(along)-max(0,(dashLength-thread)*.5));
+            coverage=max(coverage,saturate(thread*.5+.5-length(float2(end,across))));
+        }
+    }
+    return coverage;
+}
+
 [numthreads(16, 16, 1)]
 void CSCompositeLayerEffect(uint3 dispatchID : SV_DispatchThreadID)
 {
@@ -497,7 +559,7 @@ void CSCompositeLayerEffect(uint3 dispatchID : SV_DispatchThreadID)
 
     // Shadows use XY translation. Stroke uses X as a signed radial edge offset instead:
     // negative pulls the band into the authored shape, positive pushes it outward.
-    int2 shiftedPixel = _EffectType == 0
+    int2 shiftedPixel = _EffectType == 0 || _EffectType == 6 || _EffectType == 7 || _EffectType == 8
         ? pixel
         : pixel - int2(round(_EffectOffset));
     float signedDistance = -length(float2(_TextureSize));
@@ -506,6 +568,20 @@ void CSCompositeLayerEffect(uint3 dispatchID : SV_DispatchThreadID)
 
     float coverage = 0.0;
     float width = max(0.5, _EffectWidth);
+    float4 effectColor = _EffectColor;
+    if (_EffectType == 6)
+    {
+        // Remove this layer's contribution, exposing the original backdrop rather
+        // than painting a transparent color over an already-composited layer.
+        if (sourceAlpha > 0 && signedDistance >= 0 && signedDistance < width)
+        {
+            float amount = saturate(SampleEffectCurve(signedDistance / width) * _EffectLevel * _LayerOpacity);
+            float4 destination = _Composite[pixel];
+            float4 original = _GroupOriginal.Load(int3(pixel, 0));
+            _Composite[pixel] = lerp(destination, original, amount);
+        }
+        return;
+    }
     if (_EffectType == 0)
     {
         float strokeDistance = -signedDistance - _EffectOffset.x;
@@ -518,6 +594,21 @@ void CSCompositeLayerEffect(uint3 dispatchID : SV_DispatchThreadID)
                 coverage = 1.0 - smoothstep(featherStart, width, strokeDistance);
             }
         }
+    }
+    else if (_EffectType == 7)
+    {
+        if (sourceAlpha > 0 && signedDistance >= 0 && signedDistance < width)
+        {
+            float2 gradient = BevelContourGradient(float2(pixel), width);
+            float facing = dot(-gradient / max(length(gradient), .0001), _EffectBevelLight);
+            effectColor = facing >= 0 ? _EffectColor : _EffectSecondaryColor;
+            float profile = 1 - smoothstep(1 - max(.001, _EffectSmoothness), 1, signedDistance / width);
+            coverage = abs(facing) * profile * sourceAlpha;
+        }
+    }
+    else if (_EffectType == 8)
+    {
+        if(sourceAlpha>0 && signedDistance>=0)coverage=ContourStitches(float2(pixel),signedDistance)*sourceAlpha;
     }
     else if (_EffectType == 1 || _EffectType == 3)
     {
@@ -534,12 +625,12 @@ void CSCompositeLayerEffect(uint3 dispatchID : SV_DispatchThreadID)
         coverage = sourceAlpha;
     }
 
-    float alpha = saturate(coverage * _EffectColor.a * _EffectLevel * _LayerOpacity);
+    float alpha = saturate(coverage * effectColor.a * _EffectLevel * _LayerOpacity);
     if (alpha <= 0.00001) return;
     float4 destination = _Composite[pixel];
-    float3 blended = BlendRGB(destination.rgb, _EffectColor.rgb, _EffectBlendMode);
+    float3 blended = BlendRGB(destination.rgb, effectColor.rgb, _EffectBlendMode);
     if (_GrayscaleChannel != 0) blended = dot(blended, float3(0.2126, 0.7152, 0.0722)).xxx;
-    bool clippedEffect = _EffectType == 1 || _EffectType == 3 || _EffectType == 5;
+    bool clippedEffect = _EffectType == 1 || _EffectType == 3 || _EffectType == 5 || _EffectType == 7 || _EffectType == 8;
     _Composite[pixel] = float4(lerp(destination.rgb, blended, alpha), clippedEffect
         ? destination.a : alpha + destination.a * (1.0 - alpha));
 }

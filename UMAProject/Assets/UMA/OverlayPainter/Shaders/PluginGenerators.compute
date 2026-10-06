@@ -27,6 +27,7 @@ int _P_projection;
 float _P_textureScale;
 int _P_seed;
 float _P_normalCurvature;
+float _P_normalDetailRadius;
 float _P_featureSize;
 float _P_detectionLevel;
 float _P_spread;
@@ -150,19 +151,31 @@ float Cavity(float2 uv)
     return saturate(cavity);
 }
 
+float2 NormalSlope(float2 uv)
+{
+    float3 encoded = _SourceNormal.SampleLevel(sampler_linear_clamp, uv, 0).rgb * 2.0 - 1.0;
+    return encoded.xy / max(0.2, encoded.z);
+}
+
+float2 NeighborNormalSlope(float2 uv, float4 centerId, float2 fallback)
+{
+    if (any(uv < 0.0) || any(uv > 1.0) || !SameIsland(centerId, MeshId(uv))) return fallback;
+    return NormalSlope(uv);
+}
+
 float NormalCurvature(float2 uv)
 {
     if (_HasSourceNormal == 0) return 0.0;
-    float2 stepUv = 1.0 / max(float2(_OutputSize), 1.0);
-    float3 left = DecodeNormal(_SourceNormal.SampleLevel(sampler_linear_clamp,
-        saturate(uv - float2(stepUv.x, 0)), 0));
-    float3 right = DecodeNormal(_SourceNormal.SampleLevel(sampler_linear_clamp,
-        saturate(uv + float2(stepUv.x, 0)), 0));
-    float3 down = DecodeNormal(_SourceNormal.SampleLevel(sampler_linear_clamp,
-        saturate(uv - float2(0, stepUv.y)), 0));
-    float3 up = DecodeNormal(_SourceNormal.SampleLevel(sampler_linear_clamp,
-        saturate(uv + float2(0, stepUv.y)), 0));
-    return clamp(((right.x - left.x) + (up.y - down.y)) * 0.5, -1.0, 1.0);
+    uint width, height;
+    _SourceNormal.GetDimensions(width, height);
+    float2 stepUv = max(1.0 / float2(width, height), _P_normalDetailRadius / 2048.0);
+    float4 centerId = MeshId(uv);
+    float2 center = NormalSlope(uv);
+    float2 left = NeighborNormalSlope(uv - float2(stepUv.x, 0), centerId, center);
+    float2 right = NeighborNormalSlope(uv + float2(stepUv.x, 0), centerId, center);
+    float2 down = NeighborNormalSlope(uv - float2(0, stepUv.y), centerId, center);
+    float2 up = NeighborNormalSlope(uv + float2(0, stepUv.y), centerId, center);
+    return ((right.x - left.x) + (up.y - down.y)) * 0.5;
 }
 
 float3 TriplanarWeights(float3 normal)
@@ -238,8 +251,8 @@ float WeatheringCoverage(float2 uv, bool dirt, float3 position)
     for (int i = 0; i < 4; i++)
     {
         float2 sampleUv = uv + offsets[i];
-        if (SameIsland(centerId, MeshId(sampleUv)))
-            nearby = max(nearby, WeatheringFeature(sampleUv, dirt, false));
+        if (all(sampleUv >= 0.0) && all(sampleUv <= 1.0) && SameIsland(centerId, MeshId(sampleUv)))
+            nearby = max(nearby, WeatheringFeature(sampleUv, dirt, true));
     }
     selection = max(selection, nearby * _P_spread);
     float3 noisePosition = _P_projection == 0 ? float3(uv, 0) : position;
@@ -288,7 +301,7 @@ float4 WeatheringOutput(float2 uv, bool dirt)
 
 float CorrosionSource(float2 uv)
 {
-    float curvature = SignedCurvature(uv);
+    float curvature = clamp(SignedCurvature(uv) + NormalCurvature(uv) * _P_normalCurvature, -1.0, 1.0);
     float edge = max(0.0, curvature) * _P_edgeAmount;
     float valley = max(max(0.0, -curvature), Cavity(uv)) * _P_valleyAmount;
     return SmoothSelection(_P_detectionLevel, 1.0, max(edge, valley));
@@ -305,7 +318,7 @@ float CorrosionSpread(float2 uv, float3 position, float3 dpdu, float3 dpdv)
                           float2(0, -spreadV), float2(0, spreadV) };
     [unroll]
     for (int i = 0; i < 4; i++)
-        if (SameIsland(centerId, MeshId(uv + offsets[i])))
+        if (all(uv + offsets[i] >= 0.0) && all(uv + offsets[i] <= 1.0) && SameIsland(centerId, MeshId(uv + offsets[i])))
             source = max(source, CorrosionSource(uv + offsets[i]) * 0.72);
     return source;
 }
@@ -360,7 +373,7 @@ float4 CorrosionOutput(float2 uv)
     float pitNoise = Fbm(position / max(0.0005, _P_pitSizeMeters), _P_seed + 911, 3, 0.56);
     float pits = SmoothSelection(0.68, 0.94, pitNoise) * coverage;
     float crust = SmoothSelection(0.42, 0.82, 1.0 - pitNoise) * source * breakupMask;
-    float curvature = SignedCurvature(uv);
+    float curvature = clamp(SignedCurvature(uv) + NormalCurvature(uv) * _P_normalCurvature, -1.0, 1.0);
     float damage = saturate(max(max(0.0, -curvature), max(Cavity(uv), max(pits, drip))));
     float3 color = lerp(_P_freshColor.rgb, _P_dryColor.rgb,
         saturate(crust + max(0.0, curvature)));

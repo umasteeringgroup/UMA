@@ -10,7 +10,7 @@ children-per-guide generation, UV editing, vertex RGBA, two material passes,
 skinning and baking remain available.
 
 The swept preset, root-to-tip guide interchange, shader, scalp MeshModifier,
-editable example and [hairstyle guide](../SweptClumpsGuide.md) are included.
+editable example and [hairstyle guide](../Documentation/SweptClumpsGuide.md) are included.
 No third-party hair-generation implementation was imported or executed, and the
 source authoring file was not saved. The original diffuse atlas/import settings were preserved;
 the example uses a private image copy with mipmaps, retaining the same UV layout.

@@ -21,7 +21,7 @@ namespace UMA.TexturePaint.Editor
         private bool LinkedOutputReady()
         {
             // Saving/exporting must not bypass a pending refresh while a gesture or another save owns the data.
-            if (IsPersistenceActive || pluginLayerCancellation != null || strokeActive ||
+            if (regeneratingStaleLayers || IsPersistenceActive || pluginLayerCancellation != null || strokeActive ||
                 uvStrokeActive || GUIUtility.hotControl != 0) return false;
             for (int pass = 0; pass < 32; pass++)
             {
@@ -41,7 +41,7 @@ namespace UMA.TexturePaint.Editor
         private void UpdateLinkedPlugins()
         {
             linkedUpdateStarted=false;
-            if(controller?.Textures==null || controller.Plugins==null || IsPersistenceActive || pluginLayerCancellation!=null ||
+            if(regeneratingStaleLayers || controller?.Textures==null || controller.Plugins==null || IsPersistenceActive || pluginLayerCancellation!=null ||
                 strokeActive || uvStrokeActive || GUIUtility.hotControl!=0 || EditorApplication.timeSinceStartup<nextLinkedUpdate)return;
             nextLinkedUpdate=EditorApplication.timeSinceStartup+.3;
             controller.Textures.RefreshLayerLinks();

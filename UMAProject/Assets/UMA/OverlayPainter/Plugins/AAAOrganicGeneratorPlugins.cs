@@ -112,7 +112,10 @@ namespace UMA.TexturePaint.Examples
         private const string GuideTexture = "guideTexture";
 
         public static TexturePaintChannelMask ReadChannels(AAAOrganicGeneratorMode mode) =>
-            mode == AAAOrganicGeneratorMode.ScarWound
+            mode == AAAOrganicGeneratorMode.RustCorrosion || mode == AAAOrganicGeneratorMode.ScratchDent
+                ? TexturePaintChannelMask.Normal | TexturePaintChannelMask.AmbientOcclusion
+                : mode == AAAOrganicGeneratorMode.FabricFuzz ? TexturePaintChannelMask.Normal
+                : mode == AAAOrganicGeneratorMode.ScarWound
                 ? TexturePaintChannelMask.Custom : TexturePaintChannelMask.None;
 
         public static TexturePaintPluginDescriptor CreateDescriptor(AAAOrganicGeneratorMode mode)
@@ -125,15 +128,16 @@ namespace UMA.TexturePaint.Examples
                 id = Id(mode),
                 displayName = DisplayName(mode),
                 description = Description(mode),
-                pluginVersion = mode == AAAOrganicGeneratorMode.FabricFuzz || mode == AAAOrganicGeneratorMode.RustCorrosion
-                    ? "1.1.1" : "1.0.1",
+                pluginVersion = mode == AAAOrganicGeneratorMode.VeinsSubdermal || mode == AAAOrganicGeneratorMode.RustCorrosion ? "1.2.0" : mode == AAAOrganicGeneratorMode.FabricFuzz
+                    ? "1.2.0" : mode == AAAOrganicGeneratorMode.ScratchDent ? "1.1.0" : "1.0.2",
                 capabilities = TexturePaintPluginCapability.Generator |
                                TexturePaintPluginCapability.ReadsMeshMaps |
                                TexturePaintPluginCapability.LongRunning,
                 declaredChannels = writes,
                 readChannels = reads,
                 requiredMeshMaps = RequiredMeshMaps(mode),
-                channelSnapshotMaximumResolution = 4096,
+                // Two float channel snapshots plus mesh maps must fit the host's 512 MiB budget.
+                channelSnapshotMaximumResolution = (reads & TexturePaintChannelMask.Normal) != 0 ? 2048 : 4096,
                 parameters = Parameters(mode)
             };
         }
@@ -244,7 +248,7 @@ namespace UMA.TexturePaint.Examples
                         if (!output.any) continue;
                         for (int targetIndex = 0; targetIndex < group.Count; targetIndex++)
                             Write(context, surfaceId, group[targetIndex], y, rows, output,
-                                mode == AAAOrganicGeneratorMode.FabricFuzz);
+                                mode == AAAOrganicGeneratorMode.FabricFuzz || mode == AAAOrganicGeneratorMode.VeinsSubdermal);
                     }
                 }
             }
@@ -258,7 +262,8 @@ namespace UMA.TexturePaint.Examples
             TexturePaintReadOnlyParameterTexture guide,
             TexturePaintCommandContextV2 context, int surfaceIndex, int surfaceCount)
         {
-            var output = new OutputBuffers(width * rowCount, outputChannels);
+            var output = new OutputBuffers(width * rowCount, outputChannels,
+                settings.mode == AAAOrganicGeneratorMode.VeinsSubdermal);
             Parallel.For(0, rowCount, new ParallelOptions
                 { CancellationToken = context.cancellationToken }, localY =>
             {
@@ -324,7 +329,7 @@ namespace UMA.TexturePaint.Examples
             float pillRound = Mathf.Sqrt(Mathf.Clamp01(1f - cell * cell / (0.38f * 0.38f)));
             float pillContact = Mathf.Exp(-(cell - 0.34f) * (cell - 0.34f) / 0.0144f) *
                 (1f - pillRound * 0.8f) * pillPresence;
-            float curvature = Mathf.Abs(input.Curvature(u, v));
+            float curvature = Mathf.Abs(input.Curvature(u, v) + input.DetailCurvature(u, v, s.normalDetailRadius) * s.normalDetailStrength);
             float edgeFray = SmoothStep(0.08f, 0.65f, curvature) * s.edgeAmount;
             edgeFray *= Mathf.Lerp(0.35f, 1f, Noise.Ridged(p * (s.scale * 0.35f + 2f),
                 s.seed + 73, 4));
@@ -362,8 +367,13 @@ namespace UMA.TexturePaint.Examples
             Vector3 p = input.Coordinates(u, v, s.worldProjection) * s.scale;
             float n = Noise.Fbm(p, s.seed, 5, 0.53f);
             float islands = SmoothStep(1f - s.spread, 0.98f, n);
-            float cavity = Mathf.Max(input.Cavity(u, v), Mathf.Max(0f, -input.Curvature(u, v)));
-            float edge = Mathf.Max(0f, input.Curvature(u, v));
+            // Normal snapshots contain the composite below this layer, including Normal Control.
+            // Signed divergence distinguishes the foot of a bevel from its exposed crown.
+            float detailCurvature = input.DetailCurvature(u, v, s.normalDetailRadius) * s.normalDetailStrength;
+            float cavity = Mathf.Max(input.Cavity(u, v), input.AuthoredCavity(u, v));
+            cavity = Mathf.Max(cavity, Mathf.Max(0f, -input.Curvature(u, v)));
+            cavity = Mathf.Max(cavity, Mathf.Clamp01(-detailCurvature));
+            float edge = Mathf.Max(Mathf.Max(0f, input.Curvature(u, v)), Mathf.Clamp01(detailCurvature));
             float concentration = Mathf.Clamp01(islands + cavity * s.cavityAmount +
                                                 edge * s.edgeAmount);
 
@@ -427,11 +437,12 @@ namespace UMA.TexturePaint.Examples
             damage.Scale(1f / Mathf.Max(0.0001f, retainedWeight));
 
             float presetAmount = s.preset switch { 0 => 0.48f, 1 => 0.78f, 3 => 1.28f, _ => 1f };
-            float curvature = Mathf.Max(0f, input.Curvature(u, v));
+            float detailCurvature = input.DetailCurvature(u, v, s.normalDetailRadius) * s.normalDetailStrength;
+            float curvature = Mathf.Max(0f, input.Curvature(u, v) + detailCurvature);
             float edgeWear = SmoothStep(0.05f, 0.72f, curvature) * s.edgeBias *
                              Mathf.Lerp(0.45f, 1f, Noise.Ridged(p * 0.72f,
                                  s.seed + 401, 4));
-            float cavity = input.Cavity(u, v);
+            float cavity = Mathf.Max(Mathf.Max(input.Cavity(u, v), input.AuthoredCavity(u, v)), Mathf.Clamp01(-detailCurvature));
 
             float dent = Mathf.Clamp01(damage.dent * s.dentAmount * presetAmount);
             float dentRim = Mathf.Clamp01(damage.dentRim * s.dentRimAmount * presetAmount);
@@ -626,16 +637,18 @@ namespace UMA.TexturePaint.Examples
         {
             Vector3 p = input.Coordinates(u, v, s.worldProjection) * s.scale;
             float low = Noise.Fbm(p * 0.22f, s.seed, 5, 0.58f);
-            float warp = Noise.Fbm(p * 0.47f, s.seed + 31, 3, 0.55f) - 0.5f;
-            float veinA = LineNetwork(p, s.direction, s.veinScale, warp, s.seed + 53);
-            float veinB = LineNetwork(p, s.direction + 67f, s.veinScale * 1.8f,
-                -warp, s.seed + 97) * s.branching;
-            float veins = s.veinsEnabled ? Mathf.Clamp01(Mathf.Max(veinA, veinB) * s.veinIntensity) : 0f;
+            float veinFootprint = s.scale / Mathf.Max(1, Mathf.Min(width, height));
+            if (s.veinsEnabled && s.worldProjection)
+            {
+                Vector3 px = input.Coordinates(u + (u < .5f ? 1f : -1f) / width, v, true) * s.scale;
+                Vector3 py = input.Coordinates(u, v + (v < .5f ? 1f : -1f) / height, true) * s.scale;
+                veinFootprint = Mathf.Max((px - p).magnitude, (py - p).magnitude);
+            }
+            float veins = s.veinsEnabled ? SubdermalVeinField.Sample(p, s.direction,
+                s.veinScale, s.veinWidth, s.branching, s.seed, veinFootprint) * s.veinIntensity : 0f;
 
-            float bruiseCell = Noise.Worley(p * s.bruiseScale, s.seed + 131, out float bruiseRandom);
             float bruises = s.bruisesEnabled
-                ? (1f - SmoothStep(s.bruiseSize * 0.4f, s.bruiseSize, bruiseCell)) *
-                  SmoothStep(1f - s.bruiseAmount, 1f, bruiseRandom) : 0f;
+                ? Noise.SoftClusters(p * s.bruiseScale, s.seed + 131, s.bruiseSize, s.bruiseAmount) : 0f;
             Color bruiseColor = BruiseColor(s.bruiseAge).linear;
 
             float spotCell = Noise.Worley(p * s.spotScale, s.seed + 173, out float spotRandom);
@@ -652,8 +665,10 @@ namespace UMA.TexturePaint.Examples
             float mottling = s.mottlingEnabled
                 ? SmoothStep(0.3f, 0.75f, Mathf.Abs(low - 0.5f) * 2f) * s.mottling : 0f;
 
-            float pores = 1f - Noise.Worley(p * s.poreScale, s.seed + 251, out _);
-            pores = SmoothStep(0.74f, 0.96f, pores) * s.poreAmount;
+            // A surface cuts through this 3D field. A very small sphere radius leaves
+            // almost no pore intersections, especially after height quantization.
+            float pores = (1f - SmoothStep(0.10f, 0.48f,
+                Noise.Worley(p * s.poreScale, s.seed + 251, out _))) * s.poreAmount;
             float redness = SmoothStep(0.4f, 0.8f, Noise.Fbm(p * 0.4f,
                 s.seed + 281, 4, 0.55f)) * s.redness;
             float oil = SmoothStep(0.42f, 0.78f, Noise.Fbm(p * s.oilScale,
@@ -686,8 +701,14 @@ namespace UMA.TexturePaint.Examples
             float thickness = Mathf.Clamp01(baseThickness - veins * s.veinDepth - bruises * 0.08f +
                                             mottling * 0.03f + (low - 0.5f) *
                                             s.thicknessVariation);
-            float normal = 0.5f - pores * s.poreDepth + spots * s.spotHeight -
-                           wrinkles * s.wrinkleDepth;
+            float displacement = -pores * s.poreDepth + spots * s.spotHeight -
+                wrinkles * s.wrinkleDepth + veins * s.veinHeight + bruises * s.bruiseHeight;
+            // Height already contains each feature's amount. Unpremultiply around
+            // neutral gray so layer alpha applies that amount exactly once.
+            float heightCoverage = s.fullSurface ? 1f : Mathf.Max(pores, Mathf.Max(spots,
+                Mathf.Max(wrinkles, Mathf.Max(s.veinHeight != 0 ? veins : 0,
+                    s.bruiseHeight != 0 ? bruises : 0))));
+            float normal = heightCoverage > 0.00001f ? 0.5f + displacement / heightCoverage : 0.5f;
             return new GeneratedPixel
             {
                 albedo = WithAlpha(color, coverage * (s.fullSurface ? 1f : s.colorStrength)),
@@ -696,7 +717,7 @@ namespace UMA.TexturePaint.Examples
                     bruises * 0.08f - oil * 0.24f),
                     coverage),
                 thickness = Scalar(thickness, coverage),
-                normalControl = Scalar(Mathf.Clamp01(normal), Mathf.Clamp01(coverage + pores)),
+                normalControl = Scalar(Mathf.Clamp01(normal), heightCoverage),
                 detailMask = Scalar(Mathf.Clamp01(pores + freckles + wrinkles +
                     mottling * 0.5f), coverage)
             };
@@ -844,6 +865,13 @@ namespace UMA.TexturePaint.Examples
         private static void Write(TexturePaintCommandContextV2 context, string surfaceId,
             OutputTarget target, int yStart, int rowCount, OutputBuffers output, bool straightAlpha)
         {
+            if (target.channel == TexturePaintChannel.NormalControl && output.preciseNormalControl != null)
+            {
+                context.WriteTile(surfaceId, target.channel,
+                    new RectInt(0, yStart, target.width, rowCount), output.preciseNormalControl,
+                    TexturePaintPluginColorSpace.Data, TexturePaintPluginBlend.Replace, 1f);
+                return;
+            }
             Color32[] pixels = output.For(target.channel);
             if (pixels == null) return;
             TexturePaintPluginColorSpace colorSpace = TexturePaintChannelUtility.IsColor(target.channel)
@@ -926,6 +954,7 @@ namespace UMA.TexturePaint.Examples
 
         private static void AddFabricParameters(List<TexturePaintPluginParameterDefinition> p)
         {
+            AddNormalDetailParameters(p);
             p.Add(Header("fibers", "Fiber Field", "Directional weave, fuzz coverage and material response."));
             p.Add(Enum("preset", "Fabric Family", new[] { "Cotton", "Wool", "Denim", "Velvet", "Synthetic" }, 0,
                 "Biases fiber response while retaining all manual controls."));
@@ -949,12 +978,21 @@ namespace UMA.TexturePaint.Examples
                 "Contact darkening and crown highlights in Albedo and Ambient Occlusion, independently of 3D Depth."));
         }
 
+        private static void AddNormalDetailParameters(List<TexturePaintPluginParameterDefinition> p)
+        {
+            p.Add(Float("normalDetailStrength", "Normal Detail Influence", 0f, 32f, 8f,
+                "Sensitivity to cavities and edges in the combined Normal map below this layer, including Normal Control relief. Zero uses mesh curvature and AO only."));
+            p.Add(Float("normalDetailRadius", "Normal Detail Radius", 1f, 32f, 4f,
+                "Distance used to detect bevels and recesses, measured in pixels at 2048 resolution. Increase for broader details. Draft previews may not resolve fine lettering."));
+        }
+
         private static void AddRustParameters(List<TexturePaintPluginParameterDefinition> p)
         {
             p.Add(Header("oxidation", "Oxidation Coverage", "Spread, cavity buildup and exposed-edge concentration."));
             p.Add(Float("spread", "Rust Spread", 0f, 1f, 0.62f, "Broad oxidation coverage."));
             p.Add(Float("cavityAmount", "Cavity Concentration", 0f, 2f, 0.9f, "Rust accumulation in concave and occluded regions."));
             p.Add(Float("edgeAmount", "Edge Concentration", 0f, 2f, 0.32f, "Oxidation around exposed convex edges."));
+            AddNormalDetailParameters(p);
             p.Add(Header("corrosion", "Pitting, Flakes & Streaks", "Multi-scale material breakup and gravity runoff."));
             p.Add(Float("pitting", "Pitting", 0f, 1f, 0.52f, "Density of recessed corrosion pits."));
             p.Add(Float("pitScale", "Pit Scale", 0.25f, 128f, 18f, "Frequency controlling pit size."));
@@ -1019,17 +1057,20 @@ namespace UMA.TexturePaint.Examples
             p.Add(Header("veins", "Veins & Capillaries", "Branching subdermal vessels with depth and direction controls."));
             p.Add(Boolean("veinsEnabled", "Veins", true, "Enable procedural vein networks."));
             p.Add(Float("veinIntensity", "Vein Intensity", 0f, 1f, 0.55f, "Visibility of veins."));
-            p.Add(Float("veinScale", "Vein Thickness", 0.25f, 64f, 7f, "Network frequency and apparent thickness."));
-            p.Add(Float("branching", "Vein Branching", 0f, 1f, 0.65f, "Secondary vessel network."));
+            p.Add(Float("veinScale", "Vein Network Density", 0.25f, 64f, 7f, "Higher values create more, smaller vessel trees. Retains the saved network scale."));
+            p.Add(Float("veinWidth", "Vein Width", 0.25f, 3f, 1f, "Vessel width independent of network density; daughter vessels taper toward their tips."));
+            p.Add(Float("branching", "Vein Branching", 0f, 1f, 0.65f, "Amount of connected daughter vessels and finer terminal forks."));
             p.Add(Float("direction", "Vein Direction", -180f, 180f, 18f, "Primary flow direction."));
             p.Add(ColorParameter("veinColor", "Vein Color", new Color(0.12f, 0.23f, 0.34f, 1f), "Subdermal vessel color."));
             p.Add(Float("veinDepth", "Vein Depth", 0f, 0.5f, 0.08f, "Thickness reduction beneath veins."));
+            p.Add(Float("veinHeight", "Vein Surface Height", 0f, 0.2f, 0f, "Optional raised vessel relief in Normal Control; separate from subsurface Vein Depth."));
             p.Add(Header("bruising", "Bruising", "Staged bruise coloration and variable clustered sizes."));
             p.Add(Boolean("bruisesEnabled", "Bruises", false, "Enable randomized bruise clusters."));
             p.Add(Float("bruiseAmount", "Bruise Amount", 0f, 1f, 0.22f, "Frequency of bruises."));
             p.Add(Float("bruiseAge", "Bruise Age", 0f, 1f, 0.35f, "Fresh red-purple through healing green-yellow-brown."));
             p.Add(Float("bruiseScale", "Bruise Spacing", 0.1f, 32f, 1.8f, "Cluster frequency."));
             p.Add(Float("bruiseSize", "Bruise Size", 0.05f, 1f, 0.55f, "Radius of bruise clusters."));
+            p.Add(Float("bruiseHeight", "Bruise Swelling", 0f, 0.2f, 0f, "Optional surface swelling in Normal Control. Zero keeps bruising a color/subsurface change."));
             p.Add(Header("skinVariation", "Mottling, Spots & Freckles", "Multi-scale pigment and subdermal breakup."));
             p.Add(Boolean("mottlingEnabled", "Mottling", true, "Enable low-frequency skin mottling."));
             p.Add(Float("mottling", "Mottling Intensity", 0f, 1f, 0.3f, "Mottle visibility."));
@@ -1090,6 +1131,7 @@ namespace UMA.TexturePaint.Examples
 
         private static void AddScratchDentParameters(List<TexturePaintPluginParameterDefinition> p)
         {
+            AddNormalDetailParameters(p);
             p.Add(Header("combatProfile", "Combat Damage Profile",
                 "Feature-based damage distribution with clustered impacts instead of uniform surface noise."));
             p.Add(Enum("preset", "Wear History", new[]
@@ -1151,7 +1193,7 @@ namespace UMA.TexturePaint.Examples
             p.Add(Float("burrRoughness", "Burr Roughness", 0f, 1f, 0.2f, "Lower values produce polished raised lips."));
             p.Add(Float("metallic", "Exposed Metallic", 0f, 1f, 0.92f, "Metallic value written to exposed regions."));
             p.Add(Float("aoValue", "Deep Damage AO", 0f, 1f, 0.28f, "Ambient occlusion value inside deep impacts."));
-            p.Add(Float("cavityAmount", "Embedded Grime", 0f, 2f, 0.35f, "Uses mesh cavities to darken and roughen established damage."));
+            p.Add(Float("cavityAmount", "Embedded Grime", 0f, 2f, 0.35f, "Uses underlying normal-map cavities and mesh/source AO to darken and roughen established damage."));
         }
 
         private static void AddCreatureParameters(List<TexturePaintPluginParameterDefinition> p)
@@ -1276,8 +1318,9 @@ namespace UMA.TexturePaint.Examples
         {
             private readonly Color32[] albedo, metallic, roughness, ao, skinColorMask,
                 thickness, detailMask, normalControl;
+            public readonly Color[] preciseNormalControl;
             public bool any;
-            public OutputBuffers(int count, TexturePaintChannelMask channels)
+            public OutputBuffers(int count, TexturePaintChannelMask channels, bool preciseHeight)
             {
                 albedo = Has(channels, TexturePaintChannel.Albedo) ? new Color32[count] : null;
                 metallic = Has(channels, TexturePaintChannel.Metallic) ? new Color32[count] : null;
@@ -1286,7 +1329,11 @@ namespace UMA.TexturePaint.Examples
                 skinColorMask = Has(channels, TexturePaintChannel.SkinColorMask) ? new Color32[count] : null;
                 thickness = Has(channels, TexturePaintChannel.Thickness) ? new Color32[count] : null;
                 detailMask = Has(channels, TexturePaintChannel.DetailMask) ? new Color32[count] : null;
-                normalControl = Has(channels, TexturePaintChannel.NormalControl) ? new Color32[count] : null;
+                if (Has(channels, TexturePaintChannel.NormalControl))
+                {
+                    if (preciseHeight) preciseNormalControl = new Color[count];
+                    else normalControl = new Color32[count];
+                }
             }
             public void Set(int index, GeneratedPixel p)
             {
@@ -1298,6 +1345,7 @@ namespace UMA.TexturePaint.Examples
                 if (thickness != null) thickness[index] = p.thickness;
                 if (detailMask != null) detailMask[index] = p.detailMask;
                 if (normalControl != null) normalControl[index] = p.normalControl;
+                if (preciseNormalControl != null) preciseNormalControl[index] = p.normalControl;
                 any = true;
             }
             private static bool Has(TexturePaintChannelMask channels, TexturePaintChannel channel) =>
@@ -1336,11 +1384,14 @@ namespace UMA.TexturePaint.Examples
         private sealed class SurfaceInputs
         {
             public readonly TexturePaintReadOnlyImage custom;
+            private readonly TexturePaintReadOnlyImage detailNormal, authoredAo;
             private readonly TexturePaintReadOnlyMeshMap position, normal, curvature, ambientOcclusion,
                 thickness, id;
             public SurfaceInputs(TexturePaintCommandContextV2 context, string surfaceId)
             {
                 custom = context.source.Get(surfaceId, TexturePaintChannel.Custom);
+                detailNormal = context.source.Get(surfaceId, TexturePaintChannel.Normal);
+                authoredAo = context.source.Get(surfaceId, TexturePaintChannel.AmbientOcclusion);
                 position = context.GetMeshMap(surfaceId, TexturePaintMeshMap.WorldPosition);
                 normal = context.GetMeshMap(surfaceId, TexturePaintMeshMap.WorldNormal);
                 curvature = context.GetMeshMap(surfaceId, TexturePaintMeshMap.SignedCurvature);
@@ -1362,6 +1413,11 @@ namespace UMA.TexturePaint.Examples
                 curvature.GetPixelBilinear(Repeat(u), Repeat(v)).r * 2f - 1f;
             public float Cavity(float u, float v) => ambientOcclusion == null ? 0f :
                 1f - ambientOcclusion.GetPixelBilinear(Repeat(u), Repeat(v)).r;
+            public float AuthoredCavity(float u, float v) => authoredAo == null ? 0f :
+                Mathf.Clamp01(1f - authoredAo.GetPixelBilinear(u, v).r);
+
+            public float DetailCurvature(float u, float v, float radius) =>
+                SurfaceNormalDetail.Curvature(detailNormal, id, u, v, radius);
             public Vector3 Normal(float u, float v)
             {
                 if (normal == null) return Vector3.forward;
@@ -1395,12 +1451,12 @@ namespace UMA.TexturePaint.Examples
                 guideSource, woundType, patternType, armorFinish, scrapeCount;
             public readonly float scale, globalAmount, density, fiberFrequency, direction,
                 directionVariation, edgeAmount, pilling, pillScale, colorStrength, roughness,
-                height, depthStrength, shadingStrength, spread, cavityAmount, pitting, pitScale, depth, flaking, flakeScale,
+                height, depthStrength, shadingStrength, spread, cavityAmount, normalDetailStrength, normalDetailRadius, pitting, pitScale, depth, flaking, flakeScale,
                 streaking, streakLength, streakFrequency, metallic, aoValue, persistence,
                 noiseAmount, poreAmount, poreDensity, poreScale, poreSize, poreDepth,
                 scratchAmount, scratchDensity, scratchFrequency, scratchLength, scratchWidth,
                 scratchDepth, randomness, roughnessVariation, skinMaskStrength, thickness,
-                veinIntensity, veinScale, branching, veinDepth, bruiseAmount, bruiseAge,
+                veinIntensity, veinScale, veinWidth, branching, veinDepth, veinHeight, bruiseHeight, bruiseAmount, bruiseAge,
                 bruiseScale, bruiseSize, mottling, spotAmount, spotScale, spotSize, spotHeight,
                 freckleAmount, freckleScale, freckleSize, edgeFadePixels, redness,
                 spotColorVariation, oiliness, oilScale, wrinkleAmount, wrinkleScale,
@@ -1448,6 +1504,8 @@ namespace UMA.TexturePaint.Examples
                 shadingStrength = mode == AAAOrganicGeneratorMode.FabricFuzz
                     ? Mathf.Clamp(v.Float("shadingStrength", 1f), 0f, 3f) : 1f;
                 spread = Clamp01(v, "spread", 0.62f); cavityAmount = Pos(v, "cavityAmount", 0.9f);
+                normalDetailStrength = Mathf.Clamp(v.Float("normalDetailStrength", 8f), 0f, 32f);
+                normalDetailRadius = Mathf.Clamp(v.Float("normalDetailRadius", 4f), 1f, 32f);
                 pitting = Clamp01(v, "pitting", 0.52f); pitScale = Pos(v, "pitScale", 18f);
                 depth = Pos(v, "depth", 0.12f); flaking = Clamp01(v, "flaking", 0.48f);
                 flakeScale = Pos(v, "flakeScale", 11f); streaking = Clamp01(v, "streaking", 0.55f);
@@ -1465,7 +1523,10 @@ namespace UMA.TexturePaint.Examples
                 veinsEnabled = v.Boolean("veinsEnabled", true); bruisesEnabled = v.Boolean("bruisesEnabled", false);
                 mottlingEnabled = v.Boolean("mottlingEnabled", true); veinIntensity = Clamp01(v, "veinIntensity", 0.55f);
                 veinScale = Pos(v, "veinScale", 7f); branching = Clamp01(v, "branching", 0.65f);
+                veinWidth = Mathf.Clamp(v.Float("veinWidth", 1f), .25f, 3f);
                 veinDepth = Pos(v, "veinDepth", 0.08f); bruiseAmount = Clamp01(v, "bruiseAmount", 0.22f);
+                veinHeight = Mathf.Clamp(v.Float("veinHeight", 0f), 0f, .2f);
+                bruiseHeight = Mathf.Clamp(v.Float("bruiseHeight", 0f), 0f, .2f);
                 bruiseAge = Clamp01(v, "bruiseAge", 0.35f); bruiseScale = Pos(v, "bruiseScale", 1.8f);
                 bruiseSize = Pos(v, "bruiseSize", 0.55f); mottling = Clamp01(v, "mottling", 0.3f);
                 spotAmount = Clamp01(v, "spotAmount", 0.22f); spotScale = Pos(v, "spotScale", 12f);
@@ -1606,6 +1667,26 @@ namespace UMA.TexturePaint.Examples
                         best = d; cellRandom = Hash(cx, cy, cz, seed + 67);
                     }
                 return Mathf.Clamp01(Mathf.Sqrt(best));
+            }
+            public static float SoftClusters(Vector3 p, int seed, float radius, float amount)
+            {
+                if (amount <= 0f) return 0f;
+                int bx = Mathf.FloorToInt(p.x), by = Mathf.FloorToInt(p.y), bz = Mathf.FloorToInt(p.z);
+                float value = 0f;
+                // Evaluate each seeded blob to its own zero edge. Selecting only the
+                // nearest cell switches its random intensity at Voronoi boundaries.
+                for (int z = -1; z <= 1; z++) for (int y = -1; y <= 1; y++)
+                    for (int x = -1; x <= 1; x++)
+                    {
+                        int cx = bx + x, cy = by + y, cz = bz + z;
+                        float strength = SmoothStep(1f - amount, 1f, Hash(cx, cy, cz, seed + 67));
+                        if (strength <= 0f) continue;
+                        Vector3 point = new Vector3(cx + Hash(cx, cy, cz, seed),
+                            cy + Hash(cx, cy, cz, seed + 17), cz + Hash(cx, cy, cz, seed + 31));
+                        float distance = (point - p).magnitude;
+                        value = Mathf.Max(value, strength * (1f - SmoothStep(radius * .4f, radius, distance)));
+                    }
+                return value;
             }
             private static float Hash(int x, int y, int z, int seed)
             {

@@ -22,7 +22,7 @@ namespace UMA.TexturePaint.Editor
             if (brush) return TexturePaintLayerPreviewKind.Brush;
             if (mask) return TexturePaintLayerPreviewKind.CachedLayer;
             if (layer.kind == TexturePaintLayerKind.Plugin) return TexturePaintLayerPreviewKind.Plugin;
-            if (layer.IsSplineLayer && (layer.splineSettings?.garment?.enabled == true || layer.splineSettings?.hemSeam?.enabled == true))
+            if (layer.IsSplineLayer && (layer.splineSettings?.pathGenerator?.enabled == true || layer.splineSettings?.garment?.enabled == true || layer.splineSettings?.hemSeam?.enabled == true))
                 return TexturePaintLayerPreviewKind.GarmentPath;
             if (layer.kind == TexturePaintLayerKind.Projection && layer.projectionSettings?.garment?.enabled == true)
                 return TexturePaintLayerPreviewKind.GarmentProjection;
@@ -30,6 +30,17 @@ namespace UMA.TexturePaint.Editor
         }
 
         internal void DrawLayerPreviewPanel()
+        {
+            bool changed = GUI.changed;
+            try
+            {
+                DrawLayerPreviewContent();
+                DrawRegenerateStaleLayersButton();
+            }
+            finally { GUI.changed = changed; }
+        }
+
+        private void DrawLayerPreviewContent()
         {
             bool changed = GUI.changed;
             try
@@ -49,19 +60,26 @@ namespace UMA.TexturePaint.Editor
                         if (TexturePaintPluginPreview.Supports(plugin))
                         {
                             RequestPluginPreview(set, layer, plugin, mask ? layer.layerMask.pluginParameters : layer.pluginParameters, mask);
+                            string progressKey = (mask ? "mask:" : string.Empty) +
+                                (!string.IsNullOrEmpty(layer.logicalLayerId) ? layer.logicalLayerId : layer.id);
+                            float? regenerationProgress = pluginLayerCancellation != null &&
+                                string.Equals(runningPluginLayerId, progressKey, StringComparison.Ordinal)
+                                ? pluginLayerProgress : (float?)null;
                             pluginPreview.Draw(() =>
                             {
                                 if (mask) RegenerateLayerMaskPlugin(set, layer, plugin);
                                 else RegeneratePluginLayer(set, layer, plugin);
-                            }, pluginLayerCancellation == null && !IsPersistenceActive);
+                            }, pluginLayerCancellation == null && !IsPersistenceActive, regenerationProgress);
                             return;
                         }
                         break;
                     case TexturePaintLayerPreviewKind.GarmentPath:
                         float width = Mathf.Max(.0002f, layer.splineSettings.brushSize * 2);
                         RequestGarmentSectionPreview(set, layer, layer.splineSettings.garment, layer.splineSettings.hemSeam,
-                            new Vector2(width, width * 3), layer.spline?.closed == true);
-                        garmentPreview.Draw(); return;
+                            new Vector2(width, width * 3), layer.spline?.closed == true,layer.splineSettings.pathGenerator);
+                        garmentPreview.Draw(layer.splineSettings.pathGenerator?.enabled==true ?
+                            () => { QueueSplineReapply(set);ReapplyPendingSpline(); } : null, !IsPersistenceActive);
+                        return;
                     case TexturePaintLayerPreviewKind.GarmentProjection:
                         RequestGarmentSectionPreview(set, layer, layer.projectionSettings.garment, null,
                             new Vector2(layer.projectionSettings.width, layer.projectionSettings.height), false);

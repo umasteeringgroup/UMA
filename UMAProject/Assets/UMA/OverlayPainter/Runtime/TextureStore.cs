@@ -734,7 +734,6 @@ namespace UMA.TexturePaint
         public ProceduralMeshMaps GetProceduralMeshMaps(int maximumResolution = 512,
             TexturePaintOperationContext operation = default)
         {
-            if (proceduralMeshMaps != null) return proceduralMeshMaps;
             int resolution = Mathf.Clamp(maximumResolution, 16, 1024);
             foreach (TextureChannelTarget channel in channels.Values)
             {
@@ -742,8 +741,14 @@ namespace UMA.TexturePaint
                 resolution = Mathf.Min(resolution, Mathf.Min(channel.Texture.width, channel.Texture.height));
                 break;
             }
+            if (proceduralMeshMaps?.position != null && proceduralMeshMaps.position.width >= resolution)
+                return proceduralMeshMaps;
             operation.ThrowIfCancellationRequested();
-            proceduralMeshMaps = ProceduralMeshMapBuilder.Build(surface, resolution, resolution, operation);
+            // A draft request must not permanently pin full generation to its lower resolution.
+            // Keep the previous cache intact if a more detailed bake is canceled or fails.
+            ProceduralMeshMaps rebuilt = ProceduralMeshMapBuilder.Build(surface, resolution, resolution, operation);
+            proceduralMeshMaps?.Dispose();
+            proceduralMeshMaps = rebuilt;
             return proceduralMeshMaps;
         }
 
@@ -1457,14 +1462,16 @@ namespace UMA.TexturePaint
                 Graphics.Blit(source.linkedMask,copy.linkedMask);copy.linkError=source.linkError;
             }
             copy.NormalizeKindPayload();
+            // Plugin presets may configure an output before its first generation allocates pixels.
+            // Preserve those settings when the generation transaction clones the empty layer.
+            foreach (var setting in source.channelSettings)
+                if (setting.Value != null) copy.channelSettings[setting.Key] = setting.Value.Clone();
             foreach (KeyValuePair<TexturePaintChannel, EditableTextureTarget> pair in source.channels)
             {
                 TextureChannelTarget baseChannel = GetChannel(pair.Key);
                 if (baseChannel == null) continue;
                 if (copyChannelPixels) copy.channels[pair.Key] = new EditableTextureTarget(copy.name + " " + pair.Key,
                     pair.Value.Width, pair.Value.Height, pair.Value.Front.format, pair.Value.Front, Color.clear);
-                TexturePaintLayerChannelSettings settings = source.GetChannelSettings(pair.Key, false);
-                if (settings != null) copy.channelSettings[pair.Key] = settings.Clone();
             }
             if (source.layerMask?.target?.Front != null)
             {
@@ -2156,7 +2163,11 @@ namespace UMA.TexturePaint
                 descriptor.depthBufferBits = 0;
                 descriptor.msaaSamples = 1;
                 descriptor.enableRandomWrite = true;
-                control = RenderTexture.GetTemporary(descriptor);
+                var controlDescriptor = descriptor;
+                // Height differences can be smaller than one 8-bit step even when the final
+                // normal map is 8-bit. Preserve them until the slope conversion.
+                controlDescriptor.graphicsFormat = GetChannel(TexturePaintChannel.NormalControl).Texture.graphicsFormat;
+                control = RenderTexture.GetTemporary(controlDescriptor);
                 effective = RenderTexture.GetTemporary(descriptor);
                 if (compositor.ComposeBelowLayer(this, TexturePaintChannel.NormalControl,
                         boundaryLayer, control) &&
@@ -2664,7 +2675,8 @@ namespace UMA.TexturePaint
             }
             layer.channelSettings.Clear();
             foreach (KeyValuePair<TexturePaintChannel, TexturePaintLayerChannelSettings> pair in template.channelSettings)
-                if (set.GetChannel(pair.Key) != null && layer.channels.ContainsKey(pair.Key))
+                if (set.GetChannel(pair.Key) != null &&
+                    (layer.kind == TexturePaintLayerKind.Plugin || layer.channels.ContainsKey(pair.Key)))
                 {
                     TexturePaintLayerChannelSettings channelSettings = pair.Value.Clone();
                     if (channelSettings.sourceSettings?.source == TexturePaintBrushSource.Overlay)
@@ -2857,6 +2869,7 @@ namespace UMA.TexturePaint
             BuildPackedChannelGroups(set);
             if (!hasDeclaredUmaChannels) EnsureMinimumChannels(set);
             EnsureNormalControlChannel(set);
+            EnsureCustomGuideChannel(set);
             BuildSourceBindings(set, generated, surface);
             TextureChannelTarget normal = set.GetChannel(TexturePaintChannel.Normal);
             int mapResolution = normal != null ? Mathf.Min(normal.Texture.width, 2048) : Mathf.Min(DefaultResolution, 2048);
@@ -3222,6 +3235,34 @@ namespace UMA.TexturePaint
             control.composite = EditableTextureTarget.Create(set.Name + " Normal Control Composite",
                 normal.Texture.width, normal.Texture.height, format);
             set.channels.Add(TexturePaintChannel.NormalControl, control);
+        }
+
+        private void EnsureCustomGuideChannel(TextureSet set)
+        {
+            // Scar/text generators read Custom from the layers below them. This authoring
+            // target must exist even when the UMA material has no Custom shader channel.
+            // Preserve a real material-provided Custom channel when one is already present.
+            if (set.channels.ContainsKey(TexturePaintChannel.Custom)) return;
+            TextureChannelTarget reference = set.GetChannel(TexturePaintChannel.Albedo);
+            if (reference == null)
+                foreach (TextureChannelTarget candidate in set.channels.Values)
+                    if (candidate.Texture != null) { reference = candidate; break; }
+            int width = reference?.Texture != null ? reference.Texture.width : DefaultResolution;
+            int height = reference?.Texture != null ? reference.Texture.height : DefaultResolution;
+            const RenderTextureFormat format = RenderTextureFormat.ARGB32;
+            var guide = new TextureChannelTarget
+            {
+                channel = TexturePaintChannel.Custom,
+                materialProperty = null,
+                umaChannelIndex = -1,
+                sRGB = false,
+                format = format,
+                editable = new EditableTextureTarget(set.Name + " Custom Guide", width, height,
+                    format, null, Color.black),
+                composite = EditableTextureTarget.Create(set.Name + " Custom Guide Composite",
+                    width, height, format)
+            };
+            set.channels.Add(TexturePaintChannel.Custom, guide);
         }
 
         private void EnsureChannel(TextureSet set, TexturePaintChannel channel, string property)

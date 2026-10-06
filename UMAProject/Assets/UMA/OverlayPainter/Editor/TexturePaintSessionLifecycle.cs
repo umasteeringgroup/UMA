@@ -301,7 +301,7 @@ namespace UMA.TexturePaint.Editor
                 return;
             }
 
-            if (afterLinkedUpdates.Count > 0 || !UMASettings.TexturePaintAutomaticRecovery || !recoveryDirty ||
+            if (afterLinkedUpdates.Count > 0 || !TexturePaintProjectSettings.TexturePaintAutomaticRecovery || !recoveryDirty ||
                 controller == null || controller.Painting == null || controller.Painting.IsPainting ||
                 EditorApplication.isCompiling || EditorApplication.isUpdating ||
                 EditorApplication.timeSinceStartup < nextAutosaveTime) return;
@@ -493,24 +493,24 @@ namespace UMA.TexturePaint.Editor
             if (!IsPersistenceActive)
                 nextAutosaveTime = Math.Max(nextAutosaveTime,
                     CalculateAutomaticSaveDeadline(EditorApplication.timeSinceStartup,
-                        lastAutomaticSaveTime, UMASettings.TexturePaintRecoveryIdleDelaySeconds,
-                        UMASettings.TexturePaintRecoveryMinimumIntervalSeconds));
+                        lastAutomaticSaveTime, TexturePaintProjectSettings.TexturePaintRecoveryIdleDelaySeconds,
+                        TexturePaintProjectSettings.TexturePaintRecoveryMinimumIntervalSeconds));
         }
 
         private void ScheduleAutosaveAfterChange()
         {
             nextAutosaveTime = CalculateAutomaticSaveDeadline(
                 EditorApplication.timeSinceStartup, lastAutomaticSaveTime,
-                UMASettings.TexturePaintRecoveryIdleDelaySeconds,
-                UMASettings.TexturePaintRecoveryMinimumIntervalSeconds);
+                TexturePaintProjectSettings.TexturePaintRecoveryIdleDelaySeconds,
+                TexturePaintProjectSettings.TexturePaintRecoveryMinimumIntervalSeconds);
         }
 
         private void RecordAutomaticSaveCompletion()
         {
             lastAutomaticSaveTime = EditorApplication.timeSinceStartup;
             nextAutosaveTime = CalculateAutomaticSaveDeadline(lastAutomaticSaveTime,
-                lastAutomaticSaveTime, UMASettings.TexturePaintRecoveryIdleDelaySeconds,
-                UMASettings.TexturePaintRecoveryMinimumIntervalSeconds);
+                lastAutomaticSaveTime, TexturePaintProjectSettings.TexturePaintRecoveryIdleDelaySeconds,
+                TexturePaintProjectSettings.TexturePaintRecoveryMinimumIntervalSeconds);
         }
 
         internal static double CalculateAutomaticSaveDeadline(double now,

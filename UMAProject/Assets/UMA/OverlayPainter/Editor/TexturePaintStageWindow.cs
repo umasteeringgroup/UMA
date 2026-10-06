@@ -14,7 +14,7 @@ namespace UMA.TexturePaint.Editor
 {
     public sealed partial class TexturePaintStageWindow : PreviewSceneStage
     {
-        private static string ShaderRoot => UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders") + "/";
+        private static string ShaderRoot => TexturePaintAssets.ResolveInstallAssetPath("OverlayPainter/Shaders") + "/";
         private const float SplineInsertTolerancePixels = 8f;
         private const double InteractiveSplineReapplyDelaySeconds = 0.25d;
         private const int PaintControlHint = 0x50A17;
@@ -157,6 +157,7 @@ namespace UMA.TexturePaint.Editor
         [SerializeField] private int pathTextureFlipSeed;
         [SerializeField] private bool pathCrossfadeJoins;
         [SerializeField, Range(0f, 1f)] private float pathJoinOverlap = .2f;
+        [SerializeField] private TexturePaintPathGeneratorSettings pathGenerator;
         [SerializeField] private TexturePaintHemSeamSettings pathHemSeam;
         [SerializeField] private TexturePaintGarmentSettings pathGarment;
         [SerializeField, Range(0f, 2f)] private float pathStartFade;
@@ -173,7 +174,7 @@ namespace UMA.TexturePaint.Editor
         [SerializeField] private bool strokeDiagnosticsReportExpanded;
         [SerializeField, Range(16, 1024)] private int historyBudgetMB = 256;
         [SerializeField, Range(16, 512)] private int coverageBudgetMB = 128;
-        [SerializeField] private string exportFolder = UMAPathUtility.OverlayPainterGeneratedRoot;
+        [SerializeField] private string exportFolder = TexturePaintPaths.GeneratedRoot;
 
         private TexturePaintStageController controller;
         private TexturePaintDocument document;
@@ -423,6 +424,7 @@ namespace UMA.TexturePaint.Editor
                 observedPluginCommitVersion = controller.Plugins.CommitVersion;
                 TexturePaintStageState restoredState = LoadDocumentEditorState() ?? savedState;
                 RestoreState(restoredState, false);
+                ReleaseSceneInputForNavigation();
                 if (ShouldDefaultCharacterIsolate(standalone, restoredState))
                     isolateSelectedSlots = true;
                 EnsureInitialSlotSelection(!standalone);
@@ -565,6 +567,8 @@ namespace UMA.TexturePaint.Editor
             ReleaseSplineHandleCapture();
             ReleaseModifierBrushCapture(false);
             ReleasePaintControl();
+            ReleaseStencilControl();
+            ReleaseSymmetryHandleCapture();
             DisposeWorkspaceUI();
             if (controller != null)
             {
@@ -590,6 +594,7 @@ namespace UMA.TexturePaint.Editor
             TexturePaintDockWindow.RepaintOpenWindows();
             TexturePaintUVWindow.RepaintOpenWindows();
             TexturePaintBrushWindow.RepaintOpenWindows();
+            TexturePaintPropertiesWindow.RepaintOpenWindows();
             base.OnCloseStage();
         }
 
@@ -620,6 +625,14 @@ namespace UMA.TexturePaint.Editor
 
         private void OnSceneGUI(SceneView sceneView)
         {
+            // Navigation must run before recovery/save guards, raycasts, layer eligibility,
+            // or any handle can retain/reacquire mouse ownership. Do not consume the event.
+            Event current = Event.current;
+            if (ShouldYieldToSceneNavigation(current) || Tools.viewToolActive)
+            {
+                ReleaseSceneInputForNavigation();
+                return;
+            }
             if (controller?.Reconstruction == null) return;
             if (closeAfterSave && IsPersistenceActive) return;
             if (needsFrame && Event.current.type == EventType.Repaint)
@@ -628,7 +641,6 @@ namespace UMA.TexturePaint.Editor
                 Bounds bounds = CalculateBounds();
                 sceneView.Frame(bounds, false);
             }
-            Event current = Event.current;
             if (HandleStencilScene(sceneView, current)) return;
             EventType inputEventType = current.type;
             TexturePaintStrokeDiagnostics diagnostics = controller.Painting.Performance.StrokeDiagnostics;
@@ -659,17 +671,7 @@ namespace UMA.TexturePaint.Editor
                 selectedSplinePoint < sceneSplineLayer.spline.PointCount;
             bool sceneSplineHandlesActive = authoringSplineLayer || positioningTwoDimensionalPoint;
             splineMode = authoringSplineLayer;
-            if (ShouldYieldToSceneNavigation(current))
-            {
-                ReleaseSplineHandleCapture(true, false);
-                if (paintGestureActive)
-                {
-                    if (strokeActive) EndPaint();
-                    paintGestureActive = false;
-                    ReleasePaintControl();
-                }
-            }
-            else if (splineHandleHotControl != 0 && GUIUtility.hotControl != splineHandleHotControl)
+            if (splineHandleHotControl != 0 && GUIUtility.hotControl != splineHandleHotControl)
                 ReleaseSplineHandleCapture(true, false);
             else if (!sceneSplineHandlesActive && splineHandleHotControl != 0)
                 ReleaseSplineHandleCapture(true, false);
@@ -1166,7 +1168,7 @@ namespace UMA.TexturePaint.Editor
             DrawSplitLayerButton(new GUIContent("+ Fill", "Add a Fill layer using the current source"),
                 () => AddFillLayer(set), () => ShowAddFillLayerMenu(set), 66f);
             if (GUILayout.Button("+ Projection")) AddProjectionLayer(set);
-            if (GUILayout.Button("+ Plugin")) AddPluginLayer(set);
+            if (GUILayout.Button("+ Plugin")) ShowPluginLayerMenu(set);
             if (GUILayout.Button("+ Group"))
             {
                 BeginLayerCreationUndo("Add Layer Group");
@@ -1244,7 +1246,7 @@ namespace UMA.TexturePaint.Editor
                 bool showControls = EditorGUILayout.Toggle("Show Controls", spline.showControls);
                 EditorGUILayout.LabelField("Tangents", "Per-point Corner / Smooth / Broken / Custom / Straight");
                 TexturePaintPathMode nextPathMode;
-                using (new EditorGUI.DisabledScope(pathHemSeam?.enabled == true || pathGarment?.enabled == true))
+                using (new EditorGUI.DisabledScope(pathGenerator?.enabled == true || pathHemSeam?.enabled == true || pathGarment?.enabled == true))
                     nextPathMode = (TexturePaintPathMode)EditorGUILayout.EnumPopup("Path Mode", pathMode);
                 TexturePaintPathOrientation nextOrientation;
                 using (new EditorGUI.DisabledScope(nextPathMode == TexturePaintPathMode.Ribbon))
@@ -1739,6 +1741,7 @@ namespace UMA.TexturePaint.Editor
                 TexturePaintDockWindow.RepaintOpenWindows();
                 TexturePaintUVWindow.RepaintOpenWindows();
                 TexturePaintBrushWindow.RepaintOpenWindows();
+                TexturePaintPropertiesWindow.RepaintOpenWindows();
                 return;
             }
         }
@@ -3059,6 +3062,7 @@ namespace UMA.TexturePaint.Editor
             TexturePaintDockWindow.RepaintOpenWindows();
             TexturePaintUVWindow.RepaintOpenWindows();
             TexturePaintBrushWindow.RepaintOpenWindows();
+            TexturePaintPropertiesWindow.RepaintOpenWindows();
         }
 
         private void OnPluginChanged()
@@ -3738,6 +3742,7 @@ namespace UMA.TexturePaint.Editor
                 textureFlipSeed = pathTextureFlipSeed,
                 ribbonCrossfadeJoins = pathCrossfadeJoins,
                 ribbonJoinOverlap = pathJoinOverlap,
+                pathGenerator = pathGenerator?.Clone(),
                 hemSeam = pathHemSeam?.Clone(),
                 garment = pathGarment?.Clone(),
                 ribbonStartFade = pathStartFade,
@@ -3757,9 +3762,30 @@ namespace UMA.TexturePaint.Editor
                 historyGroupKey = splineHistoryKey, replaceLayer = splineLayer, replaceHistoryGroup = true,
                 derivedLayerRaster = true
             };
-            bool garmentEnabled = ribbonMode && pathGarment?.enabled == true;
-            bool hemEnabled = ribbonMode && pathHemSeam?.enabled == true && !garmentEnabled;
-            if (garmentEnabled)
+            bool generatorEnabled = ribbonMode && pathGenerator?.enabled == true;
+            bool garmentEnabled = !generatorEnabled && ribbonMode && pathGarment?.enabled == true;
+            bool hemEnabled = !generatorEnabled && ribbonMode && pathHemSeam?.enabled == true && !garmentEnabled;
+            if (generatorEnabled)
+            {
+                if (TexturePaintPathGenerators.Find(pathGenerator.generatorId) == null)
+                {
+                    if (ownsSplineBrush) DestroyImmediate(splineBrush);
+                    ShowWorkspaceStatus("This path generator is not installed. Its saved output has been preserved.");
+                    return;
+                }
+                context.pathGenerator.Normalize();
+                context.hemSeam = null; context.garment = null;
+                context.tool = TexturePaintTool.Paint; context.paintSource = TexturePaintBrushSource.Color;
+                context.brush.blendMode = TexturePaintBlendMode.Normal;
+                PopulatePathGeneratorSources(context, splineLayer);
+                if (context.channelSources.Count == 0)
+                {
+                    controller.Painting.ClearProceduralResult(splineHistoryKey, splineLayer, logicalSets);
+                    if (ownsSplineBrush) DestroyImmediate(splineBrush);
+                    MarkDocumentDirty(); return;
+                }
+            }
+            else if (garmentEnabled)
             {
                 context.hemSeam = null;
                 if (!logicalSets.Exists(pathGarment.SupportsAnyOutput))
@@ -3792,14 +3818,14 @@ namespace UMA.TexturePaint.Editor
                 context.garment = null;
                 PopulateLayerChannelSources(context, splineLayer);
             }
-            if (!hemEnabled && !garmentEnabled && !SynchronizeLogicalLayerChannelSources(logicalTarget, logicalBinding, set,
+            if (!generatorEnabled && !hemEnabled && !garmentEnabled && !SynchronizeLogicalLayerChannelSources(logicalTarget, logicalBinding, set,
                 context.channelSources, out string sourceSyncError))
             {
                 if (ownsSplineBrush) DestroyImmediate(splineBrush);
                 ShowWorkspaceStatus(sourceSyncError);
                 return;
             }
-            if ((tool == TexturePaintTool.Paint || tool == TexturePaintTool.Plugin) &&
+            if (!generatorEnabled && (tool == TexturePaintTool.Paint || tool == TexturePaintTool.Plugin) &&
                 context.channelSources.Count == 0 && paintSource == TexturePaintBrushSource.Overlay &&
                 !BuildMemberOverlayBindings(context, logicalTarget, logicalSets, out string overlayError))
             {
@@ -4805,6 +4831,7 @@ namespace UMA.TexturePaint.Editor
                 textureFlipSeed = pathTextureFlipSeed,
                 ribbonCrossfadeJoins = pathCrossfadeJoins,
                 ribbonJoinOverlap = pathJoinOverlap,
+                pathGenerator = pathGenerator?.Clone(),
                 hemSeam = pathHemSeam?.Clone(),
                 garment = pathGarment?.Clone(),
                 startFade = pathStartFade,
@@ -4970,6 +4997,7 @@ namespace UMA.TexturePaint.Editor
                 hash = hash * 31 + settings.textureFlipSeed;
                 hash = hash * 31 + (settings.ribbonCrossfadeJoins ? 1 : 0);
                 hash = hash * 31 + settings.ribbonJoinOverlap.GetHashCode();
+                hash = hash * 31 + (settings.pathGenerator == null ? 0 : JsonUtility.ToJson(settings.pathGenerator).GetHashCode());
                 hash = hash * 31 + (settings.hemSeam == null ? 0 : JsonUtility.ToJson(settings.hemSeam).GetHashCode());
                 hash = hash * 31 + (settings.garment == null ? 0 : JsonUtility.ToJson(settings.garment).GetHashCode());
                 hash = hash * 31 + settings.startFade.GetHashCode();
@@ -5042,13 +5070,16 @@ namespace UMA.TexturePaint.Editor
             pathEditMode = Enum.IsDefined(typeof(TexturePaintPathEditMode), settings.editMode)
                 ? settings.editMode : TexturePaintPathEditMode.Standard;
             pathAutoUpdate = settings.AutoUpdateEnabled;
-            pathMode = settings.hemSeam?.enabled == true || settings.garment?.enabled == true ? TexturePaintPathMode.Ribbon : settings.pathMode;
+            pathMode = settings.pathGenerator?.enabled == true || settings.hemSeam?.enabled == true || settings.garment?.enabled == true ? TexturePaintPathMode.Ribbon : settings.pathMode;
             pathOrientation = settings.orientation;
             pathStartCap = settings.startCap;
             pathEndCap = settings.endCap;
             pathTextureFlipX = settings.textureFlipX;
             pathTextureFlipY = settings.textureFlipY;
             pathTextureFlipSeed = settings.textureFlipSeed;
+            pathGenerator = settings.pathGenerator?.Clone();
+            pathGenerator?.Normalize();
+            if (string.IsNullOrEmpty(pathGenerator?.generatorId)) pathGenerator = null;
             pathHemSeam = settings.hemSeam?.Clone();
             pathGarment = settings.garment?.Clone();
             pathLocalSymmetry = settings.localSymmetry?.Clone();
@@ -5227,6 +5258,7 @@ namespace UMA.TexturePaint.Editor
             pathTextureFlipSeed = 0;
             pathCrossfadeJoins = false;
             pathJoinOverlap = .2f;
+            pathGenerator = null;
             pathHemSeam = null;
             pathGarment = null;
             pathLocalSymmetry = null;
@@ -5755,12 +5787,28 @@ namespace UMA.TexturePaint.Editor
         internal static bool ShouldYieldToSceneNavigation(Event current)
         {
             if (current == null) return false;
-            bool altHeld = current.alt ||
-                (current.modifiers & EventModifiers.Alt) != EventModifiers.None;
-            if (!altHeld) return false;
-            return current.type == EventType.MouseDown || current.type == EventType.MouseDrag ||
-                current.rawType == EventType.MouseDown || current.rawType == EventType.MouseDrag ||
-                current.rawType == EventType.MouseUp;
+            // Include Layout and the initial Alt key event, so ownership is released before
+            // Unity processes its first orbit/pan/dolly mouse-down, not one drag too late.
+            return current.alt || (current.modifiers & EventModifiers.Alt) != EventModifiers.None ||
+                (current.type == EventType.KeyDown &&
+                    (current.keyCode == KeyCode.LeftAlt || current.keyCode == KeyCode.RightAlt));
+        }
+
+        private void ReleaseSceneInputForNavigation()
+        {
+            // Capture IDs can survive an interrupted gesture even when its active flag is
+            // false. Each release clears only controls owned by this painter, never Unity's
+            // navigation control or another window's control.
+            paintGestureActive = false;
+            ReleasePaintControl();
+            CancelRegionGesture();
+            ReleaseProjectionHandle();
+            ReleaseSymmetryHandleCapture();
+            FinishStencilDrag();
+            ReleaseSplineHandleCapture(true, false);
+            ReleaseModifierBrushCapture(true);
+            if (strokeActive) EndPaint();
+            FinishProjectionEdit();
         }
 
         private void PrepareSplineHandleUndo(TextureSet set, string label)
@@ -6182,7 +6230,7 @@ namespace UMA.TexturePaint.Editor
             {
                 exportFolder = state.exportFolder == "Assets/UMA/TexturePaintStage/Generated" ||
                     state.exportFolder == "Assets/UMA/OverlayPainter/Generated"
-                    ? UMAPathUtility.OverlayPainterGeneratedRoot
+                    ? TexturePaintPaths.GeneratedRoot
                     : state.exportFolder;
             }
             if (!string.IsNullOrEmpty(state.brushAssetGuid))
@@ -6227,6 +6275,7 @@ namespace UMA.TexturePaint.Editor
             TexturePaintDockWindow.RepaintOpenWindows();
             TexturePaintUVWindow.RepaintOpenWindows();
             TexturePaintBrushWindow.RepaintOpenWindows();
+            TexturePaintPropertiesWindow.RepaintOpenWindows();
         }
     }
 
@@ -6588,7 +6637,7 @@ namespace UMA.TexturePaint.Editor
         [MenuItem("Window/UMA/Overlay Painter Brush Controls")]
         public static void ShowDockable()
         {
-            TexturePaintBrushWindow window = GetWindow<TexturePaintBrushWindow>();
+            TexturePaintBrushWindow window = GetWindow<TexturePaintBrushWindow>(typeof(TexturePaintDockWindow), typeof(TexturePaintPropertiesWindow));
             window.Configure();
             window.Show();
             window.Focus();
@@ -6645,12 +6694,77 @@ namespace UMA.TexturePaint.Editor
         }
     }
 
+    public sealed class TexturePaintPropertiesWindow : EditorWindow
+    {
+        private static readonly HashSet<TexturePaintPropertiesWindow> openWindows =
+            new HashSet<TexturePaintPropertiesWindow>();
+
+        [MenuItem("Window/UMA/Overlay Painter Properties")]
+        public static void ShowDockable()
+        {
+            TexturePaintPropertiesWindow window = GetWindow<TexturePaintPropertiesWindow>(typeof(TexturePaintDockWindow), typeof(TexturePaintBrushWindow));
+            window.Configure();
+            window.Show();
+            window.Focus();
+        }
+
+        internal static void RepaintOpenWindows()
+        {
+            foreach (TexturePaintPropertiesWindow window in openWindows)
+                if (window != null) window.Repaint();
+        }
+
+        internal static void CloseOpenWindowsForLayoutChange()
+        {
+            var windows = new List<TexturePaintPropertiesWindow>(openWindows);
+            for (int i = 0; i < windows.Count; i++)
+                if (windows[i] != null) windows[i].Close();
+        }
+
+        private void OnEnable()
+        {
+            openWindows.Add(this);
+            Configure();
+        }
+
+        private void OnDisable()
+        {
+            openWindows.Remove(this);
+        }
+
+        private void OnGUI()
+        {
+            TexturePaintStageWindow stage = ResolveStage();
+            if (stage == null || stage.Controller == null)
+            {
+                EditorGUILayout.HelpBox(
+                    "Open Overlay Painter from a SlotDataAssets Inspector, or a generated DynamicCharacterAvatar's Utilities section.",
+                    MessageType.Info);
+                return;
+            }
+            stage.DrawPropertiesWorkspace(new Rect(0f, 0f, position.width, position.height));
+        }
+
+        private void Configure()
+        {
+            titleContent = new GUIContent("Overlay Painter Properties",
+                EditorGUIUtility.IconContent("Texture Icon").image);
+            minSize = new Vector2(300f, 320f);
+        }
+
+        private static TexturePaintStageWindow ResolveStage()
+        {
+            TexturePaintStageWindow stage = TexturePaintStageWindow.ActiveStage;
+            return stage ?? StageUtility.GetCurrentStage() as TexturePaintStageWindow;
+        }
+    }
+
     /// <summary>
     /// Builds Overlay Painter's optional Unity 6.3 compact workspace. Unity's public EditorWindow
     /// API can create tabs but cannot create a separate floating split hierarchy, so the single
     /// internal entry point is isolated here and validated before any existing windows are moved.
     /// </summary>
-    internal static class TexturePaintWorkspaceLayout
+    internal static partial class TexturePaintWorkspaceLayout
     {
         internal const string CompactViewMenuPath = "Window/UMA/Reset Overlay Painter Compact View";
         internal const string CompactWindowId = "UMA.OverlayPainter.CompactWorkspace";
@@ -6668,10 +6782,21 @@ namespace UMA.TexturePaint.Editor
         ""children"": [
             {
                 ""size"": 0.4,
-                ""tabs"": true,
+                ""vertical"": true,
                 ""children"": [
-                    { ""class_name"": ""TexturePaintDockWindow"" },
-                    { ""class_name"": ""TexturePaintBrushWindow"" }
+                    {
+                        ""size"": 0.5,
+                        ""tabs"": true,
+                        ""children"": [
+                            { ""class_name"": ""TexturePaintDockWindow"" },
+                            { ""class_name"": ""TexturePaintBrushWindow"" }
+                        ]
+                    },
+                    {
+                        ""size"": 0.5,
+                        ""tabs"": true,
+                        ""children"": [ { ""class_name"": ""TexturePaintPropertiesWindow"" } ]
+                    }
                 ]
             },
             {
@@ -6705,7 +6830,12 @@ namespace UMA.TexturePaint.Editor
         internal static void OpenForActiveStage()
         {
             if (TexturePaintStageWindow.ActiveStage == null) return;
-            if (!UMASettings.TexturePaintCompactView)
+            if (HasSavedLayout)
+            {
+                if (TryRestoreSavedLayout(out string savedError)) return;
+                Debug.LogWarning("Overlay Painter could not restore its saved layout. Using the default layout. " + savedError);
+            }
+            if (!TexturePaintProjectSettings.TexturePaintCompactView)
             {
                 OpenSeparateWindows();
                 return;
@@ -6725,7 +6855,7 @@ namespace UMA.TexturePaint.Editor
         internal static void ResetCompactView()
         {
             if (TexturePaintStageWindow.ActiveStage == null) return;
-            if (!UMASettings.TexturePaintCompactView)
+            if (!TexturePaintProjectSettings.TexturePaintCompactView)
             {
                 EditorUtility.DisplayDialog("Overlay Painter Compact View",
                     "Enable Overlay Painter Compact View in Project Settings > UMA before resetting its layout.",
@@ -6769,6 +6899,7 @@ namespace UMA.TexturePaint.Editor
                 TexturePaintDockWindow.CloseOpenWindowsForLayoutChange();
                 TexturePaintUVWindow.CloseOpenWindowsForLayoutChange();
                 TexturePaintBrushWindow.CloseOpenWindowsForLayoutChange();
+                TexturePaintPropertiesWindow.CloseOpenWindowsForLayoutChange();
                 if (resetGeometry) DeleteSavedGeometry();
                 if (!HasSavedGeometry()) SaveDefaultGeometry();
 
@@ -6859,6 +6990,7 @@ namespace UMA.TexturePaint.Editor
             TexturePaintDockWindow.ShowDockable();
             TexturePaintUVWindow.ShowDockable();
             TexturePaintBrushWindow.ShowDockable();
+            TexturePaintPropertiesWindow.ShowDockable();
             TexturePaintSceneOverlayVisibility.RefreshAll();
         }
 
@@ -6877,8 +7009,7 @@ namespace UMA.TexturePaint.Editor
             for (int i = 0; i < containers.Length; i++)
             {
                 UnityEngine.Object container = containers[i];
-                if (container == null || !string.Equals(windowId.GetValue(container) as string,
-                        CompactWindowId, StringComparison.Ordinal)) continue;
+                if (container == null || !IsPainterContainerId(windowId.GetValue(container) as string)) continue;
                 close.Invoke(container, null);
             }
         }

@@ -167,11 +167,93 @@ namespace UMA.TexturePaint.Editor
             EditorGUILayout.EndVertical();
         }
 
+        internal static bool IsTextileParameterVisible(TexturePaintPluginDescriptor descriptor, int mode, string id)
+        {
+            if (descriptor?.id != "com.uma.texturepaint.textile-surface") return true;
+            // These controls are promoted above the collapsible parameter sections.
+            if (id == "mode" || id == "modeHeader" || id == "jitter") return false;
+            if (id == "quiltAtlasSelection" || id == "quiltAtlasCell" || id == "quiltAtlasAmount" ||
+                id == "quiltSpriteSet" || id == "outputSpriteChannels") return mode == 0;
+            if (mode == 3 && (id == "scale" || id == "aspect" || id == "breakupScale")) return false;
+            string section = null;
+            foreach (var parameter in descriptor.parameters)
+            {
+                if (parameter.type == TexturePaintPluginParameterType.Header) section = parameter.id;
+                if (parameter.id != id) continue;
+                return section switch
+                {
+                    "quilt" => mode == 0,
+                    "embroidery" => mode == 1,
+                    "perforation" => mode == 2,
+                    "atlasHeader" => mode == 3,
+                    "atlasSource" => mode == 0 || mode == 3,
+                    _ => true
+                };
+            }
+            return true;
+        }
+
         internal static void DrawParameters(TexturePaintPluginDescriptor descriptor,
             TexturePaintPluginParameterSet values, Func<string, bool> hideParameter = null)
         {
             if (descriptor == null || values == null) return;
             values.EnsureDefaults(descriptor);
+            if (descriptor.id == "com.uma.texturepaint.cloth-texture")
+            {
+                var rotation = descriptor.parameters.Find(p => p.id == "clothRotation");
+                if (rotation != null)
+                {
+                    var angle = values.Get(rotation.id, true);
+                    angle.number = EditorGUILayout.Slider(new GUIContent(rotation.displayName, rotation.description),
+                        angle.number, rotation.minimum, rotation.maximum);
+                }
+                var output = values.Get("outputAlbedo", true);
+                output.boolean = EditorGUILayout.Popup(new GUIContent("Fabric Color",
+                    "Choose whether this layer changes color or only adds surface detail."), output.boolean ? 1 : 0,
+                    new[] { "Keep Existing Color", "Generate Fabric Colors" }) == 1;
+                EditorGUILayout.LabelField(output.boolean
+                    ? "Base and cross-thread colors mix through the weave. Stripes, motifs and fading are applied afterward. Regenerate to apply changes."
+                    : "This layer outputs surface detail only. Enable Generate Fabric Colors to use its color settings.", EditorStyles.wordWrappedMiniLabel);
+                using (new EditorGUI.DisabledScope(!output.boolean))
+                    if (GUILayout.Button(new GUIContent("Use Base Color for Both Threads",
+                        "Set Cross-Thread Amount to zero so both yarn directions follow Base Color. Weave detail remains.")))
+                    { UseClothBaseColor(values); GUI.changed = true; }
+                var supplied = hideParameter;
+                hideParameter = id => supplied?.Invoke(id) == true || id == "outputAlbedo" || id == "clothRotation" ||
+                    (id == "patternColor" && values.Boolean("usePatternColor", true)) ||
+                    !IsClothMappingParameterVisible(values, id);
+            }
+            if (descriptor.id == "com.uma.texturepaint.textile-surface")
+            {
+                var mode = descriptor.parameters.Find(p => p.id == "mode");
+                var selectedMode = values.Get("mode", true);
+                selectedMode.number = EditorGUILayout.Popup(new GUIContent("Active Mode",
+                    "Choose the surface construction. Quilt can fill its panels with tiles from Atlas Fabric."),
+                    Mathf.Clamp(values.Integer("mode"), 0, 3), mode.enumOptions);
+                EditorGUILayout.LabelField(values.Integer("mode") == 0
+                    ? "Atlas Fabric fills each quilt panel with one tile and keeps the stitches and puff relief."
+                    : "One surface construction per layer. Quilt includes its own per-panel Atlas Fabric.",
+                    EditorStyles.wordWrappedMiniLabel);
+                // Position Jitter is shared by Perforation and Atlas Scatter, though legacy
+                // descriptors place it under Perforation. Keep its saved parameter ID.
+                if (values.Integer("mode") >= 2)
+                {
+                    var jitter = descriptor.parameters.Find(p => p.id == "jitter");
+                    var value = values.Get("jitter", true);
+                    value.number = EditorGUILayout.Slider(new GUIContent(jitter.displayName, jitter.description),
+                        value.number, jitter.minimum, jitter.maximum);
+                }
+                var suppliedFilter = hideParameter;
+                hideParameter = id => suppliedFilter?.Invoke(id) == true ||
+                    (values.Integer("mode") == 0 && values.Get("quiltSpriteSet")?.spriteSet != null &&
+                        (id == "atlas" || id == "atlasColumns" || id == "atlasRows")) ||
+                    !IsTextileParameterVisible(descriptor, values.Integer("mode"), id);
+            }
+            if (descriptor.id == "com.uma.texturepaint.textile-surface" && values.Integer("mode") == 3 &&
+                values.Get("atlas", true).texture == null)
+                EditorGUILayout.HelpBox("Atlas Scatter needs an Atlas Texture; it scatters images from that texture. " +
+                    "Expand Atlas Fabric below, assign the texture, and match Atlas Columns / Rows to its grid " +
+                    "(1 by 1 for a single image). Then Generate or Regenerate.", MessageType.Warning);
             bool hasEditableParameters = false;
             for (int i = 0; i < descriptor.parameters.Count; i++)
             {
@@ -244,7 +326,13 @@ namespace UMA.TexturePaint.Editor
                     case TexturePaintPluginParameterType.Float:
                         value.number = EditorGUILayout.Slider(label, value.number, definition.minimum, definition.maximum); break;
                     case TexturePaintPluginParameterType.Integer:
-                        value.number = EditorGUILayout.IntSlider(label, Mathf.RoundToInt(value.number), Mathf.RoundToInt(definition.minimum), Mathf.RoundToInt(definition.maximum)); break;
+                        if (descriptor.id == "com.uma.texturepaint.textile-surface" && definition.id == "quiltAtlasCell")
+                        {
+                            using (new EditorGUI.DisabledScope(values.Integer("quiltAtlasSelection", 1) != 0))
+                                value.number = EditorGUILayout.IntSlider(label, Mathf.RoundToInt(value.number), 1,
+                                    QuiltTileCount(values));
+                        }
+                        else value.number = EditorGUILayout.IntSlider(label, Mathf.RoundToInt(value.number), Mathf.RoundToInt(definition.minimum), Mathf.RoundToInt(definition.maximum)); break;
                     case TexturePaintPluginParameterType.Boolean:
                         value.boolean = EditorGUILayout.Toggle(label, value.boolean); break;
                     case TexturePaintPluginParameterType.Color:
@@ -252,8 +340,13 @@ namespace UMA.TexturePaint.Editor
                     case TexturePaintPluginParameterType.Texture:
                         value.texture = (Texture2D)EditorGUILayout.ObjectField(label, value.texture, typeof(Texture2D), false); break;
                     case TexturePaintPluginParameterType.Sprite:
-                        value.sprite = (Sprite)EditorGUILayout.ObjectField(label, value.sprite,
-                            typeof(Sprite), false); break;
+                        var sprite = (Sprite)EditorGUILayout.ObjectField(label, value.sprite, typeof(Sprite), false);
+                        if (sprite != value.sprite && descriptor.id == "com.uma.texturepaint.cloth-texture" && definition.id == "patternSprite")
+                            SetClothPatternSprite(values, sprite);
+                        else value.sprite = sprite;
+                        break;
+                    case TexturePaintPluginParameterType.SpriteSet:
+                        DrawSpriteSet(label, value, values); break;
                     case TexturePaintPluginParameterType.Font:
                         value.font = (Font)EditorGUILayout.ObjectField(label, value.font,
                             typeof(Font), false); break;
@@ -271,7 +364,94 @@ namespace UMA.TexturePaint.Editor
                     default:
                         value.text = EditorGUILayout.TextField(label, value.text ?? string.Empty); break;
                 }
+                if (descriptor.id == "com.uma.texturepaint.cloth-texture" && definition.id == "patternOpacity" &&
+                    values.Get("patternSprite")?.sprite != null)
+                {
+                    if (values.Float("patternOpacity") <= 0f)
+                    {
+                        EditorGUILayout.HelpBox("Pattern Opacity is zero, so this sprite has no effect.", MessageType.Info);
+                        if (GUILayout.Button("Enable Pattern"))
+                        { values.Get("patternOpacity").number = 1f; GUI.changed = true; }
+                    }
+                    if (!values.Boolean("outputAlbedo", true))
+                        EditorGUILayout.HelpBox("To see the sprite's colors, choose Fabric Color > Generate Fabric Colors. With Keep Existing Color, only Pattern Height and Pattern Roughness can affect the material.", MessageType.Info);
+                }
             }
+        }
+
+        internal static void SetClothPatternSprite(TexturePaintPluginParameterSet values, Sprite sprite)
+        {
+            var value = values.Get("patternSprite", true);
+            bool firstAssignment = value.sprite == null && sprite != null;
+            value.sprite = sprite;
+            if (firstAssignment && values.Float("patternOpacity", 1f) <= 0f)
+                values.Get("patternOpacity", true).number = 1f;
+        }
+
+        internal static bool IsClothMappingParameterVisible(TexturePaintPluginParameterSet values, string id)
+        {
+            if (!id.StartsWith("triplanar", StringComparison.Ordinal)) return true;
+            if (values.Integer("projection", 0) != 1) return false;
+            return values.Integer("triplanarBlend", 0) != 1 ||
+                (id != "triplanarBlendOffset" && id != "triplanarBlendSharpness");
+        }
+
+        internal static void UseClothBaseColor(TexturePaintPluginParameterSet values)
+        {
+            values.Get("threadColor", true).color = values.Get("baseColor", true).color;
+            values.Get("threadColorAmount", true).number = 0f;
+        }
+
+        private static int QuiltTileCount(TexturePaintPluginParameterSet values)
+        {
+            var set = values.Get("quiltSpriteSet")?.spriteSet;
+            if (set == null) return Mathf.Max(1, values.Integer("atlasColumns", 4) * values.Integer("atlasRows", 4));
+            foreach (var sheet in set.spriteSheets)
+                if (sheet?.channel == TexturePaintChannel.Albedo)
+                    return Mathf.Max(1, TexturePaintSpriteSetSource.GetOrderedSprites(sheet.spriteSheet).Count);
+            return 1;
+        }
+
+        private static void DrawSpriteSet(GUIContent label, TexturePaintPluginParameterValue value,
+            TexturePaintPluginParameterSet values)
+        {
+            var source = (OverlayPainterSpriteSet)EditorGUILayout.ObjectField(label, value.spriteSet, typeof(OverlayPainterSpriteSet), false);
+            if (source != value.spriteSet)
+            {
+                value.spriteSet = source;
+                value.spriteSetSelectionExplicit = false;
+                value.enabledSpriteIndices = new List<int>();
+                if (source != null)
+                    foreach (var sheet in source.spriteSheets)
+                    {
+                        if (sheet == null) continue;
+                        string id = sheet.channel == TexturePaintChannel.AmbientOcclusion ? "outputAO" : "output" + sheet.channel;
+                        if (values.Get(id) != null) values.Get(id).boolean = true;
+                    }
+                values.Get("outputSpriteChannels", true).boolean = true;
+            }
+            if (source == null) return;
+            try
+            {
+                int count = TexturePaintSpriteSetSource.Resolve(source)[TexturePaintChannel.Albedo].Count;
+                EditorGUILayout.LabelField(value.spriteSetSelectionExplicit
+                    ? (value.enabledSpriteIndices?.Count ?? 0) + " of " + count + " tiles enabled" : "All " + count + " tiles enabled", EditorStyles.miniLabel);
+                bool changed = GUI.changed;
+                if (GUILayout.Button("Select Tiles…"))
+                {
+                    int[] selection = QuiltSpriteSetTileWindow.Select(source, value);
+                    GUI.changed = changed;
+                    if (selection != null)
+                    {
+                        value.enabledSpriteIndices = new List<int>(selection);
+                        value.spriteSetSelectionExplicit = true;
+                        if (!value.enabledSpriteIndices.Contains(values.Integer("quiltAtlasCell", 1) - 1))
+                            values.Get("quiltAtlasCell", true).number = selection[0] + 1;
+                        GUI.changed = true;
+                    }
+                }
+            }
+            catch (InvalidOperationException exception) { EditorGUILayout.HelpBox(exception.Message, MessageType.Warning); }
         }
 
         private static void DrawStripeList(GUIContent label,
@@ -288,7 +468,7 @@ namespace UMA.TexturePaint.Editor
                 EditorGUILayout.BeginVertical(EditorStyles.helpBox);
                 GUILayout.BeginHorizontal();
                 stripe.enabled = EditorGUILayout.Toggle(stripe.enabled, GUILayout.Width(18f));
-                EditorGUILayout.LabelField((i + 1) + " · " + stripe.direction + " Stripe",
+                EditorGUILayout.LabelField((i + 1) + " · " + stripe.Rotation.ToString("0.#") + "° Stripe",
                     EditorStyles.boldLabel);
                 using (new EditorGUI.DisabledScope(i == 0))
                     if (GUILayout.Button("▲", GUILayout.Width(26f)))
@@ -313,8 +493,18 @@ namespace UMA.TexturePaint.Editor
                 GUILayout.EndHorizontal();
                 using (new EditorGUI.DisabledScope(!stripe.enabled))
                 {
-                    stripe.direction = (TexturePaintStripeDirection)EditorGUILayout.EnumPopup(
-                        "Direction", stripe.direction);
+                    EditorGUI.BeginChangeCheck();
+                    float angle = EditorGUILayout.Slider(new GUIContent("Rotation",
+                        "Angle within the plaid repeat grid: horizontal is 0°, vertical is 90°. Overall and Stripe Layout Rotation also apply."),
+                        stripe.Rotation, -180f, 180f);
+                    if (EditorGUI.EndChangeCheck()) stripe.Rotation = angle;
+                    using (new EditorGUILayout.HorizontalScope())
+                    {
+                        if (GUILayout.Button("Horizontal (0°)", EditorStyles.miniButtonLeft))
+                        { stripe.SetDirection(TexturePaintStripeDirection.Horizontal); GUI.changed = true; }
+                        if (GUILayout.Button("Vertical (90°)", EditorStyles.miniButtonRight))
+                        { stripe.SetDirection(TexturePaintStripeDirection.Vertical); GUI.changed = true; }
+                    }
                     stripe.color = EditorGUILayout.ColorField("Color", stripe.color);
                     stripe.position = EditorGUILayout.Slider(new GUIContent("Position",
                         "Center within one repeat cell."), stripe.position, 0f, 1f);

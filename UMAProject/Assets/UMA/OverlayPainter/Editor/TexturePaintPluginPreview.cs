@@ -22,6 +22,10 @@ namespace UMA.TexturePaint.Editor
         private bool mask, pending, disposed;
         private string key;
         private int generation;
+        private int clothZoomIndex = 2;
+        private static readonly string[] ClothZoomLabels = { "Full Fabric", "4x Cloth Close-up", "8x Cloth Close-up", "16x Cloth Close-up" };
+        private static readonly float[] ClothZoomValues = { 1f, 4f, 8f, 16f };
+        private bool ClothCloseupAvailable => plugin?.Descriptor.id == "com.uma.texturepaint.cloth-texture" && parameters?.Integer("projection", 0) == 0;
         private double due, lastDraw;
         private readonly TexturePaintPreviewDisplay display = new TexturePaintPreviewDisplay();
         internal Texture2D Texture => display.Texture;
@@ -44,7 +48,7 @@ namespace UMA.TexturePaint.Editor
             if (disposed) return;
             lastDraw = EditorApplication.timeSinceStartup;
             string next = set.persistentId + ":" + (layer?.id ?? "manager") + ":" + plugin.Descriptor.id + ":" +
-                plugin.Descriptor.pluginVersion + ":" + mask + ":" + documentVersion + ":" + JsonUtility.ToJson(values);
+                plugin.Descriptor.pluginVersion + ":" + mask + ":" + documentVersion + ":" + JsonUtility.ToJson(values) + ":" + JsonUtility.ToJson(layer?.effects);
             if (!force && next == key && ReferenceEquals(this.set, set) && ReferenceEquals(this.layer, layer) &&
                 ReferenceEquals(this.plugin, plugin)) return;
             bool differentLayer = !ReferenceEquals(this.set, set) || this.layer?.id != layer?.id ||
@@ -70,10 +74,12 @@ namespace UMA.TexturePaint.Editor
             tokenSource.CancelAfter(TimeSpan.FromSeconds(10));
             try
             {
-                var result = await GenerateDraftAsync(store, set, layer, plugin, parameters, mask, tokenSource.Token);
+                float zoom = ClothCloseupAvailable ? ClothZoomValues[clothZoomIndex] : 1f;
+                var result = await GenerateDraftAsync(store, set, layer, plugin, parameters, mask, tokenSource.Token, zoom);
                 if (disposed || request != generation) return;
                 display.Set(result.output, result.before, mask, plugin is ITexturePaintFilterV2);
-                Status = result.output.Count == 0 ? "No output for these settings." : "128 × 128 draft";
+                Status = result.output.Count == 0 ? "No output for these settings." :
+                    zoom > 1f ? "128 × 128 draft · " + zoom + "x cloth close-up" : "128 × 128 draft";
             }
             catch (OperationCanceledException)
             {
@@ -103,12 +109,14 @@ namespace UMA.TexturePaint.Editor
 
         internal static async Task<Draft> GenerateDraftAsync(
             TextureStore store, TextureSet set, TexturePaintLayer layer, ITexturePaintCommandExtensionV2 plugin,
-            TexturePaintPluginParameterSet values, bool mask, CancellationToken token)
+            TexturePaintPluginParameterSet values, bool mask, CancellationToken token, float clothPreviewZoom = 1f)
         {
             if (!Supports(plugin)) throw new InvalidOperationException("This plugin has no image preview.");
             token.ThrowIfCancellationRequested();
             if (layer != null && !set.layers.Contains(layer)) throw new InvalidOperationException("The preview layer was removed.");
             var parameters = values.Clone(); parameters.EnsureDefaults(plugin.Descriptor);
+            if (plugin.Descriptor.id == "com.uma.texturepaint.cloth-texture")
+                parameters.Get("__clothPreviewZoom", true).number = clothPreviewZoom;
             var reads = plugin is ITexturePaintDynamicChannelUsageV2 dynamicReads
                 ? dynamicReads.ResolveReadChannels(parameters) : plugin.Descriptor.ResolvedReadChannels;
             var maps = plugin is ITexturePaintDynamicMeshMapUsageV2 dynamicMaps
@@ -134,15 +142,45 @@ namespace UMA.TexturePaint.Editor
                 foreach (TexturePaintChannel channel in Enum.GetValues(typeof(TexturePaintChannel)))
                 {
                     var image = lighting.Get(set.persistentId, channel);
-                    if (image != null) before[channel] = image.CopyPixels();
+                    if (image != null)
+                    {
+                        if (plugin.Descriptor.id == "com.uma.texturepaint.cloth-texture" &&
+                            parameters.Integer("projection", 0) == 0 && clothPreviewZoom > 1f)
+                        {
+                            var pixels = new Color[Resolution * Resolution];
+                            float zoom = Mathf.Clamp(clothPreviewZoom, 1f, 16f);
+                            for (int y = 0; y < Resolution; y++)
+                            for (int x = 0; x < Resolution; x++)
+                                pixels[y * Resolution + x] = image.GetPixelBilinear(
+                                    ((x + .5f) / Resolution - .5f) / zoom + .5f,
+                                    ((y + .5f) / Resolution - .5f) / zoom + .5f);
+                            before[channel] = pixels;
+                        }
+                        else before[channel] = image.CopyPixels();
+                    }
                 }
             }
             var context = new TexturePaintCommandContextV2(plugin.Descriptor, source, parameters, token,
                 null, Budget, mask ? TexturePaintPluginTarget.LayerMask : TexturePaintPluginTarget.LayerContent);
             await plugin.ExecuteAsync(context);
             token.ThrowIfCancellationRequested();
-            return new Draft { output = Rasterize(context.SealAndSnapshot(), set.persistentId, mask, token,
-                mask ? source.GetMask(set.persistentId) : null), before = before };
+            var output = Rasterize(context.SealAndSnapshot(), set.persistentId, mask, token,
+                mask ? source.GetMask(set.persistentId) : null);
+            if (!mask && layer?.effects?.HasEnabled == true)
+            {
+                foreach (var channel in new List<TexturePaintChannel>(output.Keys))
+                {
+                    token.ThrowIfCancellationRequested();
+                    var image = new Texture2D(Resolution, Resolution, TextureFormat.RGBAFloat, false, true);
+                    try
+                    {
+                        image.SetPixels(output[channel]); image.Apply();
+                        output[channel] = TexturePaintGarmentPreview.ApplyLayerEffects(image, layer, channel);
+                    }
+                    finally { UnityEngine.Object.DestroyImmediate(image); }
+                }
+            }
+            return new Draft { output = output, before = before };
         }
 
         internal static Dictionary<TexturePaintChannel, Color[]> Rasterize(
@@ -219,10 +257,19 @@ namespace UMA.TexturePaint.Editor
             return normal.sqrMagnitude > .000001f ? normal.normalized : Vector3.forward;
         }
 
-        internal void Draw(Action regenerateLayer = null, bool canRegenerate = true)
+        internal void Draw(Action regenerateLayer = null, bool canRegenerate = true,
+            float? regenerationProgress = null)
         {
+            if (ClothCloseupAvailable)
+            {
+                bool changed = GUI.changed;
+                int zoom = EditorGUILayout.Popup("Fabric Preview", clothZoomIndex, ClothZoomLabels);
+                GUI.changed = changed;
+                if (zoom != clothZoomIndex)
+                { clothZoomIndex = zoom; key = null; generation++; cancellation?.Cancel(); }
+            }
             if (display.Draw(Status, "Draft output; Lit Surface uses a fixed studio light. Fine details need full regeneration.",
-                    regenerateLayer, canRegenerate))
+                    regenerateLayer, canRegenerate, regenerationProgress))
             { key = null; generation++; cancellation?.Cancel(); }
         }
 

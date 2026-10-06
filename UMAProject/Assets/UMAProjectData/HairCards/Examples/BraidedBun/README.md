@@ -19,5 +19,5 @@ The saved Classic texture-backed hairline was retained and used as the starting 
 
 LOD0 geometry is 72,084 / 73,572 / 68,860 triangles for Classic / Loose / Compact. Lower preview quality reduces editing cost. First-time surface routing is substantially slower than cached reevaluation. Other example folders are unchanged.
 
-Full instructions: `Assets/UMA/HairCards/BraidedBunGuide.md`.
+Full instructions: `Assets/UMA/HairCards/Documentation/BraidedBunGuide.md`.
 Measurements, tests and limitations: `Assets/UMA/HairCards/QA/BraidedBunValidation.md`.

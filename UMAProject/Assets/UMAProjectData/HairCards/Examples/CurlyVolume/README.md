@@ -21,7 +21,7 @@ Choose **UMA > Hair Cards > Examples > Curly Volume**, or open
 4. **Hair Preview & Settings**: use Cards / Full. Hide guide splines and card
    wireframe to see the material clearly.
 
-The [full Curly Volume guide](../../../../UMA/HairCards/CurlyVolumeGuide.md)
+The [full Curly Volume guide](../../../../UMA/HairCards/Documentation/CurlyVolumeGuide.md)
 explains length behavior, masks, sampling, gravity, LODs and character binding.
 
 ![Curly Volume rendered in Unity URP](Preview.png)

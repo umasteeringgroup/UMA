@@ -1,13 +1,31 @@
 # UMA Plugin Migration Plan
 
-Status: Proposed; planning only. No implementation changes are part of this document.
+Status: Launcher API version 1 and OverlayPainter migration implemented and validated. Other add-ons below remain follow-on candidates.
 Date: 2026-10-04.
 Reviewed checkout: `C:\GitHub\UMA\UMAProject`.
 Installed UMA: `UMA NextGen 3.1f1`, read from `InternalDataStore/InGame/Resources/UMASettings.asset` after verifying its Unity YAML header.
 Unity project version: `6000.3.18f1`. Supported baseline: Unity 6.3 and newer.
-Review method: source, assembly, packaging, documentation, and verified-YAML dependency review. No Unity tests were run for this plan; the acceptance checks below are future work.
+Original planning review: source, assembly, packaging, documentation, and verified-YAML dependency review. Implementation began on 2026-10-04 after user authorization. See [usage and packaging instructions](../Docs/UMAPlugins.md).
 
 ## 1. Intended result
+
+### Implementation record — 2026-10-04
+
+- Implemented attributed discovery, matching, deterministic ordering, validation, default-header placement, explicit host leases/adapters, deferred dispatch, cancellation, and exception isolation in `UMA_Editor`.
+- Integrated recipe/wardrobe, DCA, and embedded UMAData hosts. Recipe synchronization protects pending edits and external revisions; the existing inline recipe plugin bridge remains supported.
+- Removed core painter assembly references and hardcoded launch buttons. Painter-owned actions cover scene avatars and slots. Resource paths resolve from the painter's retained script GUID.
+- Moved settings to a painter-owned Project Settings provider and project-data asset, with one-time legacy migration and scalar compatibility shims. Generic material channel metadata remains in core.
+- Separated `OverlayPainter`, `OverlayPainterExamples`, and `OverlayPainterTests`; preserved moved asset GUIDs. Painter documentation travels with its package. Both editor and runtime tests live in the test companion.
+- Extended the validated content installer catalog for official optional packages, launcher API compatibility, dependency checks, transaction recovery, and preservation of unowned files during updates. Removal deletes unchanged owned files and preserves modified files, user data, and recovery/settings assets.
+- Added version-controlled builders and an isolated migration validator under `tools/Packaging`. Generated archives and the hash report are in `Build/Plugins`; `Build/CorePackage` excludes all three optional roots. Archive version `3.0.4` follows the actual package manifest; it is separate from the installed UMASettings label below.
+
+Validation used `C:\GitHub\UMA\UMAProject` and a synchronized `tmp/UMAPluginCoreValidation` project, both Unity **6000.3.18f1**, with actual UMASettings **UMA NextGen 3.1f1**. Compilation completed with zero errors and warnings. Targeted tests passed: **15** launcher/recipe tests, **4** painter migration tests, and **19** document persistence tests. Deferred dispatch also passed a live-editor smoke check.
+
+The isolated cycle passed core without painter assemblies/source, managed installation, action discovery, resource relocation, update, removal, a fresh editor launch after removal, reinstall, and recovery of authored data with unchanged GUIDs. It verified preservation of modified owned files, unowned files, settings, and documents. The separate test companion installed successfully and ran its persistence suite.
+
+Validation limits: this is targeted plugin-migration validation, not a complete URP/HDRP/player-build or manual inspector-layout certification. The older generic content-release smoke test also requires an empty shipped AssetIndexer; the current checkout's populated indexer fails that independent release prerequisite. The plugin-specific core-absence check passes without altering the user's indexer or unsaved scene. A scene-sensitive test request in the main editor was canceled at its save prompt and rerun successfully in the isolated project.
+
+The remaining sections retain the original migration design and follow-on candidate plans.
 
 Ship OverlayPainter as an optional, versioned `.unitypackage`. Importing it into a compatible UMA project makes its existing painting workflows available automatically. A project without the package retains normal avatar generation, DNA, wardrobe, overlays, material authoring, and supported rendering.
 
@@ -17,7 +35,7 @@ The first migration preserves public types, assembly names, serialization, asset
 
 ## 2. Prerequisite: implement the new UMA plugin API
 
-[UMAPlugin.md](UMAPlugin.md) currently says implementation has not started. This checkout contains no implementation of `UMAPluginAttribute`, `UMAPluginGUI`, or the proposed header integration. Conversion therefore begins with that foundation, rather than treating it as an installed API.
+The planning review found no launcher implementation. That prerequisite is now implemented in `Editor/General/Plugins`, with recipe, DCA, and embedded UMAData host integration. [UMAPlugin.md](UMAPlugin.md) records its public contract.
 
 Follow the proposal as revised by its 2026-10-04 fitness review:
 
@@ -133,7 +151,7 @@ Planned artifacts:
 - Optional development/test payload if tests are excluded from the consumer archive.
 - UMA Core staged without painter code, resources, sample documents, or painter-specific documentation dependencies.
 
-Extend the source filtering and verification in [Build-UMAContentPackages.ps1](../../../Build/Build-UMAContentPackages.ps1). Its current Core staging includes OverlayPainter, HairCards, and Dismemberment by default. Update real Core staging and release verification, not only `.npmignore`, and do not edit generated `Build/CorePackage` copies directly.
+Source filtering and verification now live in the version-controlled [Build-UMAContentPackages.ps1](../../../tools/Packaging/Build-UMAContentPackages.ps1), with a [plugin builder](../../../tools/Packaging/Build-UMAPluginPackages.ps1). Core staging excludes OverlayPainter, OverlayPainterExamples, and OverlayPainterTests. HairCards and Dismemberment remain follow-on migrations. Generated `Build/CorePackage` copies are not implementation sources.
 
 Use explicit feature allowlists. Avoid recursive dependency-inclusive exports that can silently include UMA Core, UMA3, project settings, indexes, user documents, or recovery data. Do not package a shared `Assets/UMA` parent-folder record.
 

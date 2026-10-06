@@ -431,7 +431,7 @@ namespace UMA
 #if UNITY_EDITOR
             [Tooltip("Describes the RGBA contents of this physical texture for editor authoring tools. Automatic follows known Unity/UMA shader conventions; Custom is fully editable in the UMA Material inspector.")]
             public TextureChannelLayout textureChannelLayout;
-            [Tooltip("Controls the encoded file and TextureImporter settings produced by Overlay Painter. Automatic follows the effective channel layout; Custom is fully editable.")]
+            [Tooltip("Controls the encoded file and TextureImporter settings produced by texture authoring tools. Automatic follows the effective channel layout; Custom is fully editable.")]
             public TextureChannelOutputSettings textureChannelOutput;
 #endif
        }

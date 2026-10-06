@@ -42,9 +42,6 @@ namespace UMA.Editors.Tests
                         root.StartsWith("Packages/", StringComparison.OrdinalIgnoreCase), Is.True, root);
             Assert.That(AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(
                 UMAPathUtility.ResolveInstallAssetPath("Core/UMA_Core.asmdef")), Is.Not.Null);
-            Assert.That(AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(
-                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/StrokeRasterize.compute")),
-                Is.Not.Null);
             UMASettings settings =
                 AssetDatabase.LoadAssetAtPath<UMASettings>(
                     UMAPathUtility.ResolveInstallAssetPath(

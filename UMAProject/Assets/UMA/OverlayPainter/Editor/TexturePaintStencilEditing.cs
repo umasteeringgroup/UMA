@@ -102,11 +102,18 @@ namespace UMA.TexturePaint.Editor
             }
             else if((current.rawType==EventType.MouseUp || current.type==EventType.Ignore || current.type==EventType.MouseLeaveWindow) && stencilDragStart!=null)
             {
-                var before=stencilDragStart;var after=paintingStencil.Clone();ReleaseStencilControl();
-                ChangeStencil(before,after);if(current.type==EventType.MouseUp)current.Use();
+                FinishStencilDrag();if(current.type==EventType.MouseUp)current.Use();
             }
             return current.button==0 || current.type==EventType.Layout || current.type==EventType.Repaint;
         }
+        private void FinishStencilDrag()
+        {
+            var before = stencilDragStart;
+            var after = paintingStencil?.Clone();
+            ReleaseStencilControl();
+            if (before != null && after != null) ChangeStencil(before, after);
+        }
+
         private void ReleaseStencilControl()
         {
             if(stencilControl!=0 && GUIUtility.hotControl==stencilControl)GUIUtility.hotControl=0;

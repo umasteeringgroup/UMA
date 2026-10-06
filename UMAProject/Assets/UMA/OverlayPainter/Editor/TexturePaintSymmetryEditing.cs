@@ -9,6 +9,7 @@ namespace UMA.TexturePaint.Editor
         [SerializeField] private TexturePaintSymmetry authoringSymmetry=new TexturePaintSymmetry();
         [SerializeField] private TexturePaintSymmetry pathLocalSymmetry;
         private bool symmetryHandles;
+        private int symmetryHandleControl;
 
         private bool TryGetSymmetryLayer(TextureSet set,out TexturePaintLayer layer)
         {
@@ -174,13 +175,26 @@ namespace UMA.TexturePaint.Editor
         private void DrawSymmetryHandles()
         {
             if(!symmetryHandles || !CanEditLayerSymmetry(ActiveTextureSet) ||
-                !TryGetSymmetryLayer(ActiveTextureSet,out var layer) || layer.IsSplineLayer && !layer.spline.worldSpace)return;
-            var frame=ResolveLayerSymmetry(layer).Clone();if(!frame.enabled)return;
+                !TryGetSymmetryLayer(ActiveTextureSet,out var layer) || layer.IsSplineLayer && !layer.spline.worldSpace)
+            { ReleaseSymmetryHandleCapture(); return; }
+            var frame=ResolveLayerSymmetry(layer).Clone();if(!frame.enabled){ReleaseSymmetryHandleCapture();return;}
+            int previousControl = GUIUtility.hotControl;
             EditorGUI.BeginChangeCheck();
             var rotation=Quaternion.Euler(frame.euler);
             frame.origin=Handles.PositionHandle(frame.origin,rotation);
             frame.euler=Handles.RotationHandle(rotation,frame.origin).eulerAngles;
+            if (previousControl == 0 && GUIUtility.hotControl != 0 && Event.current.rawType == EventType.MouseDown)
+                symmetryHandleControl = GUIUtility.hotControl;
+            if (symmetryHandleControl != 0 && GUIUtility.hotControl != symmetryHandleControl)
+                symmetryHandleControl = 0;
             if(EditorGUI.EndChangeCheck())ApplyLayerSymmetryEdit(ActiveTextureSet,frame);
+        }
+
+        private void ReleaseSymmetryHandleCapture()
+        {
+            if (symmetryHandleControl != 0 && GUIUtility.hotControl == symmetryHandleControl)
+                GUIUtility.hotControl = 0;
+            symmetryHandleControl = 0;
         }
         private static StrokeSample SymmetricUV(StrokeSample source,Matrix4x4 matrix,float brushRotation = 0)
         {

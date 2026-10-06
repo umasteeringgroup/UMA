@@ -21,7 +21,7 @@ namespace UMA.TexturePaint.Examples
             id = "com.uma.texturepaint.agify",
             displayName = "Agify — Dirt & Edge Wear",
             description = "Builds cavity dirt and convex edge wear across the complete paint target using signed mesh curvature, composed normal detail, AO, world-space projection, and optional texture masks.",
-            pluginVersion = "1.1.1",
+            pluginVersion = "1.2.0",
             capabilities = TexturePaintPluginCapability.Generator |
                            TexturePaintPluginCapability.ReadsMeshMaps |
                            TexturePaintPluginCapability.LongRunning,
@@ -48,8 +48,10 @@ namespace UMA.TexturePaint.Examples
                     "Changes deterministic breakup without changing curvature or AO."),
                 Float("curvatureContrast", "Curvature Contrast", 0.1f, 8f, 2.5f,
                     "Sharpens or broadens both concave dirt and convex wear selection."),
-                Float("normalCurvature", "Normal Detail Influence", 0f, 4f, 1f,
+                Float("normalCurvature", "Normal Detail Influence", 0f, 32f, 8f,
                     "Adds signed high-frequency curvature derived from the composed tangent-space normal map."),
+                Float("normalDetailRadius", "Normal Detail Radius", 1f, 32f, 4f,
+                    "Normal curvature sampling radius in pixels at 2048 resolution. Includes underlying Normal Control relief."),
                 Float("aoInfluence", "AO / Cavity Influence", 0f, 2f, 0.8f,
                     "Adds source AO and generated cavity accessibility to dirt accumulation."),
                 Float("breakup", "Procedural Breakup", 0f, 1f, 0.55f,
@@ -151,19 +153,8 @@ namespace UMA.TexturePaint.Examples
             context.progress?.Report(1f);
         }
 
-        public static float CalculateNormalCurvature(TexturePaintReadOnlyImage normal, float u, float v)
-        {
-            if (normal == null || normal.width < 2 || normal.height < 2) return 0f;
-            float du = 1f / normal.width;
-            float dv = 1f / normal.height;
-            Vector3 left = DecodeNormal(normal.GetPixelBilinear(Repeat01(u - du), Repeat01(v)));
-            Vector3 right = DecodeNormal(normal.GetPixelBilinear(Repeat01(u + du), Repeat01(v)));
-            Vector3 down = DecodeNormal(normal.GetPixelBilinear(Repeat01(u), Repeat01(v - dv)));
-            Vector3 up = DecodeNormal(normal.GetPixelBilinear(Repeat01(u), Repeat01(v + dv)));
-            // Tangent normals approximate (-dh/dx,-dh/dy,1). Their divergence is positive over a
-            // convex height maximum and negative in a concave minimum.
-            return Mathf.Clamp(((right.x - left.x) + (up.y - down.y)) * 0.5f, -1f, 1f);
-        }
+        public static float CalculateNormalCurvature(TexturePaintReadOnlyImage normal, float u, float v) =>
+            SurfaceNormalDetail.Curvature(normal, null, u, v);
 
         private static OutputBuffers Generate(SurfaceInputs inputs, Settings settings, int width, int height,
             int yStart, int rowCount,
@@ -187,7 +178,7 @@ namespace UMA.TexturePaint.Examples
                     Vector3 worldNormal = inputs.WorldNormal(u, v);
                     float signed = inputs.SignedCurvature(u, v);
                     signed = Mathf.Clamp(signed +
-                        CalculateNormalCurvature(inputs.normal, inputs.meshId, u, v) *
+                        SurfaceNormalDetail.Curvature(inputs.normal, inputs.meshId, u, v, settings.normalDetailRadius) *
                         settings.normalCurvature, -1f, 1f);
 
                     float concave = ShapeCurvature(Mathf.Max(0f, -signed),
@@ -360,34 +351,6 @@ namespace UMA.TexturePaint.Examples
             return t * t * (3f - 2f * t);
         }
 
-        private static float CalculateNormalCurvature(TexturePaintReadOnlyImage normal,
-            TexturePaintReadOnlyMeshMap meshId, float u, float v)
-        {
-            if (meshId == null) return CalculateNormalCurvature(normal, u, v);
-            if (normal == null || normal.width < 2 || normal.height < 2) return 0f;
-            float du = 1f / normal.width;
-            float dv = 1f / normal.height;
-            Color centerId = meshId.GetPixelBilinear(u, v);
-            Vector3 center = DecodeNormal(normal.GetPixelBilinear(u, v));
-            Vector3 left = SampleNormalOnIsland(normal, meshId, centerId, center, u - du, v);
-            Vector3 right = SampleNormalOnIsland(normal, meshId, centerId, center, u + du, v);
-            Vector3 down = SampleNormalOnIsland(normal, meshId, centerId, center, u, v - dv);
-            Vector3 up = SampleNormalOnIsland(normal, meshId, centerId, center, u, v + dv);
-            return Mathf.Clamp(((right.x - left.x) + (up.y - down.y)) * 0.5f, -1f, 1f);
-        }
-
-        private static Vector3 SampleNormalOnIsland(TexturePaintReadOnlyImage normal,
-            TexturePaintReadOnlyMeshMap meshId, Color centerId, Vector3 fallback, float u, float v)
-        {
-            u = Repeat01(u);
-            v = Repeat01(v);
-            Color sampleId = meshId.GetPixelBilinear(u, v);
-            if (centerId.a < 0.5f || sampleId.a < 0.5f ||
-                Mathf.Abs(centerId.g - sampleId.g) > 0.1f ||
-                Mathf.Abs(centerId.b - sampleId.b) > 0.1f) return fallback;
-            return DecodeNormal(normal.GetPixelBilinear(u, v));
-        }
-
         private sealed class SurfaceInputs
         {
             public readonly TexturePaintReadOnlyImage normal;
@@ -478,7 +441,7 @@ namespace UMA.TexturePaint.Examples
             public readonly float textureScale;
             public readonly int seed;
             public readonly float curvatureContrast;
-            public readonly float normalCurvature;
+            public readonly float normalCurvature, normalDetailRadius;
             public readonly float aoInfluence;
             public readonly float breakup;
             public readonly float breakupScale;
@@ -502,7 +465,8 @@ namespace UMA.TexturePaint.Examples
                 textureScale = Mathf.Max(0.05f, values.Float("textureScale", 4f));
                 seed = values.Integer("seed", 173);
                 curvatureContrast = Mathf.Max(0.1f, values.Float("curvatureContrast", 2.5f));
-                normalCurvature = Mathf.Max(0f, values.Float("normalCurvature", 1f));
+                normalDetailRadius = Mathf.Clamp(values.Float("normalDetailRadius", 4f), 1f, 32f);
+                normalCurvature = Mathf.Max(0f, values.Float("normalCurvature", 8f));
                 aoInfluence = Mathf.Max(0f, values.Float("aoInfluence", 0.8f));
                 breakup = Mathf.Clamp01(values.Float("breakup", 0.55f));
                 breakupScale = Mathf.Max(0.25f, values.Float("breakupScale", 28f));

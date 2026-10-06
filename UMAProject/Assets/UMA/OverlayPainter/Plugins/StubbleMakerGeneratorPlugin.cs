@@ -11,7 +11,7 @@ namespace UMA.TexturePaint.Examples
     /// is baked into the layer.
     /// </summary>
     public sealed class StubbleMakerGeneratorPlugin : ScriptableObject,
-        ITexturePaintGeneratorV2, ITexturePaintDynamicChannelUsageV2
+        ITexturePaintGeneratorV2, ITexturePaintDynamicChannelUsageV2, ITexturePaintDynamicMeshMapUsageV2
     {
         private static readonly TexturePaintPluginDescriptor descriptor =
             StubbleMakerGeneratorEngine.CreateDescriptor();
@@ -21,11 +21,15 @@ namespace UMA.TexturePaint.Examples
         public TexturePaintChannelMask ResolveReadChannels(
             TexturePaintPluginParameterSet parameters) => TexturePaintChannelMask.None;
 
+        public TexturePaintMeshMapMask ResolveMeshMaps(TexturePaintPluginParameterSet parameters) =>
+            (parameters?.Integer("directionSpace", 0) ?? 0) == 1
+                ? TexturePaintMeshMapMask.None : descriptor.requiredMeshMaps;
+
         public Task ExecuteAsync(TexturePaintCommandContextV2 context) =>
             StubbleMakerGeneratorEngine.ExecuteAsync(context);
     }
 
-    internal static class StubbleMakerGeneratorEngine
+    internal static partial class StubbleMakerGeneratorEngine
     {
         private const int RowsPerTile = 128;
         private const string ControlMask = "controlMask";
@@ -43,13 +47,16 @@ namespace UMA.TexturePaint.Examples
                               "downward, with controllable length, width, color, placement and " +
                               "deterministic position/direction variation. Optional rash, pimples " +
                               "and pigment spots add coordinated skin shading and relief.",
-                pluginVersion = "1.0.1",
+                pluginVersion = "1.3.0",
                 capabilities = TexturePaintPluginCapability.Generator |
+                               TexturePaintPluginCapability.ReadsMeshMaps |
                                TexturePaintPluginCapability.LongRunning,
                 declaredChannels = OutputChannels,
-                // Dynamic channel usage narrows this write-only generator to dimension metadata.
+                // Material channels are write-only; World Down requests geometry separately.
                 readChannels = TexturePaintChannelMask.All,
                 channelSnapshotMaximumResolution = 4096,
+                requiredMeshMaps = TexturePaintMeshMapMask.WorldPosition |
+                                   TexturePaintMeshMapMask.WorldNormal | TexturePaintMeshMapMask.SurfaceId,
                 parameters = Parameters()
             };
 
@@ -90,12 +97,14 @@ namespace UMA.TexturePaint.Examples
                     for (int i = 0; i < group.Count; i++)
                         channels |= TexturePaintExportTemplate.ToMask(group[i].channel);
 
+                    WorldHairField worldHair = settings.directionSpace == 1 ? null
+                        : new WorldHairField(settings, context, surfaceId, width, height);
                     for (int y0 = 0; y0 < height; y0 += RowsPerTile)
                     {
                         context.cancellationToken.ThrowIfCancellationRequested();
                         int rows = Math.Min(RowsPerTile, height - y0);
                         OutputBuffers output = Generate(settings, mask, width, height, y0, rows,
-                            channels, context);
+                            channels, context, worldHair);
                         if (output.any)
                             for (int i = 0; i < group.Count; i++)
                                 Write(context, surfaceId, group[i], y0, rows, output);
@@ -109,7 +118,7 @@ namespace UMA.TexturePaint.Examples
 
         private static OutputBuffers Generate(Settings s,
             TexturePaintReadOnlyParameterTexture mask, int width, int height, int y0, int rows,
-            TexturePaintChannelMask channels, TexturePaintCommandContextV2 context)
+            TexturePaintChannelMask channels, TexturePaintCommandContextV2 context, WorldHairField worldHair)
         {
             var output = new OutputBuffers(width * rows, channels);
             Parallel.For(0, rows, new ParallelOptions
@@ -133,7 +142,7 @@ namespace UMA.TexturePaint.Examples
                     if (placement <= 0.0001f) continue;
 
                     Vector2 pixel = new Vector2(x + 0.5f, y + 0.5f);
-                    HairSample hair = SampleHair(s, pixel);
+                    HairSample hair = worldHair != null ? worldHair.Sample(s, pixel) : SampleHair(s, pixel);
                     SkinSample skin = SampleSkin(s, pixel);
                     GeneratedPixel generated = Combine(s, hair, skin, placement);
                     if (!generated.Any) continue;
@@ -164,8 +173,13 @@ namespace UMA.TexturePaint.Examples
             int baseY = Mathf.FloorToInt(alongPosition / alongSpacing);
             HairSample best = default;
 
-            for (int cy = baseY - 2; cy <= baseY + 1; cy++)
-            for (int cx = baseX - 1; cx <= baseX + 1; cx++)
+            float rootRadius = RootRadius(s);
+            float reach = baseLength * (1f + s.lengthVariation) + rootRadius +
+                baseWidth * (1f + s.widthVariation) + s.shadowSpread + Mathf.Abs(s.shadowOffset);
+            int reachX = Mathf.Max(1, Mathf.CeilToInt((reach + s.randomPositionX) / acrossSpacing));
+            int reachY = Mathf.Max(2, Mathf.CeilToInt((reach + s.randomPositionY) / alongSpacing));
+            for (int cy = baseY - reachY; cy <= baseY + reachY; cy++)
+            for (int cx = baseX - reachX; cx <= baseX + reachX; cx++)
             {
                 float existence = Hash(cx, cy, s.seed + 3);
                 if (existence > profileDensity) continue;
@@ -177,48 +191,79 @@ namespace UMA.TexturePaint.Examples
                                     s.directionVariation * (s.profile == 1 ? 0.65f : 1f) *
                                     Mathf.Deg2Rad;
                 Vector2 strandDown = Rotate(down, strandAngle);
-                Vector2 strandAcross = new Vector2(-strandDown.y, strandDown.x);
                 float length = Mathf.Max(0.5f, baseLength *
                     (1f + SignedHash(cx, cy, s.seed + 31) * s.lengthVariation));
                 float width = Mathf.Max(0.2f, baseWidth *
                     (1f + SignedHash(cx, cy, s.seed + 37) * s.widthVariation));
                 float bend = SignedHash(cx, cy, s.seed + 43) * s.curvature *
                              (s.profile == 1 ? 0.6f : 1f) * length;
-                Vector2 p0 = root;
-                Vector2 p1 = root + strandDown * (length * 0.5f) + strandAcross * bend;
-                Vector2 p2 = root + strandDown * length;
-
-                SegmentDistance(pixel, p0, p1, out float d0, out float t0);
-                SegmentDistance(pixel, p1, p2, out float d1, out float t1);
-                float distance;
-                float along;
-                if (d0 <= d1) { distance = d0; along = t0 * 0.5f; }
-                else { distance = d1; along = 0.5f + t1 * 0.5f; }
-                float radius = width * 0.5f * Mathf.Lerp(1f, 0.12f,
-                    Mathf.Pow(along, s.taper));
-                float coverage = 1f - SmoothStep(Mathf.Max(0f, radius - 0.75f),
-                    radius + 0.75f, distance);
-                coverage *= SmoothStep(1f, 0.72f, along);
-                float shadowDistance = Vector2.Distance(pixel - down * s.shadowOffset, root +
-                    strandDown * Mathf.Clamp(Vector2.Dot(pixel - root, strandDown), 0f, length));
-                float shadow = 1f - SmoothStep(radius + s.shadowSpread * 0.35f,
-                    radius + s.shadowSpread, shadowDistance);
-                shadow *= SmoothStep(1f, 0.72f, along) * s.shadowAmount;
-                float follicle = (1f - SmoothStep(s.rednessRadius * 0.25f,
-                    s.rednessRadius, Vector2.Distance(pixel, root))) * s.rednessAmount;
-                best.shadow = Mathf.Max(best.shadow, shadow);
-                best.redness = Mathf.Max(best.redness, follicle);
-                if (coverage <= best.coverage) continue;
-
-                float colorVariation = SignedHash(cx, cy, s.seed + 53) *
-                                       s.hairColorVariation;
-                best.coverage = coverage * s.hairOpacity;
-                best.color = AddRgb(s.hairColor, colorVariation);
-                best.height = Mathf.Clamp01(0.5f + s.hairHeight *
-                    coverage * Mathf.Sin(Mathf.Clamp01(along) * Mathf.PI));
+                float colorVariation = SignedHash(cx, cy, s.seed + 53) * s.hairColorVariation;
+                AccumulateHair(s, pixel, root, down, strandDown, length, width, bend,
+                    colorVariation, PimpleAtRoot(s, cx, cy, acrossSpacing * alongSpacing), ref best);
             }
             return best;
         }
+
+        private static void AccumulateHair(Settings s, Vector2 pixel, Vector2 root,
+            Vector2 down, Vector2 strandDown, float length, float width, float bend,
+            float colorVariation, bool pimple, ref HairSample best)
+        {
+            Vector2 strandAcross = new Vector2(-strandDown.y, strandDown.x);
+            Vector2 p0 = root;
+            Vector2 p1 = root + strandDown * (length * 0.5f) + strandAcross * bend;
+            Vector2 p2 = root + strandDown * length;
+
+            SegmentDistance(pixel, p0, p1, out float d0, out float t0);
+            SegmentDistance(pixel, p1, p2, out float d1, out float t1);
+            float distance;
+            float along;
+            if (d0 <= d1) { distance = d0; along = t0 * 0.5f; }
+            else { distance = d1; along = 0.5f + t1 * 0.5f; }
+            float radius = width * 0.5f * Mathf.Lerp(1f, 0.12f,
+                Mathf.Pow(along, s.taper));
+            float coverage = 1f - SmoothStep(Mathf.Max(0f, radius - 0.75f),
+                radius + 0.75f, distance);
+            coverage *= SmoothStep(1f, 0.72f, along);
+            float shadowDistance = Vector2.Distance(pixel - down * s.shadowOffset, root +
+                strandDown * Mathf.Clamp(Vector2.Dot(pixel - root, strandDown), 0f, length));
+            float shadow = 1f - SmoothStep(radius + s.shadowSpread * 0.35f,
+                radius + s.shadowSpread, shadowDistance);
+            shadow *= SmoothStep(1f, 0.72f, along) * s.shadowAmount;
+            float follicle = (1f - SmoothStep(s.rednessRadius * 0.25f,
+                s.rednessRadius, Vector2.Distance(pixel, root))) * s.rednessAmount;
+            best.shadow = Mathf.Max(best.shadow, shadow);
+            best.redness = Mathf.Max(best.redness, follicle);
+            float rootDistance = Vector2.Distance(pixel, root);
+            if (pimple)
+            {
+                float core = Mathf.Clamp01(1f - rootDistance / s.pimpleSize);
+                best.pimpleCore = Mathf.Max(best.pimpleCore, core);
+                best.pimple = Mathf.Max(best.pimple, 1f - SmoothStep(.75f, 1f, rootDistance / s.pimpleSize));
+            }
+            else if (s.follicleDepth > 0f)
+                best.follicle = Mathf.Max(best.follicle,
+                    1f - SmoothStep(0f, 1f, rootDistance / s.follicleRadius));
+
+            // Rounded cross-section, tapered toward the tip. Store displacement, not gray,
+            // and keep it independent of the winning albedo strand at overlaps.
+            float crossSection = Mathf.Sqrt(Mathf.Clamp01(1f - Mathf.Pow(distance / Mathf.Max(.5f, radius), 2f)));
+            float tip = Mathf.Lerp(1f, .12f, Mathf.Pow(along, s.taper)) * SmoothStep(1f, .72f, along);
+            best.height = Mathf.Max(best.height, s.hairHeight * crossSection * tip * s.hairOpacity);
+            if (coverage * s.hairOpacity <= best.coverage) return;
+
+            best.coverage = coverage * s.hairOpacity;
+            best.color = AddRgb(s.hairColor, colorVariation);
+
+        }
+
+        private static float RootRadius(Settings s) => Mathf.Max(
+            s.rednessAmount > 0f ? s.rednessRadius : 0f,
+            Mathf.Max(s.follicleDepth > 0f ? s.follicleRadius : 0f,
+                s.pimpleAmount > 0f ? s.pimpleSize : 0f));
+
+        private static bool PimpleAtRoot(Settings s, int cx, int cy, float cellArea) =>
+            s.pimpleAmount > 0f && Hash(cx, cy, s.seed + 211) <
+            s.pimpleAmount * Mathf.Min(1f, cellArea / (s.pimpleSpacing * s.pimpleSpacing));
 
         private static SkinSample SampleSkin(Settings s, Vector2 pixel)
         {
@@ -230,9 +275,6 @@ namespace UMA.TexturePaint.Examples
                 sample.rash = SmoothStep(1f - s.rashAmount, 1f,
                     broad * 0.72f + fine * 0.28f) * s.rashOpacity;
             }
-            if (s.pimpleAmount > 0f)
-                sample.pimple = SpotField(pixel, s.pimpleSpacing, s.pimpleSize,
-                    s.pimpleAmount, s.seed + 211, out sample.pimpleCore);
             if (s.spotAmount > 0f)
                 sample.spot = SpotField(pixel, s.spotSpacing, s.spotSize,
                     s.spotAmount, s.seed + 307, out sample.spotCore);
@@ -243,12 +285,14 @@ namespace UMA.TexturePaint.Examples
             float placement)
         {
             float skinAlpha = Mathf.Clamp01(Mathf.Max(Mathf.Max(skin.rash, hair.redness),
-                Mathf.Max(skin.pimple, skin.spot)));
+                Mathf.Max(hair.pimple, skin.spot)));
             Color skinColor = Color.clear;
             float weights = 0f;
             Accumulate(ref skinColor, ref weights, s.rashColor, skin.rash);
             Accumulate(ref skinColor, ref weights, s.rednessColor, hair.redness);
-            Accumulate(ref skinColor, ref weights, s.pimpleColor, skin.pimple);
+            Color pimpleColor = Color.Lerp(s.pimpleColor, s.pimpleCenterColor,
+                SmoothStep(.65f, .95f, hair.pimpleCore));
+            Accumulate(ref skinColor, ref weights, pimpleColor, hair.pimple);
             Accumulate(ref skinColor, ref weights, s.spotColor, skin.spot);
             if (weights > 0f) skinColor /= weights;
 
@@ -259,11 +303,15 @@ namespace UMA.TexturePaint.Examples
                 WithAlpha(hair.color, hairAlpha));
             albedo.a *= placement;
 
-            float relief = Mathf.Max(skin.pimpleCore * s.pimpleHeight,
-                skin.spotCore * s.spotHeight);
-            float normalAlpha = Mathf.Clamp01(Mathf.Max(hairAlpha,
-                Mathf.Max(skin.pimple, skin.spot))) * placement;
-            float normal = hairAlpha > relief ? hair.height : Mathf.Clamp01(0.5f + relief);
+            float relief = hair.height + hair.pimpleCore * s.pimpleHeight +
+                skin.spotCore * s.spotHeight - hair.follicle * s.follicleDepth;
+            float normalCoverage = Mathf.Max(s.hairHeight > 0f ? hairAlpha : 0f,
+                Mathf.Max(s.pimpleHeight > 0f ? hair.pimple : 0f,
+                    Mathf.Max(s.spotHeight > 0f ? skin.spot : 0f, hair.follicle)));
+            // Feature profiles already include their coverage. Apply alpha once around neutral
+            // height, preserving signed sub-byte relief through the float tile upload.
+            float normal = normalCoverage > .00001f ? Mathf.Clamp01(.5f + relief / normalCoverage) : .5f;
+            float normalAlpha = normalCoverage * placement;
             float roughness = Mathf.Lerp(s.skinRoughness,
                 s.hairRoughness, hairAlpha);
             roughness = Mathf.Lerp(roughness, s.rashRoughness, skin.rash);
@@ -271,7 +319,7 @@ namespace UMA.TexturePaint.Examples
                 skinAlpha)) * placement;
             float skinMaskAlpha = skinAlpha * s.skinMaskStrength * placement;
             float detail = Mathf.Clamp01(Mathf.Max(hairAlpha,
-                Mathf.Max(skin.pimple, skin.spot)));
+                Mathf.Max(hair.pimple, skin.spot)));
 
             return new GeneratedPixel
             {
@@ -285,6 +333,10 @@ namespace UMA.TexturePaint.Examples
 
         private static float PlacementCoverage(Settings s, float u, float v, int width, int height)
         {
+            // Keep Rectangle (0) and Ellipse (1) stable for existing saved layers.
+            // Full coverage is still restricted by the control mask and host/layer masks.
+            if (s.placementShape == 2) return 1f;
+
             Vector2 delta = new Vector2((u - s.placementX) * width,
                 (v - s.placementY) * height);
             delta = Rotate(delta, -s.placementRotation * Mathf.Deg2Rad);
@@ -340,19 +392,26 @@ namespace UMA.TexturePaint.Examples
         private static void Write(TexturePaintCommandContextV2 context, string surfaceId,
             OutputTarget target, int y0, int rows, OutputBuffers output)
         {
+            if (target.channel == TexturePaintChannel.NormalControl)
+            {
+                context.WriteTile(surfaceId, target.channel,
+                    new RectInt(0, y0, target.width, rows), output.normalControl,
+                    TexturePaintPluginColorSpace.Data, TexturePaintPluginBlend.Replace, 1f);
+                return;
+            }
             Color32[] pixels = output.For(target.channel);
             if (pixels == null) return;
             TexturePaintPluginColorSpace colorSpace = TexturePaintChannelUtility.IsColor(target.channel)
                 ? TexturePaintPluginColorSpace.Linear : TexturePaintPluginColorSpace.Data;
             context.WriteTileCompactOwned(surfaceId, target.channel,
                 new RectInt(0, y0, target.width, rows), pixels, colorSpace,
-                TexturePaintPluginBlend.Normal, 1f);
+                TexturePaintPluginBlend.Replace, 1f);
         }
 
         private static List<TexturePaintPluginParameterDefinition> Parameters() => new()
         {
-            Header("placementHeader", "Placement & Coverage", "Bounds the transparent overlay and controls its deterministic layout."),
-            Enum("placementShape", "Placement Shape", new[] { "Rectangle", "Ellipse" }, 1, "Shape of the generated region."),
+            Header("placementHeader", "Placement & Coverage", "Covers the entire unmasked area by default. Choose a shape only to limit the region further; center, size, rotation and feather apply only to shapes."),
+            Enum("placementShape", "Coverage", new[] { "Rectangle", "Ellipse", "Entire Unmasked Area" }, 2, "Generate throughout the unmasked area, or restrict generation to an additional rectangle or ellipse."),
             Float("placementX", "Center X", 0f, 1f, 0.5f, "Horizontal center in normalized texture coordinates."),
             Float("placementY", "Center Y", 0f, 1f, 0.5f, "Vertical center in normalized texture coordinates."),
             Float("placementWidth", "Placement Width", 0.001f, 1f, 0.55f, "Width as a fraction of the texture."),
@@ -361,9 +420,10 @@ namespace UMA.TexturePaint.Examples
             Float("edgeFeather", "Edge Feather (px)", 0f, 256f, 24f, "Softens overlay alpha at placement boundaries."),
             Integer("seed", "Seed", 0, 100000, 941, "Deterministically changes strand and skin-detail positions."),
             Float("overallAmount", "Overall Amount", 0f, 1f, 1f, "Final alpha multiplier for all generated channels."),
-            Texture(ControlMask, "Control Mask", "Optional grayscale texture multiplied with placement coverage."),
+            Texture(ControlMask, "Control Mask", "Optional grayscale coverage: white allows stubble, black excludes it. Also applies when Coverage is Entire Unmasked Area."),
 
-            Header("hairHeader", "Stubble Strands", "Tapered hairs grow toward texture-space down by default."),
+            Header("hairHeader", "Stubble Strands", "World Down follows gravity along the surface, independent of UV orientation. UV Direction allows manual texture-space alignment."),
+            Enum("directionSpace", "Growth Direction", new[] { "World Down", "UV Direction" }, 0, "World Down uses the mesh position and normal maps. On horizontal surfaces it falls back to world forward. UV Direction retains the original texture-space behavior."),
             Enum("profile", "Stubble Profile", new[] { "Facial Hair", "Shaved Head", "Custom / Neutral" }, 0, "Facial Hair keeps the authored measurements; Shaved Head produces shorter, denser, straighter follicles from the same controls."),
             ColorParameter("hairColor", "Hair Color", new Color(0.055f, 0.035f, 0.025f, 1f), "Base stubble color."),
             Float("hairColorVariation", "Color Variation", 0f, 0.35f, 0.055f, "Per-strand light/dark variation."),
@@ -372,7 +432,7 @@ namespace UMA.TexturePaint.Examples
             Float("density", "Density", 0f, 1f, 0.72f, "Strand population and spacing."),
             Float("hairOpacity", "Hair Opacity", 0f, 1f, 0.88f, "Maximum strand alpha."),
             Float("taper", "Tip Taper", 0.2f, 5f, 1.5f, "Controls how quickly strands narrow toward their tips."),
-            Float("directionDegrees", "Direction from Down", -180f, 180f, 0f, "Zero grows down; positive values rotate clockwise in texture space."),
+            Float("directionDegrees", "Direction from Down", -180f, 180f, 0f, "Zero follows the selected down direction. World Down rotates around the surface normal; UV Direction rotates in texture space."),
             Float("directionVariation", "Direction Variation", 0f, 60f, 7f, "Maximum random angular deviation per strand."),
             Float("curvature", "Curvature", 0f, 0.5f, 0.055f, "Maximum sideways bend as a fraction of strand length."),
             Float("randomPositionX", "Random Position X (px)", 0f, 64f, 2f, "Maximum per-strand horizontal root offset."),
@@ -380,7 +440,7 @@ namespace UMA.TexturePaint.Examples
             Float("lengthVariation", "Length Variation", 0f, 0.95f, 0.28f, "Random fractional length variation."),
             Float("widthVariation", "Width Variation", 0f, 0.95f, 0.18f, "Random fractional width variation."),
             Float("hairRoughness", "Hair Roughness", 0f, 1f, 0.46f, "Roughness written under strands; lower values read as shinier."),
-            Float("hairHeight", "Hair Height", 0f, 0.49f, 0.12f, "Raised Normal Control response at strand centers."),
+            Float("hairHeight", "Hair Height", 0f, 0.49f, 0.12f, "Raised, rounded hair relief in Normal Control. Zero disables hair relief."),
 
             Header("shadingHeader", "Shaving Redness & Shadows", "Adds transparent follicle irritation and soft contact shadow beneath the stubble."),
             Float("shadowAmount", "Stubble Shadow", 0f, 1f, 0.3f, "Opacity of the soft shadow under and around each strand."),
@@ -391,17 +451,21 @@ namespace UMA.TexturePaint.Examples
             Float("rednessRadius", "Redness Radius (px)", 0.25f, 32f, 2.4f, "Radius of follicle redness."),
             ColorParameter("rednessColor", "Redness Color", new Color(0.68f, 0.105f, 0.085f, 1f), "Freshly shaved skin tint."),
 
+            Float("follicleDepth", "Follicle Depth", 0f, .1f, .015f, "Small recessed pore at each hair root. Independent of redness; a plugged follicle is replaced by a raised pimple."),
+            Float("follicleRadius", "Follicle Radius (px)", .25f, 16f, 1.8f, "Radius of the shallow follicle depression."),
+
             Header("skinHeader", "Skin Irritation & Blemishes", "Optional transparent skin shading around and beneath the stubble."),
             Float("rashAmount", "Rash Amount", 0f, 1f, 0f, "Coverage of softly clustered irritation."),
             Float("rashScale", "Rash Cluster Size (px)", 2f, 512f, 72f, "Average size of rash clusters."),
             Float("rashOpacity", "Rash Opacity", 0f, 1f, 0.34f, "Maximum rash alpha."),
             ColorParameter("rashColor", "Rash Color", new Color(0.72f, 0.12f, 0.105f, 1f), "Irritated skin tint."),
             Float("rashRoughness", "Rash Roughness", 0f, 1f, 0.68f, "Roughness of irritated skin."),
-            Float("pimpleAmount", "Pimple Amount", 0f, 1f, 0f, "Probability of raised pimple cells."),
-            Float("pimpleSpacing", "Pimple Spacing (px)", 2f, 512f, 46f, "Average distance between possible pimples."),
+            Float("pimpleAmount", "Pimple Amount", 0f, 1f, 0f, "Fraction of eligible hair follicles that become raised pimples."),
+            Float("pimpleSpacing", "Pimple Spacing (px)", 2f, 512f, 46f, "Approximate spacing used to select existing hair follicles for pimples; smaller values allow more follicles."),
             Float("pimpleSize", "Pimple Size (px)", 0.5f, 64f, 4f, "Average pimple radius."),
-            Float("pimpleHeight", "Pimple Height", 0f, 0.49f, 0.11f, "Raised Normal Control response."),
+            Float("pimpleHeight", "Pimple Height", 0f, 0.49f, 0.11f, "Peak height of the conical pimple, falling to skin level at its edge."),
             ColorParameter("pimpleColor", "Pimple Color", new Color(0.68f, 0.11f, 0.09f, 1f), "Inflamed pimple tint."),
+            ColorParameter("pimpleCenterColor", "Pimple Center Color", new Color(.95f, .82f, .65f, 1f), "Lighter tip color at the center of the raised pimple."),
             Float("spotAmount", "Spot Amount", 0f, 1f, 0f, "Probability of pigment spots."),
             Float("spotSpacing", "Spot Spacing (px)", 2f, 512f, 28f, "Average distance between possible spots."),
             Float("spotSize", "Spot Size (px)", 0.5f, 64f, 2.5f, "Average pigment spot radius."),
@@ -413,7 +477,7 @@ namespace UMA.TexturePaint.Examples
 
         private readonly struct Settings
         {
-            public readonly int placementShape, profile, seed;
+            public readonly int placementShape, profile, seed, directionSpace;
             public readonly float placementX, placementY, placementWidth, placementHeight,
                 placementRotation, edgeFeather, overallAmount, hairColorVariation, hairLength,
                 hairWidth, density, hairOpacity, taper, directionDegrees, directionVariation,
@@ -421,15 +485,16 @@ namespace UMA.TexturePaint.Examples
                 hairRoughness, hairHeight, rashAmount, rashScale, rashOpacity, rashRoughness,
                 pimpleAmount, pimpleSpacing, pimpleSize, pimpleHeight, spotAmount, spotSpacing,
                 spotSize, spotHeight, skinRoughness, skinMaskStrength, shadowAmount,
-                shadowSpread, shadowOffset, rednessAmount, rednessRadius;
+                shadowSpread, shadowOffset, rednessAmount, rednessRadius, follicleDepth, follicleRadius;
             public readonly Color hairColor, shadowColor, rednessColor, rashColor, pimpleColor,
-                spotColor;
+                spotColor, pimpleCenterColor;
 
             public Settings(TexturePaintPluginParameterSet values)
             {
                 values ??= new TexturePaintPluginParameterSet();
-                placementShape = values.Integer("placementShape", 1);
+                placementShape = values.Integer("placementShape", 2);
                 profile = values.Integer("profile", 0);
+                directionSpace = values.Integer("directionSpace", 0);
                 placementX = Clamp01(values.Float("placementX", 0.5f));
                 placementY = Clamp01(values.Float("placementY", 0.5f));
                 placementWidth = Mathf.Clamp(values.Float("placementWidth", 0.55f), 0.001f, 1f);
@@ -470,6 +535,9 @@ namespace UMA.TexturePaint.Examples
                 pimpleSpacing = Mathf.Max(2f, values.Float("pimpleSpacing", 46f));
                 pimpleSize = Mathf.Max(0.5f, values.Float("pimpleSize", 4f));
                 pimpleHeight = Mathf.Clamp(values.Float("pimpleHeight", 0.11f), 0f, 0.49f);
+                follicleDepth = Mathf.Clamp(values.Float("follicleDepth", .015f), 0f, .1f);
+                follicleRadius = Mathf.Clamp(values.Float("follicleRadius", 1.8f), .25f, 16f);
+                pimpleCenterColor = values.LinearColor("pimpleCenterColor", new Color(.95f, .82f, .65f, 1f));
                 pimpleColor = values.LinearColor("pimpleColor", new Color(0.68f, 0.11f, 0.09f, 1f));
                 spotAmount = Clamp01(values.Float("spotAmount", 0f));
                 spotSpacing = Mathf.Max(2f, values.Float("spotSpacing", 28f));
@@ -504,13 +572,14 @@ namespace UMA.TexturePaint.Examples
 
         private sealed class OutputBuffers
         {
-            private readonly Color32[] albedo, roughness, normalControl, skinColorMask, detailMask;
+            private readonly Color32[] albedo, roughness, skinColorMask, detailMask;
+            public readonly Color[] normalControl;
             public bool any;
             public OutputBuffers(int count, TexturePaintChannelMask channels)
             {
                 albedo = Has(channels, TexturePaintChannel.Albedo) ? new Color32[count] : null;
                 roughness = Has(channels, TexturePaintChannel.Roughness) ? new Color32[count] : null;
-                normalControl = Has(channels, TexturePaintChannel.NormalControl) ? new Color32[count] : null;
+                normalControl = Has(channels, TexturePaintChannel.NormalControl) ? new Color[count] : null;
                 skinColorMask = Has(channels, TexturePaintChannel.SkinColorMask) ? new Color32[count] : null;
                 detailMask = Has(channels, TexturePaintChannel.DetailMask) ? new Color32[count] : null;
             }
@@ -527,7 +596,6 @@ namespace UMA.TexturePaint.Examples
             {
                 TexturePaintChannel.Albedo => albedo,
                 TexturePaintChannel.Roughness => roughness,
-                TexturePaintChannel.NormalControl => normalControl,
                 TexturePaintChannel.SkinColorMask => skinColorMask,
                 TexturePaintChannel.DetailMask => detailMask,
                 _ => null
@@ -545,12 +613,12 @@ namespace UMA.TexturePaint.Examples
         }
         private struct HairSample
         {
-            public float coverage, height, shadow, redness;
+            public float coverage, height, shadow, redness, follicle, pimple, pimpleCore;
             public Color color;
         }
         private struct SkinSample
         {
-            public float rash, pimple, pimpleCore, spot, spotCore;
+            public float rash, spot, spotCore;
         }
 
         private static TexturePaintPluginParameterDefinition Header(string id, string name,

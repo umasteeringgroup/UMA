@@ -116,7 +116,7 @@ namespace UMA.TexturePaint.Examples
                 description = dirt
                     ? "Accumulates controllable, fractally broken dirt in concave gaps and occluded cavities, with explicit gap size and outward spread."
                     : "Creates controllable, fractally broken wear on convex edges, with explicit edge size and outward spread.",
-                pluginVersion = "1.0.1",
+                pluginVersion = "1.1.0",
                 capabilities = TexturePaintPluginCapability.Generator |
                                TexturePaintPluginCapability.ReadsMeshMaps |
                                TexturePaintPluginCapability.LongRunning |
@@ -265,7 +265,7 @@ namespace UMA.TexturePaint.Examples
             float signed = inputs.SignedCurvature(u, v);
             if (includeNormalDetail)
                 signed = Mathf.Clamp(signed +
-                    inputs.NormalCurvature(u, v) *
+                    inputs.NormalCurvature(u, v, settings.normalDetailRadius) *
                     settings.normalCurvature, -1f, 1f);
             float sourceCavity = inputs.SourceCavity(u, v);
             float meshCavity = inputs.MeshCavity(u, v);
@@ -280,10 +280,9 @@ namespace UMA.TexturePaint.Examples
         private static float SelectNeighbor(SurfaceInputs inputs, Settings settings,
             Color centerId, float u, float v)
         {
-            u = Repeat01(u);
-            v = Repeat01(v);
+            if (u < 0f || u > 1f || v < 0f || v > 1f) return 0f;
             if (!inputs.SameIsland(centerId, inputs.MeshId(u, v))) return 0f;
-            return Select(inputs, settings, u, v, false);
+            return Select(inputs, settings, u, v, true);
         }
 
         private static void Write(TexturePaintCommandContextV2 context, string surfaceId,
@@ -348,8 +347,10 @@ namespace UMA.TexturePaint.Examples
                     "Optional-texture repetitions per UV tile, or per meter in World Triplanar mode (Unity 1 unit = 1 meter)."),
                 Integer("seed", "Seed", 0, 100000, dirt ? 317 : 719,
                     "Changes the deterministic fractal pattern."),
-                Float("normalCurvature", "Normal Detail Influence", 0f, 4f, 1f,
+                Float("normalCurvature", "Normal Detail Influence", 0f, 32f, 8f,
                     "Adds small curvature features read from the composed Normal channel."),
+                Float("normalDetailRadius", "Normal Detail Radius", 1f, 32f, 4f,
+                    "Normal curvature sampling radius in pixels at 2048 resolution. Includes underlying Normal Control relief."),
                 Float("featureSize", feature + " Size (px)", 0f, 64f, dirt ? 8f : 5f,
                     "Sampling radius used to find nearby " + feature.ToLowerInvariant() +
                     " features at the current output resolution."),
@@ -504,32 +505,13 @@ namespace UMA.TexturePaint.Examples
                 ? DecodeNormal(worldNormal.GetPixelBilinear(u, v)) : Vector3.forward;
             public float SignedCurvature(float u, float v) => signedCurvature != null
                 ? signedCurvature.GetPixelBilinear(u, v).r * 2f - 1f : 0f;
-            public float NormalCurvature(float u, float v)
-            {
-                if (normal == null || normal.width < 2 || normal.height < 2) return 0f;
-                float du = 1f / normal.width;
-                float dv = 1f / normal.height;
-                Color centerId = MeshId(u, v);
-                Vector3 center = DecodeNormal(normal.GetPixelBilinear(u, v));
-                Vector3 left = SampleNormal(centerId, center, u - du, v);
-                Vector3 right = SampleNormal(centerId, center, u + du, v);
-                Vector3 down = SampleNormal(centerId, center, u, v - dv);
-                Vector3 up = SampleNormal(centerId, center, u, v + dv);
-                return Mathf.Clamp(((right.x - left.x) + (up.y - down.y)) * 0.5f,
-                    -1f, 1f);
-            }
+            public float NormalCurvature(float u, float v, float radius) =>
+                SurfaceNormalDetail.Curvature(normal, meshId, u, v, radius);
             public float SourceCavity(float u, float v) => ambientOcclusion == null ? 0f
                 : 1f - Luminance(ambientOcclusion.GetPixelBilinear(u, v));
             public float MeshCavity(float u, float v) => meshAmbientOcclusion == null ? 0f
                 : 1f - meshAmbientOcclusion.GetPixelBilinear(u, v).r;
 
-            private Vector3 SampleNormal(Color centerId, Vector3 fallback, float u, float v)
-            {
-                u = Repeat01(u);
-                v = Repeat01(v);
-                if (!SameIsland(centerId, MeshId(u, v))) return fallback;
-                return DecodeNormal(normal.GetPixelBilinear(u, v));
-            }
         }
 
         private readonly struct OutputTarget
@@ -592,7 +574,7 @@ namespace UMA.TexturePaint.Examples
             public readonly bool triplanar;
             public readonly float textureScale;
             public readonly int seed;
-            public readonly float normalCurvature;
+            public readonly float normalCurvature, normalDetailRadius;
             public readonly float featureSize;
             public readonly float detectionLevel;
             public readonly float spread;
@@ -616,7 +598,8 @@ namespace UMA.TexturePaint.Examples
                 triplanar = values.Integer("projection", 1) == 1;
                 textureScale = Mathf.Max(0.05f, values.Float("textureScale", 4f));
                 seed = values.Integer("seed", mode == WeatheringMode.Dirt ? 317 : 719);
-                normalCurvature = Mathf.Max(0f, values.Float("normalCurvature", 1f));
+                normalCurvature = Mathf.Max(0f, values.Float("normalCurvature", 8f));
+                normalDetailRadius = Mathf.Clamp(values.Float("normalDetailRadius", 4f), 1f, 32f);
                 featureSize = Mathf.Clamp(values.Float("featureSize",
                     mode == WeatheringMode.Dirt ? 8f : 5f), 0f, 64f);
                 detectionLevel = Mathf.Clamp(values.Float("detectionLevel",
