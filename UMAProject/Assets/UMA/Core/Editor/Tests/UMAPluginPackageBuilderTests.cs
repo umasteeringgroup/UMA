@@ -38,6 +38,61 @@ namespace UMA.Editors.Tests
             Assert.That(info.Manifest.ownedPaths.All(p => p.StartsWith("Assets/UMA/HairCards/", StringComparison.Ordinal)), Is.True);
             Assert.That(info.Manifest.assets.Any(a => a.path.EndsWith("Documentation/Hair Cards - Quick Start.md", StringComparison.Ordinal)), Is.True);
             Assert.That(info.Manifest.requiredPluginApiVersion, Is.EqualTo(UMAPluginApi.Version));
+            Assert.That(info.Manifest.contentVersion, Is.EqualTo(UMAPackageVersionUtility.Normalize(UMASettings.GetSettings().UMAVersion, out var umaVersion)));
+            Assert.That(info.Manifest.umaVersion, Is.EqualTo(umaVersion));
+            Assert.That(info.Manifest.ownedPaths.Any(p => UMAContentCatalog.IsCompanionPath(UMAContentKind.HairCards, p)), Is.False);
+        }
+
+        [Test]
+        public void PluginRowsGroupSeparateCompanionsImmediatelyUnderEveryParent()
+        {
+            var order = UMAContentCatalog.PluginDisplayOrder.ToArray();
+            foreach (var parent in UMAContentCatalog.Plugins.Where(p => !UMAContentCatalog.ParentPlugin(p).HasValue))
+            {
+                var companions = UMAContentCatalog.Companions(parent).ToArray();
+                Assert.That(companions.Length, Is.EqualTo(2), UMAContentCatalog.DisplayName(parent));
+                CollectionAssert.AreEqual(companions, order.Skip(Array.IndexOf(order, parent) + 1).Take(2));
+                foreach (var companion in companions)
+                    Assert.That(UMAContentCatalog.Dependencies(companion), Does.Contain(UMAContentCatalog.Id(parent)));
+            }
+        }
+
+        [TestCase("UMA NextGen 3.1f2", "3.1.2", "3.1f2")]
+        [TestCase("UMA 3.1f12", "3.1.12", "3.1f12")]
+        [TestCase("3.1.2", "3.1.2", "3.1.2")]
+        [TestCase("3.2b3", "3.2.0-beta.3", "3.2b3")]
+        [TestCase("3.2a1", "3.2.0-alpha.1", "3.2a1")]
+        public void PackageVersionPreservesUMAReleaseAndProducesSemanticVersion(string input, string expected, string display)
+        {
+            Assert.That(UMAPackageVersionUtility.Normalize(input, out var release), Is.EqualTo(expected));
+            Assert.That(release, Is.EqualTo(display));
+        }
+
+        [TestCase("")]
+        [TestCase("UMA NextGen")]
+        [TestCase("3.1f")]
+        public void PackageVersionRejectsMissingOrIncompleteRelease(string input)
+        {
+            Assert.Throws<InvalidDataException>(() => UMAPackageVersionUtility.Normalize(input, out _));
+        }
+
+        [TestCase(UMAContentKind.HairCardsExamples)]
+        [TestCase(UMAContentKind.HairCardsTests)]
+        [TestCase(UMAContentKind.Dismemberment)]
+        [TestCase(UMAContentKind.DismembermentExamples)]
+        [TestCase(UMAContentKind.DismembermentTests)]
+        public void NewPackagesValidateAndHaveDisjointOwnership(UMAContentKind kind)
+        {
+            if (!UMAContentCatalog.PluginRequiredPaths(kind).All(File.Exists)) Assert.Ignore("Optional sources not installed.");
+            string package = UMAPluginPackageBuilder.Build(kind, directory);
+            Assert.That(UMAContentPackageArchiveValidator.TryValidate(package, kind, out var info, out string error), Is.True, error);
+            Assert.That(info.Manifest.ownedPaths.All(path => UMAContentCatalog.OwnsPluginPath(kind, path)), Is.True);
+            if (UMAContentCatalog.ParentPlugin(kind) is UMAContentKind parent)
+            {
+                string parentPackage = parent == UMAContentKind.HairCards ? archive : UMAPluginPackageBuilder.Build(parent, directory);
+                Assert.That(UMAContentPackageArchiveValidator.TryValidate(parentPackage, parent, out var parentInfo, out error), Is.True, error);
+                Assert.That(info.Manifest.assets.Select(a => a.guid).Intersect(parentInfo.Manifest.assets.Select(a => a.guid)), Is.Empty);
+            }
         }
 
         [Test]

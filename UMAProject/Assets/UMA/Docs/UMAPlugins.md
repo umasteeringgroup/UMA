@@ -1,6 +1,11 @@
 # UMA editor plugins
 
-Launcher API version 1 lives in the editor-only `UMA_Editor` assembly. Overlay Painter and Hair Card Editor are optional packages. Overlay Painter's generator/filter Plugin API v2 remains a separate API.
+Launcher API version 1 lives in the editor-only `UMA_Editor` assembly. Overlay Painter, Hair Card Editor and Dismemberment are optional packages. Overlay Painter's generator/filter Plugin API v2 remains a separate API.
+
+Every plugin distributes **Examples** and **Tests** as separate companion packages. The welcome
+page lists compact, single-line rows with those companions indented immediately below their
+parent. Install the parent first. Remove its companions before removing the parent; normal
+plugin use does not require examples or Unity Test Framework.
 
 ## Overlay Painter installation and use
 
@@ -10,23 +15,44 @@ Select a scene avatar or a slot with mesh data, then use **Editors > Plugins > O
 
 Settings are under **Project Settings > UMA > Overlay Painter**. First access copies the five legacy UMA settings to `Assets/UMAProjectData/OverlayPainter/Settings.asset`; this asset becomes authoritative. Deliberate settings changes also update the legacy scalar fields for compatibility. Settings, documents, exports, and recovery live outside the installed plugin folder.
 
-Use **UMA > Plugins > Install Overlay Painter** to install or update an archive. Managed installation validates paths, GUIDs, hashes, API version, core compatibility, and dependencies before import. Modified files use the existing backup-and-replace workflow. Unowned files survive updates. Backups and interrupted-import records live under `Library/UMA/ContentInstaller`.
+Use **Install** or **Reinstall** on **Welcome to UMA > Plugins** to install or update an archive. Managed installation validates paths, GUIDs, hashes, API version, core compatibility, and dependencies before import. Modified files use the existing backup-and-replace workflow. Unowned files survive updates. Backups and interrupted-import records live under `Library/UMA/ContentInstaller`.
 
 The corresponding **Remove** command removes unchanged manifest-owned files while preserving modified and unowned files. Remove examples and tests first. Removal recovery and its last report live under `Library/UMA/PluginRemoval`. A source checkout without an installed manifest must first be adopted using an archive built from the same files.
 
-Direct UnityPackage import requires UMA with launcher API 1 already installed. The initial archive version follows `package.json` (`3.0.4`); the actual UMASettings label is `UMA NextGen 3.1f1`. These are distinct version fields. The supported Unity baseline is 6.3.
+Direct UnityPackage import requires UMA with launcher API 1 already installed. Archive versions are derived from the installed UMASettings release; see the build instructions below for the display and semantic version formats. The supported Unity baseline is 6.3.
 
 ## Hair Card Editor installation and use
 
 **UMA > Welcome to UMA > Plugins** includes **Hair Card Editor**. Its package installs to `Assets/UMA/HairCards`; that folder and its metadata are excluded from UMA Core. Existing script and asset GUIDs are preserved. Core contains no Hair Cards type references or dedicated launcher.
 
-Select a scene avatar and use **Editors > Plugins > Hair Card Editor**. The existing **UMA > Hair Cards** menus and mesh/groom asset workflows remain available. Prefab assets and Prefab Mode cannot launch avatar authoring. Hair Cards includes its core data, runtime support, editor, shaders, and tests guarded by the optional Unity Test Framework defines. The existing UMA render pipeline package supplies the hair atlas textures and optional URP hair shaders.
+Select a scene avatar and use **Editors > Plugins > Hair Card Editor**. The existing **UMA > Hair Cards** menus and mesh/groom asset workflows remain available. Prefab assets and Prefab Mode cannot launch avatar authoring. Hair Cards includes its core data, runtime support, editor and shaders. The existing UMA render pipeline package supplies the hair atlas textures and optional URP hair shaders.
 
-The Documentation Browser's **Hair Card Editor** selection contains the quick start and hairstyle guides. Installing registers its descriptor; removing the plugin removes that documentation registration. Grooms, baked assets and recovery under `Assets/UMAProjectData/HairCards`, and preferences under `UserSettings`, are outside package ownership and survive removal. Editable grooms and runtime groom components require the plugin's types to load; reinstalling restores those types. Baked ordinary Unity/UMA assets do not require the authoring editor.
+**Hair Card Examples** contains the authored content under `Assets/UMAProjectData/HairCards/Examples`.
+**Hair Card Tests** owns `Assets/UMA/HairCards/Editor/Tests` and requires Unity Test Framework.
+The main Hair Cards archive excludes both. Reinstalling an older parent that bundled tests
+preserves the existing tests during the transition to companion ownership.
+
+The Documentation Browser's **Hair Card Editor** selection contains the quick start and hairstyle guides. Installing registers its descriptor; removing the plugin removes that documentation registration. User grooms, baked assets and recovery under `Assets/UMAProjectData/HairCards`, and preferences under `UserSettings`, survive removal. The separately installed Examples package owns only its listed example assets; modified examples are preserved during removal. Editable grooms and runtime groom components require the plugin's types to load; reinstalling restores those types. Baked ordinary Unity/UMA assets do not require the authoring editor.
+
+## Dismemberment installation and use
+
+Install **Dismemberment** from the Plugins page. Its runtime, editor, shared cap shader and
+documentation live under `Assets/UMA/UMADismemberment`, excluded from UMA Core. The existing
+GUIDs and assembly names are retained. **Editors > Plugins > Dismemberment** on a scene avatar
+adds or selects its configuration. Its documentation appears separately in the Documentation Browser.
+
+**Dismemberment Examples** owns `Samples`; **Dismemberment Tests** owns `Tests`. The parent
+has no dependency on either. UMA core has no dismemberment assembly dependency and compiles
+without the plugin. Project-authored scripts or scenes that use its components still require it.
+The `U3-GoreExample` scene and its lighting assets are now in the Examples package, rather than
+SRP's general samples. Examples requires UMA3 Content and SRP Support; Tests requires Unity
+Test Framework. The cap shader is part of the main plugin, so runtime cuts work without Examples.
 
 ## Build plugin packages
 
-Choose **UMA > Plugins > Build Plugin Packages**. Unity builds all installed known plugin sources into `Build/Plugins/<Plugin>-<version>.unitypackage` and reveals the output folder. No PowerShell installation is needed. Each archive includes a manifest with GUIDs, hashes, API requirements and dependencies, and is validated before replacing an existing output. Source files and installed manifests are not modified. Missing plugins are skipped; missing required files stop that plugin's build with an error. The version comes from UMA's `package.json`, not the UMASettings display label.
+Choose **UMA > Build > Build Plugin Packages**. Unity builds all installed known plugin sources into `Build/Plugins/<Plugin>-<version>.unitypackage` and reveals the output folder. No PowerShell installation is needed. Each archive includes a manifest with GUIDs, hashes, API requirements and dependencies, and is validated before replacing an existing output. Plugin payloads and installed ownership manifests are not modified by building. Missing plugins are skipped; missing required files stop that plugin's build with an error.
+
+Both builders read the saved, installed **UMASettings** asset and synchronize Core's `package.json` before building. The actual release label is stored as `umaVersion` in package metadata and each archive manifest; the installer displays this label. For example, `UMA NextGen 3.1f2` produces display version `3.1f2` and semantic package version `3.1.2`. Alpha and beta labels preserve their stage, such as `3.2b3` becoming `3.2.0-beta.3`. A missing, transient or unsupported settings version stops the build rather than falling back to an older version. The PowerShell builder validates the settings asset's Unity YAML header; use the Unity builder if settings are stored as a native asset.
 
 For repository release builds, `tools/Packaging/Build-UMAPluginPackages.ps1` also builds Hair Cards, validates package ownership, and stages Core with all optional plugins excluded. Use `-SkipCore` to build only the plugin archives.
 

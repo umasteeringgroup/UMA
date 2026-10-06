@@ -14,10 +14,9 @@ namespace UMA.Editors.PackageSupport
     /// <summary>Builds manifest-validated plugins without importing temporary assets or bundling dependencies.</summary>
     public static class UMAPluginPackageBuilder
     {
-        [Serializable] private sealed class PackageVersion { public string version; }
         private static readonly byte[] Padding = new byte[512];
 
-        [MenuItem("UMA/Plugins/Build Plugin Packages", priority = 100)]
+        [MenuItem("UMA/Build/Build Plugin Packages", priority = 100)]
         private static void BuildMenu()
         {
             try
@@ -38,7 +37,7 @@ namespace UMA.Editors.PackageSupport
             }
         }
 
-        [MenuItem("UMA/Plugins/Build Plugin Packages", true)]
+        [MenuItem("UMA/Build/Build Plugin Packages", true)]
         private static bool CanBuild() => !EditorApplication.isCompiling && !EditorApplication.isUpdating &&
             !File.Exists("Library/UMA/ContentInstaller/pending.json") &&
             !File.Exists("Library/UMA/PluginRemoval/pending.json");
@@ -46,7 +45,7 @@ namespace UMA.Editors.PackageSupport
         public static string[] BuildAll(string destination)
         {
             if (!CanBuild()) throw new InvalidOperationException("Wait for the current import or package operation to finish.");
-            var kinds = UMAContentCatalog.Plugins.Where(k => Directory.Exists(UMAContentCatalog.Root(k))).ToArray();
+            var kinds = UMAContentCatalog.PluginDisplayOrder.Where(k => UMAContentCatalog.PluginRequiredPaths(k).Any(File.Exists)).ToArray();
             var results = new List<string>();
             try
             {
@@ -73,10 +72,9 @@ namespace UMA.Editors.PackageSupport
                 throw new ArgumentException("Build plugin archives outside Assets to avoid importing nested packages.");
             string root = UMAContentCatalog.Root(kind);
             string manifestPath = UMAContentCatalog.ManifestPath(kind);
-            string jsonPath = UMAPathUtility.ResolveAbsolutePath(UMAPathUtility.ResolveInstallAssetPath("package.json"));
-            string version = JsonUtility.FromJson<PackageVersion>(File.ReadAllText(jsonPath)).version;
+            string version = UMAPackageVersionUtility.SyncFromInstalledSettings(out string umaVersion);
             if (!Version.TryParse(version.Split('-', '+')[0], out var numeric)) throw new InvalidDataException("Invalid UMA package version.");
-            string[] files = EnumerateFiles(root).Where(p => !p.EndsWith(".meta", StringComparison.OrdinalIgnoreCase) &&
+            string[] files = EnumerateFiles(root).Where(p => UMAContentCatalog.OwnsPluginPath(kind, p) && !p.EndsWith(".meta", StringComparison.OrdinalIgnoreCase) &&
                 p != manifestPath && !p.EndsWith(".unitypackage", StringComparison.OrdinalIgnoreCase) &&
                 !p.EndsWith("~", StringComparison.Ordinal) && !Path.GetFileName(p).StartsWith(".", StringComparison.Ordinal)).OrderBy(p => p, StringComparer.Ordinal).ToArray();
             var paths = new HashSet<string>(files, StringComparer.Ordinal);
@@ -99,9 +97,9 @@ namespace UMA.Editors.PackageSupport
             {
                 formatVersion = UMAContentCatalog.CurrentManifestFormatVersion,
                 requiredPluginApiVersion = UMAPluginApi.Version,
-                contentId = UMAContentCatalog.Id(kind), contentVersion = version,
+                contentId = UMAContentCatalog.Id(kind), contentVersion = version, umaVersion = umaVersion,
                 requiredCoreVersion = version, minimumCoreVersion = version,
-                maximumCoreVersionExclusive = (numeric.Major + 1) + ".0.0",
+                maximumCoreVersionExclusive = numeric.Major + "." + (numeric.Minor + 1) + ".0",
                 installRoot = root, dependencies = UMAContentCatalog.Dependencies(kind),
                 requiredPaths = UMAContentCatalog.PluginRequiredPaths(kind),
                 ownedPaths = paths.Append(manifestPath).OrderBy(p => p, StringComparer.Ordinal).ToArray(), assets = records
@@ -147,6 +145,7 @@ namespace UMA.Editors.PackageSupport
                 if ((attributes & FileAttributes.ReparsePoint) != 0) throw new IOException("Plugin builds do not follow symbolic links: " + path);
                 if ((attributes & FileAttributes.Directory) != 0)
                 {
+                    if (Path.GetFileName(path).EndsWith("~", StringComparison.Ordinal) || Path.GetFileName(path).StartsWith(".", StringComparison.Ordinal)) continue;
                     foreach (string child in EnumerateFiles(path)) yield return child;
                 }
                 else yield return path.Replace('\\', '/');

@@ -14,6 +14,7 @@ namespace UMA
         private Vector2 pluginsScroll;
         private double nextPluginStatusRefresh;
         private GUIStyle pluginTitleStyle;
+        private GUIStyle pluginRowStyle;
         private bool pluginActionQueued;
 
         private sealed class PluginCard
@@ -44,7 +45,7 @@ namespace UMA
         private void RefreshPluginStatus()
         {
             pluginCards.Clear();
-            foreach (UMAContentKind kind in UMAContentCatalog.Plugins)
+            foreach (UMAContentKind kind in UMAContentCatalog.PluginDisplayOrder)
             {
                 bool canRemove = UMAPluginPackageRemoval.CanRemove(kind, out _, out string reason);
                 pluginCards.Add(new PluginCard
@@ -64,9 +65,10 @@ namespace UMA
             if (pluginCards.Count == 0) RefreshPluginStatus();
             pluginTitleStyle ??= new GUIStyle(EditorStyles.boldLabel)
             {
-                wordWrap = true,
+                wordWrap = false,
                 clipping = TextClipping.Clip
             };
+            pluginRowStyle ??= new GUIStyle(EditorStyles.label) { wordWrap = false, clipping = TextClipping.Clip };
 
             GUILayout.Label("Plugins", EditorStyles.largeLabel);
             GUILayout.Label("Packages are located automatically. If none is found, choose a .unitypackage file. Use ? for details.",
@@ -94,9 +96,14 @@ namespace UMA
 
         private void DrawPluginRow(PluginCard card, float textWidth, bool busy)
         {
-            EditorGUILayout.BeginHorizontal(EditorStyles.helpBox, GUILayout.MinHeight(58));
-            GUILayout.Label(UMAContentCatalog.DisplayName(card.kind), pluginTitleStyle,
-                GUILayout.Width(textWidth), GUILayout.Height(42));
+            float height = EditorGUIUtility.singleLineHeight + 6;
+            Rect row = GUILayoutUtility.GetRect(0, height, GUILayout.ExpandWidth(true));
+            GUI.Box(row, GUIContent.none, EditorStyles.helpBox);
+            bool companion = UMAContentCatalog.ParentPlugin(card.kind).HasValue;
+            float indent = companion ? 20 : 0;
+            Rect nameRect = new Rect(row.x + 5 + indent, row.y + 3, textWidth - indent, height - 6);
+            string name = companion ? (UMAContentCatalog.IsTests(card.kind) ? "Tests" : "Examples") : UMAContentCatalog.DisplayName(card.kind);
+            GUI.Label(nameRect, new GUIContent(name, UMAContentCatalog.DisplayName(card.kind)), companion ? pluginRowStyle : pluginTitleStyle);
             string status = card.state switch
             {
                 UMAContentInstallationState.Missing => "Not installed",
@@ -104,14 +111,15 @@ namespace UMA
                 UMAContentInstallationState.Installing => "Installing...",
                 _ => "Present - needs verification"
             };
-            if (!string.IsNullOrEmpty(card.version)) status += "\n" + card.version;
+            if (!string.IsNullOrEmpty(card.version)) status += " · " + card.version;
             string detail = card.state == UMAContentInstallationState.Unmanaged
                 ? "Files are present, but the manifest, version, or dependencies could not be verified. Reinstall to repair or adopt them."
                 : status;
             if (!card.canRemove) detail += "\n" + card.removalReason;
-            GUILayout.Label(new GUIContent(status, detail), EditorStyles.wordWrappedLabel,
-                GUILayout.Width(textWidth), GUILayout.Height(42));
-            if (GUILayout.Button(new GUIContent("?", "About this plugin"), GUILayout.Width(24), GUILayout.Height(26)))
+            Rect cell = new Rect(row.x + textWidth + 9, row.y + 3, textWidth, height - 6);
+            GUI.Label(cell, new GUIContent(status, detail), pluginRowStyle);
+            cell.x += textWidth + 4; cell.width = 24;
+            if (GUI.Button(cell, new GUIContent("?", "About this package")))
             {
                 EditorUtility.DisplayDialog(UMAContentCatalog.DisplayName(card.kind),
                     UMAContentCatalog.Description(card.kind) + "\n\nRequires: " +
@@ -121,18 +129,18 @@ namespace UMA
             using (new EditorGUI.DisabledScope(busy))
             {
                 string label = card.state == UMAContentInstallationState.Missing ? "Install" : "Reinstall";
-                if (GUILayout.Button(new GUIContent(label, "Find a matching package automatically, or browse for one."), GUILayout.Width(76), GUILayout.Height(26)))
+                cell.x += cell.width + 4; cell.width = 76;
+                if (GUI.Button(cell, new GUIContent(label, "Find a matching package automatically, or browse for one.")))
                     QueuePluginAction(card.kind, false);
             }
             using (new EditorGUI.DisabledScope(busy || !card.canRemove))
             {
-                if (GUILayout.Button(new GUIContent("Remove", card.canRemove
+                cell.x += cell.width + 4; cell.width = 62;
+                if (GUI.Button(cell, new GUIContent("Remove", card.canRemove
                     ? "Remove unchanged package files; preserve modified files and user data."
-                    : card.removalReason), GUILayout.Width(62), GUILayout.Height(26)))
+                    : card.removalReason)))
                     QueuePluginAction(card.kind, true);
             }
-            GUILayout.FlexibleSpace();
-            EditorGUILayout.EndHorizontal();
         }
 
         private void QueuePluginAction(UMAContentKind kind, bool remove)

@@ -1,0 +1,249 @@
+{
+  "formatVersion": 2,
+  "requiredPluginApiVersion": 1,
+  "contentId": "hair-cards-tests",
+  "contentVersion": "3.1.2",
+  "umaVersion": "3.1f2",
+  "requiredCoreVersion": "3.1.2",
+  "minimumCoreVersion": "3.1.2",
+  "maximumCoreVersionExclusive": "3.2.0",
+  "installRoot": "Assets/UMA/HairCards/Editor/Tests",
+  "dependencies": [
+    "core",
+    "hair-cards",
+    "test-framework"
+  ],
+  "requiredPaths": [
+    "Assets/UMA/HairCards/Editor/Tests/UMA.HairCards.Editor.Tests.asmdef"
+  ],
+  "ownedPaths": [
+    "Assets/UMA/HairCards/Editor/Tests/HairAtlasAlphaTest.shader",
+    "Assets/UMA/HairCards/Editor/Tests/HairBakeReferenceTests.cs",
+    "Assets/UMA/HairCards/Editor/Tests/HairBraidSplineTests.cs",
+    "Assets/UMA/HairCards/Editor/Tests/HairCardClearanceTests.cs",
+    "Assets/UMA/HairCards/Editor/Tests/HairCharacterBindingTests.cs",
+    "Assets/UMA/HairCards/Editor/Tests/HairCoreTests.cs",
+    "Assets/UMA/HairCards/Editor/Tests/HairCoverageTests.cs",
+    "Assets/UMA/HairCards/Editor/Tests/HairEraseTests.cs",
+    "Assets/UMA/HairCards/Editor/Tests/HairFormTests.cs",
+    "Assets/UMA/HairCards/Editor/Tests/HairGatherTests.cs",
+    "Assets/UMA/HairCards/Editor/Tests/HairGrowthDensityTests.cs",
+    "Assets/UMA/HairCards/Editor/Tests/HairModifierCoordinateTests.cs",
+    "Assets/UMA/HairCards/Editor/Tests/HairNaturalStrandTests.cs",
+    "Assets/UMA/HairCards/Editor/Tests/HairNodeTests.cs",
+    "Assets/UMA/HairCards/Editor/Tests/HairPaintLifecycleTests.cs",
+    "Assets/UMA/HairCards/Editor/Tests/HairPopulationTests.cs",
+    "Assets/UMA/HairCards/Editor/Tests/HairProfileOpacityTests.cs",
+    "Assets/UMA/HairCards/Editor/Tests/HairRegularHaircutTests.cs",
+    "Assets/UMA/HairCards/Editor/Tests/HairRibbonReductionTests.cs",
+    "Assets/UMA/HairCards/Editor/Tests/HairRingletTests.cs",
+    "Assets/UMA/HairCards/Editor/Tests/HairSceneToolbarTests.cs",
+    "Assets/UMA/HairCards/Editor/Tests/HairSculptEditingTests.cs",
+    "Assets/UMA/HairCards/Editor/Tests/HairSplineFlowTests.cs",
+    "Assets/UMA/HairCards/Editor/Tests/HairTextureMapTests.cs",
+    "Assets/UMA/HairCards/Editor/Tests/UMA.HairCards.Editor.Tests.asmdef",
+    "Assets/UMA/HairCards/Editor/Tests/UMAContentManifest.json"
+  ],
+  "assets": [
+    {
+      "path": "Assets/UMA/HairCards/Editor/Tests/HairAtlasAlphaTest.shader",
+      "guid": "58d4a50d023e479aa9d1f72f1fdb4ee3",
+      "bytes": 1243,
+      "sha256": "477048e22a5b9a9528634074df797ca98c9a0d53ae82b83ed013496d9d80def7",
+      "metaBytes": 201,
+      "metaSha256": "2c692330ebeed14fe608b02a5cf4730546f4d3a22add2de34591b14c110e0cee"
+    },
+    {
+      "path": "Assets/UMA/HairCards/Editor/Tests/HairBakeReferenceTests.cs",
+      "guid": "6ea5a8d07d774b3db3701486e8914a4c",
+      "bytes": 7148,
+      "sha256": "734f80697c44d7bf91137b537bb9bac8d108b771738f6417b3255139c33c31f3",
+      "metaBytes": 60,
+      "metaSha256": "e0763f13ccf96e66c483d78bd6d67e398bfddd0106ff09c57081b6d5791481b8"
+    },
+    {
+      "path": "Assets/UMA/HairCards/Editor/Tests/HairBraidSplineTests.cs",
+      "guid": "3ef4c4b1c8e44ee3bd2b457f068c3467",
+      "bytes": 13892,
+      "sha256": "fb2b1c1e1d0e692048381d5c3cba0b6124d725df11bf5704839b772fbc9e4148",
+      "metaBytes": 60,
+      "metaSha256": "584bd06052e40c38c55d383d95e663c73a2d26217f24ce18df7592f9955655f8"
+    },
+    {
+      "path": "Assets/UMA/HairCards/Editor/Tests/HairCardClearanceTests.cs",
+      "guid": "98fd7c49e53e4b7c8fd66b2c7f93f474",
+      "bytes": 11672,
+      "sha256": "eb5a313262921414eee8fd2496f8c36ed7cba94ecb7e2df5f27b086d51803bd1",
+      "metaBytes": 60,
+      "metaSha256": "f395d66ad671af46cfe8e4ef2441f9b8cb33c24ec9d57b404538b1410be72a9d"
+    },
+    {
+      "path": "Assets/UMA/HairCards/Editor/Tests/HairCharacterBindingTests.cs",
+      "guid": "6ea8bf916a2348b993c67fd27510c5be",
+      "bytes": 18291,
+      "sha256": "5c12dc8f62942d7d4feaeb8574be53ae53ab8fc9be3df2dd37e9f63235e71aa4",
+      "metaBytes": 240,
+      "metaSha256": "053d11613e55f9dd2d1b541aa82d83cabe05b898eb3570c442e33496bde87615"
+    },
+    {
+      "path": "Assets/UMA/HairCards/Editor/Tests/HairCoreTests.cs",
+      "guid": "e31f82dbe14af9746b62d4206a0e167d",
+      "bytes": 354560,
+      "sha256": "8393e7dc149db387b9b6ad046296d6bd060552e816068bd5c8d278c74f6e5511",
+      "metaBytes": 59,
+      "metaSha256": "41e69382049b5fd64bf661a3657382d8e8bbbe69e00c6dcae83c366466fd7cdc"
+    },
+    {
+      "path": "Assets/UMA/HairCards/Editor/Tests/HairCoverageTests.cs",
+      "guid": "49d93c2dce7d4d99bc80ce24bc8ff8f3",
+      "bytes": 8168,
+      "sha256": "50573c394382e4f0075352bff20dbdd9728df4bab645fd334beeb220cf2da8ca",
+      "metaBytes": 60,
+      "metaSha256": "8e0efe10150110c41fd6dcbb9ecb717a8372c670fdc423189ed552f6cea924ef"
+    },
+    {
+      "path": "Assets/UMA/HairCards/Editor/Tests/HairEraseTests.cs",
+      "guid": "83a7f6b781ac4fbc8fce353b0c1ab314",
+      "bytes": 16977,
+      "sha256": "64f0153351d78ad882539ae85b42c538d68a870074e0595e0b93e8256a60fbe9",
+      "metaBytes": 60,
+      "metaSha256": "08247008d67a105afe11ccdacd36b5275604c20c26cdbd2d2accc1bf17b27b52"
+    },
+    {
+      "path": "Assets/UMA/HairCards/Editor/Tests/HairFormTests.cs",
+      "guid": "ac3bac4a4d76408880f66b594906cceb",
+      "bytes": 22545,
+      "sha256": "e74adbd293e8ff55186df09a2495060e1625d29838dc269ac8ea366fcdb944f6",
+      "metaBytes": 60,
+      "metaSha256": "f764255c6c0eb6cd740733011f2c26acd4e3c467ee45ac677081641577502913"
+    },
+    {
+      "path": "Assets/UMA/HairCards/Editor/Tests/HairGatherTests.cs",
+      "guid": "de28379fda6f49ecbf78e792e9ce2d88",
+      "bytes": 17976,
+      "sha256": "bc4fc9b571a899aa65775e98d196aa5e10a6e881455c8cdd866f6b9ee01fd923",
+      "metaBytes": 60,
+      "metaSha256": "71f91e0e837058b989ae1be89612b81871f01be50c9a3f858f1b5dc35b503b81"
+    },
+    {
+      "path": "Assets/UMA/HairCards/Editor/Tests/HairGrowthDensityTests.cs",
+      "guid": "4a9fc79be0cf46d2a8f63e1c29e8438c",
+      "bytes": 12280,
+      "sha256": "561e5877d9c6ae10be50861f20527ad0d2b7824c2eaeac0d88f9bac74fc19ad7",
+      "metaBytes": 60,
+      "metaSha256": "b1b71800170f673d489e5c945b6c108f84c4923be3401ad3250672380a57561f"
+    },
+    {
+      "path": "Assets/UMA/HairCards/Editor/Tests/HairModifierCoordinateTests.cs",
+      "guid": "0f82f463af5f45be9a1fa6a4637f5b26",
+      "bytes": 20730,
+      "sha256": "06e0dcaa249e08176fe117898d2196546d76c49b592bb14c73a7088561710ec1",
+      "metaBytes": 60,
+      "metaSha256": "3b2551ddf599821b6aeff0cb4152852eff324aeb14d5fb9e0de88b7997f4a651"
+    },
+    {
+      "path": "Assets/UMA/HairCards/Editor/Tests/HairNaturalStrandTests.cs",
+      "guid": "b4f957d13042476e80fbd46e105ce23a",
+      "bytes": 16119,
+      "sha256": "ab40e4d2b489132b586b94a8b720ea00263ccc9d3264671d9867af95c32d451f",
+      "metaBytes": 60,
+      "metaSha256": "cf510b11dddcb2b3b7e5866c9768cf8b7fda8850585054f93738a6171fe6e719"
+    },
+    {
+      "path": "Assets/UMA/HairCards/Editor/Tests/HairNodeTests.cs",
+      "guid": "3f7a401fa31e43ee82143465d7d3a9c5",
+      "bytes": 29700,
+      "sha256": "82be63089f3c4229e108c965f2fae94afc6bf0355741d9b9184ed122758f815b",
+      "metaBytes": 60,
+      "metaSha256": "ca52f325f7af2763991518f45e3f849e4f72291d7384a1cf292b4fe2da39776c"
+    },
+    {
+      "path": "Assets/UMA/HairCards/Editor/Tests/HairPaintLifecycleTests.cs",
+      "guid": "b491c78e50eb4c06a973a22c4b9fcda7",
+      "bytes": 7956,
+      "sha256": "ac65df7b0a832a634c34c23ece4661e0bb5f2836814d82666ad0e90ceab64985",
+      "metaBytes": 60,
+      "metaSha256": "1fd16f88a389f572211abbea5e56c5431c50d1c8f6deea745247bfc0c9c3bb72"
+    },
+    {
+      "path": "Assets/UMA/HairCards/Editor/Tests/HairPopulationTests.cs",
+      "guid": "13a7128bed4ef8b409c9f02dbc1ba7f1",
+      "bytes": 35485,
+      "sha256": "10420413d9526429264ae39c04a34c9438a97cdda93e1058f5cb18c03273a3d7",
+      "metaBytes": 60,
+      "metaSha256": "aca94a810bd3a615a43e7ac4fa617a7f03fd9e39a529a6eb6ea9271497a175bc"
+    },
+    {
+      "path": "Assets/UMA/HairCards/Editor/Tests/HairProfileOpacityTests.cs",
+      "guid": "99482d6e9b594d8e9809cdfc8fef3378",
+      "bytes": 10945,
+      "sha256": "5be319cc1db04838ed981c4168d8b8cb232976670827a9b7d91d0f7bfa366575",
+      "metaBytes": 60,
+      "metaSha256": "96f30e4de45181814ad757da36f78308941a0cc45545146430b982897a606b3a"
+    },
+    {
+      "path": "Assets/UMA/HairCards/Editor/Tests/HairRegularHaircutTests.cs",
+      "guid": "fb645137b6254b2c8ea01391c85b1a9b",
+      "bytes": 8793,
+      "sha256": "9c375384357ffda2741c3f782b8df80fe8cfc12f24f8eb6b1997152c8813d724",
+      "metaBytes": 60,
+      "metaSha256": "2f25d5dedd1aaea4c2ae4c81cea82764d46e006fa7c8f8a5871a1cb7be3697dd"
+    },
+    {
+      "path": "Assets/UMA/HairCards/Editor/Tests/HairRibbonReductionTests.cs",
+      "guid": "ea975e1a14f144b5a5aa60bda527a09d",
+      "bytes": 6628,
+      "sha256": "8db5663e72a82f687057887d6cfe72be2ebf1790ee6aaa43bb95cc2ef2e7a0b8",
+      "metaBytes": 60,
+      "metaSha256": "d76956cee9406bc9a4ea1d134d2aa28d37ce747b61b50405f0299b0d79ee161f"
+    },
+    {
+      "path": "Assets/UMA/HairCards/Editor/Tests/HairRingletTests.cs",
+      "guid": "e0180a4d31914bffb46c1e797a5f015b",
+      "bytes": 14799,
+      "sha256": "5499aa33fe8d456731d07b262950aa1d2ee3d03eb761bd298ebb859b5346522b",
+      "metaBytes": 60,
+      "metaSha256": "3ad326215393ed3bfbe3ff61ca348b4b57a5cd8cad7dc5c46499fee79538e687"
+    },
+    {
+      "path": "Assets/UMA/HairCards/Editor/Tests/HairSceneToolbarTests.cs",
+      "guid": "ccbba6be0515469d93dfd6ddaf6e7a64",
+      "bytes": 5054,
+      "sha256": "48a294dcb2f3d30ec09e835040ec56ed47081004bb6325ed6cd643f734e6034e",
+      "metaBytes": 60,
+      "metaSha256": "07d124331658adf1794e50c445cf9f8ed347f19004cae870e23a151d79516112"
+    },
+    {
+      "path": "Assets/UMA/HairCards/Editor/Tests/HairSculptEditingTests.cs",
+      "guid": "3d78e6c1139c475eab663d3d64873504",
+      "bytes": 22180,
+      "sha256": "f9f7b62671b0c0db918a725979d6ff44517003e10e22e8d576c7a320095b92fc",
+      "metaBytes": 60,
+      "metaSha256": "a24ae9f6f29b07c00ab74ee537e05e90a8d20c19c3c4370f405ed684b9b5d511"
+    },
+    {
+      "path": "Assets/UMA/HairCards/Editor/Tests/HairSplineFlowTests.cs",
+      "guid": "8133d09e4e6342879929818d2d822050",
+      "bytes": 31479,
+      "sha256": "44044e0375e4b28f60f24e2b462bc0d6fc35819ca865572ad9200812879791de",
+      "metaBytes": 60,
+      "metaSha256": "f2cb14a228c14e0929a4322d27391253823c79557aa206c489cb69261f48ff04"
+    },
+    {
+      "path": "Assets/UMA/HairCards/Editor/Tests/HairTextureMapTests.cs",
+      "guid": "631a8d2f201846aba0a70f34d7f1cbab",
+      "bytes": 17199,
+      "sha256": "12760453eb01ee1f974a0a9ebd09884ed6484a8a04416dc6f47de24794c0d128",
+      "metaBytes": 60,
+      "metaSha256": "c2cbaaa42fb38b70f13524c8195b5bbe76760c886b61cf2500ce4ac05b495e8a"
+    },
+    {
+      "path": "Assets/UMA/HairCards/Editor/Tests/UMA.HairCards.Editor.Tests.asmdef",
+      "guid": "1bf8c7280561c564ea406bde7e98674f",
+      "bytes": 846,
+      "sha256": "6d3a4e075859ee34da085aab4d9ae87c1cb18680273175ff8682e9d6dd062474",
+      "metaBytes": 166,
+      "metaSha256": "1bfaac687044397272e0d0b79722c65fa22d8791f650d36bcae7a6f6bf317877"
+    }
+  ]
+}

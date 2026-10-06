@@ -4,11 +4,9 @@ UMA Dismemberment is a Unity 6.3+/UMA 3 runtime mesh slicer. It partitions every
 
 Use these documents according to the task:
 
-- [Artist Setup and Production Guide](ARTIST_GUIDE.md) - complete setup, mesh authoring, cap materials, physics, gameplay integration, extension points, and troubleshooting.
+- [Artist Setup and Production Guide](Documentation/ArtistGuide.md) - complete setup, mesh authoring, cap materials, physics, gameplay integration, extension points, and troubleshooting.
 - [Sample Scene Walkthrough](Samples/README.md) - what the supplied scene demonstrates and how to copy it into another scene.
 - [Cap Material Notes](Samples/Materials/README.md) - the supplied cross-pipeline test material and replacement guidance.
-- [Surface Bleeding Design](BLEEDING_FLUID_SYSTEM_PLAN.md) - the preserved architecture,
-  performance contract, implementation phases, and acceptance criteria for runtime fluid decals.
 
 ## Quick setup
 

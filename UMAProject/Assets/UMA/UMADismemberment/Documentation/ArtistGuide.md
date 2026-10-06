@@ -2,7 +2,7 @@
 
 This guide explains how to prepare characters, materials, physics, and gameplay integration for the UMA 3 dismemberment system in Unity 6.3 or newer. It is written for character artists, technical artists, scene builders, and programmers who connect weapon hits or project-specific behavior to the system.
 
-For a shorter component checklist, start with the [package README](README.md). For a guided tour of the supplied buttons, avatar, callback, physics, and undo action, use the [sample scene walkthrough](Samples/README.md).
+For a shorter component checklist, start with the [package README](../README.md). For a guided tour of the supplied buttons, avatar, callback, physics, and undo action, use the [sample scene walkthrough](../Samples/README.md).
 
 ## Quick navigation
 
@@ -41,15 +41,15 @@ Those are deliberately application-specific and should be added after a successf
 
 The main files are:
 
-- [`Runtime/UmaDismemberment.cs`](Runtime/UmaDismemberment.cs) — component and public API;
-- [`Samples/Scene/U3-GoreExample.unity`](Samples/Scene/U3-GoreExample.unity) — working sample scene;
-- [`Samples/Materials/SliceFill.mat`](Samples/Materials/SliceFill.mat) — simple sample cap material;
-- [`Samples/Materials/DismembermentCap.shader`](Samples/Materials/DismembermentCap.shader) — dependency-free unlit cap shader;
-- [`Samples/Scripts/GUIDismemberment.cs`](Samples/Scripts/GUIDismemberment.cs) — UI button example;
-- [`Samples/Scripts/UndoDismemberments.cs`](Samples/Scripts/UndoDismemberments.cs) — complete undo/rebuild UI example;
-- [`Samples/Scripts/ExampleDismemberCallback.cs`](Samples/Scripts/ExampleDismemberCallback.cs) — event, physics, blood, impulse, and supplemental-gore example;
-- [`Runtime/DismemberedRagdollBuilder.cs`](Runtime/DismemberedRagdollBuilder.cs) — reusable detached rigid/articulated physics builder;
-- [`Tests/Editor/DismembermentMeshBuilderTests.cs`](Tests/Editor/DismembermentMeshBuilderTests.cs) — geometry, rig, physics, lifecycle, and undo examples expressed as tests.
+- [`Runtime/UmaDismemberment.cs`](../Runtime/UmaDismemberment.cs) — component and public API;
+- [`Samples/Scene/U3-GoreExample.unity`](../Samples/Scene/U3-GoreExample.unity) — working sample scene;
+- [`Samples/Materials/SliceFill.mat`](../Samples/Materials/SliceFill.mat) — simple sample cap material;
+- [`Runtime/Resources/UMA/Dismemberment/DismembermentCap.shader`](../Runtime/Resources/UMA/Dismemberment/DismembermentCap.shader) — dependency-free unlit cap shader;
+- [`Samples/Scripts/GUIDismemberment.cs`](../Samples/Scripts/GUIDismemberment.cs) — UI button example;
+- [`Samples/Scripts/UndoDismemberments.cs`](../Samples/Scripts/UndoDismemberments.cs) — complete undo/rebuild UI example;
+- [`Samples/Scripts/ExampleDismemberCallback.cs`](../Samples/Scripts/ExampleDismemberCallback.cs) — event, physics, blood, impulse, and supplemental-gore example;
+- [`Runtime/DismemberedRagdollBuilder.cs`](../Runtime/DismemberedRagdollBuilder.cs) — reusable detached rigid/articulated physics builder;
+- [`Tests/Editor/DismembermentMeshBuilderTests.cs`](../Tests/Editor/DismembermentMeshBuilderTests.cs) — geometry, rig, physics, lifecycle, and undo examples expressed as tests.
 
 The sample cap is intentionally simple. It is useful for verifying geometry and UV scale, but most finished projects will replace it with a pipeline-native lit material.
 

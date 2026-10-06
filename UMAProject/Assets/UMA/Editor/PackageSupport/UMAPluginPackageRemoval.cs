@@ -21,16 +21,6 @@ namespace UMA.Editors.PackageSupport
         private static string Journal => Path.GetFullPath("Library/UMA/PluginRemoval/pending.json");
         static UMAPluginPackageRemoval() { EditorApplication.delayCall += Resume; }
 
-        [MenuItem("UMA/Plugins/Remove Overlay Painter...")]
-        private static void RemovePainter() => RemoveInteractive(UMAContentKind.OverlayPainter);
-        [MenuItem("UMA/Plugins/Remove Overlay Painter Examples...")]
-        private static void RemoveExamples() => RemoveInteractive(UMAContentKind.OverlayPainterExamples);
-        [MenuItem("UMA/Plugins/Remove Overlay Painter Tests...")]
-        private static void RemoveTests() => RemoveInteractive(UMAContentKind.OverlayPainterTests);
-
-        [MenuItem("UMA/Plugins/Remove Hair Card Editor...")]
-        private static void RemoveHairCards() => RemoveInteractive(UMAContentKind.HairCards);
-
         public static void RemoveInteractive(UMAContentKind kind)
         {
             if (!CanRemove(kind, out var manifest, out string error))
@@ -52,10 +42,11 @@ namespace UMA.Editors.PackageSupport
             if (!UMAContentCatalog.IsPlugin(kind)) { error = "Only optional plugins can be removed here."; return false; }
             if (File.Exists(Journal) || File.Exists("Library/UMA/ContentInstaller/pending.json"))
             { error = "A package transaction is already pending."; return false; }
-            if (kind == UMAContentKind.OverlayPainter &&
-                (AssetDatabase.IsValidFolder(UMAContentCatalog.Root(UMAContentKind.OverlayPainterTests)) ||
-                 AssetDatabase.IsValidFolder(UMAContentCatalog.Root(UMAContentKind.OverlayPainterExamples))))
-            { error = "Remove Overlay Painter Tests and Examples before removing Overlay Painter."; return false; }
+            var companions = UMAContentCatalog.Companions(kind).Where(child => Directory.Exists(UMAContentCatalog.Root(child)) &&
+                Directory.EnumerateFiles(UMAContentCatalog.Root(child), "*", SearchOption.AllDirectories)
+                    .Any(path => !path.EndsWith(".meta", StringComparison.OrdinalIgnoreCase))).ToArray();
+            if (companions.Length > 0)
+            { error = "Remove " + string.Join(" and ", companions.Select(UMAContentCatalog.DisplayName)) + " before removing " + UMAContentCatalog.DisplayName(kind) + "."; return false; }
             return UMAContentPackageArchiveValidator.TryReadInstalledManifest(kind, out manifest, out error);
         }
 

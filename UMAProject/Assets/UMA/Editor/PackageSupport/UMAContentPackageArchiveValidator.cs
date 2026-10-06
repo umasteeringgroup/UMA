@@ -14,7 +14,12 @@ namespace UMA.Editors.PackageSupport
         OverlayPainter,
         OverlayPainterExamples,
         OverlayPainterTests,
-        HairCards
+        HairCards,
+        HairCardsExamples,
+        HairCardsTests,
+        Dismemberment,
+        DismembermentExamples,
+        DismembermentTests
     }
 
     public static class UMAContentCatalog
@@ -30,6 +35,11 @@ namespace UMA.Editors.PackageSupport
             UMAContentKind.OverlayPainterExamples => "overlay-painter-examples",
             UMAContentKind.OverlayPainterTests => "overlay-painter-tests",
             UMAContentKind.HairCards => "hair-cards",
+            UMAContentKind.HairCardsExamples => "hair-cards-examples",
+            UMAContentKind.HairCardsTests => "hair-cards-tests",
+            UMAContentKind.Dismemberment => "dismemberment",
+            UMAContentKind.DismembermentExamples => "dismemberment-examples",
+            UMAContentKind.DismembermentTests => "dismemberment-tests",
             _ => throw new ArgumentOutOfRangeException(nameof(kind))
         };
 
@@ -41,6 +51,11 @@ namespace UMA.Editors.PackageSupport
             UMAContentKind.OverlayPainterExamples => "Overlay Painter Examples",
             UMAContentKind.OverlayPainterTests => "Overlay Painter Tests",
             UMAContentKind.HairCards => "Hair Card Editor",
+            UMAContentKind.HairCardsExamples => "Hair Card Examples",
+            UMAContentKind.HairCardsTests => "Hair Card Tests",
+            UMAContentKind.Dismemberment => "Dismemberment",
+            UMAContentKind.DismembermentExamples => "Dismemberment Examples",
+            UMAContentKind.DismembermentTests => "Dismemberment Tests",
             _ => throw new ArgumentOutOfRangeException(nameof(kind))
         };
 
@@ -52,6 +67,11 @@ namespace UMA.Editors.PackageSupport
             UMAContentKind.OverlayPainterExamples => "Assets/UMA/OverlayPainterExamples",
             UMAContentKind.OverlayPainterTests => "Assets/UMA/OverlayPainterTests",
             UMAContentKind.HairCards => "Assets/UMA/HairCards",
+            UMAContentKind.HairCardsExamples => "Assets/UMAProjectData/HairCards/Examples",
+            UMAContentKind.HairCardsTests => "Assets/UMA/HairCards/Editor/Tests",
+            UMAContentKind.Dismemberment => "Assets/UMA/UMADismemberment",
+            UMAContentKind.DismembermentExamples => "Assets/UMA/UMADismemberment/Samples",
+            UMAContentKind.DismembermentTests => "Assets/UMA/UMADismemberment/Tests",
             _ => throw new ArgumentOutOfRangeException(nameof(kind))
         };
 
@@ -66,6 +86,11 @@ namespace UMA.Editors.PackageSupport
             UMAContentKind.OverlayPainterExamples => new[] { "core", "overlay-painter", "uma3", "srp" },
             UMAContentKind.OverlayPainterTests => new[] { "core", "overlay-painter", "test-framework" },
             UMAContentKind.HairCards => new[] { "core" },
+            UMAContentKind.HairCardsExamples => new[] { "core", "hair-cards", "uma3", "srp" },
+            UMAContentKind.HairCardsTests => new[] { "core", "hair-cards", "test-framework" },
+            UMAContentKind.Dismemberment => new[] { "core" },
+            UMAContentKind.DismembermentExamples => new[] { "core", "dismemberment", "uma3", "srp" },
+            UMAContentKind.DismembermentTests => new[] { "core", "dismemberment", "test-framework" },
             _ => throw new ArgumentOutOfRangeException(nameof(kind))
         };
 
@@ -74,12 +99,36 @@ namespace UMA.Editors.PackageSupport
         public static IEnumerable<UMAContentKind> Plugins =>
             Enum.GetValues(typeof(UMAContentKind)).Cast<UMAContentKind>().Where(IsPlugin);
 
+        public static UMAContentKind? ParentPlugin(UMAContentKind kind) => kind switch
+        {
+            UMAContentKind.OverlayPainterExamples or UMAContentKind.OverlayPainterTests => UMAContentKind.OverlayPainter,
+            UMAContentKind.HairCardsExamples or UMAContentKind.HairCardsTests => UMAContentKind.HairCards,
+            UMAContentKind.DismembermentExamples or UMAContentKind.DismembermentTests => UMAContentKind.Dismemberment,
+            _ => null
+        };
+
+        public static IEnumerable<UMAContentKind> Companions(UMAContentKind kind) => Plugins.Where(p => ParentPlugin(p) == kind);
+        public static IEnumerable<UMAContentKind> PluginDisplayOrder => Plugins.Where(p => ParentPlugin(p) == null)
+            .SelectMany(p => new[] { p }.Concat(Companions(p)));
+        public static bool IsTests(UMAContentKind kind) => Dependencies(kind).Contains("test-framework");
+
+        public static bool IsCompanionPath(UMAContentKind parent, string path) => Companions(parent).Any(child =>
+            path == Root(child) || path == Root(child) + ".meta" || path.StartsWith(Root(child) + "/", StringComparison.Ordinal));
+
+        public static bool OwnsPluginPath(UMAContentKind kind, string path) =>
+            path.StartsWith(Root(kind) + "/", StringComparison.Ordinal) && !IsCompanionPath(kind, path);
+
         public static string Description(UMAContentKind kind) => kind switch
         {
             UMAContentKind.OverlayPainter => "Paint and author layered textures directly on UMA characters or in the 2D texture view. Includes material channels, masks, layer effects, editable paths, and procedural generators for clothing, skin, and other surfaces.",
             UMAContentKind.OverlayPainterExamples => "Example assets and presets for learning Overlay Painter workflows. Requires Overlay Painter, UMA 3 Content, and render pipeline support.",
             UMAContentKind.OverlayPainterTests => "Automated tests for developers extending or validating Overlay Painter. Requires Overlay Painter and the Unity Test Framework; it is optional for normal painting workflows.",
             UMAContentKind.HairCards => "Create and groom hair cards on meshes and UMA characters. Paint growth regions, sculpt guides, build procedural hairstyles, author LODs, and bake meshes, slots, overlays, and wardrobe recipes. Includes runtime groom support. UMA's render pipeline support supplies the optional hair shaders and atlas textures. User grooms, exports, recovery, and preferences remain outside the plugin folder.",
+            UMAContentKind.HairCardsExamples => "Optional authored hair grooms, preview assets and textures from Assets/UMAProjectData/HairCards/Examples. Requires Hair Cards, UMA 3 content and render pipeline support. Other user hair projects are not part of this package.",
+            UMAContentKind.HairCardsTests => "Optional automated Hair Cards editor and mesh-generation tests. Requires Hair Cards and Unity Test Framework.",
+            UMAContentKind.Dismemberment => "Runtime UMA mesh dismemberment, cut capping, detached-piece ownership and physics, surface cuts, bleeding and fluid decals. Includes editor configuration and documentation. Normal UMA avatar generation does not require this plugin.",
+            UMAContentKind.DismembermentExamples => "Dismemberment demo scene, callbacks, UI helper scripts, cap materials and surface-fluid profiles. Requires Dismemberment, UMA3 Content and SRP Support.",
+            UMAContentKind.DismembermentTests => "Optional automated dismemberment geometry, physics, resource and surface-cut tests. Requires Dismemberment and Unity Test Framework.",
             _ => string.Empty
         };
 
@@ -89,6 +138,11 @@ namespace UMA.Editors.PackageSupport
             UMAContentKind.OverlayPainterExamples => "OverlayPainterExamples",
             UMAContentKind.OverlayPainterTests => "OverlayPainterTests",
             UMAContentKind.HairCards => "HairCards",
+            UMAContentKind.HairCardsExamples => "HairCardsExamples",
+            UMAContentKind.HairCardsTests => "HairCardsTests",
+            UMAContentKind.Dismemberment => "Dismemberment",
+            UMAContentKind.DismembermentExamples => "DismembermentExamples",
+            UMAContentKind.DismembermentTests => "DismembermentTests",
             _ => throw new ArgumentOutOfRangeException(nameof(kind))
         };
 
@@ -98,6 +152,11 @@ namespace UMA.Editors.PackageSupport
             UMAContentKind.OverlayPainterExamples => "f3d05e75b8aa4d3bb6d02fbb6e6f34b8",
             UMAContentKind.OverlayPainterTests => "5f78f34f3fa748d0b47ad8ba7609428f",
             UMAContentKind.HairCards => "6adee602b17a4f099ff31323a6c8dc4c",
+            UMAContentKind.HairCardsExamples => "a35472ded5b94e1eb0cc5bce746180f1",
+            UMAContentKind.HairCardsTests => "64c3ec7799ed40c4bd7a116079de4025",
+            UMAContentKind.Dismemberment => "1a936e502e1b4d81b2f97b4e8ce0b563",
+            UMAContentKind.DismembermentExamples => "d14a3c192acf4fce9caa7ef74dc87eb0",
+            UMAContentKind.DismembermentTests => "9ea72f06bca04ee7a4d2100630cffe54",
             _ => throw new ArgumentOutOfRangeException(nameof(kind))
         };
 
@@ -109,6 +168,11 @@ namespace UMA.Editors.PackageSupport
                 UMAContentKind.OverlayPainterExamples => new[] { "Samples/Overlay Painter Document.asset" },
                 UMAContentKind.OverlayPainterTests => new[] { "UMA.TexturePaint.Editor.Tests.asmdef" },
                 UMAContentKind.HairCards => new[] { "Core/UMA.HairCards.Core.asmdef", "Runtime/UMA.HairCards.Runtime.asmdef", "Editor/UMA.HairCards.Editor.asmdef", "Editor/HairCardsPluginActions.cs", "UMAPluginDocumentation.json" },
+                UMAContentKind.HairCardsExamples => new[] { "ShortHairPart/ShortHairPart_HairGroom.asset" },
+                UMAContentKind.HairCardsTests => new[] { "UMA.HairCards.Editor.Tests.asmdef" },
+                UMAContentKind.Dismemberment => new[] { "Runtime/UMA.Dismemberment.Runtime.asmdef", "Editor/UMA.Dismemberment.Editor.asmdef", "Editor/DismembermentPluginActions.cs", "UMAPluginDocumentation.json" },
+                UMAContentKind.DismembermentExamples => new[] { "Scripts/UMA.Dismemberment.Samples.asmdef", "Materials/SliceFill.mat" },
+                UMAContentKind.DismembermentTests => new[] { "Editor/UMA.Dismemberment.Editor.Tests.asmdef" },
                 _ => throw new ArgumentOutOfRangeException(nameof(kind))
             };
             return paths.Select(path => Root(kind) + "/" + path).ToArray();
@@ -133,6 +197,7 @@ namespace UMA.Editors.PackageSupport
         public int requiredPluginApiVersion;
         public string contentId;
         public string contentVersion;
+        public string umaVersion;
         public string requiredCoreVersion;
         public string minimumCoreVersion;
         public string maximumCoreVersionExclusive;

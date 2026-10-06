@@ -21,13 +21,13 @@
   <Project Path="UMA.TexturePaint.Runtime.csproj" />
   <Project Path="UMA_Utilities_Editor.csproj" />
   <Project Path="UMA.TestRunner.Editor.csproj" />
+  <Project Path="UMA.PackageSupport.Editor.csproj" />
   <Project Path="Shaderpackager-editor.csproj" />
   <Project Path="UMA_Core_Runtime_Tests.csproj" />
   <Project Path="UMA.Dismemberment.Editor.Tests.csproj" />
   <Project Path="UMA.HairCards.Runtime.csproj" />
   <Project Path="UMA3.Samples.Editor.csproj" />
   <Project Path="UMA.SRP.SkyCar.Samples.csproj" />
-  <Project Path="UMA.PackageSupport.Editor.csproj" />
   <Project Path="UMA.Dismemberment.Samples.csproj" />
   <Project Path="UMA.TexturePaint.Sprite.Editor.csproj" />
   <Project Path="Samples.csproj" />

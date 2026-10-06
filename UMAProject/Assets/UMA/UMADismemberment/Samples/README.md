@@ -2,7 +2,7 @@
 
 `Scene/U3-GoreExample.unity` is a compact integration example for the UMA 3 runtime dismemberment system. It demonstrates a generated UMA character, bone-specific uGUI cut actions, procedural caps, optional detached physics and blood, fatal versus nonfatal cuts, and restoration of the original avatar.
 
-For mesh-authoring and production guidance, see the [Artist Setup and Production Guide](../ARTIST_GUIDE.md).
+For mesh-authoring and production guidance, see the [Artist Setup and Production Guide](../Documentation/ArtistGuide.md).
 
 ## What is in the scene
 

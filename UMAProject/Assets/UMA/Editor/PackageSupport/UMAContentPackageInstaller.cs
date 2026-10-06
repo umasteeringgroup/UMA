@@ -80,17 +80,19 @@ namespace UMA.Editors.PackageSupport
         public static void InstallUma2FromFile() =>
             InstallFromFile(UMAContentKind.Uma2);
 
-        [MenuItem("UMA/Plugins/Install Overlay Painter...")]
         public static void InstallOverlayPainterFromFile() => InstallFromFile(UMAContentKind.OverlayPainter);
 
-        [MenuItem("UMA/Plugins/Install Overlay Painter Examples...")]
         public static void InstallOverlayPainterExamplesFromFile() => InstallFromFile(UMAContentKind.OverlayPainterExamples);
 
-        [MenuItem("UMA/Plugins/Install Overlay Painter Tests...")]
         public static void InstallOverlayPainterTestsFromFile() => InstallFromFile(UMAContentKind.OverlayPainterTests);
 
-        [MenuItem("UMA/Plugins/Install Hair Card Editor...")]
         public static void InstallHairCardsFromFile() => InstallFromFile(UMAContentKind.HairCards);
+
+        public static void InstallHairCardExamplesFromFile() => InstallFromFile(UMAContentKind.HairCardsExamples);
+        public static void InstallHairCardTestsFromFile() => InstallFromFile(UMAContentKind.HairCardsTests);
+        public static void InstallDismembermentFromFile() => InstallFromFile(UMAContentKind.Dismemberment);
+        public static void InstallDismembermentExamplesFromFile() => InstallFromFile(UMAContentKind.DismembermentExamples);
+        public static void InstallDismembermentTestsFromFile() => InstallFromFile(UMAContentKind.DismembermentTests);
 
         public static UMAContentInstallationState GetState(UMAContentKind kind)
         {
@@ -101,6 +103,11 @@ namespace UMA.Editors.PackageSupport
             if (File.Exists(PendingPath))
                 return UMAContentInstallationState.Installing;
             if (!AssetDatabase.IsValidFolder(UMAContentCatalog.Root(kind)))
+                return UMAContentInstallationState.Missing;
+            if (UMAContentCatalog.IsPlugin(kind) && !File.Exists(UMAContentCatalog.ManifestPath(kind)) &&
+                !Directory.EnumerateFiles(UMAContentCatalog.Root(kind), "*", SearchOption.AllDirectories)
+                    .Select(p => p.Replace('\\', '/')).Any(p => UMAContentCatalog.OwnsPluginPath(kind, p) &&
+                        !p.EndsWith(".meta", StringComparison.OrdinalIgnoreCase) && !p.Split('/').Any(part => part.EndsWith("~", StringComparison.Ordinal))))
                 return UMAContentInstallationState.Missing;
             if (!TryValidateInstalledRequiredPaths(kind,
                     out UMAContentManifest manifest, out _) ||
@@ -114,7 +121,7 @@ namespace UMA.Editors.PackageSupport
         {
             return UMAContentPackageArchiveValidator.TryReadInstalledManifest(
                 kind, out UMAContentManifest manifest, out _)
-                ? manifest.contentVersion
+                ? (string.IsNullOrEmpty(manifest.umaVersion) ? manifest.contentVersion : manifest.umaVersion)
                 : string.Empty;
         }
 
@@ -405,17 +412,24 @@ namespace UMA.Editors.PackageSupport
                     error = "The plugin manifest must declare the supported UMA plugin API version.";
                     return false;
                 }
-                if (kind == UMAContentKind.OverlayPainter || kind == UMAContentKind.HairCards) return true;
-                if (!TryValidateInstalledRequiredPaths(UMAContentKind.OverlayPainter, out var painter, out error) ||
-                    !IsCoreVersionCompatible(painter, out error)) return false;
-                if (kind == UMAContentKind.OverlayPainterTests)
+                foreach (string dependency in UMAContentCatalog.Dependencies(kind))
                 {
-                    bool installed = PackageManagerInfo.GetAllRegisteredPackages().Any(p => p.name == "com.unity.test-framework");
-                    if (!installed) error = "Install Unity Test Framework before the Overlay Painter tests.";
-                    return installed;
+                    if (dependency == "core") continue;
+                    if (dependency == "test-framework")
+                    {
+                        if (PackageManagerInfo.GetAllRegisteredPackages().Any(p => p.name == "com.unity.test-framework")) continue;
+                        error = "Install Unity Test Framework before " + UMAContentCatalog.DisplayName(kind) + ".";
+                        return false;
+                    }
+                    if (dependency == "srp")
+                    { if (!TryGetInstalledSrpSupport(out _, out error)) return false; continue; }
+                    var required = Enum.GetValues(typeof(UMAContentKind)).Cast<UMAContentKind>()
+                        .Where(candidate => UMAContentCatalog.Id(candidate) == dependency).ToArray();
+                    if (required.Length != 1) { error = "Unknown package dependency: " + dependency; return false; }
+                    if (!TryValidateInstalledRequiredPaths(required[0], out var installed, out error) ||
+                        !IsCoreVersionCompatible(installed, out error)) return false;
                 }
-                return TryValidateInstalledRequiredPaths(UMAContentKind.Uma3, out var content, out error) &&
-                    IsCoreVersionCompatible(content, out error) && TryGetInstalledSrpSupport(out _, out error);
+                return true;
             }
             if (kind == UMAContentKind.Uma3)
             {
@@ -773,6 +787,8 @@ namespace UMA.Editors.PackageSupport
             var owned = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (string path in (previous?.ownedPaths ?? Array.Empty<string>()).Concat(incoming.ownedPaths))
             {
+                // Older parent releases bundled companions. Preserve them during the split migration.
+                if (UMAContentCatalog.IsCompanionPath(kind, path)) continue;
                 owned.Add(path);
                 owned.Add(path + ".meta");
             }

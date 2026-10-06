@@ -208,7 +208,62 @@ function Assert-SafeUnityPackagePath([string]$path, [string]$installRoot) {
     }
 }
 
-function Get-SourceRecords([string]$sourceRoot, [string]$installRoot) {
+function Sync-UMAPackageVersion([string]$coreSource) {
+    $preferred = @(Get-ChildItem -LiteralPath (Join-Path $repoRoot 'Assets') -Filter 'UMAProjectSettings.asset' -Recurse -File |
+        Where-Object { $_.Directory.Name -eq 'Resources' })
+    if ($preferred.Count -gt 1) { throw 'Multiple UMAProjectSettings resources found; resolve the active settings in Unity before building.' }
+    $settingsPath = if ($preferred.Count -eq 1) { $preferred[0].FullName } else {
+        Join-Path $coreSource 'InternalDataStore/InGame/Resources/UMASettings.asset'
+    }
+    $settingsBytes = [IO.File]::ReadAllBytes($settingsPath)
+    if ($settingsBytes.Length -lt 6 -or [Text.Encoding]::ASCII.GetString($settingsBytes, 0, 6) -ne '%YAML ') {
+        throw "UMASettings is not Unity YAML: $settingsPath. Build through the Unity Editor for native assets."
+    }
+    $settingsText = [Text.Encoding]::UTF8.GetString($settingsBytes)
+    $versionField = [regex]::Match($settingsText, '(?m)^\s*UMAVersion:\s*(.+?)\s*$')
+    if (-not $versionField.Success) { throw "UMASettings has no serialized UMAVersion: $settingsPath" }
+    $raw = $versionField.Groups[1].Value.Trim().Trim('"', "'")
+    $match = [regex]::Match($raw, '^(?:UMA(?: NextGen)?\s+)?(?<major>\d+)\.(?<minor>\d+)(?:(?<stage>[abf])(?<revision>\d+)|\.(?<patch>\d+)(?<suffix>[-+][0-9A-Za-z.-]+)?)$')
+    if (-not $match.Success) { throw "Unsupported UMASettings version: $raw" }
+    $prefix = $match.Groups['major'].Value + '.' + $match.Groups['minor'].Value
+    $stage = $match.Groups['stage'].Value
+    if (-not $stage) {
+        $umaVersion = $prefix + '.' + $match.Groups['patch'].Value + $match.Groups['suffix'].Value
+        $version = $umaVersion
+    } else {
+        $revision = $match.Groups['revision'].Value
+        $umaVersion = $prefix + $stage + $revision
+        $version = if ($stage -eq 'f') { $prefix + '.' + $revision } else {
+            $prefix + '.0-' + $(if ($stage -eq 'a') { 'alpha' } else { 'beta' }) + '.' + $revision
+        }
+    }
+    $packagePath = Join-Path $coreSource 'package.json'
+    $original = [IO.File]::ReadAllText($packagePath)
+    $versionPattern = [regex]'"version"\s*:\s*"[^"]*"'
+    if (-not $versionPattern.IsMatch($original)) { throw 'UMA package.json has no version field.' }
+    $updated = $versionPattern.Replace($original, ('"version": "' + $version + '"'), 1)
+    $umaPattern = [regex]'"umaVersion"\s*:\s*"[^"]*"'
+    if ($umaPattern.IsMatch($updated)) {
+        $updated = $umaPattern.Replace($updated, ('"umaVersion": "' + $umaVersion + '"'), 1)
+    } else {
+        $updated = $versionPattern.Replace($updated, ('"version": "' + $version + '",' + "`n" + '  "umaVersion": "' + $umaVersion + '"'), 1)
+    }
+    if ($updated -ne $original) { [IO.File]::WriteAllText($packagePath, $updated, $utf8NoBom) }
+    return [pscustomobject]@{ Version=$version; UmaVersion=$umaVersion; SettingsPath=$settingsPath }
+}
+
+function Test-PackageSourceExcluded([string]$relative, [string[]]$excludedRoots) {
+    $relative = $relative.Replace('\', '/')
+    foreach ($part in $relative.Split('/')) {
+        if ($part.EndsWith('~') -or $part.EndsWith('~.meta') -or $part.StartsWith('.')) { return $true }
+    }
+    foreach ($root in $excludedRoots) {
+        if ($relative -eq $root -or $relative -eq ($root + '.meta') -or $relative.StartsWith($root + '/', [StringComparison]::Ordinal)) { return $true }
+    }
+    return $false
+}
+
+function Get-SourceRecords([string]$sourceRoot, [string]$installRoot, [string[]]$excludedRoots = @()) {
     $records = New-Object Collections.Generic.List[object]
     $guidSet = New-Object 'Collections.Generic.HashSet[string]' ([StringComparer]::OrdinalIgnoreCase)
     $pathSet = New-Object 'Collections.Generic.HashSet[string]' ([StringComparer]::OrdinalIgnoreCase)
@@ -234,6 +289,7 @@ function Get-SourceRecords([string]$sourceRoot, [string]$installRoot) {
             }
             $relative = $_.FullName.Substring($resolvedRoot.Length).TrimStart(
                 [char[]]"\/").Replace('\', '/')
+            if (Test-PackageSourceExcluded $relative $excludedRoots) { return }
             $ignored = $relative.Equals("package.json",
                     [StringComparison]::OrdinalIgnoreCase) -or
                 $relative.Equals("UMAContentManifest.json",
@@ -249,6 +305,8 @@ function Get-SourceRecords([string]$sourceRoot, [string]$installRoot) {
         }
     Get-ChildItem -LiteralPath $resolvedRoot -Recurse -Force -Directory |
         ForEach-Object {
+            $relative = $_.FullName.Substring($resolvedRoot.Length).TrimStart([char[]]"\/")
+            if (Test-PackageSourceExcluded $relative $excludedRoots) { return }
             if (($_.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
                 throw "Content source folder cannot be a junction or symbolic link: $($_.FullName)"
             }
@@ -264,6 +322,7 @@ function Get-SourceRecords([string]$sourceRoot, [string]$installRoot) {
             $metaFile = Get-Item -LiteralPath $metaPath
             $assetPath = $metaFile.FullName.Substring(0, $metaFile.FullName.Length - 5)
             $relative = $assetPath.Substring($resolvedRoot.Length).TrimStart([char[]]"\/")
+            if (Test-PackageSourceExcluded $relative $excludedRoots) { continue }
             if ([string]::IsNullOrEmpty($relative)) { continue }
             $relativeNormalized = $relative.Replace('\', '/')
             if ($relativeNormalized.Equals("package.json", [StringComparison]::OrdinalIgnoreCase) -or
@@ -357,6 +416,7 @@ function Write-UnityPackage(
         requiredPluginApiVersion = $RequiredPluginApiVersion
         contentId = $contentId
         contentVersion = $contentVersion
+        umaVersion = $script:umaReleaseVersion
         requiredCoreVersion = $contentVersion
         minimumCoreVersion = $contentVersion
         maximumCoreVersionExclusive = Get-CompatibleCoreMaximum $contentVersion
@@ -936,7 +996,9 @@ function Test-CoreFileIncluded([string]$relativePath) {
         $leaf.Equals(".DS_Store", [StringComparison]::OrdinalIgnoreCase)) {
         return $false
     }
-    if ($normalized.Equals("HairCards.meta", [StringComparison]::OrdinalIgnoreCase) -or
+    if ($normalized.Equals("UMADismemberment.meta", [StringComparison]::OrdinalIgnoreCase) -or
+        $normalized.StartsWith("UMADismemberment/", [StringComparison]::OrdinalIgnoreCase) -or
+        $normalized.Equals("HairCards.meta", [StringComparison]::OrdinalIgnoreCase) -or
         $normalized.StartsWith("HairCards/", [StringComparison]::OrdinalIgnoreCase) -or
         $normalized.Equals("OverlayPainter.meta", [StringComparison]::OrdinalIgnoreCase) -or
         $normalized.StartsWith("OverlayPainter/", [StringComparison]::OrdinalIgnoreCase) -or
@@ -1020,7 +1082,7 @@ function Assert-CoreStaging([string]$source, [string]$destination, $sourceFiles)
     if ([string]$package.name -ne "com.umasteeringgroup.uma") {
         throw "Core staging has the wrong package identity"
     }
-    foreach ($forbidden in @("HairCards", "HairCards.meta", "OverlayPainter", "OverlayPainter.meta", "OverlayPainterExamples", "OverlayPainterExamples.meta", "OverlayPainterTests", "OverlayPainterTests.meta", "UMA3", "UMA3.meta", "UMA2", "UMA2.meta",
+    foreach ($forbidden in @("UMADismemberment", "UMADismemberment.meta", "HairCards", "HairCards.meta", "OverlayPainter", "OverlayPainter.meta", "OverlayPainterExamples", "OverlayPainterExamples.meta", "OverlayPainterTests", "OverlayPainterTests.meta", "UMA3", "UMA3.meta", "UMA2", "UMA2.meta",
             "Settings", "Settings.meta",
             "Temp", "Temp.meta", "Tasks", "Tasks.meta",
             "SRP/UMAURPManifest.json", "SRP/UMAHDRPManifest.json")) {
@@ -1131,11 +1193,10 @@ $uma2Source = Resolve-ProjectPath $Uma2SourceDirectory
 $coreSource = Resolve-ProjectPath $CoreSourceDirectory
 $outputRoot = Resolve-ProjectPath $OutputDirectory
 Assert-SafeArtifactDirectory $outputRoot
-if ([string]::IsNullOrWhiteSpace($Version)) {
-    $packageJson = [IO.File]::ReadAllText((Join-Path $coreSource "package.json")) |
-        ConvertFrom-Json
-    $Version = [string]$packageJson.version
-}
+$releaseVersion = Sync-UMAPackageVersion $coreSource
+$script:umaReleaseVersion = $releaseVersion.UmaVersion
+if ([string]::IsNullOrWhiteSpace($Version)) { $Version = $releaseVersion.Version }
+elseif ($Version -ne $releaseVersion.Version) { throw "Requested version $Version does not match installed UMASettings $($releaseVersion.UmaVersion)." }
 if ($Version -notmatch "^\d+\.\d+\.\d+([-.][0-9A-Za-z.-]+)?$") {
     throw "Invalid content version: $Version"
 }
