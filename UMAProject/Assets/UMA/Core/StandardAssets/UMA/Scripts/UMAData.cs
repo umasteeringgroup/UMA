@@ -3899,8 +3899,19 @@ namespace UMA
 
 
         /// <summary>
-        /// Calls character begun events on slots.
+        /// Calls active slots after recipe DNA restoration and before DNA-driven modifier configuration.
         /// </summary>
+        public void FireRecipePreparedEvents()
+        {
+            // Use the assembled slot list for this dispatch; callbacks may replace the recipe's array.
+            var slots = umaRecipe?.slotDataList;
+            if (slots == null) return;
+            foreach (var slot in slots)
+                if (slot != null && !slot.Suppressed && slot.asset != null)
+                    slot.asset.RecipePrepared?.Invoke(this);
+        }
+
+        /// <summary>Calls character begun events on slots.</summary>
         public void FireCharacterBegunEvents()
 		{
             if (CharacterBegun != null)

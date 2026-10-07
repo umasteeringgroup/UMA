@@ -1,7 +1,7 @@
 ﻿<Solution>
+  <Project Path="UMA_Core.csproj" />
   <Project Path="UMA_Core_Editor_Tests.csproj" />
   <Project Path="asset-store-tools-editor.csproj" />
-  <Project Path="UMA_Core.csproj" />
   <Project Path="UMA_Core_Editor.csproj" />
   <Project Path="JBooth.BetterShaders.Editor.csproj" />
   <Project Path="UMA.HairCards.Editor.csproj" />

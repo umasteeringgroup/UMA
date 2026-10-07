@@ -44,7 +44,8 @@ namespace UMA
                 if (slot?.asset == null) continue;
                 if (slot.asset.animatedBones != null && slot.asset.animatedBones.Length != 0)
                     return "Embedded bone physics requires normal generation.";
-                if (UMATextureEvent.HasAnyListeners(slot.asset.CharacterBegun) || UMATextureEvent.HasAnyListeners(slot.asset.SlotAtlassed) ||
+                if (UMATextureEvent.HasAnyListeners(slot.asset.RecipePrepared) ||
+                    UMATextureEvent.HasAnyListeners(slot.asset.CharacterBegun) || UMATextureEvent.HasAnyListeners(slot.asset.SlotAtlassed) ||
                     UMATextureEvent.HasAnyListeners(slot.asset.DNAApplied)) return "Slot build callbacks require normal generation.";
             }
             foreach (var renderer in data.GetRenderers())

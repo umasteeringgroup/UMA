@@ -1,4 +1,4 @@
-﻿#if UMA_ADDRESSABLES
+#if UMA_ADDRESSABLES
 //#define UMA_VES
 using System;
 using System.Collections.Generic;
@@ -251,7 +251,7 @@ namespace UMA
                         //VES removed if (sda.SlotProcessed != null) {
                         if (stripUVAttachedShaders)
                         {
-                            UnityEngine.Events.UnityEventBase[] launcherEvents = { sda.CharacterBegun, sda.SlotAtlassed, sda.DNAApplied, sda.CharacterCompleted, sda.SlotProcessed, sda.SlotBeginProcessing }; //VES added
+                            UnityEngine.Events.UnityEventBase[] launcherEvents = { sda.RecipePrepared, sda.CharacterBegun, sda.SlotAtlassed, sda.DNAApplied, sda.CharacterCompleted, sda.SlotProcessed, sda.SlotBeginProcessing }; //VES added
                             foreach (UnityEngine.Events.UnityEventBase evt in launcherEvents) //VES changed from var evt = sda.SlotProcessed: launchers are wired to multiple slot events (e.g. DNAApplied OnDnaAppliedBootstrapper), not only SlotProcessed
                             {
                                 if (evt == null) continue; //VES added
