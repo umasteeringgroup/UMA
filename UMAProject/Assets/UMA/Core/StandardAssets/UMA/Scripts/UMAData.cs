@@ -753,6 +753,13 @@ namespace UMA
 
 		public void ClearExternalSkeletonRoot(SkinnedMeshRenderer owner = null)
 		{
+			// Standard DCA builds also call FBX cleanup. Keep their pre-DNA baseline
+			// when there is no external skeleton to release.
+			if (ReferenceEquals(externalSkeletonRoot, null) && ReferenceEquals(externalBaseRenderer, null))
+			{
+				return;
+			}
+
 			if (owner != null && externalBaseRenderer != null && owner != externalBaseRenderer)
 			{
 				return;
