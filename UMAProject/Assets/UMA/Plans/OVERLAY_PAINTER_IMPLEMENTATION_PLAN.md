@@ -563,4 +563,4 @@ The release phase is complete only when all of the following are true:
 
 ## 12. Deferred follow-on
 
-Runtime project replay, multi-project composition, and transient UMA overlay creation are intentionally deferred until this release phase is complete. Their isolated implementation plan is [Runtime Replay and Overlay Composition](RUNTIME_REPLAY_IMPLEMENTATION_PLAN.md). That plan does not add requirements to the current release definition of done.
+Runtime project replay, multi-project composition, and transient UMA overlay creation are intentionally deferred until this release phase is complete. These follow-on features do not add requirements to the current release definition of done.

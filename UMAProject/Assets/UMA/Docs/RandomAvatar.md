@@ -249,7 +249,7 @@ Reduce per-frame queue limits, use the incremental combiner, space work with int
 
 ## Related Guides
 
-- [GettingStarted.md](GettingStarted.md)
+- [GettingStarted.md](!GettingStarted.md)
 - [DynamicCharacterAvatar.md](DynamicCharacterAvatar.md)
 - [UMAGeneratorSetup.md](UMAGeneratorSetup.md)
 - [UMASimpleLOD.md](UMASimpleLOD.md)

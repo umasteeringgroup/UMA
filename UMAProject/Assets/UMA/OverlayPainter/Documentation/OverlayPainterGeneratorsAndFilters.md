@@ -6,7 +6,7 @@ tool changes, and avoiding results that look procedural, noisy, or physically in
 
 For the complete painting, layer, mask, spline, save, and export workflow, see
 [Overlay Painter](OverlayPainter.md). Plugin developers should use the
-[Plugin API v2 reference](../OverlayPainter/PLUGIN_API_V2.md).
+[Plugin API v2 reference](OverlayPainter_PLUGIN_API_V2.md).
 
 Use [shared anatomical and garment-region masks](AnatomicalRegionMasks.md) from
 **Properties → Region Placement** to localize any generator without painting another

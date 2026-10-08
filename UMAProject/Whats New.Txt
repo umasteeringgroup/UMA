@@ -1,6 +1,34 @@
-# What's New in UMA 3.1f0
+# What's New in UMA 3.1f2
 
-Changes since the `v3.05` release. UMA 3.1 supports **Unity 6.3 and newer**.
+Cumulative changes since the `v3.05` release, updated for **UMA 3.1f2**. Supports **Unity 6.3 and newer**.
+
+## Plugin installation and packaging in 3.1f2
+
+- **Welcome > Plugins** manages Overlay Painter, Hair Card Editor, Dismemberment, and UMA2Compatibility. Compact rows show installation status, descriptions, and install/reinstall/remove actions. Every plugin has separate **Examples** and **Tests** companion packages listed beneath it; parent **Remove All** removes installed companions first.
+- **UMA > Build > Build Plugin Packages** builds the installed plugins and companions using the current UMASettings version. UMA **3.1f2** uses package version **3.1.2**, for example `Dismemberment-3.1.2.unitypackage`. Each archive receives a freshly generated manifest with current asset and importer hashes.
+- Installation searches local package locations first, then tries the matching GitHub release at `V3.1f2`. Downloads show progress and support cancellation. Failed downloads provide retry, local-file selection, and a link to the release page.
+- **Install/Reinstall now shows progress immediately**, including local archive validation, file comparison, backup preparation, and final verification. The selected local archive is no longer unpacked twice during preparation.
+- Reinstall accepts local files already identical to the incoming package, including edits captured by a rebuild. Unowned empty folders and their metadata are retained without false conflict warnings. Genuinely divergent edits still use the change report and backup-and-replace workflow. Building leaves the last installed manifest intact as the comparison baseline.
+- Plugin documentation registers with the **Documentation Browser** and appears under its own selection; **UMA** remains the default. Removal unregisters the plugin's documentation. Documentation navigation labels are clipped to their buttons.
+- **UMA2Compatibility** preserves the legacy **Human Male** and **Human Female** race names and asset GUIDs. Wearable samples and example utility slots belong to its Examples companion; the parent retains the resources needed to build base characters without Examples installed.
+
+## Overlay Painter additions in 3.1f2
+
+- **Shared anatomical and garment-region masks** place effects on knees, elbows, armpits, cuffs, collar, lips, shoulders, waist, and seat. Reusable profiles use bone-relative envelopes, side selection, size/offset/feather controls, custom bone overrides, and Scene outlines. Knee and elbow masks default to the outward third of the joint, away from the bend, and placement applies across material channels.
+- **+Path > Generators** provides Scar and Wound, parameterized tattoo designs, Text and Lettering, multiple stitch constructions, seams and trim, zippers, and frayed tears. Paths retain editable curves and widths, masks, symmetry, and channel settings. Text supports fonts and X/Y flips; generated material channels follow the visible design's transparency.
+- Added **Wetness & Sweat**, **Leather & Coated Fabric**, and **Print Aging**, clothing-finish presets, automatic seam-path creation, and PBR texture-set import.
+- Expanded cloth and quilt authoring with fabric and stripe rotation, triplanar mapping controls, pattern sprites, and one selected atlas tile per quilt panel. Quilt sprite sets provide multiple material channels and selectable tiles; surface normals combine with puff relief.
+- Improved skin detail, stubble, veins, and bruising, and the use of underlying normal detail for cavity and edge placement in weathering generators. Stubble supports raised hairs and recessed follicles with root coloration. Layer-effect and material-channel fixes improve text and generated-layer results.
+- **Overlay Painter Properties** is independently dockable, with a stacked Layers/Properties default layout and one saved layout that can be restored. Layer Preview includes generation progress and **Regenerate all stale layers**.
+- Improved session recovery, target rebinding after generated material names change, Scene overlay visibility, and owned-tile generator memory use on multi-channel UDIM targets.
+
+## Character authoring and editor updates in 3.1f2
+
+- **UMADnaOverrideSlot** assigns DNA values, weighted baked blendshapes, and bone poses through a configured utility slot. The **Recipe Prepared** slot event applies overrides before DNA-driven MeshModifier configuration. Its inspector supports character-derived choices, reorderable/collapsible lists, and a reference character retained for the editor session; a configured example and guide are provided.
+- Added an **Optimizing Blendshapes** guide for artists and developers covering selective loading, Additional Blendshape Slots, baking, MeshModifiers, and race creation. Keep the live blendshape set focused on each character's needs instead of loading the entire library.
+- Added positioned-Prefab conversion and **Assets > Find Usage in Material** for textures. Fixed Icon Creator capture depth handling, duplicate Markdown links, HDRP cut-preview visibility, and repeated automatic reopening of the Welcome window.
+
+See [UMA Plugins](Assets/UMA/Docs/UMAPlugins.md), [Anatomical Region Masks](Assets/UMA/OverlayPainter/Documentation/AnatomicalRegionMasks.md), [Path Generators](Assets/UMA/OverlayPainter/Documentation/PathGenerators.md), [DNA Override Utility Slot](Assets/UMA/Docs/UMADnaOverrideSlot.md), and [Optimizing Blendshapes](Assets/UMA/Docs/OptimizingBlendshapes.MD). Plugin guides are available when the corresponding plugin is installed.
 
 ## Character generation and resource sharing
 
@@ -52,10 +80,10 @@ See [Avatar Presets](Assets/UMA/Docs/AvatarPresets.md) and [Model to Race & Clot
 - Growth, density, and grooming can be painted on vertices or texture-backed maps. Painted scalp areas can grow new roots, including extended hairlines, without changing the source mesh topology or UVs.
 - Guide and clump tools add child guides, ringlets, strand-aligned noise, surface bends, adjustable card sampling, and triangle limits. Gather helpers support ponytails, pigtails, and buns; braid paths can follow editable splines and attach to scalp or helper surfaces.
 - Form and cage editing, atlas-region editing, weighted strip selection, root-to-tip colors, scalp shading, and scalp-clearance controls help finish the shape. Grooms can be rebound to a race or generated character for skin-weight copying.
-- LOD and triangle-budget controls lead to baked meshes, slots, overlays, wardrobe recipes, and preview prefabs. The included PointySwept, Curly, ShortHairPart, and BraidedBun examples show different styling approaches.
+- LOD and triangle-budget controls lead to baked meshes, slots, overlays, wardrobe recipes, and preview prefabs. The Hair Card Examples companion provides PointySwept, Curly, ShortHairPart, and BraidedBun examples, which show different styling approaches.
 - New lit URP hair shaders offer Cutout, Alpha Blended, and Hybrid opaque-core/soft-fringe rendering, with root and tip color, opacity, shine, roughness, and finish controls. Preview and painting workflows have improved material isolation, texture-map persistence, naming, stage navigation, and recovery.
 
-See the [Hair Cards Guide](Assets/UMA/HairCards/README.md), [ShortHairPart Guide](Assets/UMA/HairCards/ShortHairPartGuide.md), and [BraidedBun Guide](Assets/UMA/HairCards/BraidedBunGuide.md).
+See the [Hair Cards Guide](Assets/UMA/HairCards/Documentation/README.md), [ShortHairPart Guide](Assets/UMA/HairCards/Documentation/ShortHairPartGuide.md), and [BraidedBun Guide](Assets/UMA/HairCards/Documentation/BraidedBunGuide.md).
 
 ## Skin, expressions, and visual quality
 

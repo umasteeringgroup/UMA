@@ -403,7 +403,7 @@ Test extreme DNA, improve skinning, add mesh hides, author a corrective Mesh Mod
 
 ## Related Guides
 
-- [GettingStarted.md](GettingStarted.md)
+- [GettingStarted.md](!GettingStarted.md)
 - [CreatingANewRace.md](CreatingANewRace.md)
 - [RaceData.md](RaceData.md)
 - [SlotDataAsset.md](SlotDataAsset.md)

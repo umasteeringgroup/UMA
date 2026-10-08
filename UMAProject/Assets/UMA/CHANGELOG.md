@@ -1,5 +1,17 @@
 # Changelog
 
+## 3.1f2 (package version 3.1.2)
+
+- Added local-first plugin installation with a matching GitHub release download fallback, download cancellation, release-page links, and local-file recovery options.
+- Added immediate install/reinstall progress for archive validation, installed-file comparison, backup preparation, and final verification; reused the selected archive validation result.
+- Fixed false reinstall conflicts from unowned empty folders and files already identical to the incoming archive. Empty folders and metadata are preserved; divergent local edits remain protected. Builds generate new archive manifests while retaining the installed comparison baseline.
+- Added a Plugins page with separate Examples/Tests rows for every official plugin, moved package builds to **UMA > Build > Build Plugin Packages**, and derived release/package versions from installed UMASettings.
+- Separated Overlay Painter, Hair Card Editor, and Dismemberment from Core, and registered plugin documentation in separate Documentation Browser selections.
+- Added Overlay Painter path generators for scars, tattoo designs, text, stitching, seams, trim, zippers, and distress; added text flips, generator material-channel handling, and related layer-effect fixes.
+- Added Wetness & Sweat, Leather & Coated Fabric, Print Aging, clothing-finish presets, automatic seam paths, and PBR texture-set import. Expanded cloth/quilt mapping, rotation, sprite-set selection, and normal combination.
+- Added dockable Overlay Painter Properties, saved-layout restoration, and Layer Preview progress and stale-layer regeneration controls.
+- Added the Recipe Prepared slot event, UMADnaOverrideSlot and its editor/example, and blendshape optimization documentation.
+
 - Moved legacy UMA2 wearable samples and utility slots into the separate UMA2Compatibility Examples package, preserving GUIDs and script identities. Required base-character resources stay in the parent; base races build without Examples.
 - Added shared anatomical and garment-region masks to Overlay Painter's **Region Placement**
   properties: knees, elbows, armpits, wrist/ankle cuffs, collar, lips, shoulders, waist and seat.

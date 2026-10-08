@@ -600,7 +600,7 @@ The required assets are probably not included through Resources, Addressables, o
 
 - [Content Creation](ContentCreation.md)
 - [RaceData](RaceData.md)
-- [Getting Started](GettingStarted.md)
+- [Getting Started](!GettingStarted.md)
 - [DynamicCharacterAvatar](DynamicCharacterAvatar.md)
 - [SlotDataAsset](SlotDataAsset.md)
 - [OverlayDataAsset](OverlayDataAsset.md)

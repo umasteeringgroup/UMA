@@ -268,7 +268,7 @@ The build may still be running. Move that work to the character-updated/complete
 
 ## Related Guides
 
-- [Getting Started](GettingStarted.md)
+- [Getting Started](!GettingStarted.md)
 - [RaceData](RaceData.md)
 - [SlotDataAsset](SlotDataAsset.md)
 - [OverlayDataAsset](OverlayDataAsset.md)

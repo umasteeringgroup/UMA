@@ -9,7 +9,7 @@ UMA can be used for player characters, crowds, character creators, modular NPCs,
 New and returning users should begin with these two guides:
 
 1. [What's New in UMA 3](!WhatsNewInUMA3.md) — new features, workflow changes, compatibility notes, and improvements since the initial UMA 3 release.
-2. [Getting Started with UMA 3](GettingStarted.md) — configure UMA, verify the Global Library and generator, and create your first character.
+2. [Getting Started with UMA 3](!GettingStarted.md) — configure UMA, verify the Global Library and generator, and create your first character.
 
 Artists creating new content should continue with:
 
@@ -36,7 +36,7 @@ You can open these guides inside Unity from `UMA > View Documentation`.
 ### Setup and core workflow
 
 - [What's New in UMA 3](!WhatsNewInUMA3.md)
-- [Getting Started](GettingStarted.md)
+- [Getting Started](!GettingStarted.md)
 - [Dynamic Character Avatar](DynamicCharacterAvatar.md)
 - [UMA Generator Setup](UMAGeneratorSetup.md)
 - [UMA Asset Indexer and Global Library](UMAAssetIndexer.md)
@@ -104,10 +104,10 @@ You can open these guides inside Unity from `UMA > View Documentation`.
 
 ### Engineering and implementation notes
 
-- [Incremental Mesh Combiner Baseline](Plans/IncrementalMeshCombinerBaseline.md)
-- [Dynamic Character Build Optimization Plan](Plans/DynamicCharacterBuildOptimizationPlan.md)
-- [Mesh Modifier Cloth Brush Plan](Plans/MeshModifierClothBrushPlan.md)
-- [Wardrobe Recipe Graph Production Readiness](Plans/UMAWardrobeRecipeGraphProductionReadiness.md)
+- [Incremental Mesh Combiner Baseline](../Plans/IncrementalMeshCombinerBaseline.md)
+- [Dynamic Character Build Optimization Plan](../Plans/DynamicCharacterBuildOptimizationPlan.md)
+- [Mesh Modifier Cloth Brush Plan](../Plans/MeshModifierClothBrushPlan.md)
+- [Wardrobe Recipe Graph Production Readiness](../Plans/UMAWardrobeRecipeGraphProductionReadiness.md)
 
 ## Project Layout
 
