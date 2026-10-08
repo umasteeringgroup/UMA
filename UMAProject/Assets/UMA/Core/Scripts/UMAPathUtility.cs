@@ -19,7 +19,7 @@ namespace UMA
         public const string PackageName = "com.umasteeringgroup.uma";
         public const string LegacyInstallRoot = "Assets/UMA";
         public const string Uma3ContentRoot = LegacyInstallRoot + "/UMA3";
-        public const string Uma2ContentRoot = LegacyInstallRoot + "/UMA2";
+        public const string Uma2ContentRoot = "Assets/UMA2";
         public const string ProjectSrpRoot = LegacyInstallRoot + "/SRP";
         public const string ShaderPackagesRelativePath = "SRP/ShaderPackages";
         public const string ProjectDataRoot = "Assets/UMAProjectData";
@@ -137,7 +137,7 @@ namespace UMA
         public static string ResolveLegacyInstallAssetPath(string assetPath)
         {
             string normalized = Normalize(assetPath);
-            const string oldUma2Root = "Assets/UMA2";
+            const string oldUma2Root = "Assets/UMA/UMA2";
             if (normalized.Equals(oldUma2Root, StringComparison.OrdinalIgnoreCase))
                 return Uma2ContentRoot;
             if (normalized.StartsWith(oldUma2Root + "/",

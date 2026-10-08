@@ -895,7 +895,11 @@ namespace UMA.TexturePaint
                 hash = hash * 31 + JsonUtility.ToJson(effects).GetHashCode();
                 if (overlay.texture != null) hash = hash * 31 + overlay.texture.updateCount.GetHashCode();
                 foreach (var effect in effects.stack)
+                {
                     if (effect.texture != null) hash = hash * 31 + effect.texture.updateCount.GetHashCode();
+                    if (effect.kind == TexturePaintMaskEffectKind.AnatomicalRegion && effect.regionProfile != null)
+                        hash = hash * 31 + JsonUtility.ToJson(effect.regionProfile).GetHashCode();
+                }
                 return hash;
             }
         }

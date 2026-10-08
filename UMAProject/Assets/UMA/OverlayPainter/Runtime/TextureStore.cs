@@ -579,6 +579,30 @@ namespace UMA.TexturePaint
         public readonly List<TexturePaintStrokeRecord> baseStrokes = new List<TexturePaintStrokeRecord>();
         public TangentSpaceMaps tangentSpaceMaps;
         public ProceduralMeshMaps proceduralMeshMaps;
+        private sealed class RegionMaskCache { public string key; public Texture2D texture; }
+        private readonly Dictionary<string, RegionMaskCache> anatomicalRegionMasks = new Dictionary<string, RegionMaskCache>();
+
+        public Texture2D GetAnatomicalRegionMask(TexturePaintMaskEffect effect, int width, int height)
+        {
+            var settings = effect.ResolveRegions();
+            string key = width + "x" + height;
+            foreach (var entry in settings) key += JsonUtility.ToJson(entry);
+            if (anatomicalRegionMasks.TryGetValue(effect.id, out var cached) && cached.key == key && cached.texture != null)
+                return cached.texture;
+            Texture2D texture = TexturePaintAnatomicalMask.BuildRegions(surface, settings, width, height, out _);
+            if (cached?.texture != null) UnityEngine.Object.DestroyImmediate(cached.texture);
+            anatomicalRegionMasks[effect.id] = new RegionMaskCache { key = key, texture = texture };
+            // Remove effects deleted from this set instead of retaining their textures until close.
+            var active = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var layer in layers)
+                if (layer.layerMask?.effects?.stack != null)
+                    foreach (var entry in layer.layerMask.effects.stack)
+                        if (entry.kind == TexturePaintMaskEffectKind.AnatomicalRegion) active.Add(entry.id);
+            var retired = new List<string>();
+            foreach (var entry in anatomicalRegionMasks) if (entry.Key != effect.id && !active.Contains(entry.Key)) retired.Add(entry.Key);
+            foreach (string id in retired) { UnityEngine.Object.DestroyImmediate(anatomicalRegionMasks[id].texture); anatomicalRegionMasks.Remove(id); }
+            return texture;
+        }
         public int activeLayerIndex = -1;
         internal TextureLayerCompositor compositor;
         internal ComputeShader channelPackShader;
@@ -2221,6 +2245,8 @@ namespace UMA.TexturePaint
             tangentSpaceMaps?.Dispose();
             proceduralMeshMaps?.Dispose();
             channels.Clear(); physicalChannelGroups.Clear(); layers.Clear(); sources.Clear(); baseStrokes.Clear();
+            foreach (var entry in anatomicalRegionMasks.Values) if (entry.texture != null) UnityEngine.Object.DestroyImmediate(entry.texture);
+            anatomicalRegionMasks.Clear();
             tangentSpaceMaps = null; proceduralMeshMaps = null;
         }
 

@@ -112,6 +112,7 @@ void CSMaskStack(uint3 dispatchID : SV_DispatchThreadID)
     else if(kind==41) value=saturate((source.r-.5)*2*amount)*lerp(1,MaskFbm(tuv),threshold);
     else if(kind==42) value=saturate((1-source.r)*amount)*lerp(1,MaskFbm(tuv),threshold);
     else if(kind==43) value=saturate(dot(source.xyz*2-1,normalize(_StackDirection.xyz+1e-15))*amount)*lerp(1,MaskFbm(tuv),threshold);
+    else if(kind==44) value=source.r;
     value=saturate(value); if(_StackInvert!=0) value=1-value;
     value=saturate(lerp(original,StackBlend(original,value),_StackOpacity));
     _StackOutput[pixel]=float4(value,value,value,1);

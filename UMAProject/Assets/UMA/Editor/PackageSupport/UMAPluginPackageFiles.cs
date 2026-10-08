@@ -17,25 +17,37 @@ namespace UMA.Editors.PackageSupport
             EditorPrefs.SetString(PreferenceKey(kind), Path.GetFullPath(path));
 
         public static string FindPackage(UMAContentKind kind)
+            => FindPackage(kind, out _);
+
+        public static string FindPackage(UMAContentKind kind,
+            out UMAContentPackageArchiveInfo validatedArchive, Action<string, float> progress = null)
         {
             string remembered = EditorPrefs.GetString(PreferenceKey(kind), "");
             return FindPackage(kind, new[]
             {
                 DefaultDirectory,
+                UMAPluginPackageDownload.CurrentCacheDirectory,
                 Path.GetDirectoryName(remembered),
                 Path.GetFullPath("Plugins"),
                 UMAPathUtility.ResolveAbsolutePath(UMAPathUtility.ResolveInstallAssetPath("Plugins"))
-            }, remembered);
+            }, out validatedArchive, remembered, progress);
         }
 
         // Only search known package locations, never recurse through user content or the whole disk.
         public static string FindPackage(UMAContentKind kind, IEnumerable<string> directories, string remembered = null)
+            => FindPackage(kind, directories, out _, remembered);
+
+        public static string FindPackage(UMAContentKind kind, IEnumerable<string> directories,
+            out UMAContentPackageArchiveInfo validatedArchive, string remembered = null,
+            Action<string, float> progress = null)
         {
+            validatedArchive = null;
             var candidates = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             if (!string.IsNullOrEmpty(remembered) && File.Exists(remembered)) candidates.Add(remembered);
             string stem = UMAContentCatalog.PackageStem(kind);
             foreach (string folder in directories.Where(p => !string.IsNullOrEmpty(p)).Distinct())
             {
+                progress?.Invoke("Looking for local packages in " + folder, 0f);
                 if (!Directory.Exists(folder)) continue;
                 try
                 {
@@ -53,7 +65,7 @@ namespace UMA.Editors.PackageSupport
             Version bestVersion = null;
             foreach (string path in candidates.OrderBy(p => p, StringComparer.Ordinal))
             {
-                if (!UMAContentPackageArchiveValidator.TryValidate(path, kind, out var archive, out _) ||
+                if (!UMAContentPackageArchiveValidator.TryValidate(path, kind, out var archive, out _, progress) ||
                     archive.Manifest.requiredPluginApiVersion != UMAPluginApi.Version ||
                     !UMAContentPackageInstaller.IsCoreVersionCompatible(archive.Manifest, out _)) continue;
                 string numeric = archive.Manifest.contentVersion.Split('-', '+')[0];
@@ -61,6 +73,7 @@ namespace UMA.Editors.PackageSupport
                 if (bestVersion != null && version.CompareTo(bestVersion) <= 0) continue;
                 best = Path.GetFullPath(path);
                 bestVersion = version;
+                validatedArchive = archive;
             }
             return best;
         }

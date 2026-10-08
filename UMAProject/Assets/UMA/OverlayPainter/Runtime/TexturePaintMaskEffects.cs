@@ -13,7 +13,7 @@ namespace UMA.TexturePaint
         Blur, DirectionalBlur, Sharpen, HighPass, Dilate, Erode, Outline, EdgeDetect,
         Distance, Feather, Transform, Warp,
         Curvature, AmbientOcclusion, Thickness, WorldNormal, WorldPosition, MeshID,
-        EdgeWear, CavityDirt, Dust
+        EdgeWear, CavityDirt, Dust, AnatomicalRegion
     }
     [Serializable]
     public sealed class TexturePaintMaskReferenceCache
@@ -41,6 +41,25 @@ namespace UMA.TexturePaint
         public Texture2D texture;
         public TexturePaintLayerMaskTextureChannel channel;
         public TexturePaintLayerReference reference = new TexturePaintLayerReference();
+        public TexturePaintRegionProfile regionProfile;
+        public TexturePaintAnatomicalSettings regionSettings = new TexturePaintAnatomicalSettings();
+        // Union members are evaluated together before this effect restricts the existing mask.
+        public List<TexturePaintAnatomicalSettings> regionUnion = new List<TexturePaintAnatomicalSettings>();
+
+        public List<TexturePaintAnatomicalSettings> ResolveRegions()
+        {
+            var result = new List<TexturePaintAnatomicalSettings>();
+            Add(regionSettings ?? new TexturePaintAnatomicalSettings());
+            if (regionUnion != null) foreach (var entry in regionUnion) if (entry != null) Add(entry);
+            return result;
+            void Add(TexturePaintAnatomicalSettings entry)
+            {
+                var settings = (regionProfile?.Get(entry.region) ?? entry).Clone();
+                settings.side = entry.side;
+                settings.Normalize();
+                result.Add(settings);
+            }
+        }
         public Vector2 tiling = Vector2.one, offset;
         public float rotation;
         public int seed, octaves = 4, steps = 4;
@@ -52,6 +71,9 @@ namespace UMA.TexturePaint
         {
             var copy = (TexturePaintMaskEffect)MemberwiseClone();
             copy.reference = reference?.Clone() ?? new TexturePaintLayerReference();
+            copy.regionSettings = regionSettings?.Clone() ?? new TexturePaintAnatomicalSettings();
+            copy.regionUnion = new List<TexturePaintAnatomicalSettings>();
+            if (regionUnion != null) foreach (var entry in regionUnion) if (entry != null) copy.regionUnion.Add(entry.Clone());
             copy.curve = curve == null ? AnimationCurve.Linear(0, 0, 1, 1) :
                 new AnimationCurve(curve.keys) { preWrapMode = curve.preWrapMode, postWrapMode = curve.postWrapMode };
             return copy;
@@ -72,12 +94,18 @@ namespace UMA.TexturePaint
             direction = new Vector3(Finite(direction.x, 0), Finite(direction.y, 1), Finite(direction.z, 0));
             curve ??= AnimationCurve.Linear(0, 0, 1, 1);
             reference ??= new TexturePaintLayerReference();
+            regionSettings ??= new TexturePaintAnatomicalSettings();
+            regionSettings.Normalize();
+            regionUnion ??= new List<TexturePaintAnatomicalSettings>();
+            regionUnion.RemoveAll(entry => entry == null);
+            foreach (var entry in regionUnion) entry.Normalize();
         }
         public static TexturePaintMaskEffect Create(TexturePaintMaskEffectKind kind)
         {
             var effect = new TexturePaintMaskEffect { kind = kind, repeat = kind < TexturePaintMaskEffectKind.Invert };
             if (kind == TexturePaintMaskEffectKind.MeshID) effect.channel = TexturePaintLayerMaskTextureChannel.Red;
-            if (kind == TexturePaintMaskEffectKind.PaintedMask) effect.blend = TexturePaintMaskBlend.Multiply;
+            if (kind == TexturePaintMaskEffectKind.PaintedMask || kind == TexturePaintMaskEffectKind.AnatomicalRegion)
+                effect.blend = TexturePaintMaskBlend.Multiply;
             if (kind >= TexturePaintMaskEffectKind.Noise && kind <= TexturePaintMaskEffectKind.Dots)
                 effect.tiling = new Vector2(8, 8);
             if (kind == TexturePaintMaskEffectKind.Gradient || kind == TexturePaintMaskEffectKind.RadialGradient)

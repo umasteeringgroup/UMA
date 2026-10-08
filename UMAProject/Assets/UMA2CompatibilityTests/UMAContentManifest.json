@@ -1,0 +1,61 @@
+{
+  "formatVersion": 2,
+  "requiredPluginApiVersion": 1,
+  "contentId": "uma2-compatibility-tests",
+  "contentVersion": "3.1.2",
+  "umaVersion": "3.1f2",
+  "requiredCoreVersion": "3.1.2",
+  "minimumCoreVersion": "3.1.2",
+  "maximumCoreVersionExclusive": "3.2.0",
+  "installRoot": "Assets/UMA2CompatibilityTests",
+  "dependencies": [
+    "core",
+    "uma2",
+    "test-framework"
+  ],
+  "requiredPaths": [
+    "Assets/UMA2CompatibilityTests/Editor/UMA2Compatibility.Editor.Tests.asmdef",
+    "Assets/UMA2CompatibilityTests/Editor/UMA2CompatibilityTests.cs"
+  ],
+  "ownedPaths": [
+    "Assets/UMA2CompatibilityTests/Editor",
+    "Assets/UMA2CompatibilityTests/Editor/UMA2Compatibility.Editor.Tests.asmdef",
+    "Assets/UMA2CompatibilityTests/Editor/UMA2CompatibilityTests.cs",
+    "Assets/UMA2CompatibilityTests/README.md",
+    "Assets/UMA2CompatibilityTests/UMAContentManifest.json"
+  ],
+  "assets": [
+    {
+      "path": "Assets/UMA2CompatibilityTests/Editor",
+      "guid": "490489ed9a0261f4eb233d608812c425",
+      "bytes": 0,
+      "sha256": "",
+      "metaBytes": 172,
+      "metaSha256": "ad2b299bc43dd2b67198a906be95b9a1f86dd02c270ce6074b7774aa7adb0b1a"
+    },
+    {
+      "path": "Assets/UMA2CompatibilityTests/Editor/UMA2Compatibility.Editor.Tests.asmdef",
+      "guid": "0d1dfbd871bca854db0bf41eb55d31d5",
+      "bytes": 561,
+      "sha256": "4630200de29751f05e219b6e1fbb50f84279284925a01995bca0e0c1b9df4a2c",
+      "metaBytes": 166,
+      "metaSha256": "8f99a4e658f0169e3a68fde4e6832f80274f24d9ffdbf3d32992eadc89b76558"
+    },
+    {
+      "path": "Assets/UMA2CompatibilityTests/Editor/UMA2CompatibilityTests.cs",
+      "guid": "736b185f8736dc048aae7b822672102c",
+      "bytes": 10314,
+      "sha256": "883d9f955a766c2984b1208de6ffab26bd06c05efea9e7b5ec9cf5b55a09df21",
+      "metaBytes": 59,
+      "metaSha256": "a92fddbbba7f28a285c65d8d680b0da2aaa435ce678d10a66e81bc45a9d3da93"
+    },
+    {
+      "path": "Assets/UMA2CompatibilityTests/README.md",
+      "guid": "d13cfe5583de483b8cb6c5562a38d0bc",
+      "bytes": 1157,
+      "sha256": "167522271ef2e24b9abb327fc2f7520ff421ebc3afb5ebfbe2b4e38af12a83e5",
+      "metaBytes": 158,
+      "metaSha256": "eeb36a7c4e974508fadc0c4a6c94ea9fdd0a605d309c135f8679d6a942f4f411"
+    }
+  ]
+}

@@ -20,6 +20,7 @@ Related docs:
 - [Overlay Painter Material Presets](OverlayPainter%20-%20MaterialPresets.MD) for saving, applying,
   versioning, and packaging reusable layer stacks.
 - [Overlay Painter Generators and Filters](OverlayPainterGeneratorsAndFilters.md) for the included procedural plugins and their controls.
+- [Shared anatomical and garment-region masks](AnatomicalRegionMasks.md) for bone-based knees, elbows, armpits, cuffs, collars, lips and reusable placement profiles.
 - [UMA Materials](../../Docs/UMAMaterial.md) for shader properties, channel layouts, packing, and output settings.
 - [OverlayDataAsset](../../Docs/OverlayDataAsset.md) for ordinary UMA overlay authoring and recipe use.
 - [SlotDataAsset](../../Docs/SlotDataAsset.md) for slots, source meshes, UVs, and UDIM metadata.
@@ -36,7 +37,7 @@ The changes from the past few days are covered in the following sections:
 - [Clothing detail generators](#clothing-detail-generators): one construction selector with 48 path presets or 32 projection presets for folds, wear, pockets, hardware, damage, labels, hems, and seams.
 - [Hem / Seam generator](#hem--seam-generator): garment construction, roping, thread rows, and protected seam masks.
 - [Path fading and curves](#path-fading-and-curves): side and endpoint fades up to 200%, with independent opacity curves.
-- [Composable mask effects](#composable-mask-effects): 44 inputs, adjustments, filters, and generators, plus reusable [smart-mask recipes](#smart-mask-recipes).
+- [Composable mask effects](#composable-mask-effects): 45 inputs, adjustments, filters, and generators, including anatomical regions, plus reusable [smart-mask recipes](#smart-mask-recipes).
 - [Camera-Space Painting Stencil](#camera-space-painting-stencil): position an image in the 3D view and paint through its coverage.
 - [Live References and Linked Instances](#live-references-and-linked-instances), [Selections and Reusable Regions](#selections-and-reusable-regions), and [Layer Symmetry](#layer-symmetry).
 

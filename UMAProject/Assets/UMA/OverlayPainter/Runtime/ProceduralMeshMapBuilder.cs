@@ -169,8 +169,8 @@ namespace UMA.TexturePaint
             (neighbors[b] ??= new HashSet<int>()).Add(a);
         }
 
-        private static void RasterizeTriangle(Vector2 a, Vector2 b, Vector2 c, int width, int height,
-            float[] distances, Action<int, int, Vector3> write)
+        internal static void RasterizeTriangle(Vector2 a, Vector2 b, Vector2 c, int width, int height,
+            float[] distances, Action<int, int, Vector3> write, bool tightRows = false)
         {
             // UVs describe texel edges; samples below are at texel centers. Using width - 1
             // shrinks the mesh map and leaves valid geometry uncovered along island seams.
@@ -188,7 +188,21 @@ namespace UMA.TexturePaint
             float denominator = (pb.y - pc.y) * (pa.x - pc.x) + (pc.x - pb.x) * (pa.y - pc.y);
             if (Mathf.Abs(denominator) < 0.0000001f) return;
             for (int y = minY; y <= maxY; y++)
-            for (int x = minX; x <= maxX; x++)
+            {
+                int rowMin = minX, rowMax = maxX;
+                if (tightRows)
+                {
+                    // Only visit the triangle's horizontal strip plus its guard band. Thin,
+                    // diagonal UV triangles otherwise scan most of the texture unnecessarily.
+                    float left = float.PositiveInfinity, right = float.NegativeInfinity;
+                    ClipEdge(pa, pb, y + .5f - padding, y + .5f + padding, ref left, ref right);
+                    ClipEdge(pb, pc, y + .5f - padding, y + .5f + padding, ref left, ref right);
+                    ClipEdge(pc, pa, y + .5f - padding, y + .5f + padding, ref left, ref right);
+                    if (left > right) continue;
+                    rowMin = Mathf.Max(minX, Mathf.FloorToInt(left - padding));
+                    rowMax = Mathf.Min(maxX, Mathf.CeilToInt(right + padding));
+                }
+            for (int x = rowMin; x <= rowMax; x++)
             {
                 Vector2 p = new Vector2(x + 0.5f, y + 0.5f);
                 float wa = ((pb.y - pc.y) * (p.x - pc.x) + (pc.x - pb.x) * (p.y - pc.y)) / denominator;
@@ -211,6 +225,22 @@ namespace UMA.TexturePaint
                 distances[index] = distance;
                 write(x, y, barycentric);
             }
+            }
+        }
+
+        private static void ClipEdge(Vector2 a, Vector2 b, float low, float high, ref float left, ref float right)
+        {
+            float dy = b.y - a.y;
+            if (Mathf.Abs(dy) < .000001f)
+            {
+                if (a.y < low || a.y > high) return;
+                left = Mathf.Min(left, Mathf.Min(a.x, b.x)); right = Mathf.Max(right, Mathf.Max(a.x, b.x)); return;
+            }
+            float start = (low - a.y) / dy, end = (high - a.y) / dy;
+            if (start > end) (start, end) = (end, start);
+            start = Mathf.Max(0, start); end = Mathf.Min(1, end); if (start > end) return;
+            float x0 = Mathf.LerpUnclamped(a.x, b.x, start), x1 = Mathf.LerpUnclamped(a.x, b.x, end);
+            left = Mathf.Min(left, Mathf.Min(x0, x1)); right = Mathf.Max(right, Mathf.Max(x0, x1));
         }
 
         private static void ClosestEdge(Vector2 point, Vector2 a, Vector2 b,

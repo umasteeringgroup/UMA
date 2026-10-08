@@ -3339,21 +3339,10 @@ namespace UMA
                 UMAContentPackageInstaller.InstallFromFile(UMAContentKind.Uma3);
 
             AddSeperator();
-            AddText("<b>3. Optional UMA 2 Legacy Content</b>");
-            UMAContentInstallationState uma2State =
-                UMAContentPackageInstaller.GetState(UMAContentKind.Uma2);
-            string uma2Version = UMAContentPackageInstaller.GetInstalledVersion(
-                UMAContentKind.Uma2);
-            AddText(ContentStatusText(UMAContentKind.Uma2, uma2State, uma2Version),
-                uma2State == UMAContentInstallationState.Installed
-                    ? LogType.Info
-                    : LogType.Warning);
-            LogLine uma2Install = AddText(
-                uma2State == UMAContentInstallationState.Missing
-                    ? "Install Optional UMA 2 Legacy Content..."
-                    : "Update, or Reinstall UMA 2 Legacy Content...");
-            uma2Install.ButtonAction = line =>
-                UMAContentPackageInstaller.InstallFromFile(UMAContentKind.Uma2);
+            AddText("<b>3. Optional plugins</b>");
+            AddText("Legacy UMA 2 characters and wearables are available as the UMA2Compatibility plugin.");
+            LogLine plugins = AddText("Manage Plugins...");
+            plugins.ButtonAction = line => ShowPluginsPage();
             AddText("Content updates compare the installed manifest with project files. " +
                 "Locally edited files are never replaced without an explicit backup-and-replace decision.");
 #else             

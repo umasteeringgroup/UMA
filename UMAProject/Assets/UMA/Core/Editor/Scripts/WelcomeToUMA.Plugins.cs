@@ -47,7 +47,10 @@ namespace UMA
             pluginCards.Clear();
             foreach (UMAContentKind kind in UMAContentCatalog.PluginDisplayOrder)
             {
-                bool canRemove = UMAPluginPackageRemoval.CanRemove(kind, out _, out string reason);
+                string reason;
+                bool canRemove = UMAContentCatalog.ParentPlugin(kind).HasValue
+                    ? UMAPluginPackageRemoval.CanRemove(kind, out _, out reason)
+                    : UMAPluginPackageRemoval.CanRemoveAll(kind, out reason);
                 pluginCards.Add(new PluginCard
                 {
                     kind = kind,
@@ -71,19 +74,36 @@ namespace UMA
             pluginRowStyle ??= new GUIStyle(EditorStyles.label) { wordWrap = false, clipping = TextClipping.Clip };
 
             GUILayout.Label("Plugins", EditorStyles.largeLabel);
-            GUILayout.Label("Packages are located automatically. If none is found, choose a .unitypackage file. Use ? for details.",
+            GUILayout.Label("Packages are located locally first, then downloaded from the matching UMA GitHub release if needed. Use ? for details.",
                 EditorStyles.wordWrappedLabel);
             GUILayout.Space(8);
 
-            bool busy = pluginActionQueued || EditorApplication.isCompiling || EditorApplication.isUpdating ||
+            bool busy = pluginActionQueued || UMAPluginPackageDownload.IsActive || EditorApplication.isCompiling || EditorApplication.isUpdating ||
                 File.Exists("Library/UMA/ContentInstaller/pending.json") ||
                 File.Exists("Library/UMA/PluginRemoval/pending.json");
             if (busy)
-                EditorGUILayout.HelpBox("Waiting for the current package operation or Unity import to finish.", MessageType.Info);
+                EditorGUILayout.HelpBox(UMAPluginPackageDownload.IsActive ? "Downloading the plugin package. You can cancel in the progress dialog."
+                    : "Waiting for the current package operation or Unity import to finish.", MessageType.Info);
+
+            var failure = UMAPluginPackageDownload.LastFailure;
+            if (failure != null)
+            {
+                EditorGUILayout.HelpBox(UMAContentCatalog.DisplayName(failure.Kind) + ": " + failure.Message +
+                    "\nDownload manually from: " + failure.DownloadPage +
+                    (failure.Location == null ? "" : "\nPackage: " + failure.Location.FileName), MessageType.Warning);
+                using (new EditorGUI.DisabledScope(busy))
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    if (GUILayout.Button("Retry")) QueuePluginAction(failure.Kind, false);
+                    if (GUILayout.Button("Open Download Page")) Application.OpenURL(failure.DownloadPage);
+                    if (GUILayout.Button("Locate Local Package")) QueuePluginAction(failure.Kind, false, true);
+                    if (GUILayout.Button("Dismiss")) UMAPluginPackageDownload.DismissFailure();
+                }
+            }
 
             pluginsScroll = EditorGUILayout.BeginScrollView(pluginsScroll);
             float availableWidth = Mathf.Max(520, ContentRect.width - 48);
-            float textWidth = (availableWidth - 194) * .5f;
+            float textWidth = (availableWidth - 212) * .5f;
             EditorGUILayout.BeginHorizontal();
             GUILayout.Label("Plugin", EditorStyles.boldLabel, GUILayout.Width(textWidth));
             GUILayout.Label("Install status", EditorStyles.boldLabel, GUILayout.Width(textWidth));
@@ -111,6 +131,7 @@ namespace UMA
                 UMAContentInstallationState.Installing => "Installing...",
                 _ => "Present - needs verification"
             };
+            if (UMAPluginPackageDownload.ActiveKind == card.kind) status = "Downloading...";
             if (!string.IsNullOrEmpty(card.version)) status += " · " + card.version;
             string detail = card.state == UMAContentInstallationState.Unmanaged
                 ? "Files are present, but the manifest, version, or dependencies could not be verified. Reinstall to repair or adopt them."
@@ -130,20 +151,21 @@ namespace UMA
             {
                 string label = card.state == UMAContentInstallationState.Missing ? "Install" : "Reinstall";
                 cell.x += cell.width + 4; cell.width = 76;
-                if (GUI.Button(cell, new GUIContent(label, "Find a matching package automatically, or browse for one.")))
+                if (GUI.Button(cell, new GUIContent(label, "Use a compatible local package, or download it from this UMA version's GitHub release.")))
                     QueuePluginAction(card.kind, false);
             }
             using (new EditorGUI.DisabledScope(busy || !card.canRemove))
             {
-                cell.x += cell.width + 4; cell.width = 62;
-                if (GUI.Button(cell, new GUIContent("Remove", card.canRemove
-                    ? "Remove unchanged package files; preserve modified files and user data."
+                cell.x += cell.width + 4; cell.width = 80;
+                if (GUI.Button(cell, new GUIContent(companion ? "Remove" : "Remove All", card.canRemove
+                    ? (companion ? "Remove unchanged package files; preserve modified files and user data."
+                        : "Remove installed Examples and Tests first, then this plugin; preserve modified files and user data.")
                     : card.removalReason)))
                     QueuePluginAction(card.kind, true);
             }
         }
 
-        private void QueuePluginAction(UMAContentKind kind, bool remove)
+        private void QueuePluginAction(UMAContentKind kind, bool remove, bool locate = false)
         {
             // Imports and removals can reload assemblies. Run outside the active GUI layout.
             pluginActionQueued = true;
@@ -151,7 +173,12 @@ namespace UMA
             {
                 try
                 {
-                    if (remove) UMAPluginPackageRemoval.RemoveInteractive(kind);
+                    if (remove)
+                    {
+                        if (UMAContentCatalog.ParentPlugin(kind).HasValue) UMAPluginPackageRemoval.RemoveInteractive(kind);
+                        else UMAPluginPackageRemoval.RemoveAllInteractive(kind);
+                    }
+                    else if (locate) UMAContentPackageInstaller.LocatePackage(kind);
                     else UMAContentPackageInstaller.InstallFromFile(kind);
                 }
                 finally

@@ -3252,6 +3252,8 @@ namespace UMA.TexturePaint.Editor
             }
             if (layer.kind == TexturePaintLayerKind.Plugin && !IsLayerMaskMode(set))
                 DrawPluginLayerProperties(set, layer);
+            if (layer.kind != TexturePaintLayerKind.Reference && !IsLayerMaskMode(set))
+                DrawAnatomicalPlacement(set, layer);
             if (IsLayerMaskMode(set) && layer.layerMask != null)
             {
                 DrawLayerMaskSource(set, layer);

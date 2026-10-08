@@ -19,7 +19,9 @@ namespace UMA.Editors.PackageSupport
         HairCardsTests,
         Dismemberment,
         DismembermentExamples,
-        DismembermentTests
+        DismembermentTests,
+        Uma2CompatibilityExamples,
+        Uma2CompatibilityTests
     }
 
     public static class UMAContentCatalog
@@ -31,6 +33,8 @@ namespace UMA.Editors.PackageSupport
         {
             UMAContentKind.Uma3 => "uma3",
             UMAContentKind.Uma2 => "uma2",
+            UMAContentKind.Uma2CompatibilityExamples => "uma2-compatibility-examples",
+            UMAContentKind.Uma2CompatibilityTests => "uma2-compatibility-tests",
             UMAContentKind.OverlayPainter => "overlay-painter",
             UMAContentKind.OverlayPainterExamples => "overlay-painter-examples",
             UMAContentKind.OverlayPainterTests => "overlay-painter-tests",
@@ -46,7 +50,9 @@ namespace UMA.Editors.PackageSupport
         public static string DisplayName(UMAContentKind kind) => kind switch
         {
             UMAContentKind.Uma3 => "UMA 3 Content",
-            UMAContentKind.Uma2 => "UMA 2 Legacy Content",
+            UMAContentKind.Uma2 => "UMA2Compatibility",
+            UMAContentKind.Uma2CompatibilityExamples => "UMA2Compatibility Examples",
+            UMAContentKind.Uma2CompatibilityTests => "UMA2Compatibility Tests",
             UMAContentKind.OverlayPainter => "Overlay Painter",
             UMAContentKind.OverlayPainterExamples => "Overlay Painter Examples",
             UMAContentKind.OverlayPainterTests => "Overlay Painter Tests",
@@ -63,6 +69,8 @@ namespace UMA.Editors.PackageSupport
         {
             UMAContentKind.Uma3 => UMAPathUtility.Uma3ContentRoot,
             UMAContentKind.Uma2 => UMAPathUtility.Uma2ContentRoot,
+            UMAContentKind.Uma2CompatibilityExamples => "Assets/UMA2CompatibilityExamples",
+            UMAContentKind.Uma2CompatibilityTests => "Assets/UMA2CompatibilityTests",
             UMAContentKind.OverlayPainter => "Assets/UMA/OverlayPainter",
             UMAContentKind.OverlayPainterExamples => "Assets/UMA/OverlayPainterExamples",
             UMAContentKind.OverlayPainterTests => "Assets/UMA/OverlayPainterTests",
@@ -82,6 +90,8 @@ namespace UMA.Editors.PackageSupport
         {
             UMAContentKind.Uma3 => new[] { "core", "srp" },
             UMAContentKind.Uma2 => new[] { "core", "srp", "uma3" },
+            UMAContentKind.Uma2CompatibilityExamples => new[] { "core", "uma2", "uma3", "srp" },
+            UMAContentKind.Uma2CompatibilityTests => new[] { "core", "uma2", "test-framework" },
             UMAContentKind.OverlayPainter => new[] { "core" },
             UMAContentKind.OverlayPainterExamples => new[] { "core", "overlay-painter", "uma3", "srp" },
             UMAContentKind.OverlayPainterTests => new[] { "core", "overlay-painter", "test-framework" },
@@ -94,13 +104,14 @@ namespace UMA.Editors.PackageSupport
             _ => throw new ArgumentOutOfRangeException(nameof(kind))
         };
 
-        public static bool IsPlugin(UMAContentKind kind) => kind >= UMAContentKind.OverlayPainter;
+        public static bool IsPlugin(UMAContentKind kind) => kind == UMAContentKind.Uma2 || kind >= UMAContentKind.OverlayPainter;
 
         public static IEnumerable<UMAContentKind> Plugins =>
             Enum.GetValues(typeof(UMAContentKind)).Cast<UMAContentKind>().Where(IsPlugin);
 
         public static UMAContentKind? ParentPlugin(UMAContentKind kind) => kind switch
         {
+            UMAContentKind.Uma2CompatibilityExamples or UMAContentKind.Uma2CompatibilityTests => UMAContentKind.Uma2,
             UMAContentKind.OverlayPainterExamples or UMAContentKind.OverlayPainterTests => UMAContentKind.OverlayPainter,
             UMAContentKind.HairCardsExamples or UMAContentKind.HairCardsTests => UMAContentKind.HairCards,
             UMAContentKind.DismembermentExamples or UMAContentKind.DismembermentTests => UMAContentKind.Dismemberment,
@@ -120,6 +131,9 @@ namespace UMA.Editors.PackageSupport
 
         public static string Description(UMAContentKind kind) => kind switch
         {
+            UMAContentKind.Uma2 => "Legacy UMA 2 races, base recipes, DNA converters, expressions, animations, random sets and required base-character resources, retaining their existing GUIDs. Base characters work without Examples; optional clothing, hair and utility-slot samples are in the Examples companion. Requires UMA Core, UMA 3 Content and render-pipeline support. This is compatibility content for current UMA on Unity 6.3+, not the old UMA 2 engine.",
+            UMAContentKind.Uma2CompatibilityExamples => "Optional legacy clothing, hair, tattoos and utility-slot examples, male and female example base recipes, and a setup guide. Installs to Assets/UMA2CompatibilityExamples with existing wearable GUIDs preserved. Requires UMA2Compatibility, UMA 3 Content and render-pipeline support.",
+            UMAContentKind.Uma2CompatibilityTests => "Optional automated coverage, archive ownership, path resolution and documentation registration tests for UMA2Compatibility. Requires UMA2Compatibility and Unity Test Framework.",
             UMAContentKind.OverlayPainter => "Paint and author layered textures directly on UMA characters or in the 2D texture view. Includes material channels, masks, layer effects, editable paths, and procedural generators for clothing, skin, and other surfaces.",
             UMAContentKind.OverlayPainterExamples => "Example assets and presets for learning Overlay Painter workflows. Requires Overlay Painter, UMA 3 Content, and render pipeline support.",
             UMAContentKind.OverlayPainterTests => "Automated tests for developers extending or validating Overlay Painter. Requires Overlay Painter and the Unity Test Framework; it is optional for normal painting workflows.",
@@ -134,6 +148,9 @@ namespace UMA.Editors.PackageSupport
 
         public static string PackageStem(UMAContentKind kind) => kind switch
         {
+            UMAContentKind.Uma2 => "UMA2Compatibility",
+            UMAContentKind.Uma2CompatibilityExamples => "UMA2CompatibilityExamples",
+            UMAContentKind.Uma2CompatibilityTests => "UMA2CompatibilityTests",
             UMAContentKind.OverlayPainter => "OverlayPainter",
             UMAContentKind.OverlayPainterExamples => "OverlayPainterExamples",
             UMAContentKind.OverlayPainterTests => "OverlayPainterTests",
@@ -148,6 +165,9 @@ namespace UMA.Editors.PackageSupport
 
         public static string ManifestGuid(UMAContentKind kind) => kind switch
         {
+            UMAContentKind.Uma2 => "0c3a1b3456784d9eaf102b3c4d5e6f70",
+            UMAContentKind.Uma2CompatibilityExamples => "9bcb7bda21f14ff798e3d7752ac4c97b",
+            UMAContentKind.Uma2CompatibilityTests => "f1e21dca49ad4d34ac6d8758010efa4c",
             UMAContentKind.OverlayPainter => "baf87f8fd4ef4ae49c08b67233d50f71",
             UMAContentKind.OverlayPainterExamples => "f3d05e75b8aa4d3bb6d02fbb6e6f34b8",
             UMAContentKind.OverlayPainterTests => "5f78f34f3fa748d0b47ad8ba7609428f",
@@ -164,6 +184,9 @@ namespace UMA.Editors.PackageSupport
         {
             string[] paths = kind switch
             {
+                UMAContentKind.Uma2 => new[] { "UMA2.Content.asmdef", "UMAPluginDocumentation.json", "UMA2Docs/UMA2Compatibility.md" },
+                UMAContentKind.Uma2CompatibilityExamples => new[] { "Recipes/UMA2 Male Example.asset", "Recipes/UMA2 Female Example.asset", "UMA2.Content.asmref", "Wearables/Example/AdditionalSlots/Locomotion/LocomotionSlotScript.cs", "README.md" },
+                UMAContentKind.Uma2CompatibilityTests => new[] { "Editor/UMA2Compatibility.Editor.Tests.asmdef", "Editor/UMA2CompatibilityTests.cs" },
                 UMAContentKind.OverlayPainter => new[] { "Runtime/UMA.TexturePaint.Runtime.asmdef", "Editor/UMA.TexturePaint.Editor.asmdef", "Editor/TexturePaintPluginActions.cs", "Shaders/StrokeRasterize.compute" },
                 UMAContentKind.OverlayPainterExamples => new[] { "Samples/Overlay Painter Document.asset" },
                 UMAContentKind.OverlayPainterTests => new[] { "UMA.TexturePaint.Editor.Tests.asmdef" },
@@ -228,13 +251,15 @@ namespace UMA.Editors.PackageSupport
     public static class UMAContentPackageArchiveValidator
     {
         public static bool TryValidate(string archivePath, UMAContentKind kind,
-            out UMAContentPackageArchiveInfo info, out string error)
+            out UMAContentPackageArchiveInfo info, out string error, Action<string, float> progress = null)
         {
             info = null;
             error = string.Empty;
             if (!UMASrpPackageArchiveValidator.TryRead(archivePath,
-                    out UMASrpPackageArchiveInfo archive, out error))
+                    out UMASrpPackageArchiveInfo archive, out error, progress))
                 return false;
+
+            progress?.Invoke("Validating package manifest and ownership", 0f);
 
             string expectedRoot = UMAContentCatalog.Root(kind);
             string manifestPath = UMAContentCatalog.ManifestPath(kind);
@@ -397,7 +422,7 @@ namespace UMA.Editors.PackageSupport
                     pair.Key.StartsWith(expectedRoot + "/",
                         StringComparison.OrdinalIgnoreCase) &&
                     string.Equals(registeredPath,
-                        "Assets/UMA2" + pair.Key.Substring(expectedRoot.Length),
+                        "Assets/UMA/UMA2" + pair.Key.Substring(expectedRoot.Length),
                         StringComparison.OrdinalIgnoreCase);
                 if (!string.IsNullOrEmpty(registeredPath) &&
                     !string.Equals(registeredPath, pair.Key,

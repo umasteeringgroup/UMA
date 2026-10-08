@@ -4,9 +4,9 @@ UMA 3.1f0 is an open-source runtime character generation, customization, authori
 
 ## Installation
 
-Install UMA Core through Package Manager using the published package or staged Core folder. Then use **UMA > Welcome to UMA > Install / Update UMA Packages** to install the matching UMA URP or HDRP support, import the matching `UMA3Content` archive, and optionally import UMA2 legacy content.
+Install UMA Core through Package Manager using the published package or staged Core folder. Then use **UMA > Welcome to UMA > Install / Update UMA Packages** to install the matching UMA URP or HDRP support and import the matching `UMA3Content` archive. Legacy UMA 2 content is available from **Welcome > Plugins > UMA2Compatibility**.
 
-Core supports both source-tree (`Assets/UMA`) and UPM (`Packages/com.umasteeringgroup.uma`) installations. A UPM Core is read-only, while character content is deliberately project-owned and editable at `Assets/UMA/UMA3` and `Assets/UMA/UMA2`. Project-specific settings, the Global Library index, generated assets, tasks, and Overlay Painter recovery/export data are stored under `Assets/UMAProjectData`.
+Core supports both source-tree (`Assets/UMA`) and UPM (`Packages/com.umasteeringgroup.uma`) installations. A UPM Core is read-only, while character content is deliberately project-owned and editable at `Assets/UMA/UMA3` and, for UMA2Compatibility, `Assets/UMA2`. Project-specific settings, the Global Library index, generated assets, tasks, and Overlay Painter recovery/export data are stored under `Assets/UMAProjectData`.
 
 Do not install Core simultaneously as an imported `Assets/UMA` tree and as a local UPM package. The editable UMA3/UMA2 content folders are expected alongside a UPM Core.
 

@@ -1,23 +1,56 @@
-# UMA editor plugins
+# UMA official plugins
 
-Launcher API version 1 lives in the editor-only `UMA_Editor` assembly. Overlay Painter, Hair Card Editor and Dismemberment are optional packages. Overlay Painter's generator/filter Plugin API v2 remains a separate API.
+Launcher API version 1 lives in the editor-only `UMA_Editor` assembly. UMA2Compatibility, Overlay Painter, Hair Card Editor and Dismemberment are official optional packages. Overlay Painter's generator/filter Plugin API v2 remains a separate API.
 
 Every plugin distributes **Examples** and **Tests** as separate companion packages. The welcome
 page lists compact, single-line rows with those companions indented immediately below their
-parent. Install the parent first. Remove its companions before removing the parent; normal
+parent. Install the parent first. **Remove All** on the parent removes its installed companions first, then the parent; normal
 plugin use does not require examples or Unity Test Framework.
 
 ## Overlay Painter installation and use
 
-Open **UMA > Welcome to UMA**, then select **Plugins**, the second navigation button. The table lists one row for every plugin in UMA's package catalog, its installation status and version, and **Install** or **Reinstall** and **Remove** actions. Click **?** for a description and dependencies. Installation searches `Build/Plugins`, the last used package location, the project `Plugins` folder, and the UMA install root's `Plugins` folder. It chooses the highest compatible validated version; if none is found, a file picker asks for the matching `.unitypackage`. Status refreshes automatically after package operations. If removal is unavailable, hover over its status or Remove button to see why; dependent packages must be removed first, and unmanaged source files require adoption before managed removal.
+Open **UMA > Welcome to UMA**, then select **Plugins**, the second navigation button. The table lists one row for every plugin in UMA's package catalog, its installation status and version, and **Install** or **Reinstall** and **Remove** actions. Click **?** for a description and dependencies. Installation searches `Build/Plugins`, the current release's download cache, the last used package location, the project `Plugins` folder, and the UMA install root's `Plugins` folder. It chooses the highest compatible validated local version; if none is found, it downloads the package from the matching UMA GitHub release. Status refreshes automatically after package operations. If removal is unavailable, hover over its status or Remove button to see why; dependent packages must be removed first, and unmanaged source files require adoption before managed removal.
+
+The download rule is `https://github.com/umasteeringgroup/UMA/releases/download/V{UMAVersion}/{unitypackagename}`.
+For UMA **3.1f2**, Dismemberment downloads from release **V3.1f2** using the filename
+**Dismemberment-3.1.2.unitypackage**. The release comes from the installed UMASettings asset;
+the filename uses the same version conversion as the package builder. This applies to
+all official plugins and their separate Examples and Tests packages.
+
+Install and Reinstall immediately open a progress dialog while UMA searches and
+validates local packages. It identifies the current operation, including unpacking
+and hashing, checking installed files for changes, and backing up existing content.
+The bar describes the current operation, not an estimate of total installation time.
+Unity displays its own progress during package import. Large local packages can
+still take time to validate even when no download is needed.
+
+Downloads show progress and can be cancelled. Files are streamed to
+`Library/UMA/PluginDownloads/V{UMAVersion}` outside `Assets`. A temporary download is
+never imported or offered as a local package: only a completed archive matching the
+requested plugin and release, with valid manifest hashes, becomes a cached package.
+The usual dependency checks, installation confirmation, and local-change protection
+still apply. Cancellation or an assembly reload discards the partial download.
+
+If the network is unavailable, the release file is missing, or validation fails, the
+Plugins page explains the failure and displays the release download page and expected
+filename. Use **Retry**, **Open Download Page**, or **Locate Local Package** to continue,
+or **Dismiss**. A compatible local package remains usable offline.
 
 Select a scene avatar or a slot with mesh data, then use **Editors > Plugins > Overlay Painter** above the inspector controls. Existing painter menus remain available. Avatar launch is disabled for prefab assets and Prefab Mode.
 
 Settings are under **Project Settings > UMA > Overlay Painter**. First access copies the five legacy UMA settings to `Assets/UMAProjectData/OverlayPainter/Settings.asset`; this asset becomes authoritative. Deliberate settings changes also update the legacy scalar fields for compatibility. Settings, documents, exports, and recovery live outside the installed plugin folder.
 
 Use **Install** or **Reinstall** on **Welcome to UMA > Plugins** to install or update an archive. Managed installation validates paths, GUIDs, hashes, API version, core compatibility, and dependencies before import. Modified files use the existing backup-and-replace workflow. Unowned files survive updates. Backups and interrupted-import records live under `Library/UMA/ContentInstaller`.
+Each build generates a fresh manifest inside the package, including the current asset
+and importer hashes. Building does not overwrite the project's installed manifest:
+that remains the baseline from the last installation. Reinstall compares local files
+with both that baseline and the incoming package, so local edits already included in
+your rebuild do not trigger a conflict warning. Different local edits remain protected.
+Empty folders are omitted from packages because Unity does not reliably import empty
+leaf folders. Reinstall retains unowned empty folders and their metadata without
+reporting them as content conflicts.
 
-The corresponding **Remove** command removes unchanged manifest-owned files while preserving modified and unowned files. Remove examples and tests first. Removal recovery and its last report live under `Library/UMA/PluginRemoval`. A source checkout without an installed manifest must first be adopted using an archive built from the same files.
+The parent's **Remove All** command asks for one confirmation and removes installed Examples and Tests before the main plugin. Companion rows retain **Remove** for individual removal. All selected manifests are validated before removal starts. Modified and unowned files remain protected, including files preserved inside a companion folder; those files do not prevent the parent from being removed during the same operation. The complete sequence is saved under `Library/UMA/PluginRemoval` and resumes after an interrupted Editor session. A source checkout without an installed manifest must first be adopted using an archive built from the same files.
 
 Direct UnityPackage import requires UMA with launcher API 1 already installed. Archive versions are derived from the installed UMASettings release; see the build instructions below for the display and semantic version formats. The supported Unity baseline is 6.3.
 
@@ -48,13 +81,51 @@ The `U3-GoreExample` scene and its lighting assets are now in the Examples packa
 SRP's general samples. Examples requires UMA3 Content and SRP Support; Tests requires Unity
 Test Framework. The cap shader is part of the main plugin, so runtime cuts work without Examples.
 
+## UMA2Compatibility installation and use
+
+Install **UMA2Compatibility** from **UMA > Welcome to UMA > Plugins** when a project needs the
+legacy UMA 2 races, DNA, expressions, animations and random sets.
+It packages the main `Assets/UMA2` content with existing asset GUIDs and the `UMA2.Content`
+assembly preserved. It supplies legacy content for current UMA on Unity 6.3+, rather than the
+old UMA 2 engine. Projects using only UMA 3 content do not require it.
+
+The parent requires Core, UMA 3 Content and the selected render-pipeline support. Select a
+legacy race on an avatar and use wardrobe recipes compatible with that race. Some historical
+materials also require the **UMA 2.X Shader Packages** offered by Welcome's shader page.
+Installing compatibility content does not automatically convert older clothing to UMA 3.
+
+**UMA2Compatibility Examples** installs legacy clothing, hair, tattoos, utility-slot samples, male and female sample base recipes and a setup guide
+to `Assets/UMA2CompatibilityExamples`. **UMA2Compatibility Tests** installs optional archive,
+ownership, path-resolution and documentation tests to `Assets/UMA2CompatibilityTests`. Both
+are separate packages, shown directly beneath the parent. The parent works without Examples: resources required by its base characters live in `Assets/UMA2/Races/HumanShared/BaseResources`. Example utility scripts retain their original assembly through an assembly reference.
+
+The Documentation Browser lists **UMA2Compatibility** separately; its guides and the original
+cloth-upgrade PDF live in `Assets/UMA2/UMA2Docs`. Installation registers the guide descriptor
+and removal unregisters it. The browser displays Markdown; the PDF can be opened as a project
+asset. See the [compatibility guide](../../UMA2/UMA2Docs/UMA2Compatibility.md).
+
+The stable package ID remains `uma2`. The new archive is
+`Build/Plugins/UMA2Compatibility-<version>.unitypackage`. An existing source tree can be adopted
+by reinstalling a matching archive. Previous `Assets/UMA/UMA2` installations can be moved by the
+installer with their GUIDs preserved; competing trees require consolidation first. Remove
+Examples and Tests before the parent. Modified and unowned files are preserved, but characters
+referencing removed legacy assets require reinstalling the plugin.
+
 ## Build plugin packages
 
 Choose **UMA > Build > Build Plugin Packages**. Unity builds all installed known plugin sources into `Build/Plugins/<Plugin>-<version>.unitypackage` and reveals the output folder. No PowerShell installation is needed. Each archive includes a manifest with GUIDs, hashes, API requirements and dependencies, and is validated before replacing an existing output. Plugin payloads and installed ownership manifests are not modified by building. Missing plugins are skipped; missing required files stop that plugin's build with an error.
 
 Both builders read the saved, installed **UMASettings** asset and synchronize Core's `package.json` before building. The actual release label is stored as `umaVersion` in package metadata and each archive manifest; the installer displays this label. For example, `UMA NextGen 3.1f2` produces display version `3.1f2` and semantic package version `3.1.2`. Alpha and beta labels preserve their stage, such as `3.2b3` becoming `3.2.0-beta.3`. A missing, transient or unsupported settings version stops the build rather than falling back to an older version. The PowerShell builder validates the settings asset's Unity YAML header; use the Unity builder if settings are stored as a native asset.
 
-For repository release builds, `tools/Packaging/Build-UMAPluginPackages.ps1` also builds Hair Cards, validates package ownership, and stages Core with all optional plugins excluded. Use `-SkipCore` to build only the plugin archives.
+For repository release builds, `tools/Packaging/Build-UMAPluginPackages.ps1` builds all installed official plugins and their separate companions, validates package ownership, and stages Core with all optional plugins excluded. Use `-SkipCore` to build only the plugin archives.
+
+To build only the compatibility plugin and its companions:
+
+```powershell
+./tools/Packaging/Build-UMAPluginPackages.ps1 -SkipCore -PluginIds @('uma2', 'uma2-compatibility-examples', 'uma2-compatibility-tests')
+```
+
+Selected builds write `packages-selected.json`; full builds retain their `packages.json` report.
 
 ## Register an inspector action
 

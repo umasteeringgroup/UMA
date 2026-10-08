@@ -12,7 +12,9 @@ Use a Control Mask to localize the effect: white applies it, black protects the 
 Texture alpha also contributes to coverage. A normal layer mask can further restrict
 the result. World mapping samples a solid procedural field; Flat uses the garment UVs.
 Rotation turns the procedural pattern. These are procedural material effects, not fluid
-simulation or automatic anatomical sweat placement.
+simulation. For automatic anatomical placement, use **Properties → Region Placement →
+Armpits → Add Region Mask** and tune a shared clothing profile. See
+[Shared anatomical and garment-region masks](AnatomicalRegionMasks.md).
 
 ## Leather and coated fabric
 

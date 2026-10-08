@@ -235,6 +235,7 @@ namespace UMA.TexturePaint.Editor
             if (pendingProjectionEdit != null && GUIUtility.hotControl == 0) FinishProjectionEdit();
             UpdateLinkedPlugins();
             ResumeAfterLinkedUpdates();
+            UpdateAnatomicalProfiles();
             // A completed capture remains available until commit finishes because its snapshot and
             // revision map are the commit payload. Only tick/transition it while no commit operation
             // exists; otherwise this branch would recreate the recovery/project writer every frame.

@@ -642,7 +642,7 @@ namespace UMA.Editors.PackageSupport
         }
 
         public static bool TryRead(string archivePath, out UMASrpPackageArchiveInfo info,
-            out string error)
+            out string error, Action<string, float> progress = null)
         {
             info = null;
             error = string.Empty;
@@ -664,7 +664,10 @@ namespace UMA.Editors.PackageSupport
                     using (FileStream file = File.OpenRead(archivePath))
                     using (GZipStream gzip = new GZipStream(file, CompressionMode.Decompress))
                     {
-                        ReadTar(gzip, entriesByGuid, tempRoot);
+                        progress?.Invoke("Unpacking and hashing " + Path.GetFileName(archivePath), 0f);
+                        ReadTar(gzip, entriesByGuid, tempRoot, () => progress?.Invoke(
+                            "Unpacking and hashing " + Path.GetFileName(archivePath),
+                            file.Length == 0 ? 0f : (float)((double)file.Position / file.Length)));
                     }
 
                     Dictionary<string, string> guidByPath =
@@ -683,8 +686,11 @@ namespace UMA.Editors.PackageSupport
                     Dictionary<string, string> metaSha256ByPath =
                         new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
+                    int checkedEntries = 0;
                     foreach (PendingEntry entry in entriesByGuid.Values)
                     {
+                        progress?.Invoke("Checking package assets and references: " + entry.pathname,
+                            (float)checkedEntries++ / entriesByGuid.Count);
                         if (string.IsNullOrWhiteSpace(entry.pathname))
                             throw new InvalidDataException(
                                 "Unitypackage entry has no pathname: " + entry.guid);
@@ -732,6 +738,7 @@ namespace UMA.Editors.PackageSupport
                     info = new UMASrpPackageArchiveInfo(guidByPath, textByPath,
                         referencesByPath, assetBytesByPath, assetSha256ByPath,
                         metaBytesByPath, metaSha256ByPath);
+                    progress?.Invoke("Package contents checked", 1f);
                     return true;
                 }
                 finally
@@ -748,12 +755,13 @@ namespace UMA.Editors.PackageSupport
         }
 
         private static void ReadTar(Stream stream,
-            Dictionary<string, PendingEntry> entries, string tempRoot)
+            Dictionary<string, PendingEntry> entries, string tempRoot, Action progress)
         {
             byte[] header = new byte[512];
             var members = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             while (ReadExact(stream, header, 0, header.Length))
             {
+                progress?.Invoke();
                 if (IsAllZero(header))
                     return;
 
@@ -802,7 +810,7 @@ namespace UMA.Editors.PackageSupport
                     entry.assetTempPath = Path.Combine(tempRoot, guid + ".asset");
                     entry.assetBytes = size;
                     entry.assetSha256 = CopyEntryToFileAndHash(stream, size,
-                        entry.assetTempPath);
+                        entry.assetTempPath, progress);
                 }
                 else
                 {
@@ -843,7 +851,7 @@ namespace UMA.Editors.PackageSupport
         }
 
         private static string CopyEntryToFileAndHash(Stream source, long count,
-            string path)
+            string path, Action progress)
         {
             using SHA256 sha = SHA256.Create();
             using FileStream output = File.Create(path);
@@ -859,6 +867,7 @@ namespace UMA.Editors.PackageSupport
                 output.Write(buffer, 0, read);
                 sha.TransformBlock(buffer, 0, read, null, 0);
                 remaining -= read;
+                progress?.Invoke();
             }
             sha.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
             return BitConverter.ToString(sha.Hash ?? Array.Empty<byte>())

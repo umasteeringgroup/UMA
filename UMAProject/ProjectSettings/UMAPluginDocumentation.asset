@@ -25,3 +25,7 @@ MonoBehaviour:
     displayName: Dismemberment
     documentationGuid: 06ac48e4f4581aa47ad1cdab4cdda24f
     descriptorGuid: 4de4a16ffd3fdb14f947daa53b96dbb6
+  - pluginId: uma2
+    displayName: UMA2Compatibility
+    documentationGuid: 0490dc311142f92438ba060621c9ff36
+    descriptorGuid: f60fc75df3b6bef4184621af11594eef

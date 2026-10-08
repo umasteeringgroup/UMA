@@ -8,6 +8,10 @@ For the complete painting, layer, mask, spline, save, and export workflow, see
 [Overlay Painter](OverlayPainter.md). Plugin developers should use the
 [Plugin API v2 reference](../OverlayPainter/PLUGIN_API_V2.md).
 
+Use [shared anatomical and garment-region masks](AnatomicalRegionMasks.md) from
+**Properties → Region Placement** to localize any generator without painting another
+selection: knee wear, armpit sweat and cuff dirt can reuse one bone-envelope profile.
+
 ## Contents
 
 - [The essential mental model](#the-essential-mental-model)

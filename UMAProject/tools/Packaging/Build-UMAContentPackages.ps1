@@ -1,6 +1,6 @@
 param(
     [string]$Uma3SourceDirectory = "Assets/UMA/UMA3",
-    [string]$Uma2SourceDirectory = "Assets/UMA/UMA2",
+    [string]$Uma2SourceDirectory = "Assets/UMA2",
     [string]$CoreSourceDirectory = "Assets/UMA",
     [string]$OutputDirectory = "Build/Content",
     [string]$CoreStagingDirectory = "Build/CorePackage",
@@ -1210,10 +1210,10 @@ $oldPathFiles = @(Get-ChildItem -LiteralPath $uma2Source -Recurse -File | Where-
     if (-not $read -and @(".asset", ".prefab", ".unity", ".mat") -contains $extension) {
         $read = Test-UnityYamlFile $_.FullName
     }
-    $read -and [IO.File]::ReadAllText($_.FullName).Contains("Assets/UMA2")
+    $read -and [IO.File]::ReadAllText($_.FullName).Contains("Assets/UMA/UMA2/")
 })
 if ($oldPathFiles.Count -gt 0) {
-    throw "UMA2 content still contains old Assets/UMA2 paths:`n$($oldPathFiles.FullName -join "`n")"
+    throw "UMA2 content still contains old nested Assets/UMA/UMA2 paths:`n$($oldPathFiles.FullName -join "`n")"
 }
 
 $workRoot = Join-Path ([IO.Path]::GetTempPath()) ("uma-content-build-" + [Guid]::NewGuid().ToString("N"))
@@ -1221,26 +1221,26 @@ try {
     New-Item -ItemType Directory -Path $outputRoot -Force | Out-Null
     New-Item -ItemType Directory -Path $workRoot -Force | Out-Null
     $uma3Output = Join-Path $outputRoot "UMA3Content-$Version.unitypackage"
-    $uma2Output = Join-Path $outputRoot "UMA2Content-$Version.unitypackage"
+    $uma2Output = Join-Path $outputRoot "UMA2Compatibility-$Version.unitypackage"
     $uma3ValidationPath = $uma3Output
     $uma2ValidationPath = $uma2Output
     $uma3Records = Get-SourceRecords $uma3Source "Assets/UMA/UMA3"
-    $uma2Records = Get-SourceRecords $uma2Source "Assets/UMA/UMA2"
+    $uma2Records = Get-SourceRecords $uma2Source "Assets/UMA2"
     Assert-NoCoreContentByteReferences $coreSource $uma3Records $uma2Records
     Assert-NoCorePipelineSpecificByteReferences $coreSource
     Assert-NoUma3Uma2ByteReferences $uma3Records $uma2Records
     if (-not $UseExistingPackages) {
         $uma3ValidationPath = Join-Path $workRoot "UMA3Content-$Version.unitypackage"
-        $uma2ValidationPath = Join-Path $workRoot "UMA2Content-$Version.unitypackage"
+        $uma2ValidationPath = Join-Path $workRoot "UMA2Compatibility-$Version.unitypackage"
         [void](Write-UnityPackage "uma3" $Version "Assets/UMA/UMA3" @("core", "srp") @(
             "Assets/UMA/UMA3/UMA3.Samples.asmdef",
             "Assets/UMA/UMA3/Races",
             "Assets/UMA/UMA3/Textures",
             "Assets/UMA/UMA3/Wearables") $uma3Records $uma3ValidationPath $workRoot)
-        [void](Write-UnityPackage "uma2" $Version "Assets/UMA/UMA2" @("core", "srp", "uma3") @(
-            "Assets/UMA/UMA2/UMA2.Content.asmdef",
-            "Assets/UMA/UMA2/Races",
-            "Assets/UMA/UMA2/Wearables") $uma2Records $uma2ValidationPath $workRoot)
+        [void](Write-UnityPackage "uma2" $Version "Assets/UMA2" @("core", "srp", "uma3") @(
+            "Assets/UMA2/UMA2.Content.asmdef",
+            "Assets/UMA2/UMAPluginDocumentation.json",
+            "Assets/UMA2/UMA2Docs/UMA2Compatibility.md") $uma2Records $uma2ValidationPath $workRoot 1)
     }
     elseif (-not (Test-Path -LiteralPath $uma3Output) -or
             -not (Test-Path -LiteralPath $uma2Output)) {
@@ -1255,10 +1255,10 @@ try {
             "Assets/UMA/UMA3/Wearables") `
         (Join-Path $workRoot "validate-uma3")
     $uma2Validation = Assert-UnityPackage $uma2ValidationPath "uma2" `
-        "Assets/UMA/UMA2" $Version @("core", "srp", "uma3") @(
-            "Assets/UMA/UMA2/UMA2.Content.asmdef",
-            "Assets/UMA/UMA2/Races",
-            "Assets/UMA/UMA2/Wearables") `
+        "Assets/UMA2" $Version @("core", "srp", "uma3") @(
+            "Assets/UMA2/UMA2.Content.asmdef",
+            "Assets/UMA2/UMAPluginDocumentation.json",
+            "Assets/UMA2/UMA2Docs/UMA2Compatibility.md") `
         (Join-Path $workRoot "validate-uma2")
     Assert-CrossPackageGuidOwnership $uma3Validation $uma2Validation
     Assert-CoreGuidOwnership $coreSource $uma3Validation $uma2Validation
@@ -1320,12 +1320,12 @@ try {
         Get-ChildItem -LiteralPath $outputRoot -Filter "UMA3Content-*.unitypackage" -File |
             Where-Object { -not (Test-SamePath $_.FullName $uma3Output) } |
             Remove-Item -Force
-        Get-ChildItem -LiteralPath $outputRoot -Filter "UMA2Content-*.unitypackage" -File |
+        Get-ChildItem -LiteralPath $outputRoot -Filter "UMA2Compatibility-*.unitypackage" -File |
             Where-Object { -not (Test-SamePath $_.FullName $uma2Output) } |
             Remove-Item -Force
     }
     Write-Output "Built and validated UMA3 Content $Version ($uma3Count paths)."
-    Write-Output "Built and validated UMA2 Content $Version ($uma2Count paths)."
+    Write-Output "Built and validated UMA2Compatibility $Version ($uma2Count paths). Build its optional companions with Build-UMAPluginPackages.ps1."
     if (-not $SkipCoreStaging) {
         Write-Output "Staged Core without raw SRP/UMA2/UMA3 content at $($coreStage.Destination)."
         if (-not [string]::IsNullOrEmpty([string]$coreStage.Backup)) {

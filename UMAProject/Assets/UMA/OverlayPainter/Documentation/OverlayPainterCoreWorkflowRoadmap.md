@@ -7,10 +7,14 @@ Implementation priorities below track remaining work. Items 1 and 3 have receive
 
 ## Implementation update: items 1 and 3
 
-Implemented an ordered mask stack with 44 input/filter/generator kinds, per-entry blending and opacity,
+Implemented an ordered mask stack with 45 input/filter/generator kinds, per-entry blending and opacity,
 smart-mask recipes with embedded textures, live dependency-checked layer inputs and persisted fallback
 caches. Painted corrections remain an independent raster input; additional independent painted inputs
 can be supplied by referenced Paint layers. Mesh generators retain the existing quick mesh-map estimates.
+
+[Shared anatomical and garment-region masks](AnatomicalRegionMasks.md) now provide bone-relative
+knees, elbows, armpits, cuffs, collar, lips, shoulders, waist and seat envelopes. Region Placement
+uses the same mask for every generator channel, with shared profile assets and pose-aware joint sectors.
 
 Projection now exposes pinned surface warp controls with 3 x 3/5 x 5/9 x 9 grids, explicit refit/reset, and
 shared channel deformation. Cylindrical projection supports partial/full arcs and continuous Rectangle

@@ -1,5 +1,22 @@
 # Changelog
 
+- Moved legacy UMA2 wearable samples and utility slots into the separate UMA2Compatibility Examples package, preserving GUIDs and script identities. Required base-character resources stay in the parent; base races build without Examples.
+- Added shared anatomical and garment-region masks to Overlay Painter's **Region Placement**
+  properties: knees, elbows, armpits, wrist/ankle cuffs, collar, lips, shoulders, waist and seat.
+  Bone-relative envelopes share reusable profiles and affect every material channel. Knee and
+  elbow masks cover an outward 120-degree sector, with pose-aware bend direction and rounded
+  envelopes. Scene outlines, custom bone names, standalone slot alignment and mirrored UV
+  ownership are supported; region examples and regressions remain in companion packages.
+
+- Parent plugin rows now offer **Remove All**, removing installed Examples and Tests before
+  their parent with one confirmation. Modified and unowned files are preserved, and the
+  complete removal sequence resumes after an interrupted Editor session.
+- Packaged the complete legacy `Assets/UMA2` content tree as the official **UMA2Compatibility**
+  plugin, preserving asset GUIDs and its assembly name. Welcome's Plugins page now provides
+  installation, reinstallation and removal, with separate Examples and Tests companions.
+  Plugin builds use the installed UMASettings version, and the Documentation Browser has a
+  separate UMA2Compatibility selection. Earlier nested `Assets/UMA/UMA2` trees retain a
+  GUID-preserving migration path.
 - Added a positioned-Prefab conversion utility under **Assets > UMA** and **UMA > Asset
   Management**. It retains the original path and GUID on a new identity-root wrapper, keeps the old
   hierarchy as an unpacked `_positioned` child at its authored transform, creates a separate

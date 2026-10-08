@@ -99,14 +99,25 @@ namespace UMA.Editors.Tests
         public void DiscoveryFindsValidatedPackageAndIgnoresInvalidHigherVersion()
         {
             File.WriteAllText(Path.Combine(directory, "HairCards-999.0.0.unitypackage"), "Not a package");
-            Assert.That(UMAPluginPackageFiles.FindPackage(UMAContentKind.HairCards, new[] { directory }), Is.EqualTo(archive));
+            var messages = new System.Collections.Generic.List<string>();
+            var fractions = new System.Collections.Generic.List<float>();
+            string found = UMAPluginPackageFiles.FindPackage(UMAContentKind.HairCards, new[] { directory },
+                out var validated, progress: (message, fraction) => { messages.Add(message); fractions.Add(fraction); });
+            Assert.That(found, Is.EqualTo(archive));
+            Assert.That(validated, Is.Not.Null, "Installation should reuse this validated archive instead of unpacking it again.");
+            Assert.That(validated.Manifest.contentId, Is.EqualTo(UMAContentCatalog.Id(UMAContentKind.HairCards)));
+            Assert.That(messages.Any(m => m.StartsWith("Looking for local packages")), Is.True);
+            Assert.That(messages.Any(m => m.StartsWith("Unpacking and hashing")), Is.True);
+            Assert.That(messages.Any(m => m.StartsWith("Checking package assets and references")), Is.True);
+            Assert.That(fractions.All(f => f >= 0f && f <= 1f), Is.True);
         }
 
         [Test]
         public void DiscoveryReturnsNoPackageForMissingDirectoryOrWrongPlugin()
         {
             Assert.That(UMAPluginPackageFiles.FindPackage(UMAContentKind.HairCards, new[] { directory + "-missing" }), Is.Null);
-            Assert.That(UMAPluginPackageFiles.FindPackage(UMAContentKind.OverlayPainter, new[] { directory }, archive), Is.Null);
+            Assert.That(UMAPluginPackageFiles.FindPackage(UMAContentKind.OverlayPainter, new[] { directory }, out var validated, archive), Is.Null);
+            Assert.That(validated, Is.Null, "Rejected candidates must not be passed to the installer.");
         }
 
         [Test]

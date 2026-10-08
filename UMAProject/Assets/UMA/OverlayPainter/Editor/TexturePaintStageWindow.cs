@@ -683,6 +683,7 @@ namespace UMA.TexturePaint.Editor
             }
             if (HandleRegionScene(sceneView,current)) return;
             DrawSymmetryHandles();
+            DrawAnatomicalEnvelopes();
             if (HandleProjectionScene(sceneView, current, targetHover)) return;
             if (HandleBrushModifierDrag(current, true))
             {

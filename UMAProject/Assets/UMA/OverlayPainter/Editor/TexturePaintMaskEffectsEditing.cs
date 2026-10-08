@@ -152,7 +152,9 @@ namespace UMA.TexturePaint.Editor
         {
             var k=e.kind;
             bool pattern=k>=TexturePaintMaskEffectKind.Noise && k<=TexturePaintMaskEffectKind.Dots;
-            bool mesh=k>=TexturePaintMaskEffectKind.Curvature;
+            bool mesh=k>=TexturePaintMaskEffectKind.Curvature && k<=TexturePaintMaskEffectKind.Dust;
+            bool grunge=k>=TexturePaintMaskEffectKind.EdgeWear && k<=TexturePaintMaskEffectKind.Dust;
+            if(k==TexturePaintMaskEffectKind.AnatomicalRegion) DrawAnatomicalParameters(set,e);
             if(k==TexturePaintMaskEffectKind.Texture || mesh)
                 e.texture=(Texture2D)EditorGUILayout.ObjectField(mesh?"Map Override (optional)":"Texture",e.texture,typeof(Texture2D),false);
             if(k==TexturePaintMaskEffectKind.LayerReference) e.reference=DrawLayerReference("Source",set,layer,e.reference,true);
@@ -160,9 +162,9 @@ namespace UMA.TexturePaint.Editor
                 e.channel=(TexturePaintLayerMaskTextureChannel)EditorGUILayout.EnumPopup("Read Channel",e.channel);
             if(k==TexturePaintMaskEffectKind.PaintedMask) EditorGUILayout.LabelField("Uses the original editable mask, independent of generators. Paint on the layer's mask thumbnail to change it.",EditorStyles.wordWrappedMiniLabel);
             if(k==TexturePaintMaskEffectKind.Fill) e.value=EditorGUILayout.Slider("Value",e.value,0,1);
-            if(pattern || k==TexturePaintMaskEffectKind.Warp || k>=TexturePaintMaskEffectKind.EdgeWear)
+            if(pattern || k==TexturePaintMaskEffectKind.Warp || grunge)
             {e.seed=EditorGUILayout.IntField("Seed",e.seed);e.octaves=EditorGUILayout.IntSlider("Noise Detail",e.octaves,1,8);}
-            if(pattern || k==TexturePaintMaskEffectKind.Texture || k==TexturePaintMaskEffectKind.Transform || k==TexturePaintMaskEffectKind.Warp || k==TexturePaintMaskEffectKind.LayerReference || k>=TexturePaintMaskEffectKind.EdgeWear)
+            if(pattern || k==TexturePaintMaskEffectKind.Texture || k==TexturePaintMaskEffectKind.Transform || k==TexturePaintMaskEffectKind.Warp || k==TexturePaintMaskEffectKind.LayerReference || grunge)
             {
                 e.tiling=EditorGUILayout.Vector2Field("UV Scale",e.tiling);e.offset=EditorGUILayout.Vector2Field("UV Offset",e.offset);
                 e.rotation=EditorGUILayout.FloatField("Rotation",e.rotation);e.repeat=EditorGUILayout.Toggle("Repeat at Borders",e.repeat);
@@ -183,11 +185,11 @@ namespace UMA.TexturePaint.Editor
                 e.radius=EditorGUILayout.Slider("Radius (pixels)",e.radius,0,128);
             if(k==TexturePaintMaskEffectKind.DirectionalBlur) e.rotation=EditorGUILayout.Slider("Direction",e.rotation,-180,180);
             if(k==TexturePaintMaskEffectKind.Distance || k==TexturePaintMaskEffectKind.Feather) e.threshold=EditorGUILayout.Slider("Boundary Threshold",e.threshold,0,1);
-            if(k==TexturePaintMaskEffectKind.Sharpen || k==TexturePaintMaskEffectKind.HighPass || k==TexturePaintMaskEffectKind.EdgeDetect || k==TexturePaintMaskEffectKind.Thickness || k>=TexturePaintMaskEffectKind.EdgeWear)
+            if(k==TexturePaintMaskEffectKind.Sharpen || k==TexturePaintMaskEffectKind.HighPass || k==TexturePaintMaskEffectKind.EdgeDetect || k==TexturePaintMaskEffectKind.Thickness || grunge)
                 e.amount=EditorGUILayout.Slider("Strength",e.amount,0,10);
             if(k==TexturePaintMaskEffectKind.WorldNormal || k==TexturePaintMaskEffectKind.WorldPosition || k==TexturePaintMaskEffectKind.Dust)
                 e.direction=EditorGUILayout.Vector3Field("World Direction",e.direction);
-            if(k>=TexturePaintMaskEffectKind.EdgeWear) e.threshold=EditorGUILayout.Slider("Grunge Amount",e.threshold,0,1);
+            if(grunge) e.threshold=EditorGUILayout.Slider("Grunge Amount",e.threshold,0,1);
             if(k==TexturePaintMaskEffectKind.MeshID) e.value=EditorGUILayout.IntField("ID Value",Mathf.RoundToInt(e.value));
             e.invert=EditorGUILayout.Toggle("Invert Result",e.invert);
         }

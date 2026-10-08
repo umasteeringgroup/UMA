@@ -33,10 +33,12 @@ namespace UMA.TexturePaint
                 {
                     if (!effect.enabled || effect.opacity <= 0) continue;
                     Texture source = effect.texture;
+                    if (effect.kind == TexturePaintMaskEffectKind.AnatomicalRegion)
+                        source = set.GetAnatomicalRegionMask(effect, width, height);
                     if (effect.kind == TexturePaintMaskEffectKind.LayerReference)
                     { if (!mask.referenceOutputs.TryGetValue(effect.id, out var referenced) || referenced == null) continue; source = referenced; }
                     if (effect.kind == TexturePaintMaskEffectKind.Texture && source == null) continue;
-                    if (effect.kind >= TexturePaintMaskEffectKind.Curvature && source == null)
+                    if (effect.kind >= TexturePaintMaskEffectKind.Curvature && effect.kind <= TexturePaintMaskEffectKind.Dust && source == null)
                     {
                         if (set?.surface?.mesh == null) continue;
                         var maps = set.GetProceduralMeshMaps();
