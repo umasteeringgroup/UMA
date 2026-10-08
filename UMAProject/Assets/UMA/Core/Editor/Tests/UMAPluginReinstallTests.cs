@@ -114,10 +114,45 @@ namespace UMA.Editors.Tests
             File.WriteAllText(backup + "/Empty/Nested.meta", "keep nested identity");
             var manifest = new UMAContentManifest { ownedPaths = Array.Empty<string>() };
             typeof(UMAContentPackageInstaller).GetMethod("RestoreUnownedPluginFiles", BindingFlags.Static | BindingFlags.NonPublic)
-                .Invoke(null, new object[] { UMAContentKind.Uma2, manifest, manifest, backup, destination });
+                .Invoke(null, new object[] { UMAContentKind.Uma2, manifest, manifest, backup, destination, false });
             Assert.That(Directory.Exists(destination + "/Empty/Nested"), Is.True);
             Assert.That(File.ReadAllText(destination + "/Empty.meta"), Is.EqualTo("keep folder identity"));
             Assert.That(File.ReadAllText(destination + "/Empty/Nested.meta"), Is.EqualTo("keep nested identity"));
+        }
+
+        [TestCase(UMAContentKind.HairCards, false)]
+        [TestCase(UMAContentKind.HairCards, true)]
+        [TestCase(UMAContentKind.Uma3, false)]
+        [TestCase(UMAContentKind.Uma3, true)]
+        public void ReplacementOptionControlsExtraFilesAndPreservesNestedCompanions(UMAContentKind kind, bool removeExtras)
+        {
+            string backup = Path.GetFullPath(root + "/Backup");
+            string destination = Path.GetFullPath(root + "/Destination");
+            Directory.CreateDirectory(backup + "/Extra");
+            File.WriteAllText(backup + "/Packaged.txt", "old packaged file");
+            File.WriteAllText(backup + "/Extra/Custom.txt", "extra user content");
+            File.WriteAllText(backup + "/Extra.meta", "extra folder identity");
+            string packageRoot = UMAContentCatalog.Root(kind);
+            var manifest = new UMAContentManifest { ownedPaths = new[] { packageRoot + "/Packaged.txt" } };
+            if (kind == UMAContentKind.HairCards)
+            {
+                Directory.CreateDirectory(backup + "/Editor/Tests");
+                File.WriteAllText(backup + "/Editor/Tests.meta", "companion identity");
+                File.WriteAllText(backup + "/Editor/Tests/CustomTest.txt", "companion content");
+                // Old parent manifests can still list files now owned by a companion.
+                manifest.ownedPaths = manifest.ownedPaths.Concat(new[] { packageRoot + "/Editor/Tests/CustomTest.txt" }).ToArray();
+            }
+            typeof(UMAContentPackageInstaller).GetMethod("RestoreUnownedPluginFiles", BindingFlags.Static | BindingFlags.NonPublic)
+                .Invoke(null, new object[] { kind, manifest, manifest, backup, destination, removeExtras });
+            Assert.That(File.Exists(destination + "/Packaged.txt"), Is.False, "The import must supply packaged files.");
+            Assert.That(File.Exists(destination + "/Extra/Custom.txt"), Is.EqualTo(!removeExtras));
+            Assert.That(File.Exists(destination + "/Extra.meta"), Is.EqualTo(!removeExtras));
+            Assert.That(File.ReadAllText(backup + "/Extra/Custom.txt"), Is.EqualTo("extra user content"), "Recovery backup must remain intact.");
+            if (kind == UMAContentKind.HairCards)
+            {
+                Assert.That(File.ReadAllText(destination + "/Editor/Tests.meta"), Is.EqualTo("companion identity"));
+                Assert.That(File.ReadAllText(destination + "/Editor/Tests/CustomTest.txt"), Is.EqualTo("companion content"));
+            }
         }
 
         private List<string> Conflicts(UMAContentManifest incoming)

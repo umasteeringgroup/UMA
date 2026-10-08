@@ -107,6 +107,140 @@ namespace UMA.Editors.Tests
             Assert.That(calls, Is.Zero);
         }
 
+        [Test]
+        public void RemovalPolicySurvivesRecoveryAndOldJournalsDefaultToPreservingEdits()
+        {
+            object batch = CreateBatch(UMAContentKind.HairCards, UMAContentKind.HairCardsTests, UMAContentKind.HairCards);
+            Assert.That(BatchType.GetField("removeModified").GetValue(Invoke("ReadBatch", JsonUtility.ToJson(batch))), Is.False);
+            BatchType.GetField("removeModified").SetValue(batch, true);
+            BatchType.GetField("next").SetValue(batch, 1);
+            object resumed = Invoke("ReadBatch", JsonUtility.ToJson(batch));
+            Assert.That(BatchType.GetField("removeModified").GetValue(resumed), Is.True);
+            Assert.That(BatchType.GetField("next").GetValue(resumed), Is.EqualTo(1));
+            object legacy = Invoke("ReadBatch", JsonUtility.ToJson(Entries(batch)[0]));
+            Assert.That(BatchType.GetField("removeModified").GetValue(legacy), Is.False);
+        }
+
+        [TestCase(false, "unchanged")]
+        [TestCase(true, "unchanged")]
+        [TestCase(false, "modified")]
+        [TestCase(true, "modified")]
+        [TestCase(false, "importer")]
+        [TestCase(true, "importer")]
+        [TestCase(false, "missing-meta")]
+        [TestCase(true, "missing-meta")]
+        [TestCase(false, "orphan-meta")]
+        [TestCase(true, "orphan-meta")]
+        public void SelectedPolicyRemovesOwnedFilesAndAlwaysPreservesUnownedFiles(bool removeModified, string state)
+        {
+            string parent = Path.GetFullPath("Library/UMA/RemovalPolicyTests") + Path.DirectorySeparatorChar;
+            string directory = Path.Combine(parent, Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(directory);
+            try
+            {
+                string owned = Path.Combine(directory, "Owned.txt");
+                string unowned = Path.Combine(directory, "User.txt");
+                File.WriteAllText(owned, "original");
+                File.WriteAllText(owned + ".meta", "original importer");
+                File.WriteAllText(unowned, "user content");
+                object batch = CreateBatch(UMAContentKind.HairCards, UMAContentKind.HairCards);
+                object removal = Entries(batch)[0];
+                var manifest = (UMAContentManifest)RemovalType.GetField("manifest").GetValue(removal);
+                var record = manifest.assets[0];
+                record.path = owned;
+                record.sha256 = (string)Invoke("Hash", owned);
+                record.metaSha256 = (string)Invoke("Hash", owned + ".meta");
+                if (state == "modified") File.WriteAllText(owned, "modified");
+                if (state == "importer") File.WriteAllText(owned + ".meta", "modified importer");
+                if (state == "missing-meta") File.Delete(owned + ".meta");
+                if (state == "orphan-meta") File.Delete(owned);
+                Func<string, bool> delete = path =>
+                {
+                    Assert.That(path, Is.EqualTo(owned), "Only the manifest-owned path may be deleted.");
+                    File.Delete(path);
+                    File.Delete(path + ".meta");
+                    return true;
+                };
+                Invoke("RemoveOwnedFiles", removal, (Action)(() => { }), removeModified, delete);
+                bool shouldRemove = removeModified || state == "unchanged";
+                Assert.That(File.Exists(owned), Is.EqualTo(!shouldRemove && state != "orphan-meta"));
+                Assert.That(File.Exists(owned + ".meta"), Is.EqualTo(!shouldRemove && state != "missing-meta"));
+                Assert.That(File.ReadAllText(unowned), Is.EqualTo("user content"));
+                Assert.That(((List<string>)RemovalType.GetField("preserved").GetValue(removal)).Count,
+                    Is.EqualTo(shouldRemove ? 0 : 1));
+                // Recovery can repeat a completed file operation safely.
+                Invoke("RemoveOwnedFiles", removal, (Action)(() => { }), removeModified, delete);
+            }
+            finally
+            {
+                if (Path.GetFullPath(directory).StartsWith(parent, StringComparison.OrdinalIgnoreCase)) Directory.Delete(directory, true);
+            }
+        }
+
+        [TestCase("empty")]
+        [TestCase("user-file")]
+        [TestCase("orphan-meta")]
+        [TestCase("companion")]
+        [TestCase("delete-failed")]
+        public void EmptyFolderCleanupPrunesParentsAndPreservesContentAndCompanions(string state)
+        {
+            string parent = Path.GetFullPath("Library/UMA/RemovalPolicyTests") + Path.DirectorySeparatorChar;
+            string fixture = Path.Combine(parent, Guid.NewGuid().ToString("N"));
+            string root = (fixture + "/Plugin").Replace('\\', '/');
+            string leaf = root + "/Races/HumanFemale/FBX/TPoses";
+            string retained = root + "/Retained/Nested";
+            Directory.CreateDirectory(leaf);
+            Directory.CreateDirectory(retained);
+            foreach (string directory in Directory.GetDirectories(fixture, "*", SearchOption.AllDirectories))
+                File.WriteAllText(directory + ".meta", "folder metadata");
+            File.WriteAllText(fixture + "/Sibling.txt", "outside package");
+            string content = retained + (state == "orphan-meta" ? "/MissingAsset.txt.meta" : "/User.txt");
+            if (state == "user-file" || state == "orphan-meta") File.WriteAllText(content, "retain me");
+            var removed = new List<string>();
+            Func<string, bool> protect = path => state == "companion" && path == root + "/Retained";
+            Func<string, bool> delete = path =>
+            {
+                Assert.That(path == root || path.StartsWith(root + "/", StringComparison.Ordinal), Is.True);
+                Assert.That(Directory.EnumerateFileSystemEntries(path), Is.Empty,
+                    "A parent must only be deleted after all its children and their metadata are gone.");
+                if (state == "delete-failed") return false;
+                Directory.Delete(path); // Deliberately leave its .meta to exercise batched cleanup.
+                removed.Add(path);
+                return true;
+            };
+            try
+            {
+                if (state == "delete-failed")
+                {
+                    Assert.Throws<IOException>(() => Invoke("RemoveEmptyFolders", root, protect, delete));
+                    Assert.That(Directory.Exists(root), Is.True);
+                    Assert.That(removed, Is.Empty);
+                    return;
+                }
+                Invoke("RemoveEmptyFolders", root, protect, delete);
+                Assert.That(Directory.Exists(root + "/Races"), Is.False);
+                Assert.That(File.Exists(root + "/Races.meta"), Is.False);
+                Assert.That(Directory.Exists(root), Is.EqualTo(state != "empty"));
+                Assert.That(File.Exists(root + ".meta"), Is.EqualTo(state != "empty"));
+                if (state == "empty") Assert.That(removed.Last(), Is.EqualTo(root));
+                if (state == "user-file" || state == "orphan-meta")
+                    Assert.That(File.ReadAllText(content), Is.EqualTo("retain me"));
+                if (state == "companion")
+                {
+                    Assert.That(Directory.Exists(retained), Is.True);
+                    Assert.That(File.Exists(retained + ".meta"), Is.True);
+                }
+                int count = removed.Count;
+                Invoke("RemoveEmptyFolders", root, protect, delete);
+                Assert.That(removed.Count, Is.EqualTo(count), "Recovery must be idempotent.");
+                Assert.That(File.ReadAllText(fixture + "/Sibling.txt"), Is.EqualTo("outside package"));
+            }
+            finally
+            {
+                if (Path.GetFullPath(fixture).StartsWith(parent, StringComparison.OrdinalIgnoreCase)) Directory.Delete(fixture, true);
+            }
+        }
+
         private static object CreateBatch(UMAContentKind parent, params UMAContentKind[] order)
         {
             object batch = Activator.CreateInstance(BatchType, true);

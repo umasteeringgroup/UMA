@@ -1,18 +1,3 @@
-What's new for UMA2Compatibility in UMA 3.1f2
-
-The legacy content is now the optional UMA2Compatibility plugin, managed from
-UMA > Welcome to UMA > Plugins. The races remain Human Male and Human Female;
-existing asset GUIDs are preserved. Requires Unity 6.3 or newer.
-
-Wearable samples and example utility slots are distributed in the separate Examples
-package, with Tests in their own companion. Base characters work without Examples.
-Package builds use UMASettings: release 3.1f2 produces version 3.1.2 archives.
-Plugin documentation appears under UMA2Compatibility in the Documentation Browser.
-
-See UMA2Compatibility.md for current installation and migration instructions, and
-Assets/UMA/Docs/!WhatsNewInUMA3.md for the complete UMA 3.1f2 release notes.
-The UMA 2 release history below is retained for reference.
-
 Whats new in UMA 2.14
 
 Fixed various scenes

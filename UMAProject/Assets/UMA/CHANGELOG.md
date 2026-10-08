@@ -2,6 +2,8 @@
 
 ## 3.1f2 (package version 3.1.2)
 
+- Added **Replace everything** to installation conflicts, with an optional clean replacement that removes extra files inside the selected package folder. Backups and installed companions are preserved in both modes.
+- Added **Continue - Remove All** to plugin removal confirmations, allowing modified package-owned files to be removed across the selected parent and companions. The choice persists through interrupted-session recovery; unowned files remain protected. Empty folders are removed from children to parents, including folders omitted from manifests and the package root when empty.
 - Added local-first plugin installation with a matching GitHub release download fallback, download cancellation, release-page links, and local-file recovery options.
 - Added immediate install/reinstall progress for archive validation, installed-file comparison, backup preparation, and final verification; reused the selected archive validation result.
 - Fixed false reinstall conflicts from unowned empty folders and files already identical to the incoming archive. Empty folders and metadata are preserved; divergent local edits remain protected. Builds generate new archive manifests while retaining the installed comparison baseline.

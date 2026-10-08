@@ -263,24 +263,26 @@ namespace UMA.Editors.PackageSupport
             string action = AssetDatabase.IsValidFolder(UMAContentCatalog.Root(kind))
                 ? "replace the existing content"
                 : "install project-owned content";
+            bool removeExtraFiles = false;
+            bool replacementConfirmed = false;
             if (analysis.conflicts.Count > 0)
             {
                 string reportPath = WriteChangeReport(kind, archive.Manifest, analysis);
-                int choice = EditorUtility.DisplayDialogComplex(
-                    "Local UMA Content Changes Detected",
+                var choice = UMAContentConflictDialog.Show(
                     analysis.conflicts.Count +
                     " locally changed, added, or deleted path(s) were found. " +
                     "The default is to cancel and leave the project unchanged. " +
-                    "Every affected path is listed in:\n\n" + reportPath +
-                    "\n\nBackup and Replace retains the current tree under " +
+                    "Every affected path is listed in the report below.\n\n" +
+                    "Target folder: " + UMAContentCatalog.Root(kind) +
+                    "\n\nReplacement retains the current tree under " +
                     "Library/UMA/ContentInstaller before importing.",
-                    "Cancel", "Review Report", "Back Up and Replace");
-                if (choice == 1)
-                    EditorUtility.RevealInFinder(reportPath);
-                if (choice != 2)
+                    reportPath);
+                if (choice == UMAContentConflictDialog.Choice.Cancel)
                     return;
+                removeExtraFiles = choice == UMAContentConflictDialog.Choice.ReplaceEverything;
+                replacementConfirmed = true;
             }
-            if (!EditorUtility.DisplayDialog(
+            if (!replacementConfirmed && !EditorUtility.DisplayDialog(
                     "Install " + UMAContentCatalog.DisplayName(kind) + "?",
                     "This will " + action + " at " +
                     UMAContentCatalog.Root(kind) + ".",
@@ -289,7 +291,7 @@ namespace UMA.Editors.PackageSupport
                 return;
 
             progress.Show("Preparing backup before importing the package");
-            BeginImport(kind, archivePath, archive, out _, progress.Report);
+            BeginImport(kind, archivePath, archive, out _, progress.Report, removeExtraFiles);
         }
 
         public static bool InstallFromFileForAutomation(UMAContentKind kind,
@@ -831,7 +833,8 @@ namespace UMA.Editors.PackageSupport
         }
 
         private static bool BeginImport(UMAContentKind kind, string archivePath,
-            UMAContentPackageArchiveInfo archive, out string error, Action<string, float> progress = null)
+            UMAContentPackageArchiveInfo archive, out string error, Action<string, float> progress = null,
+            bool removeExtraFiles = false)
         {
             error = string.Empty;
             if (archive == null || !archive.Archive.AssetSha256ByPath.TryGetValue(
@@ -887,8 +890,8 @@ namespace UMA.Editors.PackageSupport
                 UMAContentPackageArchiveValidator.TryReadInstalledManifest(kind, out var previousManifest, out _);
                 DeleteContentRoot(kind);
                 RestoreRootIdentity(pending);
-                if (UMAContentCatalog.IsPlugin(kind) && hadPrevious)
-                    RestoreUnownedPluginFiles(kind, previousManifest, archive.Manifest, backupRoot, destinationRoot);
+                if (hadPrevious)
+                    RestoreUnownedPluginFiles(kind, previousManifest, archive.Manifest, backupRoot, destinationRoot, removeExtraFiles);
                 // Hand off to Unity's own import progress UI.
                 if (progress != null) EditorUtility.ClearProgressBar();
                 AssetDatabase.ImportPackage(archiveCopy, false);
@@ -913,7 +916,7 @@ namespace UMA.Editors.PackageSupport
         }
 
         private static void RestoreUnownedPluginFiles(UMAContentKind kind, UMAContentManifest previous,
-            UMAContentManifest incoming, string backup, string destination)
+            UMAContentManifest incoming, string backup, string destination, bool removeExtraFiles = false)
         {
             var owned = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (string path in (previous?.ownedPaths ?? Array.Empty<string>()).Concat(incoming.ownedPaths))
@@ -924,16 +927,22 @@ namespace UMA.Editors.PackageSupport
                 owned.Add(path + ".meta");
             }
             string root = UMAContentCatalog.Root(kind);
+            bool KeepUnowned(string relative)
+            {
+                string path = root + "/" + relative.Replace('\\', '/');
+                // A parent archive never owns the separately installed companion trees.
+                return !owned.Contains(path) && (!removeExtraFiles || UMAContentCatalog.IsCompanionPath(kind, path));
+            }
             foreach (string source in Directory.GetDirectories(backup, "*", SearchOption.AllDirectories))
             {
                 string relative = source.Substring(backup.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-                if (!owned.Contains(root + "/" + relative.Replace('\\', '/')))
+                if (KeepUnowned(relative))
                     Directory.CreateDirectory(Path.Combine(destination, relative));
             }
             foreach (string source in Directory.GetFiles(backup, "*", SearchOption.AllDirectories))
             {
                 string relative = source.Substring(backup.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-                if (owned.Contains(root + "/" + relative.Replace('\\', '/'))) continue;
+                if (!KeepUnowned(relative)) continue;
                 string target = Path.Combine(destination, relative);
                 Directory.CreateDirectory(Path.GetDirectoryName(target));
                 File.Copy(source, target, false);

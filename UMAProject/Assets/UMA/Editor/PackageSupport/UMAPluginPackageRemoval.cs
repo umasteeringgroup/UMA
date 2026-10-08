@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace UMA.Editors.PackageSupport
 {
-    /// <summary>Removes only unchanged manifest-owned plugin files; resumes after interrupted editor sessions.</summary>
+    /// <summary>Removes manifest-owned plugin files using the confirmed policy; resumes after interrupted editor sessions.</summary>
     [InitializeOnLoad]
     public static class UMAPluginPackageRemoval
     {
@@ -24,6 +24,7 @@ namespace UMA.Editors.PackageSupport
             public UMAContentKind kind;
             public List<Removal> removals = new();
             public int next;
+            public bool removeModified;
         }
         private static string Journal => Path.GetFullPath("Library/UMA/PluginRemoval/pending.json");
         static UMAPluginPackageRemoval() { EditorApplication.delayCall += Resume; }
@@ -35,11 +36,14 @@ namespace UMA.Editors.PackageSupport
                 EditorUtility.DisplayDialog("Remove plugin", error, "OK"); return;
             }
             int unchanged = manifest.assets.Count(a => a.bytes > 0 && Matches(a));
-            if (EditorUtility.DisplayDialog("Remove " + UMAContentCatalog.DisplayName(kind),
+            int choice = EditorUtility.DisplayDialogComplex("Remove " + UMAContentCatalog.DisplayName(kind),
                 "Remove " + unchanged + " unchanged package files from " + UMAContentCatalog.Root(kind) +
-                "? Modified and unowned files, settings, documents, recovery, and exports are preserved.", "Remove", "Cancel"))
+                "?\n\nContinue preserves modified files. Continue - Remove All also deletes modified package-owned files, their metadata, and empty folders. " +
+                "Unowned files and user settings, documents, recovery, and exports are preserved with either choice.",
+                "Continue", "Cancel", "Continue - Remove All");
+            if (choice != 1)
             {
-                if (!TryRemove(kind, out error)) Debug.LogError("[UMA Plugins] " + error);
+                if (!TryRemove(kind, out error, choice == 2)) Debug.LogError("[UMA Plugins] " + error);
             }
         }
 
@@ -51,11 +55,14 @@ namespace UMA.Editors.PackageSupport
             }
             string packages = string.Join("\n", batch.removals.Select(removal =>
                 UMAContentCatalog.DisplayName(removal.kind)));
-            if (EditorUtility.DisplayDialog("Remove All — " + UMAContentCatalog.DisplayName(kind),
-                "Remove unchanged files from these packages, in this order?\n\n" + packages +
-                "\n\nModified and unowned files, settings, documents, recovery, and exports are preserved.",
-                "Remove All", "Cancel"))
+            int choice = EditorUtility.DisplayDialogComplex("Remove All — " + UMAContentCatalog.DisplayName(kind),
+                "Remove these packages, in this order?\n\n" + packages +
+                "\n\nContinue removes only unchanged package files. Continue - Remove All also deletes modified package-owned files, their metadata, and empty folders in every listed package. " +
+                "Unowned files and user settings, documents, recovery, and exports are preserved with either choice.",
+                "Continue", "Cancel", "Continue - Remove All");
+            if (choice != 1)
             {
+                batch.removeModified = choice == 2;
                 if (!TryExecuteBatch(batch, out error)) Debug.LogError("[UMA Plugins] " + error);
             }
         }
@@ -63,9 +70,10 @@ namespace UMA.Editors.PackageSupport
         public static bool CanRemoveAll(UMAContentKind kind, out string error) =>
             TryCreateBatch(kind, out _, out error);
 
-        public static bool TryRemoveAll(UMAContentKind kind, out string error)
+        public static bool TryRemoveAll(UMAContentKind kind, out string error, bool removeModified = false)
         {
             if (!TryCreateBatch(kind, out var batch, out error)) return false;
+            batch.removeModified = removeModified;
             return TryExecuteBatch(batch, out error);
         }
 
@@ -114,10 +122,10 @@ namespace UMA.Editors.PackageSupport
             return UMAContentPackageArchiveValidator.TryReadInstalledManifest(kind, out manifest, out error);
         }
 
-        public static bool TryRemove(UMAContentKind kind, out string error)
+        public static bool TryRemove(UMAContentKind kind, out string error, bool removeModified = false)
         {
             if (!CanRemove(kind, out var manifest, out error)) return false;
-            var batch = new RemovalBatch { kind = kind };
+            var batch = new RemovalBatch { kind = kind, removeModified = removeModified };
             batch.removals.Add(new Removal { kind = kind, manifest = manifest });
             return TryExecuteBatch(batch, out error);
         }
@@ -198,7 +206,7 @@ namespace UMA.Editors.PackageSupport
             AssetDatabase.StartAssetEditing();
             try
             {
-                ProcessBatch(batch, index => Execute(batch.removals[index], () => SaveBatch(batch)), () => SaveBatch(batch));
+                ProcessBatch(batch, index => Execute(batch.removals[index], () => SaveBatch(batch), batch.removeModified), () => SaveBatch(batch));
                 File.WriteAllText(Path.Combine(Path.GetDirectoryName(Journal), "last-removal-batch.json"), JsonUtility.ToJson(batch, true));
                 File.Delete(Journal);
             }
@@ -252,33 +260,67 @@ namespace UMA.Editors.PackageSupport
             }
         }
 
-        private static void Execute(Removal removal, Action saveProgress)
+        private static void Execute(Removal removal, Action saveProgress, bool removeModified)
         {
             string root = UMAContentCatalog.Root(removal.kind);
+            RemoveOwnedFiles(removal, saveProgress, removeModified, AssetDatabase.DeleteAsset);
+            string manifestPath = UMAContentCatalog.ManifestPath(removal.kind);
+            if (!AssetDatabase.DeleteAsset(manifestPath) && File.Exists(manifestPath))
+                throw new IOException("Could not remove " + manifestPath);
+            UMAPluginDocumentationRegistry.Unregister(UMAContentCatalog.Id(removal.kind));
+            if (removeModified)
+                RemoveEmptyFolders(root, path => UMAContentCatalog.IsCompanionPath(removal.kind, path), AssetDatabase.DeleteAsset);
+            else if (Directory.Exists(root) && !Directory.EnumerateFileSystemEntries(root).Any()) AssetDatabase.DeleteAsset(root);
+            File.WriteAllText(Path.Combine(Path.GetDirectoryName(Journal), "last-removal.json"), JsonUtility.ToJson(removal, true));
+            Debug.Log("[UMA Plugins] Removed " + (removeModified ? "all package-owned " : "unchanged ") +
+                UMAContentCatalog.DisplayName(removal.kind) + " files. Preserved modified files: " + removal.preserved.Count + ".");
+        }
+
+        private static void RemoveEmptyFolders(string root, Func<string, bool> isProtected, Func<string, bool> deleteAsset)
+        {
+            // Empty leaf folders are not necessarily in the manifest. Prune children
+            // first so their parents can become empty, stopping at this package root.
+            // Never infer that a lone .meta belongs to a deleted folder: it could
+            // describe a missing user asset and must be preserved.
+            ValidateTree(root);
+            Prune(root.Replace('\\', '/'));
+
+            void Prune(string directory)
+            {
+                if (!Directory.Exists(directory) || isProtected(directory)) return;
+                foreach (string child in Directory.GetDirectories(directory))
+                    Prune(child.Replace('\\', '/'));
+                if (Directory.EnumerateFileSystemEntries(directory).Any()) return;
+                if (!deleteAsset(directory) || Directory.Exists(directory))
+                    throw new IOException("Could not remove empty folder " + directory);
+                // Ensure folder metadata cannot keep its parent alive when deletion
+                // is batched or repeated during recovery.
+                if (File.Exists(directory + ".meta")) File.Delete(directory + ".meta");
+            }
+        }
+
+        private static void RemoveOwnedFiles(Removal removal, Action saveProgress, bool removeModified,
+            Func<string, bool> deleteAsset)
+        {
             // The validated manifest constrains every path to this feature root.
             foreach (var asset in removal.manifest.assets.Where(a => a.bytes > 0))
             {
                 if (!File.Exists(asset.path) && !File.Exists(asset.path + ".meta")) continue;
-                if (!Matches(asset))
+                if (!removeModified && !Matches(asset))
                 {
                     if (!removal.preserved.Contains(asset.path)) removal.preserved.Add(asset.path);
                     saveProgress();
                     continue;
                 }
-                if (!AssetDatabase.DeleteAsset(asset.path)) throw new IOException("Could not remove " + asset.path);
+                if (Directory.Exists(asset.path)) throw new IOException("Expected a package file, but found a directory: " + asset.path);
+                if (File.Exists(asset.path) && !deleteAsset(asset.path)) throw new IOException("Could not remove " + asset.path);
+                // An interrupted removal or a locally deleted asset can leave only its metadata.
+                if (File.Exists(asset.path + ".meta")) File.Delete(asset.path + ".meta");
             }
             foreach (var folder in removal.manifest.assets.Where(a => a.bytes == 0).OrderByDescending(a => a.path.Length))
                 if (Directory.Exists(folder.path) && !Directory.EnumerateFileSystemEntries(folder.path).Any() &&
-                    File.Exists(folder.path + ".meta") && Hash(folder.path + ".meta") == folder.metaSha256)
-                    AssetDatabase.DeleteAsset(folder.path);
-            string manifestPath = UMAContentCatalog.ManifestPath(removal.kind);
-            if (!AssetDatabase.DeleteAsset(manifestPath) && File.Exists(manifestPath))
-                throw new IOException("Could not remove " + manifestPath);
-            UMAPluginDocumentationRegistry.Unregister(UMAContentCatalog.Id(removal.kind));
-            if (Directory.Exists(root) && !Directory.EnumerateFileSystemEntries(root).Any()) AssetDatabase.DeleteAsset(root);
-            File.WriteAllText(Path.Combine(Path.GetDirectoryName(Journal), "last-removal.json"), JsonUtility.ToJson(removal, true));
-            Debug.Log("[UMA Plugins] Removed unchanged " + UMAContentCatalog.DisplayName(removal.kind) +
-                " files. Preserved modified files: " + removal.preserved.Count + ".");
+                    (removeModified || (File.Exists(folder.path + ".meta") && Hash(folder.path + ".meta") == folder.metaSha256)))
+                    if (!deleteAsset(folder.path)) throw new IOException("Could not remove " + folder.path);
         }
     }
 }
