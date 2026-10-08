@@ -25,6 +25,7 @@ namespace UMA.Editors.PackageSupport
             public List<Removal> removals = new();
             public int next;
             public bool removeModified;
+            public bool allPlugins;
         }
         private static string Journal => Path.GetFullPath("Library/UMA/PluginRemoval/pending.json");
         static UMAPluginPackageRemoval() { EditorApplication.delayCall += Resume; }
@@ -53,9 +54,23 @@ namespace UMA.Editors.PackageSupport
             {
                 EditorUtility.DisplayDialog("Remove plugins", error, "OK"); return;
             }
+            ConfirmRemovalBatch(batch, "Remove All — " + UMAContentCatalog.DisplayName(kind));
+        }
+
+        public static void RemoveAllInteractive()
+        {
+            if (!TryCreateAllPluginsBatch(out var batch, out string error))
+            {
+                EditorUtility.DisplayDialog("Remove plugins", error, "OK"); return;
+            }
+            ConfirmRemovalBatch(batch, "Remove all plugins");
+        }
+
+        private static void ConfirmRemovalBatch(RemovalBatch batch, string title)
+        {
             string packages = string.Join("\n", batch.removals.Select(removal =>
                 UMAContentCatalog.DisplayName(removal.kind)));
-            int choice = EditorUtility.DisplayDialogComplex("Remove All — " + UMAContentCatalog.DisplayName(kind),
+            int choice = EditorUtility.DisplayDialogComplex(title,
                 "Remove these packages, in this order?\n\n" + packages +
                 "\n\nContinue removes only unchanged package files. Continue - Remove All also deletes modified package-owned files, their metadata, and empty folders in every listed package. " +
                 "Unowned files and user settings, documents, recovery, and exports are preserved with either choice.",
@@ -63,12 +78,15 @@ namespace UMA.Editors.PackageSupport
             if (choice != 1)
             {
                 batch.removeModified = choice == 2;
-                if (!TryExecuteBatch(batch, out error)) Debug.LogError("[UMA Plugins] " + error);
+                if (!TryExecuteBatch(batch, out string error)) Debug.LogError("[UMA Plugins] " + error);
             }
         }
 
         public static bool CanRemoveAll(UMAContentKind kind, out string error) =>
             TryCreateBatch(kind, out _, out error);
+
+        public static bool CanRemoveAll(out string error) =>
+            TryCreateAllPluginsBatch(out _, out error);
 
         public static bool TryRemoveAll(UMAContentKind kind, out string error, bool removeModified = false)
         {
@@ -77,17 +95,30 @@ namespace UMA.Editors.PackageSupport
             return TryExecuteBatch(batch, out error);
         }
 
+        public static bool TryRemoveAll(out string error, bool removeModified = false)
+        {
+            if (!TryCreateAllPluginsBatch(out var batch, out error)) return false;
+            batch.removeModified = removeModified;
+            return TryExecuteBatch(batch, out error);
+        }
+
+        private static IEnumerable<UMAContentKind> PluginRemovalOrder =>
+            UMAContentCatalog.Plugins.Where(kind => !UMAContentCatalog.ParentPlugin(kind).HasValue)
+                .SelectMany(kind => UMAContentCatalog.Companions(kind).Concat(new[] { kind }));
+
         private static bool HasPackageFiles(UMAContentKind kind) =>
             File.Exists(UMAContentCatalog.ManifestPath(kind)) ||
             (Directory.Exists(UMAContentCatalog.Root(kind)) &&
              Directory.EnumerateFiles(UMAContentCatalog.Root(kind), "*", SearchOption.AllDirectories)
-                 .Any(path => !path.EndsWith(".meta", StringComparison.OrdinalIgnoreCase)));
+                 .Any(path => !path.EndsWith(".meta", StringComparison.OrdinalIgnoreCase) &&
+                     !UMAContentCatalog.IsCompanionPath(kind, path.Replace('\\', '/'))));
 
         private static bool CanStartRemoval(UMAContentKind kind, out string error)
         {
             error = string.Empty;
             if (!UMAContentCatalog.IsPlugin(kind)) { error = "Only optional plugins can be removed here."; return false; }
-            if (UMAPluginPackageDownload.IsActive || File.Exists(Journal) || File.Exists("Library/UMA/ContentInstaller/pending.json"))
+            if (UMAContentPackageInstaller.IsInstallingAllPlugins || UMAPluginPackageDownload.IsActive ||
+                File.Exists(Journal) || File.Exists("Library/UMA/ContentInstaller/pending.json"))
             { error = "A package transaction is already pending."; return false; }
             return true;
         }
@@ -108,6 +139,32 @@ namespace UMA.Editors.PackageSupport
                 }
                 candidate.removals.Add(new Removal { kind = item, manifest = manifest });
             }
+            batch = candidate;
+            return true;
+        }
+
+        private static bool TryCreateAllPluginsBatch(out RemovalBatch batch, out string error)
+        {
+            batch = null;
+            if (!CanStartRemoval(UMAContentKind.OverlayPainter, out error)) return false;
+            var candidate = new RemovalBatch { allPlugins = true };
+            // Build and validate one complete transaction before changing any package.
+            // Absent parents do not prevent removal of their remaining companions.
+            foreach (var item in PluginRemovalOrder.Where(HasPackageFiles))
+            {
+                if (!UMAContentPackageArchiveValidator.TryReadInstalledManifest(item, out var manifest, out error))
+                {
+                    error = UMAContentCatalog.DisplayName(item) + ": " + error;
+                    return false;
+                }
+                candidate.removals.Add(new Removal { kind = item, manifest = manifest });
+            }
+            if (candidate.removals.Count == 0)
+            {
+                error = "No optional plugin packages are installed.";
+                return false;
+            }
+            candidate.kind = candidate.removals.Last().kind;
             batch = candidate;
             return true;
         }
@@ -187,13 +244,20 @@ namespace UMA.Editors.PackageSupport
                 batch.removals.Last()?.kind != batch.kind)
                 throw new InvalidDataException("Invalid plugin removal journal; no files were changed.");
             var allowed = new HashSet<UMAContentKind>(UMAContentCatalog.Companions(batch.kind)) { batch.kind };
+            var order = batch.allPlugins ? PluginRemovalOrder.ToArray() : null;
             var seen = new HashSet<UMAContentKind>();
+            int previousIndex = -1;
             foreach (var removal in batch.removals)
-                if (removal == null || !UMAContentCatalog.IsPlugin(removal.kind) || !allowed.Contains(removal.kind) ||
+            {
+                int index = removal == null || order == null ? -1 : Array.IndexOf(order, removal.kind);
+                if (removal == null || !UMAContentCatalog.IsPlugin(removal.kind) ||
+                    (batch.allPlugins ? index <= previousIndex : !allowed.Contains(removal.kind)) ||
                     !seen.Add(removal.kind) ||
                     !UMAContentPackageArchiveValidator.TryValidateManifestStructure(removal.manifest, removal.kind, out _) ||
                     !removal.manifest.ownedPaths.All(path => UMAContentCatalog.OwnsPluginPath(removal.kind, path)))
                     throw new InvalidDataException("Invalid plugin removal journal; no files were changed.");
+                previousIndex = index;
+            }
         }
 
         private static void ExecuteBatch(RemovalBatch batch)

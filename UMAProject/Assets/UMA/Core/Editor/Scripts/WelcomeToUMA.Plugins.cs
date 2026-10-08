@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using UMA.Editors.PackageSupport;
@@ -16,6 +17,8 @@ namespace UMA
         private GUIStyle pluginTitleStyle;
         private GUIStyle pluginRowStyle;
         private bool pluginActionQueued;
+        private bool canRemoveAllPlugins;
+        private string removeAllPluginsReason;
 
         private sealed class PluginCard
         {
@@ -60,6 +63,7 @@ namespace UMA
                     removalReason = reason
                 });
             }
+            canRemoveAllPlugins = UMAPluginPackageRemoval.CanRemoveAll(out removeAllPluginsReason);
             nextPluginStatusRefresh = EditorApplication.timeSinceStartup + 1;
         }
 
@@ -73,14 +77,27 @@ namespace UMA
             };
             pluginRowStyle ??= new GUIStyle(EditorStyles.label) { wordWrap = false, clipping = TextClipping.Clip };
 
-            GUILayout.Label("Plugins", EditorStyles.largeLabel);
+            bool busy = pluginActionQueued || UMAContentPackageInstaller.IsInstallingAllPlugins || UMAPluginPackageDownload.IsActive ||
+                EditorApplication.isCompiling || EditorApplication.isUpdating ||
+                File.Exists("Library/UMA/ContentInstaller/pending.json") ||
+                File.Exists("Library/UMA/PluginRemoval/pending.json");
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                GUILayout.Label("Plugins", EditorStyles.largeLabel, GUILayout.ExpandWidth(false));
+                GUILayout.FlexibleSpace();
+                using (new EditorGUI.DisabledScope(busy || !pluginCards.Exists(card => card.state != UMAContentInstallationState.Installed)))
+                    if (GUILayout.Button(new GUIContent("Install all plugins", "Install all missing or unverified plugins, including their Examples and Tests packages."), GUILayout.ExpandWidth(false)))
+                        QueueAllPluginActions(false);
+                using (new EditorGUI.DisabledScope(busy || !canRemoveAllPlugins))
+                    if (GUILayout.Button(new GUIContent("Remove all plugins", canRemoveAllPlugins
+                            ? "Remove all installed plugins and their Examples and Tests packages."
+                            : removeAllPluginsReason), GUILayout.ExpandWidth(false)))
+                        QueueAllPluginActions(true);
+            }
             GUILayout.Label("Packages are located locally first, then downloaded from the matching UMA GitHub release if needed. Use ? for details.",
                 EditorStyles.wordWrappedLabel);
             GUILayout.Space(8);
 
-            bool busy = pluginActionQueued || UMAPluginPackageDownload.IsActive || EditorApplication.isCompiling || EditorApplication.isUpdating ||
-                File.Exists("Library/UMA/ContentInstaller/pending.json") ||
-                File.Exists("Library/UMA/PluginRemoval/pending.json");
             if (busy)
                 EditorGUILayout.HelpBox(UMAPluginPackageDownload.IsActive ? "Downloading the plugin package. You can cancel in the progress dialog."
                     : "Waiting for the current package operation or Unity import to finish.", MessageType.Info);
@@ -167,19 +184,36 @@ namespace UMA
 
         private void QueuePluginAction(UMAContentKind kind, bool remove, bool locate = false)
         {
+            QueuePluginAction(() =>
+            {
+                if (remove)
+                {
+                    if (UMAContentCatalog.ParentPlugin(kind).HasValue) UMAPluginPackageRemoval.RemoveInteractive(kind);
+                    else UMAPluginPackageRemoval.RemoveAllInteractive(kind);
+                }
+                else if (locate) UMAContentPackageInstaller.LocatePackage(kind);
+                else UMAContentPackageInstaller.InstallFromFile(kind);
+            });
+        }
+
+        private void QueueAllPluginActions(bool remove)
+        {
+            QueuePluginAction(() =>
+            {
+                if (remove) UMAPluginPackageRemoval.RemoveAllInteractive();
+                else UMAContentPackageInstaller.InstallAllPlugins();
+            });
+        }
+
+        private void QueuePluginAction(Action action)
+        {
             // Imports and removals can reload assemblies. Run outside the active GUI layout.
             pluginActionQueued = true;
             EditorApplication.delayCall += () =>
             {
                 try
                 {
-                    if (remove)
-                    {
-                        if (UMAContentCatalog.ParentPlugin(kind).HasValue) UMAPluginPackageRemoval.RemoveInteractive(kind);
-                        else UMAPluginPackageRemoval.RemoveAllInteractive(kind);
-                    }
-                    else if (locate) UMAContentPackageInstaller.LocatePackage(kind);
-                    else UMAContentPackageInstaller.InstallFromFile(kind);
+                    action();
                 }
                 finally
                 {

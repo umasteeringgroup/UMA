@@ -73,6 +73,71 @@ namespace UMA.Editors.Tests
         }
 
         [Test]
+        public void AllPluginsBatchResumesAcrossParentsAndRetainsRemovalPolicy()
+        {
+            var order = new[]
+            {
+                UMAContentKind.Uma2CompatibilityExamples, UMAContentKind.Uma2CompatibilityTests, UMAContentKind.Uma2,
+                UMAContentKind.OverlayPainterExamples, UMAContentKind.OverlayPainterTests, UMAContentKind.OverlayPainter,
+                UMAContentKind.HairCardsExamples, UMAContentKind.HairCardsTests, UMAContentKind.HairCards,
+                UMAContentKind.DismembermentExamples, UMAContentKind.DismembermentTests, UMAContentKind.Dismemberment
+            };
+            object batch = CreateAllPluginsBatch(order);
+            BatchType.GetField("removeModified").SetValue(batch, true);
+            var removed = new List<UMAContentKind>();
+            string checkpoint = null;
+            Assert.Throws<IOException>(() => Invoke("ProcessBatch", batch, (Action<int>)(index =>
+            {
+                if (index == 5) throw new IOException("Interrupted while moving to the next plugin");
+                removed.Add(Kind(Entries(batch)[index]));
+            }), (Action)(() => checkpoint = JsonUtility.ToJson(batch))));
+            object resumed = Invoke("ReadBatch", checkpoint);
+            Assert.That(BatchType.GetField("allPlugins").GetValue(resumed), Is.True);
+            Assert.That(BatchType.GetField("removeModified").GetValue(resumed), Is.True);
+            Assert.That(BatchType.GetField("next").GetValue(resumed), Is.EqualTo(5));
+            Invoke("ProcessBatch", resumed, (Action<int>)(index => removed.Add(Kind(Entries(resumed)[index]))), (Action)(() => { }));
+            Assert.That(removed, Is.EqualTo(order), "Recovery must skip completed packages across plugin boundaries.");
+        }
+
+        [Test]
+        public void AllPluginsBatchAcceptsAbsentPluginsAndRemainingOrphanCompanions()
+        {
+            var order = new[] { UMAContentKind.Uma2CompatibilityTests, UMAContentKind.HairCardsExamples, UMAContentKind.Dismemberment };
+            object batch = CreateAllPluginsBatch(order);
+            var removed = new List<UMAContentKind>();
+            Invoke("ProcessBatch", batch, (Action<int>)(index => removed.Add(Kind(Entries(batch)[index]))), (Action)(() => { }));
+            Assert.That(removed, Is.EqualTo(order));
+        }
+
+        [TestCase("parent-first")]
+        [TestCase("plugin-out-of-order")]
+        [TestCase("duplicate-package")]
+        [TestCase("core-package")]
+        [TestCase("unowned-path")]
+        [TestCase("missing-bulk-flag")]
+        public void InvalidAllPluginsBatchIsRejectedBeforeAnyPackageIsRemoved(string problem)
+        {
+            UMAContentKind[] order = problem switch
+            {
+                "parent-first" => new[] { UMAContentKind.HairCards, UMAContentKind.HairCardsTests, UMAContentKind.Dismemberment },
+                "plugin-out-of-order" => new[] { UMAContentKind.HairCards, UMAContentKind.OverlayPainter, UMAContentKind.Dismemberment },
+                "duplicate-package" => new[] { UMAContentKind.HairCards, UMAContentKind.HairCards, UMAContentKind.Dismemberment },
+                "core-package" => new[] { UMAContentKind.Uma3, UMAContentKind.Dismemberment },
+                _ => new[] { UMAContentKind.OverlayPainter, UMAContentKind.Dismemberment }
+            };
+            object batch = CreateAllPluginsBatch(order);
+            if (problem == "missing-bulk-flag") BatchType.GetField("allPlugins").SetValue(batch, false);
+            if (problem == "unowned-path")
+            {
+                var manifest = (UMAContentManifest)RemovalType.GetField("manifest").GetValue(Entries(batch)[0]);
+                manifest.ownedPaths = manifest.ownedPaths.Concat(new[] { "Assets/UMA/Core/UserFile.txt" }).ToArray();
+            }
+            int removed = 0;
+            Assert.Throws<InvalidDataException>(() => Invoke("ProcessBatch", batch, (Action<int>)(_ => removed++), (Action)(() => { })));
+            Assert.That(removed, Is.Zero);
+        }
+
+        [Test]
         public void LegacySinglePackageJournalAndCompletedBatchRemainRecoverable()
         {
             object original = CreateBatch(UMAContentKind.HairCardsTests, UMAContentKind.HairCardsTests);
@@ -270,6 +335,13 @@ namespace UMA.Editors.Tests
                 RemovalType.GetField("manifest").SetValue(removal, manifest);
                 Entries(batch).Add(removal);
             }
+            return batch;
+        }
+
+        private static object CreateAllPluginsBatch(params UMAContentKind[] order)
+        {
+            object batch = CreateBatch(order.Last(), order);
+            BatchType.GetField("allPlugins").SetValue(batch, true);
             return batch;
         }
 
