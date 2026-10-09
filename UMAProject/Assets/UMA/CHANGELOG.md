@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.1f3 (package version 3.1.3)
+
+- Fixed Install All failing before its first package when Unity restored an empty status array. Batch status arrays now initialize before saving and repair safely after reload; error reporting detaches the update callback before processing malformed state, preventing repeated exceptions.
+
+- Install All Plugins now uses one confirmation for the complete batch, including adoption and backed-up replacement while preserving extra files. Approval survives script reloads and downloads; completion or failure shows a per-package results dialog and saves an installation report.
+
 ## 3.1f2 (package version 3.1.2)
 
 - Plugin package builds now finish with a per-package Built/Failed results dialog and continue building other packages after a failure. Cancellation lists unbuilt packages separately; failure details retain filenames and recovery paths.
