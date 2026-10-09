@@ -12,20 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 15d96588974946c439bab525a619644d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UMA_Editor::UMA.Editors.UMAPluginDocumentationRegistry
-  registrations:
-  - pluginId: overlay-painter
-    displayName: OverlayPainter
-    documentationGuid: 8491d93be9b4bb0428a8a135d4cf26b7
-    descriptorGuid: 87b5a9b66d0605045a76d85d0d9ff566
-  - pluginId: hair-cards
-    displayName: Hair Card Editor
-    documentationGuid: aaf01d9fc413f7f43ae1e7ab91eff3c3
-    descriptorGuid: 85a3027fb7caddc4cb924aad4a6b1540
-  - pluginId: dismemberment
-    displayName: Dismemberment
-    documentationGuid: 06ac48e4f4581aa47ad1cdab4cdda24f
-    descriptorGuid: 4de4a16ffd3fdb14f947daa53b96dbb6
-  - pluginId: uma2
-    displayName: UMA2Compatibility
-    documentationGuid: 0490dc311142f92438ba060621c9ff36
-    descriptorGuid: f60fc75df3b6bef4184621af11594eef
+  registrations: []

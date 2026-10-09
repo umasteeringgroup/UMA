@@ -32,6 +32,7 @@ namespace UMA.Editors.PackageSupport
         private const string PendingFileName = "pending.json";
         private const string InstalledFileName = "installed.json";
         private const string InstallAllSessionKey = "UMA.ContentInstaller.InstallAllPlugins";
+        private const string InstallAllReportKey = "UMA.ContentInstaller.InstallAllPluginsReport";
         private static bool startingBatchPackage;
 
         [Serializable]
@@ -40,6 +41,9 @@ namespace UMA.Editors.PackageSupport
             public UMAContentKind[] kinds;
             public int nextIndex;
             public bool awaitingInstallation;
+            public bool confirmed;
+            public string[] statuses;
+            public string failure;
         }
 
         private enum PluginInstallBatchStep { Wait, Install, Complete, Failed }
@@ -114,6 +118,8 @@ namespace UMA.Editors.PackageSupport
             EditorApplication.delayCall += ResumePendingImport;
             if (IsInstallingAllPlugins)
                 EditorApplication.update += UpdateAllPluginInstallation;
+            if (!string.IsNullOrEmpty(SessionState.GetString(InstallAllReportKey, string.Empty)))
+                EditorApplication.update += ShowInstallBatchReport;
         }
 
         [MenuItem("UMA/Content/Install UMA 3 Content...")]
@@ -145,13 +151,36 @@ namespace UMA.Editors.PackageSupport
             if (IsInstallingAllPlugins || UMAPluginPackageDownload.IsActive ||
                 File.Exists(PendingPath) || File.Exists("Library/UMA/PluginRemoval/pending.json")) return;
             var batch = new PluginInstallBatch { kinds = UMAContentCatalog.PluginDisplayOrder.ToArray() };
+            if (!EditorUtility.DisplayDialog("Install All Plugins?",
+                    "Install all missing or unverified plugins and their Examples and Tests packages?\n\n" +
+                    string.Join("\n", batch.kinds.Select(UMAContentCatalog.DisplayName)) +
+                    "\n\nAlready installed packages will be skipped. Local packages are preferred; missing packages will be downloaded." +
+                    "\nExisting matching content will be registered automatically. Content requiring replacement will be backed up " +
+                    "under Library/UMA/ContentInstaller before importing. Extra files and separately installed companions are preserved." +
+                    "\nIf present, the legacy Assets/UMA/UMA2 tree will move to Assets/UMA2 with its GUIDs and edits preserved." +
+                    "\n\nThis approval applies to the whole batch. A results dialog will list every package when it finishes or stops.",
+                    "Install All", "Cancel")) return;
+            batch.confirmed = true;
+            UMAPluginPackageDownload.DismissFailure();
             SaveInstallBatch(batch);
             EditorApplication.update -= UpdateAllPluginInstallation;
             EditorApplication.update += UpdateAllPluginInstallation;
         }
 
-        private static void SaveInstallBatch(PluginInstallBatch batch) =>
+        private static void SaveInstallBatch(PluginInstallBatch batch)
+        {
+            EnsureInstallBatchStatuses(batch);
             SessionState.SetString(InstallAllSessionKey, JsonUtility.ToJson(batch));
+        }
+
+        private static void EnsureInstallBatchStatuses(PluginInstallBatch batch)
+        {
+            if (batch?.kinds == null) return;
+            // JsonUtility restores a null array as an empty array. Statuses are derived
+            // reporting data: repair their size without changing the installation queue.
+            if (batch.statuses == null || batch.statuses.Length != batch.kinds.Length)
+                Array.Resize(ref batch.statuses, batch.kinds.Length);
+        }
 
         private static void StopInstallingAllPlugins()
         {
@@ -159,21 +188,118 @@ namespace UMA.Editors.PackageSupport
             EditorApplication.update -= UpdateAllPluginInstallation;
         }
 
+        private static PluginInstallBatch LoadInstallBatch()
+        {
+            string json = SessionState.GetString(InstallAllSessionKey, string.Empty);
+            if (string.IsNullOrEmpty(json)) return null;
+            try { return JsonUtility.FromJson<PluginInstallBatch>(json); }
+            catch { return null; }
+        }
+
+        private static bool HasBatchApproval(UMAContentKind kind)
+            => IsApprovedBatchPackage(LoadInstallBatch(), kind);
+
+        private static bool IsApprovedBatchPackage(PluginInstallBatch batch, UMAContentKind kind)
+        {
+            return batch?.kinds != null && batch.confirmed && batch.awaitingInstallation &&
+                batch.nextIndex >= 0 && batch.nextIndex < batch.kinds.Length && batch.kinds[batch.nextIndex] == kind;
+        }
+
+        private static void InstallationError(UMAContentKind kind, string title, string error)
+        {
+            var batch = LoadInstallBatch();
+            if (batch?.kinds != null && batch.awaitingInstallation && batch.nextIndex >= 0 && batch.nextIndex < batch.kinds.Length &&
+                batch.kinds[batch.nextIndex] == kind)
+            {
+                batch.failure = error;
+                SaveInstallBatch(batch);
+            }
+            else EditorUtility.DisplayDialog(title, error, "OK");
+        }
+
+        private static string FormatInstallBatchReport(PluginInstallBatch batch)
+        {
+            var report = new StringBuilder();
+            for (int i = 0; i < batch.kinds.Length; i++)
+            {
+                string status = batch.statuses != null && i < batch.statuses.Length ? batch.statuses[i] : null;
+                if (string.IsNullOrEmpty(status)) status = "Not attempted";
+                string name = UMAContentCatalog.Plugins.Contains(batch.kinds[i])
+                    ? UMAContentCatalog.DisplayName(batch.kinds[i]) : "Unknown package (" + (int)batch.kinds[i] + ")";
+                report.AppendLine(status + " — " + name);
+            }
+            if (!string.IsNullOrEmpty(batch.failure)) report.AppendLine().AppendLine(batch.failure);
+            report.AppendLine().Append("Successfully installed packages have been kept.");
+            return report.ToString();
+        }
+
+        private static void FinishInstallBatch(PluginInstallBatch batch, string error = null)
+        {
+            // Detach first: even a malformed queue or a reporting failure must not
+            // throw repeatedly on every Editor update.
+            StopInstallingAllPlugins();
+            if (batch?.kinds == null)
+            {
+                if (!string.IsNullOrEmpty(error)) QueueInstallBatchReport(error);
+                return;
+            }
+            if (!string.IsNullOrEmpty(error)) batch.failure = error;
+            EnsureInstallBatchStatuses(batch);
+            if (!string.IsNullOrEmpty(batch.failure) && batch.nextIndex >= 0 && batch.nextIndex < batch.kinds.Length)
+                batch.statuses[batch.nextIndex] = "Failed / cancelled";
+            string report = FormatInstallBatchReport(batch);
+            try
+            {
+                string path = Path.GetFullPath("Library/UMA/ContentInstaller/LastPluginInstallReport.txt");
+                Directory.CreateDirectory(Path.GetDirectoryName(path));
+                File.WriteAllText(path, report);
+            }
+            catch (Exception exception) { Debug.LogWarning("[UMA] Could not save plugin installation report: " + exception.Message); }
+            Debug.Log("[UMA] Install all plugins:\n" + report);
+            QueueInstallBatchReport(report);
+        }
+
+        private static void QueueInstallBatchReport(string report)
+        {
+            // Script imports may reload the editor before the results dialog can be shown.
+            SessionState.SetString(InstallAllReportKey, report);
+            EditorApplication.update -= ShowInstallBatchReport;
+            EditorApplication.update += ShowInstallBatchReport;
+        }
+
+        private static void ShowInstallBatchReport()
+        {
+            if (EditorApplication.isCompiling || EditorApplication.isUpdating) return;
+            EditorApplication.update -= ShowInstallBatchReport;
+            string report = SessionState.GetString(InstallAllReportKey, string.Empty);
+            SessionState.EraseString(InstallAllReportKey);
+            if (!string.IsNullOrEmpty(report))
+                EditorUtility.DisplayDialog("Install All Plugins — Results", report, "OK");
+        }
+
         // Persist the awaiting flag before starting an import: importing scripts may reload this class.
         private static PluginInstallBatchStep AdvanceInstallBatch(PluginInstallBatch batch, bool busy,
             Func<UMAContentKind, UMAContentInstallationState> getState)
         {
             if (busy) return PluginInstallBatchStep.Wait;
+            EnsureInstallBatchStatuses(batch);
             if (batch.awaitingInstallation)
             {
-                if (getState(batch.kinds[batch.nextIndex]) != UMAContentInstallationState.Installed)
+                if (!string.IsNullOrEmpty(batch.failure) || getState(batch.kinds[batch.nextIndex]) != UMAContentInstallationState.Installed)
+                {
+                    batch.statuses[batch.nextIndex] = "Failed / cancelled";
                     return PluginInstallBatchStep.Failed;
+                }
+                batch.statuses[batch.nextIndex] = "Installed";
                 batch.awaitingInstallation = false;
                 batch.nextIndex++;
             }
             while (batch.nextIndex < batch.kinds.Length &&
                    getState(batch.kinds[batch.nextIndex]) == UMAContentInstallationState.Installed)
+            {
+                batch.statuses[batch.nextIndex] = "Already installed";
                 batch.nextIndex++;
+            }
             if (batch.nextIndex == batch.kinds.Length) return PluginInstallBatchStep.Complete;
             batch.awaitingInstallation = true;
             return PluginInstallBatchStep.Install;
@@ -191,7 +317,7 @@ namespace UMA.Editors.PackageSupport
                     batch.kinds.Any(kind => !UMAContentCatalog.Plugins.Contains(kind)))
                     throw new InvalidDataException("The saved plugin installation queue is invalid.");
                 if (batch.awaitingInstallation && UMAPluginPackageDownload.LastFailure?.Kind == batch.kinds[batch.nextIndex])
-                { StopInstallingAllPlugins(); return; }
+                { FinishInstallBatch(batch, UMAPluginPackageDownload.LastFailure.Message + "\n" + UMAPluginPackageDownload.LastFailure.DownloadPage); return; }
                 bool busy = EditorApplication.isCompiling || EditorApplication.isUpdating ||
                             UMAPluginPackageDownload.IsActive || File.Exists(PendingPath) ||
                             File.Exists("Library/UMA/PluginRemoval/pending.json");
@@ -199,11 +325,13 @@ namespace UMA.Editors.PackageSupport
                 if (step == PluginInstallBatchStep.Wait) return;
                 if (step == PluginInstallBatchStep.Complete || step == PluginInstallBatchStep.Failed)
                 {
-                    StopInstallingAllPlugins();
                     if (step == PluginInstallBatchStep.Failed)
-                        Debug.LogWarning("[UMA] Install all plugins stopped after " +
-                            UMAContentCatalog.DisplayName(batch.kinds[batch.nextIndex]) +
-                            " was cancelled or could not be installed.");
+                    {
+                        string error = batch.failure;
+                        FinishInstallBatch(batch, string.IsNullOrEmpty(error)
+                            ? "The package was cancelled or could not be installed. Remaining packages were not attempted." : error);
+                    }
+                    else FinishInstallBatch(batch);
                     return;
                 }
                 SaveInstallBatch(batch);
@@ -213,7 +341,7 @@ namespace UMA.Editors.PackageSupport
             }
             catch (Exception exception)
             {
-                StopInstallingAllPlugins();
+                FinishInstallBatch(LoadInstallBatch(), exception.Message);
                 Debug.LogError("[UMA] Install all plugins stopped: " + exception.Message);
             }
         }
@@ -270,7 +398,11 @@ namespace UMA.Editors.PackageSupport
         {
             using var progress = new InstallationProgress(kind);
             try { InstallInteractive(kind, archivePath, discover, progress); }
-            catch { StopInstallingAllPlugins(); throw; }
+            catch (Exception exception)
+            {
+                if (!IsInstallingAllPlugins) throw;
+                InstallationError(kind, "Plugin installation failed", exception.Message);
+            }
         }
 
         private static void InstallInteractive(UMAContentKind kind, string archivePath, bool discover,
@@ -279,10 +411,10 @@ namespace UMA.Editors.PackageSupport
             if (UMAPluginPackageDownload.IsActive || LoadPending() != null || File.Exists(PendingPath) || File.Exists("Library/UMA/PluginRemoval/pending.json"))
             {
                 progress.Clear();
-                EditorUtility.DisplayDialog("UMA Content Installation",
+                InstallationError(kind, "UMA Content Installation",
                     "Another UMA content installation is still in progress, or its " +
                     "transaction record is unreadable. The saved transaction under " +
-                    "Library/UMA/ContentInstaller was left untouched for recovery.", "OK");
+                    "Library/UMA/ContentInstaller was left untouched for recovery.");
                 return;
             }
             UMAContentPackageArchiveInfo archive = null;
@@ -313,27 +445,31 @@ namespace UMA.Editors.PackageSupport
                     out archive, out error, progress.Report))
             {
                 progress.Clear();
-                EditorUtility.DisplayDialog("Invalid UMA Content Package", error, "OK");
+                InstallationError(kind, "Invalid UMA Content Package", archivePath + "\n" + error);
                 return;
             }
             if (!IsCoreVersionCompatible(archive.Manifest, out error))
             {
                 progress.Clear();
-                EditorUtility.DisplayDialog("Incompatible UMA Content Package", error, "OK");
+                InstallationError(kind, "Incompatible UMA Content Package", archivePath + "\n" + error);
                 return;
             }
             progress.Show("Checking installed dependencies");
             if (!AreContentDependenciesSatisfied(kind, archive.Manifest, out error))
             {
                 progress.Clear();
-                EditorUtility.DisplayDialog("UMA Content Dependency Required", error, "OK");
+                InstallationError(kind, "UMA Content Dependency Required", archivePath + "\n" + error);
                 return;
             }
             if (UMAContentCatalog.IsPlugin(kind)) UMAPluginPackageFiles.Remember(kind, archivePath);
             progress.Clear();
+            bool batchApproved = HasBatchApproval(kind);
             if (kind == UMAContentKind.Uma2 &&
-                !MoveLegacyUma2TreeIfNeeded(true, out _))
+                !MoveLegacyUma2TreeIfNeeded(!batchApproved, out var moveError))
+            {
+                if (batchApproved) InstallationError(kind, "UMA2 Move Failed", moveError);
                 return;
+            }
 
             progress.Show("Comparing installed files; checking for local changes");
             ChangeAnalysis analysis = AnalyzeLocalChanges(kind, archive.Manifest,
@@ -341,7 +477,7 @@ namespace UMA.Editors.PackageSupport
             progress.Clear();
             if (analysis.canAdopt)
             {
-                if (!EditorUtility.DisplayDialog("Adopt Existing UMA Content?",
+                if (!batchApproved && !EditorUtility.DisplayDialog("Adopt Existing UMA Content?",
                         "Every archive-owned path in the existing " +
                         UMAContentCatalog.DisplayName(kind) +
                         " tree has the expected GUID and file hash. UMA can adopt it " +
@@ -360,23 +496,26 @@ namespace UMA.Editors.PackageSupport
                 ? "replace the existing content"
                 : "install project-owned content";
             bool removeExtraFiles = false;
-            bool replacementConfirmed = false;
+            bool replacementConfirmed = batchApproved;
             if (analysis.conflicts.Count > 0)
             {
                 string reportPath = WriteChangeReport(kind, archive.Manifest, analysis);
-                var choice = UMAContentConflictDialog.Show(
-                    analysis.conflicts.Count +
-                    " locally changed, added, or deleted path(s) were found. " +
-                    "The default is to cancel and leave the project unchanged. " +
-                    "Every affected path is listed in the report below.\n\n" +
-                    "Target folder: " + UMAContentCatalog.Root(kind) +
-                    "\n\nReplacement retains the current tree under " +
-                    "Library/UMA/ContentInstaller before importing.",
-                    reportPath);
-                if (choice == UMAContentConflictDialog.Choice.Cancel)
-                    return;
-                removeExtraFiles = choice == UMAContentConflictDialog.Choice.ReplaceEverything;
-                replacementConfirmed = true;
+                if (!batchApproved)
+                {
+                    var choice = UMAContentConflictDialog.Show(
+                        analysis.conflicts.Count +
+                        " locally changed, added, or deleted path(s) were found. " +
+                        "The default is to cancel and leave the project unchanged. " +
+                        "Every affected path is listed in the report below.\n\n" +
+                        "Target folder: " + UMAContentCatalog.Root(kind) +
+                        "\n\nReplacement retains the current tree under " +
+                        "Library/UMA/ContentInstaller before importing.",
+                        reportPath);
+                    if (choice == UMAContentConflictDialog.Choice.Cancel)
+                        return;
+                    removeExtraFiles = choice == UMAContentConflictDialog.Choice.ReplaceEverything;
+                    replacementConfirmed = true;
+                }
             }
             if (!replacementConfirmed && !EditorUtility.DisplayDialog(
                     "Install " + UMAContentCatalog.DisplayName(kind) + "?",
@@ -387,7 +526,8 @@ namespace UMA.Editors.PackageSupport
                 return;
 
             progress.Show("Preparing backup before importing the package");
-            BeginImport(kind, archivePath, archive, out _, progress.Report, removeExtraFiles);
+            if (!BeginImport(kind, archivePath, archive, out error, progress.Report, removeExtraFiles) && IsInstallingAllPlugins)
+                InstallationError(kind, "Plugin installation failed", archivePath + "\n" + error);
         }
 
         public static bool InstallFromFileForAutomation(UMAContentKind kind,
@@ -996,7 +1136,6 @@ namespace UMA.Editors.PackageSupport
             }
             catch (Exception exception)
             {
-                StopInstallingAllPlugins();
                 if (progress != null) EditorUtility.ClearProgressBar();
                 error = exception.Message;
                 PendingImport pending = LoadPending();
@@ -1084,13 +1223,15 @@ namespace UMA.Editors.PackageSupport
             try { CompletePendingImportCore(); }
             catch (Exception exception)
             {
-                StopInstallingAllPlugins();
                 EditorApplication.update -= CompletePendingImport;
                 PendingImport pending = LoadPending();
                 if (pending != null)
                     Rollback(pending, "Content installation could not be completed: " + exception.Message, true);
                 else
+                {
+                    if (IsInstallingAllPlugins) FinishInstallBatch(LoadInstallBatch(), exception.Message);
                     Debug.LogError("[UMA] Content installation could not be completed: " + exception.Message);
+                }
             }
         }
 
@@ -1264,10 +1405,10 @@ namespace UMA.Editors.PackageSupport
         private static void Rollback(PendingImport pending, string reason,
             bool logError)
         {
-            StopInstallingAllPlugins();
             if (!TryValidatePending(pending, out string pendingError))
             {
                 WritePendingValidationError(reason + " " + pendingError, logError);
+                if (IsInstallingAllPlugins) FinishInstallBatch(LoadInstallBatch(), reason + " " + pendingError);
                 return;
             }
             UMAContentKind kind = ParseKind(pending.contentId);
@@ -1302,6 +1443,7 @@ namespace UMA.Editors.PackageSupport
                 AssetDatabase.Refresh();
             }
             if (logError) Debug.LogError("[UMA] " + reason);
+            if (IsInstallingAllPlugins) FinishInstallBatch(LoadInstallBatch(), reason);
         }
 
         private static void DeleteContentRoot(UMAContentKind kind)
